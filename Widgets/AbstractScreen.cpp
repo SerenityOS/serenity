@@ -27,12 +27,15 @@ AbstractScreen::~AbstractScreen()
 
 void AbstractScreen::event(Event& event)
 {
-    if (event.type() == Event::MouseMove) {
+    if (event.type() == Event::MouseMove
+        || event.type() == Event::MouseDown
+        || event.type() == Event::MouseUp) {
         auto& me = static_cast<MouseEvent&>(event);
-        printf("AbstractScreen::onMouseMove: %d, %d\n", me.x(), me.y());
-
+        //printf("AbstractScreen::onMouseMove: %d, %d\n", me.x(), me.y());
         auto result = m_rootWidget->hitTest(me.x(), me.y());
-        printf("hit test for %d,%d found: %s{%p} %d,%d\n", me.x(), me.y(), result.widget->className(), result.widget, result.localX, result.localY);
+        //printf("hit test for %d,%d found: %s{%p} %d,%d\n", me.x(), me.y(), result.widget->className(), result.widget, result.localX, result.localY);
+        auto localEvent = make<MouseEvent>(event.type(), result.localX, result.localY, me.button());
+        result.widget->event(*localEvent);
     }
 }
 

@@ -17,6 +17,11 @@ public:
         m_location.moveBy(dx, dy);
     }
 
+    Point center() const
+    {
+        return { x() + width() / 2, y() + height() / 2 };
+    }
+
     bool contains(int x, int y) const
     {
         return x >= m_location.x() && x <= right() && y >= m_location.y() && y <= bottom();
