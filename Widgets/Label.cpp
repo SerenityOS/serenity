@@ -5,17 +5,25 @@
 Label::Label(Widget* parent)
     : Widget(parent)
 {
-    setRect(Rect(100, 100, 100, 100));
 }
 
 Label::~Label()
 {
 }
 
+void Label::setText(String&& text)
+{
+    if (text == m_text)
+        return;
+    m_text = std::move(text);
+    update();
+}
+
 void Label::onPaint(PaintEvent&)
 {
     Painter painter(*this);
     painter.fillRect({ 0, 0, width(), height() }, Color(0xc0, 0xc0, 0xc0));
+    painter.drawText({ 4, 4 }, text());
 }
 
 void Label::onMouseMove(MouseEvent& event)

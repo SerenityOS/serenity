@@ -15,6 +15,8 @@ int main(int c, char** v)
     fb.setRootWidget(&w);
 
     Label l(&w);
+    l.setRect(Rect(100, 100, 300, 100));
+    l.setText("ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]");
 
     return loop.exec();
 }

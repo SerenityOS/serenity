@@ -1,11 +1,12 @@
 #pragma once
 
+#include "Point.h"
+
 class Rect {
 public:
     Rect() { }
     Rect(int x, int y, int width, int height)
-        : m_x(x)
-        , m_y(y)
+        : m_location(x, y)
         , m_width(width)
         , m_height(height)
     {
@@ -13,33 +14,38 @@ public:
 
     void moveBy(int dx, int dy)
     {
-        m_x += dx;
-        m_y += dy;
+        m_location.moveBy(dx, dy);
     }
 
     bool contains(int x, int y) const
     {
-        return x >= m_x && x <= right() && y >= m_y && y <= bottom();
+        return x >= m_location.x() && x <= right() && y >= m_location.y() && y <= bottom();
     }
 
-    int left() const { return m_x; }
-    int right() const { return m_x + m_width; }
-    int top() const { return m_y; }
-    int bottom() const { return m_y + m_height; }
+    bool contains(const Point& point) const
+    {
+        return contains(point.x(), point.y());
+    }
 
-    int x() const { return m_x; }
-    int y() const { return m_y; }
+    int left() const { return x(); }
+    int right() const { return x() + width(); }
+    int top() const { return y(); }
+    int bottom() const { return y() + height(); }
+
+    int x() const { return location().x(); }
+    int y() const { return location().y(); }
     int width() const { return m_width; }
     int height() const { return m_height; }
 
-    void setX(int x) { m_x = x; }
-    void setY(int y) { m_y = y; }
+    void setX(int x) { m_location.setX(x); }
+    void setY(int y) { m_location.setY(y); }
     void setWidth(int width) { m_width = width; }
     void setHeight(int height) { m_height = height; }
 
+    Point location() const { return m_location; }
+
 private:
-    int m_x { 0 };
-    int m_y { 0 };
+    Point m_location;
     int m_width { 0 };
     int m_height { 0 };
 };
