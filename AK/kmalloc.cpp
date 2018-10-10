@@ -1,6 +1,37 @@
 #include <cstdio>
 #include "SimpleMalloc.h"
 #include <new>
+#include <cstdlib>
+
+#define USE_SYSTEM_MALLOC
+
+#ifdef USE_SYSTEM_MALLOC
+
+extern "C" {
+
+void* kcalloc(dword nmemb, dword size)
+{
+    return calloc(nmemb, size);
+}
+
+void* kmalloc(dword size)
+{
+    return malloc(size);
+}
+
+void kfree(void* ptr)
+{
+    free(ptr);
+}
+
+void* krealloc(void* ptr, dword size)
+{
+    return realloc(ptr, size);
+}
+
+}
+
+#else
 
 extern "C" {
 
@@ -63,4 +94,6 @@ void operator delete[](void* ptr, size_t)
 {
     return kfree(ptr);
 }
+
+#endif
 
