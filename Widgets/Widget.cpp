@@ -12,6 +12,13 @@ Widget::~Widget()
 {
 }
 
+void Widget::setRect(const Rect& rect)
+{
+    // FIXME: Make some kind of event loop driven ResizeEvent?
+    m_rect = rect;
+    update();
+}
+
 void Widget::event(Event& event)
 {
     switch (event.type()) {
@@ -36,8 +43,13 @@ void Widget::event(Event& event)
     }
 }
 
-void Widget::onPaint(PaintEvent&)
+void Widget::onPaint(PaintEvent& event)
 {
+    printf("Widget::onPaint :)\n");
+    for (auto* ch : children()) {
+        auto* child = (Widget*)ch;
+        child->onPaint(event);
+    }
 }
 
 void Widget::onShow(ShowEvent&)
@@ -72,5 +84,17 @@ void Widget::onMouseMove(MouseEvent&)
 void Widget::update()
 {
     EventLoop::main().postEvent(this, make<PaintEvent>());
+}
+
+Widget::HitTestResult Widget::hitTest(int x, int y)
+{
+    // FIXME: Care about z-order.
+    for (auto* ch : children()) {
+        auto* child = (Widget*)ch;
+        if (child->rect().contains(x, y)) {
+            return child->hitTest(x - child->rect().x(), y - child->rect().y());
+        }
+    }
+    return { this, x, y };
 }
 

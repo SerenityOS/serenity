@@ -1,6 +1,7 @@
 #include "FrameBufferSDL.h"
 #include "EventLoopSDL.h"
 #include "RootWidget.h"
+#include "Label.h"
 #include <cstdio>
 
 int main(int c, char** v)
@@ -12,6 +13,8 @@ int main(int c, char** v)
 
     RootWidget w;
     fb.setRootWidget(&w);
+
+    Label l(&w);
 
     return loop.exec();
 }

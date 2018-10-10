@@ -14,6 +14,9 @@ VFS_OBJS = \
     Object.o \
     Widget.o \
     RootWidget.o \
+    ColorSDL.o \
+    Painter.o \
+    Label.o \
     test.o
 
 OBJS = $(AK_OBJS) $(VFS_OBJS)

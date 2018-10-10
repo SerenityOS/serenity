@@ -13,7 +13,8 @@ AbstractScreen& AbstractScreen::the()
 }
 
 AbstractScreen::AbstractScreen(unsigned width, unsigned height)
-    : m_width(width)
+    : Object(nullptr)
+    , m_width(width)
     , m_height(height)
 {
     ASSERT(!s_the);
@@ -22,6 +23,17 @@ AbstractScreen::AbstractScreen(unsigned width, unsigned height)
 
 AbstractScreen::~AbstractScreen()
 {
+}
+
+void AbstractScreen::event(Event& event)
+{
+    if (event.type() == Event::MouseMove) {
+        auto& me = static_cast<MouseEvent&>(event);
+        printf("AbstractScreen::onMouseMove: %d, %d\n", me.x(), me.y());
+
+        auto result = m_rootWidget->hitTest(me.x(), me.y());
+        printf("hit test for %d,%d found: %s{%p} %d,%d\n", me.x(), me.y(), result.widget->className(), result.widget, result.localX, result.localY);
+    }
 }
 
 void AbstractScreen::setRootWidget(Widget* widget)

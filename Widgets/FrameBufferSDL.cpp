@@ -1,9 +1,19 @@
 #include "FrameBufferSDL.h"
 #include <AK/Assertions.h>
 
+FrameBufferSDL* s_the = nullptr;
+
+FrameBufferSDL& FrameBufferSDL::the()
+{
+    ASSERT(s_the);
+    return *s_the;
+}
+
 FrameBufferSDL::FrameBufferSDL(unsigned width, unsigned height)
     : AbstractScreen(width, height)
 {
+    ASSERT(!s_the);
+    s_the = this;
     initializeSDL();
 }
 
