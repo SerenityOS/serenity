@@ -35,24 +35,32 @@ void Painter::fillRect(const Rect& rect, Color color)
     }
 }
 
-void Painter::drawText(const Point& point, const String& text, const Color& color)
+void Painter::drawText(const Rect& rect, const String& text, TextAlignment alignment, const Color& color)
 {
-    Point p = point;
-    p.moveBy(m_widget.x(), m_widget.y());
+    Point point;
+    
+    if (alignment == TextAlignment::TopLeft) {
+        point = rect.location();
+        point.moveBy(m_widget.x(), m_widget.y());;
+    } else if (alignment == TextAlignment::Center) {
+        int textWidth = text.length() * Peanut8x8::fontWidth;
+        point = rect.center();
+        point.moveBy(-(textWidth / 2), -(Peanut8x8::fontWidth / 2));
+        point.moveBy(m_widget.x(), m_widget.y());
+    } else {
+        ASSERT_NOT_REACHED();
+    }
 
-    byte fontWidth = 8;
-    byte fontHeight = 8;
-
-    for (int row = 0; row < fontHeight; ++row) {
-        int y = p.y() + row;
+    for (int row = 0; row < Peanut8x8::fontHeight; ++row) {
+        int y = point.y() + row;
         dword* bits = scanline(y);
         for (unsigned i = 0; i < text.length(); ++i) {
             if (text[i] == ' ')
                 continue;
             const char* fontCharacter = Peanut8x8::font[text[i] - Peanut8x8::firstCharacter];
-            int x = p.x() + i * fontWidth;
-            for (unsigned j = 0; j < fontWidth; ++j) {
-                char fc = fontCharacter[row * fontWidth + j];
+            int x = point.x() + i * Peanut8x8::fontWidth;
+            for (unsigned j = 0; j < Peanut8x8::fontWidth; ++j) {
+                char fc = fontCharacter[row * Peanut8x8::fontWidth + j];
                 if (fc == '#')
                     bits[x + j] = color.value();
             }

@@ -17,6 +17,7 @@ VFS_OBJS = \
     ColorSDL.o \
     Painter.o \
     Label.o \
+    Button.o \
     test.o
 
 OBJS = $(AK_OBJS) $(VFS_OBJS)

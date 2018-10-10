@@ -12,6 +12,19 @@ EventLoopSDL::~EventLoopSDL()
 {
 }
 
+static inline MouseButton toMouseButton(byte sdlButton)
+{
+    printf("sdlbutton = %u\n", sdlButton);
+    if (sdlButton == 1)
+        return MouseButton::Left;
+    if (sdlButton == 2)
+        return MouseButton::Middle;
+    if (sdlButton == 3)
+        return MouseButton::Right;
+    ASSERT_NOT_REACHED();
+    return MouseButton::None;
+}
+
 void EventLoopSDL::waitForEvent()
 {
     SDL_Event sdlEvent;
@@ -29,6 +42,9 @@ void EventLoopSDL::waitForEvent()
             return;
         case SDL_MOUSEMOTION:
             postEvent(&AbstractScreen::the(), make<MouseEvent>(Event::MouseMove, sdlEvent.motion.x, sdlEvent.motion.y));
+            return;
+        case SDL_MOUSEBUTTONDOWN:
+            postEvent(&AbstractScreen::the(), make<MouseEvent>(Event::MouseDown, sdlEvent.button.x, sdlEvent.button.y, toMouseButton(sdlEvent.button.button)));
             return;
         }
     }

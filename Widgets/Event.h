@@ -79,6 +79,7 @@ public:
 enum class MouseButton : byte {
     None = 0,
     Left,
+    Middle,
     Right,
 };
 

@@ -3,6 +3,7 @@
 #include "Event.h"
 #include "Object.h"
 #include "Rect.h"
+#include "Color.h"
 
 class Widget : public Object {
 public:
@@ -38,6 +39,14 @@ public:
 
     void setRect(const Rect&);
 
+    Color backgroundColor() const { return m_backgroundColor; }
+    Color foregroundColor() const { return m_foregroundColor; }
+
+    void setBackgroundColor(Color color) { m_backgroundColor = color; }
+    void setForegroundColor(Color color) { m_foregroundColor = color; }
+
 private:
     Rect m_rect;
+    Color m_backgroundColor;
+    Color m_foregroundColor;
 };
