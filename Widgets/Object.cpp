@@ -13,9 +13,9 @@ Object::~Object()
 {
     if (m_parent)
         m_parent->removeChild(*this);
-    for (auto* child : m_children) {
+    auto childrenToDelete = std::move(m_children);
+    for (auto* child : childrenToDelete)
         delete child;
-    }
 }
 
 void Object::event(Event& event)
