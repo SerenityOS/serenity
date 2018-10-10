@@ -10,6 +10,11 @@ public:
 
     void show();
 
+    SDL_Surface* surface() { return m_surface; }
+    SDL_Window* window() { return m_window; }
+
+    static FrameBufferSDL& the();
+
 private:
     void initializeSDL();
 

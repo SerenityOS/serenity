@@ -2,6 +2,7 @@
 
 #include "Event.h"
 #include "Object.h"
+#include "Rect.h"
 
 class Widget : public Object {
 public:
@@ -18,9 +19,25 @@ public:
     virtual void onMouseDown(MouseEvent&);
     virtual void onMouseUp(MouseEvent&);
 
+    Rect rect() const { return m_rect; }
+    int x() const { return rect().x(); }
+    int y() const { return rect().y(); }
+    int width() const { return rect().width(); }
+    int height() const { return rect().height(); }
+
     void update();
 
+    struct HitTestResult {
+        Widget* widget { nullptr };
+        int localX { 0 };
+        int localY { 0 };
+    };
+    HitTestResult hitTest(int x, int y);
+
+    virtual const char* className() const override { return "Widget"; }
+
+    void setRect(const Rect&);
+
 private:
-    int m_x { 0 };
-    int m_y { 0 };
+    Rect m_rect;
 };
