@@ -2,6 +2,7 @@
 
 #include "Assertions.h"
 #include "OwnPtr.h"
+#include "kmalloc.h"
 #include <new>
 #include <stdlib.h>
 #include <stdio.h>
