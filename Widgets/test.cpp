@@ -15,8 +15,9 @@ int main(int c, char** v)
     fb.setRootWidget(&w);
 
     Label l(&w);
-    l.setRect(Rect(100, 100, 300, 100));
-    l.setText("ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]");
+    l.setRect(Rect(100, 100, 600, 100));
+    l.setText("()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_abcdefghijklmnopqrstuvwxyz");
+    //l.setText("Welcome to the Serenity Operating System");
 
     return loop.exec();
 }

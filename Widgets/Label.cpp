@@ -22,8 +22,9 @@ void Label::setText(String&& text)
 void Label::onPaint(PaintEvent&)
 {
     Painter painter(*this);
-    painter.fillRect({ 0, 0, width(), height() }, Color(0xc0, 0xc0, 0xc0));
-    painter.drawText({ 4, 4 }, text());
+    painter.fillRect({ 0, 0, width(), height() }, Color(0x0, 0x0, 0x0));
+    if (!text().isEmpty())
+        painter.drawText({ 4, 4 }, text(), Color(0xff, 0xff, 0xff));
 }
 
 void Label::onMouseMove(MouseEvent& event)
