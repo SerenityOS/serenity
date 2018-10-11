@@ -5,6 +5,7 @@
 #include "Rect.h"
 #include <AK/String.h>
 
+class Font;
 class Widget;
 
 class Painter {
@@ -16,6 +17,9 @@ public:
     void drawRect(const Rect&, Color);
     void drawText(const Rect&, const String&, TextAlignment = TextAlignment::TopLeft, const Color& = Color());
 
+    const Font& font() const;
+
 private:
     Widget& m_widget;
+    Font& m_font;
 };
