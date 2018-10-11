@@ -3,6 +3,7 @@
 namespace Peanut8x8 {
 
 static constexpr char firstCharacter = '!';
+static constexpr char lastCharacter = '~';
 static constexpr byte fontWidth = 8;
 static constexpr byte fontHeight = 8;
 

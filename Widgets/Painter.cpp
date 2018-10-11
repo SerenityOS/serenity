@@ -55,9 +55,14 @@ void Painter::drawText(const Rect& rect, const String& text, TextAlignment align
         int y = point.y() + row;
         dword* bits = scanline(y);
         for (unsigned i = 0; i < text.length(); ++i) {
-            if (text[i] == ' ')
+            byte ch = text[i];
+            if (ch == ' ')
                 continue;
-            const char* fontCharacter = Peanut8x8::font[text[i] - Peanut8x8::firstCharacter];
+            if (ch < Peanut8x8::firstCharacter || ch > Peanut8x8::lastCharacter) {
+                printf("Font doesn't have 0x%02x ('%c')\n", ch, ch);
+                ASSERT_NOT_REACHED();
+            }
+            const char* fontCharacter = Peanut8x8::font[ch - Peanut8x8::firstCharacter];
             int x = point.x() + i * Peanut8x8::fontWidth;
             for (unsigned j = 0; j < Peanut8x8::fontWidth; ++j) {
                 char fc = fontCharacter[row * Peanut8x8::fontWidth + j];

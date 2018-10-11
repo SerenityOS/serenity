@@ -3,8 +3,11 @@
 #include "Event.h"
 #include "Widget.h"
 #include <AK/Assertions.h>
+#include "TerminalWidget.h"
 
 static AbstractScreen* s_the;
+
+extern TerminalWidget* g_tw;
 
 AbstractScreen& AbstractScreen::the()
 {
@@ -36,7 +39,16 @@ void AbstractScreen::event(Event& event)
         //printf("hit test for %d,%d found: %s{%p} %d,%d\n", me.x(), me.y(), result.widget->className(), result.widget, result.localX, result.localY);
         auto localEvent = make<MouseEvent>(event.type(), result.localX, result.localY, me.button());
         result.widget->event(*localEvent);
+        return Object::event(event);
     }
+
+    if (event.type() == Event::KeyDown || event.type() == Event::KeyUp) {
+        // FIXME: Implement proper focus.
+        Widget* focusedWidget = g_tw;
+        return focusedWidget->event(event);
+    }
+
+    return Object::event(event);
 }
 
 void AbstractScreen::setRootWidget(Widget* widget)

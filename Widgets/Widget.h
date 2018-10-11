@@ -49,4 +49,6 @@ private:
     Rect m_rect;
     Color m_backgroundColor;
     Color m_foregroundColor;
+
+    bool m_hasPendingPaintEvent { false };
 };

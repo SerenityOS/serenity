@@ -15,13 +15,16 @@ public:
 
     unsigned rows() const { return m_rows; }
     unsigned columns() const { return m_columns; }
+
+    void onReceive(const ByteBuffer&);
+    void onReceive(byte);
     
 private:
     CharacterWithAttributes& at(unsigned row, unsigned column);
 
     virtual void onPaint(PaintEvent&) override;
-    void onReceive(const ByteBuffer&);
-    void onReceive(byte);
+    virtual void onKeyDown(KeyEvent&) override;
+    virtual void onKeyUp(KeyEvent&) override;
 
     unsigned m_columns { 80 };
     unsigned m_rows { 25 };

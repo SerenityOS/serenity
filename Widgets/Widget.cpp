@@ -25,6 +25,7 @@ void Widget::event(Event& event)
 {
     switch (event.type()) {
     case Event::Paint:
+        m_hasPendingPaintEvent = false;
         return onPaint(static_cast<PaintEvent&>(event));
     case Event::Show:
         return onShow(static_cast<ShowEvent&>(event));
@@ -85,6 +86,9 @@ void Widget::onMouseMove(MouseEvent&)
 
 void Widget::update()
 {
+    if (m_hasPendingPaintEvent)
+        return;
+    m_hasPendingPaintEvent = true;
     EventLoop::main().postEvent(this, make<PaintEvent>());
 }
 
