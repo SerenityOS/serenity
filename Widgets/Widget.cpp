@@ -1,6 +1,7 @@
 #include "Widget.h"
 #include "Event.h"
 #include "EventLoop.h"
+#include "WindowManager.h"
 #include <AK/Assertions.h>
 
 Widget::Widget(Widget* parent)
@@ -18,6 +19,17 @@ void Widget::setRect(const Rect& rect)
 {
     // FIXME: Make some kind of event loop driven ResizeEvent?
     m_rect = rect;
+    update();
+}
+
+void Widget::setIsWindow(bool value)
+{
+    if (m_isWindow == value)
+        return;
+    m_isWindow = value;
+    if (m_isWindow) {
+        WindowManager::the().addWindow(*this);
+    }
     update();
 }
 
@@ -104,3 +116,10 @@ Widget::HitTestResult Widget::hitTest(int x, int y)
     return { this, x, y };
 }
 
+void Widget::setWindowTitle(String&& title)
+{
+    if (title == m_windowTitle)
+        return;
+    m_windowTitle = std::move(title);
+    WindowManager::the().notifyTitleChanged(*this);
+}

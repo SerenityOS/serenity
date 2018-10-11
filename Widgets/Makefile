@@ -19,6 +19,7 @@ VFS_OBJS = \
     Label.o \
     Button.o \
     TerminalWidget.o \
+    WindowManager.o \
     test.o
 
 OBJS = $(AK_OBJS) $(VFS_OBJS)
