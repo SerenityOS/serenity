@@ -108,21 +108,32 @@ void WindowManager::notifyRectChanged(Window& window, const Rect& oldRect, const
         newRect.height());
 }
 
-void WindowManager::event(Event& event)
+void WindowManager::processMouseEvent(MouseEvent& event)
 {
-    if (event.type() == Event::MouseMove
-        || event.type() == Event::MouseDown
-        || event.type() == Event::MouseUp) {
-        auto& me = static_cast<MouseEvent&>(event);
-
-        auto result = m_rootWidget->hitTest(me.x(), me.y());
-        //printf("hit test for %d,%d found: %s{%p} %d,%d\n", me.x(), me.y(), result.widget->className(), result.widget, result.localX, result.localY);
-        auto localEvent = make<MouseEvent>(event.type(), result.localX, result.localY, me.button());
-        result.widget->event(*localEvent);
-        return Object::event(event);
+    // First step: hit test windows.
+    for (auto* window : m_windows) {
+        // FIXME: z-order...
+        if (window->rect().contains(event.position())) {
+            // FIXME: Re-use the existing event instead of crafting a new one?
+            auto localEvent = make<MouseEvent>(event.type(), event.x() - window->rect().x(), event.y() - window->rect().y(), event.button());
+            return;
+        }
     }
 
-    if (event.type() == Event::KeyDown || event.type() == Event::KeyUp) {
+    // Otherwise: send it to root the root widget...
+    auto result = m_rootWidget->hitTest(event.x(), event.y());
+    //printf("hit test for %d,%d found: %s{%p} %d,%d\n", me.x(), me.y(), result.widget->className(), result.widget, result.localX, result.localY);
+    // FIXME: Re-use the existing event instead of crafting a new one?
+    auto localEvent = make<MouseEvent>(event.type(), result.localX, result.localY, event.button());
+    result.widget->event(*localEvent);
+}
+
+void WindowManager::event(Event& event)
+{
+    if (event.isMouseEvent())
+        return processMouseEvent(static_cast<MouseEvent&>(event));
+
+    if (event.isKeyEvent()) {
         // FIXME: Implement proper focus.
         Widget* focusedWidget = g_tw;
         return focusedWidget->event(event);

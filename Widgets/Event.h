@@ -1,6 +1,7 @@
 #pragma once
 
 #include <AK/Types.h>
+#include "Point.h"
 
 static const char* eventNames[] = {
     "Invalid",
@@ -36,6 +37,9 @@ public:
     Type type() const { return m_type; }
 
     const char* name() const { return eventNames[(unsigned)m_type]; }
+
+    bool isMouseEvent() const { return m_type == MouseMove || m_type == MouseDown || m_type == MouseUp; }
+    bool isKeyEvent() const { return m_type == KeyUp || m_type == KeyDown; }
 
 protected:
     explicit Event(Type type) : m_type(type) { }
@@ -101,19 +105,18 @@ class MouseEvent : public Event {
 public:
     MouseEvent(Type type, int x, int y, MouseButton button = MouseButton::None)
         : Event(type)
-        , m_x(x)
-        , m_y(y)
+        , m_position(x, y)
         , m_button(button)
     {
     }
 
-    int x() const { return m_x; }
-    int y() const { return m_y; }
+    Point position() const { return m_position; }
+    int x() const { return m_position.x(); }
+    int y() const { return m_position.y(); }
     MouseButton button() const { return m_button; }
 
 private:
-    int m_x { 0 };
-    int m_y { 0 };
+    Point m_position;
     MouseButton m_button { MouseButton::None };
 };
 
