@@ -8,6 +8,19 @@
 
 extern TerminalWidget* g_tw;
 
+static const int windowFrameWidth = 2;
+static const int windowTitleBarHeight = 16;
+
+static inline Rect titleBarRectForWindow(const Window& window)
+{
+    return {
+        window.x() - windowFrameWidth,
+        window.y() - windowTitleBarHeight - windowFrameWidth,
+        window.width() + windowFrameWidth * 2,
+        windowTitleBarHeight + windowFrameWidth
+    };
+}
+
 WindowManager& WindowManager::the()
 {
     static WindowManager* s_the = new WindowManager;
@@ -16,6 +29,8 @@ WindowManager& WindowManager::the()
 
 WindowManager::WindowManager()
 {
+    m_windowBorderColor = Color(0x00, 0x00, 0x80);
+    m_windowTitleColor = Color(0xff, 0xff, 0xff);
 }
 
 WindowManager::~WindowManager()
@@ -34,14 +49,7 @@ void WindowManager::paintWindowFrame(Window& window)
 
     printf("WM: paintWindowFrame {%p}, rect: %d,%d %dx%d\n", &window, window.rect().x(), window.rect().y(), window.rect().width(), window.rect().height());
 
-    static const int windowFrameWidth = 2;
-    static const int windowTitleBarHeight = 16;
-
-    Rect topRect {
-        window.x() - windowFrameWidth,
-        window.y() - windowTitleBarHeight - windowFrameWidth,
-        window.width() + windowFrameWidth * 2,
-        windowTitleBarHeight + windowFrameWidth };
+    Rect topRect = titleBarRectForWindow(window);
 
     Rect bottomRect {
         window.x() - windowFrameWidth,
@@ -63,25 +71,23 @@ void WindowManager::paintWindowFrame(Window& window)
         window.height()
     };
 
-    static const Color windowBorderColor(0x00, 0x00, 0x80);
-    static const Color windowTitleColor(0xff, 0xff, 0xff);
-
     Rect borderRect {
         topRect.x() - 1, 
         topRect.y() - 1,
         topRect.width() + 2,
         windowFrameWidth + windowTitleBarHeight + window.rect().height() + 4
     };
+
     p.drawRect(borderRect, Color(255, 255, 255));
     borderRect.inflate(2, 2);
-    p.drawRect(borderRect, windowBorderColor);
+    p.drawRect(borderRect, m_windowBorderColor);
 
-    p.fillRect(topRect, windowBorderColor);
-    p.fillRect(bottomRect, windowBorderColor);
-    p.fillRect(leftRect, windowBorderColor);
-    p.fillRect(rightRect, windowBorderColor);
+    p.fillRect(topRect, m_windowBorderColor);
+    p.fillRect(bottomRect, m_windowBorderColor);
+    p.fillRect(leftRect, m_windowBorderColor);
+    p.fillRect(rightRect, m_windowBorderColor);
 
-    p.drawText(topRect, window.title(), Painter::TextAlignment::Center, windowTitleColor);
+    p.drawText(topRect, window.title(), Painter::TextAlignment::Center, m_windowTitleColor);
 }
 
 void WindowManager::addWindow(Window& window)
@@ -108,11 +114,24 @@ void WindowManager::notifyRectChanged(Window& window, const Rect& oldRect, const
         newRect.height());
 }
 
+void WindowManager::handleTitleBarMouseEvent(Window& window, MouseEvent& event)
+{
+    byte r = (((double)rand()) / (double)RAND_MAX) * 255.0;
+    byte g = (((double)rand()) / (double)RAND_MAX) * 255.0;
+    byte b = (((double)rand()) / (double)RAND_MAX) * 255.0;
+    m_windowBorderColor = Color(r, g, b);
+    paintWindowFrame(window);
+}
+
 void WindowManager::processMouseEvent(MouseEvent& event)
 {
-    // First step: hit test windows.
+    // FIXME: Respect z-order of windows...
     for (auto* window : m_windows) {
-        // FIXME: z-order...
+        if (titleBarRectForWindow(*window).contains(event.position())) {
+            handleTitleBarMouseEvent(*window, event);
+            return;
+        }
+
         if (window->rect().contains(event.position())) {
             // FIXME: Re-use the existing event instead of crafting a new one?
             auto localEvent = make<MouseEvent>(event.type(), event.x() - window->rect().x(), event.y() - window->rect().y(), event.button());
@@ -129,6 +148,13 @@ void WindowManager::processMouseEvent(MouseEvent& event)
     result.widget->event(*localEvent);
 }
 
+void WindowManager::handlePaintEvent(PaintEvent& event)
+{
+    printf("[WM] paint event\n");
+    m_rootWidget->event(event);
+    paintWindowFrames();
+}
+
 void WindowManager::event(Event& event)
 {
     if (event.isMouseEvent())
@@ -140,9 +166,8 @@ void WindowManager::event(Event& event)
         return focusedWidget->event(event);
     }
 
-    if (event.type() == Event::Paint) {
-        return m_rootWidget->event(event);
-    }
+    if (event.isPaintEvent())
+        return handlePaintEvent(static_cast<PaintEvent&>(event));
 
     return Object::event(event);
 }

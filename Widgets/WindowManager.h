@@ -2,16 +2,17 @@
 
 #include "Object.h"
 #include "Rect.h"
+#include "Color.h"
 #include <AK/HashTable.h>
 
 class MouseEvent;
+class PaintEvent;
 class Widget;
 class Window;
 
 class WindowManager : public Object {
 public:
-    static WindowManager& the();
-
+    static WindowManager& the(); 
     void addWindow(Window&);
     void paintWindowFrames();
 
@@ -26,8 +27,13 @@ private:
     ~WindowManager();
 
     void processMouseEvent(MouseEvent&);
+    void handleTitleBarMouseEvent(Window&, MouseEvent&);
+    void handlePaintEvent(PaintEvent&);
 
     virtual void event(Event&) override;
+
+    Color m_windowBorderColor;
+    Color m_windowTitleColor;
 
     void paintWindowFrame(Window&);
     HashTable<Window*> m_windows;
