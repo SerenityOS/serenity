@@ -46,6 +46,9 @@ void EventLoopSDL::waitForEvent()
         case SDL_MOUSEBUTTONDOWN:
             postEvent(&AbstractScreen::the(), make<MouseEvent>(Event::MouseDown, sdlEvent.button.x, sdlEvent.button.y, toMouseButton(sdlEvent.button.button)));
             return;
+        case SDL_MOUSEBUTTONUP:
+            postEvent(&AbstractScreen::the(), make<MouseEvent>(Event::MouseUp, sdlEvent.button.x, sdlEvent.button.y, toMouseButton(sdlEvent.button.button)));
+            return;
         }
     }
 }
