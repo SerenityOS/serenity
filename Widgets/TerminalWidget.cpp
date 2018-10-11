@@ -13,7 +13,7 @@ TerminalWidget::TerminalWidget(Widget* parent)
 {
     g_tw = this;
     
-    setRect({ 100, 300, columns() * 8, rows() * 8 });
+    setRect({ 100, 300, columns() * 8, rows() * 10 });
     printf("rekt: %d x %d\n", width(), height());
     m_screen = new CharacterWithAttributes[rows() * columns()]; 
     for (unsigned row = 0; row < m_rows; ++row) {
@@ -64,11 +64,11 @@ void TerminalWidget::onPaint(PaintEvent&)
 
     char buf[2] = { 0, 0 };
     for (unsigned row = 0; row < m_rows; ++row) {
-        int y = row * 8;
+        int y = row * 10;
         for (unsigned column = 0; column < m_columns; ++column) {
             int x = column * 8;
             buf[0] = at(row, column).character;
-            painter.drawText({ x, y, width(), 8 }, buf, Painter::TextAlignment::TopLeft, Color(0xa0, 0xa0, 0xa0));
+            painter.drawText({ x, y, width(), 10 }, buf, Painter::TextAlignment::TopLeft, Color(0xa0, 0xa0, 0xa0));
         }
     }
 }
@@ -90,7 +90,7 @@ void TerminalWidget::onReceive(byte ch)
 
     auto addChar = [&] (byte ch) {
         at(m_cursorRow, m_cursorColumn).character = ch;
-        if (++m_cursorColumn > m_columns) {
+        if (++m_cursorColumn >= m_columns) {
             m_cursorColumn = 0;
             if (m_cursorRow < (m_rows - 1)) {
                 ++m_cursorRow;
