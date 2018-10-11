@@ -4,6 +4,7 @@
 #include "Label.h"
 #include "Button.h"
 #include "TerminalWidget.h"
+#include "WindowManager.h"
 #include <cstdio>
 
 int main(int c, char** v)
@@ -15,6 +16,8 @@ int main(int c, char** v)
 
     RootWidget w;
     fb.setRootWidget(&w);
+
+    WindowManager::the();
 
     auto* l1 = new Label(&w);
     l1->setRect(Rect(100, 100, 300, 20));
@@ -37,6 +40,7 @@ int main(int c, char** v)
     b->setCaption("Button!");
 
     auto* t = new TerminalWidget(&w);
+    t->setWindowTitle("Console");
 
     return loop.exec();
 }

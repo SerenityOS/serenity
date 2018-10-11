@@ -4,6 +4,7 @@
 #include "Object.h"
 #include "Rect.h"
 #include "Color.h"
+#include <AK/String.h>
 
 class Widget : public Object {
 public:
@@ -45,10 +46,18 @@ public:
     void setBackgroundColor(Color color) { m_backgroundColor = color; }
     void setForegroundColor(Color color) { m_foregroundColor = color; }
 
+    bool isWindow() const { return m_isWindow; }
+    void setIsWindow(bool);
+
+    void setWindowTitle(String&&);
+    String windowTitle() const { return m_windowTitle; }
+
 private:
     Rect m_rect;
     Color m_backgroundColor;
     Color m_foregroundColor;
+    String m_windowTitle;
 
+    bool m_isWindow { false };
     bool m_hasPendingPaintEvent { false };
 };

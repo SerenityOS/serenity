@@ -11,6 +11,8 @@ TerminalWidget* g_tw;
 TerminalWidget::TerminalWidget(Widget* parent)
     : Widget(parent)
 {
+    setIsWindow(true);
+
     g_tw = this;
     
     setRect({ 100, 300, columns() * 8, rows() * 10 });
