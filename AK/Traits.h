@@ -21,5 +21,11 @@ struct Traits<unsigned> {
     static void dump(unsigned u) { printf("%u", u); }
 };
 
+template<typename T>
+struct Traits<T*> {
+    static unsigned hash(const T* p) { return (unsigned)p; }
+    static void dump(const T* p) { printf("%p", p); }
+};
+
 }
 
