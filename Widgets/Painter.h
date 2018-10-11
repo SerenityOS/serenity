@@ -13,6 +13,7 @@ public:
     explicit Painter(Widget&);
     ~Painter();
     void fillRect(const Rect&, Color);
+    void drawRect(const Rect&, Color);
     void drawText(const Rect&, const String&, TextAlignment = TextAlignment::TopLeft, const Color& = Color());
 
 private:

@@ -15,7 +15,8 @@ TerminalWidget::TerminalWidget(Widget* parent)
 
     g_tw = this;
     
-    setRect({ 100, 300, columns() * 8, rows() * 10 });
+    setRect({ 100, 300, (columns() * 8) + 4, (rows() * 10) + 4 });
+
     printf("rekt: %d x %d\n", width(), height());
     m_screen = new CharacterWithAttributes[rows() * columns()]; 
     for (unsigned row = 0; row < m_rows; ++row) {
@@ -70,7 +71,7 @@ void TerminalWidget::onPaint(PaintEvent&)
         for (unsigned column = 0; column < m_columns; ++column) {
             int x = column * 8;
             buf[0] = at(row, column).character;
-            painter.drawText({ x, y, width(), 10 }, buf, Painter::TextAlignment::TopLeft, Color(0xa0, 0xa0, 0xa0));
+            painter.drawText({ x + 2, y + 2, width(), 10 }, buf, Painter::TextAlignment::TopLeft, Color(0xa0, 0xa0, 0xa0));
         }
     }
 }
