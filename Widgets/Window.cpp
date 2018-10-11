@@ -1,5 +1,6 @@
 #include "Window.h"
 #include "WindowManager.h"
+#include "Event.h"
 
 Window::Window(Object* parent)
     : Object(parent)
@@ -36,4 +37,15 @@ void Window::setRect(const Rect& rect)
     auto oldRect = m_rect;
     m_rect = rect;
     WindowManager::the().notifyRectChanged(*this, oldRect, m_rect);
+}
+
+void Window::event(Event& event)
+{
+    if (event.isMouseEvent()) {
+        auto& me = static_cast<MouseEvent&>(event);
+        printf("Window{%p}: %s %d,%d\n", this, me.name(), me.x(), me.y());
+        return Object::event(event);
+    }
+
+    return Object::event(event);
 }
