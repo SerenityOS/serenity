@@ -3,7 +3,14 @@
 #include "Widget.h"
 #include <AK/Assertions.h>
 #include <SDL.h>
+
+#if 0
 #include "Peanut8x8.h"
+#define FONT_NAMESPACE Peanut8x8
+#else
+#include "Peanut8x10.h"
+#define FONT_NAMESPACE Peanut8x10
+#endif
 
 Painter::Painter(Widget& widget)
     : m_widget(widget)
@@ -43,29 +50,29 @@ void Painter::drawText(const Rect& rect, const String& text, TextAlignment align
         point = rect.location();
         point.moveBy(m_widget.x(), m_widget.y());;
     } else if (alignment == TextAlignment::Center) {
-        int textWidth = text.length() * Peanut8x8::fontWidth;
+        int textWidth = text.length() * FONT_NAMESPACE::fontWidth;
         point = rect.center();
-        point.moveBy(-(textWidth / 2), -(Peanut8x8::fontWidth / 2));
+        point.moveBy(-(textWidth / 2), -(FONT_NAMESPACE::fontWidth / 2));
         point.moveBy(m_widget.x(), m_widget.y());
     } else {
         ASSERT_NOT_REACHED();
     }
 
-    for (int row = 0; row < Peanut8x8::fontHeight; ++row) {
+    for (int row = 0; row < FONT_NAMESPACE::fontHeight; ++row) {
         int y = point.y() + row;
         dword* bits = scanline(y);
         for (unsigned i = 0; i < text.length(); ++i) {
             byte ch = text[i];
             if (ch == ' ')
                 continue;
-            if (ch < Peanut8x8::firstCharacter || ch > Peanut8x8::lastCharacter) {
+            if (ch < FONT_NAMESPACE::firstCharacter || ch > FONT_NAMESPACE::lastCharacter) {
                 printf("Font doesn't have 0x%02x ('%c')\n", ch, ch);
                 ASSERT_NOT_REACHED();
             }
-            const char* fontCharacter = Peanut8x8::font[ch - Peanut8x8::firstCharacter];
-            int x = point.x() + i * Peanut8x8::fontWidth;
-            for (unsigned j = 0; j < Peanut8x8::fontWidth; ++j) {
-                char fc = fontCharacter[row * Peanut8x8::fontWidth + j];
+            const char* fontCharacter = FONT_NAMESPACE::font[ch - FONT_NAMESPACE::firstCharacter];
+            int x = point.x() + i * FONT_NAMESPACE::fontWidth;
+            for (unsigned j = 0; j < FONT_NAMESPACE::fontWidth; ++j) {
+                char fc = fontCharacter[row * FONT_NAMESPACE::fontWidth + j];
                 if (fc == '#')
                     bits[x + j] = color.value();
             }
