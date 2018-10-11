@@ -771,8 +771,8 @@ static constexpr const char* font[] {
     "        "
     "    ### "
     "   #    "
-    "   #    "
     "  ####  "
+    "   #    "
     "   #    "
     "   #    "
     "   #    "
@@ -790,11 +790,11 @@ static constexpr const char* font[] {
     "      # "
     "  ####  ",
 
-    "        "
     " #      "
     " #      "
     " #      "
     " #####  "
+    " #    # "
     " #    # "
     " #    # "
     " #    # "
@@ -887,7 +887,7 @@ static constexpr const char* font[] {
     " #    # "
     " #####  "
     " #      "
-    "###     ",
+    " #      ",
 
     "        "
     "        "
@@ -898,7 +898,7 @@ static constexpr const char* font[] {
     " #    # "
     "  ##### "
     "      # "
-    "     ###",
+    "      # ",
 
     "        "
     "        "
@@ -925,8 +925,8 @@ static constexpr const char* font[] {
     "        "
     "   #    "
     "   #    "
+    " #####  "
     "   #    "
-    "  ####  "
     "   #    "
     "   #    "
     "   #    "
