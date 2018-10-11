@@ -4,6 +4,7 @@
 #include "Rect.h"
 #include <AK/HashTable.h>
 
+class MouseEvent;
 class Widget;
 class Window;
 
@@ -23,6 +24,8 @@ public:
 private:
     WindowManager();
     ~WindowManager();
+
+    void processMouseEvent(MouseEvent&);
 
     virtual void event(Event&) override;
 
