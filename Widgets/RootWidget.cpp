@@ -16,7 +16,6 @@ void RootWidget::onPaint(PaintEvent& event)
     //printf("RootWidget::onPaint\n");
     Painter painter(*this);
     painter.fillRect(Rect(0, 0, 800, 600), Color(0x40, 0x40, 0x40));
-    WindowManager::the().paintWindowFrames();
     Widget::onPaint(event);
 }
 

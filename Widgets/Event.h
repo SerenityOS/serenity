@@ -40,6 +40,7 @@ public:
 
     bool isMouseEvent() const { return m_type == MouseMove || m_type == MouseDown || m_type == MouseUp; }
     bool isKeyEvent() const { return m_type == KeyUp || m_type == KeyDown; }
+    bool isPaintEvent() const { return m_type == Paint; }
 
 protected:
     explicit Event(Type type) : m_type(type) { }
