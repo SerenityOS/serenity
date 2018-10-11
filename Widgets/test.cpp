@@ -16,9 +16,7 @@ int main(int c, char** v)
     EventLoopSDL loop;
 
     RootWidget w;
-    fb.setRootWidget(&w);
-
-    WindowManager::the();
+    WindowManager::the().setRootWidget(&w);
 
     auto* l1 = new Label(&w);
     l1->setRect(Rect(100, 100, 300, 20));
