@@ -3,6 +3,7 @@
 #include "RootWidget.h"
 #include "Label.h"
 #include "Button.h"
+#include "TerminalWidget.h"
 #include <cstdio>
 
 int main(int c, char** v)
@@ -31,13 +32,11 @@ int main(int c, char** v)
     l4->setRect(Rect(100, 160, 300, 20));
     l4->setText("!\"#$%&'()*+,-./:;<=>?@[\\]^_{|}~");
 
-    auto* l5 = new Label(&w);
-    l5->setRect(Rect(200, 200, 400, 50));
-    l5->setText("Welcome to the Serenity Operating System");
-
     auto* b = new Button(&w);
     b->setRect(Rect(10, 10, 100, 30));
     b->setCaption("Button!");
+
+    auto* t = new TerminalWidget(&w);
 
     return loop.exec();
 }
