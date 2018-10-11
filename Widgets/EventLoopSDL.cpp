@@ -1,9 +1,9 @@
 #include "EventLoopSDL.h"
 #include "Event.h"
 #include <SDL.h>
-#include "AbstractScreen.h"
 #include "Widget.h"
 #include "TerminalWidget.h"
+#include "WindowManager.h"
 #include <unistd.h>
 
 int g_fd;
@@ -46,23 +46,23 @@ void EventLoopSDL::waitForEvent()
             if (sdlEvent.window.event == SDL_WINDOWEVENT_EXPOSED) {
                 // Spam paint events whenever we get exposed.
                 // This is obviously not ideal, but the SDL backend here is just a prototype anyway.
-                postEvent(AbstractScreen::the().rootWidget(), make<PaintEvent>());
+                postEvent(&WindowManager::the(), make<PaintEvent>());
             }
             return;
         case SDL_MOUSEMOTION:
-            postEvent(&AbstractScreen::the(), make<MouseEvent>(Event::MouseMove, sdlEvent.motion.x, sdlEvent.motion.y));
+            postEvent(&WindowManager::the(), make<MouseEvent>(Event::MouseMove, sdlEvent.motion.x, sdlEvent.motion.y));
             return;
         case SDL_MOUSEBUTTONDOWN:
-            postEvent(&AbstractScreen::the(), make<MouseEvent>(Event::MouseDown, sdlEvent.button.x, sdlEvent.button.y, toMouseButton(sdlEvent.button.button)));
+            postEvent(&WindowManager::the(), make<MouseEvent>(Event::MouseDown, sdlEvent.button.x, sdlEvent.button.y, toMouseButton(sdlEvent.button.button)));
             return;
         case SDL_MOUSEBUTTONUP:
-            postEvent(&AbstractScreen::the(), make<MouseEvent>(Event::MouseUp, sdlEvent.button.x, sdlEvent.button.y, toMouseButton(sdlEvent.button.button)));
+            postEvent(&WindowManager::the(), make<MouseEvent>(Event::MouseUp, sdlEvent.button.x, sdlEvent.button.y, toMouseButton(sdlEvent.button.button)));
             return;
         case SDL_KEYDOWN:
-            postEvent(&AbstractScreen::the(), make<KeyEvent>(Event::KeyDown, toKey(sdlEvent.key.keysym)));
+            postEvent(&WindowManager::the(), make<KeyEvent>(Event::KeyDown, toKey(sdlEvent.key.keysym)));
             return;
         case SDL_KEYUP:
-            postEvent(&AbstractScreen::the(), make<KeyEvent>(Event::KeyUp, toKey(sdlEvent.key.keysym)));
+            postEvent(&WindowManager::the(), make<KeyEvent>(Event::KeyUp, toKey(sdlEvent.key.keysym)));
             return;
         }
     }
