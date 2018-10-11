@@ -3,6 +3,11 @@
 #include <SDL.h>
 #include "AbstractScreen.h"
 #include "Widget.h"
+#include "TerminalWidget.h"
+#include <unistd.h>
+
+int g_fd;
+extern TerminalWidget* g_tw;
 
 EventLoopSDL::EventLoopSDL()
 {
@@ -14,7 +19,6 @@ EventLoopSDL::~EventLoopSDL()
 
 static inline MouseButton toMouseButton(byte sdlButton)
 {
-    printf("sdlbutton = %u\n", sdlButton);
     if (sdlButton == 1)
         return MouseButton::Left;
     if (sdlButton == 2)
@@ -25,10 +29,15 @@ static inline MouseButton toMouseButton(byte sdlButton)
     return MouseButton::None;
 }
 
+static inline int toKey(const SDL_Keysym& sym)
+{
+    return sym.sym;
+}
+
 void EventLoopSDL::waitForEvent()
 {
     SDL_Event sdlEvent;
-    while (SDL_WaitEvent(&sdlEvent) != 0) {
+    while (SDL_PollEvent(&sdlEvent) != 0) {
         switch (sdlEvent.type) {
         case SDL_QUIT:
             postEvent(nullptr, make<QuitEvent>());
@@ -49,7 +58,28 @@ void EventLoopSDL::waitForEvent()
         case SDL_MOUSEBUTTONUP:
             postEvent(&AbstractScreen::the(), make<MouseEvent>(Event::MouseUp, sdlEvent.button.x, sdlEvent.button.y, toMouseButton(sdlEvent.button.button)));
             return;
+        case SDL_KEYDOWN:
+            postEvent(&AbstractScreen::the(), make<KeyEvent>(Event::KeyDown, toKey(sdlEvent.key.keysym)));
+            return;
+        case SDL_KEYUP:
+            postEvent(&AbstractScreen::the(), make<KeyEvent>(Event::KeyUp, toKey(sdlEvent.key.keysym)));
+            return;
         }
+    }
+
+    fd_set rfds;
+    FD_ZERO(&rfds);
+    FD_SET(g_fd, &rfds);
+
+    struct timeval tv = { 0, 5000 };
+    int rc = select(g_fd + 1, &rfds, NULL, NULL, &tv);
+
+    //printf("select{%d} = %d\n", g_fd, rc);
+
+    if (rc > 0) {
+        byte buf[1024];
+        int nread = read(g_fd, buf, sizeof(buf));
+        g_tw->onReceive(ByteBuffer::wrap(buf, nread));
     }
 }
 
