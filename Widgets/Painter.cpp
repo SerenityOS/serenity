@@ -78,12 +78,12 @@ void Painter::drawText(const Rect& rect, const String& text, TextAlignment align
             if (ch == ' ')
                 continue;
             const char* glyph = m_font.glyph(ch);
-            if (!ch) {
+            if (!glyph) {
                 printf("Font doesn't have 0x%02x ('%c')\n", ch, ch);
                 ASSERT_NOT_REACHED();
             }
             int x = point.x() + i * m_font.glyphWidth();
-            for (unsigned j = 0; j < m_font.glyphWidth(); ++j) {
+            for (int j = 0; j < m_font.glyphWidth(); ++j) {
                 char fc = glyph[row * m_font.glyphWidth() + j];
                 if (fc == '#')
                     bits[x + j] = color.value();

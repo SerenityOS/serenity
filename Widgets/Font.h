@@ -11,16 +11,16 @@ public:
 
     const char* glyph(char) const;
 
-    unsigned glyphWidth() const { return m_glyphWidth; }
-    unsigned glyphHeight() const { return m_glyphHeight; }
+    byte glyphWidth() const { return m_glyphWidth; }
+    byte glyphHeight() const { return m_glyphHeight; }
 
 private:
-    Font(const char* const* glyphs, unsigned glyphWidth, unsigned glyphHeight, byte firstGlyph, byte lastGlyph);
+    Font(const char* const* glyphs, byte glyphWidth, byte glyphHeight, byte firstGlyph, byte lastGlyph);
 
     const char* const* m_glyphs { nullptr };
 
-    unsigned m_glyphWidth { 0 };
-    unsigned m_glyphHeight { 0 };
+    byte m_glyphWidth { 0 };
+    byte m_glyphHeight { 0 };
 
     byte m_firstGlyph { 0 };
     byte m_lastGlyph { 0 };
