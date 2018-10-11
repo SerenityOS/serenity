@@ -17,6 +17,12 @@ public:
         m_y += dy;
     }
 
+    bool operator==(const Point& other) const
+    {
+        return m_x == other.m_x
+            && m_y == other.m_y;
+    }
+
 private:
     int m_x { 0 };
     int m_y { 0 };

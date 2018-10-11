@@ -5,6 +5,7 @@
 #include "Button.h"
 #include "TerminalWidget.h"
 #include "WindowManager.h"
+#include "Window.h"
 #include <cstdio>
 
 int main(int c, char** v)
@@ -39,8 +40,12 @@ int main(int c, char** v)
     b->setRect(Rect(10, 10, 100, 30));
     b->setCaption("Button!");
 
+    auto* win = new Window;
+    win->setTitle("Console");
+    win->setRect({100, 300, 644, 254});
+
     auto* t = new TerminalWidget(&w);
-    t->setWindowTitle("Console");
+    win->setMainWidget(t);
 
     return loop.exec();
 }

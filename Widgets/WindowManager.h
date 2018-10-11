@@ -1,24 +1,26 @@
 #pragma once
 
-class Widget;
+class Window;
 
 #include "Object.h"
+#include "Rect.h"
 #include <AK/HashTable.h>
 
 class WindowManager : public Object {
 public:
     static WindowManager& the();
 
-    void addWindow(Widget&);
+    void addWindow(Window&);
     void paintWindowFrames();
 
-    void notifyTitleChanged(Widget&);
+    void notifyTitleChanged(Window&);
+    void notifyRectChanged(Window&, const Rect& oldRect, const Rect& newRect);
 
 private:
     WindowManager();
     ~WindowManager();
 
-    void paintWindowFrame(Widget&);
+    void paintWindowFrame(Window&);
 
-    HashTable<Widget*> m_windows;
+    HashTable<Window*> m_windows;
 };

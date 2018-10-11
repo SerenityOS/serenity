@@ -6,6 +6,8 @@
 #include "Color.h"
 #include <AK/String.h>
 
+class Window;
+
 class Widget : public Object {
 public:
     explicit Widget(Widget* parent = nullptr);
@@ -46,18 +48,29 @@ public:
     void setBackgroundColor(Color color) { m_backgroundColor = color; }
     void setForegroundColor(Color color) { m_foregroundColor = color; }
 
-    bool isWindow() const { return m_isWindow; }
-    void setIsWindow(bool);
+    Window* window()
+    {
+        if (auto* pw = parentWidget())
+            return pw->window();
+        return m_window;
+    }
 
-    void setWindowTitle(String&&);
-    String windowTitle() const { return m_windowTitle; }
+    const Window* window() const
+    {
+        if (auto* pw = parentWidget())
+            return pw->window();
+        return m_window;
+    }
+
+    Widget* parentWidget() { return static_cast<Widget*>(parent()); }
+    const Widget* parentWidget() const { return static_cast<const Widget*>(parent()); }
 
 private:
+    Window* m_window { nullptr };
+
     Rect m_rect;
     Color m_backgroundColor;
     Color m_foregroundColor;
-    String m_windowTitle;
 
-    bool m_isWindow { false };
     bool m_hasPendingPaintEvent { false };
 };

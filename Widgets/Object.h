@@ -15,6 +15,9 @@ public:
 
     Vector<Object*>& children() { return m_children; }
 
+    Object* parent() { return m_parent; }
+    const Object* parent() const { return m_parent; }
+
 private:
     void addChild(Object&);
     void removeChild(Object&);

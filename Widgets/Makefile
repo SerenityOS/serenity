@@ -21,6 +21,7 @@ VFS_OBJS = \
     TerminalWidget.o \
     WindowManager.o \
     Font.o \
+    Window.o \
     test.o
 
 OBJS = $(AK_OBJS) $(VFS_OBJS)
