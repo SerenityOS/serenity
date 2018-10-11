@@ -23,7 +23,8 @@ public:
     {
         if (!m_elements)
             return;
-        kfree(m_elements);
+        if (m_owned)
+            kfree(m_elements);
         m_elements = nullptr;
     }
 
