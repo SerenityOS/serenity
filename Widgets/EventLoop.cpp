@@ -29,7 +29,7 @@ int EventLoop::exec()
         for (auto& queuedEvent : events) {
             auto* receiver = queuedEvent.receiver;
             auto& event = *queuedEvent.event;
-            printf("EventLoop: Object{%p} event %u (%s)\n", receiver, (unsigned)event.type(), event.name());
+            //printf("EventLoop: Object{%p} event %u (%s)\n", receiver, (unsigned)event.type(), event.name());
             if (!receiver) {
                 switch (event.type()) {
                 case Event::Quit:

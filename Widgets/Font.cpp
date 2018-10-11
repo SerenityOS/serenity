@@ -9,7 +9,7 @@ Font& Font::defaultFont()
     return *f;
 }
 
-Font::Font(const char* const* glyphs, unsigned glyphWidth, unsigned glyphHeight, byte firstGlyph, byte lastGlyph)
+Font::Font(const char* const* glyphs, byte glyphWidth, byte glyphHeight, byte firstGlyph, byte lastGlyph)
     : m_glyphs(glyphs)
     , m_glyphWidth(glyphWidth)
     , m_glyphHeight(glyphHeight)

@@ -1,4 +1,5 @@
 #include "TerminalWidget.h"
+#include "Font.h"
 #include "Painter.h"
 #include <unistd.h>
 #include <signal.h>
@@ -14,8 +15,10 @@ TerminalWidget::TerminalWidget(Widget* parent)
     setIsWindow(true);
 
     g_tw = this;
+
+    auto& font = Font::defaultFont();
     
-    setRect({ 100, 300, (columns() * 8) + 4, (rows() * 10) + 4 });
+    setRect({ 100, 300, (columns() * font.glyphWidth()) + 4, (rows() * font.glyphHeight()) + 4 });
 
     printf("rekt: %d x %d\n", width(), height());
     m_screen = new CharacterWithAttributes[rows() * columns()]; 
@@ -62,16 +65,17 @@ CharacterWithAttributes& TerminalWidget::at(unsigned row, unsigned column)
 void TerminalWidget::onPaint(PaintEvent&)
 {
     Painter painter(*this);
-
     painter.fillRect({ 0, 0, width(), height() }, Color(0, 0, 0));
+
+    auto& font = Font::defaultFont();
 
     char buf[2] = { 0, 0 };
     for (unsigned row = 0; row < m_rows; ++row) {
-        int y = row * 10;
+        int y = row * font.glyphHeight();
         for (unsigned column = 0; column < m_columns; ++column) {
-            int x = column * 8;
+            int x = column * font.glyphWidth();
             buf[0] = at(row, column).character;
-            painter.drawText({ x + 2, y + 2, width(), 10 }, buf, Painter::TextAlignment::TopLeft, Color(0xa0, 0xa0, 0xa0));
+            painter.drawText({ x + 2, y + 2, width(), font.glyphHeight() }, buf, Painter::TextAlignment::TopLeft, Color(0xa0, 0xa0, 0xa0));
         }
     }
 }
