@@ -18,6 +18,7 @@ VFS_OBJS = \
     Painter.o \
     Label.o \
     Button.o \
+    TerminalWidget.o \
     test.o
 
 OBJS = $(AK_OBJS) $(VFS_OBJS)
