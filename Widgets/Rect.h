@@ -57,6 +57,13 @@ public:
 
     Point location() const { return m_location; }
 
+    bool operator==(const Rect& other) const
+    {
+        return m_location == other.m_location
+            && m_width == other.m_width
+            && m_height == other.m_height;
+    }
+
 private:
     Point m_location;
     int m_width { 0 };

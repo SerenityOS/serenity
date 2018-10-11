@@ -12,8 +12,6 @@ TerminalWidget* g_tw;
 TerminalWidget::TerminalWidget(Widget* parent)
     : Widget(parent)
 {
-    setIsWindow(true);
-
     g_tw = this;
 
     auto& font = Font::defaultFont();

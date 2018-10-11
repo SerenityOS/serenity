@@ -22,17 +22,6 @@ void Widget::setRect(const Rect& rect)
     update();
 }
 
-void Widget::setIsWindow(bool value)
-{
-    if (m_isWindow == value)
-        return;
-    m_isWindow = value;
-    if (m_isWindow) {
-        WindowManager::the().addWindow(*this);
-    }
-    update();
-}
-
 void Widget::event(Event& event)
 {
     switch (event.type()) {
@@ -116,10 +105,3 @@ Widget::HitTestResult Widget::hitTest(int x, int y)
     return { this, x, y };
 }
 
-void Widget::setWindowTitle(String&& title)
-{
-    if (title == m_windowTitle)
-        return;
-    m_windowTitle = std::move(title);
-    WindowManager::the().notifyTitleChanged(*this);
-}
