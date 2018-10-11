@@ -116,6 +116,7 @@ void WindowManager::processMouseEvent(MouseEvent& event)
         if (window->rect().contains(event.position())) {
             // FIXME: Re-use the existing event instead of crafting a new one?
             auto localEvent = make<MouseEvent>(event.type(), event.x() - window->rect().x(), event.y() - window->rect().y(), event.button());
+            window->event(*localEvent);
             return;
         }
     }

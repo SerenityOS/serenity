@@ -6,7 +6,7 @@
 
 class Widget;
 
-class Window : public Object {
+class Window final : public Object {
 public:
     explicit Window(Object* parent = nullptr);
     virtual ~Window() override;
@@ -26,6 +26,8 @@ public:
     const Widget* mainWidget() const { return m_mainWidget; }
 
     void setMainWidget(Widget*);
+
+    virtual void event(Event&) override;
 
 private:
     String m_title;
