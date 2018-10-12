@@ -80,17 +80,14 @@ void Painter::xorRect(const Rect& rect, Color color)
     }
 }
 
-void Painter::drawBitmap(const Point& point, const char* bitmap, const Size& bitmapSize, Color color)
+void Painter::drawBitmap(const Point& point, const CBitmap& bitmap, Color color)
 {
-    ASSERT(bitmap);
-    ASSERT(!bitmapSize.isEmpty());
-
-    for (int row = 0; row < bitmapSize.height(); ++row) {
+    for (unsigned row = 0; row < bitmap.height(); ++row) {
         int y = point.y() + row;
         int x = point.x();
         dword* bits = scanline(y);
-        for (int j = 0; j < bitmapSize.width(); ++j) {
-            char fc = bitmap[row * bitmapSize.width() + j];
+        for (unsigned j = 0; j < bitmap.width(); ++j) {
+            char fc = bitmap.bits()[row * bitmap.width() + j];
             if (fc == '#')
                 bits[x + j] = color.value();
         }
@@ -117,14 +114,14 @@ void Painter::drawText(const Rect& rect, const String& text, TextAlignment align
         byte ch = text[i];
         if (ch == ' ')
             continue;
-        const char* glyph = m_font.glyph(ch);
-        if (!glyph) {
+        auto* bitmap = m_font.glyphBitmap(ch);
+        if (!bitmap) {
             printf("Font doesn't have 0x%02x ('%c')\n", ch, ch);
             ASSERT_NOT_REACHED();
         }
         int x = point.x() + i * m_font.glyphWidth();
         int y = point.y();
-        drawBitmap({ x, y }, glyph, { m_font.glyphWidth(), m_font.glyphHeight() }, color);
+        drawBitmap({ x, y }, *bitmap, color);
     }
 }
 

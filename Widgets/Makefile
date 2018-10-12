@@ -23,6 +23,7 @@ VFS_OBJS = \
     Font.o \
     Window.o \
     ClockWidget.o \
+    CBitmap.o \
     test.o
 
 OBJS = $(AK_OBJS) $(VFS_OBJS)
