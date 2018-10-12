@@ -44,21 +44,27 @@ int main(int argc, char** argv)
     l4->setWindowRelativeRect({ 0, 60, 300, 20 });
     l4->setText("!\"#$%&'()*+,-./:;<=>?@[\\]^_{|}~");
 
-    auto* widgetTestWindow = new Window;
-    widgetTestWindow->setTitle("Widget test");
-    widgetTestWindow->setRect({ 20, 40, 100, 100 });
+    {
+        auto* widgetTestWindow = new Window;
+        widgetTestWindow->setTitle("Widget test");
+        widgetTestWindow->setRect({ 20, 40, 100, 60 });
 
-    auto* widgetTestWindowWidget = new Widget;
-    widgetTestWindowWidget->setWindowRelativeRect({ 0, 0, 100, 100 });
-    widgetTestWindow->setMainWidget(widgetTestWindowWidget);
-    
-    auto* b = new Button(widgetTestWindowWidget);
-    b->setWindowRelativeRect({ 0, 0, 100, 30 });
-    b->setCaption("Button");
+        auto* widgetTestWindowWidget = new Widget;
+        widgetTestWindowWidget->setWindowRelativeRect({ 0, 0, 100, 100 });
+        widgetTestWindow->setMainWidget(widgetTestWindowWidget);
 
-    auto* c = new CheckBox(widgetTestWindowWidget);
-    c->setWindowRelativeRect({ 0, 30, 100, 30 });
-    c->setCaption("CheckBox");
+        auto* l = new Label(widgetTestWindowWidget);
+        l->setWindowRelativeRect({ 0, 0, 100, 20 });
+        l->setText("Label");
+
+        auto* b = new Button(widgetTestWindowWidget);
+        b->setWindowRelativeRect({ 0, 20, 100, 20 });
+        b->setCaption("Button");
+
+        auto* c = new CheckBox(widgetTestWindowWidget);
+        c->setWindowRelativeRect({ 0, 40, 100, 20 });
+        c->setCaption("CheckBox");
+    }
 
     auto* win = new Window;
     win->setTitle("Console");
