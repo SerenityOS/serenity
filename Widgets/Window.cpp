@@ -1,6 +1,7 @@
 #include "Window.h"
 #include "WindowManager.h"
 #include "Event.h"
+#include "Widget.h"
 
 Window::Window(Object* parent)
     : Object(parent)
@@ -18,6 +19,7 @@ void Window::setMainWidget(Widget* widget)
         return;
 
     m_mainWidget = widget;
+    widget->setWindow(this);
 }
 
 void Window::setTitle(String&& title)
@@ -45,6 +47,13 @@ void Window::event(Event& event)
         auto& me = static_cast<MouseEvent&>(event);
         printf("Window{%p}: %s %d,%d\n", this, me.name(), me.x(), me.y());
         return Object::event(event);
+    }
+
+    if (event.isPaintEvent()) {
+        if (m_mainWidget) {
+            printf("forward to main widget\n");
+            return m_mainWidget->event(event);
+        }
     }
 
     return Object::event(event);

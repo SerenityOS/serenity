@@ -22,6 +22,11 @@ public:
         m_location.moveBy(dx, dy);
     }
 
+    void moveBy(const Point& delta)
+    {
+        m_location.moveBy(delta);
+    }
+
     Point center() const
     {
         return { x() + width() / 2, y() + height() / 2 };

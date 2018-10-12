@@ -62,6 +62,8 @@ public:
         return m_window;
     }
 
+    void setWindow(Window*);
+
     Widget* parentWidget() { return static_cast<Widget*>(parent()); }
     const Widget* parentWidget() const { return static_cast<const Widget*>(parent()); }
 

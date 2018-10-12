@@ -2,6 +2,7 @@
 #include "FrameBufferSDL.h"
 #include "Widget.h"
 #include "Font.h"
+#include "Window.h"
 #include <AK/Assertions.h>
 #include <SDL.h>
 
@@ -9,6 +10,14 @@ Painter::Painter(Widget& widget)
     : m_widget(widget)
     , m_font(Font::defaultFont())
 {
+    if (auto* window = widget.window()) {
+        printf("window :: %s\n", window->title().characters());
+        m_translation.setX(window->x());
+        m_translation.setY(window->y());
+    } else {
+        m_translation.setX(widget.x());
+        m_translation.setY(widget.y());
+    }
 }
 
 Painter::~Painter()
@@ -26,7 +35,7 @@ static dword* scanline(int y)
 void Painter::fillRect(const Rect& rect, Color color)
 {
     Rect r = rect;
-    r.moveBy(m_widget.x(), m_widget.y());
+    r.moveBy(m_translation);
 
     for (int y = r.top(); y < r.bottom(); ++y) {
         dword* bits = scanline(y);
@@ -39,7 +48,7 @@ void Painter::fillRect(const Rect& rect, Color color)
 void Painter::drawRect(const Rect& rect, Color color)
 {
     Rect r = rect;
-    r.moveBy(m_widget.x(), m_widget.y());
+    r.moveBy(m_translation);
 
     for (int y = r.top(); y < r.bottom(); ++y) {
         dword* bits = scanline(y);
@@ -57,7 +66,7 @@ void Painter::drawRect(const Rect& rect, Color color)
 void Painter::xorRect(const Rect& rect, Color color)
 {
     Rect r = rect;
-    r.moveBy(m_widget.x(), m_widget.y());
+    r.moveBy(m_translation);
 
     for (int y = r.top(); y < r.bottom(); ++y) {
         dword* bits = scanline(y);
@@ -79,12 +88,12 @@ void Painter::drawText(const Rect& rect, const String& text, TextAlignment align
     
     if (alignment == TextAlignment::TopLeft) {
         point = rect.location();
-        point.moveBy(m_widget.x(), m_widget.y());
+        point.moveBy(m_translation);
     } else if (alignment == TextAlignment::Center) {
         int textWidth = text.length() * m_font.glyphWidth();
         point = rect.center();
         point.moveBy(-(textWidth / 2), -(m_font.glyphWidth() / 2));
-        point.moveBy(m_widget.x(), m_widget.y());
+        point.moveBy(m_translation);
     } else {
         ASSERT_NOT_REACHED();
     }
