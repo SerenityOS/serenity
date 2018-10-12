@@ -8,6 +8,7 @@
 #include "Window.h"
 #include "ClockWidget.h"
 #include "CheckBox.h"
+#include "ListBox.h"
 #include <cstdio>
 
 int main(int argc, char** argv)
@@ -47,7 +48,7 @@ int main(int argc, char** argv)
     {
         auto* widgetTestWindow = new Window;
         widgetTestWindow->setTitle("Widget test");
-        widgetTestWindow->setRect({ 20, 40, 100, 60 });
+        widgetTestWindow->setRect({ 20, 40, 100, 160 });
 
         auto* widgetTestWindowWidget = new Widget;
         widgetTestWindowWidget->setWindowRelativeRect({ 0, 0, 100, 100 });
@@ -64,6 +65,13 @@ int main(int argc, char** argv)
         auto* c = new CheckBox(widgetTestWindowWidget);
         c->setWindowRelativeRect({ 0, 40, 100, 20 });
         c->setCaption("CheckBox");
+
+        auto *lb = new ListBox(widgetTestWindowWidget);
+        lb->setWindowRelativeRect({0, 60, 100, 100 });
+        lb->addItem("This");
+        lb->addItem("is");
+        lb->addItem("a");
+        lb->addItem("ListBox");
     }
 
     auto* win = new Window;
