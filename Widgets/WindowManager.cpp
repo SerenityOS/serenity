@@ -124,6 +124,7 @@ void WindowManager::handleTitleBarMouseEvent(Window& window, MouseEvent& event)
         m_dragWindow = &window;
         m_dragOrigin = event.position();
         m_dragWindowOrigin = window.position();
+        window.setIsBeingDragged(true);
         return;
     }
 #if 0
@@ -140,6 +141,7 @@ void WindowManager::processMouseEvent(MouseEvent& event)
     if (event.type() == Event::MouseUp) {
         if (m_dragWindow) {
             printf("[WM] Finish dragging Window{%p}\n", m_dragWindow);
+            m_dragWindow->setIsBeingDragged(false);
             m_dragWindow = nullptr;
             EventLoop::main().postEvent(this, make<PaintEvent>());
             return;

@@ -22,11 +22,12 @@ VFS_OBJS = \
     WindowManager.o \
     Font.o \
     Window.o \
+    ClockWidget.o \
     test.o
 
 OBJS = $(AK_OBJS) $(VFS_OBJS)
 
-CXXFLAGS = -std=c++17 -O0 -W -Wall -Wextra -Wconversion -I. -I.. -g `sdl2-config --cflags`
+CXXFLAGS = -std=c++17 -O0 -W -Wall -Wextra -Wconversion -I. -I.. -g `sdl2-config --cflags` -DUSE_SDL
 
 LDFLAGS = `sdl2-config --libs`
 

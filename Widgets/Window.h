@@ -32,9 +32,13 @@ public:
 
     virtual void event(Event&) override;
 
+    bool isBeingDragged() const { return m_isBeingDragged; }
+    void setIsBeingDragged(bool b) { m_isBeingDragged = b; }
+
 private:
     String m_title;
     Rect m_rect;
     Widget* m_mainWidget { nullptr };
+    bool m_isBeingDragged { false };
 };
 

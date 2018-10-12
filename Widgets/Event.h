@@ -14,6 +14,7 @@ static const char* eventNames[] = {
     "MouseUp",
     "KeyDown",
     "KeyUp",
+    "Timer",
 };
 
 class Event {
@@ -29,6 +30,7 @@ public:
         MouseUp,
         KeyDown,
         KeyUp,
+        Timer,
     };
 
     Event() { }
@@ -88,7 +90,7 @@ enum class MouseButton : byte {
     Right,
 };
 
-class KeyEvent : public Event {
+class KeyEvent final : public Event {
 public:
     KeyEvent(Type type, int key)
         : Event(type)
@@ -102,7 +104,7 @@ private:
     int m_key { 0 };
 };
 
-class MouseEvent : public Event {
+class MouseEvent final : public Event {
 public:
     MouseEvent(Type type, int x, int y, MouseButton button = MouseButton::None)
         : Event(type)
@@ -119,5 +121,11 @@ public:
 private:
     Point m_position;
     MouseButton m_button { MouseButton::None };
+};
+
+class TimerEvent final : public Event {
+public:
+    TimerEvent() : Event(Event::Timer) { }
+    ~TimerEvent() { }
 };
 

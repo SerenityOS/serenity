@@ -2,6 +2,7 @@
 #include "Event.h"
 #include "EventLoop.h"
 #include "WindowManager.h"
+#include "Window.h"
 #include <AK/Assertions.h>
 
 Widget::Widget(Widget* parent)
@@ -26,6 +27,10 @@ void Widget::event(Event& event)
 {
     switch (event.type()) {
     case Event::Paint:
+        if (auto* win = window()) {
+            if (win->isBeingDragged())
+                return;
+        }
         m_hasPendingPaintEvent = false;
         return onPaint(static_cast<PaintEvent&>(event));
     case Event::Show:

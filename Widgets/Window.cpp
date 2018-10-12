@@ -50,10 +50,12 @@ void Window::event(Event& event)
     }
 
     if (event.isPaintEvent()) {
-        if (m_mainWidget) {
-            printf("forward to main widget\n");
-            return m_mainWidget->event(event);
+        if (isBeingDragged()) {
+            // Ignore paint events during window drag.
+            return;
         }
+        if (m_mainWidget)
+            return m_mainWidget->event(event);
     }
 
     return Object::event(event);
