@@ -10,6 +10,9 @@ public:
         Red,
         Green,
         Blue,
+        DarkGray,
+        MidGray,
+        LightGray,
     };
 
     Color() { }

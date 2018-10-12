@@ -46,8 +46,8 @@ WindowManager& WindowManager::the()
 
 WindowManager::WindowManager()
 {
-    m_windowBorderColor = Color(0x00, 0x00, 0x80);
-    m_windowTitleColor = Color(0xff, 0xff, 0xff);
+    m_windowBorderColor = Color(0, 64, 192);
+    m_windowTitleColor = Color::White;
 }
 
 WindowManager::~WindowManager()
@@ -92,17 +92,17 @@ void WindowManager::paintWindowFrame(Window& window)
 
 
     if (!m_lastDragRect.isEmpty()) {
-        p.xorRect(m_lastDragRect, Color(255, 0, 0));
+        p.xorRect(m_lastDragRect, Color::Red);
         m_lastDragRect = Rect();
     }
 
     if (m_dragWindow == &window) {
-        p.xorRect(outerRect, Color(255, 0, 0));
+        p.xorRect(outerRect, Color::Red);
         m_lastDragRect = outerRect;
         return;
     }
 
-    p.drawRect(borderRect, Color(255, 255, 255));
+    p.drawRect(borderRect, Color::White);
     p.drawRect(outerRect, m_windowBorderColor);
 
     p.fillRect(titleBarRect, m_windowBorderColor);

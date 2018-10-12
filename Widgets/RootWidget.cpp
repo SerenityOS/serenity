@@ -21,7 +21,7 @@ void RootWidget::onPaint(PaintEvent& event)
             event.rect().width(),
             event.rect().height());
     Painter painter(*this);
-    painter.fillRect(event.rect(), Color(0x40, 0x40, 0x40));
+    painter.fillRect(event.rect(), Color(0, 72, 96));
 }
 
 void RootWidget::onMouseMove(MouseEvent& event)

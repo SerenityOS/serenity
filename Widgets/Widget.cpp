@@ -8,8 +8,8 @@
 Widget::Widget(Widget* parent)
     : Object(parent)
 {
-    m_backgroundColor = Color(255, 255, 255);
-    m_foregroundColor = Color(0, 0, 0);
+    m_backgroundColor = Color::White;
+    m_foregroundColor = Color::Black;
 }
 
 Widget::~Widget()
