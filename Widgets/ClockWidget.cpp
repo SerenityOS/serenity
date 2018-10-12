@@ -5,7 +5,7 @@
 ClockWidget::ClockWidget(Widget* parent)
     : Widget(parent)
 {
-    setRect({ 0, 0, 100, 40 });
+    setWindowRelativeRect({ 0, 0, 100, 40 });
     startTimer(250);
 }
 

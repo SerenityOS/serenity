@@ -12,7 +12,7 @@ Painter::Painter(Widget& widget)
 {
     if (auto* window = widget.window()) {
         m_translation = window->position();
-        m_translation.moveBy(widget.position());
+        m_translation.moveBy(widget.relativePosition());
     } else {
         m_translation.setX(widget.x());
         m_translation.setY(widget.y());
@@ -80,8 +80,10 @@ void Painter::xorRect(const Rect& rect, Color color)
     }
 }
 
-void Painter::drawBitmap(const Point& point, const CBitmap& bitmap, Color color)
+void Painter::drawBitmap(const Point& p, const CBitmap& bitmap, Color color)
 {
+    Point point = p;
+    point.moveBy(m_translation);
     for (unsigned row = 0; row < bitmap.height(); ++row) {
         int y = point.y() + row;
         int x = point.x();
@@ -100,12 +102,10 @@ void Painter::drawText(const Rect& rect, const String& text, TextAlignment align
     
     if (alignment == TextAlignment::TopLeft) {
         point = rect.location();
-        point.moveBy(m_translation);
     } else if (alignment == TextAlignment::Center) {
         int textWidth = text.length() * m_font.glyphWidth();
         point = rect.center();
         point.moveBy(-(textWidth / 2), -(m_font.glyphWidth() / 2));
-        point.moveBy(m_translation);
     } else {
         ASSERT_NOT_REACHED();
     }

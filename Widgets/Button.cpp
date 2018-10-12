@@ -22,9 +22,9 @@ void Button::setCaption(String&& caption)
 void Button::onPaint(PaintEvent&)
 {
     Painter painter(*this);
-    painter.fillRect({ 0, 0, width(), height() }, backgroundColor());
+    painter.fillRect(rect(), backgroundColor());
     if (!caption().isEmpty()) {
-        painter.drawText({ 0, 0, width(), height() }, caption(), Painter::TextAlignment::Center, Color(0, 0, 0));
+        painter.drawText(rect(), caption(), Painter::TextAlignment::Center, Color(0, 0, 0));
     }
 }
 

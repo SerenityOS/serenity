@@ -16,10 +16,10 @@ Widget::~Widget()
 {
 }
 
-void Widget::setRect(const Rect& rect)
+void Widget::setWindowRelativeRect(const Rect& rect)
 {
     // FIXME: Make some kind of event loop driven ResizeEvent?
-    m_rect = rect;
+    m_relativeRect = rect;
     update();
 }
 
@@ -102,8 +102,8 @@ Widget::HitTestResult Widget::hitTest(int x, int y)
     // FIXME: Care about z-order.
     for (auto* ch : children()) {
         auto* child = (Widget*)ch;
-        if (child->rect().contains(x, y)) {
-            return child->hitTest(x - child->rect().x(), y - child->rect().y());
+        if (child->relativeRect().contains(x, y)) {
+            return child->hitTest(x - child->relativeRect().x(), y - child->relativeRect().y());
         }
     }
     return { this, x, y };

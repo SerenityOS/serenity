@@ -7,9 +7,10 @@
 #include "WindowManager.h"
 #include "Window.h"
 #include "ClockWidget.h"
+#include "CheckBox.h"
 #include <cstdio>
 
-int main(int c, char** v)
+int main(int argc, char** argv)
 {
     FrameBufferSDL fb(800, 600);
     fb.show();
@@ -21,31 +22,43 @@ int main(int c, char** v)
 
     auto* fontTestWindow = new Window;
     fontTestWindow->setTitle("Font test");
-    fontTestWindow->setRect({ 100, 100, 300, 80 });
+    fontTestWindow->setRect({ 140, 100, 300, 80 });
 
     auto* fontTestWindowWidget = new Widget;
     fontTestWindow->setMainWidget(fontTestWindowWidget);
-    fontTestWindowWidget->setRect({ 0, 0, 300, 80 });
+    fontTestWindowWidget->setWindowRelativeRect({ 0, 0, 300, 80 });
 
     auto* l1 = new Label(fontTestWindowWidget);
-    l1->setRect({ 0, 0, 300, 20 });
+    l1->setWindowRelativeRect({ 0, 0, 300, 20 });
     l1->setText("0123456789");
 
     auto* l2 = new Label(fontTestWindowWidget);
-    l2->setRect({ 0, 20, 300, 20 });
+    l2->setWindowRelativeRect({ 0, 20, 300, 20 });
     l2->setText("ABCDEFGHIJKLMNOPQRSTUVWXYZ");
     
     auto* l3 = new Label(fontTestWindowWidget);
-    l3->setRect({ 0, 40, 300, 20 });
+    l3->setWindowRelativeRect({ 0, 40, 300, 20 });
     l3->setText("abcdefghijklmnopqrstuvwxyz");
 
     auto* l4 = new Label(fontTestWindowWidget);
-    l4->setRect({ 0, 60, 300, 20 });
+    l4->setWindowRelativeRect({ 0, 60, 300, 20 });
     l4->setText("!\"#$%&'()*+,-./:;<=>?@[\\]^_{|}~");
 
-    auto* b = new Button(&w);
-    b->setRect({ 10, 10, 100, 30 });
-    b->setCaption("Button!");
+    auto* widgetTestWindow = new Window;
+    widgetTestWindow->setTitle("Widget test");
+    widgetTestWindow->setRect({ 20, 40, 100, 100 });
+
+    auto* widgetTestWindowWidget = new Widget;
+    widgetTestWindowWidget->setWindowRelativeRect({ 0, 0, 100, 100 });
+    widgetTestWindow->setMainWidget(widgetTestWindowWidget);
+    
+    auto* b = new Button(widgetTestWindowWidget);
+    b->setWindowRelativeRect({ 0, 0, 100, 30 });
+    b->setCaption("Button");
+
+    auto* c = new CheckBox(widgetTestWindowWidget);
+    c->setWindowRelativeRect({ 0, 30, 100, 30 });
+    c->setCaption("CheckBox");
 
     auto* win = new Window;
     win->setTitle("Console");

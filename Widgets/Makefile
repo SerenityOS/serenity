@@ -24,6 +24,7 @@ VFS_OBJS = \
     Window.o \
     ClockWidget.o \
     CBitmap.o \
+    CheckBox.o \
     test.o
 
 OBJS = $(AK_OBJS) $(VFS_OBJS)

@@ -16,7 +16,7 @@ TerminalWidget::TerminalWidget(Widget* parent)
 
     auto& font = Font::defaultFont();
     
-    setRect({ 0, 0, (columns() * font.glyphWidth()) + 4, (rows() * font.glyphHeight()) + 4 });
+    setWindowRelativeRect({ 0, 0, (columns() * font.glyphWidth()) + 4, (rows() * font.glyphHeight()) + 4 });
 
     printf("rekt: %d x %d\n", width(), height());
     m_screen = new CharacterWithAttributes[rows() * columns()]; 
