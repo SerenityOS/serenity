@@ -1,9 +1,9 @@
 #include "VirtualFileSystem.h"
 #include "FileHandle.h"
 #include "FileSystem.h"
+#include <AK/kmalloc.h>
 #include <cstdio>
 #include <cstdlib>
-#include "kmalloc.h"
 
 //#define VFS_DEBUG
 
