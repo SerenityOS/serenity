@@ -24,6 +24,8 @@ public:
     virtual void onMouseUp(MouseEvent&);
 
     Rect rect() const { return m_rect; }
+    Point position() const { return m_rect.location(); }
+
     int x() const { return rect().x(); }
     int y() const { return rect().y(); }
     int width() const { return rect().width(); }

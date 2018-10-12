@@ -12,8 +12,8 @@ Painter::Painter(Widget& widget)
 {
     if (auto* window = widget.window()) {
         printf("window :: %s\n", window->title().characters());
-        m_translation.setX(window->x());
-        m_translation.setY(window->y());
+        m_translation = window->position();
+        m_translation.moveBy(widget.position());
     } else {
         m_translation.setX(widget.x());
         m_translation.setY(widget.y());
