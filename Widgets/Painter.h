@@ -30,4 +30,6 @@ private:
     Widget& m_widget;
     Font& m_font;
     Point m_translation;
+
+    Rect m_clipRect;
 };
