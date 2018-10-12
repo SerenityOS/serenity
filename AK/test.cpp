@@ -127,5 +127,33 @@ int main(int, char**)
         problem.append("test");
     }
 
+    {
+        auto printInts = [] (const Vector<int>& v) {
+            printf("Vector {\n    size: %u\n    capacity: %u\n    elements: ", v.size(), v.capacity());
+            for (auto i : v)
+                printf("%d ", i);
+            printf("\n}\n");
+        };
+
+        Vector<int> v;
+        v.append(0);
+        v.append(1);
+        v.append(2);
+        v.append(3);
+        printInts(v);
+
+        v.remove(1);
+        printInts(v);
+
+        v.remove(0);
+        printInts(v);
+
+        v.remove(0);
+        printInts(v);
+
+        v.remove(0);
+        printInts(v);
+    }
+
     return 0;
 }
