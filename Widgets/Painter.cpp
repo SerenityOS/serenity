@@ -80,8 +80,24 @@ void Painter::xorRect(const Rect& rect, Color color)
     }
 }
 
+void Painter::drawBitmap(const Point& point, const char* bitmap, const Size& bitmapSize, Color color)
+{
+    ASSERT(bitmap);
+    ASSERT(!bitmapSize.isEmpty());
 
-void Painter::drawText(const Rect& rect, const String& text, TextAlignment alignment, const Color& color)
+    for (int row = 0; row < bitmapSize.height(); ++row) {
+        int y = point.y() + row;
+        int x = point.x();
+        dword* bits = scanline(y);
+        for (int j = 0; j < bitmapSize.width(); ++j) {
+            char fc = bitmap[row * bitmapSize.width() + j];
+            if (fc == '#')
+                bits[x + j] = color.value();
+        }
+    }
+}
+
+void Painter::drawText(const Rect& rect, const String& text, TextAlignment alignment, Color color)
 {
     Point point;
     
@@ -97,25 +113,18 @@ void Painter::drawText(const Rect& rect, const String& text, TextAlignment align
         ASSERT_NOT_REACHED();
     }
 
-    for (int row = 0; row < m_font.glyphHeight(); ++row) {
-        int y = point.y() + row;
-        dword* bits = scanline(y);
-        for (unsigned i = 0; i < text.length(); ++i) {
-            byte ch = text[i];
-            if (ch == ' ')
-                continue;
-            const char* glyph = m_font.glyph(ch);
-            if (!glyph) {
-                printf("Font doesn't have 0x%02x ('%c')\n", ch, ch);
-                ASSERT_NOT_REACHED();
-            }
-            int x = point.x() + i * m_font.glyphWidth();
-            for (int j = 0; j < m_font.glyphWidth(); ++j) {
-                char fc = glyph[row * m_font.glyphWidth() + j];
-                if (fc == '#')
-                    bits[x + j] = color.value();
-            }
+    for (unsigned i = 0; i < text.length(); ++i) {
+        byte ch = text[i];
+        if (ch == ' ')
+            continue;
+        const char* glyph = m_font.glyph(ch);
+        if (!glyph) {
+            printf("Font doesn't have 0x%02x ('%c')\n", ch, ch);
+            ASSERT_NOT_REACHED();
         }
+        int x = point.x() + i * m_font.glyphWidth();
+        int y = point.y();
+        drawBitmap({ x, y }, glyph, { m_font.glyphWidth(), m_font.glyphHeight() }, color);
     }
 }
 

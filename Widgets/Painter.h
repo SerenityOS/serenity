@@ -3,6 +3,7 @@
 #include "Color.h"
 #include "Point.h"
 #include "Rect.h"
+#include "Size.h"
 #include <AK/String.h>
 
 class Font;
@@ -15,7 +16,8 @@ public:
     ~Painter();
     void fillRect(const Rect&, Color);
     void drawRect(const Rect&, Color);
-    void drawText(const Rect&, const String&, TextAlignment = TextAlignment::TopLeft, const Color& = Color());
+    void drawText(const Rect&, const String&, TextAlignment = TextAlignment::TopLeft, Color = Color());
+    void drawBitmap(const Point&, const char* bitmap, const Size& bitmapSize, Color = Color());
 
     void xorRect(const Rect&, Color);
 
