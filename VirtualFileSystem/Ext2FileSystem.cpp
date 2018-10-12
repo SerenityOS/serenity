@@ -260,6 +260,9 @@ ByteBuffer Ext2FileSystem::readInode(InodeIdentifier inode) const
         return nullptr;
     }
 
+    if (e2inode->i_size == 0)
+        return ByteBuffer::createEmpty();
+
     // Symbolic links shorter than 60 characters are store inline inside the i_block array.
     // This avoids wasting an entire block on short links. (Most links are short.)
     static const unsigned maxInlineSymlinkLength = 60;

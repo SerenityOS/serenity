@@ -27,6 +27,7 @@ public:
         return *this;
     }
 
+    static ByteBuffer createEmpty() { return ByteBuffer(Buffer<byte>::createUninitialized(0)); }
     static ByteBuffer createUninitialized(size_t size) { return ByteBuffer(Buffer<byte>::createUninitialized(size)); }
     static ByteBuffer copy(const byte* data, size_t size) { return ByteBuffer(Buffer<byte>::copy(data, size)); }
     static ByteBuffer wrap(byte* data, size_t size) { return ByteBuffer(Buffer<byte>::wrap(data, size)); }
