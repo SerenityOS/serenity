@@ -29,6 +29,18 @@ public:
     T& at(unsigned i) { return *slot(i); }
     const T& at(unsigned i) const { return *slot(i); }
 
+    void remove(unsigned index)
+    {
+        ASSERT(index < m_size);
+        at(index).~T();
+        for (unsigned i = index + 1; i < m_size; ++i) {
+            new (slot(i - 1)) T(std::move(at(i)));
+            at(i).~T();
+        }
+
+        --m_size;
+    }
+
 private:
     friend class Vector<T>;
 
@@ -95,6 +107,11 @@ public:
         return value;
     }
 
+    void remove(unsigned index)
+    {
+        m_impl->remove(index);
+    }
+
     void append(T&& value)
     {
         ensureCapacity(size() + 1);
@@ -152,8 +169,8 @@ public:
         unsigned m_index { 0 };
     };
 
-    ConstIterator begin() const { return Iterator(*this, 0); }
-    ConstIterator end() const { return Iterator(*this, size()); }
+    ConstIterator begin() const { return ConstIterator(*this, 0); }
+    ConstIterator end() const { return ConstIterator(*this, size()); }
 
 private:
     static unsigned paddedCapacity(unsigned capacity)
