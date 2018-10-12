@@ -68,6 +68,10 @@ void EventLoopSDL::handleKeyEvent(Event::Type type, const SDL_KeyboardEvent& sdl
         keyEvent->m_text = buf;
     }
 
+    keyEvent->m_shift = sdlKey.keysym.mod & KMOD_SHIFT;
+    keyEvent->m_ctrl = sdlKey.keysym.mod & KMOD_CTRL;
+    keyEvent->m_alt = sdlKey.keysym.mod & KMOD_ALT;
+
     postEvent(&WindowManager::the(), std::move(keyEvent));
 }
 
