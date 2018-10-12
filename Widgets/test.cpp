@@ -18,20 +18,28 @@ int main(int c, char** v)
     RootWidget w;
     WindowManager::the().setRootWidget(&w);
 
-    auto* l1 = new Label(&w);
-    l1->setRect(Rect(100, 100, 300, 20));
+    auto* fontTestWindow = new Window;
+    fontTestWindow->setTitle("Font test");
+    fontTestWindow->setRect({100, 100, 300, 80 });
+
+    auto* fontTestWindowWidget = new Widget;
+    fontTestWindow->setMainWidget(fontTestWindowWidget);
+    fontTestWindowWidget->setRect({0, 0, 300, 80 });
+
+    auto* l1 = new Label(fontTestWindowWidget);
+    l1->setRect(Rect(0, 0, 300, 20));
     l1->setText("0123456789");
 
-    auto* l2 = new Label(&w);
-    l2->setRect(Rect(100, 120, 300, 20));
+    auto* l2 = new Label(fontTestWindowWidget);
+    l2->setRect(Rect(0, 20, 300, 20));
     l2->setText("ABCDEFGHIJKLMNOPQRSTUVWXYZ");
     
-    auto* l3 = new Label(&w);
-    l3->setRect(Rect(100, 140, 300, 20));
+    auto* l3 = new Label(fontTestWindowWidget);
+    l3->setRect(Rect(0, 40, 300, 20));
     l3->setText("abcdefghijklmnopqrstuvwxyz");
 
-    auto* l4 = new Label(&w);
-    l4->setRect(Rect(100, 160, 300, 20));
+    auto* l4 = new Label(fontTestWindowWidget);
+    l4->setRect(Rect(0, 60, 300, 20));
     l4->setText("!\"#$%&'()*+,-./:;<=>?@[\\]^_{|}~");
 
     auto* b = new Button(&w);
