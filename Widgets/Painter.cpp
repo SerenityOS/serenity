@@ -125,3 +125,56 @@ void Painter::drawText(const Rect& rect, const String& text, TextAlignment align
     }
 }
 
+void Painter::drawPixel(const Point& p, Color color)
+{
+    auto point = p;
+    point.moveBy(m_translation);
+    scanline(point.y())[point.x()] = color.value();
+}
+
+void Painter::drawLine(const Point& p1, const Point& p2, Color color)
+{
+    auto point1 = p1;
+    point1.moveBy(m_translation);
+
+    auto point2 = p2;
+    point2.moveBy(m_translation);
+
+    // Special case: vertical line.
+    if (point1.x() == point2.x()) {
+        if (point1.y() > point2.y())
+            std::swap(point1, point2);
+        for (int y = point1.y(); y <= point2.y(); ++y)
+            scanline(y)[point1.x()] = color.value();
+        return;
+    }
+
+    if (point1.x() > point2.x())
+        std::swap(point1, point2);
+
+    // Special case: horizontal line.
+    if (point1.y() == point2.y()) {
+        if (point1.y() > point2.y())
+            std::swap(point1, point2);
+        auto* pixels = scanline(point1.y());
+        for (int x = point1.x(); x <= point2.x(); ++x)
+            pixels[x] = color.value();
+        return;
+    }
+
+    const double dx = point2.x() - point1.x();
+    const double dy = point2.y() - point1.y();
+    const double deltaError = fabs(dy / dx);
+    double error = 0;
+    const double yStep = dy == 0 ? 0 : (dy > 0 ? 1 : -1);
+
+    int y = point1.y();
+    for (int x = point1.x(); x <= point2.x(); ++x) {
+        scanline(y)[x] = color.value();
+        error += deltaError;
+        if (error >= 0.5) {
+            y = (double)y + yStep;
+            error -= 1.0;
+        }
+    }
+}

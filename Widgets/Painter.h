@@ -19,6 +19,8 @@ public:
     void drawRect(const Rect&, Color);
     void drawText(const Rect&, const String&, TextAlignment = TextAlignment::TopLeft, Color = Color());
     void drawBitmap(const Point&, const CBitmap&, Color = Color());
+    void drawPixel(const Point&, Color);
+    void drawLine(const Point& p1, const Point& p2, Color);
 
     void xorRect(const Rect&, Color);
 
