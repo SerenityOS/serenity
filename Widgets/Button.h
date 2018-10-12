@@ -14,9 +14,11 @@ public:
 private:
     virtual void onPaint(PaintEvent&) override;
     virtual void onMouseDown(MouseEvent&) override;
+    virtual void onMouseUp(MouseEvent&) override;
 
     virtual const char* className() const override { return "Button"; }
 
     String m_caption;
+    bool m_beingPressed { false };
 };
 
