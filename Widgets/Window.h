@@ -22,6 +22,9 @@ public:
     const Rect& rect() const { return m_rect; }
     void setRect(const Rect&);
 
+    Point position() const { return m_rect.location(); }
+    void setPosition(const Point& position) { setRect({ position.x(), position.y(), width(), height() }); }
+
     Widget* mainWidget() { return m_mainWidget; }
     const Widget* mainWidget() const { return m_mainWidget; }
 

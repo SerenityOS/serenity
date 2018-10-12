@@ -12,6 +12,11 @@ public:
     {
     }
 
+    bool isEmpty() const
+    {
+        return width() == 0 || height() == 0;
+    }
+
     void moveBy(int dx, int dy)
     {
         m_location.moveBy(dx, dy);

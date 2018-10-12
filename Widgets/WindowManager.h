@@ -38,4 +38,9 @@ private:
     void paintWindowFrame(Window&);
     HashTable<Window*> m_windows;
     Widget* m_rootWidget { nullptr };
+
+    Window* m_dragWindow { nullptr };
+    Point m_dragOrigin;
+    Point m_dragWindowOrigin;
+    Rect m_lastDragRect;
 };

@@ -49,7 +49,7 @@ void Widget::event(Event& event)
 
 void Widget::onPaint(PaintEvent& event)
 {
-    printf("Widget::onPaint :)\n");
+    //printf("Widget::onPaint :)\n");
     for (auto* ch : children()) {
         auto* child = (Widget*)ch;
         child->onPaint(event);
