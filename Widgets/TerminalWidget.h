@@ -25,6 +25,9 @@ private:
     virtual void onPaint(PaintEvent&) override;
     virtual void onKeyDown(KeyEvent&) override;
     virtual void onKeyUp(KeyEvent&) override;
+    virtual void onTimer(TimerEvent&) override;
+
+    void bell();
 
     unsigned m_columns { 80 };
     unsigned m_rows { 25 };
@@ -33,4 +36,6 @@ private:
     unsigned m_cursorColumn { 0 };
 
     CharacterWithAttributes* m_screen { nullptr };
+
+    bool m_belling { false };
 };

@@ -63,7 +63,7 @@ CharacterWithAttributes& TerminalWidget::at(unsigned row, unsigned column)
 void TerminalWidget::onPaint(PaintEvent&)
 {
     Painter painter(*this);
-    painter.fillRect({ 0, 0, width(), height() }, Color(0, 0, 0));
+    painter.fillRect(rect(), Color(0, 0, 0));
 
     auto& font = Font::defaultFont();
 
@@ -76,6 +76,9 @@ void TerminalWidget::onPaint(PaintEvent&)
             painter.drawText({ x + 2, y + 2, width(), font.glyphHeight() }, buf, Painter::TextAlignment::TopLeft, Color(0xa0, 0xa0, 0xa0));
         }
     }
+
+    if (m_belling)
+        painter.drawRect(rect(), Color::Red);
 }
 
 void TerminalWidget::onReceive(const ByteBuffer& buffer)
@@ -105,20 +108,35 @@ void TerminalWidget::onReceive(byte ch)
         }
     };
 
-    if (ch == '\n') {
-        if (m_cursorRow < (m_rows - 1)) {
-            ++m_cursorRow;
-        } else {
-            scrollScreen();
+    switch (ch) {
+        case '\n':
+            if (m_cursorRow < (m_rows - 1)) {
+                ++m_cursorRow;
+            } else {
+                scrollScreen();
+            }
+            break;
+        case '\r':
+            m_cursorColumn = 0;
+            break;
+        case '\t':
+            // FIXME: Respect terminal tab stops.
+            while ((m_cursorColumn % 8) != 0 && m_cursorColumn < m_columns) {
+                addChar(' ');
+            break;
+        case '\a':
+            bell();
+            break;
+        case 8:
+            if (m_cursorColumn > 0) {
+                --m_cursorColumn;
+                at(m_cursorRow, m_cursorColumn).character = ' ';
+            }
+            break;
+        default:
+            addChar(ch);
+            break;
         }
-    } else if (ch == '\r') {
-        m_cursorColumn = 0;
-    } else if (ch == '\t') {
-        while ((m_cursorColumn % 8) != 0 && m_cursorColumn < m_columns) {
-            addChar(' ');
-        }
-    } else {
-        addChar(ch);
     }
     update();
 }
@@ -136,3 +154,18 @@ void TerminalWidget::onKeyUp(KeyEvent& event)
     return Widget::onKeyUp(event);
 }
 
+void TerminalWidget::bell()
+{
+    if (m_belling)
+        stopTimer();
+    startTimer(250);
+    m_belling = true;
+    update();
+}
+
+void TerminalWidget::onTimer(TimerEvent&)
+{
+    m_belling = false;
+    stopTimer();
+    update();
+}
