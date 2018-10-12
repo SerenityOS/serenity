@@ -23,6 +23,11 @@ void Widget::setWindowRelativeRect(const Rect& rect)
     update();
 }
 
+void Widget::repaint(const Rect& rect)
+{
+    event(*make<PaintEvent>(rect));
+}
+
 void Widget::event(Event& event)
 {
     switch (event.type()) {
@@ -94,7 +99,7 @@ void Widget::update()
     if (m_hasPendingPaintEvent)
         return;
     m_hasPendingPaintEvent = true;
-    EventLoop::main().postEvent(this, make<PaintEvent>());
+    EventLoop::main().postEvent(this, make<PaintEvent>(rect()));
 }
 
 Widget::HitTestResult Widget::hitTest(int x, int y)

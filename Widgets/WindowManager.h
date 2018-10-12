@@ -29,7 +29,8 @@ private:
     void processMouseEvent(MouseEvent&);
     void handleTitleBarMouseEvent(Window&, MouseEvent&);
     void handlePaintEvent(PaintEvent&);
-
+    void repaintAfterMove(const Rect& oldRect, const Rect& newRect);
+    
     virtual void event(Event&) override;
 
     Color m_windowBorderColor;
@@ -43,4 +44,6 @@ private:
     Point m_dragOrigin;
     Point m_dragWindowOrigin;
     Rect m_lastDragRect;
+    Rect m_dragStartRect;
+    Rect m_dragEndRect;
 };

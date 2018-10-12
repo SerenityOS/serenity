@@ -2,6 +2,7 @@
 
 #include <AK/Types.h>
 #include "Point.h"
+#include "Rect.h"
 
 static const char* eventNames[] = {
     "Invalid",
@@ -61,10 +62,16 @@ public:
 
 class PaintEvent final : public Event {
 public:
-    PaintEvent()
+    explicit PaintEvent(const Rect& rect = Rect())
         : Event(Event::Paint)
+        , m_rect(rect)
     {
     }
+
+    const Rect& rect() const { return m_rect; }
+private:
+    friend class WindowManager;
+    Rect m_rect;
 };
 
 class ShowEvent final : public Event {

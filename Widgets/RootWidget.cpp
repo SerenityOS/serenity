@@ -13,10 +13,15 @@ RootWidget::~RootWidget()
 
 void RootWidget::onPaint(PaintEvent& event)
 {
-    //printf("RootWidget::onPaint\n");
-    Painter painter(*this);
-    painter.fillRect(Rect(0, 0, 800, 600), Color(0x40, 0x40, 0x40));
     Widget::onPaint(event);
+
+    printf("RootWidget::onPaint: %d,%d %dx%d\n",
+            event.rect().x(),
+            event.rect().y(),
+            event.rect().width(),
+            event.rect().height());
+    Painter painter(*this);
+    painter.fillRect(event.rect(), Color(0x40, 0x40, 0x40));
 }
 
 void RootWidget::onMouseMove(MouseEvent& event)

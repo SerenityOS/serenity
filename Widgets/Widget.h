@@ -34,6 +34,7 @@ public:
     Rect rect() const { return { 0, 0, width(), height() }; }
 
     void update();
+    void repaint(const Rect&);
 
     struct HitTestResult {
         Widget* widget { nullptr };

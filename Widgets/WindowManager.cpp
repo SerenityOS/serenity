@@ -21,6 +21,23 @@ static inline Rect titleBarRectForWindow(const Window& window)
     };
 }
 
+static inline Rect borderRectForWindow(const Window& window)
+{
+    auto titleBarRect = titleBarRectForWindow(window);
+    return { titleBarRect.x() - 1, 
+        titleBarRect.y() - 1,
+        titleBarRect.width() + 2,
+        windowFrameWidth + windowTitleBarHeight + window.rect().height() + 4
+    };
+}
+
+static inline Rect outerRectForWindow(const Window& window)
+{
+    auto rect = borderRectForWindow(window);
+    rect.inflate(2, 2);
+    return rect;
+}
+
 WindowManager& WindowManager::the()
 {
     static WindowManager* s_the = new WindowManager;
@@ -49,7 +66,9 @@ void WindowManager::paintWindowFrame(Window& window)
 
     //printf("[WM] paintWindowFrame {%p}, rect: %d,%d %dx%d\n", &window, window.rect().x(), window.rect().y(), window.rect().width(), window.rect().height());
 
-    Rect topRect = titleBarRectForWindow(window);
+    auto titleBarRect = titleBarRectForWindow(window);
+    auto outerRect = outerRectForWindow(window);
+    auto borderRect = borderRectForWindow(window);
 
     Rect bottomRect {
         window.x() - windowFrameWidth,
@@ -71,12 +90,6 @@ void WindowManager::paintWindowFrame(Window& window)
         window.height()
     };
 
-    Rect borderRect {
-        topRect.x() - 1, 
-        topRect.y() - 1,
-        topRect.width() + 2,
-        windowFrameWidth + windowTitleBarHeight + window.rect().height() + 4
-    };
 
     if (!m_lastDragRect.isEmpty()) {
         p.xorRect(m_lastDragRect, Color(255, 0, 0));
@@ -84,22 +97,20 @@ void WindowManager::paintWindowFrame(Window& window)
     }
 
     if (m_dragWindow == &window) {
-        borderRect.inflate(2, 2);
-        p.xorRect(borderRect, Color(255, 0, 0));
-        m_lastDragRect = borderRect;
+        p.xorRect(outerRect, Color(255, 0, 0));
+        m_lastDragRect = outerRect;
         return;
     }
 
     p.drawRect(borderRect, Color(255, 255, 255));
-    borderRect.inflate(2, 2);
-    p.drawRect(borderRect, m_windowBorderColor);
+    p.drawRect(outerRect, m_windowBorderColor);
 
-    p.fillRect(topRect, m_windowBorderColor);
+    p.fillRect(titleBarRect, m_windowBorderColor);
     p.fillRect(bottomRect, m_windowBorderColor);
     p.fillRect(leftRect, m_windowBorderColor);
     p.fillRect(rightRect, m_windowBorderColor);
 
-    p.drawText(topRect, window.title(), Painter::TextAlignment::Center, m_windowTitleColor);
+    p.drawText(titleBarRect, window.title(), Painter::TextAlignment::Center, m_windowTitleColor);
 }
 
 void WindowManager::addWindow(Window& window)
@@ -124,6 +135,7 @@ void WindowManager::handleTitleBarMouseEvent(Window& window, MouseEvent& event)
         m_dragWindow = &window;
         m_dragOrigin = event.position();
         m_dragWindowOrigin = window.position();
+        m_dragStartRect = outerRectForWindow(window);
         window.setIsBeingDragged(true);
         return;
     }
@@ -136,14 +148,38 @@ void WindowManager::handleTitleBarMouseEvent(Window& window, MouseEvent& event)
 #endif
 }
 
+void WindowManager::repaintAfterMove(const Rect& oldRect, const Rect& newRect)
+{
+    printf("[WM] repaint: [%d,%d %dx%d] -> [%d,%d %dx%d]\n",
+            oldRect.x(),
+            oldRect.y(),
+            oldRect.width(),
+            oldRect.height(),
+            newRect.x(),
+            newRect.y(),
+            newRect.width(),
+            newRect.height());
+
+    m_rootWidget->repaint(oldRect);
+    m_rootWidget->repaint(newRect);
+    for (auto* window : m_windows) {
+        if (outerRectForWindow(*window).intersects(oldRect) || outerRectForWindow(*window).intersects(newRect)) {
+            paintWindowFrame(*window);
+            window->repaint();
+        }
+    }
+}
+
 void WindowManager::processMouseEvent(MouseEvent& event)
 {
     if (event.type() == Event::MouseUp) {
         if (m_dragWindow) {
             printf("[WM] Finish dragging Window{%p}\n", m_dragWindow);
             m_dragWindow->setIsBeingDragged(false);
+            m_dragEndRect = outerRectForWindow(*m_dragWindow);
             m_dragWindow = nullptr;
-            EventLoop::main().postEvent(this, make<PaintEvent>());
+
+            repaintAfterMove(m_dragStartRect, m_dragEndRect);
             return;
         }
     }
@@ -179,6 +215,11 @@ void WindowManager::processMouseEvent(MouseEvent& event)
 void WindowManager::handlePaintEvent(PaintEvent& event)
 {
     //printf("[WM] paint event\n");
+    if (event.rect().isEmpty()) {
+        event.m_rect.setWidth(AbstractScreen::the().width());
+        event.m_rect.setHeight(AbstractScreen::the().height());
+    }
+
     m_rootWidget->event(event);
     paintWindowFrames();
 

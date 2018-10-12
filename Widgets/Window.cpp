@@ -41,6 +41,11 @@ void Window::setRect(const Rect& rect)
     WindowManager::the().notifyRectChanged(*this, oldRect, m_rect);
 }
 
+void Window::repaint()
+{
+    event(*make<PaintEvent>());
+}
+
 void Window::event(Event& event)
 {
     if (event.isMouseEvent()) {
@@ -58,12 +63,23 @@ void Window::event(Event& event)
     }
 
     if (event.isPaintEvent()) {
+        auto& pe = static_cast<PaintEvent&>(event);
+        printf("Window[\"%s\"]: paintEvent %d,%d %dx%d\n", className(),
+                pe.rect().x(),
+                pe.rect().y(),
+                pe.rect().width(),
+                pe.rect().height());
+
         if (isBeingDragged()) {
             // Ignore paint events during window drag.
             return;
         }
-        if (m_mainWidget)
-            return m_mainWidget->event(event);
+        if (m_mainWidget) {
+            if (pe.rect().isEmpty())
+                return m_mainWidget->event(*make<PaintEvent>(m_mainWidget->rect()));
+            else
+                return m_mainWidget->event(event);
+        }
         return Object::event(event);
     }
 
