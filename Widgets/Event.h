@@ -1,8 +1,9 @@
 #pragma once
 
-#include <AK/Types.h>
 #include "Point.h"
 #include "Rect.h"
+#include <AK/String.h>
+#include <AK/Types.h>
 
 static const char* eventNames[] = {
     "Invalid",
@@ -106,9 +107,18 @@ public:
     }
 
     int key() const { return m_key; }
+    bool ctrl() const { return m_ctrl; }
+    bool alt() const { return m_alt; }
+    bool shift() const { return m_shift; }
+    String text() const { return m_text; }
 
 private:
+    friend class EventLoopSDL;
     int m_key { 0 };
+    bool m_ctrl { false };
+    bool m_alt { false };
+    bool m_shift { false };
+    String m_text;
 };
 
 class MouseEvent final : public Event {

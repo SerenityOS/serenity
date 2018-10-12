@@ -30,5 +30,6 @@ const CBitmap* Font::glyphBitmap(byte ch) const
         const char* data = m_glyphs[(unsigned)ch - m_firstGlyph];
         m_bitmaps[ch] = CBitmap::createFromASCII(data, m_glyphWidth, m_glyphHeight);
     }
+    ASSERT(ch >= m_firstGlyph && ch <= m_lastGlyph);
     return m_bitmaps[ch].ptr();
 }
