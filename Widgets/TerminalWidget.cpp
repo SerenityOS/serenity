@@ -133,6 +133,9 @@ void TerminalWidget::onReceive(byte ch)
                 at(m_cursorRow, m_cursorColumn).character = ' ';
             }
             break;
+        case 27:
+            printf("TerminalWidget: got escape!\n");
+            break;
         default:
             addChar(ch);
             break;
