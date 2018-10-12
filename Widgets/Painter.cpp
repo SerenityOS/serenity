@@ -11,7 +11,6 @@ Painter::Painter(Widget& widget)
     , m_font(Font::defaultFont())
 {
     if (auto* window = widget.window()) {
-        printf("window :: %s\n", window->title().characters());
         m_translation = window->position();
         m_translation.moveBy(widget.position());
     } else {
