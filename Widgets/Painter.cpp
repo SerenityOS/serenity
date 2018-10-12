@@ -54,6 +54,25 @@ void Painter::drawRect(const Rect& rect, Color color)
     }
 }
 
+void Painter::xorRect(const Rect& rect, Color color)
+{
+    Rect r = rect;
+    r.moveBy(m_widget.x(), m_widget.y());
+
+    for (int y = r.top(); y < r.bottom(); ++y) {
+        dword* bits = scanline(y);
+        if (y == r.top() || y == (r.bottom() - 1)) {
+            for (int x = r.left(); x < r.right(); ++x) {
+                bits[x] ^= color.value();
+            }
+        } else {
+            bits[r.left()] ^= color.value();
+            bits[r.right() - 1] ^= color.value();
+        }
+    }
+}
+
+
 void Painter::drawText(const Rect& rect, const String& text, TextAlignment alignment, const Color& color)
 {
     Point point;

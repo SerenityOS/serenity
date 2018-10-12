@@ -47,7 +47,7 @@ void WindowManager::paintWindowFrame(Window& window)
 {
     Painter p(*m_rootWidget);
 
-    printf("WM: paintWindowFrame {%p}, rect: %d,%d %dx%d\n", &window, window.rect().x(), window.rect().y(), window.rect().width(), window.rect().height());
+    //printf("[WM] paintWindowFrame {%p}, rect: %d,%d %dx%d\n", &window, window.rect().x(), window.rect().y(), window.rect().width(), window.rect().height());
 
     Rect topRect = titleBarRectForWindow(window);
 
@@ -78,6 +78,18 @@ void WindowManager::paintWindowFrame(Window& window)
         windowFrameWidth + windowTitleBarHeight + window.rect().height() + 4
     };
 
+    if (!m_lastDragRect.isEmpty()) {
+        p.xorRect(m_lastDragRect, Color(255, 0, 0));
+        m_lastDragRect = Rect();
+    }
+
+    if (m_dragWindow == &window) {
+        borderRect.inflate(2, 2);
+        p.xorRect(borderRect, Color(255, 0, 0));
+        m_lastDragRect = borderRect;
+        return;
+    }
+
     p.drawRect(borderRect, Color(255, 255, 255));
     borderRect.inflate(2, 2);
     p.drawRect(borderRect, m_windowBorderColor);
@@ -97,34 +109,54 @@ void WindowManager::addWindow(Window& window)
 
 void WindowManager::notifyTitleChanged(Window& window)
 {
-    printf("[WM] ]Window{%p} title set to '%s'\n", &window, window.title().characters());
+    //printf("[WM] Window{%p} title set to '%s'\n", &window, window.title().characters());
 }
 
 void WindowManager::notifyRectChanged(Window& window, const Rect& oldRect, const Rect& newRect)
 {
-    printf("[WM] Window %p rect changed (%d,%d %dx%d) -> (%d,%d %dx%d)\n",
-        &window,
-        oldRect.x(),
-        oldRect.y(),
-        oldRect.width(),
-        oldRect.height(),
-        newRect.x(),
-        newRect.y(),
-        newRect.width(),
-        newRect.height());
+    //printf("[WM] Window %p rect changed (%d,%d %dx%d) -> (%d,%d %dx%d)\n", &window, oldRect.x(), oldRect.y(), oldRect.width(), oldRect.height(), newRect.x(), newRect.y(), newRect.width(), newRect.height());
 }
 
 void WindowManager::handleTitleBarMouseEvent(Window& window, MouseEvent& event)
 {
+    if (event.type() == Event::MouseDown) {
+        printf("[WM] Begin dragging Window{%p}\n", &window);
+        m_dragWindow = &window;
+        m_dragOrigin = event.position();
+        m_dragWindowOrigin = window.position();
+        return;
+    }
+#if 0
     byte r = (((double)rand()) / (double)RAND_MAX) * 255.0;
     byte g = (((double)rand()) / (double)RAND_MAX) * 255.0;
     byte b = (((double)rand()) / (double)RAND_MAX) * 255.0;
     m_windowBorderColor = Color(r, g, b);
     paintWindowFrame(window);
+#endif
 }
 
 void WindowManager::processMouseEvent(MouseEvent& event)
 {
+    if (event.type() == Event::MouseUp) {
+        if (m_dragWindow) {
+            printf("[WM] Finish dragging Window{%p}\n", m_dragWindow);
+            m_dragWindow = nullptr;
+            EventLoop::main().postEvent(this, make<PaintEvent>());
+            return;
+        }
+    }
+
+    if (event.type() == Event::MouseMove) {
+        if (m_dragWindow) {
+            Point pos = m_dragWindowOrigin;
+            printf("[WM] Dragging [origin: %d,%d] now: %d,%d\n", m_dragOrigin.x(), m_dragOrigin.y(), event.x(), event.y());
+            pos.moveBy(event.x() - m_dragOrigin.x(), event.y() - m_dragOrigin.y());
+            m_dragWindow->setPosition(pos);
+            paintWindowFrame(*m_dragWindow);
+            return;
+        }
+    }
+
     // FIXME: Respect z-order of windows...
     for (auto* window : m_windows) {
         if (titleBarRectForWindow(*window).contains(event.position())) {
@@ -150,7 +182,7 @@ void WindowManager::processMouseEvent(MouseEvent& event)
 
 void WindowManager::handlePaintEvent(PaintEvent& event)
 {
-    printf("[WM] paint event\n");
+    //printf("[WM] paint event\n");
     m_rootWidget->event(event);
     paintWindowFrames();
 }

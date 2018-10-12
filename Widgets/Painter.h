@@ -17,6 +17,8 @@ public:
     void drawRect(const Rect&, Color);
     void drawText(const Rect&, const String&, TextAlignment = TextAlignment::TopLeft, const Color& = Color());
 
+    void xorRect(const Rect&, Color);
+
     const Font& font() const;
 
 private:
