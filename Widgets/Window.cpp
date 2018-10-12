@@ -50,7 +50,7 @@ void Window::event(Event& event)
 {
     if (event.isMouseEvent()) {
         auto& me = static_cast<MouseEvent&>(event);
-        printf("Window{%p}: %s %d,%d\n", this, me.name(), me.x(), me.y());
+        //printf("Window{%p}: %s %d,%d\n", this, me.name(), me.x(), me.y());
         if (m_mainWidget) {
             auto result = m_mainWidget->hitTest(me.x(), me.y());
             //printf("hit test for %d,%d found: %s{%p} %d,%d\n", me.x(), me.y(), result.widget->className(), result.widget, result.localX, result.localY);
