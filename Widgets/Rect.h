@@ -67,6 +67,14 @@ public:
         setY(top);
     }
 
+    bool intersects(const Rect& other) const
+    {
+        return left() < other.right()
+            && other.left() < right()
+            && top() < other.bottom()
+            && other.top() < bottom();
+    }
+
     int x() const { return location().x(); }
     int y() const { return location().y(); }
     int width() const { return m_width; }

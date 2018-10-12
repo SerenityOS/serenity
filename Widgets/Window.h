@@ -35,6 +35,8 @@ public:
     bool isBeingDragged() const { return m_isBeingDragged; }
     void setIsBeingDragged(bool b) { m_isBeingDragged = b; }
 
+    void repaint();
+
 private:
     String m_title;
     Rect m_rect;
