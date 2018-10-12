@@ -105,3 +105,9 @@ Widget::HitTestResult Widget::hitTest(int x, int y)
     return { this, x, y };
 }
 
+void Widget::setWindow(Window* window)
+{
+    if (m_window == window)
+        return;
+    m_window = window;
+}

@@ -185,6 +185,10 @@ void WindowManager::handlePaintEvent(PaintEvent& event)
     //printf("[WM] paint event\n");
     m_rootWidget->event(event);
     paintWindowFrames();
+
+    for (auto* window : m_windows) {
+        window->event(event);
+    }
 }
 
 void WindowManager::event(Event& event)

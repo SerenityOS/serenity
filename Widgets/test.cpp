@@ -42,7 +42,7 @@ int main(int c, char** v)
     win->setTitle("Console");
     win->setRect({100, 300, 644, 254});
 
-    auto* t = new TerminalWidget(&w);
+    auto* t = new TerminalWidget(nullptr);
     win->setMainWidget(t);
 
     return loop.exec();

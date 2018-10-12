@@ -17,6 +17,11 @@ public:
         m_y += dy;
     }
 
+    void moveBy(const Point& delta)
+    {
+        moveBy(delta.x(), delta.y());
+    }
+
     bool operator==(const Point& other) const
     {
         return m_x == other.m_x
