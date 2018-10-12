@@ -93,7 +93,7 @@ void TerminalWidget::onReceive(byte ch)
     //printf("receive %02x\n", ch);
     auto scrollScreen = [&] () {
         memmove(m_screen, m_screen + columns(), (m_rows - 1) * columns() * sizeof(CharacterWithAttributes));
-        memset(m_screen + (m_rows - 1) * columns(), ' ', columns() * sizeof(CharacterWithAttributes) * 2);
+        memset(m_screen + (m_rows - 1) * columns(), ' ', columns() * sizeof(CharacterWithAttributes));
     };
 
     auto addChar = [&] (byte ch) {
@@ -143,10 +143,9 @@ void TerminalWidget::onReceive(byte ch)
 
 void TerminalWidget::onKeyDown(KeyEvent& event)
 {
-    char buf[] = { 0, 0 };
-    buf[0] = event.key();
-    write(g_fd, buf, 2);
-    return Widget::onKeyDown(event);
+    if (event.text().isEmpty())
+        return;
+    write(g_fd, event.text().characters(), event.text().length());
 }
 
 void TerminalWidget::onKeyUp(KeyEvent& event)

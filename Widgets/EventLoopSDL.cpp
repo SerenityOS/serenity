@@ -29,9 +29,46 @@ static inline MouseButton toMouseButton(byte sdlButton)
     return MouseButton::None;
 }
 
-static inline int toKey(const SDL_Keysym& sym)
+void EventLoopSDL::handleKeyEvent(Event::Type type, const SDL_KeyboardEvent& sdlKey)
 {
-    return sym.sym;
+    auto keyEvent = make<KeyEvent>(type, 0);
+
+    if (sdlKey.keysym.sym > SDLK_UNKNOWN && sdlKey.keysym.sym <= 'z') {
+        char buf[] = { 0, 0 };
+        char& ch = buf[0];
+        ch = (char)sdlKey.keysym.sym;
+        if (sdlKey.keysym.mod & KMOD_SHIFT) {
+            if (ch >= 'a' && ch <= 'z') {
+                ch &= ~0x20;
+            } else {
+                switch (ch) {
+                case '1': ch = '!'; break;
+                case '2': ch = '@'; break;
+                case '3': ch = '#'; break;
+                case '4': ch = '$'; break;
+                case '5': ch = '%'; break;
+                case '6': ch = '^'; break;
+                case '7': ch = '&'; break;
+                case '8': ch = '*'; break;
+                case '9': ch = '('; break;
+                case '0': ch = ')'; break;
+                case '-': ch = '_'; break;
+                case '=': ch = '+'; break;
+                case '`': ch = '~'; break;
+                case ',': ch = '<'; break;
+                case '.': ch = '>'; break;
+                case '/': ch = '?'; break;
+                case '[': ch = '{'; break;
+                case ']': ch = '}'; break;
+                case '\\': ch = '|'; break;
+                case '\'': ch = '"'; break;
+                }
+            }
+        }
+        keyEvent->m_text = buf;
+    }
+
+    postEvent(&WindowManager::the(), std::move(keyEvent));
 }
 
 void EventLoopSDL::waitForEvent()
@@ -59,10 +96,10 @@ void EventLoopSDL::waitForEvent()
             postEvent(&WindowManager::the(), make<MouseEvent>(Event::MouseUp, sdlEvent.button.x, sdlEvent.button.y, toMouseButton(sdlEvent.button.button)));
             return;
         case SDL_KEYDOWN:
-            postEvent(&WindowManager::the(), make<KeyEvent>(Event::KeyDown, toKey(sdlEvent.key.keysym)));
+            handleKeyEvent(Event::KeyDown, sdlEvent.key);
             return;
         case SDL_KEYUP:
-            postEvent(&WindowManager::the(), make<KeyEvent>(Event::KeyUp, toKey(sdlEvent.key.keysym)));
+            handleKeyEvent(Event::KeyUp, sdlEvent.key);
             return;
         }
     }
