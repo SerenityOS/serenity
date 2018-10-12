@@ -63,7 +63,6 @@ void Widget::onPaint(PaintEvent& event)
 
 void Widget::onShow(ShowEvent&)
 {
-    update();
 }
 
 void Widget::onHide(HideEvent&)
