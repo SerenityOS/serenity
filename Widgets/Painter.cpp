@@ -105,7 +105,7 @@ void Painter::drawText(const Rect& rect, const String& text, TextAlignment align
     } else if (alignment == TextAlignment::Center) {
         int textWidth = text.length() * m_font.glyphWidth();
         point = rect.center();
-        point.moveBy(-(textWidth / 2), -(m_font.glyphWidth() / 2));
+        point.moveBy(-(textWidth / 2), -(m_font.glyphHeight() / 2));
     } else {
         ASSERT_NOT_REACHED();
     }
