@@ -55,6 +55,18 @@ public:
     int top() const { return y(); }
     int bottom() const { return y() + height(); }
 
+    void setLeft(int left)
+    {
+        setWidth(x() - left);
+        setX(left);
+    }
+
+    void setTop(int top)
+    {
+        setHeight(y() - top);
+        setY(top);
+    }
+
     int x() const { return location().x(); }
     int y() const { return location().y(); }
     int width() const { return m_width; }

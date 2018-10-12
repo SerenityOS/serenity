@@ -174,12 +174,6 @@ void WindowManager::processMouseEvent(MouseEvent& event)
         }
     }
 
-    // Otherwise: send it to root the root widget...
-    auto result = m_rootWidget->hitTest(event.x(), event.y());
-    //printf("hit test for %d,%d found: %s{%p} %d,%d\n", me.x(), me.y(), result.widget->className(), result.widget, result.localX, result.localY);
-    // FIXME: Re-use the existing event instead of crafting a new one?
-    auto localEvent = make<MouseEvent>(event.type(), result.localX, result.localY, event.button());
-    result.widget->event(*localEvent);
 }
 
 void WindowManager::handlePaintEvent(PaintEvent& event)

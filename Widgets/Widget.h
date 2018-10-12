@@ -23,13 +23,15 @@ public:
     virtual void onMouseDown(MouseEvent&);
     virtual void onMouseUp(MouseEvent&);
 
-    Rect rect() const { return m_rect; }
-    Point position() const { return m_rect.location(); }
+    Rect relativeRect() const { return m_relativeRect; }
+    Point relativePosition() const { return m_relativeRect.location(); }
 
-    int x() const { return rect().x(); }
-    int y() const { return rect().y(); }
-    int width() const { return rect().width(); }
-    int height() const { return rect().height(); }
+    int x() const { return m_relativeRect.x(); }
+    int y() const { return m_relativeRect.y(); }
+    int width() const { return m_relativeRect.width(); }
+    int height() const { return m_relativeRect.height(); }
+
+    Rect rect() const { return { 0, 0, width(), height() }; }
 
     void update();
 
@@ -42,7 +44,7 @@ public:
 
     virtual const char* className() const override { return "Widget"; }
 
-    void setRect(const Rect&);
+    void setWindowRelativeRect(const Rect&);
 
     Color backgroundColor() const { return m_backgroundColor; }
     Color foregroundColor() const { return m_foregroundColor; }
@@ -72,7 +74,7 @@ public:
 private:
     Window* m_window { nullptr };
 
-    Rect m_rect;
+    Rect m_relativeRect;
     Color m_backgroundColor;
     Color m_foregroundColor;
 
