@@ -63,7 +63,7 @@ CharacterWithAttributes& TerminalWidget::at(unsigned row, unsigned column)
 void TerminalWidget::onPaint(PaintEvent&)
 {
     Painter painter(*this);
-    painter.fillRect(rect(), Color(0, 0, 0));
+    painter.fillRect(rect(), Color::Black);
 
     auto& font = Font::defaultFont();
 
