@@ -30,39 +30,54 @@ void CheckBox::setIsChecked(bool b)
 }
 
 static const char* uncheckedBitmap = {
-    "############"
-    "#          #"
-    "#          #"
-    "#          #"
-    "#          #"
-    "#          #"
-    "#          #"
-    "#          #"
-    "#          #"
-    "#          #"
-    "#          #"
-    "############"
+    "###########"
+    "#         #"
+    "#         #"
+    "#         #"
+    "#         #"
+    "#         #"
+    "#         #"
+    "#         #"
+    "#         #"
+    "#         #"
+    "###########"
 };
 
+#if 0
 static const char* checkedBitmap = {
     "############"
     "#          #"
-    "# #      # #"
-    "#  #    #  #"
-    "#   #  #   #"
-    "#    ##    #"
-    "#    ##    #"
-    "#   #  #   #"
-    "#  #    #  #"
-    "# #      # #"
+    "#       ## #"
+    "#       ## #"
+    "#      ##  #"
+    "#      ##  #"
+    "#     ##   #"
+    "# ##  ##   #"
+    "#  ## ##   #"
+    "#   ###    #"
     "#          #"
     "############"
+};
+#endif
+
+static const char* checkedBitmap = {
+    "###########"
+    "##       ##"
+    "# #     # #"
+    "#  #   #  #"
+    "#   # #   #"
+    "#    #    #"
+    "#   # #   #"
+    "#  #   #  #"
+    "# #     # #"
+    "##       ##"
+    "###########"
 };
 
 void CheckBox::onPaint(PaintEvent&)
 {
     Painter painter(*this);
-    auto bitmap = CBitmap::createFromASCII(isChecked() ? checkedBitmap : uncheckedBitmap, 12, 12);
+    auto bitmap = CBitmap::createFromASCII(isChecked() ? checkedBitmap : uncheckedBitmap, 11, 11);
 
     auto textRect = rect();
     textRect.setLeft(bitmap->width() + 4);
@@ -70,7 +85,7 @@ void CheckBox::onPaint(PaintEvent&)
 
     Point bitmapPosition;
     bitmapPosition.setX(2);
-    bitmapPosition.setY(height() / 2 - bitmap->height() / 2);
+    bitmapPosition.setY(height() / 2 - bitmap->height() / 2 - 1);
 
     painter.fillRect(rect(), backgroundColor());
     painter.drawBitmap(bitmapPosition, *bitmap, Color(0, 0, 0));
