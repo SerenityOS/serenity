@@ -43,13 +43,12 @@ void Object::addChild(Object& object)
 
 void Object::removeChild(Object& object)
 {
-    // Oh geez, Vector needs a remove() huh...
-    Vector<Object*> newList;
-    for (auto* child : m_children) {
-        if (child != &object)
-            newList.append(child);
+    for (unsigned i = 0; i < m_children.size(); ++i) {
+        if (m_children[i] == &object) {
+            m_children.remove(i);
+            return;
+        }
     }
-    m_children = std::move(newList);
 }
 
 void Object::onTimer(TimerEvent&)
