@@ -14,6 +14,7 @@ class WindowManager : public Object {
 public:
     static WindowManager& the(); 
     void addWindow(Window&);
+    void removeWindow(Window&);
     void paintWindowFrames();
 
     void notifyTitleChanged(Window&);
