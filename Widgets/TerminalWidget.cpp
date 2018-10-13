@@ -60,7 +60,7 @@ CharacterWithAttributes& TerminalWidget::at(unsigned row, unsigned column)
     return m_screen[row * columns() + column];
 }
 
-void TerminalWidget::onPaint(PaintEvent&)
+void TerminalWidget::paintEvent(PaintEvent&)
 {
     Painter painter(*this);
     painter.fillRect(rect(), Color::Black);
@@ -144,16 +144,16 @@ void TerminalWidget::onReceive(byte ch)
     update();
 }
 
-void TerminalWidget::onKeyDown(KeyEvent& event)
+void TerminalWidget::keyDownEvent(KeyEvent& event)
 {
     if (event.text().isEmpty())
         return;
     write(g_fd, event.text().characters(), event.text().length());
 }
 
-void TerminalWidget::onKeyUp(KeyEvent& event)
+void TerminalWidget::keyUpEvent(KeyEvent& event)
 {
-    return Widget::onKeyUp(event);
+    return Widget::keyUpEvent(event);
 }
 
 void TerminalWidget::bell()
@@ -165,7 +165,7 @@ void TerminalWidget::bell()
     update();
 }
 
-void TerminalWidget::onTimer(TimerEvent&)
+void TerminalWidget::timerEvent(TimerEvent&)
 {
     m_belling = false;
     stopTimer();

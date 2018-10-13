@@ -13,7 +13,7 @@ ClockWidget::~ClockWidget()
 {
 }
 
-void ClockWidget::onPaint(PaintEvent&)
+void ClockWidget::paintEvent(PaintEvent&)
 {
     auto now = time(nullptr);
     auto& tm = *localtime(&now);
@@ -26,7 +26,7 @@ void ClockWidget::onPaint(PaintEvent&)
     painter.drawText(rect(), timeBuf, Painter::TextAlignment::Center, Color::Black);
 }
 
-void ClockWidget::onTimer(TimerEvent&)
+void ClockWidget::timerEvent(TimerEvent&)
 {
     auto now = time(nullptr);
     if (now == m_lastSeenTimestamp)

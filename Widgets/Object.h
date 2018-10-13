@@ -25,7 +25,7 @@ public:
     bool hasTimer() const { return m_timerID; }
 
 private:
-    virtual void onTimer(TimerEvent&);
+    virtual void timerEvent(TimerEvent&);
 
     void addChild(Object&);
     void removeChild(Object&);

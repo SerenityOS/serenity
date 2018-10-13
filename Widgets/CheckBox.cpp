@@ -74,7 +74,7 @@ static const char* checkedBitmap = {
     "###########"
 };
 
-void CheckBox::onPaint(PaintEvent&)
+void CheckBox::paintEvent(PaintEvent&)
 {
     Painter painter(*this);
     auto bitmap = CBitmap::createFromASCII(isChecked() ? checkedBitmap : uncheckedBitmap, 11, 11);
@@ -95,9 +95,9 @@ void CheckBox::onPaint(PaintEvent&)
     }
 }
 
-void CheckBox::onMouseDown(MouseEvent& event)
+void CheckBox::mouseDownEvent(MouseEvent& event)
 {
-    printf("CheckBox::onMouseDown: x=%d, y=%d, button=%u\n", event.x(), event.y(), (unsigned)event.button());
+    printf("CheckBox::mouseDownEvent: x=%d, y=%d, button=%u\n", event.x(), event.y(), (unsigned)event.button());
 
     setIsChecked(!isChecked());
 }

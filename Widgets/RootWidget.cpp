@@ -11,11 +11,11 @@ RootWidget::~RootWidget()
 {
 }
 
-void RootWidget::onPaint(PaintEvent& event)
+void RootWidget::paintEvent(PaintEvent& event)
 {
-    Widget::onPaint(event);
+    Widget::paintEvent(event);
 
-    printf("RootWidget::onPaint: %d,%d %dx%d\n",
+    printf("RootWidget::paintEvent: %d,%d %dx%d\n",
             event.rect().x(),
             event.rect().y(),
             event.rect().width(),
@@ -24,9 +24,9 @@ void RootWidget::onPaint(PaintEvent& event)
     painter.fillRect(event.rect(), Color(0, 72, 96));
 }
 
-void RootWidget::onMouseMove(MouseEvent& event)
+void RootWidget::mouseMoveEvent(MouseEvent& event)
 {
-    //printf("RootWidget::onMouseMove: x=%d, y=%d\n", event.x(), event.y());
-    Widget::onMouseMove(event);
+    //printf("RootWidget::mouseMoveEvent: x=%d, y=%d\n", event.x(), event.y());
+    Widget::mouseMoveEvent(event);
 }
 

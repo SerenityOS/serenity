@@ -37,64 +37,64 @@ void Widget::event(Event& event)
                 return;
         }
         m_hasPendingPaintEvent = false;
-        return onPaint(static_cast<PaintEvent&>(event));
+        return paintEvent(static_cast<PaintEvent&>(event));
     case Event::Show:
-        return onShow(static_cast<ShowEvent&>(event));
+        return showEvent(static_cast<ShowEvent&>(event));
     case Event::Hide:
-        return onHide(static_cast<HideEvent&>(event));
+        return hideEvent(static_cast<HideEvent&>(event));
     case Event::KeyDown:
-        return onKeyDown(static_cast<KeyEvent&>(event));
+        return keyDownEvent(static_cast<KeyEvent&>(event));
     case Event::KeyUp:
-        return onKeyUp(static_cast<KeyEvent&>(event));
+        return keyUpEvent(static_cast<KeyEvent&>(event));
     case Event::MouseMove:
-        return onMouseMove(static_cast<MouseEvent&>(event));
+        return mouseMoveEvent(static_cast<MouseEvent&>(event));
     case Event::MouseDown:
         if (auto* win = window()) {
             // FIXME: if (acceptsFocus())
             win->setFocusedWidget(this);
         }
-        return onMouseDown(static_cast<MouseEvent&>(event));
+        return mouseDownEvent(static_cast<MouseEvent&>(event));
     case Event::MouseUp:
-        return onMouseUp(static_cast<MouseEvent&>(event));
+        return mouseUpEvent(static_cast<MouseEvent&>(event));
     default:
         return Object::event(event);
     }
 }
 
-void Widget::onPaint(PaintEvent& event)
+void Widget::paintEvent(PaintEvent& event)
 {
-    //printf("Widget::onPaint :)\n");
+    //printf("Widget::paintEvent :)\n");
     for (auto* ch : children()) {
         auto* child = (Widget*)ch;
-        child->onPaint(event);
+        child->paintEvent(event);
     }
 }
 
-void Widget::onShow(ShowEvent&)
+void Widget::showEvent(ShowEvent&)
 {
 }
 
-void Widget::onHide(HideEvent&)
+void Widget::hideEvent(HideEvent&)
 {
 }
 
-void Widget::onKeyDown(KeyEvent&)
+void Widget::keyDownEvent(KeyEvent&)
 {
 }
 
-void Widget::onKeyUp(KeyEvent&)
+void Widget::keyUpEvent(KeyEvent&)
 {
 }
 
-void Widget::onMouseDown(MouseEvent&)
+void Widget::mouseDownEvent(MouseEvent&)
 {
 }
 
-void Widget::onMouseUp(MouseEvent&)
+void Widget::mouseUpEvent(MouseEvent&)
 {
 }
 
-void Widget::onMouseMove(MouseEvent&)
+void Widget::mouseMoveEvent(MouseEvent&)
 {
 }
 

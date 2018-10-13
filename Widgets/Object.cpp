@@ -27,7 +27,7 @@ void Object::event(Event& event)
 {
     switch (event.type()) {
     case Event::Timer:
-        return onTimer(static_cast<TimerEvent&>(event));
+        return timerEvent(static_cast<TimerEvent&>(event));
     case Event::Invalid:
         ASSERT_NOT_REACHED();
         break;
@@ -51,7 +51,7 @@ void Object::removeChild(Object& object)
     }
 }
 
-void Object::onTimer(TimerEvent&)
+void Object::timerEvent(TimerEvent&)
 {
 }
 
