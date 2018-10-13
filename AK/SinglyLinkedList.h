@@ -8,15 +8,27 @@ template<typename T>
 class SinglyLinkedList {
 private:
     struct Node {
+        explicit Node(T&& v) : value(v) { }
         T value;
         Node* next { nullptr };
     };
 
 public:
     SinglyLinkedList() { }
-    ~SinglyLinkedList() { }
+    ~SinglyLinkedList() { clear(); }
 
     bool isEmpty() const { return !head(); }
+
+    void clear()
+    {
+        for (auto* node = m_head; node; ) {
+            auto* next = node->next;
+            delete node;
+            node = next;
+        }
+        m_head = nullptr;
+        m_tail = nullptr;
+    }
 
     T& first() { ASSERT(head()); return head()->value; }
     const T& first() const { ASSERT(head()); return head()->value; }
@@ -25,8 +37,7 @@ public:
 
     void append(T&& value)
     {
-        auto* node = new Node;
-        node->value = std::move(value);
+        auto* node = new Node(std::move(value));
         if (!m_head) {
             m_head = node;
             m_tail = node;
