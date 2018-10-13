@@ -126,22 +126,32 @@ void WindowManager::addWindow(Window& window)
         setActiveWindow(&window);
 }
 
+void WindowManager::repaint()
+{
+    handlePaintEvent(*make<PaintEvent>());
+}
+
 void WindowManager::removeWindow(Window& window)
 {
-    ASSERT(m_windows.contains(&window));
+    if (!m_windows.contains(&window))
+        return;
+
     m_windows.remove(&window);
     if (!activeWindow() && !m_windows.isEmpty())
         setActiveWindow(*m_windows.begin());
+
+    repaint();
 }
 
 void WindowManager::notifyTitleChanged(Window& window)
 {
-    //printf("[WM] Window{%p} title set to '%s'\n", &window, window.title().characters());
+    printf("[WM] Window{%p} title set to '%s'\n", &window, window.title().characters());
 }
 
 void WindowManager::notifyRectChanged(Window& window, const Rect& oldRect, const Rect& newRect)
 {
-    //printf("[WM] Window %p rect changed (%d,%d %dx%d) -> (%d,%d %dx%d)\n", &window, oldRect.x(), oldRect.y(), oldRect.width(), oldRect.height(), newRect.x(), newRect.y(), newRect.width(), newRect.height());
+    printf("[WM] Window %p rect changed (%d,%d %dx%d) -> (%d,%d %dx%d)\n", &window, oldRect.x(), oldRect.y(), oldRect.width(), oldRect.height(), newRect.x(), newRect.y(), newRect.width(), newRect.height());
+    repaintAfterMove(oldRect, newRect);
 }
 
 void WindowManager::handleTitleBarMouseEvent(Window& window, MouseEvent& event)
@@ -205,7 +215,7 @@ void WindowManager::processMouseEvent(MouseEvent& event)
             Point pos = m_dragWindowOrigin;
             printf("[WM] Dragging [origin: %d,%d] now: %d,%d\n", m_dragOrigin.x(), m_dragOrigin.y(), event.x(), event.y());
             pos.moveBy(event.x() - m_dragOrigin.x(), event.y() - m_dragOrigin.y());
-            m_dragWindow->setPosition(pos);
+            m_dragWindow->setPositionWithoutRepaint(pos);
             paintWindowFrame(*m_dragWindow);
             return;
         }
@@ -243,9 +253,8 @@ void WindowManager::handlePaintEvent(PaintEvent& event)
     m_rootWidget->event(event);
     paintWindowFrames();
 
-    for (auto* window : m_windows) {
+    for (auto* window : m_windows)
         window->event(event);
-    }
 }
 
 void WindowManager::event(Event& event)
@@ -294,5 +303,10 @@ void WindowManager::setActiveWindow(Window* window)
         paintWindowFrame(*m_activeWindow);
         m_activeWindow->repaint();
     }
+}
+
+bool WindowManager::isVisible(Window& window) const
+{
+    return m_windows.contains(&window);
 }
 

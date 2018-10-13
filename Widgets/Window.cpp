@@ -11,6 +11,10 @@ Window::Window(Object* parent)
 
 Window::~Window()
 {
+    delete m_mainWidget;
+    m_mainWidget = nullptr;
+    if (parent())
+        parent()->removeChild(*this);
     WindowManager::the().removeWindow(*this);
 }
 
@@ -96,6 +100,11 @@ bool Window::isActive() const
     return WindowManager::the().activeWindow() == this;
 }
 
+bool Window::isVisible() const
+{
+    return WindowManager::the().isVisible(const_cast<Window&>(*this));
+}
+
 void Window::setFocusedWidget(Widget* widget)
 {
     if (m_focusedWidget.ptr() == widget)
@@ -113,5 +122,7 @@ void Window::setFocusedWidget(Widget* widget)
 
 void Window::close()
 {
+    WindowManager::the().removeWindow(*this);
+    deleteLater();
 }
 

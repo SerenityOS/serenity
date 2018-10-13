@@ -22,9 +22,11 @@ public:
 
     const Rect& rect() const { return m_rect; }
     void setRect(const Rect&);
+    void setRectWithoutRepaint(const Rect& rect) { m_rect = rect; }
 
     Point position() const { return m_rect.location(); }
     void setPosition(const Point& position) { setRect({ position.x(), position.y(), width(), height() }); }
+    void setPositionWithoutRepaint(const Point& position) { setRectWithoutRepaint({ position.x(), position.y(), width(), height() }); }
 
     Widget* mainWidget() { return m_mainWidget; }
     const Widget* mainWidget() const { return m_mainWidget; }
@@ -43,6 +45,8 @@ public:
     Widget* focusedWidget() { return m_focusedWidget.ptr(); }
     const Widget* focusedWidget() const { return m_focusedWidget.ptr(); }
     void setFocusedWidget(Widget*);
+
+    bool isVisible() const;
 
     void close();
 
