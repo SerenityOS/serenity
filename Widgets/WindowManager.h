@@ -4,6 +4,7 @@
 #include "Rect.h"
 #include "Color.h"
 #include <AK/HashTable.h>
+#include <AK/WeakPtr.h>
 
 class MouseEvent;
 class PaintEvent;
@@ -41,7 +42,8 @@ private:
     HashTable<Window*> m_windows;
     Widget* m_rootWidget { nullptr };
 
-    Window* m_dragWindow { nullptr };
+    WeakPtr<Window> m_dragWindow;
+
     Point m_dragOrigin;
     Point m_dragWindowOrigin;
     Rect m_lastDragRect;

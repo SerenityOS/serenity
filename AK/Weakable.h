@@ -2,6 +2,7 @@
 
 #include "Assertions.h"
 #include "Retainable.h"
+#include "RetainPtr.h"
 
 namespace AK {
 
@@ -16,8 +17,8 @@ public:
     const T* ptr() const { return static_cast<const T*>(m_ptr); }
 
 private:
-    explicit WeakLink(Weakable<T>& weakable) : m_ptr(&weakable) { }
-    Weakable<T>* m_ptr;
+    explicit WeakLink(T& weakable) : m_ptr(&weakable) { }
+    T* m_ptr;
 };
 
 template<typename T>

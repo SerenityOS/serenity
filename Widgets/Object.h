@@ -1,11 +1,12 @@
 #pragma once
 
 #include <AK/Vector.h>
+#include <AK/Weakable.h>
 
 class Event;
 class TimerEvent;
 
-class Object {
+class Object : public Weakable<Object> {
 public:
     Object(Object* parent = nullptr);
     virtual ~Object();
