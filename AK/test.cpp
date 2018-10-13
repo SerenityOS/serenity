@@ -155,5 +155,33 @@ int main(int, char**)
         printInts(v);
     }
 
+    {
+        auto printInts = [] (const HashTable<int>& h) {
+            printf("HashTable {\n    size: %u\n    capacity: %u\n    elements: ", h.size(), h.capacity());
+            for (auto i : h)
+                printf("%d ", i);
+            printf("\n}\n");
+        };
+
+        HashTable<int> h;
+
+        h.set(10);
+        h.set(20);
+        h.set(30);
+        h.set(40);
+        h.set(50);
+
+        h.dump();
+
+        printInts(h);
+
+        h.remove(30);
+        printInts(h);
+
+        h.set(30);
+        h.remove(30);
+        printInts(h);
+    }
+
     return 0;
 }
