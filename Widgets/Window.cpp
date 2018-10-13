@@ -56,8 +56,7 @@ void Window::event(Event& event)
             //printf("hit test for %d,%d found: %s{%p} %d,%d\n", me.x(), me.y(), result.widget->className(), result.widget, result.localX, result.localY);
             // FIXME: Re-use the existing event instead of crafting a new one?
             auto localEvent = make<MouseEvent>(event.type(), result.localX, result.localY, me.button());
-            result.widget->event(*localEvent);
-            return m_mainWidget->event(event);
+            return result.widget->event(*localEvent);
         }
         return Object::event(event);
     }
@@ -101,10 +100,14 @@ void Window::setFocusedWidget(Widget* widget)
 {
     if (m_focusedWidget.ptr() == widget)
         return;
+    auto* previouslyFocusedWidget = m_focusedWidget.ptr();
     if (!widget) {
         m_focusedWidget = nullptr;
-        return;
+    } else {
+        m_focusedWidget = widget->makeWeakPtr();
+        m_focusedWidget->repaint(Rect());
     }
-    m_focusedWidget = widget->makeWeakPtr();
+    if (previouslyFocusedWidget)
+        previouslyFocusedWidget->repaint(Rect());
 }
 
