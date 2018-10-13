@@ -254,9 +254,10 @@ void WindowManager::event(Event& event)
         return processMouseEvent(static_cast<MouseEvent&>(event));
 
     if (event.isKeyEvent()) {
-        // FIXME: Implement proper focus.
-        Widget* focusedWidget = g_tw;
-        return focusedWidget->event(event);
+        // FIXME: This is a good place to hook key events globally. :)
+        if (m_activeWindow)
+            return m_activeWindow->event(event);
+        return Object::event(event);
     }
 
     if (event.isPaintEvent())

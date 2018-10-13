@@ -83,11 +83,28 @@ void Window::event(Event& event)
         return Object::event(event);
     }
 
+    if (event.isKeyEvent()) {
+        if (m_focusedWidget)
+            return m_focusedWidget->event(event);
+        return Object::event(event);
+    }
+
     return Object::event(event);
 }
 
 bool Window::isActive() const
 {
     return WindowManager::the().activeWindow() == this;
+}
+
+void Window::setFocusedWidget(Widget* widget)
+{
+    if (m_focusedWidget.ptr() == widget)
+        return;
+    if (!widget) {
+        m_focusedWidget = nullptr;
+        return;
+    }
+    m_focusedWidget = widget->makeWeakPtr();
 }
 

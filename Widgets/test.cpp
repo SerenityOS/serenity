@@ -80,6 +80,7 @@ int main(int argc, char** argv)
 
     auto* t = new TerminalWidget(nullptr);
     win->setMainWidget(t);
+    t->setFocus(true);
 
     auto* clockWin = new Window;
     clockWin->setTitle("Clock");
