@@ -83,6 +83,10 @@ int main(int argc, char** argv)
         tb->setText("Hello!");
         tb->setFocus(true);
 
+        tb->onReturnPressed = [] (TextBox& textBox) {
+            printf("TextBox %p return pressed: '%s'\n", &textBox, textBox.text().characters());
+        };
+
         WindowManager::the().setActiveWindow(widgetTestWindow);
     }
 
