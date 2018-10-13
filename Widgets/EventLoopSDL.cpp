@@ -40,6 +40,7 @@ void EventLoopSDL::handleKeyEvent(Event::Type type, const SDL_KeyboardEvent& sdl
     case SDLK_UP: key = KeyboardKey::UpArrow; break;
     case SDLK_DOWN: key = KeyboardKey::DownArrow; break;
     case SDLK_BACKSPACE: key = KeyboardKey::Backspace; break;
+    case SDLK_RETURN: key = KeyboardKey::Return; break;
     }
     keyEvent->m_key = key;
 

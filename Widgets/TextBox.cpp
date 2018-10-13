@@ -56,7 +56,7 @@ void TextBox::paintEvent(PaintEvent&)
         painter.drawBitmap({x, y}, *bitmap, Color::Black);
     }
 
-    if (m_cursorBlinkState) {
+    if (isFocused() && m_cursorBlinkState) {
         unsigned visibleCursorPosition = m_cursorPosition - firstVisibleChar;
         Rect cursorRect(innerRect.x() + visibleCursorPosition * font.glyphWidth(), innerRect.y(), 1, innerRect.height());
         painter.fillRect(cursorRect, foregroundColor());
@@ -107,6 +107,10 @@ void TextBox::keyDownEvent(KeyEvent& event)
         return;
     case KeyboardKey::Backspace:
         return handleBackspace();
+    case KeyboardKey::Return:
+        if (onReturnPressed)
+            onReturnPressed(*this);
+        return;
     }
 
     if (!event.text().isEmpty()) {

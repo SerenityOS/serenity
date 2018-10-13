@@ -105,6 +105,7 @@ enum KeyboardKey {
     UpArrow,
     DownArrow,
     Backspace,
+    Return,
 };
 
 class KeyEvent final : public Event {
