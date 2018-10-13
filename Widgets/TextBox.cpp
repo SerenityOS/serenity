@@ -42,12 +42,12 @@ void TextBox::paintEvent(PaintEvent&)
     int firstVisibleChar = max((int)m_cursorPosition - (int)maxCharsToPaint, 0);
     unsigned charsToPaint = min(m_text.length() - firstVisibleChar, maxCharsToPaint);
 
+    int y = innerRect.center().y() - font.glyphHeight() / 2;
     for (unsigned i = 0; i < charsToPaint; ++i) {
         char ch = m_text[firstVisibleChar + i];
         if (ch == ' ')
             continue;
         int x = innerRect.x() + (i * font.glyphWidth());
-        int y = innerRect.y();
         auto* bitmap = font.glyphBitmap(ch);
         if (!bitmap) {
             printf("TextBox: glyph missing: %02x\n", ch);
