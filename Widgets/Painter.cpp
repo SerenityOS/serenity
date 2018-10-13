@@ -201,3 +201,12 @@ void Painter::drawLine(const Point& p1, const Point& p2, Color color)
         }
     }
 }
+
+void Painter::drawFocusRect(const Rect& rect)
+{
+    Rect focusRect = rect;
+    focusRect.moveBy(1, 1);
+    focusRect.setWidth(focusRect.width() - 2);
+    focusRect.setHeight(focusRect.height() - 2);
+    drawRect(focusRect, Color(96, 96, 192));
+}

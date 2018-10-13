@@ -49,6 +49,10 @@ void Widget::event(Event& event)
     case Event::MouseMove:
         return onMouseMove(static_cast<MouseEvent&>(event));
     case Event::MouseDown:
+        if (auto* win = window()) {
+            // FIXME: if (acceptsFocus())
+            win->setFocusedWidget(this);
+        }
         return onMouseDown(static_cast<MouseEvent&>(event));
     case Event::MouseUp:
         return onMouseUp(static_cast<MouseEvent&>(event));
@@ -123,13 +127,15 @@ void Widget::setWindow(Window* window)
 
 bool Widget::isFocused() const
 {
-    return m_window && m_window->focusedWidget() == this;
+    if (auto* win = window())
+        return win->isActive() &&  win->focusedWidget() == this;
+    return false;
 }
 
 void Widget::setFocus(bool focus)
 {
     if (focus == isFocused())
         return;
-    if (m_window)
-        m_window->setFocusedWidget(this);
+    if (auto* win = window())
+        win->setFocusedWidget(this);
 }

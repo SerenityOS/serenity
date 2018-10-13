@@ -22,6 +22,8 @@ public:
     void drawPixel(const Point&, Color);
     void drawLine(const Point& p1, const Point& p2, Color);
 
+    void drawFocusRect(const Rect&);
+
     void xorRect(const Rect&, Color);
 
     const Font& font() const;

@@ -1,6 +1,7 @@
 #include "ListBox.h"
 #include "Painter.h"
 #include "Font.h"
+#include "Window.h"
 
 ListBox::ListBox(Widget* parent)
     : Widget(parent)
@@ -19,16 +20,24 @@ unsigned ListBox::itemHeight() const
 void ListBox::onPaint(PaintEvent&)
 {
     Painter painter(*this);
+
+    // FIXME: Reduce overdraw.
     painter.fillRect(rect(), Color::White);
     painter.drawRect(rect(), Color::Black);
 
+    if (isFocused())
+        painter.drawFocusRect(rect());
+
     for (unsigned i = m_scrollOffset; i < m_items.size(); ++i) {
-        Rect itemRect(1, 1 + (i * itemHeight()), width() - 2, itemHeight());
+        Rect itemRect(2, 2 + (i * itemHeight()), width() - 4, itemHeight());
         Rect textRect(itemRect.x() + 1, itemRect.y() + 1, itemRect.width() - 2, itemRect.height() - 2);
 
         Color itemTextColor = foregroundColor();
         if (m_selectedIndex == i) {
-            painter.fillRect(itemRect, Color(0, 32, 128));
+            if (isFocused())
+                painter.fillRect(itemRect, Color(0, 32, 128));
+            else
+                painter.fillRect(itemRect, Color(96, 96, 96));
             itemTextColor = Color::White;
         }
         painter.drawText(textRect, m_items[i], Painter::TextAlignment::TopLeft, itemTextColor);

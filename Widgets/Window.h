@@ -41,6 +41,7 @@ public:
     bool isActive() const;
 
     Widget* focusedWidget() { return m_focusedWidget.ptr(); }
+    const Widget* focusedWidget() const { return m_focusedWidget.ptr(); }
     void setFocusedWidget(Widget*);
 
 private:
