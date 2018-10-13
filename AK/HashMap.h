@@ -50,6 +50,7 @@ public:
     unsigned capacity() const { return m_table.capacity(); }
 
     void set(const K&, V&&);
+    void remove(const K&);
 
     typedef HashTable<Entry, EntryTraits> HashTableType;
     typedef typename HashTableType::Iterator IteratorType;
@@ -73,6 +74,13 @@ template<typename K, typename V>
 void HashMap<K, V>::set(const K& key, V&& value)
 {
     m_table.set(Entry{key, std::move(value)});
+}
+
+template<typename K, typename V>
+void HashMap<K, V>::remove(const K& key)
+{
+    Entry dummy { key, V() };
+    m_table.remove(dummy);
 }
 
 template<typename K, typename V>
