@@ -27,6 +27,7 @@ VFS_OBJS = \
     CheckBox.o \
     ListBox.o \
     TextBox.o \
+    MsgBox.o \
     test.o
 
 OBJS = $(AK_OBJS) $(VFS_OBJS)

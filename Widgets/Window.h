@@ -44,6 +44,8 @@ public:
     const Widget* focusedWidget() const { return m_focusedWidget.ptr(); }
     void setFocusedWidget(Widget*);
 
+    void close();
+
 private:
     String m_title;
     Rect m_rect;

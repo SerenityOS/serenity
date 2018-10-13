@@ -3,6 +3,7 @@
 #include "EventLoop.h"
 #include "WindowManager.h"
 #include "Window.h"
+#include "Painter.h"
 #include <AK/Assertions.h>
 
 Widget::Widget(Widget* parent)
@@ -64,6 +65,10 @@ void Widget::event(Event& event)
 void Widget::paintEvent(PaintEvent& event)
 {
     //printf("Widget::paintEvent :)\n");
+    if (fillWithBackgroundColor()) {
+        Painter painter(*this);
+        painter.fillRect(rect(), backgroundColor());
+    }
     for (auto* ch : children()) {
         auto* child = (Widget*)ch;
         child->paintEvent(event);

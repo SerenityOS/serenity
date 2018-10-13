@@ -111,3 +111,7 @@ void Window::setFocusedWidget(Widget* widget)
         previouslyFocusedWidget->repaint(Rect());
 }
 
+void Window::close()
+{
+}
+
