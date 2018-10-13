@@ -5,6 +5,7 @@
 #include "Rect.h"
 #include "Color.h"
 #include <AK/String.h>
+#include <functional>
 
 class Window;
 

@@ -11,6 +11,8 @@ public:
     String caption() const { return m_caption; }
     void setCaption(String&&);
 
+    std::function<void(Button&)> onClick;
+
 private:
     virtual void paintEvent(PaintEvent&) override;
     virtual void mouseDownEvent(MouseEvent&) override;
