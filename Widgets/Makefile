@@ -26,6 +26,7 @@ VFS_OBJS = \
     CBitmap.o \
     CheckBox.o \
     ListBox.o \
+    TextBox.o \
     test.o
 
 OBJS = $(AK_OBJS) $(VFS_OBJS)

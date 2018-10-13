@@ -32,6 +32,16 @@ static inline MouseButton toMouseButton(byte sdlButton)
 void EventLoopSDL::handleKeyEvent(Event::Type type, const SDL_KeyboardEvent& sdlKey)
 {
     auto keyEvent = make<KeyEvent>(type, 0);
+    int key = 0;
+
+    switch (sdlKey.keysym.sym) {
+    case SDLK_LEFT: key = KeyboardKey::LeftArrow; break;
+    case SDLK_RIGHT: key = KeyboardKey::RightArrow; break;
+    case SDLK_UP: key = KeyboardKey::UpArrow; break;
+    case SDLK_DOWN: key = KeyboardKey::DownArrow; break;
+    case SDLK_BACKSPACE: key = KeyboardKey::Backspace; break;
+    }
+    keyEvent->m_key = key;
 
     if (sdlKey.keysym.sym > SDLK_UNKNOWN && sdlKey.keysym.sym <= 'z') {
         char buf[] = { 0, 0 };
@@ -62,6 +72,7 @@ void EventLoopSDL::handleKeyEvent(Event::Type type, const SDL_KeyboardEvent& sdl
                 case ']': ch = '}'; break;
                 case '\\': ch = '|'; break;
                 case '\'': ch = '"'; break;
+                case ';': ch = ':'; break;
                 }
             }
         }

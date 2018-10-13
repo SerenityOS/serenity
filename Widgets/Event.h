@@ -98,6 +98,15 @@ enum class MouseButton : byte {
     Right,
 };
 
+enum KeyboardKey {
+    Invalid,
+    LeftArrow,
+    RightArrow,
+    UpArrow,
+    DownArrow,
+    Backspace,
+};
+
 class KeyEvent final : public Event {
 public:
     KeyEvent(Type type, int key)
