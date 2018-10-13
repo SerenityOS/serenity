@@ -76,6 +76,9 @@ public:
     Widget* parentWidget() { return static_cast<Widget*>(parent()); }
     const Widget* parentWidget() const { return static_cast<const Widget*>(parent()); }
 
+    void setFillWithBackgroundColor(bool b) { m_fillWithBackgroundColor = b; }
+    bool fillWithBackgroundColor() const { return m_fillWithBackgroundColor; }
+
 private:
     Window* m_window { nullptr };
 
@@ -84,4 +87,5 @@ private:
     Color m_foregroundColor;
 
     bool m_hasPendingPaintEvent { false };
+    bool m_fillWithBackgroundColor { false };
 };

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Object.h"
+#include "Rect.h"
 
 class AbstractScreen : public Object {
 public:
@@ -10,6 +11,8 @@ public:
     unsigned height() const { return m_height; }
 
     static AbstractScreen& the();
+
+    Rect rect() const { return { 0, 0, width(), height() }; }
 
 protected:
     AbstractScreen(unsigned width, unsigned height);

@@ -10,6 +10,7 @@
 #include "CheckBox.h"
 #include "ListBox.h"
 #include "TextBox.h"
+#include "MsgBox.h"
 #include <cstdio>
 
 int main(int argc, char** argv)
@@ -102,6 +103,8 @@ int main(int argc, char** argv)
     clockWin->setTitle("Clock");
     clockWin->setRect({ 500, 50, 100, 40 });
     clockWin->setMainWidget(new ClockWidget);
+
+    MsgBox(nullptr, "This is a message box!");
 
     return loop.exec();
 }
