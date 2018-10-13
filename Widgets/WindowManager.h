@@ -27,6 +27,10 @@ public:
     Window* activeWindow() { return m_activeWindow.ptr(); }
     void setActiveWindow(Window*);
 
+    bool isVisible(Window&) const;
+
+    void repaint();
+
 private:
     WindowManager();
     ~WindowManager();

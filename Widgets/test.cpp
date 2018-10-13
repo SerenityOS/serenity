@@ -86,6 +86,7 @@ int main(int argc, char** argv)
 
         tb->onReturnPressed = [] (TextBox& textBox) {
             printf("TextBox %p return pressed: '%s'\n", &textBox, textBox.text().characters());
+            MsgBox(nullptr, textBox.text());
         };
 
         WindowManager::the().setActiveWindow(widgetTestWindow);

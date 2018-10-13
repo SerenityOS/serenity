@@ -17,6 +17,7 @@ static const char* eventNames[] = {
     "KeyDown",
     "KeyUp",
     "Timer",
+    "DeferredDestroy",
 };
 
 class Event {
@@ -33,6 +34,7 @@ public:
         KeyDown,
         KeyUp,
         Timer,
+        DeferredDestroy,
     };
 
     Event() { }
@@ -51,6 +53,14 @@ protected:
 
 private:
     Type m_type { Invalid };
+};
+
+class DeferredDestroyEvent final : public Event {
+public:
+    DeferredDestroyEvent()
+        : Event(Event::DeferredDestroy)
+    {
+    }
 };
 
 class QuitEvent final : public Event {

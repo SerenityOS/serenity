@@ -24,11 +24,13 @@ public:
     void stopTimer();
     bool hasTimer() const { return m_timerID; }
 
-private:
-    virtual void timerEvent(TimerEvent&);
-
     void addChild(Object&);
     void removeChild(Object&);
+
+    void deleteLater();
+
+private:
+    virtual void timerEvent(TimerEvent&);
 
     Object* m_parent { nullptr };
 

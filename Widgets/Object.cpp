@@ -28,6 +28,9 @@ void Object::event(Event& event)
     switch (event.type()) {
     case Event::Timer:
         return timerEvent(static_cast<TimerEvent&>(event));
+    case Event::DeferredDestroy:
+        delete this;
+        break;
     case Event::Invalid:
         ASSERT_NOT_REACHED();
         break;
@@ -80,5 +83,10 @@ void Object::stopTimer()
         return;
     SDL_RemoveTimer(m_timerID);
     m_timerID = 0;
+}
+
+void Object::deleteLater()
+{
+    EventLoop::main().postEvent(this, make<DeferredDestroyEvent>());
 }
 
