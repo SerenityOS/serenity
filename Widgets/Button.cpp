@@ -87,5 +87,8 @@ void Button::mouseUpEvent(MouseEvent& event)
 
     update();
     Widget::mouseUpEvent(event);
+
+    if (onClick)
+        onClick(*this);
 }
 

@@ -63,6 +63,10 @@ int main(int argc, char** argv)
         b->setWindowRelativeRect({ 0, 20, 100, 20 });
         b->setCaption("Button");
 
+        b->onClick = [] (Button& button) {
+            printf("Button %p clicked!\n", &button);
+        };
+
         auto* c = new CheckBox(widgetTestWindowWidget);
         c->setWindowRelativeRect({ 0, 40, 100, 20 });
         c->setCaption("CheckBox");
