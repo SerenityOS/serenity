@@ -186,12 +186,12 @@ public:
         {
             if (!isEnd && !m_table.isEmpty() && !(m_bucketIterator != DoublyLinkedList<T>::ConstIterator::universalEnd())) {
 #ifdef HASHTABLE_DEBUG
-                printf("bucket iterator init!\n");
+                printf("const bucket iterator init!\n");
 #endif
                 const DoublyLinkedList<T>& chain = m_table.m_buckets[0].chain;
                 m_bucketIterator = chain.begin();
-                
-                skipToNext();
+                if (m_bucketIterator.isEnd())
+                    skipToNext();
             }
         }
 
@@ -206,6 +206,15 @@ public:
 
     Iterator find(const T&);
     ConstIterator find(const T&) const;
+
+    void remove(const T& value)
+    {
+        auto it = find(value);
+        if (it != end())
+            remove(it);
+    }
+
+    void remove(Iterator&);
 
 private:
     Bucket& lookup(const T&);
@@ -313,6 +322,14 @@ auto HashTable<T, TraitsForT>::find(const T& value) const -> ConstIterator
     if (bucketIterator != bucket.chain.end())
         return ConstIterator(*this, false, bucketIterator);
     return end();
+}
+
+template<typename T, typename TraitsForT>
+void HashTable<T, TraitsForT>::remove(Iterator& it)
+{
+    ASSERT(!isEmpty());
+    m_buckets[it.m_bucketIndex].chain.remove(it.m_bucketIterator);
+    --m_size;
 }
 
 template<typename T, typename TraitsForT>
