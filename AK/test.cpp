@@ -7,6 +7,10 @@
 #include "HashMap.h"
 #include "TemporaryFile.h"
 #include "Buffer.h"
+#include "Weakable.h"
+#include "WeakPtr.h"
+
+static void testWeakPtr();
 
 int main(int, char**)
 {
@@ -183,5 +187,27 @@ int main(int, char**)
         printInts(h);
     }
 
+    testWeakPtr();
+
     return 0;
+}
+
+class TestWeakable : public Weakable<TestWeakable> {
+public:
+    TestWeakable() { }
+    ~TestWeakable() { }
+};
+
+void testWeakPtr()
+{
+    auto* weakable = new TestWeakable;
+
+    auto weakPtr = weakable->makeWeakPtr();
+    ASSERT(weakPtr);
+    ASSERT(weakPtr.ptr() == weakable);
+
+    delete weakable;
+
+    ASSERT(!weakPtr);
+    ASSERT(weakPtr.ptr() == nullptr);
 }
