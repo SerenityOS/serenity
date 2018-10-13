@@ -36,6 +36,9 @@ public:
     void update();
     void repaint(const Rect&);
 
+    bool isFocused() const;
+    void setFocus(bool);
+
     struct HitTestResult {
         Widget* widget { nullptr };
         int localX { 0 };

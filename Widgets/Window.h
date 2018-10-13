@@ -1,8 +1,9 @@
 #pragma once
 
-#include <AK/String.h>
 #include "Object.h"
 #include "Rect.h"
+#include <AK/String.h>
+#include <AK/WeakPtr.h>
 
 class Widget;
 
@@ -39,10 +40,15 @@ public:
 
     bool isActive() const;
 
+    Widget* focusedWidget() { return m_focusedWidget.ptr(); }
+    void setFocusedWidget(Widget*);
+
 private:
     String m_title;
     Rect m_rect;
     Widget* m_mainWidget { nullptr };
     bool m_isBeingDragged { false };
+
+    WeakPtr<Widget> m_focusedWidget;
 };
 

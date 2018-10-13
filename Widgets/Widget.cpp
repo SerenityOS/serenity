@@ -120,3 +120,16 @@ void Widget::setWindow(Window* window)
         return;
     m_window = window;
 }
+
+bool Widget::isFocused() const
+{
+    return m_window && m_window->focusedWidget() == this;
+}
+
+void Widget::setFocus(bool focus)
+{
+    if (focus == isFocused())
+        return;
+    if (m_window)
+        m_window->setFocusedWidget(this);
+}
