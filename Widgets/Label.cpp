@@ -19,7 +19,7 @@ void Label::setText(String&& text)
     update();
 }
 
-void Label::onPaint(PaintEvent&)
+void Label::paintEvent(PaintEvent&)
 {
     Painter painter(*this);
     painter.fillRect({ 0, 0, width(), height() }, backgroundColor());
@@ -27,9 +27,9 @@ void Label::onPaint(PaintEvent&)
         painter.drawText({ 4, 4, width(), height() }, text(), Painter::TextAlignment::TopLeft, foregroundColor());
 }
 
-void Label::onMouseMove(MouseEvent& event)
+void Label::mouseMoveEvent(MouseEvent& event)
 {
-    printf("Label::onMouseMove: x=%d, y=%d\n", event.x(), event.y());
-    Widget::onMouseMove(event);
+    printf("Label::mouseMoveEvent: x=%d, y=%d\n", event.x(), event.y());
+    Widget::mouseMoveEvent(event);
 }
 

@@ -15,8 +15,8 @@ public:
     void setIsChecked(bool);
 
 private:
-    virtual void onPaint(PaintEvent&) override;
-    virtual void onMouseDown(MouseEvent&) override;
+    virtual void paintEvent(PaintEvent&) override;
+    virtual void mouseDownEvent(MouseEvent&) override;
 
     virtual const char* className() const override { return "CheckBox"; }
 

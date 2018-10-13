@@ -21,7 +21,7 @@ void TextBox::setText(String&& text)
     update();
 }
 
-void TextBox::onPaint(PaintEvent&)
+void TextBox::paintEvent(PaintEvent&)
 {
     Painter painter(*this);
 
@@ -63,7 +63,7 @@ void TextBox::onPaint(PaintEvent&)
     }
 }
 
-void TextBox::onMouseDown(MouseEvent&)
+void TextBox::mouseDownEvent(MouseEvent&)
 {
 }
 
@@ -90,7 +90,7 @@ void TextBox::handleBackspace()
     update();
 }
 
-void TextBox::onKeyDown(KeyEvent& event)
+void TextBox::keyDownEvent(KeyEvent& event)
 {
     switch (event.key()) {
     case KeyboardKey::LeftArrow:
@@ -126,7 +126,7 @@ void TextBox::onKeyDown(KeyEvent& event)
     }
 }
 
-void TextBox::onTimer(TimerEvent&)
+void TextBox::timerEvent(TimerEvent&)
 {
     // FIXME: Disable the timer when not focused.
     if (!isFocused())

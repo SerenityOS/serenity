@@ -19,7 +19,7 @@ void Button::setCaption(String&& caption)
     update();
 }
 
-void Button::onPaint(PaintEvent&)
+void Button::paintEvent(PaintEvent&)
 {
     Color buttonColor = Color::LightGray;
     Color highlightColor = Color::White;
@@ -69,23 +69,23 @@ void Button::onPaint(PaintEvent&)
     }
 }
 
-void Button::onMouseDown(MouseEvent& event)
+void Button::mouseDownEvent(MouseEvent& event)
 {
-    printf("Button::onMouseDown: x=%d, y=%d, button=%u\n", event.x(), event.y(), (unsigned)event.button());
+    printf("Button::mouseDownEvent: x=%d, y=%d, button=%u\n", event.x(), event.y(), (unsigned)event.button());
 
     m_beingPressed = true;
 
     update();
-    Widget::onMouseDown(event);
+    Widget::mouseDownEvent(event);
 }
 
-void Button::onMouseUp(MouseEvent& event)
+void Button::mouseUpEvent(MouseEvent& event)
 {
-    printf("Button::onMouseUp: x=%d, y=%d, button=%u\n", event.x(), event.y(), (unsigned)event.button());
+    printf("Button::mouseUpEvent: x=%d, y=%d, button=%u\n", event.x(), event.y(), (unsigned)event.button());
 
     m_beingPressed = false;
 
     update();
-    Widget::onMouseUp(event);
+    Widget::mouseUpEvent(event);
 }
 

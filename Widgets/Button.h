@@ -12,9 +12,9 @@ public:
     void setCaption(String&&);
 
 private:
-    virtual void onPaint(PaintEvent&) override;
-    virtual void onMouseDown(MouseEvent&) override;
-    virtual void onMouseUp(MouseEvent&) override;
+    virtual void paintEvent(PaintEvent&) override;
+    virtual void mouseDownEvent(MouseEvent&) override;
+    virtual void mouseUpEvent(MouseEvent&) override;
 
     virtual const char* className() const override { return "Button"; }
 

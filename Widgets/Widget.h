@@ -14,14 +14,14 @@ public:
     virtual ~Widget();
 
     virtual void event(Event&);
-    virtual void onPaint(PaintEvent&);
-    virtual void onShow(ShowEvent&);
-    virtual void onHide(HideEvent&);
-    virtual void onKeyDown(KeyEvent&);
-    virtual void onKeyUp(KeyEvent&);
-    virtual void onMouseMove(MouseEvent&);
-    virtual void onMouseDown(MouseEvent&);
-    virtual void onMouseUp(MouseEvent&);
+    virtual void paintEvent(PaintEvent&);
+    virtual void showEvent(ShowEvent&);
+    virtual void hideEvent(HideEvent&);
+    virtual void keyDownEvent(KeyEvent&);
+    virtual void keyUpEvent(KeyEvent&);
+    virtual void mouseMoveEvent(MouseEvent&);
+    virtual void mouseDownEvent(MouseEvent&);
+    virtual void mouseUpEvent(MouseEvent&);
 
     Rect relativeRect() const { return m_relativeRect; }
     Point relativePosition() const { return m_relativeRect.location(); }

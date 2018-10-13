@@ -11,10 +11,10 @@ public:
     void setText(String&&);
 
 private:
-    virtual void onPaint(PaintEvent&) override;
-    virtual void onMouseDown(MouseEvent&) override;
-    virtual void onKeyDown(KeyEvent&) override;
-    virtual void onTimer(TimerEvent&) override;
+    virtual void paintEvent(PaintEvent&) override;
+    virtual void mouseDownEvent(MouseEvent&) override;
+    virtual void keyDownEvent(KeyEvent&) override;
+    virtual void timerEvent(TimerEvent&) override;
 
     void handleBackspace();
 

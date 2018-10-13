@@ -17,7 +17,7 @@ unsigned ListBox::itemHeight() const
     return Font::defaultFont().glyphHeight() + 2;
 }
 
-void ListBox::onPaint(PaintEvent&)
+void ListBox::paintEvent(PaintEvent&)
 {
     Painter painter(*this);
 
@@ -44,9 +44,9 @@ void ListBox::onPaint(PaintEvent&)
     }
 }
 
-void ListBox::onMouseDown(MouseEvent& event)
+void ListBox::mouseDownEvent(MouseEvent& event)
 {
-    printf("ListBox::onMouseDown %d,%d\n", event.x(), event.y());
+    printf("ListBox::mouseDownEvent %d,%d\n", event.x(), event.y());
     for (unsigned i = m_scrollOffset; i < m_items.size(); ++i) {
         Rect itemRect(1, 1 + (i * itemHeight()), width() - 2, itemHeight());
         if (itemRect.contains(event.position())) {

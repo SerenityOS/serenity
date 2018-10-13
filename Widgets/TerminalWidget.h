@@ -22,10 +22,10 @@ public:
 private:
     CharacterWithAttributes& at(unsigned row, unsigned column);
 
-    virtual void onPaint(PaintEvent&) override;
-    virtual void onKeyDown(KeyEvent&) override;
-    virtual void onKeyUp(KeyEvent&) override;
-    virtual void onTimer(TimerEvent&) override;
+    virtual void paintEvent(PaintEvent&) override;
+    virtual void keyDownEvent(KeyEvent&) override;
+    virtual void keyUpEvent(KeyEvent&) override;
+    virtual void timerEvent(TimerEvent&) override;
 
     void bell();
 

@@ -11,8 +11,8 @@ public:
     int selectedIndex() const { return m_selectedIndex; }
 
 private:
-    virtual void onPaint(PaintEvent&) override;
-    virtual void onMouseDown(MouseEvent&) override;
+    virtual void paintEvent(PaintEvent&) override;
+    virtual void mouseDownEvent(MouseEvent&) override;
 
     unsigned itemHeight() const;
 

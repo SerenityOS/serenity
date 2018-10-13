@@ -8,8 +8,8 @@ public:
     virtual ~ClockWidget() override;
 
 private:
-    virtual void onPaint(PaintEvent&) override;
-    virtual void onTimer(TimerEvent&) override;
+    virtual void paintEvent(PaintEvent&) override;
+    virtual void timerEvent(TimerEvent&) override;
 
     dword m_lastSeenTimestamp { 0 };
 };

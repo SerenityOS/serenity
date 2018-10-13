@@ -8,6 +8,6 @@ public:
     virtual ~RootWidget() override;
 
 private:
-    virtual void onPaint(PaintEvent&) override;
-    virtual void onMouseMove(MouseEvent&) override;
+    virtual void paintEvent(PaintEvent&) override;
+    virtual void mouseMoveEvent(MouseEvent&) override;
 };
