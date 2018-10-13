@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Assertions.h"
-#include "SinglyLinkedList.h"
+#include "DoublyLinkedList.h"
 #include "Traits.h"
 #include <cstdlib>
 #include <utility>
@@ -16,7 +16,7 @@ template<typename T, typename TraitsForT>
 class HashTable {
 private:
     struct Bucket {
-        SinglyLinkedList<T> chain;
+        DoublyLinkedList<T> chain;
     };
 
 public:
@@ -104,12 +104,12 @@ public:
         }
     private:
         friend class HashTable;
-        explicit Iterator(HashTable& table, bool isEnd, typename SinglyLinkedList<T>::Iterator bucketIterator = SinglyLinkedList<T>::Iterator::universalEnd())
+        explicit Iterator(HashTable& table, bool isEnd, typename DoublyLinkedList<T>::Iterator bucketIterator = DoublyLinkedList<T>::Iterator::universalEnd())
             : m_table(table)
             , m_isEnd(isEnd)
             , m_bucketIterator(bucketIterator)
         {
-            if (!isEnd && !m_table.isEmpty() && !(m_bucketIterator != SinglyLinkedList<T>::Iterator::universalEnd())) {
+            if (!isEnd && !m_table.isEmpty() && !(m_bucketIterator != DoublyLinkedList<T>::Iterator::universalEnd())) {
 #ifdef HASHTABLE_DEBUG
                 printf("bucket iterator init!\n");
 #endif
@@ -122,7 +122,7 @@ public:
         HashTable& m_table;
         unsigned m_bucketIndex { 0 };
         bool m_isEnd { false };
-        typename SinglyLinkedList<T>::Iterator m_bucketIterator;
+        typename DoublyLinkedList<T>::Iterator m_bucketIterator;
     };
 
     Iterator begin() { return Iterator(*this, false); }
@@ -168,7 +168,7 @@ public:
                         m_isEnd = true;
                         return;
                     }
-                    const SinglyLinkedList<T>& chain = m_table.m_buckets[m_bucketIndex].chain;
+                    const DoublyLinkedList<T>& chain = m_table.m_buckets[m_bucketIndex].chain;
                     m_bucketIterator = chain.begin();
                 } else {
                     ++m_bucketIterator;
@@ -179,16 +179,16 @@ public:
         }
     private:
         friend class HashTable;
-        ConstIterator(const HashTable& table, bool isEnd, typename SinglyLinkedList<T>::ConstIterator bucketIterator = SinglyLinkedList<T>::ConstIterator::universalEnd())
+        ConstIterator(const HashTable& table, bool isEnd, typename DoublyLinkedList<T>::ConstIterator bucketIterator = DoublyLinkedList<T>::ConstIterator::universalEnd())
             : m_table(table)
             , m_isEnd(isEnd)
             , m_bucketIterator(bucketIterator)
         {
-            if (!isEnd && !m_table.isEmpty() && !(m_bucketIterator != SinglyLinkedList<T>::ConstIterator::universalEnd())) {
+            if (!isEnd && !m_table.isEmpty() && !(m_bucketIterator != DoublyLinkedList<T>::ConstIterator::universalEnd())) {
 #ifdef HASHTABLE_DEBUG
                 printf("bucket iterator init!\n");
 #endif
-                const SinglyLinkedList<T>& chain = m_table.m_buckets[0].chain;
+                const DoublyLinkedList<T>& chain = m_table.m_buckets[0].chain;
                 m_bucketIterator = chain.begin();
                 
                 skipToNext();
@@ -198,7 +198,7 @@ public:
         const HashTable& m_table;
         unsigned m_bucketIndex { 0 };
         bool m_isEnd { false };
-        typename SinglyLinkedList<T>::ConstIterator m_bucketIterator;
+        typename DoublyLinkedList<T>::ConstIterator m_bucketIterator;
     };
 
     ConstIterator begin() const { return ConstIterator(*this, false); }
