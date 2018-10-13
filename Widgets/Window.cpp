@@ -85,3 +85,9 @@ void Window::event(Event& event)
 
     return Object::event(event);
 }
+
+bool Window::isActive() const
+{
+    return WindowManager::the().activeWindow() == this;
+}
+

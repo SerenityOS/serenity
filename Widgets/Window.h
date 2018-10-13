@@ -37,6 +37,8 @@ public:
 
     void repaint();
 
+    bool isActive() const;
+
 private:
     String m_title;
     Rect m_rect;
