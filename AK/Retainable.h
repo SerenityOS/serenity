@@ -7,8 +7,6 @@ namespace AK {
 template<typename T>
 class Retainable {
 public:
-    Retainable() { }
-
     void retain()
     {
         ASSERT(m_retainCount);
@@ -28,6 +26,7 @@ public:
     }
 
 protected:
+    Retainable() { }
     ~Retainable()
     {
         ASSERT(!m_retainCount);
