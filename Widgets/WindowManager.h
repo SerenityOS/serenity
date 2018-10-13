@@ -24,6 +24,9 @@ public:
     Widget* rootWidget() { return m_rootWidget; }
     void setRootWidget(Widget*);
 
+    Window* activeWindow() { return m_activeWindow.ptr(); }
+    void setActiveWindow(Window*);
+
 private:
     WindowManager();
     ~WindowManager();
@@ -35,12 +38,17 @@ private:
     
     virtual void event(Event&) override;
 
-    Color m_windowBorderColor;
-    Color m_windowTitleColor;
+    Color m_activeWindowBorderColor;
+    Color m_activeWindowTitleColor;
+
+    Color m_inactiveWindowBorderColor;
+    Color m_inactiveWindowTitleColor;
 
     void paintWindowFrame(Window&);
     HashTable<Window*> m_windows;
     Widget* m_rootWidget { nullptr };
+
+    WeakPtr<Window> m_activeWindow;
 
     WeakPtr<Window> m_dragWindow;
 

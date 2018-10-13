@@ -46,8 +46,11 @@ WindowManager& WindowManager::the()
 
 WindowManager::WindowManager()
 {
-    m_windowBorderColor = Color(0, 64, 192);
-    m_windowTitleColor = Color::White;
+    m_activeWindowBorderColor = Color(0, 64, 192);
+    m_activeWindowTitleColor = Color::White;
+
+    m_inactiveWindowBorderColor = Color(64, 64, 64);
+    m_inactiveWindowTitleColor = Color::White;
 }
 
 WindowManager::~WindowManager()
@@ -102,26 +105,33 @@ void WindowManager::paintWindowFrame(Window& window)
         return;
     }
 
-    p.drawRect(borderRect, Color::White);
-    p.drawRect(outerRect, m_windowBorderColor);
+    auto titleColor = &window == activeWindow() ? m_activeWindowTitleColor : m_inactiveWindowTitleColor;
+    auto borderColor = &window == activeWindow() ? m_activeWindowBorderColor : m_inactiveWindowBorderColor;
 
-    p.fillRect(titleBarRect, m_windowBorderColor);
-    p.fillRect(bottomRect, m_windowBorderColor);
-    p.fillRect(leftRect, m_windowBorderColor);
-    p.fillRect(rightRect, m_windowBorderColor);
+    p.drawRect(borderRect, Color::MidGray);
+    p.drawRect(outerRect, borderColor);
 
-    p.drawText(titleBarRect, window.title(), Painter::TextAlignment::Center, m_windowTitleColor);
+    p.fillRect(titleBarRect, borderColor);
+    p.fillRect(bottomRect, borderColor);
+    p.fillRect(leftRect, borderColor);
+    p.fillRect(rightRect, borderColor);
+
+    p.drawText(titleBarRect, window.title(), Painter::TextAlignment::Center, titleColor);
 }
 
 void WindowManager::addWindow(Window& window)
 {
     m_windows.set(&window);
+    if (!activeWindow())
+        setActiveWindow(&window);
 }
 
 void WindowManager::removeWindow(Window& window)
 {
     ASSERT(m_windows.contains(&window));
     m_windows.remove(&window);
+    if (!activeWindow() && !m_windows.isEmpty())
+        setActiveWindow(*m_windows.begin());
 }
 
 void WindowManager::notifyTitleChanged(Window& window)
@@ -149,7 +159,7 @@ void WindowManager::handleTitleBarMouseEvent(Window& window, MouseEvent& event)
     byte r = (((double)rand()) / (double)RAND_MAX) * 255.0;
     byte g = (((double)rand()) / (double)RAND_MAX) * 255.0;
     byte b = (((double)rand()) / (double)RAND_MAX) * 255.0;
-    m_windowBorderColor = Color(r, g, b);
+    m_activeWindowBorderColor = Color(r, g, b);
     paintWindowFrame(window);
 #endif
 }
@@ -204,11 +214,15 @@ void WindowManager::processMouseEvent(MouseEvent& event)
     // FIXME: Respect z-order of windows...
     for (auto* window : m_windows) {
         if (titleBarRectForWindow(*window).contains(event.position())) {
+            if (event.type() == Event::MouseDown)
+                setActiveWindow(window);
             handleTitleBarMouseEvent(*window, event);
             return;
         }
 
         if (window->rect().contains(event.position())) {
+            if (event.type() == Event::MouseDown)
+                setActiveWindow(window);
             // FIXME: Re-use the existing event instead of crafting a new one?
             auto localEvent = make<MouseEvent>(event.type(), event.x() - window->rect().x(), event.y() - window->rect().y(), event.button());
             window->event(*localEvent);
@@ -260,3 +274,24 @@ void WindowManager::setRootWidget(Widget* widget)
     m_rootWidget = widget;
     EventLoop::main().postEvent(m_rootWidget, make<ShowEvent>());
 }
+
+void WindowManager::setActiveWindow(Window* window)
+{
+    if (window == m_activeWindow.ptr())
+        return;
+
+    auto* previouslyActiveWindow = m_activeWindow.ptr();
+
+    m_activeWindow = window->makeWeakPtr();
+
+    if (previouslyActiveWindow) {
+        paintWindowFrame(*previouslyActiveWindow);
+        previouslyActiveWindow->repaint();
+    }
+
+    if (m_activeWindow) {
+        paintWindowFrame(*m_activeWindow);
+        m_activeWindow->repaint();
+    }
+}
+
