@@ -96,7 +96,7 @@ void WindowManager::paintWindowFrame(Window& window)
         m_lastDragRect = Rect();
     }
 
-    if (m_dragWindow == &window) {
+    if (m_dragWindow.ptr() == &window) {
         p.xorRect(outerRect, Color::Red);
         m_lastDragRect = outerRect;
         return;
@@ -138,7 +138,7 @@ void WindowManager::handleTitleBarMouseEvent(Window& window, MouseEvent& event)
 {
     if (event.type() == Event::MouseDown) {
         printf("[WM] Begin dragging Window{%p}\n", &window);
-        m_dragWindow = &window;
+        m_dragWindow = window.makeWeakPtr();;
         m_dragOrigin = event.position();
         m_dragWindowOrigin = window.position();
         m_dragStartRect = outerRectForWindow(window);
@@ -180,7 +180,7 @@ void WindowManager::processMouseEvent(MouseEvent& event)
 {
     if (event.type() == Event::MouseUp) {
         if (m_dragWindow) {
-            printf("[WM] Finish dragging Window{%p}\n", m_dragWindow);
+            printf("[WM] Finish dragging Window{%p}\n", m_dragWindow.ptr());
             m_dragWindow->setIsBeingDragged(false);
             m_dragEndRect = outerRectForWindow(*m_dragWindow);
             m_dragWindow = nullptr;
