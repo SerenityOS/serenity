@@ -18,8 +18,7 @@ FileSystem::FileSystem()
 
 FileSystem::~FileSystem()
 {
-    // FIXME: Needs HashMap::remove()!
-    //fileSystems().remove(m_id);
+    fileSystems().remove(m_id);
 }
 
 FileSystem* FileSystem::fromID(dword id)

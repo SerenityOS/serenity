@@ -11,6 +11,7 @@ Window::Window(Object* parent)
 
 Window::~Window()
 {
+    WindowManager::the().removeWindow(*this);
 }
 
 void Window::setMainWidget(Widget* widget)
@@ -30,7 +31,6 @@ void Window::setTitle(String&& title)
     m_title = std::move(title);
     WindowManager::the().notifyTitleChanged(*this);
 }
-
 
 void Window::setRect(const Rect& rect)
 {

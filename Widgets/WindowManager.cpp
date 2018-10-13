@@ -118,6 +118,12 @@ void WindowManager::addWindow(Window& window)
     m_windows.set(&window);
 }
 
+void WindowManager::removeWindow(Window& window)
+{
+    ASSERT(m_windows.contains(&window));
+    m_windows.remove(&window);
+}
+
 void WindowManager::notifyTitleChanged(Window& window)
 {
     //printf("[WM] Window{%p} title set to '%s'\n", &window, window.title().characters());

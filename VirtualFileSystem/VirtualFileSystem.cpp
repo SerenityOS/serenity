@@ -115,11 +115,10 @@ void VirtualFileSystem::freeNode(Node* node)
 {
     ASSERT(node);
     ASSERT(node->inUse());
+    m_inode2vnode.remove(node->inode);
     node->inode.fileSystem()->release();
     node->inode = InodeIdentifier();
     m_nodeFreeList.append(std::move(node));
-    // FIXME: Need HashMap::remove.
-    //m_inode2vnode.remove(node);
 }
 
 bool VirtualFileSystem::isDirectory(const String& path)
