@@ -36,8 +36,9 @@ int FileHandle::stat(Unix::stat* buffer)
     buffer->st_uid = metadata.uid;
     buffer->st_gid = metadata.gid;
     buffer->st_rdev = 0; // FIXME
-    buffer->st_blksize = 0; // FIXME
-    buffer->st_blocks = 0; // FIXME
+    buffer->st_size = metadata.size;
+    buffer->st_blksize = metadata.blockSize;
+    buffer->st_blocks = metadata.blockCount;
     buffer->st_atime = metadata.atime;
     buffer->st_mtime = metadata.mtime;
     buffer->st_ctime = metadata.ctime;

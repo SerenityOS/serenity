@@ -132,6 +132,35 @@ int main(int c, char** v)
             continue;
         }
 
+        if (cmd == "stat" && parts.size() > 1) {
+            char buf[1024];
+            sprintf(buf, "%s/%s", currentDirectory.characters(), parts[1].characters());
+            auto handle = vfs.open(buf);
+            if (!handle) {
+                printf("Can't open '%s' :(\n", buf);
+                continue;
+            }
+            Unix::stat st;
+            int rc = handle->stat(&st);
+            if (rc < 0) {
+                printf("stat failed: %d\n", rc);
+                continue;
+            }
+            printf("st_dev:     %u\n", st.st_dev);
+            printf("st_ino:     %u\n", st.st_ino);
+            printf("st_mode:    %u\n", st.st_mode);
+            printf("st_nlink:   %u\n", st.st_nlink);
+            printf("st_uid:     %u\n", st.st_uid);
+            printf("st_gid:     %u\n", st.st_gid);
+            printf("st_rdev:    %u\n", st.st_rdev);
+            printf("st_size:    %lld\n", st.st_size);
+            printf("st_blksize: %u\n", st.st_blksize);
+            printf("st_blocks:  %u\n", st.st_blocks);
+            printf("st_atime:   %u - %s", st.st_atime, ctime(&st.st_atime));
+            printf("st_mtime:   %u - %s", st.st_mtime, ctime(&st.st_mtime));
+            printf("st_ctime:   %u - %s", st.st_ctime, ctime(&st.st_ctime));
+            continue;
+        }
 
         if (cmd == "cat" && parts.size() > 1) {
             char pathbuf[1024];

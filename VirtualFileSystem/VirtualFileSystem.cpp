@@ -263,7 +263,7 @@ void VirtualFileSystem::listDirectory(const String& path)
             sprintf(buf, "%u, %u", metadata.majorDevice, metadata.minorDevice);
             printf("%12s ", buf);
         } else {
-            printf("%12u ", metadata.size);
+            printf("%12lld ", metadata.size);
         }
 
         printf("\033[30;1m");
