@@ -20,6 +20,7 @@ VFS_OBJS = \
     InodeIdentifier.o \
     CharacterDevice.o \
     ZeroDevice.o \
+    NullDevice.o \
     test.o
 
 OBJS = $(AK_OBJS) $(VFS_OBJS)

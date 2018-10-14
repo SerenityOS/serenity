@@ -7,6 +7,7 @@
 #include <AK/Vector.h>
 #include "InodeIdentifier.h"
 
+class CharacterDevice;
 class FileHandle;
 class FileSystem;
 
@@ -16,6 +17,9 @@ public:
         InodeIdentifier inode;
 
         bool inUse() const { return inode.isValid(); }
+
+        bool isCharacterDevice() const { return m_characterDevice; }
+        CharacterDevice* characterDevice() { return m_characterDevice; }
 
         void retain();
         void release();
@@ -27,6 +31,7 @@ public:
         friend class VirtualFileSystem;
         VirtualFileSystem* vfs { nullptr };
         unsigned retainCount { 0 };
+        CharacterDevice* m_characterDevice { nullptr };
     };
 
     VirtualFileSystem();
@@ -51,6 +56,8 @@ public:
     bool isRoot(InodeIdentifier) const;
 
     bool touch(const String&path);
+
+    void registerCharacterDevice(unsigned major, unsigned minor, CharacterDevice&);
 
 private:
     template<typename F> void enumerateDirectoryInode(InodeIdentifier, F func);
@@ -80,6 +87,7 @@ private:
     Mount* findMountForGuest(InodeIdentifier);
 
     HashMap<InodeIdentifier, Node*> m_inode2vnode;
+    HashMap<dword, Node*> m_device2vnode;
 
     Vector<OwnPtr<Mount>> m_mounts;
 
@@ -89,5 +97,7 @@ private:
     Vector<Node*> m_nodeFreeList;
 
     RetainPtr<Node> m_rootNode;
+
+    HashMap<dword, CharacterDevice*> m_characterDevices;
 };
 

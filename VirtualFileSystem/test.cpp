@@ -3,6 +3,8 @@
 #include "VirtualFileSystem.h"
 #include "FileHandle.h"
 #include "SyntheticFileSystem.h"
+#include "ZeroDevice.h"
+#include "NullDevice.h"
 #include <cstring>
 #include <AK/SimpleMalloc.h>
 #include <AK/kmalloc.h>
@@ -16,6 +18,12 @@ int main(int c, char** v)
         filename = v[1];
 
     VirtualFileSystem vfs;
+
+    auto zero = make<ZeroDevice>();
+    vfs.registerCharacterDevice(1, 5, *zero);
+
+    auto null = make<NullDevice>();
+    vfs.registerCharacterDevice(1, 3, *null);
 
     if (!vfs.mountRoot(makeFileSystem(filename))) {
         printf("Failed to mount root :(\n");
