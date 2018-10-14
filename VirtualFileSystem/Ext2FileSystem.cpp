@@ -1,5 +1,6 @@
 #include "Ext2FileSystem.h"
 #include "ext2_fs.h"
+#include "UnixTypes.h"
 #include <AK/Bitmap.h>
 #include <AK/StdLib.h>
 #include <cstdio>
@@ -257,7 +258,7 @@ Vector<unsigned> Ext2FileSystem::blockListForInode(const ext2_inode& e2inode) co
     return list;
 }
 
-ssize_t Ext2FileSystem::readInodeBytes(InodeIdentifier inode, FileOffset offset, size_t count, byte* buffer) const
+ssize_t Ext2FileSystem::readInodeBytes(InodeIdentifier inode, Unix::off_t offset, size_t count, byte* buffer) const
 {
     ASSERT(offset >= 0);
     ASSERT(inode.fileSystemID() == id());
@@ -281,7 +282,7 @@ ssize_t Ext2FileSystem::readInodeBytes(InodeIdentifier inode, FileOffset offset,
     // This avoids wasting an entire block on short links. (Most links are short.)
     static const unsigned maxInlineSymlinkLength = 60;
     if (isSymbolicLink(e2inode->i_mode) && e2inode->i_size < maxInlineSymlinkLength) {
-        ssize_t nread = min(e2inode->i_size - offset, static_cast<FileOffset>(count));
+        ssize_t nread = min(e2inode->i_size - offset, static_cast<Unix::off_t>(count));
         memcpy(buffer, e2inode->i_block + offset, nread);
         return nread;
     }
@@ -302,7 +303,7 @@ ssize_t Ext2FileSystem::readInodeBytes(InodeIdentifier inode, FileOffset offset,
     dword offsetIntoFirstBlock = offset % blockSize();
 
     ssize_t nread = 0;
-    size_t remainingCount = min((FileOffset)count, e2inode->i_size - offset);
+    size_t remainingCount = min((Unix::off_t)count, e2inode->i_size - offset);
     byte* out = buffer;
 
 #ifdef EXT2_DEBUG
@@ -348,7 +349,7 @@ ByteBuffer Ext2FileSystem::readInode(InodeIdentifier inode) const
     ssize_t nread;
     byte buffer[512];
     byte* out = contents.pointer();
-    FileOffset offset = 0;
+    Unix::off_t offset = 0;
     for (;;) {
         nread = readInodeBytes(inode, offset, sizeof(buffer), buffer);
         if (nread <= 0)

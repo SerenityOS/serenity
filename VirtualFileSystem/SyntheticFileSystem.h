@@ -1,6 +1,7 @@
 #pragma once
 
 #include "FileSystem.h"
+#include "UnixTypes.h"
 #include <AK/HashMap.h>
 
 class SyntheticFileSystem final : public FileSystem {
@@ -17,7 +18,7 @@ public:
     virtual InodeMetadata inodeMetadata(InodeIdentifier) const override;
     virtual bool setModificationTime(InodeIdentifier, dword timestamp) override;
     virtual InodeIdentifier createInode(InodeIdentifier parentInode, const String& name, word mode) override;
-    virtual ssize_t readInodeBytes(InodeIdentifier, FileOffset offset, size_t count, byte* buffer) const override;
+    virtual ssize_t readInodeBytes(InodeIdentifier, Unix::off_t offset, size_t count, byte* buffer) const override;
 
 private:
     SyntheticFileSystem();

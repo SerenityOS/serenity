@@ -1,12 +1,9 @@
 #pragma once
 
 #include <limits>
+#include "UnixTypes.h"
 
-typedef dword size_t;
-typedef signed_dword ssize_t;
+static const Unix::size_t GoodBufferSize = 4096;
 
-static const size_t GoodBufferSize = 4096;
-
-typedef int64_t FileOffset;
-inline static const FileOffset maxFileOffset = std::numeric_limits<FileOffset>::max();
+inline static const Unix::off_t maxFileOffset = std::numeric_limits<Unix::off_t>::max();
 
