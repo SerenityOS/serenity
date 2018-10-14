@@ -4,6 +4,7 @@
 #include "InodeIdentifier.h"
 #include "InodeMetadata.h"
 #include "Limits.h"
+#include "UnixTypes.h"
 #include <AK/ByteBuffer.h>
 #include <AK/HashMap.h>
 #include <AK/OwnPtr.h>
@@ -28,7 +29,7 @@ public:
     virtual bool writeInode(InodeIdentifier, const ByteBuffer&) = 0;
     virtual InodeMetadata inodeMetadata(InodeIdentifier) const = 0;
 
-    virtual ssize_t readInodeBytes(InodeIdentifier, FileOffset offset, size_t count, byte* buffer) const = 0;
+    virtual ssize_t readInodeBytes(InodeIdentifier, Unix::off_t offset, size_t count, byte* buffer) const = 0;
 
     struct DirectoryEntry {
         String name;

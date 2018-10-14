@@ -3,19 +3,14 @@
 #include "VirtualFileSystem.h"
 #include <AK/ByteBuffer.h>
 
-enum class SeekType {
-    Absolute,           // SEEK_SET
-    RelativeToCurrent,  // SEEK_CUR
-    RelativeToEnd,      // SEEK_END
-};
-
 class FileHandle {
 public:
     explicit FileHandle(RetainPtr<VirtualFileSystem::Node>&&);
     ~FileHandle();
 
-    FileOffset lseek(FileOffset, SeekType);
-    ssize_t read(byte* buffer, size_t count);
+    Unix::off_t seek(Unix::off_t, int whence);
+    Unix::ssize_t read(byte* buffer, Unix::size_t count);
+    int stat(Unix::stat*);
 
     ByteBuffer readEntireFile();
 
@@ -24,6 +19,6 @@ private:
 
     RetainPtr<VirtualFileSystem::Node> m_vnode;
 
-    FileOffset m_currentOffset { 0 };
+    Unix::off_t m_currentOffset { 0 };
 };
 
