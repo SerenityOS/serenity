@@ -5,6 +5,7 @@
 #include "SyntheticFileSystem.h"
 #include "ZeroDevice.h"
 #include "NullDevice.h"
+#include "FullDevice.h"
 #include <cstring>
 #include <AK/SimpleMalloc.h>
 #include <AK/kmalloc.h>
@@ -24,6 +25,9 @@ int main(int c, char** v)
 
     auto null = make<NullDevice>();
     vfs.registerCharacterDevice(1, 3, *null);
+
+    auto full = make<FullDevice>();
+    vfs.registerCharacterDevice(1, 7, *full);
 
     if (!vfs.mountRoot(makeFileSystem(filename))) {
         printf("Failed to mount root :(\n");
