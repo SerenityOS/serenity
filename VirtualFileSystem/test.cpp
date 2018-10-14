@@ -6,6 +6,7 @@
 #include "ZeroDevice.h"
 #include "NullDevice.h"
 #include "FullDevice.h"
+#include "RandomDevice.h"
 #include <cstring>
 #include <AK/SimpleMalloc.h>
 #include <AK/kmalloc.h>
@@ -28,6 +29,9 @@ int main(int c, char** v)
 
     auto full = make<FullDevice>();
     vfs.registerCharacterDevice(1, 7, *full);
+
+    auto random = make<RandomDevice>();
+    vfs.registerCharacterDevice(1, 8, *random);
 
     if (!vfs.mountRoot(makeFileSystem(filename))) {
         printf("Failed to mount root :(\n");
@@ -187,7 +191,6 @@ int main(int c, char** v)
             byte buffer[512];
             for (;;) {
                 nread = handle->read(buffer, sizeof(buffer));
-                printf("read() returned %d\n", nread);
                 if (nread <= 0)
                     break;
                 fwrite(buffer, 1, nread, stdout);
