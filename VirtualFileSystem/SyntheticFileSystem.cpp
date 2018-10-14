@@ -121,3 +121,9 @@ bool SyntheticFileSystem::writeInode(InodeIdentifier, const ByteBuffer&)
     printf("FIXME: Implement SyntheticFileSystem::writeInode().\n");
     return false;
 }
+
+ssize_t SyntheticFileSystem::readInodeBytes(InodeIdentifier, FileOffset offset, size_t count, byte* buffer) const
+{
+    printf("FIXME: Implement SyntheticFileSystem::readInodeBytes().\n");
+    return 0;
+}

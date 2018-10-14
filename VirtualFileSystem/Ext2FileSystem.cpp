@@ -256,6 +256,82 @@ Vector<unsigned> Ext2FileSystem::blockListForInode(const ext2_inode& e2inode) co
     return list;
 }
 
+ssize_t Ext2FileSystem::readInodeBytes(InodeIdentifier inode, FileOffset offset, size_t count, byte* buffer) const
+{
+    ASSERT(offset >= 0);
+    ASSERT(inode.fileSystemID() == id());
+
+    auto e2inode = lookupExt2Inode(inode.index());
+    if (!e2inode) {
+        printf("[ext2fs] readInodeBytes: metadata lookup for inode %u failed\n", inode.index());
+        return -EIO;
+    }
+
+#if 0
+    // FIXME: We can't fail here while the directory traversal depends on this function. :]
+    if (isDirectory(e2inode->i_mode))
+        return -EISDIR;
+#endif
+
+    if (e2inode->i_size == 0)
+        return 0;
+
+    // Symbolic links shorter than 60 characters are store inline inside the i_block array.
+    // This avoids wasting an entire block on short links. (Most links are short.)
+    static const unsigned maxInlineSymlinkLength = 60;
+    if (isSymbolicLink(e2inode->i_mode) && e2inode->i_size < maxInlineSymlinkLength) {
+        ssize_t nread = min(e2inode->i_size - offset, static_cast<FileOffset>(count));
+        memcpy(buffer, e2inode->i_block + offset, nread);
+        return nread;
+    }
+
+    // FIXME: It's grossly inefficient to fetch the blocklist on every call to readInodeBytes().
+    //        It needs to be cached!
+    auto list = blockListForInode(*e2inode);
+    if (list.isEmpty()) {
+        printf("[ext2fs] readInodeBytes: empty block list for inode %u\n", inode.index());
+        return -EIO;
+    }
+
+    dword firstBlockLogicalIndex = offset / blockSize();
+    dword lastBlockLogicalIndex = (offset + count) / blockSize();
+    if (lastBlockLogicalIndex >= list.size())
+        lastBlockLogicalIndex = list.size() - 1;
+
+    dword offsetIntoFirstBlock = offset % blockSize();
+
+    ssize_t nread = 0;
+    size_t remainingCount = min((FileOffset)count, e2inode->i_size - offset);
+    byte* out = buffer;
+
+#ifdef EXT2_DEBUG
+    printf("ok let's do it, read(%llu, %u) -> blocks %u thru %u, oifb: %u\n", offset, count, firstBlockLogicalIndex, lastBlockLogicalIndex, offsetIntoFirstBlock);
+#endif
+
+    for (dword bi = firstBlockLogicalIndex; bi <= lastBlockLogicalIndex; ++bi) {
+        auto block = readBlock(list[bi]);
+        if (!block) {
+            printf("[ext2fs] readInodeBytes: readBlock(%u) failed (lbi: %u)\n", list[bi], bi);
+            return -EIO;
+        }
+
+        dword offsetIntoBlock;
+
+        if (bi == firstBlockLogicalIndex)
+            offsetIntoBlock = offsetIntoFirstBlock;
+        else
+            offsetIntoBlock = 0;
+
+        dword numBytesToCopy = min(blockSize() - offsetIntoBlock, remainingCount);
+        memcpy(out, block.pointer() + offsetIntoBlock, numBytesToCopy);
+        remainingCount -= numBytesToCopy;
+        nread += numBytesToCopy;
+        out += numBytesToCopy;
+    }
+
+    return nread;
+}
+
 ByteBuffer Ext2FileSystem::readInode(InodeIdentifier inode) const
 {
     ASSERT(inode.fileSystemID() == id());
@@ -266,41 +342,25 @@ ByteBuffer Ext2FileSystem::readInode(InodeIdentifier inode) const
         return nullptr;
     }
 
-    if (e2inode->i_size == 0)
-        return ByteBuffer::createEmpty();
+    auto contents = ByteBuffer::createUninitialized(e2inode->i_size);
 
-    // Symbolic links shorter than 60 characters are store inline inside the i_block array.
-    // This avoids wasting an entire block on short links. (Most links are short.)
-    static const unsigned maxInlineSymlinkLength = 60;
-    if (isSymbolicLink(e2inode->i_mode) && e2inode->i_size < maxInlineSymlinkLength) {
-        auto inlineSymlink = ByteBuffer::createUninitialized(e2inode->i_size);
-        memcpy(inlineSymlink.pointer(), e2inode->i_block, e2inode->i_size);
-        return inlineSymlink;
+    ssize_t nread;
+    byte buffer[512];
+    byte* out = contents.pointer();
+    FileOffset offset = 0;
+    for (;;) {
+        nread = readInodeBytes(inode, offset, sizeof(buffer), buffer);
+        if (nread <= 0)
+            break;
+        memcpy(out, buffer, nread);
+        out += nread;
+        offset += nread;
     }
-
-    auto list = blockListForInode(*e2inode);
-    if (list.isEmpty()) {
-        printf("[ext2fs] readInode: empty block list for inode %u\n", inode.index());
+    if (nread < 0) {
+        printf("[ext2fs] readInode: ERROR: %d\n", nread);
         return nullptr;
     }
 
-    auto contents = ByteBuffer::createUninitialized(list.size() * blockSize());
-    auto* out = contents.pointer();
-
-    for (unsigned i = 0; i < list.size(); ++i) {
-        auto block = readBlock(list[i]);
-        if (!block) {
-            printf("[ext2fs] readInode: readBlock(%u) failed\n", list[i]);
-            return nullptr;
-        }
-        memcpy(out, block.pointer(), block.size());
-        out += blockSize();
-    }
-
-#ifdef EXT2_DEBUG
-    printf("trim from %u to %u\n", contents.size(), e2inode->i_size);
-#endif
-    contents.trim(e2inode->i_size);
     return contents;
 }
 

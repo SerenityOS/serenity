@@ -6,6 +6,7 @@
 #include <AK/String.h>
 #include <AK/Vector.h>
 #include "InodeIdentifier.h"
+#include "Limits.h"
 
 class CharacterDevice;
 class FileHandle;

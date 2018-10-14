@@ -26,7 +26,7 @@ VFS_OBJS = \
 
 OBJS = $(AK_OBJS) $(VFS_OBJS)
 
-CXXFLAGS = -std=c++17 -Os -W -Wall -Wextra -Wconversion -I. -I.. -ggdb3 -Wno-class-memaccess
+CXXFLAGS = -std=c++17 -O0 -W -Wall -Wextra -Wconversion -I. -I.. -ggdb3 -Wno-class-memaccess
 
 #test.o: BlockDevice.h FileBackedBlockDevice.h FileSystem.h Ext2FileSystem.h VirtualFileSystem.h FileHandle.h
 

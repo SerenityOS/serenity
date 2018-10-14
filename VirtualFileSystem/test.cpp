@@ -44,7 +44,7 @@ int main(int c, char** v)
             printf("failed to open %s inside fs image\n", v[2]);
             return 1;
         }
-        auto contents = handle->read();
+        auto contents = handle->readEntireFile();
 
         FILE* fout = fopen(v[3], "w");
         if (!fout) {
@@ -71,7 +71,7 @@ int main(int c, char** v)
     printf("handle = %p\n", handle.ptr());
     ASSERT(handle);
 
-    auto contents = handle->read();
+    auto contents = handle->readEntireFile();
     ASSERT(contents);
 
     printf("contents: '%s'\n", contents->pointer());
@@ -141,8 +141,30 @@ int main(int c, char** v)
                 printf("failed to open %s\n", pathbuf);
                 continue;
             }
-            auto contents = handle->read();
+            auto contents = handle->readEntireFile();
             fwrite(contents.pointer(), sizeof(char), contents.size(), stdout);
+            continue;
+        }
+
+        if (cmd == "kat" && parts.size() > 1) {
+            char pathbuf[1024];
+            sprintf(pathbuf, "%s/%s", currentDirectory.characters(), parts[1].characters());
+            auto handle = vfs.open(pathbuf);
+            if (!handle) {
+                printf("failed to open %s\n", pathbuf);
+                continue;
+            }
+            ssize_t nread;
+            byte buffer[512];
+            for (;;) {
+                nread = handle->read(buffer, sizeof(buffer));
+                printf("read() returned %d\n", nread);
+                if (nread <= 0)
+                    break;
+                fwrite(buffer, 1, nread, stdout);
+            }
+            if (nread < 0)
+                printf("ERROR: %d\n", nread);
             continue;
         }
 
