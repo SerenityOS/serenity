@@ -8,7 +8,7 @@ public:
     explicit FileHandle(RetainPtr<VirtualFileSystem::Node>&&);
     ~FileHandle();
 
-    ByteBuffer read() const;
+    ByteBuffer read();
 
 private:
     friend class VirtualFileSystem;

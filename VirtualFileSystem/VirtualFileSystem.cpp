@@ -7,6 +7,11 @@
 
 //#define VFS_DEBUG
 
+static dword encodedDevice(unsigned major, unsigned minor)
+{
+    return (minor & 0xff) | (major << 8) | ((minor & ~0xff) << 12);
+}
+
 VirtualFileSystem::VirtualFileSystem()
 {
     m_maxNodeCount = 16;
@@ -28,6 +33,17 @@ auto VirtualFileSystem::makeNode(InodeIdentifier inode) -> RetainPtr<Node>
     if (!metadata.isValid())
         return nullptr;
 
+    CharacterDevice* characterDevice = nullptr;
+    if (metadata.isCharacterDevice()) {
+        auto it = m_characterDevices.find(encodedDevice(metadata.majorDevice, metadata.minorDevice));
+        if (it != m_characterDevices.end()) {
+            characterDevice = (*it).value;
+        } else {
+            printf("[VFS] makeNode() no such character device %u,%u\n", metadata.majorDevice, metadata.minorDevice);
+            return nullptr;
+        }
+    }
+
     auto vnode = allocateNode();
     ASSERT(vnode);
 
@@ -41,6 +57,7 @@ auto VirtualFileSystem::makeNode(InodeIdentifier inode) -> RetainPtr<Node>
 #endif
 
     m_inode2vnode.set(inode, vnode.ptr());
+    vnode->m_characterDevice = characterDevice;
     return vnode;
 }
 
@@ -118,6 +135,7 @@ void VirtualFileSystem::freeNode(Node* node)
     m_inode2vnode.remove(node->inode);
     node->inode.fileSystem()->release();
     node->inode = InodeIdentifier();
+    node->m_characterDevice = nullptr;
     m_nodeFreeList.append(std::move(node));
 }
 
@@ -415,3 +433,7 @@ VirtualFileSystem::Mount::Mount(InodeIdentifier host, RetainPtr<FileSystem>&& gu
 {
 }
 
+void VirtualFileSystem::registerCharacterDevice(unsigned major, unsigned minor, CharacterDevice& device)
+{
+    m_characterDevices.set(encodedDevice(major, minor), &device);
+}
