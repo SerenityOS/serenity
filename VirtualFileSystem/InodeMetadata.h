@@ -37,6 +37,8 @@ struct InodeMetadata {
     time_t ctime { 0 };
     time_t mtime { 0 };
     time_t dtime { 0 };
+    unsigned majorDevice { 0 };
+    unsigned minorDevice { 0 };
 };
 
 
