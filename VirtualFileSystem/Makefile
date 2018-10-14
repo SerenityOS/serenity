@@ -18,6 +18,8 @@ VFS_OBJS = \
     DeviceBackedFileSystem.o \
     SyntheticFileSystem.o \
     InodeIdentifier.o \
+    CharacterDevice.o \
+    ZeroDevice.o \
     test.o
 
 OBJS = $(AK_OBJS) $(VFS_OBJS)

@@ -199,6 +199,10 @@ void VirtualFileSystem::listDirectory(const String& path)
             nameColorBegin = "\033[42;30m";
             nameColorEnd = "\033[0m";
         }
+        if (metadata.isCharacterDevice() || metadata.isBlockDevice()) {
+            nameColorBegin = "\033[33;1m";
+            nameColorEnd = "\033[0m";
+        }
         printf("%02u:%08u ",
             metadata.inode.fileSystemID(),
             metadata.inode.index());
@@ -236,7 +240,13 @@ void VirtualFileSystem::listDirectory(const String& path)
         else
             printf("%c", metadata.mode & 00001 ? 'x' : '-');
 
-        printf("%12u ", metadata.size);
+        if (metadata.isCharacterDevice() || metadata.isBlockDevice()) {
+            char buf[16];
+            sprintf(buf, "%u, %u", metadata.majorDevice, metadata.minorDevice);
+            printf("%12s ", buf);
+        } else {
+            printf("%12u ", metadata.size);
+        }
 
         printf("\033[30;1m");
         auto tm = *localtime(&metadata.mtime);
