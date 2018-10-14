@@ -390,8 +390,8 @@ bool Ext2FileSystem::enumerateDirectoryInode(InodeIdentifier inode, std::functio
         if (entry->inode != 0) {
             memcpy(namebuf, entry->name, entry->name_len);
             namebuf[entry->name_len] = 0;
-#ifdef EXT2_DEBUG
-            printf("inode: %u, name_len: %u, rec_len: %u, name: %s\n", entry->inode, entry->name_len, entry->rec_len, namebuf);
+#ifndef EXT2_DEBUG
+            printf("inode: %u, name_len: %u, rec_len: %u, file_type: %u, name: %s\n", entry->inode, entry->name_len, entry->rec_len, entry->file_type, namebuf);
 #endif
             if (!callback({ namebuf, { id(), entry->inode }, entry->file_type }))
                 break;
@@ -401,7 +401,7 @@ bool Ext2FileSystem::enumerateDirectoryInode(InodeIdentifier inode, std::functio
     return true;
 }
 
-bool Ext2FileSystem::addInodeToDirectory(unsigned directoryInode, unsigned inode, const String& name)
+bool Ext2FileSystem::addInodeToDirectory(unsigned directoryInode, unsigned inode, const String& name, byte fileType)
 {
     auto e2inodeForDirectory = lookupExt2Inode(directoryInode);
     ASSERT(e2inodeForDirectory);
@@ -426,7 +426,7 @@ bool Ext2FileSystem::addInodeToDirectory(unsigned directoryInode, unsigned inode
         return false;
     }
 
-    entries.append({ name, { id(), inode } });
+    entries.append({ name, { id(), inode }, fileType });
 
     return writeDirectoryInode(directoryInode, std::move(entries));
 }
@@ -502,6 +502,7 @@ bool Ext2FileSystem::writeDirectoryInode(unsigned directoryInode, Vector<Directo
         printf("* inode: %u", entry.inode.index());
         printf(", name_len: %u", word(entry.name.length()));
         printf(", rec_len: %u", word(recordLength));
+        printf(", file_type: %u", byte(entry.fileType));
         printf(", name: %s\n", entry.name.characters());
 
         stream << dword(entry.inode.index());
@@ -754,8 +755,24 @@ InodeIdentifier Ext2FileSystem::createInode(InodeIdentifier parentInode, const S
     // NOTE: This doesn't commit the inode allocation just yet!
     auto inode = allocateInode(0, 0);
 
+    byte fileType = 0;
+    if (isRegularFile(mode))
+        fileType = EXT2_FT_REG_FILE;
+    else if (isDirectory(mode))
+        fileType = EXT2_FT_DIR;
+    else if (isCharacterDevice(mode))
+        fileType = EXT2_FT_CHRDEV;
+    else if (isBlockDevice(mode))
+        fileType = EXT2_FT_BLKDEV;
+    else if (isFIFO(mode))
+        fileType = EXT2_FT_FIFO;
+    else if (isSocket(mode))
+        fileType = EXT2_FT_SOCK;
+    else if (isSymbolicLink(mode))
+        fileType = EXT2_FT_SYMLINK;
+
     // Try adding it to the directory first, in case the name is already in use.
-    bool success = addInodeToDirectory(parentInode.index(), inode, name);
+    bool success = addInodeToDirectory(parentInode.index(), inode, name, fileType);
     if (!success) {
         printf("[ext2fs] failed to add inode to directory :(\n");
         return { };

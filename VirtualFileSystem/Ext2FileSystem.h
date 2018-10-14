@@ -54,7 +54,7 @@ private:
     template<typename F>
     void traverseInodeBitmap(unsigned groupIndex, F) const;
 
-    bool addInodeToDirectory(unsigned directoryInode, unsigned inode, const String& name);
+    bool addInodeToDirectory(unsigned directoryInode, unsigned inode, const String& name, byte fileType);
     bool writeDirectoryInode(unsigned directoryInode, Vector<DirectoryEntry>&&);
     bool setInodeAllocationState(unsigned inode, bool);
 
