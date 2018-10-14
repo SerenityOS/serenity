@@ -258,7 +258,7 @@ Vector<unsigned> Ext2FileSystem::blockListForInode(const ext2_inode& e2inode) co
     return list;
 }
 
-ssize_t Ext2FileSystem::readInodeBytes(InodeIdentifier inode, Unix::off_t offset, size_t count, byte* buffer) const
+Unix::ssize_t Ext2FileSystem::readInodeBytes(InodeIdentifier inode, Unix::off_t offset, Unix::size_t count, byte* buffer) const
 {
     ASSERT(offset >= 0);
     ASSERT(inode.fileSystemID() == id());
@@ -282,7 +282,7 @@ ssize_t Ext2FileSystem::readInodeBytes(InodeIdentifier inode, Unix::off_t offset
     // This avoids wasting an entire block on short links. (Most links are short.)
     static const unsigned maxInlineSymlinkLength = 60;
     if (isSymbolicLink(e2inode->i_mode) && e2inode->i_size < maxInlineSymlinkLength) {
-        ssize_t nread = min(e2inode->i_size - offset, static_cast<Unix::off_t>(count));
+        Unix::ssize_t nread = min(e2inode->i_size - offset, static_cast<Unix::off_t>(count));
         memcpy(buffer, e2inode->i_block + offset, nread);
         return nread;
     }
@@ -302,8 +302,8 @@ ssize_t Ext2FileSystem::readInodeBytes(InodeIdentifier inode, Unix::off_t offset
 
     dword offsetIntoFirstBlock = offset % blockSize();
 
-    ssize_t nread = 0;
-    size_t remainingCount = min((Unix::off_t)count, e2inode->i_size - offset);
+    Unix::ssize_t nread = 0;
+    Unix::size_t remainingCount = min((Unix::off_t)count, e2inode->i_size - offset);
     byte* out = buffer;
 
 #ifdef EXT2_DEBUG
@@ -346,7 +346,7 @@ ByteBuffer Ext2FileSystem::readInode(InodeIdentifier inode) const
 
     auto contents = ByteBuffer::createUninitialized(e2inode->i_size);
 
-    ssize_t nread;
+    Unix::ssize_t nread;
     byte buffer[512];
     byte* out = contents.pointer();
     Unix::off_t offset = 0;
@@ -501,7 +501,7 @@ public:
 
 private:
     ByteBuffer& m_buffer;
-    size_t m_offset { 0 };
+    Unix::size_t m_offset { 0 };
 };
 
 bool Ext2FileSystem::writeDirectoryInode(unsigned directoryInode, Vector<DirectoryEntry>&& entries)
