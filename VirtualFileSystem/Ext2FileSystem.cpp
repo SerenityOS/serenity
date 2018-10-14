@@ -188,6 +188,8 @@ InodeMetadata Ext2FileSystem::inodeMetadata(InodeIdentifier inode) const
     metadata.ctime = e2inode->i_ctime;
     metadata.mtime = e2inode->i_mtime;
     metadata.dtime = e2inode->i_dtime;
+    metadata.blockSize = blockSize();
+    metadata.blockCount = e2inode->i_blocks;
 
     if (isBlockDevice(e2inode->i_mode) || isCharacterDevice(e2inode->i_mode)) {
         unsigned dev = e2inode->i_block[0];
