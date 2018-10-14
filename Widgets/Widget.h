@@ -4,6 +4,7 @@
 #include "Object.h"
 #include "Rect.h"
 #include "Color.h"
+#include "Font.h"
 #include <AK/String.h>
 #include <functional>
 
@@ -79,12 +80,16 @@ public:
     void setFillWithBackgroundColor(bool b) { m_fillWithBackgroundColor = b; }
     bool fillWithBackgroundColor() const { return m_fillWithBackgroundColor; }
 
+    const Font& font() const { return *m_font; }
+    void setFont(RetainPtr<Font>&&);
+
 private:
     Window* m_window { nullptr };
 
     Rect m_relativeRect;
     Color m_backgroundColor;
     Color m_foregroundColor;
+    RetainPtr<Font> m_font;
 
     bool m_hasPendingPaintEvent { false };
     bool m_fillWithBackgroundColor { false };

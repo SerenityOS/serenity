@@ -9,6 +9,7 @@
 Widget::Widget(Widget* parent)
     : Object(parent)
 {
+    setFont(nullptr);
     m_backgroundColor = Color::White;
     m_foregroundColor = Color::Black;
 }
@@ -145,4 +146,12 @@ void Widget::setFocus(bool focus)
         return;
     if (auto* win = window())
         win->setFocusedWidget(this);
+}
+
+void Widget::setFont(RetainPtr<Font>&& font)
+{
+    if (!font)
+        m_font = Font::defaultFont();
+    else
+        m_font = std::move(font);
 }

@@ -14,7 +14,7 @@ ListBox::~ListBox()
 
 unsigned ListBox::itemHeight() const
 {
-    return Font::defaultFont().glyphHeight() + 2;
+    return font().glyphHeight() + 2;
 }
 
 void ListBox::paintEvent(PaintEvent&)

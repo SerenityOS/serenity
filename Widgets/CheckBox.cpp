@@ -1,7 +1,6 @@
 #include "CheckBox.h"
 #include "Painter.h"
 #include "CBitmap.h"
-#include "Font.h"
 #include <cstdio>
 
 CheckBox::CheckBox(Widget* parent)
@@ -81,7 +80,7 @@ void CheckBox::paintEvent(PaintEvent&)
 
     auto textRect = rect();
     textRect.setLeft(bitmap->width() + 4);
-    textRect.setTop(height() / 2 - Font::defaultFont().glyphHeight() / 2);
+    textRect.setTop(height() / 2 - font().glyphHeight() / 2);
 
     Point bitmapPosition;
     bitmapPosition.setX(2);
