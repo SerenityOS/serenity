@@ -12,7 +12,6 @@ public:
     virtual bool initialize() override;
     virtual const char* className() const override;
     virtual InodeIdentifier rootInode() const override;
-    virtual ByteBuffer readInode(InodeIdentifier) const override;
     virtual bool writeInode(InodeIdentifier, const ByteBuffer&) override;
     virtual bool enumerateDirectoryInode(InodeIdentifier, std::function<bool(const DirectoryEntry&)>) const override;
     virtual InodeMetadata inodeMetadata(InodeIdentifier) const override;

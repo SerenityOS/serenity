@@ -285,7 +285,7 @@ void VirtualFileSystem::listDirectory(const String& path)
         if (metadata.isDirectory()) {
             printf("/");
         } else if (metadata.isSymbolicLink()) {
-            auto symlinkContents = directoryInode.fileSystem()->readInode(metadata.inode);
+            auto symlinkContents = directoryInode.fileSystem()->readEntireInode(metadata.inode);
             printf(" -> %s", String((const char*)symlinkContents.pointer(), symlinkContents.size()).characters());
         }
         printf("\n");

@@ -29,7 +29,7 @@ FileSystem* FileSystem::fromID(dword id)
     return nullptr;
 }
 
-InodeIdentifier FileSystem::childOfDirectoryInodeWithName(InodeIdentifier inode, const String& name)
+InodeIdentifier FileSystem::childOfDirectoryInodeWithName(InodeIdentifier inode, const String& name) const
 {
     InodeIdentifier foundInode;
     enumerateDirectoryInode(inode, [&] (const DirectoryEntry& entry) {
@@ -40,5 +40,37 @@ InodeIdentifier FileSystem::childOfDirectoryInodeWithName(InodeIdentifier inode,
         return true;
     });
     return foundInode;
+}
+
+ByteBuffer FileSystem::readEntireInode(InodeIdentifier inode) const
+{
+    ASSERT(inode.fileSystemID() == id());
+
+    auto metadata = inodeMetadata(inode);
+    if (!metadata.isValid()) {
+        printf("[fs] readInode: metadata lookup for inode %u failed\n", inode.index());
+        return nullptr;
+    }
+
+    auto contents = ByteBuffer::createUninitialized(metadata.size);
+
+    Unix::ssize_t nread;
+    byte buffer[512];
+    byte* out = contents.pointer();
+    Unix::off_t offset = 0;
+    for (;;) {
+        nread = readInodeBytes(inode, offset, sizeof(buffer), buffer);
+        if (nread <= 0)
+            break;
+        memcpy(out, buffer, nread);
+        out += nread;
+        offset += nread;
+    }
+    if (nread < 0) {
+        printf("[fs] readInode: ERROR: %d\n", nread);
+        return nullptr;
+    }
+
+    return contents;
 }
 

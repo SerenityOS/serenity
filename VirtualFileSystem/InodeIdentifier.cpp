@@ -5,5 +5,5 @@ ByteBuffer InodeIdentifier::readEntireFile() const
 {
     if (!fileSystem())
         return { };
-    return fileSystem()->readInode(*this);
+    return fileSystem()->readEntireInode(*this);
 }

@@ -62,17 +62,6 @@ InodeIdentifier SyntheticFileSystem::rootInode() const
     return { id(), 1 };
 }
 
-ByteBuffer SyntheticFileSystem::readInode(InodeIdentifier inode) const
-{
-    ASSERT(inode.fileSystemID() == id());
-#ifdef SYNTHFS_DEBUG
-    printf("[synthfs] readInode %u\n", inode.index());
-#endif
-    ASSERT(inode.index() != 1);
-    ASSERT(inode.index() <= m_files.size());
-    return m_files[inode.index() - 1]->data;
-}
-
 bool SyntheticFileSystem::enumerateDirectoryInode(InodeIdentifier inode, std::function<bool(const DirectoryEntry&)> callback) const
 {
     ASSERT(inode.fileSystemID() == id());

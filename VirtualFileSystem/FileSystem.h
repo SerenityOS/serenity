@@ -25,7 +25,6 @@ public:
     virtual bool initialize() = 0;
     virtual const char* className() const = 0;
     virtual InodeIdentifier rootInode() const = 0;
-    virtual ByteBuffer readInode(InodeIdentifier) const = 0;
     virtual bool writeInode(InodeIdentifier, const ByteBuffer&) = 0;
     virtual InodeMetadata inodeMetadata(InodeIdentifier) const = 0;
 
@@ -41,7 +40,8 @@ public:
     virtual bool setModificationTime(InodeIdentifier, dword timestamp) = 0;
     virtual InodeIdentifier createInode(InodeIdentifier parentInode, const String& name, word mode) = 0;
 
-    InodeIdentifier childOfDirectoryInodeWithName(InodeIdentifier, const String& name);
+    InodeIdentifier childOfDirectoryInodeWithName(InodeIdentifier, const String& name) const;
+    ByteBuffer readEntireInode(InodeIdentifier) const;
 
 protected:
     FileSystem();

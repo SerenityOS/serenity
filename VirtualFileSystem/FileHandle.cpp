@@ -104,6 +104,6 @@ ByteBuffer FileHandle::readEntireFile()
         return buffer;
     }
 
-    return m_vnode->fileSystem()->readInode(m_vnode->inode);
+    return m_vnode->fileSystem()->readEntireInode(m_vnode->inode);
 }
 

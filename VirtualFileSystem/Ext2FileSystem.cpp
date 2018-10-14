@@ -336,38 +336,6 @@ Unix::ssize_t Ext2FileSystem::readInodeBytes(InodeIdentifier inode, Unix::off_t 
     return nread;
 }
 
-ByteBuffer Ext2FileSystem::readInode(InodeIdentifier inode) const
-{
-    ASSERT(inode.fileSystemID() == id());
-
-    auto e2inode = lookupExt2Inode(inode.index());
-    if (!e2inode) {
-        printf("[ext2fs] readInode: metadata lookup for inode %u failed\n", inode.index());
-        return nullptr;
-    }
-
-    auto contents = ByteBuffer::createUninitialized(e2inode->i_size);
-
-    Unix::ssize_t nread;
-    byte buffer[512];
-    byte* out = contents.pointer();
-    Unix::off_t offset = 0;
-    for (;;) {
-        nread = readInodeBytes(inode, offset, sizeof(buffer), buffer);
-        if (nread <= 0)
-            break;
-        memcpy(out, buffer, nread);
-        out += nread;
-        offset += nread;
-    }
-    if (nread < 0) {
-        printf("[ext2fs] readInode: ERROR: %d\n", nread);
-        return nullptr;
-    }
-
-    return contents;
-}
-
 bool Ext2FileSystem::writeInode(InodeIdentifier inode, const ByteBuffer& data)
 {
     ASSERT(inode.fileSystemID() == id());
@@ -412,7 +380,7 @@ bool Ext2FileSystem::enumerateDirectoryInode(InodeIdentifier inode, std::functio
     printf("[ext2fs] Enumerating directory contents of inode %u:\n", inode.index());
 #endif
 
-    auto buffer = readInode(inode);
+    auto buffer = readEntireInode(inode);
     ASSERT(buffer);
     auto* entry = reinterpret_cast<ext2_dir_entry_2*>(buffer.pointer());
 
