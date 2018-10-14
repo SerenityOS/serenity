@@ -21,6 +21,7 @@ VFS_OBJS = \
     CharacterDevice.o \
     ZeroDevice.o \
     NullDevice.o \
+    FullDevice.o \
     test.o
 
 OBJS = $(AK_OBJS) $(VFS_OBJS)
