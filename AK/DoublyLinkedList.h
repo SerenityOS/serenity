@@ -40,10 +40,12 @@ public:
     {
         auto* node = new Node(std::move(value));
         if (!m_head) {
+            ASSERT(!m_tail);
             m_head = node;
             m_tail = node;
             return;
         }
+        ASSERT(m_tail);
         m_tail->next = node;
         node->prev = m_tail;
         m_tail = node;
@@ -112,14 +114,20 @@ public:
     {
         ASSERT(it.m_node);
         auto* node = it.m_node;
-        if (node->prev)
+        if (node->prev) {
+            ASSERT(node != m_head);
             node->prev->next = node->next;
-        if (node->next)
-            node->next->prev = node->prev;
-        if (m_head == node)
+        } else {
+            ASSERT(node == m_head);
             m_head = node->next;
-        if (m_tail == node)
+        }
+        if (node->next) {
+            ASSERT(node != m_tail);
+            node->next->prev = node->prev;
+        } else {
+            ASSERT(node == m_tail);
             m_tail = node->prev;
+        }
         delete node;
     }
 

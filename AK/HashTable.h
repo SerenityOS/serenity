@@ -104,8 +104,9 @@ public:
         }
     private:
         friend class HashTable;
-        explicit Iterator(HashTable& table, bool isEnd, typename DoublyLinkedList<T>::Iterator bucketIterator = DoublyLinkedList<T>::Iterator::universalEnd())
+        explicit Iterator(HashTable& table, bool isEnd, typename DoublyLinkedList<T>::Iterator bucketIterator = DoublyLinkedList<T>::Iterator::universalEnd(), unsigned bucketIndex = 0)
             : m_table(table)
+            , m_bucketIndex(bucketIndex)
             , m_isEnd(isEnd)
             , m_bucketIterator(bucketIterator)
         {
@@ -179,8 +180,9 @@ public:
         }
     private:
         friend class HashTable;
-        ConstIterator(const HashTable& table, bool isEnd, typename DoublyLinkedList<T>::ConstIterator bucketIterator = DoublyLinkedList<T>::ConstIterator::universalEnd())
+        ConstIterator(const HashTable& table, bool isEnd, typename DoublyLinkedList<T>::ConstIterator bucketIterator = DoublyLinkedList<T>::ConstIterator::universalEnd(), unsigned bucketIndex = 0)
             : m_table(table)
+            , m_bucketIndex(bucketIndex)
             , m_isEnd(isEnd)
             , m_bucketIterator(bucketIterator)
         {
@@ -217,8 +219,8 @@ public:
     void remove(Iterator&);
 
 private:
-    Bucket& lookup(const T&);
-    const Bucket& lookup(const T&) const;
+    Bucket& lookup(const T&, unsigned* bucketIndex = nullptr);
+    const Bucket& lookup(const T&, unsigned* bucketIndex = nullptr) const;
     void rehash(unsigned capacity);
     void insert(T&&);
 
@@ -305,10 +307,11 @@ auto HashTable<T, TraitsForT>::find(const T& value) -> Iterator
 {
     if (isEmpty())
         return end();
-    auto& bucket = lookup(value);
+    unsigned bucketIndex;
+    auto& bucket = lookup(value, &bucketIndex);
     auto bucketIterator = bucket.chain.find(value);
     if (bucketIterator != bucket.chain.end())
-        return Iterator(*this, false, bucketIterator);
+        return Iterator(*this, false, bucketIterator, bucketIndex);
     return end();
 }
 
@@ -317,10 +320,11 @@ auto HashTable<T, TraitsForT>::find(const T& value) const -> ConstIterator
 {
     if (isEmpty())
         return end();
-    auto& bucket = lookup(value);
+    unsigned bucketIndex;
+    auto& bucket = lookup(value, &bucketIndex);
     auto bucketIterator = bucket.chain.find(value);
     if (bucketIterator != bucket.chain.end())
-        return ConstIterator(*this, false, bucketIterator);
+        return ConstIterator(*this, false, bucketIterator, bucketIndex);
     return end();
 }
 
@@ -333,7 +337,7 @@ void HashTable<T, TraitsForT>::remove(Iterator& it)
 }
 
 template<typename T, typename TraitsForT>
-typename HashTable<T, TraitsForT>::Bucket& HashTable<T, TraitsForT>::lookup(const T& value)
+typename HashTable<T, TraitsForT>::Bucket& HashTable<T, TraitsForT>::lookup(const T& value, unsigned* bucketIndex)
 {
     unsigned hash = TraitsForT::hash(value);
 #ifdef HASHTABLE_DEBUG
@@ -341,11 +345,13 @@ typename HashTable<T, TraitsForT>::Bucket& HashTable<T, TraitsForT>::lookup(cons
     TraitsForT::dump(value);
     printf(" is %u\n", hash);
 #endif
+    if (bucketIndex)
+        *bucketIndex = hash % m_capacity;
     return m_buckets[hash % m_capacity];
 }
 
 template<typename T, typename TraitsForT>
-const typename HashTable<T, TraitsForT>::Bucket& HashTable<T, TraitsForT>::lookup(const T& value) const
+const typename HashTable<T, TraitsForT>::Bucket& HashTable<T, TraitsForT>::lookup(const T& value, unsigned* bucketIndex) const
 {
     unsigned hash = TraitsForT::hash(value);
 #ifdef HASHTABLE_DEBUG
@@ -353,6 +359,8 @@ const typename HashTable<T, TraitsForT>::Bucket& HashTable<T, TraitsForT>::looku
     TraitsForT::dump(value);
     printf(" is %u\n", hash);
 #endif
+    if (bucketIndex)
+        *bucketIndex = hash % m_capacity;
     return m_buckets[hash % m_capacity];
 }
 
