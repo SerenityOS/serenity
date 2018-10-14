@@ -5,6 +5,7 @@
 #include <cstdio>
 #include <cstring>
 #include <AK/kmalloc.h>
+#include "sys-errno.h"
 
 //#define EXT2_DEBUG
 
