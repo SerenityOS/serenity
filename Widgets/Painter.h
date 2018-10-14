@@ -26,11 +26,11 @@ public:
 
     void xorRect(const Rect&, Color);
 
-    const Font& font() const;
+    const Font& font() const { return *m_font; }
 
 private:
     Widget& m_widget;
-    Font& m_font;
+    const Font* m_font;
     Point m_translation;
 
     Rect m_clipRect;

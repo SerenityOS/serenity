@@ -9,7 +9,7 @@
 
 Painter::Painter(Widget& widget)
     : m_widget(widget)
-    , m_font(Font::defaultFont())
+    , m_font(&widget.font())
 {
     if (auto* window = widget.window()) {
         m_translation = window->position();
@@ -115,9 +115,9 @@ void Painter::drawText(const Rect& rect, const String& text, TextAlignment align
     if (alignment == TextAlignment::TopLeft) {
         point = rect.location();
     } else if (alignment == TextAlignment::Center) {
-        int textWidth = text.length() * m_font.glyphWidth();
+        int textWidth = text.length() * font().glyphWidth();
         point = rect.center();
-        point.moveBy(-(textWidth / 2), -(m_font.glyphHeight() / 2));
+        point.moveBy(-(textWidth / 2), -(font().glyphHeight() / 2));
     } else {
         ASSERT_NOT_REACHED();
     }
@@ -126,12 +126,12 @@ void Painter::drawText(const Rect& rect, const String& text, TextAlignment align
         byte ch = text[i];
         if (ch == ' ')
             continue;
-        auto* bitmap = m_font.glyphBitmap(ch);
+        auto* bitmap = font().glyphBitmap(ch);
         if (!bitmap) {
             printf("Font doesn't have 0x%02x ('%c')\n", ch, ch);
             ASSERT_NOT_REACHED();
         }
-        int x = point.x() + i * m_font.glyphWidth();
+        int x = point.x() + i * font().glyphWidth();
         int y = point.y();
         drawBitmap({ x, y }, *bitmap, color);
     }
