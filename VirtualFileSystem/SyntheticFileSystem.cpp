@@ -1,4 +1,5 @@
 #include "SyntheticFileSystem.h"
+#include <AK/StdLib.h>
 
 RetainPtr<SyntheticFileSystem> SyntheticFileSystem::create()
 {
@@ -122,8 +123,19 @@ bool SyntheticFileSystem::writeInode(InodeIdentifier, const ByteBuffer&)
     return false;
 }
 
-ssize_t SyntheticFileSystem::readInodeBytes(InodeIdentifier, Unix::off_t offset, size_t count, byte* buffer) const
+ssize_t SyntheticFileSystem::readInodeBytes(InodeIdentifier inode, Unix::off_t offset, Unix::size_t count, byte* buffer) const
 {
-    printf("FIXME: Implement SyntheticFileSystem::readInodeBytes().\n");
-    return 0;
+    ASSERT(inode.fileSystemID() == id());
+#ifdef SYNTHFS_DEBUG
+    printf("[synthfs] readInode %u\n", inode.index());
+#endif
+    ASSERT(inode.index() != 1);
+    ASSERT(inode.index() <= m_files.size());
+    ASSERT(offset >= 0);
+    ASSERT(buffer);
+
+    auto& file = *m_files[inode.index() - 1];
+    Unix::ssize_t nread = min(file.data.size() - offset, static_cast<Unix::off_t>(count));
+    memcpy(buffer, file.data.pointer() + offset, nread);
+    return nread;
 }
