@@ -1,6 +1,7 @@
 #include "FileHandle.h"
 #include "FileSystem.h"
 #include "CharacterDevice.h"
+#include "sys-errno.h"
 
 FileHandle::FileHandle(RetainPtr<VirtualFileSystem::Node>&& vnode)
     : m_vnode(std::move(vnode))
