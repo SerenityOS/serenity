@@ -152,7 +152,7 @@ int main(int c, char** v)
             }
             printf("st_dev:     %u\n", st.st_dev);
             printf("st_ino:     %u\n", st.st_ino);
-            printf("st_mode:    %u\n", st.st_mode);
+            printf("st_mode:    %o\n", st.st_mode);
             printf("st_nlink:   %u\n", st.st_nlink);
             printf("st_uid:     %u\n", st.st_uid);
             printf("st_gid:     %u\n", st.st_gid);
