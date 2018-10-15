@@ -28,7 +28,7 @@ public:
     virtual bool writeInode(InodeIdentifier, const ByteBuffer&) = 0;
     virtual InodeMetadata inodeMetadata(InodeIdentifier) const = 0;
 
-    virtual ssize_t readInodeBytes(InodeIdentifier, Unix::off_t offset, size_t count, byte* buffer) const = 0;
+    virtual Unix::ssize_t readInodeBytes(InodeIdentifier, Unix::off_t offset, Unix::size_t count, byte* buffer) const = 0;
 
     struct DirectoryEntry {
         String name;
@@ -38,7 +38,8 @@ public:
     virtual bool enumerateDirectoryInode(InodeIdentifier, std::function<bool(const DirectoryEntry&)>) const = 0;
 
     virtual bool setModificationTime(InodeIdentifier, dword timestamp) = 0;
-    virtual InodeIdentifier createInode(InodeIdentifier parentInode, const String& name, word mode) = 0;
+    virtual InodeIdentifier createInode(InodeIdentifier parentInode, const String& name, Unix::mode_t, unsigned size) = 0;
+    virtual InodeIdentifier makeDirectory(InodeIdentifier parentInode, const String& name, Unix::mode_t) = 0;
 
     InodeIdentifier childOfDirectoryInodeWithName(InodeIdentifier, const String& name) const;
     ByteBuffer readEntireInode(InodeIdentifier) const;
