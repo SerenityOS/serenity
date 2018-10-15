@@ -38,8 +38,10 @@ int main(int c, char** v)
         return 1;
     }
 
-    //auto newFile = vfs.create("/empty");
-    //printf("vfs.create: %p\n", newFile.ptr());
+#if 1
+    auto newFile = vfs.create("/empty");
+    printf("vfs.create: %p\n", newFile.ptr());
+#endif
     //return 0;
 
     if (!strcmp(v[0], "./vcat")) {

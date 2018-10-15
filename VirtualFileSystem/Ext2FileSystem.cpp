@@ -390,7 +390,7 @@ bool Ext2FileSystem::enumerateDirectoryInode(InodeIdentifier inode, std::functio
         if (entry->inode != 0) {
             memcpy(namebuf, entry->name, entry->name_len);
             namebuf[entry->name_len] = 0;
-#ifndef EXT2_DEBUG
+#ifdef EXT2_DEBUG
             printf("inode: %u, name_len: %u, rec_len: %u, file_type: %u, name: %s\n", entry->inode, entry->name_len, entry->rec_len, entry->file_type, namebuf);
 #endif
             if (!callback({ namebuf, { id(), entry->inode }, entry->file_type }))
@@ -598,7 +598,7 @@ void Ext2FileSystem::traverseInodeBitmap(unsigned groupIndex, F callback) const
     for (unsigned i = 0; i < blockCount; ++i) {
         auto block = readBlock(bgd.bg_inode_bitmap + i);
         ASSERT(block);
-        bool shouldContinue = callback(i * (blockSize() / 8), Bitmap::wrap(block.pointer(), inodesInGroup));
+        bool shouldContinue = callback(i * (blockSize() / 8) + 1, Bitmap::wrap(block.pointer(), inodesInGroup));
         if (!shouldContinue)
             break;
     }
@@ -793,7 +793,7 @@ InodeIdentifier Ext2FileSystem::createInode(InodeIdentifier parentInode, const S
     e2inode->i_mtime = timestamp;
     e2inode->i_dtime = 0;
     e2inode->i_gid = 0;
-    e2inode->i_links_count = 2;
+    e2inode->i_links_count = 1;
     e2inode->i_blocks = 0;
     e2inode->i_flags = 0;
     success = writeExt2Inode(inode, *e2inode);
