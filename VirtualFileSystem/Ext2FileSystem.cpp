@@ -63,7 +63,7 @@ const ext2_group_desc& Ext2FileSystem::blockGroupDescriptor(unsigned groupIndex)
     ASSERT(groupIndex <= m_blockGroupCount);
 
     if (!m_cachedBlockGroupDescriptorTable) {
-        unsigned blocksToRead = ceilDiv(m_blockGroupCount * sizeof(ext2_group_desc), blockSize());
+        unsigned blocksToRead = ceilDiv(m_blockGroupCount * (unsigned)sizeof(ext2_group_desc), blockSize());
         printf("[ext2fs] block group count: %u, blocks-to-read: %u\n", m_blockGroupCount, blocksToRead);
         unsigned firstBlockOfBGDT = blockSize() == 1024 ? 2 : 1;
         printf("[ext2fs] first block of BGDT: %u\n", firstBlockOfBGDT);
@@ -350,7 +350,7 @@ bool Ext2FileSystem::writeInode(InodeIdentifier inode, const ByteBuffer& data)
     ASSERT(!isSymbolicLink(e2inode->i_mode));
 
     unsigned blocksNeededBefore = ceilDiv(e2inode->i_size, blockSize());
-    unsigned blocksNeededAfter = ceilDiv(data.size(), blockSize());
+    unsigned blocksNeededAfter = ceilDiv((unsigned)data.size(), blockSize());
 
     // FIXME: Support growing or shrinking the block list.
     ASSERT(blocksNeededBefore == blocksNeededAfter);
@@ -604,6 +604,38 @@ void Ext2FileSystem::traverseInodeBitmap(unsigned groupIndex, F callback) const
     }
 }
 
+template<typename F>
+void Ext2FileSystem::traverseBlockBitmap(unsigned groupIndex, F callback) const
+{
+    ASSERT(groupIndex <= m_blockGroupCount);
+    auto& bgd = blockGroupDescriptor(groupIndex);
+
+    unsigned blocksInGroup = min(blocksPerGroup(), superBlock().s_blocks_count);
+    unsigned blockCount = ceilDiv(blocksInGroup, 8u);
+
+    for (unsigned i = 0; i < blockCount; ++i) {
+        auto block = readBlock(bgd.bg_block_bitmap + i);
+        ASSERT(block);
+        bool shouldContinue = callback(i * (blockSize() / 8) + 1, Bitmap::wrap(block.pointer(), blocksInGroup));
+        if (!shouldContinue)
+            break;
+    }
+}
+
+bool Ext2FileSystem::modifyLinkCount(InodeIndex inode, int delta)
+{
+    ASSERT(inode);
+    auto e2inode = lookupExt2Inode(inode);
+    if (!e2inode)
+        return false;
+
+    auto newLinkCount = e2inode->i_links_count + delta;
+    printf("changing inode %u link count from %u to %u\n", inode, e2inode->i_links_count, newLinkCount);
+    e2inode->i_links_count = newLinkCount;
+
+    return writeExt2Inode(inode, *e2inode);
+}
+
 bool Ext2FileSystem::setModificationTime(InodeIdentifier inode, dword timestamp)
 {
     ASSERT(inode.fileSystemID() == id());
@@ -635,6 +667,36 @@ bool Ext2FileSystem::isDirectoryInode(unsigned inode) const
     if (auto e2inode = lookupExt2Inode(inode))
         return isDirectory(e2inode->i_mode);
     return false;
+}
+
+Vector<Ext2FileSystem::BlockIndex> Ext2FileSystem::allocateBlocks(unsigned group, unsigned count)
+{
+    printf("[ext2fs] allocateBlocks(group: %u, count: %u)\n", group, count);
+
+    auto& bgd = blockGroupDescriptor(group);
+    if (bgd.bg_free_blocks_count < count) {
+        printf("[ext2fs] allocateBlocks can't allocate out of group %u, wanted %u but only %u available\n", group, count, bgd.bg_free_blocks_count);
+        return { };
+    }
+
+    // FIXME: Implement a scan that finds consecutive blocks if possible.
+    Vector<BlockIndex> blocks;
+    traverseBlockBitmap(group, [&blocks, count] (unsigned firstBlockInBitmap, const Bitmap& bitmap) {
+        for (unsigned i = 0; i < bitmap.size(); ++i) {
+            if (!bitmap.get(i)) {
+                blocks.append(firstBlockInBitmap + i);
+                if (blocks.size() == count)
+                    return false;
+            }
+        }
+        return true;
+    });
+    printf("[ext2fs] allocateBlock found these blocks:\n");
+    for (auto& bi : blocks) {
+        printf("  > %u\n", bi);
+    }
+
+    return blocks;
 }
 
 unsigned Ext2FileSystem::allocateInode(unsigned preferredGroup, unsigned expectedSize)
@@ -736,14 +798,97 @@ bool Ext2FileSystem::setInodeAllocationState(unsigned inode, bool newState)
         ++mutableBGD.bg_free_inodes_count;
     printf("[ext2fs] group free inode count %u -> %u\n", bgd.bg_free_inodes_count, bgd.bg_free_inodes_count - 1);
 
-    unsigned blocksToWrite = ceilDiv(m_blockGroupCount * sizeof(ext2_group_desc), blockSize());
+    unsigned blocksToWrite = ceilDiv(m_blockGroupCount * (unsigned)sizeof(ext2_group_desc), blockSize());
     unsigned firstBlockOfBGDT = blockSize() == 1024 ? 2 : 1;
     writeBlocks(firstBlockOfBGDT, blocksToWrite, m_cachedBlockGroupDescriptorTable);
     
     return true;
 }
 
-InodeIdentifier Ext2FileSystem::createInode(InodeIdentifier parentInode, const String& name, word mode)
+bool Ext2FileSystem::setBlockAllocationState(GroupIndex group, BlockIndex bi, bool newState)
+{
+    auto& bgd = blockGroupDescriptor(group);
+
+    // Update block bitmap
+    unsigned blocksPerBitmapBlock = blockSize() * 8;
+    unsigned bitmapBlockIndex = (bi - 1) / blocksPerBitmapBlock;
+    unsigned bitIndex = (bi - 1) % blocksPerBitmapBlock;
+    auto block = readBlock(bgd.bg_block_bitmap + bitmapBlockIndex);
+    ASSERT(block);
+    auto bitmap = Bitmap::wrap(block.pointer(), block.size());
+    bool currentState = bitmap.get(bitIndex);
+    printf("[ext2fs] setBlockAllocationState(%u) %u -> %u\n", block, currentState, newState);
+
+    if (currentState == newState)
+        return true;
+
+    bitmap.set(bitIndex, newState);
+    writeBlock(bgd.bg_block_bitmap + bitmapBlockIndex, block);
+
+    // Update superblock
+    auto& sb = *reinterpret_cast<ext2_super_block*>(m_cachedSuperBlock.pointer());
+    printf("[ext2fs] superblock free block count %u -> %u\n", sb.s_free_blocks_count, sb.s_free_blocks_count - 1);
+    if (newState)
+        --sb.s_free_blocks_count;
+    else
+        ++sb.s_free_blocks_count;
+    writeSuperBlock(sb);
+
+    // Update BGD
+    auto& mutableBGD = const_cast<ext2_group_desc&>(bgd);
+    if (newState)
+        --mutableBGD.bg_free_blocks_count;
+    else
+        ++mutableBGD.bg_free_blocks_count;
+    printf("[ext2fs] group free block count %u -> %u\n", bgd.bg_free_blocks_count, bgd.bg_free_blocks_count - 1);
+
+    unsigned blocksToWrite = ceilDiv(m_blockGroupCount * (unsigned)sizeof(ext2_group_desc), blockSize());
+    unsigned firstBlockOfBGDT = blockSize() == 1024 ? 2 : 1;
+    writeBlocks(firstBlockOfBGDT, blocksToWrite, m_cachedBlockGroupDescriptorTable);
+    
+    return true;
+}
+
+InodeIdentifier Ext2FileSystem::makeDirectory(InodeIdentifier parentInode, const String& name, Unix::mode_t mode)
+{
+    ASSERT(parentInode.fileSystemID() == id());
+    ASSERT(isDirectoryInode(parentInode.index()));
+
+    // Fix up the mode to definitely be a directory.
+    // FIXME: This is a bit on the hackish side.
+    mode &= ~0170000;
+    mode |= 0040000;
+
+    // NOTE: When creating a new directory, make the size 1 block.
+    //       There's probably a better strategy here, but this works for now.
+    auto inode = createInode(parentInode, name, mode, blockSize());
+    if (!inode.isValid())
+        return { };
+
+    printf("[ext2fs] makeDirectory: created new directory named '%s' with inode %u\n", name.characters(), inode.index());
+
+    Vector<DirectoryEntry> entries;
+    entries.append({ ".", inode, EXT2_FT_DIR });
+    entries.append({ "..", parentInode, EXT2_FT_DIR });
+
+    bool success = writeDirectoryInode(inode.index(), std::move(entries));
+    ASSERT(success);
+
+    success = modifyLinkCount(parentInode.index(), 1);
+    ASSERT(success);
+
+    auto& bgd = const_cast<ext2_group_desc&>(blockGroupDescriptor(groupIndexFromInode(inode.index())));
+    ++bgd.bg_used_dirs_count;
+    printf("[ext2fs] incremented bg_used_dirs_count %u -> %u\n", bgd.bg_used_dirs_count - 1, bgd.bg_used_dirs_count);
+
+    unsigned blocksToWrite = ceilDiv(m_blockGroupCount * (unsigned)sizeof(ext2_group_desc), blockSize());
+    unsigned firstBlockOfBGDT = blockSize() == 1024 ? 2 : 1;
+    writeBlocks(firstBlockOfBGDT, blocksToWrite, m_cachedBlockGroupDescriptorTable);
+
+    return inode;
+}
+
+InodeIdentifier Ext2FileSystem::createInode(InodeIdentifier parentInode, const String& name, Unix::mode_t mode, unsigned size)
 {
     ASSERT(parentInode.fileSystemID() == id());
     ASSERT(isDirectoryInode(parentInode.index()));
@@ -754,6 +899,16 @@ InodeIdentifier Ext2FileSystem::createInode(InodeIdentifier parentInode, const S
 
     // NOTE: This doesn't commit the inode allocation just yet!
     auto inode = allocateInode(0, 0);
+    if (!inode) {
+        printf("[ext2fs] createInode: allocateInode failed\n");
+        return { };
+    }
+
+    auto blocks = allocateBlocks(groupIndexFromInode(inode), ceilDiv(size, blockSize()));
+    if (blocks.isEmpty()) {
+        printf("[ext2fs] createInode: allocateBlocks failed\n");
+        return { };
+    }
 
     byte fileType = 0;
     if (isRegularFile(mode))
@@ -782,19 +937,39 @@ InodeIdentifier Ext2FileSystem::createInode(InodeIdentifier parentInode, const S
     success = setInodeAllocationState(inode, true);
     ASSERT(success);
 
+    for (auto bi : blocks) {
+        success = setBlockAllocationState(groupIndexFromInode(inode), bi, true);
+        ASSERT(success);
+    }
+
+    unsigned initialLinksCount;
+    if (isDirectory(mode))
+        initialLinksCount = 2; // (parent directory + "." entry in self)
+    else
+        initialLinksCount = 1;
+
     auto timestamp = time(nullptr);
     auto e2inode = make<ext2_inode>();
     memset(e2inode.ptr(), 0, sizeof(ext2_inode));
     e2inode->i_mode = mode;
     e2inode->i_uid = 0;
-    e2inode->i_size = 0;
+    e2inode->i_size = size;
     e2inode->i_atime = timestamp;
     e2inode->i_ctime = timestamp;
     e2inode->i_mtime = timestamp;
     e2inode->i_dtime = 0;
     e2inode->i_gid = 0;
-    e2inode->i_links_count = 1;
-    e2inode->i_blocks = 0;
+    e2inode->i_links_count = initialLinksCount;
+    e2inode->i_blocks = blocks.size() * (blockSize() / 512);
+
+    // FIXME: Implement writing out indirect blocks!
+    ASSERT(blocks.size() < EXT2_NDIR_BLOCKS);
+
+    printf("[XXX] writing %u blocks to i_block array\n", min((unsigned)EXT2_NDIR_BLOCKS, blocks.size()));
+    for (unsigned i = 0; i < min((unsigned)EXT2_NDIR_BLOCKS, blocks.size()); ++i) {
+        e2inode->i_block[i] = blocks[i];
+    }
+
     e2inode->i_flags = 0;
     success = writeExt2Inode(inode, *e2inode);
     ASSERT(success);

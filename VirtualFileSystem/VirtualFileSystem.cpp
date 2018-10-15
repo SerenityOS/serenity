@@ -337,7 +337,14 @@ OwnPtr<FileHandle> VirtualFileSystem::open(const String& path)
 OwnPtr<FileHandle> VirtualFileSystem::create(const String& path)
 {
     // FIXME: Do the real thing, not just this fake thing!
-    m_rootNode->fileSystem()->createInode(m_rootNode->fileSystem()->rootInode(), "empty", 0100644);
+    m_rootNode->fileSystem()->createInode(m_rootNode->fileSystem()->rootInode(), "empty", 0100644, 0);
+    return nullptr;
+}
+
+OwnPtr<FileHandle> VirtualFileSystem::mkdir(const String& path)
+{
+    // FIXME: Do the real thing, not just this fake thing!
+    m_rootNode->fileSystem()->makeDirectory(m_rootNode->fileSystem()->rootInode(), "mydir", 0400755);
     return nullptr;
 }
 

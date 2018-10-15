@@ -53,6 +53,7 @@ public:
 
     OwnPtr<FileHandle> open(const String& path);
     OwnPtr<FileHandle> create(const String& path);
+    OwnPtr<FileHandle> mkdir(const String& path);
 
     bool isRoot(InodeIdentifier) const;
 

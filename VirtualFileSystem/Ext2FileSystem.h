@@ -15,6 +15,10 @@ public:
     virtual ~Ext2FileSystem() override;
 
 private:
+    typedef unsigned BlockIndex;
+    typedef unsigned GroupIndex;
+    typedef unsigned InodeIndex;
+
     explicit Ext2FileSystem(RetainPtr<BlockDevice>);
 
     const ext2_super_block& superBlock() const;
@@ -39,11 +43,13 @@ private:
     virtual bool enumerateDirectoryInode(InodeIdentifier, std::function<bool(const DirectoryEntry&)>) const override;
     virtual InodeMetadata inodeMetadata(InodeIdentifier) const override;
     virtual bool setModificationTime(InodeIdentifier, dword timestamp) override;
-    virtual InodeIdentifier createInode(InodeIdentifier parentInode, const String& name, word mode) override;
-    virtual ssize_t readInodeBytes(InodeIdentifier, Unix::off_t offset, size_t count, byte* buffer) const override;
+    virtual InodeIdentifier createInode(InodeIdentifier parentInode, const String& name, Unix::mode_t, unsigned size) override;
+    virtual Unix::ssize_t readInodeBytes(InodeIdentifier, Unix::off_t offset, Unix::size_t count, byte* buffer) const override;
+    virtual InodeIdentifier makeDirectory(InodeIdentifier parentInode, const String& name, Unix::mode_t) override;
 
     bool isDirectoryInode(unsigned) const;
     unsigned allocateInode(unsigned preferredGroup, unsigned expectedSize);
+    Vector<BlockIndex> allocateBlocks(unsigned group, unsigned count);
     unsigned groupIndexFromInode(unsigned) const;
 
     Vector<unsigned> blockListForInode(const ext2_inode&) const;
@@ -51,12 +57,15 @@ private:
     void dumpBlockBitmap(unsigned groupIndex) const;
     void dumpInodeBitmap(unsigned groupIndex) const;
 
-    template<typename F>
-    void traverseInodeBitmap(unsigned groupIndex, F) const;
+    template<typename F> void traverseInodeBitmap(unsigned groupIndex, F) const;
+    template<typename F> void traverseBlockBitmap(unsigned groupIndex, F) const;
 
     bool addInodeToDirectory(unsigned directoryInode, unsigned inode, const String& name, byte fileType);
     bool writeDirectoryInode(unsigned directoryInode, Vector<DirectoryEntry>&&);
     bool setInodeAllocationState(unsigned inode, bool);
+    bool setBlockAllocationState(GroupIndex, BlockIndex, bool);
+
+    bool modifyLinkCount(InodeIndex, int delta);
 
     unsigned m_blockGroupCount { 0 };
 

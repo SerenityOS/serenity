@@ -97,7 +97,7 @@ bool SyntheticFileSystem::setModificationTime(InodeIdentifier, dword timestamp)
     return false;
 }
 
-InodeIdentifier SyntheticFileSystem::createInode(InodeIdentifier parentInode, const String& name, word mode)
+InodeIdentifier SyntheticFileSystem::createInode(InodeIdentifier parentInode, const String& name, Unix::mode_t mode, unsigned size)
 {
     (void) parentInode;
     (void) name;
@@ -112,7 +112,7 @@ bool SyntheticFileSystem::writeInode(InodeIdentifier, const ByteBuffer&)
     return false;
 }
 
-ssize_t SyntheticFileSystem::readInodeBytes(InodeIdentifier inode, Unix::off_t offset, Unix::size_t count, byte* buffer) const
+Unix::ssize_t SyntheticFileSystem::readInodeBytes(InodeIdentifier inode, Unix::off_t offset, Unix::size_t count, byte* buffer) const
 {
     ASSERT(inode.fileSystemID() == id());
 #ifdef SYNTHFS_DEBUG
@@ -124,7 +124,13 @@ ssize_t SyntheticFileSystem::readInodeBytes(InodeIdentifier inode, Unix::off_t o
     ASSERT(buffer);
 
     auto& file = *m_files[inode.index() - 1];
-    Unix::ssize_t nread = min(file.data.size() - offset, static_cast<Unix::off_t>(count));
+    Unix::ssize_t nread = min(static_cast<Unix::off_t>(file.data.size() - offset), static_cast<Unix::off_t>(count));
     memcpy(buffer, file.data.pointer() + offset, nread);
     return nread;
+}
+
+InodeIdentifier SyntheticFileSystem::makeDirectory(InodeIdentifier parentInode, const String& name, Unix::mode_t)
+{
+    printf("FIXME: Implement SyntheticFileSystem::makeDirectory().\n");
+    return { };
 }
