@@ -10,13 +10,13 @@
 
 //#define EXT2_DEBUG
 
-RetainPtr<Ext2FileSystem> Ext2FileSystem::create(RetainPtr<BlockDevice> device)
+RetainPtr<Ext2FileSystem> Ext2FileSystem::create(RetainPtr<DiskDevice>&& device)
 {
     return adopt(*new Ext2FileSystem(std::move(device)));
 }
 
-Ext2FileSystem::Ext2FileSystem(RetainPtr<BlockDevice> device)
-    : DeviceBackedFileSystem(std::move(device))
+Ext2FileSystem::Ext2FileSystem(RetainPtr<DiskDevice>&& device)
+    : DiskBackedFileSystem(std::move(device))
 {
 }
 

@@ -1,5 +1,5 @@
 #include "Ext2FileSystem.h"
-#include "FileBackedBlockDevice.h"
+#include "FileBackedDiskDevice.h"
 #include "VirtualFileSystem.h"
 #include "FileHandle.h"
 #include "SyntheticFileSystem.h"
@@ -217,7 +217,7 @@ int main(int c, char** v)
 
 RetainPtr<FileSystem> makeFileSystem(const char* imagePath)
 {
-    auto fsImage = FileBackedBlockDevice::create(imagePath, 512);
+    auto fsImage = FileBackedDiskDevice::create(imagePath, 512);
     if (!fsImage->isValid()) {
         fprintf(stderr, "Failed to open fs image file '%s'\n", imagePath);
         exit(1);

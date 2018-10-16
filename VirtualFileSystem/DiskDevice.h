@@ -3,9 +3,9 @@
 #include <AK/Retainable.h>
 #include <AK/Types.h>
 
-class BlockDevice : public Retainable<BlockDevice> {
+class DiskDevice : public Retainable<DiskDevice> {
 public:
-    virtual ~BlockDevice();
+    virtual ~DiskDevice();
 
     virtual unsigned blockSize() const = 0;
     virtual bool readBlock(unsigned index, byte*) const = 0;
@@ -15,6 +15,6 @@ public:
     virtual bool write(qword offset, unsigned length, const byte*) = 0;
 
 protected:
-    BlockDevice();
+    DiskDevice();
 };
 

@@ -3,17 +3,17 @@
 #include "FileSystem.h"
 #include <AK/ByteBuffer.h>
 
-class DeviceBackedFileSystem : public FileSystem {
+class DiskBackedFileSystem : public FileSystem {
 public:
-    virtual ~DeviceBackedFileSystem() override;
+    virtual ~DiskBackedFileSystem() override;
 
-    BlockDevice& device() { return *m_device; }
-    const BlockDevice& device() const { return *m_device; }
+    DiskDevice& device() { return *m_device; }
+    const DiskDevice& device() const { return *m_device; }
 
     unsigned blockSize() const { return m_blockSize; }
 
 protected:
-    explicit DeviceBackedFileSystem(RetainPtr<BlockDevice>&&);
+    explicit DiskBackedFileSystem(RetainPtr<DiskDevice>&&);
 
     void setBlockSize(unsigned);
     void invalidateCaches();
@@ -26,5 +26,5 @@ protected:
 
 private:
     unsigned m_blockSize { 0 };
-    RetainPtr<BlockDevice> m_device;
+    RetainPtr<DiskDevice> m_device;
 };

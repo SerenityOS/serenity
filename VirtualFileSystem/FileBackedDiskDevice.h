@@ -1,15 +1,15 @@
 #pragma once
 
-#include "BlockDevice.h"
+#include "DiskDevice.h"
 #include <AK/RetainPtr.h>
 #include <AK/String.h>
 #include <AK/Types.h>
 #include <stdio.h>
 
-class FileBackedBlockDevice final : public BlockDevice {
+class FileBackedDiskDevice final : public DiskDevice {
 public:
-    static RetainPtr<FileBackedBlockDevice> create(String&& imagePath, unsigned blockSize);
-    virtual ~FileBackedBlockDevice() override;
+    static RetainPtr<FileBackedDiskDevice> create(String&& imagePath, unsigned blockSize);
+    virtual ~FileBackedDiskDevice() override;
 
     bool isValid() const { return m_file; }
 
@@ -22,7 +22,7 @@ public:
 private:
     virtual const char* className() const override;
 
-    FileBackedBlockDevice(String&& imagePath, unsigned blockSize);
+    FileBackedDiskDevice(String&& imagePath, unsigned blockSize);
 
     String m_imagePath;
     FILE* m_file { nullptr };

@@ -1,40 +1,40 @@
-#include "DeviceBackedFileSystem.h"
+#include "DiskBackedFileSystem.h"
 
 //#define DBFS_DEBUG
 
-DeviceBackedFileSystem::DeviceBackedFileSystem(RetainPtr<BlockDevice>&& device)
+DiskBackedFileSystem::DiskBackedFileSystem(RetainPtr<DiskDevice>&& device)
     : m_device(std::move(device))
 {
     ASSERT(m_device);
 }
 
-DeviceBackedFileSystem::~DeviceBackedFileSystem()
+DiskBackedFileSystem::~DiskBackedFileSystem()
 {
 }
 
-bool DeviceBackedFileSystem::writeBlock(unsigned index, const ByteBuffer& data)
+bool DiskBackedFileSystem::writeBlock(unsigned index, const ByteBuffer& data)
 {
     ASSERT(data.size() == blockSize());
 #ifdef DBFS_DEBUG
-    printf("DeviceBackedFileSystem::writeBlock %u\n", index);
+    printf("DiskBackedFileSystem::writeBlock %u\n", index);
 #endif
     qword baseOffset = static_cast<qword>(index) * static_cast<qword>(blockSize());
     return device().write(baseOffset, blockSize(), data.pointer());
 }
 
-bool DeviceBackedFileSystem::writeBlocks(unsigned index, unsigned count, const ByteBuffer& data)
+bool DiskBackedFileSystem::writeBlocks(unsigned index, unsigned count, const ByteBuffer& data)
 {
 #ifdef DBFS_DEBUG
-    printf("DeviceBackedFileSystem::writeBlocks %u x%u\n", index, count);
+    printf("DiskBackedFileSystem::writeBlocks %u x%u\n", index, count);
 #endif
     qword baseOffset = static_cast<qword>(index) * static_cast<qword>(blockSize());
     return device().write(baseOffset, count * blockSize(), data.pointer());
 }
 
-ByteBuffer DeviceBackedFileSystem::readBlock(unsigned index) const
+ByteBuffer DiskBackedFileSystem::readBlock(unsigned index) const
 {
 #ifdef DBFS_DEBUG
-    printf("DeviceBackedFileSystem::readBlock %u\n", index);
+    printf("DiskBackedFileSystem::readBlock %u\n", index);
 #endif
     auto buffer = ByteBuffer::createUninitialized(blockSize());
     qword baseOffset = static_cast<qword>(index) * static_cast<qword>(blockSize());
@@ -44,7 +44,7 @@ ByteBuffer DeviceBackedFileSystem::readBlock(unsigned index) const
     return buffer;
 }
 
-ByteBuffer DeviceBackedFileSystem::readBlocks(unsigned index, unsigned count) const
+ByteBuffer DiskBackedFileSystem::readBlocks(unsigned index, unsigned count) const
 {
     if (!count)
         return nullptr;
@@ -64,7 +64,7 @@ ByteBuffer DeviceBackedFileSystem::readBlocks(unsigned index, unsigned count) co
     return blocks;
 }
 
-void DeviceBackedFileSystem::setBlockSize(unsigned blockSize)
+void DiskBackedFileSystem::setBlockSize(unsigned blockSize)
 {
     if (blockSize == m_blockSize)
         return;
@@ -72,7 +72,7 @@ void DeviceBackedFileSystem::setBlockSize(unsigned blockSize)
     invalidateCaches();
 }
 
-void DeviceBackedFileSystem::invalidateCaches()
+void DiskBackedFileSystem::invalidateCaches()
 {
     // FIXME: Implement block cache.
 }

@@ -9,13 +9,13 @@ AK_OBJS = \
     ../AK/kmalloc.o
 
 VFS_OBJS = \
-    BlockDevice.o \
-    FileBackedBlockDevice.o \
+    DiskDevice.o \
+    FileBackedDiskDevice.o \
     FileSystem.o \
     Ext2FileSystem.o \
     VirtualFileSystem.o \
     FileHandle.o \
-    DeviceBackedFileSystem.o \
+    DiskBackedFileSystem.o \
     SyntheticFileSystem.o \
     InodeIdentifier.o \
     CharacterDevice.o \
@@ -28,8 +28,6 @@ VFS_OBJS = \
 OBJS = $(AK_OBJS) $(VFS_OBJS)
 
 CXXFLAGS = -std=c++17 -O0 -W -Wall -Wextra -Wconversion -I. -I.. -ggdb3 -Wno-class-memaccess
-
-#test.o: BlockDevice.h FileBackedBlockDevice.h FileSystem.h Ext2FileSystem.h VirtualFileSystem.h FileHandle.h
 
 all:	$(PROGRAM)
 
