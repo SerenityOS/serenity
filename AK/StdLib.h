@@ -1,5 +1,12 @@
 #pragma once
 
+#ifdef SERENITY_KERNEL
+#include <Kernel/StdLib.h>
+#else
+#include <cstring>
+#include <utility>
+#endif
+
 namespace AK {
 
 template<typename T>
@@ -34,10 +41,10 @@ template<typename T>
 struct identity {
     typedef T type;
 };
-template<typename T>
-T&& forward(typename identity<T>::type&& param)
+template<class T>
+constexpr T&& forward(typename identity<T>::type& param)
 {
-    return static_cast<typename identity<T>::type&&>(param);
+    return static_cast<T&&>(param);
 }
 
 template<typename T, typename U>

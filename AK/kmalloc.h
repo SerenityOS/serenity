@@ -4,10 +4,10 @@
 
 extern "C" {
 
-void* kcalloc(dword nmemb, dword size);
-void* kmalloc(dword size);
+void* kcalloc(size_t nmemb, size_t size);
+void* kmalloc(size_t size);
 void kfree(void* ptr);
-void* krealloc(void* ptr, dword size);
+void* krealloc(void* ptr, size_t size);
 
 }
 
