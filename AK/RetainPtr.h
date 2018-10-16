@@ -1,8 +1,6 @@
 #pragma once
 
-namespace std {
-typedef decltype(nullptr) nullptr_t;
-}
+#include "Types.h"
 
 namespace AK {
 
@@ -32,7 +30,16 @@ public:
     RetainPtr(AdoptTag, T& object) : m_ptr(&object) { }
     RetainPtr(RetainPtr&& other) : m_ptr(other.leakRef()) { }
     template<typename U> RetainPtr(RetainPtr<U>&& other) : m_ptr(static_cast<T*>(other.leakRef())) { }
-    ~RetainPtr() { clear(); }
+    ~RetainPtr()
+    {
+        clear();
+#ifdef SANITIZE_PTRS
+        if constexpr(sizeof(T*) == 8)
+            m_ptr = (T*)(0xe0e0e0e0e0e0e0e0);
+        else
+            m_ptr = (T*)(0xe0e0e0e0);
+#endif
+    }
     RetainPtr(std::nullptr_t) { }
 
     RetainPtr& operator=(RetainPtr&& other)
