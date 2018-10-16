@@ -22,7 +22,12 @@ KERNEL_OBJS = \
        IDEDiskDevice.o
 
 VFS_OBJS = \
-    ../VirtualFileSystem/DiskDevice.o
+    ../VirtualFileSystem/DiskDevice.o \
+    ../VirtualFileSystem/CharacterDevice.o \
+    ../VirtualFileSystem/NullDevice.o \
+    ../VirtualFileSystem/FullDevice.o \
+    ../VirtualFileSystem/ZeroDevice.o \
+    ../VirtualFileSystem/RandomDevice.o
 
 OBJS = $(KERNEL_OBJS) $(VFS_OBJS)
 

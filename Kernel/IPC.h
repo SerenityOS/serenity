@@ -3,6 +3,7 @@
 #include "types.h"
 #include "DataBuffer.h"
 #include "RefPtr.h"
+#include <AK/StdLib.h>
 
 /* IPC message types. There will be moar. */
 #define MSG_INTERRUPT 0x00000001

@@ -1,8 +1,7 @@
 #include "NullDevice.h"
 #include "Limits.h"
 #include <AK/StdLib.h>
-#include <cstring>
-#include <cstdio>
+#include <AK/kstdio.h>
 
 NullDevice::NullDevice()
 {
@@ -14,7 +13,7 @@ NullDevice::~NullDevice()
 
 Unix::ssize_t NullDevice::read(byte*, Unix::size_t)
 {
-    printf("read from null\n");
+    kprintf("NullDevice: read from null\n");
     return 0;
 }
 
