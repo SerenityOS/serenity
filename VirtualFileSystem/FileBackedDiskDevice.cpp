@@ -35,16 +35,16 @@ unsigned FileBackedDiskDevice::blockSize() const
 bool FileBackedDiskDevice::readBlock(unsigned index, byte* out) const
 {
     qword offset = index * m_blockSize;
-    return read(offset, blockSize(), out);
+    return readInternal(offset, blockSize(), out);
 }
 
 bool FileBackedDiskDevice::writeBlock(unsigned index, const byte* data)
 {
     qword offset = index * m_blockSize;
-    return write(offset, blockSize(), data);
+    return writeInternal(offset, blockSize(), data);
 }
 
-bool FileBackedDiskDevice::read(qword offset, unsigned length, byte* out) const
+bool FileBackedDiskDevice::readInternal(qword offset, unsigned length, byte* out) const
 {
 #ifndef IGNORE_FILE_LENGTH
     if (offset + length >= m_fileLength)
@@ -59,7 +59,7 @@ bool FileBackedDiskDevice::read(qword offset, unsigned length, byte* out) const
     return true;
 }
 
-bool FileBackedDiskDevice::write(qword offset, unsigned length, const byte* data)
+bool FileBackedDiskDevice::writeInternal(qword offset, unsigned length, const byte* data)
 {
 #ifndef IGNORE_FILE_LENGTH
     if (offset + length >= m_fileLength)
