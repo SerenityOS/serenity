@@ -1,0 +1,5 @@
+#!/bin/sh
+
+#bochs -q -f .bochs.conf
+
+qemu-system-i386 -drive format=raw,file=.floppy-image,if=floppy -drive format=raw,file=_fs_contents $@
