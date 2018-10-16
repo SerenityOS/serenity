@@ -59,6 +59,7 @@ public:
     }
 
     Vector<String> split(char separator) const;
+    String substring(size_t start, size_t length) const;
 
     bool isEmpty() const { return length() == 0; }
     unsigned length() const { return m_impl ? m_impl->length() : 0; }

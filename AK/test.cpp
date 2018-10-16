@@ -14,6 +14,14 @@ static void testWeakPtr();
 
 int main(int, char**)
 {
+    {
+        String path = "/////abc/def////g/h/i//";
+        auto parts = path.split('/');
+        for (auto& part : parts)
+            printf("<%s>\n", part.characters());
+    }
+
+
     String empty = "";
 
     char* buffer;
