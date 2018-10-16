@@ -1,13 +1,16 @@
 #pragma once
 
+#ifdef SERENITY_KERNEL
+#include "kassert.h"
+#else
 #include <assert.h>
-
 #define ASSERT(x) assert(x)
 #define ASSERT_NOT_REACHED() assert(false)
+#endif
 
 namespace AK {
 
-inline void notImplemented() { assert(false); }
+inline void notImplemented() { ASSERT(false); }
 
 }
 

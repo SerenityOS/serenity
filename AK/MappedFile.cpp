@@ -22,7 +22,7 @@ MappedFile::MappedFile(String&& fileName)
             perror("");
     }
 
-    printf("MappedFile{%s} := { m_fd=%d, m_fileLength=%u, m_map=%p }\n", m_fileName.characters(), m_fd, m_fileLength, m_map);
+    printf("MappedFile{%s} := { m_fd=%d, m_fileLength=%zu, m_map=%p }\n", m_fileName.characters(), m_fd, m_fileLength, m_map);
 }
 
 MappedFile::~MappedFile()

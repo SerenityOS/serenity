@@ -136,7 +136,7 @@ int main(int, char**)
     }
 
     auto charbuf = Buffer<char>::createUninitialized(1024);
-    printf("charbuf.size() = %u\n", charbuf->size());
+    printf("charbuf.size() = %zu\n", charbuf->size());
 
     {
     Vector<String> problem;
@@ -146,7 +146,7 @@ int main(int, char**)
 
     {
         auto printInts = [] (const Vector<int>& v) {
-            printf("Vector {\n    size: %u\n    capacity: %u\n    elements: ", v.size(), v.capacity());
+            printf("Vector {\n    size: %zu\n    capacity: %zu\n    elements: ", v.size(), v.capacity());
             for (auto i : v)
                 printf("%d ", i);
             printf("\n}\n");

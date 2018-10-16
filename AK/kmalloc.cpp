@@ -9,12 +9,12 @@
 
 extern "C" {
 
-void* kcalloc(dword nmemb, dword size)
+void* kcalloc(size_t nmemb, size_t size)
 {
     return calloc(nmemb, size);
 }
 
-void* kmalloc(dword size)
+void* kmalloc(size_t size)
 {
     return malloc(size);
 }
@@ -24,7 +24,7 @@ void kfree(void* ptr)
     free(ptr);
 }
 
-void* krealloc(void* ptr, dword size)
+void* krealloc(void* ptr, size_t size)
 {
     return realloc(ptr, size);
 }
@@ -35,14 +35,14 @@ void* krealloc(void* ptr, dword size)
 
 extern "C" {
 
-void* kcalloc(dword nmemb, dword size)
+void* kcalloc(size_t nmemb, size_t size)
 {
     if (!nmemb || !size)
         return nullptr;
     return SimpleMalloc::allocateZeroed(nmemb * size);
 }
 
-void* kmalloc(dword size)
+void* kmalloc(size_t size)
 {
     if (!size)
         return nullptr;
@@ -56,7 +56,7 @@ void kfree(void* ptr)
     SimpleMalloc::free((byte*)ptr);
 }
 
-void* krealloc(void* ptr, dword size)
+void* krealloc(void* ptr, size_t size)
 {
     if (!ptr)
         return ptr;

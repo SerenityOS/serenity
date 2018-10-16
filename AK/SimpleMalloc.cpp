@@ -222,6 +222,8 @@ byte* allocateZeroed(dword size)
 byte* reallocate(byte* ptr, dword size)
 {
     // FIXME;
+    (void) ptr;
+    (void) size;
     ASSERT_NOT_REACHED();
     return nullptr;
 }

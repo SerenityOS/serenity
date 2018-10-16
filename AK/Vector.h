@@ -13,24 +13,24 @@ template<typename T>
 class VectorImpl {
 public:
     ~VectorImpl() { }
-    static OwnPtr<VectorImpl> create(unsigned capacity)
+    static OwnPtr<VectorImpl> create(size_t capacity)
     {
         size_t size = sizeof(VectorImpl) + sizeof(T) * capacity;
         void* slot = kmalloc(size);
         return OwnPtr<VectorImpl>(new (slot) VectorImpl(capacity));
     }
 
-    unsigned size() const { return m_size; }
-    unsigned capacity() const { return m_capacity; }
+    size_t size() const { return m_size; }
+    size_t capacity() const { return m_capacity; }
 
-    T& at(unsigned i) { return *slot(i); }
-    const T& at(unsigned i) const { return *slot(i); }
+    T& at(size_t i) { return *slot(i); }
+    const T& at(size_t i) const { return *slot(i); }
 
-    void remove(unsigned index)
+    void remove(size_t index)
     {
         ASSERT(index < m_size);
         at(index).~T();
-        for (unsigned i = index + 1; i < m_size; ++i) {
+        for (size_t i = index + 1; i < m_size; ++i) {
             new (slot(i - 1)) T(move(at(i)));
             at(i).~T();
         }
@@ -41,16 +41,16 @@ public:
 private:
     friend class Vector<T>;
 
-    VectorImpl(unsigned capacity) : m_capacity(capacity) { }
+    VectorImpl(size_t capacity) : m_capacity(capacity) { }
 
     T* tail() { return reinterpret_cast<T*>(this + 1); }
-    T* slot(unsigned i) { return &tail()[i]; }
+    T* slot(size_t i) { return &tail()[i]; }
 
     const T* tail() const { return reinterpret_cast<const T*>(this + 1); }
-    const T* slot(unsigned i) const { return &tail()[i]; }
+    const T* slot(size_t i) const { return &tail()[i]; }
 
-    unsigned m_size { 0 };
-    unsigned m_capacity;
+    size_t m_size { 0 };
+    size_t m_capacity;
 };
 
 template<typename T>
@@ -73,21 +73,21 @@ public:
 
     void clear()
     {
-        for (unsigned i = 0; i < size(); ++i) {
+        for (size_t i = 0; i < size(); ++i) {
             at(i).~T();
         }
         m_impl = nullptr;
     }
 
     bool isEmpty() const { return size() == 0; }
-    unsigned size() const { return m_impl ? m_impl->size() : 0; }
-    unsigned capacity() const { return m_impl ? m_impl->capacity() : 0; }
+    size_t size() const { return m_impl ? m_impl->size() : 0; }
+    size_t capacity() const { return m_impl ? m_impl->capacity() : 0; }
 
-    const T& at(unsigned i) const { return m_impl->at(i); }
-    T& at(unsigned i) { return m_impl->at(i); }
+    const T& at(size_t i) const { return m_impl->at(i); }
+    T& at(size_t i) { return m_impl->at(i); }
 
-    const T& operator[](unsigned i) const { return at(i); }
-    T& operator[](unsigned i) { return at(i); }
+    const T& operator[](size_t i) const { return at(i); }
+    T& operator[](size_t i) { return at(i); }
 
     const T& first() const { return at(0); }
     T& first() { return at(0); }
@@ -104,7 +104,7 @@ public:
         return value;
     }
 
-    void remove(unsigned index)
+    void remove(size_t index)
     {
         m_impl->remove(index);
     }
@@ -123,7 +123,7 @@ public:
         ++m_impl->m_size;
     }
 
-    void ensureCapacity(unsigned neededCapacity)
+    void ensureCapacity(size_t neededCapacity)
     {
         if (capacity() >= neededCapacity)
             return;
@@ -131,7 +131,7 @@ public:
         auto newImpl = VectorImpl<T>::create(newCapacity);
         if (m_impl) {
             newImpl->m_size = m_impl->m_size;
-            for (unsigned i = 0; i < size(); ++i) {
+            for (size_t i = 0; i < size(); ++i) {
                 new (newImpl->slot(i)) T(move(m_impl->at(i)));
                 m_impl->at(i).~T();
             }
@@ -146,9 +146,9 @@ public:
         T& operator*() { return m_vector[m_index]; }
     private:
         friend class Vector;
-        Iterator(Vector& vector, unsigned index) : m_vector(vector), m_index(index) { }
+        Iterator(Vector& vector, size_t index) : m_vector(vector), m_index(index) { }
         Vector& m_vector;
-        unsigned m_index { 0 };
+        size_t m_index { 0 };
     };
 
     Iterator begin() { return Iterator(*this, 0); }
@@ -161,18 +161,18 @@ public:
         const T& operator*() const { return m_vector[m_index]; }
     private:
         friend class Vector;
-        ConstIterator(const Vector& vector, const unsigned index) : m_vector(vector), m_index(index) { }
+        ConstIterator(const Vector& vector, const size_t index) : m_vector(vector), m_index(index) { }
         const Vector& m_vector;
-        unsigned m_index { 0 };
+        size_t m_index { 0 };
     };
 
     ConstIterator begin() const { return ConstIterator(*this, 0); }
     ConstIterator end() const { return ConstIterator(*this, size()); }
 
 private:
-    static unsigned paddedCapacity(unsigned capacity)
+    static size_t paddedCapacity(size_t capacity)
     {
-        return max(4u, capacity + (capacity / 4) + 4);
+        return max(size_t(4), capacity + (capacity / 4) + 4);
     }
 
     OwnPtr<VectorImpl<T>> m_impl;
