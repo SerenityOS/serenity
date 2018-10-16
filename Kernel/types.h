@@ -63,3 +63,8 @@ typedef DWORD gid_t;
 typedef int pid_t;
 typedef DWORD time_t;
 typedef DWORD size_t;
+
+struct FarPtr {
+    DWORD offset { 0 };
+    WORD selector { 0 };
+} PACKED;

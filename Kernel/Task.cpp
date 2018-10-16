@@ -8,45 +8,48 @@
 #include "FileSystem.h"
 
 Task* current;
-static Task* kt;
-Task* Task::s_kernelTask;
+Task* s_kernelTask;
 
 static pid_t next_pid;
 static DoublyLinkedList<Task>* s_tasks;
 
-PRIVATE void context_switch(Task*);
+static bool contextSwitch(Task*);
 
-static void redo_kt_td()
+static void redoKernelTaskTSS()
 {
-    Descriptor td;
+    if (!s_kernelTask->selector())
+        s_kernelTask->setSelector(allocateGDTEntry());
 
-    td.setBase(&kt->tss());
-    td.setLimit(0xffff);
-    td.dpl = 0;
-    td.segment_present = 1;
-    td.granularity = 1;
-    td.zero = 0;
-    td.operation_size = 1;
-    td.descriptor_type = 0;
-    td.type = 9;
+    auto& tssDescriptor = getGDTEntry(s_kernelTask->selector());
 
-    if (!kt->selector())
-        kt->setSelector(allocateGDTEntry());
+    tssDescriptor.setBase(&s_kernelTask->tss());
+    tssDescriptor.setLimit(0xffff);
+    tssDescriptor.dpl = 0;
+    tssDescriptor.segment_present = 1;
+    tssDescriptor.granularity = 1;
+    tssDescriptor.zero = 0;
+    tssDescriptor.operation_size = 1;
+    tssDescriptor.descriptor_type = 0;
+    tssDescriptor.type = 9;
 
-    writeGDTEntry(kt->selector(), td);
     flushGDT();
+}
+
+void Task::prepForIRETToNewTask()
+{
+    redoKernelTaskTSS();
+    s_kernelTask->tss().backlink = current->selector();
+    loadTaskRegister(s_kernelTask->selector());
 }
 
 void Task::initialize()
 {
     current = nullptr;
     next_pid = 0;
-    Task::s_kernelTask = nullptr;
     s_tasks = new DoublyLinkedList<Task>;
-
-    kt = new Task(0, "dummy", IPC::Handle::Any, Task::Ring0);
-
-    redo_kt_td();
+    s_kernelTask = new Task(0, "idle", IPC::Handle::Any, Task::Ring0);
+    redoKernelTaskTSS();
+    loadTaskRegister(s_kernelTask->selector());
 }
 
 #ifdef TASK_SANITY_CHECKS
@@ -146,16 +149,12 @@ Task::Task(void (*e)(), const char* n, IPC::Handle h, RingLevel ring)
     // HACK: Ring2 SS in the TSS is the current PID.
     m_tss.ss2 = m_pid;
 
-    // Get a nice GDT entry @ next context switch.
-    m_selector = 0;
+    m_farPtr.offset = 0x12345678;
 
     // Don't add task 0 (kernel dummy task) to task list.
     // FIXME: This doesn't belong in the constructor.
     if (m_pid == 0)
         return;
-
-    if (m_pid == 1)
-        s_kernelTask = this;
 
     // Add it to head of task list (meaning it's next to run too, ATM.)
     s_tasks->prepend(this);
@@ -178,21 +177,28 @@ void yield()
         HANG;
     }
 
-    current->setTicksLeft(1);
+    //kprintf("%s<%u> yield()\n", current->name().characters(), current->pid());
 
-    // HACK: To avoid ridiculous clock skew, decrement the system uptime
-    //       counter. It's incremented by int 0x50...
-    --system.uptime;
-    asm("int $0x50");
+    if (!scheduleNewTask())
+        return;
+
+    Descriptor& descriptor = getGDTEntry(current->selector());
+    descriptor.type = 9;
+    flushGDT();
+
+    //kprintf("yield() jumping to new task: %x (%s)\n", current->farPtr().selector, current->name().characters());
+    asm(
+        "ljmp *(%%eax)\n"
+        ::"a"(&current->farPtr())
+    );
 }
 
-void sched()
+bool scheduleNewTask()
 {
     if (!current) {
         // XXX: The first ever context_switch() goes to the idle task.
         //      This to setup a reliable place we can return to.
-        context_switch(Task::kernelTask());
-        return;
+        return contextSwitch(Task::kernelTask());
     }
 
     // Check and unblock tasks whose wait conditions have been met.
@@ -226,20 +232,20 @@ void sched()
 
         if (task->state() == Task::Runnable || task->state() == Task::Running) {
             //kprintf("switch to %s\n", task->name().characters());
-            context_switch(task);
-            return;
+            return contextSwitch(task);
         }
 
         if (task == prevHead) {
             // Back at task_head, nothing wants to run.
-            context_switch(Task::kernelTask());
-            return;
+            return contextSwitch(Task::kernelTask());
         }
     }
 }
 
 static void drawSchedulerBanner(Task& task)
 {
+    // FIXME: We need a kernel lock to do stuff like this :(
+    //return;
     auto c = vga_get_cursor();
     auto a = vga_get_attr();
     vga_set_cursor(0, 50);
@@ -257,9 +263,13 @@ static void drawSchedulerBanner(Task& task)
     vga_set_cursor(c);
 }
 
-static void context_switch(Task* t)
+static bool contextSwitch(Task* t)
 {
+    //kprintf("c_s to %s (same:%u)\n", t->name().characters(), current == t);
     t->setTicksLeft(5);
+
+    if (current == t)
+        return false;
 
     // If the last task hasn't blocked (still marked as running),
     // mark it as runnable for the next round.
@@ -269,37 +279,27 @@ static void context_switch(Task* t)
     current = t;
     t->setState(Task::Running);
 
-    // You might be looking at the slowest i386 context switcher ever made.
-    // (But I don't think so.)
-
-    Descriptor td;
-
-    td.limit_hi = 0;
-    td.limit_lo = 0xFFFF;
-    td.base_lo = (DWORD)(&t->tss()) & 0xFFFF;
-    td.base_hi = ((DWORD)(&t->tss()) >> 16) & 0xFF;
-    td.base_hi2 = ((DWORD)(&t->tss()) >> 24) & 0xFF;
-    td.dpl = 0;
-    td.segment_present = 1;
-    td.granularity = 1;
-    td.zero = 0;
-    td.operation_size = 1;
-    td.descriptor_type = 0;
-    td.type = 11;
-
-    if (!t->selector()) {
+    if (!t->selector())
         t->setSelector(allocateGDTEntry());
-        writeGDTEntry(t->selector(), td);
-        flushGDT();
-    } else {
-        writeGDTEntry(t->selector(), td);
-    }
 
+    auto& tssDescriptor = getGDTEntry(t->selector());
+
+    tssDescriptor.limit_hi = 0;
+    tssDescriptor.limit_lo = 0xFFFF;
+    tssDescriptor.base_lo = (DWORD)(&t->tss()) & 0xFFFF;
+    tssDescriptor.base_hi = ((DWORD)(&t->tss()) >> 16) & 0xFF;
+    tssDescriptor.base_hi2 = ((DWORD)(&t->tss()) >> 24) & 0xFF;
+    tssDescriptor.dpl = 0;
+    tssDescriptor.segment_present = 1;
+    tssDescriptor.granularity = 1;
+    tssDescriptor.zero = 0;
+    tssDescriptor.operation_size = 1;
+    tssDescriptor.descriptor_type = 0;
+    tssDescriptor.type = 11; // Busy TSS
+
+    flushGDT();
     drawSchedulerBanner(*t);
-
-    redo_kt_td();
-    kt->tss().backlink = t->selector();
-    loadTaskRegister(kt->selector());
+    return true;
 }
 
 Task* Task::fromPID(pid_t pid)

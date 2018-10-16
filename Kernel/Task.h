@@ -46,10 +46,12 @@ public:
     const String& name() const { return m_name; }
     pid_t pid() const { return m_pid; }
     DWORD ticks() const { return m_ticks; }
-    WORD selector() const { return m_selector; }
+    WORD selector() const { return m_farPtr.selector; }
     TSS32& tss() { return m_tss; }
     State state() const { return m_state; }
     IPC::Handle handle() const { return m_handle; }
+
+    const FarPtr& farPtr() const { return m_farPtr; }
 
     FileHandle* fileHandleIfExists(int fd);
     FileHandle* createFileHandle();
@@ -62,10 +64,12 @@ public:
     void setWakeupTime(DWORD t) { m_wakeupTime = t; }
     DWORD wakeupTime() const { return m_wakeupTime; }
 
+    static void prepForIRETToNewTask();
+
     bool tick() { ++m_ticks; return --m_ticksLeft; }
     void setTicksLeft(DWORD t) { m_ticksLeft = t; }
 
-    void setSelector(WORD s) { m_selector = s; }
+    void setSelector(WORD s) { m_farPtr.selector = s; }
     void setState(State s) { m_state = s; }
 
     uid_t sys$getuid();
@@ -104,7 +108,7 @@ private:
     DWORD m_ticksLeft { 0 };
     IPC::Handle m_handle { 0 };
     DWORD m_stackTop { 0 };
-    WORD m_selector { 0 };
+    FarPtr m_farPtr;
     State m_state { Invalid };
     DWORD m_wakeupTime { 0 };
     TSS32 m_tss;
@@ -112,13 +116,11 @@ private:
     Vector<FileHandle*> m_fileHandles;
     RingLevel m_ring { Ring0 };
     int m_error { 0 };
-
-    static Task* s_kernelTask;
 };
 
 extern void task_init();
 extern void yield();
-extern void sched();
+extern bool scheduleNewTask();
 extern void block(Task::State);
 extern void sleep(DWORD ticks);
 

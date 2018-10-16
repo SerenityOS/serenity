@@ -94,6 +94,7 @@ void clock_handle()
     if (current->tick())
         return;
 
+    //return;
 
     auto& regs = *reinterpret_cast<RegisterDump*>(state_dump);
     current->tss().gs = regs.gs;
@@ -131,12 +132,12 @@ void clock_handle()
     // Add 12 for CS, EIP, EFLAGS (interrupt mechanic)
     current->tss().esp = regs.esp + 12;
 
-    // Prepare a new task to run.
-    sched();
+    // Prepare a new task to run;
+    if (!scheduleNewTask())
+        return;
+    Task::prepForIRETToNewTask();
 
     // Set the NT (nested task) flag.
-    // sched() has LTRed a dummy task with a backlink to the next task.
-    // This is probably super slow/stupid, but I'm just learning...
     asm(
         "pushf\n"
         "orl $0x00004000, (%esp)\n"
