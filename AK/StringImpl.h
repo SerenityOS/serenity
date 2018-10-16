@@ -2,12 +2,13 @@
 
 #include "Retainable.h"
 #include "RetainPtr.h"
+#include "Types.h"
 
 namespace AK {
 
 class StringImpl : public Retainable<StringImpl> {
 public:
-    static RetainPtr<StringImpl> createUninitialized(unsigned length, char*& buffer);
+    static RetainPtr<StringImpl> createUninitialized(size_t length, char*& buffer);
     static RetainPtr<StringImpl> create(const char* cstring);
     static RetainPtr<StringImpl> create(const char* cstring, size_t length);
     RetainPtr<StringImpl> toLowercase() const;
@@ -17,9 +18,9 @@ public:
 
     ~StringImpl();
 
-    unsigned length() const { return m_length; }
+    size_t length() const { return m_length; }
     const char* characters() const { return m_characters; }
-    char operator[](unsigned i) const { ASSERT(i < m_length); return m_characters[i]; }
+    char operator[](size_t i) const { ASSERT(i < m_length); return m_characters[i]; }
 
     unsigned hash() const
     {
@@ -33,11 +34,11 @@ private:
     explicit StringImpl(ConstructTheEmptyStringImplTag) : m_characters("") { }
 
     enum ConstructWithInlineBufferTag { ConstructWithInlineBuffer };
-    explicit StringImpl(ConstructWithInlineBufferTag, unsigned length) : m_length(length), m_characters(m_inlineBuffer) { }
+    explicit StringImpl(ConstructWithInlineBufferTag, size_t length) : m_length(length), m_characters(m_inlineBuffer) { }
 
     void computeHash() const;
 
-    unsigned m_length { 0 };
+    size_t m_length { 0 };
     bool m_ownsBuffer { true };
     mutable bool m_hasHash { false };
     const char* m_characters { nullptr };

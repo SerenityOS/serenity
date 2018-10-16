@@ -2,9 +2,7 @@
 
 #include "Buffer.h"
 #include "Types.h"
-#include <cstdlib>
-#include <cstring>
-#include <cstdio>
+#include "StdLib.h"
 
 namespace AK {
 
@@ -17,13 +15,13 @@ public:
     {
     }
     ByteBuffer(ByteBuffer&& other)
-        : m_impl(std::move(other.m_impl))
+        : m_impl(move(other.m_impl))
     {
     }
     ByteBuffer& operator=(ByteBuffer&& other)
     {
         if (this != &other)
-            m_impl = std::move(other.m_impl);
+            m_impl = move(other.m_impl);
         return *this;
     }
 
@@ -73,7 +71,7 @@ public:
 
 private:
     explicit ByteBuffer(RetainPtr<Buffer<byte>>&& impl)
-        : m_impl(std::move(impl))
+        : m_impl(move(impl))
     {
     }
 

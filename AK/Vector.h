@@ -4,9 +4,6 @@
 #include "OwnPtr.h"
 #include "kmalloc.h"
 #include <new>
-#include <stdlib.h>
-#include <stdio.h>
-#include <algorithm>
 
 namespace AK {
 
@@ -34,7 +31,7 @@ public:
         ASSERT(index < m_size);
         at(index).~T();
         for (unsigned i = index + 1; i < m_size; ++i) {
-            new (slot(i - 1)) T(std::move(at(i)));
+            new (slot(i - 1)) T(move(at(i)));
             at(i).~T();
         }
 
@@ -63,14 +60,14 @@ public:
     ~Vector() { clear(); }
 
     Vector(Vector&& other)
-        : m_impl(std::move(other.m_impl))
+        : m_impl(move(other.m_impl))
     {
     }
 
     Vector& operator=(Vector&& other)
     {
         if (this != &other)
-            m_impl = std::move(other.m_impl);
+            m_impl = move(other.m_impl);
         return *this;
     }
 
@@ -101,7 +98,7 @@ public:
     T takeLast()
     {
         ASSERT(!isEmpty());
-        T value = std::move(last());
+        T value = move(last());
         last().~T();
         --m_impl->m_size;
         return value;
@@ -115,7 +112,7 @@ public:
     void append(T&& value)
     {
         ensureCapacity(size() + 1);
-        new (m_impl->slot(m_impl->m_size)) T(std::move(value));
+        new (m_impl->slot(m_impl->m_size)) T(move(value));
         ++m_impl->m_size;
     }
 
@@ -135,11 +132,11 @@ public:
         if (m_impl) {
             newImpl->m_size = m_impl->m_size;
             for (unsigned i = 0; i < size(); ++i) {
-                new (newImpl->slot(i)) T(std::move(m_impl->at(i)));
+                new (newImpl->slot(i)) T(move(m_impl->at(i)));
                 m_impl->at(i).~T();
             }
         }
-        m_impl = std::move(newImpl);
+        m_impl = move(newImpl);
     }
 
     class Iterator {
@@ -175,7 +172,7 @@ public:
 private:
     static unsigned paddedCapacity(unsigned capacity)
     {
-        return std::max(4u, capacity + (capacity / 4) + 4);
+        return max(4u, capacity + (capacity / 4) + 4);
     }
 
     OwnPtr<VectorImpl<T>> m_impl;

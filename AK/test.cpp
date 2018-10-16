@@ -20,7 +20,12 @@ int main(int, char**)
         for (auto& part : parts)
             printf("<%s>\n", part.characters());
     }
-
+    {
+        String cmd = "cd";
+        auto parts = cmd.split(' ');
+        for (auto& part : parts)
+            printf("<%s>\n", part.characters());
+    }
 
     String empty = "";
 

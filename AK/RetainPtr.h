@@ -1,7 +1,8 @@
 #pragma once
 
-#include <cstddef>
-#include <utility>
+namespace std {
+typedef decltype(nullptr) nullptr_t;
+}
 
 namespace AK {
 

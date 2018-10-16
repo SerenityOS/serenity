@@ -1,6 +1,10 @@
 #pragma once
 
+#ifdef SERENITY_KERNEL
+#else
 #include <stdint.h>
+#include <sys/types.h>
+#endif
 
 typedef uint8_t byte;
 typedef uint16_t word;
@@ -15,3 +19,8 @@ typedef int64_t signed_qword;
 constexpr unsigned KB = 1024;
 constexpr unsigned MB = KB * KB;
 constexpr unsigned GB = KB * KB * KB;
+
+namespace std {
+typedef decltype(nullptr) nullptr_t;
+}
+
