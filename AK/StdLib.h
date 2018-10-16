@@ -30,9 +30,31 @@ T&& move(T& arg)
     return static_cast<T&&>(arg);
 }
 
+template<typename T>
+struct identity {
+    typedef T type;
+};
+template<typename T>
+T&& forward(typename identity<T>::type&& param)
+{
+    return static_cast<typename identity<T>::type&&>(param);
+}
+
+template<typename T, typename U>
+T exchange(T& a, U&& b)
+{
+    T tmp = move(a);
+    a = move(b);
+    return tmp;
+}
+
+
 }
 
 using AK::min;
 using AK::max;
+using AK::move;
+using AK::forward;
+using AK::exchange;
 using AK::ceilDiv;
 

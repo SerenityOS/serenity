@@ -1,7 +1,7 @@
 #pragma once
 
-#include <cstddef>
-#include <utility>
+#include "StdLib.h"
+#include "Types.h"
 
 namespace AK {
 
@@ -12,8 +12,17 @@ public:
     explicit OwnPtr(T* ptr) : m_ptr(ptr) { }
     OwnPtr(OwnPtr&& other) : m_ptr(other.leakPtr()) { }
     template<typename U> OwnPtr(OwnPtr<U>&& other) : m_ptr(static_cast<T*>(other.leakPtr())) { }
-    ~OwnPtr() { clear(); }
     OwnPtr(std::nullptr_t) { };
+    ~OwnPtr()
+    {
+        clear();
+#ifdef SANITIZE_PTRS
+        if constexpr(sizeof(T*) == 8)
+            m_ptr = (T*)(0xe1e1e1e1e1e1e1e1);
+        else
+            m_ptr = (T*)(0xe1e1e1e1);
+#endif
+    }
 
     OwnPtr& operator=(OwnPtr&& other)
     {
@@ -84,7 +93,7 @@ private:
 template<class T, class... Args> inline OwnPtr<T>
 make(Args&&... args)
 {
-    return OwnPtr<T>(new T(std::forward<Args>(args)...));
+    return OwnPtr<T>(new T(forward<Args>(args)...));
 }
 
 }
