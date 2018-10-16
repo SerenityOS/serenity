@@ -15,6 +15,11 @@
 #include "FileSystem.h"
 #include "Userspace.h"
 #include "IDEDiskDevice.h"
+#include <VirtualFileSystem/NullDevice.h>
+#include <VirtualFileSystem/ZeroDevice.h>
+#include <VirtualFileSystem/FullDevice.h>
+#include <VirtualFileSystem/RandomDevice.h>
+#include <AK/OwnPtr.h>
 
 #if 0
 /* Keyboard LED disco task ;^) */
@@ -124,7 +129,11 @@ void init()
     Disk::initialize();
     FileSystem::initialize();
 
-    auto hd0 = IDEDiskDevice::create();
+    auto dev_hd0 = IDEDiskDevice::create();
+    auto dev_null = make<NullDevice>();
+    auto dev_full = make<FullDevice>();
+    auto dev_zero = make<ZeroDevice>();
+    auto dev_random = make<RandomDevice>();
 
 //    new Task(motd_main, "motd", IPC::Handle::MotdTask, Task::Ring0);
     new Task(user_main, "user", IPC::Handle::UserTask, Task::Ring3);

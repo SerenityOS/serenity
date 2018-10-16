@@ -55,6 +55,13 @@ T exchange(T& a, U&& b)
     return tmp;
 }
 
+template<typename T, typename U>
+void swap(T& a, U& b)
+{
+    U tmp = move((U&)a);
+    a = (T&&)move(b);
+    b = move(tmp);
+}
 
 }
 
@@ -63,5 +70,6 @@ using AK::max;
 using AK::move;
 using AK::forward;
 using AK::exchange;
+using AK::swap;
 using AK::ceilDiv;
 

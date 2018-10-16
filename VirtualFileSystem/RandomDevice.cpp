@@ -1,8 +1,6 @@
 #include "RandomDevice.h"
 #include "Limits.h"
 #include <AK/StdLib.h>
-#include <cstring>
-#include <cstdio>
 
 RandomDevice::RandomDevice()
 {
@@ -23,10 +21,12 @@ static int myrand()
     return((unsigned)(next/((MY_RAND_MAX + 1) * 2)) % (MY_RAND_MAX + 1));
 }
 
+#if 0
 static void mysrand(unsigned seed)
 {
     next = seed;
 }
+#endif
 
 Unix::ssize_t RandomDevice::read(byte* buffer, Unix::size_t bufferSize)
 {

@@ -2,8 +2,7 @@
 #include "Limits.h"
 #include "sys-errno.h"
 #include <AK/StdLib.h>
-#include <cstring>
-#include <cstdio>
+#include <AK/kstdio.h>
 
 FullDevice::FullDevice()
 {
@@ -15,7 +14,7 @@ FullDevice::~FullDevice()
 
 Unix::ssize_t FullDevice::read(byte* buffer, Unix::size_t bufferSize)
 {
-    printf("read from full device\n");
+    kprintf("FullDevice: read from full\n");
     Unix::size_t count = min(GoodBufferSize, bufferSize);
     memset(buffer, 0, count);
     return count;
