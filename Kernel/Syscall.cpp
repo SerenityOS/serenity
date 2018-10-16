@@ -102,7 +102,7 @@ DWORD handle(DWORD function, DWORD arg1, DWORD arg2, DWORD arg3)
         kprintf( "%c", arg1 & 0xFF );
         break;
     case Syscall::Sleep:
-        kprintf("syscall: sleep(%d)\n", arg1);
+        //kprintf("syscall: sleep(%d)\n", arg1);
         current->sys$sleep(arg1);
         break;
     case Syscall::PosixOpen:

@@ -111,12 +111,11 @@ void init()
 
     extern void panel_main();
 
-    new Task(0, "KernelTask", IPC::Handle::Any, Task::Ring0);
     new Task(panel_main, "panel", IPC::Handle::PanelTask, Task::Ring0);
 
     //new Task(led_disco, "led-disco", IPC::Handle::Any, Task::Ring0);
 
-    sched();
+    scheduleNewTask();
     enableInterrupts();
 
     banner();

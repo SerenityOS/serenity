@@ -39,4 +39,9 @@ void sleep(DWORD ticks)
     DO_SYSCALL_A1(Syscall::Sleep, ticks);
 }
 
+void yield()
+{
+    DO_SYSCALL_A0(Syscall::Yield);
+}
+
 }
