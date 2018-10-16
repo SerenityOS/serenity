@@ -965,8 +965,8 @@ InodeIdentifier Ext2FileSystem::createInode(InodeIdentifier parentInode, const S
     // FIXME: Implement writing out indirect blocks!
     ASSERT(blocks.size() < EXT2_NDIR_BLOCKS);
 
-    printf("[XXX] writing %u blocks to i_block array\n", min((unsigned)EXT2_NDIR_BLOCKS, blocks.size()));
-    for (unsigned i = 0; i < min((unsigned)EXT2_NDIR_BLOCKS, blocks.size()); ++i) {
+    printf("[XXX] writing %u blocks to i_block array\n", min((size_t)EXT2_NDIR_BLOCKS, blocks.size()));
+    for (unsigned i = 0; i < min((size_t)EXT2_NDIR_BLOCKS, blocks.size()); ++i) {
         e2inode->i_block[i] = blocks[i];
     }
 
