@@ -17,12 +17,12 @@ StringImpl::~StringImpl()
 {
 }
 
-static inline size_t allocationSizeForStringImpl(unsigned length)
+static inline size_t allocationSizeForStringImpl(size_t length)
 {
     return sizeof(StringImpl) + (sizeof(char) * length) + sizeof(char);
 }
 
-RetainPtr<StringImpl> StringImpl::createUninitialized(unsigned length, char*& buffer)
+RetainPtr<StringImpl> StringImpl::createUninitialized(size_t length, char*& buffer)
 {
     if (!length)
         return theEmptyStringImpl();
@@ -89,7 +89,7 @@ RetainPtr<StringImpl> StringImpl::toLowercase() const
     if (!m_length)
         return const_cast<StringImpl*>(this);
 
-    for (unsigned i = 0; i < m_length; ++i) {
+    for (size_t i = 0; i < m_length; ++i) {
         if (!isASCIILowercase(m_characters[i]))
             goto slowPath;
     }
@@ -98,9 +98,8 @@ RetainPtr<StringImpl> StringImpl::toLowercase() const
 slowPath:
     char* buffer;
     auto lowercased = createUninitialized(m_length, buffer);
-    for (unsigned i = 0; i < m_length; ++i) {
+    for (size_t i = 0; i < m_length; ++i)
         buffer[i] = toASCIILowercase(m_characters[i]);
-    }
 
     return lowercased;
 }
@@ -110,7 +109,7 @@ RetainPtr<StringImpl> StringImpl::toUppercase() const
     if (!m_length)
         return const_cast<StringImpl*>(this);
 
-    for (unsigned i = 0; i < m_length; ++i) {
+    for (size_t i = 0; i < m_length; ++i) {
         if (!isASCIIUppercase(m_characters[i]))
             goto slowPath;
     }
@@ -119,9 +118,8 @@ RetainPtr<StringImpl> StringImpl::toUppercase() const
 slowPath:
     char* buffer;
     auto uppercased = createUninitialized(m_length, buffer);
-    for (unsigned i = 0; i < m_length; ++i) {
+    for (size_t i = 0; i < m_length; ++i)
         buffer[i] = toASCIIUppercase(m_characters[i]);
-    }
 
     return uppercased;
 }
@@ -132,7 +130,7 @@ void StringImpl::computeHash() const
         m_hash = 0;
     } else {
         unsigned hash = 0;
-        for (unsigned i = 0; i < m_length; ++i) {
+        for (size_t i = 0; i < m_length; ++i) {
             hash += m_characters[i];
             hash += (hash << 10);
             hash ^= (hash >> 6);

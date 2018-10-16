@@ -24,6 +24,11 @@ static inline T ceilDiv(T a, T b)
     return result;
 }
 
+template <typename T>
+T&& move(T& arg)
+{
+    return static_cast<T&&>(arg);
+}
 
 }
 
