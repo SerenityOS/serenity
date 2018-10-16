@@ -22,28 +22,38 @@ String String::empty()
     return StringImpl::theEmptyStringImpl();
 }
 
+String String::substring(size_t start, size_t length) const
+{
+    ASSERT(m_impl);
+    ASSERT(start + length <= m_impl->length());
+    // FIXME: This needs some input bounds checking.
+    char* buffer;
+    auto newImpl = StringImpl::createUninitialized(length, buffer);
+    memcpy(buffer, characters() + start, length);
+    buffer[length] = '\0';
+    return newImpl;
+}
+
 Vector<String> String::split(const char separator) const
 {
     if (isEmpty())
         return { };
 
-    Vector<String> parts;
-
-    auto* characters = this->characters();
-    unsigned startOfPart = 0;
-    unsigned i = 0;
-    for (i = 0; i < length(); ++i) {
-        char ch = characters[i];
+    Vector<String> v;
+    size_t substart = 0;
+    for (size_t i = 0; i < length(); ++i) {
+        char ch = characters()[i];
         if (ch == separator) {
-            if (i != startOfPart) {
-                parts.append(String(characters + startOfPart, i - startOfPart));
-            }
-            startOfPart = i + 1;
+            size_t sublen = i - substart;
+            if (sublen != 0)
+                v.append(substring(substart, sublen));
+            substart = i + 1;
         }
     }
-    if (startOfPart != length())
-        parts.append(String(characters + startOfPart, i - startOfPart));
-    return parts;
+    size_t taillen = length() - substart;
+    if (taillen != 0)
+        v.append(substring(substart, taillen));
+    return v;
 }
 
 ByteBuffer String::toByteBuffer() const
