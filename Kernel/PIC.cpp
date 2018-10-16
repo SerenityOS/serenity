@@ -1,0 +1,97 @@
+#include "types.h"
+#include "i386.h"
+#include "IO.h"
+#include "VGA.h"
+#include "PIC.h"
+#include "Assertions.h"
+
+// The slave 8259 is connected to the master's IRQ2 line.
+// This is really only to enhance clarity.
+#define SLAVE_INDEX     2
+
+#define PIC0_CTL        0x20
+#define PIC0_CMD        0x21
+#define PIC1_CTL        0xA0
+#define PIC1_CMD        0xA1
+
+#ifdef DEBUG_PIC
+static bool initialized;
+#endif
+
+namespace PIC {
+
+void disable(BYTE irq)
+{
+    BYTE imr;
+    if (irq & 8) {
+        imr = IO::in8(PIC1_CMD);
+        imr |= 1 << (irq - 8);
+        IO::out8(PIC1_CMD, imr);
+    } else {
+        imr = IO::in8(PIC0_CMD);
+        imr |= 1 << irq;
+        IO::out8(PIC0_CMD, imr);
+    }
+}
+
+void enable(BYTE irq)
+{
+    BYTE imr;
+    if (irq & 8) {
+        imr = IO::in8(PIC1_CMD);
+        imr &= ~(1 << (irq - 8));
+        IO::out8(PIC1_CMD, imr);
+    } else {
+        imr = IO::in8(PIC0_CMD);
+        imr &= ~(1 << irq);
+        IO::out8(PIC0_CMD, imr);
+    }
+}
+
+void eoi(BYTE irq)
+{
+    if (irq & 8)
+        IO::out8(PIC1_CTL, 0x20);
+    else
+        IO::out8(PIC0_CTL, 0x20);
+}
+
+void initialize()
+{
+#ifdef DEBUG_PIC
+    ASSERT(!initialized);
+#endif
+
+    /* ICW1 (edge triggered mode, cascading controllers, expect ICW4) */
+    IO::out8(PIC0_CTL, 0x11);
+    IO::out8(PIC1_CTL, 0x11);
+
+    /* ICW2 (upper 5 bits specify ISR indices, lower 3 idunno) */
+    IO::out8(PIC0_CMD, IRQ_VECTOR_BASE);
+    IO::out8(PIC1_CMD, IRQ_VECTOR_BASE + 0x08);
+
+    /* ICW3 (configure master/slave relationship) */
+    IO::out8(PIC0_CMD, 1 << SLAVE_INDEX);
+    IO::out8(PIC1_CMD, SLAVE_INDEX);
+
+    /* ICW4 (set x86 mode) */
+    IO::out8(PIC0_CMD, 0x01);
+    IO::out8(PIC1_CMD, 0x01 );
+
+    // Mask -- enable all interrupts on both PICs.
+    // Not really what I want here, but I'm unsure how to
+    // selectively enable secondary PIC IRQs...
+    IO::out8(PIC0_CMD, 0x00);
+    IO::out8(PIC1_CMD, 0x00);
+
+    // HACK: Disable busmouse IRQ for now.
+    disable(5);
+
+    kprintf("PIC(i8259): cascading mode, vectors 0x%b-0x%b\n", IRQ_VECTOR_BASE, IRQ_VECTOR_BASE + 0x08);
+
+#ifdef DEBUG_PIC
+    initialized = true;
+#endif
+}
+
+}

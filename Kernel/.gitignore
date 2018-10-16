@@ -1,0 +1,4 @@
+*.o
+.floppy-image
+Boot/boot.bin
+kernel
