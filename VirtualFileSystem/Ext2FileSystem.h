@@ -1,6 +1,6 @@
 #pragma once
 
-#include "DeviceBackedFileSystem.h"
+#include "DiskBackedFileSystem.h"
 #include "UnixTypes.h"
 #include <AK/Buffer.h>
 #include <AK/OwnPtr.h>
@@ -9,9 +9,9 @@ struct ext2_group_desc;
 struct ext2_inode;
 struct ext2_super_block;
 
-class Ext2FileSystem final : public DeviceBackedFileSystem {
+class Ext2FileSystem final : public DiskBackedFileSystem {
 public:
-    static RetainPtr<Ext2FileSystem> create(RetainPtr<BlockDevice>);
+    static RetainPtr<Ext2FileSystem> create(RetainPtr<DiskDevice>&&);
     virtual ~Ext2FileSystem() override;
 
 private:
@@ -19,7 +19,7 @@ private:
     typedef unsigned GroupIndex;
     typedef unsigned InodeIndex;
 
-    explicit Ext2FileSystem(RetainPtr<BlockDevice>);
+    explicit Ext2FileSystem(RetainPtr<DiskDevice>&&);
 
     const ext2_super_block& superBlock() const;
     const ext2_group_desc& blockGroupDescriptor(unsigned groupIndex) const;

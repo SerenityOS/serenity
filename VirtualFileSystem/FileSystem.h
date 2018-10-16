@@ -1,6 +1,6 @@
 #pragma once
 
-#include "BlockDevice.h"
+#include "DiskDevice.h"
 #include "InodeIdentifier.h"
 #include "InodeMetadata.h"
 #include "Limits.h"
