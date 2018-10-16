@@ -52,8 +52,7 @@ void eoi(BYTE irq)
 {
     if (irq & 8)
         IO::out8(PIC1_CTL, 0x20);
-    else
-        IO::out8(PIC0_CTL, 0x20);
+    IO::out8(PIC0_CTL, 0x20);
 }
 
 void initialize()
