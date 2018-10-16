@@ -14,6 +14,7 @@
 #include "CMOS.h"
 #include "FileSystem.h"
 #include "Userspace.h"
+#include "IDEDiskDevice.h"
 
 #if 0
 /* Keyboard LED disco task ;^) */
@@ -122,6 +123,8 @@ void init()
 
     Disk::initialize();
     FileSystem::initialize();
+
+    auto hd0 = IDEDiskDevice::create();
 
 //    new Task(motd_main, "motd", IPC::Handle::MotdTask, Task::Ring0);
     new Task(user_main, "user", IPC::Handle::UserTask, Task::Ring3);
