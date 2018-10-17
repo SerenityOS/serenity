@@ -69,7 +69,7 @@ static void user_main()
     // Crash ourselves!
     char* x = reinterpret_cast<char*>(0xbeefbabe);
     //*x = 1;
-    //HANG;
+    HANG;
     for (;;) {
         // nothing?
         Userspace::sleep(1 * TICKS_PER_SECOND);

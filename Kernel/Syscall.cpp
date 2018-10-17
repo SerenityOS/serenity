@@ -3,25 +3,6 @@
 #include "Task.h"
 #include "Syscall.h"
 
-struct RegisterDump {
-    WORD gs;
-    WORD fs;
-    WORD es;
-    WORD ds;
-    DWORD edi;
-    DWORD esi;
-    DWORD ebp;
-    DWORD esp;
-    DWORD ebx;
-    DWORD edx;
-    DWORD ecx;
-    DWORD eax;
-    DWORD eip;
-    WORD cs;
-    WORD __csPadding;
-    DWORD eflags;
-} PACKED;
-
 extern "C" void syscall_entry();
 extern "C" void syscall_ISR();
 extern volatile RegisterDump* syscallRegDump;

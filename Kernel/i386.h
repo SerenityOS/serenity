@@ -75,3 +75,23 @@ void writeGDTEntry(WORD selector, Descriptor&);
 
 /* Map IRQ0-15 @ ISR 0x50-0x5F */
 #define IRQ_VECTOR_BASE 0x50
+
+struct RegisterDump {
+    WORD gs;
+    WORD fs;
+    WORD es;
+    WORD ds;
+    DWORD edi;
+    DWORD esi;
+    DWORD ebp;
+    DWORD esp;
+    DWORD ebx;
+    DWORD edx;
+    DWORD ecx;
+    DWORD eax;
+    DWORD eip;
+    WORD cs;
+    WORD __csPadding;
+    DWORD eflags;
+} PACKED;
+

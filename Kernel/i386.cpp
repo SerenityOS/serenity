@@ -26,6 +26,68 @@ WORD allocateGDTEntry()
     return newGDTEntry;
 }
 
+extern volatile dword exception_state_dump;
+extern volatile word exception_code;
+asm(
+    ".globl exception_state_dump\n"
+    "exception_state_dump:\n"
+    ".long 0\n"
+    ".globl exception_code\n"
+    "exception_code:\n"
+    ".short 0\n"
+);
+
+#define EH_ENTRY(ec) \
+extern "C" void exception_ ## ec ## _handler(); \
+extern "C" void exception_ ## ec ## _entry(); \
+asm( \
+    ".globl exception_" # ec "_entry\n" \
+    "exception_" # ec "_entry: \n" \
+    "    pop exception_code\n" \
+    "    pusha\n" \
+    "    pushw %ds\n" \
+    "    pushw %es\n" \
+    "    pushw %fs\n" \
+    "    pushw %gs\n" \
+    "    pushw %ss\n" \
+    "    pushw %ss\n" \
+    "    pushw %ss\n" \
+    "    pushw %ss\n" \
+    "    popw %ds\n" \
+    "    popw %es\n" \
+    "    popw %fs\n" \
+    "    popw %gs\n" \
+    "    mov %esp, exception_state_dump\n" \
+    "    call exception_" # ec "_handler\n" \
+    "    popw %gs\n" \
+    "    popw %fs\n" \
+    "    popw %es\n" \
+    "    popw %ds\n" \
+    "    popa\n" \
+    "    iret\n" \
+);
+
+EH_ENTRY(13)
+
+void exception_13_handler()
+{
+    auto& regs = *reinterpret_cast<RegisterDump*>(exception_state_dump);
+    kprintf("Process crash: %u(%s)\n", current->pid(), current->name().characters());
+
+    kprintf("exception code: %w\n", exception_code);
+    kprintf("pc=%w:%x ds=%w es=%w fs=%w gs=%w\n", regs.cs, regs.eip, regs.ds, regs.es, regs.fs, regs.gs);
+    kprintf("eax=%x ebx=%x ecx=%x edx=%x\n", regs.eax, regs.ebx, regs.ecx, regs.edx);
+    kprintf("ebp=%x esp=%x esi=%x edi=%x\n", regs.ebp, regs.esp, regs.esi, regs.edi);
+
+    current->setState(Task::Crashing);
+    if (!scheduleNewTask()) {
+        kprintf("Failed to schedule a new task :(\n");
+        HANG;
+    }
+
+    switchNow();
+}
+
 #define EH(i, msg) \
     static void _exception ## i () \
     { \
@@ -164,7 +226,7 @@ void idt_init()
     registerInterruptHandler(0x0a, _exception10);
     registerInterruptHandler(0x0b, _exception11);
     registerInterruptHandler(0x0c, _exception12);
-    registerInterruptHandler(0x0d, _exception13);
+    registerInterruptHandler(0x0d, exception_13_entry);
     registerInterruptHandler(0x0e, _exception14);
     registerInterruptHandler(0x0f, _exception15);
     registerInterruptHandler(0x10, _exception16);
