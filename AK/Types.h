@@ -10,6 +10,9 @@ typedef signed char signed_byte;
 typedef signed short signed_word;
 typedef signed int signed_dword;
 typedef signed long long int signed_qword;
+
+typedef dword size_t;
+typedef signed_dword ssize_t;
 #else
 #include <stdint.h>
 #include <sys/types.h>
