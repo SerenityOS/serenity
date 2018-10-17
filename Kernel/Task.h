@@ -37,6 +37,8 @@ public:
         Ring3 = 3,
     };
 
+    bool isRing0() const { return m_ring == Ring0; }
+
     static Task* fromPID(pid_t);
     static Task* fromIPCHandle(IPC::Handle);
     static Task* kernelTask();
