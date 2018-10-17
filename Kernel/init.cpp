@@ -152,6 +152,8 @@ void init()
 //    new Task(motd_main, "motd", IPC::Handle::MotdTask, Task::Ring0);
     new Task(user_main, "user", IPC::Handle::UserTask, Task::Ring3);
 
+    vfs->listDirectory("/");
+
     // The idle task will spend its eternity here for now.
     for (;;) {
         asm("hlt");
