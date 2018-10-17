@@ -49,6 +49,15 @@ char* strdup(const char *str)
     return s;
 }
 
+int memcmp(const void* v1, const void* v2, size_t n)
+{
+    size_t m;
+    const char* s1 = (const char*)v1;
+    const char* s2 = (const char*)v2;
+    for (m = 0; m < n && *s1 == *s2; ++s1, ++s2);
+    return m == n ? 0 : -1;
+}
+
 extern "C" void __cxa_pure_virtual()
 {
     ASSERT_NOT_REACHED();

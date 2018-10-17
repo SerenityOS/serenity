@@ -12,13 +12,13 @@
 #include "StdLib.h"
 #include "Syscall.h"
 #include "CMOS.h"
-#include "FileSystem.h"
 #include "Userspace.h"
 #include "IDEDiskDevice.h"
 #include <VirtualFileSystem/NullDevice.h>
 #include <VirtualFileSystem/ZeroDevice.h>
 #include <VirtualFileSystem/FullDevice.h>
 #include <VirtualFileSystem/RandomDevice.h>
+#include <VirtualFileSystem/Ext2FileSystem.h>
 #include <AK/OwnPtr.h>
 
 #if 0
@@ -127,13 +127,15 @@ void init()
     banner();
 
     Disk::initialize();
-    FileSystem::initialize();
 
     auto dev_hd0 = IDEDiskDevice::create();
     auto dev_null = make<NullDevice>();
     auto dev_full = make<FullDevice>();
     auto dev_zero = make<ZeroDevice>();
     auto dev_random = make<RandomDevice>();
+
+    auto e2fs = Ext2FileSystem::create(dev_hd0.copyRef());
+    e2fs->initialize(); 
 
 //    new Task(motd_main, "motd", IPC::Handle::MotdTask, Task::Ring0);
     new Task(user_main, "user", IPC::Handle::UserTask, Task::Ring3);

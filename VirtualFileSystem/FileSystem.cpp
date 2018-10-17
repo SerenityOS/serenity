@@ -6,7 +6,9 @@ static dword s_lastFileSystemID = 0;
 
 static HashMap<dword, FileSystem*>& fileSystems()
 {
-    static auto* map = new HashMap<dword, FileSystem*>();
+    static HashMap<dword, FileSystem*>* map;
+    if (!map)
+        map = new HashMap<dword, FileSystem*>();
     return *map;
 }
 
@@ -48,7 +50,7 @@ ByteBuffer FileSystem::readEntireInode(InodeIdentifier inode) const
 
     auto metadata = inodeMetadata(inode);
     if (!metadata.isValid()) {
-        printf("[fs] readInode: metadata lookup for inode %u failed\n", inode.index());
+        kprintf("[fs] readInode: metadata lookup for inode %u failed\n", inode.index());
         return nullptr;
     }
 
@@ -67,7 +69,7 @@ ByteBuffer FileSystem::readEntireInode(InodeIdentifier inode) const
         offset += nread;
     }
     if (nread < 0) {
-        printf("[fs] readInode: ERROR: %d\n", nread);
+        kprintf("[fs] readInode: ERROR: %d\n", nread);
         return nullptr;
     }
 

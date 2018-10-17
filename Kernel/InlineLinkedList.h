@@ -3,9 +3,9 @@
 #include "Assertions.h"
 #include "types.h"
 
-template<typename T> class DoublyLinkedListNode {
+template<typename T> class InlineLinkedListNode {
 public:
-    DoublyLinkedListNode();
+    InlineLinkedListNode();
     
     void setPrev(T*);
     void setNext(T*);
@@ -14,35 +14,35 @@ public:
     T* next() const;
 };
 
-template<typename T> inline DoublyLinkedListNode<T>::DoublyLinkedListNode()
+template<typename T> inline InlineLinkedListNode<T>::InlineLinkedListNode()
 {
     setPrev(0);
     setNext(0);
 }
 
-template<typename T> inline void DoublyLinkedListNode<T>::setPrev(T* prev)
+template<typename T> inline void InlineLinkedListNode<T>::setPrev(T* prev)
 {
     static_cast<T*>(this)->m_prev = prev;
 }
 
-template<typename T> inline void DoublyLinkedListNode<T>::setNext(T* next)
+template<typename T> inline void InlineLinkedListNode<T>::setNext(T* next)
 {
     static_cast<T*>(this)->m_next = next;
 }
 
-template<typename T> inline T* DoublyLinkedListNode<T>::prev() const
+template<typename T> inline T* InlineLinkedListNode<T>::prev() const
 {
     return static_cast<const T*>(this)->m_prev;
 }
 
-template<typename T> inline T* DoublyLinkedListNode<T>::next() const
+template<typename T> inline T* InlineLinkedListNode<T>::next() const
 {
     return static_cast<const T*>(this)->m_next;
 }
 
-template<typename T> class DoublyLinkedList {
+template<typename T> class InlineLinkedList {
 public:
-    DoublyLinkedList() { }
+    InlineLinkedList() { }
     
     bool isEmpty() const { return !m_head; }
     size_t size() const;
@@ -56,14 +56,14 @@ public:
     void prepend(T*);
     void append(T*);
     void remove(T*);
-    void append(DoublyLinkedList<T>&);
+    void append(InlineLinkedList<T>&);
 
 private:
     T* m_head { nullptr };
     T* m_tail { nullptr };
 };
 
-template<typename T> inline size_t DoublyLinkedList<T>::size() const
+template<typename T> inline size_t InlineLinkedList<T>::size() const
 {
     size_t size = 0;
     for (T* node = m_head; node; node = node->next())
@@ -71,13 +71,13 @@ template<typename T> inline size_t DoublyLinkedList<T>::size() const
     return size;
 }
 
-template<typename T> inline void DoublyLinkedList<T>::clear()
+template<typename T> inline void InlineLinkedList<T>::clear()
 {
     m_head = 0;
     m_tail = 0;
 }
 
-template<typename T> inline void DoublyLinkedList<T>::prepend(T* node)
+template<typename T> inline void InlineLinkedList<T>::prepend(T* node)
 {
     if (!m_head) {
         ASSERT(!m_tail);
@@ -95,7 +95,7 @@ template<typename T> inline void DoublyLinkedList<T>::prepend(T* node)
     m_head = node;
 }
 
-template<typename T> inline void DoublyLinkedList<T>::append(T* node)
+template<typename T> inline void InlineLinkedList<T>::append(T* node)
 {
     if (!m_tail) {
         ASSERT(!m_head);
@@ -113,7 +113,7 @@ template<typename T> inline void DoublyLinkedList<T>::append(T* node)
     m_tail = node;
 }
 
-template<typename T> inline void DoublyLinkedList<T>::remove(T* node)
+template<typename T> inline void InlineLinkedList<T>::remove(T* node)
 {
     if (node->prev()) {
         ASSERT(node != m_head);
@@ -132,7 +132,7 @@ template<typename T> inline void DoublyLinkedList<T>::remove(T* node)
     }
 }
 
-template<typename T> inline T* DoublyLinkedList<T>::removeHead()
+template<typename T> inline T* InlineLinkedList<T>::removeHead()
 {
     T* node = head();
     if (node)
@@ -140,7 +140,7 @@ template<typename T> inline T* DoublyLinkedList<T>::removeHead()
     return node;
 }
 
-template<typename T> inline void DoublyLinkedList<T>::append(DoublyLinkedList<T>& other)
+template<typename T> inline void InlineLinkedList<T>::append(InlineLinkedList<T>& other)
 {
     if (!other.head())
         return;

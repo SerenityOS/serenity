@@ -8,14 +8,12 @@ DiskDevice::~DiskDevice()
 {
 }
 
-bool DiskDevice::read(qword offset, unsigned length, byte* out) const
+bool DiskDevice::read(DiskOffset offset, unsigned length, byte* out) const
 {
     ASSERT((offset % blockSize()) == 0);
     ASSERT((length % blockSize()) == 0);
-    qword firstBlock = offset / blockSize();
-    qword endBlock = (offset + length) / blockSize();
-    ASSERT(firstBlock <= 0xffffffff);
-    ASSERT(endBlock <= 0xffffffff);
+    dword firstBlock = offset / blockSize();
+    dword endBlock = (offset + length) / blockSize();
     byte* outptr = out;
     unsigned remainingCount = length;
     for (unsigned bi = firstBlock; bi < endBlock; ++bi) {
@@ -26,12 +24,12 @@ bool DiskDevice::read(qword offset, unsigned length, byte* out) const
     return true;
 }
 
-bool DiskDevice::write(qword offset, unsigned length, const byte* in)
+bool DiskDevice::write(DiskOffset offset, unsigned length, const byte* in)
 {
     ASSERT((offset % blockSize()) == 0);
     ASSERT((length % blockSize()) == 0);
-    qword firstBlock = offset / blockSize();
-    qword endBlock = (offset + length) / blockSize();
+    dword firstBlock = offset / blockSize();
+    dword endBlock = (offset + length) / blockSize();
     ASSERT(firstBlock <= 0xffffffff);
     ASSERT(endBlock <= 0xffffffff);
     const byte* inptr = in;

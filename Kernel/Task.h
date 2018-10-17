@@ -2,18 +2,18 @@
 
 #include "types.h"
 #include "IPC.h"
-#include "DoublyLinkedList.h"
-#include "String.h"
+#include "InlineLinkedList.h"
+#include <AK/String.h>
 #include "TSS.h"
-#include "Vector.h"
+#include <AK/Vector.h>
 #include "i386.h"
 
 //#define TASK_SANITY_CHECKS
 
 class FileHandle;
 
-class Task : public DoublyLinkedListNode<Task> {
-    friend class DoublyLinkedListNode<Task>;
+class Task : public InlineLinkedListNode<Task> {
+    friend class InlineLinkedListNode<Task>;
 public:
 #ifdef TASK_SANITY_CHECKS
     static void checkSanity(const char* msg = nullptr);

@@ -11,7 +11,7 @@ Task* current;
 Task* s_kernelTask;
 
 static pid_t next_pid;
-static DoublyLinkedList<Task>* s_tasks;
+static InlineLinkedList<Task>* s_tasks;
 
 static bool contextSwitch(Task*);
 
@@ -46,7 +46,7 @@ void Task::initialize()
 {
     current = nullptr;
     next_pid = 0;
-    s_tasks = new DoublyLinkedList<Task>;
+    s_tasks = new InlineLinkedList<Task>;
     s_kernelTask = new Task(0, "idle", IPC::Handle::Any, Task::Ring0);
     redoKernelTaskTSS();
     loadTaskRegister(s_kernelTask->selector());
@@ -415,12 +415,14 @@ int Task::sys$open(const char* path, size_t pathLength)
 
 FileHandle* Task::openFile(String&& path)
 {
+#if 0
     auto vnode = FileSystem::createVirtualNode(move(path));
     if (!vnode) {
         kprintf("createVirtualNode failed\n");
         return nullptr;
     }
-#if 1
+#endif
+#if 0
     FileHandle* fh = new FileHandle;
     kprintf("made new FileHandle\n");
     fh->m_fd = m_fileHandles.size();

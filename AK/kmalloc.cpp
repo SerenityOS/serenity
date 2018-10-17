@@ -1,6 +1,6 @@
 #include <cstdio>
 #include "SimpleMalloc.h"
-#include <new>
+#include "kmalloc.h"
 #include <cstdlib>
 
 #define USE_SYSTEM_MALLOC

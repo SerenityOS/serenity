@@ -14,10 +14,8 @@ KERNEL_OBJS = \
        PIC.o \
        Syscall.o \
        DataBuffer.o \
-       String.o \
        panel.o \
        Disk.o \
-       fs.o \
        Userspace.o \
        IDEDiskDevice.o
 
@@ -27,9 +25,16 @@ VFS_OBJS = \
     ../VirtualFileSystem/NullDevice.o \
     ../VirtualFileSystem/FullDevice.o \
     ../VirtualFileSystem/ZeroDevice.o \
-    ../VirtualFileSystem/RandomDevice.o
+    ../VirtualFileSystem/RandomDevice.o \
+    ../VirtualFileSystem/FileSystem.o \
+    ../VirtualFileSystem/DiskBackedFileSystem.o \
+    ../VirtualFileSystem/Ext2FileSystem.o 
 
-OBJS = $(KERNEL_OBJS) $(VFS_OBJS)
+AK_OBJS = \
+    ../AK/String.o \
+    ../AK/StringImpl.o
+
+OBJS = $(KERNEL_OBJS) $(VFS_OBJS) $(AK_OBJS)
 
 NASM = nasm
 KERNEL = kernel

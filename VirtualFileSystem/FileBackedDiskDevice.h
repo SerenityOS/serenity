@@ -20,14 +20,14 @@ public:
 private:
     virtual const char* className() const override;
 
-    bool readInternal(qword offset, unsigned length, byte* out) const;
-    bool writeInternal(qword offset, unsigned length, const byte* data);
+    bool readInternal(DiskOffset, unsigned length, byte* out) const;
+    bool writeInternal(DiskOffset, unsigned length, const byte* data);
 
     FileBackedDiskDevice(String&& imagePath, unsigned blockSize);
 
     String m_imagePath;
     FILE* m_file { nullptr };
-    qword m_fileLength { 0 };
+    DiskOffset m_fileLength { 0 };
     unsigned m_blockSize { 0 };
 };
 

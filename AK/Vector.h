@@ -3,7 +3,6 @@
 #include "Assertions.h"
 #include "OwnPtr.h"
 #include "kmalloc.h"
-#include <new>
 
 namespace AK {
 

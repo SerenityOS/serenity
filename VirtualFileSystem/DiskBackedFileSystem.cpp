@@ -3,7 +3,7 @@
 //#define DBFS_DEBUG
 
 DiskBackedFileSystem::DiskBackedFileSystem(RetainPtr<DiskDevice>&& device)
-    : m_device(std::move(device))
+    : m_device(move(device))
 {
     ASSERT(m_device);
 }
@@ -18,7 +18,7 @@ bool DiskBackedFileSystem::writeBlock(unsigned index, const ByteBuffer& data)
 #ifdef DBFS_DEBUG
     printf("DiskBackedFileSystem::writeBlock %u\n", index);
 #endif
-    qword baseOffset = static_cast<qword>(index) * static_cast<qword>(blockSize());
+    DiskOffset baseOffset = static_cast<DiskOffset>(index) * static_cast<DiskOffset>(blockSize());
     return device().write(baseOffset, blockSize(), data.pointer());
 }
 
@@ -27,7 +27,7 @@ bool DiskBackedFileSystem::writeBlocks(unsigned index, unsigned count, const Byt
 #ifdef DBFS_DEBUG
     printf("DiskBackedFileSystem::writeBlocks %u x%u\n", index, count);
 #endif
-    qword baseOffset = static_cast<qword>(index) * static_cast<qword>(blockSize());
+    DiskOffset baseOffset = static_cast<DiskOffset>(index) * static_cast<DiskOffset>(blockSize());
     return device().write(baseOffset, count * blockSize(), data.pointer());
 }
 
@@ -37,7 +37,7 @@ ByteBuffer DiskBackedFileSystem::readBlock(unsigned index) const
     printf("DiskBackedFileSystem::readBlock %u\n", index);
 #endif
     auto buffer = ByteBuffer::createUninitialized(blockSize());
-    qword baseOffset = static_cast<qword>(index) * static_cast<qword>(blockSize());
+    DiskOffset baseOffset = static_cast<DiskOffset>(index) * static_cast<DiskOffset>(blockSize());
     auto* bufferPointer = buffer.pointer();
     device().read(baseOffset, blockSize(), bufferPointer);
     ASSERT(buffer.size() == blockSize());

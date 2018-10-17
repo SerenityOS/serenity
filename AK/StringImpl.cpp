@@ -1,15 +1,14 @@
 #include "StringImpl.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <new> 
+#include "StdLib.h"
 #include "kmalloc.h"
 
 namespace AK {
 
 StringImpl& StringImpl::theEmptyStringImpl()
 {
-    static StringImpl* s = new StringImpl(ConstructTheEmptyStringImpl);
+    static StringImpl* s = nullptr;
+    if (!s)
+        s = new StringImpl(ConstructTheEmptyStringImpl);
     return *s;
 }
 
