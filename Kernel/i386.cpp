@@ -84,13 +84,8 @@ void exception_13_handler()
         HANG;
     }
 
-    current->setState(Task::Crashing);
-    if (!scheduleNewTask()) {
-        kprintf("Failed to schedule a new task :(\n");
-        HANG;
-    }
-
-    switchNow();
+    // NOTE: This will schedule a new task.
+    Task::taskDidCrash(current);
 }
 
 #define EH(i, msg) \
