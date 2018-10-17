@@ -948,7 +948,7 @@ InodeIdentifier Ext2FileSystem::createInode(InodeIdentifier parentInode, const S
     else
         initialLinksCount = 1;
 
-    auto timestamp = time(nullptr);
+    auto timestamp = ktime(nullptr);
     auto e2inode = make<ext2_inode>();
     memset(e2inode.ptr(), 0, sizeof(ext2_inode));
     e2inode->i_mode = mode;

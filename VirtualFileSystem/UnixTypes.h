@@ -24,7 +24,7 @@ typedef signed_qword off_t;
 
 typedef dword blksize_t;
 typedef dword blkcnt_t;
-typedef long int time_t;
+typedef unsigned int time_t;
 typedef dword size_t;
 typedef signed_dword ssize_t;
 

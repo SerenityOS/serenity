@@ -81,8 +81,8 @@ bool VirtualFileSystem::mount(RetainPtr<FileSystem>&& fileSystem, const String& 
 
     kprintf("mounting %s{%p} at %s (inode: %u)\n", fileSystem->className(), fileSystem.ptr(), path.characters(), inode.index());
     // FIXME: check that this is not already a mount point
-    auto mount = make<Mount>(inode, std::move(fileSystem));
-    m_mounts.append(std::move(mount));
+    auto mount = make<Mount>(inode, move(fileSystem));
+    m_mounts.append(move(mount));
     return true;
 }
 
@@ -93,7 +93,7 @@ bool VirtualFileSystem::mountRoot(RetainPtr<FileSystem>&& fileSystem)
         return false;
     }
 
-    auto mount = make<Mount>(InodeIdentifier(), std::move(fileSystem));
+    auto mount = make<Mount>(InodeIdentifier(), move(fileSystem));
 
     auto node = makeNode(mount->guest());
     if (!node->inUse()) {
@@ -105,13 +105,13 @@ bool VirtualFileSystem::mountRoot(RetainPtr<FileSystem>&& fileSystem)
         return false;
     }
 
-    m_rootNode = std::move(node);
+    m_rootNode = move(node);
 
     kprintf("[VFS] mountRoot mounted %s{%p}\n",
         m_rootNode->fileSystem()->className(),
         m_rootNode->fileSystem());
 
-    m_mounts.append(std::move(mount));
+    m_mounts.append(move(mount));
     return true;
 }
 
@@ -136,7 +136,7 @@ void VirtualFileSystem::freeNode(Node* node)
     node->inode.fileSystem()->release();
     node->inode = InodeIdentifier();
     node->m_characterDevice = nullptr;
-    m_nodeFreeList.append(std::move(node));
+    m_nodeFreeList.append(move(node));
 }
 
 bool VirtualFileSystem::isDirectory(const String& path)
@@ -260,14 +260,14 @@ void VirtualFileSystem::listDirectory(const String& path)
 
         if (metadata.isCharacterDevice() || metadata.isBlockDevice()) {
             char buf[16];
-            sprintf(buf, "%u, %u", metadata.majorDevice, metadata.minorDevice);
+            ksprintf(buf, "%u, %u", metadata.majorDevice, metadata.minorDevice);
             kprintf("%12s ", buf);
         } else {
             kprintf("%12lld ", metadata.size);
         }
 
         kprintf("\033[30;1m");
-        auto tm = *localtime(&metadata.mtime);
+        auto tm = *klocaltime(&metadata.mtime);
         kprintf("%04u-%02u-%02u %02u:%02u:%02u ",
                 tm.tm_year + 1900,
                 tm.tm_mon + 1,
@@ -306,7 +306,7 @@ void VirtualFileSystem::listDirectoryRecursively(const String& path)
         if (metadata.isDirectory()) {
             if (entry.name != "." && entry.name != "..") {
                 char buf[4096];
-                sprintf(buf, "%s/%s", path.characters(), entry.name.characters());
+                ksprintf(buf, "%s/%s", path.characters(), entry.name.characters());
                 listDirectoryRecursively(buf);
             }
         } else {
@@ -320,7 +320,7 @@ bool VirtualFileSystem::touch(const String& path)
     auto inode = resolvePath(path);
     if (!inode.isValid())
         return false;
-    return inode.fileSystem()->setModificationTime(inode, time(nullptr));
+    return inode.fileSystem()->setModificationTime(inode, ktime(nullptr));
 }
 
 OwnPtr<FileHandle> VirtualFileSystem::open(const String& path)
@@ -331,7 +331,7 @@ OwnPtr<FileHandle> VirtualFileSystem::open(const String& path)
     auto vnode = getOrCreateNode(inode);
     if (!vnode)
         return nullptr;
-    return make<FileHandle>(std::move(vnode));
+    return make<FileHandle>(move(vnode));
 }
 
 OwnPtr<FileHandle> VirtualFileSystem::create(const String& path)
@@ -354,7 +354,7 @@ InodeIdentifier VirtualFileSystem::resolveSymbolicLink(const String& basePath, I
     if (!symlinkContents)
         return { };
     char buf[4096];
-    sprintf(buf, "/%s/%s", basePath.characters(), String((const char*)symlinkContents.pointer(), symlinkContents.size()).characters());
+    ksprintf(buf, "/%s/%s", basePath.characters(), String((const char*)symlinkContents.pointer(), symlinkContents.size()).characters());
     return resolvePath(buf);
 }
 
@@ -407,7 +407,7 @@ InodeIdentifier VirtualFileSystem::resolvePath(const String& path)
             char buf[4096] = "";
             char* p = buf;
             for (unsigned j = 0; j < i; ++j) {
-                p += sprintf(p, "/%s", parts[j].characters());
+                p += ksprintf(p, "/%s", parts[j].characters());
             }
             inode = resolveSymbolicLink(buf, inode);
             if (!inode.isValid()) {
@@ -436,7 +436,7 @@ void VirtualFileSystem::Node::release()
 VirtualFileSystem::Mount::Mount(InodeIdentifier host, RetainPtr<FileSystem>&& guestFileSystem)
     : m_host(host)
     , m_guest(guestFileSystem->rootInode())
-    , m_fileSystem(std::move(guestFileSystem))
+    , m_fileSystem(move(guestFileSystem))
 {
 }
 
