@@ -30,7 +30,8 @@ VFS_OBJS = \
     ../VirtualFileSystem/DiskBackedFileSystem.o \
     ../VirtualFileSystem/Ext2FileSystem.o \
     ../VirtualFileSystem/InodeIdentifier.o \
-    ../VirtualFileSystem/VirtualFileSystem.o
+    ../VirtualFileSystem/VirtualFileSystem.o \
+    ../VirtualFileSystem/FileHandle.o
 
 AK_OBJS = \
     ../AK/String.o \

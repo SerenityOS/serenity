@@ -1,6 +1,7 @@
 #include "types.h"
 #include "Assertions.h"
 #include "kmalloc.h"
+#include <AK/Types.h>
 
 void memcpy(void *dest, const void *src, DWORD n)
 {
@@ -51,11 +52,13 @@ char* strdup(const char *str)
 
 int memcmp(const void* v1, const void* v2, size_t n)
 {
-    size_t m;
-    const char* s1 = (const char*)v1;
-    const char* s2 = (const char*)v2;
-    for (m = 0; m < n && *s1 == *s2; ++s1, ++s2);
-    return m == n ? 0 : -1;
+    auto* s1 = (const byte*)v1;
+    auto* s2 = (const byte*)v2;
+    while (n-- > 0) {
+        if (*s1++ != *s2++)
+            return s1[-1] < s2[-1] ? -1 : 1;
+    }
+    return 0;
 }
 
 extern "C" void __cxa_pure_virtual()
