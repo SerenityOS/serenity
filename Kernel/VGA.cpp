@@ -11,55 +11,50 @@ PRIVATE BYTE current_attr = 0x07;
 
 PRIVATE volatile WORD soft_cursor;
 
-PRIVATE void print_num( DWORD );
-PRIVATE void print_hex( DWORD, BYTE fields );
-static void printSignedNumber(int);
+template<typename PutChFunc> static int printNumber(PutChFunc, char*&, DWORD);
+template<typename PutChFunc> static int printHex(PutChFunc, char*&, DWORD, BYTE fields);
+template<typename PutChFunc> static int printSignedNumber(PutChFunc, char*&, int);
 
-PRIVATE void
-putch( char ch )
+static void vga_putch(char*, char ch)
 {
     WORD row;
 
-    switch( ch )
-    {
-        case '\n':
-            row = soft_cursor / 80;
-            if( row == 23 )
-            {
-                memcpy( vga_mem, vga_mem + 160, 160 * 23 );
-                memset( vga_mem + (160 * 23), 0, 160 );
-                soft_cursor = row * 80;
-            }
-            else
-                soft_cursor = (row + 1) * 80;
-            return;
-        default:
-            vga_mem[soft_cursor * 2] = ch;
-            vga_mem[soft_cursor * 2 + 1] = current_attr;
-            soft_cursor++;
+    switch (ch) {
+    case '\n':
+        row = soft_cursor / 80;
+        if (row == 23) {
+            memcpy( vga_mem, vga_mem + 160, 160 * 23 );
+            memset( vga_mem + (160 * 23), 0, 160 );
+            soft_cursor = row * 80;
+        } else {
+            soft_cursor = (row + 1) * 80;
+        }
+        return;
+    default:
+        vga_mem[soft_cursor * 2] = ch;
+        vga_mem[soft_cursor * 2 + 1] = current_attr;
+        ++soft_cursor;
     }
     row = soft_cursor / 80;
     if ((row >= 24 && current->handle() != IPC::Handle::PanelTask)) {
-        memcpy( vga_mem, vga_mem + 160, 160 * 23 );
-        memset( vga_mem + (160 * 23), 0, 160 );
+        memcpy(vga_mem, vga_mem + 160, 160 * 23);
+        memset(vga_mem + (160 * 23), 0, 160);
         soft_cursor = 23 * 80;
     }
 }
 
-PUBLIC void
-kprintf( const char *fmt, ... )
+template<typename PutChFunc>
+int kprintfInternal(PutChFunc putch, char* buffer, const char*& fmt, char*& ap)
 {
     const char *p;
-    va_list ap;
 
     soft_cursor = vga_get_cursor();
 
-    va_start( ap, fmt );
+    int ret = 0;
+    char* bufptr = buffer;
 
-    for( p = fmt; *p; ++p )
-    {
-        if( *p == '%' && *(p + 1) )
-        {
+    for (p = fmt; *p; ++p) {
+        if (*p == '%' && *(p + 1)) {
             ++p;
             switch( *p )
             {
@@ -68,105 +63,136 @@ kprintf( const char *fmt, ... )
                         const char* sp = va_arg(ap, const char*);
                         //ASSERT(sp != nullptr);
                         if (!sp) {
-                            putch('<');
-                            putch('N');
-                            putch('u');
-                            putch('L');
-                            putch('>');
+                            putch(bufptr, '<');
+                            putch(bufptr, 'N');
+                            putch(bufptr, 'u');
+                            putch(bufptr, 'L');
+                            putch(bufptr, '>');
+                            ret += 5;
                         } else {
-                            for (; *sp; ++sp)
-                                putch(*sp);
+                            for (; *sp; ++sp) {
+                                putch(bufptr, *sp);
+                                ++ret;
+                            }
                         }
                     }
                     break;
 
                 case 'd':
-                    printSignedNumber(va_arg(ap, int));
+                    ret += printSignedNumber(putch, bufptr, va_arg(ap, int));
                     break;
 
                 case 'u':
-                    print_num( va_arg( ap, DWORD ));
+                    ret += printNumber(putch, bufptr, va_arg(ap, DWORD));
                     break;
 
                 case 'x':
-                    print_hex( va_arg( ap, DWORD ), 8 );
+                    ret += printHex(putch, bufptr, va_arg(ap, DWORD), 8);
                     break;
 
                 case 'b':
-                    print_hex( va_arg( ap, int ), 2 );
+                    ret += printHex(putch, bufptr, va_arg(ap, int), 2);
                     break;
 
                 case 'c':
-                    putch( (char)va_arg( ap, int ));
+                    putch(bufptr, (char)va_arg(ap, int));
+                    ++ret;
                     break;
 
                 case 'p':
-                    putch( '0' );
-                    putch( 'x' );
-                    print_hex( va_arg( ap, DWORD ), 8 );
+                    putch(bufptr, '0');
+                    putch(bufptr, 'x');
+                    ret += 2;
+                    ret += printHex(putch, bufptr, va_arg(ap, DWORD), 8);
                     break;
             }
         }
-        else
-        {
-            putch( *p );
+        else {
+            putch(bufptr, *p);
+            ++ret;
         }
     }
-
-    /* va_arg( ap, type ); */
-    va_end( ap );
-
-    vga_set_cursor( soft_cursor );
+    return ret;
 }
 
-PRIVATE void
-print_hex( DWORD number, BYTE fields )
+int kprintf(const char* fmt, ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
+    soft_cursor = vga_get_cursor();
+    int ret = kprintfInternal(vga_putch, nullptr, fmt, ap);
+    vga_set_cursor(soft_cursor);
+    va_end(ap);
+    return ret;
+}
+
+static void buffer_putch(char* bufptr, char ch)
+{
+    *bufptr++ = ch;
+}
+
+int ksprintf(char* buffer, const char* fmt, ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
+    int ret = kprintfInternal(buffer_putch, buffer, fmt, ap);
+    va_end(ap);
+    return ret;
+}
+
+template<typename PutChFunc>
+int printHex(PutChFunc putch, char*& bufptr, DWORD number, BYTE fields)
 {
     static const char h[] = {
         '0','1','2','3','4','5','6','7',
         '8','9','a','b','c','d','e','f'
     };
 
+    int ret = 0;
     BYTE shr_count = fields * 4;
-    while( shr_count )
-    {
+    while (shr_count) {
         shr_count -= 4;
-        putch( h[(number >> shr_count) & 0x0F] );
+        putch(bufptr, h[(number >> shr_count) & 0x0F]);
+        ++ret;
     }
+    return ret;
 }
 
-PRIVATE void
-print_num( DWORD number )
+template<typename PutChFunc>
+int printNumber(PutChFunc putch, char*& bufptr, DWORD number)
 {
     DWORD divisor = 1000000000;
     char ch;
     char padding = 1;
+    int ret = 0;
 
-    for( ;; )
-    {
+    for (;;) {
         ch = '0' + (number / divisor);
         number %= divisor;
 
-        if( ch != '0' )
+        if (ch != '0')
             padding = 0;
 
-        if( !padding || divisor == 1 )
-            putch( ch );
+        if (!padding || divisor == 1) {
+            putch(bufptr, ch);
+            ++ret;
+        }
 
-        if( divisor == 1 )
+        if (divisor == 1)
             break;
         divisor /= 10;
     }
+    return ret;
 }
 
-static void printSignedNumber(int number)
+template<typename PutChFunc>
+static int printSignedNumber(PutChFunc putch, char*& bufptr, int number)
 {
     if (number < 0) {
-        putch('-');
-        print_num(0 - number);
-    } else {
-        print_num(number);
+        putch(bufptr, '-');
+        return printNumber(putch, bufptr, 0 - number) + 1;
     }
+    return printNumber(putch, bufptr, number);
 }
 
 PUBLIC void

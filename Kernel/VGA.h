@@ -8,4 +8,6 @@ void vga_set_attr(BYTE);
 void vga_set_cursor(WORD);
 void vga_set_cursor(BYTE row, BYTE column);
 WORD vga_get_cursor();
-void kprintf(const char *fmt, ...);
+
+int kprintf(const char *fmt, ...);
+int ksprintf(char* buf, const char *fmt, ...);

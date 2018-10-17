@@ -28,7 +28,8 @@ VFS_OBJS = \
     ../VirtualFileSystem/RandomDevice.o \
     ../VirtualFileSystem/FileSystem.o \
     ../VirtualFileSystem/DiskBackedFileSystem.o \
-    ../VirtualFileSystem/Ext2FileSystem.o 
+    ../VirtualFileSystem/Ext2FileSystem.o \
+    ../VirtualFileSystem/VirtualFileSystem.o
 
 AK_OBJS = \
     ../AK/String.o \
