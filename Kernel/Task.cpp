@@ -169,8 +169,24 @@ Task::Task(void (*e)(), const char* n, IPC::Handle h, RingLevel ring)
 
 Task::~Task()
 {
+    system.nprocess--;
     delete [] m_ldtEntries;
     m_ldtEntries = nullptr;
+}
+
+void Task::taskDidCrash(Task* crashedTask)
+{
+    crashedTask->setState(Crashing);
+    s_tasks->remove(crashedTask);
+
+    if (!scheduleNewTask()) {
+        kprintf("Task::taskDidCrash: Failed to schedule a new task :(\n");
+        HANG;
+    }
+
+    delete crashedTask;
+
+    switchNow();
 }
 
 void yield()

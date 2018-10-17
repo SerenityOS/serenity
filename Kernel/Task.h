@@ -95,6 +95,8 @@ public:
     static void initialize();
     void setError(int);
 
+    static void taskDidCrash(Task*);
+
 private:
     FileHandle* openFile(String&&);
 
