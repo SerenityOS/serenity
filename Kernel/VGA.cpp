@@ -126,7 +126,7 @@ int kprintf(const char* fmt, ...)
     return ret;
 }
 
-static void buffer_putch(char* bufptr, char ch)
+static void buffer_putch(char*& bufptr, char ch)
 {
     *bufptr++ = ch;
 }
