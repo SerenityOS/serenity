@@ -20,6 +20,7 @@
 #include <VirtualFileSystem/RandomDevice.h>
 #include <VirtualFileSystem/Ext2FileSystem.h>
 #include <VirtualFileSystem/VirtualFileSystem.h>
+#include <VirtualFileSystem/FileHandle.h>
 #include <AK/OwnPtr.h>
 
 #if 0
@@ -153,6 +154,16 @@ void init()
     new Task(user_main, "user", IPC::Handle::UserTask, Task::Ring3);
 
     vfs->listDirectory("/");
+
+    {
+        auto motdFile = vfs->open("/motd.txt");
+        ASSERT(motdFile);
+        auto motdData = motdFile->readEntireFile();
+
+        for (unsigned i = 0; i < motdData.size(); ++i) {
+            kprintf("%c", motdData[i]);
+        }
+    }
 
     // The idle task will spend its eternity here for now.
     for (;;) {

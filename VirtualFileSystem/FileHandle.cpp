@@ -5,7 +5,7 @@
 #include "UnixTypes.h"
 
 FileHandle::FileHandle(RetainPtr<VirtualFileSystem::Node>&& vnode)
-    : m_vnode(std::move(vnode))
+    : m_vnode(move(vnode))
 {
 }
 
@@ -13,12 +13,14 @@ FileHandle::~FileHandle()
 {
 }
 
+#ifndef SERENITY_KERNEL
 bool additionWouldOverflow(Unix::off_t a, Unix::off_t b)
 {
     ASSERT(a > 0);
     uint64_t ua = a;
     return (ua + b) > maxFileOffset;
 }
+#endif
 
 int FileHandle::stat(Unix::stat* buffer)
 {
@@ -67,14 +69,17 @@ Unix::off_t FileHandle::seek(Unix::off_t offset, int whence)
         break;
     case SEEK_CUR:
         newOffset = m_currentOffset + offset;
+#ifndef SERENITY_KERNEL
         if (additionWouldOverflow(m_currentOffset, offset))
             return -EOVERFLOW;
+#endif
         if (newOffset < 0)
             return -EINVAL;
         break;
     case SEEK_END:
         // FIXME: Implement!
         notImplemented();
+        newOffset = 0;
         break;
     default:
         return -EINVAL;
