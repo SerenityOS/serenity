@@ -19,7 +19,7 @@ inline time_t ktime(time_t* tloc)
     return 123;
 }
 
-inline tm* klocaltime(time_t* t)
+inline tm* klocaltime(time_t*)
 {
     static tm timmy;
     return &timmy;

@@ -15,7 +15,6 @@ bool DiskDevice::read(DiskOffset offset, unsigned length, byte* out) const
     dword firstBlock = offset / blockSize();
     dword endBlock = (offset + length) / blockSize();
     byte* outptr = out;
-    unsigned remainingCount = length;
     for (unsigned bi = firstBlock; bi < endBlock; ++bi) {
         if (!readBlock(bi, outptr))
             return false;
