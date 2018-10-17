@@ -6,6 +6,7 @@
 #include "i386.h"
 #include "system.h"
 #include "FileSystem.h"
+#include "MemoryManager.h"
 
 Task* current;
 Task* s_kernelTask;
@@ -128,6 +129,8 @@ Task::Task(void (*e)(), const char* n, IPC::Handle h, RingLevel ring)
     m_tss.gs = dataSegment;
     m_tss.ss = stackSegment;
     m_tss.cs = codeSegment;
+
+    m_tss.cr3 = MemoryManager::the().pageDirectoryBase().get();
 
     m_tss.eip = (DWORD)m_entry;
 

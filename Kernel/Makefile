@@ -17,7 +17,8 @@ KERNEL_OBJS = \
        panel.o \
        Disk.o \
        Userspace.o \
-       IDEDiskDevice.o
+       IDEDiskDevice.o \
+       MemoryManager.o
 
 VFS_OBJS = \
     ../VirtualFileSystem/DiskDevice.o \

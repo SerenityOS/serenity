@@ -22,6 +22,7 @@
 #include <VirtualFileSystem/VirtualFileSystem.h>
 #include <VirtualFileSystem/FileHandle.h>
 #include <AK/OwnPtr.h>
+#include "MemoryManager.h"
 
 #if 0
 /* Keyboard LED disco task ;^) */
@@ -67,7 +68,7 @@ static void user_main()
     DO_SYSCALL_A3(0x3000, 2, 3, 4);
     // Crash ourselves!
     char* x = reinterpret_cast<char*>(0xbeefbabe);
-    *x = 1;
+    //*x = 1;
     //HANG;
     for (;;) {
         // nothing?
@@ -102,6 +103,8 @@ void init()
     PIC::initialize();
     gdt_init();
     idt_init();
+
+    MemoryManager::initialize();
 
     // Anything that registers interrupts goes *after* PIC and IDT for obvious reasons.
     Syscall::initialize();
