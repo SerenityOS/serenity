@@ -267,7 +267,8 @@ void VirtualFileSystem::listDirectory(const String& path)
         }
 
         kprintf("\033[30;1m");
-        auto tm = *klocaltime(&metadata.mtime);
+        time_t mtime = metadata.mtime;
+        auto tm = *klocaltime(&mtime);
         kprintf("%04u-%02u-%02u %02u:%02u:%02u ",
                 tm.tm_year + 1900,
                 tm.tm_mon + 1,
