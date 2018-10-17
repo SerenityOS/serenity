@@ -29,6 +29,7 @@ VFS_OBJS = \
     ../VirtualFileSystem/FileSystem.o \
     ../VirtualFileSystem/DiskBackedFileSystem.o \
     ../VirtualFileSystem/Ext2FileSystem.o \
+    ../VirtualFileSystem/InodeIdentifier.o \
     ../VirtualFileSystem/VirtualFileSystem.o
 
 AK_OBJS = \

@@ -8,7 +8,7 @@
 #include <AK/kstdio.h>
 #include "sys-errno.h"
 
-#define EXT2_DEBUG
+//#define EXT2_DEBUG
 
 RetainPtr<Ext2FileSystem> Ext2FileSystem::create(RetainPtr<DiskDevice>&& device)
 {
