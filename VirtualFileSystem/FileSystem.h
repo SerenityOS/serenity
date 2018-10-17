@@ -11,7 +11,8 @@
 #include <AK/Retainable.h>
 #include <AK/RetainPtr.h>
 #include <AK/String.h>
-#include <functional>
+#include <AK/Function.h>
+#include <AK/kstdio.h>
 
 static const dword mepoch = 476763780;
 
@@ -35,7 +36,7 @@ public:
         InodeIdentifier inode;
         byte fileType { 0 };
     };
-    virtual bool enumerateDirectoryInode(InodeIdentifier, std::function<bool(const DirectoryEntry&)>) const = 0;
+    virtual bool enumerateDirectoryInode(InodeIdentifier, Function<bool(const DirectoryEntry&)>) const = 0;
 
     virtual bool setModificationTime(InodeIdentifier, dword timestamp) = 0;
     virtual InodeIdentifier createInode(InodeIdentifier parentInode, const String& name, Unix::mode_t, unsigned size) = 0;
@@ -79,7 +80,7 @@ template<>
 struct Traits<InodeIdentifier> {
     // FIXME: This is a shitty hash.
     static unsigned hash(const InodeIdentifier& inode) { return Traits<unsigned>::hash(inode.fileSystemID()) + Traits<unsigned>::hash(inode.index()); }
-    static void dump(const InodeIdentifier& inode) { printf("%02u:%08u", inode.fileSystemID(), inode.index()); }
+    static void dump(const InodeIdentifier& inode) { kprintf("%02u:%08u", inode.fileSystemID(), inode.index()); }
 };
 
 }

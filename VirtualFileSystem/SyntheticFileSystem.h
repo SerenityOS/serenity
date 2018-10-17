@@ -13,7 +13,7 @@ public:
     virtual const char* className() const override;
     virtual InodeIdentifier rootInode() const override;
     virtual bool writeInode(InodeIdentifier, const ByteBuffer&) override;
-    virtual bool enumerateDirectoryInode(InodeIdentifier, std::function<bool(const DirectoryEntry&)>) const override;
+    virtual bool enumerateDirectoryInode(InodeIdentifier, Function<bool(const DirectoryEntry&)>) const override;
     virtual InodeMetadata inodeMetadata(InodeIdentifier) const override;
     virtual bool setModificationTime(InodeIdentifier, dword timestamp) override;
     virtual InodeIdentifier createInode(InodeIdentifier parentInode, const String& name, Unix::mode_t, unsigned size) override;

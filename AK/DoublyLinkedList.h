@@ -1,6 +1,6 @@
 #pragma once
 
-#include <utility>
+#include "StdLib.h"
 
 namespace AK {
 
@@ -38,7 +38,7 @@ public:
 
     void append(T&& value)
     {
-        auto* node = new Node(std::move(value));
+        auto* node = new Node(move(value));
         if (!m_head) {
             ASSERT(!m_tail);
             m_head = node;

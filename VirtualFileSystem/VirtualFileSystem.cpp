@@ -2,8 +2,8 @@
 #include "FileHandle.h"
 #include "FileSystem.h"
 #include <AK/kmalloc.h>
-#include <cstdio>
-#include <cstdlib>
+#include <AK/kstdio.h>
+#include <AK/ktime.h>
 
 //#define VFS_DEBUG
 
@@ -24,7 +24,7 @@ VirtualFileSystem::VirtualFileSystem()
 
 VirtualFileSystem::~VirtualFileSystem()
 {
-    printf("[VFS] ~VirtualFileSystem with %u nodes allocated\n", allocatedNodeCount());
+    kprintf("[VFS] ~VirtualFileSystem with %u nodes allocated\n", allocatedNodeCount());
 }
 
 auto VirtualFileSystem::makeNode(InodeIdentifier inode) -> RetainPtr<Node>
@@ -39,7 +39,7 @@ auto VirtualFileSystem::makeNode(InodeIdentifier inode) -> RetainPtr<Node>
         if (it != m_characterDevices.end()) {
             characterDevice = (*it).value;
         } else {
-            printf("[VFS] makeNode() no such character device %u,%u\n", metadata.majorDevice, metadata.minorDevice);
+            kprintf("[VFS] makeNode() no such character device %u,%u\n", metadata.majorDevice, metadata.minorDevice);
             return nullptr;
         }
     }
@@ -53,7 +53,7 @@ auto VirtualFileSystem::makeNode(InodeIdentifier inode) -> RetainPtr<Node>
     vnode->inode = inode;
 
 #ifdef VFS_DEBUG
-    printf("makeNode: inode=%u, size=%u, mode=%o, uid=%u, gid=%u\n", inode.index(), metadata.size, metadata.mode, metadata.uid, metadata.gid);
+    kprintf("makeNode: inode=%u, size=%u, mode=%o, uid=%u, gid=%u\n", inode.index(), metadata.size, metadata.mode, metadata.uid, metadata.gid);
 #endif
 
     m_inode2vnode.set(inode, vnode.ptr());
@@ -75,11 +75,11 @@ bool VirtualFileSystem::mount(RetainPtr<FileSystem>&& fileSystem, const String& 
 
     auto inode = resolvePath(path);
     if (!inode.isValid()) {
-        printf("[VFS] mount can't resolve mount point '%s'\n", path.characters());
+        kprintf("[VFS] mount can't resolve mount point '%s'\n", path.characters());
         return false;
     }
 
-    printf("mounting %s{%p} at %s (inode: %u)\n", fileSystem->className(), fileSystem.ptr(), path.characters(), inode.index());
+    kprintf("mounting %s{%p} at %s (inode: %u)\n", fileSystem->className(), fileSystem.ptr(), path.characters(), inode.index());
     // FIXME: check that this is not already a mount point
     auto mount = make<Mount>(inode, std::move(fileSystem));
     m_mounts.append(std::move(mount));
@@ -89,7 +89,7 @@ bool VirtualFileSystem::mount(RetainPtr<FileSystem>&& fileSystem, const String& 
 bool VirtualFileSystem::mountRoot(RetainPtr<FileSystem>&& fileSystem)
 {
     if (m_rootNode) {
-        printf("[VFS] mountRoot can't mount another root\n");
+        kprintf("[VFS] mountRoot can't mount another root\n");
         return false;
     }
 
@@ -97,17 +97,17 @@ bool VirtualFileSystem::mountRoot(RetainPtr<FileSystem>&& fileSystem)
 
     auto node = makeNode(mount->guest());
     if (!node->inUse()) {
-        printf("[VFS] root inode for / is not in use :(\n");
+        kprintf("[VFS] root inode for / is not in use :(\n");
         return false;
     }
     if (!node->inode.metadata().isDirectory()) {
-        printf("[VFS] root inode for / is not in use :(\n");
+        kprintf("[VFS] root inode for / is not in use :(\n");
         return false;
     }
 
     m_rootNode = std::move(node);
 
-    printf("[VFS] mountRoot mounted %s{%p}\n",
+    kprintf("[VFS] mountRoot mounted %s{%p}\n",
         m_rootNode->fileSystem()->className(),
         m_rootNode->fileSystem());
 
@@ -118,7 +118,7 @@ bool VirtualFileSystem::mountRoot(RetainPtr<FileSystem>&& fileSystem)
 auto VirtualFileSystem::allocateNode() -> RetainPtr<Node>
 {
     if (m_nodeFreeList.isEmpty()) {
-        printf("[VFS] allocateNode has no nodes left\n");
+        kprintf("[VFS] allocateNode has no nodes left\n");
         return nullptr;
     }
     auto* node = m_nodeFreeList.takeLast();
@@ -200,7 +200,7 @@ void VirtualFileSystem::listDirectory(const String& path)
     if (!directoryInode.isValid())
         return;
 
-    printf("[VFS] ls %s -> %s %02u:%08u\n", path.characters(), directoryInode.fileSystem()->className(), directoryInode.fileSystemID(), directoryInode.index());
+    kprintf("[VFS] ls %s -> %s %02u:%08u\n", path.characters(), directoryInode.fileSystem()->className(), directoryInode.fileSystemID(), directoryInode.index());
     enumerateDirectoryInode(directoryInode, [&] (const FileSystem::DirectoryEntry& entry) {
         const char* nameColorBegin = "";
         const char* nameColorEnd = "";
@@ -221,28 +221,28 @@ void VirtualFileSystem::listDirectory(const String& path)
             nameColorBegin = "\033[33;1m";
             nameColorEnd = "\033[0m";
         }
-        printf("%02u:%08u ",
+        kprintf("%02u:%08u ",
             metadata.inode.fileSystemID(),
             metadata.inode.index());
 
         if (metadata.isDirectory())
-            printf("d");
+            kprintf("d");
         else if (metadata.isSymbolicLink())
-            printf("l");
+            kprintf("l");
         else if (metadata.isBlockDevice())
-            printf("b");
+            kprintf("b");
         else if (metadata.isCharacterDevice())
-            printf("c");
+            kprintf("c");
         else if (metadata.isSocket())
-            printf("s");
+            kprintf("s");
         else if (metadata.isFIFO())
-            printf("f");
+            kprintf("f");
         else if (metadata.isRegularFile())
-            printf("-");
+            kprintf("-");
         else
-            printf("?");
+            kprintf("?");
 
-        printf("%c%c%c%c%c%c%c%c",
+        kprintf("%c%c%c%c%c%c%c%c",
             metadata.mode & 00400 ? 'r' : '-',
             metadata.mode & 00200 ? 'w' : '-',
             metadata.mode & 00100 ? 'x' : '-',
@@ -254,41 +254,41 @@ void VirtualFileSystem::listDirectory(const String& path)
         );
 
         if (metadata.isSticky())
-            printf("t");
+            kprintf("t");
         else
-            printf("%c", metadata.mode & 00001 ? 'x' : '-');
+            kprintf("%c", metadata.mode & 00001 ? 'x' : '-');
 
         if (metadata.isCharacterDevice() || metadata.isBlockDevice()) {
             char buf[16];
             sprintf(buf, "%u, %u", metadata.majorDevice, metadata.minorDevice);
-            printf("%12s ", buf);
+            kprintf("%12s ", buf);
         } else {
-            printf("%12lld ", metadata.size);
+            kprintf("%12lld ", metadata.size);
         }
 
-        printf("\033[30;1m");
+        kprintf("\033[30;1m");
         auto tm = *localtime(&metadata.mtime);
-        printf("%04u-%02u-%02u %02u:%02u:%02u ",
+        kprintf("%04u-%02u-%02u %02u:%02u:%02u ",
                 tm.tm_year + 1900,
                 tm.tm_mon + 1,
                 tm.tm_mday,
                 tm.tm_hour,
                 tm.tm_min,
                 tm.tm_sec);
-        printf("\033[0m");
+        kprintf("\033[0m");
 
-        printf("%s%s%s",
+        kprintf("%s%s%s",
             nameColorBegin,
             entry.name.characters(),
             nameColorEnd);
 
         if (metadata.isDirectory()) {
-            printf("/");
+            kprintf("/");
         } else if (metadata.isSymbolicLink()) {
             auto symlinkContents = directoryInode.fileSystem()->readEntireInode(metadata.inode);
-            printf(" -> %s", String((const char*)symlinkContents.pointer(), symlinkContents.size()).characters());
+            kprintf(" -> %s", String((const char*)symlinkContents.pointer(), symlinkContents.size()).characters());
         }
-        printf("\n");
+        kprintf("\n");
         return true;
     });
 }
@@ -299,7 +299,7 @@ void VirtualFileSystem::listDirectoryRecursively(const String& path)
     if (!directory.isValid())
         return;
 
-    printf("%s\n", path.characters());
+    kprintf("%s\n", path.characters());
 
     enumerateDirectoryInode(directory, [&] (const FileSystem::DirectoryEntry& entry) {
         auto metadata = entry.inode.metadata();
@@ -310,7 +310,7 @@ void VirtualFileSystem::listDirectoryRecursively(const String& path)
                 listDirectoryRecursively(buf);
             }
         } else {
-            printf("%s/%s\n", path.characters(), entry.name.characters());
+            kprintf("%s/%s\n", path.characters(), entry.name.characters());
         }
     });
 }
@@ -368,35 +368,35 @@ InodeIdentifier VirtualFileSystem::resolvePath(const String& path)
         auto metadata = inode.metadata();
         if (!metadata.isValid()) {
 #ifdef VFS_DEBUG
-            printf("invalid metadata\n");
+            kprintf("invalid metadata\n");
 #endif
             return InodeIdentifier();
         }
         if (!metadata.isDirectory()) {
 #ifdef VFS_DEBUG
-            printf("not directory\n");
+            kprintf("not directory\n");
 #endif
             return InodeIdentifier();
         }
         inode = inode.fileSystem()->childOfDirectoryInodeWithName(inode, part);
         if (!inode.isValid()) {
 #ifdef VFS_DEBUG
-            printf("bad child\n");
+            kprintf("bad child\n");
 #endif
             return InodeIdentifier();
         }
 #ifdef VFS_DEBUG
-        printf("<%s> %02u:%08u\n", part.characters(), inode.fileSystemID(), inode.index());
+        kprintf("<%s> %02u:%08u\n", part.characters(), inode.fileSystemID(), inode.index());
 #endif
         if (auto mount = findMountForHost(inode)) {
 #ifdef VFS_DEBUG
-            printf("  -- is host\n");
+            kprintf("  -- is host\n");
 #endif
             inode = mount->guest();
         }
         if (inode.isRootInode() && !isRoot(inode) && part == "..") {
 #ifdef VFS_DEBUG
-            printf("  -- is guest\n");
+            kprintf("  -- is guest\n");
 #endif
             auto mount = findMountForGuest(inode);
             inode = mount->host();
@@ -411,7 +411,7 @@ InodeIdentifier VirtualFileSystem::resolvePath(const String& path)
             }
             inode = resolveSymbolicLink(buf, inode);
             if (!inode.isValid()) {
-                printf("Symbolic link resolution failed :(\n");
+                kprintf("Symbolic link resolution failed :(\n");
                 return { };
             }
         }

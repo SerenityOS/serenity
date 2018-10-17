@@ -9,7 +9,9 @@
 #include "RandomDevice.h"
 #include <cstring>
 #include <AK/SimpleMalloc.h>
+#include <AK/StdLib.h>
 #include <AK/kmalloc.h>
+#include <AK/ktime.h>
 
 static RetainPtr<FileSystem> makeFileSystem(const char* imagePath);
 

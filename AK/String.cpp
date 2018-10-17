@@ -1,5 +1,5 @@
 #include "String.h"
-#include <cstring>
+#include "StdLib.h"
 
 namespace AK {
 

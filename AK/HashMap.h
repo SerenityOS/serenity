@@ -1,7 +1,8 @@
 #pragma once
 
 #include "HashTable.h"
-#include <utility>
+#include "StdLib.h"
+#include "kstdio.h"
 
 namespace AK {
 
@@ -22,9 +23,9 @@ private:
         static unsigned hash(const Entry& entry) { return Traits<K>::hash(entry.key); }
         static void dump(const Entry& entry)
         {
-            printf("key=");
+            kprintf("key=");
             Traits<K>::dump(entry.key);
-            printf(" value=");
+            kprintf(" value=");
             Traits<V>::dump(entry.value);
         }
     };
@@ -33,14 +34,14 @@ public:
     HashMap() { }
 
     HashMap(HashMap&& other)
-        : m_table(std::move(other.m_table))
+        : m_table(move(other.m_table))
     {
     }
 
     HashMap& operator=(HashMap&& other)
     {
         if (this != &other) {
-            m_table = std::move(other.m_table);
+            m_table = move(other.m_table);
         }
         return *this;
     }
@@ -73,7 +74,7 @@ private:
 template<typename K, typename V>
 void HashMap<K, V>::set(const K& key, V&& value)
 {
-    m_table.set(Entry{key, std::move(value)});
+    m_table.set(Entry{key, move(value)});
 }
 
 template<typename K, typename V>

@@ -3,8 +3,8 @@
 #include "Assertions.h"
 #include "DoublyLinkedList.h"
 #include "Traits.h"
-#include <cstdlib>
-#include <utility>
+#include "StdLib.h"
+#include "kstdio.h"
 
 //#define HASHTABLE_DEBUG
 
@@ -68,7 +68,7 @@ public:
         T& operator*()
         {
 #ifdef HASHTABLE_DEBUG
-            printf("retrieve { bucketIndex: %u, isEnd: %u }\n", m_bucketIndex, m_isEnd);
+            kprintf("retrieve { bucketIndex: %u, isEnd: %u }\n", m_bucketIndex, m_isEnd);
 #endif
             return *m_bucketIterator;
         }
@@ -86,7 +86,7 @@ public:
             while (!m_isEnd) {
 #ifdef HASHTABLE_DEBUG
                 ++pass;
-                printf("skipToNext pass %u, m_bucketIndex=%u\n", pass, m_bucketIndex);
+                kprintf("skipToNext pass %u, m_bucketIndex=%u\n", pass, m_bucketIndex);
 #endif
                 if (m_bucketIterator.isEnd()) {
                     ++m_bucketIndex;
@@ -112,7 +112,7 @@ public:
         {
             if (!isEnd && !m_table.isEmpty() && !(m_bucketIterator != DoublyLinkedList<T>::Iterator::universalEnd())) {
 #ifdef HASHTABLE_DEBUG
-                printf("bucket iterator init!\n");
+                kprintf("bucket iterator init!\n");
 #endif
                 m_bucketIterator = m_table.m_buckets[0].chain.begin();
                 if (m_bucketIterator.isEnd())
@@ -143,7 +143,7 @@ public:
         const T& operator*() const
         {
 #ifdef HASHTABLE_DEBUG
-            printf("retrieve { bucketIndex: %u, isEnd: %u }\n", m_bucketIndex, m_isEnd);
+            kprintf("retrieve { bucketIndex: %u, isEnd: %u }\n", m_bucketIndex, m_isEnd);
 #endif
             return *m_bucketIterator;
         }
@@ -161,7 +161,7 @@ public:
             while (!m_isEnd) {
 #ifdef HASHTABLE_DEBUG
                 ++pass;
-                printf("skipToNext pass %u, m_bucketIndex=%u\n", pass, m_bucketIndex);
+                kprintf("skipToNext pass %u, m_bucketIndex=%u\n", pass, m_bucketIndex);
 #endif
                 if (m_bucketIterator.isEnd()) {
                     ++m_bucketIndex;
@@ -188,7 +188,7 @@ public:
         {
             if (!isEnd && !m_table.isEmpty() && !(m_bucketIterator != DoublyLinkedList<T>::ConstIterator::universalEnd())) {
 #ifdef HASHTABLE_DEBUG
-                printf("const bucket iterator init!\n");
+                kprintf("const bucket iterator init!\n");
 #endif
                 const DoublyLinkedList<T>& chain = m_table.m_buckets[0].chain;
                 m_bucketIterator = chain.begin();
@@ -242,9 +242,9 @@ void HashTable<T, TraitsForT>::set(T&& value)
     }
     if (size() >= capacity()) {
         rehash(size() + 1);
-        insert(std::move(value));
+        insert(move(value));
     } else {
-        bucket.chain.append(std::move(value));
+        bucket.chain.append(move(value));
     }
     m_size++;
 }
@@ -254,7 +254,7 @@ void HashTable<T, TraitsForT>::rehash(unsigned newCapacity)
 {
     newCapacity *= 2;
 #ifdef HASHTABLE_DEBUG
-    printf("rehash to %u buckets\n", newCapacity);
+    kprintf("rehash to %u buckets\n", newCapacity);
 #endif
     auto* newBuckets = new Bucket[newCapacity];
     auto* oldBuckets = m_buckets;
@@ -263,11 +263,11 @@ void HashTable<T, TraitsForT>::rehash(unsigned newCapacity)
     m_capacity = newCapacity;
 
 #ifdef HASHTABLE_DEBUG
-    printf("reinsert %u buckets\n", oldCapacity);
+    kprintf("reinsert %u buckets\n", oldCapacity);
 #endif
     for (unsigned i = 0; i < oldCapacity; ++i) {
         for (auto& value : oldBuckets[i].chain) {
-            insert(std::move(value));
+            insert(move(value));
         }
     }
 
@@ -286,7 +286,7 @@ template<typename T, typename TraitsForT>
 void HashTable<T, TraitsForT>::insert(T&& value)
 {
     auto& bucket = lookup(value);
-    bucket.chain.append(std::move(value));
+    bucket.chain.append(move(value));
 }
 
 template<typename T, typename TraitsForT>
@@ -341,9 +341,9 @@ typename HashTable<T, TraitsForT>::Bucket& HashTable<T, TraitsForT>::lookup(cons
 {
     unsigned hash = TraitsForT::hash(value);
 #ifdef HASHTABLE_DEBUG
-    printf("hash for ");
+    kprintf("hash for ");
     TraitsForT::dump(value);
-    printf(" is %u\n", hash);
+    kprintf(" is %u\n", hash);
 #endif
     if (bucketIndex)
         *bucketIndex = hash % m_capacity;
@@ -355,9 +355,9 @@ const typename HashTable<T, TraitsForT>::Bucket& HashTable<T, TraitsForT>::looku
 {
     unsigned hash = TraitsForT::hash(value);
 #ifdef HASHTABLE_DEBUG
-    printf("hash for ");
+    kprintf("hash for ");
     TraitsForT::dump(value);
-    printf(" is %u\n", hash);
+    kprintf(" is %u\n", hash);
 #endif
     if (bucketIndex)
         *bucketIndex = hash % m_capacity;
@@ -367,14 +367,14 @@ const typename HashTable<T, TraitsForT>::Bucket& HashTable<T, TraitsForT>::looku
 template<typename T, typename TraitsForT>
 void HashTable<T, TraitsForT>::dump() const
 {
-    printf("HashTable{%p} m_size=%u, m_capacity=%u, m_buckets=%p\n", this, m_size, m_capacity, m_buckets);
+    kprintf("HashTable{%p} m_size=%u, m_capacity=%u, m_buckets=%p\n", this, m_size, m_capacity, m_buckets);
     for (unsigned i = 0; i < m_capacity; ++i) {
         auto& bucket = m_buckets[i];
-        printf("Bucket %u\n", i);
+        kprintf("Bucket %u\n", i);
         for (auto& e : bucket.chain) {
-            printf("  > ");
+            kprintf("  > ");
             TraitsForT::dump(e);
-            printf("\n");
+            kprintf("\n");
         }
     }
 }

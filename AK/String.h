@@ -5,7 +5,7 @@
 #include "StringImpl.h"
 #include "Traits.h"
 #include "Vector.h"
-#include <cstdio>
+#include "kstdio.h"
 
 namespace AK {
 
@@ -20,7 +20,7 @@ public:
     }
 
     String(String&& other)
-        : m_impl(std::move(other.m_impl))
+        : m_impl(move(other.m_impl))
     {
     }
 
@@ -40,7 +40,7 @@ public:
     }
 
     String(RetainPtr<StringImpl>&& impl)
-        : m_impl(std::move(impl))
+        : m_impl(move(impl))
     {
     }
 
@@ -77,7 +77,7 @@ public:
     String& operator=(String&& other)
     {
         if (this != &other) {
-            m_impl = std::move(other.m_impl);
+            m_impl = move(other.m_impl);
         }
         return *this;
     }
@@ -91,7 +91,7 @@ private:
 template<>
 struct Traits<String> {
     static unsigned hash(const String& s) { return s.impl() ? s.impl()->hash() : 0; }
-    static void dump(const String& s) { printf("%s", s.characters()); }
+    static void dump(const String& s) { kprintf("%s", s.characters()); }
 };
 
 }

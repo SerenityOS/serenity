@@ -62,7 +62,7 @@ InodeIdentifier SyntheticFileSystem::rootInode() const
     return { id(), 1 };
 }
 
-bool SyntheticFileSystem::enumerateDirectoryInode(InodeIdentifier inode, std::function<bool(const DirectoryEntry&)> callback) const
+bool SyntheticFileSystem::enumerateDirectoryInode(InodeIdentifier inode, Function<bool(const DirectoryEntry&)> callback) const
 {
     ASSERT(inode.fileSystemID() == id());
 #ifdef SYNTHFS_DEBUG

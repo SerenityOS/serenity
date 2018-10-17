@@ -4,42 +4,57 @@
 [bits 16]
 
 boot:
-    push cs
-    pop ds
-    xor bx, bx
-    mov ah, 0x0e
-    mov si, message
+    cli
+    mov     ax, 0x8000
+    mov     ss, ax
+    mov     sp, 0xffff
+
+    push    cs
+    pop     ds
+    xor     bx, bx
+    mov     ah, 0x0e
+    mov     si, message
     lodsb
 .lewp:
-    int 0x10
+    int     0x10
     lodsb
-    cmp al, 0
-    jne .lewp
+    cmp     al, 0
+    jne     .lewp
 
-    mov bx, 0x1000
-    mov es, bx
-    xor bx, bx              ; Load kernel @ 0x10000
+    mov     bx, 0x1000
+    mov     es, bx
+    xor     bx, bx              ; Load kernel @ 0x10000
+
+    mov cx, word [cur_lba]
+.sector_loop:
+    call convert_lba_to_chs
 
     mov ah, 0x02            ; cmd 0x02 - Read Disk Sectors
-    mov al, 72              ; 72 sectors (max allowed by bochs BIOS)
-    mov ch, 0               ; track 0
-    mov cl, 10              ; sector 10
-    mov dh, 0               ; head 0
+    mov al, 1               ; 1 sector at a time
     mov dl, 0               ; drive 0 (fd0)
     int 0x13
 
     jc fug
 
-    mov ah, 0x02
-    mov al, 32
-    add bx, 0x9000
-    mov ch, 2
-    mov cl, 10
-    mov dh, 0
-    mov dl, 0
-    int 0x13
+    mov ah, 0x0e
+    mov al, '.'
+    int 0x10
 
-    jc fug
+    inc word [cur_lba]
+    mov cx, word [cur_lba]
+    cmp cx, 300
+    jz .sector_loop_end
+
+    mov bx, es
+    add bx, 0x20
+    mov es, bx
+    xor bx, bx
+
+    jmp .sector_loop
+
+.sector_loop_end:
+
+    call durk
 
     lgdt [cs:test_gdt_ptr]
 
@@ -48,6 +63,20 @@ boot:
     mov cr0, eax
 
     jmp 0x08:pmode
+
+durk:
+    push cs
+    pop ds
+    xor bx, bx
+    mov ah, 0x0e
+    mov si, msg_sectors_loaded
+    lodsb
+.lewp:
+    int 0x10
+    lodsb
+    cmp al, 0
+    jne .lewp
+    ret
 
 pmode:
 [bits 32]
@@ -59,6 +88,14 @@ pmode:
 
     mov ss, ax
     mov esp, 0x2000
+
+    xor eax, eax
+    xor ebx, ebx
+    xor ecx, ecx
+    xor edx, edx
+    xor ebp, ebp
+    xor esi, esi
+    xor edi, edi
 
     jmp 0x10000
 
@@ -95,7 +132,56 @@ fug:
 
     cli
     hlt
+
+; Input:
+;
+; AX = LBA
+;
+; Output:
+;
+; CX and DH = C/H/S address formatted for Int13,2
+
+; CL = sector (LBA % sectors_per_track) + 1
+;
+; 1.44M floppy stats:
+; (sectors_per_track: 18)
+; (heads: 2)
+; (sectors: 2880)
+
+convert_lba_to_chs:
+    mov     ax, cx
+
+    ; AX = LBA/spt, DX = LBA%spt
+    xor     dx, dx
+    div     word [sectors_per_track]
+
+    ; CL = sector (LBA % sectors_per_track) + 1
+    mov     cl, dl
+    inc     cl
+
+    ; CH = track (LBA / sectors_per_track) / heads
+    mov     ch, al
+    shr     ch, 1
+
+    ; AX = (LBA/spt)/heads, DX = (LBA/spt)%heads
+    xor     dx, dx
+    div     word [heads]
+
+    ; DH = sector (LBA / sectors_per_track) % heads
+    mov     dh, dl
+
+    ret 
     
+cur_lba:
+    dw 9
+sectors_per_track:
+    dw 18
+heads:
+    dw 2
+
+msg_sectors_loaded:
+    db "sectors loaded", 0x0d, 0x0a, 0
+
 message:
     db "boot!", 0x0d, 0x0a, 0
 
