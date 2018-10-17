@@ -5,4 +5,5 @@
 #else
 #include <cstdio>
 #define kprintf printf
+#define ksprintf sprintf
 #endif
