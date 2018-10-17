@@ -63,25 +63,6 @@ asm(
 /* Miscellaneous */
 #define BASE_FREQUENCY     1193182
 
-struct RegisterDump {
-    WORD gs;
-    WORD fs;
-    WORD es;
-    WORD ds;
-    DWORD edi;
-    DWORD esi;
-    DWORD ebp;
-    DWORD esp;
-    DWORD ebx;
-    DWORD edx;
-    DWORD ecx;
-    DWORD eax;
-    DWORD eip;
-    WORD cs;
-    WORD __csPadding;
-    DWORD eflags;
-} PACKED;
-
 void clock_handle()
 {
     IRQHandlerScope scope(IRQ_TIMER);

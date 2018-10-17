@@ -90,6 +90,10 @@ int kprintfInternal(PutChFunc putch, char* buffer, const char*& fmt, char*& ap)
                     ret += printHex(putch, bufptr, va_arg(ap, DWORD), 8);
                     break;
 
+                case 'w':
+                    ret += printHex(putch, bufptr, va_arg(ap, int), 4);
+                    break;
+
                 case 'b':
                     ret += printHex(putch, bufptr, va_arg(ap, int), 2);
                     break;

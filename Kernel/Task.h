@@ -29,6 +29,7 @@ public:
         BlockedSend = 4,
         BlockedSleep = 5,
         Terminated = 6,
+        Crashing = 7,
     };
 
     enum RingLevel {
@@ -121,6 +122,7 @@ private:
 extern void task_init();
 extern void yield();
 extern bool scheduleNewTask();
+extern void switchNow();
 extern void block(Task::State);
 extern void sleep(DWORD ticks);
 

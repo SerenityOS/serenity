@@ -185,11 +185,15 @@ void yield()
     if (!scheduleNewTask())
         return;
 
+    //kprintf("yield() jumping to new task: %x (%s)\n", current->farPtr().selector, current->name().characters());
+    switchNow();
+}
+
+void switchNow()
+{
     Descriptor& descriptor = getGDTEntry(current->selector());
     descriptor.type = 9;
     flushGDT();
-
-    //kprintf("yield() jumping to new task: %x (%s)\n", current->farPtr().selector, current->name().characters());
     asm(
         "ljmp *(%%eax)\n"
         ::"a"(&current->farPtr())
