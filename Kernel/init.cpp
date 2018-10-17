@@ -19,6 +19,7 @@
 #include <VirtualFileSystem/FullDevice.h>
 #include <VirtualFileSystem/RandomDevice.h>
 #include <VirtualFileSystem/Ext2FileSystem.h>
+#include <VirtualFileSystem/VirtualFileSystem.h>
 #include <AK/OwnPtr.h>
 
 #if 0
@@ -128,14 +129,25 @@ void init()
 
     Disk::initialize();
 
-    auto dev_hd0 = IDEDiskDevice::create();
-    auto dev_null = make<NullDevice>();
-    auto dev_full = make<FullDevice>();
-    auto dev_zero = make<ZeroDevice>();
-    auto dev_random = make<RandomDevice>();
+    auto vfs = make<VirtualFileSystem>();
 
+    auto dev_zero = make<ZeroDevice>();
+    vfs->registerCharacterDevice(1, 3, *dev_zero);
+
+    auto dev_null = make<NullDevice>();
+    vfs->registerCharacterDevice(1, 5, *dev_zero);
+
+    auto dev_full = make<FullDevice>();
+    vfs->registerCharacterDevice(1, 7, *dev_full);
+
+    auto dev_random = make<RandomDevice>();
+    vfs->registerCharacterDevice(1, 8, *dev_random);
+
+    auto dev_hd0 = IDEDiskDevice::create();
     auto e2fs = Ext2FileSystem::create(dev_hd0.copyRef());
     e2fs->initialize(); 
+
+    vfs->mountRoot(e2fs.copyRef());
 
 //    new Task(motd_main, "motd", IPC::Handle::MotdTask, Task::Ring0);
     new Task(user_main, "user", IPC::Handle::UserTask, Task::Ring3);
