@@ -1,11 +1,14 @@
 #pragma once
 
+#include <AK/Types.h>
+
 namespace PIC {
 
 void enable(BYTE number);
 void disable(BYTE number);
 void eoi(BYTE number);
 void initialize();
+word getISR();
 
 }
 

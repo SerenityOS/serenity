@@ -93,4 +93,13 @@ void initialize()
 #endif
 }
 
+word getISR()
+{
+    IO::out8(PIC0_CTL, 0x0b);
+    IO::out8(PIC1_CTL, 0x0b);
+    byte isr0 = IO::in8(PIC0_CTL);
+    byte isr1 = IO::in8(PIC1_CTL);
+    return (isr1 << 8) | isr0;
+}
+
 }
