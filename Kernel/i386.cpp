@@ -79,6 +79,11 @@ void exception_13_handler()
     kprintf("eax=%x ebx=%x ecx=%x edx=%x\n", regs.eax, regs.ebx, regs.ecx, regs.edx);
     kprintf("ebp=%x esp=%x esi=%x edi=%x\n", regs.ebp, regs.esp, regs.esi, regs.edi);
 
+    if (current->isRing0()) {
+        kprintf("Oh shit, we've crashed in ring 0 :(\n");
+        HANG;
+    }
+
     current->setState(Task::Crashing);
     if (!scheduleNewTask()) {
         kprintf("Failed to schedule a new task :(\n");
