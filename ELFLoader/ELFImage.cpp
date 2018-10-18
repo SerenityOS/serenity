@@ -1,13 +1,19 @@
 #include "ELFImage.h"
-#include <cstdio>
-#include <cstring>
-#include <cstdlib>
+#include <AK/kstdio.h>
 
-ELFImage::ELFImage(MappedFile&& file)
-    : m_file(std::move(file))
+#ifdef SERENITY_KERNEL
+ELFImage::ELFImage(const byte* data)
+    : m_data(data)
 {
     m_isValid = parse();
 }
+#else
+ELFImage::ELFImage(MappedFile&& file)
+    : m_file(move(file))
+{
+    m_isValid = parse();
+}
+#endif
 
 ELFImage::~ELFImage()
 {
@@ -41,43 +47,43 @@ unsigned ELFImage::symbolCount() const
 
 void ELFImage::dump()
 {
-    printf("AK::ELFImage{%p} {\n", this);
-    printf("    isValid: %u\n", isValid());
+    kprintf("AK::ELFImage{%p} {\n", this);
+    kprintf("    isValid: %u\n", isValid());
 
     if (!isValid()) {
-        printf("}\n");
+        kprintf("}\n");
         return;
     }
 
-    printf("    type:    %s\n", objectFileTypeToString(header().e_type));
-    printf("    machine: %u\n", header().e_machine);
-    printf("    entry:   %08x\n", header().e_entry);
-    printf("    shoff:   %u\n", header().e_shoff);
-    printf("    shnum:   %u\n", header().e_shnum);
-    printf(" shstrndx:   %u\n", header().e_shstrndx);
+    kprintf("    type:    %s\n", objectFileTypeToString(header().e_type));
+    kprintf("    machine: %u\n", header().e_machine);
+    kprintf("    entry:   %08x\n", header().e_entry);
+    kprintf("    shoff:   %u\n", header().e_shoff);
+    kprintf("    shnum:   %u\n", header().e_shnum);
+    kprintf(" shstrndx:   %u\n", header().e_shstrndx);
 
     for (unsigned i = 0; i < header().e_shnum; ++i) {
         auto& section = this->section(i);
-        printf("    Section %u: {\n", i);
-        printf("        name: %s\n", section.name());
-        printf("        type: %x\n", section.type());
-        printf("      offset: %x\n", section.offset());
-        printf("        size: %u\n", section.size());
-        printf("        \n");
-        printf("    }\n");
+        kprintf("    Section %u: {\n", i);
+        kprintf("        name: %s\n", section.name());
+        kprintf("        type: %x\n", section.type());
+        kprintf("      offset: %x\n", section.offset());
+        kprintf("        size: %u\n", section.size());
+        kprintf("        \n");
+        kprintf("    }\n");
     }
 
-    printf("Symbol count: %u (table is %u)\n", symbolCount(), m_symbolTableSectionIndex);
+    kprintf("Symbol count: %u (table is %u)\n", symbolCount(), m_symbolTableSectionIndex);
     for (unsigned i = 1; i < symbolCount(); ++i) {
         auto& sym = symbol(i);
-        printf("Symbol @%u:\n", i);
-        printf("    Name: %s\n", sym.name());
-        printf("    In section: %s\n", sectionIndexToString(sym.sectionIndex()));
-        printf("    Value: %08x\n", sym.value());
-        printf("    Size: %u\n", sym.size());
+        kprintf("Symbol @%u:\n", i);
+        kprintf("    Name: %s\n", sym.name());
+        kprintf("    In section: %s\n", sectionIndexToString(sym.sectionIndex()));
+        kprintf("    Value: %08x\n", sym.value());
+        kprintf("    Size: %u\n", sym.size());
     }
 
-    printf("}\n");
+    kprintf("}\n");
 }
 
 unsigned ELFImage::sectionCount() const
@@ -107,7 +113,7 @@ bool ELFImage::parse()
     // Then create a name-to-index map.
     for (unsigned i = 0; i < sectionCount(); ++i) {
         auto& section = this->section(i);
-        m_sections.set(section.name(), std::move(i));
+        m_sections.set(section.name(), move(i));
     }
     return true;
 }
@@ -130,7 +136,11 @@ const char* ELFImage::tableString(unsigned offset) const
 
 const char* ELFImage::rawData(unsigned offset) const
 {
+#ifdef SERENITY_KERNEL
+    return reinterpret_cast<const char*>(m_data) + offset;
+#else
     return reinterpret_cast<const char*>(m_file.pointer()) + offset;
+#endif
 }
 
 const Elf32_Ehdr& ELFImage::header() const
@@ -168,14 +178,14 @@ const ELFImage::RelocationSection ELFImage::Section::relocations() const
 {
     // FIXME: This is ugly.
     char relocationSectionName[128];
-    sprintf(relocationSectionName, ".rel%s", name());
+    ksprintf(relocationSectionName, ".rel%s", name());
 
-    printf("looking for '%s'\n", relocationSectionName);
+    kprintf("looking for '%s'\n", relocationSectionName);
     auto relocationSection = m_image.lookupSection(relocationSectionName);
     if (relocationSection.type() != SHT_REL)
         return static_cast<const RelocationSection>(m_image.section(0));
 
-    printf("Found relocations for %s in %s\n", name(), relocationSection.name());
+    kprintf("Found relocations for %s in %s\n", name(), relocationSection.name());
     return static_cast<const RelocationSection>(relocationSection);
 }
 

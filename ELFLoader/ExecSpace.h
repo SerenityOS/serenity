@@ -11,7 +11,7 @@ class ExecSpace {
 public:
     struct Area {
         Area(String&& n, char* m, unsigned s)
-            : name(std::move(n))
+            : name(move(n))
             , memory(m)
             , size(s)
         {

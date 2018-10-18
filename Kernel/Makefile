@@ -34,11 +34,16 @@ VFS_OBJS = \
     ../VirtualFileSystem/VirtualFileSystem.o \
     ../VirtualFileSystem/FileHandle.o
 
+ELFLOADER_OBJS = \
+    ../ELFLoader/ELFImage.o \
+    ../ELFLoader/ELFLoader.o \
+    ../ELFLoader/ExecSpace.o
+
 AK_OBJS = \
     ../AK/String.o \
     ../AK/StringImpl.o
 
-OBJS = $(KERNEL_OBJS) $(VFS_OBJS) $(AK_OBJS)
+OBJS = $(KERNEL_OBJS) $(VFS_OBJS) $(AK_OBJS) $(ELFLOADER_OBJS)
 
 NASM = nasm
 KERNEL = kernel

@@ -1,13 +1,21 @@
 #pragma once
 
-#include <AK/HashMap.h>
+#ifndef SERENITY_KERNEL
 #include <AK/MappedFile.h>
+#endif
+
 #include <AK/OwnPtr.h>
+#include <AK/HashMap.h>
+#include <AK/String.h>
 #include "elf.h"
 
 class ELFImage {
 public:
+#ifdef SERENITY_KERNEL
+    explicit ELFImage(const byte* data);
+#else
     explicit ELFImage(MappedFile&&);
+#endif
     ~ELFImage();
     void dump();
     bool isValid() const { return m_isValid; }
@@ -123,7 +131,11 @@ private:
     const char* sectionHeaderTableString(unsigned offset) const;
     const char* sectionIndexToString(unsigned index);
 
+#ifdef SERENITY_KERNEL
+    const byte* m_data;
+#else
     MappedFile m_file;
+#endif
     HashMap<String, unsigned> m_sections;
     bool m_isValid { false };
     unsigned m_symbolTableSectionIndex { 0 };

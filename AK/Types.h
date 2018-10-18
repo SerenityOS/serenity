@@ -13,6 +13,8 @@ typedef signed long long int signed_qword;
 
 typedef dword size_t;
 typedef signed_dword ssize_t;
+
+typedef signed_dword ptrdiff_t;
 #else
 #include <stdint.h>
 #include <sys/types.h>
