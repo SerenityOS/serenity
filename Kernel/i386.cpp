@@ -4,6 +4,7 @@
 #include "i386.h"
 #include "Assertions.h"
 #include "Task.h"
+#include "MemoryManager.h"
 
 struct DescriptorTablePointer {
     WORD size;
@@ -67,8 +68,8 @@ asm( \
     "    iret\n" \
 );
 
-EH_ENTRY(13)
-
+// 13: General Protection Fault
+EH_ENTRY(13);
 void exception_13_handler()
 {
     auto& regs = *reinterpret_cast<RegisterDump*>(exception_state_dump);
@@ -86,6 +87,42 @@ void exception_13_handler()
 
     // NOTE: This will schedule a new task.
     Task::taskDidCrash(current);
+}
+
+// 14: Page Fault
+EH_ENTRY(14);
+void exception_14_handler()
+{
+    dword faultAddress;
+    asm ("movl %%cr2, %%eax":"=a"(faultAddress));
+
+    auto& regs = *reinterpret_cast<RegisterDump*>(exception_state_dump);
+    kprintf("%s page fault: %u(%s), %s laddr=%p\n",
+        current->isRing0() ? "Kernel" : "User",
+        current->pid(),
+        current->name().characters(),
+        exception_code & 2 ? "write" : "read",
+        faultAddress);
+
+    kprintf("exception code: %w\n", exception_code);
+    kprintf("pc=%w:%x ds=%w es=%w fs=%w gs=%w\n", regs.cs, regs.eip, regs.ds, regs.es, regs.fs, regs.gs);
+    kprintf("eax=%x ebx=%x ecx=%x edx=%x\n", regs.eax, regs.ebx, regs.ecx, regs.edx);
+    kprintf("ebp=%x esp=%x esi=%x edi=%x\n", regs.ebp, regs.esp, regs.esi, regs.edi);
+
+    if (current->isRing0())
+        HANG;
+
+    auto response = MemoryManager::the().handlePageFault(PageFault(exception_code, LinearAddress(faultAddress)));
+
+    if (response == PageFaultResponse::ShouldCrash) {
+        kprintf("Crashing after unresolved page fault\n");
+        // NOTE: This will schedule a new task.
+        Task::taskDidCrash(current);
+    } else if (response == PageFaultResponse::Continue) {
+        kprintf("Continuing after resolved page fault\n");
+    } else {
+        ASSERT_NOT_REACHED();
+    }
 }
 
 #define EH(i, msg) \
@@ -227,7 +264,7 @@ void idt_init()
     registerInterruptHandler(0x0b, _exception11);
     registerInterruptHandler(0x0c, _exception12);
     registerInterruptHandler(0x0d, exception_13_entry);
-    registerInterruptHandler(0x0e, _exception14);
+    registerInterruptHandler(0x0e, exception_14_entry);
     registerInterruptHandler(0x0f, _exception15);
     registerInterruptHandler(0x10, _exception16);
 

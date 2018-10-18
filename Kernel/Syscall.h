@@ -19,9 +19,33 @@ enum Function {
 };
 
 void initialize();
-DWORD invoke(DWORD function);
-DWORD invoke(DWORD function, DWORD arg1);
-DWORD invoke(DWORD function, DWORD arg1, DWORD arg2);
-DWORD invoke(DWORD function, DWORD arg1, DWORD arg2, DWORD arg3);
+
+inline DWORD invoke(DWORD function)
+{
+    DWORD result;
+    asm("int $0x80":"=a"(result):"a"(function));
+    return result;
+}
+
+inline DWORD invoke(DWORD function, DWORD arg1)
+{
+    DWORD result;
+    asm("int $0x80":"=a"(result):"a"(function),"d"(arg1));
+    return result;
+}
+
+inline DWORD invoke(DWORD function, DWORD arg1, DWORD arg2)
+{
+    DWORD result;
+    asm("int $0x80":"=a"(result):"a"(function),"d"(arg1),"c"(arg2));
+    return result;
+}
+
+inline DWORD invoke(DWORD function, DWORD arg1, DWORD arg2, DWORD arg3)
+{
+    DWORD result;
+    asm volatile("int $0x80":"=a"(result):"a"(function),"d"(arg1),"c"(arg2),"b"(arg3));
+    return result;
+}
 
 }

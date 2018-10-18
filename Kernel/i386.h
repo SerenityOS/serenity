@@ -2,6 +2,8 @@
 
 #include "types.h"
 
+#define PAGE_SIZE 4096u
+
 union Descriptor {
     struct {
         WORD limit_lo;
@@ -76,6 +78,42 @@ void writeGDTEntry(WORD selector, Descriptor&);
 /* Map IRQ0-15 @ ISR 0x50-0x5F */
 #define IRQ_VECTOR_BASE 0x50
 
+struct PageFaultFlags {
+enum Flags {
+    NotPresent = 0x00,
+    ProtectionViolation = 0x01,
+    Read = 0x00,
+    Write = 0x02,
+    UserMode = 0x04,
+    SupervisorMode = 0x00,
+    InstructionFetch = 0x08,
+};
+};
+
+class PageFault {
+public:
+    PageFault(word code, LinearAddress address)
+        : m_code(code)
+        , m_address(address)
+    {
+    }
+
+    LinearAddress address() const { return m_address; }
+    word code() const { return m_code; }
+
+    bool isNotPresent() const { return (m_code & 1) == PageFaultFlags::NotPresent; }
+    bool isProtectionViolation() const { return (m_code & 1) == PageFaultFlags::ProtectionViolation; }
+    bool isRead() const { return (m_code & 2) == PageFaultFlags::Read; }
+    bool isWrite() const { return (m_code & 2) == PageFaultFlags::Write; }
+    bool isUser() const { return (m_code & 4) == PageFaultFlags::UserMode; }
+    bool isSupervisor() const { return (m_code & 4) == PageFaultFlags::SupervisorMode; }
+    bool isInstructionFetch() const { return (m_code & 8) == PageFaultFlags::InstructionFetch; }
+
+private:
+    word m_code;
+    LinearAddress m_address;
+};
+
 struct RegisterDump {
     WORD gs;
     WORD fs;
@@ -94,4 +132,9 @@ struct RegisterDump {
     WORD __csPadding;
     DWORD eflags;
 } PACKED;
+
+inline constexpr dword pageBaseOf(dword address)
+{
+    return address & 0xfffff000;
+}
 
