@@ -1,35 +1,38 @@
 #pragma once
 
-#include <AK/Types.h>
+#include "types.h"
+#include "i386.h"
+#include <AK/Retainable.h>
+#include <AK/RetainPtr.h>
+#include <AK/Vector.h>
+#include <AK/HashMap.h>
 
-class PhysicalAddress {
-public:
-    PhysicalAddress() { }
-    explicit PhysicalAddress(dword address) : m_address(address) { }
+class Task;
 
-    dword get() const { return m_address; }
-    void set(dword address) { m_address = address; }
-    void mask(dword m) { m_address &= m; }
-
-private:
-    dword m_address { 0 };
+enum class PageFaultResponse {
+    ShouldCrash,
+    Continue,
 };
 
-class LinearAddress {
+struct Zone : public Retainable<Zone> {
 public:
-    LinearAddress() { }
-    explicit LinearAddress(dword address) : m_address(address) { }
+    ~Zone() { }
+    size_t size() const { return m_pages.size() * PAGE_SIZE; }
 
-    LinearAddress offset(dword o) const { return LinearAddress(m_address + o); }
-    dword get() const { return m_address; }
-    void set(dword address) { m_address = address; }
-    void mask(dword m) { m_address &= m; }
-
-    bool operator==(const LinearAddress& other) const { return m_address == other.m_address; }
+    const Vector<PhysicalAddress>& pages() const { return m_pages; }
 
 private:
-    dword m_address { 0 };
+    friend class MemoryManager;
+    friend bool copyToZone(Zone&, const void* data, size_t);
+    explicit Zone(Vector<PhysicalAddress>&& pages)
+        : m_pages(move(pages))
+    {
+    }
+
+    Vector<PhysicalAddress> m_pages;
 };
+
+bool copyToZone(Zone&, const void* data, size_t);
 
 class MemoryManager {
 public:
@@ -38,6 +41,17 @@ public:
     PhysicalAddress pageDirectoryBase() const { return PhysicalAddress(reinterpret_cast<dword>(m_pageDirectory)); }
 
     static void initialize();
+
+    PageFaultResponse handlePageFault(const PageFault&);
+
+    RetainPtr<Zone> createZone(size_t);
+
+    // HACK: don't use this jeez :(
+    byte* quickMapOnePage(PhysicalAddress);
+
+    bool mapZonesForTask(Task&);
+    bool unmapZonesForTask(Task&);
+
 private:
     MemoryManager();
     ~MemoryManager();
@@ -45,6 +59,8 @@ private:
     void initializePaging();
 
     void identityMap(LinearAddress, size_t length);
+
+    Vector<PhysicalAddress> allocatePhysicalPages(size_t count);
 
     struct PageDirectoryEntry {
         explicit PageDirectoryEntry(dword* pde) : m_pde(pde) { }
@@ -128,4 +144,9 @@ private:
 
     dword* m_pageDirectory;
     dword* m_pageTableZero;
+    dword* m_pageTableOne;
+
+    HashMap<int, RetainPtr<Zone>> m_zones;
+
+    Vector<PhysicalAddress> m_freePages;
 };

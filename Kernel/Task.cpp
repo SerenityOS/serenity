@@ -92,6 +92,14 @@ void Task::allocateLDT()
     m_tss.ldt = newLDTSelector;
 }
 
+bool Task::mapZone(LinearAddress address, RetainPtr<Zone>&& zone)
+{
+    // FIXME: This needs sanity checks. What if this overlaps existing zones?
+    kprintf("mapped zone with size %u at %x\n", zone->size(), address.get());
+    m_mappedZones.append({ address, move(zone) });
+    return true;
+}
+
 Task::Task(void (*e)(), const char* n, IPC::Handle h, RingLevel ring)
     : m_name(n)
     , m_entry(e)
@@ -100,6 +108,19 @@ Task::Task(void (*e)(), const char* n, IPC::Handle h, RingLevel ring)
     , m_state(Runnable)
     , m_ring(ring)
 {
+    if (!isRing0()) {
+        auto zone = MemoryManager::the().createZone(PAGE_SIZE);
+        ASSERT(zone);
+
+        kprintf("New task zone: { size: %u }\n", zone->size());
+
+        bool success = mapZone(LinearAddress(0x300000), zone.copyRef());
+        ASSERT(success);
+
+        success = copyToZone(*zone, (void*)e, PAGE_SIZE);
+        ASSERT(success);
+    }
+
     memset(&m_tss, 0, sizeof(m_tss));
     memset(&m_ldtEntries, 0, sizeof(m_ldtEntries));
 
@@ -133,7 +154,13 @@ Task::Task(void (*e)(), const char* n, IPC::Handle h, RingLevel ring)
 
     m_tss.cr3 = MemoryManager::the().pageDirectoryBase().get();
 
-    m_tss.eip = (DWORD)m_entry;
+    if (isRing0()) {
+        m_tss.eip = (DWORD)m_entry;
+    } else {
+        m_tss.eip = m_mappedZones[0].linearAddress.get();
+    }
+
+    kprintf("basically ready\n");
 
     // NOTE: Each task gets 4KB of stack.
     // This memory is leaked ATM.
@@ -165,7 +192,7 @@ Task::Task(void (*e)(), const char* n, IPC::Handle h, RingLevel ring)
 
     system.nprocess++;
 
-    kprintf("Task %u (%s) spawned @ %p\n", m_pid, m_name.characters(), m_entry);
+    kprintf("Task %u (%s) spawned @ %p\n", m_pid, m_name.characters(), m_tss.eip);
 }
 
 Task::~Task()
@@ -299,6 +326,11 @@ static bool contextSwitch(Task* t)
     // mark it as runnable for the next round.
     if (current->state() == Task::Running)
         current->setState(Task::Runnable);
+
+    bool success = MemoryManager::the().unmapZonesForTask(*current);
+    ASSERT(success);
+    success = MemoryManager::the().mapZonesForTask(*t);
+    ASSERT(success);
 
     current = t;
     t->setState(Task::Running);

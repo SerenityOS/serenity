@@ -68,7 +68,7 @@ static void user_main()
     DO_SYSCALL_A3(0x3000, 2, 3, 4);
     // Crash ourselves!
     char* x = reinterpret_cast<char*>(0xbeefbabe);
-    //*x = 1;
+    *x = 1;
     HANG;
     for (;;) {
         // nothing?
@@ -158,7 +158,7 @@ void init()
 
     //vfs->listDirectory("/");
 
-#if 1
+#if 0
     {
         auto motdFile = vfs->open("/motd.txt");
         ASSERT(motdFile);

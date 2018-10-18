@@ -11,6 +11,7 @@
 //#define TASK_SANITY_CHECKS
 
 class FileHandle;
+class Zone;
 
 class Task : public InlineLinkedListNode<Task> {
     friend class InlineLinkedListNode<Task>;
@@ -97,6 +98,9 @@ public:
     static void taskDidCrash(Task*);
 
 private:
+    friend class MemoryManager;
+
+    bool mapZone(LinearAddress, RetainPtr<Zone>&&);
     FileHandle* openFile(String&&);
 
     void allocateLDT();
@@ -120,6 +124,13 @@ private:
     Vector<OwnPtr<FileHandle>> m_fileHandles;
     RingLevel m_ring { Ring0 };
     int m_error { 0 };
+
+    struct MappedZone {
+        LinearAddress linearAddress;
+        RetainPtr<Zone> zone;
+    };
+
+    Vector<MappedZone> m_mappedZones;
 };
 
 extern void task_init();
