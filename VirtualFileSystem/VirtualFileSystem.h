@@ -35,6 +35,8 @@ public:
         CharacterDevice* m_characterDevice { nullptr };
     };
 
+    static VirtualFileSystem& the();
+
     VirtualFileSystem();
     ~VirtualFileSystem();
 
