@@ -73,12 +73,22 @@ EH_ENTRY(13);
 void exception_13_handler()
 {
     auto& regs = *reinterpret_cast<RegisterDump*>(exception_state_dump);
-    kprintf("Process crash: %u(%s)\n", current->pid(), current->name().characters());
+    kprintf("%s crash: %u(%s)\n", current->isRing0() ? "Kernel" : "Process", current->pid(), current->name().characters());
+
+    word ss;
+    dword esp;
+    if (current->isRing0()) {
+        ss = regs.ds;
+        esp = regs.esp;
+    } else {
+        ss = regs.ss_if_crossRing;
+        esp = regs.esp_if_crossRing;
+    }
 
     kprintf("exception code: %w\n", exception_code);
     kprintf("pc=%w:%x ds=%w es=%w fs=%w gs=%w\n", regs.cs, regs.eip, regs.ds, regs.es, regs.fs, regs.gs);
     kprintf("eax=%x ebx=%x ecx=%x edx=%x\n", regs.eax, regs.ebx, regs.ecx, regs.edx);
-    kprintf("ebp=%x esp=%x esi=%x edi=%x\n", regs.ebp, regs.esp, regs.esi, regs.edi);
+    kprintf("ebp=%x esp=%x esi=%x edi=%x\n", regs.ebp, esp, regs.esi, regs.edi);
 
     if (current->isRing0()) {
         kprintf("Oh shit, we've crashed in ring 0 :(\n");
@@ -104,10 +114,20 @@ void exception_14_handler()
         exception_code & 2 ? "write" : "read",
         faultAddress);
 
+    word ss;
+    dword esp;
+    if (current->isRing0()) {
+        ss = regs.ds;
+        esp = regs.esp;
+    } else {
+        ss = regs.ss_if_crossRing;
+        esp = regs.esp_if_crossRing;
+    }
+
     kprintf("exception code: %w\n", exception_code);
     kprintf("pc=%w:%x ds=%w es=%w fs=%w gs=%w\n", regs.cs, regs.eip, regs.ds, regs.es, regs.fs, regs.gs);
     kprintf("eax=%x ebx=%x ecx=%x edx=%x\n", regs.eax, regs.ebx, regs.ecx, regs.edx);
-    kprintf("ebp=%x esp=%x esi=%x edi=%x\n", regs.ebp, regs.esp, regs.esi, regs.edi);
+    kprintf("ebp=%x esp=%x esi=%x edi=%x\n", regs.ebp, esp, regs.esi, regs.edi);
 
     if (current->isRing0())
         HANG;

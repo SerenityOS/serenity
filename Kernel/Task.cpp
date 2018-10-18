@@ -74,7 +74,7 @@ void Task::allocateLDT()
     static const WORD numLDTEntries = 4;
     WORD newLDTSelector = allocateGDTEntry();
     m_ldtEntries = new Descriptor[numLDTEntries];
-#if 1
+#if 0
     kprintf("new ldt selector = %x\n", newLDTSelector);
     kprintf("new ldt table at = %p\n", m_ldtEntries);
     kprintf("new ldt table size = %u\n", (numLDTEntries * 8) - 1);
@@ -92,12 +92,15 @@ void Task::allocateLDT()
     m_tss.ldt = newLDTSelector;
 }
 
-bool Task::mapZone(LinearAddress address, RetainPtr<Zone>&& zone)
+Task::Region* Task::allocateRegion(size_t size, String&& name)
 {
-    // FIXME: This needs sanity checks. What if this overlaps existing zones?
-    kprintf("mapped zone with size %u at %x\n", zone->size(), address.get());
-    m_mappedZones.append({ address, move(zone) });
-    return true;
+    // FIXME: This needs sanity checks. What if this overlaps existing regions?
+
+    auto zone = MemoryManager::the().createZone(PAGE_SIZE);
+    ASSERT(zone);
+    m_regions.append(make<Region>(m_nextRegion, size, move(zone), move(name)));
+    m_nextRegion = m_nextRegion.offset(size).offset(16384);
+    return m_regions.last().ptr();
 }
 
 Task::Task(void (*e)(), const char* n, IPC::Handle h, RingLevel ring)
@@ -108,16 +111,13 @@ Task::Task(void (*e)(), const char* n, IPC::Handle h, RingLevel ring)
     , m_state(Runnable)
     , m_ring(ring)
 {
+    m_nextRegion = LinearAddress(0x600000);
+
+    Region* codeRegion = nullptr;
     if (!isRing0()) {
-        auto zone = MemoryManager::the().createZone(PAGE_SIZE);
-        ASSERT(zone);
-
-        kprintf("New task zone: { size: %u }\n", zone->size());
-
-        bool success = mapZone(LinearAddress(0x300000), zone.copyRef());
-        ASSERT(success);
-
-        success = copyToZone(*zone, (void*)e, PAGE_SIZE);
+        codeRegion = allocateRegion(4096, "code");
+        ASSERT(codeRegion);
+        bool success = copyToZone(*codeRegion->zone, (void*)e, PAGE_SIZE);
         ASSERT(success);
     }
 
@@ -157,22 +157,31 @@ Task::Task(void (*e)(), const char* n, IPC::Handle h, RingLevel ring)
     if (isRing0()) {
         m_tss.eip = (DWORD)m_entry;
     } else {
-        m_tss.eip = m_mappedZones[0].linearAddress.get();
+        m_tss.eip = codeRegion->linearAddress.get();
     }
 
     kprintf("basically ready\n");
 
     // NOTE: Each task gets 4KB of stack.
-    // This memory is leaked ATM.
-    // But uh, there's also no process termination, so I guess it's not technically leaked...
     static const DWORD defaultStackSize = 4096;
-    m_stackTop = ((DWORD)kmalloc(defaultStackSize) + defaultStackSize) & 0xffffff8;
-    m_tss.esp = m_stackTop;
+
+    if (isRing0()) {
+        // FIXME: This memory is leaked.
+        // But uh, there's also no kernel task termination, so I guess it's not technically leaked...
+        m_stackTop = ((DWORD)kmalloc(defaultStackSize) + defaultStackSize) & 0xffffff8;
+        m_tss.esp = m_stackTop;
+    } else {
+        auto* region = allocateRegion(defaultStackSize, "stack");
+        ASSERT(region);
+        m_stackTop = region->linearAddress.offset(defaultStackSize).get() & 0xfffffff8;
+        m_tss.esp = m_stackTop;
+    }
 
     if (ring == Ring3) {
         // Set up a separate stack for Ring0.
         // FIXME: Don't leak this stack either.
-        DWORD ring0StackTop = ((DWORD)kmalloc(defaultStackSize) + defaultStackSize) & 0xffffff8;
+        m_kernelStack = kmalloc(defaultStackSize);
+        DWORD ring0StackTop = ((DWORD)m_kernelStack + defaultStackSize) & 0xffffff8;
         m_tss.ss0 = 0x10;
         m_tss.esp0 = ring0StackTop;
     }
@@ -200,11 +209,36 @@ Task::~Task()
     system.nprocess--;
     delete [] m_ldtEntries;
     m_ldtEntries = nullptr;
+
+    // FIXME: The task's kernel stack is currently leaked, because otherwise we GPF.
+    //        This obviously needs figuring out.
+#if 0
+    if (m_kernelStack) {
+        kfree(m_kernelStack);
+        m_kernelStack = nullptr;
+    }
+#endif
+}
+
+void Task::dumpRegions()
+{
+    kprintf("Task %s(%u) regions:\n", name().characters(), pid());
+    kprintf("BEGIN       END         SIZE        NAME\n");
+    for (auto& region : m_regions) {
+        kprintf("%x -- %x    %x    %s\n",
+            region->linearAddress.get(),
+            region->linearAddress.offset(region->size - 1).get(),
+            region->size,
+            region->name.characters());
+    }
 }
 
 void Task::taskDidCrash(Task* crashedTask)
 {
     crashedTask->setState(Crashing);
+
+    crashedTask->dumpRegions();
+
     s_tasks->remove(crashedTask);
 
     if (!scheduleNewTask()) {
@@ -327,9 +361,9 @@ static bool contextSwitch(Task* t)
     if (current->state() == Task::Running)
         current->setState(Task::Runnable);
 
-    bool success = MemoryManager::the().unmapZonesForTask(*current);
+    bool success = MemoryManager::the().unmapRegionsForTask(*current);
     ASSERT(success);
-    success = MemoryManager::the().mapZonesForTask(*t);
+    success = MemoryManager::the().mapRegionsForTask(*t);
     ASSERT(success);
 
     current = t;
@@ -522,4 +556,16 @@ Task* Task::kernelTask()
 void Task::setError(int error)
 {
     m_error = error;
+}
+
+Task::Region::Region(LinearAddress a, size_t s, RetainPtr<Zone>&& z, String&& n)
+    : linearAddress(a)
+    , size(s)
+    , zone(move(z))
+    , name(move(n))
+{
+}
+
+Task::Region::~Region()
+{
 }

@@ -97,10 +97,11 @@ public:
 
     static void taskDidCrash(Task*);
 
+    void dumpRegions();
+
 private:
     friend class MemoryManager;
 
-    bool mapZone(LinearAddress, RetainPtr<Zone>&&);
     FileHandle* openFile(String&&);
 
     void allocateLDT();
@@ -124,13 +125,22 @@ private:
     Vector<OwnPtr<FileHandle>> m_fileHandles;
     RingLevel m_ring { Ring0 };
     int m_error { 0 };
+    void* m_kernelStack { nullptr };
 
-    struct MappedZone {
+    struct Region {
+        Region(LinearAddress, size_t, RetainPtr<Zone>&&, String&&);
+        ~Region();
         LinearAddress linearAddress;
+        size_t size { 0 };
         RetainPtr<Zone> zone;
+        String name;
     };
+    Region* allocateRegion(size_t, String&& name);
 
-    Vector<MappedZone> m_mappedZones;
+    Vector<OwnPtr<Region>> m_regions;
+
+    // FIXME: Implement some kind of ASLR?
+    LinearAddress m_nextRegion;
 };
 
 extern void task_init();
