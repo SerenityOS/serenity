@@ -1,7 +1,7 @@
 #include "ExecSpace.h"
 #include "ELFLoader.h"
 #include <AK/TemporaryFile.h>
-#include <unistd.h>
+#include <AK/Types.h>
 
 ExecSpace::ExecSpace()
 {
@@ -19,7 +19,7 @@ void ExecSpace::initializeBuiltins()
 
 bool ExecSpace::loadELF(MappedFile&& file)
 {
-    ELFLoader loader(*this, std::move(file));
+    ELFLoader loader(*this, move(file));
     if (!loader.load())
         return false;
     printf("[ExecSpace] ELF loaded, symbol map now:\n");
@@ -34,6 +34,8 @@ bool ExecSpace::loadELF(MappedFile&& file)
 
 static void disassemble(const char* data, size_t length)
 {
+#ifdef SERENITY_KERNEL
+#else
     if (!length)
         return;
 
@@ -52,6 +54,7 @@ static void disassemble(const char* data, size_t length)
     char cmdbuf[128];
     sprintf(cmdbuf, "nasm -f bin -o /dev/stdout %s | ndisasm -b32 -", temp.fileName().characters());
     system(cmdbuf);
+#endif
 }
 
 char* ExecSpace::symbolPtr(const char* name)
@@ -65,16 +68,15 @@ char* ExecSpace::symbolPtr(const char* name)
     return nullptr;
 }
 
-
 char* ExecSpace::allocateArea(String&& name, unsigned size)
 {
-    char* ptr = static_cast<char*>(malloc(size));
+    char* ptr = static_cast<char*>(kmalloc(size));
     ASSERT(ptr);
-    m_areas.append(make<Area>(std::move(name), ptr, size));
+    m_areas.append(make<Area>(move(name), ptr, size));
     return ptr;
 }
 
 void ExecSpace::addSymbol(String&& name, char* ptr, unsigned size)
 {
-    m_symbols.set(std::move(name), { ptr, size });
+    m_symbols.set(move(name), { ptr, size });
 }
