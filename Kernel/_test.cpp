@@ -2,7 +2,7 @@
 
 using namespace Userspace;
 
-int elf_entry()
+extern "C" int elf_entry()
 {
     int fd = open("/Banner.txt");
     char buf[2048];

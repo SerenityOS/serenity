@@ -2,8 +2,8 @@
 #include <AK/kstdio.h>
 
 #ifdef SERENITY_KERNEL
-ELFImage::ELFImage(const byte* data)
-    : m_data(data)
+ELFImage::ELFImage(ByteBuffer&& buffer)
+    : m_buffer(buffer)
 {
     m_isValid = parse();
 }
@@ -137,7 +137,7 @@ const char* ELFImage::tableString(unsigned offset) const
 const char* ELFImage::rawData(unsigned offset) const
 {
 #ifdef SERENITY_KERNEL
-    return reinterpret_cast<const char*>(m_data) + offset;
+    return reinterpret_cast<const char*>(m_buffer.pointer()) + offset;
 #else
     return reinterpret_cast<const char*>(m_file.pointer()) + offset;
 #endif
@@ -178,7 +178,7 @@ const ELFImage::RelocationSection ELFImage::Section::relocations() const
 {
     // FIXME: This is ugly.
     char relocationSectionName[128];
-    ksprintf(relocationSectionName, ".rel%s", name());
+    int x = ksprintf(relocationSectionName, ".rel%s", name());
 
     kprintf("looking for '%s'\n", relocationSectionName);
     auto relocationSection = m_image.lookupSection(relocationSectionName);
