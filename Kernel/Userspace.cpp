@@ -4,6 +4,14 @@
 
 namespace Userspace {
 
+int strlen(const char* str)
+{
+    int len = 0;
+    while (*(str++))
+        ++len;
+    return len;
+}
+
 int open(const char* path)
 {
     return DO_SYSCALL_A2(Syscall::PosixOpen, path, strlen(path));
