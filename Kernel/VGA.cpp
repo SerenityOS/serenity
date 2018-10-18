@@ -140,6 +140,7 @@ int ksprintf(char* buffer, const char* fmt, ...)
     va_list ap;
     va_start(ap, fmt);
     int ret = kprintfInternal(buffer_putch, buffer, fmt, ap);
+    buffer[ret] = '\0';
     va_end(ap);
     return ret;
 }
