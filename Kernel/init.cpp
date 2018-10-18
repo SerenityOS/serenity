@@ -76,6 +76,14 @@ static void user_main()
     }
 }
 
+static void user_kprintf_main() NORETURN;
+static void user_kprintf_main()
+{
+    DO_SYSCALL_A1(0x4000, 0);
+    kprintf("This should not work!\n");
+    HANG;
+}
+
 system_t system;
 
 void banner()
@@ -155,10 +163,11 @@ void init()
 
     //new Task(motd_main, "motd", IPC::Handle::MotdTask, Task::Ring0);
     new Task(user_main, "user", IPC::Handle::UserTask, Task::Ring3);
+    new Task(user_kprintf_main, "user_kprintf", IPC::Handle::UserTask, Task::Ring3);
 
     //vfs->listDirectory("/");
 
-#if 0
+#if 1
     {
         auto motdFile = vfs->open("/motd.txt");
         ASSERT(motdFile);

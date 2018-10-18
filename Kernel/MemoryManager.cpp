@@ -68,9 +68,9 @@ auto MemoryManager::ensurePTE(LinearAddress linearAddress) -> PageTableEntry
             pde.setWritable(true);
         } else if (pageDirectoryIndex == 1) {
             pde.setPageTableBase((dword)m_pageTableOne);
-            pde.setUserAllowed(false);
+            pde.setUserAllowed(true);
             pde.setPresent(true);
-            pde.setWritable(false);
+            pde.setWritable(true);
         } else {
             // FIXME: We need an allocator!
             ASSERT_NOT_REACHED();
@@ -120,7 +120,6 @@ RetainPtr<Zone> MemoryManager::createZone(size_t size)
 
 Vector<PhysicalAddress> MemoryManager::allocatePhysicalPages(size_t count)
 {
-    kprintf("MM: alloc %u pages from %u available\n", count, m_freePages.size());
     if (count > m_freePages.size())
         return { };
 
@@ -128,7 +127,6 @@ Vector<PhysicalAddress> MemoryManager::allocatePhysicalPages(size_t count)
     pages.ensureCapacity(count);
     for (size_t i = 0; i < count; ++i)
         pages.append(m_freePages.takeLast());
-    kprintf("MM: returning the pages (%u of them)\n", pages.size());
     return pages;
 }
 
@@ -142,19 +140,24 @@ byte* MemoryManager::quickMapOnePage(PhysicalAddress physicalAddress)
     return (byte*)(4 * MB);
 }
 
-bool MemoryManager::unmapZonesForTask(Task& task)
+bool MemoryManager::unmapRegionsForTask(Task& task)
 {
     return true;
 }
 
-bool MemoryManager::mapZonesForTask(Task& task)
+bool MemoryManager::mapRegionsForTask(Task& task)
 {
-    for (auto& mappedZone : task.m_mappedZones) {
-        auto& zone = *mappedZone.zone;
+    for (auto& region : task.m_regions) {
+        auto& zone = *region->zone;
         for (size_t i = 0; i < zone.m_pages.size(); ++i) {
-            auto pte = ensurePTE(mappedZone.linearAddress.offset(i * PAGE_SIZE));
+            auto laddr = region->linearAddress.offset(i * PAGE_SIZE);
+            auto pte = ensurePTE(laddr);
             pte.setPhysicalPageBase(zone.m_pages[i].get());
             pte.setPresent(true);
+            pte.setWritable(true);
+            pte.setUserAllowed(!task.isRing0());
+
+            kprintf("MM: >> Mapped L%x => P%x <<\n", laddr, zone.m_pages[i].get());
         }
     }
     return true;

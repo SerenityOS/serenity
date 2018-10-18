@@ -49,8 +49,8 @@ public:
     // HACK: don't use this jeez :(
     byte* quickMapOnePage(PhysicalAddress);
 
-    bool mapZonesForTask(Task&);
-    bool unmapZonesForTask(Task&);
+    bool mapRegionsForTask(Task&);
+    bool unmapRegionsForTask(Task&);
 
 private:
     MemoryManager();

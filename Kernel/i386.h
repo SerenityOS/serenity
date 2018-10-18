@@ -131,6 +131,8 @@ struct RegisterDump {
     WORD cs;
     WORD __csPadding;
     DWORD eflags;
+    DWORD esp_if_crossRing;
+    WORD ss_if_crossRing;
 } PACKED;
 
 inline constexpr dword pageBaseOf(dword address)
