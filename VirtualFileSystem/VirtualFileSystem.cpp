@@ -12,8 +12,17 @@ static dword encodedDevice(unsigned major, unsigned minor)
     return (minor & 0xff) | (major << 8) | ((minor & ~0xff) << 12);
 }
 
+static VirtualFileSystem* s_the;
+
+VirtualFileSystem& VirtualFileSystem::the()
+{
+    ASSERT(s_the);
+    return *s_the;
+}
+
 VirtualFileSystem::VirtualFileSystem()
 {
+    s_the = this;
     m_maxNodeCount = 16;
     m_nodes = reinterpret_cast<Node*>(kmalloc(sizeof(Node) * maxNodeCount()));
     memset(m_nodes, 0, sizeof(Node) * maxNodeCount());
