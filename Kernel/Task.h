@@ -57,7 +57,6 @@ public:
     const FarPtr& farPtr() const { return m_farPtr; }
 
     FileHandle* fileHandleIfExists(int fd);
-    FileHandle* createFileHandle();
 
     bool acceptsMessageFrom(Task&);
 
@@ -118,7 +117,7 @@ private:
     DWORD m_wakeupTime { 0 };
     TSS32 m_tss;
     Descriptor* m_ldtEntries { nullptr };
-    Vector<FileHandle*> m_fileHandles;
+    Vector<OwnPtr<FileHandle>> m_fileHandles;
     RingLevel m_ring { Ring0 };
     int m_error { 0 };
 };
