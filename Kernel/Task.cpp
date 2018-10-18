@@ -5,7 +5,8 @@
 #include "StdLib.h"
 #include "i386.h"
 #include "system.h"
-#include "FileSystem.h"
+#include <VirtualFileSystem/FileHandle.h>
+#include <VirtualFileSystem/VirtualFileSystem.h>
 #include "MemoryManager.h"
 
 Task* current;
@@ -343,76 +344,35 @@ Task* Task::fromIPCHandle(IPC::Handle handle)
     return nullptr;
 }
 
-class FileHandle {
-public:
-    FileHandle() { }
-    ~FileHandle() { }
-
-    int seek(int offset);
-    size_t read(void* buffer, int bufferSize);
-    int fd() const { return m_fd; }
-
-    static FileHandle* fromFileDescriptor(int fd);
-
-//private:
-    RefPtr<FileSystem::VirtualNode> m_vnode;
-    int m_fd { -1 };
-    size_t m_offset { 0 };
-};
-
-size_t FileHandle::read(void* buffer, int bufferSize)
-{
-    Task::checkSanity("FileHandle::read");
-    size_t nread = m_vnode->read((BYTE*)buffer, m_offset, bufferSize);
-    m_offset += nread;
-    return nread;
-}
-
-int FileHandle::seek(int offset)
-{
-    if (!m_vnode)
-        return -1;
-    ASSERT(offset >= 0);
-    if ((unsigned)offset >= m_vnode->size())
-        return -1;
-    m_offset = offset;
-    return m_offset;
-}
-
-FileHandle* FileHandle::fromFileDescriptor(int fd)
-{
-    return current->fileHandleIfExists(fd);
-}
-
 FileHandle* Task::fileHandleIfExists(int fd)
 {
     if (fd < 0)
         return nullptr;
     if ((unsigned)fd < m_fileHandles.size())
-        return m_fileHandles[fd];
+        return m_fileHandles[fd].ptr();
     return nullptr;
 }
 
 int Task::sys$seek(int fd, int offset)
 {
-    auto* handle = FileHandle::fromFileDescriptor(fd);
+    auto* handle = fileHandleIfExists(fd);
     if (!handle)
         return -1;
-    return handle->seek(offset);
+    return handle->seek(offset, SEEK_SET);
 }
 
-int Task::sys$read(int fd, void* outbuf, size_t nread)
+ssize_t Task::sys$read(int fd, void* outbuf, size_t nread)
 {
     Task::checkSanity("Task::sys$read");
     kprintf("Task::sys$read: called(%d, %p, %u)\n", fd, outbuf, nread);
-    auto* handle = FileHandle::fromFileDescriptor(fd);
+    auto* handle = fileHandleIfExists(fd);
     kprintf("Task::sys$read: handle=%p\n", handle);
     if (!handle) {
         kprintf("Task::sys$read: handle not found :(\n");
         return -1;
     }
     kprintf("call read on handle=%p\n", handle);
-    nread = handle->read(outbuf, nread);
+    nread = handle->read((byte*)outbuf, nread);
     kprintf("called read\n");
     kprintf("Task::sys$read: nread=%u\n", nread);
     return nread;
@@ -420,9 +380,10 @@ int Task::sys$read(int fd, void* outbuf, size_t nread)
 
 int Task::sys$close(int fd)
 {
-    auto* handle = FileHandle::fromFileDescriptor(fd);
+    auto* handle = fileHandleIfExists(fd);
     if (!handle)
         return -1;
+    // FIXME: Implement.
     return 0;
 }
 
@@ -438,25 +399,17 @@ int Task::sys$open(const char* path, size_t pathLength)
 
 FileHandle* Task::openFile(String&& path)
 {
-#if 0
-    auto vnode = FileSystem::createVirtualNode(move(path));
-    if (!vnode) {
-        kprintf("createVirtualNode failed\n");
+    kprintf("calling vfs::open with vfs=%p, path='%s'\n", &VirtualFileSystem::the(), path.characters());
+    auto handle = VirtualFileSystem::the().open(move(path));
+    if (!handle) {
+        kprintf("vfs::open() failed\n");
         return nullptr;
     }
-#endif
-#if 0
-    FileHandle* fh = new FileHandle;
-    kprintf("made new FileHandle\n");
-    fh->m_fd = m_fileHandles.size();
-    kprintf("  fd = %d\n", fh->m_fd);
-    fh->m_vnode = move(vnode);
-    kprintf("  vnode = %p\n", fh->m_vnode.ptr());
-    m_fileHandles.append(move(fh)); // FIXME: allow non-move Vector::append
-    kprintf("Task::openFile(): FileHandle{%p} fd=%d\n", fh, fh->m_fd);
-    return fh;
-#endif
-    return nullptr;
+    handle->setFD(m_fileHandles.size());
+    kprintf("vfs::open() worked! handle=%p, fd=%d\n", handle.ptr(), handle->fd());
+    m_fileHandles.append(move(handle)); // FIXME: allow non-move Vector::append
+    kprintf("Task::openFile(): FileHandle{%p} fd=%d\n", handle.ptr(), handle->fd());
+    return m_fileHandles.last().ptr();
 }
 
 int Task::sys$kill(pid_t pid, int sig)

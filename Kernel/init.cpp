@@ -153,11 +153,12 @@ void init()
 
     vfs->mountRoot(e2fs.copyRef());
 
-//    new Task(motd_main, "motd", IPC::Handle::MotdTask, Task::Ring0);
+    //new Task(motd_main, "motd", IPC::Handle::MotdTask, Task::Ring0);
     new Task(user_main, "user", IPC::Handle::UserTask, Task::Ring3);
 
-    vfs->listDirectory("/");
+    //vfs->listDirectory("/");
 
+#if 1
     {
         auto motdFile = vfs->open("/motd.txt");
         ASSERT(motdFile);
@@ -167,6 +168,7 @@ void init()
             kprintf("%c", motdData[i]);
         }
     }
+#endif
 
     // The idle task will spend its eternity here for now.
     for (;;) {
