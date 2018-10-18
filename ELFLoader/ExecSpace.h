@@ -37,7 +37,11 @@ public:
     ExecSpace();
     ~ExecSpace();
 
+#ifdef SERENITY_KERNEL
+    bool loadELF(ByteBuffer&&);
+#else
     bool loadELF(MappedFile&&);
+#endif
 
     char* symbolPtr(const char* name);
 

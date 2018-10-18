@@ -1,7 +1,11 @@
 #include "ELFLoader.h"
 #include <AK/kstdio.h>
 
+#ifdef SERENITY_KERNEL
+ELFLoader::ELFLoader(ExecSpace& execSpace, ByteBuffer&& file)
+#else
 ELFLoader::ELFLoader(ExecSpace& execSpace, MappedFile&& file)
+#endif
     : m_execSpace(execSpace)
 {
     m_image = make<ELFImage>(move(file));
@@ -104,9 +108,9 @@ void ELFLoader::performRelocations()
 void ELFLoader::exportSymbols()
 {
     m_image->forEachSymbol([&] (const ELFImage::Symbol symbol) {
-        kprintf("symbol: %u, type=%u, name=%s\n", symbol.index(), symbol.type(), symbol.name());
+        kprintf("symbol: %u, type=%u, name=%s, section=%u\n", symbol.index(), symbol.type(), symbol.name(), symbol.sectionIndex());
         if (symbol.type() == STT_FUNC)
-            m_execSpace.addSymbol(symbol.name(), areaForSectionName(".text") + symbol.value(), symbol.size());
+            m_execSpace.addSymbol(symbol.name(), areaForSection(symbol.section()) + symbol.value(), symbol.size());
         // FIXME: What about other symbol types?
     });
 }

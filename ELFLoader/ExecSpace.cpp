@@ -12,19 +12,31 @@ ExecSpace::~ExecSpace()
 {
 }
 
+#ifdef SERENITY_KERNEL
+int puts(const char* str)
+{
+    kprintf("%s\n", str);
+    return 0;
+}
+#endif
+
 void ExecSpace::initializeBuiltins()
 {
     m_symbols.set("puts", { (char*)puts, 0 });
 }
 
+#ifdef SERENITY_KERNEL
+bool ExecSpace::loadELF(ByteBuffer&& file)
+#else
 bool ExecSpace::loadELF(MappedFile&& file)
+#endif
 {
     ELFLoader loader(*this, move(file));
     if (!loader.load())
         return false;
-    printf("[ExecSpace] ELF loaded, symbol map now:\n");
+    kprintf("[ExecSpace] ELF loaded, symbol map now:\n");
     for (auto& s : m_symbols) {
-        printf("> %p: %s (%u)\n",
+        kprintf("> %p: %s (%u)\n",
                 s.value.ptr,
                 s.key.characters(),
                 s.value.size);
@@ -34,11 +46,15 @@ bool ExecSpace::loadELF(MappedFile&& file)
 
 static void disassemble(const char* data, size_t length)
 {
-#ifdef SERENITY_KERNEL
-#else
     if (!length)
         return;
 
+#ifdef SERENITY_KERNEL
+    for (unsigned i = 0; i < length; ++i) {
+        kprintf("%b ", (unsigned char)data[i]);
+    }
+    kprintf("\n");
+#else
     TemporaryFile temp;
     if (!temp.isValid()) {
         fprintf(stderr, "Unable to create temp file for disassembly.\n");
@@ -52,7 +68,7 @@ static void disassemble(const char* data, size_t length)
     temp.sync();
 
     char cmdbuf[128];
-    sprintf(cmdbuf, "nasm -f bin -o /dev/stdout %s | ndisasm -b32 -", temp.fileName().characters());
+    ksprintf(cmdbuf, "nasm -f bin -o /dev/stdout %s | ndisasm -b32 -", temp.fileName().characters());
     system(cmdbuf);
 #endif
 }
@@ -60,7 +76,7 @@ static void disassemble(const char* data, size_t length)
 char* ExecSpace::symbolPtr(const char* name)
 {
     if (auto it = m_symbols.find(name); it != m_symbols.end()) {
-        printf("[ELFLoader] symbolPtr(%s) dump:\n", name);
+        kprintf("[ELFLoader] symbolPtr(%s) dump:\n", name);
         auto& symbol = (*it).value;
         disassemble(symbol.ptr, symbol.size);
         return symbol.ptr;

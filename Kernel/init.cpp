@@ -23,6 +23,7 @@
 #include <VirtualFileSystem/FileHandle.h>
 #include <AK/OwnPtr.h>
 #include "MemoryManager.h"
+#include <ELFLoader/ELFLoader.h>
 
 #if 0
 /* Keyboard LED disco task ;^) */
@@ -82,6 +83,8 @@ static void user_kprintf_main()
     DO_SYSCALL_A1(0x4000, 0);
     kprintf("This should not work!\n");
     HANG;
+    for (;;) {
+    }
 }
 
 system_t system;
@@ -178,6 +181,25 @@ void init()
         }
     }
 #endif
+
+    {
+        auto testExecutable = vfs->open("/_hello.o");
+        ASSERT(testExecutable);
+        auto testExecutableData = testExecutable->readEntireFile();
+        ASSERT(testExecutableData);
+        
+        ExecSpace space;
+        space.loadELF(move(testExecutableData));
+        auto* elf_entry = space.symbolPtr("elf_entry");
+        ASSERT(elf_entry);
+
+        typedef int (*MainFunctionPtr)(void);
+        kprintf("elf_entry: %p\n", elf_entry);
+        int rc = reinterpret_cast<MainFunctionPtr>(elf_entry)();
+        kprintf("it returned %d\n", rc);
+
+        HANG;
+    }
 
     // The idle task will spend its eternity here for now.
     for (;;) {

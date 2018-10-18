@@ -12,7 +12,7 @@
 class ELFImage {
 public:
 #ifdef SERENITY_KERNEL
-    explicit ELFImage(const byte* data);
+    explicit ELFImage(ByteBuffer&&);
 #else
     explicit ELFImage(MappedFile&&);
 #endif
@@ -132,7 +132,7 @@ private:
     const char* sectionIndexToString(unsigned index);
 
 #ifdef SERENITY_KERNEL
-    const byte* m_data;
+    ByteBuffer m_buffer;
 #else
     MappedFile m_file;
 #endif
