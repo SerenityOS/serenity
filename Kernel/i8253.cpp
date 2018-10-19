@@ -98,11 +98,12 @@ void clock_handle()
     WORD foo = vga_get_cursor();
 
     vga_set_attr(0x50);
-    vga_set_cursor(1600);
+    vga_set_cursor(0);
 
-    kprintf("Task %u interrupted at %x\n", current->pid(), regs.eip );
-    kprintf("EAX=%x EBX=%x ECX=%x EDX=%x\n", regs.eax, regs.ebx, regs.ecx, regs.edx);
-    kprintf("ESI=%x EDI=%x EBP=%x ESP=%x\n", regs.esi, regs.edi, regs.ebp, regs.esp);
+    kprintf("\n\n");
+    kprintf("Task %u interrupted at %x             \n", current->pid(), regs.eip );
+    kprintf("EAX=%x EBX=%x ECX=%x EDX=%x           \n", regs.eax, regs.ebx, regs.ecx, regs.edx);
+    kprintf("ESI=%x EDI=%x EBP=%x ESP=%x           \n", regs.esi, regs.edi, regs.ebp, regs.esp);
     kprintf("FLAGS=%x", regs.eflags);
 
     vga_set_cursor(foo);
@@ -111,6 +112,9 @@ void clock_handle()
 
     // Compute task ESP.
     // Add 12 for CS, EIP, EFLAGS (interrupt mechanic)
+
+    // FIXME: Hmm. Should we add an extra 8 here for SS:ESP in some cases?
+    //        If this IRQ occurred while in a user task, wouldn't that also push the stack ptr?
     current->tss().esp = regs.esp + 12;
 
     // Prepare a new task to run;

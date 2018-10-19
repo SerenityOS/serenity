@@ -16,12 +16,12 @@ panel_main()
 
     for( ;; )
     {
-        c = vga_get_cursor();
-        a = vga_get_attr();
-
         /* HACK: Avoid getting interrupted while painting since
          *       that could lead to fugly artifacts ;P */
-        disableInterrupts();
+        cli();
+
+        c = vga_get_cursor();
+        a = vga_get_attr();
 
         vga_set_attr( 0x17 );
         vga_set_cursor( 80 * 24 );
@@ -39,7 +39,7 @@ panel_main()
         vga_set_cursor( c );
 
         /* HACK cont.d */
-        enableInterrupts();
+        sti();
 
         sleep( 1 * TICKS_PER_SECOND );
     }

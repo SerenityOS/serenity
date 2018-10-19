@@ -72,8 +72,8 @@ void writeGDTEntry(WORD selector, Descriptor&);
 #define LSB(x) ((x) & 0xFF)
 #define MSB(x) (((x)>>8) & 0xFF)
 
-#define disableInterrupts() asm volatile("cli");
-#define enableInterrupts() asm volatile("sti");
+#define cli() asm volatile("cli")
+#define sti() asm volatile("sti")
 
 /* Map IRQ0-15 @ ISR 0x50-0x5F */
 #define IRQ_VECTOR_BASE 0x50
