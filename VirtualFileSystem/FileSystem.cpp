@@ -2,14 +2,20 @@
 #include <AK/HashMap.h>
 #include "FileSystem.h"
 
-static dword s_lastFileSystemID = 0;
+static dword s_lastFileSystemID;
+static HashMap<dword, FileSystem*>* map;
 
 static HashMap<dword, FileSystem*>& fileSystems()
 {
-    static HashMap<dword, FileSystem*>* map;
     if (!map)
         map = new HashMap<dword, FileSystem*>();
     return *map;
+}
+
+void FileSystem::initializeGlobals()
+{
+    s_lastFileSystemID = 0;
+    map = 0;
 }
 
 FileSystem::FileSystem()
