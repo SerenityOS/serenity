@@ -18,6 +18,7 @@ static const dword mepoch = 476763780;
 
 class FileSystem : public Retainable<FileSystem> {
 public:
+    static void initializeGlobals();
     virtual ~FileSystem();
 
     dword id() const { return m_id; }

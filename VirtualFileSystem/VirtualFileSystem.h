@@ -14,6 +14,8 @@ class FileSystem;
 
 class VirtualFileSystem {
 public:
+    static void initializeGlobals();
+
     struct Node {
         InodeIdentifier inode;
 
