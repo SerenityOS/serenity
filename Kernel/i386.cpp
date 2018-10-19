@@ -68,6 +68,67 @@ asm( \
     "    iret\n" \
 );
 
+#define EH_ENTRY_NO_CODE(ec) \
+extern "C" void exception_ ## ec ## _handler(); \
+extern "C" void exception_ ## ec ## _entry(); \
+asm( \
+    ".globl exception_" # ec "_entry\n" \
+    "exception_" # ec "_entry: \n" \
+    "    pusha\n" \
+    "    pushw %ds\n" \
+    "    pushw %es\n" \
+    "    pushw %fs\n" \
+    "    pushw %gs\n" \
+    "    pushw %ss\n" \
+    "    pushw %ss\n" \
+    "    pushw %ss\n" \
+    "    pushw %ss\n" \
+    "    popw %ds\n" \
+    "    popw %es\n" \
+    "    popw %fs\n" \
+    "    popw %gs\n" \
+    "    mov %esp, exception_state_dump\n" \
+    "    call exception_" # ec "_handler\n" \
+    "    popw %gs\n" \
+    "    popw %fs\n" \
+    "    popw %es\n" \
+    "    popw %ds\n" \
+    "    popa\n" \
+    "    iret\n" \
+);
+
+// 6: Invalid Opcode
+EH_ENTRY_NO_CODE(6);
+void exception_6_handler()
+{
+    auto& regs = *reinterpret_cast<RegisterDump*>(exception_state_dump);
+    kprintf("%s invalid opcode: %u(%s)\n", current->isRing0() ? "Kernel" : "Process", current->pid(), current->name().characters());
+
+    word ss;
+    dword esp;
+    if (current->isRing0()) {
+        ss = regs.ds;
+        esp = regs.esp;
+    } else {
+        ss = regs.ss_if_crossRing;
+        esp = regs.esp_if_crossRing;
+    }
+
+    kprintf("exception code: %w\n", exception_code);
+    kprintf("pc=%w:%x ds=%w es=%w fs=%w gs=%w\n", regs.cs, regs.eip, regs.ds, regs.es, regs.fs, regs.gs);
+    kprintf("eax=%x ebx=%x ecx=%x edx=%x\n", regs.eax, regs.ebx, regs.ecx, regs.edx);
+    kprintf("ebp=%x esp=%x esi=%x edi=%x\n", regs.ebp, esp, regs.esi, regs.edi);
+
+    if (current->isRing0()) {
+        kprintf("Oh shit, we've crashed in ring 0 :(\n");
+        HANG;
+    }
+    HANG;
+
+    // NOTE: This will schedule a new task.
+    Task::taskDidCrash(current);
+}
+
 // 13: General Protection Fault
 EH_ENTRY(13);
 void exception_13_handler()
@@ -239,7 +300,7 @@ void registerInterruptHandler(BYTE index, void (*f)())
 void registerUserCallableInterruptHandler(BYTE index, void (*f)())
 {
     s_idt[index].low = 0x00080000 | LSW((f));
-    s_idt[index].high = ((DWORD)(f) & 0xffff0000) | 0xee00;
+    s_idt[index].high = ((DWORD)(f) & 0xffff0000) | 0xef00;
     flushIDT();
 }
 
@@ -276,7 +337,7 @@ void idt_init()
     registerInterruptHandler(0x03, _exception3);
     registerInterruptHandler(0x04, _exception4);
     registerInterruptHandler(0x05, _exception5);
-    registerInterruptHandler(0x06, _exception6);
+    registerInterruptHandler(0x06, exception_6_entry);
     registerInterruptHandler(0x07, _exception7);
     registerInterruptHandler(0x08, _exception8);
     registerInterruptHandler(0x09, _exception9);

@@ -162,13 +162,14 @@ Task::Task(void (*e)(), const char* n, IPC::Handle h, RingLevel ring)
 
     kprintf("basically ready\n");
 
-    // NOTE: Each task gets 4KB of stack.
-    static const DWORD defaultStackSize = 4096;
+    // NOTE: Each task gets 16KB of stack.
+    static const DWORD defaultStackSize = 16384;
 
     if (isRing0()) {
         // FIXME: This memory is leaked.
         // But uh, there's also no kernel task termination, so I guess it's not technically leaked...
-        m_stackTop = ((DWORD)kmalloc(defaultStackSize) + defaultStackSize) & 0xffffff8;
+        dword stackBottom = (dword)kmalloc(defaultStackSize);
+        m_stackTop = (stackBottom + defaultStackSize) & 0xffffff8;
         m_tss.esp = m_stackTop;
     } else {
         auto* region = allocateRegion(defaultStackSize, "stack");
@@ -235,8 +236,8 @@ void Task::dumpRegions()
 
 void Task::taskDidCrash(Task* crashedTask)
 {
+    // NOTE: This is called from an excepton handler, so interrupts are disabled.
     crashedTask->setState(Crashing);
-
     crashedTask->dumpRegions();
 
     s_tasks->remove(crashedTask);
@@ -260,8 +261,11 @@ void yield()
 
     //kprintf("%s<%u> yield()\n", current->name().characters(), current->pid());
 
-    if (!scheduleNewTask())
+    cli();
+    if (!scheduleNewTask()) {
+        sti();
         return;
+    }
 
     //kprintf("yield() jumping to new task: %x (%s)\n", current->farPtr().selector, current->name().characters());
     switchNow();
@@ -272,7 +276,7 @@ void switchNow()
     Descriptor& descriptor = getGDTEntry(current->selector());
     descriptor.type = 9;
     flushGDT();
-    asm(
+    asm("sti\n"
         "ljmp *(%%eax)\n"
         ::"a"(&current->farPtr())
     );

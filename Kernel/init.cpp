@@ -25,6 +25,9 @@
 #include "MemoryManager.h"
 #include <ELFLoader/ELFLoader.h>
 
+#define TEST_ELF_LOADER
+#define TEST_CRASHY_USER_PROCESSES
+
 #if 0
 /* Keyboard LED disco task ;^) */
 
@@ -59,6 +62,18 @@ static void motd_main()
     kprintf("read(): '%s'\n", buffer->data());
     for (;;) {
         //kill(4, 5);
+        sleep(1 * TICKS_PER_SECOND);
+    }
+}
+
+static void syscall_test_main() NORETURN;
+static void syscall_test_main()
+{
+    kprintf("Hello in syscall_test_main!\n");
+    for (;;) {
+        Userspace::getuid();
+//        Userspace::yield();
+        //kprintf("getuid(): %u\n", Userspace::getuid());
         sleep(1 * TICKS_PER_SECOND);
     }
 }
@@ -106,7 +121,7 @@ void banner()
 
 void init()
 {
-    disableInterrupts();
+    cli();
 
     kmalloc_init();
     vga_init();
@@ -123,6 +138,8 @@ void init()
     Keyboard::initialize();
     Task::initialize();
 
+    VirtualFileSystem::initializeGlobals();
+
     memset(&system, 0, sizeof(system));
 
     WORD base_memory = (CMOS::read(0x16) << 8) | CMOS::read(0x15);
@@ -138,12 +155,12 @@ void init()
     //new Task(led_disco, "led-disco", IPC::Handle::Any, Task::Ring0);
 
     scheduleNewTask();
-    enableInterrupts();
-
     banner();
+    sti();
 
     Disk::initialize();
 
+#if 1
     auto vfs = make<VirtualFileSystem>();
 
     auto dev_zero = make<ZeroDevice>();
@@ -164,11 +181,13 @@ void init()
 
     vfs->mountRoot(e2fs.copyRef());
 
-    //new Task(motd_main, "motd", IPC::Handle::MotdTask, Task::Ring0);
+#ifdef TEST_CRASHY_USER_PROCESSES
     new Task(user_main, "user", IPC::Handle::UserTask, Task::Ring3);
     new Task(user_kprintf_main, "user_kprintf", IPC::Handle::UserTask, Task::Ring3);
+#endif
 
     //vfs->listDirectory("/");
+#endif
 
 #if 1
     {
@@ -182,6 +201,7 @@ void init()
     }
 #endif
 
+#ifdef TEST_ELF_LOADER
     {
         auto testExecutable = vfs->open("/_hello.o");
         ASSERT(testExecutable);
@@ -197,9 +217,11 @@ void init()
         kprintf("elf_entry: %p\n", elf_entry);
         int rc = reinterpret_cast<MainFunctionPtr>(elf_entry)();
         kprintf("it returned %d\n", rc);
-
-        HANG;
     }
+#endif
+
+    new Task(motd_main, "motd", IPC::Handle::MotdTask, Task::Ring0);
+    new Task(syscall_test_main, "syscall_test", IPC::Handle::MotdTask, Task::Ring0);
 
     // The idle task will spend its eternity here for now.
     for (;;) {
