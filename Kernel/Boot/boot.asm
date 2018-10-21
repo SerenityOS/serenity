@@ -87,7 +87,7 @@ pmode:
     mov gs, ax
 
     mov ss, ax
-    mov esp, 0x2000
+    mov esp, 0x4000
 
     xor eax, eax
     xor ebx, ebx
