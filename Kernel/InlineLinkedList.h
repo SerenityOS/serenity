@@ -58,6 +58,15 @@ public:
     void remove(T*);
     void append(InlineLinkedList<T>&);
 
+    bool containsSlow(T* value) const
+    {
+        for (T* node = m_head; node; node = node->next()) {
+            if (node == value)
+                return true;
+        }
+        return false;
+    }
+
 private:
     T* m_head { nullptr };
     T* m_tail { nullptr };
