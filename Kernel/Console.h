@@ -13,6 +13,8 @@ public:
     virtual ssize_t write(const byte* data, size_t size) override;
 
 private:
+    void putChar(char);
+
     byte m_rows { 25 };
     byte m_columns { 80 };
     byte m_cursorRow { 0 };

@@ -10,8 +10,6 @@
 PRIVATE BYTE *vga_mem = 0L;
 PRIVATE BYTE current_attr = 0x07;
 
-PRIVATE volatile WORD soft_cursor;
-
 template<typename PutChFunc> static int printNumber(PutChFunc, char*&, DWORD);
 template<typename PutChFunc> static int printHex(PutChFunc, char*&, DWORD, BYTE fields);
 template<typename PutChFunc> static int printSignedNumber(PutChFunc, char*&, int);
@@ -21,20 +19,22 @@ static void console_putch(char*, char ch)
     Console::the().write((byte*)&ch, 1);
 }
 
-static void vga_putch(char*, char ch)
+void vga_putch(char*, char ch)
 {
+    WORD soft_cursor = vga_get_cursor();
     WORD row;
 
     switch (ch) {
     case '\n':
         row = soft_cursor / 80;
         if (row == 23) {
-            memcpy( vga_mem, vga_mem + 160, 160 * 23 );
-            memset( vga_mem + (160 * 23), 0, 160 );
+            memcpy(vga_mem, vga_mem + 160, 160 * 23);
+            memset(vga_mem + (160 * 23), 0, 160);
             soft_cursor = row * 80;
         } else {
             soft_cursor = (row + 1) * 80;
         }
+        vga_set_cursor(soft_cursor);
         return;
     default:
         vga_mem[soft_cursor * 2] = ch;
@@ -47,14 +47,14 @@ static void vga_putch(char*, char ch)
         memset(vga_mem + (160 * 23), 0, 160);
         soft_cursor = 23 * 80;
     }
+
+    vga_set_cursor(soft_cursor);
 }
 
 template<typename PutChFunc>
 int kprintfInternal(PutChFunc putch, char* buffer, const char*& fmt, char*& ap)
 {
     const char *p;
-
-    soft_cursor = vga_get_cursor();
 
     int ret = 0;
     char* bufptr = buffer;
@@ -130,17 +130,6 @@ int kprintf(const char* fmt, ...)
     va_list ap;
     va_start(ap, fmt);
     int ret = kprintfInternal(console_putch, nullptr, fmt, ap);
-    va_end(ap);
-    return ret;
-}
-
-int kprintfFromConsole(const char* fmt, ...)
-{
-    va_list ap;
-    va_start(ap, fmt);
-    soft_cursor = vga_get_cursor();
-    int ret = kprintfInternal(vga_putch, nullptr, fmt, ap);
-    vga_set_cursor(soft_cursor);
     va_end(ap);
     return ret;
 }
