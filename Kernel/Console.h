@@ -15,8 +15,8 @@ public:
 private:
     void putChar(char);
 
-    byte m_rows { 25 };
-    byte m_columns { 80 };
+    const byte m_rows { 25 };
+    const byte m_columns { 80 };
     byte m_cursorRow { 0 };
     byte m_cursorColumn { 0 };
 
