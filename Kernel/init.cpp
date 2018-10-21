@@ -26,6 +26,7 @@
 #include <ELFLoader/ELFLoader.h>
 #include "Console.h"
 
+//#define TEST_VFS
 //#define TEST_ELF_LOADER
 //#define TEST_CRASHY_USER_PROCESSES
 
@@ -163,7 +164,7 @@ void init()
 
     Disk::initialize();
 
-#if CHECK_VFS
+#ifdef TEST_VFS
     auto vfs = make<VirtualFileSystem>();
 
     auto dev_zero = make<ZeroDevice>();

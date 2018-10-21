@@ -25,16 +25,18 @@ ssize_t Console::read(byte* buffer, size_t bufferSize)
     return 0;
 }
 
-extern int kprintfFromConsole(const char*, ...);
+void Console::putChar(char ch)
+{
+    vga_putch(nullptr, ch);
+}
 
 ssize_t Console::write(const byte* data, size_t size)
 {
     if (!size)
         return 0;
     
-    for (size_t i = 0; i < size; ++i) {
-        kprintfFromConsole("%c", data[i]);
-    }
+    for (size_t i = 0; i < size; ++i)
+        putChar(data[i]);
     return 0;
 }
 
