@@ -38,7 +38,10 @@ void MemoryManager::initializePaging()
     kprintf("MM: Page table zero @ %p\n", m_pageTableZero);
     kprintf("MM: Page table one @ %p\n", m_pageTableOne);
 
-    identityMap(LinearAddress(0), 4 * MB);
+    // Make null dereferences crash.
+    protectMap(LinearAddress(0), 4 * KB);
+
+    identityMap(LinearAddress(4096), 4 * MB);
  
     // Put pages between 4MB and 16MB in the page freelist.
     for (size_t i = (4 * MB) + 1024; i < (16 * MB); i += PAGE_SIZE) {
@@ -77,6 +80,19 @@ auto MemoryManager::ensurePTE(LinearAddress linearAddress) -> PageTableEntry
         }
     }
     return PageTableEntry(&pde.pageTableBase()[pageTableIndex]);
+}
+
+void MemoryManager::protectMap(LinearAddress linearAddress, size_t length)
+{
+    // FIXME: ASSERT(linearAddress is 4KB aligned);
+    for (dword offset = 0; offset < length; offset += 4096) {
+        auto pteAddress = linearAddress.offset(offset);
+        auto pte = ensurePTE(pteAddress);
+        pte.setPhysicalPageBase(pteAddress.get());
+        pte.setUserAllowed(false);
+        pte.setPresent(false);
+        pte.setWritable(false);
+    }
 }
 
 void MemoryManager::identityMap(LinearAddress linearAddress, size_t length)

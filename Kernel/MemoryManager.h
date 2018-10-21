@@ -58,6 +58,7 @@ private:
 
     void initializePaging();
 
+    void protectMap(LinearAddress, size_t length);
     void identityMap(LinearAddress, size_t length);
 
     Vector<PhysicalAddress> allocatePhysicalPages(size_t count);
