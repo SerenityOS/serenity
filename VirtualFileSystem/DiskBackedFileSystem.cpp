@@ -16,7 +16,7 @@ bool DiskBackedFileSystem::writeBlock(unsigned index, const ByteBuffer& data)
 {
     ASSERT(data.size() == blockSize());
 #ifdef DBFS_DEBUG
-    printf("DiskBackedFileSystem::writeBlock %u\n", index);
+    kprintf("DiskBackedFileSystem::writeBlock %u\n", index);
 #endif
     DiskOffset baseOffset = static_cast<DiskOffset>(index) * static_cast<DiskOffset>(blockSize());
     return device().write(baseOffset, blockSize(), data.pointer());
@@ -25,7 +25,7 @@ bool DiskBackedFileSystem::writeBlock(unsigned index, const ByteBuffer& data)
 bool DiskBackedFileSystem::writeBlocks(unsigned index, unsigned count, const ByteBuffer& data)
 {
 #ifdef DBFS_DEBUG
-    printf("DiskBackedFileSystem::writeBlocks %u x%u\n", index, count);
+    kprintf("DiskBackedFileSystem::writeBlocks %u x%u\n", index, count);
 #endif
     DiskOffset baseOffset = static_cast<DiskOffset>(index) * static_cast<DiskOffset>(blockSize());
     return device().write(baseOffset, count * blockSize(), data.pointer());
@@ -34,7 +34,7 @@ bool DiskBackedFileSystem::writeBlocks(unsigned index, unsigned count, const Byt
 ByteBuffer DiskBackedFileSystem::readBlock(unsigned index) const
 {
 #ifdef DBFS_DEBUG
-    printf("DiskBackedFileSystem::readBlock %u\n", index);
+    kprintf("DiskBackedFileSystem::readBlock %u\n", index);
 #endif
     auto buffer = ByteBuffer::createUninitialized(blockSize());
     DiskOffset baseOffset = static_cast<DiskOffset>(index) * static_cast<DiskOffset>(blockSize());
