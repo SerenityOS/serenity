@@ -360,14 +360,17 @@ static bool contextSwitch(Task* t)
     if (current == t)
         return false;
 
-    // If the last task hasn't blocked (still marked as running),
-    // mark it as runnable for the next round.
-    if (current->state() == Task::Running)
-        current->setState(Task::Runnable);
+    if (current) {
+        // If the last task hasn't blocked (still marked as running),
+        // mark it as runnable for the next round.
+        if (current->state() == Task::Running)
+            current->setState(Task::Runnable);
 
-    bool success = MemoryManager::the().unmapRegionsForTask(*current);
-    ASSERT(success);
-    success = MemoryManager::the().mapRegionsForTask(*t);
+        bool success = MemoryManager::the().unmapRegionsForTask(*current);
+        ASSERT(success);
+    }
+
+    bool success = MemoryManager::the().mapRegionsForTask(*t);
     ASSERT(success);
 
     current = t;
