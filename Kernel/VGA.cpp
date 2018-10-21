@@ -5,6 +5,7 @@
 #include "StdLib.h"
 #include "Task.h"
 #include <stdarg.h>
+#include "Console.h"
 
 PRIVATE BYTE *vga_mem = 0L;
 PRIVATE BYTE current_attr = 0x07;
@@ -14,6 +15,11 @@ PRIVATE volatile WORD soft_cursor;
 template<typename PutChFunc> static int printNumber(PutChFunc, char*&, DWORD);
 template<typename PutChFunc> static int printHex(PutChFunc, char*&, DWORD, BYTE fields);
 template<typename PutChFunc> static int printSignedNumber(PutChFunc, char*&, int);
+
+static void console_putch(char*, char ch)
+{
+    Console::the().write((byte*)&ch, 1);
+}
 
 static void vga_putch(char*, char ch)
 {
@@ -120,6 +126,15 @@ int kprintfInternal(PutChFunc putch, char* buffer, const char*& fmt, char*& ap)
 }
 
 int kprintf(const char* fmt, ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
+    int ret = kprintfInternal(console_putch, nullptr, fmt, ap);
+    va_end(ap);
+    return ret;
+}
+
+int kprintfFromConsole(const char* fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);

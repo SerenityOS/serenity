@@ -24,9 +24,10 @@
 #include <AK/OwnPtr.h>
 #include "MemoryManager.h"
 #include <ELFLoader/ELFLoader.h>
+#include "Console.h"
 
-#define TEST_ELF_LOADER
-#define TEST_CRASHY_USER_PROCESSES
+//#define TEST_ELF_LOADER
+//#define TEST_CRASHY_USER_PROCESSES
 
 #if 0
 /* Keyboard LED disco task ;^) */
@@ -126,6 +127,8 @@ void init()
     kmalloc_init();
     vga_init();
 
+    auto console = make<Console>();
+
     PIC::initialize();
     gdt_init();
     idt_init();
@@ -160,7 +163,7 @@ void init()
 
     Disk::initialize();
 
-#if 1
+#if CHECK_VFS
     auto vfs = make<VirtualFileSystem>();
 
     auto dev_zero = make<ZeroDevice>();
@@ -181,15 +184,8 @@ void init()
 
     vfs->mountRoot(e2fs.copyRef());
 
-#ifdef TEST_CRASHY_USER_PROCESSES
-    new Task(user_main, "user", IPC::Handle::UserTask, Task::Ring3);
-    new Task(user_kprintf_main, "user_kprintf", IPC::Handle::UserTask, Task::Ring3);
-#endif
-
     //vfs->listDirectory("/");
-#endif
 
-#if 1
     {
         auto motdFile = vfs->open("/motd.txt");
         ASSERT(motdFile);
@@ -199,6 +195,11 @@ void init()
             kprintf("%c", motdData[i]);
         }
     }
+#endif
+
+#ifdef TEST_CRASHY_USER_PROCESSES
+    new Task(user_main, "user", IPC::Handle::UserTask, Task::Ring3);
+    new Task(user_kprintf_main, "user_kprintf", IPC::Handle::UserTask, Task::Ring3);
 #endif
 
 #ifdef TEST_ELF_LOADER
@@ -220,8 +221,8 @@ void init()
     }
 #endif
 
-    new Task(motd_main, "motd", IPC::Handle::MotdTask, Task::Ring0);
-    new Task(syscall_test_main, "syscall_test", IPC::Handle::MotdTask, Task::Ring0);
+    //new Task(motd_main, "motd", IPC::Handle::MotdTask, Task::Ring0);
+    //new Task(syscall_test_main, "syscall_test", IPC::Handle::MotdTask, Task::Ring3);
 
     // The idle task will spend its eternity here for now.
     for (;;) {
