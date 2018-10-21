@@ -75,7 +75,7 @@ void ELFLoader::performRelocations()
             case R_386_PC32: {
                 char* targetPtr = (char*)lookup(symbol);
                 ptrdiff_t relativeOffset = (char*)targetPtr - ((char*)&patchPtr + 4);
-                kprintf("[ELFLoader] Relocate PC32:  offset=%08x, symbol=%u(%s) value=%08x target=%p, offset=%d\n",
+                kprintf("[ELFLoader] Relocate PC32:  offset=%x, symbol=%u(%s) value=%x target=%p, offset=%d\n",
                         relocation.offset(),
                         symbol.index(),
                         symbol.name(),
@@ -87,7 +87,7 @@ void ELFLoader::performRelocations()
                 break;
             }
             case R_386_32: {
-                kprintf("[ELFLoader] Relocate Abs32: symbol=%u(%s), value=%08x, section=%s\n",
+                kprintf("[ELFLoader] Relocate Abs32: symbol=%u(%s), value=%x, section=%s\n",
                     symbol.index(),
                     symbol.name(),
                     symbol.value(),
