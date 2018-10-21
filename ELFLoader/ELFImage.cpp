@@ -47,7 +47,7 @@ unsigned ELFImage::symbolCount() const
 
 void ELFImage::dump()
 {
-    kprintf("AK::ELFImage{%p} {\n", this);
+    kprintf("ELFImage{%p} {\n", this);
     kprintf("    isValid: %u\n", isValid());
 
     if (!isValid()) {
@@ -57,7 +57,7 @@ void ELFImage::dump()
 
     kprintf("    type:    %s\n", objectFileTypeToString(header().e_type));
     kprintf("    machine: %u\n", header().e_machine);
-    kprintf("    entry:   %08x\n", header().e_entry);
+    kprintf("    entry:   %x\n", header().e_entry);
     kprintf("    shoff:   %u\n", header().e_shoff);
     kprintf("    shnum:   %u\n", header().e_shnum);
     kprintf(" shstrndx:   %u\n", header().e_shstrndx);
@@ -79,7 +79,7 @@ void ELFImage::dump()
         kprintf("Symbol @%u:\n", i);
         kprintf("    Name: %s\n", sym.name());
         kprintf("    In section: %s\n", sectionIndexToString(sym.sectionIndex()));
-        kprintf("    Value: %08x\n", sym.value());
+        kprintf("    Value: %x\n", sym.value());
         kprintf("    Size: %u\n", sym.size());
     }
 
