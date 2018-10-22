@@ -55,10 +55,14 @@ union Descriptor {
     }
 } PACKED;
 
+class IRQHandler;
+
 void gdt_init();
 void idt_init();
 void registerInterruptHandler(BYTE number, void (*f)());
 void registerUserCallableInterruptHandler(BYTE number, void (*f)());
+void registerIRQHandler(BYTE number, IRQHandler&);
+void unregisterIRQHandler(BYTE number, IRQHandler&);
 void flushIDT();
 void flushGDT();
 void loadTaskRegister(WORD selector);

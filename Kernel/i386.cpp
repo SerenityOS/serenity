@@ -5,6 +5,8 @@
 #include "Assertions.h"
 #include "Task.h"
 #include "MemoryManager.h"
+#include "IRQHandler.h"
+#include "PIC.h"
 
 struct DescriptorTablePointer {
     WORD size;
@@ -16,6 +18,8 @@ static DescriptorTablePointer s_gdtr;
 static Descriptor* s_idt;
 static Descriptor* s_gdt;
 
+static IRQHandler** s_irqHandler;
+
 static WORD s_gdtLength;
 
 WORD allocateGDTEntry()
@@ -26,6 +30,26 @@ WORD allocateGDTEntry()
     s_gdtLength++;
     return newGDTEntry;
 }
+
+extern "C" void handleIRQ();
+extern "C" void commonIRQEntry();
+
+asm(
+    ".globl commonIRQEntry\n"
+    "commonIRQEntry: \n"
+    "    pusha\n"
+    "    pushw %ds\n"
+    "    pushw %es\n"
+    "    pushw %ss\n"
+    "    pushw %ss\n"
+    "    popw %ds\n"
+    "    popw %es\n"
+    "    call handleIRQ\n"
+    "    popw %es\n"
+    "    popw %ds\n"
+    "    popa\n"
+    "    iret\n"
+);
 
 extern volatile dword exception_state_dump;
 extern volatile word exception_code;
@@ -290,6 +314,20 @@ static void unimp_trap()
     HANG;
 }
 
+void registerIRQHandler(byte irq, IRQHandler& handler)
+{
+    ASSERT(!s_irqHandler[irq]);
+    s_irqHandler[irq] = &handler;
+    kprintf("irq handler for %u: %p\n", irq, &handler);
+    registerInterruptHandler(IRQ_VECTOR_BASE + irq, commonIRQEntry);
+}
+
+void unregisterIRQHandler(byte irq, IRQHandler& handler)
+{
+    ASSERT(s_irqHandler[irq] == &handler);
+    s_irqHandler[irq] = nullptr;
+}
+
 void registerInterruptHandler(BYTE index, void (*f)())
 {
     s_idt[index].low = 0x00080000 | LSW((f));
@@ -351,6 +389,11 @@ void idt_init()
 
     registerInterruptHandler(0x57, irq7_handler);
 
+    s_irqHandler = new IRQHandler*[16];
+    for (byte i = 0; i < 16; ++i) {
+        s_irqHandler[i] = nullptr;
+    }
+
     flushIDT();
 }
 
@@ -358,3 +401,25 @@ void loadTaskRegister(WORD selector)
 {
     asm("ltr %0"::"r"(selector));
 }
+
+void handleIRQ()
+{
+    WORD isr = PIC::getISR();
+    if (!isr) {
+        kprintf("Spurious IRQ\n");
+        return;
+    }
+
+    byte irq;
+    for (byte i = 0; i < 16; ++i) {
+        if (isr & (1 << i)) {
+            irq = i;
+            break;
+        }
+    }
+
+    if (s_irqHandler[irq])
+        s_irqHandler[irq]->handleIRQ();
+    PIC::eoi(irq);
+}
+
