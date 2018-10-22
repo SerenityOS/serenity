@@ -49,7 +49,7 @@ void Task::initialize()
     current = nullptr;
     next_pid = 0;
     s_tasks = new InlineLinkedList<Task>;
-    s_kernelTask = new Task(0, "idle", IPC::Handle::Any, Task::Ring0);
+    s_kernelTask = new Task(0, "colonel", IPC::Handle::Any, Task::Ring0);
     redoKernelTaskTSS();
     loadTaskRegister(s_kernelTask->selector());
 }
@@ -96,7 +96,7 @@ Task::Region* Task::allocateRegion(size_t size, String&& name)
 {
     // FIXME: This needs sanity checks. What if this overlaps existing regions?
 
-    auto zone = MemoryManager::the().createZone(PAGE_SIZE);
+    auto zone = MemoryManager::the().createZone(size);
     ASSERT(zone);
     m_regions.append(make<Region>(m_nextRegion, size, move(zone), move(name)));
     m_nextRegion = m_nextRegion.offset(size).offset(16384);
@@ -152,6 +152,8 @@ Task::Task(void (*e)(), const char* n, IPC::Handle h, RingLevel ring)
     m_tss.ss = stackSegment;
     m_tss.cs = codeSegment;
 
+    ASSERT((codeSegment & 3) == (stackSegment & 3));
+
     m_tss.cr3 = MemoryManager::the().pageDirectoryBase().get();
 
     if (isRing0()) {
@@ -160,14 +162,13 @@ Task::Task(void (*e)(), const char* n, IPC::Handle h, RingLevel ring)
         m_tss.eip = codeRegion->linearAddress.get();
     }
 
-    kprintf("basically ready\n");
-
     // NOTE: Each task gets 16KB of stack.
     static const DWORD defaultStackSize = 16384;
 
     if (isRing0()) {
         // FIXME: This memory is leaked.
         // But uh, there's also no kernel task termination, so I guess it's not technically leaked...
+
         dword stackBottom = (dword)kmalloc(defaultStackSize);
         m_stackTop = (stackBottom + defaultStackSize) & 0xffffff8;
         m_tss.esp = m_stackTop;
@@ -290,6 +291,13 @@ bool scheduleNewTask()
         return contextSwitch(Task::kernelTask());
     }
 
+#if 0
+    kprintf("Scheduler choices:\n");
+    for (auto* task = s_tasks->head(); task; task = task->next()) {
+        kprintf("%p  %u  %s\n", task, task->pid(), task->name().characters());
+    }
+#endif
+
     // Check and unblock tasks whose wait conditions have been met.
     for (auto* task = s_tasks->head(); task; task = task->next()) {
         if (task->state() == Task::BlockedReceive && (task->ipc.msg.isValid() || task->ipc.notifies)) {
@@ -320,12 +328,13 @@ bool scheduleNewTask()
         auto* task = s_tasks->head();
 
         if (task->state() == Task::Runnable || task->state() == Task::Running) {
-            //kprintf("switch to %s\n", task->name().characters());
+            //kprintf("switch to %s (%p vs %p)\n", task->name().characters(), task, current);
             return contextSwitch(task);
         }
 
         if (task == prevHead) {
             // Back at task_head, nothing wants to run.
+            kprintf("Switch to kernel task\n");
             return contextSwitch(Task::kernelTask());
         }
     }
@@ -333,6 +342,7 @@ bool scheduleNewTask()
 
 static void drawSchedulerBanner(Task& task)
 {
+    return;
     // FIXME: We need a kernel lock to do stuff like this :(
     //return;
     auto c = vga_get_cursor();
@@ -359,6 +369,11 @@ static bool contextSwitch(Task* t)
 
     if (current == t)
         return false;
+
+    // Some sanity checking to force a crash earlier.
+    auto csRPL = t->tss().cs & 3;
+    auto ssRPL = t->tss().ss & 3;
+    ASSERT(csRPL == ssRPL);
 
     if (current) {
         // If the last task hasn't blocked (still marked as running),
@@ -396,6 +411,8 @@ static bool contextSwitch(Task* t)
 
     flushGDT();
     drawSchedulerBanner(*t);
+
+    t->didSchedule();
     return true;
 }
 
@@ -481,7 +498,6 @@ FileHandle* Task::openFile(String&& path)
     handle->setFD(m_fileHandles.size());
     kprintf("vfs::open() worked! handle=%p, fd=%d\n", handle.ptr(), handle->fd());
     m_fileHandles.append(move(handle)); // FIXME: allow non-move Vector::append
-    kprintf("Task::openFile(): FileHandle{%p} fd=%d\n", handle.ptr(), handle->fd());
     return m_fileHandles.last().ptr();
 }
 

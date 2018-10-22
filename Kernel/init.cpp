@@ -26,9 +26,9 @@
 #include <ELFLoader/ELFLoader.h>
 #include "Console.h"
 
-//#define TEST_VFS
-//#define TEST_ELF_LOADER
-//#define TEST_CRASHY_USER_PROCESSES
+#define TEST_VFS
+#define TEST_ELF_LOADER
+#define TEST_CRASHY_USER_PROCESSES
 
 #if 0
 /* Keyboard LED disco task ;^) */
@@ -94,16 +94,6 @@ static void user_main()
     }
 }
 
-static void user_kprintf_main() NORETURN;
-static void user_kprintf_main()
-{
-    DO_SYSCALL_A1(0x4000, 0);
-    kprintf("This should not work!\n");
-    HANG;
-    for (;;) {
-    }
-}
-
 system_t system;
 
 void banner()
@@ -121,46 +111,22 @@ void banner()
     kprintf("\n");
 }
 
-void init()
+static void init_stage2() NORETURN;
+static void init_stage2()
 {
-    cli();
-
-    kmalloc_init();
-    vga_init();
-
-    auto console = make<Console>();
-
-    PIC::initialize();
-    gdt_init();
-    idt_init();
-
-    MemoryManager::initialize();
+    kprintf("init stage2...\n");
+    Keyboard::initialize();
 
     // Anything that registers interrupts goes *after* PIC and IDT for obvious reasons.
     Syscall::initialize();
-    PIT::initialize();
-    Keyboard::initialize();
-    Task::initialize();
 
     VirtualFileSystem::initializeGlobals();
-
-    memset(&system, 0, sizeof(system));
-
-    WORD base_memory = (CMOS::read(0x16) << 8) | CMOS::read(0x15);
-    WORD ext_memory = (CMOS::read(0x18) << 8) | CMOS::read(0x17);
-
-    kprintf("%u kB base memory\n", base_memory);
-    kprintf("%u kB extended memory\n", ext_memory);
 
     extern void panel_main();
 
     new Task(panel_main, "panel", IPC::Handle::PanelTask, Task::Ring0);
 
     //new Task(led_disco, "led-disco", IPC::Handle::Any, Task::Ring0);
-
-    scheduleNewTask();
-    banner();
-    sti();
 
     Disk::initialize();
 
@@ -181,7 +147,7 @@ void init()
 
     auto dev_hd0 = IDEDiskDevice::create();
     auto e2fs = Ext2FileSystem::create(dev_hd0.copyRef());
-    e2fs->initialize(); 
+    e2fs->initialize();
 
     vfs->mountRoot(e2fs.copyRef());
 
@@ -200,7 +166,6 @@ void init()
 
 #ifdef TEST_CRASHY_USER_PROCESSES
     new Task(user_main, "user", IPC::Handle::UserTask, Task::Ring3);
-    new Task(user_kprintf_main, "user_kprintf", IPC::Handle::UserTask, Task::Ring3);
 #endif
 
 #ifdef TEST_ELF_LOADER
@@ -209,7 +174,7 @@ void init()
         ASSERT(testExecutable);
         auto testExecutableData = testExecutable->readEntireFile();
         ASSERT(testExecutableData);
-        
+
         ExecSpace space;
         space.loadELF(move(testExecutableData));
         auto* elf_entry = space.symbolPtr("elf_entry");
@@ -225,7 +190,45 @@ void init()
     //new Task(motd_main, "motd", IPC::Handle::MotdTask, Task::Ring0);
     //new Task(syscall_test_main, "syscall_test", IPC::Handle::MotdTask, Task::Ring3);
 
-    // The idle task will spend its eternity here for now.
+    kprintf("init stage2 is done!\n");
+
+    for (;;) {
+        asm("hlt");
+    }
+}
+
+void init()
+{
+    cli();
+
+    kmalloc_init();
+    vga_init();
+
+    auto console = make<Console>();
+
+    PIC::initialize();
+    gdt_init();
+    idt_init();
+
+    MemoryManager::initialize();
+
+    PIT::initialize();
+
+    memset(&system, 0, sizeof(system));
+    WORD base_memory = (CMOS::read(0x16) << 8) | CMOS::read(0x15);
+    WORD ext_memory = (CMOS::read(0x18) << 8) | CMOS::read(0x17);
+
+    kprintf("%u kB base memory\n", base_memory);
+    kprintf("%u kB extended memory\n", ext_memory);
+
+    Task::initialize();
+
+    auto* init2 = new Task(init_stage2, "init", IPC::Handle::InitTask, Task::Ring0);
+    scheduleNewTask();
+
+    sti();
+
+    // This now becomes the idle task :^)
     for (;;) {
         asm("hlt");
     }

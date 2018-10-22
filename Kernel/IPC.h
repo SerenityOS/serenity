@@ -33,6 +33,7 @@ public:
         FileSystemTask = 4003,
         MotdTask = 4004,
         UserTask = 4005,
+        InitTask = 4006,
     };
     Handle(KernelTask task) : m_data((DWORD)task) { }
 

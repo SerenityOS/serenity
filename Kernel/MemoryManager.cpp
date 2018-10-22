@@ -173,7 +173,7 @@ bool MemoryManager::mapRegionsForTask(Task& task)
             pte.setWritable(true);
             pte.setUserAllowed(!task.isRing0());
 
-            kprintf("MM: >> Mapped L%x => P%x <<\n", laddr, zone.m_pages[i].get());
+            //kprintf("MM: >> Mapped L%x => P%x <<\n", laddr, zone.m_pages[i].get());
         }
     }
     return true;

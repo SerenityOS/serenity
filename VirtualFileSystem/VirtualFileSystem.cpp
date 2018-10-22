@@ -27,6 +27,9 @@ VirtualFileSystem& VirtualFileSystem::the()
 
 VirtualFileSystem::VirtualFileSystem()
 {
+#ifdef VFS_DEBUG
+    kprintf("[VFS] Constructing VFS\n");
+#endif
     s_the = this;
     m_maxNodeCount = 16;
     m_nodes = reinterpret_cast<Node*>(kmalloc(sizeof(Node) * maxNodeCount()));
