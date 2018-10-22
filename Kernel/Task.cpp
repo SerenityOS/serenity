@@ -235,6 +235,26 @@ void Task::dumpRegions()
     }
 }
 
+void Task::sys$exit(int status)
+{
+    cli();
+    kprintf("sys$exit: %s(%u) exit with status %d\n", name().characters(), pid(), status);
+
+    setState(Exiting);
+    dumpRegions();
+
+    s_tasks->remove(this);
+
+    if (!scheduleNewTask()) {
+        kprintf("Task::taskDidCrash: Failed to schedule a new task :(\n");
+        HANG;
+    }
+
+    delete this;
+
+    switchNow();
+}
+
 void Task::taskDidCrash(Task* crashedTask)
 {
     // NOTE: This is called from an excepton handler, so interrupts are disabled.

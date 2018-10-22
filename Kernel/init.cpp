@@ -192,6 +192,11 @@ static void init_stage2()
 
     kprintf("init stage2 is done!\n");
 
+    DO_SYSCALL_A1(Syscall::PosixExit, 413);
+
+    kprintf("uh, we're still going after calling sys$exit...\n");
+    HANG;
+
     for (;;) {
         asm("hlt");
     }
