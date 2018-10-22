@@ -7,11 +7,6 @@
 
 //#define VFS_DEBUG
 
-void VirtualFileSystem::initializeGlobals()
-{
-    FileSystem::initializeGlobals();
-}
-
 static dword encodedDevice(unsigned major, unsigned minor)
 {
     return (minor & 0xff) | (major << 8) | ((minor & ~0xff) << 12);
@@ -23,6 +18,12 @@ VirtualFileSystem& VirtualFileSystem::the()
 {
     ASSERT(s_the);
     return *s_the;
+}
+
+void VirtualFileSystem::initializeGlobals()
+{
+    s_the = nullptr;
+    FileSystem::initializeGlobals();
 }
 
 VirtualFileSystem::VirtualFileSystem()
