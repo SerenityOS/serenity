@@ -31,6 +31,7 @@ public:
         BlockedSleep = 5,
         Terminated = 6,
         Crashing = 7,
+        Exiting = 8,
     };
 
     enum RingLevel {
@@ -83,6 +84,7 @@ public:
     int sys$kill(pid_t pid, int sig);
     int sys$geterror() { return m_error; }
     void sys$sleep(DWORD ticks);
+    void sys$exit(int status);
 
     struct
     {

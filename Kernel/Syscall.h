@@ -16,6 +16,7 @@ enum Function {
     PosixSeek = 0x1988,
     PosixKill = 0x1989,
     PosixGetuid = 0x1990,
+    PosixExit = 0x1991,
 };
 
 void initialize();
@@ -23,21 +24,21 @@ void initialize();
 inline DWORD invoke(DWORD function)
 {
     DWORD result;
-    asm("int $0x80":"=a"(result):"a"(function));
+    asm volatile("int $0x80":"=a"(result):"a"(function));
     return result;
 }
 
 inline DWORD invoke(DWORD function, DWORD arg1)
 {
     DWORD result;
-    asm("int $0x80":"=a"(result):"a"(function),"d"(arg1));
+    asm volatile("int $0x80":"=a"(result):"a"(function),"d"(arg1));
     return result;
 }
 
 inline DWORD invoke(DWORD function, DWORD arg1, DWORD arg2)
 {
     DWORD result;
-    asm("int $0x80":"=a"(result):"a"(function),"d"(arg1),"c"(arg2));
+    asm volatile("int $0x80":"=a"(result):"a"(function),"d"(arg1),"c"(arg2));
     return result;
 }
 
