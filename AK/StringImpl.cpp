@@ -8,12 +8,13 @@ static StringImpl* s_theEmptyStringImpl = nullptr;
 
 void StringImpl::initializeGlobals()
 {
-    s_theEmptyStringImpl = new StringImpl(ConstructTheEmptyStringImpl);;
+    s_theEmptyStringImpl = nullptr;
 }
 
 StringImpl& StringImpl::theEmptyStringImpl()
 {
-    ASSERT(s_theEmptyStringImpl);
+    if (!s_theEmptyStringImpl)
+        s_theEmptyStringImpl = new StringImpl(ConstructTheEmptyStringImpl);;
     return *s_theEmptyStringImpl;
 }
 
