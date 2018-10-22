@@ -1,9 +1,11 @@
 #pragma once
 
-#define DO_SYSCALL_A0(function) Syscall::invoke((DWORD)(function))
-#define DO_SYSCALL_A1(function, arg1) Syscall::invoke((DWORD)(function), (DWORD)(arg1))
-#define DO_SYSCALL_A2(function, arg1, arg2) Syscall::invoke((DWORD)(function), (DWORD)(arg1), (DWORD)(arg2))
-#define DO_SYSCALL_A3(function, arg1, arg2, arg3) Syscall::invoke((DWORD)(function), (DWORD)(arg1), (DWORD)(arg2), (DWORD)arg3)
+#include <AK/Types.h>
+
+#define DO_SYSCALL_A0(function) Syscall::invoke((dword)(function))
+#define DO_SYSCALL_A1(function, arg1) Syscall::invoke((dword)(function), (dword)(arg1))
+#define DO_SYSCALL_A2(function, arg1, arg2) Syscall::invoke((dword)(function), (dword)(arg1), (dword)(arg2))
+#define DO_SYSCALL_A3(function, arg1, arg2, arg3) Syscall::invoke((dword)(function), (dword)(arg1), (dword)(arg2), (dword)arg3)
 
 namespace Syscall {
 
@@ -18,34 +20,36 @@ enum Function {
     PosixKill = 0x1989,
     PosixGetuid = 0x1990,
     PosixExit = 0x1991,
+    PosixGetgid = 0x1992,
+    PosixGetpid = 0x1993,
 };
 
 void initialize();
 
-inline DWORD invoke(DWORD function)
+inline dword invoke(dword function)
 {
-    DWORD result;
+    dword result;
     asm volatile("int $0x80":"=a"(result):"a"(function));
     return result;
 }
 
-inline DWORD invoke(DWORD function, DWORD arg1)
+inline dword invoke(dword function, dword arg1)
 {
-    DWORD result;
+    dword result;
     asm volatile("int $0x80":"=a"(result):"a"(function),"d"(arg1));
     return result;
 }
 
-inline DWORD invoke(DWORD function, DWORD arg1, DWORD arg2)
+inline dword invoke(dword function, dword arg1, dword arg2)
 {
-    DWORD result;
+    dword result;
     asm volatile("int $0x80":"=a"(result):"a"(function),"d"(arg1),"c"(arg2));
     return result;
 }
 
-inline DWORD invoke(DWORD function, DWORD arg1, DWORD arg2, DWORD arg3)
+inline dword invoke(dword function, dword arg1, dword arg2, dword arg3)
 {
-    DWORD result;
+    dword result;
     asm volatile("int $0x80":"=a"(result):"a"(function),"d"(arg1),"c"(arg2),"b"(arg3));
     return result;
 }

@@ -77,6 +77,10 @@ DWORD handle(DWORD function, DWORD arg1, DWORD arg2, DWORD arg3)
         return current->sys$kill((pid_t)arg1, (int)arg2);
     case Syscall::PosixGetuid:
         return current->sys$getuid();
+    case Syscall::PosixGetgid:
+        return current->sys$getgid();
+    case Syscall::PosixGetpid:
+        return current->sys$getpid();
     case Syscall::PosixExit:
         current->sys$exit((int)arg1);
         ASSERT_NOT_REACHED();

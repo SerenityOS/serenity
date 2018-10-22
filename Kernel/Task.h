@@ -77,6 +77,8 @@ public:
     void setState(State s) { m_state = s; }
 
     uid_t sys$getuid();
+    gid_t sys$getgid();
+    pid_t sys$getpid();
     int sys$open(const char* path, size_t pathLength);
     int sys$close(int fd);
     int sys$read(int fd, void* outbuf, size_t nread);
@@ -118,6 +120,7 @@ private:
     void (*m_entry)() { nullptr };
     pid_t m_pid { 0 };
     uid_t m_uid { 0 };
+    gid_t m_gid { 0 };
     DWORD m_ticks { 0 };
     DWORD m_ticksLeft { 0 };
     IPC::Handle m_handle { 0 };
