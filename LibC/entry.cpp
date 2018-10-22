@@ -2,7 +2,7 @@
 
 extern "C" int main(int, char**);
 
-extern "C" int elf_entry()
+extern "C" int _start()
 {
     // FIXME: Pass appropriate argc/argv.
     main(0, nullptr);
