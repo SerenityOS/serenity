@@ -9,11 +9,48 @@
 #include "Buffer.h"
 #include "Weakable.h"
 #include "WeakPtr.h"
+#include "CircularQueue.h"
 
 static void testWeakPtr();
 
 int main(int, char**)
 {
+    StringImpl::initializeGlobals();
+    {
+        CircularQueue<int, 4> queue;
+        queue.dump();
+        queue.enqueue(1);
+        queue.dump();
+        queue.enqueue(2);
+        queue.dump();
+        queue.enqueue(3);
+        queue.dump();
+        queue.enqueue(4);
+        ASSERT(!queue.isEmpty());
+        ASSERT(queue.size() == 4);
+        ASSERT(queue.dequeue() == 1);
+        queue.dump();
+        ASSERT(queue.dequeue() == 2);
+        queue.dump();
+        ASSERT(queue.dequeue() == 3);
+        queue.dump();
+        ASSERT(queue.dequeue() == 4);
+        queue.dump();
+        ASSERT(queue.isEmpty());
+        queue.enqueue(1);
+        queue.enqueue(2);
+        queue.enqueue(3);
+        queue.enqueue(4);
+        queue.enqueue(5);
+        queue.enqueue(6);
+        queue.enqueue(7);
+        ASSERT(queue.dequeue() == 4);
+        ASSERT(queue.dequeue() == 5);
+        ASSERT(queue.dequeue() == 6);
+        ASSERT(queue.dequeue() == 7);
+        ASSERT(queue.isEmpty());
+    }
+
     {
         String path = "/////abc/def////g/h/i//";
         auto parts = path.split('/');
