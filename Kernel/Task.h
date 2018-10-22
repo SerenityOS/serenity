@@ -99,6 +99,9 @@ public:
 
     void dumpRegions();
 
+    void didSchedule() { ++m_timesScheduled; }
+    dword timesScheduled() const { return m_timesScheduled; }
+
 private:
     friend class MemoryManager;
 
@@ -126,6 +129,7 @@ private:
     RingLevel m_ring { Ring0 };
     int m_error { 0 };
     void* m_kernelStack { nullptr };
+    dword m_timesScheduled { 0 };
 
     struct Region {
         Region(LinearAddress, size_t, RetainPtr<Zone>&&, String&&);

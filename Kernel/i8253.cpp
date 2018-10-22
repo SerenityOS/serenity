@@ -117,6 +117,15 @@ void clock_handle()
     //        If this IRQ occurred while in a user task, wouldn't that also push the stack ptr?
     current->tss().esp = regs.esp + 12;
 
+    // FIXME: Is this really safe? What if the interrupted process didn't have SS==DS?
+    current->tss().ss = regs.ds;
+
+    if ((current->tss().cs & 3) != 0) {
+        // What do I do now?
+        kprintf("clk'ed across to ring0\n");
+        HANG;
+    }
+
     // Prepare a new task to run;
     if (!scheduleNewTask())
         return;

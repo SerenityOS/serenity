@@ -77,14 +77,12 @@ void initialize()
     IO::out8(PIC0_CMD, 0x01);
     IO::out8(PIC1_CMD, 0x01 );
 
-    // Mask -- enable all interrupts on both PICs.
-    // Not really what I want here, but I'm unsure how to
-    // selectively enable secondary PIC IRQs...
-    IO::out8(PIC0_CMD, 0x00);
-    IO::out8(PIC1_CMD, 0x00);
+    // Mask -- start out with all IRQs disabled.
+    IO::out8(PIC0_CMD, 0xff);
+    IO::out8(PIC1_CMD, 0xff);
 
-    // HACK: Disable busmouse IRQ for now.
-    disable(5);
+    // ...except IRQ2, since that's needed for the master to let through slave interrupts.
+    enable(2);
 
     kprintf("PIC(i8259): cascading mode, vectors 0x%b-0x%b\n", IRQ_VECTOR_BASE, IRQ_VECTOR_BASE + 0x08);
 

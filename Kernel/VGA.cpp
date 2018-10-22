@@ -19,36 +19,17 @@ static void console_putch(char*, char ch)
     Console::the().write((byte*)&ch, 1);
 }
 
-void vga_putch(char*, char ch)
+void vga_scroll_up()
 {
-    WORD soft_cursor = vga_get_cursor();
-    WORD row;
+    memcpy(vga_mem, vga_mem + 160, 160 * 23);
+    memset(vga_mem + (160 * 23), 0, 160);
+}
 
-    switch (ch) {
-    case '\n':
-        row = soft_cursor / 80;
-        if (row == 23) {
-            memcpy(vga_mem, vga_mem + 160, 160 * 23);
-            memset(vga_mem + (160 * 23), 0, 160);
-            soft_cursor = row * 80;
-        } else {
-            soft_cursor = (row + 1) * 80;
-        }
-        vga_set_cursor(soft_cursor);
-        return;
-    default:
-        vga_mem[soft_cursor * 2] = ch;
-        vga_mem[soft_cursor * 2 + 1] = current_attr;
-        ++soft_cursor;
-    }
-    row = soft_cursor / 80;
-    if ((row >= 24 && current->handle() != IPC::Handle::PanelTask)) {
-        memcpy(vga_mem, vga_mem + 160, 160 * 23);
-        memset(vga_mem + (160 * 23), 0, 160);
-        soft_cursor = 23 * 80;
-    }
-
-    vga_set_cursor(soft_cursor);
+void vga_putch_at(byte row, byte column, byte ch)
+{
+    word cur = (row * 160) + (column * 2);
+    vga_mem[cur] = ch;
+    vga_mem[cur + 1] = current_attr;
 }
 
 template<typename PutChFunc>

@@ -27,7 +27,30 @@ ssize_t Console::read(byte* buffer, size_t bufferSize)
 
 void Console::putChar(char ch)
 {
-    vga_putch(nullptr, ch);
+    switch (ch) {
+    case '\n':
+        m_cursorColumn = 0;
+        if (m_cursorRow == (m_rows - 2)) {
+            vga_scroll_up();
+        } else {
+            ++m_cursorRow;
+        }
+        vga_set_cursor(m_cursorRow, m_cursorColumn);
+        return;
+    }
+
+    vga_putch_at(m_cursorRow, m_cursorColumn, ch);
+
+    ++m_cursorColumn;
+    if (m_cursorColumn >= m_columns) {
+        if (m_cursorRow == (m_rows - 2)) {
+            vga_scroll_up();
+        } else {
+            ++m_cursorRow;
+        }
+        m_cursorColumn = 0;
+    }
+    vga_set_cursor(m_cursorRow, m_cursorColumn);
 }
 
 ssize_t Console::write(const byte* data, size_t size)

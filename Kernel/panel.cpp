@@ -16,6 +16,7 @@ panel_main()
 
     for( ;; )
     {
+        continue;
         /* HACK: Avoid getting interrupted while painting since
          *       that could lead to fugly artifacts ;P */
         cli();
