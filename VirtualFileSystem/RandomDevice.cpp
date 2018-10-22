@@ -33,7 +33,7 @@ Unix::ssize_t RandomDevice::read(byte* buffer, Unix::size_t bufferSize)
     const int range = 'z' - 'a';
     Unix::ssize_t nread = min(bufferSize, GoodBufferSize);
     for (Unix::ssize_t i = 0; i < nread; ++i) {
-        double r = ((double)myrand() / (double)MY_RAND_MAX) * (double)range;
+        dword r = myrand() % range;
         buffer[i] = 'a' + r;
     }
     return nread;
