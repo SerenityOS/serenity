@@ -1,6 +1,9 @@
 OBJS = \
        id.o
 
+APPS = \
+       id
+
 ARCH_FLAGS =
 STANDARD_FLAGS = -std=c++17 -nostdinc++ -nostdlib
 USERLAND_FLAGS = -ffreestanding -fno-stack-protector -fno-ident
@@ -15,9 +18,12 @@ CXXFLAGS = $(WARNING_FLAGS) $(OPTIMIZATION_FLAGS) $(USERLAND_FLAGS) $(FLAVOR_FLA
 CXX = g++
 LD = ld
 AR = ar
-LDFLAGS = -T linker.ld --strip-debug -melf_i386 --gc-sections --build-id=none -z norelro -z now
+LDFLAGS = --strip-debug -melf_i386 --gc-sections --build-id=none -z norelro -z now
 
-all: $(OBJS)
+all: $(OBJS) $(APPS)
+
+id: id.o
+	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
 
 .cpp.o:
 	@echo "CXX $<"; $(CXX) $(CXXFLAGS) -o $@ -c $<
