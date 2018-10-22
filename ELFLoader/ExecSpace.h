@@ -1,5 +1,6 @@
 #pragma once
 
+#include <AK/Function.h>
 #include <AK/HashMap.h>
 #include <AK/MappedFile.h>
 #include <AK/OwnPtr.h>
@@ -36,6 +37,8 @@ public:
 
     ExecSpace();
     ~ExecSpace();
+
+    Function<void*(const String&, size_t)> hookableAlloc;
 
 #ifdef SERENITY
     bool loadELF(ByteBuffer&&);

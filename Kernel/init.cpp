@@ -27,7 +27,7 @@
 #include "Console.h"
 
 #define TEST_VFS
-#define TEST_ELF_LOADER
+//#define TEST_ELF_LOADER
 //#define TEST_CRASHY_USER_PROCESSES
 
 static void motd_main() NORETURN;
@@ -166,6 +166,8 @@ static void init_stage2()
         kprintf("it returned %d\n", rc);
     }
 #endif
+
+    auto* idTask = Task::create("/bin/id", (uid_t)209, (gid_t)1985);
 
     //new Task(motd_main, "motd", IPC::Handle::MotdTask, Task::Ring0);
     //new Task(syscall_test_main, "syscall_test", IPC::Handle::MotdTask, Task::Ring3);

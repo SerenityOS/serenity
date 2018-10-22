@@ -161,20 +161,27 @@ bool MemoryManager::unmapRegionsForTask(Task& task)
     return true;
 }
 
+bool MemoryManager::mapRegion(Task& task, Task::Region& region)
+{
+    auto& zone = *region.zone;
+    for (size_t i = 0; i < zone.m_pages.size(); ++i) {
+        auto laddr = region.linearAddress.offset(i * PAGE_SIZE);
+        auto pte = ensurePTE(laddr);
+        pte.setPhysicalPageBase(zone.m_pages[i].get());
+        pte.setPresent(true);
+        pte.setWritable(true);
+        pte.setUserAllowed(!task.isRing0());
+
+        //kprintf("MM: >> Mapped L%x => P%x <<\n", laddr, zone.m_pages[i].get());
+    }
+    return true;
+}
+
 bool MemoryManager::mapRegionsForTask(Task& task)
 {
     for (auto& region : task.m_regions) {
-        auto& zone = *region->zone;
-        for (size_t i = 0; i < zone.m_pages.size(); ++i) {
-            auto laddr = region->linearAddress.offset(i * PAGE_SIZE);
-            auto pte = ensurePTE(laddr);
-            pte.setPhysicalPageBase(zone.m_pages[i].get());
-            pte.setPresent(true);
-            pte.setWritable(true);
-            pte.setUserAllowed(!task.isRing0());
-
-            //kprintf("MM: >> Mapped L%x => P%x <<\n", laddr, zone.m_pages[i].get());
-        }
+        if (!mapRegion(task, *region))
+            return false;
     }
     return true;
 }

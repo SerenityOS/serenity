@@ -16,6 +16,9 @@ class Zone;
 class Task : public InlineLinkedListNode<Task> {
     friend class InlineLinkedListNode<Task>;
 public:
+    static Task* create(const String& path, uid_t, gid_t);
+    Task(String&& name, uid_t, gid_t);
+
 #ifdef TASK_SANITY_CHECKS
     static void checkSanity(const char* msg = nullptr);
 #else

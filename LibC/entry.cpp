@@ -5,7 +5,9 @@ extern "C" int main(int, char**);
 extern "C" int _start()
 {
     // FIXME: Pass appropriate argc/argv.
-    main(0, nullptr);
+    int status = main(0, nullptr);
+
+    Syscall::invoke(Syscall::PosixExit, status);
 
     // Birger's birthday <3
     return 20150614;

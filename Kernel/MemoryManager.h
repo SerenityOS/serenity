@@ -6,6 +6,7 @@
 #include <AK/RetainPtr.h>
 #include <AK/Vector.h>
 #include <AK/HashMap.h>
+#include "Task.h"
 
 class Task;
 
@@ -49,6 +50,7 @@ public:
     // HACK: don't use this jeez :(
     byte* quickMapOnePage(PhysicalAddress);
 
+    bool mapRegion(Task&, Task::Region&);
     bool mapRegionsForTask(Task&);
     bool unmapRegionsForTask(Task&);
 

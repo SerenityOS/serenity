@@ -22,7 +22,9 @@ int puts(const char* str)
 
 void ExecSpace::initializeBuiltins()
 {
+#ifndef SERENITY
     m_symbols.set("puts", { (char*)puts, 0 });
+#endif
 }
 
 #ifdef SERENITY
@@ -86,8 +88,13 @@ char* ExecSpace::symbolPtr(const char* name)
 
 char* ExecSpace::allocateArea(String&& name, unsigned size)
 {
-    char* ptr = static_cast<char*>(kmalloc(size));
-    ASSERT(ptr);
+    char* ptr;
+    if (hookableAlloc)
+        ptr = static_cast<char*>(hookableAlloc(name, size));
+    else
+        ptr = static_cast<char*>(kmalloc(size));
+    if (size)
+        ASSERT(ptr);
     m_areas.append(make<Area>(move(name), ptr, size));
     return ptr;
 }
