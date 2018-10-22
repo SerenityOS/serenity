@@ -150,14 +150,14 @@ static void init_stage2()
 
 #ifdef TEST_ELF_LOADER
     {
-        auto testExecutable = vfs->open("/_test.o");
+        auto testExecutable = vfs->open("/bin/id");
         ASSERT(testExecutable);
         auto testExecutableData = testExecutable->readEntireFile();
         ASSERT(testExecutableData);
 
         ExecSpace space;
         space.loadELF(move(testExecutableData));
-        auto* elf_entry = space.symbolPtr("elf_entry");
+        auto* elf_entry = space.symbolPtr("_start");
         ASSERT(elf_entry);
 
         typedef int (*MainFunctionPtr)(void);

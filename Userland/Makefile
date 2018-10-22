@@ -18,7 +18,7 @@ CXXFLAGS = $(WARNING_FLAGS) $(OPTIMIZATION_FLAGS) $(USERLAND_FLAGS) $(FLAVOR_FLA
 CXX = g++
 LD = ld
 AR = ar
-LDFLAGS = --strip-debug -melf_i386 --gc-sections --build-id=none -z norelro -z now
+LDFLAGS = -r -static --strip-debug -melf_i386 --build-id=none -z norelro -z now -e _start
 
 all: $(OBJS) $(APPS)
 
