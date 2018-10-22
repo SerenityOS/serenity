@@ -12,7 +12,7 @@ ExecSpace::~ExecSpace()
 {
 }
 
-#ifdef SERENITY_KERNEL
+#ifdef SERENITY
 int puts(const char* str)
 {
     kprintf("%s\n", str);
@@ -25,7 +25,7 @@ void ExecSpace::initializeBuiltins()
     m_symbols.set("puts", { (char*)puts, 0 });
 }
 
-#ifdef SERENITY_KERNEL
+#ifdef SERENITY
 bool ExecSpace::loadELF(ByteBuffer&& file)
 #else
 bool ExecSpace::loadELF(MappedFile&& file)
@@ -49,7 +49,7 @@ static void disassemble(const char* data, size_t length)
     if (!length)
         return;
 
-#ifdef SERENITY_KERNEL
+#ifdef SERENITY
     for (unsigned i = 0; i < length; ++i) {
         kprintf("%b ", (unsigned char)data[i]);
     }

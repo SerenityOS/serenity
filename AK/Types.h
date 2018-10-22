@@ -1,6 +1,6 @@
 #pragma once
 
-#if defined(SERENITY_KERNEL) || defined(SERENITY_LIBC)
+#if defined(SERENITY)
 typedef unsigned char byte;
 typedef unsigned short word;
 typedef unsigned int dword;

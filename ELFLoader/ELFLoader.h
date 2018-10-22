@@ -9,7 +9,7 @@
 
 class ELFLoader {
 public:
-#ifdef SERENITY_KERNEL
+#ifdef SERENITY
     ELFLoader(ExecSpace&, ByteBuffer&&);
 #else
     ELFLoader(ExecSpace&, MappedFile&&);

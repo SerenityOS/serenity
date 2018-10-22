@@ -1,6 +1,6 @@
 #pragma once
 
-#ifndef SERENITY_KERNEL
+#ifndef SERENITY
 #include <AK/MappedFile.h>
 #endif
 
@@ -11,7 +11,7 @@
 
 class ELFImage {
 public:
-#ifdef SERENITY_KERNEL
+#ifdef SERENITY
     explicit ELFImage(ByteBuffer&&);
 #else
     explicit ELFImage(MappedFile&&);
@@ -131,7 +131,7 @@ private:
     const char* sectionHeaderTableString(unsigned offset) const;
     const char* sectionIndexToString(unsigned index);
 
-#ifdef SERENITY_KERNEL
+#ifdef SERENITY
     ByteBuffer m_buffer;
 #else
     MappedFile m_file;

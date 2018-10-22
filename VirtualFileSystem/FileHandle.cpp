@@ -13,7 +13,7 @@ FileHandle::~FileHandle()
 {
 }
 
-#ifndef SERENITY_KERNEL
+#ifndef SERENITY
 bool additionWouldOverflow(Unix::off_t a, Unix::off_t b)
 {
     ASSERT(a > 0);
@@ -69,7 +69,7 @@ Unix::off_t FileHandle::seek(Unix::off_t offset, int whence)
         break;
     case SEEK_CUR:
         newOffset = m_currentOffset + offset;
-#ifndef SERENITY_KERNEL
+#ifndef SERENITY
         if (additionWouldOverflow(m_currentOffset, offset))
             return -EOVERFLOW;
 #endif

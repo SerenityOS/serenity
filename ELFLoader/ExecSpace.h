@@ -37,7 +37,7 @@ public:
     ExecSpace();
     ~ExecSpace();
 
-#ifdef SERENITY_KERNEL
+#ifdef SERENITY
     bool loadELF(ByteBuffer&&);
 #else
     bool loadELF(MappedFile&&);

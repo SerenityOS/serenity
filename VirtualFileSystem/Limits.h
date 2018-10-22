@@ -2,7 +2,7 @@
 
 #include "UnixTypes.h"
 
-#ifdef SERENITY_KERNEL
+#ifdef SERENITY
 inline static const Unix::off_t maxFileOffset = 2147483647;
 #else
 #include <limits>

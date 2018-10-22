@@ -15,7 +15,7 @@ typedef dword nlink_t;
 typedef dword uid_t;
 typedef dword gid_t;
 
-#ifdef SERENITY_KERNEL
+#ifdef SERENITY
 // FIXME: Support 64-bit offsets!
 typedef signed_dword off_t;
 typedef unsigned int time_t;

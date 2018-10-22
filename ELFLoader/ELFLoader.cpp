@@ -1,7 +1,7 @@
 #include "ELFLoader.h"
 #include <AK/kstdio.h>
 
-#ifdef SERENITY_KERNEL
+#ifdef SERENITY
 ELFLoader::ELFLoader(ExecSpace& execSpace, ByteBuffer&& file)
 #else
 ELFLoader::ELFLoader(ExecSpace& execSpace, MappedFile&& file)
