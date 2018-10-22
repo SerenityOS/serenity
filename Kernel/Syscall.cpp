@@ -51,8 +51,8 @@ DWORD handle(DWORD function, DWORD arg1, DWORD arg2, DWORD arg3)
     case Syscall::Yield:
         yield();
         break;
-    case 0x1235: // putch
-        kprintf( "%c", arg1 & 0xFF );
+    case Syscall::PutCharacter:
+        kprintf("%c", arg1 & 0xff);
         break;
     case Syscall::Sleep:
         //kprintf("syscall: sleep(%d)\n", arg1);

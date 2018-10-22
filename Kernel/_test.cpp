@@ -8,5 +8,8 @@ extern "C" int elf_entry()
     char buf[2048];
     int nread = read(fd, buf, sizeof(buf));
     buf[nread] = '\0';
+    for (int i = 0; i < nread; ++i) {
+        putch(buf[i]);
+    }
     return 0;
 }
