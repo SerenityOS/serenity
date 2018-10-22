@@ -551,6 +551,16 @@ uid_t Task::sys$getuid()
     return m_uid;
 }
 
+gid_t Task::sys$getgid()
+{
+    return m_gid;
+}
+
+pid_t Task::sys$getpid()
+{
+    return m_pid;
+}
+
 bool Task::acceptsMessageFrom(Task& peer)
 {
     return !ipc.msg.isValid() && (ipc.src == IPC::Handle::Any || ipc.src == peer.handle());
