@@ -1,3 +1,3 @@
 #pragma once
 
-#include "VGA.h"
+#include "kprintf.h"
