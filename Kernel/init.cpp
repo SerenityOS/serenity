@@ -27,25 +27,8 @@
 #include "Console.h"
 
 #define TEST_VFS
-#define TEST_ELF_LOADER
-#define TEST_CRASHY_USER_PROCESSES
-
-#if 0
-/* Keyboard LED disco task ;^) */
-
-static void led_disco() NORETURN;
-
-static void led_disco()
-{
-    BYTE b = 0;
-    for (;;) {
-        sleep(0.5 * TICKS_PER_SECOND);
-        Keyboard::unsetLED((Keyboard::LED)b++);
-        b &= 7;
-        Keyboard::setLED((Keyboard::LED)b);
-    }
-}
-#endif
+//#define TEST_ELF_LOADER
+//#define TEST_CRASHY_USER_PROCESSES
 
 static void motd_main() NORETURN;
 static void motd_main()
@@ -115,7 +98,6 @@ static void init_stage2() NORETURN;
 static void init_stage2()
 {
     kprintf("init stage2...\n");
-    Keyboard::initialize();
 
     // Anything that registers interrupts goes *after* PIC and IDT for obvious reasons.
     Syscall::initialize();
@@ -192,10 +174,14 @@ static void init_stage2()
 
     kprintf("init stage2 is done!\n");
 
+#if 0
+    // It would be nice to exit this process, but right now it instantiates all kinds of things.
+    // At the very least it needs to be made sure those things stick around as appropriate.
     DO_SYSCALL_A1(Syscall::PosixExit, 413);
 
     kprintf("uh, we're still going after calling sys$exit...\n");
     HANG;
+#endif
 
     for (;;) {
         asm("hlt");
@@ -216,6 +202,8 @@ void init()
     idt_init();
 
     MemoryManager::initialize();
+
+    auto keyboard = make<Keyboard>();
 
     PIT::initialize();
 

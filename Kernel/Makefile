@@ -19,7 +19,8 @@ KERNEL_OBJS = \
        Userspace.o \
        IDEDiskDevice.o \
        MemoryManager.o \
-       Console.o
+       Console.o \
+       IRQHandler.o
 
 VFS_OBJS = \
     ../VirtualFileSystem/DiskDevice.o \

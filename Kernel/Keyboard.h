@@ -1,16 +1,16 @@
 #pragma once
 
-namespace Keyboard {
+#include <AK/Types.h>
+#include "IRQHandler.h"
 
-enum class LED {
-    ScrollLock = 1 << 0,
-    NumLock    = 1 << 1,
-    CapsLock   = 1 << 2,
+class Keyboard final : public IRQHandler {
+public:
+    virtual ~Keyboard() override;
+    Keyboard();
+
+private:
+    virtual void handleIRQ() override;
+
+    byte m_modifiers { 0 };
 };
 
-void initialize();
-void setLED(LED);
-void unsetLED(LED);
-void handleInterrupt();
-
-}
