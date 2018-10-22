@@ -170,7 +170,7 @@ static void init_stage2()
 
 #ifdef TEST_ELF_LOADER
     {
-        auto testExecutable = vfs->open("/_hello.o");
+        auto testExecutable = vfs->open("/_test.o");
         ASSERT(testExecutable);
         auto testExecutableData = testExecutable->readEntireFile();
         ASSERT(testExecutableData);

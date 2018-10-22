@@ -10,6 +10,7 @@ namespace Syscall {
 enum Function {
     Sleep = 0x1982,
     Yield = 0x1983,
+    PutCharacter = 1984,
     PosixOpen = 0x1985,
     PosixClose = 0x1986,
     PosixRead = 0x1987,

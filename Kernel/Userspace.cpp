@@ -52,4 +52,9 @@ void yield()
     DO_SYSCALL_A0(Syscall::Yield);
 }
 
+void putch(char ch)
+{
+    DO_SYSCALL_A1(Syscall::PutCharacter, ch);
+}
+
 }
