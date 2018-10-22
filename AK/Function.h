@@ -25,6 +25,7 @@
 
 #pragma once
 
+#include "Assertions.h"
 #include "OwnPtr.h"
 #include "StdLib.h"
 

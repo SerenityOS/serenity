@@ -7,6 +7,7 @@
 #include "system.h"
 #include <VirtualFileSystem/FileHandle.h>
 #include <VirtualFileSystem/VirtualFileSystem.h>
+#include <ELFLoader/ExecSpace.h>
 #include "MemoryManager.h"
 
 Task* current;
@@ -101,6 +102,104 @@ Task::Region* Task::allocateRegion(size_t size, String&& name)
     m_regions.append(make<Region>(m_nextRegion, size, move(zone), move(name)));
     m_nextRegion = m_nextRegion.offset(size).offset(16384);
     return m_regions.last().ptr();
+}
+
+Task* Task::create(const String& path, uid_t uid, gid_t gid)
+{
+    auto parts = path.split('/');
+    if (parts.isEmpty())
+        return nullptr;
+
+    auto handle = VirtualFileSystem::the().open(path);
+    if (!handle)
+        return nullptr;
+
+    auto elfData = handle->readEntireFile();
+    if (!elfData)
+        return nullptr;
+
+    Task* t = new Task(parts.takeLast(), uid, gid);
+
+    ExecSpace space;
+    space.hookableAlloc = [&] (const String& name, size_t size) {
+        if (!size)
+            return (void*)nullptr;
+        size = ((size / 4096) + 1) * 4096;
+        Region* region = t->allocateRegion(size, String(name));
+        ASSERT(region);
+        MemoryManager::the().mapRegion(*t, *region);
+        return (void*)region->linearAddress.asPtr();
+    };
+    bool success = space.loadELF(move(elfData));
+    if (!success) {
+        delete t;
+        return nullptr;
+    }
+
+    t->m_tss.eip = (dword)space.symbolPtr("_start");
+
+    // Add this task to head of task list (meaning it's next to run too, ATM.)
+    cli();
+    s_tasks->prepend(t);
+    system.nprocess++;
+    kprintf("Task %u (%s) spawned @ %p\n", t->pid(), t->name().characters(), t->m_tss.eip);
+    sti();
+
+    return t;
+}
+
+Task::Task(String&& name, uid_t uid, gid_t gid)
+    : m_name(move(name))
+    , m_pid(next_pid++)
+    , m_uid(uid)
+    , m_gid(gid)
+    , m_state(Runnable)
+    , m_ring(Ring3)
+{
+    m_nextRegion = LinearAddress(0x600000);
+
+    memset(&m_tss, 0, sizeof(m_tss));
+    memset(&m_ldtEntries, 0, sizeof(m_ldtEntries));
+
+    allocateLDT();
+
+    // Only IF is set when a task boots.
+    m_tss.eflags = 0x0202;
+
+    WORD codeSegment = 0x1b;
+    WORD dataSegment = 0x23;
+    WORD stackSegment = dataSegment;
+
+    m_tss.ds = dataSegment;
+    m_tss.es = dataSegment;
+    m_tss.fs = dataSegment;
+    m_tss.gs = dataSegment;
+    m_tss.ss = stackSegment;
+    m_tss.cs = codeSegment;
+
+    m_tss.cr3 = MemoryManager::the().pageDirectoryBase().get();
+
+    // NOTE: Each task gets 16KB of stack.
+    static const DWORD defaultStackSize = 16384;
+
+    auto* region = allocateRegion(defaultStackSize, "stack");
+    ASSERT(region);
+    m_stackTop = region->linearAddress.offset(defaultStackSize).get() & 0xfffffff8;
+    m_tss.esp = m_stackTop;
+
+    // Set up a separate stack for Ring0.
+    // FIXME: Don't leak this stack.
+    m_kernelStack = kmalloc(defaultStackSize);
+    DWORD ring0StackTop = ((DWORD)m_kernelStack + defaultStackSize) & 0xffffff8;
+    m_tss.ss0 = 0x10;
+    m_tss.esp0 = ring0StackTop;
+
+    // HACK: Ring2 SS in the TSS is the current PID.
+    m_tss.ss2 = m_pid;
+
+    m_farPtr.offset = 0x98765432;
+
+    ASSERT(m_pid);
 }
 
 Task::Task(void (*e)(), const char* n, IPC::Handle h, RingLevel ring)
@@ -241,7 +340,6 @@ void Task::sys$exit(int status)
     kprintf("sys$exit: %s(%u) exit with status %d\n", name().characters(), pid(), status);
 
     setState(Exiting);
-    dumpRegions();
 
     s_tasks->remove(this);
 
