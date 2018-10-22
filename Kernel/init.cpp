@@ -27,7 +27,7 @@
 #include "Console.h"
 
 #define TEST_VFS
-//#define TEST_ELF_LOADER
+#define TEST_ELF_LOADER
 //#define TEST_CRASHY_USER_PROCESSES
 
 static void motd_main() NORETURN;
@@ -101,8 +101,6 @@ static void init_stage2()
 
     // Anything that registers interrupts goes *after* PIC and IDT for obvious reasons.
     Syscall::initialize();
-
-    VirtualFileSystem::initializeGlobals();
 
     extern void panel_main();
 
@@ -202,6 +200,9 @@ void init()
     idt_init();
 
     MemoryManager::initialize();
+
+    VirtualFileSystem::initializeGlobals();
+    StringImpl::initializeGlobals();
 
     auto keyboard = make<Keyboard>();
 

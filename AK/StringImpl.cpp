@@ -4,12 +4,17 @@
 
 namespace AK {
 
+static StringImpl* s_theEmptyStringImpl = nullptr;
+
+void StringImpl::initializeGlobals()
+{
+    s_theEmptyStringImpl = new StringImpl(ConstructTheEmptyStringImpl);;
+}
+
 StringImpl& StringImpl::theEmptyStringImpl()
 {
-    static StringImpl* s = nullptr;
-    if (!s)
-        s = new StringImpl(ConstructTheEmptyStringImpl);
-    return *s;
+    ASSERT(s_theEmptyStringImpl);
+    return *s_theEmptyStringImpl;
 }
 
 StringImpl::~StringImpl()
