@@ -3,14 +3,13 @@
 #include "types.h"
 #include <Kernel/Syscall.h>
 
-template<typename PutChFunc>
-int printHex(PutChFunc putch, char*& bufptr, dword number, byte fields)
-{
-    static const char h[] = {
-        '0','1','2','3','4','5','6','7',
-        '8','9','a','b','c','d','e','f'
-    };
+#define ALWAYS_INLINE __attribute__ ((always_inline))
 
+static const char h[] = { '0','1','2','3','4','5','6','7', '8','9','a','b','c','d','e','f' };
+
+template<typename PutChFunc>
+ALWAYS_INLINE int printHex(PutChFunc putch, char*& bufptr, dword number, byte fields)
+{
     int ret = 0;
     byte shr_count = fields * 4;
     while (shr_count) {
@@ -22,7 +21,7 @@ int printHex(PutChFunc putch, char*& bufptr, dword number, byte fields)
 }
 
 template<typename PutChFunc>
-int printNumber(PutChFunc putch, char*& bufptr, dword number)
+ALWAYS_INLINE int printNumber(PutChFunc putch, char*& bufptr, dword number)
 {
     dword divisor = 1000000000;
     char ch;
@@ -49,7 +48,7 @@ int printNumber(PutChFunc putch, char*& bufptr, dword number)
 }
 
 template<typename PutChFunc>
-static int printSignedNumber(PutChFunc putch, char*& bufptr, int number)
+ALWAYS_INLINE int printSignedNumber(PutChFunc putch, char*& bufptr, int number)
 {
     if (number < 0) {
         putch(bufptr, '-');
