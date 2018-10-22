@@ -20,7 +20,8 @@ KERNEL_OBJS = \
        IDEDiskDevice.o \
        MemoryManager.o \
        Console.o \
-       IRQHandler.o
+       IRQHandler.o \
+       kprintf.o
 
 VFS_OBJS = \
     ../VirtualFileSystem/DiskDevice.o \

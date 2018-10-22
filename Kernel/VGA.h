@@ -11,5 +11,3 @@ WORD vga_get_cursor();
 void vga_putch_at(byte row, byte column, byte ch);
 void vga_scroll_up();
 
-int kprintf(const char *fmt, ...);
-int ksprintf(char* buf, const char *fmt, ...);
