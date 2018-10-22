@@ -1,6 +1,6 @@
 #pragma once
 
-#ifdef SERENITY_KERNEL
+#ifdef SERENITY
 #include <Kernel/ktime.h>
 #else
 #include <time.h>

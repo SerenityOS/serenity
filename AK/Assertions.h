@@ -1,6 +1,6 @@
 #pragma once
 
-#ifdef SERENITY_KERNEL
+#ifdef SERENITY
 #include "kassert.h"
 #else
 #include <assert.h>

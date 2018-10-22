@@ -1,7 +1,7 @@
 #include "ELFImage.h"
 #include <AK/kstdio.h>
 
-#ifdef SERENITY_KERNEL
+#ifdef SERENITY
 ELFImage::ELFImage(ByteBuffer&& buffer)
     : m_buffer(buffer)
 {
@@ -136,7 +136,7 @@ const char* ELFImage::tableString(unsigned offset) const
 
 const char* ELFImage::rawData(unsigned offset) const
 {
-#ifdef SERENITY_KERNEL
+#ifdef SERENITY
     return reinterpret_cast<const char*>(m_buffer.pointer()) + offset;
 #else
     return reinterpret_cast<const char*>(m_file.pointer()) + offset;

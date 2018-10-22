@@ -61,7 +61,7 @@ FLAVOR_FLAGS = -fomit-frame-pointer -mregparm=3 -march=i386 -m32 -fno-exceptions
 OPTIMIZATION_FLAGS = -Os -fno-asynchronous-unwind-tables
 INCLUDE_FLAGS = -I.. -I.
 
-DEFINES = -DSERENITY_KERNEL -DSANITIZE_PTRS
+DEFINES = -DSERENITY -DSANITIZE_PTRS
 
 CXXFLAGS = $(WARNING_FLAGS) $(OPTIMIZATION_FLAGS) $(KERNEL_FLAGS) $(FLAVOR_FLAGS) $(ARCH_FLAGS) $(STANDARD_FLAGS) $(INCLUDE_FLAGS) $(DEFINES)
 #CXX = /usr/local/gcc-4.8.1-for-linux64/bin/x86_64-pc-linux-g++

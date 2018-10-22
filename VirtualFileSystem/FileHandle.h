@@ -14,7 +14,7 @@ public:
 
     ByteBuffer readEntireFile();
 
-#ifdef SERENITY_KERNEL
+#ifdef SERENITY
     int fd() const { return m_fd; }
     void setFD(int fd) { m_fd = fd; }
 #endif
@@ -26,7 +26,7 @@ private:
 
     Unix::off_t m_currentOffset { 0 };
 
-#ifdef SERENITY_KERNEL
+#ifdef SERENITY
     int m_fd { -1 };
 #endif
 };
