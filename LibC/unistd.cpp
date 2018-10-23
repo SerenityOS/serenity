@@ -1,4 +1,5 @@
 #include "unistd.h"
+#include "string.h"
 #include <Kernel/Syscall.h>
 
 extern "C" {
@@ -16,6 +17,22 @@ uid_t getgid()
 uid_t getpid()
 {
     return Syscall::invoke(Syscall::PosixGetpid);
+}
+
+int open(const char* path)
+{
+    size_t length = strlen(path);
+    return Syscall::invoke(Syscall::PosixOpen, (dword)path, (dword)length);
+}
+
+ssize_t read(int fd, void* buf, size_t count)
+{
+    return Syscall::invoke(Syscall::PosixRead, (dword)fd, (dword)buf, (dword)count);
+}
+
+int close(int fd)
+{
+    return Syscall::invoke(Syscall::PosixClose, fd);
 }
 
 }

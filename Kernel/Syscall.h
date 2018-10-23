@@ -10,6 +10,7 @@
 namespace Syscall {
 
 enum Function {
+    Spawn = 0x1981,
     Sleep = 0x1982,
     Yield = 0x1983,
     PutCharacter = 1984,

@@ -141,7 +141,8 @@ extern "C" {
 
 int putchar(int ch)
 {
-    return ch;
+    Syscall::invoke(Syscall::PutCharacter, ch);
+    return (byte)ch;
 }
 
 int printf(const char* fmt, ...)

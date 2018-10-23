@@ -99,13 +99,12 @@ static void init_stage2()
 {
     kprintf("init stage2...\n");
 
-    // Anything that registers interrupts goes *after* PIC and IDT for obvious reasons.
     Syscall::initialize();
 
+    auto keyboard = make<Keyboard>();
+
     extern void panel_main();
-
     new Task(panel_main, "panel", IPC::Handle::PanelTask, Task::Ring0);
-
     //new Task(led_disco, "led-disco", IPC::Handle::Any, Task::Ring0);
 
     Disk::initialize();
@@ -124,6 +123,8 @@ static void init_stage2()
 
     auto dev_random = make<RandomDevice>();
     vfs->registerCharacterDevice(1, 8, *dev_random);
+
+    vfs->registerCharacterDevice(85, 1, *keyboard);
 
     auto dev_hd0 = IDEDiskDevice::create();
     auto e2fs = Ext2FileSystem::create(dev_hd0.copyRef());
@@ -167,7 +168,9 @@ static void init_stage2()
     }
 #endif
 
-    auto* idTask = Task::create("/bin/id", (uid_t)209, (gid_t)1985);
+    //auto* idTask = Task::create("/bin/id", (uid_t)209, (gid_t)1985);
+
+    auto* shTask = Task::create("/bin/sh", (uid_t)100, (gid_t)100);
 
     //new Task(motd_main, "motd", IPC::Handle::MotdTask, Task::Ring0);
     //new Task(syscall_test_main, "syscall_test", IPC::Handle::MotdTask, Task::Ring3);
@@ -205,8 +208,6 @@ void init()
 
     VirtualFileSystem::initializeGlobals();
     StringImpl::initializeGlobals();
-
-    auto keyboard = make<Keyboard>();
 
     PIT::initialize();
 

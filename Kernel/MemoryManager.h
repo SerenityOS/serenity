@@ -51,6 +51,7 @@ public:
     byte* quickMapOnePage(PhysicalAddress);
 
     bool mapRegion(Task&, Task::Region&);
+    bool unmapRegion(Task&, Task::Region&);
     bool mapRegionsForTask(Task&);
     bool unmapRegionsForTask(Task&);
 

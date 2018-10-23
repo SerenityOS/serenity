@@ -156,8 +156,28 @@ byte* MemoryManager::quickMapOnePage(PhysicalAddress physicalAddress)
     return (byte*)(4 * MB);
 }
 
+bool MemoryManager::unmapRegion(Task& task, Task::Region& region)
+{
+    auto& zone = *region.zone;
+    for (size_t i = 0; i < zone.m_pages.size(); ++i) {
+        auto laddr = region.linearAddress.offset(i * PAGE_SIZE);
+        auto pte = ensurePTE(laddr);
+        pte.setPhysicalPageBase(0);
+        pte.setPresent(false);
+        pte.setWritable(false);
+        pte.setUserAllowed(false);
+
+//        kprintf("MM: >> Unmapped L%x => P%x <<\n", laddr, zone.m_pages[i].get());
+    }
+    return true;
+}
+
 bool MemoryManager::unmapRegionsForTask(Task& task)
 {
+    for (auto& region : task.m_regions) {
+        if (!unmapRegion(task, *region))
+            return false;
+    }
     return true;
 }
 

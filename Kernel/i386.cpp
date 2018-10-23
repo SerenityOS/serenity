@@ -78,12 +78,14 @@ asm( \
     "    pushw %ss\n" \
     "    pushw %ss\n" \
     "    pushw %ss\n" \
+    "    pushw %ss\n" \
     "    popw %ds\n" \
     "    popw %es\n" \
     "    popw %fs\n" \
     "    popw %gs\n" \
     "    mov %esp, exception_state_dump\n" \
     "    call exception_" # ec "_handler\n" \
+    "    popw %gs\n" \
     "    popw %gs\n" \
     "    popw %fs\n" \
     "    popw %es\n" \
@@ -107,12 +109,14 @@ asm( \
     "    pushw %ss\n" \
     "    pushw %ss\n" \
     "    pushw %ss\n" \
+    "    pushw %ss\n" \
     "    popw %ds\n" \
     "    popw %es\n" \
     "    popw %fs\n" \
     "    popw %gs\n" \
     "    mov %esp, exception_state_dump\n" \
     "    call exception_" # ec "_handler\n" \
+    "    popw %gs\n" \
     "    popw %gs\n" \
     "    popw %fs\n" \
     "    popw %es\n" \

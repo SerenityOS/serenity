@@ -1,0 +1,5 @@
+mkdir mnt
+mount -o loop _fs_contents mnt/
+cp ../Userland/sh mnt/bin/sh
+umount mnt
+sync

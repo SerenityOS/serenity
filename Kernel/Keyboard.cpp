@@ -47,7 +47,7 @@ void Keyboard::handleIRQ()
         case 0x9D: m_modifiers &= ~MOD_CTRL; break;
         case 0x2A: m_modifiers |= MOD_SHIFT; break;
         case 0xAA: m_modifiers &= ~MOD_SHIFT; break;
-        case 0x1C: /* enter */ kprintf("\n"); break;
+        case 0x1C: /* enter */ m_queue.enqueue('\n'); break;
         case 0xFA: /* i8042 ack */ break;
         default:
             if (ch & 0x80) {
@@ -55,11 +55,14 @@ void Keyboard::handleIRQ()
                 break;
             }
             if (!m_modifiers)
-                kprintf("%c", map[ch]);
+                m_queue.enqueue(map[ch]);
             else if (m_modifiers & MOD_SHIFT)
-                kprintf("%c", shift_map[ch]);
-            else if (m_modifiers & MOD_CTRL)
-                kprintf("^%c", shift_map[ch]);
+                m_queue.enqueue(shift_map[ch]);
+            else if (m_modifiers & MOD_CTRL) {
+                // FIXME: This is obviously not a good enough way to process ctrl+whatever.
+                m_queue.enqueue('^');
+                m_queue.enqueue(shift_map[ch]);
+            }
         }
         //break;
     }
@@ -81,3 +84,18 @@ Keyboard::~Keyboard()
     ASSERT_NOT_REACHED();
 }
 
+ssize_t Keyboard::read(byte* buffer, size_t size)
+{
+    ssize_t nread = 0;
+    while (nread < size) {
+        if (m_queue.isEmpty())
+            break;
+        buffer[nread++] = m_queue.dequeue();
+    }
+    return nread;
+}
+
+ssize_t Keyboard::write(const byte* data, size_t size)
+{
+    return 0;
+}

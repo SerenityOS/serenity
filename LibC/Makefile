@@ -1,6 +1,8 @@
 OBJS = \
        stdio.o \
        unistd.o \
+       string.o \
+       process.o \
        entry.o
 
 LIBRARY = LibC.a
