@@ -19,6 +19,8 @@ public:
     static Task* create(const String& path, uid_t, gid_t);
     Task(String&& name, uid_t, gid_t);
 
+    static Vector<Task*> allTasks();
+
 #ifdef TASK_SANITY_CHECKS
     static void checkSanity(const char* msg = nullptr);
 #else
@@ -58,6 +60,8 @@ public:
     TSS32& tss() { return m_tss; }
     State state() const { return m_state; }
     IPC::Handle handle() const { return m_handle; }
+    uid_t uid() const { return m_uid; }
+    uid_t gid() const { return m_gid; }
 
     const FarPtr& farPtr() const { return m_farPtr; }
 

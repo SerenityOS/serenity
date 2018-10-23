@@ -45,7 +45,7 @@ public:
     InlineLinkedList() { }
     
     bool isEmpty() const { return !m_head; }
-    size_t size() const;
+    size_t sizeSlow() const;
     void clear();
 
     T* head() const { return m_head; }
@@ -72,7 +72,7 @@ private:
     T* m_tail { nullptr };
 };
 
-template<typename T> inline size_t InlineLinkedList<T>::size() const
+template<typename T> inline size_t InlineLinkedList<T>::sizeSlow() const
 {
     size_t size = 0;
     for (T* node = m_head; node; node = node->next())
