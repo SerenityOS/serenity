@@ -168,8 +168,6 @@ static void init_stage2()
     }
 #endif
 
-    //auto* idTask = Task::create("/bin/id", (uid_t)209, (gid_t)1985);
-
     auto* shTask = Task::create("/bin/sh", (uid_t)100, (gid_t)100);
 
     //new Task(motd_main, "motd", IPC::Handle::MotdTask, Task::Ring0);
