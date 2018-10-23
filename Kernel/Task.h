@@ -67,6 +67,8 @@ public:
 
     FileHandle* fileHandleIfExists(int fd);
 
+    static void doHouseKeeping();
+
     bool acceptsMessageFrom(Task&);
 
     void block(Task::State);
