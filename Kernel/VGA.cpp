@@ -33,22 +33,15 @@ byte vga_get_attr()
 
 void vga_init()
 {
-    DWORD i;
-
     current_attr = 0x07;
-    vga_mem = (BYTE *)0xb8000;
+    vga_mem = (byte*)0xb8000;
 
-    for (i = 0; i < (80 * 24); ++i) {
+    for (word i = 0; i < (80 * 25); ++i) {
         vga_mem[i*2] = ' ';
         vga_mem[i*2 + 1] = 0x07;
     }
 
-    // Fill the bottom line with blue.
-    for (i = (80 * 24); i < (80 * 25); ++i) {
-        vga_mem[i*2] = ' ';
-        vga_mem[i*2 + 1] = 0x17;
-    }
-    vga_set_cursor( 0 );
+    vga_set_cursor(0);
 }
 
 WORD vga_get_cursor()

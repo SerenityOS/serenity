@@ -21,6 +21,8 @@ int main(int c, char** v)
     if (c >= 2)
         filename = v[1];
 
+    VirtualFileSystem::initializeGlobals();
+
     VirtualFileSystem vfs;
 
     auto zero = make<ZeroDevice>();

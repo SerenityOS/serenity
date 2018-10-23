@@ -20,9 +20,18 @@ VirtualFileSystem& VirtualFileSystem::the()
     return *s_the;
 }
 
+static SpinLock* s_vfsLock;
+
+SpinLock& VirtualFileSystem::lock()
+{
+    ASSERT(s_vfsLock);
+    return *s_vfsLock;
+}
+
 void VirtualFileSystem::initializeGlobals()
 {
     s_the = nullptr;
+    s_vfsLock = new SpinLock;
     FileSystem::initializeGlobals();
 }
 
@@ -336,6 +345,8 @@ void VirtualFileSystem::listDirectoryRecursively(const String& path)
 
 bool VirtualFileSystem::touch(const String& path)
 {
+    Locker locker(VirtualFileSystem::lock());
+
     auto inode = resolvePath(path);
     if (!inode.isValid())
         return false;
@@ -344,6 +355,8 @@ bool VirtualFileSystem::touch(const String& path)
 
 OwnPtr<FileHandle> VirtualFileSystem::open(const String& path)
 {
+    Locker locker(VirtualFileSystem::lock());
+
     auto inode = resolvePath(path);
     if (!inode.isValid())
         return nullptr;
@@ -355,6 +368,8 @@ OwnPtr<FileHandle> VirtualFileSystem::open(const String& path)
 
 OwnPtr<FileHandle> VirtualFileSystem::create(const String& path)
 {
+    Locker locker(VirtualFileSystem::lock());
+
     // FIXME: Do the real thing, not just this fake thing!
     (void) path;
     m_rootNode->fileSystem()->createInode(m_rootNode->fileSystem()->rootInode(), "empty", 0100644, 0);
@@ -363,6 +378,8 @@ OwnPtr<FileHandle> VirtualFileSystem::create(const String& path)
 
 OwnPtr<FileHandle> VirtualFileSystem::mkdir(const String& path)
 {
+    Locker locker(VirtualFileSystem::lock());
+
     // FIXME: Do the real thing, not just this fake thing!
     (void) path;
     m_rootNode->fileSystem()->makeDirectory(m_rootNode->fileSystem()->rootInode(), "mydir", 0400755);

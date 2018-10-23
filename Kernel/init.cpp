@@ -32,53 +32,6 @@
 //#define TEST_ELF_LOADER
 //#define TEST_CRASHY_USER_PROCESSES
 
-static void motd_main() NORETURN;
-static void motd_main()
-{
-    kprintf("Hello in motd_main!\n");
-    int fd = Userspace::open("/test.asm");
-    kprintf("motd: fd=%d\n", fd);
-    ASSERT(fd != -1);
-    DO_SYSCALL_A3(0x2000, 1, 2, 3);
-    kprintf("getuid(): %u\n", Userspace::getuid());
-    auto buffer = DataBuffer::createUninitialized(33);
-    memset(buffer->data(), 0, buffer->length());
-    int nread = Userspace::read(fd, buffer->data(), buffer->length() - 1);
-    kprintf("read(): %d\n", nread);
-    buffer->data()[nread] = 0;
-    kprintf("read(): '%s'\n", buffer->data());
-    for (;;) {
-        //kill(4, 5);
-        sleep(1 * TICKS_PER_SECOND);
-    }
-}
-
-static void syscall_test_main() NORETURN;
-static void syscall_test_main()
-{
-    kprintf("Hello in syscall_test_main!\n");
-    for (;;) {
-        Userspace::getuid();
-//        Userspace::yield();
-        //kprintf("getuid(): %u\n", Userspace::getuid());
-        sleep(1 * TICKS_PER_SECOND);
-    }
-}
-
-static void user_main() NORETURN;
-static void user_main()
-{
-    DO_SYSCALL_A3(0x3000, 2, 3, 4);
-    // Crash ourselves!
-    char* x = reinterpret_cast<char*>(0xbeefbabe);
-    *x = 1;
-    HANG;
-    for (;;) {
-        // nothing?
-        Userspace::sleep(1 * TICKS_PER_SECOND);
-    }
-}
-
 system_t system;
 
 void banner()
@@ -192,10 +145,7 @@ static void init_stage2()
 
     auto* shTask = Task::create("/bin/sh", (uid_t)100, (gid_t)100);
 
-    //new Task(motd_main, "motd", IPC::Handle::MotdTask, Task::Ring0);
-    //new Task(syscall_test_main, "syscall_test", IPC::Handle::MotdTask, Task::Ring3);
-
-    kprintf("init stage2 is done!\n");
+    banner();
 
 #if 0
     // It would be nice to exit this process, but right now it instantiates all kinds of things.
