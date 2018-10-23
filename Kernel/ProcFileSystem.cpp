@@ -21,7 +21,7 @@ bool ProcFileSystem::initialize()
         cli();
         auto tasks = Task::allTasks();
         char* buffer;
-        auto stringImpl = StringImpl::createUninitialized(tasks.size() * 64, buffer);
+        auto stringImpl = StringImpl::createUninitialized(tasks.size() * 128, buffer);
         memset(buffer, 0, stringImpl->length());
         char* ptr = buffer;
         ptr += ksprintf(ptr, "PID    OWNER      STATE  NAME\n");
@@ -33,6 +33,7 @@ bool ProcFileSystem::initialize()
                 task->state(),
                 task->name().characters());
         }
+        ptr += ksprintf(ptr, "kmalloc: alloc: %u / free: %u\n", sum_alloc, sum_free);
         *ptr = '\0';
         sti();
         return ByteBuffer::copy((byte*)buffer, ptr - buffer);

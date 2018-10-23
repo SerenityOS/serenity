@@ -12,9 +12,9 @@ public:
     virtual ssize_t read(byte* buffer, size_t size) override;
     virtual ssize_t write(const byte* data, size_t size) override;
 
-private:
     void putChar(char);
 
+private:
     const byte m_rows { 25 };
     const byte m_columns { 80 };
     byte m_cursorRow { 0 };

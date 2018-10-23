@@ -1,7 +1,7 @@
 #include "i386.h"
-#include "VGA.h"
 #include "Task.h"
 #include "Syscall.h"
+#include "Console.h"
 
 extern "C" void syscall_entry();
 extern "C" void syscall_ISR();
@@ -38,23 +38,92 @@ asm(
     "    iret\n"
 );
 
+static inline dword CAS(dword* mem, dword newval, dword oldval)
+{
+    dword ret;
+    asm volatile(
+        "cmpxchgl %2, %1"
+        :"=a"(ret), "=m"(*mem)
+        :"r"(newval), "m"(*mem), "0"(oldval));
+    return ret;
+}
+
+class SpinLock {
+public:
+    SpinLock()
+    {
+    }
+
+    ~SpinLock()
+    {
+        unlock();
+    }
+
+    void lock()
+    {
+        volatile dword count = 0;
+        for (;;) {
+            if (CAS(&m_lock, 1, 0) == 1)
+                return;
+            ++count;
+
+        }
+        if (count)
+            kprintf("waited %u in %s\n",count, current->name().characters());
+    }
+
+    void unlock()
+    {
+        // barrier();
+        m_lock = 0;
+    }
+
+private:
+    dword m_lock { 0 };
+};
+
+class Locker {
+public:
+    explicit Locker(SpinLock& l)
+        : m_lock(l)
+    {
+        m_lock.lock();
+    }
+
+    ~Locker()
+    {
+        unlock();
+    }
+
+    void unlock()
+    {
+        m_lock.unlock();
+    }
+
+private:
+    SpinLock& m_lock;
+};
+
 namespace Syscall {
+
+static SpinLock* s_lock;
 
 void initialize()
 {
+    s_lock = new SpinLock;
     registerUserCallableInterruptHandler(0x80, syscall_ISR);
-
     kprintf("syscall: int 0x80 handler installed\n");
 }
 
 DWORD handle(DWORD function, DWORD arg1, DWORD arg2, DWORD arg3)
 {
+    Locker locker(*s_lock);
     switch (function) {
     case Syscall::Yield:
         yield();
         break;
     case Syscall::PutCharacter:
-        kprintf("%c", arg1 & 0xff);
+        Console::the().putChar(arg1 & 0xff);
         break;
     case Syscall::Sleep:
         //kprintf("syscall: sleep(%d)\n", arg1);
@@ -73,8 +142,8 @@ DWORD handle(DWORD function, DWORD arg1, DWORD arg2, DWORD arg3)
         return current->sys$read((int)arg1, (void*)arg2, (size_t)arg3);
     case Syscall::PosixSeek:
         // FIXME: This has the wrong signature, should be like lseek()
-        kprintf("syscall: seek(%d, %p, %u)\n", arg1, arg2, arg3);
-        return current->sys$read((int)arg1, (void*)arg2, (size_t)arg3);
+        kprintf("syscall: seek(%d, %d)\n", arg1, arg2);
+        return current->sys$seek((int)arg1, (int)arg2);
     case Syscall::PosixKill:
         kprintf("syscall: kill(%d, %d)\n", arg1, arg2);
         return current->sys$kill((pid_t)arg1, (int)arg2);
@@ -85,6 +154,8 @@ DWORD handle(DWORD function, DWORD arg1, DWORD arg2, DWORD arg3)
     case Syscall::PosixGetpid:
         return current->sys$getpid();
     case Syscall::PosixExit:
+        cli();
+        locker.unlock();
         current->sys$exit((int)arg1);
         ASSERT_NOT_REACHED();
         return 0;
