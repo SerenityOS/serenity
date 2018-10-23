@@ -1,6 +1,8 @@
 #include "ELFLoader.h"
 #include <AK/kstdio.h>
 
+//#define ELFLOADER_DEBUG
+
 #ifdef SERENITY
 ELFLoader::ELFLoader(ExecSpace& execSpace, ByteBuffer&& file)
 #else
@@ -17,7 +19,9 @@ ELFLoader::~ELFLoader()
 
 bool ELFLoader::load()
 {
+#ifdef ELFLOADER_DEBUG
     m_image->dump();
+#endif
     if (!m_image->isValid())
         return false;
 
@@ -30,9 +34,13 @@ bool ELFLoader::load()
 
 void ELFLoader::layout()
 {
+#ifdef ELFLOADER_DEBUG
     kprintf("[ELFLoader] Layout\n");
+#endif
     m_image->forEachSectionOfType(SHT_PROGBITS, [this] (const ELFImage::Section& section) {
+#ifdef ELFLOADER_DEBUG
         kprintf("[ELFLoader] Allocating progbits section: %s\n", section.name());
+#endif
         char* ptr = m_execSpace.allocateArea(section.name(), section.size());
         memcpy(ptr, section.rawData(), section.size());
         m_sections.set(section.name(), move(ptr));
@@ -61,7 +69,9 @@ char* ELFLoader::areaForSectionName(const char* name)
 
 void ELFLoader::performRelocations()
 {
+#ifdef ELFLOADER_DEBUG
     kprintf("[ELFLoader] Performing relocations\n");
+#endif
 
     m_image->forEachSectionOfType(SHT_PROGBITS, [this] (const ELFImage::Section& section) {
         auto& relocations = section.relocations();
@@ -75,6 +85,7 @@ void ELFLoader::performRelocations()
             case R_386_PC32: {
                 char* targetPtr = (char*)lookup(symbol);
                 ptrdiff_t relativeOffset = (char*)targetPtr - ((char*)&patchPtr + 4);
+#ifdef ELFLOADER_DEBUG
                 kprintf("[ELFLoader] Relocate PC32:  offset=%x, symbol=%u(%s) value=%x target=%p, offset=%d\n",
                         relocation.offset(),
                         symbol.index(),
@@ -83,16 +94,19 @@ void ELFLoader::performRelocations()
                         targetPtr,
                         relativeOffset
                 );
+#endif
                 patchPtr = relativeOffset;
                 break;
             }
             case R_386_32: {
+#ifdef ELFLOADER_DEBUG
                 kprintf("[ELFLoader] Relocate Abs32: symbol=%u(%s), value=%x, section=%s\n",
                     symbol.index(),
                     symbol.name(),
                     symbol.value(),
                     symbol.section().name()
                 );
+#endif
                 char* targetPtr = areaForSection(symbol.section()) + symbol.value();
                 patchPtr += (ptrdiff_t)targetPtr;
                 break;
@@ -108,7 +122,9 @@ void ELFLoader::performRelocations()
 void ELFLoader::exportSymbols()
 {
     m_image->forEachSymbol([&] (const ELFImage::Symbol symbol) {
+#ifdef ELFLOADER_DEBUG
         kprintf("symbol: %u, type=%u, name=%s, section=%u\n", symbol.index(), symbol.type(), symbol.name(), symbol.sectionIndex());
+#endif
         if (symbol.type() == STT_FUNC)
             m_execSpace.addSymbol(symbol.name(), areaForSection(symbol.section()) + symbol.value(), symbol.size());
         // FIXME: What about other symbol types?

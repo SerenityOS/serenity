@@ -3,6 +3,8 @@
 #include <AK/TemporaryFile.h>
 #include <AK/Types.h>
 
+//#define EXECSPACE_DEBUG
+
 ExecSpace::ExecSpace()
 {
     initializeBuiltins();
@@ -36,6 +38,7 @@ bool ExecSpace::loadELF(MappedFile&& file)
     ELFLoader loader(*this, move(file));
     if (!loader.load())
         return false;
+#ifdef EXECSPACE_DEBUG
     kprintf("[ExecSpace] ELF loaded, symbol map now:\n");
     for (auto& s : m_symbols) {
         kprintf("> %p: %s (%u)\n",
@@ -43,9 +46,11 @@ bool ExecSpace::loadELF(MappedFile&& file)
                 s.key.characters(),
                 s.value.size);
     }
+#endif
     return true;
 }
 
+#ifdef EXECSPACE_DEBUG
 static void disassemble(const char* data, size_t length)
 {
     if (!length)
@@ -74,13 +79,16 @@ static void disassemble(const char* data, size_t length)
     system(cmdbuf);
 #endif
 }
+#endif
 
 char* ExecSpace::symbolPtr(const char* name)
 {
     if (auto it = m_symbols.find(name); it != m_symbols.end()) {
-        kprintf("[ELFLoader] symbolPtr(%s) dump:\n", name);
         auto& symbol = (*it).value;
+#ifdef EXECSPACE_DEBUG
+        kprintf("[ELFLoader] symbolPtr(%s) dump:\n", name);
         disassemble(symbol.ptr, symbol.size);
+#endif
         return symbol.ptr;
     }
     return nullptr;
