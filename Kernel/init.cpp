@@ -30,7 +30,7 @@
 #define TEST_VFS
 //#define STRESS_TEST_SPAWNING
 //#define TEST_ELF_LOADER
-//#define TEST_CRASHY_USER_PROCESSES
+#define TEST_CRASHY_USER_PROCESSES
 
 system_t system;
 
@@ -48,6 +48,22 @@ void banner()
     vga_set_attr(0x07);
     kprintf("\n");
 }
+
+#ifdef TEST_CRASHY_USER_PROCESSES
+static void user_main() NORETURN;
+static void user_main()
+{
+    DO_SYSCALL_A3(0x3000, 2, 3, 4);
+    // Crash ourselves!
+    char* x = reinterpret_cast<char*>(0xbeefbabe);
+    *x = 1;
+    HANG;
+    for (;;) {
+        // nothing?
+        Userspace::sleep(1 * TICKS_PER_SECOND);
+    }
+}
+#endif
 
 static void undertaker_main() NORETURN;
 static void undertaker_main()
