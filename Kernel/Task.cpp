@@ -11,6 +11,9 @@
 #include "MemoryManager.h"
 
 //#define DEBUG_IO
+//#define TASK_DEBUG
+
+static const DWORD defaultStackSize = 16384;
 
 Task* current;
 Task* s_kernelTask;
@@ -169,7 +172,9 @@ Task* Task::create(const String& path, uid_t uid, gid_t gid)
 
     s_tasks->prepend(t);
     system.nprocess++;
+#ifdef TASK_DEBUG
     kprintf("Task %u (%s) spawned @ %p\n", t->pid(), t->name().characters(), t->m_tss.eip);
+#endif
     sti();
 
     return t;
@@ -205,9 +210,6 @@ Task::Task(String&& name, uid_t uid, gid_t gid)
     m_tss.cs = codeSegment;
 
     m_tss.cr3 = MemoryManager::the().pageDirectoryBase().get();
-
-    // NOTE: Each task gets 16KB of stack.
-    static const DWORD defaultStackSize = 16384;
 
     auto* region = allocateRegion(defaultStackSize, "stack");
     ASSERT(region);
@@ -287,9 +289,6 @@ Task::Task(void (*e)(), const char* n, IPC::Handle h, RingLevel ring)
         m_tss.eip = codeRegion->linearAddress.get();
     }
 
-    // NOTE: Each task gets 16KB of stack.
-    static const DWORD defaultStackSize = 16384;
-
     if (isRing0()) {
         // FIXME: This memory is leaked.
         // But uh, there's also no kernel task termination, so I guess it's not technically leaked...
@@ -327,8 +326,9 @@ Task::Task(void (*e)(), const char* n, IPC::Handle h, RingLevel ring)
     s_tasks->prepend(this);
 
     system.nprocess++;
-
+#ifdef TASK_DEBUG
     kprintf("Task %u (%s) spawned @ %p\n", m_pid, m_name.characters(), m_tss.eip);
+#endif
 }
 
 Task::~Task()
@@ -359,7 +359,9 @@ void Task::dumpRegions()
 void Task::sys$exit(int status)
 {
     cli();
+#ifdef TASK_DEBUG
     kprintf("sys$exit: %s(%u) exit with status %d\n", name().characters(), pid(), status);
+#endif
 
     setState(Exiting);
 
@@ -469,6 +471,13 @@ bool scheduleNewTask()
 
         if (task->state() == Task::BlockedSleep) {
             if (task->wakeupTime() <= system.uptime) {
+                task->unblock();
+                continue;
+            }
+        }
+
+        if (task->state() == Task::BlockedWait) {
+            if (!Task::fromPID(task->waitee())) {
                 task->unblock();
                 continue;
             }
@@ -691,6 +700,16 @@ gid_t Task::sys$getgid()
 pid_t Task::sys$getpid()
 {
     return m_pid;
+}
+
+pid_t Task::sys$waitpid(pid_t waitee)
+{
+    if (!Task::fromPID(waitee))
+        return -1;
+    m_waitee = waitee;
+    block(BlockedWait);
+    yield();
+    return m_waitee;
 }
 
 bool Task::acceptsMessageFrom(Task& peer)

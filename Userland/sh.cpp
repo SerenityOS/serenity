@@ -18,7 +18,9 @@ static int runcmd(char* cmd)
     int ret = spawn(buf);
     if (ret == -1) {
         printf("spawn failed: %s\n", cmd);
+        return 1;
     }
+    waitpid(ret);
     return 0;
 }
 

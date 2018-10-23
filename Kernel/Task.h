@@ -37,6 +37,7 @@ public:
         Terminated = 6,
         Crashing = 7,
         Exiting = 8,
+        BlockedWait = 9,
     };
 
     enum RingLevel {
@@ -97,6 +98,7 @@ public:
     void sys$sleep(DWORD ticks);
     void sys$exit(int status);
     int sys$spawn(const char* path);
+    pid_t sys$waitpid(pid_t);
 
     struct
     {
@@ -115,6 +117,8 @@ public:
 
     void didSchedule() { ++m_timesScheduled; }
     dword timesScheduled() const { return m_timesScheduled; }
+
+    pid_t waitee() const { return m_waitee; }
 
 private:
     friend class MemoryManager;
@@ -145,6 +149,7 @@ private:
     int m_error { 0 };
     void* m_kernelStack { nullptr };
     dword m_timesScheduled { 0 };
+    pid_t m_waitee { -1 };
 
     struct Region {
         Region(LinearAddress, size_t, RetainPtr<Zone>&&, String&&);
