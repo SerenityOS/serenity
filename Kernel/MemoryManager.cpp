@@ -156,6 +156,14 @@ byte* MemoryManager::quickMapOnePage(PhysicalAddress physicalAddress)
     return (byte*)(4 * MB);
 }
 
+void MemoryManager::flushTLB()
+{
+    asm volatile(
+        "mov %cr3, %eax\n"
+        "mov %eax, %cr3\n"
+    );
+}
+
 bool MemoryManager::unmapRegion(Task& task, Task::Region& region)
 {
     auto& zone = *region.zone;
@@ -169,6 +177,7 @@ bool MemoryManager::unmapRegion(Task& task, Task::Region& region)
 
 //        kprintf("MM: >> Unmapped L%x => P%x <<\n", laddr, zone.m_pages[i].get());
     }
+    flushTLB();
     return true;
 }
 
@@ -194,6 +203,7 @@ bool MemoryManager::mapRegion(Task& task, Task::Region& region)
 
         //kprintf("MM: >> Mapped L%x => P%x <<\n", laddr, zone.m_pages[i].get());
     }
+    flushTLB();
     return true;
 }
 

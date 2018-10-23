@@ -60,6 +60,7 @@ private:
     ~MemoryManager();
 
     void initializePaging();
+    void flushTLB();
 
     void protectMap(LinearAddress, size_t length);
     void identityMap(LinearAddress, size_t length);
