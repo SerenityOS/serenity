@@ -1,5 +1,9 @@
 #include "Console.h"
 #include "VGA.h"
+#include "IO.h"
+
+// Bytes output to 0xE9 end up on the Bochs console. It's very handy.
+#define CONSOLE_OUT_TO_E9
 
 static Console* s_the;
 
@@ -27,6 +31,9 @@ ssize_t Console::read(byte* buffer, size_t bufferSize)
 
 void Console::putChar(char ch)
 {
+#ifdef CONSOLE_OUT_TO_E9
+    IO::out8(0xe9, ch);
+#endif
     switch (ch) {
     case '\n':
         m_cursorColumn = 0;
