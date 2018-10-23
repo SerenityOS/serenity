@@ -28,7 +28,6 @@ public:
     Handle(AnyHandle) : m_data(0xffffffff) { }
 
     enum KernelTask {
-        PanelTask = 4001,
         DiskTask = 4002,
         FileSystemTask = 4003,
         MotdTask = 4004,

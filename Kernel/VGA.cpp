@@ -10,8 +10,8 @@ PRIVATE BYTE current_attr = 0x07;
 
 void vga_scroll_up()
 {
-    memcpy(vga_mem, vga_mem + 160, 160 * 23);
-    memset(vga_mem + (160 * 23), 0, 160);
+    memcpy(vga_mem, vga_mem + 160, 160 * 24);
+    memset(vga_mem + (160 * 24), 0, 160);
 }
 
 void vga_putch_at(byte row, byte column, byte ch)

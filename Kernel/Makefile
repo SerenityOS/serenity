@@ -14,7 +14,6 @@ KERNEL_OBJS = \
        PIC.o \
        Syscall.o \
        DataBuffer.o \
-       panel.o \
        Disk.o \
        Userspace.o \
        IDEDiskDevice.o \

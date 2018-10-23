@@ -37,7 +37,7 @@ void Console::putChar(char ch)
     switch (ch) {
     case '\n':
         m_cursorColumn = 0;
-        if (m_cursorRow == (m_rows - 2)) {
+        if (m_cursorRow == (m_rows - 1)) {
             vga_scroll_up();
         } else {
             ++m_cursorRow;
@@ -50,7 +50,7 @@ void Console::putChar(char ch)
 
     ++m_cursorColumn;
     if (m_cursorColumn >= m_columns) {
-        if (m_cursorRow == (m_rows - 2)) {
+        if (m_cursorRow == (m_rows - 1)) {
             vga_scroll_up();
         } else {
             ++m_cursorRow;
