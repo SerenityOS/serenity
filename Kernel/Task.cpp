@@ -497,6 +497,17 @@ bool scheduleNewTask()
 
         if (task == prevHead) {
             // Back at task_head, nothing wants to run.
+            kprintf("Nothing wants to run!\n");
+            kprintf("PID    OWNER      STATE  NSCHED  NAME\n");
+            for (auto* task = s_tasks->head(); task; task = task->next()) {
+                kprintf("%w   %w:%w  %b     %w    %s\n",
+                    task->pid(),
+                    task->uid(),
+                    task->gid(),
+                    task->state(),
+                    task->timesScheduled(),
+                    task->name().characters());
+            }
             kprintf("Switch to kernel task\n");
             return contextSwitch(Task::kernelTask());
         }

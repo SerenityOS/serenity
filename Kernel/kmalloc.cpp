@@ -27,8 +27,8 @@ typedef struct
 
 PRIVATE BYTE alloc_map[POOL_SIZE / CHUNK_SIZE / 8];
 
-DWORD sum_alloc = 0;
-DWORD sum_free = POOL_SIZE;
+volatile DWORD sum_alloc = 0;
+volatile DWORD sum_free = POOL_SIZE;
 
 static SpinLock s_kmallocLock;
 
