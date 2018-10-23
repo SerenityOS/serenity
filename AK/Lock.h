@@ -33,6 +33,11 @@ public:
         m_lock = 0;
     }
 
+    void init()
+    {
+        m_lock = 0;
+    }
+
 private:
     volatile dword m_lock { 0 };
 };
