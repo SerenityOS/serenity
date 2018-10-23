@@ -12,6 +12,10 @@ ExecSpace::ExecSpace()
 
 ExecSpace::~ExecSpace()
 {
+    if (!hookableAlloc) {
+        for (auto& area : m_areas)
+            kfree(area->memory);
+    }
 }
 
 #ifdef SERENITY
