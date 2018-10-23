@@ -21,7 +21,8 @@ KERNEL_OBJS = \
        MemoryManager.o \
        Console.o \
        IRQHandler.o \
-       kprintf.o
+       kprintf.o \
+       ProcFileSystem.o
 
 VFS_OBJS = \
     ../VirtualFileSystem/DiskDevice.o \
@@ -35,7 +36,8 @@ VFS_OBJS = \
     ../VirtualFileSystem/Ext2FileSystem.o \
     ../VirtualFileSystem/InodeIdentifier.o \
     ../VirtualFileSystem/VirtualFileSystem.o \
-    ../VirtualFileSystem/FileHandle.o
+    ../VirtualFileSystem/FileHandle.o \
+    ../VirtualFileSystem/SyntheticFileSystem.o
 
 ELFLOADER_OBJS = \
     ../ELFLoader/ELFImage.o \

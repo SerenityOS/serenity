@@ -645,7 +645,9 @@ FileHandle* Task::openFile(String&& path)
 {
     auto handle = VirtualFileSystem::the().open(move(path));
     if (!handle) {
+#ifdef DEBUG_IO
         kprintf("vfs::open() failed\n");
+#endif
         return nullptr;
     }
     handle->setFD(m_fileHandles.size());

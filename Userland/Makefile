@@ -1,10 +1,12 @@
 OBJS = \
        id.o \
-       sh.o
+       sh.o \
+       ps.o
 
 APPS = \
        id \
-       sh
+       sh \
+       ps
 
 ARCH_FLAGS =
 STANDARD_FLAGS = -std=c++17 -nostdinc++ -nostdlib
@@ -28,6 +30,9 @@ id: id.o
 	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
 
 sh: sh.o
+	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
+
+ps: ps.o
 	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
 
 .cpp.o:

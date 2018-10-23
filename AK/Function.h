@@ -51,7 +51,7 @@ public:
     {
     }
 
-    Out operator()(In... in)
+    Out operator()(In... in) const
     {
         ASSERT(m_callableWrapper);
         return m_callableWrapper->call(forward<In>(in)...);
@@ -83,7 +83,7 @@ private:
     class CallableWrapperBase {
     public:
         virtual ~CallableWrapperBase() { }
-        virtual Out call(In...) = 0;
+        virtual Out call(In...) const = 0;
     };
 
     template<typename CallableType>
@@ -97,7 +97,7 @@ private:
         CallableWrapper(const CallableWrapper&) = delete;
         CallableWrapper& operator=(const CallableWrapper&) = delete;
 
-        Out call(In... in) final { return m_callable(forward<In>(in)...); }
+        Out call(In... in) const final { return m_callable(forward<In>(in)...); }
 
     private:
         CallableType m_callable;
