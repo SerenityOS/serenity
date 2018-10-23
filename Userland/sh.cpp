@@ -13,7 +13,9 @@ static void prompt()
 static int runcmd(char* cmd)
 {
     //printf("command: '%s'\n", cmd);
-    int ret = spawn(cmd);
+    char buf[128];
+    sprintf(buf, "/bin/%s", cmd);
+    int ret = spawn(buf);
     if (ret == -1) {
         printf("spawn failed: %s\n", cmd);
     }
