@@ -28,6 +28,7 @@
 #include "ProcFileSystem.h"
 
 #define TEST_VFS
+//#define STRESS_TEST_SPAWNING
 //#define TEST_ELF_LOADER
 //#define TEST_CRASHY_USER_PROCESSES
 
@@ -95,6 +96,15 @@ void banner()
     kprintf("\n");
 }
 
+static void undertaker_main() NORETURN;
+static void undertaker_main()
+{
+    for (;;) {
+        Task::doHouseKeeping();
+        sleep(10);
+    }
+}
+
 static void init_stage2() NORETURN;
 static void init_stage2()
 {
@@ -105,7 +115,7 @@ static void init_stage2()
     auto keyboard = make<Keyboard>();
 
     extern void panel_main();
-    new Task(panel_main, "panel", IPC::Handle::PanelTask, Task::Ring0);
+    //new Task(panel_main, "panel", IPC::Handle::PanelTask, Task::Ring0);
     //new Task(led_disco, "led-disco", IPC::Handle::Any, Task::Ring0);
 
     Disk::initialize();
@@ -171,6 +181,19 @@ static void init_stage2()
     }
 #endif
 
+#ifdef STRESS_TEST_SPAWNING
+    dword lastAlloc = sum_alloc;
+
+    for (unsigned i = 0; i < 100; ++i) {
+        auto* shTask = Task::create("/bin/id", (uid_t)100, (gid_t)100);
+        kprintf("malloc stats: alloc:%u free:%u\n", sum_alloc, sum_free);
+        kprintf("sizeof(Task):%u\n", sizeof(Task));
+        kprintf("delta:%u\n",sum_alloc - lastAlloc);
+        lastAlloc = sum_alloc;
+        sleep(600);
+    }
+#endif
+
     auto* shTask = Task::create("/bin/sh", (uid_t)100, (gid_t)100);
 
     //new Task(motd_main, "motd", IPC::Handle::MotdTask, Task::Ring0);
@@ -220,6 +243,8 @@ void init()
     kprintf("%u kB extended memory\n", ext_memory);
 
     Task::initialize();
+
+    new Task(undertaker_main, "undertaker", IPC::Handle::UserTask, Task::Ring0);
 
     auto* init2 = new Task(init_stage2, "init", IPC::Handle::InitTask, Task::Ring0);
     scheduleNewTask();

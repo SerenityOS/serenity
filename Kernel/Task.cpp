@@ -17,6 +17,7 @@ Task* s_kernelTask;
 
 static pid_t next_pid;
 static InlineLinkedList<Task>* s_tasks;
+static InlineLinkedList<Task>* s_deadTasks;
 
 static bool contextSwitch(Task*);
 
@@ -52,6 +53,7 @@ void Task::initialize()
     current = nullptr;
     next_pid = 0;
     s_tasks = new InlineLinkedList<Task>;
+    s_deadTasks = new InlineLinkedList<Task>;
     s_kernelTask = new Task(0, "colonel", IPC::Handle::Any, Task::Ring0);
     redoKernelTaskTSS();
     loadTaskRegister(s_kernelTask->selector());
@@ -213,7 +215,6 @@ Task::Task(String&& name, uid_t uid, gid_t gid)
     m_tss.esp = m_stackTop;
 
     // Set up a separate stack for Ring0.
-    // FIXME: Don't leak this stack.
     m_kernelStack = kmalloc(defaultStackSize);
     DWORD ring0StackTop = ((DWORD)m_kernelStack + defaultStackSize) & 0xffffff8;
     m_tss.ss0 = 0x10;
@@ -336,14 +337,10 @@ Task::~Task()
     delete [] m_ldtEntries;
     m_ldtEntries = nullptr;
 
-    // FIXME: The task's kernel stack is currently leaked, because otherwise we GPF.
-    //        This obviously needs figuring out.
-#if 0
     if (m_kernelStack) {
         kfree(m_kernelStack);
         m_kernelStack = nullptr;
     }
-#endif
 }
 
 void Task::dumpRegions()
@@ -375,7 +372,7 @@ void Task::sys$exit(int status)
         HANG;
     }
 
-    delete this;
+    s_deadTasks->append(this);
 
     switchNow();
 }
@@ -395,9 +392,19 @@ void Task::taskDidCrash(Task* crashedTask)
         HANG;
     }
 
-    delete crashedTask;
+    s_deadTasks->append(crashedTask);
 
     switchNow();
+}
+
+void Task::doHouseKeeping()
+{
+    Task* next = nullptr;
+    for (auto* deadTask = s_deadTasks->head(); deadTask; deadTask = next) {
+        next = deadTask->next();
+        delete deadTask;
+    }
+    s_deadTasks->clear();
 }
 
 void yield()
