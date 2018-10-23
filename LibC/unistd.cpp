@@ -35,5 +35,10 @@ int close(int fd)
     return Syscall::invoke(Syscall::PosixClose, fd);
 }
 
+pid_t waitpid(pid_t waitee)
+{
+    return Syscall::invoke(Syscall::PosixWaitpid, waitee);
+}
+
 }
 

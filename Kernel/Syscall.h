@@ -23,6 +23,7 @@ enum Function {
     PosixExit = 0x1991,
     PosixGetgid = 0x1992,
     PosixGetpid = 0x1993,
+    PosixWaitpid = 0x1994,
 };
 
 void initialize();
