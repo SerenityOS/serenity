@@ -92,8 +92,8 @@ void MemoryManager::protectMap(LinearAddress linearAddress, size_t length)
         pte.setUserAllowed(false);
         pte.setPresent(false);
         pte.setWritable(false);
+        flushTLB(pteAddress);
     }
-    flushTLB();
 }
 
 void MemoryManager::identityMap(LinearAddress linearAddress, size_t length)
@@ -106,8 +106,8 @@ void MemoryManager::identityMap(LinearAddress linearAddress, size_t length)
         pte.setUserAllowed(true);
         pte.setPresent(true);
         pte.setWritable(true);
+        flushTLB(pteAddress);
     }
-    flushTLB();
 }
 
 void MemoryManager::initialize()
@@ -155,16 +155,21 @@ byte* MemoryManager::quickMapOnePage(PhysicalAddress physicalAddress)
     pte.setPhysicalPageBase(physicalAddress.pageBase());
     pte.setPresent(true);
     pte.setWritable(true);
-    flushTLB();
+    flushTLB(LinearAddress(4 * MB));
     return (byte*)(4 * MB);
 }
 
-void MemoryManager::flushTLB()
+void MemoryManager::flushEntireTLB()
 {
     asm volatile(
         "mov %cr3, %eax\n"
         "mov %eax, %cr3\n"
     );
+}
+
+void MemoryManager::flushTLB(LinearAddress laddr)
+{
+    asm volatile("invlpg %0": :"m" (*(char*)laddr.get()));
 }
 
 bool MemoryManager::unmapRegion(Task& task, Task::Region& region)
@@ -177,10 +182,9 @@ bool MemoryManager::unmapRegion(Task& task, Task::Region& region)
         pte.setPresent(false);
         pte.setWritable(false);
         pte.setUserAllowed(false);
-
+        flushTLB(laddr);
 //        kprintf("MM: >> Unmapped L%x => P%x <<\n", laddr, zone.m_pages[i].get());
     }
-    flushTLB();
     return true;
 }
 
@@ -203,10 +207,9 @@ bool MemoryManager::mapRegion(Task& task, Task::Region& region)
         pte.setPresent(true);
         pte.setWritable(true);
         pte.setUserAllowed(!task.isRing0());
-
+        flushTLB(laddr);
         //kprintf("MM: >> Mapped L%x => P%x <<\n", laddr, zone.m_pages[i].get());
     }
-    flushTLB();
     return true;
 }
 
