@@ -366,6 +366,8 @@ void Task::sys$exit(int status)
 
     setState(Exiting);
 
+    MemoryManager::the().unmapRegionsForTask(*this);
+
     s_tasks->remove(this);
 
     if (!scheduleNewTask()) {
@@ -382,7 +384,7 @@ void Task::taskDidCrash(Task* crashedTask)
 {
     // NOTE: This is called from an excepton handler, so interrupts are disabled.
     crashedTask->setState(Crashing);
-//  crashedTask->dumpRegions();
+    crashedTask->dumpRegions();
 
     s_tasks->remove(crashedTask);
 
