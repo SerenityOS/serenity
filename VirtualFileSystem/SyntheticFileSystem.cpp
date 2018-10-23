@@ -105,10 +105,7 @@ InodeMetadata SyntheticFileSystem::inodeMetadata(InodeIdentifier inode) const
     if (inode.index() == 0 || inode.index() > m_files.size())
         return InodeMetadata();
     auto& file = *m_files[inode.index() - 1];
-    auto metadata = file.metadata;
-    if (file.generator)
-        metadata.size = file.generator().size();
-    return metadata;
+    return file.metadata;
 }
 
 bool SyntheticFileSystem::setModificationTime(InodeIdentifier, dword timestamp)
