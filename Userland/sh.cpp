@@ -41,6 +41,12 @@ int main(int c, char** v)
             printf("failed to read :(\n");
             return 2;
         }
+        if (nread > 2)
+            printf("read %u bytes\n", nread);
+        if (nread > (ssize_t)sizeof(keybuf)) {
+            printf("read() overran the buffer i gave it!\n");
+            return 3;
+        }
         for (ssize_t i = 0; i < nread; ++i) {
             putchar(keybuf[i]);
             if (keybuf[i] != '\n') {

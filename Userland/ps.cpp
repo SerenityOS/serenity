@@ -9,7 +9,7 @@ int main(int c, char** v)
         return 1;
     }
     for (;;) {
-        char buf[16];
+        char buf[128];
         ssize_t nread = read(fd, buf, sizeof(buf));
         if (nread == 0)
             break;
