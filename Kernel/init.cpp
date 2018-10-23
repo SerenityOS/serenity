@@ -30,7 +30,7 @@
 #define TEST_VFS
 //#define STRESS_TEST_SPAWNING
 //#define TEST_ELF_LOADER
-#define TEST_CRASHY_USER_PROCESSES
+//#define TEST_CRASHY_USER_PROCESSES
 
 system_t system;
 
@@ -112,15 +112,6 @@ static void init_stage2()
     procfs->initialize();
     vfs->mount(procfs.copyRef(), "/proc");
 
-    {
-        auto motdFile = vfs->open("/proc/summary");
-        ASSERT(motdFile);
-        auto motdData = motdFile->readEntireFile();
-
-        for (unsigned i = 0; i < motdData.size(); ++i) {
-            kprintf("%c", motdData[i]);
-        }
-    }
 #endif
 
 #ifdef TEST_CRASHY_USER_PROCESSES
