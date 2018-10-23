@@ -494,28 +494,6 @@ bool scheduleNewTask()
     }
 }
 
-static void drawSchedulerBanner(Task& task)
-{
-    return;
-    // FIXME: We need a kernel lock to do stuff like this :(
-    //return;
-    auto c = vga_get_cursor();
-    auto a = vga_get_attr();
-    vga_set_cursor(0, 50);
-    vga_set_attr(0x20);
-    kprintf("          ");
-    kprintf("          ");
-    kprintf("          ");
-    vga_set_cursor(0, 50);
-    kprintf("pid: %u ", task.pid());
-    vga_set_cursor(0, 58);
-    kprintf("%s", task.name().characters());
-    vga_set_cursor(0, 65);
-    kprintf("eip: %p", task.tss().eip);
-    vga_set_attr(a);
-    vga_set_cursor(c);
-}
-
 static bool contextSwitch(Task* t)
 {
     //kprintf("c_s to %s (same:%u)\n", t->name().characters(), current == t);
@@ -573,7 +551,6 @@ static bool contextSwitch(Task* t)
     tssDescriptor.type = 11; // Busy TSS
 
     flushGDT();
-    drawSchedulerBanner(*t);
 
     t->didSchedule();
     return true;

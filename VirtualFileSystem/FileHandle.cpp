@@ -24,6 +24,8 @@ bool additionWouldOverflow(Unix::off_t a, Unix::off_t b)
 
 int FileHandle::stat(Unix::stat* buffer)
 {
+    Locker locker(VirtualFileSystem::lock());
+
     if (!m_vnode)
         return -EBADF;
 
@@ -49,6 +51,8 @@ int FileHandle::stat(Unix::stat* buffer)
 
 Unix::off_t FileHandle::seek(Unix::off_t offset, int whence)
 {
+    Locker locker(VirtualFileSystem::lock());
+
     if (!m_vnode)
         return -EBADF;
 
@@ -91,6 +95,8 @@ Unix::off_t FileHandle::seek(Unix::off_t offset, int whence)
 
 Unix::ssize_t FileHandle::read(byte* buffer, Unix::size_t count)
 {
+    Locker locker(VirtualFileSystem::lock());
+
     if (m_vnode->isCharacterDevice()) {
         // FIXME: What should happen to m_currentOffset?
         return m_vnode->characterDevice()->read(buffer, count);
@@ -102,6 +108,8 @@ Unix::ssize_t FileHandle::read(byte* buffer, Unix::size_t count)
 
 ByteBuffer FileHandle::readEntireFile()
 {
+    Locker locker(VirtualFileSystem::lock());
+
     if (m_vnode->isCharacterDevice()) {
         auto buffer = ByteBuffer::createUninitialized(1024);
         Unix::ssize_t nread = m_vnode->characterDevice()->read(buffer.pointer(), buffer.size());

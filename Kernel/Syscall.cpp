@@ -2,6 +2,7 @@
 #include "Task.h"
 #include "Syscall.h"
 #include "Console.h"
+#include <AK/Lock.h>
 
 extern "C" void syscall_entry();
 extern "C" void syscall_ISR();
@@ -37,72 +38,6 @@ asm(
     "    popa\n"
     "    iret\n"
 );
-
-static inline dword CAS(dword* mem, dword newval, dword oldval)
-{
-    dword ret;
-    asm volatile(
-        "cmpxchgl %2, %1"
-        :"=a"(ret), "=m"(*mem)
-        :"r"(newval), "m"(*mem), "0"(oldval));
-    return ret;
-}
-
-class SpinLock {
-public:
-    SpinLock()
-    {
-    }
-
-    ~SpinLock()
-    {
-        unlock();
-    }
-
-    void lock()
-    {
-        volatile dword count = 0;
-        for (;;) {
-            if (CAS(&m_lock, 1, 0) == 1)
-                return;
-            ++count;
-
-        }
-        if (count)
-            kprintf("waited %u in %s\n",count, current->name().characters());
-    }
-
-    void unlock()
-    {
-        // barrier();
-        m_lock = 0;
-    }
-
-private:
-    dword m_lock { 0 };
-};
-
-class Locker {
-public:
-    explicit Locker(SpinLock& l)
-        : m_lock(l)
-    {
-        m_lock.lock();
-    }
-
-    ~Locker()
-    {
-        unlock();
-    }
-
-    void unlock()
-    {
-        m_lock.unlock();
-    }
-
-private:
-    SpinLock& m_lock;
-};
 
 namespace Syscall {
 

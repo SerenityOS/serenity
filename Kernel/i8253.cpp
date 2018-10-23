@@ -95,23 +95,6 @@ void clock_handle()
     current->tss().cs = regs.cs;
     current->tss().eflags = regs.eflags;
 
-#if 0
-    BYTE a = vga_get_attr();
-    WORD foo = vga_get_cursor();
-
-    vga_set_attr(0x50);
-    vga_set_cursor(0);
-
-    kprintf("\n\n");
-    kprintf("Task %u interrupted at %x             \n", current->pid(), regs.eip );
-    kprintf("EAX=%x EBX=%x ECX=%x EDX=%x           \n", regs.eax, regs.ebx, regs.ecx, regs.edx);
-    kprintf("ESI=%x EDI=%x EBP=%x ESP=%x           \n", regs.esi, regs.edi, regs.ebp, regs.esp);
-    kprintf("FLAGS=%x", regs.eflags);
-
-    vga_set_cursor(foo);
-    vga_set_attr(a);
-#endif
-
     // Compute task ESP.
     // Add 12 for CS, EIP, EFLAGS (interrupt mechanic)
 

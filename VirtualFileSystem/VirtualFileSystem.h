@@ -5,6 +5,7 @@
 #include <AK/RetainPtr.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
+#include <AK/Lock.h>
 #include "InodeIdentifier.h"
 #include "Limits.h"
 
@@ -15,6 +16,7 @@ class FileSystem;
 class VirtualFileSystem {
 public:
     static void initializeGlobals();
+    static SpinLock& lock();
 
     struct Node {
         InodeIdentifier inode;
