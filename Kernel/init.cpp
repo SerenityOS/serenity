@@ -101,7 +101,7 @@ static void undertaker_main()
 {
     for (;;) {
         Task::doHouseKeeping();
-        sleep(10);
+        sleep(300);
     }
 }
 
@@ -113,10 +113,6 @@ static void init_stage2()
     Syscall::initialize();
 
     auto keyboard = make<Keyboard>();
-
-    extern void panel_main();
-    //new Task(panel_main, "panel", IPC::Handle::PanelTask, Task::Ring0);
-    //new Task(led_disco, "led-disco", IPC::Handle::Any, Task::Ring0);
 
     Disk::initialize();
 
