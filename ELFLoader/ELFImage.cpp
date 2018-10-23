@@ -180,12 +180,16 @@ const ELFImage::RelocationSection ELFImage::Section::relocations() const
     char relocationSectionName[128];
     int x = ksprintf(relocationSectionName, ".rel%s", name());
 
+#ifdef ELFIMAGE_DEBUG
     kprintf("looking for '%s'\n", relocationSectionName);
+#endif
     auto relocationSection = m_image.lookupSection(relocationSectionName);
     if (relocationSection.type() != SHT_REL)
         return static_cast<const RelocationSection>(m_image.section(0));
 
+#ifdef ELFIMAGE_DEBUG
     kprintf("Found relocations for %s in %s\n", name(), relocationSection.name());
+#endif
     return static_cast<const RelocationSection>(relocationSection);
 }
 
