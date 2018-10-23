@@ -95,6 +95,15 @@ void Task::allocateLDT()
     m_tss.ldt = newLDTSelector;
 }
 
+Vector<Task*> Task::allTasks()
+{
+    Vector<Task*> tasks;
+    tasks.ensureCapacity(s_tasks->sizeSlow());
+    for (auto* task = s_tasks->head(); task; task = task->next())
+        tasks.append(task);
+    return tasks;
+}
+
 Task::Region* Task::allocateRegion(size_t size, String&& name)
 {
     // FIXME: This needs sanity checks. What if this overlaps existing regions?

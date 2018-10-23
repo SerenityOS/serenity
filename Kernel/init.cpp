@@ -138,7 +138,7 @@ static void init_stage2()
     vfs->mount(procfs.copyRef(), "/proc");
 
     {
-        auto motdFile = vfs->open("/motd.txt");
+        auto motdFile = vfs->open("/proc/summary");
         ASSERT(motdFile);
         auto motdData = motdFile->readEntireFile();
 
