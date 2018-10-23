@@ -1,8 +1,10 @@
 OBJS = \
-       id.o
+       id.o \
+       sh.o
 
 APPS = \
-       id
+       id \
+       sh
 
 ARCH_FLAGS =
 STANDARD_FLAGS = -std=c++17 -nostdinc++ -nostdlib
@@ -23,6 +25,9 @@ LDFLAGS = -r -static --strip-debug -melf_i386 --build-id=none -z norelro -z now 
 all: $(OBJS) $(APPS)
 
 id: id.o
+	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
+
+sh: sh.o
 	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
 
 .cpp.o:

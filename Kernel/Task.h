@@ -90,6 +90,7 @@ public:
     int sys$geterror() { return m_error; }
     void sys$sleep(DWORD ticks);
     void sys$exit(int status);
+    int sys$spawn(const char* path);
 
     struct
     {

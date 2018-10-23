@@ -10,6 +10,8 @@
 #include <ELFLoader/ExecSpace.h>
 #include "MemoryManager.h"
 
+//#define DEBUG_IO
+
 Task* current;
 Task* s_kernelTask;
 
@@ -104,6 +106,14 @@ Task::Region* Task::allocateRegion(size_t size, String&& name)
     return m_regions.last().ptr();
 }
 
+int Task::sys$spawn(const char* path)
+{
+    auto* child = Task::create(path, m_uid, m_gid);
+    if (child)
+        return child->pid();
+    return -1;
+}
+
 Task* Task::create(const String& path, uid_t uid, gid_t gid)
 {
     auto parts = path.split('/');
@@ -118,6 +128,7 @@ Task* Task::create(const String& path, uid_t uid, gid_t gid)
     if (!elfData)
         return nullptr;
 
+    cli();
     Task* t = new Task(parts.takeLast(), uid, gid);
 
     ExecSpace space;
@@ -137,9 +148,14 @@ Task* Task::create(const String& path, uid_t uid, gid_t gid)
     }
 
     t->m_tss.eip = (dword)space.symbolPtr("_start");
+    if (!t->m_tss.eip) {
+        delete t;
+        return nullptr;
+    }
 
-    // Add this task to head of task list (meaning it's next to run too, ATM.)
-    cli();
+    MemoryManager::the().unmapRegionsForTask(*t);
+    MemoryManager::the().mapRegionsForTask(*current);
+
     s_tasks->prepend(t);
     system.nprocess++;
     kprintf("Task %u (%s) spawned @ %p\n", t->pid(), t->name().characters(), t->m_tss.eip);
@@ -357,9 +373,11 @@ void Task::taskDidCrash(Task* crashedTask)
 {
     // NOTE: This is called from an excepton handler, so interrupts are disabled.
     crashedTask->setState(Crashing);
-    crashedTask->dumpRegions();
+//  crashedTask->dumpRegions();
 
     s_tasks->remove(crashedTask);
+
+    MemoryManager::the().unmapRegionsForTask(*crashedTask);
 
     if (!scheduleNewTask()) {
         kprintf("Task::taskDidCrash: Failed to schedule a new task :(\n");
@@ -491,7 +509,16 @@ static bool contextSwitch(Task* t)
     // Some sanity checking to force a crash earlier.
     auto csRPL = t->tss().cs & 3;
     auto ssRPL = t->tss().ss & 3;
-    ASSERT(csRPL == ssRPL);
+
+    if (csRPL != ssRPL) {
+        kprintf("Fuckup! Switching from %s(%u) to %s(%u) has RPL mismatch\n",
+                current->name().characters(), current->pid(),
+                t->name().characters(), t->pid()
+                );
+        kprintf("code: %w:%x\n", t->tss().cs, t->tss().eip);
+        kprintf(" stk: %w:%x\n", t->tss().ss, t->tss().esp);
+        ASSERT(csRPL == ssRPL);
+    }
 
     if (current) {
         // If the last task hasn't blocked (still marked as running),
@@ -572,17 +599,24 @@ int Task::sys$seek(int fd, int offset)
 ssize_t Task::sys$read(int fd, void* outbuf, size_t nread)
 {
     Task::checkSanity("Task::sys$read");
+#ifdef DEBUG_IO
     kprintf("Task::sys$read: called(%d, %p, %u)\n", fd, outbuf, nread);
+#endif
     auto* handle = fileHandleIfExists(fd);
+#ifdef DEBUG_IO
     kprintf("Task::sys$read: handle=%p\n", handle);
+#endif
     if (!handle) {
         kprintf("Task::sys$read: handle not found :(\n");
         return -1;
     }
+#ifdef DEBUG_IO
     kprintf("call read on handle=%p\n", handle);
+#endif
     nread = handle->read((byte*)outbuf, nread);
-    kprintf("called read\n");
+#ifdef DEBUG_IO
     kprintf("Task::sys$read: nread=%u\n", nread);
+#endif
     return nread;
 }
 
@@ -598,7 +632,9 @@ int Task::sys$close(int fd)
 int Task::sys$open(const char* path, size_t pathLength)
 {
     Task::checkSanity("sys$open");
+#ifdef DEBUG_IO
     kprintf("Task::sys$open(): PID=%u, path=%s {%u}\n", m_pid, path, pathLength);
+#endif
     auto* handle = current->openFile(String(path, pathLength));
     if (handle)
         return handle->fd();
@@ -607,14 +643,15 @@ int Task::sys$open(const char* path, size_t pathLength)
 
 FileHandle* Task::openFile(String&& path)
 {
-    kprintf("calling vfs::open with vfs=%p, path='%s'\n", &VirtualFileSystem::the(), path.characters());
     auto handle = VirtualFileSystem::the().open(move(path));
     if (!handle) {
         kprintf("vfs::open() failed\n");
         return nullptr;
     }
     handle->setFD(m_fileHandles.size());
+#ifdef DEBUG_IO
     kprintf("vfs::open() worked! handle=%p, fd=%d\n", handle.ptr(), handle->fd());
+#endif
     m_fileHandles.append(move(handle)); // FIXME: allow non-move Vector::append
     return m_fileHandles.last().ptr();
 }

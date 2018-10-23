@@ -22,12 +22,14 @@ asm(
     "    pushw %ss\n"
     "    pushw %ss\n"
     "    pushw %ss\n"
+    "    pushw %ss\n"
     "    popw %ds\n"
     "    popw %es\n"
     "    popw %fs\n"
     "    popw %gs\n"
     "    mov %esp, syscallRegDump\n"
     "    call syscall_entry\n"
+    "    popw %gs\n"
     "    popw %gs\n"
     "    popw %fs\n"
     "    popw %es\n"
@@ -58,15 +60,16 @@ DWORD handle(DWORD function, DWORD arg1, DWORD arg2, DWORD arg3)
         //kprintf("syscall: sleep(%d)\n", arg1);
         current->sys$sleep(arg1);
         break;
+    case Syscall::Spawn:
+        return current->sys$spawn((const char*)arg1);
     case Syscall::PosixOpen:
-        Task::checkSanity("syscall");
-        kprintf("syscall: open('%s', %u)\n", arg1, arg2);
+        //kprintf("syscall: open('%s', %u)\n", arg1, arg2);
         return current->sys$open((const char*)arg1, (size_t)arg2);
     case Syscall::PosixClose:
-        kprintf("syscall: close(%d)\n", arg1);
+        //kprintf("syscall: close(%d)\n", arg1);
         return current->sys$close((int)arg1);
     case Syscall::PosixRead:
-        kprintf("syscall: read(%d, %p, %u)\n", arg1, arg2, arg3);
+        //kprintf("syscall: read(%d, %p, %u)\n", arg1, arg2, arg3);
         return current->sys$read((int)arg1, (void*)arg2, (size_t)arg3);
     case Syscall::PosixSeek:
         // FIXME: This has the wrong signature, should be like lseek()

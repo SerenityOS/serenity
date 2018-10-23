@@ -28,12 +28,14 @@ asm(
     "    pushw %ss\n"
     "    pushw %ss\n"
     "    pushw %ss\n"
+    "    pushw %ss\n"
     "    popw %ds\n"
     "    popw %es\n"
     "    popw %fs\n"
     "    popw %gs\n"
     "    mov %esp, state_dump\n"
     "    call clock_handle\n"
+    "    popw %gs\n"
     "    popw %gs\n"
     "    popw %fs\n"
     "    popw %es\n"
@@ -117,13 +119,18 @@ void clock_handle()
     //        If this IRQ occurred while in a user task, wouldn't that also push the stack ptr?
     current->tss().esp = regs.esp + 12;
 
-    // FIXME: Is this really safe? What if the interrupted process didn't have SS==DS?
-    current->tss().ss = regs.ds;
+    current->tss().ss = regs.ss;
 
     if ((current->tss().cs & 3) != 0) {
-        // What do I do now?
-        kprintf("clk'ed across to ring0\n");
-        HANG;
+#if 0
+        kprintf("clock'ed across to ring0\n");
+        kprintf("code: %w:%x\n", current->tss().cs, current->tss().eip);
+        kprintf(" stk: %w:%x\n", current->tss().ss, current->tss().esp);
+        kprintf("astk: %w:%x\n", regs.ss_if_crossRing, regs.esp_if_crossRing);
+        //HANG;
+#endif
+        current->tss().ss = regs.ss_if_crossRing;
+        current->tss().esp = regs.esp_if_crossRing;
     }
 
     // Prepare a new task to run;

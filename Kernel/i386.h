@@ -119,6 +119,7 @@ private:
 };
 
 struct RegisterDump {
+    WORD ss;
     WORD gs;
     WORD fs;
     WORD es;
