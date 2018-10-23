@@ -25,6 +25,7 @@
 #include "MemoryManager.h"
 #include <ELFLoader/ELFLoader.h>
 #include "Console.h"
+#include "ProcFileSystem.h"
 
 #define TEST_VFS
 //#define TEST_ELF_LOADER
@@ -132,7 +133,9 @@ static void init_stage2()
 
     vfs->mountRoot(e2fs.copyRef());
 
-    //vfs->listDirectory("/");
+    auto procfs = ProcFileSystem::create();
+    procfs->initialize();
+    vfs->mount(procfs.copyRef(), "/proc");
 
     {
         auto motdFile = vfs->open("/motd.txt");

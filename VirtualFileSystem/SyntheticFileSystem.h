@@ -4,7 +4,7 @@
 #include "UnixTypes.h"
 #include <AK/HashMap.h>
 
-class SyntheticFileSystem final : public FileSystem {
+class SyntheticFileSystem : public FileSystem {
 public:
     virtual ~SyntheticFileSystem() override;
     static RetainPtr<SyntheticFileSystem> create();
@@ -20,18 +20,22 @@ public:
     virtual Unix::ssize_t readInodeBytes(InodeIdentifier, Unix::off_t offset, Unix::size_t count, byte* buffer) const override;
     virtual InodeIdentifier makeDirectory(InodeIdentifier parentInode, const String& name, Unix::mode_t) override;
 
-private:
+protected:
     SyntheticFileSystem();
 
     struct File {
         String name;
         InodeMetadata metadata;
         ByteBuffer data;
+        Function<ByteBuffer()> generator;
     };
 
     OwnPtr<File> createTextFile(String&& name, String&& text);
+    OwnPtr<File> createGeneratedFile(String&& name, Function<ByteBuffer()>&&);
+
     void addFile(OwnPtr<File>&&);
 
+private:
     Vector<OwnPtr<File>> m_files;
 };
 
