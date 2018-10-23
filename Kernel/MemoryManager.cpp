@@ -93,6 +93,7 @@ void MemoryManager::protectMap(LinearAddress linearAddress, size_t length)
         pte.setPresent(false);
         pte.setWritable(false);
     }
+    flushTLB();
 }
 
 void MemoryManager::identityMap(LinearAddress linearAddress, size_t length)
@@ -106,6 +107,7 @@ void MemoryManager::identityMap(LinearAddress linearAddress, size_t length)
         pte.setPresent(true);
         pte.setWritable(true);
     }
+    flushTLB();
 }
 
 void MemoryManager::initialize()
@@ -153,6 +155,7 @@ byte* MemoryManager::quickMapOnePage(PhysicalAddress physicalAddress)
     pte.setPhysicalPageBase(physicalAddress.pageBase());
     pte.setPresent(true);
     pte.setWritable(true);
+    flushTLB();
     return (byte*)(4 * MB);
 }
 
