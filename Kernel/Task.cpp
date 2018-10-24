@@ -700,13 +700,22 @@ int Task::sys$close(int fd)
     return 0;
 }
 
+int Task::sys$lstat(const char* path, void* statbuf)
+{
+    auto handle = VirtualFileSystem::the().open(move(path));
+    if (!handle)
+        return -1;
+    handle->stat((Unix::stat*)statbuf);
+    return 0;
+}
+
 int Task::sys$open(const char* path, size_t pathLength)
 {
     Task::checkSanity("sys$open");
 #ifdef DEBUG_IO
     kprintf("Task::sys$open(): PID=%u, path=%s {%u}\n", m_pid, path, pathLength);
 #endif
-    auto* handle = current->openFile(String(path, pathLength));
+    auto* handle = openFile(String(path, pathLength));
     if (handle)
         return handle->fd();
     return -1;

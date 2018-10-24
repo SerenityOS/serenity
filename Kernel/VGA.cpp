@@ -10,6 +10,7 @@ PRIVATE BYTE current_attr = 0x07;
 
 void vga_scroll_up()
 {
+    InterruptDisabler disabler;
     memcpy(vga_mem, vga_mem + 160, 160 * 24);
     memset(vga_mem + (160 * 24), 0, 160);
 }
