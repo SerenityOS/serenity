@@ -76,9 +76,15 @@ public:
 
     String& operator=(String&& other)
     {
-        if (this != &other) {
+        if (this != &other)
             m_impl = move(other.m_impl);
-        }
+        return *this;
+    }
+
+    String& operator=(const String& other)
+    {
+        if (this != &other)
+            m_impl = const_cast<String&>(other).m_impl.copyRef();
         return *this;
     }
 

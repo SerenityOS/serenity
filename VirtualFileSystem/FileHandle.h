@@ -16,6 +16,8 @@ public:
 
     ByteBuffer readEntireFile();
 
+    String absolutePath() const;
+
 #ifdef SERENITY
     int fd() const { return m_fd; }
     void setFD(int fd) { m_fd = fd; }

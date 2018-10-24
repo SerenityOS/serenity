@@ -2,4 +2,5 @@ id
 sh
 ps
 ls
+pwd
 *.o

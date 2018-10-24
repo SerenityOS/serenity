@@ -28,6 +28,11 @@ public:
         return m_fileSystemID == other.m_fileSystemID && m_index == other.m_index;
     }
 
+    bool operator!=(const InodeIdentifier& other) const
+    {
+        return m_fileSystemID != other.m_fileSystemID || m_index != other.m_index;
+    }
+
     InodeMetadata metadata() const;
     bool isRootInode() const;
 

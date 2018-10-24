@@ -150,7 +150,7 @@ static void init_stage2()
     }
 #endif
 
-    auto* shTask = Task::create("/bin/sh", (uid_t)100, (gid_t)100);
+    auto* shTask = Task::create("/bin/sh", (uid_t)100, (gid_t)100, (pid_t)0);
 
     banner();
 

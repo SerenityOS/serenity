@@ -165,13 +165,13 @@ int Task::sys$munmap(void* addr, size_t size)
 
 int Task::sys$spawn(const char* path)
 {
-    auto* child = Task::create(path, m_uid, m_gid);
+    auto* child = Task::create(path, m_uid, m_gid, m_pid);
     if (child)
         return child->pid();
     return -1;
 }
 
-Task* Task::create(const String& path, uid_t uid, gid_t gid)
+Task* Task::create(const String& path, uid_t uid, gid_t gid, pid_t parentPID)
 {
     auto parts = path.split('/');
     if (parts.isEmpty())
@@ -186,7 +186,7 @@ Task* Task::create(const String& path, uid_t uid, gid_t gid)
         return nullptr;
 
     InterruptDisabler disabler; // FIXME: Get rid of this, jesus christ. This "critical" section is HUGE.
-    Task* t = new Task(parts.takeLast(), uid, gid);
+    Task* t = new Task(parts.takeLast(), uid, gid, parentPID);
 
     ExecSpace space;
     space.hookableAlloc = [&] (const String& name, size_t size) {
@@ -222,17 +222,24 @@ Task* Task::create(const String& path, uid_t uid, gid_t gid)
     return t;
 }
 
-Task::Task(String&& name, uid_t uid, gid_t gid)
+Task::Task(String&& name, uid_t uid, gid_t gid, pid_t parentPID)
     : m_name(move(name))
     , m_pid(next_pid++)
     , m_uid(uid)
     , m_gid(gid)
     , m_state(Runnable)
     , m_ring(Ring3)
+    , m_parentPID(parentPID)
 {
     m_fileHandles.append(nullptr);
     m_fileHandles.append(nullptr);
     m_fileHandles.append(nullptr);
+
+    auto* parentTask = Task::fromPID(parentPID);
+    if (parentTask)
+        m_cwd = parentTask->m_cwd;
+    else
+        m_cwd = "/";
 
     m_nextRegion = LinearAddress(0x600000);
 
@@ -287,6 +294,8 @@ Task::Task(void (*e)(), const char* n, IPC::Handle h, RingLevel ring)
     m_fileHandles.append(nullptr);
     m_fileHandles.append(nullptr);
     m_fileHandles.append(nullptr);
+
+    m_cwd = "/";
 
     m_nextRegion = LinearAddress(0x600000);
 
@@ -706,6 +715,17 @@ int Task::sys$lstat(const char* path, void* statbuf)
     if (!handle)
         return -1;
     handle->stat((Unix::stat*)statbuf);
+    return 0;
+}
+
+int Task::sys$getcwd(char* buffer, size_t size)
+{
+    if (size < m_cwd.length() + 1) {
+        // FIXME: return -ERANGE;
+        return -1;
+    }
+    memcpy(buffer, m_cwd.characters(), m_cwd.length());
+    buffer[m_cwd.length()] = '\0';
     return 0;
 }
 

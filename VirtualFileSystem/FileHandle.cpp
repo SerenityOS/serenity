@@ -142,6 +142,9 @@ ssize_t FileHandle::get_dir_entries(byte* buffer, size_t size)
         return true;
     });
 
+    if (size < stream.offset())
+        return -1;
+
     memcpy(buffer, tempBuffer.pointer(), stream.offset());
     return stream.offset();
 }
