@@ -3,6 +3,7 @@
 #include "CharacterDevice.h"
 #include "sys-errno.h"
 #include "UnixTypes.h"
+#include <AK/BufferStream.h>
 
 FileHandle::FileHandle(RetainPtr<VirtualFileSystem::Node>&& vnode)
     : m_vnode(move(vnode))
@@ -29,7 +30,7 @@ int FileHandle::stat(Unix::stat* buffer)
     if (!m_vnode)
         return -EBADF;
 
-    auto metadata = m_vnode->inode.metadata();
+    auto metadata = m_vnode->metadata();
     if (!metadata.isValid())
         return -EIO;
 
@@ -58,7 +59,7 @@ Unix::off_t FileHandle::seek(Unix::off_t offset, int whence)
 
     // FIXME: The file type should be cached on the vnode.
     //        It's silly that we have to do a full metadata lookup here.
-    auto metadata = m_vnode->inode.metadata();
+    auto metadata = m_vnode->metadata();
     if (!metadata.isValid())
         return -EIO;
 
@@ -120,3 +121,27 @@ ByteBuffer FileHandle::readEntireFile()
     return m_vnode->fileSystem()->readEntireInode(m_vnode->inode);
 }
 
+ssize_t FileHandle::get_dir_entries(byte* buffer, size_t size)
+{
+    Locker locker(VirtualFileSystem::lock());
+
+    auto metadata = m_vnode->metadata();
+    if (!metadata.isValid())
+        return -EIO;
+    if (!metadata.isDirectory())
+        return -ENOTDIR;
+
+    // FIXME: Compute the actual size needed.
+    auto tempBuffer = ByteBuffer::createUninitialized(2048);
+    BufferStream stream(tempBuffer);
+    m_vnode->vfs()->enumerateDirectoryInode(m_vnode->inode, [&stream] (const FileSystem::DirectoryEntry& entry) {
+        stream << (dword)entry.inode.index();
+        stream << (byte)entry.fileType;
+        stream << (dword)entry.name.length();
+        stream << entry.name;
+        return true;
+    });
+
+    memcpy(buffer, tempBuffer.pointer(), stream.offset());
+    return stream.offset();
+}

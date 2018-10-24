@@ -101,6 +101,7 @@ public:
     pid_t sys$waitpid(pid_t);
     void* sys$mmap(void*, size_t size);
     int sys$munmap(void*, size_t size);
+    int sys$get_dir_entries(int fd, void*, size_t);
 
     struct
     {
@@ -121,6 +122,8 @@ public:
     dword timesScheduled() const { return m_timesScheduled; }
 
     pid_t waitee() const { return m_waitee; }
+
+    size_t fileHandleCount() const { return m_fileHandles.size(); }
 
 private:
     friend class MemoryManager;

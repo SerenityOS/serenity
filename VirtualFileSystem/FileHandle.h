@@ -12,6 +12,8 @@ public:
     Unix::ssize_t read(byte* buffer, Unix::size_t count);
     int stat(Unix::stat*);
 
+    ssize_t get_dir_entries(byte* buffer, Unix::size_t);
+
     ByteBuffer readEntireFile();
 
 #ifdef SERENITY

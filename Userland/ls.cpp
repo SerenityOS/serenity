@@ -1,21 +1,17 @@
 #include <LibC/stdio.h>
 #include <LibC/unistd.h>
-#include <LibC/mman.h>
+#include <LibC/dirent.h>
 
 int main(int c, char** v)
 {
-    int fd = open("/");
-    if (fd == -1) {
-        printf("failed to open / :(\n");
+    DIR* dirp = opendir("/");
+    if (!dirp) {
+        printf("opendir failed :(\n");
         return 1;
     }
+    while (auto* de = readdir(dirp)) {
+        printf("%s\n", de->d_name);
 
-    byte* memory = (byte*)mmap(nullptr, 16384);
-    printf("%p\n", memory);
-    memory[0] = 'H';
-    memory[1] = 'i';
-    memory[2] = '!';
-    memory[3] = '\0';
-    printf("%p : %s\n", memory, memory);
+    }
     return 0;
 }

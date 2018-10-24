@@ -6,12 +6,14 @@
 #include <AK/String.h>
 #include <AK/Vector.h>
 #include <AK/Lock.h>
+#include <AK/Function.h>
 #include "InodeIdentifier.h"
+#include "InodeMetadata.h"
 #include "Limits.h"
+#include "FileSystem.h"
 
 class CharacterDevice;
 class FileHandle;
-class FileSystem;
 
 class VirtualFileSystem {
 public:
@@ -20,6 +22,7 @@ public:
 
     struct Node {
         InodeIdentifier inode;
+        const InodeMetadata& metadata() const;
 
         bool inUse() const { return inode.isValid(); }
 
@@ -32,11 +35,15 @@ public:
         FileSystem* fileSystem() { return inode.fileSystem(); }
         const FileSystem* fileSystem() const { return inode.fileSystem(); }
 
+        VirtualFileSystem* vfs() { return m_vfs; }
+        const VirtualFileSystem* vfs() const { return m_vfs; }
+
     private:
         friend class VirtualFileSystem;
-        VirtualFileSystem* vfs { nullptr };
+        VirtualFileSystem* m_vfs { nullptr };
         unsigned retainCount { 0 };
         CharacterDevice* m_characterDevice { nullptr };
+        mutable InodeMetadata m_cachedMetadata;
     };
 
     static VirtualFileSystem& the();
@@ -68,7 +75,9 @@ public:
     void registerCharacterDevice(unsigned major, unsigned minor, CharacterDevice&);
 
 private:
-    template<typename F> void enumerateDirectoryInode(InodeIdentifier, F func);
+    friend class FileHandle;
+
+    void enumerateDirectoryInode(InodeIdentifier, Function<bool(const FileSystem::DirectoryEntry&)>);
     InodeIdentifier resolvePath(const String& path);
     InodeIdentifier resolveSymbolicLink(const String& basePath, InodeIdentifier symlinkInode);
 
