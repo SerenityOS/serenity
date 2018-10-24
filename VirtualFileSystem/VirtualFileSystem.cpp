@@ -78,6 +78,7 @@ auto VirtualFileSystem::makeNode(InodeIdentifier inode) -> RetainPtr<Node>
     fileSystem->retain();
 
     vnode->inode = inode;
+    vnode->m_cachedMetadata = { };
 
 #ifdef VFS_DEBUG
     kprintf("makeNode: inode=%u, size=%u, mode=%o, uid=%u, gid=%u\n", inode.index(), metadata.size, metadata.mode, metadata.uid, metadata.gid);
@@ -85,6 +86,7 @@ auto VirtualFileSystem::makeNode(InodeIdentifier inode) -> RetainPtr<Node>
 
     m_inode2vnode.set(inode, vnode.ptr());
     vnode->m_characterDevice = characterDevice;
+
     return vnode;
 }
 
@@ -151,7 +153,7 @@ auto VirtualFileSystem::allocateNode() -> RetainPtr<Node>
     auto* node = m_nodeFreeList.takeLast();
     ASSERT(node->retainCount == 0);
     node->retainCount = 1;
-    node->vfs = this;
+    node->m_vfs = this;
     return adopt(*node);
 }
 
@@ -198,8 +200,7 @@ bool VirtualFileSystem::isRoot(InodeIdentifier inode) const
     return inode == m_rootNode->inode;
 }
 
-template<typename F>
-void VirtualFileSystem::enumerateDirectoryInode(InodeIdentifier directoryInode, F func)
+void VirtualFileSystem::enumerateDirectoryInode(InodeIdentifier directoryInode, Function<bool(const FileSystem::DirectoryEntry&)> callback)
 {
     if (!directoryInode.isValid())
         return;
@@ -216,7 +217,7 @@ void VirtualFileSystem::enumerateDirectoryInode(InodeIdentifier directoryInode, 
             ASSERT(mount);
             resolvedInode = mount->host();
         }
-        func({ entry.name, resolvedInode });
+        callback({ entry.name, resolvedInode });
         return true;
     });
 }
@@ -340,6 +341,7 @@ void VirtualFileSystem::listDirectoryRecursively(const String& path)
         } else {
             kprintf("%s/%s\n", path.characters(), entry.name.characters());
         }
+        return true;
     });
 }
 
@@ -467,8 +469,15 @@ void VirtualFileSystem::Node::release()
 {
     ASSERT(retainCount);
     if (--retainCount == 0) {
-        vfs->freeNode(this);
+        m_vfs->freeNode(this);
     }
+}
+
+const InodeMetadata& VirtualFileSystem::Node::metadata() const
+{
+    if (!m_cachedMetadata.isValid())
+        m_cachedMetadata = inode.metadata();
+    return m_cachedMetadata;
 }
 
 VirtualFileSystem::Mount::Mount(InodeIdentifier host, RetainPtr<FileSystem>&& guestFileSystem)

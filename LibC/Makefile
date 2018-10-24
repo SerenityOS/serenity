@@ -4,6 +4,8 @@ OBJS = \
        string.o \
        process.o \
        mman.o \
+       dirent.o \
+       stdlib.o \
        entry.o
 
 LIBRARY = LibC.a

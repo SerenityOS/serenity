@@ -230,6 +230,10 @@ Task::Task(String&& name, uid_t uid, gid_t gid)
     , m_state(Runnable)
     , m_ring(Ring3)
 {
+    m_fileHandles.append(nullptr);
+    m_fileHandles.append(nullptr);
+    m_fileHandles.append(nullptr);
+
     m_nextRegion = LinearAddress(0x600000);
 
     memset(&m_tss, 0, sizeof(m_tss));
@@ -280,6 +284,10 @@ Task::Task(void (*e)(), const char* n, IPC::Handle h, RingLevel ring)
     , m_state(Runnable)
     , m_ring(ring)
 {
+    m_fileHandles.append(nullptr);
+    m_fileHandles.append(nullptr);
+    m_fileHandles.append(nullptr);
+
     m_nextRegion = LinearAddress(0x600000);
 
     Region* codeRegion = nullptr;
@@ -641,6 +649,14 @@ FileHandle* Task::fileHandleIfExists(int fd)
     if ((unsigned)fd < m_fileHandles.size())
         return m_fileHandles[fd].ptr();
     return nullptr;
+}
+
+ssize_t Task::sys$get_dir_entries(int fd, void* buffer, size_t size)
+{
+    auto* handle = fileHandleIfExists(fd);
+    if (!handle)
+        return -1;
+    return handle->get_dir_entries((byte*)buffer, size);
 }
 
 int Task::sys$seek(int fd, int offset)

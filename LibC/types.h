@@ -17,5 +17,8 @@ typedef dword pid_t;
 typedef dword size_t;
 typedef signed_dword ssize_t;
 
+typedef dword ino_t;
+typedef signed_dword off_t;
+
 }
 

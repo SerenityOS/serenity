@@ -21,17 +21,18 @@ bool ProcFileSystem::initialize()
         InterruptDisabler disabler;
         auto tasks = Task::allTasks();
         char* buffer;
-        auto stringImpl = StringImpl::createUninitialized(tasks.size() * 128, buffer);
+        auto stringImpl = StringImpl::createUninitialized(tasks.size() * 256, buffer);
         memset(buffer, 0, stringImpl->length());
         char* ptr = buffer;
-        ptr += ksprintf(ptr, "PID    OWNER      STATE  NSCHED  NAME\n");
+        ptr += ksprintf(ptr, "PID    OWNER      STATE  NSCHED  FDS    NAME\n");
         for (auto* task : tasks) {
-            ptr += ksprintf(ptr, "%w   %w:%w  %b     %w    %s\n",
+            ptr += ksprintf(ptr, "%w   %w:%w  %b     %w    %w   %s\n",
                 task->pid(),
                 task->uid(),
                 task->gid(),
                 task->state(),
                 task->timesScheduled(),
+                task->fileHandleCount(),
                 task->name().characters());
         }
         ptr += ksprintf(ptr, "kmalloc: alloc: %u / free: %u\n", sum_alloc, sum_free);
