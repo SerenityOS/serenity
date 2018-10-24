@@ -65,9 +65,11 @@ const ext2_group_desc& Ext2FileSystem::blockGroupDescriptor(unsigned groupIndex)
 
     if (!m_cachedBlockGroupDescriptorTable) {
         unsigned blocksToRead = ceilDiv(m_blockGroupCount * (unsigned)sizeof(ext2_group_desc), blockSize());
-        kprintf("[ext2fs] block group count: %u, blocks-to-read: %u\n", m_blockGroupCount, blocksToRead);
         unsigned firstBlockOfBGDT = blockSize() == 1024 ? 2 : 1;
+#ifdef EXT2_DEBUG
+        kprintf("[ext2fs] block group count: %u, blocks-to-read: %u\n", m_blockGroupCount, blocksToRead);
         kprintf("[ext2fs] first block of BGDT: %u\n", firstBlockOfBGDT);
+#endif
         m_cachedBlockGroupDescriptorTable = readBlocks(firstBlockOfBGDT, blocksToRead);
     }
     return reinterpret_cast<ext2_group_desc*>(m_cachedBlockGroupDescriptorTable.pointer())[groupIndex - 1];
@@ -76,19 +78,22 @@ const ext2_group_desc& Ext2FileSystem::blockGroupDescriptor(unsigned groupIndex)
 bool Ext2FileSystem::initialize()
 {
     auto& superBlock = this->superBlock();
+#ifdef EXT2_DEBUG
     kprintf("[ext2fs] super block magic: %x (super block size: %u)\n", superBlock.s_magic, sizeof(ext2_super_block));
+#endif
     if (superBlock.s_magic != EXT2_SUPER_MAGIC)
         return false;
 
+#ifdef EXT2_DEBUG
     kprintf("[ext2fs] %u inodes, %u blocks\n", superBlock.s_inodes_count, superBlock.s_blocks_count);
     kprintf("[ext2fs] block size = %u\n", EXT2_BLOCK_SIZE(&superBlock));
     kprintf("[ext2fs] first data block = %u\n", superBlock.s_first_data_block);
     kprintf("[ext2fs] inodes per block = %u\n", inodesPerBlock());
     kprintf("[ext2fs] inodes per group = %u\n", inodesPerGroup());
     kprintf("[ext2fs] free inodes = %u\n", superBlock.s_free_inodes_count);
-
     kprintf("[ext2fs] desc per block = %u\n", EXT2_DESC_PER_BLOCK(&superBlock));
     kprintf("[ext2fs] desc size = %u\n", EXT2_DESC_SIZE(&superBlock));
+#endif
 
     setBlockSize(EXT2_BLOCK_SIZE(&superBlock));
 
@@ -99,6 +104,7 @@ bool Ext2FileSystem::initialize()
         return false;
     }
 
+#ifdef EXT2_DEBUG
     for (unsigned i = 1; i <= m_blockGroupCount; ++i) {
         auto& group = blockGroupDescriptor(i);
         kprintf("[ext2fs] group[%u] { block_bitmap: %u, inode_bitmap: %u, inode_table: %u }\n",
@@ -107,6 +113,7 @@ bool Ext2FileSystem::initialize()
             group.bg_inode_bitmap,
             group.bg_inode_table);
     }
+#endif
 
     return true;
 }
