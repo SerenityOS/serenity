@@ -185,7 +185,7 @@ Task* Task::create(const String& path, uid_t uid, gid_t gid)
     if (!elfData)
         return nullptr;
 
-    cli();
+    InterruptDisabler disabler; // FIXME: Get rid of this, jesus christ. This "critical" section is HUGE.
     Task* t = new Task(parts.takeLast(), uid, gid);
 
     ExecSpace space;
@@ -218,7 +218,6 @@ Task* Task::create(const String& path, uid_t uid, gid_t gid)
 #ifdef TASK_DEBUG
     kprintf("Task %u (%s) spawned @ %p\n", t->pid(), t->name().characters(), t->m_tss.eip);
 #endif
-    sti();
 
     return t;
 }
@@ -461,11 +460,9 @@ void yield()
 
     //kprintf("%s<%u> yield()\n", current->name().characters(), current->pid());
 
-    cli();
-    if (!scheduleNewTask()) {
-        sti();
+    InterruptDisabler disabler;
+    if (!scheduleNewTask())
         return;
-    }
 
     //kprintf("yield() jumping to new task: %x (%s)\n", current->farPtr().selector, current->name().characters());
     switchNow();
