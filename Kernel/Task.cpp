@@ -120,6 +120,49 @@ Task::Region* Task::allocateRegion(size_t size, String&& name)
     return m_regions.last().ptr();
 }
 
+bool Task::deallocateRegion(Region& region)
+{
+    for (size_t i = 0; i < m_regions.size(); ++i) {
+        if (m_regions[i].ptr() == &region) {
+            // FIXME: This seems racy.
+            MemoryManager::the().unmapRegion(*this, region);
+            m_regions.remove(i);
+            return true;
+        }
+    }
+    return false;
+}
+
+Task::Region* Task::regionFromRange(LinearAddress laddr, size_t size)
+{
+    for (auto& region : m_regions) {
+        if (region->linearAddress == laddr && region->size == size)
+            return region.ptr();
+    }
+    return nullptr;
+}
+
+void* Task::sys$mmap(void* addr, size_t size)
+{
+    // FIXME: Implement mapping at a client-preferred address.
+    ASSERT(addr == nullptr);
+    auto* region = allocateRegion(size, "mmap");
+    if (!region)
+        return (void*)-1;
+    MemoryManager::the().mapRegion(*this, *region);
+    return (void*)region->linearAddress.get();
+}
+
+int Task::sys$munmap(void* addr, size_t size)
+{
+    auto* region = regionFromRange(LinearAddress((dword)addr), size);
+    if (!region)
+        return -1;
+    if (!deallocateRegion(*region))
+        return -1;
+    return 0;
+}
+
 int Task::sys$spawn(const char* path)
 {
     auto* child = Task::create(path, m_uid, m_gid);

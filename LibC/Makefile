@@ -3,6 +3,7 @@ OBJS = \
        unistd.o \
        string.o \
        process.o \
+       mman.o \
        entry.o
 
 LIBRARY = LibC.a

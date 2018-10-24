@@ -24,6 +24,8 @@ enum Function {
     PosixGetgid = 0x1992,
     PosixGetpid = 0x1993,
     PosixWaitpid = 0x1994,
+    PosixMmap = 0x1995,
+    PosixMunmap = 0x1996,
 };
 
 void initialize();
