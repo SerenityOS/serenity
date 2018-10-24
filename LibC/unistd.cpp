@@ -40,5 +40,10 @@ pid_t waitpid(pid_t waitee)
     return Syscall::invoke(Syscall::PosixWaitpid, waitee);
 }
 
+int lstat(const char* path, stat* statbuf)
+{
+    return Syscall::invoke(Syscall::PosixLstat, (dword)path, (dword)statbuf);
+}
+
 }
 

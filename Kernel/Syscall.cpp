@@ -68,6 +68,8 @@ DWORD handle(DWORD function, DWORD arg1, DWORD arg2, DWORD arg3)
         return current->sys$spawn((const char*)arg1);
     case Syscall::GetDirEntries:
         return current->sys$get_dir_entries((int)arg1, (void*)arg2, (size_t)arg3);
+    case Syscall::PosixLstat:
+        return current->sys$lstat((const char*)arg1, (void*)arg2);
     case Syscall::PosixOpen:
         //kprintf("syscall: open('%s', %u)\n", arg1, arg2);
         return current->sys$open((const char*)arg1, (size_t)arg2);

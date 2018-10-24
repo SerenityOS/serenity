@@ -92,6 +92,7 @@ public:
     int sys$open(const char* path, size_t pathLength);
     int sys$close(int fd);
     int sys$read(int fd, void* outbuf, size_t nread);
+    int sys$lstat(const char*, void* statbuf);
     int sys$seek(int fd, int offset);
     int sys$kill(pid_t pid, int sig);
     int sys$geterror() { return m_error; }

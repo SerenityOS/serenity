@@ -27,6 +27,7 @@ enum Function {
     PosixMmap = 0x1995,
     PosixMunmap = 0x1996,
     GetDirEntries = 0x1997,
+    PosixLstat = 0x1998,
 };
 
 void initialize();
