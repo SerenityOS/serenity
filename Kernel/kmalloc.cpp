@@ -10,7 +10,6 @@
 #include "VGA.h"
 #include "system.h"
 #include "Assertions.h"
-#include <AK/Lock.h>
 
 #define SANITIZE_KMALLOC
 
@@ -30,12 +29,9 @@ PRIVATE BYTE alloc_map[POOL_SIZE / CHUNK_SIZE / 8];
 volatile DWORD sum_alloc = 0;
 volatile DWORD sum_free = POOL_SIZE;
 
-static SpinLock s_kmallocLock;
-
 PUBLIC void
 kmalloc_init()
 {
-    s_kmallocLock.init();
     memset( &alloc_map, 0, sizeof(alloc_map) );
     memset( (void *)BASE_PHYS, 0, POOL_SIZE );
 
@@ -46,7 +42,7 @@ kmalloc_init()
 PUBLIC void *
 kmalloc( DWORD size )
 {
-    Locker locker(s_kmallocLock);
+    InterruptDisabler disabler;
 
     DWORD chunks_needed, chunks_here, first_chunk;
     DWORD real_size;
@@ -123,7 +119,7 @@ kfree( void *ptr )
     if( !ptr )
         return;
 
-    Locker locker(s_kmallocLock);
+    InterruptDisabler disabler;
 
     allocation_t *a = (allocation_t *)((((BYTE *)ptr) - sizeof(allocation_t)));
 

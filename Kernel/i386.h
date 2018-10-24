@@ -79,6 +79,35 @@ void writeGDTEntry(WORD selector, Descriptor&);
 #define cli() asm volatile("cli")
 #define sti() asm volatile("sti")
 
+static inline dword cpuFlags()
+{
+    dword flags;
+    asm volatile(
+        "pushf\n"
+        "pop %0\n"
+        :"=rm"(flags)
+        ::"memory");
+    return flags;
+}
+
+class InterruptDisabler {
+public:
+    InterruptDisabler()
+    {
+        m_flags = cpuFlags();
+        cli();
+    }
+
+    ~InterruptDisabler()
+    {
+        if (m_flags & 0x200)
+            sti();
+    }
+
+private:
+    dword m_flags;
+};
+
 /* Map IRQ0-15 @ ISR 0x50-0x5F */
 #define IRQ_VECTOR_BASE 0x50
 

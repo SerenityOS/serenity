@@ -18,7 +18,7 @@ bool ProcFileSystem::initialize()
 {
     SyntheticFileSystem::initialize();
     addFile(createGeneratedFile("summary", [] {
-        cli();
+        InterruptDisabler disabler;
         auto tasks = Task::allTasks();
         char* buffer;
         auto stringImpl = StringImpl::createUninitialized(tasks.size() * 128, buffer);
@@ -36,7 +36,6 @@ bool ProcFileSystem::initialize()
         }
         ptr += ksprintf(ptr, "kmalloc: alloc: %u / free: %u\n", sum_alloc, sum_free);
         *ptr = '\0';
-        sti();
         return ByteBuffer::copy((byte*)buffer, ptr - buffer);
     }));
     return true;
