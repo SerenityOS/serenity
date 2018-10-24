@@ -45,5 +45,13 @@ int lstat(const char* path, stat* statbuf)
     return Syscall::invoke(Syscall::PosixLstat, (dword)path, (dword)statbuf);
 }
 
+char* getcwd(char* buffer, size_t size)
+{
+    int rc = Syscall::invoke(Syscall::PosixGetcwd, (dword)buffer, (dword)size);
+    if (rc != 0)
+        return nullptr;
+    return buffer;
+}
+
 }
 

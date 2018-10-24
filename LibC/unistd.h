@@ -11,7 +11,7 @@ int open(const char* path);
 ssize_t read(int fd, void* buf, size_t count);
 int close(int fd);
 pid_t waitpid(pid_t);
-
+char* getcwd(char* buffer, size_t size);
 int lstat(const char* path, stat* statbuf);
 
 #define	S_IFMT 0170000
@@ -36,7 +36,6 @@ int lstat(const char* path, stat* statbuf);
 #define S_IWOTH 0002
 #define S_IXOTH 0001
 
-
 #define S_ISDIR(m) (((m) & S_IFMT) == S_IFDIR)
 #define S_ISCHR(m) (((m) & S_IFMT) == S_IFCHR)
 #define S_ISBLK(m) (((m) & S_IFMT) == S_IFBLK)
@@ -45,4 +44,3 @@ int lstat(const char* path, stat* statbuf);
 #define S_ISLNK(m) (((m) & S_IFMT) == S_IFLNK)
 
 }
-

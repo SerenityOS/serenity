@@ -78,6 +78,7 @@ private:
     friend class FileHandle;
 
     void enumerateDirectoryInode(InodeIdentifier, Function<bool(const FileSystem::DirectoryEntry&)>);
+    String absolutePath(InodeIdentifier);
     InodeIdentifier resolvePath(const String& path);
     InodeIdentifier resolveSymbolicLink(const String& basePath, InodeIdentifier symlinkInode);
 

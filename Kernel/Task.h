@@ -16,8 +16,8 @@ class Zone;
 class Task : public InlineLinkedListNode<Task> {
     friend class InlineLinkedListNode<Task>;
 public:
-    static Task* create(const String& path, uid_t, gid_t);
-    Task(String&& name, uid_t, gid_t);
+    static Task* create(const String& path, uid_t, gid_t, pid_t parentPID);
+    Task(String&& name, uid_t, gid_t, pid_t parentPID);
 
     static Vector<Task*> allTasks();
 
@@ -103,6 +103,7 @@ public:
     void* sys$mmap(void*, size_t size);
     int sys$munmap(void*, size_t size);
     int sys$get_dir_entries(int fd, void*, size_t);
+    int sys$getcwd(char*, size_t);
 
     struct
     {
@@ -157,6 +158,8 @@ private:
     dword m_timesScheduled { 0 };
     pid_t m_waitee { -1 };
 
+    String m_cwd;
+
     struct Region {
         Region(LinearAddress, size_t, RetainPtr<Zone>&&, String&&);
         ~Region();
@@ -174,6 +177,8 @@ private:
 
     // FIXME: Implement some kind of ASLR?
     LinearAddress m_nextRegion;
+
+    pid_t m_parentPID { 0 };
 };
 
 extern void task_init();
