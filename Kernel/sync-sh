@@ -3,5 +3,6 @@ mount -o loop _fs_contents mnt/
 cp ../Userland/sh mnt/bin/sh
 cp ../Userland/id mnt/bin/id
 cp ../Userland/ps mnt/bin/ps
+cp ../Userland/ls mnt/bin/ls
 umount mnt
 sync

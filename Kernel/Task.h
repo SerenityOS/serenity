@@ -99,6 +99,8 @@ public:
     void sys$exit(int status);
     int sys$spawn(const char* path);
     pid_t sys$waitpid(pid_t);
+    void* sys$mmap(void*, size_t size);
+    int sys$munmap(void*, size_t size);
 
     struct
     {
@@ -160,6 +162,9 @@ private:
         String name;
     };
     Region* allocateRegion(size_t, String&& name);
+    bool deallocateRegion(Region& region);
+
+    Region* regionFromRange(LinearAddress, size_t);
 
     Vector<OwnPtr<Region>> m_regions;
 

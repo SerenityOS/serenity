@@ -90,6 +90,10 @@ DWORD handle(DWORD function, DWORD arg1, DWORD arg2, DWORD arg3)
         return current->sys$getpid();
     case Syscall::PosixWaitpid:
         return current->sys$waitpid((pid_t)arg1);
+    case Syscall::PosixMmap:
+        return (dword)current->sys$mmap((void*)arg1, (size_t)arg2);
+    case Syscall::PosixMunmap:
+        return current->sys$munmap((void*)arg1, (size_t)arg2);
     case Syscall::PosixExit:
         cli();
         locker.unlock();
