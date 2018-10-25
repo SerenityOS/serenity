@@ -7,5 +7,7 @@ cp ../Userland/ls mnt/bin/ls
 cp ../Userland/pwd mnt/bin/pwd
 cp ../Userland/sleep mnt/bin/sleep
 cp ../Userland/date mnt/bin/date
+cp ../Userland/true mnt/bin/true
+cp ../Userland/false mnt/bin/false
 umount mnt
 sync
