@@ -25,6 +25,7 @@
 #include <ELFLoader/ELFLoader.h>
 #include "Console.h"
 #include "ProcFileSystem.h"
+#include "RTC.h"
 
 #define TEST_VFS
 //#define STRESS_TEST_SPAWNING
@@ -179,6 +180,7 @@ void init()
 
     auto console = make<Console>();
 
+    RTC::initialize();
     PIC::initialize();
     gdt_init();
     idt_init();
@@ -191,6 +193,7 @@ void init()
     PIT::initialize();
 
     memset(&system, 0, sizeof(system));
+
     WORD base_memory = (CMOS::read(0x16) << 8) | CMOS::read(0x15);
     WORD ext_memory = (CMOS::read(0x18) << 8) | CMOS::read(0x17);
 

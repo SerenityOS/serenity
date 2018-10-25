@@ -11,6 +11,7 @@
 #include "MemoryManager.h"
 #include "errno.h"
 #include "i8253.h"
+#include "RTC.h"
 
 //#define DEBUG_IO
 //#define TASK_DEBUG
@@ -725,6 +726,15 @@ int Task::sys$sleep(unsigned seconds)
     if (!seconds)
         return 0;
     sleep(seconds * TICKS_PER_SECOND);
+    return 0;
+}
+
+int Task::sys$gettimeofday(timeval* tv)
+{
+    InterruptDisabler disabler;
+    auto now = RTC::now();
+    tv->tv_sec = now;
+    tv->tv_usec = 0;
     return 0;
 }
 

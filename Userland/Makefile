@@ -4,7 +4,8 @@ OBJS = \
        ps.o \
        ls.o \
        pwd.o \
-       sleep.o
+       sleep.o \
+       date.o
 
 APPS = \
        id \
@@ -12,7 +13,8 @@ APPS = \
        ps \
        ls \
        pwd \
-       sleep
+       sleep \
+       date
 
 ARCH_FLAGS =
 STANDARD_FLAGS = -std=c++17 -nostdinc++ -nostdlib
@@ -48,6 +50,9 @@ pwd: pwd.o
 	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
 
 sleep: sleep.o
+	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
+
+date: date.o
 	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
 
 .cpp.o:

@@ -29,6 +29,7 @@ enum Function {
     GetDirEntries = 0x1997,
     PosixLstat = 0x1998,
     PosixGetcwd = 0x1999,
+    PosixGettimeofday = 0x2000,
 };
 
 void initialize();

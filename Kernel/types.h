@@ -23,7 +23,13 @@ typedef DWORD uid_t;
 typedef DWORD gid_t;
 typedef int pid_t;
 typedef DWORD time_t;
+typedef DWORD suseconds_t;
 typedef DWORD size_t;
+
+struct timeval {
+    time_t tv_sec;
+    suseconds_t tv_usec;
+};
 
 struct FarPtr {
     DWORD offset { 0 };
