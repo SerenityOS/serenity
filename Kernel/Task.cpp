@@ -57,7 +57,7 @@ void Task::initialize()
     next_pid = 0;
     s_tasks = new InlineLinkedList<Task>;
     s_deadTasks = new InlineLinkedList<Task>;
-    s_kernelTask = new Task(0, "colonel", IPC::Handle::Any, Task::Ring0);
+    s_kernelTask = new Task(0, "colonel", Task::Ring0);
     redoKernelTaskTSS();
     loadTaskRegister(s_kernelTask->selector());
 }
@@ -285,11 +285,10 @@ Task::Task(String&& name, uid_t uid, gid_t gid, pid_t parentPID)
     ASSERT(m_pid);
 }
 
-Task::Task(void (*e)(), const char* n, IPC::Handle h, RingLevel ring)
+Task::Task(void (*e)(), const char* n, RingLevel ring)
     : m_name(n)
     , m_entry(e)
     , m_pid(next_pid++)
-    , m_handle(h)
     , m_state(Runnable)
     , m_ring(ring)
 {
@@ -518,19 +517,6 @@ bool scheduleNewTask()
 
     // Check and unblock tasks whose wait conditions have been met.
     for (auto* task = s_tasks->head(); task; task = task->next()) {
-        if (task->state() == Task::BlockedReceive && (task->ipc.msg.isValid() || task->ipc.notifies)) {
-            task->unblock();
-            continue;
-        }
-
-        if (task->state() == Task::BlockedSend) {
-            Task* peer = Task::fromIPCHandle(task->ipc.dst);
-            if (peer && peer->state() == Task::BlockedReceive && peer->acceptsMessageFrom(*task)) {
-                task->unblock();
-                continue;
-            }
-        }
-
         if (task->state() == Task::BlockedSleep) {
             if (task->wakeupTime() <= system.uptime) {
                 task->unblock();
@@ -642,15 +628,6 @@ Task* Task::fromPID(pid_t pid)
 {
     for (auto* task = s_tasks->head(); task; task = task->next()) {
         if (task->pid() == pid)
-            return task;
-    }
-    return nullptr;
-}
-
-Task* Task::fromIPCHandle(IPC::Handle handle)
-{
-    for (auto* task = s_tasks->head(); task; task = task->next()) {
-        if (task->handle() == handle)
             return task;
     }
     return nullptr;
@@ -780,11 +757,6 @@ int Task::sys$kill(pid_t pid, int sig)
         // errno = ESRCH;
         return -1;
     }
-#if 0
-    send(peer->handle(), IPC::Message(SYS_KILL, DataBuffer::copy((BYTE*)&sig, sizeof(sig))));
-    IPC::Message response = receive(peer->handle());
-    return *(int*)response.data();
-#endif
     return -1;
 }
 
@@ -812,11 +784,6 @@ pid_t Task::sys$waitpid(pid_t waitee)
     block(BlockedWait);
     yield();
     return m_waitee;
-}
-
-bool Task::acceptsMessageFrom(Task& peer)
-{
-    return !ipc.msg.isValid() && (ipc.src == IPC::Handle::Any || ipc.src == peer.handle());
 }
 
 void Task::unblock()
