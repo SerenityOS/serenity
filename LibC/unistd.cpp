@@ -57,5 +57,10 @@ char* getcwd(char* buffer, size_t size)
     __RETURN_WITH_ERRNO(rc, buffer, nullptr);
 }
 
+int sleep(unsigned seconds)
+{
+    return Syscall::invoke(Syscall::Sleep, (dword)seconds);
+}
+
 }
 

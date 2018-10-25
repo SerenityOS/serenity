@@ -3,4 +3,5 @@ sh
 ps
 ls
 pwd
+sleep
 *.o

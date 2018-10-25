@@ -5,5 +5,6 @@ cp ../Userland/id mnt/bin/id
 cp ../Userland/ps mnt/bin/ps
 cp ../Userland/ls mnt/bin/ls
 cp ../Userland/pwd mnt/bin/pwd
+cp ../Userland/sleep mnt/bin/sleep
 umount mnt
 sync

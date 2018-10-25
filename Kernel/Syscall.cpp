@@ -61,7 +61,6 @@ DWORD handle(DWORD function, DWORD arg1, DWORD arg2, DWORD arg3)
         Console::the().putChar(arg1 & 0xff);
         break;
     case Syscall::Sleep:
-        //kprintf("syscall: sleep(%d)\n", arg1);
         current->sys$sleep(arg1);
         break;
     case Syscall::Spawn:

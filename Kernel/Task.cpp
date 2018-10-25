@@ -10,6 +10,7 @@
 #include <ELFLoader/ExecSpace.h>
 #include "MemoryManager.h"
 #include "errno.h"
+#include "i8253.h"
 
 //#define DEBUG_IO
 //#define TASK_DEBUG
@@ -719,6 +720,14 @@ int Task::sys$kill(pid_t pid, int sig)
     return -1;
 }
 
+int Task::sys$sleep(unsigned seconds)
+{
+    if (!seconds)
+        return 0;
+    sleep(seconds * TICKS_PER_SECOND);
+    return 0;
+}
+
 uid_t Task::sys$getuid()
 {
     return m_uid;
@@ -771,12 +780,6 @@ void sleep(DWORD ticks)
     current->setWakeupTime(system.uptime + ticks);
     current->block(Task::BlockedSleep);
     yield();
-}
-
-void Task::sys$sleep(DWORD ticks)
-{
-    ASSERT(this == current);
-    sleep(ticks);
 }
 
 Task* Task::kernelTask()
