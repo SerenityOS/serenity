@@ -12,7 +12,6 @@ KERNEL_OBJS = \
        IO.o \
        PIC.o \
        Syscall.o \
-       DataBuffer.o \
        Disk.o \
        Userspace.o \
        IDEDiskDevice.o \

@@ -6,7 +6,6 @@
 #include "StdLib.h"
 #include "IO.h"
 #include "i386.h"
-#include "DataBuffer.h"
 #include "PIC.h"
 
 //#define DISK_DEBUG
@@ -88,11 +87,11 @@ void initialize()
     enableIRQ();
     waitForInterrupt();
 
-    RefPtr<DataBuffer> wbuf = DataBuffer::createUninitialized(512);
-    BYTE* byteBuffer = new BYTE[512];
-    BYTE* b = byteBuffer;
-    WORD* wbufbase = (WORD*)wbuf->data();
-    WORD* w = (WORD*)wbuf->data();
+    ByteBuffer wbuf = ByteBuffer::createUninitialized(512);
+    ByteBuffer bbuf = ByteBuffer::createUninitialized(512);
+    BYTE* b = bbuf.pointer();
+    WORD* w = (WORD*)wbuf.pointer();
+    const WORD* wbufbase = (WORD*)wbuf.pointer();
 
     for (DWORD i = 0; i < 256; ++i) {
         WORD data = IO::in16(IDE0_DATA);
@@ -102,8 +101,8 @@ void initialize()
     }
 
     // "Unpad" the device name string.
-    for (DWORD i = 93; i > 54 && byteBuffer[i] == ' '; --i)
-        byteBuffer[i] = 0;
+    for (DWORD i = 93; i > 54 && bbuf[i] == ' '; --i)
+        bbuf[i] = 0;
 
     drive[0].cylinders = wbufbase[1];
     drive[0].heads = wbufbase[3];
@@ -111,13 +110,11 @@ void initialize()
 
     kprintf(
         "ide0: Master=\"%s\", C/H/Spt=%u/%u/%u\n",
-        byteBuffer + 54,
+        bbuf.pointer() + 54,
         drive[0].cylinders,
         drive[0].heads,
         drive[0].sectors_per_track
     );
-
-    delete byteBuffer;
 }
 
 struct CHS {

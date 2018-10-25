@@ -1,7 +1,6 @@
 #pragma once
 
 #include "types.h"
-#include "DataBuffer.h"
 
 #define IDE0_DATA        0x1F0
 #define IDE0_STATUS      0x1F7
