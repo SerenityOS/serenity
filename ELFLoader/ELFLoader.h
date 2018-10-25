@@ -19,8 +19,8 @@ public:
     bool load();
 
 private:
-    void layout();
-    void performRelocations();
+    bool layout();
+    bool performRelocations();
     void exportSymbols();
     void* lookup(const ELFImage::Symbol&);
     char* areaForSection(const ELFImage::Section&);

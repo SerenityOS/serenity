@@ -201,6 +201,7 @@ Task* Task::create(const String& path, uid_t uid, gid_t gid, pid_t parentPID)
     bool success = space.loadELF(move(elfData));
     if (!success) {
         delete t;
+        kprintf("Failure loading ELF %s\n", path.characters());
         return nullptr;
     }
 
