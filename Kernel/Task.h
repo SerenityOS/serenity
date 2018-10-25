@@ -30,13 +30,11 @@ public:
         Invalid = 0,
         Runnable = 1,
         Running = 2,
-        BlockedReceive = 3,
-        BlockedSend = 4,
-        BlockedSleep = 5,
-        Terminated = 6,
-        Crashing = 7,
-        Exiting = 8,
-        BlockedWait = 9,
+        BlockedSleep = 3,
+        BlockedWait = 4,
+        Terminated = 5,
+        Crashing = 6,
+        Exiting = 7,
     };
 
     enum RingLevel {
