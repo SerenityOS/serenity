@@ -9,6 +9,7 @@
 #include <VirtualFileSystem/VirtualFileSystem.h>
 #include <ELFLoader/ExecSpace.h>
 #include "MemoryManager.h"
+#include "errno.h"
 
 //#define DEBUG_IO
 //#define TASK_DEBUG
@@ -166,25 +167,32 @@ int Task::sys$munmap(void* addr, size_t size)
 
 int Task::sys$spawn(const char* path)
 {
-    auto* child = Task::createUserTask(path, m_uid, m_gid, m_pid);
+    int error = 0;
+    auto* child = Task::createUserTask(path, m_uid, m_gid, m_pid, error);
     if (child)
         return child->pid();
-    return -1;
+    return error;
 }
 
-Task* Task::createUserTask(const String& path, uid_t uid, gid_t gid, pid_t parentPID)
+Task* Task::createUserTask(const String& path, uid_t uid, gid_t gid, pid_t parentPID, int& error)
 {
     auto parts = path.split('/');
-    if (parts.isEmpty())
+    if (parts.isEmpty()) {
+        error = -ENOENT;
         return nullptr;
+    }
 
     auto handle = VirtualFileSystem::the().open(path);
-    if (!handle)
+    if (!handle) {
+        error = -ENOENT; // FIXME: Get a more detailed error from VFS.
         return nullptr;
+    }
 
     auto elfData = handle->readEntireFile();
-    if (!elfData)
+    if (!elfData) {
+        error = -EIO; // FIXME: Get a more detailed error from VFS.
         return nullptr;
+    }
 
     InterruptDisabler disabler; // FIXME: Get rid of this, jesus christ. This "critical" section is HUGE.
     Task* t = new Task(parts.takeLast(), uid, gid, parentPID, Ring3);
@@ -203,12 +211,14 @@ Task* Task::createUserTask(const String& path, uid_t uid, gid_t gid, pid_t paren
     if (!success) {
         delete t;
         kprintf("Failure loading ELF %s\n", path.characters());
+        error = -ENOEXEC;
         return nullptr;
     }
 
     t->m_tss.eip = (dword)space.symbolPtr("_start");
     if (!t->m_tss.eip) {
         delete t;
+        error = -ENOEXEC;
         return nullptr;
     }
 
@@ -221,6 +231,7 @@ Task* Task::createUserTask(const String& path, uid_t uid, gid_t gid, pid_t paren
     kprintf("Task %u (%s) spawned @ %p\n", t->pid(), t->name().characters(), t->m_tss.eip);
 #endif
 
+    error = 0;
     return t;
 }
 
@@ -756,11 +767,6 @@ Task* Task::kernelTask()
 {
     ASSERT(s_kernelTask);
     return s_kernelTask;
-}
-
-void Task::setError(int error)
-{
-    m_error = error;
 }
 
 Task::Region::Region(LinearAddress a, size_t s, RetainPtr<Zone>&& z, String&& n)

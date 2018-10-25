@@ -16,7 +16,7 @@ class Task : public InlineLinkedListNode<Task> {
     friend class InlineLinkedListNode<Task>;
 public:
     static Task* createKernelTask(void (*entry)(), String&& name);
-    static Task* createUserTask(const String& path, uid_t, gid_t, pid_t parentPID);
+    static Task* createUserTask(const String& path, uid_t, gid_t, pid_t parentPID, int& error);
     ~Task();
 
     static Vector<Task*> allTasks();
@@ -100,7 +100,6 @@ public:
     int sys$getcwd(char*, size_t);
 
     static void initialize();
-    void setError(int);
 
     static void taskDidCrash(Task*);
 

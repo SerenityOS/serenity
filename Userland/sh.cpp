@@ -1,6 +1,8 @@
 #include <LibC/stdio.h>
 #include <LibC/unistd.h>
 #include <LibC/process.h>
+#include <LibC/errno.h>
+#include <LibC/string.h>
 
 static void prompt()
 {
@@ -12,12 +14,14 @@ static void prompt()
 
 static int runcmd(char* cmd)
 {
+    if (cmd[0] == 0)
+        return 0;
     //printf("command: '%s'\n", cmd);
     char buf[128];
     sprintf(buf, "/bin/%s", cmd);
     int ret = spawn(buf);
     if (ret == -1) {
-        printf("spawn failed: %s\n", cmd);
+        printf("spawn failed: %s (%s)\n", cmd, strerror(errno));
         return 1;
     }
     waitpid(ret);

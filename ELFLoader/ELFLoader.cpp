@@ -56,6 +56,22 @@ bool ELFLoader::layout()
         m_sections.set(section.name(), move(ptr));
         return true;
     });
+    m_image->forEachSectionOfType(SHT_NOBITS, [this, &failed] (const ELFImage::Section& section) {
+#ifdef ELFLOADER_DEBUG
+        kprintf("[ELFLoader] Allocating nobits section: %s\n", section.name());
+#endif
+        if (!section.size())
+            return true;
+        char* ptr = m_execSpace.allocateArea(section.name(), section.size());
+        if (!ptr) {
+            kprintf("ELFLoader: failed to allocate section '%s'\n", section.name());
+            failed = true;
+            return false;
+        }
+        memset(ptr, 0, section.size());
+        m_sections.set(section.name(), move(ptr));
+        return true;
+    });
     return !failed;
 }
 

@@ -2,8 +2,12 @@
 
 extern "C" int main(int, char**);
 
+int errno;
+
 extern "C" int _start()
 {
+    errno = 0;
+
     // FIXME: Pass appropriate argc/argv.
     int status = main(0, nullptr);
 
