@@ -24,13 +24,14 @@ bool ProcFileSystem::initialize()
         auto stringImpl = StringImpl::createUninitialized(tasks.size() * 256, buffer);
         memset(buffer, 0, stringImpl->length());
         char* ptr = buffer;
-        ptr += ksprintf(ptr, "PID    OWNER      STATE  NSCHED  FDS    NAME\n");
+        ptr += ksprintf(ptr, "PID    OWNER      STATE  PPID  NSCHED  FDS    NAME\n");
         for (auto* task : tasks) {
-            ptr += ksprintf(ptr, "%w   %w:%w  %b     %w    %w   %s\n",
+            ptr += ksprintf(ptr, "%w   %w:%w  %b     %w  %w    %w   %s\n",
                 task->pid(),
                 task->uid(),
                 task->gid(),
                 task->state(),
+                task->parentPID(),
                 task->timesScheduled(),
                 task->fileHandleCount(),
                 task->name().characters());

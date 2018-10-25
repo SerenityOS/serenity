@@ -64,6 +64,8 @@ public:
     uid_t uid() const { return m_uid; }
     uid_t gid() const { return m_gid; }
 
+    pid_t parentPID() const { return m_parentPID; }
+
     const FarPtr& farPtr() const { return m_farPtr; }
 
     FileHandle* fileHandleIfExists(int fd);
