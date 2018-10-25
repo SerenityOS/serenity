@@ -15,8 +15,9 @@ class Zone;
 class Task : public InlineLinkedListNode<Task> {
     friend class InlineLinkedListNode<Task>;
 public:
-    static Task* create(const String& path, uid_t, gid_t, pid_t parentPID);
-    Task(String&& name, uid_t, gid_t, pid_t parentPID);
+    static Task* createKernelTask(void (*entry)(), String&& name);
+    static Task* createUserTask(const String& path, uid_t, gid_t, pid_t parentPID);
+    ~Task();
 
     static Vector<Task*> allTasks();
 
@@ -43,12 +44,10 @@ public:
     };
 
     bool isRing0() const { return m_ring == Ring0; }
+    bool isRing3() const { return m_ring == Ring3; }
 
     static Task* fromPID(pid_t);
     static Task* kernelTask();
-
-    Task(void (*entry)(), const char* name, RingLevel);
-    ~Task();
 
     const String& name() const { return m_name; }
     pid_t pid() const { return m_pid; }
@@ -116,6 +115,8 @@ public:
 
 private:
     friend class MemoryManager;
+
+    Task(String&& name, uid_t, gid_t, pid_t parentPID, RingLevel);
 
     FileHandle* openFile(String&&);
 

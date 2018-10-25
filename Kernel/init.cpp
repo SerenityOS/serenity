@@ -140,7 +140,7 @@ static void init_stage2()
     dword lastAlloc = sum_alloc;
 
     for (unsigned i = 0; i < 100; ++i) {
-        auto* shTask = Task::create("/bin/id", (uid_t)100, (gid_t)100);
+        auto* shTask = Task::createUserTask("/bin/id", (uid_t)100, (gid_t)100, (pid_t)0);
         kprintf("malloc stats: alloc:%u free:%u\n", sum_alloc, sum_free);
         kprintf("sizeof(Task):%u\n", sizeof(Task));
         kprintf("delta:%u\n",sum_alloc - lastAlloc);
@@ -149,7 +149,7 @@ static void init_stage2()
     }
 #endif
 
-    auto* shTask = Task::create("/bin/sh", (uid_t)100, (gid_t)100, (pid_t)0);
+    auto* shTask = Task::createUserTask("/bin/sh", (uid_t)100, (gid_t)100, (pid_t)0);
 
     banner();
 
@@ -196,9 +196,9 @@ void init()
 
     Task::initialize();
 
-    new Task(undertaker_main, "undertaker", Task::Ring0);
+    Task::createKernelTask(undertaker_main, "undertaker");
+    Task::createKernelTask(init_stage2, "init");
 
-    auto* init2 = new Task(init_stage2, "init", Task::Ring0);
     scheduleNewTask();
 
     sti();

@@ -57,7 +57,7 @@ void Task::initialize()
     next_pid = 0;
     s_tasks = new InlineLinkedList<Task>;
     s_deadTasks = new InlineLinkedList<Task>;
-    s_kernelTask = new Task(0, "colonel", Task::Ring0);
+    s_kernelTask = Task::createKernelTask(nullptr, "colonel");
     redoKernelTaskTSS();
     loadTaskRegister(s_kernelTask->selector());
 }
@@ -166,13 +166,13 @@ int Task::sys$munmap(void* addr, size_t size)
 
 int Task::sys$spawn(const char* path)
 {
-    auto* child = Task::create(path, m_uid, m_gid, m_pid);
+    auto* child = Task::createUserTask(path, m_uid, m_gid, m_pid);
     if (child)
         return child->pid();
     return -1;
 }
 
-Task* Task::create(const String& path, uid_t uid, gid_t gid, pid_t parentPID)
+Task* Task::createUserTask(const String& path, uid_t uid, gid_t gid, pid_t parentPID)
 {
     auto parts = path.split('/');
     if (parts.isEmpty())
@@ -187,7 +187,7 @@ Task* Task::create(const String& path, uid_t uid, gid_t gid, pid_t parentPID)
         return nullptr;
 
     InterruptDisabler disabler; // FIXME: Get rid of this, jesus christ. This "critical" section is HUGE.
-    Task* t = new Task(parts.takeLast(), uid, gid, parentPID);
+    Task* t = new Task(parts.takeLast(), uid, gid, parentPID, Ring3);
 
     ExecSpace space;
     space.hookableAlloc = [&] (const String& name, size_t size) {
@@ -224,18 +224,35 @@ Task* Task::create(const String& path, uid_t uid, gid_t gid, pid_t parentPID)
     return t;
 }
 
-Task::Task(String&& name, uid_t uid, gid_t gid, pid_t parentPID)
+Task* Task::createKernelTask(void (*e)(), String&& name)
+{
+    Task* task = new Task(move(name), (uid_t)0, (gid_t)0, (pid_t)0, Ring0);
+    task->m_tss.eip = (dword)e;
+
+    if (task->pid() != 0) {
+        InterruptDisabler disabler;
+        s_tasks->prepend(task);
+        system.nprocess++;
+#ifdef TASK_DEBUG
+        kprintf("Kernel task %u (%s) spawned @ %p\n", task->pid(), task->name().characters(), task->m_tss.eip);
+#endif
+    }
+
+    return task;
+}
+
+Task::Task(String&& name, uid_t uid, gid_t gid, pid_t parentPID, RingLevel ring)
     : m_name(move(name))
     , m_pid(next_pid++)
     , m_uid(uid)
     , m_gid(gid)
     , m_state(Runnable)
-    , m_ring(Ring3)
+    , m_ring(ring)
     , m_parentPID(parentPID)
 {
-    m_fileHandles.append(nullptr);
-    m_fileHandles.append(nullptr);
-    m_fileHandles.append(nullptr);
+    m_fileHandles.append(nullptr); // stdin
+    m_fileHandles.append(nullptr); // stdout
+    m_fileHandles.append(nullptr); // stderr
 
     auto* parentTask = Task::fromPID(parentPID);
     if (parentTask)
@@ -246,113 +263,39 @@ Task::Task(String&& name, uid_t uid, gid_t gid, pid_t parentPID)
     m_nextRegion = LinearAddress(0x600000);
 
     memset(&m_tss, 0, sizeof(m_tss));
-    memset(&m_ldtEntries, 0, sizeof(m_ldtEntries));
 
-    allocateLDT();
-
-    // Only IF is set when a task boots.
-    m_tss.eflags = 0x0202;
-
-    WORD codeSegment = 0x1b;
-    WORD dataSegment = 0x23;
-    WORD stackSegment = dataSegment;
-
-    m_tss.ds = dataSegment;
-    m_tss.es = dataSegment;
-    m_tss.fs = dataSegment;
-    m_tss.gs = dataSegment;
-    m_tss.ss = stackSegment;
-    m_tss.cs = codeSegment;
-
-    m_tss.cr3 = MemoryManager::the().pageDirectoryBase().get();
-
-    auto* region = allocateRegion(defaultStackSize, "stack");
-    ASSERT(region);
-    m_stackTop = region->linearAddress.offset(defaultStackSize).get() & 0xfffffff8;
-    m_tss.esp = m_stackTop;
-
-    // Set up a separate stack for Ring0.
-    m_kernelStack = kmalloc(defaultStackSize);
-    DWORD ring0StackTop = ((DWORD)m_kernelStack + defaultStackSize) & 0xffffff8;
-    m_tss.ss0 = 0x10;
-    m_tss.esp0 = ring0StackTop;
-
-    // HACK: Ring2 SS in the TSS is the current PID.
-    m_tss.ss2 = m_pid;
-
-    m_farPtr.offset = 0x98765432;
-
-    ASSERT(m_pid);
-}
-
-Task::Task(void (*e)(), const char* n, RingLevel ring)
-    : m_name(n)
-    , m_entry(e)
-    , m_pid(next_pid++)
-    , m_state(Runnable)
-    , m_ring(ring)
-{
-    m_fileHandles.append(nullptr);
-    m_fileHandles.append(nullptr);
-    m_fileHandles.append(nullptr);
-
-    m_cwd = "/";
-
-    m_nextRegion = LinearAddress(0x600000);
-
-    Region* codeRegion = nullptr;
-    if (!isRing0()) {
-        codeRegion = allocateRegion(4096, "code");
-        ASSERT(codeRegion);
-        bool success = copyToZone(*codeRegion->zone, (void*)e, PAGE_SIZE);
-        ASSERT(success);
-    }
-
-    memset(&m_tss, 0, sizeof(m_tss));
-    memset(&m_ldtEntries, 0, sizeof(m_ldtEntries));
-
-    if (ring == Ring3) {
+    if (isRing3()) {
+        memset(&m_ldtEntries, 0, sizeof(m_ldtEntries));
         allocateLDT();
     }
 
     // Only IF is set when a task boots.
     m_tss.eflags = 0x0202;
 
-    WORD dataSegment;
-    WORD stackSegment;
-    WORD codeSegment;
+    word cs, ds, ss;
 
-    if (ring == Ring0) {
-        codeSegment = 0x08;
-        dataSegment = 0x10;
-        stackSegment = dataSegment;
+    if (isRing0()) {
+        cs = 0x08;
+        ds = 0x10;
+        ss = 0x10;
     } else {
-        codeSegment = 0x1b;
-        dataSegment = 0x23;
-        stackSegment = dataSegment;
+        cs = 0x1b;
+        ds = 0x23;
+        ss = 0x23;
     }
 
-    m_tss.ds = dataSegment;
-    m_tss.es = dataSegment;
-    m_tss.fs = dataSegment;
-    m_tss.gs = dataSegment;
-    m_tss.ss = stackSegment;
-    m_tss.cs = codeSegment;
-
-    ASSERT((codeSegment & 3) == (stackSegment & 3));
+    m_tss.ds = ds;
+    m_tss.es = ds;
+    m_tss.fs = ds;
+    m_tss.gs = ds;
+    m_tss.ss = ss;
+    m_tss.cs = cs;
 
     m_tss.cr3 = MemoryManager::the().pageDirectoryBase().get();
 
     if (isRing0()) {
-        m_tss.eip = (DWORD)m_entry;
-    } else {
-        m_tss.eip = codeRegion->linearAddress.get();
-    }
-
-    if (isRing0()) {
         // FIXME: This memory is leaked.
         // But uh, there's also no kernel task termination, so I guess it's not technically leaked...
-
         dword stackBottom = (dword)kmalloc(defaultStackSize);
         m_stackTop = (stackBottom + defaultStackSize) & 0xffffff8;
         m_tss.esp = m_stackTop;
@@ -360,12 +303,11 @@ Task::Task(void (*e)(), const char* n, RingLevel ring)
         auto* region = allocateRegion(defaultStackSize, "stack");
         ASSERT(region);
         m_stackTop = region->linearAddress.offset(defaultStackSize).get() & 0xfffffff8;
-        m_tss.esp = m_stackTop;
     }
+    m_tss.esp = m_stackTop;
 
-    if (ring == Ring3) {
-        // Set up a separate stack for Ring0.
-        // FIXME: Don't leak this stack either.
+    if (isRing3()) {
+        // Ring3 tasks need a separate stack for Ring0.
         m_kernelStack = kmalloc(defaultStackSize);
         DWORD ring0StackTop = ((DWORD)m_kernelStack + defaultStackSize) & 0xffffff8;
         m_tss.ss0 = 0x10;
@@ -374,25 +316,12 @@ Task::Task(void (*e)(), const char* n, RingLevel ring)
 
     // HACK: Ring2 SS in the TSS is the current PID.
     m_tss.ss2 = m_pid;
-
-    m_farPtr.offset = 0x12345678;
-
-    // Don't add task 0 (kernel dummy task) to task list.
-    // FIXME: This doesn't belong in the constructor.
-    if (m_pid == 0)
-        return;
-
-    // Add it to head of task list (meaning it's next to run too, ATM.)
-    s_tasks->prepend(this);
-
-    system.nprocess++;
-#ifdef TASK_DEBUG
-    kprintf("Task %u (%s) spawned @ %p\n", m_pid, m_name.characters(), m_tss.eip);
-#endif
+    m_farPtr.offset = 0x98765432;
 }
 
 Task::~Task()
 {
+    InterruptDisabler disabler;
     system.nprocess--;
     delete [] m_ldtEntries;
     m_ldtEntries = nullptr;
@@ -462,6 +391,9 @@ void Task::taskDidCrash(Task* crashedTask)
 
 void Task::doHouseKeeping()
 {
+    InterruptDisabler disabler;
+    if (s_deadTasks->isEmpty())
+        return;
     Task* next = nullptr;
     for (auto* deadTask = s_deadTasks->head(); deadTask; deadTask = next) {
         next = deadTask->next();
