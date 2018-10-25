@@ -451,13 +451,6 @@ bool scheduleNewTask()
         return contextSwitch(Task::kernelTask());
     }
 
-#if 0
-    kprintf("Scheduler choices:\n");
-    for (auto* task = s_tasks->head(); task; task = task->next()) {
-        kprintf("%p  %u  %s\n", task, task->pid(), task->name().characters());
-    }
-#endif
-
     // Check and unblock tasks whose wait conditions have been met.
     for (auto* task = s_tasks->head(); task; task = task->next()) {
         if (task->state() == Task::BlockedSleep) {
@@ -474,6 +467,15 @@ bool scheduleNewTask()
             }
         }
     }
+
+#if 0
+    kprintf("Scheduler choices:\n");
+    for (auto* task = s_tasks->head(); task; task = task->next()) {
+        if (task->state() == Task::BlockedWait || task->state() == Task::BlockedSleep)
+            continue;
+        kprintf("%w %s(%u)\n", task->state(), task->name().characters(), task->pid());
+    }
+#endif
 
     auto* prevHead = s_tasks->head();
     for (;;) {
@@ -509,6 +511,7 @@ static bool contextSwitch(Task* t)
 {
     //kprintf("c_s to %s (same:%u)\n", t->name().characters(), current == t);
     t->setTicksLeft(5);
+    t->didSchedule();
 
     if (current == t)
         return false;
@@ -562,8 +565,6 @@ static bool contextSwitch(Task* t)
     tssDescriptor.type = 11; // Busy TSS
 
     flushGDT();
-
-    t->didSchedule();
     return true;
 }
 
