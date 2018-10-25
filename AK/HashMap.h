@@ -49,9 +49,12 @@ public:
     bool isEmpty() const { return m_table.isEmpty(); }
     unsigned size() const { return m_table.size(); }
     unsigned capacity() const { return m_table.capacity(); }
+    void clear() { m_table.clear(); }
 
+    void set(const K&, const V&);
     void set(const K&, V&&);
     void remove(const K&);
+    void removeOneRandomly() { m_table.remove(m_table.begin()); }
 
     typedef HashTable<Entry, EntryTraits> HashTableType;
     typedef typename HashTableType::Iterator IteratorType;
@@ -75,6 +78,12 @@ template<typename K, typename V>
 void HashMap<K, V>::set(const K& key, V&& value)
 {
     m_table.set(Entry{key, move(value)});
+}
+
+template<typename K, typename V>
+void HashMap<K, V>::set(const K& key, const V& value)
+{
+    m_table.set(Entry{key, value});
 }
 
 template<typename K, typename V>
