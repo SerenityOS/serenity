@@ -102,6 +102,7 @@ void Task::allocateLDT()
 
 Vector<Task*> Task::allTasks()
 {
+    InterruptDisabler disabler;
     Vector<Task*> tasks;
     tasks.ensureCapacity(s_tasks->sizeSlow());
     for (auto* task = s_tasks->head(); task; task = task->next())
@@ -441,7 +442,8 @@ void Task::sys$exit(int status)
 
 void Task::taskDidCrash(Task* crashedTask)
 {
-    // NOTE: This is called from an excepton handler, so interrupts are disabled.
+    ASSERT_INTERRUPTS_DISABLED();
+
     crashedTask->setState(Crashing);
     crashedTask->dumpRegions();
 
@@ -499,6 +501,8 @@ void switchNow()
 
 bool scheduleNewTask()
 {
+    ASSERT_INTERRUPTS_DISABLED();
+
     if (!current) {
         // XXX: The first ever context_switch() goes to the idle task.
         //      This to setup a reliable place we can return to.
@@ -801,6 +805,7 @@ pid_t Task::sys$getpid()
 
 pid_t Task::sys$waitpid(pid_t waitee)
 {
+    InterruptDisabler disabler;
     if (!Task::fromPID(waitee))
         return -1;
     m_waitee = waitee;
