@@ -58,6 +58,7 @@ void MemoryManager::initializePaging()
 
 auto MemoryManager::ensurePTE(LinearAddress linearAddress) -> PageTableEntry
 {
+    ASSERT_INTERRUPTS_DISABLED();
     dword pageDirectoryIndex = (linearAddress.get() >> 22) & 0x3ff;
     dword pageTableIndex = (linearAddress.get() >> 12) & 0x3ff;
 
@@ -84,6 +85,7 @@ auto MemoryManager::ensurePTE(LinearAddress linearAddress) -> PageTableEntry
 
 void MemoryManager::protectMap(LinearAddress linearAddress, size_t length)
 {
+    InterruptDisabler disabler;
     // FIXME: ASSERT(linearAddress is 4KB aligned);
     for (dword offset = 0; offset < length; offset += 4096) {
         auto pteAddress = linearAddress.offset(offset);
@@ -98,6 +100,7 @@ void MemoryManager::protectMap(LinearAddress linearAddress, size_t length)
 
 void MemoryManager::identityMap(LinearAddress linearAddress, size_t length)
 {
+    InterruptDisabler disabler;
     // FIXME: ASSERT(linearAddress is 4KB aligned);
     for (dword offset = 0; offset < length; offset += 4096) {
         auto pteAddress = linearAddress.offset(offset);
@@ -117,6 +120,7 @@ void MemoryManager::initialize()
 
 PageFaultResponse MemoryManager::handlePageFault(const PageFault& fault)
 {
+    ASSERT_INTERRUPTS_DISABLED();
     kprintf("MM: handlePageFault(%w) at laddr=%p\n", fault.code(), fault.address().get());
     if (fault.isNotPresent()) { 
         kprintf("  >> NP fault!\n");
@@ -138,6 +142,7 @@ RetainPtr<Zone> MemoryManager::createZone(size_t size)
 
 Vector<PhysicalAddress> MemoryManager::allocatePhysicalPages(size_t count)
 {
+    InterruptDisabler disabler;
     if (count > m_freePages.size())
         return { };
 
@@ -150,6 +155,7 @@ Vector<PhysicalAddress> MemoryManager::allocatePhysicalPages(size_t count)
 
 byte* MemoryManager::quickMapOnePage(PhysicalAddress physicalAddress)
 {
+    ASSERT_INTERRUPTS_DISABLED();
     auto pte = ensurePTE(LinearAddress(4 * MB));
     kprintf("quickmap %x @ %x {pte @ %p}\n", physicalAddress.get(), 4*MB, pte.ptr());
     pte.setPhysicalPageBase(physicalAddress.pageBase());
@@ -174,6 +180,7 @@ void MemoryManager::flushTLB(LinearAddress laddr)
 
 bool MemoryManager::unmapRegion(Task& task, Task::Region& region)
 {
+    InterruptDisabler disabler;
     auto& zone = *region.zone;
     for (size_t i = 0; i < zone.m_pages.size(); ++i) {
         auto laddr = region.linearAddress.offset(i * PAGE_SIZE);
@@ -190,6 +197,7 @@ bool MemoryManager::unmapRegion(Task& task, Task::Region& region)
 
 bool MemoryManager::unmapRegionsForTask(Task& task)
 {
+    ASSERT_INTERRUPTS_DISABLED();
     for (auto& region : task.m_regions) {
         if (!unmapRegion(task, *region))
             return false;
@@ -199,6 +207,7 @@ bool MemoryManager::unmapRegionsForTask(Task& task)
 
 bool MemoryManager::mapRegion(Task& task, Task::Region& region)
 {
+    InterruptDisabler disabler;
     auto& zone = *region.zone;
     for (size_t i = 0; i < zone.m_pages.size(); ++i) {
         auto laddr = region.linearAddress.offset(i * PAGE_SIZE);
@@ -215,6 +224,7 @@ bool MemoryManager::mapRegion(Task& task, Task::Region& region)
 
 bool MemoryManager::mapRegionsForTask(Task& task)
 {
+    ASSERT_INTERRUPTS_DISABLED();
     for (auto& region : task.m_regions) {
         if (!mapRegion(task, *region))
             return false;
@@ -229,6 +239,7 @@ bool copyToZone(Zone& zone, const void* data, size_t size)
         return false;
     }
 
+    InterruptDisabler disabler;
     auto* dataptr = (const byte*)data;
     size_t remaining = size;
     for (size_t i = 0; i < zone.m_pages.size(); ++i) {
