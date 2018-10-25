@@ -165,7 +165,7 @@ static void init_stage2()
 #endif
 
     for (;;) {
-        sleep(3600 * TICKS_PER_SECOND);
+        //sleep(3600 * TICKS_PER_SECOND);
         asm("hlt");
     }
 }

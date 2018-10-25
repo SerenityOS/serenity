@@ -31,11 +31,12 @@ public:
         Invalid = 0,
         Runnable = 1,
         Running = 2,
-        BlockedSleep = 3,
-        BlockedWait = 4,
-        Terminated = 5,
-        Crashing = 6,
-        Exiting = 7,
+        Terminated = 3,
+        Crashing = 4,
+        Exiting = 5,
+        BlockedSleep = 6,
+        BlockedWait = 7,
+        BlockedRead = 8,
     };
 
     enum RingLevel {
@@ -114,6 +115,7 @@ public:
 
 private:
     friend class MemoryManager;
+    friend bool scheduleNewTask();
 
     Task(String&& name, uid_t, gid_t, pid_t parentPID, RingLevel);
 
@@ -143,6 +145,7 @@ private:
     void* m_kernelStack { nullptr };
     dword m_timesScheduled { 0 };
     pid_t m_waitee { -1 };
+    int m_fdBlockedOnRead { -1 };
 
     String m_cwd;
 

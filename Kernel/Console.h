@@ -9,6 +9,7 @@ public:
     Console();
     virtual ~Console() override;
 
+    virtual bool hasDataAvailableForRead() const override;
     virtual ssize_t read(byte* buffer, size_t size) override;
     virtual ssize_t write(const byte* data, size_t size) override;
 

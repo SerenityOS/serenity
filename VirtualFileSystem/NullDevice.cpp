@@ -11,6 +11,11 @@ NullDevice::~NullDevice()
 {
 }
 
+bool NullDevice::hasDataAvailableForRead() const
+{
+    return true;
+}
+
 Unix::ssize_t NullDevice::read(byte*, Unix::size_t)
 {
     kprintf("NullDevice: read from null\n");
