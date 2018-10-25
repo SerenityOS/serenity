@@ -8,7 +8,6 @@ KERNEL_OBJS = \
        Task.o \
        i8253.o \
        Keyboard.o \
-       IPC.o \
        CMOS.o \
        IO.o \
        PIC.o \

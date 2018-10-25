@@ -5,7 +5,6 @@
 #include "i8253.h"
 #include "Keyboard.h"
 #include "Task.h"
-#include "IPC.h"
 #include "system.h"
 #include "Disk.h"
 #include "PIC.h"
@@ -115,7 +114,7 @@ static void init_stage2()
 #endif
 
 #ifdef TEST_CRASHY_USER_PROCESSES
-    new Task(user_main, "user", IPC::Handle::UserTask, Task::Ring3);
+    new Task(user_main, "user", Task::Ring3);
 #endif
 
 #ifdef TEST_ELF_LOADER
@@ -197,9 +196,9 @@ void init()
 
     Task::initialize();
 
-    new Task(undertaker_main, "undertaker", IPC::Handle::UserTask, Task::Ring0);
+    new Task(undertaker_main, "undertaker", Task::Ring0);
 
-    auto* init2 = new Task(init_stage2, "init", IPC::Handle::InitTask, Task::Ring0);
+    auto* init2 = new Task(init_stage2, "init", Task::Ring0);
     scheduleNewTask();
 
     sti();

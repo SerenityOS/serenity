@@ -1,7 +1,6 @@
 #pragma once
 
 #include "types.h"
-#include "IPC.h"
 #include "InlineLinkedList.h"
 #include <AK/String.h>
 #include "TSS.h"
@@ -48,10 +47,9 @@ public:
     bool isRing0() const { return m_ring == Ring0; }
 
     static Task* fromPID(pid_t);
-    static Task* fromIPCHandle(IPC::Handle);
     static Task* kernelTask();
 
-    Task(void (*entry)(), const char* name, IPC::Handle, RingLevel);
+    Task(void (*entry)(), const char* name, RingLevel);
     ~Task();
 
     const String& name() const { return m_name; }
@@ -60,7 +58,6 @@ public:
     WORD selector() const { return m_farPtr.selector; }
     TSS32& tss() { return m_tss; }
     State state() const { return m_state; }
-    IPC::Handle handle() const { return m_handle; }
     uid_t uid() const { return m_uid; }
     uid_t gid() const { return m_gid; }
 
@@ -71,8 +68,6 @@ public:
     FileHandle* fileHandleIfExists(int fd);
 
     static void doHouseKeeping();
-
-    bool acceptsMessageFrom(Task&);
 
     void block(Task::State);
     void unblock();
@@ -107,14 +102,6 @@ public:
     int sys$get_dir_entries(int fd, void*, size_t);
     int sys$getcwd(char*, size_t);
 
-    struct
-    {
-        IPC::Message msg;
-        IPC::Handle dst;
-        IPC::Handle src;
-        DWORD notifies { 0 };
-    } ipc;
-
     static void initialize();
     void setError(int);
 
@@ -146,7 +133,6 @@ private:
     gid_t m_gid { 0 };
     DWORD m_ticks { 0 };
     DWORD m_ticksLeft { 0 };
-    IPC::Handle m_handle { 0 };
     DWORD m_stackTop { 0 };
     FarPtr m_farPtr;
     State m_state { Invalid };
