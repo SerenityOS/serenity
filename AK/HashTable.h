@@ -216,7 +216,7 @@ public:
             remove(it);
     }
 
-    void remove(Iterator&);
+    void remove(Iterator);
 
 private:
     Bucket& lookup(const T&, unsigned* bucketIndex = nullptr);
@@ -329,7 +329,7 @@ auto HashTable<T, TraitsForT>::find(const T& value) const -> ConstIterator
 }
 
 template<typename T, typename TraitsForT>
-void HashTable<T, TraitsForT>::remove(Iterator& it)
+void HashTable<T, TraitsForT>::remove(Iterator it)
 {
     ASSERT(!isEmpty());
     m_buckets[it.m_bucketIndex].chain.remove(it.m_bucketIterator);

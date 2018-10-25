@@ -1,5 +1,11 @@
 #include "DiskBackedFileSystem.h"
 
+#ifdef SERENITY
+#include "i386.h"
+#else
+typedef int InterruptDisabler;
+#endif
+
 //#define DBFS_DEBUG
 
 DiskBackedFileSystem::DiskBackedFileSystem(RetainPtr<DiskDevice>&& device)
@@ -36,11 +42,26 @@ ByteBuffer DiskBackedFileSystem::readBlock(unsigned index) const
 #ifdef DBFS_DEBUG
     kprintf("DiskBackedFileSystem::readBlock %u\n", index);
 #endif
+    {
+        InterruptDisabler disabler;
+        auto it = m_blockCache.find(index);
+        if (it != m_blockCache.end()) {
+            return (*it).value;
+        }
+    }
+
     auto buffer = ByteBuffer::createUninitialized(blockSize());
     DiskOffset baseOffset = static_cast<DiskOffset>(index) * static_cast<DiskOffset>(blockSize());
     auto* bufferPointer = buffer.pointer();
     device().read(baseOffset, blockSize(), bufferPointer);
     ASSERT(buffer.size() == blockSize());
+
+    {
+        InterruptDisabler disabler;
+        if (m_blockCache.size() >= 32)
+            m_blockCache.removeOneRandomly();
+        m_blockCache.set(index, buffer);
+    }
     return buffer;
 }
 
@@ -74,5 +95,6 @@ void DiskBackedFileSystem::setBlockSize(unsigned blockSize)
 
 void DiskBackedFileSystem::invalidateCaches()
 {
-    // FIXME: Implement block cache.
+    InterruptDisabler disabler;
+    m_blockCache.clear();
 }
