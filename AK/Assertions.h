@@ -1,7 +1,7 @@
 #pragma once
 
 #ifdef SERENITY
-#include "kassert.h"
+#include <Kernel/kassert.h>
 #else
 #include <assert.h>
 #define ASSERT(x) assert(x)

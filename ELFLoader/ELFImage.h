@@ -147,22 +147,28 @@ inline void ELFImage::forEachSectionOfType(unsigned type, F func) const
 {
     for (unsigned i = 0; i < sectionCount(); ++i) {
         auto& section = this->section(i);
-        if (section.type() == type)
-            func(section);
+        if (section.type() == type) {
+            if (!func(section))
+                break;
+        }
     }
 }
 
 template<typename F>
 inline void ELFImage::RelocationSection::forEachRelocation(F func) const
 {
-    for (unsigned i = 0; i < relocationCount(); ++i)
-        func(relocation(i));
+    for (unsigned i = 0; i < relocationCount(); ++i) {
+        if (!func(relocation(i)))
+            break;
+    }
 }
 
 template<typename F>
 inline void ELFImage::forEachSymbol(F func) const
 {
-    for (unsigned i = 0; i < symbolCount(); ++i)
-        func(symbol(i));
+    for (unsigned i = 0; i < symbolCount(); ++i) {
+        if (!func(symbol(i)))
+            break;
+    }
 }
 

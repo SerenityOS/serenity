@@ -1,9 +1,19 @@
-#include <cstdio>
-#include "SimpleMalloc.h"
 #include "kmalloc.h"
+
+#ifndef SERENITY
+#include <cstdio>
 #include <cstdlib>
+#endif
+
+#if defined(SERENITY) && defined(USERLAND)
+#define USE_SYSTEM_MALLOC
+#endif
 
 #define USE_SYSTEM_MALLOC
+
+#ifndef USE_SYSTEM_MALLOC
+#include "SimpleMalloc.h"
+#endif
 
 #ifdef USE_SYSTEM_MALLOC
 
