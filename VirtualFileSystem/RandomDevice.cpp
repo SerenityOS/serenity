@@ -28,6 +28,11 @@ static void mysrand(unsigned seed)
 }
 #endif
 
+bool RandomDevice::hasDataAvailableForRead() const
+{
+    return true;
+}
+
 Unix::ssize_t RandomDevice::read(byte* buffer, Unix::size_t bufferSize)
 {
     const int range = 'z' - 'a';

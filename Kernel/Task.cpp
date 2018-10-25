@@ -466,6 +466,14 @@ bool scheduleNewTask()
                 continue;
             }
         }
+
+        if (task->state() == Task::BlockedRead) {
+            ASSERT(task->m_fdBlockedOnRead != -1);
+            if (task->m_fileHandles[task->m_fdBlockedOnRead]->hasDataAvailableForRead()) {
+                task->unblock();
+                continue;
+            }
+        }
     }
 
 #if 0
@@ -619,6 +627,13 @@ ssize_t Task::sys$read(int fd, void* outbuf, size_t nread)
 #ifdef DEBUG_IO
     kprintf("call read on handle=%p\n", handle);
 #endif
+    if (handle->isBlocking()) {
+        if (!handle->hasDataAvailableForRead()) {
+            m_fdBlockedOnRead = fd;
+            block(BlockedRead);
+            yield();
+        }
+    }
     nread = handle->read((byte*)outbuf, nread);
 #ifdef DEBUG_IO
     kprintf("Task::sys$read: nread=%u\n", nread);

@@ -18,6 +18,7 @@ private:
     // ^CharacterDevice
     virtual ssize_t read(byte* buffer, size_t) override;
     virtual ssize_t write(const byte* buffer, size_t) override;
+    virtual bool hasDataAvailableForRead() const override;
 
     CircularQueue<byte, 16> m_queue;
     byte m_modifiers { 0 };

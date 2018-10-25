@@ -5,9 +5,10 @@
 class ZeroDevice final : public CharacterDevice {
 public:
     ZeroDevice();
-    virtual ~ZeroDevice();
+    virtual ~ZeroDevice() override;
 
-    Unix::ssize_t read(byte* buffer, Unix::size_t bufferSize) override;
-    Unix::ssize_t write(const byte* buffer, Unix::size_t bufferSize) override;
+    virtual Unix::ssize_t read(byte* buffer, Unix::size_t bufferSize) override;
+    virtual Unix::ssize_t write(const byte* buffer, Unix::size_t bufferSize) override;
+    virtual bool hasDataAvailableForRead() const override;
 };
 

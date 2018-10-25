@@ -7,6 +7,8 @@ class CharacterDevice {
 public:
     virtual ~CharacterDevice();
 
+    virtual bool hasDataAvailableForRead() const = 0;
+
     virtual Unix::ssize_t read(byte* buffer, Unix::size_t bufferSize) = 0;
     virtual Unix::ssize_t write(const byte* buffer, Unix::size_t bufferSize) = 0;
 

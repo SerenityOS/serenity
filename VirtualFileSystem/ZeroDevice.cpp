@@ -11,6 +11,11 @@ ZeroDevice::~ZeroDevice()
 {
 }
 
+bool ZeroDevice::hasDataAvailableForRead() const
+{
+    return true;
+}
+
 Unix::ssize_t ZeroDevice::read(byte* buffer, Unix::size_t bufferSize)
 {
     kprintf("ZeroDevice: read from zero\n");

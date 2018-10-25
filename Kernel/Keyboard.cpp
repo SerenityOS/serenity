@@ -86,6 +86,11 @@ Keyboard::~Keyboard()
     ASSERT_NOT_REACHED();
 }
 
+bool Keyboard::hasDataAvailableForRead() const
+{
+    return !m_queue.isEmpty();
+}
+
 ssize_t Keyboard::read(byte* buffer, size_t size)
 {
     ssize_t nread = 0;

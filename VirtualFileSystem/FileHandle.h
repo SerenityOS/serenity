@@ -12,6 +12,8 @@ public:
     Unix::ssize_t read(byte* buffer, Unix::size_t count);
     int stat(Unix::stat*);
 
+    bool hasDataAvailableForRead();
+
     ssize_t get_dir_entries(byte* buffer, Unix::size_t);
 
     ByteBuffer readEntireFile();
@@ -21,6 +23,9 @@ public:
 #ifdef SERENITY
     int fd() const { return m_fd; }
     void setFD(int fd) { m_fd = fd; }
+
+    bool isBlocking() const { return m_isBlocking; }
+    void setBlocking(bool b) { m_isBlocking = b; }
 #endif
 
 private:
@@ -32,6 +37,7 @@ private:
 
 #ifdef SERENITY
     int m_fd { -1 };
+    bool m_isBlocking { true };
 #endif
 };
 

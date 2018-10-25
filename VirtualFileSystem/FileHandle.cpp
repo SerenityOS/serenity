@@ -107,6 +107,13 @@ Unix::ssize_t FileHandle::read(byte* buffer, Unix::size_t count)
     return nread;
 }
 
+bool FileHandle::hasDataAvailableForRead()
+{
+    if (m_vnode->isCharacterDevice())
+        return m_vnode->characterDevice()->hasDataAvailableForRead();
+    return true;
+}
+
 ByteBuffer FileHandle::readEntireFile()
 {
     Locker locker(VirtualFileSystem::lock());

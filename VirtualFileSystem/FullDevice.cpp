@@ -12,6 +12,11 @@ FullDevice::~FullDevice()
 {
 }
 
+bool FullDevice::hasDataAvailableForRead() const
+{
+    return true;
+}
+
 Unix::ssize_t FullDevice::read(byte* buffer, Unix::size_t bufferSize)
 {
     kprintf("FullDevice: read from full\n");

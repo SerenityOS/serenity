@@ -21,6 +21,11 @@ Console::~Console()
 {
 }
 
+bool Console::hasDataAvailableForRead() const
+{
+    return false;
+}
+
 ssize_t Console::read(byte* buffer, size_t bufferSize)
 {
     // FIXME: Implement reading from the console.
