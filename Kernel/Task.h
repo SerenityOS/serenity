@@ -91,7 +91,6 @@ public:
     int sys$seek(int fd, int offset);
     int sys$kill(pid_t pid, int sig);
     int sys$geterror() { return m_error; }
-    void sys$sleep(DWORD ticks);
     void sys$exit(int status);
     int sys$spawn(const char* path);
     pid_t sys$waitpid(pid_t);
@@ -99,6 +98,7 @@ public:
     int sys$munmap(void*, size_t size);
     int sys$get_dir_entries(int fd, void*, size_t);
     int sys$getcwd(char*, size_t);
+    int sys$sleep(unsigned seconds);
 
     static void initialize();
 
