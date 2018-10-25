@@ -1,5 +1,3 @@
-#pragma once
-
 #include "kprintf.h"
 #include "Console.h"
 #include <stdarg.h>

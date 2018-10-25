@@ -19,7 +19,8 @@ KERNEL_OBJS = \
        Console.o \
        IRQHandler.o \
        kprintf.o \
-       ProcFileSystem.o
+       ProcFileSystem.o \
+       RTC.o
 
 VFS_OBJS = \
     ../VirtualFileSystem/DiskDevice.o \

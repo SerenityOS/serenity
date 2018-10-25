@@ -4,4 +4,5 @@ ps
 ls
 pwd
 sleep
+date
 *.o

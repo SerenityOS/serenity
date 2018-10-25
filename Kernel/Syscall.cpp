@@ -61,8 +61,9 @@ DWORD handle(DWORD function, DWORD arg1, DWORD arg2, DWORD arg3)
         Console::the().putChar(arg1 & 0xff);
         break;
     case Syscall::Sleep:
-        current->sys$sleep(arg1);
-        break;
+        return current->sys$sleep(arg1);
+    case Syscall::PosixGettimeofday:
+        return current->sys$gettimeofday((timeval*)arg1);
     case Syscall::Spawn:
         return current->sys$spawn((const char*)arg1);
     case Syscall::GetDirEntries:

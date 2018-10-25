@@ -99,6 +99,7 @@ public:
     int sys$get_dir_entries(int fd, void*, size_t);
     int sys$getcwd(char*, size_t);
     int sys$sleep(unsigned seconds);
+    int sys$gettimeofday(timeval*);
 
     static void initialize();
 

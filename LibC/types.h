@@ -26,6 +26,12 @@ typedef dword nlink_t;
 typedef dword blksize_t;
 typedef dword blkcnt_t;
 typedef dword time_t;
+typedef dword suseconds_t;
+
+struct timeval {
+    time_t tv_sec;
+    suseconds_t tv_usec;
+};
 
 struct stat {
     dev_t     st_dev;     /* ID of device containing file */

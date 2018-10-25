@@ -6,6 +6,7 @@ OBJS = \
        mman.o \
        dirent.o \
        stdlib.o \
+       time.o \
        entry.o
 
 LIBRARY = LibC.a
