@@ -124,8 +124,6 @@ private:
 
     Task(String&& name, uid_t, gid_t, pid_t parentPID, RingLevel);
 
-    FileHandle* openFile(String&&);
-
     void allocateLDT();
 
     Task* m_prev { nullptr };
@@ -151,6 +149,7 @@ private:
     dword m_timesScheduled { 0 };
     pid_t m_waitee { -1 };
     int m_fdBlockedOnRead { -1 };
+    size_t m_maxFileHandles { 16 };
 
     RetainPtr<VirtualFileSystem::Node> m_cwd;
 
