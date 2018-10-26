@@ -74,19 +74,19 @@ static int runcmd(char* cmd)
     memcpy(buf, cmd, 128);
 
     const char* argv[32];
-    size_t argi = 1;
+    size_t argc = 1;
     argv[0] = &buf[0];
     size_t buflen = strlen(buf);
     for (size_t i = 0; i < buflen; ++i) {
         if (buf[i] == ' ') {
             buf[i] = '\0';
-            argv[argi++] = &buf[i + 1];
+            argv[argc++] = &buf[i + 1];
         }
     }
-    argv[argi + 1] = nullptr;
+    argv[argc] = nullptr;
 
     int retval = 0;
-    if (handle_builtin(argi, argv, retval)) {
+    if (handle_builtin(argc, argv, retval)) {
         return 0;
     }
 
