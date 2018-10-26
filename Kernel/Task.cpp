@@ -733,13 +733,13 @@ int Task::sys$close(int fd)
     return 0;
 }
 
-int Task::sys$lstat(const char* path, void* statbuf)
+int Task::sys$lstat(const char* path, Unix::stat* statbuf)
 {
-    VALIDATE_USER_BUFFER(statbuf, sizeof(stat));
+    VALIDATE_USER_BUFFER(statbuf, sizeof(Unix::stat));
     auto handle = VirtualFileSystem::the().open(move(path), m_cwd.ptr());
     if (!handle)
         return -1;
-    handle->stat((Unix::stat*)statbuf);
+    handle->stat(statbuf);
     return 0;
 }
 
