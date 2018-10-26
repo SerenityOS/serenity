@@ -12,11 +12,12 @@ template<typename T>
 class VectorImpl {
 public:
     ~VectorImpl() { }
-    static OwnPtr<VectorImpl> create(size_t capacity)
+    static VectorImpl* create(size_t capacity)
     {
         size_t size = sizeof(VectorImpl) + sizeof(T) * capacity;
         void* slot = kmalloc(size);
-        return OwnPtr<VectorImpl>(new (slot) VectorImpl(capacity));
+        new (slot) VectorImpl(capacity);
+        return (VectorImpl*)slot;
     }
 
     size_t size() const { return m_size; }
@@ -59,14 +60,17 @@ public:
     ~Vector() { clear(); }
 
     Vector(Vector&& other)
-        : m_impl(move(other.m_impl))
+        : m_impl(other.m_impl)
     {
+        other.m_impl = nullptr;
     }
 
     Vector& operator=(Vector&& other)
     {
-        if (this != &other)
-            m_impl = move(other.m_impl);
+        if (this != &other) {
+            m_impl = other.m_impl;
+            other.m_impl = nullptr;
+        }
         return *this;
     }
 
@@ -75,6 +79,7 @@ public:
         for (size_t i = 0; i < size(); ++i) {
             at(i).~T();
         }
+        kfree(m_impl);
         m_impl = nullptr;
     }
 
@@ -134,8 +139,9 @@ public:
                 new (newImpl->slot(i)) T(move(m_impl->at(i)));
                 m_impl->at(i).~T();
             }
+            kfree(m_impl);
         }
-        m_impl = move(newImpl);
+        m_impl = newImpl;
     }
 
     class Iterator {
@@ -174,7 +180,7 @@ private:
         return max(size_t(4), capacity + (capacity / 4) + 4);
     }
 
-    OwnPtr<VectorImpl<T>> m_impl;
+    VectorImpl<T>* m_impl { nullptr };
 };
 
 }

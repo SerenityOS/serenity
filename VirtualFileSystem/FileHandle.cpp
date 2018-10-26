@@ -133,7 +133,7 @@ bool FileHandle::isDirectory() const
     return m_vnode->metadata().isDirectory();
 }
 
-ssize_t FileHandle::get_dir_entries(byte* buffer, size_t size)
+ssize_t FileHandle::get_dir_entries(byte* buffer, Unix::size_t size)
 {
     Locker locker(VirtualFileSystem::lock());
 

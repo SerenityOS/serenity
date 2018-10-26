@@ -2,6 +2,7 @@
 
 #include "StdLib.h"
 #include "Types.h"
+#include "Traits.h"
 
 namespace AK {
 
@@ -95,6 +96,12 @@ make(Args&&... args)
 {
     return OwnPtr<T>(new T(forward<Args>(args)...));
 }
+
+template<typename T>
+struct Traits<OwnPtr<T>> {
+    static unsigned hash(const OwnPtr<T>& p) { return (unsigned)p.ptr(); }
+    static void dump(const OwnPtr<T>& p) { kprintf("%p", p.ptr()); }
+};
 
 }
 

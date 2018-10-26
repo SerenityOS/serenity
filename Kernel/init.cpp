@@ -108,9 +108,7 @@ static void init_stage2()
 
     vfs->mountRoot(e2fs.copyRef());
 
-    auto procfs = ProcFileSystem::create();
-    procfs->initialize();
-    vfs->mount(procfs.copyRef(), "/proc");
+    vfs->mount(ProcFileSystem::the(), "/proc");
 
 #endif
 
@@ -199,6 +197,9 @@ void init()
 
     kprintf("%u kB base memory\n", base_memory);
     kprintf("%u kB extended memory\n", ext_memory);
+
+    auto procfs = ProcFileSystem::create();
+    procfs->initialize();
 
     Task::initialize();
 

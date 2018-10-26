@@ -21,21 +21,31 @@ public:
     virtual InodeIdentifier makeDirectory(InodeIdentifier parentInode, const String& name, Unix::mode_t) override;
 
 protected:
+    typedef unsigned InodeIndex;
+
+    InodeIndex generateInodeIndex();
+    static constexpr InodeIndex RootInodeIndex = 1;
+
     SyntheticFileSystem();
 
     struct File {
         String name;
         InodeMetadata metadata;
+        InodeIdentifier parent;
         ByteBuffer data;
         Function<ByteBuffer()> generator;
+        Vector<File*> children;
     };
 
+    OwnPtr<File> createDirectory(String&& name);
     OwnPtr<File> createTextFile(String&& name, String&& text);
     OwnPtr<File> createGeneratedFile(String&& name, Function<ByteBuffer()>&&);
 
-    void addFile(OwnPtr<File>&&);
+    InodeIdentifier addFile(OwnPtr<File>&&, InodeIndex parent = RootInodeIndex);
+    bool removeFile(InodeIndex);
 
 private:
-    Vector<OwnPtr<File>> m_files;
+    InodeIndex m_nextInodeIndex { 2 };
+    HashMap<InodeIndex, OwnPtr<File>> m_inodes;
 };
 

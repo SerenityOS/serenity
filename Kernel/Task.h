@@ -15,6 +15,7 @@ class Zone;
 
 class Task : public InlineLinkedListNode<Task> {
     friend class InlineLinkedListNode<Task>;
+    class Region;
 public:
     static Task* createKernelTask(void (*entry)(), String&& name);
     static Task* createUserTask(const String& path, uid_t, gid_t, pid_t parentPID, int& error, const char** args = nullptr);
@@ -110,6 +111,8 @@ public:
 
     static void taskDidCrash(Task*);
 
+    size_t regionCount() const { return m_regions.size(); }
+    const Vector<OwnPtr<Region>>& regions() const { return m_regions; }
     void dumpRegions();
 
     void didSchedule() { ++m_timesScheduled; }

@@ -52,6 +52,7 @@ VirtualFileSystem::VirtualFileSystem()
 VirtualFileSystem::~VirtualFileSystem()
 {
     kprintf("[VFS] ~VirtualFileSystem with %u nodes allocated\n", allocatedNodeCount());
+    // FIXME: m_nodes is never freed. Does it matter though?
 }
 
 auto VirtualFileSystem::makeNode(InodeIdentifier inode) -> RetainPtr<Node>

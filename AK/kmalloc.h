@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Compiler.h"
+
 #ifdef SERENITY
 #ifdef USERLAND
 #include <LibC/stdlib.h>

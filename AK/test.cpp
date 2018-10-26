@@ -16,6 +16,26 @@ static void testWeakPtr();
 int main(int, char**)
 {
     StringImpl::initializeGlobals();
+
+    {
+        struct entry {
+            String s;
+        };
+
+        HashMap<unsigned, entry> tab;
+        tab.set(1, { "one" });
+        tab.set(2, { "two" });
+        tab.set(3, { "three" });
+        tab.set(4, { "four" });
+        tab.remove(1);
+        tab.remove(2);
+        tab.remove(3);
+        for (auto& it : tab) {
+            printf("%s\n", it.value.s.characters());
+        }
+        return 0;
+    }
+
     {
         CircularQueue<int, 4> queue;
         queue.dump();
