@@ -18,7 +18,6 @@ bool ZeroDevice::hasDataAvailableForRead() const
 
 Unix::ssize_t ZeroDevice::read(byte* buffer, Unix::size_t bufferSize)
 {
-    kprintf("ZeroDevice: read from zero\n");
     Unix::size_t count = min(GoodBufferSize, bufferSize);
     memset(buffer, 0, count);
     return count;

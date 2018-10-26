@@ -19,7 +19,6 @@ bool FullDevice::hasDataAvailableForRead() const
 
 Unix::ssize_t FullDevice::read(byte* buffer, Unix::size_t bufferSize)
 {
-    kprintf("FullDevice: read from full\n");
     Unix::size_t count = min(GoodBufferSize, bufferSize);
     memset(buffer, 0, count);
     return count;
