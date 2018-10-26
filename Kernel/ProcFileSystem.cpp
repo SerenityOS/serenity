@@ -1,5 +1,6 @@
 #include "ProcFileSystem.h"
 #include "Task.h"
+#include <VirtualFileSystem/VirtualFileSystem.h>
 
 static ProcFileSystem* s_the;
 
@@ -63,6 +64,22 @@ void ProcFileSystem::removeProcess(Task& task)
 bool ProcFileSystem::initialize()
 {
     SyntheticFileSystem::initialize();
+
+    addFile(createGeneratedFile("mounts", [] {
+        InterruptDisabler disabler;
+        auto buffer = ByteBuffer::createUninitialized(VirtualFileSystem::the().mountCount() * 80);
+        char* ptr = (char*)buffer.pointer();
+        VirtualFileSystem::the().forEachMount([&ptr] (auto& mount) {
+            auto& fs = mount.fileSystem();
+            ptr += ksprintf(ptr, "%s @ ", fs.className());
+            if (!mount.host().isValid())
+                ptr += ksprintf(ptr, "/\n", fs.className());
+            else
+                ptr += ksprintf(ptr, "%u:%u\n", mount.host().fileSystemID(), mount.host().index());
+        });
+        buffer.trim(ptr - (char*)buffer.pointer());
+        return buffer;
+    }));
 
     addFile(createGeneratedFile("kmalloc", [] {
         InterruptDisabler disabler;

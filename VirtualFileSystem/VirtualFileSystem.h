@@ -20,6 +20,21 @@ public:
     static void initializeGlobals();
     static SpinLock& lock();
 
+    class Mount {
+    public:
+        Mount(InodeIdentifier host, RetainPtr<FileSystem>&&);
+
+        InodeIdentifier host() const { return m_host; }
+        InodeIdentifier guest() const { return m_guest; }
+
+        const FileSystem& fileSystem() const { return *m_fileSystem; }
+
+    private:
+        InodeIdentifier m_host;
+        InodeIdentifier m_guest;
+        RetainPtr<FileSystem> m_fileSystem;
+    };
+
     struct Node {
         InodeIdentifier inode;
         const InodeMetadata& metadata() const;
@@ -46,7 +61,7 @@ public:
         mutable InodeMetadata m_cachedMetadata;
     };
 
-    static VirtualFileSystem& the();
+    static VirtualFileSystem& the() PURE;
 
     VirtualFileSystem();
     ~VirtualFileSystem();
@@ -74,6 +89,9 @@ public:
 
     void registerCharacterDevice(unsigned major, unsigned minor, CharacterDevice&);
 
+    size_t mountCount() const { return m_mounts.size(); }
+    void forEachMount(Function<void(const Mount&)>) const;
+
 private:
     friend class FileHandle;
 
@@ -87,19 +105,6 @@ private:
 
     RetainPtr<Node> makeNode(InodeIdentifier);
     RetainPtr<Node> getOrCreateNode(InodeIdentifier);
-
-    class Mount {
-    public:
-        Mount(InodeIdentifier host, RetainPtr<FileSystem>&&);
-
-        InodeIdentifier host() const { return m_host; }
-        InodeIdentifier guest() const { return m_guest; }
-
-    private:
-        InodeIdentifier m_host;
-        InodeIdentifier m_guest;
-        RetainPtr<FileSystem> m_fileSystem;
-    };
 
     Mount* findMountForHost(InodeIdentifier);
     Mount* findMountForGuest(InodeIdentifier);
