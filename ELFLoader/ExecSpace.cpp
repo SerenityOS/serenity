@@ -1,7 +1,10 @@
 #include "ExecSpace.h"
 #include "ELFLoader.h"
-#include <AK/TemporaryFile.h>
 #include <AK/Types.h>
+
+#ifndef SERENITY
+#include <AK/TemporaryFile.h>
+#endif
 
 //#define EXECSPACE_DEBUG
 
