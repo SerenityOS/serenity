@@ -15,7 +15,7 @@ int main(int argc, char** argv)
         return 1;
     }
     for (;;) {
-        char buf[4096];
+        char buf[1024];
         ssize_t nread = read(fd, buf, sizeof(buf));
         if (nread == 0)
             break;

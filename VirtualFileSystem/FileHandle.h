@@ -32,12 +32,16 @@ public:
     void setBlocking(bool b) { m_isBlocking = b; }
 #endif
 
+    ByteBuffer& generatorCache() { return m_generatorCache; }
+
 private:
     friend class VirtualFileSystem;
 
     RetainPtr<VirtualFileSystem::Node> m_vnode;
 
     Unix::off_t m_currentOffset { 0 };
+
+    ByteBuffer m_generatorCache;
 
 #ifdef SERENITY
     int m_fd { -1 };

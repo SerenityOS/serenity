@@ -102,7 +102,7 @@ Unix::ssize_t FileHandle::read(byte* buffer, Unix::size_t count)
         // FIXME: What should happen to m_currentOffset?
         return m_vnode->characterDevice()->read(buffer, count);
     }
-    Unix::ssize_t nread = m_vnode->fileSystem()->readInodeBytes(m_vnode->inode, m_currentOffset, count, buffer);
+    Unix::ssize_t nread = m_vnode->fileSystem()->readInodeBytes(m_vnode->inode, m_currentOffset, count, buffer, this);
     m_currentOffset += nread;
     return nread;
 }
@@ -125,7 +125,7 @@ ByteBuffer FileHandle::readEntireFile()
         return buffer;
     }
 
-    return m_vnode->fileSystem()->readEntireInode(m_vnode->inode);
+    return m_vnode->fileSystem()->readEntireInode(m_vnode->inode, this);
 }
 
 bool FileHandle::isDirectory() const

@@ -29,6 +29,11 @@ PRIVATE BYTE alloc_map[POOL_SIZE / CHUNK_SIZE / 8];
 volatile DWORD sum_alloc = 0;
 volatile DWORD sum_free = POOL_SIZE;
 
+bool is_kmalloc_address(void* ptr)
+{
+    return ptr >= (void*)BASE_PHYS && ptr <= ((void*)BASE_PHYS + POOL_SIZE);
+}
+
 PUBLIC void
 kmalloc_init()
 {

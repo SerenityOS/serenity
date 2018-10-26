@@ -885,3 +885,23 @@ Task::Region::Region(LinearAddress a, size_t s, RetainPtr<Zone>&& z, String&& n)
 Task::Region::~Region()
 {
 }
+
+bool Task::isValidAddressForKernel(LinearAddress laddr) const
+{
+    InterruptDisabler disabler;
+    if (laddr.get() >= ksyms().first().address && laddr.get() <= ksyms().last().address)
+        return true;
+    if (is_kmalloc_address((void*)laddr.get()))
+        return true;
+    return isValidAddressForUser(laddr);
+}
+
+bool Task::isValidAddressForUser(LinearAddress laddr) const
+{
+    InterruptDisabler disabler;
+    for (auto& region: m_regions) {
+        if (laddr >= region->linearAddress && laddr < region->linearAddress.offset(region->size))
+            return true;
+    }
+    return false;
+}

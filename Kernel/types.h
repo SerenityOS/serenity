@@ -74,6 +74,10 @@ public:
     void set(dword address) { m_address = address; }
     void mask(dword m) { m_address &= m; }
 
+    bool operator<=(const LinearAddress& other) const { return m_address <= other.m_address; }
+    bool operator>=(const LinearAddress& other) const { return m_address >= other.m_address; }
+    bool operator>(const LinearAddress& other) const { return m_address > other.m_address; }
+    bool operator<(const LinearAddress& other) const { return m_address < other.m_address; }
     bool operator==(const LinearAddress& other) const { return m_address == other.m_address; }
 
     byte* asPtr() { return reinterpret_cast<byte*>(m_address); }

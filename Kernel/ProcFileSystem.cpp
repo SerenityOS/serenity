@@ -2,6 +2,7 @@
 #include "Task.h"
 #include <VirtualFileSystem/VirtualFileSystem.h>
 #include "system.h"
+#include "MemoryManager.h"
 
 static ProcFileSystem* s_the;
 
@@ -25,6 +26,64 @@ ProcFileSystem::~ProcFileSystem()
 {
 }
 
+ByteBuffer procfs$pid_vm(const Task& task)
+{
+    InterruptDisabler disabler;
+    char* buffer;
+    auto stringImpl = StringImpl::createUninitialized(80 + task.regionCount() * 80, buffer);
+    memset(buffer, 0, stringImpl->length());
+    char* ptr = buffer;
+    ptr += ksprintf(ptr, "BEGIN       END         SIZE        NAME\n");
+    for (auto& region : task.regions()) {
+        ptr += ksprintf(ptr, "%x -- %x    %x    %s\n",
+            region->linearAddress.get(),
+            region->linearAddress.offset(region->size - 1).get(),
+            region->size,
+            region->name.characters());
+    }
+    *ptr = '\0';
+    return ByteBuffer::copy((byte*)buffer, ptr - buffer);
+}
+
+ByteBuffer procfs$pid_stack(Task& task)
+{
+    InterruptDisabler disabler;
+    if (current != &task) {
+        MemoryManager::the().unmapRegionsForTask(*current);
+        MemoryManager::the().mapRegionsForTask(task);
+    }
+    struct RecognizedSymbol {
+        dword address;
+        const KSym* ksym;
+    };
+    Vector<RecognizedSymbol> recognizedSymbols;
+    if (auto* eipKsym = ksymbolicate(task.tss().eip))
+        recognizedSymbols.append({ task.tss().eip, eipKsym });
+    for (dword* stackPtr = (dword*)task.framePtr(); task.isValidAddressForKernel(LinearAddress((dword)stackPtr)); stackPtr = (dword*)*stackPtr) {
+        dword retaddr = stackPtr[1];
+        if (auto* ksym = ksymbolicate(retaddr))
+            recognizedSymbols.append({ retaddr, ksym });
+    }
+    size_t bytesNeeded = 0;
+    for (auto& symbol : recognizedSymbols) {
+        bytesNeeded += symbol.ksym->name.length() + 8 + 16;
+    }
+    auto buffer = ByteBuffer::createUninitialized(bytesNeeded);
+    char* bufptr = (char*)buffer.pointer();
+
+    for (auto& symbol : recognizedSymbols) {
+        // FIXME: This doesn't actually create a file!
+        unsigned offset = symbol.address - symbol.ksym->address;
+        bufptr += ksprintf(bufptr, "%p  %s +%u\n", symbol.address, symbol.ksym->name.characters(), offset);
+    }
+    buffer.trim(bufptr - (char*)buffer.pointer());
+    if (current != &task) {
+        MemoryManager::the().unmapRegionsForTask(task);
+        MemoryManager::the().mapRegionsForTask(*current);
+    }
+    return buffer;
+}
+
 void ProcFileSystem::addProcess(Task& task)
 {
     ASSERT_INTERRUPTS_DISABLED();
@@ -32,58 +91,8 @@ void ProcFileSystem::addProcess(Task& task)
     ksprintf(buf, "%d", task.pid());
     auto dir = addFile(createDirectory(buf));
     m_pid2inode.set(task.pid(), dir.index());
-    addFile(createGeneratedFile("vm", [&task] {
-        InterruptDisabler disabler;
-        char* buffer;
-        auto stringImpl = StringImpl::createUninitialized(80 + task.regionCount() * 80, buffer);
-        memset(buffer, 0, stringImpl->length());
-        char* ptr = buffer;
-        ptr += ksprintf(ptr, "BEGIN       END         SIZE        NAME\n");
-        for (auto& region : task.regions()) {
-            ptr += ksprintf(ptr, "%x -- %x    %x    %s\n",
-                region->linearAddress.get(),
-                region->linearAddress.offset(region->size - 1).get(),
-                region->size,
-                region->name.characters());
-        }
-        *ptr = '\0';
-        return ByteBuffer::copy((byte*)buffer, ptr - buffer);
-    }), dir.index());
-    addFile(createGeneratedFile("stack", [&task] {
-        InterruptDisabler disabler;
-        auto& syms = ksyms();
-        dword firstKsymAddress = syms.first().address;
-        dword lastKsymAddress = syms.last().address;
-        struct RecognizedSymbol {
-            dword address;
-            const char* name;
-            dword offset;
-        };
-        Vector<RecognizedSymbol> recognizedSymbols;
-        size_t bytesNeeded = 0;
-        for (dword* stackPtr = (dword*)task.stackPtr(); (dword)stackPtr < task.stackTop(); ++stackPtr) {
-            if (*stackPtr < firstKsymAddress || *stackPtr > lastKsymAddress)
-                continue;
-            const char* name = nullptr;
-            unsigned offset = 0;
-            for (unsigned i = 0; i < syms.size(); ++i) {
-                if (*stackPtr < syms[i+1].address) {
-                    name = syms[i].name.characters();
-                    offset = *stackPtr - syms[i].address;
-                    bytesNeeded += syms[i].name.length() + 8 + 16;
-                    break;
-                }
-            }
-            recognizedSymbols.append({ *stackPtr, name, offset });
-        }
-        auto buffer = ByteBuffer::createUninitialized(bytesNeeded);
-        char* ptr = (char*)buffer.pointer();
-        for (auto& symbol : recognizedSymbols) {
-            kprintf("%p  %s +%u\n", symbol.address, symbol.name, symbol.offset);
-        }
-        buffer.trim(ptr - (char*)buffer.pointer());
-        return buffer;
-    }), dir.index());
+    addFile(createGeneratedFile("vm", [&task] { return procfs$pid_vm(task); }), dir.index());
+    addFile(createGeneratedFile("stack", [&task] { return procfs$pid_stack(task); }), dir.index());
 }
 
 void ProcFileSystem::removeProcess(Task& task)
@@ -97,56 +106,62 @@ void ProcFileSystem::removeProcess(Task& task)
     m_pid2inode.remove(pid);
 }
 
+ByteBuffer procfs$mounts()
+{
+    InterruptDisabler disabler;
+    auto buffer = ByteBuffer::createUninitialized(VirtualFileSystem::the().mountCount() * 80);
+    char* ptr = (char*)buffer.pointer();
+    VirtualFileSystem::the().forEachMount([&ptr] (auto& mount) {
+        auto& fs = mount.fileSystem();
+        ptr += ksprintf(ptr, "%s @ ", fs.className());
+        if (!mount.host().isValid())
+            ptr += ksprintf(ptr, "/\n", fs.className());
+        else
+            ptr += ksprintf(ptr, "%u:%u\n", mount.host().fileSystemID(), mount.host().index());
+    });
+    buffer.trim(ptr - (char*)buffer.pointer());
+    return buffer;
+}
+
+ByteBuffer procfs$kmalloc()
+{
+    InterruptDisabler disabler;
+    auto buffer = ByteBuffer::createUninitialized(128);
+    char* ptr = (char*)buffer.pointer();
+    ptr += ksprintf(ptr, "alloc: %u\nfree:  %u\n", sum_alloc, sum_free);
+    buffer.trim(ptr - (char*)buffer.pointer());
+    return buffer;
+}
+
+ByteBuffer procfs$summary()
+{
+    InterruptDisabler disabler;
+    auto tasks = Task::allTasks();
+    auto buffer = ByteBuffer::createUninitialized(tasks.size() * 256);
+    char* ptr = (char*)buffer.pointer();
+    ptr += ksprintf(ptr, "PID    OWNER      STATE  PPID  NSCHED      FDS    NAME\n");
+    for (auto* task : tasks) {
+        ptr += ksprintf(ptr, "%w   %w:%w  %b     %w  %x    %w   %s\n",
+            task->pid(),
+            task->uid(),
+            task->gid(),
+            task->state(),
+            task->parentPID(),
+            task->timesScheduled(),
+            task->fileHandleCount(),
+            task->name().characters());
+    }
+    *ptr = '\0';
+    buffer.trim(ptr - (char*)buffer.pointer());
+    return buffer;
+}
+
 bool ProcFileSystem::initialize()
 {
     SyntheticFileSystem::initialize();
-
-    addFile(createGeneratedFile("mounts", [] {
-        InterruptDisabler disabler;
-        auto buffer = ByteBuffer::createUninitialized(VirtualFileSystem::the().mountCount() * 80);
-        char* ptr = (char*)buffer.pointer();
-        VirtualFileSystem::the().forEachMount([&ptr] (auto& mount) {
-            auto& fs = mount.fileSystem();
-            ptr += ksprintf(ptr, "%s @ ", fs.className());
-            if (!mount.host().isValid())
-                ptr += ksprintf(ptr, "/\n", fs.className());
-            else
-                ptr += ksprintf(ptr, "%u:%u\n", mount.host().fileSystemID(), mount.host().index());
-        });
-        buffer.trim(ptr - (char*)buffer.pointer());
-        return buffer;
-    }));
-
-    addFile(createGeneratedFile("kmalloc", [] {
-        InterruptDisabler disabler;
-        auto buffer = ByteBuffer::createUninitialized(128);
-        char* ptr = (char*)buffer.pointer();
-        ptr += ksprintf(ptr, "alloc: %u\nfree:  %u\n", sum_alloc, sum_free);
-        buffer.trim(ptr - (char*)buffer.pointer());
-        return buffer;
-    }));
-
-    addFile(createGeneratedFile("summary", [] {
-        InterruptDisabler disabler;
-        auto tasks = Task::allTasks();
-        auto buffer = ByteBuffer::createUninitialized(tasks.size() * 256);
-        char* ptr = (char*)buffer.pointer();
-        ptr += ksprintf(ptr, "PID    OWNER      STATE  PPID  NSCHED      FDS    NAME\n");
-        for (auto* task : tasks) {
-            ptr += ksprintf(ptr, "%w   %w:%w  %b     %w  %x    %w   %s\n",
-                task->pid(),
-                task->uid(),
-                task->gid(),
-                task->state(),
-                task->parentPID(),
-                task->timesScheduled(),
-                task->fileHandleCount(),
-                task->name().characters());
-        }
-        *ptr = '\0';
-        buffer.trim(ptr - (char*)buffer.pointer());
-        return buffer;
-    }));
+    addFile(createGeneratedFile("mounts", procfs$mounts));
+    addFile(createGeneratedFile("kmalloc", procfs$kmalloc));
+    addFile(createGeneratedFile("summary", procfs$summary));
     return true;
 }
 

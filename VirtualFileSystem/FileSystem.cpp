@@ -50,7 +50,7 @@ InodeIdentifier FileSystem::childOfDirectoryInodeWithName(InodeIdentifier inode,
     return foundInode;
 }
 
-ByteBuffer FileSystem::readEntireInode(InodeIdentifier inode) const
+ByteBuffer FileSystem::readEntireInode(InodeIdentifier inode, FileHandle* handle) const
 {
     ASSERT(inode.fileSystemID() == id());
 
@@ -67,7 +67,7 @@ ByteBuffer FileSystem::readEntireInode(InodeIdentifier inode) const
     byte* out = contents.pointer();
     Unix::off_t offset = 0;
     for (;;) {
-        nread = readInodeBytes(inode, offset, sizeof(buffer), buffer);
+        nread = readInodeBytes(inode, offset, sizeof(buffer), buffer, handle);
         if (nread <= 0)
             break;
         memcpy(out, buffer, nread);
