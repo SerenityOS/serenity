@@ -7,6 +7,7 @@ OBJS = \
        dirent.o \
        stdlib.o \
        time.o \
+       utsname.o \
        entry.o
 
 LIBRARY = LibC.a

@@ -31,6 +31,16 @@ struct timeval {
     suseconds_t tv_usec;
 };
 
+#define UTSNAME_ENTRY_LEN 65
+
+struct utsname {
+    char sysname[UTSNAME_ENTRY_LEN];
+    char nodename[UTSNAME_ENTRY_LEN];
+    char release[UTSNAME_ENTRY_LEN];
+    char version[UTSNAME_ENTRY_LEN];
+    char machine[UTSNAME_ENTRY_LEN];
+};
+
 struct FarPtr {
     DWORD offset { 0 };
     WORD selector { 0 };

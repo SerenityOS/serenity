@@ -33,6 +33,7 @@ enum Function {
     PosixGethostname = 0x2001,
     GetArguments = 0x2002,
     PosixChdir = 0x2003,
+    PosixUname = 0x2004,
 };
 
 void initialize();

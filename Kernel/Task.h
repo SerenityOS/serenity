@@ -104,6 +104,7 @@ public:
     int sys$gettimeofday(timeval*);
     int sys$gethostname(char* name, size_t length);
     int sys$get_arguments(int* argc, char*** argv);
+    int sys$uname(utsname*);
 
     static void initialize();
 
