@@ -95,7 +95,7 @@ public:
     int sys$geterror() { return m_error; }
     void sys$exit(int status);
     int sys$spawn(const char* path, const char** args);
-    pid_t sys$waitpid(pid_t);
+    pid_t sys$waitpid(pid_t, int* wstatus, int options);
     void* sys$mmap(void*, size_t size);
     int sys$munmap(void*, size_t size);
     int sys$get_dir_entries(int fd, void*, size_t);
@@ -160,6 +160,7 @@ private:
     void* m_kernelStack { nullptr };
     dword m_timesScheduled { 0 };
     pid_t m_waitee { -1 };
+    int m_waiteeStatus { 0 };
     int m_fdBlockedOnRead { -1 };
     size_t m_maxFileHandles { 16 };
 

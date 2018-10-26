@@ -450,8 +450,13 @@ void Task::sys$exit(int status)
 
     s_tasks->remove(this);
 
+    for (auto* task = s_tasks->head(); task; task = task->next()) {
+        if (task->waitee() == m_pid)
+            task->m_waiteeStatus = status << 8;
+    }
+
     if (!scheduleNewTask()) {
-        kprintf("Task::taskDidCrash: Failed to schedule a new task :(\n");
+        kprintf("Task::sys$exit: Failed to schedule a new task :(\n");
         HANG;
     }
 
@@ -752,7 +757,6 @@ int Task::sys$chdir(const char* path)
     if (!handle->isDirectory())
         return -ENOTDIR;
     m_cwd = handle->vnode();
-    kprintf("m_cwd <- %p (%u)\n", m_cwd.ptr(), handle->vnode()->inode.index());
     return 0;
 }
 
@@ -844,14 +848,20 @@ pid_t Task::sys$getpid()
     return m_pid;
 }
 
-pid_t Task::sys$waitpid(pid_t waitee)
+pid_t Task::sys$waitpid(pid_t waitee, int* wstatus, int options)
 {
+    if (wstatus)
+        VALIDATE_USER_BUFFER(wstatus, sizeof(int));
+
     InterruptDisabler disabler;
     if (!Task::fromPID(waitee))
         return -1;
     m_waitee = waitee;
+    m_waiteeStatus = 0;
     block(BlockedWait);
     yield();
+    if (wstatus)
+        *wstatus = m_waiteeStatus;
     return m_waitee;
 }
 
