@@ -746,31 +746,18 @@ int Task::sys$getcwd(char* buffer, size_t size)
 
 int Task::sys$open(const char* path, size_t pathLength)
 {
-    Task::checkSanity("sys$open");
 #ifdef DEBUG_IO
     kprintf("Task::sys$open(): PID=%u, path=%s {%u}\n", m_pid, path, pathLength);
 #endif
-    auto* handle = openFile(String(path, pathLength));
-    if (handle)
-        return handle->fd();
-    return -1;
-}
-
-FileHandle* Task::openFile(String&& path)
-{
-    auto handle = VirtualFileSystem::the().open(move(path), m_cwd.ptr());
-    if (!handle) {
-#ifdef DEBUG_IO
-        kprintf("vfs::open() failed\n");
-#endif
-        return nullptr;
-    }
-    handle->setFD(m_fileHandles.size());
-#ifdef DEBUG_IO
-    kprintf("vfs::open() worked! handle=%p, fd=%d\n", handle.ptr(), handle->fd());
-#endif
-    m_fileHandles.append(move(handle)); // FIXME: allow non-move Vector::append
-    return m_fileHandles.last().ptr();
+    if (m_fileHandles.size() >= m_maxFileHandles)
+        return -EMFILE;
+    auto handle = VirtualFileSystem::the().open(String(path, pathLength), m_cwd.ptr());
+    if (!handle)
+        return -ENOENT; // FIXME: Detailed error.
+    int fd = m_fileHandles.size();
+    handle->setFD(fd);
+    m_fileHandles.append(move(handle));
+    return fd;
 }
 
 int Task::sys$kill(pid_t pid, int sig)
