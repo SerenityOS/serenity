@@ -89,10 +89,10 @@ static void init_stage2()
     auto vfs = make<VirtualFileSystem>();
 
     auto dev_zero = make<ZeroDevice>();
-    vfs->registerCharacterDevice(1, 3, *dev_zero);
+    vfs->registerCharacterDevice(1, 5, *dev_zero);
 
     auto dev_null = make<NullDevice>();
-    vfs->registerCharacterDevice(1, 5, *dev_zero);
+    vfs->registerCharacterDevice(1, 3, *dev_null);
 
     auto dev_full = make<FullDevice>();
     vfs->registerCharacterDevice(1, 7, *dev_full);
