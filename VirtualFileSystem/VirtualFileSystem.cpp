@@ -413,29 +413,30 @@ InodeIdentifier VirtualFileSystem::resolvePath(const String& path, Node* base)
         inode = base ? base->inode : m_rootNode->inode;
 
     for (unsigned i = 0; i < parts.size(); ++i) {
+        bool wasRootInodeAtHeadOfLoop = inode.isRootInode();
         auto& part = parts[i];
         auto metadata = inode.metadata();
         if (!metadata.isValid()) {
 #ifdef VFS_DEBUG
             kprintf("invalid metadata\n");
 #endif
-            return InodeIdentifier();
+            return { };
         }
         if (!metadata.isDirectory()) {
 #ifdef VFS_DEBUG
             kprintf("not directory\n");
 #endif
-            return InodeIdentifier();
+            return { };
         }
         inode = inode.fileSystem()->childOfDirectoryInodeWithName(inode, part);
         if (!inode.isValid()) {
 #ifdef VFS_DEBUG
             kprintf("bad child\n");
 #endif
-            return InodeIdentifier();
+            return { };
         }
 #ifdef VFS_DEBUG
-        kprintf("<%s> %02u:%08u\n", part.characters(), inode.fileSystemID(), inode.index());
+        kprintf("<%s> %u:%u\n", part.characters(), inode.fileSystemID(), inode.index());
 #endif
         if (auto mount = findMountForHost(inode)) {
 #ifdef VFS_DEBUG
@@ -443,7 +444,7 @@ InodeIdentifier VirtualFileSystem::resolvePath(const String& path, Node* base)
 #endif
             inode = mount->guest();
         }
-        if (inode.isRootInode() && !isRoot(inode) && part == "..") {
+        if (wasRootInodeAtHeadOfLoop && inode.isRootInode() && !isRoot(inode) && part == "..") {
 #ifdef VFS_DEBUG
             kprintf("  -- is guest\n");
 #endif

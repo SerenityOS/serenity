@@ -64,8 +64,6 @@ bool ProcFileSystem::initialize()
 {
     SyntheticFileSystem::initialize();
 
-    auto d = addFile(createDirectory("sys"));
-
     addFile(createGeneratedFile("summary", [] {
         InterruptDisabler disabler;
         auto tasks = Task::allTasks();
