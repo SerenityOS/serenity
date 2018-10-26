@@ -95,7 +95,7 @@ DWORD handle(DWORD function, DWORD arg1, DWORD arg2, DWORD arg3)
     case Syscall::PosixGetpid:
         return current->sys$getpid();
     case Syscall::PosixWaitpid:
-        return current->sys$waitpid((pid_t)arg1);
+        return current->sys$waitpid((pid_t)arg1, (int*)arg2, (int)arg3);
     case Syscall::PosixMmap:
         return (dword)current->sys$mmap((void*)arg1, (size_t)arg2);
     case Syscall::PosixMunmap:

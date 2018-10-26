@@ -17,7 +17,8 @@ static void prompt()
 
 static int sh_pwd(int, const char**)
 {
-    printf("cwd: %s\n", g_cwd);
+    printf("%s\n", g_cwd);
+    return 0;
 }
 
 static int sh_cd(int argc, const char** argv)
@@ -100,7 +101,14 @@ static int runcmd(char* cmd)
         return 1;
     }
     // FIXME: waitpid should give us the spawned process's exit status
-    waitpid(ret);
+    int wstatus = 0;
+    waitpid(ret, &wstatus, 0);
+
+    if (WIFEXITED(wstatus)) {
+        //printf("Exited normally with status %d\n", WEXITSTATUS(wstatus));
+    } else {
+        printf("Exited abnormally\n");
+    }
     return retval;
 }
 

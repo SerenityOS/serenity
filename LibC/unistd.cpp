@@ -39,9 +39,9 @@ int close(int fd)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-pid_t waitpid(pid_t waitee)
+pid_t waitpid(pid_t waitee, int* wstatus, int options)
 {
-    int rc = Syscall::invoke(Syscall::PosixWaitpid, waitee);
+    int rc = Syscall::invoke(Syscall::PosixWaitpid, waitee, (dword)wstatus);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 

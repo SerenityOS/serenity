@@ -10,12 +10,16 @@ pid_t getpid();
 int open(const char* path);
 ssize_t read(int fd, void* buf, size_t count);
 int close(int fd);
-pid_t waitpid(pid_t);
+pid_t waitpid(pid_t, int* wstatus, int options);
 int chdir(const char* path);
 char* getcwd(char* buffer, size_t size);
 int lstat(const char* path, stat* statbuf);
 int sleep(unsigned seconds);
 int gethostname(char*, size_t);
+
+#define WEXITSTATUS(status) (((status) & 0xff00) >> 8)
+#define WTERMSIG(status) ((status) & 0x7f)
+#define WIFEXITED(status) (WTERMSIG(status) == 0)
 
 #define HOST_NAME_MAX 64
 
