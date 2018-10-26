@@ -11,6 +11,7 @@ int open(const char* path);
 ssize_t read(int fd, void* buf, size_t count);
 int close(int fd);
 pid_t waitpid(pid_t);
+int chdir(const char* path);
 char* getcwd(char* buffer, size_t size);
 int lstat(const char* path, stat* statbuf);
 int sleep(unsigned seconds);

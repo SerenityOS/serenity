@@ -6,6 +6,7 @@
 #include "TSS.h"
 #include <AK/Vector.h>
 #include "i386.h"
+#include <VirtualFileSystem/VirtualFileSystem.h>
 
 //#define TASK_SANITY_CHECKS
 
@@ -98,6 +99,7 @@ public:
     int sys$munmap(void*, size_t size);
     int sys$get_dir_entries(int fd, void*, size_t);
     int sys$getcwd(char*, size_t);
+    int sys$chdir(const char*);
     int sys$sleep(unsigned seconds);
     int sys$gettimeofday(timeval*);
     int sys$gethostname(char* name, size_t length);
@@ -150,7 +152,7 @@ private:
     pid_t m_waitee { -1 };
     int m_fdBlockedOnRead { -1 };
 
-    String m_cwd;
+    RetainPtr<VirtualFileSystem::Node> m_cwd;
 
     struct Region {
         Region(LinearAddress, size_t, RetainPtr<Zone>&&, String&&);

@@ -205,7 +205,14 @@ Task* Task::createUserTask(const String& path, uid_t uid, gid_t gid, pid_t paren
         return nullptr;
     }
 
-    auto handle = VirtualFileSystem::the().open(path);
+    RetainPtr<VirtualFileSystem::Node> cwd;
+    {
+        InterruptDisabler disabler;
+        if (auto* parentTask = Task::fromPID(parentPID))
+            cwd = parentTask->m_cwd.copyRef();
+    }
+
+    auto handle = VirtualFileSystem::the().open(path, cwd.ptr());
     if (!handle) {
         error = -ENOENT; // FIXME: Get a more detailed error from VFS.
         return nullptr;
@@ -327,9 +334,9 @@ Task::Task(String&& name, uid_t uid, gid_t gid, pid_t parentPID, RingLevel ring)
 
     auto* parentTask = Task::fromPID(parentPID);
     if (parentTask)
-        m_cwd = parentTask->m_cwd;
+        m_cwd = parentTask->m_cwd.copyRef();
     else
-        m_cwd = "/";
+        m_cwd = nullptr;
 
     m_nextRegion = LinearAddress(0x600000);
 
@@ -712,22 +719,29 @@ int Task::sys$close(int fd)
 
 int Task::sys$lstat(const char* path, void* statbuf)
 {
-    auto handle = VirtualFileSystem::the().open(move(path));
+    auto handle = VirtualFileSystem::the().open(move(path), m_cwd.ptr());
     if (!handle)
         return -1;
     handle->stat((Unix::stat*)statbuf);
     return 0;
 }
 
+int Task::sys$chdir(const char* path)
+{
+    auto handle = VirtualFileSystem::the().open(path, m_cwd.ptr());
+    if (!handle)
+        return -ENOENT; // FIXME: More detailed error.
+    if (!handle->isDirectory())
+        return -ENOTDIR;
+    m_cwd = handle->vnode();
+    kprintf("m_cwd <- %p (%u)\n", m_cwd.ptr(), handle->vnode()->inode.index());
+    return 0;
+}
+
 int Task::sys$getcwd(char* buffer, size_t size)
 {
-    if (size < m_cwd.length() + 1) {
-        // FIXME: return -ERANGE;
-        return -1;
-    }
-    memcpy(buffer, m_cwd.characters(), m_cwd.length());
-    buffer[m_cwd.length()] = '\0';
-    return 0;
+    // FIXME: Implement!
+    return -ENOTIMPL;
 }
 
 int Task::sys$open(const char* path, size_t pathLength)
@@ -744,7 +758,7 @@ int Task::sys$open(const char* path, size_t pathLength)
 
 FileHandle* Task::openFile(String&& path)
 {
-    auto handle = VirtualFileSystem::the().open(move(path));
+    auto handle = VirtualFileSystem::the().open(move(path), m_cwd.ptr());
     if (!handle) {
 #ifdef DEBUG_IO
         kprintf("vfs::open() failed\n");

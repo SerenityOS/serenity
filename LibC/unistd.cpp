@@ -51,6 +51,12 @@ int lstat(const char* path, stat* statbuf)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
+int chdir(const char* path)
+{
+    int rc = Syscall::invoke(Syscall::PosixChdir, (dword)path);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
 char* getcwd(char* buffer, size_t size)
 {
     int rc = Syscall::invoke(Syscall::PosixGetcwd, (dword)buffer, (dword)size);

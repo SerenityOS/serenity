@@ -4,14 +4,14 @@
 
 int main(int c, char** v)
 {
-    DIR* dirp = opendir("/");
+    DIR* dirp = opendir(".");
     if (!dirp) {
         printf("opendir failed :(\n");
         return 1;
     }
     char pathbuf[256];
     while (auto* de = readdir(dirp)) {
-        sprintf(pathbuf, "/%s", de->d_name);
+        sprintf(pathbuf, "%s", de->d_name);
         stat st;
         int rc = lstat(pathbuf, &st);
         if (rc == -1) {

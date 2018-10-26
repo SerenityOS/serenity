@@ -3,6 +3,9 @@
 #include <LibC/process.h>
 #include <LibC/errno.h>
 #include <LibC/string.h>
+#include <LibC/stdlib.h>
+
+char* g_cwd = nullptr;
 
 static void prompt()
 {
@@ -12,12 +15,63 @@ static void prompt()
         printf("$ ");
 }
 
+static int sh_pwd(int, const char**)
+{
+    printf("cwd: %s\n", g_cwd);
+}
+
+static int sh_cd(int argc, const char** argv)
+{
+    if (argc == 1) {
+        printf("usage: cd <path>\n");
+        return 0;
+    }
+
+    char pathbuf[128];
+    if (argv[1][1] == '/')
+        memcpy(pathbuf, argv[1], strlen(argv[1]));
+    else
+        sprintf(pathbuf, "%s/%s", g_cwd, argv[1]);
+    struct stat st;
+    int rc = lstat(pathbuf, &st);
+    if (rc < 0) {
+        printf("lstat(%s) failed: %s\n", pathbuf, strerror(errno));
+        return 1;
+    }
+    if (!S_ISDIR(st.st_mode)) {
+        printf("Not a directory: %s\n", pathbuf);
+        return 1;
+    }
+    rc = chdir(pathbuf);
+    if (rc < 0) {
+        printf("chdir(%s) failed: %s\n", pathbuf, strerror(errno));
+        return 1;
+    }
+    memcpy(g_cwd, pathbuf, strlen(pathbuf));
+    return 0;
+}
+
+static bool handle_builtin(int argc, const char** argv, int& retval)
+{
+    if (argc == 0)
+        return false;
+    if (!strcmp(argv[0], "cd")) {
+        retval = sh_cd(argc, argv);
+        return true;
+    }
+    if (!strcmp(argv[0], "pwd")) {
+        retval = sh_pwd(argc, argv);
+        return true;
+    }
+    return false;
+}
+
 static int runcmd(char* cmd)
 {
     if (cmd[0] == 0)
         return 0;
     char buf[128];
-    sprintf(buf, "/bin/%s", cmd);
+    memcpy(buf, cmd, 128);
 
     const char* argv[32];
     size_t argi = 1;
@@ -30,16 +84,27 @@ static int runcmd(char* cmd)
         }
     }
     argv[argi + 1] = nullptr;
-    int ret = spawn(argv[0], argv);
+
+    int retval = 0;
+    if (handle_builtin(argi, argv, retval)) {
+        return 0;
+    }
+
+    const char* search_path = "/bin";
+
+    char pathbuf[128];
+    sprintf(pathbuf, "%s/%s", search_path, argv[0]);
+    int ret = spawn(pathbuf, argv);
     if (ret == -1) {
         printf("spawn failed: %s (%s)\n", cmd, strerror(errno));
         return 1;
     }
+    // FIXME: waitpid should give us the spawned process's exit status
     waitpid(ret);
-    return 0;
+    return retval;
 }
 
-int main(int c, char** v)
+int main(int, char**)
 {
     char linebuf[128];
     int linedx = 0;
@@ -50,6 +115,9 @@ int main(int c, char** v)
         printf("failed to open /dev/keyboard :(\n");
         return 1;
     }
+    g_cwd = (char*)malloc(1024);
+    g_cwd[0] = '/';
+    g_cwd[1] = '\0';
     prompt();
     for (;;) {
         char keybuf[16];

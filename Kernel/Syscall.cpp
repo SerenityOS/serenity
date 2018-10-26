@@ -110,6 +110,8 @@ DWORD handle(DWORD function, DWORD arg1, DWORD arg2, DWORD arg3)
         return 0;
     case Syscall::GetArguments:
         return current->sys$get_arguments((int*)arg1, (char***)arg2);
+    case Syscall::PosixChdir:
+        return current->sys$chdir((const char*)arg1);
     default:
         kprintf("int0x80: Unknown function %x requested {%x, %x, %x}\n", function, arg1, arg2, arg3);
         break;
