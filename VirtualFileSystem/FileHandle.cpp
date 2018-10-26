@@ -128,6 +128,11 @@ ByteBuffer FileHandle::readEntireFile()
     return m_vnode->fileSystem()->readEntireInode(m_vnode->inode);
 }
 
+bool FileHandle::isDirectory() const
+{
+    return m_vnode->metadata().isDirectory();
+}
+
 ssize_t FileHandle::get_dir_entries(byte* buffer, size_t size)
 {
     Locker locker(VirtualFileSystem::lock());

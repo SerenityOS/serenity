@@ -168,9 +168,9 @@ void VirtualFileSystem::freeNode(Node* node)
     m_nodeFreeList.append(move(node));
 }
 
-bool VirtualFileSystem::isDirectory(const String& path)
+bool VirtualFileSystem::isDirectory(const String& path, Node* base)
 {
-    auto inode = resolvePath(path);
+    auto inode = resolvePath(path, base);
     if (!inode.isValid())
         return false;
 
@@ -355,11 +355,11 @@ bool VirtualFileSystem::touch(const String& path)
     return inode.fileSystem()->setModificationTime(inode, ktime(nullptr));
 }
 
-OwnPtr<FileHandle> VirtualFileSystem::open(const String& path)
+OwnPtr<FileHandle> VirtualFileSystem::open(const String& path, Node* base)
 {
     Locker locker(VirtualFileSystem::lock());
 
-    auto inode = resolvePath(path);
+    auto inode = resolvePath(path, base);
     if (!inode.isValid())
         return nullptr;
     auto vnode = getOrCreateNode(inode);
@@ -368,7 +368,7 @@ OwnPtr<FileHandle> VirtualFileSystem::open(const String& path)
     return make<FileHandle>(move(vnode));
 }
 
-OwnPtr<FileHandle> VirtualFileSystem::create(const String& path)
+OwnPtr<FileHandle> VirtualFileSystem::create(const String& path, Node* base)
 {
     Locker locker(VirtualFileSystem::lock());
 
@@ -378,7 +378,7 @@ OwnPtr<FileHandle> VirtualFileSystem::create(const String& path)
     return nullptr;
 }
 
-OwnPtr<FileHandle> VirtualFileSystem::mkdir(const String& path)
+OwnPtr<FileHandle> VirtualFileSystem::mkdir(const String& path, Node* base)
 {
     Locker locker(VirtualFileSystem::lock());
 
@@ -398,10 +398,18 @@ InodeIdentifier VirtualFileSystem::resolveSymbolicLink(const String& basePath, I
     return resolvePath(buf);
 }
 
-InodeIdentifier VirtualFileSystem::resolvePath(const String& path)
+InodeIdentifier VirtualFileSystem::resolvePath(const String& path, Node* base)
 {
+    if (path.isEmpty())
+        return { };
+
     auto parts = path.split('/');
-    InodeIdentifier inode = m_rootNode->inode;
+    InodeIdentifier inode;
+
+    if (path[0] == '/')
+        inode = m_rootNode->inode;
+    else
+        inode = base ? base->inode : m_rootNode->inode;
 
     for (unsigned i = 0; i < parts.size(); ++i) {
         auto& part = parts[i];

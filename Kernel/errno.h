@@ -37,3 +37,5 @@
 #define ENAMETOOLONG 36 // Name too long
 
 #define EOVERFLOW 75    // Value too large for defined data type
+
+#define ENOTIMPL 999    // Not implemented

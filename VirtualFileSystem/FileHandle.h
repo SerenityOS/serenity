@@ -20,6 +20,10 @@ public:
 
     String absolutePath() const;
 
+    bool isDirectory() const;
+
+    VirtualFileSystem::Node* vnode() { return m_vnode.ptr(); }
+
 #ifdef SERENITY
     int fd() const { return m_fd; }
     void setFD(int fd) { m_fd = fd; }

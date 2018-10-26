@@ -69,6 +69,7 @@ const char* strerror(int errnum)
     case ERANGE: return "Math result not representable";
     case ENAMETOOLONG: return "Name too long";
     case EOVERFLOW: return "Value too large for data type";
+    case ENOTIMPL: return "Not implemented";
     }
     printf("strerror() missing string for errnum=%d\n", errnum);
     return "Unknown error";

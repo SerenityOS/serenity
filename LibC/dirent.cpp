@@ -46,7 +46,7 @@ dirent* readdir(DIR* dirp)
         dirp->nextptr = dirp->buffer;
     }
 
-    if (dirp->nextptr > (dirp->buffer + dirp->buffer_size))
+    if (dirp->nextptr >= (dirp->buffer + dirp->buffer_size))
         return nullptr;
 
     auto* sys_ent = (sys_dirent*)dirp->nextptr;
