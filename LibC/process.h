@@ -2,7 +2,7 @@
 
 extern "C" {
 
-int spawn(const char* path);
+int spawn(const char* path, const char** args);
 
 }
 

@@ -4,9 +4,9 @@
 
 extern "C" {
 
-int spawn(const char* path)
+int spawn(const char* path, const char** args)
 {
-    int rc = Syscall::invoke(Syscall::Spawn, (dword)path);
+    int rc = Syscall::invoke(Syscall::Spawn, (dword)path, (dword)args);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 

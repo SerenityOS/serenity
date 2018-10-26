@@ -16,7 +16,7 @@ class Task : public InlineLinkedListNode<Task> {
     friend class InlineLinkedListNode<Task>;
 public:
     static Task* createKernelTask(void (*entry)(), String&& name);
-    static Task* createUserTask(const String& path, uid_t, gid_t, pid_t parentPID, int& error);
+    static Task* createUserTask(const String& path, uid_t, gid_t, pid_t parentPID, int& error, const char** args = nullptr);
     ~Task();
 
     static Vector<Task*> allTasks();
@@ -92,7 +92,7 @@ public:
     int sys$kill(pid_t pid, int sig);
     int sys$geterror() { return m_error; }
     void sys$exit(int status);
-    int sys$spawn(const char* path);
+    int sys$spawn(const char* path, const char** args);
     pid_t sys$waitpid(pid_t);
     void* sys$mmap(void*, size_t size);
     int sys$munmap(void*, size_t size);
@@ -101,6 +101,7 @@ public:
     int sys$sleep(unsigned seconds);
     int sys$gettimeofday(timeval*);
     int sys$gethostname(char* name, size_t length);
+    int sys$get_arguments(int* argc, char*** argv);
 
     static void initialize();
 
@@ -170,6 +171,8 @@ private:
     LinearAddress m_nextRegion;
 
     pid_t m_parentPID { 0 };
+
+    Vector<String> m_arguments;
 };
 
 extern void task_init();

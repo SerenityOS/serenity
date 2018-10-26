@@ -65,7 +65,7 @@ DWORD handle(DWORD function, DWORD arg1, DWORD arg2, DWORD arg3)
     case Syscall::PosixGettimeofday:
         return current->sys$gettimeofday((timeval*)arg1);
     case Syscall::Spawn:
-        return current->sys$spawn((const char*)arg1);
+        return current->sys$spawn((const char*)arg1, (const char**)arg2);
     case Syscall::GetDirEntries:
         return current->sys$get_dir_entries((int)arg1, (void*)arg2, (size_t)arg3);
     case Syscall::PosixLstat:
@@ -108,6 +108,8 @@ DWORD handle(DWORD function, DWORD arg1, DWORD arg2, DWORD arg3)
         current->sys$exit((int)arg1);
         ASSERT_NOT_REACHED();
         return 0;
+    case Syscall::GetArguments:
+        return current->sys$get_arguments((int*)arg1, (char***)arg2);
     default:
         kprintf("int0x80: Unknown function %x requested {%x, %x, %x}\n", function, arg1, arg2, arg3);
         break;
