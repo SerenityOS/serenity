@@ -56,6 +56,11 @@ boot:
 
     call durk
 
+    ; Turn off the floppy motor.
+    mov dx, 0x3f2
+    xor al, al
+    out dx, al
+
     lgdt [cs:test_gdt_ptr]
 
     mov eax, cr0
