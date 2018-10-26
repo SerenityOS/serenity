@@ -182,8 +182,16 @@ int Task::sys$munmap(void* addr, size_t size)
     return 0;
 }
 
+#define VALIDATE_USER_BUFFER(b, s) \
+    do { \
+        LinearAddress laddr((dword)(b)); \
+        if (!isValidAddressForUser(laddr) || !isValidAddressForUser(laddr.offset((s) - 1))) \
+            return -EFAULT; \
+    } while(0)
+
 int Task::sys$gethostname(char* buffer, size_t size)
 {
+    VALIDATE_USER_BUFFER(buffer, size);
     auto hostname = getHostname();
     if (size < (hostname.length() + 1))
         return -ENAMETOOLONG;
@@ -670,6 +678,7 @@ FileHandle* Task::fileHandleIfExists(int fd)
 
 ssize_t Task::sys$get_dir_entries(int fd, void* buffer, size_t size)
 {
+    VALIDATE_USER_BUFFER(buffer, size);
     auto* handle = fileHandleIfExists(fd);
     if (!handle)
         return -1;
@@ -686,7 +695,7 @@ int Task::sys$seek(int fd, int offset)
 
 ssize_t Task::sys$read(int fd, void* outbuf, size_t nread)
 {
-    Task::checkSanity("Task::sys$read");
+    VALIDATE_USER_BUFFER(outbuf, nread);
 #ifdef DEBUG_IO
     kprintf("Task::sys$read: called(%d, %p, %u)\n", fd, outbuf, nread);
 #endif
@@ -726,6 +735,7 @@ int Task::sys$close(int fd)
 
 int Task::sys$lstat(const char* path, void* statbuf)
 {
+    VALIDATE_USER_BUFFER(statbuf, sizeof(stat));
     auto handle = VirtualFileSystem::the().open(move(path), m_cwd.ptr());
     if (!handle)
         return -1;
@@ -735,6 +745,7 @@ int Task::sys$lstat(const char* path, void* statbuf)
 
 int Task::sys$chdir(const char* path)
 {
+    VALIDATE_USER_BUFFER(path, strlen(path));
     auto handle = VirtualFileSystem::the().open(path, m_cwd.ptr());
     if (!handle)
         return -ENOENT; // FIXME: More detailed error.
@@ -748,6 +759,7 @@ int Task::sys$chdir(const char* path)
 int Task::sys$getcwd(char* buffer, size_t size)
 {
     // FIXME: Implement!
+    VALIDATE_USER_BUFFER(buffer, size);
     return -ENOTIMPL;
 }
 
@@ -756,6 +768,7 @@ int Task::sys$open(const char* path, size_t pathLength)
 #ifdef DEBUG_IO
     kprintf("Task::sys$open(): PID=%u, path=%s {%u}\n", m_pid, path, pathLength);
 #endif
+    VALIDATE_USER_BUFFER(path, pathLength);
     if (m_fileHandles.size() >= m_maxFileHandles)
         return -EMFILE;
     auto handle = VirtualFileSystem::the().open(String(path, pathLength), m_cwd.ptr());
@@ -769,6 +782,7 @@ int Task::sys$open(const char* path, size_t pathLength)
 
 int Task::sys$uname(utsname* buf)
 {
+    VALIDATE_USER_BUFFER(buf, sizeof(utsname));
     strcpy(buf->sysname, "Serenity");
     strcpy(buf->release, "1.0-dev");
     strcpy(buf->version, "FIXME");
@@ -807,6 +821,7 @@ int Task::sys$sleep(unsigned seconds)
 
 int Task::sys$gettimeofday(timeval* tv)
 {
+    VALIDATE_USER_BUFFER(tv, sizeof(tv));
     InterruptDisabler disabler;
     auto now = RTC::now();
     tv->tv_sec = now;
