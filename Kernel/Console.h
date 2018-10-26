@@ -1,5 +1,6 @@
 #pragma once
 
+#include <AK/Compiler.h>
 #include <VirtualFileSystem/CharacterDevice.h>
 
 class Console final : public CharacterDevice {

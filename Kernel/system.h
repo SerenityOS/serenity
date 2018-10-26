@@ -1,6 +1,15 @@
 #pragma once
 
 #include "types.h"
+#include <AK/Vector.h>
+#include <AK/String.h>
+
+struct KSym {
+    dword address;
+    String name;
+};
+
+Vector<KSym>& ksyms() PURE;
 
 struct system_t
 {

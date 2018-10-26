@@ -378,21 +378,21 @@ Task::Task(String&& name, uid_t uid, gid_t gid, pid_t parentPID, RingLevel ring)
         // FIXME: This memory is leaked.
         // But uh, there's also no kernel task termination, so I guess it's not technically leaked...
         dword stackBottom = (dword)kmalloc(defaultStackSize);
-        m_stackTop = (stackBottom + defaultStackSize) & 0xffffff8;
-        m_tss.esp = m_stackTop;
+        m_stackTop0 = (stackBottom + defaultStackSize) & 0xffffff8;
+        m_tss.esp = m_stackTop0;
     } else {
         auto* region = allocateRegion(defaultStackSize, "stack");
         ASSERT(region);
-        m_stackTop = region->linearAddress.offset(defaultStackSize).get() & 0xfffffff8;
+        m_stackTop3 = region->linearAddress.offset(defaultStackSize).get() & 0xfffffff8;
+        m_tss.esp = m_stackTop3;
     }
-    m_tss.esp = m_stackTop;
 
     if (isRing3()) {
         // Ring3 tasks need a separate stack for Ring0.
         m_kernelStack = kmalloc(defaultStackSize);
-        DWORD ring0StackTop = ((DWORD)m_kernelStack + defaultStackSize) & 0xffffff8;
+        m_stackTop0 = ((DWORD)m_kernelStack + defaultStackSize) & 0xffffff8;
         m_tss.ss0 = 0x10;
-        m_tss.esp0 = ring0StackTop;
+        m_tss.esp0 = m_stackTop0;
     }
 
     // HACK: Ring2 SS in the TSS is the current PID.

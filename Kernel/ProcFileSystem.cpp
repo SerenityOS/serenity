@@ -1,6 +1,7 @@
 #include "ProcFileSystem.h"
 #include "Task.h"
 #include <VirtualFileSystem/VirtualFileSystem.h>
+#include "system.h"
 
 static ProcFileSystem* s_the;
 
@@ -47,6 +48,41 @@ void ProcFileSystem::addProcess(Task& task)
         }
         *ptr = '\0';
         return ByteBuffer::copy((byte*)buffer, ptr - buffer);
+    }), dir.index());
+    addFile(createGeneratedFile("stack", [&task] {
+        InterruptDisabler disabler;
+        auto& syms = ksyms();
+        dword firstKsymAddress = syms.first().address;
+        dword lastKsymAddress = syms.last().address;
+        struct RecognizedSymbol {
+            dword address;
+            const char* name;
+            dword offset;
+        };
+        Vector<RecognizedSymbol> recognizedSymbols;
+        size_t bytesNeeded = 0;
+        for (dword* stackPtr = (dword*)task.stackPtr(); (dword)stackPtr < task.stackTop(); ++stackPtr) {
+            if (*stackPtr < firstKsymAddress || *stackPtr > lastKsymAddress)
+                continue;
+            const char* name = nullptr;
+            unsigned offset = 0;
+            for (unsigned i = 0; i < syms.size(); ++i) {
+                if (*stackPtr < syms[i+1].address) {
+                    name = syms[i].name.characters();
+                    offset = *stackPtr - syms[i].address;
+                    bytesNeeded += syms[i].name.length() + 8 + 16;
+                    break;
+                }
+            }
+            recognizedSymbols.append({ *stackPtr, name, offset });
+        }
+        auto buffer = ByteBuffer::createUninitialized(bytesNeeded);
+        char* ptr = (char*)buffer.pointer();
+        for (auto& symbol : recognizedSymbols) {
+            kprintf("%p  %s +%u\n", symbol.address, symbol.name, symbol.offset);
+        }
+        buffer.trim(ptr - (char*)buffer.pointer());
+        return buffer;
     }), dir.index());
 }
 

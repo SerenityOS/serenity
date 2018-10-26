@@ -107,10 +107,10 @@ kmalloc( DWORD size )
         }
     }
 
-    kprintf( "kmalloc(): PANIC! Out of memory (no suitable block)" );
+    kprintf("kmalloc(): PANIC! Out of memory (no suitable block for size %u)\n", size);
     HANG;
 
-    return 0L;
+    return nullptr;
 }
 
 PUBLIC void

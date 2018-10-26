@@ -79,6 +79,7 @@ auto SyntheticFileSystem::createGeneratedFile(String&& name, Function<ByteBuffer
 
 InodeIdentifier SyntheticFileSystem::addFile(OwnPtr<File>&& file, InodeIndex parent)
 {
+    ASSERT_INTERRUPTS_DISABLED();
     ASSERT(file);
     auto it = m_inodes.find(parent);
     ASSERT(it != m_inodes.end());
@@ -92,6 +93,7 @@ InodeIdentifier SyntheticFileSystem::addFile(OwnPtr<File>&& file, InodeIndex par
 
 bool SyntheticFileSystem::removeFile(InodeIndex inode)
 {
+    ASSERT_INTERRUPTS_DISABLED();
     auto it = m_inodes.find(inode);
     if (it == m_inodes.end())
         return false;
@@ -127,6 +129,7 @@ InodeIdentifier SyntheticFileSystem::rootInode() const
 
 bool SyntheticFileSystem::enumerateDirectoryInode(InodeIdentifier inode, Function<bool(const DirectoryEntry&)> callback) const
 {
+    InterruptDisabler disabler;
     ASSERT(inode.fileSystemID() == id());
 #ifdef SYNTHFS_DEBUG
     kprintf("[synthfs] enumerateDirectoryInode %u\n", inode.index());
@@ -150,6 +153,7 @@ bool SyntheticFileSystem::enumerateDirectoryInode(InodeIdentifier inode, Functio
 
 InodeMetadata SyntheticFileSystem::inodeMetadata(InodeIdentifier inode) const
 {
+    InterruptDisabler disabler;
     ASSERT(inode.fileSystemID() == id());
 #ifdef SYNTHFS_DEBUG
     kprintf("[synthfs] inodeMetadata(%u)\n", inode.index());
@@ -186,6 +190,8 @@ bool SyntheticFileSystem::writeInode(InodeIdentifier, const ByteBuffer&)
 
 Unix::ssize_t SyntheticFileSystem::readInodeBytes(InodeIdentifier inode, Unix::off_t offset, Unix::size_t count, byte* buffer) const
 {
+    InterruptDisabler disabler;
+
     ASSERT(inode.fileSystemID() == id());
 #ifdef SYNTHFS_DEBUG
     kprintf("[synthfs] readInode %u\n", inode.index());
