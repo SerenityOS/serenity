@@ -40,6 +40,8 @@ void Console::putChar(char ch)
     IO::out8(0xe9, ch);
 #endif
     switch (ch) {
+    case '\0':
+        return;
     case '\n':
         m_cursorColumn = 0;
         if (m_cursorRow == (m_rows - 1)) {
