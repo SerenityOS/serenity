@@ -16,10 +16,21 @@ static int runcmd(char* cmd)
 {
     if (cmd[0] == 0)
         return 0;
-    //printf("command: '%s'\n", cmd);
     char buf[128];
     sprintf(buf, "/bin/%s", cmd);
-    int ret = spawn(buf);
+
+    const char* argv[32];
+    size_t argi = 1;
+    argv[0] = &buf[0];
+    size_t buflen = strlen(buf);
+    for (size_t i = 0; i < buflen; ++i) {
+        if (buf[i] == ' ') {
+            buf[i] = '\0';
+            argv[argi++] = &buf[i + 1];
+        }
+    }
+    argv[argi + 1] = nullptr;
+    int ret = spawn(argv[0], argv);
     if (ret == -1) {
         printf("spawn failed: %s (%s)\n", cmd, strerror(errno));
         return 1;

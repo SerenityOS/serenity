@@ -185,18 +185,19 @@ int Task::sys$gethostname(char* buffer, size_t size)
     if (size < (hn.length() + 1))
         return -ENAMETOOLONG;
     memcpy(buffer, hn.characters(), size);
+    return 0;
 }
 
-int Task::sys$spawn(const char* path)
+int Task::sys$spawn(const char* path, const char** args)
 {
     int error = 0;
-    auto* child = Task::createUserTask(path, m_uid, m_gid, m_pid, error);
+    auto* child = Task::createUserTask(path, m_uid, m_gid, m_pid, error, args);
     if (child)
         return child->pid();
     return error;
 }
 
-Task* Task::createUserTask(const String& path, uid_t uid, gid_t gid, pid_t parentPID, int& error)
+Task* Task::createUserTask(const String& path, uid_t uid, gid_t gid, pid_t parentPID, int& error, const char** args)
 {
     auto parts = path.split('/');
     if (parts.isEmpty()) {
@@ -216,8 +217,19 @@ Task* Task::createUserTask(const String& path, uid_t uid, gid_t gid, pid_t paren
         return nullptr;
     }
 
+    Vector<String> taskArguments;
+    if (args) {
+        for (size_t i = 0; args[i]; ++i) {
+            taskArguments.append(args[i]);
+        }
+    } else {
+        taskArguments.append(parts.last());
+    }
+
     InterruptDisabler disabler; // FIXME: Get rid of this, jesus christ. This "critical" section is HUGE.
     Task* t = new Task(parts.takeLast(), uid, gid, parentPID, Ring3);
+
+    t->m_arguments = move(taskArguments);
 
     ExecSpace space;
     space.hookableAlloc = [&] (const String& name, size_t size) {
@@ -255,6 +267,25 @@ Task* Task::createUserTask(const String& path, uid_t uid, gid_t gid, pid_t paren
 
     error = 0;
     return t;
+}
+
+int Task::sys$get_arguments(int* argc, char*** argv)
+{
+    auto* region = allocateRegion(4096, "argv");
+    if (!region)
+        return -ENOMEM;
+    MemoryManager::the().mapRegion(*this, *region);
+    char* argpage = (char*)region->linearAddress.get();
+    *argc = m_arguments.size();
+    *argv = (char**)argpage;
+    char* bufptr = argpage + (sizeof(char*) * m_arguments.size());
+    for (size_t i = 0; i < m_arguments.size(); ++i) {
+        (*argv)[i] = bufptr;
+        memcpy(bufptr, m_arguments[i].characters(), m_arguments[i].length());
+        bufptr += m_arguments[i].length();
+        *(bufptr++) = '\0';
+    }
+    return 0;
 }
 
 Task* Task::createKernelTask(void (*e)(), String&& name)

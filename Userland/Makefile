@@ -8,7 +8,8 @@ OBJS = \
        date.o \
        true.o \
        false.o \
-       hostname.o
+       hostname.o \
+       cat.o
 
 APPS = \
        id \
@@ -20,7 +21,8 @@ APPS = \
        date \
        true \
        false \
-       hostname
+       hostname \
+       cat
 
 ARCH_FLAGS =
 STANDARD_FLAGS = -std=c++17 -nostdinc++ -nostdlib
@@ -68,6 +70,9 @@ false: false.o
 	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
 
 hostname: hostname.o
+	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
+
+cat: cat.o
 	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
 
 .cpp.o:

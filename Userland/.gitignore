@@ -1,3 +1,4 @@
+*.o
 id
 sh
 ps
@@ -8,4 +9,4 @@ date
 false
 true
 hostname
-*.o
+cat

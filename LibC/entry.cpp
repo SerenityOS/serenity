@@ -8,9 +8,12 @@ extern "C" int _start()
 {
     errno = 0;
 
-    // FIXME: Pass appropriate argc/argv.
-    int status = main(0, nullptr);
-
+    int argc;
+    char** argv;
+    int rc = Syscall::invoke(Syscall::GetArguments, (dword)&argc, (dword)&argv);
+    int status = 254;
+    if (rc == 0)
+        status = main(argc, argv);
     Syscall::invoke(Syscall::PosixExit, status);
 
     // Birger's birthday <3

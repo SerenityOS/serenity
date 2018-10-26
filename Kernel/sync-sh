@@ -10,5 +10,6 @@ cp ../Userland/date mnt/bin/date
 cp ../Userland/true mnt/bin/true
 cp ../Userland/false mnt/bin/false
 cp ../Userland/hostname mnt/bin/hostname
+cp ../Userland/cat mnt/bin/cat
 umount mnt
 sync
