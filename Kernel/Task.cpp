@@ -647,6 +647,7 @@ static bool contextSwitch(Task* t)
 
 Task* Task::fromPID(pid_t pid)
 {
+    ASSERT_INTERRUPTS_DISABLED();
     for (auto* task = s_tasks->head(); task; task = task->next()) {
         if (task->pid() == pid)
             return task;
