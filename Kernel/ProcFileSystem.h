@@ -7,7 +7,7 @@ class Task;
 
 class ProcFileSystem final : public SyntheticFileSystem {
 public:
-    static ProcFileSystem& the();
+    static ProcFileSystem& the() PURE;
 
     virtual ~ProcFileSystem() override;
     static RetainPtr<ProcFileSystem> create();

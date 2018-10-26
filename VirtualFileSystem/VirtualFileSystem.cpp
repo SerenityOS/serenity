@@ -501,3 +501,10 @@ void VirtualFileSystem::registerCharacterDevice(unsigned major, unsigned minor, 
 {
     m_characterDevices.set(encodedDevice(major, minor), &device);
 }
+
+void VirtualFileSystem::forEachMount(Function<void(const Mount&)> callback) const
+{
+    for (auto& mount : m_mounts) {
+        callback(*mount);
+    }
+}

@@ -4,7 +4,7 @@
 
 class Console final : public CharacterDevice {
 public:
-    static Console& the();
+    static Console& the() PURE;
 
     Console();
     virtual ~Console() override;

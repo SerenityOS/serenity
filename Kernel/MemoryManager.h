@@ -37,7 +37,7 @@ bool copyToZone(Zone&, const void* data, size_t);
 
 class MemoryManager {
 public:
-    static MemoryManager& the();
+    static MemoryManager& the() PURE;
 
     PhysicalAddress pageDirectoryBase() const { return PhysicalAddress(reinterpret_cast<dword>(m_pageDirectory)); }
 
