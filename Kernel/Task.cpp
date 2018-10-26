@@ -12,6 +12,7 @@
 #include "errno.h"
 #include "i8253.h"
 #include "RTC.h"
+#include "ProcFileSystem.h"
 
 //#define DEBUG_IO
 //#define TASK_DEBUG
@@ -397,11 +398,14 @@ Task::Task(String&& name, uid_t uid, gid_t gid, pid_t parentPID, RingLevel ring)
     // HACK: Ring2 SS in the TSS is the current PID.
     m_tss.ss2 = m_pid;
     m_farPtr.offset = 0x98765432;
+
+    ProcFileSystem::the().addProcess(*this);
 }
 
 Task::~Task()
 {
     InterruptDisabler disabler;
+    ProcFileSystem::the().removeProcess(*this);
     system.nprocess--;
     delete [] m_ldtEntries;
     m_ldtEntries = nullptr;

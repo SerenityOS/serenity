@@ -8,7 +8,7 @@ template<typename T>
 class DoublyLinkedList {
 private:
     struct Node {
-        explicit Node(T&& v) : value(v) { }
+        explicit Node(T&& v) : value(move(v)) { }
         T value;
         Node* next { nullptr };
         Node* prev { nullptr };
@@ -62,7 +62,8 @@ public:
 
     class Iterator {
     public:
-        bool operator!=(const Iterator& other) { return m_node != other.m_node; }
+        bool operator!=(const Iterator& other) const { return m_node != other.m_node; }
+        bool operator==(const Iterator& other) const { return m_node == other.m_node; }
         Iterator& operator++() { m_node = m_node->next; return *this; }
         T& operator*() { return m_node->value; }
         bool isEnd() const { return !m_node; }
@@ -78,7 +79,8 @@ public:
 
     class ConstIterator {
     public:
-        bool operator!=(const ConstIterator& other) { return m_node != other.m_node; }
+        bool operator!=(const ConstIterator& other) const { return m_node != other.m_node; }
+        bool operator==(const ConstIterator& other) const { return m_node == other.m_node; }
         ConstIterator& operator++() { m_node = m_node->next; return *this; }
         const T& operator*() const { return m_node->value; }
         bool isEnd() const { return !m_node; }

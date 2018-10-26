@@ -21,19 +21,34 @@ bool SyntheticFileSystem::initialize()
     // Add a File for the root directory.
     // FIXME: This needs work.
     auto rootDir = make<File>();
-    rootDir->metadata.inode = { id(), 1 };
+    rootDir->metadata.inode = { id(), RootInodeIndex };
+    rootDir->parent = { id(), RootInodeIndex };
     rootDir->metadata.mode = 0040555;
     rootDir->metadata.uid = 0;
     rootDir->metadata.gid = 0;
     rootDir->metadata.size = 0;
     rootDir->metadata.mtime = mepoch;
-    m_files.append(move(rootDir));
+    m_inodes.set(RootInodeIndex, move(rootDir));
 
+#if 0
 #ifndef SERENITY
     addFile(createTextFile("file", "I'm a synthetic file!\n"));
     addFile(createTextFile("message", "Hey! This isn't my bottle!\n"));
 #endif
+#endif
     return true;
+}
+
+auto SyntheticFileSystem::createDirectory(String&& name) -> OwnPtr<File>
+{
+    auto file = make<File>();
+    file->name = move(name);
+    file->metadata.size = 0;
+    file->metadata.uid = 0;
+    file->metadata.gid = 0;
+    file->metadata.mode = 0040555;
+    file->metadata.mtime = mepoch;
+    return file;
 }
 
 auto SyntheticFileSystem::createTextFile(String&& name, String&& text) -> OwnPtr<File>
@@ -44,7 +59,7 @@ auto SyntheticFileSystem::createTextFile(String&& name, String&& text) -> OwnPtr
     file->metadata.size = file->data.size();
     file->metadata.uid = 100;
     file->metadata.gid = 200;
-    file->metadata.mode = 0100644;
+    file->metadata.mode = 04;
     file->metadata.mtime = mepoch;
     return file;
 }
@@ -62,11 +77,42 @@ auto SyntheticFileSystem::createGeneratedFile(String&& name, Function<ByteBuffer
     return file;
 }
 
-void SyntheticFileSystem::addFile(OwnPtr<File>&& file)
+InodeIdentifier SyntheticFileSystem::addFile(OwnPtr<File>&& file, InodeIndex parent)
 {
     ASSERT(file);
-    file->metadata.inode = { id(), m_files.size() + 1 };
-    m_files.append(move(file));
+    auto it = m_inodes.find(parent);
+    ASSERT(it != m_inodes.end());
+    InodeIdentifier newInode { id(), generateInodeIndex() };
+    file->metadata.inode = newInode;
+    file->parent = { id(), parent };
+    (*it).value->children.append(file.ptr());
+    m_inodes.set(newInode.index(), move(file));
+    return newInode;
+}
+
+bool SyntheticFileSystem::removeFile(InodeIndex inode)
+{
+    auto it = m_inodes.find(inode);
+    if (it == m_inodes.end())
+        return false;
+    auto& file = *(*it).value;
+
+    auto pit = m_inodes.find(file.parent.index());
+    if (pit == m_inodes.end())
+        return false;
+    auto& parent = *(*pit).value;
+    for (size_t i = 0; i < parent.children.size(); ++i) {
+        if (parent.children[i]->metadata.inode.index() != inode) {
+            continue;
+        }
+        parent.children.remove(i);
+        break;
+    }
+
+    for (auto& child : file.children)
+        removeFile(child->metadata.inode.index());
+    m_inodes.remove(inode);
+    return true;
 }
 
 const char* SyntheticFileSystem::className() const
@@ -85,14 +131,20 @@ bool SyntheticFileSystem::enumerateDirectoryInode(InodeIdentifier inode, Functio
 #ifdef SYNTHFS_DEBUG
     kprintf("[synthfs] enumerateDirectoryInode %u\n", inode.index());
 #endif
-    if (inode.index() != 1)
+
+    auto it = m_inodes.find(inode.index());
+    if (it == m_inodes.end())
+        return false;
+    const File& synInode = *(*it).value;
+    if (!synInode.metadata.isDirectory())
         return false;
 
-    callback({ ".", m_files[0]->metadata.inode });
-    callback({ "..", m_files[0]->metadata.inode });
+    callback({ ".", synInode.metadata.inode });
+    callback({ "..", synInode.parent });
 
-    for (unsigned i = 1; i < m_files.size(); ++i)
-        callback({ m_files[i]->name, m_files[i]->metadata.inode });
+    for (auto& child : synInode.children) {
+        callback({ child->name, child->metadata.inode });
+    }
     return true;
 }
 
@@ -102,10 +154,11 @@ InodeMetadata SyntheticFileSystem::inodeMetadata(InodeIdentifier inode) const
 #ifdef SYNTHFS_DEBUG
     kprintf("[synthfs] inodeMetadata(%u)\n", inode.index());
 #endif
-    if (inode.index() == 0 || inode.index() > m_files.size())
-        return InodeMetadata();
-    auto& file = *m_files[inode.index() - 1];
-    return file.metadata;
+
+    auto it = m_inodes.find(inode.index());
+    if (it == m_inodes.end())
+        return { };
+    return (*it).value->metadata;
 }
 
 bool SyntheticFileSystem::setModificationTime(InodeIdentifier, dword timestamp)
@@ -120,6 +173,7 @@ InodeIdentifier SyntheticFileSystem::createInode(InodeIdentifier parentInode, co
     (void) parentInode;
     (void) name;
     (void) mode;
+    (void) size;
     kprintf("FIXME: Implement SyntheticFileSystem::createDirectoryInode().\n");
     return { };
 }
@@ -136,12 +190,13 @@ Unix::ssize_t SyntheticFileSystem::readInodeBytes(InodeIdentifier inode, Unix::o
 #ifdef SYNTHFS_DEBUG
     kprintf("[synthfs] readInode %u\n", inode.index());
 #endif
-    ASSERT(inode.index() != 1);
-    ASSERT(inode.index() <= m_files.size());
     ASSERT(offset >= 0);
     ASSERT(buffer);
-
-    auto& file = *m_files[inode.index() - 1];
+\
+    auto it = m_inodes.find(inode.index());
+    if (it == m_inodes.end())
+        return false;
+    const File& file = *(*it).value;
     ByteBuffer generatedData;
     if (file.generator)
         generatedData = file.generator();
@@ -154,6 +209,13 @@ Unix::ssize_t SyntheticFileSystem::readInodeBytes(InodeIdentifier inode, Unix::o
 
 InodeIdentifier SyntheticFileSystem::makeDirectory(InodeIdentifier parentInode, const String& name, Unix::mode_t)
 {
+    (void) parentInode;
+    (void) name;
     kprintf("FIXME: Implement SyntheticFileSystem::makeDirectory().\n");
     return { };
+}
+
+auto SyntheticFileSystem::generateInodeIndex() -> InodeIndex
+{
+    return m_nextInodeIndex++;
 }

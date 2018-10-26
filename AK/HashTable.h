@@ -56,7 +56,7 @@ public:
 
     class Iterator {
     public:
-        bool operator!=(const Iterator& other)
+        bool operator!=(const Iterator& other) const
         {
             if (m_isEnd && other.m_isEnd)
                 return false;
@@ -65,6 +65,7 @@ public:
                 || m_bucketIndex != other.m_bucketIndex
                 || m_bucketIterator != other.m_bucketIterator;
         }
+        bool operator==(const Iterator& other) const { return !(*this != other); }
         T& operator*()
         {
 #ifdef HASHTABLE_DEBUG
@@ -126,12 +127,12 @@ public:
         typename DoublyLinkedList<T>::Iterator m_bucketIterator;
     };
 
-    Iterator begin() { return Iterator(*this, false); }
+    Iterator begin() { return Iterator(*this, isEmpty()); }
     Iterator end() { return Iterator(*this, true); }
 
     class ConstIterator {
     public:
-        bool operator!=(const ConstIterator& other)
+        bool operator!=(const ConstIterator& other) const
         {
             if (m_isEnd && other.m_isEnd)
                 return false;
@@ -140,6 +141,7 @@ public:
                 || m_bucketIndex != other.m_bucketIndex
                 || m_bucketIterator != other.m_bucketIterator;
         }
+        bool operator==(const ConstIterator& other) const { return !(*this != other); }
         const T& operator*() const
         {
 #ifdef HASHTABLE_DEBUG
@@ -203,7 +205,7 @@ public:
         typename DoublyLinkedList<T>::ConstIterator m_bucketIterator;
     };
 
-    ConstIterator begin() const { return ConstIterator(*this, false); }
+    ConstIterator begin() const { return ConstIterator(*this, isEmpty()); }
     ConstIterator end() const { return ConstIterator(*this, true); }
 
     Iterator find(const T&);
