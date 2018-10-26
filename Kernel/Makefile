@@ -13,7 +13,6 @@ KERNEL_OBJS = \
        PIC.o \
        Syscall.o \
        Disk.o \
-       Userspace.o \
        IDEDiskDevice.o \
        MemoryManager.o \
        Console.o \

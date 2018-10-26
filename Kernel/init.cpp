@@ -11,7 +11,6 @@
 #include "StdLib.h"
 #include "Syscall.h"
 #include "CMOS.h"
-#include "Userspace.h"
 #include "IDEDiskDevice.h"
 #include <VirtualFileSystem/NullDevice.h>
 #include <VirtualFileSystem/ZeroDevice.h>
@@ -31,7 +30,6 @@
 #define KERNEL_MAP
 //#define STRESS_TEST_SPAWNING
 //#define TEST_ELF_LOADER
-//#define TEST_CRASHY_USER_PROCESSES
 
 system_t system;
 
@@ -98,22 +96,6 @@ static void loadKernelMap(const ByteBuffer& buffer)
     }
 }
 
-#ifdef TEST_CRASHY_USER_PROCESSES
-static void user_main() NORETURN;
-static void user_main()
-{
-    DO_SYSCALL_A3(0x3000, 2, 3, 4);
-    // Crash ourselves!
-    char* x = reinterpret_cast<char*>(0xbeefbabe);
-    *x = 1;
-    HANG;
-    for (;;) {
-        // nothing?
-        Userspace::sleep(1 * TICKS_PER_SECOND);
-    }
-}
-#endif
-
 static void undertaker_main() NORETURN;
 static void undertaker_main()
 {
@@ -172,10 +154,6 @@ static void init_stage2()
 
     vfs->mount(ProcFileSystem::the(), "/proc");
 
-#endif
-
-#ifdef TEST_CRASHY_USER_PROCESSES
-    new Task(user_main, "user", Task::Ring3);
 #endif
 
 #ifdef TEST_ELF_LOADER
