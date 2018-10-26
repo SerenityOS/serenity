@@ -56,8 +56,8 @@ ARCH_FLAGS =
 STANDARD_FLAGS = -std=c++17 -nostdinc++ -nostdlib
 KERNEL_FLAGS = -ffreestanding -fno-stack-protector -fno-ident
 WARNING_FLAGS = -Wextra -Wall -Wundef -Wcast-qual -Wwrite-strings
-FLAVOR_FLAGS = -fomit-frame-pointer -mregparm=3 -march=i386 -m32 -fno-exceptions -fno-rtti -ffunction-sections -fdata-sections -fmerge-all-constants -fno-unroll-loops -falign-functions=1 -falign-jumps=1 -falign-loops=1 -fno-pie -fno-pic
-#FLAVOR_FLAGS = -fomit-frame-pointer -mregparm=3 -march=i386 -m32 -fno-exceptions -fno-rtti -ffunction-sections -fdata-sections
+FLAVOR_FLAGS = -mregparm=3 -march=i386 -m32 -fno-exceptions -fno-rtti -ffunction-sections -fdata-sections -fmerge-all-constants -fno-unroll-loops -falign-functions=1 -falign-jumps=1 -falign-loops=1 -fno-pie -fno-pic
+#FLAVOR_FLAGS = -mregparm=3 -march=i386 -m32 -fno-exceptions -fno-rtti -ffunction-sections -fdata-sections
 OPTIMIZATION_FLAGS = -Os -fno-asynchronous-unwind-tables
 INCLUDE_FLAGS = -I.. -I.
 
@@ -71,7 +71,10 @@ LD = ld
 LDFLAGS = -T linker.ld --strip-debug -melf_i386 --gc-sections --build-id=none -z norelro -z now
 
 
-all: $(KERNEL) $(IMAGE)
+all: $(KERNEL) $(IMAGE) kernel.map
+
+kernel.map: kernel
+	@echo "MKMAP $@"; sh mkmap.sh
 
 $(KERNEL): $(OBJS)
 	@echo "LD $@"; $(LD) $(LDFLAGS) -o $@ -Ttext 0x10000 $(OBJS)

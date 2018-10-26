@@ -122,6 +122,9 @@ public:
 
     size_t fileHandleCount() const { return m_fileHandles.size(); }
 
+    dword stackPtr() const { return m_tss.esp; }
+    dword stackTop() const { return m_tss.ss == 0x10 ? m_stackTop0 : m_stackTop3; }
+
 private:
     friend class MemoryManager;
     friend bool scheduleNewTask();
@@ -140,7 +143,8 @@ private:
     gid_t m_gid { 0 };
     DWORD m_ticks { 0 };
     DWORD m_ticksLeft { 0 };
-    DWORD m_stackTop { 0 };
+    DWORD m_stackTop0 { 0 };
+    DWORD m_stackTop3 { 0 };
     FarPtr m_farPtr;
     State m_state { Invalid };
     DWORD m_wakeupTime { 0 };

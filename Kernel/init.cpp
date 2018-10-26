@@ -28,6 +28,7 @@
 #include "RTC.h"
 
 #define TEST_VFS
+#define KERNEL_MAP
 //#define STRESS_TEST_SPAWNING
 //#define TEST_ELF_LOADER
 //#define TEST_CRASHY_USER_PROCESSES
@@ -47,6 +48,43 @@ void banner()
     kprintf("|_____|___|_| |___|___|_| |_|  \n");
     vga_set_attr(0x07);
     kprintf("\n");
+}
+
+static byte parseHexDigit(char nibble)
+{
+    if (nibble >= '0' && nibble <= '9')
+        return nibble - '0';
+    ASSERT(nibble >= 'a' && nibble <= 'f');
+    return 10 + (nibble - 'a');
+}
+
+static Vector<KSym>* s_ksyms;
+
+Vector<KSym>& ksyms()
+{
+    return *s_ksyms;
+}
+
+static void loadKernelMap(const ByteBuffer& buffer)
+{
+    s_ksyms = new Vector<KSym>;
+    auto* bufptr = (const char*)buffer.pointer();
+    auto* startOfName = bufptr;
+    dword address = 0;
+
+    while (bufptr < buffer.endPointer()) {
+        for (unsigned i = 0; i < 8; ++i)
+            address = (address << 4) | parseHexDigit(*(bufptr++));
+        bufptr += 3;
+        startOfName = bufptr;
+        while (*(++bufptr)) {
+            if (*bufptr == '\n') {
+                break;
+            }
+        }
+        ksyms().append({ address, String(startOfName, bufptr - startOfName) });
+        ++bufptr;
+    }
 }
 
 #ifdef TEST_CRASHY_USER_PROCESSES
@@ -107,6 +145,19 @@ static void init_stage2()
     e2fs->initialize();
 
     vfs->mountRoot(e2fs.copyRef());
+
+#ifdef KERNEL_MAP
+    {
+        auto handle = vfs->open("/kernel.map");
+        if (!handle) {
+            kprintf("Failed to open /kernel.map\n");
+        } else {
+            auto buffer = handle->readEntireFile();
+            ASSERT(buffer);
+            loadKernelMap(buffer);
+        }
+    }
+#endif
 
     vfs->mount(ProcFileSystem::the(), "/proc");
 

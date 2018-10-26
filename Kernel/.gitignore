@@ -2,3 +2,4 @@
 .floppy-image
 Boot/boot.bin
 kernel
+kernel.map
