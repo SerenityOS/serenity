@@ -64,13 +64,20 @@ bool ProcFileSystem::initialize()
 {
     SyntheticFileSystem::initialize();
 
+    addFile(createGeneratedFile("kmalloc", [] {
+        InterruptDisabler disabler;
+        auto buffer = ByteBuffer::createUninitialized(128);
+        char* ptr = (char*)buffer.pointer();
+        ptr += ksprintf(ptr, "alloc: %u\nfree:  %u\n", sum_alloc, sum_free);
+        buffer.trim(ptr - (char*)buffer.pointer());
+        return buffer;
+    }));
+
     addFile(createGeneratedFile("summary", [] {
         InterruptDisabler disabler;
         auto tasks = Task::allTasks();
-        char* buffer;
-        auto stringImpl = StringImpl::createUninitialized(tasks.size() * 256, buffer);
-        memset(buffer, 0, stringImpl->length());
-        char* ptr = buffer;
+        auto buffer = ByteBuffer::createUninitialized(tasks.size() * 256);
+        char* ptr = (char*)buffer.pointer();
         ptr += ksprintf(ptr, "PID    OWNER      STATE  PPID  NSCHED      FDS    NAME\n");
         for (auto* task : tasks) {
             ptr += ksprintf(ptr, "%w   %w:%w  %b     %w  %x    %w   %s\n",
@@ -83,9 +90,9 @@ bool ProcFileSystem::initialize()
                 task->fileHandleCount(),
                 task->name().characters());
         }
-        ptr += ksprintf(ptr, "kmalloc: alloc: %u / free: %u\n", sum_alloc, sum_free);
         *ptr = '\0';
-        return ByteBuffer::copy((byte*)buffer, ptr - buffer);
+        buffer.trim(ptr - (char*)buffer.pointer());
+        return buffer;
     }));
     return true;
 }
