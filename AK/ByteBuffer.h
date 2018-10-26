@@ -24,6 +24,11 @@ public:
             m_impl = move(other.m_impl);
         return *this;
     }
+    ByteBuffer& operator=(const ByteBuffer& other)
+    {
+        m_impl = other.m_impl.copyRef();
+        return *this;
+    }
 
     static ByteBuffer createEmpty() { return ByteBuffer(Buffer<byte>::createUninitialized(0)); }
     static ByteBuffer createUninitialized(size_t size) { return ByteBuffer(Buffer<byte>::createUninitialized(size)); }

@@ -16,6 +16,8 @@
 
 static const dword mepoch = 476763780;
 
+class FileHandle;
+
 class FileSystem : public Retainable<FileSystem> {
 public:
     static void initializeGlobals();
@@ -30,7 +32,7 @@ public:
     virtual bool writeInode(InodeIdentifier, const ByteBuffer&) = 0;
     virtual InodeMetadata inodeMetadata(InodeIdentifier) const = 0;
 
-    virtual Unix::ssize_t readInodeBytes(InodeIdentifier, Unix::off_t offset, Unix::size_t count, byte* buffer) const = 0;
+    virtual Unix::ssize_t readInodeBytes(InodeIdentifier, Unix::off_t offset, Unix::size_t count, byte* buffer, FileHandle*) const = 0;
 
     struct DirectoryEntry {
         String name;
@@ -44,7 +46,7 @@ public:
     virtual InodeIdentifier makeDirectory(InodeIdentifier parentInode, const String& name, Unix::mode_t) = 0;
 
     InodeIdentifier childOfDirectoryInodeWithName(InodeIdentifier, const String& name) const;
-    ByteBuffer readEntireInode(InodeIdentifier) const;
+    ByteBuffer readEntireInode(InodeIdentifier, FileHandle* = nullptr) const;
 
 protected:
     FileSystem();

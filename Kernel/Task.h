@@ -122,8 +122,12 @@ public:
 
     size_t fileHandleCount() const { return m_fileHandles.size(); }
 
+    dword framePtr() const { return m_tss.ebp; }
     dword stackPtr() const { return m_tss.esp; }
     dword stackTop() const { return m_tss.ss == 0x10 ? m_stackTop0 : m_stackTop3; }
+
+    bool isValidAddressForKernel(LinearAddress) const;
+    bool isValidAddressForUser(LinearAddress) const;
 
 private:
     friend class MemoryManager;

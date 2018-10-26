@@ -1,4 +1,5 @@
 #include "SyntheticFileSystem.h"
+#include "FileHandle.h"
 #include <AK/StdLib.h>
 
 //#define SYNTHFS_DEBUG
@@ -188,7 +189,7 @@ bool SyntheticFileSystem::writeInode(InodeIdentifier, const ByteBuffer&)
     return false;
 }
 
-Unix::ssize_t SyntheticFileSystem::readInodeBytes(InodeIdentifier inode, Unix::off_t offset, Unix::size_t count, byte* buffer) const
+Unix::ssize_t SyntheticFileSystem::readInodeBytes(InodeIdentifier inode, Unix::off_t offset, Unix::size_t count, byte* buffer, FileHandle* handle) const
 {
     InterruptDisabler disabler;
 
@@ -204,12 +205,21 @@ Unix::ssize_t SyntheticFileSystem::readInodeBytes(InodeIdentifier inode, Unix::o
         return false;
     const File& file = *(*it).value;
     ByteBuffer generatedData;
-    if (file.generator)
-        generatedData = file.generator();
+    if (file.generator) {
+        if (!handle) {
+            generatedData = file.generator();
+        } else {
+            if (!handle->generatorCache())
+                handle->generatorCache() = file.generator();
+            generatedData = handle->generatorCache();
+        }
+    }
     auto* data = generatedData ? &generatedData : &file.data;
 
     Unix::ssize_t nread = min(static_cast<Unix::off_t>(data->size() - offset), static_cast<Unix::off_t>(count));
     memcpy(buffer, data->pointer() + offset, nread);
+    if (nread == 0 && handle && handle->generatorCache())
+        handle->generatorCache().clear();
     return nread;
 }
 

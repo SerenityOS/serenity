@@ -196,10 +196,10 @@ void exception_14_handler()
     asm ("movl %%cr2, %%eax":"=a"(faultAddress));
 
     auto& regs = *reinterpret_cast<RegisterDump*>(exception_state_dump);
-    kprintf("%s page fault: %u(%s), %s laddr=%p\n",
-        current->isRing0() ? "Kernel" : "User",
-        current->pid(),
+    kprintf("Ring%u page fault in %s(%u), %s laddr=%p\n",
+        regs.cs & 3,
         current->name().characters(),
+        current->pid(),
         exception_code & 2 ? "write" : "read",
         faultAddress);
 

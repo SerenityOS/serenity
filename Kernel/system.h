@@ -10,6 +10,7 @@ struct KSym {
 };
 
 Vector<KSym>& ksyms() PURE;
+const KSym* ksymbolicate(dword address) PURE;
 
 struct system_t
 {

@@ -65,6 +65,17 @@ Vector<KSym>& ksyms()
     return *s_ksyms;
 }
 
+const KSym* ksymbolicate(dword address)
+{
+    if (address < ksyms().first().address || address > ksyms().last().address)
+        return nullptr;
+    for (unsigned i = 0; i < ksyms().size(); ++i) {
+        if (address < ksyms()[i + 1].address)
+            return &ksyms()[i];
+    }
+    return nullptr;
+}
+
 static void loadKernelMap(const ByteBuffer& buffer)
 {
     s_ksyms = new Vector<KSym>;
