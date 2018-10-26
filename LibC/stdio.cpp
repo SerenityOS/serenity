@@ -1,6 +1,8 @@
 #include "stdio.h"
 #include "stdarg.h"
 #include "types.h"
+#include "string.h"
+#include "errno.h"
 #include <Kernel/Syscall.h>
 
 #define ALWAYS_INLINE __attribute__ ((always_inline))
@@ -167,6 +169,11 @@ int sprintf(char* buffer, const char* fmt, ...)
     buffer[ret] = '\0';
     va_end(ap);
     return ret;
+}
+
+void perror(const char* s)
+{
+    printf("%s: %s\n", s, strerror(errno));
 }
 
 }

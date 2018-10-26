@@ -26,10 +26,16 @@ static InlineLinkedList<Task>* s_tasks;
 static InlineLinkedList<Task>* s_deadTasks;
 static String* s_hostname;
 
-static String& hostname(InterruptDisabler&)
+static String& hostnameStorage(InterruptDisabler&)
 {
     ASSERT(s_hostname);
     return *s_hostname;
+}
+
+static String getHostname()
+{
+    InterruptDisabler disabler;
+    return hostnameStorage(disabler).isolatedCopy();
 }
 
 static bool contextSwitch(Task*);
@@ -177,14 +183,10 @@ int Task::sys$munmap(void* addr, size_t size)
 
 int Task::sys$gethostname(char* buffer, size_t size)
 {
-    String hn;
-    {
-        InterruptDisabler disabler;
-        hn = hostname(disabler).isolatedCopy();
-    }
-    if (size < (hn.length() + 1))
+    auto hostname = getHostname();
+    if (size < (hostname.length() + 1))
         return -ENAMETOOLONG;
-    memcpy(buffer, hn.characters(), size);
+    memcpy(buffer, hostname.characters(), size);
     return 0;
 }
 
@@ -758,6 +760,16 @@ int Task::sys$open(const char* path, size_t pathLength)
     handle->setFD(fd);
     m_fileHandles.append(move(handle));
     return fd;
+}
+
+int Task::sys$uname(utsname* buf)
+{
+    strcpy(buf->sysname, "Serenity");
+    strcpy(buf->release, "1.0-dev");
+    strcpy(buf->version, "FIXME");
+    strcpy(buf->machine, "i386");
+    strcpy(buf->nodename, getHostname().characters());
+    return 0;
 }
 
 int Task::sys$kill(pid_t pid, int sig)
