@@ -12,6 +12,23 @@ size_t strlen(const char* str)
     return len;
 }
 
+int strcmp(const char* s1, const char* s2)
+{
+    for (; *s1 == *s2; ++s1, ++s2) {
+        if (*s1 == 0)
+            return 0;
+    }
+    return *(const unsigned char*)s1 < *(const unsigned char*)s2 ? -1 : 1;
+}
+
+void memcpy(void* dest, const void* src, size_t n)
+{
+    auto* bdest = (unsigned char*)dest;
+    auto* bsrc = (const unsigned char*)src;
+    for (; n; --n)
+        *(bdest++) = *(bsrc++);
+}
+
 const char* strerror(int errnum)
 {
     switch (errnum) {
