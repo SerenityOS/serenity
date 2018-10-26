@@ -30,6 +30,7 @@ enum Function {
     PosixLstat = 0x1998,
     PosixGetcwd = 0x1999,
     PosixGettimeofday = 0x2000,
+    PosixGethostname = 0x2001,
 };
 
 void initialize();

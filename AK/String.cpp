@@ -22,6 +22,18 @@ String String::empty()
     return StringImpl::theEmptyStringImpl();
 }
 
+String String::isolatedCopy() const
+{
+    if (!m_impl)
+        return { };
+    if (!m_impl->length())
+        return empty();
+    char* buffer;
+    auto impl = StringImpl::createUninitialized(length(), buffer);
+    memcpy(buffer, m_impl->characters(), m_impl->length());
+    return String(move(*impl));
+}
+
 String String::substring(size_t start, size_t length) const
 {
     ASSERT(m_impl);

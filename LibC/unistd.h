@@ -14,6 +14,9 @@ pid_t waitpid(pid_t);
 char* getcwd(char* buffer, size_t size);
 int lstat(const char* path, stat* statbuf);
 int sleep(unsigned seconds);
+int gethostname(char*, size_t);
+
+#define HOST_NAME_MAX 64
 
 #define	S_IFMT 0170000
 #define	S_IFDIR 0040000
