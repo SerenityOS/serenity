@@ -100,6 +100,7 @@ public:
     int sys$getcwd(char*, size_t);
     int sys$sleep(unsigned seconds);
     int sys$gettimeofday(timeval*);
+    int sys$gethostname(char* name, size_t length);
 
     static void initialize();
 

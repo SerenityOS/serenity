@@ -7,4 +7,5 @@ sleep
 date
 false
 true
+hostname
 *.o

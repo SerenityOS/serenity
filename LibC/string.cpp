@@ -50,6 +50,7 @@ const char* strerror(int errnum)
     case EPIPE: return "Broken pipe";
     case EDOM: return "Math argument out of domain";
     case ERANGE: return "Math result not representable";
+    case ENAMETOOLONG: return "Name too long";
     case EOVERFLOW: return "Value too large for data type";
     }
     printf("strerror() missing string for errnum=%d\n", errnum);

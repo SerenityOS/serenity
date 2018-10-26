@@ -24,6 +24,13 @@ Task* s_kernelTask;
 static pid_t next_pid;
 static InlineLinkedList<Task>* s_tasks;
 static InlineLinkedList<Task>* s_deadTasks;
+static String* s_hostname;
+
+static String& hostname(InterruptDisabler&)
+{
+    ASSERT(s_hostname);
+    return *s_hostname;
+}
 
 static bool contextSwitch(Task*);
 
@@ -61,6 +68,7 @@ void Task::initialize()
     s_tasks = new InlineLinkedList<Task>;
     s_deadTasks = new InlineLinkedList<Task>;
     s_kernelTask = Task::createKernelTask(nullptr, "colonel");
+    s_hostname = new String("birx");
     redoKernelTaskTSS();
     loadTaskRegister(s_kernelTask->selector());
 }
@@ -165,6 +173,18 @@ int Task::sys$munmap(void* addr, size_t size)
     if (!deallocateRegion(*region))
         return -1;
     return 0;
+}
+
+int Task::sys$gethostname(char* buffer, size_t size)
+{
+    String hn;
+    {
+        InterruptDisabler disabler;
+        hn = hostname(disabler).isolatedCopy();
+    }
+    if (size < (hn.length() + 1))
+        return -ENAMETOOLONG;
+    memcpy(buffer, hn.characters(), size);
 }
 
 int Task::sys$spawn(const char* path)

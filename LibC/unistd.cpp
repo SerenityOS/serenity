@@ -62,5 +62,11 @@ int sleep(unsigned seconds)
     return Syscall::invoke(Syscall::Sleep, (dword)seconds);
 }
 
+int gethostname(char* buffer, size_t size)
+{
+    int rc = Syscall::invoke(Syscall::PosixGethostname, (dword)buffer, (dword)size);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
 }
 

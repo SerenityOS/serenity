@@ -69,6 +69,8 @@ public:
     bool operator==(const String&) const;
     bool operator!=(const String& other) const { return !(*this == other); }
 
+    String isolatedCopy() const;
+
     static String empty();
 
     StringImpl* impl() { return m_impl.ptr(); }
