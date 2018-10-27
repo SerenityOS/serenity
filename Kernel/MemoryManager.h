@@ -35,6 +35,8 @@ private:
 
 bool copyToZone(Zone&, const void* data, size_t);
 
+#define MM MemoryManager::the()
+
 class MemoryManager {
 public:
     static MemoryManager& the() PURE;
@@ -50,6 +52,11 @@ public:
     // HACK: don't use this jeez :(
     byte* quickMapOnePage(PhysicalAddress);
 
+    bool mapSubregion(Task&, Task::Subregion&);
+    bool unmapSubregion(Task&, Task::Subregion&);
+    bool mapSubregionsForTask(Task&);
+    bool unmapSubregionsForTask(Task&);
+
     bool mapRegion(Task&, Task::Region&);
     bool unmapRegion(Task&, Task::Region&);
     bool mapRegionsForTask(Task&);
@@ -62,6 +69,8 @@ private:
     void initializePaging();
     void flushEntireTLB();
     void flushTLB(LinearAddress);
+
+    void* allocatePageTable();
 
     void protectMap(LinearAddress, size_t length);
     void identityMap(LinearAddress, size_t length);

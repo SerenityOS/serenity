@@ -7,7 +7,7 @@
 
 #define ALWAYS_INLINE __attribute__ ((always_inline))
 
-static const char h[] = { '0','1','2','3','4','5','6','7', '8','9','a','b','c','d','e','f' };
+static constexpr const char* h = "0123456789abcdef";
 
 template<typename PutChFunc>
 ALWAYS_INLINE int printHex(PutChFunc putch, char*& bufptr, dword number, byte fields)

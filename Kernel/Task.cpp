@@ -13,6 +13,7 @@
 #include "i8253.h"
 #include "RTC.h"
 #include "ProcFileSystem.h"
+#include <AK/StdLib.h>
 
 //#define DEBUG_IO
 //#define TASK_DEBUG
@@ -132,9 +133,9 @@ Task::Region* Task::allocateRegion(size_t size, String&& name)
 {
     // FIXME: This needs sanity checks. What if this overlaps existing regions?
 
-    auto zone = MemoryManager::the().createZone(size);
+    auto zone = MM.createZone(size);
     ASSERT(zone);
-    m_regions.append(make<Region>(m_nextRegion, size, move(zone), move(name)));
+    m_regions.append(adopt(*new Region(m_nextRegion, size, move(zone), move(name))));
     m_nextRegion = m_nextRegion.offset(size).offset(16384);
     return m_regions.last().ptr();
 }
@@ -144,7 +145,7 @@ bool Task::deallocateRegion(Region& region)
     for (size_t i = 0; i < m_regions.size(); ++i) {
         if (m_regions[i].ptr() == &region) {
             // FIXME: This seems racy.
-            MemoryManager::the().unmapRegion(*this, region);
+            MM.unmapRegion(*this, region);
             m_regions.remove(i);
             return true;
         }
@@ -168,7 +169,7 @@ void* Task::sys$mmap(void* addr, size_t size)
     auto* region = allocateRegion(size, "mmap");
     if (!region)
         return (void*)-1;
-    MemoryManager::the().mapRegion(*this, *region);
+    MM.mapRegion(*this, *region);
     return (void*)region->linearAddress.get();
 }
 
@@ -250,39 +251,55 @@ Task* Task::createUserTask(const String& path, uid_t uid, gid_t gid, pid_t paren
     t->m_arguments = move(taskArguments);
 
     ExecSpace space;
+    Region* region = nullptr;
     space.hookableAlloc = [&] (const String& name, size_t size) {
         if (!size)
             return (void*)nullptr;
         size = ((size / 4096) + 1) * 4096;
-        Region* region = t->allocateRegion(size, String(name));
+        region = t->allocateRegion(size, String(name));
         ASSERT(region);
-        MemoryManager::the().mapRegion(*t, *region);
+        MM.mapRegion(*t, *region);
         return (void*)region->linearAddress.asPtr();
     };
     bool success = space.loadELF(move(elfData));
     if (!success) {
         // FIXME: This is ugly. If we need to do this, it should be at a different level.
-        MemoryManager::the().unmapRegionsForTask(*t);
-        MemoryManager::the().mapRegionsForTask(*current);
+        MM.unmapRegionsForTask(*t);
+        MM.mapRegionsForTask(*current);
         delete t;
         kprintf("Failure loading ELF %s\n", path.characters());
         error = -ENOEXEC;
         return nullptr;
     }
 
+    space.forEachArea([&] (const String& name, dword offset, size_t size, LinearAddress laddr) {
+        if (laddr.isNull())
+            return;
+        dword roundedOffset = offset & 0xfffff000;
+        size_t roundedSize = 4096 * ceilDiv((offset - roundedOffset) + size, 4096u);
+        LinearAddress roundedLaddr = laddr;
+        roundedLaddr.mask(0xfffff000);
+        t->m_subregions.append(make<Subregion>(*region, roundedOffset, roundedSize, roundedLaddr, String(name)));
+#ifdef SUBREGION_DEBUG
+        kprintf("   req subregion %s (offset: %u, size: %u) @ %p\n", name.characters(), offset, size, laddr.get());
+        kprintf("actual subregion %s (offset: %u, size: %u) @ %p\n", name.characters(), roundedOffset, roundedSize, roundedLaddr.get());
+#endif
+        MM.mapSubregion(*t, *t->m_subregions.last());
+    });
+
     t->m_tss.eip = (dword)space.symbolPtr("_start");
     if (!t->m_tss.eip) {
         // FIXME: This is ugly. If we need to do this, it should be at a different level.
-        MemoryManager::the().unmapRegionsForTask(*t);
-        MemoryManager::the().mapRegionsForTask(*current);
+        MM.unmapRegionsForTask(*t);
+        MM.mapRegionsForTask(*current);
         delete t;
         error = -ENOEXEC;
         return nullptr;
     }
 
     // FIXME: This is ugly. If we need to do this, it should be at a different level.
-    MemoryManager::the().unmapRegionsForTask(*t);
-    MemoryManager::the().mapRegionsForTask(*current);
+    MM.unmapRegionsForTask(*t);
+    MM.mapRegionsForTask(*current);
 
     s_tasks->prepend(t);
     system.nprocess++;
@@ -299,7 +316,7 @@ int Task::sys$get_arguments(int* argc, char*** argv)
     auto* region = allocateRegion(4096, "argv");
     if (!region)
         return -ENOMEM;
-    MemoryManager::the().mapRegion(*this, *region);
+    MM.mapRegion(*this, *region);
     char* argpage = (char*)region->linearAddress.get();
     *argc = m_arguments.size();
     *argv = (char**)argpage;
@@ -380,7 +397,7 @@ Task::Task(String&& name, uid_t uid, gid_t gid, pid_t parentPID, RingLevel ring)
     m_tss.ss = ss;
     m_tss.cs = cs;
 
-    m_tss.cr3 = MemoryManager::the().pageDirectoryBase().get();
+    m_tss.cr3 = MM.pageDirectoryBase().get();
 
     if (isRing0()) {
         // FIXME: This memory is leaked.
@@ -435,6 +452,18 @@ void Task::dumpRegions()
             region->size,
             region->name.characters());
     }
+
+    kprintf("Task %s(%u) subregions:\n", name().characters(), pid());
+    kprintf("REGION    OFFSET    BEGIN       END         SIZE        NAME\n");
+    for (auto& subregion : m_subregions) {
+        kprintf("%x  %x  %x -- %x    %x    %s\n",
+            subregion->region->linearAddress.get(),
+            subregion->offset,
+            subregion->linearAddress.get(),
+            subregion->linearAddress.offset(subregion->size - 1).get(),
+            subregion->size,
+            subregion->name.characters());
+    }
 }
 
 void Task::sys$exit(int status)
@@ -446,7 +475,7 @@ void Task::sys$exit(int status)
 
     setState(Exiting);
 
-    MemoryManager::the().unmapRegionsForTask(*this);
+    MM.unmapRegionsForTask(*this);
 
     s_tasks->remove(this);
 
@@ -474,7 +503,7 @@ void Task::taskDidCrash(Task* crashedTask)
 
     s_tasks->remove(crashedTask);
 
-    MemoryManager::the().unmapRegionsForTask(*crashedTask);
+    MM.unmapRegionsForTask(*crashedTask);
 
     if (!scheduleNewTask()) {
         kprintf("Task::taskDidCrash: Failed to schedule a new task :(\n");
@@ -630,11 +659,11 @@ static bool contextSwitch(Task* t)
         if (current->state() == Task::Running)
             current->setState(Task::Runnable);
 
-        bool success = MemoryManager::the().unmapRegionsForTask(*current);
+        bool success = MM.unmapRegionsForTask(*current);
         ASSERT(success);
     }
 
-    bool success = MemoryManager::the().mapRegionsForTask(*t);
+    bool success = MM.mapRegionsForTask(*t);
     ASSERT(success);
 
     current = t;
@@ -911,6 +940,20 @@ Task::Region::~Region()
 {
 }
 
+Task::Subregion::Subregion(Region& r, dword o, size_t s, LinearAddress l, String&& n)\
+    : region(r)
+    , offset(o)
+    , size(s)
+    , linearAddress(l)
+    , name(move(n))
+{
+}
+
+
+Task::Subregion::~Subregion()
+{
+}
+
 bool Task::isValidAddressForKernel(LinearAddress laddr) const
 {
     InterruptDisabler disabler;
@@ -926,6 +969,10 @@ bool Task::isValidAddressForUser(LinearAddress laddr) const
     InterruptDisabler disabler;
     for (auto& region: m_regions) {
         if (laddr >= region->linearAddress && laddr < region->linearAddress.offset(region->size))
+            return true;
+    }
+    for (auto& subregion: m_subregions) {
+        if (laddr >= subregion->linearAddress && laddr < subregion->linearAddress.offset(subregion->size))
             return true;
     }
     return false;

@@ -112,7 +112,7 @@ public:
     static void taskDidCrash(Task*);
 
     size_t regionCount() const { return m_regions.size(); }
-    const Vector<OwnPtr<Region>>& regions() const { return m_regions; }
+    const Vector<RetainPtr<Region>>& regions() const { return m_regions; }
     void dumpRegions();
 
     void didSchedule() { ++m_timesScheduled; }
@@ -166,7 +166,7 @@ private:
 
     RetainPtr<VirtualFileSystem::Node> m_cwd;
 
-    struct Region {
+    struct Region : public Retainable<Region> {
         Region(LinearAddress, size_t, RetainPtr<Zone>&&, String&&);
         ~Region();
         LinearAddress linearAddress;
@@ -174,12 +174,26 @@ private:
         RetainPtr<Zone> zone;
         String name;
     };
+
+    struct Subregion {
+        Subregion(Region&, dword offset, size_t, LinearAddress, String&& name);
+        ~Subregion();
+
+        RetainPtr<Region> region;
+        dword offset;
+        size_t size { 0 };
+        LinearAddress linearAddress;
+        String name;
+    };
+
     Region* allocateRegion(size_t, String&& name);
+    Region* allocateRegion(size_t, String&& name, LinearAddress);
     bool deallocateRegion(Region& region);
 
     Region* regionFromRange(LinearAddress, size_t);
 
-    Vector<OwnPtr<Region>> m_regions;
+    Vector<RetainPtr<Region>> m_regions;
+    Vector<OwnPtr<Subregion>> m_subregions;
 
     // FIXME: Implement some kind of ASLR?
     LinearAddress m_nextRegion;

@@ -8,7 +8,7 @@
 
 static MemoryManager* s_the;
 
-MemoryManager& MemoryManager::the()
+MemoryManager& MM
 {
     return *s_the;
 }
@@ -43,8 +43,8 @@ void MemoryManager::initializePaging()
 
     identityMap(LinearAddress(4096), 4 * MB);
  
-    // Put pages between 4MB and 16MB in the page freelist.
-    for (size_t i = (4 * MB) + 1024; i < (16 * MB); i += PAGE_SIZE) {
+    // Put pages between 4MB and 8MB in the page freelist.
+    for (size_t i = (4 * MB) + PAGE_SIZE; i < (8 * MB); i += PAGE_SIZE) {
         m_freePages.append(PhysicalAddress(i));
     }
 
@@ -54,6 +54,14 @@ void MemoryManager::initializePaging()
         "orl $0x80000001, %eax\n"
         "movl %eax, %cr0\n"
     );
+}
+
+void* MemoryManager::allocatePageTable()
+{
+    auto ppages = allocatePhysicalPages(1);
+    dword address = ppages[0].get();
+    identityMap(LinearAddress(address), 4096);
+    return (void*)address;
 }
 
 auto MemoryManager::ensurePTE(LinearAddress linearAddress) -> PageTableEntry
@@ -76,8 +84,13 @@ auto MemoryManager::ensurePTE(LinearAddress linearAddress) -> PageTableEntry
             pde.setPresent(true);
             pde.setWritable(true);
         } else {
-            // FIXME: We need an allocator!
-            ASSERT_NOT_REACHED();
+            auto* pageTable = allocatePageTable();
+            kprintf("allocated page table %u (for laddr=%p) at %p\n", pageDirectoryIndex, linearAddress.get(), pageTable);
+            memset(pageTable, 0, 4096);
+            pde.setPageTableBase((dword)pageTable);
+            pde.setUserAllowed(true);
+            pde.setPresent(true);
+            pde.setWritable(true);
         }
     }
     return PageTableEntry(&pde.pageTableBase()[pageTableIndex]);
@@ -190,7 +203,27 @@ bool MemoryManager::unmapRegion(Task& task, Task::Region& region)
         pte.setWritable(false);
         pte.setUserAllowed(false);
         flushTLB(laddr);
-//        kprintf("MM: >> Unmapped L%x => P%x <<\n", laddr, zone.m_pages[i].get());
+        //kprintf("MM: >> Unmapped L%x => P%x <<\n", laddr, zone.m_pages[i].get());
+    }
+    return true;
+}
+
+bool MemoryManager::unmapSubregion(Task& task, Task::Subregion& subregion)
+{
+    InterruptDisabler disabler;
+    auto& region = *subregion.region;
+    auto& zone = *region.zone;
+    size_t numPages = subregion.size / 4096;
+    ASSERT(numPages);
+    for (size_t i = 0; i < numPages; ++i) {
+        auto laddr = subregion.linearAddress.offset(i * PAGE_SIZE);
+        auto pte = ensurePTE(laddr);
+        pte.setPhysicalPageBase(0);
+        pte.setPresent(false);
+        pte.setWritable(false);
+        pte.setUserAllowed(false);
+        flushTLB(laddr);
+        //kprintf("MM: >> Unmapped subregion %s L%x => P%x <<\n", subregion.name.characters(), laddr, zone.m_pages[i].get());
     }
     return true;
 }
@@ -201,6 +234,31 @@ bool MemoryManager::unmapRegionsForTask(Task& task)
     for (auto& region : task.m_regions) {
         if (!unmapRegion(task, *region))
             return false;
+    }
+    for (auto& subregion : task.m_subregions) {
+        if (!unmapSubregion(task, *subregion))
+            return false;
+    }
+    return true;
+}
+
+bool MemoryManager::mapSubregion(Task& task, Task::Subregion& subregion)
+{
+    InterruptDisabler disabler;
+    auto& region = *subregion.region;
+    auto& zone = *region.zone;
+    size_t firstPage = subregion.offset / 4096;
+    size_t numPages = subregion.size / 4096;
+    ASSERT(numPages);
+    for (size_t i = 0; i < numPages; ++i) {
+        auto laddr = subregion.linearAddress.offset(i * PAGE_SIZE);
+        auto pte = ensurePTE(laddr);
+        pte.setPhysicalPageBase(zone.m_pages[firstPage + i].get());
+        pte.setPresent(true);
+        pte.setWritable(true);
+        pte.setUserAllowed(!task.isRing0());
+        flushTLB(laddr);
+        //kprintf("MM: >> Mapped subregion %s L%x => P%x (%u into region)<<\n", subregion.name.characters(), laddr, zone.m_pages[firstPage + i].get(), subregion.offset);
     }
     return true;
 }
@@ -229,6 +287,10 @@ bool MemoryManager::mapRegionsForTask(Task& task)
         if (!mapRegion(task, *region))
             return false;
     }
+    for (auto& subregion : task.m_subregions) {
+        if (!mapSubregion(task, *subregion))
+            return false;
+    }
     return true;
 }
 
@@ -243,7 +305,7 @@ bool copyToZone(Zone& zone, const void* data, size_t size)
     auto* dataptr = (const byte*)data;
     size_t remaining = size;
     for (size_t i = 0; i < zone.m_pages.size(); ++i) {
-        byte* dest = MemoryManager::the().quickMapOnePage(zone.m_pages[i]);
+        byte* dest = MM.quickMapOnePage(zone.m_pages[i]);
         kprintf("memcpy(%p, %p, %u)\n", dest, dataptr, min(PAGE_SIZE, remaining));
         memcpy(dest, dataptr, min(PAGE_SIZE, remaining));
         dataptr += PAGE_SIZE;

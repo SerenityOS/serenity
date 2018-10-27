@@ -101,17 +101,29 @@ char* ExecSpace::symbolPtr(const char* name)
     return nullptr;
 }
 
-char* ExecSpace::allocateArea(String&& name, unsigned size)
+void ExecSpace::allocateUniverse(size_t size)
 {
-    char* ptr;
+    ASSERT(!m_universe);
     if (hookableAlloc)
-        ptr = static_cast<char*>(hookableAlloc(name, size));
+        m_universe = static_cast<char*>(hookableAlloc("elf-sec", size));
     else
-        ptr = static_cast<char*>(kmalloc(size));
-    if (size)
-        ASSERT(ptr);
-    m_areas.append(make<Area>(move(name), ptr, size));
+        m_universe = static_cast<char*>(kmalloc(size));
+}
+
+char* ExecSpace::allocateArea(String&& name, unsigned size, dword offset, LinearAddress laddr)
+{
+    ASSERT(m_universe);
+    char* ptr = m_universe + offset;
+    m_areas.append(make<Area>(move(name), offset, ptr, size, laddr));
     return ptr;
+}
+
+void ExecSpace::forEachArea(Function<void(const String& name, dword offset, size_t size, LinearAddress)> callback)
+{
+    for (auto& a : m_areas) {
+        auto& area = *a;
+        callback(area.name, area.offset, area.size, area.laddr);
+    }
 }
 
 void ExecSpace::addSymbol(String&& name, char* ptr, unsigned size)
