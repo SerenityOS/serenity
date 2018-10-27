@@ -49,8 +49,8 @@ ByteBuffer procfs$pid_stack(Task& task)
 {
     InterruptDisabler disabler;
     if (current != &task) {
-        MemoryManager::the().unmapRegionsForTask(*current);
-        MemoryManager::the().mapRegionsForTask(task);
+        MM.unmapRegionsForTask(*current);
+        MM.mapRegionsForTask(task);
     }
     struct RecognizedSymbol {
         dword address;
@@ -78,8 +78,8 @@ ByteBuffer procfs$pid_stack(Task& task)
     }
     buffer.trim(bufptr - (char*)buffer.pointer());
     if (current != &task) {
-        MemoryManager::the().unmapRegionsForTask(task);
-        MemoryManager::the().mapRegionsForTask(*current);
+        MM.unmapRegionsForTask(task);
+        MM.mapRegionsForTask(*current);
     }
     return buffer;
 }

@@ -67,6 +67,7 @@ public:
         unsigned size() const { return m_sectionHeader.sh_size; }
         unsigned entrySize() const { return m_sectionHeader.sh_entsize; }
         unsigned entryCount() const { return size() / entrySize(); }
+        dword address() const { return m_sectionHeader.sh_addr; }
         const char* rawData() const { return m_image.rawData(m_sectionHeader.sh_offset); }
         bool isUndefined() const { return m_sectionIndex == SHN_UNDEF; }
         const RelocationSection relocations() const;
@@ -115,12 +116,16 @@ public:
     const Symbol symbol(unsigned) const;
     const Section section(unsigned) const;
 
+    template<typename F> void forEachSection(F) const;
     template<typename F> void forEachSectionOfType(unsigned, F) const;
     template<typename F> void forEachSymbol(F) const;
 
     // NOTE: Returns section(0) if section with name is not found.
     // FIXME: I don't love this API.
     const Section lookupSection(const char* name) const;
+
+    bool isExecutable() const { return header().e_type == ET_EXEC; }
+    bool isRelocatable() const { return header().e_type == ET_REL; }
 
 private:
     bool parseHeader();
@@ -141,6 +146,13 @@ private:
     unsigned m_symbolTableSectionIndex { 0 };
     unsigned m_stringTableSectionIndex { 0 };
 };
+
+template<typename F>
+inline void ELFImage::forEachSection(F func) const
+{
+    for (unsigned i = 0; i < sectionCount(); ++i)
+        func(section(i));
+}
 
 template<typename F>
 inline void ELFImage::forEachSectionOfType(unsigned type, F func) const

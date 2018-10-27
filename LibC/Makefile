@@ -22,7 +22,7 @@ INCLUDE_FLAGS = -I.. -I.
 DEFINES = -DSERENITY -DSANITIZE_PTRS
 
 CXXFLAGS = $(WARNING_FLAGS) $(OPTIMIZATION_FLAGS) $(LIBC_FLAGS) $(FLAVOR_FLAGS) $(ARCH_FLAGS) $(STANDARD_FLAGS) $(INCLUDE_FLAGS) $(DEFINES)
-CXX = g++
+CXX = g++-8
 LD = ld
 AR = ar
 LDFLAGS = -T linker.ld --strip-debug -melf_i386 --gc-sections --build-id=none -z norelro -z now

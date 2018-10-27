@@ -1,21 +1,24 @@
 #include <LibC/stdio.h>
 #include <LibC/unistd.h>
 #include <LibC/dirent.h>
+#include <LibC/errno.h>
+#include <LibC/string.h>
 
 int main(int c, char** v)
 {
     DIR* dirp = opendir(".");
     if (!dirp) {
-        printf("opendir failed :(\n");
+        perror("opendir failed");
         return 1;
     }
     char pathbuf[256];
     while (auto* de = readdir(dirp)) {
         sprintf(pathbuf, "%s", de->d_name);
+
         stat st;
         int rc = lstat(pathbuf, &st);
         if (rc == -1) {
-            printf("Failed to stat '%s'\n", pathbuf);
+            printf("lstat(%s) failed: %s\n", pathbuf, strerror(errno));
             return 2;
         }
 

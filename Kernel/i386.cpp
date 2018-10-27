@@ -218,10 +218,22 @@ void exception_14_handler()
     kprintf("eax=%x ebx=%x ecx=%x edx=%x\n", regs.eax, regs.ebx, regs.ecx, regs.edx);
     kprintf("ebp=%x esp=%x esi=%x edi=%x\n", regs.ebp, esp, regs.esi, regs.edi);
 
+    byte* codeptr = (byte*)regs.eip;
+    kprintf("code: %b %b %b %b %b %b %b %b\n",
+            codeptr[0],
+            codeptr[1],
+            codeptr[2],
+            codeptr[3],
+            codeptr[4],
+            codeptr[5],
+            codeptr[6],
+            codeptr[7]
+    );
+
     if (current->isRing0())
         HANG;
 
-    auto response = MemoryManager::the().handlePageFault(PageFault(exception_code, LinearAddress(faultAddress)));
+    auto response = MM.handlePageFault(PageFault(exception_code, LinearAddress(faultAddress)));
 
     if (response == PageFaultResponse::ShouldCrash) {
         kprintf("Crashing after unresolved page fault\n");

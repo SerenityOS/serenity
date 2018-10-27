@@ -40,13 +40,26 @@ bool ELFLoader::layout()
     kprintf("[ELFLoader] Layout\n");
 #endif
     bool failed = false;
+    dword highestOffset = 0;
+    dword sizeNeeded = 0;
+    m_image->forEachSection([&] (auto& section) {
+        if (section.offset() > highestOffset) {
+            highestOffset = section.offset();
+            sizeNeeded = highestOffset + section.size();
+        }
+    });
+#ifdef ELFLOADER_DEBUG
+    kprintf("[ELFLoader] Highest section offset: %u, Size needed: %u\n", highestOffset, sizeNeeded);
+#endif
+    m_execSpace.allocateUniverse(sizeNeeded);
+
     m_image->forEachSectionOfType(SHT_PROGBITS, [this, &failed] (const ELFImage::Section& section) {
 #ifdef ELFLOADER_DEBUG
         kprintf("[ELFLoader] Allocating progbits section: %s\n", section.name());
 #endif
         if (!section.size())
             return true;
-        char* ptr = m_execSpace.allocateArea(section.name(), section.size());
+        char* ptr = m_execSpace.allocateArea(section.name(), section.size(), section.offset(), LinearAddress(section.address()));
         if (!ptr) {
             kprintf("ELFLoader: failed to allocate section '%s'\n", section.name());
             failed = true;
@@ -62,7 +75,7 @@ bool ELFLoader::layout()
 #endif
         if (!section.size())
             return true;
-        char* ptr = m_execSpace.allocateArea(section.name(), section.size());
+        char* ptr = m_execSpace.allocateArea(section.name(), section.size(), section.offset(), LinearAddress(section.address()));
         if (!ptr) {
             kprintf("ELFLoader: failed to allocate section '%s'\n", section.name());
             failed = true;
@@ -163,8 +176,16 @@ void ELFLoader::exportSymbols()
 #ifdef ELFLOADER_DEBUG
         kprintf("symbol: %u, type=%u, name=%s, section=%u\n", symbol.index(), symbol.type(), symbol.name(), symbol.sectionIndex());
 #endif
-        if (symbol.type() == STT_FUNC)
-            m_execSpace.addSymbol(symbol.name(), areaForSection(symbol.section()) + symbol.value(), symbol.size());
+        if (symbol.type() == STT_FUNC) {
+            char* ptr;
+            if (m_image->isExecutable())
+                ptr = (char*)symbol.value();
+            else if (m_image->isRelocatable())
+                ptr = areaForSection(symbol.section()) + symbol.value();
+            else
+                ASSERT_NOT_REACHED();
+            m_execSpace.addSymbol(symbol.name(), ptr, symbol.size());
+        }
         // FIXME: What about other symbol types?
         return true;
     });
