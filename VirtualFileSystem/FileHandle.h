@@ -1,6 +1,7 @@
 #pragma once
 
 #include "VirtualFileSystem.h"
+#include "InodeMetadata.h"
 #include <AK/ByteBuffer.h>
 
 class FileHandle {
@@ -21,6 +22,8 @@ public:
     String absolutePath() const;
 
     bool isDirectory() const;
+
+    InodeMetadata metadata() const { return m_vnode->metadata(); }
 
     VirtualFileSystem::Node* vnode() { return m_vnode.ptr(); }
 

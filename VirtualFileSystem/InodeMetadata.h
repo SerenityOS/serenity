@@ -17,6 +17,15 @@ inline bool isSetGID(Unix::mode_t mode) { return mode & 02000; }
 struct InodeMetadata {
     bool isValid() const { return inode.isValid(); }
 
+    bool mayExecute(uid_t u, gid_t g) const
+    {
+        if (uid == u)
+            return mode & 0100;
+        if (gid == g)
+            return mode & 0010;
+        return mode & 0001;
+    }
+
     bool isDirectory() const { return ::isDirectory(mode); }
     bool isCharacterDevice() const { return ::isCharacterDevice(mode); }
     bool isBlockDevice() const { return ::isBlockDevice(mode); }

@@ -22,6 +22,8 @@ int main(int c, char** v)
             return 2;
         }
 
+        printf("%08u ", de->d_ino);
+
         if (S_ISDIR(st.st_mode))
             printf("d");
         else if (S_ISLNK(st.st_mode))
@@ -53,8 +55,9 @@ int main(int c, char** v)
         else
             printf("%c", st.st_mode & S_IXOTH ? 'x' : '-');
 
-        printf(" i:%x ", de->d_ino);
-        printf(" %x  ", st.st_size);
+        printf(" %4u %4u", st.st_uid, st.st_gid);
+
+        printf(" %10u  ", st.st_size);
         printf("%s%c", de->d_name, S_ISDIR(st.st_mode) ? '/' : ' ');
         printf("\n");
     }
