@@ -230,6 +230,11 @@ Task* Task::createUserTask(const String& path, uid_t uid, gid_t gid, pid_t paren
         return nullptr;
     }
 
+    if (!handle->metadata().mayExecute(uid, gid)) {
+        error = -EACCES;
+        return nullptr;
+    }
+
     auto elfData = handle->readEntireFile();
     if (!elfData) {
         error = -EIO; // FIXME: Get a more detailed error from VFS.
