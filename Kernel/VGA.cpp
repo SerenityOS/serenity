@@ -15,6 +15,12 @@ void vga_scroll_up()
     memset(vga_mem + (160 * 24), 0, 160);
 }
 
+void vga_clear()
+{
+    InterruptDisabler disabler;
+    memset(vga_mem, 0, 160 * 25);
+}
+
 void vga_putch_at(byte row, byte column, byte ch)
 {
     word cur = (row * 160) + (column * 2);
