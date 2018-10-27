@@ -47,5 +47,5 @@ clean:
 	rm -f $(OBJS) $(PROGRAM)
 
 $(PROGRAM): $(OBJS)
-	$(CXX) $(LDFLAGS) -o $@ $(OBJS)
+	$(CXX) -o $@ $(OBJS) $(LDFLAGS)
 
