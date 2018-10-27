@@ -1,8 +1,10 @@
+#define ALWAYS_INLINE inline __attribute__ ((always_inline))
+
 typedef unsigned char byte;
 typedef unsigned short word;
 typedef unsigned int dword;
 
-inline size_t strlen(const char* str)
+ALWAYS_INLINE size_t strlen(const char* str)
 {
     size_t len = 0;
     while (*(str++))
@@ -13,7 +15,7 @@ inline size_t strlen(const char* str)
 static constexpr const char* h = "0123456789abcdef";
 
 template<typename PutChFunc>
-int printHex(PutChFunc putch, char*& bufptr, dword number, byte fields)
+ALWAYS_INLINE int printHex(PutChFunc putch, char*& bufptr, dword number, byte fields)
 {
     int ret = 0;
     byte shr_count = fields * 4;
@@ -26,7 +28,7 @@ int printHex(PutChFunc putch, char*& bufptr, dword number, byte fields)
 }
 
 template<typename PutChFunc>
-int printNumber(PutChFunc putch, char*& bufptr, dword number, bool leftPad, bool zeroPad, dword fieldWidth)
+ALWAYS_INLINE int printNumber(PutChFunc putch, char*& bufptr, dword number, bool leftPad, bool zeroPad, dword fieldWidth)
 {
     dword divisor = 1000000000;
     char ch;
@@ -67,7 +69,7 @@ int printNumber(PutChFunc putch, char*& bufptr, dword number, bool leftPad, bool
 }
 
 template<typename PutChFunc>
-int printString(PutChFunc putch, char*& bufptr, const char* str, bool leftPad, dword fieldWidth)
+ALWAYS_INLINE int printString(PutChFunc putch, char*& bufptr, const char* str, bool leftPad, dword fieldWidth)
 {
     size_t len = strlen(str);
     if (!fieldWidth)
@@ -88,7 +90,7 @@ int printString(PutChFunc putch, char*& bufptr, const char* str, bool leftPad, d
 
 
 template<typename PutChFunc>
-int printSignedNumber(PutChFunc putch, char*& bufptr, int number, bool leftPad, bool zeroPad, dword fieldWidth)
+ALWAYS_INLINE int printSignedNumber(PutChFunc putch, char*& bufptr, int number, bool leftPad, bool zeroPad, dword fieldWidth)
 {
     if (number < 0) {
         putch(bufptr, '-');
@@ -98,7 +100,7 @@ int printSignedNumber(PutChFunc putch, char*& bufptr, int number, bool leftPad, 
 }
 
 template<typename PutChFunc>
-int printfInternal(PutChFunc putch, char* buffer, const char*& fmt, char*& ap)
+ALWAYS_INLINE int printfInternal(PutChFunc putch, char* buffer, const char*& fmt, char*& ap)
 {
     const char *p;
 
