@@ -14,6 +14,7 @@ cp ../Userland/hostname mnt/bin/hostname
 cp ../Userland/cat mnt/bin/cat
 cp ../Userland/uname mnt/bin/uname
 cp ../Userland/clear mnt/bin/clear
+cp ../Userland/tst mnt/bin/tst
 cp kernel.map mnt/
 umount mnt
 sync
