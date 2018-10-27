@@ -3,3 +3,4 @@
 Boot/boot.bin
 kernel
 kernel.map
+_fs_contents
