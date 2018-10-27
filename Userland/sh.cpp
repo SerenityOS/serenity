@@ -6,13 +6,14 @@
 #include <LibC/stdlib.h>
 
 char* g_cwd = nullptr;
+char g_hostname[32];
 
 static void prompt()
 {
     if (getuid() == 0)
         printf("# ");
     else
-        printf("$ ");
+        printf("\033[32;1m%s\033[0m:\033[34;1m%s\033[0m$> ", g_hostname, g_cwd);
 }
 
 static int sh_pwd(int, const char**)
@@ -114,6 +115,10 @@ static int runcmd(char* cmd)
 
 int main(int, char**)
 {
+    int rc = gethostname(g_hostname, sizeof(g_hostname));
+    if (rc < 0)
+        perror("gethostname");
+
     char linebuf[128];
     int linedx = 0;
     linebuf[0] = '\0';
