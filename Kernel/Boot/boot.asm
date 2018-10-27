@@ -21,6 +21,10 @@ boot:
     cmp     al, 0
     jne     .lewp
 
+    ; Enable A20
+    mov     ax, 0x2401
+    int     0x15
+
     mov     bx, 0x1000
     mov     es, bx
     xor     bx, bx              ; Load kernel @ 0x10000
