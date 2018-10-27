@@ -11,7 +11,8 @@ OBJS = \
        hostname.o \
        cat.o \
        uname.o \
-       clear.o
+       clear.o \
+       tst.o
 
 APPS = \
        id \
@@ -26,7 +27,8 @@ APPS = \
        hostname \
        cat \
        uname \
-       clear
+       clear \
+       tst
 
 ARCH_FLAGS =
 STANDARD_FLAGS = -std=c++17 -nostdinc++ -nostdlib
@@ -83,6 +85,9 @@ uname: uname.o
 	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
 
 clear: clear.o
+	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
+
+tst: tst.o
 	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
 
 .cpp.o:

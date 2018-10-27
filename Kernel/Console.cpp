@@ -171,8 +171,20 @@ void Console::escape$m(const Vector<unsigned>& params)
             break;
         }
     }
-
     vga_set_attr(m_currentAttribute);
+}
+
+void Console::escape$s(const Vector<unsigned>&)
+{
+    m_savedCursorRow = m_cursorRow;
+    m_savedCursorColumn = m_cursorColumn;
+}
+
+void Console::escape$u(const Vector<unsigned>&)
+{
+    m_cursorRow = m_savedCursorRow;
+    m_cursorColumn = m_savedCursorColumn;
+    vga_set_cursor(m_cursorRow, m_cursorColumn);
 }
 
 void Console::escape$H(const Vector<unsigned>& params)
@@ -229,6 +241,8 @@ void Console::executeEscapeSequence(byte final)
     case 'H': escape$H(params); break;
     case 'J': escape$J(params); break;
     case 'm': escape$m(params); break;
+    case 's': escape$s(params); break;
+    case 'u': escape$u(params); break;
     default: break;
     }
 
