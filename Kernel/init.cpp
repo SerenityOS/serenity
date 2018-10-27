@@ -27,7 +27,7 @@
 #include "RTC.h"
 
 #define TEST_VFS
-#define KERNEL_MAP
+#define KSYMS
 //#define STRESS_TEST_SPAWNING
 //#define TEST_ELF_LOADER
 
@@ -74,7 +74,7 @@ const KSym* ksymbolicate(dword address)
     return nullptr;
 }
 
-static void loadKernelMap(const ByteBuffer& buffer)
+static void loadKsyms(const ByteBuffer& buffer)
 {
     s_ksyms = new Vector<KSym>;
     auto* bufptr = (const char*)buffer.pointer();
@@ -139,7 +139,7 @@ static void init_stage2()
 
     vfs->mountRoot(e2fs.copyRef());
 
-#ifdef KERNEL_MAP
+#ifdef KSYMS
     {
         auto handle = vfs->open("/kernel.map");
         if (!handle) {
@@ -147,7 +147,7 @@ static void init_stage2()
         } else {
             auto buffer = handle->readEntireFile();
             ASSERT(buffer);
-            loadKernelMap(buffer);
+            loadKsyms(buffer);
         }
     }
 #endif
