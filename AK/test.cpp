@@ -33,7 +33,6 @@ int main(int, char**)
         for (auto& it : tab) {
             printf("%s\n", it.value.s.characters());
         }
-        return 0;
     }
 
     {
