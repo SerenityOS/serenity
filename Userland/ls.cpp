@@ -6,6 +6,8 @@
 
 int main(int c, char** v)
 {
+    bool colorize = true;
+
     DIR* dirp = opendir(".");
     if (!dirp) {
         perror("opendir failed");
@@ -58,7 +60,26 @@ int main(int c, char** v)
         printf(" %4u %4u", st.st_uid, st.st_gid);
 
         printf(" %10u  ", st.st_size);
-        printf("%s%c", de->d_name, S_ISDIR(st.st_mode) ? '/' : ' ');
+
+        const char* beginColor = "";
+        const char* endColor = "";
+
+        if (colorize) {
+            if (S_ISDIR(st.st_mode))
+                beginColor = "\033[34;1m";
+            else if (st.st_mode & 0111)
+                beginColor = "\033[32;1m";
+            else if (S_ISCHR(st.st_mode) || S_ISBLK(st.st_mode))
+                beginColor = "\033[33;1m";
+            endColor = "\033[0m";
+        }
+
+        printf("%s%s%s", beginColor, de->d_name, endColor);
+
+        if (S_ISDIR(st.st_mode))
+            printf("/");
+        else if (st.st_mode & 0111)
+            printf("*");
         printf("\n");
     }
     return 0;
