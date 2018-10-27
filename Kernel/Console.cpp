@@ -66,11 +66,119 @@ unsigned parseUInt(const String& str, bool& ok)
     return value;
 }
 
+enum class VGAColor : byte {
+    Black = 0,
+    Blue,
+    Green,
+    Cyan,
+    Red,
+    Magenta,
+    Brown,
+    LightGray,
+    DarkGray,
+    BrightBlue,
+    BrightGreen,
+    BrightCyan,
+    BrightRed,
+    BrightMagenta,
+    Yellow,
+    White,
+};
+
+enum class ANSIColor : byte {
+    Black = 0,
+    Red,
+    Green,
+    Brown,
+    Blue,
+    Magenta,
+    Cyan,
+    LightGray,
+    DarkGray,
+    BrightRed,
+    BrightGreen,
+    Yellow,
+    BrightBlue,
+    BrightMagenta,
+    BrightCyan,
+    White,
+};
+
+static inline VGAColor ansiColorToVGA(ANSIColor color)
+{
+    switch (color) {
+    case ANSIColor::Black: return VGAColor::Black;
+    case ANSIColor::Red: return VGAColor::Red;
+    case ANSIColor::Brown: return VGAColor::Brown;
+    case ANSIColor::Blue: return VGAColor::Blue;
+    case ANSIColor::Magenta: return VGAColor::Magenta;
+    case ANSIColor::Green: return VGAColor::Green;
+    case ANSIColor::Cyan: return VGAColor::Cyan;
+    case ANSIColor::LightGray: return VGAColor::LightGray;
+    case ANSIColor::DarkGray: return VGAColor::DarkGray;
+    case ANSIColor::BrightRed: return VGAColor::BrightRed;
+    case ANSIColor::BrightGreen: return VGAColor::BrightGreen;
+    case ANSIColor::Yellow: return VGAColor::Yellow;
+    case ANSIColor::BrightBlue: return VGAColor::BrightBlue;
+    case ANSIColor::BrightMagenta: return VGAColor::BrightMagenta;
+    case ANSIColor::BrightCyan: return VGAColor::BrightCyan;
+    case ANSIColor::White: return VGAColor::White;
+    }
+    ASSERT_NOT_REACHED();
+    return VGAColor::LightGray;
+}
+
+static inline byte ansiColorToVGA(byte color)
+{
+    return (byte)ansiColorToVGA((ANSIColor)color);
+}
+
+void Console::escape$m(const Vector<unsigned>& params)
+{
+    for (auto param : params) {
+        switch (param) {
+        case 0:
+            // Reset
+            m_currentAttribute = 0x07;
+            break;
+        case 1:
+            // Bold
+            m_currentAttribute |= 8;
+            break;
+        case 30:
+        case 31:
+        case 32:
+        case 33:
+        case 34:
+        case 35:
+        case 36:
+        case 37:
+            // Foreground color
+            m_currentAttribute &= ~0x7;
+            m_currentAttribute |= ansiColorToVGA(param - 30);
+            break;
+        case 40:
+        case 41:
+        case 42:
+        case 43:
+        case 44:
+        case 45:
+        case 46:
+        case 47:
+            // Background color
+            m_currentAttribute &= ~0x70;
+            m_currentAttribute |= ansiColorToVGA(param - 30) << 8;
+            break;
+        }
+    }
+
+    vga_set_attr(m_currentAttribute);
+}
+
 void Console::escape$H(const Vector<unsigned>& params)
 {
     unsigned row = 1;
     unsigned col = 1;
-
     if (params.size() >= 1)
         row = params[0];
     if (params.size() >= 2)
@@ -120,6 +228,7 @@ void Console::executeEscapeSequence(byte final)
     switch (final) {
     case 'H': escape$H(params); break;
     case 'J': escape$J(params); break;
+    case 'm': escape$m(params); break;
     default: break;
     }
 
