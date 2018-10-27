@@ -10,4 +10,4 @@ void vga_set_cursor(BYTE row, BYTE column);
 WORD vga_get_cursor();
 void vga_putch_at(byte row, byte column, byte ch);
 void vga_scroll_up();
-
+void vga_clear();
