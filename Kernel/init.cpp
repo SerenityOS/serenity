@@ -35,17 +35,7 @@ system_t system;
 
 void banner()
 {
-    kprintf("\n");
-    vga_set_attr(0x0a);
-    kprintf(" _____         _           _   \n");
-    vga_set_attr(0x0b);
-    kprintf("|   __|___ ___| |_ ___ ___| |_ \n");
-    vga_set_attr(0x0c);
-    kprintf("|  |  | -_|  _| . | -_|  _|  _|\n");
-    vga_set_attr(0x0d);
-    kprintf("|_____|___|_| |___|___|_| |_|  \n");
-    vga_set_attr(0x07);
-    kprintf("\n");
+    kprintf("\n\033[33;1mWelcome to \033[36;1mSerenity OS!\033[0m\n\n");
 }
 
 static byte parseHexDigit(char nibble)

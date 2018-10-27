@@ -20,6 +20,7 @@ public:
 private:
     void escape$H(const Vector<unsigned>&);
     void escape$J(const Vector<unsigned>&);
+    void escape$m(const Vector<unsigned>&);
 
     const byte m_rows { 25 };
     const byte m_columns { 80 };
