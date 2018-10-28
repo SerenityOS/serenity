@@ -98,6 +98,7 @@ public:
     pid_t sys$waitpid(pid_t, int* wstatus, int options);
     void* sys$mmap(void*, size_t size);
     int sys$munmap(void*, size_t size);
+    int sys$set_mmap_name(void*, size_t, const char*);
     int sys$get_dir_entries(int fd, void*, size_t);
     int sys$getcwd(char*, size_t);
     int sys$chdir(const char*);

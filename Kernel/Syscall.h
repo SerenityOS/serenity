@@ -34,6 +34,7 @@ enum Function {
     GetArguments = 0x2002,
     PosixChdir = 0x2003,
     PosixUname = 0x2004,
+    SetMmapName = 0x2005,
 };
 
 void initialize();
