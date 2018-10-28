@@ -16,4 +16,10 @@ int munmap(void* addr, size_t size)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
+int set_mmap_name(void* addr, size_t size, const char* name)
+{
+    int rc = Syscall::invoke(Syscall::SetMmapName, (dword)addr, (dword)size, (dword)name);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
 }

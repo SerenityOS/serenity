@@ -1,5 +1,6 @@
 #include "stdlib.h"
 #include "mman.h"
+#include "stdio.h"
 #include <Kernel/Syscall.h>
 #include <AK/Assertions.h>
 
@@ -12,6 +13,12 @@ void* malloc(size_t size)
         *crashme = 0;
     }
     void* ptr = mmap(nullptr, 4096);
+    if (ptr) {
+        int rc = set_mmap_name(ptr, 4096, "malloc");
+        if (rc < 0) {
+            perror("set_mmap_name failed");
+        }
+    }
     return ptr;
 }
 

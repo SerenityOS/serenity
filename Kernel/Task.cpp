@@ -18,6 +18,13 @@
 //#define DEBUG_IO
 //#define TASK_DEBUG
 
+#define VALIDATE_USER_BUFFER(b, s) \
+    do { \
+        LinearAddress laddr((dword)(b)); \
+        if (!isValidAddressForUser(laddr) || !isValidAddressForUser(laddr.offset((s) - 1))) \
+            return -EFAULT; \
+    } while(0)
+
 static const DWORD defaultStackSize = 16384;
 
 Task* current;
@@ -145,7 +152,6 @@ bool Task::deallocateRegion(Region& region)
     InterruptDisabler disabler;
     for (size_t i = 0; i < m_regions.size(); ++i) {
         if (m_regions[i].ptr() == &region) {
-            // FIXME: This seems racy.
             MM.unmapRegion(*this, region);
             m_regions.remove(i);
             return true;
@@ -161,6 +167,16 @@ Task::Region* Task::regionFromRange(LinearAddress laddr, size_t size)
             return region.ptr();
     }
     return nullptr;
+}
+
+int Task::sys$set_mmap_name(void* addr, size_t size, const char* name)
+{
+    VALIDATE_USER_BUFFER(name, strlen(name));
+    auto* region = regionFromRange(LinearAddress((dword)addr), size);
+    if (!region)
+        return -EINVAL;
+    region->name = name;
+    return 0;
 }
 
 void* Task::sys$mmap(void* addr, size_t size)
@@ -183,13 +199,6 @@ int Task::sys$munmap(void* addr, size_t size)
         return -1;
     return 0;
 }
-
-#define VALIDATE_USER_BUFFER(b, s) \
-    do { \
-        LinearAddress laddr((dword)(b)); \
-        if (!isValidAddressForUser(laddr) || !isValidAddressForUser(laddr.offset((s) - 1))) \
-            return -EFAULT; \
-    } while(0)
 
 int Task::sys$gethostname(char* buffer, size_t size)
 {
