@@ -10,12 +10,25 @@
 #include "Weakable.h"
 #include "WeakPtr.h"
 #include "CircularQueue.h"
+#include "FileSystemPath.h"
 
 static void testWeakPtr();
 
-int main(int, char**)
+int main(int c, char** v)
 {
     StringImpl::initializeGlobals();
+
+    {
+        const char* testpath = "/proc/../proc/1/../../proc/1/vm";
+        if (c == 2)
+            testpath = v[1];
+        FileSystemPath p(testpath);
+        if (p.string().isNull())
+            printf("canonicalized path is null\n");
+        else
+            printf("%s\n", p.string().characters());
+        return 0;
+    }
 
     {
         struct entry {
