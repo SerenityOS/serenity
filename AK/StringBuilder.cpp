@@ -4,7 +4,7 @@ namespace AK {
 
 void StringBuilder::append(String&& str)
 {
-    m_strings.append(std::move(str));
+    m_strings.append(move(str));
 }
 
 void StringBuilder::append(char ch)
@@ -14,11 +14,25 @@ void StringBuilder::append(char ch)
 
 String StringBuilder::build()
 {
-    auto strings = std::move(m_strings);
+    auto strings = move(m_strings);
     if (strings.isEmpty())
         return String::empty();
 
-    return String();
+    size_t sizeNeeded = 1;
+    for (auto& string : strings)
+        sizeNeeded += string.length();
+
+    char* buffer;
+    auto impl = StringImpl::createUninitialized(sizeNeeded, buffer);
+    if (!impl)
+        return String();
+
+    for (auto& string : strings) {
+        memcpy(buffer, string.characters(), string.length());
+        buffer += string.length();
+    }
+    *buffer = '\0';
+    return String(move(impl));
 }
 
 }
