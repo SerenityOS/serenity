@@ -87,7 +87,7 @@ public:
     uid_t sys$getuid();
     gid_t sys$getgid();
     pid_t sys$getpid();
-    int sys$open(const char* path, size_t pathLength);
+    int sys$open(const char* path, int options);
     int sys$close(int fd);
     int sys$read(int fd, void* outbuf, size_t nread);
     int sys$lstat(const char*, Unix::stat*);
@@ -108,6 +108,7 @@ public:
     int sys$gethostname(char* name, size_t length);
     int sys$get_arguments(int* argc, char*** argv);
     int sys$uname(utsname*);
+    int sys$readlink(const char*, char*, size_t);
 
     static void initialize();
 
@@ -134,12 +135,13 @@ public:
     bool isValidAddressForUser(LinearAddress) const;
 
     InodeIdentifier cwdInode() const { return m_cwd ? m_cwd->inode : InodeIdentifier(); }
+    InodeIdentifier executableInode() const { return m_executable ? m_executable->inode : InodeIdentifier(); }
 
 private:
     friend class MemoryManager;
     friend bool scheduleNewTask();
 
-    Task(String&& name, uid_t, gid_t, pid_t parentPID, RingLevel);
+    Task(String&& name, uid_t, gid_t, pid_t parentPID, RingLevel, RetainPtr<VirtualFileSystem::Node>&& = nullptr);
 
     void allocateLDT();
 
@@ -171,6 +173,7 @@ private:
     size_t m_maxFileHandles { 16 };
 
     RetainPtr<VirtualFileSystem::Node> m_cwd;
+    RetainPtr<VirtualFileSystem::Node> m_executable;
 
     struct Region : public Retainable<Region> {
         Region(LinearAddress, size_t, RetainPtr<Zone>&&, String&&);

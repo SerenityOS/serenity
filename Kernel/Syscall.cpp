@@ -116,6 +116,8 @@ DWORD handle(DWORD function, DWORD arg1, DWORD arg2, DWORD arg3)
         return current->sys$uname((utsname*)arg1);
     case Syscall::SetMmapName:
         return current->sys$set_mmap_name((void*)arg1, (size_t)arg2, (const char*)arg3);
+    case Syscall::PosixReadlink:
+        return current->sys$readlink((const char*)arg1, (char*)arg2, (size_t)arg3);
     default:
         kprintf("int0x80: Unknown function %x requested {%x, %x, %x}\n", function, arg1, arg2, arg3);
         break;

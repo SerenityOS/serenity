@@ -35,7 +35,6 @@
 #define EDOM      33    // Math argument out of domain of func
 #define ERANGE    34    // Math result not representable
 #define ENAMETOOLONG 36 // Name too long
-
+#define ELOOP     40    // Too many symbolic links
 #define EOVERFLOW 75    // Value too large for defined data type
-
 #define ENOTIMPL 999    // Not implemented

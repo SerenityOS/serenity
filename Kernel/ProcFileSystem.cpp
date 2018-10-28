@@ -96,6 +96,16 @@ ByteBuffer procfs$pid_stack(Task& task)
     return buffer;
 }
 
+ByteBuffer procfs$pid_exe(Task& task)
+{
+    InodeIdentifier inode;
+    {
+        InterruptDisabler disabler;
+        inode = task.executableInode();
+    }
+    return VirtualFileSystem::the().absolutePath(inode).toByteBuffer();
+}
+
 void ProcFileSystem::addProcess(Task& task)
 {
     ASSERT_INTERRUPTS_DISABLED();
@@ -105,6 +115,8 @@ void ProcFileSystem::addProcess(Task& task)
     m_pid2inode.set(task.pid(), dir.index());
     addFile(createGeneratedFile("vm", [&task] { return procfs$pid_vm(task); }), dir.index());
     addFile(createGeneratedFile("stack", [&task] { return procfs$pid_stack(task); }), dir.index());
+    if (task.executableInode().isValid())
+        addFile(createGeneratedFile("exe", [&task] { return procfs$pid_exe(task); }, 00120777), dir.index());
 }
 
 void ProcFileSystem::removeProcess(Task& task)

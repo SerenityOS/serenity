@@ -5,6 +5,7 @@
 #include <AK/kmalloc.h>
 #include <AK/kstdio.h>
 #include <AK/ktime.h>
+#include "sys-errno.h"
 
 //#define VFS_DEBUG
 
@@ -104,7 +105,8 @@ bool VirtualFileSystem::mount(RetainPtr<FileSystem>&& fileSystem, const String& 
 {
     ASSERT(fileSystem);
 
-    auto inode = resolvePath(path);
+    int error;
+    auto inode = resolvePath(path, error);
     if (!inode.isValid()) {
         kprintf("[VFS] mount can't resolve mount point '%s'\n", path.characters());
         return false;
@@ -172,7 +174,8 @@ void VirtualFileSystem::freeNode(Node* node)
 
 bool VirtualFileSystem::isDirectory(const String& path, InodeIdentifier base)
 {
-    auto inode = resolvePath(path, base);
+    int error;
+    auto inode = resolvePath(path, error, base);
     if (!inode.isValid())
         return false;
 
@@ -226,7 +229,8 @@ void VirtualFileSystem::enumerateDirectoryInode(InodeIdentifier directoryInode, 
 
 void VirtualFileSystem::listDirectory(const String& path)
 {
-    auto directoryInode = resolvePath(path);
+    int error;
+    auto directoryInode = resolvePath(path, error);
     if (!directoryInode.isValid())
         return;
 
@@ -326,7 +330,8 @@ void VirtualFileSystem::listDirectory(const String& path)
 
 void VirtualFileSystem::listDirectoryRecursively(const String& path)
 {
-    auto directory = resolvePath(path);
+    int error;
+    auto directory = resolvePath(path, error);
     if (!directory.isValid())
         return;
 
@@ -351,17 +356,19 @@ bool VirtualFileSystem::touch(const String& path)
 {
     Locker locker(VirtualFileSystem::lock());
 
-    auto inode = resolvePath(path);
+    int error;
+    auto inode = resolvePath(path, error);
     if (!inode.isValid())
         return false;
     return inode.fileSystem()->setModificationTime(inode, ktime(nullptr));
 }
 
-OwnPtr<FileHandle> VirtualFileSystem::open(const String& path, InodeIdentifier base)
+OwnPtr<FileHandle> VirtualFileSystem::open(const String& path, int options, InodeIdentifier base)
 {
     Locker locker(VirtualFileSystem::lock());
 
-    auto inode = resolvePath(path, base);
+    int error;
+    auto inode = resolvePath(path, error, base, options);
     if (!inode.isValid())
         return nullptr;
     auto vnode = getOrCreateNode(inode);
@@ -397,7 +404,8 @@ InodeIdentifier VirtualFileSystem::resolveSymbolicLink(const String& basePath, I
         return { };
     char buf[4096];
     ksprintf(buf, "/%s/%s", basePath.characters(), String((const char*)symlinkContents.pointer(), symlinkContents.size()).characters());
-    return resolvePath(buf);
+    int error;
+    return resolvePath(buf, error);
 }
 
 String VirtualFileSystem::absolutePath(InodeIdentifier inode)
@@ -407,6 +415,7 @@ String VirtualFileSystem::absolutePath(InodeIdentifier inode)
     if (!inode.isValid())
         return String();
 
+    int error;
     Vector<InodeIdentifier> lineage;
     while (inode != m_rootNode->inode) {
         if (auto* mount = findMountForGuest(inode))
@@ -414,7 +423,7 @@ String VirtualFileSystem::absolutePath(InodeIdentifier inode)
         else
             lineage.append(inode);
         if (inode.metadata().isDirectory()) {
-            inode = resolvePath("..", inode);
+            inode = resolvePath("..", error, inode);
         } else
             inode = inode.fileSystem()->findParentOfInode(inode);
         ASSERT(inode.isValid());
@@ -434,7 +443,7 @@ String VirtualFileSystem::absolutePath(InodeIdentifier inode)
     return builder.build();
 }
 
-InodeIdentifier VirtualFileSystem::resolvePath(const String& path, InodeIdentifier base)
+InodeIdentifier VirtualFileSystem::resolvePath(const String& path, int& error, InodeIdentifier base, int options)
 {
     if (path.isEmpty())
         return { };
@@ -455,12 +464,14 @@ InodeIdentifier VirtualFileSystem::resolvePath(const String& path, InodeIdentifi
 #ifdef VFS_DEBUG
             kprintf("invalid metadata\n");
 #endif
+            error = -EIO;
             return { };
         }
         if (!metadata.isDirectory()) {
 #ifdef VFS_DEBUG
             kprintf("not directory\n");
 #endif
+            error = -EIO;
             return { };
         }
         inode = inode.fileSystem()->childOfDirectoryInodeWithName(inode, part);
@@ -468,6 +479,7 @@ InodeIdentifier VirtualFileSystem::resolvePath(const String& path, InodeIdentifi
 #ifdef VFS_DEBUG
             kprintf("bad child\n");
 #endif
+            error = -EIO;
             return { };
         }
 #ifdef VFS_DEBUG
@@ -489,6 +501,14 @@ InodeIdentifier VirtualFileSystem::resolvePath(const String& path, InodeIdentifi
         }
         metadata = inode.metadata();
         if (metadata.isSymbolicLink()) {
+            if (i == parts.size() - 1) {
+                if (options & O_NOFOLLOW) {
+                    error = -ELOOP;
+                    return { };
+                }
+                if (options & O_NOFOLLOW_NOERROR)
+                    return inode;
+            }
             char buf[4096] = "";
             char* p = buf;
             for (unsigned j = 0; j < i; ++j) {
@@ -497,6 +517,7 @@ InodeIdentifier VirtualFileSystem::resolvePath(const String& path, InodeIdentifi
             inode = resolveSymbolicLink(buf, inode);
             if (!inode.isValid()) {
                 kprintf("Symbolic link resolution failed :(\n");
+                error = -ENOENT;
                 return { };
             }
         }

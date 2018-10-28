@@ -234,7 +234,7 @@ Task* Task::createUserTask(const String& path, uid_t uid, gid_t gid, pid_t paren
             cwd = parentTask->m_cwd.copyRef();
     }
 
-    auto handle = VirtualFileSystem::the().open(path, cwd ? cwd->inode : InodeIdentifier());
+    auto handle = VirtualFileSystem::the().open(path, 0, cwd ? cwd->inode : InodeIdentifier());
     if (!handle) {
         error = -ENOENT; // FIXME: Get a more detailed error from VFS.
         return nullptr;
@@ -261,7 +261,7 @@ Task* Task::createUserTask(const String& path, uid_t uid, gid_t gid, pid_t paren
     }
 
     InterruptDisabler disabler; // FIXME: Get rid of this, jesus christ. This "critical" section is HUGE.
-    Task* t = new Task(parts.takeLast(), uid, gid, parentPID, Ring3);
+    Task* t = new Task(parts.takeLast(), uid, gid, parentPID, Ring3, handle->vnode());
 
     t->m_arguments = move(taskArguments);
 
@@ -362,13 +362,14 @@ Task* Task::createKernelTask(void (*e)(), String&& name)
     return task;
 }
 
-Task::Task(String&& name, uid_t uid, gid_t gid, pid_t parentPID, RingLevel ring)
+Task::Task(String&& name, uid_t uid, gid_t gid, pid_t parentPID, RingLevel ring, RetainPtr<VirtualFileSystem::Node>&& executable)
     : m_name(move(name))
     , m_pid(next_pid++)
     , m_uid(uid)
     , m_gid(gid)
     , m_state(Runnable)
     , m_ring(ring)
+    , m_executable(move(executable))
     , m_parentPID(parentPID)
 {
     m_fileHandles.append(nullptr); // stdin
@@ -785,17 +786,39 @@ int Task::sys$close(int fd)
 int Task::sys$lstat(const char* path, Unix::stat* statbuf)
 {
     VALIDATE_USER_BUFFER(statbuf, sizeof(Unix::stat));
-    auto handle = VirtualFileSystem::the().open(move(path), cwdInode());
+    auto handle = VirtualFileSystem::the().open(move(path), O_NOFOLLOW_NOERROR, cwdInode());
     if (!handle)
         return -1;
     handle->stat(statbuf);
     return 0;
 }
 
+int Task::sys$readlink(const char* path, char* buffer, size_t size)
+{
+    VALIDATE_USER_BUFFER(path, strlen(path));
+    VALIDATE_USER_BUFFER(buffer, size);
+
+    auto handle = VirtualFileSystem::the().open(path, O_RDONLY | O_NOFOLLOW_NOERROR, cwdInode());
+    if (!handle)
+        return -ENOENT; // FIXME: Get a more detailed error from VFS.
+
+    if (!handle->metadata().isSymbolicLink())
+        return -EINVAL;
+
+    auto contents = handle->readEntireFile();
+    if (!contents)
+        return -EIO; // FIXME: Get a more detailed error from VFS.
+
+    memcpy(buffer, contents.pointer(), min(size, contents.size()));
+    if (contents.size() + 1 < size)
+        buffer[contents.size()] = '\0';
+    return 0;
+}
+
 int Task::sys$chdir(const char* path)
 {
     VALIDATE_USER_BUFFER(path, strlen(path));
-    auto handle = VirtualFileSystem::the().open(path, cwdInode());
+    auto handle = VirtualFileSystem::the().open(path, 0, cwdInode());
     if (!handle)
         return -ENOENT; // FIXME: More detailed error.
     if (!handle->isDirectory())
@@ -811,17 +834,20 @@ int Task::sys$getcwd(char* buffer, size_t size)
     return -ENOTIMPL;
 }
 
-int Task::sys$open(const char* path, size_t pathLength)
+int Task::sys$open(const char* path, int options)
 {
 #ifdef DEBUG_IO
     kprintf("Task::sys$open(): PID=%u, path=%s {%u}\n", m_pid, path, pathLength);
 #endif
-    VALIDATE_USER_BUFFER(path, pathLength);
+    VALIDATE_USER_BUFFER(path, strlen(path));
     if (m_fileHandles.size() >= m_maxFileHandles)
         return -EMFILE;
-    auto handle = VirtualFileSystem::the().open(String(path, pathLength), cwdInode());
+    auto handle = VirtualFileSystem::the().open(path, 0, cwdInode());
     if (!handle)
         return -ENOENT; // FIXME: Detailed error.
+    if (options & O_DIRECTORY && !handle->isDirectory())
+        return -ENOTDIR; // FIXME: This should be handled by VFS::open.
+
     int fd = m_fileHandles.size();
     handle->setFD(fd);
     m_fileHandles.append(move(handle));

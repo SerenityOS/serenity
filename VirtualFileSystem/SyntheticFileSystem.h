@@ -40,7 +40,7 @@ protected:
 
     OwnPtr<File> createDirectory(String&& name);
     OwnPtr<File> createTextFile(String&& name, String&& text);
-    OwnPtr<File> createGeneratedFile(String&& name, Function<ByteBuffer()>&&);
+    OwnPtr<File> createGeneratedFile(String&& name, Function<ByteBuffer()>&&, Unix::mode_t = 0100644);
 
     InodeIdentifier addFile(OwnPtr<File>&&, InodeIndex parent = RootInodeIndex);
     bool removeFile(InodeIndex);
