@@ -234,7 +234,7 @@ Task* Task::createUserTask(const String& path, uid_t uid, gid_t gid, pid_t paren
             cwd = parentTask->m_cwd.copyRef();
     }
 
-    auto handle = VirtualFileSystem::the().open(path, cwd.ptr());
+    auto handle = VirtualFileSystem::the().open(path, cwd ? cwd->inode : InodeIdentifier());
     if (!handle) {
         error = -ENOENT; // FIXME: Get a more detailed error from VFS.
         return nullptr;
@@ -785,7 +785,7 @@ int Task::sys$close(int fd)
 int Task::sys$lstat(const char* path, Unix::stat* statbuf)
 {
     VALIDATE_USER_BUFFER(statbuf, sizeof(Unix::stat));
-    auto handle = VirtualFileSystem::the().open(move(path), m_cwd.ptr());
+    auto handle = VirtualFileSystem::the().open(move(path), cwdInode());
     if (!handle)
         return -1;
     handle->stat(statbuf);
@@ -795,7 +795,7 @@ int Task::sys$lstat(const char* path, Unix::stat* statbuf)
 int Task::sys$chdir(const char* path)
 {
     VALIDATE_USER_BUFFER(path, strlen(path));
-    auto handle = VirtualFileSystem::the().open(path, m_cwd.ptr());
+    auto handle = VirtualFileSystem::the().open(path, cwdInode());
     if (!handle)
         return -ENOENT; // FIXME: More detailed error.
     if (!handle->isDirectory())
@@ -819,7 +819,7 @@ int Task::sys$open(const char* path, size_t pathLength)
     VALIDATE_USER_BUFFER(path, pathLength);
     if (m_fileHandles.size() >= m_maxFileHandles)
         return -EMFILE;
-    auto handle = VirtualFileSystem::the().open(String(path, pathLength), m_cwd.ptr());
+    auto handle = VirtualFileSystem::the().open(String(path, pathLength), cwdInode());
     if (!handle)
         return -ENOENT; // FIXME: Detailed error.
     int fd = m_fileHandles.size();

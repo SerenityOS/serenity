@@ -943,3 +943,35 @@ InodeIdentifier Ext2FileSystem::createInode(InodeIdentifier parentInode, const S
     return { id(), inode };
 }
 
+InodeIdentifier Ext2FileSystem::findParentOfInode(InodeIdentifier inode) const
+{
+    ASSERT(inode.fileSystemID() == id());
+    unsigned groupIndex = groupIndexFromInode(inode.index());
+    unsigned firstInodeInGroup = inodesPerGroup() * (groupIndex - 1);
+
+    Vector<InodeIdentifier> directoriesInGroup;
+
+    for (unsigned i = 0; i < inodesPerGroup(); ++i) {
+        auto e2inode = lookupExt2Inode(firstInodeInGroup + i);
+        if (!e2inode)
+            continue;
+        if (isDirectory(e2inode->i_mode)) {
+            directoriesInGroup.append({ id(), firstInodeInGroup + i });
+        }
+    }
+
+    InodeIdentifier foundParent;
+    for (auto& directory : directoriesInGroup) {
+        enumerateDirectoryInode(directory, [inode, directory, &foundParent] (auto& entry) {
+            if (entry.inode == inode) {
+                foundParent = directory;
+                return false;
+            }
+            return true;
+        });
+        if (foundParent.isValid())
+            break;
+    }
+
+    return foundParent;
+}

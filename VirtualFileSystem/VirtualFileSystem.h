@@ -66,7 +66,7 @@ public:
     VirtualFileSystem();
     ~VirtualFileSystem();
 
-    bool isDirectory(const String& path, Node* base = nullptr);
+    bool isDirectory(const String& path, InodeIdentifier base = InodeIdentifier());
     void listDirectory(const String& path);
     void listDirectoryRecursively(const String& path);
 
@@ -79,9 +79,9 @@ public:
     bool mountRoot(RetainPtr<FileSystem>&&);
     bool mount(RetainPtr<FileSystem>&&, const String& path);
 
-    OwnPtr<FileHandle> open(const String& path, Node* base = nullptr);
-    OwnPtr<FileHandle> create(const String& path, Node* base = nullptr);
-    OwnPtr<FileHandle> mkdir(const String& path, Node* base = nullptr);
+    OwnPtr<FileHandle> open(const String& path, InodeIdentifier base = InodeIdentifier());
+    OwnPtr<FileHandle> create(const String& path, InodeIdentifier base = InodeIdentifier());
+    OwnPtr<FileHandle> mkdir(const String& path, InodeIdentifier base = InodeIdentifier());
 
     bool isRoot(InodeIdentifier) const;
 
@@ -92,12 +92,13 @@ public:
     size_t mountCount() const { return m_mounts.size(); }
     void forEachMount(Function<void(const Mount&)>) const;
 
+    String absolutePath(InodeIdentifier);
+
 private:
     friend class FileHandle;
 
     void enumerateDirectoryInode(InodeIdentifier, Function<bool(const FileSystem::DirectoryEntry&)>);
-    String absolutePath(InodeIdentifier);
-    InodeIdentifier resolvePath(const String& path, Node* base = nullptr);
+    InodeIdentifier resolvePath(const String& path, InodeIdentifier base = InodeIdentifier());
     InodeIdentifier resolveSymbolicLink(const String& basePath, InodeIdentifier symlinkInode);
 
     RetainPtr<Node> allocateNode();
