@@ -1,5 +1,7 @@
 #include "stdlib.h"
 #include "mman.h"
+#include <Kernel/Syscall.h>
+#include <AK/Assertions.h>
 
 extern "C" {
 
@@ -18,6 +20,29 @@ void free(void* ptr)
     if (!ptr)
         return;
     munmap(ptr, 4096);
+}
+
+void* calloc(size_t nmemb, size_t)
+{
+    ASSERT_NOT_REACHED();
+    return nullptr;
+}
+
+void* realloc(void *ptr, size_t)
+{
+    ASSERT_NOT_REACHED();
+    return nullptr;
+}
+
+void exit(int status)
+{
+    Syscall::invoke(Syscall::PosixExit, (dword)status);
+}
+
+void abort()
+{
+    // FIXME: Implement proper abort().
+    exit(253);
 }
 
 }
