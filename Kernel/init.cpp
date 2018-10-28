@@ -131,7 +131,8 @@ static void init_stage2()
 
 #ifdef KSYMS
     {
-        auto handle = vfs->open("/kernel.map");
+        int error;
+        auto handle = vfs->open("/kernel.map", error);
         if (!handle) {
             kprintf("Failed to open /kernel.map\n");
         } else {
