@@ -34,9 +34,7 @@ void MemoryManager::initializePaging()
     memset(m_pageTableOne, 0, 4096);
     memset(m_pageDirectory, 0, 4096);
 
-    kprintf("MM: Page directory @ %p\n", m_pageDirectory);
-    kprintf("MM: Page table zero @ %p\n", m_pageTableZero);
-    kprintf("MM: Page table one @ %p\n", m_pageTableOne);
+    kprintf("[MM] Page directory @ %p\n", m_pageDirectory);
 
     // Make null dereferences crash.
     protectMap(LinearAddress(0), 4 * KB);
@@ -72,7 +70,7 @@ auto MemoryManager::ensurePTE(LinearAddress linearAddress) -> PageTableEntry
 
     PageDirectoryEntry pde = PageDirectoryEntry(&m_pageDirectory[pageDirectoryIndex]);
     if (!pde.isPresent()) {
-        kprintf("PDE %u !present, allocating\n", pageDirectoryIndex);
+        kprintf("[MM] PDE %u not present, allocating\n", pageDirectoryIndex);
         if (pageDirectoryIndex == 0) {
             pde.setPageTableBase((dword)m_pageTableZero);
             pde.setUserAllowed(true);
@@ -85,7 +83,7 @@ auto MemoryManager::ensurePTE(LinearAddress linearAddress) -> PageTableEntry
             pde.setWritable(true);
         } else {
             auto* pageTable = allocatePageTable();
-            kprintf("allocated page table %u (for laddr=%p) at %p\n", pageDirectoryIndex, linearAddress.get(), pageTable);
+            kprintf("[MM] Allocated page table #%u (for laddr=%p) at %p\n", pageDirectoryIndex, linearAddress.get(), pageTable);
             memset(pageTable, 0, 4096);
             pde.setPageTableBase((dword)pageTable);
             pde.setUserAllowed(true);
@@ -134,7 +132,7 @@ void MemoryManager::initialize()
 PageFaultResponse MemoryManager::handlePageFault(const PageFault& fault)
 {
     ASSERT_INTERRUPTS_DISABLED();
-    kprintf("MM: handlePageFault(%w) at laddr=%p\n", fault.code(), fault.address().get());
+    kprintf("[MM] handlePageFault(%w) at laddr=%p\n", fault.code(), fault.address().get());
     if (fault.isNotPresent()) { 
         kprintf("  >> NP fault!\n");
     } else if (fault.isProtectionViolation()) {
@@ -143,11 +141,36 @@ PageFaultResponse MemoryManager::handlePageFault(const PageFault& fault)
     return PageFaultResponse::ShouldCrash;
 }
 
+void MemoryManager::registerZone(Zone& zone)
+{
+    ASSERT_INTERRUPTS_DISABLED();
+    m_zones.set(&zone);
+}
+
+void MemoryManager::unregisterZone(Zone& zone)
+{
+    ASSERT_INTERRUPTS_DISABLED();
+    m_zones.remove(&zone);
+    m_freePages.append(move(zone.m_pages));
+}
+
+Zone::Zone(Vector<PhysicalAddress>&& pages)
+    : m_pages(move(pages))
+{
+    MM.registerZone(*this);
+}
+
+Zone::~Zone()
+{
+    MM.unregisterZone(*this);
+}
+
 RetainPtr<Zone> MemoryManager::createZone(size_t size)
 {
+    InterruptDisabler disabler;
     auto pages = allocatePhysicalPages(ceilDiv(size, PAGE_SIZE));
     if (pages.isEmpty()) {
-        kprintf("MM: createZone: no physical pages for size %u", size);
+        kprintf("[MM] createZone: no physical pages for size %u", size);
         return nullptr;
     }
     return adopt(*new Zone(move(pages)));
@@ -170,7 +193,7 @@ byte* MemoryManager::quickMapOnePage(PhysicalAddress physicalAddress)
 {
     ASSERT_INTERRUPTS_DISABLED();
     auto pte = ensurePTE(LinearAddress(4 * MB));
-    kprintf("quickmap %x @ %x {pte @ %p}\n", physicalAddress.get(), 4*MB, pte.ptr());
+    kprintf("[MM] quickmap %x @ %x {pte @ %p}\n", physicalAddress.get(), 4*MB, pte.ptr());
     pte.setPhysicalPageBase(physicalAddress.pageBase());
     pte.setPresent(true);
     pte.setWritable(true);
@@ -297,7 +320,7 @@ bool MemoryManager::mapRegionsForTask(Task& task)
 bool copyToZone(Zone& zone, const void* data, size_t size)
 {
     if (zone.size() < size) {
-        kprintf("copyToZone: can't fit %u bytes into zone with size %u\n", size, zone.size());
+        kprintf("[MM] copyToZone: can't fit %u bytes into zone with size %u\n", size, zone.size());
         return false;
     }
 
@@ -314,4 +337,3 @@ bool copyToZone(Zone& zone, const void* data, size_t size)
 
     return true;
 }
-

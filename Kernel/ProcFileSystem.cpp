@@ -118,6 +118,18 @@ void ProcFileSystem::removeProcess(Task& task)
     m_pid2inode.remove(pid);
 }
 
+ByteBuffer procfs$mm()
+{
+    InterruptDisabler disabler;
+    auto buffer = ByteBuffer::createUninitialized(1024);
+    char* ptr = (char*)buffer.pointer();
+    ptr += ksprintf(ptr, "Zone count: %u\n", MM.m_zones.size());
+    ptr += ksprintf(ptr, "Free physical pages: %u\n", MM.m_freePages.size());
+    buffer.trim(ptr - (char*)buffer.pointer());
+    return buffer;
+}
+
+
 ByteBuffer procfs$mounts()
 {
     InterruptDisabler disabler;
@@ -171,6 +183,7 @@ ByteBuffer procfs$summary()
 bool ProcFileSystem::initialize()
 {
     SyntheticFileSystem::initialize();
+    addFile(createGeneratedFile("mm", procfs$mm));
     addFile(createGeneratedFile("mounts", procfs$mounts));
     addFile(createGeneratedFile("kmalloc", procfs$kmalloc));
     addFile(createGeneratedFile("summary", procfs$summary));
