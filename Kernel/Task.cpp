@@ -142,6 +142,7 @@ Task::Region* Task::allocateRegion(size_t size, String&& name)
 
 bool Task::deallocateRegion(Region& region)
 {
+    InterruptDisabler disabler;
     for (size_t i = 0; i < m_regions.size(); ++i) {
         if (m_regions[i].ptr() == &region) {
             // FIXME: This seems racy.

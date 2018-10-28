@@ -4,21 +4,25 @@
 #include <LibC/errno.h>
 #include <LibC/string.h>
 #include <LibC/stdlib.h>
+#include <AK/FileSystemPath.h>
 
-char* g_cwd = nullptr;
-char g_hostname[32];
+struct GlobalState {
+    String cwd;
+    char hostname[32];
+};
+static GlobalState* g;
 
 static void prompt()
 {
     if (getuid() == 0)
         printf("# ");
     else
-        printf("\033[32;1m%s\033[0m:\033[34;1m%s\033[0m$> ", g_hostname, g_cwd);
+        printf("\033[32;1m%s\033[0m:\033[34;1m%s\033[0m$> ", g->hostname, g->cwd.characters());
 }
 
 static int sh_pwd(int, const char**)
 {
-    printf("%s\n", g_cwd);
+    printf("%s\n", g->cwd.characters());
     return 0;
 }
 
@@ -30,26 +34,34 @@ static int sh_cd(int argc, const char** argv)
     }
 
     char pathbuf[128];
-    if (argv[1][1] == '/')
-        memcpy(pathbuf, argv[1], strlen(argv[1]));
+    if (argv[1][0] == '/')
+        memcpy(pathbuf, argv[1], strlen(argv[1]) + 1);
     else
-        sprintf(pathbuf, "%s/%s", g_cwd, argv[1]);
+        sprintf(pathbuf, "%s/%s", g->cwd.characters(), argv[1]);
+
+    FileSystemPath canonicalPath(pathbuf);
+    if (!canonicalPath.isValid()) {
+        printf("FileSystemPath failed to canonicalize '%s'\n", pathbuf);
+        return 1;
+    }
+    const char* path = canonicalPath.string().characters();
+
     struct stat st;
-    int rc = lstat(pathbuf, &st);
+    int rc = lstat(path, &st);
     if (rc < 0) {
-        printf("lstat(%s) failed: %s\n", pathbuf, strerror(errno));
+        printf("lstat(%s) failed: %s\n", path, strerror(errno));
         return 1;
     }
     if (!S_ISDIR(st.st_mode)) {
-        printf("Not a directory: %s\n", pathbuf);
+        printf("Not a directory: %s\n", path);
         return 1;
     }
-    rc = chdir(pathbuf);
+    rc = chdir(path);
     if (rc < 0) {
-        printf("chdir(%s) failed: %s\n", pathbuf, strerror(errno));
+        printf("chdir(%s) failed: %s\n", path, strerror(errno));
         return 1;
     }
-    memcpy(g_cwd, pathbuf, strlen(pathbuf));
+    g->cwd = canonicalPath.string();
     return 0;
 }
 
@@ -115,7 +127,8 @@ static int runcmd(char* cmd)
 
 int main(int, char**)
 {
-    int rc = gethostname(g_hostname, sizeof(g_hostname));
+    g = new GlobalState;
+    int rc = gethostname(g->hostname, sizeof(g->hostname));
     if (rc < 0)
         perror("gethostname");
 
@@ -128,9 +141,7 @@ int main(int, char**)
         printf("failed to open /dev/keyboard :(\n");
         return 1;
     }
-    g_cwd = (char*)malloc(1024);
-    g_cwd[0] = '/';
-    g_cwd[1] = '\0';
+    g->cwd = "/";
     prompt();
     for (;;) {
         char keybuf[16];

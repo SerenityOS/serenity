@@ -1,4 +1,4 @@
-#include <LibC/stdio.cpp>
+#include <LibC/stdio.h>
 
 int main(int argc, char** argv)
 {

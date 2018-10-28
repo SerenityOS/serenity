@@ -1,7 +1,12 @@
 #pragma once
 
 #ifdef SERENITY
+#ifdef KERNEL
 #include <Kernel/StdLib.h>
+#else
+#include <LibC/stdlib.h>
+#include <LibC/string.h>
+#endif
 #else
 #include <cstring>
 #include <cstdlib>

@@ -1,4 +1,11 @@
-OBJS = \
+AK_OBJS = \
+    ../AK/StringImpl.o \
+    ../AK/String.o \
+    ../AK/StringBuilder.o \
+    ../AK/FileSystemPath.o \
+    ../AK/kmalloc.o
+
+LIBC_OBJS = \
        stdio.o \
        unistd.o \
        string.o \
@@ -8,7 +15,10 @@ OBJS = \
        stdlib.o \
        time.o \
        utsname.o \
+       assert.o \
        entry.o
+
+OBJS = $(AK_OBJS) $(LIBC_OBJS)
 
 LIBRARY = LibC.a
 ARCH_FLAGS =
@@ -19,7 +29,7 @@ FLAVOR_FLAGS = -fomit-frame-pointer -mregparm=3 -march=i386 -m32 -fno-exceptions
 OPTIMIZATION_FLAGS = -Os -fno-asynchronous-unwind-tables
 INCLUDE_FLAGS = -I.. -I.
 
-DEFINES = -DSERENITY -DSANITIZE_PTRS
+DEFINES = -DSERENITY -DUSERLAND -DSANITIZE_PTRS
 
 CXXFLAGS = $(WARNING_FLAGS) $(OPTIMIZATION_FLAGS) $(LIBC_FLAGS) $(FLAVOR_FLAGS) $(ARCH_FLAGS) $(STANDARD_FLAGS) $(INCLUDE_FLAGS) $(DEFINES)
 CXX = g++-8

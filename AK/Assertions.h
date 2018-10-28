@@ -1,7 +1,11 @@
 #pragma once
 
 #ifdef SERENITY
+#ifdef KERNEL
 #include <Kernel/kassert.h>
+#else
+#include <LibC/assert.h>
+#endif
 #else
 #include <assert.h>
 #define ASSERT(x) assert(x)

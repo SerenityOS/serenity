@@ -1,4 +1,5 @@
 #include <Kernel/Syscall.h>
+#include <AK/StringImpl.h>
 
 extern "C" int main(int, char**);
 
@@ -7,6 +8,8 @@ int errno;
 extern "C" int _start()
 {
     errno = 0;
+
+    StringImpl::initializeGlobals();
 
     int argc;
     char** argv;

@@ -21,6 +21,17 @@ int strcmp(const char* s1, const char* s2)
     return *(const unsigned char*)s1 < *(const unsigned char*)s2 ? -1 : 1;
 }
 
+int memcmp(const void* v1, const void* v2, size_t n)
+{
+    auto* s1 = (const byte*)v1;
+    auto* s2 = (const byte*)v2;
+    while (n-- > 0) {
+        if (*s1++ != *s2++)
+            return s1[-1] < s2[-1] ? -1 : 1;
+    }
+    return 0;
+}
+
 void memcpy(void* dest, const void* src, size_t n)
 {
     auto* bdest = (unsigned char*)dest;
