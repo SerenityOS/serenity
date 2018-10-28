@@ -234,11 +234,9 @@ Task* Task::createUserTask(const String& path, uid_t uid, gid_t gid, pid_t paren
             cwd = parentTask->m_cwd.copyRef();
     }
 
-    auto handle = VirtualFileSystem::the().open(path, 0, cwd ? cwd->inode : InodeIdentifier());
-    if (!handle) {
-        error = -ENOENT; // FIXME: Get a more detailed error from VFS.
+    auto handle = VirtualFileSystem::the().open(path, error, 0, cwd ? cwd->inode : InodeIdentifier());
+    if (!handle)
         return nullptr;
-    }
 
     if (!handle->metadata().mayExecute(uid, gid)) {
         error = -EACCES;
@@ -786,9 +784,10 @@ int Task::sys$close(int fd)
 int Task::sys$lstat(const char* path, Unix::stat* statbuf)
 {
     VALIDATE_USER_BUFFER(statbuf, sizeof(Unix::stat));
-    auto handle = VirtualFileSystem::the().open(move(path), O_NOFOLLOW_NOERROR, cwdInode());
+    int error;
+    auto handle = VirtualFileSystem::the().open(move(path), error, O_NOFOLLOW_NOERROR, cwdInode());
     if (!handle)
-        return -1;
+        return error;
     handle->stat(statbuf);
     return 0;
 }
@@ -798,9 +797,10 @@ int Task::sys$readlink(const char* path, char* buffer, size_t size)
     VALIDATE_USER_BUFFER(path, strlen(path));
     VALIDATE_USER_BUFFER(buffer, size);
 
-    auto handle = VirtualFileSystem::the().open(path, O_RDONLY | O_NOFOLLOW_NOERROR, cwdInode());
+    int error;
+    auto handle = VirtualFileSystem::the().open(path, error, O_RDONLY | O_NOFOLLOW_NOERROR, cwdInode());
     if (!handle)
-        return -ENOENT; // FIXME: Get a more detailed error from VFS.
+        return error;
 
     if (!handle->metadata().isSymbolicLink())
         return -EINVAL;
@@ -818,9 +818,10 @@ int Task::sys$readlink(const char* path, char* buffer, size_t size)
 int Task::sys$chdir(const char* path)
 {
     VALIDATE_USER_BUFFER(path, strlen(path));
-    auto handle = VirtualFileSystem::the().open(path, 0, cwdInode());
+    int error;
+    auto handle = VirtualFileSystem::the().open(path, error, 0, cwdInode());
     if (!handle)
-        return -ENOENT; // FIXME: More detailed error.
+        return error;
     if (!handle->isDirectory())
         return -ENOTDIR;
     m_cwd = handle->vnode();
@@ -842,9 +843,10 @@ int Task::sys$open(const char* path, int options)
     VALIDATE_USER_BUFFER(path, strlen(path));
     if (m_fileHandles.size() >= m_maxFileHandles)
         return -EMFILE;
-    auto handle = VirtualFileSystem::the().open(path, 0, cwdInode());
+    int error;
+    auto handle = VirtualFileSystem::the().open(path, error, 0, cwdInode());
     if (!handle)
-        return -ENOENT; // FIXME: Detailed error.
+        return error;
     if (options & O_DIRECTORY && !handle->isDirectory())
         return -ENOTDIR; // FIXME: This should be handled by VFS::open.
 

@@ -86,7 +86,7 @@ public:
     bool mountRoot(RetainPtr<FileSystem>&&);
     bool mount(RetainPtr<FileSystem>&&, const String& path);
 
-    OwnPtr<FileHandle> open(const String& path, int options = 0, InodeIdentifier base = InodeIdentifier());
+    OwnPtr<FileHandle> open(const String& path, int& error, int options = 0, InodeIdentifier base = InodeIdentifier());
     OwnPtr<FileHandle> create(const String& path, InodeIdentifier base = InodeIdentifier());
     OwnPtr<FileHandle> mkdir(const String& path, InodeIdentifier base = InodeIdentifier());
 
@@ -106,7 +106,7 @@ private:
 
     void enumerateDirectoryInode(InodeIdentifier, Function<bool(const FileSystem::DirectoryEntry&)>);
     InodeIdentifier resolvePath(const String& path, int& error, InodeIdentifier base = InodeIdentifier(), int options = 0);
-    InodeIdentifier resolveSymbolicLink(const String& basePath, InodeIdentifier symlinkInode);
+    InodeIdentifier resolveSymbolicLink(InodeIdentifier base, InodeIdentifier symlinkInode, int& error);
 
     RetainPtr<Node> allocateNode();
     void freeNode(Node*);

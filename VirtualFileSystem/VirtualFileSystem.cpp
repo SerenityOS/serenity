@@ -363,11 +363,10 @@ bool VirtualFileSystem::touch(const String& path)
     return inode.fileSystem()->setModificationTime(inode, ktime(nullptr));
 }
 
-OwnPtr<FileHandle> VirtualFileSystem::open(const String& path, int options, InodeIdentifier base)
+OwnPtr<FileHandle> VirtualFileSystem::open(const String& path, int& error, int options, InodeIdentifier base)
 {
     Locker locker(VirtualFileSystem::lock());
 
-    int error;
     auto inode = resolvePath(path, error, base, options);
     if (!inode.isValid())
         return nullptr;
@@ -397,15 +396,12 @@ OwnPtr<FileHandle> VirtualFileSystem::mkdir(const String& path, InodeIdentifier 
     return nullptr;
 }
 
-InodeIdentifier VirtualFileSystem::resolveSymbolicLink(const String& basePath, InodeIdentifier symlinkInode)
+InodeIdentifier VirtualFileSystem::resolveSymbolicLink(InodeIdentifier base, InodeIdentifier symlinkInode, int& error)
 {
     auto symlinkContents = symlinkInode.readEntireFile();
     if (!symlinkContents)
         return { };
-    char buf[4096];
-    ksprintf(buf, "/%s/%s", basePath.characters(), String((const char*)symlinkContents.pointer(), symlinkContents.size()).characters());
-    int error;
-    return resolvePath(buf, error);
+    return resolvePath((const char*)symlinkContents.pointer(), error, base);
 }
 
 String VirtualFileSystem::absolutePath(InodeIdentifier inode)
@@ -474,12 +470,13 @@ InodeIdentifier VirtualFileSystem::resolvePath(const String& path, int& error, I
             error = -EIO;
             return { };
         }
+        auto parent = inode;
         inode = inode.fileSystem()->childOfDirectoryInodeWithName(inode, part);
         if (!inode.isValid()) {
 #ifdef VFS_DEBUG
             kprintf("bad child\n");
 #endif
-            error = -EIO;
+            error = -ENOENT;
             return { };
         }
 #ifdef VFS_DEBUG
@@ -514,10 +511,9 @@ InodeIdentifier VirtualFileSystem::resolvePath(const String& path, int& error, I
             for (unsigned j = 0; j < i; ++j) {
                 p += ksprintf(p, "/%s", parts[j].characters());
             }
-            inode = resolveSymbolicLink(buf, inode);
+            inode = resolveSymbolicLink(parent, inode, error);
             if (!inode.isValid()) {
                 kprintf("Symbolic link resolution failed :(\n");
-                error = -ENOENT;
                 return { };
             }
         }
