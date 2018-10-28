@@ -43,7 +43,8 @@ ELFLOADER_OBJS = \
 
 AK_OBJS = \
     ../AK/String.o \
-    ../AK/StringImpl.o
+    ../AK/StringImpl.o \
+    ../AK/StringBuilder.o
 
 OBJS = $(KERNEL_OBJS) $(VFS_OBJS) $(AK_OBJS) $(ELFLOADER_OBJS)
 

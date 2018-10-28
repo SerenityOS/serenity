@@ -50,6 +50,20 @@ InodeIdentifier FileSystem::childOfDirectoryInodeWithName(InodeIdentifier inode,
     return foundInode;
 }
 
+String FileSystem::nameOfChildInDirectory(InodeIdentifier parent, InodeIdentifier child) const
+{
+    String name;
+    bool success = enumerateDirectoryInode(parent, [&] (auto& entry) {
+        if (entry.inode == child) {
+            name = entry.name;
+            return false;
+        }
+        return true;
+    });
+    ASSERT(success);
+    return name;
+}
+
 ByteBuffer FileSystem::readEntireInode(InodeIdentifier inode, FileHandle* handle) const
 {
     ASSERT(inode.fileSystemID() == id());

@@ -133,6 +133,8 @@ public:
     bool isValidAddressForKernel(LinearAddress) const;
     bool isValidAddressForUser(LinearAddress) const;
 
+    InodeIdentifier cwdInode() const { return m_cwd ? m_cwd->inode : InodeIdentifier(); }
+
 private:
     friend class MemoryManager;
     friend bool scheduleNewTask();

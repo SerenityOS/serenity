@@ -46,6 +46,7 @@ private:
     virtual InodeIdentifier createInode(InodeIdentifier parentInode, const String& name, Unix::mode_t, unsigned size) override;
     virtual Unix::ssize_t readInodeBytes(InodeIdentifier, Unix::off_t offset, Unix::size_t count, byte* buffer, FileHandle*) const override;
     virtual InodeIdentifier makeDirectory(InodeIdentifier parentInode, const String& name, Unix::mode_t) override;
+    virtual InodeIdentifier findParentOfInode(InodeIdentifier) const override;
 
     bool isDirectoryInode(unsigned) const;
     unsigned allocateInode(unsigned preferredGroup, unsigned expectedSize);

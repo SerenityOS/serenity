@@ -199,7 +199,7 @@ Unix::ssize_t SyntheticFileSystem::readInodeBytes(InodeIdentifier inode, Unix::o
 #endif
     ASSERT(offset >= 0);
     ASSERT(buffer);
-\
+
     auto it = m_inodes.find(inode.index());
     if (it == m_inodes.end())
         return false;
@@ -234,4 +234,12 @@ InodeIdentifier SyntheticFileSystem::makeDirectory(InodeIdentifier parentInode, 
 auto SyntheticFileSystem::generateInodeIndex() -> InodeIndex
 {
     return m_nextInodeIndex++;
+}
+
+InodeIdentifier SyntheticFileSystem::findParentOfInode(InodeIdentifier inode) const
+{
+    auto it = m_inodes.find(inode.index());
+    if (it == m_inodes.end())
+        return { };
+    return (*it).value->parent;
 }

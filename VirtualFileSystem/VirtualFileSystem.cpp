@@ -1,6 +1,7 @@
 #include "VirtualFileSystem.h"
 #include "FileHandle.h"
 #include "FileSystem.h"
+#include <AK/StringBuilder.h>
 #include <AK/kmalloc.h>
 #include <AK/kstdio.h>
 #include <AK/ktime.h>
@@ -169,7 +170,7 @@ void VirtualFileSystem::freeNode(Node* node)
     m_nodeFreeList.append(move(node));
 }
 
-bool VirtualFileSystem::isDirectory(const String& path, Node* base)
+bool VirtualFileSystem::isDirectory(const String& path, InodeIdentifier base)
 {
     auto inode = resolvePath(path, base);
     if (!inode.isValid())
@@ -356,7 +357,7 @@ bool VirtualFileSystem::touch(const String& path)
     return inode.fileSystem()->setModificationTime(inode, ktime(nullptr));
 }
 
-OwnPtr<FileHandle> VirtualFileSystem::open(const String& path, Node* base)
+OwnPtr<FileHandle> VirtualFileSystem::open(const String& path, InodeIdentifier base)
 {
     Locker locker(VirtualFileSystem::lock());
 
@@ -369,7 +370,7 @@ OwnPtr<FileHandle> VirtualFileSystem::open(const String& path, Node* base)
     return make<FileHandle>(move(vnode));
 }
 
-OwnPtr<FileHandle> VirtualFileSystem::create(const String& path, Node* base)
+OwnPtr<FileHandle> VirtualFileSystem::create(const String& path, InodeIdentifier base)
 {
     Locker locker(VirtualFileSystem::lock());
 
@@ -379,7 +380,7 @@ OwnPtr<FileHandle> VirtualFileSystem::create(const String& path, Node* base)
     return nullptr;
 }
 
-OwnPtr<FileHandle> VirtualFileSystem::mkdir(const String& path, Node* base)
+OwnPtr<FileHandle> VirtualFileSystem::mkdir(const String& path, InodeIdentifier base)
 {
     Locker locker(VirtualFileSystem::lock());
 
@@ -399,7 +400,41 @@ InodeIdentifier VirtualFileSystem::resolveSymbolicLink(const String& basePath, I
     return resolvePath(buf);
 }
 
-InodeIdentifier VirtualFileSystem::resolvePath(const String& path, Node* base)
+String VirtualFileSystem::absolutePath(InodeIdentifier inode)
+{
+    Locker locker(VirtualFileSystem::lock());
+
+    if (!inode.isValid())
+        return String();
+
+    Vector<InodeIdentifier> lineage;
+    while (inode != m_rootNode->inode) {
+        if (auto* mount = findMountForGuest(inode))
+            lineage.append(mount->host());
+        else
+            lineage.append(inode);
+        if (inode.metadata().isDirectory()) {
+            inode = resolvePath("..", inode);
+        } else
+            inode = inode.fileSystem()->findParentOfInode(inode);
+        ASSERT(inode.isValid());
+    }
+    if (lineage.isEmpty())
+        return "/";
+    lineage.append(m_rootNode->inode);
+    StringBuilder builder;
+    for (size_t i = lineage.size() - 1; i >= 1; --i) {
+        auto& child = lineage[i - 1];
+        auto parent = lineage[i];
+        if (auto* mount = findMountForHost(parent))
+            parent = mount->guest();
+        builder.append('/');
+        builder.append(parent.fileSystem()->nameOfChildInDirectory(parent, child));
+    }
+    return builder.build();
+}
+
+InodeIdentifier VirtualFileSystem::resolvePath(const String& path, InodeIdentifier base)
 {
     if (path.isEmpty())
         return { };
@@ -410,7 +445,7 @@ InodeIdentifier VirtualFileSystem::resolvePath(const String& path, Node* base)
     if (path[0] == '/')
         inode = m_rootNode->inode;
     else
-        inode = base ? base->inode : m_rootNode->inode;
+        inode = base.isValid() ? base : m_rootNode->inode;
 
     for (unsigned i = 0; i < parts.size(); ++i) {
         bool wasRootInodeAtHeadOfLoop = inode.isRootInode();
