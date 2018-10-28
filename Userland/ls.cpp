@@ -65,7 +65,9 @@ int main(int c, char** v)
         const char* endColor = "";
 
         if (colorize) {
-            if (S_ISDIR(st.st_mode))
+            if (S_ISLNK(st.st_mode))
+                beginColor = "\033[36;1m";
+            else if (S_ISDIR(st.st_mode))
                 beginColor = "\033[34;1m";
             else if (st.st_mode & 0111)
                 beginColor = "\033[32;1m";
@@ -76,10 +78,19 @@ int main(int c, char** v)
 
         printf("%s%s%s", beginColor, de->d_name, endColor);
 
-        if (S_ISDIR(st.st_mode))
+        if (S_ISLNK(st.st_mode)) {
+            char linkbuf[256];
+            ssize_t nread = readlink(pathbuf, linkbuf, sizeof(linkbuf));
+            if (nread < 0) {
+                perror("readlink failed");
+            } else {
+                printf(" -> %s", linkbuf);
+            }
+        } else if (S_ISDIR(st.st_mode)) {
             printf("/");
-        else if (st.st_mode & 0111)
+        } else if (st.st_mode & 0111) {
             printf("*");
+        }
         printf("\n");
     }
     return 0;

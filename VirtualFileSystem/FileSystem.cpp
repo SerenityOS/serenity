@@ -74,7 +74,8 @@ ByteBuffer FileSystem::readEntireInode(InodeIdentifier inode, FileHandle* handle
         return nullptr;
     }
 
-    auto contents = ByteBuffer::createUninitialized(metadata.size);
+    size_t initialSize = metadata.size ? metadata.size : 4096;
+    auto contents = ByteBuffer::createUninitialized(initialSize);
 
     Unix::ssize_t nread;
     byte buffer[512];
@@ -87,6 +88,7 @@ ByteBuffer FileSystem::readEntireInode(InodeIdentifier inode, FileHandle* handle
         memcpy(out, buffer, nread);
         out += nread;
         offset += nread;
+        ASSERT(offset <= initialSize); // FIXME: Support dynamically growing the buffer.
     }
     if (nread < 0) {
         kprintf("[fs] readInode: ERROR: %d\n", nread);

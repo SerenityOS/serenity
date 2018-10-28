@@ -9,7 +9,7 @@ int main(int argc, char** argv)
         printf("usage: cat <file>\n");
         return 1;
     }
-    int fd = open(argv[1]);
+    int fd = open(argv[1], O_RDONLY);
     if (fd == -1) {
         printf("failed to open %s: %s\n", argv[1], strerror(errno));
         return 1;

@@ -147,7 +147,7 @@ int main(int, char**)
     int linedx = 0;
     linebuf[0] = '\0';
 
-    int fd = open("/dev/keyboard");
+    int fd = open("/dev/keyboard", O_RDONLY);
     if (fd == -1) {
         printf("failed to open /dev/keyboard :(\n");
         return 1;

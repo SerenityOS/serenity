@@ -20,10 +20,9 @@ pid_t getpid()
     return Syscall::invoke(Syscall::PosixGetpid);
 }
 
-int open(const char* path)
+int open(const char* path, int options)
 {
-    size_t length = strlen(path);
-    int rc = Syscall::invoke(Syscall::PosixOpen, (dword)path, (dword)length);
+    int rc = Syscall::invoke(Syscall::PosixOpen, (dword)path, (dword)options);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
@@ -71,6 +70,12 @@ int sleep(unsigned seconds)
 int gethostname(char* buffer, size_t size)
 {
     int rc = Syscall::invoke(Syscall::PosixGethostname, (dword)buffer, (dword)size);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
+ssize_t readlink(const char* path, char* buffer, size_t size)
+{
+    int rc = Syscall::invoke(Syscall::PosixReadlink, (dword)path, (dword)buffer, (dword)size);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 

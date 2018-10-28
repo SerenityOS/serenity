@@ -8,8 +8,7 @@ extern "C" {
 
 DIR* opendir(const char* name)
 {
-    // FIXME: Should fail if it's not a directory!
-    int fd = open(name);
+    int fd = open(name, O_RDONLY | O_DIRECTORY);
     if (fd == -1)
         return nullptr;
     DIR* dirp = (DIR*)malloc(sizeof(dirp));

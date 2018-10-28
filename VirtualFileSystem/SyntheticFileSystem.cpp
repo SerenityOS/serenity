@@ -60,12 +60,12 @@ auto SyntheticFileSystem::createTextFile(String&& name, String&& text) -> OwnPtr
     file->metadata.size = file->data.size();
     file->metadata.uid = 100;
     file->metadata.gid = 200;
-    file->metadata.mode = 04;
+    file->metadata.mode = 0040644;
     file->metadata.mtime = mepoch;
     return file;
 }
 
-auto SyntheticFileSystem::createGeneratedFile(String&& name, Function<ByteBuffer()>&& generator) -> OwnPtr<File>
+auto SyntheticFileSystem::createGeneratedFile(String&& name, Function<ByteBuffer()>&& generator, Unix::mode_t mode) -> OwnPtr<File>
 {
     auto file = make<File>();
     file->generator = move(generator);
@@ -73,7 +73,7 @@ auto SyntheticFileSystem::createGeneratedFile(String&& name, Function<ByteBuffer
     file->metadata.size = 0;
     file->metadata.uid = 0;
     file->metadata.gid = 0;
-    file->metadata.mode = 0100644;
+    file->metadata.mode = mode;
     file->metadata.mtime = mepoch;
     return file;
 }
@@ -146,9 +146,8 @@ bool SyntheticFileSystem::enumerateDirectoryInode(InodeIdentifier inode, Functio
     callback({ ".", synInode.metadata.inode });
     callback({ "..", synInode.parent });
 
-    for (auto& child : synInode.children) {
+    for (auto& child : synInode.children)
         callback({ child->name, child->metadata.inode });
-    }
     return true;
 }
 
@@ -214,8 +213,8 @@ Unix::ssize_t SyntheticFileSystem::readInodeBytes(InodeIdentifier inode, Unix::o
             generatedData = handle->generatorCache();
         }
     }
-    auto* data = generatedData ? &generatedData : &file.data;
 
+    auto* data = generatedData ? &generatedData : &file.data;
     Unix::ssize_t nread = min(static_cast<Unix::off_t>(data->size() - offset), static_cast<Unix::off_t>(count));
     memcpy(buffer, data->pointer() + offset, nread);
     if (nread == 0 && handle && handle->generatorCache())

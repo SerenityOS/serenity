@@ -3,7 +3,7 @@
 
 int main(int c, char** v)
 {
-    int fd = open("/proc/mm");
+    int fd = open("/proc/mm", O_RDONLY);
     if (fd == -1) {
         perror("failed to open /proc/mm");
         return 1;

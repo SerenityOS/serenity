@@ -12,6 +12,13 @@
 #include "Limits.h"
 #include "FileSystem.h"
 
+#define O_RDONLY 0
+#define O_WRONLY 1
+#define O_RDWR 2
+#define O_DIRECTORY 00200000
+#define O_NOFOLLOW 00400000
+#define O_NOFOLLOW_NOERROR 0x4000000
+
 class CharacterDevice;
 class FileHandle;
 
@@ -79,7 +86,7 @@ public:
     bool mountRoot(RetainPtr<FileSystem>&&);
     bool mount(RetainPtr<FileSystem>&&, const String& path);
 
-    OwnPtr<FileHandle> open(const String& path, InodeIdentifier base = InodeIdentifier());
+    OwnPtr<FileHandle> open(const String& path, int options = 0, InodeIdentifier base = InodeIdentifier());
     OwnPtr<FileHandle> create(const String& path, InodeIdentifier base = InodeIdentifier());
     OwnPtr<FileHandle> mkdir(const String& path, InodeIdentifier base = InodeIdentifier());
 
@@ -98,7 +105,7 @@ private:
     friend class FileHandle;
 
     void enumerateDirectoryInode(InodeIdentifier, Function<bool(const FileSystem::DirectoryEntry&)>);
-    InodeIdentifier resolvePath(const String& path, InodeIdentifier base = InodeIdentifier());
+    InodeIdentifier resolvePath(const String& path, int& error, InodeIdentifier base = InodeIdentifier(), int options = 0);
     InodeIdentifier resolveSymbolicLink(const String& basePath, InodeIdentifier symlinkInode);
 
     RetainPtr<Node> allocateNode();
