@@ -5,7 +5,7 @@
 #include <AK/Retainable.h>
 #include <AK/RetainPtr.h>
 #include <AK/Vector.h>
-#include <AK/HashMap.h>
+#include <AK/HashTable.h>
 #include "Task.h"
 
 class Task;
@@ -17,7 +17,7 @@ enum class PageFaultResponse {
 
 struct Zone : public Retainable<Zone> {
 public:
-    ~Zone() { }
+    ~Zone();
     size_t size() const { return m_pages.size() * PAGE_SIZE; }
 
     const Vector<PhysicalAddress>& pages() const { return m_pages; }
@@ -25,10 +25,7 @@ public:
 private:
     friend class MemoryManager;
     friend bool copyToZone(Zone&, const void* data, size_t);
-    explicit Zone(Vector<PhysicalAddress>&& pages)
-        : m_pages(move(pages))
-    {
-    }
+    explicit Zone(Vector<PhysicalAddress>&&);
 
     Vector<PhysicalAddress> m_pages;
 };
@@ -38,6 +35,7 @@ bool copyToZone(Zone&, const void* data, size_t);
 #define MM MemoryManager::the()
 
 class MemoryManager {
+    friend ByteBuffer procfs$mm();
 public:
     static MemoryManager& the() PURE;
 
@@ -61,6 +59,9 @@ public:
     bool unmapRegion(Task&, Task::Region&);
     bool mapRegionsForTask(Task&);
     bool unmapRegionsForTask(Task&);
+
+    void registerZone(Zone&);
+    void unregisterZone(Zone&);
 
 private:
     MemoryManager();
@@ -161,7 +162,7 @@ private:
     dword* m_pageTableZero;
     dword* m_pageTableOne;
 
-    HashMap<int, RetainPtr<Zone>> m_zones;
+    HashTable<Zone*> m_zones;
 
     Vector<PhysicalAddress> m_freePages;
 };

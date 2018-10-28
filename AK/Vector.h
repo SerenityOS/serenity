@@ -116,6 +116,21 @@ public:
         m_impl->remove(index);
     }
 
+    void append(Vector<T>&& other)
+    {
+        Vector<T> tmp = move(other);
+        ensureCapacity(size() + tmp.size());
+        for (auto&& v : tmp) {
+            uncheckedAppend(move(v));
+        }
+    }
+
+    void uncheckedAppend(T&& value)
+    {
+        new (m_impl->slot(m_impl->m_size)) T(move(value));
+        ++m_impl->m_size;
+    }
+
     void append(T&& value)
     {
         ensureCapacity(size() + 1);

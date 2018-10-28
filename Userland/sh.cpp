@@ -26,6 +26,13 @@ static int sh_pwd(int, const char**)
     return 0;
 }
 
+static int sh_exit(int, const char**)
+{
+    printf("Good-bye!\n");
+    exit(0);
+    return 0;
+}
+
 static int sh_cd(int argc, const char** argv)
 {
     if (argc == 1) {
@@ -75,6 +82,10 @@ static bool handle_builtin(int argc, const char** argv, int& retval)
     }
     if (!strcmp(argv[0], "pwd")) {
         retval = sh_pwd(argc, argv);
+        return true;
+    }
+    if (!strcmp(argv[0], "exit")) {
+        retval = sh_exit(argc, argv);
         return true;
     }
     return false;

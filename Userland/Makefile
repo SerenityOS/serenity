@@ -12,7 +12,8 @@ OBJS = \
        cat.o \
        uname.o \
        clear.o \
-       tst.o
+       tst.o \
+       mm.o
 
 APPS = \
        id \
@@ -28,7 +29,8 @@ APPS = \
        cat \
        uname \
        clear \
-       tst
+       tst \
+       mm
 
 ARCH_FLAGS =
 STANDARD_FLAGS = -std=c++17 -nostdinc++ -nostdlib
@@ -88,6 +90,9 @@ clear: clear.o
 	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
 
 tst: tst.o
+	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
+
+mm: mm.o
 	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
 
 .cpp.o:
