@@ -16,6 +16,7 @@ enum class PageFaultResponse {
 };
 
 struct Zone : public Retainable<Zone> {
+    friend ByteBuffer procfs$mm();
 public:
     ~Zone();
     size_t size() const { return m_pages.size() * PAGE_SIZE; }
