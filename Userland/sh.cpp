@@ -164,7 +164,11 @@ int main(int, char**)
         printf("failed to open /dev/keyboard :(\n");
         return 1;
     }
-    g->cwd = "/";
+    {
+        char cwdbuf[1024];
+        getcwd(cwdbuf, sizeof(cwdbuf));
+        g->cwd = cwdbuf;
+    }
     prompt();
     for (;;) {
         char keybuf[16];
@@ -172,12 +176,6 @@ int main(int, char**)
         if (nread < 0) {
             printf("failed to read :(\n");
             return 2;
-        }
-        if (nread > 2)
-            printf("read %u bytes\n", nread);
-        if (nread > (ssize_t)sizeof(keybuf)) {
-            printf("read() overran the buffer i gave it!\n");
-            return 3;
         }
         for (ssize_t i = 0; i < nread; ++i) {
             putchar(keybuf[i]);

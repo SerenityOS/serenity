@@ -233,6 +233,8 @@ Task* Task::createUserTask(const String& path, uid_t uid, gid_t gid, pid_t paren
         InterruptDisabler disabler;
         if (auto* parentTask = Task::fromPID(parentPID))
             cwd = parentTask->m_cwd.copyRef();
+        if (!cwd)
+            cwd = VirtualFileSystem::the().root();
     }
 
     auto handle = VirtualFileSystem::the().open(path, error, 0, cwd ? cwd->inode : InodeIdentifier());
@@ -260,7 +262,7 @@ Task* Task::createUserTask(const String& path, uid_t uid, gid_t gid, pid_t paren
     }
 
     InterruptDisabler disabler; // FIXME: Get rid of this, jesus christ. This "critical" section is HUGE.
-    Task* t = new Task(parts.takeLast(), uid, gid, parentPID, Ring3, handle->vnode());
+    Task* t = new Task(parts.takeLast(), uid, gid, parentPID, Ring3, move(cwd), handle->vnode());
 
     t->m_arguments = move(taskArguments);
 
@@ -361,25 +363,20 @@ Task* Task::createKernelTask(void (*e)(), String&& name)
     return task;
 }
 
-Task::Task(String&& name, uid_t uid, gid_t gid, pid_t parentPID, RingLevel ring, RetainPtr<VirtualFileSystem::Node>&& executable)
+Task::Task(String&& name, uid_t uid, gid_t gid, pid_t parentPID, RingLevel ring, RetainPtr<VirtualFileSystem::Node>&& cwd, RetainPtr<VirtualFileSystem::Node>&& executable)
     : m_name(move(name))
     , m_pid(next_pid++)
     , m_uid(uid)
     , m_gid(gid)
     , m_state(Runnable)
     , m_ring(ring)
+    , m_cwd(move(cwd))
     , m_executable(move(executable))
     , m_parentPID(parentPID)
 {
     m_fileHandles.append(nullptr); // stdin
     m_fileHandles.append(nullptr); // stdout
     m_fileHandles.append(nullptr); // stderr
-
-    auto* parentTask = Task::fromPID(parentPID);
-    if (parentTask)
-        m_cwd = parentTask->m_cwd.copyRef();
-    else
-        m_cwd = nullptr;
 
     m_nextRegion = LinearAddress(0x600000);
 
@@ -833,8 +830,13 @@ int Task::sys$chdir(const char* path)
 
 int Task::sys$getcwd(char* buffer, size_t size)
 {
-    // FIXME: Implement!
     VALIDATE_USER_BUFFER(buffer, size);
+    auto path = VirtualFileSystem::the().absolutePath(cwdInode());
+    if (path.isNull())
+        return -EINVAL;
+    if (size < path.length() + 1)
+        return -ERANGE;
+    strcpy(buffer, path.characters());
     return -ENOTIMPL;
 }
 

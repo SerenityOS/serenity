@@ -13,8 +13,7 @@ void memcpy(void *dest, const void *src, DWORD n)
 
 void strcpy(char* dest, const char *src)
 {
-    while (*src)
-        *(dest++) = *(src++);
+    while ((*dest++ = *src++) != '\0');
 }
 
 void* memset(void* dest, BYTE c, DWORD n)
