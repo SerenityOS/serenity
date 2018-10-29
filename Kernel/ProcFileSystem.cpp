@@ -178,19 +178,35 @@ ByteBuffer procfs$kmalloc()
     return buffer;
 }
 
+static const char* toString(Task::State state)
+{
+    switch (state) {
+    case Task::Invalid: return "Invalid";
+    case Task::Runnable: return "Runnable";
+    case Task::Running: return "Running";
+    case Task::Terminated: return "Term";
+    case Task::Crashing: return "Crash";
+    case Task::Exiting: return "Exit";
+    case Task::BlockedSleep: return "Sleep";
+    case Task::BlockedWait: return "Wait";
+    case Task::BlockedRead: return "Read";
+    }
+    ASSERT_NOT_REACHED();
+    return nullptr;
+}
+
 ByteBuffer procfs$summary()
 {
     InterruptDisabler disabler;
     auto tasks = Task::allTasks();
     auto buffer = ByteBuffer::createUninitialized(tasks.size() * 256);
     char* ptr = (char*)buffer.pointer();
-    ptr += ksprintf(ptr, "PID    OWNER      STATE  PPID  NSCHED      FDS    NAME\n");
+    ptr += ksprintf(ptr, "PID    OWNER  STATE      PPID   NSCHED      FDS  NAME\n");
     for (auto* task : tasks) {
-        ptr += ksprintf(ptr, "%w   %w:%w  %b     %w  %x    %w   %s\n",
+        ptr += ksprintf(ptr, "% 5u  % 4u   % 8s   % 5u  % 10u  % 3u  %s\n",
             task->pid(),
             task->uid(),
-            task->gid(),
-            task->state(),
+            toString(task->state()),
             task->parentPID(),
             task->timesScheduled(),
             task->fileHandleCount(),
