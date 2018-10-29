@@ -46,6 +46,7 @@ ByteBuffer DiskBackedFileSystem::readBlock(unsigned index) const
 
 #ifdef BLOCK_CACHE
     {
+        LOCKER(m_blockCacheLock);
         InterruptDisabler disabler;
         auto it = m_blockCache.find(index);
         if (it != m_blockCache.end()) {
@@ -64,6 +65,7 @@ ByteBuffer DiskBackedFileSystem::readBlock(unsigned index) const
 
 #ifdef BLOCK_CACHE
     {
+        LOCKER(m_blockCacheLock);
         InterruptDisabler disabler;
         if (m_blockCache.size() >= 32)
             m_blockCache.removeOneRandomly();
@@ -103,6 +105,7 @@ void DiskBackedFileSystem::setBlockSize(unsigned blockSize)
 
 void DiskBackedFileSystem::invalidateCaches()
 {
+    LOCKER(m_blockCacheLock);
     InterruptDisabler disabler;
     m_blockCache.clear();
 }

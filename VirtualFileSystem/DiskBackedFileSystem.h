@@ -3,6 +3,7 @@
 #include "FileSystem.h"
 #include <AK/ByteBuffer.h>
 #include <AK/HashMap.h>
+#include <AK/Lock.h>
 
 class DiskBackedFileSystem : public FileSystem {
 public:
@@ -28,5 +29,7 @@ protected:
 private:
     unsigned m_blockSize { 0 };
     RetainPtr<DiskDevice> m_device;
+
+    mutable SpinLock m_blockCacheLock;
     mutable HashMap<unsigned, ByteBuffer> m_blockCache;
 };
