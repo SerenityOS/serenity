@@ -104,11 +104,9 @@ public:
 private:
     friend class FileHandle;
 
-    String absolutePathInternal(InodeIdentifier, Locker&);
-
     void enumerateDirectoryInode(InodeIdentifier, Function<bool(const FileSystem::DirectoryEntry&)>);
-    InodeIdentifier resolvePath(const String& path, int& error, Locker&, InodeIdentifier base = InodeIdentifier(), int options = 0);
-    InodeIdentifier resolveSymbolicLink(InodeIdentifier base, InodeIdentifier symlinkInode, int& error, Locker&);
+    InodeIdentifier resolvePath(const String& path, int& error, InodeIdentifier base = InodeIdentifier(), int options = 0);
+    InodeIdentifier resolveSymbolicLink(InodeIdentifier base, InodeIdentifier symlinkInode, int& error);
 
     RetainPtr<Node> allocateNode();
     void freeNode(Node*);

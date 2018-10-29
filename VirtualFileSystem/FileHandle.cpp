@@ -25,8 +25,6 @@ bool additionWouldOverflow(Unix::off_t a, Unix::off_t b)
 
 int FileHandle::stat(Unix::stat* buffer)
 {
-    LOCKER(VirtualFileSystem::lock());
-
     if (!m_vnode)
         return -EBADF;
 

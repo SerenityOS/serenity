@@ -204,6 +204,7 @@ InodeMetadata Ext2FileSystem::inodeMetadata(InodeIdentifier inode) const
         metadata.majorDevice = (dev & 0xfff00) >> 8;
         metadata.minorDevice= (dev & 0xff) | ((dev >> 12) & 0xfff00);
     }
+
     return metadata;
 }
 
