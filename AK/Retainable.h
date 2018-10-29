@@ -17,7 +17,7 @@ public:
     {
         ASSERT(m_retainCount);
         if (!--m_retainCount)
-            delete static_cast<const T*>(this);
+            delete static_cast<T*>(this);
     }
 
     int retainCount() const

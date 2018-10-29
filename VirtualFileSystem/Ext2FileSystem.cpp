@@ -11,6 +11,31 @@
 
 //#define EXT2_DEBUG
 
+class Ext2FileSystem::CachedExt2InodeImpl : public Retainable<CachedExt2InodeImpl> {
+public:
+    CachedExt2InodeImpl(OwnPtr<ext2_inode>&& e2i) : e2inode(move(e2i)) { }
+    ~CachedExt2InodeImpl() { }
+    OwnPtr<ext2_inode> e2inode;
+};
+
+class Ext2FileSystem::CachedExt2Inode {
+public:
+    const ext2_inode* operator->() const { return ptr->e2inode.ptr(); }
+    const ext2_inode& operator*() const { return *ptr->e2inode; }
+    ext2_inode* operator->() { return ptr->e2inode.ptr(); }
+    ext2_inode& operator*() { return *ptr->e2inode; }
+    bool operator!() const { return !ptr; }
+    operator bool() const { return !!ptr; }
+    CachedExt2Inode() { }
+    explicit CachedExt2Inode(OwnPtr<ext2_inode>&& e2inode)
+        : ptr(adopt(*new CachedExt2InodeImpl(move(e2inode))))
+    { }
+    explicit CachedExt2Inode(RetainPtr<CachedExt2InodeImpl> p)
+        : ptr(p)
+    { }
+    RetainPtr<CachedExt2InodeImpl> ptr;
+};
+
 RetainPtr<Ext2FileSystem> Ext2FileSystem::create(RetainPtr<DiskDevice>&& device)
 {
     return adopt(*new Ext2FileSystem(move(device)));
@@ -159,14 +184,22 @@ ByteBuffer Ext2FileSystem::readBlockContainingInode(unsigned inode, unsigned& bl
     return readBlock(blockIndex);
 }
 
-OwnPtr<ext2_inode> Ext2FileSystem::lookupExt2Inode(unsigned inode) const
+auto Ext2FileSystem::lookupExt2Inode(unsigned inode) const -> CachedExt2Inode
 {
+    {
+        LOCKER(m_inodeCacheLock);
+        auto it = m_inodeCache.find(inode);
+        if (it != m_inodeCache.end()) {
+            return CachedExt2Inode{ (*it).value };
+        }
+    }
+
     unsigned blockIndex;
     unsigned offset;
     auto block = readBlockContainingInode(inode, blockIndex, offset);
 
     if (!block)
-        return nullptr;
+        return { };
 
     auto* e2inode = reinterpret_cast<ext2_inode*>(kmalloc(inodeSize()));
     memcpy(e2inode, reinterpret_cast<ext2_inode*>(block.offsetPointer(offset)), inodeSize());
@@ -174,7 +207,12 @@ OwnPtr<ext2_inode> Ext2FileSystem::lookupExt2Inode(unsigned inode) const
     dumpExt2Inode(*e2inode);
 #endif
 
-    return OwnPtr<ext2_inode>(e2inode);
+    LOCKER(m_inodeCacheLock);
+    if (m_inodeCache.size() >= 64)
+        m_inodeCache.removeOneRandomly();
+    auto cachedInode = adopt(*new CachedExt2InodeImpl(OwnPtr<ext2_inode>(e2inode)));
+    m_inodeCache.set(inode, cachedInode.copyRef());
+    return CachedExt2Inode{ cachedInode };
 }
 
 InodeMetadata Ext2FileSystem::inodeMetadata(InodeIdentifier inode) const

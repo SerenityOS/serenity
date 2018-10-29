@@ -19,6 +19,8 @@ private:
     typedef unsigned BlockIndex;
     typedef unsigned GroupIndex;
     typedef unsigned InodeIndex;
+    class CachedExt2Inode;
+    class CachedExt2InodeImpl;
 
     explicit Ext2FileSystem(RetainPtr<DiskDevice>&&);
 
@@ -30,7 +32,7 @@ private:
     unsigned blocksPerGroup() const;
     unsigned inodeSize() const;
 
-    OwnPtr<ext2_inode> lookupExt2Inode(unsigned) const;
+    CachedExt2Inode lookupExt2Inode(unsigned) const;
     bool writeExt2Inode(unsigned, const ext2_inode&);
     ByteBuffer readBlockContainingInode(unsigned inode, unsigned& blockIndex, unsigned& offset) const;
 
@@ -72,5 +74,8 @@ private:
 
     mutable ByteBuffer m_cachedSuperBlock;
     mutable ByteBuffer m_cachedBlockGroupDescriptorTable;
+
+    mutable SpinLock m_inodeCacheLock;
+    mutable HashMap<unsigned, RetainPtr<CachedExt2InodeImpl>> m_inodeCache;
 };
 

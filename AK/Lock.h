@@ -36,6 +36,7 @@ public:
 
     void lock(const char* func = nullptr)
     {
+        (void)func;
 #ifdef DEBUG_LOCKS
         {
             InterruptDisabler dis;
@@ -56,6 +57,7 @@ public:
 
     void unlock(const char* func = nullptr)
     {
+        (void)func;
         // barrier();
         ASSERT(m_lock);
         m_lock = 0;

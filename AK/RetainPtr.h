@@ -29,6 +29,7 @@ public:
     RetainPtr(T* ptr) : m_ptr(ptr) { retainIfNotNull(m_ptr); }
     RetainPtr(T& object) : m_ptr(&object) { m_ptr->retain(); }
     RetainPtr(AdoptTag, T& object) : m_ptr(&object) { }
+    RetainPtr(RetainPtr& other) : m_ptr(other.copyRef().leakRef()) { }
     RetainPtr(RetainPtr&& other) : m_ptr(other.leakRef()) { }
     template<typename U> RetainPtr(RetainPtr<U>&& other) : m_ptr(static_cast<T*>(other.leakRef())) { }
     ~RetainPtr()
