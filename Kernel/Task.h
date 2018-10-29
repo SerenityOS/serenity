@@ -141,7 +141,7 @@ private:
     friend class MemoryManager;
     friend bool scheduleNewTask();
 
-    Task(String&& name, uid_t, gid_t, pid_t parentPID, RingLevel, RetainPtr<VirtualFileSystem::Node>&& = nullptr);
+    Task(String&& name, uid_t, gid_t, pid_t parentPID, RingLevel, RetainPtr<VirtualFileSystem::Node>&& cwd = nullptr, RetainPtr<VirtualFileSystem::Node>&& executable = nullptr);
 
     void allocateLDT();
 
