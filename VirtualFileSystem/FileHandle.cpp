@@ -25,7 +25,7 @@ bool additionWouldOverflow(Unix::off_t a, Unix::off_t b)
 
 int FileHandle::stat(Unix::stat* buffer)
 {
-    Locker locker(VirtualFileSystem::lock());
+    LOCKER(VirtualFileSystem::lock());
 
     if (!m_vnode)
         return -EBADF;
@@ -52,7 +52,7 @@ int FileHandle::stat(Unix::stat* buffer)
 
 Unix::off_t FileHandle::seek(Unix::off_t offset, int whence)
 {
-    Locker locker(VirtualFileSystem::lock());
+    LOCKER(VirtualFileSystem::lock());
 
     if (!m_vnode)
         return -EBADF;
@@ -96,7 +96,7 @@ Unix::off_t FileHandle::seek(Unix::off_t offset, int whence)
 
 Unix::ssize_t FileHandle::read(byte* buffer, Unix::size_t count)
 {
-    Locker locker(VirtualFileSystem::lock());
+    LOCKER(VirtualFileSystem::lock());
 
     if (m_vnode->isCharacterDevice()) {
         // FIXME: What should happen to m_currentOffset?
@@ -116,7 +116,7 @@ bool FileHandle::hasDataAvailableForRead()
 
 ByteBuffer FileHandle::readEntireFile()
 {
-    Locker locker(VirtualFileSystem::lock());
+    LOCKER(VirtualFileSystem::lock());
 
     if (m_vnode->isCharacterDevice()) {
         auto buffer = ByteBuffer::createUninitialized(1024);
@@ -135,7 +135,7 @@ bool FileHandle::isDirectory() const
 
 ssize_t FileHandle::get_dir_entries(byte* buffer, Unix::size_t size)
 {
-    Locker locker(VirtualFileSystem::lock());
+    LOCKER(VirtualFileSystem::lock());
 
     auto metadata = m_vnode->metadata();
     if (!metadata.isValid())

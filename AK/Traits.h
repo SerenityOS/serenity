@@ -29,7 +29,7 @@ struct Traits<T*> {
 #ifdef SERENITY
         return intHash((dword)p);
 #else
-        return intHash((ptrdiff_t)p & 0xffffffff);
+        return intHash((unsigned long long)p & 0xffffffff);
 #endif
     }
     static void dump(const T* p) { kprintf("%p", p); }

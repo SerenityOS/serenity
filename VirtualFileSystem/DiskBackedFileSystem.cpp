@@ -7,6 +7,7 @@ typedef int InterruptDisabler;
 #endif
 
 //#define DBFS_DEBUG
+#define BLOCK_CACHE
 
 DiskBackedFileSystem::DiskBackedFileSystem(RetainPtr<DiskDevice>&& device)
     : m_device(move(device))
@@ -42,6 +43,8 @@ ByteBuffer DiskBackedFileSystem::readBlock(unsigned index) const
 #ifdef DBFS_DEBUG
     kprintf("DiskBackedFileSystem::readBlock %u\n", index);
 #endif
+
+#ifdef BLOCK_CACHE
     {
         InterruptDisabler disabler;
         auto it = m_blockCache.find(index);
@@ -49,19 +52,24 @@ ByteBuffer DiskBackedFileSystem::readBlock(unsigned index) const
             return (*it).value;
         }
     }
+#endif
 
     auto buffer = ByteBuffer::createUninitialized(blockSize());
+    //kprintf("created block buffer with size %u\n", blockSize());
     DiskOffset baseOffset = static_cast<DiskOffset>(index) * static_cast<DiskOffset>(blockSize());
     auto* bufferPointer = buffer.pointer();
-    device().read(baseOffset, blockSize(), bufferPointer);
+    bool success = device().read(baseOffset, blockSize(), bufferPointer);
+    ASSERT(success);
     ASSERT(buffer.size() == blockSize());
 
+#ifdef BLOCK_CACHE
     {
         InterruptDisabler disabler;
         if (m_blockCache.size() >= 32)
             m_blockCache.removeOneRandomly();
         m_blockCache.set(index, buffer);
     }
+#endif
     return buffer;
 }
 

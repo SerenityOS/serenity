@@ -293,7 +293,6 @@ Unix::ssize_t Ext2FileSystem::readInodeBytes(InodeIdentifier inode, Unix::off_t 
     static const unsigned maxInlineSymlinkLength = 60;
     if (isSymbolicLink(e2inode->i_mode) && e2inode->i_size < maxInlineSymlinkLength) {
         Unix::ssize_t nread = min((Unix::off_t)e2inode->i_size - offset, static_cast<Unix::off_t>(count));
-        kprintf("nread = %d\n", nread);
         memcpy(buffer, e2inode->i_block + offset, nread);
         return nread;
     }

@@ -28,11 +28,10 @@ bool Console::hasDataAvailableForRead() const
     return false;
 }
 
-ssize_t Console::read(byte* buffer, size_t bufferSize)
+ssize_t Console::read(byte*, size_t)
 {
     // FIXME: Implement reading from the console.
     //        Maybe we could use a ring buffer for this device?
-    //        A generalized ring buffer would probably be useful.
     return 0;
 }
 

@@ -247,3 +247,17 @@ void init()
     }
 }
 
+void log_try_lock(const char* where)
+{
+    kprintf("[%u] >>> locking... (%s)\n", current->pid(), where);
+}
+
+void log_locked(const char* where)
+{
+    kprintf("[%u] >>> locked() in %s\n", current->pid(), where);
+}
+
+void log_unlocked(const char* where)
+{
+    kprintf("[%u] <<< unlocked()\n", current->pid(), where);
+}

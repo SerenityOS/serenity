@@ -17,6 +17,7 @@
 
 //#define DEBUG_IO
 //#define TASK_DEBUG
+//#define SCHEDULER_DEBUG
 
 #define VALIDATE_USER_BUFFER(b, s) \
     do { \
@@ -605,12 +606,12 @@ bool scheduleNewTask()
         }
     }
 
-#if 0
-    kprintf("Scheduler choices:\n");
+#ifdef SCHEDULER_DEBUG
+    dbgprintf("Scheduler choices:\n");
     for (auto* task = s_tasks->head(); task; task = task->next()) {
-        if (task->state() == Task::BlockedWait || task->state() == Task::BlockedSleep)
-            continue;
-        kprintf("%w %s(%u)\n", task->state(), task->name().characters(), task->pid());
+        //if (task->state() == Task::BlockedWait || task->state() == Task::BlockedSleep)
+//            continue;
+        dbgprintf("%w %s(%u)\n", task->state(), task->name().characters(), task->pid());
     }
 #endif
 
@@ -621,7 +622,9 @@ bool scheduleNewTask()
         auto* task = s_tasks->head();
 
         if (task->state() == Task::Runnable || task->state() == Task::Running) {
-            //kprintf("switch to %s (%p vs %p)\n", task->name().characters(), task, current);
+#ifdef SCHEDULER_DEBUG
+            dbgprintf("switch to %s(%u) (%p vs %p)\n", task->name().characters(), task->pid(), task, current);
+#endif
             return contextSwitch(task);
         }
 
@@ -844,7 +847,7 @@ int Task::sys$open(const char* path, int options)
     if (m_fileHandles.size() >= m_maxFileHandles)
         return -EMFILE;
     int error;
-    auto handle = VirtualFileSystem::the().open(path, error, 0, cwdInode());
+    auto handle = VirtualFileSystem::the().open(path, error, options, cwdInode());
     if (!handle)
         return error;
     if (options & O_DIRECTORY && !handle->isDirectory())

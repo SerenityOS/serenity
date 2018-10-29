@@ -18,7 +18,7 @@ String StringBuilder::build()
     if (strings.isEmpty())
         return String::empty();
 
-    size_t sizeNeeded = 1;
+    size_t sizeNeeded = 0;
     for (auto& string : strings)
         sizeNeeded += string.length();
 

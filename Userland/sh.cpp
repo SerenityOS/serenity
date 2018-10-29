@@ -17,7 +17,7 @@ static void prompt()
     if (getuid() == 0)
         printf("# ");
     else
-        printf("\033[32;1m%s\033[0m:\033[34;1m%s\033[0m$> ", g->hostname, g->cwd.characters());
+        printf("(%u) \033[32;1m%s\033[0m:\033[34;1m%s\033[0m$> ", getpid(), g->hostname, g->cwd.characters());
 }
 
 static int sh_pwd(int, const char**)
@@ -91,6 +91,21 @@ static bool handle_builtin(int argc, const char** argv, int& retval)
     return false;
 }
 
+static int try_spawn(const char* path, const char** argv)
+{
+    int ret = spawn(path, argv);
+    if (ret >= 0)
+        return ret;
+
+    const char* search_path = "/bin";
+    char pathbuf[128];
+    sprintf(pathbuf, "%s/%s", search_path, argv[0]);
+    ret = spawn(pathbuf, argv);
+    if (ret == -1)
+        return -1;
+    return ret;
+}
+
 static int runcmd(char* cmd)
 {
     if (cmd[0] == 0)
@@ -115,15 +130,12 @@ static int runcmd(char* cmd)
         return 0;
     }
 
-    const char* search_path = "/bin";
-
-    char pathbuf[128];
-    sprintf(pathbuf, "%s/%s", search_path, argv[0]);
-    int ret = spawn(pathbuf, argv);
-    if (ret == -1) {
+    int ret = try_spawn(argv[0], argv);
+    if (ret < 0) {
         printf("spawn failed: %s (%s)\n", cmd, strerror(errno));
         return 1;
     }
+
     // FIXME: waitpid should give us the spawned process's exit status
     int wstatus = 0;
     waitpid(ret, &wstatus, 0);

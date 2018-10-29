@@ -20,7 +20,7 @@ typedef struct
 } PACKED allocation_t;
 
 #define CHUNK_SIZE  128
-#define POOL_SIZE   (512 * 1024)
+#define POOL_SIZE   (1024 * 1024)
 
 #define BASE_PHYS   0x200000
 

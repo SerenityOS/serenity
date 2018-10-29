@@ -2,6 +2,20 @@
 
 #include "Types.h"
 
+#ifdef SERENITY
+#include "i386.h"
+#else
+typedef int InterruptDisabler;
+#endif
+
+//#define DEBUG_LOCKS
+
+void log_try_lock(const char*);
+void log_locked(const char*);
+void log_unlocked(const char*);
+
+void yield();
+
 namespace AK {
 
 static inline dword CAS(volatile dword* mem, dword newval, dword oldval)
@@ -9,28 +23,46 @@ static inline dword CAS(volatile dword* mem, dword newval, dword oldval)
     dword ret;
     asm volatile(
         "cmpxchgl %2, %1"
-        :"=a"(ret), "=m"(*mem)
-        :"r"(newval), "m"(*mem), "0"(oldval));
+        :"=a"(ret), "+m"(*mem)
+        :"r"(newval), "0"(oldval)
+        :"memory");
     return ret;
 }
 
 class SpinLock {
 public:
     SpinLock() { }
-    ~SpinLock() { unlock(); }
+    ~SpinLock() { }
 
-    void lock()
+    void lock(const char* func = nullptr)
     {
+#ifdef DEBUG_LOCKS
+        {
+            InterruptDisabler dis;
+            log_try_lock(func);
+        }
+#endif
         for (;;) {
-            if (CAS(&m_lock, 1, 0) == 1)
+            if (CAS(&m_lock, 1, 0) == 0) {
+#ifdef DEBUG_LOCKS
+                InterruptDisabler dis;
+                log_locked(func);
+#endif
                 return;
+            }
+            yield();
         }
     }
 
-    void unlock()
+    void unlock(const char* func = nullptr)
     {
         // barrier();
+        ASSERT(m_lock);
         m_lock = 0;
+#ifdef DEBUG_LOCKS
+        InterruptDisabler dis;
+        log_unlocked(func);
+#endif
     }
 
     void init()
@@ -44,13 +76,17 @@ private:
 
 class Locker {
 public:
-    explicit Locker(SpinLock& l) : m_lock(l) { m_lock.lock(); }
+    explicit Locker(SpinLock& l, const char* func) : m_lock(l), m_func(func) { lock(); }
     ~Locker() { unlock(); }
-    void unlock() { m_lock.unlock(); }
+    void unlock() { m_lock.unlock(m_func); }
+    void lock() { m_lock.lock(m_func); }
 
 private:
     SpinLock& m_lock;
+    const char* m_func { nullptr };
 };
+
+#define LOCKER(lock) Locker locker(lock, __FUNCTION__)
 
 }
 

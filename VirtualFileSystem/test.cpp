@@ -53,7 +53,8 @@ int main(int c, char** v)
     //return 0;
 
     if (!strcmp(v[0], "./vcat")) {
-        auto handle = vfs.open(v[2]);
+        int error;
+        auto handle = vfs.open(v[2], error);
         if (!handle) {
             printf("failed to open %s inside fs image\n", v[2]);
             return 1;
@@ -149,7 +150,8 @@ int main(int c, char** v)
         if (cmd == "stat" && parts.size() > 1) {
             char buf[1024];
             sprintf(buf, "%s/%s", currentDirectory.characters(), parts[1].characters());
-            auto handle = vfs.open(buf);
+            int error;
+            auto handle = vfs.open(buf, error);
             if (!handle) {
                 printf("Can't open '%s' :(\n", buf);
                 continue;
@@ -179,7 +181,8 @@ int main(int c, char** v)
         if (cmd == "cat" && parts.size() > 1) {
             char pathbuf[1024];
             sprintf(pathbuf, "%s/%s", currentDirectory.characters(), parts[1].characters());
-            auto handle = vfs.open(pathbuf);
+            int error;
+            auto handle = vfs.open(pathbuf, error);
             if (!handle) {
                 printf("failed to open %s\n", pathbuf);
                 continue;
@@ -192,7 +195,8 @@ int main(int c, char** v)
         if (cmd == "kat" && parts.size() > 1) {
             char pathbuf[1024];
             sprintf(pathbuf, "%s/%s", currentDirectory.characters(), parts[1].characters());
-            auto handle = vfs.open(pathbuf);
+            int error;
+            auto handle = vfs.open(pathbuf, error);
             if (!handle) {
                 printf("failed to open %s\n", pathbuf);
                 continue;

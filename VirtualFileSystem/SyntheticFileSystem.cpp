@@ -2,6 +2,11 @@
 #include "FileHandle.h"
 #include <AK/StdLib.h>
 
+#ifndef SERENITY
+typedef int InterruptDisabler;
+#define ASSERT_INTERRUPTS_DISABLED()
+#endif
+
 //#define SYNTHFS_DEBUG
 
 RetainPtr<SyntheticFileSystem> SyntheticFileSystem::create()
@@ -31,11 +36,10 @@ bool SyntheticFileSystem::initialize()
     rootDir->metadata.mtime = mepoch;
     m_inodes.set(RootInodeIndex, move(rootDir));
 
-#if 0
 #ifndef SERENITY
     addFile(createTextFile("file", "I'm a synthetic file!\n"));
     addFile(createTextFile("message", "Hey! This isn't my bottle!\n"));
-#endif
+    addFile(createGeneratedFile("lunk", [] { return String("/home/andreas/file1").toByteBuffer(); }, 00120777));
 #endif
     return true;
 }
@@ -60,7 +64,7 @@ auto SyntheticFileSystem::createTextFile(String&& name, String&& text) -> OwnPtr
     file->metadata.size = file->data.size();
     file->metadata.uid = 100;
     file->metadata.gid = 200;
-    file->metadata.mode = 0040644;
+    file->metadata.mode = 0010644;
     file->metadata.mtime = mepoch;
     return file;
 }
