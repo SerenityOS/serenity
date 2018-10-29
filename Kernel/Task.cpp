@@ -510,6 +510,11 @@ void Task::taskDidCrash(Task* crashedTask)
 {
     ASSERT_INTERRUPTS_DISABLED();
 
+    if (crashedTask->state() == Crashing) {
+        kprintf("Double crash :(\n");
+        HANG;
+    }
+
     crashedTask->setState(Crashing);
     crashedTask->dumpRegions();
 
