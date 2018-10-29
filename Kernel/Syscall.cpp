@@ -41,18 +41,15 @@ asm(
 
 namespace Syscall {
 
-static SpinLock* s_lock;
-
 void initialize()
 {
-    s_lock = new SpinLock;
     registerUserCallableInterruptHandler(0x80, syscall_ISR);
     kprintf("syscall: int 0x80 handler installed\n");
 }
 
 DWORD handle(DWORD function, DWORD arg1, DWORD arg2, DWORD arg3)
 {
-    Locker locker(*s_lock);
+    ASSERT_INTERRUPTS_ENABLED();
     switch (function) {
     case Syscall::Yield:
         yield();
@@ -73,8 +70,7 @@ DWORD handle(DWORD function, DWORD arg1, DWORD arg2, DWORD arg3)
     case Syscall::PosixGetcwd:
         return current->sys$getcwd((char*)arg1, (size_t)arg2);
     case Syscall::PosixOpen:
-        //kprintf("syscall: open('%s', %u)\n", arg1, arg2);
-        return current->sys$open((const char*)arg1, (size_t)arg2);
+        return current->sys$open((const char*)arg1, (int)arg2);
     case Syscall::PosixClose:
         //kprintf("syscall: close(%d)\n", arg1);
         return current->sys$close((int)arg1);
@@ -104,7 +100,7 @@ DWORD handle(DWORD function, DWORD arg1, DWORD arg2, DWORD arg3)
         return current->sys$gethostname((char*)arg1, (size_t)arg2);
     case Syscall::PosixExit:
         cli();
-        locker.unlock();
+        //locker.unlock();
         current->sys$exit((int)arg1);
         ASSERT_NOT_REACHED();
         return 0;

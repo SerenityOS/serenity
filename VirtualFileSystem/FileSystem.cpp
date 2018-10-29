@@ -78,11 +78,13 @@ ByteBuffer FileSystem::readEntireInode(InodeIdentifier inode, FileHandle* handle
     auto contents = ByteBuffer::createUninitialized(initialSize);
 
     Unix::ssize_t nread;
-    byte buffer[512];
+    byte buffer[4096];
     byte* out = contents.pointer();
     Unix::off_t offset = 0;
     for (;;) {
         nread = readInodeBytes(inode, offset, sizeof(buffer), buffer, handle);
+        //kprintf("nread: %u, bufsiz: %u, initialSize: %u\n", nread, sizeof(buffer), initialSize);
+        ASSERT(nread <= sizeof(buffer));
         if (nread <= 0)
             break;
         memcpy(out, buffer, nread);
@@ -95,6 +97,7 @@ ByteBuffer FileSystem::readEntireInode(InodeIdentifier inode, FileHandle* handle
         return nullptr;
     }
 
+    contents.trim(offset);
     return contents;
 }
 

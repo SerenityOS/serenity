@@ -11,12 +11,21 @@
 #include "WeakPtr.h"
 #include "CircularQueue.h"
 #include "FileSystemPath.h"
+#include "Lock.h"
 
 static void testWeakPtr();
+
+void log_locked() { }
+void log_unlocked() { }
 
 int main(int c, char** v)
 {
     StringImpl::initializeGlobals();
+
+    {
+        SpinLock lock;
+        Locker locker(lock);
+    }
 
     {
         const char* testpath = "/proc/../proc/1/../../proc/1/vm";

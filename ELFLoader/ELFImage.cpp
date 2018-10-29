@@ -178,7 +178,7 @@ const ELFImage::RelocationSection ELFImage::Section::relocations() const
 {
     // FIXME: This is ugly.
     char relocationSectionName[128];
-    int x = ksprintf(relocationSectionName, ".rel%s", name());
+    ksprintf(relocationSectionName, ".rel%s", name());
 
 #ifdef ELFIMAGE_DEBUG
     kprintf("looking for '%s'\n", relocationSectionName);
