@@ -2,7 +2,6 @@
 #include "Task.h"
 #include "Syscall.h"
 #include "Console.h"
-#include <AK/Lock.h>
 
 extern "C" void syscall_entry();
 extern "C" void syscall_ISR();
@@ -100,7 +99,6 @@ DWORD handle(DWORD function, DWORD arg1, DWORD arg2, DWORD arg3)
         return current->sys$gethostname((char*)arg1, (size_t)arg2);
     case Syscall::PosixExit:
         cli();
-        //locker.unlock();
         current->sys$exit((int)arg1);
         ASSERT_NOT_REACHED();
         return 0;

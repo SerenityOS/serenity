@@ -56,15 +56,15 @@ auto SyntheticFileSystem::createDirectory(String&& name) -> OwnPtr<File>
     return file;
 }
 
-auto SyntheticFileSystem::createTextFile(String&& name, String&& text) -> OwnPtr<File>
+auto SyntheticFileSystem::createTextFile(String&& name, ByteBuffer&& contents, Unix::mode_t mode) -> OwnPtr<File>
 {
     auto file = make<File>();
-    file->data = text.toByteBuffer();
+    file->data = contents;
     file->name = move(name);
     file->metadata.size = file->data.size();
     file->metadata.uid = 100;
     file->metadata.gid = 200;
-    file->metadata.mode = 0010644;
+    file->metadata.mode = mode;
     file->metadata.mtime = mepoch;
     return file;
 }
