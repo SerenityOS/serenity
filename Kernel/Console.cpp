@@ -303,6 +303,14 @@ void Console::putChar(char ch)
     case '\033':
         m_escState = ExpectBracket;
         return;
+    case 8: // Backspace
+        if (m_cursorColumn) {
+            --m_cursorColumn;\
+            vga_set_cursor(m_cursorRow, m_cursorColumn);
+            vga_putch_at(m_cursorRow, m_cursorColumn, ' ');
+            return;
+        }
+        break;
     case '\n':
         scrollup();
         vga_set_cursor(m_cursorRow, m_cursorColumn);
