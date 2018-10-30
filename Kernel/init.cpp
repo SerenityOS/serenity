@@ -37,6 +37,7 @@ system_t system;
 VirtualConsole* tty0;
 VirtualConsole* tty1;
 VirtualConsole* tty2;
+VirtualConsole* tty3;
 Keyboard* keyboard;
 
 void banner()
@@ -131,6 +132,7 @@ static void init_stage2()
     vfs->registerCharacterDevice(*tty0);
     vfs->registerCharacterDevice(*tty1);
     vfs->registerCharacterDevice(*tty2);
+    vfs->registerCharacterDevice(*tty3);
 
     auto dev_hd0 = IDEDiskDevice::create();
     auto e2fs = Ext2FileSystem::create(dev_hd0.copyRef());
@@ -195,6 +197,7 @@ static void init_stage2()
     auto* sh0 = Task::createUserTask("/bin/sh", (uid_t)100, (gid_t)100, (pid_t)0, error, nullptr, tty0);
     auto* sh1 = Task::createUserTask("/bin/sh", (uid_t)100, (gid_t)100, (pid_t)0, error, nullptr, tty1);
     auto* sh2 = Task::createUserTask("/bin/sh", (uid_t)100, (gid_t)100, (pid_t)0, error, nullptr, tty2);
+    auto* sh3 = Task::createUserTask("/bin/sh", (uid_t)100, (gid_t)100, (pid_t)0, error, nullptr, tty3);
 
 #if 0
     // It would be nice to exit this process, but right now it instantiates all kinds of things.
@@ -231,6 +234,7 @@ void init()
     tty0 = new VirtualConsole(0, VirtualConsole::AdoptCurrentVGABuffer);
     tty1 = new VirtualConsole(1);
     tty2 = new VirtualConsole(2);
+    tty3 = new VirtualConsole(3);
     VirtualConsole::switchTo(0);
 
     MemoryManager::initialize();
