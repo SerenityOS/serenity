@@ -10,6 +10,7 @@ static Console* s_the;
 
 Console& Console::the()
 {
+    ASSERT(s_the);
     return *s_the;
 }
 
