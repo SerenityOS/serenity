@@ -159,11 +159,6 @@ int main(int, char**)
     int linedx = 0;
     linebuf[0] = '\0';
 
-    int fd = 0; // open("/dev/keyboard", O_RDONLY);
-    if (fd == -1) {
-        printf("failed to open /dev/keyboard :(\n");
-        return 1;
-    }
     {
         char cwdbuf[1024];
         getcwd(cwdbuf, sizeof(cwdbuf));
@@ -172,7 +167,7 @@ int main(int, char**)
     prompt();
     for (;;) {
         char keybuf[16];
-        ssize_t nread = read(fd, keybuf, sizeof(keybuf));
+        ssize_t nread = read(0, keybuf, sizeof(keybuf));
         if (nread < 0) {
             printf("failed to read :(\n");
             return 2;
