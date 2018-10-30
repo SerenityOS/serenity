@@ -38,6 +38,12 @@ static char shift_map[0x100] =
     0, 0, 0, ' '
 };
 
+void Keyboard::emit(byte ch)
+{
+    if (m_client)
+        m_client->onKeyPress(ch);
+    m_queue.enqueue(ch);
+}
 
 void Keyboard::handleIRQ()
 {
@@ -50,7 +56,7 @@ void Keyboard::handleIRQ()
         case 0x9D: m_modifiers &= ~MOD_CTRL; break;
         case 0x2A: m_modifiers |= MOD_SHIFT; break;
         case 0xAA: m_modifiers &= ~MOD_SHIFT; break;
-        case 0x1C: /* enter */ m_queue.enqueue('\n'); break;
+        case 0x1C: /* enter */ emit('\n'); break;
         case 0xFA: /* i8042 ack */ break;
         default:
             if (ch & 0x80) {
@@ -69,31 +75,33 @@ void Keyboard::handleIRQ()
                 }
             }
             if (!m_modifiers) {
-                if (m_client)
-                    m_client->onKeyPress(map[ch]);
-                m_queue.enqueue(map[ch]);
+                emit(map[ch]);
             } else if (m_modifiers & MOD_SHIFT) {
-                if (m_client)
-                    m_client->onKeyPress(shift_map[ch]);
-                m_queue.enqueue(shift_map[ch]);
+                emit(shift_map[ch]);
             } else if (m_modifiers & MOD_CTRL) {
                 // FIXME: This is obviously not a good enough way to process ctrl+whatever.
-                if (m_client) {
-                    m_client->onKeyPress('^');
-                    m_client->onKeyPress(shift_map[ch]);
-                }
-                m_queue.enqueue('^');
-                m_queue.enqueue(shift_map[ch]);
+                emit('^');
+                emit(shift_map[ch]);
             }
         }
         //break;
     }
 }
 
+static Keyboard* s_the;
+
+Keyboard& Keyboard::the()
+{
+    ASSERT(s_the);
+    return *s_the;
+}
+
 Keyboard::Keyboard()
     : IRQHandler(IRQ_KEYBOARD)
     , CharacterDevice(85, 1)
 {
+    s_the = this;
+
     // Empty the buffer of any pending data.
     // I don't care what you've been pressing until now!
     while (IO::in8(I8042_STATUS ) & DATA_AVAILABLE)

@@ -70,6 +70,8 @@ DWORD handle(DWORD function, DWORD arg1, DWORD arg2, DWORD arg3)
         return current->sys$getcwd((char*)arg1, (size_t)arg2);
     case Syscall::PosixOpen:
         return current->sys$open((const char*)arg1, (int)arg2);
+    case Syscall::PosixWrite:
+        return current->sys$write((int)arg1, (const void*)arg2, (size_t)arg3);
     case Syscall::PosixClose:
         //kprintf("syscall: close(%d)\n", arg1);
         return current->sys$close((int)arg1);

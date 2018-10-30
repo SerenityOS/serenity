@@ -20,7 +20,7 @@ class Task : public InlineLinkedListNode<Task> {
     struct Subregion;
 public:
     static Task* createKernelTask(void (*entry)(), String&& name);
-    static Task* createUserTask(const String& path, uid_t, gid_t, pid_t parentPID, int& error, const char** args = nullptr);
+    static Task* createUserTask(const String& path, uid_t, gid_t, pid_t parentPID, int& error, const char** args = nullptr, TTY* = nullptr);
     ~Task();
 
     static Vector<Task*> allTasks();
@@ -90,7 +90,8 @@ public:
     pid_t sys$getpid();
     int sys$open(const char* path, int options);
     int sys$close(int fd);
-    int sys$read(int fd, void* outbuf, size_t nread);
+    ssize_t sys$read(int fd, void* outbuf, size_t nread);
+    ssize_t sys$write(int fd, const void*, size_t);
     int sys$lstat(const char*, Unix::stat*);
     int sys$seek(int fd, int offset);
     int sys$kill(pid_t pid, int sig);
@@ -114,6 +115,8 @@ public:
     static void initialize();
 
     static void taskDidCrash(Task*);
+
+    const TTY* tty() const { return m_tty; }
 
     size_t regionCount() const { return m_regions.size(); }
     const Vector<RetainPtr<Region>>& regions() const { return m_regions; }

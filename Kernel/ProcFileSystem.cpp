@@ -201,15 +201,16 @@ ByteBuffer procfs$summary()
     auto tasks = Task::allTasks();
     auto buffer = ByteBuffer::createUninitialized(tasks.size() * 256);
     char* ptr = (char*)buffer.pointer();
-    ptr += ksprintf(ptr, "PID    OWNER  STATE      PPID   NSCHED      FDS  NAME\n");
+    ptr += ksprintf(ptr, "PID    OWNER  STATE      PPID   NSCHED      FDS  TTY  NAME\n");
     for (auto* task : tasks) {
-        ptr += ksprintf(ptr, "% 5u  % 4u   % 8s   % 5u  % 10u  % 3u  %s\n",
+        ptr += ksprintf(ptr, "% 5u  % 4u   % 8s   % 5u  % 10u  % 3u  % 4s  %s\n",
             task->pid(),
             task->uid(),
             toString(task->state()),
             task->parentPID(),
             task->timesScheduled(),
             task->fileHandleCount(),
+            task->tty() ? task->tty()->ttyName().characters() : "n/a",
             task->name().characters());
     }
     *ptr = '\0';

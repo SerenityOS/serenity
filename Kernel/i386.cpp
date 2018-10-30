@@ -192,6 +192,8 @@ void exception_13_handler()
 EH_ENTRY(14);
 void exception_14_handler()
 {
+    ASSERT(current);
+
     dword faultAddress;
     asm ("movl %%cr2, %%eax":"=a"(faultAddress));
 
@@ -249,7 +251,6 @@ void exception_14_handler()
 #define EH(i, msg) \
     static void _exception ## i () \
     { \
-        vga_set_attr(0x0a); \
         kprintf(msg"\n"); \
         DWORD cr0, cr2, cr3, cr4; \
         asm ("movl %%cr0, %%eax":"=a"(cr0)); \

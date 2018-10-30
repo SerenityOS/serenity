@@ -10,7 +10,8 @@ public:
     ~FileHandle();
 
     Unix::off_t seek(Unix::off_t, int whence);
-    Unix::ssize_t read(byte* buffer, Unix::size_t count);
+    Unix::ssize_t read(byte*, Unix::size_t);
+    Unix::ssize_t write(const byte* data, Unix::size_t);
     int stat(Unix::stat*);
 
     bool hasDataAvailableForRead();

@@ -89,12 +89,35 @@ auto VirtualFileSystem::makeNode(InodeIdentifier inode) -> RetainPtr<Node>
     return vnode;
 }
 
+auto VirtualFileSystem::makeNode(CharacterDevice& device) -> RetainPtr<Node>
+{
+    auto vnode = allocateNode();
+    ASSERT(vnode);
+
+#ifdef VFS_DEBUG
+    kprintf("makeNode: device=%p (%u,%u)\n", &device, device.major(), device.minor());
+#endif
+
+    m_device2vnode.set(encodedDevice(device.major(), device.minor()), vnode.ptr());
+    vnode->m_characterDevice = &device;
+
+    return vnode;
+}
+
 auto VirtualFileSystem::getOrCreateNode(InodeIdentifier inode) -> RetainPtr<Node>
 {
     auto it = m_inode2vnode.find(inode);
     if (it != m_inode2vnode.end())
         return (*it).value;
     return makeNode(inode);
+}
+
+auto VirtualFileSystem::getOrCreateNode(CharacterDevice& device) -> RetainPtr<Node>
+{
+    auto it = m_device2vnode.find(encodedDevice(device.major(), device.minor()));
+    if (it != m_device2vnode.end())
+        return (*it).value;
+    return makeNode(device);
 }
 
 bool VirtualFileSystem::mount(RetainPtr<FileSystem>&& fileSystem, const String& path)
@@ -161,10 +184,15 @@ void VirtualFileSystem::freeNode(Node* node)
 {
     ASSERT(node);
     ASSERT(node->inUse());
-    m_inode2vnode.remove(node->inode);
-    node->inode.fileSystem()->release();
-    node->inode = InodeIdentifier();
-    node->m_characterDevice = nullptr;
+    if (node->inode.isValid()) {
+        m_inode2vnode.remove(node->inode);
+        node->inode.fileSystem()->release();
+        node->inode = InodeIdentifier();
+    }
+    if (node->m_characterDevice) {
+        m_device2vnode.remove(encodedDevice(node->m_characterDevice->major(), node->m_characterDevice->minor()));
+        node->m_characterDevice = nullptr;
+    }
     m_nodeFreeList.append(move(node));
 }
 
@@ -359,6 +387,14 @@ bool VirtualFileSystem::touch(const String& path)
     if (!inode.isValid())
         return false;
     return inode.fileSystem()->setModificationTime(inode, ktime(nullptr));
+}
+
+OwnPtr<FileHandle> VirtualFileSystem::open(CharacterDevice& device, int options)
+{
+    auto vnode = getOrCreateNode(device);
+    if (!vnode)
+        return nullptr;
+    return make<FileHandle>(move(vnode));
 }
 
 OwnPtr<FileHandle> VirtualFileSystem::open(const String& path, int& error, int options, InodeIdentifier base)

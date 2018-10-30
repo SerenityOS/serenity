@@ -214,13 +214,13 @@ int Task::sys$gethostname(char* buffer, size_t size)
 int Task::sys$spawn(const char* path, const char** args)
 {
     int error = 0;
-    auto* child = Task::createUserTask(path, m_uid, m_gid, m_pid, error, args);
+    auto* child = Task::createUserTask(path, m_uid, m_gid, m_pid, error, args, m_tty);
     if (child)
         return child->pid();
     return error;
 }
 
-Task* Task::createUserTask(const String& path, uid_t uid, gid_t gid, pid_t parentPID, int& error, const char** args)
+Task* Task::createUserTask(const String& path, uid_t uid, gid_t gid, pid_t parentPID, int& error, const char** args, TTY* tty)
 {
     auto parts = path.split('/');
     if (parts.isEmpty()) {
@@ -262,7 +262,7 @@ Task* Task::createUserTask(const String& path, uid_t uid, gid_t gid, pid_t paren
     }
 
     InterruptDisabler disabler; // FIXME: Get rid of this, jesus christ. This "critical" section is HUGE.
-    Task* t = new Task(parts.takeLast(), uid, gid, parentPID, Ring3, move(cwd), handle->vnode());
+    Task* t = new Task(parts.takeLast(), uid, gid, parentPID, Ring3, move(cwd), handle->vnode(), tty);
 
     t->m_arguments = move(taskArguments);
 
@@ -372,8 +372,8 @@ Task::Task(String&& name, uid_t uid, gid_t gid, pid_t parentPID, RingLevel ring,
     , m_ring(ring)
     , m_cwd(move(cwd))
     , m_executable(move(executable))
-    , m_parentPID(parentPID)
     , m_tty(tty)
+    , m_parentPID(parentPID)
 {
     if (tty) {
         m_fileHandles.append(tty->open(O_RDONLY)); // stdin
@@ -753,6 +753,25 @@ int Task::sys$seek(int fd, int offset)
     return handle->seek(offset, SEEK_SET);
 }
 
+ssize_t Task::sys$write(int fd, const void* data, size_t size)
+{
+    VALIDATE_USER_BUFFER(data, size);
+#ifdef DEBUG_IO
+    kprintf("Task::sys$write: called(%d, %p, %u)\n", fd, data, size);
+#endif
+    auto* handle = fileHandleIfExists(fd);
+#ifdef DEBUG_IO
+    kprintf("Task::sys$write: handle=%p\n", handle);
+#endif
+    if (!handle)
+        return -EBADF;
+    auto nwritten = handle->write((const byte*)data, size);
+#ifdef DEBUG_IO
+    kprintf("Task::sys$write: nwritten=%u\n", nwritten);
+#endif
+    return nwritten;
+}
+
 ssize_t Task::sys$read(int fd, void* outbuf, size_t nread)
 {
     VALIDATE_USER_BUFFER(outbuf, nread);
@@ -763,13 +782,8 @@ ssize_t Task::sys$read(int fd, void* outbuf, size_t nread)
 #ifdef DEBUG_IO
     kprintf("Task::sys$read: handle=%p\n", handle);
 #endif
-    if (!handle) {
-        kprintf("Task::sys$read: handle not found :(\n");
-        return -1;
-    }
-#ifdef DEBUG_IO
-    kprintf("call read on handle=%p\n", handle);
-#endif
+    if (!handle)
+        return -EBADF;
     if (handle->isBlocking()) {
         if (!handle->hasDataAvailableForRead()) {
             m_fdBlockedOnRead = fd;

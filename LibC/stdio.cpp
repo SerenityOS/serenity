@@ -3,6 +3,7 @@
 #include "types.h"
 #include "string.h"
 #include "errno.h"
+#include "unistd.h"
 #include <Kernel/Syscall.h>
 #include <AK/printf.cpp>
 
@@ -10,13 +11,14 @@ extern "C" {
 
 int putchar(int ch)
 {
-    Syscall::invoke(Syscall::PutCharacter, ch);
+    write(0, &ch, 1);
+    //Syscall::invoke(Syscall::PutCharacter, ch);
     return (byte)ch;
 }
 
-static void sys_putch(char*, char ch)
+static void sys_putch(char*&, char ch)
 {
-    Syscall::invoke(Syscall::PutCharacter, ch);
+    putchar(ch);
 }
 
 int printf(const char* fmt, ...)

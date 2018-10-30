@@ -3,16 +3,17 @@
 #include "kmalloc.h"
 #include "i386.h"
 #include "StdLib.h"
+#include "Keyboard.h"
 #include <AK/String.h>
 
 static byte* s_vgaBuffer = (byte*)0xb8000;
 static VirtualConsole* s_consoles[6];
-static unsigned s_activeConsole;
+static int s_activeConsole;
 
 void VirtualConsole::initialize()
 {
     memset(s_consoles, 0, sizeof(s_consoles));
-    s_activeConsole = 0;
+    s_activeConsole = -1;
 }
 
 VirtualConsole::VirtualConsole(unsigned index, InitialContents initialContents)
@@ -40,7 +41,7 @@ VirtualConsole::~VirtualConsole()
 
 void VirtualConsole::switchTo(unsigned index)
 {
-    if (index == s_activeConsole)
+    if ((int)index == s_activeConsole)
         return;
     dbgprintf("[VC] Switch to %u\n", index);
     ASSERT(index < 6);
@@ -49,6 +50,7 @@ void VirtualConsole::switchTo(unsigned index)
     s_consoles[s_activeConsole]->setActive(false);
     s_activeConsole = index;
     s_consoles[s_activeConsole]->setActive(true);
+    Console::the().setImplementation(s_consoles[s_activeConsole]);
 }
 
 void VirtualConsole::setActive(bool b)
@@ -60,14 +62,14 @@ void VirtualConsole::setActive(bool b)
 
     m_active = b;
     if (!m_active) {
-        dbgprintf("%u becomes inactive, copying to buffer\n", m_index);
         memcpy(m_buffer, s_vgaBuffer, 80 * 25 * 2);
         return;
     }
 
-    dbgprintf("%u becomes active, copying from buffer, set cursor %u,%u\n", m_index, m_cursorRow, m_cursorColumn);
     memcpy(s_vgaBuffer, m_buffer, 80 * 25 * 2);
     vga_set_cursor(m_cursorRow, m_cursorColumn);
+
+    Keyboard::the().setClient(this);
 }
 
 inline bool isParameter(byte ch)
@@ -205,7 +207,6 @@ void VirtualConsole::escape$m(const Vector<unsigned>& params)
             break;
         }
     }
-    vga_set_attr(m_currentAttribute);
 }
 
 void VirtualConsole::escape$s(const Vector<unsigned>&)
@@ -216,9 +217,7 @@ void VirtualConsole::escape$s(const Vector<unsigned>&)
 
 void VirtualConsole::escape$u(const Vector<unsigned>&)
 {
-    m_cursorRow = m_savedCursorRow;
-    m_cursorColumn = m_savedCursorColumn;
-    vga_set_cursor(m_cursorRow, m_cursorColumn);
+    setCursor(m_savedCursorRow, m_savedCursorColumn);
 }
 
 void VirtualConsole::escape$H(const Vector<unsigned>& params)
@@ -229,9 +228,7 @@ void VirtualConsole::escape$H(const Vector<unsigned>& params)
         row = params[0];
     if (params.size() >= 2)
         col = params[1];
-    m_cursorRow = row - 1;
-    m_cursorColumn = col - 1;
-    vga_set_cursor(row - 1, col - 1);
+    setCursor(row - 1, col - 1);
 }
 
 void VirtualConsole::escape$J(const Vector<unsigned>& params)
@@ -284,16 +281,42 @@ void VirtualConsole::executeEscapeSequence(byte final)
     m_intermediates.clear();
 }
 
-void VirtualConsole::onChar(byte ch)
+void VirtualConsole::scrollUp()
 {
-    auto scrollup = [&] {
-        if (m_cursorRow == (m_rows - 1)) {
+    if (m_cursorRow == (m_rows - 1)) {
+        memcpy(m_buffer, m_buffer + 160, 160 * 24);
+        word* linemem = (word*)&m_buffer[24 * 160];
+        for (word i = 0; i < 80; ++i)
+            linemem[i] = 0x0720;
+        if (m_active)
             vga_scroll_up();
-        } else {
-            ++m_cursorRow;
-        }
-        m_cursorColumn = 0;
-    };
+    } else {
+        ++m_cursorRow;
+    }
+    m_cursorColumn = 0;
+}
+
+void VirtualConsole::setCursor(unsigned row, unsigned column)
+{
+    m_cursorRow = row;
+    m_cursorColumn = column;
+    if (m_active)
+        vga_set_cursor(m_cursorRow, m_cursorColumn);
+}
+
+void VirtualConsole::putCharacterAt(unsigned row, unsigned column, byte ch)
+{
+    word cur = (row * 160) + (column * 2);
+    m_buffer[cur] = ch;
+    m_buffer[cur + 1] = m_currentAttribute;
+    if (m_active)
+        vga_putch_at(row, column, ch, m_currentAttribute);
+}
+
+void VirtualConsole::onChar(byte ch, bool shouldEmit)
+{
+    if (shouldEmit)
+        emit(ch);
 
     switch (m_escState) {
     case ExpectBracket:
@@ -336,32 +359,43 @@ void VirtualConsole::onChar(byte ch)
         return;
     case 8: // Backspace
         if (m_cursorColumn) {
-            --m_cursorColumn;\
-            vga_set_cursor(m_cursorRow, m_cursorColumn);
-            vga_putch_at(m_cursorRow, m_cursorColumn, ' ');
+            setCursor(m_cursorRow, m_cursorColumn - 1);
+            putCharacterAt(m_cursorRow, m_cursorColumn, ' ');
             return;
         }
         break;
     case '\n':
-        scrollup();
-        vga_set_cursor(m_cursorRow, m_cursorColumn);
+        scrollUp();
+        setCursor(m_cursorRow, m_cursorColumn);
         return;
     }
 
-    vga_putch_at(m_cursorRow, m_cursorColumn, ch);
+    putCharacterAt(m_cursorRow, m_cursorColumn, ch);
 
     ++m_cursorColumn;
     if (m_cursorColumn >= m_columns)
-        scrollup();
-    vga_set_cursor(m_cursorRow, m_cursorColumn);
+        scrollUp();
+    setCursor(m_cursorRow, m_cursorColumn);
 }
 
 void VirtualConsole::onKeyPress(byte ch)
 {
-    onChar(ch);
+    emit(ch);
 }
 
 void VirtualConsole::onConsoleReceive(byte ch)
 {
-    onChar(ch);
+    onChar(ch, false);
+}
+
+void VirtualConsole::onTTYWrite(byte ch)
+{
+    onChar(ch, false);
+}
+
+String VirtualConsole::ttyName() const
+{
+    char buf[8];
+    ksprintf(buf, "tty%u", m_index);
+    return String(buf);
 }

@@ -19,7 +19,7 @@ public:
     virtual ~Keyboard() override;
     Keyboard();
 
-    void setClient(KeyboardClient*);
+    void setClient(KeyboardClient* client) { m_client = client; }
 
 private:
     // ^IRQHandler
@@ -29,6 +29,8 @@ private:
     virtual ssize_t read(byte* buffer, size_t) override;
     virtual ssize_t write(const byte* buffer, size_t) override;
     virtual bool hasDataAvailableForRead() const override;
+
+    void emit(byte);
 
     KeyboardClient* m_client { nullptr };
     CircularQueue<byte, 16> m_queue;
