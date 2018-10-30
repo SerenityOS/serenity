@@ -111,6 +111,7 @@ public:
     int sys$get_arguments(int* argc, char*** argv);
     int sys$uname(utsname*);
     int sys$readlink(const char*, char*, size_t);
+    int sys$ttyname_r(int fd, char*, size_t);
 
     static void initialize();
 

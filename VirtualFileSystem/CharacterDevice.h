@@ -18,6 +18,8 @@ public:
     unsigned major() const { return m_major; }
     unsigned minor() const { return m_minor; }
 
+    virtual bool isTTY() const { return false; }
+
 protected:
     CharacterDevice(unsigned major, unsigned minor) : m_major(major), m_minor(minor) { }
 

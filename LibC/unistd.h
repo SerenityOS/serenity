@@ -18,6 +18,8 @@ int lstat(const char* path, stat* statbuf);
 int sleep(unsigned seconds);
 int gethostname(char*, size_t);
 ssize_t readlink(const char* path, char* buffer, size_t);
+char* ttyname(int fd);
+int ttyname_r(int fd, char* buffer, size_t);
 
 #define WEXITSTATUS(status) (((status) & 0xff00) >> 8)
 #define WTERMSIG(status) ((status) & 0x7f)

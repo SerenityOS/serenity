@@ -3,6 +3,7 @@
 #include "CharacterDevice.h"
 #include "sys-errno.h"
 #include "UnixTypes.h"
+#include "TTY.h"
 #include <AK/BufferStream.h>
 
 FileHandle::FileHandle(RetainPtr<VirtualFileSystem::Node>&& vnode)
@@ -109,6 +110,7 @@ Unix::ssize_t FileHandle::write(const byte* data, Unix::size_t size)
     }
     // FIXME: Implement non-device writes.
     ASSERT_NOT_REACHED();
+    return -1;
 }
 
 bool FileHandle::hasDataAvailableForRead()
@@ -159,4 +161,18 @@ ssize_t FileHandle::get_dir_entries(byte* buffer, Unix::size_t size)
 
     memcpy(buffer, tempBuffer.pointer(), stream.offset());
     return stream.offset();
+}
+
+bool FileHandle::isTTY() const
+{
+    if (auto* device = m_vnode->characterDevice())
+        return device->isTTY();
+    return false;
+}
+
+const TTY* FileHandle::tty() const
+{
+    if (auto* device = m_vnode->characterDevice())
+        return static_cast<const TTY*>(device);
+    return nullptr;
 }

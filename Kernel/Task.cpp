@@ -741,7 +741,7 @@ ssize_t Task::sys$get_dir_entries(int fd, void* buffer, size_t size)
     VALIDATE_USER_BUFFER(buffer, size);
     auto* handle = fileHandleIfExists(fd);
     if (!handle)
-        return -1;
+        return -EBADF;
     return handle->get_dir_entries((byte*)buffer, size);
 }
 
@@ -749,8 +749,23 @@ int Task::sys$seek(int fd, int offset)
 {
     auto* handle = fileHandleIfExists(fd);
     if (!handle)
-        return -1;
+        return -EBADF;
     return handle->seek(offset, SEEK_SET);
+}
+
+int Task::sys$ttyname_r(int fd, char* buffer, size_t size)
+{
+    VALIDATE_USER_BUFFER(buffer, size);
+    auto* handle = fileHandleIfExists(fd);
+    if (!handle)
+        return -EBADF;
+    if (!handle->isTTY())
+        return -ENOTTY;
+    auto ttyName = handle->tty()->ttyName();
+    if (size < ttyName.length() + 1)
+        return -ERANGE;
+    strcpy(buffer, ttyName.characters());
+    return 0;
 }
 
 ssize_t Task::sys$write(int fd, const void* data, size_t size)
@@ -802,7 +817,7 @@ int Task::sys$close(int fd)
 {
     auto* handle = fileHandleIfExists(fd);
     if (!handle)
-        return -1;
+        return -EBADF;
     // FIXME: Implement.
     return 0;
 }

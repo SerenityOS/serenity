@@ -38,6 +38,20 @@ ssize_t write(int fd, const void* buf, size_t count)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
+int ttyname_r(int fd, char* buffer, size_t size)
+{
+    int rc = Syscall::invoke(Syscall::PosixTtynameR, (dword)fd, (dword)buffer, (dword)size);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
+static char ttyname_buf[32];
+char* ttyname(int fd)
+{
+    if (ttyname_r(fd, ttyname_buf, sizeof(ttyname_buf)) < 0)
+        return nullptr;
+    return ttyname_buf;
+}
+
 int close(int fd)
 {
     int rc = Syscall::invoke(Syscall::PosixClose, fd);

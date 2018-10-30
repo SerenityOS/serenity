@@ -4,6 +4,7 @@
 #include <LibC/errno.h>
 #include <LibC/string.h>
 #include <LibC/stdlib.h>
+#include <LibC/utsname.h>
 #include <AK/FileSystemPath.h>
 
 struct GlobalState {
@@ -148,12 +149,25 @@ static int runcmd(char* cmd)
     return retval;
 }
 
+static void greeting()
+{
+    utsname uts;
+    int rc = uname(&uts);
+    if (rc < 0) {
+        perror("uname");
+        return;
+    }
+    printf("\n%s/%s on %s\n\n", uts.sysname, uts.machine, ttyname(0));
+}
+
 int main(int, char**)
 {
     g = new GlobalState;
     int rc = gethostname(g->hostname, sizeof(g->hostname));
     if (rc < 0)
         perror("gethostname");
+
+    greeting();
 
     char linebuf[128];
     int linedx = 0;
