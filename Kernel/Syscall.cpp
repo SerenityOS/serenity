@@ -3,15 +3,12 @@
 #include "Syscall.h"
 #include "Console.h"
 
-extern "C" void syscall_entry();
+extern "C" void syscall_entry(RegisterDump&);
 extern "C" void syscall_ISR();
 extern volatile RegisterDump* syscallRegDump;
 
 asm(
     ".globl syscall_ISR \n"
-    ".globl syscallRegDump \n"
-    "syscallRegDump: \n"
-    ".long 0\n"
     "syscall_ISR:\n"
     "    pusha\n"
     "    pushw %ds\n"
@@ -27,7 +24,7 @@ asm(
     "    popw %es\n"
     "    popw %fs\n"
     "    popw %gs\n"
-    "    mov %esp, syscallRegDump\n"
+    "    mov %esp, %eax\n"
     "    call syscall_entry\n"
     "    popw %gs\n"
     "    popw %gs\n"
@@ -125,9 +122,8 @@ DWORD handle(DWORD function, DWORD arg1, DWORD arg2, DWORD arg3)
 
 }
 
-void syscall_entry()
+void syscall_entry(RegisterDump& regs)
 {
-    auto& regs = *syscallRegDump;
     DWORD function = regs.eax;
     DWORD arg1 = regs.edx;
     DWORD arg2 = regs.ecx;
