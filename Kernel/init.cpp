@@ -218,6 +218,8 @@ void init()
     kmalloc_init();
     vga_init();
 
+    auto console = make<Console>();
+
     RTC::initialize();
     PIC::initialize();
     gdt_init();
@@ -225,7 +227,6 @@ void init()
 
     keyboard = new Keyboard;
 
-    auto console = make<Console>();
     VirtualConsole::initialize();
     tty0 = new VirtualConsole(0, VirtualConsole::AdoptCurrentVGABuffer);
     tty1 = new VirtualConsole(1);
