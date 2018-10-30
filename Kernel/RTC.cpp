@@ -1,5 +1,6 @@
 #include "RTC.h"
 #include "CMOS.h"
+#include <AK/Assertions.h>
 
 namespace RTC {
 
@@ -77,6 +78,8 @@ time_t now()
     unsigned hour = CMOS::read(0x04);
     unsigned minute = CMOS::read(0x02);
     unsigned second = CMOS::read(0x00);
+
+    ASSERT(year >= 2018);
 
     return daysInYearsSinceEpoch(year - 1) * 86400
          + daysInMonthsSinceStartOfYear(month - 1, year) * 86400
