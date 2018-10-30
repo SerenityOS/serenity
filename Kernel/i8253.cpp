@@ -106,10 +106,10 @@ void clock_handle()
 
     if ((current->tss().cs & 3) != 0) {
 #if 0
-        kprintf("clock'ed across to ring0\n");
-        kprintf("code: %w:%x\n", current->tss().cs, current->tss().eip);
-        kprintf(" stk: %w:%x\n", current->tss().ss, current->tss().esp);
-        kprintf("astk: %w:%x\n", regs.ss_if_crossRing, regs.esp_if_crossRing);
+        dbgprintf("clock'ed across to ring0\n");
+        dbgprintf("code: %w:%x\n", current->tss().cs, current->tss().eip);
+        dbgprintf(" stk: %w:%x\n", current->tss().ss, current->tss().esp);
+        dbgprintf("astk: %w:%x\n", regs.ss_if_crossRing, regs.esp_if_crossRing);
         //HANG;
 #endif
         current->tss().ss = regs.ss_if_crossRing;

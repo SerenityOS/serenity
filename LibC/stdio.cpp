@@ -12,7 +12,6 @@ extern "C" {
 int putchar(int ch)
 {
     write(0, &ch, 1);
-    //Syscall::invoke(Syscall::PutCharacter, ch);
     return (byte)ch;
 }
 
