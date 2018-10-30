@@ -6,12 +6,13 @@
 #include "Keyboard.h"
 #include <AK/String.h>
 
-static byte* s_vgaBuffer = (byte*)0xb8000;
+static byte* s_vgaBuffer;
 static VirtualConsole* s_consoles[6];
 static int s_activeConsole;
 
 void VirtualConsole::initialize()
 {
+    s_vgaBuffer = (byte*)0xb8000;
     memset(s_consoles, 0, sizeof(s_consoles));
     s_activeConsole = -1;
 }
@@ -21,8 +22,8 @@ VirtualConsole::VirtualConsole(unsigned index, InitialContents initialContents)
     , m_index(index)
 {
     s_consoles[index] = this;
-    kprintf("VirtualConsole %u @ %p\n", index, this);
     m_buffer = (byte*)kmalloc(80 * 25 * 2);
+    dbgprintf("VirtualConsole %u @ %p, m_buffer = %p\n", index, this, m_buffer);
     if (initialContents == AdoptCurrentVGABuffer) {
         memcpy(m_buffer, s_vgaBuffer, 80 * 25 * 2);
         auto vgaCursor = vga_get_cursor();
@@ -43,11 +44,12 @@ void VirtualConsole::switchTo(unsigned index)
 {
     if ((int)index == s_activeConsole)
         return;
-    dbgprintf("[VC] Switch to %u\n", index);
+    dbgprintf("[VC] Switch to %u (%p)\n", index, s_consoles[index]);
     ASSERT(index < 6);
     ASSERT(s_consoles[index]);
     InterruptDisabler disabler;
-    s_consoles[s_activeConsole]->setActive(false);
+    if (s_activeConsole != -1)
+        s_consoles[s_activeConsole]->setActive(false);
     s_activeConsole = index;
     s_consoles[s_activeConsole]->setActive(true);
     Console::the().setImplementation(s_consoles[s_activeConsole]);
