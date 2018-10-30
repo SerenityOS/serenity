@@ -32,6 +32,12 @@ ssize_t read(int fd, void* buf, size_t count)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
+ssize_t write(int fd, const void* buf, size_t count)
+{
+    int rc = Syscall::invoke(Syscall::PosixWrite, (dword)fd, (dword)buf, (dword)count);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
 int close(int fd)
 {
     int rc = Syscall::invoke(Syscall::PosixClose, fd);

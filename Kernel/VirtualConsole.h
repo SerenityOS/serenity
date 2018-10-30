@@ -19,16 +19,24 @@ public:
 
 private:
     // ^KeyboardClient
-    void onKeyPress(byte) override;
+    virtual void onKeyPress(byte) override;
 
     // ^ConsoleImplementation
-    void onConsoleReceive(byte) override;
+    virtual void onConsoleReceive(byte) override;
 
-    void onChar(byte);
+    // ^TTY
+    virtual void onTTYWrite(byte) override;
+    virtual String ttyName() const override;
+
+    void onChar(byte, bool shouldEmit);
 
     byte* m_buffer;
     unsigned m_index;
     bool m_active { false };
+
+    void scrollUp();
+    void setCursor(unsigned row, unsigned column);
+    void putCharacterAt(unsigned row, unsigned column, byte ch);
 
     void escape$H(const Vector<unsigned>&);
     void escape$J(const Vector<unsigned>&);
@@ -56,6 +64,4 @@ private:
     EscapeState m_escState { Normal };
     Vector<byte> m_parameters;
     Vector<byte> m_intermediates;
-
 };
-

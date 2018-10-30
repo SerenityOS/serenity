@@ -31,16 +31,11 @@ void vga_clear()
         vga_clear_row(i);
 }
 
-void vga_putch_at(byte row, byte column, byte ch)
+void vga_putch_at(byte row, byte column, byte ch, byte attr)
 {
     word cur = (row * 160) + (column * 2);
     vga_mem[cur] = ch;
-    vga_mem[cur + 1] = current_attr;
-}
-
-void vga_set_attr(BYTE attr)
-{
-    current_attr = attr;
+    vga_mem[cur + 1] = attr;
 }
 
 byte vga_get_attr()

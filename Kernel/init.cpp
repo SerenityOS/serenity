@@ -37,9 +37,11 @@ system_t system;
 VirtualConsole* tty0;
 VirtualConsole* tty1;
 VirtualConsole* tty2;
+Keyboard* keyboard;
 
 void banner()
 {
+    InterruptDisabler disabler;
     kprintf("\n\033[33;1mWelcome to \033[36;1mSerenity OS!\033[0m\n\n");
 }
 
@@ -106,8 +108,6 @@ static void init_stage2()
     kprintf("init stage2...\n");
 
     Syscall::initialize();
-
-    auto keyboard = make<Keyboard>();
 
     Disk::initialize();
 
@@ -189,10 +189,12 @@ static void init_stage2()
     }
 #endif
 
-    int error;
-    auto* shTask = Task::createUserTask("/bin/sh", (uid_t)100, (gid_t)100, (pid_t)0, error);
-
     banner();
+
+    int error;
+    auto* sh0 = Task::createUserTask("/bin/sh", (uid_t)100, (gid_t)100, (pid_t)0, error, nullptr, tty0);
+    auto* sh1 = Task::createUserTask("/bin/sh", (uid_t)100, (gid_t)100, (pid_t)0, error, nullptr, tty1);
+    auto* sh2 = Task::createUserTask("/bin/sh", (uid_t)100, (gid_t)100, (pid_t)0, error, nullptr, tty2);
 
 #if 0
     // It would be nice to exit this process, but right now it instantiates all kinds of things.
@@ -216,20 +218,19 @@ void init()
     kmalloc_init();
     vga_init();
 
-    VirtualConsole::initialize();
-    tty0 = new VirtualConsole(0, VirtualConsole::AdoptCurrentVGABuffer);
-    tty1 = new VirtualConsole(1);
-    tty2 = new VirtualConsole(2);
-    tty0->setActive(true);
-    tty1->setActive(false);
-    tty2->setActive(false);
-    auto console = make<Console>();
-    console->setImplementation(tty0);
-
     RTC::initialize();
     PIC::initialize();
     gdt_init();
     idt_init();
+
+    keyboard = new Keyboard;
+
+    auto console = make<Console>();
+    VirtualConsole::initialize();
+    tty0 = new VirtualConsole(0, VirtualConsole::AdoptCurrentVGABuffer);
+    tty1 = new VirtualConsole(1);
+    tty2 = new VirtualConsole(2);
+    VirtualConsole::switchTo(0);
 
     MemoryManager::initialize();
 

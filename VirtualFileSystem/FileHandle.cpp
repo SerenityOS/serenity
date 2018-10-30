@@ -101,6 +101,16 @@ Unix::ssize_t FileHandle::read(byte* buffer, Unix::size_t count)
     return nread;
 }
 
+Unix::ssize_t FileHandle::write(const byte* data, Unix::size_t size)
+{
+    if (m_vnode->isCharacterDevice()) {
+        // FIXME: What should happen to m_currentOffset?
+        return m_vnode->characterDevice()->write(data, size);
+    }
+    // FIXME: Implement non-device writes.
+    ASSERT_NOT_REACHED();
+}
+
 bool FileHandle::hasDataAvailableForRead()
 {
     if (m_vnode->isCharacterDevice())

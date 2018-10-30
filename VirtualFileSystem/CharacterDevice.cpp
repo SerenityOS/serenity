@@ -6,5 +6,5 @@ CharacterDevice::~CharacterDevice()
 
 OwnPtr<FileHandle> CharacterDevice::open(int options)
 {
-    //VirtualFileSystem::the().open()
+    return VirtualFileSystem::the().open(*this, options);
 }

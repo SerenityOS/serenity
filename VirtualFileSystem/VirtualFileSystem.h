@@ -51,7 +51,7 @@ public:
         InodeIdentifier inode;
         const InodeMetadata& metadata() const;
 
-        bool inUse() const { return inode.isValid(); }
+        bool inUse() const { return inode.isValid() || m_characterDevice; }
 
         bool isCharacterDevice() const { return m_characterDevice; }
         CharacterDevice* characterDevice() { return m_characterDevice; }
@@ -91,6 +91,7 @@ public:
     bool mountRoot(RetainPtr<FileSystem>&&);
     bool mount(RetainPtr<FileSystem>&&, const String& path);
 
+    OwnPtr<FileHandle> open(CharacterDevice&, int options);
     OwnPtr<FileHandle> open(const String& path, int& error, int options = 0, InodeIdentifier base = InodeIdentifier());
     OwnPtr<FileHandle> create(const String& path, InodeIdentifier base = InodeIdentifier());
     OwnPtr<FileHandle> mkdir(const String& path, InodeIdentifier base = InodeIdentifier());
@@ -117,7 +118,9 @@ private:
     void freeNode(Node*);
 
     RetainPtr<Node> makeNode(InodeIdentifier);
+    RetainPtr<Node> makeNode(CharacterDevice&);
     RetainPtr<Node> getOrCreateNode(InodeIdentifier);
+    RetainPtr<Node> getOrCreateNode(CharacterDevice&);
 
     Mount* findMountForHost(InodeIdentifier);
     Mount* findMountForGuest(InodeIdentifier);
