@@ -22,6 +22,11 @@
 class CharacterDevice;
 class FileHandle;
 
+inline constexpr dword encodedDevice(unsigned major, unsigned minor)
+{
+    return (minor & 0xff) | (major << 8) | ((minor & ~0xff) << 12);
+}
+
 class VirtualFileSystem {
 public:
     static void initializeGlobals();
@@ -94,7 +99,7 @@ public:
 
     bool touch(const String&path);
 
-    void registerCharacterDevice(unsigned major, unsigned minor, CharacterDevice&);
+    void registerCharacterDevice(CharacterDevice&);
 
     size_t mountCount() const { return m_mounts.size(); }
     void forEachMount(Function<void(const Mount&)>) const;

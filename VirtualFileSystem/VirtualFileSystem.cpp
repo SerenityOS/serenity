@@ -5,14 +5,10 @@
 #include <AK/kmalloc.h>
 #include <AK/kstdio.h>
 #include <AK/ktime.h>
+#include "CharacterDevice.h"
 #include "sys-errno.h"
 
 //#define VFS_DEBUG
-
-static dword encodedDevice(unsigned major, unsigned minor)
-{
-    return (minor & 0xff) | (major << 8) | ((minor & ~0xff) << 12);
-}
 
 static VirtualFileSystem* s_the;
 
@@ -542,9 +538,9 @@ VirtualFileSystem::Mount::Mount(InodeIdentifier host, RetainPtr<FileSystem>&& gu
 {
 }
 
-void VirtualFileSystem::registerCharacterDevice(unsigned major, unsigned minor, CharacterDevice& device)
+void VirtualFileSystem::registerCharacterDevice(CharacterDevice& device)
 {
-    m_characterDevices.set(encodedDevice(major, minor), &device);
+    m_characterDevices.set(encodedDevice(device.major(), device.minor()), &device);
 }
 
 void VirtualFileSystem::forEachMount(Function<void(const Mount&)> callback) const

@@ -25,6 +25,7 @@
 #include "Console.h"
 #include "ProcFileSystem.h"
 #include "RTC.h"
+#include "VirtualConsole.h"
 
 #define TEST_VFS
 #define KSYMS
@@ -32,6 +33,10 @@
 //#define TEST_ELF_LOADER
 
 system_t system;
+
+VirtualConsole* tty0;
+VirtualConsole* tty1;
+VirtualConsole* tty2;
 
 void banner()
 {
@@ -110,18 +115,22 @@ static void init_stage2()
     auto vfs = make<VirtualFileSystem>();
 
     auto dev_zero = make<ZeroDevice>();
-    vfs->registerCharacterDevice(1, 5, *dev_zero);
+    vfs->registerCharacterDevice(*dev_zero);
 
     auto dev_null = make<NullDevice>();
-    vfs->registerCharacterDevice(1, 3, *dev_null);
+    vfs->registerCharacterDevice(*dev_null);
 
     auto dev_full = make<FullDevice>();
-    vfs->registerCharacterDevice(1, 7, *dev_full);
+    vfs->registerCharacterDevice(*dev_full);
 
     auto dev_random = make<RandomDevice>();
-    vfs->registerCharacterDevice(1, 8, *dev_random);
+    vfs->registerCharacterDevice(*dev_random);
 
-    vfs->registerCharacterDevice(85, 1, *keyboard);
+    vfs->registerCharacterDevice(*keyboard);
+
+    vfs->registerCharacterDevice(*tty0);
+    vfs->registerCharacterDevice(*tty1);
+    vfs->registerCharacterDevice(*tty2);
 
     auto dev_hd0 = IDEDiskDevice::create();
     auto e2fs = Ext2FileSystem::create(dev_hd0.copyRef());
@@ -207,7 +216,15 @@ void init()
     kmalloc_init();
     vga_init();
 
+    VirtualConsole::initialize();
+    tty0 = new VirtualConsole(0, VirtualConsole::AdoptCurrentVGABuffer);
+    tty1 = new VirtualConsole(1);
+    tty2 = new VirtualConsole(2);
+    tty0->setActive(true);
+    tty1->setActive(false);
+    tty2->setActive(false);
     auto console = make<Console>();
+    console->setImplementation(tty0);
 
     RTC::initialize();
     PIC::initialize();

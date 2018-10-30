@@ -19,7 +19,9 @@ KERNEL_OBJS = \
        IRQHandler.o \
        kprintf.o \
        ProcFileSystem.o \
-       RTC.o
+       RTC.o \
+       TTY.o \
+       VirtualConsole.o
 
 VFS_OBJS = \
     ../VirtualFileSystem/DiskDevice.o \
@@ -53,7 +55,7 @@ KERNEL = kernel
 BOOTLOADER = Boot/boot.bin
 IMAGE = .floppy-image
 ARCH_FLAGS =
-STANDARD_FLAGS = -std=c++17 -nostdinc++ -nostdlib
+STANDARD_FLAGS = -std=c++17 -nostdinc++ -nostdlib #-nostdinc
 KERNEL_FLAGS = -ffreestanding -fno-stack-protector -fno-ident
 WARNING_FLAGS = -Wextra -Wall -Wundef -Wcast-qual -Wwrite-strings
 FLAVOR_FLAGS = -mregparm=3 -march=i386 -m32 -fno-exceptions -fno-rtti -fmerge-all-constants -fno-unroll-loops -fno-pie -fno-pic

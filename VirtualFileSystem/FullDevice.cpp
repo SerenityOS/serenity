@@ -5,6 +5,7 @@
 #include <AK/kstdio.h>
 
 FullDevice::FullDevice()
+    : CharacterDevice(1, 7)
 {
 }
 
