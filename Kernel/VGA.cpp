@@ -12,13 +12,23 @@ void vga_scroll_up()
 {
     InterruptDisabler disabler;
     memcpy(vga_mem, vga_mem + 160, 160 * 24);
-    memset(vga_mem + (160 * 24), 0, 160);
+    vga_clear_row(24);
+}
+
+void vga_clear_row(word line)
+{
+    InterruptDisabler disabler;
+    word* linemem = (word*)&vga_mem[line * 160];
+    for (word i = 0; i < 80; ++i) {
+        linemem[i] = 0x0720;
+    }
 }
 
 void vga_clear()
 {
     InterruptDisabler disabler;
-    memset(vga_mem, 0, 160 * 25);
+    for (word i = 0; i < 25; ++i)
+        vga_clear_row(i);
 }
 
 void vga_putch_at(byte row, byte column, byte ch)

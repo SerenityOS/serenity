@@ -4,6 +4,7 @@
 #include "VGA.h"
 #include "PIC.h"
 #include "Keyboard.h"
+#include "VirtualConsole.h"
 #include <AK/Assertions.h>
 
 #define IRQ_KEYBOARD             1
@@ -56,12 +57,31 @@ void Keyboard::handleIRQ()
                 // key has been depressed
                 break;
             }
-            if (!m_modifiers)
+            if (m_modifiers & MOD_ALT) {
+                switch (map[ch]) {
+                case '1':
+                case '2':
+                case '3':
+                    VirtualConsole::switchTo(map[ch] - '0' - 1);
+                    break;
+                default:
+                    break;
+                }
+            }
+            if (!m_modifiers) {
+                if (m_client)
+                    m_client->onKeyPress(map[ch]);
                 m_queue.enqueue(map[ch]);
-            else if (m_modifiers & MOD_SHIFT)
+            } else if (m_modifiers & MOD_SHIFT) {
+                if (m_client)
+                    m_client->onKeyPress(shift_map[ch]);
                 m_queue.enqueue(shift_map[ch]);
-            else if (m_modifiers & MOD_CTRL) {
+            } else if (m_modifiers & MOD_CTRL) {
                 // FIXME: This is obviously not a good enough way to process ctrl+whatever.
+                if (m_client) {
+                    m_client->onKeyPress('^');
+                    m_client->onKeyPress(shift_map[ch]);
+                }
                 m_queue.enqueue('^');
                 m_queue.enqueue(shift_map[ch]);
             }
@@ -72,6 +92,7 @@ void Keyboard::handleIRQ()
 
 Keyboard::Keyboard()
     : IRQHandler(IRQ_KEYBOARD)
+    , CharacterDevice(85, 1)
 {
     // Empty the buffer of any pending data.
     // I don't care what you've been pressing until now!
@@ -105,4 +126,8 @@ ssize_t Keyboard::read(byte* buffer, size_t size)
 ssize_t Keyboard::write(const byte* data, size_t size)
 {
     return 0;
+}
+
+KeyboardClient::~KeyboardClient()
+{
 }

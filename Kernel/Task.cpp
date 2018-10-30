@@ -363,7 +363,7 @@ Task* Task::createKernelTask(void (*e)(), String&& name)
     return task;
 }
 
-Task::Task(String&& name, uid_t uid, gid_t gid, pid_t parentPID, RingLevel ring, RetainPtr<VirtualFileSystem::Node>&& cwd, RetainPtr<VirtualFileSystem::Node>&& executable)
+Task::Task(String&& name, uid_t uid, gid_t gid, pid_t parentPID, RingLevel ring, RetainPtr<VirtualFileSystem::Node>&& cwd, RetainPtr<VirtualFileSystem::Node>&& executable, TTY* tty)
     : m_name(move(name))
     , m_pid(next_pid++)
     , m_uid(uid)
@@ -373,10 +373,17 @@ Task::Task(String&& name, uid_t uid, gid_t gid, pid_t parentPID, RingLevel ring,
     , m_cwd(move(cwd))
     , m_executable(move(executable))
     , m_parentPID(parentPID)
+    , m_tty(tty)
 {
-    m_fileHandles.append(nullptr); // stdin
-    m_fileHandles.append(nullptr); // stdout
-    m_fileHandles.append(nullptr); // stderr
+    if (tty) {
+        m_fileHandles.append(tty->open(O_RDONLY)); // stdin
+        m_fileHandles.append(tty->open(O_WRONLY)); // stdout
+        m_fileHandles.append(tty->open(O_WRONLY)); // stderr
+    } else {
+        m_fileHandles.append(nullptr); // stdin
+        m_fileHandles.append(nullptr); // stdout
+        m_fileHandles.append(nullptr); // stderr
+    }
 
     m_nextRegion = LinearAddress(0x600000);
 

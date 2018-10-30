@@ -7,6 +7,7 @@
 #include <AK/Vector.h>
 #include "i386.h"
 #include <VirtualFileSystem/VirtualFileSystem.h>
+#include "TTY.h"
 
 //#define TASK_SANITY_CHECKS
 
@@ -141,7 +142,7 @@ private:
     friend class MemoryManager;
     friend bool scheduleNewTask();
 
-    Task(String&& name, uid_t, gid_t, pid_t parentPID, RingLevel, RetainPtr<VirtualFileSystem::Node>&& cwd = nullptr, RetainPtr<VirtualFileSystem::Node>&& executable = nullptr);
+    Task(String&& name, uid_t, gid_t, pid_t parentPID, RingLevel, RetainPtr<VirtualFileSystem::Node>&& cwd = nullptr, RetainPtr<VirtualFileSystem::Node>&& executable = nullptr, TTY* = nullptr);
 
     void allocateLDT();
 
@@ -174,6 +175,8 @@ private:
 
     RetainPtr<VirtualFileSystem::Node> m_cwd;
     RetainPtr<VirtualFileSystem::Node> m_executable;
+
+    TTY* m_tty { nullptr };
 
     struct Region : public Retainable<Region> {
         Region(LinearAddress, size_t, RetainPtr<Zone>&&, String&&);

@@ -4,6 +4,7 @@
 #include <AK/kstdio.h>
 
 NullDevice::NullDevice()
+    : CharacterDevice(1, 3)
 {
 }
 

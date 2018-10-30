@@ -3,6 +3,7 @@
 #include <AK/StdLib.h>
 
 RandomDevice::RandomDevice()
+    : CharacterDevice(1, 8)
 {
 }
 
