@@ -55,6 +55,7 @@ public:
 
         bool isCharacterDevice() const { return m_characterDevice; }
         CharacterDevice* characterDevice() { return m_characterDevice; }
+        const CharacterDevice* characterDevice() const { return m_characterDevice; }
 
         void retain();
         void release();

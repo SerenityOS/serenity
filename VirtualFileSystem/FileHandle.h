@@ -4,6 +4,8 @@
 #include "InodeMetadata.h"
 #include <AK/ByteBuffer.h>
 
+class TTY;
+
 class FileHandle {
 public:
     explicit FileHandle(RetainPtr<VirtualFileSystem::Node>&&);
@@ -23,6 +25,9 @@ public:
     String absolutePath() const;
 
     bool isDirectory() const;
+
+    bool isTTY() const;
+    const TTY* tty() const;
 
     InodeMetadata metadata() const { return m_vnode->metadata(); }
 

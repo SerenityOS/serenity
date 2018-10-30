@@ -13,6 +13,8 @@ public:
     virtual String ttyName() const = 0;
 
 protected:
+    virtual bool isTTY() const final { return true; }
+
     TTY(unsigned major, unsigned minor);
     void emit(byte);
 

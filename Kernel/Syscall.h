@@ -37,6 +37,7 @@ enum Function {
     SetMmapName = 0x2005,
     PosixReadlink = 0x2006,
     PosixWrite = 0x2007,
+    PosixTtynameR = 0x2008,
 };
 
 void initialize();
