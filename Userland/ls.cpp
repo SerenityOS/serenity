@@ -17,7 +17,7 @@ int main(int c, char** v)
     while (auto* de = readdir(dirp)) {
         sprintf(pathbuf, "%s", de->d_name);
 
-        stat st;
+        struct stat st;
         int rc = lstat(pathbuf, &st);
         if (rc == -1) {
             printf("lstat(%s) failed: %s\n", pathbuf, strerror(errno));
