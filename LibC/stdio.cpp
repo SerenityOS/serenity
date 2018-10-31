@@ -170,7 +170,7 @@ int sprintf(char* buffer, const char* fmt, ...)
 
 void perror(const char* s)
 {
-    printf("%s: %s\n", s, strerror(errno));
+    fprintf(stderr, "%s: %s\n", s, strerror(errno));
 }
 
 FILE* fopen(const char* pathname, const char* mode)
