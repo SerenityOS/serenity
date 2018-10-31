@@ -1,5 +1,7 @@
+rm -f _fs_contents.lock
+rm -f _fs_contents
 cp -p _fs_contents.stock _fs_contents
-mkdir mnt
+mkdir -p mnt
 mount -o loop _fs_contents mnt/
 cp -R ../Base/* mnt/
 cp ../Userland/sh mnt/bin/sh

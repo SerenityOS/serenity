@@ -3,6 +3,7 @@
 #include <VirtualFileSystem/VirtualFileSystem.h>
 #include "system.h"
 #include "MemoryManager.h"
+#include "StdLib.h"
 
 static ProcFileSystem* s_the;
 
@@ -210,7 +211,7 @@ ByteBuffer procfs$summary()
             task->parentPID(),
             task->timesScheduled(),
             task->fileHandleCount(),
-            task->tty() ? task->tty()->ttyName().characters() : "n/a",
+            task->tty() ? strrchr(task->tty()->ttyName().characters(), '/') + 1 : "n/a",
             task->name().characters());
     }
     *ptr = '\0';

@@ -19,3 +19,4 @@ DWORD strlen(const char*);
 void *memset(void*, BYTE, DWORD);
 char *strdup(const char*);
 int memcmp(const void*, const void*, size_t);
+char* strrchr(const char* str, int ch);
