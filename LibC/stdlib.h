@@ -1,8 +1,9 @@
 #pragma once
 
-#include "types.h"
+#include <sys/cdefs.h>
+#include <sys/types.h>
 
-extern "C" {
+__BEGIN_DECLS
 
 void* malloc(size_t);
 void free(void*);
@@ -12,5 +13,5 @@ void* realloc(void *ptr, size_t);
 void exit(int status);
 void abort();
 
-}
+__END_DECLS
 

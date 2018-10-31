@@ -1,6 +1,8 @@
 #pragma once
 
-extern "C" {
+#include <sys/cdefs.h>
+
+__BEGIN_DECLS
 
 void __assertion_failed(const char* msg, const char* file, unsigned line, const char* func);
 
@@ -10,5 +12,5 @@ void __assertion_failed(const char* msg, const char* file, unsigned line, const 
 #define RELEASE_ASSERT assert
 #define ASSERT_NOT_REACHED() assert(false)
 
-}
+__END_DECLS
 

@@ -23,7 +23,7 @@ OBJS = $(AK_OBJS) $(LIBC_OBJS)
 
 LIBRARY = LibC.a
 ARCH_FLAGS =
-STANDARD_FLAGS = -std=c++17 -nostdinc++ -nostdlib
+STANDARD_FLAGS = -std=c++17 -nostdinc++ -nostdlib -nostdinc
 LIBC_FLAGS = -ffreestanding -fno-stack-protector -fno-ident
 WARNING_FLAGS = -Wextra -Wall -Wundef -Wcast-qual -Wwrite-strings
 FLAVOR_FLAGS = -fomit-frame-pointer -mregparm=3 -march=i386 -m32 -fno-exceptions -fno-rtti -ffunction-sections -fdata-sections -fmerge-all-constants -fno-unroll-loops -falign-functions=1 -falign-jumps=1 -falign-loops=1 -fno-pie -fno-pic

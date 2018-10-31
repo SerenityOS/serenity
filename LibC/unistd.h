@@ -1,8 +1,9 @@
 #pragma once
 
-#include "types.h"
+#include <sys/cdefs.h>
+#include <sys/types.h>
 
-extern "C" {
+__BEGIN_DECLS
 
 uid_t getuid();
 gid_t getgid();
@@ -14,7 +15,7 @@ int close(int fd);
 pid_t waitpid(pid_t, int* wstatus, int options);
 int chdir(const char* path);
 char* getcwd(char* buffer, size_t size);
-int lstat(const char* path, stat* statbuf);
+int lstat(const char* path, struct stat* statbuf);
 int sleep(unsigned seconds);
 int gethostname(char*, size_t);
 ssize_t readlink(const char* path, char* buffer, size_t);
@@ -62,4 +63,5 @@ int ttyname_r(int fd, char* buffer, size_t);
 #define O_DIRECTORY 00200000
 #define O_NOFOLLOW 00400000
 
-}
+__END_DECLS
+

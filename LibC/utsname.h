@@ -1,8 +1,10 @@
 #pragma once
 
+#include <sys/cdefs.h>
+
 #define UTSNAME_ENTRY_LEN 65
 
-extern "C" {
+__BEGIN_DECLS
 
 struct utsname {
     char sysname[UTSNAME_ENTRY_LEN];
@@ -14,4 +16,5 @@ struct utsname {
 
 int uname(struct utsname*);
 
-}
+__END_DECLS
+

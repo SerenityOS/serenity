@@ -1,8 +1,9 @@
 #pragma once
 
-#include "types.h"
+#include <sys/cdefs.h>
+#include <sys/types.h>
 
-extern "C" {
+__BEGIN_DECLS
 
 struct dirent {
     ino_t d_ino;
@@ -23,5 +24,5 @@ struct DIR {
 DIR* opendir(const char* name);
 dirent* readdir(DIR* dirp);
 
-}
+__END_DECLS
 
