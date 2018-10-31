@@ -5,10 +5,12 @@
 #include <LibC/string.h>
 #include <LibC/stdlib.h>
 #include <LibC/utsname.h>
+#include <LibC/pwd.h>
 #include <AK/FileSystemPath.h>
 
 struct GlobalState {
     String cwd;
+    String username;
     char ttyname[32];
     char hostname[32];
 };
@@ -19,7 +21,7 @@ static void prompt()
     if (getuid() == 0)
         printf("# ");
     else
-        printf("\033[31;1m%s\033[0m:\033[37;1m%s\033[0m:\033[32;1m%s\033[0m$> ", g->ttyname, g->hostname, g->cwd.characters());
+        printf("\033[31;1m%s\033[0m@\033[37;1m%s\033[0m:\033[32;1m%s\033[0m$> ", g->username.characters(), g->hostname, g->cwd.characters());
 }
 
 static int sh_pwd(int, const char**)
@@ -170,6 +172,12 @@ int main(int, char**)
     rc = ttyname_r(0, g->ttyname, sizeof(g->ttyname));
     if (rc < 0)
         perror("ttyname_r");
+    {
+        auto* pw = getpwuid(getuid());
+        if (pw)
+            g->username = pw->pw_name;
+        endpwent();
+    }
 
     greeting();
 

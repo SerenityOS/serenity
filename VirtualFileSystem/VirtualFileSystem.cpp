@@ -59,6 +59,8 @@ auto VirtualFileSystem::makeNode(InodeIdentifier inode) -> RetainPtr<Node>
     if (!metadata.isValid())
         return nullptr;
 
+    InterruptDisabler disabler;
+
     CharacterDevice* characterDevice = nullptr;
     if (metadata.isCharacterDevice()) {
         auto it = m_characterDevices.find(encodedDevice(metadata.majorDevice, metadata.minorDevice));
@@ -91,6 +93,7 @@ auto VirtualFileSystem::makeNode(InodeIdentifier inode) -> RetainPtr<Node>
 
 auto VirtualFileSystem::makeNode(CharacterDevice& device) -> RetainPtr<Node>
 {
+    InterruptDisabler disabler;
     auto vnode = allocateNode();
     ASSERT(vnode);
 
@@ -106,17 +109,23 @@ auto VirtualFileSystem::makeNode(CharacterDevice& device) -> RetainPtr<Node>
 
 auto VirtualFileSystem::getOrCreateNode(InodeIdentifier inode) -> RetainPtr<Node>
 {
-    auto it = m_inode2vnode.find(inode);
-    if (it != m_inode2vnode.end())
-        return (*it).value;
+    {
+        InterruptDisabler disabler;
+        auto it = m_inode2vnode.find(inode);
+        if (it != m_inode2vnode.end())
+            return (*it).value;
+    }
     return makeNode(inode);
 }
 
 auto VirtualFileSystem::getOrCreateNode(CharacterDevice& device) -> RetainPtr<Node>
 {
-    auto it = m_device2vnode.find(encodedDevice(device.major(), device.minor()));
-    if (it != m_device2vnode.end())
-        return (*it).value;
+    {
+        InterruptDisabler disabler;
+        auto it = m_device2vnode.find(encodedDevice(device.major(), device.minor()));
+        if (it != m_device2vnode.end())
+            return (*it).value;
+    }
     return makeNode(device);
 }
 
@@ -152,7 +161,7 @@ bool VirtualFileSystem::mountRoot(RetainPtr<FileSystem>&& fileSystem)
         return false;
     }
     if (!node->inode.metadata().isDirectory()) {
-        kprintf("VFS: root inode for / is not in use :(\n");
+        kprintf("VFS: root inode for / is not a directory :(\n");
         return false;
     }
 
@@ -168,7 +177,6 @@ bool VirtualFileSystem::mountRoot(RetainPtr<FileSystem>&& fileSystem)
 
 auto VirtualFileSystem::allocateNode() -> RetainPtr<Node>
 {
-
     if (m_nodeFreeList.isEmpty()) {
         kprintf("VFS: allocateNode has no nodes left\n");
         return nullptr;
@@ -182,6 +190,7 @@ auto VirtualFileSystem::allocateNode() -> RetainPtr<Node>
 
 void VirtualFileSystem::freeNode(Node* node)
 {
+    InterruptDisabler disabler;
     ASSERT(node);
     ASSERT(node->inUse());
     if (node->inode.isValid()) {

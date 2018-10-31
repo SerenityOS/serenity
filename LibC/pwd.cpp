@@ -5,6 +5,8 @@
 #include <sys/mman.h>
 #include <AK/String.h>
 
+extern "C" {
+
 struct passwd_with_strings : public passwd {
     char name_buffer[256];
     char passwd_buffer[256];
@@ -24,6 +26,10 @@ void setpwent()
         rewind(__pwdb_stream);
     } else {
         __pwdb_stream = fopen("/etc/passwd", "r");
+        if (!__pwdb_stream) {
+            perror("open /etc/passwd");
+        }
+        assert(__pwdb_stream);
         __pwdb_entry = (struct passwd_with_strings*)mmap(nullptr, getpagesize());
         set_mmap_name(__pwdb_entry, getpagesize(), "setpwent");
     }
@@ -67,6 +73,7 @@ struct passwd* getpwent()
     if (!__pwdb_stream)
         setpwent();
 
+    assert(__pwdb_stream);
     if (feof(__pwdb_stream))
         return nullptr;
 
@@ -76,6 +83,7 @@ next_entry:
     char* s = fgets(buffer, sizeof(buffer), __pwdb_stream);
     if (!s)
         return nullptr;
+    assert(__pwdb_stream);
     if (feof(__pwdb_stream))
         return nullptr;
     String line(s);
@@ -115,4 +123,6 @@ next_entry:
     strncpy(__pwdb_entry->dir_buffer, e_dir.characters(), e_dir.length());
     strncpy(__pwdb_entry->shell_buffer, e_shell.characters(), e_shell.length());
     return __pwdb_entry;
+}
+
 }
