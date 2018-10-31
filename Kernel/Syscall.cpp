@@ -77,10 +77,8 @@ DWORD handle(DWORD function, DWORD arg1, DWORD arg2, DWORD arg3)
     case Syscall::PosixRead:
         //kprintf("syscall: read(%d, %p, %u)\n", arg1, arg2, arg3);
         return current->sys$read((int)arg1, (void*)arg2, (size_t)arg3);
-    case Syscall::PosixSeek:
-        // FIXME: This has the wrong signature, should be like lseek()
-        kprintf("syscall: seek(%d, %d)\n", arg1, arg2);
-        return current->sys$seek((int)arg1, (int)arg2);
+    case Syscall::PosixLseek:
+        return current->sys$lseek((int)arg1, (off_t)arg2, (int)arg3);
     case Syscall::PosixKill:
         return current->sys$kill((pid_t)arg1, (int)arg2);
     case Syscall::PosixGetuid:
@@ -104,6 +102,8 @@ DWORD handle(DWORD function, DWORD arg1, DWORD arg2, DWORD arg3)
         return 0;
     case Syscall::GetArguments:
         return current->sys$get_arguments((int*)arg1, (char***)arg2);
+    case Syscall::GetEnvironment:
+        return current->sys$get_environment((char***)arg1);
     case Syscall::PosixChdir:
         return current->sys$chdir((const char*)arg1);
     case Syscall::PosixUname:

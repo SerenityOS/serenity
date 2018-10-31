@@ -5,6 +5,8 @@
 
 __BEGIN_DECLS
 
+extern char** environ;
+
 uid_t getuid();
 gid_t getgid();
 pid_t getpid();
@@ -22,6 +24,7 @@ int gethostname(char*, size_t);
 ssize_t readlink(const char* path, char* buffer, size_t);
 char* ttyname(int fd);
 int ttyname_r(int fd, char* buffer, size_t);
+off_t lseek(int fd, off_t, int whence);
 
 #define WEXITSTATUS(status) (((status) & 0xff00) >> 8)
 #define WTERMSIG(status) ((status) & 0x7f)

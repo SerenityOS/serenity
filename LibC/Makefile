@@ -17,6 +17,8 @@ LIBC_OBJS = \
        utsname.o \
        assert.o \
        signal.o \
+       getopt.o \
+       scanf.o \
        entry.o
 
 OBJS = $(AK_OBJS) $(LIBC_OBJS)

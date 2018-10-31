@@ -4,15 +4,113 @@
 #include <string.h>
 #include <errno.h>
 #include <unistd.h>
+#include <assert.h>
+#include <stdlib.h>
 #include <Kernel/Syscall.h>
 #include <AK/printf.cpp>
 
 extern "C" {
 
+int fileno(FILE* stream)
+{
+    return stream->fd;
+}
+
+int feof(FILE* stream)
+{
+    return stream->eof;
+}
+
+char* fgets(char* buffer, int size, FILE* stream)
+{
+    ssize_t nread = 0;
+    for (;;) {
+        if (nread >= size)
+            break;
+        char ch = fgetc(stream);
+        if (feof(stream))
+            break;
+        buffer[nread++] = ch;
+        if (!ch || ch == '\n')
+            break;
+    }
+    if (nread < size)
+        buffer[nread] = '\0';
+    return buffer;
+}
+
+int fgetc(FILE* stream)
+{
+    char ch;
+    read(stream->fd, &ch, 1);
+    return ch;
+}
+
+int getc(FILE* stream)
+{
+    return fgetc(stream);
+}
+
+int getchar()
+{
+    return getc(stdin);
+}
+
+int fputc(int ch, FILE* stream)
+{
+    write(stream->fd, &ch, 1);
+    return (byte)ch;
+}
+
+int putc(int ch, FILE* stream)
+{
+    return fputc(ch, stream);
+}
+
 int putchar(int ch)
 {
-    write(0, &ch, 1);
-    return (byte)ch;
+    return putc(ch, stdout);
+}
+
+void clearerr(FILE* stream)
+{
+    stream->eof = false;
+}
+
+size_t fread(void* ptr, size_t size, size_t nmemb, FILE* stream)
+{
+    ssize_t nread = read(stream->fd, ptr, nmemb * size);
+    if (nread < 0)
+        return 0;
+    if (nread == 0)
+        stream->eof = true;
+    return nread;
+}
+
+size_t fwrite(const void* ptr, size_t size, size_t nmemb, FILE* stream)
+{
+    ssize_t nwritten = write(stream->fd, ptr, nmemb * size);
+    if (nwritten < 0)
+        return 0;
+    return nwritten;
+}
+
+int fseek(FILE* stream, long offset, int whence)
+{
+    off_t off = lseek(stream->fd, offset, whence);
+    if (off < 0)
+        return off;
+    return 0;
+}
+
+long ftell(FILE* stream)
+{
+    return lseek(stream->fd, 0, SEEK_CUR);
+}
+
+void rewind(FILE* stream)
+{
+    fseek(stream, 0, SEEK_SET);
 }
 
 static void sys_putch(char*&, char ch)
@@ -63,6 +161,25 @@ int sprintf(char* buffer, const char* fmt, ...)
 void perror(const char* s)
 {
     printf("%s: %s\n", s, strerror(errno));
+}
+
+FILE* fopen(const char* pathname, const char* mode)
+{
+    assert(!strcmp(mode, "r") || !strcmp(mode, "rb"));
+    int fd = open(pathname, O_RDONLY);
+    if (fd < 0)
+        return nullptr;
+    auto* fp = (FILE*)malloc(sizeof(FILE));
+    fp->fd = fd;
+    fp->eof = false;
+    return fp;
+}
+
+int fclose(FILE* stream)
+{
+    int rc = close(stream->fd);
+    free(stream);
+    return rc;
 }
 
 }

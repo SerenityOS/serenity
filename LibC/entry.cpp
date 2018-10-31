@@ -10,9 +10,14 @@ int errno;
 FILE* stdin;
 FILE* stdout;
 FILE* stderr;
+char** environ;
+
+extern "C" void __malloc_init();
 
 extern "C" int _start()
 {
+    __malloc_init();
+
     errno = 0;
 
     __default_streams[0].fd = 0;
@@ -26,12 +31,18 @@ extern "C" int _start()
 
     StringImpl::initializeGlobals();
 
+    int status = 254;
     int argc;
     char** argv;
     int rc = Syscall::invoke(Syscall::GetArguments, (dword)&argc, (dword)&argv);
-    int status = 254;
-    if (rc == 0)
-        status = main(argc, argv);
+    if (rc < 0)
+        goto epilogue;
+    rc = Syscall::invoke(Syscall::GetEnvironment, (dword)&environ);
+    if (rc < 0)
+        goto epilogue;
+    status = main(argc, argv);
+
+epilogue:
     Syscall::invoke(Syscall::PosixExit, status);
 
     // Birger's birthday <3

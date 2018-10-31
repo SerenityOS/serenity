@@ -4,6 +4,40 @@
 
 extern "C" {
 
+void* memset(void* dest, int c, size_t n)
+{
+    byte* bdest = (byte*)dest;
+    for (; n; --n)
+        *(bdest++) = c;
+    return dest;
+}
+
+size_t strspn(const char* s, const char* accept)
+{
+    const char* p = s;
+cont:
+    char ch = *p++;
+    char ac;
+    for (const char* ap = accept; (ac = *ap++) != '\0';) {
+        if (ac == ch)
+            goto cont;
+    }
+    return p - 1 - s;
+}
+
+size_t strcspn(const char* s, const char* reject)
+{
+    for (auto* p = s;;) {
+        char c = *p++;
+        auto* rp = reject;
+        char rc;
+        do {
+            if ((rc = *rp++) == c)
+                return p - 1 - s;
+        } while(rc);
+    }
+}
+
 size_t strlen(const char* str)
 {
     size_t len = 0;
@@ -62,9 +96,20 @@ char* strchr(const char* str, int c)
     if (!str)
         return nullptr;
     char* ptr = (char*)str;
-    while (*ptr != c)
+    while (*ptr && *ptr != c)
         ++ptr;
     return ptr;
+}
+
+char* strrchr(const char* str, int ch)
+{
+    char *last = nullptr;
+    char c;
+    for (; (c = *str); ++str) {
+        if (c == ch)
+            last = (char*)str;
+    }
+    return last;
 }
 
 char* strcat(char *dest, const char *src)

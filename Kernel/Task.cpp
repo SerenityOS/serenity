@@ -182,6 +182,7 @@ int Task::sys$set_mmap_name(void* addr, size_t size, const char* name)
 
 void* Task::sys$mmap(void* addr, size_t size)
 {
+    InterruptDisabler disabler;
     // FIXME: Implement mapping at a client-preferred address.
     ASSERT(addr == nullptr);
     auto* region = allocateRegion(size, "mmap");
@@ -193,6 +194,7 @@ void* Task::sys$mmap(void* addr, size_t size)
 
 int Task::sys$munmap(void* addr, size_t size)
 {
+    InterruptDisabler disabler;
     auto* region = regionFromRange(LinearAddress((dword)addr), size);
     if (!region)
         return -1;
@@ -213,6 +215,12 @@ int Task::sys$gethostname(char* buffer, size_t size)
 
 int Task::sys$spawn(const char* path, const char** args)
 {
+    if (args) {
+        for (size_t i = 0; args[i]; ++i) {
+            VALIDATE_USER_BUFFER(args[i], strlen(args[i]));
+        }
+    }
+
     int error = 0;
     auto* child = Task::createUserTask(path, m_uid, m_gid, m_pid, error, args, m_tty);
     if (child)
@@ -261,10 +269,17 @@ Task* Task::createUserTask(const String& path, uid_t uid, gid_t gid, pid_t paren
         taskArguments.append(parts.last());
     }
 
+    Vector<String> taskEnvironment;
+    taskEnvironment.append("PATH=/bin");
+    taskEnvironment.append("SHELL=/bin/sh");
+    taskEnvironment.append("TERM=console");
+    taskEnvironment.append("HOME=/");
+
     InterruptDisabler disabler; // FIXME: Get rid of this, jesus christ. This "critical" section is HUGE.
     Task* t = new Task(parts.takeLast(), uid, gid, parentPID, Ring3, move(cwd), handle->vnode(), tty);
 
     t->m_arguments = move(taskArguments);
+    t->m_initialEnvironment = move(taskEnvironment);
 
     ExecSpace space;
     Region* region = nullptr;
@@ -322,9 +337,27 @@ Task* Task::createUserTask(const String& path, uid_t uid, gid_t gid, pid_t paren
 #ifdef TASK_DEBUG
     kprintf("Task %u (%s) spawned @ %p\n", t->pid(), t->name().characters(), t->m_tss.eip);
 #endif
-
     error = 0;
     return t;
+}
+
+int Task::sys$get_environment(char*** environ)
+{
+    auto* region = allocateRegion(4096, "environ");
+    if (!region)
+        return -ENOMEM;
+    MM.mapRegion(*this, *region);
+    char* envpage = (char*)region->linearAddress.get();
+    *environ = (char**)envpage;
+    char* bufptr = envpage + (sizeof(char*) * (m_initialEnvironment.size() + 1));
+    for (size_t i = 0; i < m_initialEnvironment.size(); ++i) {
+        (*environ)[i] = bufptr;
+        memcpy(bufptr, m_initialEnvironment[i].characters(), m_initialEnvironment[i].length());
+        bufptr += m_initialEnvironment[i].length();
+        *(bufptr++) = '\0';
+    }
+    (*environ)[m_initialEnvironment.size()] = nullptr;
+    return 0;
 }
 
 int Task::sys$get_arguments(int* argc, char*** argv)
@@ -763,12 +796,12 @@ ssize_t Task::sys$get_dir_entries(int fd, void* buffer, size_t size)
     return handle->get_dir_entries((byte*)buffer, size);
 }
 
-int Task::sys$seek(int fd, int offset)
+int Task::sys$lseek(int fd, off_t offset, int whence)
 {
     auto* handle = fileHandleIfExists(fd);
     if (!handle)
-        return -1;
-    return handle->seek(offset, SEEK_SET);
+        return -EBADF;
+    return handle->seek(offset, whence);
 }
 
 int Task::sys$ttyname_r(int fd, char* buffer, size_t size)

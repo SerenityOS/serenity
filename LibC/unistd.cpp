@@ -105,5 +105,11 @@ ssize_t readlink(const char* path, char* buffer, size_t size)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
+off_t lseek(int fd, off_t offset, int whence)
+{
+    int rc = Syscall::invoke(Syscall::PosixLseek, (dword)fd, (dword)offset, (dword)whence);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
 }
 

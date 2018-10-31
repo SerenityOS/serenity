@@ -1,32 +1,50 @@
-#include "stdlib.h"
-#include "mman.h"
-#include "stdio.h"
+#include <stdlib.h>
+#include <mman.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <string.h>
+#include <alloca.h>
 #include <Kernel/Syscall.h>
 #include <AK/Assertions.h>
 
 extern "C" {
 
+// FIXME: This is a temporary malloc() implementation. It never frees anything,
+//        and you can't allocate more than 128 kB total.
+static const size_t mallocBudget = 131072;
+
+static byte* nextptr = nullptr;
+static byte* endptr = nullptr;
+
+void __malloc_init()
+{
+    nextptr = (byte*)mmap(nullptr, mallocBudget);
+    endptr = nextptr + mallocBudget;
+    int rc = set_mmap_name(nextptr, mallocBudget, "malloc");
+    if (rc < 0)
+        perror("set_mmap_name failed");
+}
+
 void* malloc(size_t size)
 {
-    if (size > 4096) {
+    if ((nextptr + size) > endptr) {
         volatile char* crashme = (char*)0xc007d00d;
         *crashme = 0;
     }
-    void* ptr = mmap(nullptr, 4096);
-    if (ptr) {
-        int rc = set_mmap_name(ptr, 4096, "malloc");
-        if (rc < 0) {
-            perror("set_mmap_name failed");
-        }
-    }
-    return ptr;
+    byte* ret = nextptr;
+    nextptr += size;
+    nextptr += 16;
+    nextptr = (byte*)((dword)nextptr & 0xfffffff0);
+    return ret;
 }
 
 void free(void* ptr)
 {
     if (!ptr)
         return;
+#if 0
     munmap(ptr, 4096);
+#endif
 }
 
 void* calloc(size_t nmemb, size_t)
@@ -52,5 +70,41 @@ void abort()
     exit(253);
 }
 
+char* getenv(const char* name)
+{
+    for (size_t i = 0; environ[i]; ++i) {
+        const char* decl = environ[i];
+        char* eq = strchr(decl, '=');
+        if (!eq)
+            continue;
+        size_t varLength = eq - decl;
+        char* var = (char*)alloca(varLength + 1);
+        memcpy(var, decl, varLength);
+        var[varLength] = '\0';
+        if (!strcmp(var, name)) {
+            char* value = eq + 1;
+            return value;
+        }
+    }
+    return nullptr;
 }
 
+int atoi(const char* str)
+{
+    ssize_t len = strlen(str);
+    int value = 0;
+    bool isNegative = false;
+    for (size_t i = 0; i < len; ++i) {
+        if (i == 0 && str[0] == '-') {
+            isNegative = true;
+            continue;
+        }
+        if (str[i] < '0' || str[i] > '9')
+            return 0;
+        value = value * 10;
+        value += str[i] - '0';
+    }
+    return isNegative ? -value : value;
+}
+
+}

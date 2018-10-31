@@ -17,7 +17,7 @@ enum Function {
     PosixOpen = 0x1985,
     PosixClose = 0x1986,
     PosixRead = 0x1987,
-    PosixSeek = 0x1988,
+    PosixLseek = 0x1988,
     PosixKill = 0x1989,
     PosixGetuid = 0x1990,
     PosixExit = 0x1991,
@@ -39,6 +39,7 @@ enum Function {
     PosixWrite = 0x2007,
     PosixTtynameR = 0x2008,
     PosixStat = 0x2009,
+    GetEnvironment = 0x2010,
 };
 
 void initialize();
