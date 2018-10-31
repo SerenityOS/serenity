@@ -63,6 +63,8 @@ DWORD handle(DWORD function, DWORD arg1, DWORD arg2, DWORD arg3)
         return current->sys$get_dir_entries((int)arg1, (void*)arg2, (size_t)arg3);
     case Syscall::PosixLstat:
         return current->sys$lstat((const char*)arg1, (Unix::stat*)arg2);
+    case Syscall::PosixStat:
+        return current->sys$stat((const char*)arg1, (Unix::stat*)arg2);
     case Syscall::PosixGetcwd:
         return current->sys$getcwd((char*)arg1, (size_t)arg2);
     case Syscall::PosixOpen:

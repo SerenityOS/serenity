@@ -93,6 +93,7 @@ public:
     ssize_t sys$read(int fd, void* outbuf, size_t nread);
     ssize_t sys$write(int fd, const void*, size_t);
     int sys$lstat(const char*, Unix::stat*);
+    int sys$stat(const char*, Unix::stat*);
     int sys$seek(int fd, int offset);
     int sys$kill(pid_t pid, int sig);
     int sys$geterror() { return m_error; }
