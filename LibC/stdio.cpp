@@ -13,16 +13,19 @@ extern "C" {
 
 int fileno(FILE* stream)
 {
+    assert(stream);
     return stream->fd;
 }
 
 int feof(FILE* stream)
 {
+    assert(stream);
     return stream->eof;
 }
 
 char* fgets(char* buffer, int size, FILE* stream)
 {
+    assert(stream);
     ssize_t nread = 0;
     for (;;) {
         if (nread >= size)
@@ -41,6 +44,7 @@ char* fgets(char* buffer, int size, FILE* stream)
 
 int fgetc(FILE* stream)
 {
+    assert(stream);
     char ch;
     fread(&ch, sizeof(char), 1, stream);
     return ch;
@@ -58,6 +62,7 @@ int getchar()
 
 int fputc(int ch, FILE* stream)
 {
+    assert(stream);
     write(stream->fd, &ch, 1);
     return (byte)ch;
 }
@@ -74,11 +79,13 @@ int putchar(int ch)
 
 void clearerr(FILE* stream)
 {
+    assert(stream);
     stream->eof = false;
 }
 
 size_t fread(void* ptr, size_t size, size_t nmemb, FILE* stream)
 {
+    assert(stream);
     ssize_t nread = read(stream->fd, ptr, nmemb * size);
     if (nread < 0)
         return 0;
@@ -89,6 +96,7 @@ size_t fread(void* ptr, size_t size, size_t nmemb, FILE* stream)
 
 size_t fwrite(const void* ptr, size_t size, size_t nmemb, FILE* stream)
 {
+    assert(stream);
     ssize_t nwritten = write(stream->fd, ptr, nmemb * size);
     if (nwritten < 0)
         return 0;
@@ -97,6 +105,7 @@ size_t fwrite(const void* ptr, size_t size, size_t nmemb, FILE* stream)
 
 int fseek(FILE* stream, long offset, int whence)
 {
+    assert(stream);
     off_t off = lseek(stream->fd, offset, whence);
     if (off < 0)
         return off;
@@ -105,6 +114,7 @@ int fseek(FILE* stream, long offset, int whence)
 
 long ftell(FILE* stream)
 {
+    assert(stream);
     return lseek(stream->fd, 0, SEEK_CUR);
 }
 

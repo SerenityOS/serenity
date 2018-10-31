@@ -73,8 +73,11 @@ void interrupt()
     interrupted = true;
 }
 
+static SpinLock* s_diskLock;
+
 void initialize()
 {
+    s_diskLock = new SpinLock;
     disableIRQ();
     interrupted = false;
     registerInterruptHandler(IRQ_VECTOR_BASE + IRQ_FIXED_DISK, ide_ISR);
@@ -135,6 +138,7 @@ static CHS lba2chs(BYTE drive_index, DWORD lba)
 
 bool readSectors(DWORD startSector, WORD count, BYTE* outbuf)
 {
+    LOCKER(*s_diskLock);
 #ifdef DISK_DEBUG
     kprintf("%s: Disk::readSectors request (%u sector(s) @ %u)\n",
             current->name().characters(),

@@ -129,6 +129,9 @@ bool Ext2FileSystem::initialize()
         return false;
     }
 
+    // Preheat the BGD cache.
+    blockGroupDescriptor(0);
+
 #ifdef EXT2_DEBUG
     for (unsigned i = 1; i <= m_blockGroupCount; ++i) {
         auto& group = blockGroupDescriptor(i);
