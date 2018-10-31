@@ -18,6 +18,7 @@ cp ../Userland/clear mnt/bin/clear
 cp ../Userland/tst mnt/bin/tst
 cp ../Userland/mm mnt/bin/mm
 cp ../Userland/kill mnt/bin/kill
+cp ../Userland/tty mnt/bin/tty
 sh sync-local.sh
 cp kernel.map mnt/
 umount mnt

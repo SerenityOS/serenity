@@ -13,7 +13,8 @@ OBJS = \
        clear.o \
        tst.o \
        mm.o \
-       kill.o
+       kill.o \
+       tty.o
 
 APPS = \
        id \
@@ -30,7 +31,8 @@ APPS = \
        clear \
        tst \
        mm \
-       kill
+       kill \
+       tty
 
 ARCH_FLAGS =
 STANDARD_FLAGS = -std=c++17 -nostdinc++ -nostdlib -nostdinc
@@ -93,6 +95,9 @@ mm: mm.o
 	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
 
 kill: kill.o
+	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
+
+tty: tty.o
 	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
 
 .cpp.o:

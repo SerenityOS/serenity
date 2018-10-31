@@ -400,7 +400,7 @@ void VirtualConsole::onTTYWrite(byte ch)
 
 String VirtualConsole::ttyName() const
 {
-    char buf[8];
-    ksprintf(buf, "tty%u", m_index);
+    char buf[16];
+    ksprintf(buf, "/dev/tty%u", m_index);
     return String(buf);
 }
