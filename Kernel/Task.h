@@ -216,6 +216,8 @@ private:
 
     pid_t m_parentPID { 0 };
 
+    void murder();
+
     Vector<String> m_arguments;
 };
 
