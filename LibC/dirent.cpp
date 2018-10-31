@@ -1,8 +1,9 @@
-#include "dirent.h"
-#include "unistd.h"
-#include "stdlib.h"
+#include <dirent.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 #include <Kernel/Syscall.h>
-#include "stdio.h"
 
 extern "C" {
 
@@ -11,7 +12,7 @@ DIR* opendir(const char* name)
     int fd = open(name, O_RDONLY | O_DIRECTORY);
     if (fd == -1)
         return nullptr;
-    DIR* dirp = (DIR*)malloc(sizeof(dirp));
+    DIR* dirp = (DIR*)malloc(sizeof(DIR));
     dirp->fd = fd;
     dirp->buffer = nullptr;
     dirp->buffer_size = 0;
