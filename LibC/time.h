@@ -1,11 +1,12 @@
 #pragma once
 
-#include "types.h"
+#include <sys/cdefs.h>
+#include <sys/types.h>
 
-extern "C" {
+__BEGIN_DECLS
 
 int gettimeofday(timeval*);
 time_t time(time_t*);
 
-}
+__END_DECLS
 

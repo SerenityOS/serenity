@@ -1,8 +1,8 @@
 #pragma once
 
-#include "types.h"
+#include <sys/types.h>
 
-extern "C" {
+__BEGIN_DECLS
 
 int kill(pid_t, int sig);
 
@@ -22,5 +22,5 @@ int kill(pid_t, int sig);
 #define SIGALRM  14
 #define SIGTERM  15
 
-}
+__END_DECLS
 

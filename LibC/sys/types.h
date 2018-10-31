@@ -1,6 +1,8 @@
 #pragma once
 
-extern "C" {
+#include <sys/cdefs.h>
+
+__BEGIN_DECLS
 
 typedef unsigned int dword;
 typedef unsigned short word;
@@ -49,5 +51,11 @@ struct stat {
     time_t    st_ctime;   /* time of last status change */
 };
 
-}
+#ifdef __cplusplus
+#define NULL nullptr
+#else
+#define NULL 0
+#endif
+
+__END_DECLS
 
