@@ -5,6 +5,7 @@
 #include "Console.h"
 
 class VirtualConsole final : public TTY, public KeyboardClient, public ConsoleImplementation {
+    AK_MAKE_ETERNAL
 public:
     enum InitialContents { Cleared, AdoptCurrentVGABuffer };
 

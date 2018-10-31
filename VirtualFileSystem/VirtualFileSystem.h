@@ -28,6 +28,7 @@ inline constexpr dword encodedDevice(unsigned major, unsigned minor)
 }
 
 class VirtualFileSystem {
+    AK_MAKE_ETERNAL
 public:
     static void initializeGlobals();
     static SpinLock& lock();

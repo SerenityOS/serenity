@@ -3,6 +3,7 @@
 #include "CharacterDevice.h"
 
 class FullDevice final : public CharacterDevice {
+    AK_MAKE_ETERNAL
 public:
     FullDevice();
     virtual ~FullDevice();

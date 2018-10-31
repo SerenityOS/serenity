@@ -39,6 +39,11 @@ void* krealloc(void* ptr, size_t size)
     return realloc(ptr, size);
 }
 
+void* kmalloc_eternal(size_t size)
+{
+    return kmalloc(size);
+}
+
 }
 
 #else
@@ -53,6 +58,13 @@ void* kcalloc(size_t nmemb, size_t size)
 }
 
 void* kmalloc(size_t size)
+{
+    if (!size)
+        return nullptr;
+    return SimpleMalloc::allocate(size);
+}
+
+void* kmalloc_eternal(size_t size)
 {
     if (!size)
         return nullptr;

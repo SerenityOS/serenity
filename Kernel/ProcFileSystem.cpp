@@ -174,7 +174,7 @@ ByteBuffer procfs$kmalloc()
     InterruptDisabler disabler;
     auto buffer = ByteBuffer::createUninitialized(128);
     char* ptr = (char*)buffer.pointer();
-    ptr += ksprintf(ptr, "alloc: %u\nfree:  %u\n", sum_alloc, sum_free);
+    ptr += ksprintf(ptr, "eternal:   %u\nallocated: %u\nfree:      %u\n", kmalloc_sum_eternal, sum_alloc, sum_free);
     buffer.trim(ptr - (char*)buffer.pointer());
     return buffer;
 }

@@ -3,6 +3,7 @@
 #include "CharacterDevice.h"
 
 class ZeroDevice final : public CharacterDevice {
+    AK_MAKE_ETERNAL
 public:
     ZeroDevice();
     virtual ~ZeroDevice() override;

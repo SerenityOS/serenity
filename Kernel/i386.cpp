@@ -310,7 +310,7 @@ void flushGDT()
 
 void gdt_init()
 {
-    s_gdt = new Descriptor[256];
+    s_gdt = static_cast<Descriptor*>(kmalloc_eternal(sizeof(Descriptor) * 256));
     s_gdtLength = 5;
 
     s_gdtr.address = s_gdt;
@@ -378,7 +378,7 @@ asm(
 
 void idt_init()
 {
-    s_idt = new Descriptor[256];
+    s_idt = static_cast<Descriptor*>(kmalloc_eternal(sizeof(Descriptor) * 256));
 
     s_idtr.address = s_idt;
     s_idtr.size = 0x100 * 8;
@@ -406,7 +406,7 @@ void idt_init()
 
     registerInterruptHandler(0x57, irq7_handler);
 
-    s_irqHandler = new IRQHandler*[16];
+    s_irqHandler = static_cast<IRQHandler**>(kmalloc_eternal(sizeof(IRQHandler*) * 16));
     for (byte i = 0; i < 16; ++i) {
         s_irqHandler[i] = nullptr;
     }

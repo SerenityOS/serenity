@@ -9,7 +9,7 @@ struct KSym {
     String name;
 };
 
-Vector<KSym>& ksyms() PURE;
+Vector<KSym, KmallocEternalAllocator>& ksyms() PURE;
 const KSym* ksymbolicate(dword address) PURE;
 
 struct system_t

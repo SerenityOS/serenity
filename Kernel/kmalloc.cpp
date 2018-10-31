@@ -22,15 +22,21 @@ typedef struct
 #define CHUNK_SIZE  128
 #define POOL_SIZE   (1024 * 1024)
 
+#define ETERNAL_BASE_PHYSICAL 0x300000
 #define BASE_PHYS   0x200000
 
 PRIVATE BYTE alloc_map[POOL_SIZE / CHUNK_SIZE / 8];
 
 volatile DWORD sum_alloc = 0;
 volatile DWORD sum_free = POOL_SIZE;
+volatile size_t kmalloc_sum_eternal = 0;
+
+static byte* s_next_eternal_ptr;
 
 bool is_kmalloc_address(void* ptr)
 {
+    if (ptr >= (byte*)ETERNAL_BASE_PHYSICAL && ptr < s_next_eternal_ptr)
+        return true;
     return ptr >= (void*)BASE_PHYS && ptr <= ((void*)BASE_PHYS + POOL_SIZE);
 }
 
@@ -40,8 +46,19 @@ kmalloc_init()
     memset( &alloc_map, 0, sizeof(alloc_map) );
     memset( (void *)BASE_PHYS, 0, POOL_SIZE );
 
+    kmalloc_sum_eternal = 0;
     sum_alloc = 0;
     sum_free = POOL_SIZE;
+
+    s_next_eternal_ptr = (byte*)ETERNAL_BASE_PHYSICAL;
+}
+
+void* kmalloc_eternal(size_t size)
+{
+    void* ptr = s_next_eternal_ptr;
+    s_next_eternal_ptr += size;
+    kmalloc_sum_eternal += size;
+    return ptr;
 }
 
 PUBLIC void *

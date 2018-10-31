@@ -36,6 +36,7 @@ bool copyToZone(Zone&, const void* data, size_t);
 #define MM MemoryManager::the()
 
 class MemoryManager {
+    AK_MAKE_ETERNAL
     friend ByteBuffer procfs$mm();
 public:
     static MemoryManager& the() PURE;

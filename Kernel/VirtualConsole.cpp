@@ -22,7 +22,7 @@ VirtualConsole::VirtualConsole(unsigned index, InitialContents initialContents)
     , m_index(index)
 {
     s_consoles[index] = this;
-    m_buffer = (byte*)kmalloc(80 * 25 * 2);
+    m_buffer = (byte*)kmalloc_eternal(80 * 25 * 2);
     dbgprintf("VirtualConsole %u @ %p, m_buffer = %p\n", index, this, m_buffer);
     if (initialContents == AdoptCurrentVGABuffer) {
         memcpy(m_buffer, s_vgaBuffer, 80 * 25 * 2);

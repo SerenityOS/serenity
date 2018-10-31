@@ -48,9 +48,9 @@ static byte parseHexDigit(char nibble)
     return 10 + (nibble - 'a');
 }
 
-static Vector<KSym>* s_ksyms;
+static Vector<KSym, KmallocEternalAllocator>* s_ksyms;
 
-Vector<KSym>& ksyms()
+Vector<KSym, KmallocEternalAllocator>& ksyms()
 {
     return *s_ksyms;
 }
@@ -68,7 +68,9 @@ const KSym* ksymbolicate(dword address)
 
 static void loadKsyms(const ByteBuffer& buffer)
 {
-    s_ksyms = new Vector<KSym>;
+    // FIXME: It's gross that this vector grows dynamically rather than being sized-to-fit.
+    //        We're wasting that eternal kmalloc memory.
+    s_ksyms = new Vector<KSym, KmallocEternalAllocator>;
     auto* bufptr = (const char*)buffer.pointer();
     auto* startOfName = bufptr;
     dword address = 0;
@@ -83,6 +85,7 @@ static void loadKsyms(const ByteBuffer& buffer)
                 break;
             }
         }
+        // FIXME: The Strings here should be eternally allocated too.
         ksyms().append({ address, String(startOfName, bufptr - startOfName) });
         ++bufptr;
     }
