@@ -41,7 +41,6 @@ void MemoryManager::initializePaging()
 
     identityMap(LinearAddress(4096), 4 * MB);
  
-    // Put pages between 4MB and 8MB in the page freelist.
     for (size_t i = (4 * MB) + PAGE_SIZE; i < (8 * MB); i += PAGE_SIZE) {
         m_freePages.append(PhysicalAddress(i));
     }
@@ -170,7 +169,7 @@ RetainPtr<Zone> MemoryManager::createZone(size_t size)
     InterruptDisabler disabler;
     auto pages = allocatePhysicalPages(ceilDiv(size, PAGE_SIZE));
     if (pages.isEmpty()) {
-        kprintf("[MM] createZone: no physical pages for size %u", size);
+        kprintf("[MM] createZone: no physical pages for size %u\n", size);
         return nullptr;
     }
     return adopt(*new Zone(move(pages)));

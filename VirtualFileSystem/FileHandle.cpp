@@ -79,9 +79,8 @@ Unix::off_t FileHandle::seek(Unix::off_t offset, int whence)
             return -EINVAL;
         break;
     case SEEK_END:
-        // FIXME: Implement!
-        notImplemented();
-        newOffset = 0;
+        ASSERT(metadata.size); // FIXME: What do I do?
+        newOffset = metadata.size;
         break;
     default:
         return -EINVAL;
@@ -148,7 +147,7 @@ ssize_t FileHandle::get_dir_entries(byte* buffer, Unix::size_t size)
     // FIXME: Compute the actual size needed.
     auto tempBuffer = ByteBuffer::createUninitialized(2048);
     BufferStream stream(tempBuffer);
-    m_vnode->vfs()->enumerateDirectoryInode(m_vnode->inode, [&stream] (const FileSystem::DirectoryEntry& entry) {
+    m_vnode->vfs()->enumerateDirectoryInode(m_vnode->inode, [&stream] (auto& entry) {
         stream << (dword)entry.inode.index();
         stream << (byte)entry.fileType;
         stream << (dword)entry.name.length();

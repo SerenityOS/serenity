@@ -94,7 +94,7 @@ public:
     ssize_t sys$write(int fd, const void*, size_t);
     int sys$lstat(const char*, Unix::stat*);
     int sys$stat(const char*, Unix::stat*);
-    int sys$seek(int fd, int offset);
+    int sys$lseek(int fd, off_t, int whence);
     int sys$kill(pid_t pid, int sig);
     int sys$geterror() { return m_error; }
     void sys$exit(int status);
@@ -110,6 +110,7 @@ public:
     int sys$gettimeofday(timeval*);
     int sys$gethostname(char* name, size_t length);
     int sys$get_arguments(int* argc, char*** argv);
+    int sys$get_environment(char*** environ);
     int sys$uname(utsname*);
     int sys$readlink(const char*, char*, size_t);
     int sys$ttyname_r(int fd, char*, size_t);
@@ -220,6 +221,7 @@ private:
     void murder();
 
     Vector<String> m_arguments;
+    Vector<String> m_initialEnvironment;
 };
 
 extern void task_init();
