@@ -44,7 +44,7 @@ void VirtualConsole::switchTo(unsigned index)
 {
     if ((int)index == s_activeConsole)
         return;
-    dbgprintf("[VC] Switch to %u (%p)\n", index, s_consoles[index]);
+    dbgprintf("VC: Switch to %u (%p)\n", index, s_consoles[index]);
     ASSERT(index < 6);
     ASSERT(s_consoles[index]);
     InterruptDisabler disabler;
@@ -387,7 +387,10 @@ void VirtualConsole::onKeyPress(byte ch)
 
 void VirtualConsole::onConsoleReceive(byte ch)
 {
+    auto old_attribute = m_currentAttribute;
+    m_currentAttribute = 0x03;
     onChar(ch, false);
+    m_currentAttribute = old_attribute;
 }
 
 void VirtualConsole::onTTYWrite(byte ch)

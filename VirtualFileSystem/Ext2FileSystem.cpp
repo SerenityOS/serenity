@@ -92,8 +92,8 @@ const ext2_group_desc& Ext2FileSystem::blockGroupDescriptor(unsigned groupIndex)
         unsigned blocksToRead = ceilDiv(m_blockGroupCount * (unsigned)sizeof(ext2_group_desc), blockSize());
         unsigned firstBlockOfBGDT = blockSize() == 1024 ? 2 : 1;
 #ifdef EXT2_DEBUG
-        kprintf("[ext2fs] block group count: %u, blocks-to-read: %u\n", m_blockGroupCount, blocksToRead);
-        kprintf("[ext2fs] first block of BGDT: %u\n", firstBlockOfBGDT);
+        kprintf("ext2fs: block group count: %u, blocks-to-read: %u\n", m_blockGroupCount, blocksToRead);
+        kprintf("ext2fs: first block of BGDT: %u\n", firstBlockOfBGDT);
 #endif
         m_cachedBlockGroupDescriptorTable = readBlocks(firstBlockOfBGDT, blocksToRead);
     }
@@ -104,20 +104,20 @@ bool Ext2FileSystem::initialize()
 {
     auto& superBlock = this->superBlock();
 #ifdef EXT2_DEBUG
-    kprintf("[ext2fs] super block magic: %x (super block size: %u)\n", superBlock.s_magic, sizeof(ext2_super_block));
+    kprintf("ext2fs: super block magic: %x (super block size: %u)\n", superBlock.s_magic, sizeof(ext2_super_block));
 #endif
     if (superBlock.s_magic != EXT2_SUPER_MAGIC)
         return false;
 
 #ifdef EXT2_DEBUG
-    kprintf("[ext2fs] %u inodes, %u blocks\n", superBlock.s_inodes_count, superBlock.s_blocks_count);
-    kprintf("[ext2fs] block size = %u\n", EXT2_BLOCK_SIZE(&superBlock));
-    kprintf("[ext2fs] first data block = %u\n", superBlock.s_first_data_block);
-    kprintf("[ext2fs] inodes per block = %u\n", inodesPerBlock());
-    kprintf("[ext2fs] inodes per group = %u\n", inodesPerGroup());
-    kprintf("[ext2fs] free inodes = %u\n", superBlock.s_free_inodes_count);
-    kprintf("[ext2fs] desc per block = %u\n", EXT2_DESC_PER_BLOCK(&superBlock));
-    kprintf("[ext2fs] desc size = %u\n", EXT2_DESC_SIZE(&superBlock));
+    kprintf("ext2fs: %u inodes, %u blocks\n", superBlock.s_inodes_count, superBlock.s_blocks_count);
+    kprintf("ext2fs: block size = %u\n", EXT2_BLOCK_SIZE(&superBlock));
+    kprintf("ext2fs: first data block = %u\n", superBlock.s_first_data_block);
+    kprintf("ext2fs: inodes per block = %u\n", inodesPerBlock());
+    kprintf("ext2fs: inodes per group = %u\n", inodesPerGroup());
+    kprintf("ext2fs: free inodes = %u\n", superBlock.s_free_inodes_count);
+    kprintf("ext2fs: desc per block = %u\n", EXT2_DESC_PER_BLOCK(&superBlock));
+    kprintf("ext2fs: desc size = %u\n", EXT2_DESC_SIZE(&superBlock));
 #endif
 
     setBlockSize(EXT2_BLOCK_SIZE(&superBlock));
@@ -125,14 +125,14 @@ bool Ext2FileSystem::initialize()
     m_blockGroupCount = ceilDiv(superBlock.s_blocks_count, superBlock.s_blocks_per_group);
 
     if (m_blockGroupCount == 0) {
-        kprintf("[ext2fs] no block groups :(\n");
+        kprintf("ext2fs: no block groups :(\n");
         return false;
     }
 
 #ifdef EXT2_DEBUG
     for (unsigned i = 1; i <= m_blockGroupCount; ++i) {
         auto& group = blockGroupDescriptor(i);
-        kprintf("[ext2fs] group[%u] { block_bitmap: %u, inode_bitmap: %u, inode_table: %u }\n",
+        kprintf("ext2fs: group[%u] { block_bitmap: %u, inode_bitmap: %u, inode_table: %u }\n",
             i,
             group.bg_block_bitmap,
             group.bg_inode_bitmap,
@@ -314,7 +314,7 @@ Unix::ssize_t Ext2FileSystem::readInodeBytes(InodeIdentifier inode, Unix::off_t 
 
     auto e2inode = lookupExt2Inode(inode.index());
     if (!e2inode) {
-        kprintf("[ext2fs] readInodeBytes: metadata lookup for inode %u failed\n", inode.index());
+        kprintf("ext2fs: readInodeBytes: metadata lookup for inode %u failed\n", inode.index());
         return -EIO;
     }
 
@@ -340,7 +340,7 @@ Unix::ssize_t Ext2FileSystem::readInodeBytes(InodeIdentifier inode, Unix::off_t 
     //        It needs to be cached!
     auto list = blockListForInode(*e2inode);
     if (list.isEmpty()) {
-        kprintf("[ext2fs] readInodeBytes: empty block list for inode %u\n", inode.index());
+        kprintf("ext2fs: readInodeBytes: empty block list for inode %u\n", inode.index());
         return -EIO;
     }
 
@@ -362,7 +362,7 @@ Unix::ssize_t Ext2FileSystem::readInodeBytes(InodeIdentifier inode, Unix::off_t 
     for (dword bi = firstBlockLogicalIndex; bi <= lastBlockLogicalIndex; ++bi) {
         auto block = readBlock(list[bi]);
         if (!block) {
-            kprintf("[ext2fs] readInodeBytes: readBlock(%u) failed (lbi: %u)\n", list[bi], bi);
+            kprintf("ext2fs: readInodeBytes: readBlock(%u) failed (lbi: %u)\n", list[bi], bi);
             return -EIO;
         }
 
@@ -389,7 +389,7 @@ bool Ext2FileSystem::writeInode(InodeIdentifier inode, const ByteBuffer& data)
 
     auto e2inode = lookupExt2Inode(inode.index());
     if (!e2inode) {
-        kprintf("[ext2fs] writeInode: metadata lookup for inode %u failed\n", inode.index());
+        kprintf("ext2fs: writeInode: metadata lookup for inode %u failed\n", inode.index());
         return false;
     }
 
@@ -404,7 +404,7 @@ bool Ext2FileSystem::writeInode(InodeIdentifier inode, const ByteBuffer& data)
 
     auto list = blockListForInode(*e2inode);
     if (list.isEmpty()) {
-        kprintf("[ext2fs] writeInode: empty block list for inode %u\n", inode.index());
+        kprintf("ext2fs: writeInode: empty block list for inode %u\n", inode.index());
         return false;
     }
 
@@ -424,7 +424,7 @@ bool Ext2FileSystem::enumerateDirectoryInode(InodeIdentifier inode, Function<boo
     ASSERT(isDirectoryInode(inode.index()));
 
 #ifdef EXT2_DEBUG
-    kprintf("[ext2fs] Enumerating directory contents of inode %u:\n", inode.index());
+    kprintf("ext2fs: Enumerating directory contents of inode %u:\n", inode.index());
 #endif
 
     auto buffer = readEntireInode(inode);
@@ -455,7 +455,7 @@ bool Ext2FileSystem::addInodeToDirectory(unsigned directoryInode, unsigned inode
     ASSERT(isDirectory(e2inodeForDirectory->i_mode));
 
 //#ifdef EXT2_DEBUG
-    kprintf("[ext2fs] Adding inode %u with name '%s' to directory %u\n", inode, name.characters(), directoryInode);
+    kprintf("ext2fs: Adding inode %u with name '%s' to directory %u\n", inode, name.characters(), directoryInode);
 //#endif
 
     Vector<DirectoryEntry> entries;
@@ -469,7 +469,7 @@ bool Ext2FileSystem::addInodeToDirectory(unsigned directoryInode, unsigned inode
         return true;
     });
     if (nameAlreadyExists) {
-        kprintf("[ext2fs] Name '%s' already exists in directory inode %u\n", name.characters(), directoryInode);
+        kprintf("ext2fs: Name '%s' already exists in directory inode %u\n", name.characters(), directoryInode);
         return false;
     }
 
@@ -480,7 +480,7 @@ bool Ext2FileSystem::addInodeToDirectory(unsigned directoryInode, unsigned inode
 
 bool Ext2FileSystem::writeDirectoryInode(unsigned directoryInode, Vector<DirectoryEntry>&& entries)
 {
-    kprintf("[ext2fs] New directory inode %u contents to write:\n", directoryInode);
+    kprintf("ext2fs: New directory inode %u contents to write:\n", directoryInode);
 
     unsigned directorySize = 0;
     for (auto& entry : entries) {
@@ -491,7 +491,7 @@ bool Ext2FileSystem::writeDirectoryInode(unsigned directoryInode, Vector<Directo
     unsigned blocksNeeded = ceilDiv(directorySize, blockSize());
     unsigned occupiedSize = blocksNeeded * blockSize();
 
-    kprintf("[ext2fs] directory size: %u (occupied: %u)\n", directorySize, occupiedSize);
+    kprintf("ext2fs: directory size: %u (occupied: %u)\n", directorySize, occupiedSize);
 
     auto directoryData = ByteBuffer::createUninitialized(occupiedSize);
 
@@ -572,7 +572,7 @@ void Ext2FileSystem::dumpBlockBitmap(unsigned groupIndex) const
     auto bitmapBlocks = readBlocks(bgd.bg_block_bitmap, blockCount);
     ASSERT(bitmapBlocks);
 
-    kprintf("[ext2fs] group[%u] block bitmap (bitmap occupies %u blocks):\n", groupIndex, blockCount);
+    kprintf("ext2fs: group[%u] block bitmap (bitmap occupies %u blocks):\n", groupIndex, blockCount);
 
     auto bitmap = Bitmap::wrap(bitmapBlocks.pointer(), blocksInGroup);
     for (unsigned i = 0; i < blocksInGroup; ++i) {
@@ -675,11 +675,11 @@ bool Ext2FileSystem::isDirectoryInode(unsigned inode) const
 
 Vector<Ext2FileSystem::BlockIndex> Ext2FileSystem::allocateBlocks(unsigned group, unsigned count)
 {
-    kprintf("[ext2fs] allocateBlocks(group: %u, count: %u)\n", group, count);
+    kprintf("ext2fs: allocateBlocks(group: %u, count: %u)\n", group, count);
 
     auto& bgd = blockGroupDescriptor(group);
     if (bgd.bg_free_blocks_count < count) {
-        kprintf("[ext2fs] allocateBlocks can't allocate out of group %u, wanted %u but only %u available\n", group, count, bgd.bg_free_blocks_count);
+        kprintf("ext2fs: allocateBlocks can't allocate out of group %u, wanted %u but only %u available\n", group, count, bgd.bg_free_blocks_count);
         return { };
     }
 
@@ -695,7 +695,7 @@ Vector<Ext2FileSystem::BlockIndex> Ext2FileSystem::allocateBlocks(unsigned group
         }
         return true;
     });
-    kprintf("[ext2fs] allocateBlock found these blocks:\n");
+    kprintf("ext2fs: allocateBlock found these blocks:\n");
     for (auto& bi : blocks) {
         kprintf("  > %u\n", bi);
     }
@@ -705,11 +705,11 @@ Vector<Ext2FileSystem::BlockIndex> Ext2FileSystem::allocateBlocks(unsigned group
 
 unsigned Ext2FileSystem::allocateInode(unsigned preferredGroup, unsigned expectedSize)
 {
-    kprintf("[ext2fs] allocateInode(preferredGroup: %u, expectedSize: %u)\n", preferredGroup, expectedSize);
+    kprintf("ext2fs: allocateInode(preferredGroup: %u, expectedSize: %u)\n", preferredGroup, expectedSize);
 
     unsigned neededBlocks = ceilDiv(expectedSize, blockSize());
 
-    kprintf("[ext2fs] minimum needed blocks: %u\n", neededBlocks);
+    kprintf("ext2fs: minimum needed blocks: %u\n", neededBlocks);
 
     unsigned groupIndex = 0;
 
@@ -728,11 +728,11 @@ unsigned Ext2FileSystem::allocateInode(unsigned preferredGroup, unsigned expecte
     }
 
     if (!groupIndex) {
-        kprintf("[ext2fs] allocateInode: no suitable group found for new inode with %u blocks needed :(\n", neededBlocks);
+        kprintf("ext2fs: allocateInode: no suitable group found for new inode with %u blocks needed :(\n", neededBlocks);
         return 0;
     }
 
-    kprintf("[ext2fs] allocateInode: found suitable group [%u] for new inode with %u blocks needed :^)\n", groupIndex, neededBlocks);
+    kprintf("ext2fs: allocateInode: found suitable group [%u] for new inode with %u blocks needed :^)\n", groupIndex, neededBlocks);
 
     unsigned firstFreeInodeInGroup = 0;
     traverseInodeBitmap(groupIndex, [&firstFreeInodeInGroup] (unsigned firstInodeInBitmap, const Bitmap& bitmap) {
@@ -746,12 +746,12 @@ unsigned Ext2FileSystem::allocateInode(unsigned preferredGroup, unsigned expecte
     });
 
     if (!firstFreeInodeInGroup) {
-        kprintf("[ext2fs] firstFreeInodeInGroup returned no inode, despite bgd claiming there are inodes :(\n");
+        kprintf("ext2fs: firstFreeInodeInGroup returned no inode, despite bgd claiming there are inodes :(\n");
         return 0;
     }
 
     unsigned inode = firstFreeInodeInGroup;
-    kprintf("[ext2fs] found suitable inode %u\n", inode);
+    kprintf("ext2fs: found suitable inode %u\n", inode);
 
     // FIXME: allocate blocks if needed!
 
@@ -777,7 +777,7 @@ bool Ext2FileSystem::setInodeAllocationState(unsigned inode, bool newState)
     ASSERT(block);
     auto bitmap = Bitmap::wrap(block.pointer(), block.size());
     bool currentState = bitmap.get(bitIndex);
-    kprintf("[ext2fs] setInodeAllocationState(%u) %u -> %u\n", inode, currentState, newState);
+    kprintf("ext2fs: setInodeAllocationState(%u) %u -> %u\n", inode, currentState, newState);
 
     if (currentState == newState)
         return true;
@@ -787,7 +787,7 @@ bool Ext2FileSystem::setInodeAllocationState(unsigned inode, bool newState)
 
     // Update superblock
     auto& sb = *reinterpret_cast<ext2_super_block*>(m_cachedSuperBlock.pointer());
-    kprintf("[ext2fs] superblock free inode count %u -> %u\n", sb.s_free_inodes_count, sb.s_free_inodes_count - 1);
+    kprintf("ext2fs: superblock free inode count %u -> %u\n", sb.s_free_inodes_count, sb.s_free_inodes_count - 1);
     if (newState)
         --sb.s_free_inodes_count;
     else
@@ -800,7 +800,7 @@ bool Ext2FileSystem::setInodeAllocationState(unsigned inode, bool newState)
         --mutableBGD.bg_free_inodes_count;
     else
         ++mutableBGD.bg_free_inodes_count;
-    kprintf("[ext2fs] group free inode count %u -> %u\n", bgd.bg_free_inodes_count, bgd.bg_free_inodes_count - 1);
+    kprintf("ext2fs: group free inode count %u -> %u\n", bgd.bg_free_inodes_count, bgd.bg_free_inodes_count - 1);
 
     unsigned blocksToWrite = ceilDiv(m_blockGroupCount * (unsigned)sizeof(ext2_group_desc), blockSize());
     unsigned firstBlockOfBGDT = blockSize() == 1024 ? 2 : 1;
@@ -821,7 +821,7 @@ bool Ext2FileSystem::setBlockAllocationState(GroupIndex group, BlockIndex bi, bo
     ASSERT(block);
     auto bitmap = Bitmap::wrap(block.pointer(), block.size());
     bool currentState = bitmap.get(bitIndex);
-    kprintf("[ext2fs] setBlockAllocationState(%u) %u -> %u\n", block, currentState, newState);
+    kprintf("ext2fs: setBlockAllocationState(%u) %u -> %u\n", block, currentState, newState);
 
     if (currentState == newState)
         return true;
@@ -831,7 +831,7 @@ bool Ext2FileSystem::setBlockAllocationState(GroupIndex group, BlockIndex bi, bo
 
     // Update superblock
     auto& sb = *reinterpret_cast<ext2_super_block*>(m_cachedSuperBlock.pointer());
-    kprintf("[ext2fs] superblock free block count %u -> %u\n", sb.s_free_blocks_count, sb.s_free_blocks_count - 1);
+    kprintf("ext2fs: superblock free block count %u -> %u\n", sb.s_free_blocks_count, sb.s_free_blocks_count - 1);
     if (newState)
         --sb.s_free_blocks_count;
     else
@@ -844,7 +844,7 @@ bool Ext2FileSystem::setBlockAllocationState(GroupIndex group, BlockIndex bi, bo
         --mutableBGD.bg_free_blocks_count;
     else
         ++mutableBGD.bg_free_blocks_count;
-    kprintf("[ext2fs] group free block count %u -> %u\n", bgd.bg_free_blocks_count, bgd.bg_free_blocks_count - 1);
+    kprintf("ext2fs: group free block count %u -> %u\n", bgd.bg_free_blocks_count, bgd.bg_free_blocks_count - 1);
 
     unsigned blocksToWrite = ceilDiv(m_blockGroupCount * (unsigned)sizeof(ext2_group_desc), blockSize());
     unsigned firstBlockOfBGDT = blockSize() == 1024 ? 2 : 1;
@@ -869,7 +869,7 @@ InodeIdentifier Ext2FileSystem::makeDirectory(InodeIdentifier parentInode, const
     if (!inode.isValid())
         return { };
 
-    kprintf("[ext2fs] makeDirectory: created new directory named '%s' with inode %u\n", name.characters(), inode.index());
+    kprintf("ext2fs: makeDirectory: created new directory named '%s' with inode %u\n", name.characters(), inode.index());
 
     Vector<DirectoryEntry> entries;
     entries.append({ ".", inode, EXT2_FT_DIR });
@@ -883,7 +883,7 @@ InodeIdentifier Ext2FileSystem::makeDirectory(InodeIdentifier parentInode, const
 
     auto& bgd = const_cast<ext2_group_desc&>(blockGroupDescriptor(groupIndexFromInode(inode.index())));
     ++bgd.bg_used_dirs_count;
-    kprintf("[ext2fs] incremented bg_used_dirs_count %u -> %u\n", bgd.bg_used_dirs_count - 1, bgd.bg_used_dirs_count);
+    kprintf("ext2fs: incremented bg_used_dirs_count %u -> %u\n", bgd.bg_used_dirs_count - 1, bgd.bg_used_dirs_count);
 
     unsigned blocksToWrite = ceilDiv(m_blockGroupCount * (unsigned)sizeof(ext2_group_desc), blockSize());
     unsigned firstBlockOfBGDT = blockSize() == 1024 ? 2 : 1;
@@ -898,19 +898,19 @@ InodeIdentifier Ext2FileSystem::createInode(InodeIdentifier parentInode, const S
     ASSERT(isDirectoryInode(parentInode.index()));
 
 //#ifdef EXT2_DEBUG
-    kprintf("[ext2fs] Adding inode '%s' (mode %o) to parent directory %u:\n", name.characters(), mode, parentInode.index());
+    kprintf("ext2fs: Adding inode '%s' (mode %o) to parent directory %u:\n", name.characters(), mode, parentInode.index());
 //#endif
 
     // NOTE: This doesn't commit the inode allocation just yet!
     auto inode = allocateInode(0, 0);
     if (!inode) {
-        kprintf("[ext2fs] createInode: allocateInode failed\n");
+        kprintf("ext2fs: createInode: allocateInode failed\n");
         return { };
     }
 
     auto blocks = allocateBlocks(groupIndexFromInode(inode), ceilDiv(size, blockSize()));
     if (blocks.isEmpty()) {
-        kprintf("[ext2fs] createInode: allocateBlocks failed\n");
+        kprintf("ext2fs: createInode: allocateBlocks failed\n");
         return { };
     }
 
@@ -933,7 +933,7 @@ InodeIdentifier Ext2FileSystem::createInode(InodeIdentifier parentInode, const S
     // Try adding it to the directory first, in case the name is already in use.
     bool success = addInodeToDirectory(parentInode.index(), inode, name, fileType);
     if (!success) {
-        kprintf("[ext2fs] failed to add inode to directory :(\n");
+        kprintf("ext2fs: failed to add inode to directory :(\n");
         return { };
     }
 

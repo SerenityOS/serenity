@@ -137,7 +137,7 @@ bool SyntheticFileSystem::enumerateDirectoryInode(InodeIdentifier inode, Functio
     InterruptDisabler disabler;
     ASSERT(inode.fileSystemID() == id());
 #ifdef SYNTHFS_DEBUG
-    kprintf("[synthfs] enumerateDirectoryInode %u\n", inode.index());
+    kprintf("synthfs: enumerateDirectoryInode %u\n", inode.index());
 #endif
 
     auto it = m_inodes.find(inode.index());
@@ -160,7 +160,7 @@ InodeMetadata SyntheticFileSystem::inodeMetadata(InodeIdentifier inode) const
     InterruptDisabler disabler;
     ASSERT(inode.fileSystemID() == id());
 #ifdef SYNTHFS_DEBUG
-    kprintf("[synthfs] inodeMetadata(%u)\n", inode.index());
+    kprintf("synthfs: inodeMetadata(%u)\n", inode.index());
 #endif
 
     auto it = m_inodes.find(inode.index());
@@ -198,7 +198,7 @@ Unix::ssize_t SyntheticFileSystem::readInodeBytes(InodeIdentifier inode, Unix::o
 
     ASSERT(inode.fileSystemID() == id());
 #ifdef SYNTHFS_DEBUG
-    kprintf("[synthfs] readInode %u\n", inode.index());
+    kprintf("synthfs: readInode %u\n", inode.index());
 #endif
     ASSERT(offset >= 0);
     ASSERT(buffer);

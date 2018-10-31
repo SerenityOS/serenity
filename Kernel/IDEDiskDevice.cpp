@@ -34,7 +34,7 @@ bool IDEDiskDevice::writeBlock(unsigned index, const byte* data)
 {
     (void) index;
     (void) data;
-    kprintf("[IDEDiskDevice] writeBlock not implemented()\n");
+    kprintf("IDEDiskDevice: writeBlock not implemented()\n");
     notImplemented();
     return false;
 }

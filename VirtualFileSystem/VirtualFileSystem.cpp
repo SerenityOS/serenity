@@ -36,7 +36,7 @@ void VirtualFileSystem::initializeGlobals()
 VirtualFileSystem::VirtualFileSystem()
 {
 #ifdef VFS_DEBUG
-    kprintf("[VFS] Constructing VFS\n");
+    kprintf("VFS: Constructing VFS\n");
 #endif
     s_the = this;
     m_maxNodeCount = 16;
@@ -49,7 +49,7 @@ VirtualFileSystem::VirtualFileSystem()
 
 VirtualFileSystem::~VirtualFileSystem()
 {
-    kprintf("[VFS] ~VirtualFileSystem with %u nodes allocated\n", allocatedNodeCount());
+    kprintf("VFS: ~VirtualFileSystem with %u nodes allocated\n", allocatedNodeCount());
     // FIXME: m_nodes is never freed. Does it matter though?
 }
 
@@ -65,7 +65,7 @@ auto VirtualFileSystem::makeNode(InodeIdentifier inode) -> RetainPtr<Node>
         if (it != m_characterDevices.end()) {
             characterDevice = (*it).value;
         } else {
-            kprintf("[VFS] makeNode() no such character device %u,%u\n", metadata.majorDevice, metadata.minorDevice);
+            kprintf("VFS: makeNode() no such character device %u,%u\n", metadata.majorDevice, metadata.minorDevice);
             return nullptr;
         }
     }
@@ -126,11 +126,11 @@ bool VirtualFileSystem::mount(RetainPtr<FileSystem>&& fileSystem, const String& 
     int error;
     auto inode = resolvePath(path, error);
     if (!inode.isValid()) {
-        kprintf("[VFS] mount can't resolve mount point '%s'\n", path.characters());
+        kprintf("VFS: mount can't resolve mount point '%s'\n", path.characters());
         return false;
     }
 
-    kprintf("mounting %s{%p} at %s (inode: %u)\n", fileSystem->className(), fileSystem.ptr(), path.characters(), inode.index());
+    kprintf("VFS: mounting %s{%p} at %s (inode: %u)\n", fileSystem->className(), fileSystem.ptr(), path.characters(), inode.index());
     // FIXME: check that this is not already a mount point
     auto mount = make<Mount>(inode, move(fileSystem));
     m_mounts.append(move(mount));
@@ -140,7 +140,7 @@ bool VirtualFileSystem::mount(RetainPtr<FileSystem>&& fileSystem, const String& 
 bool VirtualFileSystem::mountRoot(RetainPtr<FileSystem>&& fileSystem)
 {
     if (m_rootNode) {
-        kprintf("[VFS] mountRoot can't mount another root\n");
+        kprintf("VFS: mountRoot can't mount another root\n");
         return false;
     }
 
@@ -148,17 +148,17 @@ bool VirtualFileSystem::mountRoot(RetainPtr<FileSystem>&& fileSystem)
 
     auto node = makeNode(mount->guest());
     if (!node->inUse()) {
-        kprintf("[VFS] root inode for / is not in use :(\n");
+        kprintf("VFS: root inode for / is not in use :(\n");
         return false;
     }
     if (!node->inode.metadata().isDirectory()) {
-        kprintf("[VFS] root inode for / is not in use :(\n");
+        kprintf("VFS: root inode for / is not in use :(\n");
         return false;
     }
 
     m_rootNode = move(node);
 
-    kprintf("[VFS] mountRoot mounted %s{%p}\n",
+    kprintf("VFS: mounted root on %s{%p}\n",
         m_rootNode->fileSystem()->className(),
         m_rootNode->fileSystem());
 
@@ -170,7 +170,7 @@ auto VirtualFileSystem::allocateNode() -> RetainPtr<Node>
 {
 
     if (m_nodeFreeList.isEmpty()) {
-        kprintf("[VFS] allocateNode has no nodes left\n");
+        kprintf("VFS: allocateNode has no nodes left\n");
         return nullptr;
     }
     auto* node = m_nodeFreeList.takeLast();
@@ -261,7 +261,7 @@ void VirtualFileSystem::listDirectory(const String& path)
     if (!directoryInode.isValid())
         return;
 
-    kprintf("[VFS] ls %s -> %s %02u:%08u\n", path.characters(), directoryInode.fileSystem()->className(), directoryInode.fileSystemID(), directoryInode.index());
+    kprintf("VFS: ls %s -> %s %02u:%08u\n", path.characters(), directoryInode.fileSystem()->className(), directoryInode.fileSystemID(), directoryInode.index());
     enumerateDirectoryInode(directoryInode, [&] (const FileSystem::DirectoryEntry& entry) {
         const char* nameColorBegin = "";
         const char* nameColorEnd = "";
