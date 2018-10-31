@@ -20,6 +20,22 @@ static void sys_putch(char*&, char ch)
     putchar(ch);
 }
 
+static FILE* __current_stream = nullptr;
+static void stream_putch(char*&, char ch)
+{
+    write(__current_stream->fd, &ch, 1);
+}
+
+int fprintf(FILE* fp, const char* fmt, ...)
+{
+    __current_stream = fp;
+    va_list ap;
+    va_start(ap, fmt);
+    int ret = printfInternal(stream_putch, nullptr, fmt, ap);
+    va_end(ap);
+    return ret;
+}
+
 int printf(const char* fmt, ...)
 {
     va_list ap;

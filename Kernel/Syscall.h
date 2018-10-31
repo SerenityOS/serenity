@@ -38,6 +38,7 @@ enum Function {
     PosixReadlink = 0x2006,
     PosixWrite = 0x2007,
     PosixTtynameR = 0x2008,
+    PosixStat = 0x2009,
 };
 
 void initialize();

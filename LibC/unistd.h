@@ -16,6 +16,7 @@ pid_t waitpid(pid_t, int* wstatus, int options);
 int chdir(const char* path);
 char* getcwd(char* buffer, size_t size);
 int lstat(const char* path, struct stat* statbuf);
+int stat(const char* path, struct stat* statbuf);
 int sleep(unsigned seconds);
 int gethostname(char*, size_t);
 ssize_t readlink(const char* path, char* buffer, size_t);

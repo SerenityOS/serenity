@@ -64,9 +64,15 @@ pid_t waitpid(pid_t waitee, int* wstatus, int options)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-int lstat(const char* path, stat* statbuf)
+int lstat(const char* path, struct stat* statbuf)
 {
     int rc = Syscall::invoke(Syscall::PosixLstat, (dword)path, (dword)statbuf);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
+int stat(const char* path, struct stat* statbuf)
+{
+    int rc = Syscall::invoke(Syscall::PosixStat, (dword)path, (dword)statbuf);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 

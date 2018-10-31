@@ -40,6 +40,53 @@ void memcpy(void* dest, const void* src, size_t n)
         *(bdest++) = *(bsrc++);
 }
 
+char* strcpy(char* dest, const char *src)
+{
+    char* originalDest = dest;
+    while ((*dest++ = *src++) != '\0');
+    return originalDest;
+}
+
+char* strncpy(char* dest, const char* src, size_t n)
+{
+    size_t i;
+    for (i = 0; i < n && src[i] != '\0'; ++i)
+        dest[i] = src[i];
+    for ( ; i < n; ++i)
+        dest[i] = '\0';
+    return dest;
+}
+
+char* strchr(const char* str, int c)
+{
+    if (!str)
+        return nullptr;
+    char* ptr = (char*)str;
+    while (*ptr != c)
+        ++ptr;
+    return ptr;
+}
+
+char* strcat(char *dest, const char *src)
+{
+    size_t destLength = strlen(dest);
+    size_t i;
+    for (i = 0 ; src[i] != '\0' ; i++)
+        dest[destLength + i] = src[i];
+    dest[destLength + i] = '\0';
+    return dest;
+}
+
+char* strncat(char *dest, const char *src, size_t n)
+{
+    size_t destLength = strlen(dest);
+    size_t i;
+    for (i = 0 ; i < n && src[i] != '\0' ; i++)
+        dest[destLength + i] = src[i];
+    dest[destLength + i] = '\0';
+    return dest;
+}
+
 const char* strerror(int errnum)
 {
     switch (errnum) {

@@ -851,6 +851,17 @@ int Task::sys$lstat(const char* path, Unix::stat* statbuf)
     return 0;
 }
 
+int Task::sys$stat(const char* path, Unix::stat* statbuf)
+{
+    VALIDATE_USER_BUFFER(statbuf, sizeof(Unix::stat));
+    int error;
+    auto handle = VirtualFileSystem::the().open(move(path), error, 0, cwdInode());
+    if (!handle)
+        return error;
+    handle->stat(statbuf);
+    return 0;
+}
+
 int Task::sys$readlink(const char* path, char* buffer, size_t size)
 {
     VALIDATE_USER_BUFFER(path, strlen(path));
