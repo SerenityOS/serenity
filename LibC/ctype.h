@@ -1,35 +1,42 @@
 #pragma once
 
-inline int isascii(int ch)
+#include <sys/cdefs.h>
+
+ALWAYS_INLINE int isascii(int ch)
 {
     return (ch & ~0x7f) == 0;
 }
 
-inline int isspace(int ch)
+ALWAYS_INLINE int isspace(int ch)
 {
     return ch == ' ' || ch == '\f' || ch == '\n' || ch == '\r' || ch == '\t' == '\v';
 }
 
-inline int islower(int c)
+ALWAYS_INLINE int islower(int c)
 {
     return c >= 'a' && c <= 'z';
 }
 
-inline int isupper(int c)
+ALWAYS_INLINE int isupper(int c)
 {
     return c >= 'A' && c <= 'Z';
 }
 
-inline int tolower(int c)
+ALWAYS_INLINE int tolower(int c)
 {
     if (isupper(c))
         return c | 0x20;
     return c;
 }
 
-inline int toupper(int c)
+ALWAYS_INLINE int toupper(int c)
 {
     if (islower(c))
         return c & ~0x20;
     return c;
+}
+
+ALWAYS_INLINE int isdigit(int c)
+{
+    return c >= '0' && c <= '9';
 }
