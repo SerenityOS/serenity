@@ -9,6 +9,7 @@
 
 struct GlobalState {
     String cwd;
+    char ttyname[32];
     char hostname[32];
 };
 static GlobalState* g;
@@ -18,7 +19,7 @@ static void prompt()
     if (getuid() == 0)
         printf("# ");
     else
-        printf("(%u) \033[32;1m%s\033[0m:\033[34;1m%s\033[0m$> ", getpid(), g->hostname, g->cwd.characters());
+        printf("\033[31;1m%s\033[0m:\033[37;1m%s\033[0m:\033[32;1m%s\033[0m$> ", g->ttyname, g->hostname, g->cwd.characters());
 }
 
 static int sh_pwd(int, const char**)
@@ -157,7 +158,7 @@ static void greeting()
         perror("uname");
         return;
     }
-    printf("\n%s/%s on %s\n\n", uts.sysname, uts.machine, ttyname(0));
+    printf("\n%s/%s on %s\n\n", uts.sysname, uts.machine, g->ttyname);
 }
 
 int main(int, char**)
@@ -166,6 +167,9 @@ int main(int, char**)
     int rc = gethostname(g->hostname, sizeof(g->hostname));
     if (rc < 0)
         perror("gethostname");
+    rc = ttyname_r(0, g->ttyname, sizeof(g->ttyname));
+    if (rc < 0)
+        perror("ttyname_r");
 
     greeting();
 
