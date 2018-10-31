@@ -19,6 +19,7 @@ LIBC_OBJS = \
        signal.o \
        getopt.o \
        scanf.o \
+       pwd.o \
        entry.o
 
 OBJS = $(AK_OBJS) $(LIBC_OBJS)

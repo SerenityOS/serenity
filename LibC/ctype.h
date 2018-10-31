@@ -9,7 +9,7 @@ ALWAYS_INLINE int isascii(int ch)
 
 ALWAYS_INLINE int isspace(int ch)
 {
-    return ch == ' ' || ch == '\f' || ch == '\n' || ch == '\r' || ch == '\t' == '\v';
+    return ch == ' ' || ch == '\f' || ch == '\n' || ch == '\r' || ch == '\t' || ch == '\v';
 }
 
 ALWAYS_INLINE int islower(int c)

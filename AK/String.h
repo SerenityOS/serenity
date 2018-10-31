@@ -44,6 +44,8 @@ public:
     {
     }
 
+    unsigned toUInt(bool& ok) const;
+
     String toLowercase() const
     {
         if (!m_impl)

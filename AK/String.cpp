@@ -75,4 +75,19 @@ ByteBuffer String::toByteBuffer() const
     return ByteBuffer::copy(reinterpret_cast<const byte*>(characters()), length());
 }
 
+unsigned String::toUInt(bool& ok) const
+{
+    unsigned value = 0;
+    for (size_t i = 0; i < length(); ++i) {
+        if (characters()[i] < '0' || characters()[i] > '9') {
+            ok = false;
+            return 0;
+        }
+        value = value * 10;
+        value += characters()[i] - '0';
+    }
+    ok = true;
+    return value;
+}
+
 }
