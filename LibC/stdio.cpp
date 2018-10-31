@@ -42,7 +42,7 @@ char* fgets(char* buffer, int size, FILE* stream)
 int fgetc(FILE* stream)
 {
     char ch;
-    read(stream->fd, &ch, 1);
+    fread(&ch, sizeof(char), 1, stream);
     return ch;
 }
 

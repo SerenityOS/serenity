@@ -7,6 +7,7 @@ __BEGIN_DECLS
 
 extern char** environ;
 
+inline int getpagesize() { return 4096; }
 uid_t getuid();
 gid_t getgid();
 pid_t getpid();

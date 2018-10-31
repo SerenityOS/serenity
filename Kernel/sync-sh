@@ -1,6 +1,7 @@
 cp -p _fs_contents.stock _fs_contents
 mkdir mnt
 mount -o loop _fs_contents mnt/
+cp -R ../Base/* mnt/
 cp ../Userland/sh mnt/bin/sh
 cp ../Userland/id mnt/bin/id
 cp ../Userland/ps mnt/bin/ps

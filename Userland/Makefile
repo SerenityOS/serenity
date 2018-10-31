@@ -3,7 +3,6 @@ OBJS = \
        sh.o \
        ps.o \
        ls.o \
-       pwd.o \
        sleep.o \
        date.o \
        true.o \
@@ -21,7 +20,6 @@ APPS = \
        sh \
        ps \
        ls \
-       pwd \
        sleep \
        date \
        true \
@@ -62,9 +60,6 @@ ps: ps.o
 	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
 
 ls: ls.o
-	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
-
-pwd: pwd.o
 	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
 
 sleep: sleep.o
