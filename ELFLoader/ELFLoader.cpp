@@ -37,7 +37,7 @@ bool ELFLoader::load()
 bool ELFLoader::layout()
 {
 #ifdef ELFLOADER_DEBUG
-    kprintf("[ELFLoader] Layout\n");
+    kprintf("ELFLoader: Layout\n");
 #endif
     bool failed = false;
     dword highestOffset = 0;
@@ -49,13 +49,13 @@ bool ELFLoader::layout()
         }
     });
 #ifdef ELFLOADER_DEBUG
-    kprintf("[ELFLoader] Highest section offset: %u, Size needed: %u\n", highestOffset, sizeNeeded);
+    kprintf("ELFLoader: Highest section offset: %u, Size needed: %u\n", highestOffset, sizeNeeded);
 #endif
     m_execSpace.allocateUniverse(sizeNeeded);
 
     m_image->forEachSectionOfType(SHT_PROGBITS, [this, &failed] (const ELFImage::Section& section) {
 #ifdef ELFLOADER_DEBUG
-        kprintf("[ELFLoader] Allocating progbits section: %s\n", section.name());
+        kprintf("ELFLoader: Allocating progbits section: %s\n", section.name());
 #endif
         if (!section.size())
             return true;
@@ -71,7 +71,7 @@ bool ELFLoader::layout()
     });
     m_image->forEachSectionOfType(SHT_NOBITS, [this, &failed] (const ELFImage::Section& section) {
 #ifdef ELFLOADER_DEBUG
-        kprintf("[ELFLoader] Allocating nobits section: %s\n", section.name());
+        kprintf("ELFLoader: Allocating nobits section: %s\n", section.name());
 #endif
         if (!section.size())
             return true;
@@ -111,7 +111,7 @@ char* ELFLoader::areaForSectionName(const char* name)
 bool ELFLoader::performRelocations()
 {
 #ifdef ELFLOADER_DEBUG
-    kprintf("[ELFLoader] Performing relocations\n");
+    kprintf("ELFLoader: Performing relocations\n");
 #endif
 
     bool failed = false;
@@ -134,7 +134,7 @@ bool ELFLoader::performRelocations()
                 }
                 ptrdiff_t relativeOffset = (char*)targetPtr - ((char*)&patchPtr + 4);
 #ifdef ELFLOADER_DEBUG
-                kprintf("[ELFLoader] Relocate PC32:  offset=%x, symbol=%u(%s) value=%x target=%p, offset=%d\n",
+                kprintf("ELFLoader: Relocate PC32:  offset=%x, symbol=%u(%s) value=%x target=%p, offset=%d\n",
                         relocation.offset(),
                         symbol.index(),
                         symbol.name(),
@@ -148,7 +148,7 @@ bool ELFLoader::performRelocations()
             }
             case R_386_32: {
 #ifdef ELFLOADER_DEBUG
-                kprintf("[ELFLoader] Relocate Abs32: symbol=%u(%s), value=%x, section=%s\n",
+                kprintf("ELFLoader: Relocate Abs32: symbol=%u(%s), value=%x, section=%s\n",
                     symbol.index(),
                     symbol.name(),
                     symbol.value(),

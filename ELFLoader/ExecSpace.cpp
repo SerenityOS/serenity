@@ -46,7 +46,7 @@ bool ExecSpace::loadELF(MappedFile&& file)
     if (!loader.load())
         return false;
 #ifdef EXECSPACE_DEBUG
-    kprintf("[ExecSpace] ELF loaded, symbol map now:\n");
+    kprintf("ExecSpace: ELF loaded, symbol map now:\n");
     for (auto& s : m_symbols) {
         kprintf("> %p: %s (%u)\n",
                 s.value.ptr,

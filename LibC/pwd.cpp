@@ -25,6 +25,7 @@ void setpwent()
     } else {
         __pwdb_stream = fopen("/etc/passwd", "r");
         __pwdb_entry = (struct passwd_with_strings*)mmap(nullptr, getpagesize());
+        set_mmap_name(__pwdb_entry, getpagesize(), "setpwent");
     }
 }
 

@@ -100,8 +100,6 @@ static void undertaker_main()
 static void init_stage2() NORETURN;
 static void init_stage2()
 {
-    kprintf("init stage2...\n");
-
     Syscall::initialize();
 
     Disk::initialize();
@@ -228,6 +226,8 @@ void init()
     tty2 = new VirtualConsole(2);
     tty3 = new VirtualConsole(3);
     VirtualConsole::switchTo(0);
+
+    kprintf("Starting Serenity Operating System...\n");
 
     MemoryManager::initialize();
 
