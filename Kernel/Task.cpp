@@ -454,7 +454,7 @@ Task::Task(String&& name, uid_t uid, gid_t gid, pid_t parentPID, RingLevel ring,
     if (isRing0()) {
         // FIXME: This memory is leaked.
         // But uh, there's also no kernel task termination, so I guess it's not technically leaked...
-        dword stackBottom = (dword)kmalloc(defaultStackSize);
+        dword stackBottom = (dword)kmalloc_eternal(defaultStackSize);
         m_stackTop0 = (stackBottom + defaultStackSize) & 0xffffff8;
         m_tss.esp = m_stackTop0;
     } else {

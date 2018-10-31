@@ -13,6 +13,7 @@ public:
 };
 
 class Keyboard final : public IRQHandler, public CharacterDevice {
+    AK_MAKE_ETERNAL
 public:
     static Keyboard& the() PURE;
 

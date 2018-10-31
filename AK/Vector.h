@@ -6,16 +6,26 @@
 
 namespace AK {
 
-template<typename T> class Vector;
+template<typename T, typename Allocator> class Vector;
 
-template<typename T>
+struct KmallocAllocator {
+    static void* allocate(size_t size) { return kmalloc(size); }
+    static void deallocate(void* ptr) { kfree(ptr); }
+};
+
+struct KmallocEternalAllocator {
+    static void* allocate(size_t size) { return kmalloc_eternal(size); }
+    static void deallocate(void*) { }
+};
+
+template<typename T, typename Allocator>
 class VectorImpl {
 public:
     ~VectorImpl() { }
     static VectorImpl* create(size_t capacity)
     {
         size_t size = sizeof(VectorImpl) + sizeof(T) * capacity;
-        void* slot = kmalloc(size);
+        void* slot = Allocator::allocate(size);
         new (slot) VectorImpl(capacity);
         return (VectorImpl*)slot;
     }
@@ -39,7 +49,7 @@ public:
     }
 
 private:
-    friend class Vector<T>;
+    friend class Vector<T, Allocator>;
 
     VectorImpl(size_t capacity) : m_capacity(capacity) { }
 
@@ -53,7 +63,7 @@ private:
     size_t m_capacity;
 };
 
-template<typename T>
+template<typename T, typename Allocator = KmallocAllocator>
 class Vector {
 public:
     Vector() { }
@@ -79,7 +89,7 @@ public:
         for (size_t i = 0; i < size(); ++i) {
             at(i).~T();
         }
-        kfree(m_impl);
+        Allocator::deallocate(m_impl);
         m_impl = nullptr;
     }
 
@@ -150,14 +160,14 @@ public:
         if (capacity() >= neededCapacity)
             return;
         size_t newCapacity = paddedCapacity(neededCapacity);
-        auto newImpl = VectorImpl<T>::create(newCapacity);
+        auto newImpl = VectorImpl<T, Allocator>::create(newCapacity);
         if (m_impl) {
             newImpl->m_size = m_impl->m_size;
             for (size_t i = 0; i < size(); ++i) {
                 new (newImpl->slot(i)) T(move(m_impl->at(i)));
                 m_impl->at(i).~T();
             }
-            kfree(m_impl);
+            Allocator::deallocate(m_impl);
         }
         m_impl = newImpl;
     }
@@ -198,10 +208,11 @@ private:
         return max(size_t(4), capacity + (capacity / 4) + 4);
     }
 
-    VectorImpl<T>* m_impl { nullptr };
+    VectorImpl<T, Allocator>* m_impl { nullptr };
 };
 
 }
 
 using AK::Vector;
-
+using AK::KmallocEternalAllocator;
+using AK::KmallocAllocator;

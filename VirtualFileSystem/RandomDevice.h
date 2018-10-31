@@ -3,6 +3,7 @@
 #include "CharacterDevice.h"
 
 class RandomDevice final : public CharacterDevice {
+    AK_MAKE_ETERNAL
 public:
     RandomDevice();
     virtual ~RandomDevice() override;
