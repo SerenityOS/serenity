@@ -40,12 +40,6 @@ VirtualConsole* tty2;
 VirtualConsole* tty3;
 Keyboard* keyboard;
 
-void banner()
-{
-    InterruptDisabler disabler;
-    kprintf("\n\033[33;1mWelcome to \033[36;1mSerenity OS!\033[0m\n\n");
-}
-
 static byte parseHexDigit(char nibble)
 {
     if (nibble >= '0' && nibble <= '9')
@@ -190,8 +184,6 @@ static void init_stage2()
         sleep(600);
     }
 #endif
-
-    banner();
 
     int error;
     auto* sh0 = Task::createUserTask("/bin/sh", (uid_t)100, (gid_t)100, (pid_t)0, error, nullptr, tty0);
