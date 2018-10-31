@@ -513,6 +513,24 @@ void Task::sys$exit(int status)
     switchNow();
 }
 
+void Task::murder()
+{
+    ASSERT_INTERRUPTS_DISABLED();
+    bool wasCurrent = current == this;
+    setState(Exiting);
+    s_tasks->remove(this);
+    if (wasCurrent) {
+        MM.unmapRegionsForTask(*this);
+        if (!scheduleNewTask()) {
+            kprintf("Task::murder: Failed to schedule a new task :(\n");
+            HANG;
+        }
+    }
+    s_deadTasks->append(this);
+    if (wasCurrent)
+        switchNow();
+}
+
 void Task::taskDidCrash(Task* crashedTask)
 {
     ASSERT_INTERRUPTS_DISABLED();
@@ -749,7 +767,7 @@ int Task::sys$seek(int fd, int offset)
 {
     auto* handle = fileHandleIfExists(fd);
     if (!handle)
-        return -EBADF;
+        return -1;
     return handle->seek(offset, SEEK_SET);
 }
 
@@ -924,11 +942,15 @@ int Task::sys$kill(pid_t pid, int sig)
         // FIXME: Send to all processes.
         ASSERT(pid != -1);
     }
-    ASSERT_NOT_REACHED();
-    Task* peer = Task::fromPID(pid);
-    if (!peer) {
-        // errno = ESRCH;
-        return -1;
+    ASSERT(pid != current->pid()); // FIXME: Support this scenario.
+    InterruptDisabler disabler;
+    auto* peer = Task::fromPID(pid);
+    if (!peer)
+        return -ESRCH;
+    if (sig == 9) {
+        peer->murder();
+    } else {
+        ASSERT_NOT_REACHED();
     }
     return -1;
 }

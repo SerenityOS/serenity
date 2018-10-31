@@ -80,7 +80,6 @@ DWORD handle(DWORD function, DWORD arg1, DWORD arg2, DWORD arg3)
         kprintf("syscall: seek(%d, %d)\n", arg1, arg2);
         return current->sys$seek((int)arg1, (int)arg2);
     case Syscall::PosixKill:
-        kprintf("syscall: kill(%d, %d)\n", arg1, arg2);
         return current->sys$kill((pid_t)arg1, (int)arg2);
     case Syscall::PosixGetuid:
         return current->sys$getuid();

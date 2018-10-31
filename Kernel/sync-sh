@@ -16,6 +16,7 @@ cp ../Userland/uname mnt/bin/uname
 cp ../Userland/clear mnt/bin/clear
 cp ../Userland/tst mnt/bin/tst
 cp ../Userland/mm mnt/bin/mm
+cp ../Userland/kill mnt/bin/kill
 cp kernel.map mnt/
 umount mnt
 sync

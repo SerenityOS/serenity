@@ -16,6 +16,7 @@ LIBC_OBJS = \
        time.o \
        utsname.o \
        assert.o \
+       signal.o \
        entry.o
 
 OBJS = $(AK_OBJS) $(LIBC_OBJS)
