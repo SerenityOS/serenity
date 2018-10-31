@@ -49,7 +49,7 @@ ALWAYS_INLINE int printNumber(PutChFunc putch, char*& bufptr, dword number, bool
     }
 
     size_t numlen = p - buf;
-    if (!fieldWidth)
+    if (!fieldWidth || fieldWidth < numlen)
         fieldWidth = numlen;
     if (!leftPad) {
         for (unsigned i = 0; i < fieldWidth - numlen; ++i) {
@@ -72,7 +72,7 @@ template<typename PutChFunc>
 ALWAYS_INLINE int printString(PutChFunc putch, char*& bufptr, const char* str, bool leftPad, dword fieldWidth)
 {
     size_t len = strlen(str);
-    if (!fieldWidth)
+    if (!fieldWidth || fieldWidth < len)
         fieldWidth = len;
     if (!leftPad) {
         for (unsigned i = 0; i < fieldWidth - len; ++i)
