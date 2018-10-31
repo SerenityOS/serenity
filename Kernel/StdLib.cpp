@@ -24,6 +24,17 @@ void* memset(void* dest, BYTE c, DWORD n)
     return dest;
 }
 
+char* strrchr(const char* str, int ch)
+{
+    char *last = nullptr;
+    char c;
+    for (; (c = *str); ++str) {
+        if (c == ch)
+            last = (char*)str;
+    }
+    return last;
+}
+
 DWORD strlen(const char* str)
 {
     DWORD len = 0;
