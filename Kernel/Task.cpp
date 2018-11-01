@@ -720,13 +720,13 @@ bool scheduleNewTask()
 
 static bool contextSwitch(Task* t)
 {
-    //kprintf("c_s to %s (same:%u)\n", t->name().characters(), current == t);
     t->setTicksLeft(5);
     t->didSchedule();
 
     if (current == t)
         return false;
 
+#ifdef SCHEDULER_DEBUG
     // Some sanity checking to force a crash earlier.
     auto csRPL = t->tss().cs & 3;
     auto ssRPL = t->tss().ss & 3;
@@ -740,6 +740,7 @@ static bool contextSwitch(Task* t)
         kprintf(" stk: %w:%x\n", t->tss().ss, t->tss().esp);
         ASSERT(csRPL == ssRPL);
     }
+#endif
 
     if (current) {
         // If the last task hasn't blocked (still marked as running),
@@ -751,24 +752,21 @@ static bool contextSwitch(Task* t)
     current = t;
     t->setState(Task::Running);
 
-    if (!t->selector())
+    if (!t->selector()) {
         t->setSelector(allocateGDTEntry());
+        auto& descriptor = getGDTEntry(t->selector());
+        descriptor.setBase(&t->tss());
+        descriptor.setLimit(0xffff);
+        descriptor.dpl = 0;
+        descriptor.segment_present = 1;
+        descriptor.granularity = 1;
+        descriptor.zero = 0;
+        descriptor.operation_size = 1;
+        descriptor.descriptor_type = 0;
+    }
 
-    auto& tssDescriptor = getGDTEntry(t->selector());
-
-    tssDescriptor.limit_hi = 0;
-    tssDescriptor.limit_lo = 0xFFFF;
-    tssDescriptor.base_lo = (DWORD)(&t->tss()) & 0xFFFF;
-    tssDescriptor.base_hi = ((DWORD)(&t->tss()) >> 16) & 0xFF;
-    tssDescriptor.base_hi2 = ((DWORD)(&t->tss()) >> 24) & 0xFF;
-    tssDescriptor.dpl = 0;
-    tssDescriptor.segment_present = 1;
-    tssDescriptor.granularity = 1;
-    tssDescriptor.zero = 0;
-    tssDescriptor.operation_size = 1;
-    tssDescriptor.descriptor_type = 0;
-    tssDescriptor.type = 11; // Busy TSS
-
+    auto& descriptor = getGDTEntry(t->selector());
+    descriptor.type = 11; // Busy TSS
     flushGDT();
     return true;
 }
