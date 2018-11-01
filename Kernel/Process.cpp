@@ -62,7 +62,7 @@ static bool contextSwitch(Process*);
 static void redoKernelProcessTSS()
 {
     if (!s_kernelProcess->selector())
-        s_kernelProcess->setSelector(allocateGDTEntry());
+        s_kernelProcess->setSelector(gdt_alloc_entry());
 
     auto& tssDescriptor = getGDTEntry(s_kernelProcess->selector());
 
@@ -109,14 +109,14 @@ void Process::allocateLDT()
 {
     ASSERT(!m_tss.ldt);
     static const WORD numLDTEntries = 4;
-    WORD newLDTSelector = allocateGDTEntry();
+    m_ldt_selector = gdt_alloc_entry();
     m_ldtEntries = new Descriptor[numLDTEntries];
 #if 0
-    kprintf("new ldt selector = %x\n", newLDTSelector);
+    kprintf("new ldt selector = %x\n", m_ldt_selector);
     kprintf("new ldt table at = %p\n", m_ldtEntries);
     kprintf("new ldt table size = %u\n", (numLDTEntries * 8) - 1);
 #endif
-    Descriptor& ldt = getGDTEntry(newLDTSelector);
+    Descriptor& ldt = getGDTEntry(m_ldt_selector);
     ldt.setBase(m_ldtEntries);
     ldt.setLimit(numLDTEntries * 8 - 1);
     ldt.dpl = 0;
@@ -126,7 +126,7 @@ void Process::allocateLDT()
     ldt.operation_size = 1;
     ldt.descriptor_type = 0;
     ldt.type = Descriptor::LDT;
-    m_tss.ldt = newLDTSelector;
+    m_tss.ldt = m_ldt_selector;
 }
 
 Vector<Process*> Process::allProcesses()
@@ -489,8 +489,14 @@ Process::~Process()
     InterruptDisabler disabler;
     ProcFileSystem::the().removeProcess(*this);
     system.nprocess--;
-    delete [] m_ldtEntries;
-    m_ldtEntries = nullptr;
+
+    if (isRing3()) {
+        delete [] m_ldtEntries;
+        m_ldtEntries = nullptr;
+        gdt_free_entry(m_ldt_selector);
+    }
+
+    gdt_free_entry(selector());
 
     if (m_kernelStack) {
         kfree(m_kernelStack);
@@ -754,7 +760,7 @@ static bool contextSwitch(Process* t)
     t->set_state(Process::Running);
 
     if (!t->selector()) {
-        t->setSelector(allocateGDTEntry());
+        t->setSelector(gdt_alloc_entry());
         auto& descriptor = getGDTEntry(t->selector());
         descriptor.setBase(&t->tss());
         descriptor.setLimit(0xffff);

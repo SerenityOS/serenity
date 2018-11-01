@@ -106,13 +106,13 @@ static void spawn_stress()
 {
     dword lastAlloc = sum_alloc;
 
-    for (unsigned i = 0; i < 100; ++i) {
+    for (unsigned i = 0; i < 10000; ++i) {
         int error;
         Process::createUserProcess("/bin/id", (uid_t)100, (gid_t)100, (pid_t)0, error, nullptr, tty0);
-        kprintf("malloc stats: alloc:%u free:%u\n", sum_alloc, sum_free);
+        kprintf("malloc stats: alloc:%u free:%u page_aligned:%u eternal:%u\n", sum_alloc, sum_free, kmalloc_page_aligned, kmalloc_sum_eternal);
         kprintf("delta:%u\n", sum_alloc - lastAlloc);
         lastAlloc = sum_alloc;
-        sleep(600);
+        sleep(60);
     }
     for (;;) {
         asm volatile("hlt");
