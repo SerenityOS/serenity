@@ -7,12 +7,14 @@
 
 extern "C" {
 
+#define PWDB_STR_MAX_LEN 256
+
 struct passwd_with_strings : public passwd {
-    char name_buffer[256];
-    char passwd_buffer[256];
-    char gecos_buffer[256];
-    char dir_buffer[256];
-    char shell_buffer[256];
+    char name_buffer[PWDB_STR_MAX_LEN];
+    char passwd_buffer[PWDB_STR_MAX_LEN];
+    char gecos_buffer[PWDB_STR_MAX_LEN];
+    char dir_buffer[PWDB_STR_MAX_LEN];
+    char shell_buffer[PWDB_STR_MAX_LEN];
 };
 
 static FILE* __pwdb_stream = nullptr;
@@ -117,11 +119,11 @@ next_entry:
     __pwdb_entry->pw_gecos = __pwdb_entry->gecos_buffer;
     __pwdb_entry->pw_dir = __pwdb_entry->dir_buffer;
     __pwdb_entry->pw_shell = __pwdb_entry->shell_buffer;
-    strncpy(__pwdb_entry->name_buffer, e_name.characters(), e_name.length());
-    strncpy(__pwdb_entry->passwd_buffer, e_passwd.characters(), e_passwd.length());
-    strncpy(__pwdb_entry->gecos_buffer, e_gecos.characters(), e_gecos.length());
-    strncpy(__pwdb_entry->dir_buffer, e_dir.characters(), e_dir.length());
-    strncpy(__pwdb_entry->shell_buffer, e_shell.characters(), e_shell.length());
+    strncpy(__pwdb_entry->name_buffer, e_name.characters(), PWDB_STR_MAX_LEN);
+    strncpy(__pwdb_entry->passwd_buffer, e_passwd.characters(), PWDB_STR_MAX_LEN);
+    strncpy(__pwdb_entry->gecos_buffer, e_gecos.characters(), PWDB_STR_MAX_LEN);
+    strncpy(__pwdb_entry->dir_buffer, e_dir.characters(), PWDB_STR_MAX_LEN);
+    strncpy(__pwdb_entry->shell_buffer, e_shell.characters(), PWDB_STR_MAX_LEN);
     return __pwdb_entry;
 }
 
