@@ -228,11 +228,6 @@ int Task::sys$spawn(const char* path, const char** args)
     return error;
 }
 
-struct KernelPagingScope {
-    KernelPagingScope() { MM.enter_kernel_paging_scope(); }
-    ~KernelPagingScope() { MM.enter_task_paging_scope(*current); }
-};
-
 Task* Task::createUserTask(const String& path, uid_t uid, gid_t gid, pid_t parentPID, int& error, const char** args, TTY* tty)
 {
     auto parts = path.split('/');
@@ -281,7 +276,7 @@ Task* Task::createUserTask(const String& path, uid_t uid, gid_t gid, pid_t paren
     taskEnvironment.append("HOME=/");
 
     InterruptDisabler disabler; // FIXME: Get rid of this, jesus christ. This "critical" section is HUGE.
-    KernelPagingScope kernelScope;
+    KernelPagingScope pagingScope;
     Task* t = new Task(parts.takeLast(), uid, gid, parentPID, Ring3, move(cwd), handle->vnode(), tty);
 
     t->m_arguments = move(taskArguments);

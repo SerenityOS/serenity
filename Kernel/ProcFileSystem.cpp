@@ -61,11 +61,7 @@ ByteBuffer procfs$pid_vm(const Task& task)
 ByteBuffer procfs$pid_stack(Task& task)
 {
     InterruptDisabler disabler;
-    ASSERT(false);
-    if (current != &task) {
-        MM.unmapRegionsForTask(*current);
-        MM.mapRegionsForTask(task);
-    }
+    OtherTaskPagingScope pagingScope(task);
     struct RecognizedSymbol {
         dword address;
         const KSym* ksym;
@@ -91,10 +87,6 @@ ByteBuffer procfs$pid_stack(Task& task)
         bufptr += ksprintf(bufptr, "%p  %s +%u\n", symbol.address, symbol.ksym->name.characters(), offset);
     }
     buffer.trim(bufptr - (char*)buffer.pointer());
-    if (current != &task) {
-        MM.unmapRegionsForTask(task);
-        MM.mapRegionsForTask(*current);
-    }
     return buffer;
 }
 
