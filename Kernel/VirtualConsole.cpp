@@ -300,6 +300,8 @@ void VirtualConsole::scrollUp()
 
 void VirtualConsole::setCursor(unsigned row, unsigned column)
 {
+    ASSERT(row < m_rows);
+    ASSERT(column < m_columns);
     m_cursorRow = row;
     m_cursorColumn = column;
     if (m_active)
@@ -308,6 +310,8 @@ void VirtualConsole::setCursor(unsigned row, unsigned column)
 
 void VirtualConsole::putCharacterAt(unsigned row, unsigned column, byte ch)
 {
+    ASSERT(row < m_rows);
+    ASSERT(column < m_columns);
     word cur = (row * 160) + (column * 2);
     m_buffer[cur] = ch;
     m_buffer[cur + 1] = m_currentAttribute;
@@ -317,6 +321,7 @@ void VirtualConsole::putCharacterAt(unsigned row, unsigned column, byte ch)
 
 void VirtualConsole::onChar(byte ch, bool shouldEmit)
 {
+    InterruptDisabler disabler;
     if (shouldEmit)
         emit(ch);
 

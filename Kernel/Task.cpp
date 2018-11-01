@@ -518,6 +518,15 @@ void Task::dumpRegions()
     }
 }
 
+void Task::notify_waiters(pid_t waitee, int exit_status, int signal)
+{
+    ASSERT_INTERRUPTS_DISABLED();
+    for (auto* task = s_tasks->head(); task; task = task->next()) {
+        if (task->waitee() == waitee)
+            task->m_waiteeStatus = (exit_status << 8) | (signal);
+    }
+}
+
 void Task::sys$exit(int status)
 {
     cli();
@@ -531,10 +540,7 @@ void Task::sys$exit(int status)
 
     s_tasks->remove(this);
 
-    for (auto* task = s_tasks->head(); task; task = task->next()) {
-        if (task->waitee() == m_pid)
-            task->m_waiteeStatus = status << 8;
-    }
+    notify_waiters(m_pid, status, 0);
 
     if (!scheduleNewTask()) {
         kprintf("Task::sys$exit: Failed to schedule a new task :(\n");
@@ -546,13 +552,17 @@ void Task::sys$exit(int status)
     switchNow();
 }
 
-void Task::murder()
+void Task::murder(int signal)
 {
     ASSERT_INTERRUPTS_DISABLED();
     bool wasCurrent = current == this;
     setState(Exiting);
     s_tasks->remove(this);
+
+    notify_waiters(m_pid, 0, signal);
+
     if (wasCurrent) {
+        kprintf("Current task committing suicide!\n");
         MM.unmapRegionsForTask(*this);
         if (!scheduleNewTask()) {
             kprintf("Task::murder: Failed to schedule a new task :(\n");
@@ -577,6 +587,8 @@ void Task::taskDidCrash(Task* crashedTask)
     crashedTask->dumpRegions();
 
     s_tasks->remove(crashedTask);
+
+    notify_waiters(crashedTask->m_pid, 0, SIGSEGV);
 
     MM.unmapRegionsForTask(*crashedTask);
 
@@ -991,8 +1003,9 @@ int Task::sys$kill(pid_t pid, int sig)
     auto* peer = Task::fromPID(pid);
     if (!peer)
         return -ESRCH;
-    if (sig == 9) {
-        peer->murder();
+    if (sig == SIGKILL) {
+        peer->murder(SIGKILL);
+        return 0;
     } else {
         ASSERT_NOT_REACHED();
     }

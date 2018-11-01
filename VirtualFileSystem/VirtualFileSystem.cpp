@@ -558,11 +558,13 @@ InodeIdentifier VirtualFileSystem::resolvePath(const String& path, int& error, I
 
 void VirtualFileSystem::Node::retain()
 {
+    InterruptDisabler disabler; // FIXME: Make a Retainable with atomic retain count instead.
     ++retainCount;
 }
 
 void VirtualFileSystem::Node::release()
 {
+    InterruptDisabler disabler; // FIXME: Make a Retainable with atomic retain count instead.
     ASSERT(retainCount);
     if (--retainCount == 0) {
         m_vfs->freeNode(this);
