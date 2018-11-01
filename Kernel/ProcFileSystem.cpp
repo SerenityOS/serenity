@@ -27,6 +27,22 @@ ProcFileSystem::~ProcFileSystem()
 {
 }
 
+ByteBuffer procfs$pid_fds(const Process& process)
+{
+    char* buffer;
+    auto stringImpl = StringImpl::createUninitialized(process.number_of_open_file_descriptors() * 80, buffer);
+    memset(buffer, 0, stringImpl->length());
+    char* ptr = buffer;
+    for (size_t i = 0; i < process.max_open_file_descriptors(); ++i) {
+        auto* handle = process.file_descriptor(i);
+        if (!handle)
+            continue;
+        ptr += ksprintf(ptr, "% 3u %s\n", i, handle->absolute_path().characters());
+    }
+    *ptr = '\0';
+    return ByteBuffer::copy((byte*)buffer, ptr - buffer);
+}
+
 ByteBuffer procfs$pid_vm(const Process& process)
 {
     InterruptDisabler disabler;
@@ -109,6 +125,7 @@ void ProcFileSystem::addProcess(Process& process)
     m_pid2inode.set(process.pid(), dir.index());
     addFile(createGeneratedFile("vm", [&process] { return procfs$pid_vm(process); }), dir.index());
     addFile(createGeneratedFile("stack", [&process] { return procfs$pid_stack(process); }), dir.index());
+    addFile(createGeneratedFile("fds", [&process] { return procfs$pid_fds(process); }), dir.index());
     if (process.executableInode().isValid())
         addFile(createGeneratedFile("exe", [&process] { return procfs$pid_exe(process); }, 00120777), dir.index());
 }

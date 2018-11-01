@@ -867,8 +867,9 @@ int Process::sys$close(int fd)
     auto* handle = fileHandleIfExists(fd);
     if (!handle)
         return -EBADF;
-    // FIXME: Implement.
-    return 0;
+    int rc = handle->close();
+    m_file_descriptors[fd] = nullptr;
+    return rc;
 }
 
 int Process::sys$lstat(const char* path, Unix::stat* statbuf)
@@ -966,9 +967,13 @@ int Process::sys$open(const char* path, int options)
     if (options & O_DIRECTORY && !handle->isDirectory())
         return -ENOTDIR; // FIXME: This should be handled by VFS::open.
 
-    int fd = m_file_descriptors.size();
+    int fd = 0;
+    for (; fd < m_max_open_file_descriptors; ++fd) {
+        if (!m_file_descriptors[fd])
+            break;
+    }
     handle->setFD(fd);
-    m_file_descriptors.append(move(handle));
+    m_file_descriptors[fd] = move(handle);
     return fd;
 }
 

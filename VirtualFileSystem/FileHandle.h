@@ -11,6 +11,8 @@ public:
     explicit FileHandle(RetainPtr<VirtualFileSystem::Node>&&);
     ~FileHandle();
 
+    int close();
+
     Unix::off_t seek(Unix::off_t, int whence);
     Unix::ssize_t read(byte*, Unix::size_t);
     Unix::ssize_t write(const byte* data, Unix::size_t);
@@ -22,7 +24,7 @@ public:
 
     ByteBuffer readEntireFile();
 
-    String absolutePath() const;
+    String absolute_path() const;
 
     bool isDirectory() const;
 

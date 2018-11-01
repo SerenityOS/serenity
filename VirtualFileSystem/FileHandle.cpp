@@ -175,3 +175,15 @@ const TTY* FileHandle::tty() const
         return static_cast<const TTY*>(device);
     return nullptr;
 }
+
+int FileHandle::close()
+{
+    return 0;
+}
+
+String FileHandle::absolute_path() const
+{
+    if (isTTY())
+        return tty()->ttyName();
+    return VirtualFileSystem::the().absolutePath(m_vnode->inode);
+}
