@@ -346,20 +346,6 @@ bool MemoryManager::unmapSubregion(Task& task, Task::Subregion& subregion)
     return true;
 }
 
-bool MemoryManager::unmapRegionsForTask(Task& task)
-{
-    ASSERT_INTERRUPTS_DISABLED();
-    for (auto& region : task.m_regions) {
-        if (!unmapRegion(task, *region))
-            return false;
-    }
-    for (auto& subregion : task.m_subregions) {
-        if (!unmapSubregion(task, *subregion))
-            return false;
-    }
-    return true;
-}
-
 bool MemoryManager::mapSubregion(Task& task, Task::Subregion& subregion)
 {
     InterruptDisabler disabler;

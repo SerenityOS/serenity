@@ -54,13 +54,10 @@ public:
 
     bool mapSubregion(Task&, Task::Subregion&);
     bool unmapSubregion(Task&, Task::Subregion&);
-    bool mapSubregionsForTask(Task&);
-    bool unmapSubregionsForTask(Task&);
 
     bool mapRegion(Task&, Task::Region&);
     bool unmapRegion(Task&, Task::Region&);
     bool mapRegionsForTask(Task&);
-    bool unmapRegionsForTask(Task&);
 
     void registerZone(Zone&);
     void unregisterZone(Zone&);
@@ -181,4 +178,14 @@ private:
     HashTable<Zone*> m_zones;
 
     Vector<PhysicalAddress> m_freePages;
+};
+
+struct KernelPagingScope {
+    KernelPagingScope() { MM.enter_kernel_paging_scope(); }
+    ~KernelPagingScope() { MM.enter_task_paging_scope(*current); }
+};
+
+struct OtherTaskPagingScope {
+    OtherTaskPagingScope(Task& task) { MM.enter_task_paging_scope(task); }
+    ~OtherTaskPagingScope() { MM.enter_task_paging_scope(*current); }
 };
