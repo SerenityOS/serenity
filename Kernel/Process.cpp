@@ -1,5 +1,5 @@
 #include "types.h"
-#include "Task.h"
+#include "Process.h"
 #include "kmalloc.h"
 #include "VGA.h"
 #include "StdLib.h"
@@ -37,12 +37,12 @@
 
 static const DWORD defaultStackSize = 16384;
 
-Task* current;
-Task* s_kernelTask;
+Process* current;
+Process* s_kernelProcess;
 
 static pid_t next_pid;
-static InlineLinkedList<Task>* s_tasks;
-static InlineLinkedList<Task>* s_deadTasks;
+static InlineLinkedList<Process>* s_processes;
+static InlineLinkedList<Process>* s_deadProcesses;
 static String* s_hostname;
 
 static String& hostnameStorage(InterruptDisabler&)
@@ -57,16 +57,16 @@ static String getHostname()
     return hostnameStorage(disabler).isolatedCopy();
 }
 
-static bool contextSwitch(Task*);
+static bool contextSwitch(Process*);
 
-static void redoKernelTaskTSS()
+static void redoKernelProcessTSS()
 {
-    if (!s_kernelTask->selector())
-        s_kernelTask->setSelector(allocateGDTEntry());
+    if (!s_kernelProcess->selector())
+        s_kernelProcess->setSelector(allocateGDTEntry());
 
-    auto& tssDescriptor = getGDTEntry(s_kernelTask->selector());
+    auto& tssDescriptor = getGDTEntry(s_kernelProcess->selector());
 
-    tssDescriptor.setBase(&s_kernelTask->tss());
+    tssDescriptor.setBase(&s_kernelProcess->tss());
     tssDescriptor.setLimit(0xffff);
     tssDescriptor.dpl = 0;
     tssDescriptor.segment_present = 1;
@@ -79,40 +79,26 @@ static void redoKernelTaskTSS()
     flushGDT();
 }
 
-void Task::prepForIRETToNewTask()
+void Process::prepForIRETToNewProcess()
 {
-    redoKernelTaskTSS();
-    s_kernelTask->tss().backlink = current->selector();
-    loadTaskRegister(s_kernelTask->selector());
+    redoKernelProcessTSS();
+    s_kernelProcess->tss().backlink = current->selector();
+    loadTaskRegister(s_kernelProcess->selector());
 }
 
-void Task::initialize()
+void Process::initialize()
 {
     current = nullptr;
     next_pid = 0;
-    s_tasks = new InlineLinkedList<Task>;
-    s_deadTasks = new InlineLinkedList<Task>;
-    s_kernelTask = Task::createKernelTask(nullptr, "colonel");
+    s_processes = new InlineLinkedList<Process>;
+    s_deadProcesses = new InlineLinkedList<Process>;
+    s_kernelProcess = Process::createKernelProcess(nullptr, "colonel");
     s_hostname = new String("birx");
-    redoKernelTaskTSS();
-    loadTaskRegister(s_kernelTask->selector());
+    redoKernelProcessTSS();
+    loadTaskRegister(s_kernelProcess->selector());
 }
 
-#ifdef TASK_SANITY_CHECKS
-void Task::checkSanity(const char* msg)
-{
-    char ch = current->name()[0];
-    kprintf("<%p> %s{%u}%b [%d] :%b: sanity check <%s>\n",
-            current->name().characters(),
-            current->name().characters(),
-            current->name().length(),
-            current->name()[current->name().length() - 1],
-            current->pid(), ch, msg ? msg : "");
-    ASSERT((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z'));
-}
-#endif
-
-void Task::allocateLDT()
+void Process::allocateLDT()
 {
     ASSERT(!m_tss.ldt);
     static const WORD numLDTEntries = 4;
@@ -136,17 +122,17 @@ void Task::allocateLDT()
     m_tss.ldt = newLDTSelector;
 }
 
-Vector<Task*> Task::allTasks()
+Vector<Process*> Process::allProcesses()
 {
     InterruptDisabler disabler;
-    Vector<Task*> tasks;
-    tasks.ensureCapacity(s_tasks->sizeSlow());
-    for (auto* task = s_tasks->head(); task; task = task->next())
-        tasks.append(task);
-    return tasks;
+    Vector<Process*> processes;
+    processes.ensureCapacity(s_processes->sizeSlow());
+    for (auto* process = s_processes->head(); process; process = process->next())
+        processes.append(process);
+    return processes;
 }
 
-Task::Region* Task::allocateRegion(size_t size, String&& name)
+Process::Region* Process::allocateRegion(size_t size, String&& name)
 {
     // FIXME: This needs sanity checks. What if this overlaps existing regions?
 
@@ -154,10 +140,11 @@ Task::Region* Task::allocateRegion(size_t size, String&& name)
     ASSERT(zone);
     m_regions.append(adopt(*new Region(m_nextRegion, size, move(zone), move(name))));
     m_nextRegion = m_nextRegion.offset(size).offset(16384);
+    MM.mapRegion(*this, *m_regions.last());
     return m_regions.last().ptr();
 }
 
-bool Task::deallocateRegion(Region& region)
+bool Process::deallocateRegion(Region& region)
 {
     InterruptDisabler disabler;
     for (size_t i = 0; i < m_regions.size(); ++i) {
@@ -170,7 +157,7 @@ bool Task::deallocateRegion(Region& region)
     return false;
 }
 
-Task::Region* Task::regionFromRange(LinearAddress laddr, size_t size)
+Process::Region* Process::regionFromRange(LinearAddress laddr, size_t size)
 {
     for (auto& region : m_regions) {
         if (region->linearAddress == laddr && region->size == size)
@@ -179,7 +166,7 @@ Task::Region* Task::regionFromRange(LinearAddress laddr, size_t size)
     return nullptr;
 }
 
-int Task::sys$set_mmap_name(void* addr, size_t size, const char* name)
+int Process::sys$set_mmap_name(void* addr, size_t size, const char* name)
 {
     VALIDATE_USER_READ(name, strlen(name));
     auto* region = regionFromRange(LinearAddress((dword)addr), size);
@@ -189,7 +176,7 @@ int Task::sys$set_mmap_name(void* addr, size_t size, const char* name)
     return 0;
 }
 
-void* Task::sys$mmap(void* addr, size_t size)
+void* Process::sys$mmap(void* addr, size_t size)
 {
     InterruptDisabler disabler;
     // FIXME: Implement mapping at a client-preferred address.
@@ -201,7 +188,7 @@ void* Task::sys$mmap(void* addr, size_t size)
     return (void*)region->linearAddress.get();
 }
 
-int Task::sys$munmap(void* addr, size_t size)
+int Process::sys$munmap(void* addr, size_t size)
 {
     InterruptDisabler disabler;
     auto* region = regionFromRange(LinearAddress((dword)addr), size);
@@ -212,7 +199,7 @@ int Task::sys$munmap(void* addr, size_t size)
     return 0;
 }
 
-int Task::sys$gethostname(char* buffer, size_t size)
+int Process::sys$gethostname(char* buffer, size_t size)
 {
     VALIDATE_USER_WRITE(buffer, size);
     auto hostname = getHostname();
@@ -222,7 +209,7 @@ int Task::sys$gethostname(char* buffer, size_t size)
     return 0;
 }
 
-int Task::sys$spawn(const char* path, const char** args)
+int Process::sys$spawn(const char* path, const char** args)
 {
     if (args) {
         for (size_t i = 0; args[i]; ++i) {
@@ -231,13 +218,13 @@ int Task::sys$spawn(const char* path, const char** args)
     }
 
     int error = 0;
-    auto* child = Task::createUserTask(path, m_uid, m_gid, m_pid, error, args, m_tty);
+    auto* child = Process::createUserProcess(path, m_uid, m_gid, m_pid, error, args, m_tty);
     if (child)
         return child->pid();
     return error;
 }
 
-Task* Task::createUserTask(const String& path, uid_t uid, gid_t gid, pid_t parentPID, int& error, const char** args, TTY* tty)
+Process* Process::createUserProcess(const String& path, uid_t uid, gid_t gid, pid_t parentPID, int& error, const char** args, TTY* tty)
 {
     auto parts = path.split('/');
     if (parts.isEmpty()) {
@@ -248,8 +235,8 @@ Task* Task::createUserTask(const String& path, uid_t uid, gid_t gid, pid_t paren
     RetainPtr<VirtualFileSystem::Node> cwd;
     {
         InterruptDisabler disabler;
-        if (auto* parentTask = Task::fromPID(parentPID))
-            cwd = parentTask->m_cwd.copyRef();
+        if (auto* parentProcess = Process::fromPID(parentPID))
+            cwd = parentProcess->m_cwd.copyRef();
         if (!cwd)
             cwd = VirtualFileSystem::the().root();
     }
@@ -269,27 +256,27 @@ Task* Task::createUserTask(const String& path, uid_t uid, gid_t gid, pid_t paren
         return nullptr;
     }
 
-    Vector<String> taskArguments;
+    Vector<String> processArguments;
     if (args) {
         for (size_t i = 0; args[i]; ++i) {
-            taskArguments.append(args[i]);
+            processArguments.append(args[i]);
         }
     } else {
-        taskArguments.append(parts.last());
+        processArguments.append(parts.last());
     }
 
-    Vector<String> taskEnvironment;
-    taskEnvironment.append("PATH=/bin");
-    taskEnvironment.append("SHELL=/bin/sh");
-    taskEnvironment.append("TERM=console");
-    taskEnvironment.append("HOME=/");
+    Vector<String> processEnvironment;
+    processEnvironment.append("PATH=/bin");
+    processEnvironment.append("SHELL=/bin/sh");
+    processEnvironment.append("TERM=console");
+    processEnvironment.append("HOME=/");
 
     InterruptDisabler disabler; // FIXME: Get rid of this, jesus christ. This "critical" section is HUGE.
     KernelPagingScope pagingScope;
-    Task* t = new Task(parts.takeLast(), uid, gid, parentPID, Ring3, move(cwd), handle->vnode(), tty);
+    Process* t = new Process(parts.takeLast(), uid, gid, parentPID, Ring3, move(cwd), handle->vnode(), tty);
 
-    t->m_arguments = move(taskArguments);
-    t->m_initialEnvironment = move(taskEnvironment);
+    t->m_arguments = move(processArguments);
+    t->m_initialEnvironment = move(processEnvironment);
 
     ExecSpace space;
     Region* region = nullptr;
@@ -343,18 +330,16 @@ Task* Task::createUserTask(const String& path, uid_t uid, gid_t gid, pid_t paren
     ASSERT(region);
     MM.remove_kernel_alias_for_region(*region, region_alias);
 
-    MM.mapRegionsForTask(*t);
-
-    s_tasks->prepend(t);
+    s_processes->prepend(t);
     system.nprocess++;
 #ifdef TASK_DEBUG
-    kprintf("Task %u (%s) spawned @ %p\n", t->pid(), t->name().characters(), t->m_tss.eip);
+    kprintf("Process %u (%s) spawned @ %p\n", t->pid(), t->name().characters(), t->m_tss.eip);
 #endif
     error = 0;
     return t;
 }
 
-int Task::sys$get_environment(char*** environ)
+int Process::sys$get_environment(char*** environ)
 {
     auto* region = allocateRegion(4096, "environ");
     if (!region)
@@ -373,7 +358,7 @@ int Task::sys$get_environment(char*** environ)
     return 0;
 }
 
-int Task::sys$get_arguments(int* argc, char*** argv)
+int Process::sys$get_arguments(int* argc, char*** argv)
 {
     auto* region = allocateRegion(4096, "argv");
     if (!region)
@@ -392,24 +377,24 @@ int Task::sys$get_arguments(int* argc, char*** argv)
     return 0;
 }
 
-Task* Task::createKernelTask(void (*e)(), String&& name)
+Process* Process::createKernelProcess(void (*e)(), String&& name)
 {
-    Task* task = new Task(move(name), (uid_t)0, (gid_t)0, (pid_t)0, Ring0);
-    task->m_tss.eip = (dword)e;
+    Process* process = new Process(move(name), (uid_t)0, (gid_t)0, (pid_t)0, Ring0);
+    process->m_tss.eip = (dword)e;
 
-    if (task->pid() != 0) {
+    if (process->pid() != 0) {
         InterruptDisabler disabler;
-        s_tasks->prepend(task);
+        s_processes->prepend(process);
         system.nprocess++;
 #ifdef TASK_DEBUG
-        kprintf("Kernel task %u (%s) spawned @ %p\n", task->pid(), task->name().characters(), task->m_tss.eip);
+        kprintf("Kernel process %u (%s) spawned @ %p\n", process->pid(), process->name().characters(), process->m_tss.eip);
 #endif
     }
 
-    return task;
+    return process;
 }
 
-Task::Task(String&& name, uid_t uid, gid_t gid, pid_t parentPID, RingLevel ring, RetainPtr<VirtualFileSystem::Node>&& cwd, RetainPtr<VirtualFileSystem::Node>&& executable, TTY* tty)
+Process::Process(String&& name, uid_t uid, gid_t gid, pid_t parentPID, RingLevel ring, RetainPtr<VirtualFileSystem::Node>&& cwd, RetainPtr<VirtualFileSystem::Node>&& executable, TTY* tty)
     : m_name(move(name))
     , m_pid(next_pid++)
     , m_uid(uid)
@@ -443,7 +428,7 @@ Task::Task(String&& name, uid_t uid, gid_t gid, pid_t parentPID, RingLevel ring,
         allocateLDT();
     }
 
-    // Only IF is set when a task boots.
+    // Only IF is set when a process boots.
     m_tss.eflags = 0x0202;
 
     word cs, ds, ss;
@@ -469,7 +454,7 @@ Task::Task(String&& name, uid_t uid, gid_t gid, pid_t parentPID, RingLevel ring,
 
     if (isRing0()) {
         // FIXME: This memory is leaked.
-        // But uh, there's also no kernel task termination, so I guess it's not technically leaked...
+        // But uh, there's also no kernel process termination, so I guess it's not technically leaked...
         dword stackBottom = (dword)kmalloc_eternal(defaultStackSize);
         m_stackTop0 = (stackBottom + defaultStackSize) & 0xffffff8;
         m_tss.esp = m_stackTop0;
@@ -481,7 +466,7 @@ Task::Task(String&& name, uid_t uid, gid_t gid, pid_t parentPID, RingLevel ring,
     }
 
     if (isRing3()) {
-        // Ring3 tasks need a separate stack for Ring0.
+        // Ring3 processes need a separate stack for Ring0.
         m_kernelStack = kmalloc(defaultStackSize);
         m_stackTop0 = ((DWORD)m_kernelStack + defaultStackSize) & 0xffffff8;
         m_tss.ss0 = 0x10;
@@ -495,7 +480,7 @@ Task::Task(String&& name, uid_t uid, gid_t gid, pid_t parentPID, RingLevel ring,
     ProcFileSystem::the().addProcess(*this);
 }
 
-Task::~Task()
+Process::~Process()
 {
     InterruptDisabler disabler;
     ProcFileSystem::the().removeProcess(*this);
@@ -509,9 +494,9 @@ Task::~Task()
     }
 }
 
-void Task::dumpRegions()
+void Process::dumpRegions()
 {
-    kprintf("Task %s(%u) regions:\n", name().characters(), pid());
+    kprintf("Process %s(%u) regions:\n", name().characters(), pid());
     kprintf("BEGIN       END         SIZE        NAME\n");
     for (auto& region : m_regions) {
         kprintf("%x -- %x    %x    %s\n",
@@ -521,7 +506,7 @@ void Task::dumpRegions()
             region->name.characters());
     }
 
-    kprintf("Task %s(%u) subregions:\n", name().characters(), pid());
+    kprintf("Process %s(%u) subregions:\n", name().characters(), pid());
     kprintf("REGION    OFFSET    BEGIN       END         SIZE        NAME\n");
     for (auto& subregion : m_subregions) {
         kprintf("%x  %x  %x -- %x    %x    %s\n",
@@ -534,16 +519,16 @@ void Task::dumpRegions()
     }
 }
 
-void Task::notify_waiters(pid_t waitee, int exit_status, int signal)
+void Process::notify_waiters(pid_t waitee, int exit_status, int signal)
 {
     ASSERT_INTERRUPTS_DISABLED();
-    for (auto* task = s_tasks->head(); task; task = task->next()) {
-        if (task->waitee() == waitee)
-            task->m_waiteeStatus = (exit_status << 8) | (signal);
+    for (auto* process = s_processes->head(); process; process = process->next()) {
+        if (process->waitee() == waitee)
+            process->m_waiteeStatus = (exit_status << 8) | (signal);
     }
 }
 
-void Task::sys$exit(int status)
+void Process::sys$exit(int status)
 {
     cli();
 #ifdef TASK_DEBUG
@@ -552,78 +537,78 @@ void Task::sys$exit(int status)
 
     setState(Exiting);
 
-    s_tasks->remove(this);
+    s_processes->remove(this);
 
     notify_waiters(m_pid, status, 0);
 
-    if (!scheduleNewTask()) {
-        kprintf("Task::sys$exit: Failed to schedule a new task :(\n");
+    if (!scheduleNewProcess()) {
+        kprintf("Process::sys$exit: Failed to schedule a new process :(\n");
         HANG;
     }
 
-    s_deadTasks->append(this);
+    s_deadProcesses->append(this);
 
     switchNow();
 }
 
-void Task::murder(int signal)
+void Process::murder(int signal)
 {
     ASSERT_INTERRUPTS_DISABLED();
     bool wasCurrent = current == this;
     setState(Exiting);
-    s_tasks->remove(this);
+    s_processes->remove(this);
 
     notify_waiters(m_pid, 0, signal);
 
     if (wasCurrent) {
-        kprintf("Current task committing suicide!\n");
-        if (!scheduleNewTask()) {
-            kprintf("Task::murder: Failed to schedule a new task :(\n");
+        kprintf("Current process committing suicide!\n");
+        if (!scheduleNewProcess()) {
+            kprintf("Process::murder: Failed to schedule a new process :(\n");
             HANG;
         }
     }
-    s_deadTasks->append(this);
+    s_deadProcesses->append(this);
     if (wasCurrent)
         switchNow();
 }
 
-void Task::taskDidCrash(Task* crashedTask)
+void Process::processDidCrash(Process* crashedProcess)
 {
     ASSERT_INTERRUPTS_DISABLED();
 
-    if (crashedTask->state() == Crashing) {
+    if (crashedProcess->state() == Crashing) {
         kprintf("Double crash :(\n");
         HANG;
     }
 
-    crashedTask->setState(Crashing);
-    crashedTask->dumpRegions();
+    crashedProcess->setState(Crashing);
+    crashedProcess->dumpRegions();
 
-    s_tasks->remove(crashedTask);
+    s_processes->remove(crashedProcess);
 
-    notify_waiters(crashedTask->m_pid, 0, SIGSEGV);
+    notify_waiters(crashedProcess->m_pid, 0, SIGSEGV);
 
-    if (!scheduleNewTask()) {
-        kprintf("Task::taskDidCrash: Failed to schedule a new task :(\n");
+    if (!scheduleNewProcess()) {
+        kprintf("Process::processDidCrash: Failed to schedule a new process :(\n");
         HANG;
     }
 
-    s_deadTasks->append(crashedTask);
+    s_deadProcesses->append(crashedProcess);
 
     switchNow();
 }
 
-void Task::doHouseKeeping()
+void Process::doHouseKeeping()
 {
     InterruptDisabler disabler;
-    if (s_deadTasks->isEmpty())
+    if (s_deadProcesses->isEmpty())
         return;
-    Task* next = nullptr;
-    for (auto* deadTask = s_deadTasks->head(); deadTask; deadTask = next) {
-        next = deadTask->next();
-        delete deadTask;
+    Process* next = nullptr;
+    for (auto* deadProcess = s_deadProcesses->head(); deadProcess; deadProcess = next) {
+        next = deadProcess->next();
+        delete deadProcess;
     }
-    s_deadTasks->clear();
+    s_deadProcesses->clear();
 }
 
 void yield()
@@ -636,10 +621,10 @@ void yield()
     //kprintf("%s<%u> yield()\n", current->name().characters(), current->pid());
 
     InterruptDisabler disabler;
-    if (!scheduleNewTask())
+    if (!scheduleNewProcess())
         return;
 
-    //kprintf("yield() jumping to new task: %x (%s)\n", current->farPtr().selector, current->name().characters());
+    //kprintf("yield() jumping to new process: %x (%s)\n", current->farPtr().selector, current->name().characters());
     switchNow();
 }
 
@@ -654,36 +639,36 @@ void switchNow()
     );
 }
 
-bool scheduleNewTask()
+bool scheduleNewProcess()
 {
     ASSERT_INTERRUPTS_DISABLED();
 
     if (!current) {
-        // XXX: The first ever context_switch() goes to the idle task.
+        // XXX: The first ever context_switch() goes to the idle process.
         //      This to setup a reliable place we can return to.
-        return contextSwitch(Task::kernelTask());
+        return contextSwitch(Process::kernelProcess());
     }
 
-    // Check and unblock tasks whose wait conditions have been met.
-    for (auto* task = s_tasks->head(); task; task = task->next()) {
-        if (task->state() == Task::BlockedSleep) {
-            if (task->wakeupTime() <= system.uptime) {
-                task->unblock();
+    // Check and unblock processes whose wait conditions have been met.
+    for (auto* process = s_processes->head(); process; process = process->next()) {
+        if (process->state() == Process::BlockedSleep) {
+            if (process->wakeupTime() <= system.uptime) {
+                process->unblock();
                 continue;
             }
         }
 
-        if (task->state() == Task::BlockedWait) {
-            if (!Task::fromPID(task->waitee())) {
-                task->unblock();
+        if (process->state() == Process::BlockedWait) {
+            if (!Process::fromPID(process->waitee())) {
+                process->unblock();
                 continue;
             }
         }
 
-        if (task->state() == Task::BlockedRead) {
-            ASSERT(task->m_fdBlockedOnRead != -1);
-            if (task->m_fileHandles[task->m_fdBlockedOnRead]->hasDataAvailableForRead()) {
-                task->unblock();
+        if (process->state() == Process::BlockedRead) {
+            ASSERT(process->m_fdBlockedOnRead != -1);
+            if (process->m_fileHandles[process->m_fdBlockedOnRead]->hasDataAvailableForRead()) {
+                process->unblock();
                 continue;
             }
         }
@@ -691,46 +676,46 @@ bool scheduleNewTask()
 
 #ifdef SCHEDULER_DEBUG
     dbgprintf("Scheduler choices:\n");
-    for (auto* task = s_tasks->head(); task; task = task->next()) {
-        //if (task->state() == Task::BlockedWait || task->state() == Task::BlockedSleep)
+    for (auto* process = s_processes->head(); process; process = process->next()) {
+        //if (process->state() == Process::BlockedWait || process->state() == Process::BlockedSleep)
 //            continue;
-        dbgprintf("%w %s(%u)\n", task->state(), task->name().characters(), task->pid());
+        dbgprintf("%w %s(%u)\n", process->state(), process->name().characters(), process->pid());
     }
 #endif
 
-    auto* prevHead = s_tasks->head();
+    auto* prevHead = s_processes->head();
     for (;;) {
         // Move head to tail.
-        s_tasks->append(s_tasks->removeHead());
-        auto* task = s_tasks->head();
+        s_processes->append(s_processes->removeHead());
+        auto* process = s_processes->head();
 
-        if (task->state() == Task::Runnable || task->state() == Task::Running) {
+        if (process->state() == Process::Runnable || process->state() == Process::Running) {
 #ifdef SCHEDULER_DEBUG
-            dbgprintf("switch to %s(%u) (%p vs %p)\n", task->name().characters(), task->pid(), task, current);
+            dbgprintf("switch to %s(%u) (%p vs %p)\n", process->name().characters(), process->pid(), process, current);
 #endif
-            return contextSwitch(task);
+            return contextSwitch(process);
         }
 
-        if (task == prevHead) {
-            // Back at task_head, nothing wants to run.
+        if (process == prevHead) {
+            // Back at process_head, nothing wants to run.
             kprintf("Nothing wants to run!\n");
             kprintf("PID    OWNER      STATE  NSCHED  NAME\n");
-            for (auto* task = s_tasks->head(); task; task = task->next()) {
+            for (auto* process = s_processes->head(); process; process = process->next()) {
                 kprintf("%w   %w:%w  %b     %w    %s\n",
-                    task->pid(),
-                    task->uid(),
-                    task->gid(),
-                    task->state(),
-                    task->timesScheduled(),
-                    task->name().characters());
+                    process->pid(),
+                    process->uid(),
+                    process->gid(),
+                    process->state(),
+                    process->timesScheduled(),
+                    process->name().characters());
             }
-            kprintf("Switch to kernel task\n");
-            return contextSwitch(Task::kernelTask());
+            kprintf("Switch to kernel process\n");
+            return contextSwitch(Process::kernelProcess());
         }
     }
 }
 
-static bool contextSwitch(Task* t)
+static bool contextSwitch(Process* t)
 {
     t->setTicksLeft(5);
     t->didSchedule();
@@ -755,14 +740,14 @@ static bool contextSwitch(Task* t)
 #endif
 
     if (current) {
-        // If the last task hasn't blocked (still marked as running),
+        // If the last process hasn't blocked (still marked as running),
         // mark it as runnable for the next round.
-        if (current->state() == Task::Running)
-            current->setState(Task::Runnable);
+        if (current->state() == Process::Running)
+            current->setState(Process::Runnable);
     }
 
     current = t;
-    t->setState(Task::Running);
+    t->setState(Process::Running);
 
     if (!t->selector()) {
         t->setSelector(allocateGDTEntry());
@@ -783,17 +768,17 @@ static bool contextSwitch(Task* t)
     return true;
 }
 
-Task* Task::fromPID(pid_t pid)
+Process* Process::fromPID(pid_t pid)
 {
     ASSERT_INTERRUPTS_DISABLED();
-    for (auto* task = s_tasks->head(); task; task = task->next()) {
-        if (task->pid() == pid)
-            return task;
+    for (auto* process = s_processes->head(); process; process = process->next()) {
+        if (process->pid() == pid)
+            return process;
     }
     return nullptr;
 }
 
-FileHandle* Task::fileHandleIfExists(int fd)
+FileHandle* Process::fileHandleIfExists(int fd)
 {
     if (fd < 0)
         return nullptr;
@@ -802,7 +787,7 @@ FileHandle* Task::fileHandleIfExists(int fd)
     return nullptr;
 }
 
-ssize_t Task::sys$get_dir_entries(int fd, void* buffer, size_t size)
+ssize_t Process::sys$get_dir_entries(int fd, void* buffer, size_t size)
 {
     VALIDATE_USER_WRITE(buffer, size);
     auto* handle = fileHandleIfExists(fd);
@@ -811,7 +796,7 @@ ssize_t Task::sys$get_dir_entries(int fd, void* buffer, size_t size)
     return handle->get_dir_entries((byte*)buffer, size);
 }
 
-int Task::sys$lseek(int fd, off_t offset, int whence)
+int Process::sys$lseek(int fd, off_t offset, int whence)
 {
     auto* handle = fileHandleIfExists(fd);
     if (!handle)
@@ -819,7 +804,7 @@ int Task::sys$lseek(int fd, off_t offset, int whence)
     return handle->seek(offset, whence);
 }
 
-int Task::sys$ttyname_r(int fd, char* buffer, size_t size)
+int Process::sys$ttyname_r(int fd, char* buffer, size_t size)
 {
     VALIDATE_USER_WRITE(buffer, size);
     auto* handle = fileHandleIfExists(fd);
@@ -834,34 +819,34 @@ int Task::sys$ttyname_r(int fd, char* buffer, size_t size)
     return 0;
 }
 
-ssize_t Task::sys$write(int fd, const void* data, size_t size)
+ssize_t Process::sys$write(int fd, const void* data, size_t size)
 {
     VALIDATE_USER_READ(data, size);
 #ifdef DEBUG_IO
-    kprintf("Task::sys$write: called(%d, %p, %u)\n", fd, data, size);
+    kprintf("Process::sys$write: called(%d, %p, %u)\n", fd, data, size);
 #endif
     auto* handle = fileHandleIfExists(fd);
 #ifdef DEBUG_IO
-    kprintf("Task::sys$write: handle=%p\n", handle);
+    kprintf("Process::sys$write: handle=%p\n", handle);
 #endif
     if (!handle)
         return -EBADF;
     auto nwritten = handle->write((const byte*)data, size);
 #ifdef DEBUG_IO
-    kprintf("Task::sys$write: nwritten=%u\n", nwritten);
+    kprintf("Process::sys$write: nwritten=%u\n", nwritten);
 #endif
     return nwritten;
 }
 
-ssize_t Task::sys$read(int fd, void* outbuf, size_t nread)
+ssize_t Process::sys$read(int fd, void* outbuf, size_t nread)
 {
     VALIDATE_USER_WRITE(outbuf, nread);
 #ifdef DEBUG_IO
-    kprintf("Task::sys$read: called(%d, %p, %u)\n", fd, outbuf, nread);
+    kprintf("Process::sys$read: called(%d, %p, %u)\n", fd, outbuf, nread);
 #endif
     auto* handle = fileHandleIfExists(fd);
 #ifdef DEBUG_IO
-    kprintf("Task::sys$read: handle=%p\n", handle);
+    kprintf("Process::sys$read: handle=%p\n", handle);
 #endif
     if (!handle)
         return -EBADF;
@@ -874,12 +859,12 @@ ssize_t Task::sys$read(int fd, void* outbuf, size_t nread)
     }
     nread = handle->read((byte*)outbuf, nread);
 #ifdef DEBUG_IO
-    kprintf("Task::sys$read: nread=%u\n", nread);
+    kprintf("Process::sys$read: nread=%u\n", nread);
 #endif
     return nread;
 }
 
-int Task::sys$close(int fd)
+int Process::sys$close(int fd)
 {
     auto* handle = fileHandleIfExists(fd);
     if (!handle)
@@ -888,7 +873,7 @@ int Task::sys$close(int fd)
     return 0;
 }
 
-int Task::sys$lstat(const char* path, Unix::stat* statbuf)
+int Process::sys$lstat(const char* path, Unix::stat* statbuf)
 {
     VALIDATE_USER_WRITE(statbuf, sizeof(Unix::stat));
     int error;
@@ -899,7 +884,7 @@ int Task::sys$lstat(const char* path, Unix::stat* statbuf)
     return 0;
 }
 
-int Task::sys$stat(const char* path, Unix::stat* statbuf)
+int Process::sys$stat(const char* path, Unix::stat* statbuf)
 {
     VALIDATE_USER_WRITE(statbuf, sizeof(Unix::stat));
     int error;
@@ -910,7 +895,7 @@ int Task::sys$stat(const char* path, Unix::stat* statbuf)
     return 0;
 }
 
-int Task::sys$readlink(const char* path, char* buffer, size_t size)
+int Process::sys$readlink(const char* path, char* buffer, size_t size)
 {
     VALIDATE_USER_READ(path, strlen(path));
     VALIDATE_USER_WRITE(buffer, size);
@@ -933,7 +918,7 @@ int Task::sys$readlink(const char* path, char* buffer, size_t size)
     return 0;
 }
 
-int Task::sys$chdir(const char* path)
+int Process::sys$chdir(const char* path)
 {
     VALIDATE_USER_READ(path, strlen(path));
     int error;
@@ -946,7 +931,7 @@ int Task::sys$chdir(const char* path)
     return 0;
 }
 
-int Task::sys$getcwd(char* buffer, size_t size)
+int Process::sys$getcwd(char* buffer, size_t size)
 {
     VALIDATE_USER_WRITE(buffer, size);
     auto path = VirtualFileSystem::the().absolutePath(cwdInode());
@@ -958,10 +943,10 @@ int Task::sys$getcwd(char* buffer, size_t size)
     return -ENOTIMPL;
 }
 
-int Task::sys$open(const char* path, int options)
+int Process::sys$open(const char* path, int options)
 {
 #ifdef DEBUG_IO
-    kprintf("Task::sys$open(): PID=%u, path=%s {%u}\n", m_pid, path, pathLength);
+    kprintf("Process::sys$open(): PID=%u, path=%s {%u}\n", m_pid, path, pathLength);
 #endif
     VALIDATE_USER_READ(path, strlen(path));
     if (m_fileHandles.size() >= m_maxFileHandles)
@@ -979,7 +964,7 @@ int Task::sys$open(const char* path, int options)
     return fd;
 }
 
-int Task::sys$uname(utsname* buf)
+int Process::sys$uname(utsname* buf)
 {
     VALIDATE_USER_WRITE(buf, sizeof(utsname));
     strcpy(buf->sysname, "Serenity");
@@ -990,7 +975,7 @@ int Task::sys$uname(utsname* buf)
     return 0;
 }
 
-int Task::sys$kill(pid_t pid, int sig)
+int Process::sys$kill(pid_t pid, int sig)
 {
     (void) sig;
     if (pid == 0) {
@@ -1003,7 +988,7 @@ int Task::sys$kill(pid_t pid, int sig)
     }
     ASSERT(pid != current->pid()); // FIXME: Support this scenario.
     InterruptDisabler disabler;
-    auto* peer = Task::fromPID(pid);
+    auto* peer = Process::fromPID(pid);
     if (!peer)
         return -ESRCH;
     if (sig == SIGKILL) {
@@ -1015,7 +1000,7 @@ int Task::sys$kill(pid_t pid, int sig)
     return -1;
 }
 
-int Task::sys$sleep(unsigned seconds)
+int Process::sys$sleep(unsigned seconds)
 {
     if (!seconds)
         return 0;
@@ -1023,7 +1008,7 @@ int Task::sys$sleep(unsigned seconds)
     return 0;
 }
 
-int Task::sys$gettimeofday(timeval* tv)
+int Process::sys$gettimeofday(timeval* tv)
 {
     VALIDATE_USER_WRITE(tv, sizeof(tv));
     InterruptDisabler disabler;
@@ -1033,28 +1018,28 @@ int Task::sys$gettimeofday(timeval* tv)
     return 0;
 }
 
-uid_t Task::sys$getuid()
+uid_t Process::sys$getuid()
 {
     return m_uid;
 }
 
-gid_t Task::sys$getgid()
+gid_t Process::sys$getgid()
 {
     return m_gid;
 }
 
-pid_t Task::sys$getpid()
+pid_t Process::sys$getpid()
 {
     return m_pid;
 }
 
-pid_t Task::sys$waitpid(pid_t waitee, int* wstatus, int options)
+pid_t Process::sys$waitpid(pid_t waitee, int* wstatus, int options)
 {
     if (wstatus)
         VALIDATE_USER_WRITE(wstatus, sizeof(int));
 
     InterruptDisabler disabler;
-    if (!Task::fromPID(waitee))
+    if (!Process::fromPID(waitee))
         return -1;
     m_waitee = waitee;
     m_waiteeStatus = 0;
@@ -1065,21 +1050,21 @@ pid_t Task::sys$waitpid(pid_t waitee, int* wstatus, int options)
     return m_waitee;
 }
 
-void Task::unblock()
+void Process::unblock()
 {
-    ASSERT(m_state != Task::Runnable && m_state != Task::Running);
+    ASSERT(m_state != Process::Runnable && m_state != Process::Running);
     system.nblocked--;
-    m_state = Task::Runnable;
+    m_state = Process::Runnable;
 }
 
-void Task::block(Task::State state)
+void Process::block(Process::State state)
 {
-    ASSERT(current->state() == Task::Running);
+    ASSERT(current->state() == Process::Running);
     system.nblocked++;
     current->setState(state);
 }
 
-void block(Task::State state)
+void block(Process::State state)
 {
     current->block(state);
     yield();
@@ -1087,19 +1072,19 @@ void block(Task::State state)
 
 void sleep(DWORD ticks)
 {
-    ASSERT(current->state() == Task::Running);
+    ASSERT(current->state() == Process::Running);
     current->setWakeupTime(system.uptime + ticks);
-    current->block(Task::BlockedSleep);
+    current->block(Process::BlockedSleep);
     yield();
 }
 
-Task* Task::kernelTask()
+Process* Process::kernelProcess()
 {
-    ASSERT(s_kernelTask);
-    return s_kernelTask;
+    ASSERT(s_kernelProcess);
+    return s_kernelProcess;
 }
 
-Task::Region::Region(LinearAddress a, size_t s, RetainPtr<Zone>&& z, String&& n)
+Process::Region::Region(LinearAddress a, size_t s, RetainPtr<Zone>&& z, String&& n)
     : linearAddress(a)
     , size(s)
     , zone(move(z))
@@ -1107,11 +1092,11 @@ Task::Region::Region(LinearAddress a, size_t s, RetainPtr<Zone>&& z, String&& n)
 {
 }
 
-Task::Region::~Region()
+Process::Region::~Region()
 {
 }
 
-Task::Subregion::Subregion(Region& r, dword o, size_t s, LinearAddress l, String&& n)\
+Process::Subregion::Subregion(Region& r, dword o, size_t s, LinearAddress l, String&& n)\
     : region(r)
     , offset(o)
     , size(s)
@@ -1121,11 +1106,11 @@ Task::Subregion::Subregion(Region& r, dword o, size_t s, LinearAddress l, String
 }
 
 
-Task::Subregion::~Subregion()
+Process::Subregion::~Subregion()
 {
 }
 
-bool Task::isValidAddressForKernel(LinearAddress laddr) const
+bool Process::isValidAddressForKernel(LinearAddress laddr) const
 {
     // We check extra carefully here since the first 4MB of the address space is identity-mapped.
     // This code allows access outside of the known used address ranges to get caught.
@@ -1138,13 +1123,13 @@ bool Task::isValidAddressForKernel(LinearAddress laddr) const
     return validate_user_read(laddr);
 }
 
-bool Task::validate_user_read(LinearAddress laddr) const
+bool Process::validate_user_read(LinearAddress laddr) const
 {
     InterruptDisabler disabler;
     return MM.validate_user_read(*this, laddr);
 }
 
-bool Task::validate_user_write(LinearAddress laddr) const
+bool Process::validate_user_write(LinearAddress laddr) const
 {
     InterruptDisabler disabler;
     return MM.validate_user_write(*this, laddr);

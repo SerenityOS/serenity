@@ -2,7 +2,7 @@
 #include "i386.h"
 #include "IO.h"
 #include "VGA.h"
-#include "Task.h"
+#include "Process.h"
 #include "system.h"
 #include "PIC.h"
 
@@ -77,8 +77,6 @@ void clock_handle()
     if (current->tick())
         return;
 
-    //return;
-
     auto& regs = *reinterpret_cast<RegisterDump*>(state_dump);
     current->tss().gs = regs.gs;
     current->tss().fs = regs.fs;
@@ -95,31 +93,19 @@ void clock_handle()
     current->tss().cs = regs.cs;
     current->tss().eflags = regs.eflags;
 
-    // Compute task ESP.
+    // Compute process stack pointer.
     // Add 12 for CS, EIP, EFLAGS (interrupt mechanic)
-
-    // FIXME: Hmm. Should we add an extra 8 here for SS:ESP in some cases?
-    //        If this IRQ occurred while in a user task, wouldn't that also push the stack ptr?
     current->tss().esp = regs.esp + 12;
-
     current->tss().ss = regs.ss;
 
     if ((current->tss().cs & 3) != 0) {
-#if 0
-        dbgprintf("clock'ed across to ring0\n");
-        dbgprintf("code: %w:%x\n", current->tss().cs, current->tss().eip);
-        dbgprintf(" stk: %w:%x\n", current->tss().ss, current->tss().esp);
-        dbgprintf("astk: %w:%x\n", regs.ss_if_crossRing, regs.esp_if_crossRing);
-        //HANG;
-#endif
         current->tss().ss = regs.ss_if_crossRing;
         current->tss().esp = regs.esp_if_crossRing;
     }
 
-    // Prepare a new task to run;
-    if (!scheduleNewTask())
+    if (!scheduleNewProcess())
         return;
-    Task::prepForIRETToNewTask();
+    Process::prepForIRETToNewProcess();
 
     // Set the NT (nested task) flag.
     asm(

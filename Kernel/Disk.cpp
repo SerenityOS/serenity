@@ -1,5 +1,5 @@
 #include "types.h"
-#include "Task.h"
+#include "Process.h"
 #include "VGA.h"
 #include "Disk.h"
 #include "kmalloc.h"
@@ -145,8 +145,6 @@ bool readSectors(DWORD startSector, WORD count, BYTE* outbuf)
             count,
             startSector);
 #endif
-    Task::checkSanity("Disk::readSectors");
-
     disableIRQ();
 
     CHS chs = lba2chs(IDE0_DISK0, startSector);

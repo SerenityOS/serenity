@@ -4,7 +4,7 @@
 #include "i386.h"
 #include "i8253.h"
 #include "Keyboard.h"
-#include "Task.h"
+#include "Process.h"
 #include "system.h"
 #include "Disk.h"
 #include "PIC.h"
@@ -96,7 +96,7 @@ static void undertaker_main() NORETURN;
 static void undertaker_main()
 {
     for (;;) {
-        Task::doHouseKeeping();
+        Process::doHouseKeeping();
         sleep(300);
     }
 }
@@ -178,9 +178,9 @@ static void init_stage2()
 
     for (unsigned i = 0; i < 100; ++i) {
         int error;
-        auto* shTask = Task::createUserTask("/bin/id", (uid_t)100, (gid_t)100, (pid_t)0, error);
+        auto* shProcess = Process::createUserProcess("/bin/id", (uid_t)100, (gid_t)100, (pid_t)0, error);
         kprintf("malloc stats: alloc:%u free:%u\n", sum_alloc, sum_free);
-        kprintf("sizeof(Task):%u\n", sizeof(Task));
+        kprintf("sizeof(Process):%u\n", sizeof(Process));
         kprintf("delta:%u\n",sum_alloc - lastAlloc);
         lastAlloc = sum_alloc;
         sleep(600);
@@ -188,11 +188,11 @@ static void init_stage2()
 #endif
 
     int error;
-    auto* sh0 = Task::createUserTask("/bin/sh", (uid_t)100, (gid_t)100, (pid_t)0, error, nullptr, tty0);
+    auto* sh0 = Process::createUserProcess("/bin/sh", (uid_t)100, (gid_t)100, (pid_t)0, error, nullptr, tty0);
 #ifdef SPAWN_MULTIPLE_SHELLS
-    auto* sh1 = Task::createUserTask("/bin/sh", (uid_t)100, (gid_t)100, (pid_t)0, error, nullptr, tty1);
-    auto* sh2 = Task::createUserTask("/bin/sh", (uid_t)100, (gid_t)100, (pid_t)0, error, nullptr, tty2);
-    auto* sh3 = Task::createUserTask("/bin/sh", (uid_t)100, (gid_t)100, (pid_t)0, error, nullptr, tty3);
+    auto* sh1 = Process::createUserProcess("/bin/sh", (uid_t)100, (gid_t)100, (pid_t)0, error, nullptr, tty1);
+    auto* sh2 = Process::createUserProcess("/bin/sh", (uid_t)100, (gid_t)100, (pid_t)0, error, nullptr, tty2);
+    auto* sh3 = Process::createUserProcess("/bin/sh", (uid_t)100, (gid_t)100, (pid_t)0, error, nullptr, tty3);
 #endif
 
 #if 0
@@ -253,16 +253,16 @@ void init()
     auto procfs = ProcFileSystem::create();
     procfs->initialize();
 
-    Task::initialize();
+    Process::initialize();
 
-    Task::createKernelTask(undertaker_main, "undertaker");
-    Task::createKernelTask(init_stage2, "init");
+    Process::createKernelProcess(undertaker_main, "undertaker");
+    Process::createKernelProcess(init_stage2, "init");
 
-    scheduleNewTask();
+    scheduleNewProcess();
 
     sti();
 
-    // This now becomes the idle task :^)
+    // This now becomes the idle process :^)
     for (;;) {
         asm("hlt");
     }

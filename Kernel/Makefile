@@ -5,7 +5,7 @@ KERNEL_OBJS = \
        kmalloc.o \
        StdLib.o \
        i386.o \
-       Task.o \
+       Process.o \
        i8253.o \
        Keyboard.o \
        CMOS.o \

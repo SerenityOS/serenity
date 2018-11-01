@@ -3,7 +3,7 @@
 #include "VGA.h"
 #include "i386.h"
 #include "Assertions.h"
-#include "Task.h"
+#include "Process.h"
 #include "MemoryManager.h"
 #include "IRQHandler.h"
 #include "PIC.h"
@@ -153,8 +153,7 @@ void exception_6_handler()
     }
     HANG;
 
-    // NOTE: This will schedule a new task.
-    Task::taskDidCrash(current);
+    Process::processDidCrash(current);
 }
 
 // 13: General Protection Fault
@@ -184,8 +183,7 @@ void exception_13_handler()
         HANG;
     }
 
-    // NOTE: This will schedule a new task.
-    Task::taskDidCrash(current);
+    Process::processDidCrash(current);
 }
 
 // 14: Page Fault
@@ -239,8 +237,7 @@ void exception_14_handler()
 
     if (response == PageFaultResponse::ShouldCrash) {
         kprintf("Crashing after unresolved page fault\n");
-        // NOTE: This will schedule a new task.
-        Task::taskDidCrash(current);
+        Process::processDidCrash(current);
     } else if (response == PageFaultResponse::Continue) {
         kprintf("Continuing after resolved page fault\n");
     } else {
