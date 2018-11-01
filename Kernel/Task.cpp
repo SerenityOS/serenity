@@ -228,6 +228,11 @@ int Task::sys$spawn(const char* path, const char** args)
     return error;
 }
 
+struct KernelPagingScope {
+    KernelPagingScope() { MM.enter_kernel_paging_scope(); }
+    ~KernelPagingScope() { MM.enter_task_paging_scope(*current); }
+};
+
 Task* Task::createUserTask(const String& path, uid_t uid, gid_t gid, pid_t parentPID, int& error, const char** args, TTY* tty)
 {
     auto parts = path.split('/');
@@ -276,6 +281,7 @@ Task* Task::createUserTask(const String& path, uid_t uid, gid_t gid, pid_t paren
     taskEnvironment.append("HOME=/");
 
     InterruptDisabler disabler; // FIXME: Get rid of this, jesus christ. This "critical" section is HUGE.
+    KernelPagingScope kernelScope;
     Task* t = new Task(parts.takeLast(), uid, gid, parentPID, Ring3, move(cwd), handle->vnode(), tty);
 
     t->m_arguments = move(taskArguments);
@@ -283,20 +289,21 @@ Task* Task::createUserTask(const String& path, uid_t uid, gid_t gid, pid_t paren
 
     ExecSpace space;
     Region* region = nullptr;
+
+    byte* region_alias = nullptr;
+
     space.hookableAlloc = [&] (const String& name, size_t size) {
         if (!size)
             return (void*)nullptr;
-        size = ((size / 4096) + 1) * 4096;
+        size = ((size / 4096) + 1) * 4096; // FIXME: Use ceil_div?
         region = t->allocateRegion(size, String(name));
         ASSERT(region);
-        MM.mapRegion(*t, *region);
-        return (void*)region->linearAddress.asPtr();
+        region_alias = MM.create_kernel_alias_for_region(*region);
+        return (void*)region_alias;
     };
     bool success = space.loadELF(move(elfData));
     if (!success) {
-        // FIXME: This is ugly. If we need to do this, it should be at a different level.
-        MM.unmapRegionsForTask(*t);
-        MM.mapRegionsForTask(*current);
+        MM.remove_kernel_alias_for_region(*region, region_alias);
         delete t;
         kprintf("Failure loading ELF %s\n", path.characters());
         error = -ENOEXEC;
@@ -321,16 +328,15 @@ Task* Task::createUserTask(const String& path, uid_t uid, gid_t gid, pid_t paren
     t->m_tss.eip = (dword)space.symbolPtr("_start");
     if (!t->m_tss.eip) {
         // FIXME: This is ugly. If we need to do this, it should be at a different level.
-        MM.unmapRegionsForTask(*t);
-        MM.mapRegionsForTask(*current);
+        MM.remove_kernel_alias_for_region(*region, region_alias);
         delete t;
         error = -ENOEXEC;
         return nullptr;
     }
 
-    // FIXME: This is ugly. If we need to do this, it should be at a different level.
-    MM.unmapRegionsForTask(*t);
-    MM.mapRegionsForTask(*current);
+    MM.remove_kernel_alias_for_region(*region, region_alias);
+
+    MM.mapRegionsForTask(*t);
 
     s_tasks->prepend(t);
     system.nprocess++;
@@ -409,7 +415,7 @@ Task::Task(String&& name, uid_t uid, gid_t gid, pid_t parentPID, RingLevel ring,
     , m_parentPID(parentPID)
 {
     m_pageDirectory = (dword*)kmalloc_page_aligned(4096);
-    MM.populatePageDirectory(*this);
+    MM.populate_page_directory(*this);
 
     if (tty) {
         m_fileHandles.append(tty->open(O_RDONLY)); // stdin
@@ -421,7 +427,7 @@ Task::Task(String&& name, uid_t uid, gid_t gid, pid_t parentPID, RingLevel ring,
         m_fileHandles.append(nullptr); // stderr
     }
 
-    m_nextRegion = LinearAddress(0x600000);
+    m_nextRegion = LinearAddress(0x10000000);
 
     memset(&m_tss, 0, sizeof(m_tss));
 
@@ -539,8 +545,6 @@ void Task::sys$exit(int status)
 
     setState(Exiting);
 
-    MM.unmapRegionsForTask(*this);
-
     s_tasks->remove(this);
 
     notify_waiters(m_pid, status, 0);
@@ -566,7 +570,6 @@ void Task::murder(int signal)
 
     if (wasCurrent) {
         kprintf("Current task committing suicide!\n");
-        MM.unmapRegionsForTask(*this);
         if (!scheduleNewTask()) {
             kprintf("Task::murder: Failed to schedule a new task :(\n");
             HANG;
@@ -592,8 +595,6 @@ void Task::taskDidCrash(Task* crashedTask)
     s_tasks->remove(crashedTask);
 
     notify_waiters(crashedTask->m_pid, 0, SIGSEGV);
-
-    MM.unmapRegionsForTask(*crashedTask);
 
     if (!scheduleNewTask()) {
         kprintf("Task::taskDidCrash: Failed to schedule a new task :(\n");
@@ -750,13 +751,7 @@ static bool contextSwitch(Task* t)
         // mark it as runnable for the next round.
         if (current->state() == Task::Running)
             current->setState(Task::Runnable);
-
-        bool success = MM.unmapRegionsForTask(*current);
-        ASSERT(success);
     }
-
-    bool success = MM.mapRegionsForTask(*t);
-    ASSERT(success);
 
     current = t;
     t->setState(Task::Running);

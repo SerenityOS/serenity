@@ -29,6 +29,7 @@
 
 #define TEST_VFS
 #define KSYMS
+#define SPAWN_MULTIPLE_SHELLS
 //#define STRESS_TEST_SPAWNING
 //#define TEST_ELF_LOADER
 
@@ -188,9 +189,11 @@ static void init_stage2()
 
     int error;
     auto* sh0 = Task::createUserTask("/bin/sh", (uid_t)100, (gid_t)100, (pid_t)0, error, nullptr, tty0);
+#ifdef SPAWN_MULTIPLE_SHELLS
     auto* sh1 = Task::createUserTask("/bin/sh", (uid_t)100, (gid_t)100, (pid_t)0, error, nullptr, tty1);
     auto* sh2 = Task::createUserTask("/bin/sh", (uid_t)100, (gid_t)100, (pid_t)0, error, nullptr, tty2);
     auto* sh3 = Task::createUserTask("/bin/sh", (uid_t)100, (gid_t)100, (pid_t)0, error, nullptr, tty3);
+#endif
 
 #if 0
     // It would be nice to exit this process, but right now it instantiates all kinds of things.
