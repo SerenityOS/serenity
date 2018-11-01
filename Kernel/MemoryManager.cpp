@@ -90,12 +90,12 @@ auto MemoryManager::ensurePTE(dword* page_directory, LinearAddress laddr) -> Pag
 #endif
         if (pageDirectoryIndex == 0) {
             pde.setPageTableBase((dword)m_pageTableZero);
-            pde.setUserAllowed(true);
+            pde.setUserAllowed(false);
             pde.setPresent(true);
             pde.setWritable(true);
         } else if (pageDirectoryIndex == 1) {
             pde.setPageTableBase((dword)m_pageTableOne);
-            pde.setUserAllowed(true);
+            pde.setUserAllowed(false);
             pde.setPresent(true);
             pde.setWritable(true);
         } else {
@@ -135,7 +135,7 @@ void MemoryManager::identityMap(LinearAddress linearAddress, size_t length)
         auto pteAddress = linearAddress.offset(offset);
         auto pte = ensurePTE(m_kernel_page_directory, pteAddress);
         pte.setPhysicalPageBase(pteAddress.get());
-        pte.setUserAllowed(true);
+        pte.setUserAllowed(false);
         pte.setPresent(true);
         pte.setWritable(true);
         flushTLB(pteAddress);
@@ -372,6 +372,38 @@ bool MemoryManager::mapSubregion(Task& task, Task::Subregion& subregion)
 bool MemoryManager::mapRegion(Task& task, Task::Region& region)
 {
     map_region_at_address(task.m_pageDirectory, region, region.linearAddress);
+    return true;
+}
+
+bool MemoryManager::validate_user_read(const Task& task, LinearAddress laddr) const
+{
+    dword pageDirectoryIndex = (laddr.get() >> 22) & 0x3ff;
+    dword pageTableIndex = (laddr.get() >> 12) & 0x3ff;
+    auto pde = PageDirectoryEntry(&task.m_pageDirectory[pageDirectoryIndex]);
+    if (!pde.isPresent())
+        return false;
+    auto pte = PageTableEntry(&pde.pageTableBase()[pageTableIndex]);
+    if (!pte.isPresent())
+        return false;
+    if (!pte.isUserAllowed())
+        return false;
+    return true;
+}
+
+bool MemoryManager::validate_user_write(const Task& task, LinearAddress laddr) const
+{
+    dword pageDirectoryIndex = (laddr.get() >> 22) & 0x3ff;
+    dword pageTableIndex = (laddr.get() >> 12) & 0x3ff;
+    auto pde = PageDirectoryEntry(&task.m_pageDirectory[pageDirectoryIndex]);
+    if (!pde.isPresent())
+        return false;
+    auto pte = PageTableEntry(&pde.pageTableBase()[pageTableIndex]);
+    if (!pte.isPresent())
+        return false;
+    if (!pte.isUserAllowed())
+        return false;
+    if (!pte.isWritable())
+        return false;
     return true;
 }
 

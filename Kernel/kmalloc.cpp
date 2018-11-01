@@ -40,6 +40,8 @@ bool is_kmalloc_address(void* ptr)
 {
     if (ptr >= (byte*)ETERNAL_BASE_PHYSICAL && ptr < s_next_eternal_ptr)
         return true;
+    if (ptr >= (byte*)PAGE_ALIGNED_BASE_PHYSICAL && ptr < s_next_page_aligned_ptr)
+        return true;
     return ptr >= (void*)BASE_PHYS && ptr <= ((void*)BASE_PHYS + POOL_SIZE);
 }
 
