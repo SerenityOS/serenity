@@ -78,7 +78,7 @@ ByteBuffer procfs$pid_vm(Process& process)
 ByteBuffer procfs$pid_stack(Process& process)
 {
     ProcessInspectionScope scope(process);
-    OtherProcessPagingScope pagingScope(process);
+    ProcessPagingScope pagingScope(process);
     struct RecognizedSymbol {
         dword address;
         const KSym* ksym;
@@ -147,14 +147,14 @@ ByteBuffer procfs$mm()
         zonePageCount += zone->m_pages.size();
     auto buffer = ByteBuffer::createUninitialized(1024 + 80 * MM.m_zones.size() + zonePageCount * 10);
     char* ptr = (char*)buffer.pointer();
-    ptr += ksprintf(ptr, "Zone count: %u\n", MM.m_zones.size());
-    ptr += ksprintf(ptr, "Free physical pages: %u\n", MM.m_freePages.size());
     for (auto* zone : MM.m_zones) {
         ptr += ksprintf(ptr, "Zone %p size: %u\n  ", zone, zone->size());
         for (auto page : zone->m_pages)
             ptr += ksprintf(ptr, "%x ", page);
         ptr += ksprintf(ptr, "\n");
     }
+    ptr += ksprintf(ptr, "Zone count: %u\n", MM.m_zones.size());
+    ptr += ksprintf(ptr, "Free physical pages: %u\n", MM.m_freePages.size());
     buffer.trim(ptr - (char*)buffer.pointer());
     return buffer;
 }

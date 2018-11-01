@@ -10,6 +10,7 @@
 #include "TTY.h"
 
 class FileHandle;
+class PageDirectory;
 class Region;
 class Subregion;
 class Zone;
@@ -149,7 +150,7 @@ private:
 
     void allocateLDT();
 
-    dword* m_pageDirectory { nullptr };
+    PageDirectory* m_page_directory { nullptr };
 
     Process* m_prev { nullptr };
     Process* m_next { nullptr };

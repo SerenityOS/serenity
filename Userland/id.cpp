@@ -9,7 +9,7 @@ int main(int c, char** v)
 
     struct passwd* pw = getpwuid(uid);
 
-    printf("uid=%u(%s), gid=%u\n", uid, pw ? pw->pw_name : "n/a", gid);
+    printf("uid=%u(%s), gid=%u, pid=%u\n", uid, pw ? pw->pw_name : "n/a", gid, getpid());
     return 0;
 }
 

@@ -66,6 +66,8 @@ public:
     void set(dword address) { m_address = address; }
     void mask(dword m) { m_address &= m; }
 
+    bool is_null() const { return m_address == 0; }
+
     byte* asPtr() { return reinterpret_cast<byte*>(m_address); }
     const byte* asPtr() const { return reinterpret_cast<const byte*>(m_address); }
 

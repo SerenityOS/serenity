@@ -285,22 +285,17 @@ Process* Process::createUserProcess(const String& path, uid_t uid, gid_t gid, pi
 
     ExecSpace space;
     Region* region = nullptr;
-    byte* region_alias = nullptr;
 
-    KernelPagingScope pagingScope;
+    ProcessPagingScope pagingScope(*t);
     space.hookableAlloc = [&] (const String& name, size_t size) {
         if (!size)
             return (void*)nullptr;
         size = ((size / 4096) + 1) * 4096; // FIXME: Use ceil_div?
         region = t->allocateRegion(size, String(name));
-        ASSERT(region);
-        region_alias = MM.create_kernel_alias_for_region(*region);
-        return (void*)region_alias;
+        return (void*)region->linearAddress.get();
     };
     bool success = space.loadELF(move(elfData));
     if (!success) {
-        if (region)
-            MM.remove_kernel_alias_for_region(*region, region_alias);
         delete t;
         kprintf("Failure loading ELF %s\n", path.characters());
         error = -ENOEXEC;
@@ -325,15 +320,12 @@ Process* Process::createUserProcess(const String& path, uid_t uid, gid_t gid, pi
     t->m_tss.eip = (dword)space.symbolPtr("_start");
     if (!t->m_tss.eip) {
         // FIXME: This is ugly. If we need to do this, it should be at a different level.
-        if (region)
-            MM.remove_kernel_alias_for_region(*region, region_alias);
         delete t;
         error = -ENOEXEC;
         return nullptr;
     }
 
     ASSERT(region);
-    MM.remove_kernel_alias_for_region(*region, region_alias);
 
     ProcFileSystem::the().addProcess(*t);
 
@@ -414,7 +406,7 @@ Process::Process(String&& name, uid_t uid, gid_t gid, pid_t parentPID, RingLevel
     , m_tty(tty)
     , m_parentPID(parentPID)
 {
-    m_pageDirectory = (dword*)kmalloc_page_aligned(4096);
+    m_page_directory = (PageDirectory*)kmalloc_page_aligned(sizeof(PageDirectory));
     MM.populate_page_directory(*this);
 
     m_file_descriptors.resize(m_max_open_file_descriptors);
@@ -456,7 +448,7 @@ Process::Process(String&& name, uid_t uid, gid_t gid, pid_t parentPID, RingLevel
     m_tss.ss = ss;
     m_tss.cs = cs;
 
-    m_tss.cr3 = (dword)m_pageDirectory;
+    m_tss.cr3 = (dword)m_page_directory;
 
     if (isRing0()) {
         // FIXME: This memory is leaked.
@@ -502,6 +494,8 @@ Process::~Process()
         kfree(m_kernelStack);
         m_kernelStack = nullptr;
     }
+
+    MM.release_page_directory(*this);
 }
 
 void Process::dumpRegions()
@@ -610,9 +604,9 @@ void Process::processDidCrash(Process* crashedProcess)
 
 void Process::doHouseKeeping()
 {
-    InterruptDisabler disabler;
     if (s_deadProcesses->isEmpty())
         return;
+    InterruptDisabler disabler;
     Process* next = nullptr;
     for (auto* deadProcess = s_deadProcesses->head(); deadProcess; deadProcess = next) {
         next = deadProcess->next();
