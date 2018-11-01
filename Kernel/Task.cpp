@@ -307,7 +307,8 @@ Task* Task::createUserTask(const String& path, uid_t uid, gid_t gid, pid_t paren
     };
     bool success = space.loadELF(move(elfData));
     if (!success) {
-        MM.remove_kernel_alias_for_region(*region, region_alias);
+        if (region)
+            MM.remove_kernel_alias_for_region(*region, region_alias);
         delete t;
         kprintf("Failure loading ELF %s\n", path.characters());
         error = -ENOEXEC;
@@ -332,12 +333,14 @@ Task* Task::createUserTask(const String& path, uid_t uid, gid_t gid, pid_t paren
     t->m_tss.eip = (dword)space.symbolPtr("_start");
     if (!t->m_tss.eip) {
         // FIXME: This is ugly. If we need to do this, it should be at a different level.
-        MM.remove_kernel_alias_for_region(*region, region_alias);
+        if (region)
+            MM.remove_kernel_alias_for_region(*region, region_alias);
         delete t;
         error = -ENOEXEC;
         return nullptr;
     }
 
+    ASSERT(region);
     MM.remove_kernel_alias_for_region(*region, region_alias);
 
     MM.mapRegionsForTask(*t);
