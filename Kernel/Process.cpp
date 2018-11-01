@@ -86,13 +86,20 @@ void Process::prepForIRETToNewProcess()
     loadTaskRegister(s_kernelProcess->selector());
 }
 
+static void hlt_loop()
+{
+    for (;;) {
+        asm volatile("hlt");
+    }
+}
+
 void Process::initialize()
 {
     current = nullptr;
     next_pid = 0;
     s_processes = new InlineLinkedList<Process>;
     s_deadProcesses = new InlineLinkedList<Process>;
-    s_kernelProcess = Process::createKernelProcess(nullptr, "colonel");
+    s_kernelProcess = Process::createKernelProcess(hlt_loop, "colonel");
     s_hostname = new String("birx");
     redoKernelProcessTSS();
     loadTaskRegister(s_kernelProcess->selector());
@@ -271,18 +278,16 @@ Process* Process::createUserProcess(const String& path, uid_t uid, gid_t gid, pi
     processEnvironment.append("TERM=console");
     processEnvironment.append("HOME=/");
 
-    InterruptDisabler disabler; // FIXME: Get rid of this, jesus christ. This "critical" section is HUGE.
-    KernelPagingScope pagingScope;
-    Process* t = new Process(parts.takeLast(), uid, gid, parentPID, Ring3, move(cwd), handle->vnode(), tty);
+    auto* t = new Process(parts.takeLast(), uid, gid, parentPID, Ring3, move(cwd), handle->vnode(), tty);
 
     t->m_arguments = move(processArguments);
     t->m_initialEnvironment = move(processEnvironment);
 
     ExecSpace space;
     Region* region = nullptr;
-
     byte* region_alias = nullptr;
 
+    KernelPagingScope pagingScope;
     space.hookableAlloc = [&] (const String& name, size_t size) {
         if (!size)
             return (void*)nullptr;
@@ -329,6 +334,8 @@ Process* Process::createUserProcess(const String& path, uid_t uid, gid_t gid, pi
 
     ASSERT(region);
     MM.remove_kernel_alias_for_region(*region, region_alias);
+
+    ProcFileSystem::the().addProcess(*t);
 
     s_processes->prepend(t);
     system.nprocess++;
@@ -379,13 +386,14 @@ int Process::sys$get_arguments(int* argc, char*** argv)
 
 Process* Process::createKernelProcess(void (*e)(), String&& name)
 {
-    Process* process = new Process(move(name), (uid_t)0, (gid_t)0, (pid_t)0, Ring0);
+    auto* process = new Process(move(name), (uid_t)0, (gid_t)0, (pid_t)0, Ring0);
     process->m_tss.eip = (dword)e;
 
     if (process->pid() != 0) {
         InterruptDisabler disabler;
         s_processes->prepend(process);
         system.nprocess++;
+        ProcFileSystem::the().addProcess(*process);
 #ifdef TASK_DEBUG
         kprintf("Kernel process %u (%s) spawned @ %p\n", process->pid(), process->name().characters(), process->m_tss.eip);
 #endif
@@ -474,8 +482,6 @@ Process::Process(String&& name, uid_t uid, gid_t gid, pid_t parentPID, RingLevel
     // HACK: Ring2 SS in the TSS is the current PID.
     m_tss.ss2 = m_pid;
     m_farPtr.offset = 0x98765432;
-
-    ProcFileSystem::the().addProcess(*this);
 }
 
 Process::~Process()
@@ -707,7 +713,7 @@ bool scheduleNewProcess()
                     process->timesScheduled(),
                     process->name().characters());
             }
-            kprintf("Switch to kernel process\n");
+            kprintf("Switch to kernel process @ %w:%x\n", s_kernelProcess->tss().cs, s_kernelProcess->tss().eip);
             return contextSwitch(Process::kernelProcess());
         }
     }
