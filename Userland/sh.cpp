@@ -148,7 +148,11 @@ static int runcmd(char* cmd)
     if (WIFEXITED(wstatus)) {
         //printf("Exited normally with status %d\n", WEXITSTATUS(wstatus));
     } else {
-        printf("Exited abnormally\n");
+        if (WIFSIGNALED(wstatus)) {
+            printf("Terminated by signal %d\n", WTERMSIG(wstatus));
+        } else {
+            printf("Exited abnormally\n");
+        }
     }
     return retval;
 }
