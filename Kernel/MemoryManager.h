@@ -65,6 +65,8 @@ public:
     void registerZone(Zone&);
     void unregisterZone(Zone&);
 
+    void populatePageDirectory(Task&);
+
 private:
     MemoryManager();
     ~MemoryManager();
@@ -158,7 +160,7 @@ private:
         dword* m_pte;
     };
 
-    PageTableEntry ensurePTE(LinearAddress);
+    PageTableEntry ensurePTE(dword* pageDirectory, LinearAddress);
 
     dword* m_pageDirectory;
     dword* m_pageTableZero;

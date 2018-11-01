@@ -408,6 +408,9 @@ Task::Task(String&& name, uid_t uid, gid_t gid, pid_t parentPID, RingLevel ring,
     , m_tty(tty)
     , m_parentPID(parentPID)
 {
+    m_pageDirectory = (dword*)kmalloc_page_aligned(4096);
+    MM.populatePageDirectory(*this);
+
     if (tty) {
         m_fileHandles.append(tty->open(O_RDONLY)); // stdin
         m_fileHandles.append(tty->open(O_WRONLY)); // stdout
@@ -449,7 +452,7 @@ Task::Task(String&& name, uid_t uid, gid_t gid, pid_t parentPID, RingLevel ring,
     m_tss.ss = ss;
     m_tss.cs = cs;
 
-    m_tss.cr3 = MM.pageDirectoryBase().get();
+    m_tss.cr3 = (dword)m_pageDirectory;
 
     if (isRing0()) {
         // FIXME: This memory is leaked.

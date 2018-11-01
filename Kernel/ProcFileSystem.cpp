@@ -172,9 +172,9 @@ ByteBuffer procfs$mounts()
 ByteBuffer procfs$kmalloc()
 {
     InterruptDisabler disabler;
-    auto buffer = ByteBuffer::createUninitialized(128);
+    auto buffer = ByteBuffer::createUninitialized(256);
     char* ptr = (char*)buffer.pointer();
-    ptr += ksprintf(ptr, "eternal:   %u\nallocated: %u\nfree:      %u\n", kmalloc_sum_eternal, sum_alloc, sum_free);
+    ptr += ksprintf(ptr, "eternal:      %u\npage-aligned: %u\nallocated:    %u\nfree:         %u\n", kmalloc_sum_eternal, sum_alloc, sum_free);
     buffer.trim(ptr - (char*)buffer.pointer());
     return buffer;
 }

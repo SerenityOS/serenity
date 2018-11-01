@@ -152,6 +152,8 @@ private:
 
     void allocateLDT();
 
+    dword* m_pageDirectory { nullptr };
+
     Task* m_prev { nullptr };
     Task* m_next { nullptr };
 
