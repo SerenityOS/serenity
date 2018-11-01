@@ -231,7 +231,7 @@ void init()
     tty1 = new VirtualConsole(1);
     tty2 = new VirtualConsole(2);
     tty3 = new VirtualConsole(3);
-    VirtualConsole::switchTo(0);
+    VirtualConsole::switch_to(0);
 
     kprintf("Starting Serenity Operating System...\n");
 

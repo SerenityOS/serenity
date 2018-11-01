@@ -12,10 +12,7 @@ public:
     VirtualConsole(unsigned index, InitialContents = Cleared);
     virtual ~VirtualConsole() override;
 
-    void adoptCurrentVGABuffer();
-    void setActive(bool);
-
-    static void switchTo(unsigned);
+    static void switch_to(unsigned);
     static void initialize();
 
 private:
@@ -29,15 +26,16 @@ private:
     virtual void onTTYWrite(byte) override;
     virtual String ttyName() const override;
 
-    void onChar(byte, bool shouldEmit);
+    void set_active(bool);
+    void on_char(byte, bool shouldEmit);
 
     byte* m_buffer;
     unsigned m_index;
     bool m_active { false };
 
-    void scrollUp();
-    void setCursor(unsigned row, unsigned column);
-    void putCharacterAt(unsigned row, unsigned column, byte ch);
+    void scroll_up();
+    void set_cursor(unsigned row, unsigned column);
+    void put_character_at(unsigned row, unsigned column, byte ch);
 
     void escape$H(const Vector<unsigned>&);
     void escape$J(const Vector<unsigned>&);
@@ -47,13 +45,13 @@ private:
 
     const byte m_rows { 25 };
     const byte m_columns { 80 };
-    byte m_cursorRow { 0 };
-    byte m_cursorColumn { 0 };
-    byte m_savedCursorRow { 0 };
-    byte m_savedCursorColumn { 0 };
-    byte m_currentAttribute { 0x07 };
+    byte m_cursor_row { 0 };
+    byte m_cursor_column { 0 };
+    byte m_saved_cursor_row { 0 };
+    byte m_saved_cursor_column { 0 };
+    byte m_current_attribute { 0x07 };
 
-    void executeEscapeSequence(byte final);
+    void execute_escape_sequence(byte final);
 
     enum EscapeState {
         Normal,
@@ -62,7 +60,7 @@ private:
         ExpectIntermediate,
         ExpectFinal,
     };
-    EscapeState m_escState { Normal };
+    EscapeState m_escape_state { Normal };
     Vector<byte> m_parameters;
     Vector<byte> m_intermediates;
 };

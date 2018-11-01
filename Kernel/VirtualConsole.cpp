@@ -6,33 +6,33 @@
 #include "Keyboard.h"
 #include <AK/String.h>
 
-static byte* s_vgaBuffer;
+static byte* s_vga_buffer;
 static VirtualConsole* s_consoles[6];
-static int s_activeConsole;
+static int s_active_console;
 
 void VirtualConsole::initialize()
 {
-    s_vgaBuffer = (byte*)0xb8000;
+    s_vga_buffer = (byte*)0xb8000;
     memset(s_consoles, 0, sizeof(s_consoles));
-    s_activeConsole = -1;
+    s_active_console = -1;
 }
 
-VirtualConsole::VirtualConsole(unsigned index, InitialContents initialContents)
+VirtualConsole::VirtualConsole(unsigned index, InitialContents initial_contents)
     : TTY(4, index)
     , m_index(index)
 {
     s_consoles[index] = this;
     m_buffer = (byte*)kmalloc_eternal(80 * 25 * 2);
     dbgprintf("VirtualConsole %u @ %p, m_buffer = %p\n", index, this, m_buffer);
-    if (initialContents == AdoptCurrentVGABuffer) {
-        memcpy(m_buffer, s_vgaBuffer, 80 * 25 * 2);
+    if (initial_contents == AdoptCurrentVGABuffer) {
+        memcpy(m_buffer, s_vga_buffer, 80 * 25 * 2);
         auto vgaCursor = vga_get_cursor();
-        m_cursorRow = vgaCursor / 80;
-        m_cursorColumn = vgaCursor % 80;
+        m_cursor_row = vgaCursor / 80;
+        m_cursor_column = vgaCursor % 80;
     } else {
-        word* linemem = (word*)m_buffer;
+        word* line_mem = reinterpret_cast<word*>(m_buffer);
         for (word i = 0; i < 80 * 25; ++i)
-            linemem[i] = 0x0720;
+            line_mem[i] = 0x0720;
     }
 }
 
@@ -40,22 +40,22 @@ VirtualConsole::~VirtualConsole()
 {
 }
 
-void VirtualConsole::switchTo(unsigned index)
+void VirtualConsole::switch_to(unsigned index)
 {
-    if ((int)index == s_activeConsole)
+    if ((int)index == s_active_console)
         return;
     dbgprintf("VC: Switch to %u (%p)\n", index, s_consoles[index]);
     ASSERT(index < 6);
     ASSERT(s_consoles[index]);
     InterruptDisabler disabler;
-    if (s_activeConsole != -1)
-        s_consoles[s_activeConsole]->setActive(false);
-    s_activeConsole = index;
-    s_consoles[s_activeConsole]->setActive(true);
-    Console::the().setImplementation(s_consoles[s_activeConsole]);
+    if (s_active_console != -1)
+        s_consoles[s_active_console]->set_active(false);
+    s_active_console = index;
+    s_consoles[s_active_console]->set_active(true);
+    Console::the().setImplementation(s_consoles[s_active_console]);
 }
 
-void VirtualConsole::setActive(bool b)
+void VirtualConsole::set_active(bool b)
 {
     if (b == m_active)
         return;
@@ -64,27 +64,27 @@ void VirtualConsole::setActive(bool b)
 
     m_active = b;
     if (!m_active) {
-        memcpy(m_buffer, s_vgaBuffer, 80 * 25 * 2);
+        memcpy(m_buffer, s_vga_buffer, 80 * 25 * 2);
         return;
     }
 
-    memcpy(s_vgaBuffer, m_buffer, 80 * 25 * 2);
-    vga_set_cursor(m_cursorRow, m_cursorColumn);
+    memcpy(s_vga_buffer, m_buffer, 80 * 25 * 2);
+    vga_set_cursor(m_cursor_row, m_cursor_column);
 
     Keyboard::the().setClient(this);
 }
 
-inline bool isParameter(byte ch)
+inline bool is_valid_parameter_character(byte ch)
 {
     return ch >= 0x30 && ch <= 0x3f;
 }
 
-inline bool isIntermediate(byte ch)
+inline bool is_valid_intermediate_character(byte ch)
 {
     return ch >= 0x20 && ch <= 0x2f;
 }
 
-inline bool isFinal(byte ch)
+inline bool is_valid_final_character(byte ch)
 {
     return ch >= 0x40 && ch <= 0x7e;
 }
@@ -142,7 +142,7 @@ enum class ANSIColor : byte {
     White,
 };
 
-static inline VGAColor ansiColorToVGA(ANSIColor color)
+static inline VGAColor ansi_color_to_vga(ANSIColor color)
 {
     switch (color) {
     case ANSIColor::Black: return VGAColor::Black;
@@ -166,9 +166,9 @@ static inline VGAColor ansiColorToVGA(ANSIColor color)
     return VGAColor::LightGray;
 }
 
-static inline byte ansiColorToVGA(byte color)
+static inline byte ansi_color_to_vga(byte color)
 {
-    return (byte)ansiColorToVGA((ANSIColor)color);
+    return (byte)ansi_color_to_vga((ANSIColor)color);
 }
 
 void VirtualConsole::escape$m(const Vector<unsigned>& params)
@@ -177,11 +177,11 @@ void VirtualConsole::escape$m(const Vector<unsigned>& params)
         switch (param) {
         case 0:
             // Reset
-            m_currentAttribute = 0x07;
+            m_current_attribute = 0x07;
             break;
         case 1:
             // Bold
-            m_currentAttribute |= 8;
+            m_current_attribute |= 8;
             break;
         case 30:
         case 31:
@@ -192,8 +192,8 @@ void VirtualConsole::escape$m(const Vector<unsigned>& params)
         case 36:
         case 37:
             // Foreground color
-            m_currentAttribute &= ~0x7;
-            m_currentAttribute |= ansiColorToVGA(param - 30);
+            m_current_attribute &= ~0x7;
+            m_current_attribute |= ansi_color_to_vga(param - 30);
             break;
         case 40:
         case 41:
@@ -204,8 +204,8 @@ void VirtualConsole::escape$m(const Vector<unsigned>& params)
         case 46:
         case 47:
             // Background color
-            m_currentAttribute &= ~0x70;
-            m_currentAttribute |= ansiColorToVGA(param - 30) << 8;
+            m_current_attribute &= ~0x70;
+            m_current_attribute |= ansi_color_to_vga(param - 30) << 8;
             break;
         }
     }
@@ -213,13 +213,13 @@ void VirtualConsole::escape$m(const Vector<unsigned>& params)
 
 void VirtualConsole::escape$s(const Vector<unsigned>&)
 {
-    m_savedCursorRow = m_cursorRow;
-    m_savedCursorColumn = m_cursorColumn;
+    m_saved_cursor_row = m_cursor_row;
+    m_saved_cursor_column = m_cursor_column;
 }
 
 void VirtualConsole::escape$u(const Vector<unsigned>&)
 {
-    setCursor(m_savedCursorRow, m_savedCursorColumn);
+    set_cursor(m_saved_cursor_row, m_saved_cursor_column);
 }
 
 void VirtualConsole::escape$H(const Vector<unsigned>& params)
@@ -230,7 +230,7 @@ void VirtualConsole::escape$H(const Vector<unsigned>& params)
         row = params[0];
     if (params.size() >= 2)
         col = params[1];
-    setCursor(row - 1, col - 1);
+    set_cursor(row - 1, col - 1);
 }
 
 void VirtualConsole::escape$J(const Vector<unsigned>& params)
@@ -257,7 +257,7 @@ void VirtualConsole::escape$J(const Vector<unsigned>& params)
     }
 }
 
-void VirtualConsole::executeEscapeSequence(byte final)
+void VirtualConsole::execute_escape_sequence(byte final)
 {
     auto paramparts = String((const char*)m_parameters.data(), m_parameters.size()).split(';');
     Vector<unsigned> params;
@@ -283,9 +283,9 @@ void VirtualConsole::executeEscapeSequence(byte final)
     m_intermediates.clear();
 }
 
-void VirtualConsole::scrollUp()
+void VirtualConsole::scroll_up()
 {
-    if (m_cursorRow == (m_rows - 1)) {
+    if (m_cursor_row == (m_rows - 1)) {
         memcpy(m_buffer, m_buffer + 160, 160 * 24);
         word* linemem = (word*)&m_buffer[24 * 160];
         for (word i = 0; i < 80; ++i)
@@ -293,66 +293,66 @@ void VirtualConsole::scrollUp()
         if (m_active)
             vga_scroll_up();
     } else {
-        ++m_cursorRow;
+        ++m_cursor_row;
     }
-    m_cursorColumn = 0;
+    m_cursor_column = 0;
 }
 
-void VirtualConsole::setCursor(unsigned row, unsigned column)
+void VirtualConsole::set_cursor(unsigned row, unsigned column)
 {
     ASSERT(row < m_rows);
     ASSERT(column < m_columns);
-    m_cursorRow = row;
-    m_cursorColumn = column;
+    m_cursor_row = row;
+    m_cursor_column = column;
     if (m_active)
-        vga_set_cursor(m_cursorRow, m_cursorColumn);
+        vga_set_cursor(m_cursor_row, m_cursor_column);
 }
 
-void VirtualConsole::putCharacterAt(unsigned row, unsigned column, byte ch)
+void VirtualConsole::put_character_at(unsigned row, unsigned column, byte ch)
 {
     ASSERT(row < m_rows);
     ASSERT(column < m_columns);
     word cur = (row * 160) + (column * 2);
     m_buffer[cur] = ch;
-    m_buffer[cur + 1] = m_currentAttribute;
+    m_buffer[cur + 1] = m_current_attribute;
     if (m_active)
-        vga_putch_at(row, column, ch, m_currentAttribute);
+        vga_putch_at(row, column, ch, m_current_attribute);
 }
 
-void VirtualConsole::onChar(byte ch, bool shouldEmit)
+void VirtualConsole::on_char(byte ch, bool shouldEmit)
 {
     InterruptDisabler disabler;
     if (shouldEmit)
         emit(ch);
 
-    switch (m_escState) {
+    switch (m_escape_state) {
     case ExpectBracket:
         if (ch == '[')
-            m_escState = ExpectParameter;
+            m_escape_state = ExpectParameter;
         else
-            m_escState = Normal;
+            m_escape_state = Normal;
         return;
     case ExpectParameter:
-        if (isParameter(ch)) {
+        if (is_valid_parameter_character(ch)) {
             m_parameters.append(ch);
             return;
         }
-        m_escState = ExpectIntermediate;
+        m_escape_state = ExpectIntermediate;
         // fall through
     case ExpectIntermediate:
-        if (isIntermediate(ch)) {
+        if (is_valid_intermediate_character(ch)) {
             m_intermediates.append(ch);
             return;
         }
-        m_escState = ExpectFinal;
+        m_escape_state = ExpectFinal;
         // fall through
     case ExpectFinal:
-        if (isFinal(ch)) {
-            m_escState = Normal;
-            executeEscapeSequence(ch);
+        if (is_valid_final_character(ch)) {
+            m_escape_state = Normal;
+            execute_escape_sequence(ch);
             return;
         }
-        m_escState = Normal;
+        m_escape_state = Normal;
         return;
     case Normal:
         break;
@@ -362,27 +362,27 @@ void VirtualConsole::onChar(byte ch, bool shouldEmit)
     case '\0':
         return;
     case '\033':
-        m_escState = ExpectBracket;
+        m_escape_state = ExpectBracket;
         return;
     case 8: // Backspace
-        if (m_cursorColumn) {
-            setCursor(m_cursorRow, m_cursorColumn - 1);
-            putCharacterAt(m_cursorRow, m_cursorColumn, ' ');
+        if (m_cursor_column) {
+            set_cursor(m_cursor_row, m_cursor_column - 1);
+            put_character_at(m_cursor_row, m_cursor_column, ' ');
             return;
         }
         break;
     case '\n':
-        scrollUp();
-        setCursor(m_cursorRow, m_cursorColumn);
+        scroll_up();
+        set_cursor(m_cursor_row, m_cursor_column);
         return;
     }
 
-    putCharacterAt(m_cursorRow, m_cursorColumn, ch);
+    put_character_at(m_cursor_row, m_cursor_column, ch);
 
-    ++m_cursorColumn;
-    if (m_cursorColumn >= m_columns)
-        scrollUp();
-    setCursor(m_cursorRow, m_cursorColumn);
+    ++m_cursor_column;
+    if (m_cursor_column >= m_columns)
+        scroll_up();
+    set_cursor(m_cursor_row, m_cursor_column);
 }
 
 void VirtualConsole::onKeyPress(byte ch)
@@ -392,15 +392,15 @@ void VirtualConsole::onKeyPress(byte ch)
 
 void VirtualConsole::onConsoleReceive(byte ch)
 {
-    auto old_attribute = m_currentAttribute;
-    m_currentAttribute = 0x03;
-    onChar(ch, false);
-    m_currentAttribute = old_attribute;
+    auto old_attribute = m_current_attribute;
+    m_current_attribute = 0x03;
+    on_char(ch, false);
+    m_current_attribute = old_attribute;
 }
 
 void VirtualConsole::onTTYWrite(byte ch)
 {
-    onChar(ch, false);
+    on_char(ch, false);
 }
 
 String VirtualConsole::ttyName() const

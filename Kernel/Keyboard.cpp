@@ -69,7 +69,7 @@ void Keyboard::handleIRQ()
                 case '2':
                 case '3':
                 case '4':
-                    VirtualConsole::switchTo(map[ch] - '0' - 1);
+                    VirtualConsole::switch_to(map[ch] - '0' - 1);
                     break;
                 default:
                     break;
