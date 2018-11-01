@@ -234,7 +234,7 @@ void MemoryManager::flushTLB(LinearAddress laddr)
     asm volatile("invlpg %0": :"m" (*(char*)laddr.get()));
 }
 
-void MemoryManager::map_region_at_address(dword* page_directory, Process::Region& region, LinearAddress laddr, bool user_allowed)
+void MemoryManager::map_region_at_address(dword* page_directory, Region& region, LinearAddress laddr, bool user_allowed)
 {
     InterruptDisabler disabler;
     auto& zone = *region.zone;
@@ -282,7 +282,7 @@ LinearAddress MemoryManager::allocate_linear_address_range(size_t size)
     return laddr;
 }
 
-byte* MemoryManager::create_kernel_alias_for_region(Process::Region& region)
+byte* MemoryManager::create_kernel_alias_for_region(Region& region)
 {
     InterruptDisabler disabler;
     auto laddr = allocate_linear_address_range(region.size);
@@ -290,12 +290,12 @@ byte* MemoryManager::create_kernel_alias_for_region(Process::Region& region)
     return laddr.asPtr();
 }
 
-void MemoryManager::remove_kernel_alias_for_region(Process::Region& region, byte* addr)
+void MemoryManager::remove_kernel_alias_for_region(Region& region, byte* addr)
 {
     unmap_range(m_kernel_page_directory, LinearAddress((dword)addr), region.size);
 }
 
-bool MemoryManager::unmapRegion(Process& process, Process::Region& region)
+bool MemoryManager::unmapRegion(Process& process, Region& region)
 {
     InterruptDisabler disabler;
     auto& zone = *region.zone;
@@ -314,7 +314,7 @@ bool MemoryManager::unmapRegion(Process& process, Process::Region& region)
     return true;
 }
 
-bool MemoryManager::unmapSubregion(Process& process, Process::Subregion& subregion)
+bool MemoryManager::unmapSubregion(Process& process, Subregion& subregion)
 {
     InterruptDisabler disabler;
     size_t numPages = subregion.size / 4096;
@@ -334,7 +334,7 @@ bool MemoryManager::unmapSubregion(Process& process, Process::Subregion& subregi
     return true;
 }
 
-bool MemoryManager::mapSubregion(Process& process, Process::Subregion& subregion)
+bool MemoryManager::mapSubregion(Process& process, Subregion& subregion)
 {
     InterruptDisabler disabler;
     auto& region = *subregion.region;
@@ -357,7 +357,7 @@ bool MemoryManager::mapSubregion(Process& process, Process::Subregion& subregion
     return true;
 }
 
-bool MemoryManager::mapRegion(Process& process, Process::Region& region)
+bool MemoryManager::mapRegion(Process& process, Region& region)
 {
     map_region_at_address(process.m_pageDirectory, region, region.linearAddress, true);
     return true;
