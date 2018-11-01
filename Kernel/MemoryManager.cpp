@@ -17,7 +17,7 @@ MemoryManager& MM
 
 MemoryManager::MemoryManager()
 {
-    m_kernel_page_directory = (dword*)0x5000;
+    m_kernel_page_directory = (PageDirectory*)0x4000;
     m_pageTableZero = (dword*)0x6000;
     m_pageTableOne = (dword*)0x7000;
 
@@ -32,10 +32,19 @@ MemoryManager::~MemoryManager()
 
 void MemoryManager::populate_page_directory(Process& process)
 {
-    memset(process.m_pageDirectory, 0, 4096);
+    memset(process.m_page_directory, 0, sizeof(PageDirectory));
+    process.m_page_directory[0] = m_kernel_page_directory[0];
+    process.m_page_directory[1] = m_kernel_page_directory[1];
+}
 
-    process.m_pageDirectory[0] = m_kernel_page_directory[0];
-    process.m_pageDirectory[1] = m_kernel_page_directory[1];
+void MemoryManager::release_page_directory(Process& process)
+{
+    ASSERT_INTERRUPTS_DISABLED();
+    for (size_t i = 0; i < 1024; ++i) {
+        auto paddr = process.m_page_directory->physical_addresses[i];
+        if (!paddr.is_null())
+            m_freePages.append(paddr);
+    }
 }
 
 void MemoryManager::initializePaging()
@@ -44,7 +53,7 @@ void MemoryManager::initializePaging()
     static_assert(sizeof(MemoryManager::PageTableEntry) == 4);
     memset(m_pageTableZero, 0, 4096);
     memset(m_pageTableOne, 0, 4096);
-    memset(m_kernel_page_directory, 0, 4096);
+    memset(m_kernel_page_directory, 0, 8192);
 
 #ifdef MM_DEBUG
     kprintf("MM: Kernel page directory @ %p\n", m_kernel_page_directory);
@@ -68,7 +77,7 @@ void MemoryManager::initializePaging()
     );
 }
 
-void* MemoryManager::allocatePageTable()
+void* MemoryManager::allocate_page_table()
 {
     auto ppages = allocatePhysicalPages(1);
     dword address = ppages[0].get();
@@ -77,39 +86,40 @@ void* MemoryManager::allocatePageTable()
     return (void*)address;
 }
 
-auto MemoryManager::ensurePTE(dword* page_directory, LinearAddress laddr) -> PageTableEntry
+auto MemoryManager::ensurePTE(PageDirectory* page_directory, LinearAddress laddr) -> PageTableEntry
 {
     ASSERT_INTERRUPTS_DISABLED();
-    dword pageDirectoryIndex = (laddr.get() >> 22) & 0x3ff;
-    dword pageTableIndex = (laddr.get() >> 12) & 0x3ff;
+    dword page_directory_index = (laddr.get() >> 22) & 0x3ff;
+    dword page_table_index = (laddr.get() >> 12) & 0x3ff;
 
-    PageDirectoryEntry pde = PageDirectoryEntry(&page_directory[pageDirectoryIndex]);
+    PageDirectoryEntry pde = PageDirectoryEntry(&page_directory->entries[page_directory_index]);
     if (!pde.isPresent()) {
 #ifdef MM_DEBUG
-        dbgprintf("MM: PDE %u not present, allocating\n", pageDirectoryIndex);
+        dbgprintf("MM: PDE %u not present, allocating\n", page_directory_index);
 #endif
-        if (pageDirectoryIndex == 0) {
+        if (page_directory_index == 0) {
             pde.setPageTableBase((dword)m_pageTableZero);
             pde.setUserAllowed(false);
             pde.setPresent(true);
             pde.setWritable(true);
-        } else if (pageDirectoryIndex == 1) {
+        } else if (page_directory_index == 1) {
             pde.setPageTableBase((dword)m_pageTableOne);
             pde.setUserAllowed(false);
             pde.setPresent(true);
             pde.setWritable(true);
         } else {
-            auto* pageTable = allocatePageTable();
+            auto* page_table = allocate_page_table();
 #ifdef MM_DEBUG
-            dbgprintf("MM: PDE %x allocated page table #%u (for laddr=%p) at %p\n", page_directory, pageDirectoryIndex, laddr.get(), pageTable);
+            dbgprintf("MM: PDE %x allocated page table #%u (for laddr=%p) at %p\n", page_directory, page_directory_index, laddr.get(), page_table);
 #endif
-            pde.setPageTableBase((dword)pageTable);
+            page_directory->physical_addresses[page_directory_index] = PhysicalAddress((dword)page_table);
+            pde.setPageTableBase((dword)page_table);
             pde.setUserAllowed(true);
             pde.setPresent(true);
             pde.setWritable(true);
         }
     }
-    return PageTableEntry(&pde.pageTableBase()[pageTableIndex]);
+    return PageTableEntry(&pde.pageTableBase()[page_table_index]);
 }
 
 void MemoryManager::protectMap(LinearAddress linearAddress, size_t length)
@@ -217,8 +227,8 @@ void MemoryManager::enter_kernel_paging_scope()
 void MemoryManager::enter_process_paging_scope(Process& process)
 {
     InterruptDisabler disabler;
-    current->m_tss.cr3 = (dword)process.m_pageDirectory;
-    asm volatile("movl %%eax, %%cr3"::"a"(process.m_pageDirectory));
+    current->m_tss.cr3 = (dword)process.m_page_directory;
+    asm volatile("movl %%eax, %%cr3"::"a"(process.m_page_directory));
 }
 
 void MemoryManager::flushEntireTLB()
@@ -234,7 +244,7 @@ void MemoryManager::flushTLB(LinearAddress laddr)
     asm volatile("invlpg %0": :"m" (*(char*)laddr.get()));
 }
 
-void MemoryManager::map_region_at_address(dword* page_directory, Region& region, LinearAddress laddr, bool user_allowed)
+void MemoryManager::map_region_at_address(PageDirectory* page_directory, Region& region, LinearAddress laddr, bool user_allowed)
 {
     InterruptDisabler disabler;
     auto& zone = *region.zone;
@@ -252,7 +262,7 @@ void MemoryManager::map_region_at_address(dword* page_directory, Region& region,
     }
 }
 
-void MemoryManager::unmap_range(dword* page_directory, LinearAddress laddr, size_t size)
+void MemoryManager::unmap_range(PageDirectory* page_directory, LinearAddress laddr, size_t size)
 {
     ASSERT((size % PAGE_SIZE) == 0);
 
@@ -287,6 +297,9 @@ byte* MemoryManager::create_kernel_alias_for_region(Region& region)
     InterruptDisabler disabler;
     auto laddr = allocate_linear_address_range(region.size);
     map_region_at_address(m_kernel_page_directory, region, laddr, false);
+#ifdef MM_DEBUG
+    dbgprintf("MM: Created alias L%x for L%x\n", laddr.get(), region.linearAddress.get());
+#endif
     return laddr.asPtr();
 }
 
@@ -301,7 +314,7 @@ bool MemoryManager::unmapRegion(Process& process, Region& region)
     auto& zone = *region.zone;
     for (size_t i = 0; i < zone.m_pages.size(); ++i) {
         auto laddr = region.linearAddress.offset(i * PAGE_SIZE);
-        auto pte = ensurePTE(process.m_pageDirectory, laddr);
+        auto pte = ensurePTE(process.m_page_directory, laddr);
         pte.setPhysicalPageBase(0);
         pte.setPresent(false);
         pte.setWritable(false);
@@ -321,7 +334,7 @@ bool MemoryManager::unmapSubregion(Process& process, Subregion& subregion)
     ASSERT(numPages);
     for (size_t i = 0; i < numPages; ++i) {
         auto laddr = subregion.linearAddress.offset(i * PAGE_SIZE);
-        auto pte = ensurePTE(process.m_pageDirectory, laddr);
+        auto pte = ensurePTE(process.m_page_directory, laddr);
         pte.setPhysicalPageBase(0);
         pte.setPresent(false);
         pte.setWritable(false);
@@ -344,7 +357,7 @@ bool MemoryManager::mapSubregion(Process& process, Subregion& subregion)
     ASSERT(numPages);
     for (size_t i = 0; i < numPages; ++i) {
         auto laddr = subregion.linearAddress.offset(i * PAGE_SIZE);
-        auto pte = ensurePTE(process.m_pageDirectory, laddr);
+        auto pte = ensurePTE(process.m_page_directory, laddr);
         pte.setPhysicalPageBase(zone.m_pages[firstPage + i].get());
         pte.setPresent(true);
         pte.setWritable(true);
@@ -359,7 +372,7 @@ bool MemoryManager::mapSubregion(Process& process, Subregion& subregion)
 
 bool MemoryManager::mapRegion(Process& process, Region& region)
 {
-    map_region_at_address(process.m_pageDirectory, region, region.linearAddress, true);
+    map_region_at_address(process.m_page_directory, region, region.linearAddress, true);
     return true;
 }
 
@@ -367,7 +380,7 @@ bool MemoryManager::validate_user_read(const Process& process, LinearAddress lad
 {
     dword pageDirectoryIndex = (laddr.get() >> 22) & 0x3ff;
     dword pageTableIndex = (laddr.get() >> 12) & 0x3ff;
-    auto pde = PageDirectoryEntry(&process.m_pageDirectory[pageDirectoryIndex]);
+    auto pde = PageDirectoryEntry(&process.m_page_directory->entries[pageDirectoryIndex]);
     if (!pde.isPresent())
         return false;
     auto pte = PageTableEntry(&pde.pageTableBase()[pageTableIndex]);
@@ -382,7 +395,7 @@ bool MemoryManager::validate_user_write(const Process& process, LinearAddress la
 {
     dword pageDirectoryIndex = (laddr.get() >> 22) & 0x3ff;
     dword pageTableIndex = (laddr.get() >> 12) & 0x3ff;
-    auto pde = PageDirectoryEntry(&process.m_pageDirectory[pageDirectoryIndex]);
+    auto pde = PageDirectoryEntry(&process.m_page_directory->entries[pageDirectoryIndex]);
     if (!pde.isPresent())
         return false;
     auto pte = PageTableEntry(&pde.pageTableBase()[pageTableIndex]);

@@ -17,6 +17,11 @@ enum class PageFaultResponse {
     Continue,
 };
 
+struct PageDirectory {
+    dword entries[1024];
+    PhysicalAddress physical_addresses[1024];
+};
+
 struct Zone : public Retainable<Zone> {
     friend ByteBuffer procfs$mm();
 public:
@@ -78,6 +83,7 @@ public:
     void unregisterZone(Zone&);
 
     void populate_page_directory(Process&);
+    void release_page_directory(Process&);
 
     byte* create_kernel_alias_for_region(Region&);
     void remove_kernel_alias_for_region(Region&, byte*);
@@ -93,14 +99,14 @@ private:
     ~MemoryManager();
 
     LinearAddress allocate_linear_address_range(size_t);
-    void map_region_at_address(dword* page_directory, Region&, LinearAddress, bool user_accessible);
-    void unmap_range(dword* page_directory, LinearAddress, size_t);
+    void map_region_at_address(PageDirectory*, Region&, LinearAddress, bool user_accessible);
+    void unmap_range(PageDirectory*, LinearAddress, size_t);
 
     void initializePaging();
     void flushEntireTLB();
     void flushTLB(LinearAddress);
 
-    void* allocatePageTable();
+    void* allocate_page_table();
 
     void protectMap(LinearAddress, size_t length);
     void identityMap(LinearAddress, size_t length);
@@ -185,9 +191,9 @@ private:
         dword* m_pte;
     };
 
-    PageTableEntry ensurePTE(dword* pageDirectory, LinearAddress);
+    PageTableEntry ensurePTE(PageDirectory*, LinearAddress);
 
-    dword* m_kernel_page_directory;
+    PageDirectory* m_kernel_page_directory;
     dword* m_pageTableZero;
     dword* m_pageTableOne;
 
@@ -203,7 +209,7 @@ struct KernelPagingScope {
     ~KernelPagingScope() { MM.enter_process_paging_scope(*current); }
 };
 
-struct OtherProcessPagingScope {
-    OtherProcessPagingScope(Process& process) { MM.enter_process_paging_scope(process); }
-    ~OtherProcessPagingScope() { MM.enter_process_paging_scope(*current); }
+struct ProcessPagingScope {
+    ProcessPagingScope(Process& process) { MM.enter_process_paging_scope(process); }
+    ~ProcessPagingScope() { MM.enter_process_paging_scope(*current); }
 };

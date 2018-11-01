@@ -49,11 +49,18 @@ static byte parseHexDigit(char nibble)
     return 10 + (nibble - 'a');
 }
 
+#ifdef KSYMS
 static Vector<KSym, KmallocEternalAllocator>* s_ksyms;
+static bool s_ksyms_ready;
 
 Vector<KSym, KmallocEternalAllocator>& ksyms()
 {
     return *s_ksyms;
+}
+
+volatile bool ksyms_ready()
+{
+    return s_ksyms_ready;
 }
 
 const KSym* ksymbolicate(dword address)
@@ -90,7 +97,37 @@ static void loadKsyms(const ByteBuffer& buffer)
         ksyms().append({ address, String(startOfName, bufptr - startOfName) });
         ++bufptr;
     }
+    s_ksyms_ready = true;
 }
+
+void dump_backtrace()
+{
+    if (!current)
+        return;
+    extern volatile bool ksyms_ready();
+    if (!ksyms_ready())
+        return;
+    dword stack_variable;
+    struct RecognizedSymbol {
+        dword address;
+        const KSym* ksym;
+    };
+    Vector<RecognizedSymbol> recognizedSymbols;
+    for (dword* stackPtr = &stack_variable; current->isValidAddressForKernel(LinearAddress((dword)stackPtr)); stackPtr = (dword*)*stackPtr) {
+        dword retaddr = stackPtr[1];
+        if (auto* ksym = ksymbolicate(retaddr))
+            recognizedSymbols.append({ retaddr, ksym });
+    }
+    size_t bytesNeeded = 0;
+    for (auto& symbol : recognizedSymbols) {
+        bytesNeeded += symbol.ksym->name.length() + 8 + 16;
+    }
+    for (auto& symbol : recognizedSymbols) {
+        unsigned offset = symbol.address - symbol.ksym->address;
+        dbgprintf("%p  %s +%u\n", symbol.address, symbol.ksym->name.characters(), offset);
+    }
+}
+#endif
 
 static void undertaker_main() NORETURN;
 static void undertaker_main()
@@ -109,8 +146,8 @@ static void spawn_stress()
     for (unsigned i = 0; i < 10000; ++i) {
         int error;
         Process::createUserProcess("/bin/id", (uid_t)100, (gid_t)100, (pid_t)0, error, nullptr, tty0);
-        kprintf("malloc stats: alloc:%u free:%u page_aligned:%u eternal:%u\n", sum_alloc, sum_free, kmalloc_page_aligned, kmalloc_sum_eternal);
-        kprintf("delta:%u\n", sum_alloc - lastAlloc);
+//        kprintf("malloc stats: alloc:%u free:%u page_aligned:%u eternal:%u\n", sum_alloc, sum_free, kmalloc_page_aligned, kmalloc_sum_eternal);
+//        kprintf("delta:%u\n", sum_alloc - lastAlloc);
         lastAlloc = sum_alloc;
         sleep(60);
     }
@@ -222,6 +259,11 @@ static void init_stage2()
 void init()
 {
     cli();
+
+#ifdef KSYMS
+    s_ksyms = nullptr;
+    s_ksyms_ready = false;
+#endif
 
     kmalloc_init();
     vga_init();
