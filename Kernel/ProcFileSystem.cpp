@@ -1,5 +1,5 @@
 #include "ProcFileSystem.h"
-#include "Task.h"
+#include "Process.h"
 #include <VirtualFileSystem/VirtualFileSystem.h>
 #include "system.h"
 #include "MemoryManager.h"
@@ -27,24 +27,24 @@ ProcFileSystem::~ProcFileSystem()
 {
 }
 
-ByteBuffer procfs$pid_vm(const Task& task)
+ByteBuffer procfs$pid_vm(const Process& process)
 {
     InterruptDisabler disabler;
     char* buffer;
-    auto stringImpl = StringImpl::createUninitialized(80 + task.regionCount() * 80 + 80 + task.subregionCount() * 80, buffer);
+    auto stringImpl = StringImpl::createUninitialized(80 + process.regionCount() * 80 + 80 + process.subregionCount() * 80, buffer);
     memset(buffer, 0, stringImpl->length());
     char* ptr = buffer;
     ptr += ksprintf(ptr, "BEGIN       END         SIZE        NAME\n");
-    for (auto& region : task.regions()) {
+    for (auto& region : process.regions()) {
         ptr += ksprintf(ptr, "%x -- %x    %x    %s\n",
             region->linearAddress.get(),
             region->linearAddress.offset(region->size - 1).get(),
             region->size,
             region->name.characters());
     }
-    if (task.subregionCount()) {
+    if (process.subregionCount()) {
         ptr += ksprintf(ptr, "\nREGION    OFFSET    BEGIN       END         SIZE        NAME\n");
-        for (auto& subregion : task.subregions()) {
+        for (auto& subregion : process.subregions()) {
             ptr += ksprintf(ptr, "%x  %x  %x -- %x    %x    %s\n",
                 subregion->region->linearAddress.get(),
                 subregion->offset,
@@ -58,18 +58,18 @@ ByteBuffer procfs$pid_vm(const Task& task)
     return ByteBuffer::copy((byte*)buffer, ptr - buffer);
 }
 
-ByteBuffer procfs$pid_stack(Task& task)
+ByteBuffer procfs$pid_stack(Process& process)
 {
     InterruptDisabler disabler;
-    OtherTaskPagingScope pagingScope(task);
+    OtherProcessPagingScope pagingScope(process);
     struct RecognizedSymbol {
         dword address;
         const KSym* ksym;
     };
     Vector<RecognizedSymbol> recognizedSymbols;
-    if (auto* eipKsym = ksymbolicate(task.tss().eip))
-        recognizedSymbols.append({ task.tss().eip, eipKsym });
-    for (dword* stackPtr = (dword*)task.framePtr(); task.isValidAddressForKernel(LinearAddress((dword)stackPtr)); stackPtr = (dword*)*stackPtr) {
+    if (auto* eipKsym = ksymbolicate(process.tss().eip))
+        recognizedSymbols.append({ process.tss().eip, eipKsym });
+    for (dword* stackPtr = (dword*)process.framePtr(); process.isValidAddressForKernel(LinearAddress((dword)stackPtr)); stackPtr = (dword*)*stackPtr) {
         dword retaddr = stackPtr[1];
         if (auto* ksym = ksymbolicate(retaddr))
             recognizedSymbols.append({ retaddr, ksym });
@@ -90,33 +90,33 @@ ByteBuffer procfs$pid_stack(Task& task)
     return buffer;
 }
 
-ByteBuffer procfs$pid_exe(Task& task)
+ByteBuffer procfs$pid_exe(Process& process)
 {
     InodeIdentifier inode;
     {
         InterruptDisabler disabler;
-        inode = task.executableInode();
+        inode = process.executableInode();
     }
     return VirtualFileSystem::the().absolutePath(inode).toByteBuffer();
 }
 
-void ProcFileSystem::addProcess(Task& task)
+void ProcFileSystem::addProcess(Process& process)
 {
     ASSERT_INTERRUPTS_DISABLED();
     char buf[16];
-    ksprintf(buf, "%d", task.pid());
+    ksprintf(buf, "%d", process.pid());
     auto dir = addFile(createDirectory(buf));
-    m_pid2inode.set(task.pid(), dir.index());
-    addFile(createGeneratedFile("vm", [&task] { return procfs$pid_vm(task); }), dir.index());
-    addFile(createGeneratedFile("stack", [&task] { return procfs$pid_stack(task); }), dir.index());
-    if (task.executableInode().isValid())
-        addFile(createGeneratedFile("exe", [&task] { return procfs$pid_exe(task); }, 00120777), dir.index());
+    m_pid2inode.set(process.pid(), dir.index());
+    addFile(createGeneratedFile("vm", [&process] { return procfs$pid_vm(process); }), dir.index());
+    addFile(createGeneratedFile("stack", [&process] { return procfs$pid_stack(process); }), dir.index());
+    if (process.executableInode().isValid())
+        addFile(createGeneratedFile("exe", [&process] { return procfs$pid_exe(process); }, 00120777), dir.index());
 }
 
-void ProcFileSystem::removeProcess(Task& task)
+void ProcFileSystem::removeProcess(Process& process)
 {
     ASSERT_INTERRUPTS_DISABLED();
-    auto pid = task.pid();
+    auto pid = process.pid();
     auto it = m_pid2inode.find(pid);
     ASSERT(it != m_pid2inode.end());
     bool success = removeFile((*it).value);
@@ -172,18 +172,18 @@ ByteBuffer procfs$kmalloc()
     return buffer;
 }
 
-static const char* toString(Task::State state)
+static const char* toString(Process::State state)
 {
     switch (state) {
-    case Task::Invalid: return "Invalid";
-    case Task::Runnable: return "Runnable";
-    case Task::Running: return "Running";
-    case Task::Terminated: return "Term";
-    case Task::Crashing: return "Crash";
-    case Task::Exiting: return "Exit";
-    case Task::BlockedSleep: return "Sleep";
-    case Task::BlockedWait: return "Wait";
-    case Task::BlockedRead: return "Read";
+    case Process::Invalid: return "Invalid";
+    case Process::Runnable: return "Runnable";
+    case Process::Running: return "Running";
+    case Process::Terminated: return "Term";
+    case Process::Crashing: return "Crash";
+    case Process::Exiting: return "Exit";
+    case Process::BlockedSleep: return "Sleep";
+    case Process::BlockedWait: return "Wait";
+    case Process::BlockedRead: return "Read";
     }
     ASSERT_NOT_REACHED();
     return nullptr;
@@ -192,20 +192,20 @@ static const char* toString(Task::State state)
 ByteBuffer procfs$summary()
 {
     InterruptDisabler disabler;
-    auto tasks = Task::allTasks();
-    auto buffer = ByteBuffer::createUninitialized(tasks.size() * 256);
+    auto processes = Process::allProcesses();
+    auto buffer = ByteBuffer::createUninitialized(processes.size() * 256);
     char* ptr = (char*)buffer.pointer();
     ptr += ksprintf(ptr, "PID    OWNER  STATE      PPID   NSCHED      FDS  TTY  NAME\n");
-    for (auto* task : tasks) {
+    for (auto* process : processes) {
         ptr += ksprintf(ptr, "% 5u  % 4u   % 8s   % 5u  % 10u  % 3u  % 4s  %s\n",
-            task->pid(),
-            task->uid(),
-            toString(task->state()),
-            task->parentPID(),
-            task->timesScheduled(),
-            task->fileHandleCount(),
-            task->tty() ? strrchr(task->tty()->ttyName().characters(), '/') + 1 : "n/a",
-            task->name().characters());
+            process->pid(),
+            process->uid(),
+            toString(process->state()),
+            process->parentPID(),
+            process->timesScheduled(),
+            process->fileHandleCount(),
+            process->tty() ? strrchr(process->tty()->ttyName().characters(), '/') + 1 : "n/a",
+            process->name().characters());
     }
     *ptr = '\0';
     buffer.trim(ptr - (char*)buffer.pointer());

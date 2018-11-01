@@ -4,7 +4,7 @@
 #include <AK/kmalloc.h>
 #include "i386.h"
 #include "StdLib.h"
-#include "Task.h"
+#include "Process.h"
 
 //#define MM_DEBUG
 
@@ -30,12 +30,12 @@ MemoryManager::~MemoryManager()
 {
 }
 
-void MemoryManager::populate_page_directory(Task& task)
+void MemoryManager::populate_page_directory(Process& process)
 {
-    memset(task.m_pageDirectory, 0, 4096);
+    memset(process.m_pageDirectory, 0, 4096);
 
-    task.m_pageDirectory[0] = m_kernel_page_directory[0];
-    task.m_pageDirectory[1] = m_kernel_page_directory[1];
+    process.m_pageDirectory[0] = m_kernel_page_directory[0];
+    process.m_pageDirectory[1] = m_kernel_page_directory[1];
 }
 
 void MemoryManager::initializePaging()
@@ -214,11 +214,11 @@ void MemoryManager::enter_kernel_paging_scope()
     asm volatile("movl %%eax, %%cr3"::"a"(m_kernel_page_directory));
 }
 
-void MemoryManager::enter_task_paging_scope(Task& task)
+void MemoryManager::enter_process_paging_scope(Process& process)
 {
     InterruptDisabler disabler;
-    current->m_tss.cr3 = (dword)task.m_pageDirectory;
-    asm volatile("movl %%eax, %%cr3"::"a"(task.m_pageDirectory));
+    current->m_tss.cr3 = (dword)process.m_pageDirectory;
+    asm volatile("movl %%eax, %%cr3"::"a"(process.m_pageDirectory));
 }
 
 void MemoryManager::flushEntireTLB()
@@ -234,7 +234,7 @@ void MemoryManager::flushTLB(LinearAddress laddr)
     asm volatile("invlpg %0": :"m" (*(char*)laddr.get()));
 }
 
-void MemoryManager::map_region_at_address(dword* page_directory, Task::Region& region, LinearAddress laddr)
+void MemoryManager::map_region_at_address(dword* page_directory, Process::Region& region, LinearAddress laddr, bool user_allowed)
 {
     InterruptDisabler disabler;
     auto& zone = *region.zone;
@@ -244,7 +244,7 @@ void MemoryManager::map_region_at_address(dword* page_directory, Task::Region& r
         pte.setPhysicalPageBase(zone.m_pages[i].get());
         pte.setPresent(true);
         pte.setWritable(true);
-        pte.setUserAllowed(true);
+        pte.setUserAllowed(user_allowed);
         flushTLB(page_laddr);
 #ifdef MM_DEBUG
         dbgprintf("MM: >> map_region_at_address (PD=%x) L%x => P%x\n", page_directory, page_laddr, zone.m_pages[i].get());
@@ -282,26 +282,26 @@ LinearAddress MemoryManager::allocate_linear_address_range(size_t size)
     return laddr;
 }
 
-byte* MemoryManager::create_kernel_alias_for_region(Task::Region& region)
+byte* MemoryManager::create_kernel_alias_for_region(Process::Region& region)
 {
     InterruptDisabler disabler;
     auto laddr = allocate_linear_address_range(region.size);
-    map_region_at_address(m_kernel_page_directory, region, laddr);
+    map_region_at_address(m_kernel_page_directory, region, laddr, false);
     return laddr.asPtr();
 }
 
-void MemoryManager::remove_kernel_alias_for_region(Task::Region& region, byte* addr)
+void MemoryManager::remove_kernel_alias_for_region(Process::Region& region, byte* addr)
 {
     unmap_range(m_kernel_page_directory, LinearAddress((dword)addr), region.size);
 }
 
-bool MemoryManager::unmapRegion(Task& task, Task::Region& region)
+bool MemoryManager::unmapRegion(Process& process, Process::Region& region)
 {
     InterruptDisabler disabler;
     auto& zone = *region.zone;
     for (size_t i = 0; i < zone.m_pages.size(); ++i) {
         auto laddr = region.linearAddress.offset(i * PAGE_SIZE);
-        auto pte = ensurePTE(task.m_pageDirectory, laddr);
+        auto pte = ensurePTE(process.m_pageDirectory, laddr);
         pte.setPhysicalPageBase(0);
         pte.setPresent(false);
         pte.setWritable(false);
@@ -314,14 +314,14 @@ bool MemoryManager::unmapRegion(Task& task, Task::Region& region)
     return true;
 }
 
-bool MemoryManager::unmapSubregion(Task& task, Task::Subregion& subregion)
+bool MemoryManager::unmapSubregion(Process& process, Process::Subregion& subregion)
 {
     InterruptDisabler disabler;
     size_t numPages = subregion.size / 4096;
     ASSERT(numPages);
     for (size_t i = 0; i < numPages; ++i) {
         auto laddr = subregion.linearAddress.offset(i * PAGE_SIZE);
-        auto pte = ensurePTE(task.m_pageDirectory, laddr);
+        auto pte = ensurePTE(process.m_pageDirectory, laddr);
         pte.setPhysicalPageBase(0);
         pte.setPresent(false);
         pte.setWritable(false);
@@ -334,7 +334,7 @@ bool MemoryManager::unmapSubregion(Task& task, Task::Subregion& subregion)
     return true;
 }
 
-bool MemoryManager::mapSubregion(Task& task, Task::Subregion& subregion)
+bool MemoryManager::mapSubregion(Process& process, Process::Subregion& subregion)
 {
     InterruptDisabler disabler;
     auto& region = *subregion.region;
@@ -344,7 +344,7 @@ bool MemoryManager::mapSubregion(Task& task, Task::Subregion& subregion)
     ASSERT(numPages);
     for (size_t i = 0; i < numPages; ++i) {
         auto laddr = subregion.linearAddress.offset(i * PAGE_SIZE);
-        auto pte = ensurePTE(task.m_pageDirectory, laddr);
+        auto pte = ensurePTE(process.m_pageDirectory, laddr);
         pte.setPhysicalPageBase(zone.m_pages[firstPage + i].get());
         pte.setPresent(true);
         pte.setWritable(true);
@@ -357,17 +357,17 @@ bool MemoryManager::mapSubregion(Task& task, Task::Subregion& subregion)
     return true;
 }
 
-bool MemoryManager::mapRegion(Task& task, Task::Region& region)
+bool MemoryManager::mapRegion(Process& process, Process::Region& region)
 {
-    map_region_at_address(task.m_pageDirectory, region, region.linearAddress);
+    map_region_at_address(process.m_pageDirectory, region, region.linearAddress, true);
     return true;
 }
 
-bool MemoryManager::validate_user_read(const Task& task, LinearAddress laddr) const
+bool MemoryManager::validate_user_read(const Process& process, LinearAddress laddr) const
 {
     dword pageDirectoryIndex = (laddr.get() >> 22) & 0x3ff;
     dword pageTableIndex = (laddr.get() >> 12) & 0x3ff;
-    auto pde = PageDirectoryEntry(&task.m_pageDirectory[pageDirectoryIndex]);
+    auto pde = PageDirectoryEntry(&process.m_pageDirectory[pageDirectoryIndex]);
     if (!pde.isPresent())
         return false;
     auto pte = PageTableEntry(&pde.pageTableBase()[pageTableIndex]);
@@ -378,11 +378,11 @@ bool MemoryManager::validate_user_read(const Task& task, LinearAddress laddr) co
     return true;
 }
 
-bool MemoryManager::validate_user_write(const Task& task, LinearAddress laddr) const
+bool MemoryManager::validate_user_write(const Process& process, LinearAddress laddr) const
 {
     dword pageDirectoryIndex = (laddr.get() >> 22) & 0x3ff;
     dword pageTableIndex = (laddr.get() >> 12) & 0x3ff;
-    auto pde = PageDirectoryEntry(&task.m_pageDirectory[pageDirectoryIndex]);
+    auto pde = PageDirectoryEntry(&process.m_pageDirectory[pageDirectoryIndex]);
     if (!pde.isPresent())
         return false;
     auto pte = PageTableEntry(&pde.pageTableBase()[pageTableIndex]);
@@ -392,19 +392,5 @@ bool MemoryManager::validate_user_write(const Task& task, LinearAddress laddr) c
         return false;
     if (!pte.isWritable())
         return false;
-    return true;
-}
-
-bool MemoryManager::mapRegionsForTask(Task& task)
-{
-    ASSERT_INTERRUPTS_DISABLED();
-    for (auto& region : task.m_regions) {
-        if (!mapRegion(task, *region))
-            return false;
-    }
-    for (auto& subregion : task.m_subregions) {
-        if (!mapSubregion(task, *subregion))
-            return false;
-    }
     return true;
 }

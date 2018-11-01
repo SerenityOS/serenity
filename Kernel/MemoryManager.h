@@ -6,9 +6,9 @@
 #include <AK/RetainPtr.h>
 #include <AK/Vector.h>
 #include <AK/HashTable.h>
-#include "Task.h"
+#include "Process.h"
 
-class Task;
+class Process;
 
 enum class PageFaultResponse {
     ShouldCrash,
@@ -46,33 +46,32 @@ public:
 
     RetainPtr<Zone> createZone(size_t);
 
-    bool mapSubregion(Task&, Task::Subregion&);
-    bool unmapSubregion(Task&, Task::Subregion&);
+    bool mapSubregion(Process&, Process::Subregion&);
+    bool unmapSubregion(Process&, Process::Subregion&);
 
-    bool mapRegion(Task&, Task::Region&);
-    bool unmapRegion(Task&, Task::Region&);
-    bool mapRegionsForTask(Task&);
+    bool mapRegion(Process&, Process::Region&);
+    bool unmapRegion(Process&, Process::Region&);
 
     void registerZone(Zone&);
     void unregisterZone(Zone&);
 
-    void populate_page_directory(Task&);
+    void populate_page_directory(Process&);
 
-    byte* create_kernel_alias_for_region(Task::Region&);
-    void remove_kernel_alias_for_region(Task::Region&, byte*);
+    byte* create_kernel_alias_for_region(Process::Region&);
+    void remove_kernel_alias_for_region(Process::Region&, byte*);
 
     void enter_kernel_paging_scope();
-    void enter_task_paging_scope(Task&);
+    void enter_process_paging_scope(Process&);
 
-    bool validate_user_read(const Task&, LinearAddress) const;
-    bool validate_user_write(const Task&, LinearAddress) const;
+    bool validate_user_read(const Process&, LinearAddress) const;
+    bool validate_user_write(const Process&, LinearAddress) const;
 
 private:
     MemoryManager();
     ~MemoryManager();
 
     LinearAddress allocate_linear_address_range(size_t);
-    void map_region_at_address(dword* page_directory, Task::Region&, LinearAddress);
+    void map_region_at_address(dword* page_directory, Process::Region&, LinearAddress, bool user_accessible);
     void unmap_range(dword* page_directory, LinearAddress, size_t);
 
     void initializePaging();
@@ -179,10 +178,10 @@ private:
 
 struct KernelPagingScope {
     KernelPagingScope() { MM.enter_kernel_paging_scope(); }
-    ~KernelPagingScope() { MM.enter_task_paging_scope(*current); }
+    ~KernelPagingScope() { MM.enter_process_paging_scope(*current); }
 };
 
-struct OtherTaskPagingScope {
-    OtherTaskPagingScope(Task& task) { MM.enter_task_paging_scope(task); }
-    ~OtherTaskPagingScope() { MM.enter_task_paging_scope(*current); }
+struct OtherProcessPagingScope {
+    OtherProcessPagingScope(Process& process) { MM.enter_process_paging_scope(process); }
+    ~OtherProcessPagingScope() { MM.enter_process_paging_scope(*current); }
 };

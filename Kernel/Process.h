@@ -9,27 +9,19 @@
 #include <VirtualFileSystem/VirtualFileSystem.h>
 #include "TTY.h"
 
-//#define TASK_SANITY_CHECKS
-
 class FileHandle;
 class Zone;
 
-class Task : public InlineLinkedListNode<Task> {
-    friend class InlineLinkedListNode<Task>;
+class Process : public InlineLinkedListNode<Process> {
+    friend class InlineLinkedListNode<Process>;
     struct Region;
     struct Subregion;
 public:
-    static Task* createKernelTask(void (*entry)(), String&& name);
-    static Task* createUserTask(const String& path, uid_t, gid_t, pid_t parentPID, int& error, const char** args = nullptr, TTY* = nullptr);
-    ~Task();
+    static Process* createKernelProcess(void (*entry)(), String&& name);
+    static Process* createUserProcess(const String& path, uid_t, gid_t, pid_t parentPID, int& error, const char** args = nullptr, TTY* = nullptr);
+    ~Process();
 
-    static Vector<Task*> allTasks();
-
-#ifdef TASK_SANITY_CHECKS
-    static void checkSanity(const char* msg = nullptr);
-#else
-    static void checkSanity(const char*) { }
-#endif
+    static Vector<Process*> allProcesses();
 
     enum State {
         Invalid = 0,
@@ -51,8 +43,8 @@ public:
     bool isRing0() const { return m_ring == Ring0; }
     bool isRing3() const { return m_ring == Ring3; }
 
-    static Task* fromPID(pid_t);
-    static Task* kernelTask();
+    static Process* fromPID(pid_t);
+    static Process* kernelProcess();
 
     const String& name() const { return m_name; }
     pid_t pid() const { return m_pid; }
@@ -71,13 +63,13 @@ public:
 
     static void doHouseKeeping();
 
-    void block(Task::State);
+    void block(Process::State);
     void unblock();
 
     void setWakeupTime(DWORD t) { m_wakeupTime = t; }
     DWORD wakeupTime() const { return m_wakeupTime; }
 
-    static void prepForIRETToNewTask();
+    static void prepForIRETToNewProcess();
 
     bool tick() { ++m_ticks; return --m_ticksLeft; }
     void setTicksLeft(DWORD t) { m_ticksLeft = t; }
@@ -117,7 +109,7 @@ public:
 
     static void initialize();
 
-    static void taskDidCrash(Task*);
+    static void processDidCrash(Process*);
 
     const TTY* tty() const { return m_tty; }
 
@@ -147,16 +139,16 @@ public:
 
 private:
     friend class MemoryManager;
-    friend bool scheduleNewTask();
+    friend bool scheduleNewProcess();
 
-    Task(String&& name, uid_t, gid_t, pid_t parentPID, RingLevel, RetainPtr<VirtualFileSystem::Node>&& cwd = nullptr, RetainPtr<VirtualFileSystem::Node>&& executable = nullptr, TTY* = nullptr);
+    Process(String&& name, uid_t, gid_t, pid_t parentPID, RingLevel, RetainPtr<VirtualFileSystem::Node>&& cwd = nullptr, RetainPtr<VirtualFileSystem::Node>&& executable = nullptr, TTY* = nullptr);
 
     void allocateLDT();
 
     dword* m_pageDirectory { nullptr };
 
-    Task* m_prev { nullptr };
-    Task* m_next { nullptr };
+    Process* m_prev { nullptr };
+    Process* m_next { nullptr };
 
     String m_name;
     void (*m_entry)() { nullptr };
@@ -228,12 +220,10 @@ private:
     Vector<String> m_initialEnvironment;
 };
 
-extern void task_init();
 extern void yield();
-extern bool scheduleNewTask();
+extern bool scheduleNewProcess();
 extern void switchNow();
-extern void block(Task::State);
+extern void block(Process::State);
 extern void sleep(DWORD ticks);
 
-/* The currently executing task. NULL during kernel bootup. */
-extern Task* current;
+extern Process* current;

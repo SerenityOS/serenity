@@ -3,7 +3,7 @@
 #include <AK/Types.h>
 #include <VirtualFileSystem/SyntheticFileSystem.h>
 
-class Task;
+class Process;
 
 class ProcFileSystem final : public SyntheticFileSystem {
 public:
@@ -15,8 +15,8 @@ public:
     virtual bool initialize() override;
     virtual const char* className() const override;
 
-    void addProcess(Task&);
-    void removeProcess(Task&);
+    void addProcess(Process&);
+    void removeProcess(Process&);
 
 private:
     ProcFileSystem();
