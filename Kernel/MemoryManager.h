@@ -70,6 +70,9 @@ public:
     void enter_kernel_paging_scope();
     void enter_task_paging_scope(Task&);
 
+    bool validate_user_read(const Task&, LinearAddress) const;
+    bool validate_user_write(const Task&, LinearAddress) const;
+
 private:
     MemoryManager();
     ~MemoryManager();

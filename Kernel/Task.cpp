@@ -19,10 +19,19 @@
 //#define TASK_DEBUG
 //#define SCHEDULER_DEBUG
 
-#define VALIDATE_USER_BUFFER(b, s) \
+// FIXME: Only do a single validation for accesses that don't span multiple pages.
+// FIXME: Some places pass strlen(arg1) as arg2. This doesn't seem entirely perfect..
+#define VALIDATE_USER_READ(b, s) \
     do { \
         LinearAddress laddr((dword)(b)); \
-        if (!isValidAddressForUser(laddr) || !isValidAddressForUser(laddr.offset((s) - 1))) \
+        if (!validate_user_read(laddr) || !validate_user_read(laddr.offset((s) - 1))) \
+            return -EFAULT; \
+    } while(0)
+
+#define VALIDATE_USER_WRITE(b, s) \
+    do { \
+        LinearAddress laddr((dword)(b)); \
+        if (!validate_user_write(laddr) || !validate_user_write(laddr.offset((s) - 1))) \
             return -EFAULT; \
     } while(0)
 
@@ -172,7 +181,7 @@ Task::Region* Task::regionFromRange(LinearAddress laddr, size_t size)
 
 int Task::sys$set_mmap_name(void* addr, size_t size, const char* name)
 {
-    VALIDATE_USER_BUFFER(name, strlen(name));
+    VALIDATE_USER_READ(name, strlen(name));
     auto* region = regionFromRange(LinearAddress((dword)addr), size);
     if (!region)
         return -EINVAL;
@@ -205,7 +214,7 @@ int Task::sys$munmap(void* addr, size_t size)
 
 int Task::sys$gethostname(char* buffer, size_t size)
 {
-    VALIDATE_USER_BUFFER(buffer, size);
+    VALIDATE_USER_WRITE(buffer, size);
     auto hostname = getHostname();
     if (size < (hostname.length() + 1))
         return -ENAMETOOLONG;
@@ -217,7 +226,7 @@ int Task::sys$spawn(const char* path, const char** args)
 {
     if (args) {
         for (size_t i = 0; args[i]; ++i) {
-            VALIDATE_USER_BUFFER(args[i], strlen(args[i]));
+            VALIDATE_USER_READ(args[i], strlen(args[i]));
         }
     }
 
@@ -792,7 +801,7 @@ FileHandle* Task::fileHandleIfExists(int fd)
 
 ssize_t Task::sys$get_dir_entries(int fd, void* buffer, size_t size)
 {
-    VALIDATE_USER_BUFFER(buffer, size);
+    VALIDATE_USER_WRITE(buffer, size);
     auto* handle = fileHandleIfExists(fd);
     if (!handle)
         return -EBADF;
@@ -809,7 +818,7 @@ int Task::sys$lseek(int fd, off_t offset, int whence)
 
 int Task::sys$ttyname_r(int fd, char* buffer, size_t size)
 {
-    VALIDATE_USER_BUFFER(buffer, size);
+    VALIDATE_USER_WRITE(buffer, size);
     auto* handle = fileHandleIfExists(fd);
     if (!handle)
         return -EBADF;
@@ -824,7 +833,7 @@ int Task::sys$ttyname_r(int fd, char* buffer, size_t size)
 
 ssize_t Task::sys$write(int fd, const void* data, size_t size)
 {
-    VALIDATE_USER_BUFFER(data, size);
+    VALIDATE_USER_READ(data, size);
 #ifdef DEBUG_IO
     kprintf("Task::sys$write: called(%d, %p, %u)\n", fd, data, size);
 #endif
@@ -843,7 +852,7 @@ ssize_t Task::sys$write(int fd, const void* data, size_t size)
 
 ssize_t Task::sys$read(int fd, void* outbuf, size_t nread)
 {
-    VALIDATE_USER_BUFFER(outbuf, nread);
+    VALIDATE_USER_WRITE(outbuf, nread);
 #ifdef DEBUG_IO
     kprintf("Task::sys$read: called(%d, %p, %u)\n", fd, outbuf, nread);
 #endif
@@ -878,7 +887,7 @@ int Task::sys$close(int fd)
 
 int Task::sys$lstat(const char* path, Unix::stat* statbuf)
 {
-    VALIDATE_USER_BUFFER(statbuf, sizeof(Unix::stat));
+    VALIDATE_USER_WRITE(statbuf, sizeof(Unix::stat));
     int error;
     auto handle = VirtualFileSystem::the().open(move(path), error, O_NOFOLLOW_NOERROR, cwdInode());
     if (!handle)
@@ -889,7 +898,7 @@ int Task::sys$lstat(const char* path, Unix::stat* statbuf)
 
 int Task::sys$stat(const char* path, Unix::stat* statbuf)
 {
-    VALIDATE_USER_BUFFER(statbuf, sizeof(Unix::stat));
+    VALIDATE_USER_WRITE(statbuf, sizeof(Unix::stat));
     int error;
     auto handle = VirtualFileSystem::the().open(move(path), error, 0, cwdInode());
     if (!handle)
@@ -900,8 +909,8 @@ int Task::sys$stat(const char* path, Unix::stat* statbuf)
 
 int Task::sys$readlink(const char* path, char* buffer, size_t size)
 {
-    VALIDATE_USER_BUFFER(path, strlen(path));
-    VALIDATE_USER_BUFFER(buffer, size);
+    VALIDATE_USER_READ(path, strlen(path));
+    VALIDATE_USER_WRITE(buffer, size);
 
     int error;
     auto handle = VirtualFileSystem::the().open(path, error, O_RDONLY | O_NOFOLLOW_NOERROR, cwdInode());
@@ -923,7 +932,7 @@ int Task::sys$readlink(const char* path, char* buffer, size_t size)
 
 int Task::sys$chdir(const char* path)
 {
-    VALIDATE_USER_BUFFER(path, strlen(path));
+    VALIDATE_USER_READ(path, strlen(path));
     int error;
     auto handle = VirtualFileSystem::the().open(path, error, 0, cwdInode());
     if (!handle)
@@ -936,7 +945,7 @@ int Task::sys$chdir(const char* path)
 
 int Task::sys$getcwd(char* buffer, size_t size)
 {
-    VALIDATE_USER_BUFFER(buffer, size);
+    VALIDATE_USER_WRITE(buffer, size);
     auto path = VirtualFileSystem::the().absolutePath(cwdInode());
     if (path.isNull())
         return -EINVAL;
@@ -951,7 +960,7 @@ int Task::sys$open(const char* path, int options)
 #ifdef DEBUG_IO
     kprintf("Task::sys$open(): PID=%u, path=%s {%u}\n", m_pid, path, pathLength);
 #endif
-    VALIDATE_USER_BUFFER(path, strlen(path));
+    VALIDATE_USER_READ(path, strlen(path));
     if (m_fileHandles.size() >= m_maxFileHandles)
         return -EMFILE;
     int error;
@@ -969,7 +978,7 @@ int Task::sys$open(const char* path, int options)
 
 int Task::sys$uname(utsname* buf)
 {
-    VALIDATE_USER_BUFFER(buf, sizeof(utsname));
+    VALIDATE_USER_WRITE(buf, sizeof(utsname));
     strcpy(buf->sysname, "Serenity");
     strcpy(buf->release, "1.0-dev");
     strcpy(buf->version, "FIXME");
@@ -1013,7 +1022,7 @@ int Task::sys$sleep(unsigned seconds)
 
 int Task::sys$gettimeofday(timeval* tv)
 {
-    VALIDATE_USER_BUFFER(tv, sizeof(tv));
+    VALIDATE_USER_WRITE(tv, sizeof(tv));
     InterruptDisabler disabler;
     auto now = RTC::now();
     tv->tv_sec = now;
@@ -1039,7 +1048,7 @@ pid_t Task::sys$getpid()
 pid_t Task::sys$waitpid(pid_t waitee, int* wstatus, int options)
 {
     if (wstatus)
-        VALIDATE_USER_BUFFER(wstatus, sizeof(int));
+        VALIDATE_USER_WRITE(wstatus, sizeof(int));
 
     InterruptDisabler disabler;
     if (!Task::fromPID(waitee))
@@ -1115,24 +1124,25 @@ Task::Subregion::~Subregion()
 
 bool Task::isValidAddressForKernel(LinearAddress laddr) const
 {
+    // We check extra carefully here since the first 4MB of the address space is identity-mapped.
+    // This code allows access outside of the known used address ranges to get caught.
+
     InterruptDisabler disabler;
     if (laddr.get() >= ksyms().first().address && laddr.get() <= ksyms().last().address)
         return true;
     if (is_kmalloc_address((void*)laddr.get()))
         return true;
-    return isValidAddressForUser(laddr);
+    return validate_user_read(laddr);
 }
 
-bool Task::isValidAddressForUser(LinearAddress laddr) const
+bool Task::validate_user_read(LinearAddress laddr) const
 {
     InterruptDisabler disabler;
-    for (auto& region: m_regions) {
-        if (laddr >= region->linearAddress && laddr < region->linearAddress.offset(region->size))
-            return true;
-    }
-    for (auto& subregion: m_subregions) {
-        if (laddr >= subregion->linearAddress && laddr < subregion->linearAddress.offset(subregion->size))
-            return true;
-    }
-    return false;
+    return MM.validate_user_read(*this, laddr);
+}
+
+bool Task::validate_user_write(LinearAddress laddr) const
+{
+    InterruptDisabler disabler;
+    return MM.validate_user_write(*this, laddr);
 }

@@ -139,7 +139,8 @@ public:
     dword stackTop() const { return m_tss.ss == 0x10 ? m_stackTop0 : m_stackTop3; }
 
     bool isValidAddressForKernel(LinearAddress) const;
-    bool isValidAddressForUser(LinearAddress) const;
+    bool validate_user_read(LinearAddress) const;
+    bool validate_user_write(LinearAddress) const;
 
     InodeIdentifier cwdInode() const { return m_cwd ? m_cwd->inode : InodeIdentifier(); }
     InodeIdentifier executableInode() const { return m_executable ? m_executable->inode : InodeIdentifier(); }
