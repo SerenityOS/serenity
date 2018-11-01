@@ -66,7 +66,8 @@ void unregisterIRQHandler(BYTE number, IRQHandler&);
 void flushIDT();
 void flushGDT();
 void loadTaskRegister(WORD selector);
-WORD allocateGDTEntry();
+word gdt_alloc_entry();
+void gdt_free_entry(word);
 Descriptor& getGDTEntry(WORD selector);
 void writeGDTEntry(WORD selector, Descriptor&);
 

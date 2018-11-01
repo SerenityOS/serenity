@@ -167,6 +167,7 @@ private:
     State m_state { Invalid };
     DWORD m_wakeupTime { 0 };
     TSS32 m_tss;
+    word m_ldt_selector { 0 };
     Descriptor* m_ldtEntries { nullptr };
     Vector<OwnPtr<FileHandle>> m_file_descriptors;
     RingLevel m_ring { Ring0 };
