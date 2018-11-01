@@ -136,6 +136,9 @@ public:
     InodeIdentifier executableInode() const { return m_executable ? m_executable->inode : InodeIdentifier(); }
 
     size_t number_of_open_file_descriptors() const;
+    size_t max_open_file_descriptors() const { return m_max_open_file_descriptors; }
+    FileHandle* file_descriptor(size_t i) { return m_file_descriptors[i].ptr(); }
+    const FileHandle* file_descriptor(size_t i) const { return m_file_descriptors[i].ptr(); }
 
 private:
     friend class MemoryManager;
