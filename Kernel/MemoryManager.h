@@ -25,13 +25,10 @@ public:
 
 private:
     friend class MemoryManager;
-    friend bool copyToZone(Zone&, const void* data, size_t);
     explicit Zone(Vector<PhysicalAddress>&&);
 
     Vector<PhysicalAddress> m_pages;
 };
-
-bool copyToZone(Zone&, const void* data, size_t);
 
 #define MM MemoryManager::the()
 
@@ -48,9 +45,6 @@ public:
     PageFaultResponse handlePageFault(const PageFault&);
 
     RetainPtr<Zone> createZone(size_t);
-
-    // HACK: don't use this jeez :(
-    byte* quickMapOnePage(PhysicalAddress);
 
     bool mapSubregion(Task&, Task::Subregion&);
     bool unmapSubregion(Task&, Task::Subregion&);
