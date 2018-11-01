@@ -5,6 +5,7 @@
 #include "UnixTypes.h"
 #include "TTY.h"
 #include <AK/BufferStream.h>
+#include <Kernel/Task.h>
 
 FileHandle::FileHandle(RetainPtr<VirtualFileSystem::Node>&& vnode)
     : m_vnode(move(vnode))

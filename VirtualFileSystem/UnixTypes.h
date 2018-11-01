@@ -8,6 +8,11 @@ namespace Unix {
 #define SEEK_CUR 1
 #define SEEK_END 2
 
+#define SIGINT 2
+#define SIGKILL 9
+#define SIGSEGV 11
+#define SIGTERM 15
+
 typedef dword dev_t;
 typedef dword ino_t;
 typedef dword mode_t;

@@ -218,7 +218,8 @@ private:
 
     pid_t m_parentPID { 0 };
 
-    void murder();
+    static void notify_waiters(pid_t waitee, int exit_status, int signal);
+    void murder(int signal);
 
     Vector<String> m_arguments;
     Vector<String> m_initialEnvironment;
