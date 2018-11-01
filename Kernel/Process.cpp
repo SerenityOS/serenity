@@ -132,7 +132,7 @@ Vector<Process*> Process::allProcesses()
     return processes;
 }
 
-Process::Region* Process::allocateRegion(size_t size, String&& name)
+Region* Process::allocateRegion(size_t size, String&& name)
 {
     // FIXME: This needs sanity checks. What if this overlaps existing regions?
 
@@ -157,7 +157,7 @@ bool Process::deallocateRegion(Region& region)
     return false;
 }
 
-Process::Region* Process::regionFromRange(LinearAddress laddr, size_t size)
+Region* Process::regionFromRange(LinearAddress laddr, size_t size)
 {
     for (auto& region : m_regions) {
         if (region->linearAddress == laddr && region->size == size)
@@ -1084,7 +1084,7 @@ Process* Process::kernelProcess()
     return s_kernelProcess;
 }
 
-Process::Region::Region(LinearAddress a, size_t s, RetainPtr<Zone>&& z, String&& n)
+Region::Region(LinearAddress a, size_t s, RetainPtr<Zone>&& z, String&& n)
     : linearAddress(a)
     , size(s)
     , zone(move(z))
@@ -1092,11 +1092,11 @@ Process::Region::Region(LinearAddress a, size_t s, RetainPtr<Zone>&& z, String&&
 {
 }
 
-Process::Region::~Region()
+Region::~Region()
 {
 }
 
-Process::Subregion::Subregion(Region& r, dword o, size_t s, LinearAddress l, String&& n)\
+Subregion::Subregion(Region& r, dword o, size_t s, LinearAddress l, String&& n)\
     : region(r)
     , offset(o)
     , size(s)
@@ -1105,8 +1105,7 @@ Process::Subregion::Subregion(Region& r, dword o, size_t s, LinearAddress l, Str
 {
 }
 
-
-Process::Subregion::~Subregion()
+Subregion::~Subregion()
 {
 }
 

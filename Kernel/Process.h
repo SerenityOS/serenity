@@ -10,12 +10,12 @@
 #include "TTY.h"
 
 class FileHandle;
+class Region;
+class Subregion;
 class Zone;
 
 class Process : public InlineLinkedListNode<Process> {
     friend class InlineLinkedListNode<Process>;
-    struct Region;
-    struct Subregion;
 public:
     static Process* createKernelProcess(void (*entry)(), String&& name);
     static Process* createUserProcess(const String& path, uid_t, gid_t, pid_t parentPID, int& error, const char** args = nullptr, TTY* = nullptr);
@@ -178,26 +178,6 @@ private:
     RetainPtr<VirtualFileSystem::Node> m_executable;
 
     TTY* m_tty { nullptr };
-
-    struct Region : public Retainable<Region> {
-        Region(LinearAddress, size_t, RetainPtr<Zone>&&, String&&);
-        ~Region();
-        LinearAddress linearAddress;
-        size_t size { 0 };
-        RetainPtr<Zone> zone;
-        String name;
-    };
-
-    struct Subregion {
-        Subregion(Region&, dword offset, size_t, LinearAddress, String&& name);
-        ~Subregion();
-
-        RetainPtr<Region> region;
-        dword offset;
-        size_t size { 0 };
-        LinearAddress linearAddress;
-        String name;
-    };
 
     Region* allocateRegion(size_t, String&& name);
     Region* allocateRegion(size_t, String&& name, LinearAddress);

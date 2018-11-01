@@ -2,13 +2,15 @@
 
 #include "types.h"
 #include "i386.h"
+#include <AK/ByteBuffer.h>
 #include <AK/Retainable.h>
 #include <AK/RetainPtr.h>
 #include <AK/Vector.h>
 #include <AK/HashTable.h>
-#include "Process.h"
+#include <AK/String.h>
 
 class Process;
+extern Process* current;
 
 enum class PageFaultResponse {
     ShouldCrash,
@@ -30,6 +32,26 @@ private:
     Vector<PhysicalAddress> m_pages;
 };
 
+struct Region : public Retainable<Region> {
+    Region(LinearAddress, size_t, RetainPtr<Zone>&&, String&&);
+    ~Region();
+    LinearAddress linearAddress;
+    size_t size { 0 };
+    RetainPtr<Zone> zone;
+    String name;
+};
+
+struct Subregion {
+    Subregion(Region&, dword offset, size_t, LinearAddress, String&& name);
+    ~Subregion();
+
+    RetainPtr<Region> region;
+    dword offset;
+    size_t size { 0 };
+    LinearAddress linearAddress;
+    String name;
+};
+
 #define MM MemoryManager::the()
 
 class MemoryManager {
@@ -46,19 +68,19 @@ public:
 
     RetainPtr<Zone> createZone(size_t);
 
-    bool mapSubregion(Process&, Process::Subregion&);
-    bool unmapSubregion(Process&, Process::Subregion&);
+    bool mapSubregion(Process&, Subregion&);
+    bool unmapSubregion(Process&, Subregion&);
 
-    bool mapRegion(Process&, Process::Region&);
-    bool unmapRegion(Process&, Process::Region&);
+    bool mapRegion(Process&, Region&);
+    bool unmapRegion(Process&, Region&);
 
     void registerZone(Zone&);
     void unregisterZone(Zone&);
 
     void populate_page_directory(Process&);
 
-    byte* create_kernel_alias_for_region(Process::Region&);
-    void remove_kernel_alias_for_region(Process::Region&, byte*);
+    byte* create_kernel_alias_for_region(Region&);
+    void remove_kernel_alias_for_region(Region&, byte*);
 
     void enter_kernel_paging_scope();
     void enter_process_paging_scope(Process&);
@@ -71,7 +93,7 @@ private:
     ~MemoryManager();
 
     LinearAddress allocate_linear_address_range(size_t);
-    void map_region_at_address(dword* page_directory, Process::Region&, LinearAddress, bool user_accessible);
+    void map_region_at_address(dword* page_directory, Region&, LinearAddress, bool user_accessible);
     void unmap_range(dword* page_directory, LinearAddress, size_t);
 
     void initializePaging();
