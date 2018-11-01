@@ -30,9 +30,10 @@ public:
         Terminated = 3,
         Crashing = 4,
         Exiting = 5,
-        BlockedSleep = 6,
-        BlockedWait = 7,
-        BlockedRead = 8,
+        BeingInspected = 6,
+        BlockedSleep = 7,
+        BlockedWait = 8,
+        BlockedRead = 9,
     };
 
     enum RingLevel {
@@ -75,7 +76,7 @@ public:
     void setTicksLeft(DWORD t) { m_ticksLeft = t; }
 
     void setSelector(WORD s) { m_farPtr.selector = s; }
-    void setState(State s) { m_state = s; }
+    void set_state(State s) { m_state = s; }
 
     uid_t sys$getuid();
     gid_t sys$getgid();
@@ -201,6 +202,24 @@ private:
 
     Vector<String> m_arguments;
     Vector<String> m_initialEnvironment;
+};
+
+class ProcessInspectionScope {
+public:
+    ProcessInspectionScope(Process& process)
+        : m_process(process)
+        , m_original_state(process.state())
+    {
+        m_process.set_state(Process::BeingInspected);
+    }
+
+    ~ProcessInspectionScope()
+    {
+        m_process.set_state(m_original_state);
+    }
+private:
+    Process& m_process;
+    Process::State m_original_state { Process::Invalid };
 };
 
 extern void yield();

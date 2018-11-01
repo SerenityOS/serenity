@@ -533,7 +533,7 @@ void Process::sys$exit(int status)
     kprintf("sys$exit: %s(%u) exit with status %d\n", name().characters(), pid(), status);
 #endif
 
-    setState(Exiting);
+    set_state(Exiting);
 
     s_processes->remove(this);
 
@@ -553,7 +553,7 @@ void Process::murder(int signal)
 {
     ASSERT_INTERRUPTS_DISABLED();
     bool wasCurrent = current == this;
-    setState(Exiting);
+    set_state(Exiting);
     s_processes->remove(this);
 
     notify_waiters(m_pid, 0, signal);
@@ -579,7 +579,7 @@ void Process::processDidCrash(Process* crashedProcess)
         HANG;
     }
 
-    crashedProcess->setState(Crashing);
+    crashedProcess->set_state(Crashing);
     crashedProcess->dumpRegions();
 
     s_processes->remove(crashedProcess);
@@ -741,11 +741,11 @@ static bool contextSwitch(Process* t)
         // If the last process hasn't blocked (still marked as running),
         // mark it as runnable for the next round.
         if (current->state() == Process::Running)
-            current->setState(Process::Runnable);
+            current->set_state(Process::Runnable);
     }
 
     current = t;
-    t->setState(Process::Running);
+    t->set_state(Process::Running);
 
     if (!t->selector()) {
         t->setSelector(allocateGDTEntry());
@@ -1074,7 +1074,7 @@ void Process::block(Process::State state)
 {
     ASSERT(current->state() == Process::Running);
     system.nblocked++;
-    current->setState(state);
+    current->set_state(state);
 }
 
 void block(Process::State state)

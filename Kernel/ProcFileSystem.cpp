@@ -27,8 +27,9 @@ ProcFileSystem::~ProcFileSystem()
 {
 }
 
-ByteBuffer procfs$pid_fds(const Process& process)
+ByteBuffer procfs$pid_fds(Process& process)
 {
+    ProcessInspectionScope scope(process);
     char* buffer;
     auto stringImpl = StringImpl::createUninitialized(process.number_of_open_file_descriptors() * 80, buffer);
     memset(buffer, 0, stringImpl->length());
@@ -43,9 +44,9 @@ ByteBuffer procfs$pid_fds(const Process& process)
     return ByteBuffer::copy((byte*)buffer, ptr - buffer);
 }
 
-ByteBuffer procfs$pid_vm(const Process& process)
+ByteBuffer procfs$pid_vm(Process& process)
 {
-    InterruptDisabler disabler;
+    ProcessInspectionScope scope(process);
     char* buffer;
     auto stringImpl = StringImpl::createUninitialized(80 + process.regionCount() * 80 + 80 + process.subregionCount() * 80, buffer);
     memset(buffer, 0, stringImpl->length());
@@ -76,7 +77,7 @@ ByteBuffer procfs$pid_vm(const Process& process)
 
 ByteBuffer procfs$pid_stack(Process& process)
 {
-    InterruptDisabler disabler;
+    ProcessInspectionScope scope(process);
     OtherProcessPagingScope pagingScope(process);
     struct RecognizedSymbol {
         dword address;
@@ -108,11 +109,8 @@ ByteBuffer procfs$pid_stack(Process& process)
 
 ByteBuffer procfs$pid_exe(Process& process)
 {
-    InodeIdentifier inode;
-    {
-        InterruptDisabler disabler;
-        inode = process.executableInode();
-    }
+    ProcessInspectionScope scope(process);
+    auto inode = process.executableInode();
     return VirtualFileSystem::the().absolutePath(inode).toByteBuffer();
 }
 
@@ -201,6 +199,7 @@ static const char* toString(Process::State state)
     case Process::BlockedSleep: return "Sleep";
     case Process::BlockedWait: return "Wait";
     case Process::BlockedRead: return "Read";
+    case Process::BeingInspected: return "Inspect";
     }
     ASSERT_NOT_REACHED();
     return nullptr;
