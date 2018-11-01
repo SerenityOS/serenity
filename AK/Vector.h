@@ -172,6 +172,17 @@ public:
         m_impl = newImpl;
     }
 
+    void resize(size_t new_size)
+    {
+        ASSERT(new_size >= size());
+        if (!new_size)
+            return;
+        ensureCapacity(new_size);
+        for (size_t i = size(); i < new_size; ++i)
+            new (m_impl->slot(i)) T;
+        m_impl->m_size = new_size;
+    }
+
     class Iterator {
     public:
         bool operator!=(const Iterator& other) { return m_index != other.m_index; }

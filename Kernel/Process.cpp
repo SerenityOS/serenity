@@ -409,14 +409,12 @@ Process::Process(String&& name, uid_t uid, gid_t gid, pid_t parentPID, RingLevel
     m_pageDirectory = (dword*)kmalloc_page_aligned(4096);
     MM.populate_page_directory(*this);
 
+    m_file_descriptors.resize(m_max_open_file_descriptors);
+
     if (tty) {
-        m_fileHandles.append(tty->open(O_RDONLY)); // stdin
-        m_fileHandles.append(tty->open(O_WRONLY)); // stdout
-        m_fileHandles.append(tty->open(O_WRONLY)); // stderr
-    } else {
-        m_fileHandles.append(nullptr); // stdin
-        m_fileHandles.append(nullptr); // stdout
-        m_fileHandles.append(nullptr); // stderr
+        m_file_descriptors[0] = tty->open(O_RDONLY);
+        m_file_descriptors[1] = tty->open(O_WRONLY);
+        m_file_descriptors[2] = tty->open(O_WRONLY);
     }
 
     m_nextRegion = LinearAddress(0x10000000);
@@ -667,7 +665,7 @@ bool scheduleNewProcess()
 
         if (process->state() == Process::BlockedRead) {
             ASSERT(process->m_fdBlockedOnRead != -1);
-            if (process->m_fileHandles[process->m_fdBlockedOnRead]->hasDataAvailableForRead()) {
+            if (process->m_file_descriptors[process->m_fdBlockedOnRead]->hasDataAvailableForRead()) {
                 process->unblock();
                 continue;
             }
@@ -782,8 +780,8 @@ FileHandle* Process::fileHandleIfExists(int fd)
 {
     if (fd < 0)
         return nullptr;
-    if ((unsigned)fd < m_fileHandles.size())
-        return m_fileHandles[fd].ptr();
+    if ((unsigned)fd < m_file_descriptors.size())
+        return m_file_descriptors[fd].ptr();
     return nullptr;
 }
 
@@ -943,13 +941,23 @@ int Process::sys$getcwd(char* buffer, size_t size)
     return -ENOTIMPL;
 }
 
+size_t Process::number_of_open_file_descriptors() const
+{
+    size_t count = 0;
+    for (auto& handle : m_file_descriptors) {
+        if (handle)
+            ++count;
+    }
+    return count;
+}
+
 int Process::sys$open(const char* path, int options)
 {
 #ifdef DEBUG_IO
     kprintf("Process::sys$open(): PID=%u, path=%s {%u}\n", m_pid, path, pathLength);
 #endif
     VALIDATE_USER_READ(path, strlen(path));
-    if (m_fileHandles.size() >= m_maxFileHandles)
+    if (number_of_open_file_descriptors() >= m_max_open_file_descriptors)
         return -EMFILE;
     int error;
     auto handle = VirtualFileSystem::the().open(path, error, options, cwdInode());
@@ -958,9 +966,9 @@ int Process::sys$open(const char* path, int options)
     if (options & O_DIRECTORY && !handle->isDirectory())
         return -ENOTDIR; // FIXME: This should be handled by VFS::open.
 
-    int fd = m_fileHandles.size();
+    int fd = m_file_descriptors.size();
     handle->setFD(fd);
-    m_fileHandles.append(move(handle));
+    m_file_descriptors.append(move(handle));
     return fd;
 }
 

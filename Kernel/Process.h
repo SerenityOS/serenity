@@ -124,8 +124,6 @@ public:
 
     pid_t waitee() const { return m_waitee; }
 
-    size_t fileHandleCount() const { return m_fileHandles.size(); }
-
     dword framePtr() const { return m_tss.ebp; }
     dword stackPtr() const { return m_tss.esp; }
     dword stackTop() const { return m_tss.ss == 0x10 ? m_stackTop0 : m_stackTop3; }
@@ -136,6 +134,8 @@ public:
 
     InodeIdentifier cwdInode() const { return m_cwd ? m_cwd->inode : InodeIdentifier(); }
     InodeIdentifier executableInode() const { return m_executable ? m_executable->inode : InodeIdentifier(); }
+
+    size_t number_of_open_file_descriptors() const;
 
 private:
     friend class MemoryManager;
@@ -164,7 +164,7 @@ private:
     DWORD m_wakeupTime { 0 };
     TSS32 m_tss;
     Descriptor* m_ldtEntries { nullptr };
-    Vector<OwnPtr<FileHandle>> m_fileHandles;
+    Vector<OwnPtr<FileHandle>> m_file_descriptors;
     RingLevel m_ring { Ring0 };
     int m_error { 0 };
     void* m_kernelStack { nullptr };
@@ -172,7 +172,7 @@ private:
     pid_t m_waitee { -1 };
     int m_waiteeStatus { 0 };
     int m_fdBlockedOnRead { -1 };
-    size_t m_maxFileHandles { 16 };
+    size_t m_max_open_file_descriptors { 16 };
 
     RetainPtr<VirtualFileSystem::Node> m_cwd;
     RetainPtr<VirtualFileSystem::Node> m_executable;
