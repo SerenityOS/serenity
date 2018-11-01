@@ -207,18 +207,6 @@ Vector<PhysicalAddress> MemoryManager::allocatePhysicalPages(size_t count)
     return pages;
 }
 
-byte* MemoryManager::quickMapOnePage(PhysicalAddress physicalAddress)
-{
-    ASSERT_INTERRUPTS_DISABLED();
-    auto pte = ensurePTE(m_kernel_page_directory, LinearAddress(4 * MB));
-    kprintf("MM: quickmap %x @ %x {pte @ %p}\n", physicalAddress.get(), 4*MB, pte.ptr());
-    pte.setPhysicalPageBase(physicalAddress.pageBase());
-    pte.setPresent(true);
-    pte.setWritable(true);
-    flushTLB(LinearAddress(4 * MB));
-    return (byte*)(4 * MB);
-}
-
 void MemoryManager::enter_kernel_paging_scope()
 {
     InterruptDisabler disabler;
@@ -418,26 +406,5 @@ bool MemoryManager::mapRegionsForTask(Task& task)
         if (!mapSubregion(task, *subregion))
             return false;
     }
-    return true;
-}
-
-bool copyToZone(Zone& zone, const void* data, size_t size)
-{
-    if (zone.size() < size) {
-        kprintf("MM: copyToZone: can't fit %u bytes into zone with size %u\n", size, zone.size());
-        return false;
-    }
-
-    InterruptDisabler disabler;
-    auto* dataptr = (const byte*)data;
-    size_t remaining = size;
-    for (size_t i = 0; i < zone.m_pages.size(); ++i) {
-        byte* dest = MM.quickMapOnePage(zone.m_pages[i]);
-        kprintf("memcpy(%p, %p, %u)\n", dest, dataptr, min(PAGE_SIZE, remaining));
-        memcpy(dest, dataptr, min(PAGE_SIZE, remaining));
-        dataptr += PAGE_SIZE;
-        remaining -= PAGE_SIZE;
-    }
-
     return true;
 }
