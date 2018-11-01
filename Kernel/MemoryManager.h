@@ -41,7 +41,7 @@ class MemoryManager {
 public:
     static MemoryManager& the() PURE;
 
-    PhysicalAddress pageDirectoryBase() const { return PhysicalAddress(reinterpret_cast<dword>(m_pageDirectory)); }
+    PhysicalAddress pageDirectoryBase() const { return PhysicalAddress(reinterpret_cast<dword>(m_kernel_page_directory)); }
 
     static void initialize();
 
@@ -65,11 +65,21 @@ public:
     void registerZone(Zone&);
     void unregisterZone(Zone&);
 
-    void populatePageDirectory(Task&);
+    void populate_page_directory(Task&);
+
+    byte* create_kernel_alias_for_region(Task::Region&);
+    void remove_kernel_alias_for_region(Task::Region&, byte*);
+
+    void enter_kernel_paging_scope();
+    void enter_task_paging_scope(Task&);
 
 private:
     MemoryManager();
     ~MemoryManager();
+
+    LinearAddress allocate_linear_address_range(size_t);
+    void map_region_at_address(dword* page_directory, Task::Region&, LinearAddress);
+    void unmap_range(dword* page_directory, LinearAddress, size_t);
 
     void initializePaging();
     void flushEntireTLB();
@@ -162,9 +172,11 @@ private:
 
     PageTableEntry ensurePTE(dword* pageDirectory, LinearAddress);
 
-    dword* m_pageDirectory;
+    dword* m_kernel_page_directory;
     dword* m_pageTableZero;
     dword* m_pageTableOne;
+
+    LinearAddress m_next_laddr;
 
     HashTable<Zone*> m_zones;
 

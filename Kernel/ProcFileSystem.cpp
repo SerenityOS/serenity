@@ -61,6 +61,7 @@ ByteBuffer procfs$pid_vm(const Task& task)
 ByteBuffer procfs$pid_stack(Task& task)
 {
     InterruptDisabler disabler;
+    ASSERT(false);
     if (current != &task) {
         MM.unmapRegionsForTask(*current);
         MM.mapRegionsForTask(task);
