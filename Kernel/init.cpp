@@ -101,6 +101,25 @@ static void undertaker_main()
     }
 }
 
+static void spawn_stress() NORETURN;
+static void spawn_stress()
+{
+    dword lastAlloc = sum_alloc;
+
+    for (unsigned i = 0; i < 100; ++i) {
+        int error;
+        Process::createUserProcess("/bin/id", (uid_t)100, (gid_t)100, (pid_t)0, error, nullptr, tty0);
+        kprintf("malloc stats: alloc:%u free:%u\n", sum_alloc, sum_free);
+        kprintf("delta:%u\n", sum_alloc - lastAlloc);
+        lastAlloc = sum_alloc;
+        sleep(600);
+    }
+    for (;;) {
+        asm volatile("hlt");
+    }
+}
+
+
 static void init_stage2() NORETURN;
 static void init_stage2()
 {
@@ -173,26 +192,16 @@ static void init_stage2()
     }
 #endif
 
-#ifdef STRESS_TEST_SPAWNING
-    dword lastAlloc = sum_alloc;
-
-    for (unsigned i = 0; i < 100; ++i) {
-        int error;
-        auto* shProcess = Process::createUserProcess("/bin/id", (uid_t)100, (gid_t)100, (pid_t)0, error);
-        kprintf("malloc stats: alloc:%u free:%u\n", sum_alloc, sum_free);
-        kprintf("sizeof(Process):%u\n", sizeof(Process));
-        kprintf("delta:%u\n",sum_alloc - lastAlloc);
-        lastAlloc = sum_alloc;
-        sleep(600);
-    }
-#endif
-
     int error;
     auto* sh0 = Process::createUserProcess("/bin/sh", (uid_t)100, (gid_t)100, (pid_t)0, error, nullptr, tty0);
 #ifdef SPAWN_MULTIPLE_SHELLS
     auto* sh1 = Process::createUserProcess("/bin/sh", (uid_t)100, (gid_t)100, (pid_t)0, error, nullptr, tty1);
     auto* sh2 = Process::createUserProcess("/bin/sh", (uid_t)100, (gid_t)100, (pid_t)0, error, nullptr, tty2);
     auto* sh3 = Process::createUserProcess("/bin/sh", (uid_t)100, (gid_t)100, (pid_t)0, error, nullptr, tty3);
+#endif
+
+#ifdef STRESS_TEST_SPAWNING
+    Process::createKernelProcess(spawn_stress, "spawn_stress");
 #endif
 
 #if 0

@@ -116,7 +116,7 @@ ByteBuffer procfs$pid_exe(Process& process)
 
 void ProcFileSystem::addProcess(Process& process)
 {
-    ASSERT_INTERRUPTS_DISABLED();
+    InterruptDisabler disabler;
     char buf[16];
     ksprintf(buf, "%d", process.pid());
     auto dir = addFile(createDirectory(buf));
@@ -130,7 +130,7 @@ void ProcFileSystem::addProcess(Process& process)
 
 void ProcFileSystem::removeProcess(Process& process)
 {
-    ASSERT_INTERRUPTS_DISABLED();
+    InterruptDisabler disabler;
     auto pid = process.pid();
     auto it = m_pid2inode.find(pid);
     ASSERT(it != m_pid2inode.end());
