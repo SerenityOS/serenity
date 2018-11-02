@@ -447,4 +447,3 @@ void handleIRQ()
         s_irqHandler[irq]->handleIRQ();
     PIC::eoi(irq);
 }
-
