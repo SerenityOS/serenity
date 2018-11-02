@@ -14,6 +14,7 @@ struct GlobalState {
     const char* ttyname_short { nullptr };
     char ttyname[32];
     char hostname[32];
+    pid_t sid;
 };
 static GlobalState* g;
 
@@ -171,6 +172,7 @@ static void greeting()
 int main(int, char**)
 {
     g = new GlobalState;
+    g->sid = setsid();
     int rc = gethostname(g->hostname, sizeof(g->hostname));
     if (rc < 0)
         perror("gethostname");

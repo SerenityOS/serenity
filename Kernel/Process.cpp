@@ -129,6 +129,16 @@ void Process::allocateLDT()
     m_tss.ldt = m_ldt_selector;
 }
 
+template<typename Callback>
+static void forEachProcess(Callback callback)
+{
+    ASSERT_INTERRUPTS_DISABLED();
+    for (auto* process = s_processes->head(); process; process = process->next()) {
+        if (!callback(*process))
+            break;
+    }
+}
+
 Vector<Process*> Process::allProcesses()
 {
     InterruptDisabler disabler;
@@ -406,6 +416,16 @@ Process::Process(String&& name, uid_t uid, gid_t gid, pid_t parentPID, RingLevel
     , m_tty(tty)
     , m_parentPID(parentPID)
 {
+    {
+        // FIXME: Use a ProcessHandle? Presumably we're executing *IN* the parent right now though..
+        InterruptDisabler disabler;
+        if (auto* parent = Process::fromPID(m_parentPID)) {
+            m_sid = parent->m_sid;
+            m_pgid = parent->m_pgid;
+        }
+
+    }
+
     m_page_directory = (PageDirectory*)kmalloc_page_aligned(sizeof(PageDirectory));
     MM.populate_page_directory(*this);
 
@@ -1151,4 +1171,81 @@ bool Process::validate_user_write(LinearAddress laddr) const
 {
     InterruptDisabler disabler;
     return MM.validate_user_write(*this, laddr);
+}
+
+pid_t Process::sys$getsid(pid_t pid)
+{
+    if (pid == 0)
+        return m_sid;
+    InterruptDisabler disabler;
+    auto* process = Process::fromPID(pid);
+    if (!process)
+        return -ESRCH;
+    if (m_sid != process->m_sid)
+        return -EPERM;
+    return process->m_sid;
+}
+
+pid_t Process::sys$setsid()
+{
+    InterruptDisabler disabler;
+    bool found_process_with_same_pgid_as_my_pid = false;
+    forEachProcess([&] (auto& process) {
+        if (process.pgid() == pid()) {
+            found_process_with_same_pgid_as_my_pid = true;
+            return false;
+        }
+        return true;
+    });
+    if (found_process_with_same_pgid_as_my_pid)
+        return -EPERM;
+    m_sid = m_pid;
+    m_pgid = m_pid;
+    return m_sid;
+}
+
+pid_t Process::sys$getpgid(pid_t pid)
+{
+    if (pid == 0)
+        return m_pgid;
+    InterruptDisabler disabler; // FIXME: Use a ProcessHandle
+    auto* process = Process::fromPID(pid);
+    if (!process)
+        return -ESRCH;
+    return process->m_pgid;
+}
+
+pid_t Process::sys$getpgrp()
+{
+    return m_pgid;
+}
+
+static pid_t get_sid_from_pgid(pid_t pgid)
+{
+    InterruptDisabler disabler;
+    auto* group_leader = Process::fromPID(pgid);
+    if (!group_leader)
+        return -1;
+    return group_leader->sid();
+}
+
+int Process::sys$setpgid(pid_t specified_pid, pid_t specified_pgid)
+{
+    InterruptDisabler disabler; // FIXME: Use a ProcessHandle
+    pid_t pid = specified_pid ? specified_pid : m_pid;
+    if (specified_pgid < 0)
+        return -EINVAL;
+    auto* process = Process::fromPID(pid);
+    if (!process)
+        return -ESRCH;
+    pid_t new_pgid = specified_pgid ? specified_pgid : process->m_pid;
+    pid_t current_sid = get_sid_from_pgid(process->m_pgid);
+    pid_t new_sid = get_sid_from_pgid(new_pgid);
+    if (current_sid != new_sid) {
+        // Can't move a process between sessions.
+        return -EPERM;
+    }
+    // FIXME: There are more EPERM conditions to check for here..
+    process->m_pgid = new_pgid;
+    return 0;
 }

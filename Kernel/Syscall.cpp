@@ -114,6 +114,16 @@ DWORD handle(DWORD function, DWORD arg1, DWORD arg2, DWORD arg3)
         return current->sys$readlink((const char*)arg1, (char*)arg2, (size_t)arg3);
     case Syscall::PosixTtynameR:
         return current->sys$ttyname_r((int)arg1, (char*)arg2, (size_t)arg3);
+    case Syscall::PosixSetsid:
+        return current->sys$setsid();
+    case Syscall::PosixGetsid:
+        return current->sys$getsid((pid_t)arg1);
+    case Syscall::PosixSetpgid:
+        return current->sys$setpgid((pid_t)arg1, (pid_t)arg2);
+    case Syscall::PosixGetpgid:
+        return current->sys$getpgid((pid_t)arg1);
+    case Syscall::PosixGetpgrp:
+        return current->sys$getpgrp();
     default:
         kprintf("<%u> int0x80: Unknown function %x requested {%x, %x, %x}\n", current->pid(), function, arg1, arg2, arg3);
         break;
