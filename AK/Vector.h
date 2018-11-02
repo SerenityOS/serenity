@@ -93,6 +93,15 @@ public:
         m_impl = nullptr;
     }
 
+    bool contains_slow(const T& value) const
+    {
+        for (size_t i = 0; i < size(); ++i) {
+            if (at(i) == value)
+                return true;
+        }
+        return false;
+    }
+
     bool isEmpty() const { return size() == 0; }
     size_t size() const { return m_impl ? m_impl->size() : 0; }
     size_t capacity() const { return m_impl ? m_impl->capacity() : 0; }

@@ -108,10 +108,13 @@ private:
     void flushEntireTLB();
     void flushTLB(LinearAddress);
 
-    void* allocate_page_table();
+    PhysicalAddress allocate_page_table();
+    void deallocate_page_table(PhysicalAddress);
 
     void protectMap(LinearAddress, size_t length);
-    void identityMap(LinearAddress, size_t length);
+
+    void create_identity_mapping(LinearAddress, size_t length);
+    void remove_identity_mapping(LinearAddress, size_t);
 
     Vector<PhysicalAddress> allocatePhysicalPages(size_t count);
 

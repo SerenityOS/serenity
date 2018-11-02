@@ -7,6 +7,7 @@
 #include "Process.h"
 
 //#define MM_DEBUG
+#define SCRUB_DEALLOCATED_PAGE_TABLES
 
 static MemoryManager* s_the;
 
@@ -33,41 +34,51 @@ MemoryManager::~MemoryManager()
 void MemoryManager::populate_page_directory(Process& process)
 {
     memset(process.m_page_directory, 0, sizeof(PageDirectory));
-    process.m_page_directory[0] = m_kernel_page_directory[0];
-    process.m_page_directory[1] = m_kernel_page_directory[1];
+    process.m_page_directory->entries[0] = m_kernel_page_directory->entries[0];
+    process.m_page_directory->entries[1] = m_kernel_page_directory->entries[1];
 }
 
 void MemoryManager::release_page_directory(Process& process)
 {
     ASSERT_INTERRUPTS_DISABLED();
+#ifdef MM_DEBUG
+    dbgprintf("MM: release_page_directory for pid %d, PD K%x\n", process.pid(), process.m_page_directory);
+#endif
     for (size_t i = 0; i < 1024; ++i) {
-        auto paddr = process.m_page_directory->physical_addresses[i];
-        if (!paddr.is_null())
-            m_freePages.append(paddr);
+        auto page_table = process.m_page_directory->physical_addresses[i];
+        if (!page_table.is_null()) {
+#ifdef MM_DEBUG
+            dbgprintf("MM: deallocating process page table [%u] P%x @ %p\n", i, page_table.get(), &process.m_page_directory->physical_addresses[i]);
+#endif
+            deallocate_page_table(page_table);
+        }
     }
+#ifdef SCRUB_DEALLOCATED_PAGE_TABLES
+    memset(process.m_page_directory, 0xc9, sizeof(PageDirectory));
+#endif
 }
 
 void MemoryManager::initializePaging()
 {
     static_assert(sizeof(MemoryManager::PageDirectoryEntry) == 4);
     static_assert(sizeof(MemoryManager::PageTableEntry) == 4);
-    memset(m_pageTableZero, 0, 4096);
-    memset(m_pageTableOne, 0, 4096);
-    memset(m_kernel_page_directory, 0, 8192);
+    memset(m_pageTableZero, 0, PAGE_SIZE);
+    memset(m_pageTableOne, 0, PAGE_SIZE);
+    memset(m_kernel_page_directory, 0, sizeof(PageDirectory));
 
 #ifdef MM_DEBUG
     kprintf("MM: Kernel page directory @ %p\n", m_kernel_page_directory);
 #endif
 
     // Make null dereferences crash.
-    protectMap(LinearAddress(0), 4 * KB);
+    protectMap(LinearAddress(0), PAGE_SIZE);
 
-    // The bottom 4 MB are identity mapped & supervisor only. Every process shares this mapping.
-    identityMap(LinearAddress(4096), 4 * MB);
+    // The bottom 4 MB are identity mapped & supervisor only. Every process shares these mappings.
+    create_identity_mapping(LinearAddress(PAGE_SIZE), 4 * MB);
  
-    for (size_t i = (4 * MB) + PAGE_SIZE; i < (8 * MB); i += PAGE_SIZE) {
+    // The physical pages 4 MB through 8 MB are available for Zone allocation.
+    for (size_t i = (4 * MB) + PAGE_SIZE; i < (8 * MB); i += PAGE_SIZE)
         m_freePages.append(PhysicalAddress(i));
-    }
 
     asm volatile("movl %%eax, %%cr3"::"a"(m_kernel_page_directory));
     asm volatile(
@@ -77,13 +88,35 @@ void MemoryManager::initializePaging()
     );
 }
 
-void* MemoryManager::allocate_page_table()
+PhysicalAddress MemoryManager::allocate_page_table()
 {
     auto ppages = allocatePhysicalPages(1);
     dword address = ppages[0].get();
-    identityMap(LinearAddress(address), 4096);
-    memset((void*)address, 0, 4096);
-    return (void*)address;
+    create_identity_mapping(LinearAddress(address), PAGE_SIZE);
+    memset((void*)address, 0, PAGE_SIZE);
+    return PhysicalAddress(address);
+}
+
+void MemoryManager::deallocate_page_table(PhysicalAddress paddr)
+{
+    ASSERT(!m_freePages.contains_slow(paddr));
+    remove_identity_mapping(LinearAddress(paddr.get()), PAGE_SIZE);
+    m_freePages.append(paddr);
+}
+
+void MemoryManager::remove_identity_mapping(LinearAddress laddr, size_t size)
+{
+    InterruptDisabler disabler;
+    // FIXME: ASSERT(laddr is 4KB aligned);
+    for (dword offset = 0; offset < size; offset += PAGE_SIZE) {
+        auto pte_address = laddr.offset(offset);
+        auto pte = ensurePTE(m_kernel_page_directory, pte_address);
+        pte.setPhysicalPageBase(0);
+        pte.setUserAllowed(false);
+        pte.setPresent(true);
+        pte.setWritable(true);
+        flushTLB(pte_address);
+    }
 }
 
 auto MemoryManager::ensurePTE(PageDirectory* page_directory, LinearAddress laddr) -> PageTableEntry
@@ -98,22 +131,31 @@ auto MemoryManager::ensurePTE(PageDirectory* page_directory, LinearAddress laddr
         dbgprintf("MM: PDE %u not present, allocating\n", page_directory_index);
 #endif
         if (page_directory_index == 0) {
+            ASSERT(page_directory == m_kernel_page_directory);
             pde.setPageTableBase((dword)m_pageTableZero);
             pde.setUserAllowed(false);
             pde.setPresent(true);
             pde.setWritable(true);
         } else if (page_directory_index == 1) {
+            ASSERT(page_directory == m_kernel_page_directory);
             pde.setPageTableBase((dword)m_pageTableOne);
             pde.setUserAllowed(false);
             pde.setPresent(true);
             pde.setWritable(true);
         } else {
-            auto* page_table = allocate_page_table();
+            auto page_table = allocate_page_table();
 #ifdef MM_DEBUG
-            dbgprintf("MM: PDE %x allocated page table #%u (for laddr=%p) at %p\n", page_directory, page_directory_index, laddr.get(), page_table);
+            dbgprintf("MM: PD K%x (%s) allocated page table #%u (for L%x) at P%x\n",
+                page_directory,
+                page_directory == m_kernel_page_directory ? "Kernel" : "User",
+                page_directory_index,
+                laddr.get(),
+                page_table);
 #endif
-            page_directory->physical_addresses[page_directory_index] = PhysicalAddress((dword)page_table);
-            pde.setPageTableBase((dword)page_table);
+            if (page_table.get() == 0x71d000)
+                ASSERT(page_directory == m_kernel_page_directory);
+            page_directory->physical_addresses[page_directory_index] = page_table;
+            pde.setPageTableBase(page_table.get());
             pde.setUserAllowed(true);
             pde.setPresent(true);
             pde.setWritable(true);
@@ -126,7 +168,7 @@ void MemoryManager::protectMap(LinearAddress linearAddress, size_t length)
 {
     InterruptDisabler disabler;
     // FIXME: ASSERT(linearAddress is 4KB aligned);
-    for (dword offset = 0; offset < length; offset += 4096) {
+    for (dword offset = 0; offset < length; offset += PAGE_SIZE) {
         auto pteAddress = linearAddress.offset(offset);
         auto pte = ensurePTE(m_kernel_page_directory, pteAddress);
         pte.setPhysicalPageBase(pteAddress.get());
@@ -137,12 +179,12 @@ void MemoryManager::protectMap(LinearAddress linearAddress, size_t length)
     }
 }
 
-void MemoryManager::identityMap(LinearAddress linearAddress, size_t length)
+void MemoryManager::create_identity_mapping(LinearAddress laddr, size_t size)
 {
     InterruptDisabler disabler;
-    // FIXME: ASSERT(linearAddress is 4KB aligned);
-    for (dword offset = 0; offset < length; offset += 4096) {
-        auto pteAddress = linearAddress.offset(offset);
+    // FIXME: ASSERT(laddr is 4KB aligned);
+    for (dword offset = 0; offset < size; offset += PAGE_SIZE) {
+        auto pteAddress = laddr.offset(offset);
         auto pte = ensurePTE(m_kernel_page_directory, pteAddress);
         pte.setPhysicalPageBase(pteAddress.get());
         pte.setUserAllowed(false);
@@ -160,7 +202,7 @@ void MemoryManager::initialize()
 PageFaultResponse MemoryManager::handlePageFault(const PageFault& fault)
 {
     ASSERT_INTERRUPTS_DISABLED();
-    kprintf("MM: handlePageFault(%w) at laddr=%p\n", fault.code(), fault.address().get());
+    kprintf("MM: handlePageFault(%w) at L%x\n", fault.code(), fault.address().get());
     if (fault.isNotPresent()) { 
         kprintf("  >> NP fault!\n");
     } else if (fault.isProtectionViolation()) {
@@ -173,11 +215,19 @@ void MemoryManager::registerZone(Zone& zone)
 {
     ASSERT_INTERRUPTS_DISABLED();
     m_zones.set(&zone);
+#ifdef MM_DEBUG
+    for (size_t i = 0; i < zone.m_pages.size(); ++i)
+        dbgprintf("MM: allocated to zone: P%x\n", zone.m_pages[i].get());
+#endif
 }
 
 void MemoryManager::unregisterZone(Zone& zone)
 {
     ASSERT_INTERRUPTS_DISABLED();
+#ifdef MM_DEBUG
+    for (size_t i = 0; i < zone.m_pages.size(); ++i)
+        dbgprintf("MM: deallocated from zone: P%x\n", zone.m_pages[i].get());
+#endif
     m_zones.remove(&zone);
     m_freePages.append(move(zone.m_pages));
 }
@@ -212,8 +262,12 @@ Vector<PhysicalAddress> MemoryManager::allocatePhysicalPages(size_t count)
 
     Vector<PhysicalAddress> pages;
     pages.ensureCapacity(count);
-    for (size_t i = 0; i < count; ++i)
+    for (size_t i = 0; i < count; ++i) {
         pages.append(m_freePages.takeLast());
+#ifdef MM_DEBUG
+        dbgprintf("MM: allocate_physical_pages vending P%x\n", pages.last());
+#endif
+    }
     return pages;
 }
 
@@ -221,14 +275,14 @@ void MemoryManager::enter_kernel_paging_scope()
 {
     InterruptDisabler disabler;
     current->m_tss.cr3 = (dword)m_kernel_page_directory;
-    asm volatile("movl %%eax, %%cr3"::"a"(m_kernel_page_directory));
+    asm volatile("movl %%eax, %%cr3"::"a"(m_kernel_page_directory):"memory");
 }
 
 void MemoryManager::enter_process_paging_scope(Process& process)
 {
     InterruptDisabler disabler;
     current->m_tss.cr3 = (dword)process.m_page_directory;
-    asm volatile("movl %%eax, %%cr3"::"a"(process.m_page_directory));
+    asm volatile("movl %%eax, %%cr3"::"a"(process.m_page_directory):"memory");
 }
 
 void MemoryManager::flushEntireTLB()
@@ -236,7 +290,7 @@ void MemoryManager::flushEntireTLB()
     asm volatile(
         "mov %cr3, %eax\n"
         "mov %eax, %cr3\n"
-    );
+     );
 }
 
 void MemoryManager::flushTLB(LinearAddress laddr)
@@ -267,7 +321,7 @@ void MemoryManager::unmap_range(PageDirectory* page_directory, LinearAddress lad
     ASSERT((size % PAGE_SIZE) == 0);
 
     InterruptDisabler disabler;
-    size_t numPages = size / 4096;
+    size_t numPages = size / PAGE_SIZE;
     for (size_t i = 0; i < numPages; ++i) {
         auto page_laddr = laddr.offset(i * PAGE_SIZE);
         auto pte = ensurePTE(page_directory, page_laddr);
@@ -295,6 +349,9 @@ LinearAddress MemoryManager::allocate_linear_address_range(size_t size)
 byte* MemoryManager::create_kernel_alias_for_region(Region& region)
 {
     InterruptDisabler disabler;
+#ifdef MM_DEBUG
+    dbgprintf("MM: create_kernel_alias_for_region region=%p (L%x size=%u)\n", &region, region.linearAddress.get(), region.size);
+#endif
     auto laddr = allocate_linear_address_range(region.size);
     map_region_at_address(m_kernel_page_directory, region, laddr, false);
 #ifdef MM_DEBUG
@@ -305,6 +362,9 @@ byte* MemoryManager::create_kernel_alias_for_region(Region& region)
 
 void MemoryManager::remove_kernel_alias_for_region(Region& region, byte* addr)
 {
+#ifdef MM_DEBUG
+    dbgprintf("remove_kernel_alias_for_region region=%p, addr=L%x\n", &region, addr);
+#endif
     unmap_range(m_kernel_page_directory, LinearAddress((dword)addr), region.size);
 }
 
@@ -330,7 +390,7 @@ bool MemoryManager::unmapRegion(Process& process, Region& region)
 bool MemoryManager::unmapSubregion(Process& process, Subregion& subregion)
 {
     InterruptDisabler disabler;
-    size_t numPages = subregion.size / 4096;
+    size_t numPages = subregion.size / PAGE_SIZE;
     ASSERT(numPages);
     for (size_t i = 0; i < numPages; ++i) {
         auto laddr = subregion.linearAddress.offset(i * PAGE_SIZE);
@@ -352,8 +412,8 @@ bool MemoryManager::mapSubregion(Process& process, Subregion& subregion)
     InterruptDisabler disabler;
     auto& region = *subregion.region;
     auto& zone = *region.zone;
-    size_t firstPage = subregion.offset / 4096;
-    size_t numPages = subregion.size / 4096;
+    size_t firstPage = subregion.offset / PAGE_SIZE;
+    size_t numPages = subregion.size / PAGE_SIZE;
     ASSERT(numPages);
     for (size_t i = 0; i < numPages; ++i) {
         auto laddr = subregion.linearAddress.offset(i * PAGE_SIZE);
@@ -427,3 +487,4 @@ RetainPtr<Region> Region::clone()
     MM.remove_kernel_alias_for_region(*this, src_alias);
     return clone_region;
 }
+
