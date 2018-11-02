@@ -9,7 +9,6 @@ KERNEL_OBJS = \
        i8253.o \
        Keyboard.o \
        CMOS.o \
-       IO.o \
        PIC.o \
        Syscall.o \
        Disk.o \
