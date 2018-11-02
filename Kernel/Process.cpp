@@ -139,6 +139,15 @@ static void forEachProcess(Callback callback)
     }
 }
 
+void Process::for_each_in_pgrp(pid_t pgid, Function<void(Process&)> callback)
+{
+    ASSERT_INTERRUPTS_DISABLED();
+    for (auto* process = s_processes->head(); process; process = process->next()) {
+        if (process->pgid() == pgid)
+            callback(*process);
+    }
+}
+
 Vector<Process*> Process::allProcesses()
 {
     InterruptDisabler disabler;
@@ -575,10 +584,10 @@ void Process::sys$exit(int status)
     switchNow();
 }
 
-void Process::murder(int signal)
+void Process::send_signal(int signal, Process* sender)
 {
     ASSERT_INTERRUPTS_DISABLED();
-    bool wasCurrent = current == this;
+    bool wasCurrent = current == sender;
     set_state(Exiting);
     s_processes->remove(this);
 
@@ -587,7 +596,7 @@ void Process::murder(int signal)
     if (wasCurrent) {
         kprintf("Current process committing suicide!\n");
         if (!scheduleNewProcess()) {
-            kprintf("Process::murder: Failed to schedule a new process :(\n");
+            kprintf("Process::send_signal: Failed to schedule a new process :(\n");
             HANG;
         }
     }
@@ -1014,9 +1023,8 @@ int Process::sys$uname(utsname* buf)
     return 0;
 }
 
-int Process::sys$kill(pid_t pid, int sig)
+int Process::sys$kill(pid_t pid, int signal)
 {
-    (void) sig;
     if (pid == 0) {
         // FIXME: Send to same-group processes.
         ASSERT(pid != 0);
@@ -1030,13 +1038,8 @@ int Process::sys$kill(pid_t pid, int sig)
     auto* peer = Process::fromPID(pid);
     if (!peer)
         return -ESRCH;
-    if (sig == SIGKILL) {
-        peer->murder(SIGKILL);
-        return 0;
-    } else {
-        ASSERT_NOT_REACHED();
-    }
-    return -1;
+    peer->send_signal(signal, this);
+    return 0;
 }
 
 int Process::sys$sleep(unsigned seconds)

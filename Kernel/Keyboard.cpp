@@ -40,9 +40,12 @@ static char shift_map[0x100] =
 
 void Keyboard::emit(byte ch)
 {
+    Key key;
+    key.character = ch;
+    key.modifiers = m_modifiers;
     if (m_client)
-        m_client->onKeyPress(ch);
-    m_queue.enqueue(ch);
+        m_client->onKeyPress(key);
+    m_queue.enqueue(key);
 }
 
 void Keyboard::handleIRQ()
@@ -50,12 +53,12 @@ void Keyboard::handleIRQ()
     while (IO::in8(0x64) & 1) {
         BYTE ch = IO::in8(0x60);
         switch (ch) {
-        case 0x38: m_modifiers |= MOD_ALT; break;
-        case 0xB8: m_modifiers &= ~MOD_ALT; break;
-        case 0x1D: m_modifiers |= MOD_CTRL; break;
-        case 0x9D: m_modifiers &= ~MOD_CTRL; break;
-        case 0x2A: m_modifiers |= MOD_SHIFT; break;
-        case 0xAA: m_modifiers &= ~MOD_SHIFT; break;
+        case 0x38: m_modifiers |= Mod_Alt; break;
+        case 0xB8: m_modifiers &= ~Mod_Alt; break;
+        case 0x1D: m_modifiers |= Mod_Ctrl; break;
+        case 0x9D: m_modifiers &= ~Mod_Ctrl; break;
+        case 0x2A: m_modifiers |= Mod_Shift; break;
+        case 0xAA: m_modifiers &= ~Mod_Shift; break;
         case 0x1C: /* enter */ emit('\n'); break;
         case 0xFA: /* i8042 ack */ break;
         default:
@@ -75,16 +78,13 @@ void Keyboard::handleIRQ()
                     break;
                 }
             }
-            if (!m_modifiers) {
+            if (!m_modifiers)
                 emit(map[ch]);
-            } else if (m_modifiers & MOD_SHIFT) {
+            else if (m_modifiers & Mod_Shift)
                 emit(shift_map[ch]);
-            } else if (m_modifiers & MOD_CTRL) {
-                // FIXME: This is obviously not a good enough way to process ctrl+whatever.
-                emit('^');
+            else if (m_modifiers & Mod_Ctrl)
                 emit(shift_map[ch]);
             }
-        }
         //break;
     }
 }
@@ -127,7 +127,7 @@ ssize_t Keyboard::read(byte* buffer, size_t size)
     while (nread < size) {
         if (m_queue.isEmpty())
             break;
-        buffer[nread++] = m_queue.dequeue();
+        buffer[nread++] = m_queue.dequeue().character;
     }
     return nread;
 }

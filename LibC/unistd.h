@@ -39,6 +39,11 @@ off_t lseek(int fd, off_t, int whence);
 #define WIFEXITED(status) (WTERMSIG(status) == 0)
 #define WIFSIGNALED(status) (((char) (((status) & 0x7f) + 1) >> 1) > 0)
 
+#define SIGINT 2
+#define SIGKILL 9
+#define SIGSEGV 11
+#define SIGTERM 15
+
 #define HOST_NAME_MAX 64
 
 #define	S_IFMT 0170000

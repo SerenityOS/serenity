@@ -1,4 +1,5 @@
 #include "TTY.h"
+#include "Process.h"
 
 TTY::TTY(unsigned major, unsigned minor)
     : CharacterDevice(major, minor)
@@ -37,4 +38,17 @@ bool TTY::hasDataAvailableForRead() const
 void TTY::emit(byte ch)
 {
     m_buffer.append(ch);
+}
+
+void TTY::interrupt()
+{
+    dbgprintf("%s: Interrupt ^C pressed!\n", ttyName().characters());
+    if (pgid()) {
+        dbgprintf("%s: Send SIGINT to everyone in pgrp %d\n", ttyName().characters(), pgid());
+        InterruptDisabler disabler;
+        Process::for_each_in_pgrp(pgid(), [this] (auto& process) {
+            dbgprintf("%s: Send SIGINT to %d\n", ttyName().characters(), process.pid());
+            process.send_signal(SIGINT, nullptr);
+        });
+    }
 }

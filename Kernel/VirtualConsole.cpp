@@ -384,9 +384,15 @@ void VirtualConsole::on_char(byte ch, bool shouldEmit)
     set_cursor(m_cursor_row, m_cursor_column);
 }
 
-void VirtualConsole::onKeyPress(byte ch)
+void VirtualConsole::onKeyPress(Keyboard::Key key)
 {
-    emit(ch);
+    if (key.ctrl() && key.character == 'C') {
+        interrupt();
+        return;
+    }
+    if (key.ctrl())
+        emit('^');
+    emit(key.character);
 }
 
 void VirtualConsole::onConsoleReceive(byte ch)
