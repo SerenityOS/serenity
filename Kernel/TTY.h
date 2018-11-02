@@ -23,6 +23,8 @@ protected:
 
     virtual void onTTYWrite(byte) = 0;
 
+    void interrupt();
+
 private:
     Vector<byte> m_buffer;
     pid_t m_pgid { 0 };

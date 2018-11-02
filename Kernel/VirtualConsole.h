@@ -17,7 +17,7 @@ public:
 
 private:
     // ^KeyboardClient
-    virtual void onKeyPress(byte) override;
+    virtual void onKeyPress(Keyboard::Key) override;
 
     // ^ConsoleImplementation
     virtual void onConsoleReceive(byte) override;

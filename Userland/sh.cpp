@@ -157,7 +157,14 @@ static int runcmd(char* cmd)
         //printf("Exited normally with status %d\n", WEXITSTATUS(wstatus));
     } else {
         if (WIFSIGNALED(wstatus)) {
-            printf("Terminated by signal %d\n", WTERMSIG(wstatus));
+            switch (WTERMSIG(wstatus)) {
+            case SIGINT:
+                printf("Interrupted\n");
+                break;
+            default:
+                printf("Terminated by signal %d\n", WTERMSIG(wstatus));
+                break;
+            }
         } else {
             printf("Exited abnormally\n");
         }

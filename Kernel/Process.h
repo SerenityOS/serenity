@@ -73,6 +73,8 @@ public:
     void setWakeupTime(DWORD t) { m_wakeupTime = t; }
     DWORD wakeupTime() const { return m_wakeupTime; }
 
+    static void for_each_in_pgrp(pid_t pgid, Function<void(Process&)>);
+
     static void prepForIRETToNewProcess();
 
     bool tick() { ++m_ticks; return --m_ticksLeft; }
@@ -151,6 +153,8 @@ public:
     FileHandle* file_descriptor(size_t i) { return m_file_descriptors[i].ptr(); }
     const FileHandle* file_descriptor(size_t i) const { return m_file_descriptors[i].ptr(); }
 
+    void send_signal(int signal, Process* sender);
+
 private:
     friend class MemoryManager;
     friend bool scheduleNewProcess();
@@ -211,7 +215,6 @@ private:
     pid_t m_parentPID { 0 };
 
     static void notify_waiters(pid_t waitee, int exit_status, int signal);
-    void murder(int signal);
 
     Vector<String> m_arguments;
     Vector<String> m_initialEnvironment;
