@@ -50,6 +50,8 @@ public:
 
     const String& name() const { return m_name; }
     pid_t pid() const { return m_pid; }
+    pid_t sid() const { return m_sid; }
+    pid_t pgid() const { return m_pgid; }
     DWORD ticks() const { return m_ticks; }
     WORD selector() const { return m_farPtr.selector; }
     TSS32& tss() { return m_tss; }
@@ -79,6 +81,11 @@ public:
     void setSelector(WORD s) { m_farPtr.selector = s; }
     void set_state(State s) { m_state = s; }
 
+    pid_t sys$setsid();
+    pid_t sys$getsid(pid_t);
+    int sys$setpgid(pid_t pid, pid_t pgid);
+    pid_t sys$getpgrp();
+    pid_t sys$getpgid(pid_t);
     uid_t sys$getuid();
     gid_t sys$getgid();
     pid_t sys$getpid();
@@ -160,6 +167,8 @@ private:
     pid_t m_pid { 0 };
     uid_t m_uid { 0 };
     gid_t m_gid { 0 };
+    pid_t m_sid { 0 };
+    pid_t m_pgid { 0 };
     DWORD m_ticks { 0 };
     DWORD m_ticksLeft { 0 };
     DWORD m_stackTop0 { 0 };

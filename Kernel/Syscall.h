@@ -40,6 +40,11 @@ enum Function {
     PosixTtynameR = 0x2008,
     PosixStat = 0x2009,
     GetEnvironment = 0x2010,
+    PosixGetsid = 0x2011,
+    PosixSetsid = 0x2012,
+    PosixGetpgid = 0x2013,
+    PosixSetpgid = 0x2014,
+    PosixGetpgrp = 0x2015,
 };
 
 void initialize();

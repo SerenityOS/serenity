@@ -20,6 +20,31 @@ pid_t getpid()
     return Syscall::invoke(Syscall::PosixGetpid);
 }
 
+pid_t setsid()
+{
+    return Syscall::invoke(Syscall::PosixSetsid);
+}
+
+pid_t sys$getsid(pid_t pid)
+{
+    return Syscall::invoke(Syscall::PosixSetsid, (dword)pid);
+}
+
+int setpgid(pid_t pid, pid_t pgid)
+{
+    return Syscall::invoke(Syscall::PosixSetpgid, (dword)pid, (dword)pgid);
+}
+
+pid_t getpgid(pid_t pid)
+{
+    return Syscall::invoke(Syscall::PosixGetpgid, (dword)pid);
+}
+
+pid_t getpgrp()
+{
+    return Syscall::invoke(Syscall::PosixGetpgrp);
+}
+
 int open(const char* path, int options)
 {
     int rc = Syscall::invoke(Syscall::PosixOpen, (dword)path, (dword)options);
