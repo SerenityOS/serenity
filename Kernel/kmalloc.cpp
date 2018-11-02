@@ -79,7 +79,7 @@ void* kmalloc_eternal(size_t size)
 
 void* kmalloc_page_aligned(size_t size)
 {
-    ASSERT((size % 4096) == 0);
+    ASSERT((size % PAGE_SIZE) == 0);
     void* ptr = s_next_page_aligned_ptr;
     s_next_page_aligned_ptr += size;
     ASSERT(s_next_page_aligned_ptr < s_end_of_page_aligned_range);
