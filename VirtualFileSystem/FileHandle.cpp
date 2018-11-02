@@ -176,6 +176,13 @@ const TTY* FileHandle::tty() const
     return nullptr;
 }
 
+TTY* FileHandle::tty()
+{
+    if (auto* device = m_vnode->characterDevice())
+        return static_cast<TTY*>(device);
+    return nullptr;
+}
+
 int FileHandle::close()
 {
     return 0;
