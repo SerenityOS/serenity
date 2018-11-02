@@ -15,6 +15,19 @@ FileHandle::~FileHandle()
 {
 }
 
+OwnPtr<FileHandle> FileHandle::clone()
+{
+    auto handle = make<FileHandle>(m_vnode.copyRef());
+    if (!handle)
+        return nullptr;
+    handle->m_currentOffset = m_currentOffset;
+#ifdef SERENITY
+    handle->m_fd = m_fd;
+    handle->m_isBlocking = m_isBlocking;
+#endif
+    return handle;
+}
+
 #ifndef SERENITY
 bool additionWouldOverflow(Unix::off_t a, Unix::off_t b)
 {

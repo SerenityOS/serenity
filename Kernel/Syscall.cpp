@@ -43,7 +43,7 @@ void initialize()
     kprintf("syscall: int 0x80 handler installed\n");
 }
 
-DWORD handle(DWORD function, DWORD arg1, DWORD arg2, DWORD arg3)
+static DWORD handle(RegisterDump& regs, DWORD function, DWORD arg1, DWORD arg2, DWORD arg3)
 {
     ASSERT_INTERRUPTS_ENABLED();
     switch (function) {
@@ -128,6 +128,8 @@ DWORD handle(DWORD function, DWORD arg1, DWORD arg2, DWORD arg3)
         return current->sys$tcgetpgrp((int)arg1);
     case Syscall::PosixTcsetpgrp:
         return current->sys$tcsetpgrp((int)arg1, (pid_t)arg2);
+    case Syscall::PosixFork:
+        return current->sys$fork(regs);
     default:
         kprintf("<%u> int0x80: Unknown function %x requested {%x, %x, %x}\n", current->pid(), function, arg1, arg2, arg3);
         break;
@@ -143,5 +145,6 @@ void syscall_entry(RegisterDump& regs)
     DWORD arg1 = regs.edx;
     DWORD arg2 = regs.ecx;
     DWORD arg3 = regs.ebx;
-    regs.eax = Syscall::handle(function, arg1, arg2, arg3);
+    regs.eax = Syscall::handle(regs, function, arg1, arg2, arg3);
 }
+

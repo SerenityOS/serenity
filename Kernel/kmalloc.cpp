@@ -26,6 +26,8 @@ typedef struct
 #define ETERNAL_BASE_PHYSICAL 0x200000
 #define BASE_PHYS   0x100000
 
+#define RANGE_SIZE 0x100000
+
 PRIVATE BYTE alloc_map[POOL_SIZE / CHUNK_SIZE / 8];
 
 volatile DWORD sum_alloc = 0;
@@ -35,6 +37,9 @@ volatile size_t kmalloc_sum_page_aligned = 0;
 
 static byte* s_next_eternal_ptr;
 static byte* s_next_page_aligned_ptr;
+
+static byte* s_end_of_eternal_range;
+static byte* s_end_of_page_aligned_range;
 
 bool is_kmalloc_address(void* ptr)
 {
@@ -58,12 +63,16 @@ kmalloc_init()
 
     s_next_eternal_ptr = (byte*)ETERNAL_BASE_PHYSICAL;
     s_next_page_aligned_ptr = (byte*)PAGE_ALIGNED_BASE_PHYSICAL;
+
+    s_end_of_eternal_range = s_next_eternal_ptr + RANGE_SIZE;
+    s_end_of_page_aligned_range = s_next_page_aligned_ptr + RANGE_SIZE;
 }
 
 void* kmalloc_eternal(size_t size)
 {
     void* ptr = s_next_eternal_ptr;
     s_next_eternal_ptr += size;
+    ASSERT(s_next_eternal_ptr < s_end_of_eternal_range);
     kmalloc_sum_eternal += size;
     return ptr;
 }
@@ -73,6 +82,7 @@ void* kmalloc_page_aligned(size_t size)
     ASSERT((size % 4096) == 0);
     void* ptr = s_next_page_aligned_ptr;
     s_next_page_aligned_ptr += size;
+    ASSERT(s_next_page_aligned_ptr < s_end_of_page_aligned_range);
     kmalloc_sum_page_aligned += size;
     return ptr;
 }

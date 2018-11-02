@@ -14,6 +14,7 @@ OBJS = \
        tst.o \
        mm.o \
        kill.o \
+       ft.o \
        tty.o
 
 APPS = \
@@ -32,6 +33,7 @@ APPS = \
        tst \
        mm \
        kill \
+       ft \
        tty
 
 ARCH_FLAGS =
@@ -89,6 +91,9 @@ clear: clear.o
 	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
 
 tst: tst.o
+	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
+
+ft: ft.o
 	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
 
 mm: mm.o

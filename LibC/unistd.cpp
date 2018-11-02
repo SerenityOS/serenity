@@ -5,6 +5,11 @@
 
 extern "C" {
 
+pid_t fork()
+{
+    return Syscall::invoke(Syscall::PosixFork);
+}
+
 uid_t getuid()
 {
     return Syscall::invoke(Syscall::PosixGetuid);

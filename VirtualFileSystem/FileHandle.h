@@ -11,6 +11,8 @@ public:
     explicit FileHandle(RetainPtr<VirtualFileSystem::Node>&&);
     ~FileHandle();
 
+    OwnPtr<FileHandle> clone();
+
     int close();
 
     Unix::off_t seek(Unix::off_t, int whence);

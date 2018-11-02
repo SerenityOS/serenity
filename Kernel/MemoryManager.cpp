@@ -407,3 +407,23 @@ bool MemoryManager::validate_user_write(const Process& process, LinearAddress la
         return false;
     return true;
 }
+
+RetainPtr<Region> Region::clone()
+{
+    InterruptDisabler disabler;
+    KernelPagingScope pagingScope;
+
+    // FIXME: Implement COW regions.
+    auto clone_zone = MM.createZone(zone->size());
+    auto clone_region = adopt(*new Region(linearAddress, size, move(clone_zone), String(name)));
+
+    // FIXME: It would be cool to make the src_alias a read-only mapping.
+    byte* src_alias = MM.create_kernel_alias_for_region(*this);
+    byte* dest_alias = MM.create_kernel_alias_for_region(*clone_region);
+
+    memcpy(dest_alias, src_alias, size);
+
+    MM.remove_kernel_alias_for_region(*clone_region, dest_alias);
+    MM.remove_kernel_alias_for_region(*this, src_alias);
+    return clone_region;
+}

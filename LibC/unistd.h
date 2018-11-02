@@ -8,6 +8,7 @@ __BEGIN_DECLS
 extern char** environ;
 
 inline int getpagesize() { return 4096; }
+pid_t fork();
 pid_t getsid(pid_t);
 pid_t setsid();
 int setpgid(pid_t pid, pid_t pgid);
