@@ -241,7 +241,7 @@ void MemoryManager::flushEntireTLB()
 
 void MemoryManager::flushTLB(LinearAddress laddr)
 {
-    asm volatile("invlpg %0": :"m" (*(char*)laddr.get()));
+    asm volatile("invlpg %0": :"m" (*(char*)laddr.get()) : "memory");
 }
 
 void MemoryManager::map_region_at_address(PageDirectory* page_directory, Region& region, LinearAddress laddr, bool user_allowed)

@@ -4,6 +4,7 @@
 #include "system.h"
 #include "MemoryManager.h"
 #include "StdLib.h"
+#include "i386.h"
 
 static ProcFileSystem* s_the;
 
@@ -177,6 +178,71 @@ ByteBuffer procfs$mounts()
     return buffer;
 }
 
+ByteBuffer procfs$cpuinfo()
+{
+    auto buffer = ByteBuffer::createUninitialized(256);
+    char* ptr = (char*)buffer.pointer();
+    {
+        CPUID cpuid(0);
+        ptr += ksprintf(ptr, "cpuid:     ");
+        auto emit_dword = [&] (dword value) {
+            ptr += ksprintf(ptr, "%c%c%c%c",
+                value & 0xff,
+                (value >> 8) & 0xff,
+                (value >> 16) & 0xff,
+                (value >> 24) & 0xff);
+        };
+        emit_dword(cpuid.ebx());
+        emit_dword(cpuid.edx());
+        emit_dword(cpuid.ecx());
+        ptr += ksprintf(ptr, "\n");
+    }
+    {
+        CPUID cpuid(1);
+        dword stepping = cpuid.eax() & 0xf;
+        dword model = (cpuid.eax() >> 4) & 0xf;
+        dword family = (cpuid.eax() >> 8) & 0xf;
+        dword type = (cpuid.eax() >> 12) & 0x3;
+        dword extended_model = (cpuid.eax() >> 16) & 0xf;
+        dword extended_family = (cpuid.eax() >> 20) & 0xff;
+        dword display_model;
+        dword display_family;
+        if (family == 15) {
+            display_family = family + extended_family;
+            display_model = model + (extended_model << 4);
+        } else if (family == 6) {
+            display_family = family;
+            display_model = model + (extended_model << 4);
+        } else {
+            display_family = family;
+            display_model = model;
+        }
+        ptr += ksprintf(ptr, "family:    %u\n", display_family);
+        ptr += ksprintf(ptr, "model:     %u\n", display_model);
+        ptr += ksprintf(ptr, "stepping:  %u\n", stepping);
+        ptr += ksprintf(ptr, "type:      %u\n", type);
+    }
+    {
+        // FIXME: Check first that this is supported by calling CPUID with eax=0x80000000
+        //        and verifying that the returned eax>=0x80000004.
+        char buffer[48];
+        dword* bufptr = reinterpret_cast<dword*>(buffer);
+        auto copy_brand_string_part_to_buffer = [&] (dword i) {
+            CPUID cpuid(0x80000002 + i);
+            *bufptr++ = cpuid.eax();
+            *bufptr++ = cpuid.ebx();
+            *bufptr++ = cpuid.ecx();
+            *bufptr++ = cpuid.edx();
+        };
+        copy_brand_string_part_to_buffer(0);
+        copy_brand_string_part_to_buffer(1);
+        copy_brand_string_part_to_buffer(2);
+        ptr += ksprintf(ptr, "brandstr:  \"%s\"\n", buffer);
+    }
+    buffer.trim(ptr - (char*)buffer.pointer());
+    return buffer;
+}
+
 ByteBuffer procfs$kmalloc()
 {
     InterruptDisabler disabler;
@@ -235,6 +301,7 @@ bool ProcFileSystem::initialize()
     addFile(createGeneratedFile("mounts", procfs$mounts));
     addFile(createGeneratedFile("kmalloc", procfs$kmalloc));
     addFile(createGeneratedFile("summary", procfs$summary));
+    addFile(createGeneratedFile("cpuinfo", procfs$cpuinfo));
     return true;
 }
 

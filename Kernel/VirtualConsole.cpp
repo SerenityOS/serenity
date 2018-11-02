@@ -23,7 +23,6 @@ VirtualConsole::VirtualConsole(unsigned index, InitialContents initial_contents)
 {
     s_consoles[index] = this;
     m_buffer = (byte*)kmalloc_eternal(80 * 25 * 2);
-    dbgprintf("VirtualConsole %u @ %p, m_buffer = %p\n", index, this, m_buffer);
     if (initial_contents == AdoptCurrentVGABuffer) {
         memcpy(m_buffer, s_vga_buffer, 80 * 25 * 2);
         auto vgaCursor = vga_get_cursor();

@@ -175,3 +175,16 @@ inline constexpr dword pageBaseOf(dword address)
     return address & 0xfffff000;
 }
 
+class CPUID {
+public:
+    CPUID(dword function) { asm volatile("cpuid" : "=a" (m_eax), "=b" (m_ebx), "=c" (m_ecx), "=d" (m_edx) : "a" (function), "c" (0)); }
+    dword eax() const { return m_eax; }
+    dword ebx() const { return m_ebx; }
+    dword ecx() const { return m_ecx; }
+    dword edx() const { return m_edx; }
+private:
+    dword m_eax { 0xffffffff };
+    dword m_ebx { 0xffffffff };
+    dword m_ecx { 0xffffffff };
+    dword m_edx { 0xffffffff };
+};
