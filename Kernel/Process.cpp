@@ -105,30 +105,6 @@ void Process::initialize()
     loadTaskRegister(s_kernelProcess->selector());
 }
 
-void Process::allocateLDT()
-{
-    ASSERT(!m_tss.ldt);
-    static const WORD numLDTEntries = 4;
-    m_ldt_selector = gdt_alloc_entry();
-    m_ldtEntries = new Descriptor[numLDTEntries];
-#if 0
-    kprintf("new ldt selector = %x\n", m_ldt_selector);
-    kprintf("new ldt table at = %p\n", m_ldtEntries);
-    kprintf("new ldt table size = %u\n", (numLDTEntries * 8) - 1);
-#endif
-    Descriptor& ldt = getGDTEntry(m_ldt_selector);
-    ldt.setBase(m_ldtEntries);
-    ldt.setLimit(numLDTEntries * 8 - 1);
-    ldt.dpl = 0;
-    ldt.segment_present = 1;
-    ldt.granularity = 0;
-    ldt.zero = 0;
-    ldt.operation_size = 1;
-    ldt.descriptor_type = 0;
-    ldt.type = Descriptor::LDT;
-    m_tss.ldt = m_ldt_selector;
-}
-
 template<typename Callback>
 static void forEachProcess(Callback callback)
 {
@@ -233,6 +209,77 @@ int Process::sys$gethostname(char* buffer, size_t size)
         return -ENAMETOOLONG;
     memcpy(buffer, hostname.characters(), size);
     return 0;
+}
+
+Process* Process::fork(RegisterDump& regs)
+{
+    auto* child = new Process(String(m_name), m_uid, m_gid, m_pid, m_ring, m_cwd.copyRef(), m_executable.copyRef(), m_tty, this);
+#ifdef FORK_DEBUG
+    dbgprintf("fork: child=%p\n", child);
+#endif
+
+#if 0
+    // FIXME: An honest fork() would copy these. Needs a Vector copy ctor.
+    child->m_arguments = m_arguments;
+    child->m_initialEnvironment = m_initialEnvironment;
+#endif
+
+    for (auto& region : m_regions) {
+#ifdef FORK_DEBUG
+        dbgprintf("fork: cloning Region{%p}\n", region.ptr());
+#endif
+        auto cloned_region = region->clone();
+        // FIXME: Move subregions into Region?
+        for (auto& subregion : m_subregions) {
+            if (subregion->region.ptr() != region.ptr())
+                continue;
+#ifdef FORK_DEBUG
+            dbgprintf("fork: cloning Subregion{%p}\n", subregion.ptr());
+#endif
+            auto cloned_subregion = make<Subregion>(*cloned_region, subregion->offset, subregion->size, subregion->linearAddress, String(subregion->name));
+            child->m_subregions.append(move(cloned_subregion));
+            MM.mapSubregion(*child, *child->m_subregions.last());
+        }
+        child->m_regions.append(move(cloned_region));
+        MM.mapRegion(*child, *child->m_regions.last());
+    }
+
+    child->m_tss.eax = 0; // fork() returns 0 in the child :^)
+    child->m_tss.ebx = regs.ebx;
+    child->m_tss.ecx = regs.ecx;
+    child->m_tss.edx = regs.edx;
+    child->m_tss.ebp = regs.ebp;
+    child->m_tss.esp = regs.esp_if_crossRing;
+    child->m_tss.esi = regs.esi;
+    child->m_tss.edi = regs.edi;
+    child->m_tss.eflags = regs.eflags;
+    child->m_tss.eip = regs.eip;
+    child->m_tss.cs = regs.cs;
+    child->m_tss.ds = regs.ds;
+    child->m_tss.es = regs.es;
+    child->m_tss.fs = regs.fs;
+    child->m_tss.gs = regs.gs;
+    child->m_tss.ss = regs.ss_if_crossRing;
+
+#ifdef FORK_DEBUG
+    dbgprintf("fork: child will begin executing at %w:%x with stack %w:%x\n", child->m_tss.cs, child->m_tss.eip, child->m_tss.ss, child->m_tss.esp);
+#endif
+
+    ProcFileSystem::the().addProcess(*child);
+
+    s_processes->prepend(child);
+    system.nprocess++;
+#ifdef TASK_DEBUG
+    kprintf("Process %u (%s) forked from %u @ %p\n", child->pid(), child->name().characters(), m_pid, child->m_tss.eip);
+#endif
+    return child;
+}
+
+pid_t Process::sys$fork(RegisterDump& regs)
+{
+    auto* child = fork(regs);
+    ASSERT(child);
+    return child->pid();
 }
 
 int Process::sys$spawn(const char* path, const char** args)
@@ -413,9 +460,9 @@ Process* Process::createKernelProcess(void (*e)(), String&& name)
     return process;
 }
 
-Process::Process(String&& name, uid_t uid, gid_t gid, pid_t parentPID, RingLevel ring, RetainPtr<VirtualFileSystem::Node>&& cwd, RetainPtr<VirtualFileSystem::Node>&& executable, TTY* tty)
+Process::Process(String&& name, uid_t uid, gid_t gid, pid_t parentPID, RingLevel ring, RetainPtr<VirtualFileSystem::Node>&& cwd, RetainPtr<VirtualFileSystem::Node>&& executable, TTY* tty, Process* fork_parent)
     : m_name(move(name))
-    , m_pid(next_pid++)
+    , m_pid(next_pid++) // FIXME: RACE: This variable looks racy!
     , m_uid(uid)
     , m_gid(gid)
     , m_state(Runnable)
@@ -425,57 +472,71 @@ Process::Process(String&& name, uid_t uid, gid_t gid, pid_t parentPID, RingLevel
     , m_tty(tty)
     , m_parentPID(parentPID)
 {
-    {
+    if (fork_parent) {
+        m_sid = fork_parent->m_sid;
+        m_pgid = fork_parent->m_pgid;
+    } else {
         // FIXME: Use a ProcessHandle? Presumably we're executing *IN* the parent right now though..
         InterruptDisabler disabler;
         if (auto* parent = Process::fromPID(m_parentPID)) {
             m_sid = parent->m_sid;
             m_pgid = parent->m_pgid;
         }
-
     }
 
     m_page_directory = (PageDirectory*)kmalloc_page_aligned(sizeof(PageDirectory));
     MM.populate_page_directory(*this);
 
-    m_file_descriptors.resize(m_max_open_file_descriptors);
-
-    if (tty) {
-        m_file_descriptors[0] = tty->open(O_RDONLY);
-        m_file_descriptors[1] = tty->open(O_WRONLY);
-        m_file_descriptors[2] = tty->open(O_WRONLY);
-    }
-
-    m_nextRegion = LinearAddress(0x10000000);
-
-    memset(&m_tss, 0, sizeof(m_tss));
-
-    if (isRing3()) {
-        memset(&m_ldtEntries, 0, sizeof(m_ldtEntries));
-        allocateLDT();
-    }
-
-    // Only IF is set when a process boots.
-    m_tss.eflags = 0x0202;
-
-    word cs, ds, ss;
-
-    if (isRing0()) {
-        cs = 0x08;
-        ds = 0x10;
-        ss = 0x10;
+    if (fork_parent) {
+        m_file_descriptors.resize(fork_parent->m_file_descriptors.size());
+        for (size_t i = 0; i < fork_parent->m_file_descriptors.size(); ++i) {
+            if (!fork_parent->m_file_descriptors[i])
+                continue;
+#ifdef FORK_DEBUG
+            dbgprintf("fork: cloning fd %u... (%p) istty? %um\n", i, fork_parent->m_file_descriptors[i].ptr(), fork_parent->m_file_descriptors[i]->isTTY());
+#endif
+            m_file_descriptors[i] = fork_parent->m_file_descriptors[i]->clone();
+        }
     } else {
-        cs = 0x1b;
-        ds = 0x23;
-        ss = 0x23;
+        m_file_descriptors.resize(m_max_open_file_descriptors);
+        if (tty) {
+            m_file_descriptors[0] = tty->open(O_RDONLY);
+            m_file_descriptors[1] = tty->open(O_WRONLY);
+            m_file_descriptors[2] = tty->open(O_WRONLY);
+        }
     }
 
-    m_tss.ds = ds;
-    m_tss.es = ds;
-    m_tss.fs = ds;
-    m_tss.gs = ds;
-    m_tss.ss = ss;
-    m_tss.cs = cs;
+    if (fork_parent)
+        m_nextRegion = fork_parent->m_nextRegion;
+    else
+        m_nextRegion = LinearAddress(0x10000000);
+
+    if (fork_parent) {
+        memcpy(&m_tss, &fork_parent->m_tss, sizeof(m_tss));
+    } else {
+        memset(&m_tss, 0, sizeof(m_tss));
+
+        // Only IF is set when a process boots.
+        m_tss.eflags = 0x0202;
+        word cs, ds, ss;
+
+        if (isRing0()) {
+            cs = 0x08;
+            ds = 0x10;
+            ss = 0x10;
+        } else {
+            cs = 0x1b;
+            ds = 0x23;
+            ss = 0x23;
+        }
+
+        m_tss.ds = ds;
+        m_tss.es = ds;
+        m_tss.fs = ds;
+        m_tss.gs = ds;
+        m_tss.ss = ss;
+        m_tss.cs = cs;
+    }
 
     m_tss.cr3 = (dword)m_page_directory;
 
@@ -486,10 +547,14 @@ Process::Process(String&& name, uid_t uid, gid_t gid, pid_t parentPID, RingLevel
         m_stackTop0 = (stackBottom + defaultStackSize) & 0xffffff8;
         m_tss.esp = m_stackTop0;
     } else {
-        auto* region = allocateRegion(defaultStackSize, "stack");
-        ASSERT(region);
-        m_stackTop3 = region->linearAddress.offset(defaultStackSize).get() & 0xfffffff8;
-        m_tss.esp = m_stackTop3;
+        if (fork_parent) {
+            m_stackTop3 = fork_parent->m_stackTop3;
+        } else {
+            auto* region = allocateRegion(defaultStackSize, "stack");
+            ASSERT(region);
+            m_stackTop3 = region->linearAddress.offset(defaultStackSize).get() & 0xfffffff8;
+            m_tss.esp = m_stackTop3;
+        }
     }
 
     if (isRing3()) {
@@ -510,12 +575,6 @@ Process::~Process()
     InterruptDisabler disabler;
     ProcFileSystem::the().removeProcess(*this);
     system.nprocess--;
-
-    if (isRing3()) {
-        delete [] m_ldtEntries;
-        m_ldtEntries = nullptr;
-        gdt_free_entry(m_ldt_selector);
-    }
 
     gdt_free_entry(selector());
 

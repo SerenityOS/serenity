@@ -47,6 +47,7 @@ enum Function {
     PosixGetpgrp = 0x2015,
     PosixTcsetpgrp = 0x2016,
     PosixTcgetpgrp = 0x2017,
+    PosixFork = 0x2018,
 };
 
 void initialize();

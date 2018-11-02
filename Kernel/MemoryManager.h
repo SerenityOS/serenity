@@ -40,6 +40,8 @@ private:
 struct Region : public Retainable<Region> {
     Region(LinearAddress, size_t, RetainPtr<Zone>&&, String&&);
     ~Region();
+
+    RetainPtr<Region> clone();
     LinearAddress linearAddress;
     size_t size { 0 };
     RetainPtr<Zone> zone;

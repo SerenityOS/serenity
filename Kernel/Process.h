@@ -119,6 +119,7 @@ public:
     int sys$uname(utsname*);
     int sys$readlink(const char*, char*, size_t);
     int sys$ttyname_r(int fd, char*, size_t);
+    pid_t sys$fork(RegisterDump&);
 
     static void initialize();
 
@@ -155,11 +156,13 @@ public:
 
     void send_signal(int signal, Process* sender);
 
+    Process* fork(RegisterDump&);
+
 private:
     friend class MemoryManager;
     friend bool scheduleNewProcess();
 
-    Process(String&& name, uid_t, gid_t, pid_t parentPID, RingLevel, RetainPtr<VirtualFileSystem::Node>&& cwd = nullptr, RetainPtr<VirtualFileSystem::Node>&& executable = nullptr, TTY* = nullptr);
+    Process(String&& name, uid_t, gid_t, pid_t parentPID, RingLevel, RetainPtr<VirtualFileSystem::Node>&& cwd = nullptr, RetainPtr<VirtualFileSystem::Node>&& executable = nullptr, TTY* = nullptr, Process* fork_parent = nullptr);
 
     void allocateLDT();
 
@@ -183,8 +186,6 @@ private:
     State m_state { Invalid };
     DWORD m_wakeupTime { 0 };
     TSS32 m_tss;
-    word m_ldt_selector { 0 };
-    Descriptor* m_ldtEntries { nullptr };
     Vector<OwnPtr<FileHandle>> m_file_descriptors;
     RingLevel m_ring { Ring0 };
     int m_error { 0 };

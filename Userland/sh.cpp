@@ -32,6 +32,13 @@ static int sh_pwd(int, const char**)
     return 0;
 }
 
+static int sh_fork(int, const char**)
+{
+    pid_t pid = fork();
+    printf("getpid()=%d, fork()=%d\n", getpid(), pid);
+    return 0;
+}
+
 static int sh_exit(int, const char**)
 {
     printf("Good-bye!\n");
@@ -92,6 +99,11 @@ static bool handle_builtin(int argc, const char** argv, int& retval)
     }
     if (!strcmp(argv[0], "exit")) {
         retval = sh_exit(argc, argv);
+        return true;
+    }
+
+    if (!strcmp(argv[0], "fork")) {
+        retval = sh_fork(argc, argv);
         return true;
     }
     return false;
