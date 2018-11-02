@@ -30,6 +30,7 @@ public:
 
     bool isTTY() const;
     const TTY* tty() const;
+    TTY* tty();
 
     InodeMetadata metadata() const { return m_vnode->metadata(); }
 

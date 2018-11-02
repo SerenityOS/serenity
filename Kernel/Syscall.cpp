@@ -124,6 +124,10 @@ DWORD handle(DWORD function, DWORD arg1, DWORD arg2, DWORD arg3)
         return current->sys$getpgid((pid_t)arg1);
     case Syscall::PosixGetpgrp:
         return current->sys$getpgrp();
+    case Syscall::PosixTcgetpgrp:
+        return current->sys$tcgetpgrp((int)arg1);
+    case Syscall::PosixTcsetpgrp:
+        return current->sys$tcsetpgrp((int)arg1, (pid_t)arg2);
     default:
         kprintf("<%u> int0x80: Unknown function %x requested {%x, %x, %x}\n", current->pid(), function, arg1, arg2, arg3);
         break;

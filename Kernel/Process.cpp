@@ -1249,3 +1249,34 @@ int Process::sys$setpgid(pid_t specified_pid, pid_t specified_pgid)
     process->m_pgid = new_pgid;
     return 0;
 }
+
+pid_t Process::sys$tcgetpgrp(int fd)
+{
+    auto* handle = fileHandleIfExists(fd);
+    if (!handle)
+        return -EBADF;
+    if (!handle->isTTY())
+        return -ENOTTY;
+    auto& tty = *handle->tty();
+    if (&tty != m_tty)
+        return -ENOTTY;
+    return tty.pgid();
+}
+
+int Process::sys$tcsetpgrp(int fd, pid_t pgid)
+{
+    if (pgid < 0)
+        return -EINVAL;
+    if (get_sid_from_pgid(pgid) != m_sid)
+        return -EINVAL;
+    auto* handle = fileHandleIfExists(fd);
+    if (!handle)
+        return -EBADF;
+    if (!handle->isTTY())
+        return -ENOTTY;
+    auto& tty = *handle->tty();
+    if (&tty != m_tty)
+        return -ENOTTY;
+    tty.set_pgid(pgid);
+    return 0;
+}

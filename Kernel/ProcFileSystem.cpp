@@ -277,10 +277,11 @@ ByteBuffer procfs$summary()
     auto processes = Process::allProcesses();
     auto buffer = ByteBuffer::createUninitialized(processes.size() * 256);
     char* ptr = (char*)buffer.pointer();
-    ptr += ksprintf(ptr, "PID PGP SID  OWNER  STATE      PPID NSCHED     FDS  TTY  NAME\n");
+    ptr += ksprintf(ptr, "PID TPG PGP SID  OWNER  STATE      PPID NSCHED     FDS  TTY  NAME\n");
     for (auto* process : processes) {
-        ptr += ksprintf(ptr, "% 3u % 3u % 3u  % 4u   % 8s   % 3u  % 9u  % 3u  % 4s  %s\n",
+        ptr += ksprintf(ptr, "% 3u % 3u % 3u % 3u  % 4u   % 8s   % 3u  % 9u  % 3u  % 4s  %s\n",
             process->pid(),
+            process->tty() ? process->tty()->pgid() : 0,
             process->pgid(),
             process->sid(),
             process->uid(),

@@ -12,6 +12,9 @@ public:
 
     virtual String ttyName() const = 0;
 
+    void set_pgid(pid_t pgid) { m_pgid = pgid; }
+    pid_t pgid() const { return m_pgid; }
+
 protected:
     virtual bool isTTY() const final { return true; }
 
@@ -22,5 +25,6 @@ protected:
 
 private:
     Vector<byte> m_buffer;
+    pid_t m_pgid { 0 };
 };
 

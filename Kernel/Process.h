@@ -86,6 +86,8 @@ public:
     int sys$setpgid(pid_t pid, pid_t pgid);
     pid_t sys$getpgrp();
     pid_t sys$getpgid(pid_t);
+    pid_t sys$tcgetpgrp(int fd);
+    int sys$tcsetpgrp(int fd, pid_t pgid);
     uid_t sys$getuid();
     gid_t sys$getgid();
     pid_t sys$getpid();

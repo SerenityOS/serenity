@@ -25,9 +25,14 @@ pid_t setsid()
     return Syscall::invoke(Syscall::PosixSetsid);
 }
 
-pid_t sys$getsid(pid_t pid)
+pid_t tcgetpgrp(int fd)
 {
-    return Syscall::invoke(Syscall::PosixSetsid, (dword)pid);
+    return Syscall::invoke(Syscall::PosixTcgetpgrp, (dword)fd);
+}
+
+int tcsetpgrp(int fd, pid_t pgid)
+{
+    return Syscall::invoke(Syscall::PosixTcsetpgrp, (dword)fd, (dword)pgid);
 }
 
 int setpgid(pid_t pid, pid_t pgid)

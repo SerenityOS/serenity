@@ -142,9 +142,16 @@ static int runcmd(char* cmd)
         return 1;
     }
 
+    // FIXME: This is racy, since spawn has already started the new process.
+    //        Once I have fork()+exec(), pgrp setup can be done in the child before exec()ing.
+    tcsetpgrp(0, ret);
+
     // FIXME: waitpid should give us the spawned process's exit status
     int wstatus = 0;
     waitpid(ret, &wstatus, 0);
+
+    // FIXME: Racy as mentioned above. Rework once we have fork()+exec().
+    tcsetpgrp(0, getpid());
 
     if (WIFEXITED(wstatus)) {
         //printf("Exited normally with status %d\n", WEXITSTATUS(wstatus));
@@ -173,6 +180,8 @@ int main(int, char**)
 {
     g = new GlobalState;
     g->sid = setsid();
+    tcsetpgrp(0, getpgrp());
+
     int rc = gethostname(g->hostname, sizeof(g->hostname));
     if (rc < 0)
         perror("gethostname");
