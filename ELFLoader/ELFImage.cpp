@@ -91,6 +91,11 @@ unsigned ELFImage::sectionCount() const
     return header().e_shnum;
 }
 
+unsigned ELFImage::program_header_count() const
+{
+    return header().e_phnum;
+}
+
 bool ELFImage::parse()
 {
     // We only support i386.
@@ -148,6 +153,12 @@ const Elf32_Ehdr& ELFImage::header() const
     return *reinterpret_cast<const Elf32_Ehdr*>(rawData(0));
 }
 
+const Elf32_Phdr& ELFImage::program_header_internal(unsigned index) const
+{
+    ASSERT(index < header().e_phnum);
+    return *reinterpret_cast<const Elf32_Phdr*>(rawData(header().e_phoff + (index * sizeof(Elf32_Phdr))));
+}
+
 const Elf32_Shdr& ELFImage::sectionHeader(unsigned index) const
 {
     ASSERT(index < header().e_shnum);
@@ -165,6 +176,12 @@ const ELFImage::Section ELFImage::section(unsigned index) const
 {
     ASSERT(index < sectionCount());
     return Section(*this, index);
+}
+
+const ELFImage::ProgramHeader ELFImage::program_header(unsigned index) const
+{
+    ASSERT(index < program_header_count());
+    return ProgramHeader(*this, index);
 }
 
 const ELFImage::Relocation ELFImage::RelocationSection::relocation(unsigned index) const
