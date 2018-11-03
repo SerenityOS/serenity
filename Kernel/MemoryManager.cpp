@@ -152,8 +152,6 @@ auto MemoryManager::ensurePTE(PageDirectory* page_directory, LinearAddress laddr
                 laddr.get(),
                 page_table);
 #endif
-            if (page_table.get() == 0x71d000)
-                ASSERT(page_directory == m_kernel_page_directory);
             page_directory->physical_addresses[page_directory_index] = page_table;
             pde.setPageTableBase(page_table.get());
             pde.setUserAllowed(true);
