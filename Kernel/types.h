@@ -84,7 +84,7 @@ public:
     LinearAddress() { }
     explicit LinearAddress(dword address) : m_address(address) { }
 
-    bool isNull() const { return m_address == 0; }
+    bool is_null() const { return m_address == 0; }
 
     LinearAddress offset(dword o) const { return LinearAddress(m_address + o); }
     dword get() const { return m_address; }

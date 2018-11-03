@@ -15,10 +15,6 @@ ExecSpace::ExecSpace()
 
 ExecSpace::~ExecSpace()
 {
-    if (!hookableAlloc) {
-        for (auto& area : m_areas)
-            kfree(area->memory);
-    }
 }
 
 #ifdef SERENITY
@@ -110,20 +106,14 @@ void ExecSpace::allocateUniverse(size_t size)
         m_universe = static_cast<char*>(kmalloc(size));
 }
 
-char* ExecSpace::allocateArea(String&& name, unsigned size, dword offset, LinearAddress laddr)
+bool ExecSpace::allocate_section(LinearAddress laddr, size_t size, size_t alignment, bool is_readable, bool is_writable)
 {
-    ASSERT(m_universe);
-    char* ptr = m_universe + offset;
-    m_areas.append(make<Area>(move(name), offset, ptr, size, laddr));
-    return ptr;
-}
-
-void ExecSpace::forEachArea(Function<void(const String& name, dword offset, size_t size, LinearAddress)> callback)
-{
-    for (auto& a : m_areas) {
-        auto& area = *a;
-        callback(area.name, area.offset, area.size, area.laddr);
-    }
+    ASSERT(alloc_section_hook);
+    char namebuf[16];
+    ksprintf(namebuf, "elf-%s%s", is_readable ? "r" : "", is_writable ? "w" : "");
+    auto* ptr = static_cast<char*>(alloc_section_hook(laddr, size, alignment, is_readable, is_writable, namebuf));
+    m_allocated_regions.append(ptr);
+    return true;
 }
 
 void ExecSpace::addSymbol(String&& name, char* ptr, unsigned size)

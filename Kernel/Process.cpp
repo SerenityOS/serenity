@@ -134,19 +134,26 @@ Vector<Process*> Process::allProcesses()
     return processes;
 }
 
-Region* Process::allocateRegion(size_t size, String&& name)
+Region* Process::allocate_region(LinearAddress laddr, size_t size, String&& name, bool is_readable, bool is_writable)
 {
     // FIXME: This needs sanity checks. What if this overlaps existing regions?
+    if (laddr.is_null()) {
+        laddr = m_nextRegion;
+        m_nextRegion = m_nextRegion.offset(size).offset(PAGE_SIZE);
+    }
+
+    laddr.mask(0xfffff000);
 
     auto zone = MM.createZone(size);
     ASSERT(zone);
-    m_regions.append(adopt(*new Region(m_nextRegion, size, move(zone), move(name))));
-    m_nextRegion = m_nextRegion.offset(size).offset(16384);
+
+    m_regions.append(adopt(*new Region(laddr, size, move(zone), move(name))));
+
     MM.mapRegion(*this, *m_regions.last());
     return m_regions.last().ptr();
 }
 
-bool Process::deallocateRegion(Region& region)
+bool Process::deallocate_region(Region& region)
 {
     InterruptDisabler disabler;
     for (size_t i = 0; i < m_regions.size(); ++i) {
@@ -183,7 +190,7 @@ void* Process::sys$mmap(void* addr, size_t size)
     InterruptDisabler disabler;
     // FIXME: Implement mapping at a client-preferred address.
     ASSERT(addr == nullptr);
-    auto* region = allocateRegion(size, "mmap");
+    auto* region = allocate_region(LinearAddress(), size, "mmap");
     if (!region)
         return (void*)-1;
     MM.mapRegion(*this, *region);
@@ -196,7 +203,7 @@ int Process::sys$munmap(void* addr, size_t size)
     auto* region = regionFromRange(LinearAddress((dword)addr), size);
     if (!region)
         return -1;
-    if (!deallocateRegion(*region))
+    if (!deallocate_region(*region))
         return -1;
     return 0;
 }
@@ -229,17 +236,6 @@ Process* Process::fork(RegisterDump& regs)
         dbgprintf("fork: cloning Region{%p}\n", region.ptr());
 #endif
         auto cloned_region = region->clone();
-        // FIXME: Move subregions into Region?
-        for (auto& subregion : m_subregions) {
-            if (subregion->region.ptr() != region.ptr())
-                continue;
-#ifdef FORK_DEBUG
-            dbgprintf("fork: cloning Subregion{%p}\n", subregion.ptr());
-#endif
-            auto cloned_subregion = make<Subregion>(*cloned_region, subregion->offset, subregion->size, subregion->linearAddress, String(subregion->name));
-            child->m_subregions.append(move(cloned_subregion));
-            MM.mapSubregion(*child, *child->m_subregions.last());
-        }
         child->m_regions.append(move(cloned_region));
         MM.mapRegion(*child, *child->m_regions.last());
     }
@@ -312,18 +308,16 @@ int Process::exec(const String& path, Vector<String>&& arguments, Vector<String>
         InterruptDisabler disabler;
         // Okay, here comes the sleight of hand, pay close attention..
         auto old_regions = move(m_regions);
-        auto old_subregions = move(m_subregions);
         old_page_directory = m_page_directory;
         new_page_directory = reinterpret_cast<PageDirectory*>(kmalloc_page_aligned(sizeof(PageDirectory)));
         MM.populate_page_directory(*new_page_directory);
         m_page_directory = new_page_directory;
         MM.enter_process_paging_scope(*this);
-        space.hookableAlloc = [&] (const String& name, size_t size) {
-            if (!size)
-                return (void*)nullptr;
+        space.alloc_section_hook = [&] (LinearAddress laddr, size_t size, size_t alignment, bool is_readable, bool is_writable, const String& name) {
+            ASSERT(size);
             size = ((size / 4096) + 1) * 4096; // FIXME: Use ceil_div?
-            region = allocateRegion(size, String(name));
-            return (void*)region->linearAddress.get();
+            region = allocate_region(laddr, size, String(name), is_readable, is_writable);
+            return laddr.asPtr();
         };
         bool success = space.loadELF(move(elfData));
         if (!success) {
@@ -331,21 +325,9 @@ int Process::exec(const String& path, Vector<String>&& arguments, Vector<String>
             MM.enter_process_paging_scope(*this);
             MM.release_page_directory(*new_page_directory);
             m_regions = move(old_regions);
-            m_subregions = move(old_subregions);
             kprintf("sys$execve: Failure loading %s\n", path.characters());
             return -ENOEXEC;
         }
-
-        space.forEachArea([&] (const String& name, dword offset, size_t size, LinearAddress laddr) {
-            if (laddr.isNull())
-                return;
-            dword roundedOffset = offset & 0xfffff000;
-            size_t roundedSize = 4096 * ceilDiv((offset - roundedOffset) + size, 4096u);
-            LinearAddress roundedLaddr = laddr;
-            roundedLaddr.mask(0xfffff000);
-            m_subregions.append(make<Subregion>(*region, roundedOffset, roundedSize, roundedLaddr, String(name)));
-            MM.mapSubregion(*this, *m_subregions.last());
-        });
 
         entry_eip = (dword)space.symbolPtr("_start");
         if (!entry_eip) {
@@ -353,7 +335,6 @@ int Process::exec(const String& path, Vector<String>&& arguments, Vector<String>
             MM.enter_process_paging_scope(*this);
             MM.release_page_directory(*new_page_directory);
             m_regions = move(old_regions);
-            m_subregions = move(old_subregions);
             return -ENOEXEC;
         }
     }
@@ -375,7 +356,7 @@ int Process::exec(const String& path, Vector<String>&& arguments, Vector<String>
     m_tss.fs = 0x23;
     m_tss.ss = 0x23;
     m_tss.cr3 = (dword)m_page_directory;
-    auto* stack_region = allocateRegion(defaultStackSize, "stack");
+    auto* stack_region = allocate_region(LinearAddress(), defaultStackSize, "stack");
     ASSERT(stack_region);
     m_stackTop3 = stack_region->linearAddress.offset(defaultStackSize).get() & 0xfffffff8;
     m_tss.esp = m_stackTop3;
@@ -512,7 +493,7 @@ Process* Process::create_user_process(const String& path, uid_t uid, gid_t gid, 
 
 int Process::sys$get_environment(char*** environ)
 {
-    auto* region = allocateRegion(4096, "environ");
+    auto* region = allocate_region(LinearAddress(), PAGE_SIZE, "environ");
     if (!region)
         return -ENOMEM;
     MM.mapRegion(*this, *region);
@@ -531,7 +512,7 @@ int Process::sys$get_environment(char*** environ)
 
 int Process::sys$get_arguments(int* argc, char*** argv)
 {
-    auto* region = allocateRegion(4096, "argv");
+    auto* region = allocate_region(LinearAddress(), PAGE_SIZE, "argv");
     if (!region)
         return -ENOMEM;
     MM.mapRegion(*this, *region);
@@ -656,7 +637,7 @@ Process::Process(String&& name, uid_t uid, gid_t gid, pid_t parentPID, RingLevel
         if (fork_parent) {
             m_stackTop3 = fork_parent->m_stackTop3;
         } else {
-            auto* region = allocateRegion(defaultStackSize, "stack");
+            auto* region = allocate_region(LinearAddress(), defaultStackSize, "stack");
             ASSERT(region);
             m_stackTop3 = region->linearAddress.offset(defaultStackSize).get() & 0xfffffff8;
             m_tss.esp = m_stackTop3;
@@ -702,18 +683,6 @@ void Process::dumpRegions()
             region->linearAddress.offset(region->size - 1).get(),
             region->size,
             region->name.characters());
-    }
-
-    kprintf("Process %s(%u) subregions:\n", name().characters(), pid());
-    kprintf("REGION    OFFSET    BEGIN       END         SIZE        NAME\n");
-    for (auto& subregion : m_subregions) {
-        kprintf("%x  %x  %x -- %x    %x    %s\n",
-            subregion->region->linearAddress.get(),
-            subregion->offset,
-            subregion->linearAddress.get(),
-            subregion->linearAddress.offset(subregion->size - 1).get(),
-            subregion->size,
-            subregion->name.characters());
     }
 }
 
@@ -1300,19 +1269,6 @@ Region::Region(LinearAddress a, size_t s, RetainPtr<Zone>&& z, String&& n)
 }
 
 Region::~Region()
-{
-}
-
-Subregion::Subregion(Region& r, dword o, size_t s, LinearAddress l, String&& n)\
-    : region(r)
-    , offset(o)
-    , size(s)
-    , linearAddress(l)
-    , name(move(n))
-{
-}
-
-Subregion::~Subregion()
 {
 }
 

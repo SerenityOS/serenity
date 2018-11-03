@@ -12,7 +12,6 @@
 class FileHandle;
 class PageDirectory;
 class Region;
-class Subregion;
 class Zone;
 
 class Process : public InlineLinkedListNode<Process> {
@@ -130,8 +129,6 @@ public:
 
     size_t regionCount() const { return m_regions.size(); }
     const Vector<RetainPtr<Region>>& regions() const { return m_regions; }
-    size_t subregionCount() const { return m_regions.size(); }
-    const Vector<OwnPtr<Subregion>>& subregions() const { return m_subregions; }
     void dumpRegions();
 
     void didSchedule() { ++m_timesScheduled; }
@@ -203,14 +200,12 @@ private:
 
     TTY* m_tty { nullptr };
 
-    Region* allocateRegion(size_t, String&& name);
-    Region* allocateRegion(size_t, String&& name, LinearAddress);
-    bool deallocateRegion(Region& region);
+    Region* allocate_region(LinearAddress, size_t, String&& name, bool is_readable = true, bool is_writable = true);
+    bool deallocate_region(Region& region);
 
     Region* regionFromRange(LinearAddress, size_t);
 
     Vector<RetainPtr<Region>> m_regions;
-    Vector<OwnPtr<Subregion>> m_subregions;
 
     // FIXME: Implement some kind of ASLR?
     LinearAddress m_nextRegion;

@@ -40,35 +40,23 @@ bool ELFLoader::layout()
     kprintf("ELFLoader: Layout\n");
 #endif
 
+    bool failed = false;
     m_image->for_each_program_header([&] (const ELFImage::ProgramHeader& program_header) {
         if (program_header.type() != PT_LOAD)
             return;
 #ifdef ELFLOADER_DEBUG
         kprintf("PH: L%x %u r:%u w:%u\n", program_header.laddr().get(), program_header.size_in_memory(), program_header.is_readable(), program_header.is_writable());
 #endif
+        m_execSpace.allocate_section(program_header.laddr(), program_header.size_in_memory(), program_header.alignment(), program_header.is_readable(), program_header.is_writable());
     });
-
-    bool failed = false;
-    dword highestOffset = 0;
-    dword sizeNeeded = 0;
-    m_image->forEachSection([&] (auto& section) {
-        if (section.offset() > highestOffset) {
-            highestOffset = section.offset();
-            sizeNeeded = highestOffset + section.size();
-        }
-    });
-#ifdef ELFLOADER_DEBUG
-    kprintf("ELFLoader: Highest section offset: %u, Size needed: %u\n", highestOffset, sizeNeeded);
-#endif
-    m_execSpace.allocateUniverse(sizeNeeded);
 
     m_image->forEachSectionOfType(SHT_PROGBITS, [this, &failed] (const ELFImage::Section& section) {
 #ifdef ELFLOADER_DEBUG
-        kprintf("ELFLoader: Allocating progbits section: %s\n", section.name());
+        kprintf("ELFLoader: Copying progbits section: %s\n", section.name());
 #endif
         if (!section.size())
             return true;
-        char* ptr = m_execSpace.allocateArea(section.name(), section.size(), section.offset(), LinearAddress(section.address()));
+        char* ptr = (char*)section.address();
         if (!ptr) {
             kprintf("ELFLoader: failed to allocate section '%s'\n", section.name());
             failed = true;
@@ -80,11 +68,11 @@ bool ELFLoader::layout()
     });
     m_image->forEachSectionOfType(SHT_NOBITS, [this, &failed] (const ELFImage::Section& section) {
 #ifdef ELFLOADER_DEBUG
-        kprintf("ELFLoader: Allocating nobits section: %s\n", section.name());
+        kprintf("ELFLoader: Copying nobits section: %s\n", section.name());
 #endif
         if (!section.size())
             return true;
-        char* ptr = m_execSpace.allocateArea(section.name(), section.size(), section.offset(), LinearAddress(section.address()));
+        char* ptr = (char*)section.address();
         if (!ptr) {
             kprintf("ELFLoader: failed to allocate section '%s'\n", section.name());
             failed = true;
