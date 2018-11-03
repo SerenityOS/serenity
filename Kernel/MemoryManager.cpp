@@ -428,6 +428,10 @@ RetainPtr<Region> Region::clone()
     InterruptDisabler disabler;
     KernelPagingScope pagingScope;
 
+    if (is_readable && !is_writable) {
+        // Create a new region backed by the same zone.
+        return adopt(*new Region(linearAddress, size, zone.copyRef(), String(name), is_readable, is_writable));
+    }
     // FIXME: Implement COW regions.
     auto clone_zone = MM.createZone(zone->size());
     auto clone_region = adopt(*new Region(linearAddress, size, move(clone_zone), String(name), is_readable, is_writable));
