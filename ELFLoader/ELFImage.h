@@ -8,6 +8,7 @@
 #include <AK/HashMap.h>
 #include <AK/String.h>
 #include "elf.h"
+#include "types.h"
 
 class ELFImage {
 public:
@@ -49,6 +50,31 @@ public:
         const ELFImage& m_image;
         const Elf32_Sym& m_sym;
         const unsigned m_index;
+    };
+
+    class ProgramHeader {
+    public:
+        ProgramHeader(const ELFImage& image, unsigned program_header_index)
+            : m_program_header(image.program_header_internal(program_header_index))
+            , m_program_header_index(program_header_index)
+        {
+        }
+        ~ProgramHeader() { }
+
+        unsigned index() const { return m_program_header_index; }
+        dword type() const { return m_program_header.p_type; }
+        dword flags() const { return m_program_header.p_flags; }
+        dword offset() const { return m_program_header.p_offset; }
+        LinearAddress laddr() const { return LinearAddress(m_program_header.p_vaddr); }
+        dword size_in_memory() const { return m_program_header.p_memsz; }
+        dword size_in_image() const { return m_program_header.p_filesz; }
+        dword alignment() const { return m_program_header.p_align; }
+        bool is_readable() const { return flags() & PF_R; }
+        bool is_writable() const { return flags() & PF_W; }
+        bool is_executable() const { return flags() & PF_X; }
+    private:
+        const Elf32_Phdr& m_program_header;
+        unsigned m_program_header_index { 0 };
     };
 
     class Section {
@@ -112,13 +138,16 @@ public:
 
     unsigned symbolCount() const;
     unsigned sectionCount() const;
+    unsigned program_header_count() const;
 
     const Symbol symbol(unsigned) const;
     const Section section(unsigned) const;
+    const ProgramHeader program_header(unsigned const) const;
 
     template<typename F> void forEachSection(F) const;
     template<typename F> void forEachSectionOfType(unsigned, F) const;
     template<typename F> void forEachSymbol(F) const;
+    template<typename F> void for_each_program_header(F) const;
 
     // NOTE: Returns section(0) if section with name is not found.
     // FIXME: I don't love this API.
@@ -132,6 +161,7 @@ private:
     const char* rawData(unsigned offset) const;
     const Elf32_Ehdr& header() const;
     const Elf32_Shdr& sectionHeader(unsigned) const;
+    const Elf32_Phdr& program_header_internal(unsigned) const;
     const char* tableString(unsigned offset) const;
     const char* sectionHeaderTableString(unsigned offset) const;
     const char* sectionIndexToString(unsigned index);
@@ -184,3 +214,10 @@ inline void ELFImage::forEachSymbol(F func) const
     }
 }
 
+template<typename F>
+inline void ELFImage::for_each_program_header(F func) const
+{
+    for (unsigned i = 0; i < program_header_count(); ++i) {
+        func(program_header(i));
+    }
+}

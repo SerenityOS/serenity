@@ -39,6 +39,15 @@ bool ELFLoader::layout()
 #ifdef ELFLOADER_DEBUG
     kprintf("ELFLoader: Layout\n");
 #endif
+
+    m_image->for_each_program_header([&] (const ELFImage::ProgramHeader& program_header) {
+        if (program_header.type() != PT_LOAD)
+            return;
+#ifdef ELFLOADER_DEBUG
+        kprintf("PH: L%x %u r:%u w:%u\n", program_header.laddr().get(), program_header.size_in_memory(), program_header.is_readable(), program_header.is_writable());
+#endif
+    });
+
     bool failed = false;
     dword highestOffset = 0;
     dword sizeNeeded = 0;
