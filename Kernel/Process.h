@@ -19,7 +19,7 @@ class Process : public InlineLinkedListNode<Process> {
     friend class InlineLinkedListNode<Process>;
 public:
     static Process* createKernelProcess(void (*entry)(), String&& name);
-    static Process* createUserProcess(const String& path, uid_t, gid_t, pid_t parentPID, int& error, const char** args = nullptr, TTY* = nullptr);
+    static Process* create_user_process(const String& path, uid_t, gid_t, pid_t parentPID, int& error, Vector<String>&& arguments = Vector<String>(), Vector<String>&& environment = Vector<String>(), TTY* = nullptr);
     ~Process();
 
     static Vector<Process*> allProcesses();
@@ -103,7 +103,7 @@ public:
     int sys$kill(pid_t pid, int sig);
     int sys$geterror() { return m_error; }
     void sys$exit(int status);
-    int sys$spawn(const char* path, const char** args);
+    pid_t sys$spawn(const char* path, const char** args, const char** envp);
     pid_t sys$waitpid(pid_t, int* wstatus, int options);
     void* sys$mmap(void*, size_t size);
     int sys$munmap(void*, size_t size);

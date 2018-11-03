@@ -1,10 +1,11 @@
 #pragma once
 
 #include <sys/cdefs.h>
+#include <sys/types.h>
 
 __BEGIN_DECLS
 
-int spawn(const char* path, const char** args);
+pid_t spawn(const char* path, const char** args, const char** envp);
 
 __END_DECLS
 

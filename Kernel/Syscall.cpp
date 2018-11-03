@@ -58,7 +58,7 @@ static DWORD handle(RegisterDump& regs, DWORD function, DWORD arg1, DWORD arg2, 
     case Syscall::PosixGettimeofday:
         return current->sys$gettimeofday((timeval*)arg1);
     case Syscall::Spawn:
-        return current->sys$spawn((const char*)arg1, (const char**)arg2);
+        return current->sys$spawn((const char*)arg1, (const char**)arg2, (const char**)arg3);
     case Syscall::GetDirEntries:
         return current->sys$get_dir_entries((int)arg1, (void*)arg2, (size_t)arg3);
     case Syscall::PosixLstat:

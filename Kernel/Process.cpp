@@ -359,7 +359,8 @@ int Process::exec(const String& path, Vector<String>&& arguments, Vector<String>
     }
 
     InterruptDisabler disabler;
-    loadTaskRegister(s_kernelProcess->selector());
+    if (current == this)
+        loadTaskRegister(s_kernelProcess->selector());
 
     m_name = parts.takeLast();
 
@@ -392,8 +393,9 @@ int Process::exec(const String& path, Vector<String>&& arguments, Vector<String>
     kprintf("Process %u (%s) exec'd %s @ %p\n", pid(), name().characters(), filename, m_tss.eip);
 #endif
 
-    yield();
-    ASSERT(false);
+    if (current == this)
+        yield();
+
     return 0;
 }
 
@@ -430,129 +432,82 @@ int Process::sys$execve(const char* filename, const char** argv, const char** en
         }
     }
 
-    return exec(path, move(arguments), move(environment));
+    int rc = exec(path, move(arguments), move(environment));
+    ASSERT(rc < 0);
+    return rc;
 }
 
-int Process::sys$spawn(const char* path, const char** args)
+pid_t Process::sys$spawn(const char* filename, const char** argv, const char** envp)
 {
-    if (args) {
-        for (size_t i = 0; args[i]; ++i) {
-            VALIDATE_USER_READ(args[i], strlen(args[i]));
+    VALIDATE_USER_READ(filename, strlen(filename));
+    if (argv) {
+        for (size_t i = 0; argv[i]; ++i) {
+            VALIDATE_USER_READ(argv[i], strlen(argv[i]));
+        }
+    }
+    if (envp) {
+        for (size_t i = 0; envp[i]; ++i) {
+            VALIDATE_USER_READ(envp[i], strlen(envp[i]));
         }
     }
 
-    int error = 0;
-    auto* child = Process::createUserProcess(path, m_uid, m_gid, m_pid, error, args, m_tty);
+    String path(filename);
+    auto parts = path.split('/');
+
+    Vector<String> arguments;
+    if (argv) {
+        for (size_t i = 0; argv[i]; ++i) {
+            arguments.append(argv[i]);
+        }
+    } else {
+        arguments.append(parts.last());
+    }
+
+    Vector<String> environment;
+    if (envp) {
+        for (size_t i = 0; envp[i]; ++i) {
+            environment.append(envp[i]);
+        }
+    }
+
+    int error;
+    auto* child = create_user_process(path, m_uid, m_gid, m_pid, error, move(arguments), move(environment), m_tty);
     if (child)
         return child->pid();
     return error;
 }
 
-Process* Process::createUserProcess(const String& path, uid_t uid, gid_t gid, pid_t parentPID, int& error, const char** args, TTY* tty)
+Process* Process::create_user_process(const String& path, uid_t uid, gid_t gid, pid_t parent_pid, int& error, Vector<String>&& arguments, Vector<String>&& environment, TTY* tty)
 {
+    // FIXME: Don't split() the path twice (sys$spawn also does it...)
     auto parts = path.split('/');
-    if (parts.isEmpty()) {
-        error = -ENOENT;
-        return nullptr;
+    if (arguments.isEmpty()) {
+        arguments.append(parts.last());
     }
-
     RetainPtr<VirtualFileSystem::Node> cwd;
     {
         InterruptDisabler disabler;
-        if (auto* parentProcess = Process::fromPID(parentPID))
-            cwd = parentProcess->m_cwd.copyRef();
-        if (!cwd)
-            cwd = VirtualFileSystem::the().root();
+        if (auto* parent = Process::fromPID(parent_pid))
+            cwd = parent->m_cwd.copyRef();
     }
+    if (!cwd)
+        cwd = VirtualFileSystem::the().root();
 
-    auto handle = VirtualFileSystem::the().open(path, error, 0, cwd ? cwd->inode : InodeIdentifier());
-    if (!handle)
+    auto* process = new Process(parts.takeLast(), uid, gid, parent_pid, Ring3, move(cwd), nullptr, tty);
+
+    error = process->exec(path, move(arguments), move(environment));
+    if (error != 0)
         return nullptr;
 
-    if (!handle->metadata().mayExecute(uid, gid)) {
-        error = -EACCES;
-        return nullptr;
-    }
+    ProcFileSystem::the().addProcess(*process);
 
-    auto elfData = handle->readEntireFile();
-    if (!elfData) {
-        error = -EIO; // FIXME: Get a more detailed error from VFS.
-        return nullptr;
-    }
-
-    Vector<String> processArguments;
-    if (args) {
-        for (size_t i = 0; args[i]; ++i) {
-            processArguments.append(args[i]);
-        }
-    } else {
-        processArguments.append(parts.last());
-    }
-
-    Vector<String> processEnvironment;
-    processEnvironment.append("PATH=/bin");
-    processEnvironment.append("SHELL=/bin/sh");
-    processEnvironment.append("TERM=console");
-    processEnvironment.append("HOME=/");
-
-    auto* t = new Process(parts.takeLast(), uid, gid, parentPID, Ring3, move(cwd), handle->vnode(), tty);
-
-    t->m_arguments = move(processArguments);
-    t->m_initialEnvironment = move(processEnvironment);
-
-    ExecSpace space;
-    Region* region = nullptr;
-
-    ProcessPagingScope pagingScope(*t);
-    space.hookableAlloc = [&] (const String& name, size_t size) {
-        if (!size)
-            return (void*)nullptr;
-        size = ((size / 4096) + 1) * 4096; // FIXME: Use ceil_div?
-        region = t->allocateRegion(size, String(name));
-        return (void*)region->linearAddress.get();
-    };
-    bool success = space.loadELF(move(elfData));
-    if (!success) {
-        delete t;
-        kprintf("Failure loading ELF %s\n", path.characters());
-        error = -ENOEXEC;
-        return nullptr;
-    }
-
-    space.forEachArea([&] (const String& name, dword offset, size_t size, LinearAddress laddr) {
-        if (laddr.isNull())
-            return;
-        dword roundedOffset = offset & 0xfffff000;
-        size_t roundedSize = 4096 * ceilDiv((offset - roundedOffset) + size, 4096u);
-        LinearAddress roundedLaddr = laddr;
-        roundedLaddr.mask(0xfffff000);
-        t->m_subregions.append(make<Subregion>(*region, roundedOffset, roundedSize, roundedLaddr, String(name)));
-#ifdef SUBREGION_DEBUG
-        kprintf("   req subregion %s (offset: %u, size: %u) @ %p\n", name.characters(), offset, size, laddr.get());
-        kprintf("actual subregion %s (offset: %u, size: %u) @ %p\n", name.characters(), roundedOffset, roundedSize, roundedLaddr.get());
-#endif
-        MM.mapSubregion(*t, *t->m_subregions.last());
-    });
-
-    t->m_tss.eip = (dword)space.symbolPtr("_start");
-    if (!t->m_tss.eip) {
-        // FIXME: This is ugly. If we need to do this, it should be at a different level.
-        delete t;
-        error = -ENOEXEC;
-        return nullptr;
-    }
-
-    ASSERT(region);
-
-    ProcFileSystem::the().addProcess(*t);
-
-    s_processes->prepend(t);
+    s_processes->prepend(process);
     system.nprocess++;
 #ifdef TASK_DEBUG
-    kprintf("Process %u (%s) spawned @ %p\n", t->pid(), t->name().characters(), t->m_tss.eip);
+    kprintf("Process %u (%s) spawned @ %p\n", process->pid(), process->name().characters(), process->m_tss.eip);
 #endif
     error = 0;
-    return t;
+    return process;
 }
 
 int Process::sys$get_environment(char*** environ)
