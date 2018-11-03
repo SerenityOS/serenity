@@ -346,8 +346,7 @@ int Process::sys$execve(const char* filename, const char** argv, const char** en
         new_page_directory = reinterpret_cast<PageDirectory*>(kmalloc_page_aligned(sizeof(PageDirectory)));
         MM.populate_page_directory(*new_page_directory);
         m_page_directory = new_page_directory;
-
-        ProcessPagingScope pagingScope(*this);
+        MM.enter_process_paging_scope(*this);
         space.hookableAlloc = [&] (const String& name, size_t size) {
             if (!size)
                 return (void*)nullptr;
@@ -357,11 +356,12 @@ int Process::sys$execve(const char* filename, const char** argv, const char** en
         };
         bool success = space.loadELF(move(elfData));
         if (!success) {
-            MM.release_page_directory(*new_page_directory);
             m_page_directory = old_page_directory;
+            MM.enter_process_paging_scope(*this);
+            MM.release_page_directory(*new_page_directory);
             m_regions = move(old_regions);
             m_subregions = move(old_subregions);
-            kprintf("Failure loading ELF %s\n", path.characters());
+            kprintf("sys$execve: Failure loading %s\n", path.characters());
             return -ENOEXEC;
         }
 
@@ -378,8 +378,9 @@ int Process::sys$execve(const char* filename, const char** argv, const char** en
 
         entry_eip = (dword)space.symbolPtr("_start");
         if (!entry_eip) {
-            MM.release_page_directory(*new_page_directory);
             m_page_directory = old_page_directory;
+            MM.enter_process_paging_scope(*this);
+            MM.release_page_directory(*new_page_directory);
             m_regions = move(old_regions);
             m_subregions = move(old_subregions);
             return -ENOEXEC;

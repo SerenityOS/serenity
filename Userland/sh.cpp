@@ -142,16 +142,15 @@ static bool handle_builtin(int argc, const char** argv, int& retval)
     return false;
 }
 
-static int try_spawn(const char* path, const char** argv)
+static int try_exec(const char* path, const char** argv)
 {
-    int ret = spawn(path, argv);
-    if (ret >= 0)
-        return ret;
+    int ret = execve(path, argv, nullptr);
+    assert(ret < 0);
 
     const char* search_path = "/bin";
     char pathbuf[128];
     sprintf(pathbuf, "%s/%s", search_path, argv[0]);
-    ret = spawn(pathbuf, argv);
+    ret = execve(pathbuf, argv, nullptr);
     if (ret == -1)
         return -1;
     return ret;
@@ -181,21 +180,24 @@ static int runcmd(char* cmd)
         return 0;
     }
 
-    int ret = try_spawn(argv[0], argv);
-    if (ret < 0) {
-        printf("spawn failed: %s (%s)\n", cmd, strerror(errno));
-        return 1;
+    pid_t child = fork();
+    if (!child) {
+        setpgid(0, 0);
+        tcsetpgrp(0, getpid());
+        int ret = try_exec(argv[0], argv);
+        if (ret < 0) {
+            printf("exec failed: %s (%s)\n", cmd, strerror(errno));
+            exit(1);
+        }
+        // We should never get here!
+        assert(false);
     }
 
-    // FIXME: This is racy, since spawn has already started the new process.
-    //        Once I have fork()+exec(), pgrp setup can be done in the child before exec()ing.
-    tcsetpgrp(0, ret);
-
-    // FIXME: waitpid should give us the spawned process's exit status
     int wstatus = 0;
-    waitpid(ret, &wstatus, 0);
+    waitpid(child, &wstatus, 0);
 
-    // FIXME: Racy as mentioned above. Rework once we have fork()+exec().
+    // FIXME: Should I really have to tcsetpgrp() after my child has exited?
+    //        Is the terminal controlling pgrp really still the PGID of the dead process?
     tcsetpgrp(0, getpid());
 
     if (WIFEXITED(wstatus)) {

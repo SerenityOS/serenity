@@ -5,7 +5,6 @@
 
 int main(int argc, char** argv)
 {
-    setpgid(0, 0);
     if (argc != 2) {
         printf("usage: cat <file>\n");
         return 1;
