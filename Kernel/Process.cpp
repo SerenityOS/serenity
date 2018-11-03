@@ -282,6 +282,149 @@ pid_t Process::sys$fork(RegisterDump& regs)
     return child->pid();
 }
 
+int Process::sys$execve(const char* filename, const char** argv, const char** envp)
+{
+    VALIDATE_USER_READ(filename, strlen(filename));
+    if (argv) {
+        for (size_t i = 0; argv[i]; ++i) {
+            VALIDATE_USER_READ(argv[i], strlen(argv[i]));
+        }
+    }
+    if (envp) {
+        for (size_t i = 0; envp[i]; ++i) {
+            VALIDATE_USER_READ(envp[i], strlen(envp[i]));
+        }
+    }
+
+    String path(filename);
+    auto parts = path.split('/');
+    if (parts.isEmpty())
+        return -ENOENT;
+
+    int error;
+    auto handle = VirtualFileSystem::the().open(path, error, 0, m_cwd ? m_cwd->inode : InodeIdentifier());
+    if (!handle) {
+        ASSERT(error != 0);
+        return error;
+    }
+
+    if (!handle->metadata().mayExecute(m_uid, m_gid))
+        return -EACCES;
+
+    auto elfData = handle->readEntireFile();
+    if (!elfData)
+        return -EIO; // FIXME: Get a more detailed error from VFS.
+
+    Vector<String> processArguments;
+    if (argv) {
+        for (size_t i = 0; argv[i]; ++i) {
+            processArguments.append(argv[i]);
+        }
+    } else {
+        processArguments.append(parts.last());
+    }
+
+    Vector<String> processEnvironment;
+    if (envp) {
+        for (size_t i = 0; envp[i]; ++i) {
+            processEnvironment.append(envp[i]);
+        }
+    }
+
+    dword entry_eip = 0;
+    PageDirectory* old_page_directory;
+    PageDirectory* new_page_directory;
+    {
+        ExecSpace space;
+        Region* region = nullptr;
+
+        InterruptDisabler disabler;
+        // Okay, here comes the sleight of hand, pay close attention..
+        auto old_regions = move(m_regions);
+        auto old_subregions = move(m_subregions);
+        old_page_directory = m_page_directory;
+        new_page_directory = reinterpret_cast<PageDirectory*>(kmalloc_page_aligned(sizeof(PageDirectory)));
+        MM.populate_page_directory(*new_page_directory);
+        m_page_directory = new_page_directory;
+
+        ProcessPagingScope pagingScope(*this);
+        space.hookableAlloc = [&] (const String& name, size_t size) {
+            if (!size)
+                return (void*)nullptr;
+            size = ((size / 4096) + 1) * 4096; // FIXME: Use ceil_div?
+            region = allocateRegion(size, String(name));
+            return (void*)region->linearAddress.get();
+        };
+        bool success = space.loadELF(move(elfData));
+        if (!success) {
+            MM.release_page_directory(*new_page_directory);
+            m_page_directory = old_page_directory;
+            m_regions = move(old_regions);
+            m_subregions = move(old_subregions);
+            kprintf("Failure loading ELF %s\n", path.characters());
+            return -ENOEXEC;
+        }
+
+        space.forEachArea([&] (const String& name, dword offset, size_t size, LinearAddress laddr) {
+            if (laddr.isNull())
+                return;
+            dword roundedOffset = offset & 0xfffff000;
+            size_t roundedSize = 4096 * ceilDiv((offset - roundedOffset) + size, 4096u);
+            LinearAddress roundedLaddr = laddr;
+            roundedLaddr.mask(0xfffff000);
+            m_subregions.append(make<Subregion>(*region, roundedOffset, roundedSize, roundedLaddr, String(name)));
+            MM.mapSubregion(*this, *m_subregions.last());
+        });
+
+        entry_eip = (dword)space.symbolPtr("_start");
+        if (!entry_eip) {
+            MM.release_page_directory(*new_page_directory);
+            m_page_directory = old_page_directory;
+            m_regions = move(old_regions);
+            m_subregions = move(old_subregions);
+            return -ENOEXEC;
+        }
+    }
+
+    InterruptDisabler disabler;
+    loadTaskRegister(s_kernelProcess->selector());
+
+    m_name = parts.takeLast();
+
+    dword old_esp0 = m_tss.esp0;
+
+    memset(&m_tss, 0, sizeof(m_tss));
+    m_tss.eflags = 0x0202;
+    m_tss.eip = entry_eip;
+    m_tss.cs = 0x1b;
+    m_tss.ds = 0x23;
+    m_tss.es = 0x23;
+    m_tss.fs = 0x23;
+    m_tss.ss = 0x23;
+    m_tss.cr3 = (dword)m_page_directory;
+    auto* stack_region = allocateRegion(defaultStackSize, "stack");
+    ASSERT(stack_region);
+    m_stackTop3 = stack_region->linearAddress.offset(defaultStackSize).get() & 0xfffffff8;
+    m_tss.esp = m_stackTop3;
+    m_tss.ss0 = 0x10;
+    m_tss.esp0 = old_esp0;
+    m_tss.ss2 = m_pid;
+
+    MM.release_page_directory(*old_page_directory);
+
+    m_executable = handle->vnode();
+    m_arguments = move(processArguments);
+    m_initialEnvironment = move(processEnvironment);
+
+#ifdef TASK_DEBUG
+    kprintf("Process %u (%s) execve'd %s @ %p\n", pid(), name().characters(), filename, m_tss.eip);
+#endif
+
+    yield();
+    ASSERT(false);
+    return 0;
+}
+
 int Process::sys$spawn(const char* path, const char** args)
 {
     if (args) {
@@ -485,7 +628,7 @@ Process::Process(String&& name, uid_t uid, gid_t gid, pid_t parentPID, RingLevel
     }
 
     m_page_directory = (PageDirectory*)kmalloc_page_aligned(sizeof(PageDirectory));
-    MM.populate_page_directory(*this);
+    MM.populate_page_directory(*m_page_directory);
 
     if (fork_parent) {
         m_file_descriptors.resize(fork_parent->m_file_descriptors.size());
@@ -583,7 +726,7 @@ Process::~Process()
         m_kernelStack = nullptr;
     }
 
-    MM.release_page_directory(*this);
+    MM.release_page_directory(*m_page_directory);
 }
 
 void Process::dumpRegions()
@@ -771,7 +914,7 @@ bool scheduleNewProcess()
     for (auto* process = s_processes->head(); process; process = process->next()) {
         //if (process->state() == Process::BlockedWait || process->state() == Process::BlockedSleep)
 //            continue;
-        dbgprintf("%w %s(%u)\n", process->state(), process->name().characters(), process->pid());
+        dbgprintf("%w %s(%u) @ %w:%x\n", process->state(), process->name().characters(), process->pid(), process->tss().cs, process->tss().eip);
     }
 #endif
 

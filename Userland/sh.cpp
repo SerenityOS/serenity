@@ -39,6 +39,32 @@ static int sh_fork(int, const char**)
     return 0;
 }
 
+static int sh_fe(int, const char**)
+{
+    pid_t pid = fork();
+    if (!pid) {
+        int rc = execve("/bin/ps", nullptr, nullptr);
+        if (rc < 0) {
+            perror("execve");
+            exit(1);
+        }
+    }
+    return 0;
+}
+
+static int sh_fef(int, const char**)
+{
+    pid_t pid = fork();
+    if (!pid) {
+        int rc = execve("/bin/psx", nullptr, nullptr);
+        if (rc < 0) {
+            perror("execve");
+            exit(1);
+        }
+    }
+    return 0;
+}
+
 static int sh_exit(int, const char**)
 {
     printf("Good-bye!\n");
@@ -101,7 +127,14 @@ static bool handle_builtin(int argc, const char** argv, int& retval)
         retval = sh_exit(argc, argv);
         return true;
     }
-
+    if (!strcmp(argv[0], "fe")) {
+        retval = sh_fe(argc, argv);
+        return true;
+    }
+    if (!strcmp(argv[0], "fef")) {
+        retval = sh_fef(argc, argv);
+        return true;
+    }
     if (!strcmp(argv[0], "fork")) {
         retval = sh_fork(argc, argv);
         return true;

@@ -7,7 +7,14 @@ extern "C" {
 
 pid_t fork()
 {
-    return Syscall::invoke(Syscall::PosixFork);
+    int rc = Syscall::invoke(Syscall::PosixFork);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
+int execve(const char* filename, const char** argv, const char** envp)
+{
+    int rc = Syscall::invoke(Syscall::PosixExecve, (dword)filename, (dword)argv, (dword)envp);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
 uid_t getuid()
@@ -27,32 +34,38 @@ pid_t getpid()
 
 pid_t setsid()
 {
-    return Syscall::invoke(Syscall::PosixSetsid);
+    int rc = Syscall::invoke(Syscall::PosixSetsid);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
 pid_t tcgetpgrp(int fd)
 {
-    return Syscall::invoke(Syscall::PosixTcgetpgrp, (dword)fd);
+    int rc = Syscall::invoke(Syscall::PosixTcgetpgrp, (dword)fd);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
 int tcsetpgrp(int fd, pid_t pgid)
 {
-    return Syscall::invoke(Syscall::PosixTcsetpgrp, (dword)fd, (dword)pgid);
+    int rc = Syscall::invoke(Syscall::PosixTcsetpgrp, (dword)fd, (dword)pgid);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
 int setpgid(pid_t pid, pid_t pgid)
 {
-    return Syscall::invoke(Syscall::PosixSetpgid, (dword)pid, (dword)pgid);
+    int rc = Syscall::invoke(Syscall::PosixSetpgid, (dword)pid, (dword)pgid);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
 pid_t getpgid(pid_t pid)
 {
-    return Syscall::invoke(Syscall::PosixGetpgid, (dword)pid);
+    int rc = Syscall::invoke(Syscall::PosixGetpgid, (dword)pid);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
 pid_t getpgrp()
 {
-    return Syscall::invoke(Syscall::PosixGetpgrp);
+    int rc = Syscall::invoke(Syscall::PosixGetpgrp);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
 int open(const char* path, int options)

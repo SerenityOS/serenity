@@ -84,8 +84,8 @@ public:
     void registerZone(Zone&);
     void unregisterZone(Zone&);
 
-    void populate_page_directory(Process&);
-    void release_page_directory(Process&);
+    void populate_page_directory(PageDirectory&);
+    void release_page_directory(PageDirectory&);
 
     byte* create_kernel_alias_for_region(Region&);
     void remove_kernel_alias_for_region(Region&, byte*);

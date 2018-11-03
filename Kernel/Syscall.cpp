@@ -130,6 +130,8 @@ static DWORD handle(RegisterDump& regs, DWORD function, DWORD arg1, DWORD arg2, 
         return current->sys$tcsetpgrp((int)arg1, (pid_t)arg2);
     case Syscall::PosixFork:
         return current->sys$fork(regs);
+    case Syscall::PosixExecve:
+        return current->sys$execve((const char*)arg1, (const char**)arg2, (const char**)arg3);
     default:
         kprintf("<%u> int0x80: Unknown function %x requested {%x, %x, %x}\n", current->pid(), function, arg1, arg2, arg3);
         break;
