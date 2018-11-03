@@ -31,21 +31,21 @@ MemoryManager::~MemoryManager()
 {
 }
 
-void MemoryManager::populate_page_directory(Process& process)
+void MemoryManager::populate_page_directory(PageDirectory& page_directory)
 {
-    memset(process.m_page_directory, 0, sizeof(PageDirectory));
-    process.m_page_directory->entries[0] = m_kernel_page_directory->entries[0];
-    process.m_page_directory->entries[1] = m_kernel_page_directory->entries[1];
+    memset(&page_directory, 0, sizeof(PageDirectory));
+    page_directory.entries[0] = m_kernel_page_directory->entries[0];
+    page_directory.entries[1] = m_kernel_page_directory->entries[1];
 }
 
-void MemoryManager::release_page_directory(Process& process)
+void MemoryManager::release_page_directory(PageDirectory& page_directory)
 {
     ASSERT_INTERRUPTS_DISABLED();
 #ifdef MM_DEBUG
-    dbgprintf("MM: release_page_directory for pid %d, PD K%x\n", process.pid(), process.m_page_directory);
+    dbgprintf("MM: release_page_directory for PD K%x\n", &page_directory);
 #endif
     for (size_t i = 0; i < 1024; ++i) {
-        auto page_table = process.m_page_directory->physical_addresses[i];
+        auto page_table = page_directory.physical_addresses[i];
         if (!page_table.is_null()) {
 #ifdef MM_DEBUG
             dbgprintf("MM: deallocating process page table [%u] P%x @ %p\n", i, page_table.get(), &process.m_page_directory->physical_addresses[i]);
@@ -54,7 +54,7 @@ void MemoryManager::release_page_directory(Process& process)
         }
     }
 #ifdef SCRUB_DEALLOCATED_PAGE_TABLES
-    memset(process.m_page_directory, 0xc9, sizeof(PageDirectory));
+    memset(&page_directory, 0xc9, sizeof(PageDirectory));
 #endif
 }
 
