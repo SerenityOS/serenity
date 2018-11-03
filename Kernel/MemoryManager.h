@@ -38,7 +38,7 @@ private:
 };
 
 struct Region : public Retainable<Region> {
-    Region(LinearAddress, size_t, RetainPtr<Zone>&&, String&&);
+    Region(LinearAddress, size_t, RetainPtr<Zone>&&, String&&, bool r, bool w);
     ~Region();
 
     RetainPtr<Region> clone();
@@ -46,6 +46,8 @@ struct Region : public Retainable<Region> {
     size_t size { 0 };
     RetainPtr<Zone> zone;
     String name;
+    bool is_readable { true };
+    bool is_writable { true };
 };
 
 #define MM MemoryManager::the()

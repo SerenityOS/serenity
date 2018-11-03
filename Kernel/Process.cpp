@@ -147,7 +147,7 @@ Region* Process::allocate_region(LinearAddress laddr, size_t size, String&& name
     auto zone = MM.createZone(size);
     ASSERT(zone);
 
-    m_regions.append(adopt(*new Region(laddr, size, move(zone), move(name))));
+    m_regions.append(adopt(*new Region(laddr, size, move(zone), move(name), is_readable, is_writable)));
 
     MM.mapRegion(*this, *m_regions.last());
     return m_regions.last().ptr();
@@ -1260,11 +1260,13 @@ Process* Process::kernelProcess()
     return s_kernelProcess;
 }
 
-Region::Region(LinearAddress a, size_t s, RetainPtr<Zone>&& z, String&& n)
+Region::Region(LinearAddress a, size_t s, RetainPtr<Zone>&& z, String&& n, bool r, bool w)
     : linearAddress(a)
     , size(s)
     , zone(move(z))
     , name(move(n))
+    , is_readable(r)
+    , is_writable(w)
 {
 }
 
