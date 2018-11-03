@@ -282,21 +282,8 @@ pid_t Process::sys$fork(RegisterDump& regs)
     return child->pid();
 }
 
-int Process::sys$execve(const char* filename, const char** argv, const char** envp)
+int Process::exec(const String& path, Vector<String>&& arguments, Vector<String>&& environment)
 {
-    VALIDATE_USER_READ(filename, strlen(filename));
-    if (argv) {
-        for (size_t i = 0; argv[i]; ++i) {
-            VALIDATE_USER_READ(argv[i], strlen(argv[i]));
-        }
-    }
-    if (envp) {
-        for (size_t i = 0; envp[i]; ++i) {
-            VALIDATE_USER_READ(envp[i], strlen(envp[i]));
-        }
-    }
-
-    String path(filename);
     auto parts = path.split('/');
     if (parts.isEmpty())
         return -ENOENT;
@@ -314,22 +301,6 @@ int Process::sys$execve(const char* filename, const char** argv, const char** en
     auto elfData = handle->readEntireFile();
     if (!elfData)
         return -EIO; // FIXME: Get a more detailed error from VFS.
-
-    Vector<String> processArguments;
-    if (argv) {
-        for (size_t i = 0; argv[i]; ++i) {
-            processArguments.append(argv[i]);
-        }
-    } else {
-        processArguments.append(parts.last());
-    }
-
-    Vector<String> processEnvironment;
-    if (envp) {
-        for (size_t i = 0; envp[i]; ++i) {
-            processEnvironment.append(envp[i]);
-        }
-    }
 
     dword entry_eip = 0;
     PageDirectory* old_page_directory;
@@ -414,16 +385,52 @@ int Process::sys$execve(const char* filename, const char** argv, const char** en
     MM.release_page_directory(*old_page_directory);
 
     m_executable = handle->vnode();
-    m_arguments = move(processArguments);
-    m_initialEnvironment = move(processEnvironment);
+    m_arguments = move(arguments);
+    m_initialEnvironment = move(environment);
 
 #ifdef TASK_DEBUG
-    kprintf("Process %u (%s) execve'd %s @ %p\n", pid(), name().characters(), filename, m_tss.eip);
+    kprintf("Process %u (%s) exec'd %s @ %p\n", pid(), name().characters(), filename, m_tss.eip);
 #endif
 
     yield();
     ASSERT(false);
     return 0;
+}
+
+int Process::sys$execve(const char* filename, const char** argv, const char** envp)
+{
+    VALIDATE_USER_READ(filename, strlen(filename));
+    if (argv) {
+        for (size_t i = 0; argv[i]; ++i) {
+            VALIDATE_USER_READ(argv[i], strlen(argv[i]));
+        }
+    }
+    if (envp) {
+        for (size_t i = 0; envp[i]; ++i) {
+            VALIDATE_USER_READ(envp[i], strlen(envp[i]));
+        }
+    }
+
+    String path(filename);
+    auto parts = path.split('/');
+
+    Vector<String> arguments;
+    if (argv) {
+        for (size_t i = 0; argv[i]; ++i) {
+            arguments.append(argv[i]);
+        }
+    } else {
+        arguments.append(parts.last());
+    }
+
+    Vector<String> environment;
+    if (envp) {
+        for (size_t i = 0; envp[i]; ++i) {
+            environment.append(envp[i]);
+        }
+    }
+
+    return exec(path, move(arguments), move(environment));
 }
 
 int Process::sys$spawn(const char* path, const char** args)

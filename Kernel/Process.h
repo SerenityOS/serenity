@@ -158,6 +158,7 @@ public:
     void send_signal(int signal, Process* sender);
 
     Process* fork(RegisterDump&);
+    int exec(const String& path, Vector<String>&& arguments, Vector<String>&& environment);
 
 private:
     friend class MemoryManager;
