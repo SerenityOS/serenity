@@ -65,6 +65,18 @@ static int sh_fef(int, const char**)
     return 0;
 }
 
+static int sh_wt(int, const char**)
+{
+    const char* rodata_ptr = "foo";
+    printf("Writing to rodata=%p...\n", rodata_ptr);
+    *(char*)rodata_ptr = 0;
+
+    char* text_ptr = (char*)sh_fef;
+    printf("Writing to text=%p...\n", text_ptr);
+    *text_ptr = 0;
+    return 0;
+}
+
 static int sh_exit(int, const char**)
 {
     printf("Good-bye!\n");
@@ -133,6 +145,10 @@ static bool handle_builtin(int argc, const char** argv, int& retval)
     }
     if (!strcmp(argv[0], "fef")) {
         retval = sh_fef(argc, argv);
+        return true;
+    }
+    if (!strcmp(argv[0], "wt")) {
+        retval = sh_wt(argc, argv);
         return true;
     }
     if (!strcmp(argv[0], "fork")) {

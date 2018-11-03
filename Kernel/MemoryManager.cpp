@@ -304,8 +304,8 @@ void MemoryManager::map_region_at_address(PageDirectory* page_directory, Region&
         auto page_laddr = laddr.offset(i * PAGE_SIZE);
         auto pte = ensurePTE(page_directory, page_laddr);
         pte.setPhysicalPageBase(zone.m_pages[i].get());
-        pte.setPresent(true);
-        pte.setWritable(true);
+        pte.setPresent(true); // FIXME: Maybe we could use the is_readable flag here?
+        pte.setWritable(region.is_writable);
         pte.setUserAllowed(user_allowed);
         flushTLB(page_laddr);
 #ifdef MM_DEBUG
@@ -430,7 +430,7 @@ RetainPtr<Region> Region::clone()
 
     // FIXME: Implement COW regions.
     auto clone_zone = MM.createZone(zone->size());
-    auto clone_region = adopt(*new Region(linearAddress, size, move(clone_zone), String(name)));
+    auto clone_region = adopt(*new Region(linearAddress, size, move(clone_zone), String(name), is_readable, is_writable));
 
     // FIXME: It would be cool to make the src_alias a read-only mapping.
     byte* src_alias = MM.create_kernel_alias_for_region(*this);
