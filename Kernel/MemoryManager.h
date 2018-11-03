@@ -48,17 +48,6 @@ struct Region : public Retainable<Region> {
     String name;
 };
 
-struct Subregion {
-    Subregion(Region&, dword offset, size_t, LinearAddress, String&& name);
-    ~Subregion();
-
-    RetainPtr<Region> region;
-    dword offset;
-    size_t size { 0 };
-    LinearAddress linearAddress;
-    String name;
-};
-
 #define MM MemoryManager::the()
 
 class MemoryManager {
@@ -74,9 +63,6 @@ public:
     PageFaultResponse handlePageFault(const PageFault&);
 
     RetainPtr<Zone> createZone(size_t);
-
-    bool mapSubregion(Process&, Subregion&);
-    bool unmapSubregion(Process&, Subregion&);
 
     bool mapRegion(Process&, Region&);
     bool unmapRegion(Process&, Region&);

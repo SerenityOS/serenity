@@ -49,7 +49,7 @@ ByteBuffer procfs$pid_vm(Process& process)
 {
     ProcessInspectionScope scope(process);
     char* buffer;
-    auto stringImpl = StringImpl::createUninitialized(80 + process.regionCount() * 80 + 80 + process.subregionCount() * 80, buffer);
+    auto stringImpl = StringImpl::createUninitialized(80 + process.regionCount() * 80, buffer);
     memset(buffer, 0, stringImpl->length());
     char* ptr = buffer;
     ptr += ksprintf(ptr, "BEGIN       END         SIZE        NAME\n");
@@ -59,18 +59,6 @@ ByteBuffer procfs$pid_vm(Process& process)
             region->linearAddress.offset(region->size - 1).get(),
             region->size,
             region->name.characters());
-    }
-    if (process.subregionCount()) {
-        ptr += ksprintf(ptr, "\nREGION    OFFSET    BEGIN       END         SIZE        NAME\n");
-        for (auto& subregion : process.subregions()) {
-            ptr += ksprintf(ptr, "%x  %x  %x -- %x    %x    %s\n",
-                subregion->region->linearAddress.get(),
-                subregion->offset,
-                subregion->linearAddress.get(),
-                subregion->linearAddress.offset(subregion->size - 1).get(),
-                subregion->size,
-                subregion->name.characters());
-        }
     }
     *ptr = '\0';
     return ByteBuffer::copy((byte*)buffer, ptr - buffer);

@@ -385,49 +385,6 @@ bool MemoryManager::unmapRegion(Process& process, Region& region)
     return true;
 }
 
-bool MemoryManager::unmapSubregion(Process& process, Subregion& subregion)
-{
-    InterruptDisabler disabler;
-    size_t numPages = subregion.size / PAGE_SIZE;
-    ASSERT(numPages);
-    for (size_t i = 0; i < numPages; ++i) {
-        auto laddr = subregion.linearAddress.offset(i * PAGE_SIZE);
-        auto pte = ensurePTE(process.m_page_directory, laddr);
-        pte.setPhysicalPageBase(0);
-        pte.setPresent(false);
-        pte.setWritable(false);
-        pte.setUserAllowed(false);
-        flushTLB(laddr);
-#ifdef MM_DEBUG
-        //dbgprintf("MM: >> Unmapped subregion %s L%x => P%x <<\n", subregion.name.characters(), laddr, zone.m_pages[i].get());
-#endif
-    }
-    return true;
-}
-
-bool MemoryManager::mapSubregion(Process& process, Subregion& subregion)
-{
-    InterruptDisabler disabler;
-    auto& region = *subregion.region;
-    auto& zone = *region.zone;
-    size_t firstPage = subregion.offset / PAGE_SIZE;
-    size_t numPages = subregion.size / PAGE_SIZE;
-    ASSERT(numPages);
-    for (size_t i = 0; i < numPages; ++i) {
-        auto laddr = subregion.linearAddress.offset(i * PAGE_SIZE);
-        auto pte = ensurePTE(process.m_page_directory, laddr);
-        pte.setPhysicalPageBase(zone.m_pages[firstPage + i].get());
-        pte.setPresent(true);
-        pte.setWritable(true);
-        pte.setUserAllowed(true);
-        flushTLB(laddr);
-#ifdef MM_DEBUG
-        //dbgprintf("MM: >> Mapped subregion %s L%x => P%x (%u into region)\n", subregion.name.characters(), laddr, zone.m_pages[firstPage + i].get(), subregion.offset);
-#endif
-    }
-    return true;
-}
-
 bool MemoryManager::mapRegion(Process& process, Region& region)
 {
     map_region_at_address(process.m_page_directory, region, region.linearAddress, true);
