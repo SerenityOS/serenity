@@ -7,7 +7,7 @@
 #include "system.h"
 #include <VirtualFileSystem/FileHandle.h>
 #include <VirtualFileSystem/VirtualFileSystem.h>
-#include <ELFLoader/ExecSpace.h>
+#include <ELFLoader/ELFLoader.h>
 #include "MemoryManager.h"
 #include "errno.h"
 #include "i8253.h"
@@ -302,9 +302,6 @@ int Process::exec(const String& path, Vector<String>&& arguments, Vector<String>
     PageDirectory* old_page_directory;
     PageDirectory* new_page_directory;
     {
-        ExecSpace space;
-        Region* region = nullptr;
-
         InterruptDisabler disabler;
         // Okay, here comes the sleight of hand, pay close attention..
         auto old_regions = move(m_regions);
@@ -313,13 +310,14 @@ int Process::exec(const String& path, Vector<String>&& arguments, Vector<String>
         MM.populate_page_directory(*new_page_directory);
         m_page_directory = new_page_directory;
         MM.enter_process_paging_scope(*this);
-        space.alloc_section_hook = [&] (LinearAddress laddr, size_t size, size_t alignment, bool is_readable, bool is_writable, const String& name) {
+        ELFLoader loader(move(elfData));
+        loader.alloc_section_hook = [&] (LinearAddress laddr, size_t size, size_t alignment, bool is_readable, bool is_writable, const String& name) {
             ASSERT(size);
             size = ((size / 4096) + 1) * 4096; // FIXME: Use ceil_div?
-            region = allocate_region(laddr, size, String(name), is_readable, is_writable);
+            (void) allocate_region(laddr, size, String(name), is_readable, is_writable);
             return laddr.asPtr();
         };
-        bool success = space.loadELF(move(elfData));
+        bool success = loader.load();
         if (!success) {
             m_page_directory = old_page_directory;
             MM.enter_process_paging_scope(*this);
@@ -329,7 +327,7 @@ int Process::exec(const String& path, Vector<String>&& arguments, Vector<String>
             return -ENOEXEC;
         }
 
-        entry_eip = (dword)space.symbolPtr("_start");
+        entry_eip = (dword)loader.symbol_ptr("_start");
         if (!entry_eip) {
             m_page_directory = old_page_directory;
             MM.enter_process_paging_scope(*this);

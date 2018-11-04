@@ -219,7 +219,7 @@ static void init_stage2()
 
         ExecSpace space;
         space.loadELF(move(testExecutableData));
-        auto* elf_entry = space.symbolPtr("_start");
+        auto* elf_entry = space.symbol_ptr("_start");
         ASSERT(elf_entry);
 
         typedef int (*MainFunctionPtr)(void);

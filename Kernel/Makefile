@@ -39,8 +39,7 @@ VFS_OBJS = \
 
 ELFLOADER_OBJS = \
     ../ELFLoader/ELFImage.o \
-    ../ELFLoader/ELFLoader.o \
-    ../ELFLoader/ExecSpace.o
+    ../ELFLoader/ELFLoader.o
 
 AK_OBJS = \
     ../AK/String.o \
