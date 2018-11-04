@@ -1,9 +1,5 @@
 #pragma once
 
-#ifndef SERENITY
-#include <AK/MappedFile.h>
-#endif
-
 #include <AK/OwnPtr.h>
 #include <AK/HashMap.h>
 #include <AK/String.h>
@@ -12,11 +8,7 @@
 
 class ELFImage {
 public:
-#ifdef SERENITY
     explicit ELFImage(ByteBuffer&&);
-#else
-    explicit ELFImage(MappedFile&&);
-#endif
     ~ELFImage();
     void dump();
     bool isValid() const { return m_isValid; }

@@ -3,14 +3,10 @@
 
 //#define ELFLOADER_DEBUG
 
-#ifdef SERENITY
-ELFLoader::ELFLoader(ExecSpace& execSpace, ByteBuffer&& file)
-#else
-ELFLoader::ELFLoader(ExecSpace& execSpace, MappedFile&& file)
-#endif
+ELFLoader::ELFLoader(ExecSpace& execSpace, ByteBuffer&& buffer)
     : m_execSpace(execSpace)
 {
-    m_image = make<ELFImage>(move(file));
+    m_image = make<ELFImage>(move(buffer));
 }
 
 ELFLoader::~ELFLoader()
@@ -58,9 +54,10 @@ bool ELFLoader::layout()
             return true;
         char* ptr = (char*)section.address();
         if (!ptr) {
-            kprintf("ELFLoader: failed to allocate section '%s'\n", section.name());
-            failed = true;
-            return false;
+#ifdef ELFLOADER_DEBUG
+            kprintf("ELFLoader: ignoring section '%s' with null address\n", section.name());
+#endif
+            return true;
         }
         memcpy(ptr, section.rawData(), section.size());
         m_sections.set(section.name(), move(ptr));

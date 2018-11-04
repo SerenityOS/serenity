@@ -1,19 +1,11 @@
 #include "ELFImage.h"
 #include <AK/kstdio.h>
 
-#ifdef SERENITY
 ELFImage::ELFImage(ByteBuffer&& buffer)
     : m_buffer(buffer)
 {
     m_isValid = parse();
 }
-#else
-ELFImage::ELFImage(MappedFile&& file)
-    : m_file(move(file))
-{
-    m_isValid = parse();
-}
-#endif
 
 ELFImage::~ELFImage()
 {
