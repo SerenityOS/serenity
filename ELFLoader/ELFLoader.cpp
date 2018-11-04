@@ -4,8 +4,8 @@
 //#define ELFLOADER_DEBUG
 
 ELFLoader::ELFLoader(ByteBuffer&& buffer)
+    : m_image(move(buffer))
 {
-    m_image = make<ELFImage>(move(buffer));
 }
 
 ELFLoader::~ELFLoader()
@@ -15,15 +15,15 @@ ELFLoader::~ELFLoader()
 bool ELFLoader::load()
 {
 #ifdef ELFLOADER_DEBUG
-    m_image->dump();
+    m_image.dump();
 #endif
-    if (!m_image->isValid())
+    if (!m_image.is_valid())
         return false;
 
     if (!layout())
         return false;
-    exportSymbols();
-    if (!performRelocations())
+    export_symbols();
+    if (!perform_relocations())
         return false;
 
     return true;
@@ -36,7 +36,7 @@ bool ELFLoader::layout()
 #endif
 
     bool failed = false;
-    m_image->for_each_program_header([&] (const ELFImage::ProgramHeader& program_header) {
+    m_image.for_each_program_header([&] (const ELFImage::ProgramHeader& program_header) {
         if (program_header.type() != PT_LOAD)
             return;
 #ifdef ELFLOADER_DEBUG
@@ -45,7 +45,7 @@ bool ELFLoader::layout()
         allocate_section(program_header.laddr(), program_header.size_in_memory(), program_header.alignment(), program_header.is_readable(), program_header.is_writable());
     });
 
-    m_image->forEachSectionOfType(SHT_PROGBITS, [this, &failed] (const ELFImage::Section& section) {
+    m_image.for_each_section_of_type(SHT_PROGBITS, [this, &failed] (const ELFImage::Section& section) {
 #ifdef ELFLOADER_DEBUG
         kprintf("ELFLoader: Copying progbits section: %s\n", section.name());
 #endif
@@ -58,11 +58,11 @@ bool ELFLoader::layout()
 #endif
             return true;
         }
-        memcpy(ptr, section.rawData(), section.size());
+        memcpy(ptr, section.raw_data(), section.size());
         m_sections.set(section.name(), move(ptr));
         return true;
     });
-    m_image->forEachSectionOfType(SHT_NOBITS, [this, &failed] (const ELFImage::Section& section) {
+    m_image.for_each_section_of_type(SHT_NOBITS, [this, &failed] (const ELFImage::Section& section) {
 #ifdef ELFLOADER_DEBUG
         kprintf("ELFLoader: Copying nobits section: %s\n", section.name());
 #endif
@@ -83,17 +83,17 @@ bool ELFLoader::layout()
 
 void* ELFLoader::lookup(const ELFImage::Symbol& symbol)
 {
-    if (symbol.section().isUndefined())
+    if (symbol.section().is_undefined())
         return symbol_ptr(symbol.name());
-    return areaForSection(symbol.section()) + symbol.value();
+    return area_for_section(symbol.section()) + symbol.value();
 }
 
-char* ELFLoader::areaForSection(const ELFImage::Section& section)
+char* ELFLoader::area_for_section(const ELFImage::Section& section)
 {
-    return areaForSectionName(section.name());
+    return area_for_section_name(section.name());
 }
 
-char* ELFLoader::areaForSectionName(const char* name)
+char* ELFLoader::area_for_section_name(const char* name)
 {
     if (auto it = m_sections.find(name); it != m_sections.end())
         return (*it).value;
@@ -101,7 +101,7 @@ char* ELFLoader::areaForSectionName(const char* name)
     return nullptr;
 }
 
-bool ELFLoader::performRelocations()
+bool ELFLoader::perform_relocations()
 {
 #ifdef ELFLOADER_DEBUG
     kprintf("ELFLoader: Performing relocations\n");
@@ -109,34 +109,34 @@ bool ELFLoader::performRelocations()
 
     bool failed = false;
 
-    m_image->forEachSectionOfType(SHT_PROGBITS, [this, &failed] (const ELFImage::Section& section) -> bool {
+    m_image.for_each_section_of_type(SHT_PROGBITS, [this, &failed] (const ELFImage::Section& section) -> bool {
         auto& relocations = section.relocations();
-        if (relocations.isUndefined())
+        if (relocations.is_undefined())
             return true;
-        relocations.forEachRelocation([this, section, &failed] (const ELFImage::Relocation& relocation) {
+        relocations.for_each_relocation([this, section, &failed] (const ELFImage::Relocation& relocation) {
             auto symbol = relocation.symbol();
-            auto& patchPtr = *reinterpret_cast<ptrdiff_t*>(areaForSection(section) + relocation.offset());
+            auto& patch_ptr = *reinterpret_cast<ptrdiff_t*>(area_for_section(section) + relocation.offset());
 
             switch (relocation.type()) {
             case R_386_PC32: {
-                char* targetPtr = (char*)lookup(symbol);
-                if (!targetPtr) {
+                char* target_ptr = (char*)lookup(symbol);
+                if (!target_ptr) {
                     kprintf("ELFLoader: unresolved symbol '%s'\n", symbol.name());
                     failed = true;
                     return false;
                 }
-                ptrdiff_t relativeOffset = (char*)targetPtr - ((char*)&patchPtr + 4);
+                ptrdiff_t relativeOffset = (char*)target_ptr - ((char*)&patch_ptr + 4);
 #ifdef ELFLOADER_DEBUG
                 kprintf("ELFLoader: Relocate PC32:  offset=%x, symbol=%u(%s) value=%x target=%p, offset=%d\n",
                         relocation.offset(),
                         symbol.index(),
                         symbol.name(),
                         symbol.value(),
-                        targetPtr,
+                        target_ptr,
                         relativeOffset
                 );
 #endif
-                patchPtr = relativeOffset;
+                patch_ptr = relativeOffset;
                 break;
             }
             case R_386_32: {
@@ -148,8 +148,8 @@ bool ELFLoader::performRelocations()
                     symbol.section().name()
                 );
 #endif
-                char* targetPtr = areaForSection(symbol.section()) + symbol.value();
-                patchPtr += (ptrdiff_t)targetPtr;
+                char* target_ptr = area_for_section(symbol.section()) + symbol.value();
+                patch_ptr += (ptrdiff_t)target_ptr;
                 break;
             }
             default:
@@ -163,18 +163,18 @@ bool ELFLoader::performRelocations()
     return !failed;
 }
 
-void ELFLoader::exportSymbols()
+void ELFLoader::export_symbols()
 {
-    m_image->forEachSymbol([&] (const ELFImage::Symbol symbol) {
+    m_image.for_each_symbol([&] (const ELFImage::Symbol symbol) {
 #ifdef ELFLOADER_DEBUG
         kprintf("symbol: %u, type=%u, name=%s, section=%u\n", symbol.index(), symbol.type(), symbol.name(), symbol.sectionIndex());
 #endif
         if (symbol.type() == STT_FUNC) {
             char* ptr;
-            if (m_image->isExecutable())
+            if (m_image.is_executable())
                 ptr = (char*)symbol.value();
-            else if (m_image->isRelocatable())
-                ptr = areaForSection(symbol.section()) + symbol.value();
+            else if (m_image.is_relocatable())
+                ptr = area_for_section(symbol.section()) + symbol.value();
             else
                 ASSERT_NOT_REACHED();
             add_symbol(symbol.name(), ptr, symbol.size());
