@@ -447,3 +447,10 @@ void handleIRQ()
         s_irqHandler[irq]->handleIRQ();
     PIC::eoi(irq);
 }
+
+void __assertion_failed(const char* msg, const char* file, unsigned line, const char* func)
+{
+    asm volatile("cli");
+    kprintf("ASSERTION FAILED: %s\n%s:%u in %s\n", msg, file, line, func);
+    asm volatile("hlt");
+}
