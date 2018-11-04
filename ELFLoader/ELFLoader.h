@@ -1,7 +1,6 @@
 #pragma once
 
 #include <AK/HashMap.h>
-#include <AK/MappedFile.h>
 #include <AK/OwnPtr.h>
 #include <AK/Vector.h>
 #include "ExecSpace.h"
@@ -9,11 +8,7 @@
 
 class ELFLoader {
 public:
-#ifdef SERENITY
     ELFLoader(ExecSpace&, ByteBuffer&&);
-#else
-    ELFLoader(ExecSpace&, MappedFile&&);
-#endif
     ~ELFLoader();
 
     bool load();
