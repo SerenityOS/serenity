@@ -19,11 +19,11 @@ public:
 
 private:
     bool layout();
-    bool performRelocations();
-    void exportSymbols();
+    bool perform_relocations();
+    void export_symbols();
     void* lookup(const ELFImage::Symbol&);
-    char* areaForSection(const ELFImage::Section&);
-    char* areaForSectionName(const char*);
+    char* area_for_section(const ELFImage::Section&);
+    char* area_for_section_name(const char*);
 
     struct PtrAndSize {
         PtrAndSize() { }
@@ -36,8 +36,9 @@ private:
         char* ptr { nullptr };
         unsigned size { 0 };
     };
+    ELFImage m_image;
+
     HashMap<String, PtrAndSize> m_symbols;
     HashMap<String, char*> m_sections;
-    OwnPtr<ELFImage> m_image;
 };
 

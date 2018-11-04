@@ -4,7 +4,7 @@
 ELFImage::ELFImage(ByteBuffer&& buffer)
     : m_buffer(buffer)
 {
-    m_isValid = parse();
+    m_valid = parse();
 }
 
 ELFImage::~ELFImage()
@@ -23,7 +23,7 @@ static const char* objectFileTypeToString(Elf32_Half type)
     }
 }
 
-const char* ELFImage::sectionIndexToString(unsigned index)
+const char* ELFImage::section_index_to_string(unsigned index)
 {
     if (index == SHN_UNDEF)
         return "Undefined";
@@ -32,17 +32,17 @@ const char* ELFImage::sectionIndexToString(unsigned index)
     return section(index).name();
 }
 
-unsigned ELFImage::symbolCount() const
+unsigned ELFImage::symbol_count() const
 {
-    return section(m_symbolTableSectionIndex).entryCount();
+    return section(m_symbol_table_section_index).entry_count();
 }
 
 void ELFImage::dump()
 {
     kprintf("ELFImage{%p} {\n", this);
-    kprintf("    isValid: %u\n", isValid());
+    kprintf("    isValid: %u\n", is_valid());
 
-    if (!isValid()) {
+    if (!is_valid()) {
         kprintf("}\n");
         return;
     }
@@ -65,12 +65,12 @@ void ELFImage::dump()
         kprintf("    }\n");
     }
 
-    kprintf("Symbol count: %u (table is %u)\n", symbolCount(), m_symbolTableSectionIndex);
-    for (unsigned i = 1; i < symbolCount(); ++i) {
+    kprintf("Symbol count: %u (table is %u)\n", symbol_count(), m_symbol_table_section_index);
+    for (unsigned i = 1; i < symbol_count(); ++i) {
         auto& sym = symbol(i);
         kprintf("Symbol @%u:\n", i);
         kprintf("    Name: %s\n", sym.name());
-        kprintf("    In section: %s\n", sectionIndexToString(sym.sectionIndex()));
+        kprintf("    In section: %s\n", section_index_to_string(sym.section_index()));
         kprintf("    Value: %x\n", sym.value());
         kprintf("    Size: %u\n", sym.size());
     }
@@ -78,7 +78,7 @@ void ELFImage::dump()
     kprintf("}\n");
 }
 
-unsigned ELFImage::sectionCount() const
+unsigned ELFImage::section_count() const
 {
     return header().e_shnum;
 }
@@ -95,43 +95,43 @@ bool ELFImage::parse()
         return false;
 
     // First locate the string tables.
-    for (unsigned i = 0; i < sectionCount(); ++i) {
-        auto& sh = sectionHeader(i);
+    for (unsigned i = 0; i < section_count(); ++i) {
+        auto& sh = section_header(i);
         if (sh.sh_type == SHT_SYMTAB) {
-            ASSERT(!m_symbolTableSectionIndex);
-            m_symbolTableSectionIndex = i;
+            ASSERT(!m_symbol_table_section_index);
+            m_symbol_table_section_index = i;
         }
         if (sh.sh_type == SHT_STRTAB && i != header().e_shstrndx) {
-            ASSERT(!m_stringTableSectionIndex);
-            m_stringTableSectionIndex = i;
+            ASSERT(!m_string_table_section_index);
+            m_string_table_section_index = i;
         }
     }
 
     // Then create a name-to-index map.
-    for (unsigned i = 0; i < sectionCount(); ++i) {
+    for (unsigned i = 0; i < section_count(); ++i) {
         auto& section = this->section(i);
         m_sections.set(section.name(), move(i));
     }
     return true;
 }
 
-const char* ELFImage::sectionHeaderTableString(unsigned offset) const
+const char* ELFImage::section_header_table_string(unsigned offset) const
 {
-    auto& sh = sectionHeader(header().e_shstrndx);
+    auto& sh = section_header(header().e_shstrndx);
     if (sh.sh_type != SHT_STRTAB)
         return nullptr;
-    return rawData(sh.sh_offset + offset);
+    return raw_data(sh.sh_offset + offset);
 }
 
-const char* ELFImage::tableString(unsigned offset) const
+const char* ELFImage::table_string(unsigned offset) const
 {
-    auto& sh = sectionHeader(m_stringTableSectionIndex);
+    auto& sh = section_header(m_string_table_section_index);
     if (sh.sh_type != SHT_STRTAB)
         return nullptr;
-    return rawData(sh.sh_offset + offset);
+    return raw_data(sh.sh_offset + offset);
 }
 
-const char* ELFImage::rawData(unsigned offset) const
+const char* ELFImage::raw_data(unsigned offset) const
 {
 #ifdef SERENITY
     return reinterpret_cast<const char*>(m_buffer.pointer()) + offset;
@@ -142,31 +142,31 @@ const char* ELFImage::rawData(unsigned offset) const
 
 const Elf32_Ehdr& ELFImage::header() const
 {
-    return *reinterpret_cast<const Elf32_Ehdr*>(rawData(0));
+    return *reinterpret_cast<const Elf32_Ehdr*>(raw_data(0));
 }
 
 const Elf32_Phdr& ELFImage::program_header_internal(unsigned index) const
 {
     ASSERT(index < header().e_phnum);
-    return *reinterpret_cast<const Elf32_Phdr*>(rawData(header().e_phoff + (index * sizeof(Elf32_Phdr))));
+    return *reinterpret_cast<const Elf32_Phdr*>(raw_data(header().e_phoff + (index * sizeof(Elf32_Phdr))));
 }
 
-const Elf32_Shdr& ELFImage::sectionHeader(unsigned index) const
+const Elf32_Shdr& ELFImage::section_header(unsigned index) const
 {
     ASSERT(index < header().e_shnum);
-    return *reinterpret_cast<const Elf32_Shdr*>(rawData(header().e_shoff + (index * sizeof(Elf32_Shdr))));
+    return *reinterpret_cast<const Elf32_Shdr*>(raw_data(header().e_shoff + (index * sizeof(Elf32_Shdr))));
 }
 
 const ELFImage::Symbol ELFImage::symbol(unsigned index) const
 {
-    ASSERT(index < symbolCount());
-    auto* rawSyms = reinterpret_cast<const Elf32_Sym*>(rawData(section(m_symbolTableSectionIndex).offset()));
+    ASSERT(index < symbol_count());
+    auto* rawSyms = reinterpret_cast<const Elf32_Sym*>(raw_data(section(m_symbol_table_section_index).offset()));
     return Symbol(*this, index, rawSyms[index]);
 }
 
 const ELFImage::Section ELFImage::section(unsigned index) const
 {
-    ASSERT(index < sectionCount());
+    ASSERT(index < section_count());
     return Section(*this, index);
 }
 
@@ -178,8 +178,8 @@ const ELFImage::ProgramHeader ELFImage::program_header(unsigned index) const
 
 const ELFImage::Relocation ELFImage::RelocationSection::relocation(unsigned index) const
 {
-    ASSERT(index < relocationCount());
-    auto* rels = reinterpret_cast<const Elf32_Rel*>(m_image.rawData(offset()));
+    ASSERT(index < relocation_count());
+    auto* rels = reinterpret_cast<const Elf32_Rel*>(m_image.raw_data(offset()));
     return Relocation(m_image, rels[index]);
 }
 

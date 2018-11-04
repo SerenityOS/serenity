@@ -11,7 +11,7 @@ public:
     explicit ELFImage(ByteBuffer&&);
     ~ELFImage();
     void dump();
-    bool isValid() const { return m_isValid; }
+    bool is_valid() const { return m_valid; }
     bool parse();
 
     class Section;
@@ -30,13 +30,13 @@ public:
 
         ~Symbol() { }
 
-        const char* name() const { return m_image.tableString(m_sym.st_name); }
-        unsigned sectionIndex() const { return m_sym.st_shndx; }
+        const char* name() const { return m_image.table_string(m_sym.st_name); }
+        unsigned section_index() const { return m_sym.st_shndx; }
         unsigned value() const { return m_sym.st_value; }
         unsigned size() const { return m_sym.st_size; }
         unsigned index() const { return m_index; }
         unsigned type() const { return ELF32_ST_TYPE(m_sym.st_info); }
-        const Section section() const { return m_image.section(sectionIndex()); }
+        const Section section() const { return m_image.section(section_index()); }
 
     private:
         const ELFImage& m_image;
@@ -73,39 +73,39 @@ public:
     public:
         Section(const ELFImage& image, unsigned sectionIndex)
             : m_image(image)
-            , m_sectionHeader(image.sectionHeader(sectionIndex))
-            , m_sectionIndex(sectionIndex)
+            , m_section_header(image.section_header(sectionIndex))
+            , m_section_index(sectionIndex)
         {
         }
         ~Section() { }
 
-        const char* name() const { return m_image.sectionHeaderTableString(m_sectionHeader.sh_name); }
-        unsigned type() const { return m_sectionHeader.sh_type; }
-        unsigned offset() const { return m_sectionHeader.sh_offset; }
-        unsigned size() const { return m_sectionHeader.sh_size; }
-        unsigned entrySize() const { return m_sectionHeader.sh_entsize; }
-        unsigned entryCount() const { return size() / entrySize(); }
-        dword address() const { return m_sectionHeader.sh_addr; }
-        const char* rawData() const { return m_image.rawData(m_sectionHeader.sh_offset); }
-        bool isUndefined() const { return m_sectionIndex == SHN_UNDEF; }
+        const char* name() const { return m_image.section_header_table_string(m_section_header.sh_name); }
+        unsigned type() const { return m_section_header.sh_type; }
+        unsigned offset() const { return m_section_header.sh_offset; }
+        unsigned size() const { return m_section_header.sh_size; }
+        unsigned entry_size() const { return m_section_header.sh_entsize; }
+        unsigned entry_count() const { return size() / entry_size(); }
+        dword address() const { return m_section_header.sh_addr; }
+        const char* raw_data() const { return m_image.raw_data(m_section_header.sh_offset); }
+        bool is_undefined() const { return m_section_index == SHN_UNDEF; }
         const RelocationSection relocations() const;
 
     protected:
         friend class RelocationSection;
         const ELFImage& m_image;
-        const Elf32_Shdr& m_sectionHeader;
-        unsigned m_sectionIndex;
+        const Elf32_Shdr& m_section_header;
+        unsigned m_section_index;
     };
 
     class RelocationSection : public Section {
     public:
         RelocationSection(const Section& section)
-            : Section(section.m_image, section.m_sectionIndex)
+            : Section(section.m_image, section.m_section_index)
         {
         }
-        unsigned relocationCount() const { return entryCount(); }
+        unsigned relocation_count() const { return entry_count(); }
         const Relocation relocation(unsigned index) const;
-        template<typename F> void forEachRelocation(F) const;
+        template<typename F> void for_each_relocation(F) const;
     };
 
     class Relocation {
@@ -120,66 +120,62 @@ public:
 
         unsigned offset() const { return m_rel.r_offset; }
         unsigned type() const { return ELF32_R_TYPE(m_rel.r_info); }
-        unsigned symbolIndex() const { return ELF32_R_SYM(m_rel.r_info); }
-        const Symbol symbol() const { return m_image.symbol(symbolIndex()); }
+        unsigned symbol_index() const { return ELF32_R_SYM(m_rel.r_info); }
+        const Symbol symbol() const { return m_image.symbol(symbol_index()); }
 
     private:
         const ELFImage& m_image;
         const Elf32_Rel& m_rel;
     };
 
-    unsigned symbolCount() const;
-    unsigned sectionCount() const;
+    unsigned symbol_count() const;
+    unsigned section_count() const;
     unsigned program_header_count() const;
 
     const Symbol symbol(unsigned) const;
     const Section section(unsigned) const;
     const ProgramHeader program_header(unsigned const) const;
 
-    template<typename F> void forEachSection(F) const;
-    template<typename F> void forEachSectionOfType(unsigned, F) const;
-    template<typename F> void forEachSymbol(F) const;
+    template<typename F> void for_each_section(F) const;
+    template<typename F> void for_each_section_of_type(unsigned, F) const;
+    template<typename F> void for_each_symbol(F) const;
     template<typename F> void for_each_program_header(F) const;
 
     // NOTE: Returns section(0) if section with name is not found.
     // FIXME: I don't love this API.
     const Section lookupSection(const char* name) const;
 
-    bool isExecutable() const { return header().e_type == ET_EXEC; }
-    bool isRelocatable() const { return header().e_type == ET_REL; }
+    bool is_executable() const { return header().e_type == ET_EXEC; }
+    bool is_relocatable() const { return header().e_type == ET_REL; }
 
 private:
     bool parseHeader();
-    const char* rawData(unsigned offset) const;
+    const char* raw_data(unsigned offset) const;
     const Elf32_Ehdr& header() const;
-    const Elf32_Shdr& sectionHeader(unsigned) const;
+    const Elf32_Shdr& section_header(unsigned) const;
     const Elf32_Phdr& program_header_internal(unsigned) const;
-    const char* tableString(unsigned offset) const;
-    const char* sectionHeaderTableString(unsigned offset) const;
-    const char* sectionIndexToString(unsigned index);
+    const char* table_string(unsigned offset) const;
+    const char* section_header_table_string(unsigned offset) const;
+    const char* section_index_to_string(unsigned index);
 
-#ifdef SERENITY
     ByteBuffer m_buffer;
-#else
-    MappedFile m_file;
-#endif
     HashMap<String, unsigned> m_sections;
-    bool m_isValid { false };
-    unsigned m_symbolTableSectionIndex { 0 };
-    unsigned m_stringTableSectionIndex { 0 };
+    bool m_valid { false };
+    unsigned m_symbol_table_section_index { 0 };
+    unsigned m_string_table_section_index { 0 };
 };
 
 template<typename F>
-inline void ELFImage::forEachSection(F func) const
+inline void ELFImage::for_each_section(F func) const
 {
-    for (unsigned i = 0; i < sectionCount(); ++i)
+    for (unsigned i = 0; i < section_count(); ++i)
         func(section(i));
 }
 
 template<typename F>
-inline void ELFImage::forEachSectionOfType(unsigned type, F func) const
+inline void ELFImage::for_each_section_of_type(unsigned type, F func) const
 {
-    for (unsigned i = 0; i < sectionCount(); ++i) {
+    for (unsigned i = 0; i < section_count(); ++i) {
         auto& section = this->section(i);
         if (section.type() == type) {
             if (!func(section))
@@ -189,18 +185,18 @@ inline void ELFImage::forEachSectionOfType(unsigned type, F func) const
 }
 
 template<typename F>
-inline void ELFImage::RelocationSection::forEachRelocation(F func) const
+inline void ELFImage::RelocationSection::for_each_relocation(F func) const
 {
-    for (unsigned i = 0; i < relocationCount(); ++i) {
+    for (unsigned i = 0; i < relocation_count(); ++i) {
         if (!func(relocation(i)))
             break;
     }
 }
 
 template<typename F>
-inline void ELFImage::forEachSymbol(F func) const
+inline void ELFImage::for_each_symbol(F func) const
 {
-    for (unsigned i = 0; i < symbolCount(); ++i) {
+    for (unsigned i = 0; i < symbol_count(); ++i) {
         if (!func(symbol(i)))
             break;
     }
@@ -209,7 +205,6 @@ inline void ELFImage::forEachSymbol(F func) const
 template<typename F>
 inline void ELFImage::for_each_program_header(F func) const
 {
-    for (unsigned i = 0; i < program_header_count(); ++i) {
+    for (unsigned i = 0; i < program_header_count(); ++i)
         func(program_header(i));
-    }
 }
