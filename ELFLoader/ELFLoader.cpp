@@ -3,8 +3,7 @@
 
 //#define ELFLOADER_DEBUG
 
-ELFLoader::ELFLoader(ExecSpace& execSpace, ByteBuffer&& buffer)
-    : m_execSpace(execSpace)
+ELFLoader::ELFLoader(ByteBuffer&& buffer)
 {
     m_image = make<ELFImage>(move(buffer));
 }
@@ -43,7 +42,7 @@ bool ELFLoader::layout()
 #ifdef ELFLOADER_DEBUG
         kprintf("PH: L%x %u r:%u w:%u\n", program_header.laddr().get(), program_header.size_in_memory(), program_header.is_readable(), program_header.is_writable());
 #endif
-        m_execSpace.allocate_section(program_header.laddr(), program_header.size_in_memory(), program_header.alignment(), program_header.is_readable(), program_header.is_writable());
+        allocate_section(program_header.laddr(), program_header.size_in_memory(), program_header.alignment(), program_header.is_readable(), program_header.is_writable());
     });
 
     m_image->forEachSectionOfType(SHT_PROGBITS, [this, &failed] (const ELFImage::Section& section) {
@@ -85,7 +84,7 @@ bool ELFLoader::layout()
 void* ELFLoader::lookup(const ELFImage::Symbol& symbol)
 {
     if (symbol.section().isUndefined())
-        return m_execSpace.symbolPtr(symbol.name());
+        return symbol_ptr(symbol.name());
     return areaForSection(symbol.section()) + symbol.value();
 }
 
@@ -178,10 +177,35 @@ void ELFLoader::exportSymbols()
                 ptr = areaForSection(symbol.section()) + symbol.value();
             else
                 ASSERT_NOT_REACHED();
-            m_execSpace.addSymbol(symbol.name(), ptr, symbol.size());
+            add_symbol(symbol.name(), ptr, symbol.size());
         }
         // FIXME: What about other symbol types?
         return true;
     });
 }
 
+char* ELFLoader::symbol_ptr(const char* name)
+{
+    if (auto it = m_symbols.find(name); it != m_symbols.end()) {
+        auto& symbol = (*it).value;
+#ifdef EXECSPACE_DEBUG
+        kprintf("[ELFLoader] symbol_ptr(%s) dump:\n", name);
+        disassemble(symbol.ptr, symbol.size);
+#endif
+        return symbol.ptr;
+    }
+    return nullptr;
+}
+
+bool ELFLoader::allocate_section(LinearAddress laddr, size_t size, size_t alignment, bool is_readable, bool is_writable)
+{
+    ASSERT(alloc_section_hook);
+    char namebuf[16];
+    ksprintf(namebuf, "elf-%s%s", is_readable ? "r" : "", is_writable ? "w" : "");
+    return alloc_section_hook(laddr, size, alignment, is_readable, is_writable, namebuf);
+}
+
+void ELFLoader::add_symbol(String&& name, char* ptr, unsigned size)
+{
+    m_symbols.set(move(name), { ptr, size });
+}
