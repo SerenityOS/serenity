@@ -34,6 +34,7 @@ int fclose(FILE*);
 void rewind(FILE*);
 void clearerr(FILE*);
 int feof(FILE*);
+int fflush(FILE*);
 size_t fread(void* ptr, size_t size, size_t nmemb, FILE*);
 size_t fwrite(const void* ptr, size_t size, size_t nmemb, FILE*);
 int fprintf(FILE*, const char* fmt, ...);
