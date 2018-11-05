@@ -238,7 +238,7 @@ void exception_14_handler()
     if (current->isRing0())
         HANG;
 
-    auto response = MM.handlePageFault(PageFault(exception_code, LinearAddress(faultAddress)));
+    auto response = MM.handle_page_fault(PageFault(exception_code, LinearAddress(faultAddress)));
 
     if (response == PageFaultResponse::ShouldCrash) {
         kprintf("Crashing after unresolved page fault\n");

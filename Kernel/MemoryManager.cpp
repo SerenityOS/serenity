@@ -105,7 +105,8 @@ void MemoryManager::deallocate_page_table(PageDirectory& page_directory, unsigne
 {
     auto& physical_page = page_directory.physical_pages[index];
     ASSERT(physical_page);
-    ASSERT(!m_free_physical_pages.contains_slow(physical_page));
+    //FIXME: This line is buggy and effectful somehow :(
+    //ASSERT(!m_free_physical_pages.contains_slow(physical_page));
     for (size_t i = 0; i < MM.m_free_physical_pages.size(); ++i) {
         ASSERT(MM.m_free_physical_pages[i].ptr() != physical_page.ptr());
     }
@@ -207,13 +208,13 @@ void MemoryManager::initialize()
     s_the = new MemoryManager;
 }
 
-PageFaultResponse MemoryManager::handlePageFault(const PageFault& fault)
+PageFaultResponse MemoryManager::handle_page_fault(const PageFault& fault)
 {
     ASSERT_INTERRUPTS_DISABLED();
-    kprintf("MM: handlePageFault(%w) at L%x\n", fault.code(), fault.address().get());
-    if (fault.isNotPresent()) { 
+    kprintf("MM: handle_page_fault(%w) at L%x\n", fault.code(), fault.laddr().get());
+    if (fault.is_not_present()) {
         kprintf("  >> NP fault!\n");
-    } else if (fault.isProtectionViolation()) {
+    } else if (fault.is_protection_violation()) {
         kprintf("  >> PV fault!\n");
     }
     return PageFaultResponse::ShouldCrash;
