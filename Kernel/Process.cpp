@@ -1158,7 +1158,6 @@ int Process::sys$open(const char* path, int options)
         if (!m_file_descriptors[fd])
             break;
     }
-    handle->setFD(fd);
     m_file_descriptors[fd] = move(handle);
     return fd;
 }
@@ -1434,4 +1433,36 @@ int Process::sys$tcsetpgrp(int fd, pid_t pgid)
         return -ENOTTY;
     tty.set_pgid(pgid);
     return 0;
+}
+
+int Process::sys$getdtablesize()
+{
+    return m_max_open_file_descriptors;
+}
+
+int Process::sys$dup(int old_fd)
+{
+    auto* handle = fileHandleIfExists(old_fd);
+    if (!handle)
+        return -EBADF;
+    if (number_of_open_file_descriptors() == m_max_open_file_descriptors)
+        return -EMFILE;
+    int new_fd = 0;
+    for (; new_fd < m_max_open_file_descriptors; ++new_fd) {
+        if (!m_file_descriptors[new_fd])
+            break;
+    }
+    m_file_descriptors[new_fd] = handle;
+    return new_fd;
+}
+
+int Process::sys$dup2(int old_fd, int new_fd)
+{
+    auto* handle = fileHandleIfExists(old_fd);
+    if (!handle)
+        return -EBADF;
+    if (number_of_open_file_descriptors() == m_max_open_file_descriptors)
+        return -EMFILE;
+    m_file_descriptors[new_fd] = handle;
+    return new_fd;
 }

@@ -6,6 +6,11 @@
 #include "TTY.h"
 #include <AK/BufferStream.h>
 
+RetainPtr<FileHandle> FileHandle::create(RetainPtr<VirtualFileSystem::Node>&& vnode)
+{
+    return adopt(*new FileHandle(move(vnode)));
+}
+
 FileHandle::FileHandle(RetainPtr<VirtualFileSystem::Node>&& vnode)
     : m_vnode(move(vnode))
 {
@@ -15,9 +20,9 @@ FileHandle::~FileHandle()
 {
 }
 
-OwnPtr<FileHandle> FileHandle::clone()
+RetainPtr<FileHandle> FileHandle::clone()
 {
-    auto handle = make<FileHandle>(m_vnode.copyRef());
+    auto handle = FileHandle::create(m_vnode.copyRef());
     if (!handle)
         return nullptr;
     handle->m_currentOffset = m_currentOffset;

@@ -193,6 +193,17 @@ FILE* fopen(const char* pathname, const char* mode)
     return fp;
 }
 
+FILE* fdopen(int fd, const char* mode)
+{
+    assert(!strcmp(mode, "r") || !strcmp(mode, "rb"));
+    if (fd < 0)
+        return nullptr;
+    auto* fp = (FILE*)malloc(sizeof(FILE));
+    fp->fd = fd;
+    fp->eof = false;
+    return fp;
+}
+
 int fclose(FILE* stream)
 {
     int rc = close(stream->fd);

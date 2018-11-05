@@ -8,7 +8,7 @@ class CharacterDevice {
 public:
     virtual ~CharacterDevice();
 
-    virtual OwnPtr<FileHandle> open(int options);
+    RetainPtr<FileHandle> open(int options);
 
     virtual bool hasDataAvailableForRead() const = 0;
 

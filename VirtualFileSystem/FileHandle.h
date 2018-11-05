@@ -3,15 +3,16 @@
 #include "VirtualFileSystem.h"
 #include "InodeMetadata.h"
 #include <AK/ByteBuffer.h>
+#include <AK/Retainable.h>
 
 class TTY;
 
-class FileHandle {
+class FileHandle : public Retainable<FileHandle> {
 public:
-    explicit FileHandle(RetainPtr<VirtualFileSystem::Node>&&);
+    static RetainPtr<FileHandle> create(RetainPtr<VirtualFileSystem::Node>&&);
     ~FileHandle();
 
-    OwnPtr<FileHandle> clone();
+    RetainPtr<FileHandle> clone();
 
     int close();
 
@@ -39,9 +40,6 @@ public:
     VirtualFileSystem::Node* vnode() { return m_vnode.ptr(); }
 
 #ifdef SERENITY
-    int fd() const { return m_fd; }
-    void setFD(int fd) { m_fd = fd; }
-
     bool isBlocking() const { return m_isBlocking; }
     void setBlocking(bool b) { m_isBlocking = b; }
 #endif
@@ -50,6 +48,7 @@ public:
 
 private:
     friend class VirtualFileSystem;
+    explicit FileHandle(RetainPtr<VirtualFileSystem::Node>&&);
 
     RetainPtr<VirtualFileSystem::Node> m_vnode;
 

@@ -93,10 +93,10 @@ public:
     bool mountRoot(RetainPtr<FileSystem>&&);
     bool mount(RetainPtr<FileSystem>&&, const String& path);
 
-    OwnPtr<FileHandle> open(CharacterDevice&, int options);
-    OwnPtr<FileHandle> open(const String& path, int& error, int options = 0, InodeIdentifier base = InodeIdentifier());
-    OwnPtr<FileHandle> create(const String& path, InodeIdentifier base = InodeIdentifier());
-    OwnPtr<FileHandle> mkdir(const String& path, InodeIdentifier base = InodeIdentifier());
+    RetainPtr<FileHandle> open(CharacterDevice&, int options);
+    RetainPtr<FileHandle> open(const String& path, int& error, int options = 0, InodeIdentifier base = InodeIdentifier());
+    RetainPtr<FileHandle> create(const String& path, InodeIdentifier base = InodeIdentifier());
+    RetainPtr<FileHandle> mkdir(const String& path, InodeIdentifier base = InodeIdentifier());
 
     bool isRoot(InodeIdentifier) const;
 

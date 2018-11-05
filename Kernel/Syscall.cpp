@@ -140,6 +140,12 @@ static DWORD handle(RegisterDump& regs, DWORD function, DWORD arg1, DWORD arg2, 
         return (dword)current->sys$signal((int)arg1, (Unix::sighandler_t)arg2);
     case Syscall::PosixIsatty:
         return current->sys$isatty((int)arg1);
+    case Syscall::Getdtablesize:
+        return current->sys$getdtablesize();
+    case Syscall::Dup:
+        return current->sys$dup((int)arg1);
+    case Syscall::Dup2:
+        return current->sys$dup2((int)arg1, (int)arg2);
     default:
         kprintf("<%u> int0x80: Unknown function %x requested {%x, %x, %x}\n", current->pid(), function, arg1, arg2, arg3);
         break;
