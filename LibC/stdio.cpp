@@ -23,6 +23,14 @@ int feof(FILE* stream)
     return stream->eof;
 }
 
+int fflush(FILE* stream)
+{
+    // FIXME: Implement buffered streams, duh.
+    if (!stream)
+        return -EBADF;
+    return 0;
+}
+
 char* fgets(char* buffer, int size, FILE* stream)
 {
     assert(stream);
