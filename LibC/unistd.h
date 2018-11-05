@@ -15,6 +15,8 @@ pid_t setsid();
 int setpgid(pid_t pid, pid_t pgid);
 pid_t getpgid(pid_t);
 pid_t getpgrp();
+uid_t geteuid();
+gid_t getegid();
 uid_t getuid();
 gid_t getgid();
 pid_t getpid();

@@ -303,7 +303,7 @@ int Process::exec(const String& path, Vector<String>&& arguments, Vector<String>
         return error;
     }
 
-    if (!handle->metadata().mayExecute(m_uid, m_gid))
+    if (!handle->metadata().mayExecute(m_euid, m_egid))
         return -EACCES;
 
     auto elfData = handle->readEntireFile();
@@ -563,6 +563,8 @@ Process::Process(String&& name, uid_t uid, gid_t gid, pid_t parentPID, RingLevel
     , m_pid(next_pid++) // FIXME: RACE: This variable looks racy!
     , m_uid(uid)
     , m_gid(gid)
+    , m_euid(uid)
+    , m_egid(gid)
     , m_state(Runnable)
     , m_ring(ring)
     , m_cwd(move(cwd))
@@ -1217,6 +1219,16 @@ uid_t Process::sys$getuid()
 gid_t Process::sys$getgid()
 {
     return m_gid;
+}
+
+uid_t Process::sys$geteuid()
+{
+    return m_euid;
+}
+
+gid_t Process::sys$getegid()
+{
+    return m_egid;
 }
 
 pid_t Process::sys$getpid()
