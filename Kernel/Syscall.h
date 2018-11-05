@@ -51,6 +51,8 @@ enum Function {
     PosixExecve = 0x2019,
     PosixGeteuid = 0x2020,
     PosixGetegid = 0x2021,
+    PosixSignal = 0x2022,
+    PosixIsatty = 0x2023,
 };
 
 void initialize();

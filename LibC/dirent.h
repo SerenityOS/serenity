@@ -13,16 +13,17 @@ struct dirent {
     char d_name[256];
 };
 
-struct DIR {
+struct __DIR {
     int fd;
-    dirent cur_ent;
+    struct dirent cur_ent;
     char* buffer;
     size_t buffer_size;
     char* nextptr;
 };
+typedef struct __DIR DIR;
 
 DIR* opendir(const char* name);
-dirent* readdir(DIR* dirp);
+struct dirent* readdir(DIR* dirp);
 
 __END_DECLS
 

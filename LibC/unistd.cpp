@@ -184,5 +184,11 @@ int unlink(const char*)
     assert(false);
 }
 
+int isatty(int fd)
+{
+    int rc = Syscall::invoke(Syscall::PosixIsatty, (dword)fd);
+    __RETURN_WITH_ERRNO(rc, 1, 0);
+}
+
 }
 

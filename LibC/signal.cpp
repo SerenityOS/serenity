@@ -11,5 +11,16 @@ int kill(pid_t pid, int sig)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
+sighandler_t signal(int signum, sighandler_t handler)
+{
+    sighandler_t old_handler = (sighandler_t)Syscall::invoke(Syscall::PosixSignal, (dword)signum, (dword)handler);
+    if (old_handler == SIG_ERR) {
+        errno = EINVAL;
+        return SIG_ERR;
+    }
+    errno = 0;
+    return old_handler;
+}
+
 }
 

@@ -7,6 +7,7 @@
 #include <AK/Vector.h>
 #include "i386.h"
 #include <VirtualFileSystem/VirtualFileSystem.h>
+#include <VirtualFileSystem/UnixTypes.h>
 #include "TTY.h"
 
 class FileHandle;
@@ -123,6 +124,8 @@ public:
     int sys$ttyname_r(int fd, char*, size_t);
     pid_t sys$fork(RegisterDump&);
     int sys$execve(const char* filename, const char** argv, const char** envp);
+    Unix::sighandler_t sys$signal(int signum, Unix::sighandler_t);
+    int sys$isatty(int fd);
 
     static void initialize();
 

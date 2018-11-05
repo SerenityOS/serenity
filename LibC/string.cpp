@@ -4,6 +4,16 @@
 
 extern "C" {
 
+void bzero(void* dest, size_t n)
+{
+    memset(dest, 0, n);
+}
+
+void bcopy(const void* src, void* dest, size_t n)
+{
+    memmove(dest, src, n);
+}
+
 void* memset(void* dest, int c, size_t n)
 {
     uint8_t* bdest = (uint8_t*)dest;
@@ -48,11 +58,23 @@ size_t strlen(const char* str)
 
 int strcmp(const char* s1, const char* s2)
 {
-    for (; *s1 == *s2; ++s1, ++s2) {
-        if (*s1 == 0)
+    while (*s1 == *s2++)
+        if (*s1++ == 0)
             return 0;
-    }
-    return *(const unsigned char*)s1 < *(const unsigned char*)s2 ? -1 : 1;
+    return *(const unsigned char*)s1 - *(const unsigned char*)--s2;
+}
+
+int strncmp(const char* s1, const char* s2, size_t n)
+{
+    if (!n)
+        return 0;
+    do {
+        if (*s1 != *s2++)
+            return *(const unsigned char*)s1 - *(const unsigned char*)--s2;
+        if (*s1++ == 0)
+            break;
+    } while (--n);
+    return 0;
 }
 
 int memcmp(const void* v1, const void* v2, size_t n)
