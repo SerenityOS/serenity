@@ -45,6 +45,7 @@ off_t lseek(int fd, off_t, int whence);
 #define SIGKILL 9
 #define SIGSEGV 11
 #define SIGTERM 15
+#define SIGCHLD 17
 
 #define HOST_NAME_MAX 64
 

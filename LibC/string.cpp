@@ -132,7 +132,7 @@ char* strncat(char *dest, const char *src, size_t n)
     return dest;
 }
 
-const char* strerror(int errnum)
+char* strerror(int errnum)
 {
     switch (errnum) {
     case 0: return "No error";

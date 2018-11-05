@@ -18,7 +18,7 @@ char* strcat(char *dest, const char *src);
 char* strncat(char *dest, const char *src, size_t);
 size_t strspn(const char*, const char* accept);
 size_t strcspn(const char*, const char* reject);
-const char* strerror(int errnum);
+char* strerror(int errnum);
 
 __END_DECLS
 
