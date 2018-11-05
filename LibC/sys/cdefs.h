@@ -10,3 +10,6 @@
 #define __BEGIN_DECLS
 #define __END_DECLS
 #endif
+
+#undef __P
+#define __P(a) a
