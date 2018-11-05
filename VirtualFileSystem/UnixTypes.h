@@ -20,6 +20,9 @@ typedef dword nlink_t;
 typedef dword uid_t;
 typedef dword gid_t;
 
+typedef void (*__sighandler_t)(int);
+typedef __sighandler_t sighandler_t;
+
 #ifdef SERENITY
 // FIXME: Support 64-bit offsets!
 typedef signed_dword off_t;

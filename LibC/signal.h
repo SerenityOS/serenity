@@ -19,6 +19,7 @@ struct sigaction {
 };
 
 int kill(pid_t, int sig);
+sighandler_t signal(int sig, sighandler_t);
 
 #define SIG_DFL ((__sighandler_t)0)
 #define SIG_ERR ((__sighandler_t)-1)
@@ -27,7 +28,6 @@ int kill(pid_t, int sig);
 #define SIG_BLOCK 0
 #define SIG_UNBLOCK 1
 #define SIG_SETMASK 2
-
 
 #define SIGHUP    1
 #define SIGINT    2
@@ -44,6 +44,10 @@ int kill(pid_t, int sig);
 #define SIGPIPE  13
 #define SIGALRM  14
 #define SIGTERM  15
+#define SIGCONT  18
+#define SIGTSTP  20
+#define SIGTTIN  21
+#define SIGTTOU  22
 
 __END_DECLS
 

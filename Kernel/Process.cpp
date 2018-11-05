@@ -1174,6 +1174,22 @@ int Process::sys$uname(utsname* buf)
     return 0;
 }
 
+int Process::sys$isatty(int fd)
+{
+    auto* handle = fileHandleIfExists(fd);
+    if (!handle)
+        return -EBADF;
+    if (!handle->isTTY())
+        return -ENOTTY;
+    return 1;
+}
+
+Unix::sighandler_t Process::sys$signal(int signum, Unix::sighandler_t handler)
+{
+    dbgprintf("sys$signal: %d => L%x\n", signum, handler);
+    return nullptr;
+}
+
 int Process::sys$kill(pid_t pid, int signal)
 {
     if (pid == 0) {

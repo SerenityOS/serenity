@@ -7,8 +7,12 @@ __BEGIN_DECLS
 
 size_t strlen(const char*);
 int strcmp(const char*, const char*);
+int strncmp(const char*, const char*, size_t);
 int memcmp(const void*, const void*, size_t);
 void memcpy(void*, const void*, size_t);
+void memmove(void*, const void*, size_t);
+void bzero(void*, size_t);
+void bcopy(const void*, void*, size_t);
 void* memset(void*, int, size_t);
 char* strcpy(char* dest, const char* src);
 char* strncpy(char* dest, const char* src, size_t);

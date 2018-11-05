@@ -21,6 +21,8 @@ LIBC_OBJS = \
        scanf.o \
        pwd.o \
        times.o \
+       termcap.o \
+       setjmp.o \
        entry.o
 
 OBJS = $(AK_OBJS) $(LIBC_OBJS)
