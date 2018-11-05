@@ -75,6 +75,13 @@ public:
         other.m_impl = nullptr;
     }
 
+    Vector(const Vector& other)
+    {
+        ensureCapacity(other.size());
+        for (size_t i = 0; i < other.size(); ++i)
+            unchecked_append(other[i]);
+    }
+
     Vector& operator=(Vector&& other)
     {
         if (this != &other) {
@@ -140,13 +147,19 @@ public:
         Vector<T> tmp = move(other);
         ensureCapacity(size() + tmp.size());
         for (auto&& v : tmp) {
-            uncheckedAppend(move(v));
+            unchecked_append(move(v));
         }
     }
 
-    void uncheckedAppend(T&& value)
+    void unchecked_append(T&& value)
     {
         new (m_impl->slot(m_impl->m_size)) T(move(value));
+        ++m_impl->m_size;
+    }
+
+    void unchecked_append(const T& value)
+    {
+        new (m_impl->slot(m_impl->m_size)) T(value);
         ++m_impl->m_size;
     }
 

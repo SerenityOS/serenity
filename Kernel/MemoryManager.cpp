@@ -45,12 +45,12 @@ void MemoryManager::release_page_directory(PageDirectory& page_directory)
     dbgprintf("MM: release_page_directory for PD K%x\n", &page_directory);
 #endif
     for (size_t i = 0; i < 1024; ++i) {
-        auto page_table = page_directory.physical_addresses[i];
+        auto& page_table = page_directory.physical_pages[i];
         if (!page_table.is_null()) {
 #ifdef MM_DEBUG
-            dbgprintf("MM: deallocating process page table [%u] P%x @ %p\n", i, page_table.get(), &process.m_page_directory->physical_addresses[i]);
+            dbgprintf("MM: deallocating user page table P%x\n", page_table->paddr().get());
 #endif
-            deallocate_page_table(page_table);
+            deallocate_page_table(page_directory, i);
         }
     }
 #ifdef SCRUB_DEALLOCATED_PAGE_TABLES
@@ -76,9 +76,9 @@ void MemoryManager::initializePaging()
     // The bottom 4 MB are identity mapped & supervisor only. Every process shares these mappings.
     create_identity_mapping(LinearAddress(PAGE_SIZE), 4 * MB);
  
-    // The physical pages 4 MB through 8 MB are available for Zone allocation.
+    // The physical pages 4 MB through 8 MB are available for allocation.
     for (size_t i = (4 * MB) + PAGE_SIZE; i < (8 * MB); i += PAGE_SIZE)
-        m_freePages.append(PhysicalAddress(i));
+        m_free_physical_pages.append(adopt(*new PhysicalPage(PhysicalAddress(i))));
 
     asm volatile("movl %%eax, %%cr3"::"a"(m_kernel_page_directory));
     asm volatile(
@@ -88,20 +88,29 @@ void MemoryManager::initializePaging()
     );
 }
 
-PhysicalAddress MemoryManager::allocate_page_table()
+RetainPtr<PhysicalPage> MemoryManager::allocate_page_table(PageDirectory& page_directory, unsigned index)
 {
-    auto ppages = allocatePhysicalPages(1);
-    dword address = ppages[0].get();
+    auto& page_directory_physical_ptr = page_directory.physical_pages[index];
+    ASSERT(!page_directory_physical_ptr);
+    auto ppages = allocate_physical_pages(1);
+    ASSERT(ppages.size() == 1);
+    dword address = ppages[0]->paddr().get();
     create_identity_mapping(LinearAddress(address), PAGE_SIZE);
     memset((void*)address, 0, PAGE_SIZE);
-    return PhysicalAddress(address);
+    page_directory.physical_pages[index] = move(ppages[0]);
+    return page_directory.physical_pages[index];
 }
 
-void MemoryManager::deallocate_page_table(PhysicalAddress paddr)
+void MemoryManager::deallocate_page_table(PageDirectory& page_directory, unsigned index)
 {
-    ASSERT(!m_freePages.contains_slow(paddr));
-    remove_identity_mapping(LinearAddress(paddr.get()), PAGE_SIZE);
-    m_freePages.append(paddr);
+    auto& physical_page = page_directory.physical_pages[index];
+    ASSERT(physical_page);
+    ASSERT(!m_free_physical_pages.contains_slow(physical_page));
+    for (size_t i = 0; i < MM.m_free_physical_pages.size(); ++i) {
+        ASSERT(MM.m_free_physical_pages[i].ptr() != physical_page.ptr());
+    }
+    remove_identity_mapping(LinearAddress(physical_page->paddr().get()), PAGE_SIZE);
+    page_directory.physical_pages[index] = nullptr;
 }
 
 void MemoryManager::remove_identity_mapping(LinearAddress laddr, size_t size)
@@ -143,20 +152,21 @@ auto MemoryManager::ensurePTE(PageDirectory* page_directory, LinearAddress laddr
             pde.setPresent(true);
             pde.setWritable(true);
         } else {
-            auto page_table = allocate_page_table();
+            auto page_table = allocate_page_table(*page_directory, page_directory_index);
 #ifdef MM_DEBUG
             dbgprintf("MM: PD K%x (%s) allocated page table #%u (for L%x) at P%x\n",
                 page_directory,
                 page_directory == m_kernel_page_directory ? "Kernel" : "User",
                 page_directory_index,
                 laddr.get(),
-                page_table);
+                page_table->paddr().get());
 #endif
-            page_directory->physical_addresses[page_directory_index] = page_table;
-            pde.setPageTableBase(page_table.get());
+
+            pde.setPageTableBase(page_table->paddr().get());
             pde.setUserAllowed(true);
             pde.setPresent(true);
             pde.setWritable(true);
+            page_directory->physical_pages[page_directory_index] = move(page_table);
         }
     }
     return PageTableEntry(&pde.pageTableBase()[page_table_index]);
@@ -209,61 +219,18 @@ PageFaultResponse MemoryManager::handlePageFault(const PageFault& fault)
     return PageFaultResponse::ShouldCrash;
 }
 
-void MemoryManager::registerZone(Zone& zone)
-{
-    ASSERT_INTERRUPTS_DISABLED();
-    m_zones.set(&zone);
-#ifdef MM_DEBUG
-    for (size_t i = 0; i < zone.m_pages.size(); ++i)
-        dbgprintf("MM: allocated to zone: P%x\n", zone.m_pages[i].get());
-#endif
-}
-
-void MemoryManager::unregisterZone(Zone& zone)
-{
-    ASSERT_INTERRUPTS_DISABLED();
-#ifdef MM_DEBUG
-    for (size_t i = 0; i < zone.m_pages.size(); ++i)
-        dbgprintf("MM: deallocated from zone: P%x\n", zone.m_pages[i].get());
-#endif
-    m_zones.remove(&zone);
-    m_freePages.append(move(zone.m_pages));
-}
-
-Zone::Zone(Vector<PhysicalAddress>&& pages)
-    : m_pages(move(pages))
-{
-    MM.registerZone(*this);
-}
-
-Zone::~Zone()
-{
-    MM.unregisterZone(*this);
-}
-
-RetainPtr<Zone> MemoryManager::createZone(size_t size)
+Vector<RetainPtr<PhysicalPage>> MemoryManager::allocate_physical_pages(size_t count)
 {
     InterruptDisabler disabler;
-    auto pages = allocatePhysicalPages(ceilDiv(size, PAGE_SIZE));
-    if (pages.isEmpty()) {
-        kprintf("MM: createZone: no physical pages for size %u\n", size);
-        return nullptr;
-    }
-    return adopt(*new Zone(move(pages)));
-}
-
-Vector<PhysicalAddress> MemoryManager::allocatePhysicalPages(size_t count)
-{
-    InterruptDisabler disabler;
-    if (count > m_freePages.size())
+    if (count > m_free_physical_pages.size())
         return { };
 
-    Vector<PhysicalAddress> pages;
+    Vector<RetainPtr<PhysicalPage>> pages;
     pages.ensureCapacity(count);
     for (size_t i = 0; i < count; ++i) {
-        pages.append(m_freePages.takeLast());
+        pages.append(m_free_physical_pages.takeLast());
 #ifdef MM_DEBUG
-        dbgprintf("MM: allocate_physical_pages vending P%x\n", pages.last());
+        dbgprintf("MM: allocate_physical_pages vending P%x\n", pages.last()->paddr().get());
 #endif
     }
     return pages;
@@ -299,17 +266,22 @@ void MemoryManager::flushTLB(LinearAddress laddr)
 void MemoryManager::map_region_at_address(PageDirectory* page_directory, Region& region, LinearAddress laddr, bool user_allowed)
 {
     InterruptDisabler disabler;
-    auto& zone = *region.zone;
-    for (size_t i = 0; i < zone.m_pages.size(); ++i) {
+    for (size_t i = 0; i < region.physical_pages.size(); ++i) {
         auto page_laddr = laddr.offset(i * PAGE_SIZE);
         auto pte = ensurePTE(page_directory, page_laddr);
-        pte.setPhysicalPageBase(zone.m_pages[i].get());
-        pte.setPresent(true); // FIXME: Maybe we could use the is_readable flag here?
+        auto& physical_page = region.physical_pages[i];
+        if (physical_page) {
+            pte.setPhysicalPageBase(physical_page->paddr().get());
+            pte.setPresent(true); // FIXME: Maybe we should use the is_readable flag here?
+        } else {
+            pte.setPhysicalPageBase(0);
+            pte.setPresent(false);
+        }
         pte.setWritable(region.is_writable);
         pte.setUserAllowed(user_allowed);
         flushTLB(page_laddr);
 #ifdef MM_DEBUG
-        dbgprintf("MM: >> map_region_at_address (PD=%x) L%x => P%x\n", page_directory, page_laddr, zone.m_pages[i].get());
+        dbgprintf("MM: >> map_region_at_address (PD=%x) '%s' L%x => P%x (@%p)\n", page_directory, region.name.characters(), page_laddr, physical_page ? physical_page->paddr().get() : 0, physical_page.ptr());
 #endif
     }
 }
@@ -369,8 +341,7 @@ void MemoryManager::remove_kernel_alias_for_region(Region& region, byte* addr)
 bool MemoryManager::unmapRegion(Process& process, Region& region)
 {
     InterruptDisabler disabler;
-    auto& zone = *region.zone;
-    for (size_t i = 0; i < zone.m_pages.size(); ++i) {
+    for (size_t i = 0; i < region.physical_pages.size(); ++i) {
         auto laddr = region.linearAddress.offset(i * PAGE_SIZE);
         auto pte = ensurePTE(process.m_page_directory, laddr);
         pte.setPhysicalPageBase(0);
@@ -379,7 +350,8 @@ bool MemoryManager::unmapRegion(Process& process, Region& region)
         pte.setUserAllowed(false);
         flushTLB(laddr);
 #ifdef MM_DEBUG
-        //dbgprintf("MM: >> Unmapped L%x => P%x <<\n", laddr, zone.m_pages[i].get());
+        auto& physical_page = region.physical_pages[i];
+        dbgprintf("MM: >> Unmapped L%x => P%x <<\n", laddr, physical_page ? physical_page->paddr().get() : 0);
 #endif
     }
     return true;
@@ -429,12 +401,12 @@ RetainPtr<Region> Region::clone()
     KernelPagingScope pagingScope;
 
     if (is_readable && !is_writable) {
-        // Create a new region backed by the same zone.
-        return adopt(*new Region(linearAddress, size, zone.copyRef(), String(name), is_readable, is_writable));
+        // Create a new region backed by the same physical pages.
+        return adopt(*new Region(linearAddress, size, physical_pages, String(name), is_readable, is_writable));
     }
     // FIXME: Implement COW regions.
-    auto clone_zone = MM.createZone(zone->size());
-    auto clone_region = adopt(*new Region(linearAddress, size, move(clone_zone), String(name), is_readable, is_writable));
+    auto clone_physical_pages = MM.allocate_physical_pages(physical_pages.size());
+    auto clone_region = adopt(*new Region(linearAddress, size, move(clone_physical_pages), String(name), is_readable, is_writable));
 
     // FIXME: It would be cool to make the src_alias a read-only mapping.
     byte* src_alias = MM.create_kernel_alias_for_region(*this);
@@ -447,3 +419,26 @@ RetainPtr<Region> Region::clone()
     return clone_region;
 }
 
+Region::Region(LinearAddress a, size_t s, Vector<RetainPtr<PhysicalPage>> pp, String&& n, bool r, bool w)
+    : linearAddress(a)
+    , size(s)
+    , physical_pages(move(pp))
+    , name(move(n))
+    , is_readable(r)
+    , is_writable(w)
+{
+}
+
+Region::~Region()
+{
+}
+
+void PhysicalPage::return_to_freelist()
+{
+    InterruptDisabler disabler;
+    m_retain_count = 1;
+    MM.m_free_physical_pages.append(adopt(*this));
+#ifdef MM_DEBUG
+    dbgprintf("MM: P%x released to freelist\n", m_paddr.get());
+#endif
+}

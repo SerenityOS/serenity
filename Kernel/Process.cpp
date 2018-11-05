@@ -17,6 +17,7 @@
 
 //#define DEBUG_IO
 //#define TASK_DEBUG
+//#define FORK_DEBUG
 //#define SCHEDULER_DEBUG
 
 // FIXME: Only do a single validation for accesses that don't span multiple pages.
@@ -144,11 +145,11 @@ Region* Process::allocate_region(LinearAddress laddr, size_t size, String&& name
 
     laddr.mask(0xfffff000);
 
-    auto zone = MM.createZone(size);
-    ASSERT(zone);
+    unsigned page_count = ceilDiv(size, PAGE_SIZE);
+    auto physical_pages = MM.allocate_physical_pages(page_count);
+    ASSERT(physical_pages.size() == page_count);
 
-    m_regions.append(adopt(*new Region(laddr, size, move(zone), move(name), is_readable, is_writable)));
-
+    m_regions.append(adopt(*new Region(laddr, size, move(physical_pages), move(name), is_readable, is_writable)));
     MM.mapRegion(*this, *m_regions.last());
     return m_regions.last().ptr();
 }
@@ -1256,20 +1257,6 @@ Process* Process::kernelProcess()
 {
     ASSERT(s_kernelProcess);
     return s_kernelProcess;
-}
-
-Region::Region(LinearAddress a, size_t s, RetainPtr<Zone>&& z, String&& n, bool r, bool w)
-    : linearAddress(a)
-    , size(s)
-    , zone(move(z))
-    , name(move(n))
-    , is_readable(r)
-    , is_writable(w)
-{
-}
-
-Region::~Region()
-{
 }
 
 bool Process::isValidAddressForKernel(LinearAddress laddr) const
