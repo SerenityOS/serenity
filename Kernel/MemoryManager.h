@@ -37,6 +37,8 @@ public:
             return_to_freelist();
     }
 
+    unsigned retain_count() const { return m_retain_count; }
+
 private:
     PhysicalPage(PhysicalAddress paddr)
         : m_paddr(paddr)

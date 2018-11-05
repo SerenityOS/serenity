@@ -61,9 +61,10 @@ ByteBuffer procfs$pid_vm(Process& process)
             region->name.characters());
         for (size_t i = 0; i < region->physical_pages.size(); ++i) {
             auto& physical_page = region->physical_pages[i];
-            ptr += ksprintf(ptr, "P%x%s ",
+            ptr += ksprintf(ptr, "P%x%s(%u) ",
                 physical_page ? physical_page->paddr().get() : 0,
-                region->cow_map.get(i) ? "!" : ""
+                region->cow_map.get(i) ? "!" : "",
+                physical_page->retain_count()
             );
         }
         ptr += ksprintf(ptr, "\n");
