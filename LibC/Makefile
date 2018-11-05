@@ -20,6 +20,7 @@ LIBC_OBJS = \
        getopt.o \
        scanf.o \
        pwd.o \
+       times.o \
        entry.o
 
 OBJS = $(AK_OBJS) $(LIBC_OBJS)

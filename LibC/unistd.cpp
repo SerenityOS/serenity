@@ -1,6 +1,8 @@
-#include "unistd.h"
-#include "string.h"
-#include "errno.h"
+#include <unistd.h>
+#include <string.h>
+#include <errno.h>
+#include <stdarg.h>
+#include <assert.h>
 #include <Kernel/Syscall.h>
 
 extern "C" {
@@ -78,9 +80,12 @@ pid_t getpgrp()
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-int open(const char* path, int options)
+int open(const char* path, int options, ...)
 {
-    int rc = Syscall::invoke(Syscall::PosixOpen, (dword)path, (dword)options);
+    va_list ap;
+    va_start(ap, options);
+    int rc = Syscall::invoke(Syscall::PosixOpen, (dword)path, (dword)options, (dword)ap);
+    va_end(ap);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
@@ -167,6 +172,16 @@ off_t lseek(int fd, off_t offset, int whence)
 {
     int rc = Syscall::invoke(Syscall::PosixLseek, (dword)fd, (dword)offset, (dword)whence);
     __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
+int link(const char*, const char*)
+{
+    assert(false);
+}
+
+int unlink(const char*)
+{
+    assert(false);
 }
 
 }
