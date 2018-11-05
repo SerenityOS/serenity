@@ -56,8 +56,9 @@ public:
     TSS32& tss() { return m_tss; }
     State state() const { return m_state; }
     uid_t uid() const { return m_uid; }
-    uid_t gid() const { return m_gid; }
-
+    gid_t gid() const { return m_gid; }
+    uid_t euid() const { return m_euid; }
+    gid_t egid() const { return m_egid; }
     pid_t parentPID() const { return m_parentPID; }
 
     const FarPtr& farPtr() const { return m_farPtr; }
@@ -91,6 +92,8 @@ public:
     int sys$tcsetpgrp(int fd, pid_t pgid);
     uid_t sys$getuid();
     gid_t sys$getgid();
+    uid_t sys$geteuid();
+    gid_t sys$getegid();
     pid_t sys$getpid();
     int sys$open(const char* path, int options);
     int sys$close(int fd);
@@ -175,6 +178,8 @@ private:
     pid_t m_pid { 0 };
     uid_t m_uid { 0 };
     gid_t m_gid { 0 };
+    uid_t m_euid { 0 };
+    gid_t m_egid { 0 };
     pid_t m_sid { 0 };
     pid_t m_pgid { 0 };
     DWORD m_ticks { 0 };

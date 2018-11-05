@@ -27,6 +27,16 @@ gid_t getgid()
     return Syscall::invoke(Syscall::PosixGetgid);
 }
 
+uid_t geteuid()
+{
+    return Syscall::invoke(Syscall::PosixGeteuid);
+}
+
+gid_t getegid()
+{
+    return Syscall::invoke(Syscall::PosixGetegid);
+}
+
 pid_t getpid()
 {
     return Syscall::invoke(Syscall::PosixGetpid);
