@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <errno.h>
 #include <Kernel/Syscall.h>
 
 extern "C" {
@@ -18,6 +19,16 @@ DIR* opendir(const char* name)
     dirp->buffer_size = 0;
     dirp->nextptr = nullptr;
     return dirp;
+}
+
+int closedir(DIR* dirp)
+{
+    if (!dirp || dirp->fd == -1)
+        return -EBADF;
+    int rc = close(dirp->fd);
+    if (rc == 0)
+        dirp->fd = -1;
+    return rc;
 }
 
 struct sys_dirent {

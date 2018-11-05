@@ -29,6 +29,7 @@ int fileno(FILE*);
 int fgetc(FILE*);
 int getc(FILE*);
 int getchar();
+FILE* fdopen(int fd, const char* mode);
 FILE* fopen(const char* pathname, const char* mode);
 int fclose(FILE*);
 void rewind(FILE*);

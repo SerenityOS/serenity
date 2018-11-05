@@ -39,6 +39,9 @@ int ttyname_r(int fd, char* buffer, size_t);
 off_t lseek(int fd, off_t, int whence);
 int link(const char* oldpath, const char* newpath);
 int unlink(const char* pathname);
+int getdtablesize();
+int dup(int old_fd);
+int dup2(int old_fd, int new_fd);
 
 #define WEXITSTATUS(status) (((status) & 0xff00) >> 8)
 #define WTERMSIG(status) ((status) & 0x7f)

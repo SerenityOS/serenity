@@ -53,6 +53,9 @@ enum Function {
     PosixGetegid = 0x2021,
     PosixSignal = 0x2022,
     PosixIsatty = 0x2023,
+    Getdtablesize = 0x2024,
+    Dup = 0x2025,
+    Dup2 = 0x2026,
 };
 
 void initialize();

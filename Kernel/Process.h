@@ -126,6 +126,9 @@ public:
     int sys$execve(const char* filename, const char** argv, const char** envp);
     Unix::sighandler_t sys$signal(int signum, Unix::sighandler_t);
     int sys$isatty(int fd);
+    int sys$getdtablesize();
+    int sys$dup(int oldfd);
+    int sys$dup2(int oldfd, int newfd);
 
     static void initialize();
 
@@ -193,7 +196,7 @@ private:
     State m_state { Invalid };
     DWORD m_wakeupTime { 0 };
     TSS32 m_tss;
-    Vector<OwnPtr<FileHandle>> m_file_descriptors;
+    Vector<RetainPtr<FileHandle>> m_file_descriptors;
     RingLevel m_ring { Ring0 };
     int m_error { 0 };
     void* m_kernelStack { nullptr };

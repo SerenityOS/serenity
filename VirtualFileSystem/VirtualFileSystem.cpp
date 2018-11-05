@@ -398,15 +398,15 @@ bool VirtualFileSystem::touch(const String& path)
     return inode.fileSystem()->setModificationTime(inode, ktime(nullptr));
 }
 
-OwnPtr<FileHandle> VirtualFileSystem::open(CharacterDevice& device, int options)
+RetainPtr<FileHandle> VirtualFileSystem::open(CharacterDevice& device, int options)
 {
     auto vnode = getOrCreateNode(device);
     if (!vnode)
         return nullptr;
-    return make<FileHandle>(move(vnode));
+    return FileHandle::create(move(vnode));
 }
 
-OwnPtr<FileHandle> VirtualFileSystem::open(const String& path, int& error, int options, InodeIdentifier base)
+RetainPtr<FileHandle> VirtualFileSystem::open(const String& path, int& error, int options, InodeIdentifier base)
 {
     auto inode = resolvePath(path, error, base, options);
     if (!inode.isValid())
@@ -414,10 +414,10 @@ OwnPtr<FileHandle> VirtualFileSystem::open(const String& path, int& error, int o
     auto vnode = getOrCreateNode(inode);
     if (!vnode)
         return nullptr;
-    return make<FileHandle>(move(vnode));
+    return FileHandle::create(move(vnode));
 }
 
-OwnPtr<FileHandle> VirtualFileSystem::create(const String& path, InodeIdentifier base)
+RetainPtr<FileHandle> VirtualFileSystem::create(const String& path, InodeIdentifier base)
 {
     // FIXME: Do the real thing, not just this fake thing!
     (void) path;
@@ -425,7 +425,7 @@ OwnPtr<FileHandle> VirtualFileSystem::create(const String& path, InodeIdentifier
     return nullptr;
 }
 
-OwnPtr<FileHandle> VirtualFileSystem::mkdir(const String& path, InodeIdentifier base)
+RetainPtr<FileHandle> VirtualFileSystem::mkdir(const String& path, InodeIdentifier base)
 {
     // FIXME: Do the real thing, not just this fake thing!
     (void) path;

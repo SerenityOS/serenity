@@ -23,7 +23,8 @@ struct __DIR {
 typedef struct __DIR DIR;
 
 DIR* opendir(const char* name);
-struct dirent* readdir(DIR* dirp);
+int closedir(DIR*);
+struct dirent* readdir(DIR*);
 
 __END_DECLS
 

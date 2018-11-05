@@ -190,5 +190,22 @@ int isatty(int fd)
     __RETURN_WITH_ERRNO(rc, 1, 0);
 }
 
+int getdtablesize()
+{
+    int rc = Syscall::invoke(Syscall::Getdtablesize);
+    __RETURN_WITH_ERRNO(rc, 1, 0);
 }
 
+int dup(int old_fd)
+{
+    int rc = Syscall::invoke(Syscall::Dup, (dword)old_fd);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
+int dup2(int old_fd, int new_fd)
+{
+    int rc = Syscall::invoke(Syscall::Dup2, (dword)old_fd, (dword)new_fd);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
+}
