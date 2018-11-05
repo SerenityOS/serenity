@@ -8,6 +8,8 @@
 #include "IRQHandler.h"
 #include "PIC.h"
 
+//#define PAGE_FAULT_DEBUG
+
 struct DescriptorTablePointer {
     WORD size;
     void* address;

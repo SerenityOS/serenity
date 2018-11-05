@@ -223,6 +223,16 @@ Region* MemoryManager::region_from_laddr(Process& process, LinearAddress laddr)
 
 bool MemoryManager::copy_on_write(Process& process, Region& region, unsigned page_index_in_region)
 {
+    ASSERT_INTERRUPTS_DISABLED();
+    if (region.physical_pages[page_index_in_region]->retain_count() == 1) {
+#ifdef PAGE_FAULT_DEBUG
+        dbgprintf("    >> It's a COW page but nobody is sharing it anymore. Remap r/w\n");
+#endif
+        region.cow_map.set(page_index_in_region, false);
+        remap_region_page(process.m_page_directory, region, page_index_in_region, true);
+        return true;
+    }
+
 #ifdef PAGE_FAULT_DEBUG
     dbgprintf("    >> It's a COW page and it's time to COW!\n");
 #endif
