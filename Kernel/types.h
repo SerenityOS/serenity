@@ -105,3 +105,8 @@ public:
 private:
     dword m_address { 0 };
 };
+
+inline LinearAddress operator-(const LinearAddress& a, const LinearAddress& b)
+{
+    return LinearAddress(a.get() - b.get());
+}

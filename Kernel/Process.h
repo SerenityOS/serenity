@@ -236,6 +236,24 @@ private:
     Process::State m_original_state { Process::Invalid };
 };
 
+static inline const char* toString(Process::State state)
+{
+    switch (state) {
+    case Process::Invalid: return "Invalid";
+    case Process::Runnable: return "Runnable";
+    case Process::Running: return "Running";
+    case Process::Terminated: return "Term";
+    case Process::Crashing: return "Crash";
+    case Process::Exiting: return "Exit";
+    case Process::BlockedSleep: return "Sleep";
+    case Process::BlockedWait: return "Wait";
+    case Process::BlockedRead: return "Read";
+    case Process::BeingInspected: return "Inspect";
+    }
+    ASSERT_NOT_REACHED();
+    return nullptr;
+}
+
 extern void yield();
 extern bool scheduleNewProcess();
 extern void switchNow();

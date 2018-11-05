@@ -170,6 +170,30 @@ struct RegisterDump {
     WORD ss_if_crossRing;
 } PACKED;
 
+struct RegisterDumpWithExceptionCode {
+    WORD ss;
+    WORD gs;
+    WORD fs;
+    WORD es;
+    WORD ds;
+    DWORD edi;
+    DWORD esi;
+    DWORD ebp;
+    DWORD esp;
+    DWORD ebx;
+    DWORD edx;
+    DWORD ecx;
+    DWORD eax;
+    WORD exception_code;
+    WORD __exception_code_padding;
+    DWORD eip;
+    WORD cs;
+    WORD __csPadding;
+    DWORD eflags;
+    DWORD esp_if_crossRing;
+    WORD ss_if_crossRing;
+} PACKED;
+
 inline constexpr dword pageBaseOf(dword address)
 {
     return address & 0xfffff000;
