@@ -1,5 +1,7 @@
 #pragma once
 
+#define _POSIX_VERSION 200809L
+
 #define ALWAYS_INLINE inline __attribute__ ((always_inline))
 #define __NORETURN __attribute__ ((noreturn))
 

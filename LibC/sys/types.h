@@ -1,34 +1,29 @@
 #pragma once
 
 #include <sys/cdefs.h>
+#include <stdint.h>
 
 __BEGIN_DECLS
 
-typedef unsigned int dword;
-typedef unsigned short word;
-typedef unsigned char byte;
-
-typedef signed int signed_dword;
-typedef signed short signed_word;
-typedef signed char signed_byte;
-
-typedef dword uid_t;
-typedef dword gid_t;
+typedef uint32_t uid_t;
+typedef uint32_t gid_t;
 typedef int pid_t;
 
-typedef dword size_t;
-typedef signed_dword ssize_t;
+typedef uint32_t size_t;
+typedef int32_t ssize_t;
 
-typedef dword ino_t;
-typedef signed_dword off_t;
+typedef uint32_t ino_t;
+typedef int32_t off_t;
 
-typedef dword dev_t;
-typedef dword mode_t;
-typedef dword nlink_t;
-typedef dword blksize_t;
-typedef dword blkcnt_t;
-typedef dword time_t;
-typedef dword suseconds_t;
+typedef uint32_t dev_t;
+typedef uint32_t mode_t;
+typedef uint32_t nlink_t;
+typedef uint32_t blksize_t;
+typedef uint32_t blkcnt_t;
+typedef uint32_t time_t;
+typedef uint32_t suseconds_t;
+
+typedef uint32_t clock_t;
 
 struct timeval {
     time_t tv_sec;

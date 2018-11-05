@@ -43,6 +43,7 @@ int sprintf(char* buffer, const char* fmt, ...);
 int putchar(int ch);
 void perror(const char*);
 int sscanf (const char* buf, const char* fmt, ...);
+int fscanf(FILE*, const char* fmt, ...);
 
 __END_DECLS
 

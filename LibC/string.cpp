@@ -6,7 +6,7 @@ extern "C" {
 
 void* memset(void* dest, int c, size_t n)
 {
-    byte* bdest = (byte*)dest;
+    uint8_t* bdest = (uint8_t*)dest;
     for (; n; --n)
         *(bdest++) = c;
     return dest;
@@ -57,8 +57,8 @@ int strcmp(const char* s1, const char* s2)
 
 int memcmp(const void* v1, const void* v2, size_t n)
 {
-    auto* s1 = (const byte*)v1;
-    auto* s2 = (const byte*)v2;
+    auto* s1 = (const uint8_t*)v1;
+    auto* s2 = (const uint8_t*)v2;
     while (n-- > 0) {
         if (*s1++ != *s2++)
             return s1[-1] < s2[-1] ? -1 : 1;

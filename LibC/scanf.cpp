@@ -189,7 +189,7 @@ static int vsscanf(const char *buf, const char *s, va_list ap)
                     for (tc = s; isdigit(*s); s++);
                     strncpy (tmp, tc, s - tc);
                     tmp[s - tc] = '\0';
-                    atob ((dword*)&width, tmp, 10);
+                    atob ((uint32_t*)&width, tmp, 10);
                     s--;
                 }
             }
@@ -232,7 +232,7 @@ static int vsscanf(const char *buf, const char *s, va_list ap)
                 tmp[width] = '\0';
                 buf += width;
                 if (!noassign)
-                    atob(va_arg(ap, dword*), tmp, base);
+                    atob(va_arg(ap, uint32_t*), tmp, base);
             }
             if (!noassign)
                 ++count;

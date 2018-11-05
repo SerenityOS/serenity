@@ -22,7 +22,7 @@ gid_t getgid();
 pid_t getpid();
 pid_t tcgetpgrp(int fd);
 int tcsetpgrp(int fd, pid_t pgid);
-int open(const char* path, int options);
+int open(const char* path, int options, ...);
 ssize_t read(int fd, void* buf, size_t count);
 ssize_t write(int fd, const void* buf, size_t count);
 int close(int fd);
@@ -37,6 +37,8 @@ ssize_t readlink(const char* path, char* buffer, size_t);
 char* ttyname(int fd);
 int ttyname_r(int fd, char* buffer, size_t);
 off_t lseek(int fd, off_t, int whence);
+int link(const char* oldpath, const char* newpath);
+int unlink(const char* pathname);
 
 #define WEXITSTATUS(status) (((status) & 0xff00) >> 8)
 #define WTERMSIG(status) ((status) & 0x7f)
@@ -83,6 +85,12 @@ off_t lseek(int fd, off_t, int whence);
 #define O_RDONLY 0
 #define O_WRONLY 1
 #define O_RDWR 2
+#define O_CREAT 0100
+#define O_EXCL 0200
+#define O_NOCTTY 0400
+#define O_TRUNC 01000
+#define O_APPEND 02000
+#define O_NONBLOCK 04000
 #define O_DIRECTORY 00200000
 #define O_NOFOLLOW 00400000
 
