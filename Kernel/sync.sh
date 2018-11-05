@@ -19,6 +19,7 @@ cp ../Userland/uname mnt/bin/uname
 cp ../Userland/clear mnt/bin/clear
 cp ../Userland/tst mnt/bin/tst
 cp ../Userland/ft mnt/bin/ft
+cp ../Userland/ft2 mnt/bin/ft2
 cp ../Userland/mm mnt/bin/mm
 cp ../Userland/kill mnt/bin/kill
 cp ../Userland/tty mnt/bin/tty

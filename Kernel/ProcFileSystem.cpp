@@ -49,7 +49,7 @@ ByteBuffer procfs$pid_vm(Process& process)
 {
     ProcessInspectionScope scope(process);
     char* buffer;
-    auto stringImpl = StringImpl::createUninitialized(80 + process.regionCount() * 80, buffer);
+    auto stringImpl = StringImpl::createUninitialized(80 + process.regionCount() * 80 + 4096, buffer);
     memset(buffer, 0, stringImpl->length());
     char* ptr = buffer;
     ptr += ksprintf(ptr, "BEGIN       END         SIZE        NAME\n");
@@ -59,6 +59,10 @@ ByteBuffer procfs$pid_vm(Process& process)
             region->linearAddress.offset(region->size - 1).get(),
             region->size,
             region->name.characters());
+        for (auto& physical_page : region->physical_pages) {
+            ptr += ksprintf(ptr, "P%x ", physical_page ? physical_page->paddr().get() : 0);
+        }
+        ptr += ksprintf(ptr, "\n");
     }
     *ptr = '\0';
     return ByteBuffer::copy((byte*)buffer, ptr - buffer);
@@ -130,6 +134,8 @@ void ProcFileSystem::removeProcess(Process& process)
 
 ByteBuffer procfs$mm()
 {
+    // FIXME: Implement
+#if 0
     InterruptDisabler disabler;
     size_t zonePageCount = 0;
     for (auto* zone : MM.m_zones)
@@ -143,9 +149,11 @@ ByteBuffer procfs$mm()
         ptr += ksprintf(ptr, "\n");
     }
     ptr += ksprintf(ptr, "Zone count: %u\n", MM.m_zones.size());
-    ptr += ksprintf(ptr, "Free physical pages: %u\n", MM.m_freePages.size());
+    ptr += ksprintf(ptr, "Free physical pages: %u\n", MM.m_free_physical_pages.size());
     buffer.trim(ptr - (char*)buffer.pointer());
     return buffer;
+#endif
+    return { };
 }
 
 

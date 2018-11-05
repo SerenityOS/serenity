@@ -17,34 +17,50 @@ enum class PageFaultResponse {
     Continue,
 };
 
-struct PageDirectory {
-    dword entries[1024];
-    PhysicalAddress physical_addresses[1024];
-};
-
-struct Zone : public Retainable<Zone> {
-    friend ByteBuffer procfs$mm();
+class PhysicalPage {
+    friend class MemoryManager;
 public:
-    ~Zone();
-    size_t size() const { return m_pages.size() * PAGE_SIZE; }
+    ~PhysicalPage() { }
+    PhysicalAddress paddr() const { return m_paddr; }
 
-    const Vector<PhysicalAddress>& pages() const { return m_pages; }
+    void retain()
+    {
+        ASSERT(m_retain_count);
+        ++m_retain_count;
+    }
+
+    void release()
+    {
+        ASSERT(m_retain_count);
+        if (!--m_retain_count)
+            return_to_freelist();
+    }
 
 private:
-    friend class MemoryManager;
-    explicit Zone(Vector<PhysicalAddress>&&);
+    PhysicalPage(PhysicalAddress paddr)
+        : m_paddr(paddr)
+    {
+    }
 
-    Vector<PhysicalAddress> m_pages;
+    void return_to_freelist();
+
+    unsigned m_retain_count { 1 };
+    PhysicalAddress m_paddr;
+};
+
+struct PageDirectory {
+    dword entries[1024];
+    RetainPtr<PhysicalPage> physical_pages[1024];
 };
 
 struct Region : public Retainable<Region> {
-    Region(LinearAddress, size_t, RetainPtr<Zone>&&, String&&, bool r, bool w);
+    Region(LinearAddress, size_t, Vector<RetainPtr<PhysicalPage>>, String&&, bool r, bool w);
     ~Region();
 
     RetainPtr<Region> clone();
     LinearAddress linearAddress;
     size_t size { 0 };
-    RetainPtr<Zone> zone;
+    Vector<RetainPtr<PhysicalPage>> physical_pages;
     String name;
     bool is_readable { true };
     bool is_writable { true };
@@ -54,6 +70,7 @@ struct Region : public Retainable<Region> {
 
 class MemoryManager {
     AK_MAKE_ETERNAL
+    friend class PhysicalPage;
     friend ByteBuffer procfs$mm();
 public:
     static MemoryManager& the() PURE;
@@ -64,13 +81,8 @@ public:
 
     PageFaultResponse handlePageFault(const PageFault&);
 
-    RetainPtr<Zone> createZone(size_t);
-
     bool mapRegion(Process&, Region&);
     bool unmapRegion(Process&, Region&);
-
-    void registerZone(Zone&);
-    void unregisterZone(Zone&);
 
     void populate_page_directory(PageDirectory&);
     void release_page_directory(PageDirectory&);
@@ -84,6 +96,8 @@ public:
     bool validate_user_read(const Process&, LinearAddress) const;
     bool validate_user_write(const Process&, LinearAddress) const;
 
+    Vector<RetainPtr<PhysicalPage>> allocate_physical_pages(size_t count);
+
 private:
     MemoryManager();
     ~MemoryManager();
@@ -96,15 +110,13 @@ private:
     void flushEntireTLB();
     void flushTLB(LinearAddress);
 
-    PhysicalAddress allocate_page_table();
-    void deallocate_page_table(PhysicalAddress);
+    RetainPtr<PhysicalPage> allocate_page_table(PageDirectory&, unsigned index);
+    void deallocate_page_table(PageDirectory&, unsigned index);
 
     void protectMap(LinearAddress, size_t length);
 
     void create_identity_mapping(LinearAddress, size_t length);
     void remove_identity_mapping(LinearAddress, size_t);
-
-    Vector<PhysicalAddress> allocatePhysicalPages(size_t count);
 
     struct PageDirectoryEntry {
         explicit PageDirectoryEntry(dword* pde) : m_pde(pde) { }
@@ -192,9 +204,7 @@ private:
 
     LinearAddress m_next_laddr;
 
-    HashTable<Zone*> m_zones;
-
-    Vector<PhysicalAddress> m_freePages;
+    Vector<RetainPtr<PhysicalPage>> m_free_physical_pages;
 };
 
 struct KernelPagingScope {

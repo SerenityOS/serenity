@@ -32,6 +32,7 @@ public:
     RetainPtr(RetainPtr& other) : m_ptr(other.copyRef().leakRef()) { }
     RetainPtr(RetainPtr&& other) : m_ptr(other.leakRef()) { }
     template<typename U> RetainPtr(RetainPtr<U>&& other) : m_ptr(static_cast<T*>(other.leakRef())) { }
+    RetainPtr(const RetainPtr& other) : m_ptr(const_cast<RetainPtr&>(other).copyRef().leakRef()) { }
     ~RetainPtr()
     {
         clear();
@@ -120,6 +121,8 @@ public:
     const T& operator*() const { return *m_ptr; }
 
     operator bool() { return !!m_ptr; }
+
+    bool is_null() const { return !m_ptr; }
 
 private:
     T* m_ptr = nullptr;
