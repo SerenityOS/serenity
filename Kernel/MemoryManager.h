@@ -79,7 +79,7 @@ public:
 
     static void initialize();
 
-    PageFaultResponse handlePageFault(const PageFault&);
+    PageFaultResponse handle_page_fault(const PageFault&);
 
     bool mapRegion(Process&, Region&);
     bool unmapRegion(Process&, Region&);

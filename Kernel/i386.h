@@ -126,26 +126,26 @@ enum Flags {
 
 class PageFault {
 public:
-    PageFault(word code, LinearAddress address)
+    PageFault(word code, LinearAddress laddr)
         : m_code(code)
-        , m_address(address)
+        , m_laddr(laddr)
     {
     }
 
-    LinearAddress address() const { return m_address; }
+    LinearAddress laddr() const { return m_laddr; }
     word code() const { return m_code; }
 
-    bool isNotPresent() const { return (m_code & 1) == PageFaultFlags::NotPresent; }
-    bool isProtectionViolation() const { return (m_code & 1) == PageFaultFlags::ProtectionViolation; }
-    bool isRead() const { return (m_code & 2) == PageFaultFlags::Read; }
-    bool isWrite() const { return (m_code & 2) == PageFaultFlags::Write; }
-    bool isUser() const { return (m_code & 4) == PageFaultFlags::UserMode; }
-    bool isSupervisor() const { return (m_code & 4) == PageFaultFlags::SupervisorMode; }
-    bool isInstructionFetch() const { return (m_code & 8) == PageFaultFlags::InstructionFetch; }
+    bool is_not_present() const { return (m_code & 1) == PageFaultFlags::NotPresent; }
+    bool is_protection_violation() const { return (m_code & 1) == PageFaultFlags::ProtectionViolation; }
+    bool is_read() const { return (m_code & 2) == PageFaultFlags::Read; }
+    bool is_write() const { return (m_code & 2) == PageFaultFlags::Write; }
+    bool is_user() const { return (m_code & 4) == PageFaultFlags::UserMode; }
+    bool is_supervisor() const { return (m_code & 4) == PageFaultFlags::SupervisorMode; }
+    bool is_instruction_fetch() const { return (m_code & 8) == PageFaultFlags::InstructionFetch; }
 
 private:
     word m_code;
-    LinearAddress m_address;
+    LinearAddress m_laddr;
 };
 
 struct RegisterDump {
