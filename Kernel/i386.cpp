@@ -56,24 +56,12 @@ asm(
     "    iret\n"
 );
 
-extern volatile dword exception_state_dump;
-extern volatile word exception_code;
-asm(
-    ".globl exception_state_dump\n"
-    "exception_state_dump:\n"
-    ".long 0\n"
-    ".globl exception_code\n"
-    "exception_code:\n"
-    ".short 0\n"
-);
-
 #define EH_ENTRY(ec) \
-extern "C" void exception_ ## ec ## _handler(); \
+extern "C" void exception_ ## ec ## _handler(RegisterDumpWithExceptionCode&); \
 extern "C" void exception_ ## ec ## _entry(); \
 asm( \
     ".globl exception_" # ec "_entry\n" \
     "exception_" # ec "_entry: \n" \
-    "    pop exception_code\n" \
     "    pusha\n" \
     "    pushw %ds\n" \
     "    pushw %es\n" \
@@ -88,7 +76,7 @@ asm( \
     "    popw %es\n" \
     "    popw %fs\n" \
     "    popw %gs\n" \
-    "    mov %esp, exception_state_dump\n" \
+    "    mov %esp, %eax\n" \
     "    call exception_" # ec "_handler\n" \
     "    popw %gs\n" \
     "    popw %gs\n" \
@@ -96,11 +84,12 @@ asm( \
     "    popw %es\n" \
     "    popw %ds\n" \
     "    popa\n" \
+    "    add $0x4, %esp\n" \
     "    iret\n" \
 );
 
 #define EH_ENTRY_NO_CODE(ec) \
-extern "C" void exception_ ## ec ## _handler(); \
+extern "C" void exception_ ## ec ## _handler(RegisterDump&); \
 extern "C" void exception_ ## ec ## _entry(); \
 asm( \
     ".globl exception_" # ec "_entry\n" \
@@ -119,7 +108,7 @@ asm( \
     "    popw %es\n" \
     "    popw %fs\n" \
     "    popw %gs\n" \
-    "    mov %esp, exception_state_dump\n" \
+    "    mov %esp, %eax\n" \
     "    call exception_" # ec "_handler\n" \
     "    popw %gs\n" \
     "    popw %gs\n" \
@@ -132,9 +121,8 @@ asm( \
 
 // 6: Invalid Opcode
 EH_ENTRY_NO_CODE(6);
-void exception_6_handler()
+void exception_6_handler(RegisterDump& regs)
 {
-    auto& regs = *reinterpret_cast<RegisterDump*>(exception_state_dump);
     kprintf("%s invalid opcode: %u(%s)\n", current->isRing0() ? "Kernel" : "Process", current->pid(), current->name().characters());
 
     word ss;
@@ -147,7 +135,6 @@ void exception_6_handler()
         esp = regs.esp_if_crossRing;
     }
 
-    kprintf("exception code: %w\n", exception_code);
     kprintf("pc=%w:%x ds=%w es=%w fs=%w gs=%w\n", regs.cs, regs.eip, regs.ds, regs.es, regs.fs, regs.gs);
     kprintf("eax=%x ebx=%x ecx=%x edx=%x\n", regs.eax, regs.ebx, regs.ecx, regs.edx);
     kprintf("ebp=%x esp=%x esi=%x edi=%x\n", regs.ebp, esp, regs.esi, regs.edi);
@@ -163,10 +150,9 @@ void exception_6_handler()
 
 // 13: General Protection Fault
 EH_ENTRY(13);
-void exception_13_handler()
+void exception_13_handler(RegisterDumpWithExceptionCode& regs)
 {
-    auto& regs = *reinterpret_cast<RegisterDump*>(exception_state_dump);
-    kprintf("%s crash: %u(%s)\n", current->isRing0() ? "Kernel" : "Process", current->pid(), current->name().characters());
+    kprintf("%s GPF: %u(%s)\n", current->isRing0() ? "Kernel" : "User", current->pid(), current->name().characters());
 
     word ss;
     dword esp;
@@ -178,7 +164,7 @@ void exception_13_handler()
         esp = regs.esp_if_crossRing;
     }
 
-    kprintf("exception code: %w\n", exception_code);
+    kprintf("exception code: %w\n", regs.exception_code);
     kprintf("pc=%w:%x ds=%w es=%w fs=%w gs=%w\n", regs.cs, regs.eip, regs.ds, regs.es, regs.fs, regs.gs);
     kprintf("eax=%x ebx=%x ecx=%x edx=%x\n", regs.eax, regs.ebx, regs.ecx, regs.edx);
     kprintf("ebp=%x esp=%x esi=%x edi=%x\n", regs.ebp, esp, regs.esi, regs.edi);
@@ -193,19 +179,18 @@ void exception_13_handler()
 
 // 14: Page Fault
 EH_ENTRY(14);
-void exception_14_handler()
+void exception_14_handler(RegisterDumpWithExceptionCode& regs)
 {
     ASSERT(current);
 
     dword faultAddress;
     asm ("movl %%cr2, %%eax":"=a"(faultAddress));
 
-    auto& regs = *reinterpret_cast<RegisterDump*>(exception_state_dump);
-    kprintf("Ring%u page fault in %s(%u), %s laddr=%p\n",
+    dbgprintf("Ring%u page fault in %s(%u), %s laddr=%p\n",
         regs.cs & 3,
         current->name().characters(),
         current->pid(),
-        exception_code & 2 ? "write" : "read",
+        regs.exception_code & 2 ? "write" : "read",
         faultAddress);
 
     word ss;
@@ -218,13 +203,15 @@ void exception_14_handler()
         esp = regs.esp_if_crossRing;
     }
 
-    kprintf("exception code: %w\n", exception_code);
-    kprintf("pc=%w:%x ds=%w es=%w fs=%w gs=%w\n", regs.cs, regs.eip, regs.ds, regs.es, regs.fs, regs.gs);
-    kprintf("eax=%x ebx=%x ecx=%x edx=%x\n", regs.eax, regs.ebx, regs.ecx, regs.edx);
-    kprintf("ebp=%x esp=%x esi=%x edi=%x\n", regs.ebp, esp, regs.esi, regs.edi);
+#ifdef PAGE_FAULT_DEBUG
+    dbgprintf("exception code: %w\n", regs.exception_code);
+    dbgprintf("pc=%w:%x ds=%w es=%w fs=%w gs=%w\n", regs.cs, regs.eip, regs.ds, regs.es, regs.fs, regs.gs);
+    dbgprintf("stk=%w:%x\n", ss, esp);
+    dbgprintf("eax=%x ebx=%x ecx=%x edx=%x\n", regs.eax, regs.ebx, regs.ecx, regs.edx);
+    dbgprintf("ebp=%x esp=%x esi=%x edi=%x\n", regs.ebp, esp, regs.esi, regs.edi);
 
     byte* codeptr = (byte*)regs.eip;
-    kprintf("code: %b %b %b %b %b %b %b %b\n",
+    dbgprintf("code: %b %b %b %b %b %b %b %b\n",
             codeptr[0],
             codeptr[1],
             codeptr[2],
@@ -234,17 +221,20 @@ void exception_14_handler()
             codeptr[6],
             codeptr[7]
     );
+#endif
 
     if (current->isRing0())
         HANG;
 
-    auto response = MM.handle_page_fault(PageFault(exception_code, LinearAddress(faultAddress)));
+    auto response = MM.handle_page_fault(PageFault(regs.exception_code, LinearAddress(faultAddress)));
 
     if (response == PageFaultResponse::ShouldCrash) {
         kprintf("Crashing after unresolved page fault\n");
         Process::processDidCrash(current);
     } else if (response == PageFaultResponse::Continue) {
-        kprintf("Continuing after resolved page fault\n");
+#ifdef PAGE_FAULT_DEBUG
+        dbgprintf("Continuing after resolved page fault\n");
+#endif
     } else {
         ASSERT_NOT_REACHED();
     }

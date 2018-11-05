@@ -19,6 +19,14 @@
 //#define TASK_DEBUG
 //#define FORK_DEBUG
 //#define SCHEDULER_DEBUG
+#define COOL_GLOBALS
+
+#ifdef COOL_GLOBALS
+struct CoolGlobals {
+    dword current_pid;
+};
+CoolGlobals* g_cool_globals;
+#endif
 
 // FIXME: Only do a single validation for accesses that don't span multiple pages.
 // FIXME: Some places pass strlen(arg1) as arg2. This doesn't seem entirely perfect..
@@ -96,6 +104,9 @@ static void hlt_loop()
 
 void Process::initialize()
 {
+#ifdef COOL_GLOBALS
+    g_cool_globals = (CoolGlobals*)0x1000;
+#endif
     current = nullptr;
     next_pid = 0;
     s_processes = new InlineLinkedList<Process>;
@@ -353,6 +364,7 @@ int Process::exec(const String& path, Vector<String>&& arguments, Vector<String>
     m_tss.ds = 0x23;
     m_tss.es = 0x23;
     m_tss.fs = 0x23;
+    m_tss.gs = 0x23;
     m_tss.ss = 0x23;
     m_tss.cr3 = (dword)m_page_directory;
     auto* stack_region = allocate_region(LinearAddress(), defaultStackSize, "stack");
@@ -845,7 +857,7 @@ bool scheduleNewProcess()
     for (auto* process = s_processes->head(); process; process = process->next()) {
         //if (process->state() == Process::BlockedWait || process->state() == Process::BlockedSleep)
 //            continue;
-        dbgprintf("%w %s(%u) @ %w:%x\n", process->state(), process->name().characters(), process->pid(), process->tss().cs, process->tss().eip);
+        dbgprintf("% 12s %s(%u) @ %w:%x\n", toString(process->state()), process->name().characters(), process->pid(), process->tss().cs, process->tss().eip);
     }
 #endif
 
@@ -914,6 +926,10 @@ static bool contextSwitch(Process* t)
 
     current = t;
     t->set_state(Process::Running);
+
+#ifdef COOL_GLOBALS
+    g_cool_globals->current_pid = t->pid();
+#endif
 
     if (!t->selector()) {
         t->setSelector(gdt_alloc_entry());

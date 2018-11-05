@@ -7,6 +7,7 @@
 #include "Process.h"
 
 //#define MM_DEBUG
+//#define PAGE_FAULT_DEBUG
 #define SCRUB_DEALLOCATED_PAGE_TABLES
 
 static MemoryManager* s_the;
@@ -67,7 +68,7 @@ void MemoryManager::initializePaging()
     memset(m_kernel_page_directory, 0, sizeof(PageDirectory));
 
 #ifdef MM_DEBUG
-    kprintf("MM: Kernel page directory @ %p\n", m_kernel_page_directory);
+    dbgprintf("MM: Kernel page directory @ %p\n", m_kernel_page_directory);
 #endif
 
     // Make null dereferences crash.
@@ -208,15 +209,66 @@ void MemoryManager::initialize()
     s_the = new MemoryManager;
 }
 
+Region* MemoryManager::region_from_laddr(Process& process, LinearAddress laddr)
+{
+    ASSERT_INTERRUPTS_DISABLED();
+
+    // FIXME: Use a binary search tree (maybe red/black?) or some other more appropriate data structure!
+    for (auto& region : process.m_regions) {
+        if (region->contains(laddr))
+            return region.ptr();
+    }
+    ASSERT_NOT_REACHED();
+}
+
+bool MemoryManager::copy_on_write(Process& process, Region& region, unsigned page_index_in_region)
+{
+#ifdef PAGE_FAULT_DEBUG
+    dbgprintf("    >> It's a COW page and it's time to COW!\n");
+#endif
+    auto physical_page_to_copy = move(region.physical_pages[page_index_in_region]);
+    auto ppages = allocate_physical_pages(1);
+    ASSERT(ppages.size() == 1);
+    byte* dest_ptr = quickmap_page(*ppages[0]);
+    const byte* src_ptr = region.linearAddress.offset(page_index_in_region * PAGE_SIZE).asPtr();
+#ifdef PAGE_FAULT_DEBUG
+    dbgprintf("      >> COW P%x <- P%x\n", ppages[0]->paddr().get(), physical_page_to_copy->paddr().get());
+#endif
+    memcpy(dest_ptr, src_ptr, PAGE_SIZE);
+    region.physical_pages[page_index_in_region] = move(ppages[0]);
+    unquickmap_page();
+    region.cow_map.set(page_index_in_region, false);
+    remap_region_page(process.m_page_directory, region, page_index_in_region, true);
+    return true;
+}
+
 PageFaultResponse MemoryManager::handle_page_fault(const PageFault& fault)
 {
     ASSERT_INTERRUPTS_DISABLED();
-    kprintf("MM: handle_page_fault(%w) at L%x\n", fault.code(), fault.laddr().get());
+#ifdef PAGE_FAULT_DEBUG
+    dbgprintf("MM: handle_page_fault(%w) at L%x\n", fault.code(), fault.laddr().get());
+#endif
+    auto* region = region_from_laddr(*current, fault.laddr());
+    ASSERT(region);
+    auto page_index_in_region = region->page_index_from_address(fault.laddr());
     if (fault.is_not_present()) {
-        kprintf("  >> NP fault!\n");
+        kprintf("  >> NP fault in Region{%p}[%u]\n", region, page_index_in_region);
     } else if (fault.is_protection_violation()) {
-        kprintf("  >> PV fault!\n");
+        if (region->cow_map.get(page_index_in_region)) {
+#ifdef PAGE_FAULT_DEBUG
+            dbgprintf("  >> PV (COW) fault in Region{%p}[%u]\n", region, page_index_in_region);
+#endif
+            bool success = copy_on_write(*current, *region, page_index_in_region);
+            ASSERT(success);
+            return PageFaultResponse::Continue;
+        }
+        kprintf("  >> PV fault in Region{%p}[%u]\n", region, page_index_in_region);
+    } else {
+        ASSERT_NOT_REACHED();
     }
+
+
+
     return PageFaultResponse::ShouldCrash;
 }
 
@@ -264,6 +316,66 @@ void MemoryManager::flushTLB(LinearAddress laddr)
     asm volatile("invlpg %0": :"m" (*(char*)laddr.get()) : "memory");
 }
 
+byte* MemoryManager::quickmap_page(PhysicalPage& physical_page)
+{
+    ASSERT_INTERRUPTS_DISABLED();
+    auto page_laddr = LinearAddress(4 * MB);
+    auto pte = ensurePTE(m_kernel_page_directory, page_laddr);
+    pte.setPhysicalPageBase(physical_page.paddr().get());
+    pte.setPresent(true); // FIXME: Maybe we should use the is_readable flag here?
+    pte.setWritable(true);
+    pte.setUserAllowed(false);
+    flushTLB(page_laddr);
+#ifdef MM_DEBUG
+    dbgprintf("MM: >> quickmap_page L%x => P%x\n", page_laddr, physical_page.paddr().get());
+#endif
+    return page_laddr.asPtr();
+}
+
+void MemoryManager::unquickmap_page()
+{
+    ASSERT_INTERRUPTS_DISABLED();
+    auto page_laddr = LinearAddress(4 * MB);
+    auto pte = ensurePTE(m_kernel_page_directory, page_laddr);
+#ifdef MM_DEBUG
+    auto old_physical_address = pte.physicalPageBase();
+#endif
+    pte.setPhysicalPageBase(0);
+    pte.setPresent(false);
+    pte.setWritable(false);
+    pte.setUserAllowed(false);
+    flushTLB(page_laddr);
+#ifdef MM_DEBUG
+    dbgprintf("MM: >> unquickmap_page L%x =/> P%x\n", page_laddr, old_physical_address);
+#endif
+}
+
+void MemoryManager::remap_region_page(PageDirectory* page_directory, Region& region, unsigned page_index_in_region, bool user_allowed)
+{
+    InterruptDisabler disabler;
+    auto page_laddr = region.linearAddress.offset(page_index_in_region * PAGE_SIZE);
+    auto pte = ensurePTE(page_directory, page_laddr);
+    auto& physical_page = region.physical_pages[page_index_in_region];
+    ASSERT(physical_page);
+    pte.setPhysicalPageBase(physical_page->paddr().get());
+    pte.setPresent(true); // FIXME: Maybe we should use the is_readable flag here?
+    if (region.cow_map.get(page_index_in_region))
+        pte.setWritable(false);
+    else
+        pte.setWritable(region.is_writable);
+    pte.setUserAllowed(user_allowed);
+    flushTLB(page_laddr);
+#ifdef MM_DEBUG
+    dbgprintf("MM: >> remap_region_page (PD=%x) '%s' L%x => P%x (@%p)\n", page_directory, region.name.characters(), page_laddr.get(), physical_page->paddr().get(), physical_page.ptr());
+#endif
+}
+
+void MemoryManager::remap_region(Process& process, Region& region)
+{
+    InterruptDisabler disabler;
+    map_region_at_address(process.m_page_directory, region, region.linearAddress, true);
+}
+
 void MemoryManager::map_region_at_address(PageDirectory* page_directory, Region& region, LinearAddress laddr, bool user_allowed)
 {
     InterruptDisabler disabler;
@@ -274,11 +386,15 @@ void MemoryManager::map_region_at_address(PageDirectory* page_directory, Region&
         if (physical_page) {
             pte.setPhysicalPageBase(physical_page->paddr().get());
             pte.setPresent(true); // FIXME: Maybe we should use the is_readable flag here?
+            if (region.cow_map.get(i))
+                pte.setWritable(false);
+            else
+                pte.setWritable(region.is_writable);
         } else {
             pte.setPhysicalPageBase(0);
             pte.setPresent(false);
+            pte.setWritable(region.is_writable);
         }
-        pte.setWritable(region.is_writable);
         pte.setUserAllowed(user_allowed);
         flushTLB(page_laddr);
 #ifdef MM_DEBUG
@@ -399,34 +515,27 @@ bool MemoryManager::validate_user_write(const Process& process, LinearAddress la
 RetainPtr<Region> Region::clone()
 {
     InterruptDisabler disabler;
-    KernelPagingScope pagingScope;
 
     if (is_readable && !is_writable) {
         // Create a new region backed by the same physical pages.
         return adopt(*new Region(linearAddress, size, physical_pages, String(name), is_readable, is_writable));
     }
-    // FIXME: Implement COW regions.
-    auto clone_physical_pages = MM.allocate_physical_pages(physical_pages.size());
-    auto clone_region = adopt(*new Region(linearAddress, size, move(clone_physical_pages), String(name), is_readable, is_writable));
 
-    // FIXME: It would be cool to make the src_alias a read-only mapping.
-    byte* src_alias = MM.create_kernel_alias_for_region(*this);
-    byte* dest_alias = MM.create_kernel_alias_for_region(*clone_region);
-
-    memcpy(dest_alias, src_alias, size);
-
-    MM.remove_kernel_alias_for_region(*clone_region, dest_alias);
-    MM.remove_kernel_alias_for_region(*this, src_alias);
-    return clone_region;
+    // Set up a COW region. The parent (this) region becomes COW as well!
+    for (size_t i = 0; i < physical_pages.size(); ++i)
+        cow_map.set(i, true);
+    MM.remap_region(*current, *this);
+    return adopt(*new Region(linearAddress, size, physical_pages, String(name), is_readable, is_writable, true));
 }
 
-Region::Region(LinearAddress a, size_t s, Vector<RetainPtr<PhysicalPage>> pp, String&& n, bool r, bool w)
+Region::Region(LinearAddress a, size_t s, Vector<RetainPtr<PhysicalPage>> pp, String&& n, bool r, bool w, bool cow)
     : linearAddress(a)
     , size(s)
     , physical_pages(move(pp))
     , name(move(n))
     , is_readable(r)
     , is_writable(w)
+    , cow_map(Bitmap::create(physical_pages.size(), cow))
 {
 }
 

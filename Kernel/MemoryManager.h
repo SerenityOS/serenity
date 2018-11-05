@@ -2,6 +2,7 @@
 
 #include "types.h"
 #include "i386.h"
+#include <AK/Bitmap.h>
 #include <AK/ByteBuffer.h>
 #include <AK/Retainable.h>
 #include <AK/RetainPtr.h>
@@ -54,16 +55,27 @@ struct PageDirectory {
 };
 
 struct Region : public Retainable<Region> {
-    Region(LinearAddress, size_t, Vector<RetainPtr<PhysicalPage>>, String&&, bool r, bool w);
+    Region(LinearAddress, size_t, Vector<RetainPtr<PhysicalPage>>, String&&, bool r, bool w, bool cow = false);
     ~Region();
 
     RetainPtr<Region> clone();
+    bool contains(LinearAddress laddr) const
+    {
+        return laddr >= linearAddress && laddr < linearAddress.offset(size);
+    }
+
+    unsigned page_index_from_address(LinearAddress laddr) const
+    {
+        return (laddr - linearAddress).get() / PAGE_SIZE;
+    }
+
     LinearAddress linearAddress;
     size_t size { 0 };
     Vector<RetainPtr<PhysicalPage>> physical_pages;
     String name;
     bool is_readable { true };
     bool is_writable { true };
+    Bitmap cow_map;
 };
 
 #define MM MemoryManager::the()
@@ -98,6 +110,8 @@ public:
 
     Vector<RetainPtr<PhysicalPage>> allocate_physical_pages(size_t count);
 
+    void remap_region(Process&, Region&);
+
 private:
     MemoryManager();
     ~MemoryManager();
@@ -105,6 +119,7 @@ private:
     LinearAddress allocate_linear_address_range(size_t);
     void map_region_at_address(PageDirectory*, Region&, LinearAddress, bool user_accessible);
     void unmap_range(PageDirectory*, LinearAddress, size_t);
+    void remap_region_page(PageDirectory*, Region&, unsigned page_index_in_region, bool user_allowed);
 
     void initializePaging();
     void flushEntireTLB();
@@ -117,6 +132,13 @@ private:
 
     void create_identity_mapping(LinearAddress, size_t length);
     void remove_identity_mapping(LinearAddress, size_t);
+
+    static Region* region_from_laddr(Process&, LinearAddress);
+
+    bool copy_on_write(Process&, Region&, unsigned page_index_in_region);
+
+    byte* quickmap_page(PhysicalPage&);
+    void unquickmap_page();
 
     struct PageDirectoryEntry {
         explicit PageDirectoryEntry(dword* pde) : m_pde(pde) { }

@@ -100,23 +100,34 @@ static void loadKsyms(const ByteBuffer& buffer)
     s_ksyms_ready = true;
 }
 
-void dump_backtrace()
+void dump_backtrace(bool use_ksyms)
 {
-    if (!current)
+    if (!current) {
+        HANG;
         return;
+    }
     extern volatile bool ksyms_ready();
-    if (!ksyms_ready())
+    if (use_ksyms && !ksyms_ready()) {
+        HANG;
         return;
-    dword stack_variable;
+    }
     struct RecognizedSymbol {
         dword address;
         const KSym* ksym;
     };
     Vector<RecognizedSymbol> recognizedSymbols;
-    for (dword* stackPtr = &stack_variable; current->isValidAddressForKernel(LinearAddress((dword)stackPtr)); stackPtr = (dword*)*stackPtr) {
-        dword retaddr = stackPtr[1];
-        if (auto* ksym = ksymbolicate(retaddr))
-            recognizedSymbols.append({ retaddr, ksym });
+    if (use_ksyms) {
+        for (dword* stackPtr = (dword*)&use_ksyms; current->isValidAddressForKernel(LinearAddress((dword)stackPtr)); stackPtr = (dword*)*stackPtr) {
+            dword retaddr = stackPtr[1];
+            if (auto* ksym = ksymbolicate(retaddr))
+                recognizedSymbols.append({ retaddr, ksym });
+        }
+    } else{
+        for (dword* stackPtr = (dword*)&use_ksyms; current->isValidAddressForKernel(LinearAddress((dword)stackPtr)); stackPtr = (dword*)*stackPtr) {
+            dword retaddr = stackPtr[1];
+            kprintf("%x (next: %x)\n", retaddr, stackPtr ? (dword*)*stackPtr : 0);
+        }
+        return;
     }
     size_t bytesNeeded = 0;
     for (auto& symbol : recognizedSymbols) {

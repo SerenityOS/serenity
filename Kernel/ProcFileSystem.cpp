@@ -59,8 +59,12 @@ ByteBuffer procfs$pid_vm(Process& process)
             region->linearAddress.offset(region->size - 1).get(),
             region->size,
             region->name.characters());
-        for (auto& physical_page : region->physical_pages) {
-            ptr += ksprintf(ptr, "P%x ", physical_page ? physical_page->paddr().get() : 0);
+        for (size_t i = 0; i < region->physical_pages.size(); ++i) {
+            auto& physical_page = region->physical_pages[i];
+            ptr += ksprintf(ptr, "P%x%s ",
+                physical_page ? physical_page->paddr().get() : 0,
+                region->cow_map.get(i) ? "!" : ""
+            );
         }
         ptr += ksprintf(ptr, "\n");
     }
@@ -247,24 +251,6 @@ ByteBuffer procfs$kmalloc()
     ptr += ksprintf(ptr, "eternal:      %u\npage-aligned: %u\nallocated:    %u\nfree:         %u\n", kmalloc_sum_eternal, sum_alloc, sum_free);
     buffer.trim(ptr - (char*)buffer.pointer());
     return buffer;
-}
-
-static const char* toString(Process::State state)
-{
-    switch (state) {
-    case Process::Invalid: return "Invalid";
-    case Process::Runnable: return "Runnable";
-    case Process::Running: return "Running";
-    case Process::Terminated: return "Term";
-    case Process::Crashing: return "Crash";
-    case Process::Exiting: return "Exit";
-    case Process::BlockedSleep: return "Sleep";
-    case Process::BlockedWait: return "Wait";
-    case Process::BlockedRead: return "Read";
-    case Process::BeingInspected: return "Inspect";
-    }
-    ASSERT_NOT_REACHED();
-    return nullptr;
 }
 
 ByteBuffer procfs$summary()

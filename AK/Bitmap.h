@@ -3,6 +3,7 @@
 #include "StdLib.h"
 #include "Types.h"
 #include "kmalloc.h"
+#include "Assertions.h"
 
 namespace AK {
 
@@ -14,9 +15,9 @@ public:
         return Bitmap(data, size);
     }
 
-    static Bitmap create(unsigned size)
+    static Bitmap create(unsigned size, bool default_value = 0)
     {
-        return Bitmap(size);
+        return Bitmap(size, default_value);
     }
 
     ~Bitmap()
@@ -45,12 +46,14 @@ public:
     const byte* data() const { return m_data; }
 
 private:
-    explicit Bitmap(unsigned size)
+    explicit Bitmap(unsigned size, bool default_value)
         : m_size(size)
         , m_owned(true)
     {
         ASSERT(m_size != 0);
-        m_data = reinterpret_cast<byte*>(kmalloc(ceilDiv(size, 8u)));
+        size_t size_to_allocate = ceilDiv(size, 8u);
+        m_data = reinterpret_cast<byte*>(kmalloc(size_to_allocate));
+        memset(m_data, default_value ? 0xff : 0x00, size_to_allocate);
     }
 
     Bitmap(byte* data, unsigned size)
