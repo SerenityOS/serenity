@@ -252,15 +252,6 @@ static void init_stage2()
     Process::createKernelProcess(spawn_stress, "spawn_stress");
 #endif
 
-#if 0
-    // It would be nice to exit this process, but right now it instantiates all kinds of things.
-    // At the very least it needs to be made sure those things stick around as appropriate.
-    DO_SYSCALL_A1(Syscall::PosixExit, 413);
-
-    kprintf("uh, we're still going after calling sys$exit...\n");
-    HANG;
-#endif
-
     for (;;) {
         //sleep(3600 * TICKS_PER_SECOND);
         asm("hlt");

@@ -2,6 +2,56 @@
 
 #include <AK/Types.h>
 
+#define ENUMERATE_SYSCALLS \
+    __ENUMERATE_SYSCALL(spawn) \
+    __ENUMERATE_SYSCALL(sleep) \
+    __ENUMERATE_SYSCALL(yield) \
+    __ENUMERATE_SYSCALL(putch) \
+    __ENUMERATE_SYSCALL(open) \
+    __ENUMERATE_SYSCALL(close) \
+    __ENUMERATE_SYSCALL(read) \
+    __ENUMERATE_SYSCALL(lseek) \
+    __ENUMERATE_SYSCALL(kill) \
+    __ENUMERATE_SYSCALL(getuid) \
+    __ENUMERATE_SYSCALL(exit) \
+    __ENUMERATE_SYSCALL(getgid) \
+    __ENUMERATE_SYSCALL(getpid) \
+    __ENUMERATE_SYSCALL(waitpid) \
+    __ENUMERATE_SYSCALL(mmap) \
+    __ENUMERATE_SYSCALL(munmap) \
+    __ENUMERATE_SYSCALL(get_dir_entries) \
+    __ENUMERATE_SYSCALL(lstat) \
+    __ENUMERATE_SYSCALL(getcwd) \
+    __ENUMERATE_SYSCALL(gettimeofday) \
+    __ENUMERATE_SYSCALL(gethostname) \
+    __ENUMERATE_SYSCALL(get_arguments) \
+    __ENUMERATE_SYSCALL(chdir) \
+    __ENUMERATE_SYSCALL(uname) \
+    __ENUMERATE_SYSCALL(set_mmap_name) \
+    __ENUMERATE_SYSCALL(readlink) \
+    __ENUMERATE_SYSCALL(write) \
+    __ENUMERATE_SYSCALL(ttyname_r) \
+    __ENUMERATE_SYSCALL(stat) \
+    __ENUMERATE_SYSCALL(get_environment) \
+    __ENUMERATE_SYSCALL(getsid) \
+    __ENUMERATE_SYSCALL(setsid) \
+    __ENUMERATE_SYSCALL(getpgid) \
+    __ENUMERATE_SYSCALL(setpgid) \
+    __ENUMERATE_SYSCALL(getpgrp) \
+    __ENUMERATE_SYSCALL(tcsetpgrp) \
+    __ENUMERATE_SYSCALL(tcgetpgrp) \
+    __ENUMERATE_SYSCALL(fork) \
+    __ENUMERATE_SYSCALL(execve) \
+    __ENUMERATE_SYSCALL(geteuid) \
+    __ENUMERATE_SYSCALL(getegid) \
+    __ENUMERATE_SYSCALL(signal) \
+    __ENUMERATE_SYSCALL(isatty) \
+    __ENUMERATE_SYSCALL(getdtablesize) \
+    __ENUMERATE_SYSCALL(dup) \
+    __ENUMERATE_SYSCALL(dup2) \
+    __ENUMERATE_SYSCALL(sigaction) \
+
+
 #define DO_SYSCALL_A0(function) Syscall::invoke((dword)(function))
 #define DO_SYSCALL_A1(function, arg1) Syscall::invoke((dword)(function), (dword)(arg1))
 #define DO_SYSCALL_A2(function, arg1, arg2) Syscall::invoke((dword)(function), (dword)(arg1), (dword)(arg2))
@@ -10,54 +60,21 @@
 namespace Syscall {
 
 enum Function {
-    Spawn = 0x1981,
-    Sleep = 0x1982,
-    Yield = 0x1983,
-    PutCharacter = 0x1984,
-    PosixOpen = 0x1985,
-    PosixClose = 0x1986,
-    PosixRead = 0x1987,
-    PosixLseek = 0x1988,
-    PosixKill = 0x1989,
-    PosixGetuid = 0x1990,
-    PosixExit = 0x1991,
-    PosixGetgid = 0x1992,
-    PosixGetpid = 0x1993,
-    PosixWaitpid = 0x1994,
-    PosixMmap = 0x1995,
-    PosixMunmap = 0x1996,
-    GetDirEntries = 0x1997,
-    PosixLstat = 0x1998,
-    PosixGetcwd = 0x1999,
-    PosixGettimeofday = 0x2000,
-    PosixGethostname = 0x2001,
-    GetArguments = 0x2002,
-    PosixChdir = 0x2003,
-    PosixUname = 0x2004,
-    SetMmapName = 0x2005,
-    PosixReadlink = 0x2006,
-    PosixWrite = 0x2007,
-    PosixTtynameR = 0x2008,
-    PosixStat = 0x2009,
-    GetEnvironment = 0x2010,
-    PosixGetsid = 0x2011,
-    PosixSetsid = 0x2012,
-    PosixGetpgid = 0x2013,
-    PosixSetpgid = 0x2014,
-    PosixGetpgrp = 0x2015,
-    PosixTcsetpgrp = 0x2016,
-    PosixTcgetpgrp = 0x2017,
-    PosixFork = 0x2018,
-    PosixExecve = 0x2019,
-    PosixGeteuid = 0x2020,
-    PosixGetegid = 0x2021,
-    PosixSignal = 0x2022,
-    PosixIsatty = 0x2023,
-    Getdtablesize = 0x2024,
-    Dup = 0x2025,
-    Dup2 = 0x2026,
-    Sigaction = 0x2027,
+#undef __ENUMERATE_SYSCALL
+#define __ENUMERATE_SYSCALL(x) SC_ ##x ,
+    ENUMERATE_SYSCALLS
+#undef __ENUMERATE_SYSCALL
 };
+
+inline constexpr const char* toString(Function function)
+{
+    switch (function) {
+#undef __ENUMERATE_SYSCALL
+#define __ENUMERATE_SYSCALL(x) case SC_ ##x: return #x;
+    ENUMERATE_SYSCALLS
+#undef __ENUMERATE_SYSCALL
+    }
+}
 
 void initialize();
 
