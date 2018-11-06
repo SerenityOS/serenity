@@ -52,7 +52,7 @@ dirent* readdir(DIR* dirp)
     if (!dirp->buffer) {
         // FIXME: Figure out how much to actually allocate.
         dirp->buffer = (char*)malloc(4096);
-        ssize_t nread = Syscall::invoke(Syscall::GetDirEntries, (dword)dirp->fd, (dword)dirp->buffer, 4096);
+        ssize_t nread = Syscall::invoke(Syscall::SC_get_dir_entries, (dword)dirp->fd, (dword)dirp->buffer, 4096);
         dirp->buffer_size = nread;
         dirp->nextptr = dirp->buffer;
     }

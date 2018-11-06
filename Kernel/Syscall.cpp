@@ -47,106 +47,106 @@ static DWORD handle(RegisterDump& regs, DWORD function, DWORD arg1, DWORD arg2, 
 {
     ASSERT_INTERRUPTS_ENABLED();
     switch (function) {
-    case Syscall::Yield:
+    case Syscall::SC_yield:
         yield();
         break;
-    case Syscall::PutCharacter:
+    case Syscall::SC_putch:
         Console::the().putChar(arg1 & 0xff);
         break;
-    case Syscall::Sleep:
+    case Syscall::SC_sleep:
         return current->sys$sleep(arg1);
-    case Syscall::PosixGettimeofday:
+    case Syscall::SC_gettimeofday:
         return current->sys$gettimeofday((timeval*)arg1);
-    case Syscall::Spawn:
+    case Syscall::SC_spawn:
         return current->sys$spawn((const char*)arg1, (const char**)arg2, (const char**)arg3);
-    case Syscall::GetDirEntries:
+    case Syscall::SC_get_dir_entries:
         return current->sys$get_dir_entries((int)arg1, (void*)arg2, (size_t)arg3);
-    case Syscall::PosixLstat:
+    case Syscall::SC_lstat:
         return current->sys$lstat((const char*)arg1, (Unix::stat*)arg2);
-    case Syscall::PosixStat:
+    case Syscall::SC_stat:
         return current->sys$stat((const char*)arg1, (Unix::stat*)arg2);
-    case Syscall::PosixGetcwd:
+    case Syscall::SC_getcwd:
         return current->sys$getcwd((char*)arg1, (size_t)arg2);
-    case Syscall::PosixOpen:
+    case Syscall::SC_open:
         return current->sys$open((const char*)arg1, (int)arg2);
-    case Syscall::PosixWrite:
+    case Syscall::SC_write:
         return current->sys$write((int)arg1, (const void*)arg2, (size_t)arg3);
-    case Syscall::PosixClose:
+    case Syscall::SC_close:
         //kprintf("syscall: close(%d)\n", arg1);
         return current->sys$close((int)arg1);
-    case Syscall::PosixRead:
+    case Syscall::SC_read:
         //kprintf("syscall: read(%d, %p, %u)\n", arg1, arg2, arg3);
         return current->sys$read((int)arg1, (void*)arg2, (size_t)arg3);
-    case Syscall::PosixLseek:
+    case Syscall::SC_lseek:
         return current->sys$lseek((int)arg1, (off_t)arg2, (int)arg3);
-    case Syscall::PosixKill:
+    case Syscall::SC_kill:
         return current->sys$kill((pid_t)arg1, (int)arg2);
-    case Syscall::PosixGetuid:
+    case Syscall::SC_getuid:
         return current->sys$getuid();
-    case Syscall::PosixGetgid:
+    case Syscall::SC_getgid:
         return current->sys$getgid();
-    case Syscall::PosixGetpid:
+    case Syscall::SC_getpid:
         return current->sys$getpid();
-    case Syscall::PosixWaitpid:
+    case Syscall::SC_waitpid:
         return current->sys$waitpid((pid_t)arg1, (int*)arg2, (int)arg3);
-    case Syscall::PosixMmap:
+    case Syscall::SC_mmap:
         return (dword)current->sys$mmap((void*)arg1, (size_t)arg2);
-    case Syscall::PosixMunmap:
+    case Syscall::SC_munmap:
         return current->sys$munmap((void*)arg1, (size_t)arg2);
-    case Syscall::PosixGethostname:
+    case Syscall::SC_gethostname:
         return current->sys$gethostname((char*)arg1, (size_t)arg2);
-    case Syscall::PosixExit:
+    case Syscall::SC_exit:
         cli();
         current->sys$exit((int)arg1);
         ASSERT_NOT_REACHED();
         return 0;
-    case Syscall::GetArguments:
+    case Syscall::SC_get_arguments:
         return current->sys$get_arguments((int*)arg1, (char***)arg2);
-    case Syscall::GetEnvironment:
+    case Syscall::SC_get_environment:
         return current->sys$get_environment((char***)arg1);
-    case Syscall::PosixChdir:
+    case Syscall::SC_chdir:
         return current->sys$chdir((const char*)arg1);
-    case Syscall::PosixUname:
+    case Syscall::SC_uname:
         return current->sys$uname((utsname*)arg1);
-    case Syscall::SetMmapName:
+    case Syscall::SC_set_mmap_name:
         return current->sys$set_mmap_name((void*)arg1, (size_t)arg2, (const char*)arg3);
-    case Syscall::PosixReadlink:
+    case Syscall::SC_readlink:
         return current->sys$readlink((const char*)arg1, (char*)arg2, (size_t)arg3);
-    case Syscall::PosixTtynameR:
+    case Syscall::SC_ttyname_r:
         return current->sys$ttyname_r((int)arg1, (char*)arg2, (size_t)arg3);
-    case Syscall::PosixSetsid:
+    case Syscall::SC_setsid:
         return current->sys$setsid();
-    case Syscall::PosixGetsid:
+    case Syscall::SC_getsid:
         return current->sys$getsid((pid_t)arg1);
-    case Syscall::PosixSetpgid:
+    case Syscall::SC_setpgid:
         return current->sys$setpgid((pid_t)arg1, (pid_t)arg2);
-    case Syscall::PosixGetpgid:
+    case Syscall::SC_getpgid:
         return current->sys$getpgid((pid_t)arg1);
-    case Syscall::PosixGetpgrp:
+    case Syscall::SC_getpgrp:
         return current->sys$getpgrp();
-    case Syscall::PosixTcgetpgrp:
+    case Syscall::SC_tcgetpgrp:
         return current->sys$tcgetpgrp((int)arg1);
-    case Syscall::PosixTcsetpgrp:
+    case Syscall::SC_tcsetpgrp:
         return current->sys$tcsetpgrp((int)arg1, (pid_t)arg2);
-    case Syscall::PosixFork:
+    case Syscall::SC_fork:
         return current->sys$fork(regs);
-    case Syscall::PosixExecve:
+    case Syscall::SC_execve:
         return current->sys$execve((const char*)arg1, (const char**)arg2, (const char**)arg3);
-    case Syscall::PosixGeteuid:
+    case Syscall::SC_geteuid:
         return current->sys$geteuid();
-    case Syscall::PosixGetegid:
+    case Syscall::SC_getegid:
         return current->sys$getegid();
-    case Syscall::PosixSignal:
+    case Syscall::SC_signal:
         return (dword)current->sys$signal((int)arg1, (Unix::sighandler_t)arg2);
-    case Syscall::PosixIsatty:
+    case Syscall::SC_isatty:
         return current->sys$isatty((int)arg1);
-    case Syscall::Getdtablesize:
+    case Syscall::SC_getdtablesize:
         return current->sys$getdtablesize();
-    case Syscall::Dup:
+    case Syscall::SC_dup:
         return current->sys$dup((int)arg1);
-    case Syscall::Dup2:
+    case Syscall::SC_dup2:
         return current->sys$dup2((int)arg1, (int)arg2);
-    case Syscall::Sigaction:
+    case Syscall::SC_sigaction:
         return current->sys$sigaction((int)arg1, (const Unix::sigaction*)arg2, (Unix::sigaction*)arg3);
     default:
         kprintf("<%u> int0x80: Unknown function %x requested {%x, %x, %x}\n", current->pid(), function, arg1, arg2, arg3);
