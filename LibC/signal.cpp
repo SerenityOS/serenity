@@ -22,5 +22,11 @@ sighandler_t signal(int signum, sighandler_t handler)
     return old_handler;
 }
 
+int sigaction(int signum, const struct sigaction* act, struct sigaction* old_act)
+{
+    int rc = Syscall::invoke(Syscall::Sigaction, (dword)signum, (dword)act, (dword)old_act);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
 }
 

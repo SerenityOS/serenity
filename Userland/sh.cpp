@@ -6,6 +6,7 @@
 #include <LibC/stdlib.h>
 #include <LibC/utsname.h>
 #include <LibC/pwd.h>
+#include <signal.h>
 #include <AK/FileSystemPath.h>
 
 struct GlobalState {
@@ -29,6 +30,29 @@ static void prompt()
 static int sh_pwd(int, const char**)
 {
     printf("%s\n", g->cwd.characters());
+    return 0;
+}
+
+void did_receive_signal(int signum)
+{
+    printf("\nMy word, I've received a signal with number %d\n", signum);
+    //exit(0);
+}
+
+static int sh_busy(int, const char**)
+{
+    struct sigaction sa;
+    sa.sa_handler = did_receive_signal;
+    sa.sa_flags = 0;
+    sa.sa_mask = 0;
+    sa.sa_restorer = nullptr;
+    int rc = sigaction(SIGUSR1, &sa, nullptr);
+    assert(rc == 0);
+    printf("listening for SIGUSR1 while looping in userspace...\n");
+    for (;;) {
+        for (volatile int i = 0; i < 100000; ++i)
+            ;
+    }
     return 0;
 }
 
@@ -145,6 +169,10 @@ static bool handle_builtin(int argc, const char** argv, int& retval)
     }
     if (!strcmp(argv[0], "fef")) {
         retval = sh_fef(argc, argv);
+        return true;
+    }
+    if (!strcmp(argv[0], "busy")) {
+        retval = sh_busy(argc, argv);
         return true;
     }
     if (!strcmp(argv[0], "wt")) {
