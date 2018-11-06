@@ -24,13 +24,13 @@ public:
     {
     }
 
-    String(const char* cstring)
-        : m_impl(StringImpl::create(cstring))
+    String(const char* cstring, ShouldChomp shouldChomp = NoChomp)
+        : m_impl(StringImpl::create(cstring, shouldChomp))
     {
     }
 
-    String(const char* cstring, size_t length)
-        : m_impl(StringImpl::create(cstring, length))
+    String(const char* cstring, size_t length, ShouldChomp shouldChomp = NoChomp)
+        : m_impl(StringImpl::create(cstring, length, shouldChomp))
     {
     }
 

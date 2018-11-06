@@ -6,11 +6,13 @@
 
 namespace AK {
 
+enum ShouldChomp { NoChomp, Chomp };
+
 class StringImpl : public Retainable<StringImpl> {
 public:
     static RetainPtr<StringImpl> createUninitialized(size_t length, char*& buffer);
-    static RetainPtr<StringImpl> create(const char* cstring);
-    static RetainPtr<StringImpl> create(const char* cstring, size_t length);
+    static RetainPtr<StringImpl> create(const char* cstring, ShouldChomp = NoChomp);
+    static RetainPtr<StringImpl> create(const char* cstring, size_t length, ShouldChomp = NoChomp);
     RetainPtr<StringImpl> toLowercase() const;
     RetainPtr<StringImpl> toUppercase() const;
 
@@ -50,3 +52,4 @@ private:
 }
 
 using AK::StringImpl;
+using AK::Chomp;
