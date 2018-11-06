@@ -28,5 +28,47 @@ int sigaction(int signum, const struct sigaction* act, struct sigaction* old_act
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
+int sigemptyset(sigset_t* set)
+{
+    *set = 0;
+    return 0;
 }
 
+int sigfillset(sigset_t* set)
+{
+    *set = 0xffffffff;
+    return 0;
+}
+
+int sigaddset(sigset_t* set, int sig)
+{
+    if (sig < 1 || sig > 32) {
+        errno = EINVAL;
+        return -1;
+    }
+    *set |= 1 << (sig - 1);
+    return 0;
+}
+
+int sigdelset(sigset_t* set, int sig)
+{
+    if (sig < 1 || sig > 32) {
+        errno = EINVAL;
+        return -1;
+    }
+    *set &= ~(1 << (sig - 1));
+    return 0;
+}
+
+int sigismember(const sigset_t* set, int sig)
+{
+    if (sig < 1 || sig > 32) {
+        errno = EINVAL;
+        return -1;
+    }
+    if (*set & (1 << (sig - 1)))
+        return 1;
+    return 0;
+}
+
+}
