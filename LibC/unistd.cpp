@@ -156,6 +156,11 @@ char* getcwd(char* buffer, size_t size)
     __RETURN_WITH_ERRNO(rc, buffer, nullptr);
 }
 
+char* getwd(char* buf)
+{
+    return getcwd(buf, PATH_MAX);
+}
+
 int sleep(unsigned seconds)
 {
     return Syscall::invoke(Syscall::SC_sleep, (dword)seconds);
