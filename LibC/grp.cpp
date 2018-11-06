@@ -87,10 +87,10 @@ next_entry:
     assert(__grdb_stream);
     if (feof(__grdb_stream))
         return nullptr;
-    String line(s);
+    String line(s, Chomp);
     auto parts = line.split(':');
     if (parts.size() != 4) {
-        fprintf(stderr, "getgrent(): Malformed entry on line %u\n", __grdb_line_number);
+        fprintf(stderr, "getgrent(): Malformed entry on line %u: '%s' has %u parts\n", __grdb_line_number, line.characters(), parts.size());
         goto next_entry;
     }
     auto& e_name = parts[0];
@@ -107,11 +107,11 @@ next_entry:
     __grdb_entry->gr_gid = e_gid;
     __grdb_entry->gr_name = __grdb_entry->name_buffer;
     __grdb_entry->gr_passwd = __grdb_entry->passwd_buffer;
-    for (size_t i = 0; i < parts.size(); ++i) {
+    for (size_t i = 0; i < members.size(); ++i) {
         __grdb_entry->members[i] = __grdb_entry->members_buffer[i];
-        strcpy(__grdb_entry->members_buffer[i], parts[i].characters());
+        strcpy(__grdb_entry->members_buffer[i], members[i].characters());
     }
-    __grdb_entry->members[parts.size()] = nullptr;
+    __grdb_entry->members[members.size()] = nullptr;
     __grdb_entry->gr_mem = __grdb_entry->members;
     strncpy(__grdb_entry->name_buffer, e_name.characters(), GRDB_STR_MAX_LEN);
     strncpy(__grdb_entry->passwd_buffer, e_passwd.characters(), GRDB_STR_MAX_LEN);
