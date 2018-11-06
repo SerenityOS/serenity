@@ -218,6 +218,8 @@ Region* MemoryManager::region_from_laddr(Process& process, LinearAddress laddr)
         if (region->contains(laddr))
             return region.ptr();
     }
+    kprintf("%s(%u) Couldn't find region for L%x\n", process.name().characters(), process.pid(), laddr.get());
+    process.dumpRegions();
     ASSERT_NOT_REACHED();
 }
 

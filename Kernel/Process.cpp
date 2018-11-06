@@ -731,17 +731,18 @@ void Process::sys$exit(int status)
     switchNow();
 }
 
-void Process::send_signal(int signal, Process* sender)
+void Process::terminate_due_to_signal(int signal, Process* sender)
 {
     ASSERT_INTERRUPTS_DISABLED();
-    bool wasCurrent = current == sender;
+    bool wasCurrent = this == current;
+
     set_state(Exiting);
     s_processes->remove(this);
 
     notify_waiters(m_pid, 0, signal);
 
     if (wasCurrent) {
-        kprintf("Current process committing suicide!\n");
+        kprintf("Current process (%u) committing suicide!\n", pid());
         if (!scheduleNewProcess()) {
             kprintf("Process::send_signal: Failed to schedule a new process :(\n");
             HANG;
@@ -750,6 +751,75 @@ void Process::send_signal(int signal, Process* sender)
     s_deadProcesses->append(this);
     if (wasCurrent)
         switchNow();
+}
+
+void Process::send_signal(int signal, Process* sender)
+{
+    ASSERT_INTERRUPTS_DISABLED();
+    ASSERT(signal < 32);
+
+    // FIXME: Handle send_signal to self.
+    ASSERT(this != current);
+
+    auto& action = m_signal_action_data[signal];
+    // FIXME: Implement SA_SIGINFO signal handlers.
+    ASSERT(!(action.flags & SA_SIGINFO));
+
+    auto handler_laddr = action.handler_or_sigaction;
+    if (handler_laddr.is_null())
+        return terminate_due_to_signal(signal, sender);
+
+    word ret_cs = m_tss.cs;
+    dword ret_eip = m_tss.eip;
+    dword ret_eflags = m_tss.eflags;
+
+    if ((ret_cs & 3) == 0) {
+        // FIXME: Handle send_signal to process currently in kernel code.
+        ASSERT_NOT_REACHED();
+    }
+
+    ProcessPagingScope pagingScope(*this);
+    dword old_esp = m_tss.esp;
+    push_value_on_stack(ret_eip);
+    push_value_on_stack(ret_eflags);
+    push_value_on_stack(m_tss.eax);
+    push_value_on_stack(m_tss.ecx);
+    push_value_on_stack(m_tss.edx);
+    push_value_on_stack(m_tss.ebx);
+    push_value_on_stack(old_esp);
+    push_value_on_stack(m_tss.ebp);
+    push_value_on_stack(m_tss.esi);
+    push_value_on_stack(m_tss.edi);
+    m_tss.eax = (dword)signal;
+    m_tss.cs = 0x1b;
+    m_tss.eip = handler_laddr.get();
+
+    if (m_return_from_signal_trampoline.is_null()) {
+        auto* region = allocate_region(LinearAddress(), PAGE_SIZE, "signal_trampoline", true, true); // FIXME: Remap as read-only after setup.
+        m_return_from_signal_trampoline = region->linearAddress;
+        byte* code_ptr = m_return_from_signal_trampoline.asPtr();
+        *code_ptr++ = 0x61; // popa
+        *code_ptr++ = 0x9d; // popf
+        *code_ptr++ = 0xc3; // ret
+        *code_ptr++ = 0x0f; // ud2
+        *code_ptr++ = 0x0b;
+    }
+
+    push_value_on_stack(m_return_from_signal_trampoline.get());
+
+    dbgprintf("signal: %s(%u) sent %d to %s(%u)\n", sender->name().characters(), sender->pid(), signal, name().characters(), pid());
+
+    if (sender == this) {
+        yield();
+        ASSERT_NOT_REACHED();
+    }
+}
+
+void Process::push_value_on_stack(dword value)
+{
+    m_tss.esp -= 4;
+    dword* stack_ptr = (dword*)m_tss.esp;
+    *stack_ptr = value;
 }
 
 void Process::processDidCrash(Process* crashedProcess)
@@ -1183,12 +1253,6 @@ int Process::sys$isatty(int fd)
     return 1;
 }
 
-Unix::sighandler_t Process::sys$signal(int signum, Unix::sighandler_t handler)
-{
-    dbgprintf("sys$signal: %d => L%x\n", signum, handler);
-    return nullptr;
-}
-
 int Process::sys$kill(pid_t pid, int signal)
 {
     if (pid == 0) {
@@ -1465,4 +1529,27 @@ int Process::sys$dup2(int old_fd, int new_fd)
         return -EMFILE;
     m_file_descriptors[new_fd] = handle;
     return new_fd;
+}
+
+Unix::sighandler_t Process::sys$signal(int signum, Unix::sighandler_t handler)
+{
+    // FIXME: Fail with -EINVAL if attepmting to catch or ignore SIGKILL or SIGSTOP.
+    if (signum >= 32)
+        return (Unix::sighandler_t)-EINVAL;
+    dbgprintf("sys$signal: %d => L%x\n", signum, handler);
+    return nullptr;
+}
+
+int Process::sys$sigaction(int signum, const Unix::sigaction* act, Unix::sigaction* old_act)
+{
+    // FIXME: Fail with -EINVAL if attepmting to change action for SIGKILL or SIGSTOP.
+    if (signum >= 32)
+        return -EINVAL;
+    VALIDATE_USER_READ(act, sizeof(Unix::sigaction));
+    InterruptDisabler disabler; // FIXME: This should use a narrower lock.
+    auto& action = m_signal_action_data[signum];
+    action.restorer = LinearAddress((dword)act->sa_restorer);
+    action.flags = act->sa_flags;
+    action.handler_or_sigaction = LinearAddress((dword)act->sa_sigaction);
+    return 0;
 }

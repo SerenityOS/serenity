@@ -15,6 +15,13 @@ class PageDirectory;
 class Region;
 class Zone;
 
+struct SignalActionData {
+    LinearAddress handler_or_sigaction;
+    dword mask { 0 };
+    int flags { 0 };
+    LinearAddress restorer;
+};
+
 class Process : public InlineLinkedListNode<Process> {
     friend class InlineLinkedListNode<Process>;
 public:
@@ -129,6 +136,7 @@ public:
     int sys$getdtablesize();
     int sys$dup(int oldfd);
     int sys$dup2(int oldfd, int newfd);
+    int sys$sigaction(int signum, const Unix::sigaction* act, Unix::sigaction* old_act);
 
     static void initialize();
 
@@ -162,6 +170,7 @@ public:
     const FileHandle* file_descriptor(size_t i) const { return m_file_descriptors[i].ptr(); }
 
     void send_signal(int signal, Process* sender);
+    void terminate_due_to_signal(int signal, Process* sender);
 
     Process* fork(RegisterDump&);
     int exec(const String& path, Vector<String>&& arguments, Vector<String>&& environment);
@@ -172,7 +181,7 @@ private:
 
     Process(String&& name, uid_t, gid_t, pid_t parentPID, RingLevel, RetainPtr<VirtualFileSystem::Node>&& cwd = nullptr, RetainPtr<VirtualFileSystem::Node>&& executable = nullptr, TTY* = nullptr, Process* fork_parent = nullptr);
 
-    void allocateLDT();
+    void push_value_on_stack(dword);
 
     PageDirectory* m_page_directory { nullptr };
 
@@ -205,6 +214,7 @@ private:
     int m_waiteeStatus { 0 };
     int m_fdBlockedOnRead { -1 };
     size_t m_max_open_file_descriptors { 16 };
+    SignalActionData m_signal_action_data[32];
 
     RetainPtr<VirtualFileSystem::Node> m_cwd;
     RetainPtr<VirtualFileSystem::Node> m_executable;
@@ -220,6 +230,8 @@ private:
 
     // FIXME: Implement some kind of ASLR?
     LinearAddress m_nextRegion;
+
+    LinearAddress m_return_from_signal_trampoline;
 
     pid_t m_parentPID { 0 };
 

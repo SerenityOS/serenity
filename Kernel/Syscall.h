@@ -56,6 +56,7 @@ enum Function {
     Getdtablesize = 0x2024,
     Dup = 0x2025,
     Dup2 = 0x2026,
+    Sigaction = 0x2027,
 };
 
 void initialize();

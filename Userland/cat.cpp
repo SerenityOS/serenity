@@ -1,7 +1,9 @@
-#include <LibC/stdio.h>
-#include <LibC/unistd.h>
-#include <LibC/errno.h>
-#include <LibC/string.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <errno.h>
+#include <string.h>
+#include <stdlib.h>
+#include <assert.h>
 
 int main(int argc, char** argv)
 {

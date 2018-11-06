@@ -146,6 +146,8 @@ static DWORD handle(RegisterDump& regs, DWORD function, DWORD arg1, DWORD arg2, 
         return current->sys$dup((int)arg1);
     case Syscall::Dup2:
         return current->sys$dup2((int)arg1, (int)arg2);
+    case Syscall::Sigaction:
+        return current->sys$sigaction((int)arg1, (const Unix::sigaction*)arg2, (Unix::sigaction*)arg3);
     default:
         kprintf("<%u> int0x80: Unknown function %x requested {%x, %x, %x}\n", current->pid(), function, arg1, arg2, arg3);
         break;
