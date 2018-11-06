@@ -87,6 +87,8 @@ static DWORD handle(RegisterDump& regs, DWORD function, DWORD arg1, DWORD arg2, 
         return current->sys$getgid();
     case Syscall::SC_getpid:
         return current->sys$getpid();
+    case Syscall::SC_getppid:
+        return current->sys$getppid();
     case Syscall::SC_waitpid:
         return current->sys$waitpid((pid_t)arg1, (int*)arg2, (int)arg3);
     case Syscall::SC_mmap:

@@ -558,7 +558,7 @@ Process* Process::createKernelProcess(void (*e)(), String&& name)
     return process;
 }
 
-Process::Process(String&& name, uid_t uid, gid_t gid, pid_t parentPID, RingLevel ring, RetainPtr<VirtualFileSystem::Node>&& cwd, RetainPtr<VirtualFileSystem::Node>&& executable, TTY* tty, Process* fork_parent)
+Process::Process(String&& name, uid_t uid, gid_t gid, pid_t ppid, RingLevel ring, RetainPtr<VirtualFileSystem::Node>&& cwd, RetainPtr<VirtualFileSystem::Node>&& executable, TTY* tty, Process* fork_parent)
     : m_name(move(name))
     , m_pid(next_pid++) // FIXME: RACE: This variable looks racy!
     , m_uid(uid)
@@ -570,7 +570,7 @@ Process::Process(String&& name, uid_t uid, gid_t gid, pid_t parentPID, RingLevel
     , m_cwd(move(cwd))
     , m_executable(move(executable))
     , m_tty(tty)
-    , m_parentPID(parentPID)
+    , m_ppid(ppid)
 {
     if (fork_parent) {
         m_sid = fork_parent->m_sid;
@@ -578,7 +578,7 @@ Process::Process(String&& name, uid_t uid, gid_t gid, pid_t parentPID, RingLevel
     } else {
         // FIXME: Use a ProcessHandle? Presumably we're executing *IN* the parent right now though..
         InterruptDisabler disabler;
-        if (auto* parent = Process::fromPID(m_parentPID)) {
+        if (auto* parent = Process::fromPID(m_ppid)) {
             m_sid = parent->m_sid;
             m_pgid = parent->m_pgid;
         }
@@ -1313,6 +1313,11 @@ gid_t Process::sys$getegid()
 pid_t Process::sys$getpid()
 {
     return m_pid;
+}
+
+pid_t Process::sys$getppid()
+{
+    return m_ppid;
 }
 
 pid_t Process::sys$waitpid(pid_t waitee, int* wstatus, int options)

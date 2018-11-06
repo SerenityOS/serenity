@@ -44,6 +44,11 @@ pid_t getpid()
     return Syscall::invoke(Syscall::SC_getpid);
 }
 
+pid_t getppid()
+{
+    return Syscall::invoke(Syscall::SC_getppid);
+}
+
 pid_t setsid()
 {
     int rc = Syscall::invoke(Syscall::SC_setsid);

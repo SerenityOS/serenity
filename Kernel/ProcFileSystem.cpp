@@ -269,7 +269,7 @@ ByteBuffer procfs$summary()
             process->sid(),
             process->uid(),
             toString(process->state()),
-            process->parentPID(),
+            process->ppid(),
             process->timesScheduled(),
             process->number_of_open_file_descriptors(),
             process->tty() ? strrchr(process->tty()->ttyName().characters(), '/') + 1 : "n/a",
