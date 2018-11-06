@@ -1,7 +1,7 @@
 #pragma once
 
 #include <sys/cdefs.h>
-#include <Kernel/errno.h>
+#include <errno_numbers.h>
 
 #define __RETURN_WITH_ERRNO(rc, good_ret, bad_ret) \
     do { \
@@ -16,7 +16,8 @@
 
 __BEGIN_DECLS
 
+extern const char* sys_errlist[];
+extern int sys_nerr;
 extern int errno;
 
 __END_DECLS
-
