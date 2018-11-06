@@ -23,6 +23,7 @@ cp ../Userland/ft2 mnt/bin/ft2
 cp ../Userland/mm mnt/bin/mm
 cp ../Userland/kill mnt/bin/kill
 cp ../Userland/tty mnt/bin/tty
+cp ../Userland/strsignal mnt/bin/strsignal
 sh sync-local.sh
 cp kernel.map mnt/
 umount mnt

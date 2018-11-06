@@ -15,6 +15,7 @@ OBJS = \
        mm.o \
        kill.o \
        ft.o \
+       strsignal.o \
        tty.o
 
 APPS = \
@@ -34,6 +35,7 @@ APPS = \
        mm \
        kill \
        ft \
+       strsignal \
        tty
 
 ARCH_FLAGS =
@@ -103,6 +105,9 @@ kill: kill.o
 	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
 
 tty: tty.o
+	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
+
+strsignal: strsignal.o
 	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
 
 .cpp.o:

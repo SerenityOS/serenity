@@ -1,6 +1,7 @@
-#include "string.h"
-#include "errno.h"
-#include "stdio.h"
+#include <string.h>
+#include <errno.h>
+#include <stdio.h>
+#include <signal.h>
 
 extern "C" {
 
@@ -157,7 +158,7 @@ char* strncat(char *dest, const char *src, size_t n)
 
 const char* sys_errlist[] = {
 #undef __ERROR
-#define __ERROR(a, b) #b,
+#define __ERROR(a, b) b,
     __ENUMERATE_ALL_ERRORS
 #undef __ERROR
 };
@@ -170,8 +171,15 @@ char* strerror(int errnum)
         return "Unknown error";
     }
     return (char*)sys_errlist[errnum];
+}
 
+char* strsignal(int signum)
+{
+    if (signum >= __signal_count) {
+        printf("strsignal() missing string for signum=%d\n", signum);
+        return "Unknown signal";
+    }
+    return (char*)sys_siglist[signum];
 }
 
 }
-

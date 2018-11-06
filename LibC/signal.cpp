@@ -46,7 +46,7 @@ int sigaddset(sigset_t* set, int sig)
         errno = EINVAL;
         return -1;
     }
-    *set |= 1 << (sig - 1);
+    *set |= 1 << (sig);
     return 0;
 }
 
@@ -56,7 +56,7 @@ int sigdelset(sigset_t* set, int sig)
         errno = EINVAL;
         return -1;
     }
-    *set &= ~(1 << (sig - 1));
+    *set &= ~(1 << (sig));
     return 0;
 }
 
@@ -66,9 +66,17 @@ int sigismember(const sigset_t* set, int sig)
         errno = EINVAL;
         return -1;
     }
-    if (*set & (1 << (sig - 1)))
+    if (*set & (1 << (sig)))
         return 1;
     return 0;
 }
+
+const char* sys_siglist[NSIG] = {
+#undef __SIGNAL
+#define __SIGNAL(a, b) b,
+    __ENUMERATE_ALL_SIGNALS
+#undef __SIGNAL
+};
+
 
 }
