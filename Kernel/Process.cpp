@@ -1320,6 +1320,13 @@ pid_t Process::sys$getppid()
     return m_ppid;
 }
 
+mode_t Process::sys$umask(mode_t mask)
+{
+    auto old_mask = m_umask;
+    m_umask = mask;
+    return old_mask;
+}
+
 pid_t Process::sys$waitpid(pid_t waitee, int* wstatus, int options)
 {
     if (wstatus)

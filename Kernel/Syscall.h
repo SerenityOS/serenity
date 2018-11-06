@@ -51,6 +51,7 @@
     __ENUMERATE_SYSCALL(dup2) \
     __ENUMERATE_SYSCALL(sigaction) \
     __ENUMERATE_SYSCALL(getppid) \
+    __ENUMERATE_SYSCALL(umask) \
 
 
 #define DO_SYSCALL_A0(function) Syscall::invoke((dword)(function))
