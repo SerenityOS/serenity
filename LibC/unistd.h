@@ -2,6 +2,7 @@
 
 #include <sys/cdefs.h>
 #include <sys/types.h>
+#include <limits.h>
 
 __BEGIN_DECLS
 
@@ -29,6 +30,7 @@ int close(int fd);
 pid_t waitpid(pid_t, int* wstatus, int options);
 int chdir(const char* path);
 char* getcwd(char* buffer, size_t size);
+char* getwd(char* buffer);
 int lstat(const char* path, struct stat* statbuf);
 int stat(const char* path, struct stat* statbuf);
 int sleep(unsigned seconds);
