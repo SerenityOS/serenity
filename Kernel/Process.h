@@ -104,6 +104,7 @@ public:
     gid_t sys$getegid();
     pid_t sys$getpid();
     pid_t sys$getppid();
+    mode_t sys$umask(mode_t);
     int sys$open(const char* path, int options);
     int sys$close(int fd);
     ssize_t sys$read(int fd, void* outbuf, size_t nread);
@@ -235,6 +236,7 @@ private:
     LinearAddress m_return_from_signal_trampoline;
 
     pid_t m_ppid { 0 };
+    mode_t m_umask { 022 };
 
     static void notify_waiters(pid_t waitee, int exit_status, int signal);
 
