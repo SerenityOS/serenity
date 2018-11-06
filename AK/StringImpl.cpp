@@ -42,7 +42,7 @@ RetainPtr<StringImpl> StringImpl::createUninitialized(size_t length, char*& buff
     return newStringImpl;
 }
 
-RetainPtr<StringImpl> StringImpl::create(const char* cstring, size_t length)
+RetainPtr<StringImpl> StringImpl::create(const char* cstring, size_t length, ShouldChomp shouldChomp)
 {
     if (!cstring)
         return nullptr;
@@ -54,15 +54,20 @@ RetainPtr<StringImpl> StringImpl::create(const char* cstring, size_t length)
     auto newStringImpl = createUninitialized(length, buffer);
     memcpy(buffer, cstring, length * sizeof(char));
 
+    if (shouldChomp && buffer[length - 1] == '\n') {
+        buffer[length - 1] = '\0';
+        --newStringImpl->m_length;
+    }
+
     return newStringImpl;
 }
 
-RetainPtr<StringImpl> StringImpl::create(const char* cstring)
+RetainPtr<StringImpl> StringImpl::create(const char* cstring, ShouldChomp shouldChomp)
 {
     if (!cstring)
         return nullptr;
 
-    return create(cstring, strlen(cstring));
+    return create(cstring, strlen(cstring), shouldChomp);
 }
 
 static inline bool isASCIILowercase(char c)

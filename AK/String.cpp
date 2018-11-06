@@ -65,6 +65,8 @@ Vector<String> String::split(const char separator) const
     size_t taillen = length() - substart;
     if (taillen != 0)
         v.append(substring(substart, taillen));
+    if (characters()[length() - 1] == separator)
+        v.append(empty());
     return v;
 }
 
