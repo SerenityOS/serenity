@@ -14,6 +14,7 @@
 #include "RTC.h"
 #include "ProcFileSystem.h"
 #include <AK/StdLib.h>
+#include <LibC/signal_numbers.h>
 
 //#define DEBUG_IO
 //#define TASK_DEBUG

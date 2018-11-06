@@ -1,5 +1,6 @@
 #include "TTY.h"
 #include "Process.h"
+#include <LibC/signal_numbers.h>
 
 TTY::TTY(unsigned major, unsigned minor)
     : CharacterDevice(major, minor)
