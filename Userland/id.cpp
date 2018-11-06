@@ -1,6 +1,7 @@
 #include <LibC/unistd.h>
 #include <LibC/stdio.h>
 #include <LibC/pwd.h>
+#include <LibC/grp.h>
 
 int main(int c, char** v)
 {
@@ -8,8 +9,9 @@ int main(int c, char** v)
     gid_t gid = getgid();
 
     struct passwd* pw = getpwuid(uid);
+    struct group* gr = getgrgid(gid);
 
-    printf("uid=%u(%s), gid=%u, pid=%u\n", uid, pw ? pw->pw_name : "n/a", gid, getpid());
+    printf("uid=%u(%s), gid=%u(%s)\n", uid, pw ? pw->pw_name : "n/a", gid, gr ? gr->gr_name : "n/a", getpid());
     return 0;
 }
 

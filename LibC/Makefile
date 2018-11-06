@@ -20,6 +20,7 @@ LIBC_OBJS = \
        getopt.o \
        scanf.o \
        pwd.o \
+       grp.o \
        times.o \
        termcap.o \
        setjmp.o \
