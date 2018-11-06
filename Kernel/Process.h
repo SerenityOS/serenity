@@ -26,7 +26,7 @@ class Process : public InlineLinkedListNode<Process> {
     friend class InlineLinkedListNode<Process>;
 public:
     static Process* createKernelProcess(void (*entry)(), String&& name);
-    static Process* create_user_process(const String& path, uid_t, gid_t, pid_t parentPID, int& error, Vector<String>&& arguments = Vector<String>(), Vector<String>&& environment = Vector<String>(), TTY* = nullptr);
+    static Process* create_user_process(const String& path, uid_t, gid_t, pid_t ppid, int& error, Vector<String>&& arguments = Vector<String>(), Vector<String>&& environment = Vector<String>(), TTY* = nullptr);
     ~Process();
 
     static Vector<Process*> allProcesses();
@@ -67,7 +67,7 @@ public:
     gid_t gid() const { return m_gid; }
     uid_t euid() const { return m_euid; }
     gid_t egid() const { return m_egid; }
-    pid_t parentPID() const { return m_parentPID; }
+    pid_t ppid() const { return m_ppid; }
 
     const FarPtr& farPtr() const { return m_farPtr; }
 
@@ -103,6 +103,7 @@ public:
     uid_t sys$geteuid();
     gid_t sys$getegid();
     pid_t sys$getpid();
+    pid_t sys$getppid();
     int sys$open(const char* path, int options);
     int sys$close(int fd);
     ssize_t sys$read(int fd, void* outbuf, size_t nread);
@@ -179,7 +180,7 @@ private:
     friend class MemoryManager;
     friend bool scheduleNewProcess();
 
-    Process(String&& name, uid_t, gid_t, pid_t parentPID, RingLevel, RetainPtr<VirtualFileSystem::Node>&& cwd = nullptr, RetainPtr<VirtualFileSystem::Node>&& executable = nullptr, TTY* = nullptr, Process* fork_parent = nullptr);
+    Process(String&& name, uid_t, gid_t, pid_t ppid, RingLevel, RetainPtr<VirtualFileSystem::Node>&& cwd = nullptr, RetainPtr<VirtualFileSystem::Node>&& executable = nullptr, TTY* = nullptr, Process* fork_parent = nullptr);
 
     void push_value_on_stack(dword);
 
@@ -233,7 +234,7 @@ private:
 
     LinearAddress m_return_from_signal_trampoline;
 
-    pid_t m_parentPID { 0 };
+    pid_t m_ppid { 0 };
 
     static void notify_waiters(pid_t waitee, int exit_status, int signal);
 
