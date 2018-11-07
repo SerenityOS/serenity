@@ -20,7 +20,8 @@ KERNEL_OBJS = \
        ProcFileSystem.o \
        RTC.o \
        TTY.o \
-       VirtualConsole.o
+       VirtualConsole.o \
+       Scheduler.o
 
 VFS_OBJS = \
     ../VirtualFileSystem/DiskDevice.o \

@@ -2,6 +2,7 @@
 #include "Process.h"
 #include "Syscall.h"
 #include "Console.h"
+#include "Scheduler.h"
 
 extern "C" void syscall_entry(RegisterDump&);
 extern "C" void syscall_ISR();
@@ -48,7 +49,7 @@ static DWORD handle(RegisterDump& regs, DWORD function, DWORD arg1, DWORD arg2, 
     ASSERT_INTERRUPTS_ENABLED();
     switch (function) {
     case Syscall::SC_yield:
-        sched_yield();
+        Scheduler::yield();
         break;
     case Syscall::SC_putch:
         Console::the().putChar(arg1 & 0xff);
