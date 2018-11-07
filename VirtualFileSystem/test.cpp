@@ -8,6 +8,7 @@
 #include "FullDevice.h"
 #include "RandomDevice.h"
 #include <cstring>
+#include <AK/FileSystemPath.h>
 #include <AK/SimpleMalloc.h>
 #include <AK/StdLib.h>
 #include <AK/kmalloc.h>
@@ -77,9 +78,9 @@ int main(int c, char** v)
 
     vfs.mount(std::move(synthfs), "/syn");
 
-    vfs.listDirectory("/");
+    vfs.listDirectory(".", vfs.root()->inode);
     printf("list /syn:\n");
-    vfs.listDirectory("/syn");
+    vfs.listDirectory("/syn", vfs.root()->inode);
 
 #if 0
     auto descriptor = vfs.open("/home/andreas/../../home/./andreas/./file2");
@@ -93,6 +94,8 @@ int main(int c, char** v)
 #endif
 
     String currentDirectory = "/";
+
+    auto cwd = vfs.root()->inode;
 
     while (true) {
         char cmdbuf[256];
@@ -120,22 +123,30 @@ int main(int c, char** v)
         }
 
         if (cmd == "ls") {
-            vfs.listDirectory(currentDirectory);
+            vfs.listDirectory(".", cwd);
             continue;
         }
 
         if (cmd == "lr") {
-            vfs.listDirectoryRecursively(currentDirectory);
+            vfs.listDirectoryRecursively(".", cwd);
             continue;
         }
 
         if (cmd == "cd" && parts.size() > 1) {
-            char buf[1024];
+            char buf[4096];
             sprintf(buf, "%s/%s", currentDirectory.characters(), parts[1].characters());
-            if (vfs.isDirectory(buf)) {
-                currentDirectory = buf;
+            FileSystemPath new_path(buf);
+            if (new_path.string() == "/") {
+                cwd = vfs.root()->inode;
+                continue;
+            }
+            int error;
+            auto new_cwd = vfs.open(new_path.string(), error, 0, cwd);
+            if (new_cwd && new_cwd->isDirectory()) {
+                currentDirectory = new_path.string();
+                cwd = new_cwd->metadata().inode;
             } else {
-                printf("No such directory: %s\n", buf);
+                printf("No such directory: %s\n", parts[1].characters());
             }
             continue;
         }
