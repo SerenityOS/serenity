@@ -1,24 +1,16 @@
 #include "i8253.h"
 #include "i386.h"
 #include "IO.h"
-#include "VGA.h"
-#include "Process.h"
-#include "system.h"
 #include "PIC.h"
 #include "Scheduler.h"
 
 #define IRQ_TIMER                0
 
 extern "C" void tick_ISR();
-extern "C" void clock_handle();
-
-extern volatile DWORD state_dump;
+extern "C" void clock_handle(RegisterDump&);
 
 asm(
     ".globl tick_ISR \n"
-    ".globl state_dump \n"
-    "state_dump: \n"
-    ".long 0\n"
     "tick_ISR: \n"
     "    pusha\n"
     "    pushw %ds\n"
@@ -34,7 +26,7 @@ asm(
     "    popw %es\n"
     "    popw %fs\n"
     "    popw %gs\n"
-    "    mov %esp, state_dump\n"
+    "    mov %esp, %eax\n"
     "    call clock_handle\n"
     "    popw %gs\n"
     "    popw %gs\n"
@@ -66,54 +58,10 @@ asm(
 /* Miscellaneous */
 #define BASE_FREQUENCY     1193182
 
-void clock_handle()
+void clock_handle(RegisterDump& regs)
 {
     IRQHandlerScope scope(IRQ_TIMER);
-
-    if (!current)
-        return;
-
-    system.uptime++;
-
-    if (current->tick())
-        return;
-
-    auto& regs = *reinterpret_cast<RegisterDump*>(state_dump);
-    current->tss().gs = regs.gs;
-    current->tss().fs = regs.fs;
-    current->tss().es = regs.es;
-    current->tss().ds = regs.ds;
-    current->tss().edi = regs.edi;
-    current->tss().esi = regs.esi;
-    current->tss().ebp = regs.ebp;
-    current->tss().ebx = regs.ebx;
-    current->tss().edx = regs.edx;
-    current->tss().ecx = regs.ecx;
-    current->tss().eax = regs.eax;
-    current->tss().eip = regs.eip;
-    current->tss().cs = regs.cs;
-    current->tss().eflags = regs.eflags;
-
-    // Compute process stack pointer.
-    // Add 12 for CS, EIP, EFLAGS (interrupt mechanic)
-    current->tss().esp = regs.esp + 12;
-    current->tss().ss = regs.ss;
-
-    if ((current->tss().cs & 3) != 0) {
-        current->tss().ss = regs.ss_if_crossRing;
-        current->tss().esp = regs.esp_if_crossRing;
-    }
-
-    if (!Scheduler::pick_next())
-        return;
-    Scheduler::prepare_for_iret_to_new_process();
-
-    // Set the NT (nested task) flag.
-    asm(
-        "pushf\n"
-        "orl $0x00004000, (%esp)\n"
-        "popf\n"
-    );
+    Scheduler::timer_tick(regs);
 }
 
 namespace PIT {
@@ -125,8 +73,6 @@ void initialize()
     IO::out8(PIT_CTL, TIMER0_SELECT | WRITE_WORD | MODE_SQUARE_WAVE);
 
     timer_reload = (BASE_FREQUENCY / TICKS_PER_SECOND);
-
-    /* Send LSB and MSB of timer reload value. */
 
     kprintf("PIT(i8253): %u Hz, square wave (%x)\n", TICKS_PER_SECOND, timer_reload);
 
