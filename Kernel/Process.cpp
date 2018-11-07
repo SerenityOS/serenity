@@ -21,7 +21,7 @@
 //#define DEBUG_IO
 //#define TASK_DEBUG
 //#define FORK_DEBUG
-//#define SIGNAL_DEBUG
+#define SIGNAL_DEBUG
 #define MAX_PROCESS_GIDS 32
 
 // FIXME: Only do a single validation for accesses that don't span multiple pages.
@@ -804,6 +804,9 @@ void Process::dispatch_signal(byte signal)
         push_value_on_stack(m_return_to_ring3_from_signal_trampoline.get());
 
     m_pending_signals &= ~(1 << signal);
+
+    // FIXME: This state is such a hack. It avoids trouble if 'current' is the process receiving a signal.
+    set_state(Skip1SchedulerPass);
 
 #ifdef SIGNAL_DEBUG
     dbgprintf("signal: Okay, %s(%u) {%s} has been primed with signal handler %w:%x\n", name().characters(), pid(), toString(state()), m_tss.cs, m_tss.eip);
