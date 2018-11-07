@@ -248,7 +248,14 @@ static int runcmd(char* cmd)
     }
 
     int wstatus = 0;
-    waitpid(child, &wstatus, 0);
+    int rc;
+    do {
+        rc = waitpid(child, &wstatus, 0);
+        if (rc < 0 && errno != EINTR) {
+            perror("waitpid");
+            break;
+        }
+    } while(errno == EINTR);
 
     // FIXME: Should I really have to tcsetpgrp() after my child has exited?
     //        Is the terminal controlling pgrp really still the PGID of the dead process?

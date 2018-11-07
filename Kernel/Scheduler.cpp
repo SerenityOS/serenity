@@ -43,7 +43,6 @@ bool Scheduler::pick_next()
             if (waitee->state() == Process::Dead) {
                 process.m_waitee_status = (waitee->m_termination_status << 8) | waitee->m_termination_signal;
                 process.unblock();
-                waitee->set_state(Process::Forgiven);
             }
             return true;
         }
@@ -66,18 +65,11 @@ bool Scheduler::pick_next()
             return true;
         }
 
-        // Forgive dead orphans.
         if (process.state() == Process::Dead) {
             if (!Process::from_pid(process.ppid()))
-                process.set_state(Process::Forgiven);
-        }
-
-        // Release the forgiven.
-        if (process.state() == Process::Forgiven) {
-            g_processes->remove(&process);
-            g_dead_processes->append(&process);
+                Process::reap(process.pid());
             return true;
-        };
+        }
 
         return true;
     });
@@ -241,11 +233,13 @@ void Scheduler::prepare_for_iret_to_new_process()
     load_task_register(s_redirection.selector);
 }
 
-void Scheduler::prepare_to_modify_own_tss()
+void Scheduler::prepare_to_modify_tss(Process& process)
 {
-    // This ensures that a process modifying its own TSS in order to yield()
-    // and end up somewhere else doesn't just end up right after the yield().
-    load_task_register(s_redirection.selector);
+    // This ensures that a currently running process modifying its own TSS
+    // in order to yield() and end up somewhere else doesn't just end up
+    // right after the yield().
+    if (current == &process)
+        load_task_register(s_redirection.selector);
 }
 
 static void hlt_loop()

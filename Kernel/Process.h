@@ -46,7 +46,6 @@ public:
         Skip1SchedulerPass,
         Skip0SchedulerPasses,
         Dead,
-        Forgiven,
         BeingInspected,
         BlockedSleep,
         BlockedWait,
@@ -88,8 +87,6 @@ public:
 
     FileDescriptor* file_descriptor(int fd);
     const FileDescriptor* file_descriptor(int fd) const;
-
-    static void doHouseKeeping();
 
     void block(Process::State);
     void unblock();
@@ -163,6 +160,7 @@ public:
     static void initialize();
 
     void crash() NORETURN;
+    static void reap(pid_t);
 
     const TTY* tty() const { return m_tty; }
 
@@ -308,7 +306,6 @@ static inline const char* toString(Process::State state)
     case Process::Dead: return "Dead";
     case Process::Skip1SchedulerPass: return "Skip1";
     case Process::Skip0SchedulerPasses: return "Skip0";
-    case Process::Forgiven: return "Forgiven";
     case Process::BlockedSleep: return "Sleep";
     case Process::BlockedWait: return "Wait";
     case Process::BlockedRead: return "Read";
@@ -322,4 +319,3 @@ extern void block(Process::State);
 extern void sleep(DWORD ticks);
 
 extern InlineLinkedList<Process>* g_processes;
-extern InlineLinkedList<Process>* g_dead_processes;

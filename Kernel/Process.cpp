@@ -21,6 +21,7 @@
 //#define DEBUG_IO
 //#define TASK_DEBUG
 //#define FORK_DEBUG
+//#define SIGNAL_DEBUG
 #define MAX_PROCESS_GIDS 32
 
 // FIXME: Only do a single validation for accesses that don't span multiple pages.
@@ -43,7 +44,6 @@ static const DWORD defaultStackSize = 16384;
 
 static pid_t next_pid;
 InlineLinkedList<Process>* g_processes;
-InlineLinkedList<Process>* g_dead_processes;
 static String* s_hostname;
 
 static String& hostnameStorage(InterruptDisabler&)
@@ -67,7 +67,6 @@ void Process::initialize()
 #endif
     next_pid = 0;
     g_processes = new InlineLinkedList<Process>;
-    g_dead_processes = new InlineLinkedList<Process>;
     s_hostname = new String("birx");
     Scheduler::initialize();
 }
@@ -286,8 +285,7 @@ int Process::exec(const String& path, Vector<String>&& arguments, Vector<String>
     }
 
     InterruptDisabler disabler;
-    if (current == this)
-        Scheduler::prepare_to_modify_own_tss();
+    Scheduler::prepare_to_modify_tss(*this);
 
     m_name = parts.takeLast();
 
@@ -716,21 +714,20 @@ void Process::dispatch_signal(byte signal)
         return terminate_due_to_signal(signal);
     }
 
-    m_tss_to_resume_kernel = m_tss;
-#ifdef SIGNAL_DEBUG
-    kprintf("resume tss pc: %w:%x\n", m_tss_to_resume_kernel.cs, m_tss_to_resume_kernel.eip);
-#endif
+    Scheduler::prepare_to_modify_tss(*this);
 
     word ret_cs = m_tss.cs;
     dword ret_eip = m_tss.eip;
     dword ret_eflags = m_tss.eflags;
 
     bool interrupting_in_kernel = (ret_cs & 3) == 0;
-
-    if ((ret_cs & 3) == 0) {
-        // FIXME: Handle send_signal to process currently in kernel code.
+    if (interrupting_in_kernel) {
         dbgprintf("dispatch_signal to %s(%u) in state=%s with return to %w:%x\n", name().characters(), pid(), toString(state()), ret_cs, ret_eip);
         ASSERT(is_blocked());
+        m_tss_to_resume_kernel = m_tss;
+#ifdef SIGNAL_DEBUG
+        dbgprintf("resume tss pc: %w:%x\n", m_tss_to_resume_kernel.cs, m_tss_to_resume_kernel.eip);
+#endif
     }
 
     ProcessPagingScope pagingScope(*this);
@@ -809,14 +806,14 @@ void Process::dispatch_signal(byte signal)
     m_pending_signals &= ~(1 << signal);
 
 #ifdef SIGNAL_DEBUG
-    dbgprintf("signal: Okay, %s(%u) has been primed\n", name().characters(), pid());
+    dbgprintf("signal: Okay, %s(%u) {%s} has been primed with signal handler %w:%x\n", name().characters(), pid(), toString(state()), m_tss.cs, m_tss.eip);
 #endif
 }
 
 void Process::sys$sigreturn()
 {
     InterruptDisabler disabler;
-    Scheduler::prepare_to_modify_own_tss();
+    Scheduler::prepare_to_modify_tss(*this);
     m_tss = m_tss_to_resume_kernel;
 #ifdef SIGNAL_DEBUG
     dbgprintf("sys$sigreturn in %s(%u)\n", name().characters(), pid());
@@ -844,19 +841,6 @@ void Process::crash()
     dumpRegions();
     Scheduler::pick_next_and_switch_now();
     ASSERT_NOT_REACHED();
-}
-
-void Process::doHouseKeeping()
-{
-    if (g_dead_processes->isEmpty())
-        return;
-    InterruptDisabler disabler;
-    Process* next = nullptr;
-    for (auto* deadProcess = g_dead_processes->head(); deadProcess; deadProcess = next) {
-        next = deadProcess->next();
-        delete deadProcess;
-    }
-    g_dead_processes->clear();
 }
 
 void Process::for_each(Function<bool(Process&)> callback)
@@ -1226,20 +1210,34 @@ mode_t Process::sys$umask(mode_t mask)
     return old_mask;
 }
 
+void Process::reap(pid_t pid)
+{
+    InterruptDisabler disabler;
+    auto* process = Process::from_pid(pid);
+    ASSERT(process);
+    dbgprintf("reap: %s(%u) {%s}\n", process->name().characters(), process->pid(), toString(process->state()));
+    ASSERT(process->state() == Dead);
+    g_processes->remove(process);
+    delete process;
+}
+
 pid_t Process::sys$waitpid(pid_t waitee, int* wstatus, int options)
 {
     if (wstatus)
         VALIDATE_USER_WRITE(wstatus, sizeof(int));
 
-    InterruptDisabler disabler;
-    if (!Process::from_pid(waitee))
-        return -1;
+    {
+        InterruptDisabler disabler;
+        if (!Process::from_pid(waitee))
+            return -ECHILD;
+    }
     m_waitee = waitee;
     m_waitee_status = 0;
     block(BlockedWait);
     sched_yield();
     if (m_was_interrupted_while_blocked)
         return -EINTR;
+    reap(waitee);
     if (wstatus)
         *wstatus = m_waitee_status;
     return m_waitee;
