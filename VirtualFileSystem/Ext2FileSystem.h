@@ -46,7 +46,7 @@ private:
     virtual InodeMetadata inodeMetadata(InodeIdentifier) const override;
     virtual bool setModificationTime(InodeIdentifier, dword timestamp) override;
     virtual InodeIdentifier createInode(InodeIdentifier parentInode, const String& name, Unix::mode_t, unsigned size) override;
-    virtual Unix::ssize_t readInodeBytes(InodeIdentifier, Unix::off_t offset, Unix::size_t count, byte* buffer, FileHandle*) const override;
+    virtual Unix::ssize_t readInodeBytes(InodeIdentifier, Unix::off_t offset, Unix::size_t count, byte* buffer, FileDescriptor*) const override;
     virtual InodeIdentifier makeDirectory(InodeIdentifier parentInode, const String& name, Unix::mode_t) override;
     virtual InodeIdentifier findParentOfInode(InodeIdentifier) const override;
 

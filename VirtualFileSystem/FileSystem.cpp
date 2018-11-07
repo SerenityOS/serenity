@@ -64,7 +64,7 @@ String FileSystem::nameOfChildInDirectory(InodeIdentifier parent, InodeIdentifie
     return name;
 }
 
-ByteBuffer FileSystem::readEntireInode(InodeIdentifier inode, FileHandle* handle) const
+ByteBuffer FileSystem::readEntireInode(InodeIdentifier inode, FileDescriptor* handle) const
 {
     ASSERT(inode.fileSystemID() == id());
 

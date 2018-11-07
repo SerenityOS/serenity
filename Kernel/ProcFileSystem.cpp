@@ -36,10 +36,10 @@ ByteBuffer procfs$pid_fds(Process& process)
     memset(buffer, 0, stringImpl->length());
     char* ptr = buffer;
     for (size_t i = 0; i < process.max_open_file_descriptors(); ++i) {
-        auto* handle = process.file_descriptor(i);
-        if (!handle)
+        auto* descriptor = process.file_descriptor(i);
+        if (!descriptor)
             continue;
-        ptr += ksprintf(ptr, "% 3u %s\n", i, handle->absolute_path().characters());
+        ptr += ksprintf(ptr, "% 3u %s\n", i, descriptor->absolute_path().characters());
     }
     *ptr = '\0';
     return ByteBuffer::copy((byte*)buffer, ptr - buffer);

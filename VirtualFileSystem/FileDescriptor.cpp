@@ -1,4 +1,4 @@
-#include "FileHandle.h"
+#include "FileDescriptor.h"
 #include "FileSystem.h"
 #include "CharacterDevice.h"
 #include "sys-errno.h"
@@ -6,31 +6,30 @@
 #include "TTY.h"
 #include <AK/BufferStream.h>
 
-RetainPtr<FileHandle> FileHandle::create(RetainPtr<VirtualFileSystem::Node>&& vnode)
+RetainPtr<FileDescriptor> FileDescriptor::create(RetainPtr<VirtualFileSystem::Node>&& vnode)
 {
-    return adopt(*new FileHandle(move(vnode)));
+    return adopt(*new FileDescriptor(move(vnode)));
 }
 
-FileHandle::FileHandle(RetainPtr<VirtualFileSystem::Node>&& vnode)
+FileDescriptor::FileDescriptor(RetainPtr<VirtualFileSystem::Node>&& vnode)
     : m_vnode(move(vnode))
 {
 }
 
-FileHandle::~FileHandle()
+FileDescriptor::~FileDescriptor()
 {
 }
 
-RetainPtr<FileHandle> FileHandle::clone()
+RetainPtr<FileDescriptor> FileDescriptor::clone()
 {
-    auto handle = FileHandle::create(m_vnode.copyRef());
-    if (!handle)
+    auto descriptor = FileDescriptor::create(m_vnode.copyRef());
+    if (!descriptor)
         return nullptr;
-    handle->m_currentOffset = m_currentOffset;
+    descriptor->m_currentOffset = m_currentOffset;
 #ifdef SERENITY
-    handle->m_fd = m_fd;
-    handle->m_isBlocking = m_isBlocking;
+    descriptor->m_isBlocking = m_isBlocking;
 #endif
-    return handle;
+    return descriptor;
 }
 
 #ifndef SERENITY
@@ -42,7 +41,7 @@ bool additionWouldOverflow(Unix::off_t a, Unix::off_t b)
 }
 #endif
 
-int FileHandle::stat(Unix::stat* buffer)
+int FileDescriptor::stat(Unix::stat* buffer)
 {
     if (!m_vnode)
         return -EBADF;
@@ -67,7 +66,7 @@ int FileHandle::stat(Unix::stat* buffer)
     return 0;
 }
 
-Unix::off_t FileHandle::seek(Unix::off_t offset, int whence)
+Unix::off_t FileDescriptor::seek(Unix::off_t offset, int whence)
 {
     if (!m_vnode)
         return -EBADF;
@@ -108,7 +107,7 @@ Unix::off_t FileHandle::seek(Unix::off_t offset, int whence)
     return m_currentOffset;
 }
 
-Unix::ssize_t FileHandle::read(byte* buffer, Unix::size_t count)
+Unix::ssize_t FileDescriptor::read(byte* buffer, Unix::size_t count)
 {
     if (m_vnode->isCharacterDevice()) {
         // FIXME: What should happen to m_currentOffset?
@@ -119,7 +118,7 @@ Unix::ssize_t FileHandle::read(byte* buffer, Unix::size_t count)
     return nread;
 }
 
-Unix::ssize_t FileHandle::write(const byte* data, Unix::size_t size)
+Unix::ssize_t FileDescriptor::write(const byte* data, Unix::size_t size)
 {
     if (m_vnode->isCharacterDevice()) {
         // FIXME: What should happen to m_currentOffset?
@@ -130,14 +129,14 @@ Unix::ssize_t FileHandle::write(const byte* data, Unix::size_t size)
     return -1;
 }
 
-bool FileHandle::hasDataAvailableForRead()
+bool FileDescriptor::hasDataAvailableForRead()
 {
     if (m_vnode->isCharacterDevice())
         return m_vnode->characterDevice()->hasDataAvailableForRead();
     return true;
 }
 
-ByteBuffer FileHandle::readEntireFile()
+ByteBuffer FileDescriptor::readEntireFile()
 {
     if (m_vnode->isCharacterDevice()) {
         auto buffer = ByteBuffer::createUninitialized(1024);
@@ -149,12 +148,12 @@ ByteBuffer FileHandle::readEntireFile()
     return m_vnode->fileSystem()->readEntireInode(m_vnode->inode, this);
 }
 
-bool FileHandle::isDirectory() const
+bool FileDescriptor::isDirectory() const
 {
     return m_vnode->metadata().isDirectory();
 }
 
-ssize_t FileHandle::get_dir_entries(byte* buffer, Unix::size_t size)
+ssize_t FileDescriptor::get_dir_entries(byte* buffer, Unix::size_t size)
 {
     auto metadata = m_vnode->metadata();
     if (!metadata.isValid())
@@ -180,33 +179,33 @@ ssize_t FileHandle::get_dir_entries(byte* buffer, Unix::size_t size)
     return stream.offset();
 }
 
-bool FileHandle::isTTY() const
+bool FileDescriptor::isTTY() const
 {
     if (auto* device = m_vnode->characterDevice())
         return device->isTTY();
     return false;
 }
 
-const TTY* FileHandle::tty() const
+const TTY* FileDescriptor::tty() const
 {
     if (auto* device = m_vnode->characterDevice())
         return static_cast<const TTY*>(device);
     return nullptr;
 }
 
-TTY* FileHandle::tty()
+TTY* FileDescriptor::tty()
 {
     if (auto* device = m_vnode->characterDevice())
         return static_cast<TTY*>(device);
     return nullptr;
 }
 
-int FileHandle::close()
+int FileDescriptor::close()
 {
     return 0;
 }
 
-String FileHandle::absolute_path() const
+String FileDescriptor::absolute_path() const
 {
     if (isTTY())
         return tty()->ttyName();

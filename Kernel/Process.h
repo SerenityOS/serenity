@@ -10,7 +10,7 @@
 #include <VirtualFileSystem/UnixTypes.h>
 #include "TTY.h"
 
-class FileHandle;
+class FileDescriptor;
 class PageDirectory;
 class Region;
 class Zone;
@@ -71,7 +71,8 @@ public:
 
     const FarPtr& farPtr() const { return m_farPtr; }
 
-    FileHandle* fileHandleIfExists(int fd);
+    FileDescriptor* file_descriptor(int fd);
+    const FileDescriptor* file_descriptor(int fd) const;
 
     static void doHouseKeeping();
 
@@ -170,8 +171,6 @@ public:
 
     size_t number_of_open_file_descriptors() const;
     size_t max_open_file_descriptors() const { return m_max_open_file_descriptors; }
-    FileHandle* file_descriptor(size_t i) { return m_file_descriptors[i].ptr(); }
-    const FileHandle* file_descriptor(size_t i) const { return m_file_descriptors[i].ptr(); }
 
     void send_signal(int signal, Process* sender);
     void terminate_due_to_signal(int signal, Process* sender);
@@ -211,7 +210,7 @@ private:
     State m_state { Invalid };
     DWORD m_wakeupTime { 0 };
     TSS32 m_tss;
-    Vector<RetainPtr<FileHandle>> m_file_descriptors;
+    Vector<RetainPtr<FileDescriptor>> m_file_descriptors;
     RingLevel m_ring { Ring0 };
     int m_error { 0 };
     void* m_kernelStack { nullptr };

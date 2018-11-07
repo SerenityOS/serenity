@@ -5,7 +5,7 @@
 #include "StdLib.h"
 #include "i386.h"
 #include "system.h"
-#include <VirtualFileSystem/FileHandle.h>
+#include <VirtualFileSystem/FileDescriptor.h>
 #include <VirtualFileSystem/VirtualFileSystem.h>
 #include <ELFLoader/ELFLoader.h>
 #include "MemoryManager.h"
@@ -299,16 +299,16 @@ int Process::exec(const String& path, Vector<String>&& arguments, Vector<String>
         return -ENOENT;
 
     int error;
-    auto handle = VirtualFileSystem::the().open(path, error, 0, m_cwd ? m_cwd->inode : InodeIdentifier());
-    if (!handle) {
+    auto descriptor = VirtualFileSystem::the().open(path, error, 0, m_cwd ? m_cwd->inode : InodeIdentifier());
+    if (!descriptor) {
         ASSERT(error != 0);
         return error;
     }
 
-    if (!handle->metadata().mayExecute(m_euid, m_gids))
+    if (!descriptor->metadata().mayExecute(m_euid, m_gids))
         return -EACCES;
 
-    auto elfData = handle->readEntireFile();
+    auto elfData = descriptor->readEntireFile();
     if (!elfData)
         return -EIO; // FIXME: Get a more detailed error from VFS.
 
@@ -379,7 +379,7 @@ int Process::exec(const String& path, Vector<String>&& arguments, Vector<String>
 
     MM.release_page_directory(*old_page_directory);
 
-    m_executable = handle->vnode();
+    m_executable = descriptor->vnode();
     m_arguments = move(arguments);
     m_initialEnvironment = move(environment);
 
@@ -1036,11 +1036,20 @@ Process* Process::fromPID(pid_t pid)
     return nullptr;
 }
 
-FileHandle* Process::fileHandleIfExists(int fd)
+FileDescriptor* Process::file_descriptor(int fd)
 {
     if (fd < 0)
         return nullptr;
-    if ((unsigned)fd < m_file_descriptors.size())
+    if ((size_t)fd < m_file_descriptors.size())
+        return m_file_descriptors[fd].ptr();
+    return nullptr;
+}
+
+const FileDescriptor* Process::file_descriptor(int fd) const
+{
+    if (fd < 0)
+        return nullptr;
+    if ((size_t)fd < m_file_descriptors.size())
         return m_file_descriptors[fd].ptr();
     return nullptr;
 }
@@ -1048,29 +1057,29 @@ FileHandle* Process::fileHandleIfExists(int fd)
 ssize_t Process::sys$get_dir_entries(int fd, void* buffer, size_t size)
 {
     VALIDATE_USER_WRITE(buffer, size);
-    auto* handle = fileHandleIfExists(fd);
-    if (!handle)
+    auto* descriptor = file_descriptor(fd);
+    if (!descriptor)
         return -EBADF;
-    return handle->get_dir_entries((byte*)buffer, size);
+    return descriptor->get_dir_entries((byte*)buffer, size);
 }
 
 int Process::sys$lseek(int fd, off_t offset, int whence)
 {
-    auto* handle = fileHandleIfExists(fd);
-    if (!handle)
+    auto* descriptor = file_descriptor(fd);
+    if (!descriptor)
         return -EBADF;
-    return handle->seek(offset, whence);
+    return descriptor->seek(offset, whence);
 }
 
 int Process::sys$ttyname_r(int fd, char* buffer, size_t size)
 {
     VALIDATE_USER_WRITE(buffer, size);
-    auto* handle = fileHandleIfExists(fd);
-    if (!handle)
+    auto* descriptor = file_descriptor(fd);
+    if (!descriptor)
         return -EBADF;
-    if (!handle->isTTY())
+    if (!descriptor->isTTY())
         return -ENOTTY;
-    auto ttyName = handle->tty()->ttyName();
+    auto ttyName = descriptor->tty()->ttyName();
     if (size < ttyName.length() + 1)
         return -ERANGE;
     strcpy(buffer, ttyName.characters());
@@ -1083,13 +1092,13 @@ ssize_t Process::sys$write(int fd, const void* data, size_t size)
 #ifdef DEBUG_IO
     kprintf("Process::sys$write: called(%d, %p, %u)\n", fd, data, size);
 #endif
-    auto* handle = fileHandleIfExists(fd);
+    auto* descriptor = file_descriptor(fd);
 #ifdef DEBUG_IO
-    kprintf("Process::sys$write: handle=%p\n", handle);
+    kprintf("Process::sys$write: handle=%p\n", descriptor);
 #endif
-    if (!handle)
+    if (!descriptor)
         return -EBADF;
-    auto nwritten = handle->write((const byte*)data, size);
+    auto nwritten = descriptor->write((const byte*)data, size);
 #ifdef DEBUG_IO
     kprintf("Process::sys$write: nwritten=%u\n", nwritten);
 #endif
@@ -1102,20 +1111,20 @@ ssize_t Process::sys$read(int fd, void* outbuf, size_t nread)
 #ifdef DEBUG_IO
     kprintf("Process::sys$read: called(%d, %p, %u)\n", fd, outbuf, nread);
 #endif
-    auto* handle = fileHandleIfExists(fd);
+    auto* descriptor = file_descriptor(fd);
 #ifdef DEBUG_IO
-    kprintf("Process::sys$read: handle=%p\n", handle);
+    kprintf("Process::sys$read: handle=%p\n", descriptor);
 #endif
-    if (!handle)
+    if (!descriptor)
         return -EBADF;
-    if (handle->isBlocking()) {
-        if (!handle->hasDataAvailableForRead()) {
+    if (descriptor->isBlocking()) {
+        if (!descriptor->hasDataAvailableForRead()) {
             m_fdBlockedOnRead = fd;
             block(BlockedRead);
             yield();
         }
     }
-    nread = handle->read((byte*)outbuf, nread);
+    nread = descriptor->read((byte*)outbuf, nread);
 #ifdef DEBUG_IO
     kprintf("Process::sys$read: nread=%u\n", nread);
 #endif
@@ -1124,10 +1133,10 @@ ssize_t Process::sys$read(int fd, void* outbuf, size_t nread)
 
 int Process::sys$close(int fd)
 {
-    auto* handle = fileHandleIfExists(fd);
-    if (!handle)
+    auto* descriptor = file_descriptor(fd);
+    if (!descriptor)
         return -EBADF;
-    int rc = handle->close();
+    int rc = descriptor->close();
     m_file_descriptors[fd] = nullptr;
     return rc;
 }
@@ -1136,10 +1145,10 @@ int Process::sys$lstat(const char* path, Unix::stat* statbuf)
 {
     VALIDATE_USER_WRITE(statbuf, sizeof(Unix::stat));
     int error;
-    auto handle = VirtualFileSystem::the().open(move(path), error, O_NOFOLLOW_NOERROR, cwdInode());
-    if (!handle)
+    auto descriptor = VirtualFileSystem::the().open(move(path), error, O_NOFOLLOW_NOERROR, cwdInode());
+    if (!descriptor)
         return error;
-    handle->stat(statbuf);
+    descriptor->stat(statbuf);
     return 0;
 }
 
@@ -1147,10 +1156,10 @@ int Process::sys$stat(const char* path, Unix::stat* statbuf)
 {
     VALIDATE_USER_WRITE(statbuf, sizeof(Unix::stat));
     int error;
-    auto handle = VirtualFileSystem::the().open(move(path), error, 0, cwdInode());
-    if (!handle)
+    auto descriptor = VirtualFileSystem::the().open(move(path), error, 0, cwdInode());
+    if (!descriptor)
         return error;
-    handle->stat(statbuf);
+    descriptor->stat(statbuf);
     return 0;
 }
 
@@ -1160,14 +1169,14 @@ int Process::sys$readlink(const char* path, char* buffer, size_t size)
     VALIDATE_USER_WRITE(buffer, size);
 
     int error;
-    auto handle = VirtualFileSystem::the().open(path, error, O_RDONLY | O_NOFOLLOW_NOERROR, cwdInode());
-    if (!handle)
+    auto descriptor = VirtualFileSystem::the().open(path, error, O_RDONLY | O_NOFOLLOW_NOERROR, cwdInode());
+    if (!descriptor)
         return error;
 
-    if (!handle->metadata().isSymbolicLink())
+    if (!descriptor->metadata().isSymbolicLink())
         return -EINVAL;
 
-    auto contents = handle->readEntireFile();
+    auto contents = descriptor->readEntireFile();
     if (!contents)
         return -EIO; // FIXME: Get a more detailed error from VFS.
 
@@ -1181,12 +1190,12 @@ int Process::sys$chdir(const char* path)
 {
     VALIDATE_USER_READ(path, strlen(path));
     int error;
-    auto handle = VirtualFileSystem::the().open(path, error, 0, cwdInode());
-    if (!handle)
+    auto descriptor = VirtualFileSystem::the().open(path, error, 0, cwdInode());
+    if (!descriptor)
         return error;
-    if (!handle->isDirectory())
+    if (!descriptor->isDirectory())
         return -ENOTDIR;
-    m_cwd = handle->vnode();
+    m_cwd = descriptor->vnode();
     return 0;
 }
 
@@ -1205,8 +1214,8 @@ int Process::sys$getcwd(char* buffer, size_t size)
 size_t Process::number_of_open_file_descriptors() const
 {
     size_t count = 0;
-    for (auto& handle : m_file_descriptors) {
-        if (handle)
+    for (auto& descriptor : m_file_descriptors) {
+        if (descriptor)
             ++count;
     }
     return count;
@@ -1221,10 +1230,10 @@ int Process::sys$open(const char* path, int options)
     if (number_of_open_file_descriptors() >= m_max_open_file_descriptors)
         return -EMFILE;
     int error;
-    auto handle = VirtualFileSystem::the().open(path, error, options, cwdInode());
-    if (!handle)
+    auto descriptor = VirtualFileSystem::the().open(path, error, options, cwdInode());
+    if (!descriptor)
         return error;
-    if (options & O_DIRECTORY && !handle->isDirectory())
+    if (options & O_DIRECTORY && !descriptor->isDirectory())
         return -ENOTDIR; // FIXME: This should be handled by VFS::open.
 
     int fd = 0;
@@ -1232,7 +1241,7 @@ int Process::sys$open(const char* path, int options)
         if (!m_file_descriptors[fd])
             break;
     }
-    m_file_descriptors[fd] = move(handle);
+    m_file_descriptors[fd] = move(descriptor);
     return fd;
 }
 
@@ -1249,10 +1258,10 @@ int Process::sys$uname(utsname* buf)
 
 int Process::sys$isatty(int fd)
 {
-    auto* handle = fileHandleIfExists(fd);
-    if (!handle)
+    auto* descriptor = file_descriptor(fd);
+    if (!descriptor)
         return -EBADF;
-    if (!handle->isTTY())
+    if (!descriptor->isTTY())
         return -ENOTTY;
     return 1;
 }
@@ -1486,12 +1495,12 @@ int Process::sys$setpgid(pid_t specified_pid, pid_t specified_pgid)
 
 pid_t Process::sys$tcgetpgrp(int fd)
 {
-    auto* handle = fileHandleIfExists(fd);
-    if (!handle)
+    auto* descriptor = file_descriptor(fd);
+    if (!descriptor)
         return -EBADF;
-    if (!handle->isTTY())
+    if (!descriptor->isTTY())
         return -ENOTTY;
-    auto& tty = *handle->tty();
+    auto& tty = *descriptor->tty();
     if (&tty != m_tty)
         return -ENOTTY;
     return tty.pgid();
@@ -1503,12 +1512,12 @@ int Process::sys$tcsetpgrp(int fd, pid_t pgid)
         return -EINVAL;
     if (get_sid_from_pgid(pgid) != m_sid)
         return -EINVAL;
-    auto* handle = fileHandleIfExists(fd);
-    if (!handle)
+    auto* descriptor = file_descriptor(fd);
+    if (!descriptor)
         return -EBADF;
-    if (!handle->isTTY())
+    if (!descriptor->isTTY())
         return -ENOTTY;
-    auto& tty = *handle->tty();
+    auto& tty = *descriptor->tty();
     if (&tty != m_tty)
         return -ENOTTY;
     tty.set_pgid(pgid);
@@ -1522,8 +1531,8 @@ int Process::sys$getdtablesize()
 
 int Process::sys$dup(int old_fd)
 {
-    auto* handle = fileHandleIfExists(old_fd);
-    if (!handle)
+    auto* descriptor = file_descriptor(old_fd);
+    if (!descriptor)
         return -EBADF;
     if (number_of_open_file_descriptors() == m_max_open_file_descriptors)
         return -EMFILE;
@@ -1532,18 +1541,18 @@ int Process::sys$dup(int old_fd)
         if (!m_file_descriptors[new_fd])
             break;
     }
-    m_file_descriptors[new_fd] = handle;
+    m_file_descriptors[new_fd] = descriptor;
     return new_fd;
 }
 
 int Process::sys$dup2(int old_fd, int new_fd)
 {
-    auto* handle = fileHandleIfExists(old_fd);
-    if (!handle)
+    auto* descriptor = file_descriptor(old_fd);
+    if (!descriptor)
         return -EBADF;
     if (number_of_open_file_descriptors() == m_max_open_file_descriptors)
         return -EMFILE;
-    m_file_descriptors[new_fd] = handle;
+    m_file_descriptors[new_fd] = descriptor;
     return new_fd;
 }
 

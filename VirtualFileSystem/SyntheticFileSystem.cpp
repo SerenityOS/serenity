@@ -1,5 +1,5 @@
 #include "SyntheticFileSystem.h"
-#include "FileHandle.h"
+#include "FileDescriptor.h"
 #include <AK/StdLib.h>
 
 #ifndef SERENITY
@@ -192,7 +192,7 @@ bool SyntheticFileSystem::writeInode(InodeIdentifier, const ByteBuffer&)
     return false;
 }
 
-Unix::ssize_t SyntheticFileSystem::readInodeBytes(InodeIdentifier inode, Unix::off_t offset, Unix::size_t count, byte* buffer, FileHandle* handle) const
+Unix::ssize_t SyntheticFileSystem::readInodeBytes(InodeIdentifier inode, Unix::off_t offset, Unix::size_t count, byte* buffer, FileDescriptor* handle) const
 {
     InterruptDisabler disabler;
 
