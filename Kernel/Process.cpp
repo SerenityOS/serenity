@@ -52,11 +52,11 @@ CoolGlobals* g_cool_globals;
 static const DWORD defaultStackSize = 16384;
 
 Process* current;
-Process* s_kernelProcess;
+Process* s_colonel_process;
 
 static pid_t next_pid;
 static InlineLinkedList<Process>* s_processes;
-static InlineLinkedList<Process>* s_deadProcesses;
+static InlineLinkedList<Process>* s_dead_processes;
 static String* s_hostname;
 
 static String& hostnameStorage(InterruptDisabler&)
@@ -73,14 +73,14 @@ static String getHostname()
 
 static bool contextSwitch(Process*);
 
-static void redoKernelProcessTSS()
+static void redo_colonel_process_tss()
 {
-    if (!s_kernelProcess->selector())
-        s_kernelProcess->setSelector(gdt_alloc_entry());
+    if (!s_colonel_process->selector())
+        s_colonel_process->setSelector(gdt_alloc_entry());
 
-    auto& tssDescriptor = getGDTEntry(s_kernelProcess->selector());
+    auto& tssDescriptor = getGDTEntry(s_colonel_process->selector());
 
-    tssDescriptor.setBase(&s_kernelProcess->tss());
+    tssDescriptor.setBase(&s_colonel_process->tss());
     tssDescriptor.setLimit(0xffff);
     tssDescriptor.dpl = 0;
     tssDescriptor.segment_present = 1;
@@ -93,11 +93,11 @@ static void redoKernelProcessTSS()
     flushGDT();
 }
 
-void Process::prepForIRETToNewProcess()
+void Process::prepare_for_iret_to_new_process()
 {
-    redoKernelProcessTSS();
-    s_kernelProcess->tss().backlink = current->selector();
-    loadTaskRegister(s_kernelProcess->selector());
+    redo_colonel_process_tss();
+    s_colonel_process->tss().backlink = current->selector();
+    load_task_register(s_colonel_process->selector());
 }
 
 static void hlt_loop()
@@ -115,30 +115,11 @@ void Process::initialize()
     current = nullptr;
     next_pid = 0;
     s_processes = new InlineLinkedList<Process>;
-    s_deadProcesses = new InlineLinkedList<Process>;
-    s_kernelProcess = Process::createKernelProcess(hlt_loop, "colonel");
+    s_dead_processes = new InlineLinkedList<Process>;
+    s_colonel_process = Process::create_kernel_process(hlt_loop, "colonel");
     s_hostname = new String("birx");
-    redoKernelProcessTSS();
-    loadTaskRegister(s_kernelProcess->selector());
-}
-
-template<typename Callback>
-static void forEachProcess(Callback callback)
-{
-    ASSERT_INTERRUPTS_DISABLED();
-    for (auto* process = s_processes->head(); process; process = process->next()) {
-        if (!callback(*process))
-            break;
-    }
-}
-
-void Process::for_each_in_pgrp(pid_t pgid, Function<void(Process&)> callback)
-{
-    ASSERT_INTERRUPTS_DISABLED();
-    for (auto* process = s_processes->head(); process; process = process->next()) {
-        if (process->pgid() == pgid)
-            callback(*process);
-    }
+    redo_colonel_process_tss();
+    load_task_register(s_colonel_process->selector());
 }
 
 Vector<Process*> Process::allProcesses()
@@ -356,7 +337,7 @@ int Process::exec(const String& path, Vector<String>&& arguments, Vector<String>
 
     InterruptDisabler disabler;
     if (current == this)
-        loadTaskRegister(s_kernelProcess->selector());
+        load_task_register(s_colonel_process->selector());
 
     m_name = parts.takeLast();
 
@@ -484,7 +465,7 @@ Process* Process::create_user_process(const String& path, uid_t uid, gid_t gid, 
     RetainPtr<VirtualFileSystem::Node> cwd;
     {
         InterruptDisabler disabler;
-        if (auto* parent = Process::fromPID(parent_pid))
+        if (auto* parent = Process::from_pid(parent_pid))
             cwd = parent->m_cwd.copyRef();
     }
     if (!cwd)
@@ -545,7 +526,7 @@ int Process::sys$get_arguments(int* argc, char*** argv)
     return 0;
 }
 
-Process* Process::createKernelProcess(void (*e)(), String&& name)
+Process* Process::create_kernel_process(void (*e)(), String&& name)
 {
     auto* process = new Process(move(name), (uid_t)0, (gid_t)0, (pid_t)0, Ring0);
     process->m_tss.eip = (dword)e;
@@ -585,7 +566,7 @@ Process::Process(String&& name, uid_t uid, gid_t gid, pid_t ppid, RingLevel ring
     } else {
         // FIXME: Use a ProcessHandle? Presumably we're executing *IN* the parent right now though..
         InterruptDisabler disabler;
-        if (auto* parent = Process::fromPID(m_ppid)) {
+        if (auto* parent = Process::from_pid(m_ppid)) {
             m_sid = parent->m_sid;
             m_pgid = parent->m_pgid;
         }
@@ -789,8 +770,6 @@ void Process::dispatch_signal(byte signal)
     kprintf("resume tss pc: %w:%x\n", m_tss_to_resume_kernel.cs, m_tss_to_resume_kernel.eip);
 #endif
 
-    word ret_ss = m_tss.ss;
-    dword ret_esp = m_tss.esp;
     word ret_cs = m_tss.cs;
     dword ret_eip = m_tss.eip;
     dword ret_eflags = m_tss.eflags;
@@ -891,7 +870,7 @@ void Process::sys$sigreturn()
     dbgprintf("sys$sigreturn in %s(%u)\n", name().characters(), pid());
     dbgprintf(" -> resuming execution at %w:%x\n", m_tss.cs, m_tss.eip);
 #endif
-    loadTaskRegister(s_kernelProcess->selector());
+    load_task_register(s_colonel_process->selector());
     sched_yield();
     kprintf("sys$sigreturn failed in %s(%u)\n", name().characters(), pid());
     ASSERT_NOT_REACHED();
@@ -922,15 +901,15 @@ void Process::crash()
 
 void Process::doHouseKeeping()
 {
-    if (s_deadProcesses->isEmpty())
+    if (s_dead_processes->isEmpty())
         return;
     InterruptDisabler disabler;
     Process* next = nullptr;
-    for (auto* deadProcess = s_deadProcesses->head(); deadProcess; deadProcess = next) {
+    for (auto* deadProcess = s_dead_processes->head(); deadProcess; deadProcess = next) {
         next = deadProcess->next();
         delete deadProcess;
     }
-    s_deadProcesses->clear();
+    s_dead_processes->clear();
 }
 
 int sched_yield()
@@ -962,8 +941,27 @@ void switchNow()
     );
 }
 
-template<typename Callback>
-static void for_each_process_in_state(Process::State state, Callback callback)
+void Process::for_each(Function<bool(Process&)> callback)
+{
+    ASSERT_INTERRUPTS_DISABLED();
+    for (auto* process = s_processes->head(); process; process = process->next()) {
+        if (!callback(*process))
+            break;
+    }
+}
+
+void Process::for_each_in_pgrp(pid_t pgid, Function<bool(Process&)> callback)
+{
+    ASSERT_INTERRUPTS_DISABLED();
+    for (auto* process = s_processes->head(); process; process = process->next()) {
+        if (process->pgid() == pgid) {
+            if (!callback(*process))
+                break;
+        }
+    }
+}
+
+void Process::for_each_in_state(State state, Function<bool(Process&)> callback)
 {
     ASSERT_INTERRUPTS_DISABLED();
     for (auto* process = s_processes->head(); process;) {
@@ -974,25 +972,12 @@ static void for_each_process_in_state(Process::State state, Callback callback)
     }
 }
 
-template<typename Callback>
-static void for_each_process_not_in_state(Process::State state, Callback callback)
+void Process::for_each_not_in_state(State state, Function<bool(Process&)> callback)
 {
     ASSERT_INTERRUPTS_DISABLED();
     for (auto* process = s_processes->head(); process;) {
         auto* next_process = process->next();
         if (process->state() != state)
-            callback(*process);
-        process = next_process;
-    }
-}
-
-template<typename Callback>
-static void for_each_blocked_process(Callback callback)
-{
-    ASSERT_INTERRUPTS_DISABLED();
-    for (auto* process = s_processes->head(); process;) {
-        auto* next_process = process->next();
-        if (process->is_blocked())
             callback(*process);
         process = next_process;
     }
@@ -1005,59 +990,62 @@ bool scheduleNewProcess()
     if (!current) {
         // XXX: The first ever context_switch() goes to the idle process.
         //      This to setup a reliable place we can return to.
-        return contextSwitch(Process::kernelProcess());
+        return contextSwitch(Process::colonel_process());
     }
 
     // Check and unblock processes whose wait conditions have been met.
-    for (auto* process = s_processes->head(); process; process = process->next()) {
-        if (process->state() == Process::BlockedSleep) {
-            if (process->wakeupTime() <= system.uptime)
-                process->unblock();
-            continue;
+    Process::for_each([] (auto& process) {
+        if (process.state() == Process::BlockedSleep) {
+            if (process.wakeupTime() <= system.uptime)
+                process.unblock();
+            return true;
         }
 
-        if (process->state() == Process::BlockedWait) {
-            auto* waitee = Process::fromPID(process->waitee());
+        if (process.state() == Process::BlockedWait) {
+            auto* waitee = Process::from_pid(process.waitee());
             if (!waitee) {
-                kprintf("waitee %u of %s(%u) reaped before I could wait?\n", process->waitee(), process->name().characters(), process->pid());
+                kprintf("waitee %u of %s(%u) reaped before I could wait?\n", process.waitee(), process.name().characters(), process.pid());
                 ASSERT_NOT_REACHED();
             }
             if (waitee->state() == Process::Dead) {
-                process->m_waitee_status = (waitee->m_termination_status << 8) | waitee->m_termination_signal;
-                process->unblock();
+                process.m_waitee_status = (waitee->m_termination_status << 8) | waitee->m_termination_signal;
+                process.unblock();
                 waitee->set_state(Process::Forgiven);
             }
-            continue;
+            return true;
         }
 
-        if (process->state() == Process::BlockedRead) {
-            ASSERT(process->m_fdBlockedOnRead != -1);
+        if (process.state() == Process::BlockedRead) {
+            ASSERT(process.m_fdBlockedOnRead != -1);
             // FIXME: Block until the amount of data wanted is available.
-            if (process->m_file_descriptors[process->m_fdBlockedOnRead]->hasDataAvailableForRead())
-                process->unblock();
-            continue;
+            if (process.m_file_descriptors[process.m_fdBlockedOnRead]->hasDataAvailableForRead())
+                process.unblock();
+            return true;
         }
-    }
+        return true;
+    });
 
     // Forgive dead orphans.
     // FIXME: Does this really make sense?
-    for_each_process_in_state(Process::Dead, [] (auto& process) {
-        if (!Process::fromPID(process.ppid()))
+    Process::for_each_in_state(Process::Dead, [] (auto& process) {
+        if (!Process::from_pid(process.ppid()))
             process.set_state(Process::Forgiven);
+        return true;
     });
 
     // Clean up forgiven processes.
     // FIXME: Do we really need this to be a separate pass over the process list?
-    for_each_process_in_state(Process::Forgiven, [] (auto& process) {
+    Process::for_each_in_state(Process::Forgiven, [] (auto& process) {
         s_processes->remove(&process);
-        s_deadProcesses->append(&process);
+        s_dead_processes->append(&process);
+        return true;
     });
 
     // Dispatch any pending signals.
     // FIXME: Do we really need this to be a separate pass over the process list?
-    for_each_process_not_in_state(Process::Dead, [] (auto& process) {
+    Process::for_each_not_in_state(Process::Dead, [] (auto& process) {
         if (!process.has_unmasked_pending_signals())
-            return;
+            return true;
         // We know how to interrupt blocked processes, but if they are just executing
         // at some random point in the kernel, let them continue. They'll be in userspace
         // sooner or later and we can deliver the signal then.
@@ -1065,12 +1053,13 @@ bool scheduleNewProcess()
         //        signal and dispatch it then and there? Would that be doable without the
         //        syscall effectively being "interrupted" despite having completed?
         if (process.in_kernel() && !process.is_blocked())
-            return;
+            return true;
         process.dispatch_one_pending_signal();
         if (process.is_blocked()) {
             process.m_was_interrupted_while_blocked = true;
             process.unblock();
         }
+        return true;
     });
 
 #ifdef SCHEDULER_DEBUG
@@ -1108,8 +1097,8 @@ bool scheduleNewProcess()
                     process->timesScheduled(),
                     process->name().characters());
             }
-            kprintf("Switch to kernel process @ %w:%x\n", s_kernelProcess->tss().cs, s_kernelProcess->tss().eip);
-            return contextSwitch(Process::kernelProcess());
+            kprintf("Switch to kernel process @ %w:%x\n", s_colonel_process->tss().cs, s_colonel_process->tss().eip);
+            return contextSwitch(Process::colonel_process());
         }
     }
 }
@@ -1171,7 +1160,7 @@ static bool contextSwitch(Process* t)
     return true;
 }
 
-Process* Process::fromPID(pid_t pid)
+Process* Process::from_pid(pid_t pid)
 {
     ASSERT_INTERRUPTS_DISABLED();
     for (auto* process = s_processes->head(); process; process = process->next()) {
@@ -1425,7 +1414,7 @@ int Process::sys$kill(pid_t pid, int signal)
     }
     ASSERT(pid != current->pid()); // FIXME: Support this scenario.
     InterruptDisabler disabler;
-    auto* peer = Process::fromPID(pid);
+    auto* peer = Process::from_pid(pid);
     if (!peer)
         return -ESRCH;
     peer->send_signal(signal, this);
@@ -1498,7 +1487,7 @@ pid_t Process::sys$waitpid(pid_t waitee, int* wstatus, int options)
         VALIDATE_USER_WRITE(wstatus, sizeof(int));
 
     InterruptDisabler disabler;
-    if (!Process::fromPID(waitee))
+    if (!Process::from_pid(waitee))
         return -1;
     m_waitee = waitee;
     m_waitee_status = 0;
@@ -1540,10 +1529,10 @@ void sleep(DWORD ticks)
     sched_yield();
 }
 
-Process* Process::kernelProcess()
+Process* Process::colonel_process()
 {
-    ASSERT(s_kernelProcess);
-    return s_kernelProcess;
+    ASSERT(s_colonel_process);
+    return s_colonel_process;
 }
 
 bool Process::isValidAddressForKernel(LinearAddress laddr) const
@@ -1576,7 +1565,7 @@ pid_t Process::sys$getsid(pid_t pid)
     if (pid == 0)
         return m_sid;
     InterruptDisabler disabler;
-    auto* process = Process::fromPID(pid);
+    auto* process = Process::from_pid(pid);
     if (!process)
         return -ESRCH;
     if (m_sid != process->m_sid)
@@ -1588,12 +1577,9 @@ pid_t Process::sys$setsid()
 {
     InterruptDisabler disabler;
     bool found_process_with_same_pgid_as_my_pid = false;
-    forEachProcess([&] (auto& process) {
-        if (process.pgid() == pid()) {
-            found_process_with_same_pgid_as_my_pid = true;
-            return false;
-        }
-        return true;
+    Process::for_each_in_pgrp(pid(), [&] (auto& process) {
+        found_process_with_same_pgid_as_my_pid = true;
+        return false;
     });
     if (found_process_with_same_pgid_as_my_pid)
         return -EPERM;
@@ -1607,7 +1593,7 @@ pid_t Process::sys$getpgid(pid_t pid)
     if (pid == 0)
         return m_pgid;
     InterruptDisabler disabler; // FIXME: Use a ProcessHandle
-    auto* process = Process::fromPID(pid);
+    auto* process = Process::from_pid(pid);
     if (!process)
         return -ESRCH;
     return process->m_pgid;
@@ -1621,7 +1607,7 @@ pid_t Process::sys$getpgrp()
 static pid_t get_sid_from_pgid(pid_t pgid)
 {
     InterruptDisabler disabler;
-    auto* group_leader = Process::fromPID(pgid);
+    auto* group_leader = Process::from_pid(pgid);
     if (!group_leader)
         return -1;
     return group_leader->sid();
@@ -1633,7 +1619,7 @@ int Process::sys$setpgid(pid_t specified_pid, pid_t specified_pgid)
     pid_t pid = specified_pid ? specified_pid : m_pid;
     if (specified_pgid < 0)
         return -EINVAL;
-    auto* process = Process::fromPID(pid);
+    auto* process = Process::from_pid(pid);
     if (!process)
         return -ESRCH;
     pid_t new_pgid = specified_pgid ? specified_pgid : process->m_pid;

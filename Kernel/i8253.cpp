@@ -105,7 +105,7 @@ void clock_handle()
 
     if (!scheduleNewProcess())
         return;
-    Process::prepForIRETToNewProcess();
+    Process::prepare_for_iret_to_new_process();
 
     // Set the NT (nested task) flag.
     asm(
