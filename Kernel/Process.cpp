@@ -857,20 +857,24 @@ void Process::doHouseKeeping()
 void Process::for_each(Function<bool(Process&)> callback)
 {
     ASSERT_INTERRUPTS_DISABLED();
-    for (auto* process = g_processes->head(); process; process = process->next()) {
+    for (auto* process = g_processes->head(); process;) {
+        auto* next_process = process->next();
         if (!callback(*process))
             break;
+        process = next_process;
     }
 }
 
 void Process::for_each_in_pgrp(pid_t pgid, Function<bool(Process&)> callback)
 {
     ASSERT_INTERRUPTS_DISABLED();
-    for (auto* process = g_processes->head(); process; process = process->next()) {
+    for (auto* process = g_processes->head(); process;) {
+        auto* next_process = process->next();
         if (process->pgid() == pgid) {
             if (!callback(*process))
                 break;
         }
+        process = next_process;
     }
 }
 
