@@ -1,7 +1,7 @@
 #include "FileDescriptor.h"
 #include "FileSystem.h"
 #include "CharacterDevice.h"
-#include "sys-errno.h"
+#include <LibC/errno_numbers.h>
 #include "UnixTypes.h"
 #include <AK/BufferStream.h>
 

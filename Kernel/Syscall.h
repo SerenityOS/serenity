@@ -54,6 +54,7 @@
     __ENUMERATE_SYSCALL(umask) \
     __ENUMERATE_SYSCALL(getgroups) \
     __ENUMERATE_SYSCALL(setgroups) \
+    __ENUMERATE_SYSCALL(sigreturn) \
 
 
 #define DO_SYSCALL_A0(function) Syscall::invoke((dword)(function))
@@ -78,6 +79,7 @@ inline constexpr const char* toString(Function function)
     ENUMERATE_SYSCALLS
 #undef __ENUMERATE_SYSCALL
     }
+    return "Unknown";
 }
 
 void initialize();

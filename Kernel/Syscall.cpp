@@ -54,7 +54,7 @@ static DWORD handle(RegisterDump& regs, DWORD function, DWORD arg1, DWORD arg2, 
         Console::the().putChar(arg1 & 0xff);
         break;
     case Syscall::SC_sleep:
-        return current->sys$sleep(arg1);
+        return current->sys$sleep((unsigned)arg1);
     case Syscall::SC_gettimeofday:
         return current->sys$gettimeofday((timeval*)arg1);
     case Syscall::SC_spawn:
@@ -156,6 +156,10 @@ static DWORD handle(RegisterDump& regs, DWORD function, DWORD arg1, DWORD arg2, 
         return current->sys$getgroups((int)arg1, (gid_t*)arg2);
     case Syscall::SC_setgroups:
         return current->sys$setgroups((size_t)arg1, (const gid_t*)arg2);
+    case Syscall::SC_sigreturn:
+        current->sys$sigreturn();
+        ASSERT_NOT_REACHED();
+        return 0;
     default:
         kprintf("<%u> int0x80: Unknown function %x requested {%x, %x, %x}\n", current->pid(), function, arg1, arg2, arg3);
         break;

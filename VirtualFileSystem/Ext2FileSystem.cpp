@@ -7,7 +7,7 @@
 #include <AK/ktime.h>
 #include <AK/kstdio.h>
 #include <AK/BufferStream.h>
-#include "sys-errno.h"
+#include <LibC/errno_numbers.h>
 
 //#define EXT2_DEBUG
 

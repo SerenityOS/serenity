@@ -331,8 +331,12 @@ int main(int, char**)
         char keybuf[16];
         ssize_t nread = read(0, keybuf, sizeof(keybuf));
         if (nread < 0) {
-            printf("failed to read :(\n");
-            return 2;
+            if (errno == EINTR) {
+                // Ignore. :^)
+            } else {
+                perror("read failed");
+                return 2;
+            }
         }
         for (ssize_t i = 0; i < nread; ++i) {
             putchar(keybuf[i]);
