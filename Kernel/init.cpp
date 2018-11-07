@@ -141,15 +141,6 @@ void dump_backtrace(bool use_ksyms)
 }
 #endif
 
-static void undertaker_main() NORETURN;
-static void undertaker_main()
-{
-    for (;;) {
-        Process::doHouseKeeping();
-        sleep(300);
-    }
-}
-
 static void spawn_stress() NORETURN;
 static void spawn_stress()
 {
@@ -306,7 +297,6 @@ void init()
 
     Process::initialize();
 
-    Process::create_kernel_process(undertaker_main, "undertaker");
     Process::create_kernel_process(init_stage2, "init_stage2");
 
     Scheduler::pick_next();
