@@ -16,7 +16,7 @@ public:
     pid_t pgid() const { return m_pgid; }
 
 protected:
-    virtual bool isTTY() const final { return true; }
+    virtual bool isTTY() const final override { return true; }
 
     TTY(unsigned major, unsigned minor);
     void emit(byte);
