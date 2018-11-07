@@ -6,7 +6,7 @@
 #include <AK/kstdio.h>
 #include <AK/ktime.h>
 #include "CharacterDevice.h"
-#include "sys-errno.h"
+#include <LibC/errno_numbers.h>
 
 //#define VFS_DEBUG
 

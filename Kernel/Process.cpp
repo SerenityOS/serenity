@@ -15,6 +15,7 @@
 #include "ProcFileSystem.h"
 #include <AK/StdLib.h>
 #include <LibC/signal_numbers.h>
+#include "Syscall.h"
 
 //#define DEBUG_IO
 //#define TASK_DEBUG
@@ -371,9 +372,9 @@ int Process::exec(const String& path, Vector<String>&& arguments, Vector<String>
     m_tss.gs = 0x23;
     m_tss.ss = 0x23;
     m_tss.cr3 = (dword)m_page_directory;
-    auto* stack_region = allocate_region(LinearAddress(), defaultStackSize, "stack");
-    ASSERT(stack_region);
-    m_stackTop3 = stack_region->linearAddress.offset(defaultStackSize).get() & 0xfffffff8;
+    m_stack_region = allocate_region(LinearAddress(), defaultStackSize, "stack");
+    ASSERT(m_stack_region);
+    m_stackTop3 = m_stack_region->linearAddress.offset(defaultStackSize).get() & 0xfffffff8;
     m_tss.esp = m_stackTop3;
     m_tss.ss0 = 0x10;
     m_tss.esp0 = old_esp0;
@@ -783,20 +784,49 @@ void Process::dispatch_signal(byte signal)
         return terminate_due_to_signal(signal);
     }
 
+    m_tss_to_resume_kernel = m_tss;
+#ifdef SIGNAL_DEBUG
+    kprintf("resume tss pc: %w:%x\n", m_tss_to_resume_kernel.cs, m_tss_to_resume_kernel.eip);
+#endif
+
+    word ret_ss = m_tss.ss;
+    dword ret_esp = m_tss.esp;
     word ret_cs = m_tss.cs;
     dword ret_eip = m_tss.eip;
     dword ret_eflags = m_tss.eflags;
 
+    bool interrupting_in_kernel = (ret_cs & 3) == 0;
+
     if ((ret_cs & 3) == 0) {
         // FIXME: Handle send_signal to process currently in kernel code.
-        kprintf("Boo! dispatch_signal in %s(%u) with return to %w:%x\n", name().characters(), pid(), ret_cs, ret_eip);
-        ASSERT_NOT_REACHED();
+        dbgprintf("dispatch_signal to %s(%u) in state=%s with return to %w:%x\n", name().characters(), pid(), toString(state()), ret_cs, ret_eip);
+        ASSERT(is_blocked());
     }
 
     ProcessPagingScope pagingScope(*this);
+
+    if (interrupting_in_kernel) {
+        if (!m_signal_stack_user_region) {
+            m_signal_stack_user_region = allocate_region(LinearAddress(), defaultStackSize, "signal stack (user)");
+            ASSERT(m_signal_stack_user_region);
+            m_signal_stack_kernel_region = allocate_region(LinearAddress(), defaultStackSize, "signal stack (kernel)");
+            ASSERT(m_signal_stack_user_region);
+        }
+        m_tss.ss = 0x23;
+        m_tss.esp = m_signal_stack_user_region->linearAddress.offset(defaultStackSize).get() & 0xfffffff8;
+        m_tss.ss0 = 0x10;
+        m_tss.esp0 = m_signal_stack_kernel_region->linearAddress.offset(defaultStackSize).get() & 0xfffffff8;
+        push_value_on_stack(ret_eflags);
+        push_value_on_stack(ret_cs);
+        push_value_on_stack(ret_eip);
+    } else {
+        push_value_on_stack(ret_cs);
+        push_value_on_stack(ret_eip);
+        push_value_on_stack(ret_eflags);
+    }
+
+    // PUSHA
     dword old_esp = m_tss.esp;
-    push_value_on_stack(ret_eip);
-    push_value_on_stack(ret_eflags);
     push_value_on_stack(m_tss.eax);
     push_value_on_stack(m_tss.ecx);
     push_value_on_stack(m_tss.edx);
@@ -805,31 +835,66 @@ void Process::dispatch_signal(byte signal)
     push_value_on_stack(m_tss.ebp);
     push_value_on_stack(m_tss.esi);
     push_value_on_stack(m_tss.edi);
+
     m_tss.eax = (dword)signal;
     m_tss.cs = 0x1b;
+    m_tss.ds = 0x23;
+    m_tss.es = 0x23;
+    m_tss.fs = 0x23;
+    m_tss.gs = 0x23;
     m_tss.eip = handler_laddr.get();
 
-    if (m_return_from_signal_trampoline.is_null()) {
+    if (m_return_to_ring3_from_signal_trampoline.is_null()) {
         // FIXME: This should be a global trampoline shared by all processes, not one created per process!
         // FIXME: Remap as read-only after setup.
         auto* region = allocate_region(LinearAddress(), PAGE_SIZE, "signal_trampoline", true, true);
-        m_return_from_signal_trampoline = region->linearAddress;
-        byte* code_ptr = m_return_from_signal_trampoline.asPtr();
+        m_return_to_ring3_from_signal_trampoline = region->linearAddress;
+        byte* code_ptr = m_return_to_ring3_from_signal_trampoline.asPtr();
         *code_ptr++ = 0x61; // popa
         *code_ptr++ = 0x9d; // popf
         *code_ptr++ = 0xc3; // ret
         *code_ptr++ = 0x0f; // ud2
         *code_ptr++ = 0x0b;
+
+        m_return_to_ring0_from_signal_trampoline = LinearAddress((dword)code_ptr);
+        *code_ptr++ = 0x61; // popa
+        *code_ptr++ = 0xb8; // mov eax, <dword>
+        *(dword*)code_ptr = Syscall::SC_sigreturn;
+        code_ptr += sizeof(dword);
+        *code_ptr++ = 0xcd; // int 0x80
+        *code_ptr++ = 0x80;
+        *code_ptr++ = 0x0f; // ud2
+        *code_ptr++ = 0x0b;
+
         // FIXME: For !SA_NODEFER, maybe we could do something like emitting an int 0x80 syscall here that
         //        unmasks the signal so it can be received again? I guess then I would need one trampoline
         //        per signal number if it's hard-coded, but it's just a few bytes per each.
     }
 
-    push_value_on_stack(m_return_from_signal_trampoline.get());
+    if (interrupting_in_kernel)
+        push_value_on_stack(m_return_to_ring0_from_signal_trampoline.get());
+    else
+        push_value_on_stack(m_return_to_ring3_from_signal_trampoline.get());
 
     m_pending_signals &= ~(1 << signal);
 
+#ifdef SIGNAL_DEBUG
     dbgprintf("signal: Okay, %s(%u) has been primed\n", name().characters(), pid());
+#endif
+}
+
+void Process::sys$sigreturn()
+{
+    InterruptDisabler disabler;
+    m_tss = m_tss_to_resume_kernel;
+#ifdef SIGNAL_DEBUG
+    dbgprintf("sys$sigreturn in %s(%u)\n", name().characters(), pid());
+    dbgprintf(" -> resuming execution at %w:%x\n", m_tss.cs, m_tss.eip);
+#endif
+    loadTaskRegister(s_kernelProcess->selector());
+    sched_yield();
+    kprintf("sys$sigreturn failed in %s(%u)\n", name().characters(), pid());
+    ASSERT_NOT_REACHED();
 }
 
 void Process::push_value_on_stack(dword value)
@@ -871,7 +936,7 @@ void Process::doHouseKeeping()
 int sched_yield()
 {
     if (!current) {
-        kprintf( "PANIC: yield() with !current" );
+        kprintf("PANIC: sched_yield() with !current");
         HANG;
     }
 
@@ -921,6 +986,18 @@ static void for_each_process_not_in_state(Process::State state, Callback callbac
     }
 }
 
+template<typename Callback>
+static void for_each_blocked_process(Callback callback)
+{
+    ASSERT_INTERRUPTS_DISABLED();
+    for (auto* process = s_processes->head(); process;) {
+        auto* next_process = process->next();
+        if (process->is_blocked())
+            callback(*process);
+        process = next_process;
+    }
+}
+
 bool scheduleNewProcess()
 {
     ASSERT_INTERRUPTS_DISABLED();
@@ -955,6 +1032,7 @@ bool scheduleNewProcess()
 
         if (process->state() == Process::BlockedRead) {
             ASSERT(process->m_fdBlockedOnRead != -1);
+            // FIXME: Block until the amount of data wanted is available.
             if (process->m_file_descriptors[process->m_fdBlockedOnRead]->hasDataAvailableForRead())
                 process->unblock();
             continue;
@@ -980,7 +1058,19 @@ bool scheduleNewProcess()
     for_each_process_not_in_state(Process::Dead, [] (auto& process) {
         if (!process.has_unmasked_pending_signals())
             return;
+        // We know how to interrupt blocked processes, but if they are just executing
+        // at some random point in the kernel, let them continue. They'll be in userspace
+        // sooner or later and we can deliver the signal then.
+        // FIXME: Maybe we could check when returning from a syscall if there's a pending
+        //        signal and dispatch it then and there? Would that be doable without the
+        //        syscall effectively being "interrupted" despite having completed?
+        if (process.in_kernel() && !process.is_blocked())
+            return;
         process.dispatch_one_pending_signal();
+        if (process.is_blocked()) {
+            process.m_was_interrupted_while_blocked = true;
+            process.unblock();
+        }
     });
 
 #ifdef SCHEDULER_DEBUG
@@ -1000,7 +1090,7 @@ bool scheduleNewProcess()
 
         if (process->state() == Process::Runnable || process->state() == Process::Running) {
 #ifdef SCHEDULER_DEBUG
-            dbgprintf("switch to %s(%u) (%p vs %p)\n", process->name().characters(), process->pid(), process, current);
+            dbgprintf("switch to %s(%u)\n", process->name().characters(), process->pid());
 #endif
             return contextSwitch(process);
         }
@@ -1177,6 +1267,8 @@ ssize_t Process::sys$read(int fd, void* outbuf, size_t nread)
             m_fdBlockedOnRead = fd;
             block(BlockedRead);
             sched_yield();
+            if (m_was_interrupted_while_blocked)
+                return -EINTR;
         }
     }
     nread = descriptor->read((byte*)outbuf, nread);
@@ -1345,6 +1437,11 @@ int Process::sys$sleep(unsigned seconds)
     if (!seconds)
         return 0;
     sleep(seconds * TICKS_PER_SECOND);
+    if (m_wakeupTime > system.uptime) {
+        ASSERT(m_was_interrupted_while_blocked);
+        dword ticks_left_until_original_wakeup_time = m_wakeupTime - system.uptime;
+        return ticks_left_until_original_wakeup_time / TICKS_PER_SECOND;
+    }
     return 0;
 }
 
@@ -1407,6 +1504,8 @@ pid_t Process::sys$waitpid(pid_t waitee, int* wstatus, int options)
     m_waitee_status = 0;
     block(BlockedWait);
     sched_yield();
+    if (m_was_interrupted_while_blocked)
+        return -EINTR;
     if (wstatus)
         *wstatus = m_waitee_status;
     return m_waitee;
@@ -1423,7 +1522,8 @@ void Process::block(Process::State state)
 {
     ASSERT(current->state() == Process::Running);
     system.nblocked++;
-    current->set_state(state);
+    m_was_interrupted_while_blocked = false;
+    set_state(state);
 }
 
 void block(Process::State state)

@@ -51,6 +51,13 @@ public:
     bool isRing0() const { return m_ring == Ring0; }
     bool isRing3() const { return m_ring == Ring3; }
 
+    bool is_blocked() const
+    {
+        return m_state == BlockedSleep || m_state == BlockedWait || m_state == BlockedRead;
+    }
+
+    bool in_kernel() const { return (m_tss.cs & 0x03) == 0; }
+
     static Process* fromPID(pid_t);
     static Process* kernelProcess();
 
@@ -115,6 +122,7 @@ public:
     int sys$kill(pid_t pid, int sig);
     int sys$geterror() { return m_error; }
     void sys$exit(int status);
+    void sys$sigreturn();
     pid_t sys$spawn(const char* path, const char** args, const char** envp);
     pid_t sys$waitpid(pid_t, int* wstatus, int options);
     void* sys$mmap(void*, size_t size);
@@ -212,6 +220,7 @@ private:
     State m_state { Invalid };
     DWORD m_wakeupTime { 0 };
     TSS32 m_tss;
+    TSS32 m_tss_to_resume_kernel;
     Vector<RetainPtr<FileDescriptor>> m_file_descriptors;
     RingLevel m_ring { Ring0 };
     int m_error { 0 };
@@ -243,16 +252,23 @@ private:
     // FIXME: Implement some kind of ASLR?
     LinearAddress m_nextRegion;
 
-    LinearAddress m_return_from_signal_trampoline;
+    LinearAddress m_return_to_ring3_from_signal_trampoline;
+    LinearAddress m_return_to_ring0_from_signal_trampoline;
 
     pid_t m_ppid { 0 };
     mode_t m_umask { 022 };
+
+    bool m_was_interrupted_while_blocked { false };
 
     static void notify_waiters(pid_t waitee, int exit_status, int signal);
 
     Vector<String> m_arguments;
     Vector<String> m_initialEnvironment;
     HashTable<gid_t> m_gids;
+
+    Region* m_stack_region { nullptr };
+    Region* m_signal_stack_user_region { nullptr };
+    Region* m_signal_stack_kernel_region { nullptr };
 };
 
 class ProcessInspectionScope {
