@@ -7,6 +7,7 @@
 #include "IO.h"
 #include "i386.h"
 #include "PIC.h"
+#include <AK/Lock.h>
 
 //#define DISK_DEBUG
 
@@ -55,7 +56,7 @@ static bool waitForInterrupt()
 #endif
     // FIXME: Add timeout.
     while (!interrupted) {
-        yield();
+        sched_yield();
     }
 #ifdef DISK_DEBUG
     kprintf("disk: got interrupt!\n");

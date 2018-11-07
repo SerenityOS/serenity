@@ -15,7 +15,7 @@ VFS_OBJS = \
     FileSystem.o \
     Ext2FileSystem.o \
     VirtualFileSystem.o \
-    FileHandle.o \
+    FileDescriptor.o \
     DiskBackedFileSystem.o \
     SyntheticFileSystem.o \
     InodeIdentifier.o \

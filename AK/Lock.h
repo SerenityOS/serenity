@@ -4,7 +4,9 @@
 
 #ifdef SERENITY
 #include "i386.h"
+int sched_yield();
 #else
+#include <sched.h>
 typedef int InterruptDisabler;
 #endif
 
@@ -13,8 +15,6 @@ typedef int InterruptDisabler;
 void log_try_lock(const char*);
 void log_locked(const char*);
 void log_unlocked(const char*);
-
-void yield();
 
 namespace AK {
 
@@ -51,7 +51,7 @@ public:
 #endif
                 return;
             }
-            yield();
+            sched_yield();
         }
     }
 

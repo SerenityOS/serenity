@@ -388,7 +388,7 @@ int Process::exec(const String& path, Vector<String>&& arguments, Vector<String>
 #endif
 
     if (current == this)
-        yield();
+        sched_yield();
 
     return 0;
 }
@@ -814,7 +814,7 @@ void Process::send_signal(int signal, Process* sender)
     dbgprintf("signal: %s(%u) sent %d to %s(%u)\n", sender->name().characters(), sender->pid(), signal, name().characters(), pid());
 
     if (sender == this) {
-        yield();
+        sched_yield();
         ASSERT_NOT_REACHED();
     }
 }
@@ -865,7 +865,7 @@ void Process::doHouseKeeping()
     s_deadProcesses->clear();
 }
 
-void yield()
+int sched_yield()
 {
     if (!current) {
         kprintf( "PANIC: yield() with !current" );
@@ -876,10 +876,11 @@ void yield()
 
     InterruptDisabler disabler;
     if (!scheduleNewProcess())
-        return;
+        return 1;
 
     //kprintf("yield() jumping to new process: %x (%s)\n", current->farPtr().selector, current->name().characters());
     switchNow();
+    return 0;
 }
 
 void switchNow()
@@ -1121,7 +1122,7 @@ ssize_t Process::sys$read(int fd, void* outbuf, size_t nread)
         if (!descriptor->hasDataAvailableForRead()) {
             m_fdBlockedOnRead = fd;
             block(BlockedRead);
-            yield();
+            sched_yield();
         }
     }
     nread = descriptor->read((byte*)outbuf, nread);
@@ -1351,7 +1352,7 @@ pid_t Process::sys$waitpid(pid_t waitee, int* wstatus, int options)
     m_waitee = waitee;
     m_waiteeStatus = 0;
     block(BlockedWait);
-    yield();
+    sched_yield();
     if (wstatus)
         *wstatus = m_waiteeStatus;
     return m_waitee;
@@ -1374,7 +1375,7 @@ void Process::block(Process::State state)
 void block(Process::State state)
 {
     current->block(state);
-    yield();
+    sched_yield();
 }
 
 void sleep(DWORD ticks)
@@ -1382,7 +1383,7 @@ void sleep(DWORD ticks)
     ASSERT(current->state() == Process::Running);
     current->setWakeupTime(system.uptime + ticks);
     current->block(Process::BlockedSleep);
-    yield();
+    sched_yield();
 }
 
 Process* Process::kernelProcess()
