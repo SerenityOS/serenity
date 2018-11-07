@@ -105,6 +105,27 @@ ByteBuffer procfs$pid_stack(Process& process)
     return buffer;
 }
 
+ByteBuffer procfs$pid_regs(Process& process)
+{
+    ProcessInspectionScope scope(process);
+    auto& tss = process.tss();
+    auto buffer = ByteBuffer::createUninitialized(1024);
+    char* ptr = (char*)buffer.pointer();
+    ptr += ksprintf(ptr, "eax: %x\n", tss.eax);
+    ptr += ksprintf(ptr, "ebx: %x\n", tss.ebx);
+    ptr += ksprintf(ptr, "ecx: %x\n", tss.ecx);
+    ptr += ksprintf(ptr, "edx: %x\n", tss.edx);
+    ptr += ksprintf(ptr, "esi: %x\n", tss.esi);
+    ptr += ksprintf(ptr, "edi: %x\n", tss.edi);
+    ptr += ksprintf(ptr, "ebp: %x\n", tss.ebp);
+    ptr += ksprintf(ptr, "cr3: %x\n", tss.cr3);
+    ptr += ksprintf(ptr, "flg: %x\n", tss.eflags);
+    ptr += ksprintf(ptr, "sp:  %w:%x\n", tss.ss, tss.esp);
+    ptr += ksprintf(ptr, "pc:  %w:%x\n", tss.cs, tss.eip);
+    buffer.trim(ptr - (char*)buffer.pointer());
+    return buffer;
+}
+
 ByteBuffer procfs$pid_exe(Process& process)
 {
     ProcessInspectionScope scope(process);
@@ -121,6 +142,7 @@ void ProcFileSystem::addProcess(Process& process)
     m_pid2inode.set(process.pid(), dir.index());
     addFile(createGeneratedFile("vm", [&process] { return procfs$pid_vm(process); }), dir.index());
     addFile(createGeneratedFile("stack", [&process] { return procfs$pid_stack(process); }), dir.index());
+    addFile(createGeneratedFile("regs", [&process] { return procfs$pid_regs(process); }), dir.index());
     addFile(createGeneratedFile("fds", [&process] { return procfs$pid_fds(process); }), dir.index());
     if (process.executableInode().isValid())
         addFile(createGeneratedFile("exe", [&process] { return procfs$pid_exe(process); }, 00120777), dir.index());
