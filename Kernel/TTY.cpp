@@ -50,6 +50,7 @@ void TTY::interrupt()
         Process::for_each_in_pgrp(pgid(), [this] (auto& process) {
             dbgprintf("%s: Send SIGINT to %d\n", ttyName().characters(), process.pid());
             process.send_signal(SIGINT, nullptr);
+            return true;
         });
     }
 }

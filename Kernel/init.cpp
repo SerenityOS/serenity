@@ -308,8 +308,8 @@ void init()
 
     Process::initialize();
 
-    Process::createKernelProcess(undertaker_main, "undertaker");
-    Process::createKernelProcess(init_stage2, "init");
+    Process::create_kernel_process(undertaker_main, "undertaker");
+    Process::create_kernel_process(init_stage2, "init");
 
     scheduleNewProcess();
 

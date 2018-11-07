@@ -25,7 +25,7 @@ struct SignalActionData {
 class Process : public InlineLinkedListNode<Process> {
     friend class InlineLinkedListNode<Process>;
 public:
-    static Process* createKernelProcess(void (*entry)(), String&& name);
+    static Process* create_kernel_process(void (*entry)(), String&& name);
     static Process* create_user_process(const String& path, uid_t, gid_t, pid_t ppid, int& error, Vector<String>&& arguments = Vector<String>(), Vector<String>&& environment = Vector<String>(), TTY* = nullptr);
     ~Process();
 
@@ -58,8 +58,8 @@ public:
 
     bool in_kernel() const { return (m_tss.cs & 0x03) == 0; }
 
-    static Process* fromPID(pid_t);
-    static Process* kernelProcess();
+    static Process* from_pid(pid_t);
+    static Process* colonel_process();
 
     const String& name() const { return m_name; }
     pid_t pid() const { return m_pid; }
@@ -88,9 +88,12 @@ public:
     void setWakeupTime(DWORD t) { m_wakeupTime = t; }
     DWORD wakeupTime() const { return m_wakeupTime; }
 
-    static void for_each_in_pgrp(pid_t pgid, Function<void(Process&)>);
+    static void for_each(Function<bool(Process&)>);
+    static void for_each_in_pgrp(pid_t, Function<bool(Process&)>);
+    static void for_each_in_state(State, Function<bool(Process&)>);
+    static void for_each_not_in_state(State, Function<bool(Process&)>);
 
-    static void prepForIRETToNewProcess();
+    static void prepare_for_iret_to_new_process();
 
     bool tick() { ++m_ticks; return --m_ticksLeft; }
     void setTicksLeft(DWORD t) { m_ticksLeft = t; }

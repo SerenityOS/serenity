@@ -414,7 +414,7 @@ void idt_init()
     flushIDT();
 }
 
-void loadTaskRegister(WORD selector)
+void load_task_register(WORD selector)
 {
     asm("ltr %0"::"r"(selector));
 }
