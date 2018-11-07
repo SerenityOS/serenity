@@ -25,6 +25,7 @@ LIBC_OBJS = \
        termcap.o \
        setjmp.o \
        stat.o \
+       mntent.o \
        entry.o
 
 OBJS = $(AK_OBJS) $(LIBC_OBJS)

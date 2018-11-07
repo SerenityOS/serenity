@@ -37,6 +37,8 @@
     __ERROR(ENAMETOOLONG,   "Name too long") \
     __ERROR(ELOOP,          "Too many symlinks") \
     __ERROR(EOVERFLOW,      "Overflow") \
+    __ERROR(EOPNOTSUPP,     "Operation not supported") \
+    __ERROR(ENOSYS,         "No such syscall") \
     __ERROR(ENOTIMPL,       "Not implemented") \
 
 enum __errno_values {

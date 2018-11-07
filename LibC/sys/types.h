@@ -22,8 +22,8 @@ typedef uint32_t blksize_t;
 typedef uint32_t blkcnt_t;
 typedef uint32_t time_t;
 typedef uint32_t suseconds_t;
-
 typedef uint32_t clock_t;
+typedef uint32_t socklen_t;
 
 struct timeval {
     time_t tv_sec;
