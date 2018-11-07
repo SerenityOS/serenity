@@ -5,7 +5,9 @@
 #include <AK/ByteBuffer.h>
 #include <AK/Retainable.h>
 
+#ifdef SERENITY
 class TTY;
+#endif
 
 class FileDescriptor : public Retainable<FileDescriptor> {
 public:
@@ -31,9 +33,11 @@ public:
 
     bool isDirectory() const;
 
+#ifdef SERENITY
     bool isTTY() const;
     const TTY* tty() const;
     TTY* tty();
+#endif
 
     InodeMetadata metadata() const { return m_vnode->metadata(); }
 

@@ -48,7 +48,7 @@ static DWORD handle(RegisterDump& regs, DWORD function, DWORD arg1, DWORD arg2, 
     ASSERT_INTERRUPTS_ENABLED();
     switch (function) {
     case Syscall::SC_yield:
-        yield();
+        sched_yield();
         break;
     case Syscall::SC_putch:
         Console::the().putChar(arg1 & 0xff);

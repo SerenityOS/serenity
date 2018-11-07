@@ -26,16 +26,16 @@ int main(int c, char** v)
     VirtualFileSystem vfs;
 
     auto zero = make<ZeroDevice>();
-    vfs.registerCharacterDevice(1, 5, *zero);
+    vfs.registerCharacterDevice(*zero);
 
     auto null = make<NullDevice>();
-    vfs.registerCharacterDevice(1, 3, *null);
+    vfs.registerCharacterDevice(*null);
 
     auto full = make<FullDevice>();
-    vfs.registerCharacterDevice(1, 7, *full);
+    vfs.registerCharacterDevice(*full);
 
     auto random = make<RandomDevice>();
-    vfs.registerCharacterDevice(1, 8, *random);
+    vfs.registerCharacterDevice(*random);
 
     if (!vfs.mountRoot(makeFileSystem(filename))) {
         printf("Failed to mount root :(\n");

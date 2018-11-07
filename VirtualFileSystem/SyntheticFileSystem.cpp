@@ -37,8 +37,8 @@ bool SyntheticFileSystem::initialize()
     m_inodes.set(RootInodeIndex, move(rootDir));
 
 #ifndef SERENITY
-    addFile(createTextFile("file", "I'm a synthetic file!\n"));
-    addFile(createTextFile("message", "Hey! This isn't my bottle!\n"));
+    addFile(createTextFile("file", String("I'm a synthetic file!\n").toByteBuffer(), 0100644));
+    addFile(createTextFile("message", String("Hey! This isn't my bottle!\n").toByteBuffer(), 0100644));
     addFile(createGeneratedFile("lunk", [] { return String("/home/andreas/file1").toByteBuffer(); }, 00120777));
 #endif
     return true;

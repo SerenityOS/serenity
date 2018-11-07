@@ -5,7 +5,6 @@
 #include <AK/RetainPtr.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
-#include <AK/Lock.h>
 #include <AK/Function.h>
 #include "InodeIdentifier.h"
 #include "InodeMetadata.h"
@@ -31,7 +30,6 @@ class VirtualFileSystem {
     AK_MAKE_ETERNAL
 public:
     static void initializeGlobals();
-    static SpinLock& lock();
 
     class Mount {
     public:

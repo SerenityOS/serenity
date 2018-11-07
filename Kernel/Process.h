@@ -284,7 +284,7 @@ static inline const char* toString(Process::State state)
     return nullptr;
 }
 
-extern void yield();
+extern int sched_yield();
 extern bool scheduleNewProcess();
 extern void switchNow();
 extern void block(Process::State);

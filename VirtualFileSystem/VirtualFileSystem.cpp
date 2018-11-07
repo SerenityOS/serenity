@@ -12,24 +12,19 @@
 
 static VirtualFileSystem* s_the;
 
+#ifndef SERENITY
+typedef int InterruptDisabler;
+#endif
+
 VirtualFileSystem& VirtualFileSystem::the()
 {
     ASSERT(s_the);
     return *s_the;
 }
 
-static SpinLock* s_vfsLock;
-
-SpinLock& VirtualFileSystem::lock()
-{
-    ASSERT(s_vfsLock);
-    return *s_vfsLock;
-}
-
 void VirtualFileSystem::initializeGlobals()
 {
     s_the = nullptr;
-    s_vfsLock = new SpinLock;
     FileSystem::initializeGlobals();
 }
 

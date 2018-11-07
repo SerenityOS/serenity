@@ -3,8 +3,11 @@
 #include "CharacterDevice.h"
 #include "sys-errno.h"
 #include "UnixTypes.h"
-#include "TTY.h"
 #include <AK/BufferStream.h>
+
+#ifdef SERENITY
+#include "TTY.h"
+#endif
 
 RetainPtr<FileDescriptor> FileDescriptor::create(RetainPtr<VirtualFileSystem::Node>&& vnode)
 {
@@ -178,7 +181,8 @@ ssize_t FileDescriptor::get_dir_entries(byte* buffer, Unix::size_t size)
     memcpy(buffer, tempBuffer.pointer(), stream.offset());
     return stream.offset();
 }
-
+\
+#ifdef SERENITY
 bool FileDescriptor::isTTY() const
 {
     if (auto* device = m_vnode->characterDevice())
@@ -199,6 +203,7 @@ TTY* FileDescriptor::tty()
         return static_cast<TTY*>(device);
     return nullptr;
 }
+#endif
 
 int FileDescriptor::close()
 {
@@ -207,7 +212,9 @@ int FileDescriptor::close()
 
 String FileDescriptor::absolute_path() const
 {
+#ifdef SERENITY
     if (isTTY())
         return tty()->ttyName();
+#endif
     return VirtualFileSystem::the().absolutePath(m_vnode->inode);
 }
