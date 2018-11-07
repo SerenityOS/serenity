@@ -23,6 +23,8 @@
 #define COOL_GLOBALS
 #define MAX_PROCESS_GIDS 32
 
+static const dword scheduler_time_slice = 5; // *10 = 50ms
+
 #ifdef COOL_GLOBALS
 struct CoolGlobals {
     dword current_pid;
@@ -763,7 +765,7 @@ void Process::send_signal(int signal, Process* sender)
     ASSERT(signal < 32);
 
     // FIXME: Handle send_signal to self.
-    ASSERT(this != current);
+    ASSERT(this != sender);
 
     auto& action = m_signal_action_data[signal];
     // FIXME: Implement SA_SIGINFO signal handlers.
@@ -813,7 +815,7 @@ void Process::send_signal(int signal, Process* sender)
 
     dbgprintf("signal: %s(%u) sent %d to %s(%u)\n", sender->name().characters(), sender->pid(), signal, name().characters(), pid());
 
-    if (sender == this) {
+    if (current == this) {
         sched_yield();
         ASSERT_NOT_REACHED();
     }
@@ -972,7 +974,7 @@ bool scheduleNewProcess()
 
 static bool contextSwitch(Process* t)
 {
-    t->setTicksLeft(5);
+    t->setTicksLeft(scheduler_time_slice);
     t->didSchedule();
 
     if (current == t)

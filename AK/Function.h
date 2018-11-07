@@ -97,7 +97,7 @@ private:
         CallableWrapper(const CallableWrapper&) = delete;
         CallableWrapper& operator=(const CallableWrapper&) = delete;
 
-        Out call(In... in) const final { return m_callable(forward<In>(in)...); }
+        Out call(In... in) const final override { return m_callable(forward<In>(in)...); }
 
     private:
         CallableType m_callable;
