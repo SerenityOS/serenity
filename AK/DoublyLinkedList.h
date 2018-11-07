@@ -8,6 +8,7 @@ template<typename T>
 class DoublyLinkedList {
 private:
     struct Node {
+        explicit Node(const T& v) : value(v) { }
         explicit Node(T&& v) : value(move(v)) { }
         T value;
         Node* next { nullptr };
@@ -38,17 +39,13 @@ public:
 
     void append(T&& value)
     {
-        auto* node = new Node(move(value));
-        if (!m_head) {
-            ASSERT(!m_tail);
-            m_head = node;
-            m_tail = node;
-            return;
-        }
-        ASSERT(m_tail);
-        m_tail->next = node;
-        node->prev = m_tail;
-        m_tail = node;
+        append_node(new Node(move(value)));
+
+    }
+
+    void append(const T& value)
+    {
+        append_node(new Node(value));
     }
 
     bool containsSlow(const T& value) const
@@ -135,6 +132,20 @@ public:
 
 private:
     friend class Iterator;
+
+    void append_node(Node* node)
+    {
+        if (!m_head) {
+            ASSERT(!m_tail);
+            m_head = node;
+            m_tail = node;
+            return;
+        }
+        ASSERT(m_tail);
+        m_tail->next = node;
+        node->prev = m_tail;
+        m_tail = node;
+    }
 
     Node* head() { return m_head; }
     const Node* head() const { return m_head; }

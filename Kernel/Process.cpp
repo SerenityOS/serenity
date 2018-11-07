@@ -21,6 +21,7 @@
 //#define FORK_DEBUG
 //#define SCHEDULER_DEBUG
 #define COOL_GLOBALS
+#define MAX_PROCESS_GIDS 32
 
 #ifdef COOL_GLOBALS
 struct CoolGlobals {
@@ -304,7 +305,7 @@ int Process::exec(const String& path, Vector<String>&& arguments, Vector<String>
         return error;
     }
 
-    if (!handle->metadata().mayExecute(m_euid, m_egid))
+    if (!handle->metadata().mayExecute(m_euid, m_gids))
         return -EACCES;
 
     auto elfData = handle->readEntireFile();
@@ -573,6 +574,8 @@ Process::Process(String&& name, uid_t uid, gid_t gid, pid_t ppid, RingLevel ring
     , m_tty(tty)
     , m_ppid(ppid)
 {
+    m_gids.set(m_gid);
+
     if (fork_parent) {
         m_sid = fork_parent->m_sid;
         m_pgid = fork_parent->m_pgid;
@@ -1564,5 +1567,35 @@ int Process::sys$sigaction(int signum, const Unix::sigaction* act, Unix::sigacti
     action.restorer = LinearAddress((dword)act->sa_restorer);
     action.flags = act->sa_flags;
     action.handler_or_sigaction = LinearAddress((dword)act->sa_sigaction);
+    return 0;
+}
+
+int Process::sys$getgroups(int count, gid_t* gids)
+{
+    if (count < 0)
+        return -EINVAL;
+    ASSERT(m_gids.size() < MAX_PROCESS_GIDS);
+    if (!count)
+        return m_gids.size();
+    if (count != m_gids.size())
+        return -EINVAL;
+    VALIDATE_USER_WRITE(gids, sizeof(gid_t) * count);
+    size_t i = 0;
+    for (auto gid : m_gids)
+        gids[i++] = gid;
+    return 0;
+}
+
+int Process::sys$setgroups(size_t count, const gid_t* gids)
+{
+    if (!is_root())
+        return -EPERM;
+    if (count >= MAX_PROCESS_GIDS)
+        return -EINVAL;
+    VALIDATE_USER_READ(gids, sizeof(gid_t) * count);
+    m_gids.clear();
+    m_gids.set(m_gid);
+    for (size_t i = 0; i < count; ++i)
+        m_gids.set(gids[i]);
     return 0;
 }

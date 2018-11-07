@@ -152,6 +152,10 @@ static DWORD handle(RegisterDump& regs, DWORD function, DWORD arg1, DWORD arg2, 
         return current->sys$sigaction((int)arg1, (const Unix::sigaction*)arg2, (Unix::sigaction*)arg3);
     case Syscall::SC_umask:
         return current->sys$umask((mode_t)arg1);
+    case Syscall::SC_getgroups:
+        return current->sys$getgroups((int)arg1, (gid_t*)arg2);
+    case Syscall::SC_setgroups:
+        return current->sys$setgroups((size_t)arg1, (const gid_t*)arg2);
     default:
         kprintf("<%u> int0x80: Unknown function %x requested {%x, %x, %x}\n", current->pid(), function, arg1, arg2, arg3);
         break;

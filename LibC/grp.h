@@ -18,4 +18,6 @@ void endgrent();
 struct group* getgrnam(const char* name);
 struct group* getgrgid(gid_t);
 
+int initgroups(const char* user, gid_t);
+
 __END_DECLS

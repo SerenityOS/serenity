@@ -2,6 +2,7 @@
 
 #include "InodeIdentifier.h"
 #include "UnixTypes.h"
+#include <AK/HashTable.h>
 
 inline bool isDirectory(Unix::mode_t mode) { return (mode & 0170000) == 0040000; }
 inline bool isCharacterDevice(Unix::mode_t mode) { return (mode & 0170000) == 0020000; }
@@ -17,11 +18,11 @@ inline bool isSetGID(Unix::mode_t mode) { return mode & 02000; }
 struct InodeMetadata {
     bool isValid() const { return inode.isValid(); }
 
-    bool mayExecute(uid_t u, gid_t g) const
+    bool mayExecute(uid_t u, const HashTable<gid_t>& g) const
     {
         if (uid == u)
             return mode & 0100;
-        if (gid == g)
+        if (g.contains(gid))
             return mode & 0010;
         return mode & 0001;
     }

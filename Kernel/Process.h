@@ -139,6 +139,8 @@ public:
     int sys$dup(int oldfd);
     int sys$dup2(int oldfd, int newfd);
     int sys$sigaction(int signum, const Unix::sigaction* act, Unix::sigaction* old_act);
+    int sys$getgroups(int size, gid_t*);
+    int sys$setgroups(size_t, const gid_t*);
 
     static void initialize();
 
@@ -176,6 +178,8 @@ public:
 
     Process* fork(RegisterDump&);
     int exec(const String& path, Vector<String>&& arguments, Vector<String>&& environment);
+
+    bool is_root() const { return m_euid == 0; }
 
 private:
     friend class MemoryManager;
@@ -242,6 +246,7 @@ private:
 
     Vector<String> m_arguments;
     Vector<String> m_initialEnvironment;
+    HashTable<gid_t> m_gids;
 };
 
 class ProcessInspectionScope {
