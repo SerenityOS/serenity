@@ -7,6 +7,7 @@ AK_OBJS = \
     ../AK/TemporaryFile.o \
     ../AK/SimpleMalloc.o \
     ../AK/StringBuilder.o \
+    ../AK/FileSystemPath.o \
     ../AK/kmalloc.o
 
 VFS_OBJS = \

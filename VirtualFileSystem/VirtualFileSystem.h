@@ -79,8 +79,8 @@ public:
     ~VirtualFileSystem();
 
     bool isDirectory(const String& path, InodeIdentifier base = InodeIdentifier());
-    void listDirectory(const String& path);
-    void listDirectoryRecursively(const String& path);
+    void listDirectory(const String& path, InodeIdentifier base);
+    void listDirectoryRecursively(const String& path, InodeIdentifier base);
 
     unsigned maxNodeCount() const { return m_maxNodeCount; }
     unsigned allocatedNodeCount() const { return m_maxNodeCount - m_nodeFreeList.size(); }

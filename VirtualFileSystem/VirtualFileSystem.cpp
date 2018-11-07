@@ -258,10 +258,10 @@ void VirtualFileSystem::enumerateDirectoryInode(InodeIdentifier directoryInode, 
 }
 
 #ifndef SERENITY
-void VirtualFileSystem::listDirectory(const String& path)
+void VirtualFileSystem::listDirectory(const String& path, InodeIdentifier base)
 {
     int error;
-    auto directoryInode = resolvePath(path, error);
+    auto directoryInode = resolvePath(path, error, base);
     if (!directoryInode.isValid())
         return;
 
@@ -359,10 +359,10 @@ void VirtualFileSystem::listDirectory(const String& path)
     });
 }
 
-void VirtualFileSystem::listDirectoryRecursively(const String& path)
+void VirtualFileSystem::listDirectoryRecursively(const String& path, InodeIdentifier base)
 {
     int error;
-    auto directory = resolvePath(path, error);
+    auto directory = resolvePath(path, error, base);
     if (!directory.isValid())
         return;
 
@@ -374,7 +374,7 @@ void VirtualFileSystem::listDirectoryRecursively(const String& path)
             if (entry.name != "." && entry.name != "..") {
                 char buf[4096];
                 ksprintf(buf, "%s/%s", path.characters(), entry.name.characters());
-                listDirectoryRecursively(buf);
+                listDirectoryRecursively(buf, base);
             }
         } else {
             kprintf("%s/%s\n", path.characters(), entry.name.characters());
