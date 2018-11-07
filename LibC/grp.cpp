@@ -118,4 +118,26 @@ next_entry:
     return __grdb_entry;
 }
 
+int initgroups(const char* user, gid_t extra_gid)
+{
+    size_t count = 0;
+    gid_t gids[32];
+    bool extra_gid_added = false;
+    setgrent();
+    while (auto* gr = getgrent()) {
+        for (auto* mem = gr->gr_mem; *mem; ++mem) {
+            if (!strcmp(*mem, user)) {
+                gids[count++] = gr->gr_gid;
+                if (gr->gr_gid == extra_gid)
+                    extra_gid_added = true;
+                break;
+            }
+        }
+    }
+    endgrent();
+    if (!extra_gid_added)
+        gids[count++] = extra_gid;
+    return setgroups(count, gids);
+}
+
 }

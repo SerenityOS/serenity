@@ -21,6 +21,8 @@ gid_t getegid();
 uid_t getuid();
 gid_t getgid();
 pid_t getpid();
+int getgroups(int size, gid_t list[]);
+int setgroups(size_t, const gid_t*);
 pid_t tcgetpgrp(int fd);
 int tcsetpgrp(int fd, pid_t pgid);
 int open(const char* path, int options, ...);

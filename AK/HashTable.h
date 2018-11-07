@@ -48,6 +48,7 @@ public:
     unsigned size() const { return m_size; }
     unsigned capacity() const { return m_capacity; }
 
+    void set(const T&);
     void set(T&&);
     bool contains(const T&) const;
     void clear();
@@ -224,6 +225,7 @@ private:
     Bucket& lookup(const T&, unsigned* bucketIndex = nullptr);
     const Bucket& lookup(const T&, unsigned* bucketIndex = nullptr) const;
     void rehash(unsigned capacity);
+    void insert(const T&);
     void insert(T&&);
 
     Bucket* m_buckets { nullptr };
@@ -250,6 +252,26 @@ void HashTable<T, TraitsForT>::set(T&& value)
     }
     m_size++;
 }
+
+template<typename T, typename TraitsForT>
+void HashTable<T, TraitsForT>::set(const T& value)
+{
+    if (!m_capacity)
+        rehash(1);
+    auto& bucket = lookup(value);
+    for (auto& e : bucket.chain) {
+        if (e == value)
+            return;
+    }
+    if (size() >= capacity()) {
+        rehash(size() + 1);
+        insert(value);
+    } else {
+        bucket.chain.append(value);
+    }
+    m_size++;
+}
+
 
 template<typename T, typename TraitsForT>
 void HashTable<T, TraitsForT>::rehash(unsigned newCapacity)
@@ -289,6 +311,13 @@ void HashTable<T, TraitsForT>::insert(T&& value)
 {
     auto& bucket = lookup(value);
     bucket.chain.append(move(value));
+}
+
+template<typename T, typename TraitsForT>
+void HashTable<T, TraitsForT>::insert(const T& value)
+{
+    auto& bucket = lookup(value);
+    bucket.chain.append(value);
 }
 
 template<typename T, typename TraitsForT>

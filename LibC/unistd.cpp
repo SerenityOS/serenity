@@ -3,6 +3,9 @@
 #include <errno.h>
 #include <stdarg.h>
 #include <assert.h>
+#include <grp.h>
+#include <pwd.h>
+#include <stdio.h>
 #include <Kernel/Syscall.h>
 
 extern "C" {
@@ -215,6 +218,18 @@ int dup(int old_fd)
 int dup2(int old_fd, int new_fd)
 {
     int rc = Syscall::invoke(Syscall::SC_dup2, (dword)old_fd, (dword)new_fd);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
+int setgroups(size_t size, const gid_t* list)
+{
+    int rc = Syscall::invoke(Syscall::SC_getgroups, (dword)size, (dword)list);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
+int getgroups(int size, gid_t list[])
+{
+    int rc = Syscall::invoke(Syscall::SC_getgroups, (dword)size, (dword)list);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
