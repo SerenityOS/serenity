@@ -56,12 +56,12 @@ bool Scheduler::pick_next()
             return true;
         }
 
-        if (process.state() == Process::ExecPhase1) {
-            process.set_state(Process::ExecPhase2);
+        if (process.state() == Process::Skip1SchedulerPass) {
+            process.set_state(Process::Skip0SchedulerPasses);
             return true;
         }
 
-        if (process.state() == Process::ExecPhase2) {
+        if (process.state() == Process::Skip0SchedulerPasses) {
             process.set_state(Process::Runnable);
             return true;
         }

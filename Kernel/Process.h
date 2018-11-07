@@ -43,8 +43,8 @@ public:
         Invalid = 0,
         Runnable,
         Running,
-        ExecPhase1,
-        ExecPhase2,
+        Skip1SchedulerPass,
+        Skip0SchedulerPasses,
         Dead,
         Forgiven,
         BeingInspected,
@@ -306,8 +306,8 @@ static inline const char* toString(Process::State state)
     case Process::Runnable: return "Runnable";
     case Process::Running: return "Running";
     case Process::Dead: return "Dead";
-    case Process::ExecPhase1: return "ExecPhase1";
-    case Process::ExecPhase2: return "ExecPhase2";
+    case Process::Skip1SchedulerPass: return "Skip1";
+    case Process::Skip0SchedulerPasses: return "Skip0";
     case Process::Forgiven: return "Forgiven";
     case Process::BlockedSleep: return "Sleep";
     case Process::BlockedWait: return "Wait";

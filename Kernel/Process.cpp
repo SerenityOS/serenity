@@ -321,7 +321,7 @@ int Process::exec(const String& path, Vector<String>&& arguments, Vector<String>
     kprintf("Process %u (%s) exec'd %s @ %p\n", pid(), name().characters(), path.characters(), m_tss.eip);
 #endif
 
-    set_state(ExecPhase1);
+    set_state(Skip1SchedulerPass);
 
     if (current == this) {
         bool success = Scheduler::yield();
@@ -822,6 +822,7 @@ void Process::sys$sigreturn()
     dbgprintf("sys$sigreturn in %s(%u)\n", name().characters(), pid());
     dbgprintf(" -> resuming execution at %w:%x\n", m_tss.cs, m_tss.eip);
 #endif
+    set_state(Skip1SchedulerPass);
     Scheduler::yield();
     kprintf("sys$sigreturn failed in %s(%u)\n", name().characters(), pid());
     ASSERT_NOT_REACHED();
