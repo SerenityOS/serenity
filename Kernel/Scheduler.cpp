@@ -2,6 +2,7 @@
 #include "Process.h"
 #include "system.h"
 
+//#define LOG_EVERY_CONTEXT_SWITCH
 //#define SCHEDULER_DEBUG
 
 static const dword time_slice = 5; // *10 = 50ms
@@ -48,22 +49,20 @@ bool Scheduler::pick_next()
                 process.unblock();
             return true;
         }
-        return true;
-    });
 
-    // Forgive dead orphans.
-    // FIXME: Does this really make sense?
-    Process::for_each_in_state(Process::Dead, [] (auto& process) {
-        if (!Process::from_pid(process.ppid()))
-            process.set_state(Process::Forgiven);
-        return true;
-    });
+        // Forgive dead orphans.
+        if (process.state() == Process::Dead) {
+            if (!Process::from_pid(process.ppid()))
+                process.set_state(Process::Forgiven);
+        }
 
-    // Clean up forgiven processes.
-    // FIXME: Do we really need this to be a separate pass over the process list?
-    Process::for_each_in_state(Process::Forgiven, [] (auto& process) {
-        g_processes->remove(&process);
-        g_dead_processes->append(&process);
+        // Release the forgiven.
+        Process::for_each_in_state(Process::Forgiven, [] (auto& process) {
+            g_processes->remove(&process);
+            g_dead_processes->append(&process);
+            return true;
+        });
+
         return true;
     });
 
@@ -178,6 +177,10 @@ bool Scheduler::context_switch(Process& process)
         // mark it as runnable for the next round.
         if (current->state() == Process::Running)
             current->set_state(Process::Runnable);
+
+#ifdef LOG_EVERY_CONTEXT_SWITCH
+        dbgprintf("Scheduler: %s(%u) -> %s(%u)\n", current->name().characters(), current->pid(), process.name().characters(), process.pid());
+#endif
     }
 
     current = &process;
