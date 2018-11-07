@@ -15,6 +15,14 @@ class PageDirectory;
 class Region;
 class Zone;
 
+#define COOL_GLOBALS
+#ifdef COOL_GLOBALS
+struct CoolGlobals {
+    pid_t current_pid;
+};
+extern CoolGlobals* g_cool_globals;
+#endif
+
 struct SignalActionData {
     LinearAddress handler_or_sigaction;
     dword mask { 0 };
@@ -59,7 +67,6 @@ public:
     bool in_kernel() const { return (m_tss.cs & 0x03) == 0; }
 
     static Process* from_pid(pid_t);
-    static Process* colonel_process();
 
     const String& name() const { return m_name; }
     pid_t pid() const { return m_pid; }
@@ -93,10 +100,8 @@ public:
     static void for_each_in_state(State, Function<bool(Process&)>);
     static void for_each_not_in_state(State, Function<bool(Process&)>);
 
-    static void prepare_for_iret_to_new_process();
-
     bool tick() { ++m_ticks; return --m_ticksLeft; }
-    void setTicksLeft(DWORD t) { m_ticksLeft = t; }
+    void set_ticks_left(dword t) { m_ticksLeft = t; }
 
     void setSelector(WORD s) { m_farPtr.selector = s; }
     void set_state(State s) { m_state = s; }
@@ -124,8 +129,8 @@ public:
     int sys$lseek(int fd, off_t, int whence);
     int sys$kill(pid_t pid, int sig);
     int sys$geterror() { return m_error; }
-    void sys$exit(int status);
-    void sys$sigreturn();
+    void sys$exit(int status) NORETURN;
+    void sys$sigreturn() NORETURN;
     pid_t sys$spawn(const char* path, const char** args, const char** envp);
     pid_t sys$waitpid(pid_t, int* wstatus, int options);
     void* sys$mmap(void*, size_t size);
@@ -155,7 +160,7 @@ public:
 
     static void initialize();
 
-    void crash();
+    void crash() NORETURN;
 
     const TTY* tty() const { return m_tty; }
 
@@ -163,7 +168,7 @@ public:
     const Vector<RetainPtr<Region>>& regions() const { return m_regions; }
     void dumpRegions();
 
-    void didSchedule() { ++m_timesScheduled; }
+    void did_schedule() { ++m_timesScheduled; }
     dword timesScheduled() const { return m_timesScheduled; }
 
     pid_t waitee() const { return m_waitee; }
@@ -195,7 +200,7 @@ public:
 
 private:
     friend class MemoryManager;
-    friend bool scheduleNewProcess();
+    friend class Scheduler;
 
     Process(String&& name, uid_t, gid_t, pid_t ppid, RingLevel, RetainPtr<VirtualFileSystem::Node>&& cwd = nullptr, RetainPtr<VirtualFileSystem::Node>&& executable = nullptr, TTY* = nullptr, Process* fork_parent = nullptr);
 
@@ -309,10 +314,8 @@ static inline const char* toString(Process::State state)
     return nullptr;
 }
 
-extern int sched_yield();
-extern bool scheduleNewProcess();
-extern void switchNow();
 extern void block(Process::State);
 extern void sleep(DWORD ticks);
 
-extern Process* current;
+extern InlineLinkedList<Process>* g_processes;
+extern InlineLinkedList<Process>* g_dead_processes;

@@ -16,22 +16,12 @@
 #include <AK/StdLib.h>
 #include <LibC/signal_numbers.h>
 #include "Syscall.h"
+#include "Scheduler.h"
 
 //#define DEBUG_IO
 //#define TASK_DEBUG
 //#define FORK_DEBUG
-//#define SCHEDULER_DEBUG
-#define COOL_GLOBALS
 #define MAX_PROCESS_GIDS 32
-
-static const dword scheduler_time_slice = 5; // *10 = 50ms
-
-#ifdef COOL_GLOBALS
-struct CoolGlobals {
-    dword current_pid;
-};
-CoolGlobals* g_cool_globals;
-#endif
 
 // FIXME: Only do a single validation for accesses that don't span multiple pages.
 // FIXME: Some places pass strlen(arg1) as arg2. This doesn't seem entirely perfect..
@@ -51,12 +41,9 @@ CoolGlobals* g_cool_globals;
 
 static const DWORD defaultStackSize = 16384;
 
-Process* current;
-Process* s_colonel_process;
-
 static pid_t next_pid;
-static InlineLinkedList<Process>* s_processes;
-static InlineLinkedList<Process>* s_dead_processes;
+InlineLinkedList<Process>* g_processes;
+InlineLinkedList<Process>* g_dead_processes;
 static String* s_hostname;
 
 static String& hostnameStorage(InterruptDisabler&)
@@ -71,63 +58,26 @@ static String getHostname()
     return hostnameStorage(disabler).isolatedCopy();
 }
 
-static bool contextSwitch(Process*);
-
-static void redo_colonel_process_tss()
-{
-    if (!s_colonel_process->selector())
-        s_colonel_process->setSelector(gdt_alloc_entry());
-
-    auto& tssDescriptor = getGDTEntry(s_colonel_process->selector());
-
-    tssDescriptor.setBase(&s_colonel_process->tss());
-    tssDescriptor.setLimit(0xffff);
-    tssDescriptor.dpl = 0;
-    tssDescriptor.segment_present = 1;
-    tssDescriptor.granularity = 1;
-    tssDescriptor.zero = 0;
-    tssDescriptor.operation_size = 1;
-    tssDescriptor.descriptor_type = 0;
-    tssDescriptor.type = 9;
-
-    flushGDT();
-}
-
-void Process::prepare_for_iret_to_new_process()
-{
-    redo_colonel_process_tss();
-    s_colonel_process->tss().backlink = current->selector();
-    load_task_register(s_colonel_process->selector());
-}
-
-static void hlt_loop()
-{
-    for (;;) {
-        asm volatile("hlt");
-    }
-}
+CoolGlobals* g_cool_globals;
 
 void Process::initialize()
 {
 #ifdef COOL_GLOBALS
-    g_cool_globals = (CoolGlobals*)0x1000;
+    g_cool_globals = reinterpret_cast<CoolGlobals*>(0x1000);
 #endif
-    current = nullptr;
     next_pid = 0;
-    s_processes = new InlineLinkedList<Process>;
-    s_dead_processes = new InlineLinkedList<Process>;
-    s_colonel_process = Process::create_kernel_process(hlt_loop, "colonel");
+    g_processes = new InlineLinkedList<Process>;
+    g_dead_processes = new InlineLinkedList<Process>;
     s_hostname = new String("birx");
-    redo_colonel_process_tss();
-    load_task_register(s_colonel_process->selector());
+    Scheduler::initialize();
 }
 
 Vector<Process*> Process::allProcesses()
 {
     InterruptDisabler disabler;
     Vector<Process*> processes;
-    processes.ensureCapacity(s_processes->sizeSlow());
-    for (auto* process = s_processes->head(); process; process = process->next())
+    processes.ensureCapacity(g_processes->sizeSlow());
+    for (auto* process = g_processes->head(); process; process = process->next())
         processes.append(process);
     return processes;
 }
@@ -261,7 +211,7 @@ Process* Process::fork(RegisterDump& regs)
 
     ProcFileSystem::the().addProcess(*child);
 
-    s_processes->prepend(child);
+    g_processes->prepend(child);
     system.nprocess++;
 #ifdef TASK_DEBUG
     kprintf("Process %u (%s) forked from %u @ %p\n", child->pid(), child->name().characters(), m_pid, child->m_tss.eip);
@@ -337,7 +287,7 @@ int Process::exec(const String& path, Vector<String>&& arguments, Vector<String>
 
     InterruptDisabler disabler;
     if (current == this)
-        load_task_register(s_colonel_process->selector());
+        Scheduler::prepare_to_modify_own_tss();
 
     m_name = parts.takeLast();
 
@@ -368,11 +318,11 @@ int Process::exec(const String& path, Vector<String>&& arguments, Vector<String>
     m_initialEnvironment = move(environment);
 
 #ifdef TASK_DEBUG
-    kprintf("Process %u (%s) exec'd %s @ %p\n", pid(), name().characters(), filename, m_tss.eip);
+    kprintf("Process %u (%s) exec'd %s @ %p\n", pid(), name().characters(), path.characters(), m_tss.eip);
 #endif
 
     if (current == this)
-        sched_yield();
+        Scheduler::yield();
 
     return 0;
 }
@@ -479,7 +429,7 @@ Process* Process::create_user_process(const String& path, uid_t uid, gid_t gid, 
 
     ProcFileSystem::the().addProcess(*process);
 
-    s_processes->prepend(process);
+    g_processes->prepend(process);
     system.nprocess++;
 #ifdef TASK_DEBUG
     kprintf("Process %u (%s) spawned @ %p\n", process->pid(), process->name().characters(), process->m_tss.eip);
@@ -533,7 +483,7 @@ Process* Process::create_kernel_process(void (*e)(), String&& name)
 
     if (process->pid() != 0) {
         InterruptDisabler disabler;
-        s_processes->prepend(process);
+        g_processes->prepend(process);
         system.nprocess++;
         ProcFileSystem::the().addProcess(*process);
 #ifdef TASK_DEBUG
@@ -698,11 +648,8 @@ void Process::sys$exit(int status)
     m_termination_status = status;
     m_termination_signal = 0;
 
-    if (!scheduleNewProcess()) {
-        kprintf("Process::sys$exit: Failed to schedule a new process :(\n");
-        HANG;
-    }
-    switchNow();
+    Scheduler::pick_next_and_switch_now();
+    ASSERT_NOT_REACHED();
 }
 
 void Process::terminate_due_to_signal(byte signal)
@@ -865,13 +812,13 @@ void Process::dispatch_signal(byte signal)
 void Process::sys$sigreturn()
 {
     InterruptDisabler disabler;
+    Scheduler::prepare_to_modify_own_tss();
     m_tss = m_tss_to_resume_kernel;
 #ifdef SIGNAL_DEBUG
     dbgprintf("sys$sigreturn in %s(%u)\n", name().characters(), pid());
     dbgprintf(" -> resuming execution at %w:%x\n", m_tss.cs, m_tss.eip);
 #endif
-    load_task_register(s_colonel_process->selector());
-    sched_yield();
+    Scheduler::yield();
     kprintf("sys$sigreturn failed in %s(%u)\n", name().characters(), pid());
     ASSERT_NOT_REACHED();
 }
@@ -887,64 +834,30 @@ void Process::crash()
 {
     ASSERT_INTERRUPTS_DISABLED();
     ASSERT(state() != Dead);
-
     m_termination_signal = SIGSEGV;
     set_state(Dead);
     dumpRegions();
-
-    if (!scheduleNewProcess()) {
-        kprintf("Process::crash: Failed to schedule a new process :(\n");
-        HANG;
-    }
-    switchNow();
+    Scheduler::pick_next_and_switch_now();
+    ASSERT_NOT_REACHED();
 }
 
 void Process::doHouseKeeping()
 {
-    if (s_dead_processes->isEmpty())
+    if (g_dead_processes->isEmpty())
         return;
     InterruptDisabler disabler;
     Process* next = nullptr;
-    for (auto* deadProcess = s_dead_processes->head(); deadProcess; deadProcess = next) {
+    for (auto* deadProcess = g_dead_processes->head(); deadProcess; deadProcess = next) {
         next = deadProcess->next();
         delete deadProcess;
     }
-    s_dead_processes->clear();
-}
-
-int sched_yield()
-{
-    if (!current) {
-        kprintf("PANIC: sched_yield() with !current");
-        HANG;
-    }
-
-    //kprintf("%s<%u> yield()\n", current->name().characters(), current->pid());
-
-    InterruptDisabler disabler;
-    if (!scheduleNewProcess())
-        return 1;
-
-    //kprintf("yield() jumping to new process: %x (%s)\n", current->farPtr().selector, current->name().characters());
-    switchNow();
-    return 0;
-}
-
-void switchNow()
-{
-    Descriptor& descriptor = getGDTEntry(current->selector());
-    descriptor.type = 9;
-    flushGDT();
-    asm("sti\n"
-        "ljmp *(%%eax)\n"
-        ::"a"(&current->farPtr())
-    );
+    g_dead_processes->clear();
 }
 
 void Process::for_each(Function<bool(Process&)> callback)
 {
     ASSERT_INTERRUPTS_DISABLED();
-    for (auto* process = s_processes->head(); process; process = process->next()) {
+    for (auto* process = g_processes->head(); process; process = process->next()) {
         if (!callback(*process))
             break;
     }
@@ -953,7 +866,7 @@ void Process::for_each(Function<bool(Process&)> callback)
 void Process::for_each_in_pgrp(pid_t pgid, Function<bool(Process&)> callback)
 {
     ASSERT_INTERRUPTS_DISABLED();
-    for (auto* process = s_processes->head(); process; process = process->next()) {
+    for (auto* process = g_processes->head(); process; process = process->next()) {
         if (process->pgid() == pgid) {
             if (!callback(*process))
                 break;
@@ -964,7 +877,7 @@ void Process::for_each_in_pgrp(pid_t pgid, Function<bool(Process&)> callback)
 void Process::for_each_in_state(State state, Function<bool(Process&)> callback)
 {
     ASSERT_INTERRUPTS_DISABLED();
-    for (auto* process = s_processes->head(); process;) {
+    for (auto* process = g_processes->head(); process;) {
         auto* next_process = process->next();
         if (process->state() == state)
             callback(*process);
@@ -975,7 +888,7 @@ void Process::for_each_in_state(State state, Function<bool(Process&)> callback)
 void Process::for_each_not_in_state(State state, Function<bool(Process&)> callback)
 {
     ASSERT_INTERRUPTS_DISABLED();
-    for (auto* process = s_processes->head(); process;) {
+    for (auto* process = g_processes->head(); process;) {
         auto* next_process = process->next();
         if (process->state() != state)
             callback(*process);
@@ -983,187 +896,10 @@ void Process::for_each_not_in_state(State state, Function<bool(Process&)> callba
     }
 }
 
-bool scheduleNewProcess()
-{
-    ASSERT_INTERRUPTS_DISABLED();
-
-    if (!current) {
-        // XXX: The first ever context_switch() goes to the idle process.
-        //      This to setup a reliable place we can return to.
-        return contextSwitch(Process::colonel_process());
-    }
-
-    // Check and unblock processes whose wait conditions have been met.
-    Process::for_each([] (auto& process) {
-        if (process.state() == Process::BlockedSleep) {
-            if (process.wakeupTime() <= system.uptime)
-                process.unblock();
-            return true;
-        }
-
-        if (process.state() == Process::BlockedWait) {
-            auto* waitee = Process::from_pid(process.waitee());
-            if (!waitee) {
-                kprintf("waitee %u of %s(%u) reaped before I could wait?\n", process.waitee(), process.name().characters(), process.pid());
-                ASSERT_NOT_REACHED();
-            }
-            if (waitee->state() == Process::Dead) {
-                process.m_waitee_status = (waitee->m_termination_status << 8) | waitee->m_termination_signal;
-                process.unblock();
-                waitee->set_state(Process::Forgiven);
-            }
-            return true;
-        }
-
-        if (process.state() == Process::BlockedRead) {
-            ASSERT(process.m_fdBlockedOnRead != -1);
-            // FIXME: Block until the amount of data wanted is available.
-            if (process.m_file_descriptors[process.m_fdBlockedOnRead]->hasDataAvailableForRead())
-                process.unblock();
-            return true;
-        }
-        return true;
-    });
-
-    // Forgive dead orphans.
-    // FIXME: Does this really make sense?
-    Process::for_each_in_state(Process::Dead, [] (auto& process) {
-        if (!Process::from_pid(process.ppid()))
-            process.set_state(Process::Forgiven);
-        return true;
-    });
-
-    // Clean up forgiven processes.
-    // FIXME: Do we really need this to be a separate pass over the process list?
-    Process::for_each_in_state(Process::Forgiven, [] (auto& process) {
-        s_processes->remove(&process);
-        s_dead_processes->append(&process);
-        return true;
-    });
-
-    // Dispatch any pending signals.
-    // FIXME: Do we really need this to be a separate pass over the process list?
-    Process::for_each_not_in_state(Process::Dead, [] (auto& process) {
-        if (!process.has_unmasked_pending_signals())
-            return true;
-        // We know how to interrupt blocked processes, but if they are just executing
-        // at some random point in the kernel, let them continue. They'll be in userspace
-        // sooner or later and we can deliver the signal then.
-        // FIXME: Maybe we could check when returning from a syscall if there's a pending
-        //        signal and dispatch it then and there? Would that be doable without the
-        //        syscall effectively being "interrupted" despite having completed?
-        if (process.in_kernel() && !process.is_blocked())
-            return true;
-        process.dispatch_one_pending_signal();
-        if (process.is_blocked()) {
-            process.m_was_interrupted_while_blocked = true;
-            process.unblock();
-        }
-        return true;
-    });
-
-#ifdef SCHEDULER_DEBUG
-    dbgprintf("Scheduler choices:\n");
-    for (auto* process = s_processes->head(); process; process = process->next()) {
-        //if (process->state() == Process::BlockedWait || process->state() == Process::BlockedSleep)
-//            continue;
-        dbgprintf("% 12s %s(%u) @ %w:%x\n", toString(process->state()), process->name().characters(), process->pid(), process->tss().cs, process->tss().eip);
-    }
-#endif
-
-    auto* prevHead = s_processes->head();
-    for (;;) {
-        // Move head to tail.
-        s_processes->append(s_processes->removeHead());
-        auto* process = s_processes->head();
-
-        if (process->state() == Process::Runnable || process->state() == Process::Running) {
-#ifdef SCHEDULER_DEBUG
-            dbgprintf("switch to %s(%u)\n", process->name().characters(), process->pid());
-#endif
-            return contextSwitch(process);
-        }
-
-        if (process == prevHead) {
-            // Back at process_head, nothing wants to run.
-            kprintf("Nothing wants to run!\n");
-            kprintf("PID    OWNER      STATE  NSCHED  NAME\n");
-            for (auto* process = s_processes->head(); process; process = process->next()) {
-                kprintf("%w   %w:%w  %b     %w    %s\n",
-                    process->pid(),
-                    process->uid(),
-                    process->gid(),
-                    process->state(),
-                    process->timesScheduled(),
-                    process->name().characters());
-            }
-            kprintf("Switch to kernel process @ %w:%x\n", s_colonel_process->tss().cs, s_colonel_process->tss().eip);
-            return contextSwitch(Process::colonel_process());
-        }
-    }
-}
-
-static bool contextSwitch(Process* t)
-{
-    t->setTicksLeft(scheduler_time_slice);
-    t->didSchedule();
-
-    if (current == t)
-        return false;
-
-#ifdef SCHEDULER_DEBUG
-    // Some sanity checking to force a crash earlier.
-    auto csRPL = t->tss().cs & 3;
-    auto ssRPL = t->tss().ss & 3;
-
-    if (csRPL != ssRPL) {
-        kprintf("Fuckup! Switching from %s(%u) to %s(%u) has RPL mismatch\n",
-                current->name().characters(), current->pid(),
-                t->name().characters(), t->pid()
-                );
-        kprintf("code: %w:%x\n", t->tss().cs, t->tss().eip);
-        kprintf(" stk: %w:%x\n", t->tss().ss, t->tss().esp);
-        ASSERT(csRPL == ssRPL);
-    }
-#endif
-
-    if (current) {
-        // If the last process hasn't blocked (still marked as running),
-        // mark it as runnable for the next round.
-        if (current->state() == Process::Running)
-            current->set_state(Process::Runnable);
-    }
-
-    current = t;
-    t->set_state(Process::Running);
-
-#ifdef COOL_GLOBALS
-    g_cool_globals->current_pid = t->pid();
-#endif
-
-    if (!t->selector()) {
-        t->setSelector(gdt_alloc_entry());
-        auto& descriptor = getGDTEntry(t->selector());
-        descriptor.setBase(&t->tss());
-        descriptor.setLimit(0xffff);
-        descriptor.dpl = 0;
-        descriptor.segment_present = 1;
-        descriptor.granularity = 1;
-        descriptor.zero = 0;
-        descriptor.operation_size = 1;
-        descriptor.descriptor_type = 0;
-    }
-
-    auto& descriptor = getGDTEntry(t->selector());
-    descriptor.type = 11; // Busy TSS
-    flushGDT();
-    return true;
-}
-
 Process* Process::from_pid(pid_t pid)
 {
     ASSERT_INTERRUPTS_DISABLED();
-    for (auto* process = s_processes->head(); process; process = process->next()) {
+    for (auto* process = g_processes->head(); process; process = process->next()) {
         if (process->pid() == pid)
             return process;
     }
@@ -1527,12 +1263,6 @@ void sleep(DWORD ticks)
     current->setWakeupTime(system.uptime + ticks);
     current->block(Process::BlockedSleep);
     sched_yield();
-}
-
-Process* Process::colonel_process()
-{
-    ASSERT(s_colonel_process);
-    return s_colonel_process;
 }
 
 bool Process::isValidAddressForKernel(LinearAddress laddr) const

@@ -1,0 +1,261 @@
+#include "Scheduler.h"
+#include "Process.h"
+#include "system.h"
+
+//#define SCHEDULER_DEBUG
+
+static const dword time_slice = 5; // *10 = 50ms
+
+Process* current;
+static Process* s_colonel_process;
+
+bool Scheduler::pick_next()
+{
+    ASSERT_INTERRUPTS_DISABLED();
+
+    if (!current) {
+        // XXX: The first ever context_switch() goes to the idle process.
+        //      This to setup a reliable place we can return to.
+        return context_switch(*s_colonel_process);
+    }
+
+    // Check and unblock processes whose wait conditions have been met.
+    Process::for_each([] (auto& process) {
+        if (process.state() == Process::BlockedSleep) {
+            if (process.wakeupTime() <= system.uptime)
+                process.unblock();
+            return true;
+        }
+
+        if (process.state() == Process::BlockedWait) {
+            auto* waitee = Process::from_pid(process.waitee());
+            if (!waitee) {
+                kprintf("waitee %u of %s(%u) reaped before I could wait?\n", process.waitee(), process.name().characters(), process.pid());
+                ASSERT_NOT_REACHED();
+            }
+            if (waitee->state() == Process::Dead) {
+                process.m_waitee_status = (waitee->m_termination_status << 8) | waitee->m_termination_signal;
+                process.unblock();
+                waitee->set_state(Process::Forgiven);
+            }
+            return true;
+        }
+
+        if (process.state() == Process::BlockedRead) {
+            ASSERT(process.m_fdBlockedOnRead != -1);
+            // FIXME: Block until the amount of data wanted is available.
+            if (process.m_file_descriptors[process.m_fdBlockedOnRead]->hasDataAvailableForRead())
+                process.unblock();
+            return true;
+        }
+        return true;
+    });
+
+    // Forgive dead orphans.
+    // FIXME: Does this really make sense?
+    Process::for_each_in_state(Process::Dead, [] (auto& process) {
+        if (!Process::from_pid(process.ppid()))
+            process.set_state(Process::Forgiven);
+        return true;
+    });
+
+    // Clean up forgiven processes.
+    // FIXME: Do we really need this to be a separate pass over the process list?
+    Process::for_each_in_state(Process::Forgiven, [] (auto& process) {
+        g_processes->remove(&process);
+        g_dead_processes->append(&process);
+        return true;
+    });
+
+    // Dispatch any pending signals.
+    // FIXME: Do we really need this to be a separate pass over the process list?
+    Process::for_each_not_in_state(Process::Dead, [] (auto& process) {
+        if (!process.has_unmasked_pending_signals())
+            return true;
+        // We know how to interrupt blocked processes, but if they are just executing
+        // at some random point in the kernel, let them continue. They'll be in userspace
+        // sooner or later and we can deliver the signal then.
+        // FIXME: Maybe we could check when returning from a syscall if there's a pending
+        //        signal and dispatch it then and there? Would that be doable without the
+        //        syscall effectively being "interrupted" despite having completed?
+        if (process.in_kernel() && !process.is_blocked())
+            return true;
+        process.dispatch_one_pending_signal();
+        if (process.is_blocked()) {
+            process.m_was_interrupted_while_blocked = true;
+            process.unblock();
+        }
+        return true;
+    });
+
+#ifdef SCHEDULER_DEBUG
+    dbgprintf("Scheduler choices:\n");
+    for (auto* process = g_processes->head(); process; process = process->next()) {
+        //if (process->state() == Process::BlockedWait || process->state() == Process::BlockedSleep)
+//            continue;
+        dbgprintf("% 12s %s(%u) @ %w:%x\n", toString(process->state()), process->name().characters(), process->pid(), process->tss().cs, process->tss().eip);
+    }
+#endif
+
+    auto* prevHead = g_processes->head();
+    for (;;) {
+        // Move head to tail.
+        g_processes->append(g_processes->removeHead());
+        auto* process = g_processes->head();
+
+        if (process->state() == Process::Runnable || process->state() == Process::Running) {
+#ifdef SCHEDULER_DEBUG
+            dbgprintf("switch to %s(%u)\n", process->name().characters(), process->pid());
+#endif
+            return context_switch(*process);
+        }
+
+        if (process == prevHead) {
+            // Back at process_head, nothing wants to run.
+            kprintf("Nothing wants to run!\n");
+            kprintf("PID    OWNER      STATE  NSCHED  NAME\n");
+            for (auto* process = g_processes->head(); process; process = process->next()) {
+                kprintf("%w   %w:%w  %b     %w    %s\n",
+                    process->pid(),
+                    process->uid(),
+                    process->gid(),
+                    process->state(),
+                    process->timesScheduled(),
+                    process->name().characters());
+            }
+            kprintf("Switch to kernel process @ %w:%x\n", s_colonel_process->tss().cs, s_colonel_process->tss().eip);
+            return context_switch(*s_colonel_process);
+        }
+    }
+}
+
+bool Scheduler::yield()
+{
+    if (!current) {
+        kprintf("PANIC: sched_yield() with !current");
+        HANG;
+    }
+
+    //dbgprintf("%s<%u> yield()\n", current->name().characters(), current->pid());
+
+    InterruptDisabler disabler;
+    if (!pick_next())
+        return 1;
+
+    //dbgprintf("yield() jumping to new process: %x (%s)\n", current->farPtr().selector, current->name().characters());
+    switch_now();
+    return 0;
+}
+
+void Scheduler::pick_next_and_switch_now()
+{
+    bool someone_wants_to_run = pick_next();
+    ASSERT(someone_wants_to_run);
+    switch_now();
+}
+
+void Scheduler::switch_now()
+{
+    Descriptor& descriptor = getGDTEntry(current->selector());
+    descriptor.type = 9;
+    flushGDT();
+    asm("sti\n"
+        "ljmp *(%%eax)\n"
+        ::"a"(&current->farPtr())
+    );
+}
+
+bool Scheduler::context_switch(Process& process)
+{
+    process.set_ticks_left(time_slice);
+    process.did_schedule();
+
+    if (current == &process)
+        return false;
+
+    if (current) {
+        // If the last process hasn't blocked (still marked as running),
+        // mark it as runnable for the next round.
+        if (current->state() == Process::Running)
+            current->set_state(Process::Runnable);
+    }
+
+    current = &process;
+    process.set_state(Process::Running);
+
+#ifdef COOL_GLOBALS
+    g_cool_globals->current_pid = process.pid();
+#endif
+
+    if (!process.selector()) {
+        process.setSelector(gdt_alloc_entry());
+        auto& descriptor = getGDTEntry(process.selector());
+        descriptor.setBase(&process.tss());
+        descriptor.setLimit(0xffff);
+        descriptor.dpl = 0;
+        descriptor.segment_present = 1;
+        descriptor.granularity = 1;
+        descriptor.zero = 0;
+        descriptor.operation_size = 1;
+        descriptor.descriptor_type = 0;
+    }
+
+    auto& descriptor = getGDTEntry(process.selector());
+    descriptor.type = 11; // Busy TSS
+    flushGDT();
+    return true;
+}
+
+int sched_yield()
+{
+    return Scheduler::yield();
+}
+
+static void redo_colonel_process_tss()
+{
+    if (!s_colonel_process->selector())
+        s_colonel_process->setSelector(gdt_alloc_entry());
+
+    auto& tssDescriptor = getGDTEntry(s_colonel_process->selector());
+
+    tssDescriptor.setBase(&s_colonel_process->tss());
+    tssDescriptor.setLimit(0xffff);
+    tssDescriptor.dpl = 0;
+    tssDescriptor.segment_present = 1;
+    tssDescriptor.granularity = 1;
+    tssDescriptor.zero = 0;
+    tssDescriptor.operation_size = 1;
+    tssDescriptor.descriptor_type = 0;
+    tssDescriptor.type = 9;
+
+    flushGDT();
+}
+
+void Scheduler::prepare_for_iret_to_new_process()
+{
+    redo_colonel_process_tss();
+    s_colonel_process->tss().backlink = current->selector();
+    load_task_register(s_colonel_process->selector());
+}
+
+void Scheduler::prepare_to_modify_own_tss()
+{
+    // This ensures that a process modifying its own TSS in order to yield()
+    // and end up somewhere else doesn't just end up right after the yield().
+    load_task_register(s_colonel_process->selector());
+}
+
+static void hlt_loop()
+{
+    for (;;) {
+        asm volatile("hlt");
+    }
+}
+
+void Scheduler::initialize()
+{
+    s_colonel_process = Process::create_kernel_process(hlt_loop, "colonel");
+    current = nullptr;
+    redo_colonel_process_tss();
+    load_task_register(s_colonel_process->selector());
+}

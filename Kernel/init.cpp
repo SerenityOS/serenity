@@ -26,6 +26,7 @@
 #include "ProcFileSystem.h"
 #include "RTC.h"
 #include "VirtualConsole.h"
+#include "Scheduler.h"
 
 #define TEST_VFS
 #define KSYMS
@@ -311,7 +312,7 @@ void init()
     Process::create_kernel_process(undertaker_main, "undertaker");
     Process::create_kernel_process(init_stage2, "init");
 
-    scheduleNewProcess();
+    Scheduler::pick_next();
 
     sti();
 

@@ -5,6 +5,7 @@
 #include "Process.h"
 #include "system.h"
 #include "PIC.h"
+#include "Scheduler.h"
 
 #define IRQ_TIMER                0
 
@@ -103,9 +104,9 @@ void clock_handle()
         current->tss().esp = regs.esp_if_crossRing;
     }
 
-    if (!scheduleNewProcess())
+    if (!Scheduler::pick_next())
         return;
-    Process::prepare_for_iret_to_new_process();
+    Scheduler::prepare_for_iret_to_new_process();
 
     // Set the NT (nested task) flag.
     asm(
