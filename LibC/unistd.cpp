@@ -131,7 +131,7 @@ int close(int fd)
 
 pid_t waitpid(pid_t waitee, int* wstatus, int options)
 {
-    int rc = Syscall::invoke(Syscall::SC_waitpid, waitee, (dword)wstatus);
+    int rc = Syscall::invoke(Syscall::SC_waitpid, waitee, (dword)wstatus, (dword)options);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
