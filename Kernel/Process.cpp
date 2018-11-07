@@ -321,8 +321,12 @@ int Process::exec(const String& path, Vector<String>&& arguments, Vector<String>
     kprintf("Process %u (%s) exec'd %s @ %p\n", pid(), name().characters(), path.characters(), m_tss.eip);
 #endif
 
-    if (current == this)
-        Scheduler::yield();
+    set_state(ExecPhase1);
+
+    if (current == this) {
+        bool success = Scheduler::yield();
+        ASSERT(success);
+    }
 
     return 0;
 }
@@ -361,7 +365,7 @@ int Process::sys$execve(const char* filename, const char** argv, const char** en
     }
 
     int rc = exec(path, move(arguments), move(environment));
-    ASSERT(rc < 0);
+    ASSERT(rc < 0); // We should never continue after a successful exec!
     return rc;
 }
 

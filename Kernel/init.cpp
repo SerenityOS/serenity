@@ -168,7 +168,6 @@ static void spawn_stress()
     }
 }
 
-
 static void init_stage2() NORETURN;
 static void init_stage2()
 {
@@ -242,21 +241,19 @@ static void init_stage2()
 #endif
 
     int error;
-    auto* sh0 = Process::create_user_process("/bin/sh", (uid_t)100, (gid_t)100, (pid_t)0, error, Vector<String>(), Vector<String>(), tty0);
+    Process::create_user_process("/bin/sh", (uid_t)100, (gid_t)100, (pid_t)0, error, Vector<String>(), Vector<String>(), tty0);
 #ifdef SPAWN_MULTIPLE_SHELLS
-    auto* sh1 = Process::create_user_process("/bin/sh", (uid_t)100, (gid_t)100, (pid_t)0, error, Vector<String>(), Vector<String>(), tty1);
-    auto* sh2 = Process::create_user_process("/bin/sh", (uid_t)100, (gid_t)100, (pid_t)0, error, Vector<String>(), Vector<String>(), tty2);
-    auto* sh3 = Process::create_user_process("/bin/sh", (uid_t)100, (gid_t)100, (pid_t)0, error, Vector<String>(), Vector<String>(), tty3);
+    Process::create_user_process("/bin/sh", (uid_t)100, (gid_t)100, (pid_t)0, error, Vector<String>(), Vector<String>(), tty1);
+    Process::create_user_process("/bin/sh", (uid_t)100, (gid_t)100, (pid_t)0, error, Vector<String>(), Vector<String>(), tty2);
+    Process::create_user_process("/bin/sh", (uid_t)100, (gid_t)100, (pid_t)0, error, Vector<String>(), Vector<String>(), tty3);
 #endif
 
 #ifdef STRESS_TEST_SPAWNING
-    Process::createKernelProcess(spawn_stress, "spawn_stress");
+    Process::create_kernel_process(spawn_stress, "spawn_stress");
 #endif
 
-    for (;;) {
-        //sleep(3600 * TICKS_PER_SECOND);
-        asm("hlt");
-    }
+    current->sys$exit(0);
+    ASSERT_NOT_REACHED();
 }
 
 void init()
@@ -310,7 +307,7 @@ void init()
     Process::initialize();
 
     Process::create_kernel_process(undertaker_main, "undertaker");
-    Process::create_kernel_process(init_stage2, "init");
+    Process::create_kernel_process(init_stage2, "init_stage2");
 
     Scheduler::pick_next();
 

@@ -10,6 +10,12 @@ static const dword time_slice = 5; // *10 = 50ms
 Process* current;
 static Process* s_colonel_process;
 
+struct TaskRedirectionData {
+    word selector;
+    TSS32 tss;
+};
+static TaskRedirectionData s_redirection;
+
 bool Scheduler::pick_next()
 {
     ASSERT_INTERRUPTS_DISABLED();
@@ -50,6 +56,16 @@ bool Scheduler::pick_next()
             return true;
         }
 
+        if (process.state() == Process::ExecPhase1) {
+            process.set_state(Process::ExecPhase2);
+            return true;
+        }
+
+        if (process.state() == Process::ExecPhase2) {
+            process.set_state(Process::Runnable);
+            return true;
+        }
+
         // Forgive dead orphans.
         if (process.state() == Process::Dead) {
             if (!Process::from_pid(process.ppid()))
@@ -57,11 +73,11 @@ bool Scheduler::pick_next()
         }
 
         // Release the forgiven.
-        Process::for_each_in_state(Process::Forgiven, [] (auto& process) {
+        if (process.state() == Process::Forgiven) {
             g_processes->remove(&process);
             g_dead_processes->append(&process);
             return true;
-        });
+        };
 
         return true;
     });
@@ -104,25 +120,13 @@ bool Scheduler::pick_next()
 
         if (process->state() == Process::Runnable || process->state() == Process::Running) {
 #ifdef SCHEDULER_DEBUG
-            dbgprintf("switch to %s(%u)\n", process->name().characters(), process->pid());
+            dbgprintf("switch to %s(%u) @ %w:%x\n", process->name().characters(), process->pid(), process->tss().cs, process->tss().eip);
 #endif
             return context_switch(*process);
         }
 
         if (process == prevHead) {
-            // Back at process_head, nothing wants to run.
-            kprintf("Nothing wants to run!\n");
-            kprintf("PID    OWNER      STATE  NSCHED  NAME\n");
-            for (auto* process = g_processes->head(); process; process = process->next()) {
-                kprintf("%w   %w:%w  %b     %w    %s\n",
-                    process->pid(),
-                    process->uid(),
-                    process->gid(),
-                    process->state(),
-                    process->timesScheduled(),
-                    process->name().characters());
-            }
-            kprintf("Switch to kernel process @ %w:%x\n", s_colonel_process->tss().cs, s_colonel_process->tss().eip);
+            // Back at process_head, nothing wants to run. Send in the colonel!
             return context_switch(*s_colonel_process);
         }
     }
@@ -214,38 +218,34 @@ int sched_yield()
     return Scheduler::yield();
 }
 
-static void redo_colonel_process_tss()
+static void initialize_redirection()
 {
-    if (!s_colonel_process->selector())
-        s_colonel_process->setSelector(gdt_alloc_entry());
-
-    auto& tssDescriptor = getGDTEntry(s_colonel_process->selector());
-
-    tssDescriptor.setBase(&s_colonel_process->tss());
-    tssDescriptor.setLimit(0xffff);
-    tssDescriptor.dpl = 0;
-    tssDescriptor.segment_present = 1;
-    tssDescriptor.granularity = 1;
-    tssDescriptor.zero = 0;
-    tssDescriptor.operation_size = 1;
-    tssDescriptor.descriptor_type = 0;
-    tssDescriptor.type = 9;
-
+    auto& descriptor = getGDTEntry(s_redirection.selector);
+    descriptor.setBase(&s_redirection.tss);
+    descriptor.setLimit(0xffff);
+    descriptor.dpl = 0;
+    descriptor.segment_present = 1;
+    descriptor.granularity = 1;
+    descriptor.zero = 0;
+    descriptor.operation_size = 1;
+    descriptor.descriptor_type = 0;
+    descriptor.type = 9;
     flushGDT();
 }
 
 void Scheduler::prepare_for_iret_to_new_process()
 {
-    redo_colonel_process_tss();
-    s_colonel_process->tss().backlink = current->selector();
-    load_task_register(s_colonel_process->selector());
+    auto& descriptor = getGDTEntry(s_redirection.selector);
+    descriptor.type = 9;
+    s_redirection.tss.backlink = current->selector();
+    load_task_register(s_redirection.selector);
 }
 
 void Scheduler::prepare_to_modify_own_tss()
 {
     // This ensures that a process modifying its own TSS in order to yield()
     // and end up somewhere else doesn't just end up right after the yield().
-    load_task_register(s_colonel_process->selector());
+    load_task_register(s_redirection.selector);
 }
 
 static void hlt_loop()
@@ -257,8 +257,10 @@ static void hlt_loop()
 
 void Scheduler::initialize()
 {
+    memset(&s_redirection, 0, sizeof(s_redirection));
+    s_redirection.selector = gdt_alloc_entry();
+    initialize_redirection();
     s_colonel_process = Process::create_kernel_process(hlt_loop, "colonel");
     current = nullptr;
-    redo_colonel_process_tss();
-    load_task_register(s_colonel_process->selector());
+    load_task_register(s_redirection.selector);
 }
