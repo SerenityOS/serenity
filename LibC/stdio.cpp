@@ -72,6 +72,8 @@ int fputc(int ch, FILE* stream)
 {
     assert(stream);
     write(stream->fd, &ch, 1);
+    if (stream->eof)
+        return EOF;
     return (byte)ch;
 }
 
@@ -85,10 +87,31 @@ int putchar(int ch)
     return putc(ch, stdout);
 }
 
+int fputs(const char* s, FILE* stream)
+{
+    for (; *s; ++s) {
+        int rc = putc(*s, stream);
+        if (rc == EOF)
+            return EOF;
+    }
+    return putc('\n', stream);
+}
+
+int puts(const char* s)
+{
+    fputs(s, stdout);
+}
+
 void clearerr(FILE* stream)
 {
     assert(stream);
     stream->eof = false;
+    stream->error = false;
+}
+
+int ferror(FILE* stream)
+{
+    return stream->error;
 }
 
 size_t fread(void* ptr, size_t size, size_t nmemb, FILE* stream)
@@ -190,6 +213,7 @@ FILE* fopen(const char* pathname, const char* mode)
     auto* fp = (FILE*)malloc(sizeof(FILE));
     fp->fd = fd;
     fp->eof = false;
+    fp->error = 0;
     return fp;
 }
 
@@ -201,6 +225,7 @@ FILE* fdopen(int fd, const char* mode)
     auto* fp = (FILE*)malloc(sizeof(FILE));
     fp->fd = fd;
     fp->eof = false;
+    fp->error = 0;
     return fp;
 }
 
