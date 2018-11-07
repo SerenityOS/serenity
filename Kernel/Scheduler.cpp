@@ -66,7 +66,7 @@ bool Scheduler::pick_next()
         }
 
         if (process.state() == Process::Dead) {
-            if (!Process::from_pid(process.ppid()))
+            if (current != &process && !Process::from_pid(process.ppid()))
                 Process::reap(process.pid());
             return true;
         }
@@ -242,19 +242,12 @@ void Scheduler::prepare_to_modify_tss(Process& process)
         load_task_register(s_redirection.selector);
 }
 
-static void hlt_loop()
-{
-    for (;;) {
-        asm volatile("hlt");
-    }
-}
-
 void Scheduler::initialize()
 {
     memset(&s_redirection, 0, sizeof(s_redirection));
     s_redirection.selector = gdt_alloc_entry();
     initialize_redirection();
-    s_colonel_process = Process::create_kernel_process(hlt_loop, "colonel");
+    s_colonel_process = Process::create_kernel_process(nullptr, "colonel");
     current = nullptr;
     load_task_register(s_redirection.selector);
 }
