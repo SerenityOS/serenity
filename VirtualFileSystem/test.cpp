@@ -1,7 +1,7 @@
 #include "Ext2FileSystem.h"
 #include "FileBackedDiskDevice.h"
 #include "VirtualFileSystem.h"
-#include "FileHandle.h"
+#include "FileDescriptor.h"
 #include "SyntheticFileSystem.h"
 #include "ZeroDevice.h"
 #include "NullDevice.h"
@@ -54,12 +54,12 @@ int main(int c, char** v)
 
     if (!strcmp(v[0], "./vcat")) {
         int error;
-        auto handle = vfs.open(v[2], error);
-        if (!handle) {
+        auto descriptor = vfs.open(v[2], error);
+        if (!descriptor) {
             printf("failed to open %s inside fs image\n", v[2]);
             return 1;
         }
-        auto contents = handle->readEntireFile();
+        auto contents = descriptor->readEntireFile();
 
         FILE* fout = fopen(v[3], "w");
         if (!fout) {
@@ -82,11 +82,11 @@ int main(int c, char** v)
     vfs.listDirectory("/syn");
 
 #if 0
-    auto handle = vfs.open("/home/andreas/../../home/./andreas/./file2");
-    printf("handle = %p\n", handle.ptr());
-    ASSERT(handle);
+    auto descriptor = vfs.open("/home/andreas/../../home/./andreas/./file2");
+    printf("descriptor = %p\n", handle.ptr());
+    ASSERT(descriptor);
 
-    auto contents = handle->readEntireFile();
+    auto contents = descriptor->readEntireFile();
     ASSERT(contents);
 
     printf("contents: '%s'\n", contents->pointer());
@@ -151,13 +151,13 @@ int main(int c, char** v)
             char buf[1024];
             sprintf(buf, "%s/%s", currentDirectory.characters(), parts[1].characters());
             int error;
-            auto handle = vfs.open(buf, error);
-            if (!handle) {
+            auto descriptor = vfs.open(buf, error);
+            if (!descriptor) {
                 printf("Can't open '%s' :(\n", buf);
                 continue;
             }
             Unix::stat st;
-            int rc = handle->stat(&st);
+            int rc = descriptor->stat(&st);
             if (rc < 0) {
                 printf("stat failed: %d\n", rc);
                 continue;
@@ -182,12 +182,12 @@ int main(int c, char** v)
             char pathbuf[1024];
             sprintf(pathbuf, "%s/%s", currentDirectory.characters(), parts[1].characters());
             int error;
-            auto handle = vfs.open(pathbuf, error);
-            if (!handle) {
+            auto descriptor = vfs.open(pathbuf, error);
+            if (!descriptor) {
                 printf("failed to open %s\n", pathbuf);
                 continue;
             }
-            auto contents = handle->readEntireFile();
+            auto contents = descriptor->readEntireFile();
             fwrite(contents.pointer(), sizeof(char), contents.size(), stdout);
             continue;
         }
@@ -196,15 +196,15 @@ int main(int c, char** v)
             char pathbuf[1024];
             sprintf(pathbuf, "%s/%s", currentDirectory.characters(), parts[1].characters());
             int error;
-            auto handle = vfs.open(pathbuf, error);
-            if (!handle) {
+            auto descriptor = vfs.open(pathbuf, error);
+            if (!descriptor) {
                 printf("failed to open %s\n", pathbuf);
                 continue;
             }
             ssize_t nread;
             byte buffer[512];
             for (;;) {
-                nread = handle->read(buffer, sizeof(buffer));
+                nread = descriptor->read(buffer, sizeof(buffer));
                 if (nread <= 0)
                     break;
                 fwrite(buffer, 1, nread, stdout);

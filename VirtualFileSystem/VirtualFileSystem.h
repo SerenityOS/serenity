@@ -20,7 +20,7 @@
 #define O_NOFOLLOW_NOERROR 0x4000000
 
 class CharacterDevice;
-class FileHandle;
+class FileDescriptor;
 
 inline constexpr dword encodedDevice(unsigned major, unsigned minor)
 {
@@ -93,10 +93,10 @@ public:
     bool mountRoot(RetainPtr<FileSystem>&&);
     bool mount(RetainPtr<FileSystem>&&, const String& path);
 
-    RetainPtr<FileHandle> open(CharacterDevice&, int options);
-    RetainPtr<FileHandle> open(const String& path, int& error, int options = 0, InodeIdentifier base = InodeIdentifier());
-    RetainPtr<FileHandle> create(const String& path, InodeIdentifier base = InodeIdentifier());
-    RetainPtr<FileHandle> mkdir(const String& path, InodeIdentifier base = InodeIdentifier());
+    RetainPtr<FileDescriptor> open(CharacterDevice&, int options);
+    RetainPtr<FileDescriptor> open(const String& path, int& error, int options = 0, InodeIdentifier base = InodeIdentifier());
+    RetainPtr<FileDescriptor> create(const String& path, InodeIdentifier base = InodeIdentifier());
+    RetainPtr<FileDescriptor> mkdir(const String& path, InodeIdentifier base = InodeIdentifier());
 
     bool isRoot(InodeIdentifier) const;
 
@@ -110,7 +110,7 @@ public:
     String absolutePath(InodeIdentifier);
 
 private:
-    friend class FileHandle;
+    friend class FileDescriptor;
 
     void enumerateDirectoryInode(InodeIdentifier, Function<bool(const FileSystem::DirectoryEntry&)>);
     InodeIdentifier resolvePath(const String& path, int& error, InodeIdentifier base = InodeIdentifier(), int options = 0);

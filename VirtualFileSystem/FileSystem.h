@@ -16,7 +16,7 @@
 
 static const dword mepoch = 476763780;
 
-class FileHandle;
+class FileDescriptor;
 
 class FileSystem : public Retainable<FileSystem> {
 public:
@@ -32,7 +32,7 @@ public:
     virtual bool writeInode(InodeIdentifier, const ByteBuffer&) = 0;
     virtual InodeMetadata inodeMetadata(InodeIdentifier) const = 0;
 
-    virtual Unix::ssize_t readInodeBytes(InodeIdentifier, Unix::off_t offset, Unix::size_t count, byte* buffer, FileHandle*) const = 0;
+    virtual Unix::ssize_t readInodeBytes(InodeIdentifier, Unix::off_t offset, Unix::size_t count, byte* buffer, FileDescriptor*) const = 0;
 
     struct DirectoryEntry {
         String name;
@@ -48,7 +48,7 @@ public:
     virtual InodeIdentifier findParentOfInode(InodeIdentifier) const = 0;
 
     InodeIdentifier childOfDirectoryInodeWithName(InodeIdentifier, const String& name) const;
-    ByteBuffer readEntireInode(InodeIdentifier, FileHandle* = nullptr) const;
+    ByteBuffer readEntireInode(InodeIdentifier, FileDescriptor* = nullptr) const;
     String nameOfChildInDirectory(InodeIdentifier parent, InodeIdentifier child) const;
 
 protected:

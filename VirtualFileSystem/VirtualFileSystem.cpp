@@ -1,5 +1,5 @@
 #include "VirtualFileSystem.h"
-#include "FileHandle.h"
+#include "FileDescriptor.h"
 #include "FileSystem.h"
 #include <AK/StringBuilder.h>
 #include <AK/kmalloc.h>
@@ -398,15 +398,15 @@ bool VirtualFileSystem::touch(const String& path)
     return inode.fileSystem()->setModificationTime(inode, ktime(nullptr));
 }
 
-RetainPtr<FileHandle> VirtualFileSystem::open(CharacterDevice& device, int options)
+RetainPtr<FileDescriptor> VirtualFileSystem::open(CharacterDevice& device, int options)
 {
     auto vnode = getOrCreateNode(device);
     if (!vnode)
         return nullptr;
-    return FileHandle::create(move(vnode));
+    return FileDescriptor::create(move(vnode));
 }
 
-RetainPtr<FileHandle> VirtualFileSystem::open(const String& path, int& error, int options, InodeIdentifier base)
+RetainPtr<FileDescriptor> VirtualFileSystem::open(const String& path, int& error, int options, InodeIdentifier base)
 {
     auto inode = resolvePath(path, error, base, options);
     if (!inode.isValid())
@@ -414,10 +414,10 @@ RetainPtr<FileHandle> VirtualFileSystem::open(const String& path, int& error, in
     auto vnode = getOrCreateNode(inode);
     if (!vnode)
         return nullptr;
-    return FileHandle::create(move(vnode));
+    return FileDescriptor::create(move(vnode));
 }
 
-RetainPtr<FileHandle> VirtualFileSystem::create(const String& path, InodeIdentifier base)
+RetainPtr<FileDescriptor> VirtualFileSystem::create(const String& path, InodeIdentifier base)
 {
     // FIXME: Do the real thing, not just this fake thing!
     (void) path;
@@ -425,7 +425,7 @@ RetainPtr<FileHandle> VirtualFileSystem::create(const String& path, InodeIdentif
     return nullptr;
 }
 
-RetainPtr<FileHandle> VirtualFileSystem::mkdir(const String& path, InodeIdentifier base)
+RetainPtr<FileDescriptor> VirtualFileSystem::mkdir(const String& path, InodeIdentifier base)
 {
     // FIXME: Do the real thing, not just this fake thing!
     (void) path;

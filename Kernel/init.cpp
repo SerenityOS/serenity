@@ -18,7 +18,7 @@
 #include <VirtualFileSystem/RandomDevice.h>
 #include <VirtualFileSystem/Ext2FileSystem.h>
 #include <VirtualFileSystem/VirtualFileSystem.h>
-#include <VirtualFileSystem/FileHandle.h>
+#include <VirtualFileSystem/FileDescriptor.h>
 #include <AK/OwnPtr.h>
 #include "MemoryManager.h"
 #include <ELFLoader/ELFLoader.h>
@@ -206,11 +206,11 @@ static void init_stage2()
 #ifdef KSYMS
     {
         int error;
-        auto handle = vfs->open("/kernel.map", error);
-        if (!handle) {
+        auto descriptor = vfs->open("/kernel.map", error);
+        if (!descriptor) {
             kprintf("Failed to open /kernel.map\n");
         } else {
-            auto buffer = handle->readEntireFile();
+            auto buffer = descriptor->readEntireFile();
             ASSERT(buffer);
             loadKsyms(buffer);
         }

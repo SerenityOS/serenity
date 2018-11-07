@@ -2,13 +2,13 @@
 
 #include <AK/Types.h>
 #include "Limits.h"
-#include "FileHandle.h"
+#include "FileDescriptor.h"
 
 class CharacterDevice {
 public:
     virtual ~CharacterDevice();
 
-    RetainPtr<FileHandle> open(int options);
+    RetainPtr<FileDescriptor> open(int options);
 
     virtual bool hasDataAvailableForRead() const = 0;
 

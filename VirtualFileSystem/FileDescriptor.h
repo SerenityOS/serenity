@@ -7,12 +7,12 @@
 
 class TTY;
 
-class FileHandle : public Retainable<FileHandle> {
+class FileDescriptor : public Retainable<FileDescriptor> {
 public:
-    static RetainPtr<FileHandle> create(RetainPtr<VirtualFileSystem::Node>&&);
-    ~FileHandle();
+    static RetainPtr<FileDescriptor> create(RetainPtr<VirtualFileSystem::Node>&&);
+    ~FileDescriptor();
 
-    RetainPtr<FileHandle> clone();
+    RetainPtr<FileDescriptor> clone();
 
     int close();
 
@@ -48,7 +48,7 @@ public:
 
 private:
     friend class VirtualFileSystem;
-    explicit FileHandle(RetainPtr<VirtualFileSystem::Node>&&);
+    explicit FileDescriptor(RetainPtr<VirtualFileSystem::Node>&&);
 
     RetainPtr<VirtualFileSystem::Node> m_vnode;
 
@@ -57,7 +57,6 @@ private:
     ByteBuffer m_generatorCache;
 
 #ifdef SERENITY
-    int m_fd { -1 };
     bool m_isBlocking { true };
 #endif
 };

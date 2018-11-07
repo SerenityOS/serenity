@@ -34,7 +34,7 @@ VFS_OBJS = \
     ../VirtualFileSystem/Ext2FileSystem.o \
     ../VirtualFileSystem/InodeIdentifier.o \
     ../VirtualFileSystem/VirtualFileSystem.o \
-    ../VirtualFileSystem/FileHandle.o \
+    ../VirtualFileSystem/FileDescriptor.o \
     ../VirtualFileSystem/SyntheticFileSystem.o
 
 ELFLOADER_OBJS = \
