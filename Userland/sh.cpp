@@ -33,10 +33,17 @@ static int sh_pwd(int, const char**)
     return 0;
 }
 
+static volatile bool g_got_signal = false;
+
 void did_receive_signal(int signum)
 {
     printf("\nMy word, I've received a signal with number %d\n", signum);
-    //exit(0);
+    g_got_signal = true;
+}
+
+void handle_sigint(int signum)
+{
+    printf("Interrupt received by sh\n");
 }
 
 static int sh_busy(int, const char**)
@@ -48,11 +55,14 @@ static int sh_busy(int, const char**)
     sa.sa_restorer = nullptr;
     int rc = sigaction(SIGUSR1, &sa, nullptr);
     assert(rc == 0);
-    printf("listening for SIGUSR1 while looping in userspace...\n");
+    printf("listening for signal SIGUSR1 while looping in userspace...\n");
     for (;;) {
         for (volatile int i = 0; i < 100000; ++i)
             ;
+        if (g_got_signal)
+            break;
     }
+    g_got_signal = false;
     return 0;
 }
 
@@ -279,6 +289,16 @@ int main(int, char**)
     g = new GlobalState;
     g->sid = setsid();
     tcsetpgrp(0, getpgrp());
+
+    {
+        struct sigaction sa;
+        sa.sa_handler = handle_sigint;
+        sa.sa_flags = 0;
+        sa.sa_mask = 0;
+        sa.sa_restorer = nullptr;
+        int rc = sigaction(SIGINT, &sa, nullptr);
+        assert(rc == 0);
+    }
 
     int rc = gethostname(g->hostname, sizeof(g->hostname));
     if (rc < 0)

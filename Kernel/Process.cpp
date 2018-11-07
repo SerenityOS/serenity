@@ -789,7 +789,7 @@ void Process::dispatch_signal(byte signal)
 
     if ((ret_cs & 3) == 0) {
         // FIXME: Handle send_signal to process currently in kernel code.
-        kprintf("Boo! dispatch_signal with return to %w:%x\n", ret_cs, ret_eip);
+        kprintf("Boo! dispatch_signal in %s(%u) with return to %w:%x\n", name().characters(), pid(), ret_cs, ret_eip);
         ASSERT_NOT_REACHED();
     }
 
@@ -826,6 +826,8 @@ void Process::dispatch_signal(byte signal)
     }
 
     push_value_on_stack(m_return_from_signal_trampoline.get());
+
+    m_pending_signals &= ~(1 << signal);
 
     dbgprintf("signal: Okay, %s(%u) has been primed\n", name().characters(), pid());
 }
