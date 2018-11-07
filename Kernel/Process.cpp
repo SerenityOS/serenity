@@ -1564,6 +1564,12 @@ int Process::sys$sigaction(int signum, const Unix::sigaction* act, Unix::sigacti
     VALIDATE_USER_READ(act, sizeof(Unix::sigaction));
     InterruptDisabler disabler; // FIXME: This should use a narrower lock.
     auto& action = m_signal_action_data[signum];
+    if (old_act) {
+        VALIDATE_USER_WRITE(old_act, sizeof(Unix::sigaction));
+        old_act->sa_flags = action.flags;
+        old_act->sa_restorer = (decltype(old_act->sa_restorer))action.restorer.get();
+        old_act->sa_sigaction = (decltype(old_act->sa_sigaction))action.handler_or_sigaction.get();
+    }
     action.restorer = LinearAddress((dword)act->sa_restorer);
     action.flags = act->sa_flags;
     action.handler_or_sigaction = LinearAddress((dword)act->sa_sigaction);
