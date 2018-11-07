@@ -705,15 +705,6 @@ void Process::dumpRegions()
     }
 }
 
-void Process::notify_waiters(pid_t waitee, int exit_status, int signal)
-{
-    ASSERT_INTERRUPTS_DISABLED();
-    for (auto* process = s_processes->head(); process; process = process->next()) {
-        if (process->waitee() == waitee)
-            process->m_waiteeStatus = (exit_status << 8) | (signal);
-    }
-}
-
 void Process::sys$exit(int status)
 {
     cli();
@@ -721,59 +712,76 @@ void Process::sys$exit(int status)
     kprintf("sys$exit: %s(%u) exit with status %d\n", name().characters(), pid(), status);
 #endif
 
-    set_state(Exiting);
-
-    s_processes->remove(this);
-
-    notify_waiters(m_pid, status, 0);
+    set_state(Dead);
+    m_termination_status = status;
+    m_termination_signal = 0;
 
     if (!scheduleNewProcess()) {
         kprintf("Process::sys$exit: Failed to schedule a new process :(\n");
         HANG;
     }
-
-    s_deadProcesses->append(this);
-
     switchNow();
 }
 
-void Process::terminate_due_to_signal(int signal, Process* sender)
+void Process::terminate_due_to_signal(byte signal)
 {
     ASSERT_INTERRUPTS_DISABLED();
-    bool wasCurrent = this == current;
-
-    set_state(Exiting);
-    s_processes->remove(this);
-
-    notify_waiters(m_pid, 0, signal);
-
-    if (wasCurrent) {
-        kprintf("Current process (%u) committing suicide!\n", pid());
-        if (!scheduleNewProcess()) {
-            kprintf("Process::send_signal: Failed to schedule a new process :(\n");
-            HANG;
-        }
-    }
-    s_deadProcesses->append(this);
-    if (wasCurrent)
-        switchNow();
+    ASSERT(signal < 32);
+    dbgprintf("terminate_due_to_signal %s(%u) <- %u\n", name().characters(), pid(), signal);
+    m_termination_status = 0;
+    m_termination_signal = signal;
+    set_state(Dead);
 }
 
-void Process::send_signal(int signal, Process* sender)
+void Process::send_signal(byte signal, Process* sender)
 {
     ASSERT_INTERRUPTS_DISABLED();
     ASSERT(signal < 32);
 
-    // FIXME: Handle send_signal to self.
-    ASSERT(this != sender);
+    m_pending_signals |= 1 << signal;
+
+    if (sender)
+        dbgprintf("signal: %s(%u) sent %d to %s(%u)\n", sender->name().characters(), sender->pid(), signal, name().characters(), pid());
+    else
+        dbgprintf("signal: kernel sent %d to %s(%u)\n", signal, name().characters(), pid());
+}
+
+bool Process::has_unmasked_pending_signals() const
+{
+    return m_pending_signals & ~m_signal_mask;
+}
+
+void Process::dispatch_one_pending_signal()
+{
+    ASSERT_INTERRUPTS_DISABLED();
+    dword signal_candidates = m_pending_signals & ~m_signal_mask;
+    ASSERT(signal_candidates);
+
+    byte signal = 0;
+    for (; signal < 32; ++signal) {
+        if (signal_candidates & (1 << signal)) {
+            break;
+        }
+    }
+    dispatch_signal(signal);
+}
+
+void Process::dispatch_signal(byte signal)
+{
+    ASSERT_INTERRUPTS_DISABLED();
+    ASSERT(signal < 32);
+
+    dbgprintf("dispatch_signal %s(%u) <- %u\n", name().characters(), pid(), signal);
 
     auto& action = m_signal_action_data[signal];
     // FIXME: Implement SA_SIGINFO signal handlers.
     ASSERT(!(action.flags & SA_SIGINFO));
 
     auto handler_laddr = action.handler_or_sigaction;
-    if (handler_laddr.is_null())
-        return terminate_due_to_signal(signal, sender);
+    if (handler_laddr.is_null()) {
+        // FIXME: Is termination really always the appropriate action?
+        return terminate_due_to_signal(signal);
+    }
 
     word ret_cs = m_tss.cs;
     dword ret_eip = m_tss.eip;
@@ -781,6 +789,7 @@ void Process::send_signal(int signal, Process* sender)
 
     if ((ret_cs & 3) == 0) {
         // FIXME: Handle send_signal to process currently in kernel code.
+        kprintf("Boo! dispatch_signal with return to %w:%x\n", ret_cs, ret_eip);
         ASSERT_NOT_REACHED();
     }
 
@@ -801,7 +810,9 @@ void Process::send_signal(int signal, Process* sender)
     m_tss.eip = handler_laddr.get();
 
     if (m_return_from_signal_trampoline.is_null()) {
-        auto* region = allocate_region(LinearAddress(), PAGE_SIZE, "signal_trampoline", true, true); // FIXME: Remap as read-only after setup.
+        // FIXME: This should be a global trampoline shared by all processes, not one created per process!
+        // FIXME: Remap as read-only after setup.
+        auto* region = allocate_region(LinearAddress(), PAGE_SIZE, "signal_trampoline", true, true);
         m_return_from_signal_trampoline = region->linearAddress;
         byte* code_ptr = m_return_from_signal_trampoline.asPtr();
         *code_ptr++ = 0x61; // popa
@@ -809,16 +820,14 @@ void Process::send_signal(int signal, Process* sender)
         *code_ptr++ = 0xc3; // ret
         *code_ptr++ = 0x0f; // ud2
         *code_ptr++ = 0x0b;
+        // FIXME: For !SA_NODEFER, maybe we could do something like emitting an int 0x80 syscall here that
+        //        unmasks the signal so it can be received again? I guess then I would need one trampoline
+        //        per signal number if it's hard-coded, but it's just a few bytes per each.
     }
 
     push_value_on_stack(m_return_from_signal_trampoline.get());
 
-    dbgprintf("signal: %s(%u) sent %d to %s(%u)\n", sender->name().characters(), sender->pid(), signal, name().characters(), pid());
-
-    if (current == this) {
-        sched_yield();
-        ASSERT_NOT_REACHED();
-    }
+    dbgprintf("signal: Okay, %s(%u) has been primed\n", name().characters(), pid());
 }
 
 void Process::push_value_on_stack(dword value)
@@ -828,29 +837,19 @@ void Process::push_value_on_stack(dword value)
     *stack_ptr = value;
 }
 
-void Process::processDidCrash(Process* crashedProcess)
+void Process::crash()
 {
     ASSERT_INTERRUPTS_DISABLED();
+    ASSERT(state() != Dead);
 
-    if (crashedProcess->state() == Crashing) {
-        kprintf("Double crash :(\n");
-        HANG;
-    }
-
-    crashedProcess->set_state(Crashing);
-    crashedProcess->dumpRegions();
-
-    s_processes->remove(crashedProcess);
-
-    notify_waiters(crashedProcess->m_pid, 0, SIGSEGV);
+    m_termination_signal = SIGSEGV;
+    set_state(Dead);
+    dumpRegions();
 
     if (!scheduleNewProcess()) {
-        kprintf("Process::processDidCrash: Failed to schedule a new process :(\n");
+        kprintf("Process::crash: Failed to schedule a new process :(\n");
         HANG;
     }
-
-    s_deadProcesses->append(crashedProcess);
-
     switchNow();
 }
 
@@ -896,6 +895,30 @@ void switchNow()
     );
 }
 
+template<typename Callback>
+static void for_each_process_in_state(Process::State state, Callback callback)
+{
+    ASSERT_INTERRUPTS_DISABLED();
+    for (auto* process = s_processes->head(); process;) {
+        auto* next_process = process->next();
+        if (process->state() == state)
+            callback(*process);
+        process = next_process;
+    }
+}
+
+template<typename Callback>
+static void for_each_process_not_in_state(Process::State state, Callback callback)
+{
+    ASSERT_INTERRUPTS_DISABLED();
+    for (auto* process = s_processes->head(); process;) {
+        auto* next_process = process->next();
+        if (process->state() != state)
+            callback(*process);
+        process = next_process;
+    }
+}
+
 bool scheduleNewProcess()
 {
     ASSERT_INTERRUPTS_DISABLED();
@@ -909,27 +932,54 @@ bool scheduleNewProcess()
     // Check and unblock processes whose wait conditions have been met.
     for (auto* process = s_processes->head(); process; process = process->next()) {
         if (process->state() == Process::BlockedSleep) {
-            if (process->wakeupTime() <= system.uptime) {
+            if (process->wakeupTime() <= system.uptime)
                 process->unblock();
-                continue;
-            }
+            continue;
         }
 
         if (process->state() == Process::BlockedWait) {
-            if (!Process::fromPID(process->waitee())) {
-                process->unblock();
-                continue;
+            auto* waitee = Process::fromPID(process->waitee());
+            if (!waitee) {
+                kprintf("waitee %u of %s(%u) reaped before I could wait?\n", process->waitee(), process->name().characters(), process->pid());
+                ASSERT_NOT_REACHED();
             }
+            if (waitee->state() == Process::Dead) {
+                process->m_waitee_status = (waitee->m_termination_status << 8) | waitee->m_termination_signal;
+                process->unblock();
+                waitee->set_state(Process::Forgiven);
+            }
+            continue;
         }
 
         if (process->state() == Process::BlockedRead) {
             ASSERT(process->m_fdBlockedOnRead != -1);
-            if (process->m_file_descriptors[process->m_fdBlockedOnRead]->hasDataAvailableForRead()) {
+            if (process->m_file_descriptors[process->m_fdBlockedOnRead]->hasDataAvailableForRead())
                 process->unblock();
-                continue;
-            }
+            continue;
         }
     }
+
+    // Forgive dead orphans.
+    // FIXME: Does this really make sense?
+    for_each_process_in_state(Process::Dead, [] (auto& process) {
+        if (!Process::fromPID(process.ppid()))
+            process.set_state(Process::Forgiven);
+    });
+
+    // Clean up forgiven processes.
+    // FIXME: Do we really need this to be a separate pass over the process list?
+    for_each_process_in_state(Process::Forgiven, [] (auto& process) {
+        s_processes->remove(&process);
+        s_deadProcesses->append(&process);
+    });
+
+    // Dispatch any pending signals.
+    // FIXME: Do we really need this to be a separate pass over the process list?
+    for_each_process_not_in_state(Process::Dead, [] (auto& process) {
+        if (!process.has_unmasked_pending_signals())
+            return;
+        process.dispatch_one_pending_signal();
+    });
 
 #ifdef SCHEDULER_DEBUG
     dbgprintf("Scheduler choices:\n");
@@ -1352,11 +1402,11 @@ pid_t Process::sys$waitpid(pid_t waitee, int* wstatus, int options)
     if (!Process::fromPID(waitee))
         return -1;
     m_waitee = waitee;
-    m_waiteeStatus = 0;
+    m_waitee_status = 0;
     block(BlockedWait);
     sched_yield();
     if (wstatus)
-        *wstatus = m_waiteeStatus;
+        *wstatus = m_waitee_status;
     return m_waitee;
 }
 

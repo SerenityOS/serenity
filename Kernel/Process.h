@@ -33,15 +33,14 @@ public:
 
     enum State {
         Invalid = 0,
-        Runnable = 1,
-        Running = 2,
-        Terminated = 3,
-        Crashing = 4,
-        Exiting = 5,
-        BeingInspected = 6,
-        BlockedSleep = 7,
-        BlockedWait = 8,
-        BlockedRead = 9,
+        Runnable,
+        Running,
+        Dead,
+        Forgiven,
+        BeingInspected,
+        BlockedSleep,
+        BlockedWait,
+        BlockedRead,
     };
 
     enum RingLevel {
@@ -145,7 +144,7 @@ public:
 
     static void initialize();
 
-    static void processDidCrash(Process*);
+    void crash();
 
     const TTY* tty() const { return m_tty; }
 
@@ -172,8 +171,11 @@ public:
     size_t number_of_open_file_descriptors() const;
     size_t max_open_file_descriptors() const { return m_max_open_file_descriptors; }
 
-    void send_signal(int signal, Process* sender);
-    void terminate_due_to_signal(int signal, Process* sender);
+    void send_signal(byte signal, Process* sender);
+    void dispatch_one_pending_signal();
+    void dispatch_signal(byte signal);
+    bool has_unmasked_pending_signals() const;
+    void terminate_due_to_signal(byte signal);
 
     Process* fork(RegisterDump&);
     int exec(const String& path, Vector<String>&& arguments, Vector<String>&& environment);
@@ -216,10 +218,15 @@ private:
     void* m_kernelStack { nullptr };
     dword m_timesScheduled { 0 };
     pid_t m_waitee { -1 };
-    int m_waiteeStatus { 0 };
+    int m_waitee_status { 0 };
     int m_fdBlockedOnRead { -1 };
     size_t m_max_open_file_descriptors { 16 };
     SignalActionData m_signal_action_data[32];
+    dword m_pending_signals { 0 };
+    dword m_signal_mask { 0 };
+
+    byte m_termination_status { 0 };
+    byte m_termination_signal { 0 };
 
     RetainPtr<VirtualFileSystem::Node> m_cwd;
     RetainPtr<VirtualFileSystem::Node> m_executable;
@@ -272,9 +279,8 @@ static inline const char* toString(Process::State state)
     case Process::Invalid: return "Invalid";
     case Process::Runnable: return "Runnable";
     case Process::Running: return "Running";
-    case Process::Terminated: return "Term";
-    case Process::Crashing: return "Crash";
-    case Process::Exiting: return "Exit";
+    case Process::Dead: return "Dead";
+    case Process::Forgiven: return "Forgiven";
     case Process::BlockedSleep: return "Sleep";
     case Process::BlockedWait: return "Wait";
     case Process::BlockedRead: return "Read";

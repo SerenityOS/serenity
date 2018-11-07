@@ -15,6 +15,7 @@ OBJS = \
        mm.o \
        kill.o \
        ft.o \
+       ft2.o \
        strsignal.o \
        tty.o
 
@@ -35,6 +36,7 @@ APPS = \
        mm \
        kill \
        ft \
+       ft2 \
        strsignal \
        tty
 
@@ -96,6 +98,9 @@ tst: tst.o
 	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
 
 ft: ft.o
+	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
+
+ft2: ft2.o
 	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
 
 mm: mm.o

@@ -147,7 +147,7 @@ void exception_6_handler(RegisterDump& regs)
     }
     HANG;
 
-    Process::processDidCrash(current);
+    current->crash();
 }
 
 // 13: General Protection Fault
@@ -176,7 +176,7 @@ void exception_13_handler(RegisterDumpWithExceptionCode& regs)
         HANG;
     }
 
-    Process::processDidCrash(current);
+    current->crash();
 }
 
 // 14: Page Fault
@@ -232,7 +232,7 @@ void exception_14_handler(RegisterDumpWithExceptionCode& regs)
 
     if (response == PageFaultResponse::ShouldCrash) {
         kprintf("Crashing after unresolved page fault\n");
-        Process::processDidCrash(current);
+        current->crash();
     } else if (response == PageFaultResponse::Continue) {
 #ifdef PAGE_FAULT_DEBUG
         dbgprintf("Continuing after resolved page fault\n");
