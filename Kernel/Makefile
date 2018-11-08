@@ -80,7 +80,10 @@ $(KERNEL): $(OBJS)
 	@echo "LD $@"; $(LD) $(LDFLAGS) -o $@ -Ttext 0x10000 $(OBJS)
 
 $(IMAGE): $(KERNEL) $(BOOTLOADER)
-	@echo "CREATE $@"; cat $(BOOTLOADER) $(KERNEL) > $(IMAGE)
+	@echo "CREATE $@"; cat $(BOOTLOADER) $(KERNEL) > .tmp-floppy-image
+	@dd if=/dev/zero bs=2M count=1 >> .tmp-floppy-image 2> /dev/null
+	@dd if=.tmp-floppy-image of=.floppy-image bs=1440k count=1 2>/dev/null
+	@rm -f .tmp-floppy-image
 
 $(BOOTLOADER): Boot/boot.asm
 	@echo "NASM $<"; $(NASM) -f bin -o $@ $<
