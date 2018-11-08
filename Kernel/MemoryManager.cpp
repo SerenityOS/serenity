@@ -254,6 +254,31 @@ bool MemoryManager::copy_on_write(Process& process, Region& region, unsigned pag
     return true;
 }
 
+bool MemoryManager::page_in_from_vnode(Process& process, Region& region, unsigned page_index_in_region)
+{
+    ASSERT(region.physical_pages[page_index_in_region].is_null());
+    region.physical_pages[page_index_in_region] = allocate_physical_page();
+    if (region.physical_pages[page_index_in_region].is_null()) {
+        kprintf("MM: page_in_from_vnode was unable to allocate a physical page\n");
+        return false;
+    }
+    remap_region_page(process.m_page_directory, region, page_index_in_region, true);
+    byte* dest_ptr = region.linearAddress.offset(page_index_in_region * PAGE_SIZE).asPtr();
+    dbgprintf("MM: page_in_from_vnode ready to read from vnode, will write to L%x!\n", dest_ptr);
+    sti(); // Oh god here we go...
+    auto nread = region.m_vnode->fileSystem()->readInodeBytes(region.m_vnode->inode, region.m_file_offset, PAGE_SIZE, dest_ptr, nullptr);
+    if (nread < 0) {
+        kprintf("MM: page_in_form_vnode had error (%d) while reading!\n", nread);
+        return false;
+    }
+    if (nread < PAGE_SIZE) {
+        // If we read less than a page, zero out the rest to avoid leaking uninitialized data.
+        memset(dest_ptr + nread, 0, PAGE_SIZE - nread);
+    }
+    cli();
+    return true;
+}
+
 PageFaultResponse MemoryManager::handle_page_fault(const PageFault& fault)
 {
     ASSERT_INTERRUPTS_DISABLED();
@@ -264,17 +289,21 @@ PageFaultResponse MemoryManager::handle_page_fault(const PageFault& fault)
     ASSERT(region);
     auto page_index_in_region = region->page_index_from_address(fault.laddr());
     if (fault.is_not_present()) {
-        kprintf("  >> NP fault in Region{%p}[%u]\n", region, page_index_in_region);
+        if (region->m_vnode) {
+            dbgprintf("NP(vnode) fault in Region{%p}[%u]\n", region, page_index_in_region);
+            page_in_from_vnode(*current, *region, page_index_in_region);
+            return PageFaultResponse::Continue;
+        } else {
+            kprintf("NP(error) fault in Region{%p}[%u]\n", region, page_index_in_region);
+        }
     } else if (fault.is_protection_violation()) {
         if (region->cow_map.get(page_index_in_region)) {
-#ifdef PAGE_FAULT_DEBUG
-            dbgprintf("  >> PV (COW) fault in Region{%p}[%u]\n", region, page_index_in_region);
-#endif
+            dbgprintf("PV(cow) fault in Region{%p}[%u]\n", region, page_index_in_region);
             bool success = copy_on_write(*current, *region, page_index_in_region);
             ASSERT(success);
             return PageFaultResponse::Continue;
         }
-        kprintf("  >> PV fault in Region{%p}[%u]\n", region, page_index_in_region);
+        kprintf("PV(error) fault in Region{%p}[%u]\n", region, page_index_in_region);
     } else {
         ASSERT_NOT_REACHED();
     }
@@ -282,6 +311,17 @@ PageFaultResponse MemoryManager::handle_page_fault(const PageFault& fault)
 
 
     return PageFaultResponse::ShouldCrash;
+}
+
+RetainPtr<PhysicalPage> MemoryManager::allocate_physical_page()
+{
+    InterruptDisabler disabler;
+    if (1 > m_free_physical_pages.size())
+        return { };
+#ifdef MM_DEBUG
+    dbgprintf("MM: allocate_physical_page vending P%x\n", m_free_physical_pages.last()->paddr().get());
+#endif
+    return m_free_physical_pages.takeLast();
 }
 
 Vector<RetainPtr<PhysicalPage>> MemoryManager::allocate_physical_pages(size_t count)

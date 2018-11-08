@@ -72,7 +72,7 @@ struct Region : public Retainable<Region> {
         return (laddr - linearAddress).get() / PAGE_SIZE;
     }
 
-    RetainPtr<VirtualFileSystem::Node> m_file;
+    RetainPtr<VirtualFileSystem::Node> m_vnode;
     Unix::off_t m_file_offset { 0 };
 
     LinearAddress linearAddress;
@@ -115,6 +115,7 @@ public:
     bool validate_user_write(const Process&, LinearAddress) const;
 
     Vector<RetainPtr<PhysicalPage>> allocate_physical_pages(size_t count);
+    RetainPtr<PhysicalPage> allocate_physical_page();
 
     void remap_region(Process&, Region&);
 
@@ -142,6 +143,7 @@ private:
     static Region* region_from_laddr(Process&, LinearAddress);
 
     bool copy_on_write(Process&, Region&, unsigned page_index_in_region);
+    bool page_in_from_vnode(Process&, Region&, unsigned page_index_in_region);
 
     byte* quickmap_page(PhysicalPage&);
     void unquickmap_page();

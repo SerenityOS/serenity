@@ -14,6 +14,8 @@
 #define PROT_EXEC 0x4
 #define PROT_NONE 0x0
 
+#define MAP_FAILED ((void*)-1)
+
 __BEGIN_DECLS
 
 void* mmap(void* addr, size_t, int prot, int flags, int fd, off_t);
