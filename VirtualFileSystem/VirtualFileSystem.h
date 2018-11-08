@@ -65,12 +65,16 @@ public:
         VirtualFileSystem* vfs() { return m_vfs; }
         const VirtualFileSystem* vfs() const { return m_vfs; }
 
+        void* vmo() { return m_vmo; }
+        void set_vmo(void* vmo) { m_vmo = vmo; }
+
     private:
         friend class VirtualFileSystem;
         VirtualFileSystem* m_vfs { nullptr };
         unsigned retainCount { 0 };
         CharacterDevice* m_characterDevice { nullptr };
         mutable InodeMetadata m_cachedMetadata;
+        void* m_vmo { nullptr };
     };
 
     static VirtualFileSystem& the() PURE;

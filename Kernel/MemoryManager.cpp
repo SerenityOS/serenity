@@ -220,8 +220,7 @@ Region* MemoryManager::region_from_laddr(Process& process, LinearAddress laddr)
             return region.ptr();
     }
     kprintf("%s(%u) Couldn't find region for L%x\n", process.name().characters(), process.pid(), laddr.get());
-    process.dumpRegions();
-    ASSERT_NOT_REACHED();
+    return nullptr;
 }
 
 bool MemoryManager::copy_on_write(Process& process, Region& region, unsigned page_index_in_region)
@@ -292,7 +291,10 @@ PageFaultResponse MemoryManager::handle_page_fault(const PageFault& fault)
     dbgprintf("MM: handle_page_fault(%w) at L%x\n", fault.code(), fault.laddr().get());
 #endif
     auto* region = region_from_laddr(*current, fault.laddr());
-    ASSERT(region);
+    if (!region) {
+        kprintf("NP(error) fault at invalid address L%x\n", fault.laddr().get());
+        return PageFaultResponse::ShouldCrash;
+    }
     auto page_index_in_region = region->page_index_from_address(fault.laddr());
     if (fault.is_not_present()) {
         if (region->vmo().vnode()) {
@@ -640,7 +642,12 @@ void PhysicalPage::return_to_freelist()
 
 RetainPtr<VMObject> VMObject::create_file_backed(RetainPtr<VirtualFileSystem::Node>&& vnode, size_t size)
 {
-    return adopt(*new VMObject(move(vnode), size));
+    InterruptDisabler disabler;
+    if (vnode->vmo())
+        return static_cast<VMObject*>(vnode->vmo());
+    auto vmo = adopt(*new VMObject(move(vnode), size));
+    vmo->vnode()->set_vmo(vmo.ptr());
+    return vmo;
 }
 
 RetainPtr<VMObject> VMObject::create_anonymous(size_t size)
@@ -679,6 +686,11 @@ VMObject::VMObject(RetainPtr<VirtualFileSystem::Node>&& vnode, size_t size)
 
 VMObject::~VMObject()
 {
+    InterruptDisabler disabler;
+    if (m_vnode) {
+        ASSERT(m_vnode->vmo() == this);
+        m_vnode->set_vmo(nullptr);
+    }
 }
 
 int Region::commit(Process& process)

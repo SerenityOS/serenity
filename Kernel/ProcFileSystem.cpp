@@ -49,7 +49,7 @@ ByteBuffer procfs$pid_vm(Process& process)
 {
     ProcessInspectionScope scope(process);
     char* buffer;
-    auto stringImpl = StringImpl::createUninitialized(80 + process.regionCount() * 80 + 4096, buffer);
+    auto stringImpl = StringImpl::createUninitialized(80 + process.regionCount() * 160 + 4096, buffer);
     memset(buffer, 0, stringImpl->length());
     char* ptr = buffer;
     ptr += ksprintf(ptr, "BEGIN       END         SIZE        NAME\n");
@@ -59,12 +59,17 @@ ByteBuffer procfs$pid_vm(Process& process)
             region->linearAddress.offset(region->size - 1).get(),
             region->size,
             region->name.characters());
+        ptr += ksprintf(ptr, "VMO: %s \"%s\" @ %x(%u)\n",
+            region->vmo().is_anonymous() ? "anonymous" : "file-backed",
+            region->vmo().name().characters(),
+            &region->vmo(),
+            region->vmo().retainCount());
         for (size_t i = 0; i < region->vmo().page_count(); ++i) {
             auto& physical_page = region->vmo().physical_pages()[i];
             ptr += ksprintf(ptr, "P%x%s(%u) ",
                 physical_page ? physical_page->paddr().get() : 0,
                 region->cow_map.get(i) ? "!" : "",
-                physical_page->retain_count()
+                physical_page ? physical_page->retain_count() : 0
             );
         }
         ptr += ksprintf(ptr, "\n");

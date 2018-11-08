@@ -296,7 +296,6 @@ void init()
     procfs->initialize();
 
     Process::initialize();
-
     Process::create_kernel_process(init_stage2, "init_stage2");
 
     Scheduler::pick_next();

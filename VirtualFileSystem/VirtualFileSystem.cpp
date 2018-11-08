@@ -180,6 +180,7 @@ auto VirtualFileSystem::allocateNode() -> RetainPtr<Node>
     ASSERT(node->retainCount == 0);
     node->retainCount = 1;
     node->m_vfs = this;
+    node->m_vmo = nullptr;
     return adopt(*node);
 }
 
@@ -197,6 +198,8 @@ void VirtualFileSystem::freeNode(Node* node)
         m_device2vnode.remove(encodedDevice(node->m_characterDevice->major(), node->m_characterDevice->minor()));
         node->m_characterDevice = nullptr;
     }
+    node->m_vfs = nullptr;
+    node->m_vmo = nullptr;
     m_nodeFreeList.append(move(node));
 }
 

@@ -139,6 +139,27 @@ close_it:
     return 0;
 }
 
+static int sh_mp(int, const char**)
+{
+    int rc;
+    int fd = open("/kernel.map", O_RDONLY);
+    if (fd < 0) {
+        perror("open(/kernel.map)");
+        return 1;
+    }
+    printf("opened /kernel.map, calling mmap...\n");
+    byte* data = (byte*)mmap(nullptr, getpagesize() * 10, PROT_READ, MAP_PRIVATE, fd, 0);
+    if (data == MAP_FAILED) {
+        perror("mmap()");
+        return 1;
+    }
+    printf("mapped file @ %p\n", data);
+    printf("contents: %c%c%c%c%c%c%c...\n", data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7]);
+
+    printf("leaving it open :)\n");
+    return 0;
+}
+
 static int sh_exit(int, const char**)
 {
     printf("Good-bye!\n");
@@ -219,6 +240,10 @@ static bool handle_builtin(int argc, const char** argv, int& retval)
     }
     if (!strcmp(argv[0], "mf")) {
         retval = sh_mf(argc, argv);
+        return true;
+    }
+    if (!strcmp(argv[0], "mp")) {
+        retval = sh_mp(argc, argv);
         return true;
     }
     if (!strcmp(argv[0], "fork")) {
