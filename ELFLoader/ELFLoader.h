@@ -8,14 +8,16 @@
 
 class ELFLoader {
 public:
-    ELFLoader(ByteBuffer&&);
+    explicit ELFLoader(const byte*);
     ~ELFLoader();
 
     bool load();
     Function<void*(LinearAddress, size_t, size_t, bool, bool, const String&)> alloc_section_hook;
+    Function<void*(LinearAddress, size_t, size_t, size_t, bool, bool, const String&)> map_section_hook;
     char* symbol_ptr(const char* name);
     void add_symbol(String&& name, char* ptr, unsigned size);
     bool allocate_section(LinearAddress, size_t, size_t alignment, bool is_readable, bool is_writable);
+    bool map_section(LinearAddress, size_t, size_t alignment, size_t offset_in_image, bool is_readable, bool is_writable);
 
 private:
     bool layout();

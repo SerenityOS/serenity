@@ -188,11 +188,15 @@ void exception_14_handler(RegisterDumpWithExceptionCode& regs)
     dword faultAddress;
     asm ("movl %%cr2, %%eax":"=a"(faultAddress));
 
-    dbgprintf("%s(%u): ring%u %s page fault, %s L%x\n",
+    dword fault_page_directory;
+    asm ("movl %%cr3, %%eax":"=a"(fault_page_directory));
+
+    dbgprintf("%s(%u): ring%u %s page fault in PD=%x, %s L%x\n",
         current->name().characters(),
         current->pid(),
         regs.cs & 3,
         regs.exception_code & 1 ? "PV" : "NP",
+        fault_page_directory,
         regs.exception_code & 2 ? "write" : "read",
         faultAddress);
 

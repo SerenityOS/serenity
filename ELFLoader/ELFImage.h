@@ -8,7 +8,7 @@
 
 class ELFImage {
 public:
-    explicit ELFImage(ByteBuffer&&);
+    explicit ELFImage(const byte*);
     ~ELFImage();
     void dump();
     bool is_valid() const { return m_valid; }
@@ -158,7 +158,7 @@ private:
     const char* section_header_table_string(unsigned offset) const;
     const char* section_index_to_string(unsigned index);
 
-    ByteBuffer m_buffer;
+    const byte* m_buffer { nullptr };
     HashMap<String, unsigned> m_sections;
     bool m_valid { false };
     unsigned m_symbol_table_section_index { 0 };

@@ -94,12 +94,7 @@ Region* Process::allocate_region(LinearAddress laddr, size_t size, String&& name
         laddr = m_nextRegion;
         m_nextRegion = m_nextRegion.offset(size).offset(PAGE_SIZE);
     }
-
     laddr.mask(0xfffff000);
-
-    unsigned page_count = ceilDiv(size, PAGE_SIZE);
-    auto physical_pages = MM.allocate_physical_pages(page_count);
-    ASSERT(physical_pages.size() == page_count);
     m_regions.append(adopt(*new Region(laddr, size, move(name), is_readable, is_writable)));
     m_regions.last()->commit(*this);
     MM.mapRegion(*this, *m_regions.last());
@@ -115,14 +110,25 @@ Region* Process::allocate_file_backed_region(LinearAddress laddr, size_t size, R
         laddr = m_nextRegion;
         m_nextRegion = m_nextRegion.offset(size).offset(PAGE_SIZE);
     }
-
     laddr.mask(0xfffff000);
-
     unsigned page_count = ceilDiv(size, PAGE_SIZE);
-    Vector<RetainPtr<PhysicalPage>> physical_pages;
-    physical_pages.resize(page_count); // Start out with no physical pages!
-
     m_regions.append(adopt(*new Region(laddr, size, move(vnode), move(name), is_readable, is_writable)));
+    MM.mapRegion(*this, *m_regions.last());
+    return m_regions.last().ptr();
+}
+
+Region* Process::allocate_region_with_vmo(LinearAddress laddr, size_t size, RetainPtr<VMObject>&& vmo, size_t offset_in_vmo, String&& name, bool is_readable, bool is_writable)
+{
+    ASSERT(vmo);
+    // FIXME: This needs sanity checks. What if this overlaps existing regions?
+    if (laddr.is_null()) {
+        laddr = m_nextRegion;
+        m_nextRegion = m_nextRegion.offset(size).offset(PAGE_SIZE);
+    }
+    laddr.mask(0xfffff000);
+    offset_in_vmo &= PAGE_MASK;
+    size = ceilDiv(size, PAGE_SIZE) * PAGE_SIZE;
+    m_regions.append(adopt(*new Region(laddr, size, move(vmo), offset_in_vmo, move(name), is_readable, is_writable)));
     MM.mapRegion(*this, *m_regions.last());
     return m_regions.last().ptr();
 }
@@ -296,23 +302,42 @@ int Process::exec(const String& path, Vector<String>&& arguments, Vector<String>
     if (!descriptor->metadata().mayExecute(m_euid, m_gids))
         return -EACCES;
 
+    if (!descriptor->metadata().size) {
+        kprintf("exec() of 0-length binaries not supported\n");
+        return -ENOTIMPL;
+    }
+
+    auto vmo = VMObject::create_file_backed(descriptor->vnode(), descriptor->metadata().size);
+    auto* region = allocate_region_with_vmo(LinearAddress(), descriptor->metadata().size, vmo.copyRef(), 0, "helper", true, false);
+
+#if 0
     auto elfData = descriptor->readEntireFile();
     if (!elfData)
         return -EIO; // FIXME: Get a more detailed error from VFS.
+#endif
 
     dword entry_eip = 0;
-    PageDirectory* old_page_directory;
-    PageDirectory* new_page_directory;
+    PageDirectory* old_page_directory = m_page_directory;
+    PageDirectory* new_page_directory = reinterpret_cast<PageDirectory*>(kmalloc_page_aligned(sizeof(PageDirectory)));
+    dbgprintf("Process exec: PD=%x created\n", new_page_directory);
+    MM.populate_page_directory(*new_page_directory);
+    m_page_directory = new_page_directory;
+    MM.enter_process_paging_scope(*this);
+
+    bool success = region->page_in(*new_page_directory);
+
+    ASSERT(success);
     {
         InterruptDisabler disabler;
         // Okay, here comes the sleight of hand, pay close attention..
         auto old_regions = move(m_regions);
-        old_page_directory = m_page_directory;
-        new_page_directory = reinterpret_cast<PageDirectory*>(kmalloc_page_aligned(sizeof(PageDirectory)));
-        MM.populate_page_directory(*new_page_directory);
-        m_page_directory = new_page_directory;
-        MM.enter_process_paging_scope(*this);
-        ELFLoader loader(move(elfData));
+        ELFLoader loader(region->linearAddress.asPtr());
+        loader.map_section_hook = [&] (LinearAddress laddr, size_t size, size_t alignment, size_t offset_in_image, bool is_readable, bool is_writable, const String& name) {
+            ASSERT(size);
+            size = ((size / 4096) + 1) * 4096; // FIXME: Use ceil_div?
+            (void) allocate_region_with_vmo(laddr, size, vmo.copyRef(), offset_in_image, String(name), is_readable, is_writable);
+            return laddr.asPtr();
+        };
         loader.alloc_section_hook = [&] (LinearAddress laddr, size_t size, size_t alignment, bool is_readable, bool is_writable, const String& name) {
             ASSERT(size);
             size = ((size / 4096) + 1) * 4096; // FIXME: Use ceil_div?
@@ -580,6 +605,7 @@ Process::Process(String&& name, uid_t uid, gid_t gid, pid_t ppid, RingLevel ring
     }
 
     m_page_directory = (PageDirectory*)kmalloc_page_aligned(sizeof(PageDirectory));
+    dbgprintf("Process ctor: PD=%x created\n", m_page_directory);
     MM.populate_page_directory(*m_page_directory);
 
     if (fork_parent) {
@@ -1326,7 +1352,7 @@ pid_t Process::sys$setsid()
 {
     InterruptDisabler disabler;
     bool found_process_with_same_pgid_as_my_pid = false;
-    Process::for_each_in_pgrp(pid(), [&] (auto& process) {
+    Process::for_each_in_pgrp(pid(), [&] (auto&) {
         found_process_with_same_pgid_as_my_pid = true;
         return false;
     });
