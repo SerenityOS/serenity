@@ -28,7 +28,11 @@ int fflush(FILE* stream)
     // FIXME: Implement buffered streams, duh.
     if (!stream)
         return -EBADF;
-    return 0;
+    if (!stream->write_buffer_index)
+        return 0;
+    int rc = write(stream->fd, stream->write_buffer, stream->write_buffer_index);
+    stream->write_buffer_index = 0;
+    return rc;
 }
 
 char* fgets(char* buffer, int size, FILE* stream)
@@ -71,7 +75,10 @@ int getchar()
 int fputc(int ch, FILE* stream)
 {
     assert(stream);
-    write(stream->fd, &ch, 1);
+    assert(stream->write_buffer_index < __STDIO_FILE_BUFFER_SIZE);
+    stream->write_buffer[stream->write_buffer_index++] = ch;
+    if (ch == '\n' || stream->write_buffer_index >= __STDIO_FILE_BUFFER_SIZE)
+        fflush(stream);
     if (stream->eof)
         return EOF;
     return (byte)ch;
@@ -99,7 +106,7 @@ int fputs(const char* s, FILE* stream)
 
 int puts(const char* s)
 {
-    fputs(s, stdout);
+    return fputs(s, stdout);
 }
 
 void clearerr(FILE* stream)
@@ -128,6 +135,7 @@ size_t fread(void* ptr, size_t size, size_t nmemb, FILE* stream)
 size_t fwrite(const void* ptr, size_t size, size_t nmemb, FILE* stream)
 {
     assert(stream);
+    fflush(stream);
     ssize_t nwritten = write(stream->fd, ptr, nmemb * size);
     if (nwritten < 0)
         return 0;
@@ -162,7 +170,7 @@ static void sys_putch(char*&, char ch)
 static FILE* __current_stream = nullptr;
 static void stream_putch(char*&, char ch)
 {
-    write(__current_stream->fd, &ch, 1);
+    fputc(ch, __current_stream);
 }
 
 int fprintf(FILE* fp, const char* fmt, ...)
@@ -211,9 +219,8 @@ FILE* fopen(const char* pathname, const char* mode)
     if (fd < 0)
         return nullptr;
     auto* fp = (FILE*)malloc(sizeof(FILE));
+    memset(fp, 0, sizeof(FILE));
     fp->fd = fd;
-    fp->eof = false;
-    fp->error = 0;
     return fp;
 }
 
@@ -223,9 +230,8 @@ FILE* fdopen(int fd, const char* mode)
     if (fd < 0)
         return nullptr;
     auto* fp = (FILE*)malloc(sizeof(FILE));
+    memset(fp, 0, sizeof(FILE));
     fp->fd = fd;
-    fp->eof = false;
-    fp->error = 0;
     return fp;
 }
 

@@ -4,8 +4,7 @@
 #include <sys/types.h>
 
 __BEGIN_DECLS
-
-#ifndef EOF
+ #ifndef EOF
 #define EOF (-1)
 #endif
 
@@ -13,10 +12,16 @@ __BEGIN_DECLS
 #define SEEK_CUR 1
 #define SEEK_END 2
 
+#define __STDIO_FILE_BUFFER_SIZE 128
+
 struct __STDIO_FILE {
     int fd;
     int eof;
     int error;
+    char read_buffer[__STDIO_FILE_BUFFER_SIZE];
+    size_t read_buffer_index;
+    char write_buffer[__STDIO_FILE_BUFFER_SIZE];
+    size_t write_buffer_index;
 };
 
 typedef struct __STDIO_FILE FILE;
