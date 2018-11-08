@@ -2,7 +2,7 @@
 
 #include "types.h"
 
-#define PAGE_SIZE 4096u
+#define PAGE_SIZE 4096
 #define PAGE_MASK 0xfffff000
 
 union Descriptor {

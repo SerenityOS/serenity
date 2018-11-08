@@ -5,6 +5,7 @@
 #include "i386.h"
 #include "StdLib.h"
 #include "Process.h"
+#include <LibC/errno_numbers.h>
 
 //#define MM_DEBUG
 //#define PAGE_FAULT_DEBUG
@@ -226,7 +227,8 @@ Region* MemoryManager::region_from_laddr(Process& process, LinearAddress laddr)
 bool MemoryManager::copy_on_write(Process& process, Region& region, unsigned page_index_in_region)
 {
     ASSERT_INTERRUPTS_DISABLED();
-    if (region.physical_pages[page_index_in_region]->retain_count() == 1) {
+    auto& vmo = region.vmo();
+    if (vmo.physical_pages()[page_index_in_region]->retain_count() == 1) {
 #ifdef PAGE_FAULT_DEBUG
         dbgprintf("    >> It's a COW page but nobody is sharing it anymore. Remap r/w\n");
 #endif
@@ -238,7 +240,7 @@ bool MemoryManager::copy_on_write(Process& process, Region& region, unsigned pag
 #ifdef PAGE_FAULT_DEBUG
     dbgprintf("    >> It's a COW page and it's time to COW!\n");
 #endif
-    auto physical_page_to_copy = move(region.physical_pages[page_index_in_region]);
+    auto physical_page_to_copy = move(vmo.physical_pages()[page_index_in_region]);
     auto ppages = allocate_physical_pages(1);
     ASSERT(ppages.size() == 1);
     byte* dest_ptr = quickmap_page(*ppages[0]);
@@ -247,7 +249,7 @@ bool MemoryManager::copy_on_write(Process& process, Region& region, unsigned pag
     dbgprintf("      >> COW P%x <- P%x\n", ppages[0]->paddr().get(), physical_page_to_copy->paddr().get());
 #endif
     memcpy(dest_ptr, src_ptr, PAGE_SIZE);
-    region.physical_pages[page_index_in_region] = move(ppages[0]);
+    vmo.physical_pages()[page_index_in_region] = move(ppages[0]);
     unquickmap_page();
     region.cow_map.set(page_index_in_region, false);
     remap_region_page(process.m_page_directory, region, page_index_in_region, true);
@@ -256,9 +258,13 @@ bool MemoryManager::copy_on_write(Process& process, Region& region, unsigned pag
 
 bool MemoryManager::page_in_from_vnode(Process& process, Region& region, unsigned page_index_in_region)
 {
-    ASSERT(region.physical_pages[page_index_in_region].is_null());
-    region.physical_pages[page_index_in_region] = allocate_physical_page();
-    if (region.physical_pages[page_index_in_region].is_null()) {
+    auto& vmo = region.vmo();
+    ASSERT(!vmo.is_anonymous());
+    ASSERT(vmo.vnode());
+    auto& vnode = *vmo.vnode();
+    ASSERT(vmo.physical_pages()[page_index_in_region].is_null());
+    vmo.physical_pages()[page_index_in_region] = allocate_physical_page();
+    if (vmo.physical_pages()[page_index_in_region].is_null()) {
         kprintf("MM: page_in_from_vnode was unable to allocate a physical page\n");
         return false;
     }
@@ -266,7 +272,7 @@ bool MemoryManager::page_in_from_vnode(Process& process, Region& region, unsigne
     byte* dest_ptr = region.linearAddress.offset(page_index_in_region * PAGE_SIZE).asPtr();
     dbgprintf("MM: page_in_from_vnode ready to read from vnode, will write to L%x!\n", dest_ptr);
     sti(); // Oh god here we go...
-    auto nread = region.m_vnode->fileSystem()->readInodeBytes(region.m_vnode->inode, region.m_file_offset, PAGE_SIZE, dest_ptr, nullptr);
+    auto nread = vnode.fileSystem()->readInodeBytes(vnode.inode, vmo.vnode_offset(), PAGE_SIZE, dest_ptr, nullptr);
     if (nread < 0) {
         kprintf("MM: page_in_form_vnode had error (%d) while reading!\n", nread);
         return false;
@@ -289,7 +295,7 @@ PageFaultResponse MemoryManager::handle_page_fault(const PageFault& fault)
     ASSERT(region);
     auto page_index_in_region = region->page_index_from_address(fault.laddr());
     if (fault.is_not_present()) {
-        if (region->m_vnode) {
+        if (region->vmo().vnode()) {
             dbgprintf("NP(vnode) fault in Region{%p}[%u]\n", region, page_index_in_region);
             page_in_from_vnode(*current, *region, page_index_in_region);
             return PageFaultResponse::Continue;
@@ -407,7 +413,7 @@ void MemoryManager::remap_region_page(PageDirectory* page_directory, Region& reg
     InterruptDisabler disabler;
     auto page_laddr = region.linearAddress.offset(page_index_in_region * PAGE_SIZE);
     auto pte = ensurePTE(page_directory, page_laddr);
-    auto& physical_page = region.physical_pages[page_index_in_region];
+    auto& physical_page = region.vmo().physical_pages()[page_index_in_region];
     ASSERT(physical_page);
     pte.setPhysicalPageBase(physical_page->paddr().get());
     pte.setPresent(true); // FIXME: Maybe we should use the is_readable flag here?
@@ -431,10 +437,11 @@ void MemoryManager::remap_region(Process& process, Region& region)
 void MemoryManager::map_region_at_address(PageDirectory* page_directory, Region& region, LinearAddress laddr, bool user_allowed)
 {
     InterruptDisabler disabler;
-    for (size_t i = 0; i < region.physical_pages.size(); ++i) {
+    auto& vmo = region.vmo();
+    for (size_t i = 0; i < vmo.page_count(); ++i) {
         auto page_laddr = laddr.offset(i * PAGE_SIZE);
         auto pte = ensurePTE(page_directory, page_laddr);
-        auto& physical_page = region.physical_pages[i];
+        auto& physical_page = vmo.physical_pages()[i];
         if (physical_page) {
             pte.setPhysicalPageBase(physical_page->paddr().get());
             pte.setPresent(true); // FIXME: Maybe we should use the is_readable flag here?
@@ -510,7 +517,8 @@ void MemoryManager::remove_kernel_alias_for_region(Region& region, byte* addr)
 bool MemoryManager::unmapRegion(Process& process, Region& region)
 {
     InterruptDisabler disabler;
-    for (size_t i = 0; i < region.physical_pages.size(); ++i) {
+    auto& vmo = region.vmo();
+    for (size_t i = 0; i < vmo.page_count(); ++i) {
         auto laddr = region.linearAddress.offset(i * PAGE_SIZE);
         auto pte = ensurePTE(process.m_page_directory, laddr);
         pte.setPhysicalPageBase(0);
@@ -519,7 +527,7 @@ bool MemoryManager::unmapRegion(Process& process, Region& region)
         pte.setUserAllowed(false);
         flushTLB(laddr);
 #ifdef MM_DEBUG
-        auto& physical_page = region.physical_pages[i];
+        auto& physical_page = vmo.physical_pages()[i];
         dbgprintf("MM: >> Unmapped L%x => P%x <<\n", laddr, physical_page ? physical_page->paddr().get() : 0);
 #endif
     }
@@ -569,26 +577,51 @@ RetainPtr<Region> Region::clone()
     InterruptDisabler disabler;
 
     if (is_readable && !is_writable) {
-        // Create a new region backed by the same physical pages.
-        return adopt(*new Region(linearAddress, size, physical_pages, String(name), is_readable, is_writable));
+        // Create a new region backed by the same VMObject.
+        return adopt(*new Region(linearAddress, size, m_vmo.copyRef(), String(name), is_readable, is_writable));
     }
 
     // Set up a COW region. The parent (this) region becomes COW as well!
-    for (size_t i = 0; i < physical_pages.size(); ++i)
+    for (size_t i = 0; i < vmo().page_count(); ++i)
         cow_map.set(i, true);
     MM.remap_region(*current, *this);
-    return adopt(*new Region(linearAddress, size, physical_pages, String(name), is_readable, is_writable, true));
+    return adopt(*new Region(linearAddress, size, m_vmo->clone(), String(name), is_readable, is_writable, true));
 }
 
-Region::Region(LinearAddress a, size_t s, Vector<RetainPtr<PhysicalPage>> pp, String&& n, bool r, bool w, bool cow)
+Region::Region(LinearAddress a, size_t s, String&& n, bool r, bool w, bool cow)
     : linearAddress(a)
     , size(s)
-    , physical_pages(move(pp))
+    , m_vmo(VMObject::create_anonymous(s))
     , name(move(n))
     , is_readable(r)
     , is_writable(w)
-    , cow_map(Bitmap::create(physical_pages.size(), cow))
+    , cow_map(Bitmap::create(m_vmo->page_count(), cow))
 {
+    m_vmo->set_name(name);
+}
+
+Region::Region(LinearAddress a, size_t s, RetainPtr<VirtualFileSystem::Node>&& vnode, String&& n, bool r, bool w)
+    : linearAddress(a)
+    , size(s)
+    , m_vmo(VMObject::create_file_backed(move(vnode), s))
+    , name(move(n))
+    , is_readable(r)
+    , is_writable(w)
+    , cow_map(Bitmap::create(m_vmo->page_count()))
+{
+    m_vmo->set_name(name);
+}
+
+Region::Region(LinearAddress a, size_t s, RetainPtr<VMObject>&& vmo, String&& n, bool r, bool w, bool cow)
+    : linearAddress(a)
+    , size(s)
+    , m_vmo(move(vmo))
+    , name(move(n))
+    , is_readable(r)
+    , is_writable(w)
+    , cow_map(Bitmap::create(m_vmo->page_count(), cow))
+{
+    m_vmo->set_name(name);
 }
 
 Region::~Region()
@@ -603,4 +636,67 @@ void PhysicalPage::return_to_freelist()
 #ifdef MM_DEBUG
     dbgprintf("MM: P%x released to freelist\n", m_paddr.get());
 #endif
+}
+
+RetainPtr<VMObject> VMObject::create_file_backed(RetainPtr<VirtualFileSystem::Node>&& vnode, size_t size)
+{
+    return adopt(*new VMObject(move(vnode), size));
+}
+
+RetainPtr<VMObject> VMObject::create_anonymous(size_t size)
+{
+    return adopt(*new VMObject(size));
+}
+
+RetainPtr<VMObject> VMObject::clone()
+{
+    return adopt(*new VMObject(*this));
+}
+
+VMObject::VMObject(VMObject& other)
+    : m_name(other.m_name)
+    , m_anonymous(other.m_anonymous)
+    , m_vnode_offset(other.m_vnode_offset)
+    , m_size(other.m_size)
+    , m_vnode(other.m_vnode)
+    , m_physical_pages(other.m_physical_pages)
+{
+}
+
+VMObject::VMObject(size_t size)
+    : m_anonymous(true)
+    , m_size(size)
+{
+    m_physical_pages.resize(page_count());
+}
+
+VMObject::VMObject(RetainPtr<VirtualFileSystem::Node>&& vnode, size_t size)
+    : m_size(size)
+    , m_vnode(move(vnode))
+{
+    m_physical_pages.resize(page_count());
+}
+
+VMObject::~VMObject()
+{
+}
+
+int Region::commit(Process& process)
+{
+    InterruptDisabler disabler;
+#ifdef MM_DEBUG
+    dbgprintf("MM: commit %u pages in at L%x\n", vmo().page_count(), linearAddress.get());
+#endif
+    for (size_t i = 0; i < vmo().page_count(); ++i) {
+        if (!vmo().physical_pages()[i].is_null())
+            continue;
+        auto physical_page = MM.allocate_physical_page();
+        if (!physical_page) {
+            kprintf("MM: page_in_from_vnode was unable to allocate a physical page\n");
+            return -ENOMEM;
+        }
+        vmo().physical_pages()[i] = move(physical_page);
+        MM.remap_region_page(process.m_page_directory, *this, i, true);
+    }
+    return 0;
 }

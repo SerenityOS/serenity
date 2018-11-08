@@ -57,9 +57,46 @@ struct PageDirectory {
     RetainPtr<PhysicalPage> physical_pages[1024];
 };
 
+class VMObject : public Retainable<VMObject> {
+public:
+    static RetainPtr<VMObject> create_file_backed(RetainPtr<VirtualFileSystem::Node>&&, size_t);
+    static RetainPtr<VMObject> create_anonymous(size_t);
+    RetainPtr<VMObject> clone();
+
+    ~VMObject();
+    bool is_anonymous() const { return m_anonymous; }
+
+    VirtualFileSystem::Node* vnode() { return m_vnode.ptr(); }
+    const VirtualFileSystem::Node* vnode() const { return m_vnode.ptr(); }
+    size_t vnode_offset() const { return m_vnode_offset; }
+
+    String name() const { return m_name; }
+    void set_name(const String& name) { m_name = name; }
+
+    size_t page_count() const { return m_size / PAGE_SIZE; }
+    const Vector<RetainPtr<PhysicalPage>>& physical_pages() const { return m_physical_pages; }
+    Vector<RetainPtr<PhysicalPage>>& physical_pages() { return m_physical_pages; }
+
+private:
+    VMObject(RetainPtr<VirtualFileSystem::Node>&&, size_t);
+    explicit VMObject(VMObject&);
+    explicit VMObject(size_t);
+    String m_name;
+    bool m_anonymous { false };
+    Unix::off_t m_vnode_offset { 0 };
+    size_t m_size { 0 };
+    RetainPtr<VirtualFileSystem::Node> m_vnode;
+    Vector<RetainPtr<PhysicalPage>> m_physical_pages;
+};
+
 struct Region : public Retainable<Region> {
-    Region(LinearAddress, size_t, Vector<RetainPtr<PhysicalPage>>, String&&, bool r, bool w, bool cow = false);
+    Region(LinearAddress, size_t, String&&, bool r, bool w, bool cow = false);
+    Region(LinearAddress, size_t, RetainPtr<VMObject>&&, String&&, bool r, bool w, bool cow = false);
+    Region(LinearAddress, size_t, RetainPtr<VirtualFileSystem::Node>&&, String&&, bool r, bool w);
     ~Region();
+
+    const VMObject& vmo() const { return *m_vmo; }
+    VMObject& vmo() { return *m_vmo; }
 
     RetainPtr<Region> clone();
     bool contains(LinearAddress laddr) const
@@ -72,12 +109,12 @@ struct Region : public Retainable<Region> {
         return (laddr - linearAddress).get() / PAGE_SIZE;
     }
 
-    RetainPtr<VirtualFileSystem::Node> m_vnode;
-    Unix::off_t m_file_offset { 0 };
+    int commit(Process&);
+    int decommit(Process&);
 
     LinearAddress linearAddress;
     size_t size { 0 };
-    Vector<RetainPtr<PhysicalPage>> physical_pages;
+    RetainPtr<VMObject> m_vmo;
     String name;
     bool is_readable { true };
     bool is_writable { true };
@@ -89,6 +126,7 @@ struct Region : public Retainable<Region> {
 class MemoryManager {
     AK_MAKE_ETERNAL
     friend class PhysicalPage;
+    friend class Region;
     friend ByteBuffer procfs$mm();
 public:
     static MemoryManager& the() PURE;
