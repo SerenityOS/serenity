@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 #include <Kernel/Syscall.h>
 #include <AK/StringImpl.h>
 
@@ -19,6 +20,8 @@ extern "C" int _start()
     __malloc_init();
 
     errno = 0;
+
+    memset(__default_streams, 0, sizeof(__default_streams));
 
     __default_streams[0].fd = 0;
     stdin = &__default_streams[0];

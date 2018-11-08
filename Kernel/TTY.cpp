@@ -26,8 +26,7 @@ ssize_t TTY::read(byte* buffer, size_t size)
 
 ssize_t TTY::write(const byte* buffer, size_t size)
 {
-    for (size_t i = 0; i < size; ++i)
-        onTTYWrite(buffer[i]);
+    onTTYWrite(buffer, size);
     return 0;
 }
 

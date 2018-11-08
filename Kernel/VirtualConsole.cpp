@@ -320,7 +320,6 @@ void VirtualConsole::put_character_at(unsigned row, unsigned column, byte ch)
 
 void VirtualConsole::on_char(byte ch, bool shouldEmit)
 {
-    InterruptDisabler disabler;
     if (shouldEmit)
         emit(ch);
 
@@ -397,15 +396,18 @@ void VirtualConsole::onKeyPress(Keyboard::Key key)
 
 void VirtualConsole::onConsoleReceive(byte ch)
 {
+    InterruptDisabler disabler;
     auto old_attribute = m_current_attribute;
     m_current_attribute = 0x03;
     on_char(ch, false);
     m_current_attribute = old_attribute;
 }
 
-void VirtualConsole::onTTYWrite(byte ch)
+void VirtualConsole::onTTYWrite(const byte* data, size_t size)
 {
-    on_char(ch, false);
+    InterruptDisabler disabler;
+    for (size_t i = 0; i < size; ++i)
+        on_char(data[i], false);
 }
 
 String VirtualConsole::ttyName() const

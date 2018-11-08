@@ -23,7 +23,7 @@ private:
     virtual void onConsoleReceive(byte) override;
 
     // ^TTY
-    virtual void onTTYWrite(byte) override;
+    virtual void onTTYWrite(const byte*, size_t) override;
     virtual String ttyName() const override;
 
     void set_active(bool);

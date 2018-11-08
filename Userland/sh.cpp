@@ -25,6 +25,7 @@ static void prompt()
         printf("# ");
     else
         printf("\033[31;1m%s\033[0m@\033[37;1m%s\033[0m:\033[32;1m%s\033[0m$> ", g->username.characters(), g->hostname, g->cwd.characters());
+    fflush(stdout);
 }
 
 static int sh_pwd(int, const char**)
@@ -347,6 +348,7 @@ int main(int, char**)
         }
         for (ssize_t i = 0; i < nread; ++i) {
             putchar(keybuf[i]);
+            fflush(stdout);
             if (keybuf[i] != '\n') {
                 linebuf[linedx++] = keybuf[i];
                 linebuf[linedx] = '\0';

@@ -29,15 +29,19 @@
 #define VALIDATE_USER_READ(b, s) \
     do { \
         LinearAddress laddr((dword)(b)); \
-        if (!validate_user_read(laddr) || !validate_user_read(laddr.offset((s) - 1))) \
+        if (!validate_user_read(laddr) || !validate_user_read(laddr.offset((s) - 1))) { \
+            dbgprintf("Bad read address passed to syscall: %p +%u\n", laddr.get(), (s)); \
             return -EFAULT; \
+        } \
     } while(0)
 
 #define VALIDATE_USER_WRITE(b, s) \
     do { \
         LinearAddress laddr((dword)(b)); \
-        if (!validate_user_write(laddr) || !validate_user_write(laddr.offset((s) - 1))) \
+        if (!validate_user_write(laddr) || !validate_user_write(laddr.offset((s) - 1))) { \
+            dbgprintf("Bad write address passed to syscall: %p +%u\n", laddr.get(), (s)); \
             return -EFAULT; \
+        } \
     } while(0)
 
 static const DWORD defaultStackSize = 16384;

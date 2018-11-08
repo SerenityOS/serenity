@@ -17,7 +17,7 @@ int main(int argc, char** argv)
         return 1;
     }
     for (;;) {
-        char buf[1024];
+        char buf[4096];
         ssize_t nread = read(fd, buf, sizeof(buf));
         if (nread == 0)
             break;
@@ -25,8 +25,7 @@ int main(int argc, char** argv)
             printf("read() error: %s\n", strerror(errno));
             return 2;
         }
-        for (ssize_t i = 0; i < nread; ++i)
-            putchar(buf[i]);
+        write(1, buf, nread);
     }
     return 0;
 }

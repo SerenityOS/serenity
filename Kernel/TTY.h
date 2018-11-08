@@ -21,7 +21,7 @@ protected:
     TTY(unsigned major, unsigned minor);
     void emit(byte);
 
-    virtual void onTTYWrite(byte) = 0;
+    virtual void onTTYWrite(const byte*, size_t) = 0;
 
     void interrupt();
 
