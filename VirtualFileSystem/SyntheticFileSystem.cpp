@@ -194,8 +194,6 @@ bool SyntheticFileSystem::writeInode(InodeIdentifier, const ByteBuffer&)
 
 Unix::ssize_t SyntheticFileSystem::readInodeBytes(InodeIdentifier inode, Unix::off_t offset, Unix::size_t count, byte* buffer, FileDescriptor* handle) const
 {
-    InterruptDisabler disabler;
-
     ASSERT(inode.fileSystemID() == id());
 #ifdef SYNTHFS_DEBUG
     kprintf("synthfs: readInode %u\n", inode.index());
@@ -203,10 +201,15 @@ Unix::ssize_t SyntheticFileSystem::readInodeBytes(InodeIdentifier inode, Unix::o
     ASSERT(offset >= 0);
     ASSERT(buffer);
 
-    auto it = m_inodes.find(inode.index());
-    if (it == m_inodes.end())
-        return false;
-    const File& file = *(*it).value;
+    const File* found_file;
+    {
+        InterruptDisabler disabler;
+        auto it = m_inodes.find(inode.index());
+        if (it == m_inodes.end())
+            return false;
+        found_file = (*it).value.ptr();
+    }
+    const File& file = *found_file;
     ByteBuffer generatedData;
     if (file.generator) {
         if (!handle) {
