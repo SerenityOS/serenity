@@ -619,6 +619,8 @@ Region::Region(LinearAddress a, size_t s, String&& n, bool r, bool w, bool cow)
     , is_writable(w)
     , cow_map(Bitmap::create(m_vmo->page_count(), cow))
 {
+    m_vmo->set_name(name);
+    MM.register_region(*this);
 }
 
 Region::Region(LinearAddress a, size_t s, RetainPtr<VirtualFileSystem::Node>&& vnode, String&& n, bool r, bool w)
@@ -630,6 +632,7 @@ Region::Region(LinearAddress a, size_t s, RetainPtr<VirtualFileSystem::Node>&& v
     , is_writable(w)
     , cow_map(Bitmap::create(m_vmo->page_count()))
 {
+    MM.register_region(*this);
 }
 
 Region::Region(LinearAddress a, size_t s, RetainPtr<VMObject>&& vmo, size_t offset_in_vmo, String&& n, bool r, bool w, bool cow)
@@ -642,10 +645,12 @@ Region::Region(LinearAddress a, size_t s, RetainPtr<VMObject>&& vmo, size_t offs
     , is_writable(w)
     , cow_map(Bitmap::create(m_vmo->page_count(), cow))
 {
+    MM.register_region(*this);
 }
 
 Region::~Region()
 {
+    MM.unregister_region(*this);
 }
 
 void PhysicalPage::return_to_freelist()
@@ -738,10 +743,24 @@ int Region::commit(Process& process)
 
 void MemoryManager::register_vmo(VMObject& vmo)
 {
+    InterruptDisabler disabler;
     m_vmos.set(&vmo);
 }
 
 void MemoryManager::unregister_vmo(VMObject& vmo)
 {
+    InterruptDisabler disabler;
     m_vmos.remove(&vmo);
+}
+
+void MemoryManager::register_region(Region& region)
+{
+    InterruptDisabler disabler;
+    m_regions.set(&region);
+}
+
+void MemoryManager::unregister_region(Region& region)
+{
+    InterruptDisabler disabler;
+    m_regions.remove(&region);
 }

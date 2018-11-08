@@ -146,6 +146,7 @@ class MemoryManager {
     friend class Region;
     friend class VMObject;
     friend ByteBuffer procfs$mm();
+    friend ByteBuffer procfs$regions();
 public:
     static MemoryManager& the() PURE;
 
@@ -181,6 +182,8 @@ private:
 
     void register_vmo(VMObject&);
     void unregister_vmo(VMObject&);
+    void register_region(Region&);
+    void unregister_region(Region&);
 
     LinearAddress allocate_linear_address_range(size_t);
     void map_region_at_address(PageDirectory*, Region&, LinearAddress, bool user_accessible);
@@ -296,6 +299,7 @@ private:
     Vector<RetainPtr<PhysicalPage>> m_free_physical_pages;
 
     HashTable<VMObject*> m_vmos;
+    HashTable<Region*> m_regions;
 };
 
 struct KernelPagingScope {
