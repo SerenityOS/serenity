@@ -87,7 +87,7 @@ private:
     };
 
     template<typename CallableType>
-    class CallableWrapper : public CallableWrapperBase {
+    class CallableWrapper final : public CallableWrapperBase {
     public:
         explicit CallableWrapper(CallableType&& callable)
             : m_callable(move(callable))

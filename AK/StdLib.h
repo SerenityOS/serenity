@@ -28,9 +28,10 @@ inline T max(const T& a, const T& b)
 }
 
 
-template<typename T>
-static inline T ceilDiv(T a, T b)
+template<typename T, typename U>
+static inline T ceilDiv(T a, U b)
 {
+    static_assert(sizeof(T) == sizeof(U));
     T result = a / b;
     if ((a % b) != 0)
         ++result;
