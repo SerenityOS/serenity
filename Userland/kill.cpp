@@ -6,6 +6,10 @@
 
 static unsigned parseUInt(const String& str, bool& ok)
 {
+    if (str.isEmpty()) {
+        ok = false;
+        return 0;
+    }
     unsigned value = 0;
     for (size_t i = 0; i < str.length(); ++i) {
         if (str[i] < '0' || str[i] > '9') {
@@ -38,13 +42,13 @@ int main(int argc, char** argv)
             print_usage_and_exit();
         signum = parseUInt(&argv[1][1], ok);
         if (!ok) {
-            printf("%s is not a valid signal number\n", &argv[1][1]);
+            printf("'%s' is not a valid signal number\n", &argv[1][1]);
             return 2;
         }
     }
     unsigned pid = parseUInt(argv[pid_argi], ok);
     if (!ok) {
-        printf("%s is not a valid PID\n", argv[pid_argi]);
+        printf("'%s' is not a valid PID\n", argv[pid_argi]);
         return 3;
     }
 
