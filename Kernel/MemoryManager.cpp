@@ -255,23 +255,43 @@ bool MemoryManager::copy_on_write(Process& process, Region& region, unsigned pag
     return true;
 }
 
-bool MemoryManager::page_in_from_vnode(Process& process, Region& region, unsigned page_index_in_region)
+bool Region::page_in(PageDirectory& page_directory)
+{
+    ASSERT(!vmo().is_anonymous());
+    ASSERT(vmo().vnode());
+#ifdef MM_DEBUG
+    dbgprintf("MM: page_in %u pages\n", page_count());
+#endif
+    for (size_t i = 0; i < page_count(); ++i) {
+        auto& vmo_page = vmo().physical_pages()[first_page_index() + i];
+        if (vmo_page.is_null()) {
+            bool success = MM.page_in_from_vnode(page_directory, *this, i);
+            if (!success)
+                return false;
+        }
+        MM.remap_region_page(&page_directory, *this, i, true);
+    }
+    return true;
+}
+
+bool MemoryManager::page_in_from_vnode(PageDirectory& page_directory, Region& region, unsigned page_index_in_region)
 {
     auto& vmo = region.vmo();
     ASSERT(!vmo.is_anonymous());
     ASSERT(vmo.vnode());
     auto& vnode = *vmo.vnode();
-    ASSERT(vmo.physical_pages()[page_index_in_region].is_null());
-    vmo.physical_pages()[page_index_in_region] = allocate_physical_page();
-    if (vmo.physical_pages()[page_index_in_region].is_null()) {
+    auto& vmo_page = vmo.physical_pages()[region.first_page_index() + page_index_in_region];
+    ASSERT(vmo_page.is_null());
+    vmo_page = allocate_physical_page();
+    if (vmo_page.is_null()) {
         kprintf("MM: page_in_from_vnode was unable to allocate a physical page\n");
         return false;
     }
-    remap_region_page(process.m_page_directory, region, page_index_in_region, true);
+    remap_region_page(&page_directory, region, page_index_in_region, true);
     byte* dest_ptr = region.linearAddress.offset(page_index_in_region * PAGE_SIZE).asPtr();
     dbgprintf("MM: page_in_from_vnode ready to read from vnode, will write to L%x!\n", dest_ptr);
     sti(); // Oh god here we go...
-    auto nread = vnode.fileSystem()->readInodeBytes(vnode.inode, vmo.vnode_offset(), PAGE_SIZE, dest_ptr, nullptr);
+    auto nread = vnode.fileSystem()->readInodeBytes(vnode.inode, vmo.vnode_offset() + ((region.first_page_index() + page_index_in_region) * PAGE_SIZE), PAGE_SIZE, dest_ptr, nullptr);
     if (nread < 0) {
         kprintf("MM: page_in_form_vnode had error (%d) while reading!\n", nread);
         return false;
@@ -299,7 +319,7 @@ PageFaultResponse MemoryManager::handle_page_fault(const PageFault& fault)
     if (fault.is_not_present()) {
         if (region->vmo().vnode()) {
             dbgprintf("NP(vnode) fault in Region{%p}[%u]\n", region, page_index_in_region);
-            page_in_from_vnode(*current, *region, page_index_in_region);
+            page_in_from_vnode(*current->m_page_directory, *region, page_index_in_region);
             return PageFaultResponse::Continue;
         } else {
             kprintf("NP(error) fault in Region{%p}[%u]\n", region, page_index_in_region);
@@ -440,7 +460,8 @@ void MemoryManager::map_region_at_address(PageDirectory* page_directory, Region&
 {
     InterruptDisabler disabler;
     auto& vmo = region.vmo();
-    for (size_t i = 0; i < vmo.page_count(); ++i) {
+    dbgprintf("MM: map_region_at_address will map VMO pages %u - %u (VMO page count: %u)\n", region.first_page_index(), region.last_page_index(), vmo.page_count());
+    for (size_t i = region.first_page_index(); i <= region.last_page_index(); ++i) {
         auto page_laddr = laddr.offset(i * PAGE_SIZE);
         auto pte = ensurePTE(page_directory, page_laddr);
         auto& physical_page = vmo.physical_pages()[i];
@@ -519,8 +540,7 @@ void MemoryManager::remove_kernel_alias_for_region(Region& region, byte* addr)
 bool MemoryManager::unmapRegion(Process& process, Region& region)
 {
     InterruptDisabler disabler;
-    auto& vmo = region.vmo();
-    for (size_t i = 0; i < vmo.page_count(); ++i) {
+    for (size_t i = 0; i < region.page_count(); ++i) {
         auto laddr = region.linearAddress.offset(i * PAGE_SIZE);
         auto pte = ensurePTE(process.m_page_directory, laddr);
         pte.setPhysicalPageBase(0);
@@ -529,7 +549,7 @@ bool MemoryManager::unmapRegion(Process& process, Region& region)
         pte.setUserAllowed(false);
         flushTLB(laddr);
 #ifdef MM_DEBUG
-        auto& physical_page = vmo.physical_pages()[i];
+        auto& physical_page = region.vmo().physical_pages()[region.first_page_index() + i];
         dbgprintf("MM: >> Unmapped L%x => P%x <<\n", laddr, physical_page ? physical_page->paddr().get() : 0);
 #endif
     }
@@ -580,14 +600,14 @@ RetainPtr<Region> Region::clone()
 
     if (is_readable && !is_writable) {
         // Create a new region backed by the same VMObject.
-        return adopt(*new Region(linearAddress, size, m_vmo.copyRef(), String(name), is_readable, is_writable));
+        return adopt(*new Region(linearAddress, size, m_vmo.copyRef(), m_offset_in_vmo, String(name), is_readable, is_writable));
     }
 
     // Set up a COW region. The parent (this) region becomes COW as well!
-    for (size_t i = 0; i < vmo().page_count(); ++i)
+    for (size_t i = 0; i < page_count(); ++i)
         cow_map.set(i, true);
     MM.remap_region(*current, *this);
-    return adopt(*new Region(linearAddress, size, m_vmo->clone(), String(name), is_readable, is_writable, true));
+    return adopt(*new Region(linearAddress, size, m_vmo->clone(), m_offset_in_vmo, String(name), is_readable, is_writable, true));
 }
 
 Region::Region(LinearAddress a, size_t s, String&& n, bool r, bool w, bool cow)
@@ -599,7 +619,6 @@ Region::Region(LinearAddress a, size_t s, String&& n, bool r, bool w, bool cow)
     , is_writable(w)
     , cow_map(Bitmap::create(m_vmo->page_count(), cow))
 {
-    m_vmo->set_name(name);
 }
 
 Region::Region(LinearAddress a, size_t s, RetainPtr<VirtualFileSystem::Node>&& vnode, String&& n, bool r, bool w)
@@ -611,19 +630,18 @@ Region::Region(LinearAddress a, size_t s, RetainPtr<VirtualFileSystem::Node>&& v
     , is_writable(w)
     , cow_map(Bitmap::create(m_vmo->page_count()))
 {
-    m_vmo->set_name(name);
 }
 
-Region::Region(LinearAddress a, size_t s, RetainPtr<VMObject>&& vmo, String&& n, bool r, bool w, bool cow)
+Region::Region(LinearAddress a, size_t s, RetainPtr<VMObject>&& vmo, size_t offset_in_vmo, String&& n, bool r, bool w, bool cow)
     : linearAddress(a)
     , size(s)
+    , m_offset_in_vmo(offset_in_vmo)
     , m_vmo(move(vmo))
     , name(move(n))
     , is_readable(r)
     , is_writable(w)
     , cow_map(Bitmap::create(m_vmo->page_count(), cow))
 {
-    m_vmo->set_name(name);
 }
 
 Region::~Region()
@@ -645,6 +663,7 @@ RetainPtr<VMObject> VMObject::create_file_backed(RetainPtr<VirtualFileSystem::No
     InterruptDisabler disabler;
     if (vnode->vmo())
         return static_cast<VMObject*>(vnode->vmo());
+    size = ceilDiv(size, PAGE_SIZE) * PAGE_SIZE;
     auto vmo = adopt(*new VMObject(move(vnode), size));
     vmo->vnode()->set_vmo(vmo.ptr());
     return vmo;
@@ -652,6 +671,7 @@ RetainPtr<VMObject> VMObject::create_file_backed(RetainPtr<VirtualFileSystem::No
 
 RetainPtr<VMObject> VMObject::create_anonymous(size_t size)
 {
+    size = ceilDiv(size, PAGE_SIZE) * PAGE_SIZE;
     return adopt(*new VMObject(size));
 }
 
@@ -668,12 +688,14 @@ VMObject::VMObject(VMObject& other)
     , m_vnode(other.m_vnode)
     , m_physical_pages(other.m_physical_pages)
 {
+    MM.register_vmo(*this);
 }
 
 VMObject::VMObject(size_t size)
     : m_anonymous(true)
     , m_size(size)
 {
+    MM.register_vmo(*this);
     m_physical_pages.resize(page_count());
 }
 
@@ -682,15 +704,16 @@ VMObject::VMObject(RetainPtr<VirtualFileSystem::Node>&& vnode, size_t size)
     , m_vnode(move(vnode))
 {
     m_physical_pages.resize(page_count());
+    MM.register_vmo(*this);
 }
 
 VMObject::~VMObject()
 {
-    InterruptDisabler disabler;
     if (m_vnode) {
         ASSERT(m_vnode->vmo() == this);
         m_vnode->set_vmo(nullptr);
     }
+    MM.unregister_vmo(*this);
 }
 
 int Region::commit(Process& process)
@@ -699,16 +722,26 @@ int Region::commit(Process& process)
 #ifdef MM_DEBUG
     dbgprintf("MM: commit %u pages in at L%x\n", vmo().page_count(), linearAddress.get());
 #endif
-    for (size_t i = 0; i < vmo().page_count(); ++i) {
+    for (size_t i = first_page_index(); i <= last_page_index(); ++i) {
         if (!vmo().physical_pages()[i].is_null())
             continue;
         auto physical_page = MM.allocate_physical_page();
         if (!physical_page) {
-            kprintf("MM: page_in_from_vnode was unable to allocate a physical page\n");
+            kprintf("MM: commit was unable to allocate a physical page\n");
             return -ENOMEM;
         }
         vmo().physical_pages()[i] = move(physical_page);
         MM.remap_region_page(process.m_page_directory, *this, i, true);
     }
     return 0;
+}
+
+void MemoryManager::register_vmo(VMObject& vmo)
+{
+    m_vmos.set(&vmo);
+}
+
+void MemoryManager::unregister_vmo(VMObject& vmo)
+{
+    m_vmos.remove(&vmo);
 }

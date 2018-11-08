@@ -91,7 +91,7 @@ private:
 
 struct Region : public Retainable<Region> {
     Region(LinearAddress, size_t, String&&, bool r, bool w, bool cow = false);
-    Region(LinearAddress, size_t, RetainPtr<VMObject>&&, String&&, bool r, bool w, bool cow = false);
+    Region(LinearAddress, size_t, RetainPtr<VMObject>&&, size_t offset_in_vmo, String&&, bool r, bool w, bool cow = false);
     Region(LinearAddress, size_t, RetainPtr<VirtualFileSystem::Node>&&, String&&, bool r, bool w);
     ~Region();
 
@@ -109,11 +109,28 @@ struct Region : public Retainable<Region> {
         return (laddr - linearAddress).get() / PAGE_SIZE;
     }
 
+    size_t first_page_index() const
+    {
+        return m_offset_in_vmo / PAGE_SIZE;
+    }
+
+    size_t last_page_index() const
+    {
+        return (first_page_index() + page_count()) - 1;
+    }
+
+    size_t page_count() const
+    {
+        return size / PAGE_SIZE;
+    }
+
+    bool page_in(PageDirectory&);
     int commit(Process&);
     int decommit(Process&);
 
     LinearAddress linearAddress;
     size_t size { 0 };
+    size_t m_offset_in_vmo { 0 };
     RetainPtr<VMObject> m_vmo;
     String name;
     bool is_readable { true };
@@ -127,6 +144,7 @@ class MemoryManager {
     AK_MAKE_ETERNAL
     friend class PhysicalPage;
     friend class Region;
+    friend class VMObject;
     friend ByteBuffer procfs$mm();
 public:
     static MemoryManager& the() PURE;
@@ -161,6 +179,9 @@ private:
     MemoryManager();
     ~MemoryManager();
 
+    void register_vmo(VMObject&);
+    void unregister_vmo(VMObject&);
+
     LinearAddress allocate_linear_address_range(size_t);
     void map_region_at_address(PageDirectory*, Region&, LinearAddress, bool user_accessible);
     void unmap_range(PageDirectory*, LinearAddress, size_t);
@@ -181,7 +202,7 @@ private:
     static Region* region_from_laddr(Process&, LinearAddress);
 
     bool copy_on_write(Process&, Region&, unsigned page_index_in_region);
-    bool page_in_from_vnode(Process&, Region&, unsigned page_index_in_region);
+    bool page_in_from_vnode(PageDirectory&, Region&, unsigned page_index_in_region);
 
     byte* quickmap_page(PhysicalPage&);
     void unquickmap_page();
@@ -273,6 +294,8 @@ private:
     LinearAddress m_next_laddr;
 
     Vector<RetainPtr<PhysicalPage>> m_free_physical_pages;
+
+    HashTable<VMObject*> m_vmos;
 };
 
 struct KernelPagingScope {

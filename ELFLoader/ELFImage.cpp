@@ -1,7 +1,7 @@
 #include "ELFImage.h"
 #include <AK/kstdio.h>
 
-ELFImage::ELFImage(ByteBuffer&& buffer)
+ELFImage::ELFImage(const byte* buffer)
     : m_buffer(buffer)
 {
     m_valid = parse();
@@ -133,11 +133,7 @@ const char* ELFImage::table_string(unsigned offset) const
 
 const char* ELFImage::raw_data(unsigned offset) const
 {
-#ifdef SERENITY
-    return reinterpret_cast<const char*>(m_buffer.pointer()) + offset;
-#else
-    return reinterpret_cast<const char*>(m_file.pointer()) + offset;
-#endif
+    return reinterpret_cast<const char*>(m_buffer) + offset;
 }
 
 const Elf32_Ehdr& ELFImage::header() const

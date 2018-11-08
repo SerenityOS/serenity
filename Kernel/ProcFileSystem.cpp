@@ -167,25 +167,16 @@ void ProcFileSystem::removeProcess(Process& process)
 ByteBuffer procfs$mm()
 {
     // FIXME: Implement
-#if 0
     InterruptDisabler disabler;
-    size_t zonePageCount = 0;
-    for (auto* zone : MM.m_zones)
-        zonePageCount += zone->m_pages.size();
-    auto buffer = ByteBuffer::createUninitialized(1024 + 80 * MM.m_zones.size() + zonePageCount * 10);
+    auto buffer = ByteBuffer::createUninitialized(1024 + 80 * MM.m_vmos.size());
     char* ptr = (char*)buffer.pointer();
-    for (auto* zone : MM.m_zones) {
-        ptr += ksprintf(ptr, "Zone %p size: %u\n  ", zone, zone->size());
-        for (auto page : zone->m_pages)
-            ptr += ksprintf(ptr, "%x ", page);
-        ptr += ksprintf(ptr, "\n");
+    for (auto* vmo : MM.m_vmos) {
+        ptr += ksprintf(ptr, "VMO: %p %s (p:%u, r:%u)\n", vmo, vmo->name().characters(), vmo->page_count(), vmo->retainCount());
     }
-    ptr += ksprintf(ptr, "Zone count: %u\n", MM.m_zones.size());
+    ptr += ksprintf(ptr, "VMO count: %u\n", MM.m_vmos.size());
     ptr += ksprintf(ptr, "Free physical pages: %u\n", MM.m_free_physical_pages.size());
     buffer.trim(ptr - (char*)buffer.pointer());
     return buffer;
-#endif
-    return { };
 }
 
 

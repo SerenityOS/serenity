@@ -3,8 +3,8 @@
 
 //#define ELFLOADER_DEBUG
 
-ELFLoader::ELFLoader(ByteBuffer&& buffer)
-    : m_image(move(buffer))
+ELFLoader::ELFLoader(const byte* buffer)
+    : m_image(buffer)
 {
 }
 
@@ -42,7 +42,11 @@ bool ELFLoader::layout()
 #ifdef ELFLOADER_DEBUG
         kprintf("PH: L%x %u r:%u w:%u\n", program_header.laddr().get(), program_header.size_in_memory(), program_header.is_readable(), program_header.is_writable());
 #endif
-        allocate_section(program_header.laddr(), program_header.size_in_memory(), program_header.alignment(), program_header.is_readable(), program_header.is_writable());
+        if (program_header.is_writable()) {
+            allocate_section(program_header.laddr(), program_header.size_in_memory(), program_header.alignment(), program_header.is_readable(), program_header.is_writable());
+        } else {
+            map_section(program_header.laddr(), program_header.size_in_memory(), program_header.alignment(), program_header.offset(), program_header.is_readable(), program_header.is_writable());
+        }
     });
 
     m_image.for_each_section_of_type(SHT_PROGBITS, [this, &failed] (const ELFImage::Section& section) {
@@ -201,8 +205,16 @@ bool ELFLoader::allocate_section(LinearAddress laddr, size_t size, size_t alignm
 {
     ASSERT(alloc_section_hook);
     char namebuf[16];
-    ksprintf(namebuf, "elf-%s%s", is_readable ? "r" : "", is_writable ? "w" : "");
+    ksprintf(namebuf, "elf-alloc-%s%s", is_readable ? "r" : "", is_writable ? "w" : "");
     return alloc_section_hook(laddr, size, alignment, is_readable, is_writable, namebuf);
+}
+
+bool ELFLoader::map_section(LinearAddress laddr, size_t size, size_t alignment, size_t offset_in_image, bool is_readable, bool is_writable)
+{
+    ASSERT(alloc_section_hook);
+    char namebuf[16];
+    ksprintf(namebuf, "elf-map-%s%s", is_readable ? "r" : "", is_writable ? "w" : "");
+    return map_section_hook(laddr, size, alignment, offset_in_image, is_readable, is_writable, namebuf);
 }
 
 void ELFLoader::add_symbol(String&& name, char* ptr, unsigned size)

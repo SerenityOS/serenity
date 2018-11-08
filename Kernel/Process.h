@@ -14,6 +14,7 @@
 class FileDescriptor;
 class PageDirectory;
 class Region;
+class VMObject;
 class Zone;
 
 #define COOL_GLOBALS
@@ -253,7 +254,8 @@ private:
     TTY* m_tty { nullptr };
 
     Region* allocate_region(LinearAddress, size_t, String&& name, bool is_readable = true, bool is_writable = true);
-    Region* allocate_file_backed_region(LinearAddress laddr, size_t size, RetainPtr<VirtualFileSystem::Node>&& vnode, String&& name, bool is_readable, bool is_writable);
+    Region* allocate_file_backed_region(LinearAddress, size_t, RetainPtr<VirtualFileSystem::Node>&& vnode, String&& name, bool is_readable, bool is_writable);
+    Region* allocate_region_with_vmo(LinearAddress, size_t, RetainPtr<VMObject>&&, size_t offset_in_vmo, String&& name, bool is_readable, bool is_writable);
     bool deallocate_region(Region& region);
 
     Region* regionFromRange(LinearAddress, size_t);
