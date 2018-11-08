@@ -82,33 +82,42 @@ inline constexpr const char* toString(Function function)
     return "Unknown";
 }
 
+struct SC_mmap_params {
+    uint32_t addr;
+    uint32_t size;
+    int32_t prot;
+    int32_t flags;
+    int32_t fd;
+    uint32_t offset; // FIXME: 64-bit off_t?
+};
+
 void initialize();
 
 inline dword invoke(dword function)
 {
     dword result;
-    asm volatile("int $0x80":"=a"(result):"a"(function));
+    asm volatile("int $0x80":"=a"(result):"a"(function):"memory");
     return result;
 }
 
 inline dword invoke(dword function, dword arg1)
 {
     dword result;
-    asm volatile("int $0x80":"=a"(result):"a"(function),"d"(arg1));
+    asm volatile("int $0x80":"=a"(result):"a"(function),"d"(arg1):"memory");
     return result;
 }
 
 inline dword invoke(dword function, dword arg1, dword arg2)
 {
     dword result;
-    asm volatile("int $0x80":"=a"(result):"a"(function),"d"(arg1),"c"(arg2));
+    asm volatile("int $0x80":"=a"(result):"a"(function),"d"(arg1),"c"(arg2):"memory");
     return result;
 }
 
 inline dword invoke(dword function, dword arg1, dword arg2, dword arg3)
 {
     dword result;
-    asm volatile("int $0x80":"=a"(result):"a"(function),"d"(arg1),"c"(arg2),"b"(arg3));
+    asm volatile("int $0x80":"=a"(result):"a"(function),"d"(arg1),"c"(arg2),"b"(arg3):"memory");
     return result;
 }
 

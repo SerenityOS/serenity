@@ -26,14 +26,16 @@
 
 // FIXME: Only do a single validation for accesses that don't span multiple pages.
 // FIXME: Some places pass strlen(arg1) as arg2. This doesn't seem entirely perfect..
-#define VALIDATE_USER_READ(b, s) \
+#define VALIDATE_USER_READ_WITH_RETURN_TYPE(b, s, ret_type) \
     do { \
         LinearAddress laddr((dword)(b)); \
         if (!validate_user_read(laddr) || !validate_user_read(laddr.offset((s) - 1))) { \
             dbgprintf("Bad read address passed to syscall: %p +%u\n", laddr.get(), (s)); \
-            return -EFAULT; \
+            return (ret_type)-EFAULT; \
         } \
     } while(0)
+
+#define VALIDATE_USER_READ(b, s) VALIDATE_USER_READ_WITH_RETURN_TYPE(b, s, int)
 
 #define VALIDATE_USER_WRITE(b, s) \
     do { \
@@ -136,15 +138,21 @@ int Process::sys$set_mmap_name(void* addr, size_t size, const char* name)
     return 0;
 }
 
-void* Process::sys$mmap(void* addr, size_t size)
+void* Process::sys$mmap(const Syscall::SC_mmap_params* params)
 {
+    VALIDATE_USER_READ_WITH_RETURN_TYPE(params, sizeof(Syscall::SC_mmap_params), void*);
     InterruptDisabler disabler;
-    // FIXME: Implement mapping at a client-preferred address.
+    void* addr = (void*)params->addr;
+    size_t size = params->size;
+    int prot = params->prot;
+    int flags = params->flags;
+    int fd = params->fd;
+    Unix::off_t offset = params->offset;
+    // FIXME: Implement mapping at a client-preferred address. Most of the support is already in plcae.
     ASSERT(addr == nullptr);
     auto* region = allocate_region(LinearAddress(), size, "mmap");
     if (!region)
         return (void*)-1;
-    MM.mapRegion(*this, *region);
     return (void*)region->linearAddress.get();
 }
 

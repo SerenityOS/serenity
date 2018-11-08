@@ -232,6 +232,11 @@ void exception_14_handler(RegisterDumpWithExceptionCode& regs)
 
     if (response == PageFaultResponse::ShouldCrash) {
         kprintf("Crashing after unresolved page fault\n");
+        kprintf("exception code: %w\n", regs.exception_code);
+        kprintf("pc=%w:%x ds=%w es=%w fs=%w gs=%w\n", regs.cs, regs.eip, regs.ds, regs.es, regs.fs, regs.gs);
+        kprintf("stk=%w:%x\n", ss, esp);
+        kprintf("eax=%x ebx=%x ecx=%x edx=%x\n", regs.eax, regs.ebx, regs.ecx, regs.edx);
+        kprintf("ebp=%x esp=%x esi=%x edi=%x\n", regs.ebp, esp, regs.esi, regs.edi);
         current->crash();
     } else if (response == PageFaultResponse::Continue) {
 #ifdef PAGE_FAULT_DEBUG

@@ -17,20 +17,16 @@ extern "C" void __malloc_init();
 
 extern "C" int _start()
 {
-    __malloc_init();
-
     errno = 0;
-
     memset(__default_streams, 0, sizeof(__default_streams));
-
     __default_streams[0].fd = 0;
     stdin = &__default_streams[0];
-
     __default_streams[1].fd = 1;
     stdout = &__default_streams[1];
-
     __default_streams[2].fd = 2;
     stderr = &__default_streams[2];
+
+    __malloc_init();
 
     StringImpl::initializeGlobals();
 

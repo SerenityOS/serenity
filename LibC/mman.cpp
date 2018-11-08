@@ -1,12 +1,14 @@
-#include "mman.h"
-#include "errno.h"
+#include <mman.h>
+#include <errno.h>
+#include <stdio.h>
 #include <Kernel/Syscall.h>
 
 extern "C" {
 
-void* mmap(void* addr, size_t size)
+void* mmap(void* addr, size_t size, int prot, int flags, int fd, off_t offset)
 {
-    int rc = Syscall::invoke(Syscall::SC_mmap, (dword)addr, (dword)size);
+    Syscall::SC_mmap_params params { (dword)addr, size, prot, flags, fd, offset };
+    int rc = Syscall::invoke(Syscall::SC_mmap, (dword)&params);
     __RETURN_WITH_ERRNO(rc, (void*)rc, (void*)-1);
 }
 

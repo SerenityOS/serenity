@@ -9,6 +9,7 @@
 #include <AK/Vector.h>
 #include <AK/HashTable.h>
 #include <AK/String.h>
+#include <VirtualFileSystem/VirtualFileSystem.h>
 
 class Process;
 extern Process* current;
@@ -70,6 +71,9 @@ struct Region : public Retainable<Region> {
     {
         return (laddr - linearAddress).get() / PAGE_SIZE;
     }
+
+    RetainPtr<VirtualFileSystem::Node> m_file;
+    Unix::off_t m_file_offset { 0 };
 
     LinearAddress linearAddress;
     size_t size { 0 };

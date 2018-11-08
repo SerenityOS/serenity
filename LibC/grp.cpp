@@ -31,7 +31,7 @@ void setgrent()
             perror("open /etc/group");
         }
         assert(__grdb_stream);
-        __grdb_entry = (struct group_with_strings*)mmap(nullptr, getpagesize());
+        __grdb_entry = (struct group_with_strings*)mmap(nullptr, getpagesize(), PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0);
         set_mmap_name(__grdb_entry, getpagesize(), "setgrent");
     }
 }

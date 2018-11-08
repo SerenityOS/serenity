@@ -18,7 +18,7 @@ static byte* endptr = nullptr;
 
 void __malloc_init()
 {
-    nextptr = (byte*)mmap(nullptr, mallocBudget);
+    nextptr = (byte*)mmap(nullptr, mallocBudget, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0);
     endptr = nextptr + mallocBudget;
     int rc = set_mmap_name(nextptr, mallocBudget, "malloc");
     if (rc < 0)
