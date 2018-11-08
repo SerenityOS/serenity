@@ -171,7 +171,12 @@ ByteBuffer procfs$mm()
     auto buffer = ByteBuffer::createUninitialized(1024 + 80 * MM.m_vmos.size());
     char* ptr = (char*)buffer.pointer();
     for (auto* vmo : MM.m_vmos) {
-        ptr += ksprintf(ptr, "VMO: %p %s (p:%u, r:%u)\n", vmo, vmo->name().characters(), vmo->page_count(), vmo->retainCount());
+        ptr += ksprintf(ptr, "VMO: %p %s(%u): p:%4u %s\n",
+            vmo,
+            vmo->is_anonymous() ? "anon" : "file",
+            vmo->retainCount(),
+            vmo->page_count(),
+            vmo->name().characters());
     }
     ptr += ksprintf(ptr, "VMO count: %u\n", MM.m_vmos.size());
     ptr += ksprintf(ptr, "Free physical pages: %u\n", MM.m_free_physical_pages.size());
@@ -179,6 +184,22 @@ ByteBuffer procfs$mm()
     return buffer;
 }
 
+ByteBuffer procfs$regions()
+{
+    // FIXME: Implement
+    InterruptDisabler disabler;
+    auto buffer = ByteBuffer::createUninitialized(1024 + 80 * MM.m_regions.size());
+    char* ptr = (char*)buffer.pointer();
+    for (auto* region : MM.m_regions) {
+        ptr += ksprintf(ptr, "Region: %p VMO=%p %s\n",
+            region,
+            &region->vmo(),
+            region->name.characters());
+    }
+    ptr += ksprintf(ptr, "Region count: %u\n", MM.m_regions.size());
+    buffer.trim(ptr - (char*)buffer.pointer());
+    return buffer;
+}
 
 ByteBuffer procfs$mounts()
 {
@@ -302,6 +323,7 @@ bool ProcFileSystem::initialize()
 {
     SyntheticFileSystem::initialize();
     addFile(createGeneratedFile("mm", procfs$mm));
+    addFile(createGeneratedFile("regions", procfs$regions));
     addFile(createGeneratedFile("mounts", procfs$mounts));
     addFile(createGeneratedFile("kmalloc", procfs$kmalloc));
     addFile(createGeneratedFile("summary", procfs$summary));

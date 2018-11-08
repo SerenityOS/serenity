@@ -307,14 +307,10 @@ int Process::exec(const String& path, Vector<String>&& arguments, Vector<String>
         return -ENOTIMPL;
     }
 
+    { // Put everything into a scope so things get cleaned up before we yield-teleport into the new executable.
     auto vmo = VMObject::create_file_backed(descriptor->vnode(), descriptor->metadata().size);
+    vmo->set_name(descriptor->absolute_path());
     auto* region = allocate_region_with_vmo(LinearAddress(), descriptor->metadata().size, vmo.copyRef(), 0, "helper", true, false);
-
-#if 0
-    auto elfData = descriptor->readEntireFile();
-    if (!elfData)
-        return -EIO; // FIXME: Get a more detailed error from VFS.
-#endif
 
     dword entry_eip = 0;
     PageDirectory* old_page_directory = m_page_directory;
@@ -324,6 +320,7 @@ int Process::exec(const String& path, Vector<String>&& arguments, Vector<String>
     m_page_directory = new_page_directory;
     MM.enter_process_paging_scope(*this);
 
+    // FIXME: Should we consider doing on-demand paging here? Is it actually useful?
     bool success = region->page_in(*new_page_directory);
 
     ASSERT(success);
@@ -400,10 +397,11 @@ int Process::exec(const String& path, Vector<String>&& arguments, Vector<String>
 #endif
 
     set_state(Skip1SchedulerPass);
+    } // Ready to yield-teleport!
 
     if (current == this) {
         bool success = Scheduler::yield();
-        ASSERT(success);
+        ASSERT_NOT_REACHED();
     }
 
     return 0;
