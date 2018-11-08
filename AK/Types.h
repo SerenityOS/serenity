@@ -15,6 +15,15 @@ typedef dword size_t;
 typedef signed_dword ssize_t;
 
 typedef signed_dword ptrdiff_t;
+
+typedef byte uint8_t;
+typedef word uint16_t;
+typedef dword uint32_t;
+
+typedef signed_byte int8_t;
+typedef signed_word int16_t;
+typedef signed_dword int32_t;
+
 #else
 #include <stdint.h>
 #include <sys/types.h>

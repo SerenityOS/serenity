@@ -9,6 +9,7 @@
 #include <VirtualFileSystem/VirtualFileSystem.h>
 #include <VirtualFileSystem/UnixTypes.h>
 #include "TTY.h"
+#include "Syscall.h"
 
 class FileDescriptor;
 class PageDirectory;
@@ -132,7 +133,7 @@ public:
     void sys$sigreturn() NORETURN;
     pid_t sys$spawn(const char* path, const char** args, const char** envp);
     pid_t sys$waitpid(pid_t, int* wstatus, int options);
-    void* sys$mmap(void*, size_t size);
+    void* sys$mmap(const Syscall::SC_mmap_params*);
     int sys$munmap(void*, size_t size);
     int sys$set_mmap_name(void*, size_t, const char*);
     int sys$get_dir_entries(int fd, void*, size_t);

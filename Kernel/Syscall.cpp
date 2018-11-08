@@ -8,7 +8,7 @@ extern "C" void syscall_entry(RegisterDump&);
 extern "C" void syscall_ISR();
 extern volatile RegisterDump* syscallRegDump;
 
-asm(
+asm volatile(
     ".globl syscall_ISR \n"
     "syscall_ISR:\n"
     "    pusha\n"
@@ -93,7 +93,7 @@ static DWORD handle(RegisterDump& regs, DWORD function, DWORD arg1, DWORD arg2, 
     case Syscall::SC_waitpid:
         return current->sys$waitpid((pid_t)arg1, (int*)arg2, (int)arg3);
     case Syscall::SC_mmap:
-        return (dword)current->sys$mmap((void*)arg1, (size_t)arg2);
+        return (dword)current->sys$mmap((const SC_mmap_params*)arg1);
     case Syscall::SC_munmap:
         return current->sys$munmap((void*)arg1, (size_t)arg2);
     case Syscall::SC_gethostname:
