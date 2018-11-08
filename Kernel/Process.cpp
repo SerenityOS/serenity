@@ -901,52 +901,6 @@ void Process::crash()
     ASSERT_NOT_REACHED();
 }
 
-void Process::for_each(Function<bool(Process&)> callback)
-{
-    ASSERT_INTERRUPTS_DISABLED();
-    for (auto* process = g_processes->head(); process;) {
-        auto* next_process = process->next();
-        if (!callback(*process))
-            break;
-        process = next_process;
-    }
-}
-
-void Process::for_each_in_pgrp(pid_t pgid, Function<bool(Process&)> callback)
-{
-    ASSERT_INTERRUPTS_DISABLED();
-    for (auto* process = g_processes->head(); process;) {
-        auto* next_process = process->next();
-        if (process->pgid() == pgid) {
-            if (!callback(*process))
-                break;
-        }
-        process = next_process;
-    }
-}
-
-void Process::for_each_in_state(State state, Function<bool(Process&)> callback)
-{
-    ASSERT_INTERRUPTS_DISABLED();
-    for (auto* process = g_processes->head(); process;) {
-        auto* next_process = process->next();
-        if (process->state() == state)
-            callback(*process);
-        process = next_process;
-    }
-}
-
-void Process::for_each_not_in_state(State state, Function<bool(Process&)> callback)
-{
-    ASSERT_INTERRUPTS_DISABLED();
-    for (auto* process = g_processes->head(); process;) {
-        auto* next_process = process->next();
-        if (process->state() != state)
-            callback(*process);
-        process = next_process;
-    }
-}
-
 Process* Process::from_pid(pid_t pid)
 {
     ASSERT_INTERRUPTS_DISABLED();

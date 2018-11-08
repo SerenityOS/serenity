@@ -95,10 +95,10 @@ public:
     void setWakeupTime(DWORD t) { m_wakeupTime = t; }
     DWORD wakeupTime() const { return m_wakeupTime; }
 
-    static void for_each(Function<bool(Process&)>);
-    static void for_each_in_pgrp(pid_t, Function<bool(Process&)>);
-    static void for_each_in_state(State, Function<bool(Process&)>);
-    static void for_each_not_in_state(State, Function<bool(Process&)>);
+    template<typename Callback> static void for_each(Callback);
+    template<typename Callback> static void for_each_in_pgrp(pid_t, Callback);
+    template<typename Callback> static void for_each_in_state(State, Callback);
+    template<typename Callback> static void for_each_not_in_state(State, Callback);
 
     bool tick() { ++m_ticks; return --m_ticksLeft; }
     void set_ticks_left(dword t) { m_ticksLeft = t; }
@@ -322,3 +322,53 @@ extern void block(Process::State);
 extern void sleep(DWORD ticks);
 
 extern InlineLinkedList<Process>* g_processes;
+
+template<typename Callback>
+inline void Process::for_each(Callback callback)
+{
+    ASSERT_INTERRUPTS_DISABLED();
+    for (auto* process = g_processes->head(); process;) {
+        auto* next_process = process->next();
+        if (!callback(*process))
+            break;
+        process = next_process;
+    }
+}
+
+template<typename Callback>
+inline void Process::for_each_in_pgrp(pid_t pgid, Callback callback)
+{
+    ASSERT_INTERRUPTS_DISABLED();
+    for (auto* process = g_processes->head(); process;) {
+        auto* next_process = process->next();
+        if (process->pgid() == pgid) {
+            if (!callback(*process))
+                break;
+        }
+        process = next_process;
+    }
+}
+
+template<typename Callback>
+inline void Process::for_each_in_state(State state, Callback callback)
+{
+    ASSERT_INTERRUPTS_DISABLED();
+    for (auto* process = g_processes->head(); process;) {
+        auto* next_process = process->next();
+        if (process->state() == state)
+            callback(*process);
+        process = next_process;
+    }
+}
+
+template<typename Callback>
+inline void Process::for_each_not_in_state(State state, Callback callback)
+{
+    ASSERT_INTERRUPTS_DISABLED();
+    for (auto* process = g_processes->head(); process;) {
+        auto* next_process = process->next();
+        if (process->state() != state)
+            callback(*process);
+        process = next_process;
+    }
+}
