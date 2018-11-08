@@ -100,8 +100,8 @@ Region* Process::allocate_region(LinearAddress laddr, size_t size, String&& name
     unsigned page_count = ceilDiv(size, PAGE_SIZE);
     auto physical_pages = MM.allocate_physical_pages(page_count);
     ASSERT(physical_pages.size() == page_count);
-
-    m_regions.append(adopt(*new Region(laddr, size, move(physical_pages), move(name), is_readable, is_writable)));
+    m_regions.append(adopt(*new Region(laddr, size, move(name), is_readable, is_writable)));
+    m_regions.last()->commit(*this);
     MM.mapRegion(*this, *m_regions.last());
     return m_regions.last().ptr();
 }
@@ -122,8 +122,7 @@ Region* Process::allocate_file_backed_region(LinearAddress laddr, size_t size, R
     Vector<RetainPtr<PhysicalPage>> physical_pages;
     physical_pages.resize(page_count); // Start out with no physical pages!
 
-    m_regions.append(adopt(*new Region(laddr, size, move(physical_pages), move(name), is_readable, is_writable)));
-    m_regions.last()->m_vnode = move(vnode);
+    m_regions.append(adopt(*new Region(laddr, size, move(vnode), move(name), is_readable, is_writable)));
     MM.mapRegion(*this, *m_regions.last());
     return m_regions.last().ptr();
 }

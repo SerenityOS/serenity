@@ -59,8 +59,8 @@ ByteBuffer procfs$pid_vm(Process& process)
             region->linearAddress.offset(region->size - 1).get(),
             region->size,
             region->name.characters());
-        for (size_t i = 0; i < region->physical_pages.size(); ++i) {
-            auto& physical_page = region->physical_pages[i];
+        for (size_t i = 0; i < region->vmo().page_count(); ++i) {
+            auto& physical_page = region->vmo().physical_pages()[i];
             ptr += ksprintf(ptr, "P%x%s(%u) ",
                 physical_page ? physical_page->paddr().get() : 0,
                 region->cow_map.get(i) ? "!" : "",

@@ -202,6 +202,7 @@ public:
 private:
     friend class MemoryManager;
     friend class Scheduler;
+    friend class Region;
 
     Process(String&& name, uid_t, gid_t, pid_t ppid, RingLevel, RetainPtr<VirtualFileSystem::Node>&& cwd = nullptr, RetainPtr<VirtualFileSystem::Node>&& executable = nullptr, TTY* = nullptr, Process* fork_parent = nullptr);
 
