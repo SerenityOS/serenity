@@ -92,6 +92,11 @@ static inline dword cpuFlags()
     return flags;
 }
 
+inline bool are_interrupts_enabled()
+{
+    return cpuFlags() & 0x200;
+}
+
 class InterruptDisabler {
 public:
     InterruptDisabler()
