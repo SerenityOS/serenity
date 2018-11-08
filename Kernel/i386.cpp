@@ -188,10 +188,11 @@ void exception_14_handler(RegisterDumpWithExceptionCode& regs)
     dword faultAddress;
     asm ("movl %%cr2, %%eax":"=a"(faultAddress));
 
-    dbgprintf("Ring%u page fault in %s(%u), %s laddr=%p\n",
-        regs.cs & 3,
+    dbgprintf("%s(%u): ring%u %s page fault, %s L%x\n",
         current->name().characters(),
         current->pid(),
+        regs.cs & 3,
+        regs.exception_code & 1 ? "PV" : "NP",
         regs.exception_code & 2 ? "write" : "read",
         faultAddress);
 
@@ -231,7 +232,12 @@ void exception_14_handler(RegisterDumpWithExceptionCode& regs)
     auto response = MM.handle_page_fault(PageFault(regs.exception_code, LinearAddress(faultAddress)));
 
     if (response == PageFaultResponse::ShouldCrash) {
-        kprintf("Crashing after unresolved page fault\n");
+        kprintf("%s(%u) unrecoverable page fault, %s laddr=%p\n",
+            current->name().characters(),
+            current->pid(),
+            regs.exception_code & 2 ? "write" : "read",
+            faultAddress);
+
         kprintf("exception code: %w\n", regs.exception_code);
         kprintf("pc=%w:%x ds=%w es=%w fs=%w gs=%w\n", regs.cs, regs.eip, regs.ds, regs.es, regs.fs, regs.gs);
         kprintf("stk=%w:%x\n", ss, esp);

@@ -6,6 +6,7 @@
 #include <LibC/stdlib.h>
 #include <LibC/utsname.h>
 #include <LibC/pwd.h>
+#include <sys/mman.h>
 #include <signal.h>
 #include <AK/FileSystemPath.h>
 
@@ -112,6 +113,32 @@ static int sh_wt(int, const char**)
     return 0;
 }
 
+static int sh_mf(int, const char**)
+{
+    int rc;
+    int fd = open("/Banner.txt", O_RDONLY);
+    if (fd < 0) {
+        perror("open(/Banner.txt)");
+        return 1;
+    }
+    printf("opened /Banner.txt, calling mmap...\n");
+    byte* data = (byte*)mmap(nullptr, getpagesize(), PROT_READ, MAP_PRIVATE, fd, 0);
+    if (data == MAP_FAILED) {
+        perror("mmap()");
+        goto close_it;
+    }
+    printf("mapped file @ %p\n", data);
+    printf("contents: %b %b %b %b\n", data[0], data[1], data[2], data[3]);
+
+    rc = munmap(data, getpagesize());
+    printf("munmap() returned %d\n", rc);
+
+close_it:
+    rc = close(fd);
+    printf("close() returned %d\n", rc);
+    return 0;
+}
+
 static int sh_exit(int, const char**)
 {
     printf("Good-bye!\n");
@@ -188,6 +215,10 @@ static bool handle_builtin(int argc, const char** argv, int& retval)
     }
     if (!strcmp(argv[0], "wt")) {
         retval = sh_wt(argc, argv);
+        return true;
+    }
+    if (!strcmp(argv[0], "mf")) {
+        retval = sh_mf(argc, argv);
         return true;
     }
     if (!strcmp(argv[0], "fork")) {

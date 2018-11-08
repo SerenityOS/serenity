@@ -106,6 +106,28 @@ Region* Process::allocate_region(LinearAddress laddr, size_t size, String&& name
     return m_regions.last().ptr();
 }
 
+Region* Process::allocate_file_backed_region(LinearAddress laddr, size_t size, RetainPtr<VirtualFileSystem::Node>&& vnode, String&& name, bool is_readable, bool is_writable)
+{
+    ASSERT(!vnode->isCharacterDevice());
+
+    // FIXME: This needs sanity checks. What if this overlaps existing regions?
+    if (laddr.is_null()) {
+        laddr = m_nextRegion;
+        m_nextRegion = m_nextRegion.offset(size).offset(PAGE_SIZE);
+    }
+
+    laddr.mask(0xfffff000);
+
+    unsigned page_count = ceilDiv(size, PAGE_SIZE);
+    Vector<RetainPtr<PhysicalPage>> physical_pages;
+    physical_pages.resize(page_count); // Start out with no physical pages!
+
+    m_regions.append(adopt(*new Region(laddr, size, move(physical_pages), move(name), is_readable, is_writable)));
+    m_regions.last()->m_vnode = move(vnode);
+    MM.mapRegion(*this, *m_regions.last());
+    return m_regions.last().ptr();
+}
+
 bool Process::deallocate_region(Region& region)
 {
     InterruptDisabler disabler;
@@ -141,19 +163,41 @@ int Process::sys$set_mmap_name(void* addr, size_t size, const char* name)
 void* Process::sys$mmap(const Syscall::SC_mmap_params* params)
 {
     VALIDATE_USER_READ_WITH_RETURN_TYPE(params, sizeof(Syscall::SC_mmap_params), void*);
-    InterruptDisabler disabler;
     void* addr = (void*)params->addr;
     size_t size = params->size;
     int prot = params->prot;
     int flags = params->flags;
     int fd = params->fd;
     Unix::off_t offset = params->offset;
-    // FIXME: Implement mapping at a client-preferred address. Most of the support is already in plcae.
+    if (size == 0)
+        return (void*)-EINVAL;
+    if ((dword)addr & ~PAGE_MASK || size & ~PAGE_MASK)
+        return (void*)-EINVAL;
+    if (flags & MAP_ANONYMOUS) {
+        InterruptDisabler disabler;
+        // FIXME: Implement mapping at a client-specified address. Most of the support is already in plcae.
+        ASSERT(addr == nullptr);
+        auto* region = allocate_region(LinearAddress(), size, "mmap", prot & PROT_READ, prot & PROT_WRITE);
+        if (!region)
+            return (void*)-ENOMEM;
+        return region->linearAddress.asPtr();
+    }
+    if (offset & ~PAGE_MASK)
+        return (void*)-EINVAL;
+    auto* descriptor = file_descriptor(fd);
+    if (!descriptor)
+        return (void*)-EBADF;
+    if (descriptor->vnode()->isCharacterDevice())
+        return (void*)-ENODEV;
+    // FIXME: If PROT_EXEC, check that the underlying file system isn't mounted noexec.
+    auto region_name = descriptor->absolute_path();
+    InterruptDisabler disabler;
+    // FIXME: Implement mapping at a client-specified address. Most of the support is already in plcae.
     ASSERT(addr == nullptr);
-    auto* region = allocate_region(LinearAddress(), size, "mmap");
+    auto* region = allocate_file_backed_region(LinearAddress(), size, descriptor->vnode(), move(region_name), prot & PROT_READ, prot & PROT_WRITE);
     if (!region)
-        return (void*)-1;
-    return (void*)region->linearAddress.get();
+        return (void*)-ENOMEM;
+    return region->linearAddress.asPtr();
 }
 
 int Process::sys$munmap(void* addr, size_t size)

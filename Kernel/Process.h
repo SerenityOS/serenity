@@ -252,6 +252,7 @@ private:
     TTY* m_tty { nullptr };
 
     Region* allocate_region(LinearAddress, size_t, String&& name, bool is_readable = true, bool is_writable = true);
+    Region* allocate_file_backed_region(LinearAddress laddr, size_t size, RetainPtr<VirtualFileSystem::Node>&& vnode, String&& name, bool is_readable, bool is_writable);
     bool deallocate_region(Region& region);
 
     Region* regionFromRange(LinearAddress, size_t);
