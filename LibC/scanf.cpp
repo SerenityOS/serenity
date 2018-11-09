@@ -71,7 +71,7 @@ static int _atob(unsigned long* vp, const char* p, int base)
     }
 
     if (base == 16 && (q = strchr(p, '.')) != 0) {
-        if (q - p > sizeof(tmp) - 1)
+        if (q - p > (int)sizeof(tmp) - 1)
             return 0;
         strncpy(tmp, p, q - p);
         tmp[q - p] = '\0';
@@ -164,11 +164,10 @@ static int vfscanf(FILE *fp, const char* fmt, va_list ap)
 
 static int vsscanf(const char *buf, const char *s, va_list ap)
 {
-    int base;
+    int base = 10;
     char *t;
     char tmp[MAXLN];
     bool noassign = false;
-    bool lflag = false;
     int count = 0;
     int width = 0;
 
@@ -182,8 +181,6 @@ static int vsscanf(const char *buf, const char *s, va_list ap)
                     break;
                 if (*s == '*')
                     noassign = true;
-                else if (*s == 'l' || *s == 'L')
-                    lflag = true;
                 else if (*s >= '1' && *s <= '9') {
                     const char* tc;
                     for (tc = s; isdigit(*s); s++);
@@ -238,7 +235,6 @@ static int vsscanf(const char *buf, const char *s, va_list ap)
                 ++count;
             width = 0;
             noassign = false;
-            lflag = false;
             ++s;
         } else {
             while (isspace(*buf))

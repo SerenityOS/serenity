@@ -49,12 +49,14 @@ void free(void* ptr)
 
 void* calloc(size_t nmemb, size_t)
 {
+    (void) nmemb;
     ASSERT_NOT_REACHED();
     return nullptr;
 }
 
 void* realloc(void *ptr, size_t)
 {
+    (void) ptr;
     ASSERT_NOT_REACHED();
     return nullptr;
 }
@@ -62,6 +64,7 @@ void* realloc(void *ptr, size_t)
 void exit(int status)
 {
     Syscall::invoke(Syscall::SC_exit, (dword)status);
+    for (;;);
 }
 
 void abort()
@@ -91,7 +94,7 @@ char* getenv(const char* name)
 
 int atoi(const char* str)
 {
-    ssize_t len = strlen(str);
+    size_t len = strlen(str);
     int value = 0;
     bool isNegative = false;
     for (size_t i = 0; i < len; ++i) {

@@ -5,7 +5,7 @@
 
 __BEGIN_DECLS
 
-typedef struct timezone {
+struct timezone {
     int tz_minuteswest;
     int tz_dsttime;
 };
