@@ -29,9 +29,7 @@ static inline size_t allocationSizeForStringImpl(size_t length)
 
 RetainPtr<StringImpl> StringImpl::createUninitialized(size_t length, char*& buffer)
 {
-    if (!length)
-        return theEmptyStringImpl();
-
+    ASSERT(length);
     void* slot = kmalloc(allocationSizeForStringImpl(length));
     if (!slot)
         return nullptr;
@@ -52,6 +50,8 @@ RetainPtr<StringImpl> StringImpl::create(const char* cstring, size_t length, Sho
 
     char* buffer;
     auto newStringImpl = createUninitialized(length, buffer);
+    if (!newStringImpl)
+        return nullptr;
     memcpy(buffer, cstring, length * sizeof(char));
 
     if (shouldChomp && buffer[length - 1] == '\n') {
@@ -108,6 +108,8 @@ RetainPtr<StringImpl> StringImpl::toLowercase() const
 slowPath:
     char* buffer;
     auto lowercased = createUninitialized(m_length, buffer);
+    if (!lowercased)
+        return nullptr;
     for (size_t i = 0; i < m_length; ++i)
         buffer[i] = toASCIILowercase(m_characters[i]);
 
@@ -128,6 +130,8 @@ RetainPtr<StringImpl> StringImpl::toUppercase() const
 slowPath:
     char* buffer;
     auto uppercased = createUninitialized(m_length, buffer);
+    if (!uppercased)
+        return nullptr;
     for (size_t i = 0; i < m_length; ++i)
         buffer[i] = toASCIIUppercase(m_characters[i]);
 

@@ -52,7 +52,8 @@ private:
     PhysicalAddress m_paddr;
 };
 
-struct PageDirectory {
+class PageDirectory {
+public:
     dword entries[1024];
     RetainPtr<PhysicalPage> physical_pages[1024];
 
@@ -91,7 +92,8 @@ private:
     Vector<RetainPtr<PhysicalPage>> m_physical_pages;
 };
 
-struct Region : public Retainable<Region> {
+class Region : public Retainable<Region> {
+public:
     Region(LinearAddress, size_t, String&&, bool r, bool w, bool cow = false);
     Region(LinearAddress, size_t, RetainPtr<VMObject>&&, size_t offset_in_vmo, String&&, bool r, bool w, bool cow = false);
     Region(LinearAddress, size_t, RetainPtr<VirtualFileSystem::Node>&&, String&&, bool r, bool w);

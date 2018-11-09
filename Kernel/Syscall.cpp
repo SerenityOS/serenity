@@ -8,7 +8,7 @@ extern "C" void syscall_entry(RegisterDump&);
 extern "C" void syscall_ISR();
 extern volatile RegisterDump* syscallRegDump;
 
-asm volatile(
+asm(
     ".globl syscall_ISR \n"
     "syscall_ISR:\n"
     "    pusha\n"

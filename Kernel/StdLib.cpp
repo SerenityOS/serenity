@@ -3,6 +3,8 @@
 #include "kmalloc.h"
 #include <AK/Types.h>
 
+extern "C" {
+
 void memcpy(void *dest, const void *src, DWORD n)
 {
     BYTE* bdest = (BYTE*)dest;
@@ -71,8 +73,10 @@ int memcmp(const void* v1, const void* v2, size_t n)
     return 0;
 }
 
-extern "C" void __cxa_pure_virtual() NORETURN;
-extern "C" void __cxa_pure_virtual()
+void __cxa_pure_virtual() NORETURN;
+void __cxa_pure_virtual()
 {
     ASSERT_NOT_REACHED();
+}
+
 }

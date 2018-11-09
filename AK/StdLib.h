@@ -114,31 +114,31 @@ struct IsPointer : __IsPointerHelper<typename RemoveCV<T>::Type> { };
 template<class> struct IsFunction : FalseType { };
 
 template<class Ret, class... Args> struct IsFunction<Ret(Args...)> : TrueType { };
-template<class Ret, class... Args> struct IsFunction<Ret(Args......)> : TrueType { };
+template<class Ret, class... Args> struct IsFunction<Ret(Args...,...)> : TrueType { };
 template<class Ret, class... Args> struct IsFunction<Ret(Args...) const> : TrueType { };
-template<class Ret, class... Args> struct IsFunction<Ret(Args......) const> : TrueType { };
+template<class Ret, class... Args> struct IsFunction<Ret(Args...,...) const> : TrueType { };
 template<class Ret, class... Args> struct IsFunction<Ret(Args...) volatile> : TrueType { };
-template<class Ret, class... Args> struct IsFunction<Ret(Args......) volatile> : TrueType { };
+template<class Ret, class... Args> struct IsFunction<Ret(Args...,...) volatile> : TrueType { };
 template<class Ret, class... Args> struct IsFunction<Ret(Args...) const volatile> : TrueType { };
-template<class Ret, class... Args> struct IsFunction<Ret(Args......) const volatile> : TrueType { };
+template<class Ret, class... Args> struct IsFunction<Ret(Args...,...) const volatile> : TrueType { };
 
 template<class Ret, class... Args> struct IsFunction<Ret(Args...) &> : TrueType { };
-template<class Ret, class... Args> struct IsFunction<Ret(Args......) &> : TrueType { };
+template<class Ret, class... Args> struct IsFunction<Ret(Args...,...) &> : TrueType { };
 template<class Ret, class... Args> struct IsFunction<Ret(Args...) const &> : TrueType { };
-template<class Ret, class... Args> struct IsFunction<Ret(Args......) const &> : TrueType { };
+template<class Ret, class... Args> struct IsFunction<Ret(Args...,...) const &> : TrueType { };
 template<class Ret, class... Args> struct IsFunction<Ret(Args...) volatile &> : TrueType { };
-template<class Ret, class... Args> struct IsFunction<Ret(Args......) volatile &> : TrueType { };
+template<class Ret, class... Args> struct IsFunction<Ret(Args...,...) volatile &> : TrueType { };
 template<class Ret, class... Args> struct IsFunction<Ret(Args...) const volatile &> : TrueType { };
-template<class Ret, class... Args> struct IsFunction<Ret(Args......) const volatile &> : TrueType { };
+template<class Ret, class... Args> struct IsFunction<Ret(Args...,...) const volatile &> : TrueType { };
 
 template<class Ret, class... Args> struct IsFunction<Ret(Args...) &&> : TrueType { };
-template<class Ret, class... Args> struct IsFunction<Ret(Args......) &&> : TrueType { };
+template<class Ret, class... Args> struct IsFunction<Ret(Args...,...) &&> : TrueType { };
 template<class Ret, class... Args> struct IsFunction<Ret(Args...) const &&> : TrueType { };
-template<class Ret, class... Args> struct IsFunction<Ret(Args......) const &&> : TrueType { };
+template<class Ret, class... Args> struct IsFunction<Ret(Args...,...) const &&> : TrueType { };
 template<class Ret, class... Args> struct IsFunction<Ret(Args...) volatile &&> : TrueType { };
-template<class Ret, class... Args> struct IsFunction<Ret(Args......) volatile &&> : TrueType { };
+template<class Ret, class... Args> struct IsFunction<Ret(Args...,...) volatile &&> : TrueType { };
 template<class Ret, class... Args> struct IsFunction<Ret(Args...) const volatile &&> : TrueType { };
-template<class Ret, class... Args> struct IsFunction<Ret(Args......) const volatile &&> : TrueType { };
+template<class Ret, class... Args> struct IsFunction<Ret(Args...,...) const volatile &&> : TrueType { };
 
 template<class T> struct IsRvalueReference : FalseType { };
 template<class T> struct IsRvalueReference<T&&> : TrueType { };

@@ -42,7 +42,6 @@ private:
     void computeHash() const;
 
     size_t m_length { 0 };
-    bool m_ownsBuffer { true };
     mutable bool m_hasHash { false };
     const char* m_characters { nullptr };
     mutable unsigned m_hash { 0 };

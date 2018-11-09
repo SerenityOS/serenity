@@ -49,7 +49,7 @@ bool ELFLoader::layout()
         }
     });
 
-    m_image.for_each_section_of_type(SHT_PROGBITS, [this, &failed] (const ELFImage::Section& section) {
+    m_image.for_each_section_of_type(SHT_PROGBITS, [this] (const ELFImage::Section& section) {
 #ifdef ELFLOADER_DEBUG
         kprintf("ELFLoader: Copying progbits section: %s\n", section.name());
 #endif

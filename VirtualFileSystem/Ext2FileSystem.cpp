@@ -824,7 +824,7 @@ bool Ext2FileSystem::setBlockAllocationState(GroupIndex group, BlockIndex bi, bo
     ASSERT(block);
     auto bitmap = Bitmap::wrap(block.pointer(), block.size());
     bool currentState = bitmap.get(bitIndex);
-    kprintf("ext2fs: setBlockAllocationState(%u) %u -> %u\n", block, currentState, newState);
+    kprintf("ext2fs: setBlockAllocationState(%u) %u -> %u\n", bi, currentState, newState);
 
     if (currentState == newState)
         return true;
