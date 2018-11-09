@@ -30,7 +30,7 @@ char* strrchr(const char* str, int ch)
     char c;
     for (; (c = *str); ++str) {
         if (c == ch)
-            last = (char*)str;
+            last = const_cast<char*>(str);
     }
     return last;
 }
@@ -71,6 +71,7 @@ int memcmp(const void* v1, const void* v2, size_t n)
     return 0;
 }
 
+extern "C" void __cxa_pure_virtual() NORETURN;
 extern "C" void __cxa_pure_virtual()
 {
     ASSERT_NOT_REACHED();

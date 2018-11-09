@@ -113,7 +113,6 @@ Keyboard::Keyboard()
 
 Keyboard::~Keyboard()
 {
-    ASSERT_NOT_REACHED();
 }
 
 bool Keyboard::hasDataAvailableForRead() const
@@ -124,7 +123,7 @@ bool Keyboard::hasDataAvailableForRead() const
 ssize_t Keyboard::read(byte* buffer, size_t size)
 {
     ssize_t nread = 0;
-    while (nread < size) {
+    while ((size_t)nread < size) {
         if (m_queue.isEmpty())
             break;
         buffer[nread++] = m_queue.dequeue().character;
@@ -132,7 +131,7 @@ ssize_t Keyboard::read(byte* buffer, size_t size)
     return nread;
 }
 
-ssize_t Keyboard::write(const byte* data, size_t size)
+ssize_t Keyboard::write(const byte*, size_t)
 {
     return 0;
 }
