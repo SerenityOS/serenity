@@ -4,8 +4,10 @@
 #include <grp.h>
 #include <alloca.h>
 
-int main(int c, char** v)
+int main(int argc, char** argv)
 {
+    (void) argc;
+    (void) argv;
     uid_t uid = getuid();
     gid_t gid = getgid();
 
