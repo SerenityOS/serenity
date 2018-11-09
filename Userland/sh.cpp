@@ -1,12 +1,12 @@
-#include <stdio.h>
-#include <unistd.h>
 #include <errno.h>
-#include <string.h>
-#include <stdlib.h>
-#include <utsname.h>
 #include <pwd.h>
-#include <sys/mman.h>
 #include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/mman.h>
+#include <sys/utsname.h>
 #include <AK/FileSystemPath.h>
 
 struct GlobalState {

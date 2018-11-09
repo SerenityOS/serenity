@@ -1,5 +1,5 @@
-#include "utsname.h"
-#include "errno.h"
+#include <sys/utsname.h>
+#include <errno.h>
 #include <Kernel/Syscall.h>
 
 extern "C" {
