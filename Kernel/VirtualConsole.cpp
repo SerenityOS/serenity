@@ -63,12 +63,13 @@ void VirtualConsole::set_active(bool b)
 
     m_active = b;
     if (!m_active) {
-        memcpy(m_buffer, s_vga_buffer, 80 * 25 * 2);
+        memcpy(m_buffer, m_current_vga_window, 80 * 25 * 2);
         return;
     }
 
     memcpy(s_vga_buffer, m_buffer, 80 * 25 * 2);
-    vga_set_cursor(m_cursor_row, m_cursor_column);
+    set_vga_start_row(0);
+    vga_set_cursor(m_cursor_row, m_cursor_column, m_current_vga_start_address);
 
     Keyboard::the().setClient(this);
 }
@@ -282,15 +283,31 @@ void VirtualConsole::execute_escape_sequence(byte final)
     m_intermediates.clear();
 }
 
+void VirtualConsole::clear_vga_row(word row)
+{
+    word* linemem = (word*)&m_current_vga_window[row * 160];
+    for (word i = 0; i < 80; ++i)
+        linemem[i] = 0x0720;
+}
+
 void VirtualConsole::scroll_up()
 {
     if (m_cursor_row == (m_rows - 1)) {
-        memcpy(m_buffer, m_buffer + 160, 160 * 24);
-        word* linemem = (word*)&m_buffer[24 * 160];
-        for (word i = 0; i < 80; ++i)
-            linemem[i] = 0x0720;
-        if (m_active)
-            vga_scroll_up();
+        if (m_active) {
+            if (m_vga_start_row >= 160) {
+                memcpy(s_vga_buffer, m_current_vga_window + 160, 80 * 24 * 2);
+                set_vga_start_row(0);
+                clear_vga_row(24);
+            } else {
+                set_vga_start_row(m_vga_start_row + 1);
+                clear_vga_row(24);
+            }
+        } else {
+            memcpy(m_buffer, m_buffer + 160, 160 * 24);
+            word* linemem = (word*)&m_buffer[24 * 160];
+            for (word i = 0; i < 80; ++i)
+                linemem[i] = 0x0720;
+        }
     } else {
         ++m_cursor_row;
     }
@@ -304,7 +321,7 @@ void VirtualConsole::set_cursor(unsigned row, unsigned column)
     m_cursor_row = row;
     m_cursor_column = column;
     if (m_active)
-        vga_set_cursor(m_cursor_row, m_cursor_column);
+        vga_set_cursor(m_cursor_row, m_cursor_column, m_current_vga_start_address);
 }
 
 void VirtualConsole::put_character_at(unsigned row, unsigned column, byte ch)
@@ -312,10 +329,14 @@ void VirtualConsole::put_character_at(unsigned row, unsigned column, byte ch)
     ASSERT(row < m_rows);
     ASSERT(column < m_columns);
     word cur = (row * 160) + (column * 2);
-    m_buffer[cur] = ch;
-    m_buffer[cur + 1] = m_current_attribute;
-    if (m_active)
-        vga_putch_at(row, column, ch, m_current_attribute);
+    if (m_active) {
+        word cur = (row * 160) + (column * 2);
+        m_current_vga_window[cur] = ch;
+        m_current_vga_window[cur + 1] = m_current_attribute;
+    } else {
+        m_buffer[cur] = ch;
+        m_buffer[cur + 1] = m_current_attribute;
+    }
 }
 
 void VirtualConsole::on_char(byte ch, bool shouldEmit)
@@ -415,4 +436,12 @@ String VirtualConsole::ttyName() const
     char buf[16];
     ksprintf(buf, "/dev/tty%u", m_index);
     return String(buf);
+}
+
+void VirtualConsole::set_vga_start_row(word row)
+{
+    m_vga_start_row = row;
+    m_current_vga_start_address = row * 80;
+    m_current_vga_window = s_vga_buffer + row * 160;
+    vga_set_start_address(m_current_vga_start_address);
 }
