@@ -9,7 +9,6 @@ LIBC_OBJS = \
        stdio.o \
        unistd.o \
        string.o \
-       process.o \
        mman.o \
        dirent.o \
        stdlib.o \
