@@ -4,6 +4,8 @@
 #include <grp.h>
 #include <alloca.h>
 
+extern "C" int main(int, char**);
+
 int main(int argc, char** argv)
 {
     (void) argc;
