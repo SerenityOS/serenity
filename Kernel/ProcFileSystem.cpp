@@ -319,6 +319,29 @@ ByteBuffer procfs$summary()
     return buffer;
 }
 
+ByteBuffer procfs$vnodes()
+{
+    auto& vfs = VirtualFileSystem::the();
+    auto buffer = ByteBuffer::createUninitialized(vfs.m_maxNodeCount * 256);
+    char* ptr = (char*)buffer.pointer();
+    for (size_t i = 0; i < vfs.m_maxNodeCount; ++i) {
+        auto& vnode = vfs.m_nodes[i];
+        if (!vnode.inUse())
+            continue;
+        auto path = vfs.absolutePath(vnode.inode);
+        if (path.isEmpty()) {
+            if (auto* dev = vnode.characterDevice()) {
+                if (dev->isTTY())
+                    path = static_cast<const TTY*>(dev)->ttyName();
+            }
+        }
+        ptr += ksprintf(ptr, "vnode %03u: %02u:%08u (%u) %s\n", i, vnode.inode.fileSystemID(), vnode.inode.index(), vnode.retain_count(), path.characters());
+    }
+    *ptr = '\0';
+    buffer.trim(ptr - (char*)buffer.pointer());
+    return buffer;
+}
+
 bool ProcFileSystem::initialize()
 {
     SyntheticFileSystem::initialize();
@@ -328,6 +351,7 @@ bool ProcFileSystem::initialize()
     addFile(createGeneratedFile("kmalloc", procfs$kmalloc));
     addFile(createGeneratedFile("summary", procfs$summary));
     addFile(createGeneratedFile("cpuinfo", procfs$cpuinfo));
+    addFile(createGeneratedFile("vnodes", procfs$vnodes));
     return true;
 }
 

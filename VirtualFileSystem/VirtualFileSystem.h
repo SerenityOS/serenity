@@ -28,6 +28,7 @@ inline constexpr dword encodedDevice(unsigned major, unsigned minor)
 
 class VirtualFileSystem {
     AK_MAKE_ETERNAL
+    friend ByteBuffer procfs$vnodes();
 public:
     static void initializeGlobals();
 
@@ -67,6 +68,8 @@ public:
 
         void* vmo() { return m_vmo; }
         void set_vmo(void* vmo) { m_vmo = vmo; }
+
+        unsigned retain_count() const { return retainCount; }
 
     private:
         friend class VirtualFileSystem;
