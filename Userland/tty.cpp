@@ -1,5 +1,5 @@
-#include <LibC/stdio.h>
-#include <LibC/unistd.h>
+#include <stdio.h>
+#include <unistd.h>
 
 int main(int, char**)
 {

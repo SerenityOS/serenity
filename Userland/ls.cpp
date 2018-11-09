@@ -4,8 +4,10 @@
 #include <LibC/errno.h>
 #include <LibC/string.h>
 
-int main(int c, char** v)
+int main(int argc, char** argv)
 {
+    (void) argc;
+    (void) argv;
     bool colorize = true;
 
     DIR* dirp = opendir(".");

@@ -1,11 +1,11 @@
-#include <LibC/stdio.h>
-#include <LibC/unistd.h>
-#include <LibC/process.h>
-#include <LibC/errno.h>
-#include <LibC/string.h>
-#include <LibC/stdlib.h>
-#include <LibC/utsname.h>
-#include <LibC/pwd.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <process.h>
+#include <errno.h>
+#include <string.h>
+#include <stdlib.h>
+#include <utsname.h>
+#include <pwd.h>
 #include <sys/mman.h>
 #include <signal.h>
 #include <AK/FileSystemPath.h>
@@ -43,7 +43,7 @@ void did_receive_signal(int signum)
     g_got_signal = true;
 }
 
-void handle_sigint(int signum)
+void handle_sigint(int)
 {
     printf("Interrupt received by sh\n");
 }
@@ -105,7 +105,7 @@ static int sh_wt(int, const char**)
 {
     const char* rodata_ptr = "foo";
     printf("Writing to rodata=%p...\n", rodata_ptr);
-    *(char*)rodata_ptr = 0;
+    *const_cast<char*>(rodata_ptr) = 0;
 
     char* text_ptr = (char*)sh_fef;
     printf("Writing to text=%p...\n", text_ptr);
@@ -141,7 +141,6 @@ close_it:
 
 static int sh_mp(int, const char**)
 {
-    int rc;
     int fd = open("/kernel.map", O_RDONLY);
     if (fd < 0) {
         perror("open(/kernel.map)");

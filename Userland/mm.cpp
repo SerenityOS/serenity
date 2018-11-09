@@ -1,8 +1,10 @@
 #include <LibC/stdio.h>
 #include <LibC/unistd.h>
 
-int main(int c, char** v)
+int main(int argc, char** argv)
 {
+    (void) argc;
+    (void) argv;
     int fd = open("/proc/mm", O_RDONLY);
     if (fd == -1) {
         perror("failed to open /proc/mm");

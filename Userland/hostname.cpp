@@ -1,10 +1,12 @@
-#include <LibC/unistd.h>
-#include <LibC/stdio.h>
-#include <LibC/errno.h>
-#include <LibC/string.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <errno.h>
+#include <string.h>
 
-int main(int c, char** v)
+int main(int argc, char** argv)
 {
+    (void) argc;
+    (void) argv;
     char buffer[HOST_NAME_MAX];
     int rc = gethostname(buffer, sizeof(buffer));
     if (rc < 0) {

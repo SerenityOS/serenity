@@ -1,5 +1,5 @@
-#include <LibC/utsname.h>
-#include <LibC/stdio.h>
+#include <utsname.h>
+#include <stdio.h>
 
 int main(int argc, char** argv)
 {
