@@ -7,13 +7,6 @@
 
 static byte* vga_mem = nullptr;
 
-void vga_scroll_up()
-{
-    InterruptDisabler disabler;
-    memcpy(vga_mem, vga_mem + 160, 160 * 24);
-    vga_clear_row(24);
-}
-
 void vga_clear_row(word line)
 {
     InterruptDisabler disabler;
@@ -35,6 +28,24 @@ void vga_putch_at(byte row, byte column, byte ch, byte attr)
     word cur = (row * 160) + (column * 2);
     vga_mem[cur] = ch;
     vga_mem[cur + 1] = attr;
+}
+
+word vga_get_start_address()
+{
+    word value;
+    IO::out8(0x3d4, 0x0d);
+    value = IO::in8(0x3d5) << 8;
+    IO::out8(0x3d4, 0x0c);
+    value |= IO::in8(0x3d5);
+    return value;
+}
+
+void vga_set_start_address(word value)
+{
+    IO::out8(0x3d4, 0x0c);
+    IO::out8(0x3d5, MSB(value));
+    IO::out8(0x3d4, 0x0d);
+    IO::out8(0x3d5, LSB(value));
 }
 
 void vga_init()
@@ -61,10 +72,6 @@ WORD vga_get_cursor()
 
 void vga_set_cursor(WORD value)
 {
-    if (value >= (80 * 25)) {
-        vga_set_cursor(0);
-        return;
-    }
     IO::out8(0x3d4, 0x0e);
     IO::out8(0x3d5, MSB(value));
     IO::out8(0x3d4, 0x0f);
@@ -74,4 +81,9 @@ void vga_set_cursor(WORD value)
 void vga_set_cursor(BYTE row, BYTE column)
 {
     vga_set_cursor(row * 80 + column);
+}
+
+void vga_set_cursor(byte row, byte column, word start_address)
+{
+    vga_set_cursor((start_address) + (row * 80 + column));
 }

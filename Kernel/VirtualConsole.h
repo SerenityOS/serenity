@@ -51,6 +51,12 @@ private:
     byte m_saved_cursor_column { 0 };
     byte m_current_attribute { 0x07 };
 
+    void clear_vga_row(word row);
+    void set_vga_start_row(word row);
+    word m_vga_start_row { 0 };
+    word m_current_vga_start_address { 0 };
+    byte* m_current_vga_window { nullptr };
+
     void execute_escape_sequence(byte final);
 
     enum EscapeState {

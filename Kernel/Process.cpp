@@ -592,7 +592,7 @@ Process::Process(String&& name, uid_t uid, gid_t gid, pid_t ppid, RingLevel ring
             if (!fork_parent->m_file_descriptors[i])
                 continue;
 #ifdef FORK_DEBUG
-            dbgprintf("fork: cloning fd %u... (%p) istty? %um\n", i, fork_parent->m_file_descriptors[i].ptr(), fork_parent->m_file_descriptors[i]->isTTY());
+            dbgprintf("fork: cloning fd %u... (%p) istty? %u\n", i, fork_parent->m_file_descriptors[i].ptr(), fork_parent->m_file_descriptors[i]->isTTY());
 #endif
             m_file_descriptors[i] = fork_parent->m_file_descriptors[i]->clone();
         }
