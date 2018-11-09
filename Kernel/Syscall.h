@@ -3,7 +3,6 @@
 #include <AK/Types.h>
 
 #define ENUMERATE_SYSCALLS \
-    __ENUMERATE_SYSCALL(spawn) \
     __ENUMERATE_SYSCALL(sleep) \
     __ENUMERATE_SYSCALL(yield) \
     __ENUMERATE_SYSCALL(putch) \

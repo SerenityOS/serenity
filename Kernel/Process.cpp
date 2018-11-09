@@ -450,46 +450,6 @@ int Process::sys$execve(const char* filename, const char** argv, const char** en
     return rc;
 }
 
-pid_t Process::sys$spawn(const char* filename, const char** argv, const char** envp)
-{
-    VALIDATE_USER_READ(filename, strlen(filename));
-    if (argv) {
-        for (size_t i = 0; argv[i]; ++i) {
-            VALIDATE_USER_READ(argv[i], strlen(argv[i]));
-        }
-    }
-    if (envp) {
-        for (size_t i = 0; envp[i]; ++i) {
-            VALIDATE_USER_READ(envp[i], strlen(envp[i]));
-        }
-    }
-
-    String path(filename);
-    auto parts = path.split('/');
-
-    Vector<String> arguments;
-    if (argv) {
-        for (size_t i = 0; argv[i]; ++i) {
-            arguments.append(argv[i]);
-        }
-    } else {
-        arguments.append(parts.last());
-    }
-
-    Vector<String> environment;
-    if (envp) {
-        for (size_t i = 0; envp[i]; ++i) {
-            environment.append(envp[i]);
-        }
-    }
-
-    int error;
-    auto* child = create_user_process(path, m_uid, m_gid, m_pid, error, move(arguments), move(environment), m_tty);
-    if (child)
-        return child->pid();
-    return error;
-}
-
 Process* Process::create_user_process(const String& path, uid_t uid, gid_t gid, pid_t parent_pid, int& error, Vector<String>&& arguments, Vector<String>&& environment, TTY* tty)
 {
     // FIXME: Don't split() the path twice (sys$spawn also does it...)

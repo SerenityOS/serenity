@@ -135,7 +135,6 @@ public:
     int sys$geterror() { return m_error; }
     void sys$exit(int status) NORETURN;
     void sys$sigreturn() NORETURN;
-    pid_t sys$spawn(const char* path, const char** args, const char** envp);
     pid_t sys$waitpid(pid_t, int* wstatus, int options);
     void* sys$mmap(const Syscall::SC_mmap_params*);
     int sys$munmap(void*, size_t size);

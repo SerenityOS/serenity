@@ -58,8 +58,6 @@ static DWORD handle(RegisterDump& regs, DWORD function, DWORD arg1, DWORD arg2, 
         return current->sys$sleep((unsigned)arg1);
     case Syscall::SC_gettimeofday:
         return current->sys$gettimeofday((timeval*)arg1);
-    case Syscall::SC_spawn:
-        return current->sys$spawn((const char*)arg1, (const char**)arg2, (const char**)arg3);
     case Syscall::SC_get_dir_entries:
         return current->sys$get_dir_entries((int)arg1, (void*)arg2, (size_t)arg3);
     case Syscall::SC_lstat:
