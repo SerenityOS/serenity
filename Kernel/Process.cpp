@@ -288,7 +288,7 @@ pid_t Process::sys$fork(RegisterDump& regs)
     return child->pid();
 }
 
-int Process::exec(const String& path, Vector<String>&& arguments, Vector<String>&& environment)
+int Process::do_exec(const String& path, Vector<String>&& arguments, Vector<String>&& environment)
 {
     auto parts = path.split('/');
     if (parts.isEmpty())
@@ -309,7 +309,6 @@ int Process::exec(const String& path, Vector<String>&& arguments, Vector<String>
         return -ENOTIMPL;
     }
 
-    { // Put everything into a scope so things get cleaned up before we yield-teleport into the new executable.
     auto vmo = VMObject::create_file_backed(descriptor->vnode(), descriptor->metadata().size);
     vmo->set_name(descriptor->absolute_path());
     auto* region = allocate_region_with_vmo(LinearAddress(), descriptor->metadata().size, vmo.copyRef(), 0, "helper", true, false);
@@ -403,7 +402,16 @@ int Process::exec(const String& path, Vector<String>&& arguments, Vector<String>
 #endif
 
     set_state(Skip1SchedulerPass);
-    } // Ready to yield-teleport!
+    return 0;
+}
+
+int Process::exec(const String& path, Vector<String>&& arguments, Vector<String>&& environment)
+{
+    // The bulk of exec() is done by do_exec(), which ensures that all locals
+    // are cleaned up by the time we yield-teleport below.
+    int rc = do_exec(path, move(arguments), move(environment));
+    if (rc < 0)
+        return rc;
 
     if (current == this) {
         Scheduler::yield();

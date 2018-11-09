@@ -209,6 +209,7 @@ private:
 
     Process(String&& name, uid_t, gid_t, pid_t ppid, RingLevel, RetainPtr<VirtualFileSystem::Node>&& cwd = nullptr, RetainPtr<VirtualFileSystem::Node>&& executable = nullptr, TTY* = nullptr, Process* fork_parent = nullptr);
 
+    int do_exec(const String& path, Vector<String>&& arguments, Vector<String>&& environment);
     void push_value_on_stack(dword);
 
     PageDirectory* m_page_directory { nullptr };
