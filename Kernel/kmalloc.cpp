@@ -28,7 +28,7 @@ typedef struct
 
 #define RANGE_SIZE 0x100000
 
-PRIVATE BYTE alloc_map[POOL_SIZE / CHUNK_SIZE / 8];
+static byte alloc_map[POOL_SIZE / CHUNK_SIZE / 8];
 
 volatile DWORD sum_alloc = 0;
 volatile DWORD sum_free = POOL_SIZE;
@@ -50,8 +50,7 @@ bool is_kmalloc_address(void* ptr)
     return ptr >= (void*)BASE_PHYS && ptr <= ((void*)BASE_PHYS + POOL_SIZE);
 }
 
-PUBLIC void
-kmalloc_init()
+void kmalloc_init()
 {
     memset( &alloc_map, 0, sizeof(alloc_map) );
     memset( (void *)BASE_PHYS, 0, POOL_SIZE );
@@ -88,8 +87,7 @@ void* kmalloc_page_aligned(size_t size)
 }
 
 
-PUBLIC void *
-kmalloc( DWORD size )
+void* kmalloc(dword size)
 {
     InterruptDisabler disabler;
 
@@ -162,8 +160,7 @@ kmalloc( DWORD size )
     return nullptr;
 }
 
-PUBLIC void
-kfree( void *ptr )
+void kfree(void *ptr)
 {
     if( !ptr )
         return;

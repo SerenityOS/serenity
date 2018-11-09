@@ -55,6 +55,8 @@ private:
 struct PageDirectory {
     dword entries[1024];
     RetainPtr<PhysicalPage> physical_pages[1024];
+
+    bool is_active() const;
 };
 
 class VMObject : public Retainable<VMObject> {

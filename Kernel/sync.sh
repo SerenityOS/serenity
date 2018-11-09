@@ -1,30 +1,30 @@
-rm -f _fs_contents.lock
-rm -f _fs_contents
-cp -p _fs_contents.stock _fs_contents
-mkdir -p mnt
+rm -vf _fs_contents.lock
+rm -vf _fs_contents
+cp -vp _fs_contents.stock _fs_contents
+mkdir -vp mnt
 mount -o loop _fs_contents mnt/
 cp -R ../Base/* mnt/
-cp ../Userland/sh mnt/bin/sh
-cp ../Userland/id mnt/bin/id
-cp ../Userland/ps mnt/bin/ps
-cp ../Userland/ls mnt/bin/ls
-cp ../Userland/pwd mnt/bin/pwd
-cp ../Userland/sleep mnt/bin/sleep
-cp ../Userland/date mnt/bin/date
-cp ../Userland/true mnt/bin/true
-cp ../Userland/false mnt/bin/false
-cp ../Userland/hostname mnt/bin/hostname
-cp ../Userland/cat mnt/bin/cat
-cp ../Userland/uname mnt/bin/uname
-cp ../Userland/clear mnt/bin/clear
-cp ../Userland/tst mnt/bin/tst
-cp ../Userland/ft mnt/bin/ft
-cp ../Userland/ft2 mnt/bin/ft2
-cp ../Userland/mm mnt/bin/mm
-cp ../Userland/kill mnt/bin/kill
-cp ../Userland/tty mnt/bin/tty
-cp ../Userland/strsignal mnt/bin/strsignal
+cp -v ../Userland/sh mnt/bin/sh
+cp -v ../Userland/id mnt/bin/id
+cp -v ../Userland/ps mnt/bin/ps
+cp -v ../Userland/ls mnt/bin/ls
+cp -v ../Userland/pwd mnt/bin/pwd
+cp -v ../Userland/sleep mnt/bin/sleep
+cp -v ../Userland/date mnt/bin/date
+cp -v ../Userland/true mnt/bin/true
+cp -v ../Userland/false mnt/bin/false
+cp -v ../Userland/hostname mnt/bin/hostname
+cp -v ../Userland/cat mnt/bin/cat
+cp -v ../Userland/uname mnt/bin/uname
+cp -v ../Userland/clear mnt/bin/clear
+cp -v ../Userland/tst mnt/bin/tst
+cp -v ../Userland/ft mnt/bin/ft
+cp -v ../Userland/ft2 mnt/bin/ft2
+cp -v ../Userland/mm mnt/bin/mm
+cp -v ../Userland/kill mnt/bin/kill
+cp -v ../Userland/tty mnt/bin/tty
+cp -v ../Userland/strsignal mnt/bin/strsignal
 sh sync-local.sh
-cp kernel.map mnt/
+cp -v kernel.map mnt/
 umount mnt
 sync

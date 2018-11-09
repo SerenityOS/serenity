@@ -271,8 +271,11 @@ Process* Process::fork(RegisterDump& regs)
 
     ProcFileSystem::the().addProcess(*child);
 
-    g_processes->prepend(child);
-    system.nprocess++;
+    {
+        InterruptDisabler disabler;
+        g_processes->prepend(child);
+        system.nprocess++;
+    }
 #ifdef TASK_DEBUG
     kprintf("Process %u (%s) forked from %u @ %p\n", child->pid(), child->name().characters(), m_pid, child->m_tss.eip);
 #endif
@@ -315,10 +318,12 @@ int Process::exec(const String& path, Vector<String>&& arguments, Vector<String>
     dword entry_eip = 0;
     PageDirectory* old_page_directory = m_page_directory;
     PageDirectory* new_page_directory = reinterpret_cast<PageDirectory*>(kmalloc_page_aligned(sizeof(PageDirectory)));
-    dbgprintf("Process exec: PD=%x created\n", new_page_directory);
+#ifdef MM_DEBUG
+    dbgprintf("Process %u exec: PD=%x created\n", pid(), new_page_directory);
+#endif
     MM.populate_page_directory(*new_page_directory);
     m_page_directory = new_page_directory;
-    MM.enter_process_paging_scope(*this);
+    ProcessPagingScope paging_scope(*this);
 
     // FIXME: Should we consider doing on-demand paging here? Is it actually useful?
     bool success = region->page_in(*new_page_directory);
@@ -400,10 +405,9 @@ int Process::exec(const String& path, Vector<String>&& arguments, Vector<String>
     } // Ready to yield-teleport!
 
     if (current == this) {
-        bool success = Scheduler::yield();
+        Scheduler::yield();
         ASSERT_NOT_REACHED();
     }
-
     return 0;
 }
 
@@ -509,8 +513,11 @@ Process* Process::create_user_process(const String& path, uid_t uid, gid_t gid, 
 
     ProcFileSystem::the().addProcess(*process);
 
-    g_processes->prepend(process);
-    system.nprocess++;
+    {
+        InterruptDisabler disabler;
+        g_processes->prepend(process);
+        system.nprocess++;
+    }
 #ifdef TASK_DEBUG
     kprintf("Process %u (%s) spawned @ %p\n", process->pid(), process->name().characters(), process->m_tss.eip);
 #endif
@@ -562,9 +569,11 @@ Process* Process::create_kernel_process(void (*e)(), String&& name)
     process->m_tss.eip = (dword)e;
 
     if (process->pid() != 0) {
-        InterruptDisabler disabler;
-        g_processes->prepend(process);
-        system.nprocess++;
+        {
+            InterruptDisabler disabler;
+            g_processes->prepend(process);
+            system.nprocess++;
+        }
         ProcFileSystem::the().addProcess(*process);
 #ifdef TASK_DEBUG
         kprintf("Kernel process %u (%s) spawned @ %p\n", process->pid(), process->name().characters(), process->m_tss.eip);
@@ -603,7 +612,9 @@ Process::Process(String&& name, uid_t uid, gid_t gid, pid_t ppid, RingLevel ring
     }
 
     m_page_directory = (PageDirectory*)kmalloc_page_aligned(sizeof(PageDirectory));
-    dbgprintf("Process ctor: PD=%x created\n", m_page_directory);
+#ifdef MM_DEBUG
+    dbgprintf("Process %u ctor: PD=%x created\n", pid(), m_page_directory);
+#endif
     MM.populate_page_directory(*m_page_directory);
 
     if (fork_parent) {
@@ -1246,15 +1257,13 @@ mode_t Process::sys$umask(mode_t mask)
     return old_mask;
 }
 
-void Process::reap(pid_t pid)
+void Process::reap(Process& process)
 {
     InterruptDisabler disabler;
-    auto* process = Process::from_pid(pid);
-    ASSERT(process);
-    dbgprintf("reap: %s(%u) {%s}\n", process->name().characters(), process->pid(), toString(process->state()));
-    ASSERT(process->state() == Dead);
-    g_processes->remove(process);
-    delete process;
+    dbgprintf("reap: %s(%u) {%s}\n", process.name().characters(), process.pid(), toString(process.state()));
+    ASSERT(process.state() == Dead);
+    g_processes->remove(&process);
+    delete &process;
 }
 
 pid_t Process::sys$waitpid(pid_t waitee, int* wstatus, int options)
@@ -1273,7 +1282,13 @@ pid_t Process::sys$waitpid(pid_t waitee, int* wstatus, int options)
     sched_yield();
     if (m_was_interrupted_while_blocked)
         return -EINTR;
-    reap(waitee);
+    Process* waitee_process;
+    {
+        InterruptDisabler disabler;
+        waitee_process = Process::from_pid(waitee);
+    }
+    ASSERT(waitee_process);
+    reap(*waitee_process);
     if (wstatus)
         *wstatus = m_waitee_status;
     return m_waitee;

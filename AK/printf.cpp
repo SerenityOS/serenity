@@ -1,5 +1,3 @@
-#define ALWAYS_INLINE inline __attribute__ ((always_inline))
-
 typedef unsigned char byte;
 typedef unsigned short word;
 typedef unsigned int dword;
