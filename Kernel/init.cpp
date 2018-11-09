@@ -83,6 +83,14 @@ static void loadKsyms(const ByteBuffer& buffer)
     auto* bufptr = (const char*)buffer.pointer();
     auto* startOfName = bufptr;
     dword address = 0;
+    dword ksym_count = 0;
+
+    for (unsigned i = 0; i < 8; ++i)
+        ksym_count = (ksym_count << 4) | parseHexDigit(*(bufptr++));
+    s_ksyms->ensureCapacity(ksym_count);
+    ++bufptr; // skip newline
+
+    kprintf("Loading ksyms: \033[s");
 
     while (bufptr < buffer.endPointer()) {
         for (unsigned i = 0; i < 8; ++i)
@@ -96,8 +104,11 @@ static void loadKsyms(const ByteBuffer& buffer)
         }
         // FIXME: The Strings here should be eternally allocated too.
         ksyms().append({ address, String(startOfName, bufptr - startOfName) });
+
+        kprintf("\033[u\033[s%u/%u", ksyms().size(), ksym_count);
         ++bufptr;
     }
+    kprintf("\n");
     s_ksyms_ready = true;
 }
 
