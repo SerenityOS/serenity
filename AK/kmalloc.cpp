@@ -46,6 +46,36 @@ void* kmalloc_eternal(size_t size)
 
 }
 
+void* operator new(size_t size)
+{
+    return kmalloc(size);
+}
+
+void* operator new[](size_t size)
+{
+    return kmalloc(size);
+}
+
+void operator delete(void* ptr)
+{
+    return kfree(ptr);
+}
+
+void operator delete[](void* ptr)
+{
+    return kfree(ptr);
+}
+
+void operator delete(void* ptr, size_t)
+{
+    return kfree(ptr);
+}
+
+void operator delete[](void* ptr, size_t)
+{
+    return kfree(ptr);
+}
+
 #else
 
 extern "C" {

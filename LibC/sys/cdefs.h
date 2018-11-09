@@ -16,3 +16,6 @@
 
 #undef __P
 #define __P(a) a
+
+extern "C" int main(int, char**);
+

@@ -45,13 +45,13 @@ STANDARD_FLAGS = -std=c++17 -nostdinc++ -nostdlib -nostdinc
 USERLAND_FLAGS = -ffreestanding -fno-stack-protector -fno-ident
 WARNING_FLAGS = -Wextra -Wall -Wundef -Wcast-qual -Wwrite-strings
 FLAVOR_FLAGS = -march=i386 -mregparm=3 -m32 -fno-exceptions -fno-rtti -fmerge-all-constants -fno-unroll-loops -fno-pie -fno-pic
-OPTIMIZATION_FLAGS = -Os -fno-asynchronous-unwind-tables
+OPTIMIZATION_FLAGS = -Oz -fno-asynchronous-unwind-tables
 INCLUDE_FLAGS = -I.. -I. -I../LibC
 
 DEFINES = -DSERENITY -DSANITIZE_PTRS -DUSERLAND
 
 CXXFLAGS = $(WARNING_FLAGS) $(OPTIMIZATION_FLAGS) $(USERLAND_FLAGS) $(FLAVOR_FLAGS) $(ARCH_FLAGS) $(STANDARD_FLAGS) $(INCLUDE_FLAGS) $(DEFINES)
-CXX = g++-8
+CXX = clang
 LD = ld
 AR = ar
 LDFLAGS = -static --strip-debug -melf_i386 --build-id=none -z norelro -z now -e _start --gc-sections
