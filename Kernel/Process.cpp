@@ -28,7 +28,7 @@
 // FIXME: Some places pass strlen(arg1) as arg2. This doesn't seem entirely perfect..
 #define VALIDATE_USER_READ_WITH_RETURN_TYPE(b, s, ret_type) \
     do { \
-        LinearAddress laddr((dword)(b)); \
+        LinearAddress laddr(reinterpret_cast<dword>(b)); \
         if (!validate_user_read(laddr) || !validate_user_read(laddr.offset((s) - 1))) { \
             dbgprintf("Bad read address passed to syscall: %p +%u\n", laddr.get(), (s)); \
             return (ret_type)-EFAULT; \
@@ -39,7 +39,7 @@
 
 #define VALIDATE_USER_WRITE(b, s) \
     do { \
-        LinearAddress laddr((dword)(b)); \
+        LinearAddress laddr(reinterpret_cast<dword>(b)); \
         if (!validate_user_write(laddr) || !validate_user_write(laddr.offset((s) - 1))) { \
             dbgprintf("Bad write address passed to syscall: %p +%u\n", laddr.get(), (s)); \
             return -EFAULT; \

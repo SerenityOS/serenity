@@ -3,6 +3,6 @@
 if [ "$1" = "b" ]; then
     bochs -q -f .bochsrc
 else
-    qemu-system-i386 -m 32 -drive format=raw,file=.floppy-image,if=floppy -drive format=raw,file=_fs_contents #$@
+    qemu-system-i386 -s -m 32 -drive format=raw,file=.floppy-image,if=floppy -drive format=raw,file=_fs_contents #$@
 fi
 
