@@ -84,13 +84,13 @@ ByteBuffer FileSystem::readEntireInode(InodeIdentifier inode, FileDescriptor* ha
     for (;;) {
         nread = readInodeBytes(inode, offset, sizeof(buffer), buffer, handle);
         //kprintf("nread: %u, bufsiz: %u, initialSize: %u\n", nread, sizeof(buffer), initialSize);
-        ASSERT(nread <= sizeof(buffer));
+        ASSERT(nread <= (Unix::ssize_t)sizeof(buffer));
         if (nread <= 0)
             break;
         memcpy(out, buffer, nread);
         out += nread;
         offset += nread;
-        ASSERT(offset <= initialSize); // FIXME: Support dynamically growing the buffer.
+        ASSERT(offset <= (Unix::ssize_t)initialSize); // FIXME: Support dynamically growing the buffer.
     }
     if (nread < 0) {
         kprintf("[fs] readInode: ERROR: %d\n", nread);

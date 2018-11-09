@@ -111,7 +111,6 @@ Region* Process::allocate_file_backed_region(LinearAddress laddr, size_t size, R
         m_nextRegion = m_nextRegion.offset(size).offset(PAGE_SIZE);
     }
     laddr.mask(0xfffff000);
-    unsigned page_count = ceilDiv(size, PAGE_SIZE);
     m_regions.append(adopt(*new Region(laddr, size, move(vnode), move(name), is_readable, is_writable)));
     MM.mapRegion(*this, *m_regions.last());
     return m_regions.last().ptr();
@@ -336,12 +335,14 @@ int Process::exec(const String& path, Vector<String>&& arguments, Vector<String>
         ELFLoader loader(region->linearAddress.asPtr());
         loader.map_section_hook = [&] (LinearAddress laddr, size_t size, size_t alignment, size_t offset_in_image, bool is_readable, bool is_writable, const String& name) {
             ASSERT(size);
+            ASSERT(alignment == PAGE_SIZE);
             size = ((size / 4096) + 1) * 4096; // FIXME: Use ceil_div?
             (void) allocate_region_with_vmo(laddr, size, vmo.copyRef(), offset_in_image, String(name), is_readable, is_writable);
             return laddr.asPtr();
         };
         loader.alloc_section_hook = [&] (LinearAddress laddr, size_t size, size_t alignment, bool is_readable, bool is_writable, const String& name) {
             ASSERT(size);
+            ASSERT(alignment == PAGE_SIZE);
             size = ((size / 4096) + 1) * 4096; // FIXME: Use ceil_div?
             (void) allocate_region(laddr, size, String(name), is_readable, is_writable);
             return laddr.asPtr();
@@ -1149,7 +1150,7 @@ int Process::sys$open(const char* path, int options)
         return -ENOTDIR; // FIXME: This should be handled by VFS::open.
 
     int fd = 0;
-    for (; fd < m_max_open_file_descriptors; ++fd) {
+    for (; fd < (int)m_max_open_file_descriptors; ++fd) {
         if (!m_file_descriptors[fd])
             break;
     }
@@ -1268,6 +1269,8 @@ void Process::reap(Process& process)
 
 pid_t Process::sys$waitpid(pid_t waitee, int* wstatus, int options)
 {
+    // FIXME: Respect options
+    (void) options;
     if (wstatus)
         VALIDATE_USER_WRITE(wstatus, sizeof(int));
 
@@ -1466,7 +1469,7 @@ int Process::sys$dup(int old_fd)
     if (number_of_open_file_descriptors() == m_max_open_file_descriptors)
         return -EMFILE;
     int new_fd = 0;
-    for (; new_fd < m_max_open_file_descriptors; ++new_fd) {
+    for (; new_fd < (int)m_max_open_file_descriptors; ++new_fd) {
         if (!m_file_descriptors[new_fd])
             break;
     }
@@ -1521,7 +1524,7 @@ int Process::sys$getgroups(int count, gid_t* gids)
     ASSERT(m_gids.size() < MAX_PROCESS_GIDS);
     if (!count)
         return m_gids.size();
-    if (count != m_gids.size())
+    if (count != (int)m_gids.size())
         return -EINVAL;
     VALIDATE_USER_WRITE(gids, sizeof(gid_t) * count);
     size_t i = 0;

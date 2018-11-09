@@ -15,7 +15,7 @@ ssize_t TTY::read(byte* buffer, size_t size)
 {
     ssize_t nread = min(m_buffer.size(), size);
     memcpy(buffer, m_buffer.data(), nread);
-    if (nread == m_buffer.size())
+    if (nread == (ssize_t)m_buffer.size())
         m_buffer.clear();
     else {
         dbgprintf("had %u, read %u\n", m_buffer.size(), nread);

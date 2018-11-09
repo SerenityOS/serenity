@@ -60,7 +60,7 @@ WARNING_FLAGS = -Wextra -Wall -Wundef -Wcast-qual -Wwrite-strings
 FLAVOR_FLAGS = -mregparm=3 -march=i386 -m32 -fno-exceptions -fno-rtti -fmerge-all-constants -fno-unroll-loops -fno-pie -fno-pic
 OPTIMIZATION_FLAGS = -Os -fno-asynchronous-unwind-tables
 INCLUDE_FLAGS = -I.. -I.
-SUGGEST_FLAGS = -Wsuggest-attribute=noreturn -Wsuggest-final-types -Wsuggest-final-methods -Wsuggest-override
+SUGGEST_FLAGS = -Wsuggest-final-types -Wsuggest-final-methods -Wsuggest-override #-Wsuggest-attribute=noreturn 
 
 DEFINES = -DSERENITY -DKERNEL -DSANITIZE_PTRS
 

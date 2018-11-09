@@ -398,6 +398,8 @@ bool VirtualFileSystem::touch(const String& path)
 
 RetainPtr<FileDescriptor> VirtualFileSystem::open(CharacterDevice& device, int options)
 {
+    // FIXME: Respect options.
+    (void) options;
     auto vnode = getOrCreateNode(device);
     if (!vnode)
         return nullptr;
@@ -419,6 +421,7 @@ RetainPtr<FileDescriptor> VirtualFileSystem::create(const String& path, InodeIde
 {
     // FIXME: Do the real thing, not just this fake thing!
     (void) path;
+    (void) base;
     m_rootNode->fileSystem()->createInode(m_rootNode->fileSystem()->rootInode(), "empty", 0100644, 0);
     return nullptr;
 }
@@ -427,6 +430,7 @@ RetainPtr<FileDescriptor> VirtualFileSystem::mkdir(const String& path, InodeIden
 {
     // FIXME: Do the real thing, not just this fake thing!
     (void) path;
+    (void) base;
     m_rootNode->fileSystem()->makeDirectory(m_rootNode->fileSystem()->rootInode(), "mydir", 0400755);
     return nullptr;
 }

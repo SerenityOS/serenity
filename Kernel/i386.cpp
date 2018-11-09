@@ -138,6 +138,7 @@ void exception_6_handler(RegisterDump& regs)
     }
 
     kprintf("pc=%w:%x ds=%w es=%w fs=%w gs=%w\n", regs.cs, regs.eip, regs.ds, regs.es, regs.fs, regs.gs);
+    kprintf("stk=%w:%x\n", ss, esp);
     kprintf("eax=%x ebx=%x ecx=%x edx=%x\n", regs.eax, regs.ebx, regs.ecx, regs.edx);
     kprintf("ebp=%x esp=%x esi=%x edi=%x\n", regs.ebp, esp, regs.esi, regs.edi);
 
@@ -168,6 +169,7 @@ void exception_13_handler(RegisterDumpWithExceptionCode& regs)
 
     kprintf("exception code: %w\n", regs.exception_code);
     kprintf("pc=%w:%x ds=%w es=%w fs=%w gs=%w\n", regs.cs, regs.eip, regs.ds, regs.es, regs.fs, regs.gs);
+    kprintf("stk=%w:%x\n", ss, esp);
     kprintf("eax=%x ebx=%x ecx=%x edx=%x\n", regs.eax, regs.ebx, regs.ecx, regs.edx);
     kprintf("ebp=%x esp=%x esi=%x edi=%x\n", regs.ebp, esp, regs.esi, regs.edi);
 
@@ -276,15 +278,12 @@ EH(2, "Unknown error")
 EH(3, "Breakpoint")
 EH(4, "Overflow")
 EH(5, "Bounds check")
-EH(6, "Invalid opcode")
 EH(7, "Coprocessor not available")
 EH(8, "Double fault")
 EH(9, "Coprocessor segment overrun")
 EH(10, "Invalid TSS")
 EH(11, "Segment not present")
 EH(12, "Stack exception")
-EH(13, "General protection fault")
-EH(14, "Page fault")
 EH(15, "Unknown error")
 EH(16, "Coprocessor error")
 
@@ -442,7 +441,7 @@ void handleIRQ()
         return;
     }
 
-    byte irq;
+    byte irq = 0;
     for (byte i = 0; i < 16; ++i) {
         if (isr & (1 << i)) {
             irq = i;
@@ -460,4 +459,5 @@ void __assertion_failed(const char* msg, const char* file, unsigned line, const 
     asm volatile("cli");
     kprintf("ASSERTION FAILED: %s\n%s:%u in %s\n", msg, file, line, func);
     asm volatile("hlt");
+    for (;;);
 }

@@ -59,7 +59,7 @@ Vector<KSym, KmallocEternalAllocator>& ksyms()
     return *s_ksyms;
 }
 
-volatile bool ksyms_ready()
+bool ksyms_ready()
 {
     return s_ksyms_ready;
 }
@@ -107,7 +107,6 @@ void dump_backtrace(bool use_ksyms)
         HANG;
         return;
     }
-    extern volatile bool ksyms_ready();
     if (use_ksyms && !ksyms_ready()) {
         HANG;
         return;
@@ -141,6 +140,7 @@ void dump_backtrace(bool use_ksyms)
 }
 #endif
 
+#ifdef STRESS_TEST_SPAWNING
 static void spawn_stress() NORETURN;
 static void spawn_stress()
 {
@@ -158,6 +158,7 @@ static void spawn_stress()
         asm volatile("hlt");
     }
 }
+#endif
 
 static void init_stage2() NORETURN;
 static void init_stage2()
@@ -247,6 +248,7 @@ static void init_stage2()
     ASSERT_NOT_REACHED();
 }
 
+void init() NORETURN;
 void init()
 {
     cli();
