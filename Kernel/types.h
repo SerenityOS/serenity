@@ -1,13 +1,10 @@
 #pragma once
 
+#include <AK/Compiler.h>
 #include <AK/Types.h>
 
 #define PACKED __attribute__ ((packed))
-#define NORETURN __attribute__ ((noreturn))
-#define ALWAYS_INLINE __attribute__ ((always_inline))
 #define PURE __attribute__ ((pure))
-#define PUBLIC
-#define PRIVATE static
 
 typedef unsigned char BYTE;
 typedef unsigned short WORD;

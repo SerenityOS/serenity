@@ -444,7 +444,8 @@ void MemoryManager::remap_region_page(PageDirectory* page_directory, Region& reg
     else
         pte.setWritable(region.is_writable);
     pte.setUserAllowed(user_allowed);
-    flushTLB(page_laddr);
+    if (page_directory->is_active())
+        flushTLB(page_laddr);
 #ifdef MM_DEBUG
     dbgprintf("MM: >> remap_region_page (PD=%x) '%s' L%x => P%x (@%p)\n", page_directory, region.name.characters(), page_laddr.get(), physical_page->paddr().get(), physical_page.ptr());
 #endif
@@ -478,7 +479,8 @@ void MemoryManager::map_region_at_address(PageDirectory* page_directory, Region&
             pte.setWritable(region.is_writable);
         }
         pte.setUserAllowed(user_allowed);
-        flushTLB(page_laddr);
+        if (page_directory->is_active())
+            flushTLB(page_laddr);
 #ifdef MM_DEBUG
         dbgprintf("MM: >> map_region_at_address (PD=%x) '%s' L%x => P%x (@%p)\n", page_directory, region.name.characters(), page_laddr, physical_page ? physical_page->paddr().get() : 0, physical_page.ptr());
 #endif
@@ -498,7 +500,8 @@ void MemoryManager::unmap_range(PageDirectory* page_directory, LinearAddress lad
         pte.setPresent(false);
         pte.setWritable(false);
         pte.setUserAllowed(false);
-        flushTLB(page_laddr);
+        if (page_directory->is_active())
+            flushTLB(page_laddr);
 #ifdef MM_DEBUG
         dbgprintf("MM: << unmap_range L%x =/> 0\n", page_laddr);
 #endif
@@ -547,7 +550,8 @@ bool MemoryManager::unmapRegion(Process& process, Region& region)
         pte.setPresent(false);
         pte.setWritable(false);
         pte.setUserAllowed(false);
-        flushTLB(laddr);
+        if (process.m_page_directory->is_active())
+            flushTLB(laddr);
 #ifdef MM_DEBUG
         auto& physical_page = region.vmo().physical_pages()[region.first_page_index() + i];
         dbgprintf("MM: >> Unmapped L%x => P%x <<\n", laddr, physical_page ? physical_page->paddr().get() : 0);
@@ -763,4 +767,9 @@ void MemoryManager::unregister_region(Region& region)
 {
     InterruptDisabler disabler;
     m_regions.remove(&region);
+}
+
+inline bool PageDirectory::is_active() const
+{
+    return &current->page_directory() == this;
 }

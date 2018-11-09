@@ -67,7 +67,7 @@ bool Scheduler::pick_next()
 
         if (process.state() == Process::Dead) {
             if (current != &process && !Process::from_pid(process.ppid()))
-                Process::reap(process.pid());
+                Process::reap(process);
             return true;
         }
 

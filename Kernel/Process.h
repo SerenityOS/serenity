@@ -67,6 +67,9 @@ public:
         return m_state == BlockedSleep || m_state == BlockedWait || m_state == BlockedRead;
     }
 
+    PageDirectory& page_directory() { return *m_page_directory; }
+    const PageDirectory& page_directory() const { return *m_page_directory; }
+
     bool in_kernel() const { return (m_tss.cs & 0x03) == 0; }
 
     static Process* from_pid(pid_t);
@@ -162,7 +165,7 @@ public:
     static void initialize();
 
     void crash() NORETURN;
-    static void reap(pid_t);
+    static void reap(Process&);
 
     const TTY* tty() const { return m_tty; }
 
