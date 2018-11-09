@@ -55,19 +55,19 @@ BOOTLOADER = Boot/boot.bin
 IMAGE = .floppy-image
 ARCH_FLAGS =
 STANDARD_FLAGS = -std=c++17 -nostdinc++ -nostdlib #-nostdinc
-KERNEL_FLAGS = -ffreestanding -fno-stack-protector -fno-ident
+KERNEL_FLAGS = -ffreestanding -fno-stack-protector -fno-ident -fno-builtin
 WARNING_FLAGS = -Wextra -Wall -Wundef -Wcast-qual -Wwrite-strings
 FLAVOR_FLAGS = -mregparm=3 -march=i386 -m32 -fno-exceptions -fno-rtti -fmerge-all-constants -fno-unroll-loops -fno-pie -fno-pic
-OPTIMIZATION_FLAGS = -Os -fno-asynchronous-unwind-tables
+OPTIMIZATION_FLAGS = -Oz -fno-asynchronous-unwind-tables
 INCLUDE_FLAGS = -I.. -I.
-SUGGEST_FLAGS = -Wsuggest-final-types -Wsuggest-final-methods -Wsuggest-override #-Wsuggest-attribute=noreturn 
+#SUGGEST_FLAGS = -Wsuggest-final-types -Wsuggest-final-methods -Wsuggest-override #-Wsuggest-attribute=noreturn 
 
 DEFINES = -DSERENITY -DKERNEL -DSANITIZE_PTRS
 
 CXXFLAGS = $(WARNING_FLAGS) $(OPTIMIZATION_FLAGS) $(KERNEL_FLAGS) $(FLAVOR_FLAGS) $(ARCH_FLAGS) $(STANDARD_FLAGS) $(SUGGEST_FLAGS) $(INCLUDE_FLAGS) $(DEFINES)
 #CXX = /usr/local/gcc-4.8.1-for-linux64/bin/x86_64-pc-linux-g++
 #LD = /usr/local/gcc-4.8.1-for-linux64/bin/x86_64-pc-linux-ld
-CXX = g++-8
+CXX = clang
 LD = ld
 LDFLAGS = -T linker.ld --strip-debug -melf_i386 --gc-sections --build-id=none -z norelro -z now
 
