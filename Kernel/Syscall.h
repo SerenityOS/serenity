@@ -88,7 +88,7 @@ struct SC_mmap_params {
     int32_t prot;
     int32_t flags;
     int32_t fd;
-    uint32_t offset; // FIXME: 64-bit off_t?
+    int32_t offset; // FIXME: 64-bit off_t?
 };
 
 void initialize();

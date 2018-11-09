@@ -119,7 +119,7 @@ char* strchr(const char* str, int c)
     char ch = c;
     for (;; ++str) {
         if (*str == ch)
-            return (char*)str;
+            return const_cast<char*>(str);
         if (!*str)
             return nullptr;
     }
@@ -131,7 +131,7 @@ char* strrchr(const char* str, int ch)
     char c;
     for (; (c = *str); ++str) {
         if (c == ch)
-            last = (char*)str;
+            last = const_cast<char*>(str);
     }
     return last;
 }
@@ -168,18 +168,18 @@ char* strerror(int errnum)
 {
     if (errnum >= __errno_count) {
         printf("strerror() missing string for errnum=%d\n", errnum);
-        return "Unknown error";
+        return const_cast<char*>("Unknown error");
     }
-    return (char*)sys_errlist[errnum];
+    return const_cast<char*>(sys_errlist[errnum]);
 }
 
 char* strsignal(int signum)
 {
     if (signum >= __signal_count) {
         printf("strsignal() missing string for signum=%d\n", signum);
-        return "Unknown signal";
+        return const_cast<char*>("Unknown signal");
     }
-    return (char*)sys_siglist[signum];
+    return const_cast<char*>(sys_siglist[signum]);
 }
 
 }

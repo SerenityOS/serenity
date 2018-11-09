@@ -10,6 +10,8 @@ time_t time(time_t* tloc)
     struct timezone tz;
     if (gettimeofday(&tv, &tz) < 0)
         return (time_t)-1;
+    if (tloc)
+        *tloc = tv.tv_sec;
     return tv.tv_sec;
 }
 

@@ -91,7 +91,7 @@ int getopt(int nargc, char* const nargv[], const char* ostr)
     }
     else { /* need an argument */
         if (*place) /* no white space */
-            optarg = (char*)place;
+            optarg = const_cast<char*>(place);
         else if (nargc <= ++optind) { /* no arg */
             place = EMSG;
             if (*ostr == ':')
