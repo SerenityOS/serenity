@@ -39,6 +39,16 @@ VirtualConsole::~VirtualConsole()
 {
 }
 
+void VirtualConsole::clear()
+{
+    word* linemem = m_active ? (word*)s_vga_buffer : (word*)m_buffer;
+    for (word i = 0; i < 80 * 25; ++i)
+        linemem[i] = 0x0720;
+    if (m_active)
+        set_vga_start_row(0);
+    set_cursor(0, 0);
+}
+
 void VirtualConsole::switch_to(unsigned index)
 {
     if ((int)index == s_active_console)
@@ -248,11 +258,11 @@ void VirtualConsole::escape$J(const Vector<unsigned>& params)
         notImplemented();
         break;
     case 2:
-        vga_clear();
+        clear();
         break;
     case 3:
         // FIXME: <esc>[3J should also clear the scrollback buffer.
-        vga_clear();
+        clear();
         break;
     }
 }

@@ -41,6 +41,9 @@ extern "C" int _start()
         goto epilogue;
     status = main(argc, argv);
 
+    fflush(stdout);
+    fflush(stderr);
+
 epilogue:
     Syscall::invoke(Syscall::SC_exit, status);
 

@@ -43,6 +43,8 @@ private:
     void escape$s(const Vector<unsigned>&);
     void escape$u(const Vector<unsigned>&);
 
+    void clear();
+
     const byte m_rows { 25 };
     const byte m_columns { 80 };
     byte m_cursor_row { 0 };
