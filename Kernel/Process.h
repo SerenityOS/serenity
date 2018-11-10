@@ -288,19 +288,25 @@ private:
     Region* m_signal_stack_kernel_region { nullptr };
 };
 
-class ProcessInspectionScope {
+extern Process* current;
+
+class ProcessInspectionHandle {
 public:
-    ProcessInspectionScope(Process& process)
+    ProcessInspectionHandle(Process& process)
         : m_process(process)
         , m_original_state(process.state())
     {
-        m_process.set_state(Process::BeingInspected);
+        if (&process != current)
+            m_process.set_state(Process::BeingInspected);
     }
 
-    ~ProcessInspectionScope()
+    ~ProcessInspectionHandle()
     {
         m_process.set_state(m_original_state);
     }
+
+    Process* operator->() { return &m_process; }
+    Process& operator*() { return m_process; }
 private:
     Process& m_process;
     Process::State m_original_state { Process::Invalid };

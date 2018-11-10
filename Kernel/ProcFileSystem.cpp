@@ -30,7 +30,7 @@ ProcFileSystem::~ProcFileSystem()
 
 ByteBuffer procfs$pid_fds(Process& process)
 {
-    ProcessInspectionScope scope(process);
+    ProcessInspectionHandle handle(process);
     char* buffer;
     auto stringImpl = StringImpl::createUninitialized(process.number_of_open_file_descriptors() * 80, buffer);
     memset(buffer, 0, stringImpl->length());
@@ -47,7 +47,7 @@ ByteBuffer procfs$pid_fds(Process& process)
 
 ByteBuffer procfs$pid_vm(Process& process)
 {
-    ProcessInspectionScope scope(process);
+    ProcessInspectionHandle handle(process);
     char* buffer;
     auto stringImpl = StringImpl::createUninitialized(80 + process.regionCount() * 160 + 4096, buffer);
     memset(buffer, 0, stringImpl->length());
@@ -80,7 +80,7 @@ ByteBuffer procfs$pid_vm(Process& process)
 
 ByteBuffer procfs$pid_stack(Process& process)
 {
-    ProcessInspectionScope scope(process);
+    ProcessInspectionHandle handle(process);
     ProcessPagingScope pagingScope(process);
     struct RecognizedSymbol {
         dword address;
@@ -112,7 +112,7 @@ ByteBuffer procfs$pid_stack(Process& process)
 
 ByteBuffer procfs$pid_regs(Process& process)
 {
-    ProcessInspectionScope scope(process);
+    ProcessInspectionHandle handle(process);
     auto& tss = process.tss();
     auto buffer = ByteBuffer::createUninitialized(1024);
     char* ptr = (char*)buffer.pointer();
@@ -133,7 +133,7 @@ ByteBuffer procfs$pid_regs(Process& process)
 
 ByteBuffer procfs$pid_exe(Process& process)
 {
-    ProcessInspectionScope scope(process);
+    ProcessInspectionHandle handle(process);
     auto inode = process.executableInode();
     return VirtualFileSystem::the().absolutePath(inode).toByteBuffer();
 }
@@ -285,7 +285,6 @@ ByteBuffer procfs$cpuinfo()
 
 ByteBuffer procfs$kmalloc()
 {
-    InterruptDisabler disabler;
     auto buffer = ByteBuffer::createUninitialized(256);
     char* ptr = (char*)buffer.pointer();
     ptr += ksprintf(ptr, "eternal:      %u\npage-aligned: %u\nallocated:    %u\nfree:         %u\n", kmalloc_sum_eternal, sum_alloc, sum_free);
@@ -326,6 +325,7 @@ ByteBuffer procfs$vnodes()
     char* ptr = (char*)buffer.pointer();
     for (size_t i = 0; i < vfs.m_maxNodeCount; ++i) {
         auto& vnode = vfs.m_nodes[i];
+        // FIXME: Retain the vnode while inspecting it.
         if (!vnode.inUse())
             continue;
         auto path = vfs.absolutePath(vnode.inode);
