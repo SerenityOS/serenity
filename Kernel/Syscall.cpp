@@ -161,6 +161,18 @@ static DWORD handle(RegisterDump& regs, DWORD function, DWORD arg1, DWORD arg2, 
         return 0;
     case Syscall::SC_sigprocmask:
         return current->sys$sigprocmask((int)arg1, (const Unix::sigset_t*)arg2, (Unix::sigset_t*)arg3);
+    case Syscall::SC_pipe:
+        return current->sys$pipe((int*)arg1);
+    case Syscall::SC_killpg:
+        return current->sys$killpg((int)arg1, (int)arg2);
+    case Syscall::SC_setuid:
+        return current->sys$setuid((uid_t)arg1);
+    case Syscall::SC_setgid:
+        return current->sys$setgid((gid_t)arg1);
+    case Syscall::SC_alarm:
+        return current->sys$alarm((unsigned)arg1);
+    case Syscall::SC_access:
+        return current->sys$access((const char*)arg1, (int)arg2);
     default:
         kprintf("<%u> int0x80: Unknown function %x requested {%x, %x, %x}\n", current->pid(), function, arg1, arg2, arg3);
         break;

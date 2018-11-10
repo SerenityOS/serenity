@@ -1035,6 +1035,23 @@ int Process::sys$close(int fd)
     return rc;
 }
 
+int Process::sys$access(const char* pathname, int mode)
+{
+    (void) mode;
+    VALIDATE_USER_READ(pathname, strlen(pathname));
+    ASSERT_NOT_REACHED();
+}
+
+int Process::sys$fstat(int fd, Unix::stat* statbuf)
+{
+    VALIDATE_USER_WRITE(statbuf, sizeof(Unix::stat));
+    auto* descriptor = file_descriptor(fd);
+    if (!descriptor)
+        return -EBADF;
+    descriptor->stat(statbuf);
+    return 0;
+}
+
 int Process::sys$lstat(const char* path, Unix::stat* statbuf)
 {
     VALIDATE_USER_WRITE(statbuf, sizeof(Unix::stat));
@@ -1137,6 +1154,36 @@ int Process::sys$open(const char* path, int options)
     }
     m_file_descriptors[fd] = move(descriptor);
     return fd;
+}
+
+int Process::sys$pipe(int* pipefd)
+{
+    VALIDATE_USER_WRITE(pipefd, sizeof(int) * 2);
+    ASSERT_NOT_REACHED();
+}
+
+int Process::sys$killpg(int pgrp, int signum)
+{
+    if (signum < 1 || signum >= 32)
+        return -EINVAL;
+    (void) pgrp;
+    ASSERT_NOT_REACHED();
+}
+
+int Process::sys$setuid(uid_t)
+{
+    ASSERT_NOT_REACHED();
+}
+
+int Process::sys$setgid(gid_t)
+{
+    ASSERT_NOT_REACHED();
+}
+
+unsigned Process::sys$alarm(unsigned seconds)
+{
+    (void) seconds;
+    ASSERT_NOT_REACHED();
 }
 
 int Process::sys$uname(utsname* buf)
@@ -1472,7 +1519,7 @@ int Process::sys$dup2(int old_fd, int new_fd)
 Unix::sighandler_t Process::sys$signal(int signum, Unix::sighandler_t handler)
 {
     // FIXME: Fail with -EINVAL if attepmting to catch or ignore SIGKILL or SIGSTOP.
-    if (signum >= 32)
+    if (signum < 1 || signum >= 32)
         return (Unix::sighandler_t)-EINVAL;
     dbgprintf("sys$signal: %d => L%x\n", signum, handler);
     return nullptr;
@@ -1508,7 +1555,7 @@ int Process::sys$sigpending(Unix::sigset_t* set)
 int Process::sys$sigaction(int signum, const Unix::sigaction* act, Unix::sigaction* old_act)
 {
     // FIXME: Fail with -EINVAL if attepmting to change action for SIGKILL or SIGSTOP.
-    if (signum >= 32)
+    if (signum < 1 || signum >= 32)
         return -EINVAL;
     VALIDATE_USER_READ(act, sizeof(Unix::sigaction));
     InterruptDisabler disabler; // FIXME: This should use a narrower lock.

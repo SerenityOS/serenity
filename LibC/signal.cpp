@@ -11,6 +11,12 @@ int kill(pid_t pid, int sig)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
+int killpg(int pgrp, int sig)
+{
+    int rc = Syscall::invoke(Syscall::SC_killpg, (dword)pgrp, (dword)sig);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
 sighandler_t signal(int signum, sighandler_t handler)
 {
     sighandler_t old_handler = (sighandler_t)Syscall::invoke(Syscall::SC_signal, (dword)signum, (dword)handler);

@@ -33,6 +33,7 @@ pid_t waitpid(pid_t, int* wstatus, int options);
 int chdir(const char* path);
 char* getcwd(char* buffer, size_t size);
 char* getwd(char* buffer);
+int fstat(int fd, struct stat* statbuf);
 int lstat(const char* path, struct stat* statbuf);
 int stat(const char* path, struct stat* statbuf);
 int sleep(unsigned seconds);
@@ -46,6 +47,9 @@ int unlink(const char* pathname);
 int getdtablesize();
 int dup(int old_fd);
 int dup2(int old_fd, int new_fd);
+int pipe(int pipefd[2]);
+unsigned int alarm(unsigned int seconds);
+int access(const char* pathname, int mode);
 
 #define WEXITSTATUS(status) (((status) & 0xff00) >> 8)
 #define WTERMSIG(status) ((status) & 0x7f)

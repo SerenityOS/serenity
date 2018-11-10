@@ -147,6 +147,12 @@ int stat(const char* path, struct stat* statbuf)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
+int fstat(int fd, struct stat *statbuf)
+{
+    int rc = Syscall::invoke(Syscall::SC_fstat, (dword)fd, (dword)statbuf);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
 int chdir(const char* path)
 {
     int rc = Syscall::invoke(Syscall::SC_chdir, (dword)path);
@@ -230,6 +236,35 @@ int setgroups(size_t size, const gid_t* list)
 int getgroups(int size, gid_t list[])
 {
     int rc = Syscall::invoke(Syscall::SC_getgroups, (dword)size, (dword)list);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
+int pipe(int pipefd[2])
+{
+    int rc = Syscall::invoke(Syscall::SC_pipe, (dword)pipefd);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
+unsigned int alarm(unsigned int seconds)
+{
+    return Syscall::invoke(Syscall::SC_alarm, (dword)seconds);
+}
+
+int setuid(uid_t uid)
+{
+    int rc = Syscall::invoke(Syscall::SC_setuid, (dword)uid);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
+int setgid(uid_t gid)
+{
+    int rc = Syscall::invoke(Syscall::SC_setgid, (dword)gid);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
+int access(const char* pathname, int mode)
+{
+    int rc = Syscall::invoke(Syscall::SC_access, (dword)pathname, (dword)mode);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
