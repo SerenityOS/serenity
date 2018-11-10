@@ -17,5 +17,7 @@
 #undef __P
 #define __P(a) a
 
+#ifdef __cplusplus
 extern "C" int main(int, char**);
+#endif
 

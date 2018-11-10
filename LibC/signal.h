@@ -29,6 +29,8 @@ int sigfillset(sigset_t*);
 int sigaddset(sigset_t*, int sig);
 int sigdelset(sigset_t*, int sig);
 int sigismember(const sigset_t*, int sig);
+int sigprocmask(int how, const sigset_t* set, sigset_t* old_set);
+int sigpending(sigset_t*);
 
 #define NSIG 32
 extern const char* sys_siglist[NSIG];

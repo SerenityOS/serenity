@@ -71,12 +71,23 @@ int sigismember(const sigset_t* set, int sig)
     return 0;
 }
 
+int sigprocmask(int how, const sigset_t* set, sigset_t* old_set)
+{
+    int rc = Syscall::invoke(Syscall::SC_sigprocmask, (dword)how, (dword)set, (dword)old_set);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
+int sigpending(sigset_t* set)
+{
+    int rc = Syscall::invoke(Syscall::SC_sigpending, (dword)set);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
 const char* sys_siglist[NSIG] = {
 #undef __SIGNAL
 #define __SIGNAL(a, b) b,
     __ENUMERATE_ALL_SIGNALS
 #undef __SIGNAL
 };
-
 
 }

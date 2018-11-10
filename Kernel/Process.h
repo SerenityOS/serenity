@@ -159,6 +159,8 @@ public:
     int sys$dup(int oldfd);
     int sys$dup2(int oldfd, int newfd);
     int sys$sigaction(int signum, const Unix::sigaction* act, Unix::sigaction* old_act);
+    int sys$sigprocmask(int how, const Unix::sigset_t* set, Unix::sigset_t* old_set);
+    int sys$sigpending(Unix::sigset_t*);
     int sys$getgroups(int size, gid_t*);
     int sys$setgroups(size_t, const gid_t*);
 
@@ -247,7 +249,7 @@ private:
     size_t m_max_open_file_descriptors { 16 };
     SignalActionData m_signal_action_data[32];
     dword m_pending_signals { 0 };
-    dword m_signal_mask { 0 };
+    dword m_signal_mask { 0xffffffff };
 
     byte m_termination_status { 0 };
     byte m_termination_signal { 0 };

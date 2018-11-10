@@ -227,6 +227,11 @@ int Process::sys$gethostname(char* buffer, size_t size)
 Process* Process::fork(RegisterDump& regs)
 {
     auto* child = new Process(String(m_name), m_uid, m_gid, m_pid, m_ring, m_cwd.copyRef(), m_executable.copyRef(), m_tty, this);
+    if (!child)
+        return nullptr;
+
+    memcpy(child->m_signal_action_data, m_signal_action_data, sizeof(m_signal_action_data));
+    child->m_signal_mask = m_signal_mask;
 #ifdef FORK_DEBUG
     dbgprintf("fork: child=%p\n", child);
 #endif
@@ -364,6 +369,9 @@ int Process::do_exec(const String& path, Vector<String>&& arguments, Vector<Stri
             return -ENOEXEC;
         }
     }
+
+    memset(m_signal_action_data, 0, sizeof(m_signal_action_data));
+    m_signal_mask = 0xffffffff;
 
     InterruptDisabler disabler;
     Scheduler::prepare_to_modify_tss(*this);
@@ -737,13 +745,13 @@ void Process::send_signal(byte signal, Process* sender)
 
 bool Process::has_unmasked_pending_signals() const
 {
-    return m_pending_signals & ~m_signal_mask;
+    return m_pending_signals & m_signal_mask;
 }
 
 void Process::dispatch_one_pending_signal()
 {
     ASSERT_INTERRUPTS_DISABLED();
-    dword signal_candidates = m_pending_signals & ~m_signal_mask;
+    dword signal_candidates = m_pending_signals & m_signal_mask;
     ASSERT(signal_candidates);
 
     byte signal = 0;
@@ -1468,6 +1476,33 @@ Unix::sighandler_t Process::sys$signal(int signum, Unix::sighandler_t handler)
         return (Unix::sighandler_t)-EINVAL;
     dbgprintf("sys$signal: %d => L%x\n", signum, handler);
     return nullptr;
+}
+
+int Process::sys$sigprocmask(int how, const Unix::sigset_t* set, Unix::sigset_t* old_set)
+{
+    VALIDATE_USER_READ(set, sizeof(Unix::sigset_t));
+    if (old_set)
+        VALIDATE_USER_READ(old_set, sizeof(Unix::sigset_t));
+    *old_set = m_signal_mask;
+    switch (how) {
+    case SIG_BLOCK:
+        m_signal_mask &= ~(*set);
+        break;
+    case SIG_UNBLOCK:
+        m_signal_mask |= *set;
+        break;
+    case SIG_SETMASK:
+        m_signal_mask = *set;
+        break;
+    }
+    return 0;
+}
+
+int Process::sys$sigpending(Unix::sigset_t* set)
+{
+    VALIDATE_USER_READ(set, sizeof(Unix::sigset_t));
+    *set = m_pending_signals;
+    return 0;
 }
 
 int Process::sys$sigaction(int signum, const Unix::sigaction* act, Unix::sigaction* old_act)
