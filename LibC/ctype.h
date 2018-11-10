@@ -2,6 +2,8 @@
 
 #include <sys/cdefs.h>
 
+__BEGIN_DECLS
+
 ALWAYS_INLINE int isascii(int ch)
 {
     return (ch & ~0x7f) == 0;
@@ -40,3 +42,7 @@ ALWAYS_INLINE int isdigit(int c)
 {
     return c >= '0' && c <= '9';
 }
+
+int ispunct(int c);
+
+__END_DECLS
