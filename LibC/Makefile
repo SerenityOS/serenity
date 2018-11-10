@@ -25,6 +25,7 @@ LIBC_OBJS = \
        setjmp.o \
        stat.o \
        mntent.o \
+       ctype.o \
        entry.o
 
 OBJS = $(AK_OBJS) $(LIBC_OBJS)
