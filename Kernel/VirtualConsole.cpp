@@ -1,7 +1,7 @@
 #include "VirtualConsole.h"
-#include "VGA.h"
 #include "kmalloc.h"
 #include "i386.h"
+#include "IO.h"
 #include "StdLib.h"
 #include "Keyboard.h"
 #include <AK/String.h>
@@ -9,6 +9,26 @@
 static byte* s_vga_buffer;
 static VirtualConsole* s_consoles[6];
 static int s_active_console;
+
+void VirtualConsole::get_vga_cursor(byte& row, byte& column)
+{
+    word value;
+    IO::out8(0x3d4, 0x0e);
+    value = IO::in8(0x3d5) << 8;
+    IO::out8(0x3d4, 0x0f);
+    value |= IO::in8(0x3d5);
+    row = value / 80;
+    column = value % 80;
+}
+
+void VirtualConsole::flush_vga_cursor()
+{
+    word value = m_current_vga_start_address + (m_cursor_row * 80 + m_cursor_column);
+    IO::out8(0x3d4, 0x0e);
+    IO::out8(0x3d5, MSB(value));
+    IO::out8(0x3d4, 0x0f);
+    IO::out8(0x3d5, LSB(value));
+}
 
 void VirtualConsole::initialize()
 {
@@ -25,9 +45,7 @@ VirtualConsole::VirtualConsole(unsigned index, InitialContents initial_contents)
     m_buffer = (byte*)kmalloc_eternal(80 * 25 * 2);
     if (initial_contents == AdoptCurrentVGABuffer) {
         memcpy(m_buffer, s_vga_buffer, 80 * 25 * 2);
-        auto vgaCursor = vga_get_cursor();
-        m_cursor_row = vgaCursor / 80;
-        m_cursor_column = vgaCursor % 80;
+        get_vga_cursor(m_cursor_row, m_cursor_column);
     } else {
         word* line_mem = reinterpret_cast<word*>(m_buffer);
         for (word i = 0; i < 80 * 25; ++i)
@@ -79,7 +97,7 @@ void VirtualConsole::set_active(bool b)
 
     memcpy(s_vga_buffer, m_buffer, 80 * 25 * 2);
     set_vga_start_row(0);
-    vga_set_cursor(m_cursor_row, m_cursor_column, m_current_vga_start_address);
+    flush_vga_cursor();
 
     Keyboard::the().setClient(this);
 }
@@ -331,7 +349,7 @@ void VirtualConsole::set_cursor(unsigned row, unsigned column)
     m_cursor_row = row;
     m_cursor_column = column;
     if (m_active)
-        vga_set_cursor(m_cursor_row, m_cursor_column, m_current_vga_start_address);
+        flush_vga_cursor();
 }
 
 void VirtualConsole::put_character_at(unsigned row, unsigned column, byte ch)
@@ -453,5 +471,8 @@ void VirtualConsole::set_vga_start_row(word row)
     m_vga_start_row = row;
     m_current_vga_start_address = row * 80;
     m_current_vga_window = s_vga_buffer + row * 160;
-    vga_set_start_address(m_current_vga_start_address);
+    IO::out8(0x3d4, 0x0c);
+    IO::out8(0x3d5, MSB(m_current_vga_start_address));
+    IO::out8(0x3d4, 0x0d);
+    IO::out8(0x3d5, LSB(m_current_vga_start_address));
 }

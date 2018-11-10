@@ -1,7 +1,6 @@
 KERNEL_OBJS = \
        _start.o \
        init.o \
-       VGA.o \
        kmalloc.o \
        StdLib.o \
        i386.o \

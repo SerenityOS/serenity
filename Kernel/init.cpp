@@ -1,5 +1,4 @@
 #include "types.h"
-#include "VGA.h"
 #include "kmalloc.h"
 #include "i386.h"
 #include "i8253.h"
@@ -267,7 +266,6 @@ void init()
 #endif
 
     kmalloc_init();
-    vga_init();
 
     auto console = make<Console>();
 

@@ -7,9 +7,8 @@
 #include "kmalloc.h"
 #include "StdLib.h"
 #include "i386.h"
-#include "VGA.h"
 #include "system.h"
-#include "Assertions.h"
+#include <AK/Assertions.h>
 
 #define SANITIZE_KMALLOC
 

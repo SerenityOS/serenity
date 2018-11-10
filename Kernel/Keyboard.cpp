@@ -1,7 +1,6 @@
 #include "types.h"
 #include "i386.h"
 #include "IO.h"
-#include "VGA.h"
 #include "PIC.h"
 #include "Keyboard.h"
 #include "VirtualConsole.h"
