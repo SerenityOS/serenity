@@ -175,7 +175,6 @@ public:
     bool validate_user_read(const Process&, LinearAddress) const;
     bool validate_user_write(const Process&, LinearAddress) const;
 
-    Vector<RetainPtr<PhysicalPage>> allocate_physical_pages(size_t count);
     RetainPtr<PhysicalPage> allocate_physical_page();
 
     void remap_region(Process&, Region&);

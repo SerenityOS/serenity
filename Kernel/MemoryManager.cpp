@@ -94,12 +94,13 @@ RetainPtr<PhysicalPage> MemoryManager::allocate_page_table(PageDirectory& page_d
 {
     auto& page_directory_physical_ptr = page_directory.physical_pages[index];
     ASSERT(!page_directory_physical_ptr);
-    auto ppages = allocate_physical_pages(1);
-    ASSERT(ppages.size() == 1);
-    dword address = ppages[0]->paddr().get();
+    auto physical_page = allocate_physical_page();
+    if (!physical_page)
+        return nullptr;
+    dword address = physical_page->paddr().get();
     create_identity_mapping(LinearAddress(address), PAGE_SIZE);
     memset((void*)address, 0, PAGE_SIZE);
-    page_directory.physical_pages[index] = move(ppages[0]);
+    page_directory.physical_pages[index] = move(physical_page);
     return page_directory.physical_pages[index];
 }
 
@@ -240,15 +241,14 @@ bool MemoryManager::copy_on_write(Process& process, Region& region, unsigned pag
     dbgprintf("    >> It's a COW page and it's time to COW!\n");
 #endif
     auto physical_page_to_copy = move(vmo.physical_pages()[page_index_in_region]);
-    auto ppages = allocate_physical_pages(1);
-    ASSERT(ppages.size() == 1);
-    byte* dest_ptr = quickmap_page(*ppages[0]);
+    auto physical_page = allocate_physical_page();
+    byte* dest_ptr = quickmap_page(*physical_page);
     const byte* src_ptr = region.linearAddress.offset(page_index_in_region * PAGE_SIZE).asPtr();
 #ifdef PAGE_FAULT_DEBUG
-    dbgprintf("      >> COW P%x <- P%x\n", ppages[0]->paddr().get(), physical_page_to_copy->paddr().get());
+    dbgprintf("      >> COW P%x <- P%x\n", physical_page->paddr().get(), physical_page_to_copy->paddr().get());
 #endif
     memcpy(dest_ptr, src_ptr, PAGE_SIZE);
-    vmo.physical_pages()[page_index_in_region] = move(ppages[0]);
+    vmo.physical_pages()[page_index_in_region] = move(physical_page);
     unquickmap_page();
     region.cow_map.set(page_index_in_region, false);
     remap_region_page(process.m_page_directory, region, page_index_in_region, true);
@@ -350,23 +350,6 @@ RetainPtr<PhysicalPage> MemoryManager::allocate_physical_page()
     dbgprintf("MM: allocate_physical_page vending P%x\n", m_free_physical_pages.last()->paddr().get());
 #endif
     return m_free_physical_pages.takeLast();
-}
-
-Vector<RetainPtr<PhysicalPage>> MemoryManager::allocate_physical_pages(size_t count)
-{
-    InterruptDisabler disabler;
-    if (count > m_free_physical_pages.size())
-        return { };
-
-    Vector<RetainPtr<PhysicalPage>> pages;
-    pages.ensureCapacity(count);
-    for (size_t i = 0; i < count; ++i) {
-        pages.append(m_free_physical_pages.takeLast());
-#ifdef MM_DEBUG
-        dbgprintf("MM: allocate_physical_pages vending P%x\n", pages.last()->paddr().get());
-#endif
-    }
-    return pages;
 }
 
 void MemoryManager::enter_kernel_paging_scope()
