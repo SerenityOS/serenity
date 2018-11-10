@@ -26,7 +26,8 @@ bool FileSystemPath::canonicalize(bool resolveSymbolicLinks)
                 canonicalParts.takeLast();
             continue;
         }
-        canonicalParts.append(part);
+        if (!part.isEmpty())
+            canonicalParts.append(part);
     }
     if (canonicalParts.isEmpty()) {
         m_string = "/";
