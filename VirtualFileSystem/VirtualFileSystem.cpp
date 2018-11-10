@@ -496,6 +496,8 @@ InodeIdentifier VirtualFileSystem::resolvePath(const String& path, int& error, I
     for (unsigned i = 0; i < parts.size(); ++i) {
         bool wasRootInodeAtHeadOfLoop = inode.isRootInode();
         auto& part = parts[i];
+        if (part.isEmpty())
+            break;
         auto metadata = inode.metadata();
         if (!metadata.isValid()) {
 #ifdef VFS_DEBUG
