@@ -138,6 +138,13 @@ ByteBuffer procfs$pid_exe(Process& process)
     return VirtualFileSystem::the().absolutePath(inode).toByteBuffer();
 }
 
+ByteBuffer procfs$pid_cwd(Process& process)
+{
+    ProcessInspectionHandle handle(process);
+    auto inode = process.cwdInode();
+    return VirtualFileSystem::the().absolutePath(inode).toByteBuffer();
+}
+
 void ProcFileSystem::addProcess(Process& process)
 {
     InterruptDisabler disabler;
@@ -151,6 +158,7 @@ void ProcFileSystem::addProcess(Process& process)
     addFile(createGeneratedFile("fds", [&process] { return procfs$pid_fds(process); }), dir.index());
     if (process.executableInode().isValid())
         addFile(createGeneratedFile("exe", [&process] { return procfs$pid_exe(process); }, 00120777), dir.index());
+    addFile(createGeneratedFile("cwd", [&process] { return procfs$pid_cwd(process); }, 00120777), dir.index());
 }
 
 void ProcFileSystem::removeProcess(Process& process)

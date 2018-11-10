@@ -186,7 +186,7 @@ static int sh_cd(int argc, const char** argv)
     const char* path = canonicalPath.string().characters();
 
     struct stat st;
-    int rc = lstat(path, &st);
+    int rc = stat(path, &st);
     if (rc < 0) {
         printf("lstat(%s) failed: %s\n", path, strerror(errno));
         return 1;
