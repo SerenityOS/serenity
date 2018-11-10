@@ -129,6 +129,7 @@ public:
     int sys$close(int fd);
     ssize_t sys$read(int fd, void* outbuf, size_t nread);
     ssize_t sys$write(int fd, const void*, size_t);
+    int sys$fstat(int fd, Unix::stat*);
     int sys$lstat(const char*, Unix::stat*);
     int sys$stat(const char*, Unix::stat*);
     int sys$lseek(int fd, off_t, int whence);
@@ -163,6 +164,12 @@ public:
     int sys$sigpending(Unix::sigset_t*);
     int sys$getgroups(int size, gid_t*);
     int sys$setgroups(size_t, const gid_t*);
+    int sys$pipe(int* pipefd);
+    int sys$killpg(int pgrp, int sig);
+    int sys$setgid(gid_t);
+    int sys$setuid(uid_t);
+    unsigned sys$alarm(unsigned seconds);
+    int sys$access(const char* pathname, int mode);
 
     static void initialize();
 

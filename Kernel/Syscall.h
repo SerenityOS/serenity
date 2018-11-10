@@ -56,6 +56,13 @@
     __ENUMERATE_SYSCALL(sigreturn) \
     __ENUMERATE_SYSCALL(sigprocmask) \
     __ENUMERATE_SYSCALL(sigpending) \
+    __ENUMERATE_SYSCALL(pipe) \
+    __ENUMERATE_SYSCALL(killpg) \
+    __ENUMERATE_SYSCALL(setuid) \
+    __ENUMERATE_SYSCALL(setgid) \
+    __ENUMERATE_SYSCALL(alarm) \
+    __ENUMERATE_SYSCALL(fstat) \
+    __ENUMERATE_SYSCALL(access) \
 
 
 #define DO_SYSCALL_A0(function) Syscall::invoke((dword)(function))
