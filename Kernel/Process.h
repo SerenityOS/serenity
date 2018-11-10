@@ -52,6 +52,7 @@ public:
         BlockedSleep,
         BlockedWait,
         BlockedRead,
+        BlockedSignal,
     };
 
     enum RingLevel {
@@ -64,7 +65,7 @@ public:
 
     bool is_blocked() const
     {
-        return m_state == BlockedSleep || m_state == BlockedWait || m_state == BlockedRead;
+        return m_state == BlockedSleep || m_state == BlockedWait || m_state == BlockedRead || m_state == BlockedSignal;
     }
 
     PageDirectory& page_directory() { return *m_page_directory; }
@@ -317,6 +318,7 @@ static inline const char* toString(Process::State state)
     case Process::BlockedSleep: return "Sleep";
     case Process::BlockedWait: return "Wait";
     case Process::BlockedRead: return "Read";
+    case Process::BlockedSignal: return "Signal";
     case Process::BeingInspected: return "Inspect";
     }
     ASSERT_NOT_REACHED();
