@@ -978,6 +978,12 @@ ssize_t Process::sys$write(int fd, const void* data, size_t size)
     if (!descriptor)
         return -EBADF;
     auto nwritten = descriptor->write((const byte*)data, size);
+    if (has_unmasked_pending_signals()) {
+        block(BlockedSignal);
+        Scheduler::yield();
+        if (nwritten == 0)
+            return -EINTR;
+    }
 #ifdef DEBUG_IO
     kprintf("Process::sys$write: nwritten=%u\n", nwritten);
 #endif
