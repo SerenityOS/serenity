@@ -189,10 +189,10 @@ heads:
     dw 2
 
 msg_sectors_loaded:
-    db "sectors loaded", 0x0d, 0x0a, 0
+    db "done!", 0x0d, 0x0a, 0
 
 message:
-    db "boot!", 0x0d, 0x0a, 0
+    db "Loading kernel", 0
 
 fug_message:
     db "FUG!", 0x0d, 0x0a, 0

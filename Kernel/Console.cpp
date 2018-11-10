@@ -1,5 +1,4 @@
 #include "Console.h"
-#include "VGA.h"
 #include "IO.h"
 #include "kprintf.h"
 

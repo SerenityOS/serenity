@@ -29,6 +29,9 @@ private:
     void set_active(bool);
     void on_char(byte, bool shouldEmit);
 
+    void get_vga_cursor(byte& row, byte& column);
+    void flush_vga_cursor();
+
     byte* m_buffer;
     unsigned m_index;
     bool m_active { false };

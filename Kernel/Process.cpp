@@ -1,7 +1,6 @@
 #include "types.h"
 #include "Process.h"
 #include "kmalloc.h"
-#include "VGA.h"
 #include "StdLib.h"
 #include "i386.h"
 #include "system.h"
