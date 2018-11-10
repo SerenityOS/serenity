@@ -54,6 +54,8 @@
     __ENUMERATE_SYSCALL(getgroups) \
     __ENUMERATE_SYSCALL(setgroups) \
     __ENUMERATE_SYSCALL(sigreturn) \
+    __ENUMERATE_SYSCALL(sigprocmask) \
+    __ENUMERATE_SYSCALL(sigpending) \
 
 
 #define DO_SYSCALL_A0(function) Syscall::invoke((dword)(function))

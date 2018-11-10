@@ -159,6 +159,8 @@ static DWORD handle(RegisterDump& regs, DWORD function, DWORD arg1, DWORD arg2, 
         current->sys$sigreturn();
         ASSERT_NOT_REACHED();
         return 0;
+    case Syscall::SC_sigprocmask:
+        return current->sys$sigprocmask((int)arg1, (const Unix::sigset_t*)arg2, (Unix::sigset_t*)arg3);
     default:
         kprintf("<%u> int0x80: Unknown function %x requested {%x, %x, %x}\n", current->pid(), function, arg1, arg2, arg3);
         break;
