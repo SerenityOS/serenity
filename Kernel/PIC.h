@@ -9,6 +9,7 @@ void disable(BYTE number);
 void eoi(BYTE number);
 void initialize();
 word getISR();
+word get_irr();
 
 }
 

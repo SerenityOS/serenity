@@ -100,4 +100,13 @@ word getISR()
     return (isr1 << 8) | isr0;
 }
 
+word get_irr()
+{
+    IO::out8(PIC0_CTL, 0x0a);
+    IO::out8(PIC1_CTL, 0x0a);
+    byte irr0 = IO::in8(PIC0_CTL);
+    byte irr1 = IO::in8(PIC1_CTL);
+    return (irr1 << 8) | irr0;
+}
+
 }

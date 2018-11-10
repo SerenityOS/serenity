@@ -6,7 +6,6 @@
 #include "Keyboard.h"
 #include "Process.h"
 #include "system.h"
-#include "Disk.h"
 #include "PIC.h"
 #include "StdLib.h"
 #include "Syscall.h"
@@ -175,8 +174,6 @@ static void init_stage2() NORETURN;
 static void init_stage2()
 {
     Syscall::initialize();
-
-    Disk::initialize();
 
 #ifdef TEST_VFS
     auto vfs = make<VirtualFileSystem>();

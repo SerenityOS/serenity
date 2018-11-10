@@ -38,12 +38,12 @@ void gdt_free_entry(word entry)
     s_gdt_freelist->append(entry);
 }
 
-extern "C" void handleIRQ();
-extern "C" void commonIRQEntry();
+extern "C" void handle_irq();
+extern "C" void asm_irq_entry();
 
 asm(
-    ".globl commonIRQEntry\n"
-    "commonIRQEntry: \n"
+    ".globl asm_irq_entry\n"
+    "asm_irq_entry: \n"
     "    pusha\n"
     "    pushw %ds\n"
     "    pushw %es\n"
@@ -51,7 +51,7 @@ asm(
     "    pushw %ss\n"
     "    popw %ds\n"
     "    popw %es\n"
-    "    call handleIRQ\n"
+    "    call handle_irq\n"
     "    popw %es\n"
     "    popw %ds\n"
     "    popa\n"
@@ -349,8 +349,7 @@ void registerIRQHandler(byte irq, IRQHandler& handler)
 {
     ASSERT(!s_irqHandler[irq]);
     s_irqHandler[irq] = &handler;
-    kprintf("irq handler for %u: %p\n", irq, &handler);
-    registerInterruptHandler(IRQ_VECTOR_BASE + irq, commonIRQEntry);
+    registerInterruptHandler(IRQ_VECTOR_BASE + irq, asm_irq_entry);
 }
 
 void unregisterIRQHandler(byte irq, IRQHandler& handler)
@@ -433,7 +432,7 @@ void load_task_register(WORD selector)
     asm("ltr %0"::"r"(selector));
 }
 
-void handleIRQ()
+void handle_irq()
 {
     WORD isr = PIC::getISR();
     if (!isr) {
@@ -443,6 +442,8 @@ void handleIRQ()
 
     byte irq = 0;
     for (byte i = 0; i < 16; ++i) {
+        if (i == 2)
+            continue;
         if (isr & (1 << i)) {
             irq = i;
             break;

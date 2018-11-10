@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Assertions.h"
 #include "Types.h"
 
 #ifdef SERENITY

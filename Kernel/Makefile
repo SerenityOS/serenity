@@ -11,7 +11,6 @@ KERNEL_OBJS = \
        CMOS.o \
        PIC.o \
        Syscall.o \
-       Disk.o \
        IDEDiskDevice.o \
        MemoryManager.o \
        Console.o \
