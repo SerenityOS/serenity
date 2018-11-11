@@ -103,11 +103,17 @@ int atoi(const char* str)
             continue;
         }
         if (str[i] < '0' || str[i] > '9')
-            return 0;
+            return value;
         value = value * 10;
         value += str[i] - '0';
     }
     return isNegative ? -value : value;
+}
+
+long atol(const char* str)
+{
+    static_assert(sizeof(int) == sizeof(long));
+    return atoi(str);
 }
 
 }

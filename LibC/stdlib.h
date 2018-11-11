@@ -11,6 +11,7 @@ void* calloc(size_t nmemb, size_t);
 void* realloc(void *ptr, size_t);
 char* getenv(const char* name);
 int atoi(const char*);
+long atol(const char*);
 
 void exit(int status) __NORETURN;
 void abort() __NORETURN;
