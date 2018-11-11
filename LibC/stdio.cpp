@@ -6,10 +6,69 @@
 #include <unistd.h>
 #include <assert.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <Kernel/Syscall.h>
 #include <AK/printf.cpp>
 
 extern "C" {
+
+static FILE __default_streams[3];
+FILE* stdin;
+FILE* stdout;
+FILE* stderr;
+
+void init_FILE(FILE& fp, int fd, int mode)
+{
+    fp.fd = fd;
+    fp.buffer = fp.default_buffer;
+    fp.buffer_size = BUFSIZ;
+    fp.mode = mode;
+}
+
+static FILE* make_FILE(int fd)
+{
+    auto* fp = (FILE*)malloc(sizeof(FILE));
+    memset(fp, 0, sizeof(FILE));
+    init_FILE(*fp, fd, isatty(fd));
+    return fp;
+}
+
+void __stdio_init()
+{
+    stdin = &__default_streams[0];
+    stdout = &__default_streams[1];
+    stderr = &__default_streams[2];
+    init_FILE(*stdin, 0, isatty(0) ? _IOLBF : _IOFBF);
+    init_FILE(*stdout, 1, isatty(1) ? _IOLBF : _IOFBF);
+    init_FILE(*stderr, 2, _IONBF);
+}
+
+int setvbuf(FILE* stream, char* buf, int mode, size_t size)
+{
+    if (mode != _IONBF && mode != _IOLBF && mode != _IOFBF) {
+        errno = EINVAL;
+        return -1;
+    }
+    stream->mode = mode;
+    if (buf) {
+        stream->buffer = buf;
+        stream->buffer_size = size;
+    } else {
+        stream->buffer = stream->default_buffer;
+        stream->buffer_size = BUFSIZ;
+    }
+    return 0;
+}
+
+void setbuf(FILE* stream, char* buf)
+{
+    setvbuf(stream, buf, buf ? _IOFBF : _IONBF, BUFSIZ);
+}
+
+void setlinebuf(FILE* stream, char* buf)
+{
+    setvbuf(stream, buf, buf ? _IOLBF : _IONBF, BUFSIZ);
+}
 
 int fileno(FILE* stream)
 {
@@ -28,10 +87,10 @@ int fflush(FILE* stream)
     // FIXME: Implement buffered streams, duh.
     if (!stream)
         return -EBADF;
-    if (!stream->write_buffer_index)
+    if (!stream->buffer_index)
         return 0;
-    int rc = write(stream->fd, stream->write_buffer, stream->write_buffer_index);
-    stream->write_buffer_index = 0;
+    int rc = write(stream->fd, stream->buffer, stream->buffer_index);
+    stream->buffer_index = 0;
     return rc;
 }
 
@@ -75,9 +134,11 @@ int getchar()
 int fputc(int ch, FILE* stream)
 {
     assert(stream);
-    assert(stream->write_buffer_index < __STDIO_FILE_BUFFER_SIZE);
-    stream->write_buffer[stream->write_buffer_index++] = ch;
-    if (ch == '\n' || stream->write_buffer_index >= __STDIO_FILE_BUFFER_SIZE)
+    assert(stream->buffer_index < stream->buffer_size);
+    stream->buffer[stream->buffer_index++] = ch;
+    if (stream->buffer_index >= stream->buffer_size)
+        fflush(stream);
+    else if (stream->mode == _IOLBF && ch == '\n')
         fflush(stream);
     if (stream->eof)
         return EOF;
@@ -218,10 +279,7 @@ FILE* fopen(const char* pathname, const char* mode)
     int fd = open(pathname, O_RDONLY);
     if (fd < 0)
         return nullptr;
-    auto* fp = (FILE*)malloc(sizeof(FILE));
-    memset(fp, 0, sizeof(FILE));
-    fp->fd = fd;
-    return fp;
+    return make_FILE(fd);
 }
 
 FILE* fdopen(int fd, const char* mode)
@@ -229,10 +287,7 @@ FILE* fdopen(int fd, const char* mode)
     assert(!strcmp(mode, "r") || !strcmp(mode, "rb"));
     if (fd < 0)
         return nullptr;
-    auto* fp = (FILE*)malloc(sizeof(FILE));
-    memset(fp, 0, sizeof(FILE));
-    fp->fd = fd;
-    return fp;
+    return make_FILE(fd);
 }
 
 int fclose(FILE* stream)
