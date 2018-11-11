@@ -17,6 +17,7 @@ OBJS = \
        ft.o \
        ft2.o \
        strsignal.o \
+       fgrep.o \
        tty.o
 
 APPS = \
@@ -38,6 +39,7 @@ APPS = \
        ft \
        ft2 \
        strsignal \
+       fgrep \
        tty
 
 ARCH_FLAGS =
@@ -68,6 +70,9 @@ ps: ps.o
 	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
 
 ls: ls.o
+	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
+
+fgrep: fgrep.o
 	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
 
 sleep: sleep.o

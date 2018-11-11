@@ -8,6 +8,7 @@ cp -v ../Userland/sh mnt/bin/sh
 cp -v ../Userland/id mnt/bin/id
 cp -v ../Userland/ps mnt/bin/ps
 cp -v ../Userland/ls mnt/bin/ls
+cp -v ../Userland/fgrep mnt/bin/fgrep
 cp -v ../Userland/sleep mnt/bin/sleep
 cp -v ../Userland/date mnt/bin/date
 cp -v ../Userland/true mnt/bin/true
