@@ -253,13 +253,13 @@ static bool handle_builtin(int argc, const char** argv, int& retval)
 
 static int try_exec(const char* path, const char** argv)
 {
-    int ret = execve(path, argv, nullptr);
+    int ret = execve(path, argv, const_cast<const char**>(environ));
     assert(ret < 0);
 
     const char* search_path = "/bin";
     char pathbuf[128];
     sprintf(pathbuf, "%s/%s", search_path, argv[0]);
-    ret = execve(pathbuf, argv, nullptr);
+    ret = execve(pathbuf, argv, const_cast<const char**>(environ));
     if (ret == -1)
         return -1;
     return ret;
@@ -317,7 +317,8 @@ static int runcmd(char* cmd)
     tcsetpgrp(0, getpid());
 
     if (WIFEXITED(wstatus)) {
-        //printf("Exited normally with status %d\n", WEXITSTATUS(wstatus));
+        if (WEXITSTATUS(wstatus) != 0)
+            printf("Exited with status %d\n", WEXITSTATUS(wstatus));
     } else {
         if (WIFSIGNALED(wstatus)) {
             switch (WTERMSIG(wstatus)) {

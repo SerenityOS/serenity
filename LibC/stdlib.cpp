@@ -1,9 +1,10 @@
 #include <stdlib.h>
-#include <mman.h>
+#include <sys/mman.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
 #include <alloca.h>
+#include <assert.h>
 #include <Kernel/Syscall.h>
 #include <AK/Assertions.h>
 
@@ -54,11 +55,12 @@ void* calloc(size_t nmemb, size_t)
     return nullptr;
 }
 
-void* realloc(void *ptr, size_t)
+void* realloc(void *ptr, size_t size)
 {
-    (void) ptr;
-    ASSERT_NOT_REACHED();
-    return nullptr;
+    // FIXME: This is broken as shit.
+    auto* new_ptr = malloc(size);
+    memcpy(new_ptr, ptr, size);
+    return new_ptr;
 }
 
 void exit(int status)
@@ -114,6 +116,15 @@ long atol(const char* str)
 {
     static_assert(sizeof(int) == sizeof(long));
     return atoi(str);
+}
+
+void __qsort(void *base, size_t nmemb, size_t size, int (*compar)(const void *, const void *))
+{
+    (void) base;
+    (void) nmemb;
+    (void) size;
+    (void) compar;
+    assert(false);
 }
 
 }

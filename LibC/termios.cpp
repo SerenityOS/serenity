@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <errno.h>
 #include <termios.h>
 #include <Kernel/Syscall.h>
@@ -14,6 +15,13 @@ int tcsetattr(int fd, int optional_actions, const struct termios* t)
 {
     int rc = Syscall::invoke(Syscall::SC_tcsetattr, (dword)fd, (dword)optional_actions, (dword)t);
     __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
+int tcflow(int fd, int action)
+{
+    (void) fd;
+    (void) action;
+    assert(false);
 }
 
 }

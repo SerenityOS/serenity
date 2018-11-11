@@ -261,6 +261,17 @@ void VirtualConsole::escape$H(const Vector<unsigned>& params)
     set_cursor(row - 1, col - 1);
 }
 
+void VirtualConsole::escape$A(const Vector<unsigned>& params)
+{
+    int num = 1;
+    if (params.size() >= 1)
+        num = params[0];
+    int new_row = (int)m_cursor_row - num;
+    if (new_row < 0)
+        new_row = 0;
+    set_cursor(new_row, m_cursor_column);
+}
+
 void VirtualConsole::escape$J(const Vector<unsigned>& params)
 {
     int mode = 0;

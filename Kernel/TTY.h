@@ -1,6 +1,7 @@
 #pragma once
 
 #include <VirtualFileSystem/CharacterDevice.h>
+#include <VirtualFileSystem/UnixTypes.h>
 
 class TTY : public CharacterDevice {
 public:
@@ -15,6 +16,10 @@ public:
     void set_pgid(pid_t pgid) { m_pgid = pgid; }
     pid_t pgid() const { return m_pgid; }
 
+    Unix::termios& termios() { return m_termios; }
+    bool should_generate_signals() const { return m_termios.c_lflag & ISIG; }
+    bool should_echo_input() const { return m_termios.c_lflag & ECHO; }
+
 protected:
     virtual bool isTTY() const final override { return true; }
 
@@ -28,5 +33,6 @@ protected:
 private:
     Vector<byte> m_buffer;
     pid_t m_pgid { 0 };
+    Unix::termios m_termios;
 };
 

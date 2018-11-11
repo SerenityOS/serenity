@@ -45,6 +45,7 @@ void __stdio_init()
 
 int setvbuf(FILE* stream, char* buf, int mode, size_t size)
 {
+    fprintf(stderr, "setvbuf(%p [fd=%d], %p, %d, %u)\n", stream, stream->fd, buf, mode, size);
     if (mode != _IONBF && mode != _IOLBF && mode != _IOFBF) {
         errno = EINVAL;
         return -1;
@@ -57,6 +58,7 @@ int setvbuf(FILE* stream, char* buf, int mode, size_t size)
         stream->buffer = stream->default_buffer;
         stream->buffer_size = BUFSIZ;
     }
+    stream->buffer_index = 0;
     return 0;
 }
 
@@ -65,9 +67,9 @@ void setbuf(FILE* stream, char* buf)
     setvbuf(stream, buf, buf ? _IOFBF : _IONBF, BUFSIZ);
 }
 
-void setlinebuf(FILE* stream, char* buf)
+void setlinebuf(FILE* stream)
 {
-    setvbuf(stream, buf, buf ? _IOLBF : _IONBF, BUFSIZ);
+    setvbuf(stream, nullptr, _IOLBF, 0);
 }
 
 int fileno(FILE* stream)
@@ -138,7 +140,7 @@ int fputc(int ch, FILE* stream)
     stream->buffer[stream->buffer_index++] = ch;
     if (stream->buffer_index >= stream->buffer_size)
         fflush(stream);
-    else if (stream->mode == _IOLBF && ch == '\n')
+    else if (stream->mode == _IONBF || (stream->mode == _IOLBF && ch == '\n'))
         fflush(stream);
     if (stream->eof)
         return EOF;

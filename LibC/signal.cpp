@@ -1,6 +1,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <signal.h>
+#include <stdio.h>
 #include <Kernel/Syscall.h>
 
 extern "C" {

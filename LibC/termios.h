@@ -20,6 +20,7 @@ struct termios {
 
 int tcgetattr(int fd, struct termios*);
 int tcsetattr(int fd, int optional_actions, const struct termios*);
+int tcflow(int fd, int action);
 
 /* c_cc characters */
 #define VINTR 0

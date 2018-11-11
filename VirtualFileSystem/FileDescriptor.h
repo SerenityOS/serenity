@@ -46,6 +46,12 @@ public:
 #ifdef SERENITY
     bool isBlocking() const { return m_isBlocking; }
     void setBlocking(bool b) { m_isBlocking = b; }
+
+    dword file_flags() const { return m_file_flags; }
+    int set_file_flags(dword flags) { m_file_flags = flags; return 0; }
+
+    dword fd_flags() const { return m_fd_flags; }
+    int set_fd_flags(dword flags) { m_fd_flags = flags; return 0; }
 #endif
 
     ByteBuffer& generatorCache() { return m_generatorCache; }
@@ -62,6 +68,8 @@ private:
 
 #ifdef SERENITY
     bool m_isBlocking { true };
+    dword m_fd_flags { 0 };
+    dword m_file_flags { 0 };
 #endif
 };
 

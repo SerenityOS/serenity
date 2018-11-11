@@ -239,8 +239,11 @@ static void init_stage2()
     }
 #endif
 
+    Vector<String> environment;
+    environment.append("TERM=ansi");
+
     int error;
-    Process::create_user_process("/bin/sh", (uid_t)100, (gid_t)100, (pid_t)0, error, Vector<String>(), Vector<String>(), tty0);
+    Process::create_user_process("/bin/sh", (uid_t)100, (gid_t)100, (pid_t)0, error, Vector<String>(), move(environment), tty0);
 #ifdef SPAWN_MULTIPLE_SHELLS
     Process::create_user_process("/bin/sh", (uid_t)100, (gid_t)100, (pid_t)0, error, Vector<String>(), Vector<String>(), tty1);
     Process::create_user_process("/bin/sh", (uid_t)100, (gid_t)100, (pid_t)0, error, Vector<String>(), Vector<String>(), tty2);

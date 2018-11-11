@@ -104,6 +104,7 @@ public:
     template<typename Callback> static void for_each_in_pgrp(pid_t, Callback);
     template<typename Callback> static void for_each_in_state(State, Callback);
     template<typename Callback> static void for_each_not_in_state(State, Callback);
+    template<typename Callback> void for_each_child(Callback);
 
     bool tick() { ++m_ticks; return --m_ticksLeft; }
     void set_ticks_left(dword t) { m_ticksLeft = t; }
@@ -356,6 +357,21 @@ inline void Process::for_each(Callback callback)
         auto* next_process = process->next();
         if (!callback(*process))
             break;
+        process = next_process;
+    }
+}
+
+template<typename Callback>
+inline void Process::for_each_child(Callback callback)
+{
+    ASSERT_INTERRUPTS_DISABLED();
+    pid_t my_pid = pid();
+    for (auto* process = g_processes->head(); process;) {
+        auto* next_process = process->next();
+        if (process->ppid() == my_pid) {
+            if (!callback(*process))
+                break;
+        }
         process = next_process;
     }
 }

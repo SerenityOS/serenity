@@ -2,6 +2,7 @@
 #include <errno.h>
 #include <stdio.h>
 #include <signal.h>
+#include <assert.h>
 
 extern "C" {
 
@@ -95,6 +96,14 @@ void memcpy(void* dest, const void* src, size_t n)
     auto* bsrc = (const unsigned char*)src;
     for (; n; --n)
         *(bdest++) = *(bsrc++);
+}
+
+void memmove(void* dest, const void* src, size_t n)
+{
+    if (dest < src)
+        return memcpy(dest, src, n);
+    // FIXME: Implement backwards copy.
+    assert(false);
 }
 
 char* strcpy(char* dest, const char *src)
