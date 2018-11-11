@@ -50,6 +50,7 @@ int dup2(int old_fd, int new_fd);
 int pipe(int pipefd[2]);
 unsigned int alarm(unsigned int seconds);
 int access(const char* pathname, int mode);
+int isatty(int fd);
 
 #define WEXITSTATUS(status) (((status) & 0xff00) >> 8)
 #define WTERMSIG(status) ((status) & 0x7f)

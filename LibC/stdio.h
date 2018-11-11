@@ -2,6 +2,7 @@
 
 #include <sys/cdefs.h>
 #include <sys/types.h>
+#include <limits.h>
 
 __BEGIN_DECLS
  #ifndef EOF
@@ -12,16 +13,19 @@ __BEGIN_DECLS
 #define SEEK_CUR 1
 #define SEEK_END 2
 
-#define __STDIO_FILE_BUFFER_SIZE 128
+#define _IOFBF 0
+#define _IOLBF 1
+#define _IONBF 2
 
 struct __STDIO_FILE {
     int fd;
     int eof;
     int error;
-    char read_buffer[__STDIO_FILE_BUFFER_SIZE];
-    size_t read_buffer_index;
-    char write_buffer[__STDIO_FILE_BUFFER_SIZE];
-    size_t write_buffer_index;
+    int mode;
+    char* buffer;
+    size_t buffer_size;
+    size_t buffer_index;
+    char default_buffer[BUFSIZ];
 };
 
 typedef struct __STDIO_FILE FILE;
@@ -55,6 +59,9 @@ int fputs(const char*, FILE*);
 void perror(const char*);
 int sscanf (const char* buf, const char* fmt, ...);
 int fscanf(FILE*, const char* fmt, ...);
+int setvbuf(FILE*, char* buf, int mode, size_t);
+void setbuf(FILE*, char* buf);
+void setlinebuf(FILE*, char* buf);
 
 __END_DECLS
 

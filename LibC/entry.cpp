@@ -5,27 +5,17 @@
 
 extern "C" int main(int, char**);
 
-FILE __default_streams[3];
-
 int errno;
-FILE* stdin;
-FILE* stdout;
-FILE* stderr;
 char** environ;
 
 extern "C" void __malloc_init();
+extern "C" void __stdio_init();
 
 extern "C" int _start()
 {
     errno = 0;
-    memset(__default_streams, 0, sizeof(__default_streams));
-    __default_streams[0].fd = 0;
-    stdin = &__default_streams[0];
-    __default_streams[1].fd = 1;
-    stdout = &__default_streams[1];
-    __default_streams[2].fd = 2;
-    stderr = &__default_streams[2];
 
+    __stdio_init();
     __malloc_init();
 
     StringImpl::initializeGlobals();

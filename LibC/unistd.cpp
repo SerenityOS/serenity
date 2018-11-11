@@ -212,7 +212,7 @@ int isatty(int fd)
 int getdtablesize()
 {
     int rc = Syscall::invoke(Syscall::SC_getdtablesize);
-    __RETURN_WITH_ERRNO(rc, 1, 0);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
 int dup(int old_fd)
