@@ -61,7 +61,7 @@ int sscanf (const char* buf, const char* fmt, ...);
 int fscanf(FILE*, const char* fmt, ...);
 int setvbuf(FILE*, char* buf, int mode, size_t);
 void setbuf(FILE*, char* buf);
-void setlinebuf(FILE*, char* buf);
+void setlinebuf(FILE*);
 
 __END_DECLS
 

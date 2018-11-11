@@ -35,15 +35,17 @@ bool Scheduler::pick_next()
         }
 
         if (process.state() == Process::BlockedWait) {
-            auto* waitee = Process::from_pid(process.waitee());
-            if (!waitee) {
-                kprintf("waitee %u of %s(%u) reaped before I could wait?\n", process.waitee(), process.name().characters(), process.pid());
-                ASSERT_NOT_REACHED();
-            }
-            if (waitee->state() == Process::Dead) {
-                process.m_waitee_status = (waitee->m_termination_status << 8) | waitee->m_termination_signal;
-                process.unblock();
-            }
+            process.for_each_child([&process] (Process& child) {
+                if (child.state() != Process::Dead)
+                    return true;
+                if (process.waitee() == -1 || process.waitee() == child.pid()) {
+                    process.m_waitee_status = (child.m_termination_status << 8) | child.m_termination_signal;
+                    process.m_waitee = child.pid();
+                    process.unblock();
+                    return false;
+                }
+                return true;
+            });
             return true;
         }
 

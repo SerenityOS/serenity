@@ -431,11 +431,13 @@ int Process::sys$execve(const char* filename, const char** argv, const char** en
 {
     VALIDATE_USER_READ(filename, strlen(filename));
     if (argv) {
+        VALIDATE_USER_READ(argv, sizeof(const char**));
         for (size_t i = 0; argv[i]; ++i) {
             VALIDATE_USER_READ(argv[i], strlen(argv[i]));
         }
     }
     if (envp) {
+        VALIDATE_USER_READ(envp, sizeof(const char**));
         for (size_t i = 0; envp[i]; ++i) {
             VALIDATE_USER_READ(envp[i], strlen(envp[i]));
         }
@@ -455,9 +457,8 @@ int Process::sys$execve(const char* filename, const char** argv, const char** en
 
     Vector<String> environment;
     if (envp) {
-        for (size_t i = 0; envp[i]; ++i) {
+        for (size_t i = 0; envp[i]; ++i)
             environment.append(envp[i]);
-        }
     }
 
     int rc = exec(path, move(arguments), move(environment));
@@ -976,12 +977,9 @@ ssize_t Process::sys$write(int fd, const void* data, size_t size)
 {
     VALIDATE_USER_READ(data, size);
 #ifdef DEBUG_IO
-    kprintf("Process::sys$write: called(%d, %p, %u)\n", fd, data, size);
+    dbgprintf("%s(%u): sys$write(%d, %p, %u)\n", name().characters(), pid(), fd, data, size);
 #endif
     auto* descriptor = file_descriptor(fd);
-#ifdef DEBUG_IO
-    kprintf("Process::sys$write: handle=%p\n", descriptor);
-#endif
     if (!descriptor)
         return -EBADF;
     auto nwritten = descriptor->write((const byte*)data, size);
@@ -992,7 +990,7 @@ ssize_t Process::sys$write(int fd, const void* data, size_t size)
             return -EINTR;
     }
 #ifdef DEBUG_IO
-    kprintf("Process::sys$write: nwritten=%u\n", nwritten);
+    dbgprintf("%s(%u) sys$write: nwritten=%u\n", name().characters(), pid(), nwritten);
 #endif
     return nwritten;
 }
@@ -1001,12 +999,9 @@ ssize_t Process::sys$read(int fd, void* outbuf, size_t nread)
 {
     VALIDATE_USER_WRITE(outbuf, nread);
 #ifdef DEBUG_IO
-    kprintf("Process::sys$read: called(%d, %p, %u)\n", fd, outbuf, nread);
+    dbgprintf("%s(%u) sys$read(%d, %p, %u)\n", name().characters(), pid(), fd, outbuf, nread);
 #endif
     auto* descriptor = file_descriptor(fd);
-#ifdef DEBUG_IO
-    kprintf("Process::sys$read: handle=%p\n", descriptor);
-#endif
     if (!descriptor)
         return -EBADF;
     if (descriptor->isBlocking()) {
@@ -1020,7 +1015,7 @@ ssize_t Process::sys$read(int fd, void* outbuf, size_t nread)
     }
     nread = descriptor->read((byte*)outbuf, nread);
 #ifdef DEBUG_IO
-    kprintf("Process::sys$read: nread=%u\n", nread);
+    dbgprintf("%s(%u) Process::sys$read: nread=%u\n", name().characters(), pid(), nread);
 #endif
     return nread;
 }
@@ -1042,14 +1037,27 @@ int Process::sys$access(const char* pathname, int mode)
     ASSERT_NOT_REACHED();
 }
 
-int Process::sys$fcntl(int fd, int cmd, dword extra_arg)
+int Process::sys$fcntl(int fd, int cmd, dword arg)
 {
     (void) cmd;
-    (void) extra_arg;
+    (void) arg;
+    dbgprintf("sys$fcntl: fd=%d, cmd=%d, arg=%u\n", fd, cmd, arg);
     auto* descriptor = file_descriptor(fd);
     if (!descriptor)
         return -EBADF;
-    ASSERT_NOT_REACHED();
+    switch (cmd) {
+    case F_GETFD:
+        return descriptor->fd_flags();
+    case F_SETFD:
+        return descriptor->set_fd_flags(arg);
+    case F_GETFL:
+        return descriptor->file_flags();
+    case F_SETFL:
+        return descriptor->set_file_flags(arg);
+    default:
+        ASSERT_NOT_REACHED();
+    }
+    return 0;
 }
 
 int Process::sys$fstat(int fd, Unix::stat* statbuf)
@@ -1129,7 +1137,7 @@ int Process::sys$getcwd(char* buffer, size_t size)
     if (size < path.length() + 1)
         return -ERANGE;
     strcpy(buffer, path.characters());
-    return -ENOTIMPL;
+    return 0;
 }
 
 size_t Process::number_of_open_file_descriptors() const
@@ -1145,7 +1153,7 @@ size_t Process::number_of_open_file_descriptors() const
 int Process::sys$open(const char* path, int options)
 {
 #ifdef DEBUG_IO
-    kprintf("Process::sys$open(): PID=%u, path=%s {%u}\n", m_pid, path, pathLength);
+    dbgprintf("%s(%u) sys$open(\"%s\")\n", name().characters(), pid(), path);
 #endif
     VALIDATE_USER_READ(path, strlen(path));
     if (number_of_open_file_descriptors() >= m_max_open_file_descriptors)
@@ -1307,6 +1315,7 @@ void Process::reap(Process& process)
 
 pid_t Process::sys$waitpid(pid_t waitee, int* wstatus, int options)
 {
+    //kprintf("sys$waitpid(%d, %p, %d)\n", waitee, wstatus, options);
     // FIXME: Respect options
     (void) options;
     if (wstatus)
@@ -1314,7 +1323,7 @@ pid_t Process::sys$waitpid(pid_t waitee, int* wstatus, int options)
 
     {
         InterruptDisabler disabler;
-        if (!Process::from_pid(waitee))
+        if (waitee != -1 && !Process::from_pid(waitee))
             return -ECHILD;
     }
     m_waitee = waitee;
@@ -1326,7 +1335,9 @@ pid_t Process::sys$waitpid(pid_t waitee, int* wstatus, int options)
     Process* waitee_process;
     {
         InterruptDisabler disabler;
-        waitee_process = Process::from_pid(waitee);
+
+        // NOTE: If waitee was -1, m_waitee will have been filled in by the scheduler.
+        waitee_process = Process::from_pid(m_waitee);
     }
     ASSERT(waitee_process);
     reap(*waitee_process);
@@ -1471,7 +1482,12 @@ int Process::sys$tcgetattr(int fd, Unix::termios* tp)
         return -EBADF;
     if (!descriptor->isTTY())
         return -ENOTTY;
-    ASSERT_NOT_REACHED();
+    auto& tty = *descriptor->tty();
+#ifdef TERMIOS_DEBUG
+    kprintf("sys$tcgetattr(fd=%d, tp=%p)\n", fd, tp);
+#endif
+    memcpy(tp, &tty.termios(), sizeof(Unix::termios));
+    return 0;
 }
 
 int Process::sys$tcsetattr(int fd, int optional_actions, const Unix::termios* tp)
@@ -1483,7 +1499,12 @@ int Process::sys$tcsetattr(int fd, int optional_actions, const Unix::termios* tp
         return -EBADF;
     if (!descriptor->isTTY())
         return -ENOTTY;
-    ASSERT_NOT_REACHED();
+#ifdef TERMIOS_DEBUG
+    kprintf("sys$tcsetattr(fd=%d, tp=%p)\n", fd, tp);
+#endif
+    auto& tty = *descriptor->tty();
+    memcpy(&tty.termios(), tp, sizeof(Unix::termios));
+    return 0;
 }
 
 pid_t Process::sys$tcgetpgrp(int fd)
@@ -1560,20 +1581,25 @@ Unix::sighandler_t Process::sys$signal(int signum, Unix::sighandler_t handler)
 
 int Process::sys$sigprocmask(int how, const Unix::sigset_t* set, Unix::sigset_t* old_set)
 {
-    VALIDATE_USER_READ(set, sizeof(Unix::sigset_t));
-    if (old_set)
+    if (old_set) {
         VALIDATE_USER_READ(old_set, sizeof(Unix::sigset_t));
-    *old_set = m_signal_mask;
-    switch (how) {
-    case SIG_BLOCK:
-        m_signal_mask &= ~(*set);
-        break;
-    case SIG_UNBLOCK:
-        m_signal_mask |= *set;
-        break;
-    case SIG_SETMASK:
-        m_signal_mask = *set;
-        break;
+        *old_set = m_signal_mask;
+    }
+    if (set) {
+        VALIDATE_USER_READ(set, sizeof(Unix::sigset_t));
+        switch (how) {
+        case SIG_BLOCK:
+            m_signal_mask &= ~(*set);
+            break;
+        case SIG_UNBLOCK:
+            m_signal_mask |= *set;
+            break;
+        case SIG_SETMASK:
+            m_signal_mask = *set;
+            break;
+        default:
+            return -EINVAL;
+        }
     }
     return 0;
 }

@@ -167,7 +167,8 @@ char* getcwd(char* buffer, size_t size)
 
 char* getwd(char* buf)
 {
-    return getcwd(buf, PATH_MAX);
+    auto* p = getcwd(buf, PATH_MAX);
+    return p;
 }
 
 int sleep(unsigned seconds)

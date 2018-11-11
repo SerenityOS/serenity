@@ -4,7 +4,8 @@
 
 int setjmp(jmp_buf)
 {
-    assert(false);
+    //assert(false);
+    return 0;
 }
 
 void longjmp(jmp_buf, int)

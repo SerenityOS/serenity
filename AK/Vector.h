@@ -48,7 +48,7 @@ public:
         --m_size;
     }
 
-private:
+//private:
     friend class Vector<T, Allocator>;
 
     VectorImpl(size_t capacity) : m_capacity(capacity) { }
@@ -235,7 +235,7 @@ public:
     ConstIterator begin() const { return ConstIterator(*this, 0); }
     ConstIterator end() const { return ConstIterator(*this, size()); }
 
-private:
+//private:
     static size_t paddedCapacity(size_t capacity)
     {
         return max(size_t(4), capacity + (capacity / 4) + 4);

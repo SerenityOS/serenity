@@ -289,7 +289,9 @@ bool MemoryManager::page_in_from_vnode(PageDirectory& page_directory, Region& re
     }
     remap_region_page(&page_directory, region, page_index_in_region, true);
     byte* dest_ptr = region.linearAddress.offset(page_index_in_region * PAGE_SIZE).asPtr();
+#ifdef MM_DEBUG
     dbgprintf("MM: page_in_from_vnode ready to read from vnode, will write to L%x!\n", dest_ptr);
+#endif
     sti(); // Oh god here we go...
     auto nread = vnode.fileSystem()->readInodeBytes(vnode.inode, vmo.vnode_offset() + ((region.first_page_index() + page_index_in_region) * PAGE_SIZE), PAGE_SIZE, dest_ptr, nullptr);
     if (nread < 0) {
@@ -444,7 +446,9 @@ void MemoryManager::map_region_at_address(PageDirectory* page_directory, Region&
 {
     InterruptDisabler disabler;
     auto& vmo = region.vmo();
+#ifdef MM_DEBUG
     dbgprintf("MM: map_region_at_address will map VMO pages %u - %u (VMO page count: %u)\n", region.first_page_index(), region.last_page_index(), vmo.page_count());
+#endif
     for (size_t i = region.first_page_index(); i <= region.last_page_index(); ++i) {
         auto page_laddr = laddr.offset(i * PAGE_SIZE);
         auto pte = ensurePTE(page_directory, page_laddr);

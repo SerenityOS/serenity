@@ -5,6 +5,8 @@
 TTY::TTY(unsigned major, unsigned minor)
     : CharacterDevice(major, minor)
 {
+    memset(&m_termios, 0, sizeof(m_termios));
+    m_termios.c_lflag |= ISIG | ECHO;
 }
 
 TTY::~TTY()
@@ -42,6 +44,8 @@ void TTY::emit(byte ch)
 
 void TTY::interrupt()
 {
+    if (!should_generate_signals())
+        return;
     dbgprintf("%s: Interrupt ^C pressed!\n", ttyName().characters());
     if (pgid()) {
         dbgprintf("%s: Send SIGINT to everyone in pgrp %d\n", ttyName().characters(), pgid());
