@@ -44,5 +44,6 @@ ALWAYS_INLINE int isdigit(int c)
 }
 
 int ispunct(int c);
+int isprint(int c);
 
 __END_DECLS

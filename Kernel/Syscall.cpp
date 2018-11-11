@@ -173,6 +173,12 @@ static DWORD handle(RegisterDump& regs, DWORD function, DWORD arg1, DWORD arg2, 
         return current->sys$alarm((unsigned)arg1);
     case Syscall::SC_access:
         return current->sys$access((const char*)arg1, (int)arg2);
+    case Syscall::SC_fcntl:
+        return current->sys$fcntl((int)arg1, (int)arg2, (dword)arg3);
+    case Syscall::SC_tcgetattr:
+        return current->sys$tcgetattr((int)arg1, (Unix::termios*)arg2);
+    case Syscall::SC_tcsetattr:
+        return current->sys$tcsetattr((int)arg1, (int)arg2, (const Unix::termios*)arg3);
     default:
         kprintf("<%u> int0x80: Unknown function %x requested {%x, %x, %x}\n", current->pid(), function, arg1, arg2, arg3);
         break;

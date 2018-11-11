@@ -67,6 +67,19 @@ typedef dword blkcnt_t;
 typedef dword size_t;
 typedef signed_dword ssize_t;
 
+#define NCCS 32
+
+typedef uint32_t tcflag_t;
+typedef uint8_t cc_t;
+
+struct termios {
+    tcflag_t c_iflag;
+    tcflag_t c_oflag;
+    tcflag_t c_cflag;
+    tcflag_t c_lflag;
+    cc_t     c_cc[NCCS];
+};
+
 struct stat {
     dev_t     st_dev;     /* ID of device containing file */
     ino_t     st_ino;     /* inode number */

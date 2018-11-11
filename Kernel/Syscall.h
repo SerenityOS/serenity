@@ -63,6 +63,9 @@
     __ENUMERATE_SYSCALL(alarm) \
     __ENUMERATE_SYSCALL(fstat) \
     __ENUMERATE_SYSCALL(access) \
+    __ENUMERATE_SYSCALL(fcntl) \
+    __ENUMERATE_SYSCALL(tcsetattr) \
+    __ENUMERATE_SYSCALL(tcgetattr) \
 
 
 #define DO_SYSCALL_A0(function) Syscall::invoke((dword)(function))

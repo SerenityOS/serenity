@@ -5,7 +5,6 @@
 
 __BEGIN_DECLS
 
-
 #define NCCS 32
 
 typedef uint32_t tcflag_t;
@@ -18,6 +17,9 @@ struct termios {
     tcflag_t c_lflag;
     cc_t     c_cc[NCCS];
 };
+
+int tcgetattr(int fd, struct termios*);
+int tcsetattr(int fd, int optional_actions, const struct termios*);
 
 /* c_cc characters */
 #define VINTR 0

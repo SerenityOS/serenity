@@ -26,6 +26,8 @@ LIBC_OBJS = \
        stat.o \
        mntent.o \
        ctype.o \
+       fcntl.o \
+       termios.o \
        entry.o
 
 OBJS = $(AK_OBJS) $(LIBC_OBJS)
