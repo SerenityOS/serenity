@@ -21,4 +21,9 @@ int gettimeofday(struct timeval* tv, struct timezone*)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
+char* ctime(const time_t*)
+{
+    return const_cast<char*>("ctime() not implemented");
+}
+
 }

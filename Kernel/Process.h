@@ -170,6 +170,9 @@ public:
     int sys$setuid(uid_t);
     unsigned sys$alarm(unsigned seconds);
     int sys$access(const char* pathname, int mode);
+    int sys$fcntl(int fd, int cmd, dword extra_arg);
+    int sys$tcgetattr(int fd, Unix::termios*);
+    int sys$tcsetattr(int fd, int optional_actions, const Unix::termios*);
 
     static void initialize();
 

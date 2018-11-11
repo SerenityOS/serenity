@@ -1042,6 +1042,16 @@ int Process::sys$access(const char* pathname, int mode)
     ASSERT_NOT_REACHED();
 }
 
+int Process::sys$fcntl(int fd, int cmd, dword extra_arg)
+{
+    (void) cmd;
+    (void) extra_arg;
+    auto* descriptor = file_descriptor(fd);
+    if (!descriptor)
+        return -EBADF;
+    ASSERT_NOT_REACHED();
+}
+
 int Process::sys$fstat(int fd, Unix::stat* statbuf)
 {
     VALIDATE_USER_WRITE(statbuf, sizeof(Unix::stat));
@@ -1451,6 +1461,29 @@ int Process::sys$setpgid(pid_t specified_pid, pid_t specified_pgid)
     // FIXME: There are more EPERM conditions to check for here..
     process->m_pgid = new_pgid;
     return 0;
+}
+
+int Process::sys$tcgetattr(int fd, Unix::termios* tp)
+{
+    VALIDATE_USER_WRITE(tp, sizeof(Unix::termios));
+    auto* descriptor = file_descriptor(fd);
+    if (!descriptor)
+        return -EBADF;
+    if (!descriptor->isTTY())
+        return -ENOTTY;
+    ASSERT_NOT_REACHED();
+}
+
+int Process::sys$tcsetattr(int fd, int optional_actions, const Unix::termios* tp)
+{
+    (void) optional_actions;
+    VALIDATE_USER_READ(tp, sizeof(Unix::termios));
+    auto* descriptor = file_descriptor(fd);
+    if (!descriptor)
+        return -EBADF;
+    if (!descriptor->isTTY())
+        return -ENOTTY;
+    ASSERT_NOT_REACHED();
 }
 
 pid_t Process::sys$tcgetpgrp(int fd)

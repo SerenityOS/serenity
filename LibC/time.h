@@ -12,6 +12,7 @@ struct timezone {
 
 int gettimeofday(struct timeval*, struct timezone* tz);
 time_t time(time_t*);
+char* ctime(const time_t*);
 
 __END_DECLS
 
