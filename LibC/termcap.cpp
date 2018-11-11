@@ -23,13 +23,13 @@ int tgetent(char* bp, const char* name)
     assert(false);
 }
 
-static HashMap<String, String>* caps = nullptr;
+static HashMap<String, const char*>* caps = nullptr;
 
 void ensure_caps()
 {
     if (caps)
         return;
-    caps = new HashMap<String, String>;
+    caps = new HashMap<String, const char*>;
     caps->set("DC", "\033[%p1%dP");
     caps->set("IC", "\033[%p1%d@");
     caps->set("ce", "\033[K");
@@ -60,12 +60,13 @@ void ensure_caps()
 char* tgetstr(char* id, char** area)
 {
     ensure_caps();
-    fprintf(stderr, "tgetstr: id='%s', area=%p\n", id, area);
+    fprintf(stderr, "tgetstr: id='%s', area=%p", id, area);
     auto it = caps->find(id);
     if (it != caps->end()) {
         char* ret = *area;
-        strcpy(*area, (*it).value.characters());
-        *area += (*it).value.length() + 1;
+        const char* val = (*it).value;
+        strcpy(*area, val);
+        *area += strlen(val) + 1;
         return ret;
     }
     assert(false);
@@ -85,7 +86,7 @@ int tgetnum(char* id)
     fprintf(stderr, "tgetnum: '%s'\n", id);
     auto it = caps->find(id);
     if (it != caps->end()) {
-        return atoi((*it).value.characters());
+        return atoi((*it).value);
     }
     assert(false);
 }
@@ -97,7 +98,7 @@ char* tgoto(const char* cap, int col, int row)
 
 int tputs(const char* str, int affcnt, int (*putc)(int))
 {
-    assert(false);
+    printf("%s", str);
 }
 
 }

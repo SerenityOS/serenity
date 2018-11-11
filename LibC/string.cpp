@@ -191,4 +191,23 @@ char* strsignal(int signum)
     return const_cast<char*>(sys_siglist[signum]);
 }
 
+char* strstr(const char* haystack, const char* needle)
+{
+    char nch;
+    char hch;
+
+    if ((nch = *needle++) != 0) {
+        size_t len = strlen(needle);
+        do {
+            do {
+                if ((hch = *haystack++) == 0)
+                    return nullptr;
+            } while (hch != nch);
+        } while (strncmp(haystack, needle, len) != 0);
+        --haystack;
+    }
+    return const_cast<char*>(haystack);
 }
+
+}
+

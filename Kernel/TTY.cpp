@@ -20,7 +20,7 @@ ssize_t TTY::read(byte* buffer, size_t size)
     if (nread == (ssize_t)m_buffer.size())
         m_buffer.clear();
     else {
-        dbgprintf("had %u, read %u\n", m_buffer.size(), nread);
+        kprintf("had %u, read %u\n", m_buffer.size(), nread);
         ASSERT_NOT_REACHED();
     }
     return nread;
