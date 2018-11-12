@@ -57,3 +57,12 @@ void TTY::interrupt()
         });
     }
 }
+
+void TTY::set_termios(const Unix::termios& t)
+{
+    m_termios = t;
+    dbgprintf("%s set_termios: IECHO? %u, ISIG? %u\n",
+        ttyName().characters(),
+        should_echo_input(),
+        should_generate_signals());
+}

@@ -21,6 +21,7 @@
 //#define DEBUG_IO
 //#define TASK_DEBUG
 //#define FORK_DEBUG
+#define TERMIOS_DEBUG
 #define SIGNAL_DEBUG
 #define MAX_PROCESS_GIDS 32
 
@@ -1545,10 +1546,10 @@ int Process::sys$tcgetattr(int fd, Unix::termios* tp)
         return -EBADF;
     if (!descriptor->isTTY())
         return -ENOTTY;
-    auto& tty = *descriptor->tty();
 #ifdef TERMIOS_DEBUG
-    kprintf("sys$tcgetattr(fd=%d, tp=%p)\n", fd, tp);
+    dbgprintf("sys$tcgetattr(fd=%d, tp=%p)\n", fd, tp);
 #endif
+    auto& tty = *descriptor->tty();
     memcpy(tp, &tty.termios(), sizeof(Unix::termios));
     return 0;
 }
@@ -1563,10 +1564,10 @@ int Process::sys$tcsetattr(int fd, int optional_actions, const Unix::termios* tp
     if (!descriptor->isTTY())
         return -ENOTTY;
 #ifdef TERMIOS_DEBUG
-    kprintf("sys$tcsetattr(fd=%d, tp=%p)\n", fd, tp);
+    dbgprintf("sys$tcsetattr(fd=%d, tp=%p)\n", fd, tp);
 #endif
     auto& tty = *descriptor->tty();
-    memcpy(&tty.termios(), tp, sizeof(Unix::termios));
+    tty.set_termios(*tp);
     return 0;
 }
 
