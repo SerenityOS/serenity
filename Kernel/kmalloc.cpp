@@ -112,6 +112,12 @@ void* kmalloc(dword size)
 
     for( i = 0; i < (POOL_SIZE / CHUNK_SIZE / 8); ++i )
     {
+        if (alloc_map[i] == 0xff) {
+            // Skip over completely full bucket.
+            chunks_here = 0;
+            continue;
+        }
+        // FIXME: This scan can be optimized further with LZCNT.
         for( j = 0; j < 8; ++j )
         {
             if( !(alloc_map[i] & (1<<j)) )
