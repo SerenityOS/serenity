@@ -88,7 +88,12 @@ public:
         dword address() const { return m_section_header.sh_addr; }
         const char* raw_data() const { return m_image.raw_data(m_section_header.sh_offset); }
         bool is_undefined() const { return m_section_index == SHN_UNDEF; }
+#ifdef SUPPORT_RELOCATIONS
         const RelocationSection relocations() const;
+#endif
+        dword flags() const { return m_section_header.sh_flags; }
+        bool is_writable() const { return flags() & SHF_WRITE; }
+        bool is_executable() const { return flags() & PF_X; }
 
     protected:
         friend class RelocationSection;
@@ -97,6 +102,7 @@ public:
         unsigned m_section_index;
     };
 
+#ifdef SUPPORT_RELOCATIONS
     class RelocationSection : public Section {
     public:
         RelocationSection(const Section& section)
@@ -127,6 +133,7 @@ public:
         const ELFImage& m_image;
         const Elf32_Rel& m_rel;
     };
+#endif
 
     unsigned symbol_count() const;
     unsigned section_count() const;
@@ -159,7 +166,9 @@ private:
     const char* section_index_to_string(unsigned index);
 
     const byte* m_buffer { nullptr };
+#ifdef SUPPORT_RELOCATIONS
     HashMap<String, unsigned> m_sections;
+#endif
     bool m_valid { false };
     unsigned m_symbol_table_section_index { 0 };
     unsigned m_string_table_section_index { 0 };
@@ -184,6 +193,7 @@ inline void ELFImage::for_each_section_of_type(unsigned type, F func) const
     }
 }
 
+#ifdef SUPPORT_RELOCATIONS
 template<typename F>
 inline void ELFImage::RelocationSection::for_each_relocation(F func) const
 {
@@ -192,6 +202,7 @@ inline void ELFImage::RelocationSection::for_each_relocation(F func) const
             break;
     }
 }
+#endif
 
 template<typename F>
 inline void ELFImage::for_each_symbol(F func) const

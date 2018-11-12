@@ -2,6 +2,7 @@
 #include <AK/kstdio.h>
 
 //#define ELFLOADER_DEBUG
+//#define SUPPORT_RELOCATIONS
 
 ELFLoader::ELFLoader(const byte* buffer)
     : m_image(buffer)
@@ -22,9 +23,10 @@ bool ELFLoader::load()
 
     if (!layout())
         return false;
-    export_symbols();
+#ifdef SUPPORT_RELOCATIONS
     if (!perform_relocations())
         return false;
+#endif
 
     return true;
 }
@@ -49,7 +51,7 @@ bool ELFLoader::layout()
         }
     });
 
-    m_image.for_each_section_of_type(SHT_PROGBITS, [this] (const ELFImage::Section& section) {
+    m_image.for_each_section_of_type(SHT_PROGBITS, [] (const ELFImage::Section& section) {
 #ifdef ELFLOADER_DEBUG
         kprintf("ELFLoader: Copying progbits section: %s\n", section.name());
 #endif
@@ -62,11 +64,15 @@ bool ELFLoader::layout()
 #endif
             return true;
         }
-        memcpy(ptr, section.raw_data(), section.size());
+        // If this section isn't writable, it's already mmapped.
+        if (section.is_writable())
+            memcpy(ptr, section.raw_data(), section.size());
+#ifdef SUPPORT_RELOCATIONS
         m_sections.set(section.name(), move(ptr));
+#endif
         return true;
     });
-    m_image.for_each_section_of_type(SHT_NOBITS, [this, &failed] (const ELFImage::Section& section) {
+    m_image.for_each_section_of_type(SHT_NOBITS, [&failed] (const ELFImage::Section& section) {
 #ifdef ELFLOADER_DEBUG
         kprintf("ELFLoader: Copying nobits section: %s\n", section.name());
 #endif
@@ -79,19 +85,24 @@ bool ELFLoader::layout()
             return false;
         }
         memset(ptr, 0, section.size());
+#ifdef SUPPORT_RELOCATIONS
         m_sections.set(section.name(), move(ptr));
+#endif
         return true;
     });
     return !failed;
 }
 
+#ifdef SUPPORT_RELOCATIONS
 void* ELFLoader::lookup(const ELFImage::Symbol& symbol)
 {
     if (symbol.section().is_undefined())
         return symbol_ptr(symbol.name());
     return area_for_section(symbol.section()) + symbol.value();
 }
+#endif
 
+#ifdef SUPPORT_RELOCATIONS
 char* ELFLoader::area_for_section(const ELFImage::Section& section)
 {
     return area_for_section_name(section.name());
@@ -104,7 +115,9 @@ char* ELFLoader::area_for_section_name(const char* name)
     ASSERT_NOT_REACHED();
     return nullptr;
 }
+#endif
 
+#ifdef SUPPORT_RELOCATIONS
 bool ELFLoader::perform_relocations()
 {
 #ifdef ELFLOADER_DEBUG
@@ -166,39 +179,27 @@ bool ELFLoader::perform_relocations()
     });
     return !failed;
 }
-
-void ELFLoader::export_symbols()
-{
-    m_image.for_each_symbol([&] (const ELFImage::Symbol symbol) {
-#ifdef ELFLOADER_DEBUG
-        kprintf("symbol: %u, type=%u, name=%s, section=%u\n", symbol.index(), symbol.type(), symbol.name(), symbol.sectionIndex());
 #endif
-        if (symbol.type() == STT_FUNC) {
-            char* ptr;
-            if (m_image.is_executable())
-                ptr = (char*)symbol.value();
-            else if (m_image.is_relocatable())
-                ptr = area_for_section(symbol.section()) + symbol.value();
-            else
-                ASSERT_NOT_REACHED();
-            add_symbol(symbol.name(), ptr, symbol.size());
-        }
-        // FIXME: What about other symbol types?
-        return true;
-    });
-}
 
 char* ELFLoader::symbol_ptr(const char* name)
 {
-    if (auto it = m_symbols.find(name); it != m_symbols.end()) {
-        auto& symbol = (*it).value;
-#ifdef EXECSPACE_DEBUG
-        kprintf("[ELFLoader] symbol_ptr(%s) dump:\n", name);
-        disassemble(symbol.ptr, symbol.size);
+    char* found_ptr = nullptr;
+    m_image.for_each_symbol([&] (const ELFImage::Symbol symbol) {
+        if (symbol.type() != STT_FUNC)
+            return true;
+        if (strcmp(symbol.name(), name))
+            return true;
+        if (m_image.is_executable())
+            found_ptr = (char*)symbol.value();
+#ifdef SUPPORT_RELOCATIONS
+        else if (m_image.is_relocatable())
+            found_ptr = area_for_section(symbol.section()) + symbol.value();
 #endif
-        return symbol.ptr;
-    }
-    return nullptr;
+        else
+            ASSERT_NOT_REACHED();
+        return false;
+    });
+    return found_ptr;
 }
 
 bool ELFLoader::allocate_section(LinearAddress laddr, size_t size, size_t alignment, bool is_readable, bool is_writable)
@@ -215,9 +216,4 @@ bool ELFLoader::map_section(LinearAddress laddr, size_t size, size_t alignment, 
     char namebuf[16];
     ksprintf(namebuf, "elf-map-%s%s", is_readable ? "r" : "", is_writable ? "w" : "");
     return map_section_hook(laddr, size, alignment, offset_in_image, is_readable, is_writable, namebuf);
-}
-
-void ELFLoader::add_symbol(String&& name, char* ptr, unsigned size)
-{
-    m_symbols.set(move(name), { ptr, size });
 }

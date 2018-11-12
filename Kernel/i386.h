@@ -1,6 +1,7 @@
 #pragma once
 
 #include "types.h"
+#include "kprintf.h"
 
 #define PAGE_SIZE 4096
 #define PAGE_MASK 0xfffff000
@@ -217,4 +218,36 @@ private:
     dword m_ebx { 0xffffffff };
     dword m_ecx { 0xffffffff };
     dword m_edx { 0xffffffff };
+};
+
+inline void read_tsc(dword& lsw, dword& msw)
+{
+    asm volatile("rdtsc":"=d"(msw),"=a"(lsw));
+}
+
+struct Stopwatch {
+public:
+    Stopwatch(const char* name)
+        : m_name(name)
+    {
+        read_tsc(m_start_lsw, m_start_msw);
+    }
+
+    ~Stopwatch()
+    {
+        dword end_lsw;
+        dword end_msw;
+        read_tsc(end_lsw, end_msw);
+        if (m_start_msw != end_msw) {
+            dbgprintf("differing msw's\n");
+            asm volatile("cli;hlt");
+        }
+        dword diff = end_lsw - m_start_lsw;
+        dbgprintf("Stopwatch(%s): %u ticks\n", m_name, diff);
+    }
+
+private:
+    const char* m_name { nullptr };
+    dword m_start_lsw { 0 };
+    dword m_start_msw { 0 };
 };
