@@ -147,11 +147,11 @@ bool SyntheticFileSystem::enumerateDirectoryInode(InodeIdentifier inode, Functio
     if (!synInode.metadata.isDirectory())
         return false;
 
-    callback({ ".", synInode.metadata.inode });
-    callback({ "..", synInode.parent });
+    callback({ ".", 1, synInode.metadata.inode, 2 });
+    callback({ "..", 2, synInode.parent, 2 });
 
     for (auto& child : synInode.children)
-        callback({ child->name, child->metadata.inode });
+        callback({ child->name.characters(), child->name.length(), child->metadata.inode, child->metadata.isDirectory() ? (byte)2 : (byte)1 });
     return true;
 }
 

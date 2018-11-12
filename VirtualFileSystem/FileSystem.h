@@ -35,7 +35,10 @@ public:
     virtual Unix::ssize_t readInodeBytes(InodeIdentifier, Unix::off_t offset, Unix::size_t count, byte* buffer, FileDescriptor*) const = 0;
 
     struct DirectoryEntry {
-        String name;
+        DirectoryEntry(const char* name, InodeIdentifier, byte fileType);
+        DirectoryEntry(const char* name, Unix::size_t name_length, InodeIdentifier, byte fileType);
+        char name[256];
+        Unix::size_t name_length { 0 };
         InodeIdentifier inode;
         byte fileType { 0 };
     };

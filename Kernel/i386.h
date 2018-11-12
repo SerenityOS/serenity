@@ -239,8 +239,7 @@ public:
         dword end_msw;
         read_tsc(end_lsw, end_msw);
         if (m_start_msw != end_msw) {
-            dbgprintf("differing msw's\n");
-            asm volatile("cli;hlt");
+            dbgprintf("stopwatch: differing msw, no result for %s\n", m_name);
         }
         dword diff = end_lsw - m_start_lsw;
         dbgprintf("Stopwatch(%s): %u ticks\n", m_name, diff);

@@ -30,6 +30,13 @@ public:
         m_buffer[m_offset++] = (byte)(value >> 24) & 0xffu;
     }
 
+    void operator<<(const char* str)
+    {
+        size_t len = strlen(str);
+        for (unsigned i = 0; i < len; ++i)
+            m_buffer[m_offset++] = str[i];
+    }
+
     void operator<<(const String& value)
     {
         for (unsigned i = 0; i < value.length(); ++i)

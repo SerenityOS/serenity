@@ -211,7 +211,7 @@ auto Ext2FileSystem::lookupExt2Inode(unsigned inode) const -> CachedExt2Inode
 #endif
 
     LOCKER(m_inodeCacheLock);
-    if (m_inodeCache.size() >= 64)
+    if (m_inodeCache.size() >= 128)
         m_inodeCache.removeOneRandomly();
     auto cachedInode = adopt(*new CachedExt2InodeImpl(OwnPtr<ext2_inode>(e2inode)));
     m_inodeCache.set(inode, cachedInode.copyRef());
@@ -261,14 +261,14 @@ Vector<unsigned> Ext2FileSystem::blockListForInode(const ext2_inode& e2inode) co
 
     unsigned directCount = min(blockCount, (unsigned)EXT2_NDIR_BLOCKS);
     for (unsigned i = 0; i < directCount; ++i) {
-        list.append(e2inode.i_block[i]);
+        list.unchecked_append(e2inode.i_block[i]);
         --blocksRemaining;
     }
 
     if (!blocksRemaining)
         return list;
 
-    auto processBlockArray = [&] (unsigned arrayBlockIndex, Function<void(unsigned)> callback) {
+    auto processBlockArray = [&] (unsigned arrayBlockIndex, auto&& callback) {
         auto arrayBlock = readBlock(arrayBlockIndex);
         ASSERT(arrayBlock);
         auto* array = reinterpret_cast<const __u32*>(arrayBlock.pointer());
@@ -284,7 +284,7 @@ Vector<unsigned> Ext2FileSystem::blockListForInode(const ext2_inode& e2inode) co
     };
 
     processBlockArray(e2inode.i_block[EXT2_IND_BLOCK], [&] (unsigned entry) {
-        list.append(entry);
+        list.unchecked_append(entry);
     });
 
     if (!blocksRemaining)
@@ -292,7 +292,7 @@ Vector<unsigned> Ext2FileSystem::blockListForInode(const ext2_inode& e2inode) co
 
     processBlockArray(e2inode.i_block[EXT2_DIND_BLOCK], [&] (unsigned entry) {
         processBlockArray(entry, [&] (unsigned entry) {
-            list.append(entry);
+            list.unchecked_append(entry);
         });
     });
 
@@ -302,7 +302,7 @@ Vector<unsigned> Ext2FileSystem::blockListForInode(const ext2_inode& e2inode) co
     processBlockArray(e2inode.i_block[EXT2_TIND_BLOCK], [&] (unsigned entry) {
         processBlockArray(entry, [&] (unsigned entry) {
             processBlockArray(entry, [&] (unsigned entry) {
-                list.append(entry);
+                list.unchecked_append(entry);
             });
         });
     });
@@ -434,16 +434,12 @@ bool Ext2FileSystem::enumerateDirectoryInode(InodeIdentifier inode, Function<boo
     ASSERT(buffer);
     auto* entry = reinterpret_cast<ext2_dir_entry_2*>(buffer.pointer());
 
-    char namebuf[EXT2_NAME_LEN + 1];
-
     while (entry < buffer.endPointer()) {
         if (entry->inode != 0) {
-            memcpy(namebuf, entry->name, entry->name_len);
-            namebuf[entry->name_len] = 0;
 #ifdef EXT2_DEBUG
             kprintf("inode: %u, name_len: %u, rec_len: %u, file_type: %u, name: %s\n", entry->inode, entry->name_len, entry->rec_len, entry->file_type, namebuf);
 #endif
-            if (!callback({ namebuf, { id(), entry->inode }, entry->file_type }))
+            if (!callback({ entry->name, entry->name_len, { id(), entry->inode }, entry->file_type }))
                 break;
         }
         entry = (ext2_dir_entry_2*)((char*)entry + entry->rec_len);
@@ -464,7 +460,7 @@ bool Ext2FileSystem::addInodeToDirectory(unsigned directoryInode, unsigned inode
     Vector<DirectoryEntry> entries;
     bool nameAlreadyExists = false;
     enumerateDirectoryInode({ id(), directoryInode }, [&] (const DirectoryEntry& entry) {
-        if (entry.name == name) {
+        if (!strcmp(entry.name, name.characters())) {
             nameAlreadyExists = true;
             return false;
         }
@@ -476,8 +472,7 @@ bool Ext2FileSystem::addInodeToDirectory(unsigned directoryInode, unsigned inode
         return false;
     }
 
-    entries.append({ name, { id(), inode }, fileType });
-
+    entries.append({ name.characters(), name.length(), { id(), inode }, fileType });
     return writeDirectoryInode(directoryInode, move(entries));
 }
 
@@ -487,8 +482,8 @@ bool Ext2FileSystem::writeDirectoryInode(unsigned directoryInode, Vector<Directo
 
     unsigned directorySize = 0;
     for (auto& entry : entries) {
-        kprintf("  - %08u %s\n", entry.inode.index(), entry.name.characters());
-        directorySize += EXT2_DIR_REC_LEN(entry.name.length());
+        kprintf("  - %08u %s\n", entry.inode.index(), entry.name);
+        directorySize += EXT2_DIR_REC_LEN(entry.name_length);
     }
 
     unsigned blocksNeeded = ceilDiv(directorySize, blockSize());
@@ -502,23 +497,23 @@ bool Ext2FileSystem::writeDirectoryInode(unsigned directoryInode, Vector<Directo
     for (unsigned i = 0; i < entries.size(); ++i) {
         auto& entry = entries[i];
 
-        unsigned recordLength = EXT2_DIR_REC_LEN(entry.name.length());
+        unsigned recordLength = EXT2_DIR_REC_LEN(entry.name_length);
         if (i == entries.size() - 1)
             recordLength += occupiedSize - directorySize;
 
         kprintf("* inode: %u", entry.inode.index());
-        kprintf(", name_len: %u", word(entry.name.length()));
+        kprintf(", name_len: %u", word(entry.name_length));
         kprintf(", rec_len: %u", word(recordLength));
         kprintf(", file_type: %u", byte(entry.fileType));
-        kprintf(", name: %s\n", entry.name.characters());
+        kprintf(", name: %s\n", entry.name);
 
         stream << dword(entry.inode.index());
         stream << word(recordLength);
-        stream << byte(entry.name.length());
+        stream << byte(entry.name_length);
         stream << byte(entry.fileType);
         stream << entry.name;
 
-        unsigned padding = recordLength - entry.name.length() - 8;
+        unsigned padding = recordLength - entry.name_length - 8;
         kprintf("  *** pad %u bytes\n", padding);
         for (unsigned j = 0; j < padding; ++j) {
             stream << byte(0);
