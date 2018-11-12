@@ -16,7 +16,8 @@ public:
     void set_pgid(pid_t pgid) { m_pgid = pgid; }
     pid_t pgid() const { return m_pgid; }
 
-    Unix::termios& termios() { return m_termios; }
+    const Unix::termios& termios() const { return m_termios; }
+    void set_termios(const Unix::termios&);
     bool should_generate_signals() const { return m_termios.c_lflag & ISIG; }
     bool should_echo_input() const { return m_termios.c_lflag & ECHO; }
 
