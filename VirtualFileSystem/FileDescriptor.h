@@ -2,7 +2,9 @@
 
 #include "VirtualFileSystem.h"
 #include "InodeMetadata.h"
+#include "FIFO.h"
 #include <AK/ByteBuffer.h>
+#include <AK/CircularQueue.h>
 #include <AK/Retainable.h>
 
 #ifdef SERENITY
@@ -12,6 +14,8 @@ class TTY;
 class FileDescriptor : public Retainable<FileDescriptor> {
 public:
     static RetainPtr<FileDescriptor> create(RetainPtr<VirtualFileSystem::Node>&&);
+    static RetainPtr<FileDescriptor> create_pipe_writer(FIFO&);
+    static RetainPtr<FileDescriptor> create_pipe_reader(FIFO&);
     ~FileDescriptor();
 
     RetainPtr<FileDescriptor> clone();
@@ -24,6 +28,7 @@ public:
     int stat(Unix::stat*);
 
     bool hasDataAvailableForRead();
+    bool can_write();
 
     ssize_t get_dir_entries(byte* buffer, Unix::size_t);
 
@@ -52,6 +57,9 @@ public:
 
     dword fd_flags() const { return m_fd_flags; }
     int set_fd_flags(dword flags) { m_fd_flags = flags; return 0; }
+
+    bool is_fifo() const { return m_fifo; }
+    FIFO::Direction fifo_direction() { return m_fifo_direction; }
 #endif
 
     ByteBuffer& generatorCache() { return m_generatorCache; }
@@ -59,6 +67,7 @@ public:
 private:
     friend class VirtualFileSystem;
     explicit FileDescriptor(RetainPtr<VirtualFileSystem::Node>&&);
+    FileDescriptor(FIFO&, FIFO::Direction);
 
     RetainPtr<VirtualFileSystem::Node> m_vnode;
 
@@ -70,6 +79,9 @@ private:
     bool m_isBlocking { true };
     dword m_fd_flags { 0 };
     dword m_file_flags { 0 };
+
+    RetainPtr<FIFO> m_fifo;
+    FIFO::Direction m_fifo_direction { FIFO::Neither };
 #endif
 };
 

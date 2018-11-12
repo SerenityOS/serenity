@@ -57,6 +57,13 @@ bool Scheduler::pick_next()
             return true;
         }
 
+        if (process.state() == Process::BlockedWrite) {
+            ASSERT(process.m_blocked_fd != -1);
+            if (process.m_file_descriptors[process.m_blocked_fd]->can_write())
+                process.unblock();
+            return true;
+        }
+
         if (process.state() == Process::Skip1SchedulerPass) {
             process.set_state(Process::Skip0SchedulerPasses);
             return true;

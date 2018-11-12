@@ -52,6 +52,7 @@ public:
         BlockedSleep,
         BlockedWait,
         BlockedRead,
+        BlockedWrite,
         BlockedSignal,
     };
 
@@ -226,6 +227,8 @@ private:
     int do_exec(const String& path, Vector<String>&& arguments, Vector<String>&& environment);
     void push_value_on_stack(dword);
 
+    int alloc_fd();
+
     PageDirectory* m_page_directory { nullptr };
 
     Process* m_prev { nullptr };
@@ -257,6 +260,7 @@ private:
     pid_t m_waitee { -1 };
     int m_waitee_status { 0 };
     int m_fdBlockedOnRead { -1 };
+    int m_blocked_fd { -1 };
     size_t m_max_open_file_descriptors { 16 };
     SignalActionData m_signal_action_data[32];
     dword m_pending_signals { 0 };
@@ -337,6 +341,7 @@ static inline const char* toString(Process::State state)
     case Process::BlockedSleep: return "Sleep";
     case Process::BlockedWait: return "Wait";
     case Process::BlockedRead: return "Read";
+    case Process::BlockedWrite: return "Write";
     case Process::BlockedSignal: return "Signal";
     case Process::BeingInspected: return "Inspect";
     }

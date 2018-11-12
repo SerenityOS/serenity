@@ -45,7 +45,6 @@ void __stdio_init()
 
 int setvbuf(FILE* stream, char* buf, int mode, size_t size)
 {
-    fprintf(stderr, "setvbuf(%p [fd=%d], %p, %d, %u)\n", stream, stream->fd, buf, mode, size);
     if (mode != _IONBF && mode != _IOLBF && mode != _IOFBF) {
         errno = EINVAL;
         return -1;
