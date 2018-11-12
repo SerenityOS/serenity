@@ -26,7 +26,6 @@
 #include "VirtualConsole.h"
 #include "Scheduler.h"
 
-#define TEST_VFS
 #define KSYMS
 #define SPAWN_MULTIPLE_SHELLS
 //#define STRESS_TEST_SPAWNING
@@ -103,7 +102,8 @@ static void loadKsyms(const ByteBuffer& buffer)
         // FIXME: The Strings here should be eternally allocated too.
         ksyms().append({ address, String(startOfName, bufptr - startOfName) });
 
-        kprintf("\033[u\033[s%u/%u", ksyms().size(), ksym_count);
+        if ((ksyms().size() % 10) == 0 || ksym_count == ksyms().size())
+            kprintf("\033[u\033[s%u/%u", ksyms().size(), ksym_count);
         ++bufptr;
     }
     kprintf("\n");
@@ -174,7 +174,6 @@ static void init_stage2()
 {
     Syscall::initialize();
 
-#ifdef TEST_VFS
     auto vfs = make<VirtualFileSystem>();
 
     auto dev_zero = make<ZeroDevice>();
@@ -217,8 +216,6 @@ static void init_stage2()
 #endif
 
     vfs->mount(ProcFileSystem::the(), "/proc");
-
-#endif
 
 #ifdef TEST_ELF_LOADER
     {

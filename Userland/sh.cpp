@@ -16,12 +16,13 @@ struct GlobalState {
     char ttyname[32];
     char hostname[32];
     pid_t sid;
+    uid_t uid;
 };
 static GlobalState* g;
 
 static void prompt()
 {
-    if (getuid() == 0)
+    if (g->uid == 0)
         printf("# ");
     else
         printf("\033[31;1m%s\033[0m@\033[37;1m%s\033[0m:\033[32;1m%s\033[0m$> ", g->username.characters(), g->hostname, g->cwd.characters());
@@ -350,6 +351,7 @@ static void greeting()
 int main(int, char**)
 {
     g = new GlobalState;
+    g->uid = getuid();
     g->sid = setsid();
     tcsetpgrp(0, getpgrp());
 

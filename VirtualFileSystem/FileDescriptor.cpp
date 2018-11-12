@@ -218,7 +218,7 @@ ssize_t FileDescriptor::get_dir_entries(byte* buffer, Unix::size_t size)
     m_vnode->vfs()->enumerateDirectoryInode(m_vnode->inode, [&stream] (auto& entry) {
         stream << (dword)entry.inode.index();
         stream << (byte)entry.fileType;
-        stream << (dword)entry.name.length();
+        stream << (dword)entry.name_length;
         stream << entry.name;
         return true;
     });

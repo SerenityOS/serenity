@@ -41,7 +41,7 @@ InodeIdentifier FileSystem::childOfDirectoryInodeWithName(InodeIdentifier inode,
 {
     InodeIdentifier foundInode;
     enumerateDirectoryInode(inode, [&] (const DirectoryEntry& entry) {
-        if (entry.name == name) {
+        if (!strcmp(entry.name, name.characters())) {
             foundInode = entry.inode;
             return false;
         }
@@ -101,3 +101,20 @@ ByteBuffer FileSystem::readEntireInode(InodeIdentifier inode, FileDescriptor* ha
     return contents;
 }
 
+FileSystem::DirectoryEntry::DirectoryEntry(const char* n, InodeIdentifier i, byte ft)
+    : name_length(strlen(name))
+    , inode(i)
+    , fileType(ft)
+{
+    memcpy(name, n, name_length);
+    name[name_length] = '\0';
+}
+
+FileSystem::DirectoryEntry::DirectoryEntry(const char* n, Unix::size_t nl, InodeIdentifier i, byte ft)
+    : name_length(nl)
+    , inode(i)
+    , fileType(ft)
+{
+    memcpy(name, n, nl);
+    name[nl] = '\0';
+}

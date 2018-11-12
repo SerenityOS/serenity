@@ -250,12 +250,12 @@ void VirtualFileSystem::enumerateDirectoryInode(InodeIdentifier directoryInode, 
         else
             resolvedInode = entry.inode;
 
-        if (directoryInode.isRootInode() && !isRoot(directoryInode) && entry.name == "..") {
+        if (directoryInode.isRootInode() && !isRoot(directoryInode) && !strcmp(entry.name, "..")) {
             auto mount = findMountForGuest(entry.inode);
             ASSERT(mount);
             resolvedInode = mount->host();
         }
-        callback({ entry.name, resolvedInode });
+        callback(FileSystem::DirectoryEntry(entry.name, entry.name_length, resolvedInode, entry.fileType));
         return true;
     });
 }
@@ -348,7 +348,7 @@ void VirtualFileSystem::listDirectory(const String& path, InodeIdentifier base)
 
         kprintf("%s%s%s",
             nameColorBegin,
-            entry.name.characters(),
+            entry.name,
             nameColorEnd);
 
         if (metadata.isDirectory()) {
@@ -376,11 +376,11 @@ void VirtualFileSystem::listDirectoryRecursively(const String& path, InodeIdenti
         if (metadata.isDirectory()) {
             if (entry.name != "." && entry.name != "..") {
                 char buf[4096];
-                ksprintf(buf, "%s/%s", path.characters(), entry.name.characters());
+                ksprintf(buf, "%s/%s", path.characters(), entry.name);
                 listDirectoryRecursively(buf, base);
             }
         } else {
-            kprintf("%s/%s\n", path.characters(), entry.name.characters());
+            kprintf("%s/%s\n", path.characters(), entry.name);
         }
         return true;
     });
