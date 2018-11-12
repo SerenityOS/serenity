@@ -107,11 +107,13 @@ bool ELFImage::parse()
         }
     }
 
+#ifdef SUPPORT_RELOCATIONS
     // Then create a name-to-index map.
     for (unsigned i = 0; i < section_count(); ++i) {
         auto& section = this->section(i);
         m_sections.set(section.name(), move(i));
     }
+#endif
     return true;
 }
 
@@ -172,6 +174,7 @@ const ELFImage::ProgramHeader ELFImage::program_header(unsigned index) const
     return ProgramHeader(*this, index);
 }
 
+#ifdef SUPPORT_RELOCATIONS
 const ELFImage::Relocation ELFImage::RelocationSection::relocation(unsigned index) const
 {
     ASSERT(index < relocation_count());
@@ -204,4 +207,5 @@ const ELFImage::Section ELFImage::lookupSection(const char* name) const
         return section((*it).value);
     return section(0);
 }
+#endif
 

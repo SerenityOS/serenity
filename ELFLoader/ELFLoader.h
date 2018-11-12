@@ -15,14 +15,12 @@ public:
     Function<void*(LinearAddress, size_t, size_t, bool, bool, const String&)> alloc_section_hook;
     Function<void*(LinearAddress, size_t, size_t, size_t, bool, bool, const String&)> map_section_hook;
     char* symbol_ptr(const char* name);
-    void add_symbol(String&& name, char* ptr, unsigned size);
     bool allocate_section(LinearAddress, size_t, size_t alignment, bool is_readable, bool is_writable);
     bool map_section(LinearAddress, size_t, size_t alignment, size_t offset_in_image, bool is_readable, bool is_writable);
 
 private:
     bool layout();
     bool perform_relocations();
-    void export_symbols();
     void* lookup(const ELFImage::Symbol&);
     char* area_for_section(const ELFImage::Section&);
     char* area_for_section_name(const char*);
@@ -40,7 +38,6 @@ private:
     };
     ELFImage m_image;
 
-    HashMap<String, PtrAndSize> m_symbols;
     HashMap<String, char*> m_sections;
 };
 
