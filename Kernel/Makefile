@@ -19,6 +19,7 @@ KERNEL_OBJS = \
        RTC.o \
        TTY.o \
        VirtualConsole.o \
+       FIFO.o \
        Scheduler.o
 
 VFS_OBJS = \

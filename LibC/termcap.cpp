@@ -5,6 +5,8 @@
 #include <AK/HashMap.h>
 #include <AK/String.h>
 
+//#define TERMCAP_DEBUG
+
 extern "C" {
 
 char PC;
@@ -13,7 +15,9 @@ char* BC;
 
 int tgetent(char* bp, const char* name)
 {
+#ifdef TERMCAP_DEBUG
     fprintf(stderr, "tgetent: bp=%p, name='%s'\n", bp, name);
+#endif
     if (!strcmp(name, "ansi")) {
         PC = '\0';
         BC = const_cast<char*>("\033[D");
@@ -60,7 +64,9 @@ void ensure_caps()
 char* tgetstr(char* id, char** area)
 {
     ensure_caps();
-    fprintf(stderr, "tgetstr: id='%s', area=%p", id, area);
+#ifdef TERMCAP_DEBUG
+    fprintf(stderr, "tgetstr: id='%s'\n", id);
+#endif
     auto it = caps->find(id);
     if (it != caps->end()) {
         char* ret = *area;
@@ -74,7 +80,9 @@ char* tgetstr(char* id, char** area)
 
 int tgetflag(char* id)
 {
+#ifdef TERMCAP_DEBUG
     fprintf(stderr, "tgetflag: '%s'\n", id);
+#endif
     auto it = caps->find(id);
     if (it != caps->end())
         return 1;
@@ -83,11 +91,12 @@ int tgetflag(char* id)
 
 int tgetnum(char* id)
 {
+#ifdef TERMCAP_DEBUG
     fprintf(stderr, "tgetnum: '%s'\n", id);
+#endif
     auto it = caps->find(id);
-    if (it != caps->end()) {
+    if (it != caps->end())
         return atoi((*it).value);
-    }
     assert(false);
 }
 

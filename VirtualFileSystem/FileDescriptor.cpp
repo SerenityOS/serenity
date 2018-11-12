@@ -4,6 +4,7 @@
 #include <LibC/errno_numbers.h>
 #include "UnixTypes.h"
 #include <AK/BufferStream.h>
+#include "FIFO.h"
 
 #ifdef SERENITY
 #include "TTY.h"
@@ -14,6 +15,16 @@ RetainPtr<FileDescriptor> FileDescriptor::create(RetainPtr<VirtualFileSystem::No
     return adopt(*new FileDescriptor(move(vnode)));
 }
 
+RetainPtr<FileDescriptor> FileDescriptor::create_pipe_writer(FIFO& fifo)
+{
+    return adopt(*new FileDescriptor(fifo, FIFO::Writer));
+}
+
+RetainPtr<FileDescriptor> FileDescriptor::create_pipe_reader(FIFO& fifo)
+{
+    return adopt(*new FileDescriptor(fifo, FIFO::Reader));
+}
+
 FileDescriptor::FileDescriptor(RetainPtr<VirtualFileSystem::Node>&& vnode)
     : m_vnode(move(vnode))
 {
@@ -21,16 +32,27 @@ FileDescriptor::FileDescriptor(RetainPtr<VirtualFileSystem::Node>&& vnode)
 
 FileDescriptor::~FileDescriptor()
 {
+    if (m_fifo)
+        m_fifo->close(fifo_direction());
 }
 
 RetainPtr<FileDescriptor> FileDescriptor::clone()
 {
-    auto descriptor = FileDescriptor::create(m_vnode.copyRef());
+    RetainPtr<FileDescriptor> descriptor;
+    if (is_fifo()) {
+        descriptor = fifo_direction() == FIFO::Reader
+            ? FileDescriptor::create_pipe_reader(*m_fifo)
+            : FileDescriptor::create_pipe_writer(*m_fifo);
+    } else {
+        descriptor = FileDescriptor::create(m_vnode.copyRef());
+    }
     if (!descriptor)
         return nullptr;
     descriptor->m_currentOffset = m_currentOffset;
 #ifdef SERENITY
     descriptor->m_isBlocking = m_isBlocking;
+    descriptor->m_fd_flags = m_fd_flags;
+    descriptor->m_file_flags = m_file_flags;
 #endif
     return descriptor;
 }
@@ -46,6 +68,7 @@ bool additionWouldOverflow(Unix::off_t a, Unix::off_t b)
 
 int FileDescriptor::stat(Unix::stat* buffer)
 {
+    ASSERT(!is_fifo());
     if (!m_vnode)
         return -EBADF;
 
@@ -71,6 +94,7 @@ int FileDescriptor::stat(Unix::stat* buffer)
 
 Unix::off_t FileDescriptor::seek(Unix::off_t offset, int whence)
 {
+    ASSERT(!is_fifo());
     if (!m_vnode)
         return -EBADF;
 
@@ -112,6 +136,10 @@ Unix::off_t FileDescriptor::seek(Unix::off_t offset, int whence)
 
 Unix::ssize_t FileDescriptor::read(byte* buffer, Unix::size_t count)
 {
+    if (is_fifo()) {
+        ASSERT(fifo_direction() == FIFO::Reader);
+        return m_fifo->read(buffer, count);
+    }
     if (m_vnode->isCharacterDevice()) {
         // FIXME: What should happen to m_currentOffset?
         return m_vnode->characterDevice()->read(buffer, count);
@@ -123,6 +151,10 @@ Unix::ssize_t FileDescriptor::read(byte* buffer, Unix::size_t count)
 
 Unix::ssize_t FileDescriptor::write(const byte* data, Unix::size_t size)
 {
+    if (is_fifo()) {
+        ASSERT(fifo_direction() == FIFO::Writer);
+        return m_fifo->write(data, size);
+    }
     if (m_vnode->isCharacterDevice()) {
         // FIXME: What should happen to m_currentOffset?
         return m_vnode->characterDevice()->write(data, size);
@@ -132,8 +164,21 @@ Unix::ssize_t FileDescriptor::write(const byte* data, Unix::size_t size)
     return -1;
 }
 
+bool FileDescriptor::can_write()
+{
+    if (is_fifo()) {
+        ASSERT(fifo_direction() == FIFO::Writer);
+        return m_fifo->can_write();
+    }
+    return true;
+}
+
 bool FileDescriptor::hasDataAvailableForRead()
 {
+    if (is_fifo()) {
+        ASSERT(fifo_direction() == FIFO::Reader);
+        return m_fifo->can_read();
+    }
     if (m_vnode->isCharacterDevice())
         return m_vnode->characterDevice()->hasDataAvailableForRead();
     return true;
@@ -141,6 +186,8 @@ bool FileDescriptor::hasDataAvailableForRead()
 
 ByteBuffer FileDescriptor::readEntireFile()
 {
+    ASSERT(!is_fifo());
+
     if (m_vnode->isCharacterDevice()) {
         auto buffer = ByteBuffer::createUninitialized(1024);
         Unix::ssize_t nread = m_vnode->characterDevice()->read(buffer.pointer(), buffer.size());
@@ -153,6 +200,7 @@ ByteBuffer FileDescriptor::readEntireFile()
 
 bool FileDescriptor::isDirectory() const
 {
+    ASSERT(!is_fifo());
     return m_vnode->metadata().isDirectory();
 }
 
@@ -185,6 +233,8 @@ ssize_t FileDescriptor::get_dir_entries(byte* buffer, Unix::size_t size)
 #ifdef SERENITY
 bool FileDescriptor::isTTY() const
 {
+    if (is_fifo())
+        return false;
     if (auto* device = m_vnode->characterDevice())
         return device->isTTY();
     return false;
@@ -192,6 +242,8 @@ bool FileDescriptor::isTTY() const
 
 const TTY* FileDescriptor::tty() const
 {
+    if (is_fifo())
+        return nullptr;
     if (auto* device = m_vnode->characterDevice())
         return static_cast<const TTY*>(device);
     return nullptr;
@@ -199,6 +251,8 @@ const TTY* FileDescriptor::tty() const
 
 TTY* FileDescriptor::tty()
 {
+    if (is_fifo())
+        return nullptr;
     if (auto* device = m_vnode->characterDevice())
         return static_cast<TTY*>(device);
     return nullptr;
@@ -216,5 +270,18 @@ String FileDescriptor::absolute_path() const
     if (isTTY())
         return tty()->ttyName();
 #endif
+    if (is_fifo()) {
+        char buf[32];
+        ksprintf(buf, "fifo:%x", m_fifo.ptr());
+        return buf;
+    }
     return VirtualFileSystem::the().absolutePath(m_vnode->inode);
+}
+
+FileDescriptor::FileDescriptor(FIFO& fifo, FIFO::Direction direction)
+    : m_isBlocking(true)
+    , m_fifo(fifo)
+    , m_fifo_direction(direction)
+{
+    m_fifo->open(direction);
 }

@@ -16,6 +16,7 @@
 #include <LibC/signal_numbers.h>
 #include "Syscall.h"
 #include "Scheduler.h"
+#include "FIFO.h"
 
 //#define DEBUG_IO
 //#define TASK_DEBUG
@@ -982,7 +983,42 @@ ssize_t Process::sys$write(int fd, const void* data, size_t size)
     auto* descriptor = file_descriptor(fd);
     if (!descriptor)
         return -EBADF;
-    auto nwritten = descriptor->write((const byte*)data, size);
+    ssize_t nwritten = 0;
+    if (descriptor->isBlocking()) {
+        while (nwritten < (ssize_t)size) {
+#ifdef IO_DEBUG
+            dbgprintf("while %u < %u\n", nwritten, size);
+#endif
+            if (!descriptor->can_write()) {
+#ifdef IO_DEBUG
+                dbgprintf("block write on %d\n", fd);
+#endif
+                m_blocked_fd = fd;
+                block(BlockedWrite);
+                Scheduler::yield();
+            }
+            ssize_t rc = descriptor->write((const byte*)data + nwritten, size - nwritten);
+#ifdef IO_DEBUG
+            dbgprintf("   -> write returned %d\n", rc);
+#endif
+            if (rc < 0) {
+                // FIXME: Support returning partial nwritten with errno.
+                ASSERT(nwritten == 0);
+                return rc;
+            }
+            if (rc == 0)
+                break;
+            if (has_unmasked_pending_signals()) {
+                block(BlockedSignal);
+                Scheduler::yield();
+                if (nwritten == 0)
+                    return -EINTR;
+            }
+            nwritten += rc;
+        }
+    } else {
+        nwritten = descriptor->write((const byte*)data, size);
+    }
     if (has_unmasked_pending_signals()) {
         block(BlockedSignal);
         Scheduler::yield();
@@ -1174,10 +1210,34 @@ int Process::sys$open(const char* path, int options)
     return fd;
 }
 
+int Process::alloc_fd()
+{
+    int fd = -1;
+    for (int i = 0; i < (int)m_max_open_file_descriptors; ++i) {
+        if (!m_file_descriptors[i]) {
+            fd = i;
+            break;
+        }
+    }
+    return fd;
+}
+
 int Process::sys$pipe(int* pipefd)
 {
     VALIDATE_USER_WRITE(pipefd, sizeof(int) * 2);
-    ASSERT_NOT_REACHED();
+    if (number_of_open_file_descriptors() + 2 > max_open_file_descriptors())
+        return -EMFILE;
+    auto fifo = FIFO::create();
+
+    int reader_fd = alloc_fd();
+    m_file_descriptors[reader_fd] = FileDescriptor::create_pipe_reader(*fifo);
+    pipefd[0] = reader_fd;
+
+    int writer_fd = alloc_fd();
+    m_file_descriptors[writer_fd] = FileDescriptor::create_pipe_writer(*fifo);
+    pipefd[1] = writer_fd;
+
+    return 0;
 }
 
 int Process::sys$killpg(int pgrp, int signum)
@@ -1353,12 +1413,15 @@ void Process::unblock()
     m_state = Process::Runnable;
 }
 
-void Process::block(Process::State state)
+void Process::block(Process::State new_state)
 {
-    ASSERT(current->state() == Process::Running);
+    if (state() != Process::Running) {
+        kprintf("Process::block: %s(%u) block(%u/%s) with state=%u/%s\n", name().characters(), pid(), new_state, toString(new_state), state(), toString(state()));
+    }
+    ASSERT(state() == Process::Running);
     system.nblocked++;
     m_was_interrupted_while_blocked = false;
-    set_state(state);
+    set_state(new_state);
 }
 
 void block(Process::State state)

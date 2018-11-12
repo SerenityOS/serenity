@@ -43,7 +43,7 @@ ssize_t Console::write(const byte* data, size_t size)
         return 0;
     for (size_t i = 0; i < size; ++i)
         putChar(data[i]);
-    return 0;
+    return size;
 }
 
 void Console::putChar(char ch)

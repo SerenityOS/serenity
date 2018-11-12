@@ -11,10 +11,10 @@ int main(int argc, char** argv)
     for (;;) {
         char buf[4096];
         fgets(buf, sizeof(buf), stdin);
-        if (feof(stdin))
-            return 0;
         if (strstr(buf, argv[1]))
             write(1, buf, strlen(buf));
+        if (feof(stdin))
+            return 0;
     }
     return 0;
 }
