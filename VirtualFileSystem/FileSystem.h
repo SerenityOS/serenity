@@ -23,11 +23,13 @@ class CoreInode : public Retainable<CoreInode> {
 public:
     virtual ~CoreInode();
 
-    FileSystem& fs() const { return m_fs; }
+    FileSystem& fs() { return m_fs; }
+    const FileSystem& fs() const { return m_fs; }
     unsigned fsid() const;
     unsigned index() const { return m_index; }
 
     InodeIdentifier identifier() const { return { fsid(), index() }; }
+    const InodeMetadata& metadata() const { if (!m_metadata.isValid()) { populate_metadata(); } return m_metadata; }
 
     virtual Unix::ssize_t read_bytes(Unix::off_t, Unix::size_t, byte* buffer, FileDescriptor*) = 0;
 
@@ -38,6 +40,9 @@ protected:
     {
     }
 
+    virtual void populate_metadata() const = 0;
+
+    mutable InodeMetadata m_metadata;
 private:
     FileSystem& m_fs;
     unsigned m_index { 0 };

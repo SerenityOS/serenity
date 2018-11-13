@@ -29,7 +29,6 @@
 #define KSYMS
 #define SPAWN_MULTIPLE_SHELLS
 //#define STRESS_TEST_SPAWNING
-//#define TEST_ELF_LOADER
 
 system_t system;
 
@@ -216,25 +215,6 @@ static void init_stage2()
 #endif
 
     vfs->mount(ProcFileSystem::the(), "/proc");
-
-#ifdef TEST_ELF_LOADER
-    {
-        auto testExecutable = vfs->open("/bin/id");
-        ASSERT(testExecutable);
-        auto testExecutableData = testExecutable->readEntireFile();
-        ASSERT(testExecutableData);
-
-        ExecSpace space;
-        space.loadELF(move(testExecutableData));
-        auto* elf_entry = space.symbol_ptr("_start");
-        ASSERT(elf_entry);
-
-        typedef int (*MainFunctionPtr)(void);
-        kprintf("elf_entry: %p\n", elf_entry);
-        int rc = reinterpret_cast<MainFunctionPtr>(elf_entry)();
-        kprintf("it returned %d\n", rc);
-    }
-#endif
 
     Vector<String> environment;
     environment.append("TERM=ansi");

@@ -320,6 +320,28 @@ Ext2Inode::~Ext2Inode()
 {
 }
 
+void Ext2Inode::populate_metadata() const
+{
+    m_metadata.inode = identifier();
+    m_metadata.size = m_raw_inode.i_size;
+    m_metadata.mode = m_raw_inode.i_mode;
+    m_metadata.uid = m_raw_inode.i_uid;
+    m_metadata.gid = m_raw_inode.i_gid;
+    m_metadata.linkCount = m_raw_inode.i_links_count;
+    m_metadata.atime = m_raw_inode.i_atime;
+    m_metadata.ctime = m_raw_inode.i_ctime;
+    m_metadata.mtime = m_raw_inode.i_mtime;
+    m_metadata.dtime = m_raw_inode.i_dtime;
+    m_metadata.blockSize = fs().blockSize();
+    m_metadata.blockCount = m_raw_inode.i_blocks;
+
+    if (isBlockDevice(m_raw_inode.i_mode) || isCharacterDevice(m_raw_inode.i_mode)) {
+        unsigned dev = m_raw_inode.i_block[0];
+        m_metadata.majorDevice = (dev & 0xfff00) >> 8;
+        m_metadata.minorDevice= (dev & 0xff) | ((dev >> 12) & 0xfff00);
+    }
+}
+
 RetainPtr<CoreInode> Ext2FileSystem::get_inode(InodeIdentifier inode)
 {
     ASSERT(inode.fileSystemID() == id());

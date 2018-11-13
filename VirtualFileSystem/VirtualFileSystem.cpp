@@ -77,7 +77,7 @@ auto VirtualFileSystem::makeNode(InodeIdentifier inode) -> RetainPtr<Node>
 
     vnode->inode = inode;
     vnode->m_core_inode = move(core_inode);
-    vnode->m_cachedMetadata = { };
+    vnode->m_cachedMetadata = metadata;
 
 #ifdef VFS_DEBUG
     kprintf("makeNode: inode=%u, size=%u, mode=%o, uid=%u, gid=%u\n", inode.index(), metadata.size, metadata.mode, metadata.uid, metadata.gid);
@@ -158,7 +158,7 @@ bool VirtualFileSystem::mountRoot(RetainPtr<FileSystem>&& fileSystem)
         kprintf("VFS: root inode for / is not in use :(\n");
         return false;
     }
-    if (!node->inode.metadata().isDirectory()) {
+    if (!node->metadata().isDirectory()) {
         kprintf("VFS: root inode for / is not a directory :(\n");
         return false;
     }
@@ -580,6 +580,8 @@ void VirtualFileSystem::Node::release()
 
 const InodeMetadata& VirtualFileSystem::Node::metadata() const
 {
+    if (m_core_inode)
+        return m_core_inode->metadata();
     if (!m_cachedMetadata.isValid())
         m_cachedMetadata = inode.metadata();
     return m_cachedMetadata;
