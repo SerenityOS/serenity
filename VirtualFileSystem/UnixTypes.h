@@ -25,6 +25,8 @@ namespace Unix {
 #define F_GETFL 3
 #define F_SETFL 4
 
+#define FD_CLOEXEC 1
+
 /* c_cc characters */
 #define VINTR 0
 #define VQUIT 1

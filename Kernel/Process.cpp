@@ -375,6 +375,14 @@ int Process::do_exec(const String& path, Vector<String>&& arguments, Vector<Stri
     memset(m_signal_action_data, 0, sizeof(m_signal_action_data));
     m_signal_mask = 0xffffffff;
 
+    for (size_t i = 0; i < m_fds.size(); ++i) {
+        auto& daf = m_fds[i];
+        if (daf.descriptor && daf.flags & FD_CLOEXEC) {
+            daf.descriptor->close();
+            daf = { };
+        }
+    }
+
     InterruptDisabler disabler;
     Scheduler::prepare_to_modify_tss(*this);
 
@@ -597,21 +605,22 @@ Process::Process(String&& name, uid_t uid, gid_t gid, pid_t ppid, RingLevel ring
     MM.populate_page_directory(*m_page_directory);
 
     if (fork_parent) {
-        m_file_descriptors.resize(fork_parent->m_file_descriptors.size());
-        for (size_t i = 0; i < fork_parent->m_file_descriptors.size(); ++i) {
-            if (!fork_parent->m_file_descriptors[i])
+        m_fds.resize(fork_parent->m_fds.size());
+        for (size_t i = 0; i < fork_parent->m_fds.size(); ++i) {
+            if (!fork_parent->m_fds[i].descriptor)
                 continue;
 #ifdef FORK_DEBUG
-            dbgprintf("fork: cloning fd %u... (%p) istty? %u\n", i, fork_parent->m_file_descriptors[i].ptr(), fork_parent->m_file_descriptors[i]->isTTY());
+            dbgprintf("fork: cloning fd %u... (%p) istty? %u\n", i, fork_parent->m_fds[i].ptr(), fork_parent->m_fds[i]->isTTY());
 #endif
-            m_file_descriptors[i] = fork_parent->m_file_descriptors[i]->clone();
+            m_fds[i].descriptor = fork_parent->m_fds[i].descriptor->clone();
+            m_fds[i].flags = fork_parent->m_fds[i].flags;
         }
     } else {
-        m_file_descriptors.resize(m_max_open_file_descriptors);
+        m_fds.resize(m_max_open_file_descriptors);
         if (tty) {
-            m_file_descriptors[0] = tty->open(O_RDONLY);
-            m_file_descriptors[1] = tty->open(O_WRONLY);
-            m_file_descriptors[2] = tty->open(O_WRONLY);
+            m_fds[0].set(tty->open(O_RDONLY));
+            m_fds[1].set(tty->open(O_WRONLY));
+            m_fds[2].set(tty->open(O_WRONLY));
         }
     }
 
@@ -929,8 +938,8 @@ FileDescriptor* Process::file_descriptor(int fd)
 {
     if (fd < 0)
         return nullptr;
-    if ((size_t)fd < m_file_descriptors.size())
-        return m_file_descriptors[fd].ptr();
+    if ((size_t)fd < m_fds.size())
+        return m_fds[fd].descriptor.ptr();
     return nullptr;
 }
 
@@ -938,8 +947,8 @@ const FileDescriptor* Process::file_descriptor(int fd) const
 {
     if (fd < 0)
         return nullptr;
-    if ((size_t)fd < m_file_descriptors.size())
-        return m_file_descriptors[fd].ptr();
+    if ((size_t)fd < m_fds.size())
+        return m_fds[fd].descriptor.ptr();
     return nullptr;
 }
 
@@ -1063,7 +1072,7 @@ int Process::sys$close(int fd)
     if (!descriptor)
         return -EBADF;
     int rc = descriptor->close();
-    m_file_descriptors[fd] = nullptr;
+    m_fds[fd] = { };
     return rc;
 }
 
@@ -1082,15 +1091,19 @@ int Process::sys$fcntl(int fd, int cmd, dword arg)
     auto* descriptor = file_descriptor(fd);
     if (!descriptor)
         return -EBADF;
+    // NOTE: The FD flags are not shared between FileDescriptor objects.
+    //       This means that dup() doesn't copy the FD_CLOEXEC flag!
     switch (cmd) {
     case F_GETFD:
-        return descriptor->fd_flags();
+        return m_fds[fd].flags;
     case F_SETFD:
-        return descriptor->set_fd_flags(arg);
+        m_fds[fd].flags = arg;
+        break;
     case F_GETFL:
         return descriptor->file_flags();
     case F_SETFL:
-        return descriptor->set_file_flags(arg);
+        descriptor->set_file_flags(arg);
+        break;
     default:
         ASSERT_NOT_REACHED();
     }
@@ -1180,7 +1193,7 @@ int Process::sys$getcwd(char* buffer, size_t size)
 size_t Process::number_of_open_file_descriptors() const
 {
     size_t count = 0;
-    for (auto& descriptor : m_file_descriptors) {
+    for (auto& descriptor : m_fds) {
         if (descriptor)
             ++count;
     }
@@ -1204,10 +1217,11 @@ int Process::sys$open(const char* path, int options)
 
     int fd = 0;
     for (; fd < (int)m_max_open_file_descriptors; ++fd) {
-        if (!m_file_descriptors[fd])
+        if (!m_fds[fd])
             break;
     }
-    m_file_descriptors[fd] = move(descriptor);
+    dword flags = (options & O_CLOEXEC) ? FD_CLOEXEC : 0;
+    m_fds[fd].set(move(descriptor), flags);
     return fd;
 }
 
@@ -1215,7 +1229,7 @@ int Process::alloc_fd()
 {
     int fd = -1;
     for (int i = 0; i < (int)m_max_open_file_descriptors; ++i) {
-        if (!m_file_descriptors[i]) {
+        if (!m_fds[i]) {
             fd = i;
             break;
         }
@@ -1231,11 +1245,11 @@ int Process::sys$pipe(int* pipefd)
     auto fifo = FIFO::create();
 
     int reader_fd = alloc_fd();
-    m_file_descriptors[reader_fd] = FileDescriptor::create_pipe_reader(*fifo);
+    m_fds[reader_fd].set(FileDescriptor::create_pipe_reader(*fifo));
     pipefd[0] = reader_fd;
 
     int writer_fd = alloc_fd();
-    m_file_descriptors[writer_fd] = FileDescriptor::create_pipe_writer(*fifo);
+    m_fds[writer_fd].set(FileDescriptor::create_pipe_writer(*fifo));
     pipefd[1] = writer_fd;
 
     return 0;
@@ -1616,10 +1630,10 @@ int Process::sys$dup(int old_fd)
         return -EMFILE;
     int new_fd = 0;
     for (; new_fd < (int)m_max_open_file_descriptors; ++new_fd) {
-        if (!m_file_descriptors[new_fd])
+        if (!m_fds[new_fd])
             break;
     }
-    m_file_descriptors[new_fd] = descriptor;
+    m_fds[new_fd].set(descriptor);
     return new_fd;
 }
 
@@ -1630,7 +1644,7 @@ int Process::sys$dup2(int old_fd, int new_fd)
         return -EBADF;
     if (number_of_open_file_descriptors() == m_max_open_file_descriptors)
         return -EMFILE;
-    m_file_descriptors[new_fd] = descriptor;
+    m_fds[new_fd].set(descriptor);
     return new_fd;
 }
 

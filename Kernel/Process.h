@@ -252,7 +252,14 @@ private:
     DWORD m_wakeupTime { 0 };
     TSS32 m_tss;
     TSS32 m_tss_to_resume_kernel;
-    Vector<RetainPtr<FileDescriptor>> m_file_descriptors;
+    struct FileDescriptorAndFlags {
+        operator bool() const { return !!descriptor; }
+        void clear() { descriptor = nullptr; flags = 0; }
+        void set(RetainPtr<FileDescriptor>&& d, dword f = 0) { descriptor = move(d), flags = f; }
+        RetainPtr<FileDescriptor> descriptor;
+        dword flags { 0 };
+    };
+    Vector<FileDescriptorAndFlags> m_fds;
     RingLevel m_ring { Ring0 };
     int m_error { 0 };
     void* m_kernelStack { nullptr };
