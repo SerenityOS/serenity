@@ -194,6 +194,8 @@ ByteBuffer FileDescriptor::readEntireFile()
         return buffer;
     }
 
+    if (m_vnode->core_inode())
+        return m_vnode->core_inode()->read_entire(this);
     return m_vnode->fileSystem()->readEntireInode(m_vnode->inode, this);
 }
 
@@ -263,8 +265,9 @@ int FileDescriptor::close()
     return 0;
 }
 
-String FileDescriptor::absolute_path() const
+String FileDescriptor::absolute_path()
 {
+    Stopwatch sw("absolute_path");
 #ifdef SERENITY
     if (isTTY())
         return tty()->ttyName();
@@ -274,7 +277,8 @@ String FileDescriptor::absolute_path() const
         ksprintf(buf, "fifo:%x", m_fifo.ptr());
         return buf;
     }
-    return VirtualFileSystem::the().absolutePath(m_vnode->inode);
+    ASSERT(m_vnode->core_inode());
+    return VirtualFileSystem::the().absolute_path(*m_vnode->core_inode());
 }
 
 FileDescriptor::FileDescriptor(FIFO& fifo, FIFO::Direction direction)

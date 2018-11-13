@@ -342,7 +342,7 @@ void Ext2Inode::populate_metadata() const
     }
 }
 
-RetainPtr<CoreInode> Ext2FileSystem::get_inode(InodeIdentifier inode)
+RetainPtr<CoreInode> Ext2FileSystem::get_inode(InodeIdentifier inode) const
 {
     ASSERT(inode.fileSystemID() == id());
     {
@@ -358,7 +358,7 @@ RetainPtr<CoreInode> Ext2FileSystem::get_inode(InodeIdentifier inode)
     auto it = m_inode_cache.find(inode.index());
     if (it != m_inode_cache.end())
         return (*it).value;
-    auto new_inode = adopt(*new Ext2Inode(*this, inode.index(), *raw_inode));
+    auto new_inode = adopt(*new Ext2Inode(const_cast<Ext2FileSystem&>(*this), inode.index(), *raw_inode));
     m_inode_cache.set(inode.index(), new_inode.copyRef());
     return new_inode;
 }
@@ -533,6 +533,31 @@ bool Ext2FileSystem::writeInode(InodeIdentifier inode, const ByteBuffer& data)
         ASSERT(success);
     }
 
+    return true;
+}
+
+bool Ext2Inode::traverse_as_directory(Function<bool(const FileSystem::DirectoryEntry&)> callback)
+{
+    ASSERT(metadata().isDirectory());
+
+#ifdef EXT2_DEBUG
+    kprintf("Ext2Inode::traverse_as_directory: inode=%u:\n", index());
+#endif
+
+    auto buffer = read_entire();
+    ASSERT(buffer);
+    auto* entry = reinterpret_cast<ext2_dir_entry_2*>(buffer.pointer());
+
+    while (entry < buffer.endPointer()) {
+        if (entry->inode != 0) {
+#ifdef EXT2_DEBUG
+            kprintf("Ext2Inode::traverse_as_directory: %u, name_len: %u, rec_len: %u, file_type: %u, name: %s\n", entry->inode, entry->name_len, entry->rec_len, entry->file_type, namebuf);
+#endif
+            if (!callback({ entry->name, entry->name_len, { fsid(), entry->inode }, entry->file_type }))
+                break;
+        }
+        entry = (ext2_dir_entry_2*)((char*)entry + entry->rec_len);
+    }
     return true;
 }
 
@@ -1094,28 +1119,29 @@ InodeIdentifier Ext2FileSystem::createInode(InodeIdentifier parentInode, const S
     return { id(), inode };
 }
 
-InodeIdentifier Ext2FileSystem::findParentOfInode(InodeIdentifier inode) const
+InodeIdentifier Ext2FileSystem::findParentOfInode(InodeIdentifier inode_id) const
 {
-    ASSERT(inode.fileSystemID() == id());
-    unsigned groupIndex = groupIndexFromInode(inode.index());
+    auto inode = get_inode(inode_id);
+    ASSERT(inode);
+
+    unsigned groupIndex = groupIndexFromInode(inode->index());
     unsigned firstInodeInGroup = inodesPerGroup() * (groupIndex - 1);
 
-    Vector<InodeIdentifier> directoriesInGroup;
+    Vector<RetainPtr<Ext2Inode>> directories_in_group;
 
     for (unsigned i = 0; i < inodesPerGroup(); ++i) {
-        auto e2inode = lookupExt2Inode(firstInodeInGroup + i);
-        if (!e2inode)
+        auto group_member = get_inode({ id(), firstInodeInGroup + i });
+        if (!group_member)
             continue;
-        if (isDirectory(e2inode->i_mode)) {
-            directoriesInGroup.append({ id(), firstInodeInGroup + i });
-        }
+        if (group_member->is_directory())
+            directories_in_group.append(move(group_member));
     }
 
     InodeIdentifier foundParent;
-    for (auto& directory : directoriesInGroup) {
-        enumerateDirectoryInode(directory, [inode, directory, &foundParent] (auto& entry) {
-            if (entry.inode == inode) {
-                foundParent = directory;
+    for (auto& directory : directories_in_group) {
+        directory->traverse_as_directory([inode, directory, &foundParent] (auto& entry) {
+            if (entry.inode == inode->identifier()) {
+                foundParent = directory->identifier();
                 return false;
             }
             return true;

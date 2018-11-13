@@ -16,37 +16,8 @@
 
 static const dword mepoch = 476763780;
 
+class CoreInode;
 class FileDescriptor;
-class FileSystem;
-
-class CoreInode : public Retainable<CoreInode> {
-public:
-    virtual ~CoreInode();
-
-    FileSystem& fs() { return m_fs; }
-    const FileSystem& fs() const { return m_fs; }
-    unsigned fsid() const;
-    unsigned index() const { return m_index; }
-
-    InodeIdentifier identifier() const { return { fsid(), index() }; }
-    const InodeMetadata& metadata() const { if (!m_metadata.isValid()) { populate_metadata(); } return m_metadata; }
-
-    virtual Unix::ssize_t read_bytes(Unix::off_t, Unix::size_t, byte* buffer, FileDescriptor*) = 0;
-
-protected:
-    CoreInode(FileSystem& fs, unsigned index)
-        : m_fs(fs)
-        , m_index(index)
-    {
-    }
-
-    virtual void populate_metadata() const = 0;
-
-    mutable InodeMetadata m_metadata;
-private:
-    FileSystem& m_fs;
-    unsigned m_index { 0 };
-};
 
 class FileSystem : public Retainable<FileSystem> {
 public:
@@ -80,7 +51,7 @@ public:
 
     virtual InodeIdentifier findParentOfInode(InodeIdentifier) const = 0;
 
-    virtual RetainPtr<CoreInode> get_inode(InodeIdentifier) = 0;
+    virtual RetainPtr<CoreInode> get_inode(InodeIdentifier) const = 0;
 
     InodeIdentifier childOfDirectoryInodeWithName(InodeIdentifier, const String& name) const;
     ByteBuffer readEntireInode(InodeIdentifier, FileDescriptor* = nullptr) const;
@@ -91,6 +62,43 @@ protected:
 
 private:
     dword m_id { 0 };
+};
+
+class CoreInode : public Retainable<CoreInode> {
+    friend class VirtualFileSystem;
+public:
+    virtual ~CoreInode();
+
+    FileSystem& fs() { return m_fs; }
+    const FileSystem& fs() const { return m_fs; }
+    unsigned fsid() const;
+    unsigned index() const { return m_index; }
+
+    size_t size() const { return metadata().size; }
+    bool is_symlink() const { return metadata().isSymbolicLink(); }
+    bool is_directory() const { return metadata().isDirectory(); }
+
+    InodeIdentifier identifier() const { return { fsid(), index() }; }
+    const InodeMetadata& metadata() const { if (!m_metadata.isValid()) { populate_metadata(); } return m_metadata; }
+
+    virtual Unix::ssize_t read_bytes(Unix::off_t, Unix::size_t, byte* buffer, FileDescriptor*) = 0;
+    virtual bool traverse_as_directory(Function<bool(const FileSystem::DirectoryEntry&)>) = 0;
+
+    ByteBuffer read_entire(FileDescriptor* = nullptr);
+
+protected:
+    CoreInode(FileSystem& fs, unsigned index)
+        : m_fs(fs)
+        , m_index(index)
+    {
+    }
+
+    virtual void populate_metadata() const = 0;
+
+    mutable InodeMetadata m_metadata;
+private:
+    FileSystem& m_fs;
+    unsigned m_index { 0 };
 };
 
 inline FileSystem* InodeIdentifier::fileSystem()

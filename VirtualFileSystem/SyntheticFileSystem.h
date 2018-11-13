@@ -4,6 +4,8 @@
 #include "UnixTypes.h"
 #include <AK/HashMap.h>
 
+class SynthFSInode;
+
 class SyntheticFileSystem : public FileSystem {
 public:
     virtual ~SyntheticFileSystem() override;
@@ -20,7 +22,7 @@ public:
     virtual Unix::ssize_t readInodeBytes(InodeIdentifier, Unix::off_t offset, Unix::size_t count, byte* buffer, FileDescriptor*) const override;
     virtual InodeIdentifier makeDirectory(InodeIdentifier parentInode, const String& name, Unix::mode_t) override;
     virtual InodeIdentifier findParentOfInode(InodeIdentifier) const override;
-    virtual RetainPtr<CoreInode> get_inode(InodeIdentifier) override;
+    virtual RetainPtr<CoreInode> get_inode(InodeIdentifier) const override;
 
 protected:
     typedef unsigned InodeIndex;
@@ -30,24 +32,36 @@ protected:
 
     SyntheticFileSystem();
 
-    struct File {
-        String name;
-        InodeMetadata metadata;
-        InodeIdentifier parent;
-        ByteBuffer data;
-        Function<ByteBuffer()> generator;
-        Vector<File*> children;
-    };
+    RetainPtr<SynthFSInode> create_directory(String&& name);
+    RetainPtr<SynthFSInode> create_text_file(String&& name, ByteBuffer&&, Unix::mode_t = 0010644);
+    RetainPtr<SynthFSInode> create_generated_file(String&& name, Function<ByteBuffer()>&&, Unix::mode_t = 0100644);
 
-    OwnPtr<File> createDirectory(String&& name);
-    OwnPtr<File> createTextFile(String&& name, ByteBuffer&&, Unix::mode_t = 0010644);
-    OwnPtr<File> createGeneratedFile(String&& name, Function<ByteBuffer()>&&, Unix::mode_t = 0100644);
-
-    InodeIdentifier addFile(OwnPtr<File>&&, InodeIndex parent = RootInodeIndex);
+    InodeIdentifier addFile(RetainPtr<SynthFSInode>&&, InodeIndex parent = RootInodeIndex);
     bool removeFile(InodeIndex);
 
 private:
     InodeIndex m_nextInodeIndex { 2 };
-    HashMap<InodeIndex, OwnPtr<File>> m_inodes;
+    HashMap<InodeIndex, RetainPtr<SynthFSInode>> m_inodes;
 };
 
+class SynthFSInode final : public CoreInode {
+    friend class SyntheticFileSystem;
+public:
+    virtual ~SynthFSInode() override;
+
+private:
+    // ^CoreInode
+    virtual Unix::ssize_t read_bytes(Unix::off_t, Unix::size_t, byte* buffer, FileDescriptor*) override;
+    virtual void populate_metadata() const override;
+    virtual bool traverse_as_directory(Function<bool(const FileSystem::DirectoryEntry&)>) override;
+
+    SyntheticFileSystem& fs();
+    const SyntheticFileSystem& fs() const;
+    SynthFSInode(SyntheticFileSystem&, unsigned index);
+
+    String m_name;
+    InodeIdentifier m_parent;
+    ByteBuffer m_data;
+    Function<ByteBuffer()> m_generator;
+    Vector<SynthFSInode*> m_children;
+};

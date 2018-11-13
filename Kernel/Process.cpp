@@ -1124,7 +1124,7 @@ int Process::sys$lstat(const char* path, Unix::stat* statbuf)
 {
     VALIDATE_USER_WRITE(statbuf, sizeof(Unix::stat));
     int error;
-    auto descriptor = VirtualFileSystem::the().open(move(path), error, O_NOFOLLOW_NOERROR, cwdInode());
+    auto descriptor = VirtualFileSystem::the().open(move(path), error, O_NOFOLLOW_NOERROR, cwd_inode()->identifier());
     if (!descriptor)
         return error;
     descriptor->stat(statbuf);
@@ -1135,7 +1135,7 @@ int Process::sys$stat(const char* path, Unix::stat* statbuf)
 {
     VALIDATE_USER_WRITE(statbuf, sizeof(Unix::stat));
     int error;
-    auto descriptor = VirtualFileSystem::the().open(move(path), error, 0, cwdInode());
+    auto descriptor = VirtualFileSystem::the().open(move(path), error, 0, cwd_inode()->identifier());
     if (!descriptor)
         return error;
     descriptor->stat(statbuf);
@@ -1148,7 +1148,7 @@ int Process::sys$readlink(const char* path, char* buffer, size_t size)
     VALIDATE_USER_WRITE(buffer, size);
 
     int error;
-    auto descriptor = VirtualFileSystem::the().open(path, error, O_RDONLY | O_NOFOLLOW_NOERROR, cwdInode());
+    auto descriptor = VirtualFileSystem::the().open(path, error, O_RDONLY | O_NOFOLLOW_NOERROR, cwd_inode()->identifier());
     if (!descriptor)
         return error;
 
@@ -1169,7 +1169,7 @@ int Process::sys$chdir(const char* path)
 {
     VALIDATE_USER_READ(path, strlen(path));
     int error;
-    auto descriptor = VirtualFileSystem::the().open(path, error, 0, cwdInode());
+    auto descriptor = VirtualFileSystem::the().open(path, error, 0, cwd_inode()->identifier());
     if (!descriptor)
         return error;
     if (!descriptor->isDirectory())
@@ -1181,7 +1181,8 @@ int Process::sys$chdir(const char* path)
 int Process::sys$getcwd(char* buffer, size_t size)
 {
     VALIDATE_USER_WRITE(buffer, size);
-    auto path = VirtualFileSystem::the().absolutePath(cwdInode());
+    ASSERT(cwd_inode());
+    auto path = VirtualFileSystem::the().absolute_path(*cwd_inode());
     if (path.isNull())
         return -EINVAL;
     if (size < path.length() + 1)
@@ -1209,7 +1210,7 @@ int Process::sys$open(const char* path, int options)
     if (number_of_open_file_descriptors() >= m_max_open_file_descriptors)
         return -EMFILE;
     int error;
-    auto descriptor = VirtualFileSystem::the().open(path, error, options, cwdInode());
+    auto descriptor = VirtualFileSystem::the().open(path, error, options, cwd_inode()->identifier());
     if (!descriptor)
         return error;
     if (options & O_DIRECTORY && !descriptor->isDirectory())

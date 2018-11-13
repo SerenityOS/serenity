@@ -134,15 +134,17 @@ ByteBuffer procfs$pid_regs(Process& process)
 ByteBuffer procfs$pid_exe(Process& process)
 {
     ProcessInspectionHandle handle(process);
-    auto inode = process.executableInode();
-    return VirtualFileSystem::the().absolutePath(inode).toByteBuffer();
+    auto inode = process.executable_inode();
+    ASSERT(inode);
+    return VirtualFileSystem::the().absolute_path(*inode).toByteBuffer();
 }
 
 ByteBuffer procfs$pid_cwd(Process& process)
 {
     ProcessInspectionHandle handle(process);
-    auto inode = process.cwdInode();
-    return VirtualFileSystem::the().absolutePath(inode).toByteBuffer();
+    auto inode = process.cwd_inode();
+    ASSERT(inode);
+    return VirtualFileSystem::the().absolute_path(*inode).toByteBuffer();
 }
 
 void ProcFileSystem::addProcess(Process& process)
@@ -150,15 +152,15 @@ void ProcFileSystem::addProcess(Process& process)
     InterruptDisabler disabler;
     char buf[16];
     ksprintf(buf, "%d", process.pid());
-    auto dir = addFile(createDirectory(buf));
+    auto dir = addFile(create_directory(buf));
     m_pid2inode.set(process.pid(), dir.index());
-    addFile(createGeneratedFile("vm", [&process] { return procfs$pid_vm(process); }), dir.index());
-    addFile(createGeneratedFile("stack", [&process] { return procfs$pid_stack(process); }), dir.index());
-    addFile(createGeneratedFile("regs", [&process] { return procfs$pid_regs(process); }), dir.index());
-    addFile(createGeneratedFile("fds", [&process] { return procfs$pid_fds(process); }), dir.index());
-    if (process.executableInode().isValid())
-        addFile(createGeneratedFile("exe", [&process] { return procfs$pid_exe(process); }, 00120777), dir.index());
-    addFile(createGeneratedFile("cwd", [&process] { return procfs$pid_cwd(process); }, 00120777), dir.index());
+    addFile(create_generated_file("vm", [&process] { return procfs$pid_vm(process); }), dir.index());
+    addFile(create_generated_file("stack", [&process] { return procfs$pid_stack(process); }), dir.index());
+    addFile(create_generated_file("regs", [&process] { return procfs$pid_regs(process); }), dir.index());
+    addFile(create_generated_file("fds", [&process] { return procfs$pid_fds(process); }), dir.index());
+    if (process.executable_inode())
+        addFile(create_generated_file("exe", [&process] { return procfs$pid_exe(process); }, 00120777), dir.index());
+    addFile(create_generated_file("cwd", [&process] { return procfs$pid_cwd(process); }, 00120777), dir.index());
 }
 
 void ProcFileSystem::removeProcess(Process& process)
@@ -336,7 +338,9 @@ ByteBuffer procfs$vnodes()
         // FIXME: Retain the vnode while inspecting it.
         if (!vnode.inUse())
             continue;
-        auto path = vfs.absolutePath(vnode.inode);
+        String path;
+        if (vnode.core_inode())
+            path = vfs.absolute_path(*vnode.core_inode());
         if (path.isEmpty()) {
             if (auto* dev = vnode.characterDevice()) {
                 if (dev->isTTY())
@@ -353,13 +357,13 @@ ByteBuffer procfs$vnodes()
 bool ProcFileSystem::initialize()
 {
     SyntheticFileSystem::initialize();
-    addFile(createGeneratedFile("mm", procfs$mm));
-    addFile(createGeneratedFile("regions", procfs$regions));
-    addFile(createGeneratedFile("mounts", procfs$mounts));
-    addFile(createGeneratedFile("kmalloc", procfs$kmalloc));
-    addFile(createGeneratedFile("summary", procfs$summary));
-    addFile(createGeneratedFile("cpuinfo", procfs$cpuinfo));
-    addFile(createGeneratedFile("vnodes", procfs$vnodes));
+    addFile(create_generated_file("mm", procfs$mm));
+    addFile(create_generated_file("regions", procfs$regions));
+    addFile(create_generated_file("mounts", procfs$mounts));
+    addFile(create_generated_file("kmalloc", procfs$kmalloc));
+    addFile(create_generated_file("summary", procfs$summary));
+    addFile(create_generated_file("cpuinfo", procfs$cpuinfo));
+    addFile(create_generated_file("vnodes", procfs$vnodes));
     return true;
 }
 

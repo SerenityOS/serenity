@@ -34,7 +34,7 @@ public:
 
     ByteBuffer readEntireFile();
 
-    String absolute_path() const;
+    String absolute_path();
 
     bool isDirectory() const;
 
