@@ -118,3 +118,7 @@ FileSystem::DirectoryEntry::DirectoryEntry(const char* n, Unix::size_t nl, Inode
     memcpy(name, n, nl);
     name[nl] = '\0';
 }
+
+CoreInode::~CoreInode()
+{
+}

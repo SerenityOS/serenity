@@ -67,6 +67,7 @@ private:
     FileDescriptor(FIFO&, FIFO::Direction);
 
     RetainPtr<VirtualFileSystem::Node> m_vnode;
+    RetainPtr<CoreInode> m_inode;
 
     Unix::off_t m_currentOffset { 0 };
 

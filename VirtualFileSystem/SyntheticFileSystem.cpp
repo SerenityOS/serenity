@@ -249,3 +249,8 @@ InodeIdentifier SyntheticFileSystem::findParentOfInode(InodeIdentifier inode) co
         return { };
     return (*it).value->parent;
 }
+
+RetainPtr<CoreInode> SyntheticFileSystem::get_inode(InodeIdentifier)
+{
+    return nullptr;
+}

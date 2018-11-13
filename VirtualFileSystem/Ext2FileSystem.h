@@ -4,12 +4,35 @@
 #include "UnixTypes.h"
 #include <AK/Buffer.h>
 #include <AK/OwnPtr.h>
+#include "ext2_fs.h"
 
 struct ext2_group_desc;
 struct ext2_inode;
 struct ext2_super_block;
 
+class Ext2FileSystem;
+
+class Ext2Inode final : public CoreInode {
+    friend class Ext2FileSystem;
+public:
+    virtual ~Ext2Inode() override;
+
+    virtual Unix::ssize_t read_bytes(Unix::off_t, Unix::size_t, byte* buffer, FileDescriptor*) override;
+
+    size_t size() const { return m_raw_inode.i_size; }
+    bool is_symlink() const { return isSymbolicLink(m_raw_inode.i_mode); }
+
+private:
+    Ext2FileSystem& fs();
+    Ext2Inode(Ext2FileSystem&, unsigned index, const ext2_inode&);
+
+    SpinLock m_lock;
+    Vector<unsigned> m_block_list;
+    ext2_inode m_raw_inode;
+};
+
 class Ext2FileSystem final : public DiskBackedFileSystem {
+    friend class Ext2Inode;
 public:
     static RetainPtr<Ext2FileSystem> create(RetainPtr<DiskDevice>&&);
     virtual ~Ext2FileSystem() override;
@@ -49,6 +72,7 @@ private:
     virtual Unix::ssize_t readInodeBytes(InodeIdentifier, Unix::off_t offset, Unix::size_t count, byte* buffer, FileDescriptor*) const override;
     virtual InodeIdentifier makeDirectory(InodeIdentifier parentInode, const String& name, Unix::mode_t) override;
     virtual InodeIdentifier findParentOfInode(InodeIdentifier) const override;
+    virtual RetainPtr<CoreInode> get_inode(InodeIdentifier) override;
 
     bool isDirectoryInode(unsigned) const;
     unsigned allocateInode(unsigned preferredGroup, unsigned expectedSize);
@@ -77,5 +101,12 @@ private:
 
     mutable SpinLock m_inodeCacheLock;
     mutable HashMap<unsigned, RetainPtr<CachedExt2InodeImpl>> m_inodeCache;
+
+    mutable SpinLock m_inode_cache_lock;
+    mutable HashMap<BlockIndex, RetainPtr<Ext2Inode>> m_inode_cache;
 };
 
+inline Ext2FileSystem& Ext2Inode::fs()
+{
+    return static_cast<Ext2FileSystem&>(CoreInode::fs());
+}

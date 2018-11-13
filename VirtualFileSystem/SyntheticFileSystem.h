@@ -20,6 +20,7 @@ public:
     virtual Unix::ssize_t readInodeBytes(InodeIdentifier, Unix::off_t offset, Unix::size_t count, byte* buffer, FileDescriptor*) const override;
     virtual InodeIdentifier makeDirectory(InodeIdentifier parentInode, const String& name, Unix::mode_t) override;
     virtual InodeIdentifier findParentOfInode(InodeIdentifier) const override;
+    virtual RetainPtr<CoreInode> get_inode(InodeIdentifier) override;
 
 protected:
     typedef unsigned InodeIndex;

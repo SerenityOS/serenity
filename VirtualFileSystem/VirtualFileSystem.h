@@ -78,6 +78,8 @@ public:
 
         unsigned retain_count() const { return retainCount; }
 
+        CoreInode* core_inode() { return m_core_inode.ptr(); }
+
     private:
         friend class VirtualFileSystem;
         VirtualFileSystem* m_vfs { nullptr };
@@ -85,6 +87,7 @@ public:
         CharacterDevice* m_characterDevice { nullptr };
         mutable InodeMetadata m_cachedMetadata;
         void* m_vmo { nullptr };
+        RetainPtr<CoreInode> m_core_inode;
     };
 
     static VirtualFileSystem& the() PURE;

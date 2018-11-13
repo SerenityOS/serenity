@@ -33,6 +33,7 @@ public:
     RetainPtr(RetainPtr&& other) : m_ptr(other.leakRef()) { }
     template<typename U> RetainPtr(RetainPtr<U>&& other) : m_ptr(static_cast<T*>(other.leakRef())) { }
     RetainPtr(const RetainPtr& other) : m_ptr(const_cast<RetainPtr&>(other).copyRef().leakRef()) { }
+    template<typename U> RetainPtr(const RetainPtr<U>& other) : m_ptr(const_cast<RetainPtr<U>&>(other).copyRef().leakRef()) { }
     ~RetainPtr()
     {
         clear();

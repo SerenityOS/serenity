@@ -310,6 +310,99 @@ Vector<unsigned> Ext2FileSystem::blockListForInode(const ext2_inode& e2inode) co
     return list;
 }
 
+Ext2Inode::Ext2Inode(Ext2FileSystem& fs, unsigned index, const ext2_inode& raw_inode)
+    : CoreInode(fs, index)
+    , m_raw_inode(raw_inode)
+{
+}
+
+Ext2Inode::~Ext2Inode()
+{
+}
+
+RetainPtr<CoreInode> Ext2FileSystem::get_inode(InodeIdentifier inode)
+{
+    ASSERT(inode.fileSystemID() == id());
+    {
+        LOCKER(m_inode_cache_lock);
+        auto it = m_inode_cache.find(inode.index());
+        if (it != m_inode_cache.end())
+            return (*it).value;
+    }
+    auto raw_inode = lookupExt2Inode(inode.index());
+    if (!raw_inode)
+        return nullptr;
+    LOCKER(m_inode_cache_lock);
+    auto it = m_inode_cache.find(inode.index());
+    if (it != m_inode_cache.end())
+        return (*it).value;
+    auto new_inode = adopt(*new Ext2Inode(*this, inode.index(), *raw_inode));
+    m_inode_cache.set(inode.index(), new_inode.copyRef());
+    return new_inode;
+}
+
+Unix::ssize_t Ext2Inode::read_bytes(Unix::off_t offset, Unix::size_t count, byte* buffer, FileDescriptor*)
+{
+    ASSERT(offset >= 0);
+    if (m_raw_inode.i_size == 0)
+        return 0;
+
+    // Symbolic links shorter than 60 characters are store inline inside the i_block array.
+    // This avoids wasting an entire block on short links. (Most links are short.)
+    static const unsigned max_inline_symlink_length = 60;
+    if (is_symlink() && size() < max_inline_symlink_length) {
+        Unix::ssize_t nread = min((Unix::off_t)size() - offset, static_cast<Unix::off_t>(count));
+        memcpy(buffer, m_raw_inode.i_block + offset, nread);
+        return nread;
+    }
+
+    if (m_block_list.isEmpty()) {
+        auto block_list = fs().blockListForInode(m_raw_inode);
+        LOCKER(m_lock);
+        if (m_block_list.size() != block_list.size())
+            m_block_list = move(block_list);
+    }
+
+    if (m_block_list.isEmpty()) {
+        kprintf("ext2fs: read_bytes: empty block list for inode %u\n", index());
+        return -EIO;
+    }
+
+    const size_t block_size = fs().blockSize();
+
+    dword first_block_logical_index = offset / block_size;
+    dword last_block_logical_index = (offset + count) / block_size;
+    if (last_block_logical_index >= m_block_list.size())
+        last_block_logical_index = m_block_list.size() - 1;
+
+    dword offset_into_first_block = offset % block_size;
+
+    Unix::ssize_t nread = 0;
+    Unix::size_t remaining_count = min((Unix::off_t)count, (Unix::off_t)size() - offset);
+    byte* out = buffer;
+
+#ifdef EXT2_DEBUG
+    kprintf("ok let's do it, read(%llu, %u) -> blocks %u thru %u, oifb: %u\n", offset, count, firstBlockLogicalIndex, lastBlockLogicalIndex, offsetIntoFirstBlock);
+#endif
+
+    for (dword bi = first_block_logical_index; remaining_count && bi <= last_block_logical_index; ++bi) {
+        auto block = fs().readBlock(m_block_list[bi]);
+        if (!block) {
+            kprintf("ext2fs: read_bytes: readBlock(%u) failed (lbi: %u)\n", m_block_list[bi], bi);
+            return -EIO;
+        }
+
+        dword offset_into_block = (bi == first_block_logical_index) ? offset_into_first_block : 0;
+        dword num_bytes_to_copy = min(block_size - offset_into_block, remaining_count);
+        memcpy(out, block.pointer() + offset_into_block, num_bytes_to_copy);
+        remaining_count -= num_bytes_to_copy;
+        nread += num_bytes_to_copy;
+        out += num_bytes_to_copy;
+    }
+
+    return nread;
+}
+
 Unix::ssize_t Ext2FileSystem::readInodeBytes(InodeIdentifier inode, Unix::off_t offset, Unix::size_t count, byte* buffer, FileDescriptor*) const
 {
     ASSERT(offset >= 0);
