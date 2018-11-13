@@ -54,6 +54,8 @@ auto VirtualFileSystem::makeNode(InodeIdentifier inode) -> RetainPtr<Node>
     if (!metadata.isValid())
         return nullptr;
 
+    auto core_inode = inode.fileSystem()->get_inode(inode);
+
     InterruptDisabler disabler;
 
     CharacterDevice* characterDevice = nullptr;
@@ -74,6 +76,7 @@ auto VirtualFileSystem::makeNode(InodeIdentifier inode) -> RetainPtr<Node>
     fileSystem->retain();
 
     vnode->inode = inode;
+    vnode->m_core_inode = move(core_inode);
     vnode->m_cachedMetadata = { };
 
 #ifdef VFS_DEBUG

@@ -17,6 +17,31 @@
 static const dword mepoch = 476763780;
 
 class FileDescriptor;
+class FileSystem;
+
+class CoreInode : public Retainable<CoreInode> {
+public:
+    virtual ~CoreInode();
+
+    FileSystem& fs() const { return m_fs; }
+    unsigned fsid() const;
+    unsigned index() const { return m_index; }
+
+    InodeIdentifier identifier() const { return { fsid(), index() }; }
+
+    virtual Unix::ssize_t read_bytes(Unix::off_t, Unix::size_t, byte* buffer, FileDescriptor*) = 0;
+
+protected:
+    CoreInode(FileSystem& fs, unsigned index)
+        : m_fs(fs)
+        , m_index(index)
+    {
+    }
+
+private:
+    FileSystem& m_fs;
+    unsigned m_index { 0 };
+};
 
 class FileSystem : public Retainable<FileSystem> {
 public:
@@ -50,6 +75,8 @@ public:
 
     virtual InodeIdentifier findParentOfInode(InodeIdentifier) const = 0;
 
+    virtual RetainPtr<CoreInode> get_inode(InodeIdentifier) = 0;
+
     InodeIdentifier childOfDirectoryInodeWithName(InodeIdentifier, const String& name) const;
     ByteBuffer readEntireInode(InodeIdentifier, FileDescriptor* = nullptr) const;
     String nameOfChildInDirectory(InodeIdentifier parent, InodeIdentifier child) const;
@@ -81,6 +108,11 @@ inline InodeMetadata InodeIdentifier::metadata() const
 inline bool InodeIdentifier::isRootInode() const
 {
     return (*this) == fileSystem()->rootInode();
+}
+
+inline unsigned CoreInode::fsid() const
+{
+    return m_fs.id();
 }
 
 namespace AK {

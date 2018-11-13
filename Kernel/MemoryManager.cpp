@@ -293,9 +293,10 @@ bool MemoryManager::page_in_from_vnode(PageDirectory& page_directory, Region& re
     dbgprintf("MM: page_in_from_vnode ready to read from vnode, will write to L%x!\n", dest_ptr);
 #endif
     sti(); // Oh god here we go...
-    auto nread = vnode.fileSystem()->readInodeBytes(vnode.inode, vmo.vnode_offset() + ((region.first_page_index() + page_index_in_region) * PAGE_SIZE), PAGE_SIZE, dest_ptr, nullptr);
+    ASSERT(vnode.core_inode());
+    auto nread = vnode.core_inode()->read_bytes(vmo.vnode_offset() + ((region.first_page_index() + page_index_in_region) * PAGE_SIZE), PAGE_SIZE, dest_ptr, nullptr);
     if (nread < 0) {
-        kprintf("MM: page_in_form_vnode had error (%d) while reading!\n", nread);
+        kprintf("MM: page_in_from_vnode had error (%d) while reading!\n", nread);
         return false;
     }
     if (nread < PAGE_SIZE) {
