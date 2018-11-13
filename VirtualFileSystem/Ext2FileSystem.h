@@ -24,6 +24,7 @@ private:
     // ^CoreInode
     virtual Unix::ssize_t read_bytes(Unix::off_t, Unix::size_t, byte* buffer, FileDescriptor*) override;
     virtual void populate_metadata() const override;
+    virtual bool traverse_as_directory(Function<bool(const FileSystem::DirectoryEntry&)>) override;
 
     Ext2FileSystem& fs();
     const Ext2FileSystem& fs() const;
@@ -75,7 +76,7 @@ private:
     virtual Unix::ssize_t readInodeBytes(InodeIdentifier, Unix::off_t offset, Unix::size_t count, byte* buffer, FileDescriptor*) const override;
     virtual InodeIdentifier makeDirectory(InodeIdentifier parentInode, const String& name, Unix::mode_t) override;
     virtual InodeIdentifier findParentOfInode(InodeIdentifier) const override;
-    virtual RetainPtr<CoreInode> get_inode(InodeIdentifier) override;
+    virtual RetainPtr<CoreInode> get_inode(InodeIdentifier) const override;
 
     bool isDirectoryInode(unsigned) const;
     unsigned allocateInode(unsigned preferredGroup, unsigned expectedSize);

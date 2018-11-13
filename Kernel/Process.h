@@ -200,8 +200,8 @@ public:
     bool validate_user_read(LinearAddress) const;
     bool validate_user_write(LinearAddress) const;
 
-    InodeIdentifier cwdInode() const { return m_cwd ? m_cwd->inode : InodeIdentifier(); }
-    InodeIdentifier executableInode() const { return m_executable ? m_executable->inode : InodeIdentifier(); }
+    CoreInode* cwd_inode() { return m_cwd ? m_cwd->core_inode() : nullptr; }
+    CoreInode* executable_inode() { return m_executable ? m_executable->core_inode() : nullptr; }
 
     size_t number_of_open_file_descriptors() const;
     size_t max_open_file_descriptors() const { return m_max_open_file_descriptors; }

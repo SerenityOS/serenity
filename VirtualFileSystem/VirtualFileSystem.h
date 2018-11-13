@@ -122,12 +122,15 @@ public:
     size_t mountCount() const { return m_mounts.size(); }
     void forEachMount(Function<void(const Mount&)>) const;
 
-    String absolutePath(InodeIdentifier);
+    String absolute_path(CoreInode&);
 
 private:
     friend class FileDescriptor;
 
+    RetainPtr<CoreInode> get_inode(InodeIdentifier);
+
     void enumerateDirectoryInode(InodeIdentifier, Function<bool(const FileSystem::DirectoryEntry&)>);
+    InodeIdentifier resolve_path(const String& path, int& error, CoreInode& base, int options = 0);
     InodeIdentifier resolvePath(const String& path, int& error, InodeIdentifier base = InodeIdentifier(), int options = 0);
     InodeIdentifier resolveSymbolicLink(InodeIdentifier base, InodeIdentifier symlinkInode, int& error);
 

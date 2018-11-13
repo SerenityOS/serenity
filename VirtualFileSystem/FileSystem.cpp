@@ -64,6 +64,38 @@ String FileSystem::nameOfChildInDirectory(InodeIdentifier parent, InodeIdentifie
     return name;
 }
 
+ByteBuffer CoreInode::read_entire(FileDescriptor* descriptor)
+{
+    return fs().readEntireInode(identifier(), descriptor);
+/*
+    size_t initial_size = metadata().size ? metadata().size : 4096;
+    auto contents = ByteBuffer::createUninitialized(initial_size);
+
+    Unix::ssize_t nread;
+    byte buffer[4096];
+    byte* out = contents.pointer();
+    Unix::off_t offset = 0;
+    for (;;) {
+        nread = read_bytes(offset, sizeof(buffer), buffer, descriptor);
+        //kprintf("nread: %u, bufsiz: %u, initial_size: %u\n", nread, sizeof(buffer), initial_size);
+        ASSERT(nread <= (Unix::ssize_t)sizeof(buffer));
+        if (nread <= 0)
+            break;
+        memcpy(out, buffer, nread);
+        out += nread;
+        offset += nread;
+        ASSERT(offset <= (Unix::ssize_t)initial_size); // FIXME: Support dynamically growing the buffer.
+    }
+    if (nread < 0) {
+        kprintf("CoreInode::read_entire: ERROR: %d\n", nread);
+        return nullptr;
+    }
+
+    contents.trim(offset);
+    return contents;
+    */
+}
+
 ByteBuffer FileSystem::readEntireInode(InodeIdentifier inode, FileDescriptor* handle) const
 {
     ASSERT(inode.fileSystemID() == id());

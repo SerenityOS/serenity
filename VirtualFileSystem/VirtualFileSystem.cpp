@@ -55,6 +55,8 @@ auto VirtualFileSystem::makeNode(InodeIdentifier inode) -> RetainPtr<Node>
         return nullptr;
 
     auto core_inode = inode.fileSystem()->get_inode(inode);
+    if (core_inode)
+        core_inode->m_metadata = metadata;
 
     InterruptDisabler disabler;
 
@@ -450,23 +452,32 @@ InodeIdentifier VirtualFileSystem::resolveSymbolicLink(InodeIdentifier base, Ino
     return resolvePath(linkee, error, base);
 }
 
-String VirtualFileSystem::absolutePath(InodeIdentifier inode)
+RetainPtr<CoreInode> VirtualFileSystem::get_inode(InodeIdentifier inode_id)
 {
-    if (!inode.isValid())
-        return String();
+    if (!inode_id.isValid())
+        return nullptr;
+    return inode_id.fileSystem()->get_inode(inode_id);
+}
 
+String VirtualFileSystem::absolute_path(CoreInode& core_inode)
+{
     int error;
     Vector<InodeIdentifier> lineage;
-    while (inode != m_rootNode->inode) {
-        if (auto* mount = findMountForGuest(inode))
+    RetainPtr<CoreInode> inode = &core_inode;
+    while (inode->identifier() != m_rootNode->inode) {
+        if (auto* mount = findMountForGuest(inode->identifier()))
             lineage.append(mount->host());
         else
-            lineage.append(inode);
-        if (inode.metadata().isDirectory()) {
-            inode = resolvePath("..", error, inode);
-        } else
-            inode = inode.fileSystem()->findParentOfInode(inode);
-        ASSERT(inode.isValid());
+            lineage.append(inode->identifier());
+
+        InodeIdentifier parent_id;
+        if (inode->is_directory()) {
+            parent_id = resolvePath("..", error, inode->identifier());
+        } else {
+            parent_id = inode->fs().findParentOfInode(inode->identifier());
+        }
+        ASSERT(parent_id.isValid());
+        inode = get_inode(parent_id);
     }
     if (lineage.isEmpty())
         return "/";
