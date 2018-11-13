@@ -17,13 +17,16 @@ class Ext2Inode final : public CoreInode {
 public:
     virtual ~Ext2Inode() override;
 
-    virtual Unix::ssize_t read_bytes(Unix::off_t, Unix::size_t, byte* buffer, FileDescriptor*) override;
-
     size_t size() const { return m_raw_inode.i_size; }
     bool is_symlink() const { return isSymbolicLink(m_raw_inode.i_mode); }
 
 private:
+    // ^CoreInode
+    virtual Unix::ssize_t read_bytes(Unix::off_t, Unix::size_t, byte* buffer, FileDescriptor*) override;
+    virtual void populate_metadata() const override;
+
     Ext2FileSystem& fs();
+    const Ext2FileSystem& fs() const;
     Ext2Inode(Ext2FileSystem&, unsigned index, const ext2_inode&);
 
     SpinLock m_lock;
@@ -109,4 +112,9 @@ private:
 inline Ext2FileSystem& Ext2Inode::fs()
 {
     return static_cast<Ext2FileSystem&>(CoreInode::fs());
+}
+
+inline const Ext2FileSystem& Ext2Inode::fs() const
+{
+    return static_cast<const Ext2FileSystem&>(CoreInode::fs());
 }
