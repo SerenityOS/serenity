@@ -52,14 +52,14 @@ bool Scheduler::pick_next()
         if (process.state() == Process::BlockedRead) {
             ASSERT(process.m_fdBlockedOnRead != -1);
             // FIXME: Block until the amount of data wanted is available.
-            if (process.m_file_descriptors[process.m_fdBlockedOnRead]->hasDataAvailableForRead())
+            if (process.m_fds[process.m_fdBlockedOnRead].descriptor->hasDataAvailableForRead())
                 process.unblock();
             return true;
         }
 
         if (process.state() == Process::BlockedWrite) {
             ASSERT(process.m_blocked_fd != -1);
-            if (process.m_file_descriptors[process.m_blocked_fd]->can_write())
+            if (process.m_fds[process.m_blocked_fd].descriptor->can_write())
                 process.unblock();
             return true;
         }

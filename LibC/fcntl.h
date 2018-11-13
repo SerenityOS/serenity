@@ -10,6 +10,8 @@ __BEGIN_DECLS
 #define F_GETFL 3
 #define F_SETFL 4
 
+#define FD_CLOEXEC 1
+
 int fcntl(int fd, int cmd, ...);
 
 __END_DECLS

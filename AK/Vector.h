@@ -142,6 +142,17 @@ public:
         m_impl->remove(index);
     }
 
+    Vector& operator=(const Vector<T>& other)
+    {
+        if (this != &other) {
+            clear();
+            ensureCapacity(other.size());
+            for (const auto& v : other)
+                unchecked_append(v);
+        }
+        return *this;
+    }
+
     void append(Vector<T>&& other)
     {
         Vector<T> tmp = move(other);

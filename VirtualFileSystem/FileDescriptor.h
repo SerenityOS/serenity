@@ -53,10 +53,7 @@ public:
     void setBlocking(bool b) { m_isBlocking = b; }
 
     dword file_flags() const { return m_file_flags; }
-    int set_file_flags(dword flags) { m_file_flags = flags; return 0; }
-
-    dword fd_flags() const { return m_fd_flags; }
-    int set_fd_flags(dword flags) { m_fd_flags = flags; return 0; }
+    void set_file_flags(dword flags) { m_file_flags = flags; }
 
     bool is_fifo() const { return m_fifo; }
     FIFO::Direction fifo_direction() { return m_fifo_direction; }
@@ -77,7 +74,6 @@ private:
 
 #ifdef SERENITY
     bool m_isBlocking { true };
-    dword m_fd_flags { 0 };
     dword m_file_flags { 0 };
 
     RetainPtr<FIFO> m_fifo;

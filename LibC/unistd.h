@@ -99,6 +99,7 @@ int isatty(int fd);
 #define O_NONBLOCK 04000
 #define O_DIRECTORY 00200000
 #define O_NOFOLLOW 00400000
+#define O_CLOEXEC 02000000
 
 __END_DECLS
 

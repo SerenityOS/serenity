@@ -51,7 +51,6 @@ RetainPtr<FileDescriptor> FileDescriptor::clone()
     descriptor->m_currentOffset = m_currentOffset;
 #ifdef SERENITY
     descriptor->m_isBlocking = m_isBlocking;
-    descriptor->m_fd_flags = m_fd_flags;
     descriptor->m_file_flags = m_file_flags;
 #endif
     return descriptor;
