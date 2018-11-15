@@ -561,7 +561,7 @@ bool Ext2Inode::traverse_as_directory(Function<bool(const FileSystem::DirectoryE
     return true;
 }
 
-bool Ext2FileSystem::enumerateDirectoryInode(InodeIdentifier inode, Function<bool(const DirectoryEntry&)> callback) const
+bool Ext2FileSystem::deprecated_enumerateDirectoryInode(InodeIdentifier inode, Function<bool(const DirectoryEntry&)> callback) const
 {
     ASSERT(inode.fsid() == id());
     ASSERT(isDirectoryInode(inode.index()));
@@ -599,7 +599,7 @@ bool Ext2FileSystem::addInodeToDirectory(unsigned directoryInode, unsigned inode
 
     Vector<DirectoryEntry> entries;
     bool nameAlreadyExists = false;
-    enumerateDirectoryInode({ id(), directoryInode }, [&] (const DirectoryEntry& entry) {
+    deprecated_enumerateDirectoryInode({ id(), directoryInode }, [&] (const DirectoryEntry& entry) {
         if (!strcmp(entry.name, name.characters())) {
             nameAlreadyExists = true;
             return false;
@@ -1139,40 +1139,55 @@ InodeIdentifier Ext2FileSystem::find_parent_of_inode(InodeIdentifier inode_id) c
 
     InodeIdentifier foundParent;
     for (auto& directory : directories_in_group) {
-        directory->traverse_as_directory([inode, directory, &foundParent] (auto& entry) {
-            if (entry.inode == inode->identifier()) {
-                foundParent = directory->identifier();
-                return false;
-            }
-            return true;
-        });
-        if (foundParent.isValid())
+        if (!directory->reverse_lookup(inode->identifier()).isNull()) {
+            foundParent = directory->identifier();
             break;
+        }
     }
 
     return foundParent;
 }
 
+void Ext2Inode::populate_lookup_cache()
+{
+    {
+        LOCKER(m_lock);
+        if (!m_lookup_cache.isEmpty())
+            return;
+    }
+    HashMap<String, unsigned> children;
+
+    traverse_as_directory([&children] (auto& entry) {
+        children.set(String(entry.name, entry.name_length), entry.inode.index());
+        return true;
+    });
+
+    LOCKER(m_lock);
+    if (!m_lookup_cache.isEmpty())
+        return;
+    m_lookup_cache = move(children);
+}
+
 InodeIdentifier Ext2Inode::lookup(const String& name)
 {
     ASSERT(is_directory());
-
-    if (m_child_cache.isEmpty()) {
-        HashMap<String, unsigned> children;
-
-        traverse_as_directory([&children] (auto& entry) {
-            children.set(String(entry.name, entry.name_length), entry.inode.index());
-            return true;
-        });
-
-        LOCKER(m_lock);
-        m_child_cache = move(children);
-    }
-
+    populate_lookup_cache();
     LOCKER(m_lock);
-    auto it = m_child_cache.find(name);
-    if (it != m_child_cache.end())
+    auto it = m_lookup_cache.find(name);
+    if (it != m_lookup_cache.end())
         return { fsid(), (*it).value };
+    return { };
+}
 
+String Ext2Inode::reverse_lookup(InodeIdentifier child_id)
+{
+    ASSERT(is_directory());
+    ASSERT(child_id.fsid() == fsid());
+    populate_lookup_cache();
+    LOCKER(m_lock);
+    for (auto it : m_lookup_cache) {
+        if (it.value == child_id.index())
+            return it.key;
+    }
     return { };
 }

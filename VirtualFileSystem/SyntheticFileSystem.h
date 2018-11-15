@@ -15,7 +15,6 @@ public:
     virtual const char* class_name() const override;
     virtual InodeIdentifier rootInode() const override;
     virtual bool writeInode(InodeIdentifier, const ByteBuffer&) override;
-    virtual bool enumerateDirectoryInode(InodeIdentifier, Function<bool(const DirectoryEntry&)>) const override;
     virtual InodeMetadata inodeMetadata(InodeIdentifier) const override;
     virtual bool set_mtime(InodeIdentifier, dword timestamp) override;
     virtual InodeIdentifier create_inode(InodeIdentifier parentInode, const String& name, Unix::mode_t, unsigned size) override;
@@ -55,6 +54,7 @@ private:
     virtual void populate_metadata() const override;
     virtual bool traverse_as_directory(Function<bool(const FileSystem::DirectoryEntry&)>) override;
     virtual InodeIdentifier lookup(const String& name) override;
+    virtual String reverse_lookup(InodeIdentifier) override;
 
     SyntheticFileSystem& fs();
     const SyntheticFileSystem& fs() const;

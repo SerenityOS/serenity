@@ -43,7 +43,6 @@ public:
         InodeIdentifier inode;
         byte fileType { 0 };
     };
-    virtual bool enumerateDirectoryInode(InodeIdentifier, Function<bool(const DirectoryEntry&)>) const = 0;
 
     virtual bool set_mtime(InodeIdentifier, dword timestamp) = 0;
     virtual InodeIdentifier create_inode(InodeIdentifier parentInode, const String& name, Unix::mode_t, unsigned size) = 0;
@@ -54,7 +53,6 @@ public:
     virtual RetainPtr<CoreInode> get_inode(InodeIdentifier) const = 0;
 
     ByteBuffer readEntireInode(InodeIdentifier, FileDescriptor* = nullptr) const;
-    String name_of_child_in_directory(InodeIdentifier parent, InodeIdentifier child) const;
 
 protected:
     FileSystem();
@@ -85,7 +83,7 @@ public:
     virtual Unix::ssize_t read_bytes(Unix::off_t, Unix::size_t, byte* buffer, FileDescriptor*) = 0;
     virtual bool traverse_as_directory(Function<bool(const FileSystem::DirectoryEntry&)>) = 0;
     virtual InodeIdentifier lookup(const String& name) = 0;
-
+    virtual String reverse_lookup(InodeIdentifier) = 0;
 
 protected:
     CoreInode(FileSystem& fs, unsigned index)

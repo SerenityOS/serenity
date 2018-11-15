@@ -486,7 +486,8 @@ String VFS::absolute_path(CoreInode& core_inode)
         if (auto* mount = find_mount_for_host(parent))
             parent = mount->guest();
         builder.append('/');
-        builder.append(parent.fileSystem()->name_of_child_in_directory(parent, child));
+        auto parent_inode = get_inode(parent);
+        builder.append(parent_inode->reverse_lookup(child));
     }
     return builder.build();
 }
