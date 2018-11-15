@@ -85,12 +85,12 @@ public:
         InodeIdentifier host() const { return m_host; }
         InodeIdentifier guest() const { return m_guest; }
 
-        const FileSystem& fileSystem() const { return *m_fileSystem; }
+        const FileSystem& guest_fs() const { return *m_guest_fs; }
 
     private:
         InodeIdentifier m_host;
         InodeIdentifier m_guest;
-        RetainPtr<FileSystem> m_fileSystem;
+        RetainPtr<FileSystem> m_guest_fs;
     };
 
     static VFS& the() PURE;
@@ -135,7 +135,7 @@ private:
 
     bool is_vfs_root(InodeIdentifier) const;
 
-    void enumerateDirectoryInode(InodeIdentifier, Function<bool(const FileSystem::DirectoryEntry&)>);
+    void traverse_directory_inode(CoreInode&, Function<bool(const FileSystem::DirectoryEntry&)>);
     InodeIdentifier resolve_path(const String& path, int& error, CoreInode& base, int options = 0);
     InodeIdentifier resolve_path(const String& path, int& error, InodeIdentifier base = InodeIdentifier(), int options = 0);
     InodeIdentifier resolveSymbolicLink(InodeIdentifier base, InodeIdentifier symlinkInode, int& error);
@@ -145,8 +145,8 @@ private:
 
     RetainPtr<Vnode> makeNode(InodeIdentifier);
     RetainPtr<Vnode> makeNode(CharacterDevice&);
-    RetainPtr<Vnode> getOrCreateNode(InodeIdentifier);
-    RetainPtr<Vnode> getOrCreateNode(CharacterDevice&);
+    RetainPtr<Vnode> get_or_create_node(InodeIdentifier);
+    RetainPtr<Vnode> get_or_create_node(CharacterDevice&);
 
     Mount* find_mount_for_host(InodeIdentifier);
     Mount* find_mount_for_guest(InodeIdentifier);

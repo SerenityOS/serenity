@@ -143,7 +143,7 @@ Unix::ssize_t FileDescriptor::read(byte* buffer, Unix::size_t count)
         // FIXME: What should happen to m_currentOffset?
         return m_vnode->characterDevice()->read(buffer, count);
     }
-    Unix::ssize_t nread = m_vnode->fileSystem()->readInodeBytes(m_vnode->inode, m_currentOffset, count, buffer, this);
+    Unix::ssize_t nread = m_vnode->fileSystem()->read_inode_bytes(m_vnode->inode, m_currentOffset, count, buffer, this);
     m_currentOffset += nread;
     return nread;
 }
@@ -216,7 +216,7 @@ ssize_t FileDescriptor::get_dir_entries(byte* buffer, Unix::size_t size)
     // FIXME: Compute the actual size needed.
     auto tempBuffer = ByteBuffer::createUninitialized(2048);
     BufferStream stream(tempBuffer);
-    m_vnode->vfs()->enumerateDirectoryInode(m_vnode->inode, [&stream] (auto& entry) {
+    m_vnode->vfs()->traverse_directory_inode(*m_vnode->core_inode(), [&stream] (auto& entry) {
         stream << (dword)entry.inode.index();
         stream << (byte)entry.fileType;
         stream << (dword)entry.name_length;

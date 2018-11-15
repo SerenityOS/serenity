@@ -11,7 +11,7 @@ public:
     Object(Object* parent = nullptr);
     virtual ~Object();
 
-    virtual const char* className() const { return "Object"; }
+    virtual const char* class_name() const { return "Object"; }
 
     virtual void event(Event&);
 

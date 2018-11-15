@@ -18,7 +18,7 @@ private:
     virtual void paintEvent(PaintEvent&) override;
     virtual void mouseDownEvent(MouseEvent&) override;
 
-    virtual const char* className() const override { return "CheckBox"; }
+    virtual const char* class_name() const override { return "CheckBox"; }
 
     String m_caption;
     bool m_isChecked { false };

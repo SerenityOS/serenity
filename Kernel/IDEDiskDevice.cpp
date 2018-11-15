@@ -46,7 +46,7 @@ IDEDiskDevice::~IDEDiskDevice()
 {
 }
 
-const char* IDEDiskDevice::className() const
+const char* IDEDiskDevice::class_name() const
 {
     return "IDEDiskDevice";
 }

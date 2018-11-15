@@ -75,7 +75,7 @@ bool FileBackedDiskDevice::writeInternal(DiskOffset offset, unsigned length, con
     return true;
 }
 
-const char* FileBackedDiskDevice::className() const
+const char* FileBackedDiskDevice::class_name() const
 {
     return "FileBackedDiskDevice";
 }

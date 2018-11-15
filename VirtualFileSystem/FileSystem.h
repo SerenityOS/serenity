@@ -28,12 +28,12 @@ public:
     static FileSystem* fromID(dword);
 
     virtual bool initialize() = 0;
-    virtual const char* className() const = 0;
+    virtual const char* class_name() const = 0;
     virtual InodeIdentifier rootInode() const = 0;
     virtual bool writeInode(InodeIdentifier, const ByteBuffer&) = 0;
     virtual InodeMetadata inodeMetadata(InodeIdentifier) const = 0;
 
-    virtual Unix::ssize_t readInodeBytes(InodeIdentifier, Unix::off_t offset, Unix::size_t count, byte* buffer, FileDescriptor*) const = 0;
+    virtual Unix::ssize_t read_inode_bytes(InodeIdentifier, Unix::off_t offset, Unix::size_t count, byte* buffer, FileDescriptor*) const = 0;
 
     struct DirectoryEntry {
         DirectoryEntry(const char* name, InodeIdentifier, byte fileType);
@@ -45,9 +45,9 @@ public:
     };
     virtual bool enumerateDirectoryInode(InodeIdentifier, Function<bool(const DirectoryEntry&)>) const = 0;
 
-    virtual bool setModificationTime(InodeIdentifier, dword timestamp) = 0;
-    virtual InodeIdentifier createInode(InodeIdentifier parentInode, const String& name, Unix::mode_t, unsigned size) = 0;
-    virtual InodeIdentifier makeDirectory(InodeIdentifier parentInode, const String& name, Unix::mode_t) = 0;
+    virtual bool set_mtime(InodeIdentifier, dword timestamp) = 0;
+    virtual InodeIdentifier create_inode(InodeIdentifier parentInode, const String& name, Unix::mode_t, unsigned size) = 0;
+    virtual InodeIdentifier create_directory(InodeIdentifier parentInode, const String& name, Unix::mode_t) = 0;
 
     virtual InodeIdentifier find_parent_of_inode(InodeIdentifier) const = 0;
 

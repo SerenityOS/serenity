@@ -18,7 +18,7 @@ private:
     virtual void mouseDownEvent(MouseEvent&) override;
     virtual void mouseUpEvent(MouseEvent&) override;
 
-    virtual const char* className() const override { return "Button"; }
+    virtual const char* class_name() const override { return "Button"; }
 
     String m_caption;
     bool m_beingPressed { false };

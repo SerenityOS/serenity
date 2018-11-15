@@ -13,7 +13,7 @@ public:
     static RetainPtr<ProcFileSystem> create();
 
     virtual bool initialize() override;
-    virtual const char* className() const override;
+    virtual const char* class_name() const override;
 
     void addProcess(Process&);
     void removeProcess(Process&);

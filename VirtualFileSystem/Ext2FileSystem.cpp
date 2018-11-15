@@ -146,7 +146,7 @@ bool Ext2FileSystem::initialize()
     return true;
 }
 
-const char* Ext2FileSystem::className() const
+const char* Ext2FileSystem::class_name() const
 {
     return "ext2fs";
 }
@@ -425,7 +425,7 @@ Unix::ssize_t Ext2Inode::read_bytes(Unix::off_t offset, Unix::size_t count, byte
     return nread;
 }
 
-Unix::ssize_t Ext2FileSystem::readInodeBytes(InodeIdentifier inode, Unix::off_t offset, Unix::size_t count, byte* buffer, FileDescriptor*) const
+Unix::ssize_t Ext2FileSystem::read_inode_bytes(InodeIdentifier inode, Unix::off_t offset, Unix::size_t count, byte* buffer, FileDescriptor*) const
 {
     ASSERT(offset >= 0);
     ASSERT(inode.fsid() == id());
@@ -778,7 +778,7 @@ bool Ext2FileSystem::modifyLinkCount(InodeIndex inode, int delta)
     return writeExt2Inode(inode, *e2inode);
 }
 
-bool Ext2FileSystem::setModificationTime(InodeIdentifier inode, dword timestamp)
+bool Ext2FileSystem::set_mtime(InodeIdentifier inode, dword timestamp)
 {
     ASSERT(inode.fsid() == id());
 
@@ -991,7 +991,7 @@ bool Ext2FileSystem::setBlockAllocationState(GroupIndex group, BlockIndex bi, bo
     return true;
 }
 
-InodeIdentifier Ext2FileSystem::makeDirectory(InodeIdentifier parentInode, const String& name, Unix::mode_t mode)
+InodeIdentifier Ext2FileSystem::create_directory(InodeIdentifier parentInode, const String& name, Unix::mode_t mode)
 {
     ASSERT(parentInode.fsid() == id());
     ASSERT(isDirectoryInode(parentInode.index()));
@@ -1003,7 +1003,7 @@ InodeIdentifier Ext2FileSystem::makeDirectory(InodeIdentifier parentInode, const
 
     // NOTE: When creating a new directory, make the size 1 block.
     //       There's probably a better strategy here, but this works for now.
-    auto inode = createInode(parentInode, name, mode, blockSize());
+    auto inode = create_inode(parentInode, name, mode, blockSize());
     if (!inode.isValid())
         return { };
 
@@ -1030,7 +1030,7 @@ InodeIdentifier Ext2FileSystem::makeDirectory(InodeIdentifier parentInode, const
     return inode;
 }
 
-InodeIdentifier Ext2FileSystem::createInode(InodeIdentifier parentInode, const String& name, Unix::mode_t mode, unsigned size)
+InodeIdentifier Ext2FileSystem::create_inode(InodeIdentifier parentInode, const String& name, Unix::mode_t mode, unsigned size)
 {
     ASSERT(parentInode.fsid() == id());
     ASSERT(isDirectoryInode(parentInode.index()));

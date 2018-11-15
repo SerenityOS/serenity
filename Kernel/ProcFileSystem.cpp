@@ -217,10 +217,10 @@ ByteBuffer procfs$mounts()
     auto buffer = ByteBuffer::createUninitialized(VFS::the().mount_count() * 80);
     char* ptr = (char*)buffer.pointer();
     VFS::the().for_each_mount([&ptr] (auto& mount) {
-        auto& fs = mount.fileSystem();
-        ptr += ksprintf(ptr, "%s @ ", fs.className());
+        auto& fs = mount.guest_fs();
+        ptr += ksprintf(ptr, "%s @ ", fs.class_name());
         if (!mount.host().isValid())
-            ptr += ksprintf(ptr, "/\n", fs.className());
+            ptr += ksprintf(ptr, "/\n", fs.class_name());
         else
             ptr += ksprintf(ptr, "%u:%u\n", mount.host().fsid(), mount.host().index());
     });
@@ -367,7 +367,7 @@ bool ProcFileSystem::initialize()
     return true;
 }
 
-const char* ProcFileSystem::className() const
+const char* ProcFileSystem::class_name() const
 {
     return "procfs";
 }

@@ -57,7 +57,7 @@ void Window::event(Event& event)
         //printf("Window{%p}: %s %d,%d\n", this, me.name(), me.x(), me.y());
         if (m_mainWidget) {
             auto result = m_mainWidget->hitTest(me.x(), me.y());
-            //printf("hit test for %d,%d found: %s{%p} %d,%d\n", me.x(), me.y(), result.widget->className(), result.widget, result.localX, result.localY);
+            //printf("hit test for %d,%d found: %s{%p} %d,%d\n", me.x(), me.y(), result.widget->class_name(), result.widget, result.localX, result.localY);
             // FIXME: Re-use the existing event instead of crafting a new one?
             auto localEvent = make<MouseEvent>(event.type(), result.localX, result.localY, me.button());
             return result.widget->event(*localEvent);
@@ -67,7 +67,7 @@ void Window::event(Event& event)
 
     if (event.isPaintEvent()) {
         auto& pe = static_cast<PaintEvent&>(event);
-        printf("Window[\"%s\"]: paintEvent %d,%d %dx%d\n", className(),
+        printf("Window[\"%s\"]: paintEvent %d,%d %dx%d\n", class_name(),
                 pe.rect().x(),
                 pe.rect().y(),
                 pe.rect().width(),

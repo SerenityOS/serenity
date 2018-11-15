@@ -17,7 +17,7 @@ public:
     virtual unsigned blockSize() const = 0;
     virtual bool readBlock(unsigned index, byte*) const = 0;
     virtual bool writeBlock(unsigned index, const byte*) = 0;
-    virtual const char* className() const = 0;
+    virtual const char* class_name() const = 0;
     bool read(DiskOffset, unsigned length, byte*) const;
     bool write(DiskOffset, unsigned length, const byte*);
 

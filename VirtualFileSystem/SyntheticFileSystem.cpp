@@ -121,7 +121,7 @@ bool SyntheticFileSystem::removeFile(InodeIndex inode)
     return true;
 }
 
-const char* SyntheticFileSystem::className() const
+const char* SyntheticFileSystem::class_name() const
 {
     return "synthfs";
 }
@@ -172,14 +172,14 @@ InodeMetadata SyntheticFileSystem::inodeMetadata(InodeIdentifier inode) const
     return (*it).value->m_metadata;
 }
 
-bool SyntheticFileSystem::setModificationTime(InodeIdentifier, dword timestamp)
+bool SyntheticFileSystem::set_mtime(InodeIdentifier, dword timestamp)
 {
     (void) timestamp;
     kprintf("FIXME: Implement SyntheticFileSystem::setModificationTime().\n");
     return false;
 }
 
-InodeIdentifier SyntheticFileSystem::createInode(InodeIdentifier parentInode, const String& name, Unix::mode_t mode, unsigned size)
+InodeIdentifier SyntheticFileSystem::create_inode(InodeIdentifier parentInode, const String& name, Unix::mode_t mode, unsigned size)
 {
     (void) parentInode;
     (void) name;
@@ -195,7 +195,7 @@ bool SyntheticFileSystem::writeInode(InodeIdentifier, const ByteBuffer&)
     return false;
 }
 
-Unix::ssize_t SyntheticFileSystem::readInodeBytes(InodeIdentifier inode, Unix::off_t offset, Unix::size_t count, byte* buffer, FileDescriptor* handle) const
+Unix::ssize_t SyntheticFileSystem::read_inode_bytes(InodeIdentifier inode, Unix::off_t offset, Unix::size_t count, byte* buffer, FileDescriptor* handle) const
 {
     ASSERT(inode.fsid() == id());
 #ifdef SYNTHFS_DEBUG
@@ -232,7 +232,7 @@ Unix::ssize_t SyntheticFileSystem::readInodeBytes(InodeIdentifier inode, Unix::o
     return nread;
 }
 
-InodeIdentifier SyntheticFileSystem::makeDirectory(InodeIdentifier parentInode, const String& name, Unix::mode_t)
+InodeIdentifier SyntheticFileSystem::create_directory(InodeIdentifier parentInode, const String& name, Unix::mode_t)
 {
     (void) parentInode;
     (void) name;
