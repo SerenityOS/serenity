@@ -1152,3 +1152,27 @@ InodeIdentifier Ext2FileSystem::find_parent_of_inode(InodeIdentifier inode_id) c
 
     return foundParent;
 }
+
+InodeIdentifier Ext2Inode::lookup(const String& name)
+{
+    ASSERT(is_directory());
+
+    if (m_child_cache.isEmpty()) {
+        HashMap<String, unsigned> children;
+
+        traverse_as_directory([&children] (auto& entry) {
+            children.set(String(entry.name, entry.name_length), entry.inode.index());
+            return true;
+        });
+
+        LOCKER(m_lock);
+        m_child_cache = move(children);
+    }
+
+    LOCKER(m_lock);
+    auto it = m_child_cache.find(name);
+    if (it != m_child_cache.end())
+        return { fsid(), (*it).value };
+
+    return { };
+}

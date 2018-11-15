@@ -37,19 +37,6 @@ FileSystem* FileSystem::fromID(dword id)
     return nullptr;
 }
 
-InodeIdentifier FileSystem::child_of_directory_inode_with_name(InodeIdentifier inode, const String& name) const
-{
-    InodeIdentifier foundInode;
-    enumerateDirectoryInode(inode, [&] (const DirectoryEntry& entry) {
-        if (!strcmp(entry.name, name.characters())) {
-            foundInode = entry.inode;
-            return false;
-        }
-        return true;
-    });
-    return foundInode;
-}
-
 String FileSystem::name_of_child_in_directory(InodeIdentifier parent, InodeIdentifier child) const
 {
     String name;

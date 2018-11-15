@@ -25,6 +25,7 @@ private:
     virtual Unix::ssize_t read_bytes(Unix::off_t, Unix::size_t, byte* buffer, FileDescriptor*) override;
     virtual void populate_metadata() const override;
     virtual bool traverse_as_directory(Function<bool(const FileSystem::DirectoryEntry&)>) override;
+    virtual InodeIdentifier lookup(const String& name) override;
 
     Ext2FileSystem& fs();
     const Ext2FileSystem& fs() const;
@@ -32,6 +33,7 @@ private:
 
     SpinLock m_lock;
     Vector<unsigned> m_block_list;
+    HashMap<String, unsigned> m_child_cache;
     ext2_inode m_raw_inode;
 };
 
