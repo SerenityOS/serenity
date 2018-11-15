@@ -114,7 +114,7 @@ ByteBuffer FileSystem::readEntireInode(InodeIdentifier inode, FileDescriptor* ha
     byte* out = contents.pointer();
     Unix::off_t offset = 0;
     for (;;) {
-        nread = readInodeBytes(inode, offset, sizeof(buffer), buffer, handle);
+        nread = read_inode_bytes(inode, offset, sizeof(buffer), buffer, handle);
         //kprintf("nread: %u, bufsiz: %u, initialSize: %u\n", nread, sizeof(buffer), initialSize);
         ASSERT(nread <= (Unix::ssize_t)sizeof(buffer));
         if (nread <= 0)

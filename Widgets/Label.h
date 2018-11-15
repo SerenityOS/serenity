@@ -15,7 +15,7 @@ private:
     virtual void paintEvent(PaintEvent&) override;
     virtual void mouseMoveEvent(MouseEvent&) override;
 
-    virtual const char* className() const override { return "Label"; }
+    virtual const char* class_name() const override { return "Label"; }
 
     String m_text;
 };

@@ -18,7 +18,7 @@ public:
     virtual bool writeBlock(unsigned index, const byte*) override;
 
 private:
-    virtual const char* className() const override;
+    virtual const char* class_name() const override;
 
     bool readInternal(DiskOffset, unsigned length, byte* out) const;
     bool writeInternal(DiskOffset, unsigned length, const byte* data);

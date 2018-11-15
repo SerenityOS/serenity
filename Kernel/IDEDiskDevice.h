@@ -23,7 +23,7 @@ private:
     virtual void handleIRQ() override;
 
     // ^DiskDevice
-    virtual const char* className() const override;
+    virtual const char* class_name() const override;
 
     struct CHS {
         dword cylinder;

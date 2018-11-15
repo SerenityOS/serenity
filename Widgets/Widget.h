@@ -48,7 +48,7 @@ public:
     };
     HitTestResult hitTest(int x, int y);
 
-    virtual const char* className() const override { return "Widget"; }
+    virtual const char* class_name() const override { return "Widget"; }
 
     void setWindowRelativeRect(const Rect&);
 

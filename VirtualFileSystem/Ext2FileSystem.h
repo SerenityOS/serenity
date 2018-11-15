@@ -66,15 +66,15 @@ private:
     ByteBuffer readSuperBlock() const;
     bool writeSuperBlock(const ext2_super_block&);
 
-    virtual const char* className() const override;
+    virtual const char* class_name() const override;
     virtual InodeIdentifier rootInode() const override;
     virtual bool writeInode(InodeIdentifier, const ByteBuffer&) override;
     virtual bool enumerateDirectoryInode(InodeIdentifier, Function<bool(const DirectoryEntry&)>) const override;
     virtual InodeMetadata inodeMetadata(InodeIdentifier) const override;
-    virtual bool setModificationTime(InodeIdentifier, dword timestamp) override;
-    virtual InodeIdentifier createInode(InodeIdentifier parentInode, const String& name, Unix::mode_t, unsigned size) override;
-    virtual Unix::ssize_t readInodeBytes(InodeIdentifier, Unix::off_t offset, Unix::size_t count, byte* buffer, FileDescriptor*) const override;
-    virtual InodeIdentifier makeDirectory(InodeIdentifier parentInode, const String& name, Unix::mode_t) override;
+    virtual bool set_mtime(InodeIdentifier, dword timestamp) override;
+    virtual InodeIdentifier create_inode(InodeIdentifier parentInode, const String& name, Unix::mode_t, unsigned size) override;
+    virtual Unix::ssize_t read_inode_bytes(InodeIdentifier, Unix::off_t offset, Unix::size_t count, byte* buffer, FileDescriptor*) const override;
+    virtual InodeIdentifier create_directory(InodeIdentifier parentInode, const String& name, Unix::mode_t) override;
     virtual InodeIdentifier find_parent_of_inode(InodeIdentifier) const override;
     virtual RetainPtr<CoreInode> get_inode(InodeIdentifier) const override;
 
