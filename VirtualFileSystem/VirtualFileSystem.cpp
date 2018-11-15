@@ -10,45 +10,45 @@
 
 //#define VFS_DEBUG
 
-static VirtualFileSystem* s_the;
+static VFS* s_the;
 
 #ifndef SERENITY
 typedef int InterruptDisabler;
 #endif
 
-VirtualFileSystem& VirtualFileSystem::the()
+VFS& VFS::the()
 {
     ASSERT(s_the);
     return *s_the;
 }
 
-void VirtualFileSystem::initializeGlobals()
+void VFS::initializeGlobals()
 {
     s_the = nullptr;
     FileSystem::initializeGlobals();
 }
 
-VirtualFileSystem::VirtualFileSystem()
+VFS::VFS()
 {
 #ifdef VFS_DEBUG
     kprintf("VFS: Constructing VFS\n");
 #endif
     s_the = this;
     m_maxNodeCount = 16;
-    m_nodes = reinterpret_cast<Node*>(kmalloc(sizeof(Node) * maxNodeCount()));
-    memset(m_nodes, 0, sizeof(Node) * maxNodeCount());
+    m_nodes = reinterpret_cast<Vnode*>(kmalloc(sizeof(Vnode) * maxNodeCount()));
+    memset(m_nodes, 0, sizeof(Vnode) * maxNodeCount());
 
     for (unsigned i = 0; i < m_maxNodeCount; ++i)
         m_nodeFreeList.append(&m_nodes[i]);
 }
 
-VirtualFileSystem::~VirtualFileSystem()
+VFS::~VFS()
 {
     kprintf("VFS: ~VirtualFileSystem with %u nodes allocated\n", allocatedNodeCount());
     // FIXME: m_nodes is never freed. Does it matter though?
 }
 
-auto VirtualFileSystem::makeNode(InodeIdentifier inode) -> RetainPtr<Node>
+auto VFS::makeNode(InodeIdentifier inode) -> RetainPtr<Vnode>
 {
     auto metadata = inode.metadata();
     if (!metadata.isValid())
@@ -91,7 +91,7 @@ auto VirtualFileSystem::makeNode(InodeIdentifier inode) -> RetainPtr<Node>
     return vnode;
 }
 
-auto VirtualFileSystem::makeNode(CharacterDevice& device) -> RetainPtr<Node>
+auto VFS::makeNode(CharacterDevice& device) -> RetainPtr<Vnode>
 {
     InterruptDisabler disabler;
     auto vnode = allocateNode();
@@ -107,7 +107,7 @@ auto VirtualFileSystem::makeNode(CharacterDevice& device) -> RetainPtr<Node>
     return vnode;
 }
 
-auto VirtualFileSystem::getOrCreateNode(InodeIdentifier inode) -> RetainPtr<Node>
+auto VFS::getOrCreateNode(InodeIdentifier inode) -> RetainPtr<Vnode>
 {
     {
         InterruptDisabler disabler;
@@ -118,7 +118,7 @@ auto VirtualFileSystem::getOrCreateNode(InodeIdentifier inode) -> RetainPtr<Node
     return makeNode(inode);
 }
 
-auto VirtualFileSystem::getOrCreateNode(CharacterDevice& device) -> RetainPtr<Node>
+auto VFS::getOrCreateNode(CharacterDevice& device) -> RetainPtr<Vnode>
 {
     {
         InterruptDisabler disabler;
@@ -129,7 +129,7 @@ auto VirtualFileSystem::getOrCreateNode(CharacterDevice& device) -> RetainPtr<No
     return makeNode(device);
 }
 
-bool VirtualFileSystem::mount(RetainPtr<FileSystem>&& fileSystem, const String& path)
+bool VFS::mount(RetainPtr<FileSystem>&& fileSystem, const String& path)
 {
     ASSERT(fileSystem);
     int error;
@@ -146,7 +146,7 @@ bool VirtualFileSystem::mount(RetainPtr<FileSystem>&& fileSystem, const String& 
     return true;
 }
 
-bool VirtualFileSystem::mountRoot(RetainPtr<FileSystem>&& fileSystem)
+bool VFS::mountRoot(RetainPtr<FileSystem>&& fileSystem)
 {
     if (m_rootNode) {
         kprintf("VFS: mountRoot can't mount another root\n");
@@ -175,7 +175,7 @@ bool VirtualFileSystem::mountRoot(RetainPtr<FileSystem>&& fileSystem)
     return true;
 }
 
-auto VirtualFileSystem::allocateNode() -> RetainPtr<Node>
+auto VFS::allocateNode() -> RetainPtr<Vnode>
 {
     if (m_nodeFreeList.isEmpty()) {
         kprintf("VFS: allocateNode has no nodes left\n");
@@ -189,7 +189,7 @@ auto VirtualFileSystem::allocateNode() -> RetainPtr<Node>
     return adopt(*node);
 }
 
-void VirtualFileSystem::freeNode(Node* node)
+void VFS::freeNode(Vnode* node)
 {
     InterruptDisabler disabler;
     ASSERT(node);
@@ -209,7 +209,7 @@ void VirtualFileSystem::freeNode(Node* node)
 }
 
 #ifndef SERENITY
-bool VirtualFileSystem::isDirectory(const String& path, InodeIdentifier base)
+bool VFS::isDirectory(const String& path, InodeIdentifier base)
 {
     int error;
     auto inode = resolvePath(path, error, base);
@@ -220,7 +220,7 @@ bool VirtualFileSystem::isDirectory(const String& path, InodeIdentifier base)
 }
 #endif
 
-auto VirtualFileSystem::findMountForHost(InodeIdentifier inode) -> Mount*
+auto VFS::findMountForHost(InodeIdentifier inode) -> Mount*
 {
     for (auto& mount : m_mounts) {
         if (mount->host() == inode)
@@ -229,7 +229,7 @@ auto VirtualFileSystem::findMountForHost(InodeIdentifier inode) -> Mount*
     return nullptr;
 }
 
-auto VirtualFileSystem::findMountForGuest(InodeIdentifier inode) -> Mount*
+auto VFS::findMountForGuest(InodeIdentifier inode) -> Mount*
 {
     for (auto& mount : m_mounts) {
         if (mount->guest() == inode)
@@ -238,12 +238,12 @@ auto VirtualFileSystem::findMountForGuest(InodeIdentifier inode) -> Mount*
     return nullptr;
 }
 
-bool VirtualFileSystem::isRoot(InodeIdentifier inode) const
+bool VFS::is_vfs_root(InodeIdentifier inode) const
 {
     return inode == m_rootNode->inode;
 }
 
-void VirtualFileSystem::enumerateDirectoryInode(InodeIdentifier directoryInode, Function<bool(const FileSystem::DirectoryEntry&)> callback)
+void VFS::enumerateDirectoryInode(InodeIdentifier directoryInode, Function<bool(const FileSystem::DirectoryEntry&)> callback)
 {
     if (!directoryInode.isValid())
         return;
@@ -255,7 +255,7 @@ void VirtualFileSystem::enumerateDirectoryInode(InodeIdentifier directoryInode, 
         else
             resolvedInode = entry.inode;
 
-        if (directoryInode.isRootInode() && !isRoot(directoryInode) && !strcmp(entry.name, "..")) {
+        if (directoryInode.isRootInode() && !is_vfs_root(directoryInode) && !strcmp(entry.name, "..")) {
             auto mount = findMountForGuest(entry.inode);
             ASSERT(mount);
             resolvedInode = mount->host();
@@ -266,7 +266,7 @@ void VirtualFileSystem::enumerateDirectoryInode(InodeIdentifier directoryInode, 
 }
 
 #ifndef SERENITY
-void VirtualFileSystem::listDirectory(const String& path, InodeIdentifier base)
+void VFS::listDirectory(const String& path, InodeIdentifier base)
 {
     int error;
     auto directoryInode = resolvePath(path, error, base);
@@ -367,7 +367,7 @@ void VirtualFileSystem::listDirectory(const String& path, InodeIdentifier base)
     });
 }
 
-void VirtualFileSystem::listDirectoryRecursively(const String& path, InodeIdentifier base)
+void VFS::listDirectoryRecursively(const String& path, InodeIdentifier base)
 {
     int error;
     auto directory = resolvePath(path, error, base);
@@ -392,7 +392,7 @@ void VirtualFileSystem::listDirectoryRecursively(const String& path, InodeIdenti
 }
 #endif
 
-bool VirtualFileSystem::touch(const String& path)
+bool VFS::touch(const String& path)
 {
     int error;
     auto inode = resolvePath(path, error);
@@ -401,7 +401,7 @@ bool VirtualFileSystem::touch(const String& path)
     return inode.fileSystem()->setModificationTime(inode, ktime(nullptr));
 }
 
-RetainPtr<FileDescriptor> VirtualFileSystem::open(CharacterDevice& device, int options)
+RetainPtr<FileDescriptor> VFS::open(CharacterDevice& device, int options)
 {
     // FIXME: Respect options.
     (void) options;
@@ -411,7 +411,7 @@ RetainPtr<FileDescriptor> VirtualFileSystem::open(CharacterDevice& device, int o
     return FileDescriptor::create(move(vnode));
 }
 
-RetainPtr<FileDescriptor> VirtualFileSystem::open(const String& path, int& error, int options, InodeIdentifier base)
+RetainPtr<FileDescriptor> VFS::open(const String& path, int& error, int options, InodeIdentifier base)
 {
     auto inode = resolvePath(path, error, base, options);
     if (!inode.isValid())
@@ -422,7 +422,7 @@ RetainPtr<FileDescriptor> VirtualFileSystem::open(const String& path, int& error
     return FileDescriptor::create(move(vnode));
 }
 
-RetainPtr<FileDescriptor> VirtualFileSystem::create(const String& path, InodeIdentifier base)
+RetainPtr<FileDescriptor> VFS::create(const String& path, InodeIdentifier base)
 {
     // FIXME: Do the real thing, not just this fake thing!
     (void) path;
@@ -431,7 +431,7 @@ RetainPtr<FileDescriptor> VirtualFileSystem::create(const String& path, InodeIde
     return nullptr;
 }
 
-RetainPtr<FileDescriptor> VirtualFileSystem::mkdir(const String& path, InodeIdentifier base)
+RetainPtr<FileDescriptor> VFS::mkdir(const String& path, InodeIdentifier base)
 {
     // FIXME: Do the real thing, not just this fake thing!
     (void) path;
@@ -440,7 +440,7 @@ RetainPtr<FileDescriptor> VirtualFileSystem::mkdir(const String& path, InodeIden
     return nullptr;
 }
 
-InodeIdentifier VirtualFileSystem::resolveSymbolicLink(InodeIdentifier base, InodeIdentifier symlinkInode, int& error)
+InodeIdentifier VFS::resolveSymbolicLink(InodeIdentifier base, InodeIdentifier symlinkInode, int& error)
 {
     auto symlinkContents = symlinkInode.readEntireFile();
     if (!symlinkContents)
@@ -452,14 +452,14 @@ InodeIdentifier VirtualFileSystem::resolveSymbolicLink(InodeIdentifier base, Ino
     return resolvePath(linkee, error, base);
 }
 
-RetainPtr<CoreInode> VirtualFileSystem::get_inode(InodeIdentifier inode_id)
+RetainPtr<CoreInode> VFS::get_inode(InodeIdentifier inode_id)
 {
     if (!inode_id.isValid())
         return nullptr;
     return inode_id.fileSystem()->get_inode(inode_id);
 }
 
-String VirtualFileSystem::absolute_path(CoreInode& core_inode)
+String VFS::absolute_path(CoreInode& core_inode)
 {
     int error;
     Vector<InodeIdentifier> lineage;
@@ -494,7 +494,7 @@ String VirtualFileSystem::absolute_path(CoreInode& core_inode)
     return builder.build();
 }
 
-InodeIdentifier VirtualFileSystem::resolvePath(const String& path, int& error, InodeIdentifier base, int options)
+InodeIdentifier VFS::resolvePath(const String& path, int& error, InodeIdentifier base, int options)
 {
     if (path.isEmpty())
         return { };
@@ -545,7 +545,7 @@ InodeIdentifier VirtualFileSystem::resolvePath(const String& path, int& error, I
 #endif
             inode = mount->guest();
         }
-        if (wasRootInodeAtHeadOfLoop && inode.isRootInode() && !isRoot(inode) && part == "..") {
+        if (wasRootInodeAtHeadOfLoop && inode.isRootInode() && !is_vfs_root(inode) && part == "..") {
 #ifdef VFS_DEBUG
             kprintf("  -- is guest\n");
 #endif
@@ -574,13 +574,13 @@ InodeIdentifier VirtualFileSystem::resolvePath(const String& path, int& error, I
     return inode;
 }
 
-void VirtualFileSystem::Node::retain()
+void Vnode::retain()
 {
     InterruptDisabler disabler; // FIXME: Make a Retainable with atomic retain count instead.
     ++retainCount;
 }
 
-void VirtualFileSystem::Node::release()
+void Vnode::release()
 {
     InterruptDisabler disabler; // FIXME: Make a Retainable with atomic retain count instead.
     ASSERT(retainCount);
@@ -589,7 +589,7 @@ void VirtualFileSystem::Node::release()
     }
 }
 
-const InodeMetadata& VirtualFileSystem::Node::metadata() const
+const InodeMetadata& Vnode::metadata() const
 {
     if (m_core_inode)
         return m_core_inode->metadata();
@@ -598,19 +598,19 @@ const InodeMetadata& VirtualFileSystem::Node::metadata() const
     return m_cachedMetadata;
 }
 
-VirtualFileSystem::Mount::Mount(InodeIdentifier host, RetainPtr<FileSystem>&& guestFileSystem)
+VFS::Mount::Mount(InodeIdentifier host, RetainPtr<FileSystem>&& guestFileSystem)
     : m_host(host)
     , m_guest(guestFileSystem->rootInode())
     , m_fileSystem(move(guestFileSystem))
 {
 }
 
-void VirtualFileSystem::registerCharacterDevice(CharacterDevice& device)
+void VFS::registerCharacterDevice(CharacterDevice& device)
 {
     m_characterDevices.set(encodedDevice(device.major(), device.minor()), &device);
 }
 
-void VirtualFileSystem::forEachMount(Function<void(const Mount&)> callback) const
+void VFS::forEachMount(Function<void(const Mount&)> callback) const
 {
     for (auto& mount : m_mounts) {
         callback(*mount);

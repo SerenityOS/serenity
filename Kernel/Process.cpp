@@ -102,7 +102,7 @@ Region* Process::allocate_region(LinearAddress laddr, size_t size, String&& name
     return m_regions.last().ptr();
 }
 
-Region* Process::allocate_file_backed_region(LinearAddress laddr, size_t size, RetainPtr<VirtualFileSystem::Node>&& vnode, String&& name, bool is_readable, bool is_writable)
+Region* Process::allocate_file_backed_region(LinearAddress laddr, size_t size, RetainPtr<Vnode>&& vnode, String&& name, bool is_readable, bool is_writable)
 {
     ASSERT(!vnode->isCharacterDevice());
 
@@ -301,7 +301,7 @@ int Process::do_exec(const String& path, Vector<String>&& arguments, Vector<Stri
         return -ENOENT;
 
     int error;
-    auto descriptor = VirtualFileSystem::the().open(path, error, 0, m_cwd ? m_cwd->inode : InodeIdentifier());
+    auto descriptor = VFS::the().open(path, error, 0, m_cwd ? m_cwd->inode : InodeIdentifier());
     if (!descriptor) {
         ASSERT(error != 0);
         return error;
@@ -483,14 +483,14 @@ Process* Process::create_user_process(const String& path, uid_t uid, gid_t gid, 
     if (arguments.isEmpty()) {
         arguments.append(parts.last());
     }
-    RetainPtr<VirtualFileSystem::Node> cwd;
+    RetainPtr<Vnode> cwd;
     {
         InterruptDisabler disabler;
         if (auto* parent = Process::from_pid(parent_pid))
             cwd = parent->m_cwd.copyRef();
     }
     if (!cwd)
-        cwd = VirtualFileSystem::the().root();
+        cwd = VFS::the().root();
 
     auto* process = new Process(parts.takeLast(), uid, gid, parent_pid, Ring3, move(cwd), nullptr, tty);
 
@@ -570,7 +570,7 @@ Process* Process::create_kernel_process(void (*e)(), String&& name)
     return process;
 }
 
-Process::Process(String&& name, uid_t uid, gid_t gid, pid_t ppid, RingLevel ring, RetainPtr<VirtualFileSystem::Node>&& cwd, RetainPtr<VirtualFileSystem::Node>&& executable, TTY* tty, Process* fork_parent)
+Process::Process(String&& name, uid_t uid, gid_t gid, pid_t ppid, RingLevel ring, RetainPtr<Vnode>&& cwd, RetainPtr<Vnode>&& executable, TTY* tty, Process* fork_parent)
     : m_name(move(name))
     , m_pid(next_pid++) // FIXME: RACE: This variable looks racy!
     , m_uid(uid)
@@ -1124,7 +1124,7 @@ int Process::sys$lstat(const char* path, Unix::stat* statbuf)
 {
     VALIDATE_USER_WRITE(statbuf, sizeof(Unix::stat));
     int error;
-    auto descriptor = VirtualFileSystem::the().open(move(path), error, O_NOFOLLOW_NOERROR, cwd_inode()->identifier());
+    auto descriptor = VFS::the().open(move(path), error, O_NOFOLLOW_NOERROR, cwd_inode()->identifier());
     if (!descriptor)
         return error;
     descriptor->stat(statbuf);
@@ -1135,7 +1135,7 @@ int Process::sys$stat(const char* path, Unix::stat* statbuf)
 {
     VALIDATE_USER_WRITE(statbuf, sizeof(Unix::stat));
     int error;
-    auto descriptor = VirtualFileSystem::the().open(move(path), error, 0, cwd_inode()->identifier());
+    auto descriptor = VFS::the().open(move(path), error, 0, cwd_inode()->identifier());
     if (!descriptor)
         return error;
     descriptor->stat(statbuf);
@@ -1148,7 +1148,7 @@ int Process::sys$readlink(const char* path, char* buffer, size_t size)
     VALIDATE_USER_WRITE(buffer, size);
 
     int error;
-    auto descriptor = VirtualFileSystem::the().open(path, error, O_RDONLY | O_NOFOLLOW_NOERROR, cwd_inode()->identifier());
+    auto descriptor = VFS::the().open(path, error, O_RDONLY | O_NOFOLLOW_NOERROR, cwd_inode()->identifier());
     if (!descriptor)
         return error;
 
@@ -1169,7 +1169,7 @@ int Process::sys$chdir(const char* path)
 {
     VALIDATE_USER_READ(path, strlen(path));
     int error;
-    auto descriptor = VirtualFileSystem::the().open(path, error, 0, cwd_inode()->identifier());
+    auto descriptor = VFS::the().open(path, error, 0, cwd_inode()->identifier());
     if (!descriptor)
         return error;
     if (!descriptor->isDirectory())
@@ -1182,7 +1182,7 @@ int Process::sys$getcwd(char* buffer, size_t size)
 {
     VALIDATE_USER_WRITE(buffer, size);
     ASSERT(cwd_inode());
-    auto path = VirtualFileSystem::the().absolute_path(*cwd_inode());
+    auto path = VFS::the().absolute_path(*cwd_inode());
     if (path.isNull())
         return -EINVAL;
     if (size < path.length() + 1)
@@ -1210,7 +1210,7 @@ int Process::sys$open(const char* path, int options)
     if (number_of_open_file_descriptors() >= m_max_open_file_descriptors)
         return -EMFILE;
     int error;
-    auto descriptor = VirtualFileSystem::the().open(path, error, options, cwd_inode()->identifier());
+    auto descriptor = VFS::the().open(path, error, options, cwd_inode()->identifier());
     if (!descriptor)
         return error;
     if (options & O_DIRECTORY && !descriptor->isDirectory())

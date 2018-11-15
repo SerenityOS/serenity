@@ -136,7 +136,7 @@ ByteBuffer procfs$pid_exe(Process& process)
     ProcessInspectionHandle handle(process);
     auto inode = process.executable_inode();
     ASSERT(inode);
-    return VirtualFileSystem::the().absolute_path(*inode).toByteBuffer();
+    return VFS::the().absolute_path(*inode).toByteBuffer();
 }
 
 ByteBuffer procfs$pid_cwd(Process& process)
@@ -144,7 +144,7 @@ ByteBuffer procfs$pid_cwd(Process& process)
     ProcessInspectionHandle handle(process);
     auto inode = process.cwd_inode();
     ASSERT(inode);
-    return VirtualFileSystem::the().absolute_path(*inode).toByteBuffer();
+    return VFS::the().absolute_path(*inode).toByteBuffer();
 }
 
 void ProcFileSystem::addProcess(Process& process)
@@ -214,9 +214,9 @@ ByteBuffer procfs$regions()
 ByteBuffer procfs$mounts()
 {
     InterruptDisabler disabler;
-    auto buffer = ByteBuffer::createUninitialized(VirtualFileSystem::the().mountCount() * 80);
+    auto buffer = ByteBuffer::createUninitialized(VFS::the().mountCount() * 80);
     char* ptr = (char*)buffer.pointer();
-    VirtualFileSystem::the().forEachMount([&ptr] (auto& mount) {
+    VFS::the().forEachMount([&ptr] (auto& mount) {
         auto& fs = mount.fileSystem();
         ptr += ksprintf(ptr, "%s @ ", fs.className());
         if (!mount.host().isValid())
@@ -330,7 +330,7 @@ ByteBuffer procfs$summary()
 
 ByteBuffer procfs$vnodes()
 {
-    auto& vfs = VirtualFileSystem::the();
+    auto& vfs = VFS::the();
     auto buffer = ByteBuffer::createUninitialized(vfs.m_maxNodeCount * 256);
     char* ptr = (char*)buffer.pointer();
     for (size_t i = 0; i < vfs.m_maxNodeCount; ++i) {

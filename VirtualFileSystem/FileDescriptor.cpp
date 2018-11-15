@@ -10,7 +10,7 @@
 #include "TTY.h"
 #endif
 
-RetainPtr<FileDescriptor> FileDescriptor::create(RetainPtr<VirtualFileSystem::Node>&& vnode)
+RetainPtr<FileDescriptor> FileDescriptor::create(RetainPtr<Vnode>&& vnode)
 {
     return adopt(*new FileDescriptor(move(vnode)));
 }
@@ -25,7 +25,7 @@ RetainPtr<FileDescriptor> FileDescriptor::create_pipe_reader(FIFO& fifo)
     return adopt(*new FileDescriptor(fifo, FIFO::Reader));
 }
 
-FileDescriptor::FileDescriptor(RetainPtr<VirtualFileSystem::Node>&& vnode)
+FileDescriptor::FileDescriptor(RetainPtr<Vnode>&& vnode)
     : m_vnode(move(vnode))
 {
 }
@@ -278,7 +278,7 @@ String FileDescriptor::absolute_path()
         return buf;
     }
     ASSERT(m_vnode->core_inode());
-    return VirtualFileSystem::the().absolute_path(*m_vnode->core_inode());
+    return VFS::the().absolute_path(*m_vnode->core_inode());
 }
 
 FileDescriptor::FileDescriptor(FIFO& fifo, FIFO::Direction direction)

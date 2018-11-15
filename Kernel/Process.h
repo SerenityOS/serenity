@@ -222,7 +222,7 @@ private:
     friend class Scheduler;
     friend class Region;
 
-    Process(String&& name, uid_t, gid_t, pid_t ppid, RingLevel, RetainPtr<VirtualFileSystem::Node>&& cwd = nullptr, RetainPtr<VirtualFileSystem::Node>&& executable = nullptr, TTY* = nullptr, Process* fork_parent = nullptr);
+    Process(String&& name, uid_t, gid_t, pid_t ppid, RingLevel, RetainPtr<Vnode>&& cwd = nullptr, RetainPtr<Vnode>&& executable = nullptr, TTY* = nullptr, Process* fork_parent = nullptr);
 
     int do_exec(const String& path, Vector<String>&& arguments, Vector<String>&& environment);
     void push_value_on_stack(dword);
@@ -276,13 +276,13 @@ private:
     byte m_termination_status { 0 };
     byte m_termination_signal { 0 };
 
-    RetainPtr<VirtualFileSystem::Node> m_cwd;
-    RetainPtr<VirtualFileSystem::Node> m_executable;
+    RetainPtr<Vnode> m_cwd;
+    RetainPtr<Vnode> m_executable;
 
     TTY* m_tty { nullptr };
 
     Region* allocate_region(LinearAddress, size_t, String&& name, bool is_readable = true, bool is_writable = true);
-    Region* allocate_file_backed_region(LinearAddress, size_t, RetainPtr<VirtualFileSystem::Node>&& vnode, String&& name, bool is_readable, bool is_writable);
+    Region* allocate_file_backed_region(LinearAddress, size_t, RetainPtr<Vnode>&& vnode, String&& name, bool is_readable, bool is_writable);
     Region* allocate_region_with_vmo(LinearAddress, size_t, RetainPtr<VMObject>&&, size_t offset_in_vmo, String&& name, bool is_readable, bool is_writable);
     bool deallocate_region(Region& region);
 

@@ -13,7 +13,7 @@ class TTY;
 
 class FileDescriptor : public Retainable<FileDescriptor> {
 public:
-    static RetainPtr<FileDescriptor> create(RetainPtr<VirtualFileSystem::Node>&&);
+    static RetainPtr<FileDescriptor> create(RetainPtr<Vnode>&&);
     static RetainPtr<FileDescriptor> create_pipe_writer(FIFO&);
     static RetainPtr<FileDescriptor> create_pipe_reader(FIFO&);
     ~FileDescriptor();
@@ -46,7 +46,7 @@ public:
 
     InodeMetadata metadata() const { return m_vnode->metadata(); }
 
-    VirtualFileSystem::Node* vnode() { return m_vnode.ptr(); }
+    Vnode* vnode() { return m_vnode.ptr(); }
 
 #ifdef SERENITY
     bool isBlocking() const { return m_isBlocking; }
@@ -62,11 +62,11 @@ public:
     ByteBuffer& generatorCache() { return m_generatorCache; }
 
 private:
-    friend class VirtualFileSystem;
-    explicit FileDescriptor(RetainPtr<VirtualFileSystem::Node>&&);
+    friend class VFS;
+    explicit FileDescriptor(RetainPtr<Vnode>&&);
     FileDescriptor(FIFO&, FIFO::Direction);
 
-    RetainPtr<VirtualFileSystem::Node> m_vnode;
+    RetainPtr<Vnode> m_vnode;
     RetainPtr<CoreInode> m_inode;
 
     Unix::off_t m_currentOffset { 0 };
