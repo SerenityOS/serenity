@@ -37,20 +37,6 @@ FileSystem* FileSystem::fromID(dword id)
     return nullptr;
 }
 
-String FileSystem::name_of_child_in_directory(InodeIdentifier parent, InodeIdentifier child) const
-{
-    String name;
-    bool success = enumerateDirectoryInode(parent, [&] (auto& entry) {
-        if (entry.inode == child) {
-            name = entry.name;
-            return false;
-        }
-        return true;
-    });
-    ASSERT(success);
-    return name;
-}
-
 ByteBuffer CoreInode::read_entire(FileDescriptor* descriptor)
 {
     return fs().readEntireInode(identifier(), descriptor);

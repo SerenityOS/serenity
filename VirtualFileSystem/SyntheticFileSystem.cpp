@@ -131,33 +131,6 @@ InodeIdentifier SyntheticFileSystem::rootInode() const
     return { id(), 1 };
 }
 
-bool SyntheticFileSystem::enumerateDirectoryInode(InodeIdentifier inode, Function<bool(const DirectoryEntry&)> callback) const
-{
-    InterruptDisabler disabler;
-    ASSERT(inode.fsid() == id());
-#ifdef SYNTHFS_DEBUG
-    kprintf("synthfs: enumerateDirectoryInode %u\n", inode.index());
-#endif
-
-    auto it = m_inodes.find(inode.index());
-    if (it == m_inodes.end()) {
-        kprintf("SynthFS: enumerateDirectoryInode with invalid inode %u\n", inode.index());
-        return false;
-    }
-    const auto& synthfs_inode = *(*it).value;
-    if (!synthfs_inode.m_metadata.isDirectory()) {
-        kprintf("SynthFS: enumerateDirectoryInode with non-directory inode %u\n", inode.index());
-        return false;
-    }
-
-    callback({ ".", 1, synthfs_inode.m_metadata.inode, 2 });
-    callback({ "..", 2, synthfs_inode.m_parent, 2 });
-
-    for (auto& child : synthfs_inode.m_children)
-        callback({ child->m_name.characters(), child->m_name.length(), child->m_metadata.inode, child->m_metadata.isDirectory() ? (byte)2 : (byte)1 });
-    return true;
-}
-
 InodeMetadata SyntheticFileSystem::inodeMetadata(InodeIdentifier inode) const
 {
     InterruptDisabler disabler;
@@ -331,6 +304,16 @@ InodeIdentifier SynthFSInode::lookup(const String& name)
     for (auto& child : m_children) {
         if (child->m_name == name)
             return child->identifier();
+    }
+    return { };
+}
+
+String SynthFSInode::reverse_lookup(InodeIdentifier child_id)
+{
+    ASSERT(is_directory());
+    for (auto& child : m_children) {
+        if (child->identifier() == child_id)
+            return child->m_name;
     }
     return { };
 }
