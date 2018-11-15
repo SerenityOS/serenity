@@ -22,7 +22,7 @@ VFS& VFS::the()
     return *s_the;
 }
 
-void VFS::initializeGlobals()
+void VFS::initialize_globals()
 {
     s_the = nullptr;
     FileSystem::initializeGlobals();
@@ -34,17 +34,17 @@ VFS::VFS()
     kprintf("VFS: Constructing VFS\n");
 #endif
     s_the = this;
-    m_maxNodeCount = 16;
-    m_nodes = reinterpret_cast<Vnode*>(kmalloc(sizeof(Vnode) * maxNodeCount()));
-    memset(m_nodes, 0, sizeof(Vnode) * maxNodeCount());
+    m_max_vnode_count = 16;
+    m_nodes = reinterpret_cast<Vnode*>(kmalloc(sizeof(Vnode) * max_vnode_count()));
+    memset(m_nodes, 0, sizeof(Vnode) * max_vnode_count());
 
-    for (unsigned i = 0; i < m_maxNodeCount; ++i)
-        m_nodeFreeList.append(&m_nodes[i]);
+    for (unsigned i = 0; i < m_max_vnode_count; ++i)
+        m_vnode_freelist.append(&m_nodes[i]);
 }
 
 VFS::~VFS()
 {
-    kprintf("VFS: ~VirtualFileSystem with %u nodes allocated\n", allocatedNodeCount());
+    kprintf("VFS: ~VirtualFileSystem with %u nodes allocated\n", allocated_vnode_count());
     // FIXME: m_nodes is never freed. Does it matter though?
 }
 
@@ -62,8 +62,8 @@ auto VFS::makeNode(InodeIdentifier inode) -> RetainPtr<Vnode>
 
     CharacterDevice* characterDevice = nullptr;
     if (metadata.isCharacterDevice()) {
-        auto it = m_characterDevices.find(encodedDevice(metadata.majorDevice, metadata.minorDevice));
-        if (it != m_characterDevices.end()) {
+        auto it = m_character_devices.find(encodedDevice(metadata.majorDevice, metadata.minorDevice));
+        if (it != m_character_devices.end()) {
             characterDevice = (*it).value;
         } else {
             kprintf("VFS: makeNode() no such character device %u,%u\n", metadata.majorDevice, metadata.minorDevice);
@@ -133,7 +133,7 @@ bool VFS::mount(RetainPtr<FileSystem>&& fileSystem, const String& path)
 {
     ASSERT(fileSystem);
     int error;
-    auto inode = resolvePath(path, error);
+    auto inode = resolve_path(path, error);
     if (!inode.isValid()) {
         kprintf("VFS: mount can't resolve mount point '%s'\n", path.characters());
         return false;
@@ -146,10 +146,10 @@ bool VFS::mount(RetainPtr<FileSystem>&& fileSystem, const String& path)
     return true;
 }
 
-bool VFS::mountRoot(RetainPtr<FileSystem>&& fileSystem)
+bool VFS::mount_root(RetainPtr<FileSystem>&& fileSystem)
 {
-    if (m_rootNode) {
-        kprintf("VFS: mountRoot can't mount another root\n");
+    if (m_root_vnode) {
+        kprintf("VFS: mount_root can't mount another root\n");
         return false;
     }
 
@@ -165,11 +165,11 @@ bool VFS::mountRoot(RetainPtr<FileSystem>&& fileSystem)
         return false;
     }
 
-    m_rootNode = move(node);
+    m_root_vnode = move(node);
 
     kprintf("VFS: mounted root on %s{%p}\n",
-        m_rootNode->fileSystem()->className(),
-        m_rootNode->fileSystem());
+        m_root_vnode->fileSystem()->className(),
+        m_root_vnode->fileSystem());
 
     m_mounts.append(move(mount));
     return true;
@@ -177,11 +177,11 @@ bool VFS::mountRoot(RetainPtr<FileSystem>&& fileSystem)
 
 auto VFS::allocateNode() -> RetainPtr<Vnode>
 {
-    if (m_nodeFreeList.isEmpty()) {
+    if (m_vnode_freelist.isEmpty()) {
         kprintf("VFS: allocateNode has no nodes left\n");
         return nullptr;
     }
-    auto* node = m_nodeFreeList.takeLast();
+    auto* node = m_vnode_freelist.takeLast();
     ASSERT(node->retainCount == 0);
     node->retainCount = 1;
     node->m_vfs = this;
@@ -205,7 +205,7 @@ void VFS::freeNode(Vnode* node)
     }
     node->m_vfs = nullptr;
     node->m_vmo = nullptr;
-    m_nodeFreeList.append(move(node));
+    m_vnode_freelist.append(move(node));
 }
 
 #ifndef SERENITY
@@ -220,7 +220,7 @@ bool VFS::isDirectory(const String& path, InodeIdentifier base)
 }
 #endif
 
-auto VFS::findMountForHost(InodeIdentifier inode) -> Mount*
+auto VFS::find_mount_for_host(InodeIdentifier inode) -> Mount*
 {
     for (auto& mount : m_mounts) {
         if (mount->host() == inode)
@@ -229,7 +229,7 @@ auto VFS::findMountForHost(InodeIdentifier inode) -> Mount*
     return nullptr;
 }
 
-auto VFS::findMountForGuest(InodeIdentifier inode) -> Mount*
+auto VFS::find_mount_for_guest(InodeIdentifier inode) -> Mount*
 {
     for (auto& mount : m_mounts) {
         if (mount->guest() == inode)
@@ -240,7 +240,7 @@ auto VFS::findMountForGuest(InodeIdentifier inode) -> Mount*
 
 bool VFS::is_vfs_root(InodeIdentifier inode) const
 {
-    return inode == m_rootNode->inode;
+    return inode == m_root_vnode->inode;
 }
 
 void VFS::enumerateDirectoryInode(InodeIdentifier directoryInode, Function<bool(const FileSystem::DirectoryEntry&)> callback)
@@ -250,13 +250,13 @@ void VFS::enumerateDirectoryInode(InodeIdentifier directoryInode, Function<bool(
 
     directoryInode.fileSystem()->enumerateDirectoryInode(directoryInode, [&] (const FileSystem::DirectoryEntry& entry) {
         InodeIdentifier resolvedInode;
-        if (auto mount = findMountForHost(entry.inode))
+        if (auto mount = find_mount_for_host(entry.inode))
             resolvedInode = mount->guest();
         else
             resolvedInode = entry.inode;
 
         if (directoryInode.isRootInode() && !is_vfs_root(directoryInode) && !strcmp(entry.name, "..")) {
-            auto mount = findMountForGuest(entry.inode);
+            auto mount = find_mount_for_guest(entry.inode);
             ASSERT(mount);
             resolvedInode = mount->host();
         }
@@ -273,7 +273,7 @@ void VFS::listDirectory(const String& path, InodeIdentifier base)
     if (!directoryInode.isValid())
         return;
 
-    kprintf("VFS: ls %s -> %s %02u:%08u\n", path.characters(), directoryInode.fileSystem()->className(), directoryInode.fileSystemID(), directoryInode.index());
+    kprintf("VFS: ls %s -> %s %02u:%08u\n", path.characters(), directoryInode.fileSystem()->className(), directoryInode.fsid(), directoryInode.index());
     enumerateDirectoryInode(directoryInode, [&] (const FileSystem::DirectoryEntry& entry) {
         const char* nameColorBegin = "";
         const char* nameColorEnd = "";
@@ -295,7 +295,7 @@ void VFS::listDirectory(const String& path, InodeIdentifier base)
             nameColorEnd = "\033[0m";
         }
         kprintf("%02u:%08u ",
-            metadata.inode.fileSystemID(),
+            metadata.inode.fsid(),
             metadata.inode.index());
 
         if (metadata.isDirectory())
@@ -395,7 +395,7 @@ void VFS::listDirectoryRecursively(const String& path, InodeIdentifier base)
 bool VFS::touch(const String& path)
 {
     int error;
-    auto inode = resolvePath(path, error);
+    auto inode = resolve_path(path, error);
     if (!inode.isValid())
         return false;
     return inode.fileSystem()->setModificationTime(inode, ktime(nullptr));
@@ -413,7 +413,7 @@ RetainPtr<FileDescriptor> VFS::open(CharacterDevice& device, int options)
 
 RetainPtr<FileDescriptor> VFS::open(const String& path, int& error, int options, InodeIdentifier base)
 {
-    auto inode = resolvePath(path, error, base, options);
+    auto inode = resolve_path(path, error, base, options);
     if (!inode.isValid())
         return nullptr;
     auto vnode = getOrCreateNode(inode);
@@ -427,7 +427,7 @@ RetainPtr<FileDescriptor> VFS::create(const String& path, InodeIdentifier base)
     // FIXME: Do the real thing, not just this fake thing!
     (void) path;
     (void) base;
-    m_rootNode->fileSystem()->createInode(m_rootNode->fileSystem()->rootInode(), "empty", 0100644, 0);
+    m_root_vnode->fileSystem()->createInode(m_root_vnode->fileSystem()->rootInode(), "empty", 0100644, 0);
     return nullptr;
 }
 
@@ -436,20 +436,20 @@ RetainPtr<FileDescriptor> VFS::mkdir(const String& path, InodeIdentifier base)
     // FIXME: Do the real thing, not just this fake thing!
     (void) path;
     (void) base;
-    m_rootNode->fileSystem()->makeDirectory(m_rootNode->fileSystem()->rootInode(), "mydir", 0400755);
+    m_root_vnode->fileSystem()->makeDirectory(m_root_vnode->fileSystem()->rootInode(), "mydir", 0400755);
     return nullptr;
 }
 
 InodeIdentifier VFS::resolveSymbolicLink(InodeIdentifier base, InodeIdentifier symlinkInode, int& error)
 {
-    auto symlinkContents = symlinkInode.readEntireFile();
-    if (!symlinkContents)
+    auto symlink_contents = symlinkInode.readEntireFile();
+    if (!symlink_contents)
         return { };
-    auto linkee = String((const char*)symlinkContents.pointer(), symlinkContents.size());
+    auto linkee = String((const char*)symlink_contents.pointer(), symlink_contents.size());
 #ifdef VFS_DEBUG
-    kprintf("linkee (%s)(%u) from %u:%u\n", linkee.characters(), linkee.length(), base.fileSystemID(), base.index());
+    kprintf("linkee (%s)(%u) from %u:%u\n", linkee.characters(), linkee.length(), base.fsid(), base.index());
 #endif
-    return resolvePath(linkee, error, base);
+    return resolve_path(linkee, error, base);
 }
 
 RetainPtr<CoreInode> VFS::get_inode(InodeIdentifier inode_id)
@@ -464,37 +464,37 @@ String VFS::absolute_path(CoreInode& core_inode)
     int error;
     Vector<InodeIdentifier> lineage;
     RetainPtr<CoreInode> inode = &core_inode;
-    while (inode->identifier() != m_rootNode->inode) {
-        if (auto* mount = findMountForGuest(inode->identifier()))
+    while (inode->identifier() != m_root_vnode->inode) {
+        if (auto* mount = find_mount_for_guest(inode->identifier()))
             lineage.append(mount->host());
         else
             lineage.append(inode->identifier());
 
         InodeIdentifier parent_id;
         if (inode->is_directory()) {
-            parent_id = resolvePath("..", error, inode->identifier());
+            parent_id = resolve_path("..", error, inode->identifier());
         } else {
-            parent_id = inode->fs().findParentOfInode(inode->identifier());
+            parent_id = inode->fs().find_parent_of_inode(inode->identifier());
         }
         ASSERT(parent_id.isValid());
         inode = get_inode(parent_id);
     }
     if (lineage.isEmpty())
         return "/";
-    lineage.append(m_rootNode->inode);
+    lineage.append(m_root_vnode->inode);
     StringBuilder builder;
     for (size_t i = lineage.size() - 1; i >= 1; --i) {
         auto& child = lineage[i - 1];
         auto parent = lineage[i];
-        if (auto* mount = findMountForHost(parent))
+        if (auto* mount = find_mount_for_host(parent))
             parent = mount->guest();
         builder.append('/');
-        builder.append(parent.fileSystem()->nameOfChildInDirectory(parent, child));
+        builder.append(parent.fileSystem()->name_of_child_in_directory(parent, child));
     }
     return builder.build();
 }
 
-InodeIdentifier VFS::resolvePath(const String& path, int& error, InodeIdentifier base, int options)
+InodeIdentifier VFS::resolve_path(const String& path, int& error, InodeIdentifier base, int options)
 {
     if (path.isEmpty())
         return { };
@@ -503,12 +503,12 @@ InodeIdentifier VFS::resolvePath(const String& path, int& error, InodeIdentifier
     InodeIdentifier inode;
 
     if (path[0] == '/')
-        inode = m_rootNode->inode;
+        inode = m_root_vnode->inode;
     else
-        inode = base.isValid() ? base : m_rootNode->inode;
+        inode = base.isValid() ? base : m_root_vnode->inode;
 
     for (unsigned i = 0; i < parts.size(); ++i) {
-        bool wasRootInodeAtHeadOfLoop = inode.isRootInode();
+        bool inode_was_root_at_head_of_loop = inode.isRootInode();
         auto& part = parts[i];
         if (part.isEmpty())
             break;
@@ -522,36 +522,36 @@ InodeIdentifier VFS::resolvePath(const String& path, int& error, InodeIdentifier
         }
         if (!metadata.isDirectory()) {
 #ifdef VFS_DEBUG
-            kprintf("parent of <%s> not directory, it's inode %u:%u / %u:%u, mode: %u, size: %u\n", part.characters(), inode.fileSystemID(), inode.index(), metadata.inode.fileSystemID(), metadata.inode.index(), metadata.mode, metadata.size);
+            kprintf("parent of <%s> not directory, it's inode %u:%u / %u:%u, mode: %u, size: %u\n", part.characters(), inode.fsid(), inode.index(), metadata.inode.fsid(), metadata.inode.index(), metadata.mode, metadata.size);
 #endif
             error = -EIO;
             return { };
         }
         auto parent = inode;
-        inode = inode.fileSystem()->childOfDirectoryInodeWithName(inode, part);
+        inode = inode.fileSystem()->child_of_directory_inode_with_name(inode, part);
         if (!inode.isValid()) {
 #ifdef VFS_DEBUG
-            kprintf("child <%s>(%u) not found in directory, %02u:%08u\n", part.characters(), part.length(), parent.fileSystemID(), parent.index());
+            kprintf("child <%s>(%u) not found in directory, %02u:%08u\n", part.characters(), part.length(), parent.fsid(), parent.index());
 #endif
             error = -ENOENT;
             return { };
         }
 #ifdef VFS_DEBUG
-        kprintf("<%s> %u:%u\n", part.characters(), inode.fileSystemID(), inode.index());
+        kprintf("<%s> %u:%u\n", part.characters(), inode.fsid(), inode.index());
 #endif
-        if (auto mount = findMountForHost(inode)) {
+        if (auto mount = find_mount_for_host(inode)) {
 #ifdef VFS_DEBUG
             kprintf("  -- is host\n");
 #endif
             inode = mount->guest();
         }
-        if (wasRootInodeAtHeadOfLoop && inode.isRootInode() && !is_vfs_root(inode) && part == "..") {
+        if (inode_was_root_at_head_of_loop && inode.isRootInode() && !is_vfs_root(inode) && part == "..") {
 #ifdef VFS_DEBUG
             kprintf("  -- is guest\n");
 #endif
-            auto mount = findMountForGuest(inode);
+            auto mount = find_mount_for_guest(inode);
             inode = mount->host();
-            inode = inode.fileSystem()->childOfDirectoryInodeWithName(inode, "..");
+            inode = inode.fileSystem()->child_of_directory_inode_with_name(inode, "..");
         }
         metadata = inode.metadata();
         if (metadata.isSymbolicLink()) {
@@ -605,12 +605,12 @@ VFS::Mount::Mount(InodeIdentifier host, RetainPtr<FileSystem>&& guestFileSystem)
 {
 }
 
-void VFS::registerCharacterDevice(CharacterDevice& device)
+void VFS::register_character_device(CharacterDevice& device)
 {
-    m_characterDevices.set(encodedDevice(device.major(), device.minor()), &device);
+    m_character_devices.set(encodedDevice(device.major(), device.minor()), &device);
 }
 
-void VFS::forEachMount(Function<void(const Mount&)> callback) const
+void VFS::for_each_mount(Function<void(const Mount&)> callback) const
 {
     for (auto& mount : m_mounts) {
         callback(*mount);

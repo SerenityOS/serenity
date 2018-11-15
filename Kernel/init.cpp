@@ -176,29 +176,29 @@ static void init_stage2()
     auto vfs = make<VFS>();
 
     auto dev_zero = make<ZeroDevice>();
-    vfs->registerCharacterDevice(*dev_zero);
+    vfs->register_character_device(*dev_zero);
 
     auto dev_null = make<NullDevice>();
-    vfs->registerCharacterDevice(*dev_null);
+    vfs->register_character_device(*dev_null);
 
     auto dev_full = make<FullDevice>();
-    vfs->registerCharacterDevice(*dev_full);
+    vfs->register_character_device(*dev_full);
 
     auto dev_random = make<RandomDevice>();
-    vfs->registerCharacterDevice(*dev_random);
+    vfs->register_character_device(*dev_random);
 
-    vfs->registerCharacterDevice(*keyboard);
+    vfs->register_character_device(*keyboard);
 
-    vfs->registerCharacterDevice(*tty0);
-    vfs->registerCharacterDevice(*tty1);
-    vfs->registerCharacterDevice(*tty2);
-    vfs->registerCharacterDevice(*tty3);
+    vfs->register_character_device(*tty0);
+    vfs->register_character_device(*tty1);
+    vfs->register_character_device(*tty2);
+    vfs->register_character_device(*tty3);
 
     auto dev_hd0 = IDEDiskDevice::create();
     auto e2fs = Ext2FileSystem::create(dev_hd0.copyRef());
     e2fs->initialize();
 
-    vfs->mountRoot(e2fs.copyRef());
+    vfs->mount_root(e2fs.copyRef());
 
 #ifdef KSYMS
     {
@@ -267,7 +267,7 @@ void init()
 
     MemoryManager::initialize();
 
-    VFS::initializeGlobals();
+    VFS::initialize_globals();
     StringImpl::initializeGlobals();
 
     PIT::initialize();

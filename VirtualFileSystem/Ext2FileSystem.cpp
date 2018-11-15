@@ -220,7 +220,7 @@ auto Ext2FileSystem::lookupExt2Inode(unsigned inode) const -> CachedExt2Inode
 
 InodeMetadata Ext2FileSystem::inodeMetadata(InodeIdentifier inode) const
 {
-    ASSERT(inode.fileSystemID() == id());
+    ASSERT(inode.fsid() == id());
 
     auto e2inode = lookupExt2Inode(inode.index());
     if (!e2inode)
@@ -344,7 +344,7 @@ void Ext2Inode::populate_metadata() const
 
 RetainPtr<CoreInode> Ext2FileSystem::get_inode(InodeIdentifier inode) const
 {
-    ASSERT(inode.fileSystemID() == id());
+    ASSERT(inode.fsid() == id());
     {
         LOCKER(m_inode_cache_lock);
         auto it = m_inode_cache.find(inode.index());
@@ -428,7 +428,7 @@ Unix::ssize_t Ext2Inode::read_bytes(Unix::off_t offset, Unix::size_t count, byte
 Unix::ssize_t Ext2FileSystem::readInodeBytes(InodeIdentifier inode, Unix::off_t offset, Unix::size_t count, byte* buffer, FileDescriptor*) const
 {
     ASSERT(offset >= 0);
-    ASSERT(inode.fileSystemID() == id());
+    ASSERT(inode.fsid() == id());
 
     auto e2inode = lookupExt2Inode(inode.index());
     if (!e2inode) {
@@ -503,7 +503,7 @@ Unix::ssize_t Ext2FileSystem::readInodeBytes(InodeIdentifier inode, Unix::off_t 
 
 bool Ext2FileSystem::writeInode(InodeIdentifier inode, const ByteBuffer& data)
 {
-    ASSERT(inode.fileSystemID() == id());
+    ASSERT(inode.fsid() == id());
 
     auto e2inode = lookupExt2Inode(inode.index());
     if (!e2inode) {
@@ -563,7 +563,7 @@ bool Ext2Inode::traverse_as_directory(Function<bool(const FileSystem::DirectoryE
 
 bool Ext2FileSystem::enumerateDirectoryInode(InodeIdentifier inode, Function<bool(const DirectoryEntry&)> callback) const
 {
-    ASSERT(inode.fileSystemID() == id());
+    ASSERT(inode.fsid() == id());
     ASSERT(isDirectoryInode(inode.index()));
 
 #ifdef EXT2_DEBUG
@@ -780,7 +780,7 @@ bool Ext2FileSystem::modifyLinkCount(InodeIndex inode, int delta)
 
 bool Ext2FileSystem::setModificationTime(InodeIdentifier inode, dword timestamp)
 {
-    ASSERT(inode.fileSystemID() == id());
+    ASSERT(inode.fsid() == id());
 
     auto e2inode = lookupExt2Inode(inode.index());
     if (!e2inode)
@@ -993,7 +993,7 @@ bool Ext2FileSystem::setBlockAllocationState(GroupIndex group, BlockIndex bi, bo
 
 InodeIdentifier Ext2FileSystem::makeDirectory(InodeIdentifier parentInode, const String& name, Unix::mode_t mode)
 {
-    ASSERT(parentInode.fileSystemID() == id());
+    ASSERT(parentInode.fsid() == id());
     ASSERT(isDirectoryInode(parentInode.index()));
 
     // Fix up the mode to definitely be a directory.
@@ -1032,7 +1032,7 @@ InodeIdentifier Ext2FileSystem::makeDirectory(InodeIdentifier parentInode, const
 
 InodeIdentifier Ext2FileSystem::createInode(InodeIdentifier parentInode, const String& name, Unix::mode_t mode, unsigned size)
 {
-    ASSERT(parentInode.fileSystemID() == id());
+    ASSERT(parentInode.fsid() == id());
     ASSERT(isDirectoryInode(parentInode.index()));
 
 //#ifdef EXT2_DEBUG
@@ -1119,7 +1119,7 @@ InodeIdentifier Ext2FileSystem::createInode(InodeIdentifier parentInode, const S
     return { id(), inode };
 }
 
-InodeIdentifier Ext2FileSystem::findParentOfInode(InodeIdentifier inode_id) const
+InodeIdentifier Ext2FileSystem::find_parent_of_inode(InodeIdentifier inode_id) const
 {
     auto inode = get_inode(inode_id);
     ASSERT(inode);

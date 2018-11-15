@@ -17,7 +17,7 @@ public:
 
     bool isValid() const { return m_fileSystemID != 0 && m_index != 0; }
 
-    dword fileSystemID() const { return m_fileSystemID; }
+    dword fsid() const { return m_fileSystemID; }
     dword index() const { return m_index; }
 
     FileSystem* fileSystem();
