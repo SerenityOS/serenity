@@ -6,25 +6,25 @@
 #include "StdLib.h"
 #include "i386.h"
 
-static ProcFileSystem* s_the;
+static ProcFS* s_the;
 
-ProcFileSystem& ProcFileSystem::the()
+ProcFS& ProcFS::the()
 {
     ASSERT(s_the);
     return *s_the;
 }
 
-RetainPtr<ProcFileSystem> ProcFileSystem::create()
+RetainPtr<ProcFS> ProcFS::create()
 {
-    return adopt(*new ProcFileSystem);
+    return adopt(*new ProcFS);
 }
 
-ProcFileSystem::ProcFileSystem()
+ProcFS::ProcFS()
 {
     s_the = this;
 }
 
-ProcFileSystem::~ProcFileSystem()
+ProcFS::~ProcFS()
 {
 }
 
@@ -147,7 +147,7 @@ ByteBuffer procfs$pid_cwd(Process& process)
     return VFS::the().absolute_path(*inode).toByteBuffer();
 }
 
-void ProcFileSystem::addProcess(Process& process)
+void ProcFS::addProcess(Process& process)
 {
     InterruptDisabler disabler;
     char buf[16];
@@ -163,7 +163,7 @@ void ProcFileSystem::addProcess(Process& process)
     addFile(create_generated_file("cwd", [&process] { return procfs$pid_cwd(process); }, 00120777), dir.index());
 }
 
-void ProcFileSystem::removeProcess(Process& process)
+void ProcFS::removeProcess(Process& process)
 {
     InterruptDisabler disabler;
     auto pid = process.pid();
@@ -354,9 +354,9 @@ ByteBuffer procfs$vnodes()
     return buffer;
 }
 
-bool ProcFileSystem::initialize()
+bool ProcFS::initialize()
 {
-    SyntheticFileSystem::initialize();
+    SynthFS::initialize();
     addFile(create_generated_file("mm", procfs$mm));
     addFile(create_generated_file("regions", procfs$regions));
     addFile(create_generated_file("mounts", procfs$mounts));
@@ -367,7 +367,7 @@ bool ProcFileSystem::initialize()
     return true;
 }
 
-const char* ProcFileSystem::class_name() const
+const char* ProcFS::class_name() const
 {
     return "procfs";
 }

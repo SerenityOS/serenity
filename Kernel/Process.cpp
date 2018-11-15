@@ -274,7 +274,7 @@ Process* Process::fork(RegisterDump& regs)
     dbgprintf("fork: child will begin executing at %w:%x with stack %w:%x\n", child->m_tss.cs, child->m_tss.eip, child->m_tss.ss, child->m_tss.esp);
 #endif
 
-    ProcFileSystem::the().addProcess(*child);
+    ProcFS::the().addProcess(*child);
 
     {
         InterruptDisabler disabler;
@@ -498,7 +498,7 @@ Process* Process::create_user_process(const String& path, uid_t uid, gid_t gid, 
     if (error != 0)
         return nullptr;
 
-    ProcFileSystem::the().addProcess(*process);
+    ProcFS::the().addProcess(*process);
 
     {
         InterruptDisabler disabler;
@@ -561,7 +561,7 @@ Process* Process::create_kernel_process(void (*e)(), String&& name)
             g_processes->prepend(process);
             system.nprocess++;
         }
-        ProcFileSystem::the().addProcess(*process);
+        ProcFS::the().addProcess(*process);
 #ifdef TASK_DEBUG
         kprintf("Kernel process %u (%s) spawned @ %p\n", process->pid(), process->name().characters(), process->m_tss.eip);
 #endif
@@ -691,7 +691,7 @@ Process::Process(String&& name, uid_t uid, gid_t gid, pid_t ppid, RingLevel ring
 Process::~Process()
 {
     InterruptDisabler disabler;
-    ProcFileSystem::the().removeProcess(*this);
+    ProcFS::the().removeProcess(*this);
     system.nprocess--;
 
     gdt_free_entry(selector());

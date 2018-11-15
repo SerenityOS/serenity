@@ -19,13 +19,13 @@ static const dword mepoch = 476763780;
 class CoreInode;
 class FileDescriptor;
 
-class FileSystem : public Retainable<FileSystem> {
+class FS : public Retainable<FS> {
 public:
     static void initializeGlobals();
-    virtual ~FileSystem();
+    virtual ~FS();
 
     dword id() const { return m_id; }
-    static FileSystem* fromID(dword);
+    static FS* fromID(dword);
 
     virtual bool initialize() = 0;
     virtual const char* class_name() const = 0;
@@ -55,7 +55,7 @@ public:
     ByteBuffer readEntireInode(InodeIdentifier, FileDescriptor* = nullptr) const;
 
 protected:
-    FileSystem();
+    FS();
 
 private:
     dword m_id { 0 };
@@ -66,8 +66,8 @@ class CoreInode : public Retainable<CoreInode> {
 public:
     virtual ~CoreInode();
 
-    FileSystem& fs() { return m_fs; }
-    const FileSystem& fs() const { return m_fs; }
+    FS& fs() { return m_fs; }
+    const FS& fs() const { return m_fs; }
     unsigned fsid() const;
     unsigned index() const { return m_index; }
 
@@ -81,12 +81,12 @@ public:
     ByteBuffer read_entire(FileDescriptor* = nullptr);
 
     virtual Unix::ssize_t read_bytes(Unix::off_t, Unix::size_t, byte* buffer, FileDescriptor*) = 0;
-    virtual bool traverse_as_directory(Function<bool(const FileSystem::DirectoryEntry&)>) = 0;
+    virtual bool traverse_as_directory(Function<bool(const FS::DirectoryEntry&)>) = 0;
     virtual InodeIdentifier lookup(const String& name) = 0;
     virtual String reverse_lookup(InodeIdentifier) = 0;
 
 protected:
-    CoreInode(FileSystem& fs, unsigned index)
+    CoreInode(FS& fs, unsigned index)
         : m_fs(fs)
         , m_index(index)
     {
@@ -96,18 +96,18 @@ protected:
 
     mutable InodeMetadata m_metadata;
 private:
-    FileSystem& m_fs;
+    FS& m_fs;
     unsigned m_index { 0 };
 };
 
-inline FileSystem* InodeIdentifier::fileSystem()
+inline FS* InodeIdentifier::fileSystem()
 {
-    return FileSystem::fromID(m_fileSystemID);
+    return FS::fromID(m_fileSystemID);
 }
 
-inline const FileSystem* InodeIdentifier::fileSystem() const
+inline const FS* InodeIdentifier::fileSystem() const
 {
-    return FileSystem::fromID(m_fileSystemID);
+    return FS::fromID(m_fileSystemID);
 }
 
 inline InodeMetadata InodeIdentifier::metadata() const

@@ -3,33 +3,33 @@
 #include "FileSystem.h"
 
 static dword s_lastFileSystemID;
-static HashMap<dword, FileSystem*>* map;
+static HashMap<dword, FS*>* map;
 
-static HashMap<dword, FileSystem*>& fileSystems()
+static HashMap<dword, FS*>& fileSystems()
 {
     if (!map)
-        map = new HashMap<dword, FileSystem*>();
+        map = new HashMap<dword, FS*>();
     return *map;
 }
 
-void FileSystem::initializeGlobals()
+void FS::initializeGlobals()
 {
     s_lastFileSystemID = 0;
     map = 0;
 }
 
-FileSystem::FileSystem()
+FS::FS()
     : m_id(++s_lastFileSystemID)
 {
     fileSystems().set(m_id, this);
 }
 
-FileSystem::~FileSystem()
+FS::~FS()
 {
     fileSystems().remove(m_id);
 }
 
-FileSystem* FileSystem::fromID(dword id)
+FS* FS::fromID(dword id)
 {
     auto it = fileSystems().find(id);
     if (it != fileSystems().end())
@@ -69,7 +69,7 @@ ByteBuffer CoreInode::read_entire(FileDescriptor* descriptor)
     */
 }
 
-ByteBuffer FileSystem::readEntireInode(InodeIdentifier inode, FileDescriptor* handle) const
+ByteBuffer FS::readEntireInode(InodeIdentifier inode, FileDescriptor* handle) const
 {
     ASSERT(inode.fsid() == id());
 
@@ -106,7 +106,7 @@ ByteBuffer FileSystem::readEntireInode(InodeIdentifier inode, FileDescriptor* ha
     return contents;
 }
 
-FileSystem::DirectoryEntry::DirectoryEntry(const char* n, InodeIdentifier i, byte ft)
+FS::DirectoryEntry::DirectoryEntry(const char* n, InodeIdentifier i, byte ft)
     : name_length(strlen(name))
     , inode(i)
     , fileType(ft)
@@ -115,7 +115,7 @@ FileSystem::DirectoryEntry::DirectoryEntry(const char* n, InodeIdentifier i, byt
     name[name_length] = '\0';
 }
 
-FileSystem::DirectoryEntry::DirectoryEntry(const char* n, Unix::size_t nl, InodeIdentifier i, byte ft)
+FS::DirectoryEntry::DirectoryEntry(const char* n, Unix::size_t nl, InodeIdentifier i, byte ft)
     : name_length(nl)
     , inode(i)
     , fileType(ft)

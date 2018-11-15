@@ -9,17 +9,17 @@ typedef int InterruptDisabler;
 //#define DBFS_DEBUG
 #define BLOCK_CACHE
 
-DiskBackedFileSystem::DiskBackedFileSystem(RetainPtr<DiskDevice>&& device)
+DiskBackedFS::DiskBackedFS(RetainPtr<DiskDevice>&& device)
     : m_device(move(device))
 {
     ASSERT(m_device);
 }
 
-DiskBackedFileSystem::~DiskBackedFileSystem()
+DiskBackedFS::~DiskBackedFS()
 {
 }
 
-bool DiskBackedFileSystem::writeBlock(unsigned index, const ByteBuffer& data)
+bool DiskBackedFS::writeBlock(unsigned index, const ByteBuffer& data)
 {
     ASSERT(data.size() == blockSize());
 #ifdef DBFS_DEBUG
@@ -29,7 +29,7 @@ bool DiskBackedFileSystem::writeBlock(unsigned index, const ByteBuffer& data)
     return device().write(baseOffset, blockSize(), data.pointer());
 }
 
-bool DiskBackedFileSystem::writeBlocks(unsigned index, unsigned count, const ByteBuffer& data)
+bool DiskBackedFS::writeBlocks(unsigned index, unsigned count, const ByteBuffer& data)
 {
 #ifdef DBFS_DEBUG
     kprintf("DiskBackedFileSystem::writeBlocks %u x%u\n", index, count);
@@ -38,7 +38,7 @@ bool DiskBackedFileSystem::writeBlocks(unsigned index, unsigned count, const Byt
     return device().write(baseOffset, count * blockSize(), data.pointer());
 }
 
-ByteBuffer DiskBackedFileSystem::readBlock(unsigned index) const
+ByteBuffer DiskBackedFS::readBlock(unsigned index) const
 {
 #ifdef DBFS_DEBUG
     kprintf("DiskBackedFileSystem::readBlock %u\n", index);
@@ -75,7 +75,7 @@ ByteBuffer DiskBackedFileSystem::readBlock(unsigned index) const
     return buffer;
 }
 
-ByteBuffer DiskBackedFileSystem::readBlocks(unsigned index, unsigned count) const
+ByteBuffer DiskBackedFS::readBlocks(unsigned index, unsigned count) const
 {
     if (!count)
         return nullptr;
@@ -95,7 +95,7 @@ ByteBuffer DiskBackedFileSystem::readBlocks(unsigned index, unsigned count) cons
     return blocks;
 }
 
-void DiskBackedFileSystem::setBlockSize(unsigned blockSize)
+void DiskBackedFS::setBlockSize(unsigned blockSize)
 {
     if (blockSize == m_blockSize)
         return;
@@ -103,7 +103,7 @@ void DiskBackedFileSystem::setBlockSize(unsigned blockSize)
     invalidateCaches();
 }
 
-void DiskBackedFileSystem::invalidateCaches()
+void DiskBackedFS::invalidateCaches()
 {
     LOCKER(m_blockCacheLock);
     InterruptDisabler disabler;

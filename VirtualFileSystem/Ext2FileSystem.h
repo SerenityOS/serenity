@@ -10,12 +10,12 @@ struct ext2_group_desc;
 struct ext2_inode;
 struct ext2_super_block;
 
-class Ext2FileSystem;
+class Ext2FS;
 
-class Ext2Inode final : public CoreInode {
-    friend class Ext2FileSystem;
+class Ext2FSInode final : public CoreInode {
+    friend class Ext2FS;
 public:
-    virtual ~Ext2Inode() override;
+    virtual ~Ext2FSInode() override;
 
     size_t size() const { return m_raw_inode.i_size; }
     bool is_symlink() const { return isSymbolicLink(m_raw_inode.i_mode); }
@@ -24,15 +24,15 @@ private:
     // ^CoreInode
     virtual Unix::ssize_t read_bytes(Unix::off_t, Unix::size_t, byte* buffer, FileDescriptor*) override;
     virtual void populate_metadata() const override;
-    virtual bool traverse_as_directory(Function<bool(const FileSystem::DirectoryEntry&)>) override;
+    virtual bool traverse_as_directory(Function<bool(const FS::DirectoryEntry&)>) override;
     virtual InodeIdentifier lookup(const String& name) override;
     virtual String reverse_lookup(InodeIdentifier) override;
 
     void populate_lookup_cache();
 
-    Ext2FileSystem& fs();
-    const Ext2FileSystem& fs() const;
-    Ext2Inode(Ext2FileSystem&, unsigned index, const ext2_inode&);
+    Ext2FS& fs();
+    const Ext2FS& fs() const;
+    Ext2FSInode(Ext2FS&, unsigned index, const ext2_inode&);
 
     SpinLock m_lock;
     Vector<unsigned> m_block_list;
@@ -40,11 +40,11 @@ private:
     ext2_inode m_raw_inode;
 };
 
-class Ext2FileSystem final : public DiskBackedFileSystem {
-    friend class Ext2Inode;
+class Ext2FS final : public DiskBackedFS {
+    friend class Ext2FSInode;
 public:
-    static RetainPtr<Ext2FileSystem> create(RetainPtr<DiskDevice>&&);
-    virtual ~Ext2FileSystem() override;
+    static RetainPtr<Ext2FS> create(RetainPtr<DiskDevice>&&);
+    virtual ~Ext2FS() override;
     virtual bool initialize() override;
 
 private:
@@ -54,7 +54,7 @@ private:
     class CachedExt2Inode;
     class CachedExt2InodeImpl;
 
-    explicit Ext2FileSystem(RetainPtr<DiskDevice>&&);
+    explicit Ext2FS(RetainPtr<DiskDevice>&&);
 
     const ext2_super_block& superBlock() const;
     const ext2_group_desc& blockGroupDescriptor(unsigned groupIndex) const;
@@ -113,15 +113,15 @@ private:
     mutable HashMap<unsigned, RetainPtr<CachedExt2InodeImpl>> m_inodeCache;
 
     mutable SpinLock m_inode_cache_lock;
-    mutable HashMap<BlockIndex, RetainPtr<Ext2Inode>> m_inode_cache;
+    mutable HashMap<BlockIndex, RetainPtr<Ext2FSInode>> m_inode_cache;
 };
 
-inline Ext2FileSystem& Ext2Inode::fs()
+inline Ext2FS& Ext2FSInode::fs()
 {
-    return static_cast<Ext2FileSystem&>(CoreInode::fs());
+    return static_cast<Ext2FS&>(CoreInode::fs());
 }
 
-inline const Ext2FileSystem& Ext2Inode::fs() const
+inline const Ext2FS& Ext2FSInode::fs() const
 {
-    return static_cast<const Ext2FileSystem&>(CoreInode::fs());
+    return static_cast<const Ext2FS&>(CoreInode::fs());
 }

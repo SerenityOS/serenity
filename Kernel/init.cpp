@@ -195,7 +195,7 @@ static void init_stage2()
     vfs->register_character_device(*tty3);
 
     auto dev_hd0 = IDEDiskDevice::create();
-    auto e2fs = Ext2FileSystem::create(dev_hd0.copyRef());
+    auto e2fs = Ext2FS::create(dev_hd0.copyRef());
     e2fs->initialize();
 
     vfs->mount_root(e2fs.copyRef());
@@ -214,7 +214,7 @@ static void init_stage2()
     }
 #endif
 
-    vfs->mount(ProcFileSystem::the(), "/proc");
+    vfs->mount(ProcFS::the(), "/proc");
 
     Vector<String> environment;
     environment.append("TERM=ansi");
@@ -280,7 +280,7 @@ void init()
     kprintf("%u kB base memory\n", base_memory);
     kprintf("%u kB extended memory\n", ext_memory);
 
-    auto procfs = ProcFileSystem::create();
+    auto procfs = ProcFS::create();
     procfs->initialize();
 
     Process::initialize();

@@ -6,10 +6,10 @@
 
 class SynthFSInode;
 
-class SyntheticFileSystem : public FileSystem {
+class SynthFS : public FS {
 public:
-    virtual ~SyntheticFileSystem() override;
-    static RetainPtr<SyntheticFileSystem> create();
+    virtual ~SynthFS() override;
+    static RetainPtr<SynthFS> create();
 
     virtual bool initialize() override;
     virtual const char* class_name() const override;
@@ -29,7 +29,7 @@ protected:
     InodeIndex generateInodeIndex();
     static constexpr InodeIndex RootInodeIndex = 1;
 
-    SyntheticFileSystem();
+    SynthFS();
 
     RetainPtr<SynthFSInode> create_directory(String&& name);
     RetainPtr<SynthFSInode> create_text_file(String&& name, ByteBuffer&&, Unix::mode_t = 0010644);
@@ -44,7 +44,7 @@ private:
 };
 
 class SynthFSInode final : public CoreInode {
-    friend class SyntheticFileSystem;
+    friend class SynthFS;
 public:
     virtual ~SynthFSInode() override;
 
@@ -52,13 +52,13 @@ private:
     // ^CoreInode
     virtual Unix::ssize_t read_bytes(Unix::off_t, Unix::size_t, byte* buffer, FileDescriptor*) override;
     virtual void populate_metadata() const override;
-    virtual bool traverse_as_directory(Function<bool(const FileSystem::DirectoryEntry&)>) override;
+    virtual bool traverse_as_directory(Function<bool(const FS::DirectoryEntry&)>) override;
     virtual InodeIdentifier lookup(const String& name) override;
     virtual String reverse_lookup(InodeIdentifier) override;
 
-    SyntheticFileSystem& fs();
-    const SyntheticFileSystem& fs() const;
-    SynthFSInode(SyntheticFileSystem&, unsigned index);
+    SynthFS& fs();
+    const SynthFS& fs() const;
+    SynthFSInode(SynthFS&, unsigned index);
 
     String m_name;
     InodeIdentifier m_parent;

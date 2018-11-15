@@ -25,7 +25,7 @@ VFS& VFS::the()
 void VFS::initialize_globals()
 {
     s_the = nullptr;
-    FileSystem::initializeGlobals();
+    FS::initializeGlobals();
 }
 
 VFS::VFS()
@@ -74,7 +74,7 @@ auto VFS::makeNode(InodeIdentifier inode) -> RetainPtr<Vnode>
     auto vnode = allocateNode();
     ASSERT(vnode);
 
-    FileSystem* fileSystem = inode.fileSystem();
+    FS* fileSystem = inode.fileSystem();
     fileSystem->retain();
 
     vnode->inode = inode;
@@ -129,7 +129,7 @@ auto VFS::get_or_create_node(CharacterDevice& device) -> RetainPtr<Vnode>
     return makeNode(device);
 }
 
-bool VFS::mount(RetainPtr<FileSystem>&& fileSystem, const String& path)
+bool VFS::mount(RetainPtr<FS>&& fileSystem, const String& path)
 {
     ASSERT(fileSystem);
     int error;
@@ -146,7 +146,7 @@ bool VFS::mount(RetainPtr<FileSystem>&& fileSystem, const String& path)
     return true;
 }
 
-bool VFS::mount_root(RetainPtr<FileSystem>&& fileSystem)
+bool VFS::mount_root(RetainPtr<FS>&& fileSystem)
 {
     if (m_root_vnode) {
         kprintf("VFS: mount_root can't mount another root\n");
@@ -243,9 +243,9 @@ bool VFS::is_vfs_root(InodeIdentifier inode) const
     return inode == m_root_vnode->inode;
 }
 
-void VFS::traverse_directory_inode(CoreInode& dir_inode, Function<bool(const FileSystem::DirectoryEntry&)> callback)
+void VFS::traverse_directory_inode(CoreInode& dir_inode, Function<bool(const FS::DirectoryEntry&)> callback)
 {
-    dir_inode.traverse_as_directory([&] (const FileSystem::DirectoryEntry& entry) {
+    dir_inode.traverse_as_directory([&] (const FS::DirectoryEntry& entry) {
         InodeIdentifier resolvedInode;
         if (auto mount = find_mount_for_host(entry.inode))
             resolvedInode = mount->guest();
@@ -257,7 +257,7 @@ void VFS::traverse_directory_inode(CoreInode& dir_inode, Function<bool(const Fil
             ASSERT(mount);
             resolvedInode = mount->host();
         }
-        callback(FileSystem::DirectoryEntry(entry.name, entry.name_length, resolvedInode, entry.fileType));
+        callback(FS::DirectoryEntry(entry.name, entry.name_length, resolvedInode, entry.fileType));
         return true;
     });
 }
@@ -597,7 +597,7 @@ const InodeMetadata& Vnode::metadata() const
     return m_cachedMetadata;
 }
 
-VFS::Mount::Mount(InodeIdentifier host, RetainPtr<FileSystem>&& guest_fs)
+VFS::Mount::Mount(InodeIdentifier host, RetainPtr<FS>&& guest_fs)
     : m_host(host)
     , m_guest(guest_fs->rootInode())
     , m_guest_fs(move(guest_fs))

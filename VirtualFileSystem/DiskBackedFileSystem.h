@@ -5,9 +5,9 @@
 #include <AK/HashMap.h>
 #include <AK/Lock.h>
 
-class DiskBackedFileSystem : public FileSystem {
+class DiskBackedFS : public FS {
 public:
-    virtual ~DiskBackedFileSystem() override;
+    virtual ~DiskBackedFS() override;
 
     DiskDevice& device() { return *m_device; }
     const DiskDevice& device() const { return *m_device; }
@@ -15,7 +15,7 @@ public:
     unsigned blockSize() const { return m_blockSize; }
 
 protected:
-    explicit DiskBackedFileSystem(RetainPtr<DiskDevice>&&);
+    explicit DiskBackedFS(RetainPtr<DiskDevice>&&);
 
     void setBlockSize(unsigned);
     void invalidateCaches();

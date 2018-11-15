@@ -3,7 +3,7 @@
 #include <AK/ByteBuffer.h>
 #include <AK/Types.h>
 
-class FileSystem;
+class FS;
 struct InodeMetadata;
 
 class InodeIdentifier {
@@ -20,8 +20,8 @@ public:
     dword fsid() const { return m_fileSystemID; }
     dword index() const { return m_index; }
 
-    FileSystem* fileSystem();
-    const FileSystem* fileSystem() const;
+    FS* fileSystem();
+    const FS* fileSystem() const;
 
     bool operator==(const InodeIdentifier& other) const
     {
