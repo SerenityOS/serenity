@@ -214,15 +214,15 @@ ByteBuffer procfs$regions()
 ByteBuffer procfs$mounts()
 {
     InterruptDisabler disabler;
-    auto buffer = ByteBuffer::createUninitialized(VFS::the().mountCount() * 80);
+    auto buffer = ByteBuffer::createUninitialized(VFS::the().mount_count() * 80);
     char* ptr = (char*)buffer.pointer();
-    VFS::the().forEachMount([&ptr] (auto& mount) {
+    VFS::the().for_each_mount([&ptr] (auto& mount) {
         auto& fs = mount.fileSystem();
         ptr += ksprintf(ptr, "%s @ ", fs.className());
         if (!mount.host().isValid())
             ptr += ksprintf(ptr, "/\n", fs.className());
         else
-            ptr += ksprintf(ptr, "%u:%u\n", mount.host().fileSystemID(), mount.host().index());
+            ptr += ksprintf(ptr, "%u:%u\n", mount.host().fsid(), mount.host().index());
     });
     buffer.trim(ptr - (char*)buffer.pointer());
     return buffer;
@@ -331,9 +331,9 @@ ByteBuffer procfs$summary()
 ByteBuffer procfs$vnodes()
 {
     auto& vfs = VFS::the();
-    auto buffer = ByteBuffer::createUninitialized(vfs.m_maxNodeCount * 256);
+    auto buffer = ByteBuffer::createUninitialized(vfs.m_max_vnode_count * 256);
     char* ptr = (char*)buffer.pointer();
-    for (size_t i = 0; i < vfs.m_maxNodeCount; ++i) {
+    for (size_t i = 0; i < vfs.m_max_vnode_count; ++i) {
         auto& vnode = vfs.m_nodes[i];
         // FIXME: Retain the vnode while inspecting it.
         if (!vnode.inUse())
@@ -347,7 +347,7 @@ ByteBuffer procfs$vnodes()
                     path = static_cast<const TTY*>(dev)->ttyName();
             }
         }
-        ptr += ksprintf(ptr, "vnode %03u: %02u:%08u (%u) %s\n", i, vnode.inode.fileSystemID(), vnode.inode.index(), vnode.retain_count(), path.characters());
+        ptr += ksprintf(ptr, "vnode %03u: %02u:%08u (%u) %s\n", i, vnode.inode.fsid(), vnode.inode.index(), vnode.retain_count(), path.characters());
     }
     *ptr = '\0';
     buffer.trim(ptr - (char*)buffer.pointer());

@@ -134,7 +134,7 @@ InodeIdentifier SyntheticFileSystem::rootInode() const
 bool SyntheticFileSystem::enumerateDirectoryInode(InodeIdentifier inode, Function<bool(const DirectoryEntry&)> callback) const
 {
     InterruptDisabler disabler;
-    ASSERT(inode.fileSystemID() == id());
+    ASSERT(inode.fsid() == id());
 #ifdef SYNTHFS_DEBUG
     kprintf("synthfs: enumerateDirectoryInode %u\n", inode.index());
 #endif
@@ -161,7 +161,7 @@ bool SyntheticFileSystem::enumerateDirectoryInode(InodeIdentifier inode, Functio
 InodeMetadata SyntheticFileSystem::inodeMetadata(InodeIdentifier inode) const
 {
     InterruptDisabler disabler;
-    ASSERT(inode.fileSystemID() == id());
+    ASSERT(inode.fsid() == id());
 #ifdef SYNTHFS_DEBUG
     kprintf("SynthFS: inodeMetadata(%u)\n", inode.index());
 #endif
@@ -197,7 +197,7 @@ bool SyntheticFileSystem::writeInode(InodeIdentifier, const ByteBuffer&)
 
 Unix::ssize_t SyntheticFileSystem::readInodeBytes(InodeIdentifier inode, Unix::off_t offset, Unix::size_t count, byte* buffer, FileDescriptor* handle) const
 {
-    ASSERT(inode.fileSystemID() == id());
+    ASSERT(inode.fsid() == id());
 #ifdef SYNTHFS_DEBUG
     kprintf("SynthFS: readInode %u\n", inode.index());
 #endif
@@ -245,7 +245,7 @@ auto SyntheticFileSystem::generateInodeIndex() -> InodeIndex
     return m_nextInodeIndex++;
 }
 
-InodeIdentifier SyntheticFileSystem::findParentOfInode(InodeIdentifier inode) const
+InodeIdentifier SyntheticFileSystem::find_parent_of_inode(InodeIdentifier inode) const
 {
     auto it = m_inodes.find(inode.index());
     if (it == m_inodes.end())

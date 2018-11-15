@@ -49,13 +49,13 @@ public:
     virtual InodeIdentifier createInode(InodeIdentifier parentInode, const String& name, Unix::mode_t, unsigned size) = 0;
     virtual InodeIdentifier makeDirectory(InodeIdentifier parentInode, const String& name, Unix::mode_t) = 0;
 
-    virtual InodeIdentifier findParentOfInode(InodeIdentifier) const = 0;
+    virtual InodeIdentifier find_parent_of_inode(InodeIdentifier) const = 0;
 
     virtual RetainPtr<CoreInode> get_inode(InodeIdentifier) const = 0;
 
-    InodeIdentifier childOfDirectoryInodeWithName(InodeIdentifier, const String& name) const;
+    InodeIdentifier child_of_directory_inode_with_name(InodeIdentifier, const String& name) const;
     ByteBuffer readEntireInode(InodeIdentifier, FileDescriptor* = nullptr) const;
-    String nameOfChildInDirectory(InodeIdentifier parent, InodeIdentifier child) const;
+    String name_of_child_in_directory(InodeIdentifier parent, InodeIdentifier child) const;
 
 protected:
     FileSystem();
@@ -133,8 +133,8 @@ namespace AK {
 template<>
 struct Traits<InodeIdentifier> {
     // FIXME: This is a shitty hash.
-    static unsigned hash(const InodeIdentifier& inode) { return Traits<unsigned>::hash(inode.fileSystemID()) + Traits<unsigned>::hash(inode.index()); }
-    static void dump(const InodeIdentifier& inode) { kprintf("%02u:%08u", inode.fileSystemID(), inode.index()); }
+    static unsigned hash(const InodeIdentifier& inode) { return Traits<unsigned>::hash(inode.fsid()) + Traits<unsigned>::hash(inode.index()); }
+    static void dump(const InodeIdentifier& inode) { kprintf("%02u:%08u", inode.fsid(), inode.index()); }
 };
 
 }

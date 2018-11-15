@@ -37,7 +37,7 @@ FileSystem* FileSystem::fromID(dword id)
     return nullptr;
 }
 
-InodeIdentifier FileSystem::childOfDirectoryInodeWithName(InodeIdentifier inode, const String& name) const
+InodeIdentifier FileSystem::child_of_directory_inode_with_name(InodeIdentifier inode, const String& name) const
 {
     InodeIdentifier foundInode;
     enumerateDirectoryInode(inode, [&] (const DirectoryEntry& entry) {
@@ -50,7 +50,7 @@ InodeIdentifier FileSystem::childOfDirectoryInodeWithName(InodeIdentifier inode,
     return foundInode;
 }
 
-String FileSystem::nameOfChildInDirectory(InodeIdentifier parent, InodeIdentifier child) const
+String FileSystem::name_of_child_in_directory(InodeIdentifier parent, InodeIdentifier child) const
 {
     String name;
     bool success = enumerateDirectoryInode(parent, [&] (auto& entry) {
@@ -98,7 +98,7 @@ ByteBuffer CoreInode::read_entire(FileDescriptor* descriptor)
 
 ByteBuffer FileSystem::readEntireInode(InodeIdentifier inode, FileDescriptor* handle) const
 {
-    ASSERT(inode.fileSystemID() == id());
+    ASSERT(inode.fsid() == id());
 
     auto metadata = inodeMetadata(inode);
     if (!metadata.isValid()) {

@@ -22,23 +22,23 @@ int main(int c, char** v)
     if (c >= 2)
         filename = v[1];
 
-    VFS::initializeGlobals();
+    VFS::initialize_globals();
 
     VFS vfs;
 
     auto zero = make<ZeroDevice>();
-    vfs.registerCharacterDevice(*zero);
+    vfs.register_character_device(*zero);
 
     auto null = make<NullDevice>();
-    vfs.registerCharacterDevice(*null);
+    vfs.register_character_device(*null);
 
     auto full = make<FullDevice>();
-    vfs.registerCharacterDevice(*full);
+    vfs.register_character_device(*full);
 
     auto random = make<RandomDevice>();
-    vfs.registerCharacterDevice(*random);
+    vfs.register_character_device(*random);
 
-    if (!vfs.mountRoot(makeFileSystem(filename))) {
+    if (!vfs.mount_root(makeFileSystem(filename))) {
         printf("Failed to mount root :(\n");
         return 1;
     }
