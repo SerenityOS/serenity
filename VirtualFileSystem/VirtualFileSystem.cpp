@@ -525,7 +525,8 @@ InodeIdentifier VFS::resolve_path(const String& path, int& error, InodeIdentifie
             return { };
         }
         auto parent = crumb_id;
-        crumb_id = crumb_id.fileSystem()->child_of_directory_inode_with_name(crumb_id, part);
+        auto dir_inode = get_inode(crumb_id);
+        crumb_id = dir_inode->lookup(part);
         if (!crumb_id.isValid()) {
 #ifdef VFS_DEBUG
             kprintf("child <%s>(%u) not found in directory, %02u:%08u\n", part.characters(), part.length(), parent.fsid(), parent.index());
@@ -547,8 +548,8 @@ InodeIdentifier VFS::resolve_path(const String& path, int& error, InodeIdentifie
             kprintf("  -- is guest\n");
 #endif
             auto mount = find_mount_for_guest(crumb_id);
-            crumb_id = mount->host();
-            crumb_id = crumb_id.fileSystem()->child_of_directory_inode_with_name(crumb_id, "..");
+            auto dir_inode = get_inode(mount->host());
+            crumb_id = dir_inode->lookup("..");
         }
         metadata = crumb_id.metadata();
         if (metadata.isSymbolicLink()) {

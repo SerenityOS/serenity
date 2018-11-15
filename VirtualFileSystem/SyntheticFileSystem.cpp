@@ -320,3 +320,17 @@ bool SynthFSInode::traverse_as_directory(Function<bool(const FileSystem::Directo
         callback({ child->m_name.characters(), child->m_name.length(), child->m_metadata.inode, child->m_metadata.isDirectory() ? (byte)2 : (byte)1 });
     return true;
 }
+
+InodeIdentifier SynthFSInode::lookup(const String& name)
+{
+    ASSERT(is_directory());
+    if (name == ".")
+        return identifier();
+    if (name == "..")
+        return m_parent;
+    for (auto& child : m_children) {
+        if (child->m_name == name)
+            return child->identifier();
+    }
+    return { };
+}

@@ -53,7 +53,6 @@ public:
 
     virtual RetainPtr<CoreInode> get_inode(InodeIdentifier) const = 0;
 
-    InodeIdentifier child_of_directory_inode_with_name(InodeIdentifier, const String& name) const;
     ByteBuffer readEntireInode(InodeIdentifier, FileDescriptor* = nullptr) const;
     String name_of_child_in_directory(InodeIdentifier parent, InodeIdentifier child) const;
 
@@ -81,10 +80,12 @@ public:
     InodeIdentifier identifier() const { return { fsid(), index() }; }
     const InodeMetadata& metadata() const { if (!m_metadata.isValid()) { populate_metadata(); } return m_metadata; }
 
+    ByteBuffer read_entire(FileDescriptor* = nullptr);
+
     virtual Unix::ssize_t read_bytes(Unix::off_t, Unix::size_t, byte* buffer, FileDescriptor*) = 0;
     virtual bool traverse_as_directory(Function<bool(const FileSystem::DirectoryEntry&)>) = 0;
+    virtual InodeIdentifier lookup(const String& name) = 0;
 
-    ByteBuffer read_entire(FileDescriptor* = nullptr);
 
 protected:
     CoreInode(FileSystem& fs, unsigned index)
