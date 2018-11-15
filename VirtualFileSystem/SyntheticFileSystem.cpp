@@ -9,20 +9,20 @@ typedef int InterruptDisabler;
 
 //#define SYNTHFS_DEBUG
 
-RetainPtr<SyntheticFileSystem> SyntheticFileSystem::create()
+RetainPtr<SynthFS> SynthFS::create()
 {
-    return adopt(*new SyntheticFileSystem);
+    return adopt(*new SynthFS);
 }
 
-SyntheticFileSystem::SyntheticFileSystem()
-{
-}
-
-SyntheticFileSystem::~SyntheticFileSystem()
+SynthFS::SynthFS()
 {
 }
 
-bool SyntheticFileSystem::initialize()
+SynthFS::~SynthFS()
+{
+}
+
+bool SynthFS::initialize()
 {
     // Add a File for the root directory.
     // FIXME: This needs work.
@@ -43,7 +43,7 @@ bool SyntheticFileSystem::initialize()
     return true;
 }
 
-RetainPtr<SynthFSInode> SyntheticFileSystem::create_directory(String&& name)
+RetainPtr<SynthFSInode> SynthFS::create_directory(String&& name)
 {
     auto file = adopt(*new SynthFSInode(*this, generateInodeIndex()));
     file->m_name = move(name);
@@ -55,7 +55,7 @@ RetainPtr<SynthFSInode> SyntheticFileSystem::create_directory(String&& name)
     return file;
 }
 
-RetainPtr<SynthFSInode> SyntheticFileSystem::create_text_file(String&& name, ByteBuffer&& contents, Unix::mode_t mode)
+RetainPtr<SynthFSInode> SynthFS::create_text_file(String&& name, ByteBuffer&& contents, Unix::mode_t mode)
 {
     auto file = adopt(*new SynthFSInode(*this, generateInodeIndex()));
     file->m_data = contents;
@@ -68,7 +68,7 @@ RetainPtr<SynthFSInode> SyntheticFileSystem::create_text_file(String&& name, Byt
     return file;
 }
 
-RetainPtr<SynthFSInode> SyntheticFileSystem::create_generated_file(String&& name, Function<ByteBuffer()>&& generator, Unix::mode_t mode)
+RetainPtr<SynthFSInode> SynthFS::create_generated_file(String&& name, Function<ByteBuffer()>&& generator, Unix::mode_t mode)
 {
     auto file = adopt(*new SynthFSInode(*this, generateInodeIndex()));
     file->m_generator = move(generator);
@@ -81,7 +81,7 @@ RetainPtr<SynthFSInode> SyntheticFileSystem::create_generated_file(String&& name
     return file;
 }
 
-InodeIdentifier SyntheticFileSystem::addFile(RetainPtr<SynthFSInode>&& file, InodeIndex parent)
+InodeIdentifier SynthFS::addFile(RetainPtr<SynthFSInode>&& file, InodeIndex parent)
 {
     ASSERT_INTERRUPTS_DISABLED();
     ASSERT(file);
@@ -95,7 +95,7 @@ InodeIdentifier SyntheticFileSystem::addFile(RetainPtr<SynthFSInode>&& file, Ino
     return new_inode_id;
 }
 
-bool SyntheticFileSystem::removeFile(InodeIndex inode)
+bool SynthFS::removeFile(InodeIndex inode)
 {
     ASSERT_INTERRUPTS_DISABLED();
     auto it = m_inodes.find(inode);
@@ -121,17 +121,17 @@ bool SyntheticFileSystem::removeFile(InodeIndex inode)
     return true;
 }
 
-const char* SyntheticFileSystem::class_name() const
+const char* SynthFS::class_name() const
 {
     return "synthfs";
 }
 
-InodeIdentifier SyntheticFileSystem::rootInode() const
+InodeIdentifier SynthFS::rootInode() const
 {
     return { id(), 1 };
 }
 
-InodeMetadata SyntheticFileSystem::inodeMetadata(InodeIdentifier inode) const
+InodeMetadata SynthFS::inodeMetadata(InodeIdentifier inode) const
 {
     InterruptDisabler disabler;
     ASSERT(inode.fsid() == id());
@@ -145,14 +145,14 @@ InodeMetadata SyntheticFileSystem::inodeMetadata(InodeIdentifier inode) const
     return (*it).value->m_metadata;
 }
 
-bool SyntheticFileSystem::set_mtime(InodeIdentifier, dword timestamp)
+bool SynthFS::set_mtime(InodeIdentifier, dword timestamp)
 {
     (void) timestamp;
     kprintf("FIXME: Implement SyntheticFileSystem::setModificationTime().\n");
     return false;
 }
 
-InodeIdentifier SyntheticFileSystem::create_inode(InodeIdentifier parentInode, const String& name, Unix::mode_t mode, unsigned size)
+InodeIdentifier SynthFS::create_inode(InodeIdentifier parentInode, const String& name, Unix::mode_t mode, unsigned size)
 {
     (void) parentInode;
     (void) name;
@@ -162,13 +162,13 @@ InodeIdentifier SyntheticFileSystem::create_inode(InodeIdentifier parentInode, c
     return { };
 }
 
-bool SyntheticFileSystem::writeInode(InodeIdentifier, const ByteBuffer&)
+bool SynthFS::writeInode(InodeIdentifier, const ByteBuffer&)
 {
     kprintf("FIXME: Implement SyntheticFileSystem::writeInode().\n");
     return false;
 }
 
-Unix::ssize_t SyntheticFileSystem::read_inode_bytes(InodeIdentifier inode, Unix::off_t offset, Unix::size_t count, byte* buffer, FileDescriptor* handle) const
+Unix::ssize_t SynthFS::read_inode_bytes(InodeIdentifier inode, Unix::off_t offset, Unix::size_t count, byte* buffer, FileDescriptor* handle) const
 {
     ASSERT(inode.fsid() == id());
 #ifdef SYNTHFS_DEBUG
@@ -205,7 +205,7 @@ Unix::ssize_t SyntheticFileSystem::read_inode_bytes(InodeIdentifier inode, Unix:
     return nread;
 }
 
-InodeIdentifier SyntheticFileSystem::create_directory(InodeIdentifier parentInode, const String& name, Unix::mode_t)
+InodeIdentifier SynthFS::create_directory(InodeIdentifier parentInode, const String& name, Unix::mode_t)
 {
     (void) parentInode;
     (void) name;
@@ -213,12 +213,12 @@ InodeIdentifier SyntheticFileSystem::create_directory(InodeIdentifier parentInod
     return { };
 }
 
-auto SyntheticFileSystem::generateInodeIndex() -> InodeIndex
+auto SynthFS::generateInodeIndex() -> InodeIndex
 {
     return m_nextInodeIndex++;
 }
 
-InodeIdentifier SyntheticFileSystem::find_parent_of_inode(InodeIdentifier inode) const
+InodeIdentifier SynthFS::find_parent_of_inode(InodeIdentifier inode) const
 {
     auto it = m_inodes.find(inode.index());
     if (it == m_inodes.end())
@@ -226,7 +226,7 @@ InodeIdentifier SyntheticFileSystem::find_parent_of_inode(InodeIdentifier inode)
     return (*it).value->m_parent;
 }
 
-RetainPtr<CoreInode> SyntheticFileSystem::get_inode(InodeIdentifier inode) const
+RetainPtr<CoreInode> SynthFS::get_inode(InodeIdentifier inode) const
 {
     auto it = m_inodes.find(inode.index());
     if (it == m_inodes.end())
@@ -234,7 +234,7 @@ RetainPtr<CoreInode> SyntheticFileSystem::get_inode(InodeIdentifier inode) const
     return (*it).value;
 }
 
-SynthFSInode::SynthFSInode(SyntheticFileSystem& fs, unsigned index)
+SynthFSInode::SynthFSInode(SynthFS& fs, unsigned index)
     : CoreInode(fs, index)
 {
     m_metadata.inode = { fs.id(), index };
@@ -276,7 +276,7 @@ Unix::ssize_t SynthFSInode::read_bytes(Unix::off_t offset, Unix::size_t count, b
     return nread;
 }
 
-bool SynthFSInode::traverse_as_directory(Function<bool(const FileSystem::DirectoryEntry&)> callback)
+bool SynthFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry&)> callback)
 {
     InterruptDisabler disabler;
 #ifdef SYNTHFS_DEBUG

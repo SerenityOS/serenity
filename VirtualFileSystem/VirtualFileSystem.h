@@ -49,8 +49,8 @@ public:
     void retain();
     void release();
 
-    FileSystem* fileSystem() { return inode.fileSystem(); }
-    const FileSystem* fileSystem() const { return inode.fileSystem(); }
+    FS* fileSystem() { return inode.fileSystem(); }
+    const FS* fileSystem() const { return inode.fileSystem(); }
 
     VFS* vfs() { return m_vfs; }
     const VFS* vfs() const { return m_vfs; }
@@ -80,17 +80,17 @@ public:
 
     class Mount {
     public:
-        Mount(InodeIdentifier host, RetainPtr<FileSystem>&&);
+        Mount(InodeIdentifier host, RetainPtr<FS>&&);
 
         InodeIdentifier host() const { return m_host; }
         InodeIdentifier guest() const { return m_guest; }
 
-        const FileSystem& guest_fs() const { return *m_guest_fs; }
+        const FS& guest_fs() const { return *m_guest_fs; }
 
     private:
         InodeIdentifier m_host;
         InodeIdentifier m_guest;
-        RetainPtr<FileSystem> m_guest_fs;
+        RetainPtr<FS> m_guest_fs;
     };
 
     static VFS& the() PURE;
@@ -110,8 +110,8 @@ public:
     Vnode* root() { return m_root_vnode.ptr(); }
     const Vnode* root() const { return m_root_vnode.ptr(); }
 
-    bool mount_root(RetainPtr<FileSystem>&&);
-    bool mount(RetainPtr<FileSystem>&&, const String& path);
+    bool mount_root(RetainPtr<FS>&&);
+    bool mount(RetainPtr<FS>&&, const String& path);
 
     RetainPtr<FileDescriptor> open(CharacterDevice&, int options);
     RetainPtr<FileDescriptor> open(const String& path, int& error, int options = 0, InodeIdentifier base = InodeIdentifier());
@@ -135,7 +135,7 @@ private:
 
     bool is_vfs_root(InodeIdentifier) const;
 
-    void traverse_directory_inode(CoreInode&, Function<bool(const FileSystem::DirectoryEntry&)>);
+    void traverse_directory_inode(CoreInode&, Function<bool(const FS::DirectoryEntry&)>);
     InodeIdentifier resolve_path(const String& path, int& error, CoreInode& base, int options = 0);
     InodeIdentifier resolve_path(const String& path, int& error, InodeIdentifier base = InodeIdentifier(), int options = 0);
     InodeIdentifier resolveSymbolicLink(InodeIdentifier base, InodeIdentifier symlinkInode, int& error);

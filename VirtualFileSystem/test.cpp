@@ -14,7 +14,7 @@
 #include <AK/kmalloc.h>
 #include <AK/ktime.h>
 
-static RetainPtr<FileSystem> makeFileSystem(const char* imagePath);
+static RetainPtr<FS> makeFileSystem(const char* imagePath);
 
 int main(int c, char** v)
 {
@@ -72,8 +72,8 @@ int main(int c, char** v)
         return 0;
     }
 
-    auto synthfs = SyntheticFileSystem::create();
-    bool success = static_cast<FileSystem&>(*synthfs).initialize();
+    auto synthfs = SynthFS::create();
+    bool success = static_cast<FS&>(*synthfs).initialize();
     printf("synth->initialize(): returned %u\n", success);
 
     vfs.mount(std::move(synthfs), "/syn");
@@ -234,16 +234,16 @@ int main(int c, char** v)
     return 0;
 }
 
-RetainPtr<FileSystem> makeFileSystem(const char* imagePath)
+RetainPtr<FS> makeFileSystem(const char* imagePath)
 {
     auto fsImage = FileBackedDiskDevice::create(imagePath, 512);
     if (!fsImage->isValid()) {
         fprintf(stderr, "Failed to open fs image file '%s'\n", imagePath);
         exit(1);
     }
-    auto ext2 = Ext2FileSystem::create(std::move(fsImage));
+    auto ext2 = Ext2FS::create(std::move(fsImage));
 
-    bool success = static_cast<FileSystem&>(*ext2).initialize();
+    bool success = static_cast<FS&>(*ext2).initialize();
     printf("ext2->initialize(): returned %u\n", success);
     return ext2;
 }

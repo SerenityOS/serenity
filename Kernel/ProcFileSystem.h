@@ -5,12 +5,12 @@
 
 class Process;
 
-class ProcFileSystem final : public SyntheticFileSystem {
+class ProcFS final : public SynthFS {
 public:
-    static ProcFileSystem& the() PURE;
+    static ProcFS& the() PURE;
 
-    virtual ~ProcFileSystem() override;
-    static RetainPtr<ProcFileSystem> create();
+    virtual ~ProcFS() override;
+    static RetainPtr<ProcFS> create();
 
     virtual bool initialize() override;
     virtual const char* class_name() const override;
@@ -19,7 +19,7 @@ public:
     void removeProcess(Process&);
 
 private:
-    ProcFileSystem();
+    ProcFS();
 
     HashMap<pid_t, InodeIndex> m_pid2inode;
 };
