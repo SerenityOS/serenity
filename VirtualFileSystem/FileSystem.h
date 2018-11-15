@@ -65,7 +65,7 @@ private:
 };
 
 class CoreInode : public Retainable<CoreInode> {
-    friend class VirtualFileSystem;
+    friend class VFS;
 public:
     virtual ~CoreInode();
 

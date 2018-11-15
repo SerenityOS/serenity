@@ -62,15 +62,15 @@ public:
 
 class VMObject : public Retainable<VMObject> {
 public:
-    static RetainPtr<VMObject> create_file_backed(RetainPtr<VirtualFileSystem::Node>&&, size_t);
+    static RetainPtr<VMObject> create_file_backed(RetainPtr<Vnode>&&, size_t);
     static RetainPtr<VMObject> create_anonymous(size_t);
     RetainPtr<VMObject> clone();
 
     ~VMObject();
     bool is_anonymous() const { return m_anonymous; }
 
-    VirtualFileSystem::Node* vnode() { return m_vnode.ptr(); }
-    const VirtualFileSystem::Node* vnode() const { return m_vnode.ptr(); }
+    Vnode* vnode() { return m_vnode.ptr(); }
+    const Vnode* vnode() const { return m_vnode.ptr(); }
     size_t vnode_offset() const { return m_vnode_offset; }
 
     String name() const { return m_name; }
@@ -81,14 +81,14 @@ public:
     Vector<RetainPtr<PhysicalPage>>& physical_pages() { return m_physical_pages; }
 
 private:
-    VMObject(RetainPtr<VirtualFileSystem::Node>&&, size_t);
+    VMObject(RetainPtr<Vnode>&&, size_t);
     explicit VMObject(VMObject&);
     explicit VMObject(size_t);
     String m_name;
     bool m_anonymous { false };
     Unix::off_t m_vnode_offset { 0 };
     size_t m_size { 0 };
-    RetainPtr<VirtualFileSystem::Node> m_vnode;
+    RetainPtr<Vnode> m_vnode;
     Vector<RetainPtr<PhysicalPage>> m_physical_pages;
 };
 
@@ -96,7 +96,7 @@ class Region : public Retainable<Region> {
 public:
     Region(LinearAddress, size_t, String&&, bool r, bool w, bool cow = false);
     Region(LinearAddress, size_t, RetainPtr<VMObject>&&, size_t offset_in_vmo, String&&, bool r, bool w, bool cow = false);
-    Region(LinearAddress, size_t, RetainPtr<VirtualFileSystem::Node>&&, String&&, bool r, bool w);
+    Region(LinearAddress, size_t, RetainPtr<Vnode>&&, String&&, bool r, bool w);
     ~Region();
 
     const VMObject& vmo() const { return *m_vmo; }

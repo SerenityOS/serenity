@@ -22,9 +22,9 @@ int main(int c, char** v)
     if (c >= 2)
         filename = v[1];
 
-    VirtualFileSystem::initializeGlobals();
+    VFS::initializeGlobals();
 
-    VirtualFileSystem vfs;
+    VFS vfs;
 
     auto zero = make<ZeroDevice>();
     vfs.registerCharacterDevice(*zero);

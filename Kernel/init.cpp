@@ -173,7 +173,7 @@ static void init_stage2()
 {
     Syscall::initialize();
 
-    auto vfs = make<VirtualFileSystem>();
+    auto vfs = make<VFS>();
 
     auto dev_zero = make<ZeroDevice>();
     vfs->registerCharacterDevice(*dev_zero);
@@ -267,7 +267,7 @@ void init()
 
     MemoryManager::initialize();
 
-    VirtualFileSystem::initializeGlobals();
+    VFS::initializeGlobals();
     StringImpl::initializeGlobals();
 
     PIT::initialize();

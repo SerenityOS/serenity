@@ -615,7 +615,7 @@ Region::Region(LinearAddress a, size_t s, String&& n, bool r, bool w, bool cow)
     MM.register_region(*this);
 }
 
-Region::Region(LinearAddress a, size_t s, RetainPtr<VirtualFileSystem::Node>&& vnode, String&& n, bool r, bool w)
+Region::Region(LinearAddress a, size_t s, RetainPtr<Vnode>&& vnode, String&& n, bool r, bool w)
     : linearAddress(a)
     , size(s)
     , m_vmo(VMObject::create_file_backed(move(vnode), s))
@@ -655,7 +655,7 @@ void PhysicalPage::return_to_freelist()
 #endif
 }
 
-RetainPtr<VMObject> VMObject::create_file_backed(RetainPtr<VirtualFileSystem::Node>&& vnode, size_t size)
+RetainPtr<VMObject> VMObject::create_file_backed(RetainPtr<Vnode>&& vnode, size_t size)
 {
     InterruptDisabler disabler;
     if (vnode->vmo())
@@ -696,7 +696,7 @@ VMObject::VMObject(size_t size)
     m_physical_pages.resize(page_count());
 }
 
-VMObject::VMObject(RetainPtr<VirtualFileSystem::Node>&& vnode, size_t size)
+VMObject::VMObject(RetainPtr<Vnode>&& vnode, size_t size)
     : m_size(size)
     , m_vnode(move(vnode))
 {
