@@ -171,10 +171,6 @@ static DWORD handle(RegisterDump& regs, DWORD function, DWORD arg1, DWORD arg2, 
         return current->sys$access((const char*)arg1, (int)arg2);
     case Syscall::SC_fcntl:
         return current->sys$fcntl((int)arg1, (int)arg2, (dword)arg3);
-    case Syscall::SC_tcgetattr:
-        return current->sys$tcgetattr((int)arg1, (Unix::termios*)arg2);
-    case Syscall::SC_tcsetattr:
-        return current->sys$tcsetattr((int)arg1, (int)arg2, (const Unix::termios*)arg3);
     case Syscall::SC_ioctl:
         return current->sys$ioctl((int)arg1, (unsigned)arg2, (unsigned)arg3);
     default:
