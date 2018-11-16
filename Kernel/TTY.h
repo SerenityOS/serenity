@@ -46,6 +46,7 @@ public:
     void set_termios(const Unix::termios&);
     bool should_generate_signals() const { return m_termios.c_lflag & ISIG; }
     bool should_echo_input() const { return m_termios.c_lflag & ECHO; }
+    bool in_canonical_mode() const { return m_termios.c_lflag & ICANON; }
 
 protected:
     virtual bool isTTY() const final override { return true; }

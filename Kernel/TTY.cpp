@@ -4,6 +4,8 @@
 #include <LibC/signal_numbers.h>
 #include <LibC/sys/ioctl_numbers.h>
 
+//#define TTY_DEBUG
+
 void DoubleBuffer::flip()
 {
     ASSERT(m_read_buffer_index == m_read_buffer->size());
@@ -48,6 +50,9 @@ ssize_t TTY::read(byte* buffer, size_t size)
 
 ssize_t TTY::write(const byte* buffer, size_t size)
 {
+#ifdef TTY_DEBUG
+    dbgprintf("TTY::write %b    {%u}\n", buffer[0], size);
+#endif
     onTTYWrite(buffer, size);
     return 0;
 }
@@ -81,10 +86,12 @@ void TTY::interrupt()
 void TTY::set_termios(const Unix::termios& t)
 {
     m_termios = t;
-    dbgprintf("%s set_termios: IECHO? %u, ISIG? %u\n",
+    dbgprintf("%s set_termios: IECHO? %u, ISIG? %u, ICANON? %u\n",
         ttyName().characters(),
         should_echo_input(),
-        should_generate_signals());
+        should_generate_signals(),
+        in_canonical_mode()
+    );
 }
 
 int TTY::ioctl(Process& process, unsigned request, unsigned arg)
