@@ -196,10 +196,8 @@ public:
     dword stackTop() const { return m_tss.ss == 0x10 ? m_stackTop0 : m_stackTop3; }
 
     bool isValidAddressForKernel(LinearAddress) const;
-    bool validate_user_read(LinearAddress) const;
-    bool validate_user_write(LinearAddress) const;
 
-    bool validate_read(void*, size_t) const;
+    bool validate_read(const void*, size_t) const;
     bool validate_write(void*, size_t) const;
 
     CoreInode* cwd_inode() { return m_cwd ? m_cwd->core_inode() : nullptr; }

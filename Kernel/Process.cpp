@@ -24,28 +24,6 @@
 #define SIGNAL_DEBUG
 #define MAX_PROCESS_GIDS 32
 
-// FIXME: Only do a single validation for accesses that don't span multiple pages.
-// FIXME: Some places pass strlen(arg1) as arg2. This doesn't seem entirely perfect..
-#define VALIDATE_USER_READ_WITH_RETURN_TYPE(b, s, ret_type) \
-    do { \
-        LinearAddress laddr(reinterpret_cast<dword>(b)); \
-        if (!validate_user_read(laddr) || !validate_user_read(laddr.offset((s) - 1))) { \
-            dbgprintf("Bad read address passed to syscall: %p +%u\n", laddr.get(), (s)); \
-            return (ret_type)-EFAULT; \
-        } \
-    } while(0)
-
-#define VALIDATE_USER_READ(b, s) VALIDATE_USER_READ_WITH_RETURN_TYPE(b, s, int)
-
-#define VALIDATE_USER_WRITE(b, s) \
-    do { \
-        LinearAddress laddr(reinterpret_cast<dword>(b)); \
-        if (!validate_user_write(laddr) || !validate_user_write(laddr.offset((s) - 1))) { \
-            dbgprintf("Bad write address passed to syscall: %p +%u\n", laddr.get(), (s)); \
-            return -EFAULT; \
-        } \
-    } while(0)
-
 static const DWORD defaultStackSize = 16384;
 
 static pid_t next_pid;
@@ -156,7 +134,8 @@ Region* Process::regionFromRange(LinearAddress laddr, size_t size)
 
 int Process::sys$set_mmap_name(void* addr, size_t size, const char* name)
 {
-    VALIDATE_USER_READ(name, strlen(name));
+    if (!validate_read(name, strlen(name) + 1))
+        return -EFAULT;
     auto* region = regionFromRange(LinearAddress((dword)addr), size);
     if (!region)
         return -EINVAL;
@@ -166,7 +145,8 @@ int Process::sys$set_mmap_name(void* addr, size_t size, const char* name)
 
 void* Process::sys$mmap(const Syscall::SC_mmap_params* params)
 {
-    VALIDATE_USER_READ_WITH_RETURN_TYPE(params, sizeof(Syscall::SC_mmap_params), void*);
+    if (!validate_read(params, sizeof(Syscall::SC_mmap_params)))
+        return (void*)-EFAULT;
     void* addr = (void*)params->addr;
     size_t size = params->size;
     int prot = params->prot;
@@ -217,7 +197,8 @@ int Process::sys$munmap(void* addr, size_t size)
 
 int Process::sys$gethostname(char* buffer, size_t size)
 {
-    VALIDATE_USER_WRITE(buffer, size);
+    if (!validate_write(buffer, size))
+        return -EFAULT;
     auto hostname = getHostname();
     if (size < (hostname.length() + 1))
         return -ENAMETOOLONG;
@@ -438,17 +419,22 @@ int Process::exec(const String& path, Vector<String>&& arguments, Vector<String>
 
 int Process::sys$execve(const char* filename, const char** argv, const char** envp)
 {
-    VALIDATE_USER_READ(filename, strlen(filename));
+    if (!validate_read(filename, strlen(filename)))
+        return -EFAULT;
     if (argv) {
-        VALIDATE_USER_READ(argv, sizeof(const char**));
+        if (!validate_read(argv, sizeof(const char**)))
+            return -EFAULT;
         for (size_t i = 0; argv[i]; ++i) {
-            VALIDATE_USER_READ(argv[i], strlen(argv[i]));
+            if (!validate_read(argv[i], strlen(argv[i])))
+                return -EFAULT;
         }
     }
     if (envp) {
-        VALIDATE_USER_READ(envp, sizeof(const char**));
+        if (!validate_read(envp, sizeof(const char**)))
+            return -EFAULT;
         for (size_t i = 0; envp[i]; ++i) {
-            VALIDATE_USER_READ(envp[i], strlen(envp[i]));
+            if (!validate_read(envp[i], strlen(envp[i])))
+                return -EFAULT;
         }
     }
 
@@ -953,7 +939,8 @@ const FileDescriptor* Process::file_descriptor(int fd) const
 
 ssize_t Process::sys$get_dir_entries(int fd, void* buffer, size_t size)
 {
-    VALIDATE_USER_WRITE(buffer, size);
+    if (!validate_write(buffer, size))
+        return -EFAULT;
     auto* descriptor = file_descriptor(fd);
     if (!descriptor)
         return -EBADF;
@@ -970,7 +957,8 @@ int Process::sys$lseek(int fd, off_t offset, int whence)
 
 int Process::sys$ttyname_r(int fd, char* buffer, size_t size)
 {
-    VALIDATE_USER_WRITE(buffer, size);
+    if (!validate_write(buffer, size))
+        return -EFAULT;
     auto* descriptor = file_descriptor(fd);
     if (!descriptor)
         return -EBADF;
@@ -985,7 +973,8 @@ int Process::sys$ttyname_r(int fd, char* buffer, size_t size)
 
 ssize_t Process::sys$write(int fd, const void* data, size_t size)
 {
-    VALIDATE_USER_READ(data, size);
+    if (!validate_read(data, size))
+        return -EFAULT;
 #ifdef DEBUG_IO
     dbgprintf("%s(%u): sys$write(%d, %p, %u)\n", name().characters(), pid(), fd, data, size);
 #endif
@@ -1042,7 +1031,8 @@ ssize_t Process::sys$write(int fd, const void* data, size_t size)
 
 ssize_t Process::sys$read(int fd, void* outbuf, size_t nread)
 {
-    VALIDATE_USER_WRITE(outbuf, nread);
+    if (!validate_write(outbuf, nread))
+        return -EFAULT;
 #ifdef DEBUG_IO
     dbgprintf("%s(%u) sys$read(%d, %p, %u)\n", name().characters(), pid(), fd, outbuf, nread);
 #endif
@@ -1078,7 +1068,8 @@ int Process::sys$close(int fd)
 int Process::sys$access(const char* pathname, int mode)
 {
     (void) mode;
-    VALIDATE_USER_READ(pathname, strlen(pathname));
+    if (!validate_read(pathname, strlen(pathname)))
+        return -EFAULT;
     ASSERT_NOT_REACHED();
 }
 
@@ -1111,7 +1102,8 @@ int Process::sys$fcntl(int fd, int cmd, dword arg)
 
 int Process::sys$fstat(int fd, Unix::stat* statbuf)
 {
-    VALIDATE_USER_WRITE(statbuf, sizeof(Unix::stat));
+    if (!validate_write(statbuf, sizeof(Unix::stat)))
+        return -EFAULT;
     auto* descriptor = file_descriptor(fd);
     if (!descriptor)
         return -EBADF;
@@ -1121,7 +1113,8 @@ int Process::sys$fstat(int fd, Unix::stat* statbuf)
 
 int Process::sys$lstat(const char* path, Unix::stat* statbuf)
 {
-    VALIDATE_USER_WRITE(statbuf, sizeof(Unix::stat));
+    if (!validate_write(statbuf, sizeof(Unix::stat)))
+        return -EFAULT;
     int error;
     auto descriptor = VFS::the().open(move(path), error, O_NOFOLLOW_NOERROR, cwd_inode()->identifier());
     if (!descriptor)
@@ -1132,7 +1125,8 @@ int Process::sys$lstat(const char* path, Unix::stat* statbuf)
 
 int Process::sys$stat(const char* path, Unix::stat* statbuf)
 {
-    VALIDATE_USER_WRITE(statbuf, sizeof(Unix::stat));
+    if (!validate_write(statbuf, sizeof(Unix::stat)))
+        return -EFAULT;
     int error;
     auto descriptor = VFS::the().open(move(path), error, 0, cwd_inode()->identifier());
     if (!descriptor)
@@ -1143,8 +1137,10 @@ int Process::sys$stat(const char* path, Unix::stat* statbuf)
 
 int Process::sys$readlink(const char* path, char* buffer, size_t size)
 {
-    VALIDATE_USER_READ(path, strlen(path));
-    VALIDATE_USER_WRITE(buffer, size);
+    if (!validate_read(path, strlen(path) + 1))
+        return -EFAULT;
+    if (!validate_write(buffer, size))
+        return -EFAULT;
 
     int error;
     auto descriptor = VFS::the().open(path, error, O_RDONLY | O_NOFOLLOW_NOERROR, cwd_inode()->identifier());
@@ -1166,7 +1162,8 @@ int Process::sys$readlink(const char* path, char* buffer, size_t size)
 
 int Process::sys$chdir(const char* path)
 {
-    VALIDATE_USER_READ(path, strlen(path));
+    if (!validate_read(path, strlen(path) + 1))
+        return -EFAULT;
     int error;
     auto descriptor = VFS::the().open(path, error, 0, cwd_inode()->identifier());
     if (!descriptor)
@@ -1179,7 +1176,8 @@ int Process::sys$chdir(const char* path)
 
 int Process::sys$getcwd(char* buffer, size_t size)
 {
-    VALIDATE_USER_WRITE(buffer, size);
+    if (!validate_write(buffer, size))
+        return -EFAULT;
     ASSERT(cwd_inode());
     auto path = VFS::the().absolute_path(*cwd_inode());
     if (path.isNull())
@@ -1205,7 +1203,8 @@ int Process::sys$open(const char* path, int options)
 #ifdef DEBUG_IO
     dbgprintf("%s(%u) sys$open(\"%s\")\n", name().characters(), pid(), path);
 #endif
-    VALIDATE_USER_READ(path, strlen(path));
+    if (!validate_read(path, strlen(path) + 1))
+        return -EFAULT;
     if (number_of_open_file_descriptors() >= m_max_open_file_descriptors)
         return -EMFILE;
     int error;
@@ -1239,7 +1238,8 @@ int Process::alloc_fd()
 
 int Process::sys$pipe(int* pipefd)
 {
-    VALIDATE_USER_WRITE(pipefd, sizeof(int) * 2);
+    if (!validate_write(pipefd, sizeof(int) * 2))
+        return -EFAULT;
     if (number_of_open_file_descriptors() + 2 > max_open_file_descriptors())
         return -EMFILE;
     auto fifo = FIFO::create();
@@ -1281,7 +1281,8 @@ unsigned Process::sys$alarm(unsigned seconds)
 
 int Process::sys$uname(utsname* buf)
 {
-    VALIDATE_USER_WRITE(buf, sizeof(utsname));
+    if (!validate_write(buf, sizeof(utsname)))
+        return -EFAULT;
     strcpy(buf->sysname, "Serenity");
     strcpy(buf->release, "1.0-dev");
     strcpy(buf->version, "FIXME");
@@ -1334,7 +1335,8 @@ int Process::sys$sleep(unsigned seconds)
 
 int Process::sys$gettimeofday(timeval* tv)
 {
-    VALIDATE_USER_WRITE(tv, sizeof(tv));
+    if (!validate_write(tv, sizeof(timeval)))
+        return -EFAULT;
     InterruptDisabler disabler;
     auto now = RTC::now();
     tv->tv_sec = now;
@@ -1394,7 +1396,8 @@ pid_t Process::sys$waitpid(pid_t waitee, int* wstatus, int options)
     // FIXME: Respect options
     (void) options;
     if (wstatus)
-        VALIDATE_USER_WRITE(wstatus, sizeof(int));
+        if (!validate_write(wstatus, sizeof(int)))
+            return -EFAULT;
 
     {
         InterruptDisabler disabler;
@@ -1461,14 +1464,14 @@ bool Process::isValidAddressForKernel(LinearAddress laddr) const
     InterruptDisabler disabler;
     if (laddr.get() >= ksyms().first().address && laddr.get() <= ksyms().last().address)
         return true;
-    if (is_kmalloc_address((void*)laddr.get()))
+    if (is_kmalloc_address(laddr.asPtr()))
         return true;
-    return validate_user_read(laddr);
+    return validate_read(laddr.asPtr(), 1);
 }
 
-bool Process::validate_read(void* address, size_t size) const
+bool Process::validate_read(const void* address, size_t size) const
 {
-    if ((reinterpret_cast<dword>(address) & PAGE_MASK) != ((reinterpret_cast<dword>(address) + size) & PAGE_MASK)) {
+    if ((reinterpret_cast<dword>(address) & PAGE_MASK) != ((reinterpret_cast<dword>(address) + (size - 1)) & PAGE_MASK)) {
         if (!MM.validate_user_read(*this, LinearAddress((dword)address).offset(size)))
             return false;
     }
@@ -1477,23 +1480,11 @@ bool Process::validate_read(void* address, size_t size) const
 
 bool Process::validate_write(void* address, size_t size) const
 {
-    if ((reinterpret_cast<dword>(address) & PAGE_MASK) != ((reinterpret_cast<dword>(address) + size) & PAGE_MASK)) {
+    if ((reinterpret_cast<dword>(address) & PAGE_MASK) != ((reinterpret_cast<dword>(address) + (size - 1)) & PAGE_MASK)) {
         if (!MM.validate_user_write(*this, LinearAddress((dword)address).offset(size)))
             return false;
     }
     return MM.validate_user_write(*this, LinearAddress((dword)address));
-}
-
-bool Process::validate_user_read(LinearAddress laddr) const
-{
-    InterruptDisabler disabler;
-    return MM.validate_user_read(*this, laddr);
-}
-
-bool Process::validate_user_write(LinearAddress laddr) const
-{
-    InterruptDisabler disabler;
-    return MM.validate_user_write(*this, laddr);
 }
 
 pid_t Process::sys$getsid(pid_t pid)
@@ -1624,11 +1615,13 @@ Unix::sighandler_t Process::sys$signal(int signum, Unix::sighandler_t handler)
 int Process::sys$sigprocmask(int how, const Unix::sigset_t* set, Unix::sigset_t* old_set)
 {
     if (old_set) {
-        VALIDATE_USER_READ(old_set, sizeof(Unix::sigset_t));
+        if (!validate_read(old_set, sizeof(Unix::sigset_t)))
+            return -EFAULT;
         *old_set = m_signal_mask;
     }
     if (set) {
-        VALIDATE_USER_READ(set, sizeof(Unix::sigset_t));
+        if (!validate_read(set, sizeof(Unix::sigset_t)))
+            return -EFAULT;
         switch (how) {
         case SIG_BLOCK:
             m_signal_mask &= ~(*set);
@@ -1648,7 +1641,8 @@ int Process::sys$sigprocmask(int how, const Unix::sigset_t* set, Unix::sigset_t*
 
 int Process::sys$sigpending(Unix::sigset_t* set)
 {
-    VALIDATE_USER_READ(set, sizeof(Unix::sigset_t));
+    if (!validate_read(set, sizeof(Unix::sigset_t)))
+        return -EFAULT;
     *set = m_pending_signals;
     return 0;
 }
@@ -1658,11 +1652,13 @@ int Process::sys$sigaction(int signum, const Unix::sigaction* act, Unix::sigacti
     // FIXME: Fail with -EINVAL if attepmting to change action for SIGKILL or SIGSTOP.
     if (signum < 1 || signum >= 32)
         return -EINVAL;
-    VALIDATE_USER_READ(act, sizeof(Unix::sigaction));
+    if (!validate_read(act, sizeof(Unix::sigaction)))
+        return -EFAULT;
     InterruptDisabler disabler; // FIXME: This should use a narrower lock.
     auto& action = m_signal_action_data[signum];
     if (old_act) {
-        VALIDATE_USER_WRITE(old_act, sizeof(Unix::sigaction));
+        if (!validate_write(old_act, sizeof(Unix::sigaction)))
+            return -EFAULT;
         old_act->sa_flags = action.flags;
         old_act->sa_restorer = (decltype(old_act->sa_restorer))action.restorer.get();
         old_act->sa_sigaction = (decltype(old_act->sa_sigaction))action.handler_or_sigaction.get();
@@ -1682,7 +1678,8 @@ int Process::sys$getgroups(int count, gid_t* gids)
         return m_gids.size();
     if (count != (int)m_gids.size())
         return -EINVAL;
-    VALIDATE_USER_WRITE(gids, sizeof(gid_t) * count);
+    if (!validate_write(gids, sizeof(gid_t) * count))
+        return -EFAULT;
     size_t i = 0;
     for (auto gid : m_gids)
         gids[i++] = gid;
@@ -1695,7 +1692,8 @@ int Process::sys$setgroups(size_t count, const gid_t* gids)
         return -EPERM;
     if (count >= MAX_PROCESS_GIDS)
         return -EINVAL;
-    VALIDATE_USER_READ(gids, sizeof(gid_t) * count);
+    if (!validate_read(gids, sizeof(gid_t) * count))
+        return -EFAULT;
     m_gids.clear();
     m_gids.set(m_gid);
     for (size_t i = 0; i < count; ++i)
