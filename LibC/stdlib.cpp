@@ -29,6 +29,7 @@ void __malloc_init()
 void* malloc(size_t size)
 {
     if ((nextptr + size) > endptr) {
+        fprintf(stderr, "Unable to serve malloc() request with size %u\n", size);
         volatile char* crashme = (char*)0xc007d00d;
         *crashme = 0;
     }
