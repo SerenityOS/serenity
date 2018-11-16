@@ -188,6 +188,14 @@ public:
         ++m_impl->m_size;
     }
 
+    void append(const T* values, size_t count)
+    {
+        ensureCapacity(size() + count);
+        for (size_t i = 0; i < count; ++i)
+            new (m_impl->slot(m_impl->m_size + i)) T(values[i]);
+        m_impl->m_size += count;
+    }
+
     void ensureCapacity(size_t neededCapacity)
     {
         if (capacity() >= neededCapacity)
