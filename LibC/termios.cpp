@@ -21,6 +21,8 @@ int tcsetattr(int fd, int optional_actions, const struct termios* t)
     case TCSAFLUSH:
         return ioctl(fd, TCSETSF, t);
     }
+    errno = EINVAL;
+    return -1;
 }
 
 int tcflow(int fd, int action)
