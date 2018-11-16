@@ -134,7 +134,7 @@ Region* Process::regionFromRange(LinearAddress laddr, size_t size)
 
 int Process::sys$set_mmap_name(void* addr, size_t size, const char* name)
 {
-    if (!validate_read(name, strlen(name) + 1))
+    if (!validate_read_str(name))
         return -EFAULT;
     auto* region = regionFromRange(LinearAddress((dword)addr), size);
     if (!region)
@@ -419,21 +419,21 @@ int Process::exec(const String& path, Vector<String>&& arguments, Vector<String>
 
 int Process::sys$execve(const char* filename, const char** argv, const char** envp)
 {
-    if (!validate_read(filename, strlen(filename)))
+    if (!validate_read_str(filename))
         return -EFAULT;
     if (argv) {
-        if (!validate_read(argv, sizeof(const char**)))
+        if (!validate_read_typed(argv))
             return -EFAULT;
         for (size_t i = 0; argv[i]; ++i) {
-            if (!validate_read(argv[i], strlen(argv[i])))
+            if (!validate_read_str(argv[i]))
                 return -EFAULT;
         }
     }
     if (envp) {
-        if (!validate_read(envp, sizeof(const char**)))
+        if (!validate_read_typed(envp))
             return -EFAULT;
         for (size_t i = 0; envp[i]; ++i) {
-            if (!validate_read(envp[i], strlen(envp[i])))
+            if (!validate_read_str(envp[i]))
                 return -EFAULT;
         }
     }
@@ -1068,7 +1068,7 @@ int Process::sys$close(int fd)
 int Process::sys$access(const char* pathname, int mode)
 {
     (void) mode;
-    if (!validate_read(pathname, strlen(pathname)))
+    if (!validate_read_str(pathname))
         return -EFAULT;
     ASSERT_NOT_REACHED();
 }
@@ -1102,7 +1102,7 @@ int Process::sys$fcntl(int fd, int cmd, dword arg)
 
 int Process::sys$fstat(int fd, Unix::stat* statbuf)
 {
-    if (!validate_write(statbuf, sizeof(Unix::stat)))
+    if (!validate_write_typed(statbuf))
         return -EFAULT;
     auto* descriptor = file_descriptor(fd);
     if (!descriptor)
@@ -1113,7 +1113,7 @@ int Process::sys$fstat(int fd, Unix::stat* statbuf)
 
 int Process::sys$lstat(const char* path, Unix::stat* statbuf)
 {
-    if (!validate_write(statbuf, sizeof(Unix::stat)))
+    if (!validate_write_typed(statbuf))
         return -EFAULT;
     int error;
     auto descriptor = VFS::the().open(move(path), error, O_NOFOLLOW_NOERROR, cwd_inode()->identifier());
@@ -1125,7 +1125,7 @@ int Process::sys$lstat(const char* path, Unix::stat* statbuf)
 
 int Process::sys$stat(const char* path, Unix::stat* statbuf)
 {
-    if (!validate_write(statbuf, sizeof(Unix::stat)))
+    if (!validate_write_typed(statbuf))
         return -EFAULT;
     int error;
     auto descriptor = VFS::the().open(move(path), error, 0, cwd_inode()->identifier());
@@ -1137,7 +1137,7 @@ int Process::sys$stat(const char* path, Unix::stat* statbuf)
 
 int Process::sys$readlink(const char* path, char* buffer, size_t size)
 {
-    if (!validate_read(path, strlen(path) + 1))
+    if (!validate_read_str(path))
         return -EFAULT;
     if (!validate_write(buffer, size))
         return -EFAULT;
@@ -1162,7 +1162,7 @@ int Process::sys$readlink(const char* path, char* buffer, size_t size)
 
 int Process::sys$chdir(const char* path)
 {
-    if (!validate_read(path, strlen(path) + 1))
+    if (!validate_read_str(path))
         return -EFAULT;
     int error;
     auto descriptor = VFS::the().open(path, error, 0, cwd_inode()->identifier());
@@ -1203,7 +1203,7 @@ int Process::sys$open(const char* path, int options)
 #ifdef DEBUG_IO
     dbgprintf("%s(%u) sys$open(\"%s\")\n", name().characters(), pid(), path);
 #endif
-    if (!validate_read(path, strlen(path) + 1))
+    if (!validate_read_str(path))
         return -EFAULT;
     if (number_of_open_file_descriptors() >= m_max_open_file_descriptors)
         return -EMFILE;
@@ -1236,9 +1236,9 @@ int Process::alloc_fd()
     return fd;
 }
 
-int Process::sys$pipe(int* pipefd)
+int Process::sys$pipe(int pipefd[2])
 {
-    if (!validate_write(pipefd, sizeof(int) * 2))
+    if (!validate_write_typed(pipefd))
         return -EFAULT;
     if (number_of_open_file_descriptors() + 2 > max_open_file_descriptors())
         return -EMFILE;
@@ -1281,7 +1281,7 @@ unsigned Process::sys$alarm(unsigned seconds)
 
 int Process::sys$uname(utsname* buf)
 {
-    if (!validate_write(buf, sizeof(utsname)))
+    if (!validate_write_typed(buf))
         return -EFAULT;
     strcpy(buf->sysname, "Serenity");
     strcpy(buf->release, "1.0-dev");
@@ -1335,7 +1335,7 @@ int Process::sys$sleep(unsigned seconds)
 
 int Process::sys$gettimeofday(timeval* tv)
 {
-    if (!validate_write(tv, sizeof(timeval)))
+    if (!validate_write_typed(tv))
         return -EFAULT;
     InterruptDisabler disabler;
     auto now = RTC::now();
@@ -1396,7 +1396,7 @@ pid_t Process::sys$waitpid(pid_t waitee, int* wstatus, int options)
     // FIXME: Respect options
     (void) options;
     if (wstatus)
-        if (!validate_write(wstatus, sizeof(int)))
+        if (!validate_write_typed(wstatus))
             return -EFAULT;
 
     {
@@ -1615,12 +1615,12 @@ Unix::sighandler_t Process::sys$signal(int signum, Unix::sighandler_t handler)
 int Process::sys$sigprocmask(int how, const Unix::sigset_t* set, Unix::sigset_t* old_set)
 {
     if (old_set) {
-        if (!validate_read(old_set, sizeof(Unix::sigset_t)))
+        if (!validate_read_typed(old_set))
             return -EFAULT;
         *old_set = m_signal_mask;
     }
     if (set) {
-        if (!validate_read(set, sizeof(Unix::sigset_t)))
+        if (!validate_read_typed(set))
             return -EFAULT;
         switch (how) {
         case SIG_BLOCK:
@@ -1641,7 +1641,7 @@ int Process::sys$sigprocmask(int how, const Unix::sigset_t* set, Unix::sigset_t*
 
 int Process::sys$sigpending(Unix::sigset_t* set)
 {
-    if (!validate_read(set, sizeof(Unix::sigset_t)))
+    if (!validate_read_typed(set))
         return -EFAULT;
     *set = m_pending_signals;
     return 0;
@@ -1652,12 +1652,12 @@ int Process::sys$sigaction(int signum, const Unix::sigaction* act, Unix::sigacti
     // FIXME: Fail with -EINVAL if attepmting to change action for SIGKILL or SIGSTOP.
     if (signum < 1 || signum >= 32)
         return -EINVAL;
-    if (!validate_read(act, sizeof(Unix::sigaction)))
+    if (!validate_read_typed(act))
         return -EFAULT;
     InterruptDisabler disabler; // FIXME: This should use a narrower lock.
     auto& action = m_signal_action_data[signum];
     if (old_act) {
-        if (!validate_write(old_act, sizeof(Unix::sigaction)))
+        if (!validate_write_typed(old_act))
             return -EFAULT;
         old_act->sa_flags = action.flags;
         old_act->sa_restorer = (decltype(old_act->sa_restorer))action.restorer.get();
@@ -1678,7 +1678,7 @@ int Process::sys$getgroups(int count, gid_t* gids)
         return m_gids.size();
     if (count != (int)m_gids.size())
         return -EINVAL;
-    if (!validate_write(gids, sizeof(gid_t) * count))
+    if (!validate_write_typed(gids, m_gids.size()))
         return -EFAULT;
     size_t i = 0;
     for (auto gid : m_gids)
@@ -1692,7 +1692,7 @@ int Process::sys$setgroups(size_t count, const gid_t* gids)
         return -EPERM;
     if (count >= MAX_PROCESS_GIDS)
         return -EINVAL;
-    if (!validate_read(gids, sizeof(gid_t) * count))
+    if (!validate_read(gids, count))
         return -EFAULT;
     m_gids.clear();
     m_gids.set(m_gid);
