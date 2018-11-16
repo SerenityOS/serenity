@@ -96,7 +96,8 @@ bool Scheduler::pick_next()
         //        syscall effectively being "interrupted" despite having completed?
         if (process.in_kernel() && !process.is_blocked())
             return true;
-        process.dispatch_one_pending_signal();
+        if (!process.dispatch_one_pending_signal())
+            return true;
         if (process.is_blocked()) {
             process.m_was_interrupted_while_blocked = true;
             process.unblock();

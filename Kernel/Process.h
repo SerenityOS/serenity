@@ -208,8 +208,8 @@ public:
     size_t max_open_file_descriptors() const { return m_max_open_file_descriptors; }
 
     void send_signal(byte signal, Process* sender);
-    void dispatch_one_pending_signal();
-    void dispatch_signal(byte signal);
+    bool dispatch_one_pending_signal();
+    bool dispatch_signal(byte signal);
     bool has_unmasked_pending_signals() const;
     void terminate_due_to_signal(byte signal);
 

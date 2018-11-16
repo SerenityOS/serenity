@@ -745,7 +745,7 @@ bool Process::has_unmasked_pending_signals() const
     return m_pending_signals & m_signal_mask;
 }
 
-void Process::dispatch_one_pending_signal()
+bool Process::dispatch_one_pending_signal()
 {
     ASSERT_INTERRUPTS_DISABLED();
     dword signal_candidates = m_pending_signals & m_signal_mask;
@@ -757,10 +757,10 @@ void Process::dispatch_one_pending_signal()
             break;
         }
     }
-    dispatch_signal(signal);
+    return dispatch_signal(signal);
 }
 
-void Process::dispatch_signal(byte signal)
+bool Process::dispatch_signal(byte signal)
 {
     ASSERT_INTERRUPTS_DISABLED();
     ASSERT(signal < 32);
@@ -774,12 +774,14 @@ void Process::dispatch_signal(byte signal)
     auto handler_laddr = action.handler_or_sigaction;
     if (handler_laddr.is_null()) {
         // FIXME: Is termination really always the appropriate action?
-        return terminate_due_to_signal(signal);
+        terminate_due_to_signal(signal);
+        return true;
     }
 
+    m_pending_signals &= ~(1 << signal);
+
     if (handler_laddr.asPtr() == SIG_IGN) {
-        dbgprintf("%s(%u) ignored signal %u\n", name().characters(), pid(), signal);
-        return;
+        dbgprintf("%s(%u) ignored signal %u\n", name().characters(), pid(), signal); return false;
     }
 
     Scheduler::prepare_to_modify_tss(*this);
@@ -871,14 +873,13 @@ void Process::dispatch_signal(byte signal)
     else
         push_value_on_stack(m_return_to_ring3_from_signal_trampoline.get());
 
-    m_pending_signals &= ~(1 << signal);
-
     // FIXME: This state is such a hack. It avoids trouble if 'current' is the process receiving a signal.
     set_state(Skip1SchedulerPass);
 
 #ifdef SIGNAL_DEBUG
     dbgprintf("signal: Okay, %s(%u) {%s} has been primed with signal handler %w:%x\n", name().characters(), pid(), toString(state()), m_tss.cs, m_tss.eip);
 #endif
+    return true;
 }
 
 void Process::sys$sigreturn()
