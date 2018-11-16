@@ -274,8 +274,8 @@ void init()
 
     memset(&system, 0, sizeof(system));
 
-    WORD base_memory = (CMOS::read(0x16) << 8) | CMOS::read(0x15);
-    WORD ext_memory = (CMOS::read(0x18) << 8) | CMOS::read(0x17);
+    word base_memory = (CMOS::read(0x16) << 8) | CMOS::read(0x15);
+    word ext_memory = (CMOS::read(0x18) << 8) | CMOS::read(0x17);
 
     kprintf("%u kB base memory\n", base_memory);
     kprintf("%u kB extended memory\n", ext_memory);

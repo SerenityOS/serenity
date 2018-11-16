@@ -44,7 +44,7 @@ void initialize()
     kprintf("syscall: int 0x80 handler installed\n");
 }
 
-static DWORD handle(RegisterDump& regs, DWORD function, DWORD arg1, DWORD arg2, DWORD arg3)
+static dword handle(RegisterDump& regs, dword function, dword arg1, dword arg2, dword arg3)
 {
     ASSERT_INTERRUPTS_ENABLED();
     switch (function) {
@@ -184,10 +184,10 @@ static DWORD handle(RegisterDump& regs, DWORD function, DWORD arg1, DWORD arg2, 
 
 void syscall_entry(RegisterDump& regs)
 {
-    DWORD function = regs.eax;
-    DWORD arg1 = regs.edx;
-    DWORD arg2 = regs.ecx;
-    DWORD arg3 = regs.ebx;
+    dword function = regs.eax;
+    dword arg1 = regs.edx;
+    dword arg2 = regs.ecx;
+    dword arg3 = regs.ebx;
     regs.eax = Syscall::handle(regs, function, arg1, arg2, arg3);
 }
 

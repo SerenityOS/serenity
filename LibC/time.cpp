@@ -1,5 +1,6 @@
-#include "time.h"
-#include "errno.h"
+#include <time.h>
+#include <errno.h>
+#include <assert.h>
 #include <Kernel/Syscall.h>
 
 extern "C" {
@@ -24,6 +25,18 @@ int gettimeofday(struct timeval* tv, struct timezone*)
 char* ctime(const time_t*)
 {
     return const_cast<char*>("ctime() not implemented");
+}
+
+struct tm* localtime(const time_t*)
+{
+    assert(false);
+}
+
+long timezone = 0;
+
+void tzset()
+{
+    assert(false);
 }
 
 }

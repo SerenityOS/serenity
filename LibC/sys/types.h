@@ -5,6 +5,14 @@
 
 __BEGIN_DECLS
 
+typedef unsigned int u_int;
+typedef unsigned long u_long;
+typedef int ptrdiff_t;
+typedef unsigned long int __uintmax_t;
+typedef __uintmax_t uintmax_t;
+typedef long int __intmax_t;
+typedef __intmax_t intmax_t;
+
 typedef uint32_t uid_t;
 typedef uint32_t gid_t;
 typedef int pid_t;

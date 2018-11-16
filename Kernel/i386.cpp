@@ -10,7 +10,7 @@
 //#define PAGE_FAULT_DEBUG
 
 struct DescriptorTablePointer {
-    WORD size;
+    word size;
     void* address;
 } PACKED;
 
@@ -23,7 +23,7 @@ static IRQHandler** s_irqHandler;
 
 static Vector<word, KmallocEternalAllocator>* s_gdt_freelist;
 
-static WORD s_gdtLength;
+static word s_gdtLength;
 
 word gdt_alloc_entry()
 {
@@ -262,7 +262,7 @@ void exception_14_handler(RegisterDumpWithExceptionCode& regs)
     static void _exception ## i () \
     { \
         kprintf(msg"\n"); \
-        DWORD cr0, cr2, cr3, cr4; \
+        dword cr0, cr2, cr3, cr4; \
         asm ("movl %%cr0, %%eax":"=a"(cr0)); \
         asm ("movl %%cr2, %%eax":"=a"(cr2)); \
         asm ("movl %%cr3, %%eax":"=a"(cr3)); \
@@ -286,9 +286,9 @@ EH(12, "Stack exception")
 EH(15, "Unknown error")
 EH(16, "Coprocessor error")
 
-static void writeRawGDTEntry(WORD selector, DWORD low, DWORD high)
+static void writeRawGDTEntry(word selector, dword low, dword high)
 {
-    WORD i = (selector & 0xfffc) >> 3;
+    word i = (selector & 0xfffc) >> 3;
     s_gdt[i].low = low;
     s_gdt[i].high = high;
 
@@ -297,14 +297,14 @@ static void writeRawGDTEntry(WORD selector, DWORD low, DWORD high)
     }
 }
 
-void writeGDTEntry(WORD selector, Descriptor& descriptor)
+void writeGDTEntry(word selector, Descriptor& descriptor)
 {
     writeRawGDTEntry(selector, descriptor.low, descriptor.high);
 }
 
-Descriptor& getGDTEntry(WORD selector)
+Descriptor& getGDTEntry(word selector)
 {
-    WORD i = (selector & 0xfffc) >> 3;
+    word i = (selector & 0xfffc) >> 3;
     return *(Descriptor*)(&s_gdt[i]);
 }
 
@@ -357,17 +357,17 @@ void unregisterIRQHandler(byte irq, IRQHandler& handler)
     s_irqHandler[irq] = nullptr;
 }
 
-void registerInterruptHandler(BYTE index, void (*f)())
+void registerInterruptHandler(byte index, void (*f)())
 {
     s_idt[index].low = 0x00080000 | LSW((f));
-    s_idt[index].high = ((DWORD)(f) & 0xffff0000) | 0x8e00;
+    s_idt[index].high = ((dword)(f) & 0xffff0000) | 0x8e00;
     flushIDT();
 }
 
-void registerUserCallableInterruptHandler(BYTE index, void (*f)())
+void registerUserCallableInterruptHandler(byte index, void (*f)())
 {
     s_idt[index].low = 0x00080000 | LSW((f));
-    s_idt[index].high = ((DWORD)(f) & 0xffff0000) | 0xef00;
+    s_idt[index].high = ((dword)(f) & 0xffff0000) | 0xef00;
     flushIDT();
 }
 
@@ -395,7 +395,7 @@ void idt_init()
     s_idtr.address = s_idt;
     s_idtr.size = 0x100 * 8;
 
-    for (BYTE i = 0xff; i > 0x10; --i)
+    for (byte i = 0xff; i > 0x10; --i)
         registerInterruptHandler(i, unimp_trap);
 
     registerInterruptHandler(0x00, _exception0);
@@ -426,14 +426,14 @@ void idt_init()
     flushIDT();
 }
 
-void load_task_register(WORD selector)
+void load_task_register(word selector)
 {
     asm("ltr %0"::"r"(selector));
 }
 
 void handle_irq()
 {
-    WORD isr = PIC::getISR();
+    word isr = PIC::getISR();
     if (!isr) {
         kprintf("Spurious IRQ\n");
         return;

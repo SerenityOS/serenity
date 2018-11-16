@@ -235,12 +235,17 @@ static void stream_putch(char*&, char ch)
     fputc(ch, __current_stream);
 }
 
-int fprintf(FILE* fp, const char* fmt, ...)
+int vfprintf(FILE* stream, const char* fmt, va_list ap)
 {
-    __current_stream = fp;
+    __current_stream = stream;
+    return printfInternal(stream_putch, nullptr, fmt, ap);
+}
+
+int fprintf(FILE* stream, const char* fmt, ...)
+{
     va_list ap;
     va_start(ap, fmt);
-    int ret = printfInternal(stream_putch, nullptr, fmt, ap);
+    int ret = vfprintf(stream, fmt, ap);
     va_end(ap);
     return ret;
 }
@@ -259,11 +264,18 @@ static void buffer_putch(char*& bufptr, char ch)
     *bufptr++ = ch;
 }
 
+int vsprintf(char* buffer, const char* fmt, va_list ap)
+{
+    int ret = printfInternal(buffer_putch, buffer, fmt, ap);
+    buffer[ret] = '\0';
+    return ret;
+}
+
 int sprintf(char* buffer, const char* fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
-    int ret = printfInternal(buffer_putch, buffer, fmt, ap);
+    int ret = vsprintf(buffer, fmt, ap);
     buffer[ret] = '\0';
     va_end(ap);
     return ret;

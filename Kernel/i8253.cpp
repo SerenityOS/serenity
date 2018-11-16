@@ -53,7 +53,7 @@ asm(
 #define MODE_RATE          0x04
 #define MODE_SQUARE_WAVE   0x06
 
-#define WRITE_WORD         0x30
+#define WRITE_word         0x30
 
 /* Miscellaneous */
 #define BASE_FREQUENCY     1193182
@@ -68,9 +68,9 @@ namespace PIT {
 
 void initialize()
 {
-    WORD timer_reload;
+    word timer_reload;
 
-    IO::out8(PIT_CTL, TIMER0_SELECT | WRITE_WORD | MODE_SQUARE_WAVE);
+    IO::out8(PIT_CTL, TIMER0_SELECT | WRITE_word | MODE_SQUARE_WAVE);
 
     timer_reload = (BASE_FREQUENCY / TICKS_PER_SECOND);
 

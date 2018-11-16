@@ -14,8 +14,8 @@
 
 typedef struct
 {
-    DWORD start;
-    DWORD nchunk;
+    dword start;
+    dword nchunk;
 } PACKED allocation_t;
 
 #define CHUNK_SIZE  128
@@ -29,8 +29,8 @@ typedef struct
 
 static byte alloc_map[POOL_SIZE / CHUNK_SIZE / 8];
 
-volatile DWORD sum_alloc = 0;
-volatile DWORD sum_free = POOL_SIZE;
+volatile dword sum_alloc = 0;
+volatile dword sum_free = POOL_SIZE;
 volatile size_t kmalloc_sum_eternal = 0;
 volatile size_t kmalloc_sum_page_aligned = 0;
 
@@ -90,9 +90,9 @@ void* kmalloc(dword size)
 {
     InterruptDisabler disabler;
 
-    DWORD chunks_needed, chunks_here, first_chunk;
-    DWORD real_size;
-    DWORD i, j, k;
+    dword chunks_needed, chunks_here, first_chunk;
+    dword real_size;
+    dword i, j, k;
 
     /* We need space for the allocation_t structure at the head of the block. */
     real_size = size + sizeof(allocation_t);
@@ -133,7 +133,7 @@ void* kmalloc(dword size)
                 if( chunks_here == chunks_needed )
                 {
                     auto* a = (allocation_t *)(BASE_PHYS + (first_chunk * CHUNK_SIZE));
-                    BYTE *ptr = (BYTE *)a;
+                    byte *ptr = (byte *)a;
                     ptr += sizeof(allocation_t);
                     a->nchunk = chunks_needed;
                     a->start = first_chunk;
@@ -172,16 +172,16 @@ void kfree(void *ptr)
 
     InterruptDisabler disabler;
 
-    allocation_t *a = (allocation_t *)((((BYTE *)ptr) - sizeof(allocation_t)));
+    allocation_t *a = (allocation_t *)((((byte *)ptr) - sizeof(allocation_t)));
 
 #if 0
-    DWORD hdr = (DWORD)a;
-    DWORD mhdr = hdr & ~0x7;
+    dword hdr = (dword)a;
+    dword mhdr = hdr & ~0x7;
     kprintf("hdr / mhdr %p / %p\n", hdr, mhdr);
     ASSERT(hdr == mhdr);
 #endif
 
-    for (DWORD k = a->start; k < (a->start + a->nchunk); ++k) {
+    for (dword k = a->start; k < (a->start + a->nchunk); ++k) {
         alloc_map[k / 8] &= ~(1 << (k % 8));
     }
 

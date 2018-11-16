@@ -24,7 +24,7 @@
 #define SIGNAL_DEBUG
 #define MAX_PROCESS_GIDS 32
 
-static const DWORD defaultStackSize = 16384;
+static const dword defaultStackSize = 16384;
 
 static pid_t next_pid;
 InlineLinkedList<Process>* g_processes;
@@ -663,7 +663,7 @@ Process::Process(String&& name, uid_t uid, gid_t gid, pid_t ppid, RingLevel ring
     if (isRing3()) {
         // Ring3 processes need a separate stack for Ring0.
         m_kernelStack = kmalloc(defaultStackSize);
-        m_stackTop0 = ((DWORD)m_kernelStack + defaultStackSize) & 0xffffff8;
+        m_stackTop0 = ((dword)m_kernelStack + defaultStackSize) & 0xffffff8;
         m_tss.ss0 = 0x10;
         m_tss.esp0 = m_stackTop0;
     }
@@ -1414,7 +1414,7 @@ void Process::reap(Process& process)
 
 pid_t Process::sys$waitpid(pid_t waitee, int* wstatus, int options)
 {
-    //kprintf("sys$waitpid(%d, %p, %d)\n", waitee, wstatus, options);
+    dbgprintf("sys$waitpid(%d, %p, %d)\n", waitee, wstatus, options);
     // FIXME: Respect options
     (void) options;
     if (wstatus)
@@ -1426,6 +1426,31 @@ pid_t Process::sys$waitpid(pid_t waitee, int* wstatus, int options)
         if (waitee != -1 && !Process::from_pid(waitee))
             return -ECHILD;
     }
+
+    if (options & WNOHANG) {
+        if (waitee == -1) {
+            pid_t reaped_pid = 0;
+            InterruptDisabler disabler;
+            for_each_child([&reaped_pid] (Process& process) {
+                if (process.state() == Dead) {
+                    reaped_pid = process.pid();
+                    reap(process);
+                }
+                return true;
+            });
+            return reaped_pid;
+        } else {
+            auto* waitee_process = Process::from_pid(waitee);
+            if (!waitee_process)
+                return -ECHILD;
+            if (waitee_process->state() == Dead) {
+                reap(*waitee_process);
+                return waitee;
+            }
+            return 0;
+        }
+    }
+
     m_waitee = waitee;
     m_waitee_status = 0;
     block(BlockedWait);
@@ -1470,7 +1495,7 @@ void block(Process::State state)
     sched_yield();
 }
 
-void sleep(DWORD ticks)
+void sleep(dword ticks)
 {
     ASSERT(current->state() == Process::Running);
     current->setWakeupTime(system.uptime + ticks);

@@ -2,6 +2,7 @@
 
 #include <sys/cdefs.h>
 #include <sys/types.h>
+#include <stdarg.h>
 #include <limits.h>
 
 __BEGIN_DECLS
@@ -49,6 +50,8 @@ int feof(FILE*);
 int fflush(FILE*);
 size_t fread(void* ptr, size_t size, size_t nmemb, FILE*);
 size_t fwrite(const void* ptr, size_t size, size_t nmemb, FILE*);
+int vfprintf(FILE*, const char* fmt, va_list);
+int vsprintf(char* buffer, const char* fmt, va_list);
 int fprintf(FILE*, const char* fmt, ...);
 int printf(const char* fmt, ...);
 int sprintf(char* buffer, const char* fmt, ...);

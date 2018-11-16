@@ -19,9 +19,9 @@ static bool initialized;
 
 namespace PIC {
 
-void disable(BYTE irq)
+void disable(byte irq)
 {
-    BYTE imr;
+    byte imr;
     if (irq & 8) {
         imr = IO::in8(PIC1_CMD);
         imr |= 1 << (irq - 8);
@@ -33,9 +33,9 @@ void disable(BYTE irq)
     }
 }
 
-void enable(BYTE irq)
+void enable(byte irq)
 {
-    BYTE imr;
+    byte imr;
     if (irq & 8) {
         imr = IO::in8(PIC1_CMD);
         imr &= ~(1 << (irq - 8));
@@ -47,7 +47,7 @@ void enable(BYTE irq)
     }
 }
 
-void eoi(BYTE irq)
+void eoi(byte irq)
 {
     if (irq & 8)
         IO::out8(PIC1_CTL, 0x20);

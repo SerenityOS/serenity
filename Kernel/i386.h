@@ -8,23 +8,23 @@
 
 union Descriptor {
     struct {
-        WORD limit_lo;
-        WORD base_lo;
-        BYTE base_hi;
-        BYTE type : 4;
-        BYTE descriptor_type : 1;
-        BYTE dpl : 2;
-        BYTE segment_present : 1;
-        BYTE limit_hi : 4;
-        BYTE : 1;
-        BYTE zero : 1;
-        BYTE operation_size : 1;
-        BYTE granularity : 1;
-        BYTE base_hi2;
+        word limit_lo;
+        word base_lo;
+        byte base_hi;
+        byte type : 4;
+        byte descriptor_type : 1;
+        byte dpl : 2;
+        byte segment_present : 1;
+        byte limit_hi : 4;
+        byte : 1;
+        byte zero : 1;
+        byte operation_size : 1;
+        byte granularity : 1;
+        byte base_hi2;
     };
     struct {
-        DWORD low;
-        DWORD high;
+        dword low;
+        dword high;
     };
 
     enum Type {
@@ -45,15 +45,15 @@ union Descriptor {
 
     void setBase(void* b)
     {
-        base_lo = (DWORD)(b) & 0xffff;
-        base_hi = ((DWORD)(b) >> 16) & 0xff;
-        base_hi2 = ((DWORD)(b) >> 24) & 0xff;
+        base_lo = (dword)(b) & 0xffff;
+        base_hi = ((dword)(b) >> 16) & 0xff;
+        base_hi2 = ((dword)(b) >> 24) & 0xff;
     }
 
-    void setLimit(DWORD l)
+    void setLimit(dword l)
     {
-        limit_lo = (DWORD)l & 0xffff;
-        limit_hi = ((DWORD)l >> 16) & 0xff;
+        limit_lo = (dword)l & 0xffff;
+        limit_hi = ((dword)l >> 16) & 0xff;
     }
 } PACKED;
 
@@ -61,21 +61,21 @@ class IRQHandler;
 
 void gdt_init();
 void idt_init();
-void registerInterruptHandler(BYTE number, void (*f)());
-void registerUserCallableInterruptHandler(BYTE number, void (*f)());
-void registerIRQHandler(BYTE number, IRQHandler&);
-void unregisterIRQHandler(BYTE number, IRQHandler&);
+void registerInterruptHandler(byte number, void (*f)());
+void registerUserCallableInterruptHandler(byte number, void (*f)());
+void registerIRQHandler(byte number, IRQHandler&);
+void unregisterIRQHandler(byte number, IRQHandler&);
 void flushIDT();
 void flushGDT();
-void load_task_register(WORD selector);
+void load_task_register(word selector);
 word gdt_alloc_entry();
 void gdt_free_entry(word);
-Descriptor& getGDTEntry(WORD selector);
-void writeGDTEntry(WORD selector, Descriptor&);
+Descriptor& getGDTEntry(word selector);
+void writeGDTEntry(word selector, Descriptor&);
 
 #define HANG asm volatile( "cli; hlt" );
-#define LSW(x) ((DWORD)(x) & 0xFFFF)
-#define MSW(x) (((DWORD)(x) >> 16) & 0xFFFF)
+#define LSW(x) ((dword)(x) & 0xFFFF)
+#define MSW(x) (((dword)(x) >> 16) & 0xFFFF)
 #define LSB(x) ((x) & 0xFF)
 #define MSB(x) (((x)>>8) & 0xFF)
 
@@ -156,49 +156,49 @@ private:
 };
 
 struct RegisterDump {
-    WORD ss;
-    WORD gs;
-    WORD fs;
-    WORD es;
-    WORD ds;
-    DWORD edi;
-    DWORD esi;
-    DWORD ebp;
-    DWORD esp;
-    DWORD ebx;
-    DWORD edx;
-    DWORD ecx;
-    DWORD eax;
-    DWORD eip;
-    WORD cs;
-    WORD __csPadding;
-    DWORD eflags;
-    DWORD esp_if_crossRing;
-    WORD ss_if_crossRing;
+    word ss;
+    word gs;
+    word fs;
+    word es;
+    word ds;
+    dword edi;
+    dword esi;
+    dword ebp;
+    dword esp;
+    dword ebx;
+    dword edx;
+    dword ecx;
+    dword eax;
+    dword eip;
+    word cs;
+    word __csPadding;
+    dword eflags;
+    dword esp_if_crossRing;
+    word ss_if_crossRing;
 } PACKED;
 
 struct RegisterDumpWithExceptionCode {
-    WORD ss;
-    WORD gs;
-    WORD fs;
-    WORD es;
-    WORD ds;
-    DWORD edi;
-    DWORD esi;
-    DWORD ebp;
-    DWORD esp;
-    DWORD ebx;
-    DWORD edx;
-    DWORD ecx;
-    DWORD eax;
-    WORD exception_code;
-    WORD __exception_code_padding;
-    DWORD eip;
-    WORD cs;
-    WORD __csPadding;
-    DWORD eflags;
-    DWORD esp_if_crossRing;
-    WORD ss_if_crossRing;
+    word ss;
+    word gs;
+    word fs;
+    word es;
+    word ds;
+    dword edi;
+    dword esi;
+    dword ebp;
+    dword esp;
+    dword ebx;
+    dword edx;
+    dword ecx;
+    dword eax;
+    word exception_code;
+    word __exception_code_padding;
+    dword eip;
+    word cs;
+    word __csPadding;
+    dword eflags;
+    dword esp_if_crossRing;
+    word ss_if_crossRing;
 } PACKED;
 
 inline constexpr dword pageBaseOf(dword address)

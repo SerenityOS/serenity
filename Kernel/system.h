@@ -15,8 +15,8 @@ const KSym* ksymbolicate(dword address) PURE;
 struct system_t
 {
     time_t uptime;
-    DWORD nprocess;
-    DWORD nblocked;
+    dword nprocess;
+    dword nblocked;
 };
 
 extern system_t system;
