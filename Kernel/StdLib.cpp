@@ -5,10 +5,10 @@
 
 extern "C" {
 
-void memcpy(void *dest, const void *src, DWORD n)
+void memcpy(void *dest, const void *src, dword n)
 {
-    BYTE* bdest = (BYTE*)dest;
-    const BYTE* bsrc = (const BYTE*)src;
+    byte* bdest = (byte*)dest;
+    const byte* bsrc = (const byte*)src;
     for (; n; --n)
         *(bdest++) = *(bsrc++);
 }
@@ -18,9 +18,9 @@ void strcpy(char* dest, const char *src)
     while ((*dest++ = *src++) != '\0');
 }
 
-void* memset(void* dest, BYTE c, DWORD n)
+void* memset(void* dest, byte c, dword n)
 {
-    BYTE *bdest = (BYTE *)dest;
+    byte *bdest = (byte *)dest;
     for (; n; --n)
         *(bdest++) = c;
     return dest;
@@ -37,9 +37,9 @@ char* strrchr(const char* str, int ch)
     return last;
 }
 
-DWORD strlen(const char* str)
+dword strlen(const char* str)
 {
-    DWORD len = 0;
+    dword len = 0;
     while (*(str++))
         ++len;
     return len;
@@ -51,12 +51,12 @@ int strcmp(const char *s1, const char *s2)
         if (*s1 == 0)
             return 0;
     }
-    return *(const BYTE*)s1 < *(const BYTE*)s2 ? -1 : 1;
+    return *(const byte*)s1 < *(const byte*)s2 ? -1 : 1;
 }
 
 char* strdup(const char *str)
 {
-    DWORD len = strlen(str);
+    dword len = strlen(str);
     char *s = (char*)kmalloc(len);
     memcpy(s, str, len);
     return s;

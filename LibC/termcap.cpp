@@ -56,6 +56,12 @@ void ensure_caps()
     caps->set("up", "\033[A");
     caps->set("vb", "");
     caps->set("am", "");
+    caps->set("@7", "");
+    caps->set("kH", "");
+    caps->set("kI", "\033[L");
+    caps->set("kh", "\033[H");
+    caps->set("vs", "");
+    caps->set("ve", "");
 
     caps->set("co", "80");
     caps->set("li", "25");
@@ -75,7 +81,8 @@ char* tgetstr(char* id, char** area)
         *area += strlen(val) + 1;
         return ret;
     }
-    assert(false);
+    fprintf(stderr, "tgetstr: missing cap id='%s'\n", id);
+    return nullptr;
 }
 
 int tgetflag(char* id)

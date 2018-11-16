@@ -50,7 +50,7 @@ void Keyboard::emit(byte ch)
 void Keyboard::handleIRQ()
 {
     while (IO::in8(0x64) & 1) {
-        BYTE ch = IO::in8(0x60);
+        byte ch = IO::in8(0x60);
         switch (ch) {
         case 0x38: m_modifiers |= Mod_Alt; break;
         case 0xB8: m_modifiers &= ~Mod_Alt; break;

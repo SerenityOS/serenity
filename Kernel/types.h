@@ -6,22 +6,18 @@
 #define PACKED __attribute__ ((packed))
 #define PURE __attribute__ ((pure))
 
-typedef unsigned char BYTE;
-typedef unsigned short WORD;
-typedef unsigned int DWORD;
-
-typedef DWORD __u32;
-typedef WORD __u16;
-typedef BYTE __u8;
+typedef dword __u32;
+typedef word __u16;
+typedef byte __u8;
 typedef int __s32;
 typedef short __s16;
 
-typedef DWORD uid_t;
-typedef DWORD gid_t;
+typedef dword uid_t;
+typedef dword gid_t;
 typedef int pid_t;
-typedef DWORD time_t;
-typedef DWORD suseconds_t;
-typedef DWORD size_t;
+typedef dword time_t;
+typedef dword suseconds_t;
+typedef dword size_t;
 
 struct timeval {
     time_t tv_sec;
@@ -50,8 +46,8 @@ typedef dword time_t;
 typedef dword suseconds_t;
 
 struct FarPtr {
-    DWORD offset { 0 };
-    WORD selector { 0 };
+    dword offset { 0 };
+    word selector { 0 };
 } PACKED;
 
 class PhysicalAddress {

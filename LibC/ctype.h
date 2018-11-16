@@ -43,7 +43,10 @@ ALWAYS_INLINE int isdigit(int c)
     return c >= '0' && c <= '9';
 }
 
+int isalpha(int c);
+int isalnum(int c);
 int ispunct(int c);
 int isprint(int c);
+int iscntrl(int c);
 
 __END_DECLS

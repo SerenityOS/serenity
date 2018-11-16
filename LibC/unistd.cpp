@@ -268,4 +268,10 @@ int access(const char* pathname, int mode)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
+int mknod(const char* pathname, mode_t, dev_t)
+{
+    (void) pathname;
+    assert(false);
+}
+
 }

@@ -51,6 +51,7 @@ int pipe(int pipefd[2]);
 unsigned int alarm(unsigned int seconds);
 int access(const char* pathname, int mode);
 int isatty(int fd);
+int mknod(const char* pathname, mode_t, dev_t);
 
 #define WEXITSTATUS(status) (((status) & 0xff00) >> 8)
 #define WTERMSIG(status) ((status) & 0x7f)

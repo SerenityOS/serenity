@@ -6,5 +6,5 @@ cp ../../figlet-2.2.5/fonts/big.flf mnt/$FIGLET_FONTDIR
 cp ../../figlet-2.2.5/fonts/slant.flf mnt/$FIGLET_FONTDIR
 cp ../../figlet-2.2.5/fonts/lean.flf mnt/$FIGLET_FONTDIR
 
-cp ../../bash-1.14.7/bash2 mnt/bin/bash
+cp ../../bash-2.05b/bash mnt/bin/bash
 

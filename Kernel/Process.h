@@ -80,8 +80,8 @@ public:
     pid_t pid() const { return m_pid; }
     pid_t sid() const { return m_sid; }
     pid_t pgid() const { return m_pgid; }
-    DWORD ticks() const { return m_ticks; }
-    WORD selector() const { return m_farPtr.selector; }
+    dword ticks() const { return m_ticks; }
+    word selector() const { return m_farPtr.selector; }
     TSS32& tss() { return m_tss; }
     State state() const { return m_state; }
     uid_t uid() const { return m_uid; }
@@ -98,8 +98,8 @@ public:
     void block(Process::State);
     void unblock();
 
-    void setWakeupTime(DWORD t) { m_wakeupTime = t; }
-    DWORD wakeupTime() const { return m_wakeupTime; }
+    void setWakeupTime(dword t) { m_wakeupTime = t; }
+    dword wakeupTime() const { return m_wakeupTime; }
 
     template<typename Callback> static void for_each(Callback);
     template<typename Callback> static void for_each_in_pgrp(pid_t, Callback);
@@ -110,7 +110,7 @@ public:
     bool tick() { ++m_ticks; return --m_ticksLeft; }
     void set_ticks_left(dword t) { m_ticksLeft = t; }
 
-    void setSelector(WORD s) { m_farPtr.selector = s; }
+    void setSelector(word s) { m_farPtr.selector = s; }
     void set_state(State s) { m_state = s; }
 
     pid_t sys$setsid();
@@ -244,13 +244,13 @@ private:
     gid_t m_egid { 0 };
     pid_t m_sid { 0 };
     pid_t m_pgid { 0 };
-    DWORD m_ticks { 0 };
-    DWORD m_ticksLeft { 0 };
-    DWORD m_stackTop0 { 0 };
-    DWORD m_stackTop3 { 0 };
+    dword m_ticks { 0 };
+    dword m_ticksLeft { 0 };
+    dword m_stackTop0 { 0 };
+    dword m_stackTop3 { 0 };
     FarPtr m_farPtr;
     State m_state { Invalid };
-    DWORD m_wakeupTime { 0 };
+    dword m_wakeupTime { 0 };
     TSS32 m_tss;
     TSS32 m_tss_to_resume_kernel;
     struct FileDescriptorAndFlags {
@@ -358,7 +358,7 @@ static inline const char* toString(Process::State state)
 }
 
 extern void block(Process::State);
-extern void sleep(DWORD ticks);
+extern void sleep(dword ticks);
 
 extern InlineLinkedList<Process>* g_processes;
 

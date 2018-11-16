@@ -3,13 +3,13 @@
 
 namespace CMOS {
 
-BYTE read(BYTE index)
+byte read(byte index)
 {
     IO::out8(0x70, index);
     return IO::in8(0x71);
 }
 
-void write(BYTE index, BYTE data)
+void write(byte index, byte data)
 {
     IO::out8(0x70, index);
     IO::out8(0x71, data);
