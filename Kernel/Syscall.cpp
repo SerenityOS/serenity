@@ -173,8 +173,10 @@ static dword handle(RegisterDump& regs, dword function, dword arg1, dword arg2, 
         return current->sys$fcntl((int)arg1, (int)arg2, (dword)arg3);
     case Syscall::SC_ioctl:
         return current->sys$ioctl((int)arg1, (unsigned)arg2, (unsigned)arg3);
+    case Syscall::SC_fstat:
+        return current->sys$fstat((int)arg1, (Unix::stat*)arg2);
     default:
-        kprintf("<%u> int0x80: Unknown function %x requested {%x, %x, %x}\n", current->pid(), function, arg1, arg2, arg3);
+        kprintf("<%u> int0x80: Unknown function %u requested {%x, %x, %x}\n", current->pid(), function, arg1, arg2, arg3);
         break;
     }
     return 0;
