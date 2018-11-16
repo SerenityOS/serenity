@@ -363,7 +363,11 @@ int Process::do_exec(const String& path, Vector<String>&& arguments, Vector<Stri
         }
     }
 
-    InterruptDisabler disabler;
+    // We cli() manually here because we don't want to get interrupted between do_exec() and Schedule::yield().
+    // The reason is that the task redirection we've set up above will be clobbered by the timer IRQ.
+    // If we used an InterruptDisabler that sti()'d on exit, we might timer tick'd too soon in exec().
+    cli();
+
     Scheduler::prepare_to_modify_tss(*this);
 
     m_name = parts.takeLast();
