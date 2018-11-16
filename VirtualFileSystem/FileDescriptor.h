@@ -38,6 +38,9 @@ public:
 
     bool isDirectory() const;
 
+    bool is_character_device() const { return m_vnode && m_vnode->isCharacterDevice(); }
+    CharacterDevice* character_device() { return m_vnode ? m_vnode->characterDevice() : nullptr; }
+
 #ifdef SERENITY
     bool isTTY() const;
     const TTY* tty() const;

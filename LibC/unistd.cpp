@@ -6,6 +6,7 @@
 #include <grp.h>
 #include <pwd.h>
 #include <stdio.h>
+#include <sys/ioctl.h>
 #include <Kernel/Syscall.h>
 
 extern "C" {
@@ -60,14 +61,12 @@ pid_t setsid()
 
 pid_t tcgetpgrp(int fd)
 {
-    int rc = Syscall::invoke(Syscall::SC_tcgetpgrp, (dword)fd);
-    __RETURN_WITH_ERRNO(rc, rc, -1);
+    return ioctl(fd, TIOCGPGRP);
 }
 
 int tcsetpgrp(int fd, pid_t pgid)
 {
-    int rc = Syscall::invoke(Syscall::SC_tcsetpgrp, (dword)fd, (dword)pgid);
-    __RETURN_WITH_ERRNO(rc, rc, -1);
+    return ioctl(fd, TIOCSPGRP, pgid);
 }
 
 int setpgid(pid_t pid, pid_t pgid)

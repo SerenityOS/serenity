@@ -1586,35 +1586,14 @@ int Process::sys$tcsetattr(int fd, int optional_actions, const Unix::termios* tp
     return 0;
 }
 
-pid_t Process::sys$tcgetpgrp(int fd)
+int Process::sys$ioctl(int fd, unsigned request, unsigned arg)
 {
     auto* descriptor = file_descriptor(fd);
     if (!descriptor)
         return -EBADF;
-    if (!descriptor->isTTY())
+    if (!descriptor->is_character_device())
         return -ENOTTY;
-    auto& tty = *descriptor->tty();
-    if (&tty != m_tty)
-        return -ENOTTY;
-    return tty.pgid();
-}
-
-int Process::sys$tcsetpgrp(int fd, pid_t pgid)
-{
-    if (pgid < 0)
-        return -EINVAL;
-    if (get_sid_from_pgid(pgid) != m_sid)
-        return -EINVAL;
-    auto* descriptor = file_descriptor(fd);
-    if (!descriptor)
-        return -EBADF;
-    if (!descriptor->isTTY())
-        return -ENOTTY;
-    auto& tty = *descriptor->tty();
-    if (&tty != m_tty)
-        return -ENOTTY;
-    tty.set_pgid(pgid);
-    return 0;
+    return descriptor->character_device()->ioctl(*this, request, arg);
 }
 
 int Process::sys$getdtablesize()

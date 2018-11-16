@@ -37,8 +37,6 @@
     __ENUMERATE_SYSCALL(getpgid) \
     __ENUMERATE_SYSCALL(setpgid) \
     __ENUMERATE_SYSCALL(getpgrp) \
-    __ENUMERATE_SYSCALL(tcsetpgrp) \
-    __ENUMERATE_SYSCALL(tcgetpgrp) \
     __ENUMERATE_SYSCALL(fork) \
     __ENUMERATE_SYSCALL(execve) \
     __ENUMERATE_SYSCALL(geteuid) \
@@ -66,6 +64,7 @@
     __ENUMERATE_SYSCALL(fcntl) \
     __ENUMERATE_SYSCALL(tcsetattr) \
     __ENUMERATE_SYSCALL(tcgetattr) \
+    __ENUMERATE_SYSCALL(ioctl) \
 
 
 #define DO_SYSCALL_A0(function) Syscall::invoke((dword)(function))
@@ -104,28 +103,28 @@ struct SC_mmap_params {
 
 void initialize();
 
-inline dword invoke(dword function)
+inline dword invoke(Function function)
 {
     dword result;
     asm volatile("int $0x80":"=a"(result):"a"(function):"memory");
     return result;
 }
 
-inline dword invoke(dword function, dword arg1)
+inline dword invoke(Function function, dword arg1)
 {
     dword result;
     asm volatile("int $0x80":"=a"(result):"a"(function),"d"(arg1):"memory");
     return result;
 }
 
-inline dword invoke(dword function, dword arg1, dword arg2)
+inline dword invoke(Function function, dword arg1, dword arg2)
 {
     dword result;
     asm volatile("int $0x80":"=a"(result):"a"(function),"d"(arg1),"c"(arg2):"memory");
     return result;
 }
 
-inline dword invoke(dword function, dword arg1, dword arg2, dword arg3)
+inline dword invoke(Function function, dword arg1, dword arg2, dword arg3)
 {
     dword result;
     asm volatile("int $0x80":"=a"(result):"a"(function),"d"(arg1),"c"(arg2),"b"(arg3):"memory");

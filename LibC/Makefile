@@ -30,6 +30,7 @@ LIBC_OBJS = \
        termios.o \
        ulimit.o \
        qsort.o \
+       ioctl.o \
        entry.o
 
 OBJS = $(AK_OBJS) $(LIBC_OBJS)

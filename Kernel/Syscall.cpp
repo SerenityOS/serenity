@@ -125,10 +125,6 @@ static DWORD handle(RegisterDump& regs, DWORD function, DWORD arg1, DWORD arg2, 
         return current->sys$getpgid((pid_t)arg1);
     case Syscall::SC_getpgrp:
         return current->sys$getpgrp();
-    case Syscall::SC_tcgetpgrp:
-        return current->sys$tcgetpgrp((int)arg1);
-    case Syscall::SC_tcsetpgrp:
-        return current->sys$tcsetpgrp((int)arg1, (pid_t)arg2);
     case Syscall::SC_fork:
         return current->sys$fork(regs);
     case Syscall::SC_execve:
@@ -179,6 +175,8 @@ static DWORD handle(RegisterDump& regs, DWORD function, DWORD arg1, DWORD arg2, 
         return current->sys$tcgetattr((int)arg1, (Unix::termios*)arg2);
     case Syscall::SC_tcsetattr:
         return current->sys$tcsetattr((int)arg1, (int)arg2, (const Unix::termios*)arg3);
+    case Syscall::SC_ioctl:
+        return current->sys$ioctl((int)arg1, (unsigned)arg2, (unsigned)arg3);
     default:
         kprintf("<%u> int0x80: Unknown function %x requested {%x, %x, %x}\n", current->pid(), function, arg1, arg2, arg3);
         break;
