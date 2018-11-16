@@ -49,16 +49,17 @@ public:
     bool in_canonical_mode() const { return m_termios.c_lflag & ICANON; }
 
 protected:
-    virtual bool isTTY() const final override { return true; }
+    virtual void onTTYWrite(const byte*, size_t) = 0;
 
     TTY(unsigned major, unsigned minor);
     void emit(byte);
 
-    virtual void onTTYWrite(const byte*, size_t) = 0;
-
-    void interrupt();
-
 private:
+    // ^CharacterDevice
+    virtual bool isTTY() const final override { return true; }
+
+    void generate_signal(int signal);
+
     DoubleBuffer m_buffer;
     pid_t m_pgid { 0 };
     Unix::termios m_termios;

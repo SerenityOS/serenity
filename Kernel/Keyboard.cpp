@@ -82,7 +82,7 @@ void Keyboard::handleIRQ()
             else if (m_modifiers & Mod_Shift)
                 emit(shift_map[ch]);
             else if (m_modifiers & Mod_Ctrl)
-                emit(shift_map[ch]);
+                emit(map[ch]);
             }
         //break;
     }
