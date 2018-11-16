@@ -3,5 +3,9 @@
 enum IOCtlNumber {
     TIOCGPGRP,
     TIOCSPGRP,
+    TCGETS,
+    TCSETS,
+    TCSETSW,
+    TCSETSF,
 };
 

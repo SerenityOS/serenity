@@ -62,8 +62,6 @@
     __ENUMERATE_SYSCALL(fstat) \
     __ENUMERATE_SYSCALL(access) \
     __ENUMERATE_SYSCALL(fcntl) \
-    __ENUMERATE_SYSCALL(tcsetattr) \
-    __ENUMERATE_SYSCALL(tcgetattr) \
     __ENUMERATE_SYSCALL(ioctl) \
 
 

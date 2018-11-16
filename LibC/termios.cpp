@@ -1,20 +1,26 @@
 #include <assert.h>
 #include <errno.h>
 #include <termios.h>
+#include <sys/ioctl.h>
 #include <Kernel/Syscall.h>
 
 extern "C" {
 
 int tcgetattr(int fd, struct termios* t)
 {
-    int rc = Syscall::invoke(Syscall::SC_tcgetattr, (dword)fd, (dword)t);
-    __RETURN_WITH_ERRNO(rc, rc, -1);
+    return ioctl(fd, TCGETS, t);
 }
 
 int tcsetattr(int fd, int optional_actions, const struct termios* t)
 {
-    int rc = Syscall::invoke(Syscall::SC_tcsetattr, (dword)fd, (dword)optional_actions, (dword)t);
-    __RETURN_WITH_ERRNO(rc, rc, -1);
+    switch (optional_actions) {
+    case TCSANOW:
+        return ioctl(fd, TCSETS, t);
+    case TCSADRAIN:
+        return ioctl(fd, TCSETSW, t);
+    case TCSAFLUSH:
+        return ioctl(fd, TCSETSF, t);
+    }
 }
 
 int tcflow(int fd, int action)

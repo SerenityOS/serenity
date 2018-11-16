@@ -199,6 +199,9 @@ public:
     bool validate_user_read(LinearAddress) const;
     bool validate_user_write(LinearAddress) const;
 
+    bool validate_read(void*, size_t) const;
+    bool validate_write(void*, size_t) const;
+
     CoreInode* cwd_inode() { return m_cwd ? m_cwd->core_inode() : nullptr; }
     CoreInode* executable_inode() { return m_executable ? m_executable->core_inode() : nullptr; }
 

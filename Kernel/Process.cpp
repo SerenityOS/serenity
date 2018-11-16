@@ -21,7 +21,6 @@
 //#define DEBUG_IO
 //#define TASK_DEBUG
 //#define FORK_DEBUG
-#define TERMIOS_DEBUG
 #define SIGNAL_DEBUG
 #define MAX_PROCESS_GIDS 32
 
@@ -1467,6 +1466,24 @@ bool Process::isValidAddressForKernel(LinearAddress laddr) const
     return validate_user_read(laddr);
 }
 
+bool Process::validate_read(void* address, size_t size) const
+{
+    if ((reinterpret_cast<dword>(address) & PAGE_MASK) != ((reinterpret_cast<dword>(address) + size) & PAGE_MASK)) {
+        if (!MM.validate_user_read(*this, LinearAddress((dword)address).offset(size)))
+            return false;
+    }
+    return MM.validate_user_read(*this, LinearAddress((dword)address));
+}
+
+bool Process::validate_write(void* address, size_t size) const
+{
+    if ((reinterpret_cast<dword>(address) & PAGE_MASK) != ((reinterpret_cast<dword>(address) + size) & PAGE_MASK)) {
+        if (!MM.validate_user_write(*this, LinearAddress((dword)address).offset(size)))
+            return false;
+    }
+    return MM.validate_user_write(*this, LinearAddress((dword)address));
+}
+
 bool Process::validate_user_read(LinearAddress laddr) const
 {
     InterruptDisabler disabler;
@@ -1550,39 +1567,6 @@ int Process::sys$setpgid(pid_t specified_pid, pid_t specified_pgid)
     }
     // FIXME: There are more EPERM conditions to check for here..
     process->m_pgid = new_pgid;
-    return 0;
-}
-
-int Process::sys$tcgetattr(int fd, Unix::termios* tp)
-{
-    VALIDATE_USER_WRITE(tp, sizeof(Unix::termios));
-    auto* descriptor = file_descriptor(fd);
-    if (!descriptor)
-        return -EBADF;
-    if (!descriptor->isTTY())
-        return -ENOTTY;
-#ifdef TERMIOS_DEBUG
-    dbgprintf("sys$tcgetattr(fd=%d, tp=%p)\n", fd, tp);
-#endif
-    auto& tty = *descriptor->tty();
-    memcpy(tp, &tty.termios(), sizeof(Unix::termios));
-    return 0;
-}
-
-int Process::sys$tcsetattr(int fd, int optional_actions, const Unix::termios* tp)
-{
-    (void) optional_actions;
-    VALIDATE_USER_READ(tp, sizeof(Unix::termios));
-    auto* descriptor = file_descriptor(fd);
-    if (!descriptor)
-        return -EBADF;
-    if (!descriptor->isTTY())
-        return -ENOTTY;
-#ifdef TERMIOS_DEBUG
-    dbgprintf("sys$tcsetattr(fd=%d, tp=%p)\n", fd, tp);
-#endif
-    auto& tty = *descriptor->tty();
-    tty.set_termios(*tp);
     return 0;
 }
 

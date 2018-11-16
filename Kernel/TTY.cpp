@@ -71,19 +71,34 @@ void TTY::set_termios(const Unix::termios& t)
 
 int TTY::ioctl(Process& process, unsigned request, unsigned arg)
 {
+    pid_t pgid;
+    Unix::termios* tp;
+
     if (process.tty() != this)
         return -ENOTTY;
     switch (request) {
     case TIOCGPGRP:
-        return pgid();
-    case TIOCSPGRP: {
+        return m_pgid;
+    case TIOCSPGRP:
         // FIXME: Validate pgid fully.
-        pid_t pgid = static_cast<pid_t>(arg);
+        pgid = static_cast<pid_t>(arg);
         if (pgid < 0)
             return -EINVAL;
-        set_pgid(arg);
+        m_pgid = pgid;
+        return 0;
+    case TCGETS:
+        tp = reinterpret_cast<Unix::termios*>(arg);
+        if (!process.validate_write(tp, sizeof(Unix::termios)))
+            return -EFAULT;
+        *tp = m_termios;
+        return 0;
+    case TCSETS:
+        tp = reinterpret_cast<Unix::termios*>(arg);
+        if (!process.validate_read(tp, sizeof(Unix::termios)))
+            return -EFAULT;
+        set_termios(*tp);
         return 0;
     }
-    }
+    ASSERT_NOT_REACHED();
     return -EINVAL;
 }
