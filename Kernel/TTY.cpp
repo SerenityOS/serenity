@@ -4,6 +4,32 @@
 #include <LibC/signal_numbers.h>
 #include <LibC/sys/ioctl_numbers.h>
 
+void DoubleBuffer::flip()
+{
+    ASSERT(m_read_buffer_index == m_read_buffer->size());
+    swap(m_read_buffer, m_write_buffer);
+    m_write_buffer->clear();
+    m_read_buffer_index = 0;
+}
+
+Unix::ssize_t DoubleBuffer::write(const byte* data, size_t size)
+{
+    m_write_buffer->append(data, size);
+    return size;
+}
+
+Unix::ssize_t DoubleBuffer::read(byte* data, size_t size)
+{
+    if (m_read_buffer_index >= m_read_buffer->size() && !m_write_buffer->isEmpty())
+        flip();
+    if (m_read_buffer_index >= m_read_buffer->size())
+        return 0;
+    ssize_t nread = min(m_read_buffer->size() - m_read_buffer_index, size);
+    memcpy(data, m_read_buffer->data() + m_read_buffer_index, nread);
+    m_read_buffer_index += nread;
+    return nread;
+}
+
 TTY::TTY(unsigned major, unsigned minor)
     : CharacterDevice(major, minor)
 {
@@ -17,15 +43,7 @@ TTY::~TTY()
 
 ssize_t TTY::read(byte* buffer, size_t size)
 {
-    ssize_t nread = min(m_buffer.size(), size);
-    memcpy(buffer, m_buffer.data(), nread);
-    if (nread == (ssize_t)m_buffer.size())
-        m_buffer.clear();
-    else {
-        kprintf("had %u, read %u\n", m_buffer.size(), nread);
-        ASSERT_NOT_REACHED();
-    }
-    return nread;
+    return m_buffer.read(buffer, size);
 }
 
 ssize_t TTY::write(const byte* buffer, size_t size)
@@ -36,12 +54,12 @@ ssize_t TTY::write(const byte* buffer, size_t size)
 
 bool TTY::hasDataAvailableForRead() const
 {
-    return !m_buffer.isEmpty();
+    return !m_buffer.is_empty();
 }
 
 void TTY::emit(byte ch)
 {
-    m_buffer.append(ch);
+    m_buffer.write(&ch, 1);
 }
 
 void TTY::interrupt()
@@ -93,6 +111,8 @@ int TTY::ioctl(Process& process, unsigned request, unsigned arg)
         *tp = m_termios;
         return 0;
     case TCSETS:
+    case TCSETSF:
+    case TCSETSW:
         tp = reinterpret_cast<Unix::termios*>(arg);
         if (!process.validate_read(tp, sizeof(Unix::termios)))
             return -EFAULT;
