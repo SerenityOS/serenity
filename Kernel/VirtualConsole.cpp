@@ -378,11 +378,8 @@ void VirtualConsole::put_character_at(unsigned row, unsigned column, byte ch)
     }
 }
 
-void VirtualConsole::on_char(byte ch, bool shouldEmit)
+void VirtualConsole::on_char(byte ch)
 {
-    if (shouldEmit)
-        emit(ch);
-
     switch (m_escape_state) {
     case ExpectBracket:
         if (ch == '[')
@@ -445,12 +442,15 @@ void VirtualConsole::on_char(byte ch, bool shouldEmit)
 
 void VirtualConsole::onKeyPress(Keyboard::Key key)
 {
-    if (key.ctrl() && key.character == 'C') {
-        interrupt();
-        return;
+    if (key.ctrl()) {
+        if (key.character >= 'a' && key.character <= 'z') {
+            emit(key.character - 'a' + 1);
+            return;
+        } else if (key.character == '\\') {
+            emit(0x1c);
+            return;
+        }
     }
-    if (key.ctrl())
-        emit('^');
     emit(key.character);
 }
 
@@ -459,7 +459,7 @@ void VirtualConsole::onConsoleReceive(byte ch)
     InterruptDisabler disabler;
     auto old_attribute = m_current_attribute;
     m_current_attribute = 0x03;
-    on_char(ch, false);
+    on_char(ch);
     m_current_attribute = old_attribute;
 }
 
@@ -467,7 +467,7 @@ void VirtualConsole::onTTYWrite(const byte* data, size_t size)
 {
     InterruptDisabler disabler;
     for (size_t i = 0; i < size; ++i)
-        on_char(data[i], false);
+        on_char(data[i]);
 }
 
 String VirtualConsole::ttyName() const

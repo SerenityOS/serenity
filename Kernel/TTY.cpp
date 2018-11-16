@@ -37,6 +37,8 @@ TTY::TTY(unsigned major, unsigned minor)
 {
     memset(&m_termios, 0, sizeof(m_termios));
     m_termios.c_lflag |= ISIG | ECHO;
+    static const char default_cc[32] = "\003\034\177\025\004\0\1\0\021\023\032\0\022\017\027\026\0";
+    memcpy(m_termios.c_cc, default_cc, sizeof(default_cc));
 }
 
 TTY::~TTY()
@@ -64,23 +66,32 @@ bool TTY::hasDataAvailableForRead() const
 
 void TTY::emit(byte ch)
 {
+    if (should_generate_signals()) {
+        if (ch == m_termios.c_cc[VINTR]) {
+            dbgprintf("%s: VINTR pressed!\n", ttyName().characters());
+            generate_signal(SIGINT);
+            return;
+        }
+        if (ch == m_termios.c_cc[VQUIT]) {
+            dbgprintf("%s: VQUIT pressed!\n", ttyName().characters());
+            generate_signal(SIGQUIT);
+            return;
+        }
+    }
     m_buffer.write(&ch, 1);
 }
 
-void TTY::interrupt()
+void TTY::generate_signal(int signal)
 {
-    if (!should_generate_signals())
+    if (!pgid())
         return;
-    dbgprintf("%s: Interrupt ^C pressed!\n", ttyName().characters());
-    if (pgid()) {
-        dbgprintf("%s: Send SIGINT to everyone in pgrp %d\n", ttyName().characters(), pgid());
-        InterruptDisabler disabler;
-        Process::for_each_in_pgrp(pgid(), [this] (auto& process) {
-            dbgprintf("%s: Send SIGINT to %d\n", ttyName().characters(), process.pid());
-            process.send_signal(SIGINT, nullptr);
-            return true;
-        });
-    }
+    dbgprintf("%s: Send signal %d to everyone in pgrp %d\n", ttyName().characters(), signal, pgid());
+    InterruptDisabler disabler; // FIXME: Iterate over a set of process handles instead?
+    Process::for_each_in_pgrp(pgid(), [&] (auto& process) {
+        dbgprintf("%s: Send signal %d to %d\n", ttyName().characters(), signal, process.pid());
+        process.send_signal(signal, nullptr);
+        return true;
+    });
 }
 
 void TTY::set_termios(const Unix::termios& t)

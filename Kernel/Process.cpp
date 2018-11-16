@@ -777,6 +777,11 @@ void Process::dispatch_signal(byte signal)
         return terminate_due_to_signal(signal);
     }
 
+    if (handler_laddr.asPtr() == SIG_IGN) {
+        dbgprintf("%s(%u) ignored signal %u\n", name().characters(), pid(), signal);
+        return;
+    }
+
     Scheduler::prepare_to_modify_tss(*this);
 
     word ret_cs = m_tss.cs;

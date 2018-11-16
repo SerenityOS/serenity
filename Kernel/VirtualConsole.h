@@ -27,7 +27,7 @@ private:
     virtual String ttyName() const override;
 
     void set_active(bool);
-    void on_char(byte, bool shouldEmit);
+    void on_char(byte);
 
     void get_vga_cursor(byte& row, byte& column);
     void flush_vga_cursor();
