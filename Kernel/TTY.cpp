@@ -1,6 +1,8 @@
 #include "TTY.h"
 #include "Process.h"
+#include <LibC/errno_numbers.h>
 #include <LibC/signal_numbers.h>
+#include <LibC/sys/ioctl_numbers.h>
 
 TTY::TTY(unsigned major, unsigned minor)
     : CharacterDevice(major, minor)
@@ -65,4 +67,23 @@ void TTY::set_termios(const Unix::termios& t)
         ttyName().characters(),
         should_echo_input(),
         should_generate_signals());
+}
+
+int TTY::ioctl(Process& process, unsigned request, unsigned arg)
+{
+    if (process.tty() != this)
+        return -ENOTTY;
+    switch (request) {
+    case TIOCGPGRP:
+        return pgid();
+    case TIOCSPGRP: {
+        // FIXME: Validate pgid fully.
+        pid_t pgid = static_cast<pid_t>(arg);
+        if (pgid < 0)
+            return -EINVAL;
+        set_pgid(arg);
+        return 0;
+    }
+    }
+    return -EINVAL;
 }

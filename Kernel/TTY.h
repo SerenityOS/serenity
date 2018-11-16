@@ -3,6 +3,8 @@
 #include <VirtualFileSystem/CharacterDevice.h>
 #include <VirtualFileSystem/UnixTypes.h>
 
+class Process;
+
 class TTY : public CharacterDevice {
 public:
     virtual ~TTY() override;
@@ -10,6 +12,7 @@ public:
     virtual ssize_t read(byte*, size_t) override;
     virtual ssize_t write(const byte*, size_t) override;
     virtual bool hasDataAvailableForRead() const override;
+    virtual int ioctl(Process&, unsigned request, unsigned arg) override final;
 
     virtual String ttyName() const = 0;
 

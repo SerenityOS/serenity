@@ -108,6 +108,7 @@ char* tgoto(const char* cap, int col, int row)
 int tputs(const char* str, int affcnt, int (*putc)(int))
 {
     printf("%s", str);
+    return 0;
 }
 
 }

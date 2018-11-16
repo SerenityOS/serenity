@@ -4,6 +4,8 @@
 #include "Limits.h"
 #include "FileDescriptor.h"
 
+class Process;
+
 class CharacterDevice {
 public:
     virtual ~CharacterDevice();
@@ -20,10 +22,12 @@ public:
 
     virtual bool isTTY() const { return false; }
 
+    virtual int ioctl(Process&, unsigned request, unsigned arg);
+
 protected:
     CharacterDevice(unsigned major, unsigned minor) : m_major(major), m_minor(minor) { }
 
 private:
     unsigned m_major { 0 };
-    unsigned m_minor{ 0 };
+    unsigned m_minor { 0 };
 };

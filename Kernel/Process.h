@@ -118,8 +118,6 @@ public:
     int sys$setpgid(pid_t pid, pid_t pgid);
     pid_t sys$getpgrp();
     pid_t sys$getpgid(pid_t);
-    pid_t sys$tcgetpgrp(int fd);
-    int sys$tcsetpgrp(int fd, pid_t pgid);
     uid_t sys$getuid();
     gid_t sys$getgid();
     uid_t sys$geteuid();
@@ -175,6 +173,7 @@ public:
     int sys$fcntl(int fd, int cmd, dword extra_arg);
     int sys$tcgetattr(int fd, Unix::termios*);
     int sys$tcsetattr(int fd, int optional_actions, const Unix::termios*);
+    int sys$ioctl(int fd, unsigned request, unsigned arg);
 
     static void initialize();
 
