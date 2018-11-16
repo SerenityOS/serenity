@@ -1090,6 +1090,22 @@ int Process::sys$fcntl(int fd, int cmd, dword arg)
     // NOTE: The FD flags are not shared between FileDescriptor objects.
     //       This means that dup() doesn't copy the FD_CLOEXEC flag!
     switch (cmd) {
+    case F_DUPFD: {
+        int arg_fd = (int)arg;
+        if (arg_fd < 0)
+            return -EINVAL;
+        int new_fd = -1;
+        for (int i = arg_fd; i < (int)m_max_open_file_descriptors; ++i) {
+            if (!m_fds[i]) {
+                new_fd = i;
+                break;
+            }
+        }
+        if (new_fd == -1)
+            return -EMFILE;
+        m_fds[new_fd].set(descriptor);
+        break;
+    }
     case F_GETFD:
         return m_fds[fd].flags;
     case F_SETFD:

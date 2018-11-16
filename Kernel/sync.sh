@@ -3,6 +3,11 @@ rm -vf _fs_contents
 cp -vp _fs_contents.stock _fs_contents
 mkdir -vp mnt
 mount -o loop _fs_contents mnt/
+mkdir -vp mnt/dev
+mknod mnt/dev/tty0 c 4 0
+mknod mnt/dev/tty1 c 4 1
+mknod mnt/dev/tty2 c 4 2
+mknod mnt/dev/tty3 c 4 3
 cp -R ../Base/* mnt/
 cp -v ../Userland/sh mnt/bin/sh
 cp -v ../Userland/id mnt/bin/id
