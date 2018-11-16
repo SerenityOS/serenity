@@ -51,7 +51,7 @@ void Process::initialize()
 #endif
     next_pid = 0;
     g_processes = new InlineLinkedList<Process>;
-    s_hostname = new String("birx");
+    s_hostname = new String("courage");
     Scheduler::initialize();
 }
 
