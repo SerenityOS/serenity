@@ -11,6 +11,7 @@ extern char** environ;
 inline int getpagesize() { return 4096; }
 pid_t fork();
 int execve(const char* filename, const char** argv, const char** envp);
+void _exit(int status);
 pid_t getsid(pid_t);
 pid_t setsid();
 int setpgid(pid_t pid, pid_t pgid);
@@ -52,6 +53,12 @@ unsigned int alarm(unsigned int seconds);
 int access(const char* pathname, int mode);
 int isatty(int fd);
 int mknod(const char* pathname, mode_t, dev_t);
+long fpathconf(int fd, int name);
+long pathconf(const char *path, int name);
+
+enum {
+    _PC_NAME_MAX,
+};
 
 #define WEXITSTATUS(status) (((status) & 0xff00) >> 8)
 #define WTERMSIG(status) ((status) & 0x7f)
@@ -82,25 +89,15 @@ int mknod(const char* pathname, mode_t, dev_t);
 #define S_IWOTH 0002
 #define S_IXOTH 0001
 
+#define S_IRWXG (S_IRWXU >> 3)
+#define S_IRWXO (S_IRWXG >> 3)
+
 #define S_ISDIR(m) (((m) & S_IFMT) == S_IFDIR)
 #define S_ISCHR(m) (((m) & S_IFMT) == S_IFCHR)
 #define S_ISBLK(m) (((m) & S_IFMT) == S_IFBLK)
 #define S_ISREG(m) (((m) & S_IFMT) == S_IFREG)
 #define S_ISFIFO(m) (((m) & S_IFMT) == S_IFIFO)
 #define S_ISLNK(m) (((m) & S_IFMT) == S_IFLNK)
-
-#define O_RDONLY 0
-#define O_WRONLY 1
-#define O_RDWR 2
-#define O_CREAT 0100
-#define O_EXCL 0200
-#define O_NOCTTY 0400
-#define O_TRUNC 01000
-#define O_APPEND 02000
-#define O_NONBLOCK 04000
-#define O_DIRECTORY 00200000
-#define O_NOFOLLOW 00400000
-#define O_CLOEXEC 02000000
 
 __END_DECLS
 

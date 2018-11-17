@@ -40,6 +40,7 @@
     __ERROR(EOPNOTSUPP,     "Operation not supported") \
     __ERROR(ENOSYS,         "No such syscall") \
     __ERROR(ENOTIMPL,       "Not implemented") \
+    __ERROR(EAFNOSUPPORT,   "Address family not supported") \
 
 enum __errno_values {
 #undef __ERROR

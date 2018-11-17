@@ -274,4 +274,24 @@ int mknod(const char* pathname, mode_t, dev_t)
     assert(false);
 }
 
+long fpathconf(int fd, int name)
+{
+    (void) fd;
+    (void) name;
+    assert(false);
+}
+
+long pathconf(const char* path, int name)
+{
+    (void) path;
+    (void) name;
+    assert(false);
+}
+
+void _exit(int status)
+{
+    Syscall::invoke(Syscall::SC_exit, (dword)status);
+    assert(false);
+}
+
 }

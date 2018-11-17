@@ -7,6 +7,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include <Kernel/Syscall.h>
 #include <AK/printf.cpp>
 

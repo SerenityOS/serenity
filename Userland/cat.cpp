@@ -3,6 +3,7 @@
 #include <errno.h>
 #include <string.h>
 #include <stdlib.h>
+#include <fcntl.h>
 #include <assert.h>
 
 int main(int argc, char** argv)
