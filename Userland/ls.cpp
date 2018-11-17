@@ -4,20 +4,27 @@
 #include <LibC/errno.h>
 #include <LibC/string.h>
 
+static int do_dir(const char* path);
+
 int main(int argc, char** argv)
 {
-    (void) argc;
-    (void) argv;
-    bool colorize = true;
+    if (argc == 2) {
+        return do_dir(argv[1]);
+    }
+    return do_dir(".");
+}
 
-    DIR* dirp = opendir(".");
+int do_dir(const char* path)
+{
+    DIR* dirp = opendir(path);
     if (!dirp) {
-        perror("opendir failed");
+        perror("opendir");
         return 1;
     }
+    bool colorize = true;
     char pathbuf[256];
     while (auto* de = readdir(dirp)) {
-        sprintf(pathbuf, "%s", de->d_name);
+        sprintf(pathbuf, "%s/%s", path, de->d_name);
 
         struct stat st;
         int rc = lstat(pathbuf, &st);
