@@ -66,8 +66,8 @@ void* realloc(void *ptr, size_t size)
 
 void exit(int status)
 {
-    Syscall::invoke(Syscall::SC_exit, (dword)status);
-    for (;;);
+    _exit(status);
+    assert(false);
 }
 
 void abort()

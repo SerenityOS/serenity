@@ -5,6 +5,9 @@
 
 __BEGIN_DECLS
 
+#define EXIT_SUCCESS 0
+#define EXIT_FAILURE 1
+
 void* malloc(size_t) __MALLOC;
 void free(void*);
 void* calloc(size_t nmemb, size_t);

@@ -90,15 +90,16 @@ int memcmp(const void* v1, const void* v2, size_t n)
     return 0;
 }
 
-void memcpy(void* dest, const void* src, size_t n)
+void* memcpy(void* dest, const void* src, size_t n)
 {
     auto* bdest = (unsigned char*)dest;
     auto* bsrc = (const unsigned char*)src;
     for (; n; --n)
         *(bdest++) = *(bsrc++);
+    return dest;
 }
 
-void memmove(void* dest, const void* src, size_t n)
+void* memmove(void* dest, const void* src, size_t n)
 {
     if (dest < src)
         return memcpy(dest, src, n);
