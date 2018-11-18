@@ -172,6 +172,7 @@ public:
     int sys$access(const char* pathname, int mode);
     int sys$fcntl(int fd, int cmd, dword extra_arg);
     int sys$ioctl(int fd, unsigned request, unsigned arg);
+    int sys$mkdir(const char* pathname, mode_t mode);
 
     static void initialize();
 

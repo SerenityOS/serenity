@@ -51,9 +51,6 @@ private:
     typedef unsigned BlockIndex;
     typedef unsigned GroupIndex;
     typedef unsigned InodeIndex;
-    class CachedExt2Inode;
-    class CachedExt2InodeImpl;
-
     explicit Ext2FS(RetainPtr<DiskDevice>&&);
 
     const ext2_super_block& superBlock() const;
@@ -64,7 +61,7 @@ private:
     unsigned blocksPerGroup() const;
     unsigned inodeSize() const;
 
-    CachedExt2Inode lookupExt2Inode(unsigned) const;
+    OwnPtr<ext2_inode> lookupExt2Inode(unsigned) const;
     bool writeExt2Inode(unsigned, const ext2_inode&);
     ByteBuffer readBlockContainingInode(unsigned inode, unsigned& blockIndex, unsigned& offset) const;
 
@@ -76,9 +73,9 @@ private:
     virtual bool writeInode(InodeIdentifier, const ByteBuffer&) override;
     virtual InodeMetadata inodeMetadata(InodeIdentifier) const override;
     virtual bool set_mtime(InodeIdentifier, dword timestamp) override;
-    virtual InodeIdentifier create_inode(InodeIdentifier parentInode, const String& name, Unix::mode_t, unsigned size) override;
+    virtual InodeIdentifier create_inode(InodeIdentifier parentInode, const String& name, Unix::mode_t, unsigned size, int& error) override;
     virtual Unix::ssize_t read_inode_bytes(InodeIdentifier, Unix::off_t offset, Unix::size_t count, byte* buffer, FileDescriptor*) const override;
-    virtual InodeIdentifier create_directory(InodeIdentifier parentInode, const String& name, Unix::mode_t) override;
+    virtual InodeIdentifier create_directory(InodeIdentifier parentInode, const String& name, Unix::mode_t, int& error) override;
     virtual InodeIdentifier find_parent_of_inode(InodeIdentifier) const override;
     virtual RetainPtr<CoreInode> get_inode(InodeIdentifier) const override;
 
@@ -95,7 +92,7 @@ private:
     template<typename F> void traverseInodeBitmap(unsigned groupIndex, F) const;
     template<typename F> void traverseBlockBitmap(unsigned groupIndex, F) const;
 
-    bool addInodeToDirectory(unsigned directoryInode, unsigned inode, const String& name, byte fileType);
+    bool addInodeToDirectory(unsigned directoryInode, unsigned inode, const String& name, byte fileType, int& error);
     bool writeDirectoryInode(unsigned directoryInode, Vector<DirectoryEntry>&&);
     bool setInodeAllocationState(unsigned inode, bool);
     bool setBlockAllocationState(GroupIndex, BlockIndex, bool);
@@ -108,9 +105,6 @@ private:
 
     mutable ByteBuffer m_cachedSuperBlock;
     mutable ByteBuffer m_cachedBlockGroupDescriptorTable;
-
-    mutable SpinLock m_inodeCacheLock;
-    mutable HashMap<unsigned, RetainPtr<CachedExt2InodeImpl>> m_inodeCache;
 
     mutable SpinLock m_inode_cache_lock;
     mutable HashMap<BlockIndex, RetainPtr<Ext2FSInode>> m_inode_cache;

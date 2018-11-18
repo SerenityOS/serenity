@@ -29,6 +29,7 @@ cp -v ../Userland/mm mnt/bin/mm
 cp -v ../Userland/kill mnt/bin/kill
 cp -v ../Userland/tty mnt/bin/tty
 cp -v ../Userland/strsignal mnt/bin/strsignal
+cp -v ../Userland/mkdir mnt/bin/mkdir
 sh sync-local.sh
 cp -v kernel.map mnt/
 umount mnt

@@ -18,6 +18,7 @@
 enum IDECommand : byte {
     IDENTIFY_DRIVE = 0xEC,
     READ_SECTORS = 0x21,
+    WRITE_SECTORS = 0x30,
 };
 
 enum IDEStatus : byte {
@@ -64,11 +65,8 @@ bool IDEDiskDevice::readBlock(unsigned index, byte* out) const
 
 bool IDEDiskDevice::writeBlock(unsigned index, const byte* data)
 {
-    (void) index;
-    (void) data;
-    kprintf("IDEDiskDevice: writeBlock not implemented()\n");
-    notImplemented();
-    return false;
+    write_sectors(index, 1, data);
+    return true;
 }
 
 #ifdef DISK_DEBUG
@@ -218,6 +216,51 @@ bool IDEDiskDevice::read_sectors(dword start_sector, word count, byte* outbuf)
             outbuf[i+1] = MSB(w);
         }
     }
+
+    return true;
+}
+
+bool IDEDiskDevice::write_sectors(dword start_sector, word count, const byte* data)
+{
+    LOCKER(m_lock);
+    dbgprintf("%s(%u): IDEDiskDevice::write_sectors request (%u sector(s) @ %u)\n",
+            current->name().characters(),
+            current->pid(),
+            count,
+            start_sector);
+    disableIRQ();
+
+    auto chs = lba_to_chs(start_sector);
+
+    while (IO::in8(IDE0_STATUS) & BUSY);
+
+    //dbgprintf("IDEDiskDevice: Writing %u sector(s) @ LBA %u (%u/%u/%u)\n", count, start_sector, chs.cylinder, chs.head, chs.sector);
+
+    IO::out8(0x1F2, count == 256 ? 0 : LSB(count));
+    IO::out8(0x1F3, chs.sector);
+    IO::out8(0x1F4, LSB(chs.cylinder));
+    IO::out8(0x1F5, MSB(chs.cylinder));
+
+    IO::out8(0x1F6, 0xA0 | chs.head); /* 0xB0 for 2nd device */
+
+    IO::out8(0x3F6, 0x08);
+
+    IO::out8(IDE0_COMMAND, WRITE_SECTORS);
+
+    while (!(IO::in8(IDE0_STATUS) & DRQ));
+
+    byte status = IO::in8(0x1f7);
+    if (status & DRQ) {
+        //dbgprintf("Sending %u bytes (status=%b), data=%p...\n", count * 512, status, data);
+        auto* data_as_words = (const word*)data;
+        for (dword i = 0; i < (count * 512) / 2; ++i) {
+            IO::out16(IDE0_DATA, data_as_words[i]);
+        }
+    }
+
+    m_interrupted = false;
+    enableIRQ();
+    wait_for_irq();
 
     return true;
 }

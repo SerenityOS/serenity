@@ -1751,3 +1751,15 @@ int Process::sys$setgroups(size_t count, const gid_t* gids)
         m_gids.set(gids[i]);
     return 0;
 }
+
+int Process::sys$mkdir(const char* pathname, mode_t mode)
+{
+    if (!validate_read_str(pathname))
+        return -EFAULT;
+    if (strlen(pathname) >= 255)
+        return -ENAMETOOLONG;
+    int error;
+    if (!VFS::the().mkdir(pathname, mode, cwd_inode()->identifier(), error))
+        return error;
+    return 0;
+}

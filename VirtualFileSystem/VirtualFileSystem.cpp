@@ -1,6 +1,7 @@
 #include "VirtualFileSystem.h"
 #include "FileDescriptor.h"
 #include "FileSystem.h"
+#include <AK/FileSystemPath.h>
 #include <AK/StringBuilder.h>
 #include <AK/kmalloc.h>
 #include <AK/kstdio.h>
@@ -419,22 +420,34 @@ RetainPtr<FileDescriptor> VFS::open(const String& path, int& error, int options,
     return FileDescriptor::create(move(vnode));
 }
 
-RetainPtr<FileDescriptor> VFS::create(const String& path, InodeIdentifier base)
+RetainPtr<FileDescriptor> VFS::create(const String& path, InodeIdentifier base, int& error)
 {
     // FIXME: Do the real thing, not just this fake thing!
     (void) path;
     (void) base;
-    m_root_vnode->fileSystem()->create_inode(m_root_vnode->fileSystem()->rootInode(), "empty", 0100644, 0);
+    m_root_vnode->fileSystem()->create_inode(m_root_vnode->fileSystem()->rootInode(), "empty", 0100644, 0, error);
     return nullptr;
 }
 
-RetainPtr<FileDescriptor> VFS::mkdir(const String& path, InodeIdentifier base)
+bool VFS::mkdir(const String& path, mode_t mode, InodeIdentifier base, int& error)
 {
-    // FIXME: Do the real thing, not just this fake thing!
-    (void) path;
-    (void) base;
-    m_root_vnode->fileSystem()->create_directory(m_root_vnode->fileSystem()->rootInode(), "mydir", 0400755);
-    return nullptr;
+    error = EWHYTHO;
+    // FIXME: This won't work nicely across mount boundaries.
+    FileSystemPath p(path);
+    if (!p.isValid()) {
+        error = -EINVAL;
+        return false;
+    }
+    dbgprintf("VFS::mkdir: '%s' in '%s'\n", p.basename().characters(), p.dirname().characters());
+    auto parent_dir = resolve_path(p.dirname(), error, m_root_vnode->inode);
+    if (!parent_dir.isValid())
+        return false;
+    auto new_dir = base.fileSystem()->create_directory(parent_dir, p.basename(), mode, error);
+    if (new_dir.isValid()) {
+        error = 0;
+        return true;
+    }
+    return false;
 }
 
 InodeIdentifier VFS::resolveSymbolicLink(InodeIdentifier base, InodeIdentifier symlinkInode, int& error)

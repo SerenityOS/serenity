@@ -1,5 +1,6 @@
 #include "SyntheticFileSystem.h"
 #include "FileDescriptor.h"
+#include <LibC/errno_numbers.h>
 #include <AK/StdLib.h>
 
 #ifndef SERENITY
@@ -152,13 +153,14 @@ bool SynthFS::set_mtime(InodeIdentifier, dword timestamp)
     return false;
 }
 
-InodeIdentifier SynthFS::create_inode(InodeIdentifier parentInode, const String& name, Unix::mode_t mode, unsigned size)
+InodeIdentifier SynthFS::create_inode(InodeIdentifier parentInode, const String& name, Unix::mode_t mode, unsigned size, int& error)
 {
     (void) parentInode;
     (void) name;
     (void) mode;
     (void) size;
-    kprintf("FIXME: Implement SyntheticFileSystem::createDirectoryInode().\n");
+    (void) error;
+    kprintf("FIXME: Implement SyntheticFileSystem::create_inode().\n");
     return { };
 }
 
@@ -205,11 +207,9 @@ Unix::ssize_t SynthFS::read_inode_bytes(InodeIdentifier inode, Unix::off_t offse
     return nread;
 }
 
-InodeIdentifier SynthFS::create_directory(InodeIdentifier parentInode, const String& name, Unix::mode_t)
+InodeIdentifier SynthFS::create_directory(InodeIdentifier, const String&, Unix::mode_t, int& error)
 {
-    (void) parentInode;
-    (void) name;
-    kprintf("FIXME: Implement SyntheticFileSystem::makeDirectory().\n");
+    error = -EROFS;
     return { };
 }
 

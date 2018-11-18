@@ -7,6 +7,11 @@ void StringBuilder::append(String&& str)
     m_strings.append(move(str));
 }
 
+void StringBuilder::append(const String& str)
+{
+    m_strings.append(str);
+}
+
 void StringBuilder::append(char ch)
 {
     m_strings.append(StringImpl::create(&ch, 1));

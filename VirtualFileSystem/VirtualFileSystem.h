@@ -115,8 +115,8 @@ public:
 
     RetainPtr<FileDescriptor> open(CharacterDevice&, int options);
     RetainPtr<FileDescriptor> open(const String& path, int& error, int options = 0, InodeIdentifier base = InodeIdentifier());
-    RetainPtr<FileDescriptor> create(const String& path, InodeIdentifier base = InodeIdentifier());
-    RetainPtr<FileDescriptor> mkdir(const String& path, InodeIdentifier base = InodeIdentifier());
+    RetainPtr<FileDescriptor> create(const String& path, InodeIdentifier base, int& error);
+    bool mkdir(const String& path, mode_t mode, InodeIdentifier base, int& error);
 
     bool touch(const String&path);
 
@@ -136,7 +136,6 @@ private:
     bool is_vfs_root(InodeIdentifier) const;
 
     void traverse_directory_inode(CoreInode&, Function<bool(const FS::DirectoryEntry&)>);
-    InodeIdentifier resolve_path(const String& path, int& error, CoreInode& base, int options = 0);
     InodeIdentifier resolve_path(const String& path, int& error, InodeIdentifier base = InodeIdentifier(), int options = 0);
     InodeIdentifier resolveSymbolicLink(InodeIdentifier base, InodeIdentifier symlinkInode, int& error);
 

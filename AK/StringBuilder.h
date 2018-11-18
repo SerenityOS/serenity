@@ -10,6 +10,7 @@ public:
     StringBuilder() { }
     ~StringBuilder() { }
 
+    void append(const String&);
     void append(String&&);
     void append(char);
 

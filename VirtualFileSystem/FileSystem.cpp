@@ -107,7 +107,7 @@ ByteBuffer FS::readEntireInode(InodeIdentifier inode, FileDescriptor* handle) co
 }
 
 FS::DirectoryEntry::DirectoryEntry(const char* n, InodeIdentifier i, byte ft)
-    : name_length(strlen(name))
+    : name_length(strlen(n))
     , inode(i)
     , fileType(ft)
 {

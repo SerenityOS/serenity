@@ -63,6 +63,7 @@
     __ENUMERATE_SYSCALL(access) \
     __ENUMERATE_SYSCALL(fcntl) \
     __ENUMERATE_SYSCALL(ioctl) \
+    __ENUMERATE_SYSCALL(mkdir) \
 
 
 #define DO_SYSCALL_A0(function) Syscall::invoke((dword)(function))
