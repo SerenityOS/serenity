@@ -30,32 +30,17 @@ bool FileSystemPath::canonicalize(bool resolveSymbolicLinks)
             canonicalParts.append(part);
     }
     if (canonicalParts.isEmpty()) {
-        m_string = m_basename = m_dirname = "/";
+        m_string = m_basename = "/";
         return true;
     }
 
     m_basename = canonicalParts.last();
-
-    if (canonicalParts.size() == 1) {
-        m_dirname = "/";
-    } else {
-        StringBuilder builder;
-        for (size_t i = 0; i < canonicalParts.size() - 1; ++i) {
-            auto& cpart = canonicalParts[i];
-            builder.append('/');
-            builder.append(cpart);
-        }
-        m_dirname = builder.build();
+    StringBuilder builder;
+    for (auto& cpart : canonicalParts) {
+        builder.append('/');
+        builder.append(move(cpart));
     }
-
-    {
-        StringBuilder builder;
-        for (auto& cpart : canonicalParts) {
-            builder.append('/');
-            builder.append(move(cpart));
-        }
-        m_string = builder.build();
-    }
+    m_string = builder.build();
     return true;
 }
 

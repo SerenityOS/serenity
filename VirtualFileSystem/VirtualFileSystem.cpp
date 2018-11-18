@@ -13,10 +13,6 @@
 
 static VFS* s_the;
 
-#ifndef SERENITY
-typedef int InterruptDisabler;
-#endif
-
 VFS& VFS::the()
 {
     ASSERT(s_the);
@@ -130,11 +126,16 @@ auto VFS::get_or_create_node(CharacterDevice& device) -> RetainPtr<Vnode>
     return makeNode(device);
 }
 
+InodeIdentifier VFS::root_inode_id() const
+{
+    return m_root_vnode->inode;
+}
+
 bool VFS::mount(RetainPtr<FS>&& fileSystem, const String& path)
 {
     ASSERT(fileSystem);
     int error;
-    auto inode = resolve_path(path, error);
+    auto inode = resolve_path(path, root_inode_id(), error);
     if (!inode.isValid()) {
         kprintf("VFS: mount can't resolve mount point '%s'\n", path.characters());
         return false;
@@ -209,18 +210,6 @@ void VFS::freeNode(Vnode* node)
     m_vnode_freelist.append(move(node));
 }
 
-#ifndef SERENITY
-bool VFS::isDirectory(const String& path, InodeIdentifier base)
-{
-    int error;
-    auto inode = resolve_path(path, error, base);
-    if (!inode.isValid())
-        return false;
-
-    return inode.metadata().isDirectory();
-}
-#endif
-
 auto VFS::find_mount_for_host(InodeIdentifier inode) -> Mount*
 {
     for (auto& mount : m_mounts) {
@@ -263,137 +252,10 @@ void VFS::traverse_directory_inode(CoreInode& dir_inode, Function<bool(const FS:
     });
 }
 
-#ifndef SERENITY
-void VFS::listDirectory(const String& path, InodeIdentifier base)
-{
-    int error;
-    auto directoryInode = resolve_path(path, error, base);
-    if (!directoryInode.isValid())
-        return;
-
-    kprintf("VFS: ls %s -> %s %02u:%08u\n", path.characters(), directoryInode.fileSystem()->class_name(), directoryInode.fsid(), directoryInode.index());
-    enumerateDirectoryInode(directoryInode, [&] (const FileSystem::DirectoryEntry& entry) {
-        const char* nameColorBegin = "";
-        const char* nameColorEnd = "";
-        auto metadata = entry.inode.metadata();
-        ASSERT(metadata.isValid());
-        if (metadata.isDirectory()) {
-            nameColorBegin = "\033[34;1m";
-            nameColorEnd = "\033[0m";
-        } else if (metadata.isSymbolicLink()) {
-            nameColorBegin = "\033[36;1m";
-            nameColorEnd = "\033[0m";
-        }
-        if (metadata.isSticky()) {
-            nameColorBegin = "\033[42;30m";
-            nameColorEnd = "\033[0m";
-        }
-        if (metadata.isCharacterDevice() || metadata.isBlockDevice()) {
-            nameColorBegin = "\033[33;1m";
-            nameColorEnd = "\033[0m";
-        }
-        kprintf("%02u:%08u ",
-            metadata.inode.fsid(),
-            metadata.inode.index());
-
-        if (metadata.isDirectory())
-            kprintf("d");
-        else if (metadata.isSymbolicLink())
-            kprintf("l");
-        else if (metadata.isBlockDevice())
-            kprintf("b");
-        else if (metadata.isCharacterDevice())
-            kprintf("c");
-        else if (metadata.isSocket())
-            kprintf("s");
-        else if (metadata.isFIFO())
-            kprintf("f");
-        else if (metadata.isRegularFile())
-            kprintf("-");
-        else
-            kprintf("?");
-
-        kprintf("%c%c%c%c%c%c%c%c",
-            metadata.mode & 00400 ? 'r' : '-',
-            metadata.mode & 00200 ? 'w' : '-',
-            metadata.mode & 00100 ? 'x' : '-',
-            metadata.mode & 00040 ? 'r' : '-',
-            metadata.mode & 00020 ? 'w' : '-',
-            metadata.mode & 00010 ? 'x' : '-',
-            metadata.mode & 00004 ? 'r' : '-',
-            metadata.mode & 00002 ? 'w' : '-'
-        );
-
-        if (metadata.isSticky())
-            kprintf("t");
-        else
-            kprintf("%c", metadata.mode & 00001 ? 'x' : '-');
-
-        if (metadata.isCharacterDevice() || metadata.isBlockDevice()) {
-            char buf[16];
-            ksprintf(buf, "%u, %u", metadata.majorDevice, metadata.minorDevice);
-            kprintf("%12s ", buf);
-        } else {
-            kprintf("%12lld ", metadata.size);
-        }
-
-        kprintf("\033[30;1m");
-        time_t mtime = metadata.mtime;
-        auto tm = *klocaltime(&mtime);
-        kprintf("%04u-%02u-%02u %02u:%02u:%02u ",
-                tm.tm_year + 1900,
-                tm.tm_mon + 1,
-                tm.tm_mday,
-                tm.tm_hour,
-                tm.tm_min,
-                tm.tm_sec);
-        kprintf("\033[0m");
-
-        kprintf("%s%s%s",
-            nameColorBegin,
-            entry.name,
-            nameColorEnd);
-
-        if (metadata.isDirectory()) {
-            kprintf("/");
-        } else if (metadata.isSymbolicLink()) {
-            auto symlinkContents = directoryInode.fileSystem()->readEntireInode(metadata.inode);
-            kprintf(" -> %s", String((const char*)symlinkContents.pointer(), symlinkContents.size()).characters());
-        }
-        kprintf("\n");
-        return true;
-    });
-}
-
-void VFS::listDirectoryRecursively(const String& path, InodeIdentifier base)
-{
-    int error;
-    auto directory = resolve_path(path, error, base);
-    if (!directory.isValid())
-        return;
-
-    kprintf("%s\n", path.characters());
-
-    enumerateDirectoryInode(directory, [&] (const FileSystem::DirectoryEntry& entry) {
-        auto metadata = entry.inode.metadata();
-        if (metadata.isDirectory()) {
-            if (entry.name != "." && entry.name != "..") {
-                char buf[4096];
-                ksprintf(buf, "%s/%s", path.characters(), entry.name);
-                listDirectoryRecursively(buf, base);
-            }
-        } else {
-            kprintf("%s/%s\n", path.characters(), entry.name);
-        }
-        return true;
-    });
-}
-#endif
-
 bool VFS::touch(const String& path)
 {
     int error;
-    auto inode = resolve_path(path, error);
+    auto inode = resolve_path(path, root_inode_id(), error);
     if (!inode.isValid())
         return false;
     return inode.fileSystem()->set_mtime(inode, ktime(nullptr));
@@ -411,7 +273,7 @@ RetainPtr<FileDescriptor> VFS::open(CharacterDevice& device, int options)
 
 RetainPtr<FileDescriptor> VFS::open(const String& path, int& error, int options, InodeIdentifier base)
 {
-    auto inode = resolve_path(path, error, base, options);
+    auto inode = resolve_path(path, base, error, options);
     if (!inode.isValid())
         return nullptr;
     auto vnode = get_or_create_node(inode);
@@ -438,10 +300,24 @@ bool VFS::mkdir(const String& path, mode_t mode, InodeIdentifier base, int& erro
         error = -EINVAL;
         return false;
     }
-    dbgprintf("VFS::mkdir: '%s' in '%s'\n", p.basename().characters(), p.dirname().characters());
-    auto parent_dir = resolve_path(p.dirname(), error, m_root_vnode->inode);
-    if (!parent_dir.isValid())
+
+    InodeIdentifier parent_dir;
+    auto existing_dir = resolve_path(path, base, error, 0, &parent_dir);
+    if (existing_dir.isValid()) {
+        kprintf("fug\n");
+        error = -EEXIST;
         return false;
+    }
+    if (!parent_dir.isValid()) {
+        kprintf("fug2\n");
+        error = -ENOENT;
+        return false;
+    }
+    if (error != -ENOENT) {
+        kprintf("fug3\n");
+        return false;
+    }
+    dbgprintf("VFS::mkdir: '%s' in %u:%u\n", p.basename().characters(), parent_dir.fsid(), parent_dir.index());
     auto new_dir = base.fileSystem()->create_directory(parent_dir, p.basename(), mode, error);
     if (new_dir.isValid()) {
         error = 0;
@@ -459,7 +335,7 @@ InodeIdentifier VFS::resolveSymbolicLink(InodeIdentifier base, InodeIdentifier s
 #ifdef VFS_DEBUG
     kprintf("linkee (%s)(%u) from %u:%u\n", linkee.characters(), linkee.length(), base.fsid(), base.index());
 #endif
-    return resolve_path(linkee, error, base);
+    return resolve_path(linkee, base, error);
 }
 
 RetainPtr<CoreInode> VFS::get_inode(InodeIdentifier inode_id)
@@ -482,7 +358,7 @@ String VFS::absolute_path(CoreInode& core_inode)
 
         InodeIdentifier parent_id;
         if (inode->is_directory()) {
-            parent_id = resolve_path("..", error, inode->identifier());
+            parent_id = resolve_path("..", inode->identifier(), error);
         } else {
             parent_id = inode->fs().find_parent_of_inode(inode->identifier());
         }
@@ -505,10 +381,12 @@ String VFS::absolute_path(CoreInode& core_inode)
     return builder.build();
 }
 
-InodeIdentifier VFS::resolve_path(const String& path, int& error, InodeIdentifier base, int options)
+InodeIdentifier VFS::resolve_path(const String& path, InodeIdentifier base, int& error, int options, InodeIdentifier* deepest_dir)
 {
-    if (path.isEmpty())
+    if (path.isEmpty()) {
+        error = -EINVAL;
         return { };
+    }
 
     auto parts = path.split('/');
     InodeIdentifier crumb_id;
@@ -517,6 +395,9 @@ InodeIdentifier VFS::resolve_path(const String& path, int& error, InodeIdentifie
         crumb_id = m_root_vnode->inode;
     else
         crumb_id = base.isValid() ? base : m_root_vnode->inode;
+
+    if (deepest_dir)
+        *deepest_dir = crumb_id;
 
     for (unsigned i = 0; i < parts.size(); ++i) {
         bool inode_was_root_at_head_of_loop = crumb_id.isRootInode();
@@ -535,7 +416,7 @@ InodeIdentifier VFS::resolve_path(const String& path, int& error, InodeIdentifie
 #ifdef VFS_DEBUG
             kprintf("parent of <%s> not directory, it's inode %u:%u / %u:%u, mode: %u, size: %u\n", part.characters(), inode.fsid(), inode.index(), metadata.inode.fsid(), metadata.inode.index(), metadata.mode, metadata.size);
 #endif
-            error = -EIO;
+            error = -ENOTDIR;
             return { };
         }
         auto parent = crumb_id;
@@ -566,6 +447,10 @@ InodeIdentifier VFS::resolve_path(const String& path, int& error, InodeIdentifie
             crumb_id = dir_inode->lookup("..");
         }
         metadata = crumb_id.metadata();
+        if (metadata.isDirectory()) {
+            if (deepest_dir)
+                *deepest_dir = crumb_id;
+        }
         if (metadata.isSymbolicLink()) {
             if (i == parts.size() - 1) {
                 if (options & O_NOFOLLOW) {
