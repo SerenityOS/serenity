@@ -98,12 +98,6 @@ public:
     VFS();
     ~VFS();
 
-#ifndef SERENITY
-    bool isDirectory(const String& path, InodeIdentifier base = InodeIdentifier());
-    void listDirectory(const String& path, InodeIdentifier base);
-    void listDirectoryRecursively(const String& path, InodeIdentifier base);
-#endif
-
     unsigned max_vnode_count() const { return m_max_vnode_count; }
     unsigned allocated_vnode_count() const { return m_max_vnode_count - m_vnode_freelist.size(); }
 
@@ -127,6 +121,8 @@ public:
 
     String absolute_path(CoreInode&);
 
+    InodeIdentifier root_inode_id() const;
+
 private:
     friend class FileDescriptor;
     friend class Vnode;
@@ -136,7 +132,7 @@ private:
     bool is_vfs_root(InodeIdentifier) const;
 
     void traverse_directory_inode(CoreInode&, Function<bool(const FS::DirectoryEntry&)>);
-    InodeIdentifier resolve_path(const String& path, int& error, InodeIdentifier base = InodeIdentifier(), int options = 0);
+    InodeIdentifier resolve_path(const String& path, InodeIdentifier base, int& error, int options = 0, InodeIdentifier* deepest_dir = nullptr);
     InodeIdentifier resolveSymbolicLink(InodeIdentifier base, InodeIdentifier symlinkInode, int& error);
 
     RetainPtr<Vnode> allocateNode();

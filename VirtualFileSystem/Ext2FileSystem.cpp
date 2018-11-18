@@ -1011,7 +1011,7 @@ InodeIdentifier Ext2FS::create_inode(InodeIdentifier parentInode, const String& 
     ASSERT(parentInode.fsid() == id());
     ASSERT(isDirectoryInode(parentInode.index()));
 
-    dbgprintf("Ext2FS: Adding inode '%s' (mode %o) to parent directory %u:\n", name.characters(), mode, parentInode.index());
+    dbgprintf("Ext2FS: Adding inode '%s' (mode %u) to parent directory %u:\n", name.characters(), mode, parentInode.index());
 
     // NOTE: This doesn't commit the inode allocation just yet!
     auto inode = allocateInode(0, 0);
