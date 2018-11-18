@@ -10,43 +10,128 @@
 
 extern "C" {
 
-// FIXME: This is a temporary malloc() implementation. It never frees anything,
-//        and you can't allocate more than 128 kB total.
-static const size_t mallocBudget = 131072;
+#define SANITIZE_LIBC_MALLOC
+#define MALLOC_SCRUB_BYTE 0x85
+#define FREE_SCRUB_BYTE 0x82
 
-static byte* nextptr = nullptr;
-static byte* endptr = nullptr;
+struct MallocHeader {
+    uint16_t magic;
+    uint16_t first_chunk_index;
+    uint16_t chunk_count;
+    uint16_t xorcheck;
+};
 
-void __malloc_init()
-{
-    nextptr = (byte*)mmap(nullptr, mallocBudget, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0);
-    endptr = nextptr + mallocBudget;
-    int rc = set_mmap_name(nextptr, mallocBudget, "malloc");
-    if (rc < 0)
-        perror("set_mmap_name failed");
-}
+#define MALLOC_MAGIC 0x0413 // happy birthday k
+#define CHUNK_SIZE  32
+#define POOL_SIZE   128 * 1024
+
+static const size_t malloc_budget = POOL_SIZE;
+static byte s_malloc_map[POOL_SIZE / CHUNK_SIZE / 8];
+static byte* s_malloc_pool;
+
+static uint32_t s_malloc_sum_alloc = 0;
+static uint32_t s_malloc_sum_free = POOL_SIZE;
 
 void* malloc(size_t size)
 {
-    if ((nextptr + size) > endptr) {
-        fprintf(stderr, "Unable to serve malloc() request with size %u\n", size);
-        volatile char* crashme = (char*)0xc007d00d;
-        *crashme = 0;
+    // We need space for the MallocHeader structure at the head of the block.
+    size_t real_size = size + sizeof(MallocHeader);
+
+    if (s_malloc_sum_free < real_size) {
+        fprintf(stderr, "malloc(): Out of memory\ns_malloc_sum_free=%u, real_size=%x\n", s_malloc_sum_free, real_size);
+        assert(false);
     }
-    byte* ret = nextptr;
-    nextptr += size;
-    nextptr += 16;
-    nextptr = (byte*)((dword)nextptr & 0xfffffff0);
-    return ret;
+
+    size_t chunks_needed = real_size / CHUNK_SIZE;
+    if (real_size % CHUNK_SIZE)
+        chunks_needed++;
+
+    size_t chunks_here = 0;
+    size_t first_chunk = 0;
+
+    for (unsigned i = 0; i < (POOL_SIZE / CHUNK_SIZE / 8); ++i) {
+        if (s_malloc_map[i] == 0xff) {
+            // Skip over completely full bucket.
+            chunks_here = 0;
+            continue;
+        }
+
+        // FIXME: This scan can be optimized further with TZCNT.
+        for (unsigned j = 0; j < 8; ++j) {
+            // FIXME: Invert loop.
+            if (!(s_malloc_map[i] & (1<<j))) {
+                if (chunks_here == 0) {
+                    // Mark where potential allocation starts.
+                    first_chunk = i * 8 + j;
+                }
+
+                chunks_here++;
+
+                if (chunks_here == chunks_needed) {
+                    auto* header = (MallocHeader*)(s_malloc_pool + (first_chunk * CHUNK_SIZE));
+                    byte* ptr = ((byte*)header) + sizeof(MallocHeader);
+                    header->chunk_count = chunks_needed;
+                    header->first_chunk_index = first_chunk;
+                    header->magic = MALLOC_MAGIC;
+                    header->xorcheck = header->magic ^ header->first_chunk_index ^ header->chunk_count;
+
+                    for (size_t k = first_chunk; k < (first_chunk + chunks_needed); ++k)
+                        s_malloc_map[k / 8] |= 1 << (k % 8);
+
+                    s_malloc_sum_alloc += header->chunk_count * CHUNK_SIZE;
+                    s_malloc_sum_free  -= header->chunk_count * CHUNK_SIZE;
+#ifdef SANITIZE_LIBC_MALLOC
+                    memset(ptr, MALLOC_SCRUB_BYTE, (header->chunk_count * CHUNK_SIZE) - sizeof(MallocHeader));
+#endif
+                    return ptr;
+                }
+            }
+            else
+            {
+                /* This is in use, so restart chunks_here counter. */
+                chunks_here = 0;
+            }
+        }
+    }
+
+    fprintf(stderr, "malloc(): Out of memory (no consecutive chunks found for size %u)\n", size);
+    volatile char* crashme = (char*)0xc007d00d;
+    *crashme = 0;
+    return nullptr;
 }
 
-void free(void* ptr)
+void free(void *ptr)
 {
     if (!ptr)
         return;
-#if 0
-    munmap(ptr, 4096);
+
+    auto* header = (MallocHeader*)((((byte*)ptr) - sizeof(MallocHeader)));
+    if (header->magic != MALLOC_MAGIC) {
+        fprintf(stderr, "free() called on bad pointer %p, magic=%w\n", ptr, header->magic);
+        assert(false);
+    }
+    if (header->xorcheck != (header->magic ^ header->first_chunk_index ^ header->chunk_count)) {
+        fprintf(stderr, "free() called on bad pointer %p, xorcheck=%w\n", ptr, header->xorcheck);
+        assert(false);
+    }
+
+    for (unsigned i = header->first_chunk_index; i < (header->first_chunk_index + header->chunk_count); ++i)
+        s_malloc_map[i / 8] &= ~(1 << (i % 8));
+
+    s_malloc_sum_alloc -= header->chunk_count * CHUNK_SIZE;
+    s_malloc_sum_free += header->chunk_count * CHUNK_SIZE;
+
+#ifdef SANITIZE_LIBC_MALLOC
+    memset(header, FREE_SCRUB_BYTE, header->chunk_count * CHUNK_SIZE);
 #endif
+}
+
+void __malloc_init()
+{
+    s_malloc_pool = (byte*)mmap(nullptr, malloc_budget, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0);
+    int rc = set_mmap_name(s_malloc_pool, malloc_budget, "malloc pool");
+    if (rc < 0)
+        perror("set_mmap_name failed");
 }
 
 void* calloc(size_t nmemb, size_t)
@@ -58,9 +143,19 @@ void* calloc(size_t nmemb, size_t)
 
 void* realloc(void *ptr, size_t size)
 {
-    // FIXME: This is broken as shit.
+    auto* header = (MallocHeader*)((((byte*)ptr) - sizeof(MallocHeader)));
+    if (header->magic != MALLOC_MAGIC) {
+        fprintf(stderr, "realloc() called on bad pointer %p, magic=%w\n", ptr, header->magic);
+        assert(false);
+    }
+    if (header->xorcheck != (header->magic ^ header->first_chunk_index ^ header->chunk_count)) {
+        fprintf(stderr, "realloc() called on bad pointer %p, xorcheck=%w\n", ptr, header->xorcheck);
+        assert(false);
+    }
+
+    size_t old_size = header->chunk_count * CHUNK_SIZE;
     auto* new_ptr = malloc(size);
-    memcpy(new_ptr, ptr, size);
+    memcpy(new_ptr, ptr, old_size);
     return new_ptr;
 }
 
@@ -117,15 +212,6 @@ long atol(const char* str)
 {
     static_assert(sizeof(int) == sizeof(long));
     return atoi(str);
-}
-
-void __qsort(void *base, size_t nmemb, size_t size, int (*compar)(const void *, const void *))
-{
-    (void) base;
-    (void) nmemb;
-    (void) size;
-    (void) compar;
-    assert(false);
 }
 
 }
