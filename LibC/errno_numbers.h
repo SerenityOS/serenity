@@ -41,6 +41,7 @@
     __ERROR(ENOSYS,         "No such syscall") \
     __ERROR(ENOTIMPL,       "Not implemented") \
     __ERROR(EAFNOSUPPORT,   "Address family not supported") \
+    __ERROR(EWHYTHO,        "Failed without setting an error code (Bug!)") \
 
 enum __errno_values {
 #undef __ERROR

@@ -175,6 +175,8 @@ static dword handle(RegisterDump& regs, dword function, dword arg1, dword arg2, 
         return current->sys$ioctl((int)arg1, (unsigned)arg2, (unsigned)arg3);
     case Syscall::SC_fstat:
         return current->sys$fstat((int)arg1, (Unix::stat*)arg2);
+    case Syscall::SC_mkdir:
+        return current->sys$mkdir((const char*)arg1, (mode_t)arg2);
     default:
         kprintf("<%u> int0x80: Unknown function %u requested {%x, %x, %x}\n", current->pid(), function, arg1, arg2, arg3);
         break;

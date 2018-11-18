@@ -34,7 +34,8 @@ private:
 
     void initialize();
     bool wait_for_irq();
-    bool read_sectors(dword start_sector, word count, byte* outbuf);
+    bool read_sectors(dword start_sector, word count, byte* buffer);
+    bool write_sectors(dword start_sector, word count, const byte* data);
 
     SpinLock m_lock;
     word m_cylinders { 0 };
