@@ -52,12 +52,13 @@ ByteBuffer procfs$pid_vm(Process& process)
     auto stringImpl = StringImpl::createUninitialized(80 + process.regionCount() * 160 + 4096, buffer);
     memset(buffer, 0, stringImpl->length());
     char* ptr = buffer;
-    ptr += ksprintf(ptr, "BEGIN       END         SIZE        NAME\n");
+    ptr += ksprintf(ptr, "BEGIN       END         SIZE      COMMIT     NAME\n");
     for (auto& region : process.regions()) {
-        ptr += ksprintf(ptr, "%x -- %x    %x    %s\n",
+        ptr += ksprintf(ptr, "%x -- %x    %x  %x   %s\n",
             region->linearAddress.get(),
             region->linearAddress.offset(region->size - 1).get(),
             region->size,
+            region->committed(),
             region->name.characters());
     }
     *ptr = '\0';

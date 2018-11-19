@@ -65,7 +65,7 @@ Vector<Process*> Process::allProcesses()
     return processes;
 }
 
-Region* Process::allocate_region(LinearAddress laddr, size_t size, String&& name, bool is_readable, bool is_writable)
+Region* Process::allocate_region(LinearAddress laddr, size_t size, String&& name, bool is_readable, bool is_writable, bool commit)
 {
     // FIXME: This needs sanity checks. What if this overlaps existing regions?
     if (laddr.is_null()) {
@@ -74,7 +74,8 @@ Region* Process::allocate_region(LinearAddress laddr, size_t size, String&& name
     }
     laddr.mask(0xfffff000);
     m_regions.append(adopt(*new Region(laddr, size, move(name), is_readable, is_writable)));
-    m_regions.last()->commit(*this);
+    if (commit)
+        m_regions.last()->commit(*this);
     MM.mapRegion(*this, *m_regions.last());
     return m_regions.last().ptr();
 }
@@ -161,7 +162,7 @@ void* Process::sys$mmap(const Syscall::SC_mmap_params* params)
         InterruptDisabler disabler;
         // FIXME: Implement mapping at a client-specified address. Most of the support is already in plcae.
         ASSERT(addr == nullptr);
-        auto* region = allocate_region(LinearAddress(), size, "mmap", prot & PROT_READ, prot & PROT_WRITE);
+        auto* region = allocate_region(LinearAddress(), size, "mmap", prot & PROT_READ, prot & PROT_WRITE, false);
         if (!region)
             return (void*)-ENOMEM;
         return region->linearAddress.asPtr();

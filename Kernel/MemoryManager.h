@@ -132,6 +132,8 @@ public:
     int commit(Process&);
     int decommit(Process&);
 
+    size_t committed() const;
+
     LinearAddress linearAddress;
     size_t size { 0 };
     size_t m_offset_in_vmo { 0 };
@@ -209,6 +211,7 @@ private:
 
     bool copy_on_write(Process&, Region&, unsigned page_index_in_region);
     bool page_in_from_vnode(PageDirectory&, Region&, unsigned page_index_in_region);
+    bool zero_page(PageDirectory&, Region& region, unsigned page_index_in_region);
 
     byte* quickmap_page(PhysicalPage&);
     void unquickmap_page();
