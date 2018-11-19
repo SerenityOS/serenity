@@ -64,39 +64,36 @@ void* malloc(size_t size)
 
         // FIXME: This scan can be optimized further with TZCNT.
         for (unsigned j = 0; j < 8; ++j) {
-            // FIXME: Invert loop.
-            if (!(s_malloc_map[i] & (1<<j))) {
-                if (chunks_here == 0) {
-                    // Mark where potential allocation starts.
-                    first_chunk = i * 8 + j;
-                }
-
-                chunks_here++;
-
-                if (chunks_here == chunks_needed) {
-                    auto* header = (MallocHeader*)(s_malloc_pool + (first_chunk * CHUNK_SIZE));
-                    byte* ptr = ((byte*)header) + sizeof(MallocHeader);
-                    header->chunk_count = chunks_needed;
-                    header->first_chunk_index = first_chunk;
-                    header->size = size;
-
-                    auto* footer = (MallocFooter*)((byte*)header + (header->chunk_count * CHUNK_SIZE) - sizeof(MallocFooter));
-                    footer->xorcheck = header->compute_xorcheck();
-
-                    for (size_t k = first_chunk; k < (first_chunk + chunks_needed); ++k)
-                        s_malloc_map[k / 8] |= 1 << (k % 8);
-
-                    s_malloc_sum_alloc += header->chunk_count * CHUNK_SIZE;
-                    s_malloc_sum_free  -= header->chunk_count * CHUNK_SIZE;
-
-                    memset(ptr, MALLOC_SCRUB_BYTE, (header->chunk_count * CHUNK_SIZE) - (sizeof(MallocHeader) + sizeof(MallocFooter)));
-                    return ptr;
-                }
-            }
-            else
-            {
-                /* This is in use, so restart chunks_here counter. */
+            if ((s_malloc_map[i] & (1<<j))) {
+                // This is in use, so restart chunks_here counter.
                 chunks_here = 0;
+                continue;
+            }
+            if (chunks_here == 0) {
+                // Mark where potential allocation starts.
+                first_chunk = i * 8 + j;
+            }
+
+            ++chunks_here;
+
+            if (chunks_here == chunks_needed) {
+                auto* header = (MallocHeader*)(s_malloc_pool + (first_chunk * CHUNK_SIZE));
+                byte* ptr = ((byte*)header) + sizeof(MallocHeader);
+                header->chunk_count = chunks_needed;
+                header->first_chunk_index = first_chunk;
+                header->size = size;
+
+                auto* footer = (MallocFooter*)((byte*)header + (header->chunk_count * CHUNK_SIZE) - sizeof(MallocFooter));
+                footer->xorcheck = header->compute_xorcheck();
+
+                for (size_t k = first_chunk; k < (first_chunk + chunks_needed); ++k)
+                    s_malloc_map[k / 8] |= 1 << (k % 8);
+
+                s_malloc_sum_alloc += header->chunk_count * CHUNK_SIZE;
+                s_malloc_sum_free  -= header->chunk_count * CHUNK_SIZE;
+
+                memset(ptr, MALLOC_SCRUB_BYTE, (header->chunk_count * CHUNK_SIZE) - (sizeof(MallocHeader) + sizeof(MallocFooter)));
+                return ptr;
             }
         }
     }

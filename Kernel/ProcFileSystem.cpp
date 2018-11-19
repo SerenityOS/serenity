@@ -59,6 +59,25 @@ ByteBuffer procfs$pid_vm(Process& process)
             region->linearAddress.offset(region->size - 1).get(),
             region->size,
             region->name.characters());
+    }
+    *ptr = '\0';
+    return ByteBuffer::copy((byte*)buffer, ptr - buffer);
+}
+
+ByteBuffer procfs$pid_vmo(Process& process)
+{
+    ProcessInspectionHandle handle(process);
+    char* buffer;
+    auto stringImpl = StringImpl::createUninitialized(80 + process.regionCount() * 160 + 4096, buffer);
+    memset(buffer, 0, stringImpl->length());
+    char* ptr = buffer;
+    ptr += ksprintf(ptr, "BEGIN       END         SIZE        NAME\n");
+    for (auto& region : process.regions()) {
+        ptr += ksprintf(ptr, "%x -- %x    %x    %s\n",
+            region->linearAddress.get(),
+            region->linearAddress.offset(region->size - 1).get(),
+            region->size,
+            region->name.characters());
         ptr += ksprintf(ptr, "VMO: %s \"%s\" @ %x(%u)\n",
             region->vmo().is_anonymous() ? "anonymous" : "file-backed",
             region->vmo().name().characters(),
@@ -155,6 +174,7 @@ void ProcFS::addProcess(Process& process)
     auto dir = addFile(create_directory(buf));
     m_pid2inode.set(process.pid(), dir.index());
     addFile(create_generated_file("vm", [&process] { return procfs$pid_vm(process); }), dir.index());
+    addFile(create_generated_file("vmo", [&process] { return procfs$pid_vmo(process); }), dir.index());
     addFile(create_generated_file("stack", [&process] { return procfs$pid_stack(process); }), dir.index());
     addFile(create_generated_file("regs", [&process] { return procfs$pid_regs(process); }), dir.index());
     addFile(create_generated_file("fds", [&process] { return procfs$pid_fds(process); }), dir.index());
