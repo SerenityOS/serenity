@@ -10,19 +10,25 @@
 
 extern "C" {
 
-#define SANITIZE_LIBC_MALLOC
 #define MALLOC_SCRUB_BYTE 0x85
 #define FREE_SCRUB_BYTE 0x82
 
 struct MallocHeader {
-    uint16_t magic;
     uint16_t first_chunk_index;
     uint16_t chunk_count;
-    uint16_t xorcheck;
+    size_t size;
+
+    uint32_t compute_xorcheck() const
+    {
+        return 0x19820413 ^ ((first_chunk_index << 16) | chunk_count) ^ size;
+    }
 };
 
-#define MALLOC_MAGIC 0x0413 // happy birthday k
-#define CHUNK_SIZE  32
+struct MallocFooter {
+    uint32_t xorcheck;
+};
+
+#define CHUNK_SIZE  8
 #define POOL_SIZE   128 * 1024
 
 static const size_t malloc_budget = POOL_SIZE;
@@ -35,7 +41,7 @@ static uint32_t s_malloc_sum_free = POOL_SIZE;
 void* malloc(size_t size)
 {
     // We need space for the MallocHeader structure at the head of the block.
-    size_t real_size = size + sizeof(MallocHeader);
+    size_t real_size = size + sizeof(MallocHeader) + sizeof(MallocFooter);
 
     if (s_malloc_sum_free < real_size) {
         fprintf(stderr, "malloc(): Out of memory\ns_malloc_sum_free=%u, real_size=%x\n", s_malloc_sum_free, real_size);
@@ -72,17 +78,18 @@ void* malloc(size_t size)
                     byte* ptr = ((byte*)header) + sizeof(MallocHeader);
                     header->chunk_count = chunks_needed;
                     header->first_chunk_index = first_chunk;
-                    header->magic = MALLOC_MAGIC;
-                    header->xorcheck = header->magic ^ header->first_chunk_index ^ header->chunk_count;
+                    header->size = size;
+
+                    auto* footer = (MallocFooter*)((byte*)header + (header->chunk_count * CHUNK_SIZE) - sizeof(MallocFooter));
+                    footer->xorcheck = header->compute_xorcheck();
 
                     for (size_t k = first_chunk; k < (first_chunk + chunks_needed); ++k)
                         s_malloc_map[k / 8] |= 1 << (k % 8);
 
                     s_malloc_sum_alloc += header->chunk_count * CHUNK_SIZE;
                     s_malloc_sum_free  -= header->chunk_count * CHUNK_SIZE;
-#ifdef SANITIZE_LIBC_MALLOC
-                    memset(ptr, MALLOC_SCRUB_BYTE, (header->chunk_count * CHUNK_SIZE) - sizeof(MallocHeader));
-#endif
+
+                    memset(ptr, MALLOC_SCRUB_BYTE, (header->chunk_count * CHUNK_SIZE) - (sizeof(MallocHeader) + sizeof(MallocFooter)));
                     return ptr;
                 }
             }
@@ -100,30 +107,35 @@ void* malloc(size_t size)
     return nullptr;
 }
 
-void free(void *ptr)
+static void validate_mallocation(void* ptr, const char* func)
+{
+    auto* header = (MallocHeader*)((((byte*)ptr) - sizeof(MallocHeader)));
+    if (header->size == 0) {
+        fprintf(stderr, "%s called on bad pointer %p, size=0\n", func, ptr);
+        assert(false);
+    }
+    auto* footer = (MallocFooter*)((byte*)header + (header->chunk_count * CHUNK_SIZE) - sizeof(MallocFooter));
+    uint32_t expected_xorcheck = header->compute_xorcheck();
+    if (footer->xorcheck != expected_xorcheck) {
+        fprintf(stderr, "%s called on bad pointer %p, xorcheck=%w (expected %w)\n", func, ptr, footer->xorcheck, expected_xorcheck);
+        assert(false);
+    }
+}
+
+void free(void* ptr)
 {
     if (!ptr)
         return;
 
+    validate_mallocation(ptr, "free()");
     auto* header = (MallocHeader*)((((byte*)ptr) - sizeof(MallocHeader)));
-    if (header->magic != MALLOC_MAGIC) {
-        fprintf(stderr, "free() called on bad pointer %p, magic=%w\n", ptr, header->magic);
-        assert(false);
-    }
-    if (header->xorcheck != (header->magic ^ header->first_chunk_index ^ header->chunk_count)) {
-        fprintf(stderr, "free() called on bad pointer %p, xorcheck=%w\n", ptr, header->xorcheck);
-        assert(false);
-    }
-
     for (unsigned i = header->first_chunk_index; i < (header->first_chunk_index + header->chunk_count); ++i)
         s_malloc_map[i / 8] &= ~(1 << (i % 8));
 
     s_malloc_sum_alloc -= header->chunk_count * CHUNK_SIZE;
     s_malloc_sum_free += header->chunk_count * CHUNK_SIZE;
 
-#ifdef SANITIZE_LIBC_MALLOC
     memset(header, FREE_SCRUB_BYTE, header->chunk_count * CHUNK_SIZE);
-#endif
 }
 
 void __malloc_init()
@@ -143,17 +155,9 @@ void* calloc(size_t nmemb, size_t)
 
 void* realloc(void *ptr, size_t size)
 {
+    validate_mallocation(ptr, "realloc()");
     auto* header = (MallocHeader*)((((byte*)ptr) - sizeof(MallocHeader)));
-    if (header->magic != MALLOC_MAGIC) {
-        fprintf(stderr, "realloc() called on bad pointer %p, magic=%w\n", ptr, header->magic);
-        assert(false);
-    }
-    if (header->xorcheck != (header->magic ^ header->first_chunk_index ^ header->chunk_count)) {
-        fprintf(stderr, "realloc() called on bad pointer %p, xorcheck=%w\n", ptr, header->xorcheck);
-        assert(false);
-    }
-
-    size_t old_size = header->chunk_count * CHUNK_SIZE;
+    size_t old_size = header->size;
     auto* new_ptr = malloc(size);
     memcpy(new_ptr, ptr, old_size);
     return new_ptr;
