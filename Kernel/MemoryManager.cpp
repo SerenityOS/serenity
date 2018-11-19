@@ -224,6 +224,24 @@ Region* MemoryManager::region_from_laddr(Process& process, LinearAddress laddr)
     return nullptr;
 }
 
+bool MemoryManager::zero_page(PageDirectory& page_directory, Region& region, unsigned page_index_in_region)
+{
+    ASSERT_INTERRUPTS_DISABLED();
+    auto& vmo = region.vmo();
+    auto physical_page = allocate_physical_page();
+    byte* dest_ptr = quickmap_page(*physical_page);
+    memset(dest_ptr, 0, PAGE_SIZE);
+#ifdef PAGE_FAULT_DEBUG
+    dbgprintf("      >> ZERO P%x\n", physical_page->paddr().get());
+#endif
+    unquickmap_page();
+    region.cow_map.set(page_index_in_region, false);
+    vmo.physical_pages()[page_index_in_region] = move(physical_page);
+    unquickmap_page();
+    remap_region_page(&page_directory, region, page_index_in_region, true);
+    return true;
+}
+
 bool MemoryManager::copy_on_write(Process& process, Region& region, unsigned page_index_in_region)
 {
     ASSERT_INTERRUPTS_DISABLED();
@@ -325,7 +343,9 @@ PageFaultResponse MemoryManager::handle_page_fault(const PageFault& fault)
             page_in_from_vnode(*current->m_page_directory, *region, page_index_in_region);
             return PageFaultResponse::Continue;
         } else {
-            kprintf("NP(error) fault in Region{%p}[%u]\n", region, page_index_in_region);
+            dbgprintf("NP(zero) fault in Region{%p}[%u]\n", region, page_index_in_region);
+            zero_page(*current->m_page_directory, *region, page_index_in_region);
+            return PageFaultResponse::Continue;
         }
     } else if (fault.is_protection_violation()) {
         if (region->cow_map.get(page_index_in_region)) {
@@ -760,4 +780,14 @@ void MemoryManager::unregister_region(Region& region)
 inline bool PageDirectory::is_active() const
 {
     return &current->page_directory() == this;
+}
+
+size_t Region::committed() const
+{
+    size_t bytes = 0;
+    for (size_t i = 0; i < page_count(); ++i) {
+        if (m_vmo->physical_pages()[first_page_index() + i])
+            bytes += PAGE_SIZE;
+    }
+    return bytes;
 }
