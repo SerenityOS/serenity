@@ -38,8 +38,8 @@ bool Scheduler::pick_next()
             process.for_each_child([&process] (Process& child) {
                 if (child.state() != Process::Dead)
                     return true;
-                if (process.waitee() == -1 || process.waitee() == child.pid()) {
-                    process.m_waitee = child.pid();
+                if (process.waitee_pid() == -1 || process.waitee_pid() == child.pid()) {
+                    process.m_waitee_pid = child.pid();
                     process.unblock();
                     return false;
                 }
@@ -99,9 +99,12 @@ bool Scheduler::pick_next()
         //        syscall effectively being "interrupted" despite having completed?
         if (process.in_kernel() && !process.is_blocked())
             return true;
+        // NOTE: dispatch_one_pending_signal() may unblock the process.
+        bool was_blocked = process.is_blocked();
         if (!process.dispatch_one_pending_signal())
             return true;
-        if (process.is_blocked()) {
+        if (was_blocked) {
+            dbgprintf("Unblock %s(%u) due to signal\n", process.name().characters(), process.pid());
             process.m_was_interrupted_while_blocked = true;
             process.unblock();
         }

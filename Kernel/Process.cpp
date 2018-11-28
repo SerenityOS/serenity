@@ -1464,7 +1464,7 @@ pid_t Process::sys$waitpid(pid_t waitee, int* wstatus, int options)
         }
     }
 
-    m_waitee = waitee;
+    m_waitee_pid = waitee;
     block(BlockedWait);
     sched_yield();
     if (m_was_interrupted_while_blocked)
@@ -1472,17 +1472,20 @@ pid_t Process::sys$waitpid(pid_t waitee, int* wstatus, int options)
     Process* waitee_process;
     {
         InterruptDisabler disabler;
-
         // NOTE: If waitee was -1, m_waitee will have been filled in by the scheduler.
-        waitee_process = Process::from_pid(m_waitee);
+        waitee_process = Process::from_pid(m_waitee_pid);
     }
     ASSERT(waitee_process);
     exit_status = reap(*waitee_process);
-    return m_waitee;
+    return m_waitee_pid;
 }
 
 void Process::unblock()
 {
+    if (current == this) {
+        kprintf("ignoring unblock() on current, %s(%u) {%s}\n", name().characters(), pid(), toString(state()));
+        return;
+    }
     ASSERT(m_state != Process::Runnable && m_state != Process::Running);
     system.nblocked--;
     m_state = Process::Runnable;
