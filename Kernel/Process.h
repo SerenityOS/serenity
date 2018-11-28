@@ -177,7 +177,7 @@ public:
     static void initialize();
 
     void crash() NORETURN;
-    static void reap(Process&);
+    static int reap(Process&) WARN_UNUSED_RESULT;
 
     const TTY* tty() const { return m_tty; }
 
@@ -267,7 +267,6 @@ private:
     void* m_kernelStack { nullptr };
     dword m_timesScheduled { 0 };
     pid_t m_waitee { -1 };
-    int m_waitee_status { 0 };
     int m_fdBlockedOnRead { -1 };
     int m_blocked_fd { -1 };
     size_t m_max_open_file_descriptors { 16 };
