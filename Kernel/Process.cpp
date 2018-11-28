@@ -1411,13 +1411,15 @@ mode_t Process::sys$umask(mode_t mask)
     return old_mask;
 }
 
-void Process::reap(Process& process)
+int Process::reap(Process& process)
 {
     InterruptDisabler disabler;
+    int exit_status = (process.m_termination_status << 8) | process.m_termination_signal;
     dbgprintf("reap: %s(%u) {%s}\n", process.name().characters(), process.pid(), toString(process.state()));
     ASSERT(process.state() == Dead);
     g_processes->remove(&process);
     delete &process;
+    return exit_status;
 }
 
 pid_t Process::sys$waitpid(pid_t waitee, int* wstatus, int options)
@@ -1429,6 +1431,9 @@ pid_t Process::sys$waitpid(pid_t waitee, int* wstatus, int options)
         if (!validate_write_typed(wstatus))
             return -EFAULT;
 
+    int dummy_wstatus;
+    int& exit_status = wstatus ? *wstatus : dummy_wstatus;
+
     {
         InterruptDisabler disabler;
         if (waitee != -1 && !Process::from_pid(waitee))
@@ -1439,10 +1444,10 @@ pid_t Process::sys$waitpid(pid_t waitee, int* wstatus, int options)
         if (waitee == -1) {
             pid_t reaped_pid = 0;
             InterruptDisabler disabler;
-            for_each_child([&reaped_pid] (Process& process) {
+            for_each_child([&reaped_pid, &exit_status] (Process& process) {
                 if (process.state() == Dead) {
                     reaped_pid = process.pid();
-                    reap(process);
+                    exit_status = reap(process);
                 }
                 return true;
             });
@@ -1452,7 +1457,7 @@ pid_t Process::sys$waitpid(pid_t waitee, int* wstatus, int options)
             if (!waitee_process)
                 return -ECHILD;
             if (waitee_process->state() == Dead) {
-                reap(*waitee_process);
+                exit_status = reap(*waitee_process);
                 return waitee;
             }
             return 0;
@@ -1460,7 +1465,6 @@ pid_t Process::sys$waitpid(pid_t waitee, int* wstatus, int options)
     }
 
     m_waitee = waitee;
-    m_waitee_status = 0;
     block(BlockedWait);
     sched_yield();
     if (m_was_interrupted_while_blocked)
@@ -1473,9 +1477,7 @@ pid_t Process::sys$waitpid(pid_t waitee, int* wstatus, int options)
         waitee_process = Process::from_pid(m_waitee);
     }
     ASSERT(waitee_process);
-    reap(*waitee_process);
-    if (wstatus)
-        *wstatus = m_waitee_status;
+    exit_status = reap(*waitee_process);
     return m_waitee;
 }
 

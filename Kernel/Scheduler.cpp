@@ -39,7 +39,6 @@ bool Scheduler::pick_next()
                 if (child.state() != Process::Dead)
                     return true;
                 if (process.waitee() == -1 || process.waitee() == child.pid()) {
-                    process.m_waitee_status = (child.m_termination_status << 8) | child.m_termination_signal;
                     process.m_waitee = child.pid();
                     process.unblock();
                     return false;
@@ -75,8 +74,12 @@ bool Scheduler::pick_next()
         }
 
         if (process.state() == Process::Dead) {
-            if (current != &process && !Process::from_pid(process.ppid()))
-                Process::reap(process);
+            if (current != &process && !Process::from_pid(process.ppid())) {
+                auto name = process.name();
+                auto pid = process.pid();
+                auto exit_status = Process::reap(process);
+                kprintf("reaped unparented process %s(%u), exit status: %u\n", name.characters(), pid, exit_status);
+            }
             return true;
         }
 
