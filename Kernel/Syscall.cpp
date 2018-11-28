@@ -133,8 +133,6 @@ static dword handle(RegisterDump& regs, dword function, dword arg1, dword arg2, 
         return current->sys$geteuid();
     case Syscall::SC_getegid:
         return current->sys$getegid();
-    case Syscall::SC_signal:
-        return (dword)current->sys$signal((int)arg1, (Unix::sighandler_t)arg2);
     case Syscall::SC_isatty:
         return current->sys$isatty((int)arg1);
     case Syscall::SC_getdtablesize:

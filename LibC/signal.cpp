@@ -20,13 +20,16 @@ int killpg(int pgrp, int sig)
 
 sighandler_t signal(int signum, sighandler_t handler)
 {
-    sighandler_t old_handler = (sighandler_t)Syscall::invoke(Syscall::SC_signal, (dword)signum, (dword)handler);
-    if (old_handler == SIG_ERR) {
-        errno = EINVAL;
+    struct sigaction new_act;
+    struct sigaction old_act;
+    new_act.sa_handler = handler;
+    new_act.sa_flags = 0;
+    new_act.sa_mask = 0;
+    new_act.sa_restorer = nullptr;
+    int rc = sigaction(signum, &new_act, &old_act);
+    if (rc < 0)
         return SIG_ERR;
-    }
-    errno = 0;
-    return old_handler;
+    return old_act.sa_handler;
 }
 
 int sigaction(int signum, const struct sigaction* act, struct sigaction* old_act)
