@@ -187,7 +187,7 @@ public:
     void did_schedule() { ++m_timesScheduled; }
     dword timesScheduled() const { return m_timesScheduled; }
 
-    pid_t waitee() const { return m_waitee; }
+    pid_t waitee_pid() const { return m_waitee_pid; }
 
     dword framePtr() const { return m_tss.ebp; }
     dword stackPtr() const { return m_tss.esp; }
@@ -265,7 +265,7 @@ private:
     int m_error { 0 };
     void* m_kernelStack { nullptr };
     dword m_timesScheduled { 0 };
-    pid_t m_waitee { -1 };
+    pid_t m_waitee_pid { -1 };
     int m_fdBlockedOnRead { -1 };
     int m_blocked_fd { -1 };
     size_t m_max_open_file_descriptors { 16 };
