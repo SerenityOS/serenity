@@ -41,7 +41,6 @@
     __ENUMERATE_SYSCALL(execve) \
     __ENUMERATE_SYSCALL(geteuid) \
     __ENUMERATE_SYSCALL(getegid) \
-    __ENUMERATE_SYSCALL(signal) \
     __ENUMERATE_SYSCALL(isatty) \
     __ENUMERATE_SYSCALL(getdtablesize) \
     __ENUMERATE_SYSCALL(dup) \

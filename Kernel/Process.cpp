@@ -1660,15 +1660,6 @@ int Process::sys$dup2(int old_fd, int new_fd)
     return new_fd;
 }
 
-Unix::sighandler_t Process::sys$signal(int signum, Unix::sighandler_t handler)
-{
-    // FIXME: Fail with -EINVAL if attepmting to catch or ignore SIGKILL or SIGSTOP.
-    if (signum < 1 || signum >= 32)
-        return (Unix::sighandler_t)-EINVAL;
-    dbgprintf("sys$signal: %d => L%x\n", signum, handler);
-    return nullptr;
-}
-
 int Process::sys$sigprocmask(int how, const Unix::sigset_t* set, Unix::sigset_t* old_set)
 {
     if (old_set) {
