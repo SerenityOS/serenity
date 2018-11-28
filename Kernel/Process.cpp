@@ -353,8 +353,11 @@ int Process::do_exec(const String& path, Vector<String>&& arguments, Vector<Stri
         }
     }
 
+    m_signal_stack_kernel_region = nullptr;
+    m_signal_stack_user_region = nullptr;
     memset(m_signal_action_data, 0, sizeof(m_signal_action_data));
     m_signal_mask = 0xffffffff;
+    m_pending_signals = 0;
 
     for (size_t i = 0; i < m_fds.size(); ++i) {
         auto& daf = m_fds[i];
@@ -387,7 +390,7 @@ int Process::do_exec(const String& path, Vector<String>&& arguments, Vector<Stri
     m_tss.cr3 = (dword)m_page_directory;
     m_stack_region = allocate_region(LinearAddress(), defaultStackSize, "stack");
     ASSERT(m_stack_region);
-    m_stackTop3 = m_stack_region->linearAddress.offset(defaultStackSize).get() & 0xfffffff8;
+    m_stackTop3 = m_stack_region->linearAddress.offset(defaultStackSize).get();
     m_tss.esp = m_stackTop3;
     m_tss.ss0 = 0x10;
     m_tss.esp0 = old_esp0;
@@ -660,7 +663,7 @@ Process::Process(String&& name, uid_t uid, gid_t gid, pid_t ppid, RingLevel ring
         } else {
             auto* region = allocate_region(LinearAddress(), defaultStackSize, "stack");
             ASSERT(region);
-            m_stackTop3 = region->linearAddress.offset(defaultStackSize).get() & 0xfffffff8;
+            m_stackTop3 = region->linearAddress.offset(defaultStackSize).get();
             m_tss.esp = m_stackTop3;
         }
     }
