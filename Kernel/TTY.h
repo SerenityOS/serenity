@@ -39,6 +39,9 @@ public:
 
     virtual String ttyName() const = 0;
 
+    unsigned short rows() const { return m_rows; }
+    unsigned short columns() const { return m_columns; }
+
     void set_pgid(pid_t pgid) { m_pgid = pgid; }
     pid_t pgid() const { return m_pgid; }
 
@@ -50,6 +53,7 @@ public:
 
 protected:
     virtual void onTTYWrite(const byte*, size_t) = 0;
+    void set_size(unsigned short columns, unsigned short rows);
 
     TTY(unsigned major, unsigned minor);
     void emit(byte);
@@ -63,5 +67,7 @@ private:
     DoubleBuffer m_buffer;
     pid_t m_pgid { 0 };
     Unix::termios m_termios;
+    unsigned short m_rows { 0 };
+    unsigned short m_columns { 0 };
 };
 

@@ -5,6 +5,11 @@
 
 __BEGIN_DECLS
 
+struct winsize {
+    unsigned short ws_row;
+    unsigned short ws_col;
+};
+
 int ioctl(int fd, unsigned request, ...);
 
 __END_DECLS

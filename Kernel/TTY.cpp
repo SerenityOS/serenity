@@ -109,6 +109,7 @@ int TTY::ioctl(Process& process, unsigned request, unsigned arg)
 {
     pid_t pgid;
     Unix::termios* tp;
+    Unix::winsize* ws;
 
     if (process.tty() != this)
         return -ENOTTY;
@@ -136,7 +137,20 @@ int TTY::ioctl(Process& process, unsigned request, unsigned arg)
             return -EFAULT;
         set_termios(*tp);
         return 0;
+    case TIOCGWINSZ:
+        ws = reinterpret_cast<Unix::winsize*>(arg);
+        if (!process.validate_write(ws, sizeof(Unix::winsize)))
+            return -EFAULT;
+        ws->ws_row = m_rows;
+        ws->ws_col = m_columns;
+        return 0;
     }
     ASSERT_NOT_REACHED();
     return -EINVAL;
+}
+
+void TTY::set_size(unsigned short columns, unsigned short rows)
+{
+    m_rows = rows;
+    m_columns = columns;
 }
