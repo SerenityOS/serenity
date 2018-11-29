@@ -1,8 +1,8 @@
 #!/bin/sh
 
-if [ "$1" = "b" ]; then
-    bochs -q -f .bochsrc
-else
+if [ "$1" = "q" ]; then
     qemu-system-i386 -s -m 32 -drive format=raw,file=.floppy-image,if=floppy -drive format=raw,file=_fs_contents #$@
+else
+    bochs -q -f .bochsrc
 fi
 

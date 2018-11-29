@@ -17,13 +17,13 @@ void VirtualConsole::get_vga_cursor(byte& row, byte& column)
     value = IO::in8(0x3d5) << 8;
     IO::out8(0x3d4, 0x0f);
     value |= IO::in8(0x3d5);
-    row = value / 80;
-    column = value % 80;
+    row = value / columns();
+    column = value % columns();
 }
 
 void VirtualConsole::flush_vga_cursor()
 {
-    word value = m_current_vga_start_address + (m_cursor_row * 80 + m_cursor_column);
+    word value = m_current_vga_start_address + (m_cursor_row * columns() + m_cursor_column);
     IO::out8(0x3d4, 0x0e);
     IO::out8(0x3d5, MSB(value));
     IO::out8(0x3d4, 0x0f);
@@ -41,14 +41,15 @@ VirtualConsole::VirtualConsole(unsigned index, InitialContents initial_contents)
     : TTY(4, index)
     , m_index(index)
 {
+    set_size(80, 25);
     s_consoles[index] = this;
-    m_buffer = (byte*)kmalloc_eternal(80 * 25 * 2);
+    m_buffer = (byte*)kmalloc_eternal(rows() * columns() * 2);
     if (initial_contents == AdoptCurrentVGABuffer) {
-        memcpy(m_buffer, s_vga_buffer, 80 * 25 * 2);
+        memcpy(m_buffer, s_vga_buffer, rows() * columns() * 2);
         get_vga_cursor(m_cursor_row, m_cursor_column);
     } else {
         word* line_mem = reinterpret_cast<word*>(m_buffer);
-        for (word i = 0; i < 80 * 25; ++i)
+        for (word i = 0; i < rows() * columns(); ++i)
             line_mem[i] = 0x0720;
     }
 }
@@ -60,7 +61,7 @@ VirtualConsole::~VirtualConsole()
 void VirtualConsole::clear()
 {
     word* linemem = m_active ? (word*)s_vga_buffer : (word*)m_buffer;
-    for (word i = 0; i < 80 * 25; ++i)
+    for (word i = 0; i < rows() * columns(); ++i)
         linemem[i] = 0x0720;
     if (m_active)
         set_vga_start_row(0);
@@ -91,11 +92,11 @@ void VirtualConsole::set_active(bool b)
 
     m_active = b;
     if (!m_active) {
-        memcpy(m_buffer, m_current_vga_window, 80 * 25 * 2);
+        memcpy(m_buffer, m_current_vga_window, rows() * columns() * 2);
         return;
     }
 
-    memcpy(s_vga_buffer, m_buffer, 80 * 25 * 2);
+    memcpy(s_vga_buffer, m_buffer, rows() * columns() * 2);
     set_vga_start_row(0);
     flush_vga_cursor();
 
@@ -325,16 +326,16 @@ void VirtualConsole::execute_escape_sequence(byte final)
 void VirtualConsole::clear_vga_row(word row)
 {
     word* linemem = (word*)&m_current_vga_window[row * 160];
-    for (word i = 0; i < 80; ++i)
+    for (word i = 0; i < columns(); ++i)
         linemem[i] = 0x0720;
 }
 
 void VirtualConsole::scroll_up()
 {
-    if (m_cursor_row == (m_rows - 1)) {
+    if (m_cursor_row == (rows() - 1)) {
         if (m_active) {
             if (m_vga_start_row >= 160) {
-                memcpy(s_vga_buffer, m_current_vga_window + 160, 80 * 24 * 2);
+                memcpy(s_vga_buffer, m_current_vga_window + 160, (rows() - 1) * columns() * 2);
                 set_vga_start_row(0);
                 clear_vga_row(24);
             } else {
@@ -344,7 +345,7 @@ void VirtualConsole::scroll_up()
         } else {
             memcpy(m_buffer, m_buffer + 160, 160 * 24);
             word* linemem = (word*)&m_buffer[24 * 160];
-            for (word i = 0; i < 80; ++i)
+            for (word i = 0; i < columns(); ++i)
                 linemem[i] = 0x0720;
         }
     } else {
@@ -355,8 +356,8 @@ void VirtualConsole::scroll_up()
 
 void VirtualConsole::set_cursor(unsigned row, unsigned column)
 {
-    ASSERT(row < m_rows);
-    ASSERT(column < m_columns);
+    ASSERT(row < rows());
+    ASSERT(column < columns());
     m_cursor_row = row;
     m_cursor_column = column;
     if (m_active)
@@ -365,8 +366,8 @@ void VirtualConsole::set_cursor(unsigned row, unsigned column)
 
 void VirtualConsole::put_character_at(unsigned row, unsigned column, byte ch)
 {
-    ASSERT(row < m_rows);
-    ASSERT(column < m_columns);
+    ASSERT(row < rows());
+    ASSERT(column < columns());
     word cur = (row * 160) + (column * 2);
     if (m_active) {
         word cur = (row * 160) + (column * 2);
@@ -435,7 +436,7 @@ void VirtualConsole::on_char(byte ch)
     put_character_at(m_cursor_row, m_cursor_column, ch);
 
     ++m_cursor_column;
-    if (m_cursor_column >= m_columns)
+    if (m_cursor_column >= columns())
         scroll_up();
     set_cursor(m_cursor_row, m_cursor_column);
 }
@@ -480,7 +481,7 @@ String VirtualConsole::ttyName() const
 void VirtualConsole::set_vga_start_row(word row)
 {
     m_vga_start_row = row;
-    m_current_vga_start_address = row * 80;
+    m_current_vga_start_address = row * columns();
     m_current_vga_window = s_vga_buffer + row * 160;
     IO::out8(0x3d4, 0x0c);
     IO::out8(0x3d5, MSB(m_current_vga_start_address));

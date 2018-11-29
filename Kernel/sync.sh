@@ -32,5 +32,7 @@ cp -v ../Userland/strsignal mnt/bin/strsignal
 cp -v ../Userland/mkdir mnt/bin/mkdir
 sh sync-local.sh
 cp -v kernel.map mnt/
+ln -s dir_a mnt/dir_cur
+ln -s nowhere mnt/bad_link
 umount mnt
 sync

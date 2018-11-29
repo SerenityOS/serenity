@@ -49,8 +49,6 @@ private:
 
     void clear();
 
-    const byte m_rows { 25 };
-    const byte m_columns { 80 };
     byte m_cursor_row { 0 };
     byte m_cursor_column { 0 };
     byte m_saved_cursor_row { 0 };

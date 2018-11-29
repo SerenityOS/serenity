@@ -208,6 +208,10 @@ namespace Unix {
 #define	TCSADRAIN	1
 #define	TCSAFLUSH	2
 
+struct winsize {
+    unsigned short ws_row;
+    unsigned short ws_col;
+};
 
 typedef dword dev_t;
 typedef dword ino_t;
