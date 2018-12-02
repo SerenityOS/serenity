@@ -13,9 +13,9 @@ public:
 
     virtual bool initialize() override;
     virtual const char* class_name() const override;
-    virtual InodeIdentifier rootInode() const override;
-    virtual bool writeInode(InodeIdentifier, const ByteBuffer&) override;
-    virtual InodeMetadata inodeMetadata(InodeIdentifier) const override;
+    virtual InodeIdentifier root_inode() const override;
+    virtual bool write_inode(InodeIdentifier, const ByteBuffer&) override;
+    virtual InodeMetadata inode_metadata(InodeIdentifier) const override;
     virtual bool set_mtime(InodeIdentifier, dword timestamp) override;
     virtual InodeIdentifier create_inode(InodeIdentifier parentInode, const String& name, Unix::mode_t, unsigned size, int& error) override;
     virtual ssize_t read_inode_bytes(InodeIdentifier, Unix::off_t offset, size_t count, byte* buffer, FileDescriptor*) const override;

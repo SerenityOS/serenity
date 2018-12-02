@@ -127,12 +127,12 @@ const char* SynthFS::class_name() const
     return "synthfs";
 }
 
-InodeIdentifier SynthFS::rootInode() const
+InodeIdentifier SynthFS::root_inode() const
 {
     return { id(), 1 };
 }
 
-InodeMetadata SynthFS::inodeMetadata(InodeIdentifier inode) const
+InodeMetadata SynthFS::inode_metadata(InodeIdentifier inode) const
 {
     InterruptDisabler disabler;
     ASSERT(inode.fsid() == id());
@@ -164,7 +164,7 @@ InodeIdentifier SynthFS::create_inode(InodeIdentifier parentInode, const String&
     return { };
 }
 
-bool SynthFS::writeInode(InodeIdentifier, const ByteBuffer&)
+bool SynthFS::write_inode(InodeIdentifier, const ByteBuffer&)
 {
     kprintf("FIXME: Implement SyntheticFileSystem::writeInode().\n");
     return false;

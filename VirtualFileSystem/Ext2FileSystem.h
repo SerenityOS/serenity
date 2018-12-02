@@ -53,25 +53,25 @@ private:
     typedef unsigned InodeIndex;
     explicit Ext2FS(RetainPtr<DiskDevice>&&);
 
-    const ext2_super_block& superBlock() const;
-    const ext2_group_desc& blockGroupDescriptor(unsigned groupIndex) const;
-    unsigned firstBlockOfGroup(unsigned groupIndex) const;
-    unsigned inodesPerBlock() const;
-    unsigned inodesPerGroup() const;
-    unsigned blocksPerGroup() const;
-    unsigned inodeSize() const;
+    const ext2_super_block& super_block() const;
+    const ext2_group_desc& group_descriptor(unsigned groupIndex) const;
+    unsigned first_block_of_group(unsigned groupIndex) const;
+    unsigned inodes_per_block() const;
+    unsigned inodes_per_group() const;
+    unsigned blocks_per_group() const;
+    unsigned inode_size() const;
 
-    OwnPtr<ext2_inode> lookupExt2Inode(unsigned) const;
-    bool writeExt2Inode(unsigned, const ext2_inode&);
-    ByteBuffer readBlockContainingInode(unsigned inode, unsigned& blockIndex, unsigned& offset) const;
+    OwnPtr<ext2_inode> lookup_ext2_inode(unsigned) const;
+    bool write_ext2_inode(unsigned, const ext2_inode&);
+    ByteBuffer read_block_containing_inode(unsigned inode, unsigned& blockIndex, unsigned& offset) const;
 
-    ByteBuffer readSuperBlock() const;
-    bool writeSuperBlock(const ext2_super_block&);
+    ByteBuffer read_super_block() const;
+    bool write_super_block(const ext2_super_block&);
 
     virtual const char* class_name() const override;
-    virtual InodeIdentifier rootInode() const override;
-    virtual bool writeInode(InodeIdentifier, const ByteBuffer&) override;
-    virtual InodeMetadata inodeMetadata(InodeIdentifier) const override;
+    virtual InodeIdentifier root_inode() const override;
+    virtual bool write_inode(InodeIdentifier, const ByteBuffer&) override;
+    virtual InodeMetadata inode_metadata(InodeIdentifier) const override;
     virtual bool set_mtime(InodeIdentifier, dword timestamp) override;
     virtual InodeIdentifier create_inode(InodeIdentifier parentInode, const String& name, Unix::mode_t, unsigned size, int& error) override;
     virtual ssize_t read_inode_bytes(InodeIdentifier, Unix::off_t offset, size_t count, byte* buffer, FileDescriptor*) const override;
@@ -79,32 +79,32 @@ private:
     virtual InodeIdentifier find_parent_of_inode(InodeIdentifier) const override;
     virtual RetainPtr<CoreInode> get_inode(InodeIdentifier) const override;
 
-    bool isDirectoryInode(unsigned) const;
-    unsigned allocateInode(unsigned preferredGroup, unsigned expectedSize);
-    Vector<BlockIndex> allocateBlocks(unsigned group, unsigned count);
-    unsigned groupIndexFromInode(unsigned) const;
+    bool is_directory_inode(unsigned) const;
+    unsigned allocate_inode(unsigned preferredGroup, unsigned expectedSize);
+    Vector<BlockIndex> allocate_blocks(unsigned group, unsigned count);
+    unsigned group_index_from_inode(unsigned) const;
 
-    Vector<unsigned> blockListForInode(const ext2_inode&) const;
+    Vector<unsigned> block_list_for_inode(const ext2_inode&) const;
 
-    void dumpBlockBitmap(unsigned groupIndex) const;
-    void dumpInodeBitmap(unsigned groupIndex) const;
+    void dump_block_bitmap(unsigned groupIndex) const;
+    void dump_inode_bitmap(unsigned groupIndex) const;
 
-    template<typename F> void traverseInodeBitmap(unsigned groupIndex, F) const;
-    template<typename F> void traverseBlockBitmap(unsigned groupIndex, F) const;
+    template<typename F> void traverse_inode_bitmap(unsigned groupIndex, F) const;
+    template<typename F> void traverse_block_bitmap(unsigned groupIndex, F) const;
 
-    bool addInodeToDirectory(unsigned directoryInode, unsigned inode, const String& name, byte fileType, int& error);
-    bool writeDirectoryInode(unsigned directoryInode, Vector<DirectoryEntry>&&);
-    bool setInodeAllocationState(unsigned inode, bool);
-    bool setBlockAllocationState(GroupIndex, BlockIndex, bool);
+    bool add_inode_to_directory(unsigned directoryInode, unsigned inode, const String& name, byte fileType, int& error);
+    bool write_directory_inode(unsigned directoryInode, Vector<DirectoryEntry>&&);
+    bool set_inode_allocation_state(unsigned inode, bool);
+    bool set_block_allocation_state(GroupIndex, BlockIndex, bool);
 
-    bool modifyLinkCount(InodeIndex, int delta);
+    bool modify_link_count(InodeIndex, int delta);
 
     unsigned m_blockGroupCount { 0 };
 
     bool deprecated_enumerateDirectoryInode(InodeIdentifier, Function<bool(const DirectoryEntry&)>) const;
 
-    mutable ByteBuffer m_cachedSuperBlock;
-    mutable ByteBuffer m_cachedBlockGroupDescriptorTable;
+    mutable ByteBuffer m_cached_super_block;
+    mutable ByteBuffer m_cached_group_descriptor_table;
 
     mutable SpinLock m_inode_cache_lock;
     mutable HashMap<BlockIndex, RetainPtr<Ext2FSInode>> m_inode_cache;

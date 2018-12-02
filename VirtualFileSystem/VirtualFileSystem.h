@@ -40,7 +40,7 @@ public:
     InodeIdentifier inode;
     const InodeMetadata& metadata() const;
 
-    bool inUse() const { return inode.isValid() || m_characterDevice; }
+    bool inUse() const { return inode.is_valid() || m_characterDevice; }
 
     bool isCharacterDevice() const { return m_characterDevice; }
     CharacterDevice* characterDevice() { return m_characterDevice; }
@@ -49,8 +49,8 @@ public:
     void retain();
     void release();
 
-    FS* fileSystem() { return inode.fileSystem(); }
-    const FS* fileSystem() const { return inode.fileSystem(); }
+    FS* fileSystem() { return inode.fs(); }
+    const FS* fileSystem() const { return inode.fs(); }
 
     VFS* vfs() { return m_vfs; }
     const VFS* vfs() const { return m_vfs; }

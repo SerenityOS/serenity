@@ -1,9 +1,9 @@
 #include "InodeIdentifier.h"
 #include "FileSystem.h"
 
-ByteBuffer InodeIdentifier::readEntireFile() const
+ByteBuffer InodeIdentifier::read_entire_file() const
 {
-    if (!fileSystem())
+    if (!fs())
         return { };
-    return fileSystem()->readEntireInode(*this, nullptr);
+    return fs()->read_entire_inode(*this, nullptr);
 }

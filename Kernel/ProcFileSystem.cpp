@@ -240,7 +240,7 @@ ByteBuffer procfs$mounts()
     VFS::the().for_each_mount([&ptr] (auto& mount) {
         auto& fs = mount.guest_fs();
         ptr += ksprintf(ptr, "%s @ ", fs.class_name());
-        if (!mount.host().isValid())
+        if (!mount.host().is_valid())
             ptr += ksprintf(ptr, "/\n", fs.class_name());
         else
             ptr += ksprintf(ptr, "%u:%u\n", mount.host().fsid(), mount.host().index());

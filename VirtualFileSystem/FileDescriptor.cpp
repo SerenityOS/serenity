@@ -196,7 +196,7 @@ ByteBuffer FileDescriptor::readEntireFile()
 
     if (m_vnode->core_inode())
         return m_vnode->core_inode()->read_entire(this);
-    return m_vnode->fileSystem()->readEntireInode(m_vnode->inode, this);
+    return m_vnode->fileSystem()->read_entire_inode(m_vnode->inode, this);
 }
 
 bool FileDescriptor::isDirectory() const

@@ -10,36 +10,36 @@ class InodeIdentifier {
 public:
     InodeIdentifier() { }
     InodeIdentifier(dword fileSystemID, dword inode)
-        : m_fileSystemID(fileSystemID)
+        : m_fsid(fileSystemID)
         , m_index(inode)
     {
     }
 
-    bool isValid() const { return m_fileSystemID != 0 && m_index != 0; }
+    bool is_valid() const { return m_fsid != 0 && m_index != 0; }
 
-    dword fsid() const { return m_fileSystemID; }
+    dword fsid() const { return m_fsid; }
     dword index() const { return m_index; }
 
-    FS* fileSystem();
-    const FS* fileSystem() const;
+    FS* fs();
+    const FS* fs() const;
 
     bool operator==(const InodeIdentifier& other) const
     {
-        return m_fileSystemID == other.m_fileSystemID && m_index == other.m_index;
+        return m_fsid == other.m_fsid && m_index == other.m_index;
     }
 
     bool operator!=(const InodeIdentifier& other) const
     {
-        return m_fileSystemID != other.m_fileSystemID || m_index != other.m_index;
+        return m_fsid != other.m_fsid || m_index != other.m_index;
     }
 
     InodeMetadata metadata() const;
-    bool isRootInode() const;
+    bool is_root_inode() const;
 
-    ByteBuffer readEntireFile() const;
+    ByteBuffer read_entire_file() const;
 
 private:
-    dword m_fileSystemID { 0 };
+    dword m_fsid { 0 };
     dword m_index { 0 };
 };
 
