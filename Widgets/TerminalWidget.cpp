@@ -14,7 +14,7 @@ TerminalWidget::TerminalWidget(Widget* parent)
 {
     g_tw = this;
 
-    setWindowRelativeRect({ 0, 0, (columns() * font().glyphWidth()) + 4, (rows() * font().glyphHeight()) + 4 });
+    setWindowRelativeRect({ 0, 0, int(columns() * font().glyphWidth()) + 4, int(rows() * font().glyphHeight()) + 4 });
 
     printf("rekt: %d x %d\n", width(), height());
     m_screen = new CharacterWithAttributes[rows() * columns()]; 
@@ -24,7 +24,13 @@ TerminalWidget::TerminalWidget(Widget* parent)
             at(row, column).attribute = 0x07;
         }
     }
+
+#if __APPLE__
+    g_fd = posix_openpt(O_RDWR);
+#else
     g_fd = getpt();
+#endif
+
     grantpt(g_fd);
     unlockpt(g_fd);
     char buf[1024];
