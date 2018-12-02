@@ -1055,7 +1055,7 @@ ssize_t Process::sys$read(int fd, void* outbuf, size_t nread)
         return -EBADF;
     if (descriptor->is_blocking()) {
         if (!descriptor->has_data_available_for_reading()) {
-            m_fdBlockedOnRead = fd;
+            m_blocked_fd = fd;
             block(BlockedRead);
             sched_yield();
             if (m_was_interrupted_while_blocked)

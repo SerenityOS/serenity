@@ -266,7 +266,6 @@ private:
     void* m_kernelStack { nullptr };
     dword m_timesScheduled { 0 };
     pid_t m_waitee_pid { -1 };
-    int m_fdBlockedOnRead { -1 };
     int m_blocked_fd { -1 };
     size_t m_max_open_file_descriptors { 16 };
     SignalActionData m_signal_action_data[32];

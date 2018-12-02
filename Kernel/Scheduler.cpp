@@ -49,9 +49,9 @@ bool Scheduler::pick_next()
         }
 
         if (process.state() == Process::BlockedRead) {
-            ASSERT(process.m_fdBlockedOnRead != -1);
+            ASSERT(process.m_blocked_fd != -1);
             // FIXME: Block until the amount of data wanted is available.
-            if (process.m_fds[process.m_fdBlockedOnRead].descriptor->has_data_available_for_reading())
+            if (process.m_fds[process.m_blocked_fd].descriptor->has_data_available_for_reading())
                 process.unblock();
             return true;
         }
