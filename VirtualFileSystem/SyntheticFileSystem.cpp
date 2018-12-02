@@ -170,7 +170,7 @@ bool SynthFS::writeInode(InodeIdentifier, const ByteBuffer&)
     return false;
 }
 
-Unix::ssize_t SynthFS::read_inode_bytes(InodeIdentifier inode, Unix::off_t offset, Unix::size_t count, byte* buffer, FileDescriptor* handle) const
+ssize_t SynthFS::read_inode_bytes(InodeIdentifier inode, Unix::off_t offset, size_t count, byte* buffer, FileDescriptor* handle) const
 {
     ASSERT(inode.fsid() == id());
 #ifdef SYNTHFS_DEBUG
@@ -200,7 +200,7 @@ Unix::ssize_t SynthFS::read_inode_bytes(InodeIdentifier inode, Unix::off_t offse
     }
 
     auto* data = generatedData ? &generatedData : &file.m_data;
-    Unix::ssize_t nread = min(static_cast<Unix::off_t>(data->size() - offset), static_cast<Unix::off_t>(count));
+    ssize_t nread = min(static_cast<Unix::off_t>(data->size() - offset), static_cast<Unix::off_t>(count));
     memcpy(buffer, data->pointer() + offset, nread);
     if (nread == 0 && handle && handle->generatorCache())
         handle->generatorCache().clear();
@@ -249,7 +249,7 @@ void SynthFSInode::populate_metadata() const
     // Already done when SynthFS created the file.
 }
 
-Unix::ssize_t SynthFSInode::read_bytes(Unix::off_t offset, Unix::size_t count, byte* buffer, FileDescriptor* descriptor)
+ssize_t SynthFSInode::read_bytes(Unix::off_t offset, size_t count, byte* buffer, FileDescriptor* descriptor)
 {
 #ifdef SYNTHFS_DEBUG
     kprintf("SynthFS: read_bytes %u\n", index());
@@ -269,7 +269,7 @@ Unix::ssize_t SynthFSInode::read_bytes(Unix::off_t offset, Unix::size_t count, b
     }
 
     auto* data = generatedData ? &generatedData : &m_data;
-    Unix::ssize_t nread = min(static_cast<Unix::off_t>(data->size() - offset), static_cast<Unix::off_t>(count));
+    ssize_t nread = min(static_cast<Unix::off_t>(data->size() - offset), static_cast<Unix::off_t>(count));
     memcpy(buffer, data->pointer() + offset, nread);
     if (nread == 0 && descriptor && descriptor->generatorCache())
         descriptor->generatorCache().clear();

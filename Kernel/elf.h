@@ -17,16 +17,11 @@
    Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
    02111-1307 USA.  */
 
-#ifndef _ELF_H
-#define	_ELF_H 1
-
-#include <features.h>
-
-__BEGIN_DECLS
+#pragma once
 
 /* Standard ELF types.  */
 
-#include <stdint.h>
+#include <AK/Types.h>
 
 /* Type for a 16-bit quantity.  */
 typedef uint16_t Elf32_Half;
@@ -2640,6 +2635,3 @@ typedef Elf32_Addr Elf32_Conflict;
 #define R_M32R_NUM		256	/* Keep this the last entry. */
 
 
-__END_DECLS
-
-#endif	/* elf.h */

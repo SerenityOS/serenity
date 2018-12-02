@@ -258,8 +258,6 @@ typedef ::time_t time_t;
 
 typedef dword blksize_t;
 typedef dword blkcnt_t;
-typedef dword size_t;
-typedef signed_dword ssize_t;
 
 #define NCCS 32
 

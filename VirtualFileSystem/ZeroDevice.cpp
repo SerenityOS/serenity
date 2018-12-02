@@ -17,14 +17,14 @@ bool ZeroDevice::hasDataAvailableForRead() const
     return true;
 }
 
-Unix::ssize_t ZeroDevice::read(byte* buffer, Unix::size_t bufferSize)
+ssize_t ZeroDevice::read(byte* buffer, size_t bufferSize)
 {
-    Unix::size_t count = min(GoodBufferSize, bufferSize);
+    size_t count = min(GoodBufferSize, bufferSize);
     memset(buffer, 0, count);
     return count;
 }
 
-Unix::ssize_t ZeroDevice::write(const byte*, Unix::size_t bufferSize)
+ssize_t ZeroDevice::write(const byte*, size_t bufferSize)
 {
     return min(GoodBufferSize, bufferSize);
 }

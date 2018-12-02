@@ -34,18 +34,18 @@ bool RandomDevice::hasDataAvailableForRead() const
     return true;
 }
 
-Unix::ssize_t RandomDevice::read(byte* buffer, Unix::size_t bufferSize)
+ssize_t RandomDevice::read(byte* buffer, size_t bufferSize)
 {
     const int range = 'z' - 'a';
-    Unix::ssize_t nread = min(bufferSize, GoodBufferSize);
-    for (Unix::ssize_t i = 0; i < nread; ++i) {
+    ssize_t nread = min(bufferSize, GoodBufferSize);
+    for (ssize_t i = 0; i < nread; ++i) {
         dword r = myrand() % range;
         buffer[i] = 'a' + r;
     }
     return nread;
 }
 
-Unix::ssize_t RandomDevice::write(const byte*, Unix::size_t bufferSize)
+ssize_t RandomDevice::write(const byte*, size_t bufferSize)
 {
     // FIXME: Use input for entropy? I guess that could be a neat feature?
     return min(GoodBufferSize, bufferSize);

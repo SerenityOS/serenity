@@ -9,6 +9,6 @@ inline static const Unix::off_t maxFileOffset = 2147483647;
 inline static const Unix::off_t maxFileOffset = std::numeric_limits<Unix::off_t>::max();
 #endif
 
-static const Unix::size_t GoodBufferSize = 4096;
+static const size_t GoodBufferSize = 4096;
 
 

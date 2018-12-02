@@ -8,10 +8,10 @@ void kfree(void*);
 
 bool is_kmalloc_address(void*);
 
-extern volatile dword sum_alloc;
-extern volatile dword sum_free;
-extern volatile dword kmalloc_sum_eternal;
-extern volatile dword kmalloc_sum_page_aligned;
+extern volatile size_t sum_alloc;
+extern volatile size_t sum_free;
+extern volatile size_t kmalloc_sum_eternal;
+extern volatile size_t kmalloc_sum_page_aligned;
 
 inline void* operator new(size_t, void* p) { return p; }
 inline void* operator new[](size_t, void* p) { return p; }

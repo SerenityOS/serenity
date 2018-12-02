@@ -16,8 +16,8 @@ public:
     void open(Direction);
     void close(Direction);
 
-    Unix::ssize_t write(const byte*, Unix::size_t);
-    Unix::ssize_t read(byte*, Unix::size_t);
+    ssize_t write(const byte*, size_t);
+    ssize_t read(byte*, size_t);
 
     bool can_read() const;
     bool can_write() const;
