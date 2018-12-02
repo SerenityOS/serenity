@@ -6,7 +6,7 @@
 #include "system.h"
 #include <VirtualFileSystem/FileDescriptor.h>
 #include <VirtualFileSystem/VirtualFileSystem.h>
-#include <ELFLoader/ELFLoader.h>
+#include "ELFLoader.h"
 #include "MemoryManager.h"
 #include "errno.h"
 #include "i8253.h"

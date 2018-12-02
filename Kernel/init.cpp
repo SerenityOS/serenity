@@ -19,7 +19,7 @@
 #include <VirtualFileSystem/FileDescriptor.h>
 #include <AK/OwnPtr.h>
 #include "MemoryManager.h"
-#include <ELFLoader/ELFLoader.h>
+#include "ELFLoader.h"
 #include "Console.h"
 #include "ProcFileSystem.h"
 #include "RTC.h"
