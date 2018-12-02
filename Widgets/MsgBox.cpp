@@ -10,14 +10,14 @@ void MsgBox(Window* owner, String&& text)
     Font& font = Font::defaultFont();
     auto screenRect = AbstractScreen::the().rect();
 
-    unsigned textWidth = text.length() * font.glyphWidth() + 8;
-    unsigned textHeight = font.glyphHeight() + 8;
-    unsigned horizontalPadding = 16;
-    unsigned verticalPadding = 16;
-    unsigned buttonWidth = 60;
-    unsigned buttonHeight = 20;
-    unsigned windowWidth = textWidth + horizontalPadding * 2;
-    unsigned windowHeight = textHeight + buttonHeight + verticalPadding * 3;
+    int textWidth = text.length() * font.glyphWidth() + 8;
+    int textHeight = font.glyphHeight() + 8;
+    int horizontalPadding = 16;
+    int verticalPadding = 16;
+    int buttonWidth = 60;
+    int buttonHeight = 20;
+    int windowWidth = textWidth + horizontalPadding * 2;
+    int windowHeight = textHeight + buttonHeight + verticalPadding * 3;
 
     Rect windowRect(
         screenRect.center().x() - windowWidth / 2,

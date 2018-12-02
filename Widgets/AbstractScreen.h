@@ -7,8 +7,8 @@ class AbstractScreen : public Object {
 public:
     virtual ~AbstractScreen();
 
-    unsigned width() const { return m_width; }
-    unsigned height() const { return m_height; }
+    int width() const { return m_width; }
+    int height() const { return m_height; }
 
     static AbstractScreen& the();
 
@@ -18,7 +18,7 @@ protected:
     AbstractScreen(unsigned width, unsigned height);
 
 private:
-    unsigned m_width { 0 };
-    unsigned m_height { 0 };
+    int m_width { 0 };
+    int m_height { 0 };
 };
 
