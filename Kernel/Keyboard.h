@@ -30,16 +30,16 @@ public:
     virtual ~Keyboard() override;
     Keyboard();
 
-    void setClient(KeyboardClient* client) { m_client = client; }
+    void set_client(KeyboardClient* client) { m_client = client; }
 
 private:
     // ^IRQHandler
-    virtual void handleIRQ() override;
+    virtual void handle_irq() override;
 
     // ^CharacterDevice
     virtual ssize_t read(byte* buffer, size_t) override;
     virtual ssize_t write(const byte* buffer, size_t) override;
-    virtual bool hasDataAvailableForRead() const override;
+    virtual bool has_data_available_for_reading() const override;
 
     void emit(byte);
 
@@ -51,5 +51,5 @@ private:
 class KeyboardClient {
 public:
     virtual ~KeyboardClient();
-    virtual void onKeyPress(Keyboard::Key) = 0;
+    virtual void on_key_pressed(Keyboard::Key) = 0;
 };

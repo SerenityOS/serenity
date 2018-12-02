@@ -46,7 +46,7 @@ bool SynthFS::initialize()
 
 RetainPtr<SynthFSInode> SynthFS::create_directory(String&& name)
 {
-    auto file = adopt(*new SynthFSInode(*this, generateInodeIndex()));
+    auto file = adopt(*new SynthFSInode(*this, generate_inode_index()));
     file->m_name = move(name);
     file->m_metadata.size = 0;
     file->m_metadata.uid = 0;
@@ -58,7 +58,7 @@ RetainPtr<SynthFSInode> SynthFS::create_directory(String&& name)
 
 RetainPtr<SynthFSInode> SynthFS::create_text_file(String&& name, ByteBuffer&& contents, Unix::mode_t mode)
 {
-    auto file = adopt(*new SynthFSInode(*this, generateInodeIndex()));
+    auto file = adopt(*new SynthFSInode(*this, generate_inode_index()));
     file->m_data = contents;
     file->m_name = move(name);
     file->m_metadata.size = file->m_data.size();
@@ -71,7 +71,7 @@ RetainPtr<SynthFSInode> SynthFS::create_text_file(String&& name, ByteBuffer&& co
 
 RetainPtr<SynthFSInode> SynthFS::create_generated_file(String&& name, Function<ByteBuffer()>&& generator, Unix::mode_t mode)
 {
-    auto file = adopt(*new SynthFSInode(*this, generateInodeIndex()));
+    auto file = adopt(*new SynthFSInode(*this, generate_inode_index()));
     file->m_generator = move(generator);
     file->m_name = move(name);
     file->m_metadata.size = 0;
@@ -82,7 +82,7 @@ RetainPtr<SynthFSInode> SynthFS::create_generated_file(String&& name, Function<B
     return file;
 }
 
-InodeIdentifier SynthFS::addFile(RetainPtr<SynthFSInode>&& file, InodeIndex parent)
+InodeIdentifier SynthFS::add_file(RetainPtr<SynthFSInode>&& file, InodeIndex parent)
 {
     ASSERT_INTERRUPTS_DISABLED();
     ASSERT(file);
@@ -96,7 +96,7 @@ InodeIdentifier SynthFS::addFile(RetainPtr<SynthFSInode>&& file, InodeIndex pare
     return new_inode_id;
 }
 
-bool SynthFS::removeFile(InodeIndex inode)
+bool SynthFS::remove_file(InodeIndex inode)
 {
     ASSERT_INTERRUPTS_DISABLED();
     auto it = m_inodes.find(inode);
@@ -117,7 +117,7 @@ bool SynthFS::removeFile(InodeIndex inode)
     }
 
     for (auto& child : file.m_children)
-        removeFile(child->m_metadata.inode.index());
+        remove_file(child->m_metadata.inode.index());
     m_inodes.remove(inode);
     return true;
 }
@@ -193,17 +193,17 @@ ssize_t SynthFS::read_inode_bytes(InodeIdentifier inode, Unix::off_t offset, siz
         if (!handle) {
             generatedData = file.m_generator();
         } else {
-            if (!handle->generatorCache())
-                handle->generatorCache() = file.m_generator();
-            generatedData = handle->generatorCache();
+            if (!handle->generator_cache())
+                handle->generator_cache() = file.m_generator();
+            generatedData = handle->generator_cache();
         }
     }
 
     auto* data = generatedData ? &generatedData : &file.m_data;
     ssize_t nread = min(static_cast<Unix::off_t>(data->size() - offset), static_cast<Unix::off_t>(count));
     memcpy(buffer, data->pointer() + offset, nread);
-    if (nread == 0 && handle && handle->generatorCache())
-        handle->generatorCache().clear();
+    if (nread == 0 && handle && handle->generator_cache())
+        handle->generator_cache().clear();
     return nread;
 }
 
@@ -213,9 +213,9 @@ InodeIdentifier SynthFS::create_directory(InodeIdentifier, const String&, Unix::
     return { };
 }
 
-auto SynthFS::generateInodeIndex() -> InodeIndex
+auto SynthFS::generate_inode_index() -> InodeIndex
 {
-    return m_nextInodeIndex++;
+    return m_next_inode_index++;
 }
 
 InodeIdentifier SynthFS::find_parent_of_inode(InodeIdentifier inode) const
@@ -262,17 +262,17 @@ ssize_t SynthFSInode::read_bytes(Unix::off_t offset, size_t count, byte* buffer,
         if (!descriptor) {
             generatedData = m_generator();
         } else {
-            if (!descriptor->generatorCache())
-                descriptor->generatorCache() = m_generator();
-            generatedData = descriptor->generatorCache();
+            if (!descriptor->generator_cache())
+                descriptor->generator_cache() = m_generator();
+            generatedData = descriptor->generator_cache();
         }
     }
 
     auto* data = generatedData ? &generatedData : &m_data;
     ssize_t nread = min(static_cast<Unix::off_t>(data->size() - offset), static_cast<Unix::off_t>(count));
     memcpy(buffer, data->pointer() + offset, nread);
-    if (nread == 0 && descriptor && descriptor->generatorCache())
-        descriptor->generatorCache().clear();
+    if (nread == 0 && descriptor && descriptor->generator_cache())
+        descriptor->generator_cache().clear();
     return nread;
 }
 

@@ -26,7 +26,7 @@ public:
 protected:
     typedef unsigned InodeIndex;
 
-    InodeIndex generateInodeIndex();
+    InodeIndex generate_inode_index();
     static constexpr InodeIndex RootInodeIndex = 1;
 
     SynthFS();
@@ -35,11 +35,11 @@ protected:
     RetainPtr<SynthFSInode> create_text_file(String&& name, ByteBuffer&&, Unix::mode_t = 0010644);
     RetainPtr<SynthFSInode> create_generated_file(String&& name, Function<ByteBuffer()>&&, Unix::mode_t = 0100644);
 
-    InodeIdentifier addFile(RetainPtr<SynthFSInode>&&, InodeIndex parent = RootInodeIndex);
-    bool removeFile(InodeIndex);
+    InodeIdentifier add_file(RetainPtr<SynthFSInode>&&, InodeIndex parent = RootInodeIndex);
+    bool remove_file(InodeIndex);
 
 private:
-    InodeIndex m_nextInodeIndex { 2 };
+    InodeIndex m_next_inode_index { 2 };
     HashMap<InodeIndex, RetainPtr<SynthFSInode>> m_inodes;
 };
 

@@ -46,7 +46,7 @@ void FIFO::close(Direction direction)
 
 bool FIFO::can_read() const
 {
-    return !m_queue.isEmpty() || !m_writers;
+    return !m_queue.is_empty() || !m_writers;
 }
 
 bool FIFO::can_write() const
@@ -59,7 +59,7 @@ bool FIFO::can_write() const
 
 ssize_t FIFO::read(byte* buffer, size_t size)
 {
-    if (!m_writers && m_queue.isEmpty())
+    if (!m_writers && m_queue.is_empty())
         return 0;
 #ifdef FIFO_DEBUG
     dbgprintf("fifo: read(%u)\n",size);

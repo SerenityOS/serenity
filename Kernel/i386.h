@@ -61,17 +61,17 @@ class IRQHandler;
 
 void gdt_init();
 void idt_init();
-void registerInterruptHandler(byte number, void (*f)());
-void registerUserCallableInterruptHandler(byte number, void (*f)());
-void registerIRQHandler(byte number, IRQHandler&);
-void unregisterIRQHandler(byte number, IRQHandler&);
-void flushIDT();
-void flushGDT();
+void register_interrupt_handler(byte number, void (*f)());
+void register_user_callable_interrupt_handler(byte number, void (*f)());
+void register_irq_handler(byte number, IRQHandler&);
+void unregister_irq_handler(byte number, IRQHandler&);
+void flush_idt();
+void flush_gdt();
 void load_task_register(word selector);
 word gdt_alloc_entry();
 void gdt_free_entry(word);
-Descriptor& getGDTEntry(word selector);
-void writeGDTEntry(word selector, Descriptor&);
+Descriptor& get_gdt_entry(word selector);
+void write_gdt_entry(word selector, Descriptor&);
 
 #define HANG asm volatile( "cli; hlt" );
 #define LSW(x) ((dword)(x) & 0xFFFF)
@@ -82,7 +82,7 @@ void writeGDTEntry(word selector, Descriptor&);
 #define cli() asm volatile("cli")
 #define sti() asm volatile("sti")
 
-static inline dword cpuFlags()
+static inline dword cpu_flags()
 {
     dword flags;
     asm volatile(
@@ -95,14 +95,14 @@ static inline dword cpuFlags()
 
 inline bool are_interrupts_enabled()
 {
-    return cpuFlags() & 0x200;
+    return cpu_flags() & 0x200;
 }
 
 class InterruptDisabler {
 public:
     InterruptDisabler()
     {
-        m_flags = cpuFlags();
+        m_flags = cpu_flags();
         cli();
     }
 

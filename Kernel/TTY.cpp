@@ -55,11 +55,11 @@ ssize_t TTY::write(const byte* buffer, size_t size)
 #ifdef TTY_DEBUG
     dbgprintf("TTY::write %b    {%u}\n", buffer[0], size);
 #endif
-    onTTYWrite(buffer, size);
+    on_tty_write(buffer, size);
     return 0;
 }
 
-bool TTY::hasDataAvailableForRead() const
+bool TTY::has_data_available_for_reading() const
 {
     return !m_buffer.is_empty();
 }
@@ -68,12 +68,12 @@ void TTY::emit(byte ch)
 {
     if (should_generate_signals()) {
         if (ch == m_termios.c_cc[VINTR]) {
-            dbgprintf("%s: VINTR pressed!\n", ttyName().characters());
+            dbgprintf("%s: VINTR pressed!\n", tty_name().characters());
             generate_signal(SIGINT);
             return;
         }
         if (ch == m_termios.c_cc[VQUIT]) {
-            dbgprintf("%s: VQUIT pressed!\n", ttyName().characters());
+            dbgprintf("%s: VQUIT pressed!\n", tty_name().characters());
             generate_signal(SIGQUIT);
             return;
         }
@@ -85,10 +85,10 @@ void TTY::generate_signal(int signal)
 {
     if (!pgid())
         return;
-    dbgprintf("%s: Send signal %d to everyone in pgrp %d\n", ttyName().characters(), signal, pgid());
+    dbgprintf("%s: Send signal %d to everyone in pgrp %d\n", tty_name().characters(), signal, pgid());
     InterruptDisabler disabler; // FIXME: Iterate over a set of process handles instead?
     Process::for_each_in_pgrp(pgid(), [&] (auto& process) {
-        dbgprintf("%s: Send signal %d to %d\n", ttyName().characters(), signal, process.pid());
+        dbgprintf("%s: Send signal %d to %d\n", tty_name().characters(), signal, process.pid());
         process.send_signal(signal, nullptr);
         return true;
     });
@@ -98,7 +98,7 @@ void TTY::set_termios(const Unix::termios& t)
 {
     m_termios = t;
     dbgprintf("%s set_termios: IECHO? %u, ISIG? %u, ICANON? %u\n",
-        ttyName().characters(),
+        tty_name().characters(),
         should_echo_input(),
         should_generate_signals(),
         in_canonical_mode()

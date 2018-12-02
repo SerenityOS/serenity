@@ -34,10 +34,10 @@ public:
 
     virtual ssize_t read(byte*, size_t) override;
     virtual ssize_t write(const byte*, size_t) override;
-    virtual bool hasDataAvailableForRead() const override;
+    virtual bool has_data_available_for_reading() const override;
     virtual int ioctl(Process&, unsigned request, unsigned arg) override final;
 
-    virtual String ttyName() const = 0;
+    virtual String tty_name() const = 0;
 
     unsigned short rows() const { return m_rows; }
     unsigned short columns() const { return m_columns; }
@@ -52,7 +52,7 @@ public:
     bool in_canonical_mode() const { return m_termios.c_lflag & ICANON; }
 
 protected:
-    virtual void onTTYWrite(const byte*, size_t) = 0;
+    virtual void on_tty_write(const byte*, size_t) = 0;
     void set_size(unsigned short columns, unsigned short rows);
 
     TTY(unsigned major, unsigned minor);
@@ -60,7 +60,7 @@ protected:
 
 private:
     // ^CharacterDevice
-    virtual bool isTTY() const final override { return true; }
+    virtual bool is_tty() const final override { return true; }
 
     void generate_signal(int signal);
 

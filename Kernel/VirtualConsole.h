@@ -17,14 +17,14 @@ public:
 
 private:
     // ^KeyboardClient
-    virtual void onKeyPress(Keyboard::Key) override;
+    virtual void on_key_pressed(Keyboard::Key) override;
 
     // ^ConsoleImplementation
-    virtual void onConsoleReceive(byte) override;
+    virtual void on_sysconsole_receive(byte) override;
 
     // ^TTY
-    virtual void onTTYWrite(const byte*, size_t) override;
-    virtual String ttyName() const override;
+    virtual void on_tty_write(const byte*, size_t) override;
+    virtual String tty_name() const override;
 
     void set_active(bool);
     void on_char(byte);

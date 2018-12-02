@@ -43,11 +43,11 @@ void Keyboard::emit(byte ch)
     key.character = ch;
     key.modifiers = m_modifiers;
     if (m_client)
-        m_client->onKeyPress(key);
+        m_client->on_key_pressed(key);
     m_queue.enqueue(key);
 }
 
-void Keyboard::handleIRQ()
+void Keyboard::handle_irq()
 {
     while (IO::in8(0x64) & 1) {
         byte ch = IO::in8(0x60);
@@ -107,23 +107,23 @@ Keyboard::Keyboard()
     while (IO::in8(I8042_STATUS ) & DATA_AVAILABLE)
         IO::in8(I8042_BUFFER);
 
-    enableIRQ();
+    enable_irq();
 }
 
 Keyboard::~Keyboard()
 {
 }
 
-bool Keyboard::hasDataAvailableForRead() const
+bool Keyboard::has_data_available_for_reading() const
 {
-    return !m_queue.isEmpty();
+    return !m_queue.is_empty();
 }
 
 ssize_t Keyboard::read(byte* buffer, size_t size)
 {
     ssize_t nread = 0;
     while ((size_t)nread < size) {
-        if (m_queue.isEmpty())
+        if (m_queue.is_empty())
             break;
         buffer[nread++] = m_queue.dequeue().character;
     }

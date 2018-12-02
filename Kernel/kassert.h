@@ -9,5 +9,5 @@ void __assertion_failed(const char* msg, const char* file, unsigned line, const 
 #define CRASH() do { asm volatile("ud2"); } while(0)
 #define RELEASE_ASSERT(x) do { if (!(x)) CRASH(); } while(0)
 #define ASSERT_NOT_REACHED() ASSERT(false)
-#define ASSERT_INTERRUPTS_DISABLED() ASSERT(!(cpuFlags() & 0x200))
-#define ASSERT_INTERRUPTS_ENABLED() ASSERT(cpuFlags() & 0x200)
+#define ASSERT_INTERRUPTS_DISABLED() ASSERT(!(cpu_flags() & 0x200))
+#define ASSERT_INTERRUPTS_ENABLED() ASSERT(cpu_flags() & 0x200)

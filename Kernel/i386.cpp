@@ -297,18 +297,18 @@ static void writeRawGDTEntry(word selector, dword low, dword high)
     }
 }
 
-void writeGDTEntry(word selector, Descriptor& descriptor)
+void write_gdt_entry(word selector, Descriptor& descriptor)
 {
     writeRawGDTEntry(selector, descriptor.low, descriptor.high);
 }
 
-Descriptor& getGDTEntry(word selector)
+Descriptor& get_gdt_entry(word selector)
 {
     word i = (selector & 0xfffc) >> 3;
     return *(Descriptor*)(&s_gdt[i]);
 }
 
-void flushGDT()
+void flush_gdt()
 {
     s_gdtr.address = s_gdt;
     s_gdtr.size = (s_gdtLength * 8) - 1;
@@ -335,7 +335,7 @@ void gdt_init()
     writeRawGDTEntry(0x0018, 0x0000ffff, 0x00cffa00);
     writeRawGDTEntry(0x0020, 0x0000ffff, 0x00cff200);
 
-    flushGDT();
+    flush_gdt();
 }
 
 static void unimp_trap()
@@ -344,34 +344,34 @@ static void unimp_trap()
     HANG;
 }
 
-void registerIRQHandler(byte irq, IRQHandler& handler)
+void register_irq_handler(byte irq, IRQHandler& handler)
 {
     ASSERT(!s_irqHandler[irq]);
     s_irqHandler[irq] = &handler;
-    registerInterruptHandler(IRQ_VECTOR_BASE + irq, asm_irq_entry);
+    register_interrupt_handler(IRQ_VECTOR_BASE + irq, asm_irq_entry);
 }
 
-void unregisterIRQHandler(byte irq, IRQHandler& handler)
+void unregister_irq_handler(byte irq, IRQHandler& handler)
 {
     ASSERT(s_irqHandler[irq] == &handler);
     s_irqHandler[irq] = nullptr;
 }
 
-void registerInterruptHandler(byte index, void (*f)())
+void register_interrupt_handler(byte index, void (*f)())
 {
     s_idt[index].low = 0x00080000 | LSW((f));
     s_idt[index].high = ((dword)(f) & 0xffff0000) | 0x8e00;
-    flushIDT();
+    flush_idt();
 }
 
-void registerUserCallableInterruptHandler(byte index, void (*f)())
+void register_user_callable_interrupt_handler(byte index, void (*f)())
 {
     s_idt[index].low = 0x00080000 | LSW((f));
     s_idt[index].high = ((dword)(f) & 0xffff0000) | 0xef00;
-    flushIDT();
+    flush_idt();
 }
 
-void flushIDT()
+void flush_idt()
 {
     asm("lidt %0"::"m"(s_idtr));
 }
@@ -396,34 +396,34 @@ void idt_init()
     s_idtr.size = 0x100 * 8;
 
     for (byte i = 0xff; i > 0x10; --i)
-        registerInterruptHandler(i, unimp_trap);
+        register_interrupt_handler(i, unimp_trap);
 
-    registerInterruptHandler(0x00, _exception0);
-    registerInterruptHandler(0x01, _exception1);
-    registerInterruptHandler(0x02, _exception2);
-    registerInterruptHandler(0x03, _exception3);
-    registerInterruptHandler(0x04, _exception4);
-    registerInterruptHandler(0x05, _exception5);
-    registerInterruptHandler(0x06, exception_6_entry);
-    registerInterruptHandler(0x07, _exception7);
-    registerInterruptHandler(0x08, _exception8);
-    registerInterruptHandler(0x09, _exception9);
-    registerInterruptHandler(0x0a, _exception10);
-    registerInterruptHandler(0x0b, _exception11);
-    registerInterruptHandler(0x0c, _exception12);
-    registerInterruptHandler(0x0d, exception_13_entry);
-    registerInterruptHandler(0x0e, exception_14_entry);
-    registerInterruptHandler(0x0f, _exception15);
-    registerInterruptHandler(0x10, _exception16);
+    register_interrupt_handler(0x00, _exception0);
+    register_interrupt_handler(0x01, _exception1);
+    register_interrupt_handler(0x02, _exception2);
+    register_interrupt_handler(0x03, _exception3);
+    register_interrupt_handler(0x04, _exception4);
+    register_interrupt_handler(0x05, _exception5);
+    register_interrupt_handler(0x06, exception_6_entry);
+    register_interrupt_handler(0x07, _exception7);
+    register_interrupt_handler(0x08, _exception8);
+    register_interrupt_handler(0x09, _exception9);
+    register_interrupt_handler(0x0a, _exception10);
+    register_interrupt_handler(0x0b, _exception11);
+    register_interrupt_handler(0x0c, _exception12);
+    register_interrupt_handler(0x0d, exception_13_entry);
+    register_interrupt_handler(0x0e, exception_14_entry);
+    register_interrupt_handler(0x0f, _exception15);
+    register_interrupt_handler(0x10, _exception16);
 
-    registerInterruptHandler(0x57, irq7_handler);
+    register_interrupt_handler(0x57, irq7_handler);
 
     s_irqHandler = static_cast<IRQHandler**>(kmalloc_eternal(sizeof(IRQHandler*) * 16));
     for (byte i = 0; i < 16; ++i) {
         s_irqHandler[i] = nullptr;
     }
 
-    flushIDT();
+    flush_idt();
 }
 
 void load_task_register(word selector)
@@ -450,7 +450,7 @@ void handle_irq()
     }
 
     if (s_irqHandler[irq])
-        s_irqHandler[irq]->handleIRQ();
+        s_irqHandler[irq]->handle_irq();
     PIC::eoi(irq);
 }
 

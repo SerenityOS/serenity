@@ -20,7 +20,7 @@ protected:
 
 private:
     // ^IRQHandler
-    virtual void handleIRQ() override;
+    virtual void handle_irq() override;
 
     // ^DiskDevice
     virtual const char* class_name() const override;

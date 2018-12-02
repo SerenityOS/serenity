@@ -40,7 +40,7 @@ namespace Syscall {
 
 void initialize()
 {
-    registerUserCallableInterruptHandler(0x80, syscall_ISR);
+    register_user_callable_interrupt_handler(0x80, syscall_ISR);
     kprintf("syscall: int 0x80 handler installed\n");
 }
 
