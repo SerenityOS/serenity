@@ -304,17 +304,14 @@ bool VFS::mkdir(const String& path, mode_t mode, InodeIdentifier base, int& erro
     InodeIdentifier parent_dir;
     auto existing_dir = resolve_path(path, base, error, 0, &parent_dir);
     if (existing_dir.isValid()) {
-        kprintf("fug\n");
         error = -EEXIST;
         return false;
     }
     if (!parent_dir.isValid()) {
-        kprintf("fug2\n");
         error = -ENOENT;
         return false;
     }
     if (error != -ENOENT) {
-        kprintf("fug3\n");
         return false;
     }
     dbgprintf("VFS::mkdir: '%s' in %u:%u\n", p.basename().characters(), parent_dir.fsid(), parent_dir.index());
