@@ -523,45 +523,20 @@ bool Ext2FSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry&)
     return true;
 }
 
-bool Ext2FS::deprecated_enumerateDirectoryInode(InodeIdentifier inode, Function<bool(const DirectoryEntry&)> callback) const
+bool Ext2FS::add_inode_to_directory(InodeIndex parent, InodeIndex child, const String& name, byte fileType, int& error)
 {
-    ASSERT(inode.fsid() == id());
-    ASSERT(is_directory_inode(inode.index()));
-
-#ifdef EXT2_DEBUG
-    kprintf("ext2fs: Enumerating directory contents of inode %u:\n", inode.index());
-#endif
-
-    auto buffer = read_entire_inode(inode);
-    ASSERT(buffer);
-    auto* entry = reinterpret_cast<ext2_dir_entry_2*>(buffer.pointer());
-
-    while (entry < buffer.endPointer()) {
-        if (entry->inode != 0) {
-#ifdef EXT2_DEBUG
-            kprintf("inode: %u, name_len: %u, rec_len: %u, file_type: %u, name: %s\n", entry->inode, entry->name_len, entry->rec_len, entry->file_type, namebuf);
-#endif
-            if (!callback({ entry->name, entry->name_len, { id(), entry->inode }, entry->file_type }))
-                break;
-        }
-        entry = (ext2_dir_entry_2*)((char*)entry + entry->rec_len);
-    }
-    return true;
-}
-
-bool Ext2FS::add_inode_to_directory(unsigned directoryInode, unsigned inode, const String& name, byte fileType, int& error)
-{
-    auto e2inodeForDirectory = lookup_ext2_inode(directoryInode);
+    auto e2inodeForDirectory = lookup_ext2_inode(parent);
     ASSERT(e2inodeForDirectory);
     ASSERT(isDirectory(e2inodeForDirectory->i_mode));
 
 //#ifdef EXT2_DEBUG
-    dbgprintf("Ext2FS: Adding inode %u with name '%s' to directory %u\n", inode, name.characters(), directoryInode);
+    dbgprintf("Ext2FS: Adding inode %u with name '%s' to directory %u\n", child, name.characters(), parent);
 //#endif
 
     Vector<DirectoryEntry> entries;
     bool nameAlreadyExists = false;
-    deprecated_enumerateDirectoryInode({ id(), directoryInode }, [&] (const DirectoryEntry& entry) {
+    auto directory = get_inode({ id(), parent });
+    directory->traverse_as_directory([&] (auto& entry) {
         if (!strcmp(entry.name, name.characters())) {
             nameAlreadyExists = true;
             return false;
@@ -570,13 +545,13 @@ bool Ext2FS::add_inode_to_directory(unsigned directoryInode, unsigned inode, con
         return true;
     });
     if (nameAlreadyExists) {
-        kprintf("Ext2FS: Name '%s' already exists in directory inode %u\n", name.characters(), directoryInode);
+        kprintf("Ext2FS: Name '%s' already exists in directory inode %u\n", name.characters(), parent);
         error = -EEXIST;
         return false;
     }
 
-    entries.append({ name.characters(), name.length(), { id(), inode }, fileType });
-    return write_directory_inode(directoryInode, move(entries));
+    entries.append({ name.characters(), name.length(), { id(), child }, fileType });
+    return write_directory_inode(parent, move(entries));
 }
 
 bool Ext2FS::write_directory_inode(unsigned directoryInode, Vector<DirectoryEntry>&& entries)

@@ -92,7 +92,7 @@ private:
     template<typename F> void traverse_inode_bitmap(unsigned groupIndex, F) const;
     template<typename F> void traverse_block_bitmap(unsigned groupIndex, F) const;
 
-    bool add_inode_to_directory(unsigned directoryInode, unsigned inode, const String& name, byte fileType, int& error);
+    bool add_inode_to_directory(InodeIndex parent, InodeIndex child, const String& name, byte fileType, int& error);
     bool write_directory_inode(unsigned directoryInode, Vector<DirectoryEntry>&&);
     bool set_inode_allocation_state(unsigned inode, bool);
     bool set_block_allocation_state(GroupIndex, BlockIndex, bool);
@@ -100,8 +100,6 @@ private:
     bool modify_link_count(InodeIndex, int delta);
 
     unsigned m_blockGroupCount { 0 };
-
-    bool deprecated_enumerateDirectoryInode(InodeIdentifier, Function<bool(const DirectoryEntry&)>) const;
 
     mutable ByteBuffer m_cached_super_block;
     mutable ByteBuffer m_cached_group_descriptor_table;
