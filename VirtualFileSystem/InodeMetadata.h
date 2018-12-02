@@ -16,7 +16,7 @@ inline bool isSetUID(Unix::mode_t mode) { return mode & 04000; }
 inline bool isSetGID(Unix::mode_t mode) { return mode & 02000; }
 
 struct InodeMetadata {
-    bool isValid() const { return inode.isValid(); }
+    bool isValid() const { return inode.is_valid(); }
 
     bool mayExecute(uid_t u, const HashTable<gid_t>& g) const
     {

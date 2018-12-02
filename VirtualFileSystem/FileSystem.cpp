@@ -19,17 +19,17 @@ void FS::initializeGlobals()
 }
 
 FS::FS()
-    : m_id(++s_lastFileSystemID)
+    : m_fsid(++s_lastFileSystemID)
 {
-    fileSystems().set(m_id, this);
+    fileSystems().set(m_fsid, this);
 }
 
 FS::~FS()
 {
-    fileSystems().remove(m_id);
+    fileSystems().remove(m_fsid);
 }
 
-FS* FS::fromID(dword id)
+FS* FS::from_fsid(dword id)
 {
     auto it = fileSystems().find(id);
     if (it != fileSystems().end())
@@ -39,7 +39,7 @@ FS* FS::fromID(dword id)
 
 ByteBuffer CoreInode::read_entire(FileDescriptor* descriptor)
 {
-    return fs().readEntireInode(identifier(), descriptor);
+    return fs().read_entire_inode(identifier(), descriptor);
 /*
     size_t initial_size = metadata().size ? metadata().size : 4096;
     auto contents = ByteBuffer::createUninitialized(initial_size);
@@ -69,11 +69,11 @@ ByteBuffer CoreInode::read_entire(FileDescriptor* descriptor)
     */
 }
 
-ByteBuffer FS::readEntireInode(InodeIdentifier inode, FileDescriptor* handle) const
+ByteBuffer FS::read_entire_inode(InodeIdentifier inode, FileDescriptor* handle) const
 {
     ASSERT(inode.fsid() == id());
 
-    auto metadata = inodeMetadata(inode);
+    auto metadata = inode_metadata(inode);
     if (!metadata.isValid()) {
         kprintf("[fs] readInode: metadata lookup for inode %u failed\n", inode.index());
         return nullptr;

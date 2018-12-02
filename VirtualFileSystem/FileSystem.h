@@ -24,14 +24,14 @@ public:
     static void initializeGlobals();
     virtual ~FS();
 
-    dword id() const { return m_id; }
-    static FS* fromID(dword);
+    dword id() const { return m_fsid; }
+    static FS* from_fsid(dword);
 
     virtual bool initialize() = 0;
     virtual const char* class_name() const = 0;
-    virtual InodeIdentifier rootInode() const = 0;
-    virtual bool writeInode(InodeIdentifier, const ByteBuffer&) = 0;
-    virtual InodeMetadata inodeMetadata(InodeIdentifier) const = 0;
+    virtual InodeIdentifier root_inode() const = 0;
+    virtual bool write_inode(InodeIdentifier, const ByteBuffer&) = 0;
+    virtual InodeMetadata inode_metadata(InodeIdentifier) const = 0;
 
     virtual ssize_t read_inode_bytes(InodeIdentifier, Unix::off_t offset, size_t count, byte* buffer, FileDescriptor*) const = 0;
 
@@ -52,13 +52,13 @@ public:
 
     virtual RetainPtr<CoreInode> get_inode(InodeIdentifier) const = 0;
 
-    ByteBuffer readEntireInode(InodeIdentifier, FileDescriptor* = nullptr) const;
+    ByteBuffer read_entire_inode(InodeIdentifier, FileDescriptor* = nullptr) const;
 
 protected:
     FS();
 
 private:
-    dword m_id { 0 };
+    dword m_fsid { 0 };
 };
 
 class CoreInode : public Retainable<CoreInode> {
@@ -100,26 +100,26 @@ private:
     unsigned m_index { 0 };
 };
 
-inline FS* InodeIdentifier::fileSystem()
+inline FS* InodeIdentifier::fs()
 {
-    return FS::fromID(m_fileSystemID);
+    return FS::from_fsid(m_fsid);
 }
 
-inline const FS* InodeIdentifier::fileSystem() const
+inline const FS* InodeIdentifier::fs() const
 {
-    return FS::fromID(m_fileSystemID);
+    return FS::from_fsid(m_fsid);
 }
 
 inline InodeMetadata InodeIdentifier::metadata() const
 {
-    if (!isValid())
+    if (!is_valid())
         return InodeMetadata();
-    return fileSystem()->inodeMetadata(*this);
+    return fs()->inode_metadata(*this);
 }
 
-inline bool InodeIdentifier::isRootInode() const
+inline bool InodeIdentifier::is_root_inode() const
 {
-    return (*this) == fileSystem()->rootInode();
+    return (*this) == fs()->root_inode();
 }
 
 inline unsigned CoreInode::fsid() const
