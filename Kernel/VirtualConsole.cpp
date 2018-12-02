@@ -100,7 +100,7 @@ void VirtualConsole::set_active(bool b)
     set_vga_start_row(0);
     flush_vga_cursor();
 
-    Keyboard::the().setClient(this);
+    Keyboard::the().set_client(this);
 }
 
 inline bool is_valid_parameter_character(byte ch)
@@ -441,7 +441,7 @@ void VirtualConsole::on_char(byte ch)
     set_cursor(m_cursor_row, m_cursor_column);
 }
 
-void VirtualConsole::onKeyPress(Keyboard::Key key)
+void VirtualConsole::on_key_pressed(Keyboard::Key key)
 {
     if (key.ctrl()) {
         if (key.character >= 'a' && key.character <= 'z') {
@@ -455,7 +455,7 @@ void VirtualConsole::onKeyPress(Keyboard::Key key)
     emit(key.character);
 }
 
-void VirtualConsole::onConsoleReceive(byte ch)
+void VirtualConsole::on_sysconsole_receive(byte ch)
 {
     InterruptDisabler disabler;
     auto old_attribute = m_current_attribute;
@@ -464,14 +464,14 @@ void VirtualConsole::onConsoleReceive(byte ch)
     m_current_attribute = old_attribute;
 }
 
-void VirtualConsole::onTTYWrite(const byte* data, size_t size)
+void VirtualConsole::on_tty_write(const byte* data, size_t size)
 {
     InterruptDisabler disabler;
     for (size_t i = 0; i < size; ++i)
         on_char(data[i]);
 }
 
-String VirtualConsole::ttyName() const
+String VirtualConsole::tty_name() const
 {
     char buf[16];
     ksprintf(buf, "/dev/tty%u", m_index);

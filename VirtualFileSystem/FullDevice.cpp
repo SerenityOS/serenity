@@ -13,7 +13,7 @@ FullDevice::~FullDevice()
 {
 }
 
-bool FullDevice::hasDataAvailableForRead() const
+bool FullDevice::has_data_available_for_reading() const
 {
     return true;
 }

@@ -67,7 +67,7 @@ int main(int c, char** v)
         queue.enqueue(3);
         queue.dump();
         queue.enqueue(4);
-        ASSERT(!queue.isEmpty());
+        ASSERT(!queue.is_empty());
         ASSERT(queue.size() == 4);
         ASSERT(queue.dequeue() == 1);
         queue.dump();
@@ -77,7 +77,7 @@ int main(int c, char** v)
         queue.dump();
         ASSERT(queue.dequeue() == 4);
         queue.dump();
-        ASSERT(queue.isEmpty());
+        ASSERT(queue.is_empty());
         queue.enqueue(1);
         queue.enqueue(2);
         queue.enqueue(3);
@@ -89,7 +89,7 @@ int main(int c, char** v)
         ASSERT(queue.dequeue() == 5);
         ASSERT(queue.dequeue() == 6);
         ASSERT(queue.dequeue() == 7);
-        ASSERT(queue.isEmpty());
+        ASSERT(queue.is_empty());
     }
 
     {

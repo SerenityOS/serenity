@@ -5,17 +5,17 @@
 class IRQHandler {
 public:
     virtual ~IRQHandler();
-    virtual void handleIRQ() = 0;
+    virtual void handle_irq() = 0;
 
-    byte irqNumber() const { return m_irqNumber; }
+    byte irq_number() const { return m_irq_number; }
 
-    void enableIRQ();
-    void disableIRQ();
+    void enable_irq();
+    void disable_irq();
 
 protected:
     explicit IRQHandler(byte irq);
 
 private:
-    byte m_irqNumber { 0 };
+    byte m_irq_number { 0 };
 };
 

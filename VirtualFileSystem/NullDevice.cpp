@@ -12,7 +12,7 @@ NullDevice::~NullDevice()
 {
 }
 
-bool NullDevice::hasDataAvailableForRead() const
+bool NullDevice::has_data_available_for_reading() const
 {
     return true;
 }

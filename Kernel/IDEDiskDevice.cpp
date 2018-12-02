@@ -100,7 +100,7 @@ bool IDEDiskDevice::wait_for_irq()
     return true;
 }
 
-void IDEDiskDevice::handleIRQ()
+void IDEDiskDevice::handle_irq()
 {
 #ifdef DISK_DEBUG
     byte status = IO::in8(0x1f7);
@@ -123,13 +123,13 @@ void IDEDiskDevice::initialize()
 
     while (IO::in8(IDE0_STATUS) & BUSY);
 
-    enableIRQ();
+    enable_irq();
 
     IO::out8(0x1F6, 0xA0); // 0xB0 for 2nd device
     IO::out8(0x3F6, 0xA0); // 0xB0 for 2nd device
     IO::out8(IDE0_COMMAND, IDENTIFY_DRIVE);
 
-    enableIRQ();
+    enable_irq();
     wait_for_irq();
 
     ByteBuffer wbuf = ByteBuffer::createUninitialized(512);
@@ -180,7 +180,7 @@ bool IDEDiskDevice::read_sectors(dword start_sector, word count, byte* outbuf)
             count,
             start_sector);
 #endif
-    disableIRQ();
+    disable_irq();
 
     auto chs = lba_to_chs(start_sector);
 
@@ -202,7 +202,7 @@ bool IDEDiskDevice::read_sectors(dword start_sector, word count, byte* outbuf)
 
     IO::out8(IDE0_COMMAND, READ_SECTORS);
     m_interrupted = false;
-    enableIRQ();
+    enable_irq();
     wait_for_irq();
 
     byte status = IO::in8(0x1f7);
@@ -228,7 +228,7 @@ bool IDEDiskDevice::write_sectors(dword start_sector, word count, const byte* da
             current->pid(),
             count,
             start_sector);
-    disableIRQ();
+    disable_irq();
 
     auto chs = lba_to_chs(start_sector);
 
@@ -259,7 +259,7 @@ bool IDEDiskDevice::write_sectors(dword start_sector, word count, const byte* da
     }
 
     m_interrupted = false;
-    enableIRQ();
+    enable_irq();
     wait_for_irq();
 
     return true;

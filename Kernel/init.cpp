@@ -207,7 +207,7 @@ static void init_stage2()
         if (!descriptor) {
             kprintf("Failed to open /kernel.map\n");
         } else {
-            auto buffer = descriptor->readEntireFile();
+            auto buffer = descriptor->read_entire_file();
             ASSERT(buffer);
             loadKsyms(buffer);
         }

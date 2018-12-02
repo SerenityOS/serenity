@@ -79,7 +79,7 @@ void initialize()
     IO::out8(TIMER0_CTL, LSB(timer_reload));
     IO::out8(TIMER0_CTL, MSB(timer_reload));
 
-    registerInterruptHandler(IRQ_VECTOR_BASE + IRQ_TIMER, tick_ISR);
+    register_interrupt_handler(IRQ_VECTOR_BASE + IRQ_TIMER, tick_ISR);
 
     PIC::enable(IRQ_TIMER);
 }

@@ -15,8 +15,8 @@ public:
     virtual bool initialize() override;
     virtual const char* class_name() const override;
 
-    void addProcess(Process&);
-    void removeProcess(Process&);
+    void add_process(Process&);
+    void remove_process(Process&);
 
 private:
     ProcFS();

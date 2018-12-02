@@ -23,7 +23,7 @@ Console::~Console()
 {
 }
 
-bool Console::hasDataAvailableForRead() const
+bool Console::has_data_available_for_reading() const
 {
     return false;
 }
@@ -53,7 +53,7 @@ void Console::putChar(char ch)
     IO::out8(0xe9, ch);
 #endif
     if (m_implementation)
-        m_implementation->onConsoleReceive(ch);
+        m_implementation->on_sysconsole_receive(ch);
 }
 
 ConsoleImplementation::~ConsoleImplementation()

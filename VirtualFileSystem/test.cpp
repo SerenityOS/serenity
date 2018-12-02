@@ -60,7 +60,7 @@ int main(int c, char** v)
             printf("failed to open %s inside fs image\n", v[2]);
             return 1;
         }
-        auto contents = descriptor->readEntireFile();
+        auto contents = descriptor->read_entire_file();
 
         FILE* fout = fopen(v[3], "w");
         if (!fout) {
@@ -142,7 +142,7 @@ int main(int c, char** v)
             }
             int error;
             auto new_cwd = vfs.open(new_path.string(), error, 0, cwd);
-            if (new_cwd && new_cwd->isDirectory()) {
+            if (new_cwd && new_cwd->is_directory()) {
                 currentDirectory = new_path.string();
                 cwd = new_cwd->metadata().inode;
             } else {
@@ -198,7 +198,7 @@ int main(int c, char** v)
                 printf("failed to open %s\n", pathbuf);
                 continue;
             }
-            auto contents = descriptor->readEntireFile();
+            auto contents = descriptor->read_entire_file();
             fwrite(contents.pointer(), sizeof(char), contents.size(), stdout);
             continue;
         }

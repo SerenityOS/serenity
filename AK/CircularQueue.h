@@ -14,7 +14,7 @@ public:
             m_elements[i] = T();
     }
 
-    bool isEmpty() const { return !m_size; }
+    bool is_empty() const { return !m_size; }
     size_t size() const { return m_size; }
 
     size_t capacity() const { return Capacity; }
@@ -39,7 +39,7 @@ public:
 
     T dequeue()
     {
-        ASSERT(!isEmpty());
+        ASSERT(!is_empty());
         T value = m_elements[m_head];
         m_head = (m_head + 1) % Capacity;
         --m_size;

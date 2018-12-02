@@ -255,7 +255,7 @@ Process* Process::fork(RegisterDump& regs)
     dbgprintf("fork: child will begin executing at %w:%x with stack %w:%x\n", child->m_tss.cs, child->m_tss.eip, child->m_tss.ss, child->m_tss.esp);
 #endif
 
-    ProcFS::the().addProcess(*child);
+    ProcFS::the().add_process(*child);
 
     {
         InterruptDisabler disabler;
@@ -491,7 +491,7 @@ Process* Process::create_user_process(const String& path, uid_t uid, gid_t gid, 
     if (error != 0)
         return nullptr;
 
-    ProcFS::the().addProcess(*process);
+    ProcFS::the().add_process(*process);
 
     {
         InterruptDisabler disabler;
@@ -554,7 +554,7 @@ Process* Process::create_kernel_process(void (*e)(), String&& name)
             g_processes->prepend(process);
             system.nprocess++;
         }
-        ProcFS::the().addProcess(*process);
+        ProcFS::the().add_process(*process);
 #ifdef TASK_DEBUG
         kprintf("Kernel process %u (%s) spawned @ %p\n", process->pid(), process->name().characters(), process->m_tss.eip);
 #endif
@@ -684,7 +684,7 @@ Process::Process(String&& name, uid_t uid, gid_t gid, pid_t ppid, RingLevel ring
 Process::~Process()
 {
     InterruptDisabler disabler;
-    ProcFS::the().removeProcess(*this);
+    ProcFS::the().remove_process(*this);
     system.nprocess--;
 
     gdt_free_entry(selector());
@@ -976,9 +976,9 @@ int Process::sys$ttyname_r(int fd, char* buffer, size_t size)
     auto* descriptor = file_descriptor(fd);
     if (!descriptor)
         return -EBADF;
-    if (!descriptor->isTTY())
+    if (!descriptor->is_tty())
         return -ENOTTY;
-    auto ttyName = descriptor->tty()->ttyName();
+    auto ttyName = descriptor->tty()->tty_name();
     if (size < ttyName.length() + 1)
         return -ERANGE;
     strcpy(buffer, ttyName.characters());
@@ -996,7 +996,7 @@ ssize_t Process::sys$write(int fd, const void* data, size_t size)
     if (!descriptor)
         return -EBADF;
     ssize_t nwritten = 0;
-    if (descriptor->isBlocking()) {
+    if (descriptor->is_blocking()) {
         while (nwritten < (ssize_t)size) {
 #ifdef IO_DEBUG
             dbgprintf("while %u < %u\n", nwritten, size);
@@ -1053,8 +1053,8 @@ ssize_t Process::sys$read(int fd, void* outbuf, size_t nread)
     auto* descriptor = file_descriptor(fd);
     if (!descriptor)
         return -EBADF;
-    if (descriptor->isBlocking()) {
-        if (!descriptor->hasDataAvailableForRead()) {
+    if (descriptor->is_blocking()) {
+        if (!descriptor->has_data_available_for_reading()) {
             m_fdBlockedOnRead = fd;
             block(BlockedRead);
             sched_yield();
@@ -1180,7 +1180,7 @@ int Process::sys$readlink(const char* path, char* buffer, size_t size)
     if (!descriptor->metadata().isSymbolicLink())
         return -EINVAL;
 
-    auto contents = descriptor->readEntireFile();
+    auto contents = descriptor->read_entire_file();
     if (!contents)
         return -EIO; // FIXME: Get a more detailed error from VFS.
 
@@ -1198,7 +1198,7 @@ int Process::sys$chdir(const char* path)
     auto descriptor = VFS::the().open(path, error, 0, cwd_inode()->identifier());
     if (!descriptor)
         return error;
-    if (!descriptor->isDirectory())
+    if (!descriptor->is_directory())
         return -ENOTDIR;
     m_cwd = descriptor->vnode();
     return 0;
@@ -1241,7 +1241,7 @@ int Process::sys$open(const char* path, int options)
     auto descriptor = VFS::the().open(path, error, options, cwd_inode()->identifier());
     if (!descriptor)
         return error;
-    if (options & O_DIRECTORY && !descriptor->isDirectory())
+    if (options & O_DIRECTORY && !descriptor->is_directory())
         return -ENOTDIR; // FIXME: This should be handled by VFS::open.
 
     int fd = 0;
@@ -1326,7 +1326,7 @@ int Process::sys$isatty(int fd)
     auto* descriptor = file_descriptor(fd);
     if (!descriptor)
         return -EBADF;
-    if (!descriptor->isTTY())
+    if (!descriptor->is_tty())
         return -ENOTTY;
     return 1;
 }

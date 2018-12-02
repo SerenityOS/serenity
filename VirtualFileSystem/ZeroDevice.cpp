@@ -12,7 +12,7 @@ ZeroDevice::~ZeroDevice()
 {
 }
 
-bool ZeroDevice::hasDataAvailableForRead() const
+bool ZeroDevice::has_data_available_for_reading() const
 {
     return true;
 }

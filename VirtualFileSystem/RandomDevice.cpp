@@ -29,7 +29,7 @@ static void mysrand(unsigned seed)
 }
 #endif
 
-bool RandomDevice::hasDataAvailableForRead() const
+bool RandomDevice::has_data_available_for_reading() const
 {
     return true;
 }

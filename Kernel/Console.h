@@ -7,7 +7,7 @@
 class ConsoleImplementation {
 public:
     virtual ~ConsoleImplementation();
-    virtual void onConsoleReceive(byte) = 0;
+    virtual void on_sysconsole_receive(byte) = 0;
 };
 
 class Console final : public CharacterDevice {
@@ -18,7 +18,7 @@ public:
     Console();
     virtual ~Console() override;
 
-    virtual bool hasDataAvailableForRead() const override;
+    virtual bool has_data_available_for_reading() const override;
     virtual ssize_t read(byte* buffer, size_t size) override;
     virtual ssize_t write(const byte* data, size_t size) override;
 

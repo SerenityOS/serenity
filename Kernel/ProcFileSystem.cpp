@@ -167,30 +167,30 @@ ByteBuffer procfs$pid_cwd(Process& process)
     return VFS::the().absolute_path(*inode).toByteBuffer();
 }
 
-void ProcFS::addProcess(Process& process)
+void ProcFS::add_process(Process& process)
 {
     InterruptDisabler disabler;
     char buf[16];
     ksprintf(buf, "%d", process.pid());
-    auto dir = addFile(create_directory(buf));
+    auto dir = add_file(create_directory(buf));
     m_pid2inode.set(process.pid(), dir.index());
-    addFile(create_generated_file("vm", [&process] { return procfs$pid_vm(process); }), dir.index());
-    addFile(create_generated_file("vmo", [&process] { return procfs$pid_vmo(process); }), dir.index());
-    addFile(create_generated_file("stack", [&process] { return procfs$pid_stack(process); }), dir.index());
-    addFile(create_generated_file("regs", [&process] { return procfs$pid_regs(process); }), dir.index());
-    addFile(create_generated_file("fds", [&process] { return procfs$pid_fds(process); }), dir.index());
+    add_file(create_generated_file("vm", [&process] { return procfs$pid_vm(process); }), dir.index());
+    add_file(create_generated_file("vmo", [&process] { return procfs$pid_vmo(process); }), dir.index());
+    add_file(create_generated_file("stack", [&process] { return procfs$pid_stack(process); }), dir.index());
+    add_file(create_generated_file("regs", [&process] { return procfs$pid_regs(process); }), dir.index());
+    add_file(create_generated_file("fds", [&process] { return procfs$pid_fds(process); }), dir.index());
     if (process.executable_inode())
-        addFile(create_generated_file("exe", [&process] { return procfs$pid_exe(process); }, 00120777), dir.index());
-    addFile(create_generated_file("cwd", [&process] { return procfs$pid_cwd(process); }, 00120777), dir.index());
+        add_file(create_generated_file("exe", [&process] { return procfs$pid_exe(process); }, 00120777), dir.index());
+    add_file(create_generated_file("cwd", [&process] { return procfs$pid_cwd(process); }, 00120777), dir.index());
 }
 
-void ProcFS::removeProcess(Process& process)
+void ProcFS::remove_process(Process& process)
 {
     InterruptDisabler disabler;
     auto pid = process.pid();
     auto it = m_pid2inode.find(pid);
     ASSERT(it != m_pid2inode.end());
-    bool success = removeFile((*it).value);
+    bool success = remove_file((*it).value);
     ASSERT(success);
     m_pid2inode.remove(pid);
 }
@@ -341,7 +341,7 @@ ByteBuffer procfs$summary()
             process->ppid(),
             process->timesScheduled(),
             process->number_of_open_file_descriptors(),
-            process->tty() ? strrchr(process->tty()->ttyName().characters(), '/') + 1 : "n/a",
+            process->tty() ? strrchr(process->tty()->tty_name().characters(), '/') + 1 : "n/a",
             process->name().characters());
     }
     *ptr = '\0';
@@ -364,8 +364,8 @@ ByteBuffer procfs$vnodes()
             path = vfs.absolute_path(*vnode.core_inode());
         if (path.isEmpty()) {
             if (auto* dev = vnode.characterDevice()) {
-                if (dev->isTTY())
-                    path = static_cast<const TTY*>(dev)->ttyName();
+                if (dev->is_tty())
+                    path = static_cast<const TTY*>(dev)->tty_name();
             }
         }
         ptr += ksprintf(ptr, "vnode %03u: %02u:%08u (%u) %s\n", i, vnode.inode.fsid(), vnode.inode.index(), vnode.retain_count(), path.characters());
@@ -378,13 +378,13 @@ ByteBuffer procfs$vnodes()
 bool ProcFS::initialize()
 {
     SynthFS::initialize();
-    addFile(create_generated_file("mm", procfs$mm));
-    addFile(create_generated_file("regions", procfs$regions));
-    addFile(create_generated_file("mounts", procfs$mounts));
-    addFile(create_generated_file("kmalloc", procfs$kmalloc));
-    addFile(create_generated_file("summary", procfs$summary));
-    addFile(create_generated_file("cpuinfo", procfs$cpuinfo));
-    addFile(create_generated_file("vnodes", procfs$vnodes));
+    add_file(create_generated_file("mm", procfs$mm));
+    add_file(create_generated_file("regions", procfs$regions));
+    add_file(create_generated_file("mounts", procfs$mounts));
+    add_file(create_generated_file("kmalloc", procfs$kmalloc));
+    add_file(create_generated_file("summary", procfs$summary));
+    add_file(create_generated_file("cpuinfo", procfs$cpuinfo));
+    add_file(create_generated_file("vnodes", procfs$vnodes));
     return true;
 }
 

@@ -51,7 +51,7 @@ bool Scheduler::pick_next()
         if (process.state() == Process::BlockedRead) {
             ASSERT(process.m_fdBlockedOnRead != -1);
             // FIXME: Block until the amount of data wanted is available.
-            if (process.m_fds[process.m_fdBlockedOnRead].descriptor->hasDataAvailableForRead())
+            if (process.m_fds[process.m_fdBlockedOnRead].descriptor->has_data_available_for_reading())
                 process.unblock();
             return true;
         }
@@ -167,9 +167,9 @@ void Scheduler::pick_next_and_switch_now()
 
 void Scheduler::switch_now()
 {
-    Descriptor& descriptor = getGDTEntry(current->selector());
+    Descriptor& descriptor = get_gdt_entry(current->selector());
     descriptor.type = 9;
-    flushGDT();
+    flush_gdt();
     asm("sti\n"
         "ljmp *(%%eax)\n"
         ::"a"(&current->farPtr())
@@ -204,7 +204,7 @@ bool Scheduler::context_switch(Process& process)
 
     if (!process.selector()) {
         process.setSelector(gdt_alloc_entry());
-        auto& descriptor = getGDTEntry(process.selector());
+        auto& descriptor = get_gdt_entry(process.selector());
         descriptor.setBase(&process.tss());
         descriptor.setLimit(0xffff);
         descriptor.dpl = 0;
@@ -215,9 +215,9 @@ bool Scheduler::context_switch(Process& process)
         descriptor.descriptor_type = 0;
     }
 
-    auto& descriptor = getGDTEntry(process.selector());
+    auto& descriptor = get_gdt_entry(process.selector());
     descriptor.type = 11; // Busy TSS
-    flushGDT();
+    flush_gdt();
     return true;
 }
 
@@ -228,7 +228,7 @@ int sched_yield()
 
 static void initialize_redirection()
 {
-    auto& descriptor = getGDTEntry(s_redirection.selector);
+    auto& descriptor = get_gdt_entry(s_redirection.selector);
     descriptor.setBase(&s_redirection.tss);
     descriptor.setLimit(0xffff);
     descriptor.dpl = 0;
@@ -238,12 +238,12 @@ static void initialize_redirection()
     descriptor.operation_size = 1;
     descriptor.descriptor_type = 0;
     descriptor.type = 9;
-    flushGDT();
+    flush_gdt();
 }
 
 void Scheduler::prepare_for_iret_to_new_process()
 {
-    auto& descriptor = getGDTEntry(s_redirection.selector);
+    auto& descriptor = get_gdt_entry(s_redirection.selector);
     descriptor.type = 9;
     s_redirection.tss.backlink = current->selector();
     load_task_register(s_redirection.selector);

@@ -27,22 +27,22 @@ public:
     ssize_t write(const byte* data, size_t);
     int stat(Unix::stat*);
 
-    bool hasDataAvailableForRead();
+    bool has_data_available_for_reading();
     bool can_write();
 
     ssize_t get_dir_entries(byte* buffer, size_t);
 
-    ByteBuffer readEntireFile();
+    ByteBuffer read_entire_file();
 
     String absolute_path();
 
-    bool isDirectory() const;
+    bool is_directory() const;
 
     bool is_character_device() const { return m_vnode && m_vnode->isCharacterDevice(); }
     CharacterDevice* character_device() { return m_vnode ? m_vnode->characterDevice() : nullptr; }
 
 #ifdef SERENITY
-    bool isTTY() const;
+    bool is_tty() const;
     const TTY* tty() const;
     TTY* tty();
 #endif
@@ -52,8 +52,8 @@ public:
     Vnode* vnode() { return m_vnode.ptr(); }
 
 #ifdef SERENITY
-    bool isBlocking() const { return m_isBlocking; }
-    void setBlocking(bool b) { m_isBlocking = b; }
+    bool is_blocking() const { return m_is_blocking; }
+    void set_blocking(bool b) { m_is_blocking = b; }
 
     dword file_flags() const { return m_file_flags; }
     void set_file_flags(dword flags) { m_file_flags = flags; }
@@ -62,7 +62,7 @@ public:
     FIFO::Direction fifo_direction() { return m_fifo_direction; }
 #endif
 
-    ByteBuffer& generatorCache() { return m_generatorCache; }
+    ByteBuffer& generator_cache() { return m_generator_cache; }
 
 private:
     friend class VFS;
@@ -72,12 +72,12 @@ private:
     RetainPtr<Vnode> m_vnode;
     RetainPtr<CoreInode> m_inode;
 
-    Unix::off_t m_currentOffset { 0 };
+    Unix::off_t m_current_offset { 0 };
 
-    ByteBuffer m_generatorCache;
+    ByteBuffer m_generator_cache;
 
 #ifdef SERENITY
-    bool m_isBlocking { true };
+    bool m_is_blocking { true };
     dword m_file_flags { 0 };
 
     RetainPtr<FIFO> m_fifo;
