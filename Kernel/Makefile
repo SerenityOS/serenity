@@ -20,7 +20,9 @@ KERNEL_OBJS = \
        TTY.o \
        VirtualConsole.o \
        FIFO.o \
-       Scheduler.o
+       Scheduler.o \
+       ELFImage.o \
+       ELFLoader.o
 
 VFS_OBJS = \
     ../VirtualFileSystem/DiskDevice.o \
@@ -36,10 +38,6 @@ VFS_OBJS = \
     ../VirtualFileSystem/VirtualFileSystem.o \
     ../VirtualFileSystem/FileDescriptor.o \
     ../VirtualFileSystem/SyntheticFileSystem.o
-
-ELFLOADER_OBJS = \
-    ../ELFLoader/ELFImage.o \
-    ../ELFLoader/ELFLoader.o
 
 AK_OBJS = \
     ../AK/String.o \
