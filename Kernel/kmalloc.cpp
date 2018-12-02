@@ -29,8 +29,8 @@ typedef struct
 
 static byte alloc_map[POOL_SIZE / CHUNK_SIZE / 8];
 
-volatile dword sum_alloc = 0;
-volatile dword sum_free = POOL_SIZE;
+volatile size_t sum_alloc = 0;
+volatile size_t sum_free = POOL_SIZE;
 volatile size_t kmalloc_sum_eternal = 0;
 volatile size_t kmalloc_sum_page_aligned = 0;
 
@@ -193,12 +193,12 @@ void kfree(void *ptr)
 #endif
 }
 
-void* operator new(unsigned int size)
+void* operator new(size_t size)
 {
     return kmalloc(size);
 }
 
-void* operator new[](unsigned int size)
+void* operator new[](size_t size)
 {
     return kmalloc(size);
 }

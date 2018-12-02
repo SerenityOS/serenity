@@ -49,11 +49,11 @@ public:
             m_buffer[m_offset++] = ch;
     }
 
-    Unix::size_t offset() const { return m_offset; }
+    size_t offset() const { return m_offset; }
 
 private:
     ByteBuffer& m_buffer;
-    Unix::size_t m_offset { 0 };
+    size_t m_offset { 0 };
 };
 
 }

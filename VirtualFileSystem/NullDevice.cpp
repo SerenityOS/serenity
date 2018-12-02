@@ -17,12 +17,12 @@ bool NullDevice::hasDataAvailableForRead() const
     return true;
 }
 
-Unix::ssize_t NullDevice::read(byte*, Unix::size_t)
+ssize_t NullDevice::read(byte*, size_t)
 {
     return 0;
 }
 
-Unix::ssize_t NullDevice::write(const byte*, Unix::size_t bufferSize)
+ssize_t NullDevice::write(const byte*, size_t bufferSize)
 {
     return min(GoodBufferSize, bufferSize);
 }

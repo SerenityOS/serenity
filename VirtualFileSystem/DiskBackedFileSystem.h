@@ -12,7 +12,7 @@ public:
     DiskDevice& device() { return *m_device; }
     const DiskDevice& device() const { return *m_device; }
 
-    unsigned blockSize() const { return m_blockSize; }
+    size_t blockSize() const { return m_blockSize; }
 
 protected:
     explicit DiskBackedFS(RetainPtr<DiskDevice>&&);
@@ -27,7 +27,7 @@ protected:
     bool writeBlocks(unsigned index, unsigned count, const ByteBuffer&);
 
 private:
-    unsigned m_blockSize { 0 };
+    size_t m_blockSize { 0 };
     RetainPtr<DiskDevice> m_device;
 
     mutable SpinLock m_blockCacheLock;

@@ -14,13 +14,13 @@ void DoubleBuffer::flip()
     m_read_buffer_index = 0;
 }
 
-Unix::ssize_t DoubleBuffer::write(const byte* data, size_t size)
+ssize_t DoubleBuffer::write(const byte* data, size_t size)
 {
     m_write_buffer->append(data, size);
     return size;
 }
 
-Unix::ssize_t DoubleBuffer::read(byte* data, size_t size)
+ssize_t DoubleBuffer::read(byte* data, size_t size)
 {
     if (m_read_buffer_index >= m_read_buffer->size() && !m_write_buffer->isEmpty())
         flip();

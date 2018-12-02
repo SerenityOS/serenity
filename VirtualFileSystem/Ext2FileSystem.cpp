@@ -325,7 +325,7 @@ RetainPtr<CoreInode> Ext2FS::get_inode(InodeIdentifier inode) const
     return new_inode;
 }
 
-Unix::ssize_t Ext2FSInode::read_bytes(Unix::off_t offset, Unix::size_t count, byte* buffer, FileDescriptor*)
+ssize_t Ext2FSInode::read_bytes(Unix::off_t offset, size_t count, byte* buffer, FileDescriptor*)
 {
     ASSERT(offset >= 0);
     if (m_raw_inode.i_size == 0)
@@ -335,7 +335,7 @@ Unix::ssize_t Ext2FSInode::read_bytes(Unix::off_t offset, Unix::size_t count, by
     // This avoids wasting an entire block on short links. (Most links are short.)
     static const unsigned max_inline_symlink_length = 60;
     if (is_symlink() && size() < max_inline_symlink_length) {
-        Unix::ssize_t nread = min((Unix::off_t)size() - offset, static_cast<Unix::off_t>(count));
+        ssize_t nread = min((Unix::off_t)size() - offset, static_cast<Unix::off_t>(count));
         memcpy(buffer, m_raw_inode.i_block + offset, nread);
         return nread;
     }
@@ -361,8 +361,8 @@ Unix::ssize_t Ext2FSInode::read_bytes(Unix::off_t offset, Unix::size_t count, by
 
     dword offset_into_first_block = offset % block_size;
 
-    Unix::ssize_t nread = 0;
-    Unix::size_t remaining_count = min((Unix::off_t)count, (Unix::off_t)size() - offset);
+    ssize_t nread = 0;
+    size_t remaining_count = min((Unix::off_t)count, (Unix::off_t)size() - offset);
     byte* out = buffer;
 
 #ifdef EXT2_DEBUG
@@ -387,7 +387,7 @@ Unix::ssize_t Ext2FSInode::read_bytes(Unix::off_t offset, Unix::size_t count, by
     return nread;
 }
 
-Unix::ssize_t Ext2FS::read_inode_bytes(InodeIdentifier inode, Unix::off_t offset, Unix::size_t count, byte* buffer, FileDescriptor*) const
+ssize_t Ext2FS::read_inode_bytes(InodeIdentifier inode, Unix::off_t offset, size_t count, byte* buffer, FileDescriptor*) const
 {
     ASSERT(offset >= 0);
     ASSERT(inode.fsid() == id());
@@ -411,7 +411,7 @@ Unix::ssize_t Ext2FS::read_inode_bytes(InodeIdentifier inode, Unix::off_t offset
     // This avoids wasting an entire block on short links. (Most links are short.)
     static const unsigned maxInlineSymlinkLength = 60;
     if (isSymbolicLink(e2inode->i_mode) && e2inode->i_size < maxInlineSymlinkLength) {
-        Unix::ssize_t nread = min((Unix::off_t)e2inode->i_size - offset, static_cast<Unix::off_t>(count));
+        ssize_t nread = min((Unix::off_t)e2inode->i_size - offset, static_cast<Unix::off_t>(count));
         memcpy(buffer, e2inode->i_block + offset, nread);
         return nread;
     }
@@ -431,8 +431,8 @@ Unix::ssize_t Ext2FS::read_inode_bytes(InodeIdentifier inode, Unix::off_t offset
 
     dword offsetIntoFirstBlock = offset % blockSize();
 
-    Unix::ssize_t nread = 0;
-    Unix::size_t remainingCount = min((Unix::off_t)count, (Unix::off_t)e2inode->i_size - offset);
+    ssize_t nread = 0;
+    size_t remainingCount = min((Unix::off_t)count, (Unix::off_t)e2inode->i_size - offset);
     byte* out = buffer;
 
 #ifdef EXT2_DEBUG
@@ -453,7 +453,7 @@ Unix::ssize_t Ext2FS::read_inode_bytes(InodeIdentifier inode, Unix::off_t offset
         else
             offsetIntoBlock = 0;
 
-        dword numBytesToCopy = min(blockSize() - offsetIntoBlock, remainingCount);
+        size_t numBytesToCopy = min(blockSize() - offsetIntoBlock, remainingCount);
         memcpy(out, block.pointer() + offsetIntoBlock, numBytesToCopy);
         remainingCount -= numBytesToCopy;
         nread += numBytesToCopy;

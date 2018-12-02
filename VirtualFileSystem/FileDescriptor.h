@@ -23,14 +23,14 @@ public:
     int close();
 
     Unix::off_t seek(Unix::off_t, int whence);
-    Unix::ssize_t read(byte*, Unix::size_t);
-    Unix::ssize_t write(const byte* data, Unix::size_t);
+    ssize_t read(byte*, size_t);
+    ssize_t write(const byte* data, size_t);
     int stat(Unix::stat*);
 
     bool hasDataAvailableForRead();
     bool can_write();
 
-    ssize_t get_dir_entries(byte* buffer, Unix::size_t);
+    ssize_t get_dir_entries(byte* buffer, size_t);
 
     ByteBuffer readEntireFile();
 

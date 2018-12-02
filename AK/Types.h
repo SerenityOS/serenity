@@ -11,18 +11,23 @@ typedef signed short signed_word;
 typedef signed int signed_dword;
 typedef signed long long int signed_qword;
 
-typedef dword size_t;
-typedef signed_dword ssize_t;
+typedef unsigned long size_t;
+typedef long ssize_t;
+
+static_assert(sizeof(size_t) == sizeof(dword));
+static_assert(sizeof(ssize_t) == sizeof(signed_dword));
 
 typedef signed_dword ptrdiff_t;
 
 typedef byte uint8_t;
 typedef word uint16_t;
 typedef dword uint32_t;
+typedef qword uint64_t;
 
 typedef signed_byte int8_t;
 typedef signed_word int16_t;
 typedef signed_dword int32_t;
+typedef signed_qword int64_t;
 
 #else
 #include <stdint.h>

@@ -17,7 +17,6 @@ typedef dword gid_t;
 typedef int pid_t;
 typedef dword time_t;
 typedef dword suseconds_t;
-typedef dword size_t;
 
 struct timeval {
     time_t tv_sec;

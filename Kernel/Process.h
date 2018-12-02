@@ -141,7 +141,7 @@ public:
     void* sys$mmap(const Syscall::SC_mmap_params*);
     int sys$munmap(void*, size_t size);
     int sys$set_mmap_name(void*, size_t, const char*);
-    int sys$get_dir_entries(int fd, void*, size_t);
+    ssize_t sys$get_dir_entries(int fd, void*, size_t);
     int sys$getcwd(char*, size_t);
     int sys$chdir(const char*);
     int sys$sleep(unsigned seconds);

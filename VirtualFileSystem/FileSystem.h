@@ -33,13 +33,13 @@ public:
     virtual bool writeInode(InodeIdentifier, const ByteBuffer&) = 0;
     virtual InodeMetadata inodeMetadata(InodeIdentifier) const = 0;
 
-    virtual Unix::ssize_t read_inode_bytes(InodeIdentifier, Unix::off_t offset, Unix::size_t count, byte* buffer, FileDescriptor*) const = 0;
+    virtual ssize_t read_inode_bytes(InodeIdentifier, Unix::off_t offset, size_t count, byte* buffer, FileDescriptor*) const = 0;
 
     struct DirectoryEntry {
         DirectoryEntry(const char* name, InodeIdentifier, byte fileType);
-        DirectoryEntry(const char* name, Unix::size_t name_length, InodeIdentifier, byte fileType);
+        DirectoryEntry(const char* name, size_t name_length, InodeIdentifier, byte fileType);
         char name[256];
-        Unix::size_t name_length { 0 };
+        size_t name_length { 0 };
         InodeIdentifier inode;
         byte fileType { 0 };
     };
@@ -80,7 +80,7 @@ public:
 
     ByteBuffer read_entire(FileDescriptor* = nullptr);
 
-    virtual Unix::ssize_t read_bytes(Unix::off_t, Unix::size_t, byte* buffer, FileDescriptor*) = 0;
+    virtual ssize_t read_bytes(Unix::off_t, size_t, byte* buffer, FileDescriptor*) = 0;
     virtual bool traverse_as_directory(Function<bool(const FS::DirectoryEntry&)>) = 0;
     virtual InodeIdentifier lookup(const String& name) = 0;
     virtual String reverse_lookup(InodeIdentifier) = 0;

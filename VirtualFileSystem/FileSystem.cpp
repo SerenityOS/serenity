@@ -44,20 +44,20 @@ ByteBuffer CoreInode::read_entire(FileDescriptor* descriptor)
     size_t initial_size = metadata().size ? metadata().size : 4096;
     auto contents = ByteBuffer::createUninitialized(initial_size);
 
-    Unix::ssize_t nread;
+    ssize_t nread;
     byte buffer[4096];
     byte* out = contents.pointer();
     Unix::off_t offset = 0;
     for (;;) {
         nread = read_bytes(offset, sizeof(buffer), buffer, descriptor);
         //kprintf("nread: %u, bufsiz: %u, initial_size: %u\n", nread, sizeof(buffer), initial_size);
-        ASSERT(nread <= (Unix::ssize_t)sizeof(buffer));
+        ASSERT(nread <= (ssize_t)sizeof(buffer));
         if (nread <= 0)
             break;
         memcpy(out, buffer, nread);
         out += nread;
         offset += nread;
-        ASSERT(offset <= (Unix::ssize_t)initial_size); // FIXME: Support dynamically growing the buffer.
+        ASSERT(offset <= (ssize_t)initial_size); // FIXME: Support dynamically growing the buffer.
     }
     if (nread < 0) {
         kprintf("CoreInode::read_entire: ERROR: %d\n", nread);
@@ -82,20 +82,20 @@ ByteBuffer FS::readEntireInode(InodeIdentifier inode, FileDescriptor* handle) co
     size_t initialSize = metadata.size ? metadata.size : 4096;
     auto contents = ByteBuffer::createUninitialized(initialSize);
 
-    Unix::ssize_t nread;
+    ssize_t nread;
     byte buffer[4096];
     byte* out = contents.pointer();
     Unix::off_t offset = 0;
     for (;;) {
         nread = read_inode_bytes(inode, offset, sizeof(buffer), buffer, handle);
         //kprintf("nread: %u, bufsiz: %u, initialSize: %u\n", nread, sizeof(buffer), initialSize);
-        ASSERT(nread <= (Unix::ssize_t)sizeof(buffer));
+        ASSERT(nread <= (ssize_t)sizeof(buffer));
         if (nread <= 0)
             break;
         memcpy(out, buffer, nread);
         out += nread;
         offset += nread;
-        ASSERT(offset <= (Unix::ssize_t)initialSize); // FIXME: Support dynamically growing the buffer.
+        ASSERT(offset <= (ssize_t)initialSize); // FIXME: Support dynamically growing the buffer.
     }
     if (nread < 0) {
         kprintf("[fs] readInode: ERROR: %d\n", nread);
@@ -115,7 +115,7 @@ FS::DirectoryEntry::DirectoryEntry(const char* n, InodeIdentifier i, byte ft)
     name[name_length] = '\0';
 }
 
-FS::DirectoryEntry::DirectoryEntry(const char* n, Unix::size_t nl, InodeIdentifier i, byte ft)
+FS::DirectoryEntry::DirectoryEntry(const char* n, size_t nl, InodeIdentifier i, byte ft)
     : name_length(nl)
     , inode(i)
     , fileType(ft)

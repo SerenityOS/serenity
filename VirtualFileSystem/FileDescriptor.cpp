@@ -133,7 +133,7 @@ Unix::off_t FileDescriptor::seek(Unix::off_t offset, int whence)
     return m_currentOffset;
 }
 
-Unix::ssize_t FileDescriptor::read(byte* buffer, Unix::size_t count)
+ssize_t FileDescriptor::read(byte* buffer, size_t count)
 {
     if (is_fifo()) {
         ASSERT(fifo_direction() == FIFO::Reader);
@@ -143,12 +143,12 @@ Unix::ssize_t FileDescriptor::read(byte* buffer, Unix::size_t count)
         // FIXME: What should happen to m_currentOffset?
         return m_vnode->characterDevice()->read(buffer, count);
     }
-    Unix::ssize_t nread = m_vnode->fileSystem()->read_inode_bytes(m_vnode->inode, m_currentOffset, count, buffer, this);
+    ssize_t nread = m_vnode->fileSystem()->read_inode_bytes(m_vnode->inode, m_currentOffset, count, buffer, this);
     m_currentOffset += nread;
     return nread;
 }
 
-Unix::ssize_t FileDescriptor::write(const byte* data, Unix::size_t size)
+ssize_t FileDescriptor::write(const byte* data, size_t size)
 {
     if (is_fifo()) {
         ASSERT(fifo_direction() == FIFO::Writer);
@@ -189,7 +189,7 @@ ByteBuffer FileDescriptor::readEntireFile()
 
     if (m_vnode->isCharacterDevice()) {
         auto buffer = ByteBuffer::createUninitialized(1024);
-        Unix::ssize_t nread = m_vnode->characterDevice()->read(buffer.pointer(), buffer.size());
+        ssize_t nread = m_vnode->characterDevice()->read(buffer.pointer(), buffer.size());
         buffer.trim(nread);
         return buffer;
     }
@@ -205,7 +205,7 @@ bool FileDescriptor::isDirectory() const
     return m_vnode->metadata().isDirectory();
 }
 
-ssize_t FileDescriptor::get_dir_entries(byte* buffer, Unix::size_t size)
+ssize_t FileDescriptor::get_dir_entries(byte* buffer, size_t size)
 {
     auto metadata = m_vnode->metadata();
     if (!metadata.isValid())
