@@ -1,6 +1,6 @@
 #include "RandomDevice.h"
 #include "Limits.h"
-#include <AK/StdLib.h>
+#include <AK/StdLibExtras.h>
 
 RandomDevice::RandomDevice()
     : CharacterDevice(1, 8)

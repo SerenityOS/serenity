@@ -1,7 +1,7 @@
 #pragma once
 
 #include "HashTable.h"
-#include "StdLib.h"
+#include "StdLibExtras.h"
 #include "kstdio.h"
 
 namespace AK {

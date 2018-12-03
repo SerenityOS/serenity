@@ -1,5 +1,5 @@
 #include "StringImpl.h"
-#include "StdLib.h"
+#include "StdLibExtras.h"
 #include "kmalloc.h"
 
 namespace AK {

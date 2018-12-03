@@ -2,7 +2,7 @@
 
 #include "types.h"
 #include <AK/Vector.h>
-#include <AK/String.h>
+#include <AK/AKString.h>
 
 struct KSym {
     dword address;

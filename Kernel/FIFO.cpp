@@ -1,5 +1,5 @@
 #include "FIFO.h"
-#include <AK/StdLib.h>
+#include <AK/StdLibExtras.h>
 
 //#define FIFO_DEBUG
 

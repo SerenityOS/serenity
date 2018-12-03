@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <AK/HashMap.h>
-#include <AK/String.h>
+#include <AK/AKString.h>
 
 //#define TERMCAP_DEBUG
 

@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/mman.h>
-#include <AK/String.h>
+#include <AK/AKString.h>
 
 extern "C" {
 

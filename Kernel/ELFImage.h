@@ -2,7 +2,7 @@
 
 #include <AK/OwnPtr.h>
 #include <AK/HashMap.h>
-#include <AK/String.h>
+#include <AK/AKString.h>
 #include "elf.h"
 #include "types.h"
 

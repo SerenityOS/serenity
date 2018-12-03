@@ -4,7 +4,7 @@
 #include "IO.h"
 #include "StdLib.h"
 #include "Keyboard.h"
-#include <AK/String.h>
+#include <AK/AKString.h>
 
 static byte* s_vga_buffer;
 static VirtualConsole* s_consoles[6];

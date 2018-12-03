@@ -3,7 +3,7 @@
 #include <AK/HashMap.h>
 #include <AK/OwnPtr.h>
 #include <AK/RetainPtr.h>
-#include <AK/String.h>
+#include <AK/AKString.h>
 #include <AK/Vector.h>
 #include <AK/Function.h>
 #include "InodeIdentifier.h"

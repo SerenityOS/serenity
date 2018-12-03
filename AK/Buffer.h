@@ -3,7 +3,7 @@
 #include "Assertions.h"
 #include "Retainable.h"
 #include "RetainPtr.h"
-#include "StdLib.h"
+#include "StdLibExtras.h"
 #include "kmalloc.h"
 
 namespace AK {

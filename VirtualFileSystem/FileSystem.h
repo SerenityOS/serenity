@@ -10,7 +10,7 @@
 #include <AK/OwnPtr.h>
 #include <AK/Retainable.h>
 #include <AK/RetainPtr.h>
-#include <AK/String.h>
+#include <AK/AKString.h>
 #include <AK/Function.h>
 #include <AK/kstdio.h>
 
