@@ -28,8 +28,8 @@ Ext2FS::~Ext2FS()
 ByteBuffer Ext2FS::read_super_block() const
 {
     auto buffer = ByteBuffer::createUninitialized(1024);
-    device().readBlock(2, buffer.pointer());
-    device().readBlock(3, buffer.offsetPointer(512));
+    device().read_block(2, buffer.pointer());
+    device().read_block(3, buffer.offsetPointer(512));
     return buffer;
 }
 
@@ -37,9 +37,9 @@ bool Ext2FS::write_super_block(const ext2_super_block& sb)
 {
     const byte* raw = (const byte*)&sb;
     bool success;
-    success = device().writeBlock(2, raw);
+    success = device().write_block(2, raw);
     ASSERT(success);
-    success = device().writeBlock(3, raw + 512);
+    success = device().write_block(3, raw + 512);
     ASSERT(success);
     // FIXME: This is an ugly way to refresh the superblock cache. :-|
     super_block();

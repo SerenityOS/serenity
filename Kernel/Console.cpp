@@ -42,11 +42,11 @@ ssize_t Console::write(const byte* data, size_t size)
     if (!m_implementation)
         return 0;
     for (size_t i = 0; i < size; ++i)
-        putChar(data[i]);
+        put_char(data[i]);
     return size;
 }
 
-void Console::putChar(char ch)
+void Console::put_char(char ch)
 {
 #ifdef CONSOLE_OUT_TO_E9
     //if (ch != 27)

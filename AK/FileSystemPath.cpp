@@ -8,35 +8,35 @@ namespace AK {
 FileSystemPath::FileSystemPath(const String& s)
     : m_string(s)
 {
-    m_isValid = canonicalize();
+    m_is_valid = canonicalize();
 }
 
-bool FileSystemPath::canonicalize(bool resolveSymbolicLinks)
+bool FileSystemPath::canonicalize(bool resolve_symbolic_links)
 {
     // FIXME: Implement "resolveSymbolicLinks"
-    (void) resolveSymbolicLinks;
+    (void) resolve_symbolic_links;
     auto parts = m_string.split('/');
-    Vector<String> canonicalParts;
+    Vector<String> canonical_parts;
 
     for (auto& part : parts) {
         if (part == ".")
             continue;
         if (part == "..") {
-            if (!canonicalParts.isEmpty())
-                canonicalParts.takeLast();
+            if (!canonical_parts.isEmpty())
+                canonical_parts.takeLast();
             continue;
         }
         if (!part.isEmpty())
-            canonicalParts.append(part);
+            canonical_parts.append(part);
     }
-    if (canonicalParts.isEmpty()) {
+    if (canonical_parts.isEmpty()) {
         m_string = m_basename = "/";
         return true;
     }
 
-    m_basename = canonicalParts.last();
+    m_basename = canonical_parts.last();
     StringBuilder builder;
-    for (auto& cpart : canonicalParts) {
+    for (auto& cpart : canonical_parts) {
         builder.append('/');
         builder.append(move(cpart));
     }

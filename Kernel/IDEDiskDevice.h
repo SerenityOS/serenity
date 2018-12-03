@@ -11,9 +11,9 @@ public:
     virtual ~IDEDiskDevice() override;
 
     // ^DiskDevice
-    virtual unsigned blockSize() const override;
-    virtual bool readBlock(unsigned index, byte*) const override;
-    virtual bool writeBlock(unsigned index, const byte*) override;
+    virtual unsigned block_size() const override;
+    virtual bool read_block(unsigned index, byte*) const override;
+    virtual bool write_block(unsigned index, const byte*) override;
 
 protected:
     IDEDiskDevice();

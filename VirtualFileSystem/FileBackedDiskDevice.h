@@ -8,26 +8,26 @@
 
 class FileBackedDiskDevice final : public DiskDevice {
 public:
-    static RetainPtr<FileBackedDiskDevice> create(String&& imagePath, unsigned blockSize);
+    static RetainPtr<FileBackedDiskDevice> create(String&& image_path, unsigned block_size);
     virtual ~FileBackedDiskDevice() override;
 
-    bool isValid() const { return m_file; }
+    bool is_valid() const { return m_file; }
 
-    virtual unsigned blockSize() const override;
-    virtual bool readBlock(unsigned index, byte* out) const override;
-    virtual bool writeBlock(unsigned index, const byte*) override;
+    virtual unsigned block_size() const override;
+    virtual bool read_block(unsigned index, byte* out) const override;
+    virtual bool write_block(unsigned index, const byte*) override;
 
 private:
     virtual const char* class_name() const override;
 
-    bool readInternal(DiskOffset, unsigned length, byte* out) const;
-    bool writeInternal(DiskOffset, unsigned length, const byte* data);
+    bool read_internal(DiskOffset, unsigned length, byte* out) const;
+    bool write_internal(DiskOffset, unsigned length, const byte* data);
 
-    FileBackedDiskDevice(String&& imagePath, unsigned blockSize);
+    FileBackedDiskDevice(String&& imagePath, unsigned block_size);
 
-    String m_imagePath;
+    String m_image_path;
     FILE* m_file { nullptr };
-    DiskOffset m_fileLength { 0 };
-    unsigned m_blockSize { 0 };
+    DiskOffset m_file_length { 0 };
+    unsigned m_block_size { 0 };
 };
 

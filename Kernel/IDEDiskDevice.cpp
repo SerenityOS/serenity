@@ -52,18 +52,18 @@ const char* IDEDiskDevice::class_name() const
     return "IDEDiskDevice";
 }
 
-unsigned IDEDiskDevice::blockSize() const
+unsigned IDEDiskDevice::block_size() const
 {
     return 512;
 }
 
-bool IDEDiskDevice::readBlock(unsigned index, byte* out) const
+bool IDEDiskDevice::read_block(unsigned index, byte* out) const
 {
     const_cast<IDEDiskDevice&>(*this).read_sectors(index, 1, out);
     return true;
 }
 
-bool IDEDiskDevice::writeBlock(unsigned index, const byte* data)
+bool IDEDiskDevice::write_block(unsigned index, const byte* data)
 {
     write_sectors(index, 1, data);
     return true;

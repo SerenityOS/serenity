@@ -156,14 +156,12 @@ class MemoryManager {
 public:
     static MemoryManager& the() PURE;
 
-    PhysicalAddress pageDirectoryBase() const { return PhysicalAddress(reinterpret_cast<dword>(m_kernel_page_directory)); }
-
     static void initialize();
 
     PageFaultResponse handle_page_fault(const PageFault&);
 
-    bool mapRegion(Process&, Region&);
-    bool unmapRegion(Process&, Region&);
+    bool map_region(Process&, Region&);
+    bool unmap_region(Process&, Region&);
 
     void populate_page_directory(PageDirectory&);
     void release_page_directory(PageDirectory&);
@@ -195,14 +193,14 @@ private:
     void unmap_range(PageDirectory*, LinearAddress, size_t);
     void remap_region_page(PageDirectory*, Region&, unsigned page_index_in_region, bool user_allowed);
 
-    void initializePaging();
-    void flushEntireTLB();
-    void flushTLB(LinearAddress);
+    void initialize_paging();
+    void flush_entire_tlb();
+    void flush_tlb(LinearAddress);
 
     RetainPtr<PhysicalPage> allocate_page_table(PageDirectory&, unsigned index);
     void deallocate_page_table(PageDirectory&, unsigned index);
 
-    void protectMap(LinearAddress, size_t length);
+    void map_protected(LinearAddress, size_t length);
 
     void create_identity_mapping(LinearAddress, size_t length);
     void remove_identity_mapping(LinearAddress, size_t);
@@ -235,16 +233,16 @@ private:
             UserSupervisor = 1 << 2,
         };
 
-        bool isPresent() const { return raw() & Present; }
-        void setPresent(bool b) { setBit(Present, b); }
+        bool is_present() const { return raw() & Present; }
+        void set_present(bool b) { set_bit(Present, b); }
 
-        bool isUserAllowed() const { return raw() & UserSupervisor; }
-        void setUserAllowed(bool b) { setBit(UserSupervisor, b); }
+        bool is_user_allowed() const { return raw() & UserSupervisor; }
+        void set_user_allowed(bool b) { set_bit(UserSupervisor, b); }
 
-        bool isWritable() const { return raw() & ReadWrite; }
-        void setWritable(bool b) { setBit(ReadWrite, b); }
+        bool is_writable() const { return raw() & ReadWrite; }
+        void set_writable(bool b) { set_bit(ReadWrite, b); }
 
-        void setBit(byte bit, bool value)
+        void set_bit(byte bit, bool value)
         {
             if (value)
                 *m_pde |= bit;
@@ -258,8 +256,8 @@ private:
     struct PageTableEntry {
         explicit PageTableEntry(dword* pte) : m_pte(pte) { }
 
-        dword* physicalPageBase() { return reinterpret_cast<dword*>(raw() & 0xfffff000u); }
-        void setPhysicalPageBase(dword value)
+        dword* physical_page_base() { return reinterpret_cast<dword*>(raw() & 0xfffff000u); }
+        void set_physical_page_base(dword value)
         {
             *m_pte &= 0xfffu;
             *m_pte |= value & 0xfffff000u;
@@ -274,16 +272,16 @@ private:
             UserSupervisor = 1 << 2,
         };
 
-        bool isPresent() const { return raw() & Present; }
-        void setPresent(bool b) { setBit(Present, b); }
+        bool is_present() const { return raw() & Present; }
+        void set_present(bool b) { set_bit(Present, b); }
 
-        bool isUserAllowed() const { return raw() & UserSupervisor; }
-        void setUserAllowed(bool b) { setBit(UserSupervisor, b); }
+        bool is_user_allowed() const { return raw() & UserSupervisor; }
+        void set_user_allowed(bool b) { set_bit(UserSupervisor, b); }
 
-        bool isWritable() const { return raw() & ReadWrite; }
-        void setWritable(bool b) { setBit(ReadWrite, b); }
+        bool is_writable() const { return raw() & ReadWrite; }
+        void set_writable(bool b) { set_bit(ReadWrite, b); }
 
-        void setBit(byte bit, bool value)
+        void set_bit(byte bit, bool value)
         {
             if (value)
                 *m_pte |= bit;
@@ -294,11 +292,11 @@ private:
         dword* m_pte;
     };
 
-    PageTableEntry ensurePTE(PageDirectory*, LinearAddress);
+    PageTableEntry ensure_pte(PageDirectory*, LinearAddress);
 
     PageDirectory* m_kernel_page_directory;
-    dword* m_pageTableZero;
-    dword* m_pageTableOne;
+    dword* m_page_table_zero;
+    dword* m_page_table_one;
 
     LinearAddress m_next_laddr;
 
