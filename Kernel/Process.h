@@ -172,6 +172,7 @@ public:
     int sys$fcntl(int fd, int cmd, dword extra_arg);
     int sys$ioctl(int fd, unsigned request, unsigned arg);
     int sys$mkdir(const char* pathname, mode_t mode);
+    Unix::clock_t sys$times(Unix::tms*);
 
     static void initialize();
 
@@ -186,6 +187,12 @@ public:
 
     void did_schedule() { ++m_timesScheduled; }
     dword timesScheduled() const { return m_timesScheduled; }
+
+    dword m_ticks_in_user { 0 };
+    dword m_ticks_in_kernel { 0 };
+
+    dword m_ticks_in_user_for_dead_children { 0 };
+    dword m_ticks_in_kernel_for_dead_children { 0 };
 
     pid_t waitee_pid() const { return m_waitee_pid; }
 

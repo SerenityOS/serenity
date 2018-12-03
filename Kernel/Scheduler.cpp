@@ -181,6 +181,12 @@ bool Scheduler::context_switch(Process& process)
     process.set_ticks_left(time_slice);
     process.did_schedule();
 
+    if (process.tss().cs & 3) {
+        ++process.m_ticks_in_user;
+    } else {
+        ++process.m_ticks_in_kernel;
+    }
+
     if (current == &process)
         return false;
 

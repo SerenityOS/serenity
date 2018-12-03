@@ -1,8 +1,9 @@
 #include <sys/times.h>
-#include <assert.h>
+#include <errno.h>
+#include <Kernel/Syscall.h>
 
-clock_t times(struct tms*)
+clock_t times(struct tms* buf)
 {
-    assert(false);
-    return 0;
+    int rc = Syscall::invoke(Syscall::SC_times, (dword)buf);
+    __RETURN_WITH_ERRNO(rc, rc, (clock_t)-1);
 }
