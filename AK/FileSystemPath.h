@@ -9,17 +9,17 @@ public:
     FileSystemPath() { }
     explicit FileSystemPath(const String&);
 
-    bool isValid() const { return m_isValid; }
+    bool is_valid() const { return m_is_valid; }
     String string() const { return m_string; }
 
     String basename() const { return m_basename; }
 
 private:
-    bool canonicalize(bool resolveSymbolicLinks = false);
+    bool canonicalize(bool resolve_symbolic_links = false);
 
     String m_string;
     String m_basename;
-    bool m_isValid { false };
+    bool m_is_valid { false };
 };
 
 };

@@ -181,7 +181,7 @@ static int sh_cd(int argc, const char** argv)
         sprintf(pathbuf, "%s/%s", g->cwd.characters(), argv[1]);
 
     FileSystemPath canonicalPath(pathbuf);
-    if (!canonicalPath.isValid()) {
+    if (!canonicalPath.is_valid()) {
         printf("FileSystemPath failed to canonicalize '%s'\n", pathbuf);
         return 1;
     }

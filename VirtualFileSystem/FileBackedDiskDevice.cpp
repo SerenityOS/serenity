@@ -7,44 +7,44 @@
 //#define FBBD_DEBUG
 #define IGNORE_FILE_LENGTH // Useful for e.g /dev/hda2
 
-RetainPtr<FileBackedDiskDevice> FileBackedDiskDevice::create(String&& imagePath, unsigned blockSize)
+RetainPtr<FileBackedDiskDevice> FileBackedDiskDevice::create(String&& image_path, unsigned block_size)
 {
-    return adopt(*new FileBackedDiskDevice(std::move(imagePath), blockSize));
+    return adopt(*new FileBackedDiskDevice(move(image_path), block_size));
 }
 
-FileBackedDiskDevice::FileBackedDiskDevice(String&& imagePath, unsigned blockSize)
-    : m_imagePath(std::move(imagePath))
-    , m_blockSize(blockSize)
+FileBackedDiskDevice::FileBackedDiskDevice(String&& image_path, unsigned block_size)
+    : m_image_path(move(image_path))
+    , m_block_size(block_size)
 {
     struct stat st;
-    int result = stat(m_imagePath.characters(), &st);
+    int result = stat(m_image_path.characters(), &st);
     ASSERT(result != -1);
-    m_fileLength = st.st_size;
-    m_file = fopen(m_imagePath.characters(), "r+");
+    m_file_length = st.st_size;
+    m_file = fopen(m_image_path.characters(), "r+");
 }
 
 FileBackedDiskDevice::~FileBackedDiskDevice()
 {
 }
 
-unsigned FileBackedDiskDevice::blockSize() const
+unsigned FileBackedDiskDevice::block_size() const
 {
-    return m_blockSize;
+    return m_block_size;
 }
 
-bool FileBackedDiskDevice::readBlock(unsigned index, byte* out) const
+bool FileBackedDiskDevice::read_block(unsigned index, byte* out) const
 {
-    DiskOffset offset = index * m_blockSize;
-    return readInternal(offset, blockSize(), out);
+    DiskOffset offset = index * m_block_size;
+    return read_internal(offset, block_size(), out);
 }
 
-bool FileBackedDiskDevice::writeBlock(unsigned index, const byte* data)
+bool FileBackedDiskDevice::write_block(unsigned index, const byte* data)
 {
-    DiskOffset offset = index * m_blockSize;
-    return writeInternal(offset, blockSize(), data);
+    DiskOffset offset = index * m_block_size;
+    return write_internal(offset, block_size(), data);
 }
 
-bool FileBackedDiskDevice::readInternal(DiskOffset offset, unsigned length, byte* out) const
+bool FileBackedDiskDevice::read_internal(DiskOffset offset, unsigned length, byte* out) const
 {
 #ifndef IGNORE_FILE_LENGTH
     if (offset + length >= m_fileLength)
@@ -59,7 +59,7 @@ bool FileBackedDiskDevice::readInternal(DiskOffset offset, unsigned length, byte
     return true;
 }
 
-bool FileBackedDiskDevice::writeInternal(DiskOffset offset, unsigned length, const byte* data)
+bool FileBackedDiskDevice::write_internal(DiskOffset offset, unsigned length, const byte* data)
 {
 #ifndef IGNORE_FILE_LENGTH
     if (offset + length >= m_fileLength)

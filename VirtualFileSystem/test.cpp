@@ -237,7 +237,7 @@ int main(int c, char** v)
 RetainPtr<FS> makeFileSystem(const char* imagePath)
 {
     auto fsImage = FileBackedDiskDevice::create(imagePath, 512);
-    if (!fsImage->isValid()) {
+    if (!fsImage->is_valid()) {
         fprintf(stderr, "Failed to open fs image file '%s'\n", imagePath);
         exit(1);
     }

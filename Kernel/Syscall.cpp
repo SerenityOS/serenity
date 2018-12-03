@@ -52,7 +52,7 @@ static dword handle(RegisterDump& regs, dword function, dword arg1, dword arg2, 
         Scheduler::yield();
         break;
     case Syscall::SC_putch:
-        Console::the().putChar(arg1 & 0xff);
+        Console::the().put_char(arg1 & 0xff);
         break;
     case Syscall::SC_sleep:
         return current->sys$sleep((unsigned)arg1);

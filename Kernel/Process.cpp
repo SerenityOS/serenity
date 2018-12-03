@@ -76,7 +76,7 @@ Region* Process::allocate_region(LinearAddress laddr, size_t size, String&& name
     m_regions.append(adopt(*new Region(laddr, size, move(name), is_readable, is_writable)));
     if (commit)
         m_regions.last()->commit(*this);
-    MM.mapRegion(*this, *m_regions.last());
+    MM.map_region(*this, *m_regions.last());
     return m_regions.last().ptr();
 }
 
@@ -91,7 +91,7 @@ Region* Process::allocate_file_backed_region(LinearAddress laddr, size_t size, R
     }
     laddr.mask(0xfffff000);
     m_regions.append(adopt(*new Region(laddr, size, move(vnode), move(name), is_readable, is_writable)));
-    MM.mapRegion(*this, *m_regions.last());
+    MM.map_region(*this, *m_regions.last());
     return m_regions.last().ptr();
 }
 
@@ -107,7 +107,7 @@ Region* Process::allocate_region_with_vmo(LinearAddress laddr, size_t size, Reta
     offset_in_vmo &= PAGE_MASK;
     size = ceilDiv(size, PAGE_SIZE) * PAGE_SIZE;
     m_regions.append(adopt(*new Region(laddr, size, move(vmo), offset_in_vmo, move(name), is_readable, is_writable)));
-    MM.mapRegion(*this, *m_regions.last());
+    MM.map_region(*this, *m_regions.last());
     return m_regions.last().ptr();
 }
 
@@ -116,7 +116,7 @@ bool Process::deallocate_region(Region& region)
     InterruptDisabler disabler;
     for (size_t i = 0; i < m_regions.size(); ++i) {
         if (m_regions[i].ptr() == &region) {
-            MM.unmapRegion(*this, region);
+            MM.unmap_region(*this, region);
             m_regions.remove(i);
             return true;
         }
@@ -231,7 +231,7 @@ Process* Process::fork(RegisterDump& regs)
 #endif
         auto cloned_region = region->clone();
         child->m_regions.append(move(cloned_region));
-        MM.mapRegion(*child, *child->m_regions.last());
+        MM.map_region(*child, *child->m_regions.last());
     }
 
     child->m_tss.eax = 0; // fork() returns 0 in the child :^)
@@ -510,7 +510,7 @@ int Process::sys$get_environment(char*** environ)
     auto* region = allocate_region(LinearAddress(), PAGE_SIZE, "environ");
     if (!region)
         return -ENOMEM;
-    MM.mapRegion(*this, *region);
+    MM.map_region(*this, *region);
     char* envpage = (char*)region->linearAddress.get();
     *environ = (char**)envpage;
     char* bufptr = envpage + (sizeof(char*) * (m_initialEnvironment.size() + 1));
@@ -529,7 +529,7 @@ int Process::sys$get_arguments(int* argc, char*** argv)
     auto* region = allocate_region(LinearAddress(), PAGE_SIZE, "argv");
     if (!region)
         return -ENOMEM;
-    MM.mapRegion(*this, *region);
+    MM.map_region(*this, *region);
     char* argpage = (char*)region->linearAddress.get();
     *argc = m_arguments.size();
     *argv = (char**)argpage;

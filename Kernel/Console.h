@@ -24,7 +24,7 @@ public:
 
     void setImplementation(ConsoleImplementation* implementation) { m_implementation = implementation; }
 
-    void putChar(char);
+    void put_char(char);
 
 private:
     ConsoleImplementation* m_implementation { nullptr };

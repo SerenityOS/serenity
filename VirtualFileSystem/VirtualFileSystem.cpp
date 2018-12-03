@@ -296,7 +296,7 @@ bool VFS::mkdir(const String& path, mode_t mode, InodeIdentifier base, int& erro
     error = EWHYTHO;
     // FIXME: This won't work nicely across mount boundaries.
     FileSystemPath p(path);
-    if (!p.isValid()) {
+    if (!p.is_valid()) {
         error = -EINVAL;
         return false;
     }
