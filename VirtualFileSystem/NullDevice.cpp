@@ -1,6 +1,6 @@
 #include "NullDevice.h"
 #include "Limits.h"
-#include <AK/StdLib.h>
+#include <AK/StdLibExtras.h>
 #include <AK/kstdio.h>
 
 NullDevice::NullDevice()

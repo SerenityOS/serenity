@@ -3,7 +3,7 @@
 #include "Assertions.h"
 #include "DoublyLinkedList.h"
 #include "Traits.h"
-#include "StdLib.h"
+#include "StdLibExtras.h"
 #include "kstdio.h"
 
 //#define HASHTABLE_DEBUG

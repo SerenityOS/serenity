@@ -5,7 +5,7 @@ CXXFLAGS = -std=c++17 -O0 -W -Wall -ggdb3
 
 all:	$(PROGRAM)
 
-test.o: Vector.h String.h StringImpl.h MappedFile.h HashTable.h SinglyLinkedList.h Traits.h HashMap.h TemporaryFile.h Buffer.h FileSystemPath.h StringBuilder.h
+test.o: Vector.h AKString.h StringImpl.h MappedFile.h HashTable.h SinglyLinkedList.h Traits.h HashMap.h TemporaryFile.h Buffer.h FileSystemPath.h StringBuilder.h
 
 .cpp.o:
 	$(CXX) $(CXXFLAGS) -o $@ -c $<

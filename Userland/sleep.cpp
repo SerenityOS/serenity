@@ -1,7 +1,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <signal.h>
-#include <AK/String.h>
+#include <AK/AKString.h>
 
 static unsigned parseUInt(const String& str, bool& ok)
 {

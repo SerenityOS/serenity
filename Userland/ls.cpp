@@ -5,7 +5,7 @@
 #include <string.h>
 #include <getopt.h>
 #include <sys/ioctl.h>
-#include <AK/String.h>
+#include <AK/AKString.h>
 #include <AK/Vector.h>
 
 static int do_dir(const char* path);

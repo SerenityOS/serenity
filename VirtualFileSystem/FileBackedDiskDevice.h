@@ -2,7 +2,7 @@
 
 #include "DiskDevice.h"
 #include <AK/RetainPtr.h>
-#include <AK/String.h>
+#include <AK/AKString.h>
 #include <AK/Types.h>
 #include <stdio.h>
 

@@ -2,7 +2,7 @@
 #include "ext2_fs.h"
 #include "UnixTypes.h"
 #include <AK/Bitmap.h>
-#include <AK/StdLib.h>
+#include <AK/StdLibExtras.h>
 #include <AK/kmalloc.h>
 #include <AK/ktime.h>
 #include <AK/kstdio.h>

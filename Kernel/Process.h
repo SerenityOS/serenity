@@ -8,7 +8,7 @@
 #include <VirtualFileSystem/VirtualFileSystem.h>
 #include <VirtualFileSystem/UnixTypes.h>
 #include <AK/InlineLinkedList.h>
-#include <AK/String.h>
+#include <AK/AKString.h>
 #include <AK/Vector.h>
 
 class FileDescriptor;

@@ -27,7 +27,7 @@
 
 #include "Assertions.h"
 #include "OwnPtr.h"
-#include "StdLib.h"
+#include "StdLibExtras.h"
 
 namespace AK {
 

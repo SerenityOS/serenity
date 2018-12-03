@@ -1,7 +1,7 @@
 #include "SyntheticFileSystem.h"
 #include "FileDescriptor.h"
 #include <LibC/errno_numbers.h>
-#include <AK/StdLib.h>
+#include <AK/StdLibExtras.h>
 
 #ifndef SERENITY
 typedef int InterruptDisabler;

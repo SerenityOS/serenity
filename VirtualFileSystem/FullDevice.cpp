@@ -1,7 +1,7 @@
 #include "FullDevice.h"
 #include "Limits.h"
 #include <LibC/errno_numbers.h>
-#include <AK/StdLib.h>
+#include <AK/StdLibExtras.h>
 #include <AK/kstdio.h>
 
 FullDevice::FullDevice()

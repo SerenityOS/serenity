@@ -1,6 +1,6 @@
 #pragma once
 
-#include "String.h"
+#include "AKString.h"
 #include "Vector.h"
 
 namespace AK {

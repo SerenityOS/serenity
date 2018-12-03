@@ -8,7 +8,7 @@
 #include <AK/RetainPtr.h>
 #include <AK/Vector.h>
 #include <AK/HashTable.h>
-#include <AK/String.h>
+#include <AK/AKString.h>
 #include <VirtualFileSystem/VirtualFileSystem.h>
 
 class Process;
