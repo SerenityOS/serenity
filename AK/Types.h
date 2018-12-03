@@ -12,7 +12,7 @@ typedef signed int signed_dword;
 typedef signed long long int signed_qword;
 
 typedef decltype(sizeof(void*)) size_t;
-typedef long ssize_t;
+typedef signed_dword ssize_t;
 
 static_assert(sizeof(size_t) == sizeof(dword));
 static_assert(sizeof(ssize_t) == sizeof(signed_dword));

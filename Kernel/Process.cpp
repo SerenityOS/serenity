@@ -1415,6 +1415,14 @@ int Process::reap(Process& process)
 {
     InterruptDisabler disabler;
     int exit_status = (process.m_termination_status << 8) | process.m_termination_signal;
+
+    if (process.ppid()) {
+        auto* parent = Process::from_pid(process.ppid());
+        ASSERT(parent);
+        parent->m_ticks_in_user_for_dead_children += process.m_ticks_in_user + process.m_ticks_in_user_for_dead_children;
+        parent->m_ticks_in_kernel_for_dead_children += process.m_ticks_in_kernel + process.m_ticks_in_kernel_for_dead_children;
+    }
+
     dbgprintf("reap: %s(%u) {%s}\n", process.name().characters(), process.pid(), toString(process.state()));
     ASSERT(process.state() == Dead);
     g_processes->remove(&process);
@@ -1761,5 +1769,16 @@ int Process::sys$mkdir(const char* pathname, mode_t mode)
     int error;
     if (!VFS::the().mkdir(pathname, mode, cwd_inode()->identifier(), error))
         return error;
+    return 0;
+}
+
+Unix::clock_t Process::sys$times(Unix::tms* times)
+{
+    if (!validate_write_typed(times))
+        return -EFAULT;
+    times->tms_utime = m_ticks_in_user;
+    times->tms_stime = m_ticks_in_kernel;
+    times->tms_cutime = m_ticks_in_user_for_dead_children;
+    times->tms_cstime = m_ticks_in_kernel_for_dead_children;
     return 0;
 }

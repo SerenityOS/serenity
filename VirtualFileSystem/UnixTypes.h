@@ -219,6 +219,14 @@ typedef dword mode_t;
 typedef dword nlink_t;
 typedef dword uid_t;
 typedef dword gid_t;
+typedef dword clock_t;
+
+struct tms {
+    clock_t tms_utime;
+    clock_t tms_stime;
+    clock_t tms_cutime;
+    clock_t tms_cstime;
+};
 
 #ifdef SERENITY
 typedef void (*__sighandler_t)(int);

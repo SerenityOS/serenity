@@ -5,8 +5,8 @@
 #include <string.h>
 #include <alloca.h>
 #include <assert.h>
-#include <Kernel/Syscall.h>
 #include <AK/Assertions.h>
+#include <AK/Types.h>
 
 extern "C" {
 
