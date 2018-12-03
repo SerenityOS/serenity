@@ -1,7 +1,9 @@
 #pragma once
 
 #include "Assertions.h"
-#include "types.h"
+#include "Types.h"
+
+namespace AK {
 
 template<typename T> class InlineLinkedListNode {
 public:
@@ -173,3 +175,9 @@ template<typename T> inline void InlineLinkedList<T>::append(InlineLinkedList<T>
     otherHead->setPrev(m_tail);
     m_tail = otherTail;
 }
+
+}
+
+using AK::InlineLinkedList;
+using AK::InlineLinkedListNode;
+
