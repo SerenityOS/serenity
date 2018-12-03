@@ -1,15 +1,15 @@
 #pragma once
 
 #include "types.h"
-#include "InlineLinkedList.h"
-#include <AK/String.h>
 #include "TSS.h"
-#include <AK/Vector.h>
 #include "i386.h"
-#include <VirtualFileSystem/VirtualFileSystem.h>
-#include <VirtualFileSystem/UnixTypes.h>
 #include "TTY.h"
 #include "Syscall.h"
+#include <VirtualFileSystem/VirtualFileSystem.h>
+#include <VirtualFileSystem/UnixTypes.h>
+#include <AK/InlineLinkedList.h>
+#include <AK/String.h>
+#include <AK/Vector.h>
 
 class FileDescriptor;
 class PageDirectory;
