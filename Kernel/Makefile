@@ -21,6 +21,7 @@ KERNEL_OBJS = \
        VirtualConsole.o \
        FIFO.o \
        Scheduler.o \
+       DoubleBuffer.o \
        ELFImage.o \
        ELFLoader.o
 
