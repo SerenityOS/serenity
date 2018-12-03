@@ -1,6 +1,6 @@
 #pragma once
 
-#include <AK/CircularQueue.h>
+#include "DoubleBuffer.h"
 #include <AK/Retainable.h>
 #include <AK/RetainPtr.h>
 #include <VirtualFileSystem/UnixTypes.h>
@@ -27,5 +27,5 @@ private:
 
     unsigned m_writers { 0 };
     unsigned m_readers { 0 };
-    CircularQueue<byte, 16> m_queue;
+    DoubleBuffer m_buffer;
 };
