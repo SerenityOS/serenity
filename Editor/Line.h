@@ -30,6 +30,8 @@ public:
 
     void insert(size_t index, const std::string&);
 
+    void coalesce();
+
 private:
     void append(const std::string&);
     void prepend(const std::string&);

@@ -94,3 +94,13 @@ std::tuple<size_t, size_t> Line::chunk_index_for_position(size_t position)
     ASSERT(false);
     return std::make_tuple(0, 0);
 }
+
+void Line::coalesce()
+{
+    if (m_chunks.size() <= 1)
+        return;
+
+    auto contents = data();
+    m_chunks.clear();
+    m_chunks.push_back(Chunk{ contents });
+}

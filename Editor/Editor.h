@@ -56,6 +56,7 @@ private:
     void insert_at_cursor(int ch);
 
     void exec_command();
+    void coalesce_current_line();
 
     OwnPtr<Document> m_document;
 
