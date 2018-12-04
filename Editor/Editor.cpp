@@ -151,6 +151,7 @@ int Editor::exec()
             case 'k': move_up(); break;
             case 'l': move_right(); break;
             case 'i': set_mode(EditingDocument); break;
+            case 'a': move_right(); set_mode(EditingDocument); break;
             case 'q': m_should_quit = true; break;
             case '\\': set_mode(EditingCommand); break;
             }
