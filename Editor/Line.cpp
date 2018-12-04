@@ -60,12 +60,11 @@ void Line::insert(size_t index, const std::string& text)
 
     static FILE* f = fopen("log", "a");
     fprintf(f, "#Column:%zu, Chunk:%zu, Index:%zu\n", index, chunk_index, index_in_chunk);
-    
+
     auto left_string = chunk.data().substr(0, index_in_chunk);
     auto right_string = chunk.data().substr(index_in_chunk, chunk.length() - index_in_chunk);
 
     fprintf(f, "#{\"%s\", \"%s\", \"%s\"}\n", left_string.c_str(), text.c_str(), right_string.c_str());
-    fflush(f);
 
     Chunk left_chunk { left_string };
     Chunk mid_chunk { text };
@@ -76,9 +75,11 @@ void Line::insert(size_t index, const std::string& text)
     iterator = m_chunks.begin() + chunk_index;
 
     // Note reverse insertion order!
-    m_chunks.insert(iterator, right_chunk);
-    m_chunks.insert(iterator, mid_chunk);
-    m_chunks.insert(iterator, left_chunk);
+    iterator = m_chunks.insert(iterator, right_chunk);
+    iterator = m_chunks.insert(iterator, mid_chunk);
+    iterator = m_chunks.insert(iterator, left_chunk);
+
+    fflush(f);
 }
 
 std::tuple<size_t, size_t> Line::chunk_index_for_position(size_t position)
