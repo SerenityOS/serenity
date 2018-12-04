@@ -53,35 +53,35 @@ void Line::insert(size_t index, const std::string& text)
         return;
     }
 
-    auto chunkAddress = chunkIndexForPosition(index);
-    auto chunkIndex = std::get<0>(chunkAddress);
-    auto& chunk = m_chunks[chunkIndex];
-    auto indexInChunk = std::get<1>(chunkAddress);
+    auto chunk_address = chunk_index_for_position(index);
+    auto chunk_index = std::get<0>(chunk_address);
+    auto& chunk = m_chunks[chunk_index];
+    auto index_in_chunk = std::get<1>(chunk_address);
 
     static FILE* f = fopen("log", "a");
-    fprintf(f, "#Column:%zu, Chunk:%zu, Index:%zu\n", index, chunkIndex, indexInChunk);
+    fprintf(f, "#Column:%zu, Chunk:%zu, Index:%zu\n", index, chunk_index, index_in_chunk);
     
-    auto leftString = chunk.data().substr(0, indexInChunk);
-    auto rightString = chunk.data().substr(indexInChunk, chunk.length() - indexInChunk);
+    auto left_string = chunk.data().substr(0, index_in_chunk);
+    auto right_string = chunk.data().substr(index_in_chunk, chunk.length() - index_in_chunk);
 
-    fprintf(f, "#{\"%s\", \"%s\", \"%s\"}\n", leftString.c_str(), text.c_str(), rightString.c_str());
+    fprintf(f, "#{\"%s\", \"%s\", \"%s\"}\n", left_string.c_str(), text.c_str(), right_string.c_str());
     fflush(f);
 
-    Chunk leftChunk { leftString };
-    Chunk midChunk { text };
-    Chunk rightChunk { rightString };
+    Chunk left_chunk { left_string };
+    Chunk mid_chunk { text };
+    Chunk right_chunk { right_string };
 
-    auto iterator = m_chunks.begin() + chunkIndex;
+    auto iterator = m_chunks.begin() + chunk_index;
     m_chunks.erase(iterator);
-    iterator = m_chunks.begin() + chunkIndex;
+    iterator = m_chunks.begin() + chunk_index;
 
     // Note reverse insertion order!
-    m_chunks.insert(iterator, rightChunk);
-    m_chunks.insert(iterator, midChunk);
-    m_chunks.insert(iterator, leftChunk);
+    m_chunks.insert(iterator, right_chunk);
+    m_chunks.insert(iterator, mid_chunk);
+    m_chunks.insert(iterator, left_chunk);
 }
 
-std::tuple<size_t, size_t> Line::chunkIndexForPosition(size_t position)
+std::tuple<size_t, size_t> Line::chunk_index_for_position(size_t position)
 {
     ASSERT(position < length());
     size_t seen { 0 };
