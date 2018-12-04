@@ -172,6 +172,7 @@ void Editor::move_down()
 {
     if (m_cursor.line() >= max_line())
         return;
+    coalesce_current_line();
     m_cursor.move_by(1, 0);
     if (m_cursor.column() > max_column())
         m_cursor.set_column(max_column());
@@ -179,10 +180,16 @@ void Editor::move_down()
     update_scroll_position_if_needed();
 }
 
+void Editor::coalesce_current_line()
+{
+    m_document->lines()[m_cursor.line()].coalesce();
+}
+
 void Editor::move_up()
 {
     if (m_cursor.line() == 0)
         return;
+    coalesce_current_line();
     m_cursor.move_by(-1, 0);
     if (m_cursor.column() > max_column())
         m_cursor.set_column(max_column());
