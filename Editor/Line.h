@@ -34,7 +34,7 @@ private:
     void append(const std::string&);
     void prepend(const std::string&);
 
-    std::tuple<size_t, size_t> chunkIndexForPosition(size_t);
+    std::tuple<size_t, size_t> chunk_index_for_position(size_t);
 
     std::deque<Chunk> m_chunks;
 };

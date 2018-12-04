@@ -21,7 +21,7 @@ bool FileReader::can_read() const
 std::string FileReader::read_line()
 {
     if (!m_file) {
-        fprintf(stderr, "Error: FileReader::readLine() called on invalid FileReader for '%s'\n", m_path.c_str());
+        fprintf(stderr, "Error: FileReader::read_line() called on invalid FileReader for '%s'\n", m_path.c_str());
         return std::string();
     }
 
