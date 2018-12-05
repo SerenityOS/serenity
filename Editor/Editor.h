@@ -30,6 +30,7 @@ public:
     bool is_idle() const { return m_mode == Idle; }
 
     void set_status_text(const std::string&);
+    void set_status_text(const char* fmt, ...);
 
     bool insert_text_at_cursor(const std::string&);
     bool remove_text_at_cursor(const std::string&);
@@ -57,6 +58,7 @@ private:
 
     void exec_command();
     void coalesce_current_line();
+    void write_to_file();
 
     OwnPtr<Document> m_document;
 

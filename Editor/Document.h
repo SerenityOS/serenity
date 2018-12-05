@@ -8,8 +8,10 @@
 
 class Document {
 public:
-    Document() { }
+    explicit Document(const std::string& path) : m_path(path) { }
     ~Document() { }
+
+    std::string path() const { return m_path; }
 
     Line& line(size_t index) { return *m_lines[index]; }
     const Line& line(size_t index) const { return *m_lines[index]; }
@@ -25,4 +27,5 @@ public:
 
 private:
     std::deque<OwnPtr<Line>> m_lines;
+    std::string m_path;
 };

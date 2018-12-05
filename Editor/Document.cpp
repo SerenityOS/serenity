@@ -3,7 +3,7 @@
 
 OwnPtr<Document> Document::create_from_file(const std::string& path)
 {
-    auto document = make<Document>();
+    auto document = make<Document>(path);
 
     FileReader reader(path);
     while (reader.can_read()) {

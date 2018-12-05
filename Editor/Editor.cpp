@@ -3,15 +3,14 @@
 #include "InsertOperation.h"
 
 #define _XOPEN_SOURCE_EXTENDED
-#include <locale.h>
 #include <ncurses.h>
+#include <stdarg.h>
 
 static int statusbar_attributes;
 static int ruler_attributes;
 
 Editor::Editor()
 {
-    setlocale(LC_ALL, "");
     initscr();
     start_color();
     use_default_colors();
@@ -158,6 +157,28 @@ int Editor::exec()
         }
     }
     return 0;
+}
+
+void Editor::write_to_file()
+{
+    FILE* fp = fopen(m_document->path().c_str(), "w");
+    if (!fp) {
+        set_status_text("Failed to open %s for writing", m_document->path().c_str());
+        return;
+    }
+
+    size_t bytes = 0;
+    for (size_t i = 0; i < m_document->line_count(); ++i) {
+        fwrite(m_document->line(i).data().c_str(), sizeof(char), m_document->line(i).length(), fp);
+        bytes += m_document->line(i).length();
+        if (i != m_document->line_count() - 1) {
+            fputc('\n', fp);
+            ++bytes;
+        }
+    }
+
+    fclose(fp);
+    set_status_text("Wrote %zu bytes across %zu lines", bytes, m_document->line_count());
 }
 
 void Editor::move_left()
@@ -329,10 +350,25 @@ void Editor::set_status_text(const std::string& text)
     m_status_text = text;
 }
 
+void Editor::set_status_text(const char* fmt, ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
+    char buf[128];
+    vsnprintf(buf, sizeof(buf), fmt, ap);
+    va_end(ap);
+    m_status_text = buf;
+}
+
 void Editor::exec_command()
 {
     if (m_command == "q") {
         m_should_quit = true;
+        return;
+    }
+
+    if (m_command == "w") {
+        write_to_file();
         return;
     }
 
