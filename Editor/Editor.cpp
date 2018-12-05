@@ -66,8 +66,8 @@ void Editor::redraw()
             printw("%3d ", current_document_line);
             attroff(ruler_attributes);
             m_ruler_width = 4;
-            size_t line_length = m_document->lines()[current_document_line].data().size();
-            const char* line_data = m_document->lines()[current_document_line].data().c_str();
+            size_t line_length = m_document->line(current_document_line).data().size();
+            const char* line_data = m_document->line(current_document_line).data().c_str();
             if (m_scroll_position.column() < line_length)
                 addnstr(line_data + m_scroll_position.column(), window_width - m_ruler_width);
         }
@@ -182,7 +182,7 @@ void Editor::move_down()
 
 void Editor::coalesce_current_line()
 {
-    m_document->lines()[m_cursor.line()].coalesce();
+    m_document->line(m_cursor.line()).coalesce();
 }
 
 void Editor::move_up()
@@ -212,7 +212,7 @@ size_t Editor::max_line() const
 
 size_t Editor::max_column() const
 {
-    return m_document->lines()[m_cursor.line()].data().size();
+    return m_document->line(m_cursor.line()).data().size();
 }
 
 void Editor::update_scroll_position_if_needed()
@@ -307,6 +307,11 @@ void Editor::insert_at_cursor(int ch)
 bool Editor::insert_text_at_cursor(const std::string& text)
 {
     ASSERT(text.size() == 1);
+    if (text[0] == '\n') {
+        m_document->newline_at(m_cursor);
+        m_cursor.move_to(m_cursor.line() + 1, 0);
+        return true;
+    }
     m_document->insert_at(m_cursor, text);
     m_cursor.move_by(0, text.size());
     return true;

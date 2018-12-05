@@ -30,6 +30,8 @@ public:
 
     void insert(size_t index, const std::string&);
 
+    std::string truncate(size_t length);
+
     void coalesce();
 
 private:

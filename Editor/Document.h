@@ -11,17 +11,18 @@ public:
     Document() { }
     ~Document() { }
 
-    const std::deque<Line>& lines() const { return m_lines; }
-    std::deque<Line>& lines() { return m_lines; }
+    Line& line(size_t index) { return *m_lines[index]; }
+    const Line& line(size_t index) const { return *m_lines[index]; }
     size_t line_count() const { return m_lines.size(); }
 
     static OwnPtr<Document> create_from_file(const std::string& path);
 
     bool insert_at(Position, const std::string&);
+    bool newline_at(Position);
     bool backspace_at(Position);
 
     void dump();
 
 private:
-    std::deque<Line> m_lines;
+    std::deque<OwnPtr<Line>> m_lines;
 };
