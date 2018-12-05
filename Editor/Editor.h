@@ -42,6 +42,7 @@ private:
     void move_down();
     void move_up();
     void move_right();
+    void move_to_end_of_line();
 
     size_t max_line() const;
     size_t max_column() const;
