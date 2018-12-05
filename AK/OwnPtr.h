@@ -94,7 +94,7 @@ private:
 template<class T, class... Args> inline OwnPtr<T>
 make(Args&&... args)
 {
-    return OwnPtr<T>(new T(forward<Args>(args)...));
+    return OwnPtr<T>(new T(AK::forward<Args>(args)...));
 }
 
 template<typename T>

@@ -41,6 +41,19 @@ void Line::prepend(const std::string& text)
     m_chunks.push_front(Chunk(text));
 }
 
+std::string Line::truncate(size_t length)
+{
+    coalesce();
+
+    auto remainder = data().substr(0, length);
+    auto chop = data().substr(length, data().length() - length);
+
+    m_chunks.clear();
+    m_chunks.push_back(Chunk{ remainder });
+
+    return chop;
+}
+
 void Line::insert(size_t index, const std::string& text)
 {
     if (index == 0) {

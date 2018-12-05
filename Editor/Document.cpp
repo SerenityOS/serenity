@@ -8,7 +8,7 @@ OwnPtr<Document> Document::create_from_file(const std::string& path)
     FileReader reader(path);
     while (reader.can_read()) {
         auto line = reader.read_line();
-        document->m_lines.push_back(Line(line));
+        document->m_lines.push_back(make<Line>(line));
     }
 
     return document;
@@ -17,14 +17,30 @@ OwnPtr<Document> Document::create_from_file(const std::string& path)
 void Document::dump()
 {
     fprintf(stderr, "Document{%p}\n", this);
-    for (size_t i = 0; i < m_lines.size(); ++i) {
-        fprintf(stderr, "[%02zu] %s\n", i, m_lines[i].data().c_str());
+    for (size_t i = 0; i < line_count(); ++i) {
+        fprintf(stderr, "[%02zu] %s\n", i, line(i).data().c_str());
     }
 }
 
-bool Document::backspace_at(Position position)
+bool Document::backspace_at(Position)
 {
     return false;
+}
+
+bool Document::newline_at(Position position)
+{
+    ASSERT(position.is_valid());
+    ASSERT(position.line() < line_count());
+    auto& line = this->line(position.line());
+    if (position.column() > line.length())
+        return false;
+    if (position.column() == line.length()) {
+        m_lines.insert(m_lines.begin() + position.line() + 1, make<Line>(""));
+        return true;
+    }
+    auto chop = line.truncate(position.column());
+    m_lines.insert(m_lines.begin() + position.line() + 1, make<Line>(chop));
+    return true;
 }
 
 bool Document::insert_at(Position position, const std::string& text)
@@ -38,7 +54,7 @@ bool Document::insert_at(Position position, const std::string& text)
     ASSERT(position.line() < line_count());
     if (position.line() >= line_count())
         return false;
-    Line& line = m_lines[position.line()];
+    auto& line = this->line(position.line());
     if (position.column() > line.length())
         return false;
     line.insert(position.column(), text);
