@@ -150,6 +150,7 @@ int Editor::exec()
             case 'k': move_up(); break;
             case 'l': move_right(); break;
             case 'i': set_mode(EditingDocument); break;
+            case 'A': move_to_end_of_line(); set_mode(EditingDocument); break;
             case 'a': move_right(); set_mode(EditingDocument); break;
             case 'q': m_should_quit = true; break;
             case '\\': set_mode(EditingCommand); break;
@@ -223,6 +224,12 @@ void Editor::move_right()
     if (m_cursor.column() >= max_column())
         return;
     m_cursor.move_by(0, 1);
+    update_scroll_position_if_needed();
+}
+
+void Editor::move_to_end_of_line()
+{
+    m_cursor.move_to(m_cursor.line(), m_document->line(m_cursor.line()).length());
     update_scroll_position_if_needed();
 }
 
