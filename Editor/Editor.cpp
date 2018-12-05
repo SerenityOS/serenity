@@ -150,9 +150,11 @@ int Editor::exec()
             case 'k': move_up(); break;
             case 'l': move_right(); break;
             case 'i': set_mode(EditingDocument); break;
+            case 'I': move_to_start_of_line(); set_mode(EditingDocument); break;
             case 'A': move_to_end_of_line(); set_mode(EditingDocument); break;
+            case '0': move_to_start_of_line(); break;
+            case '$': move_to_end_of_line(); break;
             case 'a': move_right(); set_mode(EditingDocument); break;
-            case 'q': m_should_quit = true; break;
             case '\\': set_mode(EditingCommand); break;
             }
         }
@@ -230,6 +232,12 @@ void Editor::move_right()
 void Editor::move_to_end_of_line()
 {
     m_cursor.move_to(m_cursor.line(), m_document->line(m_cursor.line()).length());
+    update_scroll_position_if_needed();
+}
+
+void Editor::move_to_start_of_line()
+{
+    m_cursor.move_to(m_cursor.line(), 0);
     update_scroll_position_if_needed();
 }
 
