@@ -27,6 +27,16 @@ bool Document::backspace_at(Position)
     return false;
 }
 
+bool Document::erase_at(Position position, int count)
+{
+    ASSERT(position.is_valid());
+    ASSERT(position.line() < line_count());
+    if (count == 0)
+        return false;
+    line(position.line()).erase(position.column(), count);
+    return true;
+}
+
 bool Document::newline_at(Position position)
 {
     ASSERT(position.is_valid());

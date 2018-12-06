@@ -34,6 +34,8 @@ public:
 
     void coalesce();
 
+    void erase(size_t column, int count);
+
 private:
     void append(const std::string&);
     void prepend(const std::string&);

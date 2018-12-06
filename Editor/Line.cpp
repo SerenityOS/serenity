@@ -117,3 +117,16 @@ void Line::coalesce()
     m_chunks.clear();
     m_chunks.push_back(Chunk{ contents });
 }
+
+void Line::erase(size_t column, int count)
+{
+    coalesce();
+    auto str = data();
+    if (count < 0)
+        str.erase(str.begin() + column + count, str.begin() + column);
+    else
+        str.erase(str.begin() + column, str.begin() + column + count);
+    m_chunks.clear();
+    m_chunks.push_back(Chunk{ str });
+}
+

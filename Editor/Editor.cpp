@@ -155,6 +155,8 @@ int Editor::exec()
             case '0': move_to_start_of_line(); break;
             case '$': move_to_end_of_line(); break;
             case 'a': move_right(); set_mode(EditingDocument); break;
+            case 'x': erase_right(); break;
+            case 'X': erase_left(); break;
             case '\\': set_mode(EditingCommand); break;
             }
         }
@@ -358,6 +360,31 @@ bool Editor::remove_text_at_cursor(const std::string& text)
     // FIXME: Implement
     ASSERT(false);
     return false;
+}
+
+void Editor::erase_left()
+{
+    if (m_cursor.column() == 0)
+        return;
+    m_document->erase_at(m_cursor, -1);
+    m_cursor.move_by(0, -1);
+}
+
+Line& Editor::current_line()
+{
+    return m_document->line(m_cursor.line());
+}
+
+const Line& Editor::current_line() const
+{
+    return m_document->line(m_cursor.line());
+}
+
+void Editor::erase_right()
+{
+    if (m_cursor.column() == current_line().length())
+        return;
+    m_document->erase_at(m_cursor, 1);
 }
 
 void Editor::set_status_text(const std::string& text)
