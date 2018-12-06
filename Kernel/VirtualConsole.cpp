@@ -433,6 +433,9 @@ void VirtualConsole::on_char(byte ch)
             return;
         }
         break;
+    case '\a':
+        // FIXME: Bell!
+        return;
     case '\t': {
         for (unsigned i = m_cursor_column; i < columns(); ++i) {
             if (m_horizontal_tabs[i]) {
