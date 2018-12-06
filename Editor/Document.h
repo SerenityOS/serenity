@@ -22,6 +22,7 @@ public:
     bool insert_at(Position, const std::string&);
     bool newline_at(Position);
     bool backspace_at(Position);
+    bool erase_at(Position, int count);
 
     void dump();
 

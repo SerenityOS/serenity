@@ -6,6 +6,7 @@
 #include <string>
 
 class Document;
+class Line;
 
 class Editor {
 public:
@@ -38,12 +39,17 @@ public:
     void run(OwnPtr<Operation>&&);
 
 private:
+    Line& current_line();
+    const Line& current_line() const;
+
     void move_left();
     void move_down();
     void move_up();
     void move_right();
     void move_to_end_of_line();
     void move_to_start_of_line();
+    void erase_left();
+    void erase_right();
 
     size_t max_line() const;
     size_t max_column() const;
