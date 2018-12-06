@@ -45,6 +45,8 @@ VirtualConsole::VirtualConsole(unsigned index, InitialContents initial_contents)
     m_horizontal_tabs = static_cast<byte*>(kmalloc(columns()));
     for (unsigned i = 0; i < columns(); ++i)
         m_horizontal_tabs[i] = (i % 8) == 0;
+    // Rightmost column is always last tab on line.
+    m_horizontal_tabs[columns() - 1] = 1;
 
     s_consoles[index] = this;
     m_buffer = (byte*)kmalloc_eternal(rows() * columns() * 2);
