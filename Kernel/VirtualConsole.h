@@ -73,4 +73,5 @@ private:
     EscapeState m_escape_state { Normal };
     Vector<byte> m_parameters;
     Vector<byte> m_intermediates;
+    byte* m_horizontal_tabs { nullptr };
 };

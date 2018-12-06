@@ -42,6 +42,10 @@ VirtualConsole::VirtualConsole(unsigned index, InitialContents initial_contents)
     , m_index(index)
 {
     set_size(80, 25);
+    m_horizontal_tabs = static_cast<byte*>(kmalloc(columns()));
+    for (unsigned i = 0; i < columns(); ++i)
+        m_horizontal_tabs[i] = (i % 8) == 0;
+
     s_consoles[index] = this;
     m_buffer = (byte*)kmalloc_eternal(rows() * columns() * 2);
     if (initial_contents == AdoptCurrentVGABuffer) {
@@ -56,6 +60,8 @@ VirtualConsole::VirtualConsole(unsigned index, InitialContents initial_contents)
 
 VirtualConsole::~VirtualConsole()
 {
+    kfree(m_horizontal_tabs);
+    m_horizontal_tabs = nullptr;
 }
 
 void VirtualConsole::clear()
@@ -427,6 +433,15 @@ void VirtualConsole::on_char(byte ch)
             return;
         }
         break;
+    case '\t': {
+        for (unsigned i = m_cursor_column; i < columns(); ++i) {
+            if (m_horizontal_tabs[i]) {
+                set_cursor(m_cursor_row, i);
+                return;
+            }
+        }
+        return;
+    }
     case '\n':
         scroll_up();
         set_cursor(m_cursor_row, m_cursor_column);
