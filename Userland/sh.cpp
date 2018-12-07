@@ -6,6 +6,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <termios.h>
 #include <sys/mman.h>
 #include <sys/utsname.h>
 #include <AK/FileSystemPath.h>
@@ -291,6 +292,9 @@ static int runcmd(char* cmd)
         return 0;
     }
 
+    struct termios trm;
+    tcgetattr(0, &trm);
+
     pid_t child = fork();
     if (!child) {
         setpgid(0, 0);
@@ -317,6 +321,8 @@ static int runcmd(char* cmd)
     // FIXME: Should I really have to tcsetpgrp() after my child has exited?
     //        Is the terminal controlling pgrp really still the PGID of the dead process?
     tcsetpgrp(0, getpid());
+
+    tcsetattr(0, TCSANOW, &trm);
 
     if (WIFEXITED(wstatus)) {
         if (WEXITSTATUS(wstatus) != 0)
