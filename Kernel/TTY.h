@@ -29,6 +29,8 @@ public:
     bool should_echo_input() const { return m_termios.c_lflag & ECHO; }
     bool in_canonical_mode() const { return m_termios.c_lflag & ICANON; }
 
+    void set_default_termios();
+
 protected:
     virtual void on_tty_write(const byte*, size_t) = 0;
     void set_size(unsigned short columns, unsigned short rows);

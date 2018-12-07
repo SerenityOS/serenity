@@ -114,7 +114,9 @@ char* tgoto(const char* cap, int col, int row)
 
 int tputs(const char* str, int affcnt, int (*putc)(int))
 {
-    printf("%s", str);
+    size_t len = strlen(str);
+    for (size_t i = 0; i < len; ++i)
+        putc(str[i]);
     return 0;
 }
 

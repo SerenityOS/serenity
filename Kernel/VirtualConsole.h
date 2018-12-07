@@ -41,6 +41,7 @@ private:
     void put_character_at(unsigned row, unsigned column, byte ch);
 
     void escape$A(const Vector<unsigned>&);
+    void escape$D(const Vector<unsigned>&);
     void escape$H(const Vector<unsigned>&);
     void escape$J(const Vector<unsigned>&);
     void escape$m(const Vector<unsigned>&);
