@@ -30,7 +30,7 @@ int main(int argc, char** argv)
             flag_colorize = false;
             break;
         default:
-            fprintf(stderr, "usage: ls [-lvG] [path]\n");
+            fprintf(stderr, "usage: ls [-laG] [path]\n");
             return 1;
         }
     }
