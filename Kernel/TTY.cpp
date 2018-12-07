@@ -9,14 +9,19 @@
 TTY::TTY(unsigned major, unsigned minor)
     : CharacterDevice(major, minor)
 {
-    memset(&m_termios, 0, sizeof(m_termios));
-    m_termios.c_lflag |= ISIG | ECHO;
-    static const char default_cc[32] = "\003\034\177\025\004\0\1\0\021\023\032\0\022\017\027\026\0";
-    memcpy(m_termios.c_cc, default_cc, sizeof(default_cc));
+    set_default_termios();
 }
 
 TTY::~TTY()
 {
+}
+
+void TTY::set_default_termios()
+{
+    memset(&m_termios, 0, sizeof(m_termios));
+    m_termios.c_lflag |= ISIG | ECHO;
+    static const char default_cc[32] = "\003\034\177\025\004\0\1\0\021\023\032\0\022\017\027\026\0";
+    memcpy(m_termios.c_cc, default_cc, sizeof(default_cc));
 }
 
 ssize_t TTY::read(byte* buffer, size_t size)
@@ -27,7 +32,11 @@ ssize_t TTY::read(byte* buffer, size_t size)
 ssize_t TTY::write(const byte* buffer, size_t size)
 {
 #ifdef TTY_DEBUG
-    dbgprintf("TTY::write %b    {%u}\n", buffer[0], size);
+    dbgprintf("TTY::write {%u} ", size);
+    for (size_t i = 0; i < size; ++i) {
+        dbgprintf("%b ", buffer[i]);
+    }
+    dbgprintf("\n");
 #endif
     on_tty_write(buffer, size);
     return 0;
@@ -71,12 +80,25 @@ void TTY::generate_signal(int signal)
 void TTY::set_termios(const Unix::termios& t)
 {
     m_termios = t;
-    dbgprintf("%s set_termios: IECHO? %u, ISIG? %u, ICANON? %u\n",
+    dbgprintf("%s set_termios: ECHO=%u, ISIG=%u, ICANON=%u\n",
         tty_name().characters(),
         should_echo_input(),
         should_generate_signals(),
         in_canonical_mode()
     );
+    dbgprintf("%s set_termios: ECHOE=%u, ECHOK=%u, ECHONL=%u\n",
+              tty_name().characters(),
+              (m_termios.c_lflag & ECHOE) != 0,
+              (m_termios.c_lflag & ECHOK) != 0,
+              (m_termios.c_lflag & ECHONL) != 0
+              );
+    dbgprintf("%s set_termios: ISTRIP=%u, ICRNL=%u, INLCR=%u, IGNCR=%u\n",
+              tty_name().characters(),
+              (m_termios.c_iflag & ISTRIP) != 0,
+              (m_termios.c_iflag & ICRNL) != 0,
+              (m_termios.c_iflag & INLCR) != 0,
+              (m_termios.c_iflag & IGNCR) != 0
+              );
 }
 
 int TTY::ioctl(Process& process, unsigned request, unsigned arg)

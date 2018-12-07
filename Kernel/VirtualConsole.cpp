@@ -281,6 +281,17 @@ void VirtualConsole::escape$A(const Vector<unsigned>& params)
     set_cursor(new_row, m_cursor_column);
 }
 
+void VirtualConsole::escape$D(const Vector<unsigned>& params)
+{
+    int num = 1;
+    if (params.size() >= 1)
+        num = params[0];
+    int new_column = (int)m_cursor_column - num;
+    if (new_column < 0)
+        new_column = 0;
+    set_cursor(m_cursor_row, new_column);
+}
+
 void VirtualConsole::escape$J(const Vector<unsigned>& params)
 {
     int mode = 0;
@@ -319,6 +330,8 @@ void VirtualConsole::execute_escape_sequence(byte final)
         params.append(value);
     }
     switch (final) {
+    case 'A': escape$A(params); break;
+    case 'D': escape$D(params); break;
     case 'H': escape$H(params); break;
     case 'J': escape$J(params); break;
     case 'm': escape$m(params); break;
