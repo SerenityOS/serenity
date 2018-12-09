@@ -6,15 +6,16 @@ OBJS = \
 	FileReader.o \
 	Editor.o \
 	main.o \
-        InsertOperation.o \
-        Operation.o \
-        UndoStack.o
+    InsertOperation.o \
+    Operation.o \
+    UndoStack.o
 
-CXXFLAGS = -Os -std=c++1z -W -Wall -g -I../AK
-LDFLAGS = -lncurses
+CXX = g++
+CXXFLAGS = -O2 -std=c++1z -W -Wall -g -I../AK
+LIBS = -lncurses
 
 $(BINARY): $(OBJS)
-	$(CXX) $(LDFLAGS) -o $@ $(OBJS)
+	$(CXX) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
 
 all: $(BINARY)
 
