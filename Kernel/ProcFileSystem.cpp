@@ -83,7 +83,7 @@ ByteBuffer procfs$pid_vmo(Process& process)
             region->vmo().is_anonymous() ? "anonymous" : "file-backed",
             region->vmo().name().characters(),
             &region->vmo(),
-            region->vmo().retainCount());
+            region->vmo().retain_count());
         for (size_t i = 0; i < region->vmo().page_count(); ++i) {
             auto& physical_page = region->vmo().physical_pages()[i];
             ptr += ksprintf(ptr, "P%x%s(%u) ",
@@ -205,7 +205,7 @@ ByteBuffer procfs$mm()
         ptr += ksprintf(ptr, "VMO: %p %s(%u): p:%4u %s\n",
             vmo,
             vmo->is_anonymous() ? "anon" : "file",
-            vmo->retainCount(),
+            vmo->retain_count(),
             vmo->page_count(),
             vmo->name().characters());
     }

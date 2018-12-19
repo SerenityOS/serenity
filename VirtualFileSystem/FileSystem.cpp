@@ -129,6 +129,12 @@ Inode::~Inode()
 {
 }
 
+void Inode::will_be_destroyed()
+{
+    if (m_metadata_dirty)
+        flush_metadata();
+}
+
 int Inode::set_atime(Unix::time_t ts)
 {
     if (fs().is_readonly())
@@ -136,7 +142,7 @@ int Inode::set_atime(Unix::time_t ts)
     if (m_metadata.atime == ts)
         return 0;
     m_metadata.atime = ts;
-    m_dirty = true;
+    m_metadata_dirty = true;
     return 0;
 }
 
@@ -147,7 +153,7 @@ int Inode::set_ctime(Unix::time_t ts)
     if (m_metadata.ctime == ts)
         return 0;
     m_metadata.ctime = ts;
-    m_dirty = true;
+    m_metadata_dirty = true;
     return 0;
 }
 
@@ -158,6 +164,6 @@ int Inode::set_mtime(Unix::time_t ts)
     if (m_metadata.mtime == ts)
         return 0;
     m_metadata.mtime = ts;
-    m_dirty = true;
+    m_metadata_dirty = true;
     return 0;
 }
