@@ -35,6 +35,8 @@ public:
 
     virtual ssize_t read_inode_bytes(InodeIdentifier, Unix::off_t offset, size_t count, byte* buffer, FileDescriptor*) const = 0;
 
+    bool is_readonly() const { return m_readonly; }
+
     struct DirectoryEntry {
         DirectoryEntry(const char* name, InodeIdentifier, byte fileType);
         DirectoryEntry(const char* name, size_t name_length, InodeIdentifier, byte fileType);
@@ -44,7 +46,6 @@ public:
         byte fileType { 0 };
     };
 
-    virtual int set_atime_and_mtime(InodeIdentifier, dword atime, dword mtime) = 0;
     virtual InodeIdentifier create_inode(InodeIdentifier parentInode, const String& name, Unix::mode_t, unsigned size, int& error) = 0;
     virtual InodeIdentifier create_directory(InodeIdentifier parentInode, const String& name, Unix::mode_t, int& error) = 0;
 
@@ -59,6 +60,7 @@ protected:
 
 private:
     dword m_fsid { 0 };
+    bool m_readonly { false };
 };
 
 class Inode : public Retainable<Inode> {
@@ -85,7 +87,13 @@ public:
     virtual InodeIdentifier lookup(const String& name) = 0;
     virtual String reverse_lookup(InodeIdentifier) = 0;
 
-    int set_atime_and_mtime(Unix::time_t atime, Unix::time_t mtime);
+    bool is_dirty() const { return m_dirty; }
+
+    int set_atime(Unix::time_t);
+    int set_ctime(Unix::time_t);
+    int set_mtime(Unix::time_t);
+
+    virtual void flush_metadata() = 0;
 
 protected:
     Inode(FS& fs, unsigned index)
@@ -95,11 +103,13 @@ protected:
     }
 
     virtual void populate_metadata() const = 0;
+    void set_dirty(bool b) { m_dirty = b; }
 
     mutable InodeMetadata m_metadata;
 private:
     FS& m_fs;
     unsigned m_index { 0 };
+    bool m_dirty { false };
 };
 
 inline FS* InodeIdentifier::fs()

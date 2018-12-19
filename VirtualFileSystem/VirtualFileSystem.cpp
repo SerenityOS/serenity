@@ -170,8 +170,8 @@ bool VFS::mount_root(RetainPtr<FS>&& fileSystem)
     m_root_vnode = move(node);
 
     kprintf("VFS: mounted root on %s{%p}\n",
-        m_root_vnode->fileSystem()->class_name(),
-        m_root_vnode->fileSystem());
+        m_root_vnode->fs()->class_name(),
+        m_root_vnode->fs());
 
     m_mounts.append(move(mount));
     return true;
@@ -278,7 +278,7 @@ RetainPtr<FileDescriptor> VFS::create(const String& path, InodeIdentifier base, 
     // FIXME: Do the real thing, not just this fake thing!
     (void) path;
     (void) base;
-    m_root_vnode->fileSystem()->create_inode(m_root_vnode->fileSystem()->root_inode(), "empty", 0100644, 0, error);
+    m_root_vnode->fs()->create_inode(m_root_vnode->fs()->root_inode(), "empty", 0100644, 0, error);
     return nullptr;
 }
 

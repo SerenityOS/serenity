@@ -1,5 +1,6 @@
 #include <AK/Assertions.h>
 #include <AK/HashMap.h>
+#include <LibC/errno_numbers.h>
 #include "FileSystem.h"
 
 static dword s_lastFileSystemID;
@@ -60,7 +61,7 @@ ByteBuffer Inode::read_entire(FileDescriptor* descriptor)
         ASSERT(offset <= (ssize_t)initial_size); // FIXME: Support dynamically growing the buffer.
     }
     if (nread < 0) {
-        kprintf("CoreInode::read_entire: ERROR: %d\n", nread);
+        kprintf("Inode::read_entire: ERROR: %d\n", nread);
         return nullptr;
     }
 
@@ -128,7 +129,35 @@ Inode::~Inode()
 {
 }
 
-int Inode::set_atime_and_mtime(Unix::time_t atime, Unix::time_t mtime)
+int Inode::set_atime(Unix::time_t ts)
 {
-    return fs().set_atime_and_mtime(identifier(), atime, mtime);
+    if (fs().is_readonly())
+        return -EROFS;
+    if (m_metadata.atime == ts)
+        return 0;
+    m_metadata.atime = ts;
+    m_dirty = true;
+    return 0;
+}
+
+int Inode::set_ctime(Unix::time_t ts)
+{
+    if (fs().is_readonly())
+        return -EROFS;
+    if (m_metadata.ctime == ts)
+        return 0;
+    m_metadata.ctime = ts;
+    m_dirty = true;
+    return 0;
+}
+
+int Inode::set_mtime(Unix::time_t ts)
+{
+    if (fs().is_readonly())
+        return -EROFS;
+    if (m_metadata.mtime == ts)
+        return 0;
+    m_metadata.mtime = ts;
+    m_dirty = true;
+    return 0;
 }

@@ -304,6 +304,21 @@ void Ext2FSInode::populate_metadata() const
     }
 }
 
+void Ext2FSInode::flush_metadata()
+{
+    m_raw_inode.i_size = m_metadata.size;
+    m_raw_inode.i_mode = m_metadata.mode;
+    m_raw_inode.i_uid = m_metadata.uid;
+    m_raw_inode.i_gid = m_metadata.gid;
+    m_raw_inode.i_links_count = m_metadata.linkCount;
+    m_raw_inode.i_atime = m_metadata.atime;
+    m_raw_inode.i_ctime = m_metadata.ctime;
+    m_raw_inode.i_mtime = m_metadata.mtime;
+    m_raw_inode.i_dtime = m_metadata.dtime;
+    m_raw_inode.i_blocks = m_metadata.blockCount;
+    fs().write_ext2_inode(index(), m_raw_inode);
+}
+
 RetainPtr<Inode> Ext2FS::get_inode(InodeIdentifier inode) const
 {
     ASSERT(inode.fsid() == id());
@@ -714,22 +729,6 @@ bool Ext2FS::modify_link_count(InodeIndex inode, int delta)
     e2inode->i_links_count = newLinkCount;
 
     return write_ext2_inode(inode, *e2inode);
-}
-
-int Ext2FS::set_atime_and_mtime(InodeIdentifier inode, dword atime, dword mtime)
-{
-    ASSERT(inode.fsid() == id());
-
-    auto e2inode = lookup_ext2_inode(inode.index());
-    if (!e2inode)
-        return -EIO;
-
-    dbgprintf("changing inode %u atime from %u to %u\n", inode.index(), e2inode->i_atime, atime);
-    dbgprintf("changing inode %u mtime from %u to %u\n", inode.index(), e2inode->i_mtime, mtime);
-    e2inode->i_mtime = mtime;
-    e2inode->i_atime = atime;
-
-    return write_ext2_inode(inode.index(), *e2inode);
 }
 
 bool Ext2FS::write_ext2_inode(unsigned inode, const ext2_inode& e2inode)
