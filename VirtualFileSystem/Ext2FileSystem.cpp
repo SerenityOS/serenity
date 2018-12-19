@@ -306,6 +306,7 @@ void Ext2FSInode::populate_metadata() const
 
 void Ext2FSInode::flush_metadata()
 {
+    dbgprintf("Ext2FSInode: flush_metadata for inode %u\n", index());
     m_raw_inode.i_size = m_metadata.size;
     m_raw_inode.i_mode = m_metadata.mode;
     m_raw_inode.i_uid = m_metadata.uid;

@@ -44,6 +44,12 @@ void initialize()
     kprintf("syscall: int 0x80 handler installed\n");
 }
 
+static int sync()
+{
+    VFS::the().sync();
+    return 0;
+}
+
 static dword handle(RegisterDump& regs, dword function, dword arg1, dword arg2, dword arg3)
 {
     ASSERT_INTERRUPTS_ENABLED();
@@ -179,6 +185,8 @@ static dword handle(RegisterDump& regs, dword function, dword arg1, dword arg2, 
         return current->sys$times((Unix::tms*)arg1);
     case Syscall::SC_utime:
         return current->sys$utime((const char*)arg1, (const Unix::utimbuf*)arg2);
+    case Syscall::SC_sync:
+        return sync();
     default:
         kprintf("<%u> int0x80: Unknown function %u requested {%x, %x, %x}\n", current->pid(), function, arg1, arg2, arg3);
         break;

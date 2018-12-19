@@ -11,6 +11,7 @@ extern char** environ;
 inline int getpagesize() { return 4096; }
 pid_t fork();
 int execve(const char* filename, const char** argv, const char** envp);
+void sync();
 void _exit(int status);
 pid_t getsid(pid_t);
 pid_t setsid();

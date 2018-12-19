@@ -123,6 +123,8 @@ public:
 
     InodeIdentifier root_inode_id() const;
 
+    void sync();
+
 private:
     friend class FileDescriptor;
     friend class Vnode;

@@ -23,14 +23,13 @@ cp -v ../Userland/cat mnt/bin/cat
 cp -v ../Userland/uname mnt/bin/uname
 cp -v ../Userland/clear mnt/bin/clear
 cp -v ../Userland/tst mnt/bin/tst
-cp -v ../Userland/ft mnt/bin/ft
-cp -v ../Userland/ft2 mnt/bin/ft2
 cp -v ../Userland/mm mnt/bin/mm
 cp -v ../Userland/kill mnt/bin/kill
 cp -v ../Userland/tty mnt/bin/tty
 cp -v ../Userland/strsignal mnt/bin/strsignal
 cp -v ../Userland/mkdir mnt/bin/mkdir
 cp -v ../Userland/touch mnt/bin/touch
+cp -v ../Userland/sync mnt/bin/sync
 sh sync-local.sh
 cp -v kernel.map mnt/
 ln -s dir_a mnt/dir_cur
