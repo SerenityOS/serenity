@@ -21,12 +21,13 @@ public:
     bool is_symlink() const { return isSymbolicLink(m_raw_inode.i_mode); }
 
 private:
-    // ^CoreInode
+    // ^Inode
     virtual ssize_t read_bytes(Unix::off_t, size_t, byte* buffer, FileDescriptor*) override;
     virtual void populate_metadata() const override;
     virtual bool traverse_as_directory(Function<bool(const FS::DirectoryEntry&)>) override;
     virtual InodeIdentifier lookup(const String& name) override;
     virtual String reverse_lookup(InodeIdentifier) override;
+    virtual void flush_metadata() override;
 
     void populate_lookup_cache();
 
@@ -72,7 +73,6 @@ private:
     virtual InodeIdentifier root_inode() const override;
     virtual bool write_inode(InodeIdentifier, const ByteBuffer&) override;
     virtual InodeMetadata inode_metadata(InodeIdentifier) const override;
-    virtual int set_atime_and_mtime(InodeIdentifier, dword atime, dword mtime) override;
     virtual InodeIdentifier create_inode(InodeIdentifier parentInode, const String& name, Unix::mode_t, unsigned size, int& error) override;
     virtual ssize_t read_inode_bytes(InodeIdentifier, Unix::off_t offset, size_t count, byte* buffer, FileDescriptor*) const override;
     virtual InodeIdentifier create_directory(InodeIdentifier parentInode, const String& name, Unix::mode_t, int& error) override;

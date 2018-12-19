@@ -50,6 +50,7 @@ public:
     InodeMetadata metadata() const { return m_vnode->metadata(); }
 
     Vnode* vnode() { return m_vnode.ptr(); }
+    Inode* inode() { return m_vnode ? m_vnode->core_inode() : nullptr; }
 
 #ifdef SERENITY
     bool is_blocking() const { return m_is_blocking; }
@@ -63,9 +64,6 @@ public:
 #endif
 
     ByteBuffer& generator_cache() { return m_generator_cache; }
-
-    int set_atime_and_mtime(time_t, time_t);
-    int set_ctime(time_t);
 
 private:
     friend class VFS;

@@ -1090,6 +1090,9 @@ int Process::sys$utime(const char* pathname, const Unix::utimbuf* buf)
     auto descriptor = VFS::the().open(move(path), error, 0, cwd_inode()->identifier());
     if (!descriptor)
         return error;
+    auto& inode = *descriptor->inode();
+    if (inode.fs().is_readonly())
+        return -EROFS;
     Unix::time_t atime;
     Unix::time_t mtime;
     if (buf) {
@@ -1100,7 +1103,10 @@ int Process::sys$utime(const char* pathname, const Unix::utimbuf* buf)
         mtime = now;
         atime = now;
     }
-    return descriptor->set_atime_and_mtime(atime, mtime);
+    inode.set_atime(atime);
+    inode.set_mtime(atime);
+    inode.flush_metadata();
+    return 0;
 }
 
 int Process::sys$access(const char* pathname, int mode)

@@ -49,8 +49,8 @@ public:
     void retain();
     void release();
 
-    FS* fileSystem() { return inode.fs(); }
-    const FS* fileSystem() const { return inode.fs(); }
+    FS* fs() { return inode.fs(); }
+    const FS* fs() const { return inode.fs(); }
 
     VFS* vfs() { return m_vfs; }
     const VFS* vfs() const { return m_vfs; }

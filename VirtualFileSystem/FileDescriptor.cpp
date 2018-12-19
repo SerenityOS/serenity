@@ -143,7 +143,7 @@ ssize_t FileDescriptor::read(byte* buffer, size_t count)
         // FIXME: What should happen to m_currentOffset?
         return m_vnode->characterDevice()->read(buffer, count);
     }
-    ssize_t nread = m_vnode->fileSystem()->read_inode_bytes(m_vnode->inode, m_current_offset, count, buffer, this);
+    ssize_t nread = m_vnode->fs()->read_inode_bytes(m_vnode->inode, m_current_offset, count, buffer, this);
     m_current_offset += nread;
     return nread;
 }
@@ -196,7 +196,7 @@ ByteBuffer FileDescriptor::read_entire_file()
 
     if (m_vnode->core_inode())
         return m_vnode->core_inode()->read_entire(this);
-    return m_vnode->fileSystem()->read_entire_inode(m_vnode->inode, this);
+    return m_vnode->fs()->read_entire_inode(m_vnode->inode, this);
 }
 
 bool FileDescriptor::is_directory() const
@@ -287,18 +287,4 @@ FileDescriptor::FileDescriptor(FIFO& fifo, FIFO::Direction direction)
     , m_fifo_direction(direction)
 {
     m_fifo->open(direction);
-}
-
-int FileDescriptor::set_atime_and_mtime(time_t atime, time_t mtime)
-{
-    if (!m_vnode || !m_vnode->core_inode())
-        return -EBADF;
-    return m_vnode->core_inode()->set_atime_and_mtime(atime, mtime);
-}
-
-int FileDescriptor::set_ctime(time_t ctime)
-{
-    (void) ctime;
-    // FIXME: Implement.
-    ASSERT_NOT_REACHED();
 }
