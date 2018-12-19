@@ -44,7 +44,7 @@ public:
         byte fileType { 0 };
     };
 
-    virtual bool set_mtime(InodeIdentifier, dword timestamp) = 0;
+    virtual int set_atime_and_mtime(InodeIdentifier, dword atime, dword mtime) = 0;
     virtual InodeIdentifier create_inode(InodeIdentifier parentInode, const String& name, Unix::mode_t, unsigned size, int& error) = 0;
     virtual InodeIdentifier create_directory(InodeIdentifier parentInode, const String& name, Unix::mode_t, int& error) = 0;
 
@@ -84,6 +84,8 @@ public:
     virtual bool traverse_as_directory(Function<bool(const FS::DirectoryEntry&)>) = 0;
     virtual InodeIdentifier lookup(const String& name) = 0;
     virtual String reverse_lookup(InodeIdentifier) = 0;
+
+    int set_atime_and_mtime(Unix::time_t atime, Unix::time_t mtime);
 
 protected:
     CoreInode(FS& fs, unsigned index)

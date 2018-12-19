@@ -32,6 +32,7 @@ LIBC_OBJS = \
        qsort.o \
        ioctl.o \
        math.o \
+       utime.o \
        entry.o
 
 OBJS = $(AK_OBJS) $(LIBC_OBJS)

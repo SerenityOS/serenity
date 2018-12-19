@@ -152,6 +152,8 @@ int do_dir(const char* path)
 
         printf(" %10u  ", st.st_size);
 
+        printf(" %10u  ", st.st_mtime);
+
         print_name(st, de->d_name, pathbuf);
 
         printf("\n");

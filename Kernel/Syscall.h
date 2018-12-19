@@ -64,6 +64,7 @@
     __ENUMERATE_SYSCALL(ioctl) \
     __ENUMERATE_SYSCALL(mkdir) \
     __ENUMERATE_SYSCALL(times) \
+    __ENUMERATE_SYSCALL(utime) \
 
 
 #define DO_SYSCALL_A0(function) Syscall::invoke((dword)(function))

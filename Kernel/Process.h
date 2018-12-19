@@ -173,6 +173,7 @@ public:
     int sys$ioctl(int fd, unsigned request, unsigned arg);
     int sys$mkdir(const char* pathname, mode_t mode);
     Unix::clock_t sys$times(Unix::tms*);
+    int sys$utime(const char* pathname, const struct Unix::utimbuf*);
 
     static void initialize();
 
