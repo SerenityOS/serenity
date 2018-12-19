@@ -252,15 +252,6 @@ void VFS::traverse_directory_inode(CoreInode& dir_inode, Function<bool(const FS:
     });
 }
 
-bool VFS::touch(const String& path)
-{
-    int error;
-    auto inode = resolve_path(path, root_inode_id(), error);
-    if (!inode.is_valid())
-        return false;
-    return inode.fs()->set_mtime(inode, ktime(nullptr));
-}
-
 RetainPtr<FileDescriptor> VFS::open(CharacterDevice& device, int options)
 {
     // FIXME: Respect options.

@@ -288,3 +288,17 @@ FileDescriptor::FileDescriptor(FIFO& fifo, FIFO::Direction direction)
 {
     m_fifo->open(direction);
 }
+
+int FileDescriptor::set_atime_and_mtime(time_t atime, time_t mtime)
+{
+    if (!m_vnode || !m_vnode->core_inode())
+        return -EBADF;
+    return m_vnode->core_inode()->set_atime_and_mtime(atime, mtime);
+}
+
+int FileDescriptor::set_ctime(time_t ctime)
+{
+    (void) ctime;
+    // FIXME: Implement.
+    ASSERT_NOT_REACHED();
+}

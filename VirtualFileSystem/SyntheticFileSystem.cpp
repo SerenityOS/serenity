@@ -146,11 +146,12 @@ InodeMetadata SynthFS::inode_metadata(InodeIdentifier inode) const
     return (*it).value->m_metadata;
 }
 
-bool SynthFS::set_mtime(InodeIdentifier, dword timestamp)
+int SynthFS::set_atime_and_mtime(InodeIdentifier, dword atime, dword mtime)
 {
-    (void) timestamp;
+    (void) atime;
+    (void) mtime;
     kprintf("FIXME: Implement SyntheticFileSystem::setModificationTime().\n");
-    return false;
+    return -ENOTIMPL;
 }
 
 InodeIdentifier SynthFS::create_inode(InodeIdentifier parentInode, const String& name, Unix::mode_t mode, unsigned size, int& error)

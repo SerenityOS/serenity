@@ -64,13 +64,15 @@ public:
 
     ByteBuffer& generator_cache() { return m_generator_cache; }
 
+    int set_atime_and_mtime(time_t, time_t);
+    int set_ctime(time_t);
+
 private:
     friend class VFS;
     explicit FileDescriptor(RetainPtr<Vnode>&&);
     FileDescriptor(FIFO&, FIFO::Direction);
 
     RetainPtr<Vnode> m_vnode;
-    RetainPtr<CoreInode> m_inode;
 
     Unix::off_t m_current_offset { 0 };
 

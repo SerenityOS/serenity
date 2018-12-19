@@ -1079,6 +1079,30 @@ int Process::sys$close(int fd)
     return rc;
 }
 
+int Process::sys$utime(const char* pathname, const Unix::utimbuf* buf)
+{
+    if (!validate_read_str(pathname))
+        return -EFAULT;
+    if (buf && !validate_read_typed(buf))
+        return -EFAULT;
+    String path(pathname);
+    int error;
+    auto descriptor = VFS::the().open(move(path), error, 0, cwd_inode()->identifier());
+    if (!descriptor)
+        return error;
+    Unix::time_t atime;
+    Unix::time_t mtime;
+    if (buf) {
+        atime = buf->actime;
+        mtime = buf->modtime;
+    } else {
+        auto now = RTC::now();
+        mtime = now;
+        atime = now;
+    }
+    return descriptor->set_atime_and_mtime(atime, mtime);
+}
+
 int Process::sys$access(const char* pathname, int mode)
 {
     (void) mode;

@@ -264,6 +264,11 @@ typedef signed_qword off_t;
 typedef ::time_t time_t;
 #endif
 
+struct utimbuf {
+    time_t actime;
+    time_t modtime;
+};
+
 typedef dword blksize_t;
 typedef dword blkcnt_t;
 

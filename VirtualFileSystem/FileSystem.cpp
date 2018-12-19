@@ -127,3 +127,8 @@ FS::DirectoryEntry::DirectoryEntry(const char* n, size_t nl, InodeIdentifier i, 
 CoreInode::~CoreInode()
 {
 }
+
+int CoreInode::set_atime_and_mtime(Unix::time_t atime, Unix::time_t mtime)
+{
+    return fs().set_atime_and_mtime(identifier(), atime, mtime);
+}

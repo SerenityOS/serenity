@@ -716,16 +716,18 @@ bool Ext2FS::modify_link_count(InodeIndex inode, int delta)
     return write_ext2_inode(inode, *e2inode);
 }
 
-bool Ext2FS::set_mtime(InodeIdentifier inode, dword timestamp)
+int Ext2FS::set_atime_and_mtime(InodeIdentifier inode, dword atime, dword mtime)
 {
     ASSERT(inode.fsid() == id());
 
     auto e2inode = lookup_ext2_inode(inode.index());
     if (!e2inode)
-        return false;
+        return -EIO;
 
-    kprintf("changing inode %u mtime from %u to %u\n", inode.index(), e2inode->i_mtime, timestamp);
-    e2inode->i_mtime = timestamp;
+    dbgprintf("changing inode %u atime from %u to %u\n", inode.index(), e2inode->i_atime, atime);
+    dbgprintf("changing inode %u mtime from %u to %u\n", inode.index(), e2inode->i_mtime, mtime);
+    e2inode->i_mtime = mtime;
+    e2inode->i_atime = atime;
 
     return write_ext2_inode(inode.index(), *e2inode);
 }

@@ -19,7 +19,8 @@ OBJS = \
        strsignal.o \
        fgrep.o \
        tty.o \
-       mkdir.o
+       mkdir.o \
+       touch.o
 
 APPS = \
        id \
@@ -42,7 +43,8 @@ APPS = \
        strsignal \
        fgrep \
        tty \
-       mkdir
+       mkdir \
+       touch
 
 ARCH_FLAGS =
 STANDARD_FLAGS = -std=c++17 -nostdinc++ -nostdlib -nostdinc
@@ -123,6 +125,9 @@ strsignal: strsignal.o
 	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
 
 mkdir: mkdir.o
+	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
+
+touch: touch.o
 	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
 
 .cpp.o:
