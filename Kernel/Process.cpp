@@ -1104,7 +1104,7 @@ int Process::sys$utime(const char* pathname, const Unix::utimbuf* buf)
         atime = now;
     }
     inode.set_atime(atime);
-    inode.set_mtime(atime);
+    inode.set_mtime(mtime);
     inode.flush_metadata();
     return 0;
 }

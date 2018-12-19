@@ -317,6 +317,7 @@ void Ext2FSInode::flush_metadata()
     m_raw_inode.i_dtime = m_metadata.dtime;
     m_raw_inode.i_blocks = m_metadata.blockCount;
     fs().write_ext2_inode(index(), m_raw_inode);
+    set_metadata_dirty(false);
 }
 
 RetainPtr<Inode> Ext2FS::get_inode(InodeIdentifier inode) const

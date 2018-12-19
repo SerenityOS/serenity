@@ -87,13 +87,15 @@ public:
     virtual InodeIdentifier lookup(const String& name) = 0;
     virtual String reverse_lookup(InodeIdentifier) = 0;
 
-    bool is_dirty() const { return m_dirty; }
+    bool is_metadata_dirty() const { return m_metadata_dirty; }
 
     int set_atime(Unix::time_t);
     int set_ctime(Unix::time_t);
     int set_mtime(Unix::time_t);
 
     virtual void flush_metadata() = 0;
+
+    void will_be_destroyed();
 
 protected:
     Inode(FS& fs, unsigned index)
@@ -103,13 +105,13 @@ protected:
     }
 
     virtual void populate_metadata() const = 0;
-    void set_dirty(bool b) { m_dirty = b; }
+    void set_metadata_dirty(bool b) { m_metadata_dirty = b; }
 
     mutable InodeMetadata m_metadata;
 private:
     FS& m_fs;
     unsigned m_index { 0 };
-    bool m_dirty { false };
+    bool m_metadata_dirty { false };
 };
 
 inline FS* InodeIdentifier::fs()
