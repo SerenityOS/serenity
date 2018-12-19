@@ -47,13 +47,11 @@ VFS::~VFS()
 
 auto VFS::makeNode(InodeIdentifier inode) -> RetainPtr<Vnode>
 {
-    auto metadata = inode.metadata();
-    if (!metadata.isValid())
+    auto core_inode = inode.fs()->get_inode(inode);
+    if (!core_inode)
         return nullptr;
 
-    auto core_inode = inode.fs()->get_inode(inode);
-    if (core_inode)
-        core_inode->m_metadata = metadata;
+    auto& metadata = core_inode->metadata();
 
     InterruptDisabler disabler;
 
@@ -500,4 +498,9 @@ void VFS::for_each_mount(Function<void(const Mount&)> callback) const
     for (auto& mount : m_mounts) {
         callback(*mount);
     }
+}
+
+void VFS::sync()
+{
+    FS::sync();
 }

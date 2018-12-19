@@ -294,4 +294,9 @@ void _exit(int status)
     assert(false);
 }
 
+void sync()
+{
+    Syscall::invoke(Syscall::SC_sync);
+}
+
 }

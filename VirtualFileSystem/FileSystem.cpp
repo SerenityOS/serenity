@@ -4,36 +4,45 @@
 #include "FileSystem.h"
 
 static dword s_lastFileSystemID;
-static HashMap<dword, FS*>* map;
+static HashMap<dword, FS*>* s_fs_map;
+static HashTable<Inode*>* s_inode_set;
 
-static HashMap<dword, FS*>& fileSystems()
+static HashMap<dword, FS*>& all_fses()
 {
-    if (!map)
-        map = new HashMap<dword, FS*>();
-    return *map;
+    if (!s_fs_map)
+        s_fs_map = new HashMap<dword, FS*>();
+    return *s_fs_map;
+}
+
+static HashTable<Inode*>& all_inodes()
+{
+    if (!s_inode_set)
+        s_inode_set = new HashTable<Inode*>();
+    return *s_inode_set;
 }
 
 void FS::initializeGlobals()
 {
     s_lastFileSystemID = 0;
-    map = 0;
+    s_fs_map = nullptr;
+    s_inode_set = nullptr;
 }
 
 FS::FS()
     : m_fsid(++s_lastFileSystemID)
 {
-    fileSystems().set(m_fsid, this);
+    all_fses().set(m_fsid, this);
 }
 
 FS::~FS()
 {
-    fileSystems().remove(m_fsid);
+    all_fses().remove(m_fsid);
 }
 
 FS* FS::from_fsid(dword id)
 {
-    auto it = fileSystems().find(id);
-    if (it != fileSystems().end())
+    auto it = all_fses().find(id);
+    if (it != all_fses().end())
         return (*it).value;
     return nullptr;
 }
@@ -125,8 +134,16 @@ FS::DirectoryEntry::DirectoryEntry(const char* n, size_t nl, InodeIdentifier i, 
     name[nl] = '\0';
 }
 
+Inode::Inode(FS& fs, unsigned index)
+    : m_fs(fs)
+    , m_index(index)
+{
+    all_inodes().set(this);
+}
+
 Inode::~Inode()
 {
+    all_inodes().remove(this);
 }
 
 void Inode::will_be_destroyed()
@@ -166,4 +183,12 @@ int Inode::set_mtime(Unix::time_t ts)
     m_metadata.mtime = ts;
     m_metadata_dirty = true;
     return 0;
+}
+
+void FS::sync()
+{
+    for (auto* inode : all_inodes()) {
+        if (inode->is_metadata_dirty())
+            inode->flush_metadata();
+    }
 }

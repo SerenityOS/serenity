@@ -26,6 +26,7 @@ public:
 
     dword id() const { return m_fsid; }
     static FS* from_fsid(dword);
+    static void sync();
 
     virtual bool initialize() = 0;
     virtual const char* class_name() const = 0;
@@ -98,11 +99,7 @@ public:
     void will_be_destroyed();
 
 protected:
-    Inode(FS& fs, unsigned index)
-        : m_fs(fs)
-        , m_index(index)
-    {
-    }
+    Inode(FS& fs, unsigned index);
 
     virtual void populate_metadata() const = 0;
     void set_metadata_dirty(bool b) { m_metadata_dirty = b; }

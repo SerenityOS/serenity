@@ -44,7 +44,8 @@ APPS = \
        fgrep \
        tty \
        mkdir \
-       touch
+       touch \
+       sync
 
 ARCH_FLAGS =
 STANDARD_FLAGS = -std=c++17 -nostdinc++ -nostdlib -nostdinc
@@ -128,6 +129,9 @@ mkdir: mkdir.o
 	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
 
 touch: touch.o
+	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
+
+sync: sync.o
 	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
 
 .cpp.o:

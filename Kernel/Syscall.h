@@ -65,6 +65,7 @@
     __ENUMERATE_SYSCALL(mkdir) \
     __ENUMERATE_SYSCALL(times) \
     __ENUMERATE_SYSCALL(utime) \
+    __ENUMERATE_SYSCALL(sync) \
 
 
 #define DO_SYSCALL_A0(function) Syscall::invoke((dword)(function))
