@@ -12,7 +12,7 @@ struct ext2_super_block;
 
 class Ext2FS;
 
-class Ext2FSInode final : public CoreInode {
+class Ext2FSInode final : public Inode {
     friend class Ext2FS;
 public:
     virtual ~Ext2FSInode() override;
@@ -77,7 +77,7 @@ private:
     virtual ssize_t read_inode_bytes(InodeIdentifier, Unix::off_t offset, size_t count, byte* buffer, FileDescriptor*) const override;
     virtual InodeIdentifier create_directory(InodeIdentifier parentInode, const String& name, Unix::mode_t, int& error) override;
     virtual InodeIdentifier find_parent_of_inode(InodeIdentifier) const override;
-    virtual RetainPtr<CoreInode> get_inode(InodeIdentifier) const override;
+    virtual RetainPtr<Inode> get_inode(InodeIdentifier) const override;
 
     bool is_directory_inode(unsigned) const;
     unsigned allocate_inode(unsigned preferredGroup, unsigned expectedSize);
@@ -110,10 +110,10 @@ private:
 
 inline Ext2FS& Ext2FSInode::fs()
 {
-    return static_cast<Ext2FS&>(CoreInode::fs());
+    return static_cast<Ext2FS&>(Inode::fs());
 }
 
 inline const Ext2FS& Ext2FSInode::fs() const
 {
-    return static_cast<const Ext2FS&>(CoreInode::fs());
+    return static_cast<const Ext2FS&>(Inode::fs());
 }
