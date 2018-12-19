@@ -60,7 +60,7 @@ public:
 
     unsigned retain_count() const { return retainCount; }
 
-    CoreInode* core_inode() { return m_core_inode.ptr(); }
+    Inode* core_inode() { return m_core_inode.ptr(); }
 
 private:
     friend class VFS;
@@ -69,7 +69,7 @@ private:
     CharacterDevice* m_characterDevice { nullptr };
     mutable InodeMetadata m_cachedMetadata;
     void* m_vmo { nullptr };
-    RetainPtr<CoreInode> m_core_inode;
+    RetainPtr<Inode> m_core_inode;
 };
 
 class VFS {
@@ -119,7 +119,7 @@ public:
     size_t mount_count() const { return m_mounts.size(); }
     void for_each_mount(Function<void(const Mount&)>) const;
 
-    String absolute_path(CoreInode&);
+    String absolute_path(Inode&);
 
     InodeIdentifier root_inode_id() const;
 
@@ -127,11 +127,11 @@ private:
     friend class FileDescriptor;
     friend class Vnode;
 
-    RetainPtr<CoreInode> get_inode(InodeIdentifier);
+    RetainPtr<Inode> get_inode(InodeIdentifier);
 
     bool is_vfs_root(InodeIdentifier) const;
 
-    void traverse_directory_inode(CoreInode&, Function<bool(const FS::DirectoryEntry&)>);
+    void traverse_directory_inode(Inode&, Function<bool(const FS::DirectoryEntry&)>);
     InodeIdentifier resolve_path(const String& path, InodeIdentifier base, int& error, int options = 0, InodeIdentifier* deepest_dir = nullptr);
     InodeIdentifier resolveSymbolicLink(InodeIdentifier base, InodeIdentifier symlinkInode, int& error);
 

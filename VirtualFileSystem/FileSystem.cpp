@@ -37,7 +37,7 @@ FS* FS::from_fsid(dword id)
     return nullptr;
 }
 
-ByteBuffer CoreInode::read_entire(FileDescriptor* descriptor)
+ByteBuffer Inode::read_entire(FileDescriptor* descriptor)
 {
     return fs().read_entire_inode(identifier(), descriptor);
 /*
@@ -124,11 +124,11 @@ FS::DirectoryEntry::DirectoryEntry(const char* n, size_t nl, InodeIdentifier i, 
     name[nl] = '\0';
 }
 
-CoreInode::~CoreInode()
+Inode::~Inode()
 {
 }
 
-int CoreInode::set_atime_and_mtime(Unix::time_t atime, Unix::time_t mtime)
+int Inode::set_atime_and_mtime(Unix::time_t atime, Unix::time_t mtime)
 {
     return fs().set_atime_and_mtime(identifier(), atime, mtime);
 }

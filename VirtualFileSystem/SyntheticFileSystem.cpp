@@ -227,7 +227,7 @@ InodeIdentifier SynthFS::find_parent_of_inode(InodeIdentifier inode) const
     return (*it).value->m_parent;
 }
 
-RetainPtr<CoreInode> SynthFS::get_inode(InodeIdentifier inode) const
+RetainPtr<Inode> SynthFS::get_inode(InodeIdentifier inode) const
 {
     auto it = m_inodes.find(inode.index());
     if (it == m_inodes.end())
@@ -236,7 +236,7 @@ RetainPtr<CoreInode> SynthFS::get_inode(InodeIdentifier inode) const
 }
 
 SynthFSInode::SynthFSInode(SynthFS& fs, unsigned index)
-    : CoreInode(fs, index)
+    : Inode(fs, index)
 {
     m_metadata.inode = { fs.id(), index };
 }

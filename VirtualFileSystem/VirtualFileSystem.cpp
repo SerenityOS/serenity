@@ -233,7 +233,7 @@ bool VFS::is_vfs_root(InodeIdentifier inode) const
     return inode == m_root_vnode->inode;
 }
 
-void VFS::traverse_directory_inode(CoreInode& dir_inode, Function<bool(const FS::DirectoryEntry&)> callback)
+void VFS::traverse_directory_inode(Inode& dir_inode, Function<bool(const FS::DirectoryEntry&)> callback)
 {
     dir_inode.traverse_as_directory([&] (const FS::DirectoryEntry& entry) {
         InodeIdentifier resolvedInode;
@@ -326,18 +326,18 @@ InodeIdentifier VFS::resolveSymbolicLink(InodeIdentifier base, InodeIdentifier s
     return resolve_path(linkee, base, error);
 }
 
-RetainPtr<CoreInode> VFS::get_inode(InodeIdentifier inode_id)
+RetainPtr<Inode> VFS::get_inode(InodeIdentifier inode_id)
 {
     if (!inode_id.is_valid())
         return nullptr;
     return inode_id.fs()->get_inode(inode_id);
 }
 
-String VFS::absolute_path(CoreInode& core_inode)
+String VFS::absolute_path(Inode& core_inode)
 {
     int error;
     Vector<InodeIdentifier> lineage;
-    RetainPtr<CoreInode> inode = &core_inode;
+    RetainPtr<Inode> inode = &core_inode;
     while (inode->identifier() != m_root_vnode->inode) {
         if (auto* mount = find_mount_for_guest(inode->identifier()))
             lineage.append(mount->host());

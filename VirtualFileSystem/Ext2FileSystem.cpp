@@ -273,7 +273,7 @@ Vector<unsigned> Ext2FS::block_list_for_inode(const ext2_inode& e2inode) const
 }
 
 Ext2FSInode::Ext2FSInode(Ext2FS& fs, unsigned index, const ext2_inode& raw_inode)
-    : CoreInode(fs, index)
+    : Inode(fs, index)
     , m_raw_inode(raw_inode)
 {
 }
@@ -304,7 +304,7 @@ void Ext2FSInode::populate_metadata() const
     }
 }
 
-RetainPtr<CoreInode> Ext2FS::get_inode(InodeIdentifier inode) const
+RetainPtr<Inode> Ext2FS::get_inode(InodeIdentifier inode) const
 {
     ASSERT(inode.fsid() == id());
     {

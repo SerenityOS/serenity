@@ -16,7 +16,7 @@
 
 static const dword mepoch = 476763780;
 
-class CoreInode;
+class Inode;
 class FileDescriptor;
 
 class FS : public Retainable<FS> {
@@ -50,7 +50,7 @@ public:
 
     virtual InodeIdentifier find_parent_of_inode(InodeIdentifier) const = 0;
 
-    virtual RetainPtr<CoreInode> get_inode(InodeIdentifier) const = 0;
+    virtual RetainPtr<Inode> get_inode(InodeIdentifier) const = 0;
 
     ByteBuffer read_entire_inode(InodeIdentifier, FileDescriptor* = nullptr) const;
 
@@ -61,10 +61,10 @@ private:
     dword m_fsid { 0 };
 };
 
-class CoreInode : public Retainable<CoreInode> {
+class Inode : public Retainable<Inode> {
     friend class VFS;
 public:
-    virtual ~CoreInode();
+    virtual ~Inode();
 
     FS& fs() { return m_fs; }
     const FS& fs() const { return m_fs; }
@@ -88,7 +88,7 @@ public:
     int set_atime_and_mtime(Unix::time_t atime, Unix::time_t mtime);
 
 protected:
-    CoreInode(FS& fs, unsigned index)
+    Inode(FS& fs, unsigned index)
         : m_fs(fs)
         , m_index(index)
     {
@@ -124,7 +124,7 @@ inline bool InodeIdentifier::is_root_inode() const
     return (*this) == fs()->root_inode();
 }
 
-inline unsigned CoreInode::fsid() const
+inline unsigned Inode::fsid() const
 {
     return m_fs.id();
 }

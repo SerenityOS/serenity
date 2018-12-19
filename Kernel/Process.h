@@ -209,8 +209,8 @@ public:
     template<typename T> bool validate_read_typed(T* value, size_t count = 1) { return validate_read(value, sizeof(T) * count); }
     template<typename T> bool validate_write_typed(T* value, size_t count = 1) { return validate_write(value, sizeof(T) * count); }
 
-    CoreInode* cwd_inode() { return m_cwd ? m_cwd->core_inode() : nullptr; }
-    CoreInode* executable_inode() { return m_executable ? m_executable->core_inode() : nullptr; }
+    Inode* cwd_inode() { return m_cwd ? m_cwd->core_inode() : nullptr; }
+    Inode* executable_inode() { return m_executable ? m_executable->core_inode() : nullptr; }
 
     size_t number_of_open_file_descriptors() const;
     size_t max_open_file_descriptors() const { return m_max_open_file_descriptors; }
