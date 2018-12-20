@@ -44,7 +44,7 @@ void initialize()
     kprintf("syscall: int 0x80 handler installed\n");
 }
 
-static int sync()
+int sync()
 {
     VFS::the().sync();
     return 0;

@@ -103,6 +103,7 @@ struct SC_mmap_params {
 };
 
 void initialize();
+int sync();
 
 inline dword invoke(Function function)
 {
