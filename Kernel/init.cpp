@@ -167,6 +167,15 @@ static void spawn_stress()
 }
 #endif
 
+static void syncd() NORETURN;
+static void syncd()
+{
+    for (;;) {
+        Syscall::sync();
+        sleep(10 * TICKS_PER_SECOND);
+    }
+}
+
 static void init_stage2() NORETURN;
 static void init_stage2()
 {
@@ -284,6 +293,8 @@ void init()
 
     Process::initialize();
     Process::create_kernel_process(init_stage2, "init_stage2");
+
+    Process::create_kernel_process(syncd, "syncd");
 
     Scheduler::pick_next();
 
