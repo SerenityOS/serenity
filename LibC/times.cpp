@@ -4,6 +4,6 @@
 
 clock_t times(struct tms* buf)
 {
-    int rc = Syscall::invoke(Syscall::SC_times, (dword)buf);
+    int rc = syscall(SC_times, buf);
     __RETURN_WITH_ERRNO(rc, rc, (clock_t)-1);
 }

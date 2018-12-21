@@ -11,7 +11,7 @@ int ioctl(int fd, unsigned request, ...)
     va_list ap;
     va_start(ap, request);
     unsigned arg = va_arg(ap, unsigned);
-    int rc = Syscall::invoke(Syscall::SC_ioctl, (dword)fd, (dword)request, (dword)arg);
+    int rc = syscall(SC_ioctl, fd, request, arg);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 

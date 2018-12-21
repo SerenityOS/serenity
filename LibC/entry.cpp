@@ -23,10 +23,10 @@ extern "C" int _start()
     int status = 254;
     int argc;
     char** argv;
-    int rc = Syscall::invoke(Syscall::SC_get_arguments, (dword)&argc, (dword)&argv);
+    int rc = syscall(SC_get_arguments, &argc, &argv);
     if (rc < 0)
         goto epilogue;
-    rc = Syscall::invoke(Syscall::SC_get_environment, (dword)&environ);
+    rc = syscall(SC_get_environment, &environ);
     if (rc < 0)
         goto epilogue;
     status = main(argc, argv);
@@ -35,7 +35,7 @@ extern "C" int _start()
     fflush(stderr);
 
 epilogue:
-    Syscall::invoke(Syscall::SC_exit, status);
+    syscall(SC_exit, status);
 
     // Birger's birthday <3
     return 20150614;

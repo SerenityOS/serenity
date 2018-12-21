@@ -13,49 +13,49 @@ extern "C" {
 
 pid_t fork()
 {
-    int rc = Syscall::invoke(Syscall::SC_fork);
+    int rc = syscall(SC_fork);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
 int execve(const char* filename, const char** argv, const char** envp)
 {
-    int rc = Syscall::invoke(Syscall::SC_execve, (dword)filename, (dword)argv, (dword)envp);
+    int rc = syscall(SC_execve, filename, argv, envp);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
 uid_t getuid()
 {
-    return Syscall::invoke(Syscall::SC_getuid);
+    return syscall(SC_getuid);
 }
 
 gid_t getgid()
 {
-    return Syscall::invoke(Syscall::SC_getgid);
+    return syscall(SC_getgid);
 }
 
 uid_t geteuid()
 {
-    return Syscall::invoke(Syscall::SC_geteuid);
+    return syscall(SC_geteuid);
 }
 
 gid_t getegid()
 {
-    return Syscall::invoke(Syscall::SC_getegid);
+    return syscall(SC_getegid);
 }
 
 pid_t getpid()
 {
-    return Syscall::invoke(Syscall::SC_getpid);
+    return syscall(SC_getpid);
 }
 
 pid_t getppid()
 {
-    return Syscall::invoke(Syscall::SC_getppid);
+    return syscall(SC_getppid);
 }
 
 pid_t setsid()
 {
-    int rc = Syscall::invoke(Syscall::SC_setsid);
+    int rc = syscall(SC_setsid);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
@@ -71,19 +71,19 @@ int tcsetpgrp(int fd, pid_t pgid)
 
 int setpgid(pid_t pid, pid_t pgid)
 {
-    int rc = Syscall::invoke(Syscall::SC_setpgid, (dword)pid, (dword)pgid);
+    int rc = syscall(SC_setpgid, pid, pgid);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
 pid_t getpgid(pid_t pid)
 {
-    int rc = Syscall::invoke(Syscall::SC_getpgid, (dword)pid);
+    int rc = syscall(SC_getpgid, pid);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
 pid_t getpgrp()
 {
-    int rc = Syscall::invoke(Syscall::SC_getpgrp);
+    int rc = syscall(SC_getpgrp);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
@@ -91,26 +91,26 @@ int open(const char* path, int options, ...)
 {
     va_list ap;
     va_start(ap, options);
-    int rc = Syscall::invoke(Syscall::SC_open, (dword)path, (dword)options, (dword)ap);
+    int rc = syscall(SC_open, path, options, ap);
     va_end(ap);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
 ssize_t read(int fd, void* buf, size_t count)
 {
-    int rc = Syscall::invoke(Syscall::SC_read, (dword)fd, (dword)buf, (dword)count);
+    int rc = syscall(SC_read, fd, buf, count);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
 ssize_t write(int fd, const void* buf, size_t count)
 {
-    int rc = Syscall::invoke(Syscall::SC_write, (dword)fd, (dword)buf, (dword)count);
+    int rc = syscall(SC_write, fd, buf, count);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
 int ttyname_r(int fd, char* buffer, size_t size)
 {
-    int rc = Syscall::invoke(Syscall::SC_ttyname_r, (dword)fd, (dword)buffer, (dword)size);
+    int rc = syscall(SC_ttyname_r, fd, buffer, size);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
@@ -124,43 +124,43 @@ char* ttyname(int fd)
 
 int close(int fd)
 {
-    int rc = Syscall::invoke(Syscall::SC_close, fd);
+    int rc = syscall(SC_close, fd);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
 pid_t waitpid(pid_t waitee, int* wstatus, int options)
 {
-    int rc = Syscall::invoke(Syscall::SC_waitpid, waitee, (dword)wstatus, (dword)options);
+    int rc = syscall(SC_waitpid, waitee, wstatus, options);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
 int lstat(const char* path, struct stat* statbuf)
 {
-    int rc = Syscall::invoke(Syscall::SC_lstat, (dword)path, (dword)statbuf);
+    int rc = syscall(SC_lstat, path, statbuf);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
 int stat(const char* path, struct stat* statbuf)
 {
-    int rc = Syscall::invoke(Syscall::SC_stat, (dword)path, (dword)statbuf);
+    int rc = syscall(SC_stat, path, statbuf);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
 int fstat(int fd, struct stat *statbuf)
 {
-    int rc = Syscall::invoke(Syscall::SC_fstat, (dword)fd, (dword)statbuf);
+    int rc = syscall(SC_fstat, fd, statbuf);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
 int chdir(const char* path)
 {
-    int rc = Syscall::invoke(Syscall::SC_chdir, (dword)path);
+    int rc = syscall(SC_chdir, path);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
 char* getcwd(char* buffer, size_t size)
 {
-    int rc = Syscall::invoke(Syscall::SC_getcwd, (dword)buffer, (dword)size);
+    int rc = syscall(SC_getcwd, buffer, size);
     __RETURN_WITH_ERRNO(rc, buffer, nullptr);
 }
 
@@ -172,24 +172,24 @@ char* getwd(char* buf)
 
 int sleep(unsigned seconds)
 {
-    return Syscall::invoke(Syscall::SC_sleep, (dword)seconds);
+    return syscall(SC_sleep, seconds);
 }
 
 int gethostname(char* buffer, size_t size)
 {
-    int rc = Syscall::invoke(Syscall::SC_gethostname, (dword)buffer, (dword)size);
+    int rc = syscall(SC_gethostname, buffer, size);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
 ssize_t readlink(const char* path, char* buffer, size_t size)
 {
-    int rc = Syscall::invoke(Syscall::SC_readlink, (dword)path, (dword)buffer, (dword)size);
+    int rc = syscall(SC_readlink, path, buffer, size);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
 off_t lseek(int fd, off_t offset, int whence)
 {
-    int rc = Syscall::invoke(Syscall::SC_lseek, (dword)fd, (dword)offset, (dword)whence);
+    int rc = syscall(SC_lseek, fd, offset, whence);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
@@ -205,66 +205,66 @@ int unlink(const char*)
 
 int isatty(int fd)
 {
-    int rc = Syscall::invoke(Syscall::SC_isatty, (dword)fd);
+    int rc = syscall(SC_isatty, fd);
     __RETURN_WITH_ERRNO(rc, 1, 0);
 }
 
 int getdtablesize()
 {
-    int rc = Syscall::invoke(Syscall::SC_getdtablesize);
+    int rc = syscall(SC_getdtablesize);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
 int dup(int old_fd)
 {
-    int rc = Syscall::invoke(Syscall::SC_dup, (dword)old_fd);
+    int rc = syscall(SC_dup, old_fd);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
 int dup2(int old_fd, int new_fd)
 {
-    int rc = Syscall::invoke(Syscall::SC_dup2, (dword)old_fd, (dword)new_fd);
+    int rc = syscall(SC_dup2, old_fd, new_fd);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
 int setgroups(size_t size, const gid_t* list)
 {
-    int rc = Syscall::invoke(Syscall::SC_getgroups, (dword)size, (dword)list);
+    int rc = syscall(SC_getgroups, size, list);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
 int getgroups(int size, gid_t list[])
 {
-    int rc = Syscall::invoke(Syscall::SC_getgroups, (dword)size, (dword)list);
+    int rc = syscall(SC_getgroups, size, list);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
 int pipe(int pipefd[2])
 {
-    int rc = Syscall::invoke(Syscall::SC_pipe, (dword)pipefd);
+    int rc = syscall(SC_pipe, pipefd);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
 unsigned int alarm(unsigned int seconds)
 {
-    return Syscall::invoke(Syscall::SC_alarm, (dword)seconds);
+    return syscall(SC_alarm, seconds);
 }
 
 int setuid(uid_t uid)
 {
-    int rc = Syscall::invoke(Syscall::SC_setuid, (dword)uid);
+    int rc = syscall(SC_setuid, uid);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
 int setgid(uid_t gid)
 {
-    int rc = Syscall::invoke(Syscall::SC_setgid, (dword)gid);
+    int rc = syscall(SC_setgid, gid);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
 int access(const char* pathname, int mode)
 {
-    int rc = Syscall::invoke(Syscall::SC_access, (dword)pathname, (dword)mode);
+    int rc = syscall(SC_access, pathname, mode);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
@@ -290,13 +290,13 @@ long pathconf(const char* path, int name)
 
 void _exit(int status)
 {
-    Syscall::invoke(Syscall::SC_exit, (dword)status);
+    syscall(SC_exit, status);
     assert(false);
 }
 
 void sync()
 {
-    Syscall::invoke(Syscall::SC_sync);
+    syscall(SC_sync);
 }
 
 }

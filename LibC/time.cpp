@@ -18,7 +18,7 @@ time_t time(time_t* tloc)
 
 int gettimeofday(struct timeval* tv, struct timezone*)
 {
-    int rc = Syscall::invoke(Syscall::SC_gettimeofday, (dword)tv);
+    int rc = syscall(SC_gettimeofday, tv);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
