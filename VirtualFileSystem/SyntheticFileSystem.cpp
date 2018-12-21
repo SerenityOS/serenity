@@ -163,43 +163,6 @@ bool SynthFS::write_inode(InodeIdentifier, const ByteBuffer&)
     return false;
 }
 
-ssize_t SynthFS::read_inode_bytes(InodeIdentifier inode, Unix::off_t offset, size_t count, byte* buffer, FileDescriptor* handle) const
-{
-    ASSERT(inode.fsid() == id());
-#ifdef SYNTHFS_DEBUG
-    kprintf("SynthFS: readInode %u\n", inode.index());
-#endif
-    ASSERT(offset >= 0);
-    ASSERT(buffer);
-
-    const SynthFSInode* found_file;
-    {
-        InterruptDisabler disabler;
-        auto it = m_inodes.find(inode.index());
-        if (it == m_inodes.end())
-            return false;
-        found_file = (*it).value.ptr();
-    }
-    const SynthFSInode& file = *found_file;
-    ByteBuffer generatedData;
-    if (file.m_generator) {
-        if (!handle) {
-            generatedData = file.m_generator();
-        } else {
-            if (!handle->generator_cache())
-                handle->generator_cache() = file.m_generator();
-            generatedData = handle->generator_cache();
-        }
-    }
-
-    auto* data = generatedData ? &generatedData : &file.m_data;
-    ssize_t nread = min(static_cast<Unix::off_t>(data->size() - offset), static_cast<Unix::off_t>(count));
-    memcpy(buffer, data->pointer() + offset, nread);
-    if (nread == 0 && handle && handle->generator_cache())
-        handle->generator_cache().clear();
-    return nread;
-}
-
 InodeIdentifier SynthFS::create_directory(InodeIdentifier, const String&, Unix::mode_t, int& error)
 {
     error = -EROFS;

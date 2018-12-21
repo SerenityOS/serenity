@@ -143,7 +143,8 @@ ssize_t FileDescriptor::read(byte* buffer, size_t count)
         // FIXME: What should happen to m_currentOffset?
         return m_vnode->characterDevice()->read(buffer, count);
     }
-    ssize_t nread = m_vnode->fs()->read_inode_bytes(m_vnode->inode, m_current_offset, count, buffer, this);
+    ASSERT(inode());
+    ssize_t nread = inode()->read_bytes(m_current_offset, count, buffer, this);
     m_current_offset += nread;
     return nread;
 }

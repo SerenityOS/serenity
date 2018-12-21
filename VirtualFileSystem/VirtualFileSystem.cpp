@@ -391,15 +391,14 @@ InodeIdentifier VFS::resolve_path(const String& path, InodeIdentifier base, int&
         if (part.is_empty())
             break;
         auto crumb_inode = get_inode(crumb_id);
-        ASSERT(crumb_inode);
-        auto metadata = crumb_inode->metadata();
-        if (!metadata.isValid()) {
+        if (!crumb_inode) {
 #ifdef VFS_DEBUG
             kprintf("invalid metadata\n");
 #endif
             error = -EIO;
             return { };
         }
+        auto metadata = crumb_inode->metadata();
         if (!metadata.isDirectory()) {
 #ifdef VFS_DEBUG
             kprintf("parent of <%s> not directory, it's inode %u:%u / %u:%u, mode: %u, size: %u\n", part.characters(), inode.fsid(), inode.index(), metadata.inode.fsid(), metadata.inode.index(), metadata.mode, metadata.size);

@@ -17,7 +17,6 @@ public:
     virtual bool write_inode(InodeIdentifier, const ByteBuffer&) override;
     virtual InodeMetadata inode_metadata(InodeIdentifier) const override;
     virtual InodeIdentifier create_inode(InodeIdentifier parentInode, const String& name, Unix::mode_t, unsigned size, int& error) override;
-    virtual ssize_t read_inode_bytes(InodeIdentifier, Unix::off_t offset, size_t count, byte* buffer, FileDescriptor*) const override;
     virtual InodeIdentifier create_directory(InodeIdentifier parentInode, const String& name, Unix::mode_t, int& error) override;
     virtual InodeIdentifier find_parent_of_inode(InodeIdentifier) const override;
     virtual RetainPtr<Inode> get_inode(InodeIdentifier) const override;
