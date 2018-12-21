@@ -132,20 +132,6 @@ InodeIdentifier SynthFS::root_inode() const
     return { id(), 1 };
 }
 
-InodeMetadata SynthFS::inode_metadata(InodeIdentifier inode) const
-{
-    InterruptDisabler disabler;
-    ASSERT(inode.fsid() == id());
-#ifdef SYNTHFS_DEBUG
-    kprintf("SynthFS: inodeMetadata(%u)\n", inode.index());
-#endif
-
-    auto it = m_inodes.find(inode.index());
-    if (it == m_inodes.end())
-        return { };
-    return (*it).value->m_metadata;
-}
-
 InodeIdentifier SynthFS::create_inode(InodeIdentifier parentInode, const String& name, Unix::mode_t mode, unsigned size, int& error)
 {
     (void) parentInode;
