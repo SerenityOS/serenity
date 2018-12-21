@@ -33,7 +33,6 @@ public:
         return m_fsid != other.m_fsid || m_index != other.m_index;
     }
 
-    InodeMetadata metadata() const;
     bool is_root_inode() const;
 
     ByteBuffer read_entire_file() const;

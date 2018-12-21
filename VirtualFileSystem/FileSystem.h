@@ -121,13 +121,6 @@ inline const FS* InodeIdentifier::fs() const
     return FS::from_fsid(m_fsid);
 }
 
-inline InodeMetadata InodeIdentifier::metadata() const
-{
-    if (!is_valid())
-        return InodeMetadata();
-    return fs()->inode_metadata(*this);
-}
-
 inline bool InodeIdentifier::is_root_inode() const
 {
     return (*this) == fs()->root_inode();

@@ -390,7 +390,9 @@ InodeIdentifier VFS::resolve_path(const String& path, InodeIdentifier base, int&
         auto& part = parts[i];
         if (part.is_empty())
             break;
-        auto metadata = crumb_id.metadata();
+        auto crumb_inode = get_inode(crumb_id);
+        ASSERT(crumb_inode);
+        auto metadata = crumb_inode->metadata();
         if (!metadata.isValid()) {
 #ifdef VFS_DEBUG
             kprintf("invalid metadata\n");
@@ -406,8 +408,7 @@ InodeIdentifier VFS::resolve_path(const String& path, InodeIdentifier base, int&
             return { };
         }
         auto parent = crumb_id;
-        auto dir_inode = get_inode(crumb_id);
-        crumb_id = dir_inode->lookup(part);
+        crumb_id = crumb_inode->lookup(part);
         if (!crumb_id.is_valid()) {
 #ifdef VFS_DEBUG
             kprintf("child <%s>(%u) not found in directory, %02u:%08u\n", part.characters(), part.length(), parent.fsid(), parent.index());
@@ -432,7 +433,8 @@ InodeIdentifier VFS::resolve_path(const String& path, InodeIdentifier base, int&
             auto dir_inode = get_inode(mount->host());
             crumb_id = dir_inode->lookup("..");
         }
-        metadata = crumb_id.metadata();
+        crumb_inode = get_inode(crumb_id);
+        metadata = crumb_inode->metadata();
         if (metadata.isDirectory()) {
             if (deepest_dir)
                 *deepest_dir = crumb_id;
@@ -476,8 +478,6 @@ const InodeMetadata& Vnode::metadata() const
 {
     if (m_core_inode)
         return m_core_inode->metadata();
-    if (!m_cachedMetadata.isValid())
-        m_cachedMetadata = inode.metadata();
     return m_cachedMetadata;
 }
 
