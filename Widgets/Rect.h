@@ -12,7 +12,7 @@ public:
     {
     }
 
-    bool isEmpty() const
+    bool is_empty() const
     {
         return width() == 0 || height() == 0;
     }

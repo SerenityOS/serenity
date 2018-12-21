@@ -22,7 +22,7 @@ VFS& VFS::the()
 void VFS::initialize_globals()
 {
     s_the = nullptr;
-    FS::initializeGlobals();
+    FS::initialize_globals();
 }
 
 VFS::VFS()
@@ -177,7 +177,7 @@ bool VFS::mount_root(RetainPtr<FS>&& fileSystem)
 
 auto VFS::allocateNode() -> RetainPtr<Vnode>
 {
-    if (m_vnode_freelist.isEmpty()) {
+    if (m_vnode_freelist.is_empty()) {
         kprintf("VFS: allocateNode has no nodes left\n");
         return nullptr;
     }
@@ -351,7 +351,7 @@ String VFS::absolute_path(Inode& core_inode)
         ASSERT(parent_id.is_valid());
         inode = get_inode(parent_id);
     }
-    if (lineage.isEmpty())
+    if (lineage.is_empty())
         return "/";
     lineage.append(m_root_vnode->inode);
     StringBuilder builder;
@@ -369,7 +369,7 @@ String VFS::absolute_path(Inode& core_inode)
 
 InodeIdentifier VFS::resolve_path(const String& path, InodeIdentifier base, int& error, int options, InodeIdentifier* deepest_dir)
 {
-    if (path.isEmpty()) {
+    if (path.is_empty()) {
         error = -EINVAL;
         return { };
     }
@@ -388,7 +388,7 @@ InodeIdentifier VFS::resolve_path(const String& path, InodeIdentifier base, int&
     for (unsigned i = 0; i < parts.size(); ++i) {
         bool inode_was_root_at_head_of_loop = crumb_id.is_root_inode();
         auto& part = parts[i];
-        if (part.isEmpty())
+        if (part.is_empty())
             break;
         auto metadata = crumb_id.metadata();
         if (!metadata.isValid()) {

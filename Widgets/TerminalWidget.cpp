@@ -148,7 +148,7 @@ void TerminalWidget::onReceive(byte ch)
 
 void TerminalWidget::keyDownEvent(KeyEvent& event)
 {
-    if (event.text().isEmpty())
+    if (event.text().is_empty())
         return;
     write(g_fd, event.text().characters(), event.text().length());
 }

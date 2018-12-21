@@ -87,7 +87,7 @@ static void loadKsyms(const ByteBuffer& buffer)
 
     kprintf("Loading ksyms: \033[s");
 
-    while (bufptr < buffer.endPointer()) {
+    while (bufptr < buffer.end_pointer()) {
         for (unsigned i = 0; i < 8; ++i)
             address = (address << 4) | parseHexDigit(*(bufptr++));
         bufptr += 3;
@@ -276,7 +276,7 @@ void init()
     MemoryManager::initialize();
 
     VFS::initialize_globals();
-    StringImpl::initializeGlobals();
+    StringImpl::initialize_globals();
 
     PIT::initialize();
 

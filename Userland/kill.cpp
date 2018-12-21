@@ -6,7 +6,7 @@
 
 static unsigned parseUInt(const String& str, bool& ok)
 {
-    if (str.isEmpty()) {
+    if (str.is_empty()) {
         ok = false;
         return 0;
     }

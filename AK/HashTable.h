@@ -44,7 +44,7 @@ public:
     }
 
     ~HashTable() { clear(); }
-    bool isEmpty() const { return !m_size; }
+    bool is_empty() const { return !m_size; }
     unsigned size() const { return m_size; }
     unsigned capacity() const { return m_capacity; }
 
@@ -112,7 +112,7 @@ public:
             , m_isEnd(isEnd)
             , m_bucketIterator(bucketIterator)
         {
-            if (!isEnd && !m_table.isEmpty() && !(m_bucketIterator != DoublyLinkedList<T>::Iterator::universalEnd())) {
+            if (!isEnd && !m_table.is_empty() && !(m_bucketIterator != DoublyLinkedList<T>::Iterator::universalEnd())) {
 #ifdef HASHTABLE_DEBUG
                 kprintf("bucket iterator init!\n");
 #endif
@@ -128,7 +128,7 @@ public:
         typename DoublyLinkedList<T>::Iterator m_bucketIterator;
     };
 
-    Iterator begin() { return Iterator(*this, isEmpty()); }
+    Iterator begin() { return Iterator(*this, is_empty()); }
     Iterator end() { return Iterator(*this, true); }
 
     class ConstIterator {
@@ -189,7 +189,7 @@ public:
             , m_isEnd(isEnd)
             , m_bucketIterator(bucketIterator)
         {
-            if (!isEnd && !m_table.isEmpty() && !(m_bucketIterator != DoublyLinkedList<T>::ConstIterator::universalEnd())) {
+            if (!isEnd && !m_table.is_empty() && !(m_bucketIterator != DoublyLinkedList<T>::ConstIterator::universalEnd())) {
 #ifdef HASHTABLE_DEBUG
                 kprintf("const bucket iterator init!\n");
 #endif
@@ -206,7 +206,7 @@ public:
         typename DoublyLinkedList<T>::ConstIterator m_bucketIterator;
     };
 
-    ConstIterator begin() const { return ConstIterator(*this, isEmpty()); }
+    ConstIterator begin() const { return ConstIterator(*this, is_empty()); }
     ConstIterator end() const { return ConstIterator(*this, true); }
 
     Iterator find(const T&);
@@ -323,7 +323,7 @@ void HashTable<T, TraitsForT>::insert(const T& value)
 template<typename T, typename TraitsForT>
 bool HashTable<T, TraitsForT>::contains(const T& value) const
 {
-    if (isEmpty())
+    if (is_empty())
         return false;
     auto& bucket = lookup(value);
     for (auto& e : bucket.chain) {
@@ -336,7 +336,7 @@ bool HashTable<T, TraitsForT>::contains(const T& value) const
 template<typename T, typename TraitsForT>
 auto HashTable<T, TraitsForT>::find(const T& value) -> Iterator
 {
-    if (isEmpty())
+    if (is_empty())
         return end();
     unsigned bucketIndex;
     auto& bucket = lookup(value, &bucketIndex);
@@ -349,7 +349,7 @@ auto HashTable<T, TraitsForT>::find(const T& value) -> Iterator
 template<typename T, typename TraitsForT>
 auto HashTable<T, TraitsForT>::find(const T& value) const -> ConstIterator
 {
-    if (isEmpty())
+    if (is_empty())
         return end();
     unsigned bucketIndex;
     auto& bucket = lookup(value, &bucketIndex);
@@ -362,7 +362,7 @@ auto HashTable<T, TraitsForT>::find(const T& value) const -> ConstIterator
 template<typename T, typename TraitsForT>
 void HashTable<T, TraitsForT>::remove(Iterator it)
 {
-    ASSERT(!isEmpty());
+    ASSERT(!is_empty());
     m_buckets[it.m_bucketIndex].chain.remove(it.m_bucketIterator);
     --m_size;
 }

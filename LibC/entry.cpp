@@ -18,7 +18,7 @@ extern "C" int _start()
     __stdio_init();
     __malloc_init();
 
-    StringImpl::initializeGlobals();
+    StringImpl::initialize_globals();
 
     int status = 254;
     int argc;

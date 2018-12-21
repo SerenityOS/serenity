@@ -23,7 +23,7 @@ EventLoop& EventLoop::main()
 int EventLoop::exec()
 {
     for (;;) {
-        if (m_queuedEvents.isEmpty())
+        if (m_queuedEvents.is_empty())
             waitForEvent();
         auto events = std::move(m_queuedEvents);
         for (auto& queuedEvent : events) {

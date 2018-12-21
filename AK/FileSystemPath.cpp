@@ -22,14 +22,14 @@ bool FileSystemPath::canonicalize(bool resolve_symbolic_links)
         if (part == ".")
             continue;
         if (part == "..") {
-            if (!canonical_parts.isEmpty())
+            if (!canonical_parts.is_empty())
                 canonical_parts.takeLast();
             continue;
         }
-        if (!part.isEmpty())
+        if (!part.is_empty())
             canonical_parts.append(part);
     }
-    if (canonical_parts.isEmpty()) {
+    if (canonical_parts.is_empty()) {
         m_string = m_basename = "/";
         return true;
     }

@@ -39,7 +39,7 @@ static String& hostnameStorage(InterruptDisabler&)
 static String getHostname()
 {
     InterruptDisabler disabler;
-    return hostnameStorage(disabler).isolatedCopy();
+    return hostnameStorage(disabler).isolated_copy();
 }
 
 CoolGlobals* g_cool_globals;
@@ -59,7 +59,7 @@ Vector<Process*> Process::allProcesses()
 {
     InterruptDisabler disabler;
     Vector<Process*> processes;
-    processes.ensureCapacity(g_processes->sizeSlow());
+    processes.ensureCapacity(g_processes->size_slow());
     for (auto* process = g_processes->head(); process; process = process->next())
         processes.append(process);
     return processes;
@@ -278,7 +278,7 @@ pid_t Process::sys$fork(RegisterDump& regs)
 int Process::do_exec(const String& path, Vector<String>&& arguments, Vector<String>&& environment)
 {
     auto parts = path.split('/');
-    if (parts.isEmpty())
+    if (parts.is_empty())
         return -ENOENT;
 
     int error;
@@ -473,7 +473,7 @@ Process* Process::create_user_process(const String& path, uid_t uid, gid_t gid, 
 {
     // FIXME: Don't split() the path twice (sys$spawn also does it...)
     auto parts = path.split('/');
-    if (arguments.isEmpty()) {
+    if (arguments.is_empty()) {
         arguments.append(parts.last());
     }
     RetainPtr<Vnode> cwd;
@@ -1239,7 +1239,7 @@ int Process::sys$getcwd(char* buffer, size_t size)
         return -EFAULT;
     ASSERT(cwd_inode());
     auto path = VFS::the().absolute_path(*cwd_inode());
-    if (path.isNull())
+    if (path.is_null())
         return -EINVAL;
     if (size < path.length() + 1)
         return -ERANGE;

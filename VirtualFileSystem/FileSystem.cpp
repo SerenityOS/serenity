@@ -21,7 +21,7 @@ static HashTable<Inode*>& all_inodes()
     return *s_inode_set;
 }
 
-void FS::initializeGlobals()
+void FS::initialize_globals()
 {
     s_lastFileSystemID = 0;
     s_fs_map = nullptr;
@@ -52,7 +52,7 @@ ByteBuffer Inode::read_entire(FileDescriptor* descriptor)
     return fs().read_entire_inode(identifier(), descriptor);
 /*
     size_t initial_size = metadata().size ? metadata().size : 4096;
-    auto contents = ByteBuffer::createUninitialized(initial_size);
+    auto contents = ByteBuffer::create_uninitialized(initial_size);
 
     ssize_t nread;
     byte buffer[4096];
@@ -90,7 +90,7 @@ ByteBuffer FS::read_entire_inode(InodeIdentifier inode, FileDescriptor* handle) 
     }
 
     size_t initialSize = metadata.size ? metadata.size : 4096;
-    auto contents = ByteBuffer::createUninitialized(initialSize);
+    auto contents = ByteBuffer::create_uninitialized(initialSize);
 
     ssize_t nread;
     byte buffer[4096];

@@ -21,7 +21,7 @@ class FileDescriptor;
 
 class FS : public Retainable<FS> {
 public:
-    static void initializeGlobals();
+    static void initialize_globals();
     virtual ~FS();
 
     dword id() const { return m_fsid; }

@@ -78,7 +78,7 @@ void Window::event(Event& event)
             return;
         }
         if (m_mainWidget) {
-            if (pe.rect().isEmpty())
+            if (pe.rect().is_empty())
                 return m_mainWidget->event(*make<PaintEvent>(m_mainWidget->rect()));
             else
                 return m_mainWidget->event(event);

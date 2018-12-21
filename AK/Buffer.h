@@ -11,7 +11,7 @@ namespace AK {
 template<typename T>
 class Buffer : public Retainable<Buffer<T>> {
 public:
-    static RetainPtr<Buffer> createUninitialized(size_t count);
+    static RetainPtr<Buffer> create_uninitialized(size_t count);
     static RetainPtr<Buffer> copy(const T*, size_t count);
     static RetainPtr<Buffer> wrap(T*, size_t count);
     static RetainPtr<Buffer> adopt(T*, size_t count);
@@ -29,16 +29,16 @@ public:
 
     T& operator[](size_t i) { ASSERT(i < m_size); return m_elements[i]; }
     const T& operator[](size_t i) const { ASSERT(i < m_size); return m_elements[i]; }
-    bool isEmpty() const { return !m_size; }
+    bool is_empty() const { return !m_size; }
     size_t size() const { return m_size; }
 
     T* pointer() { return m_elements; }
     const T* pointer() const { return m_elements; }
 
-    T* offsetPointer(size_t offset) { return m_elements + offset; }
-    const T* offsetPointer(size_t offset) const { return m_elements + offset; }
+    T* offset_pointer(size_t offset) { return m_elements + offset; }
+    const T* offset_pointer(size_t offset) const { return m_elements + offset; }
 
-    const void* endPointer() const { return m_elements + m_size; }
+    const void* end_pointer() const { return m_elements + m_size; }
 
     // NOTE: trim() does not reallocate.
     void trim(size_t size)
@@ -91,7 +91,7 @@ inline Buffer<T>::Buffer(T* elements, size_t size, ConstructionMode mode)
 }
 
 template<typename T>
-inline RetainPtr<Buffer<T>> Buffer<T>::createUninitialized(size_t size)
+inline RetainPtr<Buffer<T>> Buffer<T>::create_uninitialized(size_t size)
 {
     return ::adopt(*new Buffer<T>(size));
 }
