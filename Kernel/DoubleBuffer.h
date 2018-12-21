@@ -14,7 +14,7 @@ public:
     ssize_t write(const byte*, size_t);
     ssize_t read(byte*, size_t);
 
-    bool is_empty() const { return m_read_buffer_index >= m_read_buffer->size() && m_write_buffer->isEmpty(); }
+    bool is_empty() const { return m_read_buffer_index >= m_read_buffer->size() && m_write_buffer->is_empty(); }
 
 private:
     void flip();

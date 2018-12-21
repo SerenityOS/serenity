@@ -19,17 +19,17 @@ bool String::operator==(const String& other) const
 
 String String::empty()
 {
-    return StringImpl::theEmptyStringImpl();
+    return StringImpl::the_empty_stringimpl();
 }
 
-String String::isolatedCopy() const
+String String::isolated_copy() const
 {
     if (!m_impl)
         return { };
     if (!m_impl->length())
         return empty();
     char* buffer;
-    auto impl = StringImpl::createUninitialized(length(), buffer);
+    auto impl = StringImpl::create_uninitialized(length(), buffer);
     memcpy(buffer, m_impl->characters(), m_impl->length());
     return String(move(*impl));
 }
@@ -40,7 +40,7 @@ String String::substring(size_t start, size_t length) const
     ASSERT(start + length <= m_impl->length());
     // FIXME: This needs some input bounds checking.
     char* buffer;
-    auto newImpl = StringImpl::createUninitialized(length, buffer);
+    auto newImpl = StringImpl::create_uninitialized(length, buffer);
     memcpy(buffer, characters() + start, length);
     buffer[length] = '\0';
     return newImpl;
@@ -48,7 +48,7 @@ String String::substring(size_t start, size_t length) const
 
 Vector<String> String::split(const char separator) const
 {
-    if (isEmpty())
+    if (is_empty())
         return { };
 
     Vector<String> v;
@@ -70,7 +70,7 @@ Vector<String> String::split(const char separator) const
     return v;
 }
 
-ByteBuffer String::toByteBuffer() const
+ByteBuffer String::to_byte_buffer() const
 {
     if (!m_impl)
         return nullptr;

@@ -27,9 +27,9 @@ Ext2FS::~Ext2FS()
 
 ByteBuffer Ext2FS::read_super_block() const
 {
-    auto buffer = ByteBuffer::createUninitialized(1024);
+    auto buffer = ByteBuffer::create_uninitialized(1024);
     device().read_block(2, buffer.pointer());
-    device().read_block(3, buffer.offsetPointer(512));
+    device().read_block(3, buffer.offset_pointer(512));
     return buffer;
 }
 
@@ -172,7 +172,7 @@ OwnPtr<ext2_inode> Ext2FS::lookup_ext2_inode(unsigned inode) const
         return { };
 
     auto* e2inode = reinterpret_cast<ext2_inode*>(kmalloc(inode_size()));
-    memcpy(e2inode, reinterpret_cast<ext2_inode*>(block.offsetPointer(offset)), inode_size());
+    memcpy(e2inode, reinterpret_cast<ext2_inode*>(block.offset_pointer(offset)), inode_size());
 #ifdef EXT2_DEBUG
     dumpExt2Inode(*e2inode);
 #endif
@@ -357,14 +357,14 @@ ssize_t Ext2FSInode::read_bytes(Unix::off_t offset, size_t count, byte* buffer, 
         return nread;
     }
 
-    if (m_block_list.isEmpty()) {
+    if (m_block_list.is_empty()) {
         auto block_list = fs().block_list_for_inode(m_raw_inode);
         LOCKER(m_lock);
         if (m_block_list.size() != block_list.size())
             m_block_list = move(block_list);
     }
 
-    if (m_block_list.isEmpty()) {
+    if (m_block_list.is_empty()) {
         kprintf("ext2fs: read_bytes: empty block list for inode %u\n", index());
         return -EIO;
     }
@@ -436,7 +436,7 @@ ssize_t Ext2FS::read_inode_bytes(InodeIdentifier inode, Unix::off_t offset, size
     // FIXME: It's grossly inefficient to fetch the blocklist on every call to readInodeBytes().
     //        It needs to be cached!
     auto list = block_list_for_inode(*e2inode);
-    if (list.isEmpty()) {
+    if (list.is_empty()) {
         kprintf("ext2fs: readInodeBytes: empty block list for inode %u\n", inode.index());
         return -EIO;
     }
@@ -500,7 +500,7 @@ bool Ext2FS::write_inode(InodeIdentifier inode, const ByteBuffer& data)
     ASSERT(blocksNeededBefore == blocksNeededAfter);
 
     auto list = block_list_for_inode(*e2inode);
-    if (list.isEmpty()) {
+    if (list.is_empty()) {
         kprintf("ext2fs: writeInode: empty block list for inode %u\n", inode.index());
         return false;
     }
@@ -527,7 +527,7 @@ bool Ext2FSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry&)
     ASSERT(buffer);
     auto* entry = reinterpret_cast<ext2_dir_entry_2*>(buffer.pointer());
 
-    while (entry < buffer.endPointer()) {
+    while (entry < buffer.end_pointer()) {
         if (entry->inode != 0) {
 #ifdef EXT2_DEBUG
             kprintf("Ext2Inode::traverse_as_directory: %u, name_len: %u, rec_len: %u, file_type: %u, name: %s\n", entry->inode, entry->name_len, entry->rec_len, entry->file_type, namebuf);
@@ -586,7 +586,7 @@ bool Ext2FS::write_directory_inode(unsigned directoryInode, Vector<DirectoryEntr
 
     dbgprintf("Ext2FS: directory size: %u (occupied: %u)\n", directorySize, occupiedSize);
 
-    auto directoryData = ByteBuffer::createUninitialized(occupiedSize);
+    auto directoryData = ByteBuffer::create_uninitialized(occupiedSize);
 
     BufferStream stream(directoryData);
     for (unsigned i = 0; i < entries.size(); ++i) {
@@ -752,7 +752,7 @@ bool Ext2FS::write_ext2_inode(unsigned inode, const ext2_inode& e2inode)
                 cached_inode.m_lookup_cache.clear();
         }
     }
-    memcpy(reinterpret_cast<ext2_inode*>(block.offsetPointer(offset)), &e2inode, inode_size());
+    memcpy(reinterpret_cast<ext2_inode*>(block.offset_pointer(offset)), &e2inode, inode_size());
     writeBlock(blockIndex, block);
     return true;
 }
@@ -1000,7 +1000,7 @@ InodeIdentifier Ext2FS::create_inode(InodeIdentifier parentInode, const String& 
     }
 
     auto blocks = allocate_blocks(group_index_from_inode(inode), ceilDiv(size, blockSize()));
-    if (blocks.isEmpty()) {
+    if (blocks.is_empty()) {
         kprintf("Ext2FS: createInode: allocateBlocks failed\n");
         error = -ENOSPC;
         return { };
@@ -1091,7 +1091,7 @@ InodeIdentifier Ext2FS::find_parent_of_inode(InodeIdentifier inode_id) const
 
     InodeIdentifier foundParent;
     for (auto& directory : directories_in_group) {
-        if (!directory->reverse_lookup(inode->identifier()).isNull()) {
+        if (!directory->reverse_lookup(inode->identifier()).is_null()) {
             foundParent = directory->identifier();
             break;
         }
@@ -1104,7 +1104,7 @@ void Ext2FSInode::populate_lookup_cache()
 {
     {
         LOCKER(m_lock);
-        if (!m_lookup_cache.isEmpty())
+        if (!m_lookup_cache.is_empty())
             return;
     }
     HashMap<String, unsigned> children;
@@ -1115,7 +1115,7 @@ void Ext2FSInode::populate_lookup_cache()
     });
 
     LOCKER(m_lock);
-    if (!m_lookup_cache.isEmpty())
+    if (!m_lookup_cache.is_empty())
         return;
     m_lookup_cache = move(children);
 }

@@ -17,7 +17,7 @@ public:
     SinglyLinkedList() { }
     ~SinglyLinkedList() { clear(); }
 
-    bool isEmpty() const { return !head(); }
+    bool is_empty() const { return !head(); }
 
     void clear()
     {

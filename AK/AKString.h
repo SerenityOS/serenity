@@ -46,25 +46,25 @@ public:
 
     unsigned toUInt(bool& ok) const;
 
-    String toLowercase() const
+    String to_lowercase() const
     {
         if (!m_impl)
             return String();
-        return m_impl->toLowercase();
+        return m_impl->to_lowercase();
     }
 
-    String toUppercase() const
+    String to_uppercase() const
     {
         if (!m_impl)
             return String();
-        return m_impl->toUppercase();
+        return m_impl->to_uppercase();
     }
 
     Vector<String> split(char separator) const;
     String substring(size_t start, size_t length) const;
 
-    bool isNull() const { return !m_impl; }
-    bool isEmpty() const { return length() == 0; }
+    bool is_null() const { return !m_impl; }
+    bool is_empty() const { return length() == 0; }
     unsigned length() const { return m_impl ? m_impl->length() : 0; }
     const char* characters() const { return m_impl ? m_impl->characters() : nullptr; }
     char operator[](unsigned i) const { ASSERT(m_impl); return (*m_impl)[i]; }
@@ -72,7 +72,7 @@ public:
     bool operator==(const String&) const;
     bool operator!=(const String& other) const { return !(*this == other); }
 
-    String isolatedCopy() const;
+    String isolated_copy() const;
 
     static String empty();
 
@@ -93,7 +93,7 @@ public:
         return *this;
     }
 
-    ByteBuffer toByteBuffer() const;
+    ByteBuffer to_byte_buffer() const;
 
 private:
     RetainPtr<StringImpl> m_impl;

@@ -188,7 +188,7 @@ ByteBuffer FileDescriptor::read_entire_file()
     ASSERT(!is_fifo());
 
     if (m_vnode->isCharacterDevice()) {
-        auto buffer = ByteBuffer::createUninitialized(1024);
+        auto buffer = ByteBuffer::create_uninitialized(1024);
         ssize_t nread = m_vnode->characterDevice()->read(buffer.pointer(), buffer.size());
         buffer.trim(nread);
         return buffer;
@@ -214,7 +214,7 @@ ssize_t FileDescriptor::get_dir_entries(byte* buffer, size_t size)
         return -ENOTDIR;
 
     // FIXME: Compute the actual size needed.
-    auto tempBuffer = ByteBuffer::createUninitialized(2048);
+    auto tempBuffer = ByteBuffer::create_uninitialized(2048);
     BufferStream stream(tempBuffer);
     m_vnode->vfs()->traverse_directory_inode(*m_vnode->core_inode(), [&stream] (auto& entry) {
         stream << (dword)entry.inode.index();

@@ -94,7 +94,7 @@ void WindowManager::paintWindowFrame(Window& window)
     };
 
 
-    if (!m_lastDragRect.isEmpty()) {
+    if (!m_lastDragRect.is_empty()) {
         p.xorRect(m_lastDragRect, Color::Red);
         m_lastDragRect = Rect();
     }
@@ -137,7 +137,7 @@ void WindowManager::removeWindow(Window& window)
         return;
 
     m_windows.remove(&window);
-    if (!activeWindow() && !m_windows.isEmpty())
+    if (!activeWindow() && !m_windows.is_empty())
         setActiveWindow(*m_windows.begin());
 
     repaint();
@@ -245,7 +245,7 @@ void WindowManager::processMouseEvent(MouseEvent& event)
 void WindowManager::handlePaintEvent(PaintEvent& event)
 {
     //printf("[WM] paint event\n");
-    if (event.rect().isEmpty()) {
+    if (event.rect().is_empty()) {
         event.m_rect.setWidth(AbstractScreen::the().width());
         event.m_rect.setHeight(AbstractScreen::the().height());
     }

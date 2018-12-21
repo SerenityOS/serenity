@@ -28,7 +28,7 @@ static word s_gdtLength;
 word gdt_alloc_entry()
 {
     ASSERT(s_gdt_freelist);
-    ASSERT(!s_gdt_freelist->isEmpty());
+    ASSERT(!s_gdt_freelist->is_empty());
     return s_gdt_freelist->takeLast();
 }
 

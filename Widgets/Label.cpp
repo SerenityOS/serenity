@@ -23,7 +23,7 @@ void Label::paintEvent(PaintEvent&)
 {
     Painter painter(*this);
     painter.fillRect({ 0, 0, width(), height() }, backgroundColor());
-    if (!text().isEmpty())
+    if (!text().is_empty())
         painter.drawText({ 4, 4, width(), height() }, text(), Painter::TextAlignment::TopLeft, foregroundColor());
 }
 

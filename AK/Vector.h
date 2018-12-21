@@ -109,7 +109,7 @@ public:
         return false;
     }
 
-    bool isEmpty() const { return size() == 0; }
+    bool is_empty() const { return size() == 0; }
     size_t size() const { return m_impl ? m_impl->size() : 0; }
     size_t capacity() const { return m_impl ? m_impl->capacity() : 0; }
 
@@ -130,7 +130,7 @@ public:
 
     T takeLast()
     {
-        ASSERT(!isEmpty());
+        ASSERT(!is_empty());
         T value = move(last());
         last().~T();
         --m_impl->m_size;

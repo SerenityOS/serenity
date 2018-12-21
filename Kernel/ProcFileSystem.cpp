@@ -32,7 +32,7 @@ ByteBuffer procfs$pid_fds(Process& process)
 {
     ProcessInspectionHandle handle(process);
     char* buffer;
-    auto stringImpl = StringImpl::createUninitialized(process.number_of_open_file_descriptors() * 80, buffer);
+    auto stringImpl = StringImpl::create_uninitialized(process.number_of_open_file_descriptors() * 80, buffer);
     memset(buffer, 0, stringImpl->length());
     char* ptr = buffer;
     for (size_t i = 0; i < process.max_open_file_descriptors(); ++i) {
@@ -49,7 +49,7 @@ ByteBuffer procfs$pid_vm(Process& process)
 {
     ProcessInspectionHandle handle(process);
     char* buffer;
-    auto stringImpl = StringImpl::createUninitialized(80 + process.regionCount() * 160 + 4096, buffer);
+    auto stringImpl = StringImpl::create_uninitialized(80 + process.regionCount() * 160 + 4096, buffer);
     memset(buffer, 0, stringImpl->length());
     char* ptr = buffer;
     ptr += ksprintf(ptr, "BEGIN       END         SIZE      COMMIT     NAME\n");
@@ -69,7 +69,7 @@ ByteBuffer procfs$pid_vmo(Process& process)
 {
     ProcessInspectionHandle handle(process);
     char* buffer;
-    auto stringImpl = StringImpl::createUninitialized(80 + process.regionCount() * 160 + 4096, buffer);
+    auto stringImpl = StringImpl::create_uninitialized(80 + process.regionCount() * 160 + 4096, buffer);
     memset(buffer, 0, stringImpl->length());
     char* ptr = buffer;
     ptr += ksprintf(ptr, "BEGIN       END         SIZE        NAME\n");
@@ -118,7 +118,7 @@ ByteBuffer procfs$pid_stack(Process& process)
     for (auto& symbol : recognizedSymbols) {
         bytesNeeded += symbol.ksym->name.length() + 8 + 16;
     }
-    auto buffer = ByteBuffer::createUninitialized(bytesNeeded);
+    auto buffer = ByteBuffer::create_uninitialized(bytesNeeded);
     char* bufptr = (char*)buffer.pointer();
 
     for (auto& symbol : recognizedSymbols) {
@@ -134,7 +134,7 @@ ByteBuffer procfs$pid_regs(Process& process)
 {
     ProcessInspectionHandle handle(process);
     auto& tss = process.tss();
-    auto buffer = ByteBuffer::createUninitialized(1024);
+    auto buffer = ByteBuffer::create_uninitialized(1024);
     char* ptr = (char*)buffer.pointer();
     ptr += ksprintf(ptr, "eax: %x\n", tss.eax);
     ptr += ksprintf(ptr, "ebx: %x\n", tss.ebx);
@@ -156,7 +156,7 @@ ByteBuffer procfs$pid_exe(Process& process)
     ProcessInspectionHandle handle(process);
     auto inode = process.executable_inode();
     ASSERT(inode);
-    return VFS::the().absolute_path(*inode).toByteBuffer();
+    return VFS::the().absolute_path(*inode).to_byte_buffer();
 }
 
 ByteBuffer procfs$pid_cwd(Process& process)
@@ -164,7 +164,7 @@ ByteBuffer procfs$pid_cwd(Process& process)
     ProcessInspectionHandle handle(process);
     auto inode = process.cwd_inode();
     ASSERT(inode);
-    return VFS::the().absolute_path(*inode).toByteBuffer();
+    return VFS::the().absolute_path(*inode).to_byte_buffer();
 }
 
 void ProcFS::add_process(Process& process)
@@ -199,7 +199,7 @@ ByteBuffer procfs$mm()
 {
     // FIXME: Implement
     InterruptDisabler disabler;
-    auto buffer = ByteBuffer::createUninitialized(1024 + 80 * MM.m_vmos.size());
+    auto buffer = ByteBuffer::create_uninitialized(1024 + 80 * MM.m_vmos.size());
     char* ptr = (char*)buffer.pointer();
     for (auto* vmo : MM.m_vmos) {
         ptr += ksprintf(ptr, "VMO: %p %s(%u): p:%4u %s\n",
@@ -219,7 +219,7 @@ ByteBuffer procfs$regions()
 {
     // FIXME: Implement
     InterruptDisabler disabler;
-    auto buffer = ByteBuffer::createUninitialized(1024 + 80 * MM.m_regions.size());
+    auto buffer = ByteBuffer::create_uninitialized(1024 + 80 * MM.m_regions.size());
     char* ptr = (char*)buffer.pointer();
     for (auto* region : MM.m_regions) {
         ptr += ksprintf(ptr, "Region: %p VMO=%p %s\n",
@@ -235,7 +235,7 @@ ByteBuffer procfs$regions()
 ByteBuffer procfs$mounts()
 {
     InterruptDisabler disabler;
-    auto buffer = ByteBuffer::createUninitialized(VFS::the().mount_count() * 80);
+    auto buffer = ByteBuffer::create_uninitialized(VFS::the().mount_count() * 80);
     char* ptr = (char*)buffer.pointer();
     VFS::the().for_each_mount([&ptr] (auto& mount) {
         auto& fs = mount.guest_fs();
@@ -251,7 +251,7 @@ ByteBuffer procfs$mounts()
 
 ByteBuffer procfs$cpuinfo()
 {
-    auto buffer = ByteBuffer::createUninitialized(256);
+    auto buffer = ByteBuffer::create_uninitialized(256);
     char* ptr = (char*)buffer.pointer();
     {
         CPUID cpuid(0);
@@ -316,7 +316,7 @@ ByteBuffer procfs$cpuinfo()
 
 ByteBuffer procfs$kmalloc()
 {
-    auto buffer = ByteBuffer::createUninitialized(256);
+    auto buffer = ByteBuffer::create_uninitialized(256);
     char* ptr = (char*)buffer.pointer();
     ptr += ksprintf(ptr, "eternal:      %u\npage-aligned: %u\nallocated:    %u\nfree:         %u\n", kmalloc_sum_eternal, sum_alloc, sum_free);
     buffer.trim(ptr - (char*)buffer.pointer());
@@ -327,7 +327,7 @@ ByteBuffer procfs$summary()
 {
     InterruptDisabler disabler;
     auto processes = Process::allProcesses();
-    auto buffer = ByteBuffer::createUninitialized(processes.size() * 256);
+    auto buffer = ByteBuffer::create_uninitialized(processes.size() * 256);
     char* ptr = (char*)buffer.pointer();
     ptr += ksprintf(ptr, "PID TPG PGP SID  OWNER  STATE      PPID NSCHED     FDS  TTY  NAME\n");
     for (auto* process : processes) {
@@ -352,7 +352,7 @@ ByteBuffer procfs$summary()
 ByteBuffer procfs$vnodes()
 {
     auto& vfs = VFS::the();
-    auto buffer = ByteBuffer::createUninitialized(vfs.m_max_vnode_count * 256);
+    auto buffer = ByteBuffer::create_uninitialized(vfs.m_max_vnode_count * 256);
     char* ptr = (char*)buffer.pointer();
     for (size_t i = 0; i < vfs.m_max_vnode_count; ++i) {
         auto& vnode = vfs.m_nodes[i];
@@ -362,7 +362,7 @@ ByteBuffer procfs$vnodes()
         String path;
         if (vnode.core_inode())
             path = vfs.absolute_path(*vnode.core_inode());
-        if (path.isEmpty()) {
+        if (path.is_empty()) {
             if (auto* dev = vnode.characterDevice()) {
                 if (dev->is_tty())
                     path = static_cast<const TTY*>(dev)->tty_name();

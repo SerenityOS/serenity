@@ -16,7 +16,7 @@ ssize_t DoubleBuffer::write(const byte* data, size_t size)
 
 ssize_t DoubleBuffer::read(byte* data, size_t size)
 {
-    if (m_read_buffer_index >= m_read_buffer->size() && !m_write_buffer->isEmpty())
+    if (m_read_buffer_index >= m_read_buffer->size() && !m_write_buffer->is_empty())
         flip();
     if (m_read_buffer_index >= m_read_buffer->size())
         return 0;

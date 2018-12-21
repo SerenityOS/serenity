@@ -61,7 +61,7 @@ void Button::paintEvent(PaintEvent&)
         painter.drawLine({ 2, height() - 3 }, { width() - 2, height() - 3 }, shadowColor);
     }
 
-    if (!caption().isEmpty()) {
+    if (!caption().is_empty()) {
         auto textRect = rect();
         if (m_beingPressed)
             textRect.moveBy(1, 1);

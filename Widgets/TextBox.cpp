@@ -78,7 +78,7 @@ void TextBox::handleBackspace()
     }
 
     char* buffer;
-    auto newText = StringImpl::createUninitialized(m_text.length() - 1, buffer);
+    auto newText = StringImpl::create_uninitialized(m_text.length() - 1, buffer);
 
     memcpy(buffer, m_text.characters(), m_cursorPosition - 1);
     memcpy(buffer + m_cursorPosition - 1, m_text.characters() + m_cursorPosition, m_text.length() - (m_cursorPosition - 1));
@@ -111,11 +111,11 @@ void TextBox::keyDownEvent(KeyEvent& event)
         return;
     }
 
-    if (!event.text().isEmpty()) {
+    if (!event.text().is_empty()) {
         ASSERT(event.text().length() == 1);
 
         char* buffer;
-        auto newText = StringImpl::createUninitialized(m_text.length() + 1, buffer);
+        auto newText = StringImpl::create_uninitialized(m_text.length() + 1, buffer);
 
         memcpy(buffer, m_text.characters(), m_cursorPosition);
         buffer[m_cursorPosition] = event.text()[0];

@@ -29,7 +29,7 @@ public:
     T& operator*() { return *ptr(); }
     const T& operator*() const { return *ptr(); }
 
-    bool isNull() const { return !m_link || !m_link->ptr(); }
+    bool is_null() const { return !m_link || !m_link->ptr(); }
     void clear() { m_link = nullptr; }
 
     WeakLink<T>* leakLink() { return m_link.leakRef(); }

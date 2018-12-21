@@ -55,7 +55,7 @@ ByteBuffer DiskBackedFS::readBlock(unsigned index) const
     }
 #endif
 
-    auto buffer = ByteBuffer::createUninitialized(blockSize());
+    auto buffer = ByteBuffer::create_uninitialized(blockSize());
     //kprintf("created block buffer with size %u\n", blockSize());
     DiskOffset baseOffset = static_cast<DiskOffset>(index) * static_cast<DiskOffset>(blockSize());
     auto* bufferPointer = buffer.pointer();
@@ -81,7 +81,7 @@ ByteBuffer DiskBackedFS::readBlocks(unsigned index, unsigned count) const
         return nullptr;
     if (count == 1)
         return readBlock(index);
-    auto blocks = ByteBuffer::createUninitialized(count * blockSize());
+    auto blocks = ByteBuffer::create_uninitialized(count * blockSize());
     byte* out = blocks.pointer();
 
     for (unsigned i = 0; i < count; ++i) {

@@ -109,7 +109,7 @@ int main(int c, char** v)
         String command = cmdbuf;
         auto parts = command.split(' ');
 
-        if (parts.isEmpty())
+        if (parts.is_empty())
             continue;
 
         String cmd = parts[0];

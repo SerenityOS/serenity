@@ -123,7 +123,7 @@ bool Scheduler::pick_next()
     auto* prevHead = g_processes->head();
     for (;;) {
         // Move head to tail.
-        g_processes->append(g_processes->removeHead());
+        g_processes->append(g_processes->remove_head());
         auto* process = g_processes->head();
 
         if (process->state() == Process::Runnable || process->state() == Process::Running) {

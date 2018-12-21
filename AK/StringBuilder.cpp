@@ -20,7 +20,7 @@ void StringBuilder::append(char ch)
 String StringBuilder::build()
 {
     auto strings = move(m_strings);
-    if (strings.isEmpty())
+    if (strings.is_empty())
         return String::empty();
 
     size_t sizeNeeded = 0;
@@ -28,7 +28,7 @@ String StringBuilder::build()
         sizeNeeded += string.length();
 
     char* buffer;
-    auto impl = StringImpl::createUninitialized(sizeNeeded, buffer);
+    auto impl = StringImpl::create_uninitialized(sizeNeeded, buffer);
     if (!impl)
         return String();
 

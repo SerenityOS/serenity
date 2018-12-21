@@ -4,18 +4,18 @@
 
 namespace AK {
 
-static StringImpl* s_theEmptyStringImpl = nullptr;
+static StringImpl* s_the_empty_stringimpl = nullptr;
 
-void StringImpl::initializeGlobals()
+void StringImpl::initialize_globals()
 {
-    s_theEmptyStringImpl = nullptr;
+    s_the_empty_stringimpl = nullptr;
 }
 
-StringImpl& StringImpl::theEmptyStringImpl()
+StringImpl& StringImpl::the_empty_stringimpl()
 {
-    if (!s_theEmptyStringImpl)
-        s_theEmptyStringImpl = new StringImpl(ConstructTheEmptyStringImpl);;
-    return *s_theEmptyStringImpl;
+    if (!s_the_empty_stringimpl)
+        s_the_empty_stringimpl = new StringImpl(ConstructTheEmptyStringImpl);;
+    return *s_the_empty_stringimpl;
 }
 
 StringImpl::~StringImpl()
@@ -27,7 +27,7 @@ static inline size_t allocationSizeForStringImpl(size_t length)
     return sizeof(StringImpl) + (sizeof(char) * length) + sizeof(char);
 }
 
-RetainPtr<StringImpl> StringImpl::createUninitialized(size_t length, char*& buffer)
+RetainPtr<StringImpl> StringImpl::create_uninitialized(size_t length, char*& buffer)
 {
     ASSERT(length);
     void* slot = kmalloc(allocationSizeForStringImpl(length));
@@ -46,10 +46,10 @@ RetainPtr<StringImpl> StringImpl::create(const char* cstring, size_t length, Sho
         return nullptr;
 
     if (!*cstring)
-        return theEmptyStringImpl();
+        return the_empty_stringimpl();
 
     char* buffer;
-    auto newStringImpl = createUninitialized(length, buffer);
+    auto newStringImpl = create_uninitialized(length, buffer);
     if (!newStringImpl)
         return nullptr;
     memcpy(buffer, cstring, length * sizeof(char));
@@ -94,7 +94,7 @@ static inline char toASCIIUppercase(char c)
     return c;
 }
 
-RetainPtr<StringImpl> StringImpl::toLowercase() const
+RetainPtr<StringImpl> StringImpl::to_lowercase() const
 {
     if (!m_length)
         return const_cast<StringImpl*>(this);
@@ -107,7 +107,7 @@ RetainPtr<StringImpl> StringImpl::toLowercase() const
 
 slowPath:
     char* buffer;
-    auto lowercased = createUninitialized(m_length, buffer);
+    auto lowercased = create_uninitialized(m_length, buffer);
     if (!lowercased)
         return nullptr;
     for (size_t i = 0; i < m_length; ++i)
@@ -116,7 +116,7 @@ slowPath:
     return lowercased;
 }
 
-RetainPtr<StringImpl> StringImpl::toUppercase() const
+RetainPtr<StringImpl> StringImpl::to_uppercase() const
 {
     if (!m_length)
         return const_cast<StringImpl*>(this);
@@ -129,7 +129,7 @@ RetainPtr<StringImpl> StringImpl::toUppercase() const
 
 slowPath:
     char* buffer;
-    auto uppercased = createUninitialized(m_length, buffer);
+    auto uppercased = create_uninitialized(m_length, buffer);
     if (!uppercased)
         return nullptr;
     for (size_t i = 0; i < m_length; ++i)
@@ -138,7 +138,7 @@ slowPath:
     return uppercased;
 }
 
-void StringImpl::computeHash() const
+void StringImpl::compute_hash() const
 {
     if (!length()) {
         m_hash = 0;

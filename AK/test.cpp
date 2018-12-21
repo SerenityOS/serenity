@@ -20,7 +20,7 @@ void log_unlocked() { }
 
 int main(int c, char** v)
 {
-    StringImpl::initializeGlobals();
+    StringImpl::initialize_globals();
 
     {
         SpinLock lock;
@@ -32,7 +32,7 @@ int main(int c, char** v)
         if (c == 2)
             testpath = v[1];
         FileSystemPath p(testpath);
-        if (p.string().isNull())
+        if (p.string().is_null())
             printf("canonicalized path is null\n");
         else
             printf("%s\n", p.string().characters());
@@ -108,14 +108,14 @@ int main(int c, char** v)
     String empty = "";
 
     char* buffer;
-    auto test = StringImpl::createUninitialized(3, buffer); 
+    auto test = StringImpl::create_uninitialized(3, buffer);
     auto hello = String("hello");
     auto Hello = String("Hello");
 
     printf("hello: '%s'\n", hello.characters());
     printf("Hello: '%s'\n", Hello.characters());
-    printf("'Hello'.lower(): '%s'\n", Hello.toLowercase().characters());
-    printf("'hello'.upper(): '%s'\n", Hello.toUppercase().characters());
+    printf("'Hello'.lower(): '%s'\n", Hello.to_lowercase().characters());
+    printf("'hello'.upper(): '%s'\n", Hello.to_uppercase().characters());
 
     Vector<String> strings;
     strings.append("a");
@@ -188,7 +188,7 @@ int main(int c, char** v)
     list.append(3);
     list.append(6);
     list.append(9);
-    ASSERT(!list.isEmpty());
+    ASSERT(!list.is_empty());
     ASSERT(list.first() == 3);
     ASSERT(list.last() == 9);
 
@@ -213,7 +213,7 @@ int main(int c, char** v)
         printf("not found\n");
     }
 
-    auto charbuf = Buffer<char>::createUninitialized(1024);
+    auto charbuf = Buffer<char>::create_uninitialized(1024);
     printf("charbuf.size() = %zu\n", charbuf->size());
 
     {

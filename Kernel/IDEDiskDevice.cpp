@@ -132,8 +132,8 @@ void IDEDiskDevice::initialize()
     enable_irq();
     wait_for_irq();
 
-    ByteBuffer wbuf = ByteBuffer::createUninitialized(512);
-    ByteBuffer bbuf = ByteBuffer::createUninitialized(512);
+    ByteBuffer wbuf = ByteBuffer::create_uninitialized(512);
+    ByteBuffer bbuf = ByteBuffer::create_uninitialized(512);
     byte* b = bbuf.pointer();
     word* w = (word*)wbuf.pointer();
     const word* wbufbase = (word*)wbuf.pointer();
