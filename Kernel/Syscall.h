@@ -67,12 +67,6 @@
     __ENUMERATE_SYSCALL(utime) \
     __ENUMERATE_SYSCALL(sync) \
 
-
-#define DO_SYSCALL_A0(function) Syscall::invoke((dword)(function))
-#define DO_SYSCALL_A1(function, arg1) Syscall::invoke((dword)(function), (dword)(arg1))
-#define DO_SYSCALL_A2(function, arg1, arg2) Syscall::invoke((dword)(function), (dword)(arg1), (dword)(arg2))
-#define DO_SYSCALL_A3(function, arg1, arg2, arg3) Syscall::invoke((dword)(function), (dword)(arg1), (dword)(arg2), (dword)arg3)
-
 namespace Syscall {
 
 enum Function {
@@ -112,25 +106,34 @@ inline dword invoke(Function function)
     return result;
 }
 
-inline dword invoke(Function function, dword arg1)
+template<typename T1>
+inline dword invoke(Function function, T1 arg1)
 {
     dword result;
-    asm volatile("int $0x80":"=a"(result):"a"(function),"d"(arg1):"memory");
+    asm volatile("int $0x80":"=a"(result):"a"(function),"d"((dword)arg1):"memory");
     return result;
 }
 
-inline dword invoke(Function function, dword arg1, dword arg2)
+template<typename T1, typename T2>
+inline dword invoke(Function function, T1 arg1, T2 arg2)
 {
     dword result;
-    asm volatile("int $0x80":"=a"(result):"a"(function),"d"(arg1),"c"(arg2):"memory");
+    asm volatile("int $0x80":"=a"(result):"a"(function),"d"((dword)arg1),"c"((dword)arg2):"memory");
     return result;
 }
 
-inline dword invoke(Function function, dword arg1, dword arg2, dword arg3)
+template<typename T1, typename T2, typename T3>
+inline dword invoke(Function function, T1 arg1, T2 arg2, T3 arg3)
 {
     dword result;
-    asm volatile("int $0x80":"=a"(result):"a"(function),"d"(arg1),"c"(arg2),"b"(arg3):"memory");
+    asm volatile("int $0x80":"=a"(result):"a"(function),"d"((dword)arg1),"c"((dword)arg2),"b"((dword)arg3):"memory");
     return result;
 }
 
 }
+
+#undef __ENUMERATE_SYSCALL
+#define __ENUMERATE_SYSCALL(x) using Syscall::SC_ ##x;
+    ENUMERATE_SYSCALLS
+#undef __ENUMERATE_SYSCALL
+#define syscall Syscall::invoke

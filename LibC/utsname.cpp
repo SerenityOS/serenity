@@ -6,7 +6,7 @@ extern "C" {
 
 int uname(struct utsname* buf)
 {
-    int rc = Syscall::invoke(Syscall::SC_uname, (dword)buf);
+    int rc = syscall(SC_uname, buf);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
