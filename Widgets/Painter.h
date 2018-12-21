@@ -4,7 +4,7 @@
 #include "Point.h"
 #include "Rect.h"
 #include "Size.h"
-#include <AK/String.h>
+#include <AK/AKString.h>
 
 class CBitmap;
 class Font;
