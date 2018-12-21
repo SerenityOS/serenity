@@ -17,7 +17,8 @@ OBJS = \
        fgrep.o \
        tty.o \
        mkdir.o \
-       touch.o
+       touch.o \
+       more.o
 
 APPS = \
        id \
@@ -39,7 +40,8 @@ APPS = \
        tty \
        mkdir \
        touch \
-       sync
+       sync \
+       more
 
 ARCH_FLAGS =
 STANDARD_FLAGS = -std=c++17 -nostdinc++ -nostdlib -nostdinc
@@ -117,6 +119,9 @@ touch: touch.o
 	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
 
 sync: sync.o
+	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
+
+more: more.o
 	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
 
 .cpp.o:

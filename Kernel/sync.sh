@@ -29,6 +29,7 @@ cp -v ../Userland/tty mnt/bin/tty
 cp -v ../Userland/mkdir mnt/bin/mkdir
 cp -v ../Userland/touch mnt/bin/touch
 cp -v ../Userland/sync mnt/bin/sync
+cp -v ../Userland/more mnt/bin/more
 sh sync-local.sh
 cp -v kernel.map mnt/
 ln -s dir_a mnt/dir_cur
