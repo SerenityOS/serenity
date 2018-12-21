@@ -32,7 +32,6 @@ public:
     virtual const char* class_name() const = 0;
     virtual InodeIdentifier root_inode() const = 0;
     virtual bool write_inode(InodeIdentifier, const ByteBuffer&) = 0;
-    virtual InodeMetadata inode_metadata(InodeIdentifier) const = 0;
 
     bool is_readonly() const { return m_readonly; }
 

@@ -180,37 +180,6 @@ OwnPtr<ext2_inode> Ext2FS::lookup_ext2_inode(unsigned inode) const
     return OwnPtr<ext2_inode>(e2inode);
 }
 
-InodeMetadata Ext2FS::inode_metadata(InodeIdentifier inode) const
-{
-    ASSERT(inode.fsid() == id());
-
-    auto e2inode = lookup_ext2_inode(inode.index());
-    if (!e2inode)
-        return InodeMetadata();
-
-    InodeMetadata metadata;
-    metadata.inode = inode;
-    metadata.size = e2inode->i_size;
-    metadata.mode = e2inode->i_mode;
-    metadata.uid = e2inode->i_uid;
-    metadata.gid = e2inode->i_gid;
-    metadata.linkCount = e2inode->i_links_count;
-    metadata.atime = e2inode->i_atime;
-    metadata.ctime = e2inode->i_ctime;
-    metadata.mtime = e2inode->i_mtime;
-    metadata.dtime = e2inode->i_dtime;
-    metadata.blockSize = blockSize();
-    metadata.blockCount = e2inode->i_blocks;
-
-    if (isBlockDevice(e2inode->i_mode) || isCharacterDevice(e2inode->i_mode)) {
-        unsigned dev = e2inode->i_block[0];
-        metadata.majorDevice = (dev & 0xfff00) >> 8;
-        metadata.minorDevice= (dev & 0xff) | ((dev >> 12) & 0xfff00);
-    }
-
-    return metadata;
-}
-
 Vector<unsigned> Ext2FS::block_list_for_inode(const ext2_inode& e2inode) const
 {
     unsigned entriesPerBlock = EXT2_ADDR_PER_BLOCK(&super_block());
