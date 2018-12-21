@@ -312,12 +312,12 @@ bool VFS::mkdir(const String& path, mode_t mode, InodeIdentifier base, int& erro
     return false;
 }
 
-InodeIdentifier VFS::resolveSymbolicLink(InodeIdentifier base, InodeIdentifier symlinkInode, int& error)
+InodeIdentifier VFS::resolve_symbolic_link(InodeIdentifier base, Inode& symlink_inode, int& error)
 {
-    auto symlinkContents = symlinkInode.read_entire_file();
-    if (!symlinkContents)
+    auto symlink_contents = symlink_inode.read_entire();
+    if (!symlink_contents)
         return { };
-    auto linkee = String((const char*)symlinkContents.pointer(), symlinkContents.size());
+    auto linkee = String((const char*)symlink_contents.pointer(), symlink_contents.size());
 #ifdef VFS_DEBUG
     kprintf("linkee (%s)(%u) from %u:%u\n", linkee.characters(), linkee.length(), base.fsid(), base.index());
 #endif
@@ -447,7 +447,7 @@ InodeIdentifier VFS::resolve_path(const String& path, InodeIdentifier base, int&
                 if (options & O_NOFOLLOW_NOERROR)
                     return crumb_id;
             }
-            crumb_id = resolveSymbolicLink(parent, crumb_id, error);
+            crumb_id = resolve_symbolic_link(parent, *crumb_inode, error);
             if (!crumb_id.is_valid()) {
                 kprintf("Symbolic link resolution failed :(\n");
                 return { };
