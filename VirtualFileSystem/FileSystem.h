@@ -34,8 +34,6 @@ public:
     virtual bool write_inode(InodeIdentifier, const ByteBuffer&) = 0;
     virtual InodeMetadata inode_metadata(InodeIdentifier) const = 0;
 
-    virtual ssize_t read_inode_bytes(InodeIdentifier, Unix::off_t offset, size_t count, byte* buffer, FileDescriptor*) const = 0;
-
     bool is_readonly() const { return m_readonly; }
 
     struct DirectoryEntry {

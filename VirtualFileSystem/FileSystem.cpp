@@ -79,15 +79,16 @@ ByteBuffer Inode::read_entire(FileDescriptor* descriptor)
     */
 }
 
-ByteBuffer FS::read_entire_inode(InodeIdentifier inode, FileDescriptor* handle) const
+ByteBuffer FS::read_entire_inode(InodeIdentifier inode_id, FileDescriptor* handle) const
 {
-    ASSERT(inode.fsid() == id());
+    ASSERT(inode_id.fsid() == id());
 
-    auto metadata = inode_metadata(inode);
-    if (!metadata.isValid()) {
-        kprintf("[fs] readInode: metadata lookup for inode %u failed\n", inode.index());
+    auto inode = get_inode(inode_id);
+    if (!inode) {
+        kprintf("fs: read_entire_inode: lookup for inode %u:%u failed\n", id(), inode_id.index());
         return nullptr;
     }
+    auto metadata = inode->metadata();
 
     size_t initialSize = metadata.size ? metadata.size : 4096;
     auto contents = ByteBuffer::create_uninitialized(initialSize);
@@ -97,7 +98,7 @@ ByteBuffer FS::read_entire_inode(InodeIdentifier inode, FileDescriptor* handle) 
     byte* out = contents.pointer();
     Unix::off_t offset = 0;
     for (;;) {
-        nread = read_inode_bytes(inode, offset, sizeof(buffer), buffer, handle);
+        nread = inode->read_bytes(offset, sizeof(buffer), buffer, handle);
         //kprintf("nread: %u, bufsiz: %u, initialSize: %u\n", nread, sizeof(buffer), initialSize);
         ASSERT(nread <= (ssize_t)sizeof(buffer));
         if (nread <= 0)
