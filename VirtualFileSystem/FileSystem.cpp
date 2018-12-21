@@ -49,8 +49,6 @@ FS* FS::from_fsid(dword id)
 
 ByteBuffer Inode::read_entire(FileDescriptor* descriptor)
 {
-    return fs().read_entire_inode(identifier(), descriptor);
-/*
     size_t initial_size = metadata().size ? metadata().size : 4096;
     auto contents = ByteBuffer::create_uninitialized(initial_size);
 
@@ -60,7 +58,6 @@ ByteBuffer Inode::read_entire(FileDescriptor* descriptor)
     Unix::off_t offset = 0;
     for (;;) {
         nread = read_bytes(offset, sizeof(buffer), buffer, descriptor);
-        //kprintf("nread: %u, bufsiz: %u, initial_size: %u\n", nread, sizeof(buffer), initial_size);
         ASSERT(nread <= (ssize_t)sizeof(buffer));
         if (nread <= 0)
             break;
@@ -71,45 +68,6 @@ ByteBuffer Inode::read_entire(FileDescriptor* descriptor)
     }
     if (nread < 0) {
         kprintf("Inode::read_entire: ERROR: %d\n", nread);
-        return nullptr;
-    }
-
-    contents.trim(offset);
-    return contents;
-    */
-}
-
-ByteBuffer FS::read_entire_inode(InodeIdentifier inode_id, FileDescriptor* handle) const
-{
-    ASSERT(inode_id.fsid() == id());
-
-    auto inode = get_inode(inode_id);
-    if (!inode) {
-        kprintf("fs: read_entire_inode: lookup for inode %u:%u failed\n", id(), inode_id.index());
-        return nullptr;
-    }
-    auto metadata = inode->metadata();
-
-    size_t initialSize = metadata.size ? metadata.size : 4096;
-    auto contents = ByteBuffer::create_uninitialized(initialSize);
-
-    ssize_t nread;
-    byte buffer[4096];
-    byte* out = contents.pointer();
-    Unix::off_t offset = 0;
-    for (;;) {
-        nread = inode->read_bytes(offset, sizeof(buffer), buffer, handle);
-        //kprintf("nread: %u, bufsiz: %u, initialSize: %u\n", nread, sizeof(buffer), initialSize);
-        ASSERT(nread <= (ssize_t)sizeof(buffer));
-        if (nread <= 0)
-            break;
-        memcpy(out, buffer, nread);
-        out += nread;
-        offset += nread;
-        ASSERT(offset <= (ssize_t)initialSize); // FIXME: Support dynamically growing the buffer.
-    }
-    if (nread < 0) {
-        kprintf("[fs] readInode: ERROR: %d\n", nread);
         return nullptr;
     }
 

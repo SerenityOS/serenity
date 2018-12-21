@@ -51,8 +51,6 @@ public:
 
     virtual RetainPtr<Inode> get_inode(InodeIdentifier) const = 0;
 
-    ByteBuffer read_entire_inode(InodeIdentifier, FileDescriptor* = nullptr) const;
-
 protected:
     FS();
 

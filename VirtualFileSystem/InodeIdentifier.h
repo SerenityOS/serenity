@@ -35,8 +35,6 @@ public:
 
     bool is_root_inode() const;
 
-    ByteBuffer read_entire_file() const;
-
 private:
     dword m_fsid { 0 };
     dword m_index { 0 };

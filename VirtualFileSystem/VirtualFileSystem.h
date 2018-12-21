@@ -135,7 +135,7 @@ private:
 
     void traverse_directory_inode(Inode&, Function<bool(const FS::DirectoryEntry&)>);
     InodeIdentifier resolve_path(const String& path, InodeIdentifier base, int& error, int options = 0, InodeIdentifier* deepest_dir = nullptr);
-    InodeIdentifier resolveSymbolicLink(InodeIdentifier base, InodeIdentifier symlinkInode, int& error);
+    InodeIdentifier resolve_symbolic_link(InodeIdentifier base, Inode& symlink_inode, int& error);
 
     RetainPtr<Vnode> allocateNode();
     void freeNode(Vnode*);

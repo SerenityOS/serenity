@@ -13,7 +13,7 @@ FileSystemPath::FileSystemPath(const String& s)
 
 bool FileSystemPath::canonicalize(bool resolve_symbolic_links)
 {
-    // FIXME: Implement "resolveSymbolicLinks"
+    // FIXME: Implement "resolve_symbolic_links"
     (void) resolve_symbolic_links;
     auto parts = m_string.split('/');
     Vector<String> canonical_parts;
