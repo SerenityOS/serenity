@@ -14,9 +14,6 @@ OBJS = \
        tst.o \
        mm.o \
        kill.o \
-       ft.o \
-       ft2.o \
-       strsignal.o \
        fgrep.o \
        tty.o \
        mkdir.o \
@@ -38,9 +35,6 @@ APPS = \
        tst \
        mm \
        kill \
-       ft \
-       ft2 \
-       strsignal \
        fgrep \
        tty \
        mkdir \
@@ -107,12 +101,6 @@ clear: clear.o
 tst: tst.o
 	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
 
-ft: ft.o
-	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
-
-ft2: ft2.o
-	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
-
 mm: mm.o
 	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
 
@@ -120,9 +108,6 @@ kill: kill.o
 	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
 
 tty: tty.o
-	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
-
-strsignal: strsignal.o
 	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
 
 mkdir: mkdir.o

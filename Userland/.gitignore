@@ -16,9 +16,6 @@ tst
 mm
 kill
 tty
-ft
-ft2
-strsignal
 fgrep
 mkdir
 touch
