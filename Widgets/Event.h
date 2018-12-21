@@ -2,7 +2,7 @@
 
 #include "Point.h"
 #include "Rect.h"
-#include <AK/String.h>
+#include <AK/AKString.h>
 #include <AK/Types.h>
 
 static const char* eventNames[] = {

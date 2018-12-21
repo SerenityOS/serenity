@@ -4,7 +4,7 @@
 #include "Font.h"
 #include "Window.h"
 #include <AK/Assertions.h>
-#include <AK/StdLib.h>
+#include <AK/StdLibExtras.h>
 #include <SDL.h>
 
 Painter::Painter(Widget& widget)

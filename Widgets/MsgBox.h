@@ -1,6 +1,6 @@
 #pragma once
 
-#include <AK/String.h>
+#include <AK/AKString.h>
 
 class Window;
 

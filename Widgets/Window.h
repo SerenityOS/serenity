@@ -2,7 +2,7 @@
 
 #include "Object.h"
 #include "Rect.h"
-#include <AK/String.h>
+#include <AK/AKString.h>
 #include <AK/WeakPtr.h>
 
 class Widget;

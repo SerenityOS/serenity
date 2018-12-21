@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Widget.h"
-#include <AK/String.h>
+#include <AK/AKString.h>
 
 class CheckBox final : public Widget {
 public:

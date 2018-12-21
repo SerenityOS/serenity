@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Widget.h"
-#include <AK/String.h>
+#include <AK/AKString.h>
 
 class Label final : public Widget {
 public:
