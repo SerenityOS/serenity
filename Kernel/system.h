@@ -4,14 +4,6 @@
 #include <AK/Vector.h>
 #include <AK/AKString.h>
 
-struct KSym {
-    dword address;
-    String name;
-};
-
-Vector<KSym, KmallocEternalAllocator>& ksyms() PURE;
-const KSym* ksymbolicate(dword address) PURE;
-
 struct system_t
 {
     time_t uptime;

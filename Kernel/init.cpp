@@ -6,26 +6,22 @@
 #include "Process.h"
 #include "system.h"
 #include "PIC.h"
-#include "StdLib.h"
-#include "Syscall.h"
 #include "CMOS.h"
 #include "IDEDiskDevice.h"
+#include "KSyms.h"
 #include <VirtualFileSystem/NullDevice.h>
 #include <VirtualFileSystem/ZeroDevice.h>
 #include <VirtualFileSystem/FullDevice.h>
 #include <VirtualFileSystem/RandomDevice.h>
 #include <VirtualFileSystem/Ext2FileSystem.h>
 #include <VirtualFileSystem/VirtualFileSystem.h>
-#include <VirtualFileSystem/FileDescriptor.h>
-#include <AK/OwnPtr.h>
 #include "MemoryManager.h"
-#include "Console.h"
+
 #include "ProcFileSystem.h"
 #include "RTC.h"
 #include "VirtualConsole.h"
 #include "Scheduler.h"
 
-#define KSYMS
 #define SPAWN_MULTIPLE_SHELLS
 //#define STRESS_TEST_SPAWNING
 
@@ -36,116 +32,6 @@ VirtualConsole* tty1;
 VirtualConsole* tty2;
 VirtualConsole* tty3;
 Keyboard* keyboard;
-
-static byte parseHexDigit(char nibble)
-{
-    if (nibble >= '0' && nibble <= '9')
-        return nibble - '0';
-    ASSERT(nibble >= 'a' && nibble <= 'f');
-    return 10 + (nibble - 'a');
-}
-
-#ifdef KSYMS
-static Vector<KSym, KmallocEternalAllocator>* s_ksyms;
-static bool s_ksyms_ready;
-
-Vector<KSym, KmallocEternalAllocator>& ksyms()
-{
-    return *s_ksyms;
-}
-
-bool ksyms_ready()
-{
-    return s_ksyms_ready;
-}
-
-const KSym* ksymbolicate(dword address)
-{
-    if (address < ksyms().first().address || address > ksyms().last().address)
-        return nullptr;
-    for (unsigned i = 0; i < ksyms().size(); ++i) {
-        if (address < ksyms()[i + 1].address)
-            return &ksyms()[i];
-    }
-    return nullptr;
-}
-
-static void loadKsyms(const ByteBuffer& buffer)
-{
-    // FIXME: It's gross that this vector grows dynamically rather than being sized-to-fit.
-    //        We're wasting that eternal kmalloc memory.
-    s_ksyms = new Vector<KSym, KmallocEternalAllocator>;
-    auto* bufptr = (const char*)buffer.pointer();
-    auto* startOfName = bufptr;
-    dword address = 0;
-    dword ksym_count = 0;
-
-    for (unsigned i = 0; i < 8; ++i)
-        ksym_count = (ksym_count << 4) | parseHexDigit(*(bufptr++));
-    s_ksyms->ensureCapacity(ksym_count);
-    ++bufptr; // skip newline
-
-    kprintf("Loading ksyms: \033[s");
-
-    while (bufptr < buffer.end_pointer()) {
-        for (unsigned i = 0; i < 8; ++i)
-            address = (address << 4) | parseHexDigit(*(bufptr++));
-        bufptr += 3;
-        startOfName = bufptr;
-        while (*(++bufptr)) {
-            if (*bufptr == '\n') {
-                break;
-            }
-        }
-        // FIXME: The Strings here should be eternally allocated too.
-        ksyms().append({ address, String(startOfName, bufptr - startOfName) });
-
-        if ((ksyms().size() % 10) == 0 || ksym_count == ksyms().size())
-            kprintf("\033[u\033[s%u/%u", ksyms().size(), ksym_count);
-        ++bufptr;
-    }
-    kprintf("\n");
-    s_ksyms_ready = true;
-}
-
-void dump_backtrace(bool use_ksyms)
-{
-    if (!current) {
-        HANG;
-        return;
-    }
-    if (use_ksyms && !ksyms_ready()) {
-        HANG;
-        return;
-    }
-    struct RecognizedSymbol {
-        dword address;
-        const KSym* ksym;
-    };
-    Vector<RecognizedSymbol> recognizedSymbols;
-    if (use_ksyms) {
-        for (dword* stackPtr = (dword*)&use_ksyms; current->isValidAddressForKernel(LinearAddress((dword)stackPtr)); stackPtr = (dword*)*stackPtr) {
-            dword retaddr = stackPtr[1];
-            if (auto* ksym = ksymbolicate(retaddr))
-                recognizedSymbols.append({ retaddr, ksym });
-        }
-    } else{
-        for (dword* stackPtr = (dword*)&use_ksyms; current->isValidAddressForKernel(LinearAddress((dword)stackPtr)); stackPtr = (dword*)*stackPtr) {
-            dword retaddr = stackPtr[1];
-            kprintf("%x (next: %x)\n", retaddr, stackPtr ? (dword*)*stackPtr : 0);
-        }
-        return;
-    }
-    size_t bytesNeeded = 0;
-    for (auto& symbol : recognizedSymbols) {
-        bytesNeeded += symbol.ksym->name.length() + 8 + 16;
-    }
-    for (auto& symbol : recognizedSymbols) {
-        unsigned offset = symbol.address - symbol.ksym->address;
-        dbgprintf("%p  %s +%u\n", symbol.address, symbol.ksym->name.characters(), offset);
-    }
-}
-#endif
 
 #ifdef STRESS_TEST_SPAWNING
 static void spawn_stress() NORETURN;
@@ -208,19 +94,7 @@ static void init_stage2()
 
     vfs->mount_root(e2fs.copyRef());
 
-#ifdef KSYMS
-    {
-        int error;
-        auto descriptor = vfs->open("/kernel.map", error);
-        if (!descriptor) {
-            kprintf("Failed to open /kernel.map\n");
-        } else {
-            auto buffer = descriptor->read_entire_file();
-            ASSERT(buffer);
-            loadKsyms(buffer);
-        }
-    }
-#endif
+    load_ksyms();
 
     vfs->mount(ProcFS::the(), "/proc");
 
@@ -304,19 +178,4 @@ void init()
     for (;;) {
         asm("hlt");
     }
-}
-
-void log_try_lock(const char* where)
-{
-    kprintf("[%u] >>> locking... (%s)\n", current->pid(), where);
-}
-
-void log_locked(const char* where)
-{
-    kprintf("[%u] >>> locked() in %s\n", current->pid(), where);
-}
-
-void log_unlocked(const char* where)
-{
-    kprintf("[%u] <<< unlocked()\n", current->pid(), where);
 }

@@ -23,7 +23,8 @@ KERNEL_OBJS = \
        Scheduler.o \
        DoubleBuffer.o \
        ELFImage.o \
-       ELFLoader.o
+       ELFLoader.o \
+       KSyms.o
 
 VFS_OBJS = \
     ../VirtualFileSystem/DiskDevice.o \
