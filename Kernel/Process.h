@@ -35,7 +35,7 @@ struct SignalActionData {
 class Process : public InlineLinkedListNode<Process> {
     friend class InlineLinkedListNode<Process>;
 public:
-    static Process* create_kernel_process(void (*entry)(), String&& name);
+    static Process* create_kernel_process(String&& name, void (*entry)());
     static Process* create_user_process(const String& path, uid_t, gid_t, pid_t ppid, int& error, Vector<String>&& arguments = Vector<String>(), Vector<String>&& environment = Vector<String>(), TTY* = nullptr);
     ~Process();
 

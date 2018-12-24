@@ -544,7 +544,7 @@ int Process::sys$get_arguments(int* argc, char*** argv)
     return 0;
 }
 
-Process* Process::create_kernel_process(void (*e)(), String&& name)
+Process* Process::create_kernel_process(String&& name, void (*e)())
 {
     auto* process = new Process(move(name), (uid_t)0, (gid_t)0, (pid_t)0, Ring0);
     process->m_tss.eip = (dword)e;
