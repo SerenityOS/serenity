@@ -144,6 +144,25 @@ int Inode::set_mtime(Unix::time_t ts)
     return 0;
 }
 
+int Inode::increment_link_count()
+{
+    if (fs().is_readonly())
+        return -EROFS;
+    ++m_metadata.linkCount;
+    m_metadata_dirty = true;
+    return 0;
+}
+
+int Inode::decrement_link_count()
+{
+    if (fs().is_readonly())
+        return -EROFS;
+    ASSERT(m_metadata.linkCount);
+    --m_metadata.linkCount;
+    m_metadata_dirty = true;
+    return 0;
+}
+
 void FS::sync()
 {
     for (auto* inode : all_inodes()) {

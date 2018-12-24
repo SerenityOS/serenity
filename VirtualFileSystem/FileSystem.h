@@ -88,6 +88,8 @@ public:
     int set_atime(Unix::time_t);
     int set_ctime(Unix::time_t);
     int set_mtime(Unix::time_t);
+    int increment_link_count();
+    int decrement_link_count();
 
     virtual void flush_metadata() = 0;
 

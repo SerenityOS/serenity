@@ -94,8 +94,6 @@ private:
     bool set_inode_allocation_state(unsigned inode, bool);
     bool set_block_allocation_state(GroupIndex, BlockIndex, bool);
 
-    bool modify_link_count(InodeIndex, int delta);
-
     unsigned m_blockGroupCount { 0 };
 
     mutable ByteBuffer m_cached_super_block;
