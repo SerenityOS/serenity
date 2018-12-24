@@ -425,35 +425,32 @@ bool Ext2FSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry&)
     return true;
 }
 
-bool Ext2FS::add_inode_to_directory(InodeIndex parent, InodeIndex child, const String& name, byte fileType, int& error)
+bool Ext2FSInode::add_child(InodeIdentifier child_id, const String& name, byte file_type, int& error)
 {
-    auto e2inodeForDirectory = lookup_ext2_inode(parent);
-    ASSERT(e2inodeForDirectory);
-    ASSERT(isDirectory(e2inodeForDirectory->i_mode));
+    ASSERT(is_directory());
 
 //#ifdef EXT2_DEBUG
-    dbgprintf("Ext2FS: Adding inode %u with name '%s' to directory %u\n", child, name.characters(), parent);
+    dbgprintf("Ext2FS: Adding inode %u with name '%s' to directory %u\n", child_id.index(), name.characters(), index());
 //#endif
 
-    Vector<DirectoryEntry> entries;
-    bool nameAlreadyExists = false;
-    auto directory = get_inode({ id(), parent });
-    directory->traverse_as_directory([&] (auto& entry) {
+    Vector<FS::DirectoryEntry> entries;
+    bool name_already_exists = false;
+    traverse_as_directory([&] (auto& entry) {
         if (!strcmp(entry.name, name.characters())) {
-            nameAlreadyExists = true;
+            name_already_exists = true;
             return false;
         }
         entries.append(entry);
         return true;
     });
-    if (nameAlreadyExists) {
-        kprintf("Ext2FS: Name '%s' already exists in directory inode %u\n", name.characters(), parent);
+    if (name_already_exists) {
+        kprintf("Ext2FS: Name '%s' already exists in directory inode %u\n", name.characters(), index());
         error = -EEXIST;
         return false;
     }
 
-    entries.append({ name.characters(), name.length(), { id(), child }, fileType });
-    return write_directory_inode(parent, move(entries));
+    entries.append({ name.characters(), name.length(), child_id, file_type });
+    return fs().write_directory_inode(index(), move(entries));
 }
 
 bool Ext2FS::write_directory_inode(unsigned directoryInode, Vector<DirectoryEntry>&& entries)
@@ -847,23 +844,24 @@ RetainPtr<Inode> Ext2FS::create_directory(InodeIdentifier parent_id, const Strin
     return inode;
 }
 
-RetainPtr<Inode> Ext2FS::create_inode(InodeIdentifier parentInode, const String& name, Unix::mode_t mode, unsigned size, int& error)
+RetainPtr<Inode> Ext2FS::create_inode(InodeIdentifier parent_id, const String& name, Unix::mode_t mode, unsigned size, int& error)
 {
-    ASSERT(parentInode.fsid() == id());
+    ASSERT(parent_id.fsid() == id());
+    auto parent_inode = get_inode(parent_id);
 
-    dbgprintf("Ext2FS: Adding inode '%s' (mode %u) to parent directory %u:\n", name.characters(), mode, parentInode.index());
+    dbgprintf("Ext2FS: Adding inode '%s' (mode %u) to parent directory %u:\n", name.characters(), mode, parent_inode->identifier().index());
 
     // NOTE: This doesn't commit the inode allocation just yet!
     auto inode_id = allocate_inode(0, 0);
     if (!inode_id) {
-        kprintf("Ext2FS: createInode: allocateInode failed\n");
+        kprintf("Ext2FS: createInode: allocate_inode failed\n");
         error = -ENOSPC;
         return { };
     }
 
     auto blocks = allocate_blocks(group_index_from_inode(inode_id), ceilDiv(size, blockSize()));
     if (blocks.is_empty()) {
-        kprintf("Ext2FS: createInode: allocateBlocks failed\n");
+        kprintf("Ext2FS: createInode: allocate_blocks failed\n");
         error = -ENOSPC;
         return { };
     }
@@ -885,7 +883,7 @@ RetainPtr<Inode> Ext2FS::create_inode(InodeIdentifier parentInode, const String&
         fileType = EXT2_FT_SYMLINK;
 
     // Try adding it to the directory first, in case the name is already in use.
-    bool success = add_inode_to_directory(parentInode.index(), inode_id, name, fileType, error);
+    bool success = parent_inode->add_child({ id(), inode_id }, name, fileType, error);
     if (!success)
         return { };
 

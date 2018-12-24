@@ -82,6 +82,7 @@ public:
     virtual InodeIdentifier lookup(const String& name) = 0;
     virtual String reverse_lookup(InodeIdentifier) = 0;
     virtual bool write(const ByteBuffer&) = 0;
+    virtual bool add_child(InodeIdentifier child_id, const String& name, byte file_type, int& error) = 0;
 
     bool is_metadata_dirty() const { return m_metadata_dirty; }
 
