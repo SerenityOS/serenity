@@ -143,12 +143,6 @@ RetainPtr<Inode> SynthFS::create_inode(InodeIdentifier parentInode, const String
     return { };
 }
 
-bool SynthFS::write_inode(InodeIdentifier, const ByteBuffer&)
-{
-    kprintf("FIXME: Implement SyntheticFileSystem::writeInode().\n");
-    return false;
-}
-
 RetainPtr<Inode> SynthFS::create_directory(InodeIdentifier, const String&, Unix::mode_t, int& error)
 {
     error = -EROFS;
@@ -262,4 +256,10 @@ String SynthFSInode::reverse_lookup(InodeIdentifier child_id)
 
 void SynthFSInode::flush_metadata()
 {
+}
+
+bool SynthFSInode::write(const ByteBuffer&)
+{
+    ASSERT_NOT_REACHED();
+    return false;
 }
