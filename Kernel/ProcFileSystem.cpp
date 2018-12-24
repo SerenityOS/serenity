@@ -5,6 +5,7 @@
 #include "MemoryManager.h"
 #include "StdLib.h"
 #include "i386.h"
+#include "KSyms.h"
 
 static ProcFS* s_the;
 
@@ -116,15 +117,14 @@ ByteBuffer procfs$pid_stack(Process& process)
     }
     size_t bytesNeeded = 0;
     for (auto& symbol : recognizedSymbols) {
-        bytesNeeded += symbol.ksym->name.length() + 8 + 16;
+        bytesNeeded += strlen(symbol.ksym->name) + 8 + 16;
     }
     auto buffer = ByteBuffer::create_uninitialized(bytesNeeded);
     char* bufptr = (char*)buffer.pointer();
 
     for (auto& symbol : recognizedSymbols) {
-        // FIXME: This doesn't actually create a file!
         unsigned offset = symbol.address - symbol.ksym->address;
-        bufptr += ksprintf(bufptr, "%p  %s +%u\n", symbol.address, symbol.ksym->name.characters(), offset);
+        bufptr += ksprintf(bufptr, "%p  %s +%u\n", symbol.address, symbol.ksym->name, offset);
     }
     buffer.trim(bufptr - (char*)buffer.pointer());
     return buffer;

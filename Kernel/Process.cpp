@@ -17,6 +17,7 @@
 #include "Syscall.h"
 #include "Scheduler.h"
 #include "FIFO.h"
+#include "KSyms.h"
 
 //#define DEBUG_IO
 //#define TASK_DEBUG
@@ -1559,7 +1560,8 @@ bool Process::isValidAddressForKernel(LinearAddress laddr) const
     // This code allows access outside of the known used address ranges to get caught.
 
     InterruptDisabler disabler;
-    if (laddr.get() >= ksyms().first().address && laddr.get() <= ksyms().last().address)
+    // FIXME: What if we're indexing into the ksym with the highest address though?
+    if (laddr.get() >= ksym_lowest_address && laddr.get() <= ksym_highest_address)
         return true;
     if (is_kmalloc_address(laddr.asPtr()))
         return true;
