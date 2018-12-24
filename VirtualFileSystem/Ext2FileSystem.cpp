@@ -612,20 +612,6 @@ void Ext2FS::traverse_block_bitmap(unsigned groupIndex, F callback) const
     }
 }
 
-bool Ext2FS::modify_link_count(InodeIndex inode, int delta)
-{
-    ASSERT(inode);
-    auto e2inode = lookup_ext2_inode(inode);
-    if (!e2inode)
-        return false;
-
-    auto newLinkCount = e2inode->i_links_count + delta;
-    dbgprintf("Ext2FS: changing inode %u link count from %u to %u\n", inode, e2inode->i_links_count, newLinkCount);
-    e2inode->i_links_count = newLinkCount;
-
-    return write_ext2_inode(inode, *e2inode);
-}
-
 bool Ext2FS::write_ext2_inode(unsigned inode, const ext2_inode& e2inode)
 {
     unsigned blockIndex;
@@ -830,9 +816,9 @@ bool Ext2FS::set_block_allocation_state(GroupIndex group, BlockIndex bi, bool ne
     return true;
 }
 
-RetainPtr<Inode> Ext2FS::create_directory(InodeIdentifier parentInode, const String& name, Unix::mode_t mode, int& error)
+RetainPtr<Inode> Ext2FS::create_directory(InodeIdentifier parent_id, const String& name, Unix::mode_t mode, int& error)
 {
-    ASSERT(parentInode.fsid() == id());
+    ASSERT(parent_id.fsid() == id());
 
     // Fix up the mode to definitely be a directory.
     // FIXME: This is a bit on the hackish side.
@@ -841,21 +827,23 @@ RetainPtr<Inode> Ext2FS::create_directory(InodeIdentifier parentInode, const Str
 
     // NOTE: When creating a new directory, make the size 1 block.
     //       There's probably a better strategy here, but this works for now.
-    auto inode = create_inode(parentInode, name, mode, blockSize(), error);
+    auto inode = create_inode(parent_id, name, mode, blockSize(), error);
     if (!inode)
-        return { };
+        return nullptr;
 
     dbgprintf("Ext2FS: create_directory: created new directory named '%s' with inode %u\n", name.characters(), inode->identifier().index());
 
     Vector<DirectoryEntry> entries;
     entries.append({ ".", inode->identifier(), EXT2_FT_DIR });
-    entries.append({ "..", parentInode, EXT2_FT_DIR });
+    entries.append({ "..", parent_id, EXT2_FT_DIR });
 
     bool success = write_directory_inode(inode->identifier().index(), move(entries));
     ASSERT(success);
 
-    success = modify_link_count(parentInode.index(), 1);
-    ASSERT(success);
+    auto parent_inode = get_inode(parent_id);
+    error = parent_inode->increment_link_count();
+    if (error < 0)
+        return nullptr;
 
     auto& bgd = const_cast<ext2_group_desc&>(group_descriptor(group_index_from_inode(inode->identifier().index())));
     ++bgd.bg_used_dirs_count;
