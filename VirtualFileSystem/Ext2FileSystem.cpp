@@ -650,13 +650,6 @@ bool Ext2FS::write_ext2_inode(unsigned inode, const ext2_inode& e2inode)
     return true;
 }
 
-bool Ext2FS::is_directory_inode(unsigned inode) const
-{
-    if (auto e2inode = lookup_ext2_inode(inode))
-        return isDirectory(e2inode->i_mode);
-    return false;
-}
-
 Vector<Ext2FS::BlockIndex> Ext2FS::allocate_blocks(unsigned group, unsigned count)
 {
     dbgprintf("Ext2FS: allocateBlocks(group: %u, count: %u)\n", group, count);
@@ -840,7 +833,6 @@ bool Ext2FS::set_block_allocation_state(GroupIndex group, BlockIndex bi, bool ne
 InodeIdentifier Ext2FS::create_directory(InodeIdentifier parentInode, const String& name, Unix::mode_t mode, int& error)
 {
     ASSERT(parentInode.fsid() == id());
-    ASSERT(is_directory_inode(parentInode.index()));
 
     // Fix up the mode to definitely be a directory.
     // FIXME: This is a bit on the hackish side.
@@ -880,7 +872,6 @@ InodeIdentifier Ext2FS::create_directory(InodeIdentifier parentInode, const Stri
 InodeIdentifier Ext2FS::create_inode(InodeIdentifier parentInode, const String& name, Unix::mode_t mode, unsigned size, int& error)
 {
     ASSERT(parentInode.fsid() == id());
-    ASSERT(is_directory_inode(parentInode.index()));
 
     dbgprintf("Ext2FS: Adding inode '%s' (mode %u) to parent directory %u:\n", name.characters(), mode, parentInode.index());
 
