@@ -16,7 +16,6 @@
 #include <VirtualFileSystem/Ext2FileSystem.h>
 #include <VirtualFileSystem/VirtualFileSystem.h>
 #include "MemoryManager.h"
-
 #include "ProcFileSystem.h"
 #include "RTC.h"
 #include "VirtualConsole.h"
@@ -52,15 +51,6 @@ static void spawn_stress()
     }
 }
 #endif
-
-static void syncd() NORETURN;
-static void syncd()
-{
-    for (;;) {
-        Syscall::sync();
-        sleep(10 * TICKS_PER_SECOND);
-    }
-}
 
 static void init_stage2() NORETURN;
 static void init_stage2()
@@ -166,9 +156,13 @@ void init()
     procfs->initialize();
 
     Process::initialize();
-    Process::create_kernel_process(init_stage2, "init_stage2");
-
-    Process::create_kernel_process(syncd, "syncd");
+    Process::create_kernel_process("init_stage2", init_stage2);
+    Process::create_kernel_process("syncd", [] {
+        for (;;) {
+            Syscall::sync();
+            sleep(10 * TICKS_PER_SECOND);
+        }
+    });
 
     Scheduler::pick_next();
 
