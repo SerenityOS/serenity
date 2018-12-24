@@ -1737,8 +1737,7 @@ int Process::sys$sigpending(Unix::sigset_t* set)
 
 int Process::sys$sigaction(int signum, const Unix::sigaction* act, Unix::sigaction* old_act)
 {
-    // FIXME: Fail with -EINVAL if attepmting to change action for SIGKILL or SIGSTOP.
-    if (signum < 1 || signum >= 32)
+    if (signum < 1 || signum >= 32 || signum == SIGKILL || signum == SIGSTOP)
         return -EINVAL;
     if (!validate_read_typed(act))
         return -EFAULT;
