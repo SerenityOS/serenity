@@ -53,6 +53,7 @@ private:
     virtual String reverse_lookup(InodeIdentifier) override;
     virtual void flush_metadata() override;
     virtual bool write(const ByteBuffer&) override;
+    virtual bool add_child(InodeIdentifier child_id, const String& name, byte file_type, int& error) override;
 
     SynthFS& fs();
     const SynthFS& fs() const;

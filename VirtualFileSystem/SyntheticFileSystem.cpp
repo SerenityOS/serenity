@@ -263,3 +263,13 @@ bool SynthFSInode::write(const ByteBuffer&)
     ASSERT_NOT_REACHED();
     return false;
 }
+
+bool SynthFSInode::add_child(InodeIdentifier child_id, const String& name, byte file_type, int& error)
+{
+    (void) child_id;
+    (void) name;
+    (void) file_type;
+    (void) error;
+    ASSERT_NOT_REACHED();
+    return false;
+}
