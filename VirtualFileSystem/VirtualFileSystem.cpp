@@ -198,6 +198,7 @@ void VFS::freeNode(Vnode* node)
         m_inode2vnode.remove(node->inode);
         node->inode.fs()->release();
         node->inode = InodeIdentifier();
+        node->m_core_inode = nullptr;
     }
     if (node->m_characterDevice) {
         m_device2vnode.remove(encodedDevice(node->m_characterDevice->major(), node->m_characterDevice->minor()));
