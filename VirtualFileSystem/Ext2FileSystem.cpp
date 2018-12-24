@@ -131,18 +131,6 @@ InodeIdentifier Ext2FS::root_inode() const
     return { id(), EXT2_ROOT_INO };
 }
 
-#ifdef EXT2_DEBUG
-static void dumpExt2Inode(const ext2_inode& inode)
-{
-    kprintf("Dump of ext2_inode:\n");
-    kprintf("  i_size: %u\n", inode.i_size);
-    kprintf("  i_mode: %u\n", inode.i_mode);
-    kprintf("  i_blocks: %u\n", inode.i_blocks);
-    kprintf("  i_uid: %u\n", inode.i_uid);
-    kprintf("  i_gid: %u\n", inode.i_gid);
-}
-#endif
-
 ByteBuffer Ext2FS::read_block_containing_inode(unsigned inode, unsigned& blockIndex, unsigned& offset) const
 {
     auto& superBlock = this->super_block();
@@ -160,24 +148,6 @@ ByteBuffer Ext2FS::read_block_containing_inode(unsigned inode, unsigned& blockIn
     offset &= blockSize() - 1;
 
     return readBlock(blockIndex);
-}
-
-OwnPtr<ext2_inode> Ext2FS::lookup_ext2_inode(unsigned inode) const
-{
-    unsigned blockIndex;
-    unsigned offset;
-    auto block = read_block_containing_inode(inode, blockIndex, offset);
-
-    if (!block)
-        return { };
-
-    auto* e2inode = reinterpret_cast<ext2_inode*>(kmalloc(inode_size()));
-    memcpy(e2inode, reinterpret_cast<ext2_inode*>(block.offset_pointer(offset)), inode_size());
-#ifdef EXT2_DEBUG
-    dumpExt2Inode(*e2inode);
-#endif
-
-    return OwnPtr<ext2_inode>(e2inode);
 }
 
 Vector<unsigned> Ext2FS::block_list_for_inode(const ext2_inode& e2inode) const
@@ -299,9 +269,20 @@ RetainPtr<Inode> Ext2FS::get_inode(InodeIdentifier inode) const
         if (it != m_inode_cache.end())
             return (*it).value;
     }
-    auto raw_inode = lookup_ext2_inode(inode.index());
+
+    unsigned block_index;
+    unsigned offset;
+    auto block = read_block_containing_inode(inode.index(), block_index, offset);
+    if (!block)
+        return { };
+
+    // FIXME: Avoid this extra allocation, copy the raw inode directly into the Ext2FSInode metadata somehow.
+    auto* e2inode = reinterpret_cast<ext2_inode*>(kmalloc(inode_size()));
+    memcpy(e2inode, reinterpret_cast<ext2_inode*>(block.offset_pointer(offset)), inode_size());
+    auto raw_inode = OwnPtr<ext2_inode>(e2inode);
     if (!raw_inode)
         return nullptr;
+
     LOCKER(m_inode_cache_lock);
     auto it = m_inode_cache.find(inode.index());
     if (it != m_inode_cache.end())
