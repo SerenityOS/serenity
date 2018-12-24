@@ -368,7 +368,10 @@ ByteBuffer procfs$vnodes()
                     path = static_cast<const TTY*>(dev)->tty_name();
             }
         }
-        ptr += ksprintf(ptr, "vnode %03u: %02u:%08u (%u) %s\n", i, vnode.inode.fsid(), vnode.inode.index(), vnode.retain_count(), path.characters());
+        ptr += ksprintf(ptr, "vnode %03u: %02u:%08u (%u) %s", i, vnode.inode.fsid(), vnode.inode.index(), vnode.retain_count(), path.characters());
+        if (vnode.characterDevice())
+            ptr += ksprintf(ptr, " (chardev: %p)", vnode.characterDevice());
+        ptr += ksprintf(ptr, "\n");
     }
     *ptr = '\0';
     buffer.trim(ptr - (char*)buffer.pointer());
