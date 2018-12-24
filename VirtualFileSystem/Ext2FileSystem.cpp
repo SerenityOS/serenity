@@ -830,7 +830,7 @@ bool Ext2FS::set_block_allocation_state(GroupIndex group, BlockIndex bi, bool ne
     return true;
 }
 
-InodeIdentifier Ext2FS::create_directory(InodeIdentifier parentInode, const String& name, Unix::mode_t mode, int& error)
+RetainPtr<Inode> Ext2FS::create_directory(InodeIdentifier parentInode, const String& name, Unix::mode_t mode, int& error)
 {
     ASSERT(parentInode.fsid() == id());
 
@@ -842,22 +842,22 @@ InodeIdentifier Ext2FS::create_directory(InodeIdentifier parentInode, const Stri
     // NOTE: When creating a new directory, make the size 1 block.
     //       There's probably a better strategy here, but this works for now.
     auto inode = create_inode(parentInode, name, mode, blockSize(), error);
-    if (!inode.is_valid())
+    if (!inode)
         return { };
 
-    dbgprintf("Ext2FS: create_directory: created new directory named '%s' with inode %u\n", name.characters(), inode.index());
+    dbgprintf("Ext2FS: create_directory: created new directory named '%s' with inode %u\n", name.characters(), inode->identifier().index());
 
     Vector<DirectoryEntry> entries;
-    entries.append({ ".", inode, EXT2_FT_DIR });
+    entries.append({ ".", inode->identifier(), EXT2_FT_DIR });
     entries.append({ "..", parentInode, EXT2_FT_DIR });
 
-    bool success = write_directory_inode(inode.index(), move(entries));
+    bool success = write_directory_inode(inode->identifier().index(), move(entries));
     ASSERT(success);
 
     success = modify_link_count(parentInode.index(), 1);
     ASSERT(success);
 
-    auto& bgd = const_cast<ext2_group_desc&>(group_descriptor(group_index_from_inode(inode.index())));
+    auto& bgd = const_cast<ext2_group_desc&>(group_descriptor(group_index_from_inode(inode->identifier().index())));
     ++bgd.bg_used_dirs_count;
     dbgprintf("Ext2FS: incremented bg_used_dirs_count %u -> %u\n", bgd.bg_used_dirs_count - 1, bgd.bg_used_dirs_count);
 
@@ -869,21 +869,21 @@ InodeIdentifier Ext2FS::create_directory(InodeIdentifier parentInode, const Stri
     return inode;
 }
 
-InodeIdentifier Ext2FS::create_inode(InodeIdentifier parentInode, const String& name, Unix::mode_t mode, unsigned size, int& error)
+RetainPtr<Inode> Ext2FS::create_inode(InodeIdentifier parentInode, const String& name, Unix::mode_t mode, unsigned size, int& error)
 {
     ASSERT(parentInode.fsid() == id());
 
     dbgprintf("Ext2FS: Adding inode '%s' (mode %u) to parent directory %u:\n", name.characters(), mode, parentInode.index());
 
     // NOTE: This doesn't commit the inode allocation just yet!
-    auto inode = allocate_inode(0, 0);
-    if (!inode) {
+    auto inode_id = allocate_inode(0, 0);
+    if (!inode_id) {
         kprintf("Ext2FS: createInode: allocateInode failed\n");
         error = -ENOSPC;
         return { };
     }
 
-    auto blocks = allocate_blocks(group_index_from_inode(inode), ceilDiv(size, blockSize()));
+    auto blocks = allocate_blocks(group_index_from_inode(inode_id), ceilDiv(size, blockSize()));
     if (blocks.is_empty()) {
         kprintf("Ext2FS: createInode: allocateBlocks failed\n");
         error = -ENOSPC;
@@ -907,16 +907,16 @@ InodeIdentifier Ext2FS::create_inode(InodeIdentifier parentInode, const String& 
         fileType = EXT2_FT_SYMLINK;
 
     // Try adding it to the directory first, in case the name is already in use.
-    bool success = add_inode_to_directory(parentInode.index(), inode, name, fileType, error);
+    bool success = add_inode_to_directory(parentInode.index(), inode_id, name, fileType, error);
     if (!success)
         return { };
 
     // Looks like we're good, time to update the inode bitmap and group+global inode counters.
-    success = set_inode_allocation_state(inode, true);
+    success = set_inode_allocation_state(inode_id, true);
     ASSERT(success);
 
     for (auto bi : blocks) {
-        success = set_block_allocation_state(group_index_from_inode(inode), bi, true);
+        success = set_block_allocation_state(group_index_from_inode(inode_id), bi, true);
         ASSERT(success);
     }
 
@@ -949,10 +949,10 @@ InodeIdentifier Ext2FS::create_inode(InodeIdentifier parentInode, const String& 
     }
 
     e2inode->i_flags = 0;
-    success = write_ext2_inode(inode, *e2inode);
+    success = write_ext2_inode(inode_id, *e2inode);
     ASSERT(success);
 
-    return { id(), inode };
+    return get_inode({ id(), inode_id });
 }
 
 InodeIdentifier Ext2FS::find_parent_of_inode(InodeIdentifier inode_id) const
