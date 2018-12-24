@@ -77,7 +77,6 @@ private:
     virtual InodeIdentifier find_parent_of_inode(InodeIdentifier) const override;
     virtual RetainPtr<Inode> get_inode(InodeIdentifier) const override;
 
-    bool is_directory_inode(unsigned) const;
     unsigned allocate_inode(unsigned preferredGroup, unsigned expectedSize);
     Vector<BlockIndex> allocate_blocks(unsigned group, unsigned count);
     unsigned group_index_from_inode(unsigned) const;
