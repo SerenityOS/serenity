@@ -306,7 +306,7 @@ bool VFS::mkdir(const String& path, mode_t mode, InodeIdentifier base, int& erro
     }
     dbgprintf("VFS::mkdir: '%s' in %u:%u\n", p.basename().characters(), parent_dir.fsid(), parent_dir.index());
     auto new_dir = base.fs()->create_directory(parent_dir, p.basename(), mode, error);
-    if (new_dir.is_valid()) {
+    if (new_dir) {
         error = 0;
         return true;
     }

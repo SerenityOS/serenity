@@ -132,7 +132,7 @@ InodeIdentifier SynthFS::root_inode() const
     return { id(), 1 };
 }
 
-InodeIdentifier SynthFS::create_inode(InodeIdentifier parentInode, const String& name, Unix::mode_t mode, unsigned size, int& error)
+RetainPtr<Inode> SynthFS::create_inode(InodeIdentifier parentInode, const String& name, Unix::mode_t mode, unsigned size, int& error)
 {
     (void) parentInode;
     (void) name;
@@ -149,10 +149,10 @@ bool SynthFS::write_inode(InodeIdentifier, const ByteBuffer&)
     return false;
 }
 
-InodeIdentifier SynthFS::create_directory(InodeIdentifier, const String&, Unix::mode_t, int& error)
+RetainPtr<Inode> SynthFS::create_directory(InodeIdentifier, const String&, Unix::mode_t, int& error)
 {
     error = -EROFS;
-    return { };
+    return nullptr;
 }
 
 auto SynthFS::generate_inode_index() -> InodeIndex
