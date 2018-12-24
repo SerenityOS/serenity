@@ -31,7 +31,6 @@ public:
     virtual bool initialize() = 0;
     virtual const char* class_name() const = 0;
     virtual InodeIdentifier root_inode() const = 0;
-    virtual bool write_inode(InodeIdentifier, const ByteBuffer&) = 0;
 
     bool is_readonly() const { return m_readonly; }
 
@@ -82,6 +81,7 @@ public:
     virtual bool traverse_as_directory(Function<bool(const FS::DirectoryEntry&)>) = 0;
     virtual InodeIdentifier lookup(const String& name) = 0;
     virtual String reverse_lookup(InodeIdentifier) = 0;
+    virtual bool write(const ByteBuffer&) = 0;
 
     bool is_metadata_dirty() const { return m_metadata_dirty; }
 

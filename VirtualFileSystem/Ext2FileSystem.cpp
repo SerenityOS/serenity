@@ -373,35 +373,27 @@ ssize_t Ext2FSInode::read_bytes(Unix::off_t offset, size_t count, byte* buffer, 
     return nread;
 }
 
-bool Ext2FS::write_inode(InodeIdentifier inode, const ByteBuffer& data)
+bool Ext2FSInode::write(const ByteBuffer& data)
 {
-    ASSERT(inode.fsid() == id());
-
-    auto e2inode = lookup_ext2_inode(inode.index());
-    if (!e2inode) {
-        kprintf("ext2fs: writeInode: metadata lookup for inode %u failed\n", inode.index());
-        return false;
-    }
-
     // FIXME: Support writing to symlink inodes.
-    ASSERT(!isSymbolicLink(e2inode->i_mode));
+    ASSERT(!m_metadata.isSymbolicLink());
 
-    unsigned blocksNeededBefore = ceilDiv(e2inode->i_size, blockSize());
-    unsigned blocksNeededAfter = ceilDiv((unsigned)data.size(), blockSize());
+    unsigned blocksNeededBefore = ceilDiv(size(), fs().blockSize());
+    unsigned blocksNeededAfter = ceilDiv((unsigned)data.size(), fs().blockSize());
 
     // FIXME: Support growing or shrinking the block list.
     ASSERT(blocksNeededBefore == blocksNeededAfter);
 
-    auto list = block_list_for_inode(*e2inode);
+    auto list = fs().block_list_for_inode(m_raw_inode);
     if (list.is_empty()) {
-        kprintf("ext2fs: writeInode: empty block list for inode %u\n", inode.index());
+        kprintf("ext2fs: writeInode: empty block list for inode %u\n", index());
         return false;
     }
 
     for (unsigned i = 0; i < list.size(); ++i) {
-        auto section = data.slice(i * blockSize(), blockSize());
+        auto section = data.slice(i * fs().blockSize(), fs().blockSize());
         //kprintf("section = %p (%u)\n", section.pointer(), section.size());
-        bool success = writeBlock(list[i], section);
+        bool success = fs().writeBlock(list[i], section);
         ASSERT(success);
     }
 
@@ -522,9 +514,7 @@ bool Ext2FS::write_directory_inode(unsigned directoryInode, Vector<DirectoryEntr
     kprintf("\n");
 #endif
 
-    write_inode({ id(), directoryInode }, directoryData);
-
-    return true;
+    return get_inode({ id(), directoryInode })->write(directoryData);
 }
 
 unsigned Ext2FS::inodes_per_block() const
