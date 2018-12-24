@@ -64,7 +64,6 @@ private:
     unsigned blocks_per_group() const;
     unsigned inode_size() const;
 
-    OwnPtr<ext2_inode> lookup_ext2_inode(unsigned) const;
     bool write_ext2_inode(unsigned, const ext2_inode&);
     ByteBuffer read_block_containing_inode(unsigned inode, unsigned& blockIndex, unsigned& offset) const;
 
