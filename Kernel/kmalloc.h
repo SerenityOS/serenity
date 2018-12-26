@@ -4,7 +4,9 @@ void kmalloc_init();
 void *kmalloc(dword size) __attribute__ ((malloc));
 void* kmalloc_eternal(size_t) __attribute__ ((malloc));
 void* kmalloc_page_aligned(size_t) __attribute__ ((malloc));
+void* kmalloc_aligned(size_t, size_t alignment) __attribute__ ((malloc));
 void kfree(void*);
+void kfree_aligned(void*);
 
 bool is_kmalloc_address(void*);
 

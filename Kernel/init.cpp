@@ -40,8 +40,8 @@ static void spawn_stress()
 
     for (unsigned i = 0; i < 10000; ++i) {
         int error;
-        Process::create_user_process("/bin/id", (uid_t)100, (gid_t)100, (pid_t)0, error, Vector<String>(), Vector<String>(), tty0);
-        kprintf("malloc stats: alloc:%u free:%u page_aligned:%u eternal:%u\n", sum_alloc, sum_free, kmalloc_page_aligned, kmalloc_sum_eternal);
+        Process::create_user_process("/bin/true", (uid_t)100, (gid_t)100, (pid_t)0, error, Vector<String>(), Vector<String>(), tty0);
+        kprintf("malloc stats: alloc:%u free:%u eternal:%u ", sum_alloc, sum_free, kmalloc_sum_eternal);
         kprintf("delta:%u\n", sum_alloc - lastAlloc);
         lastAlloc = sum_alloc;
         sleep(60);
