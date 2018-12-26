@@ -36,14 +36,13 @@ Keyboard* keyboard;
 static void spawn_stress() NORETURN;
 static void spawn_stress()
 {
-    dword lastAlloc = sum_alloc;
+    dword last_sum_alloc = sum_alloc;
 
     for (unsigned i = 0; i < 10000; ++i) {
         int error;
         Process::create_user_process("/bin/true", (uid_t)100, (gid_t)100, (pid_t)0, error, Vector<String>(), Vector<String>(), tty0);
-        kprintf("malloc stats: alloc:%u free:%u eternal:%u ", sum_alloc, sum_free, kmalloc_sum_eternal);
-        kprintf("delta:%u\n", sum_alloc - lastAlloc);
-        lastAlloc = sum_alloc;
+        dbgprintf("malloc stats: alloc:%u free:%u eternal:%u !delta:%u\n", sum_alloc, sum_free, kmalloc_sum_eternal, sum_alloc - last_sum_alloc);
+        last_sum_alloc = sum_alloc;
         sleep(60);
     }
     for (;;) {

@@ -690,7 +690,8 @@ Process::~Process()
     ProcFS::the().remove_process(*this);
     system.nprocess--;
 
-    gdt_free_entry(selector());
+    if (selector())
+        gdt_free_entry(selector());
 
     if (m_kernelStack) {
         kfree(m_kernelStack);
