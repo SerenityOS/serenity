@@ -58,6 +58,8 @@ void MemoryManager::release_page_directory(PageDirectory& page_directory)
 #ifdef SCRUB_DEALLOCATED_PAGE_TABLES
     memset(&page_directory, 0xc9, sizeof(PageDirectory));
 #endif
+
+    kfree_aligned(&page_directory);
 }
 
 void MemoryManager::initialize_paging()

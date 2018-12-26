@@ -318,7 +318,7 @@ ByteBuffer procfs$kmalloc()
 {
     auto buffer = ByteBuffer::create_uninitialized(256);
     char* ptr = (char*)buffer.pointer();
-    ptr += ksprintf(ptr, "eternal:      %u\npage-aligned: %u\nallocated:    %u\nfree:         %u\n", kmalloc_sum_eternal, sum_alloc, sum_free);
+    ptr += ksprintf(ptr, "eternal:      %u\nallocated:    %u\nfree:         %u\n", kmalloc_sum_eternal, sum_alloc, sum_free);
     buffer.trim(ptr - (char*)buffer.pointer());
     return buffer;
 }

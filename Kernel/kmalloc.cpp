@@ -32,19 +32,13 @@ static byte alloc_map[POOL_SIZE / CHUNK_SIZE / 8];
 volatile size_t sum_alloc = 0;
 volatile size_t sum_free = POOL_SIZE;
 volatile size_t kmalloc_sum_eternal = 0;
-volatile size_t kmalloc_sum_page_aligned = 0;
 
 static byte* s_next_eternal_ptr;
-static byte* s_next_page_aligned_ptr;
-
 static byte* s_end_of_eternal_range;
-static byte* s_end_of_page_aligned_range;
 
 bool is_kmalloc_address(void* ptr)
 {
     if (ptr >= (byte*)ETERNAL_BASE_PHYSICAL && ptr < s_next_eternal_ptr)
-        return true;
-    if (ptr >= (byte*)PAGE_ALIGNED_BASE_PHYSICAL && ptr < s_next_page_aligned_ptr)
         return true;
     return (dword)ptr >= BASE_PHYS && (dword)ptr <= (BASE_PHYS + POOL_SIZE);
 }
@@ -55,15 +49,11 @@ void kmalloc_init()
     memset( (void *)BASE_PHYS, 0, POOL_SIZE );
 
     kmalloc_sum_eternal = 0;
-    kmalloc_sum_page_aligned = 0;
     sum_alloc = 0;
     sum_free = POOL_SIZE;
 
     s_next_eternal_ptr = (byte*)ETERNAL_BASE_PHYSICAL;
-    s_next_page_aligned_ptr = (byte*)PAGE_ALIGNED_BASE_PHYSICAL;
-
     s_end_of_eternal_range = s_next_eternal_ptr + RANGE_SIZE;
-    s_end_of_page_aligned_range = s_next_page_aligned_ptr + RANGE_SIZE;
 }
 
 void* kmalloc_eternal(size_t size)
@@ -75,16 +65,28 @@ void* kmalloc_eternal(size_t size)
     return ptr;
 }
 
-void* kmalloc_page_aligned(size_t size)
+void* kmalloc_aligned(size_t size, size_t alignment)
 {
-    ASSERT((size % PAGE_SIZE) == 0);
-    void* ptr = s_next_page_aligned_ptr;
-    s_next_page_aligned_ptr += size;
-    ASSERT(s_next_page_aligned_ptr < s_end_of_page_aligned_range);
-    kmalloc_sum_page_aligned += size;
-    return ptr;
+    void* ptr = kmalloc(size + alignment + sizeof(void*));
+    dword max_addr = (dword)ptr + alignment;
+    void* aligned_ptr = (void*)(max_addr - (max_addr % alignment));
+
+    ((void**)aligned_ptr)[-1] = ptr;
+    return aligned_ptr;
 }
 
+void kfree_aligned(void* ptr)
+{
+    kfree(((void**)ptr)[-1]);
+}
+
+void* kmalloc_page_aligned(size_t size)
+{
+    void* ptr = kmalloc_aligned(size, PAGE_SIZE);
+    dword d = (dword)ptr;
+    ASSERT((d & PAGE_MASK) == d);
+    return ptr;
+}
 
 void* kmalloc(dword size)
 {
