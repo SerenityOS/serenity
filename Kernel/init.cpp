@@ -100,7 +100,7 @@ static void init_stage2()
 #endif
 
 #ifdef STRESS_TEST_SPAWNING
-    Process::create_kernel_process(spawn_stress, "spawn_stress");
+    Process::create_kernel_process("spawn_stress", spawn_stress);
 #endif
 
     current->sys$exit(0);
