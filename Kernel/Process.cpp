@@ -489,8 +489,10 @@ Process* Process::create_user_process(const String& path, uid_t uid, gid_t gid, 
     auto* process = new Process(parts.takeLast(), uid, gid, parent_pid, Ring3, move(cwd), nullptr, tty);
 
     error = process->exec(path, move(arguments), move(environment));
-    if (error != 0)
+    if (error != 0) {
+        delete process;
         return nullptr;
+    }
 
     ProcFS::the().add_process(*process);
 
