@@ -189,7 +189,8 @@ void ProcFS::remove_process(Process& process)
     InterruptDisabler disabler;
     auto pid = process.pid();
     auto it = m_pid2inode.find(pid);
-    ASSERT(it != m_pid2inode.end());
+    if (it == m_pid2inode.end())
+        return;
     bool success = remove_file((*it).value);
     ASSERT(success);
     m_pid2inode.remove(pid);

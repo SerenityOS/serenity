@@ -34,7 +34,7 @@ word gdt_alloc_entry()
 
 void gdt_free_entry(word entry)
 {
-    s_gdt_freelist->append(entry);
+    s_gdt_freelist->unchecked_append(entry);
 }
 
 extern "C" void handle_irq();

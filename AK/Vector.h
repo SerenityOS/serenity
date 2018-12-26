@@ -164,6 +164,7 @@ public:
 
     void unchecked_append(T&& value)
     {
+        ASSERT((size() + 1) <= capacity());
         new (m_impl->slot(m_impl->m_size)) T(move(value));
         ++m_impl->m_size;
     }
