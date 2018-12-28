@@ -37,7 +37,7 @@ private:
     explicit StringImpl(ConstructTheEmptyStringImplTag) : m_characters("") { }
 
     enum ConstructWithInlineBufferTag { ConstructWithInlineBuffer };
-    explicit StringImpl(ConstructWithInlineBufferTag, size_t length) : m_length(length), m_characters(m_inline_buffer) { }
+    StringImpl(ConstructWithInlineBufferTag, size_t length);
 
     void compute_hash() const;
 

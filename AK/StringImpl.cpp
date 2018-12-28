@@ -1,6 +1,21 @@
 #include "StringImpl.h"
 #include "StdLibExtras.h"
 #include "kmalloc.h"
+#include "HashTable.h"
+
+#ifdef DEBUG_STRINGIMPL
+unsigned g_stringimpl_count;
+static HashTable<StringImpl*>* g_all_live_stringimpls;
+
+void dump_all_stringimpls()
+{
+    unsigned i = 0;
+    for (auto& it : *g_all_live_stringimpls) {
+        dbgprintf("%u: \"%s\"\n", i, (*it).characters());
+        ++i;
+    }
+}
+#endif
 
 namespace AK {
 
@@ -9,6 +24,10 @@ static StringImpl* s_the_empty_stringimpl = nullptr;
 void StringImpl::initialize_globals()
 {
     s_the_empty_stringimpl = nullptr;
+#ifdef DEBUG_STRINGIMPL
+    g_stringimpl_count = 0;
+    g_all_live_stringimpls = new HashTable<StringImpl*>;
+#endif
 }
 
 StringImpl& StringImpl::the_empty_stringimpl()
@@ -18,8 +37,22 @@ StringImpl& StringImpl::the_empty_stringimpl()
     return *s_the_empty_stringimpl;
 }
 
+StringImpl::StringImpl(ConstructWithInlineBufferTag, size_t length)
+    : m_length(length)
+    , m_characters(m_inline_buffer)
+{
+#ifdef DEBUG_STRINGIMPL
+    ++g_stringimpl_count;
+    g_all_live_stringimpls->set(this);
+#endif
+}
+
 StringImpl::~StringImpl()
 {
+#ifdef DEBUG_STRINGIMPL
+    --g_stringimpl_count;
+    g_all_live_stringimpls->remove(this);
+#endif
 }
 
 static inline size_t allocationSizeForStringImpl(size_t length)

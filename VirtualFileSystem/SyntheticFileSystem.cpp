@@ -116,8 +116,12 @@ bool SynthFS::remove_file(InodeIndex inode)
         break;
     }
 
+    Vector<InodeIndex> indices_to_remove;
+    indices_to_remove.ensureCapacity(file.m_children.size());
     for (auto& child : file.m_children)
-        remove_file(child->m_metadata.inode.index());
+        indices_to_remove.unchecked_append(child->m_metadata.inode.index());
+    for (auto& index : indices_to_remove)
+        remove_file(index);
     m_inodes.remove(inode);
     return true;
 }
