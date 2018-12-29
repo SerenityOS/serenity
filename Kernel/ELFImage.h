@@ -155,6 +155,8 @@ public:
     bool is_executable() const { return header().e_type == ET_EXEC; }
     bool is_relocatable() const { return header().e_type == ET_REL; }
 
+    LinearAddress entry() const { return LinearAddress(header().e_entry); }
+
 private:
     bool parseHeader();
     const char* raw_data(unsigned offset) const;

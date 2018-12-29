@@ -344,7 +344,7 @@ int Process::do_exec(const String& path, Vector<String>&& arguments, Vector<Stri
             return -ENOEXEC;
         }
 
-        entry_eip = (dword)loader.symbol_ptr("_start");
+        entry_eip = loader.entry().get();
         if (!entry_eip) {
             m_page_directory = old_page_directory;
             MM.enter_process_paging_scope(*this);
@@ -606,7 +606,7 @@ Process::Process(String&& name, uid_t uid, gid_t gid, pid_t ppid, RingLevel ring
             if (!fork_parent->m_fds[i].descriptor)
                 continue;
 #ifdef FORK_DEBUG
-            dbgprintf("fork: cloning fd %u... (%p) istty? %u\n", i, fork_parent->m_fds[i].ptr(), fork_parent->m_fds[i]->isTTY());
+            dbgprintf("fork: cloning fd %u... (%p) istty? %u\n", i, fork_parent->m_fds[i].descriptor.ptr(), fork_parent->m_fds[i].descriptor->is_tty());
 #endif
             m_fds[i].descriptor = fork_parent->m_fds[i].descriptor->clone();
             m_fds[i].flags = fork_parent->m_fds[i].flags;
