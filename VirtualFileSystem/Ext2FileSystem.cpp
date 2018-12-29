@@ -88,8 +88,8 @@ bool Ext2FS::initialize()
     kprintf("ext2fs: %u inodes, %u blocks\n", superBlock.s_inodes_count, superBlock.s_blocks_count);
     kprintf("ext2fs: block size = %u\n", EXT2_BLOCK_SIZE(&superBlock));
     kprintf("ext2fs: first data block = %u\n", superBlock.s_first_data_block);
-    kprintf("ext2fs: inodes per block = %u\n", inodesPerBlock());
-    kprintf("ext2fs: inodes per group = %u\n", inodesPerGroup());
+    kprintf("ext2fs: inodes per block = %u\n", inodes_per_block());
+    kprintf("ext2fs: inodes per group = %u\n", inodes_per_group());
     kprintf("ext2fs: free inodes = %u\n", superBlock.s_free_inodes_count);
     kprintf("ext2fs: desc per block = %u\n", EXT2_DESC_PER_BLOCK(&superBlock));
     kprintf("ext2fs: desc size = %u\n", EXT2_DESC_SIZE(&superBlock));
@@ -109,7 +109,7 @@ bool Ext2FS::initialize()
 
 #ifdef EXT2_DEBUG
     for (unsigned i = 1; i <= m_blockGroupCount; ++i) {
-        auto& group = blockGroupDescriptor(i);
+        auto& group = group_descriptor(i);
         kprintf("ext2fs: group[%u] { block_bitmap: %u, inode_bitmap: %u, inode_table: %u }\n",
             i,
             group.bg_block_bitmap,
@@ -333,7 +333,8 @@ ssize_t Ext2FSInode::read_bytes(Unix::off_t offset, size_t count, byte* buffer, 
     byte* out = buffer;
 
 #ifdef EXT2_DEBUG
-    kprintf("ok let's do it, read(%llu, %u) -> blocks %u thru %u, oifb: %u\n", offset, count, firstBlockLogicalIndex, lastBlockLogicalIndex, offsetIntoFirstBlock);
+    kprintf("Ext2FS: Reading %u bytes %d bytes into inode %u:%u to %p\n", count, offset, identifier().fsid(), identifier().index(), buffer);
+    //kprintf("ok let's do it, read(%u, %u) -> blocks %u thru %u, oifb: %u\n", offset, count, first_block_logical_index, last_block_logical_index, offset_into_first_block);
 #endif
 
     for (dword bi = first_block_logical_index; remaining_count && bi <= last_block_logical_index; ++bi) {
@@ -396,7 +397,7 @@ bool Ext2FSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry&)
     while (entry < buffer.end_pointer()) {
         if (entry->inode != 0) {
 #ifdef EXT2_DEBUG
-            kprintf("Ext2Inode::traverse_as_directory: %u, name_len: %u, rec_len: %u, file_type: %u, name: %s\n", entry->inode, entry->name_len, entry->rec_len, entry->file_type, namebuf);
+            kprintf("Ext2Inode::traverse_as_directory: %u, name_len: %u, rec_len: %u, file_type: %u, name: %s\n", entry->inode, entry->name_len, entry->rec_len, entry->file_type, entry->name);
 #endif
             if (!callback({ entry->name, entry->name_len, { fsid(), entry->inode }, entry->file_type }))
                 break;
