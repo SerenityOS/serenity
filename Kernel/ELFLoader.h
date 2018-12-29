@@ -17,6 +17,7 @@ public:
     char* symbol_ptr(const char* name);
     bool allocate_section(LinearAddress, size_t, size_t alignment, bool is_readable, bool is_writable);
     bool map_section(LinearAddress, size_t, size_t alignment, size_t offset_in_image, bool is_readable, bool is_writable);
+    LinearAddress entry() const { return m_image.entry(); }
 
 private:
     bool layout();
