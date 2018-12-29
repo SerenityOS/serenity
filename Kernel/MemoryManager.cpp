@@ -426,7 +426,7 @@ void MemoryManager::unquickmap_page()
     auto page_laddr = LinearAddress(4 * MB);
     auto pte = ensure_pte(m_kernel_page_directory, page_laddr);
 #ifdef MM_DEBUG
-    auto old_physical_address = pte.physicalPageBase();
+    auto old_physical_address = pte.physical_page_base();
 #endif
     pte.set_physical_page_base(0);
     pte.set_present(false);
@@ -472,14 +472,15 @@ void MemoryManager::map_region_at_address(PageDirectory* page_directory, Region&
 #ifdef MM_DEBUG
     dbgprintf("MM: map_region_at_address will map VMO pages %u - %u (VMO page count: %u)\n", region.first_page_index(), region.last_page_index(), vmo.page_count());
 #endif
-    for (size_t i = region.first_page_index(); i <= region.last_page_index(); ++i) {
+    for (size_t i = 0; i < region.page_count(); ++i) {
         auto page_laddr = laddr.offset(i * PAGE_SIZE);
         auto pte = ensure_pte(page_directory, page_laddr);
-        auto& physical_page = vmo.physical_pages()[i];
+        auto& physical_page = vmo.physical_pages()[region.first_page_index() + i];
         if (physical_page) {
             pte.set_physical_page_base(physical_page->paddr().get());
             pte.set_present(true); // FIXME: Maybe we should use the is_readable flag here?
-            if (region.cow_map.get(i))
+            // FIXME: It seems wrong that the *region* cow map is essentially using *VMO* relative indices.
+            if (region.cow_map.get(region.first_page_index() + i))
                 pte.set_writable(false);
             else
                 pte.set_writable(region.is_writable);
