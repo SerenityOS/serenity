@@ -26,7 +26,7 @@ int main(int argc, char** argv)
             perror("\ngetgroups");
             return 1;
         }
-        printf(",");
+        printf(", groups=");
         for (int g = 0; g < extra_gid_count; ++g) {
             auto* gr = getgrgid(extra_gids[g]);
             if (gr)
