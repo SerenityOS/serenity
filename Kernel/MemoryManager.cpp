@@ -439,8 +439,7 @@ void MemoryManager::remap_region_page(PageDirectory& page_directory, Region& reg
     else
         pte.set_writable(region.is_writable);
     pte.set_user_allowed(user_allowed);
-    if (page_directory.is_active())
-        flush_tlb(page_laddr);
+    page_directory.flush(page_laddr);
 #ifdef MM_DEBUG
     dbgprintf("MM: >> remap_region_page (PD=%x) '%s' L%x => P%x (@%p)\n", &page_directory, region.name.characters(), page_laddr.get(), physical_page->paddr().get(), physical_page.ptr());
 #endif
@@ -477,8 +476,7 @@ void MemoryManager::map_region_at_address(PageDirectory& page_directory, Region&
             pte.set_writable(region.is_writable);
         }
         pte.set_user_allowed(user_allowed);
-        if (page_directory.is_active())
-            flush_tlb(page_laddr);
+        page_directory.flush(page_laddr);
 #ifdef MM_DEBUG
         dbgprintf("MM: >> map_region_at_address (PD=%x) '%s' L%x => P%x (@%p)\n", &page_directory, region.name.characters(), page_laddr, physical_page ? physical_page->paddr().get() : 0, physical_page.ptr());
 #endif
@@ -498,8 +496,7 @@ void MemoryManager::unmap_range(PageDirectory& page_directory, LinearAddress lad
         pte.set_present(false);
         pte.set_writable(false);
         pte.set_user_allowed(false);
-        if (page_directory.is_active())
-            flush_tlb(page_laddr);
+        page_directory.flush(page_laddr);
 #ifdef MM_DEBUG
         dbgprintf("MM: << unmap_range L%x =/> 0\n", page_laddr);
 #endif
@@ -548,8 +545,7 @@ bool MemoryManager::unmap_region(Process& process, Region& region)
         pte.set_present(false);
         pte.set_writable(false);
         pte.set_user_allowed(false);
-        if (process.page_directory().is_active())
-            flush_tlb(laddr);
+        process.page_directory().flush(laddr);
 #ifdef MM_DEBUG
         auto& physical_page = region.vmo().physical_pages()[region.first_page_index() + i];
         dbgprintf("MM: >> Unmapped L%x => P%x <<\n", laddr, physical_page ? physical_page->paddr().get() : 0);
@@ -772,11 +768,6 @@ void MemoryManager::unregister_region(Region& region)
     m_regions.remove(&region);
 }
 
-inline bool PageDirectory::is_active() const
-{
-    return &current->page_directory() == this;
-}
-
 size_t Region::committed() const
 {
     size_t bytes = 0;
@@ -800,4 +791,10 @@ PageDirectory::~PageDirectory()
 #endif
         MM.remove_identity_mapping(LinearAddress(page_table.paddr().get()), PAGE_SIZE);
     }
+}
+
+void PageDirectory::flush(LinearAddress laddr)
+{
+    if (&current->page_directory() == this)
+        MM.flush_tlb(laddr);
 }
