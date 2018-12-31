@@ -61,7 +61,7 @@ public:
     dword cr3() const { return m_directory_page->paddr().get(); }
     dword* entries() { return reinterpret_cast<dword*>(cr3()); }
 
-    bool is_active() const;
+    void flush(LinearAddress);
 
 private:
     RetainPtr<PhysicalPage> m_directory_page;
