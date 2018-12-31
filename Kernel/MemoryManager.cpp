@@ -95,29 +95,23 @@ void MemoryManager::initialize_paging()
 
 RetainPtr<PhysicalPage> MemoryManager::allocate_page_table(PageDirectory& page_directory, unsigned index)
 {
-    auto& page_directory_physical_ptr = page_directory.m_physical_pages[index];
-    ASSERT(!page_directory_physical_ptr);
+    ASSERT(!page_directory.m_physical_pages.contains(index));
     auto physical_page = allocate_physical_page();
     if (!physical_page)
         return nullptr;
     dword address = physical_page->paddr().get();
     create_identity_mapping(LinearAddress(address), PAGE_SIZE);
     memset((void*)address, 0, PAGE_SIZE);
-    page_directory.m_physical_pages[index] = move(physical_page);
-    return page_directory.m_physical_pages[index];
+    page_directory.m_physical_pages.set(index, physical_page.copyRef());
+    return physical_page;
 }
 
 void MemoryManager::deallocate_page_table(PageDirectory& page_directory, unsigned index)
 {
-    auto& physical_page = page_directory.m_physical_pages[index];
-    ASSERT(physical_page);
-    //FIXME: This line is buggy and effectful somehow :(
-    //ASSERT(!m_free_physical_pages.contains_slow(physical_page));
-    for (size_t i = 0; i < MM.m_free_physical_pages.size(); ++i) {
-        ASSERT(MM.m_free_physical_pages[i].ptr() != physical_page.ptr());
-    }
-    remove_identity_mapping(LinearAddress(physical_page->paddr().get()), PAGE_SIZE);
-    page_directory.m_physical_pages[index] = nullptr;
+    auto it = page_directory.m_physical_pages.find(index);
+    ASSERT(it != page_directory.m_physical_pages.end());
+    remove_identity_mapping(LinearAddress((*it).value->paddr().get()), PAGE_SIZE);
+    page_directory.m_physical_pages.set(index, nullptr);
 }
 
 void MemoryManager::remove_identity_mapping(LinearAddress laddr, size_t size)
@@ -173,7 +167,7 @@ auto MemoryManager::ensure_pte(PageDirectory& page_directory, LinearAddress ladd
             pde.set_user_allowed(true);
             pde.set_present(true);
             pde.set_writable(true);
-            page_directory.m_physical_pages[page_directory_index] = move(page_table);
+            page_directory.m_physical_pages.set(page_directory_index, move(page_table));
         }
     }
     return PageTableEntry(&pde.pageTableBase()[page_table_index]);
@@ -803,7 +797,7 @@ PageDirectory::~PageDirectory()
     dbgprintf("MM: ~PageDirectory K%x\n", this);
 #endif
     for (size_t i = 0; i < 1024; ++i) {
-        auto& page_table = m_physical_pages[i];
+        auto page_table = m_physical_pages.get(i);
         if (!page_table.is_null()) {
 #ifdef MM_DEBUG
             dbgprintf("MM: deallocating user page table P%x\n", page_table->paddr().get());
