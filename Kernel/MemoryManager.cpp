@@ -106,14 +106,6 @@ RetainPtr<PhysicalPage> MemoryManager::allocate_page_table(PageDirectory& page_d
     return physical_page;
 }
 
-void MemoryManager::deallocate_page_table(PageDirectory& page_directory, unsigned index)
-{
-    auto it = page_directory.m_physical_pages.find(index);
-    ASSERT(it != page_directory.m_physical_pages.end());
-    remove_identity_mapping(LinearAddress((*it).value->paddr().get()), PAGE_SIZE);
-    page_directory.m_physical_pages.set(index, nullptr);
-}
-
 void MemoryManager::remove_identity_mapping(LinearAddress laddr, size_t size)
 {
     InterruptDisabler disabler;
@@ -796,13 +788,11 @@ PageDirectory::~PageDirectory()
 #ifdef MM_DEBUG
     dbgprintf("MM: ~PageDirectory K%x\n", this);
 #endif
-    for (size_t i = 0; i < 1024; ++i) {
-        auto page_table = m_physical_pages.get(i);
-        if (!page_table.is_null()) {
+    for (auto& it : m_physical_pages) {
+        auto& page_table = *it.value;
 #ifdef MM_DEBUG
-            dbgprintf("MM: deallocating user page table P%x\n", page_table->paddr().get());
+        dbgprintf("MM: deallocating user page table P%x\n", page_table.paddr().get());
 #endif
-            MM.deallocate_page_table(*this, i);
-        }
+        MM.remove_identity_mapping(LinearAddress(page_table.paddr().get()), PAGE_SIZE);
     }
 }

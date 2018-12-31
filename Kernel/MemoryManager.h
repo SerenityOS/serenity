@@ -208,7 +208,6 @@ private:
     void flush_tlb(LinearAddress);
 
     RetainPtr<PhysicalPage> allocate_page_table(PageDirectory&, unsigned index);
-    void deallocate_page_table(PageDirectory&, unsigned index);
 
     void map_protected(LinearAddress, size_t length);
 
