@@ -67,7 +67,7 @@ public:
 
 private:
     RetainPtr<PhysicalPage> m_directory_page;
-    RetainPtr<PhysicalPage> m_physical_pages[1024];
+    HashMap<unsigned, RetainPtr<PhysicalPage>> m_physical_pages;
 };
 
 class VMObject : public Retainable<VMObject> {

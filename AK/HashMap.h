@@ -70,6 +70,19 @@ public:
 
     void dump() const { m_table.dump(); }
 
+    V get(const K& key) const
+    {
+        auto it = find(key);
+        if (it == end())
+            return V();
+        return (*it).value;
+    }
+
+    bool contains(const K& key) const
+    {
+        return find(key) != end();
+    }
+
 private:
     HashTable<Entry, EntryTraits> m_table;
 };
