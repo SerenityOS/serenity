@@ -302,17 +302,16 @@ int Process::do_exec(const String& path, Vector<String>&& arguments, Vector<Stri
     auto* region = allocate_region_with_vmo(LinearAddress(), descriptor->metadata().size, vmo.copyRef(), 0, "helper", true, false);
 
     dword entry_eip = 0;
-    PageDirectory* old_page_directory = m_page_directory;
-    PageDirectory* new_page_directory = reinterpret_cast<PageDirectory*>(kmalloc_page_aligned(sizeof(PageDirectory)));
+    // FIXME: Is there a race here?
+    auto old_page_directory = move(m_page_directory);
+    m_page_directory = make<PageDirectory>();
 #ifdef MM_DEBUG
-    dbgprintf("Process %u exec: PD=%x created\n", pid(), new_page_directory);
+    dbgprintf("Process %u exec: PD=%x created\n", pid(), m_page_directory.ptr());
 #endif
-    MM.populate_page_directory(*new_page_directory);
-    m_page_directory = new_page_directory;
     ProcessPagingScope paging_scope(*this);
 
     // FIXME: Should we consider doing on-demand paging here? Is it actually useful?
-    bool success = region->page_in(*new_page_directory);
+    bool success = region->page_in(*m_page_directory);
 
     ASSERT(success);
     {
@@ -336,9 +335,8 @@ int Process::do_exec(const String& path, Vector<String>&& arguments, Vector<Stri
         };
         bool success = loader.load();
         if (!success) {
-            m_page_directory = old_page_directory;
+            m_page_directory = move(old_page_directory);
             MM.enter_process_paging_scope(*this);
-            MM.release_page_directory(*new_page_directory);
             m_regions = move(old_regions);
             kprintf("sys$execve: Failure loading %s\n", path.characters());
             return -ENOEXEC;
@@ -346,9 +344,8 @@ int Process::do_exec(const String& path, Vector<String>&& arguments, Vector<Stri
 
         entry_eip = loader.entry().get();
         if (!entry_eip) {
-            m_page_directory = old_page_directory;
+            m_page_directory = move(old_page_directory);
             MM.enter_process_paging_scope(*this);
-            MM.release_page_directory(*new_page_directory);
             m_regions = move(old_regions);
             return -ENOEXEC;
         }
@@ -388,7 +385,7 @@ int Process::do_exec(const String& path, Vector<String>&& arguments, Vector<Stri
     m_tss.fs = 0x23;
     m_tss.gs = 0x23;
     m_tss.ss = 0x23;
-    m_tss.cr3 = (dword)m_page_directory;
+    m_tss.cr3 = page_directory().cr3();
     m_stack_region = allocate_region(LinearAddress(), defaultStackSize, "stack");
     ASSERT(m_stack_region);
     m_stackTop3 = m_stack_region->linearAddress.offset(defaultStackSize).get();
@@ -396,8 +393,6 @@ int Process::do_exec(const String& path, Vector<String>&& arguments, Vector<Stri
     m_tss.ss0 = 0x10;
     m_tss.esp0 = old_esp0;
     m_tss.ss2 = m_pid;
-
-    MM.release_page_directory(*old_page_directory);
 
     m_executable = descriptor->vnode();
     m_arguments = move(arguments);
@@ -594,11 +589,10 @@ Process::Process(String&& name, uid_t uid, gid_t gid, pid_t ppid, RingLevel ring
         }
     }
 
-    m_page_directory = (PageDirectory*)kmalloc_page_aligned(sizeof(PageDirectory));
+    m_page_directory = make<PageDirectory>();
 #ifdef MM_DEBUG
-    dbgprintf("Process %u ctor: PD=%x created\n", pid(), m_page_directory);
+    dbgprintf("Process %u ctor: PD=%x created\n", pid(), m_page_directory.ptr());
 #endif
-    MM.populate_page_directory(*m_page_directory);
 
     if (fork_parent) {
         m_fds.resize(fork_parent->m_fds.size());
@@ -652,7 +646,7 @@ Process::Process(String&& name, uid_t uid, gid_t gid, pid_t ppid, RingLevel ring
         m_tss.cs = cs;
     }
 
-    m_tss.cr3 = (dword)m_page_directory;
+    m_tss.cr3 = page_directory().cr3();
 
     if (isRing0()) {
         // FIXME: This memory is leaked.
@@ -697,8 +691,6 @@ Process::~Process()
         kfree(m_kernelStack);
         m_kernelStack = nullptr;
     }
-
-    MM.release_page_directory(*m_page_directory);
 }
 
 void Process::dumpRegions()

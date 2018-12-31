@@ -238,7 +238,7 @@ private:
 
     int alloc_fd();
 
-    PageDirectory* m_page_directory { nullptr };
+    OwnPtr<PageDirectory> m_page_directory;
 
     Process* m_prev { nullptr };
     Process* m_next { nullptr };
