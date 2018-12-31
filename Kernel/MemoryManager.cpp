@@ -655,6 +655,11 @@ Region::~Region()
     MM.unregister_region(*this);
 }
 
+PhysicalPage::PhysicalPage(PhysicalAddress paddr)
+    : m_paddr(paddr)
+{
+}
+
 void PhysicalPage::return_to_freelist()
 {
     InterruptDisabler disabler;

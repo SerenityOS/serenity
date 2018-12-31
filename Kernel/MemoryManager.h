@@ -20,10 +20,10 @@ enum class PageFaultResponse {
 };
 
 class PhysicalPage {
+    AK_MAKE_ETERNAL
     friend class MemoryManager;
     friend class PageDirectory;
 public:
-    ~PhysicalPage() { }
     PhysicalAddress paddr() const { return m_paddr; }
 
     void retain()
@@ -42,10 +42,8 @@ public:
     unsigned retain_count() const { return m_retain_count; }
 
 private:
-    PhysicalPage(PhysicalAddress paddr)
-        : m_paddr(paddr)
-    {
-    }
+    explicit PhysicalPage(PhysicalAddress paddr);
+    ~PhysicalPage() = delete;
 
     void return_to_freelist();
 
