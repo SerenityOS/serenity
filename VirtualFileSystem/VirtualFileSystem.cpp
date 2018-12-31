@@ -283,7 +283,7 @@ RetainPtr<FileDescriptor> VFS::create(const String& path, InodeIdentifier base, 
 
 bool VFS::mkdir(const String& path, mode_t mode, InodeIdentifier base, int& error)
 {
-    error = EWHYTHO;
+    error = -EWHYTHO;
     // FIXME: This won't work nicely across mount boundaries.
     FileSystemPath p(path);
     if (!p.is_valid()) {
