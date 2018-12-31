@@ -21,6 +21,7 @@ enum class PageFaultResponse {
 
 class PhysicalPage {
     friend class MemoryManager;
+    friend class PageDirectory;
 public:
     ~PhysicalPage() { }
     PhysicalAddress paddr() const { return m_paddr; }
@@ -53,11 +54,20 @@ private:
 };
 
 class PageDirectory {
+    friend class MemoryManager;
 public:
-    dword entries[1024];
-    RetainPtr<PhysicalPage> physical_pages[1024];
+    PageDirectory();
+    explicit PageDirectory(PhysicalAddress);
+    ~PageDirectory();
+
+    dword cr3() const { return m_directory_page->paddr().get(); }
+    dword* entries() { return reinterpret_cast<dword*>(cr3()); }
 
     bool is_active() const;
+
+private:
+    RetainPtr<PhysicalPage> m_directory_page;
+    RetainPtr<PhysicalPage> m_physical_pages[1024];
 };
 
 class VMObject : public Retainable<VMObject> {
@@ -148,6 +158,7 @@ public:
 
 class MemoryManager {
     AK_MAKE_ETERNAL
+    friend class PageDirectory;
     friend class PhysicalPage;
     friend class Region;
     friend class VMObject;
@@ -164,7 +175,6 @@ public:
     bool unmap_region(Process&, Region&);
 
     void populate_page_directory(PageDirectory&);
-    void release_page_directory(PageDirectory&);
 
     byte* create_kernel_alias_for_region(Region&);
     void remove_kernel_alias_for_region(Region&, byte*);
@@ -189,9 +199,9 @@ private:
     void unregister_region(Region&);
 
     LinearAddress allocate_linear_address_range(size_t);
-    void map_region_at_address(PageDirectory*, Region&, LinearAddress, bool user_accessible);
-    void unmap_range(PageDirectory*, LinearAddress, size_t);
-    void remap_region_page(PageDirectory*, Region&, unsigned page_index_in_region, bool user_allowed);
+    void map_region_at_address(PageDirectory&, Region&, LinearAddress, bool user_accessible);
+    void unmap_range(PageDirectory&, LinearAddress, size_t);
+    void remap_region_page(PageDirectory&, Region&, unsigned page_index_in_region, bool user_allowed);
 
     void initialize_paging();
     void flush_entire_tlb();
@@ -213,6 +223,8 @@ private:
 
     byte* quickmap_page(PhysicalPage&);
     void unquickmap_page();
+
+    PageDirectory& kernel_page_directory() { return *m_kernel_page_directory; }
 
     struct PageDirectoryEntry {
         explicit PageDirectoryEntry(dword* pde) : m_pde(pde) { }
@@ -292,9 +304,9 @@ private:
         dword* m_pte;
     };
 
-    PageTableEntry ensure_pte(PageDirectory*, LinearAddress);
+    PageTableEntry ensure_pte(PageDirectory&, LinearAddress);
 
-    PageDirectory* m_kernel_page_directory;
+    OwnPtr<PageDirectory> m_kernel_page_directory;
     dword* m_page_table_zero;
     dword* m_page_table_one;
 
