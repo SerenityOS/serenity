@@ -262,6 +262,12 @@ RetainPtr<Inode> Ext2FS::get_inode(InodeIdentifier inode) const
             return (*it).value;
     }
 
+    if (!get_inode_allocation_state(inode.index())) {
+        LOCKER(m_inode_cache_lock);
+        m_inode_cache.set(inode.index(), nullptr);
+        return nullptr;
+    }
+
     unsigned block_index;
     unsigned offset;
     auto block = read_block_containing_inode(inode.index(), block_index, offset);
@@ -688,6 +694,21 @@ unsigned Ext2FS::group_index_from_inode(unsigned inode) const
     return (inode - 1) / inodes_per_group() + 1;
 }
 
+bool Ext2FS::get_inode_allocation_state(InodeIndex index) const
+{
+    if (index == 0)
+        return true;
+    auto& bgd = group_descriptor(group_index_from_inode(index));
+
+    unsigned inodesPerBitmapBlock = blockSize() * 8;
+    unsigned bitmapBlockIndex = (index - 1) / inodesPerBitmapBlock;
+    unsigned bitIndex = (index - 1) % inodesPerBitmapBlock;
+    auto block = readBlock(bgd.bg_inode_bitmap + bitmapBlockIndex);
+    ASSERT(block);
+    auto bitmap = Bitmap::wrap(block.pointer(), block.size());
+    return bitmap.get(bitIndex);
+}
+
 bool Ext2FS::set_inode_allocation_state(unsigned inode, bool newState)
 {
     auto& bgd = group_descriptor(group_index_from_inode(inode));
@@ -901,6 +922,11 @@ RetainPtr<Inode> Ext2FS::create_inode(InodeIdentifier parent_id, const String& n
     success = write_ext2_inode(inode_id, *e2inode);
     ASSERT(success);
 
+    {
+        // We might have cached the fact that this inode didn't exist. Wipe the slate.
+        LOCKER(m_inode_cache_lock);
+        m_inode_cache.remove(inode_id);
+    }
     return get_inode({ id(), inode_id });
 }
 
@@ -915,7 +941,6 @@ InodeIdentifier Ext2FS::find_parent_of_inode(InodeIdentifier inode_id) const
     Vector<RetainPtr<Ext2FSInode>> directories_in_group;
 
     for (unsigned i = 0; i < inodes_per_group(); ++i) {
-        // FIXME: Consult the inode bitmap to see which inodes to look into.
         auto group_member = get_inode({ id(), firstInodeInGroup + i });
         if (!group_member)
             continue;

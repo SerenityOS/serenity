@@ -100,6 +100,7 @@ private:
 
     bool add_inode_to_directory(InodeIndex parent, InodeIndex child, const String& name, byte fileType, int& error);
     bool write_directory_inode(unsigned directoryInode, Vector<DirectoryEntry>&&);
+    bool get_inode_allocation_state(InodeIndex) const;
     bool set_inode_allocation_state(unsigned inode, bool);
     bool set_block_allocation_state(GroupIndex, BlockIndex, bool);
 
