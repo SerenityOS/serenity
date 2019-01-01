@@ -184,9 +184,9 @@ SynthFSInode::~SynthFSInode()
 {
 }
 
-void SynthFSInode::populate_metadata() const
+InodeMetadata SynthFSInode::metadata() const
 {
-    // Already done when SynthFS created the file.
+    return m_metadata;
 }
 
 ssize_t SynthFSInode::read_bytes(Unix::off_t offset, size_t count, byte* buffer, FileDescriptor* descriptor)

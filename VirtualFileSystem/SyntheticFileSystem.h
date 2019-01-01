@@ -47,7 +47,7 @@ public:
 private:
     // ^Inode
     virtual ssize_t read_bytes(Unix::off_t, size_t, byte* buffer, FileDescriptor*) override;
-    virtual void populate_metadata() const override;
+    virtual InodeMetadata metadata() const override;
     virtual bool traverse_as_directory(Function<bool(const FS::DirectoryEntry&)>) override;
     virtual InodeIdentifier lookup(const String& name) override;
     virtual String reverse_lookup(InodeIdentifier) override;
@@ -64,4 +64,5 @@ private:
     ByteBuffer m_data;
     Function<ByteBuffer()> m_generator;
     Vector<SynthFSInode*> m_children;
+    InodeMetadata m_metadata;
 };

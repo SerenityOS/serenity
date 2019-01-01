@@ -38,7 +38,7 @@ class VFS;
 class Vnode {
 public:
     InodeIdentifier inode;
-    const InodeMetadata& metadata() const;
+    InodeMetadata metadata() const;
 
     bool inUse() const { return inode.is_valid() || m_characterDevice; }
 

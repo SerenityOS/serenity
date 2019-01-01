@@ -75,7 +75,7 @@ public:
     bool is_directory() const { return metadata().isDirectory(); }
 
     InodeIdentifier identifier() const { return { fsid(), index() }; }
-    const InodeMetadata& metadata() const { if (!m_metadata.isValid()) { populate_metadata(); } return m_metadata; }
+    virtual InodeMetadata metadata() const = 0;
 
     ByteBuffer read_entire(FileDescriptor* = nullptr);
 
@@ -88,11 +88,11 @@ public:
 
     bool is_metadata_dirty() const { return m_metadata_dirty; }
 
-    int set_atime(Unix::time_t);
-    int set_ctime(Unix::time_t);
-    int set_mtime(Unix::time_t);
-    int increment_link_count();
-    int decrement_link_count();
+    virtual int set_atime(Unix::time_t);
+    virtual int set_ctime(Unix::time_t);
+    virtual int set_mtime(Unix::time_t);
+    virtual int increment_link_count();
+    virtual int decrement_link_count();
 
     virtual void flush_metadata() = 0;
 
@@ -101,10 +101,7 @@ public:
 protected:
     Inode(FS& fs, unsigned index);
 
-    virtual void populate_metadata() const = 0;
     void set_metadata_dirty(bool b) { m_metadata_dirty = b; }
-
-    mutable InodeMetadata m_metadata;
 private:
     FS& m_fs;
     unsigned m_index { 0 };
