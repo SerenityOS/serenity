@@ -4,6 +4,7 @@
 #include "UnixTypes.h"
 #include <AK/Buffer.h>
 #include <AK/OwnPtr.h>
+#include <AK/Lock.h>
 #include "ext2_fs.h"
 
 struct ext2_group_desc;
