@@ -39,15 +39,16 @@ public:
             return_to_freelist();
     }
 
-    unsigned retain_count() const { return m_retain_count; }
+    unsigned short retain_count() const { return m_retain_count; }
 
 private:
-    explicit PhysicalPage(PhysicalAddress paddr);
+    PhysicalPage(PhysicalAddress paddr, bool supervisor);
     ~PhysicalPage() = delete;
 
     void return_to_freelist();
 
-    unsigned m_retain_count { 1 };
+    unsigned short m_retain_count { 1 };
+    bool m_supervisor { false };
     PhysicalAddress m_paddr;
 };
 
@@ -174,16 +175,13 @@ public:
 
     void populate_page_directory(PageDirectory&);
 
-    byte* create_kernel_alias_for_region(Region&);
-    void remove_kernel_alias_for_region(Region&, byte*);
-
-    void enter_kernel_paging_scope();
     void enter_process_paging_scope(Process&);
 
     bool validate_user_read(const Process&, LinearAddress) const;
     bool validate_user_write(const Process&, LinearAddress) const;
 
     RetainPtr<PhysicalPage> allocate_physical_page();
+    RetainPtr<PhysicalPage> allocate_supervisor_physical_page();
 
     void remap_region(Process&, Region&);
 
@@ -196,7 +194,6 @@ private:
     void register_region(Region&);
     void unregister_region(Region&);
 
-    LinearAddress allocate_linear_address_range(size_t);
     void map_region_at_address(PageDirectory&, Region&, LinearAddress, bool user_accessible);
     void unmap_range(PageDirectory&, LinearAddress, size_t);
     void remap_region_page(PageDirectory&, Region&, unsigned page_index_in_region, bool user_allowed);
@@ -209,8 +206,8 @@ private:
 
     void map_protected(LinearAddress, size_t length);
 
-    void create_identity_mapping(LinearAddress, size_t length);
-    void remove_identity_mapping(LinearAddress, size_t);
+    void create_identity_mapping(PageDirectory&, LinearAddress, size_t length);
+    void remove_identity_mapping(PageDirectory&, LinearAddress, size_t);
 
     static Region* region_from_laddr(Process&, LinearAddress);
 
@@ -305,19 +302,14 @@ private:
 
     OwnPtr<PageDirectory> m_kernel_page_directory;
     dword* m_page_table_zero;
-    dword* m_page_table_one;
 
-    LinearAddress m_next_laddr;
+    LinearAddress m_quickmap_addr;
 
     Vector<RetainPtr<PhysicalPage>> m_free_physical_pages;
+    Vector<RetainPtr<PhysicalPage>> m_free_supervisor_physical_pages;
 
     HashTable<VMObject*> m_vmos;
     HashTable<Region*> m_regions;
-};
-
-struct KernelPagingScope {
-    KernelPagingScope() { MM.enter_kernel_paging_scope(); }
-    ~KernelPagingScope() { MM.enter_process_paging_scope(*current); }
 };
 
 struct ProcessPagingScope {

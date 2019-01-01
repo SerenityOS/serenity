@@ -88,6 +88,7 @@ public:
     bool operator>(const LinearAddress& other) const { return m_address > other.m_address; }
     bool operator<(const LinearAddress& other) const { return m_address < other.m_address; }
     bool operator==(const LinearAddress& other) const { return m_address == other.m_address; }
+    bool operator!=(const LinearAddress& other) const { return m_address != other.m_address; }
 
     byte* asPtr() { return reinterpret_cast<byte*>(m_address); }
     const byte* asPtr() const { return reinterpret_cast<const byte*>(m_address); }

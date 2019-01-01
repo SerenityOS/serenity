@@ -21,9 +21,6 @@ MemoryManager::MemoryManager()
 {
     m_kernel_page_directory = make<PageDirectory>(PhysicalAddress(0x4000));
     m_page_table_zero = (dword*)0x6000;
-    m_page_table_one = (dword*)0x7000;
-
-    m_next_laddr.set(0xd0000000);
 
     initialize_paging();
 }
@@ -35,7 +32,7 @@ MemoryManager::~MemoryManager()
 PageDirectory::PageDirectory(PhysicalAddress paddr)
 {
     kprintf("Instantiating PageDirectory with specific paddr P%x\n", paddr.get());
-    m_directory_page = adopt(*new PhysicalPage(paddr));
+    m_directory_page = adopt(*new PhysicalPage(paddr, true));
 }
 
 PageDirectory::PageDirectory()
@@ -45,11 +42,9 @@ PageDirectory::PageDirectory()
 
 void MemoryManager::populate_page_directory(PageDirectory& page_directory)
 {
-    page_directory.m_directory_page = allocate_physical_page();
-    create_identity_mapping(LinearAddress(page_directory.cr3()), PAGE_SIZE);
+    page_directory.m_directory_page = allocate_supervisor_physical_page();
     memset(page_directory.entries(), 0, PAGE_SIZE);
     page_directory.entries()[0] = kernel_page_directory().entries()[0];
-    page_directory.entries()[1] = kernel_page_directory().entries()[1];
 }
 
 void MemoryManager::initialize_paging()
@@ -57,7 +52,6 @@ void MemoryManager::initialize_paging()
     static_assert(sizeof(MemoryManager::PageDirectoryEntry) == 4);
     static_assert(sizeof(MemoryManager::PageTableEntry) == 4);
     memset(m_page_table_zero, 0, PAGE_SIZE);
-    memset(m_page_table_one, 0, PAGE_SIZE);
 
 #ifdef MM_DEBUG
     dbgprintf("MM: Kernel page directory @ %p\n", kernel_page_directory().cr3());
@@ -72,15 +66,21 @@ void MemoryManager::initialize_paging()
 #ifdef MM_DEBUG
     dbgprintf("MM: Identity map bottom 4MB\n");
 #endif
-    // The bottom 4 MB are identity mapped & supervisor only. Every process shares these mappings.
-    create_identity_mapping(LinearAddress(PAGE_SIZE), 4 * MB);
+    // The bottom 4 MB (except for the null page) are identity mapped & supervisor only.
+    // Every process shares these mappings.
+    create_identity_mapping(kernel_page_directory(), LinearAddress(PAGE_SIZE), (4 * MB) - PAGE_SIZE);
+    // Physical pages from this range are used for page tables.
+    for (size_t i = (1 * MB); i < (4 * MB); i += PAGE_SIZE)
+        m_free_supervisor_physical_pages.append(adopt(*new PhysicalPage(PhysicalAddress(i), true)));
 
 #ifdef MM_DEBUG
     dbgprintf("MM: 4MB-8MB available for allocation\n");
 #endif
     // The physical pages 4 MB through 8 MB are available for allocation.
-    for (size_t i = (4 * MB) + PAGE_SIZE; i < (8 * MB); i += PAGE_SIZE)
-        m_free_physical_pages.append(adopt(*new PhysicalPage(PhysicalAddress(i))));
+    for (size_t i = (4 * MB); i < (8 * MB); i += PAGE_SIZE)
+        m_free_physical_pages.append(adopt(*new PhysicalPage(PhysicalAddress(i), false)));
+    m_quickmap_addr = LinearAddress(m_free_physical_pages.takeLast().leakRef()->paddr().get());
+    kprintf("MM: Quickmap will use P%x\n", m_quickmap_addr.get());
 
 #ifdef MM_DEBUG
     dbgprintf("MM: Installing page directory\n");
@@ -96,23 +96,22 @@ void MemoryManager::initialize_paging()
 RetainPtr<PhysicalPage> MemoryManager::allocate_page_table(PageDirectory& page_directory, unsigned index)
 {
     ASSERT(!page_directory.m_physical_pages.contains(index));
-    auto physical_page = allocate_physical_page();
+    auto physical_page = allocate_supervisor_physical_page();
     if (!physical_page)
         return nullptr;
     dword address = physical_page->paddr().get();
-    create_identity_mapping(LinearAddress(address), PAGE_SIZE);
     memset((void*)address, 0, PAGE_SIZE);
     page_directory.m_physical_pages.set(index, physical_page.copyRef());
     return physical_page;
 }
 
-void MemoryManager::remove_identity_mapping(LinearAddress laddr, size_t size)
+void MemoryManager::remove_identity_mapping(PageDirectory& page_directory, LinearAddress laddr, size_t size)
 {
     InterruptDisabler disabler;
     // FIXME: ASSERT(laddr is 4KB aligned);
     for (dword offset = 0; offset < size; offset += PAGE_SIZE) {
         auto pte_address = laddr.offset(offset);
-        auto pte = ensure_pte(kernel_page_directory(), pte_address);
+        auto pte = ensure_pte(page_directory, pte_address);
         pte.set_physical_page_base(0);
         pte.set_user_allowed(false);
         pte.set_present(true);
@@ -130,7 +129,7 @@ auto MemoryManager::ensure_pte(PageDirectory& page_directory, LinearAddress ladd
     PageDirectoryEntry pde = PageDirectoryEntry(&page_directory.entries()[page_directory_index]);
     if (!pde.is_present()) {
 #ifdef MM_DEBUG
-        dbgprintf("MM: PDE %u not present, allocating\n", page_directory_index);
+        dbgprintf("MM: PDE %u not present (requested for L%x), allocating\n", page_directory_index, laddr.get());
 #endif
         if (page_directory_index == 0) {
             ASSERT(&page_directory == m_kernel_page_directory.ptr());
@@ -138,18 +137,14 @@ auto MemoryManager::ensure_pte(PageDirectory& page_directory, LinearAddress ladd
             pde.set_user_allowed(false);
             pde.set_present(true);
             pde.set_writable(true);
-        } else if (page_directory_index == 1) {
-            ASSERT(&page_directory == m_kernel_page_directory.ptr());
-            pde.setPageTableBase((dword)m_page_table_one);
-            pde.set_user_allowed(false);
-            pde.set_present(true);
-            pde.set_writable(true);
         } else {
+            ASSERT(&page_directory != m_kernel_page_directory.ptr());
             auto page_table = allocate_page_table(page_directory, page_directory_index);
 #ifdef MM_DEBUG
-            dbgprintf("MM: PD K%x (%s) allocated page table #%u (for L%x) at P%x\n",
+            dbgprintf("MM: PD K%x (%s) at P%x allocated page table #%u (for L%x) at P%x\n",
                 &page_directory,
                 &page_directory == m_kernel_page_directory.ptr() ? "Kernel" : "User",
+                page_directory.cr3(),
                 page_directory_index,
                 laddr.get(),
                 page_table->paddr().get());
@@ -180,18 +175,18 @@ void MemoryManager::map_protected(LinearAddress linearAddress, size_t length)
     }
 }
 
-void MemoryManager::create_identity_mapping(LinearAddress laddr, size_t size)
+void MemoryManager::create_identity_mapping(PageDirectory& page_directory, LinearAddress laddr, size_t size)
 {
     InterruptDisabler disabler;
-    // FIXME: ASSERT(laddr is 4KB aligned);
+    ASSERT((laddr.get() & ~PAGE_MASK) == 0);
     for (dword offset = 0; offset < size; offset += PAGE_SIZE) {
         auto pteAddress = laddr.offset(offset);
-        auto pte = ensure_pte(kernel_page_directory(), pteAddress);
+        auto pte = ensure_pte(page_directory, pteAddress);
         pte.set_physical_page_base(pteAddress.get());
         pte.set_user_allowed(false);
         pte.set_present(true);
         pte.set_writable(true);
-        flush_tlb(pteAddress);
+        page_directory.flush(pteAddress);
     }
 }
 
@@ -209,7 +204,7 @@ Region* MemoryManager::region_from_laddr(Process& process, LinearAddress laddr)
         if (region->contains(laddr))
             return region.ptr();
     }
-    kprintf("%s(%u) Couldn't find region for L%x\n", process.name().characters(), process.pid(), laddr.get());
+    kprintf("%s(%u) Couldn't find region for L%x (CR3=%x)\n", process.name().characters(), process.pid(), laddr.get());
     return nullptr;
 }
 
@@ -226,7 +221,6 @@ bool MemoryManager::zero_page(PageDirectory& page_directory, Region& region, uns
     unquickmap_page();
     region.cow_map.set(page_index_in_region, false);
     vmo.physical_pages()[page_index_in_region] = move(physical_page);
-    unquickmap_page();
     remap_region_page(page_directory, region, page_index_in_region, true);
     return true;
 }
@@ -320,6 +314,7 @@ PageFaultResponse MemoryManager::handle_page_fault(const PageFault& fault)
 #ifdef PAGE_FAULT_DEBUG
     dbgprintf("MM: handle_page_fault(%w) at L%x\n", fault.code(), fault.laddr().get());
 #endif
+    ASSERT(fault.laddr() != m_quickmap_addr);
     auto* region = region_from_laddr(*current, fault.laddr());
     if (!region) {
         kprintf("NP(error) fault at invalid address L%x\n", fault.laddr().get());
@@ -348,8 +343,6 @@ PageFaultResponse MemoryManager::handle_page_fault(const PageFault& fault)
         ASSERT_NOT_REACHED();
     }
 
-
-
     return PageFaultResponse::ShouldCrash;
 }
 
@@ -359,16 +352,20 @@ RetainPtr<PhysicalPage> MemoryManager::allocate_physical_page()
     if (1 > m_free_physical_pages.size())
         return { };
 #ifdef MM_DEBUG
-    dbgprintf("MM: allocate_physical_page vending P%x\n", m_free_physical_pages.last()->paddr().get());
+    dbgprintf("MM: allocate_physical_page vending P%x (%u remaining)\n", m_free_physical_pages.last()->paddr().get(), m_free_physical_pages.size());
 #endif
     return m_free_physical_pages.takeLast();
 }
 
-void MemoryManager::enter_kernel_paging_scope()
+RetainPtr<PhysicalPage> MemoryManager::allocate_supervisor_physical_page()
 {
     InterruptDisabler disabler;
-    current->m_tss.cr3 = kernel_page_directory().cr3();
-    asm volatile("movl %%eax, %%cr3"::"a"(kernel_page_directory().cr3()):"memory");
+    if (1 > m_free_supervisor_physical_pages.size())
+        return { };
+#ifdef MM_DEBUG
+    dbgprintf("MM: allocate_supervisor_physical_page vending P%x (%u remaining)\n", m_free_supervisor_physical_pages.last()->paddr().get(), m_free_supervisor_physical_pages.size());
+#endif
+    return m_free_supervisor_physical_pages.takeLast();
 }
 
 void MemoryManager::enter_process_paging_scope(Process& process)
@@ -394,15 +391,15 @@ void MemoryManager::flush_tlb(LinearAddress laddr)
 byte* MemoryManager::quickmap_page(PhysicalPage& physical_page)
 {
     ASSERT_INTERRUPTS_DISABLED();
-    auto page_laddr = LinearAddress(4 * MB);
-    auto pte = ensure_pte(kernel_page_directory(), page_laddr);
+    auto page_laddr = m_quickmap_addr;
+    auto pte = ensure_pte(current->page_directory(), page_laddr);
     pte.set_physical_page_base(physical_page.paddr().get());
-    pte.set_present(true); // FIXME: Maybe we should use the is_readable flag here?
+    pte.set_present(true);
     pte.set_writable(true);
-    pte.set_user_allowed(false);
     flush_tlb(page_laddr);
+    ASSERT((dword)pte.physical_page_base() == physical_page.paddr().get());
 #ifdef MM_DEBUG
-    dbgprintf("MM: >> quickmap_page L%x => P%x\n", page_laddr, physical_page.paddr().get());
+    dbgprintf("MM: >> quickmap_page L%x => P%x @ PTE=%p\n", page_laddr, physical_page.paddr().get(), pte.ptr());
 #endif
     return page_laddr.asPtr();
 }
@@ -410,15 +407,14 @@ byte* MemoryManager::quickmap_page(PhysicalPage& physical_page)
 void MemoryManager::unquickmap_page()
 {
     ASSERT_INTERRUPTS_DISABLED();
-    auto page_laddr = LinearAddress(4 * MB);
-    auto pte = ensure_pte(kernel_page_directory(), page_laddr);
+    auto page_laddr = m_quickmap_addr;
+    auto pte = ensure_pte(current->page_directory(), page_laddr);
 #ifdef MM_DEBUG
     auto old_physical_address = pte.physical_page_base();
 #endif
     pte.set_physical_page_base(0);
     pte.set_present(false);
     pte.set_writable(false);
-    pte.set_user_allowed(false);
     flush_tlb(page_laddr);
 #ifdef MM_DEBUG
     dbgprintf("MM: >> unquickmap_page L%x =/> P%x\n", page_laddr, old_physical_address);
@@ -441,7 +437,7 @@ void MemoryManager::remap_region_page(PageDirectory& page_directory, Region& reg
     pte.set_user_allowed(user_allowed);
     page_directory.flush(page_laddr);
 #ifdef MM_DEBUG
-    dbgprintf("MM: >> remap_region_page (PD=%x) '%s' L%x => P%x (@%p)\n", &page_directory, region.name.characters(), page_laddr.get(), physical_page->paddr().get(), physical_page.ptr());
+    dbgprintf("MM: >> remap_region_page (PD=%x, PTE=P%x) '%s' L%x => P%x (@%p)\n", &page_directory, pte.ptr(), region.name.characters(), page_laddr.get(), physical_page->paddr().get(), physical_page.ptr());
 #endif
 }
 
@@ -501,38 +497,6 @@ void MemoryManager::unmap_range(PageDirectory& page_directory, LinearAddress lad
         dbgprintf("MM: << unmap_range L%x =/> 0\n", page_laddr);
 #endif
     }
-}
-
-LinearAddress MemoryManager::allocate_linear_address_range(size_t size)
-{
-    ASSERT((size % PAGE_SIZE) == 0);
-
-    // FIXME: Recycle ranges!
-    auto laddr = m_next_laddr;
-    m_next_laddr.set(m_next_laddr.get() + size);
-    return laddr;
-}
-
-byte* MemoryManager::create_kernel_alias_for_region(Region& region)
-{
-    InterruptDisabler disabler;
-#ifdef MM_DEBUG
-    dbgprintf("MM: create_kernel_alias_for_region region=%p (L%x size=%u)\n", &region, region.linearAddress.get(), region.size);
-#endif
-    auto laddr = allocate_linear_address_range(region.size);
-    map_region_at_address(kernel_page_directory(), region, laddr, false);
-#ifdef MM_DEBUG
-    dbgprintf("MM: Created alias L%x for L%x\n", laddr.get(), region.linearAddress.get());
-#endif
-    return laddr.asPtr();
-}
-
-void MemoryManager::remove_kernel_alias_for_region(Region& region, byte* addr)
-{
-#ifdef MM_DEBUG
-    dbgprintf("remove_kernel_alias_for_region region=%p, addr=L%x\n", &region, addr);
-#endif
-    unmap_range(kernel_page_directory(), LinearAddress((dword)addr), region.size);
 }
 
 bool MemoryManager::unmap_region(Process& process, Region& region)
@@ -651,16 +615,21 @@ Region::~Region()
     MM.unregister_region(*this);
 }
 
-PhysicalPage::PhysicalPage(PhysicalAddress paddr)
-    : m_paddr(paddr)
+PhysicalPage::PhysicalPage(PhysicalAddress paddr, bool supervisor)
+    : m_supervisor(supervisor)
+    , m_paddr(paddr)
 {
 }
 
 void PhysicalPage::return_to_freelist()
 {
+    ASSERT((paddr().get() & ~PAGE_MASK) == 0);
     InterruptDisabler disabler;
     m_retain_count = 1;
-    MM.m_free_physical_pages.append(adopt(*this));
+    if (m_supervisor)
+        MM.m_free_supervisor_physical_pages.append(adopt(*this));
+    else
+        MM.m_free_physical_pages.append(adopt(*this));
 #ifdef MM_DEBUG
     dbgprintf("MM: P%x released to freelist\n", m_paddr.get());
 #endif
@@ -728,7 +697,7 @@ int Region::commit(Process& process)
 {
     InterruptDisabler disabler;
 #ifdef MM_DEBUG
-    dbgprintf("MM: commit %u pages in at L%x\n", vmo().page_count(), linearAddress.get());
+    dbgprintf("MM: commit %u pages in Region %p (VMO=%p) at L%x\n", vmo().page_count(), this, &vmo(), linearAddress.get());
 #endif
     for (size_t i = first_page_index(); i <= last_page_index(); ++i) {
         if (!vmo().physical_pages()[i].is_null())
@@ -784,13 +753,6 @@ PageDirectory::~PageDirectory()
 #ifdef MM_DEBUG
     dbgprintf("MM: ~PageDirectory K%x\n", this);
 #endif
-    for (auto& it : m_physical_pages) {
-        auto& page_table = *it.value;
-#ifdef MM_DEBUG
-        dbgprintf("MM: deallocating user page table P%x\n", page_table.paddr().get());
-#endif
-        MM.remove_identity_mapping(LinearAddress(page_table.paddr().get()), PAGE_SIZE);
-    }
 }
 
 void PageDirectory::flush(LinearAddress laddr)
