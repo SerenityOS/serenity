@@ -111,56 +111,29 @@ void Inode::will_be_destroyed()
         flush_metadata();
 }
 
-int Inode::set_atime(Unix::time_t ts)
+int Inode::set_atime(Unix::time_t)
 {
-    if (fs().is_readonly())
-        return -EROFS;
-    if (m_metadata.atime == ts)
-        return 0;
-    m_metadata.atime = ts;
-    m_metadata_dirty = true;
-    return 0;
+    return -ENOTIMPL;
 }
 
-int Inode::set_ctime(Unix::time_t ts)
+int Inode::set_ctime(Unix::time_t)
 {
-    if (fs().is_readonly())
-        return -EROFS;
-    if (m_metadata.ctime == ts)
-        return 0;
-    m_metadata.ctime = ts;
-    m_metadata_dirty = true;
-    return 0;
+    return -ENOTIMPL;
 }
 
-int Inode::set_mtime(Unix::time_t ts)
+int Inode::set_mtime(Unix::time_t)
 {
-    if (fs().is_readonly())
-        return -EROFS;
-    if (m_metadata.mtime == ts)
-        return 0;
-    m_metadata.mtime = ts;
-    m_metadata_dirty = true;
-    return 0;
+    return -ENOTIMPL;
 }
 
 int Inode::increment_link_count()
 {
-    if (fs().is_readonly())
-        return -EROFS;
-    ++m_metadata.linkCount;
-    m_metadata_dirty = true;
-    return 0;
+    return -ENOTIMPL;
 }
 
 int Inode::decrement_link_count()
 {
-    if (fs().is_readonly())
-        return -EROFS;
-    ASSERT(m_metadata.linkCount);
-    --m_metadata.linkCount;
-    m_metadata_dirty = true;
-    return 0;
+    return -ENOTIMPL;
 }
 
 void FS::sync()

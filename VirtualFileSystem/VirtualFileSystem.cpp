@@ -51,7 +51,7 @@ auto VFS::makeNode(InodeIdentifier inode) -> RetainPtr<Vnode>
     if (!core_inode)
         return nullptr;
 
-    auto& metadata = core_inode->metadata();
+    auto metadata = core_inode->metadata();
 
     InterruptDisabler disabler;
 
@@ -74,7 +74,6 @@ auto VFS::makeNode(InodeIdentifier inode) -> RetainPtr<Vnode>
 
     vnode->inode = inode;
     vnode->m_core_inode = move(core_inode);
-    vnode->m_cachedMetadata = metadata;
 
 #ifdef VFS_DEBUG
     kprintf("makeNode: inode=%u, size=%u, mode=%o, uid=%u, gid=%u\n", inode.index(), metadata.size, metadata.mode, metadata.uid, metadata.gid);
@@ -474,11 +473,12 @@ void Vnode::release()
     }
 }
 
-const InodeMetadata& Vnode::metadata() const
+InodeMetadata Vnode::metadata() const
 {
     if (m_core_inode)
         return m_core_inode->metadata();
-    return m_cachedMetadata;
+    ASSERT_NOT_REACHED();
+    return { };
 }
 
 VFS::Mount::Mount(InodeIdentifier host, RetainPtr<FS>&& guest_fs)

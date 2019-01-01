@@ -27,13 +27,18 @@ public:
 private:
     // ^Inode
     virtual ssize_t read_bytes(Unix::off_t, size_t, byte* buffer, FileDescriptor*) override;
-    virtual void populate_metadata() const override;
+    virtual InodeMetadata metadata() const override;
     virtual bool traverse_as_directory(Function<bool(const FS::DirectoryEntry&)>) override;
     virtual InodeIdentifier lookup(const String& name) override;
     virtual String reverse_lookup(InodeIdentifier) override;
     virtual void flush_metadata() override;
     virtual bool write(const ByteBuffer&) override;
     virtual bool add_child(InodeIdentifier child_id, const String& name, byte file_type, int& error) override;
+    virtual int set_atime(Unix::time_t) override;
+    virtual int set_ctime(Unix::time_t) override;
+    virtual int set_mtime(Unix::time_t) override;
+    virtual int increment_link_count() override;
+    virtual int decrement_link_count() override;
 
     void populate_lookup_cache();
 

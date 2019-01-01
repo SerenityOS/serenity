@@ -221,41 +221,33 @@ Ext2FSInode::~Ext2FSInode()
 {
 }
 
-void Ext2FSInode::populate_metadata() const
+InodeMetadata Ext2FSInode::metadata() const
 {
-    m_metadata.inode = identifier();
-    m_metadata.size = m_raw_inode.i_size;
-    m_metadata.mode = m_raw_inode.i_mode;
-    m_metadata.uid = m_raw_inode.i_uid;
-    m_metadata.gid = m_raw_inode.i_gid;
-    m_metadata.linkCount = m_raw_inode.i_links_count;
-    m_metadata.atime = m_raw_inode.i_atime;
-    m_metadata.ctime = m_raw_inode.i_ctime;
-    m_metadata.mtime = m_raw_inode.i_mtime;
-    m_metadata.dtime = m_raw_inode.i_dtime;
-    m_metadata.blockSize = fs().blockSize();
-    m_metadata.blockCount = m_raw_inode.i_blocks;
+    InodeMetadata metadata;
+    metadata.inode = identifier();
+    metadata.size = m_raw_inode.i_size;
+    metadata.mode = m_raw_inode.i_mode;
+    metadata.uid = m_raw_inode.i_uid;
+    metadata.gid = m_raw_inode.i_gid;
+    metadata.linkCount = m_raw_inode.i_links_count;
+    metadata.atime = m_raw_inode.i_atime;
+    metadata.ctime = m_raw_inode.i_ctime;
+    metadata.mtime = m_raw_inode.i_mtime;
+    metadata.dtime = m_raw_inode.i_dtime;
+    metadata.blockSize = fs().blockSize();
+    metadata.blockCount = m_raw_inode.i_blocks;
 
     if (isBlockDevice(m_raw_inode.i_mode) || isCharacterDevice(m_raw_inode.i_mode)) {
         unsigned dev = m_raw_inode.i_block[0];
-        m_metadata.majorDevice = (dev & 0xfff00) >> 8;
-        m_metadata.minorDevice= (dev & 0xff) | ((dev >> 12) & 0xfff00);
+        metadata.majorDevice = (dev & 0xfff00) >> 8;
+        metadata.minorDevice= (dev & 0xff) | ((dev >> 12) & 0xfff00);
     }
+    return metadata;
 }
 
 void Ext2FSInode::flush_metadata()
 {
     dbgprintf("Ext2FSInode: flush_metadata for inode %u\n", index());
-    m_raw_inode.i_size = m_metadata.size;
-    m_raw_inode.i_mode = m_metadata.mode;
-    m_raw_inode.i_uid = m_metadata.uid;
-    m_raw_inode.i_gid = m_metadata.gid;
-    m_raw_inode.i_links_count = m_metadata.linkCount;
-    m_raw_inode.i_atime = m_metadata.atime;
-    m_raw_inode.i_ctime = m_metadata.ctime;
-    m_raw_inode.i_mtime = m_metadata.mtime;
-    m_raw_inode.i_dtime = m_metadata.dtime;
-    m_raw_inode.i_blocks = m_metadata.blockCount;
     fs().write_ext2_inode(index(), m_raw_inode);
     set_metadata_dirty(false);
 }
@@ -358,7 +350,7 @@ ssize_t Ext2FSInode::read_bytes(Unix::off_t offset, size_t count, byte* buffer, 
 bool Ext2FSInode::write(const ByteBuffer& data)
 {
     // FIXME: Support writing to symlink inodes.
-    ASSERT(!m_metadata.isSymbolicLink());
+    ASSERT(!is_symlink());
 
     unsigned blocksNeededBefore = ceilDiv(size(), fs().blockSize());
     unsigned blocksNeededAfter = ceilDiv((unsigned)data.size(), fs().blockSize());
@@ -595,7 +587,6 @@ bool Ext2FS::write_ext2_inode(unsigned inode, const ext2_inode& e2inode)
             auto& cached_inode = *(*it).value;
             LOCKER(cached_inode.m_lock);
             cached_inode.m_raw_inode = e2inode;
-            cached_inode.populate_metadata();
             if (cached_inode.is_directory())
                 cached_inode.m_lookup_cache.clear();
         }
@@ -924,6 +915,7 @@ InodeIdentifier Ext2FS::find_parent_of_inode(InodeIdentifier inode_id) const
     Vector<RetainPtr<Ext2FSInode>> directories_in_group;
 
     for (unsigned i = 0; i < inodes_per_group(); ++i) {
+        // FIXME: Consult the inode bitmap to see which inodes to look into.
         auto group_member = get_inode({ id(), firstInodeInGroup + i });
         if (!group_member)
             continue;
@@ -989,4 +981,49 @@ String Ext2FSInode::reverse_lookup(InodeIdentifier child_id)
 void Ext2FSInode::one_retain_left()
 {
     // FIXME: I would like to not live forever, but uncached Ext2FS is fucking painful right now.
+}
+
+int Ext2FSInode::set_atime(Unix::time_t t)
+{
+    if (fs().is_readonly())
+        return -EROFS;
+    m_raw_inode.i_atime = t;
+    set_metadata_dirty(true);
+    return 0;
+}
+
+int Ext2FSInode::set_ctime(Unix::time_t t)
+{
+    if (fs().is_readonly())
+        return -EROFS;
+    m_raw_inode.i_ctime = t;
+    set_metadata_dirty(true);
+    return 0;
+}
+
+int Ext2FSInode::set_mtime(Unix::time_t t)
+{
+    if (fs().is_readonly())
+        return -EROFS;
+    m_raw_inode.i_mtime = t;
+    set_metadata_dirty(true);
+    return 0;
+}
+
+int Ext2FSInode::increment_link_count()
+{
+    if (fs().is_readonly())
+        return -EROFS;
+    ++m_raw_inode.i_links_count;
+    set_metadata_dirty(true);
+    return 0;
+}
+
+int Ext2FSInode::decrement_link_count()
+{
+    if (fs().is_readonly())
+        return -EROFS;
+    --m_raw_inode.i_links_count;
+    set_metadata_dirty(true);
+    return 0;
 }
