@@ -110,7 +110,7 @@ ByteBuffer procfs$pid_stack(Process& process)
     Vector<RecognizedSymbol> recognizedSymbols;
     if (auto* eipKsym = ksymbolicate(process.tss().eip))
         recognizedSymbols.append({ process.tss().eip, eipKsym });
-    for (dword* stackPtr = (dword*)process.framePtr(); process.isValidAddressForKernel(LinearAddress((dword)stackPtr)); stackPtr = (dword*)*stackPtr) {
+    for (dword* stackPtr = (dword*)process.framePtr(); process.validate_read_from_kernel(LinearAddress((dword)stackPtr)); stackPtr = (dword*)*stackPtr) {
         dword retaddr = stackPtr[1];
         if (auto* ksym = ksymbolicate(retaddr))
             recognizedSymbols.append({ retaddr, ksym });

@@ -91,13 +91,13 @@ void dump_backtrace(bool use_ksyms)
     };
     Vector<RecognizedSymbol> recognized_symbols;
     if (use_ksyms) {
-        for (dword* stackPtr = (dword*)&use_ksyms; current->isValidAddressForKernel(LinearAddress((dword)stackPtr)); stackPtr = (dword*)*stackPtr) {
+        for (dword* stackPtr = (dword*)&use_ksyms; current->validate_read_from_kernel(LinearAddress((dword)stackPtr)); stackPtr = (dword*)*stackPtr) {
             dword retaddr = stackPtr[1];
             if (auto* ksym = ksymbolicate(retaddr))
                 recognized_symbols.append({ retaddr, ksym });
         }
     } else{
-        for (dword* stackPtr = (dword*)&use_ksyms; current->isValidAddressForKernel(LinearAddress((dword)stackPtr)); stackPtr = (dword*)*stackPtr) {
+        for (dword* stackPtr = (dword*)&use_ksyms; current->validate_read_from_kernel(LinearAddress((dword)stackPtr)); stackPtr = (dword*)*stackPtr) {
             dword retaddr = stackPtr[1];
             kprintf("%x (next: %x)\n", retaddr, stackPtr ? (dword*)*stackPtr : 0);
         }

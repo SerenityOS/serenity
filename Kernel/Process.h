@@ -201,7 +201,7 @@ public:
     dword stackPtr() const { return m_tss.esp; }
     dword stackTop() const { return m_tss.ss == 0x10 ? m_stackTop0 : m_stackTop3; }
 
-    bool isValidAddressForKernel(LinearAddress) const;
+    bool validate_read_from_kernel(LinearAddress) const;
 
     bool validate_read(const void*, size_t) const;
     bool validate_write(void*, size_t) const;
