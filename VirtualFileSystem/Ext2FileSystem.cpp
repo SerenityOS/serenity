@@ -988,5 +988,5 @@ String Ext2FSInode::reverse_lookup(InodeIdentifier child_id)
 
 void Ext2FSInode::one_retain_left()
 {
-    fs().m_inode_cache.remove(index());
+    // FIXME: I would like to not live forever, but uncached Ext2FS is fucking painful right now.
 }
