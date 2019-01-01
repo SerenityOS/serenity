@@ -21,6 +21,9 @@ public:
     size_t size() const { return m_raw_inode.i_size; }
     bool is_symlink() const { return isSymbolicLink(m_raw_inode.i_mode); }
 
+    // ^Inode (Retainable magic)
+    virtual void one_retain_left() override;
+
 private:
     // ^Inode
     virtual ssize_t read_bytes(Unix::off_t, size_t, byte* buffer, FileDescriptor*) override;

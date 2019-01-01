@@ -985,3 +985,8 @@ String Ext2FSInode::reverse_lookup(InodeIdentifier child_id)
     }
     return { };
 }
+
+void Ext2FSInode::one_retain_left()
+{
+    fs().m_inode_cache.remove(index());
+}

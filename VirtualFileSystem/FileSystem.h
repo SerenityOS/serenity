@@ -63,6 +63,8 @@ class Inode : public Retainable<Inode> {
 public:
     virtual ~Inode();
 
+    virtual void one_retain_left() { }
+
     FS& fs() { return m_fs; }
     const FS& fs() const { return m_fs; }
     unsigned fsid() const;
