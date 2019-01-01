@@ -2,8 +2,6 @@
 
 #include "FileSystem.h"
 #include <AK/ByteBuffer.h>
-#include <AK/HashMap.h>
-#include <AK/Lock.h>
 
 class DiskBackedFS : public FS {
 public:
@@ -18,7 +16,6 @@ protected:
     explicit DiskBackedFS(RetainPtr<DiskDevice>&&);
 
     void setBlockSize(unsigned);
-    void invalidateCaches();
 
     ByteBuffer readBlock(unsigned index) const;
     ByteBuffer readBlocks(unsigned index, unsigned count) const;
@@ -29,7 +26,4 @@ protected:
 private:
     size_t m_blockSize { 0 };
     RetainPtr<DiskDevice> m_device;
-
-    mutable SpinLock m_blockCacheLock;
-    mutable HashMap<unsigned, ByteBuffer> m_blockCache;
 };
