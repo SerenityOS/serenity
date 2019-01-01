@@ -78,7 +78,7 @@ bool Scheduler::pick_next()
                 auto name = process.name();
                 auto pid = process.pid();
                 auto exit_status = Process::reap(process);
-                kprintf("reaped unparented process %s(%u), exit status: %u\n", name.characters(), pid, exit_status);
+                dbgprintf("reaped unparented process %s(%u), exit status: %u\n", name.characters(), pid, exit_status);
             }
             return true;
         }
