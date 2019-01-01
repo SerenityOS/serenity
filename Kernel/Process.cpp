@@ -336,6 +336,8 @@ int Process::do_exec(const String& path, Vector<String>&& arguments, Vector<Stri
         bool success = loader.load();
         if (!success) {
             m_page_directory = move(old_page_directory);
+            // FIXME: RAII this somehow instead.
+            ASSERT(current == this);
             MM.enter_process_paging_scope(*this);
             m_regions = move(old_regions);
             kprintf("sys$execve: Failure loading %s\n", path.characters());
@@ -345,6 +347,8 @@ int Process::do_exec(const String& path, Vector<String>&& arguments, Vector<Stri
         entry_eip = loader.entry().get();
         if (!entry_eip) {
             m_page_directory = move(old_page_directory);
+            // FIXME: RAII this somehow instead.
+            ASSERT(current == this);
             MM.enter_process_paging_scope(*this);
             m_regions = move(old_regions);
             return -ENOEXEC;

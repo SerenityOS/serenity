@@ -212,6 +212,7 @@ ByteBuffer procfs$mm()
     }
     ptr += ksprintf(ptr, "VMO count: %u\n", MM.m_vmos.size());
     ptr += ksprintf(ptr, "Free physical pages: %u\n", MM.m_free_physical_pages.size());
+    ptr += ksprintf(ptr, "Free supervisor physical pages: %u\n", MM.m_free_supervisor_physical_pages.size());
     buffer.trim(ptr - (char*)buffer.pointer());
     return buffer;
 }
