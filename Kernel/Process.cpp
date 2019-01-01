@@ -1553,7 +1553,7 @@ void sleep(dword ticks)
     sched_yield();
 }
 
-bool Process::isValidAddressForKernel(LinearAddress laddr) const
+bool Process::validate_read_from_kernel(LinearAddress laddr) const
 {
     // We check extra carefully here since the first 4MB of the address space is identity-mapped.
     // This code allows access outside of the known used address ranges to get caught.

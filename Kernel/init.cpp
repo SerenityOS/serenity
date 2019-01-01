@@ -111,12 +111,8 @@ void init()
 {
     cli();
 
-#ifdef KSYMS
-    s_ksyms = nullptr;
-    s_ksyms_ready = false;
-#endif
-
     kmalloc_init();
+    init_ksyms();
 
     auto console = make<Console>();
 

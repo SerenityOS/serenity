@@ -10,6 +10,7 @@ struct KSym {
 
 const KSym* ksymbolicate(dword address) PURE;
 void load_ksyms();
+void init_ksyms();
 
 extern bool ksyms_ready;
 extern dword ksym_lowest_address;
