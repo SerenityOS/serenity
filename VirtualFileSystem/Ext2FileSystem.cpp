@@ -249,6 +249,11 @@ void Ext2FSInode::flush_metadata()
 {
     dbgprintf("Ext2FSInode: flush_metadata for inode %u\n", index());
     fs().write_ext2_inode(index(), m_raw_inode);
+    if (is_directory()) {
+        // FIXME: This invalidation is way too hardcore.
+        LOCKER(m_lock);
+        m_lookup_cache.clear();
+    }
     set_metadata_dirty(false);
 }
 
@@ -586,17 +591,6 @@ bool Ext2FS::write_ext2_inode(unsigned inode, const ext2_inode& e2inode)
     auto block = read_block_containing_inode(inode, blockIndex, offset);
     if (!block)
         return false;
-    {
-        LOCKER(m_inode_cache_lock);
-        auto it = m_inode_cache.find(inode);
-        if (it != m_inode_cache.end()) {
-            auto& cached_inode = *(*it).value;
-            LOCKER(cached_inode.m_lock);
-            cached_inode.m_raw_inode = e2inode;
-            if (cached_inode.is_directory())
-                cached_inode.m_lookup_cache.clear();
-        }
-    }
     memcpy(reinterpret_cast<ext2_inode*>(block.offset_pointer(offset)), &e2inode, inode_size());
     writeBlock(blockIndex, block);
     return true;
@@ -699,35 +693,34 @@ bool Ext2FS::get_inode_allocation_state(InodeIndex index) const
     if (index == 0)
         return true;
     auto& bgd = group_descriptor(group_index_from_inode(index));
-
-    unsigned inodesPerBitmapBlock = blockSize() * 8;
-    unsigned bitmapBlockIndex = (index - 1) / inodesPerBitmapBlock;
-    unsigned bitIndex = (index - 1) % inodesPerBitmapBlock;
-    auto block = readBlock(bgd.bg_inode_bitmap + bitmapBlockIndex);
+    unsigned inodes_per_bitmap_block = blockSize() * 8;
+    unsigned bitmap_block_index = (index - 1) / inodes_per_bitmap_block;
+    unsigned bit_index = (index - 1) % inodes_per_bitmap_block;
+    auto block = readBlock(bgd.bg_inode_bitmap + bitmap_block_index);
     ASSERT(block);
     auto bitmap = Bitmap::wrap(block.pointer(), block.size());
-    return bitmap.get(bitIndex);
+    return bitmap.get(bit_index);
 }
 
-bool Ext2FS::set_inode_allocation_state(unsigned inode, bool newState)
+bool Ext2FS::set_inode_allocation_state(unsigned index, bool newState)
 {
-    auto& bgd = group_descriptor(group_index_from_inode(inode));
+    auto& bgd = group_descriptor(group_index_from_inode(index));
 
     // Update inode bitmap
-    unsigned inodesPerBitmapBlock = blockSize() * 8;
-    unsigned bitmapBlockIndex = (inode - 1) / inodesPerBitmapBlock;
-    unsigned bitIndex = (inode - 1) % inodesPerBitmapBlock;
-    auto block = readBlock(bgd.bg_inode_bitmap + bitmapBlockIndex);
+    unsigned inodes_per_bitmap_block = blockSize() * 8;
+    unsigned bitmap_block_index = (index - 1) / inodes_per_bitmap_block;
+    unsigned bit_index = (index - 1) % inodes_per_bitmap_block;
+    auto block = readBlock(bgd.bg_inode_bitmap + bitmap_block_index);
     ASSERT(block);
     auto bitmap = Bitmap::wrap(block.pointer(), block.size());
-    bool currentState = bitmap.get(bitIndex);
-    dbgprintf("ext2fs: setInodeAllocationState(%u) %u -> %u\n", inode, currentState, newState);
+    bool currentState = bitmap.get(bit_index);
+    dbgprintf("Ext2FS: set_inode_allocation_state(%u) %u -> %u\n", index, currentState, newState);
 
     if (currentState == newState)
         return true;
 
-    bitmap.set(bitIndex, newState);
-    writeBlock(bgd.bg_inode_bitmap + bitmapBlockIndex, block);
+    bitmap.set(bit_index, newState);
+    writeBlock(bgd.bg_inode_bitmap + bitmap_block_index, block);
 
     // Update superblock
     auto& sb = *reinterpret_cast<ext2_super_block*>(m_cached_super_block.pointer());
@@ -913,11 +906,12 @@ RetainPtr<Inode> Ext2FS::create_inode(InodeIdentifier parent_id, const String& n
     // FIXME: Implement writing out indirect blocks!
     ASSERT(blocks.size() < EXT2_NDIR_BLOCKS);
 
-    dbgprintf("Ext2FS: writing %zu blocks to i_block array\n", min((size_t)EXT2_NDIR_BLOCKS, blocks.size()));
+    dbgprintf("Ext2FS: writing %u blocks to i_block array\n", min((size_t)EXT2_NDIR_BLOCKS, blocks.size()));
     for (unsigned i = 0; i < min((size_t)EXT2_NDIR_BLOCKS, blocks.size()); ++i) {
         e2inode->i_block[i] = blocks[i];
     }
 
+    dbgprintf("Ext2FS: writing initial metadata for inode %u\n", inode_id);
     e2inode->i_flags = 0;
     success = write_ext2_inode(inode_id, *e2inode);
     ASSERT(success);
