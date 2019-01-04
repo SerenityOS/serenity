@@ -924,33 +924,33 @@ RetainPtr<Inode> Ext2FS::create_inode(InodeIdentifier parent_id, const String& n
     return get_inode({ id(), inode_id });
 }
 
-InodeIdentifier Ext2FS::find_parent_of_inode(InodeIdentifier inode_id) const
+RetainPtr<Inode> Ext2FSInode::parent() const
 {
-    auto inode = get_inode(inode_id);
-    ASSERT(inode);
+    if (m_parent_id.is_valid())
+        return fs().get_inode(m_parent_id);
 
-    unsigned groupIndex = group_index_from_inode(inode->index());
-    unsigned firstInodeInGroup = inodes_per_group() * (groupIndex - 1);
+    unsigned group_index = fs().group_index_from_inode(index());
+    unsigned first_inode_in_group = fs().inodes_per_group() * (group_index - 1);
 
     Vector<RetainPtr<Ext2FSInode>> directories_in_group;
 
-    for (unsigned i = 0; i < inodes_per_group(); ++i) {
-        auto group_member = get_inode({ id(), firstInodeInGroup + i });
+    for (unsigned i = 0; i < fs().inodes_per_group(); ++i) {
+        auto group_member = fs().get_inode({ fsid(), first_inode_in_group + i });
         if (!group_member)
             continue;
         if (group_member->is_directory())
             directories_in_group.append(move(group_member));
     }
 
-    InodeIdentifier foundParent;
     for (auto& directory : directories_in_group) {
-        if (!directory->reverse_lookup(inode->identifier()).is_null()) {
-            foundParent = directory->identifier();
+        if (!directory->reverse_lookup(identifier()).is_null()) {
+            m_parent_id = directory->identifier();
             break;
         }
     }
 
-    return foundParent;
+    ASSERT(m_parent_id.is_valid());
+    return fs().get_inode(m_parent_id);
 }
 
 void Ext2FSInode::populate_lookup_cache()
