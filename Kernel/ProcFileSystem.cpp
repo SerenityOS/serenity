@@ -32,6 +32,8 @@ ProcFS::~ProcFS()
 ByteBuffer procfs$pid_fds(Process& process)
 {
     ProcessInspectionHandle handle(process);
+    if (process.number_of_open_file_descriptors() == 0)
+        return { };
     char* buffer;
     auto stringImpl = StringImpl::create_uninitialized(process.number_of_open_file_descriptors() * 80, buffer);
     memset(buffer, 0, stringImpl->length());
@@ -181,7 +183,8 @@ void ProcFS::add_process(Process& process)
     add_file(create_generated_file("fds", [&process] { return procfs$pid_fds(process); }), dir.index());
     if (process.executable_inode())
         add_file(create_generated_file("exe", [&process] { return procfs$pid_exe(process); }, 00120777), dir.index());
-    add_file(create_generated_file("cwd", [&process] { return procfs$pid_cwd(process); }, 00120777), dir.index());
+    if (process.cwd_inode())
+        add_file(create_generated_file("cwd", [&process] { return procfs$pid_cwd(process); }, 00120777), dir.index());
 }
 
 void ProcFS::remove_process(Process& process)
