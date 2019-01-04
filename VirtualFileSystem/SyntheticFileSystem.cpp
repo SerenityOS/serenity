@@ -158,12 +158,9 @@ auto SynthFS::generate_inode_index() -> InodeIndex
     return m_next_inode_index++;
 }
 
-InodeIdentifier SynthFS::find_parent_of_inode(InodeIdentifier inode) const
+RetainPtr<Inode> SynthFSInode::parent() const
 {
-    auto it = m_inodes.find(inode.index());
-    if (it == m_inodes.end())
-        return { };
-    return (*it).value->m_parent;
+    return fs().get_inode(m_parent);
 }
 
 RetainPtr<Inode> SynthFS::get_inode(InodeIdentifier inode) const

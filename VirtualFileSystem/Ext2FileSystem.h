@@ -34,6 +34,7 @@ private:
     virtual void flush_metadata() override;
     virtual bool write(const ByteBuffer&) override;
     virtual bool add_child(InodeIdentifier child_id, const String& name, byte file_type, int& error) override;
+    virtual RetainPtr<Inode> parent() const override;
     virtual int set_atime(Unix::time_t) override;
     virtual int set_ctime(Unix::time_t) override;
     virtual int set_mtime(Unix::time_t) override;
@@ -50,6 +51,7 @@ private:
     Vector<unsigned> m_block_list;
     HashMap<String, unsigned> m_lookup_cache;
     ext2_inode m_raw_inode;
+    mutable InodeIdentifier m_parent_id;
 };
 
 class Ext2FS final : public DiskBackedFS {
@@ -83,7 +85,6 @@ private:
     virtual InodeIdentifier root_inode() const override;
     virtual RetainPtr<Inode> create_inode(InodeIdentifier parentInode, const String& name, Unix::mode_t, unsigned size, int& error) override;
     virtual RetainPtr<Inode> create_directory(InodeIdentifier parentInode, const String& name, Unix::mode_t, int& error) override;
-    virtual InodeIdentifier find_parent_of_inode(InodeIdentifier) const override;
     virtual RetainPtr<Inode> get_inode(InodeIdentifier) const override;
 
     unsigned allocate_inode(unsigned preferredGroup, unsigned expectedSize);

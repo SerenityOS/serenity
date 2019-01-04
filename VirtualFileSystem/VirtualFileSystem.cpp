@@ -346,7 +346,7 @@ String VFS::absolute_path(Inode& core_inode)
         if (inode->is_directory()) {
             parent_id = resolve_path("..", inode->identifier(), error);
         } else {
-            parent_id = inode->fs().find_parent_of_inode(inode->identifier());
+            parent_id = inode->parent()->identifier();
         }
         ASSERT(parent_id.is_valid());
         inode = get_inode(parent_id);

@@ -16,7 +16,6 @@ public:
     virtual InodeIdentifier root_inode() const override;
     virtual RetainPtr<Inode> create_inode(InodeIdentifier parentInode, const String& name, Unix::mode_t, unsigned size, int& error) override;
     virtual RetainPtr<Inode> create_directory(InodeIdentifier parentInode, const String& name, Unix::mode_t, int& error) override;
-    virtual InodeIdentifier find_parent_of_inode(InodeIdentifier) const override;
     virtual RetainPtr<Inode> get_inode(InodeIdentifier) const override;
 
 protected:
@@ -54,6 +53,7 @@ private:
     virtual void flush_metadata() override;
     virtual bool write(const ByteBuffer&) override;
     virtual bool add_child(InodeIdentifier child_id, const String& name, byte file_type, int& error) override;
+    virtual RetainPtr<Inode> parent() const override;
 
     SynthFS& fs();
     const SynthFS& fs() const;
@@ -66,3 +66,13 @@ private:
     Vector<SynthFSInode*> m_children;
     InodeMetadata m_metadata;
 };
+
+inline SynthFS& SynthFSInode::fs()
+{
+    return static_cast<SynthFS&>(Inode::fs());
+}
+
+inline const SynthFS& SynthFSInode::fs() const
+{
+    return static_cast<const SynthFS&>(Inode::fs());
+}

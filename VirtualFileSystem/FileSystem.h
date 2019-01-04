@@ -46,8 +46,6 @@ public:
     virtual RetainPtr<Inode> create_inode(InodeIdentifier parentInode, const String& name, Unix::mode_t, unsigned size, int& error) = 0;
     virtual RetainPtr<Inode> create_directory(InodeIdentifier parentInode, const String& name, Unix::mode_t, int& error) = 0;
 
-    virtual InodeIdentifier find_parent_of_inode(InodeIdentifier) const = 0;
-
     virtual RetainPtr<Inode> get_inode(InodeIdentifier) const = 0;
 
 protected:
@@ -85,6 +83,7 @@ public:
     virtual String reverse_lookup(InodeIdentifier) = 0;
     virtual bool write(const ByteBuffer&) = 0;
     virtual bool add_child(InodeIdentifier child_id, const String& name, byte file_type, int& error) = 0;
+    virtual RetainPtr<Inode> parent() const = 0;
 
     bool is_metadata_dirty() const { return m_metadata_dirty; }
 
