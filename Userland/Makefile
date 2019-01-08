@@ -128,5 +128,5 @@ more: more.o
 	@echo "CXX $<"; $(CXX) $(CXXFLAGS) -o $@ -c $<
 
 clean:
-	@echo "CLEAN"; rm -f $(LIBRARY) $(OBJS)
+	@echo "CLEAN"; rm -f $(APPS) $(OBJS)
 
