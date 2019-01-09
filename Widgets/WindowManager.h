@@ -4,6 +4,7 @@
 #include "Rect.h"
 #include "Color.h"
 #include <AK/HashTable.h>
+#include <AK/InlineLinkedList.h>
 #include <AK/WeakPtr.h>
 
 class MouseEvent;
@@ -32,6 +33,7 @@ public:
     void did_paint(Window&);
 
     void repaint();
+    void move_to_front(Window&);
 
 private:
     WindowManager();
@@ -52,6 +54,7 @@ private:
 
     void paintWindowFrame(Window&);
     HashTable<Window*> m_windows;
+    InlineLinkedList<Window> m_windows_in_order;
     Widget* m_rootWidget { nullptr };
 
     WeakPtr<Window> m_activeWindow;

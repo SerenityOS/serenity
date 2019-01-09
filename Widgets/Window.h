@@ -4,11 +4,12 @@
 #include "Rect.h"
 #include "GraphicsBitmap.h"
 #include <AK/AKString.h>
+#include <AK/InlineLinkedList.h>
 #include <AK/WeakPtr.h>
 
 class Widget;
 
-class Window final : public Object {
+class Window final : public Object, public InlineLinkedListNode<Window> {
 public:
     explicit Window(Object* parent = nullptr);
     virtual ~Window() override;
@@ -54,6 +55,11 @@ public:
     GraphicsBitmap* backing() { return m_backing.ptr(); }
 
     void did_paint();
+
+    // For InlineLinkedList.
+    // FIXME: Maybe make a ListHashSet and then WindowManager can just use that.
+    Window* m_next { nullptr };
+    Window* m_prev { nullptr };
 
 private:
     String m_title;

@@ -60,7 +60,7 @@ WindowManager::~WindowManager()
 
 void WindowManager::paintWindowFrames()
 {
-    for (auto* window : m_windows)
+    for (auto* window = m_windows_in_order.head(); window; window = window->next())
         paintWindowFrame(*window);
 }
 
@@ -123,8 +123,15 @@ void WindowManager::paintWindowFrame(Window& window)
 void WindowManager::addWindow(Window& window)
 {
     m_windows.set(&window);
+    m_windows_in_order.append(&window);
     if (!activeWindow())
         setActiveWindow(&window);
+}
+
+void WindowManager::move_to_front(Window& window)
+{
+    m_windows_in_order.remove(&window);
+    m_windows_in_order.append(&window);
 }
 
 void WindowManager::repaint()
@@ -132,11 +139,11 @@ void WindowManager::repaint()
     handlePaintEvent(*make<PaintEvent>());
 }
 
-void WindowManager::did_paint(Window& window)
+void WindowManager::did_paint(Window&)
 {
     auto& framebuffer = FrameBufferSDL::the();
     framebuffer.blit({ 0, 0 }, *m_rootWidget->backing());
-    for (auto* window : m_windows) {
+    for (auto* window = m_windows_in_order.head(); window; window = window->next()) {
         ASSERT(window->backing());
         framebuffer.blit(window->position(), *window->backing());
     }
@@ -149,6 +156,7 @@ void WindowManager::removeWindow(Window& window)
         return;
 
     m_windows.remove(&window);
+    m_windows_in_order.remove(&window);
     if (!activeWindow() && !m_windows.is_empty())
         setActiveWindow(*m_windows.begin());
 
@@ -200,7 +208,7 @@ void WindowManager::repaintAfterMove(const Rect& oldRect, const Rect& newRect)
 
     m_rootWidget->repaint(oldRect);
     m_rootWidget->repaint(newRect);
-    for (auto* window : m_windows) {
+    for (auto* window = m_windows_in_order.head(); window; window = window->next()) {
         if (outerRectForWindow(*window).intersects(oldRect) || outerRectForWindow(*window).intersects(newRect)) {
             paintWindowFrame(*window);
             window->repaint();
@@ -233,18 +241,21 @@ void WindowManager::processMouseEvent(MouseEvent& event)
         }
     }
 
-    // FIXME: Respect z-order of windows...
-    for (auto* window : m_windows) {
+    for (auto* window = m_windows_in_order.head(); window; window = window->next()) {
         if (titleBarRectForWindow(*window).contains(event.position())) {
-            if (event.type() == Event::MouseDown)
+            if (event.type() == Event::MouseDown) {
+                move_to_front(*window);
                 setActiveWindow(window);
+            }
             handleTitleBarMouseEvent(*window, event);
             return;
         }
 
         if (window->rect().contains(event.position())) {
-            if (event.type() == Event::MouseDown)
+            if (event.type() == Event::MouseDown) {
+                move_to_front(*window);
                 setActiveWindow(window);
+            }
             // FIXME: Re-use the existing event instead of crafting a new one?
             auto localEvent = make<MouseEvent>(event.type(), event.x() - window->rect().x(), event.y() - window->rect().y(), event.button());
             window->event(*localEvent);
@@ -264,12 +275,12 @@ void WindowManager::handlePaintEvent(PaintEvent& event)
     m_rootWidget->event(event);
     paintWindowFrames();
 
-    for (auto* window : m_windows)
+    for (auto* window = m_windows_in_order.head(); window; window = window->next())
         window->event(event);
 
     auto& framebuffer = FrameBufferSDL::the();
     framebuffer.blit({ 0, 0 }, *m_rootWidget->backing());
-    for (auto* window : m_windows) {
+    for (auto* window = m_windows_in_order.head(); window; window = window->next()) {
         ASSERT(window->backing());
         framebuffer.blit(window->position(), *window->backing());
     }
