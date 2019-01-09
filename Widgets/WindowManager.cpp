@@ -136,9 +136,10 @@ void WindowManager::repaint()
 void WindowManager::did_paint(Window& window)
 {
     auto& framebuffer = FrameBufferSDL::the();
-    if (m_windows_in_order.head() == &window) {
+    if (m_windows_in_order.tail() == &window) {
         ASSERT(window.backing());
         framebuffer.blit(window.position(), *window.backing());
+        printf("[WM] frontmost_only_compose_count: %u\n", ++m_frontmost_only_compose_count);
         return;
     }
 
@@ -167,7 +168,7 @@ void WindowManager::notifyTitleChanged(Window& window)
 void WindowManager::notifyRectChanged(Window& window, const Rect& oldRect, const Rect& newRect)
 {
     printf("[WM] Window %p rect changed (%d,%d %dx%d) -> (%d,%d %dx%d)\n", &window, oldRect.x(), oldRect.y(), oldRect.width(), oldRect.height(), newRect.x(), newRect.y(), newRect.width(), newRect.height());
-    repaintAfterMove(oldRect, newRect);
+    recompose();
 }
 
 void WindowManager::handleTitleBarMouseEvent(Window& window, MouseEvent& event)
@@ -190,28 +191,6 @@ void WindowManager::handleTitleBarMouseEvent(Window& window, MouseEvent& event)
 #endif
 }
 
-void WindowManager::repaintAfterMove(const Rect& oldRect, const Rect& newRect)
-{
-    printf("[WM] repaint: [%d,%d %dx%d] -> [%d,%d %dx%d]\n",
-            oldRect.x(),
-            oldRect.y(),
-            oldRect.width(),
-            oldRect.height(),
-            newRect.x(),
-            newRect.y(),
-            newRect.width(),
-            newRect.height());
-
-    m_rootWidget->repaint(oldRect);
-    m_rootWidget->repaint(newRect);
-    for (auto* window = m_windows_in_order.head(); window; window = window->next()) {
-        if (outerRectForWindow(*window).intersects(oldRect) || outerRectForWindow(*window).intersects(newRect)) {
-            paintWindowFrame(*window);
-            window->repaint();
-        }
-    }
-}
-
 void WindowManager::processMouseEvent(MouseEvent& event)
 {
     if (event.type() == Event::MouseUp) {
@@ -220,8 +199,7 @@ void WindowManager::processMouseEvent(MouseEvent& event)
             m_dragWindow->setIsBeingDragged(false);
             m_dragEndRect = outerRectForWindow(*m_dragWindow);
             m_dragWindow = nullptr;
-
-            repaintAfterMove(m_dragStartRect, m_dragEndRect);
+            recompose();
             return;
         }
     }
@@ -281,7 +259,8 @@ void WindowManager::recompose()
 {
     printf("[WM] recompose_count: %u\n", ++m_recompose_count);
     auto& framebuffer = FrameBufferSDL::the();
-    m_rootWidget->repaint(m_rootWidget->rect());
+    PaintEvent dummy_event(m_rootWidget->rect());
+    m_rootWidget->paintEvent(dummy_event);
     for (auto* window = m_windows_in_order.head(); window; window = window->next()) {
         if (!window->backing())
             continue;

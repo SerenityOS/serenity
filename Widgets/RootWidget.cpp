@@ -8,7 +8,8 @@
 
 RootWidget::RootWidget()
 {
-    m_backing = GraphicsBitmap::create_wrapper(FrameBufferSDL::the().size(), (byte*)FrameBufferSDL::the().scanline(0));
+    setWindowRelativeRect(FrameBufferSDL::the().rect());
+    m_backing = GraphicsBitmap::create_wrapper(size(), (byte*)FrameBufferSDL::the().scanline(0));
 }
 
 RootWidget::~RootWidget()

@@ -19,16 +19,18 @@ Widget::~Widget()
 {
 }
 
-void Widget::setWindowRelativeRect(const Rect& rect)
+void Widget::setWindowRelativeRect(const Rect& rect, bool should_update)
 {
     // FIXME: Make some kind of event loop driven ResizeEvent?
     m_relativeRect = rect;
-    update();
+    if (should_update)
+        update();
 }
 
 void Widget::repaint(const Rect& rect)
 {
-    event(*make<PaintEvent>(rect));
+    if (auto* w = window())
+        w->repaint(rect);
 }
 
 void Widget::event(Event& event)
@@ -109,10 +111,13 @@ void Widget::mouseMoveEvent(MouseEvent&)
 
 void Widget::update()
 {
+    auto* w = window();
+    if (!w)
+        return;
     if (m_hasPendingPaintEvent)
         return;
     m_hasPendingPaintEvent = true;
-    EventLoop::main().postEvent(this, make<PaintEvent>(rect()));
+    EventLoop::main().postEvent(w, make<PaintEvent>(rect()));
 }
 
 Widget::HitTestResult Widget::hitTest(int x, int y)

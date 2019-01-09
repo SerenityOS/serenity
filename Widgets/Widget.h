@@ -34,6 +34,7 @@ public:
     int height() const { return m_relativeRect.height(); }
 
     Rect rect() const { return { 0, 0, width(), height() }; }
+    Size size() const { return m_relativeRect.size(); }
 
     void update();
     void repaint(const Rect&);
@@ -50,7 +51,7 @@ public:
 
     virtual const char* class_name() const override { return "Widget"; }
 
-    void setWindowRelativeRect(const Rect&);
+    void setWindowRelativeRect(const Rect&, bool should_update = true);
 
     Color backgroundColor() const { return m_backgroundColor; }
     Color foregroundColor() const { return m_foregroundColor; }

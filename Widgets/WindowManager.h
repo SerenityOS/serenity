@@ -41,7 +41,6 @@ private:
     void processMouseEvent(MouseEvent&);
     void handleTitleBarMouseEvent(Window&, MouseEvent&);
     void handlePaintEvent(PaintEvent&);
-    void repaintAfterMove(const Rect& oldRect, const Rect& newRect);
     
     virtual void event(Event&) override;
 
@@ -68,4 +67,5 @@ private:
     Rect m_dragEndRect;
 
     unsigned m_recompose_count { 0 };
+    unsigned m_frontmost_only_compose_count { 0 };
 };
