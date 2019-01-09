@@ -5,6 +5,7 @@
 #include "AbstractScreen.h"
 #include "TerminalWidget.h"
 #include "EventLoop.h"
+#include "FrameBufferSDL.h"
 
 extern TerminalWidget* g_tw;
 
@@ -131,6 +132,17 @@ void WindowManager::repaint()
     handlePaintEvent(*make<PaintEvent>());
 }
 
+void WindowManager::did_paint(Window& window)
+{
+    auto& framebuffer = FrameBufferSDL::the();
+    framebuffer.blit({ 0, 0 }, *m_rootWidget->backing());
+    for (auto* window : m_windows) {
+        ASSERT(window->backing());
+        framebuffer.blit(window->position(), *window->backing());
+    }
+    framebuffer.flush();
+}
+
 void WindowManager::removeWindow(Window& window)
 {
     if (!m_windows.contains(&window))
@@ -239,7 +251,6 @@ void WindowManager::processMouseEvent(MouseEvent& event)
             return;
         }
     }
-
 }
 
 void WindowManager::handlePaintEvent(PaintEvent& event)
@@ -255,6 +266,14 @@ void WindowManager::handlePaintEvent(PaintEvent& event)
 
     for (auto* window : m_windows)
         window->event(event);
+
+    auto& framebuffer = FrameBufferSDL::the();
+    framebuffer.blit({ 0, 0 }, *m_rootWidget->backing());
+    for (auto* window : m_windows) {
+        ASSERT(window->backing());
+        framebuffer.blit(window->position(), *window->backing());
+    }
+    framebuffer.flush();
 }
 
 void WindowManager::event(Event& event)

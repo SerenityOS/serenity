@@ -2,6 +2,7 @@
 
 #include "Object.h"
 #include "Rect.h"
+#include "GraphicsBitmap.h"
 #include <AK/AKString.h>
 #include <AK/WeakPtr.h>
 
@@ -50,6 +51,10 @@ public:
 
     void close();
 
+    GraphicsBitmap* backing() { return m_backing.ptr(); }
+
+    void did_paint();
+
 private:
     String m_title;
     Rect m_rect;
@@ -57,5 +62,7 @@ private:
     bool m_isBeingDragged { false };
 
     WeakPtr<Widget> m_focusedWidget;
+
+    RetainPtr<GraphicsBitmap> m_backing;
 };
 

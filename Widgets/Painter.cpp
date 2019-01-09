@@ -11,28 +11,18 @@ Painter::Painter(Widget& widget)
     : m_widget(widget)
     , m_font(&widget.font())
 {
-    if (auto* window = widget.window()) {
-        m_translation = window->position();
-        m_translation.moveBy(widget.relativePosition());
-    } else {
-        m_translation.setX(widget.x());
-        m_translation.setY(widget.y());
-    }
-
+    m_target = widget.backing();
+    ASSERT(m_target);
+    m_window = widget.window();
+    m_translation.moveBy(widget.relativePosition());
     m_clipRect.setWidth(AbstractScreen::the().width());
     m_clipRect.setHeight(AbstractScreen::the().height());
 }
 
 Painter::~Painter()
 {
-    int rc = SDL_UpdateWindowSurface(FrameBufferSDL::the().window());
-    ASSERT(rc == 0);
-}
-
-static dword* scanline(int y)
-{
-    auto& surface = *FrameBufferSDL::the().surface();
-    return (dword*)(((byte*)surface.pixels) + (y * surface.pitch));
+    if (m_window)
+        m_window->did_paint();
 }
 
 void Painter::fillRect(const Rect& rect, Color color)
@@ -41,7 +31,7 @@ void Painter::fillRect(const Rect& rect, Color color)
     r.moveBy(m_translation);
 
     for (int y = max(r.top(), m_clipRect.top()); y < min(r.bottom(), m_clipRect.bottom()); ++y) {
-        dword* bits = scanline(y);
+        dword* bits = m_target->scanline(y);
         for (int x = max(r.left(), m_clipRect.left()); x < min(r.right(), m_clipRect.right()); ++x) {
             bits[x] = color.value();
         }
@@ -54,7 +44,7 @@ void Painter::drawRect(const Rect& rect, Color color)
     r.moveBy(m_translation);
 
     for (int y = max(r.top(), m_clipRect.top()); y < min(r.bottom(), m_clipRect.bottom()); ++y) {
-        dword* bits = scanline(y);
+        dword* bits = m_target->scanline(y);
         if (y == r.top() || y == (r.bottom() - 1)) {
             for (int x = max(r.left(), m_clipRect.left()); x < min(r.right(), m_clipRect.right()); ++x) {
                 bits[x] = color.value();
@@ -74,7 +64,7 @@ void Painter::xorRect(const Rect& rect, Color color)
     r.moveBy(m_translation);
 
     for (int y = max(r.top(), m_clipRect.top()); y < min(r.bottom(), m_clipRect.bottom()); ++y) {
-        dword* bits = scanline(y);
+        dword* bits = m_target->scanline(y);
         if (y == r.top() || y == (r.bottom() - 1)) {
             for (int x = max(r.left(), m_clipRect.left()); x < min(r.right(), m_clipRect.right()); ++x) {
                 bits[x] ^= color.value();
@@ -96,7 +86,7 @@ void Painter::drawBitmap(const Point& p, const CBitmap& bitmap, Color color)
         int y = point.y() + row;
         if (y < m_clipRect.top() || y >= m_clipRect.bottom())
             break;
-        dword* bits = scanline(y);
+        dword* bits = m_target->scanline(y);
         for (unsigned j = 0; j < bitmap.width(); ++j) {
             int x = point.x() + j;
             if (x < m_clipRect.left() || x >= m_clipRect.right())
@@ -143,7 +133,7 @@ void Painter::drawPixel(const Point& p, Color color)
     point.moveBy(m_translation);
     if (!m_clipRect.contains(point))
         return;
-    scanline(point.y())[point.x()] = color.value();
+    m_target->scanline(point.y())[point.x()] = color.value();
 }
 
 void Painter::drawLine(const Point& p1, const Point& p2, Color color)
@@ -162,7 +152,7 @@ void Painter::drawLine(const Point& p1, const Point& p2, Color color)
         if (point1.y() > point2.y())
             std::swap(point1, point2);
         for (int y = max(point1.y(), m_clipRect.top()); y <= min(point2.y(), m_clipRect.bottom()); ++y)
-            scanline(y)[x] = color.value();
+            m_target->scanline(y)[x] = color.value();
         return;
     }
 
@@ -176,7 +166,7 @@ void Painter::drawLine(const Point& p1, const Point& p2, Color color)
             return;
         if (point1.x() > point2.x())
             std::swap(point1, point2);
-        auto* pixels = scanline(point1.y());
+        auto* pixels = m_target->scanline(point1.y());
         for (int x = max(point1.x(), m_clipRect.left()); x <= min(point2.x(), m_clipRect.right()); ++x)
             pixels[x] = color.value();
         return;
@@ -193,7 +183,7 @@ void Painter::drawLine(const Point& p1, const Point& p2, Color color)
 
     int y = point1.y();
     for (int x = point1.x(); x <= point2.x(); ++x) {
-        scanline(y)[x] = color.value();
+        m_target->scanline(y)[x] = color.value();
         error += deltaError;
         if (error >= 0.5) {
             y = (double)y + yStep;

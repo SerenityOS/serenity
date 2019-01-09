@@ -2,6 +2,7 @@
 
 #include "Object.h"
 #include "Rect.h"
+#include "Size.h"
 
 class AbstractScreen : public Object {
 public:
@@ -12,6 +13,7 @@ public:
 
     static AbstractScreen& the();
 
+    Size size() const { return { width(), height() }; }
     Rect rect() const { return { 0, 0, width(), height() }; }
 
 protected:

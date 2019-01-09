@@ -7,8 +7,10 @@
 #include <AK/AKString.h>
 
 class CBitmap;
+class GraphicsBitmap;
 class Font;
 class Widget;
+class Window;
 
 class Painter {
 public:
@@ -32,6 +34,7 @@ private:
     Widget& m_widget;
     const Font* m_font;
     Point m_translation;
-
     Rect m_clipRect;
+    RetainPtr<GraphicsBitmap> m_target;
+    Window* m_window { nullptr };
 };
