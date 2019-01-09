@@ -23,6 +23,7 @@ class PhysicalPage {
     AK_MAKE_ETERNAL
     friend class MemoryManager;
     friend class PageDirectory;
+    friend class VMObject;
 public:
     PhysicalAddress paddr() const { return m_paddr; }
 
@@ -73,6 +74,7 @@ class VMObject : public Retainable<VMObject> {
 public:
     static RetainPtr<VMObject> create_file_backed(RetainPtr<Vnode>&&, size_t);
     static RetainPtr<VMObject> create_anonymous(size_t);
+    static RetainPtr<VMObject> create_framebuffer_wrapper(PhysicalAddress, size_t);
     RetainPtr<VMObject> clone();
 
     ~VMObject();
@@ -93,6 +95,7 @@ private:
     VMObject(RetainPtr<Vnode>&&, size_t);
     explicit VMObject(VMObject&);
     explicit VMObject(size_t);
+    VMObject(PhysicalAddress, size_t);
     String m_name;
     bool m_anonymous { false };
     Unix::off_t m_vnode_offset { 0 };

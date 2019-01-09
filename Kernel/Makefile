@@ -24,7 +24,8 @@ KERNEL_OBJS = \
        DoubleBuffer.o \
        ELFImage.o \
        ELFLoader.o \
-       KSyms.o
+       KSyms.o \
+       WindowComposer.o
 
 VFS_OBJS = \
     ../VirtualFileSystem/DiskDevice.o \
@@ -40,13 +41,17 @@ VFS_OBJS = \
     ../VirtualFileSystem/FileDescriptor.o \
     ../VirtualFileSystem/SyntheticFileSystem.o
 
+WIDGETS_OBJS = \
+    ../Widgets/Window.o \
+    ../Widgets/Painter.o
+
 AK_OBJS = \
     ../AK/String.o \
     ../AK/StringImpl.o \
     ../AK/StringBuilder.o \
     ../AK/FileSystemPath.o
 
-OBJS = $(KERNEL_OBJS) $(VFS_OBJS) $(AK_OBJS) $(ELFLOADER_OBJS)
+OBJS = $(KERNEL_OBJS) $(VFS_OBJS) $(AK_OBJS) $(WIDGETS_OBJS)
 
 NASM = nasm
 KERNEL = kernel
