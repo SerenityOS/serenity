@@ -1,6 +1,7 @@
 #include "Window.h"
 #include "WindowManager.h"
 #include "Event.h"
+#include "EventLoop.h"
 #include "Widget.h"
 
 Window::Window(Object* parent)
@@ -46,9 +47,14 @@ void Window::setRect(const Rect& rect)
     WindowManager::the().notifyRectChanged(*this, oldRect, m_rect);
 }
 
-void Window::repaint()
+void Window::repaint(const Rect& rect)
 {
-    event(*make<PaintEvent>());
+    event(*make<PaintEvent>(rect));
+}
+
+void Window::update(const Rect& rect)
+{
+    EventLoop::main().postEvent(this, make<PaintEvent>(rect));
 }
 
 void Window::event(Event& event)
@@ -80,9 +86,11 @@ void Window::event(Event& event)
         }
         if (m_mainWidget) {
             if (pe.rect().is_empty())
-                return m_mainWidget->event(*make<PaintEvent>(m_mainWidget->rect()));
+                m_mainWidget->event(*make<PaintEvent>(m_mainWidget->rect()));
             else
-                return m_mainWidget->event(event);
+                m_mainWidget->event(event);
+            WindowManager::the().did_paint(*this);
+            return;
         }
         return Object::event(event);
     }

@@ -40,7 +40,8 @@ public:
     bool isBeingDragged() const { return m_isBeingDragged; }
     void setIsBeingDragged(bool b) { m_isBeingDragged = b; }
 
-    void repaint();
+    void repaint(const Rect& = Rect());
+    void update(const Rect& = Rect());
 
     bool isActive() const;
 

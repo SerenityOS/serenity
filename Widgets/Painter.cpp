@@ -21,8 +21,6 @@ Painter::Painter(Widget& widget)
 
 Painter::~Painter()
 {
-    if (m_window)
-        m_window->did_paint();
 }
 
 void Painter::fillRect(const Rect& rect, Color color)
