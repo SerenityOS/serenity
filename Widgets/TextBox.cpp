@@ -35,13 +35,13 @@ void TextBox::paintEvent(PaintEvent&)
     Rect innerRect = rect();
     innerRect.shrink(6, 6);
 
-    unsigned maxCharsToPaint = innerRect.width() / font().glyphWidth();
+    size_t maxCharsToPaint = innerRect.width() / font().glyphWidth();
 
     int firstVisibleChar = max((int)m_cursorPosition - (int)maxCharsToPaint, 0);
-    unsigned charsToPaint = min(m_text.length() - firstVisibleChar, maxCharsToPaint);
+    size_t charsToPaint = min(m_text.length() - firstVisibleChar, maxCharsToPaint);
 
     int y = innerRect.center().y() - font().glyphHeight() / 2;
-    for (unsigned i = 0; i < charsToPaint; ++i) {
+    for (size_t i = 0; i < charsToPaint; ++i) {
         char ch = m_text[firstVisibleChar + i];
         if (ch == ' ')
             continue;

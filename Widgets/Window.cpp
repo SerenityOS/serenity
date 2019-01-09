@@ -74,7 +74,7 @@ void Window::event(Event& event)
 
     if (event.isPaintEvent()) {
         auto& pe = static_cast<PaintEvent&>(event);
-        printf("Window[\"%s\"]: paintEvent %d,%d %dx%d\n", class_name(),
+        printf("Window[\"%s\"]: paintEvent %d,%d %dx%d\n", title().characters(),
                 pe.rect().x(),
                 pe.rect().y(),
                 pe.rect().width(),
@@ -123,15 +123,15 @@ void Window::setFocusedWidget(Widget* widget)
 {
     if (m_focusedWidget.ptr() == widget)
         return;
-    auto* previouslyFocusedWidget = m_focusedWidget.ptr();
-    if (!widget) {
+    auto* previously_focused_widget = m_focusedWidget.ptr();
+    if (!widget)
         m_focusedWidget = nullptr;
-    } else {
+    else {
         m_focusedWidget = widget->makeWeakPtr();
-        m_focusedWidget->repaint(Rect());
+        EventLoop::main().postEvent(m_focusedWidget.ptr(), make<Event>(Event::FocusIn));
     }
-    if (previouslyFocusedWidget)
-        previouslyFocusedWidget->repaint(Rect());
+    if (previously_focused_widget)
+        EventLoop::main().postEvent(previously_focused_widget, make<Event>(Event::FocusOut));
 }
 
 void Window::close()

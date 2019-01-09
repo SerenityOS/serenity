@@ -37,13 +37,13 @@ void Widget::event(Event& event)
 {
     switch (event.type()) {
     case Event::Paint:
+        m_hasPendingPaintEvent = false;
         if (auto* win = window()) {
             if (win->isBeingDragged())
                 return;
             if (!win->isVisible())
                 return;
         }
-        m_hasPendingPaintEvent = false;
         return paintEvent(static_cast<PaintEvent&>(event));
     case Event::Show:
         return showEvent(static_cast<ShowEvent&>(event));
@@ -77,7 +77,7 @@ void Widget::paintEvent(PaintEvent& event)
     }
     for (auto* ch : children()) {
         auto* child = (Widget*)ch;
-        child->paintEvent(event);
+        child->event(event);
     }
 }
 
@@ -117,7 +117,7 @@ void Widget::update()
     if (m_hasPendingPaintEvent)
         return;
     m_hasPendingPaintEvent = true;
-    EventLoop::main().postEvent(w, make<PaintEvent>(rect()));
+    EventLoop::main().postEvent(w, make<PaintEvent>(relativeRect()));
 }
 
 Widget::HitTestResult Widget::hitTest(int x, int y)

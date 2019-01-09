@@ -100,10 +100,12 @@ int main(int argc, char** argv)
     win->setMainWidget(t);
     t->setFocus(true);
 
+#if 0
     auto* clockWin = new Window;
     clockWin->setTitle("Clock");
     clockWin->setRect({ 500, 50, 100, 40 });
     clockWin->setMainWidget(new ClockWidget);
+#endif
 
     MsgBox(nullptr, "This is a message box!");
 

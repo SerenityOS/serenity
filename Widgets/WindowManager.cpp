@@ -139,6 +139,7 @@ void WindowManager::did_paint(Window& window)
     if (m_windows_in_order.tail() == &window) {
         ASSERT(window.backing());
         framebuffer.blit(window.position(), *window.backing());
+        framebuffer.flush();
         printf("[WM] frontmost_only_compose_count: %u\n", ++m_frontmost_only_compose_count);
         return;
     }
