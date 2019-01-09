@@ -74,7 +74,7 @@ void FrameBufferSDL::blit(const Point& position, GraphicsBitmap& bitmap)
     for (int y = 0; y < dst_rect.height(); ++y) {
         auto* framebuffer_scanline = scanline(position.y() + y);
         auto* bitmap_scanline = bitmap.scanline(y);
-        memcpy(framebuffer_scanline + position.x(), bitmap_scanline, dst_rect.width() * 4);
+        memcpy(framebuffer_scanline + dst_rect.x(), bitmap_scanline + (dst_rect.x() - position.x()), dst_rect.width() * 4);
     }
 }
 
