@@ -11,6 +11,7 @@ VFS_OBJS = \
     FrameBufferSDL.o \
     EventLoop.o \
     EventLoopSDL.o \
+    Rect.o \
     Object.o \
     Widget.o \
     RootWidget.o \
@@ -28,6 +29,7 @@ VFS_OBJS = \
     ListBox.o \
     TextBox.o \
     MsgBox.o \
+    GraphicsBitmap.o \
     test.o
 
 OBJS = $(AK_OBJS) $(VFS_OBJS)

@@ -32,7 +32,7 @@ void Window::setTitle(String&& title)
     if (m_title == title)
         return;
 
-    m_title = std::move(title);
+    m_title = move(title);
     WindowManager::the().notifyTitleChanged(*this);
 }
 
@@ -42,6 +42,7 @@ void Window::setRect(const Rect& rect)
         return;
     auto oldRect = m_rect;
     m_rect = rect;
+    m_backing = GraphicsBitmap::create(m_rect.size());
     WindowManager::the().notifyRectChanged(*this, oldRect, m_rect);
 }
 
@@ -93,6 +94,11 @@ void Window::event(Event& event)
     }
 
     return Object::event(event);
+}
+
+void Window::did_paint()
+{
+    WindowManager::the().did_paint(*this);
 }
 
 bool Window::isActive() const

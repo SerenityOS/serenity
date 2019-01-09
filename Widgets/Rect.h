@@ -1,14 +1,19 @@
 #pragma once
 
 #include "Point.h"
+#include "Size.h"
 
 class Rect {
 public:
     Rect() { }
     Rect(int x, int y, int width, int height)
         : m_location(x, y)
-        , m_width(width)
-        , m_height(height)
+        , m_size(width, height)
+    {
+    }
+    Rect(const Point& location, const Size& size)
+        : m_location(location)
+        , m_size(size)
     {
     }
 
@@ -85,25 +90,33 @@ public:
 
     int x() const { return location().x(); }
     int y() const { return location().y(); }
-    int width() const { return m_width; }
-    int height() const { return m_height; }
+    int width() const { return m_size.width(); }
+    int height() const { return m_size.height(); }
 
     void setX(int x) { m_location.setX(x); }
     void setY(int y) { m_location.setY(y); }
-    void setWidth(int width) { m_width = width; }
-    void setHeight(int height) { m_height = height; }
+    void setWidth(int width) { m_size.setWidth(width); }
+    void setHeight(int height) { m_size.setHeight(height); }
 
     Point location() const { return m_location; }
+    Size size() const { return m_size; }
 
     bool operator==(const Rect& other) const
     {
         return m_location == other.m_location
-            && m_width == other.m_width
-            && m_height == other.m_height;
+            && m_size == other.m_size;
+    }
+
+    void intersect(const Rect&);
+
+    static Rect intersection(const Rect& a, const Rect& b)
+    {
+        Rect r(a);
+        r.intersect(b);
+        return a;
     }
 
 private:
     Point m_location;
-    int m_width { 0 };
-    int m_height { 0 };
+    Size m_size;
 };

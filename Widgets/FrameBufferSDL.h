@@ -3,6 +3,8 @@
 #include "AbstractScreen.h"
 #include <SDL.h>
 
+class GraphicsBitmap;
+
 class FrameBufferSDL final : public AbstractScreen {
 public:
     FrameBufferSDL(unsigned width, unsigned height);
@@ -14,6 +16,11 @@ public:
     SDL_Window* window() { return m_window; }
 
     static FrameBufferSDL& the();
+
+    dword* scanline(int y);
+
+    void blit(const Point&, GraphicsBitmap&);
+    void flush();
 
 private:
     void initializeSDL();

@@ -29,6 +29,8 @@ public:
 
     bool isVisible(Window&) const;
 
+    void did_paint(Window&);
+
     void repaint();
 
 private:

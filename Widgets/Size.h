@@ -13,6 +13,12 @@ public:
     void setWidth(int w) { m_width = w; }
     void setHeight(int h) { m_height = h; }
 
+    bool operator==(const Size& other) const
+    {
+        return m_width == other.m_width &&
+               m_height == other.m_height;
+    }
+
 private:
     int m_width { 0 };
     int m_height { 0 };

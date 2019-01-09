@@ -6,8 +6,8 @@
 #include "Color.h"
 #include "Font.h"
 #include <AK/AKString.h>
-#include <functional>
 
+class GraphicsBitmap;
 class Window;
 
 class Widget : public Object {
@@ -15,7 +15,7 @@ public:
     explicit Widget(Widget* parent = nullptr);
     virtual ~Widget();
 
-    virtual void event(Event&);
+    virtual void event(Event&) override;
     virtual void paintEvent(PaintEvent&);
     virtual void showEvent(ShowEvent&);
     virtual void hideEvent(HideEvent&);
@@ -82,6 +82,8 @@ public:
 
     const Font& font() const { return *m_font; }
     void setFont(RetainPtr<Font>&&);
+
+    virtual GraphicsBitmap* backing();
 
 private:
     Window* m_window { nullptr };

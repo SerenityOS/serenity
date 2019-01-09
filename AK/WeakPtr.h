@@ -35,7 +35,7 @@ public:
     WeakLink<T>* leakLink() { return m_link.leakRef(); }
 
 private:
-    WeakPtr(RetainPtr<WeakLink<T>>&& link) : m_link(std::move(link)) { }
+    WeakPtr(RetainPtr<WeakLink<T>>&& link) : m_link(move(link)) { }
 
     RetainPtr<WeakLink<T>> m_link;
 };

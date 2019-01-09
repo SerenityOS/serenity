@@ -1,6 +1,7 @@
 #include "Widget.h"
 #include "Event.h"
 #include "EventLoop.h"
+#include "GraphicsBitmap.h"
 #include "WindowManager.h"
 #include "Window.h"
 #include "Painter.h"
@@ -154,4 +155,11 @@ void Widget::setFont(RetainPtr<Font>&& font)
         m_font = Font::defaultFont();
     else
         m_font = std::move(font);
+}
+
+GraphicsBitmap* Widget::backing()
+{
+    if (auto* w = window())
+        return w->backing();
+    return nullptr;
 }

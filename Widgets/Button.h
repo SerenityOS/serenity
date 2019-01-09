@@ -2,6 +2,7 @@
 
 #include "Widget.h"
 #include <AK/AKString.h>
+#include <AK/Function.h>
 
 class Button final : public Widget {
 public:
@@ -11,7 +12,7 @@ public:
     String caption() const { return m_caption; }
     void setCaption(String&&);
 
-    std::function<void(Button&)> onClick;
+    Function<void(Button&)> onClick;
 
 private:
     virtual void paintEvent(PaintEvent&) override;

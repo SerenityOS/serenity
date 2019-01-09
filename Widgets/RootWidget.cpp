@@ -1,3 +1,5 @@
+#include "AbstractScreen.h"
+#include "GraphicsBitmap.h"
 #include "RootWidget.h"
 #include "Painter.h"
 #include "WindowManager.h"
@@ -5,6 +7,7 @@
 
 RootWidget::RootWidget()
 {
+    m_backing = GraphicsBitmap::create(AbstractScreen::the().size());
 }
 
 RootWidget::~RootWidget()
