@@ -58,12 +58,6 @@ WindowManager::~WindowManager()
 {
 }
 
-void WindowManager::paintWindowFrames()
-{
-    for (auto* window = m_windows_in_order.head(); window; window = window->next())
-        paintWindowFrame(*window);
-}
-
 void WindowManager::paintWindowFrame(Window& window)
 {
     Painter p(*m_rootWidget);
@@ -139,15 +133,17 @@ void WindowManager::repaint()
     handlePaintEvent(*make<PaintEvent>());
 }
 
-void WindowManager::did_paint(Window&)
+void WindowManager::did_paint(Window& window)
 {
     auto& framebuffer = FrameBufferSDL::the();
-    framebuffer.blit({ 0, 0 }, *m_rootWidget->backing());
-    for (auto* window = m_windows_in_order.head(); window; window = window->next()) {
-        ASSERT(window->backing());
-        framebuffer.blit(window->position(), *window->backing());
+    if (m_windows_in_order.head() == &window) {
+        ASSERT(window.backing());
+        framebuffer.blit(window.position(), *window.backing());
+        return;
     }
-    framebuffer.flush();
+
+    // FIXME: Check if anything overlaps this window, otherwise just blit.
+    recompose();
 }
 
 void WindowManager::removeWindow(Window& window)
@@ -237,11 +233,12 @@ void WindowManager::processMouseEvent(MouseEvent& event)
             pos.moveBy(event.x() - m_dragOrigin.x(), event.y() - m_dragOrigin.y());
             m_dragWindow->setPositionWithoutRepaint(pos);
             paintWindowFrame(*m_dragWindow);
+            FrameBufferSDL::the().flush();
             return;
         }
     }
 
-    for (auto* window = m_windows_in_order.head(); window; window = window->next()) {
+    for (auto* window = m_windows_in_order.tail(); window; window = window->prev()) {
         if (titleBarRectForWindow(*window).contains(event.position())) {
             if (event.type() == Event::MouseDown) {
                 move_to_front(*window);
@@ -273,14 +270,21 @@ void WindowManager::handlePaintEvent(PaintEvent& event)
     }
 
     m_rootWidget->event(event);
-    paintWindowFrames();
 
     for (auto* window = m_windows_in_order.head(); window; window = window->next())
         window->event(event);
 
+    recompose();
+}
+
+void WindowManager::recompose()
+{
     auto& framebuffer = FrameBufferSDL::the();
-    framebuffer.blit({ 0, 0 }, *m_rootWidget->backing());
+    m_rootWidget->repaint(m_rootWidget->rect());
     for (auto* window = m_windows_in_order.head(); window; window = window->next()) {
+        paintWindowFrame(*window);
+        if (m_dragWindow.ptr() == window)
+            continue;
         ASSERT(window->backing());
         framebuffer.blit(window->position(), *window->backing());
     }

@@ -17,7 +17,6 @@ public:
     static WindowManager& the(); 
     void addWindow(Window&);
     void removeWindow(Window&);
-    void paintWindowFrames();
 
     void notifyTitleChanged(Window&);
     void notifyRectChanged(Window&, const Rect& oldRect, const Rect& newRect);
@@ -52,6 +51,7 @@ private:
     Color m_inactiveWindowBorderColor;
     Color m_inactiveWindowTitleColor;
 
+    void recompose();
     void paintWindowFrame(Window&);
     HashTable<Window*> m_windows;
     InlineLinkedList<Window> m_windows_in_order;
