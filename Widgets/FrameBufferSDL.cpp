@@ -66,10 +66,9 @@ dword* FrameBufferSDL::scanline(int y)
 void FrameBufferSDL::blit(const Point& position, GraphicsBitmap& bitmap)
 {
     Rect dst_rect(position, bitmap.size());
-
-    printf("blit at %d,%d %dx%d\n", dst_rect.x(), dst_rect.y(), dst_rect.width(), dst_rect.height());
+    //printf("blit at %d,%d %dx%d\n", dst_rect.x(), dst_rect.y(), dst_rect.width(), dst_rect.height());
     dst_rect.intersect(rect());
-    printf("    -> intersection %d,%d %dx%d\n", dst_rect.x(), dst_rect.y(), dst_rect.width(), dst_rect.height());
+    //printf("    -> intersection %d,%d %dx%d\n", dst_rect.x(), dst_rect.y(), dst_rect.width(), dst_rect.height());
 
     for (int y = 0; y < dst_rect.height(); ++y) {
         auto* framebuffer_scanline = scanline(position.y() + y);

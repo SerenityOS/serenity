@@ -25,7 +25,7 @@ static inline Rect titleBarRectForWindow(const Window& window)
 static inline Rect borderRectForWindow(const Window& window)
 {
     auto titleBarRect = titleBarRectForWindow(window);
-    return { titleBarRect.x() - 1, 
+    return { titleBarRect.x() - 1,
         titleBarRect.y() - 1,
         titleBarRect.width() + 2,
         windowFrameWidth + windowTitleBarHeight + window.rect().height() + 4
@@ -282,10 +282,11 @@ void WindowManager::recompose()
     auto& framebuffer = FrameBufferSDL::the();
     m_rootWidget->repaint(m_rootWidget->rect());
     for (auto* window = m_windows_in_order.head(); window; window = window->next()) {
+        if (!window->backing())
+            continue;
         paintWindowFrame(*window);
         if (m_dragWindow.ptr() == window)
             continue;
-        ASSERT(window->backing());
         framebuffer.blit(window->position(), *window->backing());
     }
     framebuffer.flush();
@@ -314,7 +315,7 @@ void WindowManager::setRootWidget(Widget* widget)
     // FIXME: Should we support switching root widgets?
     ASSERT(!m_rootWidget);
     ASSERT(widget);
-    
+
     m_rootWidget = widget;
     EventLoop::main().postEvent(m_rootWidget, make<ShowEvent>());
 }
@@ -324,19 +325,13 @@ void WindowManager::setActiveWindow(Window* window)
     if (window == m_activeWindow.ptr())
         return;
 
-    auto* previouslyActiveWindow = m_activeWindow.ptr();
-
+    if (auto* previously_active_window = m_activeWindow.ptr())
+        EventLoop::main().postEvent(previously_active_window, make<Event>(Event::WindowBecameInactive));
     m_activeWindow = window->makeWeakPtr();
+    if (m_activeWindow)
+        EventLoop::main().postEvent(m_activeWindow.ptr(), make<Event>(Event::WindowBecameActive));
 
-    if (previouslyActiveWindow) {
-        paintWindowFrame(*previouslyActiveWindow);
-        previouslyActiveWindow->repaint();
-    }
-
-    if (m_activeWindow) {
-        paintWindowFrame(*m_activeWindow);
-        m_activeWindow->repaint();
-    }
+    recompose();
 }
 
 bool WindowManager::isVisible(Window& window) const
