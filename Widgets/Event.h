@@ -37,6 +37,8 @@ public:
         DeferredDestroy,
         WindowBecameInactive,
         WindowBecameActive,
+        FocusIn,
+        FocusOut,
     };
 
     Event() { }
