@@ -9,6 +9,43 @@ boot:
     mov     ss, ax
     mov     sp, 0xffff
 
+    ; get vesa modes
+    mov     ax, 0x4f00
+    xor     dx, dx
+    mov     es, dx
+    mov     di, 0xc000
+    mov     [es:di], byte 'V'
+    mov     [es:di+1], byte 'B'
+    mov     [es:di+2], byte 'E'
+    mov     [es:di+3], byte '2'
+    int     0x10
+    cmp     ax, 0x004f
+    jne     fug
+    cmp     [es:di], byte 'V'
+    jne     fug
+    cmp     [es:di+1], byte 'E'
+    jne     fug
+    cmp     [es:di+2], byte 'S'
+    jne     fug
+    cmp     [es:di+3], byte 'A'
+    jne     fug
+
+    ; get vesa info
+    mov     ax, 0x4f01
+    mov     cx, 0x144
+    xor     dx, dx
+    mov     es, dx
+    mov     di, 0x2000
+    int     0x10
+    cmp     ax, 0x004f
+    jne     fug
+
+    mov     ax, 0x4f02
+    mov     bx, 0x4144
+    int     0x10
+    cmp     ax, 0x004f
+    jne     fug
+
     push    cs
     pop     ds
     xor     bx, bx

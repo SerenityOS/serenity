@@ -32,6 +32,14 @@ struct SignalActionData {
     LinearAddress restorer;
 };
 
+struct DisplayInfo {
+    unsigned width;
+    unsigned height;
+    unsigned bpp;
+    unsigned pitch;
+    byte* framebuffer;
+};
+
 class Process : public InlineLinkedListNode<Process> {
     friend class InlineLinkedListNode<Process>;
 public:
@@ -175,6 +183,8 @@ public:
     Unix::clock_t sys$times(Unix::tms*);
     int sys$utime(const char* pathname, const struct Unix::utimbuf*);
 
+    DisplayInfo get_display_info();
+
     static void initialize();
 
     void crash() NORETURN;
@@ -317,6 +327,8 @@ private:
     Region* m_stack_region { nullptr };
     Region* m_signal_stack_user_region { nullptr };
     Region* m_signal_stack_kernel_region { nullptr };
+
+    RetainPtr<Region> m_display_framebuffer_region;
 };
 
 extern Process* current;

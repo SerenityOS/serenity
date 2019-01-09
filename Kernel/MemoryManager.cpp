@@ -652,6 +652,12 @@ RetainPtr<VMObject> VMObject::create_anonymous(size_t size)
     return adopt(*new VMObject(size));
 }
 
+RetainPtr<VMObject> VMObject::create_framebuffer_wrapper(PhysicalAddress paddr, size_t size)
+{
+    size = ceilDiv(size, PAGE_SIZE) * PAGE_SIZE;
+    return adopt(*new VMObject(paddr, size));
+}
+
 RetainPtr<VMObject> VMObject::clone()
 {
     return adopt(*new VMObject(*this));
@@ -675,6 +681,18 @@ VMObject::VMObject(size_t size)
     MM.register_vmo(*this);
     m_physical_pages.resize(page_count());
 }
+
+VMObject::VMObject(PhysicalAddress paddr, size_t size)
+    : m_anonymous(true)
+    , m_size(size)
+{
+    MM.register_vmo(*this);
+    for (size_t i = 0; i < size; i += PAGE_SIZE) {
+        m_physical_pages.append(adopt(*new PhysicalPage(paddr.offset(i), false)));
+    }
+    ASSERT(m_physical_pages.size() == page_count());
+}
+
 
 VMObject::VMObject(RetainPtr<Vnode>&& vnode, size_t size)
     : m_size(size)
