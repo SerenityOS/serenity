@@ -182,13 +182,6 @@ void WindowManager::handleTitleBarMouseEvent(Window& window, MouseEvent& event)
         window.setIsBeingDragged(true);
         return;
     }
-#if 0
-    byte r = (((double)rand()) / (double)RAND_MAX) * 255.0;
-    byte g = (((double)rand()) / (double)RAND_MAX) * 255.0;
-    byte b = (((double)rand()) / (double)RAND_MAX) * 255.0;
-    m_activeWindowBorderColor = Color(r, g, b);
-    paintWindowFrame(window);
-#endif
 }
 
 void WindowManager::processMouseEvent(MouseEvent& event)
