@@ -3,11 +3,12 @@
 #include "RootWidget.h"
 #include "Painter.h"
 #include "WindowManager.h"
+#include "FrameBufferSDL.h"
 #include <cstdio>
 
 RootWidget::RootWidget()
 {
-    m_backing = GraphicsBitmap::create(AbstractScreen::the().size());
+    m_backing = GraphicsBitmap::create_wrapper(FrameBufferSDL::the().size(), (byte*)FrameBufferSDL::the().scanline(0));
 }
 
 RootWidget::~RootWidget()
