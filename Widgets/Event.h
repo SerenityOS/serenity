@@ -35,9 +35,12 @@ public:
         KeyUp,
         Timer,
         DeferredDestroy,
+        WindowBecameInactive,
+        WindowBecameActive,
     };
 
     Event() { }
+    explicit Event(Type type) : m_type(type) { }
     ~Event() { }
 
     Type type() const { return m_type; }
@@ -47,9 +50,6 @@ public:
     bool isMouseEvent() const { return m_type == MouseMove || m_type == MouseDown || m_type == MouseUp; }
     bool isKeyEvent() const { return m_type == KeyUp || m_type == KeyDown; }
     bool isPaintEvent() const { return m_type == Paint; }
-
-protected:
-    explicit Event(Type type) : m_type(type) { }
 
 private:
     Type m_type { Invalid };
