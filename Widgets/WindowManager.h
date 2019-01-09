@@ -66,4 +66,6 @@ private:
     Rect m_lastDragRect;
     Rect m_dragStartRect;
     Rect m_dragEndRect;
+
+    unsigned m_recompose_count { 0 };
 };

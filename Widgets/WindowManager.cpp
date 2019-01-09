@@ -279,6 +279,7 @@ void WindowManager::handlePaintEvent(PaintEvent& event)
 
 void WindowManager::recompose()
 {
+    printf("[WM] recompose_count: %u\n", ++m_recompose_count);
     auto& framebuffer = FrameBufferSDL::the();
     m_rootWidget->repaint(m_rootWidget->rect());
     for (auto* window = m_windows_in_order.head(); window; window = window->next()) {
