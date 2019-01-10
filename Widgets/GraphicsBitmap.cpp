@@ -6,7 +6,7 @@ RetainPtr<GraphicsBitmap> GraphicsBitmap::create(const Size& size)
     return adopt(*new GraphicsBitmap(size));
 }
 
-RetainPtr<GraphicsBitmap> GraphicsBitmap::create_wrapper(const Size& size, byte* data)
+RetainPtr<GraphicsBitmap> GraphicsBitmap::create_wrapper(const Size& size, RGBA32* data)
 {
     return adopt(*new GraphicsBitmap(size, data));
 }
@@ -14,16 +14,16 @@ RetainPtr<GraphicsBitmap> GraphicsBitmap::create_wrapper(const Size& size, byte*
 GraphicsBitmap::GraphicsBitmap(const Size& size)
     : m_size(size)
 {
-    m_data = (byte*)kmalloc(size.width() * size.height() * 4);
-    memset(m_data, 0, size.width() * size.height() * 4);
+    m_data = static_cast<RGBA32*>(kmalloc(size.width() * size.height() * sizeof(RGBA32)));
+    memset(m_data, 0, size.width() * size.height() * sizeof(RGBA32));
     m_owned = true;
 }
 
-GraphicsBitmap::GraphicsBitmap(const Size& size, byte* data)
+GraphicsBitmap::GraphicsBitmap(const Size& size, RGBA32* data)
     : m_size(size)
+    , m_data(data)
+    , m_owned(false)
 {
-    m_data = data;
-    m_owned = false;
 }
 
 GraphicsBitmap::~GraphicsBitmap()
@@ -33,9 +33,9 @@ GraphicsBitmap::~GraphicsBitmap()
     m_data = nullptr;
 }
 
-dword* GraphicsBitmap::scanline(int y)
+RGBA32* GraphicsBitmap::scanline(int y)
 {
-    unsigned pitch = m_size.width() * 4;
-    return (dword*)(((byte*)m_data) + (y * pitch));
+    unsigned pitch = m_size.width() * sizeof(RGBA32);
+    return reinterpret_cast<RGBA32*>((((byte*)m_data) + (y * pitch)));
 }
 

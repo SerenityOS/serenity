@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Color.h"
 #include "Size.h"
 #include <AK/Retainable.h>
 #include <AK/RetainPtr.h>
@@ -7,10 +8,10 @@
 class GraphicsBitmap : public Retainable<GraphicsBitmap> {
 public:
     static RetainPtr<GraphicsBitmap> create(const Size&);
-    static RetainPtr<GraphicsBitmap> create_wrapper(const Size&, byte*);
+    static RetainPtr<GraphicsBitmap> create_wrapper(const Size&, RGBA32*);
     ~GraphicsBitmap();
 
-    dword* scanline(int y);
+    RGBA32* scanline(int y);
 
     Size size() const { return m_size; }
     int width() const { return m_size.width(); }
@@ -18,9 +19,9 @@ public:
 
 private:
     explicit GraphicsBitmap(const Size&);
-    GraphicsBitmap(const Size&, byte*);
+    GraphicsBitmap(const Size&, RGBA32*);
 
     Size m_size;
-    byte* m_data { nullptr };
+    RGBA32* m_data { nullptr };
     bool m_owned { false };
 };

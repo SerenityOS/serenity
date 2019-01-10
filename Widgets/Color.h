@@ -2,6 +2,8 @@
 
 #include <AK/Types.h>
 
+typedef dword RGBA32;
+
 class Color {
 public:
     enum NamedColor {
@@ -19,8 +21,8 @@ public:
     Color(NamedColor);
     Color(byte r, byte g, byte b);
 
-    dword value() const { return m_value; }
+    RGBA32 value() const { return m_value; }
 
 private:
-    dword m_value { 0 };
+    RGBA32 m_value { 0 };
 };
