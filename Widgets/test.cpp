@@ -3,7 +3,6 @@
 #include "RootWidget.h"
 #include "Label.h"
 #include "Button.h"
-#include "TerminalWidget.h"
 #include "WindowManager.h"
 #include "Window.h"
 #include "ClockWidget.h"
@@ -91,14 +90,6 @@ int main(int argc, char** argv)
 
         WindowManager::the().setActiveWindow(widgetTestWindow);
     }
-
-    auto* win = new Window;
-    win->setTitle("Console");
-    win->setRect({ 100, 300, 644, 254 });
-
-    auto* t = new TerminalWidget(nullptr);
-    win->setMainWidget(t);
-    t->setFocus(true);
 
 #if 0
     auto* clockWin = new Window;

@@ -2,12 +2,8 @@
 #include "Event.h"
 #include <SDL.h>
 #include "Widget.h"
-#include "TerminalWidget.h"
 #include "WindowManager.h"
 #include <unistd.h>
-
-int g_fd;
-extern TerminalWidget* g_tw;
 
 EventLoopSDL::EventLoopSDL()
 {
@@ -118,21 +114,6 @@ void EventLoopSDL::waitForEvent()
             handleKeyEvent(Event::KeyUp, sdlEvent.key);
             return;
         }
-    }
-
-    fd_set rfds;
-    FD_ZERO(&rfds);
-    FD_SET(g_fd, &rfds);
-
-    struct timeval tv = { 0, 5000 };
-    int rc = select(g_fd + 1, &rfds, NULL, NULL, &tv);
-
-    //printf("select{%d} = %d\n", g_fd, rc);
-
-    if (rc > 0) {
-        byte buf[1024];
-        int nread = read(g_fd, buf, sizeof(buf));
-        g_tw->onReceive(ByteBuffer::wrap(buf, nread));
     }
 }
 

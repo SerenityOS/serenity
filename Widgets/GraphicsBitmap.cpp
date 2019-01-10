@@ -15,6 +15,7 @@ GraphicsBitmap::GraphicsBitmap(const Size& size)
     : m_size(size)
 {
     m_data = (byte*)kmalloc(size.width() * size.height() * 4);
+    memset(m_data, 0, size.width() * size.height() * 4);
     m_owned = true;
 }
 
