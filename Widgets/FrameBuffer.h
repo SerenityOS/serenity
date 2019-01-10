@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AbstractScreen.h"
+#include "Color.h"
 
 #ifdef USE_SDL
 #include <SDL.h>
@@ -21,7 +22,7 @@ public:
 
     static FrameBuffer& the();
 
-    dword* scanline(int y);
+    RGBA32* scanline(int y);
 
     void blit(const Point&, GraphicsBitmap&);
     void flush();

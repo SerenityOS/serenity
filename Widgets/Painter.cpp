@@ -28,7 +28,7 @@ void Painter::fillRect(const Rect& rect, Color color)
     r.moveBy(m_translation);
 
     for (int y = max(r.top(), m_clipRect.top()); y < min(r.bottom(), m_clipRect.bottom()); ++y) {
-        dword* bits = m_target->scanline(y);
+        auto* bits = m_target->scanline(y);
         for (int x = max(r.left(), m_clipRect.left()); x < min(r.right(), m_clipRect.right()); ++x) {
             bits[x] = color.value();
         }
@@ -41,7 +41,7 @@ void Painter::drawRect(const Rect& rect, Color color)
     r.moveBy(m_translation);
 
     for (int y = max(r.top(), m_clipRect.top()); y < min(r.bottom(), m_clipRect.bottom()); ++y) {
-        dword* bits = m_target->scanline(y);
+        auto* bits = m_target->scanline(y);
         if (y == r.top() || y == (r.bottom() - 1)) {
             for (int x = max(r.left(), m_clipRect.left()); x < min(r.right(), m_clipRect.right()); ++x) {
                 bits[x] = color.value();
@@ -61,7 +61,7 @@ void Painter::xorRect(const Rect& rect, Color color)
     r.moveBy(m_translation);
 
     for (int y = max(r.top(), m_clipRect.top()); y < min(r.bottom(), m_clipRect.bottom()); ++y) {
-        dword* bits = m_target->scanline(y);
+        auto* bits = m_target->scanline(y);
         if (y == r.top() || y == (r.bottom() - 1)) {
             for (int x = max(r.left(), m_clipRect.left()); x < min(r.right(), m_clipRect.right()); ++x) {
                 bits[x] ^= color.value();
@@ -83,7 +83,7 @@ void Painter::drawBitmap(const Point& p, const CBitmap& bitmap, Color color)
         int y = point.y() + row;
         if (y < m_clipRect.top() || y >= m_clipRect.bottom())
             break;
-        dword* bits = m_target->scanline(y);
+        auto* bits = m_target->scanline(y);
         for (unsigned j = 0; j < bitmap.width(); ++j) {
             int x = point.x() + j;
             if (x < m_clipRect.left() || x >= m_clipRect.right())

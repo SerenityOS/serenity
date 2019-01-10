@@ -9,7 +9,7 @@
 RootWidget::RootWidget()
 {
     setWindowRelativeRect(FrameBuffer::the().rect());
-    m_backing = GraphicsBitmap::create_wrapper(size(), (byte*)FrameBuffer::the().scanline(0));
+    m_backing = GraphicsBitmap::create_wrapper(size(), FrameBuffer::the().scanline(0));
 }
 
 RootWidget::~RootWidget()

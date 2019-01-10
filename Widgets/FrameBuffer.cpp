@@ -63,10 +63,10 @@ void FrameBuffer::initializeSDL()
 }
 #endif
 
-dword* FrameBuffer::scanline(int y)
+RGBA32* FrameBuffer::scanline(int y)
 {
 #ifdef USE_SDL
-    return (dword*)(((byte*)m_surface->pixels) + (y * m_surface->pitch));
+    return reinterpret_cast<RGBA32*>(((byte*)m_surface->pixels) + (y * m_surface->pitch));
 #endif
 }
 
