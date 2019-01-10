@@ -159,7 +159,7 @@ void Widget::setFont(RetainPtr<Font>&& font)
     if (!font)
         m_font = Font::defaultFont();
     else
-        m_font = std::move(font);
+        m_font = move(font);
 }
 
 GraphicsBitmap* Widget::backing()

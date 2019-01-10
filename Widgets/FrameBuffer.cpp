@@ -2,7 +2,12 @@
 #include "GraphicsBitmap.h"
 #include <AK/Assertions.h>
 
-FrameBuffer* s_the = nullptr;
+FrameBuffer* s_the;
+
+void FrameBuffer::initialize()
+{
+    s_the = nullptr;
+}
 
 FrameBuffer& FrameBuffer::the()
 {
@@ -19,6 +24,17 @@ FrameBuffer::FrameBuffer(unsigned width, unsigned height)
     initializeSDL();
 #endif
 }
+
+FrameBuffer::FrameBuffer(RGBA32* data, unsigned width, unsigned height)
+    : AbstractScreen(width, height)
+#ifdef SERENITY
+    , m_data(data)
+#endif
+{
+    ASSERT(!s_the);
+    s_the = this;
+}
+
 
 FrameBuffer::~FrameBuffer()
 {
@@ -67,6 +83,10 @@ RGBA32* FrameBuffer::scanline(int y)
 {
 #ifdef USE_SDL
     return reinterpret_cast<RGBA32*>(((byte*)m_surface->pixels) + (y * m_surface->pitch));
+#endif
+#ifdef SERENITY
+    unsigned pitch = sizeof(RGBA32) * width();
+    return reinterpret_cast<RGBA32*>(((byte*)m_data) + (y * pitch));
 #endif
 }
 

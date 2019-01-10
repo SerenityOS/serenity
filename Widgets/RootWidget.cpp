@@ -4,7 +4,6 @@
 #include "Painter.h"
 #include "WindowManager.h"
 #include "FrameBuffer.h"
-#include <cstdio>
 
 RootWidget::RootWidget()
 {

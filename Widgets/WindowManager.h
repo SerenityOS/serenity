@@ -34,6 +34,8 @@ public:
     void repaint();
     void move_to_front(Window&);
 
+    static void initialize();
+
 private:
     WindowManager();
     ~WindowManager();

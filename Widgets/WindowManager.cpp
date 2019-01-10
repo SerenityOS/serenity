@@ -47,10 +47,18 @@ static inline Rect outerRectForWindow(const Window& window)
     return rect;
 }
 
+static WindowManager* s_the_window_manager;
+
 WindowManager& WindowManager::the()
 {
-    static WindowManager* s_the = new WindowManager;
-    return *s_the;
+    if (!s_the_window_manager)
+        s_the_window_manager = new WindowManager;
+    return *s_the_window_manager;
+}
+
+void WindowManager::initialize()
+{
+    s_the_window_manager = nullptr;
 }
 
 WindowManager::WindowManager()

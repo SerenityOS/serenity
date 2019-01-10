@@ -1,6 +1,5 @@
 #include "Label.h"
 #include "Painter.h"
-#include <cstdio>
 
 Label::Label(Widget* parent)
     : Widget(parent)
@@ -15,7 +14,7 @@ void Label::setText(String&& text)
 {
     if (text == m_text)
         return;
-    m_text = std::move(text);
+    m_text = move(text);
     update();
 }
 

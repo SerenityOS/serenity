@@ -1,12 +1,19 @@
 #include "Font.h"
 #include "Peanut8x10.h"
 #include <AK/RetainPtr.h>
-#include <cstdio>
+
+static Font* s_default_font;
+
+void Font::initialize()
+{
+    s_default_font = nullptr;
+}
 
 Font& Font::defaultFont()
 {
-    static auto* f = adopt(*new Font(Peanut8x10::glyphs, Peanut8x10::glyphWidth, Peanut8x10::glyphHeight, Peanut8x10::firstGlyph, Peanut8x10::lastGlyph)).leakRef();
-    return *f;
+    if (!s_default_font)
+        s_default_font = adopt(*new Font(Peanut8x10::glyphs, Peanut8x10::glyphWidth, Peanut8x10::glyphHeight, Peanut8x10::firstGlyph, Peanut8x10::lastGlyph)).leakRef();
+    return *s_default_font;
 }
 
 Font::Font(const char* const* glyphs, byte glyphWidth, byte glyphHeight, byte firstGlyph, byte lastGlyph)
