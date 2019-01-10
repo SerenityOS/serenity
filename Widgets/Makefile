@@ -14,7 +14,7 @@ VFS_OBJS = \
     Object.o \
     Widget.o \
     RootWidget.o \
-    ColorSDL.o \
+    Color.o \
     Painter.o \
     Label.o \
     Button.o \
