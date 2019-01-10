@@ -1,5 +1,5 @@
 #include "FrameBuffer.h"
-#include "EventLoopSDL.h"
+#include "EventLoop.h"
 #include "RootWidget.h"
 #include "Label.h"
 #include "Button.h"
@@ -17,7 +17,7 @@ int main(int argc, char** argv)
     FrameBuffer fb(800, 600);
     fb.show();
 
-    EventLoopSDL loop;
+    EventLoop loop;
 
     RootWidget w;
     WindowManager::the().setRootWidget(&w);

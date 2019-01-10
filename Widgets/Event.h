@@ -135,7 +135,7 @@ public:
     String text() const { return m_text; }
 
 private:
-    friend class EventLoopSDL;
+    friend class EventLoop;
     int m_key { 0 };
     bool m_ctrl { false };
     bool m_alt { false };
