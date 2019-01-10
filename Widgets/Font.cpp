@@ -22,13 +22,13 @@ Font::~Font()
 {
 }
 
-const CBitmap* Font::glyphBitmap(byte ch) const
+const CharacterBitmap* Font::glyphBitmap(byte ch) const
 {
     if (!m_bitmaps[ch]) {
         if (ch < m_firstGlyph || ch > m_lastGlyph)
             return nullptr;
         const char* data = m_glyphs[(unsigned)ch - m_firstGlyph];
-        m_bitmaps[ch] = CBitmap::createFromASCII(data, m_glyphWidth, m_glyphHeight);
+        m_bitmaps[ch] = CharacterBitmap::createFromASCII(data, m_glyphWidth, m_glyphHeight);
     }
     ASSERT(ch >= m_firstGlyph && ch <= m_lastGlyph);
     return m_bitmaps[ch].ptr();

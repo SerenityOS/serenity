@@ -22,7 +22,7 @@ VFS_OBJS = \
     Font.o \
     Window.o \
     ClockWidget.o \
-    CBitmap.o \
+    CharacterBitmap.o \
     CheckBox.o \
     ListBox.o \
     TextBox.o \
