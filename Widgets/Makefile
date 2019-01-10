@@ -19,7 +19,6 @@ VFS_OBJS = \
     Painter.o \
     Label.o \
     Button.o \
-    TerminalWidget.o \
     WindowManager.o \
     Font.o \
     Window.o \

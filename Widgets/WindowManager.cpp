@@ -3,11 +3,8 @@
 #include "Widget.h"
 #include "Window.h"
 #include "AbstractScreen.h"
-#include "TerminalWidget.h"
 #include "EventLoop.h"
 #include "FrameBufferSDL.h"
-
-extern TerminalWidget* g_tw;
 
 static const int windowFrameWidth = 2;
 static const int windowTitleBarHeight = 16;
@@ -19,6 +16,17 @@ static inline Rect titleBarRectForWindow(const Window& window)
         window.y() - windowTitleBarHeight - windowFrameWidth,
         window.width() + windowFrameWidth * 2,
         windowTitleBarHeight + windowFrameWidth
+    };
+}
+
+static inline Rect titleBarTitleRectForWindow(const Window& window)
+{
+    auto titleBarRect = titleBarRectForWindow(window);
+    return {
+        titleBarRect.x() + windowFrameWidth,
+        titleBarRect.y(),
+        titleBarRect.width() - windowFrameWidth * 2,
+        titleBarRect.height()
     };
 }
 
@@ -65,6 +73,7 @@ void WindowManager::paintWindowFrame(Window& window)
     //printf("[WM] paintWindowFrame {%p}, rect: %d,%d %dx%d\n", &window, window.rect().x(), window.rect().y(), window.rect().width(), window.rect().height());
 
     auto titleBarRect = titleBarRectForWindow(window);
+    auto titleBarTitleRect = titleBarTitleRectForWindow(window);
     auto outerRect = outerRectForWindow(window);
     auto borderRect = borderRectForWindow(window);
 
@@ -111,7 +120,7 @@ void WindowManager::paintWindowFrame(Window& window)
     p.fillRect(leftRect, borderColor);
     p.fillRect(rightRect, borderColor);
 
-    p.drawText(titleBarRect, window.title(), Painter::TextAlignment::Center, titleColor);
+    p.drawText(titleBarTitleRect, window.title(), Painter::TextAlignment::CenterLeft, titleColor);
 }
 
 void WindowManager::addWindow(Window& window)

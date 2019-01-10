@@ -14,7 +14,7 @@ class Window;
 
 class Painter {
 public:
-    enum class TextAlignment { TopLeft, Center };
+    enum class TextAlignment { TopLeft, CenterLeft, Center };
     explicit Painter(Widget&);
     ~Painter();
     void fillRect(const Rect&, Color);
