@@ -1,27 +1,33 @@
 #pragma once
 
+#include "Event.h"
 #include <AK/OwnPtr.h>
 #include <AK/Vector.h>
 
-class Event;
+#ifdef USE_SDL
+#include <SDL.h>
+#endif
+
 class Object;
 
 class EventLoop {
 public:
-    virtual ~EventLoop();
+    EventLoop();
+    ~EventLoop();
 
     int exec();
-
-    virtual void waitForEvent() = 0;
 
     void postEvent(Object* receiver, OwnPtr<Event>&&);
 
     static EventLoop& main();
 
-protected:
-    EventLoop();
-
 private:
+    void waitForEvent();
+
+#ifdef USE_SDL
+    void handleKeyEvent(Event::Type, const SDL_KeyboardEvent&);
+#endif
+
     struct QueuedEvent {
         Object* receiver { nullptr };
         OwnPtr<Event> event;

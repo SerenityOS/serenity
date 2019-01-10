@@ -10,7 +10,6 @@ VFS_OBJS = \
     AbstractScreen.o \
     FrameBuffer.o \
     EventLoop.o \
-    EventLoopSDL.o \
     Rect.o \
     Object.o \
     Widget.o \
