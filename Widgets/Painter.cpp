@@ -150,14 +150,14 @@ void Painter::drawLine(const Point& p1, const Point& p2, Color color)
         if (x < m_clipRect.left() || x >= m_clipRect.right())
             return;
         if (point1.y() > point2.y())
-            std::swap(point1, point2);
+            swap(point1, point2);
         for (int y = max(point1.y(), m_clipRect.top()); y <= min(point2.y(), m_clipRect.bottom()); ++y)
             m_target->scanline(y)[x] = color.value();
         return;
     }
 
     if (point1.x() > point2.x())
-        std::swap(point1, point2);
+        swap(point1, point2);
 
     // Special case: horizontal line.
     if (point1.y() == point2.y()) {
@@ -165,7 +165,7 @@ void Painter::drawLine(const Point& p1, const Point& p2, Color color)
         if (y < m_clipRect.top() || y >= m_clipRect.bottom())
             return;
         if (point1.x() > point2.x())
-            std::swap(point1, point2);
+            swap(point1, point2);
         auto* pixels = m_target->scanline(point1.y());
         for (int x = max(point1.x(), m_clipRect.left()); x <= min(point2.x(), m_clipRect.right()); ++x)
             pixels[x] = color.value();
@@ -175,6 +175,7 @@ void Painter::drawLine(const Point& p1, const Point& p2, Color color)
     // FIXME: Implement clipping below.
     ASSERT_NOT_REACHED();
 
+#if 0
     const double dx = point2.x() - point1.x();
     const double dy = point2.y() - point1.y();
     const double deltaError = fabs(dy / dx);
@@ -190,6 +191,7 @@ void Painter::drawLine(const Point& p1, const Point& p2, Color color)
             error -= 1.0;
         }
     }
+#endif
 }
 
 void Painter::drawFocusRect(const Rect& rect)
