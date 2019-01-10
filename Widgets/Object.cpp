@@ -72,7 +72,7 @@ void Object::startTimer(int ms)
         printf("Object{%p} already has a timer!\n", this);
         ASSERT_NOT_REACHED();
     }
-#if USE_SDL
+#ifdef USE_SDL
     m_timerID = SDL_AddTimer(ms, sdlTimerCallback, this);
 #endif
 }

@@ -4,7 +4,7 @@
 #include "Window.h"
 #include "AbstractScreen.h"
 #include "EventLoop.h"
-#include "FrameBufferSDL.h"
+#include "FrameBuffer.h"
 
 static const int windowFrameWidth = 2;
 static const int windowTitleBarHeight = 16;
@@ -144,7 +144,7 @@ void WindowManager::repaint()
 
 void WindowManager::did_paint(Window& window)
 {
-    auto& framebuffer = FrameBufferSDL::the();
+    auto& framebuffer = FrameBuffer::the();
     if (m_windows_in_order.tail() == &window) {
         ASSERT(window.backing());
         framebuffer.blit(window.position(), *window.backing());
@@ -214,7 +214,7 @@ void WindowManager::processMouseEvent(MouseEvent& event)
             pos.moveBy(event.x() - m_dragOrigin.x(), event.y() - m_dragOrigin.y());
             m_dragWindow->setPositionWithoutRepaint(pos);
             paintWindowFrame(*m_dragWindow);
-            FrameBufferSDL::the().flush();
+            FrameBuffer::the().flush();
             return;
         }
     }
@@ -261,7 +261,7 @@ void WindowManager::handlePaintEvent(PaintEvent& event)
 void WindowManager::recompose()
 {
     printf("[WM] recompose_count: %u\n", ++m_recompose_count);
-    auto& framebuffer = FrameBufferSDL::the();
+    auto& framebuffer = FrameBuffer::the();
     PaintEvent dummy_event(m_rootWidget->rect());
     m_rootWidget->paintEvent(dummy_event);
     for (auto* window = m_windows_in_order.head(); window; window = window->next()) {

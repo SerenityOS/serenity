@@ -1,37 +1,41 @@
-#include "FrameBufferSDL.h"
+#include "FrameBuffer.h"
 #include "GraphicsBitmap.h"
 #include <AK/Assertions.h>
 
-FrameBufferSDL* s_the = nullptr;
+FrameBuffer* s_the = nullptr;
 
-FrameBufferSDL& FrameBufferSDL::the()
+FrameBuffer& FrameBuffer::the()
 {
     ASSERT(s_the);
     return *s_the;
 }
 
-FrameBufferSDL::FrameBufferSDL(unsigned width, unsigned height)
+FrameBuffer::FrameBuffer(unsigned width, unsigned height)
     : AbstractScreen(width, height)
 {
     ASSERT(!s_the);
     s_the = this;
+#ifdef USE_SDL
     initializeSDL();
+#endif
 }
 
-FrameBufferSDL::~FrameBufferSDL()
+FrameBuffer::~FrameBuffer()
 {
+#ifdef USE_SDL
     SDL_DestroyWindow(m_window);
     m_surface = nullptr;
     m_window = nullptr;
-
     SDL_Quit();
+#endif
 }
 
-void FrameBufferSDL::show()
+void FrameBuffer::show()
 {
 }
 
-void FrameBufferSDL::initializeSDL()
+#ifdef USE_SDL
+void FrameBuffer::initializeSDL()
 {
     if (m_window)
         return;
@@ -57,13 +61,16 @@ void FrameBufferSDL::initializeSDL()
 
     SDL_UpdateWindowSurface(m_window);
 }
+#endif
 
-dword* FrameBufferSDL::scanline(int y)
+dword* FrameBuffer::scanline(int y)
 {
+#ifdef USE_SDL
     return (dword*)(((byte*)m_surface->pixels) + (y * m_surface->pitch));
+#endif
 }
 
-void FrameBufferSDL::blit(const Point& position, GraphicsBitmap& bitmap)
+void FrameBuffer::blit(const Point& position, GraphicsBitmap& bitmap)
 {
     Rect dst_rect(position, bitmap.size());
     //printf("blit at %d,%d %dx%d\n", dst_rect.x(), dst_rect.y(), dst_rect.width(), dst_rect.height());
@@ -77,7 +84,9 @@ void FrameBufferSDL::blit(const Point& position, GraphicsBitmap& bitmap)
     }
 }
 
-void FrameBufferSDL::flush()
+void FrameBuffer::flush()
 {
+#ifdef USE_SDL
     SDL_UpdateWindowSurface(m_window);
+#endif
 }
