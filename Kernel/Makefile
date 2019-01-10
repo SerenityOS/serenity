@@ -43,7 +43,22 @@ VFS_OBJS = \
 
 WIDGETS_OBJS = \
     ../Widgets/Window.o \
-    ../Widgets/Painter.o
+    ../Widgets/Painter.o \
+    ../Widgets/WindowManager.o \
+    ../Widgets/FrameBuffer.o \
+    ../Widgets/GraphicsBitmap.o \
+    ../Widgets/Object.o \
+    ../Widgets/Rect.o \
+    ../Widgets/Widget.o \
+    ../Widgets/Font.o \
+    ../Widgets/Color.o \
+    ../Widgets/CharacterBitmap.o \
+    ../Widgets/EventLoop.o \
+    ../Widgets/RootWidget.o \
+    ../Widgets/Label.o \
+    ../Widgets/Button.o \
+    ../Widgets/MsgBox.o \
+    ../Widgets/AbstractScreen.o
 
 AK_OBJS = \
     ../AK/String.o \

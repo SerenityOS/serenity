@@ -47,7 +47,7 @@ void MsgBox(Window* owner, String&& text)
         textWidth,
         textHeight
     });
-    label->setText(std::move(text));
+    label->setText(move(text));
     auto* button = new Button(widget);
     button->setCaption("OK");
     button->setWindowRelativeRect(buttonRect);

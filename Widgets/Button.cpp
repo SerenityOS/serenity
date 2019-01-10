@@ -1,6 +1,5 @@
 #include "Button.h"
 #include "Painter.h"
-#include <cstdio>
 
 Button::Button(Widget* parent)
     : Widget(parent)
@@ -15,7 +14,7 @@ void Button::setCaption(String&& caption)
 {
     if (caption == m_caption)
         return;
-    m_caption = std::move(caption);
+    m_caption = move(caption);
     update();
 }
 

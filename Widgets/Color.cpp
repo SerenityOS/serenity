@@ -6,7 +6,7 @@ Color::Color(byte r, byte g, byte b)
 #ifdef USE_SDL
     m_value = SDL_MapRGB(FrameBuffer::the().surface()->format, r, g, b);
 #else
-#error FIXME: Implement
+    m_value = (r << 16) | (g << 8) | b;
 #endif
 }
 
@@ -33,6 +33,6 @@ Color::Color(NamedColor named)
 #ifdef USE_SDL
     m_value = SDL_MapRGB(FrameBuffer::the().surface()->format, rgb.r, rgb.g, rgb.g);
 #else
-#error FIXME: Implement
+    m_value = (rgb.r << 16) | (rgb.g << 8) | rgb.b;
 #endif
 }

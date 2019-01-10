@@ -12,6 +12,7 @@ class GraphicsBitmap;
 class FrameBuffer final : public AbstractScreen {
 public:
     FrameBuffer(unsigned width, unsigned height);
+    FrameBuffer(RGBA32*, unsigned width, unsigned height);
     virtual ~FrameBuffer() override;
 
     void show();
@@ -27,11 +28,16 @@ public:
     void blit(const Point&, GraphicsBitmap&);
     void flush();
 
+    static void initialize();
+
 private:
 #ifdef USE_SDL
     void initializeSDL();
     SDL_Window* m_window { nullptr };
     SDL_Surface* m_surface { nullptr };
+#endif
+#ifdef SERENITY
+    RGBA32* m_data { nullptr };
 #endif
 };
 

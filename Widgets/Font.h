@@ -16,6 +16,8 @@ public:
     byte glyphWidth() const { return m_glyphWidth; }
     byte glyphHeight() const { return m_glyphHeight; }
 
+    static void initialize();
+
 private:
     Font(const char* const* glyphs, byte glyphWidth, byte glyphHeight, byte firstGlyph, byte lastGlyph);
 

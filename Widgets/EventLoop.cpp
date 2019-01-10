@@ -5,6 +5,11 @@
 
 static EventLoop* s_mainEventLoop;
 
+void EventLoop::initialize()
+{
+    s_mainEventLoop = nullptr;
+}
+
 EventLoop::EventLoop()
 {
     if (!s_mainEventLoop)
@@ -26,7 +31,7 @@ int EventLoop::exec()
     for (;;) {
         if (m_queuedEvents.is_empty())
             waitForEvent();
-        auto events = std::move(m_queuedEvents);
+        auto events = move(m_queuedEvents);
         for (auto& queuedEvent : events) {
             auto* receiver = queuedEvent.receiver;
             auto& event = *queuedEvent.event;
@@ -48,8 +53,15 @@ int EventLoop::exec()
 
 void EventLoop::postEvent(Object* receiver, OwnPtr<Event>&& event)
 {
-    m_queuedEvents.append({ receiver, std::move(event) });
+    printf("EventLoop::postEvent: {%u} << receiver=%p, event=%p\n", m_queuedEvents.size(), receiver, event.ptr());
+    m_queuedEvents.append({ receiver, move(event) });
 }
+
+#ifdef SERENITY
+void EventLoop::waitForEvent()
+{
+}
+#endif
 
 #ifdef USE_SDL
 static inline MouseButton toMouseButton(byte sdlButton)
@@ -119,7 +131,7 @@ void EventLoop::handleKeyEvent(Event::Type type, const SDL_KeyboardEvent& sdlKey
     keyEvent->m_ctrl = sdlKey.keysym.mod & KMOD_CTRL;
     keyEvent->m_alt = sdlKey.keysym.mod & KMOD_ALT;
 
-    postEvent(&WindowManager::the(), std::move(keyEvent));
+    postEvent(&WindowManager::the(), move(keyEvent));
 }
 
 void EventLoop::waitForEvent()

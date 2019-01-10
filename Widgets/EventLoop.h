@@ -21,6 +21,8 @@ public:
 
     static EventLoop& main();
 
+    static void initialize();
+
 private:
     void waitForEvent();
 

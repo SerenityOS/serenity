@@ -18,7 +18,7 @@ Object::~Object()
 {
     if (m_parent)
         m_parent->removeChild(*this);
-    auto childrenToDelete = std::move(m_children);
+    auto childrenToDelete = move(m_children);
     for (auto* child : childrenToDelete)
         delete child;
 }
@@ -81,7 +81,9 @@ void Object::stopTimer()
 {
     if (!m_timerID)
         return;
+#ifdef USE_SDL
     SDL_RemoveTimer(m_timerID);
+#endif
     m_timerID = 0;
 }
 
