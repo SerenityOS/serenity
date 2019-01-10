@@ -1,6 +1,6 @@
 #include "CheckBox.h"
 #include "Painter.h"
-#include "CBitmap.h"
+#include "CharacterBitmap.h"
 #include <cstdio>
 
 CheckBox::CheckBox(Widget* parent)
@@ -76,7 +76,7 @@ static const char* checkedBitmap = {
 void CheckBox::paintEvent(PaintEvent&)
 {
     Painter painter(*this);
-    auto bitmap = CBitmap::createFromASCII(isChecked() ? checkedBitmap : uncheckedBitmap, 11, 11);
+    auto bitmap = CharacterBitmap::createFromASCII(isChecked() ? checkedBitmap : uncheckedBitmap, 11, 11);
 
     auto textRect = rect();
     textRect.setLeft(bitmap->width() + 4);

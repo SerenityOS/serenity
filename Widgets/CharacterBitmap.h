@@ -4,10 +4,10 @@
 #include <AK/Retainable.h>
 #include <AK/RetainPtr.h>
 
-class CBitmap : public Retainable<CBitmap> {
+class CharacterBitmap : public Retainable<CharacterBitmap> {
 public:
-    static RetainPtr<CBitmap> createFromASCII(const char* asciiData, unsigned width, unsigned height);
-    ~CBitmap();
+    static RetainPtr<CharacterBitmap> createFromASCII(const char* asciiData, unsigned width, unsigned height);
+    ~CharacterBitmap();
 
     const char* bits() const { return m_bits; }
 
@@ -16,7 +16,7 @@ public:
     unsigned height() const { return m_size.height(); }
 
 private:
-    CBitmap(const char* b, unsigned w, unsigned h);
+    CharacterBitmap(const char* b, unsigned w, unsigned h);
 
     const char* m_bits { nullptr };
     Size m_size;

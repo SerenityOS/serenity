@@ -1,7 +1,7 @@
 #include "TextBox.h"
 #include "Painter.h"
 #include "Font.h"
-#include "CBitmap.h"
+#include "CharacterBitmap.h"
 #include <AK/StdLibExtras.h>
 
 TextBox::TextBox(Widget* parent)

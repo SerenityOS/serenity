@@ -75,7 +75,7 @@ void Painter::xorRect(const Rect& rect, Color color)
     }
 }
 
-void Painter::drawBitmap(const Point& p, const CBitmap& bitmap, Color color)
+void Painter::drawBitmap(const Point& p, const CharacterBitmap& bitmap, Color color)
 {
     Point point = p;
     point.moveBy(m_translation);
