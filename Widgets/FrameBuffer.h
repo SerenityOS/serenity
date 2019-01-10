@@ -1,21 +1,25 @@
 #pragma once
 
 #include "AbstractScreen.h"
+
+#ifdef USE_SDL
 #include <SDL.h>
+#endif
 
 class GraphicsBitmap;
 
-class FrameBufferSDL final : public AbstractScreen {
+class FrameBuffer final : public AbstractScreen {
 public:
-    FrameBufferSDL(unsigned width, unsigned height);
-    virtual ~FrameBufferSDL() override;
+    FrameBuffer(unsigned width, unsigned height);
+    virtual ~FrameBuffer() override;
 
     void show();
 
+#ifdef USE_SDL
     SDL_Surface* surface() { return m_surface; }
-    SDL_Window* window() { return m_window; }
+#endif
 
-    static FrameBufferSDL& the();
+    static FrameBuffer& the();
 
     dword* scanline(int y);
 
@@ -23,9 +27,10 @@ public:
     void flush();
 
 private:
+#ifdef USE_SDL
     void initializeSDL();
-
     SDL_Window* m_window { nullptr };
     SDL_Surface* m_surface { nullptr };
+#endif
 };
 

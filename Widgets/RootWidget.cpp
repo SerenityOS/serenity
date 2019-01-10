@@ -3,13 +3,13 @@
 #include "RootWidget.h"
 #include "Painter.h"
 #include "WindowManager.h"
-#include "FrameBufferSDL.h"
+#include "FrameBuffer.h"
 #include <cstdio>
 
 RootWidget::RootWidget()
 {
-    setWindowRelativeRect(FrameBufferSDL::the().rect());
-    m_backing = GraphicsBitmap::create_wrapper(size(), (byte*)FrameBufferSDL::the().scanline(0));
+    setWindowRelativeRect(FrameBuffer::the().rect());
+    m_backing = GraphicsBitmap::create_wrapper(size(), (byte*)FrameBuffer::the().scanline(0));
 }
 
 RootWidget::~RootWidget()

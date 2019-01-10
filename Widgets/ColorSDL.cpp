@@ -1,9 +1,13 @@
 #include "Color.h"
-#include "FrameBufferSDL.h"
+#include "FrameBuffer.h"
 
 Color::Color(byte r, byte g, byte b)
 {
-    m_value = SDL_MapRGB(FrameBufferSDL::the().surface()->format, r, g, b);
+#ifdef USE_SDL
+    m_value = SDL_MapRGB(FrameBuffer::the().surface()->format, r, g, b);
+#else
+#error FIXME: Implement
+#endif
 }
 
 Color::Color(NamedColor named)
@@ -26,6 +30,9 @@ Color::Color(NamedColor named)
     default: ASSERT_NOT_REACHED(); break;
     }
 
-    m_value = SDL_MapRGB(FrameBufferSDL::the().surface()->format, rgb.r, rgb.g, rgb.g);
-
+#ifdef USE_SDL
+    m_value = SDL_MapRGB(FrameBuffer::the().surface()->format, rgb.r, rgb.g, rgb.g);
+#else
+#error FIXME: Implement
+#endif
 }

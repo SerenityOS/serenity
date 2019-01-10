@@ -1,4 +1,4 @@
-#include "FrameBufferSDL.h"
+#include "FrameBuffer.h"
 #include "EventLoopSDL.h"
 #include "RootWidget.h"
 #include "Label.h"
@@ -14,7 +14,7 @@
 
 int main(int argc, char** argv)
 {
-    FrameBufferSDL fb(800, 600);
+    FrameBuffer fb(800, 600);
     fb.show();
 
     EventLoopSDL loop;

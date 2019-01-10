@@ -8,7 +8,7 @@ AK_OBJS = \
 
 VFS_OBJS = \
     AbstractScreen.o \
-    FrameBufferSDL.o \
+    FrameBuffer.o \
     EventLoop.o \
     EventLoopSDL.o \
     Rect.o \

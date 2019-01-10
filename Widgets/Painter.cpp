@@ -1,11 +1,10 @@
 #include "Painter.h"
-#include "FrameBufferSDL.h"
+#include "FrameBuffer.h"
 #include "Widget.h"
 #include "Font.h"
 #include "Window.h"
 #include <AK/Assertions.h>
 #include <AK/StdLibExtras.h>
-#include <SDL.h>
 
 Painter::Painter(Widget& widget)
     : m_widget(widget)
