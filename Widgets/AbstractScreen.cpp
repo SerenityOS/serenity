@@ -6,6 +6,11 @@
 
 static AbstractScreen* s_the;
 
+void AbstractScreen::initialize()
+{
+    s_the = nullptr;
+}
+
 AbstractScreen& AbstractScreen::the()
 {
     ASSERT(s_the);

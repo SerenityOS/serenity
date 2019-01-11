@@ -13,6 +13,7 @@ void WindowComposer_main()
     FrameBuffer::initialize();
     EventLoop::initialize();
     WindowManager::initialize();
+    AbstractScreen::initialize();
 
     auto info = current->get_display_info();
 
