@@ -29,6 +29,7 @@ AbstractScreen::AbstractScreen(unsigned width, unsigned height)
     m_cursor_location = rect().center();
 
     PS2MouseDevice::the().set_client(this);
+    Keyboard::the().set_client(this);
 }
 
 AbstractScreen::~AbstractScreen()
@@ -61,4 +62,58 @@ void AbstractScreen::did_receive_mouse_data(int dx, int dy, bool left_button, bo
     }
     if (m_cursor_location != prev_location)
         WindowManager::the().redraw_cursor();
+}
+
+void AbstractScreen::on_key_pressed(Keyboard::Key key)
+{
+    auto event = make<KeyEvent>(Event::KeyDown, 0);
+    int key_code = 0;
+
+    switch (key.character) {
+    case 8: key_code = KeyboardKey::Backspace; break;
+    case 10: key_code = KeyboardKey::Return; break;
+    }
+    event->m_key = key_code;
+
+    if (key.character) {
+        char buf[] = { 0, 0 };
+        char& ch = buf[0];
+        ch = key.character;
+        if (key.shift()) {
+            if (ch >= 'a' && ch <= 'z') {
+                ch &= ~0x20;
+            } else {
+                switch (ch) {
+                case '1': ch = '!'; break;
+                case '2': ch = '@'; break;
+                case '3': ch = '#'; break;
+                case '4': ch = '$'; break;
+                case '5': ch = '%'; break;
+                case '6': ch = '^'; break;
+                case '7': ch = '&'; break;
+                case '8': ch = '*'; break;
+                case '9': ch = '('; break;
+                case '0': ch = ')'; break;
+                case '-': ch = '_'; break;
+                case '=': ch = '+'; break;
+                case '`': ch = '~'; break;
+                case ',': ch = '<'; break;
+                case '.': ch = '>'; break;
+                case '/': ch = '?'; break;
+                case '[': ch = '{'; break;
+                case ']': ch = '}'; break;
+                case '\\': ch = '|'; break;
+                case '\'': ch = '"'; break;
+                case ';': ch = ':'; break;
+                }
+            }
+        }
+        event->m_text = buf;
+    }
+
+    event->m_shift = key.shift();
+    event->m_ctrl = key.ctrl();
+    event->m_alt = key.alt();
+
+    EventLoop::main().postEvent(&WindowManager::the(), move(event));
 }

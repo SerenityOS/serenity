@@ -3,9 +3,10 @@
 #include "Object.h"
 #include "Rect.h"
 #include "Size.h"
+#include "Keyboard.h"
 #include "PS2MouseDevice.h"
 
-class AbstractScreen : public Object, public MouseClient {
+class AbstractScreen : public Object, public KeyboardClient, public MouseClient {
 public:
     virtual ~AbstractScreen();
 
@@ -29,6 +30,9 @@ protected:
 private:
     // ^MouseClient
     virtual void did_receive_mouse_data(int dx, int dy, bool left_button, bool right_button) final;
+
+    // ^KeyboardClient
+    virtual void on_key_pressed(Keyboard::Key) final;
 
     int m_width { 0 };
     int m_height { 0 };

@@ -136,6 +136,7 @@ public:
 
 private:
     friend class EventLoop;
+    friend class AbstractScreen;
     int m_key { 0 };
     bool m_ctrl { false };
     bool m_alt { false };

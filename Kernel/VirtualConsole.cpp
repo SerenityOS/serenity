@@ -108,7 +108,9 @@ void VirtualConsole::set_active(bool b)
     set_vga_start_row(0);
     flush_vga_cursor();
 
+#if 0
     Keyboard::the().set_client(this);
+#endif
 }
 
 inline bool is_valid_parameter_character(byte ch)
