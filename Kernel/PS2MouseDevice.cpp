@@ -14,15 +14,24 @@ PS2MouseDevice::~PS2MouseDevice()
 
 void PS2MouseDevice::handle_irq()
 {
-    m_data[m_data_state] = IO::in8(0x60);
+    byte data = IO::in8(0x60);
+    m_data[m_data_state] = data;
     switch (m_data_state) {
     case 0:
+        ASSERT(data & 0x08);
+        ++m_data_state;
+        break;
     case 1:
         ++m_data_state;
         break;
     case 2:
         m_data_state = 0;
-        dbgprintf("PS2Mouse: %d, %d\n", m_data[1], m_data[2]);
+        dbgprintf("PS2Mouse: %d, %d %s %s\n",
+            m_data[1],
+            m_data[2],
+            (m_data[0] & 1) ? "Left" : "",
+            (m_data[0] & 2) ? "Right" : ""
+        );
         break;
     }
 }
