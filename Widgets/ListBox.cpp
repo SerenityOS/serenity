@@ -60,7 +60,7 @@ void ListBox::mouseDownEvent(MouseEvent& event)
 
 void ListBox::addItem(String&& item)
 {
-    m_items.append(std::move(item));
+    m_items.append(move(item));
     if (m_selectedIndex == -1)
         m_selectedIndex = 0;
 }

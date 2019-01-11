@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Widget.h"
-#include <functional>
+#include <AK/Function.h>
 
 class TextBox final : public Widget {
 public:
@@ -11,7 +11,7 @@ public:
     String text() const { return m_text; }
     void setText(String&&);
 
-    std::function<void(TextBox&)> onReturnPressed;
+    Function<void(TextBox&)> onReturnPressed;
 
 private:
     virtual void paintEvent(PaintEvent&) override;

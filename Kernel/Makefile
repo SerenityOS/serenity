@@ -59,6 +59,9 @@ WIDGETS_OBJS = \
     ../Widgets/Label.o \
     ../Widgets/Button.o \
     ../Widgets/MsgBox.o \
+    ../Widgets/ListBox.o \
+    ../Widgets/CheckBox.o \
+    ../Widgets/TextBox.o \
     ../Widgets/AbstractScreen.o
 
 AK_OBJS = \
