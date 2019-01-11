@@ -25,6 +25,7 @@ KERNEL_OBJS = \
        ELFImage.o \
        ELFLoader.o \
        KSyms.o \
+       PS2MouseDevice.o \
        WindowComposer.o
 
 VFS_OBJS = \
