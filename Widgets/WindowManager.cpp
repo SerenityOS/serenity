@@ -281,6 +281,24 @@ void WindowManager::recompose()
         framebuffer.blit(window->position(), *window->backing());
     }
     framebuffer.flush();
+    m_last_drawn_cursor_location = { -1, -1 };
+    redraw_cursor();
+}
+
+void WindowManager::redraw_cursor()
+{
+    auto cursor_location = AbstractScreen::the().cursor_location();
+    Painter painter(*m_rootWidget);
+    painter.set_draw_op(Painter::DrawOp::Xor);
+    auto draw_cross = [&painter] (const Point& p) {
+        painter.drawLine({ p.x() - 10, p.y() }, { p.x() + 10, p.y() }, Color::Red);
+        painter.drawLine({ p.x(), p.y() - 10 }, { p.x(), p.y() + 10 }, Color::Red);
+    };
+    if (cursor_location != m_last_drawn_cursor_location && m_last_drawn_cursor_location.x() != -1)
+        draw_cross(m_last_drawn_cursor_location);
+    draw_cross(cursor_location);
+    m_last_drawn_cursor_location = cursor_location;
+    FrameBuffer::the().flush();
 }
 
 void WindowManager::event(Event& event)
@@ -329,4 +347,3 @@ bool WindowManager::isVisible(Window& window) const
 {
     return m_windows.contains(&window);
 }
-

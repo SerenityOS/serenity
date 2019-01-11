@@ -1,15 +1,23 @@
 #include "PS2MouseDevice.h"
 #include "IO.h"
 
+static PS2MouseDevice* s_the;
+
 PS2MouseDevice::PS2MouseDevice()
     : IRQHandler(12)
     , CharacterDevice(10, 1)
 {
+    s_the = this;
     initialize();
 }
 
 PS2MouseDevice::~PS2MouseDevice()
 {
+}
+
+PS2MouseDevice& PS2MouseDevice::the()
+{
+    return *s_the;
 }
 
 void PS2MouseDevice::handle_irq()
@@ -32,6 +40,8 @@ void PS2MouseDevice::handle_irq()
             (m_data[0] & 1) ? "Left" : "",
             (m_data[0] & 2) ? "Right" : ""
         );
+        if (m_client)
+            m_client->did_receive_mouse_data(m_data[1], -m_data[2], m_data[0] & 1, m_data[0] & 2);
         break;
     }
 }
@@ -119,4 +129,8 @@ ssize_t PS2MouseDevice::write(const byte *buffer, size_t buffer_size)
 {
     ASSERT_NOT_REACHED();
     return 0;
+}
+
+MouseClient::~MouseClient()
+{
 }
