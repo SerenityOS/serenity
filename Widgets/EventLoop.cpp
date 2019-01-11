@@ -53,7 +53,7 @@ int EventLoop::exec()
 
 void EventLoop::postEvent(Object* receiver, OwnPtr<Event>&& event)
 {
-    printf("EventLoop::postEvent: {%u} << receiver=%p, event=%p\n", m_queuedEvents.size(), receiver, event.ptr());
+    //printf("EventLoop::postEvent: {%u} << receiver=%p, event=%p\n", m_queuedEvents.size(), receiver, event.ptr());
     m_queuedEvents.append({ receiver, move(event) });
 }
 

@@ -30,11 +30,18 @@ public:
 
     const Font& font() const { return *m_font; }
 
+    enum class DrawOp { Copy, Xor };
+    void set_draw_op(DrawOp op) { m_draw_op = op; }
+    DrawOp draw_op() const { return m_draw_op; }
+
 private:
+    void set_pixel_with_draw_op(dword& pixel, const Color&);
+
     Widget& m_widget;
     const Font* m_font;
     Point m_translation;
     Rect m_clipRect;
     RetainPtr<GraphicsBitmap> m_target;
     Window* m_window { nullptr };
+    DrawOp m_draw_op { DrawOp::Copy };
 };

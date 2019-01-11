@@ -136,6 +136,14 @@ void Painter::drawPixel(const Point& p, Color color)
     m_target->scanline(point.y())[point.x()] = color.value();
 }
 
+void Painter::set_pixel_with_draw_op(dword& pixel, const Color& color)
+{
+    if (m_draw_op == DrawOp::Copy)
+        pixel = color.value();
+    else if (m_draw_op == DrawOp::Xor)
+        pixel ^= color.value();
+}
+
 void Painter::drawLine(const Point& p1, const Point& p2, Color color)
 {
     auto point1 = p1;
@@ -152,7 +160,7 @@ void Painter::drawLine(const Point& p1, const Point& p2, Color color)
         if (point1.y() > point2.y())
             swap(point1, point2);
         for (int y = max(point1.y(), m_clipRect.top()); y <= min(point2.y(), m_clipRect.bottom()); ++y)
-            m_target->scanline(y)[x] = color.value();
+            set_pixel_with_draw_op(m_target->scanline(y)[x], color);
         return;
     }
 
@@ -168,7 +176,7 @@ void Painter::drawLine(const Point& p1, const Point& p2, Color color)
             swap(point1, point2);
         auto* pixels = m_target->scanline(point1.y());
         for (int x = max(point1.x(), m_clipRect.left()); x <= min(point2.x(), m_clipRect.right()); ++x)
-            pixels[x] = color.value();
+            set_pixel_with_draw_op(pixels[x], color);
         return;
     }
 

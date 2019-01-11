@@ -36,6 +36,8 @@ public:
 
     static void initialize();
 
+    void redraw_cursor();
+
 private:
     WindowManager();
     ~WindowManager();
@@ -67,6 +69,8 @@ private:
     Rect m_lastDragRect;
     Rect m_dragStartRect;
     Rect m_dragEndRect;
+
+    Point m_last_drawn_cursor_location;
 
     unsigned m_recompose_count { 0 };
     unsigned m_frontmost_only_compose_count { 0 };
