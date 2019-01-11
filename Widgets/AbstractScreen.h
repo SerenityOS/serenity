@@ -16,6 +16,8 @@ public:
     Size size() const { return { width(), height() }; }
     Rect rect() const { return { 0, 0, width(), height() }; }
 
+    static void initialize();
+
 protected:
     AbstractScreen(unsigned width, unsigned height);
 
