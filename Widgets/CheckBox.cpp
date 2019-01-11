@@ -1,7 +1,6 @@
 #include "CheckBox.h"
 #include "Painter.h"
 #include "CharacterBitmap.h"
-#include <cstdio>
 
 CheckBox::CheckBox(Widget* parent)
     : Widget(parent)
@@ -16,7 +15,7 @@ void CheckBox::setCaption(String&& caption)
 {
     if (caption == m_caption)
         return;
-    m_caption = std::move(caption);
+    m_caption = move(caption);
     update();
 }
 

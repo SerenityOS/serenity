@@ -16,7 +16,7 @@ TextBox::~TextBox()
 
 void TextBox::setText(String&& text)
 {
-    m_text = std::move(text);
+    m_text = move(text);
     m_cursorPosition = m_text.length();
     update();
 }
@@ -83,7 +83,7 @@ void TextBox::handleBackspace()
     memcpy(buffer, m_text.characters(), m_cursorPosition - 1);
     memcpy(buffer + m_cursorPosition - 1, m_text.characters() + m_cursorPosition, m_text.length() - (m_cursorPosition - 1));
 
-    m_text = std::move(newText);
+    m_text = move(newText);
     --m_cursorPosition;
     update();
 }
@@ -121,7 +121,7 @@ void TextBox::keyDownEvent(KeyEvent& event)
         buffer[m_cursorPosition] = event.text()[0];
         memcpy(buffer + m_cursorPosition + 1, m_text.characters() + m_cursorPosition, m_text.length() - m_cursorPosition);
 
-        m_text = std::move(newText);
+        m_text = move(newText);
         ++m_cursorPosition;
         update();
         return;
