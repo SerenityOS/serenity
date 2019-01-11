@@ -20,6 +20,7 @@
 #include "RTC.h"
 #include "VirtualConsole.h"
 #include "Scheduler.h"
+#include "PS2MouseDevice.h"
 
 #define SPAWN_MULTIPLE_SHELLS
 //#define STRESS_TEST_SPAWNING
@@ -31,6 +32,7 @@ VirtualConsole* tty1;
 VirtualConsole* tty2;
 VirtualConsole* tty3;
 Keyboard* keyboard;
+PS2MouseDevice* ps2mouse;
 
 #ifdef STRESS_TEST_SPAWNING
 static void spawn_stress() NORETURN;
@@ -71,7 +73,7 @@ static void init_stage2()
     vfs->register_character_device(*dev_random);
 
     vfs->register_character_device(*keyboard);
-
+    vfs->register_character_device(*ps2mouse);
     vfs->register_character_device(*tty0);
     vfs->register_character_device(*tty1);
     vfs->register_character_device(*tty2);
@@ -125,6 +127,7 @@ void init()
     idt_init();
 
     keyboard = new Keyboard;
+    ps2mouse = new PS2MouseDevice;
 
     VirtualConsole::initialize();
     tty0 = new VirtualConsole(0, VirtualConsole::AdoptCurrentVGABuffer);
