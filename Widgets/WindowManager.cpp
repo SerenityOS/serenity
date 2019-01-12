@@ -223,6 +223,9 @@ void WindowManager::processMouseEvent(MouseEvent& event)
 void WindowManager::compose()
 {
     printf("[WM] compose #%u (%u rects)\n", ++m_recompose_count, m_invalidated_rects.size());
+
+    dbgprintf("kmalloc stats: alloc:%u free:%u eternal:%u\n", sum_alloc, sum_free, kmalloc_sum_eternal);
+
     auto any_window_contains_rect = [this] (const Rect& r) {
         for (auto* window = m_windows_in_order.head(); window; window = window->next()) {
             if (outerRectForWindow(window->rect()).contains(r))
@@ -235,7 +238,7 @@ void WindowManager::compose()
         for (auto& r : m_invalidated_rects) {
             if (any_window_contains_rect(r))
                 continue;
-            dbgprintf("Repaint root %d,%d %dx%d\n", r.x(), r.y(), r.width(), r.height());
+            //dbgprintf("Repaint root %d,%d %dx%d\n", r.x(), r.y(), r.width(), r.height());
             painter.fillRect(r, Color(0, 72, 96));
         }
     }
@@ -249,7 +252,7 @@ void WindowManager::compose()
     for (auto& r : m_invalidated_rects) {
         flush(r);
     }
-    m_invalidated_rects.clear();
+    m_invalidated_rects.clear_with_capacity();
 }
 
 void WindowManager::redraw_cursor()
@@ -311,7 +314,7 @@ bool WindowManager::isVisible(Window& window) const
 
 void WindowManager::invalidate()
 {
-    m_invalidated_rects.clear();
+    m_invalidated_rects.clear_with_capacity();
     m_invalidated_rects.append(AbstractScreen::the().rect());
 }
 
