@@ -18,12 +18,17 @@ void strcpy(char* dest, const char *src)
     while ((*dest++ = *src++) != '\0');
 }
 
-void* memset(void* dest, byte c, dword n)
+void* memset(void* dest_ptr, byte c, dword n)
 {
-    byte *bdest = (byte *)dest;
-    for (; n; --n)
-        *(bdest++) = c;
-    return dest;
+    dword dest = (dword)dest_ptr;
+    asm volatile(
+        "cld\n"
+        "rep stosb\n"
+        : "=D" (dest), "=c" (n)
+        : "0" (dest), "1" (n), "a" (c)
+        : "cc", "memory"
+    );
+    return dest_ptr;
 }
 
 char* strrchr(const char* str, int ch)
