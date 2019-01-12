@@ -17,6 +17,7 @@ public:
     Size size() const { return m_size; }
     int width() const { return m_size.width(); }
     int height() const { return m_size.height(); }
+    size_t pitch() const { return m_pitch; }
 
 private:
     explicit GraphicsBitmap(const Size&);

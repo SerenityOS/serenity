@@ -7,36 +7,6 @@
 
 #define DEBUG_WIDGET_UNDERDRAW
 
-ALWAYS_INLINE void fast_dword_copy(dword* dest, const dword* src, size_t count)
-{
-#ifdef SERENITY
-    asm volatile(
-        "rep movsl\n"
-        : "=S"(src), "=D"(dest)
-        : "S"(src), "D"(dest), "c"(count)
-        : "memory"
-    );
-#else
-    memcpy(dest, src, count * sizeof(dword));
-#endif
-}
-
-ALWAYS_INLINE void fast_dword_fill(dword* dest, dword value, size_t count)
-{
-#ifdef SERENITY
-    asm volatile(
-        "rep stosl\n"
-        : "=D"(dest)
-        : "D"(dest), "c"(count), "a"(value)
-        : "memory"
-    );
-#else
-    for (size_t i = 0; x <= count; ++x) {
-        dest[i] = value;
-    }
-#endif
-}
-
 Painter::Painter(GraphicsBitmap& bitmap)
 {
     m_font = &Font::defaultFont();

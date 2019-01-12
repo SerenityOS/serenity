@@ -346,10 +346,14 @@ void WindowManager::flush(const Rect& a_rect)
 {
     auto rect = Rect::intersection(a_rect, m_screen_rect);
 
-    for (int y = rect.top(); y <= rect.bottom(); ++y) {
-        auto* front_scanline = m_front_bitmap->scanline(y);
-        auto* back_scanline = m_back_bitmap->scanline(y);
-        memcpy(front_scanline + rect.x(), back_scanline + rect.x(), rect.width() * sizeof(RGBA32));
+    RGBA32* front_ptr = m_front_bitmap->scanline(rect.y()) + rect.x();
+    const RGBA32* back_ptr = m_back_bitmap->scanline(rect.y()) + rect.x();
+    size_t pitch = m_back_bitmap->pitch();
+
+    for (int y = 0; y < rect.height(); ++y) {
+        fast_dword_copy(front_ptr, back_ptr, rect.width());
+        front_ptr = (RGBA32*)((byte*)front_ptr + pitch);
+        back_ptr = (const RGBA32*)((const byte*)back_ptr + pitch);
     }
 
     m_framebuffer.flush();
