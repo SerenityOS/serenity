@@ -19,6 +19,4 @@ void Rect::intersect(const Rect& other)
     m_location.setY(t);
     m_size.setWidth((r - l) + 1);
     m_size.setHeight((b - t) + 1);
-
-    dbgprintf("intersection result: %d,%d %dx%d\n", x(), y(), width(), height());
 }
