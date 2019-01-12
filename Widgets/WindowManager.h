@@ -31,20 +31,22 @@ public:
 
     void did_paint(Window&);
 
-    void repaint();
     void move_to_front(Window&);
 
     static void initialize();
 
     void redraw_cursor();
 
+    void invalidate(const Window&);
+    void invalidate(const Rect&);
+    void invalidate();
+
 private:
     WindowManager();
-    ~WindowManager();
+    virtual ~WindowManager() override;
 
     void processMouseEvent(MouseEvent&);
     void handleTitleBarMouseEvent(Window&, MouseEvent&);
-    void handlePaintEvent(PaintEvent&);
     
     virtual void event(Event&) override;
 
@@ -54,7 +56,7 @@ private:
     Color m_inactiveWindowBorderColor;
     Color m_inactiveWindowTitleColor;
 
-    void recompose();
+    void compose();
     void paintWindowFrame(Window&);
     HashTable<Window*> m_windows;
     InlineLinkedList<Window> m_windows_in_order;
@@ -73,5 +75,6 @@ private:
     Point m_last_drawn_cursor_location;
 
     unsigned m_recompose_count { 0 };
-    unsigned m_frontmost_only_compose_count { 0 };
+
+    Vector<Rect> m_invalidated_rects;
 };
