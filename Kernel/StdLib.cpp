@@ -9,7 +9,8 @@ void memcpy(void *dest_ptr, const void *src_ptr, dword n)
 {
     dword dest = (dword)dest_ptr;
     dword src = (dword)src_ptr;
-    if (n >= 12) {
+    // FIXME: Support starting at an unaligned address.
+    if (!(dest & 0x3) && !(src & 0x3) && n >= 12) {
         size_t dwords = n / sizeof(dword);
         asm volatile(
             "rep movsl\n"
@@ -36,7 +37,8 @@ void strcpy(char* dest, const char *src)
 void* memset(void* dest_ptr, byte c, dword n)
 {
     dword dest = (dword)dest_ptr;
-    if (n >= 12) {
+    // FIXME: Support starting at an unaligned address.
+    if (!(dest & 0x3) && n >= 12) {
         size_t dwords = n / sizeof(dword);
         dword expanded_c = c;
         expanded_c <<= 8;
