@@ -28,7 +28,6 @@ AbstractScreen::AbstractScreen(unsigned width, unsigned height)
 
     m_cursor_location = rect().center();
 
-    PS2MouseDevice::the().set_client(this);
     Keyboard::the().set_client(this);
 }
 
@@ -36,7 +35,7 @@ AbstractScreen::~AbstractScreen()
 {
 }
 
-void AbstractScreen::did_receive_mouse_data(int dx, int dy, bool left_button, bool right_button)
+void AbstractScreen::on_receive_mouse_data(int dx, int dy, bool left_button, bool right_button)
 {
     auto prev_location = m_cursor_location;
     m_cursor_location.moveBy(dx, dy);
