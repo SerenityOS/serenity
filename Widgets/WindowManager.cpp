@@ -63,6 +63,8 @@ void WindowManager::initialize()
 
 WindowManager::WindowManager()
 {
+    m_root_bitmap = GraphicsBitmap::create_wrapper(FrameBuffer::the().rect().size(), FrameBuffer::the().scanline(0));
+
     m_activeWindowBorderColor = Color(0, 64, 192);
     m_activeWindowTitleColor = Color::White;
 
@@ -78,7 +80,7 @@ WindowManager::~WindowManager()
 
 void WindowManager::paintWindowFrame(Window& window)
 {
-    Painter p(*m_rootWidget);
+    Painter p(*m_root_bitmap);
 
     //printf("[WM] paintWindowFrame {%p}, rect: %d,%d %dx%d\n", &window, window.rect().x(), window.rect().y(), window.rect().width(), window.rect().height());
 
@@ -253,12 +255,12 @@ void WindowManager::compose()
         return false;
     };
     {
+        Painter p(*m_root_bitmap);
         for (auto& r : m_invalidated_rects) {
             if (any_window_contains_rect(r))
                 continue;
             dbgprintf("Repaint root %d,%d %dx%d\n", r.x(), r.y(), r.width(), r.height());
-            PaintEvent event(r);
-            m_rootWidget->paintEvent(event);
+            p.fillRect(r, Color(0, 72, 96));
         }
     }
     auto& framebuffer = FrameBuffer::the();
@@ -279,7 +281,7 @@ void WindowManager::compose()
 void WindowManager::redraw_cursor()
 {
     auto cursor_location = AbstractScreen::the().cursor_location();
-    Painter painter(*m_rootWidget);
+    Painter painter(*m_root_bitmap);
     painter.set_draw_op(Painter::DrawOp::Xor);
     auto draw_cross = [&painter] (const Point& p) {
         painter.drawLine({ p.x() - 10, p.y() }, { p.x() + 10, p.y() }, Color::Red);
@@ -305,16 +307,6 @@ void WindowManager::event(Event& event)
     }
 
     return Object::event(event);
-}
-
-void WindowManager::setRootWidget(Widget* widget)
-{
-    // FIXME: Should we support switching root widgets?
-    ASSERT(!m_rootWidget);
-    ASSERT(widget);
-
-    m_rootWidget = widget;
-    EventLoop::main().postEvent(m_rootWidget, make<ShowEvent>());
 }
 
 void WindowManager::setActiveWindow(Window* window)

@@ -1,6 +1,5 @@
 #include "FrameBuffer.h"
 #include "EventLoop.h"
-#include "RootWidget.h"
 #include "Label.h"
 #include "Button.h"
 #include "WindowManager.h"
@@ -18,9 +17,6 @@ int main(int argc, char** argv)
     fb.show();
 
     EventLoop loop;
-
-    RootWidget w;
-    WindowManager::the().setRootWidget(&w);
 
     auto* fontTestWindow = new Window;
     fontTestWindow->setTitle("Font test");

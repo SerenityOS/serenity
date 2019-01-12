@@ -11,6 +11,7 @@ class MouseEvent;
 class PaintEvent;
 class Widget;
 class Window;
+class GraphicsBitmap;
 
 class WindowManager : public Object {
 public:
@@ -20,9 +21,6 @@ public:
 
     void notifyTitleChanged(Window&);
     void notifyRectChanged(Window&, const Rect& oldRect, const Rect& newRect);
-
-    Widget* rootWidget() { return m_rootWidget; }
-    void setRootWidget(Widget*);
 
     Window* activeWindow() { return m_activeWindow.ptr(); }
     void setActiveWindow(Window*);
@@ -60,7 +58,6 @@ private:
     void paintWindowFrame(Window&);
     HashTable<Window*> m_windows;
     InlineLinkedList<Window> m_windows_in_order;
-    Widget* m_rootWidget { nullptr };
 
     WeakPtr<Window> m_activeWindow;
 
@@ -75,6 +72,8 @@ private:
     Point m_last_drawn_cursor_location;
 
     unsigned m_recompose_count { 0 };
+
+    RetainPtr<GraphicsBitmap> m_root_bitmap;
 
     Vector<Rect> m_invalidated_rects;
 };

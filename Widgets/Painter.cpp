@@ -6,9 +6,15 @@
 #include <AK/Assertions.h>
 #include <AK/StdLibExtras.h>
 
+Painter::Painter(GraphicsBitmap& bitmap)
+{
+    m_font = &Font::defaultFont();
+    m_target = &bitmap;
+    m_clipRect = { { 0, 0 }, bitmap.size() };
+}
+
 Painter::Painter(Widget& widget)
-    : m_widget(widget)
-    , m_font(&widget.font())
+    : m_font(&widget.font())
 {
     m_target = widget.backing();
     ASSERT(m_target);
@@ -102,7 +108,6 @@ void Painter::drawText(const Rect& rect, const String& text, TextAlignment align
     if (alignment == TextAlignment::TopLeft) {
         point = rect.location();
     } else if (alignment == TextAlignment::CenterLeft) {
-        int textWidth = text.length() * font().glyphWidth();
         point = { rect.x(), rect.center().y() - (font().glyphHeight() / 2) };
     } else if (alignment == TextAlignment::Center) {
         int textWidth = text.length() * font().glyphWidth();

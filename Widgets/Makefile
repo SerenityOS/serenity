@@ -13,7 +13,6 @@ VFS_OBJS = \
     Rect.o \
     Object.o \
     Widget.o \
-    RootWidget.o \
     Color.o \
     Painter.o \
     Label.o \
