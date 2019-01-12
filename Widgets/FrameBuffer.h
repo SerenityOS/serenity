@@ -25,7 +25,11 @@ public:
 
     RGBA32* scanline(int y);
 
+#ifdef USE_SDL
     void flush();
+#else
+    void flush() { }
+#endif
 
     static void initialize();
 
