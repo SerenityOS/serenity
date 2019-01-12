@@ -13,6 +13,7 @@ public:
 private:
     virtual void paintEvent(PaintEvent&) override;
     virtual void mouseDownEvent(MouseEvent&) override;
+    virtual const char* class_name() const override { return "ListBox"; }
 
     unsigned itemHeight() const;
 
