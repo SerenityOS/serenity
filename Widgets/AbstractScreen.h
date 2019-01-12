@@ -6,7 +6,7 @@
 #include "Keyboard.h"
 #include "PS2MouseDevice.h"
 
-class AbstractScreen : public Object, public KeyboardClient, public MouseClient {
+class AbstractScreen : public Object, public KeyboardClient {
 public:
     virtual ~AbstractScreen();
 
@@ -24,13 +24,12 @@ public:
     bool left_mouse_button_pressed() const { return m_left_mouse_button_pressed; }
     bool right_mouse_button_pressed() const { return m_right_mouse_button_pressed; }
 
+    void on_receive_mouse_data(int dx, int dy, bool left_button, bool right_button);
+
 protected:
     AbstractScreen(unsigned width, unsigned height);
 
 private:
-    // ^MouseClient
-    virtual void did_receive_mouse_data(int dx, int dy, bool left_button, bool right_button) final;
-
     // ^KeyboardClient
     virtual void on_key_pressed(Keyboard::Key) final;
 

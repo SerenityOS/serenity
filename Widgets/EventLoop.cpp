@@ -2,6 +2,11 @@
 #include "Event.h"
 #include "Object.h"
 #include "WindowManager.h"
+#include "AbstractScreen.h"
+
+#ifdef SERENITY
+#include "PS2MouseDevice.h"
+#endif
 
 static EventLoop* s_mainEventLoop;
 
@@ -60,6 +65,13 @@ void EventLoop::postEvent(Object* receiver, OwnPtr<Event>&& event)
 #ifdef SERENITY
 void EventLoop::waitForEvent()
 {
+    auto& mouse = PS2MouseDevice::the();
+    while (mouse.has_data_available_for_reading()) {
+        signed_byte data[3];
+        ssize_t nread = mouse.read((byte*)data, 3);
+        ASSERT(nread == 3);
+        AbstractScreen::the().on_receive_mouse_data(data[1], -data[2], data[0] & 1, data[0] & 2);
+    }
 }
 #endif
 

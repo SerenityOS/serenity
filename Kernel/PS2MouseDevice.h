@@ -1,9 +1,8 @@
 #pragma once
 
 #include <VirtualFileSystem/CharacterDevice.h>
+#include "DoubleBuffer.h"
 #include "IRQHandler.h"
-
-class MouseClient;
 
 class PS2MouseDevice final : public IRQHandler, public CharacterDevice {
 public:
@@ -12,13 +11,13 @@ public:
 
     static PS2MouseDevice& the();
 
-    void set_client(MouseClient* client) { m_client = client; }
+    // ^CharacterDevice
+    virtual bool has_data_available_for_reading() const override;
+    virtual ssize_t read(byte* buffer, size_t) override;
+    virtual ssize_t write(const byte* buffer, size_t) override;
 
 private:
-    virtual bool has_data_available_for_reading() const override;
-    virtual ssize_t read(byte* buffer, size_t buffer_size) override;
-    virtual ssize_t write(const byte* buffer, size_t buffer_size) override;
-
+    // ^IRQHandler
     virtual void handle_irq() override;
 
     void initialize();
@@ -29,13 +28,7 @@ private:
     void wait_then_write(byte port, byte data);
     byte wait_then_read(byte port);
 
-    MouseClient* m_client { nullptr };
+    DoubleBuffer m_buffer;
     byte m_data_state { 0 };
     signed_byte m_data[3];
-};
-
-class MouseClient {
-public:
-    virtual ~MouseClient();
-    virtual void did_receive_mouse_data(int dx, int dy, bool left_button, bool right_button) = 0;
 };

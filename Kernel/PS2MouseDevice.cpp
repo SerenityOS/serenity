@@ -44,8 +44,7 @@ void PS2MouseDevice::handle_irq()
             (m_data[0] & 2) ? "Right" : ""
         );
 #endif
-        if (m_client)
-            m_client->did_receive_mouse_data(m_data[1], -m_data[2], m_data[0] & 1, m_data[0] & 2);
+        m_buffer.write((const byte*)m_data, 3);
         break;
     }
 }
@@ -119,22 +118,15 @@ byte PS2MouseDevice::mouse_read()
 
 bool PS2MouseDevice::has_data_available_for_reading() const
 {
-    ASSERT_NOT_REACHED();
-    return false;
+    return !m_buffer.is_empty();
 }
 
-ssize_t PS2MouseDevice::read(byte* buffer, size_t buffer_size)
+ssize_t PS2MouseDevice::read(byte* buffer, size_t size)
 {
-    ASSERT_NOT_REACHED();
+    return m_buffer.read(buffer, size);
+}
+
+ssize_t PS2MouseDevice::write(const byte*, size_t)
+{
     return 0;
-}
-
-ssize_t PS2MouseDevice::write(const byte *buffer, size_t buffer_size)
-{
-    ASSERT_NOT_REACHED();
-    return 0;
-}
-
-MouseClient::~MouseClient()
-{
 }
