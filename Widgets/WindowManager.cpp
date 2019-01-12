@@ -245,14 +245,23 @@ void WindowManager::processMouseEvent(MouseEvent& event)
 void WindowManager::compose()
 {
     printf("[WM] recompose_count: %u\n", ++m_recompose_count);
-    auto& framebuffer = FrameBuffer::the();
+    auto any_window_contains_rect = [this] (const Rect& r) {
+        for (auto* window = m_windows_in_order.head(); window; window = window->next()) {
+            if (outerRectForWindow(window->rect()).contains(r))
+                return true;
+        }
+        return false;
+    };
     {
         for (auto& r : m_invalidated_rects) {
+            if (any_window_contains_rect(r))
+                continue;
             dbgprintf("Repaint root %d,%d %dx%d\n", r.x(), r.y(), r.width(), r.height());
             PaintEvent event(r);
             m_rootWidget->paintEvent(event);
         }
     }
+    auto& framebuffer = FrameBuffer::the();
     for (auto* window = m_windows_in_order.head(); window; window = window->next()) {
         if (!window->backing())
             continue;
