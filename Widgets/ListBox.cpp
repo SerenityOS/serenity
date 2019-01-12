@@ -12,9 +12,10 @@ ListBox::~ListBox()
 {
 }
 
-unsigned ListBox::itemHeight() const
+Rect ListBox::item_rect(int index) const
 {
-    return font().glyphHeight() + 2;
+    int item_height = font().glyphHeight() + 2;
+    return Rect { 2, 2 + (index * item_height), width() - 4, item_height };
 }
 
 void ListBox::paintEvent(PaintEvent&)
@@ -28,8 +29,8 @@ void ListBox::paintEvent(PaintEvent&)
     if (isFocused())
         painter.draw_focus_rect(rect());
 
-    for (unsigned i = m_scrollOffset; i < m_items.size(); ++i) {
-        Rect itemRect(2, 2 + (i * itemHeight()), width() - 4, itemHeight());
+    for (int i = m_scrollOffset; i < static_cast<int>(m_items.size()); ++i) {
+        auto itemRect = item_rect(i);
         Rect textRect(itemRect.x() + 1, itemRect.y() + 1, itemRect.width() - 2, itemRect.height() - 2);
 
         Color itemTextColor = foregroundColor();
@@ -47,8 +48,8 @@ void ListBox::paintEvent(PaintEvent&)
 void ListBox::mouseDownEvent(MouseEvent& event)
 {
     printf("ListBox::mouseDownEvent %d,%d\n", event.x(), event.y());
-    for (unsigned i = m_scrollOffset; i < m_items.size(); ++i) {
-        Rect itemRect(1, 1 + (i * itemHeight()), width() - 2, itemHeight());
+    for (int i = m_scrollOffset; i < static_cast<int>(m_items.size()); ++i) {
+        auto itemRect = item_rect(i);
         if (itemRect.contains(event.position())) {
             m_selectedIndex = i;
             printf("ListBox: selected item %u (\"%s\")\n", i, m_items[i].characters());
