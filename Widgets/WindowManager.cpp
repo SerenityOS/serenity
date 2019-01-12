@@ -5,6 +5,8 @@
 #include "AbstractScreen.h"
 #include "EventLoop.h"
 #include "FrameBuffer.h"
+#include "Process.h"
+#include "MemoryManager.h"
 
 static const int windowTitleBarHeight = 16;
 
@@ -62,7 +64,10 @@ void WindowManager::initialize()
 
 WindowManager::WindowManager()
 {
-    m_root_bitmap = GraphicsBitmap::create_wrapper(FrameBuffer::the().rect().size(), FrameBuffer::the().scanline(0));
+    auto size = FrameBuffer::the().rect().size();
+    m_front_bitmap = GraphicsBitmap::create_wrapper(size, FrameBuffer::the().scanline(0));
+    auto* region = current->allocate_region(LinearAddress(), size.width() * size.height() * 4, "back buffer", true, true, true);
+    m_back_bitmap = GraphicsBitmap::create_wrapper(FrameBuffer::the().rect().size(), (RGBA32*)region->linearAddress.get());
 
     m_activeWindowBorderColor = Color(0, 64, 192);
     m_activeWindowTitleColor = Color::White;
@@ -79,7 +84,7 @@ WindowManager::~WindowManager()
 
 void WindowManager::paintWindowFrame(Window& window)
 {
-    Painter p(*m_root_bitmap);
+    Painter p(*m_back_bitmap);
 
     //printf("[WM] paintWindowFrame {%p}, rect: %d,%d %dx%d\n", &window, window.rect().x(), window.rect().y(), window.rect().width(), window.rect().height());
 
@@ -94,17 +99,6 @@ void WindowManager::paintWindowFrame(Window& window)
         window.width() + 2,
         window.height() + 2
     };
-
-    if (!m_lastDragRect.is_empty()) {
-        p.xorRect(m_lastDragRect, Color::Red);
-        m_lastDragRect = Rect();
-    }
-
-    if (m_dragWindow.ptr() == &window) {
-        p.xorRect(outerRect, Color::Red);
-        m_lastDragRect = outerRect;
-        return;
-    }
 
     auto titleColor = &window == activeWindow() ? m_activeWindowTitleColor : m_inactiveWindowTitleColor;
     auto borderColor = &window == activeWindow() ? m_activeWindowBorderColor : m_inactiveWindowBorderColor;
@@ -195,12 +189,14 @@ void WindowManager::processMouseEvent(MouseEvent& event)
 
     if (event.type() == Event::MouseMove) {
         if (m_dragWindow) {
+            auto old_window_rect = m_dragWindow->rect();
             Point pos = m_dragWindowOrigin;
             printf("[WM] Dragging [origin: %d,%d] now: %d,%d\n", m_dragOrigin.x(), m_dragOrigin.y(), event.x(), event.y());
             pos.moveBy(event.x() - m_dragOrigin.x(), event.y() - m_dragOrigin.y());
             m_dragWindow->setPositionWithoutRepaint(pos);
-            paintWindowFrame(*m_dragWindow);
-            FrameBuffer::the().flush();
+            invalidate(outerRectForWindow(old_window_rect));
+            invalidate(outerRectForWindow(m_dragWindow->rect()));
+            compose();
             return;
         }
     }
@@ -238,44 +234,41 @@ void WindowManager::compose()
         }
         return false;
     };
+    Painter painter(*m_back_bitmap);
     {
-        Painter p(*m_root_bitmap);
         for (auto& r : m_invalidated_rects) {
             if (any_window_contains_rect(r))
                 continue;
             dbgprintf("Repaint root %d,%d %dx%d\n", r.x(), r.y(), r.width(), r.height());
-            p.fillRect(r, Color(0, 72, 96));
+            painter.fillRect(r, Color(0, 72, 96));
         }
     }
-    auto& framebuffer = FrameBuffer::the();
     for (auto* window = m_windows_in_order.head(); window; window = window->next()) {
         if (!window->backing())
             continue;
         paintWindowFrame(*window);
-        if (m_dragWindow.ptr() == window)
-            continue;
-        framebuffer.blit(window->position(), *window->backing());
+        painter.blit(window->position(), *window->backing());
     }
-    framebuffer.flush();
-    m_last_drawn_cursor_location = { -1, -1 };
     redraw_cursor();
+    for (auto& r : m_invalidated_rects) {
+        flush(r);
+    }
     m_invalidated_rects.clear();
 }
 
 void WindowManager::redraw_cursor()
 {
     auto cursor_location = AbstractScreen::the().cursor_location();
-    Painter painter(*m_root_bitmap);
-    painter.set_draw_op(Painter::DrawOp::Xor);
+    Painter painter(*m_front_bitmap);
+    Rect cursor_rect { cursor_location.x() - 10, cursor_location.y() - 10, 21, 21 };
+    flush(m_last_cursor_rect);
+    flush(cursor_rect);
     auto draw_cross = [&painter] (const Point& p) {
         painter.drawLine({ p.x() - 10, p.y() }, { p.x() + 10, p.y() }, Color::Red);
         painter.drawLine({ p.x(), p.y() - 10 }, { p.x(), p.y() + 10 }, Color::Red);
     };
-    if (cursor_location != m_last_drawn_cursor_location && m_last_drawn_cursor_location.x() != -1)
-        draw_cross(m_last_drawn_cursor_location);
     draw_cross(cursor_location);
-    m_last_drawn_cursor_location = cursor_location;
-    FrameBuffer::the().flush();
+    m_last_cursor_rect = cursor_rect;
 }
 
 void WindowManager::event(Event& event)
@@ -322,18 +315,43 @@ void WindowManager::invalidate()
     m_invalidated_rects.append(AbstractScreen::the().rect());
 }
 
-void WindowManager::invalidate(const Rect& rect)
+void WindowManager::invalidate(const Rect& a_rect)
 {
+    // FIXME: This code is fugly.
+    Rect rect(a_rect);
+    auto screen_rect = AbstractScreen::the().rect();
+    if (rect.left() < 0)
+        rect.set_left(0);
+    if (rect.top() < 0)
+        rect.set_top(0);
+    if (rect.right() > screen_rect.right())
+        rect.set_right(screen_rect.right());
+    if (rect.bottom() > screen_rect.bottom())
+        rect.set_bottom(screen_rect.bottom());
     if (rect.is_empty())
         return;
     for (auto& r : m_invalidated_rects) {
         if (r.contains(rect))
             return;
     }
+
     m_invalidated_rects.append(rect);
 }
 
 void WindowManager::invalidate(const Window& window)
 {
     invalidate(outerRectForWindow(window.rect()));
+}
+
+void WindowManager::flush(const Rect& rect)
+{
+    auto& framebuffer = FrameBuffer::the();
+
+    for (int y = rect.top(); y <= rect.bottom(); ++y) {
+        auto* front_scanline = m_front_bitmap->scanline(y);
+        auto* back_scanline = m_back_bitmap->scanline(y);
+        memcpy(front_scanline + rect.x(), back_scanline + rect.x(), rect.width() * sizeof(RGBA32));
+    }
+
+    framebuffer.flush();
 }

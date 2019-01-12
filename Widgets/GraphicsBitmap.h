@@ -12,6 +12,7 @@ public:
     ~GraphicsBitmap();
 
     RGBA32* scanline(int y);
+    const RGBA32* scanline(int y) const;
 
     Size size() const { return m_size; }
     int width() const { return m_size.width(); }

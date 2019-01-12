@@ -27,7 +27,7 @@ public:
 
     void drawFocusRect(const Rect&);
 
-    void xorRect(const Rect&, Color);
+    void blit(const Point&, const GraphicsBitmap&);
 
     const Font& font() const { return *m_font; }
 

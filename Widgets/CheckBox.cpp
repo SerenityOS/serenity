@@ -78,8 +78,8 @@ void CheckBox::paintEvent(PaintEvent&)
     auto bitmap = CharacterBitmap::createFromASCII(isChecked() ? checkedBitmap : uncheckedBitmap, 11, 11);
 
     auto textRect = rect();
-    textRect.setLeft(bitmap->width() + 4);
-    textRect.setTop(height() / 2 - font().glyphHeight() / 2);
+    textRect.set_left(bitmap->width() + 4);
+    textRect.set_top(height() / 2 - font().glyphHeight() / 2);
 
     Point bitmapPosition;
     bitmapPosition.setX(2);

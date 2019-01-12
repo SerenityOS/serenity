@@ -76,16 +76,24 @@ public:
     int top() const { return y(); }
     int bottom() const { return y() + height() - 1; }
 
-    void setLeft(int left)
+    void set_left(int left)
     {
-        setWidth(x() - left);
         setX(left);
     }
 
-    void setTop(int top)
+    void set_top(int top)
     {
-        setHeight(y() - top);
         setY(top);
+    }
+
+    void set_right(int right)
+    {
+        setWidth(right - x());
+    }
+
+    void set_bottom(int bottom)
+    {
+        setHeight(bottom - y());
     }
 
     bool intersects(const Rect& other) const
@@ -121,7 +129,7 @@ public:
     {
         Rect r(a);
         r.intersect(b);
-        return a;
+        return r;
     }
 
 private:
