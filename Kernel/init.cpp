@@ -22,7 +22,7 @@
 #include "Scheduler.h"
 #include "PS2MouseDevice.h"
 
-#define SPAWN_MULTIPLE_SHELLS
+//#define SPAWN_MULTIPLE_SHELLS
 //#define STRESS_TEST_SPAWNING
 
 system_t system;
