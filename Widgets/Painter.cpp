@@ -1,5 +1,4 @@
 #include "Painter.h"
-#include "FrameBuffer.h"
 #include "Widget.h"
 #include "Font.h"
 #include "Window.h"
@@ -20,8 +19,8 @@ Painter::Painter(Widget& widget)
     ASSERT(m_target);
     m_window = widget.window();
     m_translation.moveBy(widget.relativePosition());
-    m_clip_rect.setWidth(AbstractScreen::the().width());
-    m_clip_rect.setHeight(AbstractScreen::the().height());
+    // NOTE: m_clip_rect is in Window coordinates since we are painting into its backing store.
+    m_clip_rect = widget.relativeRect();
 }
 
 Painter::~Painter()
