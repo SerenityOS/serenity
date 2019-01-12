@@ -63,11 +63,13 @@ void WindowManager::initialize()
 }
 
 WindowManager::WindowManager()
+    : m_framebuffer(FrameBuffer::the())
+    , m_screen_rect(m_framebuffer.rect())
 {
-    auto size = FrameBuffer::the().rect().size();
-    m_front_bitmap = GraphicsBitmap::create_wrapper(size, FrameBuffer::the().scanline(0));
+    auto size = m_screen_rect.size();
+    m_front_bitmap = GraphicsBitmap::create_wrapper(size, m_framebuffer.scanline(0));
     auto* region = current->allocate_region(LinearAddress(), size.width() * size.height() * 4, "back buffer", true, true, true);
-    m_back_bitmap = GraphicsBitmap::create_wrapper(FrameBuffer::the().rect().size(), (RGBA32*)region->linearAddress.get());
+    m_back_bitmap = GraphicsBitmap::create_wrapper(m_screen_rect.size(), (RGBA32*)region->linearAddress.get());
 
     m_activeWindowBorderColor = Color(0, 64, 192);
     m_activeWindowTitleColor = Color::White;
@@ -315,12 +317,12 @@ bool WindowManager::isVisible(Window& window) const
 void WindowManager::invalidate()
 {
     m_invalidated_rects.clear_with_capacity();
-    m_invalidated_rects.append(AbstractScreen::the().rect());
+    m_invalidated_rects.append(m_screen_rect);
 }
 
 void WindowManager::invalidate(const Rect& a_rect)
 {
-    auto rect = Rect::intersection(a_rect, AbstractScreen::the().rect());
+    auto rect = Rect::intersection(a_rect, m_screen_rect);
     if (rect.is_empty())
         return;
     for (auto& r : m_invalidated_rects) {
@@ -343,8 +345,7 @@ void WindowManager::invalidate(const Window& window)
 
 void WindowManager::flush(const Rect& a_rect)
 {
-    auto& framebuffer = FrameBuffer::the();
-    auto rect = Rect::intersection(a_rect, framebuffer.rect());
+    auto rect = Rect::intersection(a_rect, m_screen_rect);
 
     for (int y = rect.top(); y <= rect.bottom(); ++y) {
         auto* front_scanline = m_front_bitmap->scanline(y);
@@ -352,5 +353,5 @@ void WindowManager::flush(const Rect& a_rect)
         memcpy(front_scanline + rect.x(), back_scanline + rect.x(), rect.width() * sizeof(RGBA32));
     }
 
-    framebuffer.flush();
+    m_framebuffer.flush();
 }

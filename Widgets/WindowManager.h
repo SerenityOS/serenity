@@ -7,6 +7,7 @@
 #include <AK/InlineLinkedList.h>
 #include <AK/WeakPtr.h>
 
+class FrameBuffer;
 class MouseEvent;
 class PaintEvent;
 class Widget;
@@ -49,14 +50,18 @@ private:
     
     virtual void event(Event&) override;
 
+    void compose();
+    void paintWindowFrame(Window&);
+
+    FrameBuffer& m_framebuffer;
+    Rect m_screen_rect;
+
     Color m_activeWindowBorderColor;
     Color m_activeWindowTitleColor;
 
     Color m_inactiveWindowBorderColor;
     Color m_inactiveWindowTitleColor;
 
-    void compose();
-    void paintWindowFrame(Window&);
     HashTable<Window*> m_windows;
     InlineLinkedList<Window> m_windows_in_order;
 
