@@ -38,14 +38,14 @@ void Button::paintEvent(PaintEvent&)
 
     if (m_beingPressed) {
         // Base
-        painter.fillRect({ 1, 1, width() - 2, height() - 2 }, buttonColor);
+        painter.fillRect({ 1, 1, width() - 1, height() - 1 }, buttonColor);
 
         // Sunken shadow
         painter.drawLine({ 1, 1 }, { width() - 2, 1 }, shadowColor);
         painter.drawLine({ 1, 2 }, {1, height() - 2 }, shadowColor);
     } else {
         // Base
-        painter.fillRect({ 3, 3, width() - 6, height() - 6 }, buttonColor);
+        painter.fillRect({ 3, 3, width() - 5, height() - 5 }, buttonColor);
 
         // White highlight
         painter.drawLine({ 1, 1 }, { width() - 2, 1 }, highlightColor);
