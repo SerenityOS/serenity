@@ -88,12 +88,12 @@ public:
 
     void set_right(int right)
     {
-        setWidth(right - x());
+        setWidth(right - x() + 1);
     }
 
     void set_bottom(int bottom)
     {
-        setHeight(bottom - y());
+        setHeight(bottom - y() + 1);
     }
 
     bool intersects(const Rect& other) const
@@ -131,6 +131,8 @@ public:
         r.intersect(b);
         return r;
     }
+
+    Rect united(const Rect&) const;
 
 private:
     Point m_location;
