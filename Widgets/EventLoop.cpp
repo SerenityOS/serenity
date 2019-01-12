@@ -36,7 +36,11 @@ int EventLoop::exec()
     for (;;) {
         if (m_queuedEvents.is_empty())
             waitForEvent();
-        auto events = move(m_queuedEvents);
+        Vector<QueuedEvent> events;
+        {
+            InterruptDisabler disabler;
+            events = move(m_queuedEvents);
+        }
         for (auto& queuedEvent : events) {
             auto* receiver = queuedEvent.receiver;
             auto& event = *queuedEvent.event;
