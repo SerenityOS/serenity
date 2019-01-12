@@ -63,6 +63,14 @@ public:
         return contains(point.x(), point.y());
     }
 
+    bool contains(const Rect& other) const
+    {
+        return left() <= other.left()
+            && right() >= other.right()
+            && top() <= other.top()
+            && bottom() >= other.bottom();
+    }
+
     int left() const { return x(); }
     int right() const { return x() + width() - 1; }
     int top() const { return y(); }

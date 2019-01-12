@@ -339,8 +339,13 @@ void WindowManager::invalidate()
 
 void WindowManager::invalidate(const Rect& rect)
 {
-    if (!rect.is_empty())
-        m_invalidated_rects.append(rect);
+    if (rect.is_empty())
+        return;
+    for (auto& r : m_invalidated_rects) {
+        if (r.contains(rect))
+            return;
+    }
+    m_invalidated_rects.append(rect);
 }
 
 void WindowManager::invalidate(const Window& window)
