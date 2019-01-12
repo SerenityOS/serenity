@@ -3,7 +3,6 @@
 #include <Widgets/Font.h>
 #include <Widgets/FrameBuffer.h>
 #include <Widgets/WindowManager.h>
-#include <Widgets/RootWidget.h>
 #include <Widgets/EventLoop.h>
 #include <Widgets/MsgBox.h>
 #include <Widgets/TextBox.h>
@@ -26,10 +25,7 @@ void WindowComposer_main()
     dbgprintf("Screen is %ux%ux%ubpp\n", info.width, info.height, info.bpp);
 
     FrameBuffer framebuffer((dword*)info.framebuffer, info.width, info.height);
-    RootWidget rw;
     EventLoop loop;
-
-    WindowManager::the().setRootWidget(&rw);
 
     MsgBox(nullptr, "Serenity Operating System");
 

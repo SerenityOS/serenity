@@ -16,6 +16,7 @@ class Painter {
 public:
     enum class TextAlignment { TopLeft, CenterLeft, Center };
     explicit Painter(Widget&);
+    explicit Painter(GraphicsBitmap&);
     ~Painter();
     void fillRect(const Rect&, Color);
     void drawRect(const Rect&, Color);
@@ -37,7 +38,6 @@ public:
 private:
     void set_pixel_with_draw_op(dword& pixel, const Color&);
 
-    Widget& m_widget;
     const Font* m_font;
     Point m_translation;
     Rect m_clipRect;

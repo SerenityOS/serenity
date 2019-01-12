@@ -55,7 +55,6 @@ WIDGETS_OBJS = \
     ../Widgets/Color.o \
     ../Widgets/CharacterBitmap.o \
     ../Widgets/EventLoop.o \
-    ../Widgets/RootWidget.o \
     ../Widgets/Label.o \
     ../Widgets/Button.o \
     ../Widgets/MsgBox.o \
