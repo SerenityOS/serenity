@@ -70,7 +70,7 @@ WindowManager::WindowManager()
 {
     auto size = m_screen_rect.size();
     m_front_bitmap = GraphicsBitmap::create_wrapper(size, m_framebuffer.scanline(0));
-    auto* region = current->allocate_region(LinearAddress(), size.width() * size.height() * 4, "back buffer", true, true, true);
+    auto* region = current->allocate_region(LinearAddress(), size.width() * size.height() * sizeof(RGBA32), "BackBitmap", true, true, true);
     m_back_bitmap = GraphicsBitmap::create_wrapper(m_screen_rect.size(), (RGBA32*)region->linearAddress.get());
 
     m_activeWindowBorderColor = Color(0, 64, 192);

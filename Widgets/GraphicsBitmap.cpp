@@ -1,6 +1,11 @@
 #include "GraphicsBitmap.h"
 #include <AK/kmalloc.h>
 
+#ifdef SERENITY
+#include "Process.h"
+#include "MemoryManager.h"
+#endif
+
 RetainPtr<GraphicsBitmap> GraphicsBitmap::create(const Size& size)
 {
     return adopt(*new GraphicsBitmap(size));
@@ -15,9 +20,15 @@ GraphicsBitmap::GraphicsBitmap(const Size& size)
     : m_size(size)
     , m_pitch(size.width() * sizeof(RGBA32))
 {
+#ifdef SERENITY
+    m_region = current->allocate_region(LinearAddress(), size.width() * size.height() * sizeof(RGBA32), "GraphicsBitmap", true, true, true);
+    m_data = (RGBA32*)m_region->linearAddress.asPtr();
+    m_owned = false;
+#else
     m_data = static_cast<RGBA32*>(kmalloc(size.width() * size.height() * sizeof(RGBA32)));
     memset(m_data, 0, size.width() * size.height() * sizeof(RGBA32));
     m_owned = true;
+#endif
 }
 
 GraphicsBitmap::GraphicsBitmap(const Size& size, RGBA32* data)
@@ -30,6 +41,10 @@ GraphicsBitmap::GraphicsBitmap(const Size& size, RGBA32* data)
 
 GraphicsBitmap::~GraphicsBitmap()
 {
+#ifdef SERENITY
+    if (m_region)
+        current->deallocate_region(*m_region);
+#endif
     if (m_owned)
         kfree(m_data);
     m_data = nullptr;

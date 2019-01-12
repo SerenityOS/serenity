@@ -5,6 +5,8 @@
 #include <AK/Retainable.h>
 #include <AK/RetainPtr.h>
 
+class Region;
+
 class GraphicsBitmap : public Retainable<GraphicsBitmap> {
 public:
     static RetainPtr<GraphicsBitmap> create(const Size&);
@@ -26,5 +28,8 @@ private:
     Size m_size;
     RGBA32* m_data { nullptr };
     size_t m_pitch { 0 };
+#ifdef SERENITY
+    Region* m_region { nullptr };
+#endif
     bool m_owned { false };
 };
