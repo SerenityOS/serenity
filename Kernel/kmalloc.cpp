@@ -8,6 +8,8 @@
 #include "StdLib.h"
 #include "i386.h"
 #include "system.h"
+#include "Process.h"
+#include "Scheduler.h"
 #include <AK/Assertions.h>
 
 #define SANITIZE_KMALLOC
@@ -100,7 +102,7 @@ void* kmalloc(dword size)
     real_size = size + sizeof(allocation_t);
 
     if (sum_free < real_size) {
-        kprintf("kmalloc(): PANIC! Out of memory (sucks, dude)\nsum_free=%u, real_size=%x\n", sum_free, real_size);
+        kprintf("%s<%u> kmalloc(): PANIC! Out of memory (sucks, dude)\nsum_free=%u, real_size=%x\n", current->name().characters(), current->pid(), sum_free, real_size);
         HANG;
         return 0L;
     }
@@ -161,7 +163,7 @@ void* kmalloc(dword size)
         }
     }
 
-    kprintf("kmalloc(): PANIC! Out of memory (no suitable block for size %u)\n", size);
+    kprintf("%s<%u> kmalloc(): PANIC! Out of memory (no suitable block for size %u)\n", current->name().characters(), current->pid(), size);
     HANG;
 
     return nullptr;
