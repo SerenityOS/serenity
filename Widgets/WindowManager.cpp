@@ -167,7 +167,7 @@ void WindowManager::notifyRectChanged(Window& window, const Rect& old_rect, cons
 
 void WindowManager::handleTitleBarMouseEvent(Window& window, MouseEvent& event)
 {
-    if (event.type() == Event::MouseDown) {
+    if (event.type() == Event::MouseDown && event.button() == MouseButton::Left) {
         printf("[WM] Begin dragging Window{%p}\n", &window);
         m_dragWindow = window.makeWeakPtr();;
         m_dragOrigin = event.position();
@@ -180,7 +180,7 @@ void WindowManager::handleTitleBarMouseEvent(Window& window, MouseEvent& event)
 
 void WindowManager::processMouseEvent(MouseEvent& event)
 {
-    if (event.type() == Event::MouseUp) {
+    if (event.type() == Event::MouseUp && event.button() == MouseButton::Left) {
         if (m_dragWindow) {
             printf("[WM] Finish dragging Window{%p}\n", m_dragWindow.ptr());
             invalidate(m_dragStartRect);
