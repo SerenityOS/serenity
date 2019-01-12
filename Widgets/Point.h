@@ -1,5 +1,7 @@
 #pragma once
 
+class Rect;
+
 class Point {
 public:
     Point() { }
@@ -21,6 +23,8 @@ public:
     {
         moveBy(delta.x(), delta.y());
     }
+
+    void constrain(const Rect&);
 
     bool operator==(const Point& other) const
     {
