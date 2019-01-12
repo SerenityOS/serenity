@@ -55,7 +55,7 @@ public:
 
     bool contains(int x, int y) const
     {
-        return x >= m_location.x() && x < right() && y >= m_location.y() && y < bottom();
+        return x >= m_location.x() && x <= right() && y >= m_location.y() && y <= bottom();
     }
 
     bool contains(const Point& point) const

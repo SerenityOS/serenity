@@ -5,6 +5,8 @@
 #include <AK/Assertions.h>
 #include <AK/StdLibExtras.h>
 
+#define DEBUG_WIDGET_UNDERDRAW
+
 Painter::Painter(GraphicsBitmap& bitmap)
 {
     m_font = &Font::defaultFont();
@@ -21,6 +23,10 @@ Painter::Painter(Widget& widget)
     m_translation.moveBy(widget.relativePosition());
     // NOTE: m_clip_rect is in Window coordinates since we are painting into its backing store.
     m_clip_rect = widget.relativeRect();
+
+#ifdef DEBUG_WIDGET_UNDERDRAW
+    fill_rect(widget.rect(), Color::Red);
+#endif
 }
 
 Painter::~Painter()
@@ -66,12 +72,12 @@ void Painter::draw_bitmap(const Point& p, const CharacterBitmap& bitmap, Color c
     point.moveBy(m_translation);
     for (unsigned row = 0; row < bitmap.height(); ++row) {
         int y = point.y() + row;
-        if (y < m_clip_rect.top() || y >= m_clip_rect.bottom())
+        if (y < m_clip_rect.top() || y > m_clip_rect.bottom())
             break;
         auto* bits = m_target->scanline(y);
         for (unsigned j = 0; j < bitmap.width(); ++j) {
             int x = point.x() + j;
-            if (x < m_clip_rect.left() || x >= m_clip_rect.right())
+            if (x < m_clip_rect.left() || x > m_clip_rect.right())
                 break;
             char fc = bitmap.bits()[row * bitmap.width() + j];
             if (fc == '#')
@@ -139,7 +145,7 @@ void Painter::draw_line(const Point& p1, const Point& p2, Color color)
     // Special case: vertical line.
     if (point1.x() == point2.x()) {
         const int x = point1.x();
-        if (x < m_clip_rect.left() || x >= m_clip_rect.right())
+        if (x < m_clip_rect.left() || x > m_clip_rect.right())
             return;
         if (point1.y() > point2.y())
             swap(point1, point2);
@@ -156,7 +162,7 @@ void Painter::draw_line(const Point& p1, const Point& p2, Color color)
     // Special case: horizontal line.
     if (point1.y() == point2.y()) {
         const int y = point1.y();
-        if (y < m_clip_rect.top() || y >= m_clip_rect.bottom())
+        if (y < m_clip_rect.top() || y > m_clip_rect.bottom())
             return;
         if (point1.x() > point2.x())
             swap(point1, point2);

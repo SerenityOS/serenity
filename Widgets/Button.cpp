@@ -38,7 +38,7 @@ void Button::paintEvent(PaintEvent&)
 
     if (m_beingPressed) {
         // Base
-        painter.fill_rect({ 1, 1, width() - 1, height() - 1 }, buttonColor);
+        painter.fill_rect({ 1, 1, width() - 2, height() - 2 }, buttonColor);
 
         // Sunken shadow
         painter.draw_line({ 1, 1 }, { width() - 2, 1 }, shadowColor);
