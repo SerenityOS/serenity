@@ -73,7 +73,7 @@ void Widget::paintEvent(PaintEvent& event)
     //printf("Widget::paintEvent :)\n");
     if (fillWithBackgroundColor()) {
         Painter painter(*this);
-        painter.fillRect(rect(), backgroundColor());
+        painter.fill_rect(rect(), backgroundColor());
     }
     for (auto* ch : children()) {
         auto* child = (Widget*)ch;

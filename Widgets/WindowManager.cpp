@@ -106,14 +106,14 @@ void WindowManager::paintWindowFrame(Window& window)
     auto titleColor = &window == activeWindow() ? m_activeWindowTitleColor : m_inactiveWindowTitleColor;
     auto borderColor = &window == activeWindow() ? m_activeWindowBorderColor : m_inactiveWindowBorderColor;
 
-    p.drawRect(borderRect, Color::MidGray);
-    p.drawRect(outerRect, borderColor);
+    p.draw_rect(borderRect, Color::MidGray);
+    p.draw_rect(outerRect, borderColor);
 
-    p.fillRect(titleBarRect, borderColor);
+    p.fill_rect(titleBarRect, borderColor);
 
-    p.drawRect(inner_border_rect, borderColor);
+    p.draw_rect(inner_border_rect, borderColor);
 
-    p.drawText(titleBarTitleRect, window.title(), Painter::TextAlignment::CenterLeft, titleColor);
+    p.draw_text(titleBarTitleRect, window.title(), Painter::TextAlignment::CenterLeft, titleColor);
 }
 
 void WindowManager::addWindow(Window& window)
@@ -241,7 +241,7 @@ void WindowManager::compose()
             if (any_window_contains_rect(r))
                 continue;
             //dbgprintf("Repaint root %d,%d %dx%d\n", r.x(), r.y(), r.width(), r.height());
-            painter.fillRect(r, Color(0, 72, 96));
+            painter.fill_rect(r, Color(0, 72, 96));
         }
     }
     for (auto* window = m_windows_in_order.head(); window; window = window->next()) {
@@ -265,8 +265,8 @@ void WindowManager::redraw_cursor()
     flush(m_last_cursor_rect);
     flush(cursor_rect);
     auto draw_cross = [&painter] (const Point& p) {
-        painter.drawLine({ p.x() - 10, p.y() }, { p.x() + 10, p.y() }, Color::Red);
-        painter.drawLine({ p.x(), p.y() - 10 }, { p.x(), p.y() + 10 }, Color::Red);
+        painter.draw_line({ p.x() - 10, p.y() }, { p.x() + 10, p.y() }, Color::Red);
+        painter.draw_line({ p.x(), p.y() - 10 }, { p.x(), p.y() + 10 }, Color::Red);
     };
     draw_cross(cursor_location);
     m_last_cursor_rect = cursor_rect;

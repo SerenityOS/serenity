@@ -22,8 +22,8 @@ void ClockWidget::paintEvent(PaintEvent&)
     sprintf(timeBuf, "%02u:%02u:%02u ", tm.tm_hour, tm.tm_min, tm.tm_sec);
     
     Painter painter(*this);
-    painter.fillRect(rect(), Color::MidGray);
-    painter.drawText(rect(), timeBuf, Painter::TextAlignment::Center, Color::Black);
+    painter.fill_rect(rect(), Color::MidGray);
+    painter.draw_text(rect(), timeBuf, Painter::TextAlignment::Center, Color::Black);
 }
 
 void ClockWidget::timerEvent(TimerEvent&)

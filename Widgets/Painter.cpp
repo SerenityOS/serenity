@@ -10,7 +10,7 @@ Painter::Painter(GraphicsBitmap& bitmap)
 {
     m_font = &Font::defaultFont();
     m_target = &bitmap;
-    m_clipRect = { { 0, 0 }, bitmap.size() };
+    m_clip_rect = { { 0, 0 }, bitmap.size() };
 }
 
 Painter::Painter(Widget& widget)
@@ -20,59 +20,59 @@ Painter::Painter(Widget& widget)
     ASSERT(m_target);
     m_window = widget.window();
     m_translation.moveBy(widget.relativePosition());
-    m_clipRect.setWidth(AbstractScreen::the().width());
-    m_clipRect.setHeight(AbstractScreen::the().height());
+    m_clip_rect.setWidth(AbstractScreen::the().width());
+    m_clip_rect.setHeight(AbstractScreen::the().height());
 }
 
 Painter::~Painter()
 {
 }
 
-void Painter::fillRect(const Rect& rect, Color color)
+void Painter::fill_rect(const Rect& rect, Color color)
 {
     Rect r = rect;
     r.moveBy(m_translation);
 
-    for (int y = max(r.top(), m_clipRect.top()); y <= min(r.bottom(), m_clipRect.bottom()); ++y) {
+    for (int y = max(r.top(), m_clip_rect.top()); y <= min(r.bottom(), m_clip_rect.bottom()); ++y) {
         auto* bits = m_target->scanline(y);
-        for (int x = max(r.left(), m_clipRect.left()); x <= min(r.right(), m_clipRect.right()); ++x) {
+        for (int x = max(r.left(), m_clip_rect.left()); x <= min(r.right(), m_clip_rect.right()); ++x) {
             bits[x] = color.value();
         }
     }
 }
 
-void Painter::drawRect(const Rect& rect, Color color)
+void Painter::draw_rect(const Rect& rect, Color color)
 {
     Rect r = rect;
     r.moveBy(m_translation);
 
-    for (int y = max(r.top(), m_clipRect.top()); y <= min(r.bottom(), m_clipRect.bottom()); ++y) {
+    for (int y = max(r.top(), m_clip_rect.top()); y <= min(r.bottom(), m_clip_rect.bottom()); ++y) {
         auto* bits = m_target->scanline(y);
         if (y == r.top() || y == r.bottom()) {
-            for (int x = max(r.left(), m_clipRect.left()); x <= min(r.right(), m_clipRect.right()); ++x) {
+            for (int x = max(r.left(), m_clip_rect.left()); x <= min(r.right(), m_clip_rect.right()); ++x) {
                 bits[x] = color.value();
             }
         } else {
-            if (r.left() >= m_clipRect.left() && r.left() < m_clipRect.right())
+            if (r.left() >= m_clip_rect.left() && r.left() < m_clip_rect.right())
                 bits[r.left()] = color.value();
-            if (r.right() >= m_clipRect.left() && r.right() < m_clipRect.right())
+            if (r.right() >= m_clip_rect.left() && r.right() < m_clip_rect.right())
                 bits[r.right()] = color.value();
         }
     }
 }
 
-void Painter::drawBitmap(const Point& p, const CharacterBitmap& bitmap, Color color)
+void Painter::draw_bitmap(const Point& p, const CharacterBitmap& bitmap, Color color)
 {
     Point point = p;
     point.moveBy(m_translation);
     for (unsigned row = 0; row < bitmap.height(); ++row) {
         int y = point.y() + row;
-        if (y < m_clipRect.top() || y >= m_clipRect.bottom())
+        if (y < m_clip_rect.top() || y >= m_clip_rect.bottom())
             break;
         auto* bits = m_target->scanline(y);
         for (unsigned j = 0; j < bitmap.width(); ++j) {
             int x = point.x() + j;
-            if (x < m_clipRect.left() || x >= m_clipRect.right())
+            if (x < m_clip_rect.left() || x >= m_clip_rect.right())
                 break;
             char fc = bitmap.bits()[row * bitmap.width() + j];
             if (fc == '#')
@@ -81,7 +81,7 @@ void Painter::drawBitmap(const Point& p, const CharacterBitmap& bitmap, Color co
     }
 }
 
-void Painter::drawText(const Rect& rect, const String& text, TextAlignment alignment, Color color)
+void Painter::draw_text(const Rect& rect, const String& text, TextAlignment alignment, Color color)
 {
     Point point;
     
@@ -108,20 +108,20 @@ void Painter::drawText(const Rect& rect, const String& text, TextAlignment align
         }
         int x = point.x() + i * font().glyphWidth();
         int y = point.y();
-        drawBitmap({ x, y }, *bitmap, color);
+        draw_bitmap({ x, y }, *bitmap, color);
     }
 }
 
-void Painter::drawPixel(const Point& p, Color color)
+void Painter::set_pixel(const Point& p, Color color)
 {
     auto point = p;
     point.moveBy(m_translation);
-    if (!m_clipRect.contains(point))
+    if (!m_clip_rect.contains(point))
         return;
     m_target->scanline(point.y())[point.x()] = color.value();
 }
 
-void Painter::set_pixel_with_draw_op(dword& pixel, const Color& color)
+ALWAYS_INLINE void Painter::set_pixel_with_draw_op(dword& pixel, const Color& color)
 {
     if (m_draw_op == DrawOp::Copy)
         pixel = color.value();
@@ -129,7 +129,7 @@ void Painter::set_pixel_with_draw_op(dword& pixel, const Color& color)
         pixel ^= color.value();
 }
 
-void Painter::drawLine(const Point& p1, const Point& p2, Color color)
+void Painter::draw_line(const Point& p1, const Point& p2, Color color)
 {
     auto point1 = p1;
     point1.moveBy(m_translation);
@@ -140,12 +140,12 @@ void Painter::drawLine(const Point& p1, const Point& p2, Color color)
     // Special case: vertical line.
     if (point1.x() == point2.x()) {
         const int x = point1.x();
-        if (x < m_clipRect.left() || x >= m_clipRect.right())
+        if (x < m_clip_rect.left() || x >= m_clip_rect.right())
             return;
         if (point1.y() > point2.y())
             swap(point1, point2);
-        int min_y = max(point1.y(), m_clipRect.top());
-        int max_y = min(point2.y(), m_clipRect.bottom());
+        int min_y = max(point1.y(), m_clip_rect.top());
+        int max_y = min(point2.y(), m_clip_rect.bottom());
         for (int y = min_y; y <= max_y; ++y)
             set_pixel_with_draw_op(m_target->scanline(y)[x], color);
         return;
@@ -157,12 +157,12 @@ void Painter::drawLine(const Point& p1, const Point& p2, Color color)
     // Special case: horizontal line.
     if (point1.y() == point2.y()) {
         const int y = point1.y();
-        if (y < m_clipRect.top() || y >= m_clipRect.bottom())
+        if (y < m_clip_rect.top() || y >= m_clip_rect.bottom())
             return;
         if (point1.x() > point2.x())
             swap(point1, point2);
-        int min_x = max(point1.x(), m_clipRect.left());
-        int max_x = min(point2.x(), m_clipRect.right());
+        int min_x = max(point1.x(), m_clip_rect.left());
+        int max_x = min(point2.x(), m_clip_rect.right());
         auto* pixels = m_target->scanline(point1.y());
         for (int x = min_x; x <= max_x; ++x)
             set_pixel_with_draw_op(pixels[x], color);
@@ -175,14 +175,14 @@ void Painter::drawLine(const Point& p1, const Point& p2, Color color)
 #if 0
     const double dx = point2.x() - point1.x();
     const double dy = point2.y() - point1.y();
-    const double deltaError = fabs(dy / dx);
+    const double delta_error = fabs(dy / dx);
     double error = 0;
     const double yStep = dy == 0 ? 0 : (dy > 0 ? 1 : -1);
 
     int y = point1.y();
     for (int x = point1.x(); x <= point2.x(); ++x) {
         m_target->scanline(y)[x] = color.value();
-        error += deltaError;
+        error += delta_error;
         if (error >= 0.5) {
             y = (double)y + yStep;
             error -= 1.0;
@@ -191,19 +191,19 @@ void Painter::drawLine(const Point& p1, const Point& p2, Color color)
 #endif
 }
 
-void Painter::drawFocusRect(const Rect& rect)
+void Painter::draw_focus_rect(const Rect& rect)
 {
-    Rect focusRect = rect;
-    focusRect.moveBy(1, 1);
-    focusRect.setWidth(focusRect.width() - 2);
-    focusRect.setHeight(focusRect.height() - 2);
-    drawRect(focusRect, Color(96, 96, 192));
+    Rect focus_rect = rect;
+    focus_rect.moveBy(1, 1);
+    focus_rect.setWidth(focus_rect.width() - 2);
+    focus_rect.setHeight(focus_rect.height() - 2);
+    draw_rect(focus_rect, Color(96, 96, 192));
 }
 
 void Painter::blit(const Point& position, const GraphicsBitmap& source)
 {
     Rect dst_rect(position, source.size());
-    dst_rect.intersect(m_clipRect);
+    dst_rect.intersect(m_clip_rect);
 
     for (int y = 0; y < dst_rect.height(); ++y) {
         auto* dst_scanline = m_target->scanline(position.y() + y);
