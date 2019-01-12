@@ -320,17 +320,7 @@ void WindowManager::invalidate()
 
 void WindowManager::invalidate(const Rect& a_rect)
 {
-    // FIXME: This code is fugly.
-    Rect rect(a_rect);
-    auto screen_rect = AbstractScreen::the().rect();
-    if (rect.left() < 0)
-        rect.set_left(0);
-    if (rect.top() < 0)
-        rect.set_top(0);
-    if (rect.right() > screen_rect.right())
-        rect.set_right(screen_rect.right());
-    if (rect.bottom() > screen_rect.bottom())
-        rect.set_bottom(screen_rect.bottom());
+    auto rect = Rect::intersection(a_rect, AbstractScreen::the().rect());
     if (rect.is_empty())
         return;
     for (auto& r : m_invalidated_rects) {
