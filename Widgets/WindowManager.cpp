@@ -6,16 +6,15 @@
 #include "EventLoop.h"
 #include "FrameBuffer.h"
 
-static const int windowFrameWidth = 2;
 static const int windowTitleBarHeight = 16;
 
 static inline Rect titleBarRectForWindow(const Rect& window)
 {
     return {
-        window.x() - windowFrameWidth,
-        window.y() - windowTitleBarHeight - windowFrameWidth,
-        window.width() + windowFrameWidth * 2,
-        windowTitleBarHeight + windowFrameWidth
+        window.x() - 1,
+        window.y() - windowTitleBarHeight,
+        window.width() + 2,
+        windowTitleBarHeight
     };
 }
 
@@ -23,9 +22,9 @@ static inline Rect titleBarTitleRectForWindow(const Rect& window)
 {
     auto titleBarRect = titleBarRectForWindow(window);
     return {
-        titleBarRect.x() + windowFrameWidth,
+        titleBarRect.x() + 2,
         titleBarRect.y(),
-        titleBarRect.width() - windowFrameWidth * 2,
+        titleBarRect.width() - 4,
         titleBarRect.height()
     };
 }
@@ -36,7 +35,7 @@ static inline Rect borderRectForWindow(const Rect& window)
     return { titleBarRect.x() - 1,
         titleBarRect.y() - 1,
         titleBarRect.width() + 2,
-        windowFrameWidth + windowTitleBarHeight + window.height() + 4
+        windowTitleBarHeight + window.height() + 3
     };
 }
 
@@ -89,26 +88,12 @@ void WindowManager::paintWindowFrame(Window& window)
     auto outerRect = outerRectForWindow(window.rect());
     auto borderRect = borderRectForWindow(window.rect());
 
-    Rect bottomRect {
-        window.x() - windowFrameWidth,
-        window.y() + window.height(),
-        window.width() + windowFrameWidth * 2,
-        windowFrameWidth };
-
-    Rect leftRect {
-        window.x() - windowFrameWidth,
-        window.y(),
-        windowFrameWidth,
-        window.height()
+    Rect inner_border_rect {
+        window.x() - 1,
+        window.y() - 1,
+        window.width() + 2,
+        window.height() + 2
     };
-
-    Rect rightRect {
-        window.x() + window.width(),
-        window.y(),
-        windowFrameWidth,
-        window.height()
-    };
-
 
     if (!m_lastDragRect.is_empty()) {
         p.xorRect(m_lastDragRect, Color::Red);
@@ -128,9 +113,8 @@ void WindowManager::paintWindowFrame(Window& window)
     p.drawRect(outerRect, borderColor);
 
     p.fillRect(titleBarRect, borderColor);
-    p.fillRect(bottomRect, borderColor);
-    p.fillRect(leftRect, borderColor);
-    p.fillRect(rightRect, borderColor);
+
+    p.drawRect(inner_border_rect, borderColor);
 
     p.drawText(titleBarTitleRect, window.title(), Painter::TextAlignment::CenterLeft, titleColor);
 }
