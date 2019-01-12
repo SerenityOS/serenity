@@ -7,6 +7,36 @@
 
 #define DEBUG_WIDGET_UNDERDRAW
 
+ALWAYS_INLINE void fast_dword_copy(dword* dest, const dword* src, size_t count)
+{
+#ifdef SERENITY
+    asm volatile(
+        "rep movsl\n"
+        : "=S"(src), "=D"(dest)
+        : "S"(src), "D"(dest), "c"(count)
+        : "memory"
+    );
+#else
+    memcpy(dest, src, count * sizeof(dword));
+#endif
+}
+
+ALWAYS_INLINE void fast_dword_fill(dword* dest, dword value, size_t count)
+{
+#ifdef SERENITY
+    asm volatile(
+        "rep stosl\n"
+        : "=D"(dest)
+        : "D"(dest), "c"(count), "a"(value)
+        : "memory"
+    );
+#else
+    for (size_t i = 0; x <= count; ++x) {
+        dest[i] = value;
+    }
+#endif
+}
+
 Painter::Painter(GraphicsBitmap& bitmap)
 {
     m_font = &Font::defaultFont();
@@ -38,11 +68,13 @@ void Painter::fill_rect(const Rect& rect, Color color)
     Rect r = rect;
     r.moveBy(m_translation);
 
-    for (int y = max(r.top(), m_clip_rect.top()); y <= min(r.bottom(), m_clip_rect.bottom()); ++y) {
-        auto* bits = m_target->scanline(y);
-        for (int x = max(r.left(), m_clip_rect.left()); x <= min(r.right(), m_clip_rect.right()); ++x) {
-            bits[x] = color.value();
-        }
+    int min_y = max(r.top(), m_clip_rect.top());
+    int max_y = min(r.bottom(), m_clip_rect.bottom());
+    int min_x = max(r.left(), m_clip_rect.left());
+    int max_x = min(r.right(), m_clip_rect.right());
+    for (int y = min_y; y <= max_y; ++y) {
+        RGBA32* bits = m_target->scanline(y);
+        fast_dword_fill(bits + min_x, color.value(), max_x - min_x + 1);
     }
 }
 
@@ -51,12 +83,15 @@ void Painter::draw_rect(const Rect& rect, Color color)
     Rect r = rect;
     r.moveBy(m_translation);
 
-    for (int y = max(r.top(), m_clip_rect.top()); y <= min(r.bottom(), m_clip_rect.bottom()); ++y) {
+    int min_y = max(r.top(), m_clip_rect.top());
+    int max_y = min(r.bottom(), m_clip_rect.bottom());
+    int min_x = max(r.left(), m_clip_rect.left());
+    int max_x = min(r.right(), m_clip_rect.right());
+
+    for (int y = min_y; y <= max_y; ++y) {
         auto* bits = m_target->scanline(y);
         if (y == r.top() || y == r.bottom()) {
-            for (int x = max(r.left(), m_clip_rect.left()); x <= min(r.right(), m_clip_rect.right()); ++x) {
-                bits[x] = color.value();
-            }
+            fast_dword_fill(bits + min_x, color.value(), max_x - min_x + 1);
         } else {
             if (r.left() >= m_clip_rect.left() && r.left() <= m_clip_rect.right())
                 bits[r.left()] = color.value();
@@ -169,8 +204,12 @@ void Painter::draw_line(const Point& p1, const Point& p2, Color color)
         int min_x = max(point1.x(), m_clip_rect.left());
         int max_x = min(point2.x(), m_clip_rect.right());
         auto* pixels = m_target->scanline(point1.y());
-        for (int x = min_x; x <= max_x; ++x)
-            set_pixel_with_draw_op(pixels[x], color);
+        if (m_draw_op == DrawOp::Copy) {
+            fast_dword_fill(pixels + min_x, color.value(), max_x - min_x + 1);
+        } else {
+            for (int x = min_x; x <= max_x; ++x)
+                set_pixel_with_draw_op(pixels[x], color);
+        }
         return;
     }
 
@@ -213,6 +252,6 @@ void Painter::blit(const Point& position, const GraphicsBitmap& source)
     for (int y = 0; y < dst_rect.height(); ++y) {
         auto* dst_scanline = m_target->scanline(position.y() + y);
         auto* src_scanline = source.scanline(y);
-        memcpy(dst_scanline + dst_rect.x(), src_scanline + (dst_rect.x() - position.x()), dst_rect.width() * 4);
+        fast_dword_copy(dst_scanline + dst_rect.x(), src_scanline + (dst_rect.x() - position.x()), dst_rect.width());
     }
 }
