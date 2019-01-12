@@ -128,10 +128,13 @@ void Window::setFocusedWidget(Widget* widget)
         m_focusedWidget = nullptr;
     else {
         m_focusedWidget = widget->makeWeakPtr();
+        m_focusedWidget->update();
         EventLoop::main().postEvent(m_focusedWidget.ptr(), make<Event>(Event::FocusIn));
     }
-    if (previously_focused_widget)
+    if (previously_focused_widget) {
+        previously_focused_widget->update();
         EventLoop::main().postEvent(previously_focused_widget, make<Event>(Event::FocusOut));
+    }
 }
 
 void Window::close()

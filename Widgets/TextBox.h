@@ -14,6 +14,7 @@ public:
     Function<void(TextBox&)> onReturnPressed;
 
 private:
+    virtual const char* class_name() const override { return "TextBox"; }
     virtual void paintEvent(PaintEvent&) override;
     virtual void mouseDownEvent(MouseEvent&) override;
     virtual void keyDownEvent(KeyEvent&) override;
