@@ -8,6 +8,8 @@
 #include "Process.h"
 #include "MemoryManager.h"
 
+//#define DEBUG_FLUSH_YELLOW
+
 static const int windowTitleBarHeight = 16;
 
 static inline Rect titleBarRectForWindow(const Rect& window)
@@ -327,6 +329,12 @@ void WindowManager::invalidate(const Rect& a_rect)
     for (auto& r : m_invalidated_rects) {
         if (r.contains(rect))
             return;
+        if (r.intersects(rect)) {
+            // Unite with the existing dirty rect.
+            // FIXME: It would be much nicer to compute the exact rects needing repaint.
+            r = r.united(rect);
+            return;
+        }
     }
 
     m_invalidated_rects.append(rect);
@@ -349,6 +357,11 @@ void WindowManager::flush(const Rect& a_rect)
     RGBA32* front_ptr = m_front_bitmap->scanline(rect.y()) + rect.x();
     const RGBA32* back_ptr = m_back_bitmap->scanline(rect.y()) + rect.x();
     size_t pitch = m_back_bitmap->pitch();
+
+#ifdef DEBUG_FLUSH_YELLOW
+    Painter p(*m_front_bitmap);
+    p.fill_rect(rect, Color::Yellow);
+#endif
 
     for (int y = 0; y < rect.height(); ++y) {
         fast_dword_copy(front_ptr, back_ptr, rect.width());

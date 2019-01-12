@@ -20,3 +20,13 @@ void Rect::intersect(const Rect& other)
     m_size.setWidth((r - l) + 1);
     m_size.setHeight((b - t) + 1);
 }
+
+Rect Rect::united(const Rect& other) const
+{
+    Rect rect;
+    rect.set_left(min(left(), other.left()));
+    rect.set_top(min(top(), other.top()));
+    rect.set_right(max(right(), other.right()));
+    rect.set_bottom(max(bottom(), other.bottom()));
+    return rect;
+}
