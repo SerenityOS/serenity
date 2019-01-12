@@ -33,9 +33,9 @@ void Painter::fillRect(const Rect& rect, Color color)
     Rect r = rect;
     r.moveBy(m_translation);
 
-    for (int y = max(r.top(), m_clipRect.top()); y < min(r.bottom(), m_clipRect.bottom()); ++y) {
+    for (int y = max(r.top(), m_clipRect.top()); y <= min(r.bottom(), m_clipRect.bottom()); ++y) {
         auto* bits = m_target->scanline(y);
-        for (int x = max(r.left(), m_clipRect.left()); x < min(r.right(), m_clipRect.right()); ++x) {
+        for (int x = max(r.left(), m_clipRect.left()); x <= min(r.right(), m_clipRect.right()); ++x) {
             bits[x] = color.value();
         }
     }
@@ -46,17 +46,17 @@ void Painter::drawRect(const Rect& rect, Color color)
     Rect r = rect;
     r.moveBy(m_translation);
 
-    for (int y = max(r.top(), m_clipRect.top()); y < min(r.bottom(), m_clipRect.bottom()); ++y) {
+    for (int y = max(r.top(), m_clipRect.top()); y <= min(r.bottom(), m_clipRect.bottom()); ++y) {
         auto* bits = m_target->scanline(y);
-        if (y == r.top() || y == (r.bottom() - 1)) {
-            for (int x = max(r.left(), m_clipRect.left()); x < min(r.right(), m_clipRect.right()); ++x) {
+        if (y == r.top() || y == r.bottom()) {
+            for (int x = max(r.left(), m_clipRect.left()); x <= min(r.right(), m_clipRect.right()); ++x) {
                 bits[x] = color.value();
             }
         } else {
             if (r.left() >= m_clipRect.left() && r.left() < m_clipRect.right())
                 bits[r.left()] = color.value();
             if (r.right() >= m_clipRect.left() && r.right() < m_clipRect.right())
-                bits[r.right() - 1] = color.value();
+                bits[r.right()] = color.value();
         }
     }
 }
