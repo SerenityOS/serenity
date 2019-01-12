@@ -231,8 +231,10 @@ void exception_14_handler(RegisterDumpWithExceptionCode& regs)
     );
 #endif
 
-    if (current->isRing0())
+    if (current->isRing0()) {
+        current->dumpRegions();
         HANG;
+    }
 
     auto response = MM.handle_page_fault(PageFault(regs.exception_code, LinearAddress(faultAddress)));
 

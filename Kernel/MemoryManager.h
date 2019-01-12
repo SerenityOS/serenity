@@ -11,6 +11,8 @@
 #include <AK/AKString.h>
 #include <VirtualFileSystem/VirtualFileSystem.h>
 
+#define PAGE_ROUND_UP(x) ((((dword)(x)) + PAGE_SIZE-1) & (~(PAGE_SIZE-1)))
+
 class Process;
 extern Process* current;
 
