@@ -9,7 +9,7 @@
 static const int windowFrameWidth = 2;
 static const int windowTitleBarHeight = 16;
 
-static inline Rect titleBarRectForWindow(const Window& window)
+static inline Rect titleBarRectForWindow(const Rect& window)
 {
     return {
         window.x() - windowFrameWidth,
@@ -19,7 +19,7 @@ static inline Rect titleBarRectForWindow(const Window& window)
     };
 }
 
-static inline Rect titleBarTitleRectForWindow(const Window& window)
+static inline Rect titleBarTitleRectForWindow(const Rect& window)
 {
     auto titleBarRect = titleBarRectForWindow(window);
     return {
@@ -30,17 +30,17 @@ static inline Rect titleBarTitleRectForWindow(const Window& window)
     };
 }
 
-static inline Rect borderRectForWindow(const Window& window)
+static inline Rect borderRectForWindow(const Rect& window)
 {
     auto titleBarRect = titleBarRectForWindow(window);
     return { titleBarRect.x() - 1,
         titleBarRect.y() - 1,
         titleBarRect.width() + 2,
-        windowFrameWidth + windowTitleBarHeight + window.rect().height() + 4
+        windowFrameWidth + windowTitleBarHeight + window.height() + 4
     };
 }
 
-static inline Rect outerRectForWindow(const Window& window)
+static inline Rect outerRectForWindow(const Rect& window)
 {
     auto rect = borderRectForWindow(window);
     rect.inflate(2, 2);
@@ -68,6 +68,8 @@ WindowManager::WindowManager()
 
     m_inactiveWindowBorderColor = Color(64, 64, 64);
     m_inactiveWindowTitleColor = Color::White;
+
+    invalidate();
 }
 
 WindowManager::~WindowManager()
@@ -80,10 +82,10 @@ void WindowManager::paintWindowFrame(Window& window)
 
     //printf("[WM] paintWindowFrame {%p}, rect: %d,%d %dx%d\n", &window, window.rect().x(), window.rect().y(), window.rect().width(), window.rect().height());
 
-    auto titleBarRect = titleBarRectForWindow(window);
-    auto titleBarTitleRect = titleBarTitleRectForWindow(window);
-    auto outerRect = outerRectForWindow(window);
-    auto borderRect = borderRectForWindow(window);
+    auto titleBarRect = titleBarRectForWindow(window.rect());
+    auto titleBarTitleRect = titleBarTitleRectForWindow(window.rect());
+    auto outerRect = outerRectForWindow(window.rect());
+    auto borderRect = borderRectForWindow(window.rect());
 
     Rect bottomRect {
         window.x() - windowFrameWidth,
@@ -145,25 +147,10 @@ void WindowManager::move_to_front(Window& window)
     m_windows_in_order.append(&window);
 }
 
-void WindowManager::repaint()
-{
-    handlePaintEvent(*make<PaintEvent>());
-}
-
 void WindowManager::did_paint(Window& window)
 {
-    auto& framebuffer = FrameBuffer::the();
-    if (m_windows_in_order.tail() == &window) {
-        ASSERT(window.backing());
-        framebuffer.blit(window.position(), *window.backing());
-        redraw_cursor();
-        framebuffer.flush();
-        printf("[WM] frontmost_only_compose_count: %u\n", ++m_frontmost_only_compose_count);
-        return;
-    }
-
-    // FIXME: Check if anything overlaps this window, otherwise just blit.
-    recompose();
+    invalidate(window);
+    compose();
 }
 
 void WindowManager::removeWindow(Window& window)
@@ -171,12 +158,12 @@ void WindowManager::removeWindow(Window& window)
     if (!m_windows.contains(&window))
         return;
 
+    invalidate(window);
     m_windows.remove(&window);
     m_windows_in_order.remove(&window);
     if (!activeWindow() && !m_windows.is_empty())
         setActiveWindow(*m_windows.begin());
-
-    repaint();
+    compose();
 }
 
 void WindowManager::notifyTitleChanged(Window& window)
@@ -184,10 +171,12 @@ void WindowManager::notifyTitleChanged(Window& window)
     printf("[WM] Window{%p} title set to '%s'\n", &window, window.title().characters());
 }
 
-void WindowManager::notifyRectChanged(Window& window, const Rect& oldRect, const Rect& newRect)
+void WindowManager::notifyRectChanged(Window& window, const Rect& old_rect, const Rect& new_rect)
 {
-    printf("[WM] Window %p rect changed (%d,%d %dx%d) -> (%d,%d %dx%d)\n", &window, oldRect.x(), oldRect.y(), oldRect.width(), oldRect.height(), newRect.x(), newRect.y(), newRect.width(), newRect.height());
-    recompose();
+    printf("[WM] Window %p rect changed (%d,%d %dx%d) -> (%d,%d %dx%d)\n", &window, old_rect.x(), old_rect.y(), old_rect.width(), old_rect.height(), new_rect.x(), new_rect.y(), new_rect.width(), new_rect.height());
+    invalidate(outerRectForWindow(old_rect));
+    invalidate(outerRectForWindow(new_rect));
+    compose();
 }
 
 void WindowManager::handleTitleBarMouseEvent(Window& window, MouseEvent& event)
@@ -197,7 +186,7 @@ void WindowManager::handleTitleBarMouseEvent(Window& window, MouseEvent& event)
         m_dragWindow = window.makeWeakPtr();;
         m_dragOrigin = event.position();
         m_dragWindowOrigin = window.position();
-        m_dragStartRect = outerRectForWindow(window);
+        m_dragStartRect = outerRectForWindow(window.rect());
         window.setIsBeingDragged(true);
         return;
     }
@@ -208,10 +197,12 @@ void WindowManager::processMouseEvent(MouseEvent& event)
     if (event.type() == Event::MouseUp) {
         if (m_dragWindow) {
             printf("[WM] Finish dragging Window{%p}\n", m_dragWindow.ptr());
+            invalidate(m_dragStartRect);
+            invalidate(*m_dragWindow);
             m_dragWindow->setIsBeingDragged(false);
-            m_dragEndRect = outerRectForWindow(*m_dragWindow);
+            m_dragEndRect = outerRectForWindow(m_dragWindow->rect());
             m_dragWindow = nullptr;
-            recompose();
+            compose();
             return;
         }
     }
@@ -229,7 +220,7 @@ void WindowManager::processMouseEvent(MouseEvent& event)
     }
 
     for (auto* window = m_windows_in_order.tail(); window; window = window->prev()) {
-        if (titleBarRectForWindow(*window).contains(event.position())) {
+        if (titleBarRectForWindow(window->rect()).contains(event.position())) {
             if (event.type() == Event::MouseDown) {
                 move_to_front(*window);
                 setActiveWindow(window);
@@ -251,28 +242,17 @@ void WindowManager::processMouseEvent(MouseEvent& event)
     }
 }
 
-void WindowManager::handlePaintEvent(PaintEvent& event)
-{
-    //printf("[WM] paint event\n");
-    if (event.rect().is_empty()) {
-        event.m_rect.setWidth(AbstractScreen::the().width());
-        event.m_rect.setHeight(AbstractScreen::the().height());
-    }
-
-    m_rootWidget->event(event);
-
-    for (auto* window = m_windows_in_order.head(); window; window = window->next())
-        window->event(event);
-
-    recompose();
-}
-
-void WindowManager::recompose()
+void WindowManager::compose()
 {
     printf("[WM] recompose_count: %u\n", ++m_recompose_count);
     auto& framebuffer = FrameBuffer::the();
-    PaintEvent dummy_event(m_rootWidget->rect());
-    m_rootWidget->paintEvent(dummy_event);
+    {
+        for (auto& r : m_invalidated_rects) {
+            dbgprintf("Repaint root %d,%d %dx%d\n", r.x(), r.y(), r.width(), r.height());
+            PaintEvent event(r);
+            m_rootWidget->paintEvent(event);
+        }
+    }
     for (auto* window = m_windows_in_order.head(); window; window = window->next()) {
         if (!window->backing())
             continue;
@@ -284,6 +264,7 @@ void WindowManager::recompose()
     framebuffer.flush();
     m_last_drawn_cursor_location = { -1, -1 };
     redraw_cursor();
+    m_invalidated_rects.clear();
 }
 
 void WindowManager::redraw_cursor()
@@ -314,9 +295,6 @@ void WindowManager::event(Event& event)
         return Object::event(event);
     }
 
-    if (event.isPaintEvent())
-        return handlePaintEvent(static_cast<PaintEvent&>(event));
-
     return Object::event(event);
 }
 
@@ -335,16 +313,37 @@ void WindowManager::setActiveWindow(Window* window)
     if (window == m_activeWindow.ptr())
         return;
 
-    if (auto* previously_active_window = m_activeWindow.ptr())
+    if (auto* previously_active_window = m_activeWindow.ptr()) {
+        invalidate(*previously_active_window);
         EventLoop::main().postEvent(previously_active_window, make<Event>(Event::WindowBecameInactive));
+    }
     m_activeWindow = window->makeWeakPtr();
-    if (m_activeWindow)
+    if (m_activeWindow) {
+        invalidate(*m_activeWindow);
         EventLoop::main().postEvent(m_activeWindow.ptr(), make<Event>(Event::WindowBecameActive));
+    }
 
-    recompose();
+    compose();
 }
 
 bool WindowManager::isVisible(Window& window) const
 {
     return m_windows.contains(&window);
+}
+
+void WindowManager::invalidate()
+{
+    m_invalidated_rects.clear();
+    m_invalidated_rects.append(AbstractScreen::the().rect());
+}
+
+void WindowManager::invalidate(const Rect& rect)
+{
+    if (!rect.is_empty())
+        m_invalidated_rects.append(rect);
+}
+
+void WindowManager::invalidate(const Window& window)
+{
+    invalidate(outerRectForWindow(window.rect()));
 }
