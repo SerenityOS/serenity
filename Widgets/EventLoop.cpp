@@ -66,11 +66,26 @@ void EventLoop::postEvent(Object* receiver, OwnPtr<Event>&& event)
 void EventLoop::waitForEvent()
 {
     auto& mouse = PS2MouseDevice::the();
+    auto& screen = AbstractScreen::the();
+    bool prev_left_button = screen.left_mouse_button_pressed();
+    bool prev_right_button = screen.right_mouse_button_pressed();
+    int dx = 0;
+    int dy = 0;
     while (mouse.has_data_available_for_reading()) {
         signed_byte data[3];
         ssize_t nread = mouse.read((byte*)data, 3);
         ASSERT(nread == 3);
-        AbstractScreen::the().on_receive_mouse_data(data[1], -data[2], data[0] & 1, data[0] & 2);
+        bool left_button = data[0] & 1;
+        bool right_button = data[0] & 2;
+        dx += data[1];
+        dy += -data[2];
+        if (left_button != prev_left_button || right_button != prev_right_button || !mouse.has_data_available_for_reading()) {
+            prev_left_button = left_button;
+            prev_right_button = right_button;
+            screen.on_receive_mouse_data(dx, dy, left_button, right_button);
+            dx = 0;
+            dy = 0;
+        }
     }
 }
 #endif
