@@ -1,5 +1,7 @@
 #pragma once
 
+//#define KMALLOC_DEBUG_LARGE_ALLOCATIONS
+
 void kmalloc_init();
 void* kmalloc_impl(dword size) __attribute__ ((malloc));
 void* kmalloc_eternal(size_t) __attribute__ ((malloc));
@@ -20,8 +22,10 @@ inline void* operator new[](size_t, void* p) { return p; }
 
 ALWAYS_INLINE void* kmalloc(size_t size)
 {
-    // Any kernel allocation >= 32K is very suspicious, catch them.
-    if (size >= 0x8000)
+#ifdef KMALLOC_DEBUG_LARGE_ALLOCATIONS
+    // Any kernel allocation >= 1M is 99.9% a bug.
+    if (size >= 1048576)
         asm volatile("cli;hlt");
+#endif
     return kmalloc_impl(size);
 }
