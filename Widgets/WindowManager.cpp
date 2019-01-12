@@ -351,9 +351,10 @@ void WindowManager::invalidate(const Window& window)
     invalidate(outerRectForWindow(window.rect()));
 }
 
-void WindowManager::flush(const Rect& rect)
+void WindowManager::flush(const Rect& a_rect)
 {
     auto& framebuffer = FrameBuffer::the();
+    auto rect = Rect::intersection(a_rect, framebuffer.rect());
 
     for (int y = rect.top(); y <= rect.bottom(); ++y) {
         auto* front_scanline = m_front_bitmap->scanline(y);
