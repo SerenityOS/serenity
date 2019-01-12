@@ -76,6 +76,7 @@ WindowManager::WindowManager()
     m_inactiveWindowTitleColor = Color::White;
 
     invalidate();
+    compose();
 }
 
 WindowManager::~WindowManager()
@@ -130,7 +131,6 @@ void WindowManager::move_to_front(Window& window)
 void WindowManager::did_paint(Window& window)
 {
     invalidate(window);
-    compose();
 }
 
 void WindowManager::removeWindow(Window& window)
@@ -143,7 +143,6 @@ void WindowManager::removeWindow(Window& window)
     m_windows_in_order.remove(&window);
     if (!activeWindow() && !m_windows.is_empty())
         setActiveWindow(*m_windows.begin());
-    compose();
 }
 
 void WindowManager::notifyTitleChanged(Window& window)
@@ -156,7 +155,6 @@ void WindowManager::notifyRectChanged(Window& window, const Rect& old_rect, cons
     printf("[WM] Window %p rect changed (%d,%d %dx%d) -> (%d,%d %dx%d)\n", &window, old_rect.x(), old_rect.y(), old_rect.width(), old_rect.height(), new_rect.x(), new_rect.y(), new_rect.width(), new_rect.height());
     invalidate(outerRectForWindow(old_rect));
     invalidate(outerRectForWindow(new_rect));
-    compose();
 }
 
 void WindowManager::handleTitleBarMouseEvent(Window& window, MouseEvent& event)
@@ -182,7 +180,6 @@ void WindowManager::processMouseEvent(MouseEvent& event)
             m_dragWindow->setIsBeingDragged(false);
             m_dragEndRect = outerRectForWindow(m_dragWindow->rect());
             m_dragWindow = nullptr;
-            compose();
             return;
         }
     }
@@ -196,7 +193,6 @@ void WindowManager::processMouseEvent(MouseEvent& event)
             m_dragWindow->setPositionWithoutRepaint(pos);
             invalidate(outerRectForWindow(old_window_rect));
             invalidate(outerRectForWindow(m_dragWindow->rect()));
-            compose();
             return;
         }
     }
@@ -226,7 +222,7 @@ void WindowManager::processMouseEvent(MouseEvent& event)
 
 void WindowManager::compose()
 {
-    printf("[WM] recompose_count: %u\n", ++m_recompose_count);
+    printf("[WM] compose #%u (%u rects)\n", ++m_recompose_count, m_invalidated_rects.size());
     auto any_window_contains_rect = [this] (const Rect& r) {
         for (auto* window = m_windows_in_order.head(); window; window = window->next()) {
             if (outerRectForWindow(window->rect()).contains(r))
@@ -283,6 +279,12 @@ void WindowManager::event(Event& event)
         return Object::event(event);
     }
 
+    if (event.type() == Event::WM_Compose) {
+        m_pending_compose_event = false;
+        compose();
+        return;
+    }
+
     return Object::event(event);
 }
 
@@ -300,8 +302,6 @@ void WindowManager::setActiveWindow(Window* window)
         invalidate(*m_activeWindow);
         EventLoop::main().postEvent(m_activeWindow.ptr(), make<Event>(Event::WindowBecameActive));
     }
-
-    compose();
 }
 
 bool WindowManager::isVisible(Window& window) const
@@ -336,6 +336,11 @@ void WindowManager::invalidate(const Rect& a_rect)
     }
 
     m_invalidated_rects.append(rect);
+
+    if (!m_pending_compose_event) {
+        EventLoop::main().postEvent(this, make<Event>(Event::WM_Compose));
+        m_pending_compose_event = true;
+    }
 }
 
 void WindowManager::invalidate(const Window& window)

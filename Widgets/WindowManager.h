@@ -78,4 +78,6 @@ private:
     RetainPtr<GraphicsBitmap> m_back_bitmap;
 
     Vector<Rect> m_invalidated_rects;
+
+    bool m_pending_compose_event { false };
 };
