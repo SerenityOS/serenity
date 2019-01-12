@@ -39,6 +39,7 @@ public:
         WindowBecameActive,
         FocusIn,
         FocusOut,
+        WM_Compose,
     };
 
     Event() { }
