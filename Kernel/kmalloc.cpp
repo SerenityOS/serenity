@@ -90,7 +90,7 @@ void* kmalloc_page_aligned(size_t size)
     return ptr;
 }
 
-void* kmalloc(dword size)
+void* kmalloc_impl(dword size)
 {
     InterruptDisabler disabler;
 

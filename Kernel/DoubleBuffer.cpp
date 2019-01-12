@@ -2,9 +2,13 @@
 
 void DoubleBuffer::flip()
 {
+    InterruptDisabler disabler;
     ASSERT(m_read_buffer_index == m_read_buffer->size());
     swap(m_read_buffer, m_write_buffer);
-    m_write_buffer->clear();
+    if (m_write_buffer->capacity() < 32)
+        m_write_buffer->clear_with_capacity();
+    else
+        m_write_buffer->clear();
     m_read_buffer_index = 0;
 }
 
