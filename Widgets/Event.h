@@ -44,7 +44,7 @@ public:
 
     Event() { }
     explicit Event(Type type) : m_type(type) { }
-    ~Event() { }
+    virtual ~Event() { }
 
     Type type() const { return m_type; }
 
