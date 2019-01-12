@@ -100,6 +100,15 @@ public:
         m_impl = nullptr;
     }
 
+    void clear_with_capacity()
+    {
+        if (!m_impl)
+            return;
+        for (size_t i = 0; i < size(); ++i)
+            at(i).~T();
+        m_impl->m_size = 0;
+    }
+
     bool contains_slow(const T& value) const
     {
         for (size_t i = 0; i < size(); ++i) {
