@@ -22,11 +22,11 @@ void ListBox::paintEvent(PaintEvent&)
     Painter painter(*this);
 
     // FIXME: Reduce overdraw.
-    painter.fillRect(rect(), Color::White);
-    painter.drawRect(rect(), Color::Black);
+    painter.fill_rect(rect(), Color::White);
+    painter.draw_rect(rect(), Color::Black);
 
     if (isFocused())
-        painter.drawFocusRect(rect());
+        painter.draw_focus_rect(rect());
 
     for (unsigned i = m_scrollOffset; i < m_items.size(); ++i) {
         Rect itemRect(2, 2 + (i * itemHeight()), width() - 4, itemHeight());
@@ -35,12 +35,12 @@ void ListBox::paintEvent(PaintEvent&)
         Color itemTextColor = foregroundColor();
         if (m_selectedIndex == i) {
             if (isFocused())
-                painter.fillRect(itemRect, Color(0, 32, 128));
+                painter.fill_rect(itemRect, Color(0, 32, 128));
             else
-                painter.fillRect(itemRect, Color(96, 96, 96));
+                painter.fill_rect(itemRect, Color(96, 96, 96));
             itemTextColor = Color::White;
         }
-        painter.drawText(textRect, m_items[i], Painter::TextAlignment::TopLeft, itemTextColor);
+        painter.draw_text(textRect, m_items[i], Painter::TextAlignment::TopLeft, itemTextColor);
     }
 }
 

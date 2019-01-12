@@ -85,11 +85,11 @@ void CheckBox::paintEvent(PaintEvent&)
     bitmapPosition.setX(2);
     bitmapPosition.setY(height() / 2 - bitmap->height() / 2 - 1);
 
-    painter.fillRect(rect(), backgroundColor());
-    painter.drawBitmap(bitmapPosition, *bitmap, foregroundColor());
+    painter.fill_rect(rect(), backgroundColor());
+    painter.draw_bitmap(bitmapPosition, *bitmap, foregroundColor());
 
     if (!caption().is_empty()) {
-        painter.drawText(textRect, caption(), Painter::TextAlignment::TopLeft, foregroundColor());
+        painter.draw_text(textRect, caption(), Painter::TextAlignment::TopLeft, foregroundColor());
     }
 }
 

@@ -26,11 +26,11 @@ void TextBox::paintEvent(PaintEvent&)
     Painter painter(*this);
 
     // FIXME: Reduce overdraw.
-    painter.fillRect(rect(), backgroundColor());
-    painter.drawRect(rect(), foregroundColor());
+    painter.fill_rect(rect(), backgroundColor());
+    painter.draw_rect(rect(), foregroundColor());
 
     if (isFocused())
-        painter.drawFocusRect(rect());
+        painter.draw_focus_rect(rect());
 
     Rect innerRect = rect();
     innerRect.shrink(6, 6);
@@ -51,13 +51,13 @@ void TextBox::paintEvent(PaintEvent&)
             printf("TextBox: glyph missing: %02x\n", ch);
             ASSERT_NOT_REACHED();
         }
-        painter.drawBitmap({x, y}, *bitmap, Color::Black);
+        painter.draw_bitmap({x, y}, *bitmap, Color::Black);
     }
 
     if (isFocused() && m_cursorBlinkState) {
         unsigned visibleCursorPosition = m_cursorPosition - firstVisibleChar;
         Rect cursorRect(innerRect.x() + visibleCursorPosition * font().glyphWidth(), innerRect.y(), 1, innerRect.height());
-        painter.fillRect(cursorRect, foregroundColor());
+        painter.fill_rect(cursorRect, foregroundColor());
     }
 }
 

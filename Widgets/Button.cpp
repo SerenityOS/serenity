@@ -26,45 +26,45 @@ void Button::paintEvent(PaintEvent&)
 
     Painter painter(*this);
 
-    painter.drawPixel({ 0, 0 }, backgroundColor());
-    painter.drawPixel({ width() - 1, 0 }, backgroundColor());
-    painter.drawPixel({ 0, height() - 1 }, backgroundColor());
-    painter.drawPixel({ width() - 1, height() - 1 }, backgroundColor());
+    painter.set_pixel({ 0, 0 }, backgroundColor());
+    painter.set_pixel({ width() - 1, 0 }, backgroundColor());
+    painter.set_pixel({ 0, height() - 1 }, backgroundColor());
+    painter.set_pixel({ width() - 1, height() - 1 }, backgroundColor());
 
-    painter.drawLine({ 1, 0 }, { width() - 2, 0 }, Color::Black);
-    painter.drawLine({ 1, height() - 1 }, { width() - 2, height() - 1}, Color::Black);
-    painter.drawLine({ 0, 1 }, { 0, height() - 2 }, Color::Black);
-    painter.drawLine({ width() - 1, 1 }, { width() - 1, height() - 2 }, Color::Black);
+    painter.draw_line({ 1, 0 }, { width() - 2, 0 }, Color::Black);
+    painter.draw_line({ 1, height() - 1 }, { width() - 2, height() - 1}, Color::Black);
+    painter.draw_line({ 0, 1 }, { 0, height() - 2 }, Color::Black);
+    painter.draw_line({ width() - 1, 1 }, { width() - 1, height() - 2 }, Color::Black);
 
     if (m_beingPressed) {
         // Base
-        painter.fillRect({ 1, 1, width() - 1, height() - 1 }, buttonColor);
+        painter.fill_rect({ 1, 1, width() - 1, height() - 1 }, buttonColor);
 
         // Sunken shadow
-        painter.drawLine({ 1, 1 }, { width() - 2, 1 }, shadowColor);
-        painter.drawLine({ 1, 2 }, {1, height() - 2 }, shadowColor);
+        painter.draw_line({ 1, 1 }, { width() - 2, 1 }, shadowColor);
+        painter.draw_line({ 1, 2 }, {1, height() - 2 }, shadowColor);
     } else {
         // Base
-        painter.fillRect({ 3, 3, width() - 5, height() - 5 }, buttonColor);
+        painter.fill_rect({ 3, 3, width() - 5, height() - 5 }, buttonColor);
 
         // White highlight
-        painter.drawLine({ 1, 1 }, { width() - 2, 1 }, highlightColor);
-        painter.drawLine({ 1, 2 }, { width() - 3, 2 }, highlightColor);
-        painter.drawLine({ 1, 3 }, { 1, height() - 2 }, highlightColor);
-        painter.drawLine({ 2, 3 }, { 2, height() - 3 }, highlightColor);
+        painter.draw_line({ 1, 1 }, { width() - 2, 1 }, highlightColor);
+        painter.draw_line({ 1, 2 }, { width() - 3, 2 }, highlightColor);
+        painter.draw_line({ 1, 3 }, { 1, height() - 2 }, highlightColor);
+        painter.draw_line({ 2, 3 }, { 2, height() - 3 }, highlightColor);
 
         // Gray shadow 
-        painter.drawLine({ width() - 2, 1 }, { width() - 2, height() - 4 }, shadowColor);
-        painter.drawLine({ width() - 3, 2 }, { width() - 3, height() - 4 }, shadowColor);
-        painter.drawLine({ 1, height() - 2 }, { width() - 2, height() - 2 }, shadowColor);
-        painter.drawLine({ 2, height() - 3 }, { width() - 2, height() - 3 }, shadowColor);
+        painter.draw_line({ width() - 2, 1 }, { width() - 2, height() - 4 }, shadowColor);
+        painter.draw_line({ width() - 3, 2 }, { width() - 3, height() - 4 }, shadowColor);
+        painter.draw_line({ 1, height() - 2 }, { width() - 2, height() - 2 }, shadowColor);
+        painter.draw_line({ 2, height() - 3 }, { width() - 2, height() - 3 }, shadowColor);
     }
 
     if (!caption().is_empty()) {
         auto textRect = rect();
         if (m_beingPressed)
             textRect.moveBy(1, 1);
-        painter.drawText(textRect, caption(), Painter::TextAlignment::Center, Color::Black);
+        painter.draw_text(textRect, caption(), Painter::TextAlignment::Center, Color::Black);
     }
 }
 

@@ -14,20 +14,19 @@ class Window;
 
 class Painter {
 public:
-    enum class TextAlignment { TopLeft, CenterLeft, Center };
     explicit Painter(Widget&);
     explicit Painter(GraphicsBitmap&);
     ~Painter();
-    void fillRect(const Rect&, Color);
-    void drawRect(const Rect&, Color);
-    void drawText(const Rect&, const String&, TextAlignment = TextAlignment::TopLeft, Color = Color());
-    void drawBitmap(const Point&, const CharacterBitmap&, Color = Color());
-    void drawPixel(const Point&, Color);
-    void drawLine(const Point& p1, const Point& p2, Color);
-
-    void drawFocusRect(const Rect&);
-
+    void fill_rect(const Rect&, Color);
+    void draw_rect(const Rect&, Color);
+    void draw_bitmap(const Point&, const CharacterBitmap&, Color = Color());
+    void set_pixel(const Point&, Color);
+    void draw_line(const Point&, const Point&, Color);
+    void draw_focus_rect(const Rect&);
     void blit(const Point&, const GraphicsBitmap&);
+
+    enum class TextAlignment { TopLeft, CenterLeft, Center };
+    void draw_text(const Rect&, const String&, TextAlignment = TextAlignment::TopLeft, Color = Color());
 
     const Font& font() const { return *m_font; }
 
@@ -40,7 +39,7 @@ private:
 
     const Font* m_font;
     Point m_translation;
-    Rect m_clipRect;
+    Rect m_clip_rect;
     RetainPtr<GraphicsBitmap> m_target;
     Window* m_window { nullptr };
     DrawOp m_draw_op { DrawOp::Copy };

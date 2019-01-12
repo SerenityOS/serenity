@@ -67,7 +67,7 @@ CharacterWithAttributes& TerminalWidget::at(unsigned row, unsigned column)
 void TerminalWidget::paintEvent(PaintEvent&)
 {
     Painter painter(*this);
-    painter.fillRect(rect(), Color::Black);
+    painter.fill_rect(rect(), Color::Black);
 
     char buf[2] = { 0, 0 };
     for (unsigned row = 0; row < m_rows; ++row) {
@@ -75,12 +75,12 @@ void TerminalWidget::paintEvent(PaintEvent&)
         for (unsigned column = 0; column < m_columns; ++column) {
             int x = column * font().glyphWidth();
             buf[0] = at(row, column).character;
-            painter.drawText({ x + 2, y + 2, width(), font().glyphHeight() }, buf, Painter::TextAlignment::TopLeft, Color(0xa0, 0xa0, 0xa0));
+            painter.draw_text({ x + 2, y + 2, width(), font().glyphHeight() }, buf, Painter::TextAlignment::TopLeft, Color(0xa0, 0xa0, 0xa0));
         }
     }
 
     if (m_belling)
-        painter.drawRect(rect(), Color::Red);
+        painter.draw_rect(rect(), Color::Red);
 }
 
 void TerminalWidget::onReceive(const ByteBuffer& buffer)
