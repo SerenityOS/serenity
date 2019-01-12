@@ -40,6 +40,7 @@ void AbstractScreen::did_receive_mouse_data(int dx, int dy, bool left_button, bo
 {
     auto prev_location = m_cursor_location;
     m_cursor_location.moveBy(dx, dy);
+    m_cursor_location.constrain(rect());
     if (m_cursor_location.x() >= width())
         m_cursor_location.setX(width() - 1);
     if (m_cursor_location.y() >= height())

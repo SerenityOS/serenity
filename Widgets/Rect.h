@@ -64,9 +64,9 @@ public:
     }
 
     int left() const { return x(); }
-    int right() const { return x() + width(); }
+    int right() const { return x() + width() - 1; }
     int top() const { return y(); }
-    int bottom() const { return y() + height(); }
+    int bottom() const { return y() + height() - 1; }
 
     void setLeft(int left)
     {
@@ -82,10 +82,10 @@ public:
 
     bool intersects(const Rect& other) const
     {
-        return left() < other.right()
-            && other.left() < right()
-            && top() < other.bottom()
-            && other.top() < bottom();
+        return left() <= other.right()
+            && other.left() <= right()
+            && top() <= other.bottom()
+            && other.top() <= bottom();
     }
 
     int x() const { return location().x(); }
@@ -120,3 +120,15 @@ private:
     Point m_location;
     Size m_size;
 };
+
+inline void Point::constrain(const Rect& rect)
+{
+    if (x() < rect.left())
+        setX(rect.left());
+    else if (x() > rect.right())
+        setX(rect.right());
+    if (y() < rect.top())
+        setY(rect.top());
+    else if (y() > rect.bottom())
+        setY(rect.bottom());
+}
