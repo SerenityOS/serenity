@@ -1,6 +1,8 @@
 #include "PS2MouseDevice.h"
 #include "IO.h"
 
+//#define PS2MOUSE_DEBUG
+
 static PS2MouseDevice* s_the;
 
 PS2MouseDevice::PS2MouseDevice()
@@ -34,12 +36,14 @@ void PS2MouseDevice::handle_irq()
         break;
     case 2:
         m_data_state = 0;
+#ifdef PS2MOUSE_DEBUG
         dbgprintf("PS2Mouse: %d, %d %s %s\n",
             m_data[1],
             m_data[2],
             (m_data[0] & 1) ? "Left" : "",
             (m_data[0] & 2) ? "Right" : ""
         );
+#endif
         if (m_client)
             m_client->did_receive_mouse_data(m_data[1], -m_data[2], m_data[0] & 1, m_data[0] & 2);
         break;
