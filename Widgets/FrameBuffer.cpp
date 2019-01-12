@@ -90,9 +90,9 @@ RGBA32* FrameBuffer::scanline(int y)
 #endif
 }
 
+#ifdef USE_SDL
 void FrameBuffer::flush()
 {
-#ifdef USE_SDL
     SDL_UpdateWindowSurface(m_window);
-#endif
 }
+#endif
