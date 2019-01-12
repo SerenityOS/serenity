@@ -24,6 +24,8 @@ Color::Color(NamedColor named)
     case Red: rgb = { 255, 0, 0}; break;
     case Green: rgb = { 0, 255, 0}; break;
     case Blue: rgb = { 0, 0, 255}; break;
+    case Yellow: rgb = { 255, 255, 0 }; break;
+    case Magenta: rgb = { 255, 0, 255 }; break;
     case DarkGray: rgb = { 64, 64, 64 }; break;
     case MidGray: rgb = { 127, 127, 127 }; break;
     case LightGray: rgb = { 192, 192, 192 }; break;

@@ -12,6 +12,8 @@ public:
         Red,
         Green,
         Blue,
+        Yellow,
+        Magenta,
         DarkGray,
         MidGray,
         LightGray,
