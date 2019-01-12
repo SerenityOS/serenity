@@ -250,10 +250,9 @@ void WindowManager::compose()
         paintWindowFrame(*window);
         painter.blit(window->position(), *window->backing());
     }
-    redraw_cursor();
-    for (auto& r : m_invalidated_rects) {
+    for (auto& r : m_invalidated_rects)
         flush(r);
-    }
+    redraw_cursor();
     m_invalidated_rects.clear_with_capacity();
 }
 
