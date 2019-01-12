@@ -24,5 +24,6 @@ private:
 
     Size m_size;
     RGBA32* m_data { nullptr };
+    size_t m_pitch { 0 };
     bool m_owned { false };
 };
