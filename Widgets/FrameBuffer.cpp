@@ -90,20 +90,6 @@ RGBA32* FrameBuffer::scanline(int y)
 #endif
 }
 
-void FrameBuffer::blit(const Point& position, GraphicsBitmap& bitmap)
-{
-    Rect dst_rect(position, bitmap.size());
-    //printf("blit at %d,%d %dx%d\n", dst_rect.x(), dst_rect.y(), dst_rect.width(), dst_rect.height());
-    dst_rect.intersect(rect());
-    //printf("    -> intersection %d,%d %dx%d\n", dst_rect.x(), dst_rect.y(), dst_rect.width(), dst_rect.height());
-
-    for (int y = 0; y < dst_rect.height(); ++y) {
-        auto* framebuffer_scanline = scanline(position.y() + y);
-        auto* bitmap_scanline = bitmap.scanline(y);
-        memcpy(framebuffer_scanline + dst_rect.x(), bitmap_scanline + (dst_rect.x() - position.x()), dst_rect.width() * 4);
-    }
-}
-
 void FrameBuffer::flush()
 {
 #ifdef USE_SDL
