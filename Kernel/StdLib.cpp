@@ -5,12 +5,27 @@
 
 extern "C" {
 
-void memcpy(void *dest, const void *src, dword n)
+void memcpy(void *dest_ptr, const void *src_ptr, dword n)
 {
-    byte* bdest = (byte*)dest;
-    const byte* bsrc = (const byte*)src;
-    for (; n; --n)
-        *(bdest++) = *(bsrc++);
+    dword dest = (dword)dest_ptr;
+    dword src = (dword)src_ptr;
+    if (n >= 12) {
+        size_t dwords = n / sizeof(dword);
+        asm volatile(
+            "rep movsl\n"
+            : "=S"(src), "=D"(dest)
+            : "S"(src), "D"(dest), "c"(dwords)
+            : "memory"
+        );
+        n -= dwords * sizeof(dword);
+        if (n == 0)
+            return;
+    }
+    asm volatile(
+        "rep movsb\n"
+        :: "S"(src), "D"(dest), "c"(n)
+        : "memory"
+    );
 }
 
 void strcpy(char* dest, const char *src)
@@ -21,12 +36,26 @@ void strcpy(char* dest, const char *src)
 void* memset(void* dest_ptr, byte c, dword n)
 {
     dword dest = (dword)dest_ptr;
+    if (n >= 12) {
+        size_t dwords = n / sizeof(dword);
+        dword expanded_c = c;
+        expanded_c <<= 8;
+        expanded_c <<= 16;
+        asm volatile(
+            "rep stosl\n"
+            : "=D"(dest)
+            : "D"(dest), "c"(dwords), "a"(expanded_c)
+            : "memory"
+        );
+        n -= dwords * sizeof(dword);
+        if (n == 0)
+            return dest_ptr;
+    }
     asm volatile(
-        "cld\n"
         "rep stosb\n"
         : "=D" (dest), "=c" (n)
         : "0" (dest), "1" (n), "a" (c)
-        : "cc", "memory"
+        : "memory"
     );
     return dest_ptr;
 }
