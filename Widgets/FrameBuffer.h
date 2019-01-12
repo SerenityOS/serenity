@@ -25,7 +25,6 @@ public:
 
     RGBA32* scanline(int y);
 
-    void blit(const Point&, GraphicsBitmap&);
     void flush();
 
     static void initialize();
