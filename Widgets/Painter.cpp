@@ -58,9 +58,9 @@ void Painter::draw_rect(const Rect& rect, Color color)
                 bits[x] = color.value();
             }
         } else {
-            if (r.left() >= m_clip_rect.left() && r.left() < m_clip_rect.right())
+            if (r.left() >= m_clip_rect.left() && r.left() <= m_clip_rect.right())
                 bits[r.left()] = color.value();
-            if (r.right() >= m_clip_rect.left() && r.right() < m_clip_rect.right())
+            if (r.right() >= m_clip_rect.left() && r.right() <= m_clip_rect.right())
                 bits[r.right()] = color.value();
         }
     }
