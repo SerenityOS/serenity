@@ -39,3 +39,8 @@ RGBA32* GraphicsBitmap::scanline(int y)
     return reinterpret_cast<RGBA32*>((((byte*)m_data) + (y * pitch)));
 }
 
+const RGBA32* GraphicsBitmap::scanline(int y) const
+{
+    unsigned pitch = m_size.width() * sizeof(RGBA32);
+    return reinterpret_cast<RGBA32*>((((byte*)m_data) + (y * pitch)));
+}

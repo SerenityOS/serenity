@@ -38,6 +38,7 @@ public:
     void invalidate(const Window&);
     void invalidate(const Rect&);
     void invalidate();
+    void flush(const Rect&);
 
 private:
     WindowManager();
@@ -69,11 +70,12 @@ private:
     Rect m_dragStartRect;
     Rect m_dragEndRect;
 
-    Point m_last_drawn_cursor_location;
+    Rect m_last_cursor_rect;
 
     unsigned m_recompose_count { 0 };
 
-    RetainPtr<GraphicsBitmap> m_root_bitmap;
+    RetainPtr<GraphicsBitmap> m_front_bitmap;
+    RetainPtr<GraphicsBitmap> m_back_bitmap;
 
     Vector<Rect> m_invalidated_rects;
 };

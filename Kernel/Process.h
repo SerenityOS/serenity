@@ -42,6 +42,7 @@ struct DisplayInfo {
 
 class Process : public InlineLinkedListNode<Process> {
     friend class InlineLinkedListNode<Process>;
+    friend class WindowManager; // FIXME: Make a better API for allocate_region().
 public:
     static Process* create_kernel_process(String&& name, void (*entry)());
     static Process* create_user_process(const String& path, uid_t, gid_t, pid_t ppid, int& error, Vector<String>&& arguments = Vector<String>(), Vector<String>&& environment = Vector<String>(), TTY* = nullptr);

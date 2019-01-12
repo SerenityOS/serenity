@@ -61,26 +61,6 @@ void Painter::drawRect(const Rect& rect, Color color)
     }
 }
 
-void Painter::xorRect(const Rect& rect, Color color)
-{
-    Rect r = rect;
-    r.moveBy(m_translation);
-
-    for (int y = max(r.top(), m_clipRect.top()); y < min(r.bottom(), m_clipRect.bottom()); ++y) {
-        auto* bits = m_target->scanline(y);
-        if (y == r.top() || y == (r.bottom() - 1)) {
-            for (int x = max(r.left(), m_clipRect.left()); x < min(r.right(), m_clipRect.right()); ++x) {
-                bits[x] ^= color.value();
-            }
-        } else {
-            if (r.left() >= m_clipRect.left() && r.left() < m_clipRect.right())
-                bits[r.left()] ^= color.value();
-            if (r.right() >= m_clipRect.left() && r.right() < m_clipRect.right())
-                bits[r.right() - 1] ^= color.value();
-        }
-    }
-}
-
 void Painter::drawBitmap(const Point& p, const CharacterBitmap& bitmap, Color color)
 {
     Point point = p;
@@ -214,4 +194,16 @@ void Painter::drawFocusRect(const Rect& rect)
     focusRect.setWidth(focusRect.width() - 2);
     focusRect.setHeight(focusRect.height() - 2);
     drawRect(focusRect, Color(96, 96, 192));
+}
+
+void Painter::blit(const Point& position, const GraphicsBitmap& source)
+{
+    Rect dst_rect(position, source.size());
+    dst_rect.intersect(m_clipRect);
+
+    for (int y = 0; y < dst_rect.height(); ++y) {
+        auto* dst_scanline = m_target->scanline(position.y() + y);
+        auto* src_scanline = source.scanline(y);
+        memcpy(dst_scanline + dst_rect.x(), src_scanline + (dst_rect.x() - position.x()), dst_rect.width() * 4);
+    }
 }
