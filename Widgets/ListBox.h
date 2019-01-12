@@ -15,9 +15,9 @@ private:
     virtual void mouseDownEvent(MouseEvent&) override;
     virtual const char* class_name() const override { return "ListBox"; }
 
-    unsigned itemHeight() const;
+    Rect item_rect(int index) const;
 
-    unsigned m_scrollOffset { 0 };
+    int m_scrollOffset { 0 };
     int m_selectedIndex { -1 };
 
     Vector<String> m_items;
