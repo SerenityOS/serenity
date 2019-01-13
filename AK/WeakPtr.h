@@ -12,6 +12,12 @@ public:
     WeakPtr(std::nullptr_t) { }
 
     template<typename U>
+    WeakPtr(WeakPtr<U>&& other)
+        : m_link(reinterpret_cast<WeakLink<T>*>(other.leakLink()))
+    {
+    }
+
+    template<typename U>
     WeakPtr& operator=(WeakPtr<U>&& other)
     {
         m_link = reinterpret_cast<WeakLink<T>*>(other.leakLink());

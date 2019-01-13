@@ -5,6 +5,8 @@
 #include <Widgets/FrameBuffer.h>
 #include <Widgets/EventLoop.h>
 #include <Widgets/Font.h>
+#include <Widgets/Button.h>
+#include <Widgets/Label.h>
 #include <Widgets/Widget.h>
 #include <Widgets/Window.h>
 #include <Widgets/WindowManager.h>
@@ -34,7 +36,7 @@ int Process::gui$create_window(const GUI_CreateWindowParameters* user_params)
     if (!validate_read_typed(user_params))
         return -EFAULT;
 
-    GUI_CreateWindowParameters params = *user_params;
+    auto params = *user_params;
     Rect rect { params.rect.x, params.rect.y, params.rect.width, params.rect.height };
 
     if (rect.is_empty())
@@ -47,7 +49,7 @@ int Process::gui$create_window(const GUI_CreateWindowParameters* user_params)
         return -ENOMEM;
 
     int window_id = m_windows.size();
-    m_windows.append(window);
+    m_windows.append(window->makeWeakPtr());
 
     window->setTitle(params.title);
     window->setRect(rect);
@@ -64,14 +66,71 @@ int Process::gui$create_window(const GUI_CreateWindowParameters* user_params)
 
 int Process::gui$destroy_window(int window_id)
 {
-    wait_for_gui_server();
     dbgprintf("%s<%u> gui$destroy_window (window_id=%d)\n", name().characters(), pid(), window_id);
     if (window_id < 0)
         return -EINVAL;
     if (window_id >= static_cast<int>(m_windows.size()))
-        return -EBADWIN;
-    auto* window = m_windows[window_id];
-    m_windows.remove(window_id);
+        return -EBADWINDOW;
+    auto* window = m_windows[window_id].ptr();
+    if (!window)
+        return -EBADWINDOW;
     window->deleteLater();
     return 0;
 }
+
+int Process::gui$create_widget(int window_id, const GUI_CreateWidgetParameters* user_params)
+{
+    if (!validate_read_typed(user_params))
+        return -EFAULT;
+
+    if (window_id < 0)
+        return -EINVAL;
+    if (window_id >= static_cast<int>(m_windows.size()))
+        return -EINVAL;
+    if (!m_windows[window_id])
+        return -EINVAL;
+    auto& window = *m_windows[window_id];
+
+    auto params = *user_params;
+    Rect rect { params.rect.x, params.rect.y, params.rect.width, params.rect.height };
+
+    if (rect.is_empty())
+        return -EINVAL;
+
+    Widget* widget = nullptr;
+    switch (params.type) {
+    case GUI_WidgetType::Label:
+        widget = new Label(window.mainWidget());
+        static_cast<Label*>(widget)->setText(params.text);
+        break;
+    case GUI_WidgetType::Button:
+        widget = new Button(window.mainWidget());
+        static_cast<Button*>(widget)->setCaption(params.text);
+        break;
+    }
+
+    int widget_id = m_widgets.size();
+    m_widgets.append(widget->makeWeakPtr());
+
+    widget->setWindowRelativeRect(rect);
+    widget->setBackgroundColor(params.background_color);
+    widget->setFillWithBackgroundColor(params.opaque);
+    dbgprintf("%s<%u> gui$create_widget: %d with rect {%d,%d %dx%d}\n", name().characters(), pid(), widget_id, rect.x(), rect.y(), rect.width(), rect.height());
+
+    return window_id;
+}
+
+int Process::gui$destroy_widget(int widget_id)
+{
+    dbgprintf("%s<%u> gui$destroy_widget (widget_id=%d)\n", name().characters(), pid(), widget_id);
+    if (widget_id < 0)
+        return -EINVAL;
+    if (widget_id >= static_cast<int>(m_widgets.size()))
+        return -EBADWINDOW;
+    auto* widget = m_widgets[widget_id].ptr();
+    if (!widget)
+        return -EBADWIDGET;
+    widget->deleteLater();
+    return 0;
+}
+
