@@ -14,18 +14,11 @@
 
 void WindowComposer_main()
 {
-    Font::initialize();
-    FrameBuffer::initialize();
-    EventLoop::initialize();
-    WindowManager::initialize();
-    AbstractScreen::initialize();
-
     auto info = current->get_display_info();
 
     dbgprintf("Screen is %ux%ux%ubpp\n", info.width, info.height, info.bpp);
 
     FrameBuffer framebuffer((dword*)info.framebuffer, info.width, info.height);
-    EventLoop loop;
 
     MsgBox(nullptr, "Serenity Operating System");
 
@@ -75,7 +68,7 @@ void WindowComposer_main()
     }
 
     dbgprintf("Entering WindowComposer main loop.\n");
-    loop.exec();
+    EventLoop::main().exec();
 
     ASSERT_NOT_REACHED();
 }

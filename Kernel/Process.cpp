@@ -54,6 +54,7 @@ void Process::initialize()
     g_processes = new InlineLinkedList<Process>;
     s_hostname = new String("courage");
     Scheduler::initialize();
+    initialize_gui_statics();
 }
 
 Vector<Process*> Process::allProcesses()

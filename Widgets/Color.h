@@ -22,6 +22,7 @@ public:
     Color() { }
     Color(NamedColor);
     Color(byte r, byte g, byte b);
+    Color(RGBA32 rgba) : m_value(rgba) { }
 
     RGBA32 value() const { return m_value; }
 

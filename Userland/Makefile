@@ -18,7 +18,8 @@ OBJS = \
        tty.o \
        mkdir.o \
        touch.o \
-       more.o
+       more.o \
+       guitest.o
 
 APPS = \
        id \
@@ -41,7 +42,8 @@ APPS = \
        mkdir \
        touch \
        sync \
-       more
+       more \
+       guitest
 
 ARCH_FLAGS =
 STANDARD_FLAGS = -std=c++17 -nostdinc++ -nostdlib -nostdinc
@@ -122,6 +124,9 @@ sync: sync.o
 	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
 
 more: more.o
+	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
+
+guitest: guitest.o
 	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
 
 .cpp.o:

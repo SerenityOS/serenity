@@ -5,6 +5,7 @@
 #include "i386.h"
 #include "TTY.h"
 #include "Syscall.h"
+#include "GUITypes.h"
 #include <VirtualFileSystem/VirtualFileSystem.h>
 #include <VirtualFileSystem/UnixTypes.h>
 #include <AK/InlineLinkedList.h>
@@ -16,6 +17,7 @@ class PageDirectory;
 class Region;
 class VMObject;
 class Zone;
+class Window;
 
 #define COOL_GLOBALS
 #ifdef COOL_GLOBALS
@@ -185,9 +187,13 @@ public:
     Unix::clock_t sys$times(Unix::tms*);
     int sys$utime(const char* pathname, const struct Unix::utimbuf*);
 
+    int gui$create_window(const GUI_CreateWindowParameters*);
+    int gui$destroy_window(int window_id);
+
     DisplayInfo get_display_info();
 
     static void initialize();
+    static void initialize_gui_statics();
 
     void crash() NORETURN;
     static int reap(Process&) WARN_UNUSED_RESULT;
@@ -331,6 +337,8 @@ private:
     Region* m_signal_stack_kernel_region { nullptr };
 
     RetainPtr<Region> m_display_framebuffer_region;
+
+    Vector<Window*> m_windows;
 };
 
 extern Process* current;

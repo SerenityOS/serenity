@@ -187,6 +187,10 @@ static dword handle(RegisterDump& regs, dword function, dword arg1, dword arg2, 
         return current->sys$utime((const char*)arg1, (const Unix::utimbuf*)arg2);
     case Syscall::SC_sync:
         return sync();
+    case Syscall::SC_gui_create_window:
+        return current->gui$create_window((const GUI_CreateWindowParameters*)arg1);
+    case Syscall::SC_gui_destroy_window:
+        return current->gui$destroy_window((int)arg1);
     default:
         kprintf("<%u> int0x80: Unknown function %u requested {%x, %x, %x}\n", current->pid(), function, arg1, arg2, arg3);
         break;
