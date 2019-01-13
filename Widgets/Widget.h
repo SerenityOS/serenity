@@ -90,10 +90,10 @@ private:
     Window* m_window { nullptr };
 
     Rect m_relativeRect;
-    Color m_backgroundColor;
-    Color m_foregroundColor;
+    Color m_backgroundColor { 0xffffff };
+    Color m_foregroundColor { 0x000000 };
     RetainPtr<Font> m_font;
 
     bool m_hasPendingPaintEvent { false };
-    bool m_fillWithBackgroundColor { false };
+    bool m_fillWithBackgroundColor { true };
 };

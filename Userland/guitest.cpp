@@ -23,8 +23,7 @@ int main(int argc, char** argv)
     GUI_CreateWidgetParameters label_params;
     label_params.type = GUI_WidgetType::Label;
     label_params.rect = { 20, 20, 260, 20 };
-    label_params.background_color = 0xffffff;
-    label_params.opaque = true;
+    label_params.opaque = false;
     strcpy(label_params.text, "Hello World!");
     int label_id = syscall(SC_gui_create_widget, window_id, &label_params);
     if (label_id < 0) {
@@ -35,8 +34,6 @@ int main(int argc, char** argv)
     GUI_CreateWidgetParameters button_params;
     button_params.type = GUI_WidgetType::Button;
     button_params.rect = { 60, 60, 120, 20 };
-    button_params.background_color = 0xffffff;
-    button_params.opaque = true;
     strcpy(button_params.text, "I'm a button!");
     int button_id = syscall(SC_gui_create_widget, window_id, &button_params);
     if (button_id < 0) {

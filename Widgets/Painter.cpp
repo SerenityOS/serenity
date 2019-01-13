@@ -25,7 +25,9 @@ Painter::Painter(Widget& widget)
     m_clip_rect = widget.relativeRect();
 
 #ifdef DEBUG_WIDGET_UNDERDRAW
-    fill_rect(widget.rect(), Color::Red);
+    // If the widget is not opaque, let's not mess it up with debugging color.
+    if (widget.fillWithBackgroundColor())
+        fill_rect(widget.rect(), Color::Red);
 #endif
 }
 
