@@ -3,6 +3,7 @@
 #include "Object.h"
 #include "Rect.h"
 #include "Color.h"
+#include "Painter.h"
 #include <AK/HashTable.h>
 #include <AK/InlineLinkedList.h>
 #include <AK/WeakPtr.h>
@@ -35,7 +36,7 @@ public:
 
     static void initialize();
 
-    void redraw_cursor();
+    void draw_cursor();
 
     void invalidate(const Window&);
     void invalidate(const Rect&);
@@ -89,4 +90,7 @@ private:
 
     RetainPtr<CharacterBitmap> m_cursor_bitmap_inner;
     RetainPtr<CharacterBitmap> m_cursor_bitmap_outer;
+
+    OwnPtr<Painter> m_back_painter;
+    OwnPtr<Painter> m_front_painter;
 };

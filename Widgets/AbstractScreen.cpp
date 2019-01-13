@@ -61,7 +61,7 @@ void AbstractScreen::on_receive_mouse_data(int dx, int dy, bool left_button, boo
         EventLoop::main().postEvent(&WindowManager::the(), move(event));
     }
     if (m_cursor_location != prev_location || prev_left_button != left_button)
-        WindowManager::the().redraw_cursor();
+        WindowManager::the().draw_cursor();
 }
 
 void AbstractScreen::on_key_pressed(Keyboard::Key key)
