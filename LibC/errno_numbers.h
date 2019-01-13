@@ -42,6 +42,7 @@
     __ERROR(ENOTIMPL,       "Not implemented") \
     __ERROR(EAFNOSUPPORT,   "Address family not supported") \
     __ERROR(EWHYTHO,        "Failed without setting an error code (Bug!)") \
+    __ERROR(EBADWIN,        "Bad WindowID") \
 
 enum __errno_values {
 #undef __ERROR

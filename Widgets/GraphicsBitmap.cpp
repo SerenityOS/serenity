@@ -1,4 +1,5 @@
 #include "GraphicsBitmap.h"
+#include "EventLoop.h"
 #include <AK/kmalloc.h>
 
 #ifdef SERENITY
@@ -21,7 +22,9 @@ GraphicsBitmap::GraphicsBitmap(const Size& size)
     , m_pitch(size.width() * sizeof(RGBA32))
 {
 #ifdef SERENITY
-    m_region = current->allocate_region(LinearAddress(), size.width() * size.height() * sizeof(RGBA32), "GraphicsBitmap", true, true, true);
+    // FIXME: Oh god this is so horrible.
+    Process* server_process = EventLoop::main().running() ? &EventLoop::main().server_process() : current;
+    m_region = server_process->allocate_region(LinearAddress(), size.width() * size.height() * sizeof(RGBA32), "GraphicsBitmap", true, true, true);
     m_data = (RGBA32*)m_region->linearAddress.asPtr();
     m_owned = false;
 #else

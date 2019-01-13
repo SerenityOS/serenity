@@ -9,6 +9,7 @@
 #endif
 
 class Object;
+class Process;
 
 class EventLoop {
 public:
@@ -23,6 +24,9 @@ public:
 
     static void initialize();
 
+    bool running() const { return m_running; }
+    Process& server_process() { return *m_server_process; }
+
 private:
     void waitForEvent();
 
@@ -35,4 +39,7 @@ private:
         OwnPtr<Event> event;
     };
     Vector<QueuedEvent> m_queuedEvents;
+
+    Process* m_server_process { nullptr };
+    bool m_running { false };
 };

@@ -6,6 +6,7 @@
 
 #ifdef SERENITY
 #include "PS2MouseDevice.h"
+#include "Scheduler.h"
 #endif
 
 static EventLoop* s_mainEventLoop;
@@ -33,6 +34,10 @@ EventLoop& EventLoop::main()
 
 int EventLoop::exec()
 {
+#ifdef SERENITY
+    m_server_process = current;
+#endif
+    m_running = true;
     for (;;) {
         if (m_queuedEvents.is_empty())
             waitForEvent();
@@ -48,9 +53,11 @@ int EventLoop::exec()
             if (!receiver) {
                 switch (event.type()) {
                 case Event::Quit:
+                    ASSERT_NOT_REACHED();
                     return 0;
                 default:
                     printf("event type %u with no receiver :(\n", event.type());
+                    ASSERT_NOT_REACHED();
                     return 1;
                 }
             } else {
