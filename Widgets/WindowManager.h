@@ -12,6 +12,7 @@ class MouseEvent;
 class PaintEvent;
 class Widget;
 class Window;
+class CharacterBitmap;
 class GraphicsBitmap;
 
 class WindowManager : public Object {
@@ -85,4 +86,7 @@ private:
     Vector<Rect> m_invalidated_rects;
 
     bool m_pending_compose_event { false };
+
+    RetainPtr<CharacterBitmap> m_cursor_bitmap_inner;
+    RetainPtr<CharacterBitmap> m_cursor_bitmap_outer;
 };

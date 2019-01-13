@@ -60,7 +60,7 @@ void AbstractScreen::on_receive_mouse_data(int dx, int dy, bool left_button, boo
         auto event = make<MouseEvent>(right_button ? Event::MouseDown : Event::MouseUp, m_cursor_location.x(), m_cursor_location.y(), MouseButton::Right);
         EventLoop::main().postEvent(&WindowManager::the(), move(event));
     }
-    if (m_cursor_location != prev_location)
+    if (m_cursor_location != prev_location || prev_left_button != left_button)
         WindowManager::the().redraw_cursor();
 }
 
