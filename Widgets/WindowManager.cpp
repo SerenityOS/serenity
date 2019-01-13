@@ -306,8 +306,7 @@ void WindowManager::redraw_cursor()
     auto cursor_location = m_framebuffer.cursor_location();
     Painter painter(*m_front_bitmap);
     Rect cursor_rect { cursor_location.x(), cursor_location.y(), (int)m_cursor_bitmap_inner->width(), (int)m_cursor_bitmap_inner->height() };
-    flush(m_last_cursor_rect);
-    flush(cursor_rect);
+    flush(m_last_cursor_rect.united(cursor_rect));
     Color inner_color = Color::White;
     Color outer_color = Color::Black;
     if (m_framebuffer.left_mouse_button_pressed())
