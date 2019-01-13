@@ -37,9 +37,8 @@ int Process::gui$create_window(const GUI_CreateWindowParameters* user_params)
         return -EFAULT;
 
     auto params = *user_params;
-    Rect rect { params.rect.x, params.rect.y, params.rect.width, params.rect.height };
 
-    if (rect.is_empty())
+    if (params.rect.is_empty())
         return -EINVAL;
 
     ProcessPagingScope scope(EventLoop::main().server_process());
@@ -52,14 +51,14 @@ int Process::gui$create_window(const GUI_CreateWindowParameters* user_params)
     m_windows.append(window->makeWeakPtr());
 
     window->setTitle(params.title);
-    window->setRect(rect);
+    window->setRect(params.rect);
 
     auto* main_widget = new Widget;
     window->setMainWidget(main_widget);
-    main_widget->setWindowRelativeRect({ 0, 0, rect.width(), rect.height() });
+    main_widget->setWindowRelativeRect({ 0, 0, params.rect.width(), params.rect.height() });
     main_widget->setBackgroundColor(params.background_color);
     main_widget->setFillWithBackgroundColor(true);
-    dbgprintf("%s<%u> gui$create_window: %d with rect {%d,%d %dx%d}\n", name().characters(), pid(), window_id, rect.x(), rect.y(), rect.width(), rect.height());
+    dbgprintf("%s<%u> gui$create_window: %d with rect {%d,%d %dx%d}\n", name().characters(), pid(), window_id, params.rect.x(), params.rect.y(), params.rect.width(), params.rect.height());
 
     return window_id;
 }
@@ -92,9 +91,8 @@ int Process::gui$create_widget(int window_id, const GUI_CreateWidgetParameters* 
     auto& window = *m_windows[window_id];
 
     auto params = *user_params;
-    Rect rect { params.rect.x, params.rect.y, params.rect.width, params.rect.height };
 
-    if (rect.is_empty())
+    if (params.rect.is_empty())
         return -EINVAL;
 
     Widget* widget = nullptr;
@@ -112,10 +110,10 @@ int Process::gui$create_widget(int window_id, const GUI_CreateWidgetParameters* 
     int widget_id = m_widgets.size();
     m_widgets.append(widget->makeWeakPtr());
 
-    widget->setWindowRelativeRect(rect);
+    widget->setWindowRelativeRect(params.rect);
     widget->setBackgroundColor(params.background_color);
     widget->setFillWithBackgroundColor(params.opaque);
-    dbgprintf("%s<%u> gui$create_widget: %d with rect {%d,%d %dx%d}\n", name().characters(), pid(), widget_id, rect.x(), rect.y(), rect.width(), rect.height());
+    dbgprintf("%s<%u> gui$create_widget: %d with rect {%d,%d %dx%d}\n", name().characters(), pid(), widget_id, params.rect.x(), params.rect.y(), params.rect.width(), params.rect.height());
 
     return window_id;
 }
