@@ -13,6 +13,8 @@
 #include <utility>
 #endif
 
+#include <AK/Types.h>
+
 ALWAYS_INLINE void fast_dword_copy(dword* dest, const dword* src, size_t count)
 {
 #ifdef SERENITY
