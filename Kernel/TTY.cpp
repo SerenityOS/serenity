@@ -39,7 +39,7 @@ ssize_t TTY::write(const byte* buffer, size_t size)
     dbgprintf("\n");
 #endif
     on_tty_write(buffer, size);
-    return 0;
+    return size;
 }
 
 bool TTY::has_data_available_for_reading() const
