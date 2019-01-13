@@ -64,6 +64,46 @@ void WindowManager::initialize()
     s_the_window_manager = nullptr;
 }
 
+static const char* cursor_bitmap_inner_ascii = {
+    " #          "
+    " ##         "
+    " ###        "
+    " ####       "
+    " #####      "
+    " ######     "
+    " #######    "
+    " ########   "
+    " #########  "
+    " ########## "
+    " ######     "
+    " ##  ##     "
+    " #    ##    "
+    "      ##    "
+    "       ##   "
+    "       ##   "
+    "            "
+};
+
+static const char* cursor_bitmap_outer_ascii = {
+    "##          "
+    "# #         "
+    "#  #        "
+    "#   #       "
+    "#    #      "
+    "#     #     "
+    "#      #    "
+    "#       #   "
+    "#        #  "
+    "#         # "
+    "#      #### "
+    "#  ##  #    "
+    "# #  #  #   "
+    "##   #  #   "
+    "      #  #  "
+    "      #  #  "
+    "       ##   "
+};
+
 WindowManager::WindowManager()
     : m_framebuffer(FrameBuffer::the())
     , m_screen_rect(m_framebuffer.rect())
@@ -78,6 +118,9 @@ WindowManager::WindowManager()
 
     m_inactiveWindowBorderColor = Color(64, 64, 64);
     m_inactiveWindowTitleColor = Color::White;
+
+    m_cursor_bitmap_inner = CharacterBitmap::createFromASCII(cursor_bitmap_inner_ascii, 12, 17);
+    m_cursor_bitmap_outer = CharacterBitmap::createFromASCII(cursor_bitmap_outer_ascii, 12, 17);
 
     invalidate();
     compose();
@@ -260,16 +303,17 @@ void WindowManager::compose()
 
 void WindowManager::redraw_cursor()
 {
-    auto cursor_location = AbstractScreen::the().cursor_location();
+    auto cursor_location = m_framebuffer.cursor_location();
     Painter painter(*m_front_bitmap);
-    Rect cursor_rect { cursor_location.x() - 10, cursor_location.y() - 10, 21, 21 };
+    Rect cursor_rect { cursor_location.x(), cursor_location.y(), (int)m_cursor_bitmap_inner->width(), (int)m_cursor_bitmap_inner->height() };
     flush(m_last_cursor_rect);
     flush(cursor_rect);
-    auto draw_cross = [&painter] (const Point& p) {
-        painter.draw_line({ p.x() - 10, p.y() }, { p.x() + 10, p.y() }, Color::Red);
-        painter.draw_line({ p.x(), p.y() - 10 }, { p.x(), p.y() + 10 }, Color::Red);
-    };
-    draw_cross(cursor_location);
+    Color inner_color = Color::White;
+    Color outer_color = Color::Black;
+    if (m_framebuffer.left_mouse_button_pressed())
+        swap(inner_color, outer_color);
+    painter.draw_bitmap(cursor_location, *m_cursor_bitmap_inner, inner_color);
+    painter.draw_bitmap(cursor_location, *m_cursor_bitmap_outer, outer_color);
     m_last_cursor_rect = cursor_rect;
 }
 
