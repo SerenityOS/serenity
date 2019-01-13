@@ -113,6 +113,9 @@ WindowManager::WindowManager()
     auto* region = current->allocate_region(LinearAddress(), size.width() * size.height() * sizeof(RGBA32), "BackBitmap", true, true, true);
     m_back_bitmap = GraphicsBitmap::create_wrapper(m_screen_rect.size(), (RGBA32*)region->linearAddress.get());
 
+    m_front_painter = make<Painter>(*m_front_bitmap);
+    m_back_painter = make<Painter>(*m_back_bitmap);
+
     m_activeWindowBorderColor = Color(0, 64, 192);
     m_activeWindowTitleColor = Color::White;
 
@@ -132,8 +135,6 @@ WindowManager::~WindowManager()
 
 void WindowManager::paintWindowFrame(Window& window)
 {
-    Painter p(*m_back_bitmap);
-
     //printf("[WM] paintWindowFrame {%p}, rect: %d,%d %dx%d\n", &window, window.rect().x(), window.rect().y(), window.rect().width(), window.rect().height());
 
     auto titleBarRect = titleBarRectForWindow(window.rect());
@@ -151,14 +152,11 @@ void WindowManager::paintWindowFrame(Window& window)
     auto titleColor = &window == activeWindow() ? m_activeWindowTitleColor : m_inactiveWindowTitleColor;
     auto borderColor = &window == activeWindow() ? m_activeWindowBorderColor : m_inactiveWindowBorderColor;
 
-    p.draw_rect(borderRect, Color::MidGray);
-    p.draw_rect(outerRect, borderColor);
-
-    p.fill_rect(titleBarRect, borderColor);
-
-    p.draw_rect(inner_border_rect, borderColor);
-
-    p.draw_text(titleBarTitleRect, window.title(), Painter::TextAlignment::CenterLeft, titleColor);
+    m_back_painter->draw_rect(borderRect, Color::MidGray);
+    m_back_painter->draw_rect(outerRect, borderColor);
+    m_back_painter->fill_rect(titleBarRect, borderColor);
+    m_back_painter->draw_rect(inner_border_rect, borderColor);
+    m_back_painter->draw_text(titleBarTitleRect, window.title(), Painter::TextAlignment::CenterLeft, titleColor);
 }
 
 void WindowManager::addWindow(Window& window)
@@ -280,39 +278,36 @@ void WindowManager::compose()
         }
         return false;
     };
-    Painter painter(*m_back_bitmap);
-    {
-        for (auto& r : m_invalidated_rects) {
-            if (any_window_contains_rect(r))
-                continue;
-            //dbgprintf("Repaint root %d,%d %dx%d\n", r.x(), r.y(), r.width(), r.height());
-            painter.fill_rect(r, Color(0, 72, 96));
-        }
+
+    for (auto& r : m_invalidated_rects) {
+        if (any_window_contains_rect(r))
+            continue;
+        //dbgprintf("Repaint root %d,%d %dx%d\n", r.x(), r.y(), r.width(), r.height());
+        m_back_painter->fill_rect(r, Color(0, 72, 96));
     }
     for (auto* window = m_windows_in_order.head(); window; window = window->next()) {
         if (!window->backing())
             continue;
         paintWindowFrame(*window);
-        painter.blit(window->position(), *window->backing());
+        m_back_painter->blit(window->position(), *window->backing());
     }
     for (auto& r : m_invalidated_rects)
         flush(r);
-    redraw_cursor();
+    draw_cursor();
     m_invalidated_rects.clear_with_capacity();
 }
 
-void WindowManager::redraw_cursor()
+void WindowManager::draw_cursor()
 {
     auto cursor_location = m_framebuffer.cursor_location();
-    Painter painter(*m_front_bitmap);
     Rect cursor_rect { cursor_location.x(), cursor_location.y(), (int)m_cursor_bitmap_inner->width(), (int)m_cursor_bitmap_inner->height() };
     flush(m_last_cursor_rect.united(cursor_rect));
     Color inner_color = Color::White;
     Color outer_color = Color::Black;
     if (m_framebuffer.left_mouse_button_pressed())
         swap(inner_color, outer_color);
-    painter.draw_bitmap(cursor_location, *m_cursor_bitmap_inner, inner_color);
-    painter.draw_bitmap(cursor_location, *m_cursor_bitmap_outer, outer_color);
+    m_front_painter->draw_bitmap(cursor_location, *m_cursor_bitmap_inner, inner_color);
+    m_front_painter->draw_bitmap(cursor_location, *m_cursor_bitmap_outer, outer_color);
     m_last_cursor_rect = cursor_rect;
 }
 
@@ -402,8 +397,7 @@ void WindowManager::flush(const Rect& a_rect)
     size_t pitch = m_back_bitmap->pitch();
 
 #ifdef DEBUG_FLUSH_YELLOW
-    Painter p(*m_front_bitmap);
-    p.fill_rect(rect, Color::Yellow);
+    m_front_painter->fill_rect(rect, Color::Yellow);
 #endif
 
     for (int y = 0; y < rect.height(); ++y) {
