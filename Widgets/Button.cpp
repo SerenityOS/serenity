@@ -4,6 +4,7 @@
 Button::Button(Widget* parent)
     : Widget(parent)
 {
+    setFillWithBackgroundColor(false);
 }
 
 Button::~Button()
@@ -25,11 +26,6 @@ void Button::paintEvent(PaintEvent&)
     Color shadowColor = Color(96, 96, 96);
 
     Painter painter(*this);
-
-    painter.set_pixel({ 0, 0 }, backgroundColor());
-    painter.set_pixel({ width() - 1, 0 }, backgroundColor());
-    painter.set_pixel({ 0, height() - 1 }, backgroundColor());
-    painter.set_pixel({ width() - 1, height() - 1 }, backgroundColor());
 
     painter.draw_line({ 1, 0 }, { width() - 2, 0 }, Color::Black);
     painter.draw_line({ 1, height() - 1 }, { width() - 2, height() - 1}, Color::Black);
