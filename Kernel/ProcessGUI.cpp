@@ -100,6 +100,7 @@ int Process::gui$create_widget(int window_id, const GUI_CreateWidgetParameters* 
     case GUI_WidgetType::Label:
         widget = new Label(window.mainWidget());
         static_cast<Label*>(widget)->setText(params.text);
+        widget->setFillWithBackgroundColor(params.opaque);
         break;
     case GUI_WidgetType::Button:
         widget = new Button(window.mainWidget());
@@ -112,7 +113,6 @@ int Process::gui$create_widget(int window_id, const GUI_CreateWidgetParameters* 
 
     widget->setWindowRelativeRect(params.rect);
     widget->setBackgroundColor(params.background_color);
-    widget->setFillWithBackgroundColor(params.opaque);
     dbgprintf("%s<%u> gui$create_widget: %d with rect {%d,%d %dx%d}\n", name().characters(), pid(), widget_id, params.rect.x(), params.rect.y(), params.rect.width(), params.rect.height());
 
     return window_id;
