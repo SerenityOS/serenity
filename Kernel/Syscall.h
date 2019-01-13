@@ -68,6 +68,8 @@
     __ENUMERATE_SYSCALL(sync) \
     __ENUMERATE_SYSCALL(gui_create_window) \
     __ENUMERATE_SYSCALL(gui_destroy_window) \
+    __ENUMERATE_SYSCALL(gui_create_widget) \
+    __ENUMERATE_SYSCALL(gui_destroy_widget) \
 
 namespace Syscall {
 

@@ -11,6 +11,7 @@
 #include <AK/InlineLinkedList.h>
 #include <AK/AKString.h>
 #include <AK/Vector.h>
+#include <AK/WeakPtr.h>
 
 class FileDescriptor;
 class PageDirectory;
@@ -18,6 +19,7 @@ class Region;
 class VMObject;
 class Zone;
 class Window;
+class Widget;
 
 #define COOL_GLOBALS
 #ifdef COOL_GLOBALS
@@ -189,6 +191,8 @@ public:
 
     int gui$create_window(const GUI_CreateWindowParameters*);
     int gui$destroy_window(int window_id);
+    int gui$create_widget(int window_id, const GUI_CreateWidgetParameters*);
+    int gui$destroy_widget(int widget_id);
 
     DisplayInfo get_display_info();
 
@@ -338,7 +342,8 @@ private:
 
     RetainPtr<Region> m_display_framebuffer_region;
 
-    Vector<Window*> m_windows;
+    Vector<WeakPtr<Window>> m_windows;
+    Vector<WeakPtr<Widget>> m_widgets;
 };
 
 extern Process* current;
