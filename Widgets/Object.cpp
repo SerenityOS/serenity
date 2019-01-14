@@ -3,10 +3,6 @@
 #include "EventLoop.h"
 #include <AK/Assertions.h>
 
-#ifdef USE_SDL
-#include <SDL.h>
-#endif
-
 Object::Object(Object* parent)
     : m_parent(parent)
 {
@@ -58,32 +54,18 @@ void Object::timerEvent(TimerEvent&)
 {
 }
 
-#ifdef USE_SDL
-static dword sdlTimerCallback(dword interval, void* param)
-{
-    EventLoop::main().postEvent(static_cast<Object*>(param), make<TimerEvent>());
-    return interval;
-}
-#endif
-
 void Object::startTimer(int ms)
 {
     if (m_timerID) {
         printf("Object{%p} already has a timer!\n", this);
         ASSERT_NOT_REACHED();
     }
-#ifdef USE_SDL
-    m_timerID = SDL_AddTimer(ms, sdlTimerCallback, this);
-#endif
 }
 
 void Object::stopTimer()
 {
     if (!m_timerID)
         return;
-#ifdef USE_SDL
-    SDL_RemoveTimer(m_timerID);
-#endif
     m_timerID = 0;
 }
 

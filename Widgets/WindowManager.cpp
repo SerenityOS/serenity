@@ -405,6 +405,4 @@ void WindowManager::flush(const Rect& a_rect)
         front_ptr = (RGBA32*)((byte*)front_ptr + pitch);
         back_ptr = (const RGBA32*)((const byte*)back_ptr + pitch);
     }
-
-    m_framebuffer.flush();
 }

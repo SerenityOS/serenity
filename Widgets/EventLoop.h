@@ -4,10 +4,6 @@
 #include <AK/OwnPtr.h>
 #include <AK/Vector.h>
 
-#ifdef USE_SDL
-#include <SDL.h>
-#endif
-
 class Object;
 class Process;
 
@@ -29,10 +25,6 @@ public:
 
 private:
     void waitForEvent();
-
-#ifdef USE_SDL
-    void handleKeyEvent(Event::Type, const SDL_KeyboardEvent&);
-#endif
 
     struct QueuedEvent {
         Object* receiver { nullptr };
