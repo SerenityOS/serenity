@@ -29,8 +29,7 @@ void Widget::setWindowRelativeRect(const Rect& rect, bool should_update)
 
 void Widget::repaint(const Rect& rect)
 {
-    if (auto* w = window())
-        w->repaint(rect);
+    // FIXME: Implement.
 }
 
 void Widget::event(Event& event)

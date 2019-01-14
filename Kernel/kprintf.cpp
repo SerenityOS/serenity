@@ -39,7 +39,7 @@ static void debugger_putch(char*&, char ch)
     IO::out8(0xe9, ch);
 }
 
-int dbgprintf(const char* fmt, ...)
+extern "C" int dbgprintf(const char* fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);

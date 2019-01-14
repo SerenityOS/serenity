@@ -54,7 +54,7 @@ int vfprintf(FILE*, const char* fmt, va_list);
 int vsprintf(char* buffer, const char* fmt, va_list);
 int fprintf(FILE*, const char* fmt, ...);
 int printf(const char* fmt, ...);
-int sys_printf(const char* fmt, ...);
+int dbgprintf(const char* fmt, ...);
 int sprintf(char* buffer, const char* fmt, ...);
 int putchar(int ch);
 int putc(int ch, FILE*);

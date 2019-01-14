@@ -230,7 +230,7 @@ static void sys_putch(char*&, char ch)
     syscall(SC_putch, ch);
 }
 
-int sys_printf(const char* fmt, ...)
+int dbgprintf(const char* fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);

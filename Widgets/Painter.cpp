@@ -1,7 +1,7 @@
 #include "Painter.h"
 #include "Widget.h"
 #include "Font.h"
-#include "Window.h"
+#include "GraphicsBitmap.h"
 #include <AK/Assertions.h>
 #include <AK/StdLibExtras.h>
 
@@ -115,7 +115,7 @@ void Painter::draw_text(const Rect& rect, const String& text, TextAlignment alig
             continue;
         auto* bitmap = font().glyphBitmap(ch);
         if (!bitmap) {
-            printf("Font doesn't have 0x%02x ('%c')\n", ch, ch);
+            dbgprintf("Font doesn't have 0x%02x ('%c')\n", ch, ch);
             ASSERT_NOT_REACHED();
         }
         int x = point.x() + i * font().glyphWidth();
