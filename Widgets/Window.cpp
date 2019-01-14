@@ -33,7 +33,7 @@ void Window::setRect(const Rect& rect)
     auto oldRect = m_rect;
     m_rect = rect;
     dbgprintf("Window::setRect %d,%d %dx%d\n", m_rect.x(), m_rect.y(), m_rect.width(), m_rect.height());
-    m_backing = GraphicsBitmap::create(m_rect.size());
+    m_backing = GraphicsBitmap::create(m_process, m_rect.size());
     WindowManager::the().notifyRectChanged(*this, oldRect, m_rect);
 }
 

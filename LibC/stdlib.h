@@ -19,5 +19,9 @@ void qsort(void* base, size_t nmemb, size_t size, int (*compar)(const void *, co
 void exit(int status) __NORETURN;
 void abort() __NORETURN;
 
+#define RAND_MAX 32767
+int rand();
+void srand(unsigned seed);
+
 __END_DECLS
 

@@ -25,8 +25,11 @@ void Process::initialize_gui_statics()
 int Process::make_window_id()
 {
     int new_id = m_next_window_id++;
-    while (!new_id || m_windows.contains(new_id))
+    while (!new_id || m_windows.contains(new_id)) {
         new_id = m_next_window_id++;
+        if (new_id < 0)
+            new_id = 1;
+    }
     return new_id;
 }
 
@@ -74,11 +77,40 @@ int Process::gui$destroy_window(int window_id)
     dbgprintf("%s<%u> gui$destroy_window (window_id=%d)\n", name().characters(), pid(), window_id);
     if (window_id < 0)
         return -EINVAL;
-    if (window_id >= static_cast<int>(m_windows.size()))
-        return -EBADWINDOW;
     auto it = m_windows.find(window_id);
     if (it == m_windows.end())
         return -EBADWINDOW;
     m_windows.remove(window_id);
+    return 0;
+}
+
+int Process::gui$get_window_backing_store(int window_id, GUI_WindowBackingStoreInfo* info)
+{
+    dbgprintf("%s<%u> gui$get_window_backing_store (window_id=%d, info=%p)\n", name().characters(), pid(), window_id, info);
+    if (!validate_write_typed(info))
+        return -EFAULT;
+    if (window_id < 0)
+        return -EINVAL;
+    auto it = m_windows.find(window_id);
+    if (it == m_windows.end())
+        return -EBADWINDOW;
+    auto& window = *(*it).value;
+    info->bpp = sizeof(RGBA32);
+    info->pitch = window.backing()->pitch();
+    info->size = window.backing()->size();
+    info->pixels = reinterpret_cast<RGBA32*>(window.backing()->client_region()->linearAddress.asPtr());
+    return 0;
+}
+
+int Process::gui$invalidate_window(int window_id)
+{
+    dbgprintf("%s<%u> gui$invalidate_window (window_id=%d)\n", name().characters(), pid(), window_id);
+    if (window_id < 0)
+        return -EINVAL;
+    auto it = m_windows.find(window_id);
+    if (it == m_windows.end())
+        return -EBADWINDOW;
+    auto& window = *(*it).value;
+    WindowManager::the().invalidate(window);
     return 0;
 }

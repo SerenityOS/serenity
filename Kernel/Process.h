@@ -192,6 +192,8 @@ public:
 
     int gui$create_window(const GUI_CreateWindowParameters*);
     int gui$destroy_window(int window_id);
+    int gui$get_window_backing_store(int window_id, GUI_WindowBackingStoreInfo*);
+    int gui$invalidate_window(int window_id);
 
     DisplayInfo get_display_info();
 

@@ -33,6 +33,13 @@ struct GUI_CreateWindowParameters {
     char title[128];
 };
 
+struct GUI_WindowBackingStoreInfo {
+    GUI_Size size;
+    size_t bpp;
+    size_t pitch;
+    RGBA32* pixels;
+};
+
 enum class GUI_MouseButton : unsigned char {
     NoButton = 0,
     Left = 1,
