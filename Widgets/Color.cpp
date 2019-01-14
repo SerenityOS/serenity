@@ -1,13 +1,9 @@
 #include "Color.h"
-#include "FrameBuffer.h"
+#include <AK/Assertions.h>
 
 Color::Color(byte r, byte g, byte b)
 {
-#ifdef USE_SDL
-    m_value = SDL_MapRGB(FrameBuffer::the().surface()->format, r, g, b);
-#else
     m_value = (r << 16) | (g << 8) | b;
-#endif
 }
 
 Color::Color(NamedColor named)
@@ -32,9 +28,5 @@ Color::Color(NamedColor named)
     default: ASSERT_NOT_REACHED(); break;
     }
 
-#ifdef USE_SDL
-    m_value = SDL_MapRGB(FrameBuffer::the().surface()->format, rgb.r, rgb.g, rgb.g);
-#else
     m_value = (rgb.r << 16) | (rgb.g << 8) | rgb.b;
-#endif
 }

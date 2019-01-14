@@ -7,6 +7,13 @@
 #include <assert.h>
 #include <Kernel/GUITypes.h>
 #include <Kernel/Syscall.h>
+#include <AK/StdLibExtras.h>
+
+int gui_invalidate_window(int window_id)
+{
+    int rc = syscall(SC_gui_invalidate_window, window_id);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
 
 int main(int argc, char** argv)
 {
@@ -26,6 +33,23 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    GUI_WindowBackingStoreInfo backing;
+    int rc = syscall(SC_gui_get_window_backing_store, window_id, &backing);
+    if (rc < 0) {
+        perror("gui_get_window_backing_store");
+        return 1;
+    }
+
+    sys_printf("(Client) window backing %ux%u @ %p\n", backing.size.width, backing.size.height, backing.pixels);
+
+    fast_dword_fill(backing.pixels, 0x00ff00, backing.size.width * backing.size.height);
+
+    rc = gui_invalidate_window(window_id);
+    if (rc < 0) {
+        perror("gui_invalidate_window");
+        return 1;
+    }
+
     for (;;) {
         GUI_Event event;
         ssize_t nread = read(fd, &event, sizeof(event));
@@ -39,6 +63,15 @@ int main(int argc, char** argv)
         case GUI_Event::Type::MouseDown: sys_printf("WID=%x MouseDown %d,%d\n", event.window_id, event.mouse.position.x, event.mouse.position.y); break;
         case GUI_Event::Type::MouseUp: sys_printf("WID=%x MouseUp %d,%d\n", event.window_id, event.mouse.position.x, event.mouse.position.y); break;
         case GUI_Event::Type::MouseMove: sys_printf("WID=%x MouseMove %d,%d\n", event.window_id, event.mouse.position.x, event.mouse.position.y); break;
+        }
+
+        if (event.type == GUI_Event::Type::MouseDown) {
+            byte r = rand() % 255;
+            byte g = rand() % 255;
+            byte b = rand() % 255;
+            Color color(r, g, b);
+            fast_dword_fill(backing.pixels, color.value(), backing.size.width * backing.size.height);
+            gui_invalidate_window(window_id);
         }
 
     }

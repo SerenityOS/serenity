@@ -1,15 +1,12 @@
 #include "GraphicsBitmap.h"
 #include "EventLoop.h"
 #include <AK/kmalloc.h>
-
-#ifdef SERENITY
 #include "Process.h"
 #include "MemoryManager.h"
-#endif
 
-RetainPtr<GraphicsBitmap> GraphicsBitmap::create(const Size& size)
+RetainPtr<GraphicsBitmap> GraphicsBitmap::create(Process& process, const Size& size)
 {
-    return adopt(*new GraphicsBitmap(size));
+    return adopt(*new GraphicsBitmap(process, size));
 }
 
 RetainPtr<GraphicsBitmap> GraphicsBitmap::create_wrapper(const Size& size, RGBA32* data)
@@ -17,39 +14,40 @@ RetainPtr<GraphicsBitmap> GraphicsBitmap::create_wrapper(const Size& size, RGBA3
     return adopt(*new GraphicsBitmap(size, data));
 }
 
-GraphicsBitmap::GraphicsBitmap(const Size& size)
+GraphicsBitmap::GraphicsBitmap(Process& process, const Size& size)
     : m_size(size)
     , m_pitch(size.width() * sizeof(RGBA32))
+    , m_client_process(&process)
 {
-#ifdef SERENITY
-    // FIXME: Oh god this is so horrible.
-    Process* server_process = EventLoop::main().running() ? &EventLoop::main().server_process() : current;
-    m_region = server_process->allocate_region(LinearAddress(), size.width() * size.height() * sizeof(RGBA32), "GraphicsBitmap", true, true, true);
-    m_data = (RGBA32*)m_region->linearAddress.asPtr();
-    m_owned = false;
-#else
-    m_data = static_cast<RGBA32*>(kmalloc(size.width() * size.height() * sizeof(RGBA32)));
-    memset(m_data, 0, size.width() * size.height() * sizeof(RGBA32));
-    m_owned = true;
-#endif
+    size_t size_in_bytes = size.width() * size.height() * sizeof(RGBA32);
+    auto vmo = VMObject::create_anonymous(size_in_bytes);
+    m_client_region = process.allocate_region_with_vmo(LinearAddress(), size_in_bytes, vmo.copyRef(), 0, "GraphicsBitmap (shared)", true, true);
+    m_client_region->commit(process);
+
+    {
+        auto& server = EventLoop::main().server_process();
+        ProcessInspectionHandle composer_handle(server);
+        m_server_region = server.allocate_region_with_vmo(LinearAddress(), size_in_bytes, move(vmo), 0, "GraphicsBitmap (shared)", true, true);
+
+        process.dumpRegions();
+        server.dumpRegions();
+    }
+    m_data = (RGBA32*)m_server_region->linearAddress.asPtr();
 }
 
 GraphicsBitmap::GraphicsBitmap(const Size& size, RGBA32* data)
     : m_size(size)
     , m_data(data)
     , m_pitch(size.width() * sizeof(RGBA32))
-    , m_owned(false)
 {
 }
 
 GraphicsBitmap::~GraphicsBitmap()
 {
-#ifdef SERENITY
-    if (m_region)
-        current->deallocate_region(*m_region);
-#endif
-    if (m_owned)
-        kfree(m_data);
+    if (m_client_region)
+        m_client_process->deallocate_region(*m_client_region);
+    if (m_server_region)
+        EventLoop::main().server_process().deallocate_region(*m_server_region);
     m_data = nullptr;
 }
 

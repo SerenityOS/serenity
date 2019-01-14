@@ -5,6 +5,9 @@ AK_OBJS = \
     ../AK/FileSystemPath.o \
     ../AK/kmalloc.o
 
+WIDGETS_OBJS = \
+    ../Widgets/Color.o
+
 LIBC_OBJS = \
        stdio.o \
        unistd.o \
@@ -35,7 +38,7 @@ LIBC_OBJS = \
        utime.o \
        entry.o
 
-OBJS = $(AK_OBJS) $(LIBC_OBJS)
+OBJS = $(AK_OBJS) $(WIDGETS_OBJS) $(LIBC_OBJS)
 
 LIBRARY = LibC.a
 ARCH_FLAGS =

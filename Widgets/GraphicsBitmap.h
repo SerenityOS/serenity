@@ -4,12 +4,11 @@
 #include "Size.h"
 #include <AK/Retainable.h>
 #include <AK/RetainPtr.h>
-
-class Region;
+#include "Process.h"
 
 class GraphicsBitmap : public Retainable<GraphicsBitmap> {
 public:
-    static RetainPtr<GraphicsBitmap> create(const Size&);
+    static RetainPtr<GraphicsBitmap> create(Process&, const Size&);
     static RetainPtr<GraphicsBitmap> create_wrapper(const Size&, RGBA32*);
     ~GraphicsBitmap();
 
@@ -21,15 +20,17 @@ public:
     int height() const { return m_size.height(); }
     size_t pitch() const { return m_pitch; }
 
+    Region* client_region() { return m_client_region; }
+    Region* server_region() { return m_server_region; }
+
 private:
-    explicit GraphicsBitmap(const Size&);
+    GraphicsBitmap(Process&, const Size&);
     GraphicsBitmap(const Size&, RGBA32*);
 
     Size m_size;
     RGBA32* m_data { nullptr };
     size_t m_pitch { 0 };
-#ifdef SERENITY
-    Region* m_region { nullptr };
-#endif
-    bool m_owned { false };
+    Process* m_client_process { nullptr };
+    Region* m_client_region { nullptr };
+    Region* m_server_region { nullptr };
 };

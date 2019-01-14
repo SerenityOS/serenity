@@ -215,4 +215,18 @@ long atol(const char* str)
     return atoi(str);
 }
 
+
+static unsigned long s_next_rand = 1;
+
+int rand()
+{
+    s_next_rand = s_next_rand * 1103515245 + 12345;
+    return((unsigned)(s_next_rand/((RAND_MAX + 1) * 2)) % (RAND_MAX + 1));
+}
+
+void srand(unsigned seed)
+{
+    s_next_rand = seed;
+}
+
 }

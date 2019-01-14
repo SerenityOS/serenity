@@ -68,6 +68,9 @@
     __ENUMERATE_SYSCALL(sync) \
     __ENUMERATE_SYSCALL(gui_create_window) \
     __ENUMERATE_SYSCALL(gui_destroy_window) \
+    __ENUMERATE_SYSCALL(gui_get_window_backing_store) \
+    __ENUMERATE_SYSCALL(gui_invalidate_window) \
+
 
 namespace Syscall {
 
