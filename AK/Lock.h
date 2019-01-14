@@ -26,16 +26,17 @@ static inline dword CAS(volatile dword* mem, dword newval, dword oldval)
         "cmpxchgl %2, %1"
         :"=a"(ret), "+m"(*mem)
         :"r"(newval), "0"(oldval)
-        :"memory");
+        :"cc", "memory");
     return ret;
 }
 
+// FIXME: Rename to YieldingLock?
 class SpinLock {
 public:
     SpinLock() { }
     ~SpinLock() { }
 
-    void lock(const char* func = nullptr)
+    ALWAYS_INLINE void lock(const char* func = nullptr)
     {
         (void)func;
 #ifdef DEBUG_LOCKS
@@ -56,7 +57,7 @@ public:
         }
     }
 
-    void unlock(const char* func = nullptr)
+    ALWAYS_INLINE void unlock(const char* func = nullptr)
     {
         (void)func;
         // barrier();
@@ -79,10 +80,10 @@ private:
 
 class Locker {
 public:
-    explicit Locker(SpinLock& l, const char* func) : m_lock(l), m_func(func) { lock(); }
-    ~Locker() { unlock(); }
-    void unlock() { m_lock.unlock(m_func); }
-    void lock() { m_lock.lock(m_func); }
+    ALWAYS_INLINE explicit Locker(SpinLock& l, const char* func) : m_lock(l), m_func(func) { lock(); }
+    ALWAYS_INLINE ~Locker() { unlock(); }
+    ALWAYS_INLINE void unlock() { m_lock.unlock(m_func); }
+    ALWAYS_INLINE void lock() { m_lock.lock(m_func); }
 
 private:
     SpinLock& m_lock;
