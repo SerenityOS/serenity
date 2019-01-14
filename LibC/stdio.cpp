@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <AK/printf.cpp>
+#include <Kernel/Syscall.h>
 
 extern "C" {
 
@@ -226,6 +227,20 @@ void rewind(FILE* stream)
 
 static void sys_putch(char*&, char ch)
 {
+    syscall(SC_putch, ch);
+}
+
+int sys_printf(const char* fmt, ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
+    int ret = printfInternal(sys_putch, nullptr, fmt, ap);
+    va_end(ap);
+    return ret;
+}
+
+static void stdout_putch(char*&, char ch)
+{
     putchar(ch);
 }
 
@@ -254,7 +269,7 @@ int printf(const char* fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
-    int ret = printfInternal(sys_putch, nullptr, fmt, ap);
+    int ret = printfInternal(stdout_putch, nullptr, fmt, ap);
     va_end(ap);
     return ret;
 }

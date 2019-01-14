@@ -8,6 +8,8 @@ mknod mnt/dev/tty0 c 4 0
 mknod mnt/dev/tty1 c 4 1
 mknod mnt/dev/tty2 c 4 2
 mknod mnt/dev/tty3 c 4 3
+mknod mnt/dev/psaux c 10 1
+mknod mnt/dev/gui_events c 66 1
 cp -R ../Base/* mnt/
 cp -v ../Userland/sh mnt/bin/sh
 cp -v ../Userland/id mnt/bin/id

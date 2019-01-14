@@ -173,14 +173,14 @@ bool FileDescriptor::can_write()
     return true;
 }
 
-bool FileDescriptor::has_data_available_for_reading()
+bool FileDescriptor::has_data_available_for_reading(Process& process)
 {
     if (is_fifo()) {
         ASSERT(fifo_direction() == FIFO::Reader);
         return m_fifo->can_read();
     }
     if (m_vnode->isCharacterDevice())
-        return m_vnode->characterDevice()->has_data_available_for_reading();
+        return m_vnode->characterDevice()->has_data_available_for_reading(process);
     return true;
 }
 

@@ -18,7 +18,7 @@ public:
     Console();
     virtual ~Console() override;
 
-    virtual bool has_data_available_for_reading() const override;
+    virtual bool has_data_available_for_reading(Process&) const override;
     virtual ssize_t read(byte* buffer, size_t size) override;
     virtual ssize_t write(const byte* data, size_t size) override;
 

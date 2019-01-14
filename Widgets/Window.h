@@ -7,12 +7,15 @@
 #include <AK/InlineLinkedList.h>
 #include <AK/WeakPtr.h>
 
+class Process;
 class Widget;
 
 class Window final : public Object, public InlineLinkedListNode<Window> {
 public:
-    explicit Window(Object* parent = nullptr);
+    Window(Process&, int window_id);
     virtual ~Window() override;
+
+    int window_id() const { return m_window_id; }
 
     String title() const { return m_title; }
     void setTitle(String&&);
@@ -30,11 +33,6 @@ public:
     void setPosition(const Point& position) { setRect({ position.x(), position.y(), width(), height() }); }
     void setPositionWithoutRepaint(const Point& position) { setRectWithoutRepaint({ position.x(), position.y(), width(), height() }); }
 
-    Widget* mainWidget() { return m_mainWidget; }
-    const Widget* mainWidget() const { return m_mainWidget; }
-
-    void setMainWidget(Widget*);
-
     virtual void event(Event&) override;
 
     bool isBeingDragged() const { return m_isBeingDragged; }
@@ -44,10 +42,6 @@ public:
     void update(const Rect& = Rect());
 
     bool isActive() const;
-
-    Widget* focusedWidget() { return m_focusedWidget.ptr(); }
-    const Widget* focusedWidget() const { return m_focusedWidget.ptr(); }
-    void setFocusedWidget(Widget*);
 
     bool isVisible() const;
 
@@ -65,11 +59,10 @@ public:
 private:
     String m_title;
     Rect m_rect;
-    Widget* m_mainWidget { nullptr };
     bool m_isBeingDragged { false };
 
-    WeakPtr<Widget> m_focusedWidget;
-
     RetainPtr<GraphicsBitmap> m_backing;
+    Process& m_process;
+    int m_window_id { -1 };
 };
 

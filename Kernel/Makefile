@@ -62,7 +62,8 @@ WIDGETS_OBJS = \
     ../Widgets/ListBox.o \
     ../Widgets/CheckBox.o \
     ../Widgets/TextBox.o \
-    ../Widgets/AbstractScreen.o
+    ../Widgets/AbstractScreen.o \
+    ../Widgets/GUIEventDevice.o \
 
 AK_OBJS = \
     ../AK/String.o \

@@ -7,7 +7,7 @@
 #include "IRQHandler.h"
 #include "PIC.h"
 
-//#define PAGE_FAULT_DEBUG
+#define PAGE_FAULT_DEBUG
 
 struct DescriptorTablePointer {
     word size;
@@ -34,7 +34,7 @@ word gdt_alloc_entry()
 
 void gdt_free_entry(word entry)
 {
-    s_gdt_freelist->unchecked_append(entry);
+    s_gdt_freelist->append(entry);
 }
 
 extern "C" void handle_irq();
@@ -325,7 +325,7 @@ void gdt_init()
     s_gdt_freelist = new Vector<word, KmallocEternalAllocator>();
     s_gdt_freelist->ensureCapacity(256);
     for (size_t i = s_gdtLength; i < 256; ++i)
-        s_gdt_freelist->unchecked_append(i * 8);
+        s_gdt_freelist->append(i * 8);
 
     s_gdtLength = 256;
     s_gdtr.address = s_gdt;

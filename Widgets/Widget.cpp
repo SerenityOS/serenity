@@ -56,10 +56,7 @@ void Widget::event(Event& event)
     case Event::MouseMove:
         return mouseMoveEvent(static_cast<MouseEvent&>(event));
     case Event::MouseDown:
-        if (auto* win = window()) {
-            // FIXME: if (acceptsFocus())
-            win->setFocusedWidget(this);
-        }
+        // FIXME: Focus self if needed.
         return mouseDownEvent(static_cast<MouseEvent&>(event));
     case Event::MouseUp:
         return mouseUpEvent(static_cast<MouseEvent&>(event));
@@ -141,8 +138,7 @@ void Widget::setWindow(Window* window)
 
 bool Widget::isFocused() const
 {
-    if (auto* win = window())
-        return win->isActive() &&  win->focusedWidget() == this;
+    // FIXME: Implement.
     return false;
 }
 
@@ -150,8 +146,7 @@ void Widget::setFocus(bool focus)
 {
     if (focus == isFocused())
         return;
-    if (auto* win = window())
-        win->setFocusedWidget(this);
+    // FIXME: Implement.
 }
 
 void Widget::setFont(RetainPtr<Font>&& font)

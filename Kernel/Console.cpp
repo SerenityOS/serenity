@@ -23,7 +23,7 @@ Console::~Console()
 {
 }
 
-bool Console::has_data_available_for_reading() const
+bool Console::has_data_available_for_reading(Process&) const
 {
     return false;
 }

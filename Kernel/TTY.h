@@ -12,7 +12,7 @@ public:
 
     virtual ssize_t read(byte*, size_t) override;
     virtual ssize_t write(const byte*, size_t) override;
-    virtual bool has_data_available_for_reading() const override;
+    virtual bool has_data_available_for_reading(Process&) const override;
     virtual int ioctl(Process&, unsigned request, unsigned arg) override final;
 
     virtual String tty_name() const = 0;

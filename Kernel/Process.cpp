@@ -18,6 +18,7 @@
 #include "Scheduler.h"
 #include "FIFO.h"
 #include "KSyms.h"
+#include <Widgets/Window.h>
 
 //#define DEBUG_IO
 //#define TASK_DEBUG
@@ -1057,7 +1058,7 @@ ssize_t Process::sys$read(int fd, void* outbuf, size_t nread)
     if (!descriptor)
         return -EBADF;
     if (descriptor->is_blocking()) {
-        if (!descriptor->has_data_available_for_reading()) {
+        if (!descriptor->has_data_available_for_reading(*this)) {
             m_blocked_fd = fd;
             block(BlockedRead);
             sched_yield();

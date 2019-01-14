@@ -4,7 +4,9 @@
 #include "Window.h"
 #include "Label.h"
 #include "Button.h"
+#include "Process.h"
 
+#if 0
 void MsgBox(Window* owner, String&& text)
 {
     Font& font = Font::defaultFont();
@@ -33,7 +35,7 @@ void MsgBox(Window* owner, String&& text)
         buttonHeight
     );
 
-    auto* window = new Window;
+    auto* window = new Window(*current, current->make_window_id());
     window->setTitle("MsgBox");
     window->setRect(windowRect);
     auto* widget = new Widget;
@@ -56,4 +58,4 @@ void MsgBox(Window* owner, String&& text)
         button.window()->close();
     };
 }
-
+#endif

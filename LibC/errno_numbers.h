@@ -43,7 +43,6 @@
     __ERROR(EAFNOSUPPORT,   "Address family not supported") \
     __ERROR(EWHYTHO,        "Failed without setting an error code (Bug!)") \
     __ERROR(EBADWINDOW,     "Bad Window ID") \
-    __ERROR(EBADWIDGET,     "Bad Widget ID") \
 
 enum __errno_values {
 #undef __ERROR

@@ -12,6 +12,7 @@
 #include <AK/AKString.h>
 #include <AK/Vector.h>
 #include <AK/WeakPtr.h>
+#include <AK/Lock.h>
 
 class FileDescriptor;
 class PageDirectory;
@@ -191,13 +192,12 @@ public:
 
     int gui$create_window(const GUI_CreateWindowParameters*);
     int gui$destroy_window(int window_id);
-    int gui$create_widget(int window_id, const GUI_CreateWidgetParameters*);
-    int gui$destroy_widget(int widget_id);
 
     DisplayInfo get_display_info();
 
     static void initialize();
     static void initialize_gui_statics();
+    int make_window_id();
 
     void crash() NORETURN;
     static int reap(Process&) WARN_UNUSED_RESULT;
@@ -247,6 +247,9 @@ public:
     int exec(const String& path, Vector<String>&& arguments, Vector<String>&& environment);
 
     bool is_root() const { return m_euid == 0; }
+
+    Vector<GUI_Event>& gui_events() { return m_gui_events; }
+    SpinLock& gui_events_lock() { return m_gui_events_lock; }
 
 private:
     friend class MemoryManager;
@@ -342,8 +345,11 @@ private:
 
     RetainPtr<Region> m_display_framebuffer_region;
 
-    Vector<WeakPtr<Window>> m_windows;
-    Vector<WeakPtr<Widget>> m_widgets;
+    HashMap<int, OwnPtr<Window>> m_windows;
+
+    Vector<GUI_Event> m_gui_events;
+    SpinLock m_gui_events_lock;
+    int m_next_window_id { 1 };
 };
 
 extern Process* current;

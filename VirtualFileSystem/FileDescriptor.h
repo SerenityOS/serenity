@@ -9,6 +9,7 @@
 
 #ifdef SERENITY
 class TTY;
+class Process;
 #endif
 
 class FileDescriptor : public Retainable<FileDescriptor> {
@@ -27,7 +28,7 @@ public:
     ssize_t write(const byte* data, size_t);
     int stat(Unix::stat*);
 
-    bool has_data_available_for_reading();
+    bool has_data_available_for_reading(Process&);
     bool can_write();
 
     ssize_t get_dir_entries(byte* buffer, size_t);
