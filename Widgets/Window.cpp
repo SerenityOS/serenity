@@ -3,29 +3,18 @@
 #include "Event.h"
 #include "EventLoop.h"
 #include "Widget.h"
+#include "Process.h"
 
-Window::Window(Object* parent)
-    : Object(parent)
+Window::Window(Process& process, int window_id)
+    : m_process(process)
+    , m_window_id(window_id)
 {
     WindowManager::the().addWindow(*this);
 }
 
 Window::~Window()
 {
-    delete m_mainWidget;
-    m_mainWidget = nullptr;
-    if (parent())
-        parent()->removeChild(*this);
     WindowManager::the().removeWindow(*this);
-}
-
-void Window::setMainWidget(Widget* widget)
-{
-    if (m_mainWidget == widget)
-        return;
-
-    m_mainWidget = widget;
-    widget->setWindow(this);
 }
 
 void Window::setTitle(String&& title)
@@ -58,51 +47,50 @@ void Window::update(const Rect& rect)
     EventLoop::main().postEvent(this, make<PaintEvent>(rect));
 }
 
+// FIXME: Just use the same types.
+static GUI_MouseButton to_api(MouseButton button)
+{
+    switch (button) {
+    case MouseButton::None: return GUI_MouseButton::NoButton;
+    case MouseButton::Left: return GUI_MouseButton::Left;
+    case MouseButton::Right: return GUI_MouseButton::Right;
+    case MouseButton::Middle: return GUI_MouseButton::Middle;
+    }
+}
+
 void Window::event(Event& event)
 {
-    if (event.isMouseEvent()) {
-        auto& me = static_cast<MouseEvent&>(event);
-        //printf("Window{%p}: %s %d,%d\n", this, me.name(), me.x(), me.y());
-        if (m_mainWidget) {
-            auto result = m_mainWidget->hitTest(me.x(), me.y());
-            //printf("hit test for %d,%d found: %s{%p} %d,%d\n", me.x(), me.y(), result.widget->class_name(), result.widget, result.localX, result.localY);
-            // FIXME: Re-use the existing event instead of crafting a new one?
-            auto localEvent = make<MouseEvent>(event.type(), result.localX, result.localY, me.button());
-            return result.widget->event(*localEvent);
-        }
-        return Object::event(event);
+    GUI_Event gui_event;
+    gui_event.window_id = window_id();
+
+    switch (event.type()) {
+    case Event::Paint:
+        gui_event.type = GUI_Event::Type::Paint;
+        gui_event.paint.rect = static_cast<PaintEvent&>(event).rect();
+        break;
+    case Event::MouseMove:
+        gui_event.type = GUI_Event::Type::MouseMove;
+        gui_event.mouse.position = static_cast<MouseEvent&>(event).position();
+        break;
+    case Event::MouseDown:
+        gui_event.type = GUI_Event::Type::MouseDown;
+        gui_event.mouse.position = static_cast<MouseEvent&>(event).position();
+        gui_event.mouse.button = to_api(static_cast<MouseEvent&>(event).button());
+        break;
+    case Event::MouseUp:
+        gui_event.type = GUI_Event::Type::MouseUp;
+        gui_event.mouse.position = static_cast<MouseEvent&>(event).position();
+        gui_event.mouse.button = to_api(static_cast<MouseEvent&>(event).button());
+        break;
     }
 
-    if (event.isPaintEvent()) {
-        auto& pe = static_cast<PaintEvent&>(event);
-        printf("Window[\"%s\"]: paintEvent %d,%d %dx%d\n", title().characters(),
-                pe.rect().x(),
-                pe.rect().y(),
-                pe.rect().width(),
-                pe.rect().height());
+    if (gui_event.type == GUI_Event::Type::Invalid)
+        return;
 
-        if (isBeingDragged()) {
-            // Ignore paint events during window drag.
-            return;
-        }
-        if (m_mainWidget) {
-            if (pe.rect().is_empty())
-                m_mainWidget->event(*make<PaintEvent>(m_mainWidget->rect()));
-            else
-                m_mainWidget->event(event);
-            WindowManager::the().did_paint(*this);
-            return;
-        }
-        return Object::event(event);
+    {
+        LOCKER(m_process.gui_events_lock());
+        m_process.gui_events().append(move(gui_event));
     }
-
-    if (event.isKeyEvent()) {
-        if (m_focusedWidget)
-            return m_focusedWidget->event(event);
-        return Object::event(event);
-    }
-
-    return Object::event(event);
 }
 
 void Window::did_paint()
@@ -118,24 +106,6 @@ bool Window::isActive() const
 bool Window::isVisible() const
 {
     return WindowManager::the().isVisible(const_cast<Window&>(*this));
-}
-
-void Window::setFocusedWidget(Widget* widget)
-{
-    if (m_focusedWidget.ptr() == widget)
-        return;
-    auto* previously_focused_widget = m_focusedWidget.ptr();
-    if (!widget)
-        m_focusedWidget = nullptr;
-    else {
-        m_focusedWidget = widget->makeWeakPtr();
-        m_focusedWidget->update();
-        EventLoop::main().postEvent(m_focusedWidget.ptr(), make<Event>(Event::FocusIn));
-    }
-    if (previously_focused_widget) {
-        previously_focused_widget->update();
-        EventLoop::main().postEvent(previously_focused_widget, make<Event>(Event::FocusOut));
-    }
 }
 
 void Window::close()

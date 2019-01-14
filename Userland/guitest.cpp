@@ -11,7 +11,7 @@
 int main(int argc, char** argv)
 {
     GUI_CreateWindowParameters wparams;
-    wparams.rect = { 200, 200, 300, 200 };
+    wparams.rect = { { 200, 200 }, { 300, 200 } };
     wparams.background_color = 0xffc0c0;
     strcpy(wparams.title, "GUI test app");
     int window_id = syscall(SC_gui_create_window, &wparams);
@@ -20,28 +20,27 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    GUI_CreateWidgetParameters label_params;
-    label_params.type = GUI_WidgetType::Label;
-    label_params.rect = { 20, 20, 260, 20 };
-    label_params.opaque = false;
-    strcpy(label_params.text, "Hello World!");
-    int label_id = syscall(SC_gui_create_widget, window_id, &label_params);
-    if (label_id < 0) {
-        perror("gui_create_widget");
-        return 1;
-    }
-
-    GUI_CreateWidgetParameters button_params;
-    button_params.type = GUI_WidgetType::Button;
-    button_params.rect = { 60, 60, 120, 20 };
-    strcpy(button_params.text, "I'm a button!");
-    int button_id = syscall(SC_gui_create_widget, window_id, &button_params);
-    if (button_id < 0) {
-        perror("gui_create_widget");
+    int fd = open("/dev/gui_events", O_RDONLY);
+    if (fd < 0) {
+        perror("open");
         return 1;
     }
 
     for (;;) {
+        GUI_Event event;
+        ssize_t nread = read(fd, &event, sizeof(event));
+        if (nread < 0) {
+            perror("read");
+            return 1;
+        }
+        assert(nread == sizeof(event));
+        switch (event.type) {
+        case GUI_Event::Type::Paint: sys_printf("WID=%x Paint [%d,%d %dx%d]\n", event.window_id, event.paint.rect.location.x, event.paint.rect.location.y, event.paint.rect.size.width, event.paint.rect.size.height); break;
+        case GUI_Event::Type::MouseDown: sys_printf("WID=%x MouseDown %d,%d\n", event.window_id, event.mouse.position.x, event.mouse.position.y); break;
+        case GUI_Event::Type::MouseUp: sys_printf("WID=%x MouseUp %d,%d\n", event.window_id, event.mouse.position.x, event.mouse.position.y); break;
+        case GUI_Event::Type::MouseMove: sys_printf("WID=%x MouseMove %d,%d\n", event.window_id, event.mouse.position.x, event.mouse.position.y); break;
+        }
+
     }
     return 0;
 }

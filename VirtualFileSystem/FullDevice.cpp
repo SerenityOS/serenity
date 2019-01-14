@@ -13,7 +13,7 @@ FullDevice::~FullDevice()
 {
 }
 
-bool FullDevice::has_data_available_for_reading() const
+bool FullDevice::has_data_available_for_reading(Process&) const
 {
     return true;
 }

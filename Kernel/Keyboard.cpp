@@ -114,7 +114,7 @@ Keyboard::~Keyboard()
 {
 }
 
-bool Keyboard::has_data_available_for_reading() const
+bool Keyboard::has_data_available_for_reading(Process&) const
 {
     return !m_queue.is_empty();
 }

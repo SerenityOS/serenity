@@ -37,8 +37,6 @@ public:
         DeferredDestroy,
         WindowBecameInactive,
         WindowBecameActive,
-        FocusIn,
-        FocusOut,
         WM_Compose,
     };
 

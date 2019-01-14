@@ -116,7 +116,7 @@ byte PS2MouseDevice::mouse_read()
     return IO::in8(0x60);
 }
 
-bool PS2MouseDevice::has_data_available_for_reading() const
+bool PS2MouseDevice::has_data_available_for_reading(Process&) const
 {
     return !m_buffer.is_empty();
 }

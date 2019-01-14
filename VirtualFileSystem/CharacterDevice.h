@@ -12,7 +12,7 @@ public:
 
     RetainPtr<FileDescriptor> open(int options);
 
-    virtual bool has_data_available_for_reading() const = 0;
+    virtual bool has_data_available_for_reading(Process&) const = 0;
 
     virtual ssize_t read(byte* buffer, size_t bufferSize) = 0;
     virtual ssize_t write(const byte* buffer, size_t bufferSize) = 0;

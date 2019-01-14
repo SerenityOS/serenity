@@ -9,6 +9,7 @@ static const dword time_slice = 5; // *10 = 50ms
 
 Process* current;
 static Process* s_colonel_process;
+static bool s_in_yield;
 
 struct TaskRedirectionData {
     word selector;
@@ -51,7 +52,7 @@ bool Scheduler::pick_next()
         if (process.state() == Process::BlockedRead) {
             ASSERT(process.m_blocked_fd != -1);
             // FIXME: Block until the amount of data wanted is available.
-            if (process.m_fds[process.m_blocked_fd].descriptor->has_data_available_for_reading())
+            if (process.m_fds[process.m_blocked_fd].descriptor->has_data_available_for_reading(process))
                 process.unblock();
             return true;
         }
@@ -142,6 +143,9 @@ bool Scheduler::pick_next()
 
 bool Scheduler::yield()
 {
+    ASSERT(!s_in_yield);
+    s_in_yield = true;
+
     if (!current) {
         kprintf("PANIC: sched_yield() with !current");
         HANG;
@@ -150,9 +154,12 @@ bool Scheduler::yield()
     //dbgprintf("%s<%u> yield()\n", current->name().characters(), current->pid());
 
     InterruptDisabler disabler;
-    if (!pick_next())
+    if (!pick_next()) {
+        s_in_yield = false;
         return 1;
+    }
 
+    s_in_yield = false;
     //dbgprintf("yield() jumping to new process: %x (%s)\n", current->farPtr().selector, current->name().characters());
     switch_now();
     return 0;
@@ -271,6 +278,7 @@ void Scheduler::initialize()
     initialize_redirection();
     s_colonel_process = Process::create_kernel_process("colonel", nullptr);
     current = nullptr;
+    s_in_yield = false;
     load_task_register(s_redirection.selector);
 }
 

@@ -15,6 +15,7 @@
 #include <VirtualFileSystem/RandomDevice.h>
 #include <VirtualFileSystem/Ext2FileSystem.h>
 #include <VirtualFileSystem/VirtualFileSystem.h>
+#include <Widgets/GUIEventDevice.h>
 #include "MemoryManager.h"
 #include "ProcFileSystem.h"
 #include "RTC.h"
@@ -34,6 +35,7 @@ VirtualConsole* tty2;
 VirtualConsole* tty3;
 Keyboard* keyboard;
 PS2MouseDevice* ps2mouse;
+GUIEventDevice* gui_event_device;
 
 #ifdef STRESS_TEST_SPAWNING
 static void spawn_stress() NORETURN;
@@ -75,6 +77,7 @@ static void init_stage2()
 
     vfs->register_character_device(*keyboard);
     vfs->register_character_device(*ps2mouse);
+    vfs->register_character_device(*gui_event_device);
     vfs->register_character_device(*tty0);
     vfs->register_character_device(*tty1);
     vfs->register_character_device(*tty2);
@@ -94,7 +97,7 @@ static void init_stage2()
     environment.append("TERM=ansi");
 
     int error;
-    Process::create_user_process("/bin/sh", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, move(environment), tty0);
+    //Process::create_user_process("/bin/sh", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, move(environment), tty0);
 #ifdef SPAWN_GUI_TEST_APP
     Process::create_user_process("/bin/guitest", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, move(environment), tty0);
 #endif
@@ -132,6 +135,7 @@ void init()
 
     keyboard = new Keyboard;
     ps2mouse = new PS2MouseDevice;
+    gui_event_device = new GUIEventDevice;
 
     VirtualConsole::initialize();
     tty0 = new VirtualConsole(0, VirtualConsole::AdoptCurrentVGABuffer);

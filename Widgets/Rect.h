@@ -3,6 +3,8 @@
 #include "Point.h"
 #include "Size.h"
 
+struct GUI_Rect;
+
 class Rect {
 public:
     Rect() { }
@@ -16,6 +18,7 @@ public:
         , m_size(size)
     {
     }
+    Rect(const GUI_Rect&);
 
     bool is_empty() const
     {
@@ -116,6 +119,8 @@ public:
 
     Point location() const { return m_location; }
     Size size() const { return m_size; }
+
+    operator GUI_Rect() const;
 
     bool operator==(const Rect& other) const
     {
