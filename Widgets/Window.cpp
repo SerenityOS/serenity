@@ -37,16 +37,6 @@ void Window::setRect(const Rect& rect)
     WindowManager::the().notifyRectChanged(*this, oldRect, m_rect);
 }
 
-void Window::repaint(const Rect& rect)
-{
-    event(*make<PaintEvent>(rect));
-}
-
-void Window::update(const Rect& rect)
-{
-    EventLoop::main().postEvent(this, make<PaintEvent>(rect));
-}
-
 // FIXME: Just use the same types.
 static GUI_MouseButton to_api(MouseButton button)
 {

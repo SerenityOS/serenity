@@ -6,6 +6,10 @@ AK_OBJS = \
     ../AK/kmalloc.o
 
 WIDGETS_OBJS = \
+    ../Widgets/Painter.o \
+    ../Widgets/Font.o \
+    ../Widgets/GraphicsBitmap.o \
+    ../Widgets/CharacterBitmap.o \
     ../Widgets/Color.o
 
 LIBC_OBJS = \
@@ -36,6 +40,7 @@ LIBC_OBJS = \
        ioctl.o \
        math.o \
        utime.o \
+       gui.o \
        entry.o
 
 OBJS = $(AK_OBJS) $(WIDGETS_OBJS) $(LIBC_OBJS)
