@@ -146,6 +146,14 @@ public:
         return value;
     }
 
+    T take_first()
+    {
+        ASSERT(!is_empty());
+        T value = move(first());
+        remove(0);
+        return value;
+    }
+
     void remove(size_t index)
     {
         m_impl->remove(index);
