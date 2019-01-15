@@ -5,8 +5,10 @@
 #include <string.h>
 #include <alloca.h>
 #include <assert.h>
+#include <errno.h>
 #include <AK/Assertions.h>
 #include <AK/Types.h>
+#include <Kernel/Syscall.h>
 
 extern "C" {
 
@@ -215,6 +217,19 @@ long atol(const char* str)
     return atoi(str);
 }
 
+static char ptsname_buf[32];
+char* ptsname(int fd)
+{
+    if (ptsname_r(fd, ptsname_buf, sizeof(ptsname_buf)) < 0)
+        return nullptr;
+    return ptsname_buf;
+}
+
+int ptsname_r(int fd, char* buffer, size_t size)
+{
+    int rc = syscall(SC_ptsname_r, fd, buffer, size);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
 
 static unsigned long s_next_rand = 1;
 

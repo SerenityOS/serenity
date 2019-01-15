@@ -18,6 +18,8 @@ long atol(const char*);
 void qsort(void* base, size_t nmemb, size_t size, int (*compar)(const void *, const void *));
 void exit(int status) __NORETURN;
 void abort() __NORETURN;
+char* ptsname(int fd);
+int ptsname_r(int fd, char* buffer, size_t);
 
 #define RAND_MAX 32767
 int rand();

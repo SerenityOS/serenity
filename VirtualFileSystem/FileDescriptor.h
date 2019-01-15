@@ -9,6 +9,7 @@
 
 #ifdef SERENITY
 class TTY;
+class MasterPTY;
 class Process;
 #endif
 
@@ -46,6 +47,10 @@ public:
     bool is_tty() const;
     const TTY* tty() const;
     TTY* tty();
+
+    bool is_master_pty() const;
+    const MasterPTY* master_pty() const;
+    MasterPTY* master_pty();
 #endif
 
     InodeMetadata metadata() const { return m_vnode->metadata(); }

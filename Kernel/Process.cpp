@@ -19,6 +19,7 @@
 #include "FIFO.h"
 #include "KSyms.h"
 #include <Widgets/Window.h>
+#include "MasterPTY.h"
 
 //#define DEBUG_IO
 //#define TASK_DEBUG
@@ -989,6 +990,23 @@ int Process::sys$ttyname_r(int fd, char* buffer, size_t size)
     return 0;
 }
 
+int Process::sys$ptsname_r(int fd, char* buffer, size_t size)
+{
+    if (!validate_write(buffer, size))
+        return -EFAULT;
+    auto* descriptor = file_descriptor(fd);
+    if (!descriptor)
+        return -EBADF;
+    auto* master_pty = descriptor->master_pty();
+    if (!master_pty)
+        return -ENOTTY;
+    auto pts_name = master_pty->pts_name();
+    if (size < pts_name.length() + 1)
+        return -ERANGE;
+    strcpy(buffer, pts_name.characters());
+    return 0;
+}
+
 ssize_t Process::sys$write(int fd, const void* data, size_t size)
 {
     if (!validate_read(data, size))
@@ -1270,7 +1288,7 @@ int Process::sys$open(const char* path, int options)
         return -EFAULT;
     if (number_of_open_file_descriptors() >= m_max_open_file_descriptors)
         return -EMFILE;
-    int error;
+    int error = -EWHYTHO;
     auto descriptor = VFS::the().open(path, error, options, cwd_inode()->identifier());
     if (!descriptor)
         return error;

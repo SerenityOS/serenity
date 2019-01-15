@@ -19,6 +19,8 @@ KERNEL_OBJS = \
        ProcFileSystem.o \
        RTC.o \
        TTY.o \
+       MasterPTY.o \
+       SlavePTY.o \
        VirtualConsole.o \
        FIFO.o \
        Scheduler.o \

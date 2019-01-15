@@ -7,7 +7,7 @@
 #include "IRQHandler.h"
 #include "PIC.h"
 
-#define PAGE_FAULT_DEBUG
+//#define PAGE_FAULT_DEBUG
 
 struct DescriptorTablePointer {
     word size;

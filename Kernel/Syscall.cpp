@@ -121,6 +121,8 @@ static dword handle(RegisterDump& regs, dword function, dword arg1, dword arg2, 
         return current->sys$readlink((const char*)arg1, (char*)arg2, (size_t)arg3);
     case Syscall::SC_ttyname_r:
         return current->sys$ttyname_r((int)arg1, (char*)arg2, (size_t)arg3);
+    case Syscall::SC_ptsname_r:
+        return current->sys$ptsname_r((int)arg1, (char*)arg2, (size_t)arg3);
     case Syscall::SC_setsid:
         return current->sys$setsid();
     case Syscall::SC_getsid:
