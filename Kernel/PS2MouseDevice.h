@@ -12,7 +12,7 @@ public:
     static PS2MouseDevice& the();
 
     // ^CharacterDevice
-    virtual bool has_data_available_for_reading(Process&) const override;
+    virtual bool can_read(Process&) const override;
     virtual ssize_t read(byte* buffer, size_t) override;
     virtual ssize_t write(const byte* buffer, size_t) override;
     virtual bool can_write(Process&) const override { return true; }

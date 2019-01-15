@@ -183,7 +183,7 @@ bool FileDescriptor::has_data_available_for_reading(Process& process)
         return m_fifo->can_read();
     }
     if (m_vnode->isCharacterDevice())
-        return m_vnode->characterDevice()->has_data_available_for_reading(process);
+        return m_vnode->characterDevice()->can_read(process);
     return true;
 }
 

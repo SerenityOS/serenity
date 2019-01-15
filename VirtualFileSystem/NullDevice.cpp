@@ -12,7 +12,7 @@ NullDevice::~NullDevice()
 {
 }
 
-bool NullDevice::has_data_available_for_reading(Process&) const
+bool NullDevice::can_read(Process&) const
 {
     return true;
 }

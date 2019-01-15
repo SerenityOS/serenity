@@ -31,7 +31,7 @@ ssize_t MasterPTY::write(const byte* buffer, size_t size)
     return size;
 }
 
-bool MasterPTY::has_data_available_for_reading(Process&) const
+bool MasterPTY::can_read(Process&) const
 {
     return !m_buffer.is_empty();
 }

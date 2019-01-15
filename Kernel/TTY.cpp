@@ -42,7 +42,7 @@ ssize_t TTY::write(const byte* buffer, size_t size)
     return size;
 }
 
-bool TTY::has_data_available_for_reading(Process&) const
+bool TTY::can_read(Process&) const
 {
     return !m_buffer.is_empty();
 }

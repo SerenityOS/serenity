@@ -14,7 +14,7 @@ GUIEventDevice::~GUIEventDevice()
 {
 }
 
-bool GUIEventDevice::has_data_available_for_reading(Process& process) const
+bool GUIEventDevice::can_read(Process& process) const
 {
     return !process.gui_events().is_empty();
 }
