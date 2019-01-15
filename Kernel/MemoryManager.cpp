@@ -69,20 +69,24 @@ void MemoryManager::initialize_paging()
     // The bottom 4 MB (except for the null page) are identity mapped & supervisor only.
     // Every process shares these mappings.
     create_identity_mapping(kernel_page_directory(), LinearAddress(PAGE_SIZE), (4 * MB) - PAGE_SIZE);
-    // Physical pages from this range are used for page tables.
-    for (size_t i = (1 * MB); i < (4 * MB); i += PAGE_SIZE)
+
+    // Basic memory map:
+    // 0      -> 512 kB         Kernel code. Root page directory & PDE 0.
+    // 1 MB   -> 2 MB           kmalloc_eternal() space.
+    // 2 MB   -> 3 MB           kmalloc() space.
+    // 3 MB   -> 4 MB           Supervisor physical pages (available for allocation!)
+    // 4 MB   -> 32 MB          Userspace physical pages (available for allocation!)
+    for (size_t i = (2 * MB); i < (4 * MB); i += PAGE_SIZE)
         m_free_supervisor_physical_pages.append(adopt(*new PhysicalPage(PhysicalAddress(i), true)));
 
 #ifdef MM_DEBUG
     dbgprintf("MM: 4MB-32MB available for allocation\n");
 #endif
-    // The physical pages 4 MB through 8 MB are available for allocation.
     for (size_t i = (4 * MB); i < (32 * MB); i += PAGE_SIZE)
         m_free_physical_pages.append(adopt(*new PhysicalPage(PhysicalAddress(i), false)));
     m_quickmap_addr = LinearAddress(m_free_physical_pages.takeLast().leakRef()->paddr().get());
-    kprintf("MM: Quickmap will use P%x\n", m_quickmap_addr.get());
-
 #ifdef MM_DEBUG
+    dbgprintf("MM: Quickmap will use P%x\n", m_quickmap_addr.get());
     dbgprintf("MM: Installing page directory\n");
 #endif
     asm volatile("movl %%eax, %%cr3"::"a"(kernel_page_directory().cr3()));

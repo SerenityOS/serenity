@@ -23,10 +23,10 @@ typedef struct
 #define CHUNK_SIZE  128
 #define POOL_SIZE   (1024 * 1024)
 
-#define PAGE_ALIGNED_BASE_PHYSICAL 0x300000
-#define ETERNAL_BASE_PHYSICAL 0x200000
-#define BASE_PHYS   0x100000
+#define ETERNAL_BASE_PHYSICAL 0x100000
+#define ETERNAL_RANGE_SIZE 0x100000
 
+#define BASE_PHYSICAL 0x200000
 #define RANGE_SIZE 0x100000
 
 static byte alloc_map[POOL_SIZE / CHUNK_SIZE / 8];
@@ -42,20 +42,20 @@ bool is_kmalloc_address(void* ptr)
 {
     if (ptr >= (byte*)ETERNAL_BASE_PHYSICAL && ptr < s_next_eternal_ptr)
         return true;
-    return (dword)ptr >= BASE_PHYS && (dword)ptr <= (BASE_PHYS + POOL_SIZE);
+    return (dword)ptr >= BASE_PHYSICAL && (dword)ptr <= (BASE_PHYSICAL + POOL_SIZE);
 }
 
 void kmalloc_init()
 {
-    memset( &alloc_map, 0, sizeof(alloc_map) );
-    memset( (void *)BASE_PHYS, 0, POOL_SIZE );
+    memset(&alloc_map, 0, sizeof(alloc_map));
+    memset((void *)BASE_PHYSICAL, 0, POOL_SIZE);
 
     kmalloc_sum_eternal = 0;
     sum_alloc = 0;
     sum_free = POOL_SIZE;
 
     s_next_eternal_ptr = (byte*)ETERNAL_BASE_PHYSICAL;
-    s_end_of_eternal_range = s_next_eternal_ptr + RANGE_SIZE;
+    s_end_of_eternal_range = s_next_eternal_ptr + ETERNAL_RANGE_SIZE;
 }
 
 void* kmalloc_eternal(size_t size)
@@ -136,7 +136,7 @@ void* kmalloc_impl(dword size)
 
                 if( chunks_here == chunks_needed )
                 {
-                    auto* a = (allocation_t *)(BASE_PHYS + (first_chunk * CHUNK_SIZE));
+                    auto* a = (allocation_t *)(BASE_PHYSICAL + (first_chunk * CHUNK_SIZE));
                     byte *ptr = (byte *)a;
                     ptr += sizeof(allocation_t);
                     a->nchunk = chunks_needed;
