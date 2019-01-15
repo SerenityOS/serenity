@@ -74,10 +74,10 @@ void MemoryManager::initialize_paging()
         m_free_supervisor_physical_pages.append(adopt(*new PhysicalPage(PhysicalAddress(i), true)));
 
 #ifdef MM_DEBUG
-    dbgprintf("MM: 4MB-8MB available for allocation\n");
+    dbgprintf("MM: 4MB-32MB available for allocation\n");
 #endif
     // The physical pages 4 MB through 8 MB are available for allocation.
-    for (size_t i = (4 * MB); i < (8 * MB); i += PAGE_SIZE)
+    for (size_t i = (4 * MB); i < (32 * MB); i += PAGE_SIZE)
         m_free_physical_pages.append(adopt(*new PhysicalPage(PhysicalAddress(i), false)));
     m_quickmap_addr = LinearAddress(m_free_physical_pages.takeLast().leakRef()->paddr().get());
     kprintf("MM: Quickmap will use P%x\n", m_quickmap_addr.get());
