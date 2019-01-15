@@ -10,8 +10,8 @@ void Terminal::create_window()
 {
     auto& font = Font::defaultFont();
 
-    m_pixel_width = m_columns * font.glyphWidth();
-    m_pixel_height = m_rows * font.glyphHeight();
+    m_pixel_width = m_columns * font.glyphWidth() + m_inset * 2;
+    m_pixel_height = (m_rows * (font.glyphHeight() + m_line_spacing)) + (m_inset * 2);
 
     GUI_CreateWindowParameters params;
     params.rect = { { 300, 300 }, { m_pixel_width, m_pixel_height } };
@@ -161,7 +161,6 @@ void Terminal::escape$m(const Vector<unsigned>& params)
         case 36:
         case 37:
             // Foreground color
-            dbgprintf("foreground = %d\n", param - 30);
             m_current_attribute.foreground_color = param - 30;
             break;
         case 40:
@@ -393,12 +392,12 @@ void Terminal::paint()
     Painter painter(*m_backing);
 
     for (word row = 0; row < m_rows; ++row) {
-        int y = row * font.glyphHeight();
+        int y = row * (font.glyphHeight() + m_line_spacing);
         for (word column = 0; column < m_columns; ++column) {
             char ch = m_buffer[(row * m_columns) + (column)];
             auto& attribute = m_attributes[(row * m_columns) + (column)];
             int x = column * font.glyphWidth();
-            Rect glyph_rect { x + 2, y + 2, font.glyphWidth(), font.glyphHeight() };
+            Rect glyph_rect { x + m_inset, y + m_inset, font.glyphWidth(), font.glyphHeight() + m_line_spacing};
             auto glyph_background = ansi_color(attribute.background_color);
             painter.fill_rect(glyph_rect, glyph_background);
             if (ch == ' ')
