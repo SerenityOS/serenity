@@ -29,7 +29,7 @@ KERNEL_OBJS = \
        ELFLoader.o \
        KSyms.o \
        PS2MouseDevice.o \
-       WindowComposer.o
+       WindowServer.o
 
 VFS_OBJS = \
     ../VirtualFileSystem/DiskDevice.o \
