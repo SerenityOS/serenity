@@ -16,6 +16,8 @@ public:
 
     bool is_empty() const { return m_read_buffer_index >= m_read_buffer->size() && m_write_buffer->is_empty(); }
 
+    size_t bytes_in_write_buffer() const { return m_write_buffer->size(); }
+
 private:
     void flip();
 

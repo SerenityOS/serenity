@@ -47,6 +47,11 @@ bool TTY::has_data_available_for_reading(Process&) const
     return !m_buffer.is_empty();
 }
 
+bool TTY::can_write(Process&) const
+{
+    return true;
+}
+
 void TTY::emit(byte ch)
 {
     if (should_generate_signals()) {

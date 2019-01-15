@@ -36,6 +36,11 @@ bool MasterPTY::has_data_available_for_reading(Process&) const
     return !m_buffer.is_empty();
 }
 
+bool MasterPTY::can_write(Process&) const
+{
+    return m_buffer.bytes_in_write_buffer() < 4096;
+}
+
 void MasterPTY::on_slave_write(const byte* data, size_t size)
 {
     m_buffer.write(data, size);

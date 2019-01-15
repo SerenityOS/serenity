@@ -51,7 +51,7 @@ bool FIFO::can_read() const
 
 bool FIFO::can_write() const
 {
-    return true;
+    return m_buffer.bytes_in_write_buffer() < 4096;
 }
 
 ssize_t FIFO::read(byte* buffer, size_t size)
