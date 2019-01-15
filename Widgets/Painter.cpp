@@ -93,6 +93,18 @@ void Painter::draw_bitmap(const Point& p, const CharacterBitmap& bitmap, Color c
     }
 }
 
+void Painter::draw_glyph(const Point& point, char ch, Color color)
+{
+    auto* bitmap = font().glyphBitmap(ch);
+    if (!bitmap) {
+        dbgprintf("Font doesn't have 0x%02x ('%c')\n", ch, ch);
+        ASSERT_NOT_REACHED();
+    }
+    int x = point.x();
+    int y = point.y();
+    draw_bitmap({ x, y }, *bitmap, color);
+}
+
 void Painter::draw_text(const Rect& rect, const String& text, TextAlignment alignment, Color color)
 {
     Point point;
@@ -109,18 +121,11 @@ void Painter::draw_text(const Rect& rect, const String& text, TextAlignment alig
         ASSERT_NOT_REACHED();
     }
 
-    for (unsigned i = 0; i < text.length(); ++i) {
+    for (unsigned i = 0; i < text.length(); ++i, point.moveBy(font().glyphWidth(), 0)) {
         byte ch = text[i];
         if (ch == ' ')
             continue;
-        auto* bitmap = font().glyphBitmap(ch);
-        if (!bitmap) {
-            dbgprintf("Font doesn't have 0x%02x ('%c')\n", ch, ch);
-            ASSERT_NOT_REACHED();
-        }
-        int x = point.x() + i * font().glyphWidth();
-        int y = point.y();
-        draw_bitmap({ x, y }, *bitmap, color);
+        draw_glyph(point, ch, color);
     }
 }
 
