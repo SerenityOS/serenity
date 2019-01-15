@@ -165,12 +165,14 @@ ssize_t FileDescriptor::write(const byte* data, size_t size)
     return -1;
 }
 
-bool FileDescriptor::can_write()
+bool FileDescriptor::can_write(Process& process)
 {
     if (is_fifo()) {
         ASSERT(fifo_direction() == FIFO::Writer);
         return m_fifo->can_write();
     }
+    if (m_vnode->isCharacterDevice())
+        return m_vnode->characterDevice()->can_write(process);
     return true;
 }
 

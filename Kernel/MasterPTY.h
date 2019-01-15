@@ -14,6 +14,7 @@ public:
     virtual ssize_t read(byte*, size_t) override;
     virtual ssize_t write(const byte*, size_t) override;
     virtual bool has_data_available_for_reading(Process&) const override;
+    virtual bool can_write(Process&) const override;
     virtual bool is_master_pty() const override { return true; }
 
     String pts_name() const;

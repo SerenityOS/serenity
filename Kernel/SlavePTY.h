@@ -16,6 +16,7 @@ public:
 
 protected:
     virtual void on_tty_write(const byte*, size_t) override;
+    virtual bool can_write(Process&) const override;
 
 private:
     unsigned m_index;

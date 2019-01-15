@@ -1023,7 +1023,7 @@ ssize_t Process::sys$write(int fd, const void* data, size_t size)
 #ifdef IO_DEBUG
             dbgprintf("while %u < %u\n", nwritten, size);
 #endif
-            if (!descriptor->can_write()) {
+            if (!descriptor->can_write(*this)) {
 #ifdef IO_DEBUG
                 dbgprintf("block write on %d\n", fd);
 #endif

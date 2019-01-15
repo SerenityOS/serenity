@@ -59,7 +59,7 @@ bool Scheduler::pick_next()
 
         if (process.state() == Process::BlockedWrite) {
             ASSERT(process.m_blocked_fd != -1);
-            if (process.m_fds[process.m_blocked_fd].descriptor->can_write())
+            if (process.m_fds[process.m_blocked_fd].descriptor->can_write(process))
                 process.unblock();
             return true;
         }
