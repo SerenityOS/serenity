@@ -15,7 +15,7 @@ static void paint(GraphicsBitmap& bitmap, int width, int height);
 int main(int argc, char** argv)
 {
     GUI_CreateWindowParameters wparams;
-    wparams.rect = { { 200, 200 }, { 300, 200 } };
+    wparams.rect = { { 100, 100 }, { 120, 120 } };
     wparams.background_color = 0xffc0c0;
     strcpy(wparams.title, "GUI test app");
     int window_id = gui_create_window(&wparams);
@@ -56,6 +56,7 @@ int main(int argc, char** argv)
             perror("read");
             return 1;
         }
+        dbgprintf("(%d) ", getpid());
         assert(nread == sizeof(event));
         switch (event.type) {
         case GUI_Event::Type::Paint: dbgprintf("WID=%x Paint [%d,%d %dx%d]\n", event.window_id, event.paint.rect.location.x, event.paint.rect.location.y, event.paint.rect.size.width, event.paint.rect.size.height); break;
