@@ -176,7 +176,7 @@ bool FileDescriptor::can_write(Process& process)
     return true;
 }
 
-bool FileDescriptor::has_data_available_for_reading(Process& process)
+bool FileDescriptor::can_read(Process& process)
 {
     if (is_fifo()) {
         ASSERT(fifo_direction() == FIFO::Reader);
