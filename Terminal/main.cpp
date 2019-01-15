@@ -61,8 +61,6 @@ int main(int, char**)
         return 1;
     }
 
-    dbgprintf("ptm_fd = %d\n", ptm_fd);
-
     make_shell(ptm_fd);
 
     int event_fd = open("/dev/gui_events", O_RDONLY | O_NONBLOCK);
@@ -79,9 +77,8 @@ int main(int, char**)
         byte buffer[1024];
         ssize_t ptm_nread = read(ptm_fd, buffer, sizeof(buffer));
         if (ptm_nread > 0) {
-            for (ssize_t i = 0; i < ptm_nread; ++i) {
+            for (ssize_t i = 0; i < ptm_nread; ++i)
                 terminal.on_char(buffer[i]);
-            }
             terminal.paint();
         }
 
