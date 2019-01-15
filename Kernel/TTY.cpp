@@ -107,7 +107,7 @@ int TTY::ioctl(Process& process, unsigned request, unsigned arg)
     Unix::termios* tp;
     Unix::winsize* ws;
 
-    if (process.tty() != this)
+    if (process.tty() && process.tty() != this)
         return -ENOTTY;
     switch (request) {
     case TIOCGPGRP:
@@ -139,6 +139,12 @@ int TTY::ioctl(Process& process, unsigned request, unsigned arg)
             return -EFAULT;
         ws->ws_row = m_rows;
         ws->ws_col = m_columns;
+        return 0;
+    case TIOCSCTTY:
+        process.set_tty(this);
+        return 0;
+    case TIOCNOTTY:
+        process.set_tty(nullptr);
         return 0;
     }
     ASSERT_NOT_REACHED();
