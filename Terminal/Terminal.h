@@ -34,9 +34,21 @@ private:
     word columns() const { return m_columns; }
     word rows() const { return m_rows; }
 
-    void inject_string_at(word row, word column, const String&);
+    struct Attribute {
+        Attribute() { reset(); }
+        void reset()
+        {
+            foreground_color = 7;
+            background_color = 0;
+            bold = false;
+        }
+        unsigned foreground_color : 4;
+        unsigned background_color : 4;
+        bool bold : 1;
+    };
 
     byte* m_buffer { nullptr };
+    Attribute* m_attributes { nullptr };
 
     word m_columns { 0 };
     word m_rows { 0 };
@@ -45,7 +57,8 @@ private:
     byte m_cursor_column { 0 };
     byte m_saved_cursor_row { 0 };
     byte m_saved_cursor_column { 0 };
-    byte m_current_attribute { 0x07 };
+
+    Attribute m_current_attribute;
 
     void execute_escape_sequence(byte final);
 
