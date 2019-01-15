@@ -98,6 +98,7 @@ static void init_stage2()
 
     int error;
     //Process::create_user_process("/bin/sh", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, move(environment), tty0);
+    Process::create_user_process("/bin/Terminal", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, move(environment), tty0);
 #ifdef SPAWN_GUI_TEST_APP
     Process::create_user_process("/bin/guitest", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, move(environment), tty0);
 #endif

@@ -27,9 +27,6 @@ GraphicsBitmap::GraphicsBitmap(Process& process, const Size& size)
         auto& server = EventLoop::main().server_process();
         ProcessInspectionHandle composer_handle(server);
         m_server_region = server.allocate_region_with_vmo(LinearAddress(), size_in_bytes, move(vmo), 0, "GraphicsBitmap (shared)", true, true);
-
-        process.dumpRegions();
-        server.dumpRegions();
     }
     m_data = (RGBA32*)m_server_region->linearAddress.asPtr();
 }
