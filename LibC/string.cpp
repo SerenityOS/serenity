@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <signal.h>
 #include <assert.h>
+#include <AK/Types.h>
 
 extern "C" {
 
@@ -14,14 +15,6 @@ void bzero(void* dest, size_t n)
 void bcopy(const void* src, void* dest, size_t n)
 {
     memmove(dest, src, n);
-}
-
-void* memset(void* dest, int c, size_t n)
-{
-    uint8_t* bdest = (uint8_t*)dest;
-    for (; n; --n)
-        *(bdest++) = c;
-    return dest;
 }
 
 size_t strspn(const char* s, const char* accept)
@@ -90,14 +83,59 @@ int memcmp(const void* v1, const void* v2, size_t n)
     return 0;
 }
 
-void* memcpy(void* dest, const void* src, size_t n)
+void* memcpy(void *dest_ptr, const void *src_ptr, dword n)
 {
-    auto* bdest = (unsigned char*)dest;
-    auto* bsrc = (const unsigned char*)src;
-    for (; n; --n)
-        *(bdest++) = *(bsrc++);
-    return dest;
+    dword dest = (dword)dest_ptr;
+    dword src = (dword)src_ptr;
+    // FIXME: Support starting at an unaligned address.
+    if (!(dest & 0x3) && !(src & 0x3) && n >= 12) {
+        size_t dwords = n / sizeof(dword);
+        asm volatile(
+            "rep movsl\n"
+            : "=S"(src), "=D"(dest)
+            : "S"(src), "D"(dest), "c"(dwords)
+            : "memory"
+        );
+        n -= dwords * sizeof(dword);
+        if (n == 0)
+            return dest_ptr;
+    }
+    asm volatile(
+        "rep movsb\n"
+        :: "S"(src), "D"(dest), "c"(n)
+        : "memory"
+    );
+    return dest_ptr;
 }
+
+void* memset(void* dest_ptr, int c, dword n)
+{
+    dword dest = (dword)dest_ptr;
+    // FIXME: Support starting at an unaligned address.
+    if (!(dest & 0x3) && n >= 12) {
+        size_t dwords = n / sizeof(dword);
+        dword expanded_c = (byte)c;
+        expanded_c |= expanded_c << 8;
+        expanded_c |= expanded_c << 16;
+        asm volatile(
+            "rep stosl\n"
+            : "=D"(dest)
+            : "D"(dest), "c"(dwords), "a"(expanded_c)
+            : "memory"
+        );
+        n -= dwords * sizeof(dword);
+        if (n == 0)
+            return dest_ptr;
+    }
+    asm volatile(
+        "rep stosb\n"
+        : "=D" (dest), "=c" (n)
+        : "0" (dest), "1" (n), "a" (c)
+        : "memory"
+    );
+    return dest_ptr;
+}
+
 
 void* memmove(void* dest, const void* src, size_t n)
 {
