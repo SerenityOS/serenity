@@ -80,4 +80,7 @@ private:
 
     int m_pixel_width { 0 };
     int m_pixel_height { 0 };
+
+    int m_inset { 2 };
+    int m_line_spacing { 4 };
 };
