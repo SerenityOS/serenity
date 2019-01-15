@@ -12,7 +12,7 @@ ZeroDevice::~ZeroDevice()
 {
 }
 
-bool ZeroDevice::has_data_available_for_reading(Process&) const
+bool ZeroDevice::can_read(Process&) const
 {
     return true;
 }

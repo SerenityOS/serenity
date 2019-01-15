@@ -76,7 +76,7 @@ void EventLoop::waitForEvent()
     bool prev_right_button = screen.right_mouse_button_pressed();
     int dx = 0;
     int dy = 0;
-    while (mouse.has_data_available_for_reading(*m_server_process)) {
+    while (mouse.can_read(*m_server_process)) {
         signed_byte data[3];
         ssize_t nread = mouse.read((byte*)data, 3);
         ASSERT(nread == 3);
@@ -84,7 +84,7 @@ void EventLoop::waitForEvent()
         bool right_button = data[0] & 2;
         dx += data[1];
         dy += -data[2];
-        if (left_button != prev_left_button || right_button != prev_right_button || !mouse.has_data_available_for_reading(*m_server_process)) {
+        if (left_button != prev_left_button || right_button != prev_right_button || !mouse.can_read(*m_server_process)) {
             prev_left_button = left_button;
             prev_right_button = right_button;
             screen.on_receive_mouse_data(dx, dy, left_button, right_button);
