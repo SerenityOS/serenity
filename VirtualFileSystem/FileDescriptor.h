@@ -29,7 +29,7 @@ public:
     ssize_t write(Process&, const byte* data, size_t);
     int stat(Unix::stat*);
 
-    bool has_data_available_for_reading(Process&);
+    bool can_read(Process&);
     bool can_write(Process&);
 
     ssize_t get_dir_entries(byte* buffer, size_t);

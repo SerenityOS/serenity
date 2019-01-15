@@ -1076,7 +1076,7 @@ ssize_t Process::sys$read(int fd, void* outbuf, size_t nread)
     if (!descriptor)
         return -EBADF;
     if (descriptor->is_blocking()) {
-        if (!descriptor->has_data_available_for_reading(*this)) {
+        if (!descriptor->can_read(*this)) {
             m_blocked_fd = fd;
             block(BlockedRead);
             sched_yield();
@@ -1964,7 +1964,7 @@ int Process::sys$select(const Syscall::SC_select_params* params)
         memset(readfds, 0, sizeof(fd_set));
         auto bitmap = Bitmap::wrap((byte*)readfds, FD_SETSIZE);
         for (int fd : m_select_read_fds) {
-            if (m_fds[fd].descriptor->has_data_available_for_reading(*this)) {
+            if (m_fds[fd].descriptor->can_read(*this)) {
                 bitmap.set(fd, true);
                 ++markedfds;
             }
