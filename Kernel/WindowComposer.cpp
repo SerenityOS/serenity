@@ -1,4 +1,3 @@
-#include "WindowComposer.h"
 #include "Process.h"
 #include <Widgets/Font.h>
 #include <Widgets/FrameBuffer.h>
@@ -6,7 +5,7 @@
 #include <Widgets/EventLoop.h>
 #include <Widgets/Window.h>
 
-void WindowComposer_main()
+void WindowServer_main()
 {
     auto info = current->get_display_info();
 
@@ -16,7 +15,7 @@ void WindowComposer_main()
 
     WindowManager::the();
 
-    dbgprintf("Entering WindowComposer main loop.\n");
+    dbgprintf("Entering WindowServer main loop.\n");
     EventLoop::main().exec();
 
     ASSERT_NOT_REACHED();

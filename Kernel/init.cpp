@@ -137,8 +137,8 @@ static void init_stage2()
     Process::create_kernel_process("spawn_stress", spawn_stress);
 #endif
 
-    extern void WindowComposer_main();
-    Process::create_kernel_process("WindowComposer", WindowComposer_main);
+    extern void WindowServer_main();
+    Process::create_kernel_process("WindowServer", WindowServer_main);
 
     current->sys$exit(0);
     ASSERT_NOT_REACHED();
