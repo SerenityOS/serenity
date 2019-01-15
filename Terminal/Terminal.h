@@ -41,10 +41,12 @@ private:
             foreground_color = 7;
             background_color = 0;
             bold = false;
+            dirty = true;
         }
         unsigned foreground_color : 4;
         unsigned background_color : 4;
         bool bold : 1;
+        bool dirty : 1;
     };
 
     byte* m_buffer { nullptr };
@@ -80,6 +82,7 @@ private:
 
     int m_pixel_width { 0 };
     int m_pixel_height { 0 };
+    int m_rows_to_scroll_backing_store { 0 };
 
     int m_inset { 2 };
     int m_line_spacing { 4 };

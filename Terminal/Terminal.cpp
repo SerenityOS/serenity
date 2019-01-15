@@ -2,9 +2,12 @@
 #include <AK/AKString.h>
 #include <Widgets/Font.h>
 #include <Widgets/Painter.h>
+#include <AK/StdLibExtras.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <gui.h>
+
+#define FAST_SCROLL
 
 void Terminal::create_window()
 {
@@ -278,6 +281,13 @@ void Terminal::scroll_up()
 {
     if (m_cursor_row == (rows() - 1)) {
         memcpy(m_buffer, m_buffer + m_columns, m_columns * (m_rows - 1));
+#ifdef FAST_SCROLL
+        ++m_rows_to_scroll_backing_store;
+#else
+        for (size_t i = 0; i < m_rows * m_columns; ++i) {
+            m_attributes[i].dirty = true;
+        }
+#endif
         memset(&m_buffer[(m_rows - 1) * m_columns], ' ', m_columns);
         memcpy(m_attributes, m_attributes + m_columns, m_columns * (m_rows - 1) * sizeof(Attribute));
         for (size_t i = 0; i < m_columns; ++i)
@@ -390,14 +400,32 @@ void Terminal::paint()
     Rect rect { 0, 0, m_pixel_width, m_pixel_height };
     Font& font = Font::defaultFont();
     Painter painter(*m_backing);
+    int line_height = Font::defaultFont().glyphHeight() + m_line_spacing;
+#ifdef FAST_SCROLL
+    if (m_rows_to_scroll_backing_store && m_rows_to_scroll_backing_store < m_rows) {
+        int first_scanline = m_inset;
+        int second_scanline = m_inset + (m_rows_to_scroll_backing_store * line_height);
+        int num_rows_to_memcpy = m_rows - m_rows_to_scroll_backing_store;
+        int scanlines_to_copy = (num_rows_to_memcpy * line_height) - m_line_spacing;
+        fast_dword_copy(
+            m_backing->scanline(first_scanline),
+            m_backing->scanline(second_scanline),
+            scanlines_to_copy * m_pixel_width
+        );
+    }
+    m_rows_to_scroll_backing_store = 0;
+#endif
 
     for (word row = 0; row < m_rows; ++row) {
-        int y = row * (font.glyphHeight() + m_line_spacing);
+        int y = row * line_height;
         for (word column = 0; column < m_columns; ++column) {
-            char ch = m_buffer[(row * m_columns) + (column)];
             auto& attribute = m_attributes[(row * m_columns) + (column)];
+            if (!attribute.dirty)
+                continue;
+            attribute.dirty = false;
+            char ch = m_buffer[(row * m_columns) + (column)];
             int x = column * font.glyphWidth();
-            Rect glyph_rect { x + m_inset, y + m_inset, font.glyphWidth(), font.glyphHeight() + m_line_spacing };
+            Rect glyph_rect { x + m_inset, y + m_inset, font.glyphWidth(), line_height };
             auto glyph_background = ansi_color(attribute.background_color);
             painter.fill_rect(glyph_rect, glyph_background);
             if (ch == ' ')
