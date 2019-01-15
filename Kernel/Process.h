@@ -206,6 +206,7 @@ public:
     static int reap(Process&) WARN_UNUSED_RESULT;
 
     const TTY* tty() const { return m_tty; }
+    void set_tty(TTY* tty) { m_tty = tty; }
 
     size_t regionCount() const { return m_regions.size(); }
     const Vector<RetainPtr<Region>>& regions() const { return m_regions; }

@@ -5,6 +5,7 @@ SlavePTY::SlavePTY(unsigned index)
     : TTY(11, index)
     , m_index(index)
 {
+    set_size(80, 25);
 }
 
 SlavePTY::~SlavePTY()

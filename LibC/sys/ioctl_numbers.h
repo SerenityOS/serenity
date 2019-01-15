@@ -8,5 +8,7 @@ enum IOCtlNumber {
     TCSETSW,
     TCSETSF,
     TIOCGWINSZ,
+    TIOCSCTTY,
+    TIOCNOTTY,
 };
 

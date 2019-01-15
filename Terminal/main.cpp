@@ -8,6 +8,7 @@
 #include <Widgets/Font.h>
 #include <Widgets/GraphicsBitmap.h>
 #include <Widgets/Painter.h>
+#include <sys/ioctl.h>
 #include <gui.h>
 #include "Terminal.h"
 
@@ -20,9 +21,15 @@ static void make_shell(int ptm_fd)
             perror("ptsname");
             exit(1);
         }
+        int rc = 0;
         close(ptm_fd);
         int pts_fd = open(tty_name, O_RDWR);
         dbgprintf("*** In child (%d), opening slave pty %s, pts_fd=%d\n", getpid(), tty_name, pts_fd);
+        rc = ioctl(0, TIOCNOTTY);
+        if (rc < 0) {
+            perror("ioctl(TIOCNOTTY)");
+            exit(1);
+        }
         close(0);
         close(1);
         close(2);
@@ -30,7 +37,12 @@ static void make_shell(int ptm_fd)
         dup2(pts_fd, 1);
         dup2(pts_fd, 2);
         close(pts_fd);
-        int rc = execve("/bin/sh", nullptr, nullptr);
+        rc = ioctl(0, TIOCSCTTY);
+        if (rc < 0) {
+            perror("ioctl(TIOCSCTTY)");
+            exit(1);
+        }
+        rc = execve("/bin/sh", nullptr, nullptr);
         if (rc < 0) {
             perror("execve");
             exit(1);
