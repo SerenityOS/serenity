@@ -41,8 +41,8 @@ void* memset(void* dest_ptr, byte c, dword n)
     if (!(dest & 0x3) && n >= 12) {
         size_t dwords = n / sizeof(dword);
         dword expanded_c = c;
-        expanded_c <<= 8;
-        expanded_c <<= 16;
+        expanded_c |= expanded_c << 8;
+        expanded_c |= expanded_c << 16;
         asm volatile(
             "rep stosl\n"
             : "=D"(dest)

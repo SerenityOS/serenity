@@ -97,7 +97,7 @@ void Painter::draw_glyph(const Point& point, char ch, Color color)
 {
     auto* bitmap = font().glyphBitmap(ch);
     if (!bitmap) {
-        dbgprintf("Font doesn't have 0x%02x ('%c')\n", (byte)ch, ch);
+        dbgprintf("Font doesn't have 0x%b ('%c')\n", (byte)ch, ch);
         ASSERT_NOT_REACHED();
     }
     int x = point.x();
