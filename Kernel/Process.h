@@ -69,6 +69,7 @@ public:
         BlockedRead,
         BlockedWrite,
         BlockedSignal,
+        BlockedSelect,
     };
 
     enum RingLevel {
@@ -81,7 +82,7 @@ public:
 
     bool is_blocked() const
     {
-        return m_state == BlockedSleep || m_state == BlockedWait || m_state == BlockedRead || m_state == BlockedSignal;
+        return m_state == BlockedSleep || m_state == BlockedWait || m_state == BlockedRead || m_state == BlockedSignal || m_state == BlockedSelect;
     }
 
     PageDirectory& page_directory() { return *m_page_directory; }
@@ -156,6 +157,7 @@ public:
     void* sys$mmap(const Syscall::SC_mmap_params*);
     int sys$munmap(void*, size_t size);
     int sys$set_mmap_name(void*, size_t, const char*);
+    int sys$select(const Syscall::SC_select_params*);
     ssize_t sys$get_dir_entries(int fd, void*, size_t);
     int sys$getcwd(char*, size_t);
     int sys$chdir(const char*);
@@ -304,6 +306,8 @@ private:
     dword m_timesScheduled { 0 };
     pid_t m_waitee_pid { -1 };
     int m_blocked_fd { -1 };
+    Vector<int> m_select_read_fds;
+    Vector<int> m_select_write_fds;
     size_t m_max_open_file_descriptors { 16 };
     SignalActionData m_signal_action_data[32];
     dword m_pending_signals { 0 };
@@ -394,6 +398,7 @@ static inline const char* toString(Process::State state)
     case Process::BlockedRead: return "Read";
     case Process::BlockedWrite: return "Write";
     case Process::BlockedSignal: return "Signal";
+    case Process::BlockedSelect: return "Select";
     case Process::BeingInspected: return "Inspect";
     }
     ASSERT_NOT_REACHED();

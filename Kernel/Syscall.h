@@ -71,7 +71,10 @@
     __ENUMERATE_SYSCALL(gui_destroy_window) \
     __ENUMERATE_SYSCALL(gui_get_window_backing_store) \
     __ENUMERATE_SYSCALL(gui_invalidate_window) \
+    __ENUMERATE_SYSCALL(select) \
 
+
+struct fd_set;
 
 namespace Syscall {
 
@@ -100,6 +103,14 @@ struct SC_mmap_params {
     int32_t flags;
     int32_t fd;
     int32_t offset; // FIXME: 64-bit off_t?
+};
+
+struct SC_select_params {
+    int nfds;
+    fd_set* readfds;
+    fd_set* writefds;
+    fd_set* exceptfds;
+    struct timeval* timeout;
 };
 
 void initialize();

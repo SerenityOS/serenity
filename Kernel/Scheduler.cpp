@@ -64,6 +64,22 @@ bool Scheduler::pick_next()
             return true;
         }
 
+        if (process.state() == Process::BlockedSelect) {
+            for (int fd : process.m_select_read_fds) {
+                if (process.m_fds[fd].descriptor->has_data_available_for_reading(process)) {
+                    process.unblock();
+                    return true;
+                }
+            }
+            for (int fd : process.m_select_write_fds) {
+                if (process.m_fds[fd].descriptor->can_write(process)) {
+                    process.unblock();
+                    return true;
+                }
+            }
+            return true;
+        }
+
         if (process.state() == Process::Skip1SchedulerPass) {
             process.set_state(Process::Skip0SchedulerPasses);
             return true;
