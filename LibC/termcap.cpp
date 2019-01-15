@@ -18,13 +18,10 @@ int tgetent(char* bp, const char* name)
 #ifdef TERMCAP_DEBUG
     fprintf(stderr, "tgetent: bp=%p, name='%s'\n", bp, name);
 #endif
-    if (!strcmp(name, "ansi")) {
-        PC = '\0';
-        BC = const_cast<char*>("\033[D");
-        UP = const_cast<char*>("\033[A");
-        return 1;
-    }
-    assert(false);
+    PC = '\0';
+    BC = const_cast<char*>("\033[D");
+    UP = const_cast<char*>("\033[A");
+    return 1;
 }
 
 static HashMap<String, const char*>* caps = nullptr;
