@@ -43,7 +43,7 @@ static void make_shell(int ptm_fd)
 
 int main(int, char**)
 {
-    int ptm_fd = open("/dev/ptm0", O_RDWR);
+    int ptm_fd = open("/dev/ptm0", O_RDWR | O_NONBLOCK);
     if (ptm_fd < 0) {
         perror("open");
         return 1;
@@ -53,7 +53,7 @@ int main(int, char**)
 
     make_shell(ptm_fd);
 
-    int event_fd = open("/dev/gui_events", O_RDONLY);
+    int event_fd = open("/dev/gui_events", O_RDONLY | O_NONBLOCK);
     if (event_fd < 0) {
         perror("open");
         return 1;
@@ -72,13 +72,15 @@ int main(int, char**)
             }
             terminal.paint();
         }
-#if 0
+
         GUI_Event event;
         ssize_t nread = read(event_fd, &event, sizeof(event));
         if (nread < 0) {
             perror("read");
             return 1;
         }
+        if (nread == 0)
+            continue;
         assert(nread == sizeof(event));
         dbgprintf("(Terminal:%d) ", getpid());
         switch (event.type) {
@@ -86,13 +88,16 @@ int main(int, char**)
         case GUI_Event::Type::MouseDown: dbgprintf("WID=%x MouseDown %d,%d\n", event.window_id, event.mouse.position.x, event.mouse.position.y); break;
         case GUI_Event::Type::MouseUp: dbgprintf("WID=%x MouseUp %d,%d\n", event.window_id, event.mouse.position.x, event.mouse.position.y); break;
         case GUI_Event::Type::MouseMove: dbgprintf("WID=%x MouseMove %d,%d\n", event.window_id, event.mouse.position.x, event.mouse.position.y); break;
+        case GUI_Event::Type::KeyDown: dbgprintf("WID=%x KeyDown 0x%b (%c)\n", event.window_id, event.key.character, event.key.character); break;
         default:
             ASSERT_NOT_REACHED();
         }
 
-        if (event.type == GUI_Event::Type::MouseDown)
+        if (event.type == GUI_Event::Type::Paint) {
             terminal.paint();
-#endif
+        } else if (event.type == GUI_Event::Type::KeyDown) {
+            write(ptm_fd, &event.key.character, 1);
+        }
     }
     return 0;
 }
