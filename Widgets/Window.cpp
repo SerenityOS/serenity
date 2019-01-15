@@ -72,6 +72,10 @@ void Window::event(Event& event)
         gui_event.mouse.position = static_cast<MouseEvent&>(event).position();
         gui_event.mouse.button = to_api(static_cast<MouseEvent&>(event).button());
         break;
+    case Event::KeyDown:
+        gui_event.type = GUI_Event::Type::KeyDown;
+        gui_event.key.character = static_cast<KeyEvent&>(event).text()[0];
+        break;
     }
 
     if (gui_event.type == GUI_Event::Type::Invalid)

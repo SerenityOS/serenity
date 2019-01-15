@@ -42,10 +42,17 @@ struct GUI_WindowBackingStoreInfo {
 
 enum class GUI_MouseButton : unsigned char {
     NoButton = 0,
-    Left = 1,
-    Right = 2,
-    Middle = 4,
+    Left     = 1,
+    Right    = 2,
+    Middle   = 4,
 };
+
+struct GUI_KeyModifiers { enum {
+    Shift = 1 << 0,
+    Alt   = 1 << 1,
+    Ctrl  = 1 << 2,
+}; };
+
 
 struct GUI_Event {
     enum Type : unsigned {
@@ -54,6 +61,8 @@ struct GUI_Event {
         MouseMove,
         MouseDown,
         MouseUp,
+        KeyDown,
+        KeyUp,
     };
     Type type { Invalid };
     int window_id { -1 };
@@ -66,6 +75,10 @@ struct GUI_Event {
             GUI_Point position;
             GUI_MouseButton button;
         } mouse;
+        struct {
+            char character;
+            unsigned modifiers;
+        } key;
     };
 };
 
