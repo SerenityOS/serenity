@@ -45,30 +45,25 @@ Terminal::Terminal()
     // Rightmost column is always last tab on line.
     m_horizontal_tabs[columns() - 1] = 1;
 
-    m_buffer = (byte*)malloc(rows() * columns() * 2);
-    word* line_mem = reinterpret_cast<word*>(m_buffer);
-    for (word i = 0; i < rows() * columns(); ++i)
-        line_mem[i] = 0x0720;
-}
-
-void Terminal::inject_string_at(word row, word column, const String& string)
-{
-    for (size_t i = 0; i < string.length(); ++i) {
-        put_character_at(row, column + i, string[i]);
-    }
+    m_buffer = (byte*)malloc(rows() * columns());
+    m_attributes = (Attribute*)malloc(rows() * columns() * sizeof(Attribute));
+    memset(m_buffer, ' ', m_rows * m_columns);
+    for (size_t i = 0; i < rows() * columns(); ++i)
+        m_attributes[i].reset();
 }
 
 Terminal::~Terminal()
 {
-    kfree(m_horizontal_tabs);
-    m_horizontal_tabs = nullptr;
+    free(m_buffer);
+    free(m_attributes);
+    free(m_horizontal_tabs);
 }
 
 void Terminal::clear()
 {
-    word* linemem = (word*)m_buffer;
-    for (word i = 0; i < rows() * columns(); ++i)
-        linemem[i] = 0x0720;
+    memset(m_buffer, ' ', m_rows * m_columns);
+    for (size_t i = 0; i < rows() * columns(); ++i)
+        m_attributes[i].reset();
     set_cursor(0, 0);
 }
 
@@ -102,26 +97,7 @@ unsigned parseUInt(const String& str, bool& ok)
     return value;
 }
 
-enum class VGAColor : byte {
-    Black = 0,
-    Blue,
-    Green,
-    Cyan,
-    Red,
-    Magenta,
-    Brown,
-    LightGray,
-    DarkGray,
-    BrightBlue,
-    BrightGreen,
-    BrightCyan,
-    BrightRed,
-    BrightMagenta,
-    Yellow,
-    White,
-};
-
-enum class ANSIColor : byte {
+enum ANSIColor : byte {
     Black = 0,
     Red,
     Green,
@@ -140,33 +116,28 @@ enum class ANSIColor : byte {
     White,
 };
 
-static inline VGAColor ansi_color_to_vga(ANSIColor color)
+static inline Color ansi_color(unsigned color)
 {
     switch (color) {
-    case ANSIColor::Black: return VGAColor::Black;
-    case ANSIColor::Red: return VGAColor::Red;
-    case ANSIColor::Brown: return VGAColor::Brown;
-    case ANSIColor::Blue: return VGAColor::Blue;
-    case ANSIColor::Magenta: return VGAColor::Magenta;
-    case ANSIColor::Green: return VGAColor::Green;
-    case ANSIColor::Cyan: return VGAColor::Cyan;
-    case ANSIColor::LightGray: return VGAColor::LightGray;
-    case ANSIColor::DarkGray: return VGAColor::DarkGray;
-    case ANSIColor::BrightRed: return VGAColor::BrightRed;
-    case ANSIColor::BrightGreen: return VGAColor::BrightGreen;
-    case ANSIColor::Yellow: return VGAColor::Yellow;
-    case ANSIColor::BrightBlue: return VGAColor::BrightBlue;
-    case ANSIColor::BrightMagenta: return VGAColor::BrightMagenta;
-    case ANSIColor::BrightCyan: return VGAColor::BrightCyan;
-    case ANSIColor::White: return VGAColor::White;
+    case ANSIColor::Black: return Color(0, 0, 0);
+    case ANSIColor::Red: return Color(225, 56, 43);
+    case ANSIColor::Green: return Color(57, 181, 74);
+    case ANSIColor::Brown: return Color(255, 199, 6);
+    case ANSIColor::Blue: return Color(0, 111, 184);
+    case ANSIColor::Magenta: return Color(118, 38, 113);
+    case ANSIColor::Cyan: return Color(44, 181, 233);
+    case ANSIColor::LightGray: return Color(204, 204, 204);
+    case ANSIColor::DarkGray: return Color(128, 128, 128);
+    case ANSIColor::BrightRed: return Color(255, 0, 0);
+    case ANSIColor::BrightGreen: return Color(0, 255, 0);
+    case ANSIColor::Yellow: return Color(255, 255, 0);
+    case ANSIColor::BrightBlue: return Color(0, 0, 255);
+    case ANSIColor::BrightMagenta: return Color(255, 0, 255);
+    case ANSIColor::BrightCyan: return Color(0, 255, 255);
+    case ANSIColor::White: return Color(255, 255, 255);
     }
     ASSERT_NOT_REACHED();
-    return VGAColor::LightGray;
-}
-
-static inline byte ansi_color_to_vga(byte color)
-{
-    return (byte)ansi_color_to_vga((ANSIColor)color);
+    return Color::White;
 }
 
 void Terminal::escape$m(const Vector<unsigned>& params)
@@ -175,11 +146,11 @@ void Terminal::escape$m(const Vector<unsigned>& params)
         switch (param) {
         case 0:
             // Reset
-            m_current_attribute = 0x07;
+            m_current_attribute.reset();
             break;
         case 1:
             // Bold
-            m_current_attribute |= 8;
+            m_current_attribute.bold = true;
             break;
         case 30:
         case 31:
@@ -190,8 +161,8 @@ void Terminal::escape$m(const Vector<unsigned>& params)
         case 36:
         case 37:
             // Foreground color
-            m_current_attribute &= ~0x7;
-            m_current_attribute |= ansi_color_to_vga(param - 30);
+            dbgprintf("foreground = %d\n", param - 30);
+            m_current_attribute.foreground_color = param - 30;
             break;
         case 40:
         case 41:
@@ -202,8 +173,7 @@ void Terminal::escape$m(const Vector<unsigned>& params)
         case 46:
         case 47:
             // Background color
-            m_current_attribute &= ~0x70;
-            m_current_attribute |= ansi_color_to_vga(param - 30) << 8;
+            m_current_attribute.background_color = param - 30;
             break;
         }
     }
@@ -308,10 +278,11 @@ void Terminal::execute_escape_sequence(byte final)
 void Terminal::scroll_up()
 {
     if (m_cursor_row == (rows() - 1)) {
-        memcpy(m_buffer, m_buffer + 160, 160 * 24);
-        word* linemem = (word*)&m_buffer[24 * 160];
-        for (word i = 0; i < columns(); ++i)
-            linemem[i] = 0x0720;
+        memcpy(m_buffer, m_buffer + m_columns, m_columns * (m_rows - 1));
+        memset(&m_buffer[(m_rows - 1) * m_columns], ' ', m_columns);
+        memcpy(m_attributes, m_attributes + m_columns, m_columns * (m_rows - 1) * sizeof(Attribute));
+        for (size_t i = 0; i < m_columns; ++i)
+            m_attributes[((m_rows - 1) * m_columns) + i].reset();
     } else {
         ++m_cursor_row;
     }
@@ -330,9 +301,9 @@ void Terminal::put_character_at(unsigned row, unsigned column, byte ch)
 {
     ASSERT(row < rows());
     ASSERT(column < columns());
-    word cur = (row * 160) + (column * 2);
+    word cur = (row * m_columns) + (column);
     m_buffer[cur] = ch;
-    m_buffer[cur + 1] = m_current_attribute;
+    m_attributes[cur] = m_current_attribute;
 }
 
 void Terminal::on_char(byte ch)
@@ -420,16 +391,19 @@ void Terminal::paint()
     Rect rect { 0, 0, m_pixel_width, m_pixel_height };
     Font& font = Font::defaultFont();
     Painter painter(*m_backing);
-    painter.fill_rect(rect, Color::Black);
 
     for (word row = 0; row < m_rows; ++row) {
         int y = row * font.glyphHeight();
         for (word column = 0; column < m_columns; ++column) {
-            char ch = m_buffer[(row * 160) + (column * 2)];
+            char ch = m_buffer[(row * m_columns) + (column)];
+            auto& attribute = m_attributes[(row * m_columns) + (column)];
+            int x = column * font.glyphWidth();
+            Rect glyph_rect { x + 2, y + 2, font.glyphWidth(), font.glyphHeight() };
+            auto glyph_background = ansi_color(attribute.background_color);
+            painter.fill_rect(glyph_rect, glyph_background);
             if (ch == ' ')
                 continue;
-            int x = column * font.glyphWidth();
-            painter.draw_glyph({ x + 2, y + 2 }, ch, Color(0xa0, 0xa0, 0xa0));
+            painter.draw_glyph(glyph_rect.location(), ch, ansi_color(attribute.foreground_color));
         }
     }
 
