@@ -49,8 +49,6 @@ Terminal::Terminal()
     word* line_mem = reinterpret_cast<word*>(m_buffer);
     for (word i = 0; i < rows() * columns(); ++i)
         line_mem[i] = 0x0720;
-
-    inject_string_at(2, 2, "I am text inside the Terminal buffer.");
 }
 
 void Terminal::inject_string_at(word row, word column, const String& string)

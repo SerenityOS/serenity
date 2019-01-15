@@ -265,6 +265,7 @@ RetainPtr<FileDescriptor> VFS::open(const String& path, int& error, int options,
     auto inode = resolve_path(path, base, error, options);
     if (!inode.is_valid())
         return nullptr;
+    // FIXME: Propagate any error from get_or_create_node().
     auto vnode = get_or_create_node(inode);
     if (!vnode)
         return nullptr;

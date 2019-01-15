@@ -21,6 +21,7 @@ public:
     unsigned minor() const { return m_minor; }
 
     virtual bool is_tty() const { return false; }
+    virtual bool is_master_pty() const { return false; }
 
     virtual int ioctl(Process&, unsigned request, unsigned arg);
 

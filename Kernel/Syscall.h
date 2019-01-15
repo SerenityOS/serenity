@@ -66,6 +66,7 @@
     __ENUMERATE_SYSCALL(times) \
     __ENUMERATE_SYSCALL(utime) \
     __ENUMERATE_SYSCALL(sync) \
+    __ENUMERATE_SYSCALL(ptsname_r) \
     __ENUMERATE_SYSCALL(gui_create_window) \
     __ENUMERATE_SYSCALL(gui_destroy_window) \
     __ENUMERATE_SYSCALL(gui_get_window_backing_store) \

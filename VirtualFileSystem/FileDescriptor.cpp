@@ -8,6 +8,7 @@
 
 #ifdef SERENITY
 #include "TTY.h"
+#include "MasterPTY.h"
 #endif
 
 RetainPtr<FileDescriptor> FileDescriptor::create(RetainPtr<Vnode>&& vnode)
@@ -257,6 +258,29 @@ TTY* FileDescriptor::tty()
     if (auto* device = m_vnode->characterDevice())
         return static_cast<TTY*>(device);
     return nullptr;
+}
+
+bool FileDescriptor::is_master_pty() const
+{
+    if (is_fifo())
+        return false;
+    if (auto* device = m_vnode->characterDevice())
+        return device->is_master_pty();
+    return false;
+}
+
+const MasterPTY* FileDescriptor::master_pty() const
+{
+    if (!is_master_pty())
+        return nullptr;
+    return static_cast<const MasterPTY*>(m_vnode->characterDevice());
+}
+
+MasterPTY* FileDescriptor::master_pty()
+{
+    if (!is_master_pty())
+        return nullptr;
+    return static_cast<MasterPTY*>(m_vnode->characterDevice());
 }
 #endif
 

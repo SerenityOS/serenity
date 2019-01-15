@@ -167,6 +167,7 @@ public:
     int sys$uname(utsname*);
     int sys$readlink(const char*, char*, size_t);
     int sys$ttyname_r(int fd, char*, size_t);
+    int sys$ptsname_r(int fd, char*, size_t);
     pid_t sys$fork(RegisterDump&);
     int sys$execve(const char* filename, const char** argv, const char** envp);
     int sys$isatty(int fd);
