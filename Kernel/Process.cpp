@@ -1909,3 +1909,78 @@ DisplayInfo Process::get_display_info()
     info.framebuffer = m_display_framebuffer_region->linearAddress.asPtr();
     return info;
 }
+
+int Process::sys$select(const Syscall::SC_select_params* params)
+{
+    if (!validate_read_typed(params))
+        return -EFAULT;
+    if (params->writefds && !validate_read_typed(params->writefds))
+        return -EFAULT;
+    if (params->readfds && !validate_read_typed(params->readfds))
+        return -EFAULT;
+    if (params->exceptfds && !validate_read_typed(params->exceptfds))
+        return -EFAULT;
+    if (params->timeout && !validate_read_typed(params->timeout))
+        return -EFAULT;
+    int nfds = params->nfds;
+    fd_set* writefds = params->writefds;
+    fd_set* readfds = params->readfds;
+    fd_set* exceptfds = params->exceptfds;
+    auto* timeout = params->timeout;
+
+    // FIXME: Implement exceptfds support.
+    ASSERT(!exceptfds);
+
+    // FIXME: Implement timeout support.
+    ASSERT(!timeout);
+
+    if (nfds < 0)
+        return -EINVAL;
+
+    // FIXME: Return -EBADF if one of the fd sets contains an invalid fd.
+    // FIXME: Return -EINTR if a signal is caught.
+    // FIXME: Return -EINVAL if timeout is invalid.
+
+    auto transfer_fds = [nfds] (fd_set* set, auto& vector) {
+        if (!set)
+            return;
+        vector.clear_with_capacity();
+        auto bitmap = Bitmap::wrap((byte*)set, FD_SETSIZE);
+        for (int i = 0; i < nfds; ++i) {
+            if (bitmap.get(i))
+                vector.append(i);
+        }
+    };
+
+    transfer_fds(writefds, m_select_write_fds);
+    transfer_fds(readfds, m_select_read_fds);
+
+    block(BlockedSelect);
+    Scheduler::yield();
+
+    int markedfds = 0;
+
+    if (readfds) {
+        memset(readfds, 0, sizeof(fd_set));
+        auto bitmap = Bitmap::wrap((byte*)readfds, FD_SETSIZE);
+        for (int fd : m_select_read_fds) {
+            if (m_fds[fd].descriptor->has_data_available_for_reading(*this)) {
+                bitmap.set(fd, true);
+                ++markedfds;
+            }
+        }
+    }
+
+    if (writefds) {
+        memset(writefds, 0, sizeof(fd_set));
+        auto bitmap = Bitmap::wrap((byte*)writefds, FD_SETSIZE);
+        for (int fd : m_select_write_fds) {
+            if (m_fds[fd].descriptor->can_write(*this)) {
+                bitmap.set(fd, true);
+                ++markedfds;
+            }
+        }
+    }
+
+    return markedfds;
+}

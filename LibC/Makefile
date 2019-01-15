@@ -41,6 +41,7 @@ LIBC_OBJS = \
        math.o \
        utime.o \
        gui.o \
+       sys/select.o \
        entry.o
 
 OBJS = $(AK_OBJS) $(WIDGETS_OBJS) $(LIBC_OBJS)

@@ -2,6 +2,9 @@
 
 extern "C" {
 
+#define FD_SETSIZE 64
+struct fd_set { unsigned char bits[FD_SETSIZE / 8];  };
+
 namespace Unix {
 
 #define WNOHANG 1
