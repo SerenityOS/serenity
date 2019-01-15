@@ -1,11 +1,6 @@
 #include "Color.h"
 #include <AK/Assertions.h>
 
-Color::Color(byte r, byte g, byte b)
-{
-    m_value = (r << 16) | (g << 8) | b;
-}
-
 Color::Color(NamedColor named)
 {
     struct {

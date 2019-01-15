@@ -27,6 +27,7 @@ public:
 
     enum class TextAlignment { TopLeft, CenterLeft, Center };
     void draw_text(const Rect&, const String&, TextAlignment = TextAlignment::TopLeft, Color = Color());
+    void draw_glyph(const Point&, char, Color);
 
     const Font& font() const { return *m_font; }
 

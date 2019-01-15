@@ -424,14 +424,14 @@ void Terminal::paint()
     Painter painter(*m_backing);
     painter.fill_rect(rect, Color::Black);
 
-    char buf[2] = { 0, 0 };
-    for (unsigned row = 0; row < m_rows; ++row) {
+    for (word row = 0; row < m_rows; ++row) {
         int y = row * font.glyphHeight();
-        for (unsigned column = 0; column < m_columns; ++column) {
+        for (word column = 0; column < m_columns; ++column) {
+            char ch = m_buffer[(row * 160) + (column * 2)];
+            if (ch == ' ')
+                continue;
             int x = column * font.glyphWidth();
-            //buf[0] = at(row, column).character;
-            buf[0] = m_buffer[(row * 160) + (column * 2)];
-            painter.draw_text({ x + 2, y + 2, font.glyphWidth(), font.glyphHeight() }, buf, Painter::TextAlignment::TopLeft, Color(0xa0, 0xa0, 0xa0));
+            painter.draw_glyph({ x + 2, y + 2 }, ch, Color(0xa0, 0xa0, 0xa0));
         }
     }
 
