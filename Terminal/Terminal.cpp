@@ -11,7 +11,7 @@ void Terminal::create_window()
     auto& font = Font::defaultFont();
 
     m_pixel_width = m_columns * font.glyphWidth() + m_inset * 2;
-    m_pixel_height = (m_rows * (font.glyphHeight() + m_line_spacing)) + (m_inset * 2);
+    m_pixel_height = (m_rows * (font.glyphHeight() + m_line_spacing)) + (m_inset * 2) - m_line_spacing;
 
     GUI_CreateWindowParameters params;
     params.rect = { { 300, 300 }, { m_pixel_width, m_pixel_height } };
@@ -397,7 +397,7 @@ void Terminal::paint()
             char ch = m_buffer[(row * m_columns) + (column)];
             auto& attribute = m_attributes[(row * m_columns) + (column)];
             int x = column * font.glyphWidth();
-            Rect glyph_rect { x + m_inset, y + m_inset, font.glyphWidth(), font.glyphHeight() + m_line_spacing};
+            Rect glyph_rect { x + m_inset, y + m_inset, font.glyphWidth(), font.glyphHeight() + m_line_spacing };
             auto glyph_background = ansi_color(attribute.background_color);
             painter.fill_rect(glyph_rect, glyph_background);
             if (ch == ' ')
