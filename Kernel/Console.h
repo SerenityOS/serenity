@@ -20,8 +20,8 @@ public:
 
     virtual bool can_read(Process&) const override;
     virtual bool can_write(Process&) const override { return true; }
-    virtual ssize_t read(byte* buffer, size_t size) override;
-    virtual ssize_t write(const byte* data, size_t size) override;
+    virtual ssize_t read(Process&, byte* buffer, size_t size) override;
+    virtual ssize_t write(Process&, const byte* data, size_t size) override;
 
     void setImplementation(ConsoleImplementation* implementation) { m_implementation = implementation; }
 

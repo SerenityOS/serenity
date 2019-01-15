@@ -134,7 +134,7 @@ Unix::off_t FileDescriptor::seek(Unix::off_t offset, int whence)
     return m_current_offset;
 }
 
-ssize_t FileDescriptor::read(byte* buffer, size_t count)
+ssize_t FileDescriptor::read(Process& process, byte* buffer, size_t count)
 {
     if (is_fifo()) {
         ASSERT(fifo_direction() == FIFO::Reader);
@@ -142,7 +142,7 @@ ssize_t FileDescriptor::read(byte* buffer, size_t count)
     }
     if (m_vnode->isCharacterDevice()) {
         // FIXME: What should happen to m_currentOffset?
-        return m_vnode->characterDevice()->read(buffer, count);
+        return m_vnode->characterDevice()->read(process, buffer, count);
     }
     ASSERT(inode());
     ssize_t nread = inode()->read_bytes(m_current_offset, count, buffer, this);
@@ -150,7 +150,7 @@ ssize_t FileDescriptor::read(byte* buffer, size_t count)
     return nread;
 }
 
-ssize_t FileDescriptor::write(const byte* data, size_t size)
+ssize_t FileDescriptor::write(Process& process, const byte* data, size_t size)
 {
     if (is_fifo()) {
         ASSERT(fifo_direction() == FIFO::Writer);
@@ -158,7 +158,7 @@ ssize_t FileDescriptor::write(const byte* data, size_t size)
     }
     if (m_vnode->isCharacterDevice()) {
         // FIXME: What should happen to m_currentOffset?
-        return m_vnode->characterDevice()->write(data, size);
+        return m_vnode->characterDevice()->write(process, data, size);
     }
     // FIXME: Implement non-device writes.
     ASSERT_NOT_REACHED();
@@ -187,13 +187,13 @@ bool FileDescriptor::has_data_available_for_reading(Process& process)
     return true;
 }
 
-ByteBuffer FileDescriptor::read_entire_file()
+ByteBuffer FileDescriptor::read_entire_file(Process& process)
 {
     ASSERT(!is_fifo());
 
     if (m_vnode->isCharacterDevice()) {
         auto buffer = ByteBuffer::create_uninitialized(1024);
-        ssize_t nread = m_vnode->characterDevice()->read(buffer.pointer(), buffer.size());
+        ssize_t nread = m_vnode->characterDevice()->read(process, buffer.pointer(), buffer.size());
         buffer.trim(nread);
         return buffer;
     }

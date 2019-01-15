@@ -2,12 +2,13 @@
 #include "Console.h"
 #include "IO.h"
 #include <stdarg.h>
+#include "Process.h"
 #include <AK/Types.h>
 #include <AK/printf.cpp>
 
 static void console_putch(char*&, char ch)
 {
-    Console::the().write((byte*)&ch, 1);
+    Console::the().write(*current, (byte*)&ch, 1);
 }
 
 int kprintf(const char* fmt, ...)

@@ -19,20 +19,20 @@ bool GUIEventDevice::can_read(Process& process) const
     return !process.gui_events().is_empty();
 }
 
-ssize_t GUIEventDevice::read(byte* buffer, size_t size)
+ssize_t GUIEventDevice::read(Process& process, byte* buffer, size_t size)
 {
 #ifdef GUIEVENTDEVICE_DEBUG
-    dbgprintf("GUIEventDevice::read(): %s<%u>, size=%u, sizeof(GUI_Event)=%u\n", current->name().characters(), current->pid(), size, sizeof(GUI_Event));
+    dbgprintf("GUIEventDevice::read(): %s<%u>, size=%u, sizeof(GUI_Event)=%u\n", process.name().characters(), process.pid(), size, sizeof(GUI_Event));
 #endif
-    if (current->gui_events().is_empty())
+    if (process.gui_events().is_empty())
         return 0;
-    LOCKER(current->gui_events_lock());
+    LOCKER(process.gui_events_lock());
     ASSERT(size == sizeof(GUI_Event));
-    *reinterpret_cast<GUI_Event*>(buffer) = current->gui_events().take_first();
+    *reinterpret_cast<GUI_Event*>(buffer) = process.gui_events().take_first();
     return size;
 }
 
-ssize_t GUIEventDevice::write(const byte*, size_t)
+ssize_t GUIEventDevice::write(Process&, const byte*, size_t)
 {
     return -EINVAL;
 }

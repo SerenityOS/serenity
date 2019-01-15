@@ -121,12 +121,12 @@ bool PS2MouseDevice::can_read(Process&) const
     return !m_buffer.is_empty();
 }
 
-ssize_t PS2MouseDevice::read(byte* buffer, size_t size)
+ssize_t PS2MouseDevice::read(Process&, byte* buffer, size_t size)
 {
     return m_buffer.read(buffer, size);
 }
 
-ssize_t PS2MouseDevice::write(const byte*, size_t)
+ssize_t PS2MouseDevice::write(Process&, const byte*, size_t)
 {
     return 0;
 }

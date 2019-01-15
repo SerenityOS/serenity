@@ -128,7 +128,7 @@ void load_ksyms()
     if (!descriptor) {
         kprintf("Failed to open /kernel.map\n");
     } else {
-        auto buffer = descriptor->read_entire_file();
+        auto buffer = descriptor->read_entire_file(*current);
         ASSERT(buffer);
         load_ksyms_from_data(buffer);
     }

@@ -1031,7 +1031,7 @@ ssize_t Process::sys$write(int fd, const void* data, size_t size)
                 block(BlockedWrite);
                 Scheduler::yield();
             }
-            ssize_t rc = descriptor->write((const byte*)data + nwritten, size - nwritten);
+            ssize_t rc = descriptor->write(*this, (const byte*)data + nwritten, size - nwritten);
 #ifdef IO_DEBUG
             dbgprintf("   -> write returned %d\n", rc);
 #endif
@@ -1051,7 +1051,7 @@ ssize_t Process::sys$write(int fd, const void* data, size_t size)
             nwritten += rc;
         }
     } else {
-        nwritten = descriptor->write((const byte*)data, size);
+        nwritten = descriptor->write(*this, (const byte*)data, size);
     }
     if (has_unmasked_pending_signals()) {
         block(BlockedSignal);
@@ -1084,7 +1084,7 @@ ssize_t Process::sys$read(int fd, void* outbuf, size_t nread)
                 return -EINTR;
         }
     }
-    nread = descriptor->read((byte*)outbuf, nread);
+    nread = descriptor->read(*this, (byte*)outbuf, nread);
 #ifdef DEBUG_IO
     dbgprintf("%s(%u) Process::sys$read: nread=%u\n", name().characters(), pid(), nread);
 #endif
@@ -1232,7 +1232,7 @@ int Process::sys$readlink(const char* path, char* buffer, size_t size)
     if (!descriptor->metadata().isSymbolicLink())
         return -EINVAL;
 
-    auto contents = descriptor->read_entire_file();
+    auto contents = descriptor->read_entire_file(*this);
     if (!contents)
         return -EIO; // FIXME: Get a more detailed error from VFS.
 
