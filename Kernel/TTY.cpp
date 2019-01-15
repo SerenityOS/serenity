@@ -24,12 +24,12 @@ void TTY::set_default_termios()
     memcpy(m_termios.c_cc, default_cc, sizeof(default_cc));
 }
 
-ssize_t TTY::read(byte* buffer, size_t size)
+ssize_t TTY::read(Process&, byte* buffer, size_t size)
 {
     return m_buffer.read(buffer, size);
 }
 
-ssize_t TTY::write(const byte* buffer, size_t size)
+ssize_t TTY::write(Process&, const byte* buffer, size_t size)
 {
 #ifdef TTY_DEBUG
     dbgprintf("TTY::write {%u} ", size);

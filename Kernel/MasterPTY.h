@@ -11,8 +11,8 @@ public:
     virtual ~MasterPTY() override;
     void set_slave(SlavePTY& slave) { m_slave = &slave; }
 
-    virtual ssize_t read(byte*, size_t) override;
-    virtual ssize_t write(const byte*, size_t) override;
+    virtual ssize_t read(Process&, byte*, size_t) override;
+    virtual ssize_t write(Process&, const byte*, size_t) override;
     virtual bool can_read(Process&) const override;
     virtual bool can_write(Process&) const override;
     virtual bool is_master_pty() const override { return true; }

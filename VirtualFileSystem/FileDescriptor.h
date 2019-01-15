@@ -25,8 +25,8 @@ public:
     int close();
 
     Unix::off_t seek(Unix::off_t, int whence);
-    ssize_t read(byte*, size_t);
-    ssize_t write(const byte* data, size_t);
+    ssize_t read(Process&, byte*, size_t);
+    ssize_t write(Process&, const byte* data, size_t);
     int stat(Unix::stat*);
 
     bool has_data_available_for_reading(Process&);
@@ -34,7 +34,7 @@ public:
 
     ssize_t get_dir_entries(byte* buffer, size_t);
 
-    ByteBuffer read_entire_file();
+    ByteBuffer read_entire_file(Process&);
 
     String absolute_path();
 

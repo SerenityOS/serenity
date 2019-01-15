@@ -34,7 +34,7 @@ bool RandomDevice::can_read(Process&) const
     return true;
 }
 
-ssize_t RandomDevice::read(byte* buffer, size_t bufferSize)
+ssize_t RandomDevice::read(Process&, byte* buffer, size_t bufferSize)
 {
     const int range = 'z' - 'a';
     ssize_t nread = min(bufferSize, GoodBufferSize);
@@ -45,7 +45,7 @@ ssize_t RandomDevice::read(byte* buffer, size_t bufferSize)
     return nread;
 }
 
-ssize_t RandomDevice::write(const byte*, size_t bufferSize)
+ssize_t RandomDevice::write(Process&, const byte*, size_t bufferSize)
 {
     // FIXME: Use input for entropy? I guess that could be a neat feature?
     return min(GoodBufferSize, bufferSize);

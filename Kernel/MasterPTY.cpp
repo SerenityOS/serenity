@@ -20,12 +20,12 @@ String MasterPTY::pts_name() const
     return buffer;
 }
 
-ssize_t MasterPTY::read(byte* buffer, size_t size)
+ssize_t MasterPTY::read(Process&, byte* buffer, size_t size)
 {
     return m_buffer.read(buffer, size);
 }
 
-ssize_t MasterPTY::write(const byte* buffer, size_t size)
+ssize_t MasterPTY::write(Process&, const byte* buffer, size_t size)
 {
     m_slave->on_master_write(buffer, size);
     return size;

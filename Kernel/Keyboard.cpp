@@ -119,7 +119,7 @@ bool Keyboard::can_read(Process&) const
     return !m_queue.is_empty();
 }
 
-ssize_t Keyboard::read(byte* buffer, size_t size)
+ssize_t Keyboard::read(Process&, byte* buffer, size_t size)
 {
     ssize_t nread = 0;
     while ((size_t)nread < size) {
@@ -130,7 +130,7 @@ ssize_t Keyboard::read(byte* buffer, size_t size)
     return nread;
 }
 
-ssize_t Keyboard::write(const byte*, size_t)
+ssize_t Keyboard::write(Process&, const byte*, size_t)
 {
     return 0;
 }
