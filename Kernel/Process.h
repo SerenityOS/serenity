@@ -19,8 +19,7 @@ class PageDirectory;
 class Region;
 class VMObject;
 class Zone;
-class Window;
-class Widget;
+class WSWindow;
 
 #define COOL_GLOBALS
 #ifdef COOL_GLOBALS
@@ -47,7 +46,7 @@ struct DisplayInfo {
 
 class Process : public InlineLinkedListNode<Process> {
     friend class InlineLinkedListNode<Process>;
-    friend class WindowManager; // FIXME: Make a better API for allocate_region().
+    friend class WSWindowManager; // FIXME: Make a better API for allocate_region().
     friend class GraphicsBitmap; // FIXME: Make a better API for allocate_region().
 public:
     static Process* create_kernel_process(String&& name, void (*entry)());
@@ -353,7 +352,7 @@ private:
 
     RetainPtr<Region> m_display_framebuffer_region;
 
-    HashMap<int, OwnPtr<Window>> m_windows;
+    HashMap<int, OwnPtr<WSWindow>> m_windows;
 
     Vector<GUI_Event> m_gui_events;
     SpinLock m_gui_events_lock;

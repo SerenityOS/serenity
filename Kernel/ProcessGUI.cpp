@@ -1,25 +1,22 @@
 #include "Process.h"
 #include "MemoryManager.h"
 #include <LibC/errno_numbers.h>
-#include <Widgets/AbstractScreen.h>
-#include <Widgets/FrameBuffer.h>
-#include <Widgets/EventLoop.h>
 #include <Widgets/Font.h>
-#include <Widgets/Button.h>
-#include <Widgets/Label.h>
-#include <Widgets/Widget.h>
-#include <Widgets/Window.h>
-#include <Widgets/WindowManager.h>
+#include <WindowServer/WSScreen.h>
+#include <WindowServer/WSFrameBuffer.h>
+#include <WindowServer/WSEventLoop.h>
+#include <WindowServer/WSWindow.h>
+#include <WindowServer/WSWindowManager.h>
 
 void Process::initialize_gui_statics()
 {
     Font::initialize();
-    FrameBuffer::initialize();
-    EventLoop::initialize();
-    WindowManager::initialize();
-    AbstractScreen::initialize();
+    WSFrameBuffer::initialize();
+    WSEventLoop::initialize();
+    WSWindowManager::initialize();
+    WSScreen::initialize();
 
-    new EventLoop;
+    new WSEventLoop;
 }
 
 int Process::make_window_id()
@@ -36,7 +33,7 @@ int Process::make_window_id()
 static void wait_for_gui_server()
 {
     // FIXME: Time out after a while and return an error.
-    while (!EventLoop::main().running())
+    while (!WSEventLoop::the().running())
         sleep(10);
 }
 
@@ -53,13 +50,13 @@ int Process::gui$create_window(const GUI_CreateWindowParameters* user_params)
     if (rect.is_empty())
         return -EINVAL;
 
-    ProcessPagingScope scope(EventLoop::main().server_process());
+    ProcessPagingScope scope(WSEventLoop::the().server_process());
 
     int window_id = make_window_id();
     if (!window_id)
         return -ENOMEM;
 
-    auto window = make<Window>(*this, window_id);
+    auto window = make<WSWindow>(*this, window_id);
     if (!window)
         return -ENOMEM;
 
@@ -113,7 +110,6 @@ int Process::gui$invalidate_window(int window_id)
     auto& window = *(*it).value;
     // FIXME: This should queue up a message that the window server process can read.
     //        Poking into its data structures is not good.
-    InterruptDisabler disabler;
-    WindowManager::the().invalidate(window);
+    WSEventLoop::the().post_event(&window, make<WSEvent>(WSEvent::WM_Invalidate));
     return 0;
 }

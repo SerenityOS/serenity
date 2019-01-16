@@ -1,10 +1,10 @@
 #include "GraphicsBitmap.h"
-#include "EventLoop.h"
 #include <AK/kmalloc.h>
 
 #ifdef KERNEL
-#include "Process.h"
-#include "MemoryManager.h"
+#include <Kernel/Process.h>
+#include <Kernel/MemoryManager.h>
+#include <WindowServer/WSEventLoop.h>
 #endif
 
 #ifdef KERNEL
@@ -24,7 +24,7 @@ GraphicsBitmap::GraphicsBitmap(Process& process, const Size& size)
     m_client_region->commit(process);
 
     {
-        auto& server = EventLoop::main().server_process();
+        auto& server = WSEventLoop::the().server_process();
         ProcessInspectionHandle composer_handle(server);
         m_server_region = server.allocate_region_with_vmo(LinearAddress(), size_in_bytes, move(vmo), 0, "GraphicsBitmap (shared)", true, true);
     }
@@ -50,7 +50,7 @@ GraphicsBitmap::~GraphicsBitmap()
     if (m_client_region)
         m_client_process->deallocate_region(*m_client_region);
     if (m_server_region)
-        EventLoop::main().server_process().deallocate_region(*m_server_region);
+        WSEventLoop::the().server_process().deallocate_region(*m_server_region);
 #endif
     m_data = nullptr;
 }

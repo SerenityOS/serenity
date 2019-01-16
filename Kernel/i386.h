@@ -81,6 +81,7 @@ void write_gdt_entry(word selector, Descriptor&);
 
 #define cli() asm volatile("cli")
 #define sti() asm volatile("sti")
+#define memory_barrier() asm volatile ("" ::: "memory")
 
 static inline dword cpu_flags()
 {

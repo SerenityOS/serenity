@@ -1,61 +1,58 @@
 #pragma once
 
-#include "Object.h"
-#include "Rect.h"
-#include "Color.h"
-#include "Painter.h"
+#include <Widgets/Rect.h>
+#include <Widgets/Color.h>
+#include <Widgets/Painter.h>
 #include <AK/HashTable.h>
 #include <AK/InlineLinkedList.h>
 #include <AK/WeakPtr.h>
+#include <AK/Lock.h>
+#include "WSEventReceiver.h"
 
-class FrameBuffer;
+class WSFrameBuffer;
 class MouseEvent;
 class PaintEvent;
-class Widget;
-class Window;
+class WSWindow;
 class CharacterBitmap;
 class GraphicsBitmap;
 
-class WindowManager : public Object {
+class WSWindowManager : public WSEventReceiver {
 public:
-    static WindowManager& the(); 
-    void addWindow(Window&);
-    void removeWindow(Window&);
+    static WSWindowManager& the();
+    void addWindow(WSWindow&);
+    void removeWindow(WSWindow&);
 
-    void notifyTitleChanged(Window&);
-    void notifyRectChanged(Window&, const Rect& oldRect, const Rect& newRect);
+    void notifyTitleChanged(WSWindow&);
+    void notifyRectChanged(WSWindow&, const Rect& oldRect, const Rect& newRect);
 
-    Window* activeWindow() { return m_activeWindow.ptr(); }
-    void setActiveWindow(Window*);
+    WSWindow* activeWindow() { return m_activeWindow.ptr(); }
 
-    bool isVisible(Window&) const;
-
-    void did_paint(Window&);
-
-    void move_to_front(Window&);
+    void move_to_front(WSWindow&);
 
     static void initialize();
 
     void draw_cursor();
 
-    void invalidate(const Window&);
+    void invalidate(const WSWindow&);
     void invalidate(const Rect&);
     void invalidate();
     void flush(const Rect&);
 
 private:
-    WindowManager();
-    virtual ~WindowManager() override;
+    WSWindowManager();
+    virtual ~WSWindowManager() override;
 
     void processMouseEvent(MouseEvent&);
-    void handleTitleBarMouseEvent(Window&, MouseEvent&);
+    void handleTitleBarMouseEvent(WSWindow&, MouseEvent&);
+
+    void setActiveWindow(WSWindow*);
     
-    virtual void event(Event&) override;
+    virtual void event(WSEvent&) override;
 
     void compose();
-    void paintWindowFrame(Window&);
+    void paintWindowFrame(WSWindow&);
 
-    FrameBuffer& m_framebuffer;
+    WSFrameBuffer& m_framebuffer;
     Rect m_screen_rect;
 
     Color m_activeWindowBorderColor;
@@ -64,12 +61,12 @@ private:
     Color m_inactiveWindowBorderColor;
     Color m_inactiveWindowTitleColor;
 
-    HashTable<Window*> m_windows;
-    InlineLinkedList<Window> m_windows_in_order;
+    HashTable<WSWindow*> m_windows;
+    InlineLinkedList<WSWindow> m_windows_in_order;
 
-    WeakPtr<Window> m_activeWindow;
+    WeakPtr<WSWindow> m_activeWindow;
 
-    WeakPtr<Window> m_dragWindow;
+    WeakPtr<WSWindow> m_dragWindow;
 
     Point m_dragOrigin;
     Point m_dragWindowOrigin;
@@ -93,4 +90,6 @@ private:
 
     OwnPtr<Painter> m_back_painter;
     OwnPtr<Painter> m_front_painter;
+
+    mutable SpinLock m_lock;
 };

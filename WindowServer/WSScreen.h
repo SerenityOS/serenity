@@ -1,19 +1,17 @@
 #pragma once
 
-#include "Object.h"
-#include "Rect.h"
-#include "Size.h"
-#include "Keyboard.h"
-#include "PS2MouseDevice.h"
+#include <Widgets/Rect.h>
+#include <Widgets/Size.h>
+#include <Kernel/Keyboard.h>
 
-class AbstractScreen : public Object, public KeyboardClient {
+class WSScreen : public KeyboardClient {
 public:
-    virtual ~AbstractScreen();
+    virtual ~WSScreen();
 
     int width() const { return m_width; }
     int height() const { return m_height; }
 
-    static AbstractScreen& the();
+    static WSScreen& the();
 
     Size size() const { return { width(), height() }; }
     Rect rect() const { return { 0, 0, width(), height() }; }
@@ -27,7 +25,7 @@ public:
     void on_receive_mouse_data(int dx, int dy, bool left_button, bool right_button);
 
 protected:
-    AbstractScreen(unsigned width, unsigned height);
+    WSScreen(unsigned width, unsigned height);
 
 private:
     // ^KeyboardClient
