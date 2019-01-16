@@ -55,12 +55,3 @@ GraphicsBitmap::~GraphicsBitmap()
     m_data = nullptr;
 }
 
-RGBA32* GraphicsBitmap::scanline(int y)
-{
-    return reinterpret_cast<RGBA32*>((((byte*)m_data) + (y * m_pitch)));
-}
-
-const RGBA32* GraphicsBitmap::scanline(int y) const
-{
-    return reinterpret_cast<const RGBA32*>((((const byte*)m_data) + (y * m_pitch)));
-}
