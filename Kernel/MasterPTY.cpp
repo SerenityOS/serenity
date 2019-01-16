@@ -3,9 +3,10 @@
 
 MasterPTY::MasterPTY(unsigned index)
     : CharacterDevice(10, index)
+    , m_slave(*new SlavePTY(*this, index))
     , m_index(index)
 {
-
+    VFS::the().register_character_device(m_slave);
 }
 
 MasterPTY::~MasterPTY()
@@ -14,7 +15,6 @@ MasterPTY::~MasterPTY()
 
 String MasterPTY::pts_name() const
 {
-    dbgprintf("MasterPTY::pts_name requested for index %u!\n", m_index);
     char buffer[32];
     ksprintf(buffer, "/dev/pts%u", m_index);
     return buffer;
@@ -27,7 +27,7 @@ ssize_t MasterPTY::read(Process&, byte* buffer, size_t size)
 
 ssize_t MasterPTY::write(Process&, const byte* buffer, size_t size)
 {
-    m_slave->on_master_write(buffer, size);
+    m_slave.on_master_write(buffer, size);
     return size;
 }
 

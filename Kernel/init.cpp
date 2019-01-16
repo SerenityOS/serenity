@@ -23,7 +23,6 @@
 #include "Scheduler.h"
 #include "PS2MouseDevice.h"
 #include "MasterPTY.h"
-#include "SlavePTY.h"
 
 #define SPAWN_GUI_TEST_APP
 //#define SPAWN_MULTIPLE_SHELLS
@@ -42,10 +41,6 @@ MasterPTY* ptm0;
 MasterPTY* ptm1;
 MasterPTY* ptm2;
 MasterPTY* ptm3;
-SlavePTY* pts0;
-SlavePTY* pts1;
-SlavePTY* pts2;
-SlavePTY* pts3;
 
 #ifdef STRESS_TEST_SPAWNING
 static void spawn_stress() NORETURN;
@@ -66,16 +61,6 @@ static void spawn_stress()
 }
 #endif
 
-static void make_pty_pair(unsigned index)
-{
-    auto* master = new MasterPTY(index);
-    auto* slave = new SlavePTY(index);
-    master->set_slave(*slave);
-    slave->set_master(*master);
-    VFS::the().register_character_device(*master);
-    VFS::the().register_character_device(*slave);
-}
-
 static void init_stage2() NORETURN;
 static void init_stage2()
 {
@@ -95,10 +80,10 @@ static void init_stage2()
     auto dev_random = make<RandomDevice>();
     vfs->register_character_device(*dev_random);
 
-    make_pty_pair(0);
-    make_pty_pair(1);
-    make_pty_pair(2);
-    make_pty_pair(3);
+    VFS::the().register_character_device(*new MasterPTY(0));
+    VFS::the().register_character_device(*new MasterPTY(1));
+    VFS::the().register_character_device(*new MasterPTY(2));
+    VFS::the().register_character_device(*new MasterPTY(3));
 
     vfs->register_character_device(*keyboard);
     vfs->register_character_device(*ps2mouse);

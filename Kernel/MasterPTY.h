@@ -6,10 +6,10 @@
 class SlavePTY;
 
 class MasterPTY final : public CharacterDevice {
+    AK_MAKE_ETERNAL
 public:
     explicit MasterPTY(unsigned index);
     virtual ~MasterPTY() override;
-    void set_slave(SlavePTY& slave) { m_slave = &slave; }
 
     virtual ssize_t read(Process&, byte*, size_t) override;
     virtual ssize_t write(Process&, const byte*, size_t) override;
@@ -21,7 +21,7 @@ public:
     void on_slave_write(const byte*, size_t);
 
 private:
+    SlavePTY& m_slave;
     unsigned m_index;
-    SlavePTY* m_slave { nullptr };
     DoubleBuffer m_buffer;
 };
