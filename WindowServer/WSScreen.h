@@ -4,9 +4,9 @@
 #include <Widgets/Size.h>
 #include <Kernel/Keyboard.h>
 
-class WSScreen : public KeyboardClient {
+class WSScreen {
 public:
-    virtual ~WSScreen();
+    ~WSScreen();
 
     int width() const { return m_width; }
     int height() const { return m_height; }
@@ -23,14 +23,12 @@ public:
     bool right_mouse_button_pressed() const { return m_right_mouse_button_pressed; }
 
     void on_receive_mouse_data(int dx, int dy, bool left_button, bool right_button);
+    void on_receive_keyboard_data(Keyboard::Key);
 
 protected:
     WSScreen(unsigned width, unsigned height);
 
 private:
-    // ^KeyboardClient
-    virtual void on_key_pressed(Keyboard::Key) final;
-
     int m_width { 0 };
     int m_height { 0 };
 

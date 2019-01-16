@@ -125,7 +125,12 @@ ssize_t Keyboard::read(Process&, byte* buffer, size_t size)
     while ((size_t)nread < size) {
         if (m_queue.is_empty())
             break;
-        buffer[nread++] = m_queue.dequeue().character;
+        // Don't return partial data frames.
+        if ((size - nread) < 2)
+            break;
+        auto key = m_queue.dequeue();
+        buffer[nread++] = key.character;
+        buffer[nread++] = key.modifiers;
     }
     return nread;
 }

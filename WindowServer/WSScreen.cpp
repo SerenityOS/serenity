@@ -25,8 +25,6 @@ WSScreen::WSScreen(unsigned width, unsigned height)
     s_the = this;
 
     m_cursor_location = rect().center();
-
-    Keyboard::the().set_client(this);
 }
 
 WSScreen::~WSScreen()
@@ -62,7 +60,7 @@ void WSScreen::on_receive_mouse_data(int dx, int dy, bool left_button, bool righ
         WSWindowManager::the().draw_cursor();
 }
 
-void WSScreen::on_key_pressed(Keyboard::Key key)
+void WSScreen::on_receive_keyboard_data(Keyboard::Key key)
 {
     auto event = make<KeyEvent>(WSEvent::KeyDown, 0);
     int key_code = 0;

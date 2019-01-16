@@ -9,7 +9,7 @@ class WSFrameBuffer final : public WSScreen {
 public:
     WSFrameBuffer(unsigned width, unsigned height);
     WSFrameBuffer(RGBA32*, unsigned width, unsigned height);
-    virtual ~WSFrameBuffer() override;
+    ~WSFrameBuffer();
 
     void show();
 
