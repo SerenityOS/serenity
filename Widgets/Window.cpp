@@ -2,7 +2,6 @@
 #include "WindowManager.h"
 #include "Event.h"
 #include "EventLoop.h"
-#include "Widget.h"
 #include "Process.h"
 
 Window::Window(Process& process, int window_id)
@@ -17,7 +16,7 @@ Window::~Window()
     WindowManager::the().removeWindow(*this);
 }
 
-void Window::setTitle(String&& title)
+void Window::set_title(String&& title)
 {
     if (m_title == title)
         return;
@@ -26,7 +25,7 @@ void Window::setTitle(String&& title)
     WindowManager::the().notifyTitleChanged(*this);
 }
 
-void Window::setRect(const Rect& rect)
+void Window::set_rect(const Rect& rect)
 {
     if (m_rect == rect)
         return;
@@ -87,17 +86,7 @@ void Window::event(Event& event)
     }
 }
 
-void Window::did_paint()
-{
-    WindowManager::the().did_paint(*this);
-}
-
-bool Window::isActive() const
-{
-    return WindowManager::the().activeWindow() == this;
-}
-
-bool Window::isVisible() const
+bool Window::is_visible() const
 {
     return WindowManager::the().isVisible(const_cast<Window&>(*this));
 }

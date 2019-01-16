@@ -19,8 +19,8 @@ int main(int argc, char** argv)
     EventLoop loop;
 
     auto* fontTestWindow = new Window;
-    fontTestWindow->setTitle("Font test");
-    fontTestWindow->setRect({ 140, 100, 300, 80 });
+    fontTestWindow->set_title("Font test");
+    fontTestWindow->set_rect({ 140, 100, 300, 80 });
 
     auto* fontTestWindowWidget = new Widget;
     fontTestWindow->setMainWidget(fontTestWindowWidget);
@@ -44,8 +44,8 @@ int main(int argc, char** argv)
 
     {
         auto* widgetTestWindow = new Window;
-        widgetTestWindow->setTitle("Widget test");
-        widgetTestWindow->setRect({ 20, 40, 100, 180 });
+        widgetTestWindow->set_title("Widget test");
+        widgetTestWindow->set_rect({ 20, 40, 100, 180 });
 
         auto* widgetTestWindowWidget = new Widget;
         widgetTestWindowWidget->setWindowRelativeRect({ 0, 0, 100, 100 });

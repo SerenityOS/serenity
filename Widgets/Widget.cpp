@@ -38,9 +38,9 @@ void Widget::event(Event& event)
     case Event::Paint:
         m_hasPendingPaintEvent = false;
         if (auto* win = window()) {
-            if (win->isBeingDragged())
+            if (win->is_being_dragged())
                 return;
-            if (!win->isVisible())
+            if (!win->is_visible())
                 return;
         }
         return paintEvent(static_cast<PaintEvent&>(event));

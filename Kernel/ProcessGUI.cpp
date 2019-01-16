@@ -63,8 +63,8 @@ int Process::gui$create_window(const GUI_CreateWindowParameters* user_params)
     if (!window)
         return -ENOMEM;
 
-    window->setTitle(params.title);
-    window->setRect(rect);
+    window->set_title(params.title);
+    window->set_rect(rect);
 
     m_windows.set(window_id, move(window));
     dbgprintf("%s<%u> gui$create_window: %d with rect {%d,%d %dx%d}\n", name().characters(), pid(), window_id, rect.x(), rect.y(), rect.width(), rect.height());

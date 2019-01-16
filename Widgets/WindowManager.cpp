@@ -210,7 +210,7 @@ void WindowManager::handleTitleBarMouseEvent(Window& window, MouseEvent& event)
         m_dragOrigin = event.position();
         m_dragWindowOrigin = window.position();
         m_dragStartRect = outerRectForWindow(window.rect());
-        window.setIsBeingDragged(true);
+        window.set_is_being_dragged(true);
         return;
     }
 }
@@ -222,7 +222,7 @@ void WindowManager::processMouseEvent(MouseEvent& event)
             printf("[WM] Finish dragging Window{%p}\n", m_dragWindow.ptr());
             invalidate(m_dragStartRect);
             invalidate(*m_dragWindow);
-            m_dragWindow->setIsBeingDragged(false);
+            m_dragWindow->set_is_being_dragged(false);
             m_dragEndRect = outerRectForWindow(m_dragWindow->rect());
             m_dragWindow = nullptr;
             return;
@@ -235,7 +235,7 @@ void WindowManager::processMouseEvent(MouseEvent& event)
             Point pos = m_dragWindowOrigin;
             printf("[WM] Dragging [origin: %d,%d] now: %d,%d\n", m_dragOrigin.x(), m_dragOrigin.y(), event.x(), event.y());
             pos.moveBy(event.x() - m_dragOrigin.x(), event.y() - m_dragOrigin.y());
-            m_dragWindow->setPositionWithoutRepaint(pos);
+            m_dragWindow->set_position_without_repaint(pos);
             invalidate(outerRectForWindow(old_window_rect));
             invalidate(outerRectForWindow(m_dragWindow->rect()));
             return;
