@@ -44,7 +44,9 @@ void PS2MouseDevice::handle_irq()
             (m_data[0] & 2) ? "Right" : ""
         );
 #endif
-        m_buffer.write((const byte*)m_data, 3);
+        m_queue.enqueue(m_data[0]);
+        m_queue.enqueue(m_data[1]);
+        m_queue.enqueue(m_data[2]);
         break;
     }
 }
@@ -118,12 +120,18 @@ byte PS2MouseDevice::mouse_read()
 
 bool PS2MouseDevice::can_read(Process&) const
 {
-    return !m_buffer.is_empty();
+    return !m_queue.is_empty();
 }
 
 ssize_t PS2MouseDevice::read(Process&, byte* buffer, size_t size)
 {
-    return m_buffer.read(buffer, size);
+    ssize_t nread = 0;
+    while ((size_t)nread < size) {
+        if (m_queue.is_empty())
+            break;
+        buffer[nread++] = m_queue.dequeue();
+    }
+    return nread;
 }
 
 ssize_t PS2MouseDevice::write(Process&, const byte*, size_t)
