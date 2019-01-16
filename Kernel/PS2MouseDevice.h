@@ -1,7 +1,6 @@
 #pragma once
 
 #include <VirtualFileSystem/CharacterDevice.h>
-#include "DoubleBuffer.h"
 #include "IRQHandler.h"
 
 class PS2MouseDevice final : public IRQHandler, public CharacterDevice {
@@ -29,7 +28,7 @@ private:
     void wait_then_write(byte port, byte data);
     byte wait_then_read(byte port);
 
-    DoubleBuffer m_buffer;
+    CircularQueue<byte, 600> m_queue;
     byte m_data_state { 0 };
     signed_byte m_data[3];
 };
