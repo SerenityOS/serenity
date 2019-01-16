@@ -22,7 +22,7 @@
 #include "VirtualConsole.h"
 #include "Scheduler.h"
 #include "PS2MouseDevice.h"
-#include "MasterPTY.h"
+#include "PTYMultiplexer.h"
 
 #define SPAWN_GUI_TEST_APP
 //#define SPAWN_MULTIPLE_SHELLS
@@ -37,10 +37,6 @@ VirtualConsole* tty3;
 Keyboard* keyboard;
 PS2MouseDevice* ps2mouse;
 GUIEventDevice* gui_event_device;
-MasterPTY* ptm0;
-MasterPTY* ptm1;
-MasterPTY* ptm2;
-MasterPTY* ptm3;
 
 #ifdef STRESS_TEST_SPAWNING
 static void spawn_stress() NORETURN;
@@ -80,10 +76,8 @@ static void init_stage2()
     auto dev_random = make<RandomDevice>();
     vfs->register_character_device(*dev_random);
 
-    VFS::the().register_character_device(*new MasterPTY(0));
-    VFS::the().register_character_device(*new MasterPTY(1));
-    VFS::the().register_character_device(*new MasterPTY(2));
-    VFS::the().register_character_device(*new MasterPTY(3));
+    auto dev_ptmx = make<PTYMultiplexer>();
+    vfs->register_character_device(*dev_ptmx);
 
     vfs->register_character_device(*keyboard);
     vfs->register_character_device(*ps2mouse);

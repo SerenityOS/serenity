@@ -128,11 +128,12 @@ void VFS::traverse_directory_inode(Inode& dir_inode, Function<bool(const FS::Dir
     });
 }
 
-RetainPtr<FileDescriptor> VFS::open(CharacterDevice& device, int options)
+RetainPtr<FileDescriptor> VFS::open(RetainPtr<CharacterDevice>&& device, int& error, int options)
 {
     // FIXME: Respect options.
     (void) options;
-    return FileDescriptor::create(device);
+    (void) error;
+    return FileDescriptor::create(move(device));
 }
 
 RetainPtr<FileDescriptor> VFS::open(const String& path, int& error, int options, InodeIdentifier base)
@@ -148,7 +149,7 @@ RetainPtr<FileDescriptor> VFS::open(const String& path, int& error, int options,
             kprintf("VFS::open: no such character device %u,%u\n", metadata.majorDevice, metadata.minorDevice);
             return nullptr;
         }
-        return FileDescriptor::create((*it).value);
+        return (*it).value->open(error, options);
     }
     return FileDescriptor::create(move(inode));
 }

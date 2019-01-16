@@ -13,7 +13,7 @@ public:
 
     InodeMetadata metadata() const { return { }; }
 
-    RetainPtr<FileDescriptor> open(int options);
+    virtual RetainPtr<FileDescriptor> open(int& error, int options);
 
     virtual bool can_read(Process&) const = 0;
     virtual bool can_write(Process&) const = 0;
