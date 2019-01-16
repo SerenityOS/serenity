@@ -354,29 +354,16 @@ ByteBuffer procfs$summary()
     return buffer;
 }
 
-ByteBuffer procfs$vnodes()
+ByteBuffer procfs$inodes()
 {
+    extern HashTable<Inode*>& all_inodes();
     auto& vfs = VFS::the();
-    auto buffer = ByteBuffer::create_uninitialized(vfs.m_max_vnode_count * 256);
+    auto buffer = ByteBuffer::create_uninitialized(all_inodes().size() * 256);
     char* ptr = (char*)buffer.pointer();
-    for (size_t i = 0; i < vfs.m_max_vnode_count; ++i) {
-        auto& vnode = vfs.m_nodes[i];
-        // FIXME: Retain the vnode while inspecting it.
-        if (!vnode.inUse())
-            continue;
-        String path;
-        if (vnode.core_inode())
-            path = vfs.absolute_path(*vnode.core_inode());
-        if (path.is_empty()) {
-            if (auto* dev = vnode.characterDevice()) {
-                if (dev->is_tty())
-                    path = static_cast<const TTY*>(dev)->tty_name();
-            }
-        }
-        ptr += ksprintf(ptr, "vnode %03u: %02u:%08u (%u) %s", i, vnode.inode.fsid(), vnode.inode.index(), vnode.retain_count(), path.characters());
-        if (vnode.characterDevice())
-            ptr += ksprintf(ptr, " (chardev: %p)", vnode.characterDevice());
-        ptr += ksprintf(ptr, "\n");
+    for (auto it : all_inodes()) {
+        RetainPtr<Inode> inode = *it;
+        String path = vfs.absolute_path(*inode);
+        ptr += ksprintf(ptr, "Inode{K%x} %02u:%08u (%u) %s\n", inode.ptr(), inode->fsid(), inode->index(), inode->retain_count(), path.characters());
     }
     *ptr = '\0';
     buffer.trim(ptr - (char*)buffer.pointer());
@@ -392,7 +379,7 @@ bool ProcFS::initialize()
     add_file(create_generated_file("kmalloc", procfs$kmalloc));
     add_file(create_generated_file("summary", procfs$summary));
     add_file(create_generated_file("cpuinfo", procfs$cpuinfo));
-    add_file(create_generated_file("vnodes", procfs$vnodes));
+    add_file(create_generated_file("inodes", procfs$inodes));
     return true;
 }
 

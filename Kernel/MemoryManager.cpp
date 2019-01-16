@@ -263,14 +263,14 @@ bool MemoryManager::copy_on_write(Process& process, Region& region, unsigned pag
 bool Region::page_in(PageDirectory& page_directory)
 {
     ASSERT(!vmo().is_anonymous());
-    ASSERT(vmo().vnode());
+    ASSERT(vmo().inode());
 #ifdef MM_DEBUG
     dbgprintf("MM: page_in %u pages\n", page_count());
 #endif
     for (size_t i = 0; i < page_count(); ++i) {
         auto& vmo_page = vmo().physical_pages()[first_page_index() + i];
         if (vmo_page.is_null()) {
-            bool success = MM.page_in_from_vnode(page_directory, *this, i);
+            bool success = MM.page_in_from_inode(page_directory, *this, i);
             if (!success)
                 return false;
         }
@@ -279,29 +279,28 @@ bool Region::page_in(PageDirectory& page_directory)
     return true;
 }
 
-bool MemoryManager::page_in_from_vnode(PageDirectory& page_directory, Region& region, unsigned page_index_in_region)
+bool MemoryManager::page_in_from_inode(PageDirectory& page_directory, Region& region, unsigned page_index_in_region)
 {
     auto& vmo = region.vmo();
     ASSERT(!vmo.is_anonymous());
-    ASSERT(vmo.vnode());
-    auto& vnode = *vmo.vnode();
+    ASSERT(vmo.inode());
+    auto& inode = *vmo.inode();
     auto& vmo_page = vmo.physical_pages()[region.first_page_index() + page_index_in_region];
     ASSERT(vmo_page.is_null());
     vmo_page = allocate_physical_page();
     if (vmo_page.is_null()) {
-        kprintf("MM: page_in_from_vnode was unable to allocate a physical page\n");
+        kprintf("MM: page_in_from_inode was unable to allocate a physical page\n");
         return false;
     }
     remap_region_page(page_directory, region, page_index_in_region, true);
     byte* dest_ptr = region.linearAddress.offset(page_index_in_region * PAGE_SIZE).asPtr();
 #ifdef MM_DEBUG
-    dbgprintf("MM: page_in_from_vnode ready to read from vnode, will write to L%x!\n", dest_ptr);
+    dbgprintf("MM: page_in_from_inode ready to read from inode, will write to L%x!\n", dest_ptr);
 #endif
     sti(); // Oh god here we go...
-    ASSERT(vnode.core_inode());
-    auto nread = vnode.core_inode()->read_bytes(vmo.vnode_offset() + ((region.first_page_index() + page_index_in_region) * PAGE_SIZE), PAGE_SIZE, dest_ptr, nullptr);
+    auto nread = inode.read_bytes(vmo.inode_offset() + ((region.first_page_index() + page_index_in_region) * PAGE_SIZE), PAGE_SIZE, dest_ptr, nullptr);
     if (nread < 0) {
-        kprintf("MM: page_in_from_vnode had error (%d) while reading!\n", nread);
+        kprintf("MM: page_in_from_inode had error (%d) while reading!\n", nread);
         return false;
     }
     if (nread < PAGE_SIZE) {
@@ -326,9 +325,9 @@ PageFaultResponse MemoryManager::handle_page_fault(const PageFault& fault)
     }
     auto page_index_in_region = region->page_index_from_address(fault.laddr());
     if (fault.is_not_present()) {
-        if (region->vmo().vnode()) {
-            dbgprintf("NP(vnode) fault in Region{%p}[%u]\n", region, page_index_in_region);
-            page_in_from_vnode(*current->m_page_directory, *region, page_index_in_region);
+        if (region->vmo().inode()) {
+            dbgprintf("NP(inode) fault in Region{%p}[%u]\n", region, page_index_in_region);
+            page_in_from_inode(*current->m_page_directory, *region, page_index_in_region);
             return PageFaultResponse::Continue;
         } else {
             dbgprintf("NP(zero) fault in Region{%p}[%u]\n", region, page_index_in_region);
@@ -589,10 +588,10 @@ Region::Region(LinearAddress a, size_t s, String&& n, bool r, bool w, bool cow)
     MM.register_region(*this);
 }
 
-Region::Region(LinearAddress a, size_t s, RetainPtr<Vnode>&& vnode, String&& n, bool r, bool w)
+Region::Region(LinearAddress a, size_t s, RetainPtr<Inode>&& inode, String&& n, bool r, bool w)
     : linearAddress(a)
     , size(s)
-    , m_vmo(VMObject::create_file_backed(move(vnode), s))
+    , m_vmo(VMObject::create_file_backed(move(inode), s))
     , name(move(n))
     , is_readable(r)
     , is_writable(w)
@@ -639,14 +638,14 @@ void PhysicalPage::return_to_freelist()
 #endif
 }
 
-RetainPtr<VMObject> VMObject::create_file_backed(RetainPtr<Vnode>&& vnode, size_t size)
+RetainPtr<VMObject> VMObject::create_file_backed(RetainPtr<Inode>&& inode, size_t size)
 {
     InterruptDisabler disabler;
-    if (vnode->vmo())
-        return static_cast<VMObject*>(vnode->vmo());
+    if (inode->vmo())
+        return static_cast<VMObject*>(inode->vmo());
     size = ceilDiv(size, PAGE_SIZE) * PAGE_SIZE;
-    auto vmo = adopt(*new VMObject(move(vnode), size));
-    vmo->vnode()->set_vmo(vmo.ptr());
+    auto vmo = adopt(*new VMObject(move(inode), size));
+    vmo->inode()->set_vmo(vmo.ptr());
     return vmo;
 }
 
@@ -670,9 +669,9 @@ RetainPtr<VMObject> VMObject::clone()
 VMObject::VMObject(VMObject& other)
     : m_name(other.m_name)
     , m_anonymous(other.m_anonymous)
-    , m_vnode_offset(other.m_vnode_offset)
+    , m_inode_offset(other.m_inode_offset)
     , m_size(other.m_size)
-    , m_vnode(other.m_vnode)
+    , m_inode(other.m_inode)
     , m_physical_pages(other.m_physical_pages)
 {
     MM.register_vmo(*this);
@@ -698,9 +697,9 @@ VMObject::VMObject(PhysicalAddress paddr, size_t size)
 }
 
 
-VMObject::VMObject(RetainPtr<Vnode>&& vnode, size_t size)
+VMObject::VMObject(RetainPtr<Inode>&& inode, size_t size)
     : m_size(size)
-    , m_vnode(move(vnode))
+    , m_inode(move(inode))
 {
     m_physical_pages.resize(page_count());
     MM.register_vmo(*this);
@@ -708,9 +707,9 @@ VMObject::VMObject(RetainPtr<Vnode>&& vnode, size_t size)
 
 VMObject::~VMObject()
 {
-    if (m_vnode) {
-        ASSERT(m_vnode->vmo() == this);
-        m_vnode->set_vmo(nullptr);
+    if (m_inode) {
+        ASSERT(m_inode->vmo() == this);
+        m_inode->set_vmo(nullptr);
     }
     MM.unregister_vmo(*this);
 }

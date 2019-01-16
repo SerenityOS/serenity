@@ -3,6 +3,7 @@
 
 CharacterDevice::~CharacterDevice()
 {
+    ASSERT_NOT_REACHED();
 }
 
 RetainPtr<FileDescriptor> CharacterDevice::open(int options)

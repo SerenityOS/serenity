@@ -74,7 +74,7 @@ private:
 
 class VMObject : public Retainable<VMObject> {
 public:
-    static RetainPtr<VMObject> create_file_backed(RetainPtr<Vnode>&&, size_t);
+    static RetainPtr<VMObject> create_file_backed(RetainPtr<Inode>&&, size_t);
     static RetainPtr<VMObject> create_anonymous(size_t);
     static RetainPtr<VMObject> create_framebuffer_wrapper(PhysicalAddress, size_t);
     RetainPtr<VMObject> clone();
@@ -82,9 +82,9 @@ public:
     ~VMObject();
     bool is_anonymous() const { return m_anonymous; }
 
-    Vnode* vnode() { return m_vnode.ptr(); }
-    const Vnode* vnode() const { return m_vnode.ptr(); }
-    size_t vnode_offset() const { return m_vnode_offset; }
+    Inode* inode() { return m_inode.ptr(); }
+    const Inode* inode() const { return m_inode.ptr(); }
+    size_t inode_offset() const { return m_inode_offset; }
 
     String name() const { return m_name; }
     void set_name(const String& name) { m_name = name; }
@@ -94,15 +94,15 @@ public:
     Vector<RetainPtr<PhysicalPage>>& physical_pages() { return m_physical_pages; }
 
 private:
-    VMObject(RetainPtr<Vnode>&&, size_t);
+    VMObject(RetainPtr<Inode>&&, size_t);
     explicit VMObject(VMObject&);
     explicit VMObject(size_t);
     VMObject(PhysicalAddress, size_t);
     String m_name;
     bool m_anonymous { false };
-    Unix::off_t m_vnode_offset { 0 };
+    Unix::off_t m_inode_offset { 0 };
     size_t m_size { 0 };
-    RetainPtr<Vnode> m_vnode;
+    RetainPtr<Inode> m_inode;
     Vector<RetainPtr<PhysicalPage>> m_physical_pages;
 };
 
@@ -110,7 +110,7 @@ class Region : public Retainable<Region> {
 public:
     Region(LinearAddress, size_t, String&&, bool r, bool w, bool cow = false);
     Region(LinearAddress, size_t, RetainPtr<VMObject>&&, size_t offset_in_vmo, String&&, bool r, bool w, bool cow = false);
-    Region(LinearAddress, size_t, RetainPtr<Vnode>&&, String&&, bool r, bool w);
+    Region(LinearAddress, size_t, RetainPtr<Inode>&&, String&&, bool r, bool w);
     ~Region();
 
     const VMObject& vmo() const { return *m_vmo; }
@@ -217,7 +217,7 @@ private:
     static Region* region_from_laddr(Process&, LinearAddress);
 
     bool copy_on_write(Process&, Region&, unsigned page_index_in_region);
-    bool page_in_from_vnode(PageDirectory&, Region&, unsigned page_index_in_region);
+    bool page_in_from_inode(PageDirectory&, Region&, unsigned page_index_in_region);
     bool zero_page(PageDirectory&, Region& region, unsigned page_index_in_region);
 
     byte* quickmap_page(PhysicalPage&);

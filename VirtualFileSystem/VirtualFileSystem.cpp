@@ -31,101 +31,16 @@ VFS::VFS()
     kprintf("VFS: Constructing VFS\n");
 #endif
     s_the = this;
-    m_max_vnode_count = 16;
-    m_nodes = reinterpret_cast<Vnode*>(kmalloc(sizeof(Vnode) * max_vnode_count()));
-    memset(m_nodes, 0, sizeof(Vnode) * max_vnode_count());
-
-    for (unsigned i = 0; i < m_max_vnode_count; ++i)
-        m_vnode_freelist.append(&m_nodes[i]);
 }
 
 VFS::~VFS()
 {
-    kprintf("VFS: ~VirtualFileSystem with %u nodes allocated\n", allocated_vnode_count());
-    // FIXME: m_nodes is never freed. Does it matter though?
-}
-
-auto VFS::makeNode(InodeIdentifier inode) -> RetainPtr<Vnode>
-{
-    auto core_inode = inode.fs()->get_inode(inode);
-    if (!core_inode)
-        return nullptr;
-
-    auto metadata = core_inode->metadata();
-
-    InterruptDisabler disabler;
-
-    CharacterDevice* characterDevice = nullptr;
-    if (metadata.isCharacterDevice()) {
-        auto it = m_character_devices.find(encodedDevice(metadata.majorDevice, metadata.minorDevice));
-        if (it != m_character_devices.end()) {
-            characterDevice = (*it).value;
-        } else {
-            kprintf("VFS: makeNode() no such character device %u,%u\n", metadata.majorDevice, metadata.minorDevice);
-            return nullptr;
-        }
-    }
-
-    auto vnode = allocateNode();
-    ASSERT(vnode);
-
-    FS* fileSystem = inode.fs();
-    fileSystem->retain();
-
-    vnode->inode = inode;
-    vnode->m_core_inode = move(core_inode);
-
-#ifdef VFS_DEBUG
-    kprintf("makeNode: inode=%u, size=%u, mode=%o, uid=%u, gid=%u\n", inode.index(), metadata.size, metadata.mode, metadata.uid, metadata.gid);
-#endif
-
-    m_inode2vnode.set(inode, vnode.ptr());
-    vnode->m_characterDevice = characterDevice;
-
-    return vnode;
-}
-
-auto VFS::makeNode(CharacterDevice& device) -> RetainPtr<Vnode>
-{
-    InterruptDisabler disabler;
-    auto vnode = allocateNode();
-    ASSERT(vnode);
-
-#ifdef VFS_DEBUG
-    kprintf("makeNode: device=%p (%u,%u)\n", &device, device.major(), device.minor());
-#endif
-
-    m_device2vnode.set(encodedDevice(device.major(), device.minor()), vnode.ptr());
-    vnode->m_characterDevice = &device;
-
-    return vnode;
-}
-
-auto VFS::get_or_create_node(InodeIdentifier inode) -> RetainPtr<Vnode>
-{
-    {
-        InterruptDisabler disabler;
-        auto it = m_inode2vnode.find(inode);
-        if (it != m_inode2vnode.end())
-            return (*it).value;
-    }
-    return makeNode(inode);
-}
-
-auto VFS::get_or_create_node(CharacterDevice& device) -> RetainPtr<Vnode>
-{
-    {
-        InterruptDisabler disabler;
-        auto it = m_device2vnode.find(encodedDevice(device.major(), device.minor()));
-        if (it != m_device2vnode.end())
-            return (*it).value;
-    }
-    return makeNode(device);
 }
 
 InodeIdentifier VFS::root_inode_id() const
 {
-    return m_root_vnode->inode;
+    ASSERT(m_root_inode);
+    return m_root_inode->identifier();
 }
 
 bool VFS::mount(RetainPtr<FS>&& fileSystem, const String& path)
@@ -147,65 +62,28 @@ bool VFS::mount(RetainPtr<FS>&& fileSystem, const String& path)
 
 bool VFS::mount_root(RetainPtr<FS>&& fileSystem)
 {
-    if (m_root_vnode) {
+    if (m_root_inode) {
         kprintf("VFS: mount_root can't mount another root\n");
         return false;
     }
 
     auto mount = make<Mount>(InodeIdentifier(), move(fileSystem));
 
-    auto node = makeNode(mount->guest());
-    if (!node->inUse()) {
-        kprintf("VFS: root inode for / is not in use :(\n");
-        return false;
-    }
-    if (!node->metadata().isDirectory()) {
-        kprintf("VFS: root inode for / is not a directory :(\n");
+    auto root_inode_id = mount->guest().fs()->root_inode();
+    auto root_inode = mount->guest().fs()->get_inode(root_inode_id);
+    if (!root_inode->is_directory()) {
+        kprintf("VFS: root inode (%02u:%08u) for / is not a directory :(\n", root_inode_id.fsid(), root_inode_id.index());
         return false;
     }
 
-    m_root_vnode = move(node);
+    m_root_inode = move(root_inode);
 
     kprintf("VFS: mounted root on %s{%p}\n",
-        m_root_vnode->fs()->class_name(),
-        m_root_vnode->fs());
+        m_root_inode->fs().class_name(),
+        &m_root_inode->fs());
 
     m_mounts.append(move(mount));
     return true;
-}
-
-auto VFS::allocateNode() -> RetainPtr<Vnode>
-{
-    if (m_vnode_freelist.is_empty()) {
-        kprintf("VFS: allocateNode has no nodes left\n");
-        return nullptr;
-    }
-    auto* node = m_vnode_freelist.takeLast();
-    ASSERT(node->retainCount == 0);
-    node->retainCount = 1;
-    node->m_vfs = this;
-    node->m_vmo = nullptr;
-    return adopt(*node);
-}
-
-void VFS::freeNode(Vnode* node)
-{
-    InterruptDisabler disabler;
-    ASSERT(node);
-    ASSERT(node->inUse());
-    if (node->inode.is_valid()) {
-        m_inode2vnode.remove(node->inode);
-        node->inode.fs()->release();
-        node->inode = InodeIdentifier();
-        node->m_core_inode = nullptr;
-    }
-    if (node->m_characterDevice) {
-        m_device2vnode.remove(encodedDevice(node->m_characterDevice->major(), node->m_characterDevice->minor()));
-        node->m_characterDevice = nullptr;
-    }
-    node->m_vfs = nullptr;
-    node->m_vmo = nullptr;
-    m_vnode_freelist.append(move(node));
 }
 
 auto VFS::find_mount_for_host(InodeIdentifier inode) -> Mount*
@@ -228,7 +106,7 @@ auto VFS::find_mount_for_guest(InodeIdentifier inode) -> Mount*
 
 bool VFS::is_vfs_root(InodeIdentifier inode) const
 {
-    return inode == m_root_vnode->inode;
+    return inode == root_inode_id();
 }
 
 void VFS::traverse_directory_inode(Inode& dir_inode, Function<bool(const FS::DirectoryEntry&)> callback)
@@ -254,22 +132,25 @@ RetainPtr<FileDescriptor> VFS::open(CharacterDevice& device, int options)
 {
     // FIXME: Respect options.
     (void) options;
-    auto vnode = get_or_create_node(device);
-    if (!vnode)
-        return nullptr;
-    return FileDescriptor::create(move(vnode));
+    return FileDescriptor::create(device);
 }
 
 RetainPtr<FileDescriptor> VFS::open(const String& path, int& error, int options, InodeIdentifier base)
 {
-    auto inode = resolve_path(path, base, error, options);
-    if (!inode.is_valid())
+    auto inode_id = resolve_path(path, base, error, options);
+    auto inode = get_inode(inode_id);
+    if (!inode)
         return nullptr;
-    // FIXME: Propagate any error from get_or_create_node().
-    auto vnode = get_or_create_node(inode);
-    if (!vnode)
-        return nullptr;
-    return FileDescriptor::create(move(vnode));
+    auto metadata = inode->metadata();
+    if (metadata.isCharacterDevice()) {
+        auto it = m_character_devices.find(encodedDevice(metadata.majorDevice, metadata.minorDevice));
+        if (it == m_character_devices.end()) {
+            kprintf("VFS::open: no such character device %u,%u\n", metadata.majorDevice, metadata.minorDevice);
+            return nullptr;
+        }
+        return FileDescriptor::create((*it).value);
+    }
+    return FileDescriptor::create(move(inode));
 }
 
 RetainPtr<FileDescriptor> VFS::create(const String& path, InodeIdentifier base, int& error)
@@ -277,7 +158,7 @@ RetainPtr<FileDescriptor> VFS::create(const String& path, InodeIdentifier base, 
     // FIXME: Do the real thing, not just this fake thing!
     (void) path;
     (void) base;
-    m_root_vnode->fs()->create_inode(m_root_vnode->fs()->root_inode(), "empty", 0100644, 0, error);
+    m_root_inode->fs().create_inode(m_root_inode->fs().root_inode(), "empty", 0100644, 0, error);
     return nullptr;
 }
 
@@ -337,7 +218,7 @@ String VFS::absolute_path(Inode& core_inode)
     int error;
     Vector<InodeIdentifier> lineage;
     RetainPtr<Inode> inode = &core_inode;
-    while (inode->identifier() != m_root_vnode->inode) {
+    while (inode->identifier() != root_inode_id()) {
         if (auto* mount = find_mount_for_guest(inode->identifier()))
             lineage.append(mount->host());
         else
@@ -354,7 +235,7 @@ String VFS::absolute_path(Inode& core_inode)
     }
     if (lineage.is_empty())
         return "/";
-    lineage.append(m_root_vnode->inode);
+    lineage.append(root_inode_id());
     StringBuilder builder;
     for (size_t i = lineage.size() - 1; i >= 1; --i) {
         auto& child = lineage[i - 1];
@@ -379,9 +260,9 @@ InodeIdentifier VFS::resolve_path(const String& path, InodeIdentifier base, int&
     InodeIdentifier crumb_id;
 
     if (path[0] == '/')
-        crumb_id = m_root_vnode->inode;
+        crumb_id = root_inode_id();
     else
-        crumb_id = base.is_valid() ? base : m_root_vnode->inode;
+        crumb_id = base.is_valid() ? base : root_inode_id();
 
     if (deepest_dir)
         *deepest_dir = crumb_id;
@@ -457,29 +338,6 @@ InodeIdentifier VFS::resolve_path(const String& path, InodeIdentifier base, int&
     }
 
     return crumb_id;
-}
-
-void Vnode::retain()
-{
-    InterruptDisabler disabler; // FIXME: Make a Retainable with atomic retain count instead.
-    ++retainCount;
-}
-
-void Vnode::release()
-{
-    InterruptDisabler disabler; // FIXME: Make a Retainable with atomic retain count instead.
-    ASSERT(retainCount);
-    if (--retainCount == 0) {
-        m_vfs->freeNode(this);
-    }
-}
-
-InodeMetadata Vnode::metadata() const
-{
-    if (m_core_inode)
-        return m_core_inode->metadata();
-    ASSERT_NOT_REACHED();
-    return { };
 }
 
 VFS::Mount::Mount(InodeIdentifier host, RetainPtr<FS>&& guest_fs)

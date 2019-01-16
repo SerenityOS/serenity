@@ -15,7 +15,8 @@ class Process;
 
 class FileDescriptor : public Retainable<FileDescriptor> {
 public:
-    static RetainPtr<FileDescriptor> create(RetainPtr<Vnode>&&);
+    static RetainPtr<FileDescriptor> create(RetainPtr<Inode>&&);
+    static RetainPtr<FileDescriptor> create(RetainPtr<CharacterDevice>&&);
     static RetainPtr<FileDescriptor> create_pipe_writer(FIFO&);
     static RetainPtr<FileDescriptor> create_pipe_reader(FIFO&);
     ~FileDescriptor();
@@ -40,8 +41,9 @@ public:
 
     bool is_directory() const;
 
-    bool is_character_device() const { return m_vnode && m_vnode->isCharacterDevice(); }
-    CharacterDevice* character_device() { return m_vnode ? m_vnode->characterDevice() : nullptr; }
+    bool is_character_device() const { return m_device.ptr(); }
+    CharacterDevice* character_device() { return m_device.ptr(); }
+    const CharacterDevice* character_device() const { return m_device.ptr(); }
 
 #ifdef SERENITY
     bool is_tty() const;
@@ -53,10 +55,11 @@ public:
     MasterPTY* master_pty();
 #endif
 
-    InodeMetadata metadata() const { return m_vnode->metadata(); }
+    InodeMetadata metadata() const;
+    Inode* inode() { return m_inode.ptr(); }
+    const Inode* inode() const { return m_inode.ptr(); }
 
-    Vnode* vnode() { return m_vnode.ptr(); }
-    Inode* inode() { return m_vnode ? m_vnode->core_inode() : nullptr; }
+    bool supports_mmap() const { return m_inode && !m_device; }
 
 #ifdef SERENITY
     bool is_blocking() const { return m_is_blocking; }
@@ -73,10 +76,12 @@ public:
 
 private:
     friend class VFS;
-    explicit FileDescriptor(RetainPtr<Vnode>&&);
+    explicit FileDescriptor(RetainPtr<Inode>&&);
+    explicit FileDescriptor(RetainPtr<CharacterDevice>&&);
     FileDescriptor(FIFO&, FIFO::Direction);
 
-    RetainPtr<Vnode> m_vnode;
+    RetainPtr<Inode> m_inode;
+    RetainPtr<CharacterDevice> m_device;
 
     Unix::off_t m_current_offset { 0 };
 

@@ -18,6 +18,7 @@ static const dword mepoch = 476763780;
 
 class Inode;
 class FileDescriptor;
+class VMObject;
 
 class FS : public Retainable<FS> {
 public:
@@ -71,6 +72,7 @@ public:
     size_t size() const { return metadata().size; }
     bool is_symlink() const { return metadata().isSymbolicLink(); }
     bool is_directory() const { return metadata().isDirectory(); }
+    bool is_character_device() const { return metadata().isCharacterDevice(); }
 
     InodeIdentifier identifier() const { return { fsid(), index() }; }
     virtual InodeMetadata metadata() const = 0;
@@ -97,6 +99,10 @@ public:
 
     void will_be_destroyed();
 
+    void set_vmo(RetainPtr<VMObject>&&);
+    VMObject* vmo() { return m_vmo.ptr(); }
+    const VMObject* vmo() const { return m_vmo.ptr(); }
+
 protected:
     Inode(FS& fs, unsigned index);
 
@@ -104,6 +110,7 @@ protected:
 private:
     FS& m_fs;
     unsigned m_index { 0 };
+    RetainPtr<VMObject> m_vmo;
     bool m_metadata_dirty { false };
 };
 
