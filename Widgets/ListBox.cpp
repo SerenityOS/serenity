@@ -14,7 +14,7 @@ ListBox::~ListBox()
 
 Rect ListBox::item_rect(int index) const
 {
-    int item_height = font().glyphHeight() + 2;
+    int item_height = font().glyph_height() + 2;
     return Rect { 2, 2 + (index * item_height), width() - 4, item_height };
 }
 

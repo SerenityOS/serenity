@@ -25,14 +25,14 @@ public:
         return width() == 0 || height() == 0;
     }
 
-    void moveBy(int dx, int dy)
+    void move_by(int dx, int dy)
     {
-        m_location.moveBy(dx, dy);
+        m_location.move_by(dx, dy);
     }
 
-    void moveBy(const Point& delta)
+    void move_by(const Point& delta)
     {
-        m_location.moveBy(delta);
+        m_location.move_by(delta);
     }
 
     Point center() const
@@ -42,18 +42,18 @@ public:
 
     void inflate(int w, int h)
     {
-        setX(x() - w / 2);
-        setWidth(width() + w);
-        setY(y() - h / 2);
-        setHeight(height() + h);
+        set_x(x() - w / 2);
+        set_width(width() + w);
+        set_y(y() - h / 2);
+        set_height(height() + h);
     }
 
     void shrink(int w, int h)
     {
-        setX(x() + w / 2);
-        setWidth(width() - w);
-        setY(y() + h / 2);
-        setHeight(height() - h);
+        set_x(x() + w / 2);
+        set_width(width() - w);
+        set_y(y() + h / 2);
+        set_height(height() - h);
     }
 
     bool contains(int x, int y) const
@@ -81,22 +81,22 @@ public:
 
     void set_left(int left)
     {
-        setX(left);
+        set_x(left);
     }
 
     void set_top(int top)
     {
-        setY(top);
+        set_y(top);
     }
 
     void set_right(int right)
     {
-        setWidth(right - x() + 1);
+        set_width(right - x() + 1);
     }
 
     void set_bottom(int bottom)
     {
-        setHeight(bottom - y() + 1);
+        set_height(bottom - y() + 1);
     }
 
     bool intersects(const Rect& other) const
@@ -112,10 +112,10 @@ public:
     int width() const { return m_size.width(); }
     int height() const { return m_size.height(); }
 
-    void setX(int x) { m_location.setX(x); }
-    void setY(int y) { m_location.setY(y); }
-    void setWidth(int width) { m_size.setWidth(width); }
-    void setHeight(int height) { m_size.setHeight(height); }
+    void set_x(int x) { m_location.set_x(x); }
+    void set_y(int y) { m_location.set_y(y); }
+    void set_width(int width) { m_size.set_width(width); }
+    void set_height(int height) { m_size.set_height(height); }
 
     Point location() const { return m_location; }
     Size size() const { return m_size; }
@@ -147,11 +147,11 @@ private:
 inline void Point::constrain(const Rect& rect)
 {
     if (x() < rect.left())
-        setX(rect.left());
+        set_x(rect.left());
     else if (x() > rect.right())
-        setX(rect.right());
+        set_x(rect.right());
     if (y() < rect.top())
-        setY(rect.top());
+        set_y(rect.top());
     else if (y() > rect.bottom())
-        setY(rect.bottom());
+        set_y(rect.bottom());
 }

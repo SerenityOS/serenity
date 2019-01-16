@@ -12,18 +12,18 @@ public:
     int x() const { return m_x; }
     int y() const { return m_y; }
 
-    void setX(int x) { m_x = x; }
-    void setY(int y) { m_y = y; }
+    void set_x(int x) { m_x = x; }
+    void set_y(int y) { m_y = y; }
 
-    void moveBy(int dx, int dy)
+    void move_by(int dx, int dy)
     {
         m_x += dx;
         m_y += dy;
     }
 
-    void moveBy(const Point& delta)
+    void move_by(const Point& delta)
     {
-        moveBy(delta.x(), delta.y());
+        move_by(delta.x(), delta.y());
     }
 
     void constrain(const Rect&);

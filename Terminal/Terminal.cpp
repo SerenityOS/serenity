@@ -11,10 +11,10 @@
 
 void Terminal::create_window()
 {
-    auto& font = Font::defaultFont();
+    auto& font = Font::default_font();
 
-    m_pixel_width = m_columns * font.glyphWidth() + m_inset * 2;
-    m_pixel_height = (m_rows * (font.glyphHeight() + m_line_spacing)) + (m_inset * 2) - m_line_spacing;
+    m_pixel_width = m_columns * font.glyph_width() + m_inset * 2;
+    m_pixel_height = (m_rows * (font.glyph_height() + m_line_spacing)) + (m_inset * 2) - m_line_spacing;
 
     GUI_CreateWindowParameters params;
     params.rect = { { 300, 300 }, { m_pixel_width, m_pixel_height } };
@@ -398,9 +398,9 @@ void Terminal::set_size(word columns, word rows)
 void Terminal::paint()
 {
     Rect rect { 0, 0, m_pixel_width, m_pixel_height };
-    Font& font = Font::defaultFont();
+    Font& font = Font::default_font();
     Painter painter(*m_backing);
-    int line_height = Font::defaultFont().glyphHeight() + m_line_spacing;
+    int line_height = Font::default_font().glyph_height() + m_line_spacing;
 #ifdef FAST_SCROLL
     if (m_rows_to_scroll_backing_store && m_rows_to_scroll_backing_store < m_rows) {
         int first_scanline = m_inset;
@@ -424,8 +424,8 @@ void Terminal::paint()
                 continue;
             attribute.dirty = false;
             char ch = m_buffer[(row * m_columns) + (column)];
-            int x = column * font.glyphWidth();
-            Rect glyph_rect { x + m_inset, y + m_inset, font.glyphWidth(), line_height };
+            int x = column * font.glyph_width();
+            Rect glyph_rect { x + m_inset, y + m_inset, font.glyph_width(), line_height };
             auto glyph_background = ansi_color(attribute.background_color);
             painter.fill_rect(glyph_rect, glyph_background);
             if (ch == ' ')
