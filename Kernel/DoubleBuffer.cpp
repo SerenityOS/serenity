@@ -19,6 +19,7 @@ void DoubleBuffer::flip()
 
 ssize_t DoubleBuffer::write(const byte* data, size_t size)
 {
+    ASSERT_INTERRUPTS_ENABLED();
     LOCKER(m_lock);
     m_write_buffer->append(data, size);
     compute_emptiness();
@@ -27,6 +28,7 @@ ssize_t DoubleBuffer::write(const byte* data, size_t size)
 
 ssize_t DoubleBuffer::read(byte* data, size_t size)
 {
+    ASSERT_INTERRUPTS_ENABLED();
     LOCKER(m_lock);
     if (m_read_buffer_index >= m_read_buffer->size() && !m_write_buffer->is_empty())
         flip();
