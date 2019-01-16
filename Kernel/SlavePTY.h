@@ -5,10 +5,9 @@
 class MasterPTY;
 
 class SlavePTY final : public TTY {
+    AK_MAKE_ETERNAL
 public:
-    explicit SlavePTY(unsigned index);
     virtual ~SlavePTY() override;
-    void set_master(MasterPTY& master) { m_master = &master; }
 
     virtual String tty_name() const override;
 
@@ -19,7 +18,10 @@ protected:
     virtual bool can_write(Process&) const override;
 
 private:
+    friend class MasterPTY;
+    SlavePTY(MasterPTY&, unsigned index);
+
+    MasterPTY& m_master;
     unsigned m_index;
-    MasterPTY* m_master { nullptr };
 };
 
