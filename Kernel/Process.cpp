@@ -1295,6 +1295,7 @@ int Process::sys$open(const char* path, int options)
     if (number_of_open_file_descriptors() >= m_max_open_file_descriptors)
         return -EMFILE;
     int error = -EWHYTHO;
+    ASSERT(cwd_inode());
     auto descriptor = VFS::the().open(path, error, options, cwd_inode()->identifier());
     if (!descriptor)
         return error;
@@ -1960,8 +1961,15 @@ int Process::sys$select(const Syscall::SC_select_params* params)
     transfer_fds(writefds, m_select_write_fds);
     transfer_fds(readfds, m_select_read_fds);
 
-    block(BlockedSelect);
-    Scheduler::yield();
+#ifdef DEBUG_IO
+    dbgprintf("%s<%u> selecting on (read:%u, write:%u)\n", name().characters(), pid(), m_select_read_fds.size(), m_select_write_fds.size());
+#endif
+
+    if (!m_wakeup_requested) {
+        block(BlockedSelect);
+        Scheduler::yield();
+    }
+    m_wakeup_requested = false;
 
     int markedfds = 0;
 
@@ -1988,4 +1996,12 @@ int Process::sys$select(const Syscall::SC_select_params* params)
     }
 
     return markedfds;
+}
+
+Inode* Process::cwd_inode()
+{
+    // FIXME: This is retarded factoring.
+    if (!m_cwd)
+        m_cwd = VFS::the().root_inode();
+    return m_cwd.ptr();
 }

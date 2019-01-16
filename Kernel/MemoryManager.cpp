@@ -537,7 +537,7 @@ bool MemoryManager::validate_user_read(const Process& process, LinearAddress lad
     auto pte = PageTableEntry(&pde.pageTableBase()[pageTableIndex]);
     if (!pte.is_present())
         return false;
-    if (!pte.is_user_allowed())
+    if (process.isRing3() && !pte.is_user_allowed())
         return false;
     return true;
 }
@@ -552,7 +552,7 @@ bool MemoryManager::validate_user_write(const Process& process, LinearAddress la
     auto pte = PageTableEntry(&pde.pageTableBase()[pageTableIndex]);
     if (!pte.is_present())
         return false;
-    if (!pte.is_user_allowed())
+    if (process.isRing3() && !pte.is_user_allowed())
         return false;
     if (!pte.is_writable())
         return false;

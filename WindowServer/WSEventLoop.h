@@ -25,7 +25,9 @@ public:
     Process& server_process() { return *m_server_process; }
 
 private:
-    void waitForEvent();
+    void wait_for_event();
+    void drain_mouse();
+    void drain_keyboard();
 
     SpinLock m_lock;
 
@@ -37,4 +39,7 @@ private:
 
     Process* m_server_process { nullptr };
     bool m_running { false };
+
+    int m_keyboard_fd { -1 };
+    int m_mouse_fd { -1 };
 };

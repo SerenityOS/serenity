@@ -37,6 +37,7 @@ VirtualConsole* tty3;
 Keyboard* keyboard;
 PS2MouseDevice* ps2mouse;
 GUIEventDevice* gui_event_device;
+VFS* vfs;
 
 #ifdef STRESS_TEST_SPAWNING
 static void spawn_stress() NORETURN;
@@ -61,8 +62,6 @@ static void init_stage2() NORETURN;
 static void init_stage2()
 {
     Syscall::initialize();
-
-    auto vfs = make<VFS>();
 
     auto dev_zero = make<ZeroDevice>();
     vfs->register_character_device(*dev_zero);
@@ -138,6 +137,9 @@ void init()
     gdt_init();
     idt_init();
 
+    VFS::initialize_globals();
+    vfs = new VFS;
+
     keyboard = new Keyboard;
     ps2mouse = new PS2MouseDevice;
     gui_event_device = new GUIEventDevice;
@@ -153,7 +155,6 @@ void init()
 
     MemoryManager::initialize();
 
-    VFS::initialize_globals();
     StringImpl::initialize_globals();
 
     PIT::initialize();

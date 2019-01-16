@@ -65,6 +65,11 @@ bool Scheduler::pick_next()
         }
 
         if (process.state() == Process::BlockedSelect) {
+            if (process.wakeup_requested()) {
+                process.m_wakeup_requested = false;
+                process.unblock();
+                return true;
+            }
             for (int fd : process.m_select_read_fds) {
                 if (process.m_fds[fd].descriptor->can_read(process)) {
                     process.unblock();

@@ -236,7 +236,7 @@ public:
     template<typename T> bool validate_read_typed(T* value, size_t count = 1) { return validate_read(value, sizeof(T) * count); }
     template<typename T> bool validate_write_typed(T* value, size_t count = 1) { return validate_write(value, sizeof(T) * count); }
 
-    Inode* cwd_inode() { return m_cwd.ptr(); }
+    Inode* cwd_inode();
     Inode* executable_inode() { return m_executable.ptr(); }
 
     size_t number_of_open_file_descriptors() const;
@@ -255,6 +255,9 @@ public:
 
     Vector<GUI_Event>& gui_events() { return m_gui_events; }
     SpinLock& gui_events_lock() { return m_gui_events_lock; }
+
+    bool wakeup_requested() { return m_wakeup_requested; }
+    void request_wakeup() { m_wakeup_requested = true; }
 
 private:
     friend class MemoryManager;
@@ -357,6 +360,8 @@ private:
     Vector<GUI_Event> m_gui_events;
     SpinLock m_gui_events_lock;
     int m_next_window_id { 1 };
+
+    dword m_wakeup_requested { false };
 };
 
 extern Process* current;

@@ -8,6 +8,7 @@ mknod mnt/dev/tty0 c 4 0
 mknod mnt/dev/tty1 c 4 1
 mknod mnt/dev/tty2 c 4 2
 mknod mnt/dev/tty3 c 4 3
+mknod mnt/dev/keyboard c 85 1
 mknod mnt/dev/psaux c 10 1
 mknod mnt/dev/ptmx c 5 2
 mknod mnt/dev/ptm0 c 10 0

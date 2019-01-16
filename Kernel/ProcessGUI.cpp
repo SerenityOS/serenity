@@ -108,8 +108,7 @@ int Process::gui$invalidate_window(int window_id)
     if (it == m_windows.end())
         return -EBADWINDOW;
     auto& window = *(*it).value;
-    // FIXME: This should queue up a message that the window server process can read.
-    //        Poking into its data structures is not good.
     WSEventLoop::the().post_event(&window, make<WSEvent>(WSEvent::WM_Invalidate));
+    WSEventLoop::the().server_process().request_wakeup();
     return 0;
 }

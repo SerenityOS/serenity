@@ -129,6 +129,7 @@ ssize_t PS2MouseDevice::read(Process&, byte* buffer, size_t size)
     while ((size_t)nread < size) {
         if (m_queue.is_empty())
             break;
+        // FIXME: Don't return partial data frames.
         buffer[nread++] = m_queue.dequeue();
     }
     return nread;
