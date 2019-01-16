@@ -1,26 +1,24 @@
-#include "AbstractScreen.h"
-#include "EventLoop.h"
-#include "Event.h"
-#include "Widget.h"
-#include "WindowManager.h"
+#include "WSScreen.h"
+#include "WSEventLoop.h"
+#include "WSEvent.h"
+#include "WSWindowManager.h"
 #include <AK/Assertions.h>
 
-static AbstractScreen* s_the;
+static WSScreen* s_the;
 
-void AbstractScreen::initialize()
+void WSScreen::initialize()
 {
     s_the = nullptr;
 }
 
-AbstractScreen& AbstractScreen::the()
+WSScreen& WSScreen::the()
 {
     ASSERT(s_the);
     return *s_the;
 }
 
-AbstractScreen::AbstractScreen(unsigned width, unsigned height)
-    : Object(nullptr)
-    , m_width(width)
+WSScreen::WSScreen(unsigned width, unsigned height)
+    : m_width(width)
     , m_height(height)
 {
     ASSERT(!s_the);
@@ -31,11 +29,11 @@ AbstractScreen::AbstractScreen(unsigned width, unsigned height)
     Keyboard::the().set_client(this);
 }
 
-AbstractScreen::~AbstractScreen()
+WSScreen::~WSScreen()
 {
 }
 
-void AbstractScreen::on_receive_mouse_data(int dx, int dy, bool left_button, bool right_button)
+void WSScreen::on_receive_mouse_data(int dx, int dy, bool left_button, bool right_button)
 {
     auto prev_location = m_cursor_location;
     m_cursor_location.moveBy(dx, dy);
@@ -45,28 +43,28 @@ void AbstractScreen::on_receive_mouse_data(int dx, int dy, bool left_button, boo
     if (m_cursor_location.y() >= height())
         m_cursor_location.setY(height() - 1);
     if (m_cursor_location != prev_location) {
-        auto event = make<MouseEvent>(Event::MouseMove, m_cursor_location.x(), m_cursor_location.y());
-        EventLoop::main().postEvent(&WindowManager::the(), move(event));
+        auto event = make<MouseEvent>(WSEvent::MouseMove, m_cursor_location.x(), m_cursor_location.y());
+        WSEventLoop::the().post_event(&WSWindowManager::the(), move(event));
     }
     bool prev_left_button = m_left_mouse_button_pressed;
     bool prev_right_button = m_right_mouse_button_pressed;
     m_left_mouse_button_pressed = left_button;
     m_right_mouse_button_pressed = right_button;
     if (prev_left_button != left_button) {
-        auto event = make<MouseEvent>(left_button ? Event::MouseDown : Event::MouseUp, m_cursor_location.x(), m_cursor_location.y(), MouseButton::Left);
-        EventLoop::main().postEvent(&WindowManager::the(), move(event));
+        auto event = make<MouseEvent>(left_button ? WSEvent::MouseDown : WSEvent::MouseUp, m_cursor_location.x(), m_cursor_location.y(), MouseButton::Left);
+        WSEventLoop::the().post_event(&WSWindowManager::the(), move(event));
     }
     if (prev_right_button != right_button) {
-        auto event = make<MouseEvent>(right_button ? Event::MouseDown : Event::MouseUp, m_cursor_location.x(), m_cursor_location.y(), MouseButton::Right);
-        EventLoop::main().postEvent(&WindowManager::the(), move(event));
+        auto event = make<MouseEvent>(right_button ? WSEvent::MouseDown : WSEvent::MouseUp, m_cursor_location.x(), m_cursor_location.y(), MouseButton::Right);
+        WSEventLoop::the().post_event(&WSWindowManager::the(), move(event));
     }
     if (m_cursor_location != prev_location || prev_left_button != left_button)
-        WindowManager::the().draw_cursor();
+        WSWindowManager::the().draw_cursor();
 }
 
-void AbstractScreen::on_key_pressed(Keyboard::Key key)
+void WSScreen::on_key_pressed(Keyboard::Key key)
 {
-    auto event = make<KeyEvent>(Event::KeyDown, 0);
+    auto event = make<KeyEvent>(WSEvent::KeyDown, 0);
     int key_code = 0;
 
     switch (key.character) {
@@ -115,5 +113,5 @@ void AbstractScreen::on_key_pressed(Keyboard::Key key)
     event->m_ctrl = key.ctrl();
     event->m_alt = key.alt();
 
-    EventLoop::main().postEvent(&WindowManager::the(), move(event));
+    WSEventLoop::the().post_event(&WSWindowManager::the(), move(event));
 }

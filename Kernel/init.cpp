@@ -15,7 +15,7 @@
 #include <VirtualFileSystem/RandomDevice.h>
 #include <VirtualFileSystem/Ext2FileSystem.h>
 #include <VirtualFileSystem/VirtualFileSystem.h>
-#include <Widgets/GUIEventDevice.h>
+#include "GUIEventDevice.h"
 #include "MemoryManager.h"
 #include "ProcFileSystem.h"
 #include "RTC.h"

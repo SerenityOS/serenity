@@ -133,7 +133,7 @@ bool Scheduler::pick_next()
     for (auto* process = g_processes->head(); process; process = process->next()) {
         //if (process->state() == Process::BlockedWait || process->state() == Process::BlockedSleep)
 //            continue;
-        dbgprintf("% 12s %s(%u) @ %w:%x\n", toString(process->state()), process->name().characters(), process->pid(), process->tss().cs, process->tss().eip);
+        dbgprintf("[K%x] % 12s %s(%u) @ %w:%x\n", process, toString(process->state()), process->name().characters(), process->pid(), process->tss().cs, process->tss().eip);
     }
 #endif
 

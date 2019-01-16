@@ -18,7 +18,7 @@
 #include "Scheduler.h"
 #include "FIFO.h"
 #include "KSyms.h"
-#include <Widgets/Window.h>
+#include <WindowServer/WSWindow.h>
 #include "MasterPTY.h"
 
 //#define DEBUG_IO

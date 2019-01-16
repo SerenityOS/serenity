@@ -30,7 +30,7 @@ KERNEL_OBJS = \
        ELFLoader.o \
        KSyms.o \
        PS2MouseDevice.o \
-       WindowServer.o
+       GUIEventDevice.o
 
 VFS_OBJS = \
     ../VirtualFileSystem/DiskDevice.o \
@@ -46,21 +46,20 @@ VFS_OBJS = \
     ../VirtualFileSystem/FileDescriptor.o \
     ../VirtualFileSystem/SyntheticFileSystem.o
 
-WIDGETS_OBJS = \
-    ../Widgets/Window.o \
-    ../Widgets/Painter.o \
-    ../Widgets/WindowManager.o \
-    ../Widgets/FrameBuffer.o \
-    ../Widgets/GraphicsBitmap.o \
-    ../Widgets/Object.o \
+WINDOWSERVER_OBJS = \
     ../Widgets/Rect.o \
-    ../Widgets/Widget.o \
+    ../Widgets/Painter.o \
     ../Widgets/Font.o \
     ../Widgets/Color.o \
     ../Widgets/CharacterBitmap.o \
-    ../Widgets/EventLoop.o \
-    ../Widgets/AbstractScreen.o \
-    ../Widgets/GUIEventDevice.o \
+    ../Widgets/GraphicsBitmap.o \
+    ../WindowServer/WSEventReceiver.o \
+    ../WindowServer/WSEventLoop.o \
+    ../WindowServer/WSWindow.o \
+    ../WindowServer/WSWindowManager.o \
+    ../WindowServer/WSFrameBuffer.o \
+    ../WindowServer/WSScreen.o \
+    ../WindowServer/main.o
 
 AK_OBJS = \
     ../AK/String.o \
@@ -68,7 +67,7 @@ AK_OBJS = \
     ../AK/StringBuilder.o \
     ../AK/FileSystemPath.o
 
-OBJS = $(KERNEL_OBJS) $(VFS_OBJS) $(AK_OBJS) $(WIDGETS_OBJS)
+OBJS = $(KERNEL_OBJS) $(VFS_OBJS) $(AK_OBJS) $(WINDOWSERVER_OBJS)
 
 NASM = nasm
 KERNEL = kernel

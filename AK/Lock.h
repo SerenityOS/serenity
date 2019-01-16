@@ -2,13 +2,14 @@
 
 #include "Assertions.h"
 #include "Types.h"
-
-#ifdef SERENITY
 #include "i386.h"
 int sched_yield();
-#else
-#include <sched.h>
-typedef int InterruptDisabler;
+
+class Process;
+extern Process* current;
+
+#ifndef KERNEL
+#error This thing is kernel-only right now.
 #endif
 
 //#define DEBUG_LOCKS
@@ -30,70 +31,75 @@ static inline dword CAS(volatile dword* mem, dword newval, dword oldval)
     return ret;
 }
 
-// FIXME: Rename to YieldingLock?
+// FIXME: Rename to YieldingLock? RecursiveLock? Maybe just Lock?
 class SpinLock {
 public:
     SpinLock() { }
     ~SpinLock() { }
 
-    ALWAYS_INLINE void lock(const char* func = nullptr)
-    {
-        (void)func;
-#ifdef DEBUG_LOCKS
-        {
-            InterruptDisabler dis;
-            log_try_lock(func);
-        }
-#endif
-        for (;;) {
-            if (CAS(&m_lock, 1, 0) == 0) {
-#ifdef DEBUG_LOCKS
-                InterruptDisabler dis;
-                log_locked(func);
-#endif
-                return;
-            }
-            sched_yield();
-        }
-    }
+    void lock();
+    void unlock();
 
-    ALWAYS_INLINE void unlock(const char* func = nullptr)
-    {
-        (void)func;
-        // barrier();
-        ASSERT(m_lock);
-        m_lock = 0;
-#ifdef DEBUG_LOCKS
-        InterruptDisabler dis;
-        log_unlocked(func);
-#endif
-    }
-
-    void init()
-    {
-        m_lock = 0;
-    }
+    const Process* holder() const { return m_holder; }
 
 private:
     volatile dword m_lock { 0 };
+    dword m_level { 0 };
+    Process* m_holder { nullptr };
 };
 
 class Locker {
 public:
-    ALWAYS_INLINE explicit Locker(SpinLock& l, const char* func) : m_lock(l), m_func(func) { lock(); }
+    ALWAYS_INLINE explicit Locker(SpinLock& l) : m_lock(l) { lock(); }
     ALWAYS_INLINE ~Locker() { unlock(); }
-    ALWAYS_INLINE void unlock() { m_lock.unlock(m_func); }
-    ALWAYS_INLINE void lock() { m_lock.lock(m_func); }
+    ALWAYS_INLINE void unlock() { m_lock.unlock(); }
+    ALWAYS_INLINE void lock() { m_lock.lock(); }
 
 private:
     SpinLock& m_lock;
-    const char* m_func { nullptr };
 };
 
-#define LOCKER(lock) Locker locker(lock, __FUNCTION__)
+inline void SpinLock::lock()
+{
+    for (;;) {
+        if (CAS(&m_lock, 1, 0) == 0) {
+            if (!m_holder || m_holder == current) {
+                m_holder = current;
+                ++m_level;
+                memory_barrier();
+                m_lock = 0;
+                return;
+            }
+            m_lock = 0;
+        }
+        sched_yield();
+    }
+}
+
+inline void SpinLock::unlock()
+{
+    for (;;) {
+        if (CAS(&m_lock, 1, 0) == 0) {
+            ASSERT(m_holder == current);
+            ASSERT(m_level);
+            --m_level;
+            if (m_level) {
+                memory_barrier();
+                m_lock = 0;
+                return;
+            }
+            m_holder = nullptr;
+            memory_barrier();
+            m_lock = 0;
+            return;
+        }
+        sched_yield();
+    }
+}
+
+#define LOCKER(lock) Locker locker(lock)
 
 }
 
 using AK::SpinLock;
 using AK::Locker;
-
