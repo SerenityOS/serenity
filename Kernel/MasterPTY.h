@@ -6,7 +6,6 @@
 class SlavePTY;
 
 class MasterPTY final : public CharacterDevice {
-    AK_MAKE_ETERNAL
 public:
     explicit MasterPTY(unsigned index);
     virtual ~MasterPTY() override;
@@ -17,6 +16,7 @@ public:
     virtual bool can_write(Process&) const override;
     virtual bool is_master_pty() const override { return true; }
 
+    unsigned index() const { return m_index; }
     String pts_name() const;
     void on_slave_write(const byte*, size_t);
 

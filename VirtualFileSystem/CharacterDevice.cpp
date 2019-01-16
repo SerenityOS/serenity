@@ -3,12 +3,11 @@
 
 CharacterDevice::~CharacterDevice()
 {
-    ASSERT_NOT_REACHED();
 }
 
-RetainPtr<FileDescriptor> CharacterDevice::open(int options)
+RetainPtr<FileDescriptor> CharacterDevice::open(int& error, int options)
 {
-    return VFS::the().open(*this, options);
+    return VFS::the().open(*this, error, options);
 }
 
 int CharacterDevice::ioctl(Process&, unsigned, unsigned)
