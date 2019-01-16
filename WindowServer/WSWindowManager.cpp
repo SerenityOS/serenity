@@ -284,6 +284,15 @@ void WSWindowManager::compose()
         return false;
     };
 
+    auto any_dirty_rect_intersects_window = [&invalidated_rects] (const WSWindow& window) {
+        auto window_rect = outerRectForWindow(window.rect());
+        for (auto& dirty_rect : invalidated_rects) {
+            if (dirty_rect.intersects(window_rect))
+                return true;
+        }
+        return false;
+    };
+
     for (auto& r : invalidated_rects) {
         if (any_window_contains_rect(r))
             continue;
@@ -292,6 +301,8 @@ void WSWindowManager::compose()
     }
     for (auto* window = m_windows_in_order.head(); window; window = window->next()) {
         if (!window->backing())
+            continue;
+        if (!any_dirty_rect_intersects_window(*window))
             continue;
         paintWindowFrame(*window);
         m_back_painter->blit(window->position(), *window->backing());
