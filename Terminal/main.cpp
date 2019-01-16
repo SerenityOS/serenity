@@ -59,13 +59,23 @@ static int max(int a, int b)
     return a > b ? a : b;
 }
 
+static int open_ptm()
+{
+    char buf[32];
+    for (unsigned i = 0; i < 4; ++i) {
+        sprintf(buf, "/dev/ptm%u", i);
+        int fd = open(buf, O_RDWR);
+        if (fd)
+            return fd;
+    }
+    dbgprintf("No master PTY available :(\n");
+    exit(1);
+    return -1;
+}
+
 int main(int, char**)
 {
-    int ptm_fd = open("/dev/ptm0", O_RDWR);
-    if (ptm_fd < 0) {
-        perror("open");
-        return 1;
-    }
+    int ptm_fd = open_ptm();
 
     make_shell(ptm_fd);
 

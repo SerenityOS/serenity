@@ -237,8 +237,8 @@ public:
     template<typename T> bool validate_read_typed(T* value, size_t count = 1) { return validate_read(value, sizeof(T) * count); }
     template<typename T> bool validate_write_typed(T* value, size_t count = 1) { return validate_write(value, sizeof(T) * count); }
 
-    Inode* cwd_inode() { return m_cwd ? m_cwd->core_inode() : nullptr; }
-    Inode* executable_inode() { return m_executable ? m_executable->core_inode() : nullptr; }
+    Inode* cwd_inode() { return m_cwd.ptr(); }
+    Inode* executable_inode() { return m_executable.ptr(); }
 
     size_t number_of_open_file_descriptors() const;
     size_t max_open_file_descriptors() const { return m_max_open_file_descriptors; }
@@ -262,7 +262,7 @@ private:
     friend class Scheduler;
     friend class Region;
 
-    Process(String&& name, uid_t, gid_t, pid_t ppid, RingLevel, RetainPtr<Vnode>&& cwd = nullptr, RetainPtr<Vnode>&& executable = nullptr, TTY* = nullptr, Process* fork_parent = nullptr);
+    Process(String&& name, uid_t, gid_t, pid_t ppid, RingLevel, RetainPtr<Inode>&& cwd = nullptr, RetainPtr<Inode>&& executable = nullptr, TTY* = nullptr, Process* fork_parent = nullptr);
 
     int do_exec(const String& path, Vector<String>&& arguments, Vector<String>&& environment);
     void push_value_on_stack(dword);
@@ -316,13 +316,13 @@ private:
     byte m_termination_status { 0 };
     byte m_termination_signal { 0 };
 
-    RetainPtr<Vnode> m_cwd;
-    RetainPtr<Vnode> m_executable;
+    RetainPtr<Inode> m_cwd;
+    RetainPtr<Inode> m_executable;
 
     TTY* m_tty { nullptr };
 
     Region* allocate_region(LinearAddress, size_t, String&& name, bool is_readable = true, bool is_writable = true, bool commit = true);
-    Region* allocate_file_backed_region(LinearAddress, size_t, RetainPtr<Vnode>&& vnode, String&& name, bool is_readable, bool is_writable);
+    Region* allocate_file_backed_region(LinearAddress, size_t, RetainPtr<Inode>&&, String&& name, bool is_readable, bool is_writable);
     Region* allocate_region_with_vmo(LinearAddress, size_t, RetainPtr<VMObject>&&, size_t offset_in_vmo, String&& name, bool is_readable, bool is_writable);
     bool deallocate_region(Region& region);
 

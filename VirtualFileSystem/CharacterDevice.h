@@ -1,14 +1,17 @@
 #pragma once
 
+#include <AK/Retainable.h>
 #include <AK/Types.h>
 #include "Limits.h"
 #include "FileDescriptor.h"
 
 class Process;
 
-class CharacterDevice {
+class CharacterDevice : public Retainable<CharacterDevice> {
 public:
     virtual ~CharacterDevice();
+
+    InodeMetadata metadata() const { return { }; }
 
     RetainPtr<FileDescriptor> open(int options);
 

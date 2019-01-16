@@ -11,9 +11,14 @@
 #include "MasterPTY.h"
 #endif
 
-RetainPtr<FileDescriptor> FileDescriptor::create(RetainPtr<Vnode>&& vnode)
+RetainPtr<FileDescriptor> FileDescriptor::create(RetainPtr<Inode>&& inode)
 {
-    return adopt(*new FileDescriptor(move(vnode)));
+    return adopt(*new FileDescriptor(move(inode)));
+}
+
+RetainPtr<FileDescriptor> FileDescriptor::create(RetainPtr<CharacterDevice>&& device)
+{
+    return adopt(*new FileDescriptor(move(device)));
 }
 
 RetainPtr<FileDescriptor> FileDescriptor::create_pipe_writer(FIFO& fifo)
@@ -26,8 +31,13 @@ RetainPtr<FileDescriptor> FileDescriptor::create_pipe_reader(FIFO& fifo)
     return adopt(*new FileDescriptor(fifo, FIFO::Reader));
 }
 
-FileDescriptor::FileDescriptor(RetainPtr<Vnode>&& vnode)
-    : m_vnode(move(vnode))
+FileDescriptor::FileDescriptor(RetainPtr<Inode>&& inode)
+    : m_inode(move(inode))
+{
+}
+
+FileDescriptor::FileDescriptor(RetainPtr<CharacterDevice>&& device)
+    : m_device(move(device))
 {
 }
 
@@ -45,7 +55,11 @@ RetainPtr<FileDescriptor> FileDescriptor::clone()
             ? FileDescriptor::create_pipe_reader(*m_fifo)
             : FileDescriptor::create_pipe_writer(*m_fifo);
     } else {
-        descriptor = FileDescriptor::create(m_vnode.copyRef());
+        if (m_inode)
+            descriptor = FileDescriptor::create(m_inode.copyRef());
+        else {
+            descriptor = FileDescriptor::create(m_device.copyRef());
+        }
     }
     if (!descriptor)
         return nullptr;
@@ -69,10 +83,10 @@ bool additionWouldOverflow(Unix::off_t a, Unix::off_t b)
 int FileDescriptor::stat(Unix::stat* buffer)
 {
     ASSERT(!is_fifo());
-    if (!m_vnode)
+    if (!m_inode && !m_device)
         return -EBADF;
 
-    auto metadata = m_vnode->metadata();
+    auto metadata = this->metadata();
     if (!metadata.isValid())
         return -EIO;
 
@@ -95,12 +109,12 @@ int FileDescriptor::stat(Unix::stat* buffer)
 Unix::off_t FileDescriptor::seek(Unix::off_t offset, int whence)
 {
     ASSERT(!is_fifo());
-    if (!m_vnode)
+    if (!m_inode && !m_device)
         return -EBADF;
 
     // FIXME: The file type should be cached on the vnode.
     //        It's silly that we have to do a full metadata lookup here.
-    auto metadata = m_vnode->metadata();
+    auto metadata = this->metadata();
     if (!metadata.isValid())
         return -EIO;
 
@@ -140,9 +154,9 @@ ssize_t FileDescriptor::read(Process& process, byte* buffer, size_t count)
         ASSERT(fifo_direction() == FIFO::Reader);
         return m_fifo->read(buffer, count);
     }
-    if (m_vnode->isCharacterDevice()) {
+    if (m_device) {
         // FIXME: What should happen to m_currentOffset?
-        return m_vnode->characterDevice()->read(process, buffer, count);
+        return m_device->read(process, buffer, count);
     }
     ASSERT(inode());
     ssize_t nread = inode()->read_bytes(m_current_offset, count, buffer, this);
@@ -156,9 +170,9 @@ ssize_t FileDescriptor::write(Process& process, const byte* data, size_t size)
         ASSERT(fifo_direction() == FIFO::Writer);
         return m_fifo->write(data, size);
     }
-    if (m_vnode->isCharacterDevice()) {
+    if (m_device) {
         // FIXME: What should happen to m_currentOffset?
-        return m_vnode->characterDevice()->write(process, data, size);
+        return m_device->write(process, data, size);
     }
     // FIXME: Implement non-device writes.
     ASSERT_NOT_REACHED();
@@ -171,8 +185,8 @@ bool FileDescriptor::can_write(Process& process)
         ASSERT(fifo_direction() == FIFO::Writer);
         return m_fifo->can_write();
     }
-    if (m_vnode->isCharacterDevice())
-        return m_vnode->characterDevice()->can_write(process);
+    if (m_device)
+        return m_device->can_write(process);
     return true;
 }
 
@@ -182,8 +196,8 @@ bool FileDescriptor::can_read(Process& process)
         ASSERT(fifo_direction() == FIFO::Reader);
         return m_fifo->can_read();
     }
-    if (m_vnode->isCharacterDevice())
-        return m_vnode->characterDevice()->can_read(process);
+    if (m_device)
+        return m_device->can_read(process);
     return true;
 }
 
@@ -191,26 +205,26 @@ ByteBuffer FileDescriptor::read_entire_file(Process& process)
 {
     ASSERT(!is_fifo());
 
-    if (m_vnode->isCharacterDevice()) {
+    if (m_device) {
         auto buffer = ByteBuffer::create_uninitialized(1024);
-        ssize_t nread = m_vnode->characterDevice()->read(process, buffer.pointer(), buffer.size());
+        ssize_t nread = m_device->read(process, buffer.pointer(), buffer.size());
         buffer.trim(nread);
         return buffer;
     }
 
-    ASSERT(inode());
-    return inode()->read_entire(this);
+    ASSERT(m_inode);
+    return m_inode->read_entire(this);
 }
 
 bool FileDescriptor::is_directory() const
 {
     ASSERT(!is_fifo());
-    return m_vnode->metadata().isDirectory();
+    return metadata().isDirectory();
 }
 
 ssize_t FileDescriptor::get_dir_entries(byte* buffer, size_t size)
 {
-    auto metadata = m_vnode->metadata();
+    auto metadata = this->metadata();
     if (!metadata.isValid())
         return -EIO;
     if (!metadata.isDirectory())
@@ -219,7 +233,7 @@ ssize_t FileDescriptor::get_dir_entries(byte* buffer, size_t size)
     // FIXME: Compute the actual size needed.
     auto tempBuffer = ByteBuffer::create_uninitialized(2048);
     BufferStream stream(tempBuffer);
-    m_vnode->vfs()->traverse_directory_inode(*m_vnode->core_inode(), [&stream] (auto& entry) {
+    VFS::the().traverse_directory_inode(*m_inode, [&stream] (auto& entry) {
         stream << (dword)entry.inode.index();
         stream << (byte)entry.fileType;
         stream << (dword)entry.name_length;
@@ -233,41 +247,30 @@ ssize_t FileDescriptor::get_dir_entries(byte* buffer, size_t size)
     memcpy(buffer, tempBuffer.pointer(), stream.offset());
     return stream.offset();
 }
-\
-#ifdef SERENITY
+
 bool FileDescriptor::is_tty() const
 {
-    if (is_fifo())
-        return false;
-    if (auto* device = m_vnode->characterDevice())
-        return device->is_tty();
-    return false;
+    return m_device && m_device->is_tty();
 }
 
 const TTY* FileDescriptor::tty() const
 {
-    if (is_fifo())
+    if (!is_tty())
         return nullptr;
-    if (auto* device = m_vnode->characterDevice())
-        return static_cast<const TTY*>(device);
-    return nullptr;
+    return static_cast<const TTY*>(m_device.ptr());
 }
 
 TTY* FileDescriptor::tty()
 {
-    if (is_fifo())
+    if (!is_tty())
         return nullptr;
-    if (auto* device = m_vnode->characterDevice())
-        return static_cast<TTY*>(device);
-    return nullptr;
+    return static_cast<TTY*>(m_device.ptr());
 }
 
 bool FileDescriptor::is_master_pty() const
 {
-    if (is_fifo())
-        return false;
-    if (auto* device = m_vnode->characterDevice())
-        return device->is_master_pty();
+    if (m_device)
+        return m_device->is_master_pty();
     return false;
 }
 
@@ -275,16 +278,15 @@ const MasterPTY* FileDescriptor::master_pty() const
 {
     if (!is_master_pty())
         return nullptr;
-    return static_cast<const MasterPTY*>(m_vnode->characterDevice());
+    return static_cast<const MasterPTY*>(m_device.ptr());
 }
 
 MasterPTY* FileDescriptor::master_pty()
 {
     if (!is_master_pty())
         return nullptr;
-    return static_cast<MasterPTY*>(m_vnode->characterDevice());
+    return static_cast<MasterPTY*>(m_device.ptr());
 }
-#endif
 
 int FileDescriptor::close()
 {
@@ -294,17 +296,15 @@ int FileDescriptor::close()
 String FileDescriptor::absolute_path()
 {
     Stopwatch sw("absolute_path");
-#ifdef SERENITY
     if (is_tty())
         return tty()->tty_name();
-#endif
     if (is_fifo()) {
         char buf[32];
         ksprintf(buf, "fifo:%x", m_fifo.ptr());
         return buf;
     }
-    ASSERT(m_vnode->core_inode());
-    return VFS::the().absolute_path(*m_vnode->core_inode());
+    ASSERT(m_inode);
+    return VFS::the().absolute_path(*m_inode);
 }
 
 FileDescriptor::FileDescriptor(FIFO& fifo, FIFO::Direction direction)
@@ -313,4 +313,11 @@ FileDescriptor::FileDescriptor(FIFO& fifo, FIFO::Direction direction)
     , m_fifo_direction(direction)
 {
     m_fifo->open(direction);
+}
+
+InodeMetadata FileDescriptor::metadata() const
+{
+    if (m_inode)
+        return m_inode->metadata();
+    return { };
 }

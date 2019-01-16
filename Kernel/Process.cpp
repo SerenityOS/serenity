@@ -85,9 +85,8 @@ Region* Process::allocate_region(LinearAddress laddr, size_t size, String&& name
     return m_regions.last().ptr();
 }
 
-Region* Process::allocate_file_backed_region(LinearAddress laddr, size_t size, RetainPtr<Vnode>&& vnode, String&& name, bool is_readable, bool is_writable)
+Region* Process::allocate_file_backed_region(LinearAddress laddr, size_t size, RetainPtr<Inode>&& inode, String&& name, bool is_readable, bool is_writable)
 {
-    ASSERT(!vnode->isCharacterDevice());
     size = PAGE_ROUND_UP(size);
     // FIXME: This needs sanity checks. What if this overlaps existing regions?
     if (laddr.is_null()) {
@@ -95,7 +94,7 @@ Region* Process::allocate_file_backed_region(LinearAddress laddr, size_t size, R
         m_nextRegion = m_nextRegion.offset(size).offset(PAGE_SIZE);
     }
     laddr.mask(0xfffff000);
-    m_regions.append(adopt(*new Region(laddr, size, move(vnode), move(name), is_readable, is_writable)));
+    m_regions.append(adopt(*new Region(laddr, size, move(inode), move(name), is_readable, is_writable)));
     MM.map_region(*this, *m_regions.last());
     return m_regions.last().ptr();
 }
@@ -178,14 +177,14 @@ void* Process::sys$mmap(const Syscall::SC_mmap_params* params)
     auto* descriptor = file_descriptor(fd);
     if (!descriptor)
         return (void*)-EBADF;
-    if (descriptor->vnode()->isCharacterDevice())
+    if (!descriptor->supports_mmap())
         return (void*)-ENODEV;
     // FIXME: If PROT_EXEC, check that the underlying file system isn't mounted noexec.
     auto region_name = descriptor->absolute_path();
     InterruptDisabler disabler;
     // FIXME: Implement mapping at a client-specified address. Most of the support is already in plcae.
     ASSERT(addr == nullptr);
-    auto* region = allocate_file_backed_region(LinearAddress(), size, descriptor->vnode(), move(region_name), prot & PROT_READ, prot & PROT_WRITE);
+    auto* region = allocate_file_backed_region(LinearAddress(), size, descriptor->inode(), move(region_name), prot & PROT_READ, prot & PROT_WRITE);
     if (!region)
         return (void*)-ENOMEM;
     return region->linearAddress.asPtr();
@@ -288,7 +287,7 @@ int Process::do_exec(const String& path, Vector<String>&& arguments, Vector<Stri
         return -ENOENT;
 
     int error;
-    auto descriptor = VFS::the().open(path, error, 0, m_cwd ? m_cwd->inode : InodeIdentifier());
+    auto descriptor = VFS::the().open(path, error, 0, m_cwd ? m_cwd->identifier() : InodeIdentifier());
     if (!descriptor) {
         ASSERT(error != 0);
         return error;
@@ -302,7 +301,7 @@ int Process::do_exec(const String& path, Vector<String>&& arguments, Vector<Stri
         return -ENOTIMPL;
     }
 
-    auto vmo = VMObject::create_file_backed(descriptor->vnode(), descriptor->metadata().size);
+    auto vmo = VMObject::create_file_backed(descriptor->inode(), descriptor->metadata().size);
     vmo->set_name(descriptor->absolute_path());
     auto* region = allocate_region_with_vmo(LinearAddress(), descriptor->metadata().size, vmo.copyRef(), 0, "helper", true, false);
 
@@ -403,7 +402,7 @@ int Process::do_exec(const String& path, Vector<String>&& arguments, Vector<Stri
     m_tss.esp0 = old_esp0;
     m_tss.ss2 = m_pid;
 
-    m_executable = descriptor->vnode();
+    m_executable = descriptor->inode();
     m_arguments = move(arguments);
     m_initialEnvironment = move(environment);
 
@@ -481,14 +480,15 @@ Process* Process::create_user_process(const String& path, uid_t uid, gid_t gid, 
     if (arguments.is_empty()) {
         arguments.append(parts.last());
     }
-    RetainPtr<Vnode> cwd;
+    RetainPtr<Inode> cwd;
     {
         InterruptDisabler disabler;
         if (auto* parent = Process::from_pid(parent_pid))
             cwd = parent->m_cwd.copyRef();
     }
+
     if (!cwd)
-        cwd = VFS::the().root();
+        cwd = VFS::the().root_inode();
 
     auto* process = new Process(parts.takeLast(), uid, gid, parent_pid, Ring3, move(cwd), nullptr, tty);
 
@@ -570,7 +570,7 @@ Process* Process::create_kernel_process(String&& name, void (*e)())
     return process;
 }
 
-Process::Process(String&& name, uid_t uid, gid_t gid, pid_t ppid, RingLevel ring, RetainPtr<Vnode>&& cwd, RetainPtr<Vnode>&& executable, TTY* tty, Process* fork_parent)
+Process::Process(String&& name, uid_t uid, gid_t gid, pid_t ppid, RingLevel ring, RetainPtr<Inode>&& cwd, RetainPtr<Inode>&& executable, TTY* tty, Process* fork_parent)
     : m_name(move(name))
     , m_pid(next_pid++) // FIXME: RACE: This variable looks racy!
     , m_uid(uid)
@@ -1075,6 +1075,10 @@ ssize_t Process::sys$read(int fd, void* outbuf, size_t nread)
     auto* descriptor = file_descriptor(fd);
     if (!descriptor)
         return -EBADF;
+#ifdef DEBUG_IO
+    dbgprintf("   > descriptor:%p, is_blocking:%u, can_read:%u\n", descriptor, descriptor->is_blocking(), descriptor->can_read(*this));
+    dbgprintf("   > inode:K%x, device:K%x\n", descriptor->inode(), descriptor->character_device());
+#endif
     if (descriptor->is_blocking()) {
         if (!descriptor->can_read(*this)) {
             m_blocked_fd = fd;
@@ -1252,7 +1256,7 @@ int Process::sys$chdir(const char* path)
         return error;
     if (!descriptor->is_directory())
         return -ENOTDIR;
-    m_cwd = descriptor->vnode();
+    m_cwd = descriptor->inode();
     return 0;
 }
 

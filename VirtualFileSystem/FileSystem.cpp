@@ -2,6 +2,7 @@
 #include <AK/HashMap.h>
 #include <LibC/errno_numbers.h>
 #include "FileSystem.h"
+#include "MemoryManager.h"
 
 static dword s_lastFileSystemID;
 static HashMap<dword, FS*>* s_fs_map;
@@ -14,7 +15,7 @@ static HashMap<dword, FS*>& all_fses()
     return *s_fs_map;
 }
 
-static HashTable<Inode*>& all_inodes()
+HashTable<Inode*>& all_inodes()
 {
     if (!s_inode_set)
         s_inode_set = new HashTable<Inode*>();
@@ -142,4 +143,9 @@ void FS::sync()
         if (inode->is_metadata_dirty())
             inode->flush_metadata();
     }
+}
+
+void Inode::set_vmo(RetainPtr<VMObject>&& vmo)
+{
+    m_vmo = move(vmo);
 }

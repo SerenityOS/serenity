@@ -35,46 +35,8 @@ inline constexpr dword encodedDevice(unsigned major, unsigned minor)
 
 class VFS;
 
-class Vnode {
-public:
-    InodeIdentifier inode;
-    InodeMetadata metadata() const;
-
-    bool inUse() const { return inode.is_valid() || m_characterDevice; }
-
-    bool isCharacterDevice() const { return m_characterDevice; }
-    CharacterDevice* characterDevice() { return m_characterDevice; }
-    const CharacterDevice* characterDevice() const { return m_characterDevice; }
-
-    void retain();
-    void release();
-
-    FS* fs() { return inode.fs(); }
-    const FS* fs() const { return inode.fs(); }
-
-    VFS* vfs() { return m_vfs; }
-    const VFS* vfs() const { return m_vfs; }
-
-    void* vmo() { return m_vmo; }
-    void set_vmo(void* vmo) { m_vmo = vmo; }
-
-    unsigned retain_count() const { return retainCount; }
-
-    Inode* core_inode() { return m_core_inode.ptr(); }
-
-private:
-    friend class VFS;
-    VFS* m_vfs { nullptr };
-    unsigned retainCount { 0 };
-    CharacterDevice* m_characterDevice { nullptr };
-    mutable InodeMetadata m_cachedMetadata;
-    void* m_vmo { nullptr };
-    RetainPtr<Inode> m_core_inode;
-};
-
 class VFS {
     AK_MAKE_ETERNAL
-    friend ByteBuffer procfs$vnodes();
 public:
     static void initialize_globals();
 
@@ -98,12 +60,6 @@ public:
     VFS();
     ~VFS();
 
-    unsigned max_vnode_count() const { return m_max_vnode_count; }
-    unsigned allocated_vnode_count() const { return m_max_vnode_count - m_vnode_freelist.size(); }
-
-    Vnode* root() { return m_root_vnode.ptr(); }
-    const Vnode* root() const { return m_root_vnode.ptr(); }
-
     bool mount_root(RetainPtr<FS>&&);
     bool mount(RetainPtr<FS>&&, const String& path);
 
@@ -122,12 +78,13 @@ public:
     String absolute_path(Inode&);
 
     InodeIdentifier root_inode_id() const;
+    Inode* root_inode() { return m_root_inode.ptr(); }
+    const Inode* root_inode() const { return m_root_inode.ptr(); }
 
     void sync();
 
 private:
     friend class FileDescriptor;
-    friend class Vnode;
 
     RetainPtr<Inode> get_inode(InodeIdentifier);
 
@@ -137,29 +94,11 @@ private:
     InodeIdentifier resolve_path(const String& path, InodeIdentifier base, int& error, int options = 0, InodeIdentifier* deepest_dir = nullptr);
     InodeIdentifier resolve_symbolic_link(InodeIdentifier base, Inode& symlink_inode, int& error);
 
-    RetainPtr<Vnode> allocateNode();
-    void freeNode(Vnode*);
-
-    RetainPtr<Vnode> makeNode(InodeIdentifier);
-    RetainPtr<Vnode> makeNode(CharacterDevice&);
-    RetainPtr<Vnode> get_or_create_node(InodeIdentifier);
-    RetainPtr<Vnode> get_or_create_node(CharacterDevice&);
-
     Mount* find_mount_for_host(InodeIdentifier);
     Mount* find_mount_for_guest(InodeIdentifier);
 
-    HashMap<InodeIdentifier, Vnode*> m_inode2vnode;
-    HashMap<dword, Vnode*> m_device2vnode;
-
+    RetainPtr<Inode> m_root_inode;
     Vector<OwnPtr<Mount>> m_mounts;
-
-    unsigned m_max_vnode_count { 0 };
-    Vnode* m_nodes { nullptr };
-
-    Vector<Vnode*> m_vnode_freelist;
-
-    RetainPtr<Vnode> m_root_vnode;
-
     HashMap<dword, CharacterDevice*> m_character_devices;
 };
 
