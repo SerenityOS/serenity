@@ -20,7 +20,7 @@ ALWAYS_INLINE void fast_dword_copy(dword* dest, const dword* src, size_t count)
 #ifdef SERENITY
     asm volatile(
         "rep movsl\n"
-        : "=S"(src), "=D"(dest)
+        : "=S"(src), "=D"(dest), "=c"(count)
         : "S"(src), "D"(dest), "c"(count)
         : "memory"
     );
@@ -34,7 +34,7 @@ ALWAYS_INLINE void fast_dword_fill(dword* dest, dword value, size_t count)
 #ifdef SERENITY
     asm volatile(
         "rep stosl\n"
-        : "=D"(dest)
+        : "=D"(dest), "=c"(count)
         : "D"(dest), "c"(count), "a"(value)
         : "memory"
     );

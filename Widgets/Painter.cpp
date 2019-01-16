@@ -226,9 +226,15 @@ void Painter::blit(const Point& position, const GraphicsBitmap& source)
     Rect dst_rect(position, source.size());
     dst_rect.intersect(m_clip_rect);
 
-    for (int y = 0; y < dst_rect.height(); ++y) {
-        auto* dst_scanline = m_target->scanline(position.y() + y);
-        auto* src_scanline = source.scanline(y);
-        fast_dword_copy(dst_scanline + dst_rect.x(), src_scanline + (dst_rect.x() - position.x()), dst_rect.width());
+    RGBA32* dst = m_target->scanline(position.y()) + dst_rect.x();
+    const RGBA32* src= source.scanline(0) + (dst_rect.x() - position.x());
+
+    const unsigned dst_skip = m_target->width();
+    const unsigned src_skip = source.width();
+
+    for (int i = dst_rect.height() - 1; i >= 0; --i) {
+        fast_dword_copy(dst, src, dst_rect.width());
+        dst += dst_skip;
+        src += src_skip;
     }
 }
