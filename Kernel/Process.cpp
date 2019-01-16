@@ -1551,7 +1551,8 @@ pid_t Process::sys$waitpid(pid_t waitee, int* wstatus, int options)
 void Process::unblock()
 {
     if (current == this) {
-        kprintf("ignoring unblock() on current, %s(%u) {%s}\n", name().characters(), pid(), toString(state()));
+        system.nblocked--;
+        m_state = Process::Running;
         return;
     }
     ASSERT(m_state != Process::Runnable && m_state != Process::Running);

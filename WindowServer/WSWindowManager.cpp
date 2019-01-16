@@ -10,6 +10,7 @@
 #include <AK/StdLibExtras.h>
 
 //#define DEBUG_FLUSH_YELLOW
+//#define DEBUG_COUNTERS
 
 static const int windowTitleBarHeight = 16;
 
@@ -109,6 +110,10 @@ WSWindowManager::WSWindowManager()
     : m_framebuffer(WSFrameBuffer::the())
     , m_screen_rect(m_framebuffer.rect())
 {
+#ifndef DEBUG_COUNTERS
+    (void)m_recompose_count;
+    (void)m_flush_count;
+#endif
     auto size = m_screen_rect.size();
     m_front_bitmap = GraphicsBitmap::create_wrapper(size, m_framebuffer.scanline(0));
     auto* region = current->allocate_region(LinearAddress(), size.width() * size.height() * sizeof(RGBA32), "BackBitmap", true, true, true);
@@ -266,9 +271,10 @@ void WSWindowManager::processMouseEvent(MouseEvent& event)
 void WSWindowManager::compose()
 {
     auto invalidated_rects = move(m_invalidated_rects);
-    printf("[WM] compose #%u (%u rects)\n", ++m_recompose_count, invalidated_rects.size());
-
+#ifdef DEBUG_COUNTERS
+    dbgprintf("[WM] compose #%u (%u rects)\n", ++m_recompose_count, invalidated_rects.size());
     dbgprintf("kmalloc stats: alloc:%u free:%u eternal:%u\n", sum_alloc, sum_free, kmalloc_sum_eternal);
+#endif
 
     auto any_window_contains_rect = [this] (const Rect& r) {
         for (auto* window = m_windows_in_order.head(); window; window = window->next()) {
@@ -386,6 +392,10 @@ void WSWindowManager::invalidate(const WSWindow& window)
 void WSWindowManager::flush(const Rect& a_rect)
 {
     auto rect = Rect::intersection(a_rect, m_screen_rect);
+
+#ifdef DEBUG_COUNTERS
+    dbgprintf("[WM] flush #%u (%d,%d %dx%d)\n", ++m_flush_count, rect.x(), rect.y(), rect.width(), rect.height());
+#endif
 
     RGBA32* front_ptr = m_front_bitmap->scanline(rect.y()) + rect.x();
     const RGBA32* back_ptr = m_back_bitmap->scanline(rect.y()) + rect.x();

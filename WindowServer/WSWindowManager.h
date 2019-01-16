@@ -77,6 +77,7 @@ private:
     Rect m_last_cursor_rect;
 
     unsigned m_recompose_count { 0 };
+    unsigned m_flush_count { 0 };
 
     RetainPtr<GraphicsBitmap> m_front_bitmap;
     RetainPtr<GraphicsBitmap> m_back_bitmap;
