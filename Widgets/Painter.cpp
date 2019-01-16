@@ -60,14 +60,31 @@ void Painter::draw_rect(const Rect& rect, Color color)
     int min_x = max(r.left(), m_clip_rect.left());
     int max_x = min(r.right(), m_clip_rect.right());
 
-    for (int y = min_y; y <= max_y; ++y) {
-        auto* bits = m_target->scanline(y);
-        if (y == r.top() || y == r.bottom()) {
-            fast_dword_fill(bits + min_x, color.value(), max_x - min_x + 1);
-        } else {
-            if (r.left() >= m_clip_rect.left() && r.left() <= m_clip_rect.right())
+    if (r.top() >= min_y && r.top() <= max_y) {
+        fast_dword_fill(m_target->scanline(r.top()) + min_x, color.value(), max_x - min_x + 1);
+        ++min_y;
+    }
+    if (r.bottom() <= max_y && r.bottom() >= min_y) {
+        fast_dword_fill(m_target->scanline(r.bottom()) + min_x, color.value(), max_x - min_x + 1);
+        --max_y;
+    }
+
+    bool draw_left_side = r.left() >= m_clip_rect.left() && r.left() <= m_clip_rect.right();
+    bool draw_right_side = r.right() >= m_clip_rect.left() && r.right() <= m_clip_rect.right();
+
+    if (draw_left_side && draw_right_side) {
+        // Specialized loop when drawing both sides.
+        for (int y = min_y; y <= max_y; ++y) {
+            auto* bits = m_target->scanline(y);
+            bits[r.left()] = color.value();
+            bits[r.right()] = color.value();
+        }
+    } else {
+        for (int y = min_y; y <= max_y; ++y) {
+            auto* bits = m_target->scanline(y);
+            if (draw_left_side)
                 bits[r.left()] = color.value();
-            if (r.right() >= m_clip_rect.left() && r.right() <= m_clip_rect.right())
+            if (draw_right_side)
                 bits[r.right()] = color.value();
         }
     }

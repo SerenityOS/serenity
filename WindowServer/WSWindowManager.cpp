@@ -158,9 +158,9 @@ void WSWindowManager::paintWindowFrame(WSWindow& window)
     auto titleColor = &window == activeWindow() ? m_activeWindowTitleColor : m_inactiveWindowTitleColor;
     auto borderColor = &window == activeWindow() ? m_activeWindowBorderColor : m_inactiveWindowBorderColor;
 
+    m_back_painter->fill_rect(titleBarRect, borderColor);
     m_back_painter->draw_rect(borderRect, Color::MidGray);
     m_back_painter->draw_rect(outerRect, borderColor);
-    m_back_painter->fill_rect(titleBarRect, borderColor);
     m_back_painter->draw_rect(inner_border_rect, borderColor);
     m_back_painter->draw_text(titleBarTitleRect, window.title(), Painter::TextAlignment::CenterLeft, titleColor);
 }
