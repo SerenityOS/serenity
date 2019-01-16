@@ -75,15 +75,15 @@ static const char* checkedBitmap = {
 void CheckBox::paintEvent(PaintEvent&)
 {
     Painter painter(*this);
-    auto bitmap = CharacterBitmap::createFromASCII(isChecked() ? checkedBitmap : uncheckedBitmap, 11, 11);
+    auto bitmap = CharacterBitmap::create_from_ascii(isChecked() ? checkedBitmap : uncheckedBitmap, 11, 11);
 
     auto textRect = rect();
     textRect.set_left(bitmap->width() + 4);
-    textRect.set_top(height() / 2 - font().glyphHeight() / 2);
+    textRect.set_top(height() / 2 - font().glyph_height() / 2);
 
     Point bitmapPosition;
-    bitmapPosition.setX(2);
-    bitmapPosition.setY(height() / 2 - bitmap->height() / 2 - 1);
+    bitmapPosition.set_x(2);
+    bitmapPosition.set_y(height() / 2 - bitmap->height() / 2 - 1);
 
     painter.fill_rect(rect(), backgroundColor());
     painter.draw_bitmap(bitmapPosition, *bitmap, foregroundColor());

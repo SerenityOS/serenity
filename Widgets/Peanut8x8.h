@@ -2,10 +2,10 @@
 
 namespace Peanut8x8 {
 
-static constexpr char firstCharacter = '!';
-static constexpr char lastCharacter = '~';
-static constexpr byte fontWidth = 8;
-static constexpr byte fontHeight = 8;
+static constexpr char first_character = '!';
+static constexpr char last_character = '~';
+static constexpr byte font_width = 8;
+static constexpr byte font_height = 8;
 
 static constexpr const char* font[] {
 

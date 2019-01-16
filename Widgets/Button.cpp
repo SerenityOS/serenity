@@ -59,7 +59,7 @@ void Button::paintEvent(PaintEvent&)
     if (!caption().is_empty()) {
         auto textRect = rect();
         if (m_beingPressed)
-            textRect.moveBy(1, 1);
+            textRect.move_by(1, 1);
         painter.draw_text(textRect, caption(), Painter::TextAlignment::Center, Color::Black);
     }
 }

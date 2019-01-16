@@ -151,7 +151,7 @@ void Widget::setFocus(bool focus)
 void Widget::setFont(RetainPtr<Font>&& font)
 {
     if (!font)
-        m_font = Font::defaultFont();
+        m_font = Font::default_font();
     else
         m_font = move(font);
 }

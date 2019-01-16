@@ -34,12 +34,12 @@ WSScreen::~WSScreen()
 void WSScreen::on_receive_mouse_data(int dx, int dy, bool left_button, bool right_button)
 {
     auto prev_location = m_cursor_location;
-    m_cursor_location.moveBy(dx, dy);
+    m_cursor_location.move_by(dx, dy);
     m_cursor_location.constrain(rect());
     if (m_cursor_location.x() >= width())
-        m_cursor_location.setX(width() - 1);
+        m_cursor_location.set_x(width() - 1);
     if (m_cursor_location.y() >= height())
-        m_cursor_location.setY(height() - 1);
+        m_cursor_location.set_y(height() - 1);
     if (m_cursor_location != prev_location) {
         auto event = make<MouseEvent>(WSEvent::MouseMove, m_cursor_location.x(), m_cursor_location.y());
         WSEventLoop::the().post_event(&WSWindowManager::the(), move(event));

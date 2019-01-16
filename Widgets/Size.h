@@ -13,8 +13,8 @@ public:
     int width() const { return m_width; }
     int height() const { return m_height; }
 
-    void setWidth(int w) { m_width = w; }
-    void setHeight(int h) { m_height = h; }
+    void set_width(int w) { m_width = w; }
+    void set_height(int h) { m_height = h; }
 
     bool operator==(const Size& other) const
     {

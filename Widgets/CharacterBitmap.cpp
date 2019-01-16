@@ -1,7 +1,7 @@
 #include "CharacterBitmap.h"
 
-CharacterBitmap::CharacterBitmap(const char* asciiData, unsigned width, unsigned height)
-    : m_bits(asciiData)
+CharacterBitmap::CharacterBitmap(const char* ascii_data, unsigned width, unsigned height)
+    : m_bits(ascii_data)
     , m_size(width, height)
 {
 }
@@ -10,7 +10,7 @@ CharacterBitmap::~CharacterBitmap()
 {
 }
 
-RetainPtr<CharacterBitmap> CharacterBitmap::createFromASCII(const char* asciiData, unsigned width, unsigned height)
+RetainPtr<CharacterBitmap> CharacterBitmap::create_from_ascii(const char* asciiData, unsigned width, unsigned height)
 {
     return adopt(*new CharacterBitmap(asciiData, width, height));
 }

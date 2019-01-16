@@ -35,18 +35,18 @@ void TextBox::paintEvent(PaintEvent&)
     Rect innerRect = rect();
     innerRect.shrink(6, 6);
 
-    size_t maxCharsToPaint = innerRect.width() / font().glyphWidth();
+    size_t maxCharsToPaint = innerRect.width() / font().glyph_width();
 
     int firstVisibleChar = max((int)m_cursorPosition - (int)maxCharsToPaint, 0);
     size_t charsToPaint = min(m_text.length() - firstVisibleChar, maxCharsToPaint);
 
-    int y = innerRect.center().y() - font().glyphHeight() / 2;
+    int y = innerRect.center().y() - font().glyph_height() / 2;
     for (size_t i = 0; i < charsToPaint; ++i) {
         char ch = m_text[firstVisibleChar + i];
         if (ch == ' ')
             continue;
-        int x = innerRect.x() + (i * font().glyphWidth());
-        auto* bitmap = font().glyphBitmap(ch);
+        int x = innerRect.x() + (i * font().glyph_width());
+        auto* bitmap = font().glyph_bitmap(ch);
         if (!bitmap) {
             printf("TextBox: glyph missing: %02x\n", ch);
             ASSERT_NOT_REACHED();
@@ -56,7 +56,7 @@ void TextBox::paintEvent(PaintEvent&)
 
     if (isFocused() && m_cursorBlinkState) {
         unsigned visibleCursorPosition = m_cursorPosition - firstVisibleChar;
-        Rect cursorRect(innerRect.x() + visibleCursorPosition * font().glyphWidth(), innerRect.y(), 1, innerRect.height());
+        Rect cursorRect(innerRect.x() + visibleCursorPosition * font().glyph_width(), innerRect.y(), 1, innerRect.height());
         painter.fill_rect(cursorRect, foregroundColor());
     }
 }

@@ -15,10 +15,10 @@ void Rect::intersect(const Rect& other)
         return;
     }
 
-    m_location.setX(l);
-    m_location.setY(t);
-    m_size.setWidth((r - l) + 1);
-    m_size.setHeight((b - t) + 1);
+    m_location.set_x(l);
+    m_location.set_y(t);
+    m_size.set_width((r - l) + 1);
+    m_size.set_height((b - t) + 1);
 }
 
 Rect Rect::united(const Rect& other) const

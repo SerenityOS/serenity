@@ -9,7 +9,7 @@
 
 Painter::Painter(GraphicsBitmap& bitmap)
 {
-    m_font = &Font::defaultFont();
+    m_font = &Font::default_font();
     m_target = &bitmap;
     m_clip_rect = { { 0, 0 }, bitmap.size() };
 }
@@ -20,7 +20,7 @@ Painter::Painter(Widget& widget)
     m_target = widget.backing();
     ASSERT(m_target);
     m_window = widget.window();
-    m_translation.moveBy(widget.relativePosition());
+    m_translation.move_by(widget.relativePosition());
     // NOTE: m_clip_rect is in Window coordinates since we are painting into its backing store.
     m_clip_rect = widget.relativeRect();
 
@@ -38,7 +38,7 @@ Painter::~Painter()
 void Painter::fill_rect(const Rect& rect, Color color)
 {
     Rect r = rect;
-    r.moveBy(m_translation);
+    r.move_by(m_translation);
 
     int min_y = max(r.top(), m_clip_rect.top());
     int max_y = min(r.bottom(), m_clip_rect.bottom());
@@ -53,7 +53,7 @@ void Painter::fill_rect(const Rect& rect, Color color)
 void Painter::draw_rect(const Rect& rect, Color color)
 {
     Rect r = rect;
-    r.moveBy(m_translation);
+    r.move_by(m_translation);
 
     int min_y = max(r.top(), m_clip_rect.top());
     int max_y = min(r.bottom(), m_clip_rect.bottom());
@@ -76,7 +76,7 @@ void Painter::draw_rect(const Rect& rect, Color color)
 void Painter::draw_bitmap(const Point& p, const CharacterBitmap& bitmap, Color color)
 {
     Point point = p;
-    point.moveBy(m_translation);
+    point.move_by(m_translation);
     for (unsigned row = 0; row < bitmap.height(); ++row) {
         int y = point.y() + row;
         if (y < m_clip_rect.top() || y > m_clip_rect.bottom())
@@ -95,7 +95,7 @@ void Painter::draw_bitmap(const Point& p, const CharacterBitmap& bitmap, Color c
 
 void Painter::draw_glyph(const Point& point, char ch, Color color)
 {
-    auto* bitmap = font().glyphBitmap(ch);
+    auto* bitmap = font().glyph_bitmap(ch);
     if (!bitmap) {
         dbgprintf("Font doesn't have 0x%b ('%c')\n", (byte)ch, ch);
         ASSERT_NOT_REACHED();
@@ -112,16 +112,16 @@ void Painter::draw_text(const Rect& rect, const String& text, TextAlignment alig
     if (alignment == TextAlignment::TopLeft) {
         point = rect.location();
     } else if (alignment == TextAlignment::CenterLeft) {
-        point = { rect.x(), rect.center().y() - (font().glyphHeight() / 2) };
+        point = { rect.x(), rect.center().y() - (font().glyph_height() / 2) };
     } else if (alignment == TextAlignment::Center) {
-        int textWidth = text.length() * font().glyphWidth();
+        int textWidth = text.length() * font().glyph_width();
         point = rect.center();
-        point.moveBy(-(textWidth / 2), -(font().glyphHeight() / 2));
+        point.move_by(-(textWidth / 2), -(font().glyph_height() / 2));
     } else {
         ASSERT_NOT_REACHED();
     }
 
-    for (unsigned i = 0; i < text.length(); ++i, point.moveBy(font().glyphWidth(), 0)) {
+    for (unsigned i = 0; i < text.length(); ++i, point.move_by(font().glyph_width(), 0)) {
         byte ch = text[i];
         if (ch == ' ')
             continue;
@@ -132,7 +132,7 @@ void Painter::draw_text(const Rect& rect, const String& text, TextAlignment alig
 void Painter::set_pixel(const Point& p, Color color)
 {
     auto point = p;
-    point.moveBy(m_translation);
+    point.move_by(m_translation);
     if (!m_clip_rect.contains(point))
         return;
     m_target->scanline(point.y())[point.x()] = color.value();
@@ -149,10 +149,10 @@ ALWAYS_INLINE void Painter::set_pixel_with_draw_op(dword& pixel, const Color& co
 void Painter::draw_line(const Point& p1, const Point& p2, Color color)
 {
     auto point1 = p1;
-    point1.moveBy(m_translation);
+    point1.move_by(m_translation);
 
     auto point2 = p2;
-    point2.moveBy(m_translation);
+    point2.move_by(m_translation);
 
     // Special case: vertical line.
     if (point1.x() == point2.x()) {
@@ -215,9 +215,9 @@ void Painter::draw_line(const Point& p1, const Point& p2, Color color)
 void Painter::draw_focus_rect(const Rect& rect)
 {
     Rect focus_rect = rect;
-    focus_rect.moveBy(1, 1);
-    focus_rect.setWidth(focus_rect.width() - 2);
-    focus_rect.setHeight(focus_rect.height() - 2);
+    focus_rect.move_by(1, 1);
+    focus_rect.set_width(focus_rect.width() - 2);
+    focus_rect.set_height(focus_rect.height() - 2);
     draw_rect(focus_rect, Color(96, 96, 192));
 }
 

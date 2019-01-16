@@ -14,7 +14,7 @@ TerminalWidget::TerminalWidget(Widget* parent)
 {
     g_tw = this;
 
-    setWindowRelativeRect({ 0, 0, int(columns() * font().glyphWidth()) + 4, int(rows() * font().glyphHeight()) + 4 });
+    setWindowRelativeRect({ 0, 0, int(columns() * font().glyph_width()) + 4, int(rows() * font().glyph_height()) + 4 });
 
     printf("rekt: %d x %d\n", width(), height());
     m_screen = new CharacterWithAttributes[rows() * columns()]; 
@@ -71,11 +71,11 @@ void TerminalWidget::paintEvent(PaintEvent&)
 
     char buf[2] = { 0, 0 };
     for (unsigned row = 0; row < m_rows; ++row) {
-        int y = row * font().glyphHeight();
+        int y = row * font().glyph_height();
         for (unsigned column = 0; column < m_columns; ++column) {
-            int x = column * font().glyphWidth();
+            int x = column * font().glyph_width();
             buf[0] = at(row, column).character;
-            painter.draw_text({ x + 2, y + 2, width(), font().glyphHeight() }, buf, Painter::TextAlignment::TopLeft, Color(0xa0, 0xa0, 0xa0));
+            painter.draw_text({ x + 2, y + 2, width(), font().glyph_height() }, buf, Painter::TextAlignment::TopLeft, Color(0xa0, 0xa0, 0xa0));
         }
     }
 

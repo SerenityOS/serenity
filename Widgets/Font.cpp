@@ -1,6 +1,5 @@
 #include "Font.h"
 #include "Peanut8x10.h"
-#include <AK/RetainPtr.h>
 
 static Font* s_default_font;
 
@@ -9,19 +8,19 @@ void Font::initialize()
     s_default_font = nullptr;
 }
 
-Font& Font::defaultFont()
+Font& Font::default_font()
 {
     if (!s_default_font)
-        s_default_font = adopt(*new Font(Peanut8x10::glyphs, Peanut8x10::glyphWidth, Peanut8x10::glyphHeight, Peanut8x10::firstGlyph, Peanut8x10::lastGlyph)).leakRef();
+        s_default_font = adopt(*new Font(Peanut8x10::glyphs, Peanut8x10::glyph_width, Peanut8x10::glyph_height, Peanut8x10::first_glyph, Peanut8x10::last_glyph)).leakRef();
     return *s_default_font;
 }
 
-Font::Font(const char* const* glyphs, byte glyphWidth, byte glyphHeight, byte firstGlyph, byte lastGlyph)
+Font::Font(const char* const* glyphs, byte glyph_width, byte glyph_height, byte first_glyph, byte last_glyph)
     : m_glyphs(glyphs)
-    , m_glyphWidth(glyphWidth)
-    , m_glyphHeight(glyphHeight)
-    , m_firstGlyph(firstGlyph)
-    , m_lastGlyph(lastGlyph)
+    , m_glyph_width(glyph_width)
+    , m_glyph_height(glyph_height)
+    , m_first_glyph(first_glyph)
+    , m_last_glyph(last_glyph)
 {
 }
 
@@ -29,14 +28,14 @@ Font::~Font()
 {
 }
 
-const CharacterBitmap* Font::glyphBitmap(byte ch) const
+const CharacterBitmap* Font::glyph_bitmap(byte ch) const
 {
     if (!m_bitmaps[ch]) {
-        if (ch < m_firstGlyph || ch > m_lastGlyph)
+        if (ch < m_first_glyph || ch > m_last_glyph)
             return nullptr;
-        const char* data = m_glyphs[(unsigned)ch - m_firstGlyph];
-        m_bitmaps[ch] = CharacterBitmap::createFromASCII(data, m_glyphWidth, m_glyphHeight);
+        const char* data = m_glyphs[(unsigned)ch - m_first_glyph];
+        m_bitmaps[ch] = CharacterBitmap::create_from_ascii(data, m_glyph_width, m_glyph_height);
     }
-    ASSERT(ch >= m_firstGlyph && ch <= m_lastGlyph);
+    ASSERT(ch >= m_first_glyph && ch <= m_last_glyph);
     return m_bitmaps[ch].ptr();
 }

@@ -128,8 +128,8 @@ WSWindowManager::WSWindowManager()
     m_inactiveWindowBorderColor = Color(64, 64, 64);
     m_inactiveWindowTitleColor = Color::White;
 
-    m_cursor_bitmap_inner = CharacterBitmap::createFromASCII(cursor_bitmap_inner_ascii, 12, 17);
-    m_cursor_bitmap_outer = CharacterBitmap::createFromASCII(cursor_bitmap_outer_ascii, 12, 17);
+    m_cursor_bitmap_inner = CharacterBitmap::create_from_ascii(cursor_bitmap_inner_ascii, 12, 17);
+    m_cursor_bitmap_outer = CharacterBitmap::create_from_ascii(cursor_bitmap_outer_ascii, 12, 17);
 
     invalidate();
     compose();
@@ -237,7 +237,7 @@ void WSWindowManager::processMouseEvent(MouseEvent& event)
             auto old_window_rect = m_dragWindow->rect();
             Point pos = m_dragWindowOrigin;
             printf("[WM] Dragging [origin: %d,%d] now: %d,%d\n", m_dragOrigin.x(), m_dragOrigin.y(), event.x(), event.y());
-            pos.moveBy(event.x() - m_dragOrigin.x(), event.y() - m_dragOrigin.y());
+            pos.move_by(event.x() - m_dragOrigin.x(), event.y() - m_dragOrigin.y());
             m_dragWindow->set_position_without_repaint(pos);
             invalidate(outerRectForWindow(old_window_rect));
             invalidate(outerRectForWindow(m_dragWindow->rect()));
