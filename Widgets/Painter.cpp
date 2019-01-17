@@ -35,18 +35,18 @@ Painter::~Painter()
 {
 }
 
-void Painter::fill_rect(const Rect& rect, Color color)
+void Painter::fill_rect(const Rect& a_rect, Color color)
 {
-    Rect r = rect;
-    r.move_by(m_translation);
+    auto rect = a_rect;
+    rect.move_by(m_translation);
+    rect.intersect(m_clip_rect);
 
-    int min_y = max(r.top(), m_clip_rect.top());
-    int max_y = min(r.bottom(), m_clip_rect.bottom());
-    int min_x = max(r.left(), m_clip_rect.left());
-    int max_x = min(r.right(), m_clip_rect.right());
-    for (int y = min_y; y <= max_y; ++y) {
-        RGBA32* bits = m_target->scanline(y);
-        fast_dword_fill(bits + min_x, color.value(), max_x - min_x + 1);
+    RGBA32* dst = m_target->scanline(rect.top()) + rect.left();
+    const unsigned dst_skip = m_target->width();
+
+    for (int i = rect.height() - 1; i >= 0; --i) {
+        fast_dword_fill(dst, color.value(), rect.width());
+        dst += dst_skip;
     }
 }
 
