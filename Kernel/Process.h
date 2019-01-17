@@ -254,7 +254,7 @@ public:
     bool is_root() const { return m_euid == 0; }
 
     Vector<GUI_Event>& gui_events() { return m_gui_events; }
-    SpinLock& gui_events_lock() { return m_gui_events_lock; }
+    Lock& gui_events_lock() { return m_gui_events_lock; }
 
     bool wakeup_requested() { return m_wakeup_requested; }
     void request_wakeup() { m_wakeup_requested = true; }
@@ -358,7 +358,7 @@ private:
     HashMap<int, OwnPtr<WSWindow>> m_windows;
 
     Vector<GUI_Event> m_gui_events;
-    SpinLock m_gui_events_lock;
+    Lock m_gui_events_lock;
     int m_next_window_id { 1 };
 
     dword m_wakeup_requested { false };

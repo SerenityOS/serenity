@@ -30,5 +30,5 @@ private:
     Vector<byte> m_buffer2;
     size_t m_read_buffer_index { 0 };
     bool m_empty { true };
-    SpinLock m_lock;
+    Lock m_lock;
 };

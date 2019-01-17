@@ -23,7 +23,7 @@ int main(int c, char** v)
     StringImpl::initialize_globals();
 
     {
-        SpinLock lock;
+        Lock lock;
         Locker locker(lock);
     }
 

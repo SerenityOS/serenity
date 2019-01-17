@@ -92,5 +92,5 @@ private:
     OwnPtr<Painter> m_back_painter;
     OwnPtr<Painter> m_front_painter;
 
-    mutable SpinLock m_lock;
+    mutable Lock m_lock;
 };

@@ -29,7 +29,7 @@ private:
     void drain_mouse();
     void drain_keyboard();
 
-    SpinLock m_lock;
+    Lock m_lock;
 
     struct QueuedEvent {
         WSEventReceiver* receiver { nullptr };
