@@ -119,13 +119,13 @@ void WSEventLoop::drain_mouse()
     int dx = 0;
     int dy = 0;
     while (mouse.can_read(*m_server_process)) {
-        signed_byte data[3];
+        byte data[3];
         ssize_t nread = mouse.read(*m_server_process, (byte*)data, sizeof(data));
         ASSERT(nread == sizeof(data));
         bool left_button = data[0] & 1;
         bool right_button = data[0] & 2;
-        dx += data[1];
-        dy += -data[2];
+        dx += data[1] ? (int)data[1] - (int)((data[0] << 4) & 0x100) : 0;
+        dy += data[2] ? (int)((data[0] << 3) & 0x100) - (int)data[2] : 0;
         if (left_button != prev_left_button || right_button != prev_right_button || !mouse.can_read(*m_server_process)) {
             prev_left_button = left_button;
             prev_right_button = right_button;
