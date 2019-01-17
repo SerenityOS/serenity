@@ -4,7 +4,9 @@
 #include <AK/Types.h>
 #include <AK/Vector.h>
 #include <Widgets/GraphicsBitmap.h>
+#include <Widgets/Rect.h>
 
+class Font;
 
 class Terminal {
 public:
@@ -16,6 +18,7 @@ public:
     void on_char(byte);
 
 private:
+    Font& font() { return *m_font; }
     void scroll_up();
     void set_cursor(unsigned row, unsigned column);
     void put_character_at(unsigned row, unsigned column, byte ch);
@@ -33,6 +36,7 @@ private:
     void set_size(word columns, word rows);
     word columns() const { return m_columns; }
     word rows() const { return m_rows; }
+    Rect glyph_rect(word row, word column);
 
     struct Attribute {
         Attribute() { reset(); }
@@ -62,6 +66,8 @@ private:
 
     Attribute m_current_attribute;
 
+    Attribute& attribute_at(word row, word column);
+
     void execute_escape_sequence(byte final);
 
     enum EscapeState {
@@ -86,4 +92,7 @@ private:
 
     int m_inset { 2 };
     int m_line_spacing { 4 };
+    int m_line_height { 0 };
+
+    RetainPtr<Font> m_font;
 };
