@@ -11,10 +11,8 @@
 
 void Terminal::create_window()
 {
-    auto& font = Font::default_font();
-
-    m_pixel_width = m_columns * font.glyph_width() + m_inset * 2;
-    m_pixel_height = (m_rows * (font.glyph_height() + m_line_spacing)) + (m_inset * 2) - m_line_spacing;
+    m_pixel_width = m_columns * font().glyph_width() + m_inset * 2;
+    m_pixel_height = (m_rows * (font().glyph_height() + m_line_spacing)) + (m_inset * 2) - m_line_spacing;
 
     GUI_CreateWindowParameters params;
     params.rect = { { 300, 300 }, { m_pixel_width, m_pixel_height } };
@@ -40,7 +38,10 @@ void Terminal::create_window()
 }
 
 Terminal::Terminal()
+    : m_font(Font::default_font())
 {
+    m_line_height = font().glyph_height() + m_line_spacing;
+
     set_size(80, 25);
     m_horizontal_tabs = static_cast<byte*>(malloc(columns()));
     for (unsigned i = 0; i < columns(); ++i)
@@ -279,6 +280,7 @@ void Terminal::execute_escape_sequence(byte final)
 
 void Terminal::scroll_up()
 {
+    word new_row = m_cursor_row;
     if (m_cursor_row == (rows() - 1)) {
         memcpy(m_buffer, m_buffer + m_columns, m_columns * (m_rows - 1));
 #ifdef FAST_SCROLL
@@ -289,21 +291,24 @@ void Terminal::scroll_up()
         }
 #endif
         memset(&m_buffer[(m_rows - 1) * m_columns], ' ', m_columns);
+        attribute_at(m_cursor_row, m_cursor_column).dirty = true;
         memcpy(m_attributes, m_attributes + m_columns, m_columns * (m_rows - 1) * sizeof(Attribute));
         for (size_t i = 0; i < m_columns; ++i)
             m_attributes[((m_rows - 1) * m_columns) + i].reset();
     } else {
-        ++m_cursor_row;
+        ++new_row;
     }
-    m_cursor_column = 0;
+    set_cursor(new_row, 0);
 }
 
 void Terminal::set_cursor(unsigned row, unsigned column)
 {
     ASSERT(row < rows());
     ASSERT(column < columns());
+    attribute_at(m_cursor_row, m_cursor_column).dirty = true;
     m_cursor_row = row;
     m_cursor_column = column;
+    attribute_at(m_cursor_row, m_cursor_column).dirty = true;
 }
 
 void Terminal::put_character_at(unsigned row, unsigned column, byte ch)
@@ -377,16 +382,16 @@ void Terminal::on_char(byte ch)
     }
     case '\n':
         scroll_up();
-        set_cursor(m_cursor_row, m_cursor_column);
         return;
     }
 
     put_character_at(m_cursor_row, m_cursor_column, ch);
 
-    ++m_cursor_column;
-    if (m_cursor_column >= columns())
+    auto new_column = m_cursor_column + 1;
+    if (new_column < columns())
+        set_cursor(m_cursor_row, new_column);
+    else
         scroll_up();
-    set_cursor(m_cursor_row, m_cursor_column);
 }
 
 void Terminal::set_size(word columns, word rows)
@@ -395,44 +400,56 @@ void Terminal::set_size(word columns, word rows)
     m_rows = rows;
 }
 
+Rect Terminal::glyph_rect(word row, word column)
+{
+    int y = row * m_line_height;
+    int x = column * font().glyph_width();
+    return { x + m_inset, y + m_inset, font().glyph_width(), m_line_height };
+}
+
+inline Terminal::Attribute& Terminal::attribute_at(word row, word column)
+{
+    return m_attributes[(row * m_columns) + column];
+}
+
 void Terminal::paint()
 {
     Rect rect { 0, 0, m_pixel_width, m_pixel_height };
-    Font& font = Font::default_font();
     Painter painter(*m_backing);
-    int line_height = Font::default_font().glyph_height() + m_line_spacing;
 #ifdef FAST_SCROLL
     if (m_rows_to_scroll_backing_store && m_rows_to_scroll_backing_store < m_rows) {
         int first_scanline = m_inset;
-        int second_scanline = m_inset + (m_rows_to_scroll_backing_store * line_height);
+        int second_scanline = m_inset + (m_rows_to_scroll_backing_store * m_line_height);
         int num_rows_to_memcpy = m_rows - m_rows_to_scroll_backing_store;
-        int scanlines_to_copy = (num_rows_to_memcpy * line_height) - m_line_spacing;
+        int scanlines_to_copy = (num_rows_to_memcpy * m_line_height) - m_line_spacing;
         fast_dword_copy(
             m_backing->scanline(first_scanline),
             m_backing->scanline(second_scanline),
             scanlines_to_copy * m_pixel_width
         );
+        attribute_at(m_cursor_row - m_rows_to_scroll_backing_store, m_cursor_column).dirty = true;
     }
     m_rows_to_scroll_backing_store = 0;
 #endif
 
     for (word row = 0; row < m_rows; ++row) {
-        int y = row * line_height;
         for (word column = 0; column < m_columns; ++column) {
-            auto& attribute = m_attributes[(row * m_columns) + (column)];
+            auto& attribute = attribute_at(row, column);
             if (!attribute.dirty)
                 continue;
             attribute.dirty = false;
             char ch = m_buffer[(row * m_columns) + (column)];
-            int x = column * font.glyph_width();
-            Rect glyph_rect { x + m_inset, y + m_inset, font.glyph_width(), line_height };
-            auto glyph_background = ansi_color(attribute.background_color);
-            painter.fill_rect(glyph_rect, glyph_background);
+            auto character_rect = glyph_rect(row, column);
+            auto character_background = ansi_color(attribute.background_color);
+            painter.fill_rect(character_rect, character_background);
             if (ch == ' ')
                 continue;
-            painter.draw_glyph(glyph_rect.location(), ch, ansi_color(attribute.foreground_color));
+            painter.draw_glyph(character_rect.location(), ch, ansi_color(attribute.foreground_color));
         }
     }
+
+    auto cursor_rect = glyph_rect(m_cursor_row, m_cursor_column);
+    painter.draw_rect(cursor_rect, Color::MidGray);
 
     if (m_belling)
         painter.draw_rect(rect, Color::Red);
