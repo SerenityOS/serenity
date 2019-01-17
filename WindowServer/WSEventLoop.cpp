@@ -74,11 +74,23 @@ int WSEventLoop::exec()
 
 void WSEventLoop::post_event(WSEventReceiver* receiver, OwnPtr<WSEvent>&& event)
 {
-    //ASSERT_INTERRUPTS_ENABLED();
+    ASSERT_INTERRUPTS_ENABLED();
     LOCKER(m_lock);
 #ifdef WSEVENTLOOP_DEBUG
     dbgprintf("WSEventLoop::post_event: {%u} << receiver=%p, event=%p\n", m_queued_events.size(), receiver, event.ptr());
 #endif
+
+    if (event->type() == WSEvent::WM_Invalidate) {
+        for (auto& queued_event : m_queued_events) {
+            if (receiver == queued_event.receiver && queued_event.event->type() == WSEvent::WM_Invalidate) {
+#ifdef WSEVENTLOOP_DEBUG
+                dbgprintf("Swallow WM_Invalidate\n");
+#endif
+                return;
+            }
+        }
+    }
+
     m_queued_events.append({ receiver, move(event) });
 
     if (current != m_server_process)
