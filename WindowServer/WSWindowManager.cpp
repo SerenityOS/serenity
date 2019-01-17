@@ -141,6 +141,7 @@ WSWindowManager::~WSWindowManager()
 
 void WSWindowManager::paintWindowFrame(WSWindow& window)
 {
+    LOCKER(m_lock);
     //printf("[WM] paintWindowFrame {%p}, rect: %d,%d %dx%d\n", &window, window.rect().x(), window.rect().y(), window.rect().width(), window.rect().height());
 
     auto titleBarRect = titleBarRectForWindow(window.rect());
@@ -167,6 +168,7 @@ void WSWindowManager::paintWindowFrame(WSWindow& window)
 
 void WSWindowManager::addWindow(WSWindow& window)
 {
+    LOCKER(m_lock);
     m_windows.set(&window);
     m_windows_in_order.append(&window);
     if (!activeWindow())
@@ -175,12 +177,14 @@ void WSWindowManager::addWindow(WSWindow& window)
 
 void WSWindowManager::move_to_front(WSWindow& window)
 {
+    LOCKER(m_lock);
     m_windows_in_order.remove(&window);
     m_windows_in_order.append(&window);
 }
 
 void WSWindowManager::removeWindow(WSWindow& window)
 {
+    LOCKER(m_lock);
     if (!m_windows.contains(&window))
         return;
 
@@ -270,6 +274,7 @@ void WSWindowManager::processMouseEvent(MouseEvent& event)
 
 void WSWindowManager::compose()
 {
+    LOCKER(m_lock);
     auto invalidated_rects = move(m_invalidated_rects);
 #ifdef DEBUG_COUNTERS
     dbgprintf("[WM] compose #%u (%u rects)\n", ++m_recompose_count, invalidated_rects.size());
@@ -351,6 +356,7 @@ void WSWindowManager::event(WSEvent& event)
 
 void WSWindowManager::setActiveWindow(WSWindow* window)
 {
+    LOCKER(m_lock);
     if (window == m_activeWindow.ptr())
         return;
 
@@ -363,12 +369,14 @@ void WSWindowManager::setActiveWindow(WSWindow* window)
 
 void WSWindowManager::invalidate()
 {
+    LOCKER(m_lock);
     m_invalidated_rects.clear_with_capacity();
     m_invalidated_rects.append(m_screen_rect);
 }
 
 void WSWindowManager::invalidate(const Rect& a_rect)
 {
+    LOCKER(m_lock);
     auto rect = Rect::intersection(a_rect, m_screen_rect);
     if (rect.is_empty())
         return;

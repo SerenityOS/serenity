@@ -51,6 +51,7 @@ int WSEventLoop::exec()
 
         Vector<QueuedEvent> events;
         {
+            ASSERT_INTERRUPTS_ENABLED();
             LOCKER(m_lock);
             events = move(m_queued_events);
         }
