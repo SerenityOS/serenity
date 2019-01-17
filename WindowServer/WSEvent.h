@@ -18,6 +18,8 @@ static const char* WSEvent_names[] = {
     "Timer",
     "WM_Compose",
     "WM_Invalidate",
+    "WindowActivated",
+    "WindowDeactivated",
 };
 
 class WSEvent {
@@ -35,6 +37,8 @@ public:
         Timer,
         WM_Compose,
         WM_Invalidate,
+        WindowActivated,
+        WindowDeactivated,
     };
 
     WSEvent() { }
@@ -65,22 +69,6 @@ public:
 private:
     friend class WSWindowManager;
     Rect m_rect;
-};
-
-class ShowEvent final : public WSEvent {
-public:
-    ShowEvent()
-        : WSEvent(WSEvent::Show)
-    {
-    }
-};
-
-class HideEvent final : public WSEvent {
-public:
-    HideEvent()
-        : WSEvent(WSEvent::Hide)
-    {
-    }
 };
 
 enum class MouseButton : byte {
@@ -142,10 +130,3 @@ private:
     Point m_position;
     MouseButton m_button { MouseButton::None };
 };
-
-class TimerEvent final : public WSEvent {
-public:
-    TimerEvent() : WSEvent(WSEvent::Timer) { }
-    ~TimerEvent() { }
-};
-

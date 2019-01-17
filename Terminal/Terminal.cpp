@@ -291,7 +291,8 @@ void Terminal::scroll_up()
         }
 #endif
         memset(&m_buffer[(m_rows - 1) * m_columns], ' ', m_columns);
-        attribute_at(m_cursor_row, m_cursor_column).dirty = true;
+        // NOTE: We have to invalidate the cursor before memcpy()'ing the attributes.
+        invalidate_cursor();
         memcpy(m_attributes, m_attributes + m_columns, m_columns * (m_rows - 1) * sizeof(Attribute));
         for (size_t i = 0; i < m_columns; ++i)
             m_attributes[((m_rows - 1) * m_columns) + i].reset();
@@ -305,10 +306,10 @@ void Terminal::set_cursor(unsigned row, unsigned column)
 {
     ASSERT(row < rows());
     ASSERT(column < columns());
-    attribute_at(m_cursor_row, m_cursor_column).dirty = true;
+    invalidate_cursor();
     m_cursor_row = row;
     m_cursor_column = column;
-    attribute_at(m_cursor_row, m_cursor_column).dirty = true;
+    invalidate_cursor();
 }
 
 void Terminal::put_character_at(unsigned row, unsigned column, byte ch)
@@ -449,7 +450,10 @@ void Terminal::paint()
     }
 
     auto cursor_rect = glyph_rect(m_cursor_row, m_cursor_column);
-    painter.draw_rect(cursor_rect, Color::MidGray);
+    if (m_in_active_window)
+        painter.fill_rect(cursor_rect, Color::MidGray);
+    else
+        painter.draw_rect(cursor_rect, Color::MidGray);
 
     if (m_belling)
         painter.draw_rect(rect, Color::Red);
@@ -459,4 +463,18 @@ void Terminal::paint()
         perror("gui_invalidate_window");
         exit(1);
     }
+}
+
+void Terminal::set_in_active_window(bool b)
+{
+    if (m_in_active_window == b)
+        return;
+    m_in_active_window = b;
+    invalidate_cursor();
+    paint();
+}
+
+void Terminal::invalidate_cursor()
+{
+    attribute_at(m_cursor_row, m_cursor_column).dirty = true;
 }

@@ -77,6 +77,12 @@ void WSWindow::event(WSEvent& event)
     case WSEvent::WM_Invalidate:
         WSWindowManager::the().invalidate(*this);
         return;
+    case WSEvent::WindowActivated:
+        gui_event.type = GUI_Event::Type::WindowActivated;
+        break;
+    case WSEvent::WindowDeactivated:
+        gui_event.type = GUI_Event::Type::WindowDeactivated;
+        break;
     }
 
     if (gui_event.type == GUI_Event::Type::Invalid)

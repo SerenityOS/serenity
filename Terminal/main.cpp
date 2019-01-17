@@ -118,6 +118,8 @@ int main(int, char**)
             case GUI_Event::Type::MouseUp: dbgprintf("WID=%x MouseUp %d,%d\n", event.window_id, event.mouse.position.x, event.mouse.position.y); break;
             case GUI_Event::Type::MouseMove: dbgprintf("WID=%x MouseMove %d,%d\n", event.window_id, event.mouse.position.x, event.mouse.position.y); break;
             case GUI_Event::Type::KeyDown: dbgprintf("WID=%x KeyDown 0x%b (%c)\n", event.window_id, event.key.character, event.key.character); break;
+            case GUI_Event::Type::WindowActivated: dbgprintf("WID=%x WindowActivated\n", event.window_id); break;
+            case GUI_Event::Type::WindowDeactivated: dbgprintf("WID=%x WindowDeactivated\n", event.window_id); break;
             default:
                 ASSERT_NOT_REACHED();
             }
@@ -126,6 +128,10 @@ int main(int, char**)
                 terminal.paint();
             } else if (event.type == GUI_Event::Type::KeyDown) {
                 write(ptm_fd, &event.key.character, 1);
+            } else if (event.type == GUI_Event::Type::WindowActivated) {
+                terminal.set_in_active_window(true);
+            } else if (event.type == GUI_Event::Type::WindowDeactivated) {
+                terminal.set_in_active_window(false);
             }
         }
     }

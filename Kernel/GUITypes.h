@@ -63,6 +63,8 @@ struct GUI_Event {
         MouseUp,
         KeyDown,
         KeyUp,
+        WindowActivated,
+        WindowDeactivated,
     };
     Type type { Invalid };
     int window_id { -1 };
