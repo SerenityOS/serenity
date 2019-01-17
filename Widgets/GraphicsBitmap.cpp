@@ -20,13 +20,13 @@ GraphicsBitmap::GraphicsBitmap(Process& process, const Size& size)
 {
     size_t size_in_bytes = size.width() * size.height() * sizeof(RGBA32);
     auto vmo = VMObject::create_anonymous(size_in_bytes);
-    m_client_region = process.allocate_region_with_vmo(LinearAddress(), size_in_bytes, vmo.copyRef(), 0, "GraphicsBitmap (shared)", true, true);
+    m_client_region = process.allocate_region_with_vmo(LinearAddress(), size_in_bytes, vmo.copyRef(), 0, "GraphicsBitmap (client)", true, true);
     m_client_region->commit(process);
 
     {
         auto& server = WSEventLoop::the().server_process();
-        ProcessInspectionHandle composer_handle(server);
-        m_server_region = server.allocate_region_with_vmo(LinearAddress(), size_in_bytes, move(vmo), 0, "GraphicsBitmap (shared)", true, true);
+        InterruptDisabler disabler;
+        m_server_region = server.allocate_region_with_vmo(LinearAddress(), size_in_bytes, move(vmo), 0, "GraphicsBitmap (server)", true, true);
     }
     m_data = (RGBA32*)m_server_region->linearAddress.asPtr();
 }
