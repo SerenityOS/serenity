@@ -172,7 +172,7 @@ void WSWindowManager::addWindow(WSWindow& window)
     m_windows.set(&window);
     m_windows_in_order.append(&window);
     if (!activeWindow())
-        setActiveWindow(&window);
+        set_active_window(&window);
 }
 
 void WSWindowManager::move_to_front(WSWindow& window)
@@ -192,7 +192,7 @@ void WSWindowManager::removeWindow(WSWindow& window)
     m_windows.remove(&window);
     m_windows_in_order.remove(&window);
     if (!activeWindow() && !m_windows.is_empty())
-        setActiveWindow(*m_windows.begin());
+        set_active_window(*m_windows.begin());
 }
 
 void WSWindowManager::notifyTitleChanged(WSWindow& window)
@@ -253,7 +253,7 @@ void WSWindowManager::processMouseEvent(MouseEvent& event)
         if (titleBarRectForWindow(window->rect()).contains(event.position())) {
             if (event.type() == WSEvent::MouseDown) {
                 move_to_front(*window);
-                setActiveWindow(window);
+                set_active_window(window);
             }
             handleTitleBarMouseEvent(*window, event);
             return;
@@ -262,7 +262,7 @@ void WSWindowManager::processMouseEvent(MouseEvent& event)
         if (window->rect().contains(event.position())) {
             if (event.type() == WSEvent::MouseDown) {
                 move_to_front(*window);
-                setActiveWindow(window);
+                set_active_window(window);
             }
             // FIXME: Re-use the existing event instead of crafting a new one?
             auto localEvent = make<MouseEvent>(event.type(), event.x() - window->rect().x(), event.y() - window->rect().y(), event.button());
@@ -342,8 +342,8 @@ void WSWindowManager::event(WSEvent& event)
 
     if (event.isKeyEvent()) {
         // FIXME: This is a good place to hook key events globally. :)
-        if (m_activeWindow)
-            return m_activeWindow->event(event);
+        if (m_active_window)
+            return m_active_window->event(event);
         return;
     }
 
@@ -354,17 +354,21 @@ void WSWindowManager::event(WSEvent& event)
     }
 }
 
-void WSWindowManager::setActiveWindow(WSWindow* window)
+void WSWindowManager::set_active_window(WSWindow* window)
 {
     LOCKER(m_lock);
-    if (window == m_activeWindow.ptr())
+    if (window == m_active_window.ptr())
         return;
 
-    if (auto* previously_active_window = m_activeWindow.ptr())
+    if (auto* previously_active_window = m_active_window.ptr()) {
+        WSEventLoop::the().post_event(previously_active_window, make<WSEvent>(WSEvent::WindowDeactivated));
         invalidate(*previously_active_window);
-    m_activeWindow = window->makeWeakPtr();
-    if (m_activeWindow)
-        invalidate(*m_activeWindow);
+    }
+    m_active_window = window->makeWeakPtr();
+    if (m_active_window) {
+        WSEventLoop::the().post_event(m_active_window.ptr(), make<WSEvent>(WSEvent::WindowActivated));
+        invalidate(*m_active_window);
+    }
 }
 
 void WSWindowManager::invalidate()

@@ -25,7 +25,7 @@ public:
     void notifyTitleChanged(WSWindow&);
     void notifyRectChanged(WSWindow&, const Rect& oldRect, const Rect& newRect);
 
-    WSWindow* activeWindow() { return m_activeWindow.ptr(); }
+    WSWindow* activeWindow() { return m_active_window.ptr(); }
 
     void move_to_front(WSWindow&);
 
@@ -45,7 +45,7 @@ private:
     void processMouseEvent(MouseEvent&);
     void handleTitleBarMouseEvent(WSWindow&, MouseEvent&);
 
-    void setActiveWindow(WSWindow*);
+    void set_active_window(WSWindow*);
     
     virtual void event(WSEvent&) override;
 
@@ -64,7 +64,7 @@ private:
     HashTable<WSWindow*> m_windows;
     InlineLinkedList<WSWindow> m_windows_in_order;
 
-    WeakPtr<WSWindow> m_activeWindow;
+    WeakPtr<WSWindow> m_active_window;
 
     WeakPtr<WSWindow> m_dragWindow;
 

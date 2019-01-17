@@ -17,11 +17,14 @@ public:
     void paint();
     void on_char(byte);
 
+    void set_in_active_window(bool);
+
 private:
     Font& font() { return *m_font; }
     void scroll_up();
     void set_cursor(unsigned row, unsigned column);
     void put_character_at(unsigned row, unsigned column, byte ch);
+    void invalidate_cursor();
 
     void escape$A(const Vector<unsigned>&);
     void escape$D(const Vector<unsigned>&);
@@ -93,6 +96,8 @@ private:
     int m_inset { 2 };
     int m_line_spacing { 4 };
     int m_line_height { 0 };
+
+    bool m_in_active_window { false };
 
     RetainPtr<Font> m_font;
 };
