@@ -404,7 +404,7 @@ Rect Terminal::glyph_rect(word row, word column)
 {
     int y = row * m_line_height;
     int x = column * font().glyph_width();
-    return { x + m_inset, y + m_inset, font().glyph_width(), m_line_height };
+    return { x + m_inset, y + m_inset, font().glyph_width(), font().glyph_height() };
 }
 
 inline Terminal::Attribute& Terminal::attribute_at(word row, word column)
