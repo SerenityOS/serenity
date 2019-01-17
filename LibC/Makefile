@@ -8,6 +8,7 @@ AK_OBJS = \
 WIDGETS_OBJS = \
     ../Widgets/Painter.o \
     ../Widgets/Font.o \
+    ../Widgets/Rect.o \
     ../Widgets/GraphicsBitmap.o \
     ../Widgets/CharacterBitmap.o \
     ../Widgets/Color.o

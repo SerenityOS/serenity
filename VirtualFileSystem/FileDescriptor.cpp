@@ -5,11 +5,8 @@
 #include "UnixTypes.h"
 #include <AK/BufferStream.h>
 #include "FIFO.h"
-
-#ifdef SERENITY
 #include "TTY.h"
 #include "MasterPTY.h"
-#endif
 
 RetainPtr<FileDescriptor> FileDescriptor::create(RetainPtr<Inode>&& inode)
 {
@@ -64,21 +61,17 @@ RetainPtr<FileDescriptor> FileDescriptor::clone()
     if (!descriptor)
         return nullptr;
     descriptor->m_current_offset = m_current_offset;
-#ifdef SERENITY
     descriptor->m_is_blocking = m_is_blocking;
     descriptor->m_file_flags = m_file_flags;
-#endif
     return descriptor;
 }
 
-#ifndef SERENITY
 bool additionWouldOverflow(Unix::off_t a, Unix::off_t b)
 {
     ASSERT(a > 0);
     uint64_t ua = a;
     return (ua + b) > maxFileOffset;
 }
-#endif
 
 int FileDescriptor::stat(Unix::stat* buffer)
 {

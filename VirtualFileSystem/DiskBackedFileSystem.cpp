@@ -1,10 +1,5 @@
 #include "DiskBackedFileSystem.h"
-
-#ifdef SERENITY
 #include "i386.h"
-#else
-typedef int InterruptDisabler;
-#endif
 
 //#define DBFS_DEBUG
 

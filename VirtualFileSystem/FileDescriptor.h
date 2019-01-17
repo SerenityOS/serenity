@@ -7,11 +7,9 @@
 #include <AK/CircularQueue.h>
 #include <AK/Retainable.h>
 
-#ifdef SERENITY
 class TTY;
 class MasterPTY;
 class Process;
-#endif
 
 class FileDescriptor : public Retainable<FileDescriptor> {
 public:
@@ -45,7 +43,6 @@ public:
     CharacterDevice* character_device() { return m_device.ptr(); }
     const CharacterDevice* character_device() const { return m_device.ptr(); }
 
-#ifdef SERENITY
     bool is_tty() const;
     const TTY* tty() const;
     TTY* tty();
@@ -53,7 +50,6 @@ public:
     bool is_master_pty() const;
     const MasterPTY* master_pty() const;
     MasterPTY* master_pty();
-#endif
 
     InodeMetadata metadata() const;
     Inode* inode() { return m_inode.ptr(); }
@@ -61,7 +57,6 @@ public:
 
     bool supports_mmap() const { return m_inode && !m_device; }
 
-#ifdef SERENITY
     bool is_blocking() const { return m_is_blocking; }
     void set_blocking(bool b) { m_is_blocking = b; }
 
@@ -70,7 +65,6 @@ public:
 
     bool is_fifo() const { return m_fifo; }
     FIFO::Direction fifo_direction() { return m_fifo_direction; }
-#endif
 
     ByteBuffer& generator_cache() { return m_generator_cache; }
 
@@ -87,12 +81,10 @@ private:
 
     ByteBuffer m_generator_cache;
 
-#ifdef SERENITY
     bool m_is_blocking { true };
     dword m_file_flags { 0 };
 
     RetainPtr<FIFO> m_fifo;
     FIFO::Direction m_fifo_direction { FIFO::Neither };
-#endif
 };
 

@@ -3,12 +3,8 @@
 #include <AK/Retainable.h>
 #include <AK/Types.h>
 
-#ifdef SERENITY
 // FIXME: Support 64-bit DiskOffset
 typedef dword DiskOffset;
-#else
-typedef qword DiskOffset;
-#endif
 
 class DiskDevice : public Retainable<DiskDevice> {
 public:

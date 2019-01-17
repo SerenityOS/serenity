@@ -11,7 +11,6 @@ private:
 #define AK_MAKE_ETERNAL
 #endif
 
-#ifdef SERENITY
 #ifdef KERNEL
 #include <Kernel/kmalloc.h>
 #else
@@ -30,20 +29,3 @@ void* kmalloc_eternal(size_t) MALLOC_ATTR;
 inline void* operator new(size_t, void* p) { return p; }
 inline void* operator new[](size_t, void* p) { return p; }
 #endif
-#else
-#include <new>
-
-#include "Types.h"
-
-extern "C" {
-
-void* kcalloc(size_t nmemb, size_t size);
-void* kmalloc(size_t size) MALLOC_ATTR;
-void kfree(void* ptr);
-void* krealloc(void* ptr, size_t size);
-void* kmalloc_eternal(size_t) MALLOC_ATTR;
-
-}
-
-#endif
-
