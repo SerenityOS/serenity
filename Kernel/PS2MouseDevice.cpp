@@ -28,7 +28,10 @@ void PS2MouseDevice::handle_irq()
     m_data[m_data_state] = data;
     switch (m_data_state) {
     case 0:
-        ASSERT(data & 0x08);
+        if (!(data & 0x08)) {
+            dbgprintf("PS2Mouse: Stream out of sync.\n");
+            break;
+        }
         ++m_data_state;
         break;
     case 1:
