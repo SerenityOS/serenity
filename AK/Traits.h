@@ -26,11 +26,7 @@ template<typename T>
 struct Traits<T*> {
     static unsigned hash(const T* p)
     {
-#ifdef SERENITY
         return intHash((dword)p);
-#else
-        return intHash((unsigned long long)p & 0xffffffff);
-#endif
     }
     static void dump(const T* p) { kprintf("%p", p); }
 };

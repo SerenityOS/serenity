@@ -1,6 +1,5 @@
 #include "Rect.h"
 #include <AK/StdLibExtras.h>
-#include "kstdio.h"
 
 void Rect::intersect(const Rect& other)
 {

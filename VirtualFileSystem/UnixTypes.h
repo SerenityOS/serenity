@@ -231,7 +231,6 @@ struct tms {
     clock_t tms_cstime;
 };
 
-#ifdef SERENITY
 typedef void (*__sighandler_t)(int);
 typedef __sighandler_t sighandler_t;
 
@@ -256,16 +255,9 @@ struct sigaction {
 #define SIG_UNBLOCK 1
 #define SIG_SETMASK 2
 
-#endif
-
-#ifdef SERENITY
 // FIXME: Support 64-bit offsets!
 typedef signed_dword off_t;
 typedef unsigned int time_t;
-#else
-typedef signed_qword off_t;
-typedef ::time_t time_t;
-#endif
 
 struct utimbuf {
     time_t actime;

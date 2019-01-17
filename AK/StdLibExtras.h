@@ -1,48 +1,32 @@
 #pragma once
 
-#ifdef SERENITY
 #ifdef KERNEL
 #include <Kernel/StdLib.h>
 #else
 #include <LibC/stdlib.h>
 #include <LibC/string.h>
 #endif
-#else
-#include <cstring>
-#include <cstdlib>
-#include <utility>
-#endif
 
 #include <AK/Types.h>
 
 ALWAYS_INLINE void fast_dword_copy(dword* dest, const dword* src, size_t count)
 {
-#ifdef SERENITY
     asm volatile(
         "rep movsl\n"
         : "=S"(src), "=D"(dest), "=c"(count)
         : "S"(src), "D"(dest), "c"(count)
         : "memory"
     );
-#else
-    memcpy(dest, src, count * sizeof(dword));
-#endif
 }
 
 ALWAYS_INLINE void fast_dword_fill(dword* dest, dword value, size_t count)
 {
-#ifdef SERENITY
     asm volatile(
         "rep stosl\n"
         : "=D"(dest), "=c"(count)
         : "D"(dest), "c"(count), "a"(value)
         : "memory"
     );
-#else
-    for (size_t i = 0; x <= count; ++x) {
-        dest[i] = value;
-    }
-#endif
 }
 
 namespace AK {
