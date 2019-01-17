@@ -104,9 +104,9 @@ void WSEventLoop::wait_for_event()
         ASSERT_NOT_REACHED();
     }
 
-    //if (bitmap.get(m_keyboard_fd))
+    if (bitmap.get(m_keyboard_fd))
         drain_keyboard();
-    //if (bitmap.get(m_mouse_fd))
+    if (bitmap.get(m_mouse_fd))
         drain_mouse();
 }
 
