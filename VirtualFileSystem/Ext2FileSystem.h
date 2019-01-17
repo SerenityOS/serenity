@@ -47,7 +47,7 @@ private:
     const Ext2FS& fs() const;
     Ext2FSInode(Ext2FS&, unsigned index, const ext2_inode&);
 
-    SpinLock m_lock;
+    Lock m_lock;
     Vector<unsigned> m_block_list;
     HashMap<String, unsigned> m_lookup_cache;
     ext2_inode m_raw_inode;
@@ -110,7 +110,7 @@ private:
     mutable ByteBuffer m_cached_super_block;
     mutable ByteBuffer m_cached_group_descriptor_table;
 
-    mutable SpinLock m_inode_cache_lock;
+    mutable Lock m_inode_cache_lock;
     mutable HashMap<BlockIndex, RetainPtr<Ext2FSInode>> m_inode_cache;
 };
 

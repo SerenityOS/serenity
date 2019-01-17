@@ -19,6 +19,6 @@ public:
     virtual bool can_write(Process&) const override { return true; }
 
 private:
-    SpinLock m_lock;
+    Lock m_lock;
     Vector<RetainPtr<MasterPTY>> m_freelist;
 };

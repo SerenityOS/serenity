@@ -12,12 +12,6 @@ extern Process* current;
 #error This thing is kernel-only right now.
 #endif
 
-//#define DEBUG_LOCKS
-
-void log_try_lock(const char*);
-void log_locked(const char*);
-void log_unlocked(const char*);
-
 namespace AK {
 
 static inline dword CAS(volatile dword* mem, dword newval, dword oldval)
@@ -31,16 +25,13 @@ static inline dword CAS(volatile dword* mem, dword newval, dword oldval)
     return ret;
 }
 
-// FIXME: Rename to YieldingLock? RecursiveLock? Maybe just Lock?
-class SpinLock {
+class Lock {
 public:
-    SpinLock() { }
-    ~SpinLock() { }
+    Lock() { }
+    ~Lock() { }
 
     void lock();
     void unlock();
-
-    const Process* holder() const { return m_holder; }
 
 private:
     volatile dword m_lock { 0 };
@@ -50,16 +41,16 @@ private:
 
 class Locker {
 public:
-    ALWAYS_INLINE explicit Locker(SpinLock& l) : m_lock(l) { lock(); }
+    ALWAYS_INLINE explicit Locker(Lock& l) : m_lock(l) { lock(); }
     ALWAYS_INLINE ~Locker() { unlock(); }
     ALWAYS_INLINE void unlock() { m_lock.unlock(); }
     ALWAYS_INLINE void lock() { m_lock.lock(); }
 
 private:
-    SpinLock& m_lock;
+    Lock& m_lock;
 };
 
-inline void SpinLock::lock()
+inline void Lock::lock()
 {
     for (;;) {
         if (CAS(&m_lock, 1, 0) == 0) {
@@ -76,7 +67,7 @@ inline void SpinLock::lock()
     }
 }
 
-inline void SpinLock::unlock()
+inline void Lock::unlock()
 {
     for (;;) {
         if (CAS(&m_lock, 1, 0) == 0) {
@@ -101,5 +92,5 @@ inline void SpinLock::unlock()
 
 }
 
-using AK::SpinLock;
+using AK::Lock;
 using AK::Locker;
