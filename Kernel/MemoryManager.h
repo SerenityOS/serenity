@@ -167,7 +167,6 @@ class MemoryManager {
     friend class Region;
     friend class VMObject;
     friend ByteBuffer procfs$mm();
-    friend ByteBuffer procfs$regions();
 public:
     static MemoryManager& the() PURE;
 
