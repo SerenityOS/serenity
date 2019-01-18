@@ -1,22 +1,30 @@
 #include "StringBuilder.h"
 #include <LibC/stdarg.h>
 #include "printf.cpp"
+#include <AK/StdLibExtras.h>
 
 namespace AK {
 
-void StringBuilder::append(String&& str)
+inline void StringBuilder::will_append(size_t size)
 {
-    m_strings.append(move(str));
+    if ((m_length + size) > m_buffer.size())
+        m_buffer.grow(max(16u, m_buffer.size() * 2 + size));
 }
 
 void StringBuilder::append(const String& str)
 {
-    m_strings.append(str);
+    if (str.is_empty())
+        return;
+    will_append(str.length());
+    memcpy(m_buffer.pointer() + m_length, str.characters(), str.length());
+    m_length += str.length();
 }
 
 void StringBuilder::append(char ch)
 {
-    m_strings.append(StringImpl::create(&ch, 1));
+    will_append(1);
+    m_buffer.pointer()[m_length] = ch;
+    m_length += 1;
 }
 
 void StringBuilder::appendf(const char* fmt, ...)
@@ -29,27 +37,15 @@ void StringBuilder::appendf(const char* fmt, ...)
     va_end(ap);
 }
 
+ByteBuffer StringBuilder::to_byte_buffer()
+{
+    m_buffer.trim(m_length);
+    return m_buffer;
+}
+
 String StringBuilder::build()
 {
-    auto strings = move(m_strings);
-    if (strings.is_empty())
-        return String::empty();
-
-    size_t sizeNeeded = 0;
-    for (auto& string : strings)
-        sizeNeeded += string.length();
-
-    char* buffer;
-    auto impl = StringImpl::create_uninitialized(sizeNeeded, buffer);
-    if (!impl)
-        return String();
-
-    for (auto& string : strings) {
-        memcpy(buffer, string.characters(), string.length());
-        buffer += string.length();
-    }
-    *buffer = '\0';
-    return String(move(impl));
+    return String((const char*)m_buffer.pointer(), m_length);
 }
 
 }

@@ -73,6 +73,14 @@ public:
         return copy(offset_pointer(offset), size);
     }
 
+    void grow(size_t size)
+    {
+        if (!m_impl)
+            m_impl = Buffer<byte>::create_uninitialized(size);
+        else
+            m_impl->grow(size);
+    }
+
 private:
     explicit ByteBuffer(RetainPtr<Buffer<byte>>&& impl)
         : m_impl(move(impl))

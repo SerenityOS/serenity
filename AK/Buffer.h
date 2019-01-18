@@ -47,6 +47,8 @@ public:
         m_size = size;
     }
 
+    void grow(size_t size);
+
 private:
     enum ConstructionMode { Uninitialized, Copy, Wrap, Adopt };
     explicit Buffer(size_t); // For ConstructionMode=Uninitialized
@@ -87,7 +89,19 @@ inline Buffer<T>::Buffer(T* elements, size_t size, ConstructionMode mode)
     } else if (mode == Wrap) {
         m_owned = false;
     }
+}
 
+template<typename T>
+inline void Buffer<T>::grow(size_t size)
+{
+    ASSERT(size > m_size);
+    ASSERT(m_owned);
+    T* new_elements = static_cast<T*>(kmalloc(size * sizeof(T)));
+    memcpy(new_elements, m_elements, m_size * sizeof(T));
+    T* old_elements = m_elements;
+    m_elements = new_elements;
+    m_size = size;
+    kfree(old_elements);
 }
 
 template<typename T>
