@@ -13,6 +13,7 @@ public:
     void append(const String&);
     void append(String&&);
     void append(char);
+    void appendf(const char*, ...);
 
     String build();
 

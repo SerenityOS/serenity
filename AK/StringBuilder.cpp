@@ -1,4 +1,6 @@
 #include "StringBuilder.h"
+#include <LibC/stdarg.h>
+#include "printf.cpp"
 
 namespace AK {
 
@@ -15,6 +17,16 @@ void StringBuilder::append(const String& str)
 void StringBuilder::append(char ch)
 {
     m_strings.append(StringImpl::create(&ch, 1));
+}
+
+void StringBuilder::appendf(const char* fmt, ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
+    printfInternal([this] (char*&, char ch) {
+        append(ch);
+    }, nullptr, fmt, ap);
+    va_end(ap);
 }
 
 String StringBuilder::build()

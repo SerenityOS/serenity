@@ -6,6 +6,7 @@
 #include "StdLib.h"
 #include "i386.h"
 #include "KSyms.h"
+#include <AK/StringBuilder.h>
 
 static ProcFS* s_the;
 
@@ -34,71 +35,59 @@ ByteBuffer procfs$pid_fds(Process& process)
     ProcessInspectionHandle handle(process);
     if (process.number_of_open_file_descriptors() == 0)
         return { };
-    char* buffer;
-    auto stringImpl = StringImpl::create_uninitialized(process.number_of_open_file_descriptors() * 80, buffer);
-    memset(buffer, 0, stringImpl->length());
-    char* ptr = buffer;
+    StringBuilder builder;
     for (size_t i = 0; i < process.max_open_file_descriptors(); ++i) {
         auto* descriptor = process.file_descriptor(i);
         if (!descriptor)
             continue;
-        ptr += ksprintf(ptr, "% 3u %s\n", i, descriptor->absolute_path().characters());
+        builder.appendf("% 3u %s\n", i, descriptor->absolute_path().characters());
     }
-    *ptr = '\0';
-    return ByteBuffer::copy((byte*)buffer, ptr - buffer);
+    return builder.build().to_byte_buffer();
 }
 
 ByteBuffer procfs$pid_vm(Process& process)
 {
     ProcessInspectionHandle handle(process);
-    char* buffer;
-    auto stringImpl = StringImpl::create_uninitialized(80 + process.regionCount() * 160 + 4096, buffer);
-    memset(buffer, 0, stringImpl->length());
-    char* ptr = buffer;
-    ptr += ksprintf(ptr, "BEGIN       END         SIZE      COMMIT     NAME\n");
+    StringBuilder builder;
+    builder.appendf("BEGIN       END         SIZE      COMMIT     NAME\n");
     for (auto& region : process.regions()) {
-        ptr += ksprintf(ptr, "%x -- %x    %x  %x   %s\n",
+        builder.appendf("%x -- %x    %x  %x   %s\n",
             region->linearAddress.get(),
             region->linearAddress.offset(region->size - 1).get(),
             region->size,
             region->committed(),
             region->name.characters());
     }
-    *ptr = '\0';
-    return ByteBuffer::copy((byte*)buffer, ptr - buffer);
+    return builder.build().to_byte_buffer();
 }
 
 ByteBuffer procfs$pid_vmo(Process& process)
 {
     ProcessInspectionHandle handle(process);
-    char* buffer;
-    auto stringImpl = StringImpl::create_uninitialized(80 + process.regionCount() * 160 + 4096, buffer);
-    memset(buffer, 0, stringImpl->length());
-    char* ptr = buffer;
-    ptr += ksprintf(ptr, "BEGIN       END         SIZE        NAME\n");
+    StringBuilder builder;
+    builder.appendf("BEGIN       END         SIZE        NAME\n");
     for (auto& region : process.regions()) {
-        ptr += ksprintf(ptr, "%x -- %x    %x    %s\n",
+        builder.appendf("%x -- %x    %x    %s\n",
             region->linearAddress.get(),
             region->linearAddress.offset(region->size - 1).get(),
             region->size,
             region->name.characters());
-        ptr += ksprintf(ptr, "VMO: %s \"%s\" @ %x(%u)\n",
+        builder.appendf("VMO: %s \"%s\" @ %x(%u)\n",
             region->vmo().is_anonymous() ? "anonymous" : "file-backed",
             region->vmo().name().characters(),
             &region->vmo(),
             region->vmo().retain_count());
         for (size_t i = 0; i < region->vmo().page_count(); ++i) {
             auto& physical_page = region->vmo().physical_pages()[i];
-            ptr += ksprintf(ptr, "P%x%s(%u) ",
+            builder.appendf("P%x%s(%u) ",
                 physical_page ? physical_page->paddr().get() : 0,
                 region->cow_map.get(i) ? "!" : "",
                 physical_page ? physical_page->retain_count() : 0
             );
         }
-        ptr += ksprintf(ptr, "\n");
+        builder.appendf("\n");
     }
-    *ptr = '\0';
-    return ByteBuffer::copy((byte*)buffer, ptr - buffer);
+    return builder.build().to_byte_buffer();
 }
 
 ByteBuffer procfs$pid_stack(Process& process)
@@ -117,40 +106,31 @@ ByteBuffer procfs$pid_stack(Process& process)
         if (auto* ksym = ksymbolicate(retaddr))
             recognizedSymbols.append({ retaddr, ksym });
     }
-    size_t bytesNeeded = 0;
-    for (auto& symbol : recognizedSymbols) {
-        bytesNeeded += strlen(symbol.ksym->name) + 8 + 16;
-    }
-    auto buffer = ByteBuffer::create_uninitialized(bytesNeeded);
-    char* bufptr = (char*)buffer.pointer();
-
+    StringBuilder builder;
     for (auto& symbol : recognizedSymbols) {
         unsigned offset = symbol.address - symbol.ksym->address;
-        bufptr += ksprintf(bufptr, "%p  %s +%u\n", symbol.address, symbol.ksym->name, offset);
+        builder.appendf("%p  %s +%u\n", symbol.address, symbol.ksym->name, offset);
     }
-    buffer.trim(bufptr - (char*)buffer.pointer());
-    return buffer;
+    return builder.build().to_byte_buffer();
 }
 
 ByteBuffer procfs$pid_regs(Process& process)
 {
     ProcessInspectionHandle handle(process);
     auto& tss = process.tss();
-    auto buffer = ByteBuffer::create_uninitialized(1024);
-    char* ptr = (char*)buffer.pointer();
-    ptr += ksprintf(ptr, "eax: %x\n", tss.eax);
-    ptr += ksprintf(ptr, "ebx: %x\n", tss.ebx);
-    ptr += ksprintf(ptr, "ecx: %x\n", tss.ecx);
-    ptr += ksprintf(ptr, "edx: %x\n", tss.edx);
-    ptr += ksprintf(ptr, "esi: %x\n", tss.esi);
-    ptr += ksprintf(ptr, "edi: %x\n", tss.edi);
-    ptr += ksprintf(ptr, "ebp: %x\n", tss.ebp);
-    ptr += ksprintf(ptr, "cr3: %x\n", tss.cr3);
-    ptr += ksprintf(ptr, "flg: %x\n", tss.eflags);
-    ptr += ksprintf(ptr, "sp:  %w:%x\n", tss.ss, tss.esp);
-    ptr += ksprintf(ptr, "pc:  %w:%x\n", tss.cs, tss.eip);
-    buffer.trim(ptr - (char*)buffer.pointer());
-    return buffer;
+    StringBuilder builder;
+    builder.appendf("eax: %x\n", tss.eax);
+    builder.appendf("ebx: %x\n", tss.ebx);
+    builder.appendf("ecx: %x\n", tss.ecx);
+    builder.appendf("edx: %x\n", tss.edx);
+    builder.appendf("esi: %x\n", tss.esi);
+    builder.appendf("edi: %x\n", tss.edi);
+    builder.appendf("ebp: %x\n", tss.ebp);
+    builder.appendf("cr3: %x\n", tss.cr3);
+    builder.appendf("flg: %x\n", tss.eflags);
+    builder.appendf("sp:  %w:%x\n", tss.ss, tss.esp);
+    builder.appendf("pc:  %w:%x\n", tss.cs, tss.eip);
+    return builder.build().to_byte_buffer();
 }
 
 ByteBuffer procfs$pid_exe(Process& process)
@@ -203,66 +183,44 @@ ByteBuffer procfs$mm()
 {
     // FIXME: Implement
     InterruptDisabler disabler;
-    auto buffer = ByteBuffer::create_uninitialized(1024 + 80 * MM.m_vmos.size());
-    char* ptr = (char*)buffer.pointer();
+    StringBuilder builder;
     for (auto* vmo : MM.m_vmos) {
-        ptr += ksprintf(ptr, "VMO: %p %s(%u): p:%4u %s\n",
+        builder.appendf("VMO: %p %s(%u): p:%4u %s\n",
             vmo,
             vmo->is_anonymous() ? "anon" : "file",
             vmo->retain_count(),
             vmo->page_count(),
             vmo->name().characters());
     }
-    ptr += ksprintf(ptr, "VMO count: %u\n", MM.m_vmos.size());
-    ptr += ksprintf(ptr, "Free physical pages: %u\n", MM.m_free_physical_pages.size());
-    ptr += ksprintf(ptr, "Free supervisor physical pages: %u\n", MM.m_free_supervisor_physical_pages.size());
-    buffer.trim(ptr - (char*)buffer.pointer());
-    return buffer;
-}
-
-ByteBuffer procfs$regions()
-{
-    // FIXME: Implement
-    InterruptDisabler disabler;
-    auto buffer = ByteBuffer::create_uninitialized(1024 + 80 * MM.m_regions.size());
-    char* ptr = (char*)buffer.pointer();
-    for (auto* region : MM.m_regions) {
-        ptr += ksprintf(ptr, "Region: %p VMO=%p %s\n",
-            region,
-            &region->vmo(),
-            region->name.characters());
-    }
-    ptr += ksprintf(ptr, "Region count: %u\n", MM.m_regions.size());
-    buffer.trim(ptr - (char*)buffer.pointer());
-    return buffer;
+    builder.appendf("VMO count: %u\n", MM.m_vmos.size());
+    builder.appendf("Free physical pages: %u\n", MM.m_free_physical_pages.size());
+    builder.appendf("Free supervisor physical pages: %u\n", MM.m_free_supervisor_physical_pages.size());
+    return builder.build().to_byte_buffer();
 }
 
 ByteBuffer procfs$mounts()
 {
     InterruptDisabler disabler;
-    auto buffer = ByteBuffer::create_uninitialized(VFS::the().mount_count() * 80);
-    char* ptr = (char*)buffer.pointer();
-    VFS::the().for_each_mount([&ptr] (auto& mount) {
+    StringBuilder builder;
+    VFS::the().for_each_mount([&builder] (auto& mount) {
         auto& fs = mount.guest_fs();
-        ptr += ksprintf(ptr, "%s @ ", fs.class_name());
+        builder.appendf("%s @ ", fs.class_name());
         if (!mount.host().is_valid())
-            ptr += ksprintf(ptr, "/\n", fs.class_name());
+            builder.appendf("/\n", fs.class_name());
         else
-            ptr += ksprintf(ptr, "%u:%u\n", mount.host().fsid(), mount.host().index());
+            builder.appendf("%u:%u\n", mount.host().fsid(), mount.host().index());
     });
-    buffer.trim(ptr - (char*)buffer.pointer());
-    return buffer;
+    return builder.build().to_byte_buffer();
 }
 
 ByteBuffer procfs$cpuinfo()
 {
-    auto buffer = ByteBuffer::create_uninitialized(256);
-    char* ptr = (char*)buffer.pointer();
+    StringBuilder builder;
     {
         CPUID cpuid(0);
-        ptr += ksprintf(ptr, "cpuid:     ");
+        builder.appendf("cpuid:     ");
         auto emit_dword = [&] (dword value) {
-            ptr += ksprintf(ptr, "%c%c%c%c",
+            builder.appendf("%c%c%c%c",
                 value & 0xff,
                 (value >> 8) & 0xff,
                 (value >> 16) & 0xff,
@@ -271,7 +229,7 @@ ByteBuffer procfs$cpuinfo()
         emit_dword(cpuid.ebx());
         emit_dword(cpuid.edx());
         emit_dword(cpuid.ecx());
-        ptr += ksprintf(ptr, "\n");
+        builder.appendf("\n");
     }
     {
         CPUID cpuid(1);
@@ -293,10 +251,10 @@ ByteBuffer procfs$cpuinfo()
             display_family = family;
             display_model = model;
         }
-        ptr += ksprintf(ptr, "family:    %u\n", display_family);
-        ptr += ksprintf(ptr, "model:     %u\n", display_model);
-        ptr += ksprintf(ptr, "stepping:  %u\n", stepping);
-        ptr += ksprintf(ptr, "type:      %u\n", type);
+        builder.appendf("family:    %u\n", display_family);
+        builder.appendf("model:     %u\n", display_model);
+        builder.appendf("stepping:  %u\n", stepping);
+        builder.appendf("type:      %u\n", type);
     }
     {
         // FIXME: Check first that this is supported by calling CPUID with eax=0x80000000
@@ -313,30 +271,33 @@ ByteBuffer procfs$cpuinfo()
         copy_brand_string_part_to_buffer(0);
         copy_brand_string_part_to_buffer(1);
         copy_brand_string_part_to_buffer(2);
-        ptr += ksprintf(ptr, "brandstr:  \"%s\"\n", buffer);
+        builder.appendf("brandstr:  \"%s\"\n", buffer);
     }
-    buffer.trim(ptr - (char*)buffer.pointer());
-    return buffer;
+    return builder.build().to_byte_buffer();
 }
 
 ByteBuffer procfs$kmalloc()
 {
-    auto buffer = ByteBuffer::create_uninitialized(256);
-    char* ptr = (char*)buffer.pointer();
-    ptr += ksprintf(ptr, "eternal:      %u\nallocated:    %u\nfree:         %u\n", kmalloc_sum_eternal, sum_alloc, sum_free);
-    buffer.trim(ptr - (char*)buffer.pointer());
-    return buffer;
+    StringBuilder builder;
+    builder.appendf(
+        "eternal:      %u\n"
+        "allocated:    %u\n"
+        "free:         %u\n",
+        kmalloc_sum_eternal,
+        sum_alloc,
+        sum_free
+    );
+    return builder.build().to_byte_buffer();
 }
 
 ByteBuffer procfs$summary()
 {
     InterruptDisabler disabler;
     auto processes = Process::allProcesses();
-    auto buffer = ByteBuffer::create_uninitialized(processes.size() * 256);
-    char* ptr = (char*)buffer.pointer();
-    ptr += ksprintf(ptr, "PID TPG PGP SID  OWNER  STATE      PPID NSCHED     FDS  TTY  NAME\n");
+    StringBuilder builder;
+    builder.appendf("PID TPG PGP SID  OWNER  STATE      PPID NSCHED     FDS  TTY  NAME\n");
     for (auto* process : processes) {
-        ptr += ksprintf(ptr, "% 3u % 3u % 3u % 3u  % 4u   % 8s   % 3u  % 9u  % 3u  % 4s  %s\n",
+        builder.appendf("% 3u % 3u % 3u % 3u  % 4u   % 8s   % 3u  % 9u  % 3u  % 4s  %s\n",
             process->pid(),
             process->tty() ? process->tty()->pgid() : 0,
             process->pgid(),
@@ -349,32 +310,26 @@ ByteBuffer procfs$summary()
             process->tty() ? strrchr(process->tty()->tty_name().characters(), '/') + 1 : "n/a",
             process->name().characters());
     }
-    *ptr = '\0';
-    buffer.trim(ptr - (char*)buffer.pointer());
-    return buffer;
+    return builder.build().to_byte_buffer();
 }
 
 ByteBuffer procfs$inodes()
 {
     extern HashTable<Inode*>& all_inodes();
     auto& vfs = VFS::the();
-    auto buffer = ByteBuffer::create_uninitialized(all_inodes().size() * 256);
-    char* ptr = (char*)buffer.pointer();
+    StringBuilder builder;
     for (auto it : all_inodes()) {
         RetainPtr<Inode> inode = *it;
         String path = vfs.absolute_path(*inode);
-        ptr += ksprintf(ptr, "Inode{K%x} %02u:%08u (%u) %s\n", inode.ptr(), inode->fsid(), inode->index(), inode->retain_count(), path.characters());
+        builder.appendf("Inode{K%x} %02u:%08u (%u) %s\n", inode.ptr(), inode->fsid(), inode->index(), inode->retain_count(), path.characters());
     }
-    *ptr = '\0';
-    buffer.trim(ptr - (char*)buffer.pointer());
-    return buffer;
+    return builder.build().to_byte_buffer();
 }
 
 bool ProcFS::initialize()
 {
     SynthFS::initialize();
     add_file(create_generated_file("mm", procfs$mm));
-    add_file(create_generated_file("regions", procfs$regions));
     add_file(create_generated_file("mounts", procfs$mounts));
     add_file(create_generated_file("kmalloc", procfs$kmalloc));
     add_file(create_generated_file("summary", procfs$summary));
