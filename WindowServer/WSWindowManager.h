@@ -25,7 +25,7 @@ public:
     void notify_title_changed(WSWindow&);
     void notify_rect_changed(WSWindow&, const Rect& oldRect, const Rect& newRect);
 
-    WSWindow* activeWindow() { return m_active_window.ptr(); }
+    WSWindow* active_window() { return m_active_window.ptr(); }
 
     void move_to_front(WSWindow&);
 
@@ -62,12 +62,15 @@ private:
     Color m_inactive_window_border_color;
     Color m_inactive_window_title_color;
 
+    Color m_dragging_window_border_color;
+    Color m_dragging_window_title_color;
+
     HashTable<WSWindow*> m_windows;
     InlineLinkedList<WSWindow> m_windows_in_order;
 
     WeakPtr<WSWindow> m_active_window;
 
-    WeakPtr<WSWindow> m_dragWindow;
+    WeakPtr<WSWindow> m_drag_window;
 
     Point m_drag_origin;
     Point m_drag_window_origin;
