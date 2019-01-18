@@ -11,14 +11,17 @@ public:
     ~StringBuilder() { }
 
     void append(const String&);
-    void append(String&&);
     void append(char);
     void appendf(const char*, ...);
 
     String build();
+    ByteBuffer to_byte_buffer();
 
 private:
-    Vector<String> m_strings;
+    void will_append(size_t);
+
+    ByteBuffer m_buffer;
+    size_t m_length { 0 };
 };
 
 }

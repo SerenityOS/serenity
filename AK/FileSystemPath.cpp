@@ -38,7 +38,7 @@ bool FileSystemPath::canonicalize(bool resolve_symbolic_links)
     StringBuilder builder;
     for (auto& cpart : canonical_parts) {
         builder.append('/');
-        builder.append(move(cpart));
+        builder.append(cpart);
     }
     m_string = builder.build();
     return true;

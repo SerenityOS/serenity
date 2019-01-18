@@ -42,7 +42,7 @@ ByteBuffer procfs$pid_fds(Process& process)
             continue;
         builder.appendf("% 3u %s\n", i, descriptor->absolute_path().characters());
     }
-    return builder.build().to_byte_buffer();
+    return builder.to_byte_buffer();
 }
 
 ByteBuffer procfs$pid_vm(Process& process)
@@ -58,7 +58,7 @@ ByteBuffer procfs$pid_vm(Process& process)
             region->committed(),
             region->name.characters());
     }
-    return builder.build().to_byte_buffer();
+    return builder.to_byte_buffer();
 }
 
 ByteBuffer procfs$pid_vmo(Process& process)
@@ -87,7 +87,7 @@ ByteBuffer procfs$pid_vmo(Process& process)
         }
         builder.appendf("\n");
     }
-    return builder.build().to_byte_buffer();
+    return builder.to_byte_buffer();
 }
 
 ByteBuffer procfs$pid_stack(Process& process)
@@ -111,7 +111,7 @@ ByteBuffer procfs$pid_stack(Process& process)
         unsigned offset = symbol.address - symbol.ksym->address;
         builder.appendf("%p  %s +%u\n", symbol.address, symbol.ksym->name, offset);
     }
-    return builder.build().to_byte_buffer();
+    return builder.to_byte_buffer();
 }
 
 ByteBuffer procfs$pid_regs(Process& process)
@@ -130,7 +130,7 @@ ByteBuffer procfs$pid_regs(Process& process)
     builder.appendf("flg: %x\n", tss.eflags);
     builder.appendf("sp:  %w:%x\n", tss.ss, tss.esp);
     builder.appendf("pc:  %w:%x\n", tss.cs, tss.eip);
-    return builder.build().to_byte_buffer();
+    return builder.to_byte_buffer();
 }
 
 ByteBuffer procfs$pid_exe(Process& process)
@@ -195,7 +195,7 @@ ByteBuffer procfs$mm()
     builder.appendf("VMO count: %u\n", MM.m_vmos.size());
     builder.appendf("Free physical pages: %u\n", MM.m_free_physical_pages.size());
     builder.appendf("Free supervisor physical pages: %u\n", MM.m_free_supervisor_physical_pages.size());
-    return builder.build().to_byte_buffer();
+    return builder.to_byte_buffer();
 }
 
 ByteBuffer procfs$mounts()
@@ -210,7 +210,7 @@ ByteBuffer procfs$mounts()
         else
             builder.appendf("%u:%u\n", mount.host().fsid(), mount.host().index());
     });
-    return builder.build().to_byte_buffer();
+    return builder.to_byte_buffer();
 }
 
 ByteBuffer procfs$cpuinfo()
@@ -273,7 +273,7 @@ ByteBuffer procfs$cpuinfo()
         copy_brand_string_part_to_buffer(2);
         builder.appendf("brandstr:  \"%s\"\n", buffer);
     }
-    return builder.build().to_byte_buffer();
+    return builder.to_byte_buffer();
 }
 
 ByteBuffer procfs$kmalloc()
@@ -287,7 +287,7 @@ ByteBuffer procfs$kmalloc()
         sum_alloc,
         sum_free
     );
-    return builder.build().to_byte_buffer();
+    return builder.to_byte_buffer();
 }
 
 ByteBuffer procfs$summary()
@@ -310,7 +310,7 @@ ByteBuffer procfs$summary()
             process->tty() ? strrchr(process->tty()->tty_name().characters(), '/') + 1 : "n/a",
             process->name().characters());
     }
-    return builder.build().to_byte_buffer();
+    return builder.to_byte_buffer();
 }
 
 ByteBuffer procfs$inodes()
@@ -323,7 +323,7 @@ ByteBuffer procfs$inodes()
         String path = vfs.absolute_path(*inode);
         builder.appendf("Inode{K%x} %02u:%08u (%u) %s\n", inode.ptr(), inode->fsid(), inode->index(), inode->retain_count(), path.characters());
     }
-    return builder.build().to_byte_buffer();
+    return builder.to_byte_buffer();
 }
 
 bool ProcFS::initialize()
