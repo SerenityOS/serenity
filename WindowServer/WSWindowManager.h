@@ -19,11 +19,11 @@ class GraphicsBitmap;
 class WSWindowManager : public WSEventReceiver {
 public:
     static WSWindowManager& the();
-    void addWindow(WSWindow&);
-    void removeWindow(WSWindow&);
+    void add_window(WSWindow&);
+    void remove_window(WSWindow&);
 
-    void notifyTitleChanged(WSWindow&);
-    void notifyRectChanged(WSWindow&, const Rect& oldRect, const Rect& newRect);
+    void notify_title_changed(WSWindow&);
+    void notify_rect_changed(WSWindow&, const Rect& oldRect, const Rect& newRect);
 
     WSWindow* activeWindow() { return m_active_window.ptr(); }
 
@@ -43,24 +43,24 @@ private:
     WSWindowManager();
     virtual ~WSWindowManager() override;
 
-    void processMouseEvent(MouseEvent&);
-    void handleTitleBarMouseEvent(WSWindow&, MouseEvent&);
+    void process_mouse_event(MouseEvent&);
+    void handle_titlebar_mouse_event(WSWindow&, MouseEvent&);
 
     void set_active_window(WSWindow*);
     
     virtual void event(WSEvent&) override;
 
     void compose();
-    void paintWindowFrame(WSWindow&);
+    void paint_window_frame(WSWindow&);
 
     WSFrameBuffer& m_framebuffer;
     Rect m_screen_rect;
 
-    Color m_activeWindowBorderColor;
-    Color m_activeWindowTitleColor;
+    Color m_active_window_border_color;
+    Color m_active_window_title_color;
 
-    Color m_inactiveWindowBorderColor;
-    Color m_inactiveWindowTitleColor;
+    Color m_inactive_window_border_color;
+    Color m_inactive_window_title_color;
 
     HashTable<WSWindow*> m_windows;
     InlineLinkedList<WSWindow> m_windows_in_order;
@@ -69,11 +69,11 @@ private:
 
     WeakPtr<WSWindow> m_dragWindow;
 
-    Point m_dragOrigin;
-    Point m_dragWindowOrigin;
-    Rect m_lastDragRect;
-    Rect m_dragStartRect;
-    Rect m_dragEndRect;
+    Point m_drag_origin;
+    Point m_drag_window_origin;
+    Rect m_last_drag_rect;
+    Rect m_drag_start_rect;
+    Rect m_drag_end_rect;
 
     Rect m_last_cursor_rect;
 
