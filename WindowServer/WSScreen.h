@@ -2,14 +2,17 @@
 
 #include <Widgets/Rect.h>
 #include <Widgets/Size.h>
+#include <Widgets/Color.h>
 #include <Kernel/Keyboard.h>
 
 class WSScreen {
 public:
+    WSScreen(RGBA32*, unsigned width, unsigned height);
     ~WSScreen();
 
     int width() const { return m_width; }
     int height() const { return m_height; }
+    RGBA32* scanline(int y);
 
     static WSScreen& the();
 
@@ -29,6 +32,8 @@ protected:
     WSScreen(unsigned width, unsigned height);
 
 private:
+    RGBA32* m_framebuffer { nullptr };
+
     int m_width { 0 };
     int m_height { 0 };
 
@@ -37,3 +42,8 @@ private:
     bool m_right_mouse_button_pressed { false };
 };
 
+inline RGBA32* WSScreen::scanline(int y)
+{
+    size_t pitch = sizeof(RGBA32) * width();
+    return reinterpret_cast<RGBA32*>(((byte*)m_framebuffer) + (y * pitch));
+}

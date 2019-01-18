@@ -9,7 +9,7 @@
 #include <AK/Lock.h>
 #include "WSEventReceiver.h"
 
-class WSFrameBuffer;
+class WSScreen;
 class MouseEvent;
 class PaintEvent;
 class WSWindow;
@@ -53,7 +53,7 @@ private:
     void compose();
     void paint_window_frame(WSWindow&);
 
-    WSFrameBuffer& m_framebuffer;
+    WSScreen& m_screen;
     Rect m_screen_rect;
 
     Color m_active_window_border_color;
