@@ -15,6 +15,7 @@
 
 class Process;
 extern Process* current;
+class SynthFSInode;
 
 enum class PageFaultResponse {
     ShouldCrash,
@@ -166,7 +167,7 @@ class MemoryManager {
     friend class PhysicalPage;
     friend class Region;
     friend class VMObject;
-    friend ByteBuffer procfs$mm();
+    friend ByteBuffer procfs$mm(SynthFSInode&);
 public:
     static MemoryManager& the() PURE;
 

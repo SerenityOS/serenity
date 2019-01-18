@@ -94,4 +94,6 @@ private:
     OwnPtr<Painter> m_front_painter;
 
     mutable Lock m_lock;
+
+    bool m_flash_flush { false };
 };

@@ -28,7 +28,8 @@ protected:
 
     RetainPtr<SynthFSInode> create_directory(String&& name);
     RetainPtr<SynthFSInode> create_text_file(String&& name, ByteBuffer&&, Unix::mode_t = 0010644);
-    RetainPtr<SynthFSInode> create_generated_file(String&& name, Function<ByteBuffer()>&&, Unix::mode_t = 0100644);
+    RetainPtr<SynthFSInode> create_generated_file(String&& name, Function<ByteBuffer(SynthFSInode&)>&&, Unix::mode_t = 0100644);
+    RetainPtr<SynthFSInode> create_generated_file(String&& name, Function<ByteBuffer(SynthFSInode&)>&&, Function<ssize_t(SynthFSInode&, const ByteBuffer&)>&&, Unix::mode_t = 0100644);
 
     InodeIdentifier add_file(RetainPtr<SynthFSInode>&&, InodeIndex parent = RootInodeIndex);
     bool remove_file(InodeIndex);
@@ -38,10 +39,18 @@ private:
     HashMap<InodeIndex, RetainPtr<SynthFSInode>> m_inodes;
 };
 
+struct SynthFSInodeCustomData {
+    virtual ~SynthFSInodeCustomData();
+};
+
 class SynthFSInode final : public Inode {
     friend class SynthFS;
 public:
     virtual ~SynthFSInode() override;
+
+    void set_custom_data(OwnPtr<SynthFSInodeCustomData>&& custom_data) { m_custom_data = move(custom_data); }
+    SynthFSInodeCustomData* custom_data() { return m_custom_data.ptr(); }
+    const SynthFSInodeCustomData* custom_data() const { return m_custom_data.ptr(); }
 
 private:
     // ^Inode
@@ -62,9 +71,11 @@ private:
     String m_name;
     InodeIdentifier m_parent;
     ByteBuffer m_data;
-    Function<ByteBuffer()> m_generator;
+    Function<ByteBuffer(SynthFSInode&)> m_generator;
+    Function<ssize_t(SynthFSInode&, const ByteBuffer&)> m_write_callback;
     Vector<SynthFSInode*> m_children;
     InodeMetadata m_metadata;
+    OwnPtr<SynthFSInodeCustomData> m_custom_data;
 };
 
 inline SynthFS& SynthFSInode::fs()

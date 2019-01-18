@@ -4,11 +4,11 @@
 #include "WSEventLoop.h"
 #include "Process.h"
 #include "MemoryManager.h"
+#include <Kernel/ProcFileSystem.h>
 #include <Widgets/Painter.h>
 #include <Widgets/CharacterBitmap.h>
 #include <AK/StdLibExtras.h>
 
-//#define DEBUG_FLUSH_YELLOW
 //#define DEBUG_COUNTERS
 
 static const int windowTitleBarHeight = 16;
@@ -129,6 +129,8 @@ WSWindowManager::WSWindowManager()
 
     m_cursor_bitmap_inner = CharacterBitmap::create_from_ascii(cursor_bitmap_inner_ascii, 12, 17);
     m_cursor_bitmap_outer = CharacterBitmap::create_from_ascii(cursor_bitmap_outer_ascii, 12, 17);
+
+    ProcFS::the().add_sys_bool("wm_flash_flush", &m_flash_flush);
 
     invalidate();
     compose();
@@ -444,9 +446,8 @@ void WSWindowManager::flush(const Rect& a_rect)
     const RGBA32* back_ptr = m_back_bitmap->scanline(rect.y()) + rect.x();
     size_t pitch = m_back_bitmap->pitch();
 
-#ifdef DEBUG_FLUSH_YELLOW
-    m_front_painter->fill_rect(rect, Color::Yellow);
-#endif
+    if (m_flash_flush)
+        m_front_painter->fill_rect(rect, Color::Yellow);
 
     for (int y = 0; y < rect.height(); ++y) {
         fast_dword_copy(front_ptr, back_ptr, rect.width());
