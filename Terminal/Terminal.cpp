@@ -49,6 +49,7 @@ Terminal::Terminal()
     // Rightmost column is always last tab on line.
     m_horizontal_tabs[columns() - 1] = 1;
 
+    m_row_needs_invalidation = (bool*)(malloc(rows() * sizeof(bool)));
     m_buffer = (byte*)malloc(rows() * columns());
     m_attributes = (Attribute*)malloc(rows() * columns() * sizeof(Attribute));
     memset(m_buffer, ' ', m_rows * m_columns);
@@ -58,6 +59,7 @@ Terminal::Terminal()
 
 Terminal::~Terminal()
 {
+    free(m_row_needs_invalidation);
     free(m_buffer);
     free(m_attributes);
     free(m_horizontal_tabs);
@@ -408,6 +410,12 @@ Rect Terminal::glyph_rect(word row, word column)
     return { x + m_inset, y + m_inset, font().glyph_width(), font().glyph_height() };
 }
 
+Rect Terminal::row_rect(word row)
+{
+    int y = row * m_line_height;
+    return { m_inset, y + m_inset, font().glyph_width() * m_columns, font().glyph_height() };
+}
+
 inline Terminal::Attribute& Terminal::attribute_at(word row, word column)
 {
     return m_attributes[(row * m_columns) + column];
@@ -417,6 +425,10 @@ void Terminal::paint()
 {
     Rect rect { 0, 0, m_pixel_width, m_pixel_height };
     Painter painter(*m_backing);
+
+    bool need_full_invalidation = false;
+    memset(m_row_needs_invalidation, 0, rows() * sizeof(bool));
+
 #ifdef FAST_SCROLL
     if (m_rows_to_scroll_backing_store && m_rows_to_scroll_backing_store < m_rows) {
         int first_scanline = m_inset;
@@ -428,6 +440,7 @@ void Terminal::paint()
             m_backing->scanline(second_scanline),
             scanlines_to_copy * m_pixel_width
         );
+        need_full_invalidation = true;
         attribute_at(m_cursor_row - m_rows_to_scroll_backing_store, m_cursor_column).dirty = true;
     }
     m_rows_to_scroll_backing_store = 0;
@@ -439,6 +452,7 @@ void Terminal::paint()
             if (!attribute.dirty)
                 continue;
             attribute.dirty = false;
+            m_row_needs_invalidation[row] = true;
             char ch = m_buffer[(row * m_columns) + (column)];
             auto character_rect = glyph_rect(row, column);
             auto character_background = ansi_color(attribute.background_color);
@@ -455,10 +469,30 @@ void Terminal::paint()
     else
         painter.draw_rect(cursor_rect, Color::MidGray);
 
-    if (m_belling)
-        painter.draw_rect(rect, Color::Red);
+    m_row_needs_invalidation[m_cursor_row] = true;
 
-    int rc = gui_invalidate_window(m_window_id);
+    if (m_belling) {
+        need_full_invalidation = true;
+        painter.draw_rect(rect, Color::Red);
+    }
+
+    if (need_full_invalidation) {
+        invalidate_window();
+        return;
+    }
+
+    Rect invalidation_rect;
+    for (int i = 0; i < m_rows; ++i) {
+        if (m_row_needs_invalidation[i])
+            invalidation_rect = invalidation_rect.united(row_rect(i));
+    }
+    invalidate_window(invalidation_rect);
+}
+
+void Terminal::invalidate_window(const Rect& a_rect)
+{
+    GUI_Rect rect = a_rect;
+    int rc = gui_invalidate_window(m_window_id, a_rect.is_null() ? nullptr : &rect);
     if (rc < 0) {
         perror("gui_invalidate_window");
         exit(1);

@@ -53,8 +53,15 @@ public:
     bool isKeyEvent() const { return m_type == KeyUp || m_type == KeyDown; }
     bool isPaintEvent() const { return m_type == Paint; }
 
+    Rect rect() const { return m_rect; }
+    void set_rect(const GUI_Rect& rect)
+    {
+        m_rect = rect;
+    }
+
 private:
     Type m_type { Invalid };
+    Rect m_rect;
 };
 
 class PaintEvent final : public WSEvent {

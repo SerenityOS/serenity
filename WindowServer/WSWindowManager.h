@@ -34,6 +34,7 @@ public:
     void draw_cursor();
 
     void invalidate(const WSWindow&);
+    void invalidate(const WSWindow&, const Rect&);
     void invalidate(const Rect&);
     void invalidate();
     void flush(const Rect&);

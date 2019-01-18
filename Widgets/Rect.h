@@ -20,9 +20,14 @@ public:
     }
     Rect(const GUI_Rect&);
 
+    bool is_null() const
+    {
+        return width() == 0 && height() == 0;
+    }
+
     bool is_empty() const
     {
-        return width() == 0 || height() == 0;
+        return width() <= 0 || height() <= 0;
     }
 
     void move_by(int dx, int dy)

@@ -9,9 +9,9 @@ int gui_create_window(const GUI_CreateWindowParameters* params)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-int gui_invalidate_window(int window_id)
+int gui_invalidate_window(int window_id, const GUI_Rect* rect)
 {
-    int rc = syscall(SC_gui_invalidate_window, window_id);
+    int rc = syscall(SC_gui_invalidate_window, window_id, rect);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 

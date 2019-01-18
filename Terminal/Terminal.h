@@ -25,6 +25,7 @@ private:
     void set_cursor(unsigned row, unsigned column);
     void put_character_at(unsigned row, unsigned column, byte ch);
     void invalidate_cursor();
+    void invalidate_window(const Rect& = Rect());
 
     void escape$A(const Vector<unsigned>&);
     void escape$D(const Vector<unsigned>&);
@@ -40,6 +41,7 @@ private:
     word columns() const { return m_columns; }
     word rows() const { return m_rows; }
     Rect glyph_rect(word row, word column);
+    Rect row_rect(word row);
 
     struct Attribute {
         Attribute() { reset(); }
@@ -58,6 +60,7 @@ private:
 
     byte* m_buffer { nullptr };
     Attribute* m_attributes { nullptr };
+    bool* m_row_needs_invalidation { nullptr };
 
     word m_columns { 0 };
     word m_rows { 0 };

@@ -198,7 +198,7 @@ static dword handle(RegisterDump& regs, dword function, dword arg1, dword arg2, 
     case Syscall::SC_gui_get_window_backing_store:
         return current->gui$get_window_backing_store((int)arg1, (GUI_WindowBackingStoreInfo*)arg2);
     case Syscall::SC_gui_invalidate_window:
-        return current->gui$invalidate_window((int)arg1);
+        return current->gui$invalidate_window((int)arg1, (const GUI_Rect*)arg2);
     default:
         kprintf("<%u> int0x80: Unknown function %u requested {%x, %x, %x}\n", current->pid(), function, arg1, arg2, arg3);
         break;

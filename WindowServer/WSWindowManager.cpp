@@ -412,6 +412,21 @@ void WSWindowManager::invalidate(const WSWindow& window)
     invalidate(outerRectForWindow(window.rect()));
 }
 
+void WSWindowManager::invalidate(const WSWindow& window, const Rect& rect)
+{
+    if (rect.is_empty()) {
+        invalidate(window);
+        return;
+    }
+    ASSERT_INTERRUPTS_ENABLED();
+    LOCKER(m_lock);
+    auto outer_rect = outerRectForWindow(window.rect());
+    auto inner_rect = rect;
+    inner_rect.move_by(window.position());
+    inner_rect.intersect(outer_rect);
+    invalidate(inner_rect);
+}
+
 void WSWindowManager::flush(const Rect& a_rect)
 {
     auto rect = Rect::intersection(a_rect, m_screen_rect);
