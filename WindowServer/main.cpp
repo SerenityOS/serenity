@@ -1,6 +1,6 @@
 #include "Process.h"
 #include <Widgets/Font.h>
-#include <WindowServer/WSFrameBuffer.h>
+#include <WindowServer/WSScreen.h>
 #include <WindowServer/WSWindowManager.h>
 #include <WindowServer/WSEventLoop.h>
 #include <WindowServer/WSWindow.h>
@@ -14,7 +14,7 @@ void WindowServer_main()
 
     dbgprintf("Screen is %ux%ux%ubpp\n", info.width, info.height, info.bpp);
 
-    WSFrameBuffer framebuffer((dword*)info.framebuffer, info.width, info.height);
+    WSScreen screen((dword*)info.framebuffer, info.width, info.height);
 
     WSWindowManager::the();
 

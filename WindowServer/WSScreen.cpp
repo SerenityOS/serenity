@@ -17,8 +17,9 @@ WSScreen& WSScreen::the()
     return *s_the;
 }
 
-WSScreen::WSScreen(unsigned width, unsigned height)
-    : m_width(width)
+WSScreen::WSScreen(RGBA32* framebuffer, unsigned width, unsigned height)
+    : m_framebuffer(framebuffer)
+    , m_width(width)
     , m_height(height)
 {
     ASSERT(!s_the);

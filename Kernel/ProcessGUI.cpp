@@ -3,7 +3,6 @@
 #include <LibC/errno_numbers.h>
 #include <Widgets/Font.h>
 #include <WindowServer/WSScreen.h>
-#include <WindowServer/WSFrameBuffer.h>
 #include <WindowServer/WSEventLoop.h>
 #include <WindowServer/WSWindow.h>
 #include <WindowServer/WSWindowManager.h>
@@ -11,7 +10,6 @@
 void Process::initialize_gui_statics()
 {
     Font::initialize();
-    WSFrameBuffer::initialize();
     WSEventLoop::initialize();
     WSWindowManager::initialize();
     WSScreen::initialize();

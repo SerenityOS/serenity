@@ -57,7 +57,6 @@ WINDOWSERVER_OBJS = \
     ../WindowServer/WSEventLoop.o \
     ../WindowServer/WSWindow.o \
     ../WindowServer/WSWindowManager.o \
-    ../WindowServer/WSFrameBuffer.o \
     ../WindowServer/WSScreen.o \
     ../WindowServer/main.o
 

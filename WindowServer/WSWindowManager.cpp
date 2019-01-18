@@ -2,7 +2,6 @@
 #include "WSWindow.h"
 #include "WSScreen.h"
 #include "WSEventLoop.h"
-#include "WSFrameBuffer.h"
 #include "Process.h"
 #include "MemoryManager.h"
 #include <Widgets/Painter.h>
@@ -107,15 +106,15 @@ static const char* cursor_bitmap_outer_ascii = {
 };
 
 WSWindowManager::WSWindowManager()
-    : m_framebuffer(WSFrameBuffer::the())
-    , m_screen_rect(m_framebuffer.rect())
+    : m_screen(WSScreen::the())
+    , m_screen_rect(m_screen.rect())
 {
 #ifndef DEBUG_COUNTERS
     (void)m_recompose_count;
     (void)m_flush_count;
 #endif
     auto size = m_screen_rect.size();
-    m_front_bitmap = GraphicsBitmap::create_wrapper(size, m_framebuffer.scanline(0));
+    m_front_bitmap = GraphicsBitmap::create_wrapper(size, m_screen.scanline(0));
     auto* region = current->allocate_region(LinearAddress(), size.width() * size.height() * sizeof(RGBA32), "BackBitmap", true, true, true);
     m_back_bitmap = GraphicsBitmap::create_wrapper(m_screen_rect.size(), (RGBA32*)region->linearAddress.get());
 
@@ -327,12 +326,12 @@ void WSWindowManager::draw_cursor()
 {
     ASSERT_INTERRUPTS_ENABLED();
     LOCKER(m_lock);
-    auto cursor_location = m_framebuffer.cursor_location();
+    auto cursor_location = m_screen.cursor_location();
     Rect cursor_rect { cursor_location.x(), cursor_location.y(), (int)m_cursor_bitmap_inner->width(), (int)m_cursor_bitmap_inner->height() };
     flush(m_last_cursor_rect.united(cursor_rect));
     Color inner_color = Color::White;
     Color outer_color = Color::Black;
-    if (m_framebuffer.left_mouse_button_pressed())
+    if (m_screen.left_mouse_button_pressed())
         swap(inner_color, outer_color);
     m_front_painter->draw_bitmap(cursor_location, *m_cursor_bitmap_inner, inner_color);
     m_front_painter->draw_bitmap(cursor_location, *m_cursor_bitmap_outer, outer_color);
