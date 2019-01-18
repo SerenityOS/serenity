@@ -43,6 +43,7 @@ cp -v ../Userland/touch mnt/bin/touch
 cp -v ../Userland/sync mnt/bin/sync
 cp -v ../Userland/more mnt/bin/more
 cp -v ../Userland/guitest mnt/bin/guitest
+cp -v ../Userland/sysctl mnt/bin/sysctl
 cp -v ../Terminal/Terminal mnt/bin/Terminal
 sh sync-local.sh
 cp -v kernel.map mnt/

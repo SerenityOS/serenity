@@ -19,7 +19,8 @@ OBJS = \
        mkdir.o \
        touch.o \
        more.o \
-       guitest.o
+       guitest.o \
+       sysctl.o
 
 APPS = \
        id \
@@ -43,7 +44,8 @@ APPS = \
        touch \
        sync \
        more \
-       guitest
+       guitest \
+       sysctl
 
 ARCH_FLAGS =
 STANDARD_FLAGS = -std=c++17 -nostdinc++ -nostdlib -nostdinc
@@ -127,6 +129,9 @@ more: more.o
 	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
 
 guitest: guitest.o
+	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
+
+sysctl: sysctl.o
 	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
 
 .cpp.o:
