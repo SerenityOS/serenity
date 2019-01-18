@@ -83,7 +83,9 @@ void WSEventLoop::post_event(WSEventReceiver* receiver, OwnPtr<WSEvent>&& event)
 
     if (event->type() == WSEvent::WM_Invalidate) {
         for (auto& queued_event : m_queued_events) {
-            if (receiver == queued_event.receiver && queued_event.event->type() == WSEvent::WM_Invalidate) {
+            if (receiver == queued_event.receiver
+                && queued_event.event->type() == WSEvent::WM_Invalidate
+                && (queued_event.event->rect().is_empty() || queued_event.event->rect().contains(event->rect()))) {
 #ifdef WSEVENTLOOP_DEBUG
                 dbgprintf("Swallow WM_Invalidate\n");
 #endif

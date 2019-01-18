@@ -43,7 +43,7 @@ int main(int argc, char** argv)
 
     paint(*bitmap, backing.size.width, backing.size.height);
 
-    rc = gui_invalidate_window(window_id);
+    rc = gui_invalidate_window(window_id, nullptr);
     if (rc < 0) {
         perror("gui_invalidate_window");
         return 1;
@@ -69,7 +69,7 @@ int main(int argc, char** argv)
 
         if (event.type == GUI_Event::Type::MouseDown) {
             paint(*bitmap, backing.size.width, backing.size.height);
-            gui_invalidate_window(window_id);
+            gui_invalidate_window(window_id, nullptr);
         }
 
     }

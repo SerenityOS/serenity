@@ -99,16 +99,21 @@ int Process::gui$get_window_backing_store(int window_id, GUI_WindowBackingStoreI
     return 0;
 }
 
-int Process::gui$invalidate_window(int window_id)
+int Process::gui$invalidate_window(int window_id, const GUI_Rect* rect)
 {
     dbgprintf("%s<%u> gui$invalidate_window (window_id=%d)\n", name().characters(), pid(), window_id);
     if (window_id < 0)
         return -EINVAL;
+    if (rect && !validate_read_typed(rect))
+        return -EFAULT;
     auto it = m_windows.find(window_id);
     if (it == m_windows.end())
         return -EBADWINDOW;
     auto& window = *(*it).value;
-    WSEventLoop::the().post_event(&window, make<WSEvent>(WSEvent::WM_Invalidate));
+    auto event = make<WSEvent>(WSEvent::WM_Invalidate);
+    if (rect)
+        event->set_rect(*rect);
+    WSEventLoop::the().post_event(&window, move(event));
     WSEventLoop::the().server_process().request_wakeup();
     return 0;
 }

@@ -75,7 +75,7 @@ void WSWindow::event(WSEvent& event)
         gui_event.key.character = static_cast<KeyEvent&>(event).text()[0];
         break;
     case WSEvent::WM_Invalidate:
-        WSWindowManager::the().invalidate(*this);
+        WSWindowManager::the().invalidate(*this, event.rect());
         return;
     case WSEvent::WindowActivated:
         gui_event.type = GUI_Event::Type::WindowActivated;

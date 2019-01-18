@@ -22,6 +22,10 @@ void Rect::intersect(const Rect& other)
 
 Rect Rect::united(const Rect& other) const
 {
+    if (is_null())
+        return other;
+    if (other.is_null())
+        return *this;
     Rect rect;
     rect.set_left(min(left(), other.left()));
     rect.set_top(min(top(), other.top()));
