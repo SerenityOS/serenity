@@ -18,9 +18,14 @@ public:
     void add_process(Process&);
     void remove_process(Process&);
 
+    void add_sys_file(String&&, Function<ByteBuffer(SynthFSInode&)>&& read_callback, Function<ssize_t(SynthFSInode&, const ByteBuffer&)>&& write_callback);
+
+    void add_sys_bool(String&&, bool*, Function<void()>&& change_callback = nullptr);
+
 private:
     ProcFS();
 
     HashMap<pid_t, InodeIndex> m_pid2inode;
+    InodeIdentifier m_sys_dir;
 };
 

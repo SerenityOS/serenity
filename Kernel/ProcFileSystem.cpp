@@ -156,15 +156,15 @@ void ProcFS::add_process(Process& process)
     ksprintf(buf, "%d", process.pid());
     auto dir = add_file(create_directory(buf));
     m_pid2inode.set(process.pid(), dir.index());
-    add_file(create_generated_file("vm", [&process] { return procfs$pid_vm(process); }), dir.index());
-    add_file(create_generated_file("vmo", [&process] { return procfs$pid_vmo(process); }), dir.index());
-    add_file(create_generated_file("stack", [&process] { return procfs$pid_stack(process); }), dir.index());
-    add_file(create_generated_file("regs", [&process] { return procfs$pid_regs(process); }), dir.index());
-    add_file(create_generated_file("fds", [&process] { return procfs$pid_fds(process); }), dir.index());
+    add_file(create_generated_file("vm", [&process] (SynthFSInode&) { return procfs$pid_vm(process); }), dir.index());
+    add_file(create_generated_file("vmo", [&process] (SynthFSInode&) { return procfs$pid_vmo(process); }), dir.index());
+    add_file(create_generated_file("stack", [&process] (SynthFSInode&) { return procfs$pid_stack(process); }), dir.index());
+    add_file(create_generated_file("regs", [&process] (SynthFSInode&) { return procfs$pid_regs(process); }), dir.index());
+    add_file(create_generated_file("fds", [&process] (SynthFSInode&) { return procfs$pid_fds(process); }), dir.index());
     if (process.executable_inode())
-        add_file(create_generated_file("exe", [&process] { return procfs$pid_exe(process); }, 00120777), dir.index());
+        add_file(create_generated_file("exe", [&process] (SynthFSInode&) { return procfs$pid_exe(process); }, 00120777), dir.index());
     if (process.cwd_inode())
-        add_file(create_generated_file("cwd", [&process] { return procfs$pid_cwd(process); }, 00120777), dir.index());
+        add_file(create_generated_file("cwd", [&process] (SynthFSInode&) { return procfs$pid_cwd(process); }, 00120777), dir.index());
 }
 
 void ProcFS::remove_process(Process& process)
@@ -179,7 +179,7 @@ void ProcFS::remove_process(Process& process)
     m_pid2inode.remove(pid);
 }
 
-ByteBuffer procfs$mm()
+ByteBuffer procfs$mm(SynthFSInode&)
 {
     // FIXME: Implement
     InterruptDisabler disabler;
@@ -198,7 +198,7 @@ ByteBuffer procfs$mm()
     return builder.to_byte_buffer();
 }
 
-ByteBuffer procfs$mounts()
+ByteBuffer procfs$mounts(SynthFSInode&)
 {
     InterruptDisabler disabler;
     StringBuilder builder;
@@ -213,7 +213,7 @@ ByteBuffer procfs$mounts()
     return builder.to_byte_buffer();
 }
 
-ByteBuffer procfs$cpuinfo()
+ByteBuffer procfs$cpuinfo(SynthFSInode&)
 {
     StringBuilder builder;
     {
@@ -276,7 +276,7 @@ ByteBuffer procfs$cpuinfo()
     return builder.to_byte_buffer();
 }
 
-ByteBuffer procfs$kmalloc()
+ByteBuffer procfs$kmalloc(SynthFSInode&)
 {
     StringBuilder builder;
     builder.appendf(
@@ -290,7 +290,7 @@ ByteBuffer procfs$kmalloc()
     return builder.to_byte_buffer();
 }
 
-ByteBuffer procfs$summary()
+ByteBuffer procfs$summary(SynthFSInode&)
 {
     InterruptDisabler disabler;
     auto processes = Process::allProcesses();
@@ -313,7 +313,7 @@ ByteBuffer procfs$summary()
     return builder.to_byte_buffer();
 }
 
-ByteBuffer procfs$inodes()
+ByteBuffer procfs$inodes(SynthFSInode&)
 {
     extern HashTable<Inode*>& all_inodes();
     auto& vfs = VFS::the();
@@ -326,6 +326,57 @@ ByteBuffer procfs$inodes()
     return builder.to_byte_buffer();
 }
 
+struct SysVariableData final : public SynthFSInodeCustomData {
+    virtual ~SysVariableData() override { }
+
+    enum Type {
+        Invalid,
+        Boolean,
+    };
+    Type type { Invalid };
+    Function<void()> change_callback;
+    void* address;
+};
+
+static ByteBuffer read_sys_bool(SynthFSInode& inode)
+{
+    ASSERT(inode.custom_data());
+    auto buffer = ByteBuffer::create_uninitialized(2);
+    auto& custom_data = *static_cast<const SysVariableData*>(inode.custom_data());
+    ASSERT(custom_data.type == SysVariableData::Boolean);
+    ASSERT(custom_data.address);
+    buffer[0] = *reinterpret_cast<bool*>(custom_data.address) ? '1' : '0';
+    buffer[1] = '\n';
+    return buffer;
+}
+
+static ssize_t write_sys_bool(SynthFSInode& inode, const ByteBuffer& data)
+{
+    ASSERT(inode.custom_data());
+    if (data.size() >= 1 && (data[0] == '0' || data[0] == '1')) {
+        auto& custom_data = *static_cast<const SysVariableData*>(inode.custom_data());
+        ASSERT(custom_data.address);
+        bool old_value = *reinterpret_cast<bool*>(custom_data.address);
+        bool new_value = data[0] == '1';
+        *reinterpret_cast<bool*>(custom_data.address) = new_value;
+        if (old_value != new_value && custom_data.change_callback)
+            custom_data.change_callback();
+    }
+    return data.size();
+}
+
+void ProcFS::add_sys_bool(String&& name, bool* var, Function<void()>&& change_callback)
+{
+    auto file = create_generated_file(move(name), move(read_sys_bool), move(write_sys_bool));
+    auto data = make<SysVariableData>();
+    data->type = SysVariableData::Boolean;
+    data->change_callback = move(change_callback);
+    data->address = var;
+    file->set_custom_data(move(data));
+    InterruptDisabler disabler;
+    add_file(move(file), m_sys_dir.index());
+}
+
 bool ProcFS::initialize()
 {
     SynthFS::initialize();
@@ -335,6 +386,7 @@ bool ProcFS::initialize()
     add_file(create_generated_file("summary", procfs$summary));
     add_file(create_generated_file("cpuinfo", procfs$cpuinfo));
     add_file(create_generated_file("inodes", procfs$inodes));
+    m_sys_dir = add_file(create_directory("sys"));
     return true;
 }
 

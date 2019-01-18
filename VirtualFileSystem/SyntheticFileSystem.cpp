@@ -69,10 +69,24 @@ RetainPtr<SynthFSInode> SynthFS::create_text_file(String&& name, ByteBuffer&& co
     return file;
 }
 
-RetainPtr<SynthFSInode> SynthFS::create_generated_file(String&& name, Function<ByteBuffer()>&& generator, Unix::mode_t mode)
+RetainPtr<SynthFSInode> SynthFS::create_generated_file(String&& name, Function<ByteBuffer(SynthFSInode&)>&& generator, Unix::mode_t mode)
 {
     auto file = adopt(*new SynthFSInode(*this, generate_inode_index()));
     file->m_generator = move(generator);
+    file->m_name = move(name);
+    file->m_metadata.size = 0;
+    file->m_metadata.uid = 0;
+    file->m_metadata.gid = 0;
+    file->m_metadata.mode = mode;
+    file->m_metadata.mtime = mepoch;
+    return file;
+}
+
+RetainPtr<SynthFSInode> SynthFS::create_generated_file(String&& name, Function<ByteBuffer(SynthFSInode&)>&& read_callback, Function<ssize_t(SynthFSInode&, const ByteBuffer&)>&& write_callback, Unix::mode_t mode)
+{
+    auto file = adopt(*new SynthFSInode(*this, generate_inode_index()));
+    file->m_generator = move(read_callback);
+    file->m_write_callback = move(write_callback);
     file->m_name = move(name);
     file->m_metadata.size = 0;
     file->m_metadata.uid = 0;
@@ -197,10 +211,10 @@ ssize_t SynthFSInode::read_bytes(Unix::off_t offset, size_t count, byte* buffer,
     ByteBuffer generatedData;
     if (m_generator) {
         if (!descriptor) {
-            generatedData = m_generator();
+            generatedData = m_generator(*this);
         } else {
             if (!descriptor->generator_cache())
-                descriptor->generator_cache() = m_generator();
+                descriptor->generator_cache() = m_generator(*this);
             generatedData = descriptor->generator_cache();
         }
     }
@@ -259,10 +273,11 @@ void SynthFSInode::flush_metadata()
 {
 }
 
-bool SynthFSInode::write(const ByteBuffer&)
+bool SynthFSInode::write(const ByteBuffer& data)
 {
-    ASSERT_NOT_REACHED();
-    return false;
+    if (!m_write_callback)
+        return 0; // FIXME: -EPERM?
+    return m_write_callback(*this, data);
 }
 
 bool SynthFSInode::add_child(InodeIdentifier child_id, const String& name, byte file_type, int& error)
@@ -273,4 +288,8 @@ bool SynthFSInode::add_child(InodeIdentifier child_id, const String& name, byte 
     (void) error;
     ASSERT_NOT_REACHED();
     return false;
+}
+
+SynthFSInodeCustomData::~SynthFSInodeCustomData()
+{
 }

@@ -167,9 +167,10 @@ ssize_t FileDescriptor::write(Process& process, const byte* data, size_t size)
         // FIXME: What should happen to m_currentOffset?
         return m_device->write(process, data, size);
     }
-    // FIXME: Implement non-device writes.
-    ASSERT_NOT_REACHED();
-    return -1;
+    ASSERT(m_inode);
+    ssize_t nwritten = m_inode->write(ByteBuffer::wrap((byte*)data, size));
+    m_current_offset += nwritten;
+    return nwritten;
 }
 
 bool FileDescriptor::can_write(Process& process)
