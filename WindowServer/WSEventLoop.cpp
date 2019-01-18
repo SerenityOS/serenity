@@ -45,9 +45,7 @@ int WSEventLoop::exec()
 
     m_running = true;
     for (;;) {
-
-        if (m_queued_events.is_empty())
-            wait_for_event();
+        wait_for_event();
 
         Vector<QueuedEvent> events;
         {
