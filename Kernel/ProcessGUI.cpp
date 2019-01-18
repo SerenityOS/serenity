@@ -64,14 +64,17 @@ int Process::gui$create_window(const GUI_CreateWindowParameters* user_params)
     window->set_rect(rect);
 
     m_windows.set(window_id, move(window));
+#ifdef LOG_GUI_SYSCALLS
     dbgprintf("%s<%u> gui$create_window: %d with rect {%d,%d %dx%d}\n", name().characters(), pid(), window_id, rect.x(), rect.y(), rect.width(), rect.height());
-
+#endif
     return window_id;
 }
 
 int Process::gui$destroy_window(int window_id)
 {
+#ifdef LOG_GUI_SYSCALLS
     dbgprintf("%s<%u> gui$destroy_window (window_id=%d)\n", name().characters(), pid(), window_id);
+#endif
     if (window_id < 0)
         return -EINVAL;
     auto it = m_windows.find(window_id);
@@ -83,7 +86,9 @@ int Process::gui$destroy_window(int window_id)
 
 int Process::gui$get_window_backing_store(int window_id, GUI_WindowBackingStoreInfo* info)
 {
+#ifdef LOG_GUI_SYSCALLS
     dbgprintf("%s<%u> gui$get_window_backing_store (window_id=%d, info=%p)\n", name().characters(), pid(), window_id, info);
+#endif
     if (!validate_write_typed(info))
         return -EFAULT;
     if (window_id < 0)
@@ -101,7 +106,9 @@ int Process::gui$get_window_backing_store(int window_id, GUI_WindowBackingStoreI
 
 int Process::gui$invalidate_window(int window_id, const GUI_Rect* rect)
 {
-    dbgprintf("%s<%u> gui$invalidate_window (window_id=%d)\n", name().characters(), pid(), window_id);
+#ifdef LOG_GUI_SYSCALLS
+    dbgprintf("%s<%u> gui$invalidate_window (window_id=%d, rect=%p)\n", name().characters(), pid(), window_id, rect);
+#endif
     if (window_id < 0)
         return -EINVAL;
     if (rect && !validate_read_typed(rect))

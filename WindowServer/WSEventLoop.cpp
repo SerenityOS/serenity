@@ -110,7 +110,11 @@ void WSEventLoop::wait_for_event()
     params.readfds = &rfds;
     params.writefds = nullptr;
     params.exceptfds = nullptr;
-    params.timeout = nullptr;
+    struct timeval timeout = { 0, 0 };
+    if (m_queued_events.is_empty())
+        params.timeout = nullptr;
+    else
+        params.timeout = &timeout;
     int rc = m_server_process->sys$select(&params);
     memory_barrier();
     if (rc < 0) {
