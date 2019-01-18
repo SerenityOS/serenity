@@ -15,13 +15,6 @@ WSFrameBuffer& WSFrameBuffer::the()
     return *s_the;
 }
 
-WSFrameBuffer::WSFrameBuffer(unsigned width, unsigned height)
-    : WSScreen(width, height)
-{
-    ASSERT(!s_the);
-    s_the = this;
-}
-
 WSFrameBuffer::WSFrameBuffer(RGBA32* data, unsigned width, unsigned height)
     : WSScreen(width, height)
     , m_data(data)
@@ -32,10 +25,6 @@ WSFrameBuffer::WSFrameBuffer(RGBA32* data, unsigned width, unsigned height)
 
 
 WSFrameBuffer::~WSFrameBuffer()
-{
-}
-
-void WSFrameBuffer::show()
 {
 }
 

@@ -8,12 +8,12 @@ WSWindow::WSWindow(Process& process, int window_id)
     : m_process(process)
     , m_window_id(window_id)
 {
-    WSWindowManager::the().addWindow(*this);
+    WSWindowManager::the().add_window(*this);
 }
 
 WSWindow::~WSWindow()
 {
-    WSWindowManager::the().removeWindow(*this);
+    WSWindowManager::the().remove_window(*this);
 }
 
 void WSWindow::set_title(String&& title)
@@ -22,7 +22,7 @@ void WSWindow::set_title(String&& title)
         return;
 
     m_title = move(title);
-    WSWindowManager::the().notifyTitleChanged(*this);
+    WSWindowManager::the().notify_title_changed(*this);
 }
 
 void WSWindow::set_rect(const Rect& rect)
@@ -32,7 +32,7 @@ void WSWindow::set_rect(const Rect& rect)
     auto oldRect = m_rect;
     m_rect = rect;
     m_backing = GraphicsBitmap::create(m_process, m_rect.size());
-    WSWindowManager::the().notifyRectChanged(*this, oldRect, m_rect);
+    WSWindowManager::the().notify_rect_changed(*this, oldRect, m_rect);
 }
 
 // FIXME: Just use the same types.

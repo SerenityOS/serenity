@@ -122,11 +122,11 @@ WSWindowManager::WSWindowManager()
     m_front_painter = make<Painter>(*m_front_bitmap);
     m_back_painter = make<Painter>(*m_back_bitmap);
 
-    m_activeWindowBorderColor = Color(0, 64, 192);
-    m_activeWindowTitleColor = Color::White;
+    m_active_window_border_color = Color(0, 64, 192);
+    m_active_window_title_color = Color::White;
 
-    m_inactiveWindowBorderColor = Color(64, 64, 64);
-    m_inactiveWindowTitleColor = Color::White;
+    m_inactive_window_border_color = Color(64, 64, 64);
+    m_inactive_window_title_color = Color::White;
 
     m_cursor_bitmap_inner = CharacterBitmap::create_from_ascii(cursor_bitmap_inner_ascii, 12, 17);
     m_cursor_bitmap_outer = CharacterBitmap::create_from_ascii(cursor_bitmap_outer_ascii, 12, 17);
@@ -139,7 +139,7 @@ WSWindowManager::~WSWindowManager()
 {
 }
 
-void WSWindowManager::paintWindowFrame(WSWindow& window)
+void WSWindowManager::paint_window_frame(WSWindow& window)
 {
     LOCKER(m_lock);
     //printf("[WM] paintWindowFrame {%p}, rect: %d,%d %dx%d\n", &window, window.rect().x(), window.rect().y(), window.rect().width(), window.rect().height());
@@ -156,8 +156,8 @@ void WSWindowManager::paintWindowFrame(WSWindow& window)
         window.height() + 2
     };
 
-    auto titleColor = &window == activeWindow() ? m_activeWindowTitleColor : m_inactiveWindowTitleColor;
-    auto borderColor = &window == activeWindow() ? m_activeWindowBorderColor : m_inactiveWindowBorderColor;
+    auto titleColor = &window == activeWindow() ? m_active_window_title_color : m_inactive_window_title_color;
+    auto borderColor = &window == activeWindow() ? m_active_window_border_color : m_inactive_window_border_color;
 
     m_back_painter->fill_rect(titleBarRect, borderColor);
     m_back_painter->draw_rect(borderRect, Color::MidGray);
@@ -166,7 +166,7 @@ void WSWindowManager::paintWindowFrame(WSWindow& window)
     m_back_painter->draw_text(titleBarTitleRect, window.title(), Painter::TextAlignment::CenterLeft, titleColor);
 }
 
-void WSWindowManager::addWindow(WSWindow& window)
+void WSWindowManager::add_window(WSWindow& window)
 {
     LOCKER(m_lock);
     m_windows.set(&window);
@@ -182,7 +182,7 @@ void WSWindowManager::move_to_front(WSWindow& window)
     m_windows_in_order.append(&window);
 }
 
-void WSWindowManager::removeWindow(WSWindow& window)
+void WSWindowManager::remove_window(WSWindow& window)
 {
     LOCKER(m_lock);
     if (!m_windows.contains(&window))
@@ -195,12 +195,12 @@ void WSWindowManager::removeWindow(WSWindow& window)
         set_active_window(*m_windows.begin());
 }
 
-void WSWindowManager::notifyTitleChanged(WSWindow& window)
+void WSWindowManager::notify_title_changed(WSWindow& window)
 {
     printf("[WM] WSWindow{%p} title set to '%s'\n", &window, window.title().characters());
 }
 
-void WSWindowManager::notifyRectChanged(WSWindow& window, const Rect& old_rect, const Rect& new_rect)
+void WSWindowManager::notify_rect_changed(WSWindow& window, const Rect& old_rect, const Rect& new_rect)
 {
     printf("[WM] WSWindow %p rect changed (%d,%d %dx%d) -> (%d,%d %dx%d)\n", &window, old_rect.x(), old_rect.y(), old_rect.width(), old_rect.height(), new_rect.x(), new_rect.y(), new_rect.width(), new_rect.height());
     ASSERT_INTERRUPTS_ENABLED();
@@ -209,32 +209,32 @@ void WSWindowManager::notifyRectChanged(WSWindow& window, const Rect& old_rect, 
     invalidate(outerRectForWindow(new_rect));
 }
 
-void WSWindowManager::handleTitleBarMouseEvent(WSWindow& window, MouseEvent& event)
+void WSWindowManager::handle_titlebar_mouse_event(WSWindow& window, MouseEvent& event)
 {
     if (event.type() == WSEvent::MouseDown && event.button() == MouseButton::Left) {
 #ifdef DRAG_DEBUG
         printf("[WM] Begin dragging WSWindow{%p}\n", &window);
 #endif
         m_dragWindow = window.makeWeakPtr();;
-        m_dragOrigin = event.position();
-        m_dragWindowOrigin = window.position();
-        m_dragStartRect = outerRectForWindow(window.rect());
+        m_drag_origin = event.position();
+        m_drag_window_origin = window.position();
+        m_drag_start_rect = outerRectForWindow(window.rect());
         window.set_is_being_dragged(true);
         return;
     }
 }
 
-void WSWindowManager::processMouseEvent(MouseEvent& event)
+void WSWindowManager::process_mouse_event(MouseEvent& event)
 {
     if (event.type() == WSEvent::MouseUp && event.button() == MouseButton::Left) {
         if (m_dragWindow) {
 #ifdef DRAG_DEBUG
             printf("[WM] Finish dragging WSWindow{%p}\n", m_dragWindow.ptr());
 #endif
-            invalidate(m_dragStartRect);
+            invalidate(m_drag_start_rect);
             invalidate(*m_dragWindow);
             m_dragWindow->set_is_being_dragged(false);
-            m_dragEndRect = outerRectForWindow(m_dragWindow->rect());
+            m_drag_end_rect = outerRectForWindow(m_dragWindow->rect());
             m_dragWindow = nullptr;
             return;
         }
@@ -243,11 +243,11 @@ void WSWindowManager::processMouseEvent(MouseEvent& event)
     if (event.type() == WSEvent::MouseMove) {
         if (m_dragWindow) {
             auto old_window_rect = m_dragWindow->rect();
-            Point pos = m_dragWindowOrigin;
+            Point pos = m_drag_window_origin;
 #ifdef DRAG_DEBUG
             dbgprintf("[WM] Dragging [origin: %d,%d] now: %d,%d\n", m_dragOrigin.x(), m_dragOrigin.y(), event.x(), event.y());
 #endif
-            pos.move_by(event.x() - m_dragOrigin.x(), event.y() - m_dragOrigin.y());
+            pos.move_by(event.x() - m_drag_origin.x(), event.y() - m_drag_origin.y());
             m_dragWindow->set_position_without_repaint(pos);
             invalidate(outerRectForWindow(old_window_rect));
             invalidate(outerRectForWindow(m_dragWindow->rect()));
@@ -261,7 +261,7 @@ void WSWindowManager::processMouseEvent(MouseEvent& event)
                 move_to_front(*window);
                 set_active_window(window);
             }
-            handleTitleBarMouseEvent(*window, event);
+            handle_titlebar_mouse_event(*window, event);
             return;
         }
 
@@ -315,7 +315,7 @@ void WSWindowManager::compose()
             continue;
         if (!any_dirty_rect_intersects_window(*window))
             continue;
-        paintWindowFrame(*window);
+        paint_window_frame(*window);
         m_back_painter->blit(window->position(), *window->backing());
     }
     for (auto& r : invalidated_rects)
@@ -344,7 +344,7 @@ void WSWindowManager::event(WSEvent& event)
     ASSERT_INTERRUPTS_ENABLED();
     LOCKER(m_lock);
     if (event.isMouseEvent())
-        return processMouseEvent(static_cast<MouseEvent&>(event));
+        return process_mouse_event(static_cast<MouseEvent&>(event));
 
     if (event.isKeyEvent()) {
         // FIXME: This is a good place to hook key events globally. :)

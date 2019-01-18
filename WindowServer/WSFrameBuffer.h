@@ -7,11 +7,8 @@ class GraphicsBitmap;
 
 class WSFrameBuffer final : public WSScreen {
 public:
-    WSFrameBuffer(unsigned width, unsigned height);
     WSFrameBuffer(RGBA32*, unsigned width, unsigned height);
     ~WSFrameBuffer();
-
-    void show();
 
     static WSFrameBuffer& the();
 
