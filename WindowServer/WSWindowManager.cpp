@@ -212,7 +212,9 @@ void WSWindowManager::notifyRectChanged(WSWindow& window, const Rect& old_rect, 
 void WSWindowManager::handleTitleBarMouseEvent(WSWindow& window, MouseEvent& event)
 {
     if (event.type() == WSEvent::MouseDown && event.button() == MouseButton::Left) {
+#ifdef DRAG_DEBUG
         printf("[WM] Begin dragging WSWindow{%p}\n", &window);
+#endif
         m_dragWindow = window.makeWeakPtr();;
         m_dragOrigin = event.position();
         m_dragWindowOrigin = window.position();
@@ -226,7 +228,9 @@ void WSWindowManager::processMouseEvent(MouseEvent& event)
 {
     if (event.type() == WSEvent::MouseUp && event.button() == MouseButton::Left) {
         if (m_dragWindow) {
+#ifdef DRAG_DEBUG
             printf("[WM] Finish dragging WSWindow{%p}\n", m_dragWindow.ptr());
+#endif
             invalidate(m_dragStartRect);
             invalidate(*m_dragWindow);
             m_dragWindow->set_is_being_dragged(false);
@@ -240,7 +244,9 @@ void WSWindowManager::processMouseEvent(MouseEvent& event)
         if (m_dragWindow) {
             auto old_window_rect = m_dragWindow->rect();
             Point pos = m_dragWindowOrigin;
-            printf("[WM] Dragging [origin: %d,%d] now: %d,%d\n", m_dragOrigin.x(), m_dragOrigin.y(), event.x(), event.y());
+#ifdef DRAG_DEBUG
+            dbgprintf("[WM] Dragging [origin: %d,%d] now: %d,%d\n", m_dragOrigin.x(), m_dragOrigin.y(), event.x(), event.y());
+#endif
             pos.move_by(event.x() - m_dragOrigin.x(), event.y() - m_dragOrigin.y());
             m_dragWindow->set_position_without_repaint(pos);
             invalidate(outerRectForWindow(old_window_rect));

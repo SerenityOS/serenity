@@ -1939,7 +1939,7 @@ int Process::sys$select(const Syscall::SC_select_params* params)
     ASSERT(!exceptfds);
 
     // FIXME: Implement timeout support.
-    ASSERT(!timeout);
+    ASSERT(!timeout || (!timeout->tv_sec && !timeout->tv_usec));
 
     if (nfds < 0)
         return -EINVAL;
@@ -1963,10 +1963,10 @@ int Process::sys$select(const Syscall::SC_select_params* params)
     transfer_fds(readfds, m_select_read_fds);
 
 #ifdef DEBUG_IO
-    dbgprintf("%s<%u> selecting on (read:%u, write:%u)\n", name().characters(), pid(), m_select_read_fds.size(), m_select_write_fds.size());
+    dbgprintf("%s<%u> selecting on (read:%u, write:%u), wakeup_req:%u, timeout=%p\n", name().characters(), pid(), m_select_read_fds.size(), m_select_write_fds.size(), m_wakeup_requested, timeout);
 #endif
 
-    if (!m_wakeup_requested) {
+    if (!m_wakeup_requested && (!timeout || (timeout->tv_sec || timeout->tv_usec))) {
         block(BlockedSelect);
         Scheduler::yield();
     }
