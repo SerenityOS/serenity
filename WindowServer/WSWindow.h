@@ -1,7 +1,7 @@
 #pragma once
 
-#include <Widgets/Rect.h>
-#include <Widgets/GraphicsBitmap.h>
+#include <SharedGraphics/Rect.h>
+#include <SharedGraphics/GraphicsBitmap.h>
 #include <AK/AKString.h>
 #include <AK/InlineLinkedList.h>
 #include "WSEventReceiver.h"

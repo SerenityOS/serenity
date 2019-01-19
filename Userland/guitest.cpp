@@ -6,8 +6,8 @@
 #include <fcntl.h>
 #include <assert.h>
 #include <Kernel/Syscall.h>
-#include <Widgets/GraphicsBitmap.h>
-#include <Widgets/Painter.h>
+#include <SharedGraphics/GraphicsBitmap.h>
+#include <SharedGraphics/Painter.h>
 #include "gui.h"
 
 static void paint(GraphicsBitmap& bitmap, int width, int height);

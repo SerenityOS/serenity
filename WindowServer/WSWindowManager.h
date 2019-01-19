@@ -1,8 +1,8 @@
 #pragma once
 
-#include <Widgets/Rect.h>
-#include <Widgets/Color.h>
-#include <Widgets/Painter.h>
+#include <SharedGraphics/Rect.h>
+#include <SharedGraphics/Color.h>
+#include <SharedGraphics/Painter.h>
 #include <AK/HashTable.h>
 #include <AK/InlineLinkedList.h>
 #include <AK/WeakPtr.h>

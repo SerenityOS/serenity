@@ -1,5 +1,5 @@
 #include "Process.h"
-#include <Widgets/Font.h>
+#include <SharedGraphics/Font.h>
 #include <WindowServer/WSScreen.h>
 #include <WindowServer/WSWindowManager.h>
 #include <WindowServer/WSEventLoop.h>

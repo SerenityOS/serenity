@@ -1,9 +1,12 @@
 #include "Painter.h"
-#include "Widget.h"
 #include "Font.h"
 #include "GraphicsBitmap.h"
 #include <AK/Assertions.h>
 #include <AK/StdLibExtras.h>
+
+#ifdef LIBGUI
+#include <LibGUI/Widget.h>
+#endif
 
 #define DEBUG_WIDGET_UNDERDRAW
 
@@ -14,6 +17,7 @@ Painter::Painter(GraphicsBitmap& bitmap)
     m_clip_rect = { { 0, 0 }, bitmap.size() };
 }
 
+#ifdef LIBGUI
 Painter::Painter(Widget& widget)
     : m_font(&widget.font())
 {
@@ -30,6 +34,7 @@ Painter::Painter(Widget& widget)
         fill_rect(widget.rect(), Color::Red);
 #endif
 }
+#endif
 
 Painter::~Painter()
 {

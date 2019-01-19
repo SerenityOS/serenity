@@ -1,7 +1,7 @@
 #pragma once
 
-#include <Widgets/Color.h>
-#include <Widgets/Rect.h>
+#include <SharedGraphics/Color.h>
+#include <SharedGraphics/Rect.h>
 
 // GUI system call API types.
 

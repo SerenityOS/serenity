@@ -5,13 +5,13 @@ AK_OBJS = \
     ../AK/FileSystemPath.o \
     ../AK/kmalloc.o
 
-WIDGETS_OBJS = \
-    ../Widgets/Painter.o \
-    ../Widgets/Font.o \
-    ../Widgets/Rect.o \
-    ../Widgets/GraphicsBitmap.o \
-    ../Widgets/CharacterBitmap.o \
-    ../Widgets/Color.o
+SHAREDGRAPHICS_OBJS = \
+    ../SharedGraphics/Painter.o \
+    ../SharedGraphics/Font.o \
+    ../SharedGraphics/Rect.o \
+    ../SharedGraphics/GraphicsBitmap.o \
+    ../SharedGraphics/CharacterBitmap.o \
+    ../SharedGraphics/Color.o
 
 LIBC_OBJS = \
        stdio.o \
@@ -45,7 +45,7 @@ LIBC_OBJS = \
        sys/select.o \
        entry.o
 
-OBJS = $(AK_OBJS) $(WIDGETS_OBJS) $(LIBC_OBJS)
+OBJS = $(AK_OBJS) $(WIDGETS_OBJS) $(LIBC_OBJS) $(SHAREDGRAPHICS_OBJS)
 
 LIBRARY = LibC.a
 ARCH_FLAGS =
