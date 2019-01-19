@@ -3,8 +3,8 @@
 #include <AK/AKString.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
-#include <Widgets/GraphicsBitmap.h>
-#include <Widgets/Rect.h>
+#include <SharedGraphics/GraphicsBitmap.h>
+#include <SharedGraphics/Rect.h>
 
 class Font;
 

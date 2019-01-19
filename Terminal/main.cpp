@@ -5,9 +5,9 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <assert.h>
-#include <Widgets/Font.h>
-#include <Widgets/GraphicsBitmap.h>
-#include <Widgets/Painter.h>
+#include <SharedGraphics/Font.h>
+#include <SharedGraphics/GraphicsBitmap.h>
+#include <SharedGraphics/Painter.h>
 #include <sys/ioctl.h>
 #include <sys/select.h>
 #include <gui.h>

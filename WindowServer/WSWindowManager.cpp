@@ -5,8 +5,8 @@
 #include "Process.h"
 #include "MemoryManager.h"
 #include <Kernel/ProcFileSystem.h>
-#include <Widgets/Painter.h>
-#include <Widgets/CharacterBitmap.h>
+#include <SharedGraphics/Painter.h>
+#include <SharedGraphics/CharacterBitmap.h>
 #include <AK/StdLibExtras.h>
 
 //#define DEBUG_COUNTERS

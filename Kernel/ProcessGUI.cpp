@@ -1,7 +1,7 @@
 #include "Process.h"
 #include "MemoryManager.h"
 #include <LibC/errno_numbers.h>
-#include <Widgets/Font.h>
+#include <SharedGraphics/Font.h>
 #include <WindowServer/WSScreen.h>
 #include <WindowServer/WSEventLoop.h>
 #include <WindowServer/WSWindow.h>

@@ -46,13 +46,15 @@ VFS_OBJS = \
     ../VirtualFileSystem/FileDescriptor.o \
     ../VirtualFileSystem/SyntheticFileSystem.o
 
+SHAREDGRAPHICS_OBJS = \
+    ../SharedGraphics/Rect.o \
+    ../SharedGraphics/Painter.o \
+    ../SharedGraphics/Font.o \
+    ../SharedGraphics/Color.o \
+    ../SharedGraphics/CharacterBitmap.o \
+    ../SharedGraphics/GraphicsBitmap.o
+
 WINDOWSERVER_OBJS = \
-    ../Widgets/Rect.o \
-    ../Widgets/Painter.o \
-    ../Widgets/Font.o \
-    ../Widgets/Color.o \
-    ../Widgets/CharacterBitmap.o \
-    ../Widgets/GraphicsBitmap.o \
     ../WindowServer/WSEventReceiver.o \
     ../WindowServer/WSEventLoop.o \
     ../WindowServer/WSWindow.o \
@@ -66,7 +68,7 @@ AK_OBJS = \
     ../AK/StringBuilder.o \
     ../AK/FileSystemPath.o
 
-OBJS = $(KERNEL_OBJS) $(VFS_OBJS) $(AK_OBJS) $(WINDOWSERVER_OBJS)
+OBJS = $(KERNEL_OBJS) $(VFS_OBJS) $(AK_OBJS) $(WINDOWSERVER_OBJS) $(SHAREDGRAPHICS_OBJS)
 
 NASM = nasm
 KERNEL = kernel

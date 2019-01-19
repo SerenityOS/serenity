@@ -1,8 +1,8 @@
 #pragma once
 
-#include <Widgets/Rect.h>
-#include <Widgets/Size.h>
-#include <Widgets/Color.h>
+#include <SharedGraphics/Rect.h>
+#include <SharedGraphics/Size.h>
+#include <SharedGraphics/Color.h>
 #include <Kernel/Keyboard.h>
 
 class WSScreen {

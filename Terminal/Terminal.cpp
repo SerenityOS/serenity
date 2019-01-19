@@ -1,7 +1,7 @@
 #include "Terminal.h"
 #include <AK/AKString.h>
-#include <Widgets/Font.h>
-#include <Widgets/Painter.h>
+#include <SharedGraphics/Font.h>
+#include <SharedGraphics/Painter.h>
 #include <AK/StdLibExtras.h>
 #include <unistd.h>
 #include <stdio.h>
