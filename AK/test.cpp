@@ -126,7 +126,7 @@ int main(int c, char** v)
     strings.append("f");
     strings.append("g");
 
-    auto g = strings.takeLast();
+    auto g = strings.take_last();
 
     for (unsigned i = 0; i < strings.size(); ++i) {
         printf("[%u]: '%s'\n", i, strings[i].characters());

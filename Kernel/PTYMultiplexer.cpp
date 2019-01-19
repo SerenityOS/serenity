@@ -5,7 +5,7 @@
 PTYMultiplexer::PTYMultiplexer()
     : CharacterDevice(5, 2)
 {
-    m_freelist.ensureCapacity(4);
+    m_freelist.ensure_capacity(4);
     for (int i = 4; i > 0; --i)
         m_freelist.unchecked_append(adopt(*new MasterPTY(i - 1)));
 }
@@ -21,7 +21,7 @@ RetainPtr<FileDescriptor> PTYMultiplexer::open(int& error, int options)
         error = -EBUSY;
         return nullptr;
     }
-    auto master = m_freelist.takeLast();
+    auto master = m_freelist.take_last();
     dbgprintf("PTYMultiplexer::open: Vending master %u\n", master->index());
     return VFS::the().open(move(master), error, options);
 }

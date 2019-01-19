@@ -59,73 +59,73 @@ public:
     public:
         bool operator!=(const Iterator& other) const
         {
-            if (m_isEnd && other.m_isEnd)
+            if (m_is_end && other.m_is_end)
                 return false;
             return &m_table != &other.m_table
-                || m_isEnd != other.m_isEnd
-                || m_bucketIndex != other.m_bucketIndex
-                || m_bucketIterator != other.m_bucketIterator;
+                || m_is_end != other.m_is_end
+                || m_bucket_index != other.m_bucket_index
+                || m_bucket_iterator != other.m_bucket_iterator;
         }
         bool operator==(const Iterator& other) const { return !(*this != other); }
         T& operator*()
         {
 #ifdef HASHTABLE_DEBUG
-            kprintf("retrieve { bucketIndex: %u, isEnd: %u }\n", m_bucketIndex, m_isEnd);
+            kprintf("retrieve { bucket_index: %u, is_end: %u }\n", m_bucket_index, m_is_end);
 #endif
-            return *m_bucketIterator;
+            return *m_bucket_iterator;
         }
         Iterator& operator++()
         {
-            skipToNext();
+            skip_to_next();
             return *this;
         }
 
-        void skipToNext()
+        void skip_to_next()
         {
 #ifdef HASHTABLE_DEBUG
             unsigned pass = 0;
 #endif
-            while (!m_isEnd) {
+            while (!m_is_end) {
 #ifdef HASHTABLE_DEBUG
                 ++pass;
-                kprintf("skipToNext pass %u, m_bucketIndex=%u\n", pass, m_bucketIndex);
+                kprintf("skip_to_next pass %u, m_bucket_index=%u\n", pass, m_bucket_index);
 #endif
-                if (m_bucketIterator.isEnd()) {
-                    ++m_bucketIndex;
-                    if (m_bucketIndex >= m_table.capacity()) {
-                        m_isEnd = true;
+                if (m_bucket_iterator.is_end()) {
+                    ++m_bucket_index;
+                    if (m_bucket_index >= m_table.capacity()) {
+                        m_is_end = true;
                         return;
                     }
-                    m_bucketIterator = m_table.m_buckets[m_bucketIndex].chain.begin();
+                    m_bucket_iterator = m_table.m_buckets[m_bucket_index].chain.begin();
                 } else {
-                    ++m_bucketIterator;
+                    ++m_bucket_iterator;
                 }
-                if (!m_bucketIterator.isEnd())
+                if (!m_bucket_iterator.is_end())
                     return;
             }
         }
     private:
         friend class HashTable;
-        explicit Iterator(HashTable& table, bool isEnd, typename DoublyLinkedList<T>::Iterator bucketIterator = DoublyLinkedList<T>::Iterator::universalEnd(), unsigned bucketIndex = 0)
+        explicit Iterator(HashTable& table, bool is_end, typename DoublyLinkedList<T>::Iterator bucket_iterator = DoublyLinkedList<T>::Iterator::universal_end(), unsigned bucket_index = 0)
             : m_table(table)
-            , m_bucketIndex(bucketIndex)
-            , m_isEnd(isEnd)
-            , m_bucketIterator(bucketIterator)
+            , m_bucket_index(bucket_index)
+            , m_is_end(is_end)
+            , m_bucket_iterator(bucket_iterator)
         {
-            if (!isEnd && !m_table.is_empty() && !(m_bucketIterator != DoublyLinkedList<T>::Iterator::universalEnd())) {
+            if (!is_end && !m_table.is_empty() && !(m_bucket_iterator != DoublyLinkedList<T>::Iterator::universal_end())) {
 #ifdef HASHTABLE_DEBUG
                 kprintf("bucket iterator init!\n");
 #endif
-                m_bucketIterator = m_table.m_buckets[0].chain.begin();
-                if (m_bucketIterator.isEnd())
-                    skipToNext();
+                m_bucket_iterator = m_table.m_buckets[0].chain.begin();
+                if (m_bucket_iterator.is_end())
+                    skip_to_next();
             }
         }
 
         HashTable& m_table;
-        unsigned m_bucketIndex { 0 };
-        bool m_isEnd { false };
-        typename DoublyLinkedList<T>::Iterator m_bucketIterator;
+        unsigned m_bucket_index { 0 };
+        bool m_is_end { false };
+        typename DoublyLinkedList<T>::Iterator m_bucket_iterator;
     };
 
     Iterator begin() { return Iterator(*this, is_empty()); }
@@ -135,75 +135,75 @@ public:
     public:
         bool operator!=(const ConstIterator& other) const
         {
-            if (m_isEnd && other.m_isEnd)
+            if (m_is_end && other.m_is_end)
                 return false;
             return &m_table != &other.m_table
-                || m_isEnd != other.m_isEnd
-                || m_bucketIndex != other.m_bucketIndex
-                || m_bucketIterator != other.m_bucketIterator;
+                || m_is_end != other.m_is_end
+                || m_bucket_index != other.m_bucket_index
+                || m_bucket_iterator != other.m_bucket_iterator;
         }
         bool operator==(const ConstIterator& other) const { return !(*this != other); }
         const T& operator*() const
         {
 #ifdef HASHTABLE_DEBUG
-            kprintf("retrieve { bucketIndex: %u, isEnd: %u }\n", m_bucketIndex, m_isEnd);
+            kprintf("retrieve { bucket_index: %u, is_end: %u }\n", m_bucket_index, m_is_end);
 #endif
-            return *m_bucketIterator;
+            return *m_bucket_iterator;
         }
         ConstIterator& operator++()
         {
-            skipToNext();
+            skip_to_next();
             return *this;
         }
 
-        void skipToNext()
+        void skip_to_next()
         {
 #ifdef HASHTABLE_DEBUG
             unsigned pass = 0;
 #endif
-            while (!m_isEnd) {
+            while (!m_is_end) {
 #ifdef HASHTABLE_DEBUG
                 ++pass;
-                kprintf("skipToNext pass %u, m_bucketIndex=%u\n", pass, m_bucketIndex);
+                kprintf("skip_to_next pass %u, m_bucket_index=%u\n", pass, m_bucket_index);
 #endif
-                if (m_bucketIterator.isEnd()) {
-                    ++m_bucketIndex;
-                    if (m_bucketIndex >= m_table.capacity()) {
-                        m_isEnd = true;
+                if (m_bucket_iterator.is_end()) {
+                    ++m_bucket_index;
+                    if (m_bucket_index >= m_table.capacity()) {
+                        m_is_end = true;
                         return;
                     }
-                    const DoublyLinkedList<T>& chain = m_table.m_buckets[m_bucketIndex].chain;
-                    m_bucketIterator = chain.begin();
+                    const DoublyLinkedList<T>& chain = m_table.m_buckets[m_bucket_index].chain;
+                    m_bucket_iterator = chain.begin();
                 } else {
-                    ++m_bucketIterator;
+                    ++m_bucket_iterator;
                 }
-                if (!m_bucketIterator.isEnd())
+                if (!m_bucket_iterator.is_end())
                     return;
             }
         }
     private:
         friend class HashTable;
-        ConstIterator(const HashTable& table, bool isEnd, typename DoublyLinkedList<T>::ConstIterator bucketIterator = DoublyLinkedList<T>::ConstIterator::universalEnd(), unsigned bucketIndex = 0)
+        ConstIterator(const HashTable& table, bool is_end, typename DoublyLinkedList<T>::ConstIterator bucket_iterator = DoublyLinkedList<T>::ConstIterator::universal_end(), unsigned bucket_index = 0)
             : m_table(table)
-            , m_bucketIndex(bucketIndex)
-            , m_isEnd(isEnd)
-            , m_bucketIterator(bucketIterator)
+            , m_bucket_index(bucket_index)
+            , m_is_end(is_end)
+            , m_bucket_iterator(bucket_iterator)
         {
-            if (!isEnd && !m_table.is_empty() && !(m_bucketIterator != DoublyLinkedList<T>::ConstIterator::universalEnd())) {
+            if (!is_end && !m_table.is_empty() && !(m_bucket_iterator != DoublyLinkedList<T>::ConstIterator::universal_end())) {
 #ifdef HASHTABLE_DEBUG
                 kprintf("const bucket iterator init!\n");
 #endif
                 const DoublyLinkedList<T>& chain = m_table.m_buckets[0].chain;
-                m_bucketIterator = chain.begin();
-                if (m_bucketIterator.isEnd())
-                    skipToNext();
+                m_bucket_iterator = chain.begin();
+                if (m_bucket_iterator.is_end())
+                    skip_to_next();
             }
         }
 
         const HashTable& m_table;
-        unsigned m_bucketIndex { 0 };
-        bool m_isEnd { false };
-        typename DoublyLinkedList<T>::ConstIterator m_bucketIterator;
+        unsigned m_bucket_index { 0 };
+        bool m_is_end { false };
+        typename DoublyLinkedList<T>::ConstIterator m_bucket_iterator;
     };
 
     ConstIterator begin() const { return ConstIterator(*this, is_empty()); }
@@ -222,8 +222,8 @@ public:
     void remove(Iterator);
 
 private:
-    Bucket& lookup(const T&, unsigned* bucketIndex = nullptr);
-    const Bucket& lookup(const T&, unsigned* bucketIndex = nullptr) const;
+    Bucket& lookup(const T&, unsigned* bucket_index = nullptr);
+    const Bucket& lookup(const T&, unsigned* bucket_index = nullptr) const;
     void rehash(unsigned capacity);
     void insert(const T&);
     void insert(T&&);
@@ -274,28 +274,28 @@ void HashTable<T, TraitsForT>::set(const T& value)
 
 
 template<typename T, typename TraitsForT>
-void HashTable<T, TraitsForT>::rehash(unsigned newCapacity)
+void HashTable<T, TraitsForT>::rehash(unsigned new_capacity)
 {
-    newCapacity *= 2;
+    new_capacity *= 2;
 #ifdef HASHTABLE_DEBUG
-    kprintf("rehash to %u buckets\n", newCapacity);
+    kprintf("rehash to %u buckets\n", new_capacity);
 #endif
-    auto* newBuckets = new Bucket[newCapacity];
-    auto* oldBuckets = m_buckets;
-    unsigned oldCapacity = m_capacity;
-    m_buckets = newBuckets;
-    m_capacity = newCapacity;
+    auto* new_buckets = new Bucket[new_capacity];
+    auto* old_buckets = m_buckets;
+    unsigned old_capacity = m_capacity;
+    m_buckets = new_buckets;
+    m_capacity = new_capacity;
 
 #ifdef HASHTABLE_DEBUG
-    kprintf("reinsert %u buckets\n", oldCapacity);
+    kprintf("reinsert %u buckets\n", old_capacity);
 #endif
-    for (unsigned i = 0; i < oldCapacity; ++i) {
-        for (auto& value : oldBuckets[i].chain) {
+    for (unsigned i = 0; i < old_capacity; ++i) {
+        for (auto& value : old_buckets[i].chain) {
             insert(move(value));
         }
     }
 
-    delete [] oldBuckets;
+    delete [] old_buckets;
 }
 
 template<typename T, typename TraitsForT>
@@ -338,11 +338,11 @@ auto HashTable<T, TraitsForT>::find(const T& value) -> Iterator
 {
     if (is_empty())
         return end();
-    unsigned bucketIndex;
-    auto& bucket = lookup(value, &bucketIndex);
-    auto bucketIterator = bucket.chain.find(value);
-    if (bucketIterator != bucket.chain.end())
-        return Iterator(*this, false, bucketIterator, bucketIndex);
+    unsigned bucket_index;
+    auto& bucket = lookup(value, &bucket_index);
+    auto bucket_iterator = bucket.chain.find(value);
+    if (bucket_iterator != bucket.chain.end())
+        return Iterator(*this, false, bucket_iterator, bucket_index);
     return end();
 }
 
@@ -351,11 +351,11 @@ auto HashTable<T, TraitsForT>::find(const T& value) const -> ConstIterator
 {
     if (is_empty())
         return end();
-    unsigned bucketIndex;
-    auto& bucket = lookup(value, &bucketIndex);
-    auto bucketIterator = bucket.chain.find(value);
-    if (bucketIterator != bucket.chain.end())
-        return ConstIterator(*this, false, bucketIterator, bucketIndex);
+    unsigned bucket_index;
+    auto& bucket = lookup(value, &bucket_index);
+    auto bucket_iterator = bucket.chain.find(value);
+    if (bucket_iterator != bucket.chain.end())
+        return ConstIterator(*this, false, bucket_iterator, bucket_index);
     return end();
 }
 
@@ -363,12 +363,12 @@ template<typename T, typename TraitsForT>
 void HashTable<T, TraitsForT>::remove(Iterator it)
 {
     ASSERT(!is_empty());
-    m_buckets[it.m_bucketIndex].chain.remove(it.m_bucketIterator);
+    m_buckets[it.m_bucket_index].chain.remove(it.m_bucket_iterator);
     --m_size;
 }
 
 template<typename T, typename TraitsForT>
-typename HashTable<T, TraitsForT>::Bucket& HashTable<T, TraitsForT>::lookup(const T& value, unsigned* bucketIndex)
+typename HashTable<T, TraitsForT>::Bucket& HashTable<T, TraitsForT>::lookup(const T& value, unsigned* bucket_index)
 {
     unsigned hash = TraitsForT::hash(value);
 #ifdef HASHTABLE_DEBUG
@@ -376,13 +376,13 @@ typename HashTable<T, TraitsForT>::Bucket& HashTable<T, TraitsForT>::lookup(cons
     TraitsForT::dump(value);
     kprintf(" is %u\n", hash);
 #endif
-    if (bucketIndex)
-        *bucketIndex = hash % m_capacity;
+    if (bucket_index)
+        *bucket_index = hash % m_capacity;
     return m_buckets[hash % m_capacity];
 }
 
 template<typename T, typename TraitsForT>
-const typename HashTable<T, TraitsForT>::Bucket& HashTable<T, TraitsForT>::lookup(const T& value, unsigned* bucketIndex) const
+const typename HashTable<T, TraitsForT>::Bucket& HashTable<T, TraitsForT>::lookup(const T& value, unsigned* bucket_index) const
 {
     unsigned hash = TraitsForT::hash(value);
 #ifdef HASHTABLE_DEBUG
@@ -390,8 +390,8 @@ const typename HashTable<T, TraitsForT>::Bucket& HashTable<T, TraitsForT>::looku
     TraitsForT::dump(value);
     kprintf(" is %u\n", hash);
 #endif
-    if (bucketIndex)
-        *bucketIndex = hash % m_capacity;
+    if (bucket_index)
+        *bucket_index = hash % m_capacity;
     return m_buckets[hash % m_capacity];
 }
 

@@ -77,7 +77,7 @@ public:
 
     Vector(const Vector& other)
     {
-        ensureCapacity(other.size());
+        ensure_capacity(other.size());
         for (size_t i = 0; i < other.size(); ++i)
             unchecked_append(other[i]);
     }
@@ -137,7 +137,7 @@ public:
     const T& last() const { return at(size() - 1); }
     T& last() { return at(size() - 1); }
 
-    T takeLast()
+    T take_last()
     {
         ASSERT(!is_empty());
         T value = move(last());
@@ -163,7 +163,7 @@ public:
     {
         if (this != &other) {
             clear();
-            ensureCapacity(other.size());
+            ensure_capacity(other.size());
             for (const auto& v : other)
                 unchecked_append(v);
         }
@@ -173,7 +173,7 @@ public:
     void append(Vector<T>&& other)
     {
         Vector<T> tmp = move(other);
-        ensureCapacity(size() + tmp.size());
+        ensure_capacity(size() + tmp.size());
         for (auto&& v : tmp) {
             unchecked_append(move(v));
         }
@@ -194,32 +194,32 @@ public:
 
     void append(T&& value)
     {
-        ensureCapacity(size() + 1);
+        ensure_capacity(size() + 1);
         new (m_impl->slot(m_impl->m_size)) T(move(value));
         ++m_impl->m_size;
     }
 
     void append(const T& value)
     {
-        ensureCapacity(size() + 1);
+        ensure_capacity(size() + 1);
         new (m_impl->slot(m_impl->m_size)) T(value);
         ++m_impl->m_size;
     }
 
     void append(const T* values, size_t count)
     {
-        ensureCapacity(size() + count);
+        ensure_capacity(size() + count);
         for (size_t i = 0; i < count; ++i)
             new (m_impl->slot(m_impl->m_size + i)) T(values[i]);
         m_impl->m_size += count;
     }
 
-    void ensureCapacity(size_t neededCapacity)
+    void ensure_capacity(size_t neededCapacity)
     {
         if (capacity() >= neededCapacity)
             return;
-        size_t newCapacity = paddedCapacity(neededCapacity);
-        auto newImpl = VectorImpl<T, Allocator>::create(newCapacity);
+        size_t new_capacity = padded_capacity(neededCapacity);
+        auto newImpl = VectorImpl<T, Allocator>::create(new_capacity);
         if (m_impl) {
             newImpl->m_size = m_impl->m_size;
             for (size_t i = 0; i < size(); ++i) {
@@ -236,7 +236,7 @@ public:
         ASSERT(new_size >= size());
         if (!new_size)
             return;
-        ensureCapacity(new_size);
+        ensure_capacity(new_size);
         for (size_t i = size(); i < new_size; ++i)
             new (m_impl->slot(i)) T;
         m_impl->m_size = new_size;
@@ -273,7 +273,7 @@ public:
     ConstIterator end() const { return ConstIterator(*this, size()); }
 
 //private:
-    static size_t paddedCapacity(size_t capacity)
+    static size_t padded_capacity(size_t capacity)
     {
         return max(size_t(4), capacity + (capacity / 4) + 4);
     }

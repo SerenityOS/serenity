@@ -63,7 +63,7 @@ Vector<Process*> Process::allProcesses()
 {
     InterruptDisabler disabler;
     Vector<Process*> processes;
-    processes.ensureCapacity(g_processes->size_slow());
+    processes.ensure_capacity(g_processes->size_slow());
     for (auto* process = g_processes->head(); process; process = process->next())
         processes.append(process);
     return processes;
@@ -380,7 +380,7 @@ int Process::do_exec(const String& path, Vector<String>&& arguments, Vector<Stri
 
     Scheduler::prepare_to_modify_tss(*this);
 
-    m_name = parts.takeLast();
+    m_name = parts.take_last();
 
     dword old_esp0 = m_tss.esp0;
 
@@ -490,7 +490,7 @@ Process* Process::create_user_process(const String& path, uid_t uid, gid_t gid, 
     if (!cwd)
         cwd = VFS::the().root_inode();
 
-    auto* process = new Process(parts.takeLast(), uid, gid, parent_pid, Ring3, move(cwd), nullptr, tty);
+    auto* process = new Process(parts.take_last(), uid, gid, parent_pid, Ring3, move(cwd), nullptr, tty);
 
     error = process->exec(path, move(arguments), move(environment));
     if (error != 0) {
