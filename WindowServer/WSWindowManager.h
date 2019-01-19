@@ -80,13 +80,13 @@ private:
 
     Rect m_last_cursor_rect;
 
-    unsigned m_recompose_count { 0 };
+    unsigned m_compose_count { 0 };
     unsigned m_flush_count { 0 };
 
     RetainPtr<GraphicsBitmap> m_front_bitmap;
     RetainPtr<GraphicsBitmap> m_back_bitmap;
 
-    Vector<Rect> m_invalidated_rects;
+    Vector<Rect> m_dirty_rects;
 
     bool m_pending_compose_event { false };
 
