@@ -235,6 +235,7 @@ void WSWindowManager::handle_titlebar_mouse_event(WSWindow& window, MouseEvent& 
         m_drag_window_origin = window.position();
         m_drag_start_rect = outerRectForWindow(window.rect());
         window.set_is_being_dragged(true);
+        invalidate(window);
         return;
     }
 }
