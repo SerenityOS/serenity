@@ -13,7 +13,7 @@
 
 static const int windowTitleBarHeight = 16;
 
-static inline Rect titleBarRectForWindow(const Rect& window)
+static inline Rect title_bar_rect(const Rect& window)
 {
     return {
         window.x() - 1,
@@ -23,9 +23,9 @@ static inline Rect titleBarRectForWindow(const Rect& window)
     };
 }
 
-static inline Rect titleBarTitleRectForWindow(const Rect& window)
+static inline Rect title_bar_text_rect(const Rect& window)
 {
-    auto titleBarRect = titleBarRectForWindow(window);
+    auto titleBarRect = title_bar_rect(window);
     return {
         titleBarRect.x() + 2,
         titleBarRect.y(),
@@ -34,9 +34,9 @@ static inline Rect titleBarTitleRectForWindow(const Rect& window)
     };
 }
 
-static inline Rect borderRectForWindow(const Rect& window)
+static inline Rect border_window_rect(const Rect& window)
 {
-    auto titleBarRect = titleBarRectForWindow(window);
+    auto titleBarRect = title_bar_rect(window);
     return { titleBarRect.x() - 1,
         titleBarRect.y() - 1,
         titleBarRect.width() + 2,
@@ -44,25 +44,25 @@ static inline Rect borderRectForWindow(const Rect& window)
     };
 }
 
-static inline Rect outerRectForWindow(const Rect& window)
+static inline Rect outer_window_rect(const Rect& window)
 {
-    auto rect = borderRectForWindow(window);
+    auto rect = border_window_rect(window);
     rect.inflate(2, 2);
     return rect;
 }
 
-static WSWindowManager* s_the_window_manager;
+static WSWindowManager* s_the;
 
 WSWindowManager& WSWindowManager::the()
 {
-    if (!s_the_window_manager)
-        s_the_window_manager = new WSWindowManager;
-    return *s_the_window_manager;
+    if (!s_the)
+        s_the = new WSWindowManager;
+    return *s_the;
 }
 
 void WSWindowManager::initialize()
 {
-    s_the_window_manager = nullptr;
+    s_the = nullptr;
 }
 
 static const char* cursor_bitmap_inner_ascii = {
@@ -110,7 +110,7 @@ WSWindowManager::WSWindowManager()
     , m_screen_rect(m_screen.rect())
 {
 #ifndef DEBUG_COUNTERS
-    (void)m_recompose_count;
+    (void)m_compose_count;
     (void)m_flush_count;
 #endif
     auto size = m_screen_rect.size();
@@ -148,10 +148,10 @@ void WSWindowManager::paint_window_frame(WSWindow& window)
     LOCKER(m_lock);
     //printf("[WM] paintWindowFrame {%p}, rect: %d,%d %dx%d\n", &window, window.rect().x(), window.rect().y(), window.rect().width(), window.rect().height());
 
-    auto titleBarRect = titleBarRectForWindow(window.rect());
-    auto titleBarTitleRect = titleBarTitleRectForWindow(window.rect());
-    auto outerRect = outerRectForWindow(window.rect());
-    auto borderRect = borderRectForWindow(window.rect());
+    auto titleBarRect = title_bar_rect(window.rect());
+    auto titleBarTitleRect = title_bar_text_rect(window.rect());
+    auto outerRect = outer_window_rect(window.rect());
+    auto borderRect = border_window_rect(window.rect());
 
     Rect inner_border_rect {
         window.x() - 1,
@@ -220,8 +220,8 @@ void WSWindowManager::notify_rect_changed(WSWindow& window, const Rect& old_rect
     printf("[WM] WSWindow %p rect changed (%d,%d %dx%d) -> (%d,%d %dx%d)\n", &window, old_rect.x(), old_rect.y(), old_rect.width(), old_rect.height(), new_rect.x(), new_rect.y(), new_rect.width(), new_rect.height());
     ASSERT_INTERRUPTS_ENABLED();
     LOCKER(m_lock);
-    invalidate(outerRectForWindow(old_rect));
-    invalidate(outerRectForWindow(new_rect));
+    invalidate(outer_window_rect(old_rect));
+    invalidate(outer_window_rect(new_rect));
 }
 
 void WSWindowManager::handle_titlebar_mouse_event(WSWindow& window, MouseEvent& event)
@@ -233,7 +233,7 @@ void WSWindowManager::handle_titlebar_mouse_event(WSWindow& window, MouseEvent& 
         m_drag_window = window.makeWeakPtr();;
         m_drag_origin = event.position();
         m_drag_window_origin = window.position();
-        m_drag_start_rect = outerRectForWindow(window.rect());
+        m_drag_start_rect = outer_window_rect(window.rect());
         window.set_is_being_dragged(true);
         invalidate(window);
         return;
@@ -249,7 +249,7 @@ void WSWindowManager::process_mouse_event(MouseEvent& event)
 #endif
             invalidate(*m_drag_window);
             m_drag_window->set_is_being_dragged(false);
-            m_drag_end_rect = outerRectForWindow(m_drag_window->rect());
+            m_drag_end_rect = outer_window_rect(m_drag_window->rect());
             m_drag_window = nullptr;
             return;
         }
@@ -264,14 +264,14 @@ void WSWindowManager::process_mouse_event(MouseEvent& event)
 #endif
             pos.move_by(event.x() - m_drag_origin.x(), event.y() - m_drag_origin.y());
             m_drag_window->set_position_without_repaint(pos);
-            invalidate(outerRectForWindow(old_window_rect));
-            invalidate(outerRectForWindow(m_drag_window->rect()));
+            invalidate(outer_window_rect(old_window_rect));
+            invalidate(outer_window_rect(m_drag_window->rect()));
             return;
         }
     }
 
     for (auto* window = m_windows_in_order.tail(); window; window = window->prev()) {
-        if (titleBarRectForWindow(window->rect()).contains(event.position())) {
+        if (title_bar_rect(window->rect()).contains(event.position())) {
             if (event.type() == WSEvent::MouseDown) {
                 move_to_front(*window);
                 set_active_window(window);
@@ -296,30 +296,30 @@ void WSWindowManager::process_mouse_event(MouseEvent& event)
 void WSWindowManager::compose()
 {
     LOCKER(m_lock);
-    auto invalidated_rects = move(m_invalidated_rects);
+    auto dirty_rects = move(m_dirty_rects);
 #ifdef DEBUG_COUNTERS
-    dbgprintf("[WM] compose #%u (%u rects)\n", ++m_recompose_count, invalidated_rects.size());
+    dbgprintf("[WM] compose #%u (%u rects)\n", ++m_compose_count, dirty_rects.size());
     dbgprintf("kmalloc stats: alloc:%u free:%u eternal:%u\n", sum_alloc, sum_free, kmalloc_sum_eternal);
 #endif
 
     auto any_window_contains_rect = [this] (const Rect& r) {
         for (auto* window = m_windows_in_order.head(); window; window = window->next()) {
-            if (outerRectForWindow(window->rect()).contains(r))
+            if (outer_window_rect(window->rect()).contains(r))
                 return true;
         }
         return false;
     };
 
-    auto any_dirty_rect_intersects_window = [&invalidated_rects] (const WSWindow& window) {
-        auto window_rect = outerRectForWindow(window.rect());
-        for (auto& dirty_rect : invalidated_rects) {
+    auto any_dirty_rect_intersects_window = [&dirty_rects] (const WSWindow& window) {
+        auto window_rect = outer_window_rect(window.rect());
+        for (auto& dirty_rect : dirty_rects) {
             if (dirty_rect.intersects(window_rect))
                 return true;
         }
         return false;
     };
 
-    for (auto& r : invalidated_rects) {
+    for (auto& r : dirty_rects) {
         if (any_window_contains_rect(r))
             continue;
         //dbgprintf("Repaint root %d,%d %dx%d\n", r.x(), r.y(), r.width(), r.height());
@@ -333,7 +333,7 @@ void WSWindowManager::compose()
         paint_window_frame(*window);
         m_back_painter->blit(window->position(), *window->backing());
     }
-    for (auto& r : invalidated_rects)
+    for (auto& r : dirty_rects)
         flush(r);
     draw_cursor();
 }
@@ -395,8 +395,8 @@ void WSWindowManager::set_active_window(WSWindow* window)
 void WSWindowManager::invalidate()
 {
     LOCKER(m_lock);
-    m_invalidated_rects.clear_with_capacity();
-    m_invalidated_rects.append(m_screen_rect);
+    m_dirty_rects.clear_with_capacity();
+    m_dirty_rects.append(m_screen_rect);
 }
 
 void WSWindowManager::invalidate(const Rect& a_rect)
@@ -406,7 +406,7 @@ void WSWindowManager::invalidate(const Rect& a_rect)
     if (rect.is_empty())
         return;
 
-    for (auto& r : m_invalidated_rects) {
+    for (auto& r : m_dirty_rects) {
         if (r.contains(rect))
             return;
         if (r.intersects(rect)) {
@@ -417,7 +417,7 @@ void WSWindowManager::invalidate(const Rect& a_rect)
         }
     }
 
-    m_invalidated_rects.append(rect);
+    m_dirty_rects.append(rect);
 
     if (!m_pending_compose_event) {
         ASSERT_INTERRUPTS_ENABLED();
@@ -430,7 +430,7 @@ void WSWindowManager::invalidate(const WSWindow& window)
 {
     ASSERT_INTERRUPTS_ENABLED();
     LOCKER(m_lock);
-    invalidate(outerRectForWindow(window.rect()));
+    invalidate(outer_window_rect(window.rect()));
 }
 
 void WSWindowManager::invalidate(const WSWindow& window, const Rect& rect)
@@ -441,7 +441,7 @@ void WSWindowManager::invalidate(const WSWindow& window, const Rect& rect)
     }
     ASSERT_INTERRUPTS_ENABLED();
     LOCKER(m_lock);
-    auto outer_rect = outerRectForWindow(window.rect());
+    auto outer_rect = outer_window_rect(window.rect());
     auto inner_rect = rect;
     inner_rect.move_by(window.position());
     inner_rect.intersect(outer_rect);
