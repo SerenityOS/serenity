@@ -1,5 +1,5 @@
 #include "Button.h"
-#include "Painter.h"
+#include <SharedGraphics/Painter.h>
 
 Button::Button(Widget* parent)
     : Widget(parent)
@@ -66,7 +66,7 @@ void Button::paintEvent(PaintEvent&)
 
 void Button::mouseDownEvent(MouseEvent& event)
 {
-    printf("Button::mouseDownEvent: x=%d, y=%d, button=%u\n", event.x(), event.y(), (unsigned)event.button());
+    dbgprintf("Button::mouseDownEvent: x=%d, y=%d, button=%u\n", event.x(), event.y(), (unsigned)event.button());
 
     m_beingPressed = true;
 
@@ -76,7 +76,7 @@ void Button::mouseDownEvent(MouseEvent& event)
 
 void Button::mouseUpEvent(MouseEvent& event)
 {
-    printf("Button::mouseUpEvent: x=%d, y=%d, button=%u\n", event.x(), event.y(), (unsigned)event.button());
+    dbgprintf("Button::mouseUpEvent: x=%d, y=%d, button=%u\n", event.x(), event.y(), (unsigned)event.button());
 
     m_beingPressed = false;
 

@@ -1,6 +1,6 @@
 #include "CheckBox.h"
-#include "Painter.h"
-#include "CharacterBitmap.h"
+#include <SharedGraphics/Painter.h>
+#include <SharedGraphics/CharacterBitmap.h>
 
 CheckBox::CheckBox(Widget* parent)
     : Widget(parent)
@@ -95,7 +95,7 @@ void CheckBox::paintEvent(PaintEvent&)
 
 void CheckBox::mouseDownEvent(MouseEvent& event)
 {
-    printf("CheckBox::mouseDownEvent: x=%d, y=%d, button=%u\n", event.x(), event.y(), (unsigned)event.button());
+    dbgprintf("CheckBox::mouseDownEvent: x=%d, y=%d, button=%u\n", event.x(), event.y(), (unsigned)event.button());
 
     setIsChecked(!isChecked());
 }

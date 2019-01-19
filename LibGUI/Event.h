@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Point.h"
-#include "Rect.h"
+#include <SharedGraphics/Point.h>
+#include <SharedGraphics/Rect.h>
 #include <AK/AKString.h>
 #include <AK/Types.h>
 

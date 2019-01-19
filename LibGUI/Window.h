@@ -1,16 +1,13 @@
 #pragma once
 
 #include "Object.h"
-#include "Rect.h"
-#include "GraphicsBitmap.h"
+#include <SharedGraphics/Rect.h>
+#include <SharedGraphics/GraphicsBitmap.h>
 #include <AK/AKString.h>
-#include <AK/InlineLinkedList.h>
 
-class Process;
-
-class Window final : public Object, public InlineLinkedListNode<Window> {
+class Window final : public Object {
 public:
-    Window(Process&, int window_id);
+    explicit Window(int window_id);
     virtual ~Window() override;
 
     int window_id() const { return m_window_id; }
@@ -41,18 +38,12 @@ public:
 
     GraphicsBitmap* backing() { return m_backing.ptr(); }
 
-    // For InlineLinkedList.
-    // FIXME: Maybe make a ListHashSet and then WindowManager can just use that.
-    Window* m_next { nullptr };
-    Window* m_prev { nullptr };
-
 private:
     String m_title;
     Rect m_rect;
     bool m_is_being_dragged { false };
 
     RetainPtr<GraphicsBitmap> m_backing;
-    Process& m_process;
     int m_window_id { -1 };
 };
 
