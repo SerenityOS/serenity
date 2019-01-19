@@ -57,7 +57,7 @@ void Object::timerEvent(TimerEvent&)
 void Object::startTimer(int ms)
 {
     if (m_timerID) {
-        printf("Object{%p} already has a timer!\n", this);
+        dbgprintf("Object{%p} already has a timer!\n", this);
         ASSERT_NOT_REACHED();
     }
 }

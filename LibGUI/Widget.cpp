@@ -1,11 +1,10 @@
 #include "Widget.h"
 #include "Event.h"
 #include "EventLoop.h"
-#include "GraphicsBitmap.h"
-#include "WindowManager.h"
 #include "Window.h"
-#include "Painter.h"
 #include <AK/Assertions.h>
+#include <SharedGraphics/GraphicsBitmap.h>
+#include <SharedGraphics/Painter.h>
 
 Widget::Widget(Widget* parent)
     : Object(parent)

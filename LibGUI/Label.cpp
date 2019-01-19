@@ -1,5 +1,5 @@
 #include "Label.h"
-#include "Painter.h"
+#include <SharedGraphics/Painter.h>
 
 Label::Label(Widget* parent)
     : Widget(parent)
@@ -29,7 +29,7 @@ void Label::paintEvent(PaintEvent&)
 
 void Label::mouseMoveEvent(MouseEvent& event)
 {
-    printf("Label::mouseMoveEvent: x=%d, y=%d\n", event.x(), event.y());
+    dbgprintf("Label::mouseMoveEvent: x=%d, y=%d\n", event.x(), event.y());
     Widget::mouseMoveEvent(event);
 }
 

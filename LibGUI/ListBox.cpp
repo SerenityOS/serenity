@@ -1,7 +1,7 @@
 #include "ListBox.h"
-#include "Painter.h"
-#include "Font.h"
 #include "Window.h"
+#include <SharedGraphics/Font.h>
+#include <SharedGraphics/Painter.h>
 
 ListBox::ListBox(Widget* parent)
     : Widget(parent)
@@ -47,12 +47,12 @@ void ListBox::paintEvent(PaintEvent&)
 
 void ListBox::mouseDownEvent(MouseEvent& event)
 {
-    printf("ListBox::mouseDownEvent %d,%d\n", event.x(), event.y());
+    dbgprintf("ListBox::mouseDownEvent %d,%d\n", event.x(), event.y());
     for (int i = m_scrollOffset; i < static_cast<int>(m_items.size()); ++i) {
         auto itemRect = item_rect(i);
         if (itemRect.contains(event.position())) {
             m_selectedIndex = i;
-            printf("ListBox: selected item %u (\"%s\")\n", i, m_items[i].characters());
+            dbgprintf("ListBox: selected item %u (\"%s\")\n", i, m_items[i].characters());
             update();
             return;
         }

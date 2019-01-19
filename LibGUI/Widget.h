@@ -2,9 +2,9 @@
 
 #include "Event.h"
 #include "Object.h"
-#include "Rect.h"
-#include "Color.h"
-#include "Font.h"
+#include <SharedGraphics/Rect.h>
+#include <SharedGraphics/Color.h>
+#include <SharedGraphics/Font.h>
 #include <AK/AKString.h>
 
 class GraphicsBitmap;

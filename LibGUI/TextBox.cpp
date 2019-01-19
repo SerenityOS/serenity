@@ -1,8 +1,8 @@
 #include "TextBox.h"
-#include "Painter.h"
-#include "Font.h"
-#include "CharacterBitmap.h"
 #include <AK/StdLibExtras.h>
+#include <SharedGraphics/CharacterBitmap.h>
+#include <SharedGraphics/Font.h>
+#include <SharedGraphics/Painter.h>
 
 TextBox::TextBox(Widget* parent)
     : Widget(parent)
@@ -48,7 +48,7 @@ void TextBox::paintEvent(PaintEvent&)
         int x = innerRect.x() + (i * font().glyph_width());
         auto* bitmap = font().glyph_bitmap(ch);
         if (!bitmap) {
-            printf("TextBox: glyph missing: %02x\n", ch);
+            dbgprintf("TextBox: glyph missing: %02x\n", ch);
             ASSERT_NOT_REACHED();
         }
         painter.draw_bitmap({x, y}, *bitmap, Color::Black);
