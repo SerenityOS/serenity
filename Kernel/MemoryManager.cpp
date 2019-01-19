@@ -84,7 +84,7 @@ void MemoryManager::initialize_paging()
 #endif
     for (size_t i = (4 * MB); i < (32 * MB); i += PAGE_SIZE)
         m_free_physical_pages.append(adopt(*new PhysicalPage(PhysicalAddress(i), false)));
-    m_quickmap_addr = LinearAddress(m_free_physical_pages.takeLast().leakRef()->paddr().get());
+    m_quickmap_addr = LinearAddress(m_free_physical_pages.take_last().leakRef()->paddr().get());
 #ifdef MM_DEBUG
     dbgprintf("MM: Quickmap will use P%x\n", m_quickmap_addr.get());
     dbgprintf("MM: Installing page directory\n");
@@ -357,7 +357,7 @@ RetainPtr<PhysicalPage> MemoryManager::allocate_physical_page()
 #ifdef MM_DEBUG
     dbgprintf("MM: allocate_physical_page vending P%x (%u remaining)\n", m_free_physical_pages.last()->paddr().get(), m_free_physical_pages.size());
 #endif
-    return m_free_physical_pages.takeLast();
+    return m_free_physical_pages.take_last();
 }
 
 RetainPtr<PhysicalPage> MemoryManager::allocate_supervisor_physical_page()
@@ -368,7 +368,7 @@ RetainPtr<PhysicalPage> MemoryManager::allocate_supervisor_physical_page()
 #ifdef MM_DEBUG
     dbgprintf("MM: allocate_supervisor_physical_page vending P%x (%u remaining)\n", m_free_supervisor_physical_pages.last()->paddr().get(), m_free_supervisor_physical_pages.size());
 #endif
-    return m_free_supervisor_physical_pages.takeLast();
+    return m_free_supervisor_physical_pages.take_last();
 }
 
 void MemoryManager::enter_process_paging_scope(Process& process)

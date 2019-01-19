@@ -23,7 +23,7 @@ bool FileSystemPath::canonicalize(bool resolve_symbolic_links)
             continue;
         if (part == "..") {
             if (!canonical_parts.is_empty())
-                canonical_parts.takeLast();
+                canonical_parts.take_last();
             continue;
         }
         if (!part.is_empty())

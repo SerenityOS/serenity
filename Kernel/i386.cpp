@@ -29,7 +29,7 @@ word gdt_alloc_entry()
 {
     ASSERT(s_gdt_freelist);
     ASSERT(!s_gdt_freelist->is_empty());
-    return s_gdt_freelist->takeLast();
+    return s_gdt_freelist->take_last();
 }
 
 void gdt_free_entry(word entry)
@@ -323,7 +323,7 @@ void gdt_init()
     s_gdtLength = 5;
 
     s_gdt_freelist = new Vector<word, KmallocEternalAllocator>();
-    s_gdt_freelist->ensureCapacity(256);
+    s_gdt_freelist->ensure_capacity(256);
     for (size_t i = s_gdtLength; i < 256; ++i)
         s_gdt_freelist->append(i * 8);
 

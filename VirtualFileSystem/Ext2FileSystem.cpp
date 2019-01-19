@@ -158,7 +158,7 @@ Vector<unsigned> Ext2FS::block_list_for_inode(const ext2_inode& e2inode) const
     unsigned blockCount = e2inode.i_blocks / (blockSize() / 512);
     unsigned blocksRemaining = blockCount;
     Vector<unsigned> list;
-    list.ensureCapacity(blocksRemaining);
+    list.ensure_capacity(blocksRemaining);
 
     unsigned directCount = min(blockCount, (unsigned)EXT2_NDIR_BLOCKS);
     for (unsigned i = 0; i < directCount; ++i) {

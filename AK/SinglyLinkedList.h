@@ -61,8 +61,8 @@ public:
         bool operator!=(const Iterator& other) { return m_node != other.m_node; }
         Iterator& operator++() { m_node = m_node->next; return *this; }
         T& operator*() { return m_node->value; }
-        bool isEnd() const { return !m_node; }
-        static Iterator universalEnd() { return Iterator(nullptr); }
+        bool is_end() const { return !m_node; }
+        static Iterator universal_end() { return Iterator(nullptr); }
     private:
         friend class SinglyLinkedList;
         explicit Iterator(SinglyLinkedList::Node* node) : m_node(node) { }
@@ -70,15 +70,15 @@ public:
     };
 
     Iterator begin() { return Iterator(m_head); }
-    Iterator end() { return Iterator::universalEnd(); }
+    Iterator end() { return Iterator::universal_end(); }
 
     class ConstIterator {
     public:
         bool operator!=(const ConstIterator& other) { return m_node != other.m_node; }
         ConstIterator& operator++() { m_node = m_node->next; return *this; }
         const T& operator*() const { return m_node->value; }
-        bool isEnd() const { return !m_node; }
-        static ConstIterator universalEnd() { return ConstIterator(nullptr); }
+        bool is_end() const { return !m_node; }
+        static ConstIterator universal_end() { return ConstIterator(nullptr); }
     private:
         friend class SinglyLinkedList;
         explicit ConstIterator(const SinglyLinkedList::Node* node) : m_node(node) { }
@@ -86,7 +86,7 @@ public:
     };
 
     ConstIterator begin() const { return ConstIterator(m_head); }
-    ConstIterator end() const { return ConstIterator::universalEnd(); }
+    ConstIterator end() const { return ConstIterator::universal_end(); }
 
     ConstIterator find(const T& value) const
     {
