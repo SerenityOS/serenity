@@ -1,17 +1,17 @@
-#include "Button.h"
+#include "GButton.h"
 #include <SharedGraphics/Painter.h>
 
-Button::Button(Widget* parent)
-    : Widget(parent)
+GButton::GButton(GWidget* parent)
+    : GWidget(parent)
 {
     setFillWithBackgroundColor(false);
 }
 
-Button::~Button()
+GButton::~GButton()
 {
 }
 
-void Button::setCaption(String&& caption)
+void GButton::setCaption(String&& caption)
 {
     if (caption == m_caption)
         return;
@@ -19,7 +19,7 @@ void Button::setCaption(String&& caption)
     update();
 }
 
-void Button::paintEvent(PaintEvent&)
+void GButton::paintEvent(GPaintEvent&)
 {
     Color buttonColor = Color::LightGray;
     Color highlightColor = Color::White;
@@ -64,24 +64,24 @@ void Button::paintEvent(PaintEvent&)
     }
 }
 
-void Button::mouseDownEvent(MouseEvent& event)
+void GButton::mouseDownEvent(GMouseEvent& event)
 {
     dbgprintf("Button::mouseDownEvent: x=%d, y=%d, button=%u\n", event.x(), event.y(), (unsigned)event.button());
 
     m_beingPressed = true;
 
     update();
-    Widget::mouseDownEvent(event);
+    GWidget::mouseDownEvent(event);
 }
 
-void Button::mouseUpEvent(MouseEvent& event)
+void GButton::mouseUpEvent(GMouseEvent& event)
 {
     dbgprintf("Button::mouseUpEvent: x=%d, y=%d, button=%u\n", event.x(), event.y(), (unsigned)event.button());
 
     m_beingPressed = false;
 
     update();
-    Widget::mouseUpEvent(event);
+    GWidget::mouseUpEvent(event);
 
     if (onClick)
         onClick(*this);

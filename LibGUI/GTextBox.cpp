@@ -1,27 +1,27 @@
-#include "TextBox.h"
+#include "GTextBox.h"
 #include <AK/StdLibExtras.h>
 #include <SharedGraphics/CharacterBitmap.h>
 #include <SharedGraphics/Font.h>
 #include <SharedGraphics/Painter.h>
 
-TextBox::TextBox(Widget* parent)
-    : Widget(parent)
+GTextBox::GTextBox(GWidget* parent)
+    : GWidget(parent)
 {
     startTimer(500);
 }
 
-TextBox::~TextBox()
+GTextBox::~GTextBox()
 {
 }
 
-void TextBox::setText(String&& text)
+void GTextBox::setText(String&& text)
 {
     m_text = move(text);
     m_cursorPosition = m_text.length();
     update();
 }
 
-void TextBox::paintEvent(PaintEvent&)
+void GTextBox::paintEvent(GPaintEvent&)
 {
     Painter painter(*this);
 
@@ -48,7 +48,7 @@ void TextBox::paintEvent(PaintEvent&)
         int x = innerRect.x() + (i * font().glyph_width());
         auto* bitmap = font().glyph_bitmap(ch);
         if (!bitmap) {
-            dbgprintf("TextBox: glyph missing: %02x\n", ch);
+            dbgprintf("GTextBox: glyph missing: %02x\n", ch);
             ASSERT_NOT_REACHED();
         }
         painter.draw_bitmap({x, y}, *bitmap, Color::Black);
@@ -61,11 +61,11 @@ void TextBox::paintEvent(PaintEvent&)
     }
 }
 
-void TextBox::mouseDownEvent(MouseEvent&)
+void GTextBox::mouseDownEvent(GMouseEvent&)
 {
 }
 
-void TextBox::handleBackspace()
+void GTextBox::handleBackspace()
 {
     if (m_cursorPosition == 0)
         return;
@@ -88,24 +88,24 @@ void TextBox::handleBackspace()
     update();
 }
 
-void TextBox::keyDownEvent(KeyEvent& event)
+void GTextBox::keyDownEvent(GKeyEvent& event)
 {
     switch (event.key()) {
-    case KeyboardKey::LeftArrow:
+    case GKeyboardKey::LeftArrow:
         if (m_cursorPosition)
             --m_cursorPosition;
         m_cursorBlinkState = true;
         update();
         return;
-    case KeyboardKey::RightArrow:
+    case GKeyboardKey::RightArrow:
         if (m_cursorPosition < m_text.length())
             ++m_cursorPosition;
         m_cursorBlinkState = true;
         update();
         return;
-    case KeyboardKey::Backspace:
+    case GKeyboardKey::Backspace:
         return handleBackspace();
-    case KeyboardKey::Return:
+    case GKeyboardKey::Return:
         if (onReturnPressed)
             onReturnPressed(*this);
         return;
@@ -128,7 +128,7 @@ void TextBox::keyDownEvent(KeyEvent& event)
     }
 }
 
-void TextBox::timerEvent(TimerEvent&)
+void GTextBox::timerEvent(GTimerEvent&)
 {
     // FIXME: Disable the timer when not focused.
     if (!isFocused())

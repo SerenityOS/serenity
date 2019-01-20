@@ -5,7 +5,7 @@
 #include <AK/StdLibExtras.h>
 
 #ifdef LIBGUI
-#include <LibGUI/Widget.h>
+#include <LibGUI/GWidget.h>
 #endif
 
 #define DEBUG_WIDGET_UNDERDRAW
@@ -18,7 +18,7 @@ Painter::Painter(GraphicsBitmap& bitmap)
 }
 
 #ifdef LIBGUI
-Painter::Painter(Widget& widget)
+Painter::Painter(GWidget& widget)
     : m_font(&widget.font())
 {
     m_target = widget.backing();

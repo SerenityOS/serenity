@@ -1,9 +1,9 @@
 #include "ClockWidget.h"
-#include "Painter.h"
+#include <SharedGraphics/Painter.h>
 #include <time.h>
 
-ClockWidget::ClockWidget(Widget* parent)
-    : Widget(parent)
+ClockWidget::ClockWidget(GWidget* parent)
+    : GWidget(parent)
 {
     setWindowRelativeRect({ 0, 0, 100, 40 });
     startTimer(250);

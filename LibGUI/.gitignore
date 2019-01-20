@@ -1,3 +1,2 @@
 *.o
-*.swp
-test
+LibGUI.a

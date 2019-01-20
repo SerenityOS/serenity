@@ -1,17 +1,17 @@
-#include "CheckBox.h"
+#include "GCheckBox.h"
 #include <SharedGraphics/Painter.h>
 #include <SharedGraphics/CharacterBitmap.h>
 
-CheckBox::CheckBox(Widget* parent)
-    : Widget(parent)
+GCheckBox::GCheckBox(GWidget* parent)
+    : GWidget(parent)
 {
 }
 
-CheckBox::~CheckBox()
+GCheckBox::~GCheckBox()
 {
 }
 
-void CheckBox::setCaption(String&& caption)
+void GCheckBox::setCaption(String&& caption)
 {
     if (caption == m_caption)
         return;
@@ -19,7 +19,7 @@ void CheckBox::setCaption(String&& caption)
     update();
 }
 
-void CheckBox::setIsChecked(bool b)
+void GCheckBox::setIsChecked(bool b)
 {
     if (m_isChecked == b)
         return;
@@ -72,7 +72,7 @@ static const char* checkedBitmap = {
     "###########"
 };
 
-void CheckBox::paintEvent(PaintEvent&)
+void GCheckBox::paintEvent(GPaintEvent&)
 {
     Painter painter(*this);
     auto bitmap = CharacterBitmap::create_from_ascii(isChecked() ? checkedBitmap : uncheckedBitmap, 11, 11);
@@ -93,9 +93,9 @@ void CheckBox::paintEvent(PaintEvent&)
     }
 }
 
-void CheckBox::mouseDownEvent(MouseEvent& event)
+void GCheckBox::mouseDownEvent(GMouseEvent& event)
 {
-    dbgprintf("CheckBox::mouseDownEvent: x=%d, y=%d, button=%u\n", event.x(), event.y(), (unsigned)event.button());
+    dbgprintf("GCheckBox::mouseDownEvent: x=%d, y=%d, button=%u\n", event.x(), event.y(), (unsigned)event.button());
 
     setIsChecked(!isChecked());
 }
