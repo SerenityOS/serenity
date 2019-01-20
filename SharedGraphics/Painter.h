@@ -9,12 +9,17 @@
 class CharacterBitmap;
 class GraphicsBitmap;
 class Font;
-class Widget;
-class Window;
+
+#ifdef LIBGUI
+class GWidget;
+class GWindow;
+#endif
 
 class Painter {
 public:
-    explicit Painter(Widget&);
+#ifdef LIBGUI
+    explicit Painter(GWidget&);
+#endif
     explicit Painter(GraphicsBitmap&);
     ~Painter();
     void fill_rect(const Rect&, Color);
@@ -42,6 +47,8 @@ private:
     Point m_translation;
     Rect m_clip_rect;
     RetainPtr<GraphicsBitmap> m_target;
-    Window* m_window { nullptr };
+#ifdef LIBGUI
+    GWindow* m_window { nullptr };
+#endif
     DrawOp m_draw_op { DrawOp::Copy };
 };

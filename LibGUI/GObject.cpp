@@ -1,16 +1,16 @@
-#include "Object.h"
-#include "Event.h"
-#include "EventLoop.h"
+#include "GObject.h"
+#include "GEvent.h"
+#include "GEventLoop.h"
 #include <AK/Assertions.h>
 
-Object::Object(Object* parent)
+GObject::GObject(GObject* parent)
     : m_parent(parent)
 {
     if (m_parent)
         m_parent->addChild(*this);
 }
 
-Object::~Object()
+GObject::~GObject()
 {
     if (m_parent)
         m_parent->removeChild(*this);
@@ -19,15 +19,15 @@ Object::~Object()
         delete child;
 }
 
-void Object::event(Event& event)
+void GObject::event(GEvent& event)
 {
     switch (event.type()) {
-    case Event::Timer:
-        return timerEvent(static_cast<TimerEvent&>(event));
-    case Event::DeferredDestroy:
+    case GEvent::Timer:
+        return timerEvent(static_cast<GTimerEvent&>(event));
+    case GEvent::DeferredDestroy:
         delete this;
         break;
-    case Event::Invalid:
+    case GEvent::Invalid:
         ASSERT_NOT_REACHED();
         break;
     default:
@@ -35,12 +35,12 @@ void Object::event(Event& event)
     }
 }
 
-void Object::addChild(Object& object)
+void GObject::addChild(GObject& object)
 {
     m_children.append(&object);
 }
 
-void Object::removeChild(Object& object)
+void GObject::removeChild(GObject& object)
 {
     for (unsigned i = 0; i < m_children.size(); ++i) {
         if (m_children[i] == &object) {
@@ -50,27 +50,27 @@ void Object::removeChild(Object& object)
     }
 }
 
-void Object::timerEvent(TimerEvent&)
+void GObject::timerEvent(GTimerEvent&)
 {
 }
 
-void Object::startTimer(int ms)
+void GObject::startTimer(int ms)
 {
     if (m_timerID) {
-        dbgprintf("Object{%p} already has a timer!\n", this);
+        dbgprintf("GObject{%p} already has a timer!\n", this);
         ASSERT_NOT_REACHED();
     }
 }
 
-void Object::stopTimer()
+void GObject::stopTimer()
 {
     if (!m_timerID)
         return;
     m_timerID = 0;
 }
 
-void Object::deleteLater()
+void GObject::deleteLater()
 {
-    EventLoop::main().postEvent(this, make<DeferredDestroyEvent>());
+    GEventLoop::main().postEvent(this, make<GEvent>(GEvent::DeferredDestroy));
 }
 

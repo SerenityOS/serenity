@@ -1,16 +1,16 @@
-#include "Label.h"
+#include "GLabel.h"
 #include <SharedGraphics/Painter.h>
 
-Label::Label(Widget* parent)
-    : Widget(parent)
+GLabel::GLabel(GWidget* parent)
+    : GWidget(parent)
 {
 }
 
-Label::~Label()
+GLabel::~GLabel()
 {
 }
 
-void Label::setText(String&& text)
+void GLabel::setText(String&& text)
 {
     if (text == m_text)
         return;
@@ -18,7 +18,7 @@ void Label::setText(String&& text)
     update();
 }
 
-void Label::paintEvent(PaintEvent&)
+void GLabel::paintEvent(GPaintEvent&)
 {
     Painter painter(*this);
     if (fillWithBackgroundColor())
@@ -27,9 +27,9 @@ void Label::paintEvent(PaintEvent&)
         painter.draw_text({ 4, 4, width(), height() }, text(), Painter::TextAlignment::TopLeft, foregroundColor());
 }
 
-void Label::mouseMoveEvent(MouseEvent& event)
+void GLabel::mouseMoveEvent(GMouseEvent& event)
 {
-    dbgprintf("Label::mouseMoveEvent: x=%d, y=%d\n", event.x(), event.y());
-    Widget::mouseMoveEvent(event);
+    dbgprintf("GLabel::mouseMoveEvent: x=%d, y=%d\n", event.x(), event.y());
+    GWidget::mouseMoveEvent(event);
 }
 

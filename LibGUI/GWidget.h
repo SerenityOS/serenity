@@ -1,29 +1,29 @@
 #pragma once
 
-#include "Event.h"
-#include "Object.h"
+#include "GEvent.h"
+#include "GObject.h"
 #include <SharedGraphics/Rect.h>
 #include <SharedGraphics/Color.h>
 #include <SharedGraphics/Font.h>
 #include <AK/AKString.h>
 
 class GraphicsBitmap;
-class Window;
+class GWindow;
 
-class Widget : public Object {
+class GWidget : public GObject {
 public:
-    explicit Widget(Widget* parent = nullptr);
-    virtual ~Widget();
+    explicit GWidget(GWidget* parent = nullptr);
+    virtual ~GWidget();
 
-    virtual void event(Event&) override;
-    virtual void paintEvent(PaintEvent&);
-    virtual void showEvent(ShowEvent&);
-    virtual void hideEvent(HideEvent&);
-    virtual void keyDownEvent(KeyEvent&);
-    virtual void keyUpEvent(KeyEvent&);
-    virtual void mouseMoveEvent(MouseEvent&);
-    virtual void mouseDownEvent(MouseEvent&);
-    virtual void mouseUpEvent(MouseEvent&);
+    virtual void event(GEvent&) override;
+    virtual void paintEvent(GPaintEvent&);
+    virtual void showEvent(GShowEvent&);
+    virtual void hideEvent(GHideEvent&);
+    virtual void keyDownEvent(GKeyEvent&);
+    virtual void keyUpEvent(GKeyEvent&);
+    virtual void mouseMoveEvent(GMouseEvent&);
+    virtual void mouseDownEvent(GMouseEvent&);
+    virtual void mouseUpEvent(GMouseEvent&);
 
     Rect relativeRect() const { return m_relativeRect; }
     Point relativePosition() const { return m_relativeRect.location(); }
@@ -43,13 +43,13 @@ public:
     void setFocus(bool);
 
     struct HitTestResult {
-        Widget* widget { nullptr };
+        GWidget* widget { nullptr };
         int localX { 0 };
         int localY { 0 };
     };
     HitTestResult hitTest(int x, int y);
 
-    virtual const char* class_name() const override { return "Widget"; }
+    virtual const char* class_name() const override { return "GWidget"; }
 
     void setWindowRelativeRect(const Rect&, bool should_update = true);
 
@@ -59,24 +59,24 @@ public:
     void setBackgroundColor(Color color) { m_backgroundColor = color; }
     void setForegroundColor(Color color) { m_foregroundColor = color; }
 
-    Window* window()
+    GWindow* window()
     {
         if (auto* pw = parentWidget())
             return pw->window();
         return m_window;
     }
 
-    const Window* window() const
+    const GWindow* window() const
     {
         if (auto* pw = parentWidget())
             return pw->window();
         return m_window;
     }
 
-    void setWindow(Window*);
+    void setWindow(GWindow*);
 
-    Widget* parentWidget() { return static_cast<Widget*>(parent()); }
-    const Widget* parentWidget() const { return static_cast<const Widget*>(parent()); }
+    GWidget* parentWidget() { return static_cast<GWidget*>(parent()); }
+    const GWidget* parentWidget() const { return static_cast<const GWidget*>(parent()); }
 
     void setFillWithBackgroundColor(bool b) { m_fillWithBackgroundColor = b; }
     bool fillWithBackgroundColor() const { return m_fillWithBackgroundColor; }
@@ -87,7 +87,7 @@ public:
     virtual GraphicsBitmap* backing();
 
 private:
-    Window* m_window { nullptr };
+    GWindow* m_window { nullptr };
 
     Rect m_relativeRect;
     Color m_backgroundColor { 0xffffff };

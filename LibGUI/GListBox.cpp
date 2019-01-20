@@ -1,24 +1,23 @@
-#include "ListBox.h"
-#include "Window.h"
+#include "GListBox.h"
 #include <SharedGraphics/Font.h>
 #include <SharedGraphics/Painter.h>
 
-ListBox::ListBox(Widget* parent)
-    : Widget(parent)
+GListBox::GListBox(GWidget* parent)
+    : GWidget(parent)
 {
 }
 
-ListBox::~ListBox()
+GListBox::~GListBox()
 {
 }
 
-Rect ListBox::item_rect(int index) const
+Rect GListBox::item_rect(int index) const
 {
     int item_height = font().glyph_height() + 2;
     return Rect { 2, 2 + (index * item_height), width() - 4, item_height };
 }
 
-void ListBox::paintEvent(PaintEvent&)
+void GListBox::paintEvent(GPaintEvent&)
 {
     Painter painter(*this);
 
@@ -45,21 +44,21 @@ void ListBox::paintEvent(PaintEvent&)
     }
 }
 
-void ListBox::mouseDownEvent(MouseEvent& event)
+void GListBox::mouseDownEvent(GMouseEvent& event)
 {
-    dbgprintf("ListBox::mouseDownEvent %d,%d\n", event.x(), event.y());
+    dbgprintf("GListBox::mouseDownEvent %d,%d\n", event.x(), event.y());
     for (int i = m_scrollOffset; i < static_cast<int>(m_items.size()); ++i) {
         auto itemRect = item_rect(i);
         if (itemRect.contains(event.position())) {
             m_selectedIndex = i;
-            dbgprintf("ListBox: selected item %u (\"%s\")\n", i, m_items[i].characters());
+            dbgprintf("GListBox: selected item %u (\"%s\")\n", i, m_items[i].characters());
             update();
             return;
         }
     }
 }
 
-void ListBox::addItem(String&& item)
+void GListBox::addItem(String&& item)
 {
     m_items.append(move(item));
     if (m_selectedIndex == -1)

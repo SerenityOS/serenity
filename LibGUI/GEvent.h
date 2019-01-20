@@ -20,7 +20,7 @@ static const char* eventNames[] = {
     "DeferredDestroy",
 };
 
-class Event {
+class GEvent {
 public:
     enum Type {
         Invalid = 0,
@@ -37,12 +37,11 @@ public:
         DeferredDestroy,
         WindowBecameInactive,
         WindowBecameActive,
-        WM_Compose,
     };
 
-    Event() { }
-    explicit Event(Type type) : m_type(type) { }
-    virtual ~Event() { }
+    GEvent() { }
+    explicit GEvent(Type type) : m_type(type) { }
+    virtual ~GEvent() { }
 
     Type type() const { return m_type; }
 
@@ -56,60 +55,51 @@ private:
     Type m_type { Invalid };
 };
 
-class DeferredDestroyEvent final : public Event {
-public:
-    DeferredDestroyEvent()
-        : Event(Event::DeferredDestroy)
-    {
-    }
-};
-
-class QuitEvent final : public Event {
+class QuitEvent final : public GEvent {
 public:
     QuitEvent()
-        : Event(Event::Quit)
+        : GEvent(GEvent::Quit)
     {
     }
 };
 
-class PaintEvent final : public Event {
+class GPaintEvent final : public GEvent {
 public:
-    explicit PaintEvent(const Rect& rect = Rect())
-        : Event(Event::Paint)
+    explicit GPaintEvent(const Rect& rect = Rect())
+        : GEvent(GEvent::Paint)
         , m_rect(rect)
     {
     }
 
     const Rect& rect() const { return m_rect; }
 private:
-    friend class WindowManager;
     Rect m_rect;
 };
 
-class ShowEvent final : public Event {
+class GShowEvent final : public GEvent {
 public:
-    ShowEvent()
-        : Event(Event::Show)
+    GShowEvent()
+        : GEvent(GEvent::Show)
     {
     }
 };
 
-class HideEvent final : public Event {
+class GHideEvent final : public GEvent {
 public:
-    HideEvent()
-        : Event(Event::Hide)
+    GHideEvent()
+        : GEvent(GEvent::Hide)
     {
     }
 };
 
-enum class MouseButton : byte {
+enum class GMouseButton : byte {
     None = 0,
     Left,
     Middle,
     Right,
 };
 
-enum KeyboardKey {
+enum GKeyboardKey {
     Invalid,
     LeftArrow,
     RightArrow,
@@ -119,10 +109,10 @@ enum KeyboardKey {
     Return,
 };
 
-class KeyEvent final : public Event {
+class GKeyEvent final : public GEvent {
 public:
-    KeyEvent(Type type, int key)
-        : Event(type)
+    GKeyEvent(Type type, int key)
+        : GEvent(type)
         , m_key(key)
     {
     }
@@ -134,8 +124,7 @@ public:
     String text() const { return m_text; }
 
 private:
-    friend class EventLoop;
-    friend class AbstractScreen;
+    friend class GEventLoop;
     int m_key { 0 };
     bool m_ctrl { false };
     bool m_alt { false };
@@ -143,10 +132,10 @@ private:
     String m_text;
 };
 
-class MouseEvent final : public Event {
+class GMouseEvent final : public GEvent {
 public:
-    MouseEvent(Type type, int x, int y, MouseButton button = MouseButton::None)
-        : Event(type)
+    GMouseEvent(Type type, int x, int y, GMouseButton button = GMouseButton::None)
+        : GEvent(type)
         , m_position(x, y)
         , m_button(button)
     {
@@ -155,16 +144,16 @@ public:
     Point position() const { return m_position; }
     int x() const { return m_position.x(); }
     int y() const { return m_position.y(); }
-    MouseButton button() const { return m_button; }
+    GMouseButton button() const { return m_button; }
 
 private:
     Point m_position;
-    MouseButton m_button { MouseButton::None };
+    GMouseButton m_button { GMouseButton::None };
 };
 
-class TimerEvent final : public Event {
+class GTimerEvent final : public GEvent {
 public:
-    TimerEvent() : Event(Event::Timer) { }
-    ~TimerEvent() { }
+    GTimerEvent() : GEvent(GEvent::Timer) { }
+    ~GTimerEvent() { }
 };
 

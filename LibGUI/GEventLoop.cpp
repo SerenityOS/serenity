@@ -1,31 +1,31 @@
-#include "EventLoop.h"
-#include "Event.h"
-#include "Object.h"
+#include "GEventLoop.h"
+#include "GEvent.h"
+#include "GObject.h"
 
-static EventLoop* s_mainEventLoop;
+static GEventLoop* s_mainGEventLoop;
 
-void EventLoop::initialize()
+void GEventLoop::initialize()
 {
-    s_mainEventLoop = nullptr;
+    s_mainGEventLoop = nullptr;
 }
 
-EventLoop::EventLoop()
+GEventLoop::GEventLoop()
 {
-    if (!s_mainEventLoop)
-        s_mainEventLoop = this;
+    if (!s_mainGEventLoop)
+        s_mainGEventLoop = this;
 }
 
-EventLoop::~EventLoop()
+GEventLoop::~GEventLoop()
 {
 }
 
-EventLoop& EventLoop::main()
+GEventLoop& GEventLoop::main()
 {
-    ASSERT(s_mainEventLoop);
-    return *s_mainEventLoop;
+    ASSERT(s_mainGEventLoop);
+    return *s_mainGEventLoop;
 }
 
-int EventLoop::exec()
+int GEventLoop::exec()
 {
     m_running = true;
     for (;;) {
@@ -38,10 +38,10 @@ int EventLoop::exec()
         for (auto& queuedEvent : events) {
             auto* receiver = queuedEvent.receiver;
             auto& event = *queuedEvent.event;
-            //printf("EventLoop: Object{%p} event %u (%s)\n", receiver, (unsigned)event.type(), event.name());
+            //printf("GEventLoop: GObject{%p} event %u (%s)\n", receiver, (unsigned)event.type(), event.name());
             if (!receiver) {
                 switch (event.type()) {
-                case Event::Quit:
+                case GEvent::Quit:
                     ASSERT_NOT_REACHED();
                     return 0;
                 default:
@@ -56,12 +56,12 @@ int EventLoop::exec()
     }
 }
 
-void EventLoop::postEvent(Object* receiver, OwnPtr<Event>&& event)
+void GEventLoop::postEvent(GObject* receiver, OwnPtr<GEvent>&& event)
 {
-    //printf("EventLoop::postEvent: {%u} << receiver=%p, event=%p\n", m_queuedEvents.size(), receiver, event.ptr());
+    //printf("GEventLoop::postGEvent: {%u} << receiver=%p, event=%p\n", m_queuedEvents.size(), receiver, event.ptr());
     m_queuedEvents.append({ receiver, move(event) });
 }
 
-void EventLoop::waitForEvent()
+void GEventLoop::waitForEvent()
 {
 }
