@@ -285,9 +285,10 @@ void WSWindowManager::process_mouse_event(MouseEvent& event)
                 move_to_front(*window);
                 set_active_window(window);
             }
-            // FIXME: Re-use the existing event instead of crafting a new one?
-            auto localEvent = make<MouseEvent>(event.type(), event.x() - window->rect().x(), event.y() - window->rect().y(), event.button());
-            window->event(*localEvent);
+            // FIXME: Should we just alter the coordinates of the existing MouseEvent and pass it through?
+            Point position { event.x() - window->rect().x(), event.y() - window->rect().y() };
+            auto local_event = make<MouseEvent>(event.type(), position, event.buttons(), event.button());
+            window->event(*local_event);
             return;
         }
     }

@@ -37,8 +37,6 @@ void GWidget::event(GEvent& event)
     case GEvent::Paint:
         m_hasPendingPaintEvent = false;
         if (auto* win = window()) {
-            if (win->is_being_dragged())
-                return;
             if (!win->is_visible())
                 return;
         }
@@ -112,7 +110,7 @@ void GWidget::update()
     if (m_hasPendingPaintEvent)
         return;
     m_hasPendingPaintEvent = true;
-    GEventLoop::main().postEvent(w, make<GPaintEvent>(relativeRect()));
+    GEventLoop::main().post_event(w, make<GPaintEvent>(relativeRect()));
 }
 
 GWidget::HitTestResult GWidget::hitTest(int x, int y)
