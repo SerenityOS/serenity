@@ -9,6 +9,8 @@
 #include <LibC/sys/select.h>
 #include <LibC/gui.h>
 
+//#define GEVENTLOOP_DEBUG
+
 static GEventLoop* s_mainGEventLoop;
 
 void GEventLoop::initialize()
@@ -34,7 +36,7 @@ GEventLoop& GEventLoop::main()
 
 int GEventLoop::exec()
 {
-    m_event_fd = open("/dev/gui_events", O_RDONLY);
+    m_event_fd = open("/dev/gui_events", O_RDONLY | O_NONBLOCK);
     if (m_event_fd < 0) {
         perror("GEventLoop::exec(): open");
         exit(1);
@@ -44,14 +46,13 @@ int GEventLoop::exec()
     for (;;) {
         if (m_queued_events.is_empty())
             wait_for_event();
-        Vector<QueuedEvent> events;
-        {
-            events = move(m_queued_events);
-        }
-        for (auto& queuedEvent : events) {
-            auto* receiver = queuedEvent.receiver;
-            auto& event = *queuedEvent.event;
-            //printf("GEventLoop: GObject{%p} event %u (%s)\n", receiver, (unsigned)event.type(), event.name());
+        Vector<QueuedEvent> events = move(m_queued_events);
+        for (auto& queued_event : events) {
+            auto* receiver = queued_event.receiver;
+            auto& event = *queued_event.event;
+#ifdef GEVENTLOOP_DEBUG
+            dbgprintf("GEventLoop: GObject{%p} event %u (%s)\n", receiver, (unsigned)event.type(), event.name());
+#endif
             if (!receiver) {
                 switch (event.type()) {
                 case GEvent::Quit:
@@ -71,7 +72,9 @@ int GEventLoop::exec()
 
 void GEventLoop::post_event(GObject* receiver, OwnPtr<GEvent>&& event)
 {
-    //printf("GEventLoop::postGEvent: {%u} << receiver=%p, event=%p\n", m_queuedEvents.size(), receiver, event.ptr());
+#ifdef GEVENTLOOP_DEBUG
+    dbgprintf("GEventLoop::post_event: {%u} << receiver=%p, event=%p\n", m_queued_events.size(), receiver, event.ptr());
+#endif
     m_queued_events.append({ receiver, move(event) });
 }
 
@@ -97,7 +100,7 @@ void GEventLoop::handle_mouse_event(const GUI_Event& event, GWindow& window)
     case GUI_MouseButton::Middle: button = GMouseButton::Middle; break;
     default: ASSERT_NOT_REACHED(); break;
     }
-    auto mouse_event = make<GMouseEvent>(type, event.mouse.position, button);
+    post_event(&window, make<GMouseEvent>(type, event.mouse.position, event.mouse.buttons, button));
 }
 
 void GEventLoop::wait_for_event()
@@ -105,7 +108,8 @@ void GEventLoop::wait_for_event()
     fd_set rfds;
     FD_ZERO(&rfds);
     FD_SET(m_event_fd, &rfds);
-    int rc = select(m_event_fd + 1, &rfds, nullptr, nullptr, nullptr);
+    struct timeval timeout = { 0, 0 };
+    int rc = select(m_event_fd + 1, &rfds, nullptr, nullptr, m_queued_events.is_empty() ? nullptr : &timeout);
     if (rc < 0) {
         ASSERT_NOT_REACHED();
     }
@@ -126,6 +130,7 @@ void GEventLoop::wait_for_event()
         auto* window = GWindow::from_window_id(event.window_id);
         if (!window) {
             dbgprintf("GEventLoop received event for invalid window ID %d\n", event.window_id);
+            continue;
         }
         switch (event.type) {
         case GUI_Event::Type::Paint:

@@ -76,6 +76,7 @@ struct GUI_Event {
         struct {
             GUI_Point position;
             GUI_MouseButton button;
+            unsigned buttons;
         } mouse;
         struct {
             char character;

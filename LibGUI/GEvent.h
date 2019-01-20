@@ -47,9 +47,9 @@ public:
 
     const char* name() const { return eventNames[(unsigned)m_type]; }
 
-    bool isMouseEvent() const { return m_type == MouseMove || m_type == MouseDown || m_type == MouseUp; }
-    bool isKeyEvent() const { return m_type == KeyUp || m_type == KeyDown; }
-    bool isPaintEvent() const { return m_type == Paint; }
+    bool is_mouse_event() const { return m_type == MouseMove || m_type == MouseDown || m_type == MouseUp; }
+    bool is_key_event() const { return m_type == KeyUp || m_type == KeyDown; }
+    bool is_paint_event() const { return m_type == Paint; }
 
 private:
     Type m_type { Invalid };
@@ -134,9 +134,10 @@ private:
 
 class GMouseEvent final : public GEvent {
 public:
-    GMouseEvent(Type type, const Point& position, GMouseButton button = GMouseButton::None)
+    GMouseEvent(Type type, const Point& position, unsigned buttons, GMouseButton button = GMouseButton::None)
         : GEvent(type)
         , m_position(position)
+        , m_buttons(buttons)
         , m_button(button)
     {
     }
@@ -145,9 +146,11 @@ public:
     int x() const { return m_position.x(); }
     int y() const { return m_position.y(); }
     GMouseButton button() const { return m_button; }
+    unsigned buttons() const { return m_buttons; }
 
 private:
     Point m_position;
+    unsigned m_buttons { 0 };
     GMouseButton m_button { GMouseButton::None };
 };
 

@@ -17,10 +17,9 @@ static GWindow* make_font_test_window();
 
 int main(int argc, char** argv)
 {
+    GEventLoop loop;
     auto* window = make_font_test_window();
     window->show();
-
-    GEventLoop loop;
     return loop.exec();
 }
 

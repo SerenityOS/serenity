@@ -73,7 +73,7 @@ public:
         return m_window;
     }
 
-    void setWindow(GWindow*);
+    void set_window(GWindow*);
 
     GWidget* parentWidget() { return static_cast<GWidget*>(parent()); }
     const GWidget* parentWidget() const { return static_cast<const GWidget*>(parent()); }
@@ -84,7 +84,7 @@ public:
     const Font& font() const { return *m_font; }
     void setFont(RetainPtr<Font>&&);
 
-    virtual GraphicsBitmap* backing();
+    GraphicsBitmap* backing();
 
 private:
     GWindow* m_window { nullptr };

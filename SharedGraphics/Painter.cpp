@@ -6,6 +6,7 @@
 
 #ifdef LIBGUI
 #include <LibGUI/GWidget.h>
+#include <LibGUI/GWindow.h>
 #endif
 
 #define DEBUG_WIDGET_UNDERDRAW
