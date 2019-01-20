@@ -56,42 +56,44 @@ void Painter::fill_rect(const Rect& a_rect, Color color)
     }
 }
 
-void Painter::draw_rect(const Rect& rect, Color color)
+void Painter::draw_rect(const Rect& a_rect, Color color)
 {
-    Rect r = rect;
-    r.move_by(m_translation);
+    Rect rect = a_rect;
+    rect.move_by(m_translation);
 
-    int min_y = max(r.top(), m_clip_rect.top());
-    int max_y = min(r.bottom(), m_clip_rect.bottom());
-    int min_x = max(r.left(), m_clip_rect.left());
-    int max_x = min(r.right(), m_clip_rect.right());
+    auto clipped_rect = Rect::intersection(rect, m_clip_rect);
+    if (clipped_rect.is_empty())
+        return;
 
-    if (r.top() >= min_y && r.top() <= max_y) {
-        fast_dword_fill(m_target->scanline(r.top()) + min_x, color.value(), max_x - min_x + 1);
+    int min_y = clipped_rect.top();
+    int max_y = clipped_rect.bottom();
+
+    if (rect.top() >= clipped_rect.top() && rect.top() <= clipped_rect.bottom()) {
+        fast_dword_fill(m_target->scanline(rect.top()) + clipped_rect.left(), color.value(), clipped_rect.width());
         ++min_y;
     }
-    if (r.bottom() <= max_y && r.bottom() >= min_y) {
-        fast_dword_fill(m_target->scanline(r.bottom()) + min_x, color.value(), max_x - min_x + 1);
+    if (rect.bottom() >= clipped_rect.top() && rect.bottom() <= clipped_rect.bottom()) {
+        fast_dword_fill(m_target->scanline(rect.bottom()) + clipped_rect.left(), color.value(), clipped_rect.width());
         --max_y;
     }
 
-    bool draw_left_side = r.left() >= m_clip_rect.left() && r.left() <= m_clip_rect.right();
-    bool draw_right_side = r.right() >= m_clip_rect.left() && r.right() <= m_clip_rect.right();
+    bool draw_left_side = rect.left() >= clipped_rect.left();
+    bool draw_right_side = rect.right() == clipped_rect.right();
 
     if (draw_left_side && draw_right_side) {
         // Specialized loop when drawing both sides.
         for (int y = min_y; y <= max_y; ++y) {
             auto* bits = m_target->scanline(y);
-            bits[r.left()] = color.value();
-            bits[r.right()] = color.value();
+            bits[rect.left()] = color.value();
+            bits[rect.right()] = color.value();
         }
     } else {
         for (int y = min_y; y <= max_y; ++y) {
             auto* bits = m_target->scanline(y);
             if (draw_left_side)
-                bits[r.left()] = color.value();
+                bits[rect.left()] = color.value();
             if (draw_right_side)
-                bits[r.right()] = color.value();
+                bits[rect.right()] = color.value();
         }
     }
 }
@@ -103,12 +105,12 @@ void Painter::draw_bitmap(const Point& p, const CharacterBitmap& bitmap, Color c
     for (unsigned row = 0; row < bitmap.height(); ++row) {
         int y = point.y() + row;
         if (y < m_clip_rect.top() || y > m_clip_rect.bottom())
-            break;
+            continue;
         auto* bits = m_target->scanline(y);
         for (unsigned j = 0; j < bitmap.width(); ++j) {
             int x = point.x() + j;
             if (x < m_clip_rect.left() || x > m_clip_rect.right())
-                break;
+                continue;
             char fc = bitmap.bits()[row * bitmap.width() + j];
             if (fc == '#')
                 bits[x] = color.value();
@@ -244,13 +246,13 @@ void Painter::draw_focus_rect(const Rect& rect)
     draw_rect(focus_rect, Color(96, 96, 192));
 }
 
-void Painter::blit(const Point& position, const GraphicsBitmap& source)
+void Painter::blit(const Point& position, const GraphicsBitmap& source, const Rect& src_rect)
 {
-    Rect dst_rect(position, source.size());
+    Rect dst_rect(position, src_rect.size());
     dst_rect.intersect(m_clip_rect);
 
-    RGBA32* dst = m_target->scanline(position.y()) + dst_rect.x();
-    const RGBA32* src= source.scanline(0) + (dst_rect.x() - position.x());
+    RGBA32* dst = m_target->scanline(dst_rect.y()) + dst_rect.x();
+    const RGBA32* src = source.scanline(src_rect.top()) + src_rect.left();
 
     const unsigned dst_skip = m_target->width();
     const unsigned src_skip = source.width();

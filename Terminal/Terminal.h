@@ -101,6 +101,7 @@ private:
     int m_line_height { 0 };
 
     bool m_in_active_window { false };
+    bool m_need_full_invalidation { false };
 
     RetainPtr<Font> m_font;
 };

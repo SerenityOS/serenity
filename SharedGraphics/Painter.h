@@ -28,7 +28,7 @@ public:
     void set_pixel(const Point&, Color);
     void draw_line(const Point&, const Point&, Color);
     void draw_focus_rect(const Rect&);
-    void blit(const Point&, const GraphicsBitmap&);
+    void blit(const Point&, const GraphicsBitmap&, const Rect& src_rect);
 
     enum class TextAlignment { TopLeft, CenterLeft, Center };
     void draw_text(const Rect&, const String&, TextAlignment = TextAlignment::TopLeft, Color = Color());
@@ -39,6 +39,10 @@ public:
     enum class DrawOp { Copy, Xor };
     void set_draw_op(DrawOp op) { m_draw_op = op; }
     DrawOp draw_op() const { return m_draw_op; }
+
+    void set_clip_rect(const Rect& rect) { m_clip_rect = rect; }
+    void clear_clip_rect() { m_clip_rect = { 0, 0, 1024, 768 }; }
+    Rect clip_rect() const { return m_clip_rect; }
 
 private:
     void set_pixel_with_draw_op(dword& pixel, const Color&);

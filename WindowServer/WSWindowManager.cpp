@@ -321,19 +321,32 @@ void WSWindowManager::compose()
         return false;
     };
 
-    for (auto& r : dirty_rects) {
-        if (any_window_contains_rect(r))
+    for (auto& dirty_rect : dirty_rects) {
+        if (any_window_contains_rect(dirty_rect)) {
             continue;
-        //dbgprintf("Repaint root %d,%d %dx%d\n", r.x(), r.y(), r.width(), r.height());
-        m_back_painter->fill_rect(r, Color(0, 72, 96));
+        }
+        //dbgprintf("Repaint root %d,%d %dx%d\n", dirty_rect.x(), dirty_rect.y(), dirty_rect.width(), dirty_rect.height());
+        m_back_painter->fill_rect(dirty_rect, Color(0, 72, 96));
     }
     for (auto* window = m_windows_in_order.head(); window; window = window->next()) {
         if (!window->backing())
             continue;
         if (!any_dirty_rect_intersects_window(*window))
             continue;
-        paint_window_frame(*window);
-        m_back_painter->blit(window->position(), *window->backing());
+        for (auto& dirty_rect : dirty_rects) {
+            m_back_painter->set_clip_rect(dirty_rect);
+            paint_window_frame(*window);
+            Rect dirty_rect_in_window_coordinates = Rect::intersection(dirty_rect, window->rect());
+            if (dirty_rect_in_window_coordinates.is_empty())
+                continue;
+            dirty_rect_in_window_coordinates.set_x(dirty_rect_in_window_coordinates.x() - window->x());
+            dirty_rect_in_window_coordinates.set_y(dirty_rect_in_window_coordinates.y() - window->y());
+            auto dst = window->position();
+            dst.move_by(dirty_rect_in_window_coordinates.location());
+            m_back_painter->blit(dst, *window->backing(), dirty_rect_in_window_coordinates);
+            m_back_painter->clear_clip_rect();
+        }
+        m_back_painter->clear_clip_rect();
     }
     for (auto& r : dirty_rects)
         flush(r);
