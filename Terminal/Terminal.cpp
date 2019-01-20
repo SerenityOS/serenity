@@ -426,7 +426,6 @@ void Terminal::paint()
     Rect rect { 0, 0, m_pixel_width, m_pixel_height };
     Painter painter(*m_backing);
 
-    bool need_full_invalidation = false;
     memset(m_row_needs_invalidation, 0, rows() * sizeof(bool));
 
 #ifdef FAST_SCROLL
@@ -440,7 +439,7 @@ void Terminal::paint()
             m_backing->scanline(second_scanline),
             scanlines_to_copy * m_pixel_width
         );
-        need_full_invalidation = true;
+        m_need_full_invalidation = true;
         attribute_at(m_cursor_row - m_rows_to_scroll_backing_store, m_cursor_column).dirty = true;
     }
     m_rows_to_scroll_backing_store = 0;
@@ -472,12 +471,13 @@ void Terminal::paint()
     m_row_needs_invalidation[m_cursor_row] = true;
 
     if (m_belling) {
-        need_full_invalidation = true;
+        m_need_full_invalidation = true;
         painter.draw_rect(rect, Color::Red);
     }
 
-    if (need_full_invalidation) {
+    if (m_need_full_invalidation) {
         invalidate_window();
+        m_need_full_invalidation = false;
         return;
     }
 
