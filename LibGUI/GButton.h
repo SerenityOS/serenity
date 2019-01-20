@@ -19,7 +19,7 @@ private:
     virtual void mouseDownEvent(GMouseEvent&) override;
     virtual void mouseUpEvent(GMouseEvent&) override;
 
-    virtual const char* class_name() const override { return "Button"; }
+    virtual const char* class_name() const override { return "GButton"; }
 
     String m_caption;
     bool m_beingPressed { false };

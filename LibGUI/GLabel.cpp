@@ -26,10 +26,3 @@ void GLabel::paintEvent(GPaintEvent&)
     if (!text().is_empty())
         painter.draw_text({ 4, 4, width(), height() }, text(), Painter::TextAlignment::TopLeft, foregroundColor());
 }
-
-void GLabel::mouseMoveEvent(GMouseEvent& event)
-{
-    dbgprintf("GLabel::mouseMoveEvent: x=%d, y=%d\n", event.x(), event.y());
-    GWidget::mouseMoveEvent(event);
-}
-
