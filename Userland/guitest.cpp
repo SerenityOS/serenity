@@ -14,7 +14,7 @@ static void paint(GraphicsBitmap& bitmap, int width, int height);
 
 int main(int argc, char** argv)
 {
-    GUI_CreateWindowParameters wparams;
+    GUI_WindowParameters wparams;
     wparams.rect = { { 100, 100 }, { 120, 120 } };
     wparams.background_color = 0xffc0c0;
     strcpy(wparams.title, "GUI test app");

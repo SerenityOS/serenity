@@ -14,7 +14,7 @@ void Terminal::create_window()
     m_pixel_width = m_columns * font().glyph_width() + m_inset * 2;
     m_pixel_height = (m_rows * (font().glyph_height() + m_line_spacing)) + (m_inset * 2) - m_line_spacing;
 
-    GUI_CreateWindowParameters params;
+    GUI_WindowParameters params;
     params.rect = { { 300, 300 }, { m_pixel_width, m_pixel_height } };
     params.background_color = 0x000000;
     strcpy(params.title, "Terminal");

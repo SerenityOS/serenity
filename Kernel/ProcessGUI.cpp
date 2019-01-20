@@ -35,7 +35,7 @@ static void wait_for_gui_server()
         sleep(10);
 }
 
-int Process::gui$create_window(const GUI_CreateWindowParameters* user_params)
+int Process::gui$create_window(const GUI_WindowParameters* user_params)
 {
     wait_for_gui_server();
 
@@ -120,5 +120,35 @@ int Process::gui$invalidate_window(int window_id, const GUI_Rect* rect)
         event->set_rect(*rect);
     WSEventLoop::the().post_event(&window, move(event));
     WSEventLoop::the().server_process().request_wakeup();
+    return 0;
+}
+
+int Process::gui$get_window_parameters(int window_id, GUI_WindowParameters* params)
+{
+    if (window_id < 0)
+        return -EINVAL;
+    if (!validate_write_typed(params))
+        return -EFAULT;
+    auto it = m_windows.find(window_id);
+    if (it == m_windows.end())
+        return -EBADWINDOW;
+    auto& window = *(*it).value;
+    params->rect = window.rect();
+    strcpy(params->title, window.title().characters());
+    return 0;
+}
+
+int Process::gui$set_window_parameters(int window_id, const GUI_WindowParameters* params)
+{
+    if (window_id < 0)
+        return -EINVAL;
+    if (!validate_read_typed(params))
+        return -EFAULT;
+    auto it = m_windows.find(window_id);
+    if (it == m_windows.end())
+        return -EBADWINDOW;
+    auto& window = *(*it).value;
+    window.set_rect(params->rect);
+    window.set_title(params->title);
     return 0;
 }

@@ -26,7 +26,7 @@ struct GUI_Rect {
     GUI_Size size;
 };
 
-struct GUI_CreateWindowParameters {
+struct GUI_WindowParameters {
     GUI_Rect rect;
     Color background_color;
     unsigned flags { 0 };

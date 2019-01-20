@@ -27,7 +27,7 @@ GWindow* GWindow::from_window_id(int window_id)
 GWindow::GWindow(GObject* parent)
     : GObject(parent)
 {
-    GUI_CreateWindowParameters wparams;
+    GUI_WindowParameters wparams;
     wparams.rect = { { 100, 400 }, { 140, 140 } };
     wparams.background_color = 0xffc0c0;
     strcpy(wparams.title, "GWindow");
@@ -55,17 +55,26 @@ GWindow::~GWindow()
 
 void GWindow::set_title(String&& title)
 {
-    if (m_title == title)
-        return;
-
+    dbgprintf("GWindow::set_title \"%s\"\n", title.characters());
+    GUI_WindowParameters params;
+    int rc = gui_get_window_parameters(m_window_id, &params);
+    ASSERT(rc == 0);
+    strcpy(params.title, title.characters());;
+    rc = gui_set_window_parameters(m_window_id, &params);
+    ASSERT(rc == 0);
     m_title = move(title);
 }
+
 void GWindow::set_rect(const Rect& rect)
 {
-    if (m_rect == rect)
-        return;
+    dbgprintf("GWindow::set_rect %d,%d %dx%d\n", m_rect.x(), m_rect.y(), m_rect.width(), m_rect.height());
+    GUI_WindowParameters params;
+    int rc = gui_get_window_parameters(m_window_id, &params);
+    ASSERT(rc == 0);
+    params.rect = rect;
+    rc = gui_set_window_parameters(m_window_id, &params);
+    ASSERT(rc == 0);
     m_rect = rect;
-    dbgprintf("GWindow::setRect %d,%d %dx%d\n", m_rect.x(), m_rect.y(), m_rect.width(), m_rect.height());
 }
 
 void GWindow::event(GEvent& event)
