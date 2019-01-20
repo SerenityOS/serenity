@@ -10,9 +10,9 @@ public:
     virtual ~GButton() override;
 
     String caption() const { return m_caption; }
-    void setCaption(String&&);
+    void set_caption(String&&);
 
-    Function<void(GButton&)> onClick;
+    Function<void(GButton&)> on_click;
 
 private:
     virtual void paintEvent(GPaintEvent&) override;
@@ -22,6 +22,6 @@ private:
     virtual const char* class_name() const override { return "GButton"; }
 
     String m_caption;
-    bool m_beingPressed { false };
+    bool m_being_pressed { false };
 };
 
