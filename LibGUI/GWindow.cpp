@@ -91,7 +91,7 @@ void GWindow::event(GEvent& event)
             return;
         auto& mouse_event = static_cast<GMouseEvent&>(event);
         if (m_main_widget) {
-            auto result = m_main_widget->hitTest(mouse_event.x(), mouse_event.y());
+            auto result = m_main_widget->hit_test(mouse_event.x(), mouse_event.y());
             auto local_event = make<GMouseEvent>(event.type(), Point { result.localX, result.localY }, mouse_event.buttons(), mouse_event.button());
             ASSERT(result.widget);
             return result.widget->event(*local_event);

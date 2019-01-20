@@ -9,18 +9,18 @@ public:
     virtual ~GTextBox() override;
 
     String text() const { return m_text; }
-    void setText(String&&);
+    void set_text(String&&);
 
     Function<void(GTextBox&)> onReturnPressed;
 
 private:
     virtual const char* class_name() const override { return "GTextBox"; }
-    virtual void paintEvent(GPaintEvent&) override;
-    virtual void mouseDownEvent(GMouseEvent&) override;
-    virtual void keyDownEvent(GKeyEvent&) override;
+    virtual void paint_event(GPaintEvent&) override;
+    virtual void mousedown_event(GMouseEvent&) override;
+    virtual void keydown_event(GKeyEvent&) override;
     virtual void timerEvent(GTimerEvent&) override;
 
-    void handleBackspace();
+    void handle_backspace();
 
     String m_text;
     unsigned m_cursorPosition { 0 };

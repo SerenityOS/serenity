@@ -14,22 +14,22 @@ GTextBox::~GTextBox()
 {
 }
 
-void GTextBox::setText(String&& text)
+void GTextBox::set_text(String&& text)
 {
     m_text = move(text);
     m_cursorPosition = m_text.length();
     update();
 }
 
-void GTextBox::paintEvent(GPaintEvent&)
+void GTextBox::paint_event(GPaintEvent&)
 {
     Painter painter(*this);
 
     // FIXME: Reduce overdraw.
-    painter.fill_rect(rect(), backgroundColor());
-    painter.draw_rect(rect(), foregroundColor());
+    painter.fill_rect(rect(), background_color());
+    painter.draw_rect(rect(), foreground_color());
 
-    if (isFocused())
+    if (is_focused())
         painter.draw_focus_rect(rect());
 
     Rect innerRect = rect();
@@ -54,18 +54,18 @@ void GTextBox::paintEvent(GPaintEvent&)
         painter.draw_bitmap({x, y}, *bitmap, Color::Black);
     }
 
-    if (isFocused() && m_cursorBlinkState) {
+    if (is_focused() && m_cursorBlinkState) {
         unsigned visibleCursorPosition = m_cursorPosition - firstVisibleChar;
         Rect cursorRect(innerRect.x() + visibleCursorPosition * font().glyph_width(), innerRect.y(), 1, innerRect.height());
-        painter.fill_rect(cursorRect, foregroundColor());
+        painter.fill_rect(cursorRect, foreground_color());
     }
 }
 
-void GTextBox::mouseDownEvent(GMouseEvent&)
+void GTextBox::mousedown_event(GMouseEvent&)
 {
 }
 
-void GTextBox::handleBackspace()
+void GTextBox::handle_backspace()
 {
     if (m_cursorPosition == 0)
         return;
@@ -88,7 +88,7 @@ void GTextBox::handleBackspace()
     update();
 }
 
-void GTextBox::keyDownEvent(GKeyEvent& event)
+void GTextBox::keydown_event(GKeyEvent& event)
 {
     switch (event.key()) {
     case GKeyboardKey::LeftArrow:
@@ -104,7 +104,7 @@ void GTextBox::keyDownEvent(GKeyEvent& event)
         update();
         return;
     case GKeyboardKey::Backspace:
-        return handleBackspace();
+        return handle_backspace();
     case GKeyboardKey::Return:
         if (onReturnPressed)
             onReturnPressed(*this);
@@ -131,7 +131,7 @@ void GTextBox::keyDownEvent(GKeyEvent& event)
 void GTextBox::timerEvent(GTimerEvent&)
 {
     // FIXME: Disable the timer when not focused.
-    if (!isFocused())
+    if (!is_focused())
         return;
 
     m_cursorBlinkState = !m_cursorBlinkState;

@@ -25,13 +25,13 @@ Painter::Painter(GWidget& widget)
     m_target = widget.backing();
     ASSERT(m_target);
     m_window = widget.window();
-    m_translation.move_by(widget.relativePosition());
+    m_translation.move_by(widget.relative_position());
     // NOTE: m_clip_rect is in Window coordinates since we are painting into its backing store.
-    m_clip_rect = widget.relativeRect();
+    m_clip_rect = widget.relative_rect();
 
 #ifdef DEBUG_WIDGET_UNDERDRAW
     // If the widget is not opaque, let's not mess it up with debugging color.
-    if (widget.fillWithBackgroundColor() && m_window->main_widget() != &widget)
+    if (widget.fill_with_background_color() && m_window->main_widget() != &widget)
         fill_rect(widget.rect(), Color::Red);
 #endif
 }

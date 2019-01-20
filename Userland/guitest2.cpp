@@ -36,23 +36,23 @@ GWindow* make_font_test_window()
 
     auto* widget = new GWidget;
     window->set_main_widget(widget);
-    widget->setWindowRelativeRect({ 0, 0, 300, 80 });
+    widget->set_relative_rect({ 0, 0, 300, 80 });
 
     auto* l1 = new GLabel(widget);
-    l1->setWindowRelativeRect({ 0, 0, 300, 20 });
-    l1->setText("0123456789");
+    l1->set_relative_rect({ 0, 0, 300, 20 });
+    l1->set_text("0123456789");
 
     auto* l2 = new GLabel(widget);
-    l2->setWindowRelativeRect({ 0, 20, 300, 20 });
-    l2->setText("ABCDEFGHIJKLMNOPQRSTUVWXYZ");
+    l2->set_relative_rect({ 0, 20, 300, 20 });
+    l2->set_text("ABCDEFGHIJKLMNOPQRSTUVWXYZ");
 
     auto* l3 = new GLabel(widget);
-    l3->setWindowRelativeRect({ 0, 40, 300, 20 });
-    l3->setText("abcdefghijklmnopqrstuvwxyz");
+    l3->set_relative_rect({ 0, 40, 300, 20 });
+    l3->set_text("abcdefghijklmnopqrstuvwxyz");
 
     auto* l4 = new GLabel(widget);
-    l4->setWindowRelativeRect({ 0, 60, 300, 20 });
-    l4->setText("!\"#$%&'()*+,-./:;<=>?@[\\]^_{|}~");
+    l4->set_relative_rect({ 0, 60, 300, 20 });
+    l4->set_text("!\"#$%&'()*+,-./:;<=>?@[\\]^_{|}~");
 
     return window;
 }
@@ -65,14 +65,14 @@ GWindow* make_launcher_window()
 
     auto* widget = new GWidget;
     window->set_main_widget(widget);
-    widget->setWindowRelativeRect({ 0, 0, 80, 200 });
+    widget->set_relative_rect({ 0, 0, 80, 200 });
 
     auto* label = new GLabel(widget);
-    label->setWindowRelativeRect({ 0, 0, 80, 20 });
-    label->setText("Apps");
+    label->set_relative_rect({ 0, 0, 80, 20 });
+    label->set_text("Apps");
 
     auto* button = new GButton(widget);
-    button->setWindowRelativeRect({ 5, 20, 70, 20 });
+    button->set_relative_rect({ 5, 20, 70, 20 });
     button->set_caption("Terminal");
 
     button->on_click = [] (GButton&) {

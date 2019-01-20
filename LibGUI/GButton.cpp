@@ -4,7 +4,7 @@
 GButton::GButton(GWidget* parent)
     : GWidget(parent)
 {
-    setFillWithBackgroundColor(false);
+    set_fill_with_background_color(false);
 }
 
 GButton::~GButton()
@@ -19,11 +19,11 @@ void GButton::set_caption(String&& caption)
     update();
 }
 
-void GButton::paintEvent(GPaintEvent&)
+void GButton::paint_event(GPaintEvent&)
 {
-    Color buttonColor = Color::LightGray;
-    Color highlightColor = Color::White;
-    Color shadowColor = Color(96, 96, 96);
+    Color button_color = Color::LightGray;
+    Color highlight_color = Color::White;
+    Color shadow_color = Color(96, 96, 96);
 
     Painter painter(*this);
 
@@ -34,26 +34,26 @@ void GButton::paintEvent(GPaintEvent&)
 
     if (m_being_pressed) {
         // Base
-        painter.fill_rect({ 1, 1, width() - 2, height() - 2 }, buttonColor);
+        painter.fill_rect({ 1, 1, width() - 2, height() - 2 }, button_color);
 
         // Sunken shadow
-        painter.draw_line({ 1, 1 }, { width() - 2, 1 }, shadowColor);
-        painter.draw_line({ 1, 2 }, {1, height() - 2 }, shadowColor);
+        painter.draw_line({ 1, 1 }, { width() - 2, 1 }, shadow_color);
+        painter.draw_line({ 1, 2 }, {1, height() - 2 }, shadow_color);
     } else {
         // Base
-        painter.fill_rect({ 3, 3, width() - 5, height() - 5 }, buttonColor);
+        painter.fill_rect({ 3, 3, width() - 5, height() - 5 }, button_color);
 
         // White highlight
-        painter.draw_line({ 1, 1 }, { width() - 2, 1 }, highlightColor);
-        painter.draw_line({ 1, 2 }, { width() - 3, 2 }, highlightColor);
-        painter.draw_line({ 1, 3 }, { 1, height() - 2 }, highlightColor);
-        painter.draw_line({ 2, 3 }, { 2, height() - 3 }, highlightColor);
+        painter.draw_line({ 1, 1 }, { width() - 2, 1 }, highlight_color);
+        painter.draw_line({ 1, 2 }, { width() - 3, 2 }, highlight_color);
+        painter.draw_line({ 1, 3 }, { 1, height() - 2 }, highlight_color);
+        painter.draw_line({ 2, 3 }, { 2, height() - 3 }, highlight_color);
 
         // Gray shadow 
-        painter.draw_line({ width() - 2, 1 }, { width() - 2, height() - 4 }, shadowColor);
-        painter.draw_line({ width() - 3, 2 }, { width() - 3, height() - 4 }, shadowColor);
-        painter.draw_line({ 1, height() - 2 }, { width() - 2, height() - 2 }, shadowColor);
-        painter.draw_line({ 2, height() - 3 }, { width() - 2, height() - 3 }, shadowColor);
+        painter.draw_line({ width() - 2, 1 }, { width() - 2, height() - 4 }, shadow_color);
+        painter.draw_line({ width() - 3, 2 }, { width() - 3, height() - 4 }, shadow_color);
+        painter.draw_line({ 1, height() - 2 }, { width() - 2, height() - 2 }, shadow_color);
+        painter.draw_line({ 2, height() - 3 }, { width() - 2, height() - 3 }, shadow_color);
     }
 
     if (!caption().is_empty()) {
@@ -64,24 +64,24 @@ void GButton::paintEvent(GPaintEvent&)
     }
 }
 
-void GButton::mouseDownEvent(GMouseEvent& event)
+void GButton::mousedown_event(GMouseEvent& event)
 {
     dbgprintf("Button::mouseDownEvent: x=%d, y=%d, button=%u\n", event.x(), event.y(), (unsigned)event.button());
 
     m_being_pressed = true;
 
     update();
-    GWidget::mouseDownEvent(event);
+    GWidget::mousedown_event(event);
 }
 
-void GButton::mouseUpEvent(GMouseEvent& event)
+void GButton::mouseup_event(GMouseEvent& event)
 {
     dbgprintf("Button::mouseUpEvent: x=%d, y=%d, button=%u\n", event.x(), event.y(), (unsigned)event.button());
 
     m_being_pressed = false;
 
     update();
-    GWidget::mouseUpEvent(event);
+    GWidget::mouseup_event(event);
 
     if (on_click)
         on_click(*this);
