@@ -134,9 +134,9 @@ private:
 
 class GMouseEvent final : public GEvent {
 public:
-    GMouseEvent(Type type, int x, int y, GMouseButton button = GMouseButton::None)
+    GMouseEvent(Type type, const Point& position, GMouseButton button = GMouseButton::None)
         : GEvent(type)
-        , m_position(x, y)
+        , m_position(position)
         , m_button(button)
     {
     }

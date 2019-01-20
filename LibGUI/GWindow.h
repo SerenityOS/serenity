@@ -5,10 +5,14 @@
 #include <SharedGraphics/GraphicsBitmap.h>
 #include <AK/AKString.h>
 
+class GWidget;
+
 class GWindow final : public GObject {
 public:
-    explicit GWindow(int window_id);
+    GWindow(GObject* parent = nullptr);
     virtual ~GWindow() override;
+
+    static GWindow* from_window_id(int);
 
     int window_id() const { return m_window_id; }
 
@@ -29,21 +33,24 @@ public:
 
     virtual void event(GEvent&) override;
 
-    bool is_being_dragged() const { return m_is_being_dragged; }
-    void set_is_being_dragged(bool b) { m_is_being_dragged = b; }
-
     bool is_visible() const;
 
     void close();
 
+    void set_main_widget(GWidget*);
+
     GraphicsBitmap* backing() { return m_backing.ptr(); }
+
+    void show();
+
+    void update();
 
 private:
     String m_title;
     Rect m_rect;
-    bool m_is_being_dragged { false };
 
     RetainPtr<GraphicsBitmap> m_backing;
     int m_window_id { -1 };
+    GWidget* m_main_widget { nullptr };
 };
 

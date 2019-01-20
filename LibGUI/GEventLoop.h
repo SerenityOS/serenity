@@ -5,6 +5,8 @@
 #include <AK/Vector.h>
 
 class GObject;
+class GWindow;
+struct GUI_Event;
 
 class GEventLoop {
 public:
@@ -13,7 +15,7 @@ public:
 
     int exec();
 
-    void postEvent(GObject* receiver, OwnPtr<GEvent>&&);
+    void post_event(GObject* receiver, OwnPtr<GEvent>&&);
 
     static GEventLoop& main();
 
@@ -22,13 +24,16 @@ public:
     bool running() const { return m_running; }
 
 private:
-    void waitForEvent();
+    void wait_for_event();
+    void handle_paint_event(const GUI_Event&, GWindow&);
+    void handle_mouse_event(const GUI_Event&, GWindow&);
 
     struct QueuedEvent {
         GObject* receiver { nullptr };
         OwnPtr<GEvent> event;
     };
-    Vector<QueuedEvent> m_queuedEvents;
+    Vector<QueuedEvent> m_queued_events;
 
+    int m_event_fd { -1 };
     bool m_running { false };
 };

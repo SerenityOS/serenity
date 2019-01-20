@@ -80,9 +80,9 @@ private:
 
 enum class MouseButton : byte {
     None = 0,
-    Left,
-    Middle,
-    Right,
+    Left = 1,
+    Right = 2,
+    Middle = 4,
 };
 
 enum KeyboardKey {
@@ -121,9 +121,10 @@ private:
 
 class MouseEvent final : public WSEvent {
 public:
-    MouseEvent(Type type, int x, int y, MouseButton button = MouseButton::None)
+    MouseEvent(Type type, const Point& position, unsigned buttons, MouseButton button = MouseButton::None)
         : WSEvent(type)
-        , m_position(x, y)
+        , m_position(position)
+        , m_buttons(buttons)
         , m_button(button)
     {
     }
@@ -132,8 +133,10 @@ public:
     int x() const { return m_position.x(); }
     int y() const { return m_position.y(); }
     MouseButton button() const { return m_button; }
+    unsigned buttons() const { return m_buttons; }
 
 private:
     Point m_position;
+    unsigned m_buttons { 0 };
     MouseButton m_button { MouseButton::None };
 };

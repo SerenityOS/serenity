@@ -59,6 +59,7 @@ void WSWindow::event(WSEvent& event)
     case WSEvent::MouseMove:
         gui_event.type = GUI_Event::Type::MouseMove;
         gui_event.mouse.position = static_cast<MouseEvent&>(event).position();
+        gui_event.mouse.button = GUI_MouseButton::NoButton;
         break;
     case WSEvent::MouseDown:
         gui_event.type = GUI_Event::Type::MouseDown;
