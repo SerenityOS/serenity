@@ -11,7 +11,7 @@ GButton::~GButton()
 {
 }
 
-void GButton::setCaption(String&& caption)
+void GButton::set_caption(String&& caption)
 {
     if (caption == m_caption)
         return;
@@ -32,7 +32,7 @@ void GButton::paintEvent(GPaintEvent&)
     painter.draw_line({ 0, 1 }, { 0, height() - 2 }, Color::Black);
     painter.draw_line({ width() - 1, 1 }, { width() - 1, height() - 2 }, Color::Black);
 
-    if (m_beingPressed) {
+    if (m_being_pressed) {
         // Base
         painter.fill_rect({ 1, 1, width() - 2, height() - 2 }, buttonColor);
 
@@ -58,7 +58,7 @@ void GButton::paintEvent(GPaintEvent&)
 
     if (!caption().is_empty()) {
         auto textRect = rect();
-        if (m_beingPressed)
+        if (m_being_pressed)
             textRect.move_by(1, 1);
         painter.draw_text(textRect, caption(), Painter::TextAlignment::Center, Color::Black);
     }
@@ -68,7 +68,7 @@ void GButton::mouseDownEvent(GMouseEvent& event)
 {
     dbgprintf("Button::mouseDownEvent: x=%d, y=%d, button=%u\n", event.x(), event.y(), (unsigned)event.button());
 
-    m_beingPressed = true;
+    m_being_pressed = true;
 
     update();
     GWidget::mouseDownEvent(event);
@@ -78,12 +78,12 @@ void GButton::mouseUpEvent(GMouseEvent& event)
 {
     dbgprintf("Button::mouseUpEvent: x=%d, y=%d, button=%u\n", event.x(), event.y(), (unsigned)event.button());
 
-    m_beingPressed = false;
+    m_being_pressed = false;
 
     update();
     GWidget::mouseUpEvent(event);
 
-    if (onClick)
-        onClick(*this);
+    if (on_click)
+        on_click(*this);
 }
 
