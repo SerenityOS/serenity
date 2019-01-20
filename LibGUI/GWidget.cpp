@@ -36,10 +36,6 @@ void GWidget::event(GEvent& event)
     switch (event.type()) {
     case GEvent::Paint:
         m_hasPendingPaintEvent = false;
-        if (auto* win = window()) {
-            if (!win->is_visible())
-                return;
-        }
         return paintEvent(static_cast<GPaintEvent&>(event));
     case GEvent::Show:
         return showEvent(static_cast<GShowEvent&>(event));
@@ -63,7 +59,6 @@ void GWidget::event(GEvent& event)
 
 void GWidget::paintEvent(GPaintEvent& event)
 {
-    //printf("GWidget::paintEvent :)\n");
     if (fillWithBackgroundColor()) {
         Painter painter(*this);
         painter.fill_rect(rect(), backgroundColor());
@@ -125,7 +120,7 @@ GWidget::HitTestResult GWidget::hitTest(int x, int y)
     return { this, x, y };
 }
 
-void GWidget::setWindow(GWindow* window)
+void GWidget::set_window(GWindow* window)
 {
     if (m_window == window)
         return;

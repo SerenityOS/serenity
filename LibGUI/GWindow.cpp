@@ -1,6 +1,7 @@
 #include "GWindow.h"
 #include "GEvent.h"
 #include "GEventLoop.h"
+#include "GWidget.h"
 #include <SharedGraphics/GraphicsBitmap.h>
 #include <LibC/gui.h>
 #include <LibC/stdio.h>
@@ -43,7 +44,6 @@ GWindow::GWindow(GObject* parent)
         perror("gui_get_window_backing_store");
         exit(1);
     }
-
     m_backing = GraphicsBitmap::create_wrapper(backing.size, backing.pixels);
 
     windows().set(m_window_id, this);
@@ -75,10 +75,43 @@ void GWindow::set_rect(const Rect& rect)
     rc = gui_set_window_parameters(m_window_id, &params);
     ASSERT(rc == 0);
     m_rect = rect;
+    GUI_WindowBackingStoreInfo backing;
+    rc = gui_get_window_backing_store(m_window_id, &backing);
+    if (rc < 0) {
+        perror("gui_get_window_backing_store");
+        exit(1);
+    }
+    m_backing = GraphicsBitmap::create_wrapper(backing.size, backing.pixels);
 }
 
 void GWindow::event(GEvent& event)
 {
+    if (event.is_mouse_event()) {
+        if (!m_main_widget)
+            return;
+        auto& mouse_event = static_cast<GMouseEvent&>(event);
+        if (m_main_widget) {
+            auto result = m_main_widget->hitTest(mouse_event.x(), mouse_event.y());
+            auto local_event = make<GMouseEvent>(event.type(), Point { result.localX, result.localY }, mouse_event.buttons(), mouse_event.button());
+            ASSERT(result.widget);
+            return result.widget->event(*local_event);
+        }
+    }
+
+    if (event.is_paint_event()) {
+        if (!m_main_widget)
+            return;
+        auto& paint_event = static_cast<GPaintEvent&>(event);
+        if (paint_event.rect().is_empty()) {
+            m_main_widget->paintEvent(*make<GPaintEvent>(m_main_widget->rect()));
+        } else {
+            m_main_widget->event(event);
+        }
+        int rc = gui_invalidate_window(m_window_id, nullptr);
+        ASSERT(rc == 0);
+    }
+
+    return GObject::event(event);
 }
 
 bool GWindow::is_visible() const
@@ -96,7 +129,7 @@ void GWindow::show()
 
 void GWindow::update()
 {
-    gui_invalidate_window(m_window_id, nullptr);
+    GEventLoop::main().post_event(this, make<GPaintEvent>());
 }
 
 void GWindow::set_main_widget(GWidget* widget)
@@ -104,5 +137,7 @@ void GWindow::set_main_widget(GWidget* widget)
     if (m_main_widget == widget)
         return;
     m_main_widget = widget;
+    if (widget)
+        widget->set_window(this);
     update();
 }
