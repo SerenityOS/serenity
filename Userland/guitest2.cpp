@@ -28,7 +28,7 @@ GWindow* make_font_test_window()
 {
     auto* window = new GWindow;
     window->set_title("Font test");
-    window->set_rect({ 140, 100, 300, 80 });
+    window->set_rect({ 440, 100, 300, 80 });
 
     auto* widget = new GWidget;
     window->set_main_widget(widget);

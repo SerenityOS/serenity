@@ -192,10 +192,12 @@ public:
     Unix::clock_t sys$times(Unix::tms*);
     int sys$utime(const char* pathname, const struct Unix::utimbuf*);
 
-    int gui$create_window(const GUI_CreateWindowParameters*);
+    int gui$create_window(const GUI_WindowParameters*);
     int gui$destroy_window(int window_id);
     int gui$get_window_backing_store(int window_id, GUI_WindowBackingStoreInfo*);
     int gui$invalidate_window(int window_id, const GUI_Rect*);
+    int gui$get_window_parameters(int window_id, GUI_WindowParameters*);
+    int gui$set_window_parameters(int window_id, const GUI_WindowParameters*);
 
     DisplayInfo get_display_info();
 
