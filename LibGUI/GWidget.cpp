@@ -61,7 +61,7 @@ void GWidget::paintEvent(GPaintEvent& event)
 {
     if (fillWithBackgroundColor()) {
         Painter painter(*this);
-        painter.fill_rect(rect(), backgroundColor());
+        painter.fill_rect(event.rect(), backgroundColor());
     }
     for (auto* ch : children()) {
         auto* child = (GWidget*)ch;

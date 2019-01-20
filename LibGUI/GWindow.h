@@ -37,6 +37,8 @@ public:
 
     void close();
 
+    GWidget* main_widget() { return m_main_widget; }
+    const GWidget* main_widget() const { return m_main_widget; }
     void set_main_widget(GWidget*);
 
     GraphicsBitmap* backing() { return m_backing.ptr(); }

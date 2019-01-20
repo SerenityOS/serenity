@@ -102,12 +102,12 @@ void GWindow::event(GEvent& event)
         if (!m_main_widget)
             return;
         auto& paint_event = static_cast<GPaintEvent&>(event);
-        if (paint_event.rect().is_empty()) {
-            m_main_widget->paintEvent(*make<GPaintEvent>(m_main_widget->rect()));
-        } else {
-            m_main_widget->event(event);
-        }
-        int rc = gui_invalidate_window(m_window_id, nullptr);
+        auto rect = paint_event.rect();
+        if (rect.is_empty())
+            rect = m_main_widget->rect();
+        m_main_widget->event(*make<GPaintEvent>(rect));
+        GUI_Rect gui_rect = rect;
+        int rc = gui_invalidate_window(m_window_id, &gui_rect);
         ASSERT(rc == 0);
     }
 

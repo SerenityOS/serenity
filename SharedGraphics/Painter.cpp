@@ -31,7 +31,7 @@ Painter::Painter(GWidget& widget)
 
 #ifdef DEBUG_WIDGET_UNDERDRAW
     // If the widget is not opaque, let's not mess it up with debugging color.
-    if (widget.fillWithBackgroundColor())
+    if (widget.fillWithBackgroundColor() && m_window->main_widget() != &widget)
         fill_rect(widget.rect(), Color::Red);
 #endif
 }
