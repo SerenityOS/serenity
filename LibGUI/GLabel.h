@@ -13,7 +13,6 @@ public:
 
 private:
     virtual void paintEvent(GPaintEvent&) override;
-    virtual void mouseMoveEvent(GMouseEvent&) override;
 
     virtual const char* class_name() const override { return "GLabel"; }
 
