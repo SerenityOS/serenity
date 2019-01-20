@@ -195,6 +195,7 @@ void WSWindowManager::move_to_front(WSWindow& window)
     LOCKER(m_lock);
     m_windows_in_order.remove(&window);
     m_windows_in_order.append(&window);
+    invalidate(window);
 }
 
 void WSWindowManager::remove_window(WSWindow& window)
@@ -445,6 +446,7 @@ void WSWindowManager::invalidate(const WSWindow& window, const Rect& rect)
     auto outer_rect = outer_window_rect(window.rect());
     auto inner_rect = rect;
     inner_rect.move_by(window.position());
+    // FIXME: This seems slightly wrong; the inner rect shouldn't intersect the border part of the outer rect.
     inner_rect.intersect(outer_rect);
     invalidate(inner_rect);
 }
