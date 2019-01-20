@@ -11,7 +11,7 @@ GCheckBox::~GCheckBox()
 {
 }
 
-void GCheckBox::setCaption(String&& caption)
+void GCheckBox::set_caption(String&& caption)
 {
     if (caption == m_caption)
         return;
@@ -19,11 +19,11 @@ void GCheckBox::setCaption(String&& caption)
     update();
 }
 
-void GCheckBox::setIsChecked(bool b)
+void GCheckBox::set_checked(bool b)
 {
-    if (m_isChecked == b)
+    if (m_checked == b)
         return;
-    m_isChecked = b;
+    m_checked = b;
     update();
 }
 
@@ -72,10 +72,10 @@ static const char* checkedBitmap = {
     "###########"
 };
 
-void GCheckBox::paintEvent(GPaintEvent&)
+void GCheckBox::paint_event(GPaintEvent&)
 {
     Painter painter(*this);
-    auto bitmap = CharacterBitmap::create_from_ascii(isChecked() ? checkedBitmap : uncheckedBitmap, 11, 11);
+    auto bitmap = CharacterBitmap::create_from_ascii(is_checked() ? checkedBitmap : uncheckedBitmap, 11, 11);
 
     auto textRect = rect();
     textRect.set_left(bitmap->width() + 4);
@@ -85,18 +85,18 @@ void GCheckBox::paintEvent(GPaintEvent&)
     bitmapPosition.set_x(2);
     bitmapPosition.set_y(height() / 2 - bitmap->height() / 2 - 1);
 
-    painter.fill_rect(rect(), backgroundColor());
-    painter.draw_bitmap(bitmapPosition, *bitmap, foregroundColor());
+    painter.fill_rect(rect(), background_color());
+    painter.draw_bitmap(bitmapPosition, *bitmap, foreground_color());
 
     if (!caption().is_empty()) {
-        painter.draw_text(textRect, caption(), Painter::TextAlignment::TopLeft, foregroundColor());
+        painter.draw_text(textRect, caption(), Painter::TextAlignment::TopLeft, foreground_color());
     }
 }
 
-void GCheckBox::mouseDownEvent(GMouseEvent& event)
+void GCheckBox::mousedown_event(GMouseEvent& event)
 {
     dbgprintf("GCheckBox::mouseDownEvent: x=%d, y=%d, button=%u\n", event.x(), event.y(), (unsigned)event.button());
 
-    setIsChecked(!isChecked());
+    set_checked(!is_checked());
 }
 

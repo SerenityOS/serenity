@@ -9,19 +9,19 @@
 GWidget::GWidget(GWidget* parent)
     : GObject(parent)
 {
-    setFont(nullptr);
-    m_backgroundColor = Color::White;
-    m_foregroundColor = Color::Black;
+    set_font(nullptr);
+    m_background_color = Color::White;
+    m_foreground_color = Color::Black;
 }
 
 GWidget::~GWidget()
 {
 }
 
-void GWidget::setWindowRelativeRect(const Rect& rect, bool should_update)
+void GWidget::set_relative_rect(const Rect& rect, bool should_update)
 {
     // FIXME: Make some kind of event loop driven ResizeEvent?
-    m_relativeRect = rect;
+    m_relative_rect = rect;
     if (should_update)
         update();
 }
@@ -35,33 +35,33 @@ void GWidget::event(GEvent& event)
 {
     switch (event.type()) {
     case GEvent::Paint:
-        m_hasPendingPaintEvent = false;
-        return paintEvent(static_cast<GPaintEvent&>(event));
+        m_has_pending_paint_event = false;
+        return paint_event(static_cast<GPaintEvent&>(event));
     case GEvent::Show:
-        return showEvent(static_cast<GShowEvent&>(event));
+        return show_event(static_cast<GShowEvent&>(event));
     case GEvent::Hide:
-        return hideEvent(static_cast<GHideEvent&>(event));
+        return hide_event(static_cast<GHideEvent&>(event));
     case GEvent::KeyDown:
-        return keyDownEvent(static_cast<GKeyEvent&>(event));
+        return keydown_event(static_cast<GKeyEvent&>(event));
     case GEvent::KeyUp:
-        return keyUpEvent(static_cast<GKeyEvent&>(event));
+        return keyup_event(static_cast<GKeyEvent&>(event));
     case GEvent::MouseMove:
-        return mouseMoveEvent(static_cast<GMouseEvent&>(event));
+        return mousemove_event(static_cast<GMouseEvent&>(event));
     case GEvent::MouseDown:
         // FIXME: Focus self if needed.
-        return mouseDownEvent(static_cast<GMouseEvent&>(event));
+        return mousedown_event(static_cast<GMouseEvent&>(event));
     case GEvent::MouseUp:
-        return mouseUpEvent(static_cast<GMouseEvent&>(event));
+        return mouseup_event(static_cast<GMouseEvent&>(event));
     default:
         return GObject::event(event);
     }
 }
 
-void GWidget::paintEvent(GPaintEvent& event)
+void GWidget::paint_event(GPaintEvent& event)
 {
-    if (fillWithBackgroundColor()) {
+    if (fill_with_background_color()) {
         Painter painter(*this);
-        painter.fill_rect(event.rect(), backgroundColor());
+        painter.fill_rect(event.rect(), background_color());
     }
     for (auto* ch : children()) {
         auto* child = (GWidget*)ch;
@@ -69,31 +69,31 @@ void GWidget::paintEvent(GPaintEvent& event)
     }
 }
 
-void GWidget::showEvent(GShowEvent&)
+void GWidget::show_event(GShowEvent&)
 {
 }
 
-void GWidget::hideEvent(GHideEvent&)
+void GWidget::hide_event(GHideEvent&)
 {
 }
 
-void GWidget::keyDownEvent(GKeyEvent&)
+void GWidget::keydown_event(GKeyEvent&)
 {
 }
 
-void GWidget::keyUpEvent(GKeyEvent&)
+void GWidget::keyup_event(GKeyEvent&)
 {
 }
 
-void GWidget::mouseDownEvent(GMouseEvent&)
+void GWidget::mousedown_event(GMouseEvent&)
 {
 }
 
-void GWidget::mouseUpEvent(GMouseEvent&)
+void GWidget::mouseup_event(GMouseEvent&)
 {
 }
 
-void GWidget::mouseMoveEvent(GMouseEvent&)
+void GWidget::mousemove_event(GMouseEvent&)
 {
 }
 
@@ -102,19 +102,19 @@ void GWidget::update()
     auto* w = window();
     if (!w)
         return;
-    if (m_hasPendingPaintEvent)
+    if (m_has_pending_paint_event)
         return;
-    m_hasPendingPaintEvent = true;
-    GEventLoop::main().post_event(w, make<GPaintEvent>(relativeRect()));
+    m_has_pending_paint_event = true;
+    GEventLoop::main().post_event(w, make<GPaintEvent>(relative_rect()));
 }
 
-GWidget::HitTestResult GWidget::hitTest(int x, int y)
+GWidget::HitTestResult GWidget::hit_test(int x, int y)
 {
     // FIXME: Care about z-order.
     for (auto* ch : children()) {
         auto* child = (GWidget*)ch;
-        if (child->relativeRect().contains(x, y)) {
-            return child->hitTest(x - child->relativeRect().x(), y - child->relativeRect().y());
+        if (child->relative_rect().contains(x, y)) {
+            return child->hit_test(x - child->relative_rect().x(), y - child->relative_rect().y());
         }
     }
     return { this, x, y };
@@ -127,20 +127,20 @@ void GWidget::set_window(GWindow* window)
     m_window = window;
 }
 
-bool GWidget::isFocused() const
+bool GWidget::is_focused() const
 {
     // FIXME: Implement.
     return false;
 }
 
-void GWidget::setFocus(bool focus)
+void GWidget::set_focus(bool focus)
 {
-    if (focus == isFocused())
+    if (focus == is_focused())
         return;
     // FIXME: Implement.
 }
 
-void GWidget::setFont(RetainPtr<Font>&& font)
+void GWidget::set_font(RetainPtr<Font>&& font)
 {
     if (!font)
         m_font = Font::default_font();

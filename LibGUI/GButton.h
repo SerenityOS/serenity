@@ -15,9 +15,9 @@ public:
     Function<void(GButton&)> on_click;
 
 private:
-    virtual void paintEvent(GPaintEvent&) override;
-    virtual void mouseDownEvent(GMouseEvent&) override;
-    virtual void mouseUpEvent(GMouseEvent&) override;
+    virtual void paint_event(GPaintEvent&) override;
+    virtual void mousedown_event(GMouseEvent&) override;
+    virtual void mouseup_event(GMouseEvent&) override;
 
     virtual const char* class_name() const override { return "GButton"; }
 

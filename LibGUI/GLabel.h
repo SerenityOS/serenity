@@ -9,10 +9,10 @@ public:
     virtual ~GLabel() override;
 
     String text() const { return m_text; }
-    void setText(String&&);
+    void set_text(String&&);
 
 private:
-    virtual void paintEvent(GPaintEvent&) override;
+    virtual void paint_event(GPaintEvent&) override;
 
     virtual const char* class_name() const override { return "GLabel"; }
 
