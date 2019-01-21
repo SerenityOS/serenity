@@ -179,6 +179,11 @@ void WSWindowManager::paint_window_frame(WSWindow& window)
     m_back_painter->draw_rect(outerRect, border_color);
     m_back_painter->draw_rect(inner_border_rect, border_color);
     m_back_painter->draw_text(titleBarTitleRect, window.title(), Painter::TextAlignment::CenterLeft, title_color);
+
+    Color metadata_color(204, 204, 204);
+    char buffer[64];
+    ksprintf(buffer, "%d:%d", window.pid(), window.window_id());
+    m_back_painter->draw_text(titleBarTitleRect, buffer, Painter::TextAlignment::CenterRight, metadata_color);
 }
 
 void WSWindowManager::add_window(WSWindow& window)

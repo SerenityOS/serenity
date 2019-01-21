@@ -7,6 +7,7 @@
 WSWindow::WSWindow(Process& process, int window_id)
     : m_process(process)
     , m_window_id(window_id)
+    , m_pid(process.pid())
 {
     WSWindowManager::the().add_window(*this);
 }

@@ -138,6 +138,9 @@ void Painter::draw_text(const Rect& rect, const String& text, TextAlignment alig
         point = rect.location();
     } else if (alignment == TextAlignment::CenterLeft) {
         point = { rect.x(), rect.center().y() - (font().glyph_height() / 2) };
+    } else if (alignment == TextAlignment::CenterRight) {
+        int text_width = text.length() * font().glyph_width();
+        point = { rect.right() - text_width, rect.center().y() - (font().glyph_height() / 2) };
     } else if (alignment == TextAlignment::Center) {
         int textWidth = text.length() * font().glyph_width();
         point = rect.center();

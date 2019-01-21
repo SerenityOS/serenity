@@ -38,6 +38,8 @@ public:
 
     GraphicsBitmap* backing() { return m_backing.ptr(); }
 
+    pid_t pid() const { return m_pid; }
+
     // For InlineLinkedList.
     // FIXME: Maybe make a ListHashSet and then WSWindowManager can just use that.
     WSWindow* m_next { nullptr };
@@ -51,5 +53,6 @@ private:
     RetainPtr<GraphicsBitmap> m_backing;
     Process& m_process;
     int m_window_id { -1 };
+    pid_t m_pid { -1 };
 };
 
