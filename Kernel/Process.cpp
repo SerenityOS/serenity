@@ -224,11 +224,8 @@ Process* Process::fork(RegisterDump& regs)
     dbgprintf("fork: child=%p\n", child);
 #endif
 
-#if 0
-    // FIXME: An honest fork() would copy these. Needs a Vector copy ctor.
-    child->m_arguments = m_arguments;
-    child->m_initialEnvironment = m_initialEnvironment;
-#endif
+    child->m_initial_arguments = m_initial_arguments;
+    child->m_initial_environment = m_initial_environment;
 
     for (auto& region : m_regions) {
 #ifdef FORK_DEBUG
@@ -408,8 +405,8 @@ int Process::do_exec(const String& path, Vector<String>&& arguments, Vector<Stri
     m_tss.ss2 = m_pid;
 
     m_executable = descriptor->inode();
-    m_arguments = move(arguments);
-    m_initialEnvironment = move(environment);
+    m_initial_arguments = move(arguments);
+    m_initial_environment = move(environment);
 
 #ifdef TASK_DEBUG
     kprintf("Process %u (%s) exec'd %s @ %p\n", pid(), name().characters(), path.characters(), m_tss.eip);
@@ -525,14 +522,14 @@ int Process::sys$get_environment(char*** environ)
     MM.map_region(*this, *region);
     char* envpage = (char*)region->linearAddress.get();
     *environ = (char**)envpage;
-    char* bufptr = envpage + (sizeof(char*) * (m_initialEnvironment.size() + 1));
-    for (size_t i = 0; i < m_initialEnvironment.size(); ++i) {
+    char* bufptr = envpage + (sizeof(char*) * (m_initial_environment.size() + 1));
+    for (size_t i = 0; i < m_initial_environment.size(); ++i) {
         (*environ)[i] = bufptr;
-        memcpy(bufptr, m_initialEnvironment[i].characters(), m_initialEnvironment[i].length());
-        bufptr += m_initialEnvironment[i].length();
+        memcpy(bufptr, m_initial_environment[i].characters(), m_initial_environment[i].length());
+        bufptr += m_initial_environment[i].length();
         *(bufptr++) = '\0';
     }
-    (*environ)[m_initialEnvironment.size()] = nullptr;
+    (*environ)[m_initial_environment.size()] = nullptr;
     return 0;
 }
 
@@ -543,13 +540,13 @@ int Process::sys$get_arguments(int* argc, char*** argv)
         return -ENOMEM;
     MM.map_region(*this, *region);
     char* argpage = (char*)region->linearAddress.get();
-    *argc = m_arguments.size();
+    *argc = m_initial_arguments.size();
     *argv = (char**)argpage;
-    char* bufptr = argpage + (sizeof(char*) * m_arguments.size());
-    for (size_t i = 0; i < m_arguments.size(); ++i) {
+    char* bufptr = argpage + (sizeof(char*) * m_initial_arguments.size());
+    for (size_t i = 0; i < m_initial_arguments.size(); ++i) {
         (*argv)[i] = bufptr;
-        memcpy(bufptr, m_arguments[i].characters(), m_arguments[i].length());
-        bufptr += m_arguments[i].length();
+        memcpy(bufptr, m_initial_arguments[i].characters(), m_initial_arguments[i].length());
+        bufptr += m_initial_arguments[i].length();
         *(bufptr++) = '\0';
     }
     return 0;

@@ -347,8 +347,8 @@ private:
 
     static void notify_waiters(pid_t waitee, int exit_status, int signal);
 
-    Vector<String> m_arguments;
-    Vector<String> m_initialEnvironment;
+    Vector<String> m_initial_arguments;
+    Vector<String> m_initial_environment;
     HashTable<gid_t> m_gids;
 
     Region* m_stack_region { nullptr };
