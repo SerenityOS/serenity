@@ -71,19 +71,40 @@ GWindow* make_launcher_window()
     label->set_relative_rect({ 0, 0, 80, 20 });
     label->set_text("Apps");
 
-    auto* button = new GButton(widget);
-    button->set_relative_rect({ 5, 20, 70, 20 });
-    button->set_caption("Terminal");
+    auto* terminal_button = new GButton(widget);
+    terminal_button->set_relative_rect({ 5, 20, 70, 20 });
+    terminal_button->set_caption("Terminal");
 
-    button->on_click = [] (GButton&) {
-        if (!fork()) {
+    terminal_button->on_click = [label] (GButton&) {
+        pid_t child_pid = fork();
+        if (!child_pid) {
             execve("/bin/Terminal", nullptr, nullptr);
             ASSERT_NOT_REACHED();
+        } else {
+            char buffer[32];
+            sprintf(buffer, "PID: %d", child_pid);
+            label->set_text(buffer);
+        }
+    };
+
+    auto* guitest_button = new GButton(widget);
+    guitest_button->set_relative_rect({ 5, 50, 70, 20 });
+    guitest_button->set_caption("guitest");
+
+    guitest_button->on_click = [label] (GButton&) {
+        pid_t child_pid = fork();
+        if (!child_pid) {
+            execve("/bin/guitest", nullptr, nullptr);
+            ASSERT_NOT_REACHED();
+        } else {
+            char buffer[32];
+            sprintf(buffer, "PID: %d", child_pid);
+            label->set_text(buffer);
         }
     };
 
     auto* dummy_button = new GButton(widget);
-    dummy_button->set_relative_rect({ 5, 50, 70, 20 });
+    dummy_button->set_relative_rect({ 5, 80, 70, 20 });
     dummy_button->set_caption("Dummy");
 
     return window;
