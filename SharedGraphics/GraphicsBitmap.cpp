@@ -27,7 +27,7 @@ GraphicsBitmap::GraphicsBitmap(Process& process, const Size& size)
     {
         auto& server = WSEventLoop::the().server_process();
         InterruptDisabler disabler;
-        m_server_region = server.allocate_region_with_vmo(LinearAddress(), size_in_bytes, move(vmo), 0, "GraphicsBitmap (server)", true, true);
+        m_server_region = server.allocate_region_with_vmo(LinearAddress(), size_in_bytes, move(vmo), 0, "GraphicsBitmap (server)", true, false);
         m_server_region->set_shared(true);
     }
     m_data = (RGBA32*)m_server_region->linearAddress.asPtr();
