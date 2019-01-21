@@ -232,12 +232,17 @@ Process* Process::fork(RegisterDump& regs)
 
     for (auto& region : m_regions) {
 #ifdef FORK_DEBUG
-        dbgprintf("fork: cloning Region{%p}\n", region.ptr());
+        dbgprintf("fork: cloning Region{%p} \"%s\" L%x\n", region.ptr(), region->name.characters(), region->linearAddress.get());
 #endif
         auto cloned_region = region->clone();
         child->m_regions.append(move(cloned_region));
         MM.map_region(*child, *child->m_regions.last());
+        if (region.ptr() == m_display_framebuffer_region.ptr())
+            child->m_display_framebuffer_region = child->m_regions.last().copyRef();
     }
+
+    for (auto gid : m_gids)
+        child->m_gids.set(gid);
 
     child->m_tss.eax = 0; // fork() returns 0 in the child :^)
     child->m_tss.ebx = regs.ebx;
