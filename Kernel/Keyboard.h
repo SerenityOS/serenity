@@ -42,6 +42,9 @@ private:
     // ^IRQHandler
     virtual void handle_irq() override;
 
+    // ^CharacterDevice
+    virtual const char* class_name() const override { return "Keyboard"; }
+
     void emit(byte);
 
     KeyboardClient* m_client { nullptr };

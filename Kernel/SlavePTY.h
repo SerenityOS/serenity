@@ -8,16 +8,18 @@ class SlavePTY final : public TTY {
 public:
     virtual ~SlavePTY() override;
 
-    virtual String tty_name() const override;
-
     void on_master_write(const byte*, size_t);
     unsigned index() const { return m_index; }
 
-protected:
-    virtual void on_tty_write(const byte*, size_t) override;
-    virtual bool can_write(Process&) const override;
-
 private:
+    // ^TTY
+    virtual String tty_name() const override;
+    virtual void on_tty_write(const byte*, size_t) override;
+
+    // ^CharacterDevice
+    virtual bool can_write(Process&) const override;
+    virtual const char* class_name() const override { return "SlavePTY"; }
+
     friend class MasterPTY;
     SlavePTY(MasterPTY&, unsigned index);
 

@@ -20,6 +20,9 @@ private:
     // ^IRQHandler
     virtual void handle_irq() override;
 
+    // ^CharacterDevice
+    virtual const char* class_name() const override { return "PS2MouseDevice"; }
+
     void initialize();
     void prepare_for_input();
     void prepare_for_output();

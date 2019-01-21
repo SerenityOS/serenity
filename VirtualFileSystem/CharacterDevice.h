@@ -29,6 +29,8 @@ public:
 
     virtual int ioctl(Process&, unsigned request, unsigned arg);
 
+    virtual const char* class_name() const = 0;
+
 protected:
     CharacterDevice(unsigned major, unsigned minor) : m_major(major), m_minor(minor) { }
 
