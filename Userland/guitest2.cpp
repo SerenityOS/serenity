@@ -82,5 +82,9 @@ GWindow* make_launcher_window()
         }
     };
 
+    auto* dummy_button = new GButton(widget);
+    dummy_button->set_relative_rect({ 5, 50, 70, 20 });
+    dummy_button->set_caption("Dummy");
+
     return window;
 }

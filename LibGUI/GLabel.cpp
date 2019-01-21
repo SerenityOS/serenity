@@ -18,7 +18,7 @@ void GLabel::set_text(String&& text)
     update();
 }
 
-void GLabel::paint_event(GPaintEvent&)
+void GLabel::paint_event(GPaintEvent& event)
 {
     Painter painter(*this);
     if (fill_with_background_color())

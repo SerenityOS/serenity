@@ -7,6 +7,8 @@
 #include <WindowServer/WSWindow.h>
 #include <WindowServer/WSWindowManager.h>
 
+//#define LOG_GUI_SYSCALLS
+
 void Process::initialize_gui_statics()
 {
     Font::initialize();
@@ -104,9 +106,6 @@ int Process::gui$get_window_backing_store(int window_id, GUI_WindowBackingStoreI
 
 int Process::gui$invalidate_window(int window_id, const GUI_Rect* rect)
 {
-#ifdef LOG_GUI_SYSCALLS
-    dbgprintf("%s<%u> gui$invalidate_window (window_id=%d, rect=%p)\n", name().characters(), pid(), window_id, rect);
-#endif
     if (window_id < 0)
         return -EINVAL;
     if (rect && !validate_read_typed(rect))
@@ -114,6 +113,12 @@ int Process::gui$invalidate_window(int window_id, const GUI_Rect* rect)
     auto it = m_windows.find(window_id);
     if (it == m_windows.end())
         return -EBADWINDOW;
+#ifdef LOG_GUI_SYSCALLS
+    if (!rect)
+        dbgprintf("%s<%u> gui$invalidate_window (window_id=%d, rect=(entire))\n", name().characters(), pid(), window_id);
+    else
+        dbgprintf("%s<%u> gui$invalidate_window (window_id=%d, rect={%d,%d %dx%d})\n", name().characters(), pid(), window_id, rect->location.x, rect->location.y, rect->size.width, rect->size.height);
+#endif
     auto& window = *(*it).value;
     auto event = make<WSEvent>(WSEvent::WM_Invalidate);
     if (rect)
