@@ -80,14 +80,16 @@ void WSEventLoop::post_event(WSEventReceiver* receiver, OwnPtr<WSEvent>&& event)
 #endif
 
     if (event->type() == WSEvent::WM_Invalidate) {
+        auto& invalidation_event = static_cast<WSWindowInvalidationEvent&>(*event);
         for (auto& queued_event : m_queued_events) {
-            if (receiver == queued_event.receiver
-                && queued_event.event->type() == WSEvent::WM_Invalidate
-                && (queued_event.event->rect().is_empty() || queued_event.event->rect().contains(event->rect()))) {
+            if (receiver == queued_event.receiver && queued_event.event->type() == WSEvent::WM_Invalidate) {
+                auto& queued_invalidation_event = static_cast<WSWindowInvalidationEvent&>(*queued_event.event);
+                if (queued_invalidation_event.rect().is_empty() || queued_invalidation_event.rect().contains(invalidation_event.rect())) {
 #ifdef WSEVENTLOOP_DEBUG
-                dbgprintf("Swallow WM_Invalidate\n");
+                    dbgprintf("Swallow WM_Invalidate\n");
 #endif
-                return;
+                    return;
+                }
             }
         }
     }

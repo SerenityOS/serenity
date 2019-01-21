@@ -80,7 +80,11 @@ struct GUI_Event {
         } mouse;
         struct {
             char character;
-            unsigned modifiers;
+            byte key;
+            byte modifiers;
+            bool ctrl : 1;
+            bool alt : 1;
+            bool shift : 1;
         } key;
     };
 };

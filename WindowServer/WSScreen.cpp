@@ -47,7 +47,7 @@ void WSScreen::on_receive_mouse_data(int dx, int dy, bool left_button, bool righ
     if (right_button)
         buttons |= (unsigned)MouseButton::Right;
     if (m_cursor_location != prev_location) {
-        auto event = make<MouseEvent>(WSEvent::MouseMove, m_cursor_location, buttons);
+        auto event = make<WSMouseEvent>(WSEvent::MouseMove, m_cursor_location, buttons);
         WSEventLoop::the().post_event(&WSWindowManager::the(), move(event));
     }
     bool prev_left_button = m_left_mouse_button_pressed;
@@ -55,38 +55,22 @@ void WSScreen::on_receive_mouse_data(int dx, int dy, bool left_button, bool righ
     m_left_mouse_button_pressed = left_button;
     m_right_mouse_button_pressed = right_button;
     if (prev_left_button != left_button) {
-        auto event = make<MouseEvent>(left_button ? WSEvent::MouseDown : WSEvent::MouseUp, m_cursor_location, buttons, MouseButton::Left);
+        auto event = make<WSMouseEvent>(left_button ? WSEvent::MouseDown : WSEvent::MouseUp, m_cursor_location, buttons, MouseButton::Left);
         WSEventLoop::the().post_event(&WSWindowManager::the(), move(event));
     }
     if (prev_right_button != right_button) {
-        auto event = make<MouseEvent>(right_button ? WSEvent::MouseDown : WSEvent::MouseUp, m_cursor_location, buttons, MouseButton::Right);
+        auto event = make<WSMouseEvent>(right_button ? WSEvent::MouseDown : WSEvent::MouseUp, m_cursor_location, buttons, MouseButton::Right);
         WSEventLoop::the().post_event(&WSWindowManager::the(), move(event));
     }
     if (m_cursor_location != prev_location || prev_left_button != left_button)
         WSWindowManager::the().draw_cursor();
 }
 
-void WSScreen::on_receive_keyboard_data(Keyboard::Event key)
+void WSScreen::on_receive_keyboard_data(Keyboard::Event kernel_event)
 {
-    auto event = make<KeyEvent>(key.is_press() ? WSEvent::KeyDown : WSEvent::KeyUp, 0);
-    int key_code = 0;
-
-    switch (key.character) {
-    case 8: key_code = KeyboardKey::Backspace; break;
-    case 10: key_code = KeyboardKey::Return; break;
-    }
-    event->m_key = key_code;
-
-    if (key.character) {
-        char buf[] = { 0, 0 };
-        char& ch = buf[0];
-        ch = key.character;
-        event->m_text = buf;
-    }
-
-    event->m_shift = key.shift();
-    event->m_ctrl = key.ctrl();
-    event->m_alt = key.alt();
-
+    auto event = make<WSKeyEvent>(kernel_event.is_press() ? WSEvent::KeyDown : WSEvent::KeyUp, kernel_event.key, kernel_event.character);
+    event->m_shift = kernel_event.shift();
+    event->m_ctrl = kernel_event.ctrl();
+    event->m_alt = kernel_event.alt();
     WSEventLoop::the().post_event(&WSWindowManager::the(), move(event));
 }
