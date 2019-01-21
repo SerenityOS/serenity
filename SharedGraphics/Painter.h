@@ -30,7 +30,7 @@ public:
     void draw_focus_rect(const Rect&);
     void blit(const Point&, const GraphicsBitmap&, const Rect& src_rect);
 
-    enum class TextAlignment { TopLeft, CenterLeft, Center };
+    enum class TextAlignment { TopLeft, CenterLeft, Center, CenterRight };
     void draw_text(const Rect&, const String&, TextAlignment = TextAlignment::TopLeft, Color = Color());
     void draw_glyph(const Point&, char, Color);
 
