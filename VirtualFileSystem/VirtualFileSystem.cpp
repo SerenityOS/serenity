@@ -136,12 +136,15 @@ RetainPtr<FileDescriptor> VFS::open(RetainPtr<CharacterDevice>&& device, int& er
     return FileDescriptor::create(move(device));
 }
 
-RetainPtr<FileDescriptor> VFS::open(const String& path, int& error, int options, InodeIdentifier base)
+RetainPtr<FileDescriptor> VFS::open(const String& path, int& error, int options, mode_t mode, InodeIdentifier base)
 {
     auto inode_id = resolve_path(path, base, error, options);
     auto inode = get_inode(inode_id);
-    if (!inode)
+    if (!inode) {
+        if (options & O_CREAT)
+            return create(path, error, options, mode, base);
         return nullptr;
+    }
     auto metadata = inode->metadata();
     if (metadata.isCharacterDevice()) {
         auto it = m_character_devices.find(encodedDevice(metadata.majorDevice, metadata.minorDevice));
@@ -154,13 +157,37 @@ RetainPtr<FileDescriptor> VFS::open(const String& path, int& error, int options,
     return FileDescriptor::create(move(inode));
 }
 
-RetainPtr<FileDescriptor> VFS::create(const String& path, InodeIdentifier base, int& error)
+RetainPtr<FileDescriptor> VFS::create(const String& path, int& error, int options, mode_t mode, InodeIdentifier base)
 {
-    // FIXME: Do the real thing, not just this fake thing!
-    (void) path;
-    (void) base;
-    m_root_inode->fs().create_inode(m_root_inode->fs().root_inode(), "empty", 0100644, 0, error);
-    return nullptr;
+    (void) options;
+    error = -EWHYTHO;
+    // FIXME: This won't work nicely across mount boundaries.
+    FileSystemPath p(path);
+    if (!p.is_valid()) {
+        error = -EINVAL;
+        return nullptr;
+    }
+
+    InodeIdentifier parent_dir;
+    auto existing_dir = resolve_path(path, base, error, 0, &parent_dir);
+    if (existing_dir.is_valid()) {
+        error = -EEXIST;
+        return nullptr;
+    }
+    if (!parent_dir.is_valid()) {
+        error = -ENOENT;
+        return nullptr;
+    }
+    if (error != -ENOENT) {
+        return nullptr;
+    }
+    dbgprintf("VFS::create_file: '%s' in %u:%u\n", p.basename().characters(), parent_dir.fsid(), parent_dir.index());
+    auto new_file = base.fs()->create_inode(base.fs()->root_inode(), p.basename(), mode, 0, error);
+    if (!new_file)
+        return nullptr;
+
+    error = 0;
+    return FileDescriptor::create(move(new_file));
 }
 
 bool VFS::mkdir(const String& path, mode_t mode, InodeIdentifier base, int& error)

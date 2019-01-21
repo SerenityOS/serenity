@@ -435,7 +435,12 @@ bool Ext2FSInode::add_child(InodeIdentifier child_id, const String& name, byte f
     }
 
     entries.append({ name.characters(), name.length(), child_id, file_type });
-    return fs().write_directory_inode(index(), move(entries));
+    bool success = fs().write_directory_inode(index(), move(entries));
+    if (success) {
+        LOCKER(m_lock);
+        m_lookup_cache.set(name, child_id.index());
+    }
+    return success;
 }
 
 bool Ext2FS::write_directory_inode(unsigned directoryInode, Vector<DirectoryEntry>&& entries)
@@ -598,27 +603,29 @@ bool Ext2FS::write_ext2_inode(unsigned inode, const ext2_inode& e2inode)
 
 Vector<Ext2FS::BlockIndex> Ext2FS::allocate_blocks(unsigned group, unsigned count)
 {
-    dbgprintf("Ext2FS: allocateBlocks(group: %u, count: %u)\n", group, count);
+    dbgprintf("Ext2FS: allocate_blocks(group: %u, count: %u)\n", group, count);
+    if (count == 0)
+        return { };
 
     auto& bgd = group_descriptor(group);
     if (bgd.bg_free_blocks_count < count) {
-        kprintf("ExtFS: allocateBlocks can't allocate out of group %u, wanted %u but only %u available\n", group, count, bgd.bg_free_blocks_count);
+        kprintf("Ext2FS: allocate_blocks can't allocate out of group %u, wanted %u but only %u available\n", group, count, bgd.bg_free_blocks_count);
         return { };
     }
 
     // FIXME: Implement a scan that finds consecutive blocks if possible.
     Vector<BlockIndex> blocks;
-    traverse_block_bitmap(group, [&blocks, count] (unsigned firstBlockInBitmap, const Bitmap& bitmap) {
+    traverse_block_bitmap(group, [&blocks, count] (unsigned first_block_in_bitmap, const Bitmap& bitmap) {
         for (unsigned i = 0; i < bitmap.size(); ++i) {
             if (!bitmap.get(i)) {
-                blocks.append(firstBlockInBitmap + i);
+                blocks.append(first_block_in_bitmap + i);
                 if (blocks.size() == count)
                     return false;
             }
         }
         return true;
     });
-    dbgprintf("Ext2FS: allocateBlock found these blocks:\n");
+    dbgprintf("Ext2FS: allocate_block found these blocks:\n");
     for (auto& bi : blocks) {
         dbgprintf("  > %u\n", bi);
     }
@@ -628,7 +635,7 @@ Vector<Ext2FS::BlockIndex> Ext2FS::allocate_blocks(unsigned group, unsigned coun
 
 unsigned Ext2FS::allocate_inode(unsigned preferredGroup, unsigned expectedSize)
 {
-    dbgprintf("Ext2FS: allocateInode(preferredGroup: %u, expectedSize: %u)\n", preferredGroup, expectedSize);
+    dbgprintf("Ext2FS: allocate_inode(preferredGroup: %u, expectedSize: %u)\n", preferredGroup, expectedSize);
 
     unsigned neededBlocks = ceilDiv(expectedSize, blockSize());
 
@@ -651,11 +658,11 @@ unsigned Ext2FS::allocate_inode(unsigned preferredGroup, unsigned expectedSize)
     }
 
     if (!groupIndex) {
-        kprintf("Ext2FS: allocateInode: no suitable group found for new inode with %u blocks needed :(\n", neededBlocks);
+        kprintf("Ext2FS: allocate_inode: no suitable group found for new inode with %u blocks needed :(\n", neededBlocks);
         return 0;
     }
 
-    dbgprintf("Ext2FS: allocateInode: found suitable group [%u] for new inode with %u blocks needed :^)\n", groupIndex, neededBlocks);
+    dbgprintf("Ext2FS: allocate_inode: found suitable group [%u] for new inode with %u blocks needed :^)\n", groupIndex, neededBlocks);
 
     unsigned firstFreeInodeInGroup = 0;
     traverse_inode_bitmap(groupIndex, [&firstFreeInodeInGroup] (unsigned firstInodeInBitmap, const Bitmap& bitmap) {
@@ -669,7 +676,7 @@ unsigned Ext2FS::allocate_inode(unsigned preferredGroup, unsigned expectedSize)
     });
 
     if (!firstFreeInodeInGroup) {
-        kprintf("Ext2FS: firstFreeInodeInGroup returned no inode, despite bgd claiming there are inodes :(\n");
+        kprintf("Ext2FS: first_free_inode_in_group returned no inode, despite bgd claiming there are inodes :(\n");
         return 0;
     }
 
@@ -841,14 +848,15 @@ RetainPtr<Inode> Ext2FS::create_inode(InodeIdentifier parent_id, const String& n
     // NOTE: This doesn't commit the inode allocation just yet!
     auto inode_id = allocate_inode(0, 0);
     if (!inode_id) {
-        kprintf("Ext2FS: createInode: allocate_inode failed\n");
+        kprintf("Ext2FS: create_inode: allocate_inode failed\n");
         error = -ENOSPC;
         return { };
     }
 
-    auto blocks = allocate_blocks(group_index_from_inode(inode_id), ceilDiv(size, blockSize()));
-    if (blocks.is_empty()) {
-        kprintf("Ext2FS: createInode: allocate_blocks failed\n");
+    auto needed_blocks = ceilDiv(size, blockSize());
+    auto blocks = allocate_blocks(group_index_from_inode(inode_id), needed_blocks);
+    if (blocks.size() != needed_blocks) {
+        kprintf("Ext2FS: create_inode: allocate_blocks failed\n");
         error = -ENOSPC;
         return { };
     }

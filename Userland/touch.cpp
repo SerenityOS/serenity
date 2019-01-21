@@ -1,6 +1,26 @@
 #include <stdio.h>
+#include <errno.h>
 #include <utime.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <stdlib.h>
 #include <sys/types.h>
+#include <sys/stat.h>
+
+static bool file_exists(const char* path)
+{
+    struct stat st;
+    int rc = stat(path, &st);
+    if (rc < 0) {
+        if (errno == ENOENT)
+            return false;
+    }
+    if (rc == 0) {
+        return true;
+    }
+    perror("stat");
+    exit(1);
+}
 
 int main(int argc, char** argv)
 {
@@ -8,9 +28,22 @@ int main(int argc, char** argv)
         fprintf(stderr, "usage: touch <path>\n");
         return 1;
     }
-    int rc = utime(argv[1], nullptr);
-    if (rc < 0)
-        perror("utime");
+    if (file_exists(argv[1])) {
+        int rc = utime(argv[1], nullptr);
+        if (rc < 0)
+            perror("utime");
+    } else {
+        int fd = open(argv[1], O_CREAT, 0010644);
+        if (fd < 0) {
+            perror("open");
+            return 1;
+        }
+        int rc = close(fd);
+        if (rc < 0) {
+            perror("close");
+            return 1;
+        }
+    }
     return 0;
 }
 

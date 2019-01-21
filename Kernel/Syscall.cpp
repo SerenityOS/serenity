@@ -73,7 +73,7 @@ static dword handle(RegisterDump& regs, dword function, dword arg1, dword arg2, 
     case Syscall::SC_getcwd:
         return current->sys$getcwd((char*)arg1, (size_t)arg2);
     case Syscall::SC_open:
-        return current->sys$open((const char*)arg1, (int)arg2);
+        return current->sys$open((const char*)arg1, (int)arg2, (mode_t)arg3);
     case Syscall::SC_write:
         return current->sys$write((int)arg1, (const void*)arg2, (size_t)arg3);
     case Syscall::SC_close:

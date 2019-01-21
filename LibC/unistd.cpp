@@ -7,6 +7,7 @@
 #include <pwd.h>
 #include <stdio.h>
 #include <sys/ioctl.h>
+#include <sys/types.h>
 #include <Kernel/Syscall.h>
 
 extern "C" {
@@ -91,7 +92,7 @@ int open(const char* path, int options, ...)
 {
     va_list ap;
     va_start(ap, options);
-    int rc = syscall(SC_open, path, options, ap);
+    int rc = syscall(SC_open, path, options, va_arg(ap, mode_t));
     va_end(ap);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
