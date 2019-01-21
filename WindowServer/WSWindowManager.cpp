@@ -193,9 +193,10 @@ void WSWindowManager::add_window(WSWindow& window)
 void WSWindowManager::move_to_front(WSWindow& window)
 {
     LOCKER(m_lock);
+    if (m_windows_in_order.tail() != &window)
+        invalidate(window);
     m_windows_in_order.remove(&window);
     m_windows_in_order.append(&window);
-    invalidate(window);
 }
 
 void WSWindowManager::remove_window(WSWindow& window)

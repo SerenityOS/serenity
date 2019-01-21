@@ -94,9 +94,9 @@ public:
 
 enum class GMouseButton : byte {
     None = 0,
-    Left,
-    Middle,
-    Right,
+    Left = 1,
+    Right = 2,
+    Middle = 4,
 };
 
 enum GKeyboardKey {
