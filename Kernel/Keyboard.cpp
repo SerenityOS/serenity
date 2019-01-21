@@ -7,17 +7,11 @@
 #include <AK/Assertions.h>
 
 #define IRQ_KEYBOARD             1
-
 #define I8042_BUFFER             0x60
 #define I8042_STATUS             0x64
-
 #define SET_LEDS                 0xED
 #define DATA_AVAILABLE           0x01
 #define I8042_ACK                0xFA
-
-#define MOD_ALT     1
-#define MOD_CTRL    2
-#define MOD_SHIFT   4
 
 static char map[0x80] =
 {
@@ -87,8 +81,8 @@ void Keyboard::key_state_changed(byte raw, bool pressed)
 
 void Keyboard::handle_irq()
 {
-    while (IO::in8(0x64) & 1) {
-        byte raw = IO::in8(0x60);
+    while (IO::in8(I8042_STATUS) & DATA_AVAILABLE) {
+        byte raw = IO::in8(I8042_BUFFER);
         byte ch = raw & 0x7f;
         bool pressed = !(raw & 0x80);
 
@@ -96,9 +90,9 @@ void Keyboard::handle_irq()
         case 0x38: update_modifier(Mod_Alt, pressed); break;
         case 0x1d: update_modifier(Mod_Ctrl, pressed); break;
         case 0x2a: update_modifier(Mod_Shift, pressed); break;
-        case 0xfa: /* i8042 ack */ break;
+        case I8042_ACK: break;
         default:
-            if (m_modifiers & MOD_ALT) {
+            if (m_modifiers & Mod_Alt) {
                 switch (map[ch]) {
                 case '1':
                 case '2':
