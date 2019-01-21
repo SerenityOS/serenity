@@ -158,12 +158,9 @@ void WSEventLoop::drain_keyboard()
     auto& screen = WSScreen::the();
     auto& keyboard = Keyboard::the();
     while (keyboard.can_read(*m_server_process)) {
-        byte data[2];
-        ssize_t nread = keyboard.read(*m_server_process, (byte*)data, sizeof(data));
-        ASSERT(nread == sizeof(data));
-        Keyboard::Key key;
-        key.character = data[0];
-        key.modifiers = data[1];
-        screen.on_receive_keyboard_data(key);
+        Keyboard::Event event;
+        ssize_t nread = keyboard.read(*m_server_process, (byte*)&event, sizeof(Keyboard::Event));
+        ASSERT(nread == sizeof(Keyboard::Event));
+        screen.on_receive_keyboard_data(event);
     }
 }
