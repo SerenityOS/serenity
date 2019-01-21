@@ -36,7 +36,7 @@ GEventLoop& GEventLoop::main()
 
 int GEventLoop::exec()
 {
-    m_event_fd = open("/dev/gui_events", O_RDONLY | O_NONBLOCK);
+    m_event_fd = open("/dev/gui_events", O_RDONLY | O_NONBLOCK | O_CLOEXEC);
     if (m_event_fd < 0) {
         perror("GEventLoop::exec(): open");
         exit(1);
