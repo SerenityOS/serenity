@@ -476,7 +476,7 @@ void VirtualConsole::on_char(byte ch)
     set_cursor(m_cursor_row, m_cursor_column);
 }
 
-void VirtualConsole::on_key_pressed(Keyboard::Key key)
+void VirtualConsole::on_key_pressed(Keyboard::Event key)
 {
     if (key.ctrl()) {
         if (key.character >= 'a' && key.character <= 'z') {

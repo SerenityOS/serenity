@@ -66,9 +66,9 @@ void WSScreen::on_receive_mouse_data(int dx, int dy, bool left_button, bool righ
         WSWindowManager::the().draw_cursor();
 }
 
-void WSScreen::on_receive_keyboard_data(Keyboard::Key key)
+void WSScreen::on_receive_keyboard_data(Keyboard::Event key)
 {
-    auto event = make<KeyEvent>(WSEvent::KeyDown, 0);
+    auto event = make<KeyEvent>(key.is_press() ? WSEvent::KeyDown : WSEvent::KeyUp, 0);
     int key_code = 0;
 
     switch (key.character) {
@@ -81,35 +81,6 @@ void WSScreen::on_receive_keyboard_data(Keyboard::Key key)
         char buf[] = { 0, 0 };
         char& ch = buf[0];
         ch = key.character;
-        if (key.shift()) {
-            if (ch >= 'a' && ch <= 'z') {
-                ch &= ~0x20;
-            } else {
-                switch (ch) {
-                case '1': ch = '!'; break;
-                case '2': ch = '@'; break;
-                case '3': ch = '#'; break;
-                case '4': ch = '$'; break;
-                case '5': ch = '%'; break;
-                case '6': ch = '^'; break;
-                case '7': ch = '&'; break;
-                case '8': ch = '*'; break;
-                case '9': ch = '('; break;
-                case '0': ch = ')'; break;
-                case '-': ch = '_'; break;
-                case '=': ch = '+'; break;
-                case '`': ch = '~'; break;
-                case ',': ch = '<'; break;
-                case '.': ch = '>'; break;
-                case '/': ch = '?'; break;
-                case '[': ch = '{'; break;
-                case ']': ch = '}'; break;
-                case '\\': ch = '|'; break;
-                case '\'': ch = '"'; break;
-                case ';': ch = ':'; break;
-                }
-            }
-        }
         event->m_text = buf;
     }
 

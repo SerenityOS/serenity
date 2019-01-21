@@ -26,7 +26,7 @@ public:
     bool right_mouse_button_pressed() const { return m_right_mouse_button_pressed; }
 
     void on_receive_mouse_data(int dx, int dy, bool left_button, bool right_button);
-    void on_receive_keyboard_data(Keyboard::Key);
+    void on_receive_keyboard_data(Keyboard::Event);
 
 protected:
     WSScreen(unsigned width, unsigned height);
