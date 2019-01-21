@@ -563,11 +563,16 @@ RetainPtr<Region> Region::clone()
 {
     InterruptDisabler disabler;
 
-    if (is_readable && !is_writable) {
+    if (m_shared || (is_readable && !is_writable)) {
         // Create a new region backed by the same VMObject.
         return adopt(*new Region(linearAddress, size, m_vmo.copyRef(), m_offset_in_vmo, String(name), is_readable, is_writable));
     }
 
+    dbgprintf("%s<%u> Region::clone(): cowing %s (L%x)\n",
+              current->name().characters(),
+              current->pid(),
+              name.characters(),
+              linearAddress.get());
     // Set up a COW region. The parent (this) region becomes COW as well!
     for (size_t i = 0; i < page_count(); ++i)
         cow_map.set(i, true);
