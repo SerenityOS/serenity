@@ -297,6 +297,11 @@ String FileDescriptor::absolute_path()
         ksprintf(buf, "fifo:%x", m_fifo.ptr());
         return buf;
     }
+    if (is_character_device()) {
+        char buf[128];
+        ksprintf(buf, "device:%u,%u (%s)", m_device->major(), m_device->minor(), m_device->class_name());
+        return buf;
+    }
     ASSERT(m_inode);
     return VFS::the().absolute_path(*m_inode);
 }

@@ -26,6 +26,9 @@ private:
     virtual void on_tty_write(const byte*, size_t) override;
     virtual String tty_name() const override;
 
+    // ^CharacterDevice
+    virtual const char* class_name() const override { return "VirtualConsole"; }
+
     void set_active(bool);
     void on_char(byte);
 

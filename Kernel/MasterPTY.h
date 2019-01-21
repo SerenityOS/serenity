@@ -10,6 +10,7 @@ public:
     explicit MasterPTY(unsigned index);
     virtual ~MasterPTY() override;
 
+    // ^CharacterDevice
     virtual ssize_t read(Process&, byte*, size_t) override;
     virtual ssize_t write(Process&, const byte*, size_t) override;
     virtual bool can_read(Process&) const override;
@@ -21,6 +22,9 @@ public:
     void on_slave_write(const byte*, size_t);
 
 private:
+    // ^CharacterDevice
+    virtual const char* class_name() const override { return "MasterPTY"; }
+
     SlavePTY& m_slave;
     unsigned m_index;
     DoubleBuffer m_buffer;
