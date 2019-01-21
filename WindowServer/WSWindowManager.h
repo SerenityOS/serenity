@@ -10,8 +10,8 @@
 #include "WSEventReceiver.h"
 
 class WSScreen;
-class MouseEvent;
-class PaintEvent;
+class WSMouseEvent;
+class WSPaintEvent;
 class WSWindow;
 class CharacterBitmap;
 class GraphicsBitmap;
@@ -43,8 +43,8 @@ private:
     WSWindowManager();
     virtual ~WSWindowManager() override;
 
-    void process_mouse_event(MouseEvent&);
-    void handle_titlebar_mouse_event(WSWindow&, MouseEvent&);
+    void process_mouse_event(WSMouseEvent&);
+    void handle_titlebar_mouse_event(WSWindow&, WSMouseEvent&);
 
     void set_active_window(WSWindow*);
     

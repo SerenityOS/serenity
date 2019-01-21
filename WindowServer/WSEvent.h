@@ -49,24 +49,30 @@ public:
 
     const char* name() const { return WSEvent_names[(unsigned)m_type]; }
 
-    bool isMouseEvent() const { return m_type == MouseMove || m_type == MouseDown || m_type == MouseUp; }
-    bool isKeyEvent() const { return m_type == KeyUp || m_type == KeyDown; }
-    bool isPaintEvent() const { return m_type == Paint; }
-
-    Rect rect() const { return m_rect; }
-    void set_rect(const GUI_Rect& rect)
-    {
-        m_rect = rect;
-    }
+    bool is_mouse_event() const { return m_type == MouseMove || m_type == MouseDown || m_type == MouseUp; }
+    bool is_key_event() const { return m_type == KeyUp || m_type == KeyDown; }
+    bool is_paint_event() const { return m_type == Paint; }
 
 private:
     Type m_type { Invalid };
+};
+
+class WSWindowInvalidationEvent final : public WSEvent {
+public:
+    explicit WSWindowInvalidationEvent(const Rect& rect = Rect())
+        : WSEvent(WSEvent::WM_Invalidate)
+        , m_rect(rect)
+    {
+    }
+
+    const Rect& rect() const { return m_rect; }
+private:
     Rect m_rect;
 };
 
-class PaintEvent final : public WSEvent {
+class WSPaintEvent final : public WSEvent {
 public:
-    explicit PaintEvent(const Rect& rect = Rect())
+    explicit WSPaintEvent(const Rect& rect = Rect())
         : WSEvent(WSEvent::Paint)
         , m_rect(rect)
     {
@@ -85,21 +91,12 @@ enum class MouseButton : byte {
     Middle = 4,
 };
 
-enum KeyboardKey {
-    Invalid,
-    LeftArrow,
-    RightArrow,
-    UpArrow,
-    DownArrow,
-    Backspace,
-    Return,
-};
-
-class KeyEvent final : public WSEvent {
+class WSKeyEvent final : public WSEvent {
 public:
-    KeyEvent(Type type, int key)
+    WSKeyEvent(Type type, int key, char character)
         : WSEvent(type)
         , m_key(key)
+        , m_character(character)
     {
     }
 
@@ -107,7 +104,7 @@ public:
     bool ctrl() const { return m_ctrl; }
     bool alt() const { return m_alt; }
     bool shift() const { return m_shift; }
-    String text() const { return m_text; }
+    char character() const { return m_character; }
 
 private:
     friend class WSEventLoop;
@@ -116,12 +113,12 @@ private:
     bool m_ctrl { false };
     bool m_alt { false };
     bool m_shift { false };
-    String m_text;
+    char m_character { 0 };
 };
 
-class MouseEvent final : public WSEvent {
+class WSMouseEvent final : public WSEvent {
 public:
-    MouseEvent(Type type, const Point& position, unsigned buttons, MouseButton button = MouseButton::None)
+    WSMouseEvent(Type type, const Point& position, unsigned buttons, MouseButton button = MouseButton::None)
         : WSEvent(type)
         , m_position(position)
         , m_buttons(buttons)

@@ -231,7 +231,7 @@ void WSWindowManager::notify_rect_changed(WSWindow& window, const Rect& old_rect
     invalidate(outer_window_rect(new_rect));
 }
 
-void WSWindowManager::handle_titlebar_mouse_event(WSWindow& window, MouseEvent& event)
+void WSWindowManager::handle_titlebar_mouse_event(WSWindow& window, WSMouseEvent& event)
 {
     if (event.type() == WSEvent::MouseDown && event.button() == MouseButton::Left) {
 #ifdef DRAG_DEBUG
@@ -247,7 +247,7 @@ void WSWindowManager::handle_titlebar_mouse_event(WSWindow& window, MouseEvent& 
     }
 }
 
-void WSWindowManager::process_mouse_event(MouseEvent& event)
+void WSWindowManager::process_mouse_event(WSMouseEvent& event)
 {
     if (event.type() == WSEvent::MouseUp && event.button() == MouseButton::Left) {
         if (m_drag_window) {
@@ -294,7 +294,7 @@ void WSWindowManager::process_mouse_event(MouseEvent& event)
             }
             // FIXME: Should we just alter the coordinates of the existing MouseEvent and pass it through?
             Point position { event.x() - window->rect().x(), event.y() - window->rect().y() };
-            auto local_event = make<MouseEvent>(event.type(), position, event.buttons(), event.button());
+            auto local_event = make<WSMouseEvent>(event.type(), position, event.buttons(), event.button());
             window->event(*local_event);
             return;
         }
@@ -379,10 +379,10 @@ void WSWindowManager::event(WSEvent& event)
 {
     ASSERT_INTERRUPTS_ENABLED();
     LOCKER(m_lock);
-    if (event.isMouseEvent())
-        return process_mouse_event(static_cast<MouseEvent&>(event));
+    if (event.is_mouse_event())
+        return process_mouse_event(static_cast<WSMouseEvent&>(event));
 
-    if (event.isKeyEvent()) {
+    if (event.is_key_event()) {
         // FIXME: This is a good place to hook key events globally. :)
         if (m_active_window)
             return m_active_window->event(event);

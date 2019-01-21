@@ -120,10 +120,10 @@ int Process::gui$invalidate_window(int window_id, const GUI_Rect* rect)
         dbgprintf("%s<%u> gui$invalidate_window (window_id=%d, rect={%d,%d %dx%d})\n", name().characters(), pid(), window_id, rect->location.x, rect->location.y, rect->size.width, rect->size.height);
 #endif
     auto& window = *(*it).value;
-    auto event = make<WSEvent>(WSEvent::WM_Invalidate);
+    Rect invalidation_rect;
     if (rect)
-        event->set_rect(*rect);
-    WSEventLoop::the().post_event(&window, move(event));
+        invalidation_rect = *rect;
+    WSEventLoop::the().post_event(&window, make<WSWindowInvalidationEvent>(invalidation_rect));
     WSEventLoop::the().server_process().request_wakeup();
     return 0;
 }
