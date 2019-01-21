@@ -117,6 +117,8 @@ public:
     const VMObject& vmo() const { return *m_vmo; }
     VMObject& vmo() { return *m_vmo; }
 
+    void set_shared(bool shared) { m_shared = shared; }
+
     RetainPtr<Region> clone();
     bool contains(LinearAddress laddr) const
     {
@@ -156,6 +158,7 @@ public:
     String name;
     bool is_readable { true };
     bool is_writable { true };
+    bool m_shared { false };
     Bitmap cow_map;
 };
 
