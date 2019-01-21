@@ -363,6 +363,7 @@ int Process::do_exec(const String& path, Vector<String>&& arguments, Vector<Stri
 
     m_signal_stack_kernel_region = nullptr;
     m_signal_stack_user_region = nullptr;
+    m_display_framebuffer_region = nullptr;
     memset(m_signal_action_data, 0, sizeof(m_signal_action_data));
     m_signal_mask = 0xffffffff;
     m_pending_signals = 0;
