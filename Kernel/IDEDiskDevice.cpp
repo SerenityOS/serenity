@@ -223,11 +223,13 @@ bool IDEDiskDevice::read_sectors(dword start_sector, word count, byte* outbuf)
 bool IDEDiskDevice::write_sectors(dword start_sector, word count, const byte* data)
 {
     LOCKER(m_lock);
+#ifdef DISK_DEBUG
     dbgprintf("%s(%u): IDEDiskDevice::write_sectors request (%u sector(s) @ %u)\n",
             current->name().characters(),
             current->pid(),
             count,
             start_sector);
+#endif
     disable_irq();
 
     auto chs = lba_to_chs(start_sector);

@@ -1,6 +1,7 @@
 #include "Ext2FileSystem.h"
 #include "ext2_fs.h"
 #include "UnixTypes.h"
+#include "RTC.h"
 #include <AK/Bitmap.h>
 #include <AK/StdLibExtras.h>
 #include <AK/kmalloc.h>
@@ -150,7 +151,7 @@ ByteBuffer Ext2FS::read_block_containing_inode(unsigned inode, unsigned& blockIn
     return readBlock(blockIndex);
 }
 
-Vector<unsigned> Ext2FS::block_list_for_inode(const ext2_inode& e2inode) const
+Vector<unsigned> Ext2FS::block_list_for_inode(const ext2_inode& e2inode, bool include_block_list_blocks) const
 {
     unsigned entriesPerBlock = EXT2_ADDR_PER_BLOCK(&super_block());
 
@@ -158,7 +159,12 @@ Vector<unsigned> Ext2FS::block_list_for_inode(const ext2_inode& e2inode) const
     unsigned blockCount = e2inode.i_blocks / (blockSize() / 512);
     unsigned blocksRemaining = blockCount;
     Vector<unsigned> list;
-    list.ensure_capacity(blocksRemaining);
+    if (include_block_list_blocks) {
+        // This seems like an excessive over-estimate but w/e.
+        list.ensure_capacity(blocksRemaining * 2);
+    } else {
+        list.ensure_capacity(blocksRemaining);
+    }
 
     unsigned directCount = min(blockCount, (unsigned)EXT2_NDIR_BLOCKS);
     for (unsigned i = 0; i < directCount; ++i) {
@@ -170,6 +176,8 @@ Vector<unsigned> Ext2FS::block_list_for_inode(const ext2_inode& e2inode) const
         return list;
 
     auto processBlockArray = [&] (unsigned arrayBlockIndex, auto&& callback) {
+        if (include_block_list_blocks)
+            callback(arrayBlockIndex);
         auto arrayBlock = readBlock(arrayBlockIndex);
         ASSERT(arrayBlock);
         auto* array = reinterpret_cast<const __u32*>(arrayBlock.pointer());
@@ -219,11 +227,21 @@ Ext2FSInode::Ext2FSInode(Ext2FS& fs, unsigned index, const ext2_inode& raw_inode
 
 Ext2FSInode::~Ext2FSInode()
 {
-    if (m_raw_inode.i_links_count == 0) {
-        dbgprintf("Ext2FS: inode %u has no more links, time to delete!\n", index());
-        // FIXME: Implement!
-        ASSERT_NOT_REACHED();
-    }
+    if (m_raw_inode.i_links_count != 0)
+        return;
+
+    dbgprintf("Ext2FS: inode %u has no more links, time to delete!\n", index());
+
+    m_raw_inode.i_dtime = RTC::now();
+    fs().write_ext2_inode(index(), m_raw_inode);
+
+    auto block_list = fs().block_list_for_inode(m_raw_inode, true);
+
+    auto group_index = fs().group_index_from_inode(index());
+    for (auto block_index : block_list)
+        fs().set_block_allocation_state(group_index, block_index, false);
+
+    fs().set_inode_allocation_state(index(), false);
 }
 
 InodeMetadata Ext2FSInode::metadata() const
@@ -804,6 +822,7 @@ bool Ext2FS::set_inode_allocation_state(unsigned index, bool newState)
 
 bool Ext2FS::set_block_allocation_state(GroupIndex group, BlockIndex bi, bool newState)
 {
+    dbgprintf("Ext2FS: set_block_allocation_state(group=%u, block=%u, state=%u)\n", group, bi, newState);
     auto& bgd = group_descriptor(group);
 
     // Update block bitmap
@@ -812,9 +831,9 @@ bool Ext2FS::set_block_allocation_state(GroupIndex group, BlockIndex bi, bool ne
     unsigned bitIndex = (bi - 1) % blocksPerBitmapBlock;
     auto block = readBlock(bgd.bg_block_bitmap + bitmapBlockIndex);
     ASSERT(block);
-    auto bitmap = Bitmap::wrap(block.pointer(), block.size());
+    auto bitmap = Bitmap::wrap(block.pointer(), blocksPerBitmapBlock);
     bool currentState = bitmap.get(bitIndex);
-    dbgprintf("Ext2FS: setBlockAllocationState(%u) %u -> %u\n", bi, currentState, newState);
+    dbgprintf("Ext2FS:      block %u state: %u -> %u\n", bi, currentState, newState);
 
     if (currentState == newState)
         return true;

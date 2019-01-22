@@ -6,6 +6,7 @@
 #include <LibC/gui.h>
 #include <LibC/stdio.h>
 #include <LibC/stdlib.h>
+#include <LibC/unistd.h>
 #include <AK/HashMap.h>
 
 static HashMap<int, GWindow*>* s_windows;
@@ -67,6 +68,9 @@ void GWindow::set_title(String&& title)
 
 void GWindow::set_rect(const Rect& rect)
 {
+    // FIXME: This is a hack to fudge the race with WSWindowManager trying to display @ old rect.
+    sleep(10);
+
     dbgprintf("GWindow::set_rect %d,%d %dx%d\n", m_rect.x(), m_rect.y(), m_rect.width(), m_rect.height());
     GUI_WindowParameters params;
     int rc = gui_get_window_parameters(m_window_id, &params);
