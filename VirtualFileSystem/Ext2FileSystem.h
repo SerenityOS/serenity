@@ -107,6 +107,7 @@ private:
     bool set_block_allocation_state(GroupIndex, BlockIndex, bool);
 
     void uncache_inode(InodeIndex);
+    void free_inode(Ext2FSInode&);
 
     unsigned m_blockGroupCount { 0 };
 
