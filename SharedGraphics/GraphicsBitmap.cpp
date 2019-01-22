@@ -22,7 +22,7 @@ GraphicsBitmap::GraphicsBitmap(Process& process, const Size& size)
     auto vmo = VMObject::create_anonymous(size_in_bytes);
     m_client_region = process.allocate_region_with_vmo(LinearAddress(), size_in_bytes, vmo.copyRef(), 0, "GraphicsBitmap (client)", true, true);
     m_client_region->set_shared(true);
-    m_client_region->commit(process);
+    m_client_region->commit();
 
     {
         auto& server = WSEventLoop::the().server_process();

@@ -79,9 +79,9 @@ Region* Process::allocate_region(LinearAddress laddr, size_t size, String&& name
     }
     laddr.mask(0xfffff000);
     m_regions.append(adopt(*new Region(laddr, size, move(name), is_readable, is_writable)));
-    if (commit)
-        m_regions.last()->commit(*this);
     MM.map_region(*this, *m_regions.last());
+    if (commit)
+        m_regions.last()->commit();
     return m_regions.last().ptr();
 }
 
@@ -121,7 +121,7 @@ bool Process::deallocate_region(Region& region)
     InterruptDisabler disabler;
     for (size_t i = 0; i < m_regions.size(); ++i) {
         if (m_regions[i].ptr() == &region) {
-            MM.unmap_region(*this, region);
+            MM.unmap_region(region);
             m_regions.remove(i);
             return true;
         }
@@ -303,21 +303,21 @@ int Process::do_exec(const String& path, Vector<String>&& arguments, Vector<Stri
         return -ENOTIMPL;
     }
 
-    auto vmo = VMObject::create_file_backed(descriptor->inode(), descriptor->metadata().size);
-    vmo->set_name(descriptor->absolute_path());
-    auto* region = allocate_region_with_vmo(LinearAddress(), descriptor->metadata().size, vmo.copyRef(), 0, "helper", true, false);
-
     dword entry_eip = 0;
     // FIXME: Is there a race here?
     auto old_page_directory = move(m_page_directory);
-    m_page_directory = make<PageDirectory>();
+    m_page_directory = PageDirectory::create();
 #ifdef MM_DEBUG
     dbgprintf("Process %u exec: PD=%x created\n", pid(), m_page_directory.ptr());
 #endif
     ProcessPagingScope paging_scope(*this);
 
+    auto vmo = VMObject::create_file_backed(descriptor->inode(), descriptor->metadata().size);
+    vmo->set_name(descriptor->absolute_path());
+    auto* region = allocate_region_with_vmo(LinearAddress(), descriptor->metadata().size, vmo.copyRef(), 0, "helper", true, false);
+
     // FIXME: Should we consider doing on-demand paging here? Is it actually useful?
-    bool success = region->page_in(*m_page_directory);
+    bool success = region->page_in();
 
     ASSERT(success);
     {
@@ -601,7 +601,7 @@ Process::Process(String&& name, uid_t uid, gid_t gid, pid_t ppid, RingLevel ring
         }
     }
 
-    m_page_directory = make<PageDirectory>();
+    m_page_directory = PageDirectory::create();
 #ifdef MM_DEBUG
     dbgprintf("Process %u ctor: PD=%x created\n", pid(), m_page_directory.ptr());
 #endif

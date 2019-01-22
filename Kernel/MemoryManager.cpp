@@ -19,7 +19,7 @@ MemoryManager& MM
 
 MemoryManager::MemoryManager()
 {
-    m_kernel_page_directory = make<PageDirectory>(PhysicalAddress(0x4000));
+    m_kernel_page_directory = PageDirectory::create_at_fixed_address(PhysicalAddress(0x4000));
     m_page_table_zero = (dword*)0x6000;
 
     initialize_paging();
@@ -212,7 +212,7 @@ Region* MemoryManager::region_from_laddr(Process& process, LinearAddress laddr)
     return nullptr;
 }
 
-bool MemoryManager::zero_page(PageDirectory& page_directory, Region& region, unsigned page_index_in_region)
+bool MemoryManager::zero_page(Region& region, unsigned page_index_in_region)
 {
     ASSERT_INTERRUPTS_DISABLED();
     auto& vmo = region.vmo();
@@ -225,11 +225,11 @@ bool MemoryManager::zero_page(PageDirectory& page_directory, Region& region, uns
     unquickmap_page();
     region.cow_map.set(page_index_in_region, false);
     vmo.physical_pages()[page_index_in_region] = move(physical_page);
-    remap_region_page(page_directory, region, page_index_in_region, true);
+    remap_region_page(region, page_index_in_region, true);
     return true;
 }
 
-bool MemoryManager::copy_on_write(Process& process, Region& region, unsigned page_index_in_region)
+bool MemoryManager::copy_on_write(Region& region, unsigned page_index_in_region)
 {
     ASSERT_INTERRUPTS_DISABLED();
     auto& vmo = region.vmo();
@@ -238,7 +238,7 @@ bool MemoryManager::copy_on_write(Process& process, Region& region, unsigned pag
         dbgprintf("    >> It's a COW page but nobody is sharing it anymore. Remap r/w\n");
 #endif
         region.cow_map.set(page_index_in_region, false);
-        remap_region_page(process.page_directory(), region, page_index_in_region, true);
+        remap_region_page(region, page_index_in_region, true);
         return true;
     }
 
@@ -256,12 +256,13 @@ bool MemoryManager::copy_on_write(Process& process, Region& region, unsigned pag
     vmo.physical_pages()[page_index_in_region] = move(physical_page);
     unquickmap_page();
     region.cow_map.set(page_index_in_region, false);
-    remap_region_page(process.page_directory(), region, page_index_in_region, true);
+    remap_region_page(region, page_index_in_region, true);
     return true;
 }
 
-bool Region::page_in(PageDirectory& page_directory)
+bool Region::page_in()
 {
+    ASSERT(m_page_directory);
     ASSERT(!vmo().is_anonymous());
     ASSERT(vmo().inode());
 #ifdef MM_DEBUG
@@ -270,17 +271,18 @@ bool Region::page_in(PageDirectory& page_directory)
     for (size_t i = 0; i < page_count(); ++i) {
         auto& vmo_page = vmo().physical_pages()[first_page_index() + i];
         if (vmo_page.is_null()) {
-            bool success = MM.page_in_from_inode(page_directory, *this, i);
+            bool success = MM.page_in_from_inode(*this, i);
             if (!success)
                 return false;
         }
-        MM.remap_region_page(page_directory, *this, i, true);
+        MM.remap_region_page(*this, i, true);
     }
     return true;
 }
 
-bool MemoryManager::page_in_from_inode(PageDirectory& page_directory, Region& region, unsigned page_index_in_region)
+bool MemoryManager::page_in_from_inode(Region& region, unsigned page_index_in_region)
 {
+    ASSERT(region.m_page_directory);
     auto& vmo = region.vmo();
     ASSERT(!vmo.is_anonymous());
     ASSERT(vmo.inode());
@@ -292,7 +294,7 @@ bool MemoryManager::page_in_from_inode(PageDirectory& page_directory, Region& re
         kprintf("MM: page_in_from_inode was unable to allocate a physical page\n");
         return false;
     }
-    remap_region_page(page_directory, region, page_index_in_region, true);
+    remap_region_page(region, page_index_in_region, true);
     byte* dest_ptr = region.linearAddress.offset(page_index_in_region * PAGE_SIZE).asPtr();
 #ifdef MM_DEBUG
     dbgprintf("MM: page_in_from_inode ready to read from inode, will write to L%x!\n", dest_ptr);
@@ -327,17 +329,17 @@ PageFaultResponse MemoryManager::handle_page_fault(const PageFault& fault)
     if (fault.is_not_present()) {
         if (region->vmo().inode()) {
             dbgprintf("NP(inode) fault in Region{%p}[%u]\n", region, page_index_in_region);
-            page_in_from_inode(*current->m_page_directory, *region, page_index_in_region);
+            page_in_from_inode(*region, page_index_in_region);
             return PageFaultResponse::Continue;
         } else {
             dbgprintf("NP(zero) fault in Region{%p}[%u]\n", region, page_index_in_region);
-            zero_page(*current->m_page_directory, *region, page_index_in_region);
+            zero_page(*region, page_index_in_region);
             return PageFaultResponse::Continue;
         }
     } else if (fault.is_protection_violation()) {
         if (region->cow_map.get(page_index_in_region)) {
             dbgprintf("PV(cow) fault in Region{%p}[%u]\n", region, page_index_in_region);
-            bool success = copy_on_write(*current, *region, page_index_in_region);
+            bool success = copy_on_write(*region, page_index_in_region);
             ASSERT(success);
             return PageFaultResponse::Continue;
         }
@@ -424,11 +426,12 @@ void MemoryManager::unquickmap_page()
 #endif
 }
 
-void MemoryManager::remap_region_page(PageDirectory& page_directory, Region& region, unsigned page_index_in_region, bool user_allowed)
+void MemoryManager::remap_region_page(Region& region, unsigned page_index_in_region, bool user_allowed)
 {
+    ASSERT(region.m_page_directory);
     InterruptDisabler disabler;
     auto page_laddr = region.linearAddress.offset(page_index_in_region * PAGE_SIZE);
-    auto pte = ensure_pte(page_directory, page_laddr);
+    auto pte = ensure_pte(*region.m_page_directory, page_laddr);
     auto& physical_page = region.vmo().physical_pages()[page_index_in_region];
     ASSERT(physical_page);
     pte.set_physical_page_base(physical_page->paddr().get());
@@ -438,9 +441,9 @@ void MemoryManager::remap_region_page(PageDirectory& page_directory, Region& reg
     else
         pte.set_writable(region.is_writable);
     pte.set_user_allowed(user_allowed);
-    page_directory.flush(page_laddr);
+    region.m_page_directory->flush(page_laddr);
 #ifdef MM_DEBUG
-    dbgprintf("MM: >> remap_region_page (PD=%x, PTE=P%x) '%s' L%x => P%x (@%p)\n", &page_directory, pte.ptr(), region.name.characters(), page_laddr.get(), physical_page->paddr().get(), physical_page.ptr());
+    dbgprintf("MM: >> remap_region_page (PD=%x, PTE=P%x) '%s' L%x => P%x (@%p)\n", region.m_page_directory->cr3(), pte.ptr(), region.name.characters(), page_laddr.get(), physical_page->paddr().get(), physical_page.ptr());
 #endif
 }
 
@@ -453,6 +456,7 @@ void MemoryManager::remap_region(Process& process, Region& region)
 void MemoryManager::map_region_at_address(PageDirectory& page_directory, Region& region, LinearAddress laddr, bool user_allowed)
 {
     InterruptDisabler disabler;
+    region.m_page_directory = page_directory;
     auto& vmo = region.vmo();
 #ifdef MM_DEBUG
     dbgprintf("MM: map_region_at_address will map VMO pages %u - %u (VMO page count: %u)\n", region.first_page_index(), region.last_page_index(), vmo.page_count());
@@ -482,42 +486,24 @@ void MemoryManager::map_region_at_address(PageDirectory& page_directory, Region&
     }
 }
 
-void MemoryManager::unmap_range(PageDirectory& page_directory, LinearAddress laddr, size_t size)
+bool MemoryManager::unmap_region(Region& region)
 {
-    ASSERT((size % PAGE_SIZE) == 0);
-
-    InterruptDisabler disabler;
-    size_t numPages = size / PAGE_SIZE;
-    for (size_t i = 0; i < numPages; ++i) {
-        auto page_laddr = laddr.offset(i * PAGE_SIZE);
-        auto pte = ensure_pte(page_directory, page_laddr);
-        pte.set_physical_page_base(0);
-        pte.set_present(false);
-        pte.set_writable(false);
-        pte.set_user_allowed(false);
-        page_directory.flush(page_laddr);
-#ifdef MM_DEBUG
-        dbgprintf("MM: << unmap_range L%x =/> 0\n", page_laddr);
-#endif
-    }
-}
-
-bool MemoryManager::unmap_region(Process& process, Region& region)
-{
+    ASSERT(region.m_page_directory);
     InterruptDisabler disabler;
     for (size_t i = 0; i < region.page_count(); ++i) {
         auto laddr = region.linearAddress.offset(i * PAGE_SIZE);
-        auto pte = ensure_pte(process.page_directory(), laddr);
+        auto pte = ensure_pte(*region.m_page_directory, laddr);
         pte.set_physical_page_base(0);
         pte.set_present(false);
         pte.set_writable(false);
         pte.set_user_allowed(false);
-        process.page_directory().flush(laddr);
+        region.m_page_directory->flush(laddr);
 #ifdef MM_DEBUG
         auto& physical_page = region.vmo().physical_pages()[region.first_page_index() + i];
         dbgprintf("MM: >> Unmapped L%x => P%x <<\n", laddr, physical_page ? physical_page->paddr().get() : 0);
 #endif
     }
+    region.m_page_directory.clear();
     return true;
 }
 
@@ -620,6 +606,10 @@ Region::Region(LinearAddress a, size_t s, RetainPtr<VMObject>&& vmo, size_t offs
 
 Region::~Region()
 {
+    if (m_page_directory) {
+        MM.unmap_region(*this);
+        ASSERT(!m_page_directory);
+    }
     MM.unregister_region(*this);
 }
 
@@ -719,7 +709,7 @@ VMObject::~VMObject()
     MM.unregister_vmo(*this);
 }
 
-int Region::commit(Process& process)
+int Region::commit()
 {
     InterruptDisabler disabler;
 #ifdef MM_DEBUG
@@ -734,7 +724,7 @@ int Region::commit(Process& process)
             return -ENOMEM;
         }
         vmo().physical_pages()[i] = move(physical_page);
-        MM.remap_region_page(process.page_directory(), *this, i, true);
+        MM.remap_region_page(*this, i, true);
     }
     return 0;
 }

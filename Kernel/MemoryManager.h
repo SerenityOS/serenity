@@ -56,11 +56,11 @@ private:
     PhysicalAddress m_paddr;
 };
 
-class PageDirectory {
+class PageDirectory : public Retainable<PageDirectory> {
     friend class MemoryManager;
 public:
-    PageDirectory();
-    explicit PageDirectory(PhysicalAddress);
+    static RetainPtr<PageDirectory> create() { return adopt(*new PageDirectory); }
+    static RetainPtr<PageDirectory> create_at_fixed_address(PhysicalAddress paddr) { return adopt(*new PageDirectory(paddr)); }
     ~PageDirectory();
 
     dword cr3() const { return m_directory_page->paddr().get(); }
@@ -69,6 +69,9 @@ public:
     void flush(LinearAddress);
 
 private:
+    PageDirectory();
+    explicit PageDirectory(PhysicalAddress);
+
     RetainPtr<PhysicalPage> m_directory_page;
     HashMap<unsigned, RetainPtr<PhysicalPage>> m_physical_pages;
 };
@@ -145,12 +148,12 @@ public:
         return size / PAGE_SIZE;
     }
 
-    bool page_in(PageDirectory&);
-    int commit(Process&);
-    int decommit(Process&);
+    bool page_in();
+    int commit();
 
     size_t committed() const;
 
+    RetainPtr<PageDirectory> m_page_directory;
     LinearAddress linearAddress;
     size_t size { 0 };
     size_t m_offset_in_vmo { 0 };
@@ -179,7 +182,7 @@ public:
     PageFaultResponse handle_page_fault(const PageFault&);
 
     bool map_region(Process&, Region&);
-    bool unmap_region(Process&, Region&);
+    bool unmap_region(Region&);
 
     void populate_page_directory(PageDirectory&);
 
@@ -203,8 +206,7 @@ private:
     void unregister_region(Region&);
 
     void map_region_at_address(PageDirectory&, Region&, LinearAddress, bool user_accessible);
-    void unmap_range(PageDirectory&, LinearAddress, size_t);
-    void remap_region_page(PageDirectory&, Region&, unsigned page_index_in_region, bool user_allowed);
+    void remap_region_page(Region&, unsigned page_index_in_region, bool user_allowed);
 
     void initialize_paging();
     void flush_entire_tlb();
@@ -219,9 +221,9 @@ private:
 
     static Region* region_from_laddr(Process&, LinearAddress);
 
-    bool copy_on_write(Process&, Region&, unsigned page_index_in_region);
-    bool page_in_from_inode(PageDirectory&, Region&, unsigned page_index_in_region);
-    bool zero_page(PageDirectory&, Region& region, unsigned page_index_in_region);
+    bool copy_on_write(Region&, unsigned page_index_in_region);
+    bool page_in_from_inode(Region&, unsigned page_index_in_region);
+    bool zero_page(Region& region, unsigned page_index_in_region);
 
     byte* quickmap_page(PhysicalPage&);
     void unquickmap_page();
@@ -308,7 +310,7 @@ private:
 
     PageTableEntry ensure_pte(PageDirectory&, LinearAddress);
 
-    OwnPtr<PageDirectory> m_kernel_page_directory;
+    RetainPtr<PageDirectory> m_kernel_page_directory;
     dword* m_page_table_zero;
 
     LinearAddress m_quickmap_addr;
