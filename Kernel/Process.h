@@ -191,6 +191,7 @@ public:
     int sys$mkdir(const char* pathname, mode_t mode);
     Unix::clock_t sys$times(Unix::tms*);
     int sys$utime(const char* pathname, const struct Unix::utimbuf*);
+    int sys$unlink(const char* pathname);
 
     int gui$create_window(const GUI_WindowParameters*);
     int gui$destroy_window(int window_id);

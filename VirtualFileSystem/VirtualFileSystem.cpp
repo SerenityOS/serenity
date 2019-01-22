@@ -222,6 +222,32 @@ bool VFS::mkdir(const String& path, mode_t mode, InodeIdentifier base, int& erro
     return false;
 }
 
+bool VFS::unlink(const String& path, Inode& base, int& error)
+{
+    error = -EWHYTHO;
+    // FIXME: This won't work nicely across mount boundaries.
+    FileSystemPath p(path);
+    if (!p.is_valid()) {
+        error = -EINVAL;
+        return false;
+    }
+
+    InodeIdentifier parent_dir;
+    auto inode_id = resolve_path(path, base.identifier(), error, 0, &parent_dir);
+    if (!inode_id.is_valid()) {
+        error = -ENOENT;
+        return false;
+    }
+
+    auto parent_inode = get_inode(parent_dir);
+    // FIXME: The reverse_lookup here can definitely be avoided.
+    if (!parent_inode->remove_child(parent_inode->reverse_lookup(inode_id), error))
+        return false;
+
+    error = 0;
+    return true;
+}
+
 InodeIdentifier VFS::resolve_symbolic_link(InodeIdentifier base, Inode& symlink_inode, int& error)
 {
     auto symlink_contents = symlink_inode.read_entire();

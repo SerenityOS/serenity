@@ -199,9 +199,10 @@ int link(const char*, const char*)
     assert(false);
 }
 
-int unlink(const char*)
+int unlink(const char* pathname)
 {
-    assert(false);
+    int rc = syscall(SC_unlink, pathname);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
 int isatty(int fd)
