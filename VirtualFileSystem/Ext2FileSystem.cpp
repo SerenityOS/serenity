@@ -219,6 +219,11 @@ Ext2FSInode::Ext2FSInode(Ext2FS& fs, unsigned index, const ext2_inode& raw_inode
 
 Ext2FSInode::~Ext2FSInode()
 {
+    if (m_raw_inode.i_links_count == 0) {
+        dbgprintf("Ext2FS: inode %u has no more links, time to delete!\n", index());
+        // FIXME: Implement!
+        ASSERT_NOT_REACHED();
+    }
 }
 
 InodeMetadata Ext2FSInode::metadata() const
@@ -440,6 +445,50 @@ bool Ext2FSInode::add_child(InodeIdentifier child_id, const String& name, byte f
         LOCKER(m_lock);
         m_lookup_cache.set(name, child_id.index());
     }
+    return success;
+}
+
+bool Ext2FSInode::remove_child(const String& name, int& error)
+{
+    ASSERT(is_directory());
+
+    unsigned child_inode_index;
+    {
+        LOCKER(m_lock);
+        auto it = m_lookup_cache.find(name);
+        if (it == m_lookup_cache.end()) {
+            error = -ENOENT;
+            return false;
+        }
+        child_inode_index = (*it).value;
+    }
+    InodeIdentifier child_id { fsid(), child_inode_index };
+
+//#ifdef EXT2_DEBUG
+    dbgprintf("Ext2FS: Removing '%s' in directory %u\n", name.characters(), index());
+//#endif
+
+    Vector<FS::DirectoryEntry> entries;
+    traverse_as_directory([&] (auto& entry) {
+        if (entry.inode != child_id)
+        entries.append(entry);
+        return true;
+    });
+
+    bool success = fs().write_directory_inode(index(), move(entries));
+    if (!success) {
+        // FIXME: Plumb error from write_directory_inode().
+        error = -EIO;
+        return false;
+    }
+
+    {
+        LOCKER(m_lock);
+        m_lookup_cache.remove(name);
+    }
+
+    auto child_inode = fs().get_inode(child_id);
+    child_inode->decrement_link_count();
     return success;
 }
 
@@ -1050,7 +1099,16 @@ int Ext2FSInode::decrement_link_count()
 {
     if (fs().is_readonly())
         return -EROFS;
+    ASSERT(m_raw_inode.i_links_count);
     --m_raw_inode.i_links_count;
+    if (m_raw_inode.i_links_count == 0)
+        fs().uncache_inode(index());
     set_metadata_dirty(true);
     return 0;
+}
+
+void Ext2FS::uncache_inode(InodeIndex index)
+{
+    LOCKER(m_inode_cache_lock);
+    m_inode_cache.remove(index);
 }

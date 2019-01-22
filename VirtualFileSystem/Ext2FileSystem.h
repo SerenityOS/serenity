@@ -34,6 +34,7 @@ private:
     virtual void flush_metadata() override;
     virtual bool write(const ByteBuffer&) override;
     virtual bool add_child(InodeIdentifier child_id, const String& name, byte file_type, int& error) override;
+    virtual bool remove_child(const String& name, int& error) override;
     virtual RetainPtr<Inode> parent() const override;
     virtual int set_atime(Unix::time_t) override;
     virtual int set_ctime(Unix::time_t) override;
@@ -104,6 +105,8 @@ private:
     bool get_inode_allocation_state(InodeIndex) const;
     bool set_inode_allocation_state(unsigned inode, bool);
     bool set_block_allocation_state(GroupIndex, BlockIndex, bool);
+
+    void uncache_inode(InodeIndex);
 
     unsigned m_blockGroupCount { 0 };
 

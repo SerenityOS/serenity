@@ -85,6 +85,7 @@ public:
     virtual String reverse_lookup(InodeIdentifier) = 0;
     virtual bool write(const ByteBuffer&) = 0;
     virtual bool add_child(InodeIdentifier child_id, const String& name, byte file_type, int& error) = 0;
+    virtual bool remove_child(const String& name, int& error) = 0;
     virtual RetainPtr<Inode> parent() const = 0;
 
     bool is_metadata_dirty() const { return m_metadata_dirty; }

@@ -2009,3 +2009,13 @@ Inode* Process::cwd_inode()
         m_cwd = VFS::the().root_inode();
     return m_cwd.ptr();
 }
+
+int Process::sys$unlink(const char* pathname)
+{
+    if (!validate_read_str(pathname))
+        return -EFAULT;
+    int error;
+    if (!VFS::the().unlink(String(pathname), *cwd_inode(), error))
+        return error;
+    return 0;
+}

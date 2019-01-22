@@ -21,7 +21,8 @@ OBJS = \
        more.o \
        guitest.o \
        guitest2.o \
-       sysctl.o
+       sysctl.o \
+       rm.o
 
 APPS = \
        id \
@@ -47,7 +48,8 @@ APPS = \
        more \
        guitest \
        guitest2 \
-       sysctl
+       sysctl \
+       rm
 
 ARCH_FLAGS =
 STANDARD_FLAGS = -std=c++17 -nostdinc++ -nostdlib -nostdinc
@@ -137,6 +139,9 @@ guitest2: guitest2.o
 	$(LD) -o $@ $(LDFLAGS) $< ../LibGUI/LibGUI.a ../LibC/LibC.a
 
 sysctl: sysctl.o
+	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
+
+rm: rm.o
 	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
 
 .cpp.o:
