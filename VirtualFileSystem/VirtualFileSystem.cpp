@@ -169,8 +169,8 @@ RetainPtr<FileDescriptor> VFS::create(const String& path, int& error, int option
     }
 
     InodeIdentifier parent_dir;
-    auto existing_dir = resolve_path(path, base, error, 0, &parent_dir);
-    if (existing_dir.is_valid()) {
+    auto existing_file = resolve_path(path, base, error, 0, &parent_dir);
+    if (existing_file.is_valid()) {
         error = -EEXIST;
         return nullptr;
     }
@@ -182,7 +182,7 @@ RetainPtr<FileDescriptor> VFS::create(const String& path, int& error, int option
         return nullptr;
     }
     dbgprintf("VFS::create_file: '%s' in %u:%u\n", p.basename().characters(), parent_dir.fsid(), parent_dir.index());
-    auto new_file = base.fs()->create_inode(base.fs()->root_inode(), p.basename(), mode, 0, error);
+    auto new_file = parent_dir.fs()->create_inode(parent_dir, p.basename(), mode, 0, error);
     if (!new_file)
         return nullptr;
 
