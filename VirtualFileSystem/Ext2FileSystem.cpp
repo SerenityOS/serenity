@@ -219,6 +219,23 @@ Vector<unsigned> Ext2FS::block_list_for_inode(const ext2_inode& e2inode, bool in
     return list;
 }
 
+void Ext2FS::free_inode(Ext2FSInode& inode)
+{
+    ASSERT(inode.m_raw_inode.i_links_count == 0);
+    dbgprintf("Ext2FS: inode %u has no more links, time to delete!\n", inode.index());
+
+    inode.m_raw_inode.i_dtime = RTC::now();
+    write_ext2_inode(inode.index(), inode.m_raw_inode);
+
+    auto block_list = block_list_for_inode(inode.m_raw_inode, true);
+
+    auto group_index = group_index_from_inode(inode.index());
+    for (auto block_index : block_list)
+        set_block_allocation_state(group_index, block_index, false);
+
+    set_inode_allocation_state(inode.index(), false);
+}
+
 Ext2FSInode::Ext2FSInode(Ext2FS& fs, unsigned index, const ext2_inode& raw_inode)
     : Inode(fs, index)
     , m_raw_inode(raw_inode)
@@ -227,21 +244,8 @@ Ext2FSInode::Ext2FSInode(Ext2FS& fs, unsigned index, const ext2_inode& raw_inode
 
 Ext2FSInode::~Ext2FSInode()
 {
-    if (m_raw_inode.i_links_count != 0)
-        return;
-
-    dbgprintf("Ext2FS: inode %u has no more links, time to delete!\n", index());
-
-    m_raw_inode.i_dtime = RTC::now();
-    fs().write_ext2_inode(index(), m_raw_inode);
-
-    auto block_list = fs().block_list_for_inode(m_raw_inode, true);
-
-    auto group_index = fs().group_index_from_inode(index());
-    for (auto block_index : block_list)
-        fs().set_block_allocation_state(group_index, block_index, false);
-
-    fs().set_inode_allocation_state(index(), false);
+    if (m_raw_inode.i_links_count == 0)
+        fs().free_inode(*this);
 }
 
 InodeMetadata Ext2FSInode::metadata() const
