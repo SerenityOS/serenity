@@ -92,7 +92,7 @@ private:
     Vector<BlockIndex> allocate_blocks(unsigned group, unsigned count);
     unsigned group_index_from_inode(unsigned) const;
 
-    Vector<unsigned> block_list_for_inode(const ext2_inode&) const;
+    Vector<unsigned> block_list_for_inode(const ext2_inode&, bool include_block_list_blocks = false) const;
 
     void dump_block_bitmap(unsigned groupIndex) const;
     void dump_inode_bitmap(unsigned groupIndex) const;
