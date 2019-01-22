@@ -8,12 +8,12 @@
 #include <VirtualFileSystem/VirtualFileSystem.h>
 #include "ELFLoader.h"
 #include "MemoryManager.h"
-#include "errno.h"
 #include "i8253.h"
 #include "RTC.h"
 #include "ProcFileSystem.h"
 #include <AK/StdLibExtras.h>
 #include <LibC/signal_numbers.h>
+#include <LibC/errno_numbers.h>
 #include "Syscall.h"
 #include "Scheduler.h"
 #include "FIFO.h"
