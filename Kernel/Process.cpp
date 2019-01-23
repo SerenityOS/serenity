@@ -543,13 +543,14 @@ int Process::sys$get_arguments(int* argc, char*** argv)
     char* argpage = (char*)region->linearAddress.get();
     *argc = m_initial_arguments.size();
     *argv = (char**)argpage;
-    char* bufptr = argpage + (sizeof(char*) * m_initial_arguments.size());
+    char* bufptr = argpage + (sizeof(char*) * (m_initial_arguments.size() + 1));
     for (size_t i = 0; i < m_initial_arguments.size(); ++i) {
         (*argv)[i] = bufptr;
         memcpy(bufptr, m_initial_arguments[i].characters(), m_initial_arguments[i].length());
         bufptr += m_initial_arguments[i].length();
         *(bufptr++) = '\0';
     }
+    (*argv)[m_initial_arguments.size()] = nullptr;
     return 0;
 }
 
