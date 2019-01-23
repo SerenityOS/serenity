@@ -61,6 +61,7 @@ private:
     virtual String reverse_lookup(InodeIdentifier) override;
     virtual void flush_metadata() override;
     virtual bool write(const ByteBuffer&) override;
+    virtual ssize_t write_bytes(Unix::off_t, size_t, const byte* buffer, FileDescriptor*) override;
     virtual bool add_child(InodeIdentifier child_id, const String& name, byte file_type, int& error) override;
     virtual bool remove_child(const String& name, int& error) override;
     virtual RetainPtr<Inode> parent() const override;

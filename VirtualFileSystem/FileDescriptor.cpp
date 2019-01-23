@@ -168,7 +168,7 @@ ssize_t FileDescriptor::write(Process& process, const byte* data, size_t size)
         return m_device->write(process, data, size);
     }
     ASSERT(m_inode);
-    ssize_t nwritten = m_inode->write(ByteBuffer::wrap((byte*)data, size));
+    ssize_t nwritten = m_inode->write_bytes(m_current_offset, size, data, this);
     m_current_offset += nwritten;
     return nwritten;
 }

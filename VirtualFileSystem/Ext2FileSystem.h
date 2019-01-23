@@ -33,6 +33,7 @@ private:
     virtual String reverse_lookup(InodeIdentifier) override;
     virtual void flush_metadata() override;
     virtual bool write(const ByteBuffer&) override;
+    virtual ssize_t write_bytes(Unix::off_t, size_t, const byte* data, FileDescriptor*) override;
     virtual bool add_child(InodeIdentifier child_id, const String& name, byte file_type, int& error) override;
     virtual bool remove_child(const String& name, int& error) override;
     virtual RetainPtr<Inode> parent() const override;
@@ -93,7 +94,7 @@ private:
     unsigned group_index_from_inode(unsigned) const;
 
     Vector<unsigned> block_list_for_inode(const ext2_inode&, bool include_block_list_blocks = false) const;
-    bool write_block_list_for_inode(InodeIndex, ext2_inode&, Vector<BlockIndex>&&);
+    bool write_block_list_for_inode(InodeIndex, ext2_inode&, const Vector<BlockIndex>&);
 
     void dump_block_bitmap(unsigned groupIndex) const;
     void dump_inode_bitmap(unsigned groupIndex) const;

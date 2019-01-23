@@ -15,10 +15,10 @@ DiskBackedFS::~DiskBackedFS()
 
 bool DiskBackedFS::writeBlock(unsigned index, const ByteBuffer& data)
 {
-    ASSERT(data.size() == blockSize());
 #ifdef DBFS_DEBUG
-    kprintf("DiskBackedFileSystem::writeBlock %u\n", index);
+    kprintf("DiskBackedFileSystem::writeBlock %u, size=%u\n", index, data.size());
 #endif
+    ASSERT(data.size() == blockSize());
     DiskOffset baseOffset = static_cast<DiskOffset>(index) * static_cast<DiskOffset>(blockSize());
     return device().write(baseOffset, blockSize(), data.pointer());
 }
