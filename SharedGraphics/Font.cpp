@@ -22,6 +22,7 @@ Font::Font(const char* const* glyphs, byte glyph_width, byte glyph_height, byte 
     , m_first_glyph(first_glyph)
     , m_last_glyph(last_glyph)
 {
+    m_error_bitmap = CharacterBitmap::create_from_ascii(Peanut8x10::error_glyph, m_glyph_width, m_glyph_height);
 }
 
 Font::~Font()
