@@ -43,6 +43,7 @@ LIBC_OBJS = \
        utime.o \
        gui.o \
        sys/select.o \
+       poll.o \
        entry.o
 
 OBJS = $(AK_OBJS) $(WIDGETS_OBJS) $(LIBC_OBJS) $(SHAREDGRAPHICS_OBJS)

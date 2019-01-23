@@ -100,6 +100,8 @@ static dword handle(RegisterDump& regs, dword function, dword arg1, dword arg2, 
         return (dword)current->sys$mmap((const SC_mmap_params*)arg1);
     case Syscall::SC_select:
         return current->sys$select((const SC_select_params*)arg1);
+    case Syscall::SC_poll:
+        return current->sys$poll((pollfd*)arg1, (int)arg2, (int)arg3);
     case Syscall::SC_munmap:
         return current->sys$munmap((void*)arg1, (size_t)arg2);
     case Syscall::SC_gethostname:
