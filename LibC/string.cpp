@@ -141,8 +141,12 @@ void* memmove(void* dest, const void* src, size_t n)
 {
     if (dest < src)
         return memcpy(dest, src, n);
-    // FIXME: Implement backwards copy.
-    assert(false);
+
+    byte *pd = (byte*)dest;
+    const byte *ps = (const byte*)src;
+    for (pd += n, ps += n; n--;)
+        *--pd = *--ps;
+    return dest;
 }
 
 char* strcpy(char* dest, const char *src)
