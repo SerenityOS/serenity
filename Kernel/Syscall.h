@@ -75,6 +75,7 @@
     __ENUMERATE_SYSCALL(gui_get_window_parameters) \
     __ENUMERATE_SYSCALL(gui_set_window_parameters) \
     __ENUMERATE_SYSCALL(unlink) \
+    __ENUMERATE_SYSCALL(poll) \
 
 
 struct fd_set;

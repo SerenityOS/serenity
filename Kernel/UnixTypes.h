@@ -291,3 +291,16 @@ struct stat {
     time_t    st_mtime;   /* time of last modification */
     time_t    st_ctime;   /* time of last status change */
 };
+
+#define POLLIN   (1u << 0)
+#define POLLPRI  (1u << 2)
+#define POLLOUT  (1u << 3)
+#define POLLERR  (1u << 4)
+#define POLLHUP  (1u << 5)
+#define POLLNVAL (1u << 6)
+
+struct pollfd {
+    int   fd;
+    short events;
+    short revents;
+};

@@ -2002,6 +2002,13 @@ int Process::sys$select(const Syscall::SC_select_params* params)
     return markedfds;
 }
 
+int Process::sys$poll(pollfd* fds, int nfds, int timeout)
+{
+    if (!validate_read_typed(fds))
+        return -EFAULT;
+    return 0;
+}
+
 Inode* Process::cwd_inode()
 {
     // FIXME: This is retarded factoring.
