@@ -1982,7 +1982,10 @@ int Process::sys$select(const Syscall::SC_select_params* params)
         memset(readfds, 0, sizeof(fd_set));
         auto bitmap = Bitmap::wrap((byte*)readfds, FD_SETSIZE);
         for (int fd : m_select_read_fds) {
-            if (m_fds[fd].descriptor->can_read(*this)) {
+            auto* descriptor = file_descriptor(fd);
+            if (!descriptor)
+                continue;
+            if (descriptor->can_read(*this)) {
                 bitmap.set(fd, true);
                 ++markedfds;
             }
@@ -1993,7 +1996,10 @@ int Process::sys$select(const Syscall::SC_select_params* params)
         memset(writefds, 0, sizeof(fd_set));
         auto bitmap = Bitmap::wrap((byte*)writefds, FD_SETSIZE);
         for (int fd : m_select_write_fds) {
-            if (m_fds[fd].descriptor->can_write(*this)) {
+            auto* descriptor = file_descriptor(fd);
+            if (!descriptor)
+                continue;
+            if (descriptor->can_write(*this)) {
                 bitmap.set(fd, true);
                 ++markedfds;
             }
@@ -2007,7 +2013,41 @@ int Process::sys$poll(pollfd* fds, int nfds, int timeout)
 {
     if (!validate_read_typed(fds))
         return -EFAULT;
-    return 0;
+
+    m_select_write_fds.clear_with_capacity();
+    m_select_read_fds.clear_with_capacity();
+    for (int i = 0; i < nfds; ++i) {
+        if (fds[i].events & POLLIN)
+            m_select_read_fds.append(fds[i].fd);
+        if (fds[i].events & POLLOUT)
+            m_select_write_fds.append(fds[i].fd);
+    }
+
+    if (!m_wakeup_requested && timeout < 0) {
+        block(BlockedSelect);
+        Scheduler::yield();
+    }
+    m_wakeup_requested = false;
+
+    int fds_with_revents = 0;
+
+    for (int i = 0; i < nfds; ++i) {
+        auto* descriptor = file_descriptor(fds[i].fd);
+        if (!descriptor) {
+            fds[i].revents = POLLNVAL;
+            continue;
+        }
+        fds[i].revents = 0;
+        if (fds[i].events & POLLIN && descriptor->can_read(*this))
+            fds[i].revents |= POLLIN;
+        if (fds[i].events & POLLOUT && descriptor->can_write(*this))
+            fds[i].revents |= POLLOUT;
+
+        if (fds[i].revents)
+            ++fds_with_revents;
+    }
+
+    return fds_with_revents;
 }
 
 Inode* Process::cwd_inode()
