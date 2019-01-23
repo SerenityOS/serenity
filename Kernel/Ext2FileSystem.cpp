@@ -399,7 +399,7 @@ RetainPtr<Inode> Ext2FS::get_inode(InodeIdentifier inode) const
     return new_inode;
 }
 
-ssize_t Ext2FSInode::read_bytes(Unix::off_t offset, size_t count, byte* buffer, FileDescriptor*)
+ssize_t Ext2FSInode::read_bytes(off_t offset, size_t count, byte* buffer, FileDescriptor*)
 {
     ASSERT(offset >= 0);
     if (m_raw_inode.i_size == 0)
@@ -409,7 +409,7 @@ ssize_t Ext2FSInode::read_bytes(Unix::off_t offset, size_t count, byte* buffer, 
     // This avoids wasting an entire block on short links. (Most links are short.)
     static const unsigned max_inline_symlink_length = 60;
     if (is_symlink() && size() < max_inline_symlink_length) {
-        ssize_t nread = min((Unix::off_t)size() - offset, static_cast<Unix::off_t>(count));
+        ssize_t nread = min((off_t)size() - offset, static_cast<off_t>(count));
         memcpy(buffer, m_raw_inode.i_block + offset, nread);
         return nread;
     }
@@ -436,7 +436,7 @@ ssize_t Ext2FSInode::read_bytes(Unix::off_t offset, size_t count, byte* buffer, 
     dword offset_into_first_block = offset % block_size;
 
     ssize_t nread = 0;
-    size_t remaining_count = min((Unix::off_t)count, (Unix::off_t)size() - offset);
+    size_t remaining_count = min((off_t)count, (off_t)size() - offset);
     byte* out = buffer;
 
 #ifdef EXT2_DEBUG
@@ -462,7 +462,7 @@ ssize_t Ext2FSInode::read_bytes(Unix::off_t offset, size_t count, byte* buffer, 
     return nread;
 }
 
-ssize_t Ext2FSInode::write_bytes(Unix::off_t offset, size_t count, const byte* data, FileDescriptor*)
+ssize_t Ext2FSInode::write_bytes(off_t offset, size_t count, const byte* data, FileDescriptor*)
 {
     LOCKER(m_lock);
 
@@ -496,7 +496,7 @@ ssize_t Ext2FSInode::write_bytes(Unix::off_t offset, size_t count, const byte* d
     dword offset_into_first_block = offset % block_size;
 
     ssize_t nwritten = 0;
-    size_t remaining_count = min((Unix::off_t)count, (Unix::off_t)new_size - offset);
+    size_t remaining_count = min((off_t)count, (off_t)new_size - offset);
     const byte* in = data;
 
 #ifdef EXT2_DEBUG
@@ -1006,7 +1006,7 @@ bool Ext2FS::set_block_allocation_state(GroupIndex group, BlockIndex bi, bool ne
     return true;
 }
 
-RetainPtr<Inode> Ext2FS::create_directory(InodeIdentifier parent_id, const String& name, Unix::mode_t mode, int& error)
+RetainPtr<Inode> Ext2FS::create_directory(InodeIdentifier parent_id, const String& name, mode_t mode, int& error)
 {
     ASSERT(parent_id.fsid() == fsid());
 
@@ -1047,7 +1047,7 @@ RetainPtr<Inode> Ext2FS::create_directory(InodeIdentifier parent_id, const Strin
     return inode;
 }
 
-RetainPtr<Inode> Ext2FS::create_inode(InodeIdentifier parent_id, const String& name, Unix::mode_t mode, unsigned size, int& error)
+RetainPtr<Inode> Ext2FS::create_inode(InodeIdentifier parent_id, const String& name, mode_t mode, unsigned size, int& error)
 {
     ASSERT(parent_id.fsid() == fsid());
     auto parent_inode = get_inode(parent_id);
@@ -1217,7 +1217,7 @@ void Ext2FSInode::one_retain_left()
     // FIXME: I would like to not live forever, but uncached Ext2FS is fucking painful right now.
 }
 
-int Ext2FSInode::set_atime(Unix::time_t t)
+int Ext2FSInode::set_atime(time_t t)
 {
     if (fs().is_readonly())
         return -EROFS;
@@ -1226,7 +1226,7 @@ int Ext2FSInode::set_atime(Unix::time_t t)
     return 0;
 }
 
-int Ext2FSInode::set_ctime(Unix::time_t t)
+int Ext2FSInode::set_ctime(time_t t)
 {
     if (fs().is_readonly())
         return -EROFS;
@@ -1235,7 +1235,7 @@ int Ext2FSInode::set_ctime(Unix::time_t t)
     return 0;
 }
 
-int Ext2FSInode::set_mtime(Unix::time_t t)
+int Ext2FSInode::set_mtime(time_t t)
 {
     if (fs().is_readonly())
         return -EROFS;

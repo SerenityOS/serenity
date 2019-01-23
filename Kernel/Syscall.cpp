@@ -67,9 +67,9 @@ static dword handle(RegisterDump& regs, dword function, dword arg1, dword arg2, 
     case Syscall::SC_get_dir_entries:
         return current->sys$get_dir_entries((int)arg1, (void*)arg2, (size_t)arg3);
     case Syscall::SC_lstat:
-        return current->sys$lstat((const char*)arg1, (Unix::stat*)arg2);
+        return current->sys$lstat((const char*)arg1, (stat*)arg2);
     case Syscall::SC_stat:
-        return current->sys$stat((const char*)arg1, (Unix::stat*)arg2);
+        return current->sys$stat((const char*)arg1, (stat*)arg2);
     case Syscall::SC_getcwd:
         return current->sys$getcwd((char*)arg1, (size_t)arg2);
     case Syscall::SC_open:
@@ -152,7 +152,7 @@ static dword handle(RegisterDump& regs, dword function, dword arg1, dword arg2, 
     case Syscall::SC_dup2:
         return current->sys$dup2((int)arg1, (int)arg2);
     case Syscall::SC_sigaction:
-        return current->sys$sigaction((int)arg1, (const Unix::sigaction*)arg2, (Unix::sigaction*)arg3);
+        return current->sys$sigaction((int)arg1, (const sigaction*)arg2, (sigaction*)arg3);
     case Syscall::SC_umask:
         return current->sys$umask((mode_t)arg1);
     case Syscall::SC_getgroups:
@@ -164,7 +164,7 @@ static dword handle(RegisterDump& regs, dword function, dword arg1, dword arg2, 
         ASSERT_NOT_REACHED();
         return 0;
     case Syscall::SC_sigprocmask:
-        return current->sys$sigprocmask((int)arg1, (const Unix::sigset_t*)arg2, (Unix::sigset_t*)arg3);
+        return current->sys$sigprocmask((int)arg1, (const sigset_t*)arg2, (sigset_t*)arg3);
     case Syscall::SC_pipe:
         return current->sys$pipe((int*)arg1);
     case Syscall::SC_killpg:
@@ -182,13 +182,13 @@ static dword handle(RegisterDump& regs, dword function, dword arg1, dword arg2, 
     case Syscall::SC_ioctl:
         return current->sys$ioctl((int)arg1, (unsigned)arg2, (unsigned)arg3);
     case Syscall::SC_fstat:
-        return current->sys$fstat((int)arg1, (Unix::stat*)arg2);
+        return current->sys$fstat((int)arg1, (stat*)arg2);
     case Syscall::SC_mkdir:
         return current->sys$mkdir((const char*)arg1, (mode_t)arg2);
     case Syscall::SC_times:
-        return current->sys$times((Unix::tms*)arg1);
+        return current->sys$times((tms*)arg1);
     case Syscall::SC_utime:
-        return current->sys$utime((const char*)arg1, (const Unix::utimbuf*)arg2);
+        return current->sys$utime((const char*)arg1, (const utimbuf*)arg2);
     case Syscall::SC_sync:
         return sync();
     case Syscall::SC_unlink:

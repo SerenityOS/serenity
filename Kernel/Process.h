@@ -144,9 +144,9 @@ public:
     int sys$close(int fd);
     ssize_t sys$read(int fd, void* outbuf, size_t nread);
     ssize_t sys$write(int fd, const void*, size_t);
-    int sys$fstat(int fd, Unix::stat*);
-    int sys$lstat(const char*, Unix::stat*);
-    int sys$stat(const char*, Unix::stat*);
+    int sys$fstat(int fd, stat*);
+    int sys$lstat(const char*, stat*);
+    int sys$stat(const char*, stat*);
     int sys$lseek(int fd, off_t, int whence);
     int sys$kill(pid_t pid, int sig);
     int sys$geterror() { return m_error; }
@@ -175,9 +175,9 @@ public:
     int sys$getdtablesize();
     int sys$dup(int oldfd);
     int sys$dup2(int oldfd, int newfd);
-    int sys$sigaction(int signum, const Unix::sigaction* act, Unix::sigaction* old_act);
-    int sys$sigprocmask(int how, const Unix::sigset_t* set, Unix::sigset_t* old_set);
-    int sys$sigpending(Unix::sigset_t*);
+    int sys$sigaction(int signum, const sigaction* act, sigaction* old_act);
+    int sys$sigprocmask(int how, const sigset_t* set, sigset_t* old_set);
+    int sys$sigpending(sigset_t*);
     int sys$getgroups(int size, gid_t*);
     int sys$setgroups(size_t, const gid_t*);
     int sys$pipe(int* pipefd);
@@ -189,8 +189,8 @@ public:
     int sys$fcntl(int fd, int cmd, dword extra_arg);
     int sys$ioctl(int fd, unsigned request, unsigned arg);
     int sys$mkdir(const char* pathname, mode_t mode);
-    Unix::clock_t sys$times(Unix::tms*);
-    int sys$utime(const char* pathname, const struct Unix::utimbuf*);
+    clock_t sys$times(tms*);
+    int sys$utime(const char* pathname, const struct utimbuf*);
     int sys$unlink(const char* pathname);
 
     int gui$create_window(const GUI_WindowParameters*);

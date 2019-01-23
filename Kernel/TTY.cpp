@@ -82,7 +82,7 @@ void TTY::generate_signal(int signal)
     });
 }
 
-void TTY::set_termios(const Unix::termios& t)
+void TTY::set_termios(const termios& t)
 {
     m_termios = t;
     dbgprintf("%s set_termios: ECHO=%u, ISIG=%u, ICANON=%u\n",
@@ -109,8 +109,8 @@ void TTY::set_termios(const Unix::termios& t)
 int TTY::ioctl(Process& process, unsigned request, unsigned arg)
 {
     pid_t pgid;
-    Unix::termios* tp;
-    Unix::winsize* ws;
+    termios* tp;
+    winsize* ws;
 
     if (process.tty() && process.tty() != this)
         return -ENOTTY;
@@ -125,22 +125,22 @@ int TTY::ioctl(Process& process, unsigned request, unsigned arg)
         m_pgid = pgid;
         return 0;
     case TCGETS:
-        tp = reinterpret_cast<Unix::termios*>(arg);
-        if (!process.validate_write(tp, sizeof(Unix::termios)))
+        tp = reinterpret_cast<termios*>(arg);
+        if (!process.validate_write(tp, sizeof(termios)))
             return -EFAULT;
         *tp = m_termios;
         return 0;
     case TCSETS:
     case TCSETSF:
     case TCSETSW:
-        tp = reinterpret_cast<Unix::termios*>(arg);
-        if (!process.validate_read(tp, sizeof(Unix::termios)))
+        tp = reinterpret_cast<termios*>(arg);
+        if (!process.validate_read(tp, sizeof(termios)))
             return -EFAULT;
         set_termios(*tp);
         return 0;
     case TIOCGWINSZ:
-        ws = reinterpret_cast<Unix::winsize*>(arg);
-        if (!process.validate_write(ws, sizeof(Unix::winsize)))
+        ws = reinterpret_cast<winsize*>(arg);
+        if (!process.validate_write(ws, sizeof(winsize)))
             return -EFAULT;
         ws->ws_row = m_rows;
         ws->ws_col = m_columns;

@@ -1,6 +1,11 @@
 #pragma once
 
+#ifdef KERNEL
+#define __BEGIN_DECLS
+#define __END_DECLS
+#else
 #include <sys/cdefs.h>
+#endif
 
 __BEGIN_DECLS
 

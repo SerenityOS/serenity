@@ -56,7 +56,7 @@ RetainPtr<SynthFSInode> SynthFS::create_directory(String&& name)
     return file;
 }
 
-RetainPtr<SynthFSInode> SynthFS::create_text_file(String&& name, ByteBuffer&& contents, Unix::mode_t mode)
+RetainPtr<SynthFSInode> SynthFS::create_text_file(String&& name, ByteBuffer&& contents, mode_t mode)
 {
     auto file = adopt(*new SynthFSInode(*this, generate_inode_index()));
     file->m_data = contents;
@@ -69,7 +69,7 @@ RetainPtr<SynthFSInode> SynthFS::create_text_file(String&& name, ByteBuffer&& co
     return file;
 }
 
-RetainPtr<SynthFSInode> SynthFS::create_generated_file(String&& name, Function<ByteBuffer(SynthFSInode&)>&& generator, Unix::mode_t mode)
+RetainPtr<SynthFSInode> SynthFS::create_generated_file(String&& name, Function<ByteBuffer(SynthFSInode&)>&& generator, mode_t mode)
 {
     auto file = adopt(*new SynthFSInode(*this, generate_inode_index()));
     file->m_generator = move(generator);
@@ -82,7 +82,7 @@ RetainPtr<SynthFSInode> SynthFS::create_generated_file(String&& name, Function<B
     return file;
 }
 
-RetainPtr<SynthFSInode> SynthFS::create_generated_file(String&& name, Function<ByteBuffer(SynthFSInode&)>&& read_callback, Function<ssize_t(SynthFSInode&, const ByteBuffer&)>&& write_callback, Unix::mode_t mode)
+RetainPtr<SynthFSInode> SynthFS::create_generated_file(String&& name, Function<ByteBuffer(SynthFSInode&)>&& read_callback, Function<ssize_t(SynthFSInode&, const ByteBuffer&)>&& write_callback, mode_t mode)
 {
     auto file = adopt(*new SynthFSInode(*this, generate_inode_index()));
     file->m_generator = move(read_callback);
@@ -150,7 +150,7 @@ InodeIdentifier SynthFS::root_inode() const
     return { fsid(), 1 };
 }
 
-RetainPtr<Inode> SynthFS::create_inode(InodeIdentifier parentInode, const String& name, Unix::mode_t mode, unsigned size, int& error)
+RetainPtr<Inode> SynthFS::create_inode(InodeIdentifier parentInode, const String& name, mode_t mode, unsigned size, int& error)
 {
     (void) parentInode;
     (void) name;
@@ -161,7 +161,7 @@ RetainPtr<Inode> SynthFS::create_inode(InodeIdentifier parentInode, const String
     return { };
 }
 
-RetainPtr<Inode> SynthFS::create_directory(InodeIdentifier, const String&, Unix::mode_t, int& error)
+RetainPtr<Inode> SynthFS::create_directory(InodeIdentifier, const String&, mode_t, int& error)
 {
     error = -EROFS;
     return nullptr;
@@ -200,7 +200,7 @@ InodeMetadata SynthFSInode::metadata() const
     return m_metadata;
 }
 
-ssize_t SynthFSInode::read_bytes(Unix::off_t offset, size_t count, byte* buffer, FileDescriptor* descriptor)
+ssize_t SynthFSInode::read_bytes(off_t offset, size_t count, byte* buffer, FileDescriptor* descriptor)
 {
 #ifdef SYNTHFS_DEBUG
     kprintf("SynthFS: read_bytes %u\n", index());
@@ -220,7 +220,7 @@ ssize_t SynthFSInode::read_bytes(Unix::off_t offset, size_t count, byte* buffer,
     }
 
     auto* data = generatedData ? &generatedData : &m_data;
-    ssize_t nread = min(static_cast<Unix::off_t>(data->size() - offset), static_cast<Unix::off_t>(count));
+    ssize_t nread = min(static_cast<off_t>(data->size() - offset), static_cast<off_t>(count));
     memcpy(buffer, data->pointer() + offset, nread);
     if (nread == 0 && descriptor && descriptor->generator_cache())
         descriptor->generator_cache().clear();
@@ -273,7 +273,7 @@ void SynthFSInode::flush_metadata()
 {
 }
 
-ssize_t SynthFSInode::write_bytes(Unix::off_t offset, size_t size, const byte* buffer, FileDescriptor*)
+ssize_t SynthFSInode::write_bytes(off_t offset, size_t size, const byte* buffer, FileDescriptor*)
 {
     if (!m_write_callback)
         return -EPERM;

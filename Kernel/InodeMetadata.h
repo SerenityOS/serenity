@@ -4,16 +4,16 @@
 #include "UnixTypes.h"
 #include <AK/HashTable.h>
 
-inline bool isDirectory(Unix::mode_t mode) { return (mode & 0170000) == 0040000; }
-inline bool isCharacterDevice(Unix::mode_t mode) { return (mode & 0170000) == 0020000; }
-inline bool isBlockDevice(Unix::mode_t mode) { return (mode & 0170000) == 0060000; }
-inline bool isRegularFile(Unix::mode_t mode) { return (mode & 0170000) == 0100000; }
-inline bool isFIFO(Unix::mode_t mode) { return (mode & 0170000) == 0010000; }
-inline bool isSymbolicLink(Unix::mode_t mode) { return (mode & 0170000) == 0120000; }
-inline bool isSocket(Unix::mode_t mode) { return (mode & 0170000) == 0140000; }
-inline bool isSticky(Unix::mode_t mode) { return mode & 01000; }
-inline bool isSetUID(Unix::mode_t mode) { return mode & 04000; }
-inline bool isSetGID(Unix::mode_t mode) { return mode & 02000; }
+inline bool isDirectory(mode_t mode) { return (mode & 0170000) == 0040000; }
+inline bool isCharacterDevice(mode_t mode) { return (mode & 0170000) == 0020000; }
+inline bool isBlockDevice(mode_t mode) { return (mode & 0170000) == 0060000; }
+inline bool isRegularFile(mode_t mode) { return (mode & 0170000) == 0100000; }
+inline bool isFIFO(mode_t mode) { return (mode & 0170000) == 0010000; }
+inline bool isSymbolicLink(mode_t mode) { return (mode & 0170000) == 0120000; }
+inline bool isSocket(mode_t mode) { return (mode & 0170000) == 0140000; }
+inline bool isSticky(mode_t mode) { return mode & 01000; }
+inline bool isSetUID(mode_t mode) { return mode & 04000; }
+inline bool isSetGID(mode_t mode) { return mode & 02000; }
 
 struct InodeMetadata {
     bool isValid() const { return inode.is_valid(); }
@@ -39,17 +39,17 @@ struct InodeMetadata {
     bool isSetGID() const { return ::isSetGID(mode); }
 
     InodeIdentifier inode;
-    Unix::off_t size { 0 };
-    Unix::mode_t mode { 0 };
-    Unix::uid_t uid { 0 };
-    Unix::gid_t gid { 0 };
-    Unix::nlink_t linkCount { 0 };
-    Unix::time_t atime { 0 };
-    Unix::time_t ctime { 0 };
-    Unix::time_t mtime { 0 };
-    Unix::time_t dtime { 0 };
-    Unix::blkcnt_t blockCount { 0 };
-    Unix::blksize_t blockSize { 0 };
+    off_t size { 0 };
+    mode_t mode { 0 };
+    uid_t uid { 0 };
+    gid_t gid { 0 };
+    nlink_t linkCount { 0 };
+    time_t atime { 0 };
+    time_t ctime { 0 };
+    time_t mtime { 0 };
+    time_t dtime { 0 };
+    blkcnt_t blockCount { 0 };
+    blksize_t blockSize { 0 };
     unsigned majorDevice { 0 };
     unsigned minorDevice { 0 };
 };

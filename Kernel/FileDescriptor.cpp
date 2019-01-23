@@ -66,14 +66,14 @@ RetainPtr<FileDescriptor> FileDescriptor::clone()
     return descriptor;
 }
 
-bool additionWouldOverflow(Unix::off_t a, Unix::off_t b)
+bool additionWouldOverflow(off_t a, off_t b)
 {
     ASSERT(a > 0);
     uint64_t ua = a;
     return (ua + b) > maxFileOffset;
 }
 
-int FileDescriptor::stat(Unix::stat* buffer)
+int FileDescriptor::fstat(stat* buffer)
 {
     ASSERT(!is_fifo());
     if (!m_inode && !m_device)
@@ -99,7 +99,7 @@ int FileDescriptor::stat(Unix::stat* buffer)
     return 0;
 }
 
-Unix::off_t FileDescriptor::seek(Unix::off_t offset, int whence)
+off_t FileDescriptor::seek(off_t offset, int whence)
 {
     ASSERT(!is_fifo());
     if (!m_inode && !m_device)
@@ -114,7 +114,7 @@ Unix::off_t FileDescriptor::seek(Unix::off_t offset, int whence)
     if (metadata.isSocket() || metadata.isFIFO())
         return -ESPIPE;
 
-    Unix::off_t newOffset;
+    off_t newOffset;
 
     switch (whence) {
     case SEEK_SET:

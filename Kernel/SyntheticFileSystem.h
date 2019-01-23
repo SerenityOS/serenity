@@ -14,8 +14,8 @@ public:
     virtual bool initialize() override;
     virtual const char* class_name() const override;
     virtual InodeIdentifier root_inode() const override;
-    virtual RetainPtr<Inode> create_inode(InodeIdentifier parentInode, const String& name, Unix::mode_t, unsigned size, int& error) override;
-    virtual RetainPtr<Inode> create_directory(InodeIdentifier parentInode, const String& name, Unix::mode_t, int& error) override;
+    virtual RetainPtr<Inode> create_inode(InodeIdentifier parentInode, const String& name, mode_t, unsigned size, int& error) override;
+    virtual RetainPtr<Inode> create_directory(InodeIdentifier parentInode, const String& name, mode_t, int& error) override;
     virtual RetainPtr<Inode> get_inode(InodeIdentifier) const override;
 
 protected:
@@ -27,9 +27,9 @@ protected:
     SynthFS();
 
     RetainPtr<SynthFSInode> create_directory(String&& name);
-    RetainPtr<SynthFSInode> create_text_file(String&& name, ByteBuffer&&, Unix::mode_t = 0010644);
-    RetainPtr<SynthFSInode> create_generated_file(String&& name, Function<ByteBuffer(SynthFSInode&)>&&, Unix::mode_t = 0100644);
-    RetainPtr<SynthFSInode> create_generated_file(String&& name, Function<ByteBuffer(SynthFSInode&)>&&, Function<ssize_t(SynthFSInode&, const ByteBuffer&)>&&, Unix::mode_t = 0100644);
+    RetainPtr<SynthFSInode> create_text_file(String&& name, ByteBuffer&&, mode_t = 0010644);
+    RetainPtr<SynthFSInode> create_generated_file(String&& name, Function<ByteBuffer(SynthFSInode&)>&&, mode_t = 0100644);
+    RetainPtr<SynthFSInode> create_generated_file(String&& name, Function<ByteBuffer(SynthFSInode&)>&&, Function<ssize_t(SynthFSInode&, const ByteBuffer&)>&&, mode_t = 0100644);
 
     InodeIdentifier add_file(RetainPtr<SynthFSInode>&&, InodeIndex parent = RootInodeIndex);
     bool remove_file(InodeIndex);
@@ -54,13 +54,13 @@ public:
 
 private:
     // ^Inode
-    virtual ssize_t read_bytes(Unix::off_t, size_t, byte* buffer, FileDescriptor*) override;
+    virtual ssize_t read_bytes(off_t, size_t, byte* buffer, FileDescriptor*) override;
     virtual InodeMetadata metadata() const override;
     virtual bool traverse_as_directory(Function<bool(const FS::DirectoryEntry&)>) override;
     virtual InodeIdentifier lookup(const String& name) override;
     virtual String reverse_lookup(InodeIdentifier) override;
     virtual void flush_metadata() override;
-    virtual ssize_t write_bytes(Unix::off_t, size_t, const byte* buffer, FileDescriptor*) override;
+    virtual ssize_t write_bytes(off_t, size_t, const byte* buffer, FileDescriptor*) override;
     virtual bool add_child(InodeIdentifier child_id, const String& name, byte file_type, int& error) override;
     virtual bool remove_child(const String& name, int& error) override;
     virtual RetainPtr<Inode> parent() const override;
