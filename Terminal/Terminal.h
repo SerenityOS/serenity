@@ -28,9 +28,12 @@ private:
     void invalidate_window(const Rect& = Rect());
 
     void escape$A(const Vector<unsigned>&);
+    void escape$B(const Vector<unsigned>&);
+    void escape$C(const Vector<unsigned>&);
     void escape$D(const Vector<unsigned>&);
     void escape$H(const Vector<unsigned>&);
     void escape$J(const Vector<unsigned>&);
+    void escape$K(const Vector<unsigned>&);
     void escape$m(const Vector<unsigned>&);
     void escape$s(const Vector<unsigned>&);
     void escape$u(const Vector<unsigned>&);

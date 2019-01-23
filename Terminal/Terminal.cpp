@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <gui.h>
 
+//#define TERMINAL_DEBUG
 #define FAST_SCROLL
 
 void Terminal::create_window()
@@ -211,10 +212,38 @@ void Terminal::escape$A(const Vector<unsigned>& params)
     int num = 1;
     if (params.size() >= 1)
         num = params[0];
+    if (num == 0)
+        num = 1;
     int new_row = (int)m_cursor_row - num;
     if (new_row < 0)
         new_row = 0;
     set_cursor(new_row, m_cursor_column);
+}
+
+void Terminal::escape$B(const Vector<unsigned>& params)
+{
+    int num = 1;
+    if (params.size() >= 1)
+        num = params[0];
+    if (num == 0)
+        num = 1;
+    int new_row = (int)m_cursor_row + num;
+    if (new_row >= m_rows)
+        new_row = m_rows - 1;
+    set_cursor(new_row, m_cursor_column);
+}
+
+void Terminal::escape$C(const Vector<unsigned>& params)
+{
+    int num = 1;
+    if (params.size() >= 1)
+        num = params[0];
+    if (num == 0)
+        num = 1;
+    int new_column = (int)m_cursor_column + num;
+    if (new_column >= m_columns)
+        new_column = m_columns - 1;
+    set_cursor(m_cursor_row, new_column);
 }
 
 void Terminal::escape$D(const Vector<unsigned>& params)
@@ -222,10 +251,36 @@ void Terminal::escape$D(const Vector<unsigned>& params)
     int num = 1;
     if (params.size() >= 1)
         num = params[0];
+    if (num == 0)
+        num = 1;
     int new_column = (int)m_cursor_column - num;
     if (new_column < 0)
         new_column = 0;
     set_cursor(m_cursor_row, new_column);
+}
+
+void Terminal::escape$K(const Vector<unsigned>& params)
+{
+    int mode = 0;
+    if (params.size() >= 1)
+        mode = params[0];
+    switch (mode) {
+    case 0:
+        for (int i = m_cursor_column; i < m_columns; ++i) {
+            put_character_at(m_cursor_row, i, ' ');
+        }
+        break;
+    case 1:
+        // FIXME: Clear from cursor to beginning of screen.
+        notImplemented();
+        break;
+    case 2:
+        notImplemented();
+        break;
+    default:
+        notImplemented();
+        break;
+    }
 }
 
 void Terminal::escape$J(const Vector<unsigned>& params)
@@ -249,6 +304,9 @@ void Terminal::escape$J(const Vector<unsigned>& params)
         // FIXME: <esc>[3J should also clear the scrollback buffer.
         clear();
         break;
+    default:
+        notImplemented();
+        break;
     }
 }
 
@@ -267,13 +325,18 @@ void Terminal::execute_escape_sequence(byte final)
     }
     switch (final) {
     case 'A': escape$A(params); break;
+    case 'B': escape$B(params); break;
+    case 'C': escape$C(params); break;
     case 'D': escape$D(params); break;
     case 'H': escape$H(params); break;
     case 'J': escape$J(params); break;
+    case 'K': escape$K(params); break;
     case 'm': escape$m(params); break;
     case 's': escape$s(params); break;
     case 'u': escape$u(params); break;
-    default: break;
+    default:
+        dbgprintf("Terminal::execute_escape_sequence: Unhandled final '%c'\n", final);
+        break;
     }
 
     m_parameters.clear();
@@ -306,6 +369,8 @@ void Terminal::scroll_up()
 
 void Terminal::set_cursor(unsigned row, unsigned column)
 {
+    if (row == m_cursor_row && column == m_cursor_column)
+        return;
     ASSERT(row < rows());
     ASSERT(column < columns());
     invalidate_cursor();
@@ -325,6 +390,9 @@ void Terminal::put_character_at(unsigned row, unsigned column, byte ch)
 
 void Terminal::on_char(byte ch)
 {
+#ifdef TERMINAL_DEBUG
+    dbgprintf("Terminal::on_char: %b (%c)\n", ch, ch);
+#endif
     switch (m_escape_state) {
     case ExpectBracket:
         if (ch == '[')
@@ -383,6 +451,9 @@ void Terminal::on_char(byte ch)
         }
         return;
     }
+    case '\r':
+        set_cursor(m_cursor_row, 0);
+        return;
     case '\n':
         scroll_up();
         return;
