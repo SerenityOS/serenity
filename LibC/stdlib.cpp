@@ -42,6 +42,9 @@ static uint32_t s_malloc_sum_free = POOL_SIZE;
 
 void* malloc(size_t size)
 {
+    if (size == 0)
+        return nullptr;
+
     // We need space for the MallocHeader structure at the head of the block.
     size_t real_size = size + sizeof(MallocHeader) + sizeof(MallocFooter);
 
