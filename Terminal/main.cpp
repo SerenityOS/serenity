@@ -10,7 +10,7 @@
 #include <SharedGraphics/Painter.h>
 #include <sys/ioctl.h>
 #include <sys/select.h>
-#include <gui.h>
+#include <LibC/gui.h>
 #include "Terminal.h"
 
 static void make_shell(int ptm_fd)
@@ -43,7 +43,7 @@ static void make_shell(int ptm_fd)
             perror("ioctl(TIOCSCTTY)");
             exit(1);
         }
-        rc = execve("/bin/sh", nullptr, nullptr);
+        rc = execvp("/bin/sh", nullptr);
         if (rc < 0) {
             perror("execve");
             exit(1);
@@ -111,18 +111,6 @@ int main(int, char**)
             }
             assert(nread != 0);
             assert(nread == sizeof(event));
-            dbgprintf("(Terminal:%d) ", getpid());
-            switch (event.type) {
-            case GUI_Event::Type::Paint: dbgprintf("WID=%x Paint [%d,%d %dx%d]\n", event.window_id, event.paint.rect.location.x, event.paint.rect.location.y, event.paint.rect.size.width, event.paint.rect.size.height); break;
-            case GUI_Event::Type::MouseDown: dbgprintf("WID=%x MouseDown %d,%d\n", event.window_id, event.mouse.position.x, event.mouse.position.y); break;
-            case GUI_Event::Type::MouseUp: dbgprintf("WID=%x MouseUp %d,%d\n", event.window_id, event.mouse.position.x, event.mouse.position.y); break;
-            case GUI_Event::Type::MouseMove: dbgprintf("WID=%x MouseMove %d,%d\n", event.window_id, event.mouse.position.x, event.mouse.position.y); break;
-            case GUI_Event::Type::KeyDown: dbgprintf("WID=%x KeyDown 0x%b (%c)\n", event.window_id, event.key.character, event.key.character); break;
-            case GUI_Event::Type::WindowActivated: dbgprintf("WID=%x WindowActivated\n", event.window_id); break;
-            case GUI_Event::Type::WindowDeactivated: dbgprintf("WID=%x WindowDeactivated\n", event.window_id); break;
-            default:
-                ASSERT_NOT_REACHED();
-            }
 
             if (event.type == GUI_Event::Type::Paint) {
                 terminal.paint();

@@ -72,6 +72,7 @@ private:
     byte m_cursor_column { 0 };
     byte m_saved_cursor_row { 0 };
     byte m_saved_cursor_column { 0 };
+    bool m_stomp { false };
 
     Attribute m_current_attribute;
 
