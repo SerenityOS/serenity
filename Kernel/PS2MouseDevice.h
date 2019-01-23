@@ -1,6 +1,6 @@
 #pragma once
 
-#include <VirtualFileSystem/CharacterDevice.h>
+#include <Kernel/CharacterDevice.h>
 #include "IRQHandler.h"
 
 class PS2MouseDevice final : public IRQHandler, public CharacterDevice {

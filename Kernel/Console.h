@@ -2,7 +2,7 @@
 
 #include <AK/Compiler.h>
 #include <AK/Vector.h>
-#include <VirtualFileSystem/CharacterDevice.h>
+#include <Kernel/CharacterDevice.h>
 
 class ConsoleImplementation {
 public:

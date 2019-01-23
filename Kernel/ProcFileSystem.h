@@ -1,7 +1,7 @@
 #pragma once
 
 #include <AK/Types.h>
-#include <VirtualFileSystem/SyntheticFileSystem.h>
+#include <Kernel/SyntheticFileSystem.h>
 
 class Process;
 

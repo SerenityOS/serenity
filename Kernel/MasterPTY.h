@@ -1,6 +1,6 @@
 #pragma once
 
-#include <VirtualFileSystem/CharacterDevice.h>
+#include <Kernel/CharacterDevice.h>
 #include "DoubleBuffer.h"
 
 class SlavePTY;

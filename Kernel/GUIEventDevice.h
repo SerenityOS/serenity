@@ -1,6 +1,6 @@
 #pragma once
 
-#include <VirtualFileSystem/CharacterDevice.h>
+#include <Kernel/CharacterDevice.h>
 
 class GUIEventDevice final : public CharacterDevice {
 public:
