@@ -4,7 +4,6 @@
 #include "UnixTypes.h"
 #include <AK/Buffer.h>
 #include <AK/OwnPtr.h>
-#include <AK/Lock.h>
 #include "ext2_fs.h"
 
 struct ext2_group_desc;
@@ -48,7 +47,6 @@ private:
     const Ext2FS& fs() const;
     Ext2FSInode(Ext2FS&, unsigned index, const ext2_inode&);
 
-    Lock m_lock;
     Vector<unsigned> m_block_list;
     HashMap<String, unsigned> m_lookup_cache;
     ext2_inode m_raw_inode;
