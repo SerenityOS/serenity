@@ -418,6 +418,8 @@ Rect Terminal::row_rect(word row)
 
 inline Terminal::Attribute& Terminal::attribute_at(word row, word column)
 {
+    ASSERT(row < m_rows);
+    ASSERT(column < m_columns);
     return m_attributes[(row * m_columns) + column];
 }
 
@@ -440,7 +442,7 @@ void Terminal::paint()
             scanlines_to_copy * m_pixel_width
         );
         m_need_full_invalidation = true;
-        attribute_at(m_cursor_row - m_rows_to_scroll_backing_store, m_cursor_column).dirty = true;
+        attribute_at(max(0, m_cursor_row - m_rows_to_scroll_backing_store), m_cursor_column).dirty = true;
     }
     m_rows_to_scroll_backing_store = 0;
 #endif
