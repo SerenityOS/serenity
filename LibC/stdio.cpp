@@ -164,12 +164,15 @@ int fputs(const char* s, FILE* stream)
         if (rc == EOF)
             return EOF;
     }
-    return putc('\n', stream);
+    return 0;
 }
 
 int puts(const char* s)
 {
-    return fputs(s, stdout);
+    int rc = fputs(s, stdout);
+    if (rc < 0)
+        return rc;
+    return fputc('\n', stdout);
 }
 
 void clearerr(FILE* stream)
