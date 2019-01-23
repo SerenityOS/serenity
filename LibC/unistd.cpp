@@ -24,6 +24,11 @@ int execve(const char* filename, const char** argv, const char** envp)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
+int execvp(const char* filename, const char** argv)
+{
+    return execve(filename, argv, nullptr);
+}
+
 uid_t getuid()
 {
     return syscall(SC_getuid);

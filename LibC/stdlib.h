@@ -20,6 +20,7 @@ void exit(int status) __NORETURN;
 void abort() __NORETURN;
 char* ptsname(int fd);
 int ptsname_r(int fd, char* buffer, size_t);
+int abs(int);
 
 #define RAND_MAX 32767
 int rand();

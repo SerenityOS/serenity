@@ -296,6 +296,33 @@ int sprintf(char* buffer, const char* fmt, ...)
     return ret;
 }
 
+static size_t __vsnprintf_space_remaining;
+static void sized_buffer_putch(char*& bufptr, char ch)
+{
+    if (__vsnprintf_space_remaining) {
+        *bufptr++ = ch;
+        --__vsnprintf_space_remaining;
+    }
+}
+
+int vsnprintf(char* buffer, size_t size, const char* fmt, va_list ap)
+{
+    __vsnprintf_space_remaining = size;
+    int ret = printfInternal(sized_buffer_putch, buffer, fmt, ap);
+    buffer[ret] = '\0';
+    return ret;
+}
+
+int snprintf(char* buffer, size_t size, const char* fmt, ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
+    int ret = vsnprintf(buffer, size, fmt, ap);
+    buffer[ret] = '\0';
+    va_end(ap);
+    return ret;
+}
+
 void perror(const char* s)
 {
     fprintf(stderr, "%s: %s\n", s, strerror(errno));

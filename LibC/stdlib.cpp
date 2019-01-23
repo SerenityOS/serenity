@@ -244,4 +244,9 @@ void srand(unsigned seed)
     s_next_rand = seed;
 }
 
+int abs(int i)
+{
+    return i < 0 ? -i : i;
+}
+
 }
