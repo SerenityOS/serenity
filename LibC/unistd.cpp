@@ -18,13 +18,13 @@ pid_t fork()
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-int execve(const char* filename, const char** argv, const char** envp)
+int execve(const char* filename, char* const argv[], char* const envp[])
 {
     int rc = syscall(SC_execve, filename, argv, envp);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-int execvp(const char* filename, const char** argv)
+int execvp(const char* filename, char* const argv[])
 {
     return execve(filename, argv, nullptr);
 }
