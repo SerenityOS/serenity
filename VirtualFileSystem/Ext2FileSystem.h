@@ -93,6 +93,7 @@ private:
     unsigned group_index_from_inode(unsigned) const;
 
     Vector<unsigned> block_list_for_inode(const ext2_inode&, bool include_block_list_blocks = false) const;
+    bool write_block_list_for_inode(InodeIndex, ext2_inode&, Vector<BlockIndex>&&);
 
     void dump_block_bitmap(unsigned groupIndex) const;
     void dump_inode_bitmap(unsigned groupIndex) const;
@@ -108,6 +109,16 @@ private:
 
     void uncache_inode(InodeIndex);
     void free_inode(Ext2FSInode&);
+
+    struct BlockListShape {
+        unsigned direct_blocks { 0 };
+        unsigned indirect_blocks { 0 };
+        unsigned doubly_indirect_blocks { 0 };
+        unsigned triply_indirect_blocks { 0 };
+        unsigned meta_blocks { 0 };
+    };
+
+    BlockListShape compute_block_list_shape(unsigned blocks);
 
     unsigned m_blockGroupCount { 0 };
 
