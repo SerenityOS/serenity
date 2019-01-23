@@ -9,7 +9,7 @@
 #include <AK/Vector.h>
 #include <AK/HashTable.h>
 #include <AK/AKString.h>
-#include <VirtualFileSystem/VirtualFileSystem.h>
+#include <Kernel/VirtualFileSystem.h>
 
 #define PAGE_ROUND_UP(x) ((((dword)(x)) + PAGE_SIZE-1) & (~(PAGE_SIZE-1)))
 

@@ -1,8 +1,8 @@
 #pragma once
 
 #include "DoubleBuffer.h"
-#include <VirtualFileSystem/CharacterDevice.h>
-#include <VirtualFileSystem/UnixTypes.h>
+#include <Kernel/CharacterDevice.h>
+#include <Kernel/UnixTypes.h>
 
 class Process;
 

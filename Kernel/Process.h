@@ -6,8 +6,8 @@
 #include "TTY.h"
 #include "Syscall.h"
 #include "GUITypes.h"
-#include <VirtualFileSystem/VirtualFileSystem.h>
-#include <VirtualFileSystem/UnixTypes.h>
+#include <Kernel/VirtualFileSystem.h>
+#include <Kernel/UnixTypes.h>
 #include <AK/InlineLinkedList.h>
 #include <AK/AKString.h>
 #include <AK/Vector.h>

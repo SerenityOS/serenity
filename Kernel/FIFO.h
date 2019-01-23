@@ -3,7 +3,7 @@
 #include "DoubleBuffer.h"
 #include <AK/Retainable.h>
 #include <AK/RetainPtr.h>
-#include <VirtualFileSystem/UnixTypes.h>
+#include <Kernel/UnixTypes.h>
 
 class FIFO : public Retainable<FIFO> {
 public:

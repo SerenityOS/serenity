@@ -33,18 +33,18 @@ KERNEL_OBJS = \
        GUIEventDevice.o
 
 VFS_OBJS = \
-    ../VirtualFileSystem/DiskDevice.o \
-    ../VirtualFileSystem/CharacterDevice.o \
-    ../VirtualFileSystem/NullDevice.o \
-    ../VirtualFileSystem/FullDevice.o \
-    ../VirtualFileSystem/ZeroDevice.o \
-    ../VirtualFileSystem/RandomDevice.o \
-    ../VirtualFileSystem/FileSystem.o \
-    ../VirtualFileSystem/DiskBackedFileSystem.o \
-    ../VirtualFileSystem/Ext2FileSystem.o \
-    ../VirtualFileSystem/VirtualFileSystem.o \
-    ../VirtualFileSystem/FileDescriptor.o \
-    ../VirtualFileSystem/SyntheticFileSystem.o
+    DiskDevice.o \
+    CharacterDevice.o \
+    NullDevice.o \
+    FullDevice.o \
+    ZeroDevice.o \
+    RandomDevice.o \
+    FileSystem.o \
+    DiskBackedFileSystem.o \
+    Ext2FileSystem.o \
+    VirtualFileSystem.o \
+    FileDescriptor.o \
+    SyntheticFileSystem.o
 
 SHAREDGRAPHICS_OBJS = \
     ../SharedGraphics/Rect.o \

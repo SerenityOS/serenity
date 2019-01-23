@@ -4,8 +4,8 @@
 #include "StdLib.h"
 #include "i386.h"
 #include "system.h"
-#include <VirtualFileSystem/FileDescriptor.h>
-#include <VirtualFileSystem/VirtualFileSystem.h>
+#include <Kernel/FileDescriptor.h>
+#include <Kernel/VirtualFileSystem.h>
 #include "ELFLoader.h"
 #include "MemoryManager.h"
 #include "i8253.h"
