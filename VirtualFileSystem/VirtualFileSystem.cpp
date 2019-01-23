@@ -161,6 +161,12 @@ RetainPtr<FileDescriptor> VFS::create(const String& path, int& error, int option
 {
     (void) options;
     error = -EWHYTHO;
+
+    if (!isSocket(mode) && !isFIFO(mode) && !isBlockDevice(mode) && !isCharacterDevice(mode)) {
+        // Turn it into a regular file. (This feels rather hackish.)
+        mode |= 0100000;
+    }
+
     // FIXME: This won't work nicely across mount boundaries.
     FileSystemPath p(path);
     if (!p.is_valid()) {

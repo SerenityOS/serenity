@@ -280,6 +280,17 @@ bool SynthFSInode::write(const ByteBuffer& data)
     return m_write_callback(*this, data);
 }
 
+ssize_t SynthFSInode::write_bytes(Unix::off_t offset, size_t size, const byte* buffer, FileDescriptor*)
+{
+    if (!m_write_callback)
+        return -EPERM;
+    // FIXME: Being able to write into SynthFS at a non-zero offset seems like something we should support..
+    ASSERT(offset == 0);
+    bool success = m_write_callback(*this, ByteBuffer::wrap((byte*)buffer, size));
+    ASSERT(success);
+    return 0;
+}
+
 bool SynthFSInode::add_child(InodeIdentifier child_id, const String& name, byte file_type, int& error)
 {
     (void) child_id;

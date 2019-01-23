@@ -178,7 +178,7 @@ Ext2FS::BlockListShape Ext2FS::compute_block_list_shape(unsigned blocks)
     return shape;
 }
 
-bool Ext2FS::write_block_list_for_inode(InodeIndex inode_index, ext2_inode& e2inode, Vector<BlockIndex>&& blocks)
+bool Ext2FS::write_block_list_for_inode(InodeIndex inode_index, ext2_inode& e2inode, const Vector<BlockIndex>& blocks)
 {
     dbgprintf("Ext2FS: writing %u block(s) to i_block array\n", min((size_t)EXT2_NDIR_BLOCKS, blocks.size()));
 
@@ -188,6 +188,8 @@ bool Ext2FS::write_block_list_for_inode(InodeIndex inode_index, ext2_inode& e2in
     Vector<BlockIndex> new_meta_blocks;
     if (new_shape.meta_blocks > old_shape.meta_blocks) {
         new_meta_blocks = allocate_blocks(group_index_from_inode(inode_index), new_shape.meta_blocks - old_shape.meta_blocks);
+        for (auto bi : new_meta_blocks)
+            set_block_allocation_state(group_index_from_inode(inode_index), bi, true);
     }
 
     unsigned output_block_index = 0;
@@ -207,6 +209,7 @@ bool Ext2FS::write_block_list_for_inode(InodeIndex inode_index, ext2_inode& e2in
     }
 
     {
+        dbgprintf("Ext2FS: Writing out indirect blockptr block for inode %u\n", inode_index);
         auto block_contents = ByteBuffer::create_uninitialized(blockSize());
         BufferStream stream(block_contents);
         ASSERT(new_shape.indirect_blocks <= EXT2_ADDR_PER_BLOCK(&super_block()));
@@ -459,29 +462,134 @@ ssize_t Ext2FSInode::read_bytes(Unix::off_t offset, size_t count, byte* buffer, 
     return nread;
 }
 
-bool Ext2FSInode::write(const ByteBuffer& data)
+ssize_t Ext2FSInode::write_bytes(Unix::off_t offset, size_t count, const byte* data, FileDescriptor*)
 {
+    LOCKER(m_lock);
+
     // FIXME: Support writing to symlink inodes.
     ASSERT(!is_symlink());
 
-    unsigned blocksNeededBefore = ceilDiv(size(), fs().blockSize());
-    unsigned blocksNeededAfter = ceilDiv((unsigned)data.size(), fs().blockSize());
+    ASSERT(offset >= 0);
 
-    // FIXME: Support growing or shrinking the block list.
-    ASSERT(blocksNeededBefore == blocksNeededAfter);
+    const size_t block_size = fs().blockSize();
+    size_t new_size = max(static_cast<size_t>(offset) + count, size());
 
-    auto list = fs().block_list_for_inode(m_raw_inode);
-    if (list.is_empty()) {
-        kprintf("ext2fs: writeInode: empty block list for inode %u\n", index());
-        return false;
+    unsigned blocks_needed_before = ceilDiv(size(), block_size);
+    unsigned blocks_needed_after = ceilDiv(new_size, block_size);
+
+    auto block_list = fs().block_list_for_inode(m_raw_inode);
+    if (blocks_needed_after > blocks_needed_before) {
+        auto new_blocks = fs().allocate_blocks(fs().group_index_from_inode(index()), blocks_needed_after - blocks_needed_before);
+        for (auto new_block_index : new_blocks)
+            fs().set_block_allocation_state(fs().group_index_from_inode(index()), new_block_index, true);
+        block_list.append(move(new_blocks));
+    } else if (blocks_needed_after < blocks_needed_before) {
+        // FIXME: Implement block list shrinking!
+        ASSERT_NOT_REACHED();
     }
 
-    for (unsigned i = 0; i < list.size(); ++i) {
+    dword first_block_logical_index = offset / block_size;
+    dword last_block_logical_index = (offset + count) / block_size;
+    if (last_block_logical_index >= block_list.size())
+        last_block_logical_index = block_list.size() - 1;
+
+    dword offset_into_first_block = offset % block_size;
+
+    ssize_t nwritten = 0;
+    size_t remaining_count = min((Unix::off_t)count, (Unix::off_t)new_size - offset);
+    const byte* in = data;
+
+#ifdef EXT2_DEBUG
+    dbgprintf("Ext2FS::write_bytes: Writing %u bytes %d bytes into inode %u:%u from %p\n", count, offset, fsid(), index(), data);
+#endif
+
+    auto buffer_block = ByteBuffer::create_uninitialized(block_size);
+    for (dword bi = first_block_logical_index; remaining_count && bi <= last_block_logical_index; ++bi) {
+        dword offset_into_block = (bi == first_block_logical_index) ? offset_into_first_block : 0;
+        dword num_bytes_to_copy = min(block_size - offset_into_block, remaining_count);
+
+        ByteBuffer block;
+        if (offset_into_block != 0) {
+            block = fs().readBlock(block_list[bi]);
+            if (!block) {
+                kprintf("Ext2FSInode::write_bytes: readBlock(%u) failed (lbi: %u)\n", block_list[bi], bi);
+                return -EIO;
+            }
+        } else
+            block = buffer_block;
+
+        memcpy(block.pointer() + offset_into_block, in, num_bytes_to_copy);
+        if (offset_into_block == 0 && !num_bytes_to_copy)
+            memset(block.pointer() + num_bytes_to_copy, 0, block_size - num_bytes_to_copy);
+#ifdef EXT2_DEBUG
+        dbgprintf("Ext2FSInode::write_bytes: writing block %u (offset_into_block: %u)\n", block_list[bi], offset_into_block);
+#endif
+        bool success = fs().writeBlock(block_list[bi], block);
+        if (!success) {
+            kprintf("Ext2FSInode::write_bytes: writeBlock(%u) failed (lbi: %u)\n", block_list[bi], bi);
+            return -EIO;
+        }
+        remaining_count -= num_bytes_to_copy;
+        nwritten += num_bytes_to_copy;
+        in += num_bytes_to_copy;
+    }
+
+    bool success = fs().write_block_list_for_inode(index(), m_raw_inode, block_list);
+    ASSERT(success);
+
+    m_raw_inode.i_size = new_size;
+    m_raw_inode.i_blocks = block_list.size() * (block_size / 512);
+#ifdef EXT2_DEBUG
+    dbgprintf("Ext2FSInode::write_bytes: after write, i_size=%u, i_blocks=%u (%u blocks in list)\n", m_raw_inode.i_size, m_raw_inode.i_blocks, block_list.size());
+#endif
+    flush_metadata();
+
+    // NOTE: Make sure the cached block list is up to date!
+    m_block_list = move(block_list);
+    return nwritten;
+}
+
+bool Ext2FSInode::write(const ByteBuffer& data)
+{
+    // FIXME: Lock this Inode during write. Inode should have a common locking mechanism.
+    // FIXME: Support writing to symlink inodes.
+    ASSERT(!is_symlink());
+
+    unsigned blocks_needed_before = ceilDiv(size(), fs().blockSize());
+    unsigned blocks_needed_after = ceilDiv((unsigned)data.size(), fs().blockSize());
+
+
+    auto block_list = fs().block_list_for_inode(m_raw_inode);
+    if (blocks_needed_after > blocks_needed_before) {
+        auto new_blocks = fs().allocate_blocks(fs().group_index_from_inode(index()), blocks_needed_after - blocks_needed_before);
+        for (auto new_block_index : new_blocks)
+            fs().set_block_allocation_state(fs().group_index_from_inode(index()), new_block_index, true);
+        block_list.append(move(new_blocks));
+    } else if (blocks_needed_after < blocks_needed_before) {
+        // FIXME: Implement block list shrinking!
+        ASSERT_NOT_REACHED();
+    }
+
+    auto padded_block = ByteBuffer::create_uninitialized(fs().blockSize());
+    for (unsigned i = 0; i < block_list.size(); ++i) {
         auto section = data.slice(i * fs().blockSize(), fs().blockSize());
-        //kprintf("section = %p (%u)\n", section.pointer(), section.size());
-        bool success = fs().writeBlock(list[i], section);
+        bool success;
+        dbgprintf("Ext2FS: write section = %p (%u)\n", section.pointer(), section.size());
+        if (section.size() == fs().blockSize())
+            success = fs().writeBlock(block_list[i], section);
+        else {
+            memcpy(padded_block.pointer(), section.pointer(), section.size());
+            memset(padded_block.pointer() + section.size(), 0, fs().blockSize() - section.size());
+            success = fs().writeBlock(block_list[i], padded_block);
+        }
         ASSERT(success);
     }
+
+    bool success = fs().write_block_list_for_inode(index(), m_raw_inode, block_list);
+    ASSERT(success);
+
+    m_raw_inode.i_size = data.size();
+    set_metadata_dirty(true);
 
     return true;
 }
@@ -1043,7 +1151,7 @@ RetainPtr<Inode> Ext2FS::create_inode(InodeIdentifier parent_id, const String& n
     else
         initialLinksCount = 1;
 
-    auto timestamp = ktime(nullptr);
+    auto timestamp = RTC::now();
     auto e2inode = make<ext2_inode>();
     memset(e2inode.ptr(), 0, sizeof(ext2_inode));
     e2inode->i_mode = mode;
@@ -1060,7 +1168,7 @@ RetainPtr<Inode> Ext2FS::create_inode(InodeIdentifier parent_id, const String& n
     // FIXME: Implement writing out indirect blocks!
     ASSERT(blocks.size() < EXT2_NDIR_BLOCKS);
 
-    success = write_block_list_for_inode(inode_id, *e2inode, move(blocks));
+    success = write_block_list_for_inode(inode_id, *e2inode, blocks);
     ASSERT(success);
 
     dbgprintf("Ext2FS: writing initial metadata for inode %u\n", inode_id);
