@@ -123,7 +123,7 @@ void Painter::draw_glyph(const Point& point, char ch, Color color)
     auto* bitmap = font().glyph_bitmap(ch);
     if (!bitmap) {
         dbgprintf("Font doesn't have 0x%b ('%c')\n", (byte)ch, ch);
-        ASSERT_NOT_REACHED();
+        bitmap = font().error_bitmap();
     }
     int x = point.x();
     int y = point.y();

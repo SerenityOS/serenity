@@ -12,6 +12,7 @@ public:
     ~Font();
 
     const CharacterBitmap* glyph_bitmap(byte) const;
+    const CharacterBitmap* error_bitmap() const { return m_error_bitmap.ptr(); }
 
     byte glyph_width() const { return m_glyph_width; }
     byte glyph_height() const { return m_glyph_height; }
@@ -23,6 +24,7 @@ private:
 
     const char* const* m_glyphs { nullptr };
     mutable RetainPtr<CharacterBitmap> m_bitmaps[256];
+    RetainPtr<CharacterBitmap> m_error_bitmap;
 
     byte m_glyph_width { 0 };
     byte m_glyph_height { 0 };

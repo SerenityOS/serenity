@@ -7,6 +7,17 @@ static constexpr char last_character = '~';
 static constexpr byte font_width = 8;
 static constexpr byte font_height = 8;
 
+static constexpr const char* error_glyph {
+    "  ####  "
+    " #    # "
+    " # ## # "
+    " # ## # "
+    "  ####  "
+    "   ##   "
+    " ###### "
+    "   ##   ",
+};
+
 static constexpr const char* font[] {
 
     "   ##   "
