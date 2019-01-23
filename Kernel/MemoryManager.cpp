@@ -208,7 +208,7 @@ Region* MemoryManager::region_from_laddr(Process& process, LinearAddress laddr)
         if (region->contains(laddr))
             return region.ptr();
     }
-    kprintf("%s(%u) Couldn't find region for L%x (CR3=%x)\n", process.name().characters(), process.pid(), laddr.get());
+    kprintf("%s(%u) Couldn't find region for L%x (CR3=%x)\n", process.name().characters(), process.pid(), laddr.get(), process.page_directory().cr3());
     return nullptr;
 }
 
