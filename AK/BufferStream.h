@@ -43,7 +43,7 @@ public:
             m_buffer[m_offset++] = value[i];
     }
 
-    void fillToEnd(byte ch)
+    void fill_to_end(byte ch)
     {
         while (m_offset < m_buffer.size())
             m_buffer[m_offset++] = ch;

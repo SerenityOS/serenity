@@ -151,6 +151,80 @@ ByteBuffer Ext2FS::read_block_containing_inode(unsigned inode, unsigned& blockIn
     return readBlock(blockIndex);
 }
 
+Ext2FS::BlockListShape Ext2FS::compute_block_list_shape(unsigned blocks)
+{
+    BlockListShape shape;
+    const unsigned entries_per_block = EXT2_ADDR_PER_BLOCK(&super_block());
+    unsigned blocks_remaining = blocks;
+    shape.direct_blocks = min((unsigned)EXT2_NDIR_BLOCKS, blocks_remaining);
+    blocks_remaining -= shape.direct_blocks;
+    if (!blocks_remaining)
+        return shape;
+    shape.indirect_blocks = min(blocks_remaining, entries_per_block);
+    blocks_remaining -= shape.indirect_blocks;
+    shape.meta_blocks += 1;
+    if (!blocks_remaining)
+        return shape;
+    ASSERT_NOT_REACHED();
+    // FIXME: Support dind/tind blocks.
+    shape.doubly_indirect_blocks = min(blocks_remaining, entries_per_block * entries_per_block);
+    blocks_remaining -= shape.doubly_indirect_blocks;
+    if (!blocks_remaining)
+        return shape;
+    shape.triply_indirect_blocks = min(blocks_remaining, entries_per_block * entries_per_block * entries_per_block);
+    blocks_remaining -= shape.triply_indirect_blocks;
+    // FIXME: What do we do for files >= 16GB?
+    ASSERT(!blocks_remaining);
+    return shape;
+}
+
+bool Ext2FS::write_block_list_for_inode(InodeIndex inode_index, ext2_inode& e2inode, Vector<BlockIndex>&& blocks)
+{
+    dbgprintf("Ext2FS: writing %u block(s) to i_block array\n", min((size_t)EXT2_NDIR_BLOCKS, blocks.size()));
+
+    auto old_shape = compute_block_list_shape(e2inode.i_blocks / (2 << super_block().s_log_block_size));
+    auto new_shape = compute_block_list_shape(blocks.size());
+
+    Vector<BlockIndex> new_meta_blocks;
+    if (new_shape.meta_blocks > old_shape.meta_blocks) {
+        new_meta_blocks = allocate_blocks(group_index_from_inode(inode_index), new_shape.meta_blocks - old_shape.meta_blocks);
+    }
+
+    unsigned output_block_index = 0;
+    unsigned remaining_blocks = blocks.size();
+    for (unsigned i = 0; i < new_shape.direct_blocks; ++i) {
+        e2inode.i_block[i] = blocks[output_block_index++];
+        --remaining_blocks;
+    }
+    write_ext2_inode(inode_index, e2inode);
+
+    if (!remaining_blocks)
+        return true;
+
+    if (!e2inode.i_block[EXT2_IND_BLOCK]) {
+        e2inode.i_block[EXT2_IND_BLOCK] = new_meta_blocks.take_last();
+        write_ext2_inode(inode_index, e2inode);
+    }
+
+    {
+        auto block_contents = ByteBuffer::create_uninitialized(blockSize());
+        BufferStream stream(block_contents);
+        ASSERT(new_shape.indirect_blocks <= EXT2_ADDR_PER_BLOCK(&super_block()));
+        for (unsigned i = 0; i < new_shape.indirect_blocks; ++i) {
+            stream << blocks[output_block_index++];
+            --remaining_blocks;
+        }
+        stream.fill_to_end(0);
+        writeBlock(e2inode.i_block[EXT2_IND_BLOCK], block_contents);
+    }
+
+    if (!remaining_blocks)
+        return true;
+
+    // FIXME: Implement!
+    ASSERT_NOT_REACHED();
+}
+
 Vector<unsigned> Ext2FS::block_list_for_inode(const ext2_inode& e2inode, bool include_block_list_blocks) const
 {
     unsigned entriesPerBlock = EXT2_ADDR_PER_BLOCK(&super_block());
@@ -558,7 +632,7 @@ bool Ext2FS::write_directory_inode(unsigned directoryInode, Vector<DirectoryEntr
         }
     }
 
-    stream.fillToEnd(0);
+    stream.fill_to_end(0);
 
 #if 0
     kprintf("data to write (%u):\n", directoryData.size());
@@ -986,10 +1060,8 @@ RetainPtr<Inode> Ext2FS::create_inode(InodeIdentifier parent_id, const String& n
     // FIXME: Implement writing out indirect blocks!
     ASSERT(blocks.size() < EXT2_NDIR_BLOCKS);
 
-    dbgprintf("Ext2FS: writing %u blocks to i_block array\n", min((size_t)EXT2_NDIR_BLOCKS, blocks.size()));
-    for (unsigned i = 0; i < min((size_t)EXT2_NDIR_BLOCKS, blocks.size()); ++i) {
-        e2inode->i_block[i] = blocks[i];
-    }
+    success = write_block_list_for_inode(inode_id, *e2inode, move(blocks));
+    ASSERT(success);
 
     dbgprintf("Ext2FS: writing initial metadata for inode %u\n", inode_id);
     e2inode->i_flags = 0;
