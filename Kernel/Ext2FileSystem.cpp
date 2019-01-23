@@ -192,6 +192,8 @@ bool Ext2FS::write_block_list_for_inode(InodeIndex inode_index, ext2_inode& e2in
             set_block_allocation_state(group_index_from_inode(inode_index), bi, true);
     }
 
+    e2inode.i_blocks = (blocks.size() + new_shape.meta_blocks) * (blockSize() / 512);
+
     unsigned output_block_index = 0;
     unsigned remaining_blocks = blocks.size();
     for (unsigned i = 0; i < new_shape.direct_blocks; ++i) {
@@ -538,7 +540,6 @@ ssize_t Ext2FSInode::write_bytes(off_t offset, size_t count, const byte* data, F
     ASSERT(success);
 
     m_raw_inode.i_size = new_size;
-    m_raw_inode.i_blocks = block_list.size() * (block_size / 512);
     fs().write_ext2_inode(index(), m_raw_inode);
 #ifdef EXT2_DEBUG
     dbgprintf("Ext2FSInode::write_bytes: after write, i_size=%u, i_blocks=%u (%u blocks in list)\n", m_raw_inode.i_size, m_raw_inode.i_blocks, block_list.size());
@@ -1118,10 +1119,6 @@ RetainPtr<Inode> Ext2FS::create_inode(InodeIdentifier parent_id, const String& n
     e2inode->i_dtime = 0;
     e2inode->i_gid = 0;
     e2inode->i_links_count = initialLinksCount;
-    e2inode->i_blocks = blocks.size() * (blockSize() / 512);
-
-    // FIXME: Implement writing out indirect blocks!
-    ASSERT(blocks.size() < EXT2_NDIR_BLOCKS);
 
     success = write_block_list_for_inode(inode_id, *e2inode, blocks);
     ASSERT(success);
