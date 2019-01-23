@@ -13,6 +13,7 @@
 #include <AK/AKString.h>
 #include <AK/Function.h>
 #include <AK/kstdio.h>
+#include <AK/Lock.h>
 
 static const dword mepoch = 476763780;
 
@@ -106,8 +107,10 @@ public:
 
 protected:
     Inode(FS& fs, unsigned index);
-
     void set_metadata_dirty(bool b) { m_metadata_dirty = b; }
+
+    Lock m_lock;
+
 private:
     FS& m_fs;
     unsigned m_index { 0 };
