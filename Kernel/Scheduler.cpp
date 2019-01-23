@@ -164,6 +164,7 @@ bool Scheduler::pick_next()
 
 bool Scheduler::yield()
 {
+    InterruptDisabler disabler;
     ASSERT(!s_in_yield);
     s_in_yield = true;
 
@@ -174,7 +175,6 @@ bool Scheduler::yield()
 
     //dbgprintf("%s<%u> yield()\n", current->name().characters(), current->pid());
 
-    InterruptDisabler disabler;
     if (!pick_next()) {
         s_in_yield = false;
         return 1;
