@@ -376,6 +376,8 @@ void Terminal::set_cursor(unsigned row, unsigned column)
     invalidate_cursor();
     m_cursor_row = row;
     m_cursor_column = column;
+    if (column != columns() - 1)
+        m_stomp = false;
     invalidate_cursor();
 }
 
@@ -438,7 +440,7 @@ void Terminal::on_char(byte ch)
             put_character_at(m_cursor_row, m_cursor_column, ' ');
             return;
         }
-        break;
+        return;
     case '\a':
         // FIXME: Bell!
         return;
@@ -459,13 +461,22 @@ void Terminal::on_char(byte ch)
         return;
     }
 
-    put_character_at(m_cursor_row, m_cursor_column, ch);
-
     auto new_column = m_cursor_column + 1;
-    if (new_column < columns())
+    if (new_column < columns()) {
+        put_character_at(m_cursor_row, m_cursor_column, ch);
         set_cursor(m_cursor_row, new_column);
-    else
-        scroll_up();
+    } else {
+        if (m_stomp) {
+            m_stomp = false;
+            scroll_up();
+            put_character_at(m_cursor_row, m_cursor_column, ch);
+            set_cursor(m_cursor_row, 1);
+        } else {
+            // Curious: We wait once on the right-hand side
+            m_stomp = true;
+            put_character_at(m_cursor_row, m_cursor_column, ch);
+        }
+    }
 }
 
 void Terminal::set_size(word columns, word rows)
