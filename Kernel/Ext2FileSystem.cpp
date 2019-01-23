@@ -129,7 +129,7 @@ const char* Ext2FS::class_name() const
 
 InodeIdentifier Ext2FS::root_inode() const
 {
-    return { id(), EXT2_ROOT_INO };
+    return { fsid(), EXT2_ROOT_INO };
 }
 
 ByteBuffer Ext2FS::read_block_containing_inode(unsigned inode, unsigned& blockIndex, unsigned& offset) const
@@ -363,7 +363,7 @@ void Ext2FSInode::flush_metadata()
 
 RetainPtr<Inode> Ext2FS::get_inode(InodeIdentifier inode) const
 {
-    ASSERT(inode.fsid() == id());
+    ASSERT(inode.fsid() == fsid());
     {
         LOCKER(m_inode_cache_lock);
         auto it = m_inode_cache.find(inode.index());
@@ -709,7 +709,7 @@ bool Ext2FS::write_directory_inode(unsigned directoryInode, Vector<DirectoryEntr
     kprintf("\n");
 #endif
 
-    return get_inode({ id(), directoryInode })->write_bytes(0, directoryData.size(), directoryData.pointer(), nullptr);
+    return get_inode({ fsid(), directoryInode })->write_bytes(0, directoryData.size(), directoryData.pointer(), nullptr);
 }
 
 unsigned Ext2FS::inodes_per_block() const
@@ -1008,7 +1008,7 @@ bool Ext2FS::set_block_allocation_state(GroupIndex group, BlockIndex bi, bool ne
 
 RetainPtr<Inode> Ext2FS::create_directory(InodeIdentifier parent_id, const String& name, Unix::mode_t mode, int& error)
 {
-    ASSERT(parent_id.fsid() == id());
+    ASSERT(parent_id.fsid() == fsid());
 
     // Fix up the mode to definitely be a directory.
     // FIXME: This is a bit on the hackish side.
@@ -1049,7 +1049,7 @@ RetainPtr<Inode> Ext2FS::create_directory(InodeIdentifier parent_id, const Strin
 
 RetainPtr<Inode> Ext2FS::create_inode(InodeIdentifier parent_id, const String& name, Unix::mode_t mode, unsigned size, int& error)
 {
-    ASSERT(parent_id.fsid() == id());
+    ASSERT(parent_id.fsid() == fsid());
     auto parent_inode = get_inode(parent_id);
 
     dbgprintf("Ext2FS: Adding inode '%s' (mode %u) to parent directory %u:\n", name.characters(), mode, parent_inode->identifier().index());
@@ -1087,7 +1087,7 @@ RetainPtr<Inode> Ext2FS::create_inode(InodeIdentifier parent_id, const String& n
         fileType = EXT2_FT_SYMLINK;
 
     // Try adding it to the directory first, in case the name is already in use.
-    bool success = parent_inode->add_child({ id(), inode_id }, name, fileType, error);
+    bool success = parent_inode->add_child({ fsid(), inode_id }, name, fileType, error);
     if (!success)
         return { };
 
@@ -1136,7 +1136,7 @@ RetainPtr<Inode> Ext2FS::create_inode(InodeIdentifier parent_id, const String& n
         LOCKER(m_inode_cache_lock);
         m_inode_cache.remove(inode_id);
     }
-    return get_inode({ id(), inode_id });
+    return get_inode({ fsid(), inode_id });
 }
 
 RetainPtr<Inode> Ext2FSInode::parent() const

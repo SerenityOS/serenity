@@ -25,7 +25,7 @@ public:
     static void initialize_globals();
     virtual ~FS();
 
-    dword id() const { return m_fsid; }
+    unsigned fsid() const { return m_fsid; }
     static FS* from_fsid(dword);
     static void sync();
 
@@ -53,7 +53,7 @@ protected:
     FS();
 
 private:
-    dword m_fsid { 0 };
+    unsigned m_fsid { 0 };
     bool m_readonly { false };
 };
 
@@ -132,7 +132,7 @@ inline bool InodeIdentifier::is_root_inode() const
 
 inline unsigned Inode::fsid() const
 {
-    return m_fs.id();
+    return m_fs.fsid();
 }
 
 namespace AK {
