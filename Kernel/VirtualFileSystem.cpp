@@ -245,6 +245,12 @@ bool VFS::unlink(const String& path, Inode& base, int& error)
         return false;
     }
 
+    auto inode = get_inode(inode_id);
+    if (inode->is_directory()) {
+        error = -EISDIR;
+        return false;
+    }
+
     auto parent_inode = get_inode(parent_dir);
     // FIXME: The reverse_lookup here can definitely be avoided.
     if (!parent_inode->remove_child(parent_inode->reverse_lookup(inode_id), error))
