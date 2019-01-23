@@ -83,7 +83,6 @@ public:
     virtual bool traverse_as_directory(Function<bool(const FS::DirectoryEntry&)>) = 0;
     virtual InodeIdentifier lookup(const String& name) = 0;
     virtual String reverse_lookup(InodeIdentifier) = 0;
-    virtual bool write(const ByteBuffer&) = 0;
     virtual ssize_t write_bytes(Unix::off_t, size_t, const byte* data, FileDescriptor*) = 0;
     virtual bool add_child(InodeIdentifier child_id, const String& name, byte file_type, int& error) = 0;
     virtual bool remove_child(const String& name, int& error) = 0;

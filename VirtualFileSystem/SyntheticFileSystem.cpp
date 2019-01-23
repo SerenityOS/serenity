@@ -273,13 +273,6 @@ void SynthFSInode::flush_metadata()
 {
 }
 
-bool SynthFSInode::write(const ByteBuffer& data)
-{
-    if (!m_write_callback)
-        return 0; // FIXME: -EPERM?
-    return m_write_callback(*this, data);
-}
-
 ssize_t SynthFSInode::write_bytes(Unix::off_t offset, size_t size, const byte* buffer, FileDescriptor*)
 {
     if (!m_write_callback)
