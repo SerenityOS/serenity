@@ -28,7 +28,7 @@ bool SynthFS::initialize()
     // Add a File for the root directory.
     // FIXME: This needs work.
     auto root = adopt(*new SynthFSInode(*this, RootInodeIndex));
-    root->m_parent = { id(), RootInodeIndex };
+    root->m_parent = { fsid(), RootInodeIndex };
     root->m_metadata.mode = 0040555;
     root->m_metadata.uid = 0;
     root->m_metadata.gid = 0;
@@ -104,7 +104,7 @@ InodeIdentifier SynthFS::add_file(RetainPtr<SynthFSInode>&& file, InodeIndex par
     ASSERT(it != m_inodes.end());
     auto new_inode_id = file->identifier();
     file->m_metadata.inode = new_inode_id;
-    file->m_parent = { id(), parent };
+    file->m_parent = { fsid(), parent };
     (*it).value->m_children.append(file.ptr());
     m_inodes.set(new_inode_id.index(), move(file));
     return new_inode_id;
@@ -147,7 +147,7 @@ const char* SynthFS::class_name() const
 
 InodeIdentifier SynthFS::root_inode() const
 {
-    return { id(), 1 };
+    return { fsid(), 1 };
 }
 
 RetainPtr<Inode> SynthFS::create_inode(InodeIdentifier parentInode, const String& name, Unix::mode_t mode, unsigned size, int& error)
@@ -188,7 +188,7 @@ RetainPtr<Inode> SynthFS::get_inode(InodeIdentifier inode) const
 SynthFSInode::SynthFSInode(SynthFS& fs, unsigned index)
     : Inode(fs, index)
 {
-    m_metadata.inode = { fs.id(), index };
+    m_metadata.inode = { fs.fsid(), index };
 }
 
 SynthFSInode::~SynthFSInode()
