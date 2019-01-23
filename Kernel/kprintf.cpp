@@ -1,7 +1,7 @@
 #include "kprintf.h"
 #include "Console.h"
 #include "IO.h"
-#include <stdarg.h>
+#include <LibC/stdarg.h>
 #include "Process.h"
 #include <AK/Types.h>
 #include <AK/printf.cpp>

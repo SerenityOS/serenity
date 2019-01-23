@@ -25,19 +25,19 @@ public:
 
 private:
     // ^Inode
-    virtual ssize_t read_bytes(Unix::off_t, size_t, byte* buffer, FileDescriptor*) override;
+    virtual ssize_t read_bytes(off_t, size_t, byte* buffer, FileDescriptor*) override;
     virtual InodeMetadata metadata() const override;
     virtual bool traverse_as_directory(Function<bool(const FS::DirectoryEntry&)>) override;
     virtual InodeIdentifier lookup(const String& name) override;
     virtual String reverse_lookup(InodeIdentifier) override;
     virtual void flush_metadata() override;
-    virtual ssize_t write_bytes(Unix::off_t, size_t, const byte* data, FileDescriptor*) override;
+    virtual ssize_t write_bytes(off_t, size_t, const byte* data, FileDescriptor*) override;
     virtual bool add_child(InodeIdentifier child_id, const String& name, byte file_type, int& error) override;
     virtual bool remove_child(const String& name, int& error) override;
     virtual RetainPtr<Inode> parent() const override;
-    virtual int set_atime(Unix::time_t) override;
-    virtual int set_ctime(Unix::time_t) override;
-    virtual int set_mtime(Unix::time_t) override;
+    virtual int set_atime(time_t) override;
+    virtual int set_ctime(time_t) override;
+    virtual int set_mtime(time_t) override;
     virtual int increment_link_count() override;
     virtual int decrement_link_count() override;
 
@@ -82,8 +82,8 @@ private:
 
     virtual const char* class_name() const override;
     virtual InodeIdentifier root_inode() const override;
-    virtual RetainPtr<Inode> create_inode(InodeIdentifier parentInode, const String& name, Unix::mode_t, unsigned size, int& error) override;
-    virtual RetainPtr<Inode> create_directory(InodeIdentifier parentInode, const String& name, Unix::mode_t, int& error) override;
+    virtual RetainPtr<Inode> create_inode(InodeIdentifier parentInode, const String& name, mode_t, unsigned size, int& error) override;
+    virtual RetainPtr<Inode> create_directory(InodeIdentifier parentInode, const String& name, mode_t, int& error) override;
     virtual RetainPtr<Inode> get_inode(InodeIdentifier) const override;
 
     unsigned allocate_inode(unsigned preferredGroup, unsigned expectedSize);

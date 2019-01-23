@@ -23,10 +23,10 @@ public:
 
     int close();
 
-    Unix::off_t seek(Unix::off_t, int whence);
+    off_t seek(off_t, int whence);
     ssize_t read(Process&, byte*, size_t);
     ssize_t write(Process&, const byte* data, size_t);
-    int stat(Unix::stat*);
+    int fstat(stat*);
 
     bool can_read(Process&);
     bool can_write(Process&);
@@ -77,7 +77,7 @@ private:
     RetainPtr<Inode> m_inode;
     RetainPtr<CharacterDevice> m_device;
 
-    Unix::off_t m_current_offset { 0 };
+    off_t m_current_offset { 0 };
 
     ByteBuffer m_generator_cache;
 

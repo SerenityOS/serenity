@@ -56,7 +56,7 @@ ByteBuffer Inode::read_entire(FileDescriptor* descriptor)
     ssize_t nread;
     byte buffer[4096];
     byte* out = contents.pointer();
-    Unix::off_t offset = 0;
+    off_t offset = 0;
     for (;;) {
         nread = read_bytes(offset, sizeof(buffer), buffer, descriptor);
         ASSERT(nread <= (ssize_t)sizeof(buffer));
@@ -112,17 +112,17 @@ void Inode::will_be_destroyed()
         flush_metadata();
 }
 
-int Inode::set_atime(Unix::time_t)
+int Inode::set_atime(time_t)
 {
     return -ENOTIMPL;
 }
 
-int Inode::set_ctime(Unix::time_t)
+int Inode::set_ctime(time_t)
 {
     return -ENOTIMPL;
 }
 
-int Inode::set_mtime(Unix::time_t)
+int Inode::set_mtime(time_t)
 {
     return -ENOTIMPL;
 }

@@ -158,7 +158,7 @@ void* Process::sys$mmap(const Syscall::SC_mmap_params* params)
     int prot = params->prot;
     int flags = params->flags;
     int fd = params->fd;
-    Unix::off_t offset = params->offset;
+    off_t offset = params->offset;
     if (size == 0)
         return (void*)-EINVAL;
     if ((dword)addr & ~PAGE_MASK || size & ~PAGE_MASK)
@@ -1109,7 +1109,7 @@ int Process::sys$close(int fd)
     return rc;
 }
 
-int Process::sys$utime(const char* pathname, const Unix::utimbuf* buf)
+int Process::sys$utime(const char* pathname, const utimbuf* buf)
 {
     if (!validate_read_str(pathname))
         return -EFAULT;
@@ -1123,8 +1123,8 @@ int Process::sys$utime(const char* pathname, const Unix::utimbuf* buf)
     auto& inode = *descriptor->inode();
     if (inode.fs().is_readonly())
         return -EROFS;
-    Unix::time_t atime;
-    Unix::time_t mtime;
+    time_t atime;
+    time_t mtime;
     if (buf) {
         atime = buf->actime;
         mtime = buf->modtime;
@@ -1190,18 +1190,18 @@ int Process::sys$fcntl(int fd, int cmd, dword arg)
     return 0;
 }
 
-int Process::sys$fstat(int fd, Unix::stat* statbuf)
+int Process::sys$fstat(int fd, stat* statbuf)
 {
     if (!validate_write_typed(statbuf))
         return -EFAULT;
     auto* descriptor = file_descriptor(fd);
     if (!descriptor)
         return -EBADF;
-    descriptor->stat(statbuf);
+    descriptor->fstat(statbuf);
     return 0;
 }
 
-int Process::sys$lstat(const char* path, Unix::stat* statbuf)
+int Process::sys$lstat(const char* path, stat* statbuf)
 {
     if (!validate_write_typed(statbuf))
         return -EFAULT;
@@ -1209,11 +1209,11 @@ int Process::sys$lstat(const char* path, Unix::stat* statbuf)
     auto descriptor = VFS::the().open(move(path), error, O_NOFOLLOW_NOERROR, 0, cwd_inode()->identifier());
     if (!descriptor)
         return error;
-    descriptor->stat(statbuf);
+    descriptor->fstat(statbuf);
     return 0;
 }
 
-int Process::sys$stat(const char* path, Unix::stat* statbuf)
+int Process::sys$stat(const char* path, stat* statbuf)
 {
     if (!validate_write_typed(statbuf))
         return -EFAULT;
@@ -1221,7 +1221,7 @@ int Process::sys$stat(const char* path, Unix::stat* statbuf)
     auto descriptor = VFS::the().open(move(path), error, 0, 0, cwd_inode()->identifier());
     if (!descriptor)
         return error;
-    descriptor->stat(statbuf);
+    descriptor->fstat(statbuf);
     return 0;
 }
 
@@ -1736,7 +1736,7 @@ int Process::sys$dup2(int old_fd, int new_fd)
     return new_fd;
 }
 
-int Process::sys$sigprocmask(int how, const Unix::sigset_t* set, Unix::sigset_t* old_set)
+int Process::sys$sigprocmask(int how, const sigset_t* set, sigset_t* old_set)
 {
     if (old_set) {
         if (!validate_read_typed(old_set))
@@ -1763,7 +1763,7 @@ int Process::sys$sigprocmask(int how, const Unix::sigset_t* set, Unix::sigset_t*
     return 0;
 }
 
-int Process::sys$sigpending(Unix::sigset_t* set)
+int Process::sys$sigpending(sigset_t* set)
 {
     if (!validate_read_typed(set))
         return -EFAULT;
@@ -1771,7 +1771,7 @@ int Process::sys$sigpending(Unix::sigset_t* set)
     return 0;
 }
 
-int Process::sys$sigaction(int signum, const Unix::sigaction* act, Unix::sigaction* old_act)
+int Process::sys$sigaction(int signum, const sigaction* act, sigaction* old_act)
 {
     if (signum < 1 || signum >= 32 || signum == SIGKILL || signum == SIGSTOP)
         return -EINVAL;
@@ -1836,7 +1836,7 @@ int Process::sys$mkdir(const char* pathname, mode_t mode)
     return 0;
 }
 
-Unix::clock_t Process::sys$times(Unix::tms* times)
+clock_t Process::sys$times(tms* times)
 {
     if (!validate_write_typed(times))
         return -EFAULT;

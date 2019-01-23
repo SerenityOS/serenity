@@ -45,8 +45,8 @@ public:
         byte fileType { 0 };
     };
 
-    virtual RetainPtr<Inode> create_inode(InodeIdentifier parentInode, const String& name, Unix::mode_t, unsigned size, int& error) = 0;
-    virtual RetainPtr<Inode> create_directory(InodeIdentifier parentInode, const String& name, Unix::mode_t, int& error) = 0;
+    virtual RetainPtr<Inode> create_inode(InodeIdentifier parentInode, const String& name, mode_t, unsigned size, int& error) = 0;
+    virtual RetainPtr<Inode> create_directory(InodeIdentifier parentInode, const String& name, mode_t, int& error) = 0;
 
     virtual RetainPtr<Inode> get_inode(InodeIdentifier) const = 0;
 
@@ -80,20 +80,20 @@ public:
 
     ByteBuffer read_entire(FileDescriptor* = nullptr);
 
-    virtual ssize_t read_bytes(Unix::off_t, size_t, byte* buffer, FileDescriptor*) = 0;
+    virtual ssize_t read_bytes(off_t, size_t, byte* buffer, FileDescriptor*) = 0;
     virtual bool traverse_as_directory(Function<bool(const FS::DirectoryEntry&)>) = 0;
     virtual InodeIdentifier lookup(const String& name) = 0;
     virtual String reverse_lookup(InodeIdentifier) = 0;
-    virtual ssize_t write_bytes(Unix::off_t, size_t, const byte* data, FileDescriptor*) = 0;
+    virtual ssize_t write_bytes(off_t, size_t, const byte* data, FileDescriptor*) = 0;
     virtual bool add_child(InodeIdentifier child_id, const String& name, byte file_type, int& error) = 0;
     virtual bool remove_child(const String& name, int& error) = 0;
     virtual RetainPtr<Inode> parent() const = 0;
 
     bool is_metadata_dirty() const { return m_metadata_dirty; }
 
-    virtual int set_atime(Unix::time_t);
-    virtual int set_ctime(Unix::time_t);
-    virtual int set_mtime(Unix::time_t);
+    virtual int set_atime(time_t);
+    virtual int set_ctime(time_t);
+    virtual int set_mtime(time_t);
     virtual int increment_link_count();
     virtual int decrement_link_count();
 

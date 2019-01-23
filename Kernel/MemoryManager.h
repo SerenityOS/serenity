@@ -104,7 +104,7 @@ private:
     VMObject(PhysicalAddress, size_t);
     String m_name;
     bool m_anonymous { false };
-    Unix::off_t m_inode_offset { 0 };
+    off_t m_inode_offset { 0 };
     size_t m_size { 0 };
     RetainPtr<Inode> m_inode;
     Vector<RetainPtr<PhysicalPage>> m_physical_pages;

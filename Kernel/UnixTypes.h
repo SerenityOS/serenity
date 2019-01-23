@@ -1,11 +1,7 @@
 #pragma once
 
-extern "C" {
-
 #define FD_SETSIZE 64
 struct fd_set { unsigned char bits[FD_SETSIZE / 8];  };
-
-namespace Unix {
 
 #define WNOHANG 1
 
@@ -295,8 +291,3 @@ struct stat {
     time_t    st_mtime;   /* time of last modification */
     time_t    st_ctime;   /* time of last status change */
 };
-
-}
-
-}
-
