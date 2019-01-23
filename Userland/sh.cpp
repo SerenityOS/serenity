@@ -31,7 +31,7 @@ static void prompt()
     fflush(stdout);
 }
 
-static int sh_pwd(int, const char**)
+static int sh_pwd(int, char**)
 {
     printf("%s\n", g->cwd.characters());
     return 0;
@@ -50,7 +50,7 @@ void handle_sigint(int)
     printf("Interrupt received by sh\n");
 }
 
-static int sh_busy(int, const char**)
+static int sh_busy(int, char**)
 {
     struct sigaction sa;
     sa.sa_handler = did_receive_signal;
@@ -70,40 +70,40 @@ static int sh_busy(int, const char**)
     return 0;
 }
 
-static int sh_fork(int, const char**)
+static int sh_fork(int, char**)
 {
     pid_t pid = fork();
     printf("getpid()=%d, fork()=%d\n", getpid(), pid);
     return 0;
 }
 
-static int sh_fe(int, const char**)
+static int sh_fe(int, char**)
 {
     pid_t pid = fork();
     if (!pid) {
-        int rc = execve("/bin/ps", nullptr, nullptr);
+        int rc = execvp("/bin/ps", nullptr);
         if (rc < 0) {
-            perror("execve");
+            perror("execvp");
             exit(1);
         }
     }
     return 0;
 }
 
-static int sh_fef(int, const char**)
+static int sh_fef(int, char**)
 {
     pid_t pid = fork();
     if (!pid) {
-        int rc = execve("/bin/psx", nullptr, nullptr);
+        int rc = execvp("/bin/psx", nullptr);
         if (rc < 0) {
-            perror("execve");
+            perror("execvp");
             exit(1);
         }
     }
     return 0;
 }
 
-static int sh_wt(int, const char**)
+static int sh_wt(int, char**)
 {
     const char* rodata_ptr = "foo";
     printf("Writing to rodata=%p...\n", rodata_ptr);
@@ -115,7 +115,7 @@ static int sh_wt(int, const char**)
     return 0;
 }
 
-static int sh_mf(int, const char**)
+static int sh_mf(int, char**)
 {
     int rc;
     int fd = open("/Banner.txt", O_RDONLY);
@@ -141,7 +141,7 @@ close_it:
     return 0;
 }
 
-static int sh_mp(int, const char**)
+static int sh_mp(int, char**)
 {
     int fd = open("/kernel.map", O_RDONLY);
     if (fd < 0) {
@@ -161,14 +161,14 @@ static int sh_mp(int, const char**)
     return 0;
 }
 
-static int sh_exit(int, const char**)
+static int sh_exit(int, char**)
 {
     printf("Good-bye!\n");
     exit(0);
     return 0;
 }
 
-static int sh_cd(int argc, const char** argv)
+static int sh_cd(int argc, char** argv)
 {
     if (argc == 1) {
         printf("usage: cd <path>\n");
@@ -207,7 +207,7 @@ static int sh_cd(int argc, const char** argv)
     return 0;
 }
 
-static bool handle_builtin(int argc, const char** argv, int& retval)
+static bool handle_builtin(int argc, char** argv, int& retval)
 {
     if (argc == 0)
         return false;
@@ -254,15 +254,15 @@ static bool handle_builtin(int argc, const char** argv, int& retval)
     return false;
 }
 
-static int try_exec(const char* path, const char** argv)
+static int try_exec(const char* path, char** argv)
 {
-    int ret = execve(path, argv, const_cast<const char**>(environ));
+    int ret = execve(path, argv, environ);
     assert(ret < 0);
 
     const char* search_path = "/bin";
     char pathbuf[128];
     sprintf(pathbuf, "%s/%s", search_path, argv[0]);
-    ret = execve(pathbuf, argv, const_cast<const char**>(environ));
+    ret = execve(pathbuf, argv, environ);
     if (ret == -1)
         return -1;
     return ret;
@@ -275,7 +275,7 @@ static int runcmd(char* cmd)
     char buf[128];
     memcpy(buf, cmd, 128);
 
-    const char* argv[32];
+    char* argv[32];
     size_t argc = 1;
     argv[0] = &buf[0];
     size_t buflen = strlen(buf);
