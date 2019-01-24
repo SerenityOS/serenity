@@ -38,7 +38,7 @@ bool MasterPTY::can_read(Process&) const
 
 bool MasterPTY::can_write(Process&) const
 {
-    return m_buffer.bytes_in_write_buffer() < 4096;
+    return true;
 }
 
 void MasterPTY::on_slave_write(const byte* data, size_t size)
