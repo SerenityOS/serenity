@@ -99,6 +99,9 @@ int Process::gui$get_window_backing_store(int window_id, GUI_WindowBackingStoreI
     auto& window = *(*it).value;
     WSWindowLocker locker(window);
     auto* backing_store = window.backing();
+#ifdef BACKING_STORE_DEBUG
+    dbgprintf("%s<%u> +++ %p[%d] (%dx%d)\n", name().characters(), pid(), backing_store, backing_store->width(), backing_store->height());
+#endif
     m_retained_backing_stores.append(backing_store);
     info->backing_store_id = backing_store;
     info->bpp = sizeof(RGBA32);
@@ -112,6 +115,10 @@ int Process::gui$release_window_backing_store(void* backing_store_id)
 {
     for (size_t i = 0; i < m_retained_backing_stores.size(); ++i) {
         if (m_retained_backing_stores[i].ptr() == backing_store_id) {
+#ifdef BACKING_STORE_DEBUG
+            auto* backing_store = m_retained_backing_stores[i].ptr();
+            dbgprintf("%s<%u> --- %p (%dx%d)\n", name().characters(), pid(), backing_store, backing_store->width(), backing_store->height());
+#endif
             m_retained_backing_stores.remove(i);
             return 0;
         }
