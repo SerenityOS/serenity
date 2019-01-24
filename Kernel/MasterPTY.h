@@ -20,6 +20,7 @@ public:
     unsigned index() const { return m_index; }
     String pts_name() const;
     void on_slave_write(const byte*, size_t);
+    bool can_write_from_slave() const;
 
 private:
     // ^CharacterDevice
