@@ -111,11 +111,20 @@ private:
 };
 
 class Region : public Retainable<Region> {
+    friend class MemoryManager;
 public:
     Region(LinearAddress, size_t, String&&, bool r, bool w, bool cow = false);
     Region(LinearAddress, size_t, RetainPtr<VMObject>&&, size_t offset_in_vmo, String&&, bool r, bool w, bool cow = false);
     Region(LinearAddress, size_t, RetainPtr<Inode>&&, String&&, bool r, bool w);
     ~Region();
+
+    LinearAddress laddr() const { return m_laddr; }
+    size_t size() const { return m_size; }
+    bool is_readable() const { return m_readable; }
+    bool is_writable() const { return m_writable; }
+    String name() const { return m_name; }
+
+    void set_name(String&& name) { m_name = move(name); }
 
     const VMObject& vmo() const { return *m_vmo; }
     VMObject& vmo() { return *m_vmo; }
@@ -125,12 +134,12 @@ public:
     RetainPtr<Region> clone();
     bool contains(LinearAddress laddr) const
     {
-        return laddr >= linearAddress && laddr < linearAddress.offset(size);
+        return laddr >= m_laddr && laddr < m_laddr.offset(size());
     }
 
     unsigned page_index_from_address(LinearAddress laddr) const
     {
-        return (laddr - linearAddress).get() / PAGE_SIZE;
+        return (laddr - m_laddr).get() / PAGE_SIZE;
     }
 
     size_t first_page_index() const
@@ -145,7 +154,7 @@ public:
 
     size_t page_count() const
     {
-        return size / PAGE_SIZE;
+        return m_size / PAGE_SIZE;
     }
 
     bool page_in();
@@ -153,16 +162,33 @@ public:
 
     size_t committed() const;
 
+    PageDirectory* page_directory() { return m_page_directory.ptr(); }
+
+    void set_page_directory(PageDirectory& page_directory)
+    {
+        ASSERT(!m_page_directory || m_page_directory.ptr() == &page_directory);
+        m_page_directory = page_directory;
+    }
+
+    void release_page_directory()
+    {
+        ASSERT(m_page_directory);
+        m_page_directory.clear();
+    }
+
+    const Bitmap& cow_map() const { return m_cow_map; }
+
+private:
     RetainPtr<PageDirectory> m_page_directory;
-    LinearAddress linearAddress;
-    size_t size { 0 };
+    LinearAddress m_laddr;
+    size_t m_size { 0 };
     size_t m_offset_in_vmo { 0 };
     RetainPtr<VMObject> m_vmo;
-    String name;
-    bool is_readable { true };
-    bool is_writable { true };
+    String m_name;
+    bool m_readable { true };
+    bool m_writable { true };
     bool m_shared { false };
-    Bitmap cow_map;
+    Bitmap m_cow_map;
 };
 
 #define MM MemoryManager::the()

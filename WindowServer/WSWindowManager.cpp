@@ -116,7 +116,7 @@ WSWindowManager::WSWindowManager()
     auto size = m_screen_rect.size();
     m_front_bitmap = GraphicsBitmap::create_wrapper(size, m_screen.scanline(0));
     auto* region = current->allocate_region(LinearAddress(), size.width() * size.height() * sizeof(RGBA32), "BackBitmap", true, true, true);
-    m_back_bitmap = GraphicsBitmap::create_wrapper(m_screen_rect.size(), (RGBA32*)region->linearAddress.get());
+    m_back_bitmap = GraphicsBitmap::create_wrapper(m_screen_rect.size(), (RGBA32*)region->laddr().get());
 
     m_front_painter = make<Painter>(*m_front_bitmap);
     m_back_painter = make<Painter>(*m_back_bitmap);

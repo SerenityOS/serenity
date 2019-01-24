@@ -61,10 +61,10 @@ public:
 
     bool is_null() const { return m_address == 0; }
 
-    byte* asPtr() { return reinterpret_cast<byte*>(m_address); }
-    const byte* asPtr() const { return reinterpret_cast<const byte*>(m_address); }
+    byte* as_ptr() { return reinterpret_cast<byte*>(m_address); }
+    const byte* as_ptr() const { return reinterpret_cast<const byte*>(m_address); }
 
-    dword pageBase() const { return m_address & 0xfffff000; }
+    dword page_base() const { return m_address & 0xfffff000; }
 
     bool operator==(const PhysicalAddress& other) const { return m_address == other.m_address; }
 
@@ -91,10 +91,10 @@ public:
     bool operator==(const LinearAddress& other) const { return m_address == other.m_address; }
     bool operator!=(const LinearAddress& other) const { return m_address != other.m_address; }
 
-    byte* asPtr() { return reinterpret_cast<byte*>(m_address); }
-    const byte* asPtr() const { return reinterpret_cast<const byte*>(m_address); }
+    byte* as_ptr() { return reinterpret_cast<byte*>(m_address); }
+    const byte* as_ptr() const { return reinterpret_cast<const byte*>(m_address); }
 
-    dword pageBase() const { return m_address & 0xfffff000; }
+    dword page_base() const { return m_address & 0xfffff000; }
 
 private:
     dword m_address { 0 };
