@@ -9,7 +9,7 @@ int ispunct(int c)
 
 int isprint(int c)
 {
-    return isdigit(c) || isupper(c) || islower(c) || ispunct(c) || isspace(c);
+    return c >= 0x20 && c != 0x7f;
 }
 
 int isalnum(int c)
