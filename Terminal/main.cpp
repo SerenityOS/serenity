@@ -115,7 +115,15 @@ int main(int, char**)
             if (event.type == GUI_Event::Type::Paint) {
                 terminal.paint();
             } else if (event.type == GUI_Event::Type::KeyDown) {
-                write(ptm_fd, &event.key.character, 1);
+                char ch = event.key.character;
+                if (event.key.ctrl) {
+                    if (ch >= 'a' && ch <= 'z') {
+                        ch = ch - 'a' + 1;
+                    } else if (ch == '\\') {
+                        ch = 0x1c;
+                    }
+                }
+                write(ptm_fd, &ch, 1);
             } else if (event.type == GUI_Event::Type::WindowActivated) {
                 terminal.set_in_active_window(true);
             } else if (event.type == GUI_Event::Type::WindowDeactivated) {
