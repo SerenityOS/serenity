@@ -4,11 +4,13 @@
 #include <SharedGraphics/GraphicsBitmap.h>
 #include <AK/AKString.h>
 #include <AK/InlineLinkedList.h>
+#include <AK/Lock.h>
 #include "WSEventReceiver.h"
 
 class Process;
 
 class WSWindow final : public WSEventReceiver, public InlineLinkedListNode<WSWindow> {
+    friend class WSWindowLocker;
 public:
     WSWindow(Process&, int window_id);
     virtual ~WSWindow() override;
@@ -46,6 +48,7 @@ public:
     WSWindow* m_prev { nullptr };
 
 private:
+    Lock m_lock;
     String m_title;
     Rect m_rect;
     bool m_is_being_dragged { false };
@@ -54,5 +57,13 @@ private:
     Process& m_process;
     int m_window_id { -1 };
     pid_t m_pid { -1 };
+};
+
+class WSWindowLocker {
+public:
+    WSWindowLocker(WSWindow& window) : m_locker(window.m_lock) { }
+    ~WSWindowLocker() { }
+private:
+    Locker m_locker;
 };
 

@@ -26,6 +26,7 @@ void Terminal::create_window()
         exit(1);
     }
 
+    // NOTE: We never release the backing store.
     GUI_WindowBackingStoreInfo info;
     int rc = gui_get_window_backing_store(m_window_id, &info);
     if (rc < 0) {

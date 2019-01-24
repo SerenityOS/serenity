@@ -7,6 +7,8 @@
 #ifdef LIBGUI
 #include <LibGUI/GWidget.h>
 #include <LibGUI/GWindow.h>
+#include <LibC/gui.h>
+#include <LibC/stdio.h>
 #endif
 
 #define DEBUG_WIDGET_UNDERDRAW
@@ -22,12 +24,20 @@ Painter::Painter(GraphicsBitmap& bitmap)
 Painter::Painter(GWidget& widget)
     : m_font(&widget.font())
 {
-    m_target = widget.backing();
+    GUI_WindowBackingStoreInfo backing;
+    int rc = gui_get_window_backing_store(widget.window()->window_id(), &backing);
+    if (rc < 0) {
+        perror("gui_get_window_backing_store");
+        exit(1);
+    }
+    m_backing_store_id = backing.backing_store_id;
+    m_target = GraphicsBitmap::create_wrapper(backing.size, backing.pixels);
     ASSERT(m_target);
     m_window = widget.window();
     m_translation.move_by(widget.relative_position());
     // NOTE: m_clip_rect is in Window coordinates since we are painting into its backing store.
     m_clip_rect = widget.relative_rect();
+    m_clip_rect.intersect(m_target->rect());
 
 #ifdef DEBUG_WIDGET_UNDERDRAW
     // If the widget is not opaque, let's not mess it up with debugging color.
@@ -39,6 +49,11 @@ Painter::Painter(GWidget& widget)
 
 Painter::~Painter()
 {
+#ifdef LIBGUI
+    m_target = nullptr;
+    int rc = gui_release_window_backing_store(m_backing_store_id);
+    ASSERT(rc == 0);
+#endif
 }
 
 void Painter::fill_rect(const Rect& a_rect, Color color)
@@ -46,6 +61,9 @@ void Painter::fill_rect(const Rect& a_rect, Color color)
     auto rect = a_rect;
     rect.move_by(m_translation);
     rect.intersect(m_clip_rect);
+
+    if (rect.is_empty())
+        return;
 
     RGBA32* dst = m_target->scanline(rect.top()) + rect.left();
     const unsigned dst_skip = m_target->width();
@@ -265,4 +283,14 @@ void Painter::blit(const Point& position, const GraphicsBitmap& source, const Re
         dst += dst_skip;
         src += src_skip;
     }
+}
+
+void Painter::set_clip_rect(const Rect& rect)
+{
+    m_clip_rect = Rect::intersection(rect, m_target->rect());
+}
+
+void Painter::clear_clip_rect()
+{
+    m_clip_rect = m_target->rect();
 }

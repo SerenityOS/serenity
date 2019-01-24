@@ -20,6 +20,7 @@ class Region;
 class VMObject;
 class Zone;
 class WSWindow;
+class GraphicsBitmap;
 
 #define COOL_GLOBALS
 #ifdef COOL_GLOBALS
@@ -197,9 +198,12 @@ public:
     int gui$create_window(const GUI_WindowParameters*);
     int gui$destroy_window(int window_id);
     int gui$get_window_backing_store(int window_id, GUI_WindowBackingStoreInfo*);
+    int gui$release_window_backing_store(void* backing_store_id);
     int gui$invalidate_window(int window_id, const GUI_Rect*);
-    int gui$get_window_parameters(int window_id, GUI_WindowParameters*);
-    int gui$set_window_parameters(int window_id, const GUI_WindowParameters*);
+    int gui$get_window_title(int window_id, char* buffer, size_t size);
+    int gui$set_window_title(int window_id, const char* title, size_t size);
+    int gui$get_window_rect(int window_id, GUI_Rect*);
+    int gui$set_window_rect(int window_id, const GUI_Rect*);
 
     DisplayInfo get_display_info();
 
@@ -360,6 +364,7 @@ private:
     RetainPtr<Region> m_display_framebuffer_region;
 
     HashMap<int, OwnPtr<WSWindow>> m_windows;
+    Vector<RetainPtr<GraphicsBitmap>> m_retained_backing_stores;
 
     Vector<GUI_Event> m_gui_events;
     Lock m_gui_events_lock;

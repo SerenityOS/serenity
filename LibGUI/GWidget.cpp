@@ -18,12 +18,13 @@ GWidget::~GWidget()
 {
 }
 
-void GWidget::set_relative_rect(const Rect& rect, bool should_update)
+void GWidget::set_relative_rect(const Rect& rect)
 {
+    if (rect == m_relative_rect)
+        return;
     // FIXME: Make some kind of event loop driven ResizeEvent?
     m_relative_rect = rect;
-    if (should_update)
-        update();
+    update();
 }
 
 void GWidget::repaint(const Rect& rect)
@@ -146,11 +147,4 @@ void GWidget::set_font(RetainPtr<Font>&& font)
         m_font = Font::default_font();
     else
         m_font = move(font);
-}
-
-GraphicsBitmap* GWidget::backing()
-{
-    if (auto* w = window())
-        return w->backing();
-    return nullptr;
 }

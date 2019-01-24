@@ -34,6 +34,7 @@ struct GUI_WindowParameters {
 };
 
 struct GUI_WindowBackingStoreInfo {
+    void* backing_store_id;
     GUI_Size size;
     size_t bpp;
     size_t pitch;

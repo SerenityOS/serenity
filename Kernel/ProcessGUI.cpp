@@ -97,11 +97,26 @@ int Process::gui$get_window_backing_store(int window_id, GUI_WindowBackingStoreI
     if (it == m_windows.end())
         return -EBADWINDOW;
     auto& window = *(*it).value;
+    WSWindowLocker locker(window);
+    auto* backing_store = window.backing();
+    m_retained_backing_stores.append(backing_store);
+    info->backing_store_id = backing_store;
     info->bpp = sizeof(RGBA32);
-    info->pitch = window.backing()->pitch();
-    info->size = window.backing()->size();
-    info->pixels = reinterpret_cast<RGBA32*>(window.backing()->client_region()->laddr().as_ptr());
+    info->pitch = backing_store->pitch();
+    info->size = backing_store->size();
+    info->pixels = reinterpret_cast<RGBA32*>(backing_store->client_region()->laddr().as_ptr());
     return 0;
+}
+
+int Process::gui$release_window_backing_store(void* backing_store_id)
+{
+    for (size_t i = 0; i < m_retained_backing_stores.size(); ++i) {
+        if (m_retained_backing_stores[i].ptr() == backing_store_id) {
+            m_retained_backing_stores.remove(i);
+            return 0;
+        }
+    }
+    return -EBADBACKING;
 }
 
 int Process::gui$invalidate_window(int window_id, const GUI_Rect* rect)
@@ -121,39 +136,82 @@ int Process::gui$invalidate_window(int window_id, const GUI_Rect* rect)
 #endif
     auto& window = *(*it).value;
     Rect invalidation_rect;
-    if (rect)
+    if (rect) {
+        WSWindowLocker locker(window);
         invalidation_rect = *rect;
+    }
     WSEventLoop::the().post_event(&window, make<WSWindowInvalidationEvent>(invalidation_rect));
     WSEventLoop::the().server_process().request_wakeup();
     return 0;
 }
 
-int Process::gui$get_window_parameters(int window_id, GUI_WindowParameters* params)
+int Process::gui$get_window_title(int window_id, char* buffer, size_t size)
 {
     if (window_id < 0)
         return -EINVAL;
-    if (!validate_write_typed(params))
+    if (!validate_write(buffer, size))
         return -EFAULT;
     auto it = m_windows.find(window_id);
     if (it == m_windows.end())
         return -EBADWINDOW;
     auto& window = *(*it).value;
-    params->rect = window.rect();
-    strcpy(params->title, window.title().characters());
+    String title;
+    {
+        WSWindowLocker locker(window);
+        title = window.title();
+    }
+    if (title.length() > size)
+        return -ERANGE;
+    memcpy(buffer, title.characters(), title.length());
+    return title.length();
+
+}
+
+int Process::gui$set_window_title(int window_id, const char* title, size_t size)
+{
+    if (window_id < 0)
+        return -EINVAL;
+    if (!validate_read(title, size))
+        return -EFAULT;
+    auto it = m_windows.find(window_id);
+    if (it == m_windows.end())
+        return -EBADWINDOW;
+    auto& window = *(*it).value;
+    String new_title(title, size);
+    WSEventLoop::the().post_event(&window, make<WSSetWindowTitle>(move(new_title)));
+    WSEventLoop::the().server_process().request_wakeup();
     return 0;
 }
 
-int Process::gui$set_window_parameters(int window_id, const GUI_WindowParameters* params)
+int Process::gui$get_window_rect(int window_id, GUI_Rect* rect)
 {
     if (window_id < 0)
         return -EINVAL;
-    if (!validate_read_typed(params))
+    if (!validate_write_typed(rect))
         return -EFAULT;
     auto it = m_windows.find(window_id);
     if (it == m_windows.end())
         return -EBADWINDOW;
     auto& window = *(*it).value;
-    window.set_rect(params->rect);
-    window.set_title(params->title);
+    {
+        WSWindowLocker locker(window);
+        *rect = window.rect();
+    }
+    return 0;
+}
+
+int Process::gui$set_window_rect(int window_id, const GUI_Rect* rect)
+{
+    if (window_id < 0)
+        return -EINVAL;
+    if (!validate_read_typed(rect))
+        return -EFAULT;
+    auto it = m_windows.find(window_id);
+    if (it == m_windows.end())
+        return -EBADWINDOW;
+    auto& window = *(*it).value;
+    Rect new_rect = *rect;
+    WSEventLoop::the().post_event(&window, make<WSSetWindowRect>(new_rect));
+    WSEventLoop::the().server_process().request_wakeup();
     return 0;
 }
