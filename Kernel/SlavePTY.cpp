@@ -31,7 +31,7 @@ void SlavePTY::on_tty_write(const byte* data, size_t size)
     m_master.on_slave_write(data, size);
 }
 
-bool SlavePTY::can_write(Process& process) const
+bool SlavePTY::can_write(Process&) const
 {
-    return m_master.can_write(process);
+    return m_master.can_write_from_slave();
 }

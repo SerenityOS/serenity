@@ -45,3 +45,8 @@ void MasterPTY::on_slave_write(const byte* data, size_t size)
 {
     m_buffer.write(data, size);
 }
+
+bool MasterPTY::can_write_from_slave() const
+{
+    return m_buffer.bytes_in_write_buffer() < 4096;
+}
