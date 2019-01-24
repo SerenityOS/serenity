@@ -211,7 +211,7 @@ void exception_14_handler(RegisterDumpWithExceptionCode& regs)
         esp = regs.esp_if_crossRing;
     }
 
-#ifdef PAGE_FAULT_DEBUG
+    auto dump_registers_and_code = [&] {
     dbgprintf("exception code: %w\n", regs.exception_code);
     dbgprintf("pc=%w:%x ds=%w es=%w fs=%w gs=%w\n", regs.cs, regs.eip, regs.ds, regs.es, regs.fs, regs.gs);
     dbgprintf("stk=%w:%x\n", ss, esp);
@@ -229,12 +229,17 @@ void exception_14_handler(RegisterDumpWithExceptionCode& regs)
             codeptr[6],
             codeptr[7]
     );
-#endif
+    };
 
     if (current->isRing0()) {
+        dump_registers_and_code();
         current->dumpRegions();
         HANG;
     }
+
+#ifdef PAGE_FAULT_DEBUG
+    dump_registers_and_code();
+#endif
 
     auto response = MM.handle_page_fault(PageFault(regs.exception_code, LinearAddress(faultAddress)));
 
@@ -245,11 +250,7 @@ void exception_14_handler(RegisterDumpWithExceptionCode& regs)
             regs.exception_code & 2 ? "write" : "read",
             faultAddress);
 
-        kprintf("exception code: %w\n", regs.exception_code);
-        kprintf("pc=%w:%x ds=%w es=%w fs=%w gs=%w\n", regs.cs, regs.eip, regs.ds, regs.es, regs.fs, regs.gs);
-        kprintf("stk=%w:%x\n", ss, esp);
-        kprintf("eax=%x ebx=%x ecx=%x edx=%x\n", regs.eax, regs.ebx, regs.ecx, regs.edx);
-        kprintf("ebp=%x esp=%x esi=%x edi=%x\n", regs.ebp, esp, regs.esi, regs.edi);
+        dump_registers_and_code();
         current->crash();
     } else if (response == PageFaultResponse::Continue) {
 #ifdef PAGE_FAULT_DEBUG
