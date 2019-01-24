@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Color.h"
+#include "Rect.h"
 #include "Size.h"
 #include <AK/Retainable.h>
 #include <AK/RetainPtr.h>
@@ -20,6 +21,7 @@ public:
     RGBA32* scanline(int y);
     const RGBA32* scanline(int y) const;
 
+    Rect rect() const { return { {}, m_size }; }
     Size size() const { return m_size; }
     int width() const { return m_size.width(); }
     int height() const { return m_size.height(); }

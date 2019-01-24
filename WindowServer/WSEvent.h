@@ -39,6 +39,8 @@ public:
         WM_Invalidate,
         WindowActivated,
         WindowDeactivated,
+        WM_SetWindowTitle,
+        WM_SetWindowRect,
     };
 
     WSEvent() { }
@@ -66,6 +68,34 @@ public:
     }
 
     const Rect& rect() const { return m_rect; }
+private:
+    Rect m_rect;
+};
+
+class WSSetWindowTitle final : public WSEvent {
+public:
+    explicit WSSetWindowTitle(String&& title)
+        : WSEvent(WSEvent::WM_SetWindowTitle)
+        , m_title(move(title))
+    {
+    }
+
+    String title() const { return m_title; }
+
+private:
+    String m_title;
+};
+
+class WSSetWindowRect final : public WSEvent {
+public:
+    explicit WSSetWindowRect(const Rect& rect)
+        : WSEvent(WSEvent::WM_SetWindowRect)
+        , m_rect(rect)
+    {
+    }
+
+    Rect rect() const { return m_rect; }
+
 private:
     Rect m_rect;
 };

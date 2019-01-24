@@ -30,6 +30,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    // NOTE: We never release the backing store. This is just a simple app. :^)
     GUI_WindowBackingStoreInfo backing;
     int rc = gui_get_window_backing_store(window_id, &backing);
     if (rc < 0) {

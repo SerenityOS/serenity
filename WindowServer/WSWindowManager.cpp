@@ -220,13 +220,13 @@ void WSWindowManager::remove_window(WSWindow& window)
 void WSWindowManager::notify_title_changed(WSWindow& window)
 {
     printf("[WM] WSWindow{%p} title set to '%s'\n", &window, window.title().characters());
+    invalidate(outer_window_rect(window.rect()));
 }
 
 void WSWindowManager::notify_rect_changed(WSWindow& window, const Rect& old_rect, const Rect& new_rect)
 {
     printf("[WM] WSWindow %p rect changed (%d,%d %dx%d) -> (%d,%d %dx%d)\n", &window, old_rect.x(), old_rect.y(), old_rect.width(), old_rect.height(), new_rect.x(), new_rect.y(), new_rect.width(), new_rect.height());
     ASSERT_INTERRUPTS_ENABLED();
-    LOCKER(m_lock);
     invalidate(outer_window_rect(old_rect));
     invalidate(outer_window_rect(new_rect));
 }
@@ -335,6 +335,7 @@ void WSWindowManager::compose()
         m_back_painter->fill_rect(dirty_rect, Color(0, 72, 96));
     }
     for (auto* window = m_windows_in_order.head(); window; window = window->next()) {
+        WSWindowLocker locker(*window);
         if (!window->backing())
             continue;
         if (!any_dirty_rect_intersects_window(*window))

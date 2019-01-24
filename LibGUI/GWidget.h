@@ -51,7 +51,7 @@ public:
 
     virtual const char* class_name() const override { return "GWidget"; }
 
-    void set_relative_rect(const Rect&, bool should_update = true);
+    void set_relative_rect(const Rect&);
 
     Color background_color() const { return m_background_color; }
     Color foreground_color() const { return m_foreground_color; }
@@ -83,8 +83,6 @@ public:
 
     const Font& font() const { return *m_font; }
     void set_font(RetainPtr<Font>&&);
-
-    GraphicsBitmap* backing();
 
 private:
     GWindow* m_window { nullptr };

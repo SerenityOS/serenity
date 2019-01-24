@@ -40,8 +40,8 @@ public:
     void set_draw_op(DrawOp op) { m_draw_op = op; }
     DrawOp draw_op() const { return m_draw_op; }
 
-    void set_clip_rect(const Rect& rect) { m_clip_rect = rect; }
-    void clear_clip_rect() { m_clip_rect = { 0, 0, 1024, 768 }; }
+    void set_clip_rect(const Rect& rect);
+    void clear_clip_rect();
     Rect clip_rect() const { return m_clip_rect; }
 
 private:
@@ -53,6 +53,7 @@ private:
     RetainPtr<GraphicsBitmap> m_target;
 #ifdef LIBGUI
     GWindow* m_window { nullptr };
+    void* m_backing_store_id { nullptr };
 #endif
     DrawOp m_draw_op { DrawOp::Copy };
 };

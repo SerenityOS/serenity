@@ -19,21 +19,28 @@ WSWindow::~WSWindow()
 
 void WSWindow::set_title(String&& title)
 {
-    if (m_title == title)
-        return;
+    {
+        WSWindowLocker locker(*this);
+        if (m_title == title)
+            return;
+        m_title = move(title);
+    }
 
-    m_title = move(title);
     WSWindowManager::the().notify_title_changed(*this);
 }
 
 void WSWindow::set_rect(const Rect& rect)
 {
-    if (m_rect == rect)
-        return;
-    auto old_rect = m_rect;
-    m_rect = rect;
-    m_backing = GraphicsBitmap::create(m_process, m_rect.size());
-    WSWindowManager::the().notify_rect_changed(*this, old_rect, m_rect);
+    Rect old_rect;
+    {
+        WSWindowLocker locker(*this);
+        if (m_rect == rect)
+            return;
+        old_rect = m_rect;
+        m_rect = rect;
+        m_backing = GraphicsBitmap::create(m_process, m_rect.size());
+    }
+    WSWindowManager::the().notify_rect_changed(*this, old_rect, rect);
 }
 
 // FIXME: Just use the same types.
@@ -85,6 +92,12 @@ void WSWindow::event(WSEvent& event)
         break;
     case WSEvent::WM_Invalidate:
         WSWindowManager::the().invalidate(*this, static_cast<WSWindowInvalidationEvent&>(event).rect());
+        return;
+    case WSEvent::WM_SetWindowRect:
+        set_rect(static_cast<WSSetWindowRect&>(event).rect());
+        return;
+    case WSEvent::WM_SetWindowTitle:
+        set_title(static_cast<WSSetWindowTitle&>(event).title());
         return;
     case WSEvent::WindowActivated:
         gui_event.type = GUI_Event::Type::WindowActivated;

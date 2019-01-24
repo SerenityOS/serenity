@@ -201,12 +201,18 @@ static dword handle(RegisterDump& regs, dword function, dword arg1, dword arg2, 
         return current->gui$destroy_window((int)arg1);
     case Syscall::SC_gui_get_window_backing_store:
         return current->gui$get_window_backing_store((int)arg1, (GUI_WindowBackingStoreInfo*)arg2);
+    case Syscall::SC_gui_release_window_backing_store:
+        return current->gui$release_window_backing_store((void*)arg1);
     case Syscall::SC_gui_invalidate_window:
         return current->gui$invalidate_window((int)arg1, (const GUI_Rect*)arg2);
-    case Syscall::SC_gui_set_window_parameters:
-        return current->gui$set_window_parameters((int)arg1, (const GUI_WindowParameters*)arg2);
-    case Syscall::SC_gui_get_window_parameters:
-        return current->gui$get_window_parameters((int)arg1, (GUI_WindowParameters*)arg2);
+    case Syscall::SC_gui_set_window_title:
+        return current->gui$set_window_title((int)arg1, (const char*)arg2, (size_t)arg3);
+    case Syscall::SC_gui_get_window_title:
+        return current->gui$get_window_title((int)arg1, (char*)arg2, (size_t)arg3);
+    case Syscall::SC_gui_set_window_rect:
+        return current->gui$set_window_rect((int)arg1, (const GUI_Rect*)arg2);
+    case Syscall::SC_gui_get_window_rect:
+        return current->gui$get_window_rect((int)arg1, (GUI_Rect*)arg2);
     default:
         kprintf("<%u> int0x80: Unknown function %u requested {%x, %x, %x}\n", current->pid(), function, arg1, arg2, arg3);
         break;

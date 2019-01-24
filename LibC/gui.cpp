@@ -21,14 +21,32 @@ int gui_get_window_backing_store(int window_id, GUI_WindowBackingStoreInfo* info
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-int gui_get_window_parameters(int window_id, GUI_WindowParameters* params)
+int gui_release_window_backing_store(void* backing_store_id)
 {
-    int rc = syscall(SC_gui_get_window_parameters, window_id, params);
+    int rc = syscall(SC_gui_release_window_backing_store, backing_store_id);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-int gui_set_window_parameters(int window_id, const GUI_WindowParameters* params)
+int gui_get_window_title(int window_id, char* buffer, size_t size)
 {
-    int rc = syscall(SC_gui_set_window_parameters, window_id, params);
+    int rc = syscall(SC_gui_get_window_title, window_id, buffer, size);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
+int gui_set_window_title(int window_id, const char* title, size_t length)
+{
+    int rc = syscall(SC_gui_set_window_title, window_id, title, length);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
+int gui_get_window_rect(int window_id, GUI_Rect* rect)
+{
+    int rc = syscall(SC_gui_get_window_rect, window_id, rect);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
+int gui_set_window_rect(int window_id, const GUI_Rect* rect)
+{
+    int rc = syscall(SC_gui_set_window_rect, window_id, rect);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }

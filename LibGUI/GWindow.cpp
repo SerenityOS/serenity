@@ -39,14 +39,6 @@ GWindow::GWindow(GObject* parent)
         exit(1);
     }
 
-    GUI_WindowBackingStoreInfo backing;
-    int rc = gui_get_window_backing_store(m_window_id, &backing);
-    if (rc < 0) {
-        perror("gui_get_window_backing_store");
-        exit(1);
-    }
-    m_backing = GraphicsBitmap::create_wrapper(backing.size, backing.pixels);
-
     windows().set(m_window_id, this);
 }
 
@@ -58,34 +50,16 @@ void GWindow::set_title(String&& title)
 {
     dbgprintf("GWindow::set_title \"%s\"\n", title.characters());
     GUI_WindowParameters params;
-    int rc = gui_get_window_parameters(m_window_id, &params);
+    int rc = gui_set_window_title(m_window_id, title.characters(), title.length());
     ASSERT(rc == 0);
-    strcpy(params.title, title.characters());;
-    rc = gui_set_window_parameters(m_window_id, &params);
-    ASSERT(rc == 0);
-    m_title = move(title);
 }
 
-void GWindow::set_rect(const Rect& rect)
+void GWindow::set_rect(const Rect& a_rect)
 {
-    // FIXME: This is a hack to fudge the race with WSWindowManager trying to display @ old rect.
-    sleep(10);
-
-    dbgprintf("GWindow::set_rect %d,%d %dx%d\n", m_rect.x(), m_rect.y(), m_rect.width(), m_rect.height());
-    GUI_WindowParameters params;
-    int rc = gui_get_window_parameters(m_window_id, &params);
+    dbgprintf("GWindow::set_rect! %d,%d %dx%d\n", a_rect.x(), a_rect.y(), a_rect.width(), a_rect.height());
+    GUI_Rect rect = a_rect;
+    int rc = gui_set_window_rect(m_window_id, &rect);
     ASSERT(rc == 0);
-    params.rect = rect;
-    rc = gui_set_window_parameters(m_window_id, &params);
-    ASSERT(rc == 0);
-    m_rect = rect;
-    GUI_WindowBackingStoreInfo backing;
-    rc = gui_get_window_backing_store(m_window_id, &backing);
-    if (rc < 0) {
-        perror("gui_get_window_backing_store");
-        exit(1);
-    }
-    m_backing = GraphicsBitmap::create_wrapper(backing.size, backing.pixels);
 }
 
 void GWindow::event(GEvent& event)
