@@ -52,11 +52,11 @@ ByteBuffer procfs$pid_vm(Process& process)
     builder.appendf("BEGIN       END         SIZE      COMMIT     NAME\n");
     for (auto& region : process.regions()) {
         builder.appendf("%x -- %x    %x  %x   %s\n",
-            region->linearAddress.get(),
-            region->linearAddress.offset(region->size - 1).get(),
-            region->size,
+            region->laddr().get(),
+            region->laddr().offset(region->size() - 1).get(),
+            region->size(),
             region->committed(),
-            region->name.characters());
+            region->name().characters());
     }
     return builder.to_byte_buffer();
 }
@@ -68,10 +68,10 @@ ByteBuffer procfs$pid_vmo(Process& process)
     builder.appendf("BEGIN       END         SIZE        NAME\n");
     for (auto& region : process.regions()) {
         builder.appendf("%x -- %x    %x    %s\n",
-            region->linearAddress.get(),
-            region->linearAddress.offset(region->size - 1).get(),
-            region->size,
-            region->name.characters());
+            region->laddr().get(),
+            region->laddr().offset(region->size() - 1).get(),
+            region->size(),
+            region->name().characters());
         builder.appendf("VMO: %s \"%s\" @ %x(%u)\n",
             region->vmo().is_anonymous() ? "anonymous" : "file-backed",
             region->vmo().name().characters(),
@@ -81,7 +81,7 @@ ByteBuffer procfs$pid_vmo(Process& process)
             auto& physical_page = region->vmo().physical_pages()[i];
             builder.appendf("P%x%s(%u) ",
                 physical_page ? physical_page->paddr().get() : 0,
-                region->cow_map.get(i) ? "!" : "",
+                region->cow_map().get(i) ? "!" : "",
                 physical_page ? physical_page->retain_count() : 0
             );
         }

@@ -132,7 +132,7 @@ bool Process::deallocate_region(Region& region)
 Region* Process::regionFromRange(LinearAddress laddr, size_t size)
 {
     for (auto& region : m_regions) {
-        if (region->linearAddress == laddr && region->size == size)
+        if (region->laddr() == laddr && region->size() == size)
             return region.ptr();
     }
     return nullptr;
@@ -145,7 +145,7 @@ int Process::sys$set_mmap_name(void* addr, size_t size, const char* name)
     auto* region = regionFromRange(LinearAddress((dword)addr), size);
     if (!region)
         return -EINVAL;
-    region->name = name;
+    region->set_name(String(name));
     return 0;
 }
 
@@ -170,7 +170,7 @@ void* Process::sys$mmap(const Syscall::SC_mmap_params* params)
         auto* region = allocate_region(LinearAddress(), size, "mmap", prot & PROT_READ, prot & PROT_WRITE, false);
         if (!region)
             return (void*)-ENOMEM;
-        return region->linearAddress.asPtr();
+        return region->laddr().as_ptr();
     }
     if (offset & ~PAGE_MASK)
         return (void*)-EINVAL;
@@ -187,7 +187,7 @@ void* Process::sys$mmap(const Syscall::SC_mmap_params* params)
     auto* region = allocate_file_backed_region(LinearAddress(), size, descriptor->inode(), move(region_name), prot & PROT_READ, prot & PROT_WRITE);
     if (!region)
         return (void*)-ENOMEM;
-    return region->linearAddress.asPtr();
+    return region->laddr().as_ptr();
 }
 
 int Process::sys$munmap(void* addr, size_t size)
@@ -229,7 +229,7 @@ Process* Process::fork(RegisterDump& regs)
 
     for (auto& region : m_regions) {
 #ifdef FORK_DEBUG
-        dbgprintf("fork: cloning Region{%p} \"%s\" L%x\n", region.ptr(), region->name.characters(), region->linearAddress.get());
+        dbgprintf("fork: cloning Region{%p} \"%s\" L%x\n", region.ptr(), region->name.characters(), region->laddr().get());
 #endif
         auto cloned_region = region->clone();
         child->m_regions.append(move(cloned_region));
@@ -324,20 +324,20 @@ int Process::do_exec(const String& path, Vector<String>&& arguments, Vector<Stri
         InterruptDisabler disabler;
         // Okay, here comes the sleight of hand, pay close attention..
         auto old_regions = move(m_regions);
-        ELFLoader loader(region->linearAddress.asPtr());
+        ELFLoader loader(region->laddr().as_ptr());
         loader.map_section_hook = [&] (LinearAddress laddr, size_t size, size_t alignment, size_t offset_in_image, bool is_readable, bool is_writable, const String& name) {
             ASSERT(size);
             ASSERT(alignment == PAGE_SIZE);
             size = ((size / 4096) + 1) * 4096; // FIXME: Use ceil_div?
             (void) allocate_region_with_vmo(laddr, size, vmo.copyRef(), offset_in_image, String(name), is_readable, is_writable);
-            return laddr.asPtr();
+            return laddr.as_ptr();
         };
         loader.alloc_section_hook = [&] (LinearAddress laddr, size_t size, size_t alignment, bool is_readable, bool is_writable, const String& name) {
             ASSERT(size);
             ASSERT(alignment == PAGE_SIZE);
             size = ((size / 4096) + 1) * 4096; // FIXME: Use ceil_div?
             (void) allocate_region(laddr, size, String(name), is_readable, is_writable);
-            return laddr.asPtr();
+            return laddr.as_ptr();
         };
         bool success = loader.load();
         if (!success) {
@@ -399,7 +399,7 @@ int Process::do_exec(const String& path, Vector<String>&& arguments, Vector<Stri
     m_tss.cr3 = page_directory().cr3();
     m_stack_region = allocate_region(LinearAddress(), defaultStackSize, "stack");
     ASSERT(m_stack_region);
-    m_stackTop3 = m_stack_region->linearAddress.offset(defaultStackSize).get();
+    m_stackTop3 = m_stack_region->laddr().offset(defaultStackSize).get();
     m_tss.esp = m_stackTop3;
     m_tss.ss0 = 0x10;
     m_tss.esp0 = old_esp0;
@@ -521,7 +521,7 @@ int Process::sys$get_environment(char*** environ)
     if (!region)
         return -ENOMEM;
     MM.map_region(*this, *region);
-    char* envpage = (char*)region->linearAddress.get();
+    char* envpage = (char*)region->laddr().get();
     *environ = (char**)envpage;
     char* bufptr = envpage + (sizeof(char*) * (m_initial_environment.size() + 1));
     for (size_t i = 0; i < m_initial_environment.size(); ++i) {
@@ -540,7 +540,7 @@ int Process::sys$get_arguments(int* argc, char*** argv)
     if (!region)
         return -ENOMEM;
     MM.map_region(*this, *region);
-    char* argpage = (char*)region->linearAddress.get();
+    char* argpage = (char*)region->laddr().get();
     *argc = m_initial_arguments.size();
     *argv = (char**)argpage;
     char* bufptr = argpage + (sizeof(char*) * (m_initial_arguments.size() + 1));
@@ -674,7 +674,7 @@ Process::Process(String&& name, uid_t uid, gid_t gid, pid_t ppid, RingLevel ring
         } else {
             auto* region = allocate_region(LinearAddress(), defaultStackSize, "stack");
             ASSERT(region);
-            m_stackTop3 = region->linearAddress.offset(defaultStackSize).get();
+            m_stackTop3 = region->laddr().offset(defaultStackSize).get();
             m_tss.esp = m_stackTop3;
         }
     }
@@ -713,10 +713,10 @@ void Process::dumpRegions()
     kprintf("BEGIN       END         SIZE        NAME\n");
     for (auto& region : m_regions) {
         kprintf("%x -- %x    %x    %s\n",
-            region->linearAddress.get(),
-            region->linearAddress.offset(region->size - 1).get(),
-            region->size,
-            region->name.characters());
+            region->laddr().get(),
+            region->laddr().offset(region->size() - 1).get(),
+            region->size(),
+            region->name().characters());
     }
 }
 
@@ -798,7 +798,7 @@ bool Process::dispatch_signal(byte signal)
 
     m_pending_signals &= ~(1 << signal);
 
-    if (handler_laddr.asPtr() == SIG_IGN) {
+    if (handler_laddr.as_ptr() == SIG_IGN) {
         dbgprintf("%s(%u) ignored signal %u\n", name().characters(), pid(), signal); return false;
     }
 
@@ -828,9 +828,9 @@ bool Process::dispatch_signal(byte signal)
             ASSERT(m_signal_stack_user_region);
         }
         m_tss.ss = 0x23;
-        m_tss.esp = m_signal_stack_user_region->linearAddress.offset(defaultStackSize).get() & 0xfffffff8;
+        m_tss.esp = m_signal_stack_user_region->laddr().offset(defaultStackSize).get() & 0xfffffff8;
         m_tss.ss0 = 0x10;
-        m_tss.esp0 = m_signal_stack_kernel_region->linearAddress.offset(defaultStackSize).get() & 0xfffffff8;
+        m_tss.esp0 = m_signal_stack_kernel_region->laddr().offset(defaultStackSize).get() & 0xfffffff8;
         push_value_on_stack(ret_eflags);
         push_value_on_stack(ret_cs);
         push_value_on_stack(ret_eip);
@@ -863,8 +863,8 @@ bool Process::dispatch_signal(byte signal)
         // FIXME: This should be a global trampoline shared by all processes, not one created per process!
         // FIXME: Remap as read-only after setup.
         auto* region = allocate_region(LinearAddress(), PAGE_SIZE, "signal_trampoline", true, true);
-        m_return_to_ring3_from_signal_trampoline = region->linearAddress;
-        byte* code_ptr = m_return_to_ring3_from_signal_trampoline.asPtr();
+        m_return_to_ring3_from_signal_trampoline = region->laddr();
+        byte* code_ptr = m_return_to_ring3_from_signal_trampoline.as_ptr();
         *code_ptr++ = 0x61; // popa
         *code_ptr++ = 0x9d; // popf
         *code_ptr++ = 0xc3; // ret
@@ -1598,9 +1598,9 @@ bool Process::validate_read_from_kernel(LinearAddress laddr) const
     // FIXME: What if we're indexing into the ksym with the highest address though?
     if (laddr.get() >= ksym_lowest_address && laddr.get() <= ksym_highest_address)
         return true;
-    if (is_kmalloc_address(laddr.asPtr()))
+    if (is_kmalloc_address(laddr.as_ptr()))
         return true;
-    return validate_read(laddr.asPtr(), 1);
+    return validate_read(laddr.as_ptr(), 1);
 }
 
 bool Process::validate_read(const void* address, size_t size) const
@@ -1917,7 +1917,7 @@ DisplayInfo Process::get_display_info()
         auto framebuffer_vmo = VMObject::create_framebuffer_wrapper(PhysicalAddress(vmode->framebuffer), framebuffer_size);
         m_display_framebuffer_region = allocate_region_with_vmo(LinearAddress(0xe0000000), framebuffer_size, move(framebuffer_vmo), 0, "framebuffer", true, true);
     }
-    info.framebuffer = m_display_framebuffer_region->linearAddress.asPtr();
+    info.framebuffer = m_display_framebuffer_region->laddr().as_ptr();
     return info;
 }
 

@@ -100,7 +100,7 @@ int Process::gui$get_window_backing_store(int window_id, GUI_WindowBackingStoreI
     info->bpp = sizeof(RGBA32);
     info->pitch = window.backing()->pitch();
     info->size = window.backing()->size();
-    info->pixels = reinterpret_cast<RGBA32*>(window.backing()->client_region()->linearAddress.asPtr());
+    info->pixels = reinterpret_cast<RGBA32*>(window.backing()->client_region()->laddr().as_ptr());
     return 0;
 }
 
