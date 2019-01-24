@@ -793,7 +793,7 @@ bool Process::dispatch_signal(byte signal)
     if (handler_laddr.is_null()) {
         // FIXME: Is termination really always the appropriate action?
         terminate_due_to_signal(signal);
-        return true;
+        return false;
     }
 
     m_pending_signals &= ~(1 << signal);
