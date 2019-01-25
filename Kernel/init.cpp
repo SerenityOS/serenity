@@ -24,7 +24,8 @@
 #include "PS2MouseDevice.h"
 #include "PTYMultiplexer.h"
 
-#define SPAWN_GUI_TEST_APP
+//#define SPAWN_GUITEST
+#define SPAWN_GUITEST2
 //#define SPAWN_MULTIPLE_SHELLS
 //#define STRESS_TEST_SPAWNING
 
@@ -102,8 +103,10 @@ static void init_stage2()
     int error;
     //Process::create_user_process("/bin/sh", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, move(environment), tty0);
     Process::create_user_process("/bin/Terminal", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, move(environment), tty0);
-#ifdef SPAWN_GUI_TEST_APP
+#ifdef SPAWN_GUITEST
     Process::create_user_process("/bin/guitest", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, move(environment), tty0);
+#endif
+#ifdef SPAWN_GUITEST2
     Process::create_user_process("/bin/guitest2", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, move(environment), tty0);
 #endif
 #ifdef SPAWN_MULTIPLE_SHELLS

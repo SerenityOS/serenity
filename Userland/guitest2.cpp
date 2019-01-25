@@ -61,18 +61,18 @@ GWindow* make_launcher_window()
 {
     auto* window = new GWindow;
     window->set_title("Launcher");
-    window->set_rect({ 100, 400, 80, 200 });
+    window->set_rect({ 100, 400, 100, 200 });
 
     auto* widget = new GWidget;
     window->set_main_widget(widget);
-    widget->set_relative_rect({ 0, 0, 80, 200 });
+    widget->set_relative_rect({ 0, 0, 100, 200 });
 
     auto* label = new GLabel(widget);
-    label->set_relative_rect({ 0, 0, 80, 20 });
+    label->set_relative_rect({ 0, 0, 100, 20 });
     label->set_text("Apps");
 
     auto* terminal_button = new GButton(widget);
-    terminal_button->set_relative_rect({ 5, 20, 70, 20 });
+    terminal_button->set_relative_rect({ 5, 20, 90, 20 });
     terminal_button->set_caption("Terminal");
 
     terminal_button->on_click = [label] (GButton&) {
@@ -88,7 +88,7 @@ GWindow* make_launcher_window()
     };
 
     auto* guitest_button = new GButton(widget);
-    guitest_button->set_relative_rect({ 5, 50, 70, 20 });
+    guitest_button->set_relative_rect({ 5, 50, 90, 20 });
     guitest_button->set_caption("guitest");
 
     guitest_button->on_click = [label] (GButton&) {
@@ -104,7 +104,7 @@ GWindow* make_launcher_window()
     };
 
     auto* dummy_button = new GButton(widget);
-    dummy_button->set_relative_rect({ 5, 80, 70, 20 });
+    dummy_button->set_relative_rect({ 5, 80, 90, 20 });
     dummy_button->set_caption("Dummy");
 
     return window;
