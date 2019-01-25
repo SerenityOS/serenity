@@ -413,10 +413,19 @@ int main(int, char**)
             }
         }
         for (ssize_t i = 0; i < nread; ++i) {
-            putchar(keybuf[i]);
+            char ch = keybuf[i];
+            if (ch == 8) {
+                if (linedx == 0)
+                    continue;
+                linebuf[--linedx] = '\0';
+                putchar(ch);
+                fflush(stdout);
+                continue;
+            }
+            putchar(ch);
             fflush(stdout);
-            if (keybuf[i] != '\n') {
-                linebuf[linedx++] = keybuf[i];
+            if (ch != '\n') {
+                linebuf[linedx++] = ch;
                 linebuf[linedx] = '\0';
             } else {
                 runcmd(linebuf);
