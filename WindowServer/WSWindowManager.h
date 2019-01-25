@@ -58,10 +58,13 @@ private:
 
     Color m_background_color;
     Color m_active_window_border_color;
+    Color m_active_window_border_color2;
     Color m_active_window_title_color;
     Color m_inactive_window_border_color;
+    Color m_inactive_window_border_color2;
     Color m_inactive_window_title_color;
     Color m_dragging_window_border_color;
+    Color m_dragging_window_border_color2;
     Color m_dragging_window_title_color;
 
     HashTable<WSWindow*> m_windows;

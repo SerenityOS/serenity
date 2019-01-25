@@ -29,6 +29,10 @@ public:
     Color(byte r, byte g, byte b) : m_value((r << 16) | (g << 8) | b) { }
     Color(RGBA32 rgba) : m_value(rgba) { }
 
+    int red() const { return (m_value >> 16) & 0xff; }
+    int green() const { return (m_value >> 8) & 0xff; }
+    int blue() const { return m_value & 0xff; }
+
     RGBA32 value() const { return m_value; }
 
 private:

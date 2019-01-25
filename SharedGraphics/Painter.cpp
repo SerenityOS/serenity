@@ -74,6 +74,45 @@ void Painter::fill_rect(const Rect& a_rect, Color color)
     }
 }
 
+void Painter::fill_rect_with_gradient(const Rect& a_rect, Color gradient_start, Color gradient_end)
+{
+#ifdef NO_FPU
+    return fill_rect(a_rect, gradient_start);
+#endif
+    auto rect = a_rect;
+    rect.move_by(m_translation);
+    auto clipped_rect = Rect::intersection(rect, m_clip_rect);
+    if (clipped_rect.is_empty())
+        return;
+
+    int x_offset = clipped_rect.x() - rect.x();
+
+    RGBA32* dst = m_target->scanline(clipped_rect.top()) + clipped_rect.left();
+    const unsigned dst_skip = m_target->width();
+
+    float increment = (1.0/((rect.width())/255.0));
+
+    int r2 = gradient_start.red();
+    int g2 = gradient_start.green();
+    int b2 = gradient_start.blue();
+    int r1 = gradient_end.red();
+    int g1 = gradient_end.green();
+    int b1 = gradient_end.blue();
+
+    for (int i = clipped_rect.height() - 1; i >= 0; --i) {
+        float c = x_offset * increment;
+        for (int j = 0; j < clipped_rect.width(); ++j) {
+            dst[j] = Color(
+                r1 / 255.0 * c + r2 / 255.0 * (255 - c),
+                g1 / 255.0 * c + g2 / 255.0 * (255 - c),
+                b1 / 255.0 * c + b2 / 255.0 * (255 - c)
+            ).value();
+            c += increment;
+        }
+        dst += dst_skip;
+    }
+}
+
 void Painter::draw_rect(const Rect& a_rect, Color color)
 {
     Rect rect = a_rect;

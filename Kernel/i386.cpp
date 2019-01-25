@@ -150,6 +150,35 @@ void exception_6_handler(RegisterDump& regs)
     current->crash();
 }
 
+// 7: FPU exception
+EH_ENTRY_NO_CODE(7);
+void exception_7_handler(RegisterDump& regs)
+{
+    (void)regs;
+#ifdef FPU_EXCEPTION_DEBUG
+    kprintf("%s FPU exception: %u(%s)\n", current->isRing0() ? "Kernel" : "Process", current->pid(), current->name().characters());
+
+    word ss;
+    dword esp;
+    if (current->isRing0()) {
+        ss = regs.ds;
+        esp = regs.esp;
+    } else {
+        ss = regs.ss_if_crossRing;
+        esp = regs.esp_if_crossRing;
+    }
+
+    kprintf("pc=%w:%x ds=%w es=%w fs=%w gs=%w\n", regs.cs, regs.eip, regs.ds, regs.es, regs.fs, regs.gs);
+    kprintf("stk=%w:%x\n", ss, esp);
+    kprintf("eax=%x ebx=%x ecx=%x edx=%x\n", regs.eax, regs.ebx, regs.ecx, regs.edx);
+    kprintf("ebp=%x esp=%x esi=%x edi=%x\n", regs.ebp, esp, regs.esi, regs.edi);
+#endif
+
+    // FIXME: Do stuff.
+    asm volatile("clts");
+}
+
+
 // 13: General Protection Fault
 EH_ENTRY(13);
 void exception_13_handler(RegisterDumpWithExceptionCode& regs)
@@ -280,7 +309,6 @@ EH(2, "Unknown error")
 EH(3, "Breakpoint")
 EH(4, "Overflow")
 EH(5, "Bounds check")
-EH(7, "Coprocessor not available")
 EH(8, "Double fault")
 EH(9, "Coprocessor segment overrun")
 EH(10, "Invalid TSS")
@@ -408,7 +436,7 @@ void idt_init()
     register_interrupt_handler(0x04, _exception4);
     register_interrupt_handler(0x05, _exception5);
     register_interrupt_handler(0x06, exception_6_entry);
-    register_interrupt_handler(0x07, _exception7);
+    register_interrupt_handler(0x07, exception_7_entry);
     register_interrupt_handler(0x08, _exception8);
     register_interrupt_handler(0x09, _exception9);
     register_interrupt_handler(0x0a, _exception10);
