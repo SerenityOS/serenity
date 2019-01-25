@@ -4,6 +4,11 @@
 
 typedef dword RGBA32;
 
+inline constexpr dword make_rgb(byte r, byte g, byte b)
+{
+    return ((r << 16) | (g << 8) | b);
+}
+
 class Color {
 public:
     enum NamedColor {

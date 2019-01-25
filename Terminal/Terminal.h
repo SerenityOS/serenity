@@ -52,22 +52,22 @@ private:
         {
             foreground_color = 7;
             background_color = 0;
-            bold = false;
-            dirty = true;
+            //bold = false;
         }
         unsigned foreground_color : 4;
         unsigned background_color : 4;
-        bool bold : 1;
-        bool dirty : 1;
+        //bool bold : 1;
     };
 
     struct Line {
         explicit Line(word columns);
         ~Line();
         void clear();
+        bool has_only_one_background_color() const;
         byte* characters { nullptr };
         Attribute* attributes { nullptr };
         bool needs_invalidation { false };
+        bool dirty { false };
         word length { 0 };
     };
     Line& line(size_t index) { ASSERT(index < m_rows); return *m_lines[index]; }

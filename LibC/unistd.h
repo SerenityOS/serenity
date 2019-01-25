@@ -8,6 +8,7 @@ __BEGIN_DECLS
 
 extern char** environ;
 
+int read_tsc(unsigned* lsw, unsigned* msw);
 inline int getpagesize() { return 4096; }
 pid_t fork();
 int execve(const char* filename, char* const argv[], char* const envp[]);
