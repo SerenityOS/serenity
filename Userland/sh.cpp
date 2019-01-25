@@ -19,6 +19,7 @@ struct GlobalState {
     char hostname[32];
     pid_t sid;
     uid_t uid;
+    termios termios;
 };
 static GlobalState* g;
 
@@ -364,6 +365,8 @@ int main(int, char**)
     g->sid = setsid();
     tcsetpgrp(0, getpgrp());
 
+    tcgetattr(0, &g->termios);
+
     {
         struct sigaction sa;
         sa.sa_handler = handle_sigint;
@@ -414,11 +417,22 @@ int main(int, char**)
         }
         for (ssize_t i = 0; i < nread; ++i) {
             char ch = keybuf[i];
-            if (ch == 8) {
+            if (ch == 0)
+                continue;
+            if (ch == 8 || ch == g->termios.c_cc[VERASE]) {
                 if (linedx == 0)
                     continue;
                 linebuf[--linedx] = '\0';
-                putchar(ch);
+                putchar(8);
+                fflush(stdout);
+                continue;
+            }
+            if (ch == g->termios.c_cc[VKILL]) {
+                if (linedx == 0)
+                    continue;
+                for (; linedx; --linedx)
+                    putchar(0x8);
+                linebuf[0] = '\0';
                 fflush(stdout);
                 continue;
             }
