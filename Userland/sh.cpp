@@ -20,6 +20,7 @@ struct GlobalState {
     pid_t sid;
     uid_t uid;
     termios termios;
+    bool was_interrupted { false };
 };
 static GlobalState* g;
 
@@ -50,7 +51,7 @@ void did_receive_signal(int signum)
 
 void handle_sigint(int)
 {
-    printf("Interrupt received by sh\n");
+    g->was_interrupted = true;
 }
 
 static int sh_busy(int, char**)
@@ -409,7 +410,15 @@ int main(int, char**)
         ssize_t nread = read(0, keybuf, sizeof(keybuf));
         if (nread < 0) {
             if (errno == EINTR) {
-                // Ignore. :^)
+                ASSERT(g->was_interrupted);
+                if (linedx != 0)
+                    printf("^C");
+                g->was_interrupted = false;
+                linebuf[0] = '\0';
+                linedx = 0;
+                putchar('\n');
+                prompt();
+                continue;
             } else {
                 perror("read failed");
                 return 2;
