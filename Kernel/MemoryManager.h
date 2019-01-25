@@ -246,6 +246,7 @@ private:
     void remove_identity_mapping(PageDirectory&, LinearAddress, size_t);
 
     static Region* region_from_laddr(Process&, LinearAddress);
+    static const Region* region_from_laddr(const Process&, LinearAddress);
 
     bool copy_on_write(Region&, unsigned page_index_in_region);
     bool page_in_from_inode(Region&, unsigned page_index_in_region);

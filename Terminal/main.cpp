@@ -90,7 +90,7 @@ int main(int, char**)
         }
 
         if (FD_ISSET(ptm_fd, &rfds)) {
-            byte buffer[1024];
+            byte buffer[4096];
             ssize_t nread = read(ptm_fd, buffer, sizeof(buffer));
             if (nread < 0) {
                 dbgprintf("Terminal read error: %s\n", strerror(errno));

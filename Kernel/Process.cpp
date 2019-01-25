@@ -1605,20 +1605,34 @@ bool Process::validate_read_from_kernel(LinearAddress laddr) const
 
 bool Process::validate_read(const void* address, size_t size) const
 {
-    if ((reinterpret_cast<dword>(address) & PAGE_MASK) != ((reinterpret_cast<dword>(address) + (size - 1)) & PAGE_MASK)) {
-        if (!MM.validate_user_read(*this, LinearAddress((dword)address).offset(size)))
+    if (isRing0())
+        return true;
+    ASSERT(size);
+    if (!size)
+        return false;
+    LinearAddress first_address((dword)address);
+    LinearAddress last_address = first_address.offset(size - 1);
+    if (first_address.page_base() != last_address.page_base()) {
+        if (!MM.validate_user_read(*this, last_address))
             return false;
     }
-    return MM.validate_user_read(*this, LinearAddress((dword)address));
+    return MM.validate_user_read(*this, first_address);
 }
 
 bool Process::validate_write(void* address, size_t size) const
 {
-    if ((reinterpret_cast<dword>(address) & PAGE_MASK) != ((reinterpret_cast<dword>(address) + (size - 1)) & PAGE_MASK)) {
-        if (!MM.validate_user_write(*this, LinearAddress((dword)address).offset(size)))
+    if (isRing0())
+        return true;
+    ASSERT(size);
+    if (!size)
+        return false;
+    LinearAddress first_address((dword)address);
+    LinearAddress last_address = first_address.offset(size - 1);
+    if (first_address.page_base() != last_address.page_base()) {
+        if (!MM.validate_user_write(*this, last_address))
             return false;
     }
-    return MM.validate_user_write(*this, LinearAddress((dword)address));
+    return MM.validate_user_write(*this, last_address);
 }
 
 pid_t Process::sys$getsid(pid_t pid)
