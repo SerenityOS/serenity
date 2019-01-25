@@ -138,6 +138,10 @@ void init()
     gdt_init();
     idt_init();
 
+#ifndef NO_FPU
+    asm volatile("fninit");
+#endif
+
     VFS::initialize_globals();
     vfs = new VFS;
 

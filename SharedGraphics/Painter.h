@@ -23,6 +23,7 @@ public:
     explicit Painter(GraphicsBitmap&);
     ~Painter();
     void fill_rect(const Rect&, Color);
+    void fill_rect_with_gradient(const Rect&, Color gradient_start, Color gradient_end);
     void draw_rect(const Rect&, Color);
     void draw_bitmap(const Point&, const CharacterBitmap&, Color = Color());
     void set_pixel(const Point&, Color);

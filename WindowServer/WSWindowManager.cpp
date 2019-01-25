@@ -121,12 +121,15 @@ WSWindowManager::WSWindowManager()
     m_front_painter = make<Painter>(*m_front_bitmap);
     m_back_painter = make<Painter>(*m_back_bitmap);
 
-    m_background_color = Color(0, 72, 96);
-    m_active_window_border_color = Color(0, 64, 192);
+    m_background_color = Color(50, 50, 50);
+    m_active_window_border_color = Color(110, 34, 9);
+    m_active_window_border_color2 = Color(244, 202, 158);
     m_active_window_title_color = Color::White;
-    m_inactive_window_border_color = Color(64, 64, 64);
-    m_inactive_window_title_color = Color::White;
-    m_dragging_window_border_color = Color(32, 96, 216);
+    m_inactive_window_border_color = Color(128, 128, 128);
+    m_inactive_window_border_color2 = Color(192, 192, 192);
+    m_inactive_window_title_color = Color(213, 208, 199);
+    m_dragging_window_border_color = Color(161, 50, 13);
+    m_dragging_window_border_color2 = Color(250, 220, 187);
     m_dragging_window_title_color = Color::White;
 
     m_cursor_bitmap_inner = CharacterBitmap::create_from_ascii(cursor_bitmap_inner_ascii, 12, 17);
@@ -161,25 +164,29 @@ void WSWindowManager::paint_window_frame(WSWindow& window)
 
     Color title_color;
     Color border_color;
+    Color border_color2;
 
     if (&window == m_drag_window.ptr()) {
         border_color = m_dragging_window_border_color;
+        border_color2 = m_dragging_window_border_color2;
         title_color = m_dragging_window_title_color;
     } else if (&window == m_active_window.ptr()) {
         border_color = m_active_window_border_color;
+        border_color2 = m_active_window_border_color2;
         title_color = m_active_window_title_color;
     } else {
         border_color = m_inactive_window_border_color;
+        border_color2 = m_inactive_window_border_color2;
         title_color = m_inactive_window_title_color;
     }
 
-    m_back_painter->fill_rect(titleBarRect, border_color);
+    m_back_painter->fill_rect_with_gradient(titleBarRect, border_color, border_color2);
     m_back_painter->draw_rect(borderRect, Color::MidGray);
     m_back_painter->draw_rect(outerRect, border_color);
     m_back_painter->draw_rect(inner_border_rect, border_color);
     m_back_painter->draw_text(titleBarTitleRect, window.title(), Painter::TextAlignment::CenterLeft, title_color);
 
-    Color metadata_color(204, 204, 204);
+    Color metadata_color(96, 96, 96);
     char buffer[64];
     ksprintf(buffer, "%d:%d", window.pid(), window.window_id());
     m_back_painter->draw_text(titleBarTitleRect, buffer, Painter::TextAlignment::CenterRight, metadata_color);
