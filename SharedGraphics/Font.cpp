@@ -1,5 +1,8 @@
 #include "Font.h"
 #include "Peanut8x10.h"
+#include "Liza8x10.h"
+
+#define DEFAULT_FONT_NAME Liza8x10
 
 static Font* s_default_font;
 
@@ -11,7 +14,7 @@ void Font::initialize()
 Font& Font::default_font()
 {
     if (!s_default_font)
-        s_default_font = adopt(*new Font(Peanut8x10::glyphs, Peanut8x10::glyph_width, Peanut8x10::glyph_height, Peanut8x10::first_glyph, Peanut8x10::last_glyph)).leakRef();
+        s_default_font = adopt(*new Font(DEFAULT_FONT_NAME::glyphs, DEFAULT_FONT_NAME::glyph_width, DEFAULT_FONT_NAME::glyph_height, DEFAULT_FONT_NAME::first_glyph, DEFAULT_FONT_NAME::last_glyph)).leakRef();
     return *s_default_font;
 }
 
@@ -22,7 +25,7 @@ Font::Font(const char* const* glyphs, byte glyph_width, byte glyph_height, byte 
     , m_first_glyph(first_glyph)
     , m_last_glyph(last_glyph)
 {
-    m_error_bitmap = CharacterBitmap::create_from_ascii(Peanut8x10::error_glyph, m_glyph_width, m_glyph_height);
+    m_error_bitmap = CharacterBitmap::create_from_ascii(DEFAULT_FONT_NAME::error_glyph, m_glyph_width, m_glyph_height);
 }
 
 Font::~Font()
