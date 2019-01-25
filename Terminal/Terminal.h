@@ -26,6 +26,7 @@ private:
     void put_character_at(unsigned row, unsigned column, byte ch);
     void invalidate_cursor();
     void invalidate_window(const Rect& = Rect());
+    void set_window_title(const String&);
 
     void escape$A(const Vector<unsigned>&);
     void escape$B(const Vector<unsigned>&);
@@ -88,6 +89,7 @@ private:
     Attribute& attribute_at(word row, word column);
 
     void execute_escape_sequence(byte final);
+    void execute_xterm_command();
 
     enum EscapeState {
         Normal,
@@ -95,10 +97,16 @@ private:
         ExpectParameter,
         ExpectIntermediate,
         ExpectFinal,
+
+        ExpectXtermParameter1,
+        ExpectXtermParameter2,
+        ExpectXtermFinal,
     };
     EscapeState m_escape_state { Normal };
     Vector<byte> m_parameters;
     Vector<byte> m_intermediates;
+    Vector<byte> m_xterm_param1;
+    Vector<byte> m_xterm_param2;
     byte* m_horizontal_tabs { nullptr };
     bool m_belling { false };
 

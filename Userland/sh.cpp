@@ -26,8 +26,10 @@ static void prompt()
 {
     if (g->uid == 0)
         printf("# ");
-    else
+    else {
+        printf("\033]0;%s@%s:%s\007", g->username.characters(), g->hostname, g->cwd.characters());
         printf("\033[31;1m%s\033[0m@\033[37;1m%s\033[0m:\033[32;1m%s\033[0m$> ", g->username.characters(), g->hostname, g->cwd.characters());
+    }
     fflush(stdout);
 }
 
