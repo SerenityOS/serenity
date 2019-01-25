@@ -61,9 +61,18 @@ private:
         bool dirty : 1;
     };
 
-    byte* m_buffer { nullptr };
-    Attribute* m_attributes { nullptr };
-    bool* m_row_needs_invalidation { nullptr };
+    struct Line {
+        explicit Line(word columns);
+        ~Line();
+        void clear();
+        byte* characters { nullptr };
+        Attribute* attributes { nullptr };
+        bool needs_invalidation { false };
+        word length { 0 };
+    };
+    Line& line(size_t index) { ASSERT(index < m_rows); return *m_lines[index]; }
+
+    Line** m_lines { nullptr };
 
     word m_columns { 0 };
     word m_rows { 0 };
