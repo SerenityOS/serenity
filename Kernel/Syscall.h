@@ -82,7 +82,9 @@
     __ENUMERATE_SYSCALL(gui_set_window_rect) \
 
 
+#ifdef SERENITY
 struct fd_set;
+#endif
 
 namespace Syscall {
 
@@ -104,6 +106,7 @@ inline constexpr const char* toString(Function function)
     return "Unknown";
 }
 
+#ifdef SERENITY
 struct SC_mmap_params {
     uint32_t addr;
     uint32_t size;
@@ -154,6 +157,7 @@ inline dword invoke(Function function, T1 arg1, T2 arg2, T3 arg3)
     asm volatile("int $0x80":"=a"(result):"a"(function),"d"((dword)arg1),"c"((dword)arg2),"b"((dword)arg3):"memory");
     return result;
 }
+#endif
 
 }
 
