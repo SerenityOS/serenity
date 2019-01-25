@@ -121,12 +121,11 @@ WSWindowManager::WSWindowManager()
     m_front_painter = make<Painter>(*m_front_bitmap);
     m_back_painter = make<Painter>(*m_back_bitmap);
 
+    m_background_color = Color(0, 72, 96);
     m_active_window_border_color = Color(0, 64, 192);
     m_active_window_title_color = Color::White;
-
     m_inactive_window_border_color = Color(64, 64, 64);
     m_inactive_window_title_color = Color::White;
-
     m_dragging_window_border_color = Color(32, 96, 216);
     m_dragging_window_title_color = Color::White;
 
@@ -332,7 +331,7 @@ void WSWindowManager::compose()
             continue;
         }
         //dbgprintf("Repaint root %d,%d %dx%d\n", dirty_rect.x(), dirty_rect.y(), dirty_rect.width(), dirty_rect.height());
-        m_back_painter->fill_rect(dirty_rect, Color(0, 72, 96));
+        m_back_painter->fill_rect(dirty_rect, m_background_color);
     }
     for (auto* window = m_windows_in_order.head(); window; window = window->next()) {
         WSWindowLocker locker(*window);
