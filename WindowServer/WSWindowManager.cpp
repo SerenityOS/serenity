@@ -165,23 +165,27 @@ void WSWindowManager::paint_window_frame(WSWindow& window)
     Color title_color;
     Color border_color;
     Color border_color2;
+    Color middle_border_color;
 
     if (&window == m_drag_window.ptr()) {
         border_color = m_dragging_window_border_color;
         border_color2 = m_dragging_window_border_color2;
         title_color = m_dragging_window_title_color;
+        middle_border_color = Color::White;
     } else if (&window == m_active_window.ptr()) {
         border_color = m_active_window_border_color;
         border_color2 = m_active_window_border_color2;
         title_color = m_active_window_title_color;
+        middle_border_color = Color::MidGray;
     } else {
         border_color = m_inactive_window_border_color;
         border_color2 = m_inactive_window_border_color2;
         title_color = m_inactive_window_title_color;
+        middle_border_color = Color::MidGray;
     }
 
     m_back_painter->fill_rect_with_gradient(titleBarRect, border_color, border_color2);
-    m_back_painter->draw_rect(borderRect, Color::MidGray);
+    m_back_painter->draw_rect(borderRect, middle_border_color);
     m_back_painter->draw_rect(outerRect, border_color);
     m_back_painter->draw_rect(inner_border_rect, border_color);
     m_back_painter->draw_text(titleBarTitleRect, window.title(), Painter::TextAlignment::CenterLeft, title_color);
