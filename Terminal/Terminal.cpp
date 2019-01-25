@@ -3,12 +3,12 @@
 #include <SharedGraphics/Font.h>
 #include <SharedGraphics/Painter.h>
 #include <AK/StdLibExtras.h>
-#include <unistd.h>
-#include <stdio.h>
-#include <gui.h>
+#include <LibC/stdlib.h>
+#include <LibC/unistd.h>
+#include <LibC/stdio.h>
+#include <LibC/gui.h>
 
 //#define TERMINAL_DEBUG
-#define FAST_SCROLL
 
 void Terminal::create_window()
 {
@@ -51,27 +51,45 @@ Terminal::Terminal()
     // Rightmost column is always last tab on line.
     m_horizontal_tabs[columns() - 1] = 1;
 
-    m_row_needs_invalidation = (bool*)(malloc(rows() * sizeof(bool)));
-    m_buffer = (byte*)malloc(rows() * columns());
-    m_attributes = (Attribute*)malloc(rows() * columns() * sizeof(Attribute));
-    memset(m_buffer, ' ', m_rows * m_columns);
-    for (size_t i = 0; i < rows() * columns(); ++i)
-        m_attributes[i].reset();
+    m_lines = new Line*[rows()];
+    for (size_t i = 0; i < rows(); ++i)
+        m_lines[i] = new Line(columns());
+}
+
+Terminal::Line::Line(word columns)
+    : length(columns)
+{
+    characters = new byte[length];
+    attributes = new Attribute[length];
+    needs_invalidation = false;
+    memset(characters, ' ', length);
+}
+
+Terminal::Line::~Line()
+{
+    delete [] characters;
+    delete [] attributes;
+}
+
+void Terminal::Line::clear()
+{
+    memset(characters, ' ', length);
+    for (word i = 0 ; i < length; ++i)
+        attributes[i].reset();
 }
 
 Terminal::~Terminal()
 {
-    free(m_row_needs_invalidation);
-    free(m_buffer);
-    free(m_attributes);
+    for (size_t i = 0; i < m_rows; ++i)
+        delete m_lines[i];
+    delete [] m_lines;
     free(m_horizontal_tabs);
 }
 
 void Terminal::clear()
 {
-    memset(m_buffer, ' ', m_rows * m_columns);
-    for (size_t i = 0; i < rows() * columns(); ++i)
-        m_attributes[i].reset();
+    for (size_t i = 0; i < rows(); ++i)
+        line(i).clear();
     set_cursor(0, 0);
 }
 
@@ -348,20 +366,13 @@ void Terminal::scroll_up()
 {
     word new_row = m_cursor_row;
     if (m_cursor_row == (rows() - 1)) {
-        memcpy(m_buffer, m_buffer + m_columns, m_columns * (m_rows - 1));
-#ifdef FAST_SCROLL
-        ++m_rows_to_scroll_backing_store;
-#else
-        for (size_t i = 0; i < m_rows * m_columns; ++i) {
-            m_attributes[i].dirty = true;
-        }
-#endif
-        memset(&m_buffer[(m_rows - 1) * m_columns], ' ', m_columns);
-        // NOTE: We have to invalidate the cursor before memcpy()'ing the attributes.
+        // NOTE: We have to invalidate the cursor first.
         invalidate_cursor();
-        memcpy(m_attributes, m_attributes + m_columns, m_columns * (m_rows - 1) * sizeof(Attribute));
-        for (size_t i = 0; i < m_columns; ++i)
-            m_attributes[((m_rows - 1) * m_columns) + i].reset();
+        delete m_lines[0];
+        for (word row = 1; row < rows(); ++row)
+            m_lines[row - 1] = m_lines[row];
+        m_lines[m_rows - 1] = new Line(m_columns);
+        ++m_rows_to_scroll_backing_store;
     } else {
         ++new_row;
     }
@@ -386,9 +397,8 @@ void Terminal::put_character_at(unsigned row, unsigned column, byte ch)
 {
     ASSERT(row < rows());
     ASSERT(column < columns());
-    word cur = (row * m_columns) + (column);
-    m_buffer[cur] = ch;
-    m_attributes[cur] = m_current_attribute;
+    line(row).characters[column] = ch;
+    line(row).attributes[column] = m_current_attribute;
 }
 
 void Terminal::on_char(byte ch)
@@ -503,7 +513,7 @@ inline Terminal::Attribute& Terminal::attribute_at(word row, word column)
 {
     ASSERT(row < m_rows);
     ASSERT(column < m_columns);
-    return m_attributes[(row * m_columns) + column];
+    return line(row).attributes[column];
 }
 
 void Terminal::paint()
@@ -511,9 +521,9 @@ void Terminal::paint()
     Rect rect { 0, 0, m_pixel_width, m_pixel_height };
     Painter painter(*m_backing);
 
-    memset(m_row_needs_invalidation, 0, rows() * sizeof(bool));
+    for (size_t i = 0; i < rows(); ++i)
+        line(i).needs_invalidation = false;
 
-#ifdef FAST_SCROLL
     if (m_rows_to_scroll_backing_store && m_rows_to_scroll_backing_store < m_rows) {
         int first_scanline = m_inset;
         int second_scanline = m_inset + (m_rows_to_scroll_backing_store * m_line_height);
@@ -528,7 +538,6 @@ void Terminal::paint()
         attribute_at(max(0, m_cursor_row - m_rows_to_scroll_backing_store), m_cursor_column).dirty = true;
     }
     m_rows_to_scroll_backing_store = 0;
-#endif
 
     for (word row = 0; row < m_rows; ++row) {
         for (word column = 0; column < m_columns; ++column) {
@@ -536,8 +545,8 @@ void Terminal::paint()
             if (!attribute.dirty)
                 continue;
             attribute.dirty = false;
-            m_row_needs_invalidation[row] = true;
-            char ch = m_buffer[(row * m_columns) + (column)];
+            line(row).needs_invalidation = true;
+            char ch = line(row).characters[column];
             auto character_rect = glyph_rect(row, column);
             auto character_background = ansi_color(attribute.background_color);
             painter.fill_rect(character_rect, character_background);
@@ -553,7 +562,7 @@ void Terminal::paint()
     else
         painter.draw_rect(cursor_rect, Color::MidGray);
 
-    m_row_needs_invalidation[m_cursor_row] = true;
+    line(m_cursor_row).needs_invalidation = true;
 
     if (m_belling) {
         m_need_full_invalidation = true;
@@ -568,7 +577,7 @@ void Terminal::paint()
 
     Rect invalidation_rect;
     for (int i = 0; i < m_rows; ++i) {
-        if (m_row_needs_invalidation[i])
+        if (line(i).needs_invalidation)
             invalidation_rect = invalidation_rect.united(row_rect(i));
     }
     invalidate_window(invalidation_rect);

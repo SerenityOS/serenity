@@ -93,6 +93,7 @@ int main(int, char**)
             byte buffer[1024];
             ssize_t nread = read(ptm_fd, buffer, sizeof(buffer));
             if (nread < 0) {
+                dbgprintf("Terminal read error: %s\n", strerror(errno));
                 perror("read(ptm)");
                 continue;
             }
