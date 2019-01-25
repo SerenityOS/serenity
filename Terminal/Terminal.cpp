@@ -10,6 +10,33 @@
 
 //#define TERMINAL_DEBUG
 
+struct Stopwatch {
+public:
+    Stopwatch(const char* name)
+        : m_name(name)
+    {
+        read_tsc(&m_start_lsw, &m_start_msw);
+    }
+
+    ~Stopwatch()
+    {
+        dword end_lsw;
+        dword end_msw;
+        read_tsc(&end_lsw, &end_msw);
+        if (m_start_msw != end_msw) {
+            dbgprintf("stopwatch: differing msw, no result for %s\n", m_name);
+        }
+        dword diff = end_lsw - m_start_lsw;
+        dbgprintf("Stopwatch(%s): %u ticks\n", m_name, diff);
+    }
+
+private:
+    const char* m_name { nullptr };
+    dword m_start_lsw { 0 };
+    dword m_start_msw { 0 };
+};
+
+
 void Terminal::create_window()
 {
     m_pixel_width = m_columns * font().glyph_width() + m_inset * 2;
@@ -73,6 +100,7 @@ Terminal::Line::~Line()
 
 void Terminal::Line::clear()
 {
+    dirty = true;
     memset(characters, ' ', length);
     for (word i = 0 ; i < length; ++i)
         attributes[i].reset();
@@ -144,26 +172,25 @@ enum ANSIColor : byte {
 
 static inline Color ansi_color(unsigned color)
 {
-    switch (color) {
-    case ANSIColor::Black: return Color(0, 0, 0);
-    case ANSIColor::Red: return Color(225, 56, 43);
-    case ANSIColor::Green: return Color(57, 181, 74);
-    case ANSIColor::Brown: return Color(255, 199, 6);
-    case ANSIColor::Blue: return Color(0, 111, 184);
-    case ANSIColor::Magenta: return Color(118, 38, 113);
-    case ANSIColor::Cyan: return Color(44, 181, 233);
-    case ANSIColor::LightGray: return Color(204, 204, 204);
-    case ANSIColor::DarkGray: return Color(128, 128, 128);
-    case ANSIColor::BrightRed: return Color(255, 0, 0);
-    case ANSIColor::BrightGreen: return Color(0, 255, 0);
-    case ANSIColor::Yellow: return Color(255, 255, 0);
-    case ANSIColor::BrightBlue: return Color(0, 0, 255);
-    case ANSIColor::BrightMagenta: return Color(255, 0, 255);
-    case ANSIColor::BrightCyan: return Color(0, 255, 255);
-    case ANSIColor::White: return Color(255, 255, 255);
-    }
-    ASSERT_NOT_REACHED();
-    return Color::White;
+    static const RGBA32 s_ansi_color[16] = {
+        make_rgb(0, 0, 0),          // Black
+        make_rgb(225, 56, 43),      // Red
+        make_rgb(57, 181, 74),      // Green
+        make_rgb(255, 199, 6),      // Brown
+        make_rgb(0, 11, 184),       // Blue
+        make_rgb(118, 38, 113),     // Magenta
+        make_rgb(44, 181, 233),     // Cyan
+        make_rgb(204, 204, 204),    // LightGray
+        make_rgb(128, 128, 128),    // DarkGray
+        make_rgb(255, 0, 0),        // BrightRed
+        make_rgb(0, 255, 0),        // BrightGreen
+        make_rgb(255, 255, 0),      // Yellow
+        make_rgb(0, 0, 255),        // BrightBlue
+        make_rgb(255, 0, 255),      // BrightMagenta
+        make_rgb(0, 255, 255),      // BrightCyan
+        make_rgb(255, 255, 255),    // White
+    };
+    return s_ansi_color[color];
 }
 
 void Terminal::escape$m(const Vector<unsigned>& params)
@@ -176,7 +203,7 @@ void Terminal::escape$m(const Vector<unsigned>& params)
             break;
         case 1:
             // Bold
-            m_current_attribute.bold = true;
+            //m_current_attribute.bold = true;
             break;
         case 30:
         case 31:
@@ -516,8 +543,22 @@ inline Terminal::Attribute& Terminal::attribute_at(word row, word column)
     return line(row).attributes[column];
 }
 
+bool Terminal::Line::has_only_one_background_color() const
+{
+    if (!length)
+        return true;
+    // FIXME: Cache this result?
+    auto color = attributes[0].background_color;
+    for (size_t i = 1; i < length; ++i) {
+        if (attributes[i].background_color != color)
+            return false;
+    }
+    return true;
+}
+
 void Terminal::paint()
 {
+    Stopwatch sw("Terminal::paint");
     Rect rect { 0, 0, m_pixel_width, m_pixel_height };
     Painter painter(*m_backing);
 
@@ -535,21 +576,27 @@ void Terminal::paint()
             scanlines_to_copy * m_pixel_width
         );
         m_need_full_invalidation = true;
-        attribute_at(max(0, m_cursor_row - m_rows_to_scroll_backing_store), m_cursor_column).dirty = true;
+        line(max(0, m_cursor_row - m_rows_to_scroll_backing_store)).dirty = true;
     }
     m_rows_to_scroll_backing_store = 0;
 
     for (word row = 0; row < m_rows; ++row) {
+        auto& line = this->line(row);
+        if (!line.dirty)
+            continue;
+        line.dirty = false;
+        bool has_only_one_background_color = line.has_only_one_background_color();
+        if (has_only_one_background_color)
+            painter.fill_rect(row_rect(row), line.attributes[0].background_color);
         for (word column = 0; column < m_columns; ++column) {
-            auto& attribute = attribute_at(row, column);
-            if (!attribute.dirty)
-                continue;
-            attribute.dirty = false;
-            line(row).needs_invalidation = true;
-            char ch = line(row).characters[column];
+            auto& attribute = line.attributes[column];
+            line.needs_invalidation = true;
+            char ch = line.characters[column];
             auto character_rect = glyph_rect(row, column);
-            auto character_background = ansi_color(attribute.background_color);
-            painter.fill_rect(character_rect, character_background);
+            if (!has_only_one_background_color) {
+                auto character_background = ansi_color(attribute.background_color);
+                painter.fill_rect(character_rect, character_background);
+            }
             if (ch == ' ')
                 continue;
             painter.draw_glyph(character_rect.location(), ch, ansi_color(attribute.foreground_color));
@@ -604,5 +651,5 @@ void Terminal::set_in_active_window(bool b)
 
 void Terminal::invalidate_cursor()
 {
-    attribute_at(m_cursor_row, m_cursor_column).dirty = true;
+    line(m_cursor_row).dirty = true;
 }

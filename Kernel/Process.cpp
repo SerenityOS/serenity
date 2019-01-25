@@ -2081,3 +2081,13 @@ int Process::sys$unlink(const char* pathname)
         return error;
     return 0;
 }
+
+int Process::sys$read_tsc(dword* lsw, dword* msw)
+{
+    if (!validate_write_typed(lsw))
+        return -EFAULT;
+    if (!validate_write_typed(msw))
+        return -EFAULT;
+    read_tsc(*lsw, *msw);
+    return 0;
+}

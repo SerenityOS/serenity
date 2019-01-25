@@ -70,6 +70,7 @@
     __ENUMERATE_SYSCALL(select) \
     __ENUMERATE_SYSCALL(unlink) \
     __ENUMERATE_SYSCALL(poll) \
+    __ENUMERATE_SYSCALL(read_tsc) \
     __ENUMERATE_SYSCALL(gui_create_window) \
     __ENUMERATE_SYSCALL(gui_destroy_window) \
     __ENUMERATE_SYSCALL(gui_get_window_backing_store) \
