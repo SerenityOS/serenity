@@ -208,7 +208,18 @@ Region* MemoryManager::region_from_laddr(Process& process, LinearAddress laddr)
         if (region->contains(laddr))
             return region.ptr();
     }
-    kprintf("%s(%u) Couldn't find region for L%x (CR3=%x)\n", process.name().characters(), process.pid(), laddr.get(), process.page_directory().cr3());
+    dbgprintf("%s(%u) Couldn't find region for L%x (CR3=%x)\n", process.name().characters(), process.pid(), laddr.get(), process.page_directory().cr3());
+    return nullptr;
+}
+
+const Region* MemoryManager::region_from_laddr(const Process& process, LinearAddress laddr)
+{
+    // FIXME: Use a binary search tree (maybe red/black?) or some other more appropriate data structure!
+    for (auto& region : process.m_regions) {
+        if (region->contains(laddr))
+            return region.ptr();
+    }
+    dbgprintf("%s(%u) Couldn't find region for L%x (CR3=%x)\n", process.name().characters(), process.pid(), laddr.get(), process.page_directory().cr3());
     return nullptr;
 }
 
@@ -515,34 +526,14 @@ bool MemoryManager::map_region(Process& process, Region& region)
 
 bool MemoryManager::validate_user_read(const Process& process, LinearAddress laddr) const
 {
-    dword pageDirectoryIndex = (laddr.get() >> 22) & 0x3ff;
-    dword pageTableIndex = (laddr.get() >> 12) & 0x3ff;
-    auto pde = PageDirectoryEntry(&const_cast<Process&>(process).page_directory().entries()[pageDirectoryIndex]);
-    if (!pde.is_present())
-        return false;
-    auto pte = PageTableEntry(&pde.pageTableBase()[pageTableIndex]);
-    if (!pte.is_present())
-        return false;
-    if (process.isRing3() && !pte.is_user_allowed())
-        return false;
-    return true;
+    auto* region = region_from_laddr(process, laddr);
+    return region && region->is_readable();
 }
 
 bool MemoryManager::validate_user_write(const Process& process, LinearAddress laddr) const
 {
-    dword pageDirectoryIndex = (laddr.get() >> 22) & 0x3ff;
-    dword pageTableIndex = (laddr.get() >> 12) & 0x3ff;
-    auto pde = PageDirectoryEntry(&const_cast<Process&>(process).page_directory().entries()[pageDirectoryIndex]);
-    if (!pde.is_present())
-        return false;
-    auto pte = PageTableEntry(&pde.pageTableBase()[pageTableIndex]);
-    if (!pte.is_present())
-        return false;
-    if (process.isRing3() && !pte.is_user_allowed())
-        return false;
-    if (!pte.is_writable())
-        return false;
-    return true;
+    auto* region = region_from_laddr(process, laddr);
+    return region && region->is_writable();
 }
 
 RetainPtr<Region> Region::clone()
