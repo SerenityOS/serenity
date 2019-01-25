@@ -356,6 +356,24 @@ void Terminal::escape$J(const Vector<unsigned>& params)
     }
 }
 
+void Terminal::execute_xterm_command()
+{
+    bool ok;
+    unsigned value = parseUInt(String((const char*)m_xterm_param1.data(), m_xterm_param1.size()), ok);
+    if (ok) {
+        switch (value) {
+        case 0:
+            set_window_title(String((const char*)m_xterm_param2.data(), m_xterm_param2.size()));
+            break;
+        default:
+            notImplemented();
+            break;
+        }
+    }
+    m_xterm_param1.clear_with_capacity();
+    m_xterm_param2.clear_with_capacity();
+}
+
 void Terminal::execute_escape_sequence(byte final)
 {
     auto paramparts = String((const char*)m_parameters.data(), m_parameters.size()).split(';');
@@ -437,9 +455,31 @@ void Terminal::on_char(byte ch)
     case ExpectBracket:
         if (ch == '[')
             m_escape_state = ExpectParameter;
+        else if (ch == ']')
+            m_escape_state = ExpectXtermParameter1;
         else
             m_escape_state = Normal;
         return;
+    case ExpectXtermParameter1:
+        if (ch != ';') {
+            m_xterm_param1.append(ch);
+            return;
+        }
+        m_escape_state = ExpectXtermParameter2;
+        return;
+    case ExpectXtermParameter2:
+        if (ch != '\007') {
+            m_xterm_param2.append(ch);
+            return;
+        }
+        m_escape_state = ExpectXtermFinal;
+        // fall through
+    case ExpectXtermFinal:
+        m_escape_state = Normal;
+        if (ch == '\007')
+            execute_xterm_command();
+        return;
+
     case ExpectParameter:
         if (is_valid_parameter_character(ch)) {
             m_parameters.append(ch);
@@ -636,6 +676,15 @@ void Terminal::invalidate_window(const Rect& a_rect)
     int rc = gui_invalidate_window(m_window_id, a_rect.is_null() ? nullptr : &rect);
     if (rc < 0) {
         perror("gui_invalidate_window");
+        exit(1);
+    }
+}
+
+void Terminal::set_window_title(const String& title)
+{
+    int rc = gui_set_window_title(m_window_id, title.characters(), title.length());
+    if (rc < 0) {
+        perror("gui_set_window_title");
         exit(1);
     }
 }
