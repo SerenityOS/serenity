@@ -6,6 +6,7 @@
 #include "MemoryManager.h"
 #include "IRQHandler.h"
 #include "PIC.h"
+#include "Scheduler.h"
 
 //#define PAGE_FAULT_DEBUG
 
@@ -150,13 +151,31 @@ void exception_6_handler(RegisterDump& regs)
     current->crash();
 }
 
-// 7: FPU exception
+// 7: FPU not available exception
 EH_ENTRY_NO_CODE(7);
 void exception_7_handler(RegisterDump& regs)
 {
     (void)regs;
+
+    asm volatile("clts");
+    if (g_last_fpu_process == current)
+        return;
+    if (g_last_fpu_process) {
+        asm volatile("fnsave %0":"=m"(g_last_fpu_process->fpu_state()));
+    } else {
+        asm volatile("fnclex");
+    }
+    g_last_fpu_process = current;
+
+    if (current->has_used_fpu()) {
+        asm volatile("frstor %0"::"m"(current->fpu_state()));
+    } else {
+        asm volatile("fninit");
+        current->set_has_used_fpu(true);
+    }
+
 #ifdef FPU_EXCEPTION_DEBUG
-    kprintf("%s FPU exception: %u(%s)\n", current->isRing0() ? "Kernel" : "Process", current->pid(), current->name().characters());
+    kprintf("%s FPU not available exception: %u(%s)\n", current->isRing0() ? "Kernel" : "Process", current->pid(), current->name().characters());
 
     word ss;
     dword esp;
@@ -173,9 +192,6 @@ void exception_7_handler(RegisterDump& regs)
     kprintf("eax=%x ebx=%x ecx=%x edx=%x\n", regs.eax, regs.ebx, regs.ecx, regs.edx);
     kprintf("ebp=%x esp=%x esi=%x edi=%x\n", regs.ebp, esp, regs.esi, regs.edi);
 #endif
-
-    // FIXME: Do stuff.
-    asm volatile("clts");
 }
 
 

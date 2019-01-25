@@ -258,6 +258,9 @@ Process* Process::fork(RegisterDump& regs)
     child->m_tss.gs = regs.gs;
     child->m_tss.ss = regs.ss_if_crossRing;
 
+    child->m_fpu_state = m_fpu_state;
+    child->m_has_used_fpu = m_has_used_fpu;
+
 #ifdef FORK_DEBUG
     dbgprintf("fork: child will begin executing at %w:%x with stack %w:%x\n", child->m_tss.cs, child->m_tss.eip, child->m_tss.ss, child->m_tss.esp);
 #endif
@@ -588,6 +591,8 @@ Process::Process(String&& name, uid_t uid, gid_t gid, pid_t ppid, RingLevel ring
     , m_tty(tty)
     , m_ppid(ppid)
 {
+    memset(&m_fpu_state, 0, sizeof(FPUState));
+
     m_gids.set(m_gid);
 
     if (fork_parent) {
@@ -697,6 +702,9 @@ Process::~Process()
     InterruptDisabler disabler;
     ProcFS::the().remove_process(*this);
     system.nprocess--;
+
+    if (g_last_fpu_process == this)
+        g_last_fpu_process = nullptr;
 
     if (selector())
         gdt_free_entry(selector());

@@ -268,6 +268,10 @@ public:
     bool wakeup_requested() { return m_wakeup_requested; }
     void request_wakeup() { m_wakeup_requested = true; }
 
+    FPUState& fpu_state() { return m_fpu_state; }
+    bool has_used_fpu() const { return m_has_used_fpu; }
+    void set_has_used_fpu(bool b) { m_has_used_fpu = b; }
+
 private:
     friend class MemoryManager;
     friend class Scheduler;
@@ -303,6 +307,7 @@ private:
     dword m_wakeupTime { 0 };
     TSS32 m_tss;
     TSS32 m_tss_to_resume_kernel;
+    FPUState m_fpu_state;
     struct FileDescriptorAndFlags {
         operator bool() const { return !!descriptor; }
         void clear() { descriptor = nullptr; flags = 0; }
@@ -372,6 +377,7 @@ private:
     int m_next_window_id { 1 };
 
     dword m_wakeup_requested { false };
+    bool m_has_used_fpu { false };
 };
 
 extern Process* current;

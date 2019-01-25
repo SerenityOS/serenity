@@ -42,6 +42,7 @@ void GButton::paint_event(GPaintEvent&)
     } else {
         // Base
         painter.fill_rect({ 3, 3, width() - 5, height() - 5 }, button_color);
+        painter.fill_rect_with_gradient({ 3, 3, width() - 5, height() - 5 }, button_color, Color::White);
 
         // White highlight
         painter.draw_line({ 1, 1 }, { width() - 2, 1 }, highlight_color);

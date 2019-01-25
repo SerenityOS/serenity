@@ -8,6 +8,7 @@
 static const dword time_slice = 5; // *10 = 50ms
 
 Process* current;
+Process* g_last_fpu_process;
 static Process* s_colonel_process;
 static bool s_in_yield;
 
@@ -299,6 +300,7 @@ void Scheduler::initialize()
     initialize_redirection();
     s_colonel_process = Process::create_kernel_process("colonel", nullptr);
     current = nullptr;
+    g_last_fpu_process = nullptr;
     s_in_yield = false;
     load_task_register(s_redirection.selector);
 }
