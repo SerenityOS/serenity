@@ -177,7 +177,7 @@ static inline Color ansi_color(unsigned color)
         make_rgb(225, 56, 43),      // Red
         make_rgb(57, 181, 74),      // Green
         make_rgb(255, 199, 6),      // Brown
-        make_rgb(0, 11, 184),       // Blue
+        make_rgb(0, 111, 184),      // Blue
         make_rgb(118, 38, 113),     // Magenta
         make_rgb(44, 181, 233),     // Cyan
         make_rgb(204, 204, 204),    // LightGray
