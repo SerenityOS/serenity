@@ -6,6 +6,7 @@ class Process;
 struct RegisterDump;
 
 extern Process* current;
+extern Process* g_last_fpu_process;
 
 class Scheduler {
 public:

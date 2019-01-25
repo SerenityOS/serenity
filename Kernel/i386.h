@@ -202,6 +202,17 @@ struct RegisterDumpWithExceptionCode {
     word ss_if_crossRing;
 } PACKED;
 
+struct FPUState {
+    dword cwd;
+    dword swd;
+    dword twd;
+    dword fip;
+    dword fcs;
+    dword foo;
+    dword fos;
+    dword st[20];
+};
+
 inline constexpr dword pageBaseOf(dword address)
 {
     return address & 0xfffff000;
