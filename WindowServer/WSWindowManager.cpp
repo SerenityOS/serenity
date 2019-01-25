@@ -336,7 +336,8 @@ void WSWindowManager::compose()
     }
     for (auto* window = m_windows_in_order.head(); window; window = window->next()) {
         WSWindowLocker locker(*window);
-        if (!window->backing())
+        RetainPtr<GraphicsBitmap> backing = window->backing();
+        if (!backing)
             continue;
         if (!any_dirty_rect_intersects_window(*window))
             continue;
@@ -350,7 +351,7 @@ void WSWindowManager::compose()
             dirty_rect_in_window_coordinates.set_y(dirty_rect_in_window_coordinates.y() - window->y());
             auto dst = window->position();
             dst.move_by(dirty_rect_in_window_coordinates.location());
-            m_back_painter->blit(dst, *window->backing(), dirty_rect_in_window_coordinates);
+            m_back_painter->blit(dst, *backing, dirty_rect_in_window_coordinates);
             m_back_painter->clear_clip_rect();
         }
         m_back_painter->clear_clip_rect();
