@@ -118,21 +118,26 @@ void Painter::draw_rect(const Rect& a_rect, Color color)
 
 void Painter::draw_bitmap(const Point& p, const CharacterBitmap& bitmap, Color color)
 {
-    Point point = p;
-    point.move_by(m_translation);
-    for (unsigned row = 0; row < bitmap.height(); ++row) {
-        int y = point.y() + row;
-        if (y < m_clip_rect.top() || y > m_clip_rect.bottom())
-            continue;
-        auto* bits = m_target->scanline(y);
-        for (unsigned j = 0; j < bitmap.width(); ++j) {
-            int x = point.x() + j;
-            if (x < m_clip_rect.left() || x > m_clip_rect.right())
-                continue;
-            char fc = bitmap.bits()[row * bitmap.width() + j];
+    Rect rect { p, bitmap.size() };
+    rect.move_by(m_translation);
+    auto clipped_rect = Rect::intersection(rect, m_clip_rect);
+    const int first_row = clipped_rect.top() - rect.top();
+    const int last_row = clipped_rect.bottom() - rect.top();
+    const int first_column = clipped_rect.left() - rect.left();
+    const int last_column = clipped_rect.right() - rect.left();
+    RGBA32* dst = m_target->scanline(rect.y() + first_row) + rect.x();
+    const size_t dst_skip = m_target->width();
+    const char* bitmap_row = &bitmap.bits()[first_row];
+    const size_t bitmap_skip = bitmap.width();
+
+    for (int row = first_row; row <= last_row; ++row) {
+        for (int j = first_column; j <= last_column; ++j) {
+            char fc = bitmap_row[j];
             if (fc == '#')
-                bits[x] = color.value();
+                dst[j] = color.value();
         }
+        bitmap_row += bitmap_skip;
+        dst += dst_skip;
     }
 }
 
