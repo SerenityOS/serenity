@@ -305,7 +305,7 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event)
             // FIXME: Should we just alter the coordinates of the existing MouseEvent and pass it through?
             Point position { event.x() - window->rect().x(), event.y() - window->rect().y() };
             auto local_event = make<WSMouseEvent>(event.type(), position, event.buttons(), event.button());
-            window->event(*local_event);
+            window->on_message(*local_event);
             return;
         }
     }
@@ -387,21 +387,21 @@ void WSWindowManager::draw_cursor()
     m_last_cursor_rect = cursor_rect;
 }
 
-void WSWindowManager::event(WSMessage& event)
+void WSWindowManager::on_message(WSMessage& message)
 {
     ASSERT_INTERRUPTS_ENABLED();
     LOCKER(m_lock);
-    if (event.is_mouse_event())
-        return process_mouse_event(static_cast<WSMouseEvent&>(event));
+    if (message.is_mouse_event())
+        return process_mouse_event(static_cast<WSMouseEvent&>(message));
 
-    if (event.is_key_event()) {
+    if (message.is_key_event()) {
         // FIXME: This is a good place to hook key events globally. :)
         if (m_active_window)
-            return m_active_window->event(event);
+            return m_active_window->on_message(message);
         return;
     }
 
-    if (event.type() == WSMessage::WM_Compose) {
+    if (message.type() == WSMessage::WM_Compose) {
         m_pending_compose_event = false;
         compose();
         return;
@@ -415,12 +415,12 @@ void WSWindowManager::set_active_window(WSWindow* window)
         return;
 
     if (auto* previously_active_window = m_active_window.ptr()) {
-        WSMessageLoop::the().post_event(previously_active_window, make<WSMessage>(WSMessage::WindowDeactivated));
+        WSMessageLoop::the().post_message(previously_active_window, make<WSMessage>(WSMessage::WindowDeactivated));
         invalidate(*previously_active_window);
     }
     m_active_window = window->makeWeakPtr();
     if (m_active_window) {
-        WSMessageLoop::the().post_event(m_active_window.ptr(), make<WSMessage>(WSMessage::WindowActivated));
+        WSMessageLoop::the().post_message(m_active_window.ptr(), make<WSMessage>(WSMessage::WindowActivated));
         invalidate(*m_active_window);
     }
 }
@@ -454,7 +454,7 @@ void WSWindowManager::invalidate(const Rect& a_rect)
 
     if (!m_pending_compose_event) {
         ASSERT_INTERRUPTS_ENABLED();
-        WSMessageLoop::the().post_event(this, make<WSMessage>(WSMessage::WM_Compose));
+        WSMessageLoop::the().post_message(this, make<WSMessage>(WSMessage::WM_Compose));
         m_pending_compose_event = true;
     }
 }

@@ -48,7 +48,7 @@ private:
 
     void set_active_window(WSWindow*);
     
-    virtual void event(WSMessage&) override;
+    virtual void on_message(WSMessage&) override;
 
     void compose();
     void paint_window_frame(WSWindow&);

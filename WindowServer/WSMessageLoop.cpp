@@ -45,46 +45,46 @@ int WSMessageLoop::exec()
 
     m_running = true;
     for (;;) {
-        wait_for_event();
+        wait_for_message();
 
-        Vector<QueuedEvent> events;
+        Vector<QueuedMessage> messages;
         {
             ASSERT_INTERRUPTS_ENABLED();
             LOCKER(m_lock);
-            events = move(m_queued_events);
+            messages = move(m_queued_messages);
         }
 
-        for (auto& queued_event : events) {
-            auto* receiver = queued_event.receiver;
-            auto& event = *queued_event.event;
+        for (auto& queued_message : messages) {
+            auto* receiver = queued_message.receiver;
+            auto& message = *queued_message.message;
 #ifdef WSEVENTLOOP_DEBUG
-            dbgprintf("WSMessageLoop: receiver{%p} event %u (%s)\n", receiver, (unsigned)event.type(), event.name());
+            dbgprintf("WSMessageLoop: receiver{%p} message %u (%s)\n", receiver, (unsigned)event.type(), event.name());
 #endif
             if (!receiver) {
-                dbgprintf("WSMessage type %u with no receiver :(\n", event.type());
+                dbgprintf("WSMessage type %u with no receiver :(\n", message.type());
                 ASSERT_NOT_REACHED();
                 return 1;
             } else {
-                receiver->event(event);
+                receiver->on_message(message);
             }
         }
     }
 }
 
-void WSMessageLoop::post_event(WSMessageReceiver* receiver, OwnPtr<WSMessage>&& event)
+void WSMessageLoop::post_message(WSMessageReceiver* receiver, OwnPtr<WSMessage>&& message)
 {
     ASSERT_INTERRUPTS_ENABLED();
     LOCKER(m_lock);
 #ifdef WSEVENTLOOP_DEBUG
-    dbgprintf("WSMessageLoop::post_event: {%u} << receiver=%p, event=%p\n", m_queued_events.size(), receiver, event.ptr());
+    dbgprintf("WSMessageLoop::post_message: {%u} << receiver=%p, message=%p\n", m_queued_messages.size(), receiver, message.ptr());
 #endif
 
-    if (event->type() == WSMessage::WM_Invalidate) {
-        auto& invalidation_event = static_cast<WSWindowInvalidationEvent&>(*event);
-        for (auto& queued_event : m_queued_events) {
-            if (receiver == queued_event.receiver && queued_event.event->type() == WSMessage::WM_Invalidate) {
-                auto& queued_invalidation_event = static_cast<WSWindowInvalidationEvent&>(*queued_event.event);
-                if (queued_invalidation_event.rect().is_empty() || queued_invalidation_event.rect().contains(invalidation_event.rect())) {
+    if (message->type() == WSMessage::WM_Invalidate) {
+        auto& invalidation_message = static_cast<WSWindowInvalidationEvent&>(*message);
+        for (auto& queued_message : m_queued_messages) {
+            if (receiver == queued_message.receiver && queued_message.message->type() == WSMessage::WM_Invalidate) {
+                auto& queued_invalidation_message = static_cast<WSWindowInvalidationEvent&>(*queued_message.message);
+                if (queued_invalidation_message.rect().is_empty() || queued_invalidation_message.rect().contains(invalidation_message.rect())) {
 #ifdef WSEVENTLOOP_DEBUG
                     dbgprintf("Swallow WM_Invalidate\n");
 #endif
@@ -94,12 +94,12 @@ void WSMessageLoop::post_event(WSMessageReceiver* receiver, OwnPtr<WSMessage>&& 
         }
     }
 
-    if (event->type() == WSMessage::Paint) {
-        auto& invalidation_event = static_cast<WSPaintEvent&>(*event);
-        for (auto& queued_event : m_queued_events) {
-            if (receiver == queued_event.receiver && queued_event.event->type() == WSMessage::Paint) {
-                auto& queued_invalidation_event = static_cast<WSPaintEvent&>(*queued_event.event);
-                if (queued_invalidation_event.rect().is_empty() || queued_invalidation_event.rect().contains(invalidation_event.rect())) {
+    if (message->type() == WSMessage::Paint) {
+        auto& invalidation_message = static_cast<WSPaintEvent&>(*message);
+        for (auto& queued_message : m_queued_messages) {
+            if (receiver == queued_message.receiver && queued_message.message->type() == WSMessage::Paint) {
+                auto& queued_invalidation_message = static_cast<WSPaintEvent&>(*queued_message.message);
+                if (queued_invalidation_message.rect().is_empty() || queued_invalidation_message.rect().contains(invalidation_message.rect())) {
 #ifdef WSEVENTLOOP_DEBUG
                     dbgprintf("Swallow WM_Paint\n");
 #endif
@@ -109,13 +109,13 @@ void WSMessageLoop::post_event(WSMessageReceiver* receiver, OwnPtr<WSMessage>&& 
         }
     }
 
-    m_queued_events.append({ receiver, move(event) });
+    m_queued_messages.append({ receiver, move(message) });
 
     if (current != m_server_process)
         m_server_process->request_wakeup();
 }
 
-void WSMessageLoop::wait_for_event()
+void WSMessageLoop::wait_for_message()
 {
     fd_set rfds;
     memset(&rfds, 0, sizeof(rfds));
@@ -128,7 +128,7 @@ void WSMessageLoop::wait_for_event()
     params.writefds = nullptr;
     params.exceptfds = nullptr;
     struct timeval timeout = { 0, 0 };
-    if (m_queued_events.is_empty())
+    if (m_queued_messages.is_empty())
         params.timeout = nullptr;
     else
         params.timeout = &timeout;

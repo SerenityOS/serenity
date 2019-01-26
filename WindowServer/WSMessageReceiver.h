@@ -9,5 +9,5 @@ public:
     WSMessageReceiver();
     virtual ~WSMessageReceiver();
 
-    virtual void event(WSMessage&) = 0;
+    virtual void on_message(WSMessage&) = 0;
 };
