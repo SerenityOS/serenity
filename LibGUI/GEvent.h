@@ -99,16 +99,6 @@ enum class GMouseButton : byte {
     Middle = 4,
 };
 
-enum GKeyboardKey {
-    Invalid,
-    LeftArrow,
-    RightArrow,
-    UpArrow,
-    DownArrow,
-    Backspace,
-    Return,
-};
-
 class GKeyEvent final : public GEvent {
 public:
     GKeyEvent(Type type, int key)

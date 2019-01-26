@@ -83,6 +83,17 @@ void GEventLoop::handle_paint_event(const GUI_Event& event, GWindow& window)
     post_event(&window, make<GPaintEvent>(event.paint.rect));
 }
 
+void GEventLoop::handle_key_event(const GUI_Event& event, GWindow& window)
+{
+    auto key_event = make<GKeyEvent>(event.type == GUI_Event::Type::KeyDown ? GEvent::KeyDown : GEvent::KeyUp, event.key.key);
+    key_event->m_alt = event.key.alt;
+    key_event->m_ctrl = event.key.ctrl;
+    key_event->m_shift = event.key.shift;
+    if (event.key.character != '\0')
+        key_event->m_text = String(&event.key.character, 1);
+    post_event(&window, move(key_event));
+}
+
 void GEventLoop::handle_mouse_event(const GUI_Event& event, GWindow& window)
 {
     GMouseEvent::Type type;
@@ -148,6 +159,11 @@ void GEventLoop::wait_for_event()
             break;
         case GUI_Event::Type::WindowDeactivated:
             dbgprintf("WID=%x WindowDeactivated\n", event.window_id);
+            break;
+        case GUI_Event::Type::KeyDown:
+        case GUI_Event::Type::KeyUp:
+            dbgprintf("WID=%x KeyEvent character=0x%b\n", event.window_id, event.key.character);
+            handle_key_event(event, *window);
             break;
         }
     }

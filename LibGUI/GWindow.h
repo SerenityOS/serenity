@@ -38,6 +38,7 @@ public:
     GWidget* main_widget() { return m_main_widget; }
     const GWidget* main_widget() const { return m_main_widget; }
     void set_main_widget(GWidget*);
+    void set_focused_widget(GWidget*);
 
     void show();
 
@@ -47,5 +48,6 @@ private:
     RetainPtr<GraphicsBitmap> m_backing;
     int m_window_id { -1 };
     GWidget* m_main_widget { nullptr };
+    GWidget* m_focused_widget { nullptr };
 };
 

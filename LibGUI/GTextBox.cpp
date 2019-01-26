@@ -3,6 +3,7 @@
 #include <SharedGraphics/CharacterBitmap.h>
 #include <SharedGraphics/Font.h>
 #include <SharedGraphics/Painter.h>
+#include <Kernel/KeyCode.h>
 
 GTextBox::GTextBox(GWidget* parent)
     : GWidget(parent)
@@ -91,21 +92,21 @@ void GTextBox::handle_backspace()
 void GTextBox::keydown_event(GKeyEvent& event)
 {
     switch (event.key()) {
-    case GKeyboardKey::LeftArrow:
+    case KeyCode::Key_Left:
         if (m_cursorPosition)
             --m_cursorPosition;
         m_cursorBlinkState = true;
         update();
         return;
-    case GKeyboardKey::RightArrow:
+    case KeyCode::Key_Right:
         if (m_cursorPosition < m_text.length())
             ++m_cursorPosition;
         m_cursorBlinkState = true;
         update();
         return;
-    case GKeyboardKey::Backspace:
+    case KeyCode::Key_Backspace:
         return handle_backspace();
-    case GKeyboardKey::Return:
+    case KeyCode::Key_Return:
         if (onReturnPressed)
             onReturnPressed(*this);
         return;
