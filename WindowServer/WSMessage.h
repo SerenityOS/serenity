@@ -5,36 +5,16 @@
 #include <AK/AKString.h>
 #include <AK/Types.h>
 
-static const char* WSEvent_names[] = {
-    "Invalid",
-    "Show",
-    "Hide",
-    "Paint",
-    "MouseMove",
-    "MouseDown",
-    "MouseUp",
-    "KeyDown",
-    "KeyUp",
-    "Timer",
-    "WM_Compose",
-    "WM_Invalidate",
-    "WindowActivated",
-    "WindowDeactivated",
-};
-
-class WSEvent {
+class WSMessage {
 public:
     enum Type {
         Invalid = 0,
-        Show,
-        Hide,
         Paint,
         MouseMove,
         MouseDown,
         MouseUp,
         KeyDown,
         KeyUp,
-        Timer,
         WM_Compose,
         WM_Invalidate,
         WindowActivated,
@@ -43,13 +23,11 @@ public:
         WM_SetWindowRect,
     };
 
-    WSEvent() { }
-    explicit WSEvent(Type type) : m_type(type) { }
-    virtual ~WSEvent() { }
+    WSMessage() { }
+    explicit WSMessage(Type type) : m_type(type) { }
+    virtual ~WSMessage() { }
 
     Type type() const { return m_type; }
-
-    const char* name() const { return WSEvent_names[(unsigned)m_type]; }
 
     bool is_mouse_event() const { return m_type == MouseMove || m_type == MouseDown || m_type == MouseUp; }
     bool is_key_event() const { return m_type == KeyUp || m_type == KeyDown; }
@@ -59,10 +37,10 @@ private:
     Type m_type { Invalid };
 };
 
-class WSWindowInvalidationEvent final : public WSEvent {
+class WSWindowInvalidationEvent final : public WSMessage {
 public:
     explicit WSWindowInvalidationEvent(const Rect& rect = Rect())
-        : WSEvent(WSEvent::WM_Invalidate)
+        : WSMessage(WSMessage::WM_Invalidate)
         , m_rect(rect)
     {
     }
@@ -72,10 +50,10 @@ private:
     Rect m_rect;
 };
 
-class WSSetWindowTitle final : public WSEvent {
+class WSSetWindowTitle final : public WSMessage {
 public:
     explicit WSSetWindowTitle(String&& title)
-        : WSEvent(WSEvent::WM_SetWindowTitle)
+        : WSMessage(WSMessage::WM_SetWindowTitle)
         , m_title(move(title))
     {
     }
@@ -86,10 +64,10 @@ private:
     String m_title;
 };
 
-class WSSetWindowRect final : public WSEvent {
+class WSSetWindowRect final : public WSMessage {
 public:
     explicit WSSetWindowRect(const Rect& rect)
-        : WSEvent(WSEvent::WM_SetWindowRect)
+        : WSMessage(WSMessage::WM_SetWindowRect)
         , m_rect(rect)
     {
     }
@@ -100,10 +78,10 @@ private:
     Rect m_rect;
 };
 
-class WSPaintEvent final : public WSEvent {
+class WSPaintEvent final : public WSMessage {
 public:
     explicit WSPaintEvent(const Rect& rect = Rect())
-        : WSEvent(WSEvent::Paint)
+        : WSMessage(WSMessage::Paint)
         , m_rect(rect)
     {
     }
@@ -121,10 +99,10 @@ enum class MouseButton : byte {
     Middle = 4,
 };
 
-class WSKeyEvent final : public WSEvent {
+class WSKeyEvent final : public WSMessage {
 public:
     WSKeyEvent(Type type, int key, char character)
-        : WSEvent(type)
+        : WSMessage(type)
         , m_key(key)
         , m_character(character)
     {
@@ -137,7 +115,7 @@ public:
     char character() const { return m_character; }
 
 private:
-    friend class WSEventLoop;
+    friend class WSMessageLoop;
     friend class WSScreen;
     int m_key { 0 };
     bool m_ctrl { false };
@@ -146,10 +124,10 @@ private:
     char m_character { 0 };
 };
 
-class WSMouseEvent final : public WSEvent {
+class WSMouseEvent final : public WSMessage {
 public:
     WSMouseEvent(Type type, const Point& position, unsigned buttons, MouseButton button = MouseButton::None)
-        : WSEvent(type)
+        : WSMessage(type)
         , m_position(position)
         , m_buttons(buttons)
         , m_button(button)

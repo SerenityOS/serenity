@@ -4,7 +4,7 @@
 #ifdef KERNEL
 #include <Kernel/Process.h>
 #include <Kernel/MemoryManager.h>
-#include <WindowServer/WSEventLoop.h>
+#include <WindowServer/WSMessageLoop.h>
 #endif
 
 #ifdef KERNEL
@@ -24,7 +24,7 @@ GraphicsBitmap::GraphicsBitmap(Process& process, const Size& size)
     m_client_region = process.allocate_region_with_vmo(LinearAddress(), size_in_bytes, vmo.copyRef(), 0, "GraphicsBitmap (client)", true, true);
     m_client_region->set_shared(true);
     m_client_region->commit();
-    auto& server = WSEventLoop::the().server_process();
+    auto& server = WSMessageLoop::the().server_process();
     m_server_region = server.allocate_region_with_vmo(LinearAddress(), size_in_bytes, move(vmo), 0, "GraphicsBitmap (server)", true, false);
     m_server_region->set_shared(true);
 
@@ -50,7 +50,7 @@ GraphicsBitmap::~GraphicsBitmap()
     if (m_client_region)
         m_client_process->deallocate_region(*m_client_region);
     if (m_server_region)
-        WSEventLoop::the().server_process().deallocate_region(*m_server_region);
+        WSMessageLoop::the().server_process().deallocate_region(*m_server_region);
 #endif
     m_data = nullptr;
 }

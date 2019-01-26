@@ -55,8 +55,8 @@ SHAREDGRAPHICS_OBJS = \
     ../SharedGraphics/GraphicsBitmap.o
 
 WINDOWSERVER_OBJS = \
-    ../WindowServer/WSEventReceiver.o \
-    ../WindowServer/WSEventLoop.o \
+    ../WindowServer/WSMessageReceiver.o \
+    ../WindowServer/WSMessageLoop.o \
     ../WindowServer/WSWindow.o \
     ../WindowServer/WSWindowManager.o \
     ../WindowServer/WSScreen.o \

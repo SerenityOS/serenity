@@ -2,7 +2,7 @@
 #include <SharedGraphics/Font.h>
 #include <WindowServer/WSScreen.h>
 #include <WindowServer/WSWindowManager.h>
-#include <WindowServer/WSEventLoop.h>
+#include <WindowServer/WSMessageLoop.h>
 #include <WindowServer/WSWindow.h>
 
 // NOTE: This actually runs as a kernel process.
@@ -19,7 +19,7 @@ void WindowServer_main()
     WSWindowManager::the();
 
     dbgprintf("Entering WindowServer main loop.\n");
-    WSEventLoop::the().exec();
+    WSMessageLoop::the().exec();
 
     ASSERT_NOT_REACHED();
 }

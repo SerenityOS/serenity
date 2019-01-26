@@ -1,6 +1,6 @@
 #include "WSScreen.h"
-#include "WSEventLoop.h"
-#include "WSEvent.h"
+#include "WSMessageLoop.h"
+#include "WSMessage.h"
 #include "WSWindowManager.h"
 #include <AK/Assertions.h>
 
@@ -47,20 +47,20 @@ void WSScreen::on_receive_mouse_data(int dx, int dy, bool left_button, bool righ
     if (right_button)
         buttons |= (unsigned)MouseButton::Right;
     if (m_cursor_location != prev_location) {
-        auto event = make<WSMouseEvent>(WSEvent::MouseMove, m_cursor_location, buttons);
-        WSEventLoop::the().post_event(&WSWindowManager::the(), move(event));
+        auto event = make<WSMouseEvent>(WSMessage::MouseMove, m_cursor_location, buttons);
+        WSMessageLoop::the().post_event(&WSWindowManager::the(), move(event));
     }
     bool prev_left_button = m_left_mouse_button_pressed;
     bool prev_right_button = m_right_mouse_button_pressed;
     m_left_mouse_button_pressed = left_button;
     m_right_mouse_button_pressed = right_button;
     if (prev_left_button != left_button) {
-        auto event = make<WSMouseEvent>(left_button ? WSEvent::MouseDown : WSEvent::MouseUp, m_cursor_location, buttons, MouseButton::Left);
-        WSEventLoop::the().post_event(&WSWindowManager::the(), move(event));
+        auto event = make<WSMouseEvent>(left_button ? WSMessage::MouseDown : WSMessage::MouseUp, m_cursor_location, buttons, MouseButton::Left);
+        WSMessageLoop::the().post_event(&WSWindowManager::the(), move(event));
     }
     if (prev_right_button != right_button) {
-        auto event = make<WSMouseEvent>(right_button ? WSEvent::MouseDown : WSEvent::MouseUp, m_cursor_location, buttons, MouseButton::Right);
-        WSEventLoop::the().post_event(&WSWindowManager::the(), move(event));
+        auto event = make<WSMouseEvent>(right_button ? WSMessage::MouseDown : WSMessage::MouseUp, m_cursor_location, buttons, MouseButton::Right);
+        WSMessageLoop::the().post_event(&WSWindowManager::the(), move(event));
     }
     if (m_cursor_location != prev_location || prev_left_button != left_button)
         WSWindowManager::the().draw_cursor();
@@ -68,9 +68,9 @@ void WSScreen::on_receive_mouse_data(int dx, int dy, bool left_button, bool righ
 
 void WSScreen::on_receive_keyboard_data(Keyboard::Event kernel_event)
 {
-    auto event = make<WSKeyEvent>(kernel_event.is_press() ? WSEvent::KeyDown : WSEvent::KeyUp, kernel_event.key, kernel_event.character);
+    auto event = make<WSKeyEvent>(kernel_event.is_press() ? WSMessage::KeyDown : WSMessage::KeyUp, kernel_event.key, kernel_event.character);
     event->m_shift = kernel_event.shift();
     event->m_ctrl = kernel_event.ctrl();
     event->m_alt = kernel_event.alt();
-    WSEventLoop::the().post_event(&WSWindowManager::the(), move(event));
+    WSMessageLoop::the().post_event(&WSWindowManager::the(), move(event));
 }
