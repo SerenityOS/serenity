@@ -126,28 +126,50 @@ int Process::gui$release_window_backing_store(void* backing_store_id)
     return -EBADBACKING;
 }
 
-int Process::gui$invalidate_window(int window_id, const GUI_Rect* rect)
+int Process::gui$invalidate_window(int window_id, const GUI_Rect* a_rect)
 {
     if (window_id < 0)
         return -EINVAL;
-    if (rect && !validate_read_typed(rect))
+    if (a_rect && !validate_read_typed(a_rect))
         return -EFAULT;
     auto it = m_windows.find(window_id);
     if (it == m_windows.end())
         return -EBADWINDOW;
 #ifdef LOG_GUI_SYSCALLS
-    if (!rect)
+    if (!a_rect)
         dbgprintf("%s<%u> gui$invalidate_window (window_id=%d, rect=(entire))\n", name().characters(), pid(), window_id);
     else
-        dbgprintf("%s<%u> gui$invalidate_window (window_id=%d, rect={%d,%d %dx%d})\n", name().characters(), pid(), window_id, rect->location.x, rect->location.y, rect->size.width, rect->size.height);
+        dbgprintf("%s<%u> gui$invalidate_window (window_id=%d, rect={%d,%d %dx%d})\n", name().characters(), pid(), window_id, a_rect->location.x, a_rect->location.y, a_rect->size.width, a_rect->size.height);
 #endif
     auto& window = *(*it).value;
-    Rect invalidation_rect;
-    if (rect) {
-        WSWindowLocker locker(window);
-        invalidation_rect = *rect;
-    }
-    WSEventLoop::the().post_event(&window, make<WSWindowInvalidationEvent>(invalidation_rect));
+    Rect rect;
+    if (a_rect)
+        rect = *a_rect;
+    WSEventLoop::the().post_event(&window, make<WSPaintEvent>(rect));
+    WSEventLoop::the().server_process().request_wakeup();
+    return 0;
+}
+
+int Process::gui$notify_paint_finished(int window_id, const GUI_Rect* a_rect)
+{
+    if (window_id < 0)
+        return -EINVAL;
+    if (a_rect && !validate_read_typed(a_rect))
+        return -EFAULT;
+    auto it = m_windows.find(window_id);
+    if (it == m_windows.end())
+        return -EBADWINDOW;
+#ifdef LOG_GUI_SYSCALLS
+    if (!a_rect)
+        dbgprintf("%s<%u> gui$notify_paint_finished (window_id=%d, rect=(entire))\n", name().characters(), pid(), window_id);
+    else
+        dbgprintf("%s<%u> gui$notify_paint_finished (window_id=%d, rect={%d,%d %dx%d})\n", name().characters(), pid(), window_id, a_rect->location.x, a_rect->location.y, a_rect->size.width, a_rect->size.height);
+#endif
+    auto& window = *(*it).value;
+    Rect rect;
+    if (a_rect)
+        rect = *a_rect;
+    WSEventLoop::the().post_event(&window, make<WSWindowInvalidationEvent>(rect));
     WSEventLoop::the().server_process().request_wakeup();
     return 0;
 }

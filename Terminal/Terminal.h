@@ -18,6 +18,7 @@ public:
     void on_char(byte);
 
     void set_in_active_window(bool);
+    void update();
 
 private:
     Font& font() { return *m_font; }
@@ -25,6 +26,7 @@ private:
     void set_cursor(unsigned row, unsigned column);
     void put_character_at(unsigned row, unsigned column, byte ch);
     void invalidate_cursor();
+    void did_paint(const Rect& = Rect());
     void invalidate_window(const Rect& = Rect());
     void set_window_title(const String&);
 
@@ -67,7 +69,7 @@ private:
         bool has_only_one_background_color() const;
         byte* characters { nullptr };
         Attribute* attributes { nullptr };
-        bool needs_invalidation { false };
+        bool did_paint { false };
         bool dirty { false };
         word length { 0 };
     };

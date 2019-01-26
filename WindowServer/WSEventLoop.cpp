@@ -94,6 +94,21 @@ void WSEventLoop::post_event(WSEventReceiver* receiver, OwnPtr<WSEvent>&& event)
         }
     }
 
+    if (event->type() == WSEvent::Paint) {
+        auto& invalidation_event = static_cast<WSPaintEvent&>(*event);
+        for (auto& queued_event : m_queued_events) {
+            if (receiver == queued_event.receiver && queued_event.event->type() == WSEvent::Paint) {
+                auto& queued_invalidation_event = static_cast<WSPaintEvent&>(*queued_event.event);
+                if (queued_invalidation_event.rect().is_empty() || queued_invalidation_event.rect().contains(invalidation_event.rect())) {
+#ifdef WSEVENTLOOP_DEBUG
+                    dbgprintf("Swallow WM_Paint\n");
+#endif
+                    return;
+                }
+            }
+        }
+    }
+
     m_queued_events.append({ receiver, move(event) });
 
     if (current != m_server_process)

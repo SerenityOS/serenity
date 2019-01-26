@@ -88,7 +88,7 @@ Terminal::Line::Line(word columns)
 {
     characters = new byte[length];
     attributes = new Attribute[length];
-    needs_invalidation = false;
+    did_paint = false;
     memset(characters, ' ', length);
 }
 
@@ -603,7 +603,7 @@ void Terminal::paint()
     Painter painter(*m_backing);
 
     for (size_t i = 0; i < rows(); ++i)
-        line(i).needs_invalidation = false;
+        line(i).did_paint = false;
 
     if (m_rows_to_scroll_backing_store && m_rows_to_scroll_backing_store < m_rows) {
         int first_scanline = m_inset;
@@ -630,7 +630,7 @@ void Terminal::paint()
             painter.fill_rect(row_rect(row), line.attributes[0].background_color);
         for (word column = 0; column < m_columns; ++column) {
             auto& attribute = line.attributes[column];
-            line.needs_invalidation = true;
+            line.did_paint = true;
             char ch = line.characters[column];
             auto character_rect = glyph_rect(row, column);
             if (!has_only_one_background_color) {
@@ -649,7 +649,7 @@ void Terminal::paint()
     else
         painter.draw_rect(cursor_rect, Color::MidGray);
 
-    line(m_cursor_row).needs_invalidation = true;
+    line(m_cursor_row).did_paint = true;
 
     if (m_belling) {
         m_need_full_invalidation = true;
@@ -657,23 +657,38 @@ void Terminal::paint()
     }
 
     if (m_need_full_invalidation) {
-        invalidate_window();
+        did_paint();
         m_need_full_invalidation = false;
         return;
     }
 
-    Rect invalidation_rect;
+    Rect painted_rect;
     for (int i = 0; i < m_rows; ++i) {
-        if (line(i).needs_invalidation)
-            invalidation_rect = invalidation_rect.united(row_rect(i));
+        if (line(i).did_paint)
+            painted_rect = painted_rect.united(row_rect(i));
     }
-    invalidate_window(invalidation_rect);
+    did_paint(painted_rect);
 }
 
-void Terminal::invalidate_window(const Rect& a_rect)
+void Terminal::did_paint(const Rect& a_rect)
 {
     GUI_Rect rect = a_rect;
-    int rc = gui_invalidate_window(m_window_id, a_rect.is_null() ? nullptr : &rect);
+    int rc = gui_notify_paint_finished(m_window_id, a_rect.is_null() ? nullptr : &rect);
+    if (rc < 0) {
+        perror("gui_notify_paint_finished");
+        exit(1);
+    }
+}
+
+void Terminal::update()
+{
+    Rect rect;
+    for (int i = 0; i < m_rows; ++i) {
+        if (line(i).did_paint)
+            rect = rect.united(row_rect(i));
+    }
+    GUI_Rect gui_rect = rect;
+    int rc = gui_invalidate_window(m_window_id, rect.is_null() ? nullptr : &gui_rect);
     if (rc < 0) {
         perror("gui_invalidate_window");
         exit(1);
@@ -695,7 +710,7 @@ void Terminal::set_in_active_window(bool b)
         return;
     m_in_active_window = b;
     invalidate_cursor();
-    paint();
+    update();
 }
 
 void Terminal::invalidate_cursor()

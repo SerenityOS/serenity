@@ -77,7 +77,7 @@ int main(int, char**)
 
     Terminal terminal;
     terminal.create_window();
-    terminal.paint();
+    terminal.update();
 
     for (;;) {
         fd_set rfds;
@@ -100,7 +100,7 @@ int main(int, char**)
             assert(nread != 0);
             for (ssize_t i = 0; i < nread; ++i)
                 terminal.on_char(buffer[i]);
-            terminal.paint();
+            terminal.update();
         }
 
         if (FD_ISSET(event_fd, &rfds)) {

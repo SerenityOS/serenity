@@ -215,6 +215,8 @@ static dword handle(RegisterDump& regs, dword function, dword arg1, dword arg2, 
         return current->gui$get_window_rect((int)arg1, (GUI_Rect*)arg2);
     case Syscall::SC_read_tsc:
         return current->sys$read_tsc((dword*)arg1, (dword*)arg2);
+    case Syscall::SC_gui_notify_paint_finished:
+        return current->gui$notify_paint_finished((int)arg1, (const GUI_Rect*)arg2);
     default:
         kprintf("<%u> int0x80: Unknown function %u requested {%x, %x, %x}\n", current->pid(), function, arg1, arg2, arg3);
         break;
