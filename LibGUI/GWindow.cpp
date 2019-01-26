@@ -81,6 +81,7 @@ void GWindow::event(GEvent& event)
             ASSERT(result.widget);
             return result.widget->event(*local_event);
         }
+        return;
     }
 
     if (event.is_paint_event()) {
@@ -94,6 +95,7 @@ void GWindow::event(GEvent& event)
         GUI_Rect gui_rect = rect;
         int rc = gui_notify_paint_finished(m_window_id, &gui_rect);
         ASSERT(rc == 0);
+        return;
     }
 
     if (event.is_key_event()) {
@@ -102,7 +104,14 @@ void GWindow::event(GEvent& event)
         return m_focused_widget->event(event);
     }
 
-    return GObject::event(event);
+    if (event.type() == GEvent::WindowBecameActive || event.type() == GEvent::WindowBecameInactive) {
+        m_is_active = event.type() == GEvent::WindowBecameActive;
+        if (m_focused_widget)
+            m_focused_widget->update();
+        return;
+    }
+
+    GObject::event(event);
 }
 
 bool GWindow::is_visible() const
