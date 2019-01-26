@@ -80,11 +80,17 @@ void GEventLoop::post_event(GObject* receiver, OwnPtr<GEvent>&& event)
 
 void GEventLoop::handle_paint_event(const GUI_Event& event, GWindow& window)
 {
+#ifdef GEVENTLOOP_DEBUG
+    dbgprintf("WID=%x Paint [%d,%d %dx%d]\n", event.window_id, event.paint.rect.location.x, event.paint.rect.location.y, event.paint.rect.size.width, event.paint.rect.size.height);
+#endif
     post_event(&window, make<GPaintEvent>(event.paint.rect));
 }
 
 void GEventLoop::handle_key_event(const GUI_Event& event, GWindow& window)
 {
+#ifdef GEVENTLOOP_DEBUG
+    dbgprintf("WID=%x KeyEvent character=0x%b\n", event.window_id, event.key.character);
+#endif
     auto key_event = make<GKeyEvent>(event.type == GUI_Event::Type::KeyDown ? GEvent::KeyDown : GEvent::KeyUp, event.key.key);
     key_event->m_alt = event.key.alt;
     key_event->m_ctrl = event.key.ctrl;
@@ -96,6 +102,9 @@ void GEventLoop::handle_key_event(const GUI_Event& event, GWindow& window)
 
 void GEventLoop::handle_mouse_event(const GUI_Event& event, GWindow& window)
 {
+#ifdef GEVENTLOOP_DEBUG
+    dbgprintf("WID=%x MouseEvent %d,%d\n", event.window_id, event.mouse.position.x, event.mouse.position.y);
+#endif
     GMouseEvent::Type type;
     switch (event.type) {
     case GUI_Event::Type::MouseMove: type = GEvent::MouseMove; break;
@@ -145,13 +154,11 @@ void GEventLoop::wait_for_event()
         }
         switch (event.type) {
         case GUI_Event::Type::Paint:
-            dbgprintf("WID=%x Paint [%d,%d %dx%d]\n", event.window_id, event.paint.rect.location.x, event.paint.rect.location.y, event.paint.rect.size.width, event.paint.rect.size.height);
             handle_paint_event(event, *window);
             break;
         case GUI_Event::Type::MouseDown:
         case GUI_Event::Type::MouseUp:
         case GUI_Event::Type::MouseMove:
-            dbgprintf("WID=%x MouseEvent %d,%d\n", event.window_id, event.mouse.position.x, event.mouse.position.y);
             handle_mouse_event(event, *window);
             break;
         case GUI_Event::Type::WindowActivated:
@@ -162,7 +169,6 @@ void GEventLoop::wait_for_event()
             break;
         case GUI_Event::Type::KeyDown:
         case GUI_Event::Type::KeyUp:
-            dbgprintf("WID=%x KeyEvent character=0x%b\n", event.window_id, event.key.character);
             handle_key_event(event, *window);
             break;
         }
