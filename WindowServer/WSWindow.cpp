@@ -90,6 +90,14 @@ void WSWindow::on_message(WSMessage& message)
         gui_event.key.ctrl = static_cast<WSKeyEvent&>(message).ctrl();
         gui_event.key.shift = static_cast<WSKeyEvent&>(message).shift();
         break;
+    case WSMessage::KeyUp:
+        gui_event.type = GUI_Event::Type::KeyUp;
+        gui_event.key.character = static_cast<WSKeyEvent&>(message).character();
+        gui_event.key.key = static_cast<WSKeyEvent&>(message).key();
+        gui_event.key.alt = static_cast<WSKeyEvent&>(message).alt();
+        gui_event.key.ctrl = static_cast<WSKeyEvent&>(message).ctrl();
+        gui_event.key.shift = static_cast<WSKeyEvent&>(message).shift();
+        break;
     case WSMessage::WM_ClientFinishedPaint:
         WSWindowManager::the().invalidate(*this, static_cast<WSClientFinishedPaintMessage&>(message).rect());
         return;

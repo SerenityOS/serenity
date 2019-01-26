@@ -96,6 +96,12 @@ void GWindow::event(GEvent& event)
         ASSERT(rc == 0);
     }
 
+    if (event.is_key_event()) {
+        if (!m_focused_widget)
+            return;
+        return m_focused_widget->event(event);
+    }
+
     return GObject::event(event);
 }
 
@@ -127,4 +133,14 @@ void GWindow::set_main_widget(GWidget* widget)
     if (widget)
         widget->set_window(this);
     update();
+}
+
+void GWindow::set_focused_widget(GWidget* widget)
+{
+    if (m_focused_widget == widget)
+        return;
+    if (m_focused_widget)
+        m_focused_widget->update();
+    m_focused_widget = widget;
+    m_focused_widget->update();
 }

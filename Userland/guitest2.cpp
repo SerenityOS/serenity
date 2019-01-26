@@ -13,6 +13,7 @@
 #include <LibGUI/GLabel.h>
 #include <LibGUI/GButton.h>
 #include <LibGUI/GEventLoop.h>
+#include <LibGUI/GTextBox.h>
 
 static GWindow* make_font_test_window();
 static GWindow* make_launcher_window();
@@ -106,6 +107,11 @@ GWindow* make_launcher_window()
     auto* dummy_button = new GButton(widget);
     dummy_button->set_relative_rect({ 5, 80, 90, 20 });
     dummy_button->set_caption("Dummy");
+
+    auto* textbox = new GTextBox(widget);
+    textbox->set_relative_rect({ 5, 110, 90, 20 });
+
+    window->set_focused_widget(textbox);
 
     return window;
 }
