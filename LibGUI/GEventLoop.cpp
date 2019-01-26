@@ -86,6 +86,14 @@ void GEventLoop::handle_paint_event(const GUI_Event& event, GWindow& window)
     post_event(&window, make<GPaintEvent>(event.paint.rect));
 }
 
+void GEventLoop::handle_window_activation_event(const GUI_Event& event, GWindow& window)
+{
+#ifdef GEVENTLOOP_DEBUG
+    dbgprintf("WID=%x WindowActivation\n", event.window_id);
+#endif
+    post_event(&window, make<GEvent>(event.type == GUI_Event::Type::WindowActivated ? GEvent::WindowBecameActive : GEvent::WindowBecameInactive));
+}
+
 void GEventLoop::handle_key_event(const GUI_Event& event, GWindow& window)
 {
 #ifdef GEVENTLOOP_DEBUG
@@ -162,10 +170,8 @@ void GEventLoop::wait_for_event()
             handle_mouse_event(event, *window);
             break;
         case GUI_Event::Type::WindowActivated:
-            dbgprintf("WID=%x WindowActivated\n", event.window_id);
-            break;
         case GUI_Event::Type::WindowDeactivated:
-            dbgprintf("WID=%x WindowDeactivated\n", event.window_id);
+            handle_window_activation_event(event, *window);
             break;
         case GUI_Event::Type::KeyDown:
         case GUI_Event::Type::KeyUp:

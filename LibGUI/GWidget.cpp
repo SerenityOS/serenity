@@ -145,6 +145,8 @@ bool GWidget::is_focused() const
     auto* win = window();
     if (!win)
         return false;
+    if (!win->is_active())
+        return false;
     return win->focused_widget() == this;
 }
 
