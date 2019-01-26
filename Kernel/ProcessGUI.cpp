@@ -145,7 +145,7 @@ int Process::gui$invalidate_window(int window_id, const GUI_Rect* a_rect)
     Rect rect;
     if (a_rect)
         rect = *a_rect;
-    WSMessageLoop::the().post_event(&window, make<WSPaintEvent>(rect));
+    WSMessageLoop::the().post_message(&window, make<WSPaintEvent>(rect));
     WSMessageLoop::the().server_process().request_wakeup();
     return 0;
 }
@@ -169,7 +169,7 @@ int Process::gui$notify_paint_finished(int window_id, const GUI_Rect* a_rect)
     Rect rect;
     if (a_rect)
         rect = *a_rect;
-    WSMessageLoop::the().post_event(&window, make<WSWindowInvalidationEvent>(rect));
+    WSMessageLoop::the().post_message(&window, make<WSWindowInvalidationEvent>(rect));
     WSMessageLoop::the().server_process().request_wakeup();
     return 0;
 }
@@ -207,7 +207,7 @@ int Process::gui$set_window_title(int window_id, const char* title, size_t size)
         return -EBADWINDOW;
     auto& window = *(*it).value;
     String new_title(title, size);
-    WSMessageLoop::the().post_event(&window, make<WSSetWindowTitle>(move(new_title)));
+    WSMessageLoop::the().post_message(&window, make<WSSetWindowTitle>(move(new_title)));
     WSMessageLoop::the().server_process().request_wakeup();
     return 0;
 }
@@ -240,7 +240,7 @@ int Process::gui$set_window_rect(int window_id, const GUI_Rect* rect)
         return -EBADWINDOW;
     auto& window = *(*it).value;
     Rect new_rect = *rect;
-    WSMessageLoop::the().post_event(&window, make<WSSetWindowRect>(new_rect));
+    WSMessageLoop::the().post_message(&window, make<WSSetWindowRect>(new_rect));
     WSMessageLoop::the().server_process().request_wakeup();
     return 0;
 }

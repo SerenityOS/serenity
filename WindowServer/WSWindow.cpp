@@ -54,50 +54,50 @@ static GUI_MouseButton to_api(MouseButton button)
     }
 }
 
-void WSWindow::event(WSMessage& event)
+void WSWindow::on_message(WSMessage& message)
 {
     GUI_Event gui_event;
     gui_event.window_id = window_id();
 
-    switch (event.type()) {
+    switch (message.type()) {
     case WSMessage::Paint:
         gui_event.type = GUI_Event::Type::Paint;
-        gui_event.paint.rect = static_cast<WSPaintEvent&>(event).rect();
+        gui_event.paint.rect = static_cast<WSPaintEvent&>(message).rect();
         break;
     case WSMessage::MouseMove:
         gui_event.type = GUI_Event::Type::MouseMove;
-        gui_event.mouse.position = static_cast<WSMouseEvent&>(event).position();
+        gui_event.mouse.position = static_cast<WSMouseEvent&>(message).position();
         gui_event.mouse.button = GUI_MouseButton::NoButton;
-        gui_event.mouse.buttons = static_cast<WSMouseEvent&>(event).buttons();
+        gui_event.mouse.buttons = static_cast<WSMouseEvent&>(message).buttons();
         break;
     case WSMessage::MouseDown:
         gui_event.type = GUI_Event::Type::MouseDown;
-        gui_event.mouse.position = static_cast<WSMouseEvent&>(event).position();
-        gui_event.mouse.button = to_api(static_cast<WSMouseEvent&>(event).button());
-        gui_event.mouse.buttons = static_cast<WSMouseEvent&>(event).buttons();
+        gui_event.mouse.position = static_cast<WSMouseEvent&>(message).position();
+        gui_event.mouse.button = to_api(static_cast<WSMouseEvent&>(message).button());
+        gui_event.mouse.buttons = static_cast<WSMouseEvent&>(message).buttons();
         break;
     case WSMessage::MouseUp:
         gui_event.type = GUI_Event::Type::MouseUp;
-        gui_event.mouse.position = static_cast<WSMouseEvent&>(event).position();
-        gui_event.mouse.button = to_api(static_cast<WSMouseEvent&>(event).button());
-        gui_event.mouse.buttons = static_cast<WSMouseEvent&>(event).buttons();
+        gui_event.mouse.position = static_cast<WSMouseEvent&>(message).position();
+        gui_event.mouse.button = to_api(static_cast<WSMouseEvent&>(message).button());
+        gui_event.mouse.buttons = static_cast<WSMouseEvent&>(message).buttons();
         break;
     case WSMessage::KeyDown:
         gui_event.type = GUI_Event::Type::KeyDown;
-        gui_event.key.character = static_cast<WSKeyEvent&>(event).character();
-        gui_event.key.key = static_cast<WSKeyEvent&>(event).key();
-        gui_event.key.alt = static_cast<WSKeyEvent&>(event).alt();
-        gui_event.key.ctrl = static_cast<WSKeyEvent&>(event).ctrl();
-        gui_event.key.shift = static_cast<WSKeyEvent&>(event).shift();
+        gui_event.key.character = static_cast<WSKeyEvent&>(message).character();
+        gui_event.key.key = static_cast<WSKeyEvent&>(message).key();
+        gui_event.key.alt = static_cast<WSKeyEvent&>(message).alt();
+        gui_event.key.ctrl = static_cast<WSKeyEvent&>(message).ctrl();
+        gui_event.key.shift = static_cast<WSKeyEvent&>(message).shift();
         break;
     case WSMessage::WM_Invalidate:
-        WSWindowManager::the().invalidate(*this, static_cast<WSWindowInvalidationEvent&>(event).rect());
+        WSWindowManager::the().invalidate(*this, static_cast<WSWindowInvalidationEvent&>(message).rect());
         return;
     case WSMessage::WM_SetWindowRect:
-        set_rect(static_cast<WSSetWindowRect&>(event).rect());
+        set_rect(static_cast<WSSetWindowRect&>(message).rect());
         return;
     case WSMessage::WM_SetWindowTitle:
-        set_title(static_cast<WSSetWindowTitle&>(event).title());
+        set_title(static_cast<WSSetWindowTitle&>(message).title());
         return;
     case WSMessage::WindowActivated:
         gui_event.type = GUI_Event::Type::WindowActivated;

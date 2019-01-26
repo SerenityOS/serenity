@@ -33,7 +33,7 @@ public:
     void set_position(const Point& position) { set_rect({ position.x(), position.y(), width(), height() }); }
     void set_position_without_repaint(const Point& position) { set_rect_without_repaint({ position.x(), position.y(), width(), height() }); }
 
-    virtual void event(WSMessage&) override;
+    virtual void on_message(WSMessage&) override;
 
     bool is_being_dragged() const { return m_is_being_dragged; }
     void set_is_being_dragged(bool b) { m_is_being_dragged = b; }

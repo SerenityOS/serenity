@@ -15,7 +15,7 @@ public:
 
     int exec();
 
-    void post_event(WSMessageReceiver* receiver, OwnPtr<WSMessage>&&);
+    void post_message(WSMessageReceiver* receiver, OwnPtr<WSMessage>&&);
 
     static WSMessageLoop& the();
 
@@ -25,17 +25,17 @@ public:
     Process& server_process() { return *m_server_process; }
 
 private:
-    void wait_for_event();
+    void wait_for_message();
     void drain_mouse();
     void drain_keyboard();
 
     Lock m_lock;
 
-    struct QueuedEvent {
+    struct QueuedMessage {
         WSMessageReceiver* receiver { nullptr };
-        OwnPtr<WSMessage> event;
+        OwnPtr<WSMessage> message;
     };
-    Vector<QueuedEvent> m_queued_events;
+    Vector<QueuedMessage> m_queued_messages;
 
     Process* m_server_process { nullptr };
     bool m_running { false };
