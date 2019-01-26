@@ -9,18 +9,18 @@ class WSMessage {
 public:
     enum Type {
         Invalid = 0,
-        Paint,
+        WM_ClientWantsToPaint,
+        WM_ClientFinishedPaint,
+        WM_SetWindowTitle,
+        WM_SetWindowRect,
+        WM_DeferredCompose,
         MouseMove,
         MouseDown,
         MouseUp,
         KeyDown,
         KeyUp,
-        WM_Compose,
-        WM_Invalidate,
         WindowActivated,
         WindowDeactivated,
-        WM_SetWindowTitle,
-        WM_SetWindowRect,
     };
 
     WSMessage() { }
@@ -31,16 +31,16 @@ public:
 
     bool is_mouse_event() const { return m_type == MouseMove || m_type == MouseDown || m_type == MouseUp; }
     bool is_key_event() const { return m_type == KeyUp || m_type == KeyDown; }
-    bool is_paint_event() const { return m_type == Paint; }
+    bool is_paint_event() const { return m_type == WM_ClientWantsToPaint; }
 
 private:
     Type m_type { Invalid };
 };
 
-class WSWindowInvalidationEvent final : public WSMessage {
+class WSClientFinishedPaintMessage final : public WSMessage {
 public:
-    explicit WSWindowInvalidationEvent(const Rect& rect = Rect())
-        : WSMessage(WSMessage::WM_Invalidate)
+    explicit WSClientFinishedPaintMessage(const Rect& rect = Rect())
+        : WSMessage(WSMessage::WM_ClientFinishedPaint)
         , m_rect(rect)
     {
     }
@@ -50,9 +50,9 @@ private:
     Rect m_rect;
 };
 
-class WSSetWindowTitle final : public WSMessage {
+class WSSetWindowTitleMessage final : public WSMessage {
 public:
-    explicit WSSetWindowTitle(String&& title)
+    explicit WSSetWindowTitleMessage(String&& title)
         : WSMessage(WSMessage::WM_SetWindowTitle)
         , m_title(move(title))
     {
@@ -64,9 +64,9 @@ private:
     String m_title;
 };
 
-class WSSetWindowRect final : public WSMessage {
+class WSSetWindowRectMessage final : public WSMessage {
 public:
-    explicit WSSetWindowRect(const Rect& rect)
+    explicit WSSetWindowRectMessage(const Rect& rect)
         : WSMessage(WSMessage::WM_SetWindowRect)
         , m_rect(rect)
     {
@@ -78,10 +78,10 @@ private:
     Rect m_rect;
 };
 
-class WSPaintEvent final : public WSMessage {
+class WSClientWantsToPaintMessage final : public WSMessage {
 public:
-    explicit WSPaintEvent(const Rect& rect = Rect())
-        : WSMessage(WSMessage::Paint)
+    explicit WSClientWantsToPaintMessage(const Rect& rect = Rect())
+        : WSMessage(WSMessage::WM_ClientWantsToPaint)
         , m_rect(rect)
     {
     }
