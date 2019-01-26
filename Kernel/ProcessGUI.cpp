@@ -3,7 +3,7 @@
 #include <LibC/errno_numbers.h>
 #include <SharedGraphics/Font.h>
 #include <WindowServer/WSScreen.h>
-#include <WindowServer/WSEventLoop.h>
+#include <WindowServer/WSMessageLoop.h>
 #include <WindowServer/WSWindow.h>
 #include <WindowServer/WSWindowManager.h>
 
@@ -12,11 +12,11 @@
 void Process::initialize_gui_statics()
 {
     Font::initialize();
-    WSEventLoop::initialize();
+    WSMessageLoop::initialize();
     WSWindowManager::initialize();
     WSScreen::initialize();
 
-    new WSEventLoop;
+    new WSMessageLoop;
 }
 
 int Process::make_window_id()
@@ -33,7 +33,7 @@ int Process::make_window_id()
 static void wait_for_gui_server()
 {
     // FIXME: Time out after a while and return an error.
-    while (!WSEventLoop::the().running())
+    while (!WSMessageLoop::the().running())
         sleep(10);
 }
 
@@ -50,7 +50,7 @@ int Process::gui$create_window(const GUI_WindowParameters* user_params)
     if (rect.is_empty())
         return -EINVAL;
 
-    ProcessPagingScope scope(WSEventLoop::the().server_process());
+    ProcessPagingScope scope(WSMessageLoop::the().server_process());
 
     int window_id = make_window_id();
     if (!window_id)
@@ -145,8 +145,8 @@ int Process::gui$invalidate_window(int window_id, const GUI_Rect* a_rect)
     Rect rect;
     if (a_rect)
         rect = *a_rect;
-    WSEventLoop::the().post_event(&window, make<WSPaintEvent>(rect));
-    WSEventLoop::the().server_process().request_wakeup();
+    WSMessageLoop::the().post_event(&window, make<WSPaintEvent>(rect));
+    WSMessageLoop::the().server_process().request_wakeup();
     return 0;
 }
 
@@ -169,8 +169,8 @@ int Process::gui$notify_paint_finished(int window_id, const GUI_Rect* a_rect)
     Rect rect;
     if (a_rect)
         rect = *a_rect;
-    WSEventLoop::the().post_event(&window, make<WSWindowInvalidationEvent>(rect));
-    WSEventLoop::the().server_process().request_wakeup();
+    WSMessageLoop::the().post_event(&window, make<WSWindowInvalidationEvent>(rect));
+    WSMessageLoop::the().server_process().request_wakeup();
     return 0;
 }
 
@@ -207,8 +207,8 @@ int Process::gui$set_window_title(int window_id, const char* title, size_t size)
         return -EBADWINDOW;
     auto& window = *(*it).value;
     String new_title(title, size);
-    WSEventLoop::the().post_event(&window, make<WSSetWindowTitle>(move(new_title)));
-    WSEventLoop::the().server_process().request_wakeup();
+    WSMessageLoop::the().post_event(&window, make<WSSetWindowTitle>(move(new_title)));
+    WSMessageLoop::the().server_process().request_wakeup();
     return 0;
 }
 
@@ -240,7 +240,7 @@ int Process::gui$set_window_rect(int window_id, const GUI_Rect* rect)
         return -EBADWINDOW;
     auto& window = *(*it).value;
     Rect new_rect = *rect;
-    WSEventLoop::the().post_event(&window, make<WSSetWindowRect>(new_rect));
-    WSEventLoop::the().server_process().request_wakeup();
+    WSMessageLoop::the().post_event(&window, make<WSSetWindowRect>(new_rect));
+    WSMessageLoop::the().server_process().request_wakeup();
     return 0;
 }

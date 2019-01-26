@@ -1,23 +1,23 @@
 #pragma once
 
-#include "WSEvent.h"
+#include "WSMessage.h"
 #include <AK/Lock.h>
 #include <AK/OwnPtr.h>
 #include <AK/Vector.h>
 
-class WSEventReceiver;
+class WSMessageReceiver;
 class Process;
 
-class WSEventLoop {
+class WSMessageLoop {
 public:
-    WSEventLoop();
-    ~WSEventLoop();
+    WSMessageLoop();
+    ~WSMessageLoop();
 
     int exec();
 
-    void post_event(WSEventReceiver* receiver, OwnPtr<WSEvent>&&);
+    void post_event(WSMessageReceiver* receiver, OwnPtr<WSMessage>&&);
 
-    static WSEventLoop& the();
+    static WSMessageLoop& the();
 
     static void initialize();
 
@@ -32,8 +32,8 @@ private:
     Lock m_lock;
 
     struct QueuedEvent {
-        WSEventReceiver* receiver { nullptr };
-        OwnPtr<WSEvent> event;
+        WSMessageReceiver* receiver { nullptr };
+        OwnPtr<WSMessage> event;
     };
     Vector<QueuedEvent> m_queued_events;
 

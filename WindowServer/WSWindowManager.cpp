@@ -1,7 +1,7 @@
 #include "WSWindowManager.h"
 #include "WSWindow.h"
 #include "WSScreen.h"
-#include "WSEventLoop.h"
+#include "WSMessageLoop.h"
 #include "Process.h"
 #include "MemoryManager.h"
 #include <Kernel/ProcFileSystem.h>
@@ -243,7 +243,7 @@ void WSWindowManager::notify_rect_changed(WSWindow& window, const Rect& old_rect
 
 void WSWindowManager::handle_titlebar_mouse_event(WSWindow& window, WSMouseEvent& event)
 {
-    if (event.type() == WSEvent::MouseDown && event.button() == MouseButton::Left) {
+    if (event.type() == WSMessage::MouseDown && event.button() == MouseButton::Left) {
 #ifdef DRAG_DEBUG
         printf("[WM] Begin dragging WSWindow{%p}\n", &window);
 #endif
@@ -259,7 +259,7 @@ void WSWindowManager::handle_titlebar_mouse_event(WSWindow& window, WSMouseEvent
 
 void WSWindowManager::process_mouse_event(WSMouseEvent& event)
 {
-    if (event.type() == WSEvent::MouseUp && event.button() == MouseButton::Left) {
+    if (event.type() == WSMessage::MouseUp && event.button() == MouseButton::Left) {
         if (m_drag_window) {
 #ifdef DRAG_DEBUG
             printf("[WM] Finish dragging WSWindow{%p}\n", m_dragWindow.ptr());
@@ -272,7 +272,7 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event)
         }
     }
 
-    if (event.type() == WSEvent::MouseMove) {
+    if (event.type() == WSMessage::MouseMove) {
         if (m_drag_window) {
             auto old_window_rect = m_drag_window->rect();
             Point pos = m_drag_window_origin;
@@ -289,7 +289,7 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event)
 
     for (auto* window = m_windows_in_order.tail(); window; window = window->prev()) {
         if (title_bar_rect(window->rect()).contains(event.position())) {
-            if (event.type() == WSEvent::MouseDown) {
+            if (event.type() == WSMessage::MouseDown) {
                 move_to_front(*window);
                 set_active_window(window);
             }
@@ -298,7 +298,7 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event)
         }
 
         if (window->rect().contains(event.position())) {
-            if (event.type() == WSEvent::MouseDown) {
+            if (event.type() == WSMessage::MouseDown) {
                 move_to_front(*window);
                 set_active_window(window);
             }
@@ -387,7 +387,7 @@ void WSWindowManager::draw_cursor()
     m_last_cursor_rect = cursor_rect;
 }
 
-void WSWindowManager::event(WSEvent& event)
+void WSWindowManager::event(WSMessage& event)
 {
     ASSERT_INTERRUPTS_ENABLED();
     LOCKER(m_lock);
@@ -401,7 +401,7 @@ void WSWindowManager::event(WSEvent& event)
         return;
     }
 
-    if (event.type() == WSEvent::WM_Compose) {
+    if (event.type() == WSMessage::WM_Compose) {
         m_pending_compose_event = false;
         compose();
         return;
@@ -415,12 +415,12 @@ void WSWindowManager::set_active_window(WSWindow* window)
         return;
 
     if (auto* previously_active_window = m_active_window.ptr()) {
-        WSEventLoop::the().post_event(previously_active_window, make<WSEvent>(WSEvent::WindowDeactivated));
+        WSMessageLoop::the().post_event(previously_active_window, make<WSMessage>(WSMessage::WindowDeactivated));
         invalidate(*previously_active_window);
     }
     m_active_window = window->makeWeakPtr();
     if (m_active_window) {
-        WSEventLoop::the().post_event(m_active_window.ptr(), make<WSEvent>(WSEvent::WindowActivated));
+        WSMessageLoop::the().post_event(m_active_window.ptr(), make<WSMessage>(WSMessage::WindowActivated));
         invalidate(*m_active_window);
     }
 }
@@ -454,7 +454,7 @@ void WSWindowManager::invalidate(const Rect& a_rect)
 
     if (!m_pending_compose_event) {
         ASSERT_INTERRUPTS_ENABLED();
-        WSEventLoop::the().post_event(this, make<WSEvent>(WSEvent::WM_Compose));
+        WSMessageLoop::the().post_event(this, make<WSMessage>(WSMessage::WM_Compose));
         m_pending_compose_event = true;
     }
 }

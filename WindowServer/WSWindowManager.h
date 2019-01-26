@@ -7,7 +7,7 @@
 #include <AK/InlineLinkedList.h>
 #include <AK/WeakPtr.h>
 #include <AK/Lock.h>
-#include "WSEventReceiver.h"
+#include "WSMessageReceiver.h"
 
 class WSScreen;
 class WSMouseEvent;
@@ -16,7 +16,7 @@ class WSWindow;
 class CharacterBitmap;
 class GraphicsBitmap;
 
-class WSWindowManager : public WSEventReceiver {
+class WSWindowManager : public WSMessageReceiver {
 public:
     static WSWindowManager& the();
     void add_window(WSWindow&);
@@ -48,7 +48,7 @@ private:
 
     void set_active_window(WSWindow*);
     
-    virtual void event(WSEvent&) override;
+    virtual void event(WSMessage&) override;
 
     void compose();
     void paint_window_frame(WSWindow&);

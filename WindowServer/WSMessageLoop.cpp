@@ -1,6 +1,6 @@
-#include "WSEventLoop.h"
-#include "WSEvent.h"
-#include "WSEventReceiver.h"
+#include "WSMessageLoop.h"
+#include "WSMessage.h"
+#include "WSMessageReceiver.h"
 #include "WSWindowManager.h"
 #include "WSScreen.h"
 #include "PS2MouseDevice.h"
@@ -10,30 +10,30 @@
 
 //#define WSEVENTLOOP_DEBUG
 
-static WSEventLoop* s_the;
+static WSMessageLoop* s_the;
 
-void WSEventLoop::initialize()
+void WSMessageLoop::initialize()
 {
     s_the = nullptr;
 }
 
-WSEventLoop::WSEventLoop()
+WSMessageLoop::WSMessageLoop()
 {
     if (!s_the)
         s_the = this;
 }
 
-WSEventLoop::~WSEventLoop()
+WSMessageLoop::~WSMessageLoop()
 {
 }
 
-WSEventLoop& WSEventLoop::the()
+WSMessageLoop& WSMessageLoop::the()
 {
     ASSERT(s_the);
     return *s_the;
 }
 
-int WSEventLoop::exec()
+int WSMessageLoop::exec()
 {
     m_server_process = current;
 
@@ -58,10 +58,10 @@ int WSEventLoop::exec()
             auto* receiver = queued_event.receiver;
             auto& event = *queued_event.event;
 #ifdef WSEVENTLOOP_DEBUG
-            dbgprintf("WSEventLoop: receiver{%p} event %u (%s)\n", receiver, (unsigned)event.type(), event.name());
+            dbgprintf("WSMessageLoop: receiver{%p} event %u (%s)\n", receiver, (unsigned)event.type(), event.name());
 #endif
             if (!receiver) {
-                dbgprintf("WSEvent type %u with no receiver :(\n", event.type());
+                dbgprintf("WSMessage type %u with no receiver :(\n", event.type());
                 ASSERT_NOT_REACHED();
                 return 1;
             } else {
@@ -71,18 +71,18 @@ int WSEventLoop::exec()
     }
 }
 
-void WSEventLoop::post_event(WSEventReceiver* receiver, OwnPtr<WSEvent>&& event)
+void WSMessageLoop::post_event(WSMessageReceiver* receiver, OwnPtr<WSMessage>&& event)
 {
     ASSERT_INTERRUPTS_ENABLED();
     LOCKER(m_lock);
 #ifdef WSEVENTLOOP_DEBUG
-    dbgprintf("WSEventLoop::post_event: {%u} << receiver=%p, event=%p\n", m_queued_events.size(), receiver, event.ptr());
+    dbgprintf("WSMessageLoop::post_event: {%u} << receiver=%p, event=%p\n", m_queued_events.size(), receiver, event.ptr());
 #endif
 
-    if (event->type() == WSEvent::WM_Invalidate) {
+    if (event->type() == WSMessage::WM_Invalidate) {
         auto& invalidation_event = static_cast<WSWindowInvalidationEvent&>(*event);
         for (auto& queued_event : m_queued_events) {
-            if (receiver == queued_event.receiver && queued_event.event->type() == WSEvent::WM_Invalidate) {
+            if (receiver == queued_event.receiver && queued_event.event->type() == WSMessage::WM_Invalidate) {
                 auto& queued_invalidation_event = static_cast<WSWindowInvalidationEvent&>(*queued_event.event);
                 if (queued_invalidation_event.rect().is_empty() || queued_invalidation_event.rect().contains(invalidation_event.rect())) {
 #ifdef WSEVENTLOOP_DEBUG
@@ -94,10 +94,10 @@ void WSEventLoop::post_event(WSEventReceiver* receiver, OwnPtr<WSEvent>&& event)
         }
     }
 
-    if (event->type() == WSEvent::Paint) {
+    if (event->type() == WSMessage::Paint) {
         auto& invalidation_event = static_cast<WSPaintEvent&>(*event);
         for (auto& queued_event : m_queued_events) {
-            if (receiver == queued_event.receiver && queued_event.event->type() == WSEvent::Paint) {
+            if (receiver == queued_event.receiver && queued_event.event->type() == WSMessage::Paint) {
                 auto& queued_invalidation_event = static_cast<WSPaintEvent&>(*queued_event.event);
                 if (queued_invalidation_event.rect().is_empty() || queued_invalidation_event.rect().contains(invalidation_event.rect())) {
 #ifdef WSEVENTLOOP_DEBUG
@@ -115,7 +115,7 @@ void WSEventLoop::post_event(WSEventReceiver* receiver, OwnPtr<WSEvent>&& event)
         m_server_process->request_wakeup();
 }
 
-void WSEventLoop::wait_for_event()
+void WSMessageLoop::wait_for_event()
 {
     fd_set rfds;
     memset(&rfds, 0, sizeof(rfds));
@@ -144,7 +144,7 @@ void WSEventLoop::wait_for_event()
         drain_mouse();
 }
 
-void WSEventLoop::drain_mouse()
+void WSMessageLoop::drain_mouse()
 {
     auto& screen = WSScreen::the();
     auto& mouse = PS2MouseDevice::the();
@@ -170,7 +170,7 @@ void WSEventLoop::drain_mouse()
     }
 }
 
-void WSEventLoop::drain_keyboard()
+void WSMessageLoop::drain_keyboard()
 {
     auto& screen = WSScreen::the();
     auto& keyboard = Keyboard::the();

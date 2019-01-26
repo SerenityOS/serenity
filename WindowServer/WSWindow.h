@@ -5,11 +5,11 @@
 #include <AK/AKString.h>
 #include <AK/InlineLinkedList.h>
 #include <AK/Lock.h>
-#include "WSEventReceiver.h"
+#include "WSMessageReceiver.h"
 
 class Process;
 
-class WSWindow final : public WSEventReceiver, public InlineLinkedListNode<WSWindow> {
+class WSWindow final : public WSMessageReceiver, public InlineLinkedListNode<WSWindow> {
     friend class WSWindowLocker;
 public:
     WSWindow(Process&, int window_id);
@@ -33,7 +33,7 @@ public:
     void set_position(const Point& position) { set_rect({ position.x(), position.y(), width(), height() }); }
     void set_position_without_repaint(const Point& position) { set_rect_without_repaint({ position.x(), position.y(), width(), height() }); }
 
-    virtual void event(WSEvent&) override;
+    virtual void event(WSMessage&) override;
 
     bool is_being_dragged() const { return m_is_being_dragged; }
     void set_is_being_dragged(bool b) { m_is_being_dragged = b; }
