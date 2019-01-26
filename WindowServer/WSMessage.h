@@ -31,7 +31,6 @@ public:
 
     bool is_mouse_event() const { return m_type == MouseMove || m_type == MouseDown || m_type == MouseUp; }
     bool is_key_event() const { return m_type == KeyUp || m_type == KeyDown; }
-    bool is_paint_event() const { return m_type == WM_ClientWantsToPaint; }
 
 private:
     Type m_type { Invalid };
