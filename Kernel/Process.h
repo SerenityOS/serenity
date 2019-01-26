@@ -201,6 +201,7 @@ public:
     int gui$get_window_backing_store(int window_id, GUI_WindowBackingStoreInfo*);
     int gui$release_window_backing_store(void* backing_store_id);
     int gui$invalidate_window(int window_id, const GUI_Rect*);
+    int gui$notify_paint_finished(int window_id, const GUI_Rect*);
     int gui$get_window_title(int window_id, char* buffer, size_t size);
     int gui$set_window_title(int window_id, const char* title, size_t size);
     int gui$get_window_rect(int window_id, GUI_Rect*);

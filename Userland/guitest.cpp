@@ -8,7 +8,7 @@
 #include <Kernel/Syscall.h>
 #include <SharedGraphics/GraphicsBitmap.h>
 #include <SharedGraphics/Painter.h>
-#include "gui.h"
+#include <LibC/gui.h>
 
 static void paint(GraphicsBitmap& bitmap, int width, int height);
 
@@ -68,8 +68,12 @@ int main(int argc, char** argv)
         case GUI_Event::Type::WindowDeactivated: dbgprintf("WID=%x WindowDeactivated\n", event.window_id); break;
         }
 
-        if (event.type == GUI_Event::Type::MouseDown) {
+        if (event.type == GUI_Event::Type::Paint) {
             paint(*bitmap, backing.size.width, backing.size.height);
+            gui_notify_paint_finished(window_id, nullptr);
+        }
+
+        if (event.type == GUI_Event::Type::MouseDown) {
             gui_invalidate_window(window_id, nullptr);
         }
 

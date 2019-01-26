@@ -106,7 +106,7 @@ void GWidget::update()
     if (m_has_pending_paint_event)
         return;
     m_has_pending_paint_event = true;
-    GEventLoop::main().post_event(w, make<GPaintEvent>(relative_rect()));
+    w->update(relative_rect());
 }
 
 GWidget::HitTestResult GWidget::hit_test(int x, int y)

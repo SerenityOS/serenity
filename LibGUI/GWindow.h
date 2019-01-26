@@ -16,6 +16,7 @@ public:
 
     int window_id() const { return m_window_id; }
 
+    String title() const;
     void set_title(String&&);
 
     int x() const { return rect().x(); }
@@ -40,7 +41,7 @@ public:
 
     void show();
 
-    void update();
+    void update(const Rect& = Rect());
 
 private:
     RetainPtr<GraphicsBitmap> m_backing;

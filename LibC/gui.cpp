@@ -50,3 +50,9 @@ int gui_set_window_rect(int window_id, const GUI_Rect* rect)
     int rc = syscall(SC_gui_set_window_rect, window_id, rect);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
+
+int gui_notify_paint_finished(int window_id, const GUI_Rect* rect)
+{
+    int rc = syscall(SC_gui_notify_paint_finished, window_id, rect);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}

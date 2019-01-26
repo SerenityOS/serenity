@@ -49,9 +49,16 @@ GWindow::~GWindow()
 void GWindow::set_title(String&& title)
 {
     dbgprintf("GWindow::set_title \"%s\"\n", title.characters());
-    GUI_WindowParameters params;
     int rc = gui_set_window_title(m_window_id, title.characters(), title.length());
     ASSERT(rc == 0);
+}
+
+String GWindow::title() const
+{
+    char buffer[256];
+    int rc = gui_get_window_title(m_window_id, buffer, sizeof(buffer));
+    ASSERT(rc >= 0);
+    return String(buffer, rc);
 }
 
 void GWindow::set_rect(const Rect& a_rect)
@@ -85,7 +92,7 @@ void GWindow::event(GEvent& event)
             rect = m_main_widget->rect();
         m_main_widget->event(*make<GPaintEvent>(rect));
         GUI_Rect gui_rect = rect;
-        int rc = gui_invalidate_window(m_window_id, &gui_rect);
+        int rc = gui_notify_paint_finished(m_window_id, &gui_rect);
         ASSERT(rc == 0);
     }
 
@@ -105,9 +112,11 @@ void GWindow::show()
 {
 }
 
-void GWindow::update()
+void GWindow::update(const Rect& a_rect)
 {
-    GEventLoop::main().post_event(this, make<GPaintEvent>());
+    GUI_Rect rect = a_rect;
+    int rc = gui_invalidate_window(m_window_id, a_rect.is_null() ? nullptr : &rect);
+    ASSERT(rc == 0);
 }
 
 void GWindow::set_main_widget(GWidget* widget)

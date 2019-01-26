@@ -80,6 +80,7 @@
     __ENUMERATE_SYSCALL(gui_set_window_title) \
     __ENUMERATE_SYSCALL(gui_get_window_rect) \
     __ENUMERATE_SYSCALL(gui_set_window_rect) \
+    __ENUMERATE_SYSCALL(gui_notify_paint_finished) \
 
 
 #ifdef SERENITY

@@ -134,7 +134,7 @@ void GEventLoop::wait_for_event()
         }
         switch (event.type) {
         case GUI_Event::Type::Paint:
-            dbgprintf("WID=%x Paint [%d,%d %dx%d]\n", event.window_id, event.paint.rect.location.x, event.paint.rect.location.y, event.paint.rect.size.width, event.paint.rect.size.height); break;
+            dbgprintf("WID=%x Paint [%d,%d %dx%d]\n", event.window_id, event.paint.rect.location.x, event.paint.rect.location.y, event.paint.rect.size.width, event.paint.rect.size.height);
             handle_paint_event(event, *window);
             break;
         case GUI_Event::Type::MouseDown:
