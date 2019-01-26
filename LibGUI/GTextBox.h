@@ -11,7 +11,7 @@ public:
     String text() const { return m_text; }
     void set_text(String&&);
 
-    Function<void(GTextBox&)> onReturnPressed;
+    Function<void(GTextBox&)> on_return_pressed;
 
 private:
     virtual const char* class_name() const override { return "GTextBox"; }
@@ -19,6 +19,7 @@ private:
     virtual void mousedown_event(GMouseEvent&) override;
     virtual void keydown_event(GKeyEvent&) override;
     virtual void timerEvent(GTimerEvent&) override;
+    virtual bool accepts_focus() const override { return true; }
 
     void handle_backspace();
 

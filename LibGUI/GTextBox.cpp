@@ -107,8 +107,8 @@ void GTextBox::keydown_event(GKeyEvent& event)
     case KeyCode::Key_Backspace:
         return handle_backspace();
     case KeyCode::Key_Return:
-        if (onReturnPressed)
-            onReturnPressed(*this);
+        if (on_return_pressed)
+            on_return_pressed(*this);
         return;
     }
 

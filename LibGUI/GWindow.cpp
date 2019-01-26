@@ -139,8 +139,13 @@ void GWindow::set_focused_widget(GWidget* widget)
 {
     if (m_focused_widget == widget)
         return;
-    if (m_focused_widget)
+    if (m_focused_widget) {
+        GEventLoop::main().post_event(m_focused_widget, make<GEvent>(GEvent::FocusOut));
         m_focused_widget->update();
+    }
     m_focused_widget = widget;
-    m_focused_widget->update();
+    if (m_focused_widget) {
+        GEventLoop::main().post_event(m_focused_widget, make<GEvent>(GEvent::FocusIn));
+        m_focused_widget->update();
+    }
 }

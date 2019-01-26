@@ -38,6 +38,9 @@ void GWidget::event(GEvent& event)
     case GEvent::Paint:
         m_has_pending_paint_event = false;
         return paint_event(static_cast<GPaintEvent&>(event));
+    case GEvent::FocusIn:
+    case GEvent::FocusOut:
+        return focusin_event(event);
     case GEvent::Show:
         return show_event(static_cast<GShowEvent&>(event));
     case GEvent::Hide:
@@ -49,7 +52,8 @@ void GWidget::event(GEvent& event)
     case GEvent::MouseMove:
         return mousemove_event(static_cast<GMouseEvent&>(event));
     case GEvent::MouseDown:
-        // FIXME: Focus self if needed.
+        if (accepts_focus())
+            set_focus(true);
         return mousedown_event(static_cast<GMouseEvent&>(event));
     case GEvent::MouseUp:
         return mouseup_event(static_cast<GMouseEvent&>(event));
@@ -98,6 +102,14 @@ void GWidget::mousemove_event(GMouseEvent&)
 {
 }
 
+void GWidget::focusin_event(GEvent&)
+{
+}
+
+void GWidget::focusout_event(GEvent&)
+{
+}
+
 void GWidget::update()
 {
     auto* w = window();
@@ -130,15 +142,23 @@ void GWidget::set_window(GWindow* window)
 
 bool GWidget::is_focused() const
 {
-    // FIXME: Implement.
-    return false;
+    auto* win = window();
+    if (!win)
+        return false;
+    return win->focused_widget() == this;
 }
 
 void GWidget::set_focus(bool focus)
 {
-    if (focus == is_focused())
+    auto* win = window();
+    if (!win)
         return;
-    // FIXME: Implement.
+    if (focus) {
+        win->set_focused_widget(this);
+    } else {
+        if (win->focused_widget() == this)
+            win->set_focused_widget(nullptr);
+    }
 }
 
 void GWidget::set_font(RetainPtr<Font>&& font)

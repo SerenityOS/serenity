@@ -24,6 +24,8 @@ public:
     virtual void mousemove_event(GMouseEvent&);
     virtual void mousedown_event(GMouseEvent&);
     virtual void mouseup_event(GMouseEvent&);
+    virtual void focusin_event(GEvent&);
+    virtual void focusout_event(GEvent&);
 
     Rect relative_rect() const { return m_relative_rect; }
     Point relative_position() const { return m_relative_rect.location(); }
@@ -38,6 +40,8 @@ public:
 
     void update();
     void repaint(const Rect&);
+
+    virtual bool accepts_focus() const { return false; }
 
     bool is_focused() const;
     void set_focus(bool);

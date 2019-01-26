@@ -5,21 +5,6 @@
 #include <AK/AKString.h>
 #include <AK/Types.h>
 
-static const char* eventNames[] = {
-    "Invalid",
-    "Quit",
-    "Show",
-    "Hide",
-    "Paint",
-    "MouseMove",
-    "MouseDown",
-    "MouseUp",
-    "KeyDown",
-    "KeyUp",
-    "Timer",
-    "DeferredDestroy",
-};
-
 class GEvent {
 public:
     enum Type {
@@ -37,6 +22,8 @@ public:
         DeferredDestroy,
         WindowBecameInactive,
         WindowBecameActive,
+        FocusIn,
+        FocusOut,
     };
 
     GEvent() { }
@@ -44,8 +31,6 @@ public:
     virtual ~GEvent() { }
 
     Type type() const { return m_type; }
-
-    const char* name() const { return eventNames[(unsigned)m_type]; }
 
     bool is_mouse_event() const { return m_type == MouseMove || m_type == MouseDown || m_type == MouseUp; }
     bool is_key_event() const { return m_type == KeyUp || m_type == KeyDown; }

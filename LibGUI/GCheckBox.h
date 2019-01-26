@@ -19,6 +19,7 @@ private:
     virtual void mousedown_event(GMouseEvent&) override;
 
     virtual const char* class_name() const override { return "GCheckBox"; }
+    virtual bool accepts_focus() const override { return true; }
 
     String m_caption;
     bool m_checked { false };
