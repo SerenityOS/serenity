@@ -14,6 +14,7 @@ private:
     virtual void paint_event(GPaintEvent&) override;
     virtual void mousedown_event(GMouseEvent&) override;
     virtual const char* class_name() const override { return "GListBox"; }
+    virtual bool accepts_focus() const override { return true; }
 
     Rect item_rect(int index) const;
 

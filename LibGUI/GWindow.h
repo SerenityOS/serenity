@@ -38,6 +38,10 @@ public:
     GWidget* main_widget() { return m_main_widget; }
     const GWidget* main_widget() const { return m_main_widget; }
     void set_main_widget(GWidget*);
+
+
+    GWidget* focused_widget() { return m_focused_widget; }
+    const GWidget* focused_widget() const { return m_focused_widget; }
     void set_focused_widget(GWidget*);
 
     void show();
