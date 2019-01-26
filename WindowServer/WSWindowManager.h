@@ -11,7 +11,7 @@
 
 class WSScreen;
 class WSMouseEvent;
-class WSPaintEvent;
+class WSClientWantsToPaintMessage;
 class WSWindow;
 class CharacterBitmap;
 class GraphicsBitmap;

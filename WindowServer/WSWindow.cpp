@@ -60,9 +60,9 @@ void WSWindow::on_message(WSMessage& message)
     gui_event.window_id = window_id();
 
     switch (message.type()) {
-    case WSMessage::Paint:
+    case WSMessage::WM_ClientWantsToPaint:
         gui_event.type = GUI_Event::Type::Paint;
-        gui_event.paint.rect = static_cast<WSPaintEvent&>(message).rect();
+        gui_event.paint.rect = static_cast<WSClientWantsToPaintMessage&>(message).rect();
         break;
     case WSMessage::MouseMove:
         gui_event.type = GUI_Event::Type::MouseMove;
@@ -90,14 +90,14 @@ void WSWindow::on_message(WSMessage& message)
         gui_event.key.ctrl = static_cast<WSKeyEvent&>(message).ctrl();
         gui_event.key.shift = static_cast<WSKeyEvent&>(message).shift();
         break;
-    case WSMessage::WM_Invalidate:
-        WSWindowManager::the().invalidate(*this, static_cast<WSWindowInvalidationEvent&>(message).rect());
+    case WSMessage::WM_ClientFinishedPaint:
+        WSWindowManager::the().invalidate(*this, static_cast<WSClientFinishedPaintMessage&>(message).rect());
         return;
     case WSMessage::WM_SetWindowRect:
-        set_rect(static_cast<WSSetWindowRect&>(message).rect());
+        set_rect(static_cast<WSSetWindowRectMessage&>(message).rect());
         return;
     case WSMessage::WM_SetWindowTitle:
-        set_title(static_cast<WSSetWindowTitle&>(message).title());
+        set_title(static_cast<WSSetWindowTitleMessage&>(message).title());
         return;
     case WSMessage::WindowActivated:
         gui_event.type = GUI_Event::Type::WindowActivated;

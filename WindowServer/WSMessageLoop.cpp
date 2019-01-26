@@ -79,14 +79,14 @@ void WSMessageLoop::post_message(WSMessageReceiver* receiver, OwnPtr<WSMessage>&
     dbgprintf("WSMessageLoop::post_message: {%u} << receiver=%p, message=%p\n", m_queued_messages.size(), receiver, message.ptr());
 #endif
 
-    if (message->type() == WSMessage::WM_Invalidate) {
-        auto& invalidation_message = static_cast<WSWindowInvalidationEvent&>(*message);
+    if (message->type() == WSMessage::WM_ClientFinishedPaint) {
+        auto& invalidation_message = static_cast<WSClientFinishedPaintMessage&>(*message);
         for (auto& queued_message : m_queued_messages) {
-            if (receiver == queued_message.receiver && queued_message.message->type() == WSMessage::WM_Invalidate) {
-                auto& queued_invalidation_message = static_cast<WSWindowInvalidationEvent&>(*queued_message.message);
+            if (receiver == queued_message.receiver && queued_message.message->type() == WSMessage::WM_ClientFinishedPaint) {
+                auto& queued_invalidation_message = static_cast<WSClientFinishedPaintMessage&>(*queued_message.message);
                 if (queued_invalidation_message.rect().is_empty() || queued_invalidation_message.rect().contains(invalidation_message.rect())) {
 #ifdef WSEVENTLOOP_DEBUG
-                    dbgprintf("Swallow WM_Invalidate\n");
+                    dbgprintf("Swallow WM_ClientFinishedPaint\n");
 #endif
                     return;
                 }
@@ -94,14 +94,14 @@ void WSMessageLoop::post_message(WSMessageReceiver* receiver, OwnPtr<WSMessage>&
         }
     }
 
-    if (message->type() == WSMessage::Paint) {
-        auto& invalidation_message = static_cast<WSPaintEvent&>(*message);
+    if (message->type() == WSMessage::WM_ClientWantsToPaint) {
+        auto& invalidation_message = static_cast<WSClientWantsToPaintMessage&>(*message);
         for (auto& queued_message : m_queued_messages) {
-            if (receiver == queued_message.receiver && queued_message.message->type() == WSMessage::Paint) {
-                auto& queued_invalidation_message = static_cast<WSPaintEvent&>(*queued_message.message);
+            if (receiver == queued_message.receiver && queued_message.message->type() == WSMessage::WM_ClientWantsToPaint) {
+                auto& queued_invalidation_message = static_cast<WSClientWantsToPaintMessage&>(*queued_message.message);
                 if (queued_invalidation_message.rect().is_empty() || queued_invalidation_message.rect().contains(invalidation_message.rect())) {
 #ifdef WSEVENTLOOP_DEBUG
-                    dbgprintf("Swallow WM_Paint\n");
+                    dbgprintf("Swallow WM_ClientWantsToPaint\n");
 #endif
                     return;
                 }

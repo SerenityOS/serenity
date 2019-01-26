@@ -401,7 +401,7 @@ void WSWindowManager::on_message(WSMessage& message)
         return;
     }
 
-    if (message.type() == WSMessage::WM_Compose) {
+    if (message.type() == WSMessage::WM_DeferredCompose) {
         m_pending_compose_event = false;
         compose();
         return;
@@ -454,7 +454,7 @@ void WSWindowManager::invalidate(const Rect& a_rect)
 
     if (!m_pending_compose_event) {
         ASSERT_INTERRUPTS_ENABLED();
-        WSMessageLoop::the().post_message(this, make<WSMessage>(WSMessage::WM_Compose));
+        WSMessageLoop::the().post_message(this, make<WSMessage>(WSMessage::WM_DeferredCompose));
         m_pending_compose_event = true;
     }
 }
