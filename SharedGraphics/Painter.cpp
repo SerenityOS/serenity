@@ -182,7 +182,7 @@ void Painter::draw_bitmap(const Point& p, const CharacterBitmap& bitmap, Color c
     }
 }
 
-void Painter::draw_glyph(const Point& point, char ch, Color color)
+FLATTEN void Painter::draw_glyph(const Point& point, char ch, Color color)
 {
     draw_bitmap(point, font().glyph_bitmap(ch), color);
 }
