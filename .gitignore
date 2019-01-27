@@ -1,6 +1,6 @@
 *.swp
-Serenity.config
-Serenity.creator
-Serenity.creator.user
-Serenity.files
-Serenity.includes
+*.config
+*.creator
+*.creator.user
+*.files
+*.includes
