@@ -47,12 +47,7 @@ void GTextBox::paint_event(GPaintEvent&)
         if (ch == ' ')
             continue;
         int x = innerRect.x() + (i * font().glyph_width());
-        auto* bitmap = font().glyph_bitmap(ch);
-        if (!bitmap) {
-            dbgprintf("GTextBox: glyph missing: %02x\n", ch);
-            ASSERT_NOT_REACHED();
-        }
-        painter.draw_bitmap({x, y}, *bitmap, Color::Black);
+        painter.draw_bitmap({x, y}, font().glyph_bitmap(ch), Color::Black);
     }
 
     if (is_focused() && m_cursorBlinkState) {
