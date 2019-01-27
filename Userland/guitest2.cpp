@@ -14,6 +14,7 @@
 #include <LibGUI/GButton.h>
 #include <LibGUI/GEventLoop.h>
 #include <LibGUI/GTextBox.h>
+#include <LibGUI/GCheckBox.h>
 
 static GWindow* make_font_test_window();
 static GWindow* make_launcher_window();
@@ -116,6 +117,10 @@ GWindow* make_launcher_window()
 
     auto* other_textbox = new GTextBox(widget);
     other_textbox->set_relative_rect({ 5, 140, 90, 20 });
+
+    auto* checkbox = new GCheckBox(widget);
+    checkbox->set_relative_rect({ 5, 170, 90, 20 });
+    checkbox->set_caption("CheckBox");
 
     window->set_focused_widget(textbox);
 
