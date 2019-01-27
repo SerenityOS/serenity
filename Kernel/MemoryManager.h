@@ -222,6 +222,8 @@ public:
 
     void remap_region(Process&, Region&);
 
+    size_t ram_size() const { return m_ram_size; }
+
 private:
     MemoryManager();
     ~MemoryManager();
@@ -347,6 +349,8 @@ private:
 
     HashTable<VMObject*> m_vmos;
     HashTable<Region*> m_regions;
+
+    size_t m_ram_size { 0 };
 };
 
 struct ProcessPagingScope {
