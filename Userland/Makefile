@@ -22,6 +22,7 @@ OBJS = \
        guitest.o \
        guitest2.o \
        sysctl.o \
+       cp.o \
        rm.o
 
 APPS = \
@@ -49,6 +50,7 @@ APPS = \
        guitest \
        guitest2 \
        sysctl \
+       cp \
        rm
 
 ARCH_FLAGS =
@@ -139,6 +141,9 @@ guitest2: guitest2.o
 	$(LD) -o $@ $(LDFLAGS) $< ../LibGUI/LibGUI.a ../LibC/LibC.a
 
 sysctl: sysctl.o
+	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
+
+cp: cp.o
 	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
 
 rm: rm.o
