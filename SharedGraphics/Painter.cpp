@@ -184,14 +184,7 @@ void Painter::draw_bitmap(const Point& p, const CharacterBitmap& bitmap, Color c
 
 void Painter::draw_glyph(const Point& point, char ch, Color color)
 {
-    auto* bitmap = font().glyph_bitmap(ch);
-    if (!bitmap) {
-        dbgprintf("Font doesn't have 0x%b ('%c')\n", (byte)ch, ch);
-        bitmap = font().error_bitmap();
-    }
-    int x = point.x();
-    int y = point.y();
-    draw_bitmap({ x, y }, *bitmap, color);
+    draw_bitmap(point, font().glyph_bitmap(ch), color);
 }
 
 void Painter::draw_text(const Rect& rect, const String& text, TextAlignment alignment, Color color)

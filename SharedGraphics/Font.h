@@ -11,8 +11,7 @@ public:
 
     ~Font();
 
-    const CharacterBitmap* glyph_bitmap(byte) const;
-    const CharacterBitmap* error_bitmap() const { return m_error_bitmap.ptr(); }
+    const CharacterBitmap& glyph_bitmap(char ch) const { return *m_bitmaps[(byte)ch]; }
 
     byte glyph_width() const { return m_glyph_width; }
     byte glyph_height() const { return m_glyph_height; }
