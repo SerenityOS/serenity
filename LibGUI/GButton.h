@@ -18,10 +18,12 @@ private:
     virtual void paint_event(GPaintEvent&) override;
     virtual void mousedown_event(GMouseEvent&) override;
     virtual void mouseup_event(GMouseEvent&) override;
+    virtual void mousemove_event(GMouseEvent&) override;
 
     virtual const char* class_name() const override { return "GButton"; }
 
     String m_caption;
     bool m_being_pressed { false };
+    bool m_tracking_cursor { false };
 };
 

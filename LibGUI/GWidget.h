@@ -88,6 +88,9 @@ public:
     const Font& font() const { return *m_font; }
     void set_font(RetainPtr<Font>&&);
 
+    void set_global_cursor_tracking(bool);
+    bool global_cursor_tracking() const;
+
 private:
     GWindow* m_window { nullptr };
 

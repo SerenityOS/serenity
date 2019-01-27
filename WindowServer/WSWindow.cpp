@@ -123,3 +123,9 @@ void WSWindow::on_message(WSMessage& message)
         m_process.gui_events().append(move(gui_event));
     }
 }
+
+void WSWindow::set_global_cursor_tracking_enabled(bool enabled)
+{
+    dbgprintf("WSWindow{%p} global_cursor_tracking <- %u\n", enabled);
+    m_global_cursor_tracking_enabled = enabled;
+}

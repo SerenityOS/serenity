@@ -206,6 +206,7 @@ public:
     int gui$set_window_title(int window_id, const char* title, size_t size);
     int gui$get_window_rect(int window_id, GUI_Rect*);
     int gui$set_window_rect(int window_id, const GUI_Rect*);
+    int gui$set_global_cursor_tracking_enabled(int window_id, bool enabled);
 
     DisplayInfo get_display_info();
 

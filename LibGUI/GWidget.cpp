@@ -170,3 +170,19 @@ void GWidget::set_font(RetainPtr<Font>&& font)
     else
         m_font = move(font);
 }
+
+void GWidget::set_global_cursor_tracking(bool enabled)
+{
+    auto* win = window();
+    if (!win)
+        return;
+    win->set_global_cursor_tracking_widget(enabled ? this : nullptr);
+}
+
+bool GWidget::global_cursor_tracking() const
+{
+    auto* win = window();
+    if (!win)
+        return false;
+    return win->global_cursor_tracking_widget() == this;
+}

@@ -65,12 +65,24 @@ void GButton::paint_event(GPaintEvent&)
     }
 }
 
+void GButton::mousemove_event(GMouseEvent& event)
+{
+    if (m_tracking_cursor) {
+        bool being_pressed = rect().contains(event.position());
+        if (being_pressed != m_being_pressed) {
+            m_being_pressed = being_pressed;
+            update();
+        }
+    }
+    GWidget::mousemove_event(event);
+}
+
 void GButton::mousedown_event(GMouseEvent& event)
 {
     dbgprintf("Button::mouseDownEvent: x=%d, y=%d, button=%u\n", event.x(), event.y(), (unsigned)event.button());
-
     m_being_pressed = true;
-
+    m_tracking_cursor = true;
+    set_global_cursor_tracking(true);
     update();
     GWidget::mousedown_event(event);
 }
@@ -78,13 +90,15 @@ void GButton::mousedown_event(GMouseEvent& event)
 void GButton::mouseup_event(GMouseEvent& event)
 {
     dbgprintf("Button::mouseUpEvent: x=%d, y=%d, button=%u\n", event.x(), event.y(), (unsigned)event.button());
-
+    bool was_being_pressed = m_being_pressed;
     m_being_pressed = false;
-
+    m_tracking_cursor = false;
+    set_global_cursor_tracking(false);
     update();
     GWidget::mouseup_event(event);
-
-    if (on_click)
-        on_click(*this);
+    if (was_being_pressed) {
+        if (on_click)
+            on_click(*this);
+    }
 }
 
