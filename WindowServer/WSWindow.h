@@ -42,6 +42,9 @@ public:
 
     pid_t pid() const { return m_pid; }
 
+    void set_global_cursor_tracking_enabled(bool);
+    bool global_cursor_tracking() const { return m_global_cursor_tracking_enabled; }
+
     // For InlineLinkedList.
     // FIXME: Maybe make a ListHashSet and then WSWindowManager can just use that.
     WSWindow* m_next { nullptr };
@@ -52,6 +55,7 @@ private:
     String m_title;
     Rect m_rect;
     bool m_is_being_dragged { false };
+    bool m_global_cursor_tracking_enabled { false };
 
     RetainPtr<GraphicsBitmap> m_backing;
     Process& m_process;

@@ -244,3 +244,16 @@ int Process::gui$set_window_rect(int window_id, const GUI_Rect* rect)
     WSMessageLoop::the().server_process().request_wakeup();
     return 0;
 }
+
+int Process::gui$set_global_cursor_tracking_enabled(int window_id, bool enabled)
+{
+    if (window_id < 0)
+        return -EINVAL;
+    auto it = m_windows.find(window_id);
+    if (it == m_windows.end())
+        return -EBADWINDOW;
+    auto& window = *(*it).value;
+    WSWindowLocker locker(window);
+    window.set_global_cursor_tracking_enabled(enabled);
+    return 0;
+}

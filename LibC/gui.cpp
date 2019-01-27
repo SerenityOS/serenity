@@ -56,3 +56,9 @@ int gui_notify_paint_finished(int window_id, const GUI_Rect* rect)
     int rc = syscall(SC_gui_notify_paint_finished, window_id, rect);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
+
+int gui_set_global_cursor_tracking_enabled(int window_id, bool enabled)
+{
+    int rc = syscall(SC_gui_set_global_cursor_tracking_enabled, window_id, enabled);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}

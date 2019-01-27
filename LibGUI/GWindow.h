@@ -4,6 +4,7 @@
 #include <SharedGraphics/Rect.h>
 #include <SharedGraphics/GraphicsBitmap.h>
 #include <AK/AKString.h>
+#include <AK/WeakPtr.h>
 
 class GWidget;
 
@@ -48,11 +49,16 @@ public:
 
     void update(const Rect& = Rect());
 
+    void set_global_cursor_tracking_widget(GWidget*);
+    GWidget* global_cursor_tracking_widget() { return m_global_cursor_tracking_widget.ptr(); }
+    const GWidget* global_cursor_tracking_widget() const { return m_global_cursor_tracking_widget.ptr(); }
+
 private:
     RetainPtr<GraphicsBitmap> m_backing;
     int m_window_id { -1 };
     bool m_is_active { false };
     GWidget* m_main_widget { nullptr };
     GWidget* m_focused_widget { nullptr };
+    WeakPtr<GWidget> m_global_cursor_tracking_widget;
 };
 

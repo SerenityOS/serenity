@@ -288,6 +288,14 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event)
     }
 
     for (auto* window = m_windows_in_order.tail(); window; window = window->prev()) {
+        if (!window->global_cursor_tracking())
+            continue;
+        Point position { event.x() - window->rect().x(), event.y() - window->rect().y() };
+        auto local_event = make<WSMouseEvent>(event.type(), position, event.buttons(), event.button());
+        window->on_message(*local_event);
+    }
+
+    for (auto* window = m_windows_in_order.tail(); window; window = window->prev()) {
         if (title_bar_rect(window->rect()).contains(event.position())) {
             if (event.type() == WSMessage::MouseDown) {
                 move_to_front(*window);
