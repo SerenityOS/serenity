@@ -38,7 +38,7 @@ volatile size_t kmalloc_sum_eternal = 0;
 static byte* s_next_eternal_ptr;
 static byte* s_end_of_eternal_range;
 
-bool is_kmalloc_address(void* ptr)
+bool is_kmalloc_address(const void* ptr)
 {
     if (ptr >= (byte*)ETERNAL_BASE_PHYSICAL && ptr < s_next_eternal_ptr)
         return true;

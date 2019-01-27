@@ -1597,14 +1597,19 @@ void sleep(dword ticks)
     sched_yield();
 }
 
+static bool is_inside_kernel_code(LinearAddress laddr)
+{
+    // FIXME: What if we're indexing into the ksym with the highest address though?
+    return laddr.get() >= ksym_lowest_address && laddr.get() <= ksym_highest_address;
+}
+
 bool Process::validate_read_from_kernel(LinearAddress laddr) const
 {
     // We check extra carefully here since the first 4MB of the address space is identity-mapped.
     // This code allows access outside of the known used address ranges to get caught.
 
     InterruptDisabler disabler;
-    // FIXME: What if we're indexing into the ksym with the highest address though?
-    if (laddr.get() >= ksym_lowest_address && laddr.get() <= ksym_highest_address)
+    if (is_inside_kernel_code(laddr))
         return true;
     if (is_kmalloc_address(laddr.as_ptr()))
         return true;
@@ -1613,8 +1618,12 @@ bool Process::validate_read_from_kernel(LinearAddress laddr) const
 
 bool Process::validate_read(const void* address, size_t size) const
 {
-    if (isRing0())
-        return true;
+    if (isRing0()) {
+        if (is_inside_kernel_code(LinearAddress((dword)address)))
+            return true;
+        if (is_kmalloc_address(address))
+            return true;
+    }
     ASSERT(size);
     if (!size)
         return false;
@@ -1629,8 +1638,10 @@ bool Process::validate_read(const void* address, size_t size) const
 
 bool Process::validate_write(void* address, size_t size) const
 {
-    if (isRing0())
-        return true;
+    if (isRing0()) {
+        if (is_kmalloc_address(address))
+            return true;
+    }
     ASSERT(size);
     if (!size)
         return false;
