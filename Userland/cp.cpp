@@ -29,12 +29,18 @@ int main(int argc, char** argv)
         }
         if (nread == 0)
             break;
-        ssize_t nwritten = write(dst_fd, buffer, nread);
-        if (nwritten < 0) {
-            perror("write dst");
-            return 1;
+        ssize_t remaining_to_write = nread;
+        char* bufptr = buffer;
+        while (remaining_to_write) {
+            ssize_t nwritten = write(dst_fd, bufptr, remaining_to_write);
+            if (nwritten < 0) {
+                perror("write dst");
+                return 1;
+            }
+            assert(nwritten > 0);
+            remaining_to_write -= nwritten;
+            bufptr += nwritten;
         }
-        assert(nwritten != 0);
     }
     close(src_fd);
     close(dst_fd);
