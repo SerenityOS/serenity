@@ -18,7 +18,7 @@ GTextBox::~GTextBox()
 void GTextBox::set_text(String&& text)
 {
     m_text = move(text);
-    m_cursorPosition = m_text.length();
+    m_cursor_position = m_text.length();
     update();
 }
 
@@ -26,34 +26,33 @@ void GTextBox::paint_event(GPaintEvent&)
 {
     Painter painter(*this);
 
-    // FIXME: Reduce overdraw.
-    painter.fill_rect(rect(), background_color());
+    painter.fill_rect({ rect().x() + 1, rect().y() + 1, rect().width() - 2, rect().height() - 2 }, background_color());
     painter.draw_rect(rect(), foreground_color());
 
     if (is_focused())
         painter.draw_focus_rect(rect());
 
-    Rect innerRect = rect();
-    innerRect.shrink(6, 6);
+    Rect inner_rect = rect();
+    inner_rect.shrink(6, 6);
 
-    size_t maxCharsToPaint = innerRect.width() / font().glyph_width();
+    size_t max_chars_to_paint = inner_rect.width() / font().glyph_width();
 
-    int firstVisibleChar = max((int)m_cursorPosition - (int)maxCharsToPaint, 0);
-    size_t charsToPaint = min(m_text.length() - firstVisibleChar, maxCharsToPaint);
+    int first_visible_char = max((int)m_cursor_position - (int)max_chars_to_paint, 0);
+    size_t chars_to_paint = min(m_text.length() - first_visible_char, max_chars_to_paint);
 
-    int y = innerRect.center().y() - font().glyph_height() / 2;
-    for (size_t i = 0; i < charsToPaint; ++i) {
-        char ch = m_text[firstVisibleChar + i];
+    int y = inner_rect.center().y() - font().glyph_height() / 2;
+    for (size_t i = 0; i < chars_to_paint; ++i) {
+        char ch = m_text[first_visible_char + i];
         if (ch == ' ')
             continue;
-        int x = innerRect.x() + (i * font().glyph_width());
+        int x = inner_rect.x() + (i * font().glyph_width());
         painter.draw_bitmap({x, y}, font().glyph_bitmap(ch), Color::Black);
     }
 
-    if (is_focused() && m_cursorBlinkState) {
-        unsigned visibleCursorPosition = m_cursorPosition - firstVisibleChar;
-        Rect cursorRect(innerRect.x() + visibleCursorPosition * font().glyph_width(), innerRect.y(), 1, innerRect.height());
-        painter.fill_rect(cursorRect, foreground_color());
+    if (is_focused() && m_cursor_blink_state) {
+        unsigned visible_cursor_position = m_cursor_position - first_visible_char;
+        Rect cursor_rect(inner_rect.x() + visible_cursor_position * font().glyph_width(), inner_rect.y(), 1, inner_rect.height());
+        painter.fill_rect(cursor_rect, foreground_color());
     }
 }
 
@@ -63,12 +62,12 @@ void GTextBox::mousedown_event(GMouseEvent&)
 
 void GTextBox::handle_backspace()
 {
-    if (m_cursorPosition == 0)
+    if (m_cursor_position == 0)
         return;
 
     if (m_text.length() == 1) {
         m_text = String::empty();
-        m_cursorPosition = 0;
+        m_cursor_position = 0;
         update();
         return;
     }
@@ -76,11 +75,11 @@ void GTextBox::handle_backspace()
     char* buffer;
     auto newText = StringImpl::create_uninitialized(m_text.length() - 1, buffer);
 
-    memcpy(buffer, m_text.characters(), m_cursorPosition - 1);
-    memcpy(buffer + m_cursorPosition - 1, m_text.characters() + m_cursorPosition, m_text.length() - (m_cursorPosition - 1));
+    memcpy(buffer, m_text.characters(), m_cursor_position - 1);
+    memcpy(buffer + m_cursor_position - 1, m_text.characters() + m_cursor_position, m_text.length() - (m_cursor_position - 1));
 
     m_text = move(newText);
-    --m_cursorPosition;
+    --m_cursor_position;
     update();
 }
 
@@ -88,15 +87,15 @@ void GTextBox::keydown_event(GKeyEvent& event)
 {
     switch (event.key()) {
     case KeyCode::Key_Left:
-        if (m_cursorPosition)
-            --m_cursorPosition;
-        m_cursorBlinkState = true;
+        if (m_cursor_position)
+            --m_cursor_position;
+        m_cursor_blink_state = true;
         update();
         return;
     case KeyCode::Key_Right:
-        if (m_cursorPosition < m_text.length())
-            ++m_cursorPosition;
-        m_cursorBlinkState = true;
+        if (m_cursor_position < m_text.length())
+            ++m_cursor_position;
+        m_cursor_blink_state = true;
         update();
         return;
     case KeyCode::Key_Backspace:
@@ -113,12 +112,12 @@ void GTextBox::keydown_event(GKeyEvent& event)
         char* buffer;
         auto newText = StringImpl::create_uninitialized(m_text.length() + 1, buffer);
 
-        memcpy(buffer, m_text.characters(), m_cursorPosition);
-        buffer[m_cursorPosition] = event.text()[0];
-        memcpy(buffer + m_cursorPosition + 1, m_text.characters() + m_cursorPosition, m_text.length() - m_cursorPosition);
+        memcpy(buffer, m_text.characters(), m_cursor_position);
+        buffer[m_cursor_position] = event.text()[0];
+        memcpy(buffer + m_cursor_position + 1, m_text.characters() + m_cursor_position, m_text.length() - m_cursor_position);
 
         m_text = move(newText);
-        ++m_cursorPosition;
+        ++m_cursor_position;
         update();
         return;
     }
@@ -130,6 +129,6 @@ void GTextBox::timerEvent(GTimerEvent&)
     if (!is_focused())
         return;
 
-    m_cursorBlinkState = !m_cursorBlinkState;
+    m_cursor_blink_state = !m_cursor_blink_state;
     update();
 }
