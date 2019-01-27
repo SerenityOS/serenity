@@ -6,6 +6,7 @@
 #include "StdLib.h"
 #include "Process.h"
 #include <LibC/errno_numbers.h>
+#include "CMOS.h"
 
 //#define MM_DEBUG
 //#define PAGE_FAULT_DEBUG
@@ -19,6 +20,16 @@ MemoryManager& MM
 
 MemoryManager::MemoryManager()
 {
+    // FIXME: This is not the best way to do memory map detection.
+    //        Rewrite to use BIOS int 15,e820 once we have VM86 support.
+    word base_memory = (CMOS::read(0x16) << 8) | CMOS::read(0x15);
+    word ext_memory = (CMOS::read(0x18) << 8) | CMOS::read(0x17);
+
+    kprintf("%u kB base memory\n", base_memory);
+    kprintf("%u kB extended memory\n", ext_memory);
+
+    m_ram_size = ext_memory * 1024;
+
     m_kernel_page_directory = PageDirectory::create_at_fixed_address(PhysicalAddress(0x4000));
     m_page_table_zero = (dword*)0x6000;
 
@@ -75,14 +86,12 @@ void MemoryManager::initialize_paging()
     // 1 MB   -> 2 MB           kmalloc_eternal() space.
     // 2 MB   -> 3 MB           kmalloc() space.
     // 3 MB   -> 4 MB           Supervisor physical pages (available for allocation!)
-    // 4 MB   -> 32 MB          Userspace physical pages (available for allocation!)
+    // 4 MB   -> (max) MB       Userspace physical pages (available for allocation!)
     for (size_t i = (2 * MB); i < (4 * MB); i += PAGE_SIZE)
         m_free_supervisor_physical_pages.append(adopt(*new PhysicalPage(PhysicalAddress(i), true)));
 
-#ifdef MM_DEBUG
-    dbgprintf("MM: 4MB-32MB available for allocation\n");
-#endif
-    for (size_t i = (4 * MB); i < (32 * MB); i += PAGE_SIZE)
+    dbgprintf("MM: 4MB-%uMB available for allocation\n", m_ram_size / 1048576);
+    for (size_t i = (4 * MB); i < m_ram_size; i += PAGE_SIZE)
         m_free_physical_pages.append(adopt(*new PhysicalPage(PhysicalAddress(i), false)));
     m_quickmap_addr = LinearAddress(m_free_physical_pages.take_last().leakRef()->paddr().get());
 #ifdef MM_DEBUG
