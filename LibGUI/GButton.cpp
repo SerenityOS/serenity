@@ -1,6 +1,8 @@
 #include "GButton.h"
 #include <SharedGraphics/Painter.h>
 
+//#define GBUTTON_DEBUG
+
 GButton::GButton(GWidget* parent)
     : GWidget(parent)
 {
@@ -58,10 +60,10 @@ void GButton::paint_event(GPaintEvent&)
     }
 
     if (!caption().is_empty()) {
-        auto textRect = rect();
+        auto text_rect = rect();
         if (m_being_pressed)
-            textRect.move_by(1, 1);
-        painter.draw_text(textRect, caption(), Painter::TextAlignment::Center, Color::Black);
+            text_rect.move_by(1, 1);
+        painter.draw_text(text_rect, caption(), Painter::TextAlignment::Center, Color::Black);
     }
 }
 
@@ -79,26 +81,34 @@ void GButton::mousemove_event(GMouseEvent& event)
 
 void GButton::mousedown_event(GMouseEvent& event)
 {
-    dbgprintf("Button::mouseDownEvent: x=%d, y=%d, button=%u\n", event.x(), event.y(), (unsigned)event.button());
-    m_being_pressed = true;
-    m_tracking_cursor = true;
-    set_global_cursor_tracking(true);
-    update();
+#ifdef GBUTTON_DEBUG
+    dbgprintf("GButton::mouse_down_event: x=%d, y=%d, button=%u\n", event.x(), event.y(), (unsigned)event.button());
+#endif
+    if (event.button() == GMouseButton::Left) {
+        m_being_pressed = true;
+        m_tracking_cursor = true;
+        set_global_cursor_tracking(true);
+        update();
+    }
     GWidget::mousedown_event(event);
 }
 
 void GButton::mouseup_event(GMouseEvent& event)
 {
-    dbgprintf("Button::mouseUpEvent: x=%d, y=%d, button=%u\n", event.x(), event.y(), (unsigned)event.button());
-    bool was_being_pressed = m_being_pressed;
-    m_being_pressed = false;
-    m_tracking_cursor = false;
-    set_global_cursor_tracking(false);
-    update();
-    GWidget::mouseup_event(event);
-    if (was_being_pressed) {
-        if (on_click)
-            on_click(*this);
+#ifdef GBUTTON_DEBUG
+    dbgprintf("GButton::mouse_up_event: x=%d, y=%d, button=%u\n", event.x(), event.y(), (unsigned)event.button());
+#endif
+    if (event.button() == GMouseButton::Left) {
+        bool was_being_pressed = m_being_pressed;
+        m_being_pressed = false;
+        m_tracking_cursor = false;
+        set_global_cursor_tracking(false);
+        update();
+        if (was_being_pressed) {
+            if (on_click)
+                on_click(*this);
+        }
     }
+    GWidget::mouseup_event(event);
 }
 
