@@ -29,8 +29,6 @@ const KSym* ksymbolicate(dword address)
 
 static void load_ksyms_from_data(const ByteBuffer& buffer)
 {
-    // FIXME: It's gross that this vector grows dynamically rather than being sized-to-fit.
-    //        We're wasting that eternal kmalloc memory.
     auto* bufptr = (const char*)buffer.pointer();
     auto* start_of_name = bufptr;
     dword address = 0;
