@@ -54,9 +54,9 @@ public:
 
 private:
     // ^Inode
-    virtual ssize_t read_bytes(off_t, size_t, byte* buffer, FileDescriptor*) override;
+    virtual ssize_t read_bytes(off_t, size_t, byte* buffer, FileDescriptor*) const override;
     virtual InodeMetadata metadata() const override;
-    virtual bool traverse_as_directory(Function<bool(const FS::DirectoryEntry&)>) override;
+    virtual bool traverse_as_directory(Function<bool(const FS::DirectoryEntry&)>) const override;
     virtual InodeIdentifier lookup(const String& name) override;
     virtual String reverse_lookup(InodeIdentifier) override;
     virtual void flush_metadata() override;
@@ -64,6 +64,7 @@ private:
     virtual bool add_child(InodeIdentifier child_id, const String& name, byte file_type, int& error) override;
     virtual bool remove_child(const String& name, int& error) override;
     virtual RetainPtr<Inode> parent() const override;
+    virtual size_t directory_entry_count() const override;
 
     SynthFS& fs();
     const SynthFS& fs() const;

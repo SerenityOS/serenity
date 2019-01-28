@@ -2101,6 +2101,16 @@ int Process::sys$unlink(const char* pathname)
     return 0;
 }
 
+int Process::sys$rmdir(const char* pathname)
+{
+    if (!validate_read_str(pathname))
+        return -EFAULT;
+    int error;
+    if (!VFS::the().rmdir(String(pathname), *cwd_inode(), error))
+        return error;
+    return 0;
+}
+
 int Process::sys$read_tsc(dword* lsw, dword* msw)
 {
     if (!validate_write_typed(lsw))

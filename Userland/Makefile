@@ -23,6 +23,7 @@ OBJS = \
        guitest2.o \
        sysctl.o \
        cp.o \
+       rmdir.o \
        rm.o
 
 APPS = \
@@ -51,6 +52,7 @@ APPS = \
        guitest2 \
        sysctl \
        cp \
+       rmdir \
        rm
 
 ARCH_FLAGS =
@@ -147,6 +149,9 @@ cp: cp.o
 	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
 
 rm: rm.o
+	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
+
+rmdir: rmdir.o
 	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
 
 .cpp.o:

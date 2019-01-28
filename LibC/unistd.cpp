@@ -210,6 +210,12 @@ int unlink(const char* pathname)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
+int rmdir(const char* pathname)
+{
+    int rc = syscall(SC_rmdir, pathname);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
 int isatty(int fd)
 {
     int rc = syscall(SC_isatty, fd);

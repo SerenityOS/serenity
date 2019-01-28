@@ -44,6 +44,7 @@
     __ERROR(EWHYTHO,        "Failed without setting an error code (Bug!)") \
     __ERROR(EBADWINDOW,     "Bad window ID") \
     __ERROR(EBADBACKING,    "Bad backing store ID") \
+    __ERROR(ENOTEMPTY,      "Directory not empty") \
 
 
 enum __errno_values {
