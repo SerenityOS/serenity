@@ -21,9 +21,8 @@ void GListBox::paint_event(GPaintEvent&)
 {
     Painter painter(*this);
 
-    // FIXME: Reduce overdraw.
-    painter.fill_rect(rect(), Color::White);
-    painter.draw_rect(rect(), Color::Black);
+    painter.fill_rect({ rect().x() + 1, rect().y() + 1, rect().width() - 2, rect().height() - 2 }, background_color());
+    painter.draw_rect(rect(), foreground_color());
 
     if (is_focused())
         painter.draw_focus_rect(rect());
