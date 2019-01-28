@@ -11,6 +11,11 @@ inline void StringBuilder::will_append(size_t size)
         m_buffer.grow(max(16u, m_buffer.size() * 2 + size));
 }
 
+StringBuilder::StringBuilder(size_t initial_capacity)
+{
+    m_buffer.grow(initial_capacity);
+}
+
 void StringBuilder::append(const String& str)
 {
     if (str.is_empty())
@@ -18,6 +23,15 @@ void StringBuilder::append(const String& str)
     will_append(str.length());
     memcpy(m_buffer.pointer() + m_length, str.characters(), str.length());
     m_length += str.length();
+}
+
+void StringBuilder::append(const char* characters, size_t length)
+{
+    if (!length)
+        return;
+    will_append(length);
+    memcpy(m_buffer.pointer() + m_length, characters, length);
+    m_length += length;
 }
 
 void StringBuilder::append(char ch)

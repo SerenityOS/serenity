@@ -1,5 +1,6 @@
 #include <AK/Assertions.h>
 #include <AK/HashMap.h>
+#include <AK/StringBuilder.h>
 #include <LibC/errno_numbers.h>
 #include "FileSystem.h"
 #include "MemoryManager.h"
@@ -51,29 +52,25 @@ FS* FS::from_fsid(dword id)
 ByteBuffer Inode::read_entire(FileDescriptor* descriptor) const
 {
     size_t initial_size = metadata().size ? metadata().size : 4096;
-    auto contents = ByteBuffer::create_uninitialized(initial_size);
+    StringBuilder builder(initial_size);
 
     ssize_t nread;
     byte buffer[4096];
-    byte* out = contents.pointer();
     off_t offset = 0;
     for (;;) {
         nread = read_bytes(offset, sizeof(buffer), buffer, descriptor);
         ASSERT(nread <= (ssize_t)sizeof(buffer));
         if (nread <= 0)
             break;
-        memcpy(out, buffer, nread);
-        out += nread;
+        builder.append((const char*)buffer, nread);
         offset += nread;
-        ASSERT(offset <= (ssize_t)initial_size); // FIXME: Support dynamically growing the buffer.
     }
     if (nread < 0) {
         kprintf("Inode::read_entire: ERROR: %d\n", nread);
         return nullptr;
     }
 
-    contents.trim(offset);
-    return contents;
+    return builder.to_byte_buffer();
 }
 
 FS::DirectoryEntry::DirectoryEntry(const char* n, InodeIdentifier i, byte ft)
