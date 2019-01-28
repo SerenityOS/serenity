@@ -7,11 +7,12 @@ namespace AK {
 
 class StringBuilder {
 public:
-    StringBuilder() { }
+    explicit StringBuilder(size_t initial_capacity = 16);
     ~StringBuilder() { }
 
     void append(const String&);
     void append(char);
+    void append(const char*, size_t);
     void appendf(const char*, ...);
 
     String build();
