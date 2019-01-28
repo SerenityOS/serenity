@@ -24,6 +24,7 @@ OBJS = \
        sysctl.o \
        cp.o \
        rmdir.o \
+       dmesg.o \
        rm.o
 
 APPS = \
@@ -53,6 +54,7 @@ APPS = \
        sysctl \
        cp \
        rmdir \
+       dmesg \
        rm
 
 ARCH_FLAGS =
@@ -116,6 +118,9 @@ tst: tst.o
 	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
 
 mm: mm.o
+	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
+
+dmesg: dmesg.o
 	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
 
 kill: kill.o

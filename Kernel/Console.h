@@ -1,5 +1,6 @@
 #pragma once
 
+#include <AK/CircularQueue.h>
 #include <AK/Compiler.h>
 #include <AK/Vector.h>
 #include <Kernel/CharacterDevice.h>
@@ -29,7 +30,10 @@ public:
 
     void put_char(char);
 
+    const CircularQueue<char, 16384>& logbuffer() const { return m_logbuffer; }
+
 private:
     ConsoleImplementation* m_implementation { nullptr };
+    CircularQueue<char, 16384> m_logbuffer;
 };
 
