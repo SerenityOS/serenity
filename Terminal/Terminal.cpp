@@ -10,33 +10,6 @@
 
 //#define TERMINAL_DEBUG
 
-struct Stopwatch {
-public:
-    Stopwatch(const char* name)
-        : m_name(name)
-    {
-        read_tsc(&m_start_lsw, &m_start_msw);
-    }
-
-    ~Stopwatch()
-    {
-        dword end_lsw;
-        dword end_msw;
-        read_tsc(&end_lsw, &end_msw);
-        if (m_start_msw != end_msw) {
-            dbgprintf("stopwatch: differing msw, no result for %s\n", m_name);
-        }
-        dword diff = end_lsw - m_start_lsw;
-        dbgprintf("Stopwatch(%s): %u ticks\n", m_name, diff);
-    }
-
-private:
-    const char* m_name { nullptr };
-    dword m_start_lsw { 0 };
-    dword m_start_msw { 0 };
-};
-
-
 void Terminal::create_window()
 {
     m_pixel_width = m_columns * font().glyph_width() + m_inset * 2;
@@ -598,7 +571,6 @@ bool Terminal::Line::has_only_one_background_color() const
 
 void Terminal::paint()
 {
-    Stopwatch sw("Terminal::paint");
     Rect rect { 0, 0, m_pixel_width, m_pixel_height };
     Painter painter(*m_backing);
 
