@@ -6,6 +6,7 @@
 #include "StdLib.h"
 #include "i386.h"
 #include "KSyms.h"
+#include "Console.h"
 #include <AK/StringBuilder.h>
 
 static ProcFS* s_the;
@@ -198,6 +199,15 @@ ByteBuffer procfs$mm(SynthFSInode&)
     return builder.to_byte_buffer();
 }
 
+ByteBuffer procfs$dmesg(SynthFSInode&)
+{
+    InterruptDisabler disabler;
+    StringBuilder builder;
+    for (char ch : Console::the().logbuffer())
+        builder.append(ch);
+    return builder.to_byte_buffer();
+}
+
 ByteBuffer procfs$mounts(SynthFSInode&)
 {
     InterruptDisabler disabler;
@@ -386,6 +396,7 @@ bool ProcFS::initialize()
     add_file(create_generated_file("summary", procfs$summary));
     add_file(create_generated_file("cpuinfo", procfs$cpuinfo));
     add_file(create_generated_file("inodes", procfs$inodes));
+    add_file(create_generated_file("dmesg", procfs$dmesg));
     m_sys_dir = add_file(create_directory("sys"));
     return true;
 }

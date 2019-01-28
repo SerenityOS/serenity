@@ -27,3 +27,4 @@ sysctl
 rm
 cp
 rmdir
+dmesg

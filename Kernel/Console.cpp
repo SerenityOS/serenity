@@ -52,6 +52,7 @@ void Console::put_char(char ch)
     //if (ch != 27)
     IO::out8(0xe9, ch);
 #endif
+    m_logbuffer.enqueue(ch);
     if (m_implementation)
         m_implementation->on_sysconsole_receive(ch);
 }

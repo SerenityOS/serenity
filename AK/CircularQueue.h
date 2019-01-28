@@ -46,7 +46,30 @@ public:
         return value;
     }
 
+    class ConstIterator {
+    public:
+        bool operator!=(const ConstIterator& other) { return m_index != other.m_index; }
+        ConstIterator& operator++()
+        {
+            m_index = (m_index + 1) % Capacity;
+            if (m_index == m_queue.m_head)
+                m_index = m_queue.m_size;
+            return *this;
+        }
+
+        const T& operator*() const { return m_queue.m_elements[m_index]; }
+    private:
+        friend class CircularQueue;
+        ConstIterator(const CircularQueue& queue, const size_t index) : m_queue(queue), m_index(index) { }
+        const CircularQueue& m_queue;
+        size_t m_index { 0 };
+    };
+
+    ConstIterator begin() const { return ConstIterator(*this, m_head); }
+    ConstIterator end() const { return ConstIterator(*this, size()); }
+
 private:
+    friend class ConstIterator;
     T m_elements[Capacity];
     size_t m_size { 0 };
     size_t m_head { 0 };
