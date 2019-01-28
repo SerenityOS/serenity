@@ -313,6 +313,20 @@ void Ext2FS::free_inode(Ext2FSInode& inode)
         set_block_allocation_state(group_index, block_index, false);
 
     set_inode_allocation_state(inode.index(), false);
+
+    if (inode.is_directory()) {
+        auto& bgd = const_cast<ext2_group_desc&>(group_descriptor(group_index_from_inode(inode.index())));
+        --bgd.bg_used_dirs_count;
+        dbgprintf("Ext2FS: decremented bg_used_dirs_count %u -> %u\n", bgd.bg_used_dirs_count - 1, bgd.bg_used_dirs_count);
+        flush_block_group_descriptor_table();
+    }
+}
+
+void Ext2FS::flush_block_group_descriptor_table()
+{
+    unsigned blocks_to_write = ceilDiv(m_blockGroupCount * (unsigned)sizeof(ext2_group_desc), blockSize());
+    unsigned first_block_of_bgdt = blockSize() == 1024 ? 2 : 1;
+    writeBlocks(first_block_of_bgdt, blocks_to_write, m_cached_group_descriptor_table);
 }
 
 Ext2FSInode::Ext2FSInode(Ext2FS& fs, unsigned index, const ext2_inode& raw_inode)
@@ -356,9 +370,15 @@ void Ext2FSInode::flush_metadata()
     dbgprintf("Ext2FSInode: flush_metadata for inode %u\n", index());
     fs().write_ext2_inode(index(), m_raw_inode);
     if (is_directory()) {
-        // FIXME: This invalidation is way too hardcore.
-        LOCKER(m_lock);
-        m_lookup_cache.clear();
+        // Unless we're about to go away permanently, invalidate the lookup cache.
+        if (m_raw_inode.i_links_count != 0) {
+            LOCKER(m_lock);
+            // FIXME: Something isn't working right when we hit this code path.
+            //        I've seen crashes inside HashMap::clear() all the way down in DoublyLinkedList::clear().
+            //        My guess would be a HashTable bug.
+            // FIXME: This invalidation is way too hardcore. It's sad to throw away the whole cache.
+            m_lookup_cache.clear();
+        }
     }
     set_metadata_dirty(false);
 }
@@ -401,7 +421,7 @@ RetainPtr<Inode> Ext2FS::get_inode(InodeIdentifier inode) const
     return new_inode;
 }
 
-ssize_t Ext2FSInode::read_bytes(off_t offset, size_t count, byte* buffer, FileDescriptor*)
+ssize_t Ext2FSInode::read_bytes(off_t offset, size_t count, byte* buffer, FileDescriptor*) const
 {
     ASSERT(offset >= 0);
     if (m_raw_inode.i_size == 0)
@@ -550,7 +570,7 @@ ssize_t Ext2FSInode::write_bytes(off_t offset, size_t count, const byte* data, F
     return nwritten;
 }
 
-bool Ext2FSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry&)> callback)
+bool Ext2FSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry&)> callback) const
 {
     ASSERT(metadata().isDirectory());
 
@@ -610,6 +630,9 @@ bool Ext2FSInode::add_child(InodeIdentifier child_id, const String& name, byte f
 
 bool Ext2FSInode::remove_child(const String& name, int& error)
 {
+#ifdef EXT2_DEBUG
+    dbgprintf("Ext2FSInode::remove_child(%s) in inode %u\n", name.characters(), index());
+#endif
     ASSERT(is_directory());
 
     unsigned child_inode_index;
@@ -710,7 +733,9 @@ bool Ext2FS::write_directory_inode(unsigned directoryInode, Vector<DirectoryEntr
     kprintf("\n");
 #endif
 
-    return get_inode({ fsid(), directoryInode })->write_bytes(0, directoryData.size(), directoryData.pointer(), nullptr);
+    auto directory_inode = get_inode({ fsid(), directoryInode });
+    ssize_t nwritten = directory_inode->write_bytes(0, directoryData.size(), directoryData.pointer(), nullptr);
+    return nwritten == directoryData.size();
 }
 
 unsigned Ext2FS::inodes_per_block() const
@@ -955,10 +980,7 @@ bool Ext2FS::set_inode_allocation_state(unsigned index, bool newState)
         ++mutableBGD.bg_free_inodes_count;
     dbgprintf("Ext2FS: group free inode count %u -> %u\n", bgd.bg_free_inodes_count, bgd.bg_free_inodes_count - 1);
 
-    unsigned blocksToWrite = ceilDiv(m_blockGroupCount * (unsigned)sizeof(ext2_group_desc), blockSize());
-    unsigned firstBlockOfBGDT = blockSize() == 1024 ? 2 : 1;
-    writeBlocks(firstBlockOfBGDT, blocksToWrite, m_cached_group_descriptor_table);
-    
+    flush_block_group_descriptor_table();
     return true;
 }
 
@@ -1000,10 +1022,7 @@ bool Ext2FS::set_block_allocation_state(GroupIndex group, BlockIndex bi, bool ne
         ++mutableBGD.bg_free_blocks_count;
     dbgprintf("Ext2FS: group free block count %u -> %u\n", bgd.bg_free_blocks_count, bgd.bg_free_blocks_count - 1);
 
-    unsigned blocksToWrite = ceilDiv(m_blockGroupCount * (unsigned)sizeof(ext2_group_desc), blockSize());
-    unsigned firstBlockOfBGDT = blockSize() == 1024 ? 2 : 1;
-    writeBlocks(firstBlockOfBGDT, blocksToWrite, m_cached_group_descriptor_table);
-    
+    flush_block_group_descriptor_table();
     return true;
 }
 
@@ -1040,9 +1059,7 @@ RetainPtr<Inode> Ext2FS::create_directory(InodeIdentifier parent_id, const Strin
     ++bgd.bg_used_dirs_count;
     dbgprintf("Ext2FS: incremented bg_used_dirs_count %u -> %u\n", bgd.bg_used_dirs_count - 1, bgd.bg_used_dirs_count);
 
-    unsigned blocksToWrite = ceilDiv(m_blockGroupCount * (unsigned)sizeof(ext2_group_desc), blockSize());
-    unsigned firstBlockOfBGDT = blockSize() == 1024 ? 2 : 1;
-    writeBlocks(firstBlockOfBGDT, blocksToWrite, m_cached_group_descriptor_table);
+    flush_block_group_descriptor_table();
 
     error = 0;
     return inode;
@@ -1165,7 +1182,7 @@ RetainPtr<Inode> Ext2FSInode::parent() const
     return fs().get_inode(m_parent_id);
 }
 
-void Ext2FSInode::populate_lookup_cache()
+void Ext2FSInode::populate_lookup_cache() const
 {
     {
         LOCKER(m_lock);
@@ -1266,4 +1283,12 @@ void Ext2FS::uncache_inode(InodeIndex index)
 {
     LOCKER(m_inode_cache_lock);
     m_inode_cache.remove(index);
+}
+
+size_t Ext2FSInode::directory_entry_count() const
+{
+    ASSERT(is_directory());
+    populate_lookup_cache();
+    LOCKER(m_lock);
+    return m_lookup_cache.size();
 }

@@ -219,6 +219,8 @@ static dword handle(RegisterDump& regs, dword function, dword arg1, dword arg2, 
         return current->gui$notify_paint_finished((int)arg1, (const GUI_Rect*)arg2);
     case Syscall::SC_gui_set_global_cursor_tracking_enabled:
         return current->gui$set_global_cursor_tracking_enabled((int)arg1, (bool)arg2);
+    case Syscall::SC_rmdir:
+        return current->sys$rmdir((const char*)arg1);
     default:
         kprintf("<%u> int0x80: Unknown function %u requested {%x, %x, %x}\n", current->pid(), function, arg1, arg2, arg3);
         break;

@@ -48,7 +48,7 @@ FS* FS::from_fsid(dword id)
     return nullptr;
 }
 
-ByteBuffer Inode::read_entire(FileDescriptor* descriptor)
+ByteBuffer Inode::read_entire(FileDescriptor* descriptor) const
 {
     size_t initial_size = metadata().size ? metadata().size : 4096;
     auto contents = ByteBuffer::create_uninitialized(initial_size);

@@ -194,6 +194,7 @@ public:
     clock_t sys$times(tms*);
     int sys$utime(const char* pathname, const struct utimbuf*);
     int sys$unlink(const char* pathname);
+    int sys$rmdir(const char* pathname);
     int sys$read_tsc(dword* lsw, dword* msw);
 
     int gui$create_window(const GUI_WindowParameters*);

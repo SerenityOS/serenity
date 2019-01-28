@@ -200,7 +200,7 @@ InodeMetadata SynthFSInode::metadata() const
     return m_metadata;
 }
 
-ssize_t SynthFSInode::read_bytes(off_t offset, size_t count, byte* buffer, FileDescriptor* descriptor)
+ssize_t SynthFSInode::read_bytes(off_t offset, size_t count, byte* buffer, FileDescriptor* descriptor) const
 {
 #ifdef SYNTHFS_DEBUG
     kprintf("SynthFS: read_bytes %u\n", index());
@@ -211,10 +211,10 @@ ssize_t SynthFSInode::read_bytes(off_t offset, size_t count, byte* buffer, FileD
     ByteBuffer generatedData;
     if (m_generator) {
         if (!descriptor) {
-            generatedData = m_generator(*this);
+            generatedData = m_generator(const_cast<SynthFSInode&>(*this));
         } else {
             if (!descriptor->generator_cache())
-                descriptor->generator_cache() = m_generator(*this);
+                descriptor->generator_cache() = m_generator(const_cast<SynthFSInode&>(*this));
             generatedData = descriptor->generator_cache();
         }
     }
@@ -227,7 +227,7 @@ ssize_t SynthFSInode::read_bytes(off_t offset, size_t count, byte* buffer, FileD
     return nread;
 }
 
-bool SynthFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry&)> callback)
+bool SynthFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry&)> callback) const
 {
     InterruptDisabler disabler;
 #ifdef SYNTHFS_DEBUG
@@ -304,4 +304,11 @@ bool SynthFSInode::remove_child(const String& name, int& error)
 
 SynthFSInodeCustomData::~SynthFSInodeCustomData()
 {
+}
+
+size_t SynthFSInode::directory_entry_count() const
+{
+    ASSERT(is_directory());
+    // NOTE: The 2 is for '.' and '..'
+    return m_children.size() + 2;
 }

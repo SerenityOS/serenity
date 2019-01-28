@@ -68,6 +68,7 @@ public:
     RetainPtr<FileDescriptor> create(const String& path, int& error, int options, mode_t mode, InodeIdentifier base);
     bool mkdir(const String& path, mode_t mode, InodeIdentifier base, int& error);
     bool unlink(const String& path, Inode& base, int& error);
+    bool rmdir(const String& path, Inode& base, int& error);
 
     void register_character_device(CharacterDevice&);
 
@@ -90,7 +91,7 @@ private:
     bool is_vfs_root(InodeIdentifier) const;
 
     void traverse_directory_inode(Inode&, Function<bool(const FS::DirectoryEntry&)>);
-    InodeIdentifier resolve_path(const String& path, InodeIdentifier base, int& error, int options = 0, InodeIdentifier* deepest_dir = nullptr);
+    InodeIdentifier resolve_path(const String& path, InodeIdentifier base, int& error, int options = 0, InodeIdentifier* parent_id = nullptr);
     InodeIdentifier resolve_symbolic_link(InodeIdentifier base, Inode& symlink_inode, int& error);
 
     Mount* find_mount_for_host(InodeIdentifier);

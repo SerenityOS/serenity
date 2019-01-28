@@ -260,6 +260,65 @@ bool VFS::unlink(const String& path, Inode& base, int& error)
     return true;
 }
 
+bool VFS::rmdir(const String& path, Inode& base, int& error)
+{
+    error = -EWHYTHO;
+    // FIXME: This won't work nicely across mount boundaries.
+    FileSystemPath p(path);
+    if (!p.is_valid()) {
+        error = -EINVAL;
+        return false;
+    }
+
+    InodeIdentifier parent_dir;
+    auto inode_id = resolve_path(path, base.identifier(), error, 0, &parent_dir);
+    if (!inode_id.is_valid()) {
+        error = -ENOENT;
+        return false;
+    }
+
+    if (inode_id.fs()->is_readonly()) {
+        error = -EROFS;
+        return false;
+    }
+
+    // FIXME: We should return EINVAL if the last component of the path is "."
+    // FIXME: We should return ENOTEMPTY if the last component of the path is ".."
+
+    auto inode = get_inode(inode_id);
+    if (!inode->is_directory()) {
+        error = -ENOTDIR;
+        return false;
+    }
+
+    if (inode->directory_entry_count() != 2) {
+        error = -ENOTEMPTY;
+        return false;
+    }
+
+    auto parent_inode = get_inode(parent_dir);
+    ASSERT(parent_inode);
+
+    dbgprintf("VFS::rmdir: Removing inode %u:%u from parent %u:%u\n", inode_id.fsid(), inode_id.index(), parent_dir.fsid(), parent_dir.index());
+
+    // To do:
+    // - Remove '.' in target (--child.link_count)
+    // - Remove '..' in target (--parent.link_count)
+    // - Remove target from its parent (--parent.link_count)
+    if (!inode->remove_child(".", error))
+        return false;
+
+    if (!inode->remove_child("..", error))
+        return false;
+
+    // FIXME: The reverse_lookup here can definitely be avoided.
+    if (!parent_inode->remove_child(parent_inode->reverse_lookup(inode_id), error))
+        return false;
+
+    error = 0;
+    return true;
+}
+
 InodeIdentifier VFS::resolve_symbolic_link(InodeIdentifier base, Inode& symlink_inode, int& error)
 {
     auto symlink_contents = symlink_inode.read_entire();
@@ -315,7 +374,7 @@ String VFS::absolute_path(Inode& core_inode)
     return builder.build();
 }
 
-InodeIdentifier VFS::resolve_path(const String& path, InodeIdentifier base, int& error, int options, InodeIdentifier* deepest_dir)
+InodeIdentifier VFS::resolve_path(const String& path, InodeIdentifier base, int& error, int options, InodeIdentifier* parent_id)
 {
     if (path.is_empty()) {
         error = -EINVAL;
@@ -330,8 +389,8 @@ InodeIdentifier VFS::resolve_path(const String& path, InodeIdentifier base, int&
     else
         crumb_id = base.is_valid() ? base : root_inode_id();
 
-    if (deepest_dir)
-        *deepest_dir = crumb_id;
+    if (parent_id)
+        *parent_id = crumb_id;
 
     for (unsigned i = 0; i < parts.size(); ++i) {
         bool inode_was_root_at_head_of_loop = crumb_id.is_root_inode();
@@ -383,8 +442,10 @@ InodeIdentifier VFS::resolve_path(const String& path, InodeIdentifier base, int&
         crumb_inode = get_inode(crumb_id);
         metadata = crumb_inode->metadata();
         if (metadata.isDirectory()) {
-            if (deepest_dir)
-                *deepest_dir = crumb_id;
+            if (i != parts.size() - 1) {
+                if (parent_id)
+                    *parent_id = crumb_id;
+            }
         }
         if (metadata.isSymbolicLink()) {
             if (i == parts.size() - 1) {

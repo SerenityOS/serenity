@@ -78,16 +78,17 @@ public:
     InodeIdentifier identifier() const { return { fsid(), index() }; }
     virtual InodeMetadata metadata() const = 0;
 
-    ByteBuffer read_entire(FileDescriptor* = nullptr);
+    ByteBuffer read_entire(FileDescriptor* = nullptr) const;
 
-    virtual ssize_t read_bytes(off_t, size_t, byte* buffer, FileDescriptor*) = 0;
-    virtual bool traverse_as_directory(Function<bool(const FS::DirectoryEntry&)>) = 0;
+    virtual ssize_t read_bytes(off_t, size_t, byte* buffer, FileDescriptor*) const = 0;
+    virtual bool traverse_as_directory(Function<bool(const FS::DirectoryEntry&)>) const = 0;
     virtual InodeIdentifier lookup(const String& name) = 0;
     virtual String reverse_lookup(InodeIdentifier) = 0;
     virtual ssize_t write_bytes(off_t, size_t, const byte* data, FileDescriptor*) = 0;
     virtual bool add_child(InodeIdentifier child_id, const String& name, byte file_type, int& error) = 0;
     virtual bool remove_child(const String& name, int& error) = 0;
     virtual RetainPtr<Inode> parent() const = 0;
+    virtual size_t directory_entry_count() const = 0;
 
     bool is_metadata_dirty() const { return m_metadata_dirty; }
 
@@ -109,7 +110,7 @@ protected:
     Inode(FS& fs, unsigned index);
     void set_metadata_dirty(bool b) { m_metadata_dirty = b; }
 
-    Lock m_lock;
+    mutable Lock m_lock;
 
 private:
     FS& m_fs;

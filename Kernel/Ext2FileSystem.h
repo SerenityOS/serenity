@@ -25,9 +25,9 @@ public:
 
 private:
     // ^Inode
-    virtual ssize_t read_bytes(off_t, size_t, byte* buffer, FileDescriptor*) override;
+    virtual ssize_t read_bytes(off_t, size_t, byte* buffer, FileDescriptor*) const override;
     virtual InodeMetadata metadata() const override;
-    virtual bool traverse_as_directory(Function<bool(const FS::DirectoryEntry&)>) override;
+    virtual bool traverse_as_directory(Function<bool(const FS::DirectoryEntry&)>) const override;
     virtual InodeIdentifier lookup(const String& name) override;
     virtual String reverse_lookup(InodeIdentifier) override;
     virtual void flush_metadata() override;
@@ -40,15 +40,16 @@ private:
     virtual int set_mtime(time_t) override;
     virtual int increment_link_count() override;
     virtual int decrement_link_count() override;
+    virtual size_t directory_entry_count() const override;
 
-    void populate_lookup_cache();
+    void populate_lookup_cache() const;
 
     Ext2FS& fs();
     const Ext2FS& fs() const;
     Ext2FSInode(Ext2FS&, unsigned index, const ext2_inode&);
 
-    Vector<unsigned> m_block_list;
-    HashMap<String, unsigned> m_lookup_cache;
+    mutable Vector<unsigned> m_block_list;
+    mutable HashMap<String, unsigned> m_lookup_cache;
     ext2_inode m_raw_inode;
     mutable InodeIdentifier m_parent_id;
 };
@@ -68,6 +69,7 @@ private:
 
     const ext2_super_block& super_block() const;
     const ext2_group_desc& group_descriptor(unsigned groupIndex) const;
+    void flush_block_group_descriptor_table();
     unsigned first_block_of_group(unsigned groupIndex) const;
     unsigned inodes_per_block() const;
     unsigned inodes_per_group() const;
