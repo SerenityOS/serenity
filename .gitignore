@@ -2,5 +2,6 @@
 *.config
 *.creator
 *.creator.user
+*.creator.user.*
 *.files
 *.includes
