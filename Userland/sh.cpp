@@ -14,7 +14,6 @@
 struct GlobalState {
     String cwd;
     String username;
-    const char* ttyname_short { nullptr };
     char ttyname[32];
     char hostname[32];
     pid_t sid;
@@ -356,7 +355,7 @@ static void greeting()
         perror("uname");
         return;
     }
-    printf("\n%s/%s on %s\n\n", uts.sysname, uts.machine, g->ttyname_short);
+    printf("\n%s/%s on %s\n\n", uts.sysname, uts.machine, g->ttyname);
 }
 
 int main(int, char**)
@@ -384,8 +383,7 @@ int main(int, char**)
     rc = ttyname_r(0, g->ttyname, sizeof(g->ttyname));
     if (rc < 0)
         perror("ttyname_r");
-    else
-        g->ttyname_short = strrchr(g->ttyname, '/') + 1;
+
     {
         auto* pw = getpwuid(getuid());
         if (pw)

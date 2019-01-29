@@ -22,6 +22,7 @@
 #include "Scheduler.h"
 #include "PS2MouseDevice.h"
 #include "PTYMultiplexer.h"
+#include "DevPtsFS.h"
 
 //#define SPAWN_GUITEST
 #define SPAWN_GUITEST2
@@ -95,6 +96,7 @@ static void init_stage2()
     load_ksyms();
 
     vfs->mount(ProcFS::the(), "/proc");
+    vfs->mount(DevPtsFS::the(), "/dev/pts");
 
     Vector<String> environment;
     environment.append("TERM=ansi");
@@ -166,6 +168,9 @@ void init()
 
     auto procfs = ProcFS::create();
     procfs->initialize();
+
+    auto devptsfs = DevPtsFS::create();
+    devptsfs->initialize();
 
     Process::initialize();
     Process::create_kernel_process("init_stage2", init_stage2);

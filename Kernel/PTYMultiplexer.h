@@ -23,5 +23,5 @@ private:
     virtual const char* class_name() const override { return "PTYMultiplexer"; }
 
     Lock m_lock;
-    Vector<RetainPtr<MasterPTY>> m_freelist;
+    Vector<unsigned> m_freelist;
 };
