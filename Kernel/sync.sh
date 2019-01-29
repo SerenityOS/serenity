@@ -11,14 +11,7 @@ mknod mnt/dev/tty3 c 4 3
 mknod mnt/dev/keyboard c 85 1
 mknod mnt/dev/psaux c 10 1
 mknod mnt/dev/ptmx c 5 2
-mknod mnt/dev/ptm0 c 10 0
-mknod mnt/dev/ptm1 c 10 1
-mknod mnt/dev/ptm2 c 10 2
-mknod mnt/dev/ptm3 c 10 3
-mknod mnt/dev/pts0 c 11 0
-mknod mnt/dev/pts1 c 11 1
-mknod mnt/dev/pts2 c 11 2
-mknod mnt/dev/pts3 c 11 3
+mkdir mnt/dev/pts
 mknod mnt/dev/gui_events c 66 1
 cp -R ../Base/* mnt/
 cp -v ../Userland/sh mnt/bin/sh

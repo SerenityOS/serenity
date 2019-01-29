@@ -45,6 +45,7 @@ struct SynthFSInodeCustomData {
 
 class SynthFSInode final : public Inode {
     friend class SynthFS;
+    friend class DevPtsFS;
 public:
     virtual ~SynthFSInode() override;
 

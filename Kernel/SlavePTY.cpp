@@ -1,22 +1,26 @@
 #include "SlavePTY.h"
 #include "MasterPTY.h"
+#include "DevPtsFS.h"
 
 SlavePTY::SlavePTY(MasterPTY& master, unsigned index)
     : TTY(11, index)
     , m_master(master)
     , m_index(index)
 {
+    VFS::the().register_character_device(*this);
+    DevPtsFS::the().register_slave_pty(*this);
     set_size(80, 25);
 }
 
 SlavePTY::~SlavePTY()
 {
+    DevPtsFS::the().unregister_slave_pty(*this);
 }
 
 String SlavePTY::tty_name() const
 {
     char buffer[32];
-    ksprintf(buffer, "/dev/pts%u", m_index);
+    ksprintf(buffer, "/dev/pts/%u", m_index);
     return buffer;
 }
 

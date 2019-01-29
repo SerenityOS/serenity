@@ -29,6 +29,7 @@ KERNEL_OBJS = \
        ELFImage.o \
        ELFLoader.o \
        KSyms.o \
+       DevPtsFS.o \
        PS2MouseDevice.o \
        GUIEventDevice.o
 

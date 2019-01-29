@@ -11,6 +11,9 @@ public:
     void on_master_write(const byte*, size_t);
     unsigned index() const { return m_index; }
 
+    InodeIdentifier devpts_inode_id() const { return m_devpts_inode_id; }
+    void set_devpts_inode_id(InodeIdentifier inode_id) { m_devpts_inode_id = inode_id; }
+
 private:
     // ^TTY
     virtual String tty_name() const override;
@@ -25,5 +28,6 @@ private:
 
     MasterPTY& m_master;
     unsigned m_index;
+    InodeIdentifier m_devpts_inode_id;
 };
 
