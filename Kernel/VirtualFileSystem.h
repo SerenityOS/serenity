@@ -69,6 +69,7 @@ public:
     bool mkdir(const String& path, mode_t mode, InodeIdentifier base, int& error);
     bool unlink(const String& path, Inode& base, int& error);
     bool rmdir(const String& path, Inode& base, int& error);
+    bool chmod(const String& path, mode_t, Inode& base, int& error);
 
     void register_character_device(CharacterDevice&);
 

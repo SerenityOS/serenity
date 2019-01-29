@@ -214,7 +214,7 @@ struct winsize {
 
 typedef dword dev_t;
 typedef dword ino_t;
-typedef dword mode_t;
+typedef word mode_t;
 typedef dword nlink_t;
 typedef dword uid_t;
 typedef dword gid_t;

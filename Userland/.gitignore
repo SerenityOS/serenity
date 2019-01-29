@@ -28,3 +28,4 @@ rm
 cp
 rmdir
 dmesg
+chmod

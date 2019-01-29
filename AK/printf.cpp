@@ -67,6 +67,47 @@ ALWAYS_INLINE int printNumber(PutChFunc putch, char*& bufptr, dword number, bool
 }
 
 template<typename PutChFunc>
+ALWAYS_INLINE int print_octal_number(PutChFunc putch, char*& bufptr, dword number, bool leftPad, bool zeroPad, dword fieldWidth)
+{
+    dword divisor = 134217728;
+    char ch;
+    char padding = 1;
+    char buf[32];
+    char* p = buf;
+
+    for (;;) {
+        ch = '0' + (number / divisor);
+        number %= divisor;
+        if (ch != '0')
+            padding = 0;
+        if (!padding || divisor == 1)
+            *(p++) = ch;
+        if (divisor == 1)
+            break;
+        divisor /= 8;
+    }
+
+    size_t numlen = p - buf;
+    if (!fieldWidth || fieldWidth < numlen)
+        fieldWidth = numlen;
+    if (!leftPad) {
+        for (unsigned i = 0; i < fieldWidth - numlen; ++i) {
+            putch(bufptr, zeroPad ? '0' : ' ');
+        }
+    }
+    for (unsigned i = 0; i < numlen; ++i) {
+        putch(bufptr, buf[i]);
+    }
+    if (leftPad) {
+        for (unsigned i = 0; i < fieldWidth - numlen; ++i) {
+            putch(bufptr, ' ');
+        }
+    }
+
+    return fieldWidth;
+}
+
+template<typename PutChFunc>
 ALWAYS_INLINE int printString(PutChFunc putch, char*& bufptr, const char* str, bool leftPad, dword fieldWidth)
 {
     size_t len = strlen(str);
@@ -143,6 +184,10 @@ one_more:
 
                 case 'u':
                     ret += printNumber(putch, bufptr, va_arg(ap, dword), leftPad, zeroPad, fieldWidth);
+                    break;
+
+                case 'o':
+                    ret += print_octal_number(putch, bufptr, va_arg(ap, dword), leftPad, zeroPad, fieldWidth);
                     break;
 
                 case 'x':

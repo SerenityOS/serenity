@@ -228,6 +228,37 @@ bool VFS::mkdir(const String& path, mode_t mode, InodeIdentifier base, int& erro
     return false;
 }
 
+bool VFS::chmod(const String& path, mode_t mode, Inode& base, int& error)
+{
+    error = -EWHYTHO;
+    // FIXME: This won't work nicely across mount boundaries.
+    FileSystemPath p(path);
+    if (!p.is_valid()) {
+        error = -EINVAL;
+        return false;
+    }
+
+    InodeIdentifier parent_dir;
+    auto inode_id = resolve_path(path, base.identifier(), error, 0, &parent_dir);
+    if (!inode_id.is_valid()) {
+        error = -ENOENT;
+        return false;
+    }
+
+    auto inode = get_inode(inode_id);
+
+    // FIXME: Permission checks.
+
+    // Only change the permission bits.
+    mode = (inode->mode() & ~04777) | (mode & 04777);
+
+    kprintf("VFS::chmod(): %u:%u mode %o\n", inode_id.fsid(), inode_id.index(), mode);
+    if (!inode->chmod(mode, error))
+        return false;
+    error = 0;
+    return true;
+}
+
 bool VFS::unlink(const String& path, Inode& base, int& error)
 {
     error = -EWHYTHO;

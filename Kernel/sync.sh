@@ -50,6 +50,7 @@ cp -v ../Userland/guitest2 mnt/bin/guitest2
 cp -v ../Userland/sysctl mnt/bin/sysctl
 cp -v ../Terminal/Terminal mnt/bin/Terminal
 cp -v ../Userland/dmesg mnt/bin/dmesg
+cp -v ../Userland/chmod mnt/bin/chmod
 sh sync-local.sh
 cp -v kernel.map mnt/
 ln -s dir_a mnt/dir_cur

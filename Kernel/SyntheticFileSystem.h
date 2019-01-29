@@ -65,6 +65,7 @@ private:
     virtual bool remove_child(const String& name, int& error) override;
     virtual RetainPtr<Inode> parent() const override;
     virtual size_t directory_entry_count() const override;
+    virtual bool chmod(mode_t, int& error) override;
 
     SynthFS& fs();
     const SynthFS& fs() const;

@@ -83,6 +83,7 @@
     __ENUMERATE_SYSCALL(gui_notify_paint_finished) \
     __ENUMERATE_SYSCALL(gui_set_global_cursor_tracking_enabled) \
     __ENUMERATE_SYSCALL(rmdir) \
+    __ENUMERATE_SYSCALL(chmod) \
 
 
 #ifdef SERENITY
