@@ -2120,3 +2120,13 @@ int Process::sys$read_tsc(dword* lsw, dword* msw)
     read_tsc(*lsw, *msw);
     return 0;
 }
+
+int Process::sys$chmod(const char* pathname, mode_t mode)
+{
+    if (!validate_read_str(pathname))
+        return -EFAULT;
+    int error;
+    if (!VFS::the().chmod(String(pathname), mode, *cwd_inode(), error))
+        return error;
+    return 0;
+}

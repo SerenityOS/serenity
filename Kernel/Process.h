@@ -196,6 +196,7 @@ public:
     int sys$unlink(const char* pathname);
     int sys$rmdir(const char* pathname);
     int sys$read_tsc(dword* lsw, dword* msw);
+    int sys$chmod(const char* pathname, mode_t);
 
     int gui$create_window(const GUI_WindowParameters*);
     int gui$destroy_window(int window_id);

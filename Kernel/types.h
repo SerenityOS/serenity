@@ -37,7 +37,7 @@ typedef dword ino_t;
 typedef signed_dword off_t;
 
 typedef dword dev_t;
-typedef dword mode_t;
+typedef word mode_t;
 typedef dword nlink_t;
 typedef dword blksize_t;
 typedef dword blkcnt_t;

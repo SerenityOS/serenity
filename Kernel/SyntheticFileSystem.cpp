@@ -312,3 +312,9 @@ size_t SynthFSInode::directory_entry_count() const
     // NOTE: The 2 is for '.' and '..'
     return m_children.size() + 2;
 }
+
+bool SynthFSInode::chmod(mode_t, int& error)
+{
+    error = -EPERM;
+    return false;
+}

@@ -74,6 +74,7 @@ public:
     bool is_symlink() const { return metadata().isSymbolicLink(); }
     bool is_directory() const { return metadata().isDirectory(); }
     bool is_character_device() const { return metadata().isCharacterDevice(); }
+    mode_t mode() const { return metadata().mode; }
 
     InodeIdentifier identifier() const { return { fsid(), index() }; }
     virtual InodeMetadata metadata() const = 0;
@@ -89,6 +90,7 @@ public:
     virtual bool remove_child(const String& name, int& error) = 0;
     virtual RetainPtr<Inode> parent() const = 0;
     virtual size_t directory_entry_count() const = 0;
+    virtual bool chmod(mode_t, int& error) = 0;
 
     bool is_metadata_dirty() const { return m_metadata_dirty; }
 

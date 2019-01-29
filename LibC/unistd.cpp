@@ -97,7 +97,7 @@ int open(const char* path, int options, ...)
 {
     va_list ap;
     va_start(ap, options);
-    int rc = syscall(SC_open, path, options, va_arg(ap, mode_t));
+    int rc = syscall(SC_open, path, options, (mode_t)va_arg(ap, unsigned));
     va_end(ap);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }

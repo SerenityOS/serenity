@@ -1292,3 +1292,13 @@ size_t Ext2FSInode::directory_entry_count() const
     LOCKER(m_lock);
     return m_lookup_cache.size();
 }
+
+bool Ext2FSInode::chmod(mode_t mode, int& error)
+{
+    error = 0;
+    if (m_raw_inode.i_mode == mode)
+        return true;
+    m_raw_inode.i_mode = mode;
+    set_metadata_dirty(true);
+    return true;
+}

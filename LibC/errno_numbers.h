@@ -1,6 +1,7 @@
 #pragma once
 
 #define __ENUMERATE_ALL_ERRORS \
+    __ERROR(ESUCCESS,       "Success (not an error)") \
     __ERROR(EPERM,          "Operation not permitted") \
     __ERROR(ENOENT,         "No such file or directory") \
     __ERROR(ESRCH,          "No such process") \
