@@ -14,6 +14,7 @@ public:
         WM_SetWindowTitle,
         WM_SetWindowRect,
         WM_DeferredCompose,
+        WM_DestroyWindow,
         MouseMove,
         MouseDown,
         MouseUp,

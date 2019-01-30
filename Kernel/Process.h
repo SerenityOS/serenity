@@ -216,6 +216,7 @@ public:
     static void initialize();
     static void initialize_gui_statics();
     int make_window_id();
+    void destroy_all_windows();
 
     void crash() NORETURN;
     static int reap(Process&) WARN_UNUSED_RESULT;

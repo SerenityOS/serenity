@@ -15,7 +15,7 @@ public:
 
     int exec();
 
-    void post_message(WSMessageReceiver* receiver, OwnPtr<WSMessage>&&);
+    void post_message(WSMessageReceiver* receiver, OwnPtr<WSMessage>&&, bool unsafe = false);
 
     static WSMessageLoop& the();
 
