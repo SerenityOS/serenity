@@ -29,10 +29,29 @@ GWindow* GWindow::from_window_id(int window_id)
 GWindow::GWindow(GObject* parent)
     : GObject(parent)
 {
+    m_rect_when_windowless = { 100, 400, 140, 140 };
+    m_title_when_windowless = "GWindow";
+}
+
+GWindow::~GWindow()
+{
+    hide();
+}
+
+void GWindow::close()
+{
+    delete_later();
+}
+
+void GWindow::show()
+{
+    if (m_window_id)
+        return;
+
     GUI_WindowParameters wparams;
-    wparams.rect = { { 100, 400 }, { 140, 140 } };
+    wparams.rect = m_rect_when_windowless;
     wparams.background_color = 0xffc0c0;
-    strcpy(wparams.title, "GWindow");
+    strcpy(wparams.title, m_title_when_windowless.characters());
     m_window_id = gui_create_window(&wparams);
     if (m_window_id < 0) {
         perror("gui_create_window");
@@ -40,33 +59,54 @@ GWindow::GWindow(GObject* parent)
     }
 
     windows().set(m_window_id, this);
+    update();
 }
 
-GWindow::~GWindow()
+void GWindow::hide()
 {
+    if (!m_window_id)
+        return;
+    windows().remove(m_window_id);
+    int rc = gui_destroy_window(m_window_id);
+    if (rc < 0) {
+        perror("gui_destroy_window");
+        exit(1);
+    }
 }
 
 void GWindow::set_title(String&& title)
 {
     dbgprintf("GWindow::set_title \"%s\"\n", title.characters());
-    int rc = gui_set_window_title(m_window_id, title.characters(), title.length());
-    ASSERT(rc == 0);
+    m_title_when_windowless = title;
+    if (m_window_id) {
+        int rc = gui_set_window_title(m_window_id, title.characters(), title.length());
+        if (rc < 0) {
+            perror("gui_set_window_title");
+            exit(1);
+        }
+    }
 }
 
 String GWindow::title() const
 {
-    char buffer[256];
-    int rc = gui_get_window_title(m_window_id, buffer, sizeof(buffer));
-    ASSERT(rc >= 0);
-    return String(buffer, rc);
+    if (m_window_id) {
+        char buffer[256];
+        int rc = gui_get_window_title(m_window_id, buffer, sizeof(buffer));
+        ASSERT(rc >= 0);
+        return String(buffer, rc);
+    }
+    return m_title_when_windowless;
 }
 
 void GWindow::set_rect(const Rect& a_rect)
 {
     dbgprintf("GWindow::set_rect! %d,%d %dx%d\n", a_rect.x(), a_rect.y(), a_rect.width(), a_rect.height());
-    GUI_Rect rect = a_rect;
-    int rc = gui_set_window_rect(m_window_id, &rect);
-    ASSERT(rc == 0);
+    m_rect_when_windowless = a_rect;
+    if (m_window_id) {
+        GUI_Rect rect = a_rect;
+        int rc = gui_set_window_rect(m_window_id, &rect);
+        ASSERT(rc == 0);
+    }
 }
 
 void GWindow::event(GEvent& event)
@@ -99,9 +139,11 @@ void GWindow::event(GEvent& event)
         if (rect.is_empty())
             rect = m_main_widget->rect();
         m_main_widget->event(*make<GPaintEvent>(rect));
-        GUI_Rect gui_rect = rect;
-        int rc = gui_notify_paint_finished(m_window_id, &gui_rect);
-        ASSERT(rc == 0);
+        if (m_window_id) {
+            GUI_Rect gui_rect = rect;
+            int rc = gui_notify_paint_finished(m_window_id, &gui_rect);
+            ASSERT(rc == 0);
+        }
         return;
     }
 
@@ -126,16 +168,10 @@ bool GWindow::is_visible() const
     return false;
 }
 
-void GWindow::close()
-{
-}
-
-void GWindow::show()
-{
-}
-
 void GWindow::update(const Rect& a_rect)
 {
+    if (!m_window_id)
+        return;
     GUI_Rect rect = a_rect;
     int rc = gui_invalidate_window(m_window_id, a_rect.is_null() ? nullptr : &rect);
     ASSERT(rc == 0);
@@ -168,6 +204,7 @@ void GWindow::set_focused_widget(GWidget* widget)
 
 void GWindow::set_global_cursor_tracking_widget(GWidget* widget)
 {
+    ASSERT(m_window_id);
     if (widget == m_global_cursor_tracking_widget.ptr())
         return;
     m_global_cursor_tracking_widget = widget ? widget->makeWeakPtr() : nullptr;

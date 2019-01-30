@@ -69,7 +69,7 @@ void GObject::stopTimer()
     m_timerID = 0;
 }
 
-void GObject::deleteLater()
+void GObject::delete_later()
 {
     GEventLoop::main().post_event(this, make<GEvent>(GEvent::DeferredDestroy));
 }

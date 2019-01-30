@@ -6,6 +6,7 @@
 __BEGIN_DECLS
 
 int gui_create_window(const GUI_WindowParameters*);
+int gui_destroy_window(int window_id);
 int gui_invalidate_window(int window_id, const GUI_Rect*);
 int gui_notify_paint_finished(int window_id, const GUI_Rect*);
 int gui_get_window_backing_store(int window_id, GUI_WindowBackingStoreInfo*);
