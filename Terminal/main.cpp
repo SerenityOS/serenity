@@ -136,10 +136,10 @@ int main(int, char**)
                 case KeyCode::Key_Down:
                     write(ptm_fd, "\033[B", 3);
                     break;
-                case KeyCode::Key_Left:
+                case KeyCode::Key_Right:
                     write(ptm_fd, "\033[C", 3);
                     break;
-                case KeyCode::Key_Right:
+                case KeyCode::Key_Left:
                     write(ptm_fd, "\033[D", 3);
                     break;
                 default:
