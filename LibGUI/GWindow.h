@@ -35,6 +35,8 @@ public:
     bool is_visible() const;
     bool is_active() const { return m_is_active; }
 
+    void show();
+    void hide();
     void close();
 
     GWidget* main_widget() { return m_main_widget; }
@@ -45,8 +47,6 @@ public:
     const GWidget* focused_widget() const { return m_focused_widget; }
     void set_focused_widget(GWidget*);
 
-    void show();
-
     void update(const Rect& = Rect());
 
     void set_global_cursor_tracking_widget(GWidget*);
@@ -55,10 +55,12 @@ public:
 
 private:
     RetainPtr<GraphicsBitmap> m_backing;
-    int m_window_id { -1 };
+    int m_window_id { 0 };
     bool m_is_active { false };
     GWidget* m_main_widget { nullptr };
     GWidget* m_focused_widget { nullptr };
     WeakPtr<GWidget> m_global_cursor_tracking_widget;
+    Rect m_rect_when_windowless;
+    String m_title_when_windowless;
 };
 

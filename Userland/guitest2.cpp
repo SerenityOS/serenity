@@ -63,11 +63,11 @@ GWindow* make_launcher_window()
 {
     auto* window = new GWindow;
     window->set_title("Launcher");
-    window->set_rect({ 100, 400, 100, 200 });
+    window->set_rect({ 100, 400, 100, 230 });
 
     auto* widget = new GWidget;
     window->set_main_widget(widget);
-    widget->set_relative_rect({ 0, 0, 100, 200 });
+    widget->set_relative_rect({ 0, 0, 100, 230 });
 
     auto* label = new GLabel(widget);
     label->set_relative_rect({ 0, 0, 100, 20 });
@@ -123,6 +123,13 @@ GWindow* make_launcher_window()
     checkbox->set_caption("CheckBox");
 
     window->set_focused_widget(textbox);
+
+    auto* close_button = new GButton(widget);
+    close_button->set_relative_rect({ 5, 200, 90, 20 });
+    close_button->set_caption("Close");
+    close_button->on_click = [window] (GButton&) {
+        window->close();
+    };
 
     return window;
 }

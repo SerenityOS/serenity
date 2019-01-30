@@ -27,7 +27,7 @@ public:
     void addChild(GObject&);
     void removeChild(GObject&);
 
-    void deleteLater();
+    void delete_later();
 
 private:
     virtual void timerEvent(GTimerEvent&);

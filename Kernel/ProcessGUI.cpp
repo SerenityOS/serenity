@@ -80,6 +80,8 @@ int Process::gui$destroy_window(int window_id)
     auto it = m_windows.find(window_id);
     if (it == m_windows.end())
         return -EBADWINDOW;
+    auto message = make<WSMessage>(WSMessage::WM_DestroyWindow);
+    WSMessageLoop::the().post_message((*it).value.leakPtr(), move(message), true);
     m_windows.remove(window_id);
     return 0;
 }
