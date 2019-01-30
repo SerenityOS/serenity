@@ -263,8 +263,9 @@ void exception_14_handler(RegisterDumpWithExceptionCode& regs)
     dbgprintf("eax=%x ebx=%x ecx=%x edx=%x\n", regs.eax, regs.ebx, regs.ecx, regs.edx);
     dbgprintf("ebp=%x esp=%x esi=%x edi=%x\n", regs.ebp, esp, regs.esi, regs.edi);
 
-    byte* codeptr = (byte*)regs.eip;
-    dbgprintf("code: %b %b %b %b %b %b %b %b\n",
+    if (current->validate_read((void*)regs.eip, 8)) {
+        byte* codeptr = (byte*)regs.eip;
+        dbgprintf("code: %b %b %b %b %b %b %b %b\n",
             codeptr[0],
             codeptr[1],
             codeptr[2],
@@ -273,7 +274,8 @@ void exception_14_handler(RegisterDumpWithExceptionCode& regs)
             codeptr[5],
             codeptr[6],
             codeptr[7]
-    );
+        );
+    }
     };
 
     if (current->isRing0()) {
