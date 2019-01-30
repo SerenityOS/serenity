@@ -27,7 +27,7 @@ private:
     friend class MasterPTY;
     SlavePTY(MasterPTY&, unsigned index);
 
-    MasterPTY& m_master;
+    RetainPtr<MasterPTY> m_master;
     unsigned m_index;
     InodeIdentifier m_devpts_inode_id;
 };

@@ -87,6 +87,7 @@ int main(int, char**)
         int nfds = select(max(ptm_fd, event_fd) + 1, &rfds, nullptr, nullptr, nullptr);
         if (nfds < 0) {
             dbgprintf("Terminal(%u) select() failed :( errno=%d\n", getpid(), errno);
+            return 1;
         }
 
         if (FD_ISSET(ptm_fd, &rfds)) {
