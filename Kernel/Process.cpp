@@ -1490,9 +1490,10 @@ int Process::reap(Process& process)
 
     if (process.ppid()) {
         auto* parent = Process::from_pid(process.ppid());
-        ASSERT(parent);
-        parent->m_ticks_in_user_for_dead_children += process.m_ticks_in_user + process.m_ticks_in_user_for_dead_children;
-        parent->m_ticks_in_kernel_for_dead_children += process.m_ticks_in_kernel + process.m_ticks_in_kernel_for_dead_children;
+        if (parent) {
+            parent->m_ticks_in_user_for_dead_children += process.m_ticks_in_user + process.m_ticks_in_user_for_dead_children;
+            parent->m_ticks_in_kernel_for_dead_children += process.m_ticks_in_kernel + process.m_ticks_in_kernel_for_dead_children;
+        }
     }
 
     dbgprintf("reap: %s(%u) {%s}\n", process.name().characters(), process.pid(), toString(process.state()));
@@ -2143,4 +2144,5 @@ void Process::die()
 {
     set_state(Dead);
     m_fds.clear();
+    destroy_all_windows();
 }

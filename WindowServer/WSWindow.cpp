@@ -107,11 +107,16 @@ void WSWindow::on_message(WSMessage& message)
     case WSMessage::WM_SetWindowTitle:
         set_title(static_cast<WSSetWindowTitleMessage&>(message).title());
         return;
+    case WSMessage::WM_DestroyWindow:
+        delete this;
+        return;
     case WSMessage::WindowActivated:
         gui_event.type = GUI_Event::Type::WindowActivated;
         break;
     case WSMessage::WindowDeactivated:
         gui_event.type = GUI_Event::Type::WindowDeactivated;
+        break;
+    default:
         break;
     }
 

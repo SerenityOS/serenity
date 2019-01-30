@@ -257,3 +257,12 @@ int Process::gui$set_global_cursor_tracking_enabled(int window_id, bool enabled)
     window.set_global_cursor_tracking_enabled(enabled);
     return 0;
 }
+
+void Process::destroy_all_windows()
+{
+    for (auto& it : m_windows) {
+        auto message = make<WSMessage>(WSMessage::WM_DestroyWindow);
+        WSMessageLoop::the().post_message(it.value.leakPtr(), move(message), true);
+    }
+    m_windows.clear();
+}
