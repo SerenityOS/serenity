@@ -13,7 +13,8 @@ mknod mnt/dev/psaux c 10 1
 mknod mnt/dev/ptmx c 5 2
 mkdir mnt/dev/pts
 mknod mnt/dev/gui_events c 66 1
-cp -R ../Base/* mnt/
+cp -vR ../Base/* mnt/
+chown -vR 100:100 mnt/users/anon
 cp -v ../Userland/sh mnt/bin/sh
 cp -v ../Userland/id mnt/bin/id
 cp -v ../Userland/ps mnt/bin/ps
