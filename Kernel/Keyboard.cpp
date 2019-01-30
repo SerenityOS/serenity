@@ -42,12 +42,26 @@ static KeyCode unshifted_key_map[0x80] =
     Key_Return, // 28
     Key_Control, // 29
     Key_A, Key_S, Key_D, Key_F, Key_G, Key_H, Key_J, Key_K, Key_L, Key_Semicolon, Key_Apostrophe, Key_Backtick,
-    Key_Shift,
+    Key_Shift, // 42
     Key_Backslash,
     Key_Z, Key_X, Key_C, Key_V, Key_B, Key_N, Key_M, Key_Comma, Key_Period, Key_Slash,
-    Key_Alt,
+    Key_Alt, // 54
     Key_Invalid, Key_Invalid,
-    Key_Space
+    Key_Space, // 57
+    Key_Invalid, Key_Invalid,
+    Key_Invalid, // 60
+    Key_Invalid, Key_Invalid, Key_Invalid, Key_Invalid, Key_Invalid, Key_Invalid, Key_Invalid, Key_Invalid, Key_Invalid,
+    Key_Invalid, // 70
+    Key_Invalid,
+    Key_Up,
+    Key_Invalid,
+    Key_Invalid,
+    Key_Left,
+    Key_Invalid,
+    Key_Right, // 77
+    Key_Invalid,
+    Key_Invalid,
+    Key_Down, // 80
 };
 
 static KeyCode shifted_key_map[0x100] =
@@ -64,9 +78,22 @@ static KeyCode shifted_key_map[0x100] =
     Key_Z, Key_X, Key_C, Key_V, Key_B, Key_N, Key_M, Key_LessThan, Key_GreaterThan, Key_QuestionMark,
     Key_Alt,
     Key_Invalid, Key_Invalid,
-    Key_Space
+    Key_Space,
+    Key_Invalid, Key_Invalid,
+    Key_Invalid, // 60
+    Key_Invalid, Key_Invalid, Key_Invalid, Key_Invalid, Key_Invalid, Key_Invalid, Key_Invalid, Key_Invalid, Key_Invalid,
+    Key_Invalid, // 70
+    Key_Invalid,
+    Key_Up,
+    Key_Invalid,
+    Key_Invalid,
+    Key_Left,
+    Key_Invalid,
+    Key_Right, // 77
+    Key_Invalid,
+    Key_Invalid,
+    Key_Down, // 80
 };
-
 
 void Keyboard::key_state_changed(byte raw, bool pressed)
 {

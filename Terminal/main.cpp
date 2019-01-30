@@ -12,6 +12,7 @@
 #include <sys/select.h>
 #include <LibC/gui.h>
 #include "Terminal.h"
+#include <Kernel/KeyCode.h>
 
 static void make_shell(int ptm_fd)
 {
@@ -128,7 +129,22 @@ int main(int, char**)
                         ch = 0x1c;
                     }
                 }
-                write(ptm_fd, &ch, 1);
+                switch (event.key.key) {
+                case KeyCode::Key_Up:
+                    write(ptm_fd, "\033[A", 3);
+                    break;
+                case KeyCode::Key_Down:
+                    write(ptm_fd, "\033[B", 3);
+                    break;
+                case KeyCode::Key_Left:
+                    write(ptm_fd, "\033[C", 3);
+                    break;
+                case KeyCode::Key_Right:
+                    write(ptm_fd, "\033[D", 3);
+                    break;
+                default:
+                    write(ptm_fd, &ch, 1);
+                }
             } else if (event.type == GUI_Event::Type::WindowActivated) {
                 terminal.set_in_active_window(true);
             } else if (event.type == GUI_Event::Type::WindowDeactivated) {
