@@ -12,6 +12,7 @@ MasterPTY::MasterPTY(unsigned index)
 
 MasterPTY::~MasterPTY()
 {
+    dbgprintf("~MasterPTY(%u)\n", m_index);
     PTYMultiplexer::the().notify_master_destroyed(Badge<MasterPTY>(), m_index);
 }
 
