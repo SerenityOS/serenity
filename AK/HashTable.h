@@ -301,7 +301,10 @@ void HashTable<T, TraitsForT>::rehash(unsigned new_capacity)
 template<typename T, typename TraitsForT>
 void HashTable<T, TraitsForT>::clear()
 {
-    delete [] m_buckets;
+    if (m_buckets) {
+        delete [] m_buckets;
+        m_buckets = nullptr;
+    }
     m_capacity = 0;
     m_size = 0;
 }

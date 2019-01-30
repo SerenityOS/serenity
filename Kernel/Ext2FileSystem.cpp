@@ -373,9 +373,6 @@ void Ext2FSInode::flush_metadata()
         // Unless we're about to go away permanently, invalidate the lookup cache.
         if (m_raw_inode.i_links_count != 0) {
             LOCKER(m_lock);
-            // FIXME: Something isn't working right when we hit this code path.
-            //        I've seen crashes inside HashMap::clear() all the way down in DoublyLinkedList::clear().
-            //        My guess would be a HashTable bug.
             // FIXME: This invalidation is way too hardcore. It's sad to throw away the whole cache.
             m_lookup_cache.clear();
         }
