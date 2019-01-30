@@ -30,6 +30,10 @@ private:
     void invalidate_window(const Rect& = Rect());
     void set_window_title(const String&);
 
+    void inject_string(const String&);
+    void unimplemented_escape();
+    void unimplemented_xterm_escape();
+
     void escape$A(const Vector<unsigned>&);
     void escape$B(const Vector<unsigned>&);
     void escape$C(const Vector<unsigned>&);
@@ -109,6 +113,7 @@ private:
     Vector<byte> m_intermediates;
     Vector<byte> m_xterm_param1;
     Vector<byte> m_xterm_param2;
+    byte m_final { 0 };
     byte* m_horizontal_tabs { nullptr };
     bool m_belling { false };
 

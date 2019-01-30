@@ -1,5 +1,6 @@
 #include "Terminal.h"
 #include <AK/AKString.h>
+#include <AK/StringBuilder.h>
 #include <SharedGraphics/Font.h>
 #include <SharedGraphics/Painter.h>
 #include <AK/StdLibExtras.h>
@@ -291,13 +292,13 @@ void Terminal::escape$K(const Vector<unsigned>& params)
         break;
     case 1:
         // FIXME: Clear from cursor to beginning of screen.
-        notImplemented();
+        unimplemented_escape();
         break;
     case 2:
-        notImplemented();
+        unimplemented_escape();
         break;
     default:
-        notImplemented();
+        unimplemented_escape();
         break;
     }
 }
@@ -309,12 +310,19 @@ void Terminal::escape$J(const Vector<unsigned>& params)
         mode = params[0];
     switch (mode) {
     case 0:
-        // FIXME: Clear from cursor to end of screen.
-        notImplemented();
+        // Clear from cursor to end of screen.
+        for (int i = m_cursor_column; i < m_columns; ++i) {
+            put_character_at(m_cursor_row, i, ' ');
+        }
+        for (int row = m_cursor_row + 1; row < m_rows; ++row) {
+            for (int column = 0; column < m_columns; ++column) {
+                put_character_at(row, column, ' ');
+            }
+        }
         break;
     case 1:
         // FIXME: Clear from cursor to beginning of screen.
-        notImplemented();
+        unimplemented_escape();
         break;
     case 2:
         clear();
@@ -324,13 +332,14 @@ void Terminal::escape$J(const Vector<unsigned>& params)
         clear();
         break;
     default:
-        notImplemented();
+        unimplemented_escape();
         break;
     }
 }
 
 void Terminal::execute_xterm_command()
 {
+    m_final = '@';
     bool ok;
     unsigned value = parseUInt(String((const char*)m_xterm_param1.data(), m_xterm_param1.size()), ok);
     if (ok) {
@@ -339,7 +348,7 @@ void Terminal::execute_xterm_command()
             set_window_title(String((const char*)m_xterm_param2.data(), m_xterm_param2.size()));
             break;
         default:
-            notImplemented();
+            unimplemented_xterm_escape();
             break;
         }
     }
@@ -349,6 +358,7 @@ void Terminal::execute_xterm_command()
 
 void Terminal::execute_escape_sequence(byte final)
 {
+    m_final = final;
     auto paramparts = String((const char*)m_parameters.data(), m_parameters.size()).split(';');
     Vector<unsigned> params;
     for (auto& parampart : paramparts) {
@@ -417,6 +427,7 @@ void Terminal::put_character_at(unsigned row, unsigned column, byte ch)
     ASSERT(column < columns());
     line(row).characters[column] = ch;
     line(row).attributes[column] = m_current_attribute;
+    line(row).dirty = true;
 }
 
 void Terminal::on_char(byte ch)
@@ -528,6 +539,36 @@ void Terminal::on_char(byte ch)
             put_character_at(m_cursor_row, m_cursor_column, ch);
         }
     }
+}
+
+void Terminal::inject_string(const String& str)
+{
+    for (size_t i = 0; i < str.length(); ++i)
+        on_char(str[i]);
+}
+
+void Terminal::unimplemented_escape()
+{
+    StringBuilder builder;
+    builder.appendf("((Unimplemented escape: %c", m_final);
+    if (!m_parameters.is_empty()) {
+        builder.append(" parameters:");
+        for (size_t i = 0; i < m_parameters.size(); ++i)
+            builder.append((char)m_parameters[i]);
+    }
+    if (!m_intermediates.is_empty()) {
+        builder.append(" intermediates:");
+        for (size_t i = 0; i < m_intermediates.size(); ++i)
+            builder.append((char)m_intermediates[i]);
+    }
+    builder.append("))");
+    inject_string(builder.build());
+}
+
+void Terminal::unimplemented_xterm_escape()
+{
+    auto message = String::format("((Unimplemented xterm escape: %c))\n", m_final);
+    inject_string(message);
 }
 
 void Terminal::set_size(word columns, word rows)
