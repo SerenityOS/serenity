@@ -1981,23 +1981,31 @@ int Process::sys$select(const Syscall::SC_select_params* params)
     if (nfds < 0)
         return -EINVAL;
 
-    // FIXME: Return -EBADF if one of the fd sets contains an invalid fd.
     // FIXME: Return -EINTR if a signal is caught.
     // FIXME: Return -EINVAL if timeout is invalid.
 
-    auto transfer_fds = [nfds] (fd_set* set, auto& vector) {
+    auto transfer_fds = [this, nfds] (fd_set* set, auto& vector) -> int {
         if (!set)
-            return;
+            return 0;
         vector.clear_with_capacity();
         auto bitmap = Bitmap::wrap((byte*)set, FD_SETSIZE);
         for (int i = 0; i < nfds; ++i) {
-            if (bitmap.get(i))
+            if (bitmap.get(i)) {
+                if (!file_descriptor(i))
+                    return -EBADF;
                 vector.append(i);
+            }
         }
+        return 0;
     };
 
-    transfer_fds(writefds, m_select_write_fds);
-    transfer_fds(readfds, m_select_read_fds);
+    int error = 0;
+    error = transfer_fds(writefds, m_select_write_fds);
+    if (error)
+        return error;
+    error = transfer_fds(readfds, m_select_read_fds);
+    if (error)
+        return error;
 
 #ifdef DEBUG_IO
     dbgprintf("%s<%u> selecting on (read:%u, write:%u), wakeup_req:%u, timeout=%p\n", name().characters(), pid(), m_select_read_fds.size(), m_select_write_fds.size(), m_wakeup_requested, timeout);
