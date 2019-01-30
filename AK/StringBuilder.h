@@ -2,6 +2,7 @@
 
 #include "AKString.h"
 #include "Vector.h"
+#include <LibC/stdarg.h>
 
 namespace AK {
 
@@ -14,6 +15,7 @@ public:
     void append(char);
     void append(const char*, size_t);
     void appendf(const char*, ...);
+    void appendvf(const char*, va_list);
 
     String build();
     ByteBuffer to_byte_buffer();

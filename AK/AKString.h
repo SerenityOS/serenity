@@ -95,6 +95,8 @@ public:
 
     ByteBuffer to_byte_buffer() const;
 
+    static String format(const char*, ...);
+
 private:
     RetainPtr<StringImpl> m_impl;
 };

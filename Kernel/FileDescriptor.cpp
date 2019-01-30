@@ -292,16 +292,10 @@ String FileDescriptor::absolute_path()
     Stopwatch sw("absolute_path");
     if (is_tty())
         return tty()->tty_name();
-    if (is_fifo()) {
-        char buf[32];
-        ksprintf(buf, "fifo:%x", m_fifo.ptr());
-        return buf;
-    }
-    if (is_character_device()) {
-        char buf[128];
-        ksprintf(buf, "device:%u,%u (%s)", m_device->major(), m_device->minor(), m_device->class_name());
-        return buf;
-    }
+    if (is_fifo())
+        return String::format("fifo:%x", m_fifo.ptr());
+    if (is_character_device())
+        return String::format("device:%u,%u (%s)", m_device->major(), m_device->minor(), m_device->class_name());
     ASSERT(m_inode);
     return VFS::the().absolute_path(*m_inode);
 }

@@ -153,9 +153,7 @@ ByteBuffer procfs$pid_cwd(Process& process)
 void ProcFS::add_process(Process& process)
 {
     InterruptDisabler disabler;
-    char buf[16];
-    ksprintf(buf, "%d", process.pid());
-    auto dir = add_file(create_directory(buf));
+    auto dir = add_file(create_directory(String::format("%d", process.pid())));
     m_pid2inode.set(process.pid(), dir.index());
     add_file(create_generated_file("vm", [&process] (SynthFSInode&) { return procfs$pid_vm(process); }), dir.index());
     add_file(create_generated_file("vmo", [&process] (SynthFSInode&) { return procfs$pid_vmo(process); }), dir.index());

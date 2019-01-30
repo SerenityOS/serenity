@@ -508,9 +508,7 @@ void VirtualConsole::on_tty_write(const byte* data, size_t size)
 
 String VirtualConsole::tty_name() const
 {
-    char buf[16];
-    ksprintf(buf, "/dev/tty%u", m_index);
-    return String(buf);
+    return String::format("/dev/tty%u", m_index);
 }
 
 void VirtualConsole::set_vga_start_row(word row)

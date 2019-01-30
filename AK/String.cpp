@@ -1,5 +1,7 @@
 #include "AKString.h"
 #include "StdLibExtras.h"
+#include "StringBuilder.h"
+#include <LibC/stdarg.h>
 
 namespace AK {
 
@@ -90,6 +92,16 @@ unsigned String::toUInt(bool& ok) const
     }
     ok = true;
     return value;
+}
+
+String String::format(const char* fmt, ...)
+{
+    StringBuilder builder;
+    va_list ap;
+    va_start(ap, fmt);
+    builder.appendvf(fmt, ap);
+    va_end(ap);
+    return builder.build();
 }
 
 }
