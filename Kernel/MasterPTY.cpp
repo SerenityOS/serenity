@@ -14,9 +14,7 @@ MasterPTY::~MasterPTY()
 
 String MasterPTY::pts_name() const
 {
-    char buffer[32];
-    ksprintf(buffer, "/dev/pts/%u", m_index);
-    return buffer;
+    return String::format("/dev/pts/%u", m_index);
 }
 
 ssize_t MasterPTY::read(Process&, byte* buffer, size_t size)

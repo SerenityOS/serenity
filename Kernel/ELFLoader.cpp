@@ -205,15 +205,11 @@ char* ELFLoader::symbol_ptr(const char* name)
 bool ELFLoader::allocate_section(LinearAddress laddr, size_t size, size_t alignment, bool is_readable, bool is_writable)
 {
     ASSERT(alloc_section_hook);
-    char namebuf[16];
-    ksprintf(namebuf, "elf-alloc-%s%s", is_readable ? "r" : "", is_writable ? "w" : "");
-    return alloc_section_hook(laddr, size, alignment, is_readable, is_writable, namebuf);
+    return alloc_section_hook(laddr, size, alignment, is_readable, is_writable, String::format("elf-alloc-%s%s", is_readable ? "r" : "", is_writable ? "w" : ""));
 }
 
 bool ELFLoader::map_section(LinearAddress laddr, size_t size, size_t alignment, size_t offset_in_image, bool is_readable, bool is_writable)
 {
     ASSERT(alloc_section_hook);
-    char namebuf[16];
-    ksprintf(namebuf, "elf-map-%s%s", is_readable ? "r" : "", is_writable ? "w" : "");
-    return map_section_hook(laddr, size, alignment, offset_in_image, is_readable, is_writable, namebuf);
+    return map_section_hook(laddr, size, alignment, offset_in_image, is_readable, is_writable, String::format("elf-map-%s%s", is_readable ? "r" : "", is_writable ? "w" : ""));
 }

@@ -19,9 +19,7 @@ SlavePTY::~SlavePTY()
 
 String SlavePTY::tty_name() const
 {
-    char buffer[32];
-    ksprintf(buffer, "/dev/pts/%u", m_index);
-    return buffer;
+    return String::format("/dev/pts/%u", m_index);
 }
 
 void SlavePTY::on_master_write(const byte* buffer, size_t size)
