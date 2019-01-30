@@ -1,10 +1,10 @@
 #pragma once
 
-#include "SlavePTY.h"
 #include <AK/Types.h>
 #include <Kernel/SyntheticFileSystem.h>
 
 class Process;
+class SlavePTY;
 
 class DevPtsFS final : public SynthFS {
 public:

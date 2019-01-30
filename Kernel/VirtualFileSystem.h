@@ -72,6 +72,7 @@ public:
     bool chmod(const String& path, mode_t, Inode& base, int& error);
 
     void register_character_device(CharacterDevice&);
+    void unregister_character_device(CharacterDevice&);
 
     size_t mount_count() const { return m_mounts.size(); }
     void for_each_mount(Function<void(const Mount&)>) const;

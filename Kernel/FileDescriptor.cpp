@@ -40,8 +40,15 @@ FileDescriptor::FileDescriptor(RetainPtr<CharacterDevice>&& device)
 
 FileDescriptor::~FileDescriptor()
 {
-    if (m_fifo)
+    if (m_device) {
+        m_device->close();
+        m_device = nullptr;
+    }
+    if (m_fifo) {
         m_fifo->close(fifo_direction());
+        m_fifo = nullptr;
+    }
+    m_inode = nullptr;
 }
 
 RetainPtr<FileDescriptor> FileDescriptor::clone()

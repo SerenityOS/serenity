@@ -22,6 +22,7 @@ private:
     // ^CharacterDevice
     virtual bool can_write(Process&) const override;
     virtual const char* class_name() const override { return "SlavePTY"; }
+    virtual void close() override;
 
     friend class MasterPTY;
     SlavePTY(MasterPTY&, unsigned index);

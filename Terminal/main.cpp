@@ -97,7 +97,10 @@ int main(int, char**)
                 perror("read(ptm)");
                 continue;
             }
-            assert(nread != 0);
+            if (nread == 0) {
+                dbgprintf("Terminal: EOF on master pty, closing.\n");
+                break;
+            }
             for (ssize_t i = 0; i < nread; ++i)
                 terminal.on_char(buffer[i]);
             terminal.update();

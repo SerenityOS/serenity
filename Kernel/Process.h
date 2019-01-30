@@ -128,6 +128,7 @@ public:
 
     void setSelector(word s) { m_farPtr.selector = s; }
     void set_state(State s) { m_state = s; }
+    void die();
 
     pid_t sys$setsid();
     pid_t sys$getsid(pid_t);
@@ -315,7 +316,7 @@ private:
     struct FileDescriptorAndFlags {
         operator bool() const { return !!descriptor; }
         void clear() { descriptor = nullptr; flags = 0; }
-        void set(RetainPtr<FileDescriptor>&& d, dword f = 0) { descriptor = move(d), flags = f; }
+        void set(RetainPtr<FileDescriptor>&& d, dword f = 0) { descriptor = move(d); flags = f; }
         RetainPtr<FileDescriptor> descriptor;
         dword flags { 0 };
     };

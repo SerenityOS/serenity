@@ -1,7 +1,8 @@
 #pragma once
 
+#include <AK/Badge.h>
 #include <Kernel/CharacterDevice.h>
-#include "DoubleBuffer.h"
+#include <Kernel/DoubleBuffer.h>
 
 class SlavePTY;
 
@@ -21,12 +22,13 @@ public:
     String pts_name() const;
     void on_slave_write(const byte*, size_t);
     bool can_write_from_slave() const;
+    void notify_slave_closed(Badge<SlavePTY>);
 
 private:
     // ^CharacterDevice
     virtual const char* class_name() const override { return "MasterPTY"; }
 
-    SlavePTY& m_slave;
+    RetainPtr<SlavePTY> m_slave;
     unsigned m_index;
     DoubleBuffer m_buffer;
 };
