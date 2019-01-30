@@ -510,6 +510,11 @@ void VFS::register_character_device(CharacterDevice& device)
     m_character_devices.set(encodedDevice(device.major(), device.minor()), &device);
 }
 
+void VFS::unregister_character_device(CharacterDevice& device)
+{
+    m_character_devices.remove(encodedDevice(device.major(), device.minor()));
+}
+
 void VFS::for_each_mount(Function<void(const Mount&)> callback) const
 {
     for (auto& mount : m_mounts) {

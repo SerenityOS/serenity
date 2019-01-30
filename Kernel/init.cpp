@@ -142,6 +142,7 @@ void init()
     gdt_init();
     idt_init();
 
+    PTYMultiplexer::initialize_statics();
     VFS::initialize_globals();
     vfs = new VFS;
 

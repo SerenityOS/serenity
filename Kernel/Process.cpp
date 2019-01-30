@@ -735,7 +735,7 @@ void Process::sys$exit(int status)
     kprintf("sys$exit: %s(%u) exit with status %d\n", name().characters(), pid(), status);
 #endif
 
-    set_state(Dead);
+    die();
     m_termination_status = status;
     m_termination_signal = 0;
 
@@ -750,7 +750,7 @@ void Process::terminate_due_to_signal(byte signal)
     dbgprintf("terminate_due_to_signal %s(%u) <- %u\n", name().characters(), pid(), signal);
     m_termination_status = 0;
     m_termination_signal = signal;
-    set_state(Dead);
+    die();
 }
 
 void Process::send_signal(byte signal, Process* sender)
@@ -935,8 +935,8 @@ void Process::crash()
     ASSERT_INTERRUPTS_DISABLED();
     ASSERT(state() != Dead);
     m_termination_signal = SIGSEGV;
-    set_state(Dead);
     dumpRegions();
+    die();
     Scheduler::pick_next_and_switch_now();
     ASSERT_NOT_REACHED();
 }
@@ -2129,4 +2129,10 @@ int Process::sys$chmod(const char* pathname, mode_t mode)
     if (!VFS::the().chmod(String(pathname), mode, *cwd_inode(), error))
         return error;
     return 0;
+}
+
+void Process::die()
+{
+    set_state(Dead);
+    m_fds.clear();
 }

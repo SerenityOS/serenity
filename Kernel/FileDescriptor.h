@@ -86,5 +86,7 @@ private:
 
     RetainPtr<FIFO> m_fifo;
     FIFO::Direction m_fifo_direction { FIFO::Neither };
+
+    bool m_closed { false };
 };
 

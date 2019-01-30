@@ -15,6 +15,7 @@ SlavePTY::SlavePTY(MasterPTY& master, unsigned index)
 SlavePTY::~SlavePTY()
 {
     DevPtsFS::the().unregister_slave_pty(*this);
+    VFS::the().unregister_character_device(*this);
 }
 
 String SlavePTY::tty_name() const
@@ -36,4 +37,9 @@ void SlavePTY::on_tty_write(const byte* data, size_t size)
 bool SlavePTY::can_write(Process&) const
 {
     return m_master.can_write_from_slave();
+}
+
+void SlavePTY::close()
+{
+    m_master.notify_slave_closed(Badge<SlavePTY>());
 }

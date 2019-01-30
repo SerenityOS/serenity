@@ -14,6 +14,7 @@ public:
     InodeMetadata metadata() const { return { }; }
 
     virtual RetainPtr<FileDescriptor> open(int& error, int options);
+    virtual void close();
 
     virtual bool can_read(Process&) const = 0;
     virtual bool can_write(Process&) const = 0;

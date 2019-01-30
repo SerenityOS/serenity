@@ -1,4 +1,5 @@
-#include "DevPtsFS.h"
+#include <Kernel/DevPtsFS.h>
+#include <Kernel/SlavePTY.h>
 #include <Kernel/VirtualFileSystem.h>
 #include <AK/StringBuilder.h>
 
