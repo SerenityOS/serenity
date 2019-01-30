@@ -3,7 +3,8 @@
 #include <Kernel/Syscall.h>
 
 asm(
-"setjmp:\n\
+".globl setjmp\n\
+setjmp:\n\
     movl %ebx, 0(%eax)\n\
     movl %esi, 4(%eax)\n\
     movl %edi, 8(%eax)\n\
@@ -16,7 +17,8 @@ asm(
 ");
 
 asm(
-"longjmp:\n\
+".globl longjmp\n\
+longjmp:\n\
     xchgl %edx, %eax\n\
     test %eax, %eax\n\
     jnz 1f\n\
