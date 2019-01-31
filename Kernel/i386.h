@@ -83,7 +83,14 @@ void write_gdt_entry(word selector, Descriptor&);
 #define sti() asm volatile("sti")
 #define memory_barrier() asm volatile ("" ::: "memory")
 
-static inline dword cpu_flags()
+inline dword cpu_cr3()
+{
+    dword cr3;
+    asm volatile("movl %%cr3, %%eax":"=a"(cr3));
+    return cr3;
+}
+
+inline dword cpu_flags()
 {
     dword flags;
     asm volatile(
