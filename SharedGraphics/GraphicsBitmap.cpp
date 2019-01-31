@@ -16,7 +16,7 @@ RetainPtr<GraphicsBitmap> GraphicsBitmap::create(Process& process, const Size& s
 GraphicsBitmap::GraphicsBitmap(Process& process, const Size& size)
     : m_size(size)
     , m_pitch(size.width() * sizeof(RGBA32))
-    , m_client_process(&process)
+    , m_client_process(process.makeWeakPtr())
 {
     InterruptDisabler disabler;
     size_t size_in_bytes = size.width() * size.height() * sizeof(RGBA32);
@@ -47,7 +47,7 @@ GraphicsBitmap::GraphicsBitmap(const Size& size, RGBA32* data)
 GraphicsBitmap::~GraphicsBitmap()
 {
 #ifdef KERNEL
-    if (m_client_region)
+    if (m_client_region && m_client_process)
         m_client_process->deallocate_region(*m_client_region);
     if (m_server_region)
         WSMessageLoop::the().server_process().deallocate_region(*m_server_region);

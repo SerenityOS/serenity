@@ -12,6 +12,7 @@
 #include <AK/AKString.h>
 #include <AK/Vector.h>
 #include <AK/WeakPtr.h>
+#include <AK/Weakable.h>
 #include <AK/Lock.h>
 
 class FileDescriptor;
@@ -45,7 +46,7 @@ struct DisplayInfo {
     byte* framebuffer;
 };
 
-class Process : public InlineLinkedListNode<Process> {
+class Process : public InlineLinkedListNode<Process>, public Weakable<Process> {
     friend class InlineLinkedListNode<Process>;
     friend class WSWindowManager; // FIXME: Make a better API for allocate_region().
     friend class GraphicsBitmap; // FIXME: Make a better API for allocate_region().
