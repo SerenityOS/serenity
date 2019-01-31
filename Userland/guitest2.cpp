@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <assert.h>
+#include <time.h>
 #include <Kernel/Syscall.h>
 #include <SharedGraphics/GraphicsBitmap.h>
 #include <SharedGraphics/Painter.h>
@@ -16,8 +17,56 @@
 #include <LibGUI/GTextBox.h>
 #include <LibGUI/GCheckBox.h>
 
+class ClockWidget final : public GWidget {
+public:
+    explicit ClockWidget(GWidget* parent = nullptr);
+    virtual ~ClockWidget() override { }
+
+private:
+    virtual void paint_event(GPaintEvent&) override;
+    virtual void timer_event(GTimerEvent&) override;
+    virtual void mousedown_event(GMouseEvent&) override;
+
+    dword m_last_time { 0 };
+};
+
+ClockWidget::ClockWidget(GWidget* parent)
+    : GWidget(parent)
+{
+    set_relative_rect({ 0, 0, 100, 40 });
+    startTimer(250);
+}
+
+void ClockWidget::paint_event(GPaintEvent&)
+{
+    auto now = time(nullptr);
+    auto& tm = *localtime(&now);
+
+    char timeBuf[128];
+    sprintf(timeBuf, "%02u:%02u:%02u", tm.tm_hour, tm.tm_min, tm.tm_sec);
+
+    Painter painter(*this);
+    painter.fill_rect(rect(), Color::White);
+    painter.draw_text(rect(), timeBuf, Painter::TextAlignment::Center, Color::Black);
+}
+
+void ClockWidget::timer_event(GTimerEvent&)
+{
+    auto now = time(nullptr);
+    if (now == m_last_time)
+        return;
+    m_last_time = now;
+    update();
+}
+
+void ClockWidget::mousedown_event(GMouseEvent&)
+{
+    update();
+}
+
 static GWindow* make_font_test_window();
 static GWindow* make_launcher_window();
+static GWindow* make_clock_window();
 
 int main(int argc, char** argv)
 {
@@ -27,6 +76,10 @@ int main(int argc, char** argv)
 
     auto* launcher_window = make_launcher_window();
     launcher_window->show();
+
+    auto* clock_window = make_clock_window();
+    clock_window->show();
+
     return loop.exec();
 }
 
@@ -130,6 +183,19 @@ GWindow* make_launcher_window()
     close_button->on_click = [window] (GButton&) {
         window->close();
     };
+
+    return window;
+}
+
+GWindow* make_clock_window()
+{
+    auto* window = new GWindow;
+    window->set_title("Clock");
+    window->set_rect({ 200, 200, 100, 40 });
+
+    auto* clock_widget = new ClockWidget;
+    clock_widget->set_relative_rect({ 0, 0, 100, 40 });
+    window->set_main_widget(clock_widget);
 
     return window;
 }

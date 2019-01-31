@@ -123,7 +123,7 @@ void GTextBox::keydown_event(GKeyEvent& event)
     }
 }
 
-void GTextBox::timerEvent(GTimerEvent&)
+void GTextBox::timer_event(GTimerEvent&)
 {
     // FIXME: Disable the timer when not focused.
     if (!is_focused())

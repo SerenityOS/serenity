@@ -30,7 +30,7 @@ public:
     void delete_later();
 
 private:
-    virtual void timerEvent(GTimerEvent&);
+    virtual void timer_event(GTimerEvent&);
 
     GObject* m_parent { nullptr };
 

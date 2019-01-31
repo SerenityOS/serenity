@@ -10,14 +10,14 @@ class CharacterBitmap;
 class GraphicsBitmap;
 class Font;
 
-#ifdef LIBGUI
+#ifndef KERNEL
 class GWidget;
 class GWindow;
 #endif
 
 class Painter {
 public:
-#ifdef LIBGUI
+#ifndef KERNEL
     explicit Painter(GWidget&);
 #endif
     explicit Painter(GraphicsBitmap&);
@@ -52,7 +52,7 @@ private:
     Point m_translation;
     Rect m_clip_rect;
     RetainPtr<GraphicsBitmap> m_target;
-#ifdef LIBGUI
+#ifndef KERNEL
     GWindow* m_window { nullptr };
     void* m_backing_store_id { nullptr };
 #endif
