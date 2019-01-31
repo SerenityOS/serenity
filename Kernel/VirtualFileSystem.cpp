@@ -517,6 +517,14 @@ void VFS::unregister_character_device(CharacterDevice& device)
     m_character_devices.remove(encodedDevice(device.major(), device.minor()));
 }
 
+CharacterDevice* VFS::get_device(unsigned major, unsigned minor)
+{
+    auto it = m_character_devices.find(encodedDevice(major, minor));
+    if (it == m_character_devices.end())
+        return nullptr;
+    return (*it).value;
+}
+
 void VFS::for_each_mount(Function<void(const Mount&)> callback) const
 {
     for (auto& mount : m_mounts) {

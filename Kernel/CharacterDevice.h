@@ -32,10 +32,17 @@ public:
 
     virtual const char* class_name() const = 0;
 
+    uid_t uid() const { return m_uid; }
+    uid_t gid() const { return m_gid; }
+
 protected:
     CharacterDevice(unsigned major, unsigned minor) : m_major(major), m_minor(minor) { }
+    void set_uid(uid_t uid) { m_uid = uid; }
+    void set_gid(gid_t gid) { m_gid = gid; }
 
 private:
     unsigned m_major { 0 };
     unsigned m_minor { 0 };
+    uid_t m_uid { 0 };
+    gid_t m_gid { 0 };
 };

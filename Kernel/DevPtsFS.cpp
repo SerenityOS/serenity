@@ -44,12 +44,15 @@ RetainPtr<SynthFSInode> DevPtsFS::create_slave_pty_device_file(unsigned index)
     builder.appendf("%u", index);
     file->m_name = builder.build();
 
+    auto* device = VFS::the().get_device(11, index);
+    ASSERT(device);
+
     file->m_metadata.size = 0;
-    file->m_metadata.uid = 0;
-    file->m_metadata.gid = 0;
-    file->m_metadata.mode = 0020666;
-    file->m_metadata.majorDevice = 11;
-    file->m_metadata.minorDevice = index;
+    file->m_metadata.uid = device->uid();
+    file->m_metadata.gid = device->gid();
+    file->m_metadata.mode = 0020644;
+    file->m_metadata.majorDevice = device->major();
+    file->m_metadata.minorDevice = device->minor();
     file->m_metadata.mtime = mepoch;
     return file;
 }
