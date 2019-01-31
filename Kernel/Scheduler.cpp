@@ -31,7 +31,7 @@ bool Scheduler::pick_next()
     // Check and unblock processes whose wait conditions have been met.
     Process::for_each([] (auto& process) {
         if (process.state() == Process::BlockedSleep) {
-            if (process.wakeupTime() <= system.uptime)
+            if (process.wakeup_time() <= system.uptime)
                 process.unblock();
             return true;
         }
@@ -139,11 +139,11 @@ bool Scheduler::pick_next()
     for (auto* process = g_processes->head(); process; process = process->next()) {
         //if (process->state() == Process::BlockedWait || process->state() == Process::BlockedSleep)
 //            continue;
-        dbgprintf("[K%x] % 12s %s(%u) @ %w:%x\n", process, toString(process->state()), process->name().characters(), process->pid(), process->tss().cs, process->tss().eip);
+        dbgprintf("[K%x] % 12s %s(%u) @ %w:%x\n", process, to_string(process->state()), process->name().characters(), process->pid(), process->tss().cs, process->tss().eip);
     }
 #endif
 
-    auto* prevHead = g_processes->head();
+    auto* previous_head = g_processes->head();
     for (;;) {
         // Move head to tail.
         g_processes->append(g_processes->remove_head());
@@ -156,7 +156,7 @@ bool Scheduler::pick_next()
             return context_switch(*process);
         }
 
-        if (process == prevHead) {
+        if (process == previous_head) {
             // Back at process_head, nothing wants to run. Send in the colonel!
             return context_switch(*s_colonel_process);
         }
@@ -182,7 +182,7 @@ bool Scheduler::yield()
     }
 
     s_in_yield = false;
-    //dbgprintf("yield() jumping to new process: %x (%s)\n", current->farPtr().selector, current->name().characters());
+    //dbgprintf("yield() jumping to new process: %x (%s)\n", current->far_ptr().selector, current->name().characters());
     switch_now();
     return 0;
 }
@@ -201,7 +201,7 @@ void Scheduler::switch_now()
     flush_gdt();
     asm("sti\n"
         "ljmp *(%%eax)\n"
-        ::"a"(&current->farPtr())
+        ::"a"(&current->far_ptr())
     );
 }
 
@@ -238,10 +238,10 @@ bool Scheduler::context_switch(Process& process)
 #endif
 
     if (!process.selector()) {
-        process.setSelector(gdt_alloc_entry());
+        process.set_selector(gdt_alloc_entry());
         auto& descriptor = get_gdt_entry(process.selector());
-        descriptor.setBase(&process.tss());
-        descriptor.setLimit(0xffff);
+        descriptor.set_base(&process.tss());
+        descriptor.set_limit(0xffff);
         descriptor.dpl = 0;
         descriptor.segment_present = 1;
         descriptor.granularity = 1;
@@ -264,8 +264,8 @@ int sched_yield()
 static void initialize_redirection()
 {
     auto& descriptor = get_gdt_entry(s_redirection.selector);
-    descriptor.setBase(&s_redirection.tss);
-    descriptor.setLimit(0xffff);
+    descriptor.set_base(&s_redirection.tss);
+    descriptor.set_limit(0xffff);
     descriptor.dpl = 0;
     descriptor.segment_present = 1;
     descriptor.granularity = 1;

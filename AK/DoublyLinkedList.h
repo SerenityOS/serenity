@@ -48,7 +48,7 @@ public:
         append_node(new Node(value));
     }
 
-    bool containsSlow(const T& value) const
+    bool contains_slow(const T& value) const
     {
         for (auto* node = m_head; node; node = node->next) {
             if (node->value == value)

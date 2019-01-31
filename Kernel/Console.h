@@ -26,7 +26,7 @@ public:
     virtual ssize_t write(Process&, const byte* data, size_t size) override;
     virtual const char* class_name() const override { return "Console"; }
 
-    void setImplementation(ConsoleImplementation* implementation) { m_implementation = implementation; }
+    void set_implementation(ConsoleImplementation* implementation) { m_implementation = implementation; }
 
     void put_char(char);
 

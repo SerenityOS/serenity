@@ -34,7 +34,7 @@ ClockWidget::ClockWidget(GWidget* parent)
     : GWidget(parent)
 {
     set_relative_rect({ 0, 0, 100, 40 });
-    startTimer(250);
+    start_timer(250);
 }
 
 void ClockWidget::paint_event(GPaintEvent&)

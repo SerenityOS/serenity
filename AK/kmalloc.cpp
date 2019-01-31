@@ -84,7 +84,7 @@ void* kcalloc(size_t nmemb, size_t size)
 {
     if (!nmemb || !size)
         return nullptr;
-    return SimpleMalloc::allocateZeroed(nmemb * size);
+    return SimpleMalloc::allocate_zeroed(nmemb * size);
 }
 
 void* kmalloc(size_t size)

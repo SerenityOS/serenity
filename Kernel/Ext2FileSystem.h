@@ -18,7 +18,7 @@ public:
     virtual ~Ext2FSInode() override;
 
     size_t size() const { return m_raw_inode.i_size; }
-    bool is_symlink() const { return isSymbolicLink(m_raw_inode.i_mode); }
+    bool is_symlink() const { return ::is_symlink(m_raw_inode.i_mode); }
 
     // ^Inode (Retainable magic)
     virtual void one_retain_left() override;
@@ -78,7 +78,7 @@ private:
     unsigned inode_size() const;
 
     bool write_ext2_inode(unsigned, const ext2_inode&);
-    ByteBuffer read_block_containing_inode(unsigned inode, unsigned& blockIndex, unsigned& offset) const;
+    ByteBuffer read_block_containing_inode(unsigned inode, unsigned& block_index, unsigned& offset) const;
 
     ByteBuffer read_super_block() const;
     bool write_super_block(const ext2_super_block&);
@@ -102,7 +102,7 @@ private:
     template<typename F> void traverse_inode_bitmap(unsigned groupIndex, F) const;
     template<typename F> void traverse_block_bitmap(unsigned groupIndex, F) const;
 
-    bool add_inode_to_directory(InodeIndex parent, InodeIndex child, const String& name, byte fileType, int& error);
+    bool add_inode_to_directory(InodeIndex parent, InodeIndex child, const String& name, byte file_type, int& error);
     bool write_directory_inode(unsigned directoryInode, Vector<DirectoryEntry>&&);
     bool get_inode_allocation_state(InodeIndex) const;
     bool set_inode_allocation_state(unsigned inode, bool);
@@ -121,7 +121,7 @@ private:
 
     BlockListShape compute_block_list_shape(unsigned blocks);
 
-    unsigned m_blockGroupCount { 0 };
+    unsigned m_block_group_count { 0 };
 
     mutable ByteBuffer m_cached_super_block;
     mutable ByteBuffer m_cached_group_descriptor_table;

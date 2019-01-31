@@ -10,20 +10,20 @@ public:
     DiskDevice& device() { return *m_device; }
     const DiskDevice& device() const { return *m_device; }
 
-    size_t blockSize() const { return m_blockSize; }
+    size_t block_size() const { return m_block_size; }
 
 protected:
     explicit DiskBackedFS(RetainPtr<DiskDevice>&&);
 
-    void setBlockSize(unsigned);
+    void set_block_size(unsigned);
 
-    ByteBuffer readBlock(unsigned index) const;
-    ByteBuffer readBlocks(unsigned index, unsigned count) const;
+    ByteBuffer read_block(unsigned index) const;
+    ByteBuffer read_blocks(unsigned index, unsigned count) const;
 
-    bool writeBlock(unsigned index, const ByteBuffer&);
-    bool writeBlocks(unsigned index, unsigned count, const ByteBuffer&);
+    bool write_block(unsigned index, const ByteBuffer&);
+    bool write_blocks(unsigned index, unsigned count, const ByteBuffer&);
 
 private:
-    size_t m_blockSize { 0 };
+    size_t m_block_size { 0 };
     RetainPtr<DiskDevice> m_device;
 };

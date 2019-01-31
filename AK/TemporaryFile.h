@@ -10,14 +10,14 @@ public:
     TemporaryFile();
     ~TemporaryFile();
 
-    bool isValid() const { return m_stream; }
+    bool is_valid() const { return m_stream; }
     FILE* stream() { return m_stream; }
-    String fileName() const { return m_fileName; }
+    String file_name() const { return m_file_name; }
     void sync();
 
 private:
     FILE* m_stream { nullptr };
-    String m_fileName;
+    String m_file_name;
 };
 
 }

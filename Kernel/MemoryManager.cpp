@@ -112,7 +112,7 @@ RetainPtr<PhysicalPage> MemoryManager::allocate_page_table(PageDirectory& page_d
     auto physical_page = allocate_supervisor_physical_page();
     if (!physical_page)
         return nullptr;
-    page_directory.m_physical_pages.set(index, physical_page.copyRef());
+    page_directory.m_physical_pages.set(index, physical_page.copy_ref());
     return physical_page;
 }
 
@@ -144,7 +144,7 @@ auto MemoryManager::ensure_pte(PageDirectory& page_directory, LinearAddress ladd
 #endif
         if (page_directory_index == 0) {
             ASSERT(&page_directory == m_kernel_page_directory.ptr());
-            pde.setPageTableBase((dword)m_page_table_zero);
+            pde.set_page_table_base((dword)m_page_table_zero);
             pde.set_user_allowed(false);
             pde.set_present(true);
             pde.set_writable(true);
@@ -161,14 +161,14 @@ auto MemoryManager::ensure_pte(PageDirectory& page_directory, LinearAddress ladd
                 page_table->paddr().get());
 #endif
 
-            pde.setPageTableBase(page_table->paddr().get());
+            pde.set_page_table_base(page_table->paddr().get());
             pde.set_user_allowed(true);
             pde.set_present(true);
             pde.set_writable(true);
             page_directory.m_physical_pages.set(page_directory_index, move(page_table));
         }
     }
-    return PageTableEntry(&pde.pageTableBase()[page_table_index]);
+    return PageTableEntry(&pde.page_table_base()[page_table_index]);
 }
 
 void MemoryManager::map_protected(LinearAddress laddr, size_t length)
@@ -176,13 +176,13 @@ void MemoryManager::map_protected(LinearAddress laddr, size_t length)
     InterruptDisabler disabler;
     // FIXME: ASSERT(linearAddress is 4KB aligned);
     for (dword offset = 0; offset < length; offset += PAGE_SIZE) {
-        auto pteAddress = laddr.offset(offset);
-        auto pte = ensure_pte(kernel_page_directory(), pteAddress);
-        pte.set_physical_page_base(pteAddress.get());
+        auto pte_address = laddr.offset(offset);
+        auto pte = ensure_pte(kernel_page_directory(), pte_address);
+        pte.set_physical_page_base(pte_address.get());
         pte.set_user_allowed(false);
         pte.set_present(false);
         pte.set_writable(false);
-        flush_tlb(pteAddress);
+        flush_tlb(pte_address);
     }
 }
 
@@ -191,13 +191,13 @@ void MemoryManager::create_identity_mapping(PageDirectory& page_directory, Linea
     InterruptDisabler disabler;
     ASSERT((laddr.get() & ~PAGE_MASK) == 0);
     for (dword offset = 0; offset < size; offset += PAGE_SIZE) {
-        auto pteAddress = laddr.offset(offset);
-        auto pte = ensure_pte(page_directory, pteAddress);
-        pte.set_physical_page_base(pteAddress.get());
+        auto pte_address = laddr.offset(offset);
+        auto pte = ensure_pte(page_directory, pte_address);
+        pte.set_physical_page_base(pte_address.get());
         pte.set_user_allowed(false);
         pte.set_present(true);
         pte.set_writable(true);
-        page_directory.flush(pteAddress);
+        page_directory.flush(pte_address);
     }
 }
 
@@ -560,7 +560,7 @@ RetainPtr<Region> Region::clone()
 
     if (m_shared || (m_readable && !m_writable)) {
         // Create a new region backed by the same VMObject.
-        return adopt(*new Region(laddr(), size(), m_vmo.copyRef(), m_offset_in_vmo, String(m_name), m_readable, m_writable));
+        return adopt(*new Region(laddr(), size(), m_vmo.copy_ref(), m_offset_in_vmo, String(m_name), m_readable, m_writable));
     }
 
     dbgprintf("%s<%u> Region::clone(): cowing %s (L%x)\n",
@@ -647,7 +647,7 @@ RetainPtr<VMObject> VMObject::create_file_backed(RetainPtr<Inode>&& inode, size_
     InterruptDisabler disabler;
     if (inode->vmo())
         return static_cast<VMObject*>(inode->vmo());
-    size = ceilDiv(size, PAGE_SIZE) * PAGE_SIZE;
+    size = ceil_div(size, PAGE_SIZE) * PAGE_SIZE;
     auto vmo = adopt(*new VMObject(move(inode), size));
     vmo->inode()->set_vmo(vmo.ptr());
     return vmo;
@@ -655,13 +655,13 @@ RetainPtr<VMObject> VMObject::create_file_backed(RetainPtr<Inode>&& inode, size_
 
 RetainPtr<VMObject> VMObject::create_anonymous(size_t size)
 {
-    size = ceilDiv(size, PAGE_SIZE) * PAGE_SIZE;
+    size = ceil_div(size, PAGE_SIZE) * PAGE_SIZE;
     return adopt(*new VMObject(size));
 }
 
 RetainPtr<VMObject> VMObject::create_framebuffer_wrapper(PhysicalAddress paddr, size_t size)
 {
-    size = ceilDiv(size, PAGE_SIZE) * PAGE_SIZE;
+    size = ceil_div(size, PAGE_SIZE) * PAGE_SIZE;
     return adopt(*new VMObject(paddr, size));
 }
 

@@ -11,14 +11,14 @@ TemporaryFile::TemporaryFile()
     int fd = mkstemp(nameBuffer);
     if (fd != -1) {
         m_stream = fdopen(fd, "w+");
-        m_fileName = nameBuffer;
+        m_file_name = nameBuffer;
     }
 }
 
 TemporaryFile::~TemporaryFile()
 {
-    if (isValid()) {
-        unlink(m_fileName.characters());
+    if (is_valid()) {
+        unlink(m_file_name.characters());
         fclose(m_stream);
     }
 }

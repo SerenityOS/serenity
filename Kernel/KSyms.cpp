@@ -89,21 +89,21 @@ void dump_backtrace(bool use_ksyms)
     };
     Vector<RecognizedSymbol> recognized_symbols;
     if (use_ksyms) {
-        for (dword* stackPtr = (dword*)&use_ksyms; current->validate_read_from_kernel(LinearAddress((dword)stackPtr)); stackPtr = (dword*)*stackPtr) {
-            dword retaddr = stackPtr[1];
+        for (dword* stack_ptr = (dword*)&use_ksyms; current->validate_read_from_kernel(LinearAddress((dword)stack_ptr)); stack_ptr = (dword*)*stack_ptr) {
+            dword retaddr = stack_ptr[1];
             if (auto* ksym = ksymbolicate(retaddr))
                 recognized_symbols.append({ retaddr, ksym });
         }
     } else{
-        for (dword* stackPtr = (dword*)&use_ksyms; current->validate_read_from_kernel(LinearAddress((dword)stackPtr)); stackPtr = (dword*)*stackPtr) {
-            dword retaddr = stackPtr[1];
-            kprintf("%x (next: %x)\n", retaddr, stackPtr ? (dword*)*stackPtr : 0);
+        for (dword* stack_ptr = (dword*)&use_ksyms; current->validate_read_from_kernel(LinearAddress((dword)stack_ptr)); stack_ptr = (dword*)*stack_ptr) {
+            dword retaddr = stack_ptr[1];
+            kprintf("%x (next: %x)\n", retaddr, stack_ptr ? (dword*)*stack_ptr : 0);
         }
         return;
     }
-    size_t bytesNeeded = 0;
+    size_t bytes_needed = 0;
     for (auto& symbol : recognized_symbols) {
-        bytesNeeded += strlen(symbol.ksym->name) + 8 + 16;
+        bytes_needed += strlen(symbol.ksym->name) + 8 + 16;
     }
     for (auto& symbol : recognized_symbols) {
         unsigned offset = symbol.address - symbol.ksym->address;

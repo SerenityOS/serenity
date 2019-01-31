@@ -88,7 +88,7 @@ void VirtualConsole::switch_to(unsigned index)
         s_consoles[s_active_console]->set_active(false);
     s_active_console = index;
     s_consoles[s_active_console]->set_active(true);
-    Console::the().setImplementation(s_consoles[s_active_console]);
+    Console::the().set_implementation(s_consoles[s_active_console]);
 }
 
 void VirtualConsole::set_active(bool b)
@@ -128,7 +128,7 @@ inline bool is_valid_final_character(byte ch)
     return ch >= 0x40 && ch <= 0x7e;
 }
 
-unsigned parseUInt(const String& str, bool& ok)
+unsigned parse_uint(const String& str, bool& ok)
 {
     unsigned value = 0;
     for (size_t i = 0; i < str.length(); ++i) {
@@ -302,11 +302,11 @@ void VirtualConsole::escape$J(const Vector<unsigned>& params)
     switch (mode) {
     case 0:
         // FIXME: Clear from cursor to end of screen.
-        notImplemented();
+        not_implemented();
         break;
     case 1:
         // FIXME: Clear from cursor to beginning of screen.
-        notImplemented();
+        not_implemented();
         break;
     case 2:
         clear();
@@ -324,7 +324,7 @@ void VirtualConsole::execute_escape_sequence(byte final)
     Vector<unsigned> params;
     for (auto& parampart : paramparts) {
         bool ok;
-        unsigned value = parseUInt(parampart, ok);
+        unsigned value = parse_uint(parampart, ok);
         if (!ok) {
             // FIXME: Should we do something else?
             return;

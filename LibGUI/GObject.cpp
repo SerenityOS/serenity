@@ -7,15 +7,15 @@ GObject::GObject(GObject* parent)
     : m_parent(parent)
 {
     if (m_parent)
-        m_parent->addChild(*this);
+        m_parent->add_child(*this);
 }
 
 GObject::~GObject()
 {
     if (m_parent)
-        m_parent->removeChild(*this);
-    auto childrenToDelete = move(m_children);
-    for (auto* child : childrenToDelete)
+        m_parent->remove_child(*this);
+    auto children_to_delete = move(m_children);
+    for (auto* child : children_to_delete)
         delete child;
 }
 
@@ -35,12 +35,12 @@ void GObject::event(GEvent& event)
     }
 }
 
-void GObject::addChild(GObject& object)
+void GObject::add_child(GObject& object)
 {
     m_children.append(&object);
 }
 
-void GObject::removeChild(GObject& object)
+void GObject::remove_child(GObject& object)
 {
     for (unsigned i = 0; i < m_children.size(); ++i) {
         if (m_children[i] == &object) {
@@ -54,19 +54,19 @@ void GObject::timer_event(GTimerEvent&)
 {
 }
 
-void GObject::startTimer(int ms)
+void GObject::start_timer(int ms)
 {
-    if (m_timerID) {
+    if (m_timer_id) {
         dbgprintf("GObject{%p} already has a timer!\n", this);
         ASSERT_NOT_REACHED();
     }
 }
 
-void GObject::stopTimer()
+void GObject::stop_timer()
 {
-    if (!m_timerID)
+    if (!m_timer_id)
         return;
-    m_timerID = 0;
+    m_timer_id = 0;
 }
 
 void GObject::delete_later()

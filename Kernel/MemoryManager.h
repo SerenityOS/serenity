@@ -264,8 +264,8 @@ private:
     struct PageDirectoryEntry {
         explicit PageDirectoryEntry(dword* pde) : m_pde(pde) { }
 
-        dword* pageTableBase() { return reinterpret_cast<dword*>(raw() & 0xfffff000u); }
-        void setPageTableBase(dword value)
+        dword* page_table_base() { return reinterpret_cast<dword*>(raw() & 0xfffff000u); }
+        void set_page_table_base(dword value)
         {
             *m_pde &= 0xfff;
             *m_pde |= value & 0xfffff000;

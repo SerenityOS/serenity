@@ -19,7 +19,6 @@ public:
     void remove_process(Process&);
 
     void add_sys_file(String&&, Function<ByteBuffer(SynthFSInode&)>&& read_callback, Function<ssize_t(SynthFSInode&, const ByteBuffer&)>&& write_callback);
-
     void add_sys_bool(String&&, bool*, Function<void()>&& change_callback = nullptr);
 
 private:

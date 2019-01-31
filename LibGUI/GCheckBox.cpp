@@ -27,7 +27,7 @@ GCheckBox::GCheckBox(GWidget* parent)
     : GWidget(parent)
 {
     if (!s_checked_bitmap)
-        s_checked_bitmap = CharacterBitmap::create_from_ascii(s_checked_bitmap_data, s_checked_bitmap_width, s_checked_bitmap_height).leakRef();
+        s_checked_bitmap = CharacterBitmap::create_from_ascii(s_checked_bitmap_data, s_checked_bitmap_width, s_checked_bitmap_height).leak_ref();
 }
 
 GCheckBox::~GCheckBox()

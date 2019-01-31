@@ -90,7 +90,7 @@ void initialize()
 #endif
 }
 
-word getISR()
+word get_isr()
 {
     IO::out8(PIC0_CTL, 0x0b);
     IO::out8(PIC1_CTL, 0x0b);

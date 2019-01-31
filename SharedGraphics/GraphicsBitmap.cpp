@@ -16,12 +16,12 @@ RetainPtr<GraphicsBitmap> GraphicsBitmap::create(Process& process, const Size& s
 GraphicsBitmap::GraphicsBitmap(Process& process, const Size& size)
     : m_size(size)
     , m_pitch(size.width() * sizeof(RGBA32))
-    , m_client_process(process.makeWeakPtr())
+    , m_client_process(process.make_weak_ptr())
 {
     InterruptDisabler disabler;
     size_t size_in_bytes = size.width() * size.height() * sizeof(RGBA32);
     auto vmo = VMObject::create_anonymous(size_in_bytes);
-    m_client_region = process.allocate_region_with_vmo(LinearAddress(), size_in_bytes, vmo.copyRef(), 0, "GraphicsBitmap (client)", true, true);
+    m_client_region = process.allocate_region_with_vmo(LinearAddress(), size_in_bytes, vmo.copy_ref(), 0, "GraphicsBitmap (client)", true, true);
     m_client_region->set_shared(true);
     m_client_region->commit();
     auto& server = WSMessageLoop::the().server_process();

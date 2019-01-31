@@ -150,7 +150,7 @@ public:
 
     // NOTE: Returns section(0) if section with name is not found.
     // FIXME: I don't love this API.
-    const Section lookupSection(const char* name) const;
+    const Section lookup_section(const char* name) const;
 
     bool is_executable() const { return header().e_type == ET_EXEC; }
     bool is_relocatable() const { return header().e_type == ET_REL; }
@@ -158,7 +158,7 @@ public:
     LinearAddress entry() const { return LinearAddress(header().e_entry); }
 
 private:
-    bool parseHeader();
+    bool parse_header();
     const char* raw_data(unsigned offset) const;
     const Elf32_Ehdr& header() const;
     const Elf32_Shdr& section_header(unsigned) const;

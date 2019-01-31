@@ -14,7 +14,7 @@ void Font::initialize()
 Font& Font::default_font()
 {
     if (!s_default_font)
-        s_default_font = adopt(*new Font(DEFAULT_FONT_NAME::glyphs, DEFAULT_FONT_NAME::glyph_width, DEFAULT_FONT_NAME::glyph_height, DEFAULT_FONT_NAME::first_glyph, DEFAULT_FONT_NAME::last_glyph)).leakRef();
+        s_default_font = adopt(*new Font(DEFAULT_FONT_NAME::glyphs, DEFAULT_FONT_NAME::glyph_width, DEFAULT_FONT_NAME::glyph_height, DEFAULT_FONT_NAME::first_glyph, DEFAULT_FONT_NAME::last_glyph)).leak_ref();
     return *s_default_font;
 }
 
@@ -28,7 +28,7 @@ Font::Font(const char* const* glyphs, byte glyph_width, byte glyph_height, byte 
     m_error_bitmap = CharacterBitmap::create_from_ascii(DEFAULT_FONT_NAME::error_glyph, m_glyph_width, m_glyph_height);
     for (unsigned ch = 0; ch < 256; ++ch) {
         if (ch < m_first_glyph || ch > m_last_glyph) {
-            m_bitmaps[ch] = m_error_bitmap.copyRef();
+            m_bitmaps[ch] = m_error_bitmap.copy_ref();
             continue;
         }
         const char* data = m_glyphs[(unsigned)ch - m_first_glyph];

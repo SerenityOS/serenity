@@ -18,21 +18,21 @@ public:
     Queue() { }
     ~Queue()
     {
-        while (!isEmpty())
+        while (!is_empty())
             dequeue();
     }
 
-    bool isEmpty() const { return !m_head; }
+    bool is_empty() const { return !m_head; }
     void enqueue(T&& item)
     {
-        auto* newNode = new Node(move(item));
+        auto* new_node = new Node(move(item));
         if (!m_head) {
-            m_head = newNode;
-            m_tail = newNode;
+            m_head = new_node;
+            m_tail = new_node;
         } else if (m_tail) {
-            newNode->prev = m_tail;
-            m_tail->next = newNode;
-            m_tail = newNode;
+            new_node->prev = m_tail;
+            m_tail->next = new_node;
+            m_tail = new_node;
         }
         dump("enqueue");
     }

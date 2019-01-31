@@ -81,7 +81,7 @@ int Process::gui$destroy_window(int window_id)
     if (it == m_windows.end())
         return -EBADWINDOW;
     auto message = make<WSMessage>(WSMessage::WM_DestroyWindow);
-    WSMessageLoop::the().post_message((*it).value.leakPtr(), move(message), true);
+    WSMessageLoop::the().post_message((*it).value.leak_ptr(), move(message), true);
     m_windows.remove(window_id);
     return 0;
 }
@@ -264,7 +264,7 @@ void Process::destroy_all_windows()
 {
     for (auto& it : m_windows) {
         auto message = make<WSMessage>(WSMessage::WM_DestroyWindow);
-        WSMessageLoop::the().post_message(it.value.leakPtr(), move(message), true);
+        WSMessageLoop::the().post_message(it.value.leak_ptr(), move(message), true);
     }
     m_windows.clear();
 }

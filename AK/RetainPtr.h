@@ -6,14 +6,14 @@
 namespace AK {
 
 template<typename T>
-inline void retainIfNotNull(T* ptr)
+inline void retain_if_not_null(T* ptr)
 {
     if (ptr)
         ptr->retain();
 }
 
 template<typename T>
-inline void releaseIfNotNull(T* ptr)
+inline void release_if_not_null(T* ptr)
 {
     if (ptr)
         ptr->release();
@@ -25,15 +25,15 @@ public:
     enum AdoptTag { Adopt };
 
     RetainPtr() { }
-    RetainPtr(const T* ptr) : m_ptr(const_cast<T*>(ptr)) { retainIfNotNull(m_ptr); }
-    RetainPtr(T* ptr) : m_ptr(ptr) { retainIfNotNull(m_ptr); }
+    RetainPtr(const T* ptr) : m_ptr(const_cast<T*>(ptr)) { retain_if_not_null(m_ptr); }
+    RetainPtr(T* ptr) : m_ptr(ptr) { retain_if_not_null(m_ptr); }
     RetainPtr(T& object) : m_ptr(&object) { m_ptr->retain(); }
     RetainPtr(AdoptTag, T& object) : m_ptr(&object) { }
-    RetainPtr(RetainPtr& other) : m_ptr(other.copyRef().leakRef()) { }
-    RetainPtr(RetainPtr&& other) : m_ptr(other.leakRef()) { }
-    template<typename U> RetainPtr(RetainPtr<U>&& other) : m_ptr(static_cast<T*>(other.leakRef())) { }
-    RetainPtr(const RetainPtr& other) : m_ptr(const_cast<RetainPtr&>(other).copyRef().leakRef()) { }
-    template<typename U> RetainPtr(const RetainPtr<U>& other) : m_ptr(const_cast<RetainPtr<U>&>(other).copyRef().leakRef()) { }
+    RetainPtr(RetainPtr& other) : m_ptr(other.copy_ref().leak_ref()) { }
+    RetainPtr(RetainPtr&& other) : m_ptr(other.leak_ref()) { }
+    template<typename U> RetainPtr(RetainPtr<U>&& other) : m_ptr(static_cast<T*>(other.leak_ref())) { }
+    RetainPtr(const RetainPtr& other) : m_ptr(const_cast<RetainPtr&>(other).copy_ref().leak_ref()) { }
+    template<typename U> RetainPtr(const RetainPtr<U>& other) : m_ptr(const_cast<RetainPtr<U>&>(other).copy_ref().leak_ref()) { }
     ~RetainPtr()
     {
         clear();
@@ -49,8 +49,8 @@ public:
     RetainPtr& operator=(RetainPtr&& other)
     {
         if (this != &other) {
-            releaseIfNotNull(m_ptr);
-            m_ptr = other.leakRef();
+            release_if_not_null(m_ptr);
+            m_ptr = other.leak_ref();
         }
         return *this;
     }
@@ -59,8 +59,8 @@ public:
     RetainPtr& operator=(RetainPtr<U>&& other)
     {
         if (this != static_cast<void*>(&other)) {
-            releaseIfNotNull(m_ptr);
-            m_ptr = other.leakRef();
+            release_if_not_null(m_ptr);
+            m_ptr = other.leak_ref();
         }
         return *this;
     }
@@ -68,18 +68,18 @@ public:
     RetainPtr& operator=(T* ptr)
     {
         if (m_ptr != ptr)
-            releaseIfNotNull(m_ptr);
+            release_if_not_null(m_ptr);
         m_ptr = ptr;
-        retainIfNotNull(m_ptr);
+        retain_if_not_null(m_ptr);
         return *this;
     }
 
     RetainPtr& operator=(T& object)
     {
         if (m_ptr != &object)
-            releaseIfNotNull(m_ptr);
+            release_if_not_null(m_ptr);
         m_ptr = &object;
-        retainIfNotNull(m_ptr);
+        retain_if_not_null(m_ptr);
         return *this;
     }
 
@@ -89,14 +89,14 @@ public:
         return *this;
     }
 
-    RetainPtr copyRef() const
+    RetainPtr copy_ref() const
     {
         return RetainPtr(m_ptr);
     }
 
     void clear()
     {
-        releaseIfNotNull(m_ptr);
+        release_if_not_null(m_ptr);
         m_ptr = nullptr;
     }
 
@@ -105,7 +105,7 @@ public:
     typedef T* RetainPtr::*UnspecifiedBoolType;
     operator UnspecifiedBoolType() const { return m_ptr ? &RetainPtr::m_ptr : nullptr; }
 
-    T* leakRef()
+    T* leak_ref()
     {
         T* leakedPtr = m_ptr;
         m_ptr = nullptr;

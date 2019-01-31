@@ -51,7 +51,7 @@ private:
         , m_owned(true)
     {
         ASSERT(m_size != 0);
-        size_t size_to_allocate = ceilDiv(size, 8u);
+        size_t size_to_allocate = ceil_div(size, 8u);
         m_data = reinterpret_cast<byte*>(kmalloc(size_to_allocate));
         memset(m_data, default_value ? 0xff : 0x00, size_to_allocate);
     }

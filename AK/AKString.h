@@ -15,7 +15,7 @@ public:
 
     String() { }
     String(const String& other)
-        : m_impl(const_cast<String&>(other).m_impl.copyRef())
+        : m_impl(const_cast<String&>(other).m_impl.copy_ref())
     {
     }
 
@@ -44,7 +44,7 @@ public:
     {
     }
 
-    unsigned toUInt(bool& ok) const;
+    unsigned to_uint(bool& ok) const;
 
     String to_lowercase() const
     {
@@ -89,7 +89,7 @@ public:
     String& operator=(const String& other)
     {
         if (this != &other)
-            m_impl = const_cast<String&>(other).m_impl.copyRef();
+            m_impl = const_cast<String&>(other).m_impl.copy_ref();
         return *this;
     }
 

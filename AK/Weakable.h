@@ -26,7 +26,7 @@ class Weakable {
 private:
     class Link;
 public:
-    WeakPtr<T> makeWeakPtr();
+    WeakPtr<T> make_weak_ptr();
 
 protected:
     Weakable() { }

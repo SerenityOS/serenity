@@ -35,7 +35,7 @@
 
 #define MAXLN 512
 
-static const char* determineBase(const char* p, int& base)
+static const char* determine_base(const char* p, int& base)
 {
     if (p[0] == '0') {
         switch (p[1]) {
@@ -111,7 +111,7 @@ int atob(unsigned int* vp, const char* p, int base)
     unsigned long v;
 
     if (base == 0)
-        p = determineBase(p, base);
+        p = determine_base(p, base);
     if (_atob(&v, p, base)) {
         *vp = v;
         return 1;

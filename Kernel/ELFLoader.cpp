@@ -142,7 +142,7 @@ bool ELFLoader::perform_relocations()
                     failed = true;
                     return false;
                 }
-                ptrdiff_t relativeOffset = (char*)target_ptr - ((char*)&patch_ptr + 4);
+                ptrdiff_t relative_offset = (char*)target_ptr - ((char*)&patch_ptr + 4);
 #ifdef ELFLOADER_DEBUG
                 kprintf("ELFLoader: Relocate PC32:  offset=%x, symbol=%u(%s) value=%x target=%p, offset=%d\n",
                         relocation.offset(),
@@ -150,10 +150,10 @@ bool ELFLoader::perform_relocations()
                         symbol.name(),
                         symbol.value(),
                         target_ptr,
-                        relativeOffset
+                        relative_offset
                 );
 #endif
-                patch_ptr = relativeOffset;
+                patch_ptr = relative_offset;
                 break;
             }
             case R_386_32: {

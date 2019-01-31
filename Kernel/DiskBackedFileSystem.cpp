@@ -13,63 +13,63 @@ DiskBackedFS::~DiskBackedFS()
 {
 }
 
-bool DiskBackedFS::writeBlock(unsigned index, const ByteBuffer& data)
+bool DiskBackedFS::write_block(unsigned index, const ByteBuffer& data)
 {
 #ifdef DBFS_DEBUG
-    kprintf("DiskBackedFileSystem::writeBlock %u, size=%u\n", index, data.size());
+    kprintf("DiskBackedFileSystem::write_block %u, size=%u\n", index, data.size());
 #endif
-    ASSERT(data.size() == blockSize());
-    DiskOffset baseOffset = static_cast<DiskOffset>(index) * static_cast<DiskOffset>(blockSize());
-    return device().write(baseOffset, blockSize(), data.pointer());
+    ASSERT(data.size() == block_size());
+    DiskOffset base_offset = static_cast<DiskOffset>(index) * static_cast<DiskOffset>(block_size());
+    return device().write(base_offset, block_size(), data.pointer());
 }
 
-bool DiskBackedFS::writeBlocks(unsigned index, unsigned count, const ByteBuffer& data)
+bool DiskBackedFS::write_blocks(unsigned index, unsigned count, const ByteBuffer& data)
 {
 #ifdef DBFS_DEBUG
-    kprintf("DiskBackedFileSystem::writeBlocks %u x%u\n", index, count);
+    kprintf("DiskBackedFileSystem::write_blocks %u x%u\n", index, count);
 #endif
-    DiskOffset baseOffset = static_cast<DiskOffset>(index) * static_cast<DiskOffset>(blockSize());
-    return device().write(baseOffset, count * blockSize(), data.pointer());
+    DiskOffset base_offset = static_cast<DiskOffset>(index) * static_cast<DiskOffset>(block_size());
+    return device().write(base_offset, count * block_size(), data.pointer());
 }
 
-ByteBuffer DiskBackedFS::readBlock(unsigned index) const
+ByteBuffer DiskBackedFS::read_block(unsigned index) const
 {
 #ifdef DBFS_DEBUG
-    kprintf("DiskBackedFileSystem::readBlock %u\n", index);
+    kprintf("DiskBackedFileSystem::read_block %u\n", index);
 #endif
-    auto buffer = ByteBuffer::create_uninitialized(blockSize());
-    //kprintf("created block buffer with size %u\n", blockSize());
-    DiskOffset baseOffset = static_cast<DiskOffset>(index) * static_cast<DiskOffset>(blockSize());
-    auto* bufferPointer = buffer.pointer();
-    bool success = device().read(baseOffset, blockSize(), bufferPointer);
+    auto buffer = ByteBuffer::create_uninitialized(block_size());
+    //kprintf("created block buffer with size %u\n", block_size());
+    DiskOffset base_offset = static_cast<DiskOffset>(index) * static_cast<DiskOffset>(block_size());
+    auto* buffer_pointer = buffer.pointer();
+    bool success = device().read(base_offset, block_size(), buffer_pointer);
     ASSERT(success);
-    ASSERT(buffer.size() == blockSize());
+    ASSERT(buffer.size() == block_size());
     return buffer;
 }
 
-ByteBuffer DiskBackedFS::readBlocks(unsigned index, unsigned count) const
+ByteBuffer DiskBackedFS::read_blocks(unsigned index, unsigned count) const
 {
     if (!count)
         return nullptr;
     if (count == 1)
-        return readBlock(index);
-    auto blocks = ByteBuffer::create_uninitialized(count * blockSize());
+        return read_block(index);
+    auto blocks = ByteBuffer::create_uninitialized(count * block_size());
     byte* out = blocks.pointer();
 
     for (unsigned i = 0; i < count; ++i) {
-        auto block = readBlock(index + i);
+        auto block = read_block(index + i);
         if (!block)
             return nullptr;
         memcpy(out, block.pointer(), block.size());
-        out += blockSize();
+        out += block_size();
     }
 
     return blocks;
 }
 
-void DiskBackedFS::setBlockSize(unsigned blockSize)
+void DiskBackedFS::set_block_size(unsigned block_size)
 {
-    if (blockSize == m_blockSize)
+    if (block_size == m_block_size)
         return;
-    m_blockSize = blockSize;
+    m_block_size = block_size;
 }

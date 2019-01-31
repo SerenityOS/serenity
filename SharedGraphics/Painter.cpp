@@ -199,9 +199,9 @@ void Painter::draw_text(const Rect& rect, const String& text, TextAlignment alig
         int text_width = text.length() * font().glyph_width();
         point = { rect.right() - text_width, rect.center().y() - (font().glyph_height() / 2) };
     } else if (alignment == TextAlignment::Center) {
-        int textWidth = text.length() * font().glyph_width();
+        int text_width = text.length() * font().glyph_width();
         point = rect.center();
-        point.move_by(-(textWidth / 2), -(font().glyph_height() / 2));
+        point.move_by(-(text_width / 2), -(font().glyph_height() / 2));
     } else {
         ASSERT_NOT_REACHED();
     }
@@ -283,14 +283,14 @@ void Painter::draw_line(const Point& p1, const Point& p2, Color color)
     const double dy = point2.y() - point1.y();
     const double delta_error = fabs(dy / dx);
     double error = 0;
-    const double yStep = dy == 0 ? 0 : (dy > 0 ? 1 : -1);
+    const double y_step = dy == 0 ? 0 : (dy > 0 ? 1 : -1);
 
     int y = point1.y();
     for (int x = point1.x(); x <= point2.x(); ++x) {
         m_target->scanline(y)[x] = color.value();
         error += delta_error;
         if (error >= 0.5) {
-            y = (double)y + yStep;
+            y = (double)y + y_step;
             error -= 1.0;
         }
     }

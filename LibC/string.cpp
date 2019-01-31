@@ -190,21 +190,21 @@ char* strrchr(const char* str, int ch)
 
 char* strcat(char *dest, const char *src)
 {
-    size_t destLength = strlen(dest);
+    size_t dest_length = strlen(dest);
     size_t i;
     for (i = 0 ; src[i] != '\0' ; i++)
-        dest[destLength + i] = src[i];
-    dest[destLength + i] = '\0';
+        dest[dest_length + i] = src[i];
+    dest[dest_length + i] = '\0';
     return dest;
 }
 
 char* strncat(char *dest, const char *src, size_t n)
 {
-    size_t destLength = strlen(dest);
+    size_t dest_length = strlen(dest);
     size_t i;
     for (i = 0 ; i < n && src[i] != '\0' ; i++)
-        dest[destLength + i] = src[i];
-    dest[destLength + i] = '\0';
+        dest[dest_length + i] = src[i];
+    dest[dest_length + i] = '\0';
     return dest;
 }
 

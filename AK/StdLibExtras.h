@@ -45,7 +45,7 @@ inline T max(const T& a, const T& b)
 
 
 template<typename T, typename U>
-static inline T ceilDiv(T a, U b)
+static inline T ceil_div(T a, U b)
 {
     static_assert(sizeof(T) == sizeof(U));
     T result = a / b;
@@ -173,5 +173,5 @@ using AK::move;
 using AK::forward;
 using AK::exchange;
 using AK::swap;
-using AK::ceilDiv;
+using AK::ceil_div;
 

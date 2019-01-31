@@ -110,7 +110,7 @@ inline bool is_valid_final_character(byte ch)
     return ch >= 0x40 && ch <= 0x7e;
 }
 
-unsigned parseUInt(const String& str, bool& ok)
+unsigned parse_uint(const String& str, bool& ok)
 {
     unsigned value = 0;
     for (size_t i = 0; i < str.length(); ++i) {
@@ -341,7 +341,7 @@ void Terminal::execute_xterm_command()
 {
     m_final = '@';
     bool ok;
-    unsigned value = parseUInt(String((const char*)m_xterm_param1.data(), m_xterm_param1.size()), ok);
+    unsigned value = parse_uint(String((const char*)m_xterm_param1.data(), m_xterm_param1.size()), ok);
     if (ok) {
         switch (value) {
         case 0:
@@ -363,7 +363,7 @@ void Terminal::execute_escape_sequence(byte final)
     Vector<unsigned> params;
     for (auto& parampart : paramparts) {
         bool ok;
-        unsigned value = parseUInt(parampart, ok);
+        unsigned value = parse_uint(parampart, ok);
         if (!ok) {
             // FIXME: Should we do something else?
             return;
@@ -562,7 +562,7 @@ void Terminal::unimplemented_escape()
             builder.append((char)m_intermediates[i]);
     }
     builder.append("))");
-    inject_string(builder.build());
+    inject_string(builder.to_string());
 }
 
 void Terminal::unimplemented_xterm_escape()

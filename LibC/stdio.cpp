@@ -237,7 +237,7 @@ int dbgprintf(const char* fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
-    int ret = printfInternal(sys_putch, nullptr, fmt, ap);
+    int ret = printf_internal(sys_putch, nullptr, fmt, ap);
     va_end(ap);
     return ret;
 }
@@ -256,7 +256,7 @@ static void stream_putch(char*&, char ch)
 int vfprintf(FILE* stream, const char* fmt, va_list ap)
 {
     __current_stream = stream;
-    return printfInternal(stream_putch, nullptr, fmt, ap);
+    return printf_internal(stream_putch, nullptr, fmt, ap);
 }
 
 int fprintf(FILE* stream, const char* fmt, ...)
@@ -272,7 +272,7 @@ int printf(const char* fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
-    int ret = printfInternal(stdout_putch, nullptr, fmt, ap);
+    int ret = printf_internal(stdout_putch, nullptr, fmt, ap);
     va_end(ap);
     return ret;
 }
@@ -284,7 +284,7 @@ static void buffer_putch(char*& bufptr, char ch)
 
 int vsprintf(char* buffer, const char* fmt, va_list ap)
 {
-    int ret = printfInternal(buffer_putch, buffer, fmt, ap);
+    int ret = printf_internal(buffer_putch, buffer, fmt, ap);
     buffer[ret] = '\0';
     return ret;
 }
@@ -311,7 +311,7 @@ static void sized_buffer_putch(char*& bufptr, char ch)
 int vsnprintf(char* buffer, size_t size, const char* fmt, va_list ap)
 {
     __vsnprintf_space_remaining = size;
-    int ret = printfInternal(sized_buffer_putch, buffer, fmt, ap);
+    int ret = printf_internal(sized_buffer_putch, buffer, fmt, ap);
     buffer[ret] = '\0';
     return ret;
 }

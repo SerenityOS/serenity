@@ -76,7 +76,7 @@ ByteBuffer Inode::read_entire(FileDescriptor* descriptor) const
 FS::DirectoryEntry::DirectoryEntry(const char* n, InodeIdentifier i, byte ft)
     : name_length(strlen(n))
     , inode(i)
-    , fileType(ft)
+    , file_type(ft)
 {
     memcpy(name, n, name_length);
     name[name_length] = '\0';
@@ -85,7 +85,7 @@ FS::DirectoryEntry::DirectoryEntry(const char* n, InodeIdentifier i, byte ft)
 FS::DirectoryEntry::DirectoryEntry(const char* n, size_t nl, InodeIdentifier i, byte ft)
     : name_length(nl)
     , inode(i)
-    , fileType(ft)
+    , file_type(ft)
 {
     memcpy(name, n, nl);
     name[nl] = '\0';

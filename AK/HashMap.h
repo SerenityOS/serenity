@@ -54,7 +54,7 @@ public:
     void set(const K&, const V&);
     void set(const K&, V&&);
     void remove(const K&);
-    void removeOneRandomly() { m_table.remove(m_table.begin()); }
+    void remove_one_randomly() { m_table.remove(m_table.begin()); }
 
     typedef HashTable<Entry, EntryTraits> HashTableType;
     typedef typename HashTableType::Iterator IteratorType;

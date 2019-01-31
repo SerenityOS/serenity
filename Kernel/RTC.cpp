@@ -4,34 +4,34 @@
 
 namespace RTC {
 
-static time_t s_bootTime;
+static time_t s_boot_time;
 
 void initialize()
 {    
-    byte cmosMode = CMOS::read(0x0b);
-    cmosMode |= 2; // 24 hour mode
-    cmosMode |= 4; // No BCD mode
-    CMOS::write(0x0b, cmosMode);
+    byte cmos_mode = CMOS::read(0x0b);
+    cmos_mode |= 2; // 24 hour mode
+    cmos_mode |= 4; // No BCD mode
+    CMOS::write(0x0b, cmos_mode);
 
-    s_bootTime = now();
+    s_boot_time = now();
 }
 
-time_t bootTime()
+time_t boot_time()
 {
-    return s_bootTime;
+    return s_boot_time;
 }
 
-static bool updateInProgress()
+static bool update_in_progress()
 {
     return CMOS::read(0x0a) & 0x80;
 }
 
-inline bool isLeapYear(unsigned year)
+inline bool is_leap_year(unsigned year)
 {
     return ((year % 4 == 0) && ((year % 100 != 0) || (year % 400) == 0));
 }
 
-static unsigned daysInMonthsSinceStartOfYear(unsigned month, unsigned year)
+static unsigned days_in_months_since_start_of_year(unsigned month, unsigned year)
 {
     switch (month) {
     case 11: return 30;
@@ -44,7 +44,7 @@ static unsigned daysInMonthsSinceStartOfYear(unsigned month, unsigned year)
     case 4: return 30;
     case 3: return 31;
     case 2:
-        if (isLeapYear(year))
+        if (is_leap_year(year))
             return 29;
         return 28;
     case 1: return 31;
@@ -52,12 +52,12 @@ static unsigned daysInMonthsSinceStartOfYear(unsigned month, unsigned year)
     }
 }
 
-static unsigned daysInYearsSinceEpoch(unsigned year)
+static unsigned days_in_years_since_epoch(unsigned year)
 {
     unsigned days = 0;
     while (year > 1969) {
         days += 365;
-        if (isLeapYear(year))
+        if (is_leap_year(year))
             ++days;
         --year;
     }
@@ -69,7 +69,7 @@ time_t now()
     // FIXME: We should probably do something more robust here.
     //        Perhaps read all the values twice and verify that they were identical.
     //        We don't want to be caught in the middle of an RTC register update.
-    while (updateInProgress())
+    while (update_in_progress())
         ;
 
     unsigned year = (CMOS::read(0x32) * 100) + CMOS::read(0x09);
@@ -81,8 +81,8 @@ time_t now()
 
     ASSERT(year >= 2018);
 
-    return daysInYearsSinceEpoch(year - 1) * 86400
-         + daysInMonthsSinceStartOfYear(month - 1, year) * 86400
+    return days_in_years_since_epoch(year - 1) * 86400
+         + days_in_months_since_start_of_year(month - 1, year) * 86400
          + day * 86400
          + hour * 3600
          + minute * 60

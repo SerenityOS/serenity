@@ -11,7 +11,7 @@ ELFImage::~ELFImage()
 {
 }
 
-static const char* objectFileTypeToString(Elf32_Half type)
+static const char* object_file_type_to_string(Elf32_Half type)
 {
     switch (type) {
     case ET_NONE: return "None";
@@ -40,14 +40,14 @@ unsigned ELFImage::symbol_count() const
 void ELFImage::dump()
 {
     kprintf("ELFImage{%p} {\n", this);
-    kprintf("    isValid: %u\n", is_valid());
+    kprintf("    is_valid: %u\n", is_valid());
 
     if (!is_valid()) {
         kprintf("}\n");
         return;
     }
 
-    kprintf("    type:    %s\n", objectFileTypeToString(header().e_type));
+    kprintf("    type:    %s\n", object_file_type_to_string(header().e_type));
     kprintf("    machine: %u\n", header().e_machine);
     kprintf("    entry:   %x\n", header().e_entry);
     kprintf("    shoff:   %u\n", header().e_shoff);
@@ -158,8 +158,8 @@ const Elf32_Shdr& ELFImage::section_header(unsigned index) const
 const ELFImage::Symbol ELFImage::symbol(unsigned index) const
 {
     ASSERT(index < symbol_count());
-    auto* rawSyms = reinterpret_cast<const Elf32_Sym*>(raw_data(section(m_symbol_table_section_index).offset()));
-    return Symbol(*this, index, rawSyms[index]);
+    auto* raw_syms = reinterpret_cast<const Elf32_Sym*>(raw_data(section(m_symbol_table_section_index).offset()));
+    return Symbol(*this, index, raw_syms[index]);
 }
 
 const ELFImage::Section ELFImage::section(unsigned index) const
@@ -185,23 +185,23 @@ const ELFImage::Relocation ELFImage::RelocationSection::relocation(unsigned inde
 const ELFImage::RelocationSection ELFImage::Section::relocations() const
 {
     // FIXME: This is ugly.
-    char relocationSectionName[128];
-    ksprintf(relocationSectionName, ".rel%s", name());
+    char relocation_sectionName[128];
+    ksprintf(relocation_sectionName, ".rel%s", name());
 
 #ifdef ELFIMAGE_DEBUG
-    kprintf("looking for '%s'\n", relocationSectionName);
+    kprintf("looking for '%s'\n", relocation_sectionName);
 #endif
-    auto relocationSection = m_image.lookupSection(relocationSectionName);
-    if (relocationSection.type() != SHT_REL)
+    auto relocation_section = m_image.lookup_section(relocation_sectionName);
+    if (relocation_section.type() != SHT_REL)
         return static_cast<const RelocationSection>(m_image.section(0));
 
 #ifdef ELFIMAGE_DEBUG
-    kprintf("Found relocations for %s in %s\n", name(), relocationSection.name());
+    kprintf("Found relocations for %s in %s\n", name(), relocation_section.name());
 #endif
-    return static_cast<const RelocationSection>(relocationSection);
+    return static_cast<const RelocationSection>(relocation_section);
 }
 
-const ELFImage::Section ELFImage::lookupSection(const char* name) const
+const ELFImage::Section ELFImage::lookup_section(const char* name) const
 {
     if (auto it = m_sections.find(name); it != m_sections.end())
         return section((*it).value);

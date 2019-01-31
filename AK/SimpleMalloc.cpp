@@ -50,28 +50,28 @@ public:
     void initialize(byte* base)
     {
         m_base = base;
-        m_free = capacityInAllocations();
+        m_free = capacity_in_allocations();
         dump();
     }
 
-    static constexpr dword capacityInAllocations()
+    static constexpr dword capacity_in_allocations()
     {
         return 1048576 / chunkSize;
     }
 
-    static constexpr dword capacityInBytes()
+    static constexpr dword capacity_in_bytes()
     {
-        return capacityInAllocations() * chunkSize;
+        return capacity_in_allocations() * chunkSize;
     }
 
     byte* allocate()
     {
         auto bitmap = this->bitmap();
-        for (dword i = 0; i < capacityInAllocations(); ++i) {
+        for (dword i = 0; i < capacity_in_allocations(); ++i) {
             if (!bitmap.get(i)) {
                 bitmap.set(i, true);
                 --m_free;
-                return pointerToChunk(i);
+                return pointer_to_chunk(i);
             }
         }
         return nullptr;
@@ -84,57 +84,57 @@ public:
 
     void free(byte* ptr)
     {
-        ASSERT(isInAllocator(ptr));
+        ASSERT(is_in_allocator(ptr));
         auto bitmap = this->bitmap();
-        auto chunkIndex = chunkIndexFromPointer(ptr);
-        ASSERT(bitmap.get(chunkIndex));
-        bitmap.set(chunkIndex, false);
+        auto chunk_index = chunk_index_from_pointer(ptr);
+        ASSERT(bitmap.get(chunk_index));
+        bitmap.set(chunk_index, false);
         ++m_free;
     }
 
-    bool isInAllocator(byte* ptr)
+    bool is_in_allocator(byte* ptr)
     {
-        return ptr >= pointerToChunk(0) && ptr <= addressAfterThisAllocator();
+        return ptr >= pointer_to_chunk(0) && ptr <= address_after_this_allocator();
     }
 
-    dword chunkIndexFromPointer(byte* ptr)
+    dword chunk_index_from_pointer(byte* ptr)
     {
-        return (ptr - pointerToChunk(0)) / chunkSize;
+        return (ptr - pointer_to_chunk(0)) / chunkSize;
     }
 
-    byte* pointerToChunk(dword index)
+    byte* pointer_to_chunk(dword index)
     {
-        return m_base + sizeOfAllocationBitmapInBytes() + (index * chunkSize);
+        return m_base + size_of_allocation_bitmap_in_bytes() + (index * chunkSize);
     }
 
     AllocationBitmap bitmap()
     {
-        return AllocationBitmap::wrap(m_base, capacityInAllocations());
+        return AllocationBitmap::wrap(m_base, capacity_in_allocations());
     }
 
-    static constexpr dword sizeOfAllocationBitmapInBytes()
+    static constexpr dword size_of_allocation_bitmap_in_bytes()
     {
-        return capacityInAllocations() / 8;
+        return capacity_in_allocations() / 8;
     }
 
-    byte* addressAfterThisAllocator() const
+    byte* address_after_this_allocator() const
     {
-        return m_base + sizeOfAllocationBitmapInBytes() + capacityInBytes();
+        return m_base + size_of_allocation_bitmap_in_bytes() + capacity_in_bytes();
     }
 
-    dword numberOfFreeChunks() const
+    dword number_of_free_chunks() const
     {
         return m_free;
     }
 
 private:
     byte* m_base { nullptr };
-    dword m_free { capacityInAllocations() };
+    dword m_free { capacity_in_allocations() };
 };
 
 struct Allocator {
     void initialize();
-    void initializeIfNeeded();
+    void initialize_if_needed();
     void dump();
 
     ChunkAllocator<8> alloc8;
@@ -148,7 +148,7 @@ struct Allocator {
 
 static Allocator allocator;
 
-void Allocator::initializeIfNeeded()
+void Allocator::initialize_if_needed()
 {
     if (initialized)
         return;
@@ -161,9 +161,9 @@ void Allocator::initialize()
     space = (byte*)mmap((void*)0x20000000, 32 * MB, PROT_WRITE | PROT_READ | PROT_EXEC, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
     ASSERT(space != MAP_FAILED);
     alloc8.initialize(space + 0x10000);
-    alloc16.initialize(alloc8.addressAfterThisAllocator());
-    alloc4096.initialize(alloc16.addressAfterThisAllocator());
-    alloc16384.initialize(alloc4096.addressAfterThisAllocator());
+    alloc16.initialize(alloc8.address_after_this_allocator());
+    alloc4096.initialize(alloc16.address_after_this_allocator());
+    alloc16384.initialize(alloc4096.address_after_this_allocator());
 }
 
 void Allocator::dump()
@@ -188,7 +188,7 @@ byte* allocate(dword size)
 {
     if (!size)
         return nullptr;
-    allocator.initializeIfNeeded();
+    allocator.initialize_if_needed();
     if (size <= 8) {
         if (auto* ptr = allocator.alloc8.allocate())
             return ptr;
@@ -210,7 +210,7 @@ byte* allocate(dword size)
     return nullptr;
 }
 
-byte* allocateZeroed(dword size)
+byte* allocate_zeroed(dword size)
 {
     auto* ptr = allocate(size);
     if (!ptr)
@@ -232,20 +232,20 @@ void free(byte* ptr)
 {
     if (!ptr)
         return;
-    allocator.initializeIfNeeded();
-    if (allocator.alloc8.isInAllocator(ptr)) {
+    allocator.initialize_if_needed();
+    if (allocator.alloc8.is_in_allocator(ptr)) {
         allocator.alloc8.free(ptr);
         return;
     }
-    if (allocator.alloc16.isInAllocator(ptr)) {
+    if (allocator.alloc16.is_in_allocator(ptr)) {
         allocator.alloc16.free(ptr);
         return;
     }
-    if (allocator.alloc4096.isInAllocator(ptr)) {
+    if (allocator.alloc4096.is_in_allocator(ptr)) {
         allocator.alloc4096.free(ptr);
         return;
     }
-    if (allocator.alloc16384.isInAllocator(ptr)) {
+    if (allocator.alloc16384.is_in_allocator(ptr)) {
         allocator.alloc16384.free(ptr);
         return;
     }
