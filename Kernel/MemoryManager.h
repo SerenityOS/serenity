@@ -217,7 +217,9 @@ public:
     bool validate_user_read(const Process&, LinearAddress) const;
     bool validate_user_write(const Process&, LinearAddress) const;
 
-    RetainPtr<PhysicalPage> allocate_physical_page();
+    enum class ShouldZeroFill { No, Yes };
+
+    RetainPtr<PhysicalPage> allocate_physical_page(ShouldZeroFill);
     RetainPtr<PhysicalPage> allocate_supervisor_physical_page();
 
     void remap_region(Process&, Region&);
@@ -351,6 +353,7 @@ private:
     HashTable<Region*> m_regions;
 
     size_t m_ram_size { 0 };
+    bool m_quickmap_in_use { false };
 };
 
 struct ProcessPagingScope {
