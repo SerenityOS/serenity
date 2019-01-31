@@ -23,7 +23,7 @@ void GObject::event(GEvent& event)
 {
     switch (event.type()) {
     case GEvent::Timer:
-        return timerEvent(static_cast<GTimerEvent&>(event));
+        return timer_event(static_cast<GTimerEvent&>(event));
     case GEvent::DeferredDestroy:
         delete this;
         break;
@@ -50,7 +50,7 @@ void GObject::removeChild(GObject& object)
     }
 }
 
-void GObject::timerEvent(GTimerEvent&)
+void GObject::timer_event(GTimerEvent&)
 {
 }
 

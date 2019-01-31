@@ -18,7 +18,7 @@ private:
     virtual void paint_event(GPaintEvent&) override;
     virtual void mousedown_event(GMouseEvent&) override;
     virtual void keydown_event(GKeyEvent&) override;
-    virtual void timerEvent(GTimerEvent&) override;
+    virtual void timer_event(GTimerEvent&) override;
     virtual bool accepts_focus() const override { return true; }
 
     void handle_backspace();
