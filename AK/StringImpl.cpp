@@ -55,7 +55,7 @@ StringImpl::~StringImpl()
 #endif
 }
 
-static inline size_t allocationSizeForStringImpl(size_t length)
+static inline size_t allocation_size_for_stringimpl(size_t length)
 {
     return sizeof(StringImpl) + (sizeof(char) * length) + sizeof(char);
 }
@@ -63,14 +63,14 @@ static inline size_t allocationSizeForStringImpl(size_t length)
 RetainPtr<StringImpl> StringImpl::create_uninitialized(size_t length, char*& buffer)
 {
     ASSERT(length);
-    void* slot = kmalloc(allocationSizeForStringImpl(length));
+    void* slot = kmalloc(allocation_size_for_stringimpl(length));
     if (!slot)
         return nullptr;
 
-    auto newStringImpl = adopt(*new (slot) StringImpl(ConstructWithInlineBuffer, length));
-    buffer = const_cast<char*>(newStringImpl->m_characters);
+    auto new_stringimpl = adopt(*new (slot) StringImpl(ConstructWithInlineBuffer, length));
+    buffer = const_cast<char*>(new_stringimpl->m_characters);
     buffer[length] = '\0';
-    return newStringImpl;
+    return new_stringimpl;
 }
 
 RetainPtr<StringImpl> StringImpl::create(const char* cstring, size_t length, ShouldChomp shouldChomp)
@@ -82,17 +82,17 @@ RetainPtr<StringImpl> StringImpl::create(const char* cstring, size_t length, Sho
         return the_empty_stringimpl();
 
     char* buffer;
-    auto newStringImpl = create_uninitialized(length, buffer);
-    if (!newStringImpl)
+    auto new_stringimpl = create_uninitialized(length, buffer);
+    if (!new_stringimpl)
         return nullptr;
     memcpy(buffer, cstring, length * sizeof(char));
 
     if (shouldChomp && buffer[length - 1] == '\n') {
         buffer[length - 1] = '\0';
-        --newStringImpl->m_length;
+        --new_stringimpl->m_length;
     }
 
-    return newStringImpl;
+    return new_stringimpl;
 }
 
 RetainPtr<StringImpl> StringImpl::create(const char* cstring, ShouldChomp shouldChomp)
@@ -103,26 +103,26 @@ RetainPtr<StringImpl> StringImpl::create(const char* cstring, ShouldChomp should
     return create(cstring, strlen(cstring), shouldChomp);
 }
 
-static inline bool isASCIILowercase(char c)
+static inline bool is_ascii_lowercase(char c)
 {
     return c >= 'a' && c <= 'z';
 }
 
-static inline bool isASCIIUppercase(char c)
+static inline bool is_ascii_uppercase(char c)
 {
     return c >= 'A' && c <= 'Z';
 }
 
-static inline char toASCIILowercase(char c)
+static inline char to_ascii_lowercase(char c)
 {
-    if (isASCIIUppercase(c))
+    if (is_ascii_uppercase(c))
         return c | 0x20;
     return c;
 }
 
-static inline char toASCIIUppercase(char c)
+static inline char to_ascii_uppercase(char c)
 {
-    if (isASCIILowercase(c))
+    if (is_ascii_lowercase(c))
         return c & ~0x20;
     return c;
 }
@@ -133,18 +133,18 @@ RetainPtr<StringImpl> StringImpl::to_lowercase() const
         return const_cast<StringImpl*>(this);
 
     for (size_t i = 0; i < m_length; ++i) {
-        if (!isASCIILowercase(m_characters[i]))
-            goto slowPath;
+        if (!is_ascii_lowercase(m_characters[i]))
+            goto slow_path;
     }
     return const_cast<StringImpl*>(this);
 
-slowPath:
+slow_path:
     char* buffer;
     auto lowercased = create_uninitialized(m_length, buffer);
     if (!lowercased)
         return nullptr;
     for (size_t i = 0; i < m_length; ++i)
-        buffer[i] = toASCIILowercase(m_characters[i]);
+        buffer[i] = to_ascii_lowercase(m_characters[i]);
 
     return lowercased;
 }
@@ -155,18 +155,18 @@ RetainPtr<StringImpl> StringImpl::to_uppercase() const
         return const_cast<StringImpl*>(this);
 
     for (size_t i = 0; i < m_length; ++i) {
-        if (!isASCIIUppercase(m_characters[i]))
-            goto slowPath;
+        if (!is_ascii_uppercase(m_characters[i]))
+            goto slow_path;
     }
     return const_cast<StringImpl*>(this);
 
-slowPath:
+slow_path:
     char* buffer;
     auto uppercased = create_uninitialized(m_length, buffer);
     if (!uppercased)
         return nullptr;
     for (size_t i = 0; i < m_length; ++i)
-        buffer[i] = toASCIIUppercase(m_characters[i]);
+        buffer[i] = to_ascii_uppercase(m_characters[i]);
 
     return uppercased;
 }

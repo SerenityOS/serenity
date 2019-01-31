@@ -8,7 +8,7 @@ void enable(byte number);
 void disable(byte number);
 void eoi(byte number);
 void initialize();
-word getISR();
+word get_isr();
 word get_irr();
 
 }

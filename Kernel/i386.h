@@ -43,14 +43,14 @@ union Descriptor {
         TrapGate_32bit = 0xf,
     };
 
-    void setBase(void* b)
+    void set_base(void* b)
     {
         base_lo = (dword)(b) & 0xffff;
         base_hi = ((dword)(b) >> 16) & 0xff;
         base_hi2 = ((dword)(b) >> 24) & 0xff;
     }
 
-    void setLimit(dword l)
+    void set_limit(dword l)
     {
         limit_lo = (dword)l & 0xffff;
         limit_hi = ((dword)l >> 16) & 0xff;
@@ -220,7 +220,7 @@ struct FPUState {
     dword st[20];
 };
 
-inline constexpr dword pageBaseOf(dword address)
+inline constexpr dword page_base_of(dword address)
 {
     return address & 0xfffff000;
 }

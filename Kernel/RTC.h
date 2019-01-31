@@ -6,7 +6,7 @@ namespace RTC {
 
 void initialize();
 time_t now();
-time_t bootTime();
+time_t boot_time();
 
 }
 

@@ -8,7 +8,7 @@
 GTextBox::GTextBox(GWidget* parent)
     : GWidget(parent)
 {
-    startTimer(500);
+    start_timer(500);
 }
 
 GTextBox::~GTextBox()
@@ -73,12 +73,12 @@ void GTextBox::handle_backspace()
     }
 
     char* buffer;
-    auto newText = StringImpl::create_uninitialized(m_text.length() - 1, buffer);
+    auto new_text = StringImpl::create_uninitialized(m_text.length() - 1, buffer);
 
     memcpy(buffer, m_text.characters(), m_cursor_position - 1);
     memcpy(buffer + m_cursor_position - 1, m_text.characters() + m_cursor_position, m_text.length() - (m_cursor_position - 1));
 
-    m_text = move(newText);
+    m_text = move(new_text);
     --m_cursor_position;
     update();
 }
@@ -110,13 +110,13 @@ void GTextBox::keydown_event(GKeyEvent& event)
         ASSERT(event.text().length() == 1);
 
         char* buffer;
-        auto newText = StringImpl::create_uninitialized(m_text.length() + 1, buffer);
+        auto new_text = StringImpl::create_uninitialized(m_text.length() + 1, buffer);
 
         memcpy(buffer, m_text.characters(), m_cursor_position);
         buffer[m_cursor_position] = event.text()[0];
         memcpy(buffer + m_cursor_position + 1, m_text.characters() + m_cursor_position, m_text.length() - m_cursor_position);
 
-        m_text = move(newText);
+        m_text = move(new_text);
         ++m_cursor_position;
         update();
         return;

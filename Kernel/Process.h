@@ -55,7 +55,7 @@ public:
     static Process* create_user_process(const String& path, uid_t, gid_t, pid_t ppid, int& error, Vector<String>&& arguments = Vector<String>(), Vector<String>&& environment = Vector<String>(), TTY* = nullptr);
     ~Process();
 
-    static Vector<Process*> allProcesses();
+    static Vector<Process*> all_processes();
 
     enum State {
         Invalid = 0,
@@ -78,8 +78,8 @@ public:
         Ring3 = 3,
     };
 
-    bool isRing0() const { return m_ring == Ring0; }
-    bool isRing3() const { return m_ring == Ring3; }
+    bool is_ring0() const { return m_ring == Ring0; }
+    bool is_ring3() const { return m_ring == Ring3; }
 
     bool is_blocked() const
     {
@@ -98,7 +98,7 @@ public:
     pid_t sid() const { return m_sid; }
     pid_t pgid() const { return m_pgid; }
     dword ticks() const { return m_ticks; }
-    word selector() const { return m_farPtr.selector; }
+    word selector() const { return m_far_ptr.selector; }
     TSS32& tss() { return m_tss; }
     State state() const { return m_state; }
     uid_t uid() const { return m_uid; }
@@ -107,7 +107,7 @@ public:
     gid_t egid() const { return m_egid; }
     pid_t ppid() const { return m_ppid; }
 
-    const FarPtr& farPtr() const { return m_farPtr; }
+    const FarPtr& far_ptr() const { return m_far_ptr; }
 
     FileDescriptor* file_descriptor(int fd);
     const FileDescriptor* file_descriptor(int fd) const;
@@ -115,8 +115,8 @@ public:
     void block(Process::State);
     void unblock();
 
-    void setWakeupTime(dword t) { m_wakeupTime = t; }
-    dword wakeupTime() const { return m_wakeupTime; }
+    void set_wakeup_time(dword t) { m_wakeup_time = t; }
+    dword wakeup_time() const { return m_wakeup_time; }
 
     template<typename Callback> static void for_each(Callback);
     template<typename Callback> static void for_each_in_pgrp(pid_t, Callback);
@@ -124,10 +124,10 @@ public:
     template<typename Callback> static void for_each_not_in_state(State, Callback);
     template<typename Callback> void for_each_child(Callback);
 
-    bool tick() { ++m_ticks; return --m_ticksLeft; }
-    void set_ticks_left(dword t) { m_ticksLeft = t; }
+    bool tick() { ++m_ticks; return --m_ticks_left; }
+    void set_ticks_left(dword t) { m_ticks_left = t; }
 
-    void setSelector(word s) { m_farPtr.selector = s; }
+    void set_selector(word s) { m_far_ptr.selector = s; }
     void set_state(State s) { m_state = s; }
     void die();
 
@@ -225,12 +225,12 @@ public:
     const TTY* tty() const { return m_tty; }
     void set_tty(TTY* tty) { m_tty = tty; }
 
-    size_t regionCount() const { return m_regions.size(); }
+    size_t region_count() const { return m_regions.size(); }
     const Vector<RetainPtr<Region>>& regions() const { return m_regions; }
-    void dumpRegions();
+    void dump_regions();
 
-    void did_schedule() { ++m_timesScheduled; }
-    dword timesScheduled() const { return m_timesScheduled; }
+    void did_schedule() { ++m_times_scheduled; }
+    dword times_scheduled() const { return m_times_scheduled; }
 
     dword m_ticks_in_user { 0 };
     dword m_ticks_in_kernel { 0 };
@@ -240,9 +240,9 @@ public:
 
     pid_t waitee_pid() const { return m_waitee_pid; }
 
-    dword framePtr() const { return m_tss.ebp; }
-    dword stackPtr() const { return m_tss.esp; }
-    dword stackTop() const { return m_tss.ss == 0x10 ? m_stackTop0 : m_stackTop3; }
+    dword frame_ptr() const { return m_tss.ebp; }
+    dword stack_ptr() const { return m_tss.esp; }
+    dword stack_top() const { return m_tss.ss == 0x10 ? m_stack_top0 : m_stack_top3; }
 
     bool validate_read_from_kernel(LinearAddress) const;
 
@@ -306,12 +306,12 @@ private:
     pid_t m_sid { 0 };
     pid_t m_pgid { 0 };
     dword m_ticks { 0 };
-    dword m_ticksLeft { 0 };
-    dword m_stackTop0 { 0 };
-    dword m_stackTop3 { 0 };
-    FarPtr m_farPtr;
+    dword m_ticks_left { 0 };
+    dword m_stack_top0 { 0 };
+    dword m_stack_top3 { 0 };
+    FarPtr m_far_ptr;
     State m_state { Invalid };
-    dword m_wakeupTime { 0 };
+    dword m_wakeup_time { 0 };
     TSS32 m_tss;
     TSS32 m_tss_to_resume_kernel;
     FPUState m_fpu_state;
@@ -325,8 +325,8 @@ private:
     Vector<FileDescriptorAndFlags> m_fds;
     RingLevel m_ring { Ring0 };
     int m_error { 0 };
-    void* m_kernelStack { nullptr };
-    dword m_timesScheduled { 0 };
+    void* m_kernel_stack { nullptr };
+    dword m_times_scheduled { 0 };
     pid_t m_waitee_pid { -1 };
     int m_blocked_fd { -1 };
     Vector<int> m_select_read_fds;
@@ -349,12 +349,12 @@ private:
     Region* allocate_region_with_vmo(LinearAddress, size_t, RetainPtr<VMObject>&&, size_t offset_in_vmo, String&& name, bool is_readable, bool is_writable);
     bool deallocate_region(Region& region);
 
-    Region* regionFromRange(LinearAddress, size_t);
+    Region* region_from_range(LinearAddress, size_t);
 
     Vector<RetainPtr<Region>> m_regions;
 
     // FIXME: Implement some kind of ASLR?
-    LinearAddress m_nextRegion;
+    LinearAddress m_next_region;
 
     LinearAddress m_return_to_ring3_from_signal_trampoline;
     LinearAddress m_return_to_ring0_from_signal_trampoline;
@@ -411,7 +411,7 @@ private:
     Process::State m_original_state { Process::Invalid };
 };
 
-static inline const char* toString(Process::State state)
+static inline const char* to_string(Process::State state)
 {
     switch (state) {
     case Process::Invalid: return "Invalid";

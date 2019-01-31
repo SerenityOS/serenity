@@ -219,16 +219,16 @@ public:
         if (capacity() >= neededCapacity)
             return;
         size_t new_capacity = padded_capacity(neededCapacity);
-        auto newImpl = VectorImpl<T, Allocator>::create(new_capacity);
+        auto new_impl = VectorImpl<T, Allocator>::create(new_capacity);
         if (m_impl) {
-            newImpl->m_size = m_impl->m_size;
+            new_impl->m_size = m_impl->m_size;
             for (size_t i = 0; i < size(); ++i) {
-                new (newImpl->slot(i)) T(move(m_impl->at(i)));
+                new (new_impl->slot(i)) T(move(m_impl->at(i)));
                 m_impl->at(i).~T();
             }
             Allocator::deallocate(m_impl);
         }
-        m_impl = newImpl;
+        m_impl = new_impl;
     }
 
     void resize(size_t new_size)

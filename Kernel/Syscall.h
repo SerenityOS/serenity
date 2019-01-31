@@ -99,7 +99,7 @@ enum Function {
 #undef __ENUMERATE_SYSCALL
 };
 
-inline constexpr const char* toString(Function function)
+inline constexpr const char* to_string(Function function)
 {
     switch (function) {
 #undef __ENUMERATE_SYSCALL

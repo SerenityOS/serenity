@@ -8,9 +8,9 @@
 
 namespace AK {
 
-inline void notImplemented() { ASSERT(false); }
+inline void not_implemented() { ASSERT(false); }
 
 }
 
-using AK::notImplemented;
+using AK::not_implemented;
 

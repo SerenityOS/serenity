@@ -43,9 +43,9 @@ InodeIdentifier VFS::root_inode_id() const
     return m_root_inode->identifier();
 }
 
-bool VFS::mount(RetainPtr<FS>&& fileSystem, const String& path)
+bool VFS::mount(RetainPtr<FS>&& file_system, const String& path)
 {
-    ASSERT(fileSystem);
+    ASSERT(file_system);
     int error;
     auto inode = resolve_path(path, root_inode_id(), error);
     if (!inode.is_valid()) {
@@ -53,21 +53,21 @@ bool VFS::mount(RetainPtr<FS>&& fileSystem, const String& path)
         return false;
     }
 
-    kprintf("VFS: mounting %s{%p} at %s (inode: %u)\n", fileSystem->class_name(), fileSystem.ptr(), path.characters(), inode.index());
+    kprintf("VFS: mounting %s{%p} at %s (inode: %u)\n", file_system->class_name(), file_system.ptr(), path.characters(), inode.index());
     // FIXME: check that this is not already a mount point
-    auto mount = make<Mount>(inode, move(fileSystem));
+    auto mount = make<Mount>(inode, move(file_system));
     m_mounts.append(move(mount));
     return true;
 }
 
-bool VFS::mount_root(RetainPtr<FS>&& fileSystem)
+bool VFS::mount_root(RetainPtr<FS>&& file_system)
 {
     if (m_root_inode) {
         kprintf("VFS: mount_root can't mount another root\n");
         return false;
     }
 
-    auto mount = make<Mount>(InodeIdentifier(), move(fileSystem));
+    auto mount = make<Mount>(InodeIdentifier(), move(file_system));
 
     auto root_inode_id = mount->guest().fs()->root_inode();
     auto root_inode = mount->guest().fs()->get_inode(root_inode_id);
@@ -112,18 +112,18 @@ bool VFS::is_vfs_root(InodeIdentifier inode) const
 void VFS::traverse_directory_inode(Inode& dir_inode, Function<bool(const FS::DirectoryEntry&)> callback)
 {
     dir_inode.traverse_as_directory([&] (const FS::DirectoryEntry& entry) {
-        InodeIdentifier resolvedInode;
+        InodeIdentifier resolved_inode;
         if (auto mount = find_mount_for_host(entry.inode))
-            resolvedInode = mount->guest();
+            resolved_inode = mount->guest();
         else
-            resolvedInode = entry.inode;
+            resolved_inode = entry.inode;
 
         if (dir_inode.identifier().is_root_inode() && !is_vfs_root(dir_inode.identifier()) && !strcmp(entry.name, "..")) {
             auto mount = find_mount_for_guest(entry.inode);
             ASSERT(mount);
-            resolvedInode = mount->host();
+            resolved_inode = mount->host();
         }
-        callback(FS::DirectoryEntry(entry.name, entry.name_length, resolvedInode, entry.fileType));
+        callback(FS::DirectoryEntry(entry.name, entry.name_length, resolved_inode, entry.file_type));
         return true;
     });
 }
@@ -146,10 +146,10 @@ RetainPtr<FileDescriptor> VFS::open(const String& path, int& error, int options,
         return nullptr;
     }
     auto metadata = inode->metadata();
-    if (!(options & O_DONT_OPEN_DEVICE) && metadata.isCharacterDevice()) {
-        auto it = m_character_devices.find(encodedDevice(metadata.majorDevice, metadata.minorDevice));
+    if (!(options & O_DONT_OPEN_DEVICE) && metadata.is_character_device()) {
+        auto it = m_character_devices.find(encoded_device(metadata.major_device, metadata.minor_device));
         if (it == m_character_devices.end()) {
-            kprintf("VFS::open: no such character device %u,%u\n", metadata.majorDevice, metadata.minorDevice);
+            kprintf("VFS::open: no such character device %u,%u\n", metadata.major_device, metadata.minor_device);
             return nullptr;
         }
         auto descriptor = (*it).value->open(error, options);
@@ -164,7 +164,7 @@ RetainPtr<FileDescriptor> VFS::create(const String& path, int& error, int option
     (void) options;
     error = -EWHYTHO;
 
-    if (!isSocket(mode) && !isFIFO(mode) && !isBlockDevice(mode) && !isCharacterDevice(mode)) {
+    if (!is_socket(mode) && !is_fifo(mode) && !is_block_device(mode) && !is_character_device(mode)) {
         // Turn it into a regular file. (This feels rather hackish.)
         mode |= 0100000;
     }
@@ -412,7 +412,7 @@ String VFS::absolute_path(Inode& core_inode)
         auto parent_inode = get_inode(parent);
         builder.append(parent_inode->reverse_lookup(child));
     }
-    return builder.build();
+    return builder.to_string();
 }
 
 InodeIdentifier VFS::resolve_path(const String& path, InodeIdentifier base, int& error, int options, InodeIdentifier* parent_id)
@@ -447,7 +447,7 @@ InodeIdentifier VFS::resolve_path(const String& path, InodeIdentifier base, int&
             return { };
         }
         auto metadata = crumb_inode->metadata();
-        if (!metadata.isDirectory()) {
+        if (!metadata.is_directory()) {
 #ifdef VFS_DEBUG
             kprintf("parent of <%s> not directory, it's inode %u:%u / %u:%u, mode: %u, size: %u\n", part.characters(), inode.fsid(), inode.index(), metadata.inode.fsid(), metadata.inode.index(), metadata.mode, metadata.size);
 #endif
@@ -482,13 +482,13 @@ InodeIdentifier VFS::resolve_path(const String& path, InodeIdentifier base, int&
         }
         crumb_inode = get_inode(crumb_id);
         metadata = crumb_inode->metadata();
-        if (metadata.isDirectory()) {
+        if (metadata.is_directory()) {
             if (i != parts.size() - 1) {
                 if (parent_id)
                     *parent_id = crumb_id;
             }
         }
-        if (metadata.isSymbolicLink()) {
+        if (metadata.is_symlink()) {
             if (i == parts.size() - 1) {
                 if (options & O_NOFOLLOW) {
                     error = -ELOOP;
@@ -517,17 +517,17 @@ VFS::Mount::Mount(InodeIdentifier host, RetainPtr<FS>&& guest_fs)
 
 void VFS::register_character_device(CharacterDevice& device)
 {
-    m_character_devices.set(encodedDevice(device.major(), device.minor()), &device);
+    m_character_devices.set(encoded_device(device.major(), device.minor()), &device);
 }
 
 void VFS::unregister_character_device(CharacterDevice& device)
 {
-    m_character_devices.remove(encodedDevice(device.major(), device.minor()));
+    m_character_devices.remove(encoded_device(device.major(), device.minor()));
 }
 
 CharacterDevice* VFS::get_device(unsigned major, unsigned minor)
 {
-    auto it = m_character_devices.find(encodedDevice(major, minor));
+    auto it = m_character_devices.find(encoded_device(major, minor));
     if (it == m_character_devices.end())
         return nullptr;
     return (*it).value;

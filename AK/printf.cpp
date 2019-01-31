@@ -13,7 +13,7 @@ ALWAYS_INLINE size_t strlen(const char* str)
 static constexpr const char* h = "0123456789abcdef";
 
 template<typename PutChFunc>
-ALWAYS_INLINE int printHex(PutChFunc putch, char*& bufptr, dword number, byte fields)
+ALWAYS_INLINE int print_hex(PutChFunc putch, char*& bufptr, dword number, byte fields)
 {
     int ret = 0;
     byte shr_count = fields * 4;
@@ -26,7 +26,7 @@ ALWAYS_INLINE int printHex(PutChFunc putch, char*& bufptr, dword number, byte fi
 }
 
 template<typename PutChFunc>
-ALWAYS_INLINE int printNumber(PutChFunc putch, char*& bufptr, dword number, bool leftPad, bool zeroPad, dword fieldWidth)
+ALWAYS_INLINE int print_number(PutChFunc putch, char*& bufptr, dword number, bool leftPad, bool zeroPad, dword fieldWidth)
 {
     dword divisor = 1000000000;
     char ch;
@@ -108,7 +108,7 @@ ALWAYS_INLINE int print_octal_number(PutChFunc putch, char*& bufptr, dword numbe
 }
 
 template<typename PutChFunc>
-ALWAYS_INLINE int printString(PutChFunc putch, char*& bufptr, const char* str, bool leftPad, dword fieldWidth)
+ALWAYS_INLINE int print_string(PutChFunc putch, char*& bufptr, const char* str, bool leftPad, dword fieldWidth)
 {
     size_t len = strlen(str);
     if (!fieldWidth || fieldWidth < len)
@@ -129,17 +129,17 @@ ALWAYS_INLINE int printString(PutChFunc putch, char*& bufptr, const char* str, b
 
 
 template<typename PutChFunc>
-ALWAYS_INLINE int printSignedNumber(PutChFunc putch, char*& bufptr, int number, bool leftPad, bool zeroPad, dword fieldWidth)
+ALWAYS_INLINE int print_signed_number(PutChFunc putch, char*& bufptr, int number, bool leftPad, bool zeroPad, dword fieldWidth)
 {
     if (number < 0) {
         putch(bufptr, '-');
-        return printNumber(putch, bufptr, 0 - number, leftPad, zeroPad, fieldWidth) + 1;
+        return print_number(putch, bufptr, 0 - number, leftPad, zeroPad, fieldWidth) + 1;
     }
-    return printNumber(putch, bufptr, number, leftPad, zeroPad, fieldWidth);
+    return print_number(putch, bufptr, number, leftPad, zeroPad, fieldWidth);
 }
 
 template<typename PutChFunc>
-ALWAYS_INLINE int printfInternal(PutChFunc putch, char* buffer, const char*& fmt, char*& ap)
+ALWAYS_INLINE int printf_internal(PutChFunc putch, char* buffer, const char*& fmt, char*& ap)
 {
     const char *p;
 
@@ -174,16 +174,16 @@ one_more:
                 case 's':
                     {
                         const char* sp = va_arg(ap, const char*);
-                        ret += printString(putch, bufptr, sp ? sp : "(null)", leftPad, fieldWidth);
+                        ret += print_string(putch, bufptr, sp ? sp : "(null)", leftPad, fieldWidth);
                     }
                     break;
 
                 case 'd':
-                    ret += printSignedNumber(putch, bufptr, va_arg(ap, int), leftPad, zeroPad, fieldWidth);
+                    ret += print_signed_number(putch, bufptr, va_arg(ap, int), leftPad, zeroPad, fieldWidth);
                     break;
 
                 case 'u':
-                    ret += printNumber(putch, bufptr, va_arg(ap, dword), leftPad, zeroPad, fieldWidth);
+                    ret += print_number(putch, bufptr, va_arg(ap, dword), leftPad, zeroPad, fieldWidth);
                     break;
 
                 case 'o':
@@ -191,15 +191,15 @@ one_more:
                     break;
 
                 case 'x':
-                    ret += printHex(putch, bufptr, va_arg(ap, dword), 8);
+                    ret += print_hex(putch, bufptr, va_arg(ap, dword), 8);
                     break;
 
                 case 'w':
-                    ret += printHex(putch, bufptr, va_arg(ap, int), 4);
+                    ret += print_hex(putch, bufptr, va_arg(ap, int), 4);
                     break;
 
                 case 'b':
-                    ret += printHex(putch, bufptr, va_arg(ap, int), 2);
+                    ret += print_hex(putch, bufptr, va_arg(ap, int), 2);
                     break;
 
                 case 'c':
@@ -211,7 +211,7 @@ one_more:
                     putch(bufptr, '0');
                     putch(bufptr, 'x');
                     ret += 2;
-                    ret += printHex(putch, bufptr, va_arg(ap, dword), 8);
+                    ret += print_hex(putch, bufptr, va_arg(ap, dword), 8);
                     break;
             }
         }

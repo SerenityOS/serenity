@@ -4,14 +4,14 @@
 #include "PIC.h"
 #include "Scheduler.h"
 
-#define IRQ_TIMER                0
+#define IRQ_TIMER 0
 
-extern "C" void tick_ISR();
-extern "C" void clock_handle(RegisterDump&);
+extern "C" void timer_interrupt_entry();
+extern "C" void timer_interrupt_handler(RegisterDump&);
 
 asm(
-    ".globl tick_ISR \n"
-    "tick_ISR: \n"
+    ".globl timer_interrupt_entry \n"
+    "timer_interrupt_entry: \n"
     "    pusha\n"
     "    pushw %ds\n"
     "    pushw %es\n"
@@ -27,7 +27,7 @@ asm(
     "    popw %fs\n"
     "    popw %gs\n"
     "    mov %esp, %eax\n"
-    "    call clock_handle\n"
+    "    call timer_interrupt_handler\n"
     "    popw %gs\n"
     "    popw %gs\n"
     "    popw %fs\n"
@@ -53,12 +53,11 @@ asm(
 #define MODE_RATE          0x04
 #define MODE_SQUARE_WAVE   0x06
 
-#define WRITE_word         0x30
+#define WRITE_WORD         0x30
 
-/* Miscellaneous */
 #define BASE_FREQUENCY     1193182
 
-void clock_handle(RegisterDump& regs)
+void timer_interrupt_handler(RegisterDump& regs)
 {
     IRQHandlerScope scope(IRQ_TIMER);
     Scheduler::timer_tick(regs);
@@ -70,7 +69,7 @@ void initialize()
 {
     word timer_reload;
 
-    IO::out8(PIT_CTL, TIMER0_SELECT | WRITE_word | MODE_SQUARE_WAVE);
+    IO::out8(PIT_CTL, TIMER0_SELECT | WRITE_WORD | MODE_SQUARE_WAVE);
 
     timer_reload = (BASE_FREQUENCY / TICKS_PER_SECOND);
 
@@ -79,7 +78,7 @@ void initialize()
     IO::out8(TIMER0_CTL, LSB(timer_reload));
     IO::out8(TIMER0_CTL, MSB(timer_reload));
 
-    register_interrupt_handler(IRQ_VECTOR_BASE + IRQ_TIMER, tick_ISR);
+    register_interrupt_handler(IRQ_VECTOR_BASE + IRQ_TIMER, timer_interrupt_entry);
 
     PIC::enable(IRQ_TIMER);
 }

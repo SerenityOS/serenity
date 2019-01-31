@@ -9,8 +9,8 @@ struct InodeMetadata;
 class InodeIdentifier {
 public:
     InodeIdentifier() { }
-    InodeIdentifier(dword fileSystemID, dword inode)
-        : m_fsid(fileSystemID)
+    InodeIdentifier(dword fsid, dword inode)
+        : m_fsid(fsid)
         , m_index(inode)
     {
     }

@@ -37,12 +37,12 @@ public:
     bool is_readonly() const { return m_readonly; }
 
     struct DirectoryEntry {
-        DirectoryEntry(const char* name, InodeIdentifier, byte fileType);
-        DirectoryEntry(const char* name, size_t name_length, InodeIdentifier, byte fileType);
+        DirectoryEntry(const char* name, InodeIdentifier, byte file_type);
+        DirectoryEntry(const char* name, size_t name_length, InodeIdentifier, byte file_type);
         char name[256];
         size_t name_length { 0 };
         InodeIdentifier inode;
-        byte fileType { 0 };
+        byte file_type { 0 };
     };
 
     virtual RetainPtr<Inode> create_inode(InodeIdentifier parentInode, const String& name, mode_t, unsigned size, int& error) = 0;
@@ -71,9 +71,9 @@ public:
     unsigned index() const { return m_index; }
 
     size_t size() const { return metadata().size; }
-    bool is_symlink() const { return metadata().isSymbolicLink(); }
-    bool is_directory() const { return metadata().isDirectory(); }
-    bool is_character_device() const { return metadata().isCharacterDevice(); }
+    bool is_symlink() const { return metadata().is_symlink(); }
+    bool is_directory() const { return metadata().is_directory(); }
+    bool is_character_device() const { return metadata().is_character_device(); }
     mode_t mode() const { return metadata().mode; }
 
     InodeIdentifier identifier() const { return { fsid(), index() }; }

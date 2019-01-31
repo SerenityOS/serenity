@@ -47,7 +47,7 @@ bool FileBackedDiskDevice::write_block(unsigned index, const byte* data)
 bool FileBackedDiskDevice::read_internal(DiskOffset offset, unsigned length, byte* out) const
 {
 #ifndef IGNORE_FILE_LENGTH
-    if (offset + length >= m_fileLength)
+    if (offset + length >= m_file_length)
         return false;
 #endif
 #ifdef FBBD_DEBUG
@@ -62,7 +62,7 @@ bool FileBackedDiskDevice::read_internal(DiskOffset offset, unsigned length, byt
 bool FileBackedDiskDevice::write_internal(DiskOffset offset, unsigned length, const byte* data)
 {
 #ifndef IGNORE_FILE_LENGTH
-    if (offset + length >= m_fileLength)
+    if (offset + length >= m_file_length)
         return false;
 #endif
 #ifdef FBBD_DEBUG

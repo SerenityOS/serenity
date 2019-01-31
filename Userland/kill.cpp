@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <AK/AKString.h>
 
-static unsigned parseUInt(const String& str, bool& ok)
+static unsigned parse_uint(const String& str, bool& ok)
 {
     if (str.is_empty()) {
         ok = false;
@@ -40,13 +40,13 @@ int main(int argc, char** argv)
         pid_argi = 2;
         if (argv[1][0] != '-')
             print_usage_and_exit();
-        signum = parseUInt(&argv[1][1], ok);
+        signum = parse_uint(&argv[1][1], ok);
         if (!ok) {
             printf("'%s' is not a valid signal number\n", &argv[1][1]);
             return 2;
         }
     }
-    unsigned pid = parseUInt(argv[pid_argi], ok);
+    unsigned pid = parse_uint(argv[pid_argi], ok);
     if (!ok) {
         printf("'%s' is not a valid PID\n", argv[pid_argi]);
         return 3;

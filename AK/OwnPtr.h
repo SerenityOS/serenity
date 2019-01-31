@@ -11,8 +11,8 @@ class OwnPtr {
 public:
     OwnPtr() { }
     explicit OwnPtr(T* ptr) : m_ptr(ptr) { }
-    OwnPtr(OwnPtr&& other) : m_ptr(other.leakPtr()) { }
-    template<typename U> OwnPtr(OwnPtr<U>&& other) : m_ptr(static_cast<T*>(other.leakPtr())) { }
+    OwnPtr(OwnPtr&& other) : m_ptr(other.leak_ptr()) { }
+    template<typename U> OwnPtr(OwnPtr<U>&& other) : m_ptr(static_cast<T*>(other.leak_ptr())) { }
     OwnPtr(std::nullptr_t) { };
     ~OwnPtr()
     {
@@ -29,7 +29,7 @@ public:
     {
         if (this != &other) {
             delete m_ptr;
-            m_ptr = other.leakPtr();
+            m_ptr = other.leak_ptr();
         }
         return *this;
     }
@@ -39,7 +39,7 @@ public:
     {
         if (this != static_cast<void*>(&other)) {
             delete m_ptr;
-            m_ptr = other.leakPtr();
+            m_ptr = other.leak_ptr();
         }
         return *this;
     }
@@ -69,7 +69,7 @@ public:
     typedef T* OwnPtr::*UnspecifiedBoolType;
     operator UnspecifiedBoolType() const { return m_ptr ? &OwnPtr::m_ptr : nullptr; }
 
-    T* leakPtr()
+    T* leak_ptr()
     {
         T* leakedPtr = m_ptr;
         m_ptr = nullptr;

@@ -20,12 +20,12 @@ public:
     GObject* parent() { return m_parent; }
     const GObject* parent() const { return m_parent; }
 
-    void startTimer(int ms);
-    void stopTimer();
-    bool hasTimer() const { return m_timerID; }
+    void start_timer(int ms);
+    void stop_timer();
+    bool has_timer() const { return m_timer_id; }
 
-    void addChild(GObject&);
-    void removeChild(GObject&);
+    void add_child(GObject&);
+    void remove_child(GObject&);
 
     void delete_later();
 
@@ -34,7 +34,7 @@ private:
 
     GObject* m_parent { nullptr };
 
-    int m_timerID { 0 };
+    int m_timer_id { 0 };
 
     Vector<GObject*> m_children;
 };

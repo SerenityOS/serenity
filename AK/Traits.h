@@ -12,13 +12,13 @@ struct Traits
 
 template<>
 struct Traits<int> {
-    static unsigned hash(int i) { return intHash(i); }
+    static unsigned hash(int i) { return int_hash(i); }
     static void dump(int i) { kprintf("%d", i); }
 };
 
 template<>
 struct Traits<unsigned> {
-    static unsigned hash(unsigned u) { return intHash(u); }
+    static unsigned hash(unsigned u) { return int_hash(u); }
     static void dump(unsigned u) { kprintf("%u", u); }
 };
 
@@ -26,7 +26,7 @@ template<typename T>
 struct Traits<T*> {
     static unsigned hash(const T* p)
     {
-        return intHash((dword)p);
+        return int_hash((dword)p);
     }
     static void dump(const T* p) { kprintf("%p", p); }
 };

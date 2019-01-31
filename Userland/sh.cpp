@@ -184,12 +184,12 @@ static int sh_cd(int argc, char** argv)
     else
         sprintf(pathbuf, "%s/%s", g->cwd.characters(), argv[1]);
 
-    FileSystemPath canonicalPath(pathbuf);
-    if (!canonicalPath.is_valid()) {
+    FileSystemPath canonical_path(pathbuf);
+    if (!canonical_path.is_valid()) {
         printf("FileSystemPath failed to canonicalize '%s'\n", pathbuf);
         return 1;
     }
-    const char* path = canonicalPath.string().characters();
+    const char* path = canonical_path.string().characters();
 
     struct stat st;
     int rc = stat(path, &st);
@@ -206,7 +206,7 @@ static int sh_cd(int argc, char** argv)
         printf("chdir(%s) failed: %s\n", path, strerror(errno));
         return 1;
     }
-    g->cwd = canonicalPath.string();
+    g->cwd = canonical_path.string();
     return 0;
 }
 

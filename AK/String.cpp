@@ -42,10 +42,10 @@ String String::substring(size_t start, size_t length) const
     ASSERT(start + length <= m_impl->length());
     // FIXME: This needs some input bounds checking.
     char* buffer;
-    auto newImpl = StringImpl::create_uninitialized(length, buffer);
+    auto new_impl = StringImpl::create_uninitialized(length, buffer);
     memcpy(buffer, characters() + start, length);
     buffer[length] = '\0';
-    return newImpl;
+    return new_impl;
 }
 
 Vector<String> String::split(const char separator) const
@@ -79,7 +79,7 @@ ByteBuffer String::to_byte_buffer() const
     return ByteBuffer::copy(reinterpret_cast<const byte*>(characters()), length());
 }
 
-unsigned String::toUInt(bool& ok) const
+unsigned String::to_uint(bool& ok) const
 {
     unsigned value = 0;
     for (size_t i = 0; i < length(); ++i) {
@@ -101,7 +101,7 @@ String String::format(const char* fmt, ...)
     va_start(ap, fmt);
     builder.appendvf(fmt, ap);
     va_end(ap);
-    return builder.build();
+    return builder.to_string();
 }
 
 }

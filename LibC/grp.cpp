@@ -98,7 +98,7 @@ next_entry:
     auto& e_gid_string = parts[2];
     auto& e_members_string = parts[3];
     bool ok;
-    gid_t e_gid = e_gid_string.toUInt(ok);
+    gid_t e_gid = e_gid_string.to_uint(ok);
     if (!ok) {
         fprintf(stderr, "getgrent(): Malformed GID on line %u\n", __grdb_line_number);
         goto next_entry;

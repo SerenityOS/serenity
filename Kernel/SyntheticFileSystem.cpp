@@ -202,18 +202,18 @@ ssize_t SynthFSInode::read_bytes(off_t offset, size_t count, byte* buffer, FileD
     ASSERT(offset >= 0);
     ASSERT(buffer);
 
-    ByteBuffer generatedData;
+    ByteBuffer generated_data;
     if (m_generator) {
         if (!descriptor) {
-            generatedData = m_generator(const_cast<SynthFSInode&>(*this));
+            generated_data = m_generator(const_cast<SynthFSInode&>(*this));
         } else {
             if (!descriptor->generator_cache())
                 descriptor->generator_cache() = m_generator(const_cast<SynthFSInode&>(*this));
-            generatedData = descriptor->generator_cache();
+            generated_data = descriptor->generator_cache();
         }
     }
 
-    auto* data = generatedData ? &generatedData : &m_data;
+    auto* data = generated_data ? &generated_data : &m_data;
     ssize_t nread = min(static_cast<off_t>(data->size() - offset), static_cast<off_t>(count));
     memcpy(buffer, data->pointer() + offset, nread);
     if (nread == 0 && descriptor && descriptor->generator_cache())
@@ -228,14 +228,14 @@ bool SynthFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry&
     kprintf("SynthFS: traverse_as_directory %u\n", index());
 #endif
 
-    if (!m_metadata.isDirectory())
+    if (!m_metadata.is_directory())
         return false;
 
     callback({ ".", 1, m_metadata.inode, 2 });
     callback({ "..", 2, m_parent, 2 });
 
     for (auto& child : m_children)
-        callback({ child->m_name.characters(), child->m_name.length(), child->m_metadata.inode, child->m_metadata.isDirectory() ? (byte)2 : (byte)1 });
+        callback({ child->m_name.characters(), child->m_name.length(), child->m_metadata.inode, child->m_metadata.is_directory() ? (byte)2 : (byte)1 });
     return true;
 }
 

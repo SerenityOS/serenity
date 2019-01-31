@@ -94,21 +94,21 @@ ByteBuffer procfs$pid_vmo(Process& process)
 ByteBuffer procfs$pid_stack(Process& process)
 {
     ProcessInspectionHandle handle(process);
-    ProcessPagingScope pagingScope(process);
+    ProcessPagingScope paging_scope(process);
     struct RecognizedSymbol {
         dword address;
         const KSym* ksym;
     };
-    Vector<RecognizedSymbol> recognizedSymbols;
-    if (auto* eipKsym = ksymbolicate(process.tss().eip))
-        recognizedSymbols.append({ process.tss().eip, eipKsym });
-    for (dword* stackPtr = (dword*)process.framePtr(); process.validate_read_from_kernel(LinearAddress((dword)stackPtr)); stackPtr = (dword*)*stackPtr) {
-        dword retaddr = stackPtr[1];
+    Vector<RecognizedSymbol> recognized_symbols;
+    if (auto* eip_ksym = ksymbolicate(process.tss().eip))
+        recognized_symbols.append({ process.tss().eip, eip_ksym });
+    for (dword* stack_ptr = (dword*)process.frame_ptr(); process.validate_read_from_kernel(LinearAddress((dword)stack_ptr)); stack_ptr = (dword*)*stack_ptr) {
+        dword retaddr = stack_ptr[1];
         if (auto* ksym = ksymbolicate(retaddr))
-            recognizedSymbols.append({ retaddr, ksym });
+            recognized_symbols.append({ retaddr, ksym });
     }
     StringBuilder builder;
-    for (auto& symbol : recognizedSymbols) {
+    for (auto& symbol : recognized_symbols) {
         unsigned offset = symbol.address - symbol.ksym->address;
         builder.appendf("%p  %s +%u\n", symbol.address, symbol.ksym->name, offset);
     }
@@ -306,7 +306,7 @@ ByteBuffer procfs$kmalloc(SynthFSInode&)
 ByteBuffer procfs$summary(SynthFSInode&)
 {
     InterruptDisabler disabler;
-    auto processes = Process::allProcesses();
+    auto processes = Process::all_processes();
     StringBuilder builder;
     builder.appendf("PID TPG PGP SID  OWNER  STATE      PPID NSCHED     FDS  TTY  NAME\n");
     for (auto* process : processes) {
@@ -316,9 +316,9 @@ ByteBuffer procfs$summary(SynthFSInode&)
             process->pgid(),
             process->sid(),
             process->uid(),
-            toString(process->state()),
+            to_string(process->state()),
             process->ppid(),
-            process->timesScheduled(),
+            process->times_scheduled(),
             process->number_of_open_file_descriptors(),
             process->tty() ? strrchr(process->tty()->tty_name().characters(), '/') + 1 : "n/a",
             process->name().characters());

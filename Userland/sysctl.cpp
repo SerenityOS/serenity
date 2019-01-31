@@ -84,7 +84,7 @@ static String read_var(const String& name)
     StringBuilder builder;
     builder.append("/proc/sys/");
     builder.append(name);
-    auto path = builder.build();
+    auto path = builder.to_string();
     int fd = open(path.characters(), O_RDONLY);
     if (fd < 0) {
         perror("open");
@@ -105,7 +105,7 @@ static void write_var(const String& name, const String& value)
     StringBuilder builder;
     builder.append("/proc/sys/");
     builder.append(name);
-    auto path = builder.build();
+    auto path = builder.to_string();
     int fd = open(path.characters(), O_WRONLY);
     if (fd < 0) {
         perror("open");

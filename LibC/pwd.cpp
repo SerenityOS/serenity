@@ -102,12 +102,12 @@ next_entry:
     auto& e_dir = parts[5];
     auto& e_shell = parts[6];
     bool ok;
-    uid_t e_uid = e_uid_string.toUInt(ok);
+    uid_t e_uid = e_uid_string.to_uint(ok);
     if (!ok) {
         fprintf(stderr, "getpwent(): Malformed UID on line %u\n", __pwdb_line_number);
         goto next_entry;
     }
-    gid_t e_gid = e_gid_string.toUInt(ok);
+    gid_t e_gid = e_gid_string.to_uint(ok);
     if (!ok) {
         fprintf(stderr, "getpwent(): Malformed GID on line %u\n", __pwdb_line_number);
         goto next_entry;

@@ -13,7 +13,7 @@
 #include "FileSystemPath.h"
 #include "Lock.h"
 
-static void testWeakPtr();
+static void test_weak_ptr();
 
 void log_locked() { }
 void log_unlocked() { }
@@ -223,7 +223,7 @@ int main(int c, char** v)
     }
 
     {
-        auto printInts = [] (const Vector<int>& v) {
+        auto print_ints = [] (const Vector<int>& v) {
             printf("Vector {\n    size: %zu\n    capacity: %zu\n    elements: ", v.size(), v.capacity());
             for (auto i : v)
                 printf("%d ", i);
@@ -235,23 +235,23 @@ int main(int c, char** v)
         v.append(1);
         v.append(2);
         v.append(3);
-        printInts(v);
+        print_ints(v);
 
         v.remove(1);
-        printInts(v);
+        print_ints(v);
 
         v.remove(0);
-        printInts(v);
+        print_ints(v);
 
         v.remove(0);
-        printInts(v);
+        print_ints(v);
 
         v.remove(0);
-        printInts(v);
+        print_ints(v);
     }
 
     {
-        auto printInts = [] (const HashTable<int>& h) {
+        auto print_ints = [] (const HashTable<int>& h) {
             printf("HashTable {\n    size: %u\n    capacity: %u\n    elements: ", h.size(), h.capacity());
             for (auto i : h)
                 printf("%d ", i);
@@ -268,17 +268,17 @@ int main(int c, char** v)
 
         h.dump();
 
-        printInts(h);
+        print_ints(h);
 
         h.remove(30);
-        printInts(h);
+        print_ints(h);
 
         h.set(30);
         h.remove(30);
-        printInts(h);
+        print_ints(h);
     }
 
-    testWeakPtr();
+    test_weak_ptr();
 
     return 0;
 }
@@ -289,16 +289,16 @@ public:
     ~TestWeakable() { }
 };
 
-void testWeakPtr()
+void test_weak_ptr()
 {
     auto* weakable = new TestWeakable;
 
-    auto weakPtr = weakable->makeWeakPtr();
-    ASSERT(weakPtr);
-    ASSERT(weakPtr.ptr() == weakable);
+    auto weak_ptr = weakable->make_weak_ptr();
+    ASSERT(weak_ptr);
+    ASSERT(weak_ptr.ptr() == weakable);
 
     delete weakable;
 
-    ASSERT(!weakPtr);
-    ASSERT(weakPtr.ptr() == nullptr);
+    ASSERT(!weak_ptr);
+    ASSERT(weak_ptr.ptr() == nullptr);
 }

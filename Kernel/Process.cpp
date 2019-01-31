@@ -27,22 +27,22 @@
 #define SIGNAL_DEBUG
 #define MAX_PROCESS_GIDS 32
 
-static const dword defaultStackSize = 16384;
+static const dword default_stack_size = 16384;
 
 static pid_t next_pid;
 InlineLinkedList<Process>* g_processes;
 static String* s_hostname;
 
-static String& hostnameStorage(InterruptDisabler&)
+static String& hostname_storage(InterruptDisabler&)
 {
     ASSERT(s_hostname);
     return *s_hostname;
 }
 
-static String getHostname()
+static String get_hostname()
 {
     InterruptDisabler disabler;
-    return hostnameStorage(disabler).isolated_copy();
+    return hostname_storage(disabler).isolated_copy();
 }
 
 CoolGlobals* g_cool_globals;
@@ -59,7 +59,7 @@ void Process::initialize()
     initialize_gui_statics();
 }
 
-Vector<Process*> Process::allProcesses()
+Vector<Process*> Process::all_processes()
 {
     InterruptDisabler disabler;
     Vector<Process*> processes;
@@ -74,8 +74,8 @@ Region* Process::allocate_region(LinearAddress laddr, size_t size, String&& name
     size = PAGE_ROUND_UP(size);
     // FIXME: This needs sanity checks. What if this overlaps existing regions?
     if (laddr.is_null()) {
-        laddr = m_nextRegion;
-        m_nextRegion = m_nextRegion.offset(size).offset(PAGE_SIZE);
+        laddr = m_next_region;
+        m_next_region = m_next_region.offset(size).offset(PAGE_SIZE);
     }
     laddr.mask(0xfffff000);
     m_regions.append(adopt(*new Region(laddr, size, move(name), is_readable, is_writable)));
@@ -90,8 +90,8 @@ Region* Process::allocate_file_backed_region(LinearAddress laddr, size_t size, R
     size = PAGE_ROUND_UP(size);
     // FIXME: This needs sanity checks. What if this overlaps existing regions?
     if (laddr.is_null()) {
-        laddr = m_nextRegion;
-        m_nextRegion = m_nextRegion.offset(size).offset(PAGE_SIZE);
+        laddr = m_next_region;
+        m_next_region = m_next_region.offset(size).offset(PAGE_SIZE);
     }
     laddr.mask(0xfffff000);
     m_regions.append(adopt(*new Region(laddr, size, move(inode), move(name), is_readable, is_writable)));
@@ -105,12 +105,12 @@ Region* Process::allocate_region_with_vmo(LinearAddress laddr, size_t size, Reta
     size = PAGE_ROUND_UP(size);
     // FIXME: This needs sanity checks. What if this overlaps existing regions?
     if (laddr.is_null()) {
-        laddr = m_nextRegion;
-        m_nextRegion = m_nextRegion.offset(size).offset(PAGE_SIZE);
+        laddr = m_next_region;
+        m_next_region = m_next_region.offset(size).offset(PAGE_SIZE);
     }
     laddr.mask(0xfffff000);
     offset_in_vmo &= PAGE_MASK;
-    size = ceilDiv(size, PAGE_SIZE) * PAGE_SIZE;
+    size = ceil_div(size, PAGE_SIZE) * PAGE_SIZE;
     m_regions.append(adopt(*new Region(laddr, size, move(vmo), offset_in_vmo, move(name), is_readable, is_writable)));
     MM.map_region(*this, *m_regions.last());
     return m_regions.last().ptr();
@@ -129,7 +129,7 @@ bool Process::deallocate_region(Region& region)
     return false;
 }
 
-Region* Process::regionFromRange(LinearAddress laddr, size_t size)
+Region* Process::region_from_range(LinearAddress laddr, size_t size)
 {
     for (auto& region : m_regions) {
         if (region->laddr() == laddr && region->size() == size)
@@ -142,7 +142,7 @@ int Process::sys$set_mmap_name(void* addr, size_t size, const char* name)
 {
     if (!validate_read_str(name))
         return -EFAULT;
-    auto* region = regionFromRange(LinearAddress((dword)addr), size);
+    auto* region = region_from_range(LinearAddress((dword)addr), size);
     if (!region)
         return -EINVAL;
     region->set_name(String(name));
@@ -193,7 +193,7 @@ void* Process::sys$mmap(const Syscall::SC_mmap_params* params)
 int Process::sys$munmap(void* addr, size_t size)
 {
     InterruptDisabler disabler;
-    auto* region = regionFromRange(LinearAddress((dword)addr), size);
+    auto* region = region_from_range(LinearAddress((dword)addr), size);
     if (!region)
         return -1;
     if (!deallocate_region(*region))
@@ -205,7 +205,7 @@ int Process::sys$gethostname(char* buffer, size_t size)
 {
     if (!validate_write(buffer, size))
         return -EFAULT;
-    auto hostname = getHostname();
+    auto hostname = get_hostname();
     if (size < (hostname.length() + 1))
         return -ENAMETOOLONG;
     memcpy(buffer, hostname.characters(), size);
@@ -214,7 +214,7 @@ int Process::sys$gethostname(char* buffer, size_t size)
 
 Process* Process::fork(RegisterDump& regs)
 {
-    auto* child = new Process(String(m_name), m_uid, m_gid, m_pid, m_ring, m_cwd.copyRef(), m_executable.copyRef(), m_tty, this);
+    auto* child = new Process(String(m_name), m_uid, m_gid, m_pid, m_ring, m_cwd.copy_ref(), m_executable.copy_ref(), m_tty, this);
     if (!child)
         return nullptr;
 
@@ -235,7 +235,7 @@ Process* Process::fork(RegisterDump& regs)
         child->m_regions.append(move(cloned_region));
         MM.map_region(*child, *child->m_regions.last());
         if (region.ptr() == m_display_framebuffer_region.ptr())
-            child->m_display_framebuffer_region = child->m_regions.last().copyRef();
+            child->m_display_framebuffer_region = child->m_regions.last().copy_ref();
     }
 
     for (auto gid : m_gids)
@@ -298,7 +298,7 @@ int Process::do_exec(const String& path, Vector<String>&& arguments, Vector<Stri
         return error;
     }
 
-    if (!descriptor->metadata().mayExecute(m_euid, m_gids))
+    if (!descriptor->metadata().may_execute(m_euid, m_gids))
         return -EACCES;
 
     if (!descriptor->metadata().size) {
@@ -317,7 +317,7 @@ int Process::do_exec(const String& path, Vector<String>&& arguments, Vector<Stri
 
     auto vmo = VMObject::create_file_backed(descriptor->inode(), descriptor->metadata().size);
     vmo->set_name(descriptor->absolute_path());
-    auto* region = allocate_region_with_vmo(LinearAddress(), descriptor->metadata().size, vmo.copyRef(), 0, "helper", true, false);
+    auto* region = allocate_region_with_vmo(LinearAddress(), descriptor->metadata().size, vmo.copy_ref(), 0, "helper", true, false);
 
     // FIXME: Should we consider doing on-demand paging here? Is it actually useful?
     bool success = region->page_in();
@@ -332,7 +332,7 @@ int Process::do_exec(const String& path, Vector<String>&& arguments, Vector<Stri
             ASSERT(size);
             ASSERT(alignment == PAGE_SIZE);
             size = ((size / 4096) + 1) * 4096; // FIXME: Use ceil_div?
-            (void) allocate_region_with_vmo(laddr, size, vmo.copyRef(), offset_in_image, String(name), is_readable, is_writable);
+            (void) allocate_region_with_vmo(laddr, size, vmo.copy_ref(), offset_in_image, String(name), is_readable, is_writable);
             return laddr.as_ptr();
         };
         loader.alloc_section_hook = [&] (LinearAddress laddr, size_t size, size_t alignment, bool is_readable, bool is_writable, const String& name) {
@@ -400,10 +400,10 @@ int Process::do_exec(const String& path, Vector<String>&& arguments, Vector<Stri
     m_tss.gs = 0x23;
     m_tss.ss = 0x23;
     m_tss.cr3 = page_directory().cr3();
-    m_stack_region = allocate_region(LinearAddress(), defaultStackSize, "stack");
+    m_stack_region = allocate_region(LinearAddress(), default_stack_size, "stack");
     ASSERT(m_stack_region);
-    m_stackTop3 = m_stack_region->laddr().offset(defaultStackSize).get();
-    m_tss.esp = m_stackTop3;
+    m_stack_top3 = m_stack_region->laddr().offset(default_stack_size).get();
+    m_tss.esp = m_stack_top3;
     m_tss.ss0 = 0x10;
     m_tss.esp0 = old_esp0;
     m_tss.ss2 = m_pid;
@@ -490,7 +490,7 @@ Process* Process::create_user_process(const String& path, uid_t uid, gid_t gid, 
     {
         InterruptDisabler disabler;
         if (auto* parent = Process::from_pid(parent_pid))
-            cwd = parent->m_cwd.copyRef();
+            cwd = parent->m_cwd.copy_ref();
     }
 
     if (!cwd)
@@ -634,9 +634,9 @@ Process::Process(String&& name, uid_t uid, gid_t gid, pid_t ppid, RingLevel ring
     }
 
     if (fork_parent)
-        m_nextRegion = fork_parent->m_nextRegion;
+        m_next_region = fork_parent->m_next_region;
     else
-        m_nextRegion = LinearAddress(0x10000000);
+        m_next_region = LinearAddress(0x10000000);
 
     if (fork_parent) {
         memcpy(&m_tss, &fork_parent->m_tss, sizeof(m_tss));
@@ -647,7 +647,7 @@ Process::Process(String&& name, uid_t uid, gid_t gid, pid_t ppid, RingLevel ring
         m_tss.eflags = 0x0202;
         word cs, ds, ss;
 
-        if (isRing0()) {
+        if (is_ring0()) {
             cs = 0x08;
             ds = 0x10;
             ss = 0x10;
@@ -667,34 +667,34 @@ Process::Process(String&& name, uid_t uid, gid_t gid, pid_t ppid, RingLevel ring
 
     m_tss.cr3 = page_directory().cr3();
 
-    if (isRing0()) {
+    if (is_ring0()) {
         // FIXME: This memory is leaked.
         // But uh, there's also no kernel process termination, so I guess it's not technically leaked...
-        dword stackBottom = (dword)kmalloc_eternal(defaultStackSize);
-        m_stackTop0 = (stackBottom + defaultStackSize) & 0xffffff8;
-        m_tss.esp = m_stackTop0;
+        dword stack_bottom = (dword)kmalloc_eternal(default_stack_size);
+        m_stack_top0 = (stack_bottom + default_stack_size) & 0xffffff8;
+        m_tss.esp = m_stack_top0;
     } else {
         if (fork_parent) {
-            m_stackTop3 = fork_parent->m_stackTop3;
+            m_stack_top3 = fork_parent->m_stack_top3;
         } else {
-            auto* region = allocate_region(LinearAddress(), defaultStackSize, "stack");
+            auto* region = allocate_region(LinearAddress(), default_stack_size, "stack");
             ASSERT(region);
-            m_stackTop3 = region->laddr().offset(defaultStackSize).get();
-            m_tss.esp = m_stackTop3;
+            m_stack_top3 = region->laddr().offset(default_stack_size).get();
+            m_tss.esp = m_stack_top3;
         }
     }
 
-    if (isRing3()) {
+    if (is_ring3()) {
         // Ring3 processes need a separate stack for Ring0.
-        m_kernelStack = kmalloc(defaultStackSize);
-        m_stackTop0 = ((dword)m_kernelStack + defaultStackSize) & 0xffffff8;
+        m_kernel_stack = kmalloc(default_stack_size);
+        m_stack_top0 = ((dword)m_kernel_stack + default_stack_size) & 0xffffff8;
         m_tss.ss0 = 0x10;
-        m_tss.esp0 = m_stackTop0;
+        m_tss.esp0 = m_stack_top0;
     }
 
     // HACK: Ring2 SS in the TSS is the current PID.
     m_tss.ss2 = m_pid;
-    m_farPtr.offset = 0x98765432;
+    m_far_ptr.offset = 0x98765432;
 }
 
 Process::~Process()
@@ -709,13 +709,13 @@ Process::~Process()
     if (selector())
         gdt_free_entry(selector());
 
-    if (m_kernelStack) {
-        kfree(m_kernelStack);
-        m_kernelStack = nullptr;
+    if (m_kernel_stack) {
+        kfree(m_kernel_stack);
+        m_kernel_stack = nullptr;
     }
 }
 
-void Process::dumpRegions()
+void Process::dump_regions()
 {
     kprintf("Process %s(%u) regions:\n", name().characters(), pid());
     kprintf("BEGIN       END         SIZE        NAME\n");
@@ -818,7 +818,7 @@ bool Process::dispatch_signal(byte signal)
 
     bool interrupting_in_kernel = (ret_cs & 3) == 0;
     if (interrupting_in_kernel) {
-        dbgprintf("dispatch_signal to %s(%u) in state=%s with return to %w:%x\n", name().characters(), pid(), toString(state()), ret_cs, ret_eip);
+        dbgprintf("dispatch_signal to %s(%u) in state=%s with return to %w:%x\n", name().characters(), pid(), to_string(state()), ret_cs, ret_eip);
         ASSERT(is_blocked());
         m_tss_to_resume_kernel = m_tss;
 #ifdef SIGNAL_DEBUG
@@ -826,19 +826,19 @@ bool Process::dispatch_signal(byte signal)
 #endif
     }
 
-    ProcessPagingScope pagingScope(*this);
+    ProcessPagingScope paging_scope(*this);
 
     if (interrupting_in_kernel) {
         if (!m_signal_stack_user_region) {
-            m_signal_stack_user_region = allocate_region(LinearAddress(), defaultStackSize, "signal stack (user)");
+            m_signal_stack_user_region = allocate_region(LinearAddress(), default_stack_size, "signal stack (user)");
             ASSERT(m_signal_stack_user_region);
-            m_signal_stack_kernel_region = allocate_region(LinearAddress(), defaultStackSize, "signal stack (kernel)");
+            m_signal_stack_kernel_region = allocate_region(LinearAddress(), default_stack_size, "signal stack (kernel)");
             ASSERT(m_signal_stack_user_region);
         }
         m_tss.ss = 0x23;
-        m_tss.esp = m_signal_stack_user_region->laddr().offset(defaultStackSize).get() & 0xfffffff8;
+        m_tss.esp = m_signal_stack_user_region->laddr().offset(default_stack_size).get() & 0xfffffff8;
         m_tss.ss0 = 0x10;
-        m_tss.esp0 = m_signal_stack_kernel_region->laddr().offset(defaultStackSize).get() & 0xfffffff8;
+        m_tss.esp0 = m_signal_stack_kernel_region->laddr().offset(default_stack_size).get() & 0xfffffff8;
         push_value_on_stack(ret_eflags);
         push_value_on_stack(ret_cs);
         push_value_on_stack(ret_eip);
@@ -903,7 +903,7 @@ bool Process::dispatch_signal(byte signal)
     set_state(Skip1SchedulerPass);
 
 #ifdef SIGNAL_DEBUG
-    dbgprintf("signal: Okay, %s(%u) {%s} has been primed with signal handler %w:%x\n", name().characters(), pid(), toString(state()), m_tss.cs, m_tss.eip);
+    dbgprintf("signal: Okay, %s(%u) {%s} has been primed with signal handler %w:%x\n", name().characters(), pid(), to_string(state()), m_tss.cs, m_tss.eip);
 #endif
     return true;
 }
@@ -935,7 +935,7 @@ void Process::crash()
     ASSERT_INTERRUPTS_DISABLED();
     ASSERT(state() != Dead);
     m_termination_signal = SIGSEGV;
-    dumpRegions();
+    dump_regions();
     die();
     Scheduler::pick_next_and_switch_now();
     ASSERT_NOT_REACHED();
@@ -996,10 +996,10 @@ int Process::sys$ttyname_r(int fd, char* buffer, size_t size)
         return -EBADF;
     if (!descriptor->is_tty())
         return -ENOTTY;
-    auto ttyName = descriptor->tty()->tty_name();
-    if (size < ttyName.length() + 1)
+    auto tty_name = descriptor->tty()->tty_name();
+    if (size < tty_name.length() + 1)
         return -ERANGE;
-    strcpy(buffer, ttyName.characters());
+    strcpy(buffer, tty_name.characters());
     return 0;
 }
 
@@ -1246,7 +1246,7 @@ int Process::sys$readlink(const char* path, char* buffer, size_t size)
     if (!descriptor)
         return error;
 
-    if (!descriptor->metadata().isSymbolicLink())
+    if (!descriptor->metadata().is_symlink())
         return -EINVAL;
 
     auto contents = descriptor->read_entire_file(*this);
@@ -1389,7 +1389,7 @@ int Process::sys$uname(utsname* buf)
     strcpy(buf->release, "1.0-dev");
     strcpy(buf->version, "FIXME");
     strcpy(buf->machine, "i386");
-    strcpy(buf->nodename, getHostname().characters());
+    strcpy(buf->nodename, get_hostname().characters());
     return 0;
 }
 
@@ -1427,9 +1427,9 @@ int Process::sys$sleep(unsigned seconds)
     if (!seconds)
         return 0;
     sleep(seconds * TICKS_PER_SECOND);
-    if (m_wakeupTime > system.uptime) {
+    if (m_wakeup_time > system.uptime) {
         ASSERT(m_was_interrupted_while_blocked);
-        dword ticks_left_until_original_wakeup_time = m_wakeupTime - system.uptime;
+        dword ticks_left_until_original_wakeup_time = m_wakeup_time - system.uptime;
         return ticks_left_until_original_wakeup_time / TICKS_PER_SECOND;
     }
     return 0;
@@ -1496,7 +1496,7 @@ int Process::reap(Process& process)
         }
     }
 
-    dbgprintf("reap: %s(%u) {%s}\n", process.name().characters(), process.pid(), toString(process.state()));
+    dbgprintf("reap: %s(%u) {%s}\n", process.name().characters(), process.pid(), to_string(process.state()));
     ASSERT(process.state() == Dead);
     g_processes->remove(&process);
     delete &process;
@@ -1576,7 +1576,7 @@ void Process::unblock()
 void Process::block(Process::State new_state)
 {
     if (state() != Process::Running) {
-        kprintf("Process::block: %s(%u) block(%u/%s) with state=%u/%s\n", name().characters(), pid(), new_state, toString(new_state), state(), toString(state()));
+        kprintf("Process::block: %s(%u) block(%u/%s) with state=%u/%s\n", name().characters(), pid(), new_state, to_string(new_state), state(), to_string(state()));
     }
     ASSERT(state() == Process::Running);
     system.nblocked++;
@@ -1593,7 +1593,7 @@ void block(Process::State state)
 void sleep(dword ticks)
 {
     ASSERT(current->state() == Process::Running);
-    current->setWakeupTime(system.uptime + ticks);
+    current->set_wakeup_time(system.uptime + ticks);
     current->block(Process::BlockedSleep);
     sched_yield();
 }
@@ -1619,7 +1619,7 @@ bool Process::validate_read_from_kernel(LinearAddress laddr) const
 
 bool Process::validate_read(const void* address, size_t size) const
 {
-    if (isRing0()) {
+    if (is_ring0()) {
         if (is_inside_kernel_code(LinearAddress((dword)address)))
             return true;
         if (is_kmalloc_address(address))
@@ -1639,7 +1639,7 @@ bool Process::validate_read(const void* address, size_t size) const
 
 bool Process::validate_write(void* address, size_t size) const
 {
-    if (isRing0()) {
+    if (is_ring0()) {
         if (is_kmalloc_address(address))
             return true;
     }

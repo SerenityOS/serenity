@@ -40,7 +40,7 @@ bool FileSystemPath::canonicalize(bool resolve_symbolic_links)
         builder.append('/');
         builder.append(cpart);
     }
-    m_string = builder.build();
+    m_string = builder.to_string();
     return true;
 }
 

@@ -15,7 +15,7 @@ int kprintf(const char* fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
-    int ret = printfInternal(console_putch, nullptr, fmt, ap);
+    int ret = printf_internal(console_putch, nullptr, fmt, ap);
     va_end(ap);
     return ret;
 }
@@ -29,7 +29,7 @@ int ksprintf(char* buffer, const char* fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
-    int ret = printfInternal(buffer_putch, buffer, fmt, ap);
+    int ret = printf_internal(buffer_putch, buffer, fmt, ap);
     buffer[ret] = '\0';
     va_end(ap);
     return ret;
@@ -44,7 +44,7 @@ extern "C" int dbgprintf(const char* fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
-    int ret = printfInternal(debugger_putch, nullptr, fmt, ap);
+    int ret = printf_internal(debugger_putch, nullptr, fmt, ap);
     va_end(ap);
     return ret;
 }

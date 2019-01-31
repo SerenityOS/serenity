@@ -4,13 +4,13 @@
 #include "Console.h"
 #include "Scheduler.h"
 
-extern "C" void syscall_entry(RegisterDump&);
-extern "C" void syscall_ISR();
+extern "C" void syscall_trap_entry(RegisterDump&);
+extern "C" void syscall_trap_handler();
 extern volatile RegisterDump* syscallRegDump;
 
 asm(
-    ".globl syscall_ISR \n"
-    "syscall_ISR:\n"
+    ".globl syscall_trap_handler \n"
+    "syscall_trap_handler:\n"
     "    pusha\n"
     "    pushw %ds\n"
     "    pushw %es\n"
@@ -26,7 +26,7 @@ asm(
     "    popw %fs\n"
     "    popw %gs\n"
     "    mov %esp, %eax\n"
-    "    call syscall_entry\n"
+    "    call syscall_trap_entry\n"
     "    popw %gs\n"
     "    popw %gs\n"
     "    popw %fs\n"
@@ -40,7 +40,7 @@ namespace Syscall {
 
 void initialize()
 {
-    register_user_callable_interrupt_handler(0x80, syscall_ISR);
+    register_user_callable_interrupt_handler(0x80, syscall_trap_handler);
     kprintf("syscall: int 0x80 handler installed\n");
 }
 
@@ -232,7 +232,7 @@ static dword handle(RegisterDump& regs, dword function, dword arg1, dword arg2, 
 
 }
 
-void syscall_entry(RegisterDump& regs)
+void syscall_trap_entry(RegisterDump& regs)
 {
     dword function = regs.eax;
     dword arg1 = regs.edx;

@@ -41,41 +41,41 @@ public:
 
     template<typename CallableType, class = typename EnableIf<!(IsPointer<CallableType>::value && IsFunction<typename RemovePointer<CallableType>::Type>::value) && IsRvalueReference<CallableType&&>::value>::Type>
     Function(CallableType&& callable)
-        : m_callableWrapper(make<CallableWrapper<CallableType>>(move(callable)))
+        : m_callable_wrapper(make<CallableWrapper<CallableType>>(move(callable)))
     {
     }
 
     template<typename FunctionType, class = typename EnableIf<IsPointer<FunctionType>::value && IsFunction<typename RemovePointer<FunctionType>::Type>::value>::Type>
     Function(FunctionType f)
-        : m_callableWrapper(make<CallableWrapper<FunctionType>>(move(f)))
+        : m_callable_wrapper(make<CallableWrapper<FunctionType>>(move(f)))
     {
     }
 
     Out operator()(In... in) const
     {
-        ASSERT(m_callableWrapper);
-        return m_callableWrapper->call(forward<In>(in)...);
+        ASSERT(m_callable_wrapper);
+        return m_callable_wrapper->call(forward<In>(in)...);
     }
 
-    explicit operator bool() const { return !!m_callableWrapper; }
+    explicit operator bool() const { return !!m_callable_wrapper; }
 
     template<typename CallableType, class = typename EnableIf<!(IsPointer<CallableType>::value && IsFunction<typename RemovePointer<CallableType>::Type>::value) && IsRvalueReference<CallableType&&>::value>::Type>
     Function& operator=(CallableType&& callable)
     {
-        m_callableWrapper = make<CallableWrapper<CallableType>>(move(callable));
+        m_callable_wrapper = make<CallableWrapper<CallableType>>(move(callable));
         return *this;
     }
 
     template<typename FunctionType, class = typename EnableIf<IsPointer<FunctionType>::value && IsFunction<typename RemovePointer<FunctionType>::Type>::value>::Type>
     Function& operator=(FunctionType f)
     {
-        m_callableWrapper = make<CallableWrapper<FunctionType>>(move(f));
+        m_callable_wrapper = make<CallableWrapper<FunctionType>>(move(f));
         return *this;
     }
 
     Function& operator=(std::nullptr_t)
     {
-        m_callableWrapper = nullptr;
+        m_callable_wrapper = nullptr;
         return *this;
     }
 
@@ -103,7 +103,7 @@ private:
         CallableType m_callable;
     };
 
-    OwnPtr<CallableWrapperBase> m_callableWrapper;
+    OwnPtr<CallableWrapperBase> m_callable_wrapper;
 };
 
 }

@@ -20,7 +20,7 @@ static DescriptorTablePointer s_gdtr;
 static Descriptor* s_idt;
 static Descriptor* s_gdt;
 
-static IRQHandler** s_irqHandler;
+static IRQHandler** s_irq_handler;
 
 static Vector<word, KmallocEternalAllocator>* s_gdt_freelist;
 
@@ -125,11 +125,11 @@ asm( \
 EH_ENTRY_NO_CODE(6);
 void exception_6_handler(RegisterDump& regs)
 {
-    kprintf("%s invalid opcode: %u(%s)\n", current->isRing0() ? "Kernel" : "Process", current->pid(), current->name().characters());
+    kprintf("%s invalid opcode: %u(%s)\n", current->is_ring0() ? "Kernel" : "Process", current->pid(), current->name().characters());
 
     word ss;
     dword esp;
-    if (current->isRing0()) {
+    if (current->is_ring0()) {
         ss = regs.ds;
         esp = regs.esp;
     } else {
@@ -142,7 +142,7 @@ void exception_6_handler(RegisterDump& regs)
     kprintf("eax=%x ebx=%x ecx=%x edx=%x\n", regs.eax, regs.ebx, regs.ecx, regs.edx);
     kprintf("ebp=%x esp=%x esi=%x edi=%x\n", regs.ebp, esp, regs.esi, regs.edi);
 
-    if (current->isRing0()) {
+    if (current->is_ring0()) {
         kprintf("Oh shit, we've crashed in ring 0 :(\n");
         HANG;
     }
@@ -175,11 +175,11 @@ void exception_7_handler(RegisterDump& regs)
     }
 
 #ifdef FPU_EXCEPTION_DEBUG
-    kprintf("%s FPU not available exception: %u(%s)\n", current->isRing0() ? "Kernel" : "Process", current->pid(), current->name().characters());
+    kprintf("%s FPU not available exception: %u(%s)\n", current->is_ring0() ? "Kernel" : "Process", current->pid(), current->name().characters());
 
     word ss;
     dword esp;
-    if (current->isRing0()) {
+    if (current->is_ring0()) {
         ss = regs.ds;
         esp = regs.esp;
     } else {
@@ -199,11 +199,11 @@ void exception_7_handler(RegisterDump& regs)
 EH_ENTRY(13);
 void exception_13_handler(RegisterDumpWithExceptionCode& regs)
 {
-    kprintf("%s GPF: %u(%s)\n", current->isRing0() ? "Kernel" : "User", current->pid(), current->name().characters());
+    kprintf("%s GPF: %u(%s)\n", current->is_ring0() ? "Kernel" : "User", current->pid(), current->name().characters());
 
     word ss;
     dword esp;
-    if (current->isRing0()) {
+    if (current->is_ring0()) {
         ss = regs.ds;
         esp = regs.esp;
     } else {
@@ -217,7 +217,7 @@ void exception_13_handler(RegisterDumpWithExceptionCode& regs)
     kprintf("eax=%x ebx=%x ecx=%x edx=%x\n", regs.eax, regs.ebx, regs.ecx, regs.edx);
     kprintf("ebp=%x esp=%x esi=%x edi=%x\n", regs.ebp, esp, regs.esi, regs.edi);
 
-    if (current->isRing0()) {
+    if (current->is_ring0()) {
         kprintf("Oh shit, we've crashed in ring 0 :(\n");
         HANG;
     }
@@ -248,7 +248,7 @@ void exception_14_handler(RegisterDumpWithExceptionCode& regs)
 
     word ss;
     dword esp;
-    if (current->isRing0()) {
+    if (current->is_ring0()) {
         ss = regs.ds;
         esp = regs.esp;
     } else {
@@ -278,9 +278,9 @@ void exception_14_handler(RegisterDumpWithExceptionCode& regs)
     }
     };
 
-    if (current->isRing0()) {
+    if (current->is_ring0()) {
         dump_registers_and_code();
-        current->dumpRegions();
+        current->dump_regions();
         HANG;
     }
 
@@ -335,7 +335,7 @@ EH(12, "Stack exception")
 EH(15, "Unknown error")
 EH(16, "Coprocessor error")
 
-static void writeRawGDTEntry(word selector, dword low, dword high)
+static void write_raw_gdt_entry(word selector, dword low, dword high)
 {
     word i = (selector & 0xfffc) >> 3;
     s_gdt[i].low = low;
@@ -348,7 +348,7 @@ static void writeRawGDTEntry(word selector, dword low, dword high)
 
 void write_gdt_entry(word selector, Descriptor& descriptor)
 {
-    writeRawGDTEntry(selector, descriptor.low, descriptor.high);
+    write_raw_gdt_entry(selector, descriptor.low, descriptor.high);
 }
 
 Descriptor& get_gdt_entry(word selector)
@@ -378,11 +378,11 @@ void gdt_init()
     s_gdtr.address = s_gdt;
     s_gdtr.size = (s_gdtLength * 8) - 1;
 
-    writeRawGDTEntry(0x0000, 0x00000000, 0x00000000);
-    writeRawGDTEntry(0x0008, 0x0000ffff, 0x00cf9a00);
-    writeRawGDTEntry(0x0010, 0x0000ffff, 0x00cf9200);
-    writeRawGDTEntry(0x0018, 0x0000ffff, 0x00cffa00);
-    writeRawGDTEntry(0x0020, 0x0000ffff, 0x00cff200);
+    write_raw_gdt_entry(0x0000, 0x00000000, 0x00000000);
+    write_raw_gdt_entry(0x0008, 0x0000ffff, 0x00cf9a00);
+    write_raw_gdt_entry(0x0010, 0x0000ffff, 0x00cf9200);
+    write_raw_gdt_entry(0x0018, 0x0000ffff, 0x00cffa00);
+    write_raw_gdt_entry(0x0020, 0x0000ffff, 0x00cff200);
 
     flush_gdt();
 }
@@ -395,15 +395,15 @@ static void unimp_trap()
 
 void register_irq_handler(byte irq, IRQHandler& handler)
 {
-    ASSERT(!s_irqHandler[irq]);
-    s_irqHandler[irq] = &handler;
+    ASSERT(!s_irq_handler[irq]);
+    s_irq_handler[irq] = &handler;
     register_interrupt_handler(IRQ_VECTOR_BASE + irq, asm_irq_entry);
 }
 
 void unregister_irq_handler(byte irq, IRQHandler& handler)
 {
-    ASSERT(s_irqHandler[irq] == &handler);
-    s_irqHandler[irq] = nullptr;
+    ASSERT(s_irq_handler[irq] == &handler);
+    s_irq_handler[irq] = nullptr;
 }
 
 void register_interrupt_handler(byte index, void (*f)())
@@ -467,9 +467,9 @@ void idt_init()
 
     register_interrupt_handler(0x57, irq7_handler);
 
-    s_irqHandler = static_cast<IRQHandler**>(kmalloc_eternal(sizeof(IRQHandler*) * 16));
+    s_irq_handler = static_cast<IRQHandler**>(kmalloc_eternal(sizeof(IRQHandler*) * 16));
     for (byte i = 0; i < 16; ++i) {
-        s_irqHandler[i] = nullptr;
+        s_irq_handler[i] = nullptr;
     }
 
     flush_idt();
@@ -482,7 +482,7 @@ void load_task_register(word selector)
 
 void handle_irq()
 {
-    word isr = PIC::getISR();
+    word isr = PIC::get_isr();
     if (!isr) {
         kprintf("Spurious IRQ\n");
         return;
@@ -498,8 +498,8 @@ void handle_irq()
         }
     }
 
-    if (s_irqHandler[irq])
-        s_irqHandler[irq]->handle_irq();
+    if (s_irq_handler[irq])
+        s_irq_handler[irq]->handle_irq();
     PIC::eoi(irq);
 }
 

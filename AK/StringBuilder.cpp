@@ -43,7 +43,7 @@ void StringBuilder::append(char ch)
 
 void StringBuilder::appendvf(const char* fmt, va_list ap)
 {
-    printfInternal([this] (char*&, char ch) {
+    printf_internal([this] (char*&, char ch) {
         append(ch);
     }, nullptr, fmt, ap);
 }
@@ -62,7 +62,7 @@ ByteBuffer StringBuilder::to_byte_buffer()
     return move(m_buffer);
 }
 
-String StringBuilder::build()
+String StringBuilder::to_string()
 {
     auto string = String((const char*)m_buffer.pointer(), m_length);
     m_buffer.clear();

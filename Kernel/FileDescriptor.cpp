@@ -60,10 +60,10 @@ RetainPtr<FileDescriptor> FileDescriptor::clone()
             : FileDescriptor::create_pipe_writer(*m_fifo);
     } else {
         if (m_device) {
-            descriptor = FileDescriptor::create(m_device.copyRef());
-            descriptor->m_inode = m_inode.copyRef();
+            descriptor = FileDescriptor::create(m_device.copy_ref());
+            descriptor->m_inode = m_inode.copy_ref();
         } else {
-            descriptor = FileDescriptor::create(m_inode.copyRef());
+            descriptor = FileDescriptor::create(m_inode.copy_ref());
         }
     }
     if (!descriptor)
@@ -74,7 +74,7 @@ RetainPtr<FileDescriptor> FileDescriptor::clone()
     return descriptor;
 }
 
-bool additionWouldOverflow(off_t a, off_t b)
+bool addition_would_overflow(off_t a, off_t b)
 {
     ASSERT(a > 0);
     uint64_t ua = a;
@@ -88,19 +88,19 @@ int FileDescriptor::fstat(stat* buffer)
         return -EBADF;
 
     auto metadata = this->metadata();
-    if (!metadata.isValid())
+    if (!metadata.is_valid())
         return -EIO;
 
-    buffer->st_dev = encodedDevice(metadata.majorDevice, metadata.minorDevice);
+    buffer->st_dev = encoded_device(metadata.major_device, metadata.minor_device);
     buffer->st_ino = metadata.inode.index();
     buffer->st_mode = metadata.mode;
-    buffer->st_nlink = metadata.linkCount;
+    buffer->st_nlink = metadata.link_count;
     buffer->st_uid = metadata.uid;
     buffer->st_gid = metadata.gid;
     buffer->st_rdev = 0; // FIXME
     buffer->st_size = metadata.size;
-    buffer->st_blksize = metadata.blockSize;
-    buffer->st_blocks = metadata.blockCount;
+    buffer->st_blksize = metadata.block_size;
+    buffer->st_blocks = metadata.block_count;
     buffer->st_atime = metadata.atime;
     buffer->st_mtime = metadata.mtime;
     buffer->st_ctime = metadata.ctime;
@@ -116,10 +116,10 @@ off_t FileDescriptor::seek(off_t offset, int whence)
     // FIXME: The file type should be cached on the vnode.
     //        It's silly that we have to do a full metadata lookup here.
     auto metadata = this->metadata();
-    if (!metadata.isValid())
+    if (!metadata.is_valid())
         return -EIO;
 
-    if (metadata.isSocket() || metadata.isFIFO())
+    if (metadata.is_socket() || metadata.is_fifo())
         return -ESPIPE;
 
     off_t newOffset;
@@ -217,23 +217,23 @@ ByteBuffer FileDescriptor::read_entire_file(Process& process)
 bool FileDescriptor::is_directory() const
 {
     ASSERT(!is_fifo());
-    return metadata().isDirectory();
+    return metadata().is_directory();
 }
 
 ssize_t FileDescriptor::get_dir_entries(byte* buffer, size_t size)
 {
     auto metadata = this->metadata();
-    if (!metadata.isValid())
+    if (!metadata.is_valid())
         return -EIO;
-    if (!metadata.isDirectory())
+    if (!metadata.is_directory())
         return -ENOTDIR;
 
     // FIXME: Compute the actual size needed.
-    auto tempBuffer = ByteBuffer::create_uninitialized(2048);
-    BufferStream stream(tempBuffer);
+    auto temp_buffer = ByteBuffer::create_uninitialized(2048);
+    BufferStream stream(temp_buffer);
     VFS::the().traverse_directory_inode(*m_inode, [&stream] (auto& entry) {
         stream << (dword)entry.inode.index();
-        stream << (byte)entry.fileType;
+        stream << (byte)entry.file_type;
         stream << (dword)entry.name_length;
         stream << entry.name;
         return true;
@@ -242,7 +242,7 @@ ssize_t FileDescriptor::get_dir_entries(byte* buffer, size_t size)
     if (size < stream.offset())
         return -1;
 
-    memcpy(buffer, tempBuffer.pointer(), stream.offset());
+    memcpy(buffer, temp_buffer.pointer(), stream.offset());
     return stream.offset();
 }
 

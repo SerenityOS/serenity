@@ -3,7 +3,7 @@
 #include <signal.h>
 #include <AK/AKString.h>
 
-static unsigned parseUInt(const String& str, bool& ok)
+static unsigned parse_uint(const String& str, bool& ok)
 {
     unsigned value = 0;
     for (size_t i = 0; i < str.length(); ++i) {
@@ -29,7 +29,7 @@ int main(int argc, char** argv)
         return 1;
     }
     bool ok;
-    unsigned secs = parseUInt(argv[1], ok);
+    unsigned secs = parse_uint(argv[1], ok);
     if (!ok) {
         fprintf(stderr, "Not a valid number of seconds: \"%s\"\n", argv[1]);
         return 1;

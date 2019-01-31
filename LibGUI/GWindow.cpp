@@ -207,6 +207,6 @@ void GWindow::set_global_cursor_tracking_widget(GWidget* widget)
     ASSERT(m_window_id);
     if (widget == m_global_cursor_tracking_widget.ptr())
         return;
-    m_global_cursor_tracking_widget = widget ? widget->makeWeakPtr() : nullptr;
+    m_global_cursor_tracking_widget = widget ? widget->make_weak_ptr() : nullptr;
     gui_set_global_cursor_tracking_enabled(m_window_id, widget != nullptr);
 }

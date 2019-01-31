@@ -88,10 +88,10 @@ static void init_stage2()
     vfs->register_character_device(*tty3);
 
     auto dev_hd0 = IDEDiskDevice::create();
-    auto e2fs = Ext2FS::create(dev_hd0.copyRef());
+    auto e2fs = Ext2FS::create(dev_hd0.copy_ref());
     e2fs->initialize();
 
-    vfs->mount_root(e2fs.copyRef());
+    vfs->mount_root(e2fs.copy_ref());
 
     load_ksyms();
 
