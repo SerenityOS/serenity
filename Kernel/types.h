@@ -41,8 +41,6 @@ typedef word mode_t;
 typedef dword nlink_t;
 typedef dword blksize_t;
 typedef dword blkcnt_t;
-typedef dword time_t;
-typedef dword suseconds_t;
 
 struct FarPtr {
     dword offset { 0 };

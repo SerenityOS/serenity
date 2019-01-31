@@ -253,7 +253,7 @@ struct sigaction {
 
 // FIXME: Support 64-bit offsets!
 typedef signed_dword off_t;
-typedef unsigned int time_t;
+typedef dword time_t;
 
 struct utimbuf {
     time_t actime;
