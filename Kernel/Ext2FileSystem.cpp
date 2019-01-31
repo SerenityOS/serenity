@@ -124,7 +124,7 @@ bool Ext2FS::initialize()
 
 const char* Ext2FS::class_name() const
 {
-    return "ext2fs";
+    return "Ext2FS";
 }
 
 InodeIdentifier Ext2FS::root_inode() const

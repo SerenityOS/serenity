@@ -208,15 +208,20 @@ ByteBuffer procfs$dmesg(SynthFSInode&)
 
 ByteBuffer procfs$mounts(SynthFSInode&)
 {
-    InterruptDisabler disabler;
+    // FIXME: This is obviously racy against the VFS mounts changing.
     StringBuilder builder;
     VFS::the().for_each_mount([&builder] (auto& mount) {
         auto& fs = mount.guest_fs();
         builder.appendf("%s @ ", fs.class_name());
         if (!mount.host().is_valid())
-            builder.appendf("/\n", fs.class_name());
-        else
-            builder.appendf("%u:%u\n", mount.host().fsid(), mount.host().index());
+            builder.appendf("/");
+        else {
+            builder.appendf("%u:%u", mount.host().fsid(), mount.host().index());
+            auto path = VFS::the().absolute_path(mount.host());
+            builder.append(' ');
+            builder.append(path);
+        }
+        builder.append('\n');
     });
     return builder.to_byte_buffer();
 }
@@ -401,5 +406,5 @@ bool ProcFS::initialize()
 
 const char* ProcFS::class_name() const
 {
-    return "procfs";
+    return "ProcFS";
 }
