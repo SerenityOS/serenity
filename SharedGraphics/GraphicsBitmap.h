@@ -43,7 +43,7 @@ private:
     size_t m_pitch { 0 };
 
 #ifdef KERNEL
-    Process* m_client_process { nullptr };
+    WeakPtr<Process> m_client_process;
     Region* m_client_region { nullptr };
     Region* m_server_region { nullptr };
 #endif
