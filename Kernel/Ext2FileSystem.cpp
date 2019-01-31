@@ -360,7 +360,7 @@ InodeMetadata Ext2FSInode::metadata() const
     if (isBlockDevice(m_raw_inode.i_mode) || isCharacterDevice(m_raw_inode.i_mode)) {
         unsigned dev = m_raw_inode.i_block[0];
         metadata.majorDevice = (dev & 0xfff00) >> 8;
-        metadata.minorDevice= (dev & 0xff) | ((dev >> 12) & 0xfff00);
+        metadata.minorDevice = (dev & 0xff) | ((dev >> 12) & 0xfff00);
     }
     return metadata;
 }

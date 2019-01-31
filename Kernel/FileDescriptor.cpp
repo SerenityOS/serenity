@@ -59,10 +59,11 @@ RetainPtr<FileDescriptor> FileDescriptor::clone()
             ? FileDescriptor::create_pipe_reader(*m_fifo)
             : FileDescriptor::create_pipe_writer(*m_fifo);
     } else {
-        if (m_inode)
-            descriptor = FileDescriptor::create(m_inode.copyRef());
-        else {
+        if (m_device) {
             descriptor = FileDescriptor::create(m_device.copyRef());
+            descriptor->m_inode = m_inode.copyRef();
+        } else {
+            descriptor = FileDescriptor::create(m_inode.copyRef());
         }
     }
     if (!descriptor)
@@ -90,7 +91,7 @@ int FileDescriptor::fstat(stat* buffer)
     if (!metadata.isValid())
         return -EIO;
 
-    buffer->st_dev = 0; // FIXME
+    buffer->st_dev = encodedDevice(metadata.majorDevice, metadata.minorDevice);
     buffer->st_ino = metadata.inode.index();
     buffer->st_mode = metadata.mode;
     buffer->st_nlink = metadata.linkCount;
