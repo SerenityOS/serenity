@@ -15,11 +15,13 @@ static int do_dir_short(const char* path);
 static bool flag_colorize = true;
 static bool flag_long = false;
 static bool flag_show_dotfiles = false;
+static bool flag_show_inode = false;
 
 int main(int argc, char** argv)
 {
+    static const char* valid_option_characters = "laiG";
     int opt;
-    while ((opt = getopt(argc, argv, "laG")) != -1) {
+    while ((opt = getopt(argc, argv, valid_option_characters)) != -1) {
         switch (opt) {
         case 'a':
             flag_show_dotfiles = true;
@@ -30,8 +32,11 @@ int main(int argc, char** argv)
         case 'G':
             flag_colorize = false;
             break;
+        case 'i':
+            flag_show_inode = true;
+            break;
         default:
-            fprintf(stderr, "usage: ls [-laG] [path]\n");
+            fprintf(stderr, "usage: ls [-%s] [path]\n", valid_option_characters);
             return 1;
         }
     }
@@ -116,7 +121,8 @@ int do_dir(const char* path)
             return 2;
         }
 
-        printf("%08u ", de->d_ino);
+        if (flag_show_inode)
+            printf("%08u ", de->d_ino);
 
         if (S_ISDIR(st.st_mode))
             printf("d");
