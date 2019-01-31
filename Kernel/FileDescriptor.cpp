@@ -129,10 +129,6 @@ off_t FileDescriptor::seek(off_t offset, int whence)
         break;
     case SEEK_CUR:
         newOffset = m_current_offset + offset;
-#ifndef SERENITY
-        if (additionWouldOverflow(m_currentOffset, offset))
-            return -EOVERFLOW;
-#endif
         if (newOffset < 0)
             return -EINVAL;
         break;

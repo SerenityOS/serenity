@@ -35,12 +35,6 @@ bool SynthFS::initialize()
     root->m_metadata.size = 0;
     root->m_metadata.mtime = mepoch;
     m_inodes.set(RootInodeIndex, move(root));
-
-#ifndef SERENITY
-    addFile(createTextFile("file", String("I'm a synthetic file!\n").toByteBuffer(), 0100644));
-    addFile(createTextFile("message", String("Hey! This isn't my bottle!\n").toByteBuffer(), 0100644));
-    addFile(createGeneratedFile("lunk", [] { return String("/home/andreas/file1").toByteBuffer(); }, 00120777));
-#endif
     return true;
 }
 
