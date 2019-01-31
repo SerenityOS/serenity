@@ -79,6 +79,7 @@ public:
     void for_each_mount(Function<void(const Mount&)>) const;
 
     String absolute_path(Inode&);
+    String absolute_path(InodeIdentifier);
 
     InodeIdentifier root_inode_id() const;
     Inode* root_inode() { return m_root_inode.ptr(); }

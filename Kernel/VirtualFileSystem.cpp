@@ -371,6 +371,14 @@ RetainPtr<Inode> VFS::get_inode(InodeIdentifier inode_id)
     return inode_id.fs()->get_inode(inode_id);
 }
 
+String VFS::absolute_path(InodeIdentifier inode_id)
+{
+    auto inode = get_inode(inode_id);
+    if (!inode)
+        return { };
+    return absolute_path(*inode);
+}
+
 String VFS::absolute_path(Inode& core_inode)
 {
     int error;
