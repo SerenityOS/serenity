@@ -1,5 +1,6 @@
 #include "PTYMultiplexer.h"
 #include "MasterPTY.h"
+#include <Kernel/Process.h>
 #include <LibC/errno_numbers.h>
 
 static const unsigned s_max_pty_pairs = 8;

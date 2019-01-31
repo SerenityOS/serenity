@@ -1,6 +1,7 @@
 #include "MasterPTY.h"
 #include "SlavePTY.h"
 #include "PTYMultiplexer.h"
+#include <Kernel/Process.h>
 #include <LibC/errno_numbers.h>
 
 MasterPTY::MasterPTY(unsigned index)
@@ -8,6 +9,8 @@ MasterPTY::MasterPTY(unsigned index)
     , m_slave(adopt(*new SlavePTY(*this, index)))
     , m_index(index)
 {
+    set_uid(current->uid());
+    set_gid(current->gid());
 }
 
 MasterPTY::~MasterPTY()

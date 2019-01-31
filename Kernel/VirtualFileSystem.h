@@ -86,6 +86,8 @@ public:
 
     void sync();
 
+    CharacterDevice* get_device(unsigned major, unsigned minor);
+
 private:
     friend class FileDescriptor;
 
