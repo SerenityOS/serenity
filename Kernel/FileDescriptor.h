@@ -6,6 +6,7 @@
 #include <AK/ByteBuffer.h>
 #include <AK/CircularQueue.h>
 #include <AK/Retainable.h>
+#include <AK/Badge.h>
 
 class TTY;
 class MasterPTY;
@@ -67,6 +68,8 @@ public:
     FIFO::Direction fifo_direction() { return m_fifo_direction; }
 
     ByteBuffer& generator_cache() { return m_generator_cache; }
+
+    void set_original_inode(Badge<VFS>, RetainPtr<Inode>&& inode) { m_inode = move(inode); }
 
 private:
     friend class VFS;

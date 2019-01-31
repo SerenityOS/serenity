@@ -146,13 +146,15 @@ RetainPtr<FileDescriptor> VFS::open(const String& path, int& error, int options,
         return nullptr;
     }
     auto metadata = inode->metadata();
-    if (metadata.isCharacterDevice()) {
+    if (!(options & O_DONT_OPEN_DEVICE) && metadata.isCharacterDevice()) {
         auto it = m_character_devices.find(encodedDevice(metadata.majorDevice, metadata.minorDevice));
         if (it == m_character_devices.end()) {
             kprintf("VFS::open: no such character device %u,%u\n", metadata.majorDevice, metadata.minorDevice);
             return nullptr;
         }
-        return (*it).value->open(error, options);
+        auto descriptor = (*it).value->open(error, options);
+        descriptor->set_original_inode(Badge<VFS>(), move(inode));
+        return descriptor;
     }
     return FileDescriptor::create(move(inode));
 }

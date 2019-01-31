@@ -24,6 +24,7 @@
 #define O_NOFOLLOW 00400000
 #define O_CLOEXEC 02000000
 #define O_NOFOLLOW_NOERROR 0x4000000
+#define O_DONT_OPEN_DEVICE 0x8000000
 
 class CharacterDevice;
 class FileDescriptor;
