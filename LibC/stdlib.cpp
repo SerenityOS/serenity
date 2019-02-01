@@ -252,4 +252,14 @@ int abs(int i)
     return i < 0 ? -i : i;
 }
 
+long int random()
+{
+    return rand();
+}
+
+void srandom(unsigned seed)
+{
+    srand(seed);
+}
+
 }

@@ -50,6 +50,7 @@ int feof(FILE*);
 int fflush(FILE*);
 size_t fread(void* ptr, size_t size, size_t nmemb, FILE*);
 size_t fwrite(const void* ptr, size_t size, size_t nmemb, FILE*);
+int vprintf(const char* fmt, va_list);
 int vfprintf(FILE*, const char* fmt, va_list);
 int vsprintf(char* buffer, const char* fmt, va_list);
 int vsnprintf(char* buffer, size_t, const char* fmt, va_list);
