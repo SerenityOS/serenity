@@ -1869,7 +1869,7 @@ int Process::sys$mkdir(const char* pathname, mode_t mode)
     if (pathname_length >= 255)
         return -ENAMETOOLONG;
     int error;
-    if (!VFS::the().mkdir(String(pathname, pathname_length), mode, cwd_inode()->identifier(), error))
+    if (!VFS::the().mkdir(String(pathname, pathname_length), mode, *cwd_inode(), error))
         return error;
     return 0;
 }
