@@ -10,6 +10,7 @@ typedef __sighandler_t sighandler_t;
 
 typedef uint32_t sigset_t;
 typedef void siginfo_t;
+typedef uint32_t sig_atomic_t;
 
 struct sigaction {
     union {

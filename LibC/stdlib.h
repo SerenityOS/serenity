@@ -26,5 +26,8 @@ int abs(int);
 int rand();
 void srand(unsigned seed);
 
+long int random();
+void srandom(unsigned seed);
+
 __END_DECLS
 

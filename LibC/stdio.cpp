@@ -268,11 +268,16 @@ int fprintf(FILE* stream, const char* fmt, ...)
     return ret;
 }
 
+int vprintf(const char* fmt, va_list ap)
+{
+    return printf_internal(stdout_putch, nullptr, fmt, ap);
+}
+
 int printf(const char* fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
-    int ret = printf_internal(stdout_putch, nullptr, fmt, ap);
+    int ret = vprintf(fmt, ap);
     va_end(ap);
     return ret;
 }

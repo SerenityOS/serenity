@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <signal.h>
 #include <assert.h>
+#include <stdlib.h>
 #include <AK/Types.h>
 
 extern "C" {
@@ -49,6 +50,14 @@ size_t strlen(const char* str)
     while (*(str++))
         ++len;
     return len;
+}
+
+char* strdup(const char* str)
+{
+    size_t len = strlen(str);
+    char* new_str = (char*)malloc(len);
+    strcpy(new_str, str);
+    return new_str;
 }
 
 int strcmp(const char* s1, const char* s2)
