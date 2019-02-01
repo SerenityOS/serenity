@@ -65,8 +65,8 @@ public:
     bool mount(RetainPtr<FS>&&, const String& path);
 
     RetainPtr<FileDescriptor> open(RetainPtr<CharacterDevice>&&, int& error, int options);
-    RetainPtr<FileDescriptor> open(const String& path, int& error, int options, mode_t mode, InodeIdentifier base = InodeIdentifier());
-    RetainPtr<FileDescriptor> create(const String& path, int& error, int options, mode_t mode, InodeIdentifier base);
+    RetainPtr<FileDescriptor> open(const String& path, int& error, int options, mode_t mode, Inode& base);
+    RetainPtr<FileDescriptor> create(const String& path, int& error, int options, mode_t mode, Inode& base);
     bool mkdir(const String& path, mode_t mode, Inode& base, int& error);
     bool unlink(const String& path, Inode& base, int& error);
     bool rmdir(const String& path, Inode& base, int& error);
