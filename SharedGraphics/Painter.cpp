@@ -56,8 +56,32 @@ Painter::~Painter()
 #endif
 }
 
+void Painter::fill_rect_with_draw_op(const Rect& a_rect, Color color)
+{
+    auto rect = a_rect;
+    rect.move_by(m_translation);
+    rect.intersect(m_clip_rect);
+
+    if (rect.is_empty())
+        return;
+
+    RGBA32* dst = m_target->scanline(rect.top()) + rect.left();
+    const unsigned dst_skip = m_target->width();
+
+    for (int i = rect.height() - 1; i >= 0; --i) {
+        for (int j = 0; j < rect.width(); ++j)
+            set_pixel_with_draw_op(dst[j], color.value());
+        dst += dst_skip;
+    }
+}
+
 void Painter::fill_rect(const Rect& a_rect, Color color)
 {
+    if (m_draw_op != DrawOp::Copy) {
+        fill_rect_with_draw_op(a_rect, color);
+        return;
+    }
+
     auto rect = a_rect;
     rect.move_by(m_translation);
     rect.intersect(m_clip_rect);
