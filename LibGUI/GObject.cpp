@@ -60,12 +60,16 @@ void GObject::start_timer(int ms)
         dbgprintf("GObject{%p} already has a timer!\n", this);
         ASSERT_NOT_REACHED();
     }
+
+    m_timer_id = GEventLoop::main().register_timer(*this, ms, true);
 }
 
 void GObject::stop_timer()
 {
     if (!m_timer_id)
         return;
+    bool success = GEventLoop::main().unregister_timer(m_timer_id);
+    ASSERT(success);
     m_timer_id = 0;
 }
 

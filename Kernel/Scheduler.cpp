@@ -1,6 +1,8 @@
 #include "Scheduler.h"
 #include "Process.h"
 #include "system.h"
+#include "RTC.h"
+#include "i8253.h"
 
 //#define LOG_EVERY_CONTEXT_SWITCH
 //#define SCHEDULER_DEBUG
@@ -29,7 +31,7 @@ bool Scheduler::pick_next()
     }
 
     // Check and unblock processes whose wait conditions have been met.
-    Process::for_each([] (auto& process) {
+    Process::for_each([] (Process& process) {
         if (process.state() == Process::BlockedSleep) {
             if (process.wakeup_time() <= system.uptime)
                 process.unblock();
@@ -70,6 +72,14 @@ bool Scheduler::pick_next()
                 process.m_wakeup_requested = false;
                 process.unblock();
                 return true;
+            }
+            if (process.m_select_has_timeout) {
+                auto now_sec = RTC::now();
+                auto now_usec = PIT::ticks_since_boot() % 1000;
+                if (now_sec > process.m_select_timeout.tv_sec || (now_sec == process.m_select_timeout.tv_sec && now_usec >= process.m_select_timeout.tv_usec)) {
+                    process.unblock();
+                    return true;
+                }
             }
             for (int fd : process.m_select_read_fds) {
                 if (process.m_fds[fd].descriptor->can_read(process)) {

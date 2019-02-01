@@ -57,16 +57,26 @@ asm(
 
 #define BASE_FREQUENCY     1193182
 
+static dword s_ticks_since_boot;
+
 void timer_interrupt_handler(RegisterDump& regs)
 {
     IRQHandlerScope scope(IRQ_TIMER);
+    ++s_ticks_since_boot;
     Scheduler::timer_tick(regs);
 }
 
 namespace PIT {
 
+dword ticks_since_boot()
+{
+    return s_ticks_since_boot;
+}
+
 void initialize()
 {
+    s_ticks_since_boot = 0;
+
     word timer_reload;
 
     IO::out8(PIT_CTL, TIMER0_SELECT | WRITE_WORD | MODE_SQUARE_WAVE);
