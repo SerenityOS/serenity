@@ -198,7 +198,7 @@ RetainPtr<FileDescriptor> VFS::create(const String& path, int& error, int option
     return FileDescriptor::create(move(new_file));
 }
 
-bool VFS::mkdir(const String& path, mode_t mode, InodeIdentifier base, int& error)
+bool VFS::mkdir(const String& path, mode_t mode, Inode& base, int& error)
 {
     error = -EWHYTHO;
     // FIXME: This won't work nicely across mount boundaries.
@@ -209,7 +209,7 @@ bool VFS::mkdir(const String& path, mode_t mode, InodeIdentifier base, int& erro
     }
 
     InodeIdentifier parent_dir;
-    auto existing_dir = resolve_path(path, base, error, 0, &parent_dir);
+    auto existing_dir = resolve_path(path, base.identifier(), error, 0, &parent_dir);
     if (existing_dir.is_valid()) {
         error = -EEXIST;
         return false;
@@ -222,7 +222,7 @@ bool VFS::mkdir(const String& path, mode_t mode, InodeIdentifier base, int& erro
         return false;
     }
     dbgprintf("VFS::mkdir: '%s' in %u:%u\n", p.basename().characters(), parent_dir.fsid(), parent_dir.index());
-    auto new_dir = base.fs()->create_directory(parent_dir, p.basename(), mode, error);
+    auto new_dir = parent_dir.fs()->create_directory(parent_dir, p.basename(), mode, error);
     if (new_dir) {
         error = 0;
         return true;
