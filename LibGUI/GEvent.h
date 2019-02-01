@@ -131,7 +131,12 @@ private:
 
 class GTimerEvent final : public GEvent {
 public:
-    GTimerEvent() : GEvent(GEvent::Timer) { }
+    explicit GTimerEvent(int timer_id) : GEvent(GEvent::Timer), m_timer_id(timer_id) { }
     ~GTimerEvent() { }
+
+    int timer_id() const { return m_timer_id; }
+
+private:
+    int m_timer_id;
 };
 

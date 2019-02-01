@@ -1442,7 +1442,7 @@ int Process::sys$gettimeofday(timeval* tv)
     InterruptDisabler disabler;
     auto now = RTC::now();
     tv->tv_sec = now;
-    tv->tv_usec = 0;
+    tv->tv_usec = PIT::ticks_since_boot() % 1000;
     return 0;
 }
 
@@ -1976,8 +1976,12 @@ int Process::sys$select(const Syscall::SC_select_params* params)
     // FIXME: Implement exceptfds support.
     ASSERT(!exceptfds);
 
-    // FIXME: Implement timeout support.
-    ASSERT(!timeout || (!timeout->tv_sec && !timeout->tv_usec));
+    if (timeout) {
+        m_select_timeout = *timeout;
+        m_select_has_timeout = true;
+    } else {
+        m_select_has_timeout = false;
+    }
 
     if (nfds < 0)
         return -EINVAL;

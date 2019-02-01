@@ -83,6 +83,11 @@ public:
         return find(key) != end();
     }
 
+    void remove(IteratorType it)
+    {
+        m_table.remove(it);
+    }
+
 private:
     HashTable<Entry, EntryTraits> m_table;
 };

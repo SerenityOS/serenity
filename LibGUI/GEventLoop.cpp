@@ -6,6 +6,7 @@
 #include <LibC/stdio.h>
 #include <LibC/fcntl.h>
 #include <LibC/string.h>
+#include <LibC/time.h>
 #include <LibC/sys/select.h>
 #include <LibC/gui.h>
 
@@ -137,9 +138,27 @@ void GEventLoop::wait_for_event()
     FD_ZERO(&rfds);
     FD_SET(m_event_fd, &rfds);
     struct timeval timeout = { 0, 0 };
-    int rc = select(m_event_fd + 1, &rfds, nullptr, nullptr, m_queued_events.is_empty() ? nullptr : &timeout);
+    if (!m_timers.is_empty())
+        get_next_timer_expiration(timeout);
+    int rc = select(m_event_fd + 1, &rfds, nullptr, nullptr, (m_queued_events.is_empty() && m_timers.is_empty()) ? nullptr : &timeout);
     if (rc < 0) {
         ASSERT_NOT_REACHED();
+    }
+
+    for (auto& it : m_timers) {
+        auto& timer = *it.value;
+        if (!timer.has_expired())
+            continue;
+#ifdef GEVENTLOOP_DEBUG
+        dbgprintf("GEventLoop: Timer %d has expired, sending GTimerEvent to %p\n", timer.timer_id, timer.owner);
+#endif
+        post_event(timer.owner, make<GTimerEvent>(timer.timer_id));
+        if (timer.should_reload) {
+            timer.reload();
+        } else {
+            // FIXME: Support removing expired timers that don't want to reload.
+            ASSERT_NOT_REACHED();
+        }
     }
 
     if (!FD_ISSET(m_event_fd, &rfds))
@@ -179,4 +198,54 @@ void GEventLoop::wait_for_event()
             break;
         }
     }
+}
+
+bool GEventLoop::EventLoopTimer::has_expired() const
+{
+    timeval now;
+    gettimeofday(&now, nullptr);
+    return now.tv_sec > fire_time.tv_sec || (now.tv_sec == fire_time.tv_sec && now.tv_usec >= fire_time.tv_usec);
+}
+
+void GEventLoop::EventLoopTimer::reload()
+{
+    gettimeofday(&fire_time, nullptr);
+    fire_time.tv_sec += interval / 1000;
+    fire_time.tv_usec += interval % 1000;
+}
+
+void GEventLoop::get_next_timer_expiration(timeval& soonest)
+{
+    ASSERT(!m_timers.is_empty());
+    bool has_checked_any = false;
+    for (auto& it : m_timers) {
+        auto& fire_time = it.value->fire_time;
+        if (!has_checked_any || fire_time.tv_sec < soonest.tv_sec || (fire_time.tv_sec == soonest.tv_sec && fire_time.tv_usec < soonest.tv_usec))
+            soonest = fire_time;
+        has_checked_any = true;
+    }
+}
+
+int GEventLoop::register_timer(GObject& object, int milliseconds, bool should_reload)
+{
+    ASSERT(milliseconds >= 0);
+    auto timer = make<EventLoopTimer>();
+    timer->owner = &object;
+    timer->interval = milliseconds;
+    timer->reload();
+    timer->should_reload = should_reload;
+    int timer_id = ++m_next_timer_id;  // FIXME: This will eventually wrap around.
+    ASSERT(timer_id); // FIXME: Aforementioned wraparound.
+    timer->timer_id = timer_id;
+    m_timers.set(timer->timer_id, move(timer));
+    return timer_id;
+}
+
+bool GEventLoop::unregister_timer(int timer_id)
+{
+    auto it = m_timers.find(timer_id);
+    if (it == m_timers.end())
+        return false;
+    m_timers.remove(it);
+    return true;
 }
