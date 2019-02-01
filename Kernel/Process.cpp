@@ -292,7 +292,7 @@ int Process::do_exec(const String& path, Vector<String>&& arguments, Vector<Stri
         return -ENOENT;
 
     int error;
-    auto descriptor = VFS::the().open(path, error, 0, 0, m_cwd ? m_cwd->identifier() : InodeIdentifier());
+    auto descriptor = VFS::the().open(path, error, 0, 0, *cwd_inode());
     if (!descriptor) {
         ASSERT(error != 0);
         return error;
@@ -1126,7 +1126,7 @@ int Process::sys$utime(const char* pathname, const utimbuf* buf)
         return -EFAULT;
     String path(pathname);
     int error;
-    auto descriptor = VFS::the().open(move(path), error, 0, 0, cwd_inode()->identifier());
+    auto descriptor = VFS::the().open(move(path), error, 0, 0, *cwd_inode());
     if (!descriptor)
         return error;
     auto& inode = *descriptor->inode();
@@ -1215,7 +1215,7 @@ int Process::sys$lstat(const char* path, stat* statbuf)
     if (!validate_write_typed(statbuf))
         return -EFAULT;
     int error;
-    auto descriptor = VFS::the().open(move(path), error, O_NOFOLLOW_NOERROR | O_DONT_OPEN_DEVICE, 0, cwd_inode()->identifier());
+    auto descriptor = VFS::the().open(move(path), error, O_NOFOLLOW_NOERROR | O_DONT_OPEN_DEVICE, 0, *cwd_inode());
     if (!descriptor)
         return error;
     descriptor->fstat(statbuf);
@@ -1227,7 +1227,7 @@ int Process::sys$stat(const char* path, stat* statbuf)
     if (!validate_write_typed(statbuf))
         return -EFAULT;
     int error;
-    auto descriptor = VFS::the().open(move(path), error, O_DONT_OPEN_DEVICE, 0, cwd_inode()->identifier());
+    auto descriptor = VFS::the().open(move(path), error, O_DONT_OPEN_DEVICE, 0, *cwd_inode());
     if (!descriptor)
         return error;
     descriptor->fstat(statbuf);
@@ -1242,7 +1242,7 @@ int Process::sys$readlink(const char* path, char* buffer, size_t size)
         return -EFAULT;
 
     int error;
-    auto descriptor = VFS::the().open(path, error, O_RDONLY | O_NOFOLLOW_NOERROR, 0, cwd_inode()->identifier());
+    auto descriptor = VFS::the().open(path, error, O_RDONLY | O_NOFOLLOW_NOERROR, 0, *cwd_inode());
     if (!descriptor)
         return error;
 
@@ -1264,7 +1264,7 @@ int Process::sys$chdir(const char* path)
     if (!validate_read_str(path))
         return -EFAULT;
     int error;
-    auto descriptor = VFS::the().open(path, error, 0, 0, cwd_inode()->identifier());
+    auto descriptor = VFS::the().open(path, error, 0, 0, *cwd_inode());
     if (!descriptor)
         return error;
     if (!descriptor->is_directory())
@@ -1308,7 +1308,7 @@ int Process::sys$open(const char* path, int options, mode_t mode)
         return -EMFILE;
     int error = -EWHYTHO;
     ASSERT(cwd_inode());
-    auto descriptor = VFS::the().open(path, error, options, mode, cwd_inode()->identifier());
+    auto descriptor = VFS::the().open(path, error, options, mode, *cwd_inode());
     if (!descriptor)
         return error;
     if (options & O_DIRECTORY && !descriptor->is_directory())

@@ -136,9 +136,9 @@ RetainPtr<FileDescriptor> VFS::open(RetainPtr<CharacterDevice>&& device, int& er
     return FileDescriptor::create(move(device));
 }
 
-RetainPtr<FileDescriptor> VFS::open(const String& path, int& error, int options, mode_t mode, InodeIdentifier base)
+RetainPtr<FileDescriptor> VFS::open(const String& path, int& error, int options, mode_t mode, Inode& base)
 {
-    auto inode_id = resolve_path(path, base, error, options);
+    auto inode_id = resolve_path(path, base.identifier(), error, options);
     auto inode = get_inode(inode_id);
     if (!inode) {
         if (options & O_CREAT)
@@ -159,7 +159,7 @@ RetainPtr<FileDescriptor> VFS::open(const String& path, int& error, int options,
     return FileDescriptor::create(move(inode));
 }
 
-RetainPtr<FileDescriptor> VFS::create(const String& path, int& error, int options, mode_t mode, InodeIdentifier base)
+RetainPtr<FileDescriptor> VFS::create(const String& path, int& error, int options, mode_t mode, Inode& base)
 {
     (void) options;
     error = -EWHYTHO;
@@ -177,7 +177,7 @@ RetainPtr<FileDescriptor> VFS::create(const String& path, int& error, int option
     }
 
     InodeIdentifier parent_dir;
-    auto existing_file = resolve_path(path, base, error, 0, &parent_dir);
+    auto existing_file = resolve_path(path, base.identifier(), error, 0, &parent_dir);
     if (existing_file.is_valid()) {
         error = -EEXIST;
         return nullptr;
