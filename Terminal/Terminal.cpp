@@ -633,6 +633,9 @@ void Terminal::paint()
     }
     m_rows_to_scroll_backing_store = 0;
 
+    // Always redraw the line with the cursor on it.
+    line(m_cursor_row).dirty = true;
+
     for (word row = 0; row < m_rows; ++row) {
         auto& line = this->line(row);
         if (!line.dirty)
@@ -642,25 +645,23 @@ void Terminal::paint()
         if (has_only_one_background_color)
             painter.fill_rect(row_rect(row), line.attributes[0].background_color);
         for (word column = 0; column < m_columns; ++column) {
+            bool should_reverse_fill_for_cursor = m_in_active_window && row == m_cursor_row && column == m_cursor_column;
             auto& attribute = line.attributes[column];
             line.did_paint = true;
             char ch = line.characters[column];
             auto character_rect = glyph_rect(row, column);
-            if (!has_only_one_background_color) {
-                auto character_background = ansi_color(attribute.background_color);
-                painter.fill_rect(character_rect, character_background);
-            }
+            if (!has_only_one_background_color || should_reverse_fill_for_cursor)
+                painter.fill_rect(character_rect, ansi_color(should_reverse_fill_for_cursor ? attribute.foreground_color : attribute.background_color));
             if (ch == ' ')
                 continue;
-            painter.draw_glyph(character_rect.location(), ch, ansi_color(attribute.foreground_color));
+            painter.draw_glyph(character_rect.location(), ch, ansi_color(should_reverse_fill_for_cursor ? attribute.background_color : attribute.foreground_color));
         }
     }
 
-    auto cursor_rect = glyph_rect(m_cursor_row, m_cursor_column);
-    if (m_in_active_window)
-        painter.fill_rect(cursor_rect, Color::MidGray);
-    else
-        painter.draw_rect(cursor_rect, Color::MidGray);
+    if (!m_in_active_window) {
+        auto cursor_rect = glyph_rect(m_cursor_row, m_cursor_column);
+        painter.draw_rect(cursor_rect, ansi_color(line(m_cursor_row).attributes[m_cursor_column].foreground_color));
+    }
 
     line(m_cursor_row).did_paint = true;
 
