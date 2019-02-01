@@ -47,6 +47,7 @@ public:
 
 private:
     void set_pixel_with_draw_op(dword& pixel, const Color&);
+    void fill_rect_with_draw_op(const Rect&, Color);
 
     const Font* m_font;
     Point m_translation;
