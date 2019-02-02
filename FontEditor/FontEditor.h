@@ -12,6 +12,8 @@ public:
     virtual ~FontEditorWidget() override;
 
 private:
+    RetainPtr<Font> m_edited_font;
+
     GlyphMapWidget* m_glyph_map_widget { nullptr };
     GlyphEditorWidget* m_glyph_editor_widget { nullptr };
 };
