@@ -9,6 +9,8 @@ class Font : public Retainable<Font> {
 public:
     static Font& default_font();
 
+    RetainPtr<Font> clone() const;
+
     ~Font();
 
     const CharacterBitmap& glyph_bitmap(char ch) const { return *m_bitmaps[(byte)ch]; }
@@ -19,7 +21,7 @@ public:
     static void initialize();
 
 private:
-    Font(const char* const* glyphs, byte glyph_width, byte glyph_height, byte firstGlyph, byte lastGlyph);
+    Font(const char* const* glyphs, byte glyph_width, byte glyph_height, byte first_glyph, byte last_glyph);
 
     const char* const* m_glyphs { nullptr };
     mutable RetainPtr<CharacterBitmap> m_bitmaps[256];

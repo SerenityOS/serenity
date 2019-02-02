@@ -70,7 +70,10 @@ void GWidget::paint_event(GPaintEvent& event)
     }
     for (auto* ch : children()) {
         auto* child = (GWidget*)ch;
-        child->event(event);
+        if (child->relative_rect().intersects(event.rect())) {
+            // FIXME: Pass localized rect?
+            child->event(event);
+        }
     }
 }
 

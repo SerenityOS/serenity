@@ -87,7 +87,7 @@ GWindow* make_font_test_window()
 {
     auto* window = new GWindow;
     window->set_title("Font test");
-    window->set_rect({ 440, 100, 300, 80 });
+    window->set_rect({ 480, 100, 300, 80 });
 
     auto* widget = new GWidget;
     window->set_main_widget(widget);
@@ -191,7 +191,7 @@ GWindow* make_clock_window()
 {
     auto* window = new GWindow;
     window->set_title("Clock");
-    window->set_rect({ 200, 200, 100, 40 });
+    window->set_rect({ 900, 700, 100, 40 });
 
     auto* clock_widget = new ClockWidget;
     clock_widget->set_relative_rect({ 0, 0, 100, 40 });
