@@ -77,7 +77,7 @@ public:
     }
 };
 
-enum class GMouseButton : byte {
+enum GMouseButton : byte {
     None = 0,
     Left = 1,
     Right = 2,
