@@ -1,6 +1,7 @@
 #include "Font.h"
 #include "Peanut8x10.h"
 #include "Liza8x10.h"
+#include <AK/kmalloc.h>
 
 #define DEFAULT_FONT_NAME Liza8x10
 
@@ -37,9 +38,9 @@ RetainPtr<Font> Font::clone() const
 {
     size_t bytes_per_glyph = glyph_width() * glyph_height();
     // FIXME: This is leaked!
-    char** new_glyphs = static_cast<char**>(malloc(sizeof(char*) * 256));
+    char** new_glyphs = static_cast<char**>(kmalloc(sizeof(char*) * 256));
     for (unsigned i = 0; i < 256; ++i) {
-        new_glyphs[i] = static_cast<char*>(malloc(bytes_per_glyph));
+        new_glyphs[i] = static_cast<char*>(kmalloc(bytes_per_glyph));
         if (i >= m_first_glyph && i <= m_last_glyph) {
             memcpy(new_glyphs[i], m_glyphs[i - m_first_glyph], bytes_per_glyph);
         } else {
