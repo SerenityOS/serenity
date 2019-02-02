@@ -1,4 +1,5 @@
 *.o
+*.d
 id
 sh
 ps

@@ -1,4 +1,5 @@
 *.o
+*.d
 .floppy-image
 Boot/boot.bin
 kernel
