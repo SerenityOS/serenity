@@ -2,6 +2,8 @@
 
 namespace Liza8x10 {
 
+static constexpr char name[64] = "Old Liza";
+
 static constexpr char first_glyph = '!';
 static constexpr char last_glyph = '~';
 static constexpr byte glyph_width = 8;

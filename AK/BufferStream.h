@@ -16,6 +16,11 @@ public:
         m_buffer[m_offset++] = value & 0xffu;
     }
 
+    void operator<<(char value)
+    {
+        m_buffer[m_offset++] = (byte)value;
+    }
+
     void operator<<(word value)
     {
         m_buffer[m_offset++] = value & 0xffu;
@@ -43,9 +48,20 @@ public:
             m_buffer[m_offset++] = value[i];
     }
 
+    void operator<<(const ByteBuffer& value)
+    {
+        for (size_t i = 0; i < value.size(); ++i)
+            m_buffer[m_offset++] = value[i];
+    }
+
+    bool at_end() const
+    {
+        return m_offset == m_buffer.size();
+    }
+
     void fill_to_end(byte ch)
     {
-        while (m_offset < m_buffer.size())
+        while (!at_end())
             m_buffer[m_offset++] = ch;
     }
 

@@ -1,17 +1,27 @@
 #include "FontEditor.h"
 #include <SharedGraphics/Painter.h>
+#include <LibGUI/GButton.h>
 #include <LibGUI/GLabel.h>
 
 FontEditorWidget::FontEditorWidget(GWidget* parent)
     : GWidget(parent)
 {
-    auto mutable_font = Font::default_font().clone();
+    m_edited_font = Font::load_from_file("/saved.font");
+    if (!m_edited_font)
+        m_edited_font = Font::default_font().clone();
 
-    m_glyph_map_widget = new GlyphMapWidget(*mutable_font, this);
+    m_glyph_map_widget = new GlyphMapWidget(*m_edited_font, this);
     m_glyph_map_widget->move_to({ 90, 5 });
 
-    m_glyph_editor_widget = new GlyphEditorWidget(*mutable_font, this);
+    m_glyph_editor_widget = new GlyphEditorWidget(*m_edited_font, this);
     m_glyph_editor_widget->move_to({ 5, 5 });
+
+    auto* save_button = new GButton(this);
+    save_button->set_caption("Save");
+    save_button->set_relative_rect({ 5, 135, 140, 20 });
+    save_button->on_click = [this] (GButton&) {
+        m_edited_font->write_to_file("/saved.font");
+    };
 
     auto* label = new GLabel(this);
     label->set_relative_rect({ 5, 110, 140, 20 });
