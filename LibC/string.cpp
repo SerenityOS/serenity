@@ -5,6 +5,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <AK/Types.h>
+#include <AK/StdLibExtras.h>
 
 extern "C" {
 
@@ -57,6 +58,15 @@ char* strdup(const char* str)
     size_t len = strlen(str);
     char* new_str = (char*)malloc(len + 1);
     strcpy(new_str, str);
+    return new_str;
+}
+
+char* strndup(const char* str, size_t maxlen)
+{
+    size_t len = min(strlen(str), maxlen);
+    char* new_str = (char*)malloc(len + 1);
+    memcpy(new_str, str, len);
+    new_str[len] = 0;
     return new_str;
 }
 

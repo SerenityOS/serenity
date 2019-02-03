@@ -30,5 +30,7 @@ time_t time(time_t*);
 char* ctime(const time_t*);
 void tzset();
 
+#define difftime(t1,t0) (double)(t1 - t0)
+
 __END_DECLS
 

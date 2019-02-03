@@ -42,6 +42,7 @@ int fstat(int fd, struct stat* statbuf);
 int lstat(const char* path, struct stat* statbuf);
 int stat(const char* path, struct stat* statbuf);
 int sleep(unsigned seconds);
+int usleep(useconds_t);
 int gethostname(char*, size_t);
 ssize_t readlink(const char* path, char* buffer, size_t);
 char* ttyname(int fd);

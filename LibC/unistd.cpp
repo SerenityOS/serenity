@@ -201,6 +201,11 @@ int sleep(unsigned seconds)
     return syscall(SC_sleep, seconds);
 }
 
+int usleep(useconds_t usec)
+{
+    return syscall(SC_usleep, usec);
+}
+
 int gethostname(char* buffer, size_t size)
 {
     int rc = syscall(SC_gethostname, buffer, size);

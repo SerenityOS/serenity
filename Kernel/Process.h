@@ -166,6 +166,7 @@ public:
     int sys$getcwd(char*, size_t);
     int sys$chdir(const char*);
     int sys$sleep(unsigned seconds);
+    int sys$usleep(useconds_t usec);
     int sys$gettimeofday(timeval*);
     int sys$gethostname(char* name, size_t length);
     int sys$get_arguments(int* argc, char*** argv);
