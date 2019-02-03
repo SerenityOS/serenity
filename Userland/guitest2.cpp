@@ -71,8 +71,10 @@ static GWindow* make_clock_window();
 int main(int argc, char** argv)
 {
     GEventLoop loop;
+#if 0
     auto* font_test_window = make_font_test_window();
     font_test_window->show();
+#endif
 
     auto* launcher_window = make_launcher_window();
     launcher_window->show();
