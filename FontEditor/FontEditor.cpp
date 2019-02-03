@@ -150,10 +150,17 @@ void GlyphEditorWidget::paint_event(GPaintEvent&)
 
     auto& bitmap = font().glyph_bitmap(m_glyph);
 
+    for (int y = 0; y < font().glyph_height(); ++y)
+        painter.draw_line({ 0, y * m_scale }, { font().glyph_width() * m_scale - 1, y * m_scale }, Color::Black);
+
+    for (int x = 0; x < font().glyph_width(); ++x)
+        painter.draw_line({ x * m_scale, 0 }, { x * m_scale, font().glyph_height() * m_scale - 1 }, Color::Black);
+
     for (int y = 0; y < font().glyph_height(); ++y) {
         for (int x = 0; x < font().glyph_width(); ++x) {
             Rect rect { x * m_scale, y * m_scale, m_scale, m_scale };
-            painter.fill_rect(rect, bitmap.bit_at(x, y) ? Color::Black : Color::White);
+            if (bitmap.bit_at(x, y))
+                painter.fill_rect(rect, Color::Black);
         }
     }
 }
