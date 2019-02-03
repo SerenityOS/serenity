@@ -5,11 +5,13 @@
 #include "Process.h"
 #include "MemoryManager.h"
 #include <Kernel/ProcFileSystem.h>
+#include <SharedGraphics/Font.h>
 #include <SharedGraphics/Painter.h>
 #include <SharedGraphics/CharacterBitmap.h>
 #include <AK/StdLibExtras.h>
 
 //#define DEBUG_COUNTERS
+//#define DEBUG_WID_IN_TITLE_BAR
 
 static const int window_titlebar_height = 16;
 
@@ -151,9 +153,13 @@ void WSWindowManager::paint_window_frame(WSWindow& window)
     //printf("[WM] paint_window_frame {%p}, rect: %d,%d %dx%d\n", &window, window.rect().x(), window.rect().y(), window.rect().width(), window.rect().height());
 
     auto titlebar_rect = title_bar_rect(window.rect());
-    auto titlebar_title_rect = title_bar_text_rect(window.rect());
+    auto titlebar_inner_rect = title_bar_text_rect(window.rect());
     auto outer_rect = outer_window_rect(window.rect());
     auto border_rect = border_window_rect(window.rect());
+
+
+    auto titlebar_title_rect = titlebar_inner_rect;
+    titlebar_title_rect.set_width(Font::default_font().glyph_width() * window.title().length());
 
     Rect inner_border_rect {
         window.x() - 1,
@@ -185,18 +191,23 @@ void WSWindowManager::paint_window_frame(WSWindow& window)
     }
 
     m_back_painter->fill_rect_with_gradient(titlebar_rect, border_color, border_color2);
+    for (int i = 2; i <= titlebar_inner_rect.height() - 4; i += 2) {
+        m_back_painter->draw_line({ titlebar_title_rect.right() + 4, titlebar_inner_rect.y() + i }, { titlebar_inner_rect.right(), titlebar_inner_rect.y() + i }, border_color);
+    }
     m_back_painter->draw_rect(border_rect, middle_border_color);
     m_back_painter->draw_rect(outer_rect, border_color);
     m_back_painter->draw_rect(inner_border_rect, border_color);
     m_back_painter->draw_text(titlebar_title_rect, window.title(), Painter::TextAlignment::CenterLeft, title_color);
 
+#ifdef DEBUG_WID_IN_TITLE_BAR
     Color metadata_color(96, 96, 96);
     m_back_painter->draw_text(
-        titlebar_title_rect,
+        titlebar_inner_rect,
         String::format("%d:%d", window.pid(), window.window_id()),
         Painter::TextAlignment::CenterRight,
         metadata_color
     );
+#endif
 }
 
 void WSWindowManager::add_window(WSWindow& window)
