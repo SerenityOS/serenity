@@ -84,6 +84,7 @@
     __ENUMERATE_SYSCALL(gui_set_global_cursor_tracking_enabled) \
     __ENUMERATE_SYSCALL(rmdir) \
     __ENUMERATE_SYSCALL(chmod) \
+    __ENUMERATE_SYSCALL(usleep) \
 
 
 #ifdef SERENITY

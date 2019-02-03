@@ -62,6 +62,8 @@ static dword handle(RegisterDump& regs, dword function, dword arg1, dword arg2, 
         break;
     case Syscall::SC_sleep:
         return current->sys$sleep((unsigned)arg1);
+    case Syscall::SC_usleep:
+        return current->sys$usleep((unsigned)arg1);
     case Syscall::SC_gettimeofday:
         return current->sys$gettimeofday((timeval*)arg1);
     case Syscall::SC_get_dir_entries:

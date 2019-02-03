@@ -1,4 +1,5 @@
 #include "Terminal.h"
+#include "XtermColors.h"
 #include <AK/AKString.h>
 #include <AK/StringBuilder.h>
 #include <SharedGraphics/Font.h>
@@ -72,12 +73,12 @@ Terminal::Line::~Line()
     delete [] attributes;
 }
 
-void Terminal::Line::clear()
+void Terminal::Line::clear(Attribute attribute)
 {
     dirty = true;
     memset(characters, ' ', length);
     for (word i = 0 ; i < length; ++i)
-        attributes[i].reset();
+        attributes[i] = attribute;
 }
 
 Terminal::~Terminal()
@@ -91,7 +92,7 @@ Terminal::~Terminal()
 void Terminal::clear()
 {
     for (size_t i = 0; i < rows(); ++i)
-        line(i).clear();
+        line(i).clear(m_current_attribute);
     set_cursor(0, 0);
 }
 
@@ -125,50 +126,22 @@ unsigned parse_uint(const String& str, bool& ok)
     return value;
 }
 
-enum ANSIColor : byte {
-    Black = 0,
-    Red,
-    Green,
-    Brown,
-    Blue,
-    Magenta,
-    Cyan,
-    LightGray,
-    DarkGray,
-    BrightRed,
-    BrightGreen,
-    Yellow,
-    BrightBlue,
-    BrightMagenta,
-    BrightCyan,
-    White,
-};
-
-static inline Color ansi_color(unsigned color)
+static inline Color lookup_color(unsigned color)
 {
-    static const RGBA32 s_ansi_color[16] = {
-        make_rgb(0, 0, 0),          // Black
-        make_rgb(225, 56, 43),      // Red
-        make_rgb(57, 181, 74),      // Green
-        make_rgb(255, 199, 6),      // Brown
-        make_rgb(0, 111, 184),      // Blue
-        make_rgb(118, 38, 113),     // Magenta
-        make_rgb(44, 181, 233),     // Cyan
-        make_rgb(204, 204, 204),    // LightGray
-        make_rgb(128, 128, 128),    // DarkGray
-        make_rgb(255, 0, 0),        // BrightRed
-        make_rgb(0, 255, 0),        // BrightGreen
-        make_rgb(255, 255, 0),      // Yellow
-        make_rgb(0, 0, 255),        // BrightBlue
-        make_rgb(255, 0, 255),      // BrightMagenta
-        make_rgb(0, 255, 255),      // BrightCyan
-        make_rgb(255, 255, 255),    // White
-    };
-    return s_ansi_color[color];
+    return xterm_colors[color];
 }
 
 void Terminal::escape$m(const Vector<unsigned>& params)
 {
+    if (params.size() == 3 && params[1] == 5) {
+        if (params[0] == 38) {
+            m_current_attribute.foreground_color = params[2];
+            return;
+        } else if (params[0] == 48) {
+            m_current_attribute.background_color = params[2];
+            return;
+        }
+    }
     for (auto param : params) {
         switch (param) {
         case 0:
@@ -364,6 +337,8 @@ void Terminal::execute_xterm_command()
     if (ok) {
         switch (value) {
         case 0:
+        case 1:
+        case 2:
             set_window_title(String((const char*)m_xterm_param2.data(), m_xterm_param2.size()));
             break;
         default:
@@ -384,6 +359,8 @@ void Terminal::execute_escape_sequence(byte final)
         bool ok;
         unsigned value = parse_uint(parampart, ok);
         if (!ok) {
+            m_parameters.clear_with_capacity();
+            m_intermediates.clear_with_capacity();
             // FIXME: Should we do something else?
             return;
         }
@@ -406,8 +383,8 @@ void Terminal::execute_escape_sequence(byte final)
         break;
     }
 
-    m_parameters.clear();
-    m_intermediates.clear();
+    m_parameters.clear_with_capacity();
+    m_intermediates.clear_with_capacity();
 }
 
 void Terminal::newline()
@@ -463,7 +440,7 @@ void Terminal::put_character_at(unsigned row, unsigned column, byte ch)
 void Terminal::on_char(byte ch)
 {
 #ifdef TERMINAL_DEBUG
-    dbgprintf("Terminal::on_char: %b (%c)\n", ch, ch);
+    dbgprintf("Terminal::on_char: %b (%c), fg=%u, bg=%u\n", ch, ch, m_current_attribute.foreground_color, m_current_attribute.background_color);
 #endif
     switch (m_escape_state) {
     case ExpectBracket:
@@ -617,14 +594,9 @@ Rect Terminal::glyph_rect(word row, word column)
 Rect Terminal::row_rect(word row)
 {
     int y = row * m_line_height;
-    return { m_inset, y + m_inset, font().glyph_width() * m_columns, font().glyph_height() };
-}
-
-inline Terminal::Attribute& Terminal::attribute_at(word row, word column)
-{
-    ASSERT(row < m_rows);
-    ASSERT(column < m_columns);
-    return line(row).attributes[column];
+    Rect rect = { m_inset, y + m_inset, font().glyph_width() * m_columns, font().glyph_height() };
+    rect.inflate(0, m_line_spacing);
+    return rect;
 }
 
 bool Terminal::Line::has_only_one_background_color() const
@@ -671,25 +643,29 @@ void Terminal::paint()
             continue;
         line.dirty = false;
         bool has_only_one_background_color = line.has_only_one_background_color();
-        if (has_only_one_background_color)
-            painter.fill_rect(row_rect(row), line.attributes[0].background_color);
+        if (has_only_one_background_color) {
+            painter.fill_rect(row_rect(row), lookup_color(line.attributes[0].background_color));
+        }
         for (word column = 0; column < m_columns; ++column) {
             bool should_reverse_fill_for_cursor = m_in_active_window && row == m_cursor_row && column == m_cursor_column;
             auto& attribute = line.attributes[column];
             line.did_paint = true;
             char ch = line.characters[column];
             auto character_rect = glyph_rect(row, column);
-            if (!has_only_one_background_color || should_reverse_fill_for_cursor)
-                painter.fill_rect(character_rect, ansi_color(should_reverse_fill_for_cursor ? attribute.foreground_color : attribute.background_color));
+            if (!has_only_one_background_color || should_reverse_fill_for_cursor) {
+                auto cell_rect = character_rect;
+                cell_rect.inflate(0, m_line_spacing);
+                painter.fill_rect(cell_rect, lookup_color(should_reverse_fill_for_cursor ? attribute.foreground_color : attribute.background_color));
+            }
             if (ch == ' ')
                 continue;
-            painter.draw_glyph(character_rect.location(), ch, ansi_color(should_reverse_fill_for_cursor ? attribute.background_color : attribute.foreground_color));
+            painter.draw_glyph(character_rect.location(), ch, lookup_color(should_reverse_fill_for_cursor ? attribute.background_color : attribute.foreground_color));
         }
     }
 
     if (!m_in_active_window) {
         auto cursor_rect = glyph_rect(m_cursor_row, m_cursor_column);
-        painter.draw_rect(cursor_rect, ansi_color(line(m_cursor_row).attributes[m_cursor_column].foreground_color));
+        painter.draw_rect(cursor_rect, lookup_color(line(m_cursor_row).attributes[m_cursor_column].foreground_color));
     }
 
     line(m_cursor_row).did_paint = true;

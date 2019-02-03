@@ -15,6 +15,8 @@ void* memchr(const void*, int c, size_t);
 void bzero(void*, size_t);
 void bcopy(const void*, void*, size_t);
 void* memset(void*, int, size_t);
+char* strdup(const char*);
+char* strndup(const char*, size_t);
 char* strcpy(char* dest, const char* src);
 char* strncpy(char* dest, const char* src, size_t);
 char* strchr(const char*, int c);

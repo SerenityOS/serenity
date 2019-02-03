@@ -63,8 +63,8 @@ private:
             background_color = 0;
             //bold = false;
         }
-        unsigned foreground_color : 4;
-        unsigned background_color : 4;
+        byte foreground_color;
+        byte background_color;
         //bool bold : 1;
         bool operator==(const Attribute& other) const
         {
@@ -75,7 +75,7 @@ private:
     struct Line {
         explicit Line(word columns);
         ~Line();
-        void clear();
+        void clear(Attribute);
         bool has_only_one_background_color() const;
         byte* characters { nullptr };
         Attribute* attributes { nullptr };
@@ -97,8 +97,6 @@ private:
     bool m_stomp { false };
 
     Attribute m_current_attribute;
-
-    Attribute& attribute_at(word row, word column);
 
     void execute_escape_sequence(byte final);
     void execute_xterm_command();

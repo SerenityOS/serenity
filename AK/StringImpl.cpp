@@ -81,6 +81,9 @@ RetainPtr<StringImpl> StringImpl::create(const char* cstring, size_t length, Sho
     if (!*cstring)
         return the_empty_stringimpl();
 
+    if (!length)
+        return the_empty_stringimpl();
+
     char* buffer;
     auto new_stringimpl = create_uninitialized(length, buffer);
     if (!new_stringimpl)

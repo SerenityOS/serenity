@@ -1425,6 +1425,20 @@ int Process::sys$kill(pid_t pid, int signal)
     return 0;
 }
 
+int Process::sys$usleep(useconds_t usec)
+{
+    if (!usec)
+        return 0;
+
+    sleep(usec / 1000);
+    if (m_wakeup_time > system.uptime) {
+        ASSERT(m_was_interrupted_while_blocked);
+        dword ticks_left_until_original_wakeup_time = m_wakeup_time - system.uptime;
+        return ticks_left_until_original_wakeup_time / TICKS_PER_SECOND;
+    }
+    return 0;
+}
+
 int Process::sys$sleep(unsigned seconds)
 {
     if (!seconds)
