@@ -77,6 +77,7 @@ private:
 };
 
 class VMObject : public Retainable<VMObject> {
+    friend class MemoryManager;
 public:
     static RetainPtr<VMObject> create_file_backed(RetainPtr<Inode>&&, size_t);
     static RetainPtr<VMObject> create_anonymous(size_t);
@@ -108,6 +109,7 @@ private:
     size_t m_size { 0 };
     RetainPtr<Inode> m_inode;
     Vector<RetainPtr<PhysicalPage>> m_physical_pages;
+    Lock m_paging_lock;
 };
 
 class Region : public Retainable<Region> {

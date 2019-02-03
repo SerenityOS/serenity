@@ -10,6 +10,7 @@
 #include <LibC/stdio.h>
 #include <LibC/fcntl.h>
 #include <LibC/errno.h>
+#include <LibC/mman.h>
 #endif
 
 #define DEFAULT_FONT_NAME Liza8x10
@@ -101,43 +102,26 @@ struct FontFileHeader {
     char name[64];
 } PACKED;
 
-RetainPtr<Font> Font::load_from_file(const String& path)
+RetainPtr<Font> Font::load_from_memory(const byte* data)
 {
-    int fd = open(path.characters(), O_RDONLY, 0644);
-    if (fd < 0) {
-        dbgprintf("open(%s) got fd=%d, failed: %s\n", path.characters(), fd, strerror(errno));
-        perror("open");
-        return nullptr;
-    }
-
-    FontFileHeader header;
-    ssize_t nread = read(fd, &header, sizeof(FontFileHeader));
-    if (nread != sizeof(FontFileHeader)) {
-        dbgprintf("nread != sizeof(FontFileHeader)=%u\n", sizeof(FontFileHeader));
-        return nullptr;
-    }
-
+    auto& header = *reinterpret_cast<const FontFileHeader*>(data);
     if (memcmp(header.magic, "!Fnt", 4)) {
-        dbgprintf("header.magic != '!Fnt'\n");
+        dbgprintf("header.magic != '!Fnt', instead it's '%c%c%c%c'\n", header.magic[0], header.magic[1], header.magic[2], header.magic[3]);
         return nullptr;
     }
-
     if (header.name[63] != '\0') {
         dbgprintf("Font name not fully null-terminated\n");
         return nullptr;
     }
+
+    auto* glyphs_ptr = reinterpret_cast<const unsigned*>(data + sizeof(FontFileHeader));
 
     char** new_glyphs = static_cast<char**>(kmalloc(sizeof(char*) * 256));
     for (unsigned glyph_index = 0; glyph_index < 256; ++glyph_index) {
         new_glyphs[glyph_index] = static_cast<char*>(kmalloc(header.glyph_width * header.glyph_height));
         char* bitptr = new_glyphs[glyph_index];
         for (unsigned y = 0; y < header.glyph_height; ++y) {
-            unsigned pattern;
-            ssize_t nread = read(fd, &pattern, sizeof(unsigned));
-            if (nread != sizeof(unsigned)) {
-                // FIXME: free() things and return nullptr.
-                ASSERT_NOT_REACHED();
-            }
+            unsigned pattern = *(glyphs_ptr++);
             for (unsigned x = 0; x < header.glyph_width; ++x) {
                 if (pattern & (1u << x)) {
                     *(bitptr++) = '#';
@@ -149,6 +133,25 @@ RetainPtr<Font> Font::load_from_file(const String& path)
     }
 
     return adopt(*new Font(String(header.name), new_glyphs, header.glyph_width, header.glyph_height, 0, 255));
+}
+
+RetainPtr<Font> Font::load_from_file(const String& path)
+{
+    int fd = open(path.characters(), O_RDONLY, 0644);
+    if (fd < 0) {
+        dbgprintf("open(%s) got fd=%d, failed: %s\n", path.characters(), fd, strerror(errno));
+        perror("open");
+        return nullptr;
+    }
+
+    auto* mapped_file = (byte*)mmap(nullptr, 4096 * 3, PROT_READ, MAP_SHARED, fd, 0);
+    if (mapped_file == MAP_FAILED)
+        return nullptr;
+
+    auto font = load_from_memory(mapped_file);
+    int rc = munmap(mapped_file, 4096 * 3);
+    ASSERT(rc == 0);
+    return font;
 }
 
 bool Font::write_to_file(const String& path)
