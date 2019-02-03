@@ -27,7 +27,8 @@
 #define SIGNAL_DEBUG
 #define MAX_PROCESS_GIDS 32
 
-static const dword default_stack_size = 16384;
+static const dword default_kernel_stack_size = 16384;
+static const dword default_userspace_stack_size = 65536;
 
 static pid_t next_pid;
 InlineLinkedList<Process>* g_processes;
@@ -287,6 +288,8 @@ pid_t Process::sys$fork(RegisterDump& regs)
 
 int Process::do_exec(const String& path, Vector<String>&& arguments, Vector<String>&& environment)
 {
+    ASSERT(is_ring3());
+
     auto parts = path.split('/');
     if (parts.is_empty())
         return -ENOENT;
@@ -400,9 +403,9 @@ int Process::do_exec(const String& path, Vector<String>&& arguments, Vector<Stri
     m_tss.gs = 0x23;
     m_tss.ss = 0x23;
     m_tss.cr3 = page_directory().cr3();
-    m_stack_region = allocate_region(LinearAddress(), default_stack_size, "stack");
+    m_stack_region = allocate_region(LinearAddress(), default_userspace_stack_size, "stack");
     ASSERT(m_stack_region);
-    m_stack_top3 = m_stack_region->laddr().offset(default_stack_size).get();
+    m_stack_top3 = m_stack_region->laddr().offset(default_userspace_stack_size).get();
     m_tss.esp = m_stack_top3;
     m_tss.ss0 = 0x10;
     m_tss.esp0 = old_esp0;
@@ -670,24 +673,24 @@ Process::Process(String&& name, uid_t uid, gid_t gid, pid_t ppid, RingLevel ring
     if (is_ring0()) {
         // FIXME: This memory is leaked.
         // But uh, there's also no kernel process termination, so I guess it's not technically leaked...
-        dword stack_bottom = (dword)kmalloc_eternal(default_stack_size);
-        m_stack_top0 = (stack_bottom + default_stack_size) & 0xffffff8;
+        dword stack_bottom = (dword)kmalloc_eternal(default_kernel_stack_size);
+        m_stack_top0 = (stack_bottom + default_kernel_stack_size) & 0xffffff8;
         m_tss.esp = m_stack_top0;
     } else {
         if (fork_parent) {
             m_stack_top3 = fork_parent->m_stack_top3;
         } else {
-            auto* region = allocate_region(LinearAddress(), default_stack_size, "stack");
+            auto* region = allocate_region(LinearAddress(), default_userspace_stack_size, "stack");
             ASSERT(region);
-            m_stack_top3 = region->laddr().offset(default_stack_size).get();
+            m_stack_top3 = region->laddr().offset(default_userspace_stack_size).get();
             m_tss.esp = m_stack_top3;
         }
     }
 
     if (is_ring3()) {
         // Ring3 processes need a separate stack for Ring0.
-        m_kernel_stack = kmalloc(default_stack_size);
-        m_stack_top0 = ((dword)m_kernel_stack + default_stack_size) & 0xffffff8;
+        m_kernel_stack = kmalloc(default_kernel_stack_size);
+        m_stack_top0 = ((dword)m_kernel_stack + default_kernel_stack_size) & 0xffffff8;
         m_tss.ss0 = 0x10;
         m_tss.esp0 = m_stack_top0;
     }
@@ -830,15 +833,15 @@ bool Process::dispatch_signal(byte signal)
 
     if (interrupting_in_kernel) {
         if (!m_signal_stack_user_region) {
-            m_signal_stack_user_region = allocate_region(LinearAddress(), default_stack_size, "signal stack (user)");
+            m_signal_stack_user_region = allocate_region(LinearAddress(), default_userspace_stack_size, "signal stack (user)");
             ASSERT(m_signal_stack_user_region);
-            m_signal_stack_kernel_region = allocate_region(LinearAddress(), default_stack_size, "signal stack (kernel)");
+            m_signal_stack_kernel_region = allocate_region(LinearAddress(), default_userspace_stack_size, "signal stack (kernel)");
             ASSERT(m_signal_stack_user_region);
         }
         m_tss.ss = 0x23;
-        m_tss.esp = m_signal_stack_user_region->laddr().offset(default_stack_size).get() & 0xfffffff8;
+        m_tss.esp = m_signal_stack_user_region->laddr().offset(default_userspace_stack_size).get() & 0xfffffff8;
         m_tss.ss0 = 0x10;
-        m_tss.esp0 = m_signal_stack_kernel_region->laddr().offset(default_stack_size).get() & 0xfffffff8;
+        m_tss.esp0 = m_signal_stack_kernel_region->laddr().offset(default_userspace_stack_size).get() & 0xfffffff8;
         push_value_on_stack(ret_eflags);
         push_value_on_stack(ret_cs);
         push_value_on_stack(ret_eip);
