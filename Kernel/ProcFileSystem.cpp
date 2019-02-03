@@ -150,6 +150,13 @@ ByteBuffer procfs$pid_cwd(Process& process)
     return VFS::the().absolute_path(*inode).to_byte_buffer();
 }
 
+ByteBuffer procfs$self(SynthFSInode&)
+{
+    char buffer[16];
+    ksprintf(buffer, "%u", current->pid());
+    return ByteBuffer::copy((const byte*)buffer, strlen(buffer));
+}
+
 void ProcFS::add_process(Process& process)
 {
     InterruptDisabler disabler;
@@ -400,6 +407,7 @@ bool ProcFS::initialize()
     add_file(create_generated_file("cpuinfo", procfs$cpuinfo));
     add_file(create_generated_file("inodes", procfs$inodes));
     add_file(create_generated_file("dmesg", procfs$dmesg));
+    add_file(create_generated_file("self", procfs$self, 00120777));
     m_sys_dir = add_file(create_directory("sys"));
     return true;
 }
