@@ -47,7 +47,7 @@ private:
 
     Ext2FS& fs();
     const Ext2FS& fs() const;
-    Ext2FSInode(Ext2FS&, unsigned index, const ext2_inode&);
+    Ext2FSInode(Ext2FS&, unsigned index);
 
     mutable Vector<unsigned> m_block_list;
     mutable HashMap<String, unsigned> m_lookup_cache;
