@@ -304,6 +304,8 @@ bool MemoryManager::page_in_from_inode(Region& region, unsigned page_index_in_re
 
     auto& vmo_page = vmo.physical_pages()[region.first_page_index() + page_index_in_region];
 
+    ASSERT(vmo_page.is_null());
+
     bool interrupts_were_enabled = are_interrupts_enabled();
 
     if (!interrupts_were_enabled)
