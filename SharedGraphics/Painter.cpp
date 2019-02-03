@@ -270,6 +270,10 @@ void Painter::draw_line(const Point& p1, const Point& p2, Color color)
             return;
         if (point1.y() > point2.y())
             swap(point1, point2);
+        if (point1.y() > m_clip_rect.bottom())
+            return;
+        if (point2.y() < m_clip_rect.top())
+            return;
         int min_y = max(point1.y(), m_clip_rect.top());
         int max_y = min(point2.y(), m_clip_rect.bottom());
         for (int y = min_y; y <= max_y; ++y)
@@ -287,6 +291,10 @@ void Painter::draw_line(const Point& p1, const Point& p2, Color color)
             return;
         if (point1.x() > point2.x())
             swap(point1, point2);
+        if (point1.x() > m_clip_rect.right())
+            return;
+        if (point2.x() < m_clip_rect.left())
+            return;
         int min_x = max(point1.x(), m_clip_rect.left());
         int max_x = min(point2.x(), m_clip_rect.right());
         auto* pixels = m_target->scanline(point1.y());
