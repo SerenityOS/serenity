@@ -162,7 +162,8 @@ public:
     bool page_in();
     int commit();
 
-    size_t committed() const;
+    size_t amount_resident() const;
+    size_t amount_shared() const;
 
     PageDirectory* page_directory() { return m_page_directory.ptr(); }
 
