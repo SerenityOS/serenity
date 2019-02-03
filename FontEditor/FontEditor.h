@@ -5,6 +5,7 @@
 
 class GlyphEditorWidget;
 class GlyphMapWidget;
+class GTextBox;
 
 class FontEditorWidget final : public GWidget {
 public:
@@ -16,6 +17,7 @@ private:
 
     GlyphMapWidget* m_glyph_map_widget { nullptr };
     GlyphEditorWidget* m_glyph_editor_widget { nullptr };
+    GTextBox* m_name_textbox { nullptr };
 };
 
 class GlyphMapWidget final : public GWidget {

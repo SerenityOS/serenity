@@ -68,6 +68,8 @@ void GTextBox::handle_backspace()
     if (m_text.length() == 1) {
         m_text = String::empty();
         m_cursor_position = 0;
+        if (on_change)
+            on_change(*this);
         update();
         return;
     }
@@ -80,6 +82,8 @@ void GTextBox::handle_backspace()
 
     m_text = move(new_text);
     --m_cursor_position;
+    if (on_change)
+        on_change(*this);
     update();
 }
 
@@ -118,6 +122,8 @@ void GTextBox::keydown_event(GKeyEvent& event)
 
         m_text = move(new_text);
         ++m_cursor_position;
+        if (on_change)
+            on_change(*this);
         update();
         return;
     }

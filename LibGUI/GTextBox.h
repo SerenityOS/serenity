@@ -12,6 +12,7 @@ public:
     void set_text(String&&);
 
     Function<void(GTextBox&)> on_return_pressed;
+    Function<void(GTextBox&)> on_change;
 
 private:
     virtual const char* class_name() const override { return "GTextBox"; }

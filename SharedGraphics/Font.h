@@ -26,6 +26,9 @@ public:
     byte glyph_width() const { return m_glyph_width; }
     byte glyph_height() const { return m_glyph_height; }
 
+    String name() const { return m_name; }
+    void set_name(const String& name) { m_name = name; }
+
     static void initialize();
 
 private:
