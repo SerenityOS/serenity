@@ -55,7 +55,7 @@ size_t strlen(const char* str)
 char* strdup(const char* str)
 {
     size_t len = strlen(str);
-    char* new_str = (char*)malloc(len);
+    char* new_str = (char*)malloc(len + 1);
     strcpy(new_str, str);
     return new_str;
 }
