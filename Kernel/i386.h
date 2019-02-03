@@ -79,8 +79,8 @@ void write_gdt_entry(word selector, Descriptor&);
 #define LSB(x) ((x) & 0xFF)
 #define MSB(x) (((x)>>8) & 0xFF)
 
-#define cli() asm volatile("cli")
-#define sti() asm volatile("sti")
+#define cli() asm volatile("cli" ::: "memory")
+#define sti() asm volatile("sti" ::: "memory")
 #define memory_barrier() asm volatile ("" ::: "memory")
 
 inline dword cpu_cr3()
