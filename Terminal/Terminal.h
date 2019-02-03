@@ -23,6 +23,7 @@ public:
 private:
     Font& font() { return *m_font; }
     void scroll_up();
+    void newline();
     void set_cursor(unsigned row, unsigned column);
     void put_character_at(unsigned row, unsigned column, byte ch);
     void invalidate_cursor();
@@ -41,6 +42,7 @@ private:
     void escape$H(const Vector<unsigned>&);
     void escape$J(const Vector<unsigned>&);
     void escape$K(const Vector<unsigned>&);
+    void escape$M(const Vector<unsigned>&);
     void escape$m(const Vector<unsigned>&);
     void escape$s(const Vector<unsigned>&);
     void escape$u(const Vector<unsigned>&);
@@ -64,6 +66,10 @@ private:
         unsigned foreground_color : 4;
         unsigned background_color : 4;
         //bool bold : 1;
+        bool operator==(const Attribute& other) const
+        {
+            return foreground_color == other.foreground_color && background_color == other.background_color;
+        }
     };
 
     struct Line {

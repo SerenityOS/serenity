@@ -337,6 +337,25 @@ void Terminal::escape$J(const Vector<unsigned>& params)
     }
 }
 
+void Terminal::escape$M(const Vector<unsigned>& params)
+{
+    int count = 1;
+    if (params.size() >= 1)
+        count = params[0];
+
+    if (count == 1 && m_cursor_row == 0) {
+        scroll_up();
+        return;
+    }
+
+    int max_count = m_rows - m_cursor_row;
+    count = min(count, max_count);
+
+    dbgprintf("Delete %d line(s) starting from %d\n", count, m_cursor_row);
+    // FIXME: Implement.
+    ASSERT_NOT_REACHED();
+}
+
 void Terminal::execute_xterm_command()
 {
     m_final = '@';
@@ -378,6 +397,7 @@ void Terminal::execute_escape_sequence(byte final)
     case 'H': escape$H(params); break;
     case 'J': escape$J(params); break;
     case 'K': escape$K(params); break;
+    case 'M': escape$M(params); break;
     case 'm': escape$m(params); break;
     case 's': escape$s(params); break;
     case 'u': escape$u(params); break;
@@ -390,21 +410,26 @@ void Terminal::execute_escape_sequence(byte final)
     m_intermediates.clear();
 }
 
-void Terminal::scroll_up()
+void Terminal::newline()
 {
     word new_row = m_cursor_row;
     if (m_cursor_row == (rows() - 1)) {
-        // NOTE: We have to invalidate the cursor first.
-        invalidate_cursor();
-        delete m_lines[0];
-        for (word row = 1; row < rows(); ++row)
-            m_lines[row - 1] = m_lines[row];
-        m_lines[m_rows - 1] = new Line(m_columns);
-        ++m_rows_to_scroll_backing_store;
+        scroll_up();
     } else {
         ++new_row;
     }
     set_cursor(new_row, 0);
+}
+
+void Terminal::scroll_up()
+{
+    // NOTE: We have to invalidate the cursor first.
+    invalidate_cursor();
+    delete m_lines[0];
+    for (word row = 1; row < rows(); ++row)
+        m_lines[row - 1] = m_lines[row];
+    m_lines[m_rows - 1] = new Line(m_columns);
+    ++m_rows_to_scroll_backing_store;
 }
 
 void Terminal::set_cursor(unsigned a_row, unsigned a_column)
@@ -427,9 +452,12 @@ void Terminal::put_character_at(unsigned row, unsigned column, byte ch)
 {
     ASSERT(row < rows());
     ASSERT(column < columns());
-    line(row).characters[column] = ch;
-    line(row).attributes[column] = m_current_attribute;
-    line(row).dirty = true;
+    auto& line = this->line(row);
+    if ((line.characters[column] == ch) && (line.attributes[column] == m_current_attribute))
+        return;
+    line.characters[column] = ch;
+    line.attributes[column] = m_current_attribute;
+    line.dirty = true;
 }
 
 void Terminal::on_char(byte ch)
@@ -521,7 +549,7 @@ void Terminal::on_char(byte ch)
         set_cursor(m_cursor_row, 0);
         return;
     case '\n':
-        scroll_up();
+        newline();
         return;
     }
 
@@ -532,7 +560,7 @@ void Terminal::on_char(byte ch)
     } else {
         if (m_stomp) {
             m_stomp = false;
-            scroll_up();
+            newline();
             put_character_at(m_cursor_row, m_cursor_column, ch);
             set_cursor(m_cursor_row, 1);
         } else {
@@ -635,8 +663,7 @@ void Terminal::paint()
     }
     m_rows_to_scroll_backing_store = 0;
 
-    // Always redraw the line with the cursor on it.
-    line(m_cursor_row).dirty = true;
+    invalidate_cursor();
 
     for (word row = 0; row < m_rows; ++row) {
         auto& line = this->line(row);
