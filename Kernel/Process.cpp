@@ -1209,8 +1209,7 @@ int Process::sys$fstat(int fd, stat* statbuf)
     auto* descriptor = file_descriptor(fd);
     if (!descriptor)
         return -EBADF;
-    descriptor->fstat(statbuf);
-    return 0;
+    return descriptor->fstat(statbuf);
 }
 
 int Process::sys$lstat(const char* path, stat* statbuf)
@@ -1221,8 +1220,7 @@ int Process::sys$lstat(const char* path, stat* statbuf)
     auto descriptor = VFS::the().open(move(path), error, O_NOFOLLOW_NOERROR | O_DONT_OPEN_DEVICE, 0, *cwd_inode());
     if (!descriptor)
         return error;
-    descriptor->fstat(statbuf);
-    return 0;
+    return descriptor->fstat(statbuf);
 }
 
 int Process::sys$stat(const char* path, stat* statbuf)
@@ -1233,8 +1231,7 @@ int Process::sys$stat(const char* path, stat* statbuf)
     auto descriptor = VFS::the().open(move(path), error, O_DONT_OPEN_DEVICE, 0, *cwd_inode());
     if (!descriptor)
         return error;
-    descriptor->fstat(statbuf);
-    return 0;
+    return descriptor->fstat(statbuf);
 }
 
 int Process::sys$readlink(const char* path, char* buffer, size_t size)
