@@ -407,8 +407,10 @@ void Terminal::scroll_up()
     set_cursor(new_row, 0);
 }
 
-void Terminal::set_cursor(unsigned row, unsigned column)
+void Terminal::set_cursor(unsigned a_row, unsigned a_column)
 {
+    unsigned row = min(a_row, m_rows - 1u);
+    unsigned column = min(a_column, m_columns - 1u);
     if (row == m_cursor_row && column == m_cursor_column)
         return;
     ASSERT(row < rows());
