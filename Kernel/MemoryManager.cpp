@@ -301,9 +301,41 @@ bool MemoryManager::page_in_from_inode(Region& region, unsigned page_index_in_re
     auto& vmo = region.vmo();
     ASSERT(!vmo.is_anonymous());
     ASSERT(vmo.inode());
-    auto& inode = *vmo.inode();
+
     auto& vmo_page = vmo.physical_pages()[region.first_page_index() + page_index_in_region];
-    ASSERT(vmo_page.is_null());
+
+    bool interrupts_were_enabled = are_interrupts_enabled();
+
+    if (!interrupts_were_enabled)
+        sti();
+
+    LOCKER(vmo.m_paging_lock);
+
+    if (!interrupts_were_enabled)
+        cli();
+
+    if (!vmo_page.is_null()) {
+        kprintf("MM: page_in_from_inode was served by someone else while lock was held\n");
+        remap_region_page(region, page_index_in_region, true);
+        return true;
+    }
+
+#ifdef MM_DEBUG
+    dbgprintf("MM: page_in_from_inode ready to read from inode, will write to L%x!\n", dest_ptr);
+#endif
+    sti(); // Oh god here we go...
+    byte page_buffer[PAGE_SIZE];
+    auto& inode = *vmo.inode();
+    auto nread = inode.read_bytes(vmo.inode_offset() + ((region.first_page_index() + page_index_in_region) * PAGE_SIZE), PAGE_SIZE, page_buffer, nullptr);
+    if (nread < 0) {
+        kprintf("MM: page_in_from_inode had error (%d) while reading!\n", nread);
+        return false;
+    }
+    if (nread < PAGE_SIZE) {
+        // If we read less than a page, zero out the rest to avoid leaking uninitialized data.
+        memset(page_buffer + nread, 0, PAGE_SIZE - nread);
+    }
+    cli();
     vmo_page = allocate_physical_page(ShouldZeroFill::No);
     if (vmo_page.is_null()) {
         kprintf("MM: page_in_from_inode was unable to allocate a physical page\n");
@@ -311,20 +343,7 @@ bool MemoryManager::page_in_from_inode(Region& region, unsigned page_index_in_re
     }
     remap_region_page(region, page_index_in_region, true);
     byte* dest_ptr = region.laddr().offset(page_index_in_region * PAGE_SIZE).as_ptr();
-#ifdef MM_DEBUG
-    dbgprintf("MM: page_in_from_inode ready to read from inode, will write to L%x!\n", dest_ptr);
-#endif
-    sti(); // Oh god here we go...
-    auto nread = inode.read_bytes(vmo.inode_offset() + ((region.first_page_index() + page_index_in_region) * PAGE_SIZE), PAGE_SIZE, dest_ptr, nullptr);
-    if (nread < 0) {
-        kprintf("MM: page_in_from_inode had error (%d) while reading!\n", nread);
-        return false;
-    }
-    if (nread < PAGE_SIZE) {
-        // If we read less than a page, zero out the rest to avoid leaking uninitialized data.
-        memset(dest_ptr + nread, 0, PAGE_SIZE - nread);
-    }
-    cli();
+    memcpy(dest_ptr, page_buffer, PAGE_SIZE);
     return true;
 }
 

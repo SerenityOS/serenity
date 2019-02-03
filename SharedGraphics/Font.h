@@ -12,6 +12,8 @@ public:
 
     RetainPtr<Font> clone() const;
 
+    static RetainPtr<Font> load_from_memory(const byte*);
+
 #ifdef USERLAND
     static RetainPtr<Font> load_from_file(const String& path);
     bool write_to_file(const String& path);
