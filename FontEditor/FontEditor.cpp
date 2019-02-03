@@ -2,6 +2,7 @@
 #include <SharedGraphics/Painter.h>
 #include <LibGUI/GButton.h>
 #include <LibGUI/GLabel.h>
+#include <LibGUI/GTextBox.h>
 
 FontEditorWidget::FontEditorWidget(GWidget* parent)
     : GWidget(parent)
@@ -16,9 +17,16 @@ FontEditorWidget::FontEditorWidget(GWidget* parent)
     m_glyph_editor_widget = new GlyphEditorWidget(*m_edited_font, this);
     m_glyph_editor_widget->move_to({ 5, 5 });
 
+    m_name_textbox = new GTextBox(this);
+    m_name_textbox->set_relative_rect({ 5, 135, 140, 20 });
+    m_name_textbox->set_text(m_edited_font->name());
+    m_name_textbox->on_change = [this] (GTextBox&) {
+        m_edited_font->set_name(m_name_textbox->text());
+    };
+
     auto* save_button = new GButton(this);
     save_button->set_caption("Save");
-    save_button->set_relative_rect({ 5, 135, 140, 20 });
+    save_button->set_relative_rect({ 5, 170, 140, 20 });
     save_button->on_click = [this] (GButton&) {
         m_edited_font->write_to_file("/saved.font");
     };
