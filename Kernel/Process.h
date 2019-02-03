@@ -55,6 +55,7 @@ public:
     static Process* create_user_process(const String& path, uid_t, gid_t, pid_t ppid, int& error, Vector<String>&& arguments = Vector<String>(), Vector<String>&& environment = Vector<String>(), TTY* = nullptr);
     ~Process();
 
+    static Vector<pid_t> all_pids();
     static Vector<Process*> all_processes();
 
     enum State {
@@ -404,6 +405,17 @@ public:
     ~ProcessInspectionHandle()
     {
         m_process.set_state(m_original_state);
+    }
+
+    Process& process() { return m_process; }
+
+    static OwnPtr<ProcessInspectionHandle> from_pid(pid_t pid)
+    {
+        InterruptDisabler disabler;
+        auto* process = Process::from_pid(pid);
+        if (process)
+            return make<ProcessInspectionHandle>(*process);
+        return nullptr;
     }
 
     Process* operator->() { return &m_process; }

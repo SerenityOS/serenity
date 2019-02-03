@@ -4,7 +4,7 @@
 #include "WSMessageLoop.h"
 #include "Process.h"
 #include "MemoryManager.h"
-#include <Kernel/ProcFileSystem.h>
+#include <Kernel/ProcFS.h>
 #include <SharedGraphics/Font.h>
 #include <SharedGraphics/Painter.h>
 #include <SharedGraphics/CharacterBitmap.h>

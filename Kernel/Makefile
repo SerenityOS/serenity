@@ -16,7 +16,7 @@ KERNEL_OBJS = \
        Console.o \
        IRQHandler.o \
        kprintf.o \
-       ProcFileSystem.o \
+       ProcFS.o \
        RTC.o \
        TTY.o \
        PTYMultiplexer.o \

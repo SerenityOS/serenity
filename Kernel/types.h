@@ -14,7 +14,7 @@ typedef short __s16;
 
 typedef dword uid_t;
 typedef dword gid_t;
-typedef int pid_t;
+typedef signed_word pid_t;
 typedef dword time_t;
 typedef dword suseconds_t;
 

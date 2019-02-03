@@ -16,7 +16,7 @@
 #include <Kernel/VirtualFileSystem.h>
 #include "GUIEventDevice.h"
 #include "MemoryManager.h"
-#include "ProcFileSystem.h"
+#include "ProcFS.h"
 #include "RTC.h"
 #include "VirtualConsole.h"
 #include "Scheduler.h"
@@ -171,8 +171,8 @@ void init()
 
     memset(&system, 0, sizeof(system));
 
-    auto procfs = ProcFS::create();
-    procfs->initialize();
+    auto new_procfs = ProcFS::create();
+    new_procfs->initialize();
 
     auto devptsfs = DevPtsFS::create();
     devptsfs->initialize();

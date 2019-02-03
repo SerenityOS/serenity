@@ -201,7 +201,7 @@ class MemoryManager {
     friend class PhysicalPage;
     friend class Region;
     friend class VMObject;
-    friend ByteBuffer procfs$mm(SynthFSInode&);
+    friend ByteBuffer procfs$mm(InodeIdentifier);
 public:
     static MemoryManager& the() PURE;
 

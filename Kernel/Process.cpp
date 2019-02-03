@@ -10,7 +10,6 @@
 #include "MemoryManager.h"
 #include "i8253.h"
 #include "RTC.h"
-#include "ProcFileSystem.h"
 #include <AK/StdLibExtras.h>
 #include <LibC/signal_numbers.h>
 #include <LibC/errno_numbers.h>
@@ -60,13 +59,23 @@ void Process::initialize()
     initialize_gui_statics();
 }
 
+Vector<pid_t> Process::all_pids()
+{
+    InterruptDisabler disabler;
+    Vector<pid_t> pids;
+    pids.ensure_capacity(g_processes->size_slow());
+    for (auto* process = g_processes->head(); process; process = process->next())
+        pids.unchecked_append(process->pid());
+    return pids;
+}
+
 Vector<Process*> Process::all_processes()
 {
     InterruptDisabler disabler;
     Vector<Process*> processes;
     processes.ensure_capacity(g_processes->size_slow());
     for (auto* process = g_processes->head(); process; process = process->next())
-        processes.append(process);
+        processes.unchecked_append(process);
     return processes;
 }
 
@@ -265,8 +274,6 @@ Process* Process::fork(RegisterDump& regs)
 #ifdef FORK_DEBUG
     dbgprintf("fork: child will begin executing at %w:%x with stack %w:%x\n", child->m_tss.cs, child->m_tss.eip, child->m_tss.ss, child->m_tss.esp);
 #endif
-
-    ProcFS::the().add_process(*child);
 
     {
         InterruptDisabler disabler;
@@ -507,8 +514,6 @@ Process* Process::create_user_process(const String& path, uid_t uid, gid_t gid, 
         return nullptr;
     }
 
-    ProcFS::the().add_process(*process);
-
     {
         InterruptDisabler disabler;
         g_processes->prepend(process);
@@ -571,7 +576,6 @@ Process* Process::create_kernel_process(String&& name, void (*e)())
             g_processes->prepend(process);
             system.nprocess++;
         }
-        ProcFS::the().add_process(*process);
 #ifdef TASK_DEBUG
         kprintf("Kernel process %u (%s) spawned @ %p\n", process->pid(), process->name().characters(), process->m_tss.eip);
 #endif
@@ -703,7 +707,6 @@ Process::Process(String&& name, uid_t uid, gid_t gid, pid_t ppid, RingLevel ring
 Process::~Process()
 {
     InterruptDisabler disabler;
-    ProcFS::the().remove_process(*this);
     system.nprocess--;
 
     if (g_last_fpu_process == this)

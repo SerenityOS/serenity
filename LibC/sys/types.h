@@ -15,7 +15,7 @@ typedef __intmax_t intmax_t;
 
 typedef uint32_t uid_t;
 typedef uint32_t gid_t;
-typedef int pid_t;
+typedef int16_t pid_t;
 
 typedef uint32_t size_t;
 typedef int32_t ssize_t;
