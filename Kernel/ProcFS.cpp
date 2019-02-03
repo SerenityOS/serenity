@@ -27,6 +27,7 @@ enum ProcFileType {
     FI_Root_mm,
     FI_Root_mounts,
     FI_Root_kmalloc,
+    FI_Root_all,
     FI_Root_summary,
     FI_Root_cpuinfo,
     FI_Root_inodes,
@@ -216,7 +217,7 @@ ByteBuffer procfs$pid_vm(InodeIdentifier identifier)
             region->laddr().get(),
             region->laddr().offset(region->size() - 1).get(),
             region->size(),
-            region->committed(),
+            region->amount_resident(),
             region->name().characters());
     }
     return builder.to_byte_buffer();
@@ -476,6 +477,33 @@ ByteBuffer procfs$summary(InodeIdentifier)
             process->number_of_open_file_descriptors(),
             process->tty() ? strrchr(process->tty()->tty_name().characters(), '/') + 1 : "n/a",
             process->name().characters());
+    }
+    return builder.to_byte_buffer();
+}
+
+ByteBuffer procfs$all(InodeIdentifier)
+{
+    InterruptDisabler disabler;
+    auto processes = Process::all_processes();
+    StringBuilder builder;
+    for (auto* process : processes) {
+        builder.appendf("%u,%u,%u,%u,%u,%u,%s,%u,%u,%u,%s,%s,%u,%u,%u\n",
+            process->pid(),
+            process->tty() ? process->tty()->pgid() : 0,
+            process->pgid(),
+            process->sid(),
+            process->uid(),
+            process->gid(),
+            to_string(process->state()),
+            process->ppid(),
+            process->times_scheduled(),
+            process->number_of_open_file_descriptors(),
+            process->tty() ? process->tty()->tty_name().characters() : "notty",
+            process->name().characters(),
+            process->amount_virtual(),
+            process->amount_resident(),
+            process->amount_shared()
+        );
     }
     return builder.to_byte_buffer();
 }
@@ -970,6 +998,7 @@ ProcFS::ProcFS()
     m_entries[FI_Root_mm] = { "mm", FI_Root_mm, procfs$mm };
     m_entries[FI_Root_mounts] = { "mounts", FI_Root_mounts, procfs$mounts };
     m_entries[FI_Root_kmalloc] = { "kmalloc", FI_Root_kmalloc, procfs$kmalloc };
+    m_entries[FI_Root_all] = { "all", FI_Root_all, procfs$all };
     m_entries[FI_Root_summary] = { "summary", FI_Root_summary, procfs$summary };
     m_entries[FI_Root_cpuinfo] = { "cpuinfo", FI_Root_summary, procfs$cpuinfo};
     m_entries[FI_Root_inodes] = { "inodes", FI_Root_inodes, procfs$inodes };

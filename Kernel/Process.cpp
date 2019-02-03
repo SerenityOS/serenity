@@ -327,7 +327,7 @@ int Process::do_exec(const String& path, Vector<String>&& arguments, Vector<Stri
 
     auto vmo = VMObject::create_file_backed(descriptor->inode(), descriptor->metadata().size);
     vmo->set_name(descriptor->absolute_path());
-    auto* region = allocate_region_with_vmo(LinearAddress(), descriptor->metadata().size, vmo.copy_ref(), 0, "helper", true, false);
+    RetainPtr<Region> region = allocate_region_with_vmo(LinearAddress(), descriptor->metadata().size, vmo.copy_ref(), 0, "helper", true, false);
 
     // FIXME: Should we consider doing on-demand paging here? Is it actually useful?
     bool success = region->page_in();
@@ -373,6 +373,8 @@ int Process::do_exec(const String& path, Vector<String>&& arguments, Vector<Stri
             return -ENOEXEC;
         }
     }
+
+    m_regions.append(move(region));
 
     m_signal_stack_kernel_region = nullptr;
     m_signal_stack_user_region = nullptr;
@@ -2169,4 +2171,36 @@ void Process::die()
     set_state(Dead);
     m_fds.clear();
     destroy_all_windows();
+}
+
+size_t Process::amount_virtual() const
+{
+    size_t amount = 0;
+    for (auto& region : m_regions) {
+        amount += region->size();
+    }
+    return amount;
+}
+
+size_t Process::amount_resident() const
+{
+    // FIXME: This will double count if multiple regions use the same physical page.
+    size_t amount = 0;
+    for (auto& region : m_regions) {
+        amount += region->amount_resident();
+    }
+    return amount;
+}
+
+size_t Process::amount_shared() const
+{
+    // FIXME: This will double count if multiple regions use the same physical page.
+    // FIXME: It doesn't work at the moment, since it relies on PhysicalPage retain counts,
+    //        and each PhysicalPage is only retained by its VMObject. This needs to be refactored
+    //        so that every Region contributes +1 retain to each of its PhysicalPages.
+    size_t amount = 0;
+    for (auto& region : m_regions) {
+        amount += region->amount_shared();
+    }
+    return amount;
 }

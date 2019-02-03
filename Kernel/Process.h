@@ -266,6 +266,10 @@ public:
     bool has_unmasked_pending_signals() const;
     void terminate_due_to_signal(byte signal);
 
+    size_t amount_virtual() const;
+    size_t amount_resident() const;
+    size_t amount_shared() const;
+
     Process* fork(RegisterDump&);
     int exec(const String& path, Vector<String>&& arguments, Vector<String>&& environment);
 

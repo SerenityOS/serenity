@@ -781,11 +781,22 @@ void MemoryManager::unregister_region(Region& region)
     m_regions.remove(&region);
 }
 
-size_t Region::committed() const
+size_t Region::amount_resident() const
 {
     size_t bytes = 0;
     for (size_t i = 0; i < page_count(); ++i) {
         if (m_vmo->physical_pages()[first_page_index() + i])
+            bytes += PAGE_SIZE;
+    }
+    return bytes;
+}
+
+size_t Region::amount_shared() const
+{
+    size_t bytes = 0;
+    for (size_t i = 0; i < page_count(); ++i) {
+        auto& physical_page = m_vmo->physical_pages()[first_page_index() + i];
+        if (physical_page && physical_page->retain_count() > 1)
             bytes += PAGE_SIZE;
     }
     return bytes;
