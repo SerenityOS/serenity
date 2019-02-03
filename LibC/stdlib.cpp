@@ -262,4 +262,9 @@ void srandom(unsigned seed)
     srand(seed);
 }
 
+int system(const char* command)
+{
+    return execl("/bin/sh", "sh", "-c", command, nullptr);
+}
+
 }

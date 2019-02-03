@@ -11,6 +11,7 @@ int strncmp(const char*, const char*, size_t);
 int memcmp(const void*, const void*, size_t);
 void* memcpy(void*, const void*, size_t);
 void* memmove(void*, const void*, size_t);
+void* memchr(const void*, int c, size_t);
 void bzero(void*, size_t);
 void bcopy(const void*, void*, size_t);
 void* memset(void*, int, size_t);

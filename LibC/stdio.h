@@ -40,6 +40,7 @@ int fileno(FILE*);
 int fgetc(FILE*);
 int getc(FILE*);
 int getchar();
+int ungetc(int c, FILE*);
 FILE* fdopen(int fd, const char* mode);
 FILE* fopen(const char* pathname, const char* mode);
 int fclose(FILE*);
