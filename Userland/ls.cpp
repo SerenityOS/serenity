@@ -4,6 +4,7 @@
 #include <errno.h>
 #include <string.h>
 #include <getopt.h>
+#include <time.h>
 #include <sys/ioctl.h>
 #include <sys/stat.h>
 #include <AK/AKString.h>
@@ -162,7 +163,14 @@ int do_dir(const char* path)
         else
             printf(" %10u ", st.st_size);
 
-        printf(" %10u  ", st.st_mtime);
+        auto* tm = localtime(&st.st_mtime);
+        printf("  %4u-%02u-%02u %02u:%02u:%02u  ",
+            tm->tm_year + 1900,
+            tm->tm_mon + 1,
+            tm->tm_mday,
+            tm->tm_hour,
+            tm->tm_min,
+            tm->tm_sec);
 
         print_name(st, de->d_name, pathbuf);
 
