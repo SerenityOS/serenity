@@ -1,9 +1,12 @@
 #include "Font.h"
-#include "Peanut8x10.h"
-#include "Liza8x10.h"
 #include <AK/kmalloc.h>
 #include <AK/BufferStream.h>
 #include <AK/StdLibExtras.h>
+
+#ifdef KERNEL
+#include <Kernel/FileDescriptor.h>
+#include <Kernel/VirtualFileSystem.h>
+#endif
 
 #ifdef USERLAND
 #include <LibC/unistd.h>
@@ -12,8 +15,6 @@
 #include <LibC/errno.h>
 #include <LibC/mman.h>
 #endif
-
-#define DEFAULT_FONT_NAME Liza8x10
 
 static const byte error_glyph_width = 8;
 static const byte error_glyph_height = 10;
@@ -39,13 +40,21 @@ void Font::initialize()
 
 Font& Font::default_font()
 {
+    static const char* default_font_path = "/res/fonts/Liza8x10.font";
     if (!s_default_font) {
 #ifdef USERLAND
-        s_default_font = Font::load_from_file("/res/fonts/Liza8x10.font").leak_ref();
+        s_default_font = Font::load_from_file(default_font_path).leak_ref();
         ASSERT(s_default_font);
 #else
-
-        s_default_font = adopt(*new Font(DEFAULT_FONT_NAME::name, DEFAULT_FONT_NAME::glyphs, DEFAULT_FONT_NAME::glyph_width, DEFAULT_FONT_NAME::glyph_height, DEFAULT_FONT_NAME::first_glyph, DEFAULT_FONT_NAME::last_glyph)).leak_ref();
+        int error;
+        auto descriptor = VFS::the().open(default_font_path, error, 0, 0, *VFS::the().root_inode());
+        if (!descriptor) {
+            kprintf("Failed to open default font (%s)\n", default_font_path);
+            ASSERT_NOT_REACHED();
+        }
+        auto buffer = descriptor->read_entire_file(*current);
+        ASSERT(buffer);
+        s_default_font = Font::load_from_memory(buffer.pointer()).leak_ref();
 #endif
     }
     return *s_default_font;
@@ -92,7 +101,6 @@ Font::~Font()
 {
 }
 
-#ifdef USERLAND
 struct FontFileHeader {
     char magic[4];
     byte glyph_width;
@@ -135,6 +143,7 @@ RetainPtr<Font> Font::load_from_memory(const byte* data)
     return adopt(*new Font(String(header.name), new_glyphs, header.glyph_width, header.glyph_height, 0, 255));
 }
 
+#ifdef USERLAND
 RetainPtr<Font> Font::load_from_file(const String& path)
 {
     int fd = open(path.characters(), O_RDONLY, 0644);
