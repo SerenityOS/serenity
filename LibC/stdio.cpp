@@ -133,6 +133,11 @@ int getchar()
     return getc(stdin);
 }
 
+int ungetc(int, FILE*)
+{
+    ASSERT_NOT_REACHED();
+}
+
 int fputc(int ch, FILE* stream)
 {
     assert(stream);

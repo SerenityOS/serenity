@@ -358,13 +358,12 @@ static void greeting()
     printf("\n%s/%s on %s\n\n", uts.sysname, uts.machine, g->ttyname);
 }
 
-int main(int, char**)
+int main(int argc, char** argv)
 {
     g = new GlobalState;
     g->uid = getuid();
     g->sid = setsid();
     tcsetpgrp(0, getpgrp());
-
     tcgetattr(0, &g->termios);
 
     {
@@ -389,6 +388,11 @@ int main(int, char**)
         if (pw)
             g->username = pw->pw_name;
         endpwent();
+    }
+
+    if (argc > 1 && !strcmp(argv[1], "-c")) {
+        fprintf(stderr, "FIXME: Implement /bin/sh -c\n");
+        return 1;
     }
 
     greeting();

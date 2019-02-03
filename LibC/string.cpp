@@ -186,6 +186,17 @@ char* strchr(const char* str, int c)
     }
 }
 
+void* memchr(const void* ptr, int c, size_t size)
+{
+    char ch = c;
+    char* cptr = (char*)ptr;
+    for (size_t i = 0; i < size; ++i) {
+        if (cptr[i] == ch)
+            return cptr + i;
+    }
+    return nullptr;
+}
+
 char* strrchr(const char* str, int ch)
 {
     char *last = nullptr;

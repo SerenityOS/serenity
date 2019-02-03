@@ -9,6 +9,7 @@
 #include <sys/ioctl.h>
 #include <sys/types.h>
 #include <Kernel/Syscall.h>
+#include <AK/Vector.h>
 
 extern "C" {
 
@@ -26,7 +27,26 @@ int execve(const char* filename, char* const argv[], char* const envp[])
 
 int execvp(const char* filename, char* const argv[])
 {
+    // FIXME: This should do some sort of shell-like path resolution!
     return execve(filename, argv, nullptr);
+}
+
+int execl(const char* filename, const char* arg0, ...)
+{
+    Vector<const char*> args;
+    args.append(arg0);
+
+    va_list ap;
+    va_start(ap, arg0);
+    for (;;) {
+        const char* arg = va_arg(ap, const char*);
+        if (!arg)
+            break;
+        args.append(arg);
+    }
+    va_end(ap);
+
+    return execve(filename, (char* const *)args.data(), nullptr);
 }
 
 uid_t getuid()

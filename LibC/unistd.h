@@ -13,6 +13,7 @@ inline int getpagesize() { return 4096; }
 pid_t fork();
 int execve(const char* filename, char* const argv[], char* const envp[]);
 int execvp(const char* filename, char* const argv[]);
+int execl(const char* filename, const char* arg, ...);
 void sync();
 void _exit(int status);
 pid_t getsid(pid_t);
