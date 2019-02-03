@@ -304,11 +304,6 @@ bool MemoryManager::page_in_from_inode(Region& region, unsigned page_index_in_re
 
     auto& vmo_page = vmo.physical_pages()[region.first_page_index() + page_index_in_region];
 
-    if (!vmo_page.is_null()) {
-        dbgprintf("MM: Redundant page_in_from_inode in %s(%u), inode=%u, [%u]\n", current->name().characters(), current->pid(), region.vmo().inode()->identifier().index(), page_index_in_region);
-        ASSERT_NOT_REACHED();
-    }
-
     bool interrupts_were_enabled = are_interrupts_enabled();
 
     if (!interrupts_were_enabled)
@@ -320,7 +315,7 @@ bool MemoryManager::page_in_from_inode(Region& region, unsigned page_index_in_re
         cli();
 
     if (!vmo_page.is_null()) {
-        kprintf("MM: page_in_from_inode was served by someone else while lock was held\n");
+        kprintf("MM: page_in_from_inode() but page already present. Fine with me!\n");
         remap_region_page(region, page_index_in_region, true);
         return true;
     }
