@@ -329,9 +329,8 @@ void Ext2FS::flush_block_group_descriptor_table()
     write_blocks(first_block_of_bgdt, blocks_to_write, m_cached_group_descriptor_table);
 }
 
-Ext2FSInode::Ext2FSInode(Ext2FS& fs, unsigned index, const ext2_inode& raw_inode)
+Ext2FSInode::Ext2FSInode(Ext2FS& fs, unsigned index)
     : Inode(fs, index)
-    , m_raw_inode(raw_inode)
 {
 }
 
@@ -402,18 +401,12 @@ RetainPtr<Inode> Ext2FS::get_inode(InodeIdentifier inode) const
     if (!block)
         return { };
 
-    // FIXME: Avoid this extra allocation, copy the raw inode directly into the Ext2FSInode metadata somehow.
-    auto* e2inode = reinterpret_cast<ext2_inode*>(kmalloc(inode_size()));
-    memcpy(e2inode, reinterpret_cast<ext2_inode*>(block.offset_pointer(offset)), inode_size());
-    auto raw_inode = OwnPtr<ext2_inode>(e2inode);
-    if (!raw_inode)
-        return nullptr;
-
     LOCKER(m_inode_cache_lock);
     auto it = m_inode_cache.find(inode.index());
     if (it != m_inode_cache.end())
         return (*it).value;
-    auto new_inode = adopt(*new Ext2FSInode(const_cast<Ext2FS&>(*this), inode.index(), *raw_inode));
+    auto new_inode = adopt(*new Ext2FSInode(const_cast<Ext2FS&>(*this), inode.index()));
+    memcpy(&new_inode->m_raw_inode, reinterpret_cast<ext2_inode*>(block.offset_pointer(offset)), inode_size());
     m_inode_cache.set(inode.index(), new_inode.copy_ref());
     return new_inode;
 }
