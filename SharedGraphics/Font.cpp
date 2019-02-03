@@ -154,11 +154,17 @@ RetainPtr<Font> Font::load_from_file(const String& path)
     }
 
     auto* mapped_file = (byte*)mmap(nullptr, 4096 * 3, PROT_READ, MAP_SHARED, fd, 0);
-    if (mapped_file == MAP_FAILED)
+    if (mapped_file == MAP_FAILED) {
+        int rc = close(fd);
+        ASSERT(rc == 0);
         return nullptr;
+    }
 
     auto font = load_from_memory(mapped_file);
     int rc = munmap(mapped_file, 4096 * 3);
+    ASSERT(rc == 0);
+
+    rc = close(fd);
     ASSERT(rc == 0);
     return font;
 }
