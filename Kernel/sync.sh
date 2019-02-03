@@ -13,6 +13,9 @@ mknod mnt/dev/psaux c 10 1
 mknod mnt/dev/ptmx c 5 2
 mkdir mnt/dev/pts
 mknod mnt/dev/gui_events c 66 1
+ln -s /proc/self/fd/0 mnt/dev/stdin
+ln -s /proc/self/fd/1 mnt/dev/stdout
+ln -s /proc/self/fd/2 mnt/dev/stderr
 cp -vR ../Base/* mnt/
 chown -vR 100:100 mnt/users/anon
 cp -v ../Userland/sh mnt/bin/sh

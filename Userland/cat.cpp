@@ -8,13 +8,10 @@
 
 int main(int argc, char** argv)
 {
-    if (argc != 2) {
-        printf("usage: cat <file>\n");
-        return 1;
-    }
-    int fd = open(argv[1], O_RDONLY);
+    const char* input_file = argc > 1 ? argv[1] : "/dev/stdin";
+    int fd = open(input_file, O_RDONLY);
     if (fd == -1) {
-        printf("failed to open %s: %s\n", argv[1], strerror(errno));
+        printf("failed to open %s: %s\n", input_file, strerror(errno));
         return 1;
     }
     for (;;) {
