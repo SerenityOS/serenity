@@ -7,6 +7,7 @@ GButton::GButton(GWidget* parent)
     : GWidget(parent)
 {
     set_fill_with_background_color(false);
+    set_font(Font::default_bold_font());
 }
 
 GButton::~GButton()
