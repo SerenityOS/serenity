@@ -46,6 +46,8 @@ public:
     void clear_clip_rect();
     Rect clip_rect() const { return m_clip_rect; }
 
+    void translate(int dx, int dy) { m_translation.move_by(dx, dy); }
+
 private:
     void set_pixel_with_draw_op(dword& pixel, const Color&);
     void fill_rect_with_draw_op(const Rect&, Color);
