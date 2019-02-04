@@ -33,6 +33,7 @@ public:
     HashTable& operator=(HashTable&& other)
     {
         if (this != &other) {
+            clear();
             m_buckets = other.m_buckets;
             m_size = other.m_size;
             m_capacity = other.m_capacity;
