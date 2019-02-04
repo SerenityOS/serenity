@@ -33,6 +33,7 @@ private:
 ClockWidget::ClockWidget(GWidget* parent)
     : GWidget(parent)
 {
+    set_font(Font::default_bold_font());
     set_relative_rect({ 0, 0, 100, 40 });
     start_timer(250);
 }
@@ -46,7 +47,7 @@ void ClockWidget::paint_event(GPaintEvent&)
     sprintf(timeBuf, "%02u:%02u:%02u", tm.tm_hour, tm.tm_min, tm.tm_sec);
 
     Painter painter(*this);
-    painter.fill_rect(rect(), Color::White);
+    painter.fill_rect(rect(), Color::LightGray);
     painter.draw_text(rect(), timeBuf, Painter::TextAlignment::Center, Color::Black);
 }
 

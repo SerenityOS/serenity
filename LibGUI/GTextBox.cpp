@@ -8,6 +8,7 @@
 GTextBox::GTextBox(GWidget* parent)
     : GWidget(parent)
 {
+    set_background_color(Color::White);
 }
 
 GTextBox::~GTextBox()
