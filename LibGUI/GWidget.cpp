@@ -39,8 +39,9 @@ void GWidget::event(GEvent& event)
         m_has_pending_paint_event = false;
         return paint_event(static_cast<GPaintEvent&>(event));
     case GEvent::FocusIn:
-    case GEvent::FocusOut:
         return focusin_event(event);
+    case GEvent::FocusOut:
+        return focusout_event(event);
     case GEvent::Show:
         return show_event(static_cast<GShowEvent&>(event));
     case GEvent::Hide:
