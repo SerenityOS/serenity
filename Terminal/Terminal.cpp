@@ -184,7 +184,7 @@ void Terminal::escape$m(const Vector<unsigned>& params)
         case 46:
         case 47:
             // Background color
-            m_current_attribute.background_color = param - 30;
+            m_current_attribute.background_color = param - 40;
             break;
         }
     }
@@ -271,6 +271,7 @@ void Terminal::escape$K(const Vector<unsigned>& params)
         mode = params[0];
     switch (mode) {
     case 0:
+        // Clear from cursor to end of line.
         for (int i = m_cursor_column; i < m_columns; ++i) {
             put_character_at(m_cursor_row, i, ' ');
         }
