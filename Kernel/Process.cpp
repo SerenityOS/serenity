@@ -2172,6 +2172,11 @@ void Process::die()
     m_fds.clear();
     m_tty = nullptr;
     destroy_all_windows();
+
+    InterruptDisabler disabler;
+    if (auto* parent_process = Process::from_pid(m_ppid)) {
+        parent_process->send_signal(SIGCHLD, this);
+    }
 }
 
 size_t Process::amount_virtual() const
