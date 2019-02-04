@@ -1004,7 +1004,7 @@ ProcFS::ProcFS()
     m_entries[FI_Root_kmalloc] = { "kmalloc", FI_Root_kmalloc, procfs$kmalloc };
     m_entries[FI_Root_all] = { "all", FI_Root_all, procfs$all };
     m_entries[FI_Root_summary] = { "summary", FI_Root_summary, procfs$summary };
-    m_entries[FI_Root_cpuinfo] = { "cpuinfo", FI_Root_summary, procfs$cpuinfo};
+    m_entries[FI_Root_cpuinfo] = { "cpuinfo", FI_Root_cpuinfo, procfs$cpuinfo};
     m_entries[FI_Root_inodes] = { "inodes", FI_Root_inodes, procfs$inodes };
     m_entries[FI_Root_dmesg] = { "dmesg", FI_Root_dmesg, procfs$dmesg };
     m_entries[FI_Root_self] = { "self", FI_Root_self, procfs$self };
