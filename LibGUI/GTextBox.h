@@ -20,6 +20,8 @@ private:
     virtual void mousedown_event(GMouseEvent&) override;
     virtual void keydown_event(GKeyEvent&) override;
     virtual void timer_event(GTimerEvent&) override;
+    virtual void focusin_event(GEvent&) override;
+    virtual void focusout_event(GEvent&) override;
     virtual bool accepts_focus() const override { return true; }
 
     void handle_backspace();

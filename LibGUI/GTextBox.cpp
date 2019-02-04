@@ -8,7 +8,6 @@
 GTextBox::GTextBox(GWidget* parent)
     : GWidget(parent)
 {
-    start_timer(500);
 }
 
 GTextBox::~GTextBox()
@@ -137,4 +136,14 @@ void GTextBox::timer_event(GTimerEvent&)
 
     m_cursor_blink_state = !m_cursor_blink_state;
     update();
+}
+
+void GTextBox::focusin_event(GEvent&)
+{
+    start_timer(500);
+}
+
+void GTextBox::focusout_event(GEvent&)
+{
+    stop_timer();
 }
