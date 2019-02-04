@@ -70,6 +70,10 @@ private:
         {
             return foreground_color == other.foreground_color && background_color == other.background_color;
         }
+        bool operator!=(const Attribute& other) const
+        {
+            return !(*this == other);
+        }
     };
 
     struct Line {
