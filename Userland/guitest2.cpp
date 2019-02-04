@@ -16,6 +16,7 @@
 #include <LibGUI/GEventLoop.h>
 #include <LibGUI/GTextBox.h>
 #include <LibGUI/GCheckBox.h>
+#include <signal.h>
 
 class ClockWidget final : public GWidget {
 public:
@@ -69,8 +70,15 @@ static GWindow* make_font_test_window();
 static GWindow* make_launcher_window();
 static GWindow* make_clock_window();
 
+void handle_sigchld(int)
+{
+    dbgprintf("Got SIGCHLD\n");
+}
+
 int main(int argc, char** argv)
 {
+    signal(SIGCHLD, handle_sigchld);
+
     GEventLoop loop;
 #if 0
     auto* font_test_window = make_font_test_window();
