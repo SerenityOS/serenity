@@ -73,6 +73,9 @@ static GWindow* make_clock_window();
 void handle_sigchld(int)
 {
     dbgprintf("Got SIGCHLD\n");
+    int pid = waitpid(-1, nullptr, 0);
+    dbgprintf("waitpid() returned %d\n", pid);
+    ASSERT(pid > 0);
 }
 
 int main(int argc, char** argv)

@@ -31,6 +31,8 @@ struct CoolGlobals {
 extern CoolGlobals* g_cool_globals;
 #endif
 
+enum class ShouldUnblockProcess { No = 0, Yes };
+
 struct SignalActionData {
     LinearAddress handler_or_sigaction;
     dword mask { 0 };
@@ -261,8 +263,9 @@ public:
     size_t max_open_file_descriptors() const { return m_max_open_file_descriptors; }
 
     void send_signal(byte signal, Process* sender);
-    bool dispatch_one_pending_signal();
-    bool dispatch_signal(byte signal);
+
+    ShouldUnblockProcess dispatch_one_pending_signal();
+    ShouldUnblockProcess dispatch_signal(byte signal);
     bool has_unmasked_pending_signals() const;
     void terminate_due_to_signal(byte signal);
 
@@ -296,6 +299,7 @@ private:
     void push_value_on_stack(dword);
 
     int alloc_fd();
+    void set_default_signal_dispositions();
 
     RetainPtr<PageDirectory> m_page_directory;
 
