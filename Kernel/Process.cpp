@@ -2170,6 +2170,7 @@ void Process::die()
 {
     set_state(Dead);
     m_fds.clear();
+    m_tty = nullptr;
     destroy_all_windows();
 }
 
