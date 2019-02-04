@@ -32,10 +32,12 @@ static constexpr const char* error_glyph {
 };
 
 static Font* s_default_font;
+static Font* s_default_bold_font;
 
 void Font::initialize()
 {
     s_default_font = nullptr;
+    s_default_bold_font = nullptr;
 }
 
 Font& Font::default_font()
@@ -44,7 +46,6 @@ Font& Font::default_font()
     if (!s_default_font) {
 #ifdef USERLAND
         s_default_font = Font::load_from_file(default_font_path).leak_ref();
-        ASSERT(s_default_font);
 #else
         int error;
         auto descriptor = VFS::the().open(default_font_path, error, 0, 0, *VFS::the().root_inode());
@@ -56,8 +57,31 @@ Font& Font::default_font()
         ASSERT(buffer);
         s_default_font = Font::load_from_memory(buffer.pointer()).leak_ref();
 #endif
+        ASSERT(s_default_font);
     }
     return *s_default_font;
+}
+
+Font& Font::default_bold_font()
+{
+    static const char* default_bold_font_path = "/res/fonts/LizaBold8x10.font";
+    if (!s_default_bold_font) {
+#ifdef USERLAND
+        s_default_bold_font = Font::load_from_file(default_bold_font_path).leak_ref();
+#else
+        int error;
+        auto descriptor = VFS::the().open(default_bold_font_path, error, 0, 0, *VFS::the().root_inode());
+        if (!descriptor) {
+            kprintf("Failed to open default font (%s)\n", default_bold_font_path);
+            ASSERT_NOT_REACHED();
+        }
+        auto buffer = descriptor->read_entire_file(*current);
+        ASSERT(buffer);
+        s_default_bold_font = Font::load_from_memory(buffer.pointer()).leak_ref();
+#endif
+        ASSERT(s_default_bold_font);
+    }
+    return *s_default_bold_font;
 }
 
 RetainPtr<Font> Font::clone() const

@@ -9,6 +9,7 @@
 class Font : public Retainable<Font> {
 public:
     static Font& default_font();
+    static Font& default_bold_font();
 
     RetainPtr<Font> clone() const;
 
