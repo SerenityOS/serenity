@@ -39,6 +39,9 @@ public:
     void invalidate();
     void flush(const Rect&);
 
+    Font& font() { return *m_font; }
+    const Font& font() const { return *m_font; }
+
 private:
     WSWindowManager();
     virtual ~WSWindowManager() override;
@@ -97,6 +100,8 @@ private:
 
     OwnPtr<Painter> m_back_painter;
     OwnPtr<Painter> m_front_painter;
+
+    RetainPtr<Font> m_font;
 
     mutable Lock m_lock;
 

@@ -123,6 +123,11 @@ WSWindowManager::WSWindowManager()
     m_front_painter = make<Painter>(*m_front_bitmap);
     m_back_painter = make<Painter>(*m_back_bitmap);
 
+    m_font = Font::default_bold_font();
+
+    m_front_painter->set_font(font());
+    m_back_painter->set_font(font());
+
     m_background_color = Color(50, 50, 50);
     m_active_window_border_color = Color(110, 34, 9);
     m_active_window_border_color2 = Color(244, 202, 158);
@@ -159,7 +164,7 @@ void WSWindowManager::paint_window_frame(WSWindow& window)
 
 
     auto titlebar_title_rect = titlebar_inner_rect;
-    titlebar_title_rect.set_width(Font::default_font().glyph_width() * window.title().length());
+    titlebar_title_rect.set_width(font().glyph_width() * window.title().length());
 
     Rect inner_border_rect {
         window.x() - 1,
