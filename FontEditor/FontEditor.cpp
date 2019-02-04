@@ -18,7 +18,7 @@ FontEditorWidget::FontEditorWidget(GWidget* parent)
     m_glyph_editor_widget->move_to({ 5, 5 });
 
     m_name_textbox = new GTextBox(this);
-    m_name_textbox->set_relative_rect({ 5, 135, 140, 20 });
+    m_name_textbox->set_relative_rect({ 5, 135, 100, 20 });
     m_name_textbox->set_text(m_edited_font->name());
     m_name_textbox->on_change = [this] (GTextBox&) {
         m_edited_font->set_name(m_name_textbox->text());
@@ -26,21 +26,34 @@ FontEditorWidget::FontEditorWidget(GWidget* parent)
 
     auto* save_button = new GButton(this);
     save_button->set_caption("Save");
-    save_button->set_relative_rect({ 5, 170, 140, 20 });
+    save_button->set_relative_rect({ 5, 170, 100, 20 });
     save_button->on_click = [this] (GButton&) {
         m_edited_font->write_to_file("/saved.font");
     };
 
-    auto* label = new GLabel(this);
-    label->set_relative_rect({ 5, 110, 140, 20 });
+    auto* info_label = new GLabel(this);
+    info_label->set_relative_rect({ 5, 110, 100, 20 });
+    info_label->set_font(Font::default_bold_font());
 
-    m_glyph_editor_widget->on_glyph_altered = [this] {
+    auto* demo_label_1 = new GLabel(this);
+    demo_label_1->set_font(m_edited_font.copy_ref());
+    demo_label_1->set_text("quick fox jumps nightly above wizard.");
+    demo_label_1->set_relative_rect({ 110, 120, 300, 20 });
+
+    auto* demo_label_2 = new GLabel(this);
+    demo_label_2->set_font(m_edited_font.copy_ref());
+    demo_label_2->set_text("QUICK FOX JUMPS NIGHTLY ABOVE WIZARD!");
+    demo_label_2->set_relative_rect({ 110, 140, 300, 20 });
+
+    m_glyph_editor_widget->on_glyph_altered = [this, demo_label_1, demo_label_2] {
         m_glyph_map_widget->update();
+        demo_label_1->update();
+        demo_label_2->update();
     };
 
-    m_glyph_map_widget->on_glyph_selected = [this, label] (byte glyph) {
+    m_glyph_map_widget->on_glyph_selected = [this, info_label] (byte glyph) {
         m_glyph_editor_widget->set_glyph(glyph);
-        label->set_text(String::format("Glyph: 0x%b (%c)", glyph, glyph));
+        info_label->set_text(String::format("0x%b (%c)", glyph, glyph));
     };
 
     m_glyph_map_widget->set_selected_glyph('A');
@@ -63,12 +76,12 @@ GlyphMapWidget::~GlyphMapWidget()
 
 int GlyphMapWidget::preferred_width() const
 {
-    return columns() * (font().glyph_width() + m_horizontal_spacing);
+    return columns() * (font().glyph_width() + m_horizontal_spacing) + 2;
 }
 
 int GlyphMapWidget::preferred_height() const
 {
-    return rows() * (font().glyph_height() + m_vertical_spacing);
+    return rows() * (font().glyph_height() + m_vertical_spacing) + 2;
 }
 
 void GlyphMapWidget::set_selected_glyph(byte glyph)
@@ -86,8 +99,8 @@ Rect GlyphMapWidget::get_outer_rect(byte glyph) const
     int row = glyph / columns();
     int column = glyph % columns();
     return {
-        column * (font().glyph_width() + m_horizontal_spacing),
-        row * (font().glyph_height() + m_vertical_spacing),
+        column * (font().glyph_width() + m_horizontal_spacing) + 1,
+        row * (font().glyph_height() + m_vertical_spacing) + 1,
         font().glyph_width() + m_horizontal_spacing,
         font().glyph_height() + m_horizontal_spacing
     };
@@ -98,6 +111,7 @@ void GlyphMapWidget::paint_event(GPaintEvent&)
     Painter painter(*this);
     painter.set_font(font());
     painter.fill_rect(rect(), Color::White);
+    painter.draw_rect(rect(), Color::Black);
 
     byte glyph = 0;
 
@@ -118,6 +132,9 @@ void GlyphMapWidget::paint_event(GPaintEvent&)
             }
         }
     }
+
+    if (is_focused())
+        painter.draw_focus_rect(rect());
 }
 
 void GlyphMapWidget::mousedown_event(GMouseEvent& event)
@@ -156,13 +173,15 @@ void GlyphEditorWidget::paint_event(GPaintEvent&)
     painter.fill_rect(rect(), Color::White);
     painter.draw_rect(rect(), Color::Black);
 
-    auto& bitmap = font().glyph_bitmap(m_glyph);
-
     for (int y = 0; y < font().glyph_height(); ++y)
-        painter.draw_line({ 0, y * m_scale }, { font().glyph_width() * m_scale - 1, y * m_scale }, Color::Black);
+        painter.draw_line({ 0, y * m_scale }, { font().glyph_width() * m_scale, y * m_scale }, Color::Black);
 
     for (int x = 0; x < font().glyph_width(); ++x)
-        painter.draw_line({ x * m_scale, 0 }, { x * m_scale, font().glyph_height() * m_scale - 1 }, Color::Black);
+        painter.draw_line({ x * m_scale, 0 }, { x * m_scale, font().glyph_height() * m_scale }, Color::Black);
+
+    painter.translate(1, 1);
+
+    auto& bitmap = font().glyph_bitmap(m_glyph);
 
     for (int y = 0; y < font().glyph_height(); ++y) {
         for (int x = 0; x < font().glyph_width(); ++x) {
@@ -170,6 +189,11 @@ void GlyphEditorWidget::paint_event(GPaintEvent&)
             if (bitmap.bit_at(x, y))
                 painter.fill_rect(rect, Color::Black);
         }
+    }
+
+    if (is_focused()) {
+        painter.translate(-1, -1);
+        painter.draw_focus_rect(rect());
     }
 }
 
@@ -191,8 +215,8 @@ void GlyphEditorWidget::draw_at_mouse(const GMouseEvent& event)
     if (!(set ^ unset))
         return;
     byte new_bit = set ? '#' : ' ';
-    int x = event.x() / m_scale;
-    int y = event.y() / m_scale;
+    int x = (event.x() - 1) / m_scale;
+    int y = (event.y() - 1) / m_scale;
     auto& bitmap = font().glyph_bitmap(m_glyph);
     auto* mutable_bits = const_cast<char*>(bitmap.bits());
     ASSERT((unsigned)x < bitmap.width());
@@ -208,10 +232,10 @@ void GlyphEditorWidget::draw_at_mouse(const GMouseEvent& event)
 
 int GlyphEditorWidget::preferred_width() const
 {
-    return font().glyph_width() * m_scale;
+    return font().glyph_width() * m_scale + 1;
 }
 
 int GlyphEditorWidget::preferred_height() const
 {
-    return font().glyph_height() * m_scale;
+    return font().glyph_height() * m_scale + 1;
 }
