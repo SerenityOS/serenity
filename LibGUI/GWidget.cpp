@@ -10,7 +10,7 @@ GWidget::GWidget(GWidget* parent)
     : GObject(parent)
 {
     set_font(nullptr);
-    m_background_color = Color::White;
+    m_background_color = Color::LightGray;
     m_foreground_color = Color::Black;
 }
 

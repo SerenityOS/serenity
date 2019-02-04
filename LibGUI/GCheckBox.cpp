@@ -65,6 +65,7 @@ void GCheckBox::paint_event(GPaintEvent&)
         2, height() / 2 - s_box_height / 2 - 1,
         s_box_width, s_box_height
     };
+    painter.fill_rect(box_rect, Color::White);
     painter.draw_rect(box_rect, Color::Black);
 
     if (m_being_modified) {
