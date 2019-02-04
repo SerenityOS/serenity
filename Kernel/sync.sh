@@ -50,6 +50,7 @@ cp -v ../FontEditor/FontEditor mnt/bin/FontEditor
 ln -s FontEditor mnt/bin/ff
 cp -v ../Userland/dmesg mnt/bin/dmesg
 cp -v ../Userland/chmod mnt/bin/chmod
+cp -v ../Userland/top mnt/bin/top
 sh sync-local.sh
 cp -v kernel.map mnt/
 ln -s dir_a mnt/dir_cur

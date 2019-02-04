@@ -303,6 +303,11 @@ void Scheduler::prepare_to_modify_tss(Process& process)
         load_task_register(s_redirection.selector);
 }
 
+Process* Scheduler::colonel()
+{
+    return s_colonel_process;
+}
+
 void Scheduler::initialize()
 {
     memset(&s_redirection, 0, sizeof(s_redirection));
