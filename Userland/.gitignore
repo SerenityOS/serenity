@@ -29,4 +29,5 @@ rm
 cp
 rmdir
 dmesg
+top
 chmod

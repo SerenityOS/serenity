@@ -7,6 +7,7 @@
 #include "i386.h"
 #include "KSyms.h"
 #include "Console.h"
+#include "Scheduler.h"
 #include <AK/StringBuilder.h>
 #include <LibC/errno_numbers.h>
 
@@ -486,9 +487,10 @@ ByteBuffer procfs$all(InodeIdentifier)
     InterruptDisabler disabler;
     auto processes = Process::all_processes();
     StringBuilder builder;
-    for (auto* process : processes) {
-        builder.appendf("%u,%u,%u,%u,%u,%u,%s,%u,%u,%u,%s,%s,%u,%u,%u\n",
+    auto build_process_line = [&builder] (Process* process) {
+        builder.appendf("%u,%u,%u,%u,%u,%u,%u,%s,%u,%u,%s,%s,%u,%u,%u\n",
             process->pid(),
+            process->times_scheduled(),
             process->tty() ? process->tty()->pgid() : 0,
             process->pgid(),
             process->sid(),
@@ -496,7 +498,6 @@ ByteBuffer procfs$all(InodeIdentifier)
             process->gid(),
             to_string(process->state()),
             process->ppid(),
-            process->times_scheduled(),
             process->number_of_open_file_descriptors(),
             process->tty() ? process->tty()->tty_name().characters() : "notty",
             process->name().characters(),
@@ -504,7 +505,10 @@ ByteBuffer procfs$all(InodeIdentifier)
             process->amount_resident(),
             process->amount_shared()
         );
-    }
+    };
+    build_process_line(Scheduler::colonel());
+    for (auto* process : processes)
+        build_process_line(process);
     return builder.to_byte_buffer();
 }
 

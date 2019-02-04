@@ -26,6 +26,7 @@ OBJS = \
        rmdir.o \
        dmesg.o \
        chmod.o \
+       top.o \
        rm.o
 
 APPS = \
@@ -57,6 +58,7 @@ APPS = \
        rmdir \
        dmesg \
        chmod \
+       top \
        rm
 
 ARCH_FLAGS =
@@ -162,6 +164,9 @@ rmdir: rmdir.o
 	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
 
 chmod: chmod.o
+	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
+
+top: top.o
 	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
 
 .cpp.o:
