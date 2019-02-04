@@ -75,10 +75,22 @@ Terminal::Line::~Line()
 
 void Terminal::Line::clear(Attribute attribute)
 {
-    dirty = true;
-    memset(characters, ' ', length);
-    for (word i = 0 ; i < length; ++i)
+    if (dirty) {
+        memset(characters, ' ', length);
+        for (word i = 0 ; i < length; ++i)
+            attributes[i] = attribute;
+        return;
+    }
+    for (unsigned i = 0 ; i < length; ++i) {
+        if (characters[i] != ' ')
+            dirty = true;
+        characters[i] = ' ';
+    }
+    for (unsigned i = 0 ; i < length; ++i) {
+        if (attributes[i] != attribute)
+            dirty = true;
         attributes[i] = attribute;
+    }
 }
 
 Terminal::~Terminal()
