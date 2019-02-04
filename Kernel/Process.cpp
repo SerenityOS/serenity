@@ -379,7 +379,7 @@ int Process::do_exec(const String& path, Vector<String>&& arguments, Vector<Stri
     m_signal_stack_kernel_region = nullptr;
     m_signal_stack_user_region = nullptr;
     m_display_framebuffer_region = nullptr;
-    memset(m_signal_action_data, 0, sizeof(m_signal_action_data));
+    set_default_signal_dispositions();
     m_signal_mask = 0xffffffff;
     m_pending_signals = 0;
 
@@ -600,6 +600,8 @@ Process::Process(String&& name, uid_t uid, gid_t gid, pid_t ppid, RingLevel ring
     , m_tty(tty)
     , m_ppid(ppid)
 {
+    set_default_signal_dispositions();
+
     memset(&m_fpu_state, 0, sizeof(FPUState));
 
     m_gids.set(m_gid);
@@ -779,7 +781,7 @@ bool Process::has_unmasked_pending_signals() const
     return m_pending_signals & m_signal_mask;
 }
 
-bool Process::dispatch_one_pending_signal()
+ShouldUnblockProcess Process::dispatch_one_pending_signal()
 {
     ASSERT_INTERRUPTS_DISABLED();
     dword signal_candidates = m_pending_signals & m_signal_mask;
@@ -794,7 +796,7 @@ bool Process::dispatch_one_pending_signal()
     return dispatch_signal(signal);
 }
 
-bool Process::dispatch_signal(byte signal)
+ShouldUnblockProcess Process::dispatch_signal(byte signal)
 {
     ASSERT_INTERRUPTS_DISABLED();
     ASSERT(signal < 32);
@@ -805,17 +807,19 @@ bool Process::dispatch_signal(byte signal)
     // FIXME: Implement SA_SIGINFO signal handlers.
     ASSERT(!(action.flags & SA_SIGINFO));
 
+    // Mark this signal as handled.
+    m_pending_signals &= ~(1 << signal);
+
     auto handler_laddr = action.handler_or_sigaction;
     if (handler_laddr.is_null()) {
         // FIXME: Is termination really always the appropriate action?
         terminate_due_to_signal(signal);
-        return false;
+        return ShouldUnblockProcess::No;
     }
 
-    m_pending_signals &= ~(1 << signal);
-
     if (handler_laddr.as_ptr() == SIG_IGN) {
-        dbgprintf("%s(%u) ignored signal %u\n", name().characters(), pid(), signal); return false;
+        dbgprintf("%s(%u) ignored signal %u\n", name().characters(), pid(), signal);
+        return ShouldUnblockProcess::Yes;
     }
 
     Scheduler::prepare_to_modify_tss(*this);
@@ -913,7 +917,7 @@ bool Process::dispatch_signal(byte signal)
 #ifdef SIGNAL_DEBUG
     dbgprintf("signal: Okay, %s(%u) {%s} has been primed with signal handler %w:%x\n", name().characters(), pid(), to_string(state()), m_tss.cs, m_tss.eip);
 #endif
-    return true;
+    return ShouldUnblockProcess::Yes;
 }
 
 void Process::sys$sigreturn()
@@ -1553,6 +1557,7 @@ pid_t Process::sys$waitpid(pid_t waitee, int* wstatus, int options)
             });
             return reaped_pid;
         } else {
+            ASSERT(waitee > 0); // FIXME: Implement other PID specs.
             auto* waitee_process = Process::from_pid(waitee);
             if (!waitee_process)
                 return -ECHILD;
@@ -1823,6 +1828,13 @@ int Process::sys$sigpending(sigset_t* set)
         return -EFAULT;
     *set = m_pending_signals;
     return 0;
+}
+
+void Process::set_default_signal_dispositions()
+{
+    // FIXME: Set up all the right default actions. See signal(7).
+    memset(&m_signal_action_data, 0, sizeof(m_signal_action_data));
+    m_signal_action_data[SIGCHLD].handler_or_sigaction = LinearAddress((dword)SIG_IGN);
 }
 
 int Process::sys$sigaction(int signum, const sigaction* act, sigaction* old_act)

@@ -134,7 +134,7 @@ bool Scheduler::pick_next()
             return true;
         // NOTE: dispatch_one_pending_signal() may unblock the process.
         bool was_blocked = process.is_blocked();
-        if (!process.dispatch_one_pending_signal())
+        if (process.dispatch_one_pending_signal() == ShouldUnblockProcess::No)
             return true;
         if (was_blocked) {
             dbgprintf("Unblock %s(%u) due to signal\n", process.name().characters(), process.pid());
