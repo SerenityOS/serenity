@@ -122,8 +122,8 @@ public:
     size_t size() const { return m_impl ? m_impl->size() : 0; }
     size_t capacity() const { return m_impl ? m_impl->capacity() : 0; }
 
-    T* data() { return m_impl ? &at(0) : nullptr; }
-    const T* data() const { return m_impl ? &at(0) : nullptr; }
+    T* data() { return m_impl ? m_impl->slot(0) : nullptr; }
+    const T* data() const { return m_impl ? m_impl->slot(0) : nullptr; }
 
     const T& at(size_t i) const { return m_impl->at(i); }
     T& at(size_t i) { return m_impl->at(i); }
