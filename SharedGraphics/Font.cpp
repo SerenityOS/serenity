@@ -58,7 +58,7 @@ void Font::initialize()
 
 Font& Font::default_font()
 {
-    static const char* default_font_path = "/res/fonts/Liza8x10.font";
+    static const char* default_font_path = "/res/fonts/LizaRegular8x10.font";
     if (!s_default_font) {
 #ifdef USERLAND
         s_default_font = Font::load_from_file(default_font_path).leak_ref();

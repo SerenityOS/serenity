@@ -123,7 +123,7 @@ WSWindowManager::WSWindowManager()
     m_front_painter = make<Painter>(*m_front_bitmap);
     m_back_painter = make<Painter>(*m_back_bitmap);
 
-    m_font = Font::default_bold_font();
+    m_font = Font::default_font();
 
     m_front_painter->set_font(font());
     m_back_painter->set_font(font());
