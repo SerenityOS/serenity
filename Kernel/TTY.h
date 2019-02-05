@@ -33,7 +33,7 @@ public:
     void hang_up();
 
 protected:
-    virtual void on_tty_write(const byte*, size_t) = 0;
+    virtual ssize_t on_tty_write(const byte*, size_t) = 0;
     void set_size(unsigned short columns, unsigned short rows);
 
     TTY(unsigned major, unsigned minor);

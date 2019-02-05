@@ -499,11 +499,12 @@ void VirtualConsole::on_sysconsole_receive(byte ch)
     m_current_attribute = old_attribute;
 }
 
-void VirtualConsole::on_tty_write(const byte* data, size_t size)
+ssize_t VirtualConsole::on_tty_write(const byte* data, size_t size)
 {
     InterruptDisabler disabler;
     for (size_t i = 0; i < size; ++i)
         on_char(data[i]);
+    return size;
 }
 
 String VirtualConsole::tty_name() const

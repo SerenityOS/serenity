@@ -33,9 +33,9 @@ void SlavePTY::on_master_write(const byte* buffer, size_t size)
         emit(buffer[i]);
 }
 
-void SlavePTY::on_tty_write(const byte* data, size_t size)
+ssize_t SlavePTY::on_tty_write(const byte* data, size_t size)
 {
-    m_master->on_slave_write(data, size);
+    return m_master->on_slave_write(data, size);
 }
 
 bool SlavePTY::can_write(Process&) const

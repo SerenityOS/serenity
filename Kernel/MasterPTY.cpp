@@ -61,13 +61,18 @@ void MasterPTY::notify_slave_closed(Badge<SlavePTY>)
         m_slave = nullptr;
 }
 
-void MasterPTY::on_slave_write(const byte* data, size_t size)
+ssize_t MasterPTY::on_slave_write(const byte* data, size_t size)
 {
+    if (m_closed)
+        return -EIO;
     m_buffer.write(data, size);
+    return size;
 }
 
 bool MasterPTY::can_write_from_slave() const
 {
+    if (m_closed)
+        return true;
     return m_buffer.bytes_in_write_buffer() < 4096;
 }
 
