@@ -267,4 +267,20 @@ int system(const char* command)
     return execl("/bin/sh", "sh", "-c", command, nullptr);
 }
 
+div_t div(int numerator, int denominator)
+{
+    div_t result;
+    result.quot = numerator / denominator;
+    result.rem = numerator % denominator;
+    return result;
+}
+
+ldiv_t ldiv(long numerator, long denominator)
+{
+    ldiv_t result;
+    result.quot = numerator / denominator;
+    result.rem = numerator % denominator;
+    return result;
+}
+
 }

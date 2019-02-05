@@ -30,5 +30,10 @@ void srand(unsigned seed);
 long int random();
 void srandom(unsigned seed);
 
+typedef struct { int quot; int rem; } div_t;
+div_t div(int, int);
+typedef struct { long quot; long rem; } ldiv_t;
+ldiv_t ldiv(long, long);
+
 __END_DECLS
 
