@@ -33,8 +33,8 @@ public:
     size_t size() const { return m_size; }
     size_t capacity() const { return m_capacity; }
 
-    T& at(size_t i) { return *slot(i); }
-    const T& at(size_t i) const { return *slot(i); }
+    T& at(size_t i) { ASSERT(i < m_size); return *slot(i); }
+    const T& at(size_t i) const { ASSERT(i < m_size); return *slot(i); }
 
     void remove(size_t index)
     {
