@@ -5,7 +5,7 @@
 #include "Process.h"
 
 WSWindow::WSWindow(Process& process, int window_id)
-    : m_process(process)
+    : m_process(&process)
     , m_window_id(window_id)
     , m_pid(process.pid())
 {
@@ -34,11 +34,13 @@ void WSWindow::set_rect(const Rect& rect)
     Rect old_rect;
     {
         WSWindowLocker locker(*this);
+        if (!m_process)
+            return;
         if (m_rect == rect)
             return;
         old_rect = m_rect;
         m_rect = rect;
-        m_backing = GraphicsBitmap::create(m_process, m_rect.size());
+        m_backing = GraphicsBitmap::create(*m_process, m_rect.size());
     }
     WSWindowManager::the().notify_rect_changed(*this, old_rect, rect);
 }
@@ -124,9 +126,18 @@ void WSWindow::on_message(WSMessage& message)
         return;
 
     {
-        LOCKER(m_process.gui_events_lock());
-        m_process.gui_events().append(move(gui_event));
+        WSWindowLocker window_locker(*this);
+        if (!m_process)
+            return;
+        LOCKER(m_process->gui_events_lock());
+        m_process->gui_events().append(move(gui_event));
     }
+}
+
+void WSWindow::notify_process_died(Badge<Process>)
+{
+    WSWindowLocker locker(*this);
+    m_process = nullptr;
 }
 
 void WSWindow::set_global_cursor_tracking_enabled(bool enabled)

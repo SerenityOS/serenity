@@ -264,6 +264,7 @@ void Process::destroy_all_windows()
 {
     for (auto& it : m_windows) {
         auto message = make<WSMessage>(WSMessage::WM_DestroyWindow);
+        it.value->notify_process_died(Badge<Process>());
         WSMessageLoop::the().post_message(it.value.leak_ptr(), move(message), true);
     }
     m_windows.clear();

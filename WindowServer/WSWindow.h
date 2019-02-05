@@ -5,6 +5,8 @@
 #include <AK/AKString.h>
 #include <AK/InlineLinkedList.h>
 #include <AK/Lock.h>
+#include <AK/Badge.h>
+#include <Kernel/Process.h>
 #include "WSMessageReceiver.h"
 
 class Process;
@@ -45,6 +47,8 @@ public:
     void set_global_cursor_tracking_enabled(bool);
     bool global_cursor_tracking() const { return m_global_cursor_tracking_enabled; }
 
+    void notify_process_died(Badge<Process>);
+
     // For InlineLinkedList.
     // FIXME: Maybe make a ListHashSet and then WSWindowManager can just use that.
     WSWindow* m_next { nullptr };
@@ -58,7 +62,7 @@ private:
     bool m_global_cursor_tracking_enabled { false };
 
     RetainPtr<GraphicsBitmap> m_backing;
-    Process& m_process;
+    Process* m_process { nullptr };
     int m_window_id { -1 };
     pid_t m_pid { -1 };
 };
