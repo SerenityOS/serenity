@@ -26,7 +26,8 @@
 
 //#define SPAWN_GUITEST
 #define SPAWN_GUITEST2
-#define SPAWN_FONTEDITOR
+#define SPAWN_CLOCK
+//#define SPAWN_FONTEDITOR
 //#define SPAWN_MULTIPLE_SHELLS
 //#define STRESS_TEST_SPAWNING
 
@@ -110,6 +111,9 @@ static void init_stage2()
 #endif
 #ifdef SPAWN_GUITEST2
     Process::create_user_process("/bin/guitest2", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, move(environment), tty0);
+#endif
+#ifdef SPAWN_CLOCK
+    Process::create_user_process("/bin/Clock", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, move(environment), tty0);
 #endif
 #ifdef SPAWN_FONTEDITOR
     Process::create_user_process("/bin/FontEditor", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, move(environment), tty0);
