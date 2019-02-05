@@ -40,6 +40,7 @@ int main(int argc, char** argv)
 #endif
 
     auto* launcher_window = make_launcher_window();
+    launcher_window->set_should_exit_app_on_close(true);
     launcher_window->show();
 
     return loop.exec();

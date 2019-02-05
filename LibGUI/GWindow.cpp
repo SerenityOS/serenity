@@ -35,11 +35,17 @@ GWindow::GWindow(GObject* parent)
 
 GWindow::~GWindow()
 {
+    if (m_main_widget)
+        delete m_main_widget;
     hide();
 }
 
 void GWindow::close()
 {
+    // FIXME: If we exit the event loop, we're never gonna deal with the delete_later request!
+    //        This will become relevant once we support nested event loops.
+    if (should_exit_app_on_close())
+        GEventLoop::main().exit(0);
     delete_later();
 }
 
@@ -157,6 +163,11 @@ void GWindow::event(GEvent& event)
         m_is_active = event.type() == GEvent::WindowBecameActive;
         if (m_focused_widget)
             m_focused_widget->update();
+        return;
+    }
+
+    if (event.type() == GEvent::WindowCloseRequest) {
+        close();
         return;
     }
 

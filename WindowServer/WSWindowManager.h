@@ -48,6 +48,7 @@ private:
 
     void process_mouse_event(WSMouseEvent&);
     void handle_titlebar_mouse_event(WSWindow&, WSMouseEvent&);
+    void handle_close_button_mouse_event(WSWindow&, WSMouseEvent&);
 
     void set_active_window(WSWindow*);
     

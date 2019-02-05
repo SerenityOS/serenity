@@ -12,6 +12,7 @@ GObject::GObject(GObject* parent)
 
 GObject::~GObject()
 {
+    stop_timer();
     if (m_parent)
         m_parent->remove_child(*this);
     auto children_to_delete = move(m_children);

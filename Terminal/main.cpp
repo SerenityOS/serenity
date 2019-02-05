@@ -149,6 +149,8 @@ int main(int, char**)
                 terminal.set_in_active_window(true);
             } else if (event.type == GUI_Event::Type::WindowDeactivated) {
                 terminal.set_in_active_window(false);
+            } else if (event.type == GUI_Event::Type::WindowCloseRequest) {
+                return 0;
             }
         }
     }
