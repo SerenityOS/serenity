@@ -226,7 +226,7 @@ void WSWindowManager::paint_window_frame(WSWindow& window)
 
     m_back_painter->fill_rect_with_gradient(titlebar_rect, border_color, border_color2);
     for (int i = 2; i <= titlebar_inner_rect.height() - 4; i += 2) {
-        m_back_painter->draw_line({ titlebar_title_rect.right() + 4, titlebar_inner_rect.y() + i }, { close_button_rect.left() - 4, titlebar_inner_rect.y() + i }, border_color);
+        m_back_painter->draw_line({ titlebar_title_rect.right() + 4, titlebar_inner_rect.y() + i }, { close_button_rect.left() - 3, titlebar_inner_rect.y() + i }, border_color);
     }
     m_back_painter->draw_rect(border_rect, middle_border_color);
     m_back_painter->draw_rect(outer_rect, border_color);
