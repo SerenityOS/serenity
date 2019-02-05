@@ -47,7 +47,9 @@ cp -v ../Userland/guitest2 mnt/bin/guitest2
 cp -v ../Userland/sysctl mnt/bin/sysctl
 cp -v ../Terminal/Terminal mnt/bin/Terminal
 cp -v ../FontEditor/FontEditor mnt/bin/FontEditor
+cp -v ../Clock/Clock mnt/bin/Clock
 ln -s FontEditor mnt/bin/ff
+ln -s Clock mnt/bin/cl
 cp -v ../Userland/dmesg mnt/bin/dmesg
 cp -v ../Userland/chmod mnt/bin/chmod
 cp -v ../Userland/top mnt/bin/top

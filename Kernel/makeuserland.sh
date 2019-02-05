@@ -8,6 +8,8 @@ make -C ../LibGUI clean && \
 make -C ../LibGUI && \
 make -C ../Terminal clean && \
 make -C ../Terminal && \
+make -C ../Clock clean && \
+make -C ../Clock && \
 make -C ../Userland clean && \
 make -C ../Userland && \
 sudo ./sync.sh

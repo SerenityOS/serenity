@@ -12,6 +12,8 @@ make -C ../Terminal clean && \
 make -C ../Terminal && \
 make -C ../FontEditor clean && \
 make -C ../FontEditor && \
+make -C ../Clock clean && \
+make -C ../Clock && \
 make clean &&\
 make && \
 sudo ./sync.sh
