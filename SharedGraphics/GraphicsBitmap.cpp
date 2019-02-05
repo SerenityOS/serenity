@@ -23,10 +23,12 @@ GraphicsBitmap::GraphicsBitmap(Process& process, const Size& size)
     auto vmo = VMObject::create_anonymous(size_in_bytes);
     m_client_region = process.allocate_region_with_vmo(LinearAddress(), size_in_bytes, vmo.copy_ref(), 0, "GraphicsBitmap (client)", true, true);
     m_client_region->set_shared(true);
+    m_client_region->set_is_bitmap(true);
     m_client_region->commit();
     auto& server = WSMessageLoop::the().server_process();
     m_server_region = server.allocate_region_with_vmo(LinearAddress(), size_in_bytes, move(vmo), 0, "GraphicsBitmap (server)", true, false);
     m_server_region->set_shared(true);
+    m_server_region->set_is_bitmap(true);
 
     m_data = (RGBA32*)m_server_region->laddr().as_ptr();
 }
