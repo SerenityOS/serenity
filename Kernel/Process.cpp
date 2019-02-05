@@ -2181,10 +2181,10 @@ int Process::sys$chmod(const char* pathname, mode_t mode)
 
 void Process::die()
 {
+    destroy_all_windows();
     set_state(Dead);
     m_fds.clear();
     m_tty = nullptr;
-    destroy_all_windows();
 
     InterruptDisabler disabler;
     if (auto* parent_process = Process::from_pid(m_ppid)) {
