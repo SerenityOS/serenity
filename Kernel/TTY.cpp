@@ -161,3 +161,8 @@ void TTY::set_size(unsigned short columns, unsigned short rows)
     m_rows = rows;
     m_columns = columns;
 }
+
+void TTY::hang_up()
+{
+    generate_signal(SIGHUP);
+}

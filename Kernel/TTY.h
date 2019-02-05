@@ -30,6 +30,7 @@ public:
     bool in_canonical_mode() const { return m_termios.c_lflag & ICANON; }
 
     void set_default_termios();
+    void hang_up();
 
 protected:
     virtual void on_tty_write(const byte*, size_t) = 0;
@@ -38,11 +39,11 @@ protected:
     TTY(unsigned major, unsigned minor);
     void emit(byte);
 
+    void generate_signal(int signal);
+
 private:
     // ^CharacterDevice
     virtual bool is_tty() const final override { return true; }
-
-    void generate_signal(int signal);
 
     DoubleBuffer m_buffer;
     pid_t m_pgid { 0 };

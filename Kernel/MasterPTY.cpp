@@ -3,6 +3,7 @@
 #include "PTYMultiplexer.h"
 #include <Kernel/Process.h>
 #include <LibC/errno_numbers.h>
+#include <LibC/signal_numbers.h>
 
 MasterPTY::MasterPTY(unsigned index)
     : CharacterDevice(10, index)
@@ -73,8 +74,11 @@ bool MasterPTY::can_write_from_slave() const
 void MasterPTY::close()
 {
     if (retain_count() == 2) {
+        InterruptDisabler disabler;
         // After the closing FileDescriptor dies, slave is the only thing keeping me alive.
         // From this point, let's consider ourselves closed.
         m_closed = true;
+
+        m_slave->hang_up();
     }
 }

@@ -87,7 +87,7 @@ public:
 
     bool is_blocked() const
     {
-        return m_state == BlockedSleep || m_state == BlockedWait || m_state == BlockedRead || m_state == BlockedSignal || m_state == BlockedSelect;
+        return m_state == BlockedSleep || m_state == BlockedWait || m_state == BlockedRead || m_state == BlockedWrite || m_state == BlockedSignal || m_state == BlockedSelect;
     }
 
     PageDirectory& page_directory() { return *m_page_directory; }
