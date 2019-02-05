@@ -410,6 +410,8 @@ int main(int argc, char** argv)
     for (;;) {
         char keybuf[16];
         ssize_t nread = read(0, keybuf, sizeof(keybuf));
+        if (nread == 0)
+            return 0;
         if (nread < 0) {
             if (errno == EINTR) {
                 ASSERT(g->was_interrupted);
