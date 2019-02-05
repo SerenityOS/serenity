@@ -6,6 +6,38 @@
 #include <AK/AKString.h>
 #include <AK/Types.h>
 
+// FIXME: Make a MutableGlyphBitmap buddy class for FontEditor instead?
+class GlyphBitmap {
+    friend class Font;
+public:
+    const unsigned* rows() const { return m_rows; }
+    unsigned row(unsigned index) const { return m_rows[index]; }
+
+    bool bit_at(int x, int y) const { return row(y) & (1 << x); }
+    void set_bit_at(int x, int y, bool b)
+    {
+        auto& mutable_row = const_cast<unsigned*>(m_rows)[y];
+        if (b)
+            mutable_row |= 1 << x;
+        else
+            mutable_row &= ~(1 << x);
+    }
+
+    Size size() const { return m_size; }
+    int width() const { return m_size.width(); }
+    int height() const { return m_size.height(); }
+
+private:
+    GlyphBitmap(const unsigned* rows, Size size)
+        : m_rows(rows)
+        , m_size(size)
+    {
+    }
+
+    const unsigned* m_rows { nullptr };
+    Size m_size;
+};
+
 class Font : public Retainable<Font> {
 public:
     static Font& default_font();
@@ -22,7 +54,7 @@ public:
 
     ~Font();
 
-    const CharacterBitmap& glyph_bitmap(char ch) const { return *m_bitmaps[(byte)ch]; }
+    GlyphBitmap glyph_bitmap(char ch) const { return GlyphBitmap(&m_rows[(byte)ch * m_glyph_height], { m_glyph_width, m_glyph_height }); }
 
     byte glyph_width() const { return m_glyph_width; }
     byte glyph_height() const { return m_glyph_height; }
@@ -33,17 +65,14 @@ public:
     static void initialize();
 
 private:
-    Font(const String& name, const char* const* glyphs, byte glyph_width, byte glyph_height, byte first_glyph, byte last_glyph);
+    Font(const String& name, unsigned* rows, byte glyph_width, byte glyph_height);
 
     String m_name;
 
-    const char* const* m_glyphs { nullptr };
-    mutable RetainPtr<CharacterBitmap> m_bitmaps[256];
+    unsigned* m_rows { nullptr };
+
     RetainPtr<CharacterBitmap> m_error_bitmap;
 
     byte m_glyph_width { 0 };
     byte m_glyph_height { 0 };
-
-    byte m_first_glyph { 0 };
-    byte m_last_glyph { 0 };
 };

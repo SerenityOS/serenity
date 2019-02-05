@@ -46,7 +46,7 @@ void GTextBox::paint_event(GPaintEvent&)
         if (ch == ' ')
             continue;
         int x = inner_rect.x() + (i * font().glyph_width());
-        painter.draw_bitmap({x, y}, font().glyph_bitmap(ch), Color::Black);
+        painter.draw_glyph({x, y}, ch, Color::Black);
     }
 
     if (is_focused() && m_cursor_blink_state) {

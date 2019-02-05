@@ -304,15 +304,12 @@ bool MemoryManager::page_in_from_inode(Region& region, unsigned page_index_in_re
 
     auto& vmo_page = vmo.physical_pages()[region.first_page_index() + page_index_in_region];
 
-    bool interrupts_were_enabled = are_interrupts_enabled();
+    // FIXME: Maybe this should have a separate class like InterruptFlagSaver?
+    InterruptDisabler disabler;
 
-    if (!interrupts_were_enabled)
-        sti();
-
+    disabler.temporarily_sti();
     LOCKER(vmo.m_paging_lock);
-
-    if (!interrupts_were_enabled)
-        cli();
+    disabler.temporarily_cli();
 
     if (!vmo_page.is_null()) {
         kprintf("MM: page_in_from_inode() but page already present. Fine with me!\n");
@@ -321,9 +318,9 @@ bool MemoryManager::page_in_from_inode(Region& region, unsigned page_index_in_re
     }
 
 #ifdef MM_DEBUG
-    dbgprintf("MM: page_in_from_inode ready to read from inode, will write to L%x!\n", dest_ptr);
+    dbgprintf("MM: page_in_from_inode ready to read from inode\n");
 #endif
-    sti(); // Oh god here we go...
+    disabler.temporarily_sti();
     byte page_buffer[PAGE_SIZE];
     auto& inode = *vmo.inode();
     auto nread = inode.read_bytes(vmo.inode_offset() + ((region.first_page_index() + page_index_in_region) * PAGE_SIZE), PAGE_SIZE, page_buffer, nullptr);
@@ -335,7 +332,7 @@ bool MemoryManager::page_in_from_inode(Region& region, unsigned page_index_in_re
         // If we read less than a page, zero out the rest to avoid leaking uninitialized data.
         memset(page_buffer + nread, 0, PAGE_SIZE - nread);
     }
-    cli();
+    disabler.temporarily_cli();
     vmo_page = allocate_physical_page(ShouldZeroFill::No);
     if (vmo_page.is_null()) {
         kprintf("MM: page_in_from_inode was unable to allocate a physical page\n");
@@ -610,7 +607,7 @@ Region::Region(LinearAddress a, size_t s, String&& n, bool r, bool w, bool cow)
 Region::Region(LinearAddress a, size_t s, RetainPtr<Inode>&& inode, String&& n, bool r, bool w)
     : m_laddr(a)
     , m_size(s)
-    , m_vmo(VMObject::create_file_backed(move(inode), s))
+    , m_vmo(VMObject::create_file_backed(move(inode)))
     , m_name(move(n))
     , m_readable(r)
     , m_writable(w)
@@ -661,13 +658,12 @@ void PhysicalPage::return_to_freelist()
 #endif
 }
 
-RetainPtr<VMObject> VMObject::create_file_backed(RetainPtr<Inode>&& inode, size_t size)
+RetainPtr<VMObject> VMObject::create_file_backed(RetainPtr<Inode>&& inode)
 {
     InterruptDisabler disabler;
     if (inode->vmo())
         return static_cast<VMObject*>(inode->vmo());
-    size = ceil_div(size, PAGE_SIZE) * PAGE_SIZE;
-    auto vmo = adopt(*new VMObject(move(inode), size));
+    auto vmo = adopt(*new VMObject(move(inode)));
     vmo->inode()->set_vmo(vmo.ptr());
     return vmo;
 }
@@ -720,10 +716,11 @@ VMObject::VMObject(PhysicalAddress paddr, size_t size)
 }
 
 
-VMObject::VMObject(RetainPtr<Inode>&& inode, size_t size)
-    : m_size(size)
-    , m_inode(move(inode))
+VMObject::VMObject(RetainPtr<Inode>&& inode)
+    : m_inode(move(inode))
 {
+    ASSERT(m_inode);
+    m_size = ceil_div(m_inode->size(), PAGE_SIZE) * PAGE_SIZE;
     m_physical_pages.resize(page_count());
     MM.register_vmo(*this);
 }

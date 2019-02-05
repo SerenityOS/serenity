@@ -79,7 +79,7 @@ private:
 class VMObject : public Retainable<VMObject> {
     friend class MemoryManager;
 public:
-    static RetainPtr<VMObject> create_file_backed(RetainPtr<Inode>&&, size_t);
+    static RetainPtr<VMObject> create_file_backed(RetainPtr<Inode>&&);
     static RetainPtr<VMObject> create_anonymous(size_t);
     static RetainPtr<VMObject> create_framebuffer_wrapper(PhysicalAddress, size_t);
     RetainPtr<VMObject> clone();
@@ -99,7 +99,7 @@ public:
     Vector<RetainPtr<PhysicalPage>>& physical_pages() { return m_physical_pages; }
 
 private:
-    VMObject(RetainPtr<Inode>&&, size_t);
+    VMObject(RetainPtr<Inode>&&);
     explicit VMObject(VMObject&);
     explicit VMObject(size_t);
     VMObject(PhysicalAddress, size_t);
