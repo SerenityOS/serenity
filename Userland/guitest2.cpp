@@ -34,7 +34,6 @@ private:
 ClockWidget::ClockWidget(GWidget* parent)
     : GWidget(parent)
 {
-    set_font(Font::default_bold_font());
     set_relative_rect({ 0, 0, 100, 40 });
     start_timer(250);
 }

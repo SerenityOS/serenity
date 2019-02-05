@@ -43,7 +43,6 @@ FontEditorWidget::FontEditorWidget(const String& path, RetainPtr<Font>&& edited_
 
     auto* info_label = new GLabel(this);
     info_label->set_relative_rect({ 5, 110, 100, 20 });
-    info_label->set_font(Font::default_bold_font());
 
     auto* demo_label_1 = new GLabel(this);
     demo_label_1->set_font(m_edited_font.copy_ref());
