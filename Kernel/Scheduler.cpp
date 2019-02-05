@@ -236,7 +236,10 @@ bool Scheduler::context_switch(Process& process)
             current->set_state(Process::Runnable);
 
 #ifdef LOG_EVERY_CONTEXT_SWITCH
-        dbgprintf("Scheduler: %s(%u) -> %s(%u)\n", current->name().characters(), current->pid(), process.name().characters(), process.pid());
+        dbgprintf("Scheduler: %s(%u) -> %s(%u) %w:%x\n",
+                  current->name().characters(), current->pid(),
+                  process.name().characters(), process.pid(),
+                  process.tss().cs, process.tss().eip);
 #endif
     }
 
