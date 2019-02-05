@@ -278,12 +278,6 @@ void exception_14_handler(RegisterDumpWithExceptionCode& regs)
     }
     };
 
-    if (current->is_ring0()) {
-        dump_registers_and_code();
-        current->dump_regions();
-        HANG;
-    }
-
 #ifdef PAGE_FAULT_DEBUG
     dump_registers_and_code();
 #endif
@@ -296,7 +290,6 @@ void exception_14_handler(RegisterDumpWithExceptionCode& regs)
             current->pid(),
             regs.exception_code & 2 ? "write" : "read",
             faultAddress);
-
         dump_registers_and_code();
         current->crash();
     } else if (response == PageFaultResponse::Continue) {

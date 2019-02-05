@@ -484,6 +484,7 @@ ssize_t Ext2FSInode::write_bytes(off_t offset, size_t count, const byte* data, F
     ASSERT(offset >= 0);
 
     const size_t block_size = fs().block_size();
+    size_t old_size = size();
     size_t new_size = max(static_cast<size_t>(offset) + count, size());
 
     unsigned blocks_needed_before = ceil_div(size(), block_size);
@@ -557,6 +558,10 @@ ssize_t Ext2FSInode::write_bytes(off_t offset, size_t count, const byte* data, F
 
     // NOTE: Make sure the cached block list is up to date!
     m_block_list = move(block_list);
+
+    if (old_size != new_size)
+        inode_size_changed(old_size, new_size);
+    inode_contents_changed(offset, count, data);
     return nwritten;
 }
 

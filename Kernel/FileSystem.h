@@ -111,6 +111,8 @@ public:
 protected:
     Inode(FS& fs, unsigned index);
     void set_metadata_dirty(bool b) { m_metadata_dirty = b; }
+    void inode_contents_changed(off_t, size_t, const byte*);
+    void inode_size_changed(size_t old_size, size_t new_size);
 
     mutable Lock m_lock;
 
