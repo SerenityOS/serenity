@@ -17,7 +17,7 @@ public:
 private:
     // ^TTY
     virtual String tty_name() const override;
-    virtual void on_tty_write(const byte*, size_t) override;
+    virtual ssize_t on_tty_write(const byte*, size_t) override;
 
     // ^CharacterDevice
     virtual bool can_read(Process&) const override;

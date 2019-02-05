@@ -13,7 +13,7 @@ public:
 
     unsigned index() const { return m_index; }
     String pts_name() const;
-    void on_slave_write(const byte*, size_t);
+    ssize_t on_slave_write(const byte*, size_t);
     bool can_write_from_slave() const;
     void notify_slave_closed(Badge<SlavePTY>);
     bool is_closed() const { return m_closed; }
