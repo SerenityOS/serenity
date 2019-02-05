@@ -9,6 +9,7 @@
 #include <AK/Vector.h>
 #include <AK/HashTable.h>
 #include <AK/AKString.h>
+#include <AK/Badge.h>
 #include <Kernel/VirtualFileSystem.h>
 
 #define PAGE_ROUND_UP(x) ((((dword)(x)) + PAGE_SIZE-1) & (~(PAGE_SIZE-1)))
@@ -98,11 +99,17 @@ public:
     const Vector<RetainPtr<PhysicalPage>>& physical_pages() const { return m_physical_pages; }
     Vector<RetainPtr<PhysicalPage>>& physical_pages() { return m_physical_pages; }
 
+    void inode_contents_changed(Badge<Inode>, off_t, size_t, const byte*);
+    void inode_size_changed(Badge<Inode>, size_t old_size, size_t new_size);
+
 private:
     VMObject(RetainPtr<Inode>&&);
     explicit VMObject(VMObject&);
     explicit VMObject(size_t);
     VMObject(PhysicalAddress, size_t);
+
+    template<typename Callback> void for_each_region(Callback);
+
     String m_name;
     bool m_anonymous { false };
     off_t m_inode_offset { 0 };
@@ -225,7 +232,7 @@ public:
     RetainPtr<PhysicalPage> allocate_physical_page(ShouldZeroFill);
     RetainPtr<PhysicalPage> allocate_supervisor_physical_page();
 
-    void remap_region(Process&, Region&);
+    void remap_region(PageDirectory&, Region&);
 
     size_t ram_size() const { return m_ram_size; }
 

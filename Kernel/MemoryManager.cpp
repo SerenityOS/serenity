@@ -492,10 +492,11 @@ void MemoryManager::remap_region_page(Region& region, unsigned page_index_in_reg
 #endif
 }
 
-void MemoryManager::remap_region(Process& process, Region& region)
+void MemoryManager::remap_region(PageDirectory& page_directory, Region& region)
 {
     InterruptDisabler disabler;
-    map_region_at_address(process.page_directory(), region, region.laddr(), true);
+    ASSERT(region.page_directory() == &page_directory);
+    map_region_at_address(page_directory, region, region.laddr(), true);
 }
 
 void MemoryManager::map_region_at_address(PageDirectory& page_directory, Region& region, LinearAddress laddr, bool user_allowed)
@@ -587,7 +588,7 @@ RetainPtr<Region> Region::clone()
     // Set up a COW region. The parent (this) region becomes COW as well!
     for (size_t i = 0; i < page_count(); ++i)
         m_cow_map.set(i, true);
-    MM.remap_region(*current, *this);
+    MM.remap_region(current->page_directory(), *this);
     return adopt(*new Region(laddr(), size(), m_vmo->clone(), m_offset_in_vmo, String(m_name), m_readable, m_writable, true));
 }
 
@@ -732,6 +733,91 @@ VMObject::~VMObject()
         m_inode->set_vmo(nullptr);
     }
     MM.unregister_vmo(*this);
+}
+
+template<typename Callback>
+void VMObject::for_each_region(Callback callback)
+{
+    // FIXME: Figure out a better data structure so we don't have to walk every single region every time an inode changes.
+    //        Perhaps VMObject could have a Vector<Region*> with all of his mappers?
+    for (auto* region : MM.m_regions) {
+        if (&region->vmo() == this)
+            callback(*region);
+    }
+}
+
+void VMObject::inode_size_changed(Badge<Inode>, size_t old_size, size_t new_size)
+{
+    InterruptDisabler disabler;
+
+    size_t old_page_count = page_count();
+    m_size = new_size;
+
+    if (page_count() > old_page_count) {
+        // Add null pages and let the fault handler page these in when that day comes.
+        for (size_t i = old_page_count; i < page_count(); ++i)
+            m_physical_pages.append(nullptr);
+    } else {
+        // Prune the no-longer valid pages. I'm not sure this is actually correct behavior.
+        for (size_t i = page_count(); i < old_page_count; ++i)
+            m_physical_pages.take_last();
+    }
+
+    // FIXME: Consolidate with inode_contents_changed() so we only do a single walk.
+    for_each_region([] (Region& region) {
+        ASSERT(region.page_directory());
+        MM.remap_region(*region.page_directory(), region);
+    });
+}
+
+void VMObject::inode_contents_changed(Badge<Inode>, off_t offset, size_t size, const byte* data)
+{
+    InterruptDisabler disabler;
+    ASSERT(offset >= 0);
+
+    // FIXME: Only invalidate the parts that actually changed.
+    for (auto& physical_page : m_physical_pages)
+        physical_page = nullptr;
+
+#if 0
+    size_t current_offset = offset;
+    size_t remaining_bytes = size;
+    const byte* data_ptr = data;
+
+    auto to_page_index = [] (size_t offset) -> size_t {
+        return offset / PAGE_SIZE;
+    };
+
+    if (current_offset & PAGE_MASK) {
+        size_t page_index = to_page_index(current_offset);
+        size_t bytes_to_copy = min(size, PAGE_SIZE - (current_offset & PAGE_MASK));
+        if (m_physical_pages[page_index]) {
+            auto* ptr = MM.quickmap_page(*m_physical_pages[page_index]);
+            memcpy(ptr, data_ptr, bytes_to_copy);
+            MM.unquickmap_page();
+        }
+        current_offset += bytes_to_copy;
+        data += bytes_to_copy;
+        remaining_bytes -= bytes_to_copy;
+    }
+
+    for (size_t page_index = to_page_index(current_offset); page_index < m_physical_pages.size(); ++page_index) {
+        size_t bytes_to_copy = PAGE_SIZE - (current_offset & PAGE_MASK);
+        if (m_physical_pages[page_index]) {
+            auto* ptr = MM.quickmap_page(*m_physical_pages[page_index]);
+            memcpy(ptr, data_ptr, bytes_to_copy);
+            MM.unquickmap_page();
+        }
+        current_offset += bytes_to_copy;
+        data += bytes_to_copy;
+    }
+#endif
+
+    // FIXME: Consolidate with inode_size_changed() so we only do a single walk.
+    for_each_region([] (Region& region) {
+        ASSERT(region.page_directory());
+        MM.remap_region(*region.page_directory(), region);
+    });
 }
 
 int Region::commit()
