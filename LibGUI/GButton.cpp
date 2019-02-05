@@ -28,15 +28,11 @@ void GButton::paint_event(GPaintEvent&)
     Color shadow_color = Color(96, 96, 96);
 
     Painter painter(*this);
-
-    painter.draw_line({ 1, 0 }, { width() - 2, 0 }, Color::Black);
-    painter.draw_line({ 1, height() - 1 }, { width() - 2, height() - 1}, Color::Black);
-    painter.draw_line({ 0, 1 }, { 0, height() - 2 }, Color::Black);
-    painter.draw_line({ width() - 1, 1 }, { width() - 1, height() - 2 }, Color::Black);
+    painter.draw_rect(rect(), Color::Black, true);
 
     if (m_being_pressed) {
         // Base
-        painter.fill_rect({ 1, 1, width() - 2, height() - 2 }, button_color);
+        painter.fill_rect(rect().shrunken(2, 2), button_color);
 
         // Sunken shadow
         painter.draw_line({ 1, 1 }, { width() - 2, 1 }, shadow_color);

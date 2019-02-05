@@ -236,8 +236,9 @@ void WSWindowManager::paint_window_frame(WSWindow& window)
     if (!s_close_button_bitmap)
         s_close_button_bitmap = CharacterBitmap::create_from_ascii(s_close_button_bitmap_data, s_close_button_bitmap_width, s_close_button_bitmap_height).leak_ref();
 
-    m_back_painter->fill_rect_with_gradient(close_button_rect, Color::LightGray, Color::White);
-    m_back_painter->draw_rect(close_button_rect, Color::Black);
+    m_back_painter->fill_rect_with_gradient(close_button_rect.shrunken(2, 2), Color::LightGray, Color::White);
+
+    m_back_painter->draw_rect(close_button_rect, Color::Black, true);
     auto x_location = close_button_rect.center();
     x_location.move_by(-(s_close_button_bitmap_width / 2), -(s_close_button_bitmap_height / 2));
     m_back_painter->draw_bitmap(x_location, *s_close_button_bitmap, Color::Black);
