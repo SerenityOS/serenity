@@ -4,6 +4,8 @@
 #include <AK/StdLibExtras.h>
 
 #ifdef KERNEL
+#include <Kernel/Process.h>
+#include <Kernel/MemoryManager.h>
 #include <Kernel/FileDescriptor.h>
 #include <Kernel/VirtualFileSystem.h>
 #endif
@@ -34,6 +36,20 @@ static constexpr const char* error_glyph {
 static Font* s_default_font;
 static Font* s_default_bold_font;
 
+struct FontFileHeader {
+    char magic[4];
+    byte glyph_width;
+    byte glyph_height;
+    byte type;
+    byte unused[7];
+    char name[64];
+} PACKED;
+
+static inline constexpr size_t font_file_size(unsigned glyph_height)
+{
+    return sizeof(FontFileHeader) + 256 * sizeof(dword) * glyph_height;
+}
+
 void Font::initialize()
 {
     s_default_font = nullptr;
@@ -53,9 +69,10 @@ Font& Font::default_font()
             kprintf("Failed to open default font (%s)\n", default_font_path);
             ASSERT_NOT_REACHED();
         }
-        auto buffer = descriptor->read_entire_file(*current);
-        ASSERT(buffer);
-        s_default_font = Font::load_from_memory(buffer.pointer()).leak_ref();
+        auto* region = current->allocate_file_backed_region(LinearAddress(), font_file_size(10), descriptor->inode(), "default_font", /*readable*/true, /*writable*/false);
+        ASSERT(region);
+        region->page_in();
+        s_default_font = Font::load_from_memory(region->laddr().as_ptr()).leak_ref();
 #endif
         ASSERT(s_default_font);
     }
@@ -72,12 +89,15 @@ Font& Font::default_bold_font()
         int error;
         auto descriptor = VFS::the().open(default_bold_font_path, error, 0, 0, *VFS::the().root_inode());
         if (!descriptor) {
-            kprintf("Failed to open default font (%s)\n", default_bold_font_path);
+            kprintf("Failed to open default bold font (%s)\n", default_bold_font_path);
             ASSERT_NOT_REACHED();
         }
-        auto buffer = descriptor->read_entire_file(*current);
-        ASSERT(buffer);
-        s_default_bold_font = Font::load_from_memory(buffer.pointer()).leak_ref();
+        auto* region = current->allocate_file_backed_region(LinearAddress(), font_file_size(10), descriptor->inode(), "default_bold_font", /*readable*/true, /*writable*/false);
+        ASSERT(region);
+        ASSERT_INTERRUPTS_ENABLED();
+        region->page_in();
+        ASSERT_INTERRUPTS_ENABLED();
+        s_default_bold_font = Font::load_from_memory(region->laddr().as_ptr()).leak_ref();
 #endif
         ASSERT(s_default_bold_font);
     }
@@ -86,53 +106,27 @@ Font& Font::default_bold_font()
 
 RetainPtr<Font> Font::clone() const
 {
-    size_t bytes_per_glyph = glyph_width() * glyph_height();
+    size_t bytes_per_glyph = sizeof(dword) * glyph_height();
     // FIXME: This is leaked!
-    char** new_glyphs = static_cast<char**>(kmalloc(sizeof(char*) * 256));
-    for (unsigned i = 0; i < 256; ++i) {
-        new_glyphs[i] = static_cast<char*>(kmalloc(bytes_per_glyph));
-        if (i >= m_first_glyph && i <= m_last_glyph) {
-            memcpy(new_glyphs[i], m_glyphs[i - m_first_glyph], bytes_per_glyph);
-        } else {
-            memset(new_glyphs[i], ' ', bytes_per_glyph);
-        }
-    }
-    return adopt(*new Font(m_name, new_glyphs, m_glyph_width, m_glyph_height, 0, 255));
+    auto* new_rows = static_cast<unsigned*>(kmalloc(bytes_per_glyph * 256));
+    memcpy(new_rows, m_rows, bytes_per_glyph * 256);
+    return adopt(*new Font(m_name, new_rows, m_glyph_width, m_glyph_height));
 }
 
-Font::Font(const String& name, const char* const* glyphs, byte glyph_width, byte glyph_height, byte first_glyph, byte last_glyph)
+Font::Font(const String& name, unsigned* rows, byte glyph_width, byte glyph_height)
     : m_name(name)
-    , m_glyphs(glyphs)
+    , m_rows(rows)
     , m_glyph_width(glyph_width)
     , m_glyph_height(glyph_height)
-    , m_first_glyph(first_glyph)
-    , m_last_glyph(last_glyph)
 {
     ASSERT(m_glyph_width == error_glyph_width);
     ASSERT(m_glyph_height == error_glyph_height);
     m_error_bitmap = CharacterBitmap::create_from_ascii(error_glyph, error_glyph_width, error_glyph_height);
-    for (unsigned ch = 0; ch < 256; ++ch) {
-        if (ch < m_first_glyph || ch > m_last_glyph) {
-            m_bitmaps[ch] = m_error_bitmap.copy_ref();
-            continue;
-        }
-        const char* data = m_glyphs[(unsigned)ch - m_first_glyph];
-        m_bitmaps[ch] = CharacterBitmap::create_from_ascii(data, m_glyph_width, m_glyph_height);
-    }
 }
 
 Font::~Font()
 {
 }
-
-struct FontFileHeader {
-    char magic[4];
-    byte glyph_width;
-    byte glyph_height;
-    byte type;
-    byte unused[7];
-    char name[64];
-} PACKED;
 
 RetainPtr<Font> Font::load_from_memory(const byte* data)
 {
@@ -146,25 +140,8 @@ RetainPtr<Font> Font::load_from_memory(const byte* data)
         return nullptr;
     }
 
-    auto* glyphs_ptr = reinterpret_cast<const unsigned*>(data + sizeof(FontFileHeader));
-
-    char** new_glyphs = static_cast<char**>(kmalloc(sizeof(char*) * 256));
-    for (unsigned glyph_index = 0; glyph_index < 256; ++glyph_index) {
-        new_glyphs[glyph_index] = static_cast<char*>(kmalloc(header.glyph_width * header.glyph_height));
-        char* bitptr = new_glyphs[glyph_index];
-        for (unsigned y = 0; y < header.glyph_height; ++y) {
-            unsigned pattern = *(glyphs_ptr++);
-            for (unsigned x = 0; x < header.glyph_width; ++x) {
-                if (pattern & (1u << x)) {
-                    *(bitptr++) = '#';
-                } else {
-                    *(bitptr++) = ' ';
-                }
-            }
-        }
-    }
-
-    return adopt(*new Font(String(header.name), new_glyphs, header.glyph_width, header.glyph_height, 0, 255));
+    auto* rows = (unsigned*)(data + sizeof(FontFileHeader));
+    return adopt(*new Font(String(header.name), rows, header.glyph_width, header.glyph_height));
 }
 
 #ifdef USERLAND
@@ -185,10 +162,8 @@ RetainPtr<Font> Font::load_from_file(const String& path)
     }
 
     auto font = load_from_memory(mapped_file);
-    int rc = munmap(mapped_file, 4096 * 3);
-    ASSERT(rc == 0);
 
-    rc = close(fd);
+    int rc = close(fd);
     ASSERT(rc == 0);
     return font;
 }
@@ -215,19 +190,7 @@ bool Font::write_to_file(const String& path)
     BufferStream stream(buffer);
 
     stream << ByteBuffer::wrap((byte*)&header, sizeof(FontFileHeader));
-
-    for (unsigned glyph_index = 0; glyph_index < 256; ++glyph_index) {
-        auto* glyph_bits = (byte*)m_glyphs[glyph_index];
-        for (unsigned y = 0; y < m_glyph_height; ++y) {
-            unsigned pattern = 0;
-            for (unsigned x = 0; x < m_glyph_width; ++x) {
-                if (glyph_bits[y * m_glyph_width + x] == '#') {
-                    pattern |= 1 << x;
-                }
-            }
-            stream << pattern;
-        }
-    }
+    stream << ByteBuffer::wrap((byte*)m_rows, (256 * bytes_per_glyph));
 
     ASSERT(stream.at_end());
     ssize_t nwritten = write(fd, buffer.pointer(), buffer.size());

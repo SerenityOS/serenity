@@ -8,7 +8,9 @@ FontEditorWidget::FontEditorWidget(GWidget* parent)
     : GWidget(parent)
 {
     m_edited_font = Font::load_from_file("/saved.font");
-    if (!m_edited_font)
+    if (m_edited_font)
+        m_edited_font = m_edited_font->clone();
+    else
         m_edited_font = Font::default_font().clone();
 
     m_glyph_map_widget = new GlyphMapWidget(*m_edited_font, this);
@@ -181,7 +183,7 @@ void GlyphEditorWidget::paint_event(GPaintEvent&)
 
     painter.translate(1, 1);
 
-    auto& bitmap = font().glyph_bitmap(m_glyph);
+    auto bitmap = font().glyph_bitmap(m_glyph);
 
     for (int y = 0; y < font().glyph_height(); ++y) {
         for (int x = 0; x < font().glyph_width(); ++x) {
@@ -214,17 +216,14 @@ void GlyphEditorWidget::draw_at_mouse(const GMouseEvent& event)
     bool unset = event.buttons() & GMouseButton::Right;
     if (!(set ^ unset))
         return;
-    byte new_bit = set ? '#' : ' ';
     int x = (event.x() - 1) / m_scale;
     int y = (event.y() - 1) / m_scale;
-    auto& bitmap = font().glyph_bitmap(m_glyph);
-    auto* mutable_bits = const_cast<char*>(bitmap.bits());
+    auto bitmap = font().glyph_bitmap(m_glyph);
     ASSERT((unsigned)x < bitmap.width());
     ASSERT((unsigned)y < bitmap.height());
-    auto& bit = mutable_bits[y * bitmap.width() + x];
-    if (bit == new_bit)
+    if (bitmap.bit_at(x, y) == set)
         return;
-    bit = new_bit;
+    bitmap.set_bit_at(x, y, set);
     if (on_glyph_altered)
         on_glyph_altered();
     update();

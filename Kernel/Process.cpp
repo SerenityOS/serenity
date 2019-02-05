@@ -325,7 +325,7 @@ int Process::do_exec(const String& path, Vector<String>&& arguments, Vector<Stri
 #endif
     ProcessPagingScope paging_scope(*this);
 
-    auto vmo = VMObject::create_file_backed(descriptor->inode(), descriptor->metadata().size);
+    auto vmo = VMObject::create_file_backed(descriptor->inode());
     vmo->set_name(descriptor->absolute_path());
     RetainPtr<Region> region = allocate_region_with_vmo(LinearAddress(), descriptor->metadata().size, vmo.copy_ref(), 0, "helper", true, false);
 

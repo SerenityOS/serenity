@@ -206,6 +206,29 @@ void Painter::draw_bitmap(const Point& p, const CharacterBitmap& bitmap, Color c
     }
 }
 
+void Painter::draw_bitmap(const Point& p, const GlyphBitmap& bitmap, Color color)
+{
+    Rect rect { p, bitmap.size() };
+    rect.move_by(m_translation);
+    auto clipped_rect = Rect::intersection(rect, m_clip_rect);
+    if (clipped_rect.is_empty())
+        return;
+    const int first_row = clipped_rect.top() - rect.top();
+    const int last_row = clipped_rect.bottom() - rect.top();
+    const int first_column = clipped_rect.left() - rect.left();
+    const int last_column = clipped_rect.right() - rect.left();
+    RGBA32* dst = m_target->scanline(clipped_rect.y()) + clipped_rect.x();
+    const size_t dst_skip = m_target->width();
+
+    for (int row = first_row; row <= last_row; ++row) {
+        for (int j = 0; j <= (last_column - first_column); ++j) {
+            if (bitmap.bit_at(j, row))
+                dst[j] = color.value();
+        }
+        dst += dst_skip;
+    }
+}
+
 FLATTEN void Painter::draw_glyph(const Point& point, char ch, Color color)
 {
     draw_bitmap(point, font().glyph_bitmap(ch), color);

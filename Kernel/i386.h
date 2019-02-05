@@ -120,6 +120,16 @@ public:
             sti();
     }
 
+    void temporarily_cli()
+    {
+        cli();
+    }
+
+    void temporarily_sti()
+    {
+        sti();
+    }
+
 private:
     dword m_flags;
 };
