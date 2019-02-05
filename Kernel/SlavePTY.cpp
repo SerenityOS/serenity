@@ -43,6 +43,20 @@ bool SlavePTY::can_write(Process&) const
     return m_master->can_write_from_slave();
 }
 
+bool SlavePTY::can_read(Process& process) const
+{
+    if (m_master->is_closed())
+        return true;
+    return TTY::can_read(process);
+}
+
+ssize_t SlavePTY::read(Process& process, byte* buffer, size_t size)
+{
+    if (m_master->is_closed())
+        return 0;
+    return TTY::read(process, buffer, size);
+}
+
 void SlavePTY::close()
 {
     m_master->notify_slave_closed(Badge<SlavePTY>());

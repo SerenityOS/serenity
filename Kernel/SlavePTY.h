@@ -20,6 +20,8 @@ private:
     virtual void on_tty_write(const byte*, size_t) override;
 
     // ^CharacterDevice
+    virtual bool can_read(Process&) const override;
+    virtual ssize_t read(Process&, byte*, size_t) override;
     virtual bool can_write(Process&) const override;
     virtual const char* class_name() const override { return "SlavePTY"; }
     virtual void close() override;
