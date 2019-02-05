@@ -29,6 +29,7 @@ int main(int argc, char** argv)
     auto* font_editor = new FontEditorWidget(path, move(edited_font));
     font_editor->set_relative_rect({ 0, 0, 420, 200 });
     window->set_main_widget(font_editor);
+    window->set_should_exit_app_on_close(true);
     window->show();
     return loop.exec();
 }
