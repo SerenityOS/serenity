@@ -42,10 +42,10 @@ static inline Rect close_button_rect_for_window(const Rect& window_rect)
     int close_button_margin = 1;
     int close_button_size = titlebar_inner_rect.height() - close_button_margin * 2;
     return Rect {
-        titlebar_inner_rect.right() - close_button_size,
+        titlebar_inner_rect.right() - close_button_size + 1,
         titlebar_inner_rect.top() + close_button_margin,
         close_button_size,
-        close_button_size
+        close_button_size - 1
     };
 }
 
@@ -166,20 +166,20 @@ WSWindowManager::~WSWindowManager()
 }
 
 static const char* s_close_button_bitmap_data = {
-    " ##     ## "
-    "  ##   ##  "
-    "   ## ##   "
-    "    ###    "
-    "     #     "
-    "    ###    "
-    "   ## ##   "
-    "  ##   ##  "
-    " ##     ## "
+    "##    ##"
+    "###  ###"
+    " ###### "
+    "  ####  "
+    "   ##   "
+    "  ####  "
+    " ###### "
+    "###  ###"
+    "##    ##"
 };
 
 static CharacterBitmap* s_close_button_bitmap;
-static const int s_close_button_bitmap_width = 11;
-static const int s_close_button_bitmap_height = 11;
+static const int s_close_button_bitmap_width = 8;
+static const int s_close_button_bitmap_height = 9;
 
 void WSWindowManager::paint_window_frame(WSWindow& window)
 {
@@ -190,7 +190,7 @@ void WSWindowManager::paint_window_frame(WSWindow& window)
     auto titlebar_inner_rect = title_bar_text_rect(window.rect());
     auto outer_rect = outer_window_rect(window.rect());
     auto border_rect = border_window_rect(window.rect());
-
+    auto close_button_rect = close_button_rect_for_window(window.rect());
 
     auto titlebar_title_rect = titlebar_inner_rect;
     titlebar_title_rect.set_width(font().glyph_width() * window.title().length());
@@ -226,23 +226,21 @@ void WSWindowManager::paint_window_frame(WSWindow& window)
 
     m_back_painter->fill_rect_with_gradient(titlebar_rect, border_color, border_color2);
     for (int i = 2; i <= titlebar_inner_rect.height() - 4; i += 2) {
-        m_back_painter->draw_line({ titlebar_title_rect.right() + 4, titlebar_inner_rect.y() + i }, { titlebar_inner_rect.right(), titlebar_inner_rect.y() + i }, border_color);
+        m_back_painter->draw_line({ titlebar_title_rect.right() + 4, titlebar_inner_rect.y() + i }, { close_button_rect.left() - 4, titlebar_inner_rect.y() + i }, border_color);
     }
     m_back_painter->draw_rect(border_rect, middle_border_color);
     m_back_painter->draw_rect(outer_rect, border_color);
     m_back_painter->draw_rect(inner_border_rect, border_color);
     m_back_painter->draw_text(titlebar_title_rect, window.title(), Painter::TextAlignment::CenterLeft, title_color);
 
-    Rect close_button_rect = close_button_rect_for_window(window.rect());
     if (!s_close_button_bitmap)
         s_close_button_bitmap = CharacterBitmap::create_from_ascii(s_close_button_bitmap_data, s_close_button_bitmap_width, s_close_button_bitmap_height).leak_ref();
 
     m_back_painter->fill_rect_with_gradient(close_button_rect, Color::LightGray, Color::White);
     m_back_painter->draw_rect(close_button_rect, Color::Black);
-    auto x_location = close_button_rect.location();
-    x_location.move_by(2, 2);
+    auto x_location = close_button_rect.center();
+    x_location.move_by(-(s_close_button_bitmap_width / 2), -(s_close_button_bitmap_height / 2));
     m_back_painter->draw_bitmap(x_location, *s_close_button_bitmap, Color::Black);
-
 
 #ifdef DEBUG_WID_IN_TITLE_BAR
     Color metadata_color(96, 96, 96);
