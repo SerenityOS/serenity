@@ -4,14 +4,14 @@
 #include <LibGUI/GLabel.h>
 #include <LibGUI/GTextBox.h>
 
-FontEditorWidget::FontEditorWidget(GWidget* parent)
+FontEditorWidget::FontEditorWidget(const String& path, RetainPtr<Font>&& edited_font, GWidget* parent)
     : GWidget(parent)
+    , m_edited_font(move(edited_font))
 {
-    m_edited_font = Font::load_from_file("/saved.font");
-    if (m_edited_font)
-        m_edited_font = m_edited_font->clone();
+    if (path.is_empty())
+        m_path = "/saved.font";
     else
-        m_edited_font = Font::default_font().clone();
+        m_path = path;
 
     m_glyph_map_widget = new GlyphMapWidget(*m_edited_font, this);
     m_glyph_map_widget->move_to({ 90, 5 });
@@ -30,7 +30,15 @@ FontEditorWidget::FontEditorWidget(GWidget* parent)
     save_button->set_caption("Save");
     save_button->set_relative_rect({ 5, 170, 100, 20 });
     save_button->on_click = [this] (GButton&) {
-        m_edited_font->write_to_file("/saved.font");
+        dbgprintf("write to file: '%s'\n", m_path.characters());
+        m_edited_font->write_to_file(m_path);
+    };
+
+    auto* quit_button = new GButton(this);
+    quit_button->set_caption("Quit");
+    quit_button->set_relative_rect({ 110, 170, 100, 20 });
+    quit_button->on_click = [] (GButton&) {
+        exit(0);
     };
 
     auto* info_label = new GLabel(this);

@@ -9,7 +9,7 @@ class GTextBox;
 
 class FontEditorWidget final : public GWidget {
 public:
-    FontEditorWidget(GWidget* parent = nullptr);
+    FontEditorWidget(const String& path, RetainPtr<Font>&&, GWidget* parent = nullptr);
     virtual ~FontEditorWidget() override;
 
 private:
@@ -18,6 +18,8 @@ private:
     GlyphMapWidget* m_glyph_map_widget { nullptr };
     GlyphEditorWidget* m_glyph_editor_widget { nullptr };
     GTextBox* m_name_textbox { nullptr };
+
+    String m_path;
 };
 
 class GlyphMapWidget final : public GWidget {
