@@ -12,7 +12,7 @@ static const dword time_slice = 5; // *10 = 50ms
 Process* current;
 Process* g_last_fpu_process;
 static Process* s_colonel_process;
-static bool s_in_yield;
+static volatile bool s_in_yield;
 
 struct TaskRedirectionData {
     word selector;

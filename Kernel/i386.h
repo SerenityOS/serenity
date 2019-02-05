@@ -106,6 +106,25 @@ inline bool are_interrupts_enabled()
     return cpu_flags() & 0x200;
 }
 
+class InterruptFlagSaver {
+public:
+    InterruptFlagSaver()
+    {
+        m_flags = cpu_flags();
+    }
+
+    ~InterruptFlagSaver()
+    {
+        if (m_flags & 0x200)
+            sti();
+        else
+            cli();
+    }
+
+private:
+    dword m_flags;
+};
+
 class InterruptDisabler {
 public:
     InterruptDisabler()
@@ -118,16 +137,6 @@ public:
     {
         if (m_flags & 0x200)
             sti();
-    }
-
-    void temporarily_cli()
-    {
-        cli();
-    }
-
-    void temporarily_sti()
-    {
-        sti();
     }
 
 private:

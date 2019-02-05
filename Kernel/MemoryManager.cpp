@@ -304,12 +304,11 @@ bool MemoryManager::page_in_from_inode(Region& region, unsigned page_index_in_re
 
     auto& vmo_page = vmo.physical_pages()[region.first_page_index() + page_index_in_region];
 
-    // FIXME: Maybe this should have a separate class like InterruptFlagSaver?
-    InterruptDisabler disabler;
+    InterruptFlagSaver saver;
 
-    disabler.temporarily_sti();
+    sti();
     LOCKER(vmo.m_paging_lock);
-    disabler.temporarily_cli();
+    cli();
 
     if (!vmo_page.is_null()) {
         kprintf("MM: page_in_from_inode() but page already present. Fine with me!\n");
@@ -320,7 +319,7 @@ bool MemoryManager::page_in_from_inode(Region& region, unsigned page_index_in_re
 #ifdef MM_DEBUG
     dbgprintf("MM: page_in_from_inode ready to read from inode\n");
 #endif
-    disabler.temporarily_sti();
+    sti();
     byte page_buffer[PAGE_SIZE];
     auto& inode = *vmo.inode();
     auto nread = inode.read_bytes(vmo.inode_offset() + ((region.first_page_index() + page_index_in_region) * PAGE_SIZE), PAGE_SIZE, page_buffer, nullptr);
@@ -332,7 +331,7 @@ bool MemoryManager::page_in_from_inode(Region& region, unsigned page_index_in_re
         // If we read less than a page, zero out the rest to avoid leaking uninitialized data.
         memset(page_buffer + nread, 0, PAGE_SIZE - nread);
     }
-    disabler.temporarily_cli();
+    cli();
     vmo_page = allocate_physical_page(ShouldZeroFill::No);
     if (vmo_page.is_null()) {
         kprintf("MM: page_in_from_inode was unable to allocate a physical page\n");
