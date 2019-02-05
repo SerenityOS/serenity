@@ -137,7 +137,7 @@ void Painter::fill_rect_with_gradient(const Rect& a_rect, Color gradient_start, 
     }
 }
 
-void Painter::draw_rect(const Rect& a_rect, Color color)
+void Painter::draw_rect(const Rect& a_rect, Color color, bool rough)
 {
     Rect rect = a_rect;
     rect.move_by(m_translation);
@@ -150,11 +150,15 @@ void Painter::draw_rect(const Rect& a_rect, Color color)
     int max_y = clipped_rect.bottom();
 
     if (rect.top() >= clipped_rect.top() && rect.top() <= clipped_rect.bottom()) {
-        fast_dword_fill(m_target->scanline(rect.top()) + clipped_rect.left(), color.value(), clipped_rect.width());
+        int start_x = rough ? max(rect.x() + 1, clipped_rect.x()) : clipped_rect.x();
+        int width = rough ? min(rect.width() - 2, clipped_rect.width()) : clipped_rect.width();
+        fast_dword_fill(m_target->scanline(rect.top()) + start_x, color.value(), width);
         ++min_y;
     }
     if (rect.bottom() >= clipped_rect.top() && rect.bottom() <= clipped_rect.bottom()) {
-        fast_dword_fill(m_target->scanline(rect.bottom()) + clipped_rect.left(), color.value(), clipped_rect.width());
+        int start_x = rough ? max(rect.x() + 1, clipped_rect.x()) : clipped_rect.x();
+        int width = rough ? min(rect.width() - 2, clipped_rect.width()) : clipped_rect.width();
+        fast_dword_fill(m_target->scanline(rect.bottom()) + start_x, color.value(), width);
         --max_y;
     }
 

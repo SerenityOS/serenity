@@ -67,6 +67,27 @@ public:
         set_height(height() - h);
     }
 
+    Rect shrunken(int w, int h)
+    {
+        Rect rect = *this;
+        rect.shrink(w, h);
+        return rect;
+    }
+
+    Rect inflated(int w, int h)
+    {
+        Rect rect = *this;
+        rect.inflate(w, h);
+        return rect;
+    }
+
+    Rect translated(int dx, int dy)
+    {
+        Rect rect = *this;
+        rect.move_by(dx, dy);
+        return rect;
+    }
+
     bool contains(int x, int y) const
     {
         return x >= m_location.x() && x <= right() && y >= m_location.y() && y <= bottom();

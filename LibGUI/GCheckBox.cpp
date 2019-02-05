@@ -68,17 +68,11 @@ void GCheckBox::paint_event(GPaintEvent&)
     painter.fill_rect(box_rect, Color::White);
     painter.draw_rect(box_rect, Color::Black);
 
-    if (m_being_modified) {
-        auto modification_rect = box_rect;
-        modification_rect.shrink(2, 2);
-        painter.draw_rect(modification_rect, Color::MidGray);
-    }
+    if (m_being_modified)
+        painter.draw_rect(box_rect.shrunken(2, 2), Color::MidGray);
 
-    if (m_checked) {
-        auto bitmap_rect = box_rect;
-        bitmap_rect.shrink(2, 2);
-        painter.draw_bitmap(bitmap_rect.location(), *s_checked_bitmap, foreground_color());
-    }
+    if (m_checked)
+        painter.draw_bitmap(box_rect.shrunken(2, 2).location(), *s_checked_bitmap, foreground_color());
 
     if (!caption().is_empty())
         painter.draw_text(text_rect, caption(), Painter::TextAlignment::TopLeft, foreground_color());
