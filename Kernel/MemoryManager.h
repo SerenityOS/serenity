@@ -140,6 +140,9 @@ public:
 
     void set_shared(bool shared) { m_shared = shared; }
 
+    bool is_bitmap() const { return m_is_bitmap; }
+    void set_is_bitmap(bool b) { m_is_bitmap = b; }
+
     RetainPtr<Region> clone();
     bool contains(LinearAddress laddr) const
     {
@@ -198,6 +201,7 @@ private:
     bool m_readable { true };
     bool m_writable { true };
     bool m_shared { false };
+    bool m_is_bitmap { false };
     Bitmap m_cow_map;
 };
 

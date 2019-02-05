@@ -273,6 +273,7 @@ public:
     size_t amount_virtual() const;
     size_t amount_resident() const;
     size_t amount_shared() const;
+    size_t amount_in_bitmaps() const;
 
     Process* fork(RegisterDump&);
     int exec(const String& path, Vector<String>&& arguments, Vector<String>&& environment);

@@ -15,8 +15,9 @@ struct Process {
     String name;
     String state;
     String user;
-    unsigned virt;
-    unsigned res;
+    unsigned linear;
+    unsigned committed;
+    unsigned in_bitmaps;
     unsigned nsched_since_prev;
     unsigned cpu_percent;
     unsigned cpu_percent_decimal;
@@ -42,7 +43,7 @@ static Snapshot get_snapshot()
         if (!ptr)
             break;
         auto parts = String(buf, Chomp).split(',');
-        if (parts.size() < 14)
+        if (parts.size() < 16)
             break;
         bool ok;
         pid_t pid = parts[0].to_uint(ok);
@@ -58,9 +59,11 @@ static Snapshot get_snapshot()
         process.user = s_usernames->get(uid);
         process.state = parts[7];
         process.name = parts[11];
-        process.virt = parts[12].to_uint(ok);
+        process.linear = parts[12].to_uint(ok);
         ASSERT(ok);
-        process.res = parts[13].to_uint(ok);
+        process.committed = parts[13].to_uint(ok);
+        ASSERT(ok);
+        process.in_bitmaps = parts[15].to_uint(ok);
         ASSERT(ok);
         snapshot.map.set(pid, move(process));
     }
@@ -79,17 +82,19 @@ int main(int, char**)
 
     Vector<Process*> processes;
     auto prev = get_snapshot();
+    usleep(10000);
     for (;;) {
         auto current = get_snapshot();
         auto sum_diff = current.sum_nsched - prev.sum_nsched;
 
         printf("\033[3J\033[H\033[2J");
-        printf("\033[47;30m%6s  % 8s  %8s  %8s  %8s  %4s  %s\033[K\033[0m\n",
+        printf("\033[47;30m%6s  % 8s  %8s  %6s  %6s  %6s  %4s  %s\033[K\033[0m\n",
                "PID",
                "USER",
                "STATE",
-               "VIRTUAL",
-               "RESIDENT",
+               "LINEAR",
+               "COMMIT",
+               "BITMAP",
                "%CPU",
                "NAME");
         for (auto& it : current.map) {
@@ -115,12 +120,13 @@ int main(int, char**)
         });
 
         for (auto* process : processes) {
-            printf("%6d  % 8s  %8s  %8u  %8u  %2u.%1u  %s\n",
+            printf("%6d  % 8s  %8s  %6u  %6u  %6u  %2u.%1u  %s\n",
                 process->pid,
                 process->user.characters(),
                 process->state.characters(),
-                process->virt / 1024,
-                process->res / 1024,
+                process->linear / 1024,
+                process->committed / 1024,
+                process->in_bitmaps / 1024,
                 process->cpu_percent,
                 process->cpu_percent_decimal,
                 process->name.characters()
