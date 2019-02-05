@@ -35,6 +35,12 @@ GEventLoop& GEventLoop::main()
     return *s_mainGEventLoop;
 }
 
+void GEventLoop::exit(int code)
+{
+    m_exit_requested = true;
+    m_exit_code = code;
+}
+
 int GEventLoop::exec()
 {
     m_event_fd = open("/dev/gui_events", O_RDONLY | O_NONBLOCK | O_CLOEXEC);
@@ -45,6 +51,8 @@ int GEventLoop::exec()
 
     m_running = true;
     for (;;) {
+        if (m_exit_requested)
+            return m_exit_code;
         if (m_queued_events.is_empty())
             wait_for_event();
         Vector<QueuedEvent> events = move(m_queued_events);
@@ -69,6 +77,7 @@ int GEventLoop::exec()
             }
         }
     }
+    ASSERT_NOT_REACHED();
 }
 
 void GEventLoop::post_event(GObject* receiver, OwnPtr<GEvent>&& event)
@@ -93,6 +102,11 @@ void GEventLoop::handle_window_activation_event(const GUI_Event& event, GWindow&
     dbgprintf("WID=%x WindowActivation\n", event.window_id);
 #endif
     post_event(&window, make<GEvent>(event.type == GUI_Event::Type::WindowActivated ? GEvent::WindowBecameActive : GEvent::WindowBecameInactive));
+}
+
+void GEventLoop::handle_window_close_request_event(const GUI_Event&, GWindow& window)
+{
+    post_event(&window, make<GEvent>(GEvent::WindowCloseRequest));
 }
 
 void GEventLoop::handle_key_event(const GUI_Event& event, GWindow& window)
@@ -191,6 +205,9 @@ void GEventLoop::wait_for_event()
         case GUI_Event::Type::WindowActivated:
         case GUI_Event::Type::WindowDeactivated:
             handle_window_activation_event(event, *window);
+            break;
+        case GUI_Event::Type::WindowCloseRequest:
+            handle_window_close_request_event(event, *window);
             break;
         case GUI_Event::Type::KeyDown:
         case GUI_Event::Type::KeyUp:

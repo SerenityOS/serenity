@@ -24,6 +24,7 @@ public:
         WindowBecameActive,
         FocusIn,
         FocusOut,
+        WindowCloseRequest,
     };
 
     GEvent() { }

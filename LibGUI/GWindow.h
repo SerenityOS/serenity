@@ -53,6 +53,9 @@ public:
     GWidget* global_cursor_tracking_widget() { return m_global_cursor_tracking_widget.ptr(); }
     const GWidget* global_cursor_tracking_widget() const { return m_global_cursor_tracking_widget.ptr(); }
 
+    bool should_exit_app_on_close() const { return m_should_exit_app_on_close; }
+    void set_should_exit_app_on_close(bool b) { m_should_exit_app_on_close = b; }
+
 private:
     RetainPtr<GraphicsBitmap> m_backing;
     int m_window_id { 0 };
@@ -62,5 +65,6 @@ private:
     WeakPtr<GWidget> m_global_cursor_tracking_widget;
     Rect m_rect_when_windowless;
     String m_title_when_windowless;
+    bool m_should_exit_app_on_close { false };
 };
 

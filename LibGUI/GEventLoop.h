@@ -27,12 +27,15 @@ public:
     int register_timer(GObject&, int milliseconds, bool should_reload);
     bool unregister_timer(int timer_id);
 
+    void exit(int);
+
 private:
     void wait_for_event();
     void handle_paint_event(const GUI_Event&, GWindow&);
     void handle_mouse_event(const GUI_Event&, GWindow&);
     void handle_key_event(const GUI_Event&, GWindow&);
     void handle_window_activation_event(const GUI_Event&, GWindow&);
+    void handle_window_close_request_event(const GUI_Event&, GWindow&);
 
     void get_next_timer_expiration(timeval&);
 
@@ -44,6 +47,8 @@ private:
 
     int m_event_fd { -1 };
     bool m_running { false };
+    bool m_exit_requested { false };
+    int m_exit_code { 0 };
 
     int m_next_timer_id { 1 };
 

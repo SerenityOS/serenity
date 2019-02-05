@@ -22,6 +22,7 @@ public:
         KeyUp,
         WindowActivated,
         WindowDeactivated,
+        WindowCloseRequest,
     };
 
     WSMessage() { }

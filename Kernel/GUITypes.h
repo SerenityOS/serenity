@@ -66,6 +66,7 @@ struct GUI_Event {
         KeyUp,
         WindowActivated,
         WindowDeactivated,
+        WindowCloseRequest,
     };
     Type type { Invalid };
     int window_id { -1 };

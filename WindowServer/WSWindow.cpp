@@ -118,6 +118,9 @@ void WSWindow::on_message(WSMessage& message)
     case WSMessage::WindowDeactivated:
         gui_event.type = GUI_Event::Type::WindowDeactivated;
         break;
+    case WSMessage::WindowCloseRequest:
+        gui_event.type = GUI_Event::Type::WindowCloseRequest;
+        break;
     default:
         break;
     }

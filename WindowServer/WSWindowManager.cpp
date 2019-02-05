@@ -36,6 +36,19 @@ static inline Rect title_bar_text_rect(const Rect& window)
     };
 }
 
+static inline Rect close_button_rect_for_window(const Rect& window_rect)
+{
+    auto titlebar_inner_rect = title_bar_text_rect(window_rect);
+    int close_button_margin = 1;
+    int close_button_size = titlebar_inner_rect.height() - close_button_margin * 2;
+    return Rect {
+        titlebar_inner_rect.right() - close_button_size,
+        titlebar_inner_rect.top() + close_button_margin,
+        close_button_size,
+        close_button_size
+    };
+}
+
 static inline Rect border_window_rect(const Rect& window)
 {
     auto titlebar_rect = title_bar_rect(window);
@@ -152,6 +165,22 @@ WSWindowManager::~WSWindowManager()
 {
 }
 
+static const char* s_close_button_bitmap_data = {
+    " ##     ## "
+    "  ##   ##  "
+    "   ## ##   "
+    "    ###    "
+    "     #     "
+    "    ###    "
+    "   ## ##   "
+    "  ##   ##  "
+    " ##     ## "
+};
+
+static CharacterBitmap* s_close_button_bitmap;
+static const int s_close_button_bitmap_width = 11;
+static const int s_close_button_bitmap_height = 11;
+
 void WSWindowManager::paint_window_frame(WSWindow& window)
 {
     LOCKER(m_lock);
@@ -203,6 +232,17 @@ void WSWindowManager::paint_window_frame(WSWindow& window)
     m_back_painter->draw_rect(outer_rect, border_color);
     m_back_painter->draw_rect(inner_border_rect, border_color);
     m_back_painter->draw_text(titlebar_title_rect, window.title(), Painter::TextAlignment::CenterLeft, title_color);
+
+    Rect close_button_rect = close_button_rect_for_window(window.rect());
+    if (!s_close_button_bitmap)
+        s_close_button_bitmap = CharacterBitmap::create_from_ascii(s_close_button_bitmap_data, s_close_button_bitmap_width, s_close_button_bitmap_height).leak_ref();
+
+    m_back_painter->fill_rect_with_gradient(close_button_rect, Color::LightGray, Color::White);
+    m_back_painter->draw_rect(close_button_rect, Color::Black);
+    auto x_location = close_button_rect.location();
+    x_location.move_by(2, 2);
+    m_back_painter->draw_bitmap(x_location, *s_close_button_bitmap, Color::Black);
+
 
 #ifdef DEBUG_WID_IN_TITLE_BAR
     Color metadata_color(96, 96, 96);
@@ -276,6 +316,15 @@ void WSWindowManager::handle_titlebar_mouse_event(WSWindow& window, WSMouseEvent
     }
 }
 
+void WSWindowManager::handle_close_button_mouse_event(WSWindow& window, WSMouseEvent& event)
+{
+    if (event.type() == WSMessage::MouseDown && event.button() == MouseButton::Left) {
+        WSMessage message(WSMessage::WindowCloseRequest);
+        window.on_message(message);
+        return;
+    }
+}
+
 void WSWindowManager::process_mouse_event(WSMouseEvent& event)
 {
     if (event.type() == WSMessage::MouseUp && event.button() == MouseButton::Left) {
@@ -319,6 +368,10 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event)
             if (event.type() == WSMessage::MouseDown) {
                 move_to_front(*window);
                 set_active_window(window);
+            }
+            if (close_button_rect_for_window(window->rect()).contains(event.position())) {
+                handle_close_button_mouse_event(*window, event);
+                return;
             }
             handle_titlebar_mouse_event(*window, event);
             return;
