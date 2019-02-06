@@ -38,7 +38,7 @@ static void load_ksyms_from_data(const ByteBuffer& buffer)
     s_ksyms = static_cast<KSym*>(kmalloc_eternal(sizeof(KSym) * ksym_count));
     ++bufptr; // skip newline
 
-    kprintf("Loading ksyms: \033[s");
+    kprintf("Loading ksyms...");
 
     unsigned current_ksym_index = 0;
 
@@ -64,12 +64,10 @@ static void load_ksyms_from_data(const ByteBuffer& buffer)
         if (ksym.address > ksym_highest_address)
             ksym_highest_address = ksym.address;
 
-        if ((current_ksym_index % 10) == 0 || ksym_count == current_ksym_index)
-            kprintf("\033[u\033[s%u/%u", current_ksym_index, ksym_count);
         ++bufptr;
         ++current_ksym_index;
     }
-    kprintf("\n");
+    kprintf("ok\n");
     ksyms_ready = true;
 }
 
