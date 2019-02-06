@@ -52,6 +52,7 @@ private:
 
 inline void Lock::lock()
 {
+    ASSERT_INTERRUPTS_ENABLED();
     ASSERT(!Scheduler::is_active());
     for (;;) {
         if (CAS(&m_lock, 1, 0) == 0) {
