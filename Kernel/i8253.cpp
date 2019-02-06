@@ -83,7 +83,7 @@ void initialize()
 
     timer_reload = (BASE_FREQUENCY / TICKS_PER_SECOND);
 
-    kprintf("PIT(i8253): %u Hz, square wave (%x)\n", TICKS_PER_SECOND, timer_reload);
+    kprintf("PIT: %u Hz, square wave (%x)\n", TICKS_PER_SECOND, timer_reload);
 
     IO::out8(TIMER0_CTL, LSB(timer_reload));
     IO::out8(TIMER0_CTL, MSB(timer_reload));

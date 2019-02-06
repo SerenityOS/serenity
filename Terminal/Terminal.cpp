@@ -37,8 +37,6 @@ void Terminal::create_window()
     }
 
     m_backing = GraphicsBitmap::create_wrapper(info.size, info.pixels);
-    dbgprintf("(Terminal:%d) window backing %ux%u @ %p\n", getpid(), info.size.width, info.size.height, info.pixels);
-
 }
 
 Terminal::Terminal()

@@ -41,7 +41,7 @@ namespace Syscall {
 void initialize()
 {
     register_user_callable_interrupt_handler(0x80, syscall_trap_handler);
-    kprintf("syscall: int 0x80 handler installed\n");
+    kprintf("Syscall: int 0x80 handler installed\n");
 }
 
 int sync()
@@ -79,10 +79,8 @@ static dword handle(RegisterDump& regs, dword function, dword arg1, dword arg2, 
     case Syscall::SC_write:
         return current->sys$write((int)arg1, (const void*)arg2, (size_t)arg3);
     case Syscall::SC_close:
-        //kprintf("syscall: close(%d)\n", arg1);
         return current->sys$close((int)arg1);
     case Syscall::SC_read:
-        //kprintf("syscall: read(%d, %p, %u)\n", arg1, arg2, arg3);
         return current->sys$read((int)arg1, (void*)arg2, (size_t)arg3);
     case Syscall::SC_lseek:
         return current->sys$lseek((int)arg1, (off_t)arg2, (int)arg3);

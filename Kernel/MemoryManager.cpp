@@ -42,7 +42,6 @@ MemoryManager::~MemoryManager()
 
 PageDirectory::PageDirectory(PhysicalAddress paddr)
 {
-    kprintf("Instantiating PageDirectory with specific paddr P%x\n", paddr.get());
     m_directory_page = adopt(*new PhysicalPage(paddr, true));
 }
 
@@ -311,7 +310,7 @@ bool MemoryManager::page_in_from_inode(Region& region, unsigned page_index_in_re
     cli();
 
     if (!vmo_page.is_null()) {
-        kprintf("MM: page_in_from_inode() but page already present. Fine with me!\n");
+        dbgprintf("MM: page_in_from_inode() but page already present. Fine with me!\n");
         remap_region_page(region, page_index_in_region, true);
         return true;
     }
