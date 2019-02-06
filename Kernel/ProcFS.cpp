@@ -8,6 +8,7 @@
 #include "KSyms.h"
 #include "Console.h"
 #include "Scheduler.h"
+#include <Kernel/PCI.h>
 #include <AK/StringBuilder.h>
 #include <LibC/errno_numbers.h>
 
@@ -33,6 +34,7 @@ enum ProcFileType {
     FI_Root_cpuinfo,
     FI_Root_inodes,
     FI_Root_dmesg,
+    FI_Root_pci,
     FI_Root_self, // symlink
     FI_Root_sys, // directory
     __FI_Root_End,
@@ -204,9 +206,6 @@ ByteBuffer procfs$pid_fd_entry(InodeIdentifier identifier)
 
 ByteBuffer procfs$pid_vm(InodeIdentifier identifier)
 {
-#ifdef PROCFS_DEBUG
-    dbgprintf("pid_vm: pid=%d\n", to_pid(identifier));
-#endif
     auto handle = ProcessInspectionHandle::from_pid(to_pid(identifier));
     if (!handle)
         return { };
@@ -221,6 +220,15 @@ ByteBuffer procfs$pid_vm(InodeIdentifier identifier)
             region->amount_resident(),
             region->name().characters());
     }
+    return builder.to_byte_buffer();
+}
+
+ByteBuffer procfs$pci(InodeIdentifier)
+{
+    StringBuilder builder;
+    PCI::enumerate_all([&builder] (PCI::Address address, PCI::ID id) {
+        builder.appendf("%b:%b.%b %w:%w\n", address.bus(), address.slot(), address.function(), id.vendor_id, id.device_id);
+    });
     return builder.to_byte_buffer();
 }
 
@@ -1009,6 +1017,7 @@ ProcFS::ProcFS()
     m_entries[FI_Root_inodes] = { "inodes", FI_Root_inodes, procfs$inodes };
     m_entries[FI_Root_dmesg] = { "dmesg", FI_Root_dmesg, procfs$dmesg };
     m_entries[FI_Root_self] = { "self", FI_Root_self, procfs$self };
+    m_entries[FI_Root_pci] = { "pci", FI_Root_pci, procfs$pci };
     m_entries[FI_Root_sys] = { "sys", FI_Root_sys };
 
     m_entries[FI_PID_vm] = { "vm", FI_PID_vm, procfs$pid_vm };
