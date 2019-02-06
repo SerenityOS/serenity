@@ -82,7 +82,6 @@ void GWindow::hide()
 
 void GWindow::set_title(String&& title)
 {
-    dbgprintf("GWindow::set_title \"%s\"\n", title.characters());
     m_title_when_windowless = title;
     if (m_window_id) {
         int rc = gui_set_window_title(m_window_id, title.characters(), title.length());
@@ -106,7 +105,6 @@ String GWindow::title() const
 
 void GWindow::set_rect(const Rect& a_rect)
 {
-    dbgprintf("GWindow::set_rect! %d,%d %dx%d\n", a_rect.x(), a_rect.y(), a_rect.width(), a_rect.height());
     m_rect_when_windowless = a_rect;
     if (m_window_id) {
         GUI_Rect rect = a_rect;

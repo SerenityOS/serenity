@@ -61,7 +61,7 @@ dword BochsVGADevice::find_framebuffer_address()
     PCI::enumerate_all([&framebuffer_address] (const PCI::Address& address, PCI::ID id) {
         if (id == bochs_vga_id || id == virtualbox_vga_id) {
             framebuffer_address = PCI::get_BAR0(address) & 0xfffffff0;
-            kprintf("BochsVGA framebuffer @ PCI %w:%w BAR0=%x\n", id.vendor_id, id.device_id, framebuffer_address);
+            kprintf("BochsVGA: framebuffer @ P%x\n", framebuffer_address);
         }
     });
     return framebuffer_address;

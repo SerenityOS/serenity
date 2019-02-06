@@ -154,7 +154,7 @@ void IDEDiskDevice::initialize()
     m_sectors_per_track = wbufbase[6];
 
     kprintf(
-        "ide0: Master=\"%s\", C/H/Spt=%u/%u/%u\n",
+        "IDEDiskDevice: Master=\"%s\", C/H/Spt=%u/%u/%u\n",
         bbuf.pointer() + 54,
         m_cylinders,
         m_heads,
@@ -187,7 +187,7 @@ bool IDEDiskDevice::read_sectors(dword start_sector, word count, byte* outbuf)
     while (IO::in8(IDE0_STATUS) & BUSY);
 
 #ifdef DISK_DEBUG
-    kprintf("ide0: Reading %u sector(s) @ LBA %u (%u/%u/%u)\n", count, start_sector, chs.cylinder, chs.head, chs.sector);
+    kprintf("IDEDiskDevice: Reading %u sector(s) @ LBA %u (%u/%u/%u)\n", count, start_sector, chs.cylinder, chs.head, chs.sector);
 #endif
 
     IO::out8(0x1F2, count == 256 ? 0 : LSB(count));

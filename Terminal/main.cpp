@@ -26,7 +26,6 @@ static void make_shell(int ptm_fd)
         int rc = 0;
         close(ptm_fd);
         int pts_fd = open(tty_name, O_RDWR);
-        dbgprintf("*** In child (%d), opening slave pty %s, pts_fd=%d\n", getpid(), tty_name, pts_fd);
         rc = ioctl(0, TIOCNOTTY);
         if (rc < 0) {
             perror("ioctl(TIOCNOTTY)");
@@ -50,8 +49,6 @@ static void make_shell(int ptm_fd)
             exit(1);
         }
         ASSERT_NOT_REACHED();
-    } else {
-        dbgprintf("*** In parent, child is %d\n", pid);
     }
 }
 
