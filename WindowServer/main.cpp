@@ -10,7 +10,7 @@
 
 void WindowServer_main()
 {
-    auto info = current->get_display_info();
+    auto info = current->set_video_resolution(1024, 768);
 
     dbgprintf("Screen is %ux%ux%ubpp\n", info.width, info.height, info.bpp);
 

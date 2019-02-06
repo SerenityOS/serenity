@@ -217,7 +217,7 @@ public:
     int gui$set_window_rect(int window_id, const GUI_Rect*);
     int gui$set_global_cursor_tracking_enabled(int window_id, bool enabled);
 
-    DisplayInfo get_display_info();
+    DisplayInfo set_video_resolution(int width, int height);
 
     static void initialize();
     static void initialize_gui_statics();

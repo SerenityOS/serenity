@@ -10,6 +10,8 @@ public:
     WSScreen(RGBA32*, unsigned width, unsigned height);
     ~WSScreen();
 
+    void set_resolution(int width, int height);
+
     int width() const { return m_width; }
     int height() const { return m_height; }
     RGBA32* scanline(int y);

@@ -23,6 +23,7 @@
 #include "PS2MouseDevice.h"
 #include "PTYMultiplexer.h"
 #include "DevPtsFS.h"
+#include "BochsVGADevice.h"
 
 //#define SPAWN_GUITEST
 #define SPAWN_GUITEST2
@@ -170,10 +171,13 @@ void init()
     MemoryManager::initialize();
 
     StringImpl::initialize_globals();
+    BochsVGADevice::initialize_statics();
 
     PIT::initialize();
 
     memset(&system, 0, sizeof(system));
+
+    new BochsVGADevice;
 
     auto new_procfs = ProcFS::create();
     new_procfs->initialize();
