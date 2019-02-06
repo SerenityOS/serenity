@@ -54,7 +54,7 @@ STANDARD_FLAGS = -std=c++17 -nostdinc++ -nostdlib -nostdinc
 LIBC_FLAGS = -ffreestanding -fno-stack-protector -fno-ident
 WARNING_FLAGS = -Wextra -Wall -Wundef -Wcast-qual -Wwrite-strings
 FLAVOR_FLAGS = -fomit-frame-pointer -mregparm=3 -march=i386 -m32 -fno-exceptions -fno-rtti -ffunction-sections -fdata-sections -fmerge-all-constants -fno-unroll-loops -fno-pie -fno-pic
-OPTIMIZATION_FLAGS = -Oz -fno-asynchronous-unwind-tables
+OPTIMIZATION_FLAGS = -O2 -fno-asynchronous-unwind-tables
 INCLUDE_FLAGS = -I.. -I.
 
 DEFINES = -DSERENITY -DUSERLAND -DSANITIZE_PTRS
@@ -63,7 +63,7 @@ CXXFLAGS = -MMD -MP $(WARNING_FLAGS) $(OPTIMIZATION_FLAGS) $(LIBC_FLAGS) $(FLAVO
 CXX = clang
 LD = ld
 AR = ar
-LDFLAGS = -T linker.ld --strip-debug -melf_i386 --gc-sections --build-id=none -z norelro -z now
+LDFLAGS = -T linker.ld --strip-debug -melf_i386 --gc-sections
 
 all: $(LIBRARY)
 

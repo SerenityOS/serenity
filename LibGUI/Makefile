@@ -36,7 +36,7 @@ CXXFLAGS = -MMD -MP $(WARNING_FLAGS) $(OPTIMIZATION_FLAGS) $(LIBC_FLAGS) $(FLAVO
 CXX = clang
 LD = ld
 AR = ar
-LDFLAGS = -T linker.ld --strip-debug -melf_i386 --gc-sections --build-id=none -z norelro -z now
+LDFLAGS = -T linker.ld --strip-debug -melf_i386 --gc-sections
 
 all: $(LIBRARY)
 
