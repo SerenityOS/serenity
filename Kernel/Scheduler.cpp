@@ -12,6 +12,7 @@ static const dword time_slice = 5; // *10 = 50ms
 
 Process* current;
 Process* g_last_fpu_process;
+Process* g_finalizer;
 static Process* s_colonel_process;
 
 struct TaskRedirectionData {
@@ -127,6 +128,13 @@ bool Scheduler::pick_next()
             return true;
         }
 
+        if (process.state() == Process::Dying) {
+            ASSERT(g_finalizer);
+            if (g_finalizer->state() == Process::BlockedLurking)
+                g_finalizer->unblock();
+            return true;
+        }
+
         return true;
     });
 
@@ -170,7 +178,7 @@ bool Scheduler::pick_next()
         g_processes->append(g_processes->remove_head());
         auto* process = g_processes->head();
 
-        if (process->state() == Process::Runnable || process->state() == Process::Running || process->state() == Process::Dying) {
+        if (process->state() == Process::Runnable || process->state() == Process::Running) {
 #ifdef SCHEDULER_DEBUG
             dbgprintf("switch to %s(%u) @ %w:%x\n", process->name().characters(), process->pid(), process->tss().cs, process->tss().eip);
 #endif

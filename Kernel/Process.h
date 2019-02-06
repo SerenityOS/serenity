@@ -60,6 +60,7 @@ public:
 
     static Vector<pid_t> all_pids();
     static Vector<Process*> all_processes();
+    static void finalize_dying_processes();
 
     enum State {
         Invalid = 0,
@@ -70,6 +71,7 @@ public:
         Dying,
         Dead,
         BeingInspected,
+        BlockedLurking,
         BlockedSleep,
         BlockedWait,
         BlockedRead,
@@ -135,6 +137,7 @@ public:
     void set_selector(word s) { m_far_ptr.selector = s; }
     void set_state(State s) { m_state = s; }
     void die();
+    void finalize();
 
     pid_t sys$setsid();
     pid_t sys$getsid(pid_t);
@@ -453,6 +456,7 @@ static inline const char* to_string(Process::State state)
     case Process::BlockedWrite: return "Write";
     case Process::BlockedSignal: return "Signal";
     case Process::BlockedSelect: return "Select";
+    case Process::BlockedLurking: return "Lurking";
     case Process::BeingInspected: return "Inspect";
     }
     ASSERT_NOT_REACHED();

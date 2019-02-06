@@ -187,6 +187,14 @@ void init()
             sleep(10 * TICKS_PER_SECOND);
         }
     });
+    Process::create_kernel_process("Finalizer", [] {
+        g_finalizer = current;
+        for (;;) {
+            Process::finalize_dying_processes();
+            current->block(Process::BlockedLurking);
+            Scheduler::yield();
+        }
+    });
 
     Scheduler::pick_next();
 
