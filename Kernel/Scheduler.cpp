@@ -132,7 +132,7 @@ bool Scheduler::pick_next()
 
     // Dispatch any pending signals.
     // FIXME: Do we really need this to be a separate pass over the process list?
-    Process::for_each_not_in_state(Process::Dead, [] (auto& process) {
+    Process::for_each_living([] (auto& process) {
         if (!process.has_unmasked_pending_signals())
             return true;
         // We know how to interrupt blocked processes, but if they are just executing
@@ -170,7 +170,7 @@ bool Scheduler::pick_next()
         g_processes->append(g_processes->remove_head());
         auto* process = g_processes->head();
 
-        if (process->state() == Process::Runnable || process->state() == Process::Running) {
+        if (process->state() == Process::Runnable || process->state() == Process::Running || process->state() == Process::Dying) {
 #ifdef SCHEDULER_DEBUG
             dbgprintf("switch to %s(%u) @ %w:%x\n", process->name().characters(), process->pid(), process->tss().cs, process->tss().eip);
 #endif
