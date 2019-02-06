@@ -3,7 +3,7 @@
 #include "Assertions.h"
 #include "Types.h"
 #include "i386.h"
-int sched_yield();
+#include <Kernel/Scheduler.h>
 
 class Process;
 extern Process* current;
@@ -52,6 +52,7 @@ private:
 
 inline void Lock::lock()
 {
+    ASSERT(!Scheduler::is_active());
     for (;;) {
         if (CAS(&m_lock, 1, 0) == 0) {
             if (!m_holder || m_holder == current) {
@@ -63,7 +64,7 @@ inline void Lock::lock()
             }
             m_lock = 0;
         }
-        sched_yield();
+        Scheduler::yield();
     }
 }
 
@@ -84,7 +85,7 @@ inline void Lock::unlock()
             m_lock = 0;
             return;
         }
-        sched_yield();
+        Scheduler::yield();
     }
 }
 
