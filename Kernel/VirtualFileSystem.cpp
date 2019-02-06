@@ -443,7 +443,7 @@ InodeIdentifier VFS::resolve_path(const String& path, InodeIdentifier base, int&
         auto metadata = crumb_inode->metadata();
         if (!metadata.is_directory()) {
 #ifdef VFS_DEBUG
-            kprintf("parent of <%s> not directory, it's inode %u:%u / %u:%u, mode: %u, size: %u\n", part.characters(), inode.fsid(), inode.index(), metadata.inode.fsid(), metadata.inode.index(), metadata.mode, metadata.size);
+            kprintf("parent of <%s> not directory, it's inode %u:%u / %u:%u, mode: %u, size: %u\n", part.characters(), crumb_id.fsid(), crumb_id.index(), metadata.inode.fsid(), metadata.inode.index(), metadata.mode, metadata.size);
 #endif
             error = -ENOTDIR;
             return { };
@@ -458,7 +458,7 @@ InodeIdentifier VFS::resolve_path(const String& path, InodeIdentifier base, int&
             return { };
         }
 #ifdef VFS_DEBUG
-        kprintf("<%s> %u:%u\n", part.characters(), inode.fsid(), inode.index());
+        kprintf("<%s> %u:%u\n", part.characters(), crumb_id.fsid(), crumb_id.index());
 #endif
         if (auto mount = find_mount_for_host(crumb_id)) {
 #ifdef VFS_DEBUG
