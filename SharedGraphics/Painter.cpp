@@ -226,7 +226,7 @@ void Painter::draw_bitmap(const Point& p, const GlyphBitmap& bitmap, Color color
 
     for (int row = first_row; row <= last_row; ++row) {
         for (int j = 0; j <= (last_column - first_column); ++j) {
-            if (bitmap.bit_at(j, row))
+            if (bitmap.bit_at(j + first_column, row))
                 dst[j] = color.value();
         }
         dst += dst_skip;
