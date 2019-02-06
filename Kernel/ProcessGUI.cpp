@@ -12,11 +12,6 @@
 
 void Process::initialize_gui_statics()
 {
-    Font::initialize();
-    WSMessageLoop::initialize();
-    WSWindowManager::initialize();
-    WSScreen::initialize();
-
     new WSMessageLoop;
 }
 

@@ -24,11 +24,6 @@ BochsVGADevice& BochsVGADevice::the()
     return *s_the;
 }
 
-void BochsVGADevice::initialize_statics()
-{
-    s_the = nullptr;
-}
-
 BochsVGADevice::BochsVGADevice()
 {
     s_the = this;

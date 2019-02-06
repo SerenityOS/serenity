@@ -21,15 +21,6 @@ namespace AK {
 
 static StringImpl* s_the_empty_stringimpl = nullptr;
 
-void StringImpl::initialize_globals()
-{
-    s_the_empty_stringimpl = nullptr;
-#ifdef DEBUG_STRINGIMPL
-    g_stringimpl_count = 0;
-    g_all_live_stringimpls = new HashTable<StringImpl*>;
-#endif
-}
-
 StringImpl& StringImpl::the_empty_stringimpl()
 {
     if (!s_the_empty_stringimpl)

@@ -19,12 +19,6 @@ VFS& VFS::the()
     return *s_the;
 }
 
-void VFS::initialize_globals()
-{
-    s_the = nullptr;
-    FS::initialize_globals();
-}
-
 VFS::VFS()
 {
 #ifdef VFS_DEBUG

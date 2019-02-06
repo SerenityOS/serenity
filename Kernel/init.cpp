@@ -151,8 +151,6 @@ void init()
     gdt_init();
     idt_init();
 
-    PTYMultiplexer::initialize_statics();
-    VFS::initialize_globals();
     vfs = new VFS;
 
     keyboard = new Keyboard;
@@ -169,10 +167,6 @@ void init()
     kprintf("Starting Serenity Operating System...\n");
 
     MemoryManager::initialize();
-
-    StringImpl::initialize_globals();
-    BochsVGADevice::initialize_statics();
-
     PIT::initialize();
 
     memset(&system, 0, sizeof(system));

@@ -12,11 +12,6 @@
 
 static WSMessageLoop* s_the;
 
-void WSMessageLoop::initialize()
-{
-    s_the = nullptr;
-}
-
 WSMessageLoop::WSMessageLoop()
 {
     if (!s_the)

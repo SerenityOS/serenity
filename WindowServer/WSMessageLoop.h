@@ -19,8 +19,6 @@ public:
 
     static WSMessageLoop& the();
 
-    static void initialize();
-
     bool running() const { return m_running; }
     Process& server_process() { return *m_server_process; }
 

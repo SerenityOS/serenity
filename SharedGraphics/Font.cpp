@@ -50,12 +50,6 @@ static inline constexpr size_t font_file_size(unsigned glyph_height)
     return sizeof(FontFileHeader) + 256 * sizeof(dword) * glyph_height;
 }
 
-void Font::initialize()
-{
-    s_default_font = nullptr;
-    s_default_bold_font = nullptr;
-}
-
 Font& Font::default_font()
 {
     static const char* default_font_path = "/res/fonts/LizaRegular8x10.font";
