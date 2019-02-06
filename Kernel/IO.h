@@ -18,7 +18,7 @@ inline word in16(word port)
     return value;
 }
 
-inline dword in32(dword port)
+inline dword in32(word port)
 {
     dword value;
     asm volatile("inl %1, %0":"=a"(value):"Nd"(port));
