@@ -19,8 +19,7 @@ public:
     static bool context_switch(Process&);
     static void prepare_to_modify_tss(Process&);
     static Process* colonel();
+    static bool is_active();
 private:
     static void prepare_for_iret_to_new_process();
 };
-
-int sched_yield();

@@ -3,6 +3,7 @@
 #include "system.h"
 #include "RTC.h"
 #include "i8253.h"
+#include <AK/TemporaryChange.h>
 
 //#define LOG_EVERY_CONTEXT_SWITCH
 //#define SCHEDULER_DEBUG
@@ -12,17 +13,27 @@ static const dword time_slice = 5; // *10 = 50ms
 Process* current;
 Process* g_last_fpu_process;
 static Process* s_colonel_process;
-static volatile bool s_in_yield;
 
 struct TaskRedirectionData {
     word selector;
     TSS32 tss;
 };
 static TaskRedirectionData s_redirection;
+static bool s_active;
+
+bool Scheduler::is_active()
+{
+    return s_active;
+}
 
 bool Scheduler::pick_next()
 {
     ASSERT_INTERRUPTS_DISABLED();
+    ASSERT(!s_active);
+
+    TemporaryChange<bool> change(s_active, true);
+
+    ASSERT(s_active);
 
     if (!current) {
         // XXX: The first ever context_switch() goes to the idle process.
@@ -176,22 +187,12 @@ bool Scheduler::pick_next()
 bool Scheduler::yield()
 {
     InterruptDisabler disabler;
-    ASSERT(!s_in_yield);
-    s_in_yield = true;
-
-    if (!current) {
-        kprintf("PANIC: sched_yield() with !current");
-        HANG;
-    }
-
+    ASSERT(current);
     //dbgprintf("%s<%u> yield()\n", current->name().characters(), current->pid());
 
-    if (!pick_next()) {
-        s_in_yield = false;
+    if (!pick_next())
         return 1;
-    }
 
-    s_in_yield = false;
     //dbgprintf("yield() jumping to new process: %x (%s)\n", current->far_ptr().selector, current->name().characters());
     switch_now();
     return 0;
@@ -269,11 +270,6 @@ bool Scheduler::context_switch(Process& process)
     return true;
 }
 
-int sched_yield()
-{
-    return Scheduler::yield();
-}
-
 static void initialize_redirection()
 {
     auto& descriptor = get_gdt_entry(s_redirection.selector);
@@ -319,7 +315,6 @@ void Scheduler::initialize()
     s_colonel_process = Process::create_kernel_process("colonel", nullptr);
     current = nullptr;
     g_last_fpu_process = nullptr;
-    s_in_yield = false;
     load_task_register(s_redirection.selector);
 }
 

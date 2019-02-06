@@ -1109,7 +1109,7 @@ ssize_t Process::sys$read(int fd, void* outbuf, size_t nread)
         if (!descriptor->can_read(*this)) {
             m_blocked_fd = fd;
             block(BlockedRead);
-            sched_yield();
+            Scheduler::yield();
             if (m_was_interrupted_while_blocked)
                 return -EINTR;
         }
@@ -1572,7 +1572,7 @@ pid_t Process::sys$waitpid(pid_t waitee, int* wstatus, int options)
 
     m_waitee_pid = waitee;
     block(BlockedWait);
-    sched_yield();
+    Scheduler::yield();
     if (m_was_interrupted_while_blocked)
         return -EINTR;
     Process* waitee_process;
@@ -1612,7 +1612,7 @@ void Process::block(Process::State new_state)
 void block(Process::State state)
 {
     current->block(state);
-    sched_yield();
+    Scheduler::yield();
 }
 
 void sleep(dword ticks)
@@ -1620,7 +1620,7 @@ void sleep(dword ticks)
     ASSERT(current->state() == Process::Running);
     current->set_wakeup_time(system.uptime + ticks);
     current->block(Process::BlockedSleep);
-    sched_yield();
+    Scheduler::yield();
 }
 
 static bool is_inside_kernel_code(LinearAddress laddr)
