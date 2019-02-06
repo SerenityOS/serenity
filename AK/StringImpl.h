@@ -17,7 +17,6 @@ public:
     RetainPtr<StringImpl> to_uppercase() const;
 
     static StringImpl& the_empty_stringimpl();
-    static void initialize_globals();
 
     ~StringImpl();
 

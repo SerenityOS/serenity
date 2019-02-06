@@ -23,13 +23,6 @@ HashTable<Inode*>& all_inodes()
     return *s_inode_set;
 }
 
-void FS::initialize_globals()
-{
-    s_lastFileSystemID = 0;
-    s_fs_map = nullptr;
-    s_inode_set = nullptr;
-}
-
 FS::FS()
     : m_fsid(++s_lastFileSystemID)
 {

@@ -12,11 +12,6 @@ PTYMultiplexer& PTYMultiplexer::the()
     return *s_the;
 }
 
-void PTYMultiplexer::initialize_statics()
-{
-    s_the = nullptr;
-}
-
 PTYMultiplexer::PTYMultiplexer()
     : CharacterDevice(5, 2)
 {

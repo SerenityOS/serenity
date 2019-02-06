@@ -75,11 +75,6 @@ WSWindowManager& WSWindowManager::the()
     return *s_the;
 }
 
-void WSWindowManager::initialize()
-{
-    s_the = nullptr;
-}
-
 static const char* cursor_bitmap_inner_ascii = {
     " #          "
     " ##         "

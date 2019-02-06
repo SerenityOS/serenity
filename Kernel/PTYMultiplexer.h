@@ -13,7 +13,6 @@ public:
     virtual ~PTYMultiplexer() override;
 
     static PTYMultiplexer& the();
-    static void initialize_statics();
 
     // ^CharacterDevice
     virtual RetainPtr<FileDescriptor> open(int& error, int options) override;

@@ -62,8 +62,6 @@ public:
     String name() const { return m_name; }
     void set_name(const String& name) { m_name = name; }
 
-    static void initialize();
-
 private:
     Font(const String& name, unsigned* rows, byte glyph_width, byte glyph_height);
 

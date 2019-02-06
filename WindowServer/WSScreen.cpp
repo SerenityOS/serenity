@@ -7,11 +7,6 @@
 
 static WSScreen* s_the;
 
-void WSScreen::initialize()
-{
-    s_the = nullptr;
-}
-
 WSScreen& WSScreen::the()
 {
     ASSERT(s_the);

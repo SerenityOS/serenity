@@ -39,8 +39,6 @@ class VFS;
 class VFS {
     AK_MAKE_ETERNAL
 public:
-    static void initialize_globals();
-
     class Mount {
     public:
         Mount(InodeIdentifier host, RetainPtr<FS>&&);

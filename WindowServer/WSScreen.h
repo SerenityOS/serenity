@@ -21,8 +21,6 @@ public:
     Size size() const { return { width(), height() }; }
     Rect rect() const { return { 0, 0, width(), height() }; }
 
-    static void initialize();
-
     Point cursor_location() const { return m_cursor_location; }
     bool left_mouse_button_pressed() const { return m_left_mouse_button_pressed; }
     bool right_mouse_button_pressed() const { return m_right_mouse_button_pressed; }

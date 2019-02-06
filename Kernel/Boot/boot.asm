@@ -25,9 +25,13 @@ boot:
     mov     ax, 0x2401
     int     0x15
 
-    mov     bx, 0x1000
+    ; HACK: Load the ELF kernel at 0xf000. Assuming that the first
+    ;       LOAD header has a file offset of 0x1000, this puts _start
+    ;       at 0x10000 which we jump to later.
+    ;       This is all quite rickety.
+    mov     bx, 0xf00
     mov     es, bx
-    xor     bx, bx              ; Load kernel @ 0x10000
+    xor     bx, bx
 
     mov cx, word [cur_lba]
 .sector_loop:
@@ -65,6 +69,53 @@ boot:
     xor al, al
     out dx, al
 
+    ; Let's look at the ELF header.
+    mov bx, 0xf00
+    mov fs, bx
+    cmp [fs:0], dword 0x464c457f ; ELF magic: { 0x7f "ELF" }
+    jne fug
+
+    cmp [fs:24], dword 0x10000 ; Entry should be 0x10000
+    jne fug
+
+    mov ebx, dword [fs:28] ; EBX <- program header table
+    mov ecx, dword [fs:44] ; ECX <- program header count
+
+; Let's find the BSS and clear it.
+
+parse_program_header:
+    cmp [fs:ebx], dword 0x1 ; Is Load segment?
+    jne .next
+
+    cmp [fs:ebx+24], dword 0x6 ; Is read+write but not execute?
+    jne .next
+
+    mov edi, [fs:ebx+8] ; EDI <- p_vaddr
+    add edi, [fs:ebx+16] ; skip over 'p_filesz' bytes (leave them intact)
+
+    push ecx
+
+    sub edi, [fs:ebx+16] ; skip over 'p_filesz' bytes (see above)
+
+    ; Since we're in 16-bit real mode, create a segment address.
+    mov eax, edi
+    shr eax, 4
+    mov es, ax
+    and edi, 0xf
+
+    mov ecx, [fs:ebx+20] ; ECX <- p_memsz
+    xor al, al
+    rep stosb
+
+    pop ecx
+
+.next:
+    add ebx, 32
+    loop parse_program_header
+
+; Okay we're all set to go!
+
+lets_go:
     lgdt [cs:test_gdt_ptr]
 
     mov eax, cr0
@@ -182,7 +233,7 @@ convert_lba_to_chs:
     ret 
     
 cur_lba:
-    dw 9
+    dw 1
 sectors_per_track:
     dw 18
 heads:

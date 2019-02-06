@@ -10,7 +10,6 @@ class BochsVGADevice {
     AK_MAKE_ETERNAL
 public:
     static BochsVGADevice& the();
-    static void initialize_statics();
 
     BochsVGADevice();
 

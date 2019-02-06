@@ -23,7 +23,6 @@ class VMObject;
 
 class FS : public Retainable<FS> {
 public:
-    static void initialize_globals();
     virtual ~FS();
 
     unsigned fsid() const { return m_fsid; }

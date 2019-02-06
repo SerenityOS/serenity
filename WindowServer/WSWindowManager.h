@@ -29,8 +29,6 @@ public:
 
     void move_to_front(WSWindow&);
 
-    static void initialize();
-
     void draw_cursor();
 
     void invalidate(const WSWindow&);
