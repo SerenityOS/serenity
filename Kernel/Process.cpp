@@ -62,21 +62,21 @@ void Process::initialize()
 
 Vector<pid_t> Process::all_pids()
 {
-    InterruptDisabler disabler;
     Vector<pid_t> pids;
-    pids.ensure_capacity(g_processes->size_slow());
+    pids.ensure_capacity(system.nprocess);
+    InterruptDisabler disabler;
     for (auto* process = g_processes->head(); process; process = process->next())
-        pids.unchecked_append(process->pid());
+        pids.append(process->pid());
     return pids;
 }
 
 Vector<Process*> Process::all_processes()
 {
-    InterruptDisabler disabler;
     Vector<Process*> processes;
-    processes.ensure_capacity(g_processes->size_slow());
+    processes.ensure_capacity(system.nprocess);
+    InterruptDisabler disabler;
     for (auto* process = g_processes->head(); process; process = process->next())
-        processes.unchecked_append(process);
+        processes.append(process);
     return processes;
 }
 
@@ -747,11 +747,9 @@ void Process::sys$exit(int status)
     kprintf("sys$exit: %s(%u) exit with status %d\n", name().characters(), pid(), status);
 #endif
 
-    die();
     m_termination_status = status;
     m_termination_signal = 0;
-
-    Scheduler::pick_next_and_switch_now();
+    die();
     ASSERT_NOT_REACHED();
 }
 
@@ -952,7 +950,6 @@ void Process::crash()
     m_termination_signal = SIGSEGV;
     dump_regions();
     die();
-    Scheduler::pick_next_and_switch_now();
     ASSERT_NOT_REACHED();
 }
 
@@ -2122,27 +2119,30 @@ int Process::sys$chmod(const char* pathname, mode_t mode)
     return 0;
 }
 
-void Process::die()
+void Process::finalize()
 {
-    // This is pretty hairy wrt interrupts. Once we set_state(Dead), we never get scheduled again.
-    // For this reason, we mark ourselves as Dying, which prevents the scheduler from dispatching signals in this process.
-    set_state(Dying);
-    InterruptFlagSaver saver;
+    ASSERT(current == g_finalizer);
 
-    // STI so we can take locks.
-    sti();
     destroy_all_windows();
     m_fds.clear();
     m_tty = nullptr;
 
-    // CLI for Process::from_pid(). This should go away eventually.
-    cli();
-    if (auto* parent_process = Process::from_pid(m_ppid)) {
-        parent_process->send_signal(SIGCHLD, this);
+    {
+        InterruptDisabler disabler;
+        if (auto* parent_process = Process::from_pid(m_ppid)) {
+            parent_process->send_signal(SIGCHLD, this);
+        }
     }
 
-    // Good night.
     set_state(Dead);
+}
+
+void Process::die()
+{
+    set_state(Dying);
+
+    if (!Scheduler::is_active())
+        Scheduler::pick_next_and_switch_now();
 }
 
 size_t Process::amount_virtual() const
@@ -2185,4 +2185,19 @@ size_t Process::amount_shared() const
         amount += region->amount_shared();
     }
     return amount;
+}
+
+void Process::finalize_dying_processes()
+{
+    Vector<Process*> dying_processes;
+    {
+        InterruptDisabler disabler;
+        dying_processes.ensure_capacity(system.nprocess);
+        for (auto* process = g_processes->head(); process; process = process->next()) {
+            if (process->state() == Process::Dying)
+                dying_processes.append(process);
+        }
+    }
+    for (auto* process : dying_processes)
+        process->finalize();
 }
