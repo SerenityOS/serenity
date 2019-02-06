@@ -67,6 +67,7 @@ public:
         Running,
         Skip1SchedulerPass,
         Skip0SchedulerPasses,
+        Dying,
         Dead,
         BeingInspected,
         BlockedSleep,
@@ -125,7 +126,7 @@ public:
     template<typename Callback> static void for_each(Callback);
     template<typename Callback> static void for_each_in_pgrp(pid_t, Callback);
     template<typename Callback> static void for_each_in_state(State, Callback);
-    template<typename Callback> static void for_each_not_in_state(State, Callback);
+    template<typename Callback> static void for_each_living(Callback);
     template<typename Callback> void for_each_child(Callback);
 
     bool tick() { ++m_ticks; return --m_ticks_left; }
@@ -442,6 +443,7 @@ static inline const char* to_string(Process::State state)
     case Process::Invalid: return "Invalid";
     case Process::Runnable: return "Runnable";
     case Process::Running: return "Running";
+    case Process::Dying: return "Dying";
     case Process::Dead: return "Dead";
     case Process::Skip1SchedulerPass: return "Skip1";
     case Process::Skip0SchedulerPasses: return "Skip0";
@@ -516,12 +518,12 @@ inline void Process::for_each_in_state(State state, Callback callback)
 }
 
 template<typename Callback>
-inline void Process::for_each_not_in_state(State state, Callback callback)
+inline void Process::for_each_living(Callback callback)
 {
     ASSERT_INTERRUPTS_DISABLED();
     for (auto* process = g_processes->head(); process;) {
         auto* next_process = process->next();
-        if (process->state() != state)
+        if (process->state() != Process::Dead && process->state() != Process::Dying)
             callback(*process);
         process = next_process;
     }

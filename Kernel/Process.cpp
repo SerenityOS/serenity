@@ -19,6 +19,7 @@
 #include "KSyms.h"
 #include <WindowServer/WSWindow.h>
 #include "MasterPTY.h"
+#include "elf.h"
 
 //#define DEBUG_IO
 //#define TASK_DEBUG
@@ -394,7 +395,8 @@ int Process::do_exec(const String& path, Vector<String>&& arguments, Vector<Stri
     // We cli() manually here because we don't want to get interrupted between do_exec() and Schedule::yield().
     // The reason is that the task redirection we've set up above will be clobbered by the timer IRQ.
     // If we used an InterruptDisabler that sti()'d on exit, we might timer tick'd too soon in exec().
-    cli();
+    if (current == this)
+        cli();
 
     Scheduler::prepare_to_modify_tss(*this);
 
@@ -1623,10 +1625,22 @@ void sleep(dword ticks)
     Scheduler::yield();
 }
 
-static bool is_inside_kernel_code(LinearAddress laddr)
+static bool check_kernel_memory_access(LinearAddress laddr, bool is_write)
 {
-    // FIXME: What if we're indexing into the ksym with the highest address though?
-    return laddr.get() >= ksym_lowest_address && laddr.get() <= ksym_highest_address;
+    auto* kernel_elf_header = (Elf32_Ehdr*)0xf000;
+    auto* kernel_program_headers = (Elf32_Phdr*)(0xf000 + kernel_elf_header->e_phoff);
+    for (unsigned i = 0; i < kernel_elf_header->e_phnum; ++i) {
+        auto& segment = kernel_program_headers[i];
+        if (laddr.get() < segment.p_vaddr || laddr.get() > (segment.p_vaddr + segment.p_memsz))
+            continue;
+        if (is_write && !(kernel_program_headers[i].p_flags & PF_W))
+            return false;
+        if (!is_write && !(kernel_program_headers[i].p_flags & PF_R))
+            return false;
+        return true;
+    }
+    // Returning true in this case means "it's not inside the kernel binary. let the other checks deal with it."
+    return true;
 }
 
 bool Process::validate_read_from_kernel(LinearAddress laddr) const
@@ -1635,7 +1649,7 @@ bool Process::validate_read_from_kernel(LinearAddress laddr) const
     // This code allows access outside of the known used address ranges to get caught.
 
     InterruptDisabler disabler;
-    if (is_inside_kernel_code(laddr))
+    if (check_kernel_memory_access(laddr, false))
         return true;
     if (is_kmalloc_address(laddr.as_ptr()))
         return true;
@@ -1645,7 +1659,7 @@ bool Process::validate_read_from_kernel(LinearAddress laddr) const
 bool Process::validate_read(const void* address, size_t size) const
 {
     if (is_ring0()) {
-        if (is_inside_kernel_code(LinearAddress((dword)address)))
+        if (check_kernel_memory_access(LinearAddress((dword)address), false))
             return true;
         if (is_kmalloc_address(address))
             return true;
@@ -1666,6 +1680,8 @@ bool Process::validate_write(void* address, size_t size) const
 {
     if (is_ring0()) {
         if (is_kmalloc_address(address))
+            return true;
+        if (check_kernel_memory_access(LinearAddress((dword)address), true))
             return true;
     }
     ASSERT(size);
@@ -2108,15 +2124,25 @@ int Process::sys$chmod(const char* pathname, mode_t mode)
 
 void Process::die()
 {
+    // This is pretty hairy wrt interrupts. Once we set_state(Dead), we never get scheduled again.
+    // For this reason, we mark ourselves as Dying, which prevents the scheduler from dispatching signals in this process.
+    set_state(Dying);
+    InterruptFlagSaver saver;
+
+    // STI so we can take locks.
+    sti();
     destroy_all_windows();
-    set_state(Dead);
     m_fds.clear();
     m_tty = nullptr;
 
-    InterruptDisabler disabler;
+    // CLI for Process::from_pid(). This should go away eventually.
+    cli();
     if (auto* parent_process = Process::from_pid(m_ppid)) {
         parent_process->send_signal(SIGCHLD, this);
     }
+
+    // Good night.
+    set_state(Dead);
 }
 
 size_t Process::amount_virtual() const

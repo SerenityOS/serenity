@@ -885,7 +885,6 @@ size_t Region::amount_shared() const
 
 PageDirectory::~PageDirectory()
 {
-    ASSERT_INTERRUPTS_DISABLED();
 #ifdef MM_DEBUG
     dbgprintf("MM: ~PageDirectory K%x\n", this);
 #endif
