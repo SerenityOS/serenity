@@ -91,7 +91,7 @@ DEFINES = -DSERENITY -DKERNEL -DSANITIZE_PTRS
 CXXFLAGS = -MMD -MP $(WARNING_FLAGS) $(OPTIMIZATION_FLAGS) $(KERNEL_FLAGS) $(FLAVOR_FLAGS) $(ARCH_FLAGS) $(STANDARD_FLAGS) $(SUGGEST_FLAGS) $(INCLUDE_FLAGS) $(DEFINES)
 CXX = clang
 LD = ld
-LDFLAGS = -T linker.ld --strip-debug -melf_i386 --gc-sections --build-id=none -z norelro -z now
+LDFLAGS = -T linker.ld --strip-debug -melf_i386 --gc-sections
 
 all: $(KERNEL) $(IMAGE) kernel.map
 

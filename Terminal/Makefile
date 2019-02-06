@@ -18,7 +18,7 @@ CXXFLAGS = -MMD -MP $(WARNING_FLAGS) $(OPTIMIZATION_FLAGS) $(USERLAND_FLAGS) $(F
 CXX = clang
 LD = ld
 AR = ar
-LDFLAGS = -static --strip-debug -melf_i386 --build-id=none -z norelro -z now -e _start --gc-sections
+LDFLAGS = -static --strip-debug -melf_i386 -e _start --gc-sections
 
 all: $(APP)
 
