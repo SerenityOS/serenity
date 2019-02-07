@@ -87,7 +87,7 @@ RetainPtr<SynthFSInode> SynthFS::create_generated_file(String&& name, Function<B
 
 InodeIdentifier SynthFS::add_file(RetainPtr<SynthFSInode>&& file, InodeIndex parent)
 {
-    ASSERT_INTERRUPTS_DISABLED();
+    LOCKER(m_lock);
     ASSERT(file);
     auto it = m_inodes.find(parent);
     ASSERT(it != m_inodes.end());
@@ -101,7 +101,7 @@ InodeIdentifier SynthFS::add_file(RetainPtr<SynthFSInode>&& file, InodeIndex par
 
 bool SynthFS::remove_file(InodeIndex inode)
 {
-    ASSERT_INTERRUPTS_DISABLED();
+    LOCKER(m_lock);
     auto it = m_inodes.find(inode);
     if (it == m_inodes.end())
         return false;
@@ -158,16 +158,19 @@ RetainPtr<Inode> SynthFS::create_directory(InodeIdentifier, const String&, mode_
 
 auto SynthFS::generate_inode_index() -> InodeIndex
 {
+    LOCKER(m_lock);
     return m_next_inode_index++;
 }
 
 RetainPtr<Inode> SynthFSInode::parent() const
 {
+    LOCKER(m_lock);
     return fs().get_inode(m_parent);
 }
 
 RetainPtr<Inode> SynthFS::get_inode(InodeIdentifier inode) const
 {
+    LOCKER(m_lock);
     auto it = m_inodes.find(inode.index());
     if (it == m_inodes.end())
         return { };
@@ -191,6 +194,7 @@ InodeMetadata SynthFSInode::metadata() const
 
 ssize_t SynthFSInode::read_bytes(off_t offset, size_t count, byte* buffer, FileDescriptor* descriptor) const
 {
+    LOCKER(m_lock);
 #ifdef SYNTHFS_DEBUG
     kprintf("SynthFS: read_bytes %u\n", index());
 #endif
@@ -218,6 +222,7 @@ ssize_t SynthFSInode::read_bytes(off_t offset, size_t count, byte* buffer, FileD
 
 bool SynthFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry&)> callback) const
 {
+    LOCKER(m_lock);
 #ifdef SYNTHFS_DEBUG
     kprintf("SynthFS: traverse_as_directory %u\n", index());
 #endif
@@ -235,6 +240,7 @@ bool SynthFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry&
 
 InodeIdentifier SynthFSInode::lookup(const String& name)
 {
+    LOCKER(m_lock);
     ASSERT(is_directory());
     if (name == ".")
         return identifier();
@@ -249,6 +255,7 @@ InodeIdentifier SynthFSInode::lookup(const String& name)
 
 String SynthFSInode::reverse_lookup(InodeIdentifier child_id)
 {
+    LOCKER(m_lock);
     ASSERT(is_directory());
     for (auto& child : m_children) {
         if (child->identifier() == child_id)
@@ -263,6 +270,7 @@ void SynthFSInode::flush_metadata()
 
 ssize_t SynthFSInode::write_bytes(off_t offset, size_t size, const byte* buffer, FileDescriptor*)
 {
+    LOCKER(m_lock);
     if (!m_write_callback)
         return -EPERM;
     // FIXME: Being able to write into SynthFS at a non-zero offset seems like something we should support..
@@ -296,6 +304,7 @@ SynthFSInodeCustomData::~SynthFSInodeCustomData()
 
 size_t SynthFSInode::directory_entry_count() const
 {
+    LOCKER(m_lock);
     ASSERT(is_directory());
     // NOTE: The 2 is for '.' and '..'
     return m_children.size() + 2;

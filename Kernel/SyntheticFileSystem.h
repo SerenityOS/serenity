@@ -37,6 +37,7 @@ protected:
 private:
     InodeIndex m_next_inode_index { 2 };
     HashMap<InodeIndex, RetainPtr<SynthFSInode>> m_inodes;
+    mutable Lock m_lock;
 };
 
 struct SynthFSInodeCustomData {
