@@ -2192,3 +2192,13 @@ void Process::finalize_dying_processes()
     for (auto* process : dying_processes)
         process->finalize();
 }
+
+bool Process::tick()
+{
+    ++m_ticks;
+    if (tss().cs & 3)
+        ++m_ticks_in_user;
+    else
+        ++m_ticks_in_kernel;
+    return --m_ticks_left;
+}

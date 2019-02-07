@@ -27,16 +27,19 @@ static inline dword CAS(volatile dword* mem, dword newval, dword oldval)
 
 class Lock {
 public:
-    Lock() { }
+    Lock(const char* name = nullptr) : m_name(name) { }
     ~Lock() { }
 
     void lock();
     void unlock();
 
+    const char* name() const { return m_name; }
+
 private:
     volatile dword m_lock { 0 };
     dword m_level { 0 };
     Process* m_holder { nullptr };
+    const char* m_name { nullptr };
 };
 
 class Locker {
@@ -65,7 +68,7 @@ inline void Lock::lock()
             }
             m_lock = 0;
         }
-        Scheduler::yield();
+        Scheduler::donate_to(m_holder, m_name);
     }
 }
 
@@ -86,7 +89,7 @@ inline void Lock::unlock()
             m_lock = 0;
             return;
         }
-        Scheduler::yield();
+        Scheduler::donate_to(m_holder, m_name);
     }
 }
 

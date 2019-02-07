@@ -17,6 +17,7 @@ public:
     static void pick_next_and_switch_now();
     static void switch_now();
     static bool yield();
+    static bool donate_to(Process*, const char* reason);
     static bool context_switch(Process&);
     static void prepare_to_modify_tss(Process&);
     static Process* colonel();

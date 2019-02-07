@@ -130,6 +130,7 @@ void WSWindowManager::flip_buffers()
 WSWindowManager::WSWindowManager()
     : m_screen(WSScreen::the())
     , m_screen_rect(m_screen.rect())
+    , m_lock("WSWindowManager")
 {
 #ifndef DEBUG_COUNTERS
     (void)m_compose_count;

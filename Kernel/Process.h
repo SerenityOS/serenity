@@ -131,8 +131,9 @@ public:
     template<typename Callback> static void for_each_living(Callback);
     template<typename Callback> void for_each_child(Callback);
 
-    bool tick() { ++m_ticks; return --m_ticks_left; }
+    bool tick();
     void set_ticks_left(dword t) { m_ticks_left = t; }
+    dword ticks_left() const { return m_ticks_left; }
 
     void set_selector(word s) { m_far_ptr.selector = s; }
     void set_state(State s) { m_state = s; }
