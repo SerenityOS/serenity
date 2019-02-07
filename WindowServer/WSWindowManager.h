@@ -7,6 +7,7 @@
 #include <AK/InlineLinkedList.h>
 #include <AK/WeakPtr.h>
 #include <AK/Lock.h>
+#include <AK/CircularQueue.h>
 #include "WSMessageReceiver.h"
 
 class WSScreen;
@@ -29,6 +30,7 @@ public:
 
     void move_to_front(WSWindow&);
 
+    void invalidate_cursor();
     void draw_cursor();
 
     void invalidate(const WSWindow&);
@@ -54,6 +56,7 @@ private:
 
     void compose();
     void paint_window_frame(WSWindow&);
+    void flip_buffers();
 
     WSScreen& m_screen;
     Rect m_screen_rect;
@@ -105,4 +108,5 @@ private:
     mutable Lock m_lock;
 
     bool m_flash_flush { false };
+    bool m_buffers_are_flipped { false };
 };
