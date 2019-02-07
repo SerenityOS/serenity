@@ -159,8 +159,23 @@ void WSMessageLoop::drain_mouse()
         ASSERT(nread == sizeof(data));
         bool left_button = data[0] & 1;
         bool right_button = data[0] & 2;
-        dx += data[1] ? (int)data[1] - (int)((data[0] << 4) & 0x100) : 0;
-        dy += data[2] ? (int)((data[0] << 3) & 0x100) - (int)data[2] : 0;
+        bool x_overflow = data[0] & 0x40;
+        bool y_overflow = data[0] & 0x80;
+        bool x_sign = data[0] & 0x10;
+        bool y_sign = data[0] & 0x20;
+
+        if (x_overflow || y_overflow)
+            continue;
+
+        int x = data[1];
+        int y = data[2];
+        if (x && x_sign)
+            x -= 0x100;
+        if (y && y_sign)
+            y -= 0x100;
+
+        dx += x;
+        dy += -y;
         if (left_button != prev_left_button || right_button != prev_right_button || !mouse.can_read(*m_server_process)) {
             prev_left_button = left_button;
             prev_right_button = right_button;
