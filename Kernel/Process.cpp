@@ -165,7 +165,6 @@ void* Process::sys$mmap(const Syscall::SC_mmap_params* params)
     if ((dword)addr & ~PAGE_MASK || size & ~PAGE_MASK)
         return (void*)-EINVAL;
     if (flags & MAP_ANONYMOUS) {
-        InterruptDisabler disabler;
         // FIXME: Implement mapping at a client-specified address. Most of the support is already in plcae.
         ASSERT(addr == nullptr);
         auto* region = allocate_region(LinearAddress(), size, "mmap", prot & PROT_READ, prot & PROT_WRITE, false);
@@ -193,7 +192,6 @@ void* Process::sys$mmap(const Syscall::SC_mmap_params* params)
 
 int Process::sys$munmap(void* addr, size_t size)
 {
-    InterruptDisabler disabler;
     auto* region = region_from_range(LinearAddress((dword)addr), size);
     if (!region)
         return -1;
@@ -325,7 +323,6 @@ int Process::do_exec(const String& path, Vector<String>&& arguments, Vector<Stri
 
     ASSERT(success);
     {
-        InterruptDisabler disabler;
         // Okay, here comes the sleight of hand, pay close attention..
         auto old_regions = move(m_regions);
         ELFLoader loader(region->laddr().as_ptr());
@@ -702,8 +699,10 @@ Process::Process(String&& name, uid_t uid, gid_t gid, pid_t ppid, RingLevel ring
 
 Process::~Process()
 {
-    InterruptDisabler disabler;
-    system.nprocess--;
+    {
+        InterruptDisabler disabler;
+        system.nprocess--;
+    }
 
     if (g_last_fpu_process == this)
         g_last_fpu_process = nullptr;
@@ -758,12 +757,12 @@ void Process::send_signal(byte signal, Process* sender)
     ASSERT_INTERRUPTS_DISABLED();
     ASSERT(signal < 32);
 
-    m_pending_signals |= 1 << signal;
-
     if (sender)
         dbgprintf("signal: %s(%u) sent %d to %s(%u)\n", sender->name().characters(), sender->pid(), signal, name().characters(), pid());
     else
         dbgprintf("signal: kernel sent %d to %s(%u)\n", signal, name().characters(), pid());
+
+    m_pending_signals |= 1 << signal;
 }
 
 bool Process::has_unmasked_pending_signals() const
@@ -1414,8 +1413,11 @@ int Process::sys$kill(pid_t pid, int signal)
         ASSERT(pid != -1);
     }
     ASSERT(pid != current->pid()); // FIXME: Support this scenario.
-    InterruptDisabler disabler;
-    auto* peer = Process::from_pid(pid);
+    Process* peer = nullptr;
+    {
+        InterruptDisabler disabler;
+        peer = Process::from_pid(pid);
+    }
     if (!peer)
         return -ESRCH;
     peer->send_signal(signal, this);
@@ -1453,7 +1455,6 @@ int Process::sys$gettimeofday(timeval* tv)
 {
     if (!validate_write_typed(tv))
         return -EFAULT;
-    InterruptDisabler disabler;
     auto now = RTC::now();
     tv->tv_sec = now;
     tv->tv_usec = PIT::ticks_since_boot() % 1000;
@@ -1635,8 +1636,6 @@ bool Process::validate_read_from_kernel(LinearAddress laddr) const
 {
     // We check extra carefully here since the first 4MB of the address space is identity-mapped.
     // This code allows access outside of the known used address ranges to get caught.
-
-    InterruptDisabler disabler;
     if (check_kernel_memory_access(laddr, false))
         return true;
     if (is_kmalloc_address(laddr.as_ptr()))
@@ -1848,7 +1847,7 @@ int Process::sys$sigaction(int signum, const sigaction* act, sigaction* old_act)
         return -EINVAL;
     if (!validate_read_typed(act))
         return -EFAULT;
-    InterruptDisabler disabler; // FIXME: This should use a narrower lock.
+    InterruptDisabler disabler; // FIXME: This should use a narrower lock. Maybe a way to ignore signals temporarily?
     auto& action = m_signal_action_data[signum];
     if (old_act) {
         if (!validate_write_typed(old_act))
