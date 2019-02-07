@@ -368,6 +368,7 @@ void Painter::draw_focus_rect(const Rect& rect)
 void Painter::blit(const Point& position, const GraphicsBitmap& source, const Rect& src_rect)
 {
     Rect dst_rect(position, src_rect.size());
+    dst_rect.move_by(m_translation);
     dst_rect.intersect(m_clip_rect);
 
     RGBA32* dst = m_target->scanline(dst_rect.y()) + dst_rect.x();
@@ -378,6 +379,33 @@ void Painter::blit(const Point& position, const GraphicsBitmap& source, const Re
 
     for (int i = dst_rect.height() - 1; i >= 0; --i) {
         fast_dword_copy(dst, src, dst_rect.width());
+        dst += dst_skip;
+        src += src_skip;
+    }
+}
+
+void Painter::blit_with_alpha(const Point& position, const GraphicsBitmap& source, const Rect& src_rect)
+{
+    Rect dst_rect(position, src_rect.size());
+    dst_rect.move_by(m_translation);
+    dst_rect.intersect(m_clip_rect);
+
+    RGBA32* dst = m_target->scanline(dst_rect.y()) + dst_rect.x();
+    const RGBA32* src = source.scanline(src_rect.top()) + src_rect.left();
+
+    const unsigned dst_skip = m_target->width();
+    const unsigned src_skip = source.width();
+
+    for (int i = dst_rect.height() - 1; i >= 0; --i) {
+        for (int x = 0; x < dst_rect.width(); ++x) {
+            byte alpha = Color(src[x]).alpha();
+            if (alpha == 0xff)
+                dst[x] = src[x];
+            else if (!alpha)
+                continue;
+            else
+                dst[x] = Color(dst[x]).blend(src[x]).value();
+        }
         dst += dst_skip;
         src += src_skip;
     }

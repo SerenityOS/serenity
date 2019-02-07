@@ -47,6 +47,7 @@ cp -v ../Userland/guitest2 mnt/bin/guitest2
 cp -v ../Userland/sysctl mnt/bin/sysctl
 cp -v ../Terminal/Terminal mnt/bin/Terminal
 cp -v ../FontEditor/FontEditor mnt/bin/FontEditor
+cp -v ../Launcher/Launcher mnt/bin/Launcher
 cp -v ../Clock/Clock mnt/bin/Clock
 ln -s FontEditor mnt/bin/ff
 ln -s Clock mnt/bin/cl

@@ -55,11 +55,19 @@ void GButton::paint_event(GPaintEvent&)
         painter.draw_line({ 2, height() - 3 }, { width() - 2, height() - 3 }, shadow_color);
     }
 
-    if (!caption().is_empty()) {
-        auto text_rect = rect();
-        if (m_being_pressed)
-            text_rect.move_by(1, 1);
-        painter.draw_text(text_rect, caption(), Painter::TextAlignment::Center, Color::Black);
+    if (!caption().is_empty() || m_icon) {
+        auto content_rect = rect();
+        auto icon_location = m_icon ? content_rect.center().translated(-(m_icon->width() / 2), -(m_icon->height() / 2)) : Point();
+        if (m_being_pressed) {
+            content_rect.move_by(1, 1);
+            icon_location.move_by(1, 1);
+        }
+        if (m_icon) {
+            painter.blit_with_alpha(icon_location, *m_icon, m_icon->rect());
+            painter.draw_text(content_rect, caption(), Painter::TextAlignment::Center, Color::Black);
+        } else {
+            painter.draw_text(content_rect, caption(), Painter::TextAlignment::Center, Color::Black);
+        }
     }
 }
 

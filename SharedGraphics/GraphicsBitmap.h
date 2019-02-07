@@ -5,6 +5,7 @@
 #include "Size.h"
 #include <AK/Retainable.h>
 #include <AK/RetainPtr.h>
+#include <AK/AKString.h>
 
 #ifdef KERNEL
 #include "Process.h"
@@ -16,6 +17,7 @@ public:
     static RetainPtr<GraphicsBitmap> create(Process&, const Size&);
 #endif
     static RetainPtr<GraphicsBitmap> create_wrapper(const Size&, RGBA32*);
+    static RetainPtr<GraphicsBitmap> load_from_file(const String& path, const Size&);
     ~GraphicsBitmap();
 
     RGBA32* scanline(int y);
@@ -41,6 +43,10 @@ private:
     Size m_size;
     RGBA32* m_data { nullptr };
     size_t m_pitch { 0 };
+
+#ifdef USERLAND
+    bool m_mmaped { false };
+#endif
 
 #ifdef KERNEL
     WeakPtr<Process> m_client_process;

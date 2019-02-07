@@ -14,6 +14,8 @@ make -C ../FontEditor clean && \
 make -C ../FontEditor && \
 make -C ../Clock clean && \
 make -C ../Clock && \
+make -C ../Launcher clean && \
+make -C ../Launcher && \
 make clean &&\
 make && \
 sudo ./sync.sh
