@@ -80,6 +80,12 @@ public:
         BlockedSelect,
     };
 
+    enum Priority {
+        LowPriority,
+        NormalPriority,
+        HighPriority,
+    };
+
     enum RingLevel {
         Ring0 = 0,
         Ring3 = 3,
@@ -99,6 +105,9 @@ public:
     bool in_kernel() const { return (m_tss.cs & 0x03) == 0; }
 
     static Process* from_pid(pid_t);
+
+    void set_priority(Priority p) { m_priority = p; }
+    Priority priority() const { return m_priority; }
 
     const String& name() const { return m_name; }
     pid_t pid() const { return m_pid; }
@@ -328,6 +337,7 @@ private:
     dword m_stack_top3 { 0 };
     FarPtr m_far_ptr;
     State m_state { Invalid };
+    Priority m_priority { NormalPriority };
     dword m_wakeup_time { 0 };
     TSS32 m_tss;
     TSS32 m_tss_to_resume_kernel;
@@ -459,6 +469,17 @@ static inline const char* to_string(Process::State state)
     case Process::BlockedSelect: return "Select";
     case Process::BlockedLurking: return "Lurking";
     case Process::BeingInspected: return "Inspect";
+    }
+    ASSERT_NOT_REACHED();
+    return nullptr;
+}
+
+static inline const char* to_string(Process::Priority state)
+{
+    switch (state) {
+    case Process::LowPriority: return "Low";
+    case Process::NormalPriority: return "Normal";
+    case Process::HighPriority: return "High";
     }
     ASSERT_NOT_REACHED();
     return nullptr;

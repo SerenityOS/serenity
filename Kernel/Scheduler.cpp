@@ -8,7 +8,18 @@
 //#define LOG_EVERY_CONTEXT_SWITCH
 //#define SCHEDULER_DEBUG
 
-static const dword time_slice = 20; // *1ms
+static dword time_slice_for(Process::Priority priority)
+{
+    // One time slice unit == 1ms
+    switch (priority) {
+    case Process::LowPriority:
+        return 5;
+    case Process::NormalPriority:
+        return 15;
+    case Process::HighPriority:
+        return 50;
+    }
+}
 
 Process* current;
 Process* g_last_fpu_process;
@@ -244,7 +255,7 @@ void Scheduler::switch_now()
 
 bool Scheduler::context_switch(Process& process)
 {
-    process.set_ticks_left(time_slice);
+    process.set_ticks_left(time_slice_for(process.priority()));
     process.did_schedule();
 
     if (current == &process)

@@ -15,6 +15,7 @@ struct Process {
     String name;
     String state;
     String user;
+    String priority;
     unsigned linear;
     unsigned committed;
     unsigned in_bitmaps;
@@ -43,7 +44,7 @@ static Snapshot get_snapshot()
         if (!ptr)
             break;
         auto parts = String(buf, Chomp).split(',');
-        if (parts.size() < 17)
+        if (parts.size() < 18)
             break;
         bool ok;
         pid_t pid = parts[0].to_uint(ok);
@@ -57,6 +58,7 @@ static Snapshot get_snapshot()
         unsigned uid = parts[5].to_uint(ok);
         ASSERT(ok);
         process.user = s_usernames->get(uid);
+        process.priority = parts[17];
         process.state = parts[7];
         process.name = parts[11];
         process.linear = parts[12].to_uint(ok);
@@ -88,8 +90,9 @@ int main(int, char**)
         auto sum_diff = current.sum_nsched - prev.sum_nsched;
 
         printf("\033[3J\033[H\033[2J");
-        printf("\033[47;30m%6s  % 8s  %8s  %6s  %6s  %6s  %4s  %s\033[K\033[0m\n",
+        printf("\033[47;30m%6s  %3s  % 8s  % 8s  %6s  %6s  %6s  %4s  %s\033[K\033[0m\n",
                "PID",
+               "PRI",
                "USER",
                "STATE",
                "LINEAR",
@@ -120,8 +123,9 @@ int main(int, char**)
         });
 
         for (auto* process : processes) {
-            printf("%6d  % 8s  %8s  %6u  %6u  %6u  %2u.%1u  %s\n",
+            printf("%6d  %c    % 8s  % 8s  %6u  %6u  %6u  %2u.%1u  %s\n",
                 process->pid,
+                process->priority[0],
                 process->user.characters(),
                 process->state.characters(),
                 process->linear / 1024,
