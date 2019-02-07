@@ -8,7 +8,7 @@
 //#define LOG_EVERY_CONTEXT_SWITCH
 //#define SCHEDULER_DEBUG
 
-static const dword time_slice = 5; // *10 = 50ms
+static const dword time_slice = 20; // *1ms
 
 Process* current;
 Process* g_last_fpu_process;
