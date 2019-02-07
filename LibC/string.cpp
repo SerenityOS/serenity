@@ -102,8 +102,11 @@ int memcmp(const void* v1, const void* v2, size_t n)
     return 0;
 }
 
-void* memcpy(void *dest_ptr, const void *src_ptr, dword n)
+void* memcpy(void* dest_ptr, const void* src_ptr, dword n)
 {
+    if (n >= 1024)
+        return mmx_memcpy(dest_ptr, src_ptr, n);
+
     dword dest = (dword)dest_ptr;
     dword src = (dword)src_ptr;
     // FIXME: Support starting at an unaligned address.

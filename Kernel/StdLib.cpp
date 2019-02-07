@@ -1,12 +1,18 @@
 #include "types.h"
 #include "Assertions.h"
 #include "kmalloc.h"
+#include <AK/StdLibExtras.h>
 #include <AK/Types.h>
 
 extern "C" {
 
-void memcpy(void *dest_ptr, const void *src_ptr, dword n)
+void memcpy(void* dest_ptr, const void* src_ptr, dword n)
 {
+    if (n >= 1024) {
+        mmx_memcpy(dest_ptr, src_ptr, n);
+        return;
+    }
+
     dword dest = (dword)dest_ptr;
     dword src = (dword)src_ptr;
     // FIXME: Support starting at an unaligned address.
