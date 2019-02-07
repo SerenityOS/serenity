@@ -59,7 +59,7 @@ void WSScreen::on_receive_mouse_data(int dx, int dy, bool left_button, bool righ
         WSMessageLoop::the().post_message(&WSWindowManager::the(), move(message));
     }
     if (m_cursor_location != prev_location || prev_left_button != left_button)
-        WSWindowManager::the().draw_cursor();
+        WSWindowManager::the().invalidate_cursor();
 }
 
 void WSScreen::on_receive_keyboard_data(Keyboard::Event kernel_event)

@@ -276,7 +276,7 @@ DisplayInfo Process::set_video_resolution(int width, int height)
     info.height = height;
     info.bpp = 32;
     info.pitch = width * 4;
-    size_t framebuffer_size = width * height * 4;
+    size_t framebuffer_size = width * height * 4 * 2;
     if (!m_display_framebuffer_region) {
         auto framebuffer_vmo = VMObject::create_framebuffer_wrapper(BochsVGADevice::the().framebuffer_address(), framebuffer_size);
         m_display_framebuffer_region = allocate_region_with_vmo(LinearAddress(0xe0000000), framebuffer_size, move(framebuffer_vmo), 0, "framebuffer", true, true);

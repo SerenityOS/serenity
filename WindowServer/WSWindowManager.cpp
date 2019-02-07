@@ -9,6 +9,7 @@
 #include <SharedGraphics/Painter.h>
 #include <SharedGraphics/CharacterBitmap.h>
 #include <AK/StdLibExtras.h>
+#include <Kernel/BochsVGADevice.h>
 
 //#define DEBUG_COUNTERS
 //#define DEBUG_WID_IN_TITLE_BAR
@@ -115,6 +116,17 @@ static const char* cursor_bitmap_outer_ascii = {
     "       ##   "
 };
 
+void WSWindowManager::flip_buffers()
+{
+    swap(m_front_bitmap, m_back_bitmap);
+    swap(m_front_painter, m_back_painter);
+    if (m_buffers_are_flipped)
+        BochsVGADevice::the().set_y_offset(0);
+    else
+        BochsVGADevice::the().set_y_offset(m_screen_rect.height());
+    m_buffers_are_flipped = !m_buffers_are_flipped;
+}
+
 WSWindowManager::WSWindowManager()
     : m_screen(WSScreen::the())
     , m_screen_rect(m_screen.rect())
@@ -125,8 +137,7 @@ WSWindowManager::WSWindowManager()
 #endif
     auto size = m_screen_rect.size();
     m_front_bitmap = GraphicsBitmap::create_wrapper(size, m_screen.scanline(0));
-    auto* region = current->allocate_region(LinearAddress(), size.width() * size.height() * sizeof(RGBA32), "BackBitmap", true, true, true);
-    m_back_bitmap = GraphicsBitmap::create_wrapper(m_screen_rect.size(), (RGBA32*)region->laddr().get());
+    m_back_bitmap = GraphicsBitmap::create_wrapper(size, m_screen.scanline(size.height()));
 
     m_front_painter = make<Painter>(*m_front_bitmap);
     m_back_painter = make<Painter>(*m_back_bitmap);
@@ -389,6 +400,9 @@ void WSWindowManager::compose()
 {
     LOCKER(m_lock);
     auto dirty_rects = move(m_dirty_rects);
+    auto cursor_location = m_screen.cursor_location();
+    dirty_rects.append(m_last_cursor_rect);
+    dirty_rects.append({ cursor_location.x(), cursor_location.y(), (int)m_cursor_bitmap_inner->width(), (int)m_cursor_bitmap_inner->height() });
 #ifdef DEBUG_COUNTERS
     dbgprintf("[WM] compose #%u (%u rects)\n", ++m_compose_count, dirty_rects.size());
     dbgprintf("kmalloc stats: alloc:%u free:%u eternal:%u\n", sum_alloc, sum_free, kmalloc_sum_eternal);
@@ -440,9 +454,24 @@ void WSWindowManager::compose()
         }
         m_back_painter->clear_clip_rect();
     }
+    draw_cursor();
+
+    if (m_flash_flush) {
+        for (auto& rect : dirty_rects)
+            m_front_painter->fill_rect(rect, Color::Yellow);
+    }
+
+    flip_buffers();
     for (auto& r : dirty_rects)
         flush(r);
-    draw_cursor();
+}
+
+void WSWindowManager::invalidate_cursor()
+{
+    LOCKER(m_lock);
+    auto cursor_location = m_screen.cursor_location();
+    Rect cursor_rect { cursor_location.x(), cursor_location.y(), (int)m_cursor_bitmap_inner->width(), (int)m_cursor_bitmap_inner->height() };
+    invalidate(cursor_rect);
 }
 
 void WSWindowManager::draw_cursor()
@@ -451,13 +480,12 @@ void WSWindowManager::draw_cursor()
     LOCKER(m_lock);
     auto cursor_location = m_screen.cursor_location();
     Rect cursor_rect { cursor_location.x(), cursor_location.y(), (int)m_cursor_bitmap_inner->width(), (int)m_cursor_bitmap_inner->height() };
-    flush(m_last_cursor_rect.united(cursor_rect));
     Color inner_color = Color::White;
     Color outer_color = Color::Black;
     if (m_screen.left_mouse_button_pressed())
         swap(inner_color, outer_color);
-    m_front_painter->draw_bitmap(cursor_location, *m_cursor_bitmap_inner, inner_color);
-    m_front_painter->draw_bitmap(cursor_location, *m_cursor_bitmap_outer, outer_color);
+    m_back_painter->draw_bitmap(cursor_location, *m_cursor_bitmap_inner, inner_color);
+    m_back_painter->draw_bitmap(cursor_location, *m_cursor_bitmap_outer, outer_color);
     m_last_cursor_rect = cursor_rect;
 }
 
@@ -565,15 +593,12 @@ void WSWindowManager::flush(const Rect& a_rect)
 #endif
 
     RGBA32* front_ptr = m_front_bitmap->scanline(rect.y()) + rect.x();
-    const RGBA32* back_ptr = m_back_bitmap->scanline(rect.y()) + rect.x();
+    RGBA32* back_ptr = m_back_bitmap->scanline(rect.y()) + rect.x();
     size_t pitch = m_back_bitmap->pitch();
 
-    if (m_flash_flush)
-        m_front_painter->fill_rect(rect, Color::Yellow);
-
     for (int y = 0; y < rect.height(); ++y) {
-        fast_dword_copy(front_ptr, back_ptr, rect.width());
+        fast_dword_copy(back_ptr, front_ptr, rect.width());
         front_ptr = (RGBA32*)((byte*)front_ptr + pitch);
-        back_ptr = (const RGBA32*)((const byte*)back_ptr + pitch);
+        back_ptr = (RGBA32*)((byte*)back_ptr + pitch);
     }
 }

@@ -13,6 +13,8 @@
 #define VBE_DISPI_INDEX_BANK             0x5
 #define VBE_DISPI_INDEX_VIRT_WIDTH       0x6
 #define VBE_DISPI_INDEX_VIRT_HEIGHT      0x7
+#define VBE_DISPI_INDEX_X_OFFSET         0x8
+#define VBE_DISPI_INDEX_Y_OFFSET         0x9
 #define VBE_DISPI_DISABLED               0x00
 #define VBE_DISPI_ENABLED                0x01
 #define VBE_DISPI_LFB_ENABLED            0x40
@@ -42,10 +44,15 @@ void BochsVGADevice::set_resolution(int width, int height)
     set_register(VBE_DISPI_INDEX_XRES, width);
     set_register(VBE_DISPI_INDEX_YRES, height);
     set_register(VBE_DISPI_INDEX_VIRT_WIDTH, width);
-    set_register(VBE_DISPI_INDEX_VIRT_HEIGHT, height);
+    set_register(VBE_DISPI_INDEX_VIRT_HEIGHT, height * 2);
     set_register(VBE_DISPI_INDEX_BPP, 32);
     set_register(VBE_DISPI_INDEX_ENABLE, VBE_DISPI_ENABLED | VBE_DISPI_LFB_ENABLED);
     set_register(VBE_DISPI_INDEX_BANK, 0);
+}
+
+void BochsVGADevice::set_y_offset(int offset)
+{
+    set_register(VBE_DISPI_INDEX_Y_OFFSET, offset);
 }
 
 dword BochsVGADevice::find_framebuffer_address()

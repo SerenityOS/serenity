@@ -15,6 +15,7 @@ public:
 
     PhysicalAddress framebuffer_address() const { return m_framebuffer_address; }
     void set_resolution(int width, int height);
+    void set_y_offset(int);
 
 private:
     void set_register(word index, word value);
