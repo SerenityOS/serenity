@@ -267,7 +267,7 @@ public:
 
     bool validate_read(const void*, size_t) const;
     bool validate_write(void*, size_t) const;
-    bool validate_read_str(const char* str) { return validate_read(str, strlen(str) + 1); }
+    bool validate_read_str(const char* str);
     template<typename T> bool validate_read_typed(T* value, size_t count = 1) { return validate_read(value, sizeof(T) * count); }
     template<typename T> bool validate_write_typed(T* value, size_t count = 1) { return validate_write(value, sizeof(T) * count); }
 
