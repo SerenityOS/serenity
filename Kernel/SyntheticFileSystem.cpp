@@ -3,11 +3,6 @@
 #include <LibC/errno_numbers.h>
 #include <AK/StdLibExtras.h>
 
-#ifndef SERENITY
-typedef int InterruptDisabler;
-#define ASSERT_INTERRUPTS_DISABLED()
-#endif
-
 //#define SYNTHFS_DEBUG
 
 RetainPtr<SynthFS> SynthFS::create()
@@ -223,7 +218,6 @@ ssize_t SynthFSInode::read_bytes(off_t offset, size_t count, byte* buffer, FileD
 
 bool SynthFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry&)> callback) const
 {
-    InterruptDisabler disabler;
 #ifdef SYNTHFS_DEBUG
     kprintf("SynthFS: traverse_as_directory %u\n", index());
 #endif
