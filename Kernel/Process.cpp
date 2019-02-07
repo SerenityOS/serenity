@@ -1643,6 +1643,13 @@ bool Process::validate_read_from_kernel(LinearAddress laddr) const
     return validate_read(laddr.as_ptr(), 1);
 }
 
+bool Process::validate_read_str(const char* str)
+{
+    if (!validate_read(str, 1))
+        return false;
+    return validate_read(str, strlen(str) + 1);
+}
+
 bool Process::validate_read(const void* address, size_t size) const
 {
     if (is_ring0()) {
