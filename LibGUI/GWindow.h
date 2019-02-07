@@ -27,6 +27,7 @@ public:
 
     Rect rect() const;
     void set_rect(const Rect&);
+    void set_rect(int x, int y, int width, int height) { set_rect({ x, y, width, height }); }
 
     Point position() const { return rect().location(); }
 

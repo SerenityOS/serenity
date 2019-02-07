@@ -3,8 +3,11 @@
 #include <LibGUI/GWidget.h>
 #include <LibGUI/GButton.h>
 #include <LibGUI/GEventLoop.h>
+#include <sys/wait.h>
 #include <signal.h>
 #include <unistd.h>
+#include <stdio.h>
+#include <errno.h>
 
 static GWindow* make_launcher_window();
 
@@ -29,51 +32,46 @@ int main(int, char**)
     return loop.exec();
 }
 
+class LauncherButton final : public GButton {
+public:
+    LauncherButton(const String& icon_path, const String& exec_path, GWidget* parent)
+        : GButton(parent)
+        , m_executable_path(exec_path)
+    {
+        set_icon(GraphicsBitmap::load_from_file(icon_path, { 32, 32 }));
+        resize(50, 50);
+        on_click = [this] (GButton&) {
+            pid_t child_pid = fork();
+            if (!child_pid) {
+                int rc = execl(m_executable_path.characters(), m_executable_path.characters(), nullptr);
+                if (rc < 0)
+                    perror("execl");
+            }
+        };
+    }
+    virtual ~LauncherButton() { }
+
+private:
+    String m_executable_path;
+};
+
 GWindow* make_launcher_window()
 {
     auto* window = new GWindow;
     window->set_title("Launcher");
-    window->set_rect({ 50, 50, 300, 60 });
+    window->set_rect(50, 50, 300, 60);
 
     auto* widget = new GWidget;
     window->set_main_widget(widget);
-    widget->set_relative_rect({ 0, 0, 300, 60 });
 
-    auto* terminal_button = new GButton(widget);
-    terminal_button->set_relative_rect({ 5, 5, 50, 50 });
-    terminal_button->set_icon(GraphicsBitmap::load_from_file("/res/icons/Terminal.rgb", { 32, 32 }));
+    auto* terminal_button = new LauncherButton("/res/icons/Terminal.rgb", "/bin/Terminal", widget);
+    terminal_button->move_to(5, 5);
 
-    terminal_button->on_click = [] (GButton&) {
-        pid_t child_pid = fork();
-        if (!child_pid) {
-            execve("/bin/Terminal", nullptr, nullptr);
-            ASSERT_NOT_REACHED();
-        }
-    };
+    auto* font_editor_button = new LauncherButton("/res/icons/FontEditor.rgb", "/bin/FontEditor", widget);
+    font_editor_button->move_to(60, 5);
 
-    auto* font_editor_button = new GButton(widget);
-    font_editor_button->set_relative_rect({ 60, 5, 50, 50 });
-    font_editor_button->set_icon(GraphicsBitmap::load_from_file("/res/icons/FontEditor.rgb", { 32, 32 }));
-
-    font_editor_button->on_click = [] (GButton&) {
-        pid_t child_pid = fork();
-        if (!child_pid) {
-            execve("/bin/FontEditor", nullptr, nullptr);
-            ASSERT_NOT_REACHED();
-        }
-    };
-
-    auto* guitest_editor_button = new GButton(widget);
-    guitest_editor_button->set_relative_rect({ 115, 5, 50, 50 });
-    guitest_editor_button->set_icon(GraphicsBitmap::load_from_file("/res/icons/generic.rgb", { 32, 32 }));
-
-    guitest_editor_button->on_click = [] (GButton&) {
-        pid_t child_pid = fork();
-        if (!child_pid) {
-            execve("/bin/guitest", nullptr, nullptr);
-            ASSERT_NOT_REACHED();
-        }
-    };
+    auto* guitest_editor_button = new LauncherButton("/res/icons/generic.rgb", "/bin/guitest", widget);
+    guitest_editor_button->move_to(115, 5);
 
     return window;
 }

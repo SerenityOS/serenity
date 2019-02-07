@@ -56,7 +56,11 @@ public:
     virtual const char* class_name() const override { return "GWidget"; }
 
     void set_relative_rect(const Rect&);
+
     void move_to(const Point& point) { set_relative_rect({ point, relative_rect().size() }); }
+    void move_to(int x, int y) { move_to({ x, y }); }
+    void resize(const Size& size) { set_relative_rect({ relative_rect().location(), size }); }
+    void resize(int width, int height) { resize({ width, height }); }
 
     Color background_color() const { return m_background_color; }
     Color foreground_color() const { return m_foreground_color; }
