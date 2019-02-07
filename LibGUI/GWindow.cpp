@@ -103,6 +103,17 @@ String GWindow::title() const
     return m_title_when_windowless;
 }
 
+Rect GWindow::rect() const
+{
+    if (m_window_id) {
+        GUI_Rect buffer;
+        int rc = gui_get_window_rect(m_window_id, &buffer);
+        ASSERT(rc >= 0);
+        return buffer;
+    }
+    return m_rect_when_windowless;
+}
+
 void GWindow::set_rect(const Rect& a_rect)
 {
     m_rect_when_windowless = a_rect;
@@ -191,6 +202,7 @@ void GWindow::set_main_widget(GWidget* widget)
     if (m_main_widget == widget)
         return;
     m_main_widget = widget;
+    m_main_widget->set_relative_rect({ 0, 0, width(), height() });
     if (widget)
         widget->set_window(this);
     update();
