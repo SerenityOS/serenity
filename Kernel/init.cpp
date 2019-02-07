@@ -169,8 +169,6 @@ void init()
     MemoryManager::initialize();
     PIT::initialize();
 
-    memset(&system, 0, sizeof(system));
-
     new BochsVGADevice;
 
     auto new_procfs = ProcFS::create();
