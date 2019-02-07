@@ -664,8 +664,7 @@ void Terminal::paint()
             char ch = line.characters[column];
             auto character_rect = glyph_rect(row, column);
             if (!has_only_one_background_color || should_reverse_fill_for_cursor) {
-                auto cell_rect = character_rect;
-                cell_rect.inflate(0, m_line_spacing);
+                auto cell_rect = character_rect.inflated(0, m_line_spacing);
                 painter.fill_rect(cell_rect, lookup_color(should_reverse_fill_for_cursor ? attribute.foreground_color : attribute.background_color));
             }
             if (ch == ' ')
@@ -675,8 +674,8 @@ void Terminal::paint()
     }
 
     if (!m_in_active_window) {
-        auto cursor_rect = glyph_rect(m_cursor_row, m_cursor_column);
-        painter.draw_rect(cursor_rect, lookup_color(line(m_cursor_row).attributes[m_cursor_column].foreground_color));
+        auto cell_rect = glyph_rect(m_cursor_row, m_cursor_column).inflated(0, m_line_spacing);
+        painter.draw_rect(cell_rect, lookup_color(line(m_cursor_row).attributes[m_cursor_column].foreground_color));
     }
 
     line(m_cursor_row).did_paint = true;
