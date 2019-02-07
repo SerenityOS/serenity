@@ -33,18 +33,7 @@ static const dword default_userspace_stack_size = 65536;
 static pid_t next_pid;
 InlineLinkedList<Process>* g_processes;
 static String* s_hostname;
-
-static String& hostname_storage(InterruptDisabler&)
-{
-    ASSERT(s_hostname);
-    return *s_hostname;
-}
-
-static String get_hostname()
-{
-    InterruptDisabler disabler;
-    return hostname_storage(disabler).isolated_copy();
-}
+static Lock* s_hostname_lock;
 
 CoolGlobals* g_cool_globals;
 
@@ -56,6 +45,7 @@ void Process::initialize()
     next_pid = 0;
     g_processes = new InlineLinkedList<Process>;
     s_hostname = new String("courage");
+    s_hostname_lock = new Lock;
     Scheduler::initialize();
     initialize_gui_statics();
 }
@@ -216,10 +206,10 @@ int Process::sys$gethostname(char* buffer, size_t size)
 {
     if (!validate_write(buffer, size))
         return -EFAULT;
-    auto hostname = get_hostname();
-    if (size < (hostname.length() + 1))
+    LOCKER(*s_hostname_lock);
+    if (size < (s_hostname->length() + 1))
         return -ENAMETOOLONG;
-    memcpy(buffer, hostname.characters(), size);
+    strcpy(buffer, s_hostname->characters());
     return 0;
 }
 
@@ -1398,7 +1388,8 @@ int Process::sys$uname(utsname* buf)
     strcpy(buf->release, "1.0-dev");
     strcpy(buf->version, "FIXME");
     strcpy(buf->machine, "i386");
-    strcpy(buf->nodename, get_hostname().characters());
+    LOCKER(*s_hostname_lock);
+    strncpy(buf->nodename, s_hostname->characters(), sizeof(utsname::nodename));
     return 0;
 }
 
