@@ -5,7 +5,7 @@
 #include <AK/Function.h>
 #include <SharedGraphics/GraphicsBitmap.h>
 
-class GButton final : public GWidget {
+class GButton : public GWidget {
 public:
     explicit GButton(GWidget* parent);
     virtual ~GButton() override;
