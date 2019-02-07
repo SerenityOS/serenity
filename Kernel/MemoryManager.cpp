@@ -483,6 +483,8 @@ void MemoryManager::remap_region_page(Region& region, unsigned page_index_in_reg
         pte.set_writable(false);
     else
         pte.set_writable(region.is_writable());
+    pte.set_cache_disabled(!region.vmo().m_allow_cpu_caching);
+    pte.set_write_through(!region.vmo().m_allow_cpu_caching);
     pte.set_user_allowed(user_allowed);
     region.page_directory()->flush(page_laddr);
 #ifdef MM_DEBUG
@@ -517,6 +519,8 @@ void MemoryManager::map_region_at_address(PageDirectory& page_directory, Region&
                 pte.set_writable(false);
             else
                 pte.set_writable(region.is_writable());
+            pte.set_cache_disabled(!region.vmo().m_allow_cpu_caching);
+            pte.set_write_through(!region.vmo().m_allow_cpu_caching);
         } else {
             pte.set_physical_page_base(0);
             pte.set_present(false);
@@ -676,7 +680,9 @@ RetainPtr<VMObject> VMObject::create_anonymous(size_t size)
 RetainPtr<VMObject> VMObject::create_framebuffer_wrapper(PhysicalAddress paddr, size_t size)
 {
     size = ceil_div(size, PAGE_SIZE) * PAGE_SIZE;
-    return adopt(*new VMObject(paddr, size));
+    auto vmo = adopt(*new VMObject(paddr, size));
+    vmo->m_allow_cpu_caching = false;
+    return vmo;
 }
 
 RetainPtr<VMObject> VMObject::clone()

@@ -114,6 +114,7 @@ private:
     bool m_anonymous { false };
     off_t m_inode_offset { 0 };
     size_t m_size { 0 };
+    bool m_allow_cpu_caching { true };
     RetainPtr<Inode> m_inode;
     Vector<RetainPtr<PhysicalPage>> m_physical_pages;
     Lock m_paging_lock;
@@ -292,6 +293,8 @@ private:
             Present = 1 << 0,
             ReadWrite = 1 << 1,
             UserSupervisor = 1 << 2,
+            WriteThrough = 1 << 3,
+            CacheDisabled = 1 << 4,
         };
 
         bool is_present() const { return raw() & Present; }
@@ -302,6 +305,12 @@ private:
 
         bool is_writable() const { return raw() & ReadWrite; }
         void set_writable(bool b) { set_bit(ReadWrite, b); }
+
+        bool is_write_through() const { return raw() & WriteThrough; }
+        void set_write_through(bool b) { set_bit(WriteThrough, b); }
+
+        bool is_cache_disabled() const { return raw() & CacheDisabled; }
+        void set_cache_disabled(bool b) { set_bit(CacheDisabled, b); }
 
         void set_bit(byte bit, bool value)
         {
@@ -331,6 +340,8 @@ private:
             Present = 1 << 0,
             ReadWrite = 1 << 1,
             UserSupervisor = 1 << 2,
+            WriteThrough = 1 << 3,
+            CacheDisabled = 1 << 4,
         };
 
         bool is_present() const { return raw() & Present; }
@@ -341,6 +352,12 @@ private:
 
         bool is_writable() const { return raw() & ReadWrite; }
         void set_writable(bool b) { set_bit(ReadWrite, b); }
+
+        bool is_write_through() const { return raw() & WriteThrough; }
+        void set_write_through(bool b) { set_bit(WriteThrough, b); }
+
+        bool is_cache_disabled() const { return raw() & CacheDisabled; }
+        void set_cache_disabled(bool b) { set_bit(CacheDisabled, b); }
 
         void set_bit(byte bit, bool value)
         {
