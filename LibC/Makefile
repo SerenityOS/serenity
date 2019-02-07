@@ -3,6 +3,7 @@ AK_OBJS = \
     ../AK/String.o \
     ../AK/StringBuilder.o \
     ../AK/FileSystemPath.o \
+    ../AK/StdLibExtras.o \
     ../AK/kmalloc.o
 
 SHAREDGRAPHICS_OBJS = \

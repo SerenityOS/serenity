@@ -9,8 +9,14 @@
 
 #include <AK/Types.h>
 
+void* mmx_memcpy(void* to, const void* from, size_t);
+
 ALWAYS_INLINE void fast_dword_copy(dword* dest, const dword* src, size_t count)
 {
+    if (count >= 256) {
+        mmx_memcpy(dest, src, count * sizeof(count));
+        return;
+    }
     asm volatile(
         "rep movsl\n"
         : "=S"(src), "=D"(dest), "=c"(count)

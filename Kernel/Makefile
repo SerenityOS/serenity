@@ -69,7 +69,8 @@ AK_OBJS = \
     ../AK/String.o \
     ../AK/StringImpl.o \
     ../AK/StringBuilder.o \
-    ../AK/FileSystemPath.o
+    ../AK/FileSystemPath.o \
+    ../AK/StdLibExtras.o
 
 OBJS = $(KERNEL_OBJS) $(VFS_OBJS) $(AK_OBJS) $(WINDOWSERVER_OBJS) $(SHAREDGRAPHICS_OBJS)
 
