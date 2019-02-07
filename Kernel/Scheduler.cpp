@@ -317,12 +317,9 @@ Process* Scheduler::colonel()
 
 void Scheduler::initialize()
 {
-    memset(&s_redirection, 0, sizeof(s_redirection));
     s_redirection.selector = gdt_alloc_entry();
     initialize_redirection();
     s_colonel_process = Process::create_kernel_process("colonel", nullptr);
-    current = nullptr;
-    g_last_fpu_process = nullptr;
     load_task_register(s_redirection.selector);
 }
 
