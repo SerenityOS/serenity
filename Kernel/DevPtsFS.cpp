@@ -59,13 +59,11 @@ RetainPtr<SynthFSInode> DevPtsFS::create_slave_pty_device_file(unsigned index)
 
 void DevPtsFS::register_slave_pty(SlavePTY& slave_pty)
 {
-    InterruptDisabler disabler;
     auto inode_id = add_file(create_slave_pty_device_file(slave_pty.index()));
     slave_pty.set_devpts_inode_id(inode_id);
 }
 
 void DevPtsFS::unregister_slave_pty(SlavePTY& slave_pty)
 {
-    InterruptDisabler disabler;
     remove_file(slave_pty.devpts_inode_id().index());
 }
