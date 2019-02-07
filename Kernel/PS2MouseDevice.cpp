@@ -1,6 +1,15 @@
 #include "PS2MouseDevice.h"
 #include "IO.h"
 
+#define IRQ_MOUSE                1
+#define I8042_BUFFER             0x60
+#define I8042_STATUS             0x64
+#define I8042_ACK                0xFA
+#define I8042_BUFFER_FULL        0x01
+#define I8042_WHICH_BUFFER       0x20
+#define I8042_MOUSE_BUFFER       0x20
+#define I8042_KEYBOARD_BUFFER    0x00
+
 //#define PS2MOUSE_DEBUG
 
 static PS2MouseDevice* s_the;
@@ -24,33 +33,39 @@ PS2MouseDevice& PS2MouseDevice::the()
 
 void PS2MouseDevice::handle_irq()
 {
-    byte data = IO::in8(0x60);
-    m_data[m_data_state] = data;
-    switch (m_data_state) {
-    case 0:
-        if (!(data & 0x08)) {
-            dbgprintf("PS2Mouse: Stream out of sync.\n");
+    for (;;) {
+        byte status = IO::in8(I8042_STATUS);
+        if (!(((status & I8042_WHICH_BUFFER) == I8042_MOUSE_BUFFER) && (status & I8042_BUFFER_FULL)))
+            return;
+
+        byte data = IO::in8(I8042_BUFFER);
+        m_data[m_data_state] = data;
+        switch (m_data_state) {
+        case 0:
+            if (!(data & 0x08)) {
+                dbgprintf("PS2Mouse: Stream out of sync.\n");
+                break;
+            }
+            ++m_data_state;
+            break;
+        case 1:
+            ++m_data_state;
+            break;
+        case 2:
+            m_data_state = 0;
+#ifdef PS2MOUSE_DEBUG
+            dbgprintf("PS2Mouse: %d, %d %s %s\n",
+                m_data[1],
+                m_data[2],
+                (m_data[0] & 1) ? "Left" : "",
+                (m_data[0] & 2) ? "Right" : ""
+            );
+#endif
+            m_queue.enqueue(m_data[0]);
+            m_queue.enqueue(m_data[1]);
+            m_queue.enqueue(m_data[2]);
             break;
         }
-        ++m_data_state;
-        break;
-    case 1:
-        ++m_data_state;
-        break;
-    case 2:
-        m_data_state = 0;
-#ifdef PS2MOUSE_DEBUG
-        dbgprintf("PS2Mouse: %d, %d %s %s\n",
-            m_data[1],
-            m_data[2],
-            (m_data[0] & 1) ? "Left" : "",
-            (m_data[0] & 2) ? "Right" : ""
-        );
-#endif
-        m_queue.enqueue(m_data[0]);
-        m_queue.enqueue(m_data[1]);
-        m_queue.enqueue(m_data[2]);
-        break;
     }
 }
 
@@ -74,6 +89,8 @@ void PS2MouseDevice::initialize()
     // Enable interrupts
     wait_then_write(0x64, 0x20);
 
+    // Enable the PS/2 mouse IRQ (12).
+    // NOTE: The keyboard uses IRQ 1 (and is enabled by bit 0 in this register).
     byte status = wait_then_read(0x60) | 2;
     wait_then_write(0x64, 0x60);
     wait_then_write(0x60, status);

@@ -11,9 +11,11 @@
 #define IRQ_KEYBOARD             1
 #define I8042_BUFFER             0x60
 #define I8042_STATUS             0x64
-#define SET_LEDS                 0xED
-#define DATA_AVAILABLE           0x01
 #define I8042_ACK                0xFA
+#define I8042_BUFFER_FULL        0x01
+#define I8042_WHICH_BUFFER       0x20
+#define I8042_MOUSE_BUFFER       0x20
+#define I8042_KEYBOARD_BUFFER    0x00
 
 static char map[0x80] =
 {
@@ -110,7 +112,10 @@ void Keyboard::key_state_changed(byte raw, bool pressed)
 
 void Keyboard::handle_irq()
 {
-    while (IO::in8(I8042_STATUS) & DATA_AVAILABLE) {
+    for (;;) {
+        byte status = IO::in8(I8042_STATUS);
+        if (!(((status & I8042_WHICH_BUFFER) == I8042_KEYBOARD_BUFFER) && (status & I8042_BUFFER_FULL)))
+            return;
         byte raw = IO::in8(I8042_BUFFER);
         byte ch = raw & 0x7f;
         bool pressed = !(raw & 0x80);
@@ -157,7 +162,7 @@ Keyboard::Keyboard()
 
     // Empty the buffer of any pending data.
     // I don't care what you've been pressing until now!
-    while (IO::in8(I8042_STATUS ) & DATA_AVAILABLE)
+    while (IO::in8(I8042_STATUS) & I8042_BUFFER_FULL)
         IO::in8(I8042_BUFFER);
 
     enable_irq();
