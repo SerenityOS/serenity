@@ -14,6 +14,7 @@ PTYMultiplexer& PTYMultiplexer::the()
 
 PTYMultiplexer::PTYMultiplexer()
     : CharacterDevice(5, 2)
+    , m_lock("PTYMultiplexer")
 {
     s_the = this;
     m_freelist.ensure_capacity(s_max_pty_pairs);

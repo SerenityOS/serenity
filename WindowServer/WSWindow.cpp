@@ -5,7 +5,8 @@
 #include "Process.h"
 
 WSWindow::WSWindow(Process& process, int window_id)
-    : m_process(&process)
+    : m_lock("WSWindow")
+    , m_process(&process)
     , m_window_id(window_id)
     , m_pid(process.pid())
 {

@@ -13,6 +13,7 @@
 static WSMessageLoop* s_the;
 
 WSMessageLoop::WSMessageLoop()
+    : m_lock("WSMessageLoop")
 {
     if (!s_the)
         s_the = this;

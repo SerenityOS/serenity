@@ -192,6 +192,24 @@ bool Scheduler::pick_next()
     }
 }
 
+bool Scheduler::donate_to(Process* beneficiary, const char* reason)
+{
+    (void)reason;
+    unsigned ticks_left = current->ticks_left();
+    if (!beneficiary || beneficiary->state() != Process::Runnable || ticks_left <= 1) {
+        return yield();
+    }
+
+    unsigned ticks_to_donate = ticks_left - 1;
+#ifdef SCHEDULER_DEBUG
+    dbgprintf("%s(%u) donating %u ticks to %s(%u), reason=%s\n", current->name().characters(), current->pid(), ticks_to_donate, beneficiary->name().characters(), beneficiary->pid(), reason);
+#endif
+    context_switch(*beneficiary);
+    beneficiary->set_ticks_left(ticks_to_donate);
+    switch_now();
+    return 0;
+}
+
 bool Scheduler::yield()
 {
     InterruptDisabler disabler;
@@ -228,12 +246,6 @@ bool Scheduler::context_switch(Process& process)
 {
     process.set_ticks_left(time_slice);
     process.did_schedule();
-
-    if (process.tss().cs & 3) {
-        ++process.m_ticks_in_user;
-    } else {
-        ++process.m_ticks_in_kernel;
-    }
 
     if (current == &process)
         return false;

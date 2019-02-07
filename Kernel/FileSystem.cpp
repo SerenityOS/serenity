@@ -85,7 +85,8 @@ FS::DirectoryEntry::DirectoryEntry(const char* n, size_t nl, InodeIdentifier i, 
 }
 
 Inode::Inode(FS& fs, unsigned index)
-    : m_fs(fs)
+    : m_lock("Inode")
+    , m_fs(fs)
     , m_index(index)
 {
     all_inodes().set(this);

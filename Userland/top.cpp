@@ -43,7 +43,7 @@ static Snapshot get_snapshot()
         if (!ptr)
             break;
         auto parts = String(buf, Chomp).split(',');
-        if (parts.size() < 16)
+        if (parts.size() < 17)
             break;
         bool ok;
         pid_t pid = parts[0].to_uint(ok);

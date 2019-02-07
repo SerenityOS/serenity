@@ -9,6 +9,7 @@ public:
     DoubleBuffer()
         : m_write_buffer(&m_buffer1)
         , m_read_buffer(&m_buffer2)
+        , m_lock("DoubleBuffer")
     {
     }
 
