@@ -187,6 +187,7 @@ void init()
     });
     Process::create_kernel_process("Finalizer", [] {
         g_finalizer = current;
+        current->set_priority(Process::LowPriority);
         for (;;) {
             Process::finalize_dying_processes();
             current->block(Process::BlockedLurking);

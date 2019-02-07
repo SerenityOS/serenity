@@ -10,6 +10,7 @@
 
 void WindowServer_main()
 {
+    current->set_priority(Process::HighPriority);
     auto info = current->set_video_resolution(1024, 768);
 
     dbgprintf("Screen is %ux%ux%ubpp\n", info.width, info.height, info.bpp);
