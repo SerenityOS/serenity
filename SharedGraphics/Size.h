@@ -13,6 +13,8 @@ public:
     int width() const { return m_width; }
     int height() const { return m_height; }
 
+    int area() const { return width() * height(); }
+
     void set_width(int w) { m_width = w; }
     void set_height(int h) { m_height = h; }
 

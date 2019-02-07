@@ -3,6 +3,7 @@
 #include "GWidget.h"
 #include <AK/AKString.h>
 #include <AK/Function.h>
+#include <SharedGraphics/GraphicsBitmap.h>
 
 class GButton final : public GWidget {
 public:
@@ -11,6 +12,10 @@ public:
 
     String caption() const { return m_caption; }
     void set_caption(String&&);
+
+    void set_icon(RetainPtr<GraphicsBitmap>&& icon) { m_icon = move(icon); }
+    const GraphicsBitmap* icon() const { return m_icon.ptr(); }
+    GraphicsBitmap* icon() { return m_icon.ptr(); }
 
     Function<void(GButton&)> on_click;
 
@@ -23,6 +28,7 @@ private:
     virtual const char* class_name() const override { return "GButton"; }
 
     String m_caption;
+    RetainPtr<GraphicsBitmap> m_icon;
     bool m_being_pressed { false };
     bool m_tracking_cursor { false };
 };

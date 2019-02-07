@@ -26,7 +26,8 @@
 #include "BochsVGADevice.h"
 
 //#define SPAWN_GUITEST
-#define SPAWN_GUITEST2
+#define SPAWN_LAUNCHER
+//#define SPAWN_GUITEST2
 #define SPAWN_CLOCK
 //#define SPAWN_FONTEDITOR
 //#define SPAWN_MULTIPLE_SHELLS
@@ -112,6 +113,9 @@ static void init_stage2()
 #endif
 #ifdef SPAWN_GUITEST2
     Process::create_user_process("/bin/guitest2", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, move(environment), tty0);
+#endif
+#ifdef SPAWN_LAUNCHER
+    Process::create_user_process("/bin/Launcher", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, move(environment), tty0);
 #endif
 #ifdef SPAWN_CLOCK
     Process::create_user_process("/bin/Clock", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, move(environment), tty0);

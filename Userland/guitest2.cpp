@@ -78,7 +78,7 @@ GWindow* make_font_test_window()
 GWindow* make_launcher_window()
 {
     auto* window = new GWindow;
-    window->set_title("Launcher");
+    window->set_title("guitest2");
     window->set_rect({ 100, 400, 100, 230 });
 
     auto* widget = new GWidget;

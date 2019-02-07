@@ -26,6 +26,13 @@ public:
         move_by(delta.x(), delta.y());
     }
 
+    Point translated(int dx, int dy)
+    {
+        Point point = *this;
+        point.move_by(dx, dy);
+        return point;
+    }
+
     void constrain(const Rect&);
 
     bool operator==(const Point& other) const

@@ -32,6 +32,7 @@ public:
     void draw_line(const Point&, const Point&, Color);
     void draw_focus_rect(const Rect&);
     void blit(const Point&, const GraphicsBitmap&, const Rect& src_rect);
+    void blit_with_alpha(const Point&, const GraphicsBitmap&, const Rect& src_rect);
 
     enum class TextAlignment { TopLeft, CenterLeft, Center, CenterRight };
     void draw_text(const Rect&, const String&, TextAlignment = TextAlignment::TopLeft, Color = Color());
