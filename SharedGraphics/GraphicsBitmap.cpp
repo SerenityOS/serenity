@@ -48,6 +48,7 @@ RetainPtr<GraphicsBitmap> GraphicsBitmap::create_wrapper(const Size& size, RGBA3
 
 RetainPtr<GraphicsBitmap> GraphicsBitmap::load_from_file(const String& path, const Size& size)
 {
+    RGBA32* mapped_data = nullptr;
 #ifdef USERLAND
     int fd = open(path.characters(), O_RDONLY, 0644);
     if (fd < 0) {
@@ -56,8 +57,8 @@ RetainPtr<GraphicsBitmap> GraphicsBitmap::load_from_file(const String& path, con
         return nullptr;
     }
 
-    auto* mapped_file = (RGBA32*)mmap(nullptr, size.area() * 4, PROT_READ, MAP_SHARED, fd, 0);
-    if (mapped_file == MAP_FAILED) {
+    mapped_data = (RGBA32*)mmap(nullptr, size.area() * 4, PROT_READ, MAP_SHARED, fd, 0);
+    if (mapped_data == MAP_FAILED) {
         int rc = close(fd);
         ASSERT(rc == 0);
         return nullptr;
@@ -67,10 +68,10 @@ RetainPtr<GraphicsBitmap> GraphicsBitmap::load_from_file(const String& path, con
     auto descriptor = VFS::the().open(path, error, 0, 0, *VFS::the().root_inode());
     if (!descriptor) {
         kprintf("Failed to load GraphicsBitmap from file (%s)\n", path.characters());
-        ASSERT_NOT_REACHED();
+        return nullptr;
     }
     auto* region = WSMessageLoop::the().server_process().allocate_file_backed_region(LinearAddress(), size.area() * 4, descriptor->inode(), ".rgb file", /*readable*/true, /*writable*/false);
-    auto* mapped_file = (RGBA32*)region->laddr().get();
+    mapped_data = (RGBA32*)region->laddr().get();
 #endif
 
 
@@ -78,7 +79,7 @@ RetainPtr<GraphicsBitmap> GraphicsBitmap::load_from_file(const String& path, con
     int rc = close(fd);
     ASSERT(rc == 0);
 #endif
-    auto bitmap = create_wrapper(size, mapped_file);
+    auto bitmap = create_wrapper(size, mapped_data);
 #ifdef KERNEL
     bitmap->m_server_region = region;
 #else
