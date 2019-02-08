@@ -103,8 +103,8 @@ char* fgets(char* buffer, int size, FILE* stream)
     for (;;) {
         if (nread >= size)
             break;
-        char ch = fgetc(stream);
-        if (feof(stream))
+        int ch = fgetc(stream);
+        if (ch == EOF)
             break;
         buffer[nread++] = ch;
         if (!ch || ch == '\n')
@@ -119,7 +119,12 @@ int fgetc(FILE* stream)
 {
     assert(stream);
     char ch;
-    fread(&ch, sizeof(char), 1, stream);
+    size_t nread = fread(&ch, sizeof(char), 1, stream);
+    if (nread <= 0) {
+        stream->eof = nread == 0;
+        stream->error = -nread;
+        return EOF;
+    }
     return ch;
 }
 
