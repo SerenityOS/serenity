@@ -27,6 +27,7 @@ public:
 
     void add_sys_file(String&&, Function<ByteBuffer(ProcFSInode&)>&& read_callback, Function<ssize_t(ProcFSInode&, const ByteBuffer&)>&& write_callback);
     void add_sys_bool(String&&, bool*, Function<void()>&& notify_callback = nullptr);
+    void add_sys_string(String&&, Lockable<String>&, Function<void()>&& notify_callback = nullptr);
 
 private:
     ProcFS();
