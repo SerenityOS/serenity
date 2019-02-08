@@ -59,6 +59,9 @@ void ensure_caps()
     caps->set("kh", "\033[H");
     caps->set("vs", "");
     caps->set("ve", "");
+    caps->set("E3", "");
+    caps->set("kD", "");
+    caps->set("nd", "\033[C");
 
     caps->set("co", "80");
     caps->set("li", "25");
