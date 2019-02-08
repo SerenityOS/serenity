@@ -560,7 +560,11 @@ static ByteBuffer read_sys_bool(InodeIdentifier inode_id)
     auto& custom_data = *static_cast<const SysVariableData*>(inode.custom_data());
     ASSERT(custom_data.type == SysVariableData::Boolean);
     ASSERT(custom_data.address);
-    buffer[0] = *reinterpret_cast<bool*>(custom_data.address) ? '1' : '0';
+    auto* lockable_bool = reinterpret_cast<Lockable<bool>*>(custom_data.address);
+    {
+        LOCKER(lockable_bool->lock());
+        buffer[0] = lockable_bool->resource() ? '1' : '0';
+    }
     buffer[1] = '\n';
     return buffer;
 }
@@ -572,14 +576,17 @@ static ssize_t write_sys_bool(InodeIdentifier inode_id, const ByteBuffer& data)
         return { };
     auto& inode = static_cast<ProcFSInode&>(*inode_ptr);
     ASSERT(inode.custom_data());
-    if (data.size() >= 1 && (data[0] == '0' || data[0] == '1')) {
-        auto& custom_data = *static_cast<const SysVariableData*>(inode.custom_data());
-        ASSERT(custom_data.address);
-        bool new_value = data[0] == '1';
-        *reinterpret_cast<bool*>(custom_data.address) = new_value;
-        if (custom_data.notify_callback)
-            custom_data.notify_callback();
+    if (data.is_empty() || !(data[0] == '0' || data[0] == '1'))
+        return data.size();
+
+    auto& custom_data = *static_cast<const SysVariableData*>(inode.custom_data());
+    auto* lockable_bool = reinterpret_cast<Lockable<bool>*>(custom_data.address);
+    {
+        LOCKER(lockable_bool->lock());
+        lockable_bool->resource() = data[0] == '1';
     }
+    if (custom_data.notify_callback)
+        custom_data.notify_callback();
     return data.size();
 }
 
@@ -618,7 +625,7 @@ static ssize_t write_sys_string(InodeIdentifier inode_id, const ByteBuffer& data
     return data.size();
 }
 
-void ProcFS::add_sys_bool(String&& name, bool* var, Function<void()>&& notify_callback)
+void ProcFS::add_sys_bool(String&& name, Lockable<bool>& var, Function<void()>&& notify_callback)
 {
     InterruptDisabler disabler;
 
@@ -627,7 +634,7 @@ void ProcFS::add_sys_bool(String&& name, bool* var, Function<void()>&& notify_ca
     auto data = make<SysVariableData>();
     data->type = SysVariableData::Boolean;
     data->notify_callback = move(notify_callback);
-    data->address = var;
+    data->address = &var;
     inode->set_custom_data(move(data));
     m_sys_entries.append({ strdup(name.characters()), name.length(), read_sys_bool, write_sys_bool, move(inode) });
 }

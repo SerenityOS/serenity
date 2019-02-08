@@ -103,6 +103,12 @@ public:
     Lock& lock() { return m_lock; }
     T& resource() { return m_resource; }
 
+    T lock_and_copy()
+    {
+        LOCKER(m_lock);
+        return m_resource;
+    }
+
 private:
     T m_resource;
     Lock m_lock;

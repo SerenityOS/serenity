@@ -110,6 +110,6 @@ private:
 
     mutable Lock m_lock;
 
-    bool m_flash_flush { false };
+    Lockable<bool> m_flash_flush;
     bool m_buffers_are_flipped { false };
 };
