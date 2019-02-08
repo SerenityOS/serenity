@@ -31,7 +31,7 @@ WSMessageLoop& WSMessageLoop::the()
 
 int WSMessageLoop::exec()
 {
-    m_server_process = current;
+    ASSERT(m_server_process == current);
 
     m_keyboard_fd = m_server_process->sys$open("/dev/keyboard", O_RDONLY);
     m_mouse_fd = m_server_process->sys$open("/dev/psaux", O_RDONLY);
