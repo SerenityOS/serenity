@@ -95,7 +95,21 @@ inline void Lock::unlock()
 
 #define LOCKER(lock) Locker locker(lock)
 
+template<typename T>
+class Lockable {
+public:
+    Lockable() { }
+    Lockable(T&& resource) : m_resource(move(resource)) { }
+    Lock& lock() { return m_lock; }
+    T& resource() { return m_resource; }
+
+private:
+    T m_resource;
+    Lock m_lock;
+};
+
 }
 
 using AK::Lock;
 using AK::Locker;
+using AK::Lockable;
