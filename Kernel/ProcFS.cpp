@@ -542,6 +542,7 @@ struct SysVariableData final : public ProcFSInodeCustomData {
     enum Type {
         Invalid,
         Boolean,
+        String,
     };
     Type type { Invalid };
     Function<void()> notify_callback;
@@ -582,6 +583,41 @@ static ssize_t write_sys_bool(InodeIdentifier inode_id, const ByteBuffer& data)
     return data.size();
 }
 
+static ByteBuffer read_sys_string(InodeIdentifier inode_id)
+{
+    auto inode_ptr = ProcFS::the().get_inode(inode_id);
+    if (!inode_ptr)
+        return { };
+    auto& inode = static_cast<ProcFSInode&>(*inode_ptr);
+    ASSERT(inode.custom_data());
+    auto buffer = ByteBuffer::create_uninitialized(2);
+    auto& custom_data = *static_cast<const SysVariableData*>(inode.custom_data());
+    ASSERT(custom_data.type == SysVariableData::String);
+    ASSERT(custom_data.address);
+    auto* lockable_string = reinterpret_cast<Lockable<String>*>(custom_data.address);
+    LOCKER(lockable_string->lock());
+    return lockable_string->resource().to_byte_buffer();
+}
+
+static ssize_t write_sys_string(InodeIdentifier inode_id, const ByteBuffer& data)
+{
+    auto inode_ptr = ProcFS::the().get_inode(inode_id);
+    if (!inode_ptr)
+        return { };
+    auto& inode = static_cast<ProcFSInode&>(*inode_ptr);
+    ASSERT(inode.custom_data());
+    auto& custom_data = *static_cast<const SysVariableData*>(inode.custom_data());
+    ASSERT(custom_data.address);
+    {
+        auto* lockable_string = reinterpret_cast<Lockable<String>*>(custom_data.address);
+        LOCKER(lockable_string->lock());
+        lockable_string->resource() = String((const char*)data.pointer(), data.size());
+    }
+    if (custom_data.notify_callback)
+        custom_data.notify_callback();
+    return data.size();
+}
+
 void ProcFS::add_sys_bool(String&& name, bool* var, Function<void()>&& notify_callback)
 {
     InterruptDisabler disabler;
@@ -594,6 +630,20 @@ void ProcFS::add_sys_bool(String&& name, bool* var, Function<void()>&& notify_ca
     data->address = var;
     inode->set_custom_data(move(data));
     m_sys_entries.append({ strdup(name.characters()), name.length(), read_sys_bool, write_sys_bool, move(inode) });
+}
+
+void ProcFS::add_sys_string(String&& name, Lockable<String>& var, Function<void()>&& notify_callback)
+{
+    InterruptDisabler disabler;
+
+    unsigned index = m_sys_entries.size();
+    auto inode = adopt(*new ProcFSInode(*this, sys_var_to_identifier(fsid(), index).index()));
+    auto data = make<SysVariableData>();
+    data->type = SysVariableData::String;
+    data->notify_callback = move(notify_callback);
+    data->address = &var;
+    inode->set_custom_data(move(data));
+    m_sys_entries.append({ strdup(name.characters()), name.length(), read_sys_string, write_sys_string, move(inode) });
 }
 
 bool ProcFS::initialize()
