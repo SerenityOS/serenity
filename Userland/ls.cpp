@@ -5,6 +5,7 @@
 #include <string.h>
 #include <getopt.h>
 #include <time.h>
+#include <fcntl.h>
 #include <sys/ioctl.h>
 #include <sys/stat.h>
 #include <AK/AKString.h>

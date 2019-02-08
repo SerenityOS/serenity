@@ -267,6 +267,17 @@ int system(const char* command)
     return execl("/bin/sh", "sh", "-c", command, nullptr);
 }
 
+char* mktemp(char*)
+{
+    ASSERT_NOT_REACHED();
+}
+
+void* bsearch(const void* key, const void* base, size_t nmemb, size_t size, int (*compar)(const void *, const void *))
+{
+    dbgprintf("FIXME(LibC): bsearch(%p, %p, %u, %u, %p)\n", key, base, nmemb, size, compar);
+    ASSERT_NOT_REACHED();
+}
+
 div_t div(int numerator, int denominator)
 {
     div_t result;

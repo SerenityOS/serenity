@@ -70,6 +70,7 @@ int fscanf(FILE*, const char* fmt, ...);
 int setvbuf(FILE*, char* buf, int mode, size_t);
 void setbuf(FILE*, char* buf);
 void setlinebuf(FILE*);
+int rename(const char* oldpath, const char* newpath);
 
 __END_DECLS
 
