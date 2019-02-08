@@ -105,6 +105,8 @@ private:
 
     RetainPtr<Font> m_font;
 
+    RetainPtr<GraphicsBitmap> m_wallpaper;
+
     mutable Lock m_lock;
 
     bool m_flash_flush { false };
