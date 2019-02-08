@@ -165,7 +165,7 @@ WSWindowManager::WSWindowManager()
 
     {
         LOCKER(m_wallpaper_path.lock());
-        m_wallpaper_path.resource() = "/res/wallpapers/gray-wood.rgb";
+        m_wallpaper_path.resource() = "/res/wallpapers/cool.rgb";
         m_wallpaper = GraphicsBitmap::load_from_file(m_wallpaper_path.resource(), m_screen_rect.size());
     }
 
