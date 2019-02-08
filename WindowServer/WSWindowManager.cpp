@@ -131,6 +131,7 @@ WSWindowManager::WSWindowManager()
     : m_screen(WSScreen::the())
     , m_screen_rect(m_screen.rect())
     , m_lock("WSWindowManager")
+    , m_flash_flush(false)
 {
 #ifndef DEBUG_COUNTERS
     (void)m_compose_count;
@@ -168,7 +169,7 @@ WSWindowManager::WSWindowManager()
         m_wallpaper = GraphicsBitmap::load_from_file(m_wallpaper_path.resource(), m_screen_rect.size());
     }
 
-    ProcFS::the().add_sys_bool("wm_flash_flush", &m_flash_flush);
+    ProcFS::the().add_sys_bool("wm_flash_flush", m_flash_flush);
     ProcFS::the().add_sys_string("wm_wallpaper", m_wallpaper_path, [this] {
         LOCKER(m_wallpaper_path.lock());
         m_wallpaper = GraphicsBitmap::load_from_file(m_wallpaper_path.resource(), m_screen_rect.size());
@@ -441,7 +442,6 @@ void WSWindowManager::compose()
         if (any_window_contains_rect(dirty_rect)) {
             continue;
         }
-        //dbgprintf("Repaint root %d,%d %dx%d\n", dirty_rect.x(), dirty_rect.y(), dirty_rect.width(), dirty_rect.height());
         LOCKER(m_wallpaper_path.lock());
         if (!m_wallpaper)
             m_back_painter->fill_rect(dirty_rect, m_background_color);
@@ -472,7 +472,8 @@ void WSWindowManager::compose()
     }
     draw_cursor();
 
-    if (m_flash_flush) {
+
+    if (m_flash_flush.lock_and_copy()) {
         for (auto& rect : dirty_rects)
             m_front_painter->fill_rect(rect, Color::Yellow);
     }
