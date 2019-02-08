@@ -148,7 +148,7 @@ void FS::sync()
     }
 }
 
-void Inode::set_vmo(RetainPtr<VMObject>&& vmo)
+void Inode::set_vmo(VMObject& vmo)
 {
-    m_vmo = move(vmo);
+    m_vmo = vmo.make_weak_ptr();
 }
