@@ -22,6 +22,8 @@ public:
     bool running() const { return m_running; }
     Process& server_process() { return *m_server_process; }
 
+    void set_server_process(Process& process) { m_server_process = &process; }
+
 private:
     void wait_for_message();
     void drain_mouse();

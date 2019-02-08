@@ -10,6 +10,7 @@
 
 void WindowServer_main()
 {
+    WSMessageLoop::the().set_server_process(*current);
     current->set_priority(Process::HighPriority);
     auto info = current->set_video_resolution(1024, 768);
 
