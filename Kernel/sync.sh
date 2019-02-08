@@ -1,9 +1,15 @@
 rm -vf _fs_contents.lock
 rm -vf _fs_contents
-cp -vp _fs_contents.stock _fs_contents
+dd if=/dev/zero of=_fs_contents bs=1M count=8
+mke2fs _fs_contents
+chown 1000:1000 _fs_contents
 mkdir -vp mnt
 mount -o loop _fs_contents mnt/
+mkdir -vp mnt/bin
+mkdir -vp mnt/etc
+mkdir -vp mnt/proc
 mkdir -vp mnt/dev
+mkdir -vp mnt/dev/pts
 mknod mnt/dev/tty0 c 4 0
 mknod mnt/dev/tty1 c 4 1
 mknod mnt/dev/tty2 c 4 2
@@ -11,7 +17,6 @@ mknod mnt/dev/tty3 c 4 3
 mknod mnt/dev/keyboard c 85 1
 mknod mnt/dev/psaux c 10 1
 mknod mnt/dev/ptmx c 5 2
-mkdir mnt/dev/pts
 mknod mnt/dev/gui_events c 66 1
 ln -s /proc/self/fd/0 mnt/dev/stdin
 ln -s /proc/self/fd/1 mnt/dev/stdout

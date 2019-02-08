@@ -426,12 +426,18 @@ void WSWindowManager::compose()
         return false;
     };
 
+    if (!m_wallpaper)
+        m_wallpaper = GraphicsBitmap::load_from_file("/res/wallpapers/gray-wood.rgb", { 1024, 768 });
+
     for (auto& dirty_rect : dirty_rects) {
         if (any_window_contains_rect(dirty_rect)) {
             continue;
         }
         //dbgprintf("Repaint root %d,%d %dx%d\n", dirty_rect.x(), dirty_rect.y(), dirty_rect.width(), dirty_rect.height());
-        m_back_painter->fill_rect(dirty_rect, m_background_color);
+        if (!m_wallpaper)
+            m_back_painter->fill_rect(dirty_rect, m_background_color);
+        else
+            m_back_painter->blit(dirty_rect.location(), *m_wallpaper, dirty_rect);
     }
     for (auto* window = m_windows_in_order.head(); window; window = window->next()) {
         WSWindowLocker locker(*window);
