@@ -65,7 +65,6 @@ Font& Font::default_font()
         }
         auto* region = current->allocate_file_backed_region(LinearAddress(), font_file_size(10), descriptor->inode(), "default_font", /*readable*/true, /*writable*/false);
         ASSERT(region);
-        region->page_in();
         s_default_font = Font::load_from_memory(region->laddr().as_ptr()).leak_ref();
 #endif
         ASSERT(s_default_font);
@@ -88,9 +87,6 @@ Font& Font::default_bold_font()
         }
         auto* region = current->allocate_file_backed_region(LinearAddress(), font_file_size(10), descriptor->inode(), "default_bold_font", /*readable*/true, /*writable*/false);
         ASSERT(region);
-        ASSERT_INTERRUPTS_ENABLED();
-        region->page_in();
-        ASSERT_INTERRUPTS_ENABLED();
         s_default_bold_font = Font::load_from_memory(region->laddr().as_ptr()).leak_ref();
 #endif
         ASSERT(s_default_bold_font);
