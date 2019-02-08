@@ -934,7 +934,7 @@ bool Ext2FS::get_inode_allocation_state(InodeIndex index) const
     unsigned bit_index = (index - 1) % inodes_per_bitmap_block;
     auto block = read_block(bgd.bg_inode_bitmap + bitmap_block_index);
     ASSERT(block);
-    auto bitmap = Bitmap::wrap(block.pointer(), block.size());
+    auto bitmap = Bitmap::wrap(block.pointer(), inodes_per_bitmap_block);
     return bitmap.get(bit_index);
 }
 
@@ -948,7 +948,7 @@ bool Ext2FS::set_inode_allocation_state(unsigned index, bool newState)
     unsigned bit_index = (index - 1) % inodes_per_bitmap_block;
     auto block = read_block(bgd.bg_inode_bitmap + bitmap_block_index);
     ASSERT(block);
-    auto bitmap = Bitmap::wrap(block.pointer(), block.size());
+    auto bitmap = Bitmap::wrap(block.pointer(), inodes_per_bitmap_block);
     bool current_state = bitmap.get(bit_index);
     dbgprintf("Ext2FS: set_inode_allocation_state(%u) %u -> %u\n", index, current_state, newState);
 
