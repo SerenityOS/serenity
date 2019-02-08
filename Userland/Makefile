@@ -22,6 +22,7 @@ OBJS = \
        guitest.o \
        guitest2.o \
        sysctl.o \
+       pape.o \
        cp.o \
        rmdir.o \
        dmesg.o \
@@ -54,6 +55,7 @@ APPS = \
        guitest \
        guitest2 \
        sysctl \
+       pape \
        cp \
        rmdir \
        dmesg \
@@ -152,6 +154,9 @@ guitest2: guitest2.o
 	$(LD) -o $@ $(LDFLAGS) $< ../LibGUI/LibGUI.a ../LibC/LibC.a
 
 sysctl: sysctl.o
+	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
+
+pape: pape.o
 	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
 
 cp: cp.o
