@@ -667,7 +667,7 @@ RetainPtr<VMObject> VMObject::create_file_backed(RetainPtr<Inode>&& inode)
     if (inode->vmo())
         return static_cast<VMObject*>(inode->vmo());
     auto vmo = adopt(*new VMObject(move(inode)));
-    vmo->inode()->set_vmo(vmo.ptr());
+    vmo->inode()->set_vmo(*vmo);
     return vmo;
 }
 
@@ -732,10 +732,8 @@ VMObject::VMObject(RetainPtr<Inode>&& inode)
 
 VMObject::~VMObject()
 {
-    if (m_inode) {
+    if (m_inode)
         ASSERT(m_inode->vmo() == this);
-        m_inode->set_vmo(nullptr);
-    }
     MM.unregister_vmo(*this);
 }
 

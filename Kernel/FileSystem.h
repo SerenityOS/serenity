@@ -14,6 +14,7 @@
 #include <AK/Function.h>
 #include <AK/kstdio.h>
 #include <AK/Lock.h>
+#include <AK/WeakPtr.h>
 
 static const dword mepoch = 476763780;
 
@@ -103,7 +104,7 @@ public:
 
     void will_be_destroyed();
 
-    void set_vmo(RetainPtr<VMObject>&&);
+    void set_vmo(VMObject&);
     VMObject* vmo() { return m_vmo.ptr(); }
     const VMObject* vmo() const { return m_vmo.ptr(); }
 
@@ -118,7 +119,7 @@ protected:
 private:
     FS& m_fs;
     unsigned m_index { 0 };
-    RetainPtr<VMObject> m_vmo;
+    WeakPtr<VMObject> m_vmo;
     bool m_metadata_dirty { false };
 };
 

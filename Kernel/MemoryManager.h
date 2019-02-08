@@ -10,6 +10,7 @@
 #include <AK/HashTable.h>
 #include <AK/AKString.h>
 #include <AK/Badge.h>
+#include <AK/Weakable.h>
 #include <Kernel/VirtualFileSystem.h>
 
 #define PAGE_ROUND_UP(x) ((((dword)(x)) + PAGE_SIZE-1) & (~(PAGE_SIZE-1)))
@@ -77,7 +78,7 @@ private:
     HashMap<unsigned, RetainPtr<PhysicalPage>> m_physical_pages;
 };
 
-class VMObject : public Retainable<VMObject> {
+class VMObject : public Retainable<VMObject>, public Weakable<VMObject> {
     friend class MemoryManager;
 public:
     static RetainPtr<VMObject> create_file_backed(RetainPtr<Inode>&&);
