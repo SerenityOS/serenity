@@ -929,9 +929,10 @@ bool Ext2FS::get_inode_allocation_state(InodeIndex index) const
     if (index == 0)
         return true;
     auto& bgd = group_descriptor(group_index_from_inode(index));
+    unsigned index_in_group = index % inodes_per_group();
     unsigned inodes_per_bitmap_block = block_size() * 8;
-    unsigned bitmap_block_index = (index - 1) / inodes_per_bitmap_block;
-    unsigned bit_index = (index - 1) % inodes_per_bitmap_block;
+    unsigned bitmap_block_index = (index_in_group - 1) / inodes_per_bitmap_block;
+    unsigned bit_index = (index_in_group - 1) % inodes_per_bitmap_block;
     auto block = read_block(bgd.bg_inode_bitmap + bitmap_block_index);
     ASSERT(block);
     auto bitmap = Bitmap::wrap(block.pointer(), inodes_per_bitmap_block);
@@ -941,11 +942,10 @@ bool Ext2FS::get_inode_allocation_state(InodeIndex index) const
 bool Ext2FS::set_inode_allocation_state(unsigned index, bool newState)
 {
     auto& bgd = group_descriptor(group_index_from_inode(index));
-
-    // Update inode bitmap
+    unsigned index_in_group = index % inodes_per_group();
     unsigned inodes_per_bitmap_block = block_size() * 8;
-    unsigned bitmap_block_index = (index - 1) / inodes_per_bitmap_block;
-    unsigned bit_index = (index - 1) % inodes_per_bitmap_block;
+    unsigned bitmap_block_index = (index_in_group - 1) / inodes_per_bitmap_block;
+    unsigned bit_index = (index_in_group - 1) % inodes_per_bitmap_block;
     auto block = read_block(bgd.bg_inode_bitmap + bitmap_block_index);
     ASSERT(block);
     auto bitmap = Bitmap::wrap(block.pointer(), inodes_per_bitmap_block);
