@@ -14,6 +14,8 @@ typedef signed int int32_t;
 typedef signed short int16_t;
 typedef signed char int8_t;
 
+typedef uint32_t uintptr_t;
+
 #define INT8_MIN (-128)
 #define INT16_MIN (-32767-1)
 #define INT32_MIN (-2147483647-1)

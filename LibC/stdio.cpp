@@ -365,5 +365,11 @@ int fclose(FILE* stream)
     return rc;
 }
 
+int rename(const char* oldpath, const char* newpath)
+{
+    dbgprintf("FIXME(LibC): rename(%s, %s)\n", oldpath, newpath);
+    ASSERT_NOT_REACHED();
+}
+
 }
 

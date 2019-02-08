@@ -83,7 +83,10 @@ struct tm* localtime(const time_t* t)
     return &tm_buf;
 }
 
-long timezone = 0;
+long timezone;
+long altzone;
+char* tzname[2];
+int daylight;
 
 void tzset()
 {

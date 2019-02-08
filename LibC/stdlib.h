@@ -7,6 +7,7 @@ __BEGIN_DECLS
 
 #define EXIT_SUCCESS 0
 #define EXIT_FAILURE 1
+#define MB_CUR_MAX 1
 
 void* malloc(size_t) __MALLOC;
 void free(void*);
@@ -22,6 +23,8 @@ char* ptsname(int fd);
 int ptsname_r(int fd, char* buffer, size_t);
 int abs(int);
 int system(const char* command);
+char* mktemp(char*);
+void* bsearch(const void* key, const void* base, size_t nmemb, size_t size, int (*compar)(const void *, const void *));
 
 #define RAND_MAX 32767
 int rand();

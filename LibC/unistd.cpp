@@ -6,6 +6,7 @@
 #include <grp.h>
 #include <pwd.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <sys/ioctl.h>
 #include <sys/types.h>
 #include <Kernel/Syscall.h>
@@ -186,6 +187,10 @@ int chdir(const char* path)
 
 char* getcwd(char* buffer, size_t size)
 {
+    if (!buffer) {
+        size = size ? size : PATH_MAX;
+        buffer = (char*)malloc(size);
+    }
     int rc = syscall(SC_getcwd, buffer, size);
     __RETURN_WITH_ERRNO(rc, buffer, nullptr);
 }

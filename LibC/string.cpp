@@ -285,5 +285,15 @@ char* strstr(const char* haystack, const char* needle)
     return const_cast<char*>(haystack);
 }
 
+char* strpbrk(const char* s, const char* accept)
+{
+    while (*s)
+        if(strchr(accept, *s++))
+            return (char*)--s;
+    return nullptr;
+}
+
+
+
 }
 

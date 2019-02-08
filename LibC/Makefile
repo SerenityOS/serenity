@@ -44,6 +44,7 @@ LIBC_OBJS = \
        gui.o \
        sys/select.o \
        poll.o \
+       locale.o \
        entry.o
 
 ASM_OBJS = setjmp.no

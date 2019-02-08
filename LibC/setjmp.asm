@@ -3,7 +3,7 @@
 global setjmp
 setjmp:
     mov eax, [esp + 4]
-    mov [eax * 4], ebx
+    mov [eax + 0 * 4], ebx
     mov [eax + 1 * 4], esi
     mov [eax + 2 * 4], edi
     mov [eax + 3 * 4], ebp
@@ -18,7 +18,7 @@ global longjmp
 longjmp:
     mov edx, [esp + 4]
     mov eax, [esp + 8]
-    mov ebx, [edx * 4]
+    mov ebx, [edx + 0 * 4]
     mov esi, [edx + 1 * 4]
     mov edi, [edx + 2 * 4]
     mov ebp, [edx + 3 * 4]

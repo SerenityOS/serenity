@@ -1678,7 +1678,6 @@ bool Process::validate_write(void* address, size_t size) const
         if (check_kernel_memory_access(LinearAddress((dword)address), true))
             return true;
     }
-    ASSERT(size);
     if (!size)
         return false;
     LinearAddress first_address((dword)address);

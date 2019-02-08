@@ -28,6 +28,7 @@ size_t strspn(const char*, const char* accept);
 size_t strcspn(const char*, const char* reject);
 char* strerror(int errnum);
 char* strsignal(int signum);
+char* strpbrk(const char*, const char* accept);
 
 __END_DECLS
 

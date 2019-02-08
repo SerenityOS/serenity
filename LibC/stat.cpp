@@ -1,5 +1,7 @@
 #include <sys/stat.h>
 #include <errno.h>
+#include <assert.h>
+#include <stdio.h>
 #include <Kernel/Syscall.h>
 
 extern "C" {
@@ -19,6 +21,12 @@ int chmod(const char* pathname, mode_t mode)
 {
     int rc = syscall(SC_chmod, pathname, mode);
     __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
+int fchmod(int fd, mode_t mode)
+{
+    dbgprintf("FIXME(LibC): fchmod(%d, %o)\n", fd, mode);
+    ASSERT_NOT_REACHED();
 }
 
 }
