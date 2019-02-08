@@ -934,10 +934,10 @@ void Process::push_value_on_stack(dword value)
 void Process::crash()
 {
     ASSERT_INTERRUPTS_DISABLED();
-    ASSERT(is_ring3());
     ASSERT(state() != Dead);
     m_termination_signal = SIGSEGV;
     dump_regions();
+    ASSERT(is_ring3());
     die();
     ASSERT_NOT_REACHED();
 }
