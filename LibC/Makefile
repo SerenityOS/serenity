@@ -31,7 +31,6 @@ LIBC_OBJS = \
        grp.o \
        times.o \
        termcap.o \
-       setjmp.o \
        stat.o \
        mntent.o \
        ctype.o \
@@ -47,14 +46,16 @@ LIBC_OBJS = \
        poll.o \
        entry.o
 
-OBJS = $(AK_OBJS) $(WIDGETS_OBJS) $(LIBC_OBJS) $(SHAREDGRAPHICS_OBJS)
+ASM_OBJS = setjmp.no
+
+CPP_OBJS = $(AK_OBJS) $(WIDGETS_OBJS) $(LIBC_OBJS) $(SHAREDGRAPHICS_OBJS)
 
 LIBRARY = LibC.a
 ARCH_FLAGS =
 STANDARD_FLAGS = -std=c++17 -nostdinc++ -nostdlib -nostdinc
 LIBC_FLAGS = -ffreestanding -fno-stack-protector -fno-ident
 WARNING_FLAGS = -Wextra -Wall -Wundef -Wcast-qual -Wwrite-strings
-FLAVOR_FLAGS = -fomit-frame-pointer -mregparm=3 -march=i386 -m32 -fno-exceptions -fno-rtti -ffunction-sections -fdata-sections -fmerge-all-constants -fno-unroll-loops -fno-pie -fno-pic
+FLAVOR_FLAGS = -fomit-frame-pointer -march=i386 -m32 -fno-exceptions -fno-rtti -ffunction-sections -fdata-sections -fmerge-all-constants -fno-unroll-loops -fno-pie -fno-pic
 OPTIMIZATION_FLAGS = -O2 -fno-asynchronous-unwind-tables
 INCLUDE_FLAGS = -I.. -I.
 
@@ -68,14 +69,17 @@ LDFLAGS = -T linker.ld --strip-debug -melf_i386 --gc-sections
 
 all: $(LIBRARY)
 
-$(LIBRARY): $(OBJS)
-	@echo "LIB $@"; $(AR) rcs $@ $(OBJS)
+$(LIBRARY): $(CPP_OBJS) $(ASM_OBJS)
+	@echo "LIB $@"; $(AR) rcs $@ $(CPP_OBJS) $(ASM_OBJS)
 
 .cpp.o:
 	@echo "CXX $<"; $(CXX) $(CXXFLAGS) -o $@ -c $<
 
+%.no: %.asm
+	@echo "NASM $@"; nasm -f elf -o $@ $<
+
 -include $(OBJS:%.o=%.d)
 
 clean:
-	@echo "CLEAN"; rm -f $(LIBRARY) $(OBJS) *.d
+	@echo "CLEAN"; rm -f $(LIBRARY) $(CPP_OBJS) $(ASM_OBJS) *.d
 
