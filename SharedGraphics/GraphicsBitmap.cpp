@@ -69,8 +69,7 @@ RetainPtr<GraphicsBitmap> GraphicsBitmap::load_from_file(const String& path, con
         kprintf("Failed to load GraphicsBitmap from file (%s)\n", path.characters());
         ASSERT_NOT_REACHED();
     }
-    auto* region = current->allocate_file_backed_region(LinearAddress(), size.area() * 4, descriptor->inode(), ".rgb file", /*readable*/true, /*writable*/false);
-    region->page_in();
+    auto* region = WSMessageLoop::the().server_process().allocate_file_backed_region(LinearAddress(), size.area() * 4, descriptor->inode(), ".rgb file", /*readable*/true, /*writable*/false);
     auto* mapped_file = (RGBA32*)region->laddr().get();
 #endif
 
