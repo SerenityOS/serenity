@@ -105,6 +105,7 @@ private:
 
     RetainPtr<Font> m_font;
 
+    Lockable<String> m_wallpaper_path;
     RetainPtr<GraphicsBitmap> m_wallpaper;
 
     mutable Lock m_lock;

@@ -162,7 +162,18 @@ WSWindowManager::WSWindowManager()
     m_cursor_bitmap_inner = CharacterBitmap::create_from_ascii(cursor_bitmap_inner_ascii, 12, 17);
     m_cursor_bitmap_outer = CharacterBitmap::create_from_ascii(cursor_bitmap_outer_ascii, 12, 17);
 
+    {
+        LOCKER(m_wallpaper_path.lock());
+        m_wallpaper_path.resource() = "/res/wallpapers/gray-wood.rgb";
+        m_wallpaper = GraphicsBitmap::load_from_file(m_wallpaper_path.resource(), m_screen_rect.size());
+    }
+
     ProcFS::the().add_sys_bool("wm_flash_flush", &m_flash_flush);
+    ProcFS::the().add_sys_string("wm_wallpaper", m_wallpaper_path, [this] {
+        LOCKER(m_wallpaper_path.lock());
+        m_wallpaper = GraphicsBitmap::load_from_file(m_wallpaper_path.resource(), m_screen_rect.size());
+        invalidate(m_screen_rect);
+    });
 
     invalidate();
     compose();
@@ -426,14 +437,12 @@ void WSWindowManager::compose()
         return false;
     };
 
-    if (!m_wallpaper)
-        m_wallpaper = GraphicsBitmap::load_from_file("/res/wallpapers/gray-wood.rgb", { 1024, 768 });
-
     for (auto& dirty_rect : dirty_rects) {
         if (any_window_contains_rect(dirty_rect)) {
             continue;
         }
         //dbgprintf("Repaint root %d,%d %dx%d\n", dirty_rect.x(), dirty_rect.y(), dirty_rect.width(), dirty_rect.height());
+        LOCKER(m_wallpaper_path.lock());
         if (!m_wallpaper)
             m_back_painter->fill_rect(dirty_rect, m_background_color);
         else
