@@ -211,7 +211,7 @@ bool Scheduler::donate_to(Process* beneficiary, const char* reason)
         return yield();
     }
 
-    unsigned ticks_to_donate = ticks_left - 1;
+    unsigned ticks_to_donate = min(ticks_left - 1, time_slice_for(beneficiary->priority()));
 #ifdef SCHEDULER_DEBUG
     dbgprintf("%s(%u) donating %u ticks to %s(%u), reason=%s\n", current->name().characters(), current->pid(), ticks_to_donate, beneficiary->name().characters(), beneficiary->pid(), reason);
 #endif
