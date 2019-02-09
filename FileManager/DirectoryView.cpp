@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <SharedGraphics/GraphicsBitmap.h>
 #include <SharedGraphics/Painter.h>
+#include <LibGUI/GScrollBar.h>
 #include <AK/FileSystemPath.h>
 #include "DirectoryView.h"
 
@@ -14,10 +15,17 @@ DirectoryView::DirectoryView(GWidget* parent)
     m_directory_icon = GraphicsBitmap::load_from_file("/res/icons/folder16.rgb", { 16, 16 });
     m_file_icon = GraphicsBitmap::load_from_file("/res/icons/file16.rgb", { 16, 16 });
     m_symlink_icon = GraphicsBitmap::load_from_file("/res/icons/link16.rgb", { 16, 16 });
+
+    m_scrollbar = new GScrollBar(this);
 }
 
 DirectoryView::~DirectoryView()
 {
+}
+
+void DirectoryView::resize_event(GResizeEvent& event)
+{
+    m_scrollbar->set_relative_rect(event.size().width() - 16, 0, 16, event.size().height());
 }
 
 void DirectoryView::open(const String& path)
@@ -55,6 +63,7 @@ void DirectoryView::reload()
         entries.append(move(entry));
     }
     closedir(dirp);
+    m_scrollbar->set_range(0, item_count() - 1);
 }
 
 const GraphicsBitmap& DirectoryView::icon_for(const Entry& entry) const

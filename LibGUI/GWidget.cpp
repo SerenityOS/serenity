@@ -22,7 +22,10 @@ void GWidget::set_relative_rect(const Rect& rect)
 {
     if (rect == m_relative_rect)
         return;
-    // FIXME: Make some kind of event loop driven ResizeEvent?
+    if (m_relative_rect.size() != rect.size()) {
+        auto event = make<GResizeEvent>(m_relative_rect.size(), rect.size());
+        GEventLoop::main().post_event(this, move(event));
+    }
     m_relative_rect = rect;
     update();
 }
@@ -37,7 +40,9 @@ void GWidget::event(GEvent& event)
     switch (event.type()) {
     case GEvent::Paint:
         m_has_pending_paint_event = false;
-        return paint_event(static_cast<GPaintEvent&>(event));
+        return handle_paint_event(static_cast<GPaintEvent&>(event));
+    case GEvent::Resize:
+        return resize_event(static_cast<GResizeEvent&>(event));
     case GEvent::FocusIn:
         return focusin_event(event);
     case GEvent::FocusOut:
@@ -63,19 +68,31 @@ void GWidget::event(GEvent& event)
     }
 }
 
-void GWidget::paint_event(GPaintEvent& event)
+void GWidget::handle_paint_event(GPaintEvent& event)
 {
     if (fill_with_background_color()) {
         Painter painter(*this);
         painter.fill_rect(event.rect(), background_color());
     }
+    paint_event(event);
     for (auto* ch : children()) {
         auto* child = (GWidget*)ch;
         if (child->relative_rect().intersects(event.rect())) {
-            // FIXME: Pass localized rect?
-            child->event(event);
+            auto local_rect = event.rect();
+            local_rect.intersect(child->relative_rect());
+            local_rect.move_by(-child->relative_rect().x(), -child->relative_rect().y());
+            GPaintEvent local_event(local_rect);
+            child->event(local_event);
         }
     }
+}
+
+void GWidget::resize_event(GResizeEvent&)
+{
+}
+
+void GWidget::paint_event(GPaintEvent&)
+{
 }
 
 void GWidget::show_event(GShowEvent&)

@@ -14,6 +14,7 @@ LIBGUI_OBJS = \
     GListBox.o \
     GObject.o \
     GTextBox.o \
+    GScrollBar.o \
     GWidget.o \
     GWindow.o
 

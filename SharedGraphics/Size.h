@@ -24,6 +24,11 @@ public:
                m_height == other.m_height;
     }
 
+    bool operator!=(const Size& other) const
+    {
+        return !(*this == other);
+    }
+
     operator GUI_Size() const;
 
 private:
