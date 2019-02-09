@@ -139,7 +139,16 @@ void GWidget::update()
     if (m_has_pending_paint_event)
         return;
     m_has_pending_paint_event = true;
-    w->update(relative_rect());
+    w->update(window_relative_rect());
+}
+
+Rect GWidget::window_relative_rect() const
+{
+    auto rect = relative_rect();
+    for (auto* parent = parent_widget(); parent; parent = parent->parent_widget()) {
+        rect.move_by(parent->relative_position());
+    }
+    return rect;
 }
 
 GWidget::HitTestResult GWidget::hit_test(int x, int y)

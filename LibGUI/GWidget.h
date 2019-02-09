@@ -31,6 +31,8 @@ public:
     Rect relative_rect() const { return m_relative_rect; }
     Point relative_position() const { return m_relative_rect.location(); }
 
+    Rect window_relative_rect() const;
+
     int x() const { return m_relative_rect.x(); }
     int y() const { return m_relative_rect.y(); }
     int width() const { return m_relative_rect.width(); }
