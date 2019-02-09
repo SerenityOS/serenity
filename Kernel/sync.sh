@@ -8,6 +8,8 @@ mount -o loop _fs_contents mnt/
 mkdir -vp mnt/bin
 mkdir -vp mnt/etc
 mkdir -vp mnt/proc
+mkdir -vp mnt/tmp
+chmod 1777 mnt/tmp
 mkdir -vp mnt/dev
 mkdir -vp mnt/dev/pts
 mknod mnt/dev/tty0 c 4 0
@@ -54,13 +56,12 @@ cp -v ../Terminal/Terminal mnt/bin/Terminal
 cp -v ../FontEditor/FontEditor mnt/bin/FontEditor
 cp -v ../Launcher/Launcher mnt/bin/Launcher
 cp -v ../Clock/Clock mnt/bin/Clock
+cp -v ../FileManager/FileManager mnt/bin/FileManager
 cp -v ../Userland/pape mnt/bin/pape
 cp -v ../Userland/dmesg mnt/bin/dmesg
 cp -v ../Userland/chmod mnt/bin/chmod
 cp -v ../Userland/top mnt/bin/top
 cp -v kernel.map mnt/
-ln -s dir_a mnt/dir_cur
-ln -s nowhere mnt/bad_link
 sh sync-local.sh
 umount mnt
 sync

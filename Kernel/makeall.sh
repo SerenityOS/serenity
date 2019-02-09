@@ -16,6 +16,8 @@ make -C ../Clock clean && \
 make -C ../Clock && \
 make -C ../Launcher clean && \
 make -C ../Launcher && \
+make -C ../FileManager clean && \
+make -C ../FileManager && \
 make clean &&\
 make && \
 sudo ./sync.sh
