@@ -17,6 +17,11 @@ DirectoryView::DirectoryView(GWidget* parent)
     m_symlink_icon = GraphicsBitmap::load_from_file("/res/icons/link16.rgb", { 16, 16 });
 
     m_scrollbar = new GScrollBar(this);
+    m_scrollbar->set_step(4);
+    m_scrollbar->set_big_step(30);
+    m_scrollbar->on_change = [this] (int) {
+        update();
+    };
 }
 
 DirectoryView::~DirectoryView()
@@ -63,7 +68,8 @@ void DirectoryView::reload()
         entries.append(move(entry));
     }
     closedir(dirp);
-    m_scrollbar->set_range(0, item_count() - 1);
+    int excess_height = max(0, (item_count() * item_height()) - height());
+    m_scrollbar->set_range(0, excess_height);
 }
 
 const GraphicsBitmap& DirectoryView::icon_for(const Entry& entry) const
@@ -106,6 +112,8 @@ void DirectoryView::mousedown_event(GMouseEvent& event)
 void DirectoryView::paint_event(GPaintEvent&)
 {
     Painter painter(*this);
+
+    painter.translate(0, -m_scrollbar->value());
 
     int horizontal_padding = 5;
     int icon_size = 16;
