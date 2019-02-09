@@ -26,9 +26,12 @@ int closedir(DIR* dirp)
 {
     if (!dirp || dirp->fd == -1)
         return -EBADF;
+    if (dirp->buffer)
+        free(dirp->buffer);
     int rc = close(dirp->fd);
     if (rc == 0)
         dirp->fd = -1;
+    free(dirp);
     return rc;
 }
 
