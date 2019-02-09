@@ -162,7 +162,7 @@ void* Process::sys$mmap(const Syscall::SC_mmap_params* params)
     off_t offset = params->offset;
     if (size == 0)
         return (void*)-EINVAL;
-    if ((dword)addr & ~PAGE_MASK || size & ~PAGE_MASK)
+    if ((dword)addr & ~PAGE_MASK)
         return (void*)-EINVAL;
     if (flags & MAP_ANONYMOUS) {
         // FIXME: Implement mapping at a client-specified address. Most of the support is already in plcae.
