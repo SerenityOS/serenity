@@ -13,6 +13,7 @@ public:
         Show,
         Hide,
         Paint,
+        Resize,
         MouseMove,
         MouseDown,
         MouseUp,
@@ -60,6 +61,22 @@ public:
     const Rect& rect() const { return m_rect; }
 private:
     Rect m_rect;
+};
+
+class GResizeEvent final : public GEvent {
+public:
+    explicit GResizeEvent(const Size& old_size, const Size& size)
+        : GEvent(GEvent::Resize)
+        , m_old_size(old_size)
+        , m_size(size)
+    {
+    }
+
+    const Size& old_size() const { return m_old_size; }
+    const Size& size() const { return m_size; }
+private:
+    Size m_old_size;
+    Size m_size;
 };
 
 class GShowEvent final : public GEvent {

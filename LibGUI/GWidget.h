@@ -17,6 +17,7 @@ public:
 
     virtual void event(GEvent&) override;
     virtual void paint_event(GPaintEvent&);
+    virtual void resize_event(GResizeEvent&);
     virtual void show_event(GShowEvent&);
     virtual void hide_event(GHideEvent&);
     virtual void keydown_event(GKeyEvent&);
@@ -56,6 +57,7 @@ public:
     virtual const char* class_name() const override { return "GWidget"; }
 
     void set_relative_rect(const Rect&);
+    void set_relative_rect(int x, int y, int width, int height) { set_relative_rect({ x, y, width, height }); }
 
     void move_to(const Point& point) { set_relative_rect({ point, relative_rect().size() }); }
     void move_to(int x, int y) { move_to({ x, y }); }
@@ -97,6 +99,8 @@ public:
     bool global_cursor_tracking() const;
 
 private:
+    void handle_paint_event(GPaintEvent&);
+
     GWindow* m_window { nullptr };
 
     Rect m_relative_rect;

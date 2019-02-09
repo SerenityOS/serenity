@@ -1,5 +1,7 @@
 #pragma once
 
+#include <AK/AKString.h>
+
 class Rect;
 struct GUI_Point;
 
@@ -47,6 +49,7 @@ public:
     }
 
     operator GUI_Point() const;
+    String to_string() const { return String::format("[%d,%d]", x(), y()); }
 
 private:
     int m_x { 0 };

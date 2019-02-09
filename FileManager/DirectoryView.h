@@ -4,6 +4,8 @@
 #include <AK/Function.h>
 #include <sys/stat.h>
 
+class GScrollBar;
+
 class DirectoryView final : public GWidget {
 public:
     DirectoryView(GWidget* parent);
@@ -19,6 +21,7 @@ public:
 
 private:
     virtual void paint_event(GPaintEvent&) override;
+    virtual void resize_event(GResizeEvent&) override;
     virtual void mousedown_event(GMouseEvent&) override;
 
     Rect row_rect(int item_index) const;
@@ -47,4 +50,6 @@ private:
     RetainPtr<GraphicsBitmap> m_directory_icon;
     RetainPtr<GraphicsBitmap> m_file_icon;
     RetainPtr<GraphicsBitmap> m_symlink_icon;
+
+    GScrollBar* m_scrollbar { nullptr };
 };

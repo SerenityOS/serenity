@@ -2,6 +2,7 @@
 
 #include "Point.h"
 #include "Size.h"
+#include <AK/AKString.h>
 
 struct GUI_Rect;
 
@@ -170,6 +171,8 @@ public:
     }
 
     Rect united(const Rect&) const;
+
+    String to_string() const { return String::format("[%d,%d %dx%d]", x(), y(), width(), height()); }
 
 private:
     Point m_location;
