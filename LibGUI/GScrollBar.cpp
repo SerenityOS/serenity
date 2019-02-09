@@ -81,20 +81,16 @@ void GScrollBar::paint_event(GPaintEvent&)
 {
     Painter painter(*this);
 
-    painter.fill_rect(rect(), Color(0xc0c0c0));
+    painter.fill_rect(rect(), Color::MidGray);
 
     painter.draw_rect(up_button_rect(), Color::DarkGray, true);
-    painter.fill_rect(up_button_rect().shrunken(2, 2), Color::LightGray);
+    painter.fill_rect_with_gradient(up_button_rect().shrunken(2, 2), Color::LightGray, Color::White);
 
     painter.draw_rect(down_button_rect(), Color::DarkGray, true);
-    painter.fill_rect(down_button_rect().shrunken(2, 2), Color::LightGray);
+    painter.fill_rect_with_gradient(down_button_rect().shrunken(2, 2), Color::LightGray, Color::White);
 
-    painter.fill_rect(pgup_rect(), Color::Magenta);
-    painter.fill_rect(pgdn_rect(), Color::Yellow);
-
-    painter.fill_rect(scrubber_rect(), Color::Red);
-
-    dbgprintf("Paint!\n");
+    painter.draw_rect(scrubber_rect(), Color::White, true);
+    painter.fill_rect_with_gradient(scrubber_rect().shrunken(2, 2), Color::LightGray, Color::White);
 }
 
 void GScrollBar::mousedown_event(GMouseEvent& event)
