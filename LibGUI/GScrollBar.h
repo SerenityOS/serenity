@@ -18,6 +18,7 @@ public:
     void set_value(int value);
     void set_step(int step) { m_step = step; }
     void set_big_step(int big_step) { m_big_step = big_step; }
+    bool has_scrubber() const;
 
     Function<void(int)> on_change;
 

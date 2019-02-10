@@ -1,4 +1,5 @@
 #include <LibGUI/GScrollBar.h>
+#include <LibGUI/GStyle.h>
 #include <SharedGraphics/GraphicsBitmap.h>
 #include <SharedGraphics/Painter.h>
 
@@ -71,6 +72,11 @@ int GScrollBar::scrubbable_range_in_pixels() const
     return height() - button_size() * 3;
 }
 
+bool GScrollBar::has_scrubber() const
+{
+    return m_max != m_min;
+}
+
 Rect GScrollBar::scrubber_rect() const
 {
     int range_size = m_max - m_min;
@@ -122,16 +128,14 @@ void GScrollBar::paint_event(GPaintEvent&)
 
     painter.fill_rect(rect(), Color(164, 164, 164));
 
-    painter.draw_rect(up_button_rect(), Color::DarkGray, true);
-    painter.fill_rect_with_gradient(up_button_rect().shrunken(2, 2), Color::LightGray, Color::White);
+    GStyle::the().paint_button(painter, up_button_rect(), false);
     painter.draw_bitmap(up_button_rect().location().translated(3, 3), *s_up_arrow_bitmap, Color::Black);
 
-    painter.draw_rect(down_button_rect(), Color::DarkGray, true);
-    painter.fill_rect_with_gradient(down_button_rect().shrunken(2, 2), Color::LightGray, Color::White);
+    GStyle::the().paint_button(painter, down_button_rect(), false);
     painter.draw_bitmap(down_button_rect().location().translated(3, 3), *s_down_arrow_bitmap, Color::Black);
 
-    painter.draw_rect(scrubber_rect(), Color::White, true);
-    painter.fill_rect_with_gradient(scrubber_rect().shrunken(2, 2), Color::LightGray, Color::White);
+    if (has_scrubber())
+        GStyle::the().paint_button(painter, scrubber_rect(), m_scrubbing);
 }
 
 void GScrollBar::mousedown_event(GMouseEvent& event)
@@ -154,11 +158,12 @@ void GScrollBar::mousedown_event(GMouseEvent& event)
         set_value(value() + m_big_step);
         return;
     }
-    if (scrubber_rect().contains(event.position())) {
+    if (has_scrubber() && scrubber_rect().contains(event.position())) {
         m_scrubbing = true;
         m_scrub_start_value = value();
         m_scrub_origin = event.position();
         set_global_cursor_tracking(true);
+        update();
         return;
     }
 }
@@ -171,6 +176,7 @@ void GScrollBar::mouseup_event(GMouseEvent& event)
         return;
     m_scrubbing = false;
     set_global_cursor_tracking(false);
+    update();
 }
 
 void GScrollBar::mousemove_event(GMouseEvent& event)

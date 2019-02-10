@@ -16,6 +16,7 @@ LIBGUI_OBJS = \
     GTextBox.o \
     GScrollBar.o \
     GWidget.o \
+    GStyle.o \
     GWindow.o
 
 OBJS = $(SHAREDGRAPHICS_OBJS) $(LIBGUI_OBJS)
