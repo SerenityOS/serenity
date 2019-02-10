@@ -400,6 +400,7 @@ void Terminal::scroll_up()
         m_lines[row - 1] = m_lines[row];
     m_lines[m_rows - 1] = new Line(m_columns);
     ++m_rows_to_scroll_backing_store;
+    m_need_full_flush = true;
 }
 
 void Terminal::set_cursor(unsigned a_row, unsigned a_column)
@@ -659,7 +660,6 @@ void Terminal::paint_event(GPaintEvent&)
             painter.target()->scanline(second_scanline),
             scanlines_to_copy * m_pixel_width
         );
-        m_need_full_flush = true;
         line(max(0, m_cursor_row - m_rows_to_scroll_backing_store)).dirty = true;
     }
     m_rows_to_scroll_backing_store = 0;
