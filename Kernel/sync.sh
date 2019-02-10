@@ -52,15 +52,15 @@ cp -v ../Userland/cp mnt/bin/cp
 cp -v ../Userland/guitest mnt/bin/guitest
 cp -v ../Userland/guitest2 mnt/bin/guitest2
 cp -v ../Userland/sysctl mnt/bin/sysctl
-cp -v ../Terminal/Terminal mnt/bin/Terminal
-cp -v ../FontEditor/FontEditor mnt/bin/FontEditor
-cp -v ../Launcher/Launcher mnt/bin/Launcher
-cp -v ../Clock/Clock mnt/bin/Clock
-cp -v ../FileManager/FileManager mnt/bin/FileManager
 cp -v ../Userland/pape mnt/bin/pape
 cp -v ../Userland/dmesg mnt/bin/dmesg
 cp -v ../Userland/chmod mnt/bin/chmod
 cp -v ../Userland/top mnt/bin/top
+cp -v ../Applications/Terminal/Terminal mnt/bin/Terminal
+cp -v ../Applications/FontEditor/FontEditor mnt/bin/FontEditor
+cp -v ../Applications/Launcher/Launcher mnt/bin/Launcher
+cp -v ../Applications/Clock/Clock mnt/bin/Clock
+cp -v ../Applications/FileManager/FileManager mnt/bin/FileManager
 cp -v kernel.map mnt/
 sh sync-local.sh
 umount mnt

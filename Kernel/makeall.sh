@@ -8,16 +8,16 @@ make -C ../LibGUI clean && \
 make -C ../LibGUI && \
 make -C ../Userland clean && \
 make -C ../Userland && \
-make -C ../Terminal clean && \
-make -C ../Terminal && \
-make -C ../FontEditor clean && \
-make -C ../FontEditor && \
-make -C ../Clock clean && \
-make -C ../Clock && \
-make -C ../Launcher clean && \
-make -C ../Launcher && \
-make -C ../FileManager clean && \
-make -C ../FileManager && \
+make -C ../Application/Terminal clean && \
+make -C ../Application/Terminal && \
+make -C ../Application/FontEditor clean && \
+make -C ../Application/FontEditor && \
+make -C ../Application/Clock clean && \
+make -C ../Application/Clock && \
+make -C ../Application/Launcher clean && \
+make -C ../Application/Launcher && \
+make -C ../Application/FileManager clean && \
+make -C ../Application/FileManager && \
 make clean &&\
 make && \
 sudo ./sync.sh
