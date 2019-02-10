@@ -98,8 +98,10 @@ Rect DirectoryView::row_rect(int item_index) const
 
 void DirectoryView::mousedown_event(GMouseEvent& event)
 {
-    for (int i = 0; i < item_count(); ++i) {
-        if (row_rect(i).contains(event.position())) {
+    if (event.button() == GMouseButton::Left) {
+        for (int i = 0; i < item_count(); ++i) {
+            if (!row_rect(i).contains(event.position()))
+                continue;
             auto& entry = this->entry(i);
             if (entry.is_directory()) {
                 FileSystemPath new_path(String::format("%s/%s", m_path.characters(), entry.name.characters()));
