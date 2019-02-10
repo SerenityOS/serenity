@@ -2,6 +2,7 @@
 #include "GEvent.h"
 #include "GEventLoop.h"
 #include "GWindow.h"
+#include <LibGUI/GLayout.h>
 #include <AK/Assertions.h>
 #include <SharedGraphics/GraphicsBitmap.h>
 #include <SharedGraphics/Painter.h>
@@ -12,6 +13,9 @@ GWidget::GWidget(GWidget* parent)
     set_font(nullptr);
     m_background_color = Color::LightGray;
     m_foreground_color = Color::Black;
+
+    if (parent && parent->layout())
+        parent->layout()->add_widget(*this);
 }
 
 GWidget::~GWidget()
@@ -42,7 +46,7 @@ void GWidget::event(GEvent& event)
         m_has_pending_paint_event = false;
         return handle_paint_event(static_cast<GPaintEvent&>(event));
     case GEvent::Resize:
-        return resize_event(static_cast<GResizeEvent&>(event));
+        return handle_resize_event(static_cast<GResizeEvent&>(event));
     case GEvent::FocusIn:
         return focusin_event(event);
     case GEvent::FocusOut:
@@ -85,6 +89,41 @@ void GWidget::handle_paint_event(GPaintEvent& event)
             child->event(local_event);
         }
     }
+}
+
+void GWidget::set_layout(OwnPtr<GLayout>&& layout)
+{
+    if (m_layout.ptr() == layout.ptr())
+        return;
+    if (m_layout)
+        m_layout->notify_disowned(Badge<GWidget>(), *this);
+    m_layout = move(layout);
+    if (m_layout) {
+        m_layout->notify_adopted(Badge<GWidget>(), *this);
+        do_layout();
+    } else {
+        update();
+    }
+}
+
+void GWidget::do_layout()
+{
+    if (!m_layout)
+        return;
+    m_layout->run(*this);
+    update();
+}
+
+void GWidget::notify_layout_changed(Badge<GLayout>)
+{
+    do_layout();
+}
+
+void GWidget::handle_resize_event(GResizeEvent& event)
+{
+    if (layout())
+        do_layout();
+    return resize_event(event);
 }
 
 void GWidget::resize_event(GResizeEvent&)
@@ -215,4 +254,31 @@ bool GWidget::global_cursor_tracking() const
     if (!win)
         return false;
     return win->global_cursor_tracking_widget() == this;
+}
+
+void GWidget::set_preferred_size(const Size& size)
+{
+    if (m_preferred_size == size)
+        return;
+    m_preferred_size = size;
+    invalidate_layout();
+}
+
+void GWidget::set_size_policy(SizePolicy horizontal_policy, SizePolicy vertical_policy)
+{
+    if (m_horizontal_size_policy == horizontal_policy && m_vertical_size_policy == vertical_policy)
+        return;
+    m_horizontal_size_policy = horizontal_policy;
+    m_vertical_size_policy = vertical_policy;
+    invalidate_layout();
+}
+
+void GWidget::invalidate_layout()
+{
+    auto* w = window();
+    if (!w)
+        return;
+    if (!w->main_widget())
+        return;
+    w->main_widget()->do_layout();
 }

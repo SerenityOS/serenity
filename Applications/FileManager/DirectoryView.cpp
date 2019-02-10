@@ -53,6 +53,8 @@ void DirectoryView::reload()
     }
     m_directories.clear();
     m_files.clear();
+
+    size_t bytes_in_files = 0;
     while (auto* de = readdir(dirp)) {
         Entry entry;
         entry.name = de->d_name;
@@ -66,10 +68,21 @@ void DirectoryView::reload()
         entry.mode = st.st_mode;
         auto& entries = S_ISDIR(st.st_mode) ? m_directories : m_files;
         entries.append(move(entry));
+
+        if (S_ISREG(entry.mode))
+            bytes_in_files += st.st_size;
     }
     closedir(dirp);
     int excess_height = max(0, (item_count() * item_height()) - height());
     m_scrollbar->set_range(0, excess_height);
+
+
+
+    set_status_message(String::format("%d item%s (%u byte%s)",
+                                      item_count(),
+                                      item_count() != 1 ? "s" : "",
+                                      bytes_in_files,
+                                      bytes_in_files != 1 ? "s" : ""));
 }
 
 const GraphicsBitmap& DirectoryView::icon_for(const Entry& entry) const
@@ -128,7 +141,7 @@ void DirectoryView::paint_event(GPaintEvent&)
             Rect icon_rect(horizontal_padding, y, icon_size, item_height());
             Rect name_rect(icon_rect.right() + horizontal_padding, y, 100, item_height());
             Rect size_rect(name_rect.right() + horizontal_padding, y, 64, item_height());
-            painter.fill_rect(row_rect(painted_item_index), i % 2 ? Color::LightGray : Color::White);
+            painter.fill_rect(row_rect(painted_item_index), i % 2 ? Color(210, 210, 210) : Color::White);
             painter.blit_with_alpha(icon_rect.location(), icon_for(entry), { 0, 0, icon_size, icon_size });
             painter.draw_text(name_rect, entry.name, Painter::TextAlignment::CenterLeft, Color::Black);
             if (should_show_size_for(entry))
@@ -142,4 +155,10 @@ void DirectoryView::paint_event(GPaintEvent&)
     Rect unpainted_rect(0, painted_item_index * item_height(), width(), height());
     unpainted_rect.intersect(rect());
     painter.fill_rect(unpainted_rect, Color::White);
+}
+
+void DirectoryView::set_status_message(String&& message)
+{
+    if (on_status_message)
+        on_status_message(move(message));
 }
