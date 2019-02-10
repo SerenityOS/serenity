@@ -24,19 +24,25 @@ public:
 private:
     virtual void paint_event(GPaintEvent&) override;
     virtual void mousedown_event(GMouseEvent&) override;
+    virtual void mouseup_event(GMouseEvent&) override;
+    virtual void mousemove_event(GMouseEvent&) override;
     virtual const char* class_name() const override { return "GScrollBar"; }
 
     int button_size() const { return 16; }
     Rect up_button_rect() const;
     Rect down_button_rect() const;
-    Rect pgup_rect() const;
-    Rect pgdn_rect() const;
+    Rect upper_gutter_rect() const;
+    Rect lower_gutter_rect() const;
     Rect scrubber_rect() const;
+    int scrubbable_range_in_pixels() const;
 
     int m_min { 0 };
     int m_max { 0 };
     int m_value { 0 };
     int m_step { 1 };
     int m_big_step { 5 };
-};
 
+    bool m_scrubbing { false };
+    int m_scrub_start_value { 0 };
+    Point m_scrub_origin;
+};
