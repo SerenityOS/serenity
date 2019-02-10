@@ -38,7 +38,6 @@ void GWidget::event(GEvent& event)
 {
     switch (event.type()) {
     case GEvent::Paint:
-        m_pending_paint_event_rects.clear();
         return handle_paint_event(static_cast<GPaintEvent&>(event));
     case GEvent::Resize:
         return handle_resize_event(static_cast<GResizeEvent&>(event));
@@ -175,11 +174,6 @@ void GWidget::update(const Rect& rect)
     auto* w = window();
     if (!w)
         return;
-    for (auto& pending_rect : m_pending_paint_event_rects) {
-        if (pending_rect.contains(rect))
-            return;
-    }
-    m_pending_paint_event_rects.append(rect);
     w->update(rect.translated(window_relative_rect().location()));
 }
 
