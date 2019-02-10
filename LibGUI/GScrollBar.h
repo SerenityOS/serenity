@@ -5,8 +5,10 @@
 
 class GScrollBar final : public GWidget {
 public:
-    explicit GScrollBar(GWidget* parent);
+    explicit GScrollBar(Orientation, GWidget* parent);
     virtual ~GScrollBar() override;
+
+    Orientation orientation() const { return m_orientation; }
 
     int value() const { return m_value; }
     int min() const { return m_min; }
@@ -29,7 +31,7 @@ private:
     virtual void mousemove_event(GMouseEvent&) override;
     virtual const char* class_name() const override { return "GScrollBar"; }
 
-    int button_size() const { return 16; }
+    int button_size() const { return orientation() == Orientation::Vertical ? width() : height(); }
     Rect up_button_rect() const;
     Rect down_button_rect() const;
     Rect upper_gutter_rect() const;
@@ -46,4 +48,6 @@ private:
     bool m_scrubbing { false };
     int m_scrub_start_value { 0 };
     Point m_scrub_origin;
+
+    Orientation m_orientation { Orientation::Vertical };
 };

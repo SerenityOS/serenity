@@ -16,7 +16,7 @@ DirectoryView::DirectoryView(GWidget* parent)
     m_file_icon = GraphicsBitmap::load_from_file("/res/icons/file16.rgb", { 16, 16 });
     m_symlink_icon = GraphicsBitmap::load_from_file("/res/icons/link16.rgb", { 16, 16 });
 
-    m_scrollbar = new GScrollBar(this);
+    m_scrollbar = new GScrollBar(Orientation::Vertical, this);
     m_scrollbar->set_step(4);
     m_scrollbar->set_big_step(30);
     m_scrollbar->on_change = [this] (int) {
@@ -30,7 +30,7 @@ DirectoryView::~DirectoryView()
 
 void DirectoryView::resize_event(GResizeEvent& event)
 {
-    m_scrollbar->set_relative_rect(event.size().width() - 16, 0, 16, event.size().height());
+    m_scrollbar->set_relative_rect(event.size().width() - m_scrollbar->preferred_size().width(), 0, m_scrollbar->preferred_size().width(), event.size().height());
 }
 
 void DirectoryView::open(const String& path)
