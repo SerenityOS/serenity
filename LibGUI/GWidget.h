@@ -136,7 +136,5 @@ private:
     SizePolicy m_vertical_size_policy { SizePolicy::Fill };
     Size m_preferred_size;
 
-    Vector<Rect> m_pending_paint_event_rects;
-
     bool m_fill_with_background_color { true };
 };

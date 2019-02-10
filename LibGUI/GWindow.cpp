@@ -147,6 +147,7 @@ void GWindow::event(GEvent& event)
     }
 
     if (event.is_paint_event()) {
+        m_pending_paint_event_rects.clear();
         if (!m_main_widget)
             return;
         auto& paint_event = static_cast<GPaintEvent&>(event);
@@ -196,6 +197,14 @@ void GWindow::update(const Rect& a_rect)
 {
     if (!m_window_id)
         return;
+    for (auto& pending_rect : m_pending_paint_event_rects) {
+        if (pending_rect.contains(a_rect)) {
+            dbgprintf("Ignoring %s since it's contained by pending rect %s\n", a_rect.to_string().characters(), pending_rect.to_string().characters());
+            return;
+        }
+    }
+    m_pending_paint_event_rects.append(a_rect);
+
     GUI_Rect rect = a_rect;
     int rc = gui_invalidate_window(m_window_id, a_rect.is_null() ? nullptr : &rect);
     ASSERT(rc == 0);

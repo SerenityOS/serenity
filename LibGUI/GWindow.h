@@ -69,6 +69,7 @@ private:
     WeakPtr<GWidget> m_global_cursor_tracking_widget;
     Rect m_rect_when_windowless;
     String m_title_when_windowless;
+    Vector<Rect> m_pending_paint_event_rects;
     bool m_should_exit_app_on_close { false };
 };
 
