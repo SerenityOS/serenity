@@ -4,41 +4,46 @@
 #include <SharedGraphics/Painter.h>
 
 static const char* s_up_arrow_bitmap_data = {
-    "          "
-    "          "
-    "    ##    "
-    "   ####   "
-    "  ######  "
-    " ######## "
-    "    ##    "
-    "    ##    "
-    "    ##    "
-    "          "
+    "         "
+    "    #    "
+    "   ###   "
+    "  #####  "
+    " ####### "
+    "   ###   "
+    "   ###   "
+    "   ###   "
+    "         "
 };
 
 static const char* s_down_arrow_bitmap_data = {
-    "          "
-    "    ##    "
-    "    ##    "
-    "    ##    "
-    " ######## "
-    "  ######  "
-    "   ####   "
-    "    ##    "
-    "          "
-    "          "
+    "         "
+    "   ###   "
+    "   ###   "
+    "   ###   "
+    " ####### "
+    "  #####  "
+    "   ###   "
+    "    #    "
+    "         "
 };
 
 static CharacterBitmap* s_up_arrow_bitmap;
 static CharacterBitmap* s_down_arrow_bitmap;
 
-GScrollBar::GScrollBar(GWidget* parent)
+GScrollBar::GScrollBar(Orientation orientation, GWidget* parent)
     : GWidget(parent)
+    , m_orientation(orientation)
 {
     if (!s_up_arrow_bitmap)
-        s_up_arrow_bitmap = CharacterBitmap::create_from_ascii(s_up_arrow_bitmap_data, 10, 10).leak_ref();
+        s_up_arrow_bitmap = CharacterBitmap::create_from_ascii(s_up_arrow_bitmap_data, 9, 9).leak_ref();
     if (!s_down_arrow_bitmap)
-        s_down_arrow_bitmap = CharacterBitmap::create_from_ascii(s_down_arrow_bitmap_data, 10, 10).leak_ref();
+        s_down_arrow_bitmap = CharacterBitmap::create_from_ascii(s_down_arrow_bitmap_data, 9, 9).leak_ref();
+
+    if (m_orientation == Orientation::Vertical) {
+        set_preferred_size({ 15, 0 });
+    } else {
+        set_preferred_size({ 0, 15 });
+    }
 }
 
 GScrollBar::~GScrollBar()
