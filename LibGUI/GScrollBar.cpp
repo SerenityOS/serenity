@@ -129,10 +129,10 @@ void GScrollBar::paint_event(GPaintEvent&)
     painter.fill_rect(rect(), Color(164, 164, 164));
 
     GStyle::the().paint_button(painter, up_button_rect(), false);
-    painter.draw_bitmap(up_button_rect().location().translated(3, 3), *s_up_arrow_bitmap, Color::Black);
+    painter.draw_bitmap(up_button_rect().location().translated(3, 3), *s_up_arrow_bitmap, has_scrubber() ? Color::Black : Color::MidGray);
 
     GStyle::the().paint_button(painter, down_button_rect(), false);
-    painter.draw_bitmap(down_button_rect().location().translated(3, 3), *s_down_arrow_bitmap, Color::Black);
+    painter.draw_bitmap(down_button_rect().location().translated(3, 3), *s_down_arrow_bitmap, has_scrubber() ? Color::Black : Color::MidGray);
 
     if (has_scrubber())
         GStyle::the().paint_button(painter, scrubber_rect(), m_scrubbing);
