@@ -77,17 +77,53 @@ Rect GScrollBar::scrubber_rect() const
     return { 0, (int)y, button_size(), button_size() };
 }
 
+static const char* s_up_arrow_bitmap_data = {
+    "          "
+    "          "
+    "    ##    "
+    "   ####   "
+    "  ######  "
+    " ######## "
+    "    ##    "
+    "    ##    "
+    "    ##    "
+    "          "
+};
+
+static const char* s_down_arrow_bitmap_data = {
+    "          "
+    "    ##    "
+    "    ##    "
+    "    ##    "
+    " ######## "
+    "  ######  "
+    "   ####   "
+    "    ##    "
+    "          "
+    "          "
+};
+
+static CharacterBitmap* s_up_arrow_bitmap;
+static CharacterBitmap* s_down_arrow_bitmap;
+
 void GScrollBar::paint_event(GPaintEvent&)
 {
+    if (!s_up_arrow_bitmap)
+        s_up_arrow_bitmap = CharacterBitmap::create_from_ascii(s_up_arrow_bitmap_data, 10, 10).leak_ref();
+    if (!s_down_arrow_bitmap)
+        s_down_arrow_bitmap = CharacterBitmap::create_from_ascii(s_down_arrow_bitmap_data, 10, 10).leak_ref();
+
     Painter painter(*this);
 
     painter.fill_rect(rect(), Color::MidGray);
 
     painter.draw_rect(up_button_rect(), Color::DarkGray, true);
     painter.fill_rect_with_gradient(up_button_rect().shrunken(2, 2), Color::LightGray, Color::White);
+    painter.draw_bitmap(up_button_rect().location().translated(3, 3), *s_up_arrow_bitmap, Color::Black);
 
     painter.draw_rect(down_button_rect(), Color::DarkGray, true);
     painter.fill_rect_with_gradient(down_button_rect().shrunken(2, 2), Color::LightGray, Color::White);
+    painter.draw_bitmap(down_button_rect().location().translated(3, 3), *s_down_arrow_bitmap, Color::Black);
 
     painter.draw_rect(scrubber_rect(), Color::White, true);
     painter.fill_rect_with_gradient(scrubber_rect().shrunken(2, 2), Color::LightGray, Color::White);
