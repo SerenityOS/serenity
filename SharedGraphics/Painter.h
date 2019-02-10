@@ -50,6 +50,7 @@ public:
     Rect clip_rect() const { return m_clip_rect; }
 
     void translate(int dx, int dy) { m_translation.move_by(dx, dy); }
+    void translate(const Point& delta) { m_translation.move_by(delta); }
 
 private:
     void set_pixel_with_draw_op(dword& pixel, const Color&);

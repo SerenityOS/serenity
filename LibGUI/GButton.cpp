@@ -1,5 +1,6 @@
 #include "GButton.h"
 #include <SharedGraphics/Painter.h>
+#include <LibGUI/GStyle.h>
 
 //#define GBUTTON_DEBUG
 
@@ -23,37 +24,9 @@ void GButton::set_caption(String&& caption)
 
 void GButton::paint_event(GPaintEvent&)
 {
-    Color button_color = Color::LightGray;
-    Color highlight_color = Color::White;
-    Color shadow_color = Color(96, 96, 96);
-
     Painter painter(*this);
-    painter.draw_rect(rect(), Color::Black, true);
 
-    if (m_being_pressed) {
-        // Base
-        painter.fill_rect(rect().shrunken(2, 2), button_color);
-
-        // Sunken shadow
-        painter.draw_line({ 1, 1 }, { width() - 2, 1 }, shadow_color);
-        painter.draw_line({ 1, 2 }, {1, height() - 2 }, shadow_color);
-    } else {
-        // Base
-        painter.fill_rect({ 3, 3, width() - 5, height() - 5 }, button_color);
-        painter.fill_rect_with_gradient({ 3, 3, width() - 5, height() - 5 }, button_color, Color::White);
-
-        // White highlight
-        painter.draw_line({ 1, 1 }, { width() - 2, 1 }, highlight_color);
-        painter.draw_line({ 1, 2 }, { width() - 3, 2 }, highlight_color);
-        painter.draw_line({ 1, 3 }, { 1, height() - 2 }, highlight_color);
-        painter.draw_line({ 2, 3 }, { 2, height() - 3 }, highlight_color);
-
-        // Gray shadow 
-        painter.draw_line({ width() - 2, 1 }, { width() - 2, height() - 4 }, shadow_color);
-        painter.draw_line({ width() - 3, 2 }, { width() - 3, height() - 4 }, shadow_color);
-        painter.draw_line({ 1, height() - 2 }, { width() - 2, height() - 2 }, shadow_color);
-        painter.draw_line({ 2, height() - 3 }, { width() - 2, height() - 3 }, shadow_color);
-    }
+    GStyle::the().paint_button(painter, rect(), m_being_pressed);
 
     if (!caption().is_empty() || m_icon) {
         auto content_rect = rect();

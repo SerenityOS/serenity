@@ -28,7 +28,7 @@ public:
         move_by(delta.x(), delta.y());
     }
 
-    Point translated(int dx, int dy)
+    Point translated(int dx, int dy) const
     {
         Point point = *this;
         point.move_by(dx, dy);

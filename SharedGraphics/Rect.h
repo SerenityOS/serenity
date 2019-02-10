@@ -68,21 +68,21 @@ public:
         set_height(height() - h);
     }
 
-    Rect shrunken(int w, int h)
+    Rect shrunken(int w, int h) const
     {
         Rect rect = *this;
         rect.shrink(w, h);
         return rect;
     }
 
-    Rect inflated(int w, int h)
+    Rect inflated(int w, int h) const
     {
         Rect rect = *this;
         rect.inflate(w, h);
         return rect;
     }
 
-    Rect translated(int dx, int dy)
+    Rect translated(int dx, int dy) const
     {
         Rect rect = *this;
         rect.move_by(dx, dy);
