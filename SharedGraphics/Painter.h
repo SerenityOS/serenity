@@ -52,6 +52,8 @@ public:
     void translate(int dx, int dy) { m_translation.move_by(dx, dy); }
     void translate(const Point& delta) { m_translation.move_by(delta); }
 
+    GraphicsBitmap* target() { return m_target.ptr(); }
+
 private:
     void set_pixel_with_draw_op(dword& pixel, const Color&);
     void fill_rect_with_draw_op(const Rect&, Color);

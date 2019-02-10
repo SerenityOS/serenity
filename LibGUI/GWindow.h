@@ -26,6 +26,7 @@ public:
     int height() const { return rect().height(); }
 
     Rect rect() const;
+    Size size() const { return rect().size(); }
     void set_rect(const Rect&);
     void set_rect(int x, int y, int width, int height) { set_rect({ x, y, width, height }); }
 
@@ -58,6 +59,8 @@ public:
     void set_should_exit_app_on_close(bool b) { m_should_exit_app_on_close = b; }
 
 private:
+    virtual const char* class_name() const override { return "GWindow"; }
+
     RetainPtr<GraphicsBitmap> m_backing;
     int m_window_id { 0 };
     bool m_is_active { false };

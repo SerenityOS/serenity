@@ -23,7 +23,7 @@ LDFLAGS = -static --strip-debug -melf_i386 -e _start --gc-sections
 all: $(APP)
 
 $(APP): $(OBJS)
-	$(LD) -o $(APP) $(LDFLAGS) $(OBJS) ../../LibC/LibC.a
+	$(LD) -o $(APP) $(LDFLAGS) $(OBJS) ../../LibGUI/LibGUI.a ../../LibC/LibC.a
 
 .cpp.o:
 	@echo "CXX $<"; $(CXX) $(CXXFLAGS) -o $@ -c $<

@@ -5,14 +5,15 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <assert.h>
-#include <SharedGraphics/Font.h>
-#include <SharedGraphics/GraphicsBitmap.h>
-#include <SharedGraphics/Painter.h>
 #include <sys/ioctl.h>
 #include <sys/select.h>
 #include <LibC/gui.h>
 #include "Terminal.h"
 #include <Kernel/KeyCode.h>
+#include <LibGUI/GEventLoop.h>
+#include <LibGUI/GNotifier.h>
+#include <LibGUI/GWidget.h>
+#include <LibGUI/GWindow.h>
 
 static void make_shell(int ptm_fd)
 {
@@ -52,11 +53,6 @@ static void make_shell(int ptm_fd)
     }
 }
 
-static int max(int a, int b)
-{
-    return a > b ? a : b;
-}
-
 int main(int, char**)
 {
     int ptm_fd = open("/dev/ptmx", O_RDWR);
@@ -67,16 +63,39 @@ int main(int, char**)
 
     make_shell(ptm_fd);
 
-    int event_fd = open("/dev/gui_events", O_RDONLY);
-    if (event_fd < 0) {
-        perror("open");
-        return 1;
-    }
+    GEventLoop loop;
 
-    Terminal terminal;
-    terminal.create_window();
-    terminal.update();
+    auto* window = new GWindow;
+    window->set_should_exit_app_on_close(true);
 
+    Terminal terminal(ptm_fd);
+    window->set_main_widget(&terminal);
+
+    GNotifier ptm_notifier(ptm_fd, GNotifier::Read);
+    ptm_notifier.on_ready_to_read = [&terminal] (GNotifier& notifier) {
+        byte buffer[BUFSIZ];
+        ssize_t nread = read(notifier.fd(), buffer, sizeof(buffer));
+        if (nread < 0) {
+            dbgprintf("Terminal read error: %s\n", strerror(errno));
+            perror("read(ptm)");
+            GEventLoop::main().exit(1);
+            return;
+        }
+        if (nread == 0) {
+            dbgprintf("Terminal: EOF on master pty, closing.\n");
+            GEventLoop::main().exit(0);
+            return;
+        }
+        for (ssize_t i = 0; i < nread; ++i)
+            terminal.on_char(buffer[i]);
+        terminal.flush_dirty_lines();
+    };
+
+    window->show();
+
+    return loop.exec();
+
+#if 0
     for (;;) {
         fd_set rfds;
         FD_ZERO(&rfds);
@@ -112,11 +131,12 @@ int main(int, char**)
                 perror("read(event)");
                 return 1;
             }
+
             assert(nread != 0);
             assert(nread == sizeof(event));
 
             if (event.type == GUI_Event::Type::Paint) {
-                terminal.paint();
+                terminal.update();
             } else if (event.type == GUI_Event::Type::KeyDown) {
                 char ch = event.key.character;
                 if (event.key.ctrl) {
@@ -151,5 +171,6 @@ int main(int, char**)
             }
         }
     }
+#endif
     return 0;
 }

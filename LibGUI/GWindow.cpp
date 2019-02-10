@@ -163,13 +163,17 @@ void GWindow::event(GEvent& event)
     }
 
     if (event.is_key_event()) {
-        if (!m_focused_widget)
-            return;
-        return m_focused_widget->event(event);
+        if (m_focused_widget)
+            return m_focused_widget->event(event);
+        if (m_main_widget)
+            return m_main_widget->event(event);
+        return;
     }
 
     if (event.type() == GEvent::WindowBecameActive || event.type() == GEvent::WindowBecameInactive) {
         m_is_active = event.type() == GEvent::WindowBecameActive;
+        if (m_main_widget)
+            m_main_widget->event(event);
         if (m_focused_widget)
             m_focused_widget->update();
         return;
@@ -202,9 +206,18 @@ void GWindow::set_main_widget(GWidget* widget)
     if (m_main_widget == widget)
         return;
     m_main_widget = widget;
-    m_main_widget->set_relative_rect({ 0, 0, width(), height() });
-    if (widget)
-        widget->set_window(this);
+    if (m_main_widget) {
+        auto new_window_rect = rect();
+        if (m_main_widget->horizontal_size_policy() == SizePolicy::Fixed)
+            new_window_rect.set_width(m_main_widget->preferred_size().width());
+        if (m_main_widget->vertical_size_policy() == SizePolicy::Fixed)
+            new_window_rect.set_height(m_main_widget->preferred_size().height());
+        set_rect(new_window_rect);
+        m_main_widget->set_relative_rect({ { }, new_window_rect.size() });
+        m_main_widget->set_window(this);
+        if (m_main_widget->accepts_focus())
+            m_main_widget->set_focus(true);
+    }
     update();
 }
 

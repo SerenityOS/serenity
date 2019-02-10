@@ -13,6 +13,7 @@ LIBGUI_OBJS = \
     GLabel.o \
     GListBox.o \
     GObject.o \
+    GNotifier.o \
     GTextBox.o \
     GScrollBar.o \
     GStatusBar.o \

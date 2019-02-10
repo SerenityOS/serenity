@@ -1,11 +1,13 @@
 #pragma once
 
 #include "GEvent.h"
+#include <AK/Badge.h>
 #include <AK/HashMap.h>
 #include <AK/OwnPtr.h>
 #include <AK/Vector.h>
 
 class GObject;
+class GNotifier;
 class GWindow;
 struct GUI_Event;
 
@@ -26,6 +28,9 @@ public:
 
     int register_timer(GObject&, int milliseconds, bool should_reload);
     bool unregister_timer(int timer_id);
+
+    void register_notifier(Badge<GNotifier>, GNotifier&);
+    void unregister_notifier(Badge<GNotifier>, GNotifier&);
 
     void exit(int);
 
@@ -64,4 +69,5 @@ private:
     };
 
     HashMap<int, OwnPtr<EventLoopTimer>> m_timers;
+    HashTable<GNotifier*> m_notifiers;
 };

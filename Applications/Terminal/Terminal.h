@@ -5,31 +5,33 @@
 #include <AK/Vector.h>
 #include <SharedGraphics/GraphicsBitmap.h>
 #include <SharedGraphics/Rect.h>
+#include <LibGUI/GWidget.h>
 
 class Font;
 
-class Terminal {
+class Terminal final : public GWidget {
 public:
-    Terminal();
-    ~Terminal();
+    explicit Terminal(int ptm_fd);
+    virtual ~Terminal() override;
 
     void create_window();
-    void paint();
     void on_char(byte);
 
-    void set_in_active_window(bool);
-    void update();
+    void flush_dirty_lines();
 
 private:
+    virtual void event(GEvent&) override;
+    virtual void paint_event(GPaintEvent&) override;
+    virtual void keydown_event(GKeyEvent&) override;
+    virtual const char* class_name() const override { return "Terminal"; }
+
     Font& font() { return *m_font; }
     void scroll_up();
     void newline();
     void set_cursor(unsigned row, unsigned column);
     void put_character_at(unsigned row, unsigned column, byte ch);
     void invalidate_cursor();
-    void did_paint(const Rect& = Rect());
-    void invalidate_window(const Rect& = Rect());
-    void set_window_title(const String&);
+    void set_window_title(String&&);
 
     void inject_string(const String&);
     void unimplemented_escape();
@@ -83,7 +85,6 @@ private:
         bool has_only_one_background_color() const;
         byte* characters { nullptr };
         Attribute* attributes { nullptr };
-        bool did_paint { false };
         bool dirty { false };
         word length { 0 };
     };
@@ -125,9 +126,6 @@ private:
     byte* m_horizontal_tabs { nullptr };
     bool m_belling { false };
 
-    int m_window_id { 0 };
-    RetainPtr<GraphicsBitmap> m_backing;
-
     int m_pixel_width { 0 };
     int m_pixel_height { 0 };
     int m_rows_to_scroll_backing_store { 0 };
@@ -136,8 +134,10 @@ private:
     int m_line_spacing { 4 };
     int m_line_height { 0 };
 
+    int m_ptm_fd { -1 };
+
     bool m_in_active_window { false };
-    bool m_need_full_invalidation { false };
+    bool m_need_full_flush { false };
 
     RetainPtr<Font> m_font;
 };

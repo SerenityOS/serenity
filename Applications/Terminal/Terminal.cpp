@@ -8,40 +8,17 @@
 #include <LibC/stdlib.h>
 #include <LibC/unistd.h>
 #include <LibC/stdio.h>
-#include <LibC/gui.h>
+#include <LibGUI/GWindow.h>
+#include <Kernel/KeyCode.h>
 
 //#define TERMINAL_DEBUG
 
-void Terminal::create_window()
+Terminal::Terminal(int ptm_fd)
+    : m_ptm_fd(ptm_fd)
+    , m_font(Font::default_font())
 {
-    m_pixel_width = m_columns * font().glyph_width() + m_inset * 2;
-    m_pixel_height = (m_rows * (font().glyph_height() + m_line_spacing)) + (m_inset * 2) - m_line_spacing;
+    set_fill_with_background_color(false);
 
-    GUI_WindowParameters params;
-    params.rect = { { 300, 300 }, { m_pixel_width, m_pixel_height } };
-    params.background_color = 0x000000;
-    strcpy(params.title, "Terminal");
-    m_window_id = gui_create_window(&params);
-    ASSERT(m_window_id > 0);
-    if (m_window_id < 0) {
-        perror("gui_create_window");
-        exit(1);
-    }
-
-    // NOTE: We never release the backing store.
-    GUI_WindowBackingStoreInfo info;
-    int rc = gui_get_window_backing_store(m_window_id, &info);
-    if (rc < 0) {
-        perror("gui_get_window_backing_store");
-        exit(1);
-    }
-
-    m_backing = GraphicsBitmap::create_wrapper(info.size, info.pixels);
-}
-
-Terminal::Terminal()
-    : m_font(Font::default_font())
-{
     m_line_height = font().glyph_height() + m_line_spacing;
 
     set_size(80, 25);
@@ -54,6 +31,12 @@ Terminal::Terminal()
     m_lines = new Line*[rows()];
     for (size_t i = 0; i < rows(); ++i)
         m_lines[i] = new Line(columns());
+
+    m_pixel_width = m_columns * font().glyph_width() + m_inset * 2;
+    m_pixel_height = (m_rows * (font().glyph_height() + m_line_spacing)) + (m_inset * 2) - m_line_spacing;
+
+    set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
+    set_preferred_size({ m_pixel_width, m_pixel_height });
 }
 
 Terminal::Line::Line(word columns)
@@ -61,7 +44,6 @@ Terminal::Line::Line(word columns)
 {
     characters = new byte[length];
     attributes = new Attribute[length];
-    did_paint = false;
     memset(characters, ' ', length);
 }
 
@@ -623,13 +605,49 @@ bool Terminal::Line::has_only_one_background_color() const
     return true;
 }
 
-void Terminal::paint()
+void Terminal::event(GEvent& event)
+{
+    if (event.type() == GEvent::WindowBecameActive || event.type() == GEvent::WindowBecameInactive) {
+        m_in_active_window = event.type() == GEvent::WindowBecameActive;
+        invalidate_cursor();
+        update();
+    }
+    return GWidget::event(event);
+}
+
+void Terminal::keydown_event(GKeyEvent& event)
+{
+    char ch = !event.text().is_empty() ? event.text()[0] : 0;
+    if (event.ctrl()) {
+        if (ch >= 'a' && ch <= 'z') {
+            ch = ch - 'a' + 1;
+        } else if (ch == '\\') {
+            ch = 0x1c;
+        }
+    }
+    switch (event.key()) {
+    case KeyCode::Key_Up:
+        write(m_ptm_fd, "\033[A", 3);
+        break;
+    case KeyCode::Key_Down:
+        write(m_ptm_fd, "\033[B", 3);
+        break;
+    case KeyCode::Key_Right:
+        write(m_ptm_fd, "\033[C", 3);
+        break;
+    case KeyCode::Key_Left:
+        write(m_ptm_fd, "\033[D", 3);
+        break;
+    default:
+        write(m_ptm_fd, &ch, 1);
+        break;
+    }
+}
+
+void Terminal::paint_event(GPaintEvent&)
 {
     Rect rect { 0, 0, m_pixel_width, m_pixel_height };
-    Painter painter(*m_backing);
-
-    for (size_t i = 0; i < rows(); ++i)
-        line(i).did_paint = false;
+    Painter painter(*this);
 
     if (m_rows_to_scroll_backing_store && m_rows_to_scroll_backing_store < m_rows) {
         int first_scanline = m_inset;
@@ -637,11 +655,11 @@ void Terminal::paint()
         int num_rows_to_memcpy = m_rows - m_rows_to_scroll_backing_store;
         int scanlines_to_copy = (num_rows_to_memcpy * m_line_height) - m_line_spacing;
         fast_dword_copy(
-            m_backing->scanline(first_scanline),
-            m_backing->scanline(second_scanline),
+            painter.target()->scanline(first_scanline),
+            painter.target()->scanline(second_scanline),
             scanlines_to_copy * m_pixel_width
         );
-        m_need_full_invalidation = true;
+        m_need_full_flush = true;
         line(max(0, m_cursor_row - m_rows_to_scroll_backing_store)).dirty = true;
     }
     m_rows_to_scroll_backing_store = 0;
@@ -660,7 +678,6 @@ void Terminal::paint()
         for (word column = 0; column < m_columns; ++column) {
             bool should_reverse_fill_for_cursor = m_in_active_window && row == m_cursor_row && column == m_cursor_column;
             auto& attribute = line.attributes[column];
-            line.did_paint = true;
             char ch = line.characters[column];
             auto character_rect = glyph_rect(row, column);
             if (!has_only_one_background_color || should_reverse_fill_for_cursor) {
@@ -678,71 +695,34 @@ void Terminal::paint()
         painter.draw_rect(cell_rect, lookup_color(line(m_cursor_row).attributes[m_cursor_column].foreground_color));
     }
 
-    line(m_cursor_row).did_paint = true;
-
-    if (m_belling) {
-        m_need_full_invalidation = true;
+    if (m_belling)
         painter.draw_rect(rect, Color::Red);
-    }
+}
 
-    if (m_need_full_invalidation) {
-        did_paint();
-        m_need_full_invalidation = false;
+void Terminal::set_window_title(String&& title)
+{
+    auto* w = window();
+    if (!w)
         return;
-    }
-
-    Rect painted_rect;
-    for (int i = 0; i < m_rows; ++i) {
-        if (line(i).did_paint)
-            painted_rect = painted_rect.united(row_rect(i));
-    }
-    did_paint(painted_rect);
-}
-
-void Terminal::did_paint(const Rect& a_rect)
-{
-    GUI_Rect rect = a_rect;
-    int rc = gui_notify_paint_finished(m_window_id, a_rect.is_null() ? nullptr : &rect);
-    if (rc < 0) {
-        perror("gui_notify_paint_finished");
-        exit(1);
-    }
-}
-
-void Terminal::update()
-{
-    Rect rect;
-    for (int i = 0; i < m_rows; ++i) {
-        if (line(i).did_paint)
-            rect = rect.united(row_rect(i));
-    }
-    GUI_Rect gui_rect = rect;
-    int rc = gui_invalidate_window(m_window_id, rect.is_null() ? nullptr : &gui_rect);
-    if (rc < 0) {
-        perror("gui_invalidate_window");
-        exit(1);
-    }
-}
-
-void Terminal::set_window_title(const String& title)
-{
-    int rc = gui_set_window_title(m_window_id, title.characters(), title.length());
-    if (rc < 0) {
-        perror("gui_set_window_title");
-        exit(1);
-    }
-}
-
-void Terminal::set_in_active_window(bool b)
-{
-    if (m_in_active_window == b)
-        return;
-    m_in_active_window = b;
-    invalidate_cursor();
-    update();
+    w->set_title(move(title));
 }
 
 void Terminal::invalidate_cursor()
 {
     line(m_cursor_row).dirty = true;
+}
+
+void Terminal::flush_dirty_lines()
+{
+    if (m_need_full_flush) {
+        update();
+        m_need_full_flush = false;
+        return;
+    }
+    Rect rect;
+    for (int i = 0; i < m_rows; ++i) {
+        if (line(i).dirty)
+            rect = rect.united(row_rect(i));
+    }
+    update(rect);
 }

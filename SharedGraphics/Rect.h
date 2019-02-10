@@ -99,6 +99,13 @@ public:
         return rect;
     }
 
+    Rect translated(const Point& delta) const
+    {
+        Rect rect = *this;
+        rect.move_by(delta);
+        return rect;
+    }
+
     bool contains(int x, int y) const
     {
         return x >= m_location.x() && x <= right() && y >= m_location.y() && y <= bottom();
