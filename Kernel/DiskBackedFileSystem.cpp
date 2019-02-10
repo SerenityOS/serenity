@@ -1,7 +1,48 @@
 #include "DiskBackedFileSystem.h"
 #include "i386.h"
+#include <AK/InlineLRUCache.h>
 
 //#define DBFS_DEBUG
+
+struct BlockIdentifier {
+    unsigned fsid { 0 };
+    unsigned index { 0 };
+
+    bool operator==(const BlockIdentifier& other) const { return fsid == other.fsid && index == other.index; }
+};
+
+namespace AK {
+
+template<>
+struct Traits<BlockIdentifier> {
+    static unsigned hash(const BlockIdentifier& block_id) { return pair_int_hash(block_id.fsid, block_id.index); }
+    static void dump(const BlockIdentifier& block_id) { kprintf("[block %02u:%08u]", block_id.fsid, block_id.index); }
+};
+
+}
+
+class CachedBlock : public InlineLinkedListNode<CachedBlock> {
+public:
+    CachedBlock(const BlockIdentifier& block_id, const ByteBuffer& buffer)
+        : m_key(block_id)
+        , m_buffer(buffer)
+    {
+    }
+
+    BlockIdentifier m_key;
+    CachedBlock* m_next { nullptr };
+    CachedBlock* m_prev { nullptr };
+
+    ByteBuffer m_buffer;
+};
+
+Lockable<InlineLRUCache<BlockIdentifier, CachedBlock>>& block_cache()
+{
+    static Lockable<InlineLRUCache<BlockIdentifier, CachedBlock>>* s_cache;
+    if (!s_cache)
+        s_cache = new Lockable<InlineLRUCache<BlockIdentifier, CachedBlock>>;
+    return *s_cache;
+}
 
 DiskBackedFS::DiskBackedFS(RetainPtr<DiskDevice>&& device)
     : m_device(move(device))
@@ -37,6 +78,12 @@ ByteBuffer DiskBackedFS::read_block(unsigned index) const
 #ifdef DBFS_DEBUG
     kprintf("DiskBackedFileSystem::read_block %u\n", index);
 #endif
+    {
+        LOCKER(block_cache().lock());
+        if (auto* cached_block = block_cache().resource().get({ fsid(), index }))
+            return cached_block->m_buffer;
+    }
+
     auto buffer = ByteBuffer::create_uninitialized(block_size());
     //kprintf("created block buffer with size %u\n", block_size());
     DiskOffset base_offset = static_cast<DiskOffset>(index) * static_cast<DiskOffset>(block_size());
@@ -44,6 +91,10 @@ ByteBuffer DiskBackedFS::read_block(unsigned index) const
     bool success = device().read(base_offset, block_size(), buffer_pointer);
     ASSERT(success);
     ASSERT(buffer.size() == block_size());
+    {
+        LOCKER(block_cache().lock());
+        block_cache().resource().put({ fsid(), index }, CachedBlock({ fsid(), index }, buffer));
+    }
     return buffer;
 }
 

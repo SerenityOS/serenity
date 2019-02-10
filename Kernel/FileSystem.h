@@ -147,8 +147,7 @@ namespace AK {
 
 template<>
 struct Traits<InodeIdentifier> {
-    // FIXME: This is a shitty hash.
-    static unsigned hash(const InodeIdentifier& inode) { return Traits<unsigned>::hash(inode.fsid()) + Traits<unsigned>::hash(inode.index()); }
+    static unsigned hash(const InodeIdentifier& inode) { return pair_int_hash(inode.fsid(), inode.index()); }
     static void dump(const InodeIdentifier& inode) { kprintf("%02u:%08u", inode.fsid(), inode.index()); }
 };
 
