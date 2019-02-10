@@ -754,6 +754,11 @@ InodeMetadata ProcFSInode::metadata() const
         return metadata;
     }
 
+    if (proc_parent_directory == PDI_Root_sys) {
+        metadata.mode = 00100644;
+        return metadata;
+    }
+
     switch (proc_file_type) {
     case FI_Root_self:
     case FI_PID_cwd:
