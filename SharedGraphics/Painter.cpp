@@ -212,15 +212,15 @@ void Painter::draw_bitmap(const Point& p, const CharacterBitmap& bitmap, Color c
 
 void Painter::draw_bitmap(const Point& p, const GlyphBitmap& bitmap, Color color)
 {
-    Rect rect { p, bitmap.size() };
-    rect.move_by(m_translation);
-    auto clipped_rect = Rect::intersection(rect, m_clip_rect);
+    Rect dst_rect { p, bitmap.size() };
+    dst_rect.move_by(m_translation);
+    auto clipped_rect = Rect::intersection(dst_rect, m_clip_rect);
     if (clipped_rect.is_empty())
         return;
-    const int first_row = clipped_rect.top() - rect.top();
-    const int last_row = clipped_rect.bottom() - rect.top();
-    const int first_column = clipped_rect.left() - rect.left();
-    const int last_column = clipped_rect.right() - rect.left();
+    const int first_row = clipped_rect.top() - dst_rect.top();
+    const int last_row = clipped_rect.bottom() - dst_rect.top();
+    const int first_column = clipped_rect.left() - dst_rect.left();
+    const int last_column = clipped_rect.right() - dst_rect.left();
     RGBA32* dst = m_target->scanline(clipped_rect.y()) + clipped_rect.x();
     const size_t dst_skip = m_target->width();
 
@@ -230,6 +230,60 @@ void Painter::draw_bitmap(const Point& p, const GlyphBitmap& bitmap, Color color
                 dst[j] = color.value();
         }
         dst += dst_skip;
+    }
+}
+
+void Painter::blit_with_alpha(const Point& position, const GraphicsBitmap& source, const Rect& src_rect)
+{
+    Rect dst_rect(position, src_rect.size());
+    dst_rect.move_by(m_translation);
+    auto clipped_rect = Rect::intersection(dst_rect, m_clip_rect);
+    if (clipped_rect.is_empty())
+        return;
+    const int first_row = clipped_rect.top() - dst_rect.top();
+    const int last_row = clipped_rect.bottom() - dst_rect.top();
+    const int first_column = clipped_rect.left() - dst_rect.left();
+    const int last_column = clipped_rect.right() - dst_rect.left();
+    RGBA32* dst = m_target->scanline(clipped_rect.y()) + clipped_rect.x();
+    const RGBA32* src = source.scanline(src_rect.top() + first_row) + src_rect.left() + first_column;
+    const size_t dst_skip = m_target->width();
+    const unsigned src_skip = source.width();
+
+    for (int row = first_row; row <= last_row; ++row) {
+        for (int x = 0; x <= (last_column - first_column); ++x) {
+            byte alpha = Color(src[x]).alpha();
+            if (alpha == 0xff)
+                dst[x] = src[x];
+            else if (!alpha)
+                continue;
+            else
+                dst[x] = Color(dst[x]).blend(src[x]).value();
+        }
+        dst += dst_skip;
+        src += src_skip;
+    }
+}
+
+void Painter::blit(const Point& position, const GraphicsBitmap& source, const Rect& src_rect)
+{
+    Rect dst_rect(position, src_rect.size());
+    dst_rect.move_by(m_translation);
+    auto clipped_rect = Rect::intersection(dst_rect, m_clip_rect);
+    if (clipped_rect.is_empty())
+        return;
+    const int first_row = clipped_rect.top() - dst_rect.top();
+    const int last_row = clipped_rect.bottom() - dst_rect.top();
+    const int first_column = clipped_rect.left() - dst_rect.left();
+    const int last_column = clipped_rect.right() - dst_rect.left();
+    RGBA32* dst = m_target->scanline(clipped_rect.y()) + clipped_rect.x();
+    const RGBA32* src = source.scanline(src_rect.top() + first_row) + src_rect.left() + first_column;
+    const size_t dst_skip = m_target->width();
+    const unsigned src_skip = source.width();
+
+    for (int row = first_row; row <= last_row; ++row) {
+        fast_dword_copy(dst, src, dst_rect.width());
+        dst += dst_skip;
+        src += src_skip;
     }
 }
 
@@ -363,52 +417,6 @@ void Painter::draw_focus_rect(const Rect& rect)
     focus_rect.set_width(focus_rect.width() - 2);
     focus_rect.set_height(focus_rect.height() - 2);
     draw_rect(focus_rect, Color(96, 96, 192));
-}
-
-void Painter::blit(const Point& position, const GraphicsBitmap& source, const Rect& src_rect)
-{
-    Rect dst_rect(position, src_rect.size());
-    dst_rect.move_by(m_translation);
-    dst_rect.intersect(m_clip_rect);
-
-    RGBA32* dst = m_target->scanline(dst_rect.y()) + dst_rect.x();
-    const RGBA32* src = source.scanline(src_rect.top()) + src_rect.left();
-
-    const unsigned dst_skip = m_target->width();
-    const unsigned src_skip = source.width();
-
-    for (int i = dst_rect.height() - 1; i >= 0; --i) {
-        fast_dword_copy(dst, src, dst_rect.width());
-        dst += dst_skip;
-        src += src_skip;
-    }
-}
-
-void Painter::blit_with_alpha(const Point& position, const GraphicsBitmap& source, const Rect& src_rect)
-{
-    Rect dst_rect(position, src_rect.size());
-    dst_rect.move_by(m_translation);
-    dst_rect.intersect(m_clip_rect);
-
-    RGBA32* dst = m_target->scanline(dst_rect.y()) + dst_rect.x();
-    const RGBA32* src = source.scanline(src_rect.top()) + src_rect.left();
-
-    const unsigned dst_skip = m_target->width();
-    const unsigned src_skip = source.width();
-
-    for (int i = dst_rect.height() - 1; i >= 0; --i) {
-        for (int x = 0; x < dst_rect.width(); ++x) {
-            byte alpha = Color(src[x]).alpha();
-            if (alpha == 0xff)
-                dst[x] = src[x];
-            else if (!alpha)
-                continue;
-            else
-                dst[x] = Color(dst[x]).blend(src[x]).value();
-        }
-        dst += dst_skip;
-        src += src_skip;
-    }
 }
 
 void Painter::set_clip_rect(const Rect& rect)
