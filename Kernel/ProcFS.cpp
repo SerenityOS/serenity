@@ -211,13 +211,21 @@ ByteBuffer procfs$pid_vm(InodeIdentifier identifier)
         return { };
     auto& process = handle->process();
     StringBuilder builder;
-    builder.appendf("BEGIN       END         SIZE      COMMIT     NAME\n");
+    builder.appendf("BEGIN       END         SIZE      COMMIT     FLAGS  NAME\n");
     for (auto& region : process.regions()) {
-        builder.appendf("%x -- %x    %x  %x   %s\n",
+        StringBuilder flags_builder;
+        if (region->is_readable())
+            flags_builder.append('R');
+        if (region->is_writable())
+            flags_builder.append('W');
+        if (region->is_bitmap())
+            flags_builder.append('B');
+        builder.appendf("%x -- %x    %x  %x   % 4s   %s\n",
             region->laddr().get(),
             region->laddr().offset(region->size() - 1).get(),
             region->size(),
             region->amount_resident(),
+            flags_builder.to_string().characters(),
             region->name().characters());
     }
     return builder.to_byte_buffer();
