@@ -237,6 +237,7 @@ void exception_14_handler(RegisterDumpWithExceptionCode& regs)
     dword fault_page_directory;
     asm ("movl %%cr3, %%eax":"=a"(fault_page_directory));
 
+#ifdef PAGE_FAULT_DEBUG
     dbgprintf("%s(%u): ring%u %s page fault in PD=%x, %s L%x\n",
         current->name().characters(),
         current->pid(),
@@ -245,6 +246,7 @@ void exception_14_handler(RegisterDumpWithExceptionCode& regs)
         fault_page_directory,
         regs.exception_code & 2 ? "write" : "read",
         faultAddress);
+#endif
 
     word ss;
     dword esp;

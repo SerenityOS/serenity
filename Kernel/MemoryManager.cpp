@@ -357,17 +357,23 @@ PageFaultResponse MemoryManager::handle_page_fault(const PageFault& fault)
     auto page_index_in_region = region->page_index_from_address(fault.laddr());
     if (fault.is_not_present()) {
         if (region->vmo().inode()) {
+#ifdef PAGE_FAULT_DEBUG
             dbgprintf("NP(inode) fault in Region{%p}[%u]\n", region, page_index_in_region);
+#endif
             page_in_from_inode(*region, page_index_in_region);
             return PageFaultResponse::Continue;
         } else {
+#ifdef PAGE_FAULT_DEBUG
             dbgprintf("NP(zero) fault in Region{%p}[%u]\n", region, page_index_in_region);
+#endif
             zero_page(*region, page_index_in_region);
             return PageFaultResponse::Continue;
         }
     } else if (fault.is_protection_violation()) {
         if (region->m_cow_map.get(page_index_in_region)) {
+#ifdef PAGE_FAULT_DEBUG
             dbgprintf("PV(cow) fault in Region{%p}[%u]\n", region, page_index_in_region);
+#endif
             bool success = copy_on_write(*region, page_index_in_region);
             ASSERT(success);
             return PageFaultResponse::Continue;
