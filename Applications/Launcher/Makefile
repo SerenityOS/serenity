@@ -1,8 +1,7 @@
 OBJS = \
-    ClockWidget.o \
     main.o
 
-APP = Clock
+APP = Launcher
 
 ARCH_FLAGS =
 STANDARD_FLAGS = -std=c++17 -nostdinc++ -nostdlib -nostdinc
@@ -10,7 +9,7 @@ USERLAND_FLAGS = -ffreestanding -fno-stack-protector -fno-ident
 WARNING_FLAGS = -Wextra -Wall -Wundef -Wcast-qual -Wwrite-strings
 FLAVOR_FLAGS = -march=i386 -m32 -fno-exceptions -fno-rtti -fmerge-all-constants -fno-unroll-loops -fno-pie -fno-pic
 OPTIMIZATION_FLAGS = -Oz -fno-asynchronous-unwind-tables
-INCLUDE_FLAGS = -I.. -I. -I../LibC
+INCLUDE_FLAGS = -I../.. -I. -I../../LibC
 
 DEFINES = -DSERENITY -DSANITIZE_PTRS -DUSERLAND
 
