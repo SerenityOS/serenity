@@ -316,7 +316,7 @@ int Process::do_exec(const String& path, Vector<String>&& arguments, Vector<Stri
 
     auto vmo = VMObject::create_file_backed(descriptor->inode());
     vmo->set_name(descriptor->absolute_path());
-    RetainPtr<Region> region = allocate_region_with_vmo(LinearAddress(), descriptor->metadata().size, vmo.copy_ref(), 0, "helper", true, false);
+    RetainPtr<Region> region = allocate_region_with_vmo(LinearAddress(), descriptor->metadata().size, vmo.copy_ref(), 0, "executable", true, false);
 
     // FIXME: Should we consider doing on-demand paging here? Is it actually useful?
     bool success = region->page_in();
@@ -361,8 +361,6 @@ int Process::do_exec(const String& path, Vector<String>&& arguments, Vector<Stri
             return -ENOEXEC;
         }
     }
-
-    m_regions.append(move(region));
 
     m_signal_stack_kernel_region = nullptr;
     m_signal_stack_user_region = nullptr;
