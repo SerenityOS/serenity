@@ -58,7 +58,7 @@ public:
     Size size() const { return m_relative_rect.size(); }
 
     void update();
-    void repaint(const Rect&);
+    void update(const Rect&);
 
     virtual bool accepts_focus() const { return false; }
 
@@ -136,6 +136,7 @@ private:
     SizePolicy m_vertical_size_policy { SizePolicy::Fill };
     Size m_preferred_size;
 
-    bool m_has_pending_paint_event { false };
+    Vector<Rect> m_pending_paint_event_rects;
+
     bool m_fill_with_background_color { true };
 };

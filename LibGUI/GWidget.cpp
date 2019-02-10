@@ -34,16 +34,11 @@ void GWidget::set_relative_rect(const Rect& rect)
     update();
 }
 
-void GWidget::repaint(const Rect& rect)
-{
-    // FIXME: Implement.
-}
-
 void GWidget::event(GEvent& event)
 {
     switch (event.type()) {
     case GEvent::Paint:
-        m_has_pending_paint_event = false;
+        m_pending_paint_event_rects.clear();
         return handle_paint_event(static_cast<GPaintEvent&>(event));
     case GEvent::Resize:
         return handle_resize_event(static_cast<GResizeEvent&>(event));
@@ -172,13 +167,20 @@ void GWidget::focusout_event(GEvent&)
 
 void GWidget::update()
 {
+    update(rect());
+}
+
+void GWidget::update(const Rect& rect)
+{
     auto* w = window();
     if (!w)
         return;
-    if (m_has_pending_paint_event)
-        return;
-    m_has_pending_paint_event = true;
-    w->update(window_relative_rect());
+    for (auto& pending_rect : m_pending_paint_event_rects) {
+        if (pending_rect.contains(rect))
+            return;
+    }
+    m_pending_paint_event_rects.append(rect);
+    w->update(rect.translated(window_relative_rect().location()));
 }
 
 Rect GWidget::window_relative_rect() const

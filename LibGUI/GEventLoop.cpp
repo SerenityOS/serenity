@@ -2,6 +2,7 @@
 #include "GEvent.h"
 #include "GObject.h"
 #include "GWindow.h"
+#include <LibGUI/GNotifier.h>
 #include <LibC/unistd.h>
 #include <LibC/stdio.h>
 #include <LibC/fcntl.h>
@@ -60,7 +61,7 @@ int GEventLoop::exec()
             auto* receiver = queued_event.receiver;
             auto& event = *queued_event.event;
 #ifdef GEVENTLOOP_DEBUG
-            dbgprintf("GEventLoop: GObject{%p} event %u (%s)\n", receiver, (unsigned)event.type(), event.name());
+            dbgprintf("GEventLoop: %s{%p} event %u\n", receiver->class_name(), receiver, (unsigned)event.type());
 #endif
             if (!receiver) {
                 switch (event.type()) {
@@ -149,12 +150,31 @@ void GEventLoop::handle_mouse_event(const GUI_Event& event, GWindow& window)
 void GEventLoop::wait_for_event()
 {
     fd_set rfds;
+    fd_set wfds;
     FD_ZERO(&rfds);
-    FD_SET(m_event_fd, &rfds);
+    FD_ZERO(&wfds);
+
+    int max_fd = 0;
+    auto add_fd_to_set = [&max_fd] (int fd, fd_set& set){
+        FD_SET(fd, &set);
+        if (fd > max_fd)
+            max_fd = fd;
+    };
+
+    add_fd_to_set(m_event_fd, rfds);
+    for (auto& notifier : m_notifiers) {
+        if (notifier->event_mask() & GNotifier::Read)
+            add_fd_to_set(notifier->fd(), rfds);
+        if (notifier->event_mask() & GNotifier::Write)
+            add_fd_to_set(notifier->fd(), wfds);
+        if (notifier->event_mask() & GNotifier::Exceptional)
+            ASSERT_NOT_REACHED();
+    }
+
     struct timeval timeout = { 0, 0 };
     if (!m_timers.is_empty())
         get_next_timer_expiration(timeout);
-    int rc = select(m_event_fd + 1, &rfds, nullptr, nullptr, (m_queued_events.is_empty() && m_timers.is_empty()) ? nullptr : &timeout);
+    int rc = select(m_event_fd + 1, &rfds, &wfds, nullptr, (m_queued_events.is_empty() && m_timers.is_empty()) ? nullptr : &timeout);
     if (rc < 0) {
         ASSERT_NOT_REACHED();
     }
@@ -172,6 +192,17 @@ void GEventLoop::wait_for_event()
         } else {
             // FIXME: Support removing expired timers that don't want to reload.
             ASSERT_NOT_REACHED();
+        }
+    }
+
+    for (auto& notifier : m_notifiers) {
+        if (FD_ISSET(notifier->fd(), &rfds)) {
+            if (notifier->on_ready_to_read)
+                notifier->on_ready_to_read(*notifier);
+        }
+        if (FD_ISSET(notifier->fd(), &wfds)) {
+            if (notifier->on_ready_to_write)
+                notifier->on_ready_to_write(*notifier);
         }
     }
 
@@ -265,4 +296,14 @@ bool GEventLoop::unregister_timer(int timer_id)
         return false;
     m_timers.remove(it);
     return true;
+}
+
+void GEventLoop::register_notifier(Badge<GNotifier>, GNotifier& notifier)
+{
+    m_notifiers.set(&notifier);
+}
+
+void GEventLoop::unregister_notifier(Badge<GNotifier>, GNotifier& notifier)
+{
+    m_notifiers.remove(&notifier);
 }
