@@ -38,3 +38,9 @@ epilogue:
     // Birger's birthday <3
     return 20150614;
 }
+
+extern "C" void __cxa_pure_virtual() NORETURN;
+extern "C" void __cxa_pure_virtual()
+{
+    ASSERT_NOT_REACHED();
+}

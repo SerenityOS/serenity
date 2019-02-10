@@ -4,7 +4,7 @@
 #include <AK/Assertions.h>
 #include <AK/StdLibExtras.h>
 
-#ifdef LIBGUI
+#ifdef USERLAND
 #include <LibGUI/GWidget.h>
 #include <LibGUI/GWindow.h>
 #include <LibC/gui.h>
@@ -20,7 +20,7 @@ Painter::Painter(GraphicsBitmap& bitmap)
     m_clip_rect = { { 0, 0 }, bitmap.size() };
 }
 
-#ifdef LIBGUI
+#ifdef USERLAND
 Painter::Painter(GWidget& widget)
     : m_font(&widget.font())
 {
@@ -34,9 +34,9 @@ Painter::Painter(GWidget& widget)
     m_target = GraphicsBitmap::create_wrapper(backing.size, backing.pixels);
     ASSERT(m_target);
     m_window = widget.window();
-    m_translation.move_by(widget.relative_position());
+    m_translation.move_by(widget.window_relative_rect().location());
     // NOTE: m_clip_rect is in Window coordinates since we are painting into its backing store.
-    m_clip_rect = widget.relative_rect();
+    m_clip_rect = widget.window_relative_rect();
     m_clip_rect.intersect(m_target->rect());
 
 #ifdef DEBUG_WIDGET_UNDERDRAW
@@ -49,7 +49,7 @@ Painter::Painter(GWidget& widget)
 
 Painter::~Painter()
 {
-#ifdef LIBGUI
+#ifdef USERLAND
     m_target = nullptr;
     int rc = gui_release_window_backing_store(m_backing_store_id);
     ASSERT(rc == 0);

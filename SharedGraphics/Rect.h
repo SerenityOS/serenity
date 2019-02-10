@@ -52,6 +52,16 @@ public:
         return { x() + width() / 2, y() + height() / 2 };
     }
 
+    void set_location(const Point& location)
+    {
+        m_location = location;
+    }
+
+    void set_size(const Size& size)
+    {
+        m_size = size;
+    }
+
     void inflate(int w, int h)
     {
         set_x(x() - w / 2);

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <AK/AKString.h>
+
 struct GUI_Size;
 
 class Size {
@@ -29,7 +31,16 @@ public:
         return !(*this == other);
     }
 
+    Size& operator-=(const Size& other)
+    {
+        m_width -= other.m_width;
+        m_height -= other.m_height;
+        return *this;
+    }
+
     operator GUI_Size() const;
+
+    String to_string() const { return String::format("[%d,%d]", m_width, m_height); }
 
 private:
     int m_width { 0 };

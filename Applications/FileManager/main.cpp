@@ -1,14 +1,10 @@
-#include <SharedGraphics/GraphicsBitmap.h>
 #include <LibGUI/GWindow.h>
 #include <LibGUI/GWidget.h>
-#include <LibGUI/GButton.h>
-#include <LibGUI/GListBox.h>
+#include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GEventLoop.h>
-#include <sys/wait.h>
-#include <signal.h>
+#include <LibGUI/GStatusBar.h>
 #include <unistd.h>
 #include <stdio.h>
-#include <errno.h>
 #include "DirectoryView.h"
 
 static GWindow* make_window();
@@ -33,11 +29,19 @@ GWindow* make_window()
     auto* widget = new GWidget;
     window->set_main_widget(widget);
 
+    widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
+
     auto* directory_view = new DirectoryView(widget);
-    directory_view->set_relative_rect({ 0, 0, 240, 300 });
+
+    auto* statusbar = new GStatusBar(widget);
+    statusbar->set_text("Welcome!");
 
     directory_view->on_path_change = [window] (const String& new_path) {
         window->set_title(String::format("FileManager: %s", new_path.characters()));
+    };
+
+    directory_view->on_status_message = [statusbar] (String message) {
+        statusbar->set_text(move(message));
     };
 
     directory_view->open("/");

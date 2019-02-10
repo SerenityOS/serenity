@@ -5,15 +5,31 @@
 #include <SharedGraphics/Rect.h>
 #include <SharedGraphics/Color.h>
 #include <SharedGraphics/Font.h>
+#include <AK/Badge.h>
 #include <AK/AKString.h>
 
 class GraphicsBitmap;
+class GLayout;
 class GWindow;
+
+enum class SizePolicy { Fixed, Fill };
+enum class Orientation { Horizontal, Vertical };
 
 class GWidget : public GObject {
 public:
     explicit GWidget(GWidget* parent = nullptr);
     virtual ~GWidget() override;
+
+    GLayout* layout() { return m_layout.ptr(); }
+    void set_layout(OwnPtr<GLayout>&&);
+
+    SizePolicy horizontal_size_policy() const { return m_horizontal_size_policy; }
+    SizePolicy vertical_size_policy() const { return m_vertical_size_policy; }
+    SizePolicy size_policy(Orientation orientation) { return orientation == Orientation::Horizontal ? m_horizontal_size_policy : m_vertical_size_policy; }
+    void set_size_policy(SizePolicy horizontal_policy, SizePolicy vertical_policy);
+
+    Size preferred_size() const { return m_preferred_size; }
+    void set_preferred_size(const Size&);
 
     virtual void event(GEvent&) override;
     virtual void paint_event(GPaintEvent&);
@@ -100,15 +116,25 @@ public:
     void set_global_cursor_tracking(bool);
     bool global_cursor_tracking() const;
 
+    void notify_layout_changed(Badge<GLayout>);
+
 private:
     void handle_paint_event(GPaintEvent&);
+    void handle_resize_event(GResizeEvent&);
+    void do_layout();
+    void invalidate_layout();
 
     GWindow* m_window { nullptr };
+    OwnPtr<GLayout> m_layout;
 
     Rect m_relative_rect;
     Color m_background_color { 0xffffff };
     Color m_foreground_color { 0x000000 };
     RetainPtr<Font> m_font;
+
+    SizePolicy m_horizontal_size_policy { SizePolicy::Fill };
+    SizePolicy m_vertical_size_policy { SizePolicy::Fill };
+    Size m_preferred_size;
 
     bool m_has_pending_paint_event { false };
     bool m_fill_with_background_color { true };

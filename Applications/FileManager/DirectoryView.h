@@ -15,6 +15,7 @@ public:
     void reload();
 
     Function<void(const String&)> on_path_change;
+    Function<void(String)> on_status_message;
 
     int item_height() const { return 16; }
     int item_count() const { return m_directories.size() + m_files.size(); }
@@ -23,6 +24,8 @@ private:
     virtual void paint_event(GPaintEvent&) override;
     virtual void resize_event(GResizeEvent&) override;
     virtual void mousedown_event(GMouseEvent&) override;
+
+    void set_status_message(String&&);
 
     Rect row_rect(int item_index) const;
 
