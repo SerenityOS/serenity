@@ -9,6 +9,8 @@
 #include <LibGUI/GWindow.h>
 #include <LibC/gui.h>
 #include <LibC/stdio.h>
+#include <LibC/errno.h>
+#include <LibC/string.h>
 #endif
 
 #define DEBUG_WIDGET_UNDERDRAW
@@ -28,9 +30,10 @@ Painter::Painter(GWidget& widget)
     int rc = gui_get_window_backing_store(widget.window()->window_id(), &backing);
     if (rc < 0) {
         perror("gui_get_window_backing_store");
-        exit(1);
+        ASSERT_NOT_REACHED();
     }
     m_backing_store_id = backing.backing_store_id;
+
     m_target = GraphicsBitmap::create_wrapper(backing.size, backing.pixels);
     ASSERT(m_target);
     m_window = widget.window();
@@ -51,8 +54,13 @@ Painter::~Painter()
 {
 #ifdef USERLAND
     m_target = nullptr;
-    int rc = gui_release_window_backing_store(m_backing_store_id);
-    ASSERT(rc == 0);
+    if (m_backing_store_id) {
+        int rc = gui_release_window_backing_store(m_backing_store_id);
+        if (rc < 0) {
+            perror("gui_release_window_backing_store");
+            ASSERT_NOT_REACHED();
+        }
+    }
 #endif
 }
 
@@ -281,7 +289,7 @@ void Painter::blit(const Point& position, const GraphicsBitmap& source, const Re
     const unsigned src_skip = source.width();
 
     for (int row = first_row; row <= last_row; ++row) {
-        fast_dword_copy(dst, src, dst_rect.width());
+        fast_dword_copy(dst, src, clipped_rect.width());
         dst += dst_skip;
         src += src_skip;
     }
