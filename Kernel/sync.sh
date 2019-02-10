@@ -1,3 +1,7 @@
+if [ $(id -u) != 0 ]; then
+    echo "This needs to be run as root"
+    exit
+fi
 rm -vf _fs_contents.lock
 rm -vf _fs_contents
 dd if=/dev/zero of=_fs_contents bs=1M count=12
@@ -24,7 +28,7 @@ ln -s /proc/self/fd/0 mnt/dev/stdin
 ln -s /proc/self/fd/1 mnt/dev/stdout
 ln -s /proc/self/fd/2 mnt/dev/stderr
 cp -vR ../Base/* mnt/
-chown -vR 100:100 mnt/users/anon
+chown -vR 100:100 mnt/home/anon
 cp -v ../Userland/sh mnt/bin/sh
 cp -v ../Userland/id mnt/bin/id
 cp -v ../Userland/ps mnt/bin/ps
