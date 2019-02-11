@@ -5,9 +5,13 @@
 
 class GMenu {
 public:
-    GMenu();
+    explicit GMenu(const String& name);
     ~GMenu();
 
+    void add_item(unsigned identifier, const String& text);
+    void add_separator();
+
 private:
+    String m_name;
     Vector<GMenuItem> m_items;
 };
