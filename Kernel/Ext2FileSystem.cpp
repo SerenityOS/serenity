@@ -933,8 +933,9 @@ bool Ext2FS::get_inode_allocation_state(InodeIndex index) const
 {
     if (index == 0)
         return true;
-    auto& bgd = group_descriptor(group_index_from_inode(index));
-    unsigned index_in_group = index % inodes_per_group();
+    unsigned group_index = group_index_from_inode(index);
+    auto& bgd = group_descriptor(group_index);
+    unsigned index_in_group = index - ((group_index - 1) * inodes_per_group());
     unsigned inodes_per_bitmap_block = block_size() * 8;
     unsigned bitmap_block_index = (index_in_group - 1) / inodes_per_bitmap_block;
     unsigned bit_index = (index_in_group - 1) % inodes_per_bitmap_block;
@@ -946,8 +947,9 @@ bool Ext2FS::get_inode_allocation_state(InodeIndex index) const
 
 bool Ext2FS::set_inode_allocation_state(unsigned index, bool newState)
 {
-    auto& bgd = group_descriptor(group_index_from_inode(index));
-    unsigned index_in_group = index % inodes_per_group();
+    unsigned group_index = group_index_from_inode(index);
+    auto& bgd = group_descriptor(group_index);
+    unsigned index_in_group = index - ((group_index - 1) * inodes_per_group());
     unsigned inodes_per_bitmap_block = block_size() * 8;
     unsigned bitmap_block_index = (index_in_group - 1) / inodes_per_bitmap_block;
     unsigned bit_index = (index_in_group - 1) % inodes_per_bitmap_block;
@@ -990,10 +992,12 @@ bool Ext2FS::set_block_allocation_state(GroupIndex group, BlockIndex bi, bool ne
     dbgprintf("Ext2FS: set_block_allocation_state(group=%u, block=%u, state=%u)\n", group, bi, new_state);
     auto& bgd = group_descriptor(group);
 
+    BlockIndex index_in_group = bi - ((group - 1) * blocks_per_group());
+
     // Update block bitmap
     unsigned blocks_per_bitmap_block = block_size() * 8;
-    unsigned bitmap_block_index = (bi - 1) / blocks_per_bitmap_block;
-    unsigned bit_index = (bi - 1) % blocks_per_bitmap_block;
+    unsigned bitmap_block_index = (index_in_group - 1) / blocks_per_bitmap_block;
+    unsigned bit_index = (index_in_group - 1) % blocks_per_bitmap_block;
     auto block = read_block(bgd.bg_block_bitmap + bitmap_block_index);
     ASSERT(block);
     auto bitmap = Bitmap::wrap(block.pointer(), blocks_per_bitmap_block);
