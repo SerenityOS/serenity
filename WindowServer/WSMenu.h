@@ -62,6 +62,8 @@ public:
 
     Function<void(WSMenuItem&)> on_item_activation;
 
+    void close();
+
 private:
     void did_activate(WSMenuItem&);
 
