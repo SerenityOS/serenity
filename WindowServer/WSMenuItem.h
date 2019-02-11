@@ -1,6 +1,7 @@
 #pragma once
 
 #include <AK/AKString.h>
+#include <AK/Function.h>
 #include <SharedGraphics/Rect.h>
 
 class WSMenuItem {
@@ -11,7 +12,7 @@ public:
         Separator,
     };
 
-    explicit WSMenuItem(const String& text);
+    explicit WSMenuItem(unsigned identifier, const String& text);
     explicit WSMenuItem(Type);
     ~WSMenuItem();
 
@@ -23,9 +24,12 @@ public:
     void set_rect(const Rect& rect) { m_rect = rect; }
     Rect rect() const { return m_rect; }
 
+    unsigned identifier() const { return m_identifier; }
+
 private:
     Type m_type { None };
     bool m_enabled { true };
+    unsigned m_identifier { 0 };
     String m_text;
     Rect m_rect;
 };
