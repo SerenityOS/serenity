@@ -379,8 +379,10 @@ void WSWindowManager::notify_rect_changed(WSWindow& window, const Rect& old_rect
 
 void WSWindowManager::handle_menu_mouse_event(WSMenu& menu, WSMouseEvent& event)
 {
-    if (event.type() == WSMouseEvent::MouseDown && event.button() == MouseButton::Left) {
-        dbgprintf("[WM] MouseDown on menu '%s'\n", menu.name().characters());
+    bool should_open_menu = (event.type() == WSMouseEvent::MouseMove && event.buttons() & (unsigned)MouseButton::Left)
+            || (event.type() == WSMouseEvent::MouseDown && event.button() == MouseButton::Left);
+
+    if (should_open_menu) {
         if (m_current_menu == &menu)
             return;
         close_current_menu();
