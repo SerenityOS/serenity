@@ -1612,30 +1612,40 @@ void sleep(dword ticks)
     Scheduler::yield();
 }
 
-static bool check_kernel_memory_access(LinearAddress laddr, bool is_write)
+enum class KernelMemoryCheckResult {
+    NotInsideKernelMemory,
+    AccessGranted,
+    AccessDenied
+};
+
+static KernelMemoryCheckResult check_kernel_memory_access(LinearAddress laddr, bool is_write)
 {
     auto* kernel_elf_header = (Elf32_Ehdr*)0xf000;
     auto* kernel_program_headers = (Elf32_Phdr*)(0xf000 + kernel_elf_header->e_phoff);
     for (unsigned i = 0; i < kernel_elf_header->e_phnum; ++i) {
         auto& segment = kernel_program_headers[i];
+        if (segment.p_type != PT_LOAD || !segment.p_vaddr || !segment.p_memsz)
+            continue;
         if (laddr.get() < segment.p_vaddr || laddr.get() > (segment.p_vaddr + segment.p_memsz))
             continue;
         if (is_write && !(kernel_program_headers[i].p_flags & PF_W))
-            return false;
+            return KernelMemoryCheckResult::AccessDenied;
         if (!is_write && !(kernel_program_headers[i].p_flags & PF_R))
-            return false;
-        return true;
+            return KernelMemoryCheckResult::AccessDenied;
+        return KernelMemoryCheckResult::AccessGranted;
     }
-    // Returning true in this case means "it's not inside the kernel binary. let the other checks deal with it."
-    return true;
+    return KernelMemoryCheckResult::NotInsideKernelMemory;
 }
 
 bool Process::validate_read_from_kernel(LinearAddress laddr) const
 {
     // We check extra carefully here since the first 4MB of the address space is identity-mapped.
     // This code allows access outside of the known used address ranges to get caught.
-    if (check_kernel_memory_access(laddr, false))
+    auto kmc_result = check_kernel_memory_access(laddr, false);
+    if (kmc_result == KernelMemoryCheckResult::AccessGranted)
         return true;
+    if (kmc_result == KernelMemoryCheckResult::AccessDenied)
+        return false;
     if (is_kmalloc_address(laddr.as_ptr()))
         return true;
     return validate_read(laddr.as_ptr(), 1);
@@ -1650,17 +1660,20 @@ bool Process::validate_read_str(const char* str)
 
 bool Process::validate_read(const void* address, size_t size) const
 {
+    LinearAddress first_address((dword)address);
+    LinearAddress last_address = first_address.offset(size - 1);
     if (is_ring0()) {
-        if (check_kernel_memory_access(LinearAddress((dword)address), false))
+        auto kmc_result = check_kernel_memory_access(first_address, false);
+        if (kmc_result == KernelMemoryCheckResult::AccessGranted)
             return true;
+        if (kmc_result == KernelMemoryCheckResult::AccessDenied)
+            return false;
         if (is_kmalloc_address(address))
             return true;
     }
     ASSERT(size);
     if (!size)
         return false;
-    LinearAddress first_address((dword)address);
-    LinearAddress last_address = first_address.offset(size - 1);
     if (first_address.page_base() != last_address.page_base()) {
         if (!MM.validate_user_read(*this, last_address))
             return false;
@@ -1670,16 +1683,19 @@ bool Process::validate_read(const void* address, size_t size) const
 
 bool Process::validate_write(void* address, size_t size) const
 {
+    LinearAddress first_address((dword)address);
+    LinearAddress last_address = first_address.offset(size - 1);
     if (is_ring0()) {
         if (is_kmalloc_address(address))
             return true;
-        if (check_kernel_memory_access(LinearAddress((dword)address), true))
+        auto kmc_result = check_kernel_memory_access(first_address, true);
+        if (kmc_result == KernelMemoryCheckResult::AccessGranted)
             return true;
+        if (kmc_result == KernelMemoryCheckResult::AccessDenied)
+            return false;
     }
     if (!size)
         return false;
-    LinearAddress first_address((dword)address);
-    LinearAddress last_address = first_address.offset(size - 1);
     if (first_address.page_base() != last_address.page_base()) {
         if (!MM.validate_user_write(*this, last_address))
             return false;
