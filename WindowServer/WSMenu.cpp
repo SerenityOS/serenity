@@ -43,6 +43,13 @@ int WSMenu::height() const
     return (m_items.last()->rect().bottom() - 1) + padding();
 }
 
+void WSMenu::redraw()
+{
+    ASSERT(menu_window());
+    draw();
+    menu_window()->invalidate();
+}
+
 WSWindow& WSMenu::ensure_menu_window()
 {
     if (!m_menu_window) {
@@ -59,21 +66,20 @@ WSWindow& WSMenu::ensure_menu_window()
 
         auto window = make<WSWindow>(*this);
         window->set_rect(0, 0, width(), height());
-        dbgprintf("Created menu window for menu '%s' (%u items) with rect %s\n", name().characters(), m_items.size(), window->rect().to_string().characters());
         m_menu_window = move(window);
         draw();
     }
     return *m_menu_window;
 }
 
+
 void WSMenu::draw()
 {
-    ASSERT(m_menu_window);
-    ASSERT(m_menu_window->backing());
-    Painter painter(*m_menu_window->backing());
+    ASSERT(menu_window());
+    ASSERT(menu_window()->backing());
+    Painter painter(*menu_window()->backing());
 
-    Rect rect { { }, m_menu_window->size() };
-
+    Rect rect { { }, menu_window()->size() };
     painter.draw_rect(rect, Color::White);
     painter.fill_rect(rect.shrunken(2, 2), Color::LightGray);
 
@@ -81,10 +87,10 @@ void WSMenu::draw()
         if (item->type() == WSMenuItem::Text) {
             Color text_color = Color::Black;
             if (item.ptr() == m_hovered_item) {
-                painter.fill_rect(item->rect(), Color(0, 0, 128));
+                painter.fill_rect(item->rect(), Color(0, 0, 104));
                 text_color = Color::White;
             }
-            painter.draw_text(item->rect(), item->text(), Painter::TextAlignment::CenterLeft, text_color);
+            painter.draw_text(item->rect(), item->text(), TextAlignment::CenterLeft, text_color);
         } else if (item->type() == WSMenuItem::Separator) {
             Point p1(padding(), item->rect().center().y());
             Point p2(width() - padding(), item->rect().center().y());
@@ -95,17 +101,22 @@ void WSMenu::draw()
 
 void WSMenu::on_window_message(WSMessage& message)
 {
-    dbgprintf("WSMenu::on_window_message: %u\n", message.type());
+    ASSERT(menu_window());
     if (message.type() == WSMessage::MouseMove) {
-        auto& mouse_event = static_cast<WSMouseEvent&>(message);
-        for (auto& item : m_items) {
-            if (item->rect().contains(mouse_event.position())) {
-                if (m_hovered_item == item.ptr())
-                    return;
-                m_hovered_item = item.ptr();
-                draw();
-                menu_window()->invalidate();
-            }
-        }
+        auto* item = item_at(static_cast<WSMouseEvent&>(message).position());
+        if (!item || m_hovered_item == item)
+            return;
+        m_hovered_item = item;
+        redraw();
     }
+}
+
+WSMenuItem* WSMenu::item_at(const Point& position)
+{
+    for (auto& item : m_items) {
+        if (!item->rect().contains(position))
+            continue;
+        return item.ptr();
+    }
+    return nullptr;
 }

@@ -75,7 +75,7 @@ void GCheckBox::paint_event(GPaintEvent&)
         painter.draw_bitmap(box_rect.shrunken(2, 2).location(), *s_checked_bitmap, foreground_color());
 
     if (!caption().is_empty())
-        painter.draw_text(text_rect, caption(), Painter::TextAlignment::TopLeft, foreground_color());
+        painter.draw_text(text_rect, caption(), TextAlignment::TopLeft, foreground_color());
 
     if (is_focused()) {
         // NOTE: Painter::draw_focus_rect() will shrink(2,2) the passed rect.

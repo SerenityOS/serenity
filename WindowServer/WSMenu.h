@@ -54,6 +54,9 @@ public:
     void draw();
     const Font& font() const;
 
+    WSMenuItem* item_at(const Point&);
+    void redraw();
+
 private:
     String m_name;
     Rect m_rect_in_menubar;

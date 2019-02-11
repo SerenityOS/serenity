@@ -16,6 +16,8 @@ class GWidget;
 class GWindow;
 #endif
 
+enum class TextAlignment { TopLeft, CenterLeft, Center, CenterRight };
+
 class Painter {
 public:
 #ifndef KERNEL
@@ -34,7 +36,6 @@ public:
     void blit(const Point&, const GraphicsBitmap&, const Rect& src_rect);
     void blit_with_alpha(const Point&, const GraphicsBitmap&, const Rect& src_rect);
 
-    enum class TextAlignment { TopLeft, CenterLeft, Center, CenterRight };
     void draw_text(const Rect&, const String&, TextAlignment = TextAlignment::TopLeft, Color = Color());
     void draw_glyph(const Point&, char, Color);
 

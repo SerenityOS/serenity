@@ -302,7 +302,7 @@ void WSWindowManager::paint_window_frame(WSWindow& window)
     m_back_painter->draw_rect(border_rect, middle_border_color);
     m_back_painter->draw_rect(outer_rect, border_color);
     m_back_painter->draw_rect(inner_border_rect, border_color);
-    m_back_painter->draw_text(titlebar_title_rect, window.title(), Painter::TextAlignment::CenterLeft, title_color);
+    m_back_painter->draw_text(titlebar_title_rect, window.title(), TextAlignment::CenterLeft, title_color);
 
     if (!s_close_button_bitmap)
         s_close_button_bitmap = CharacterBitmap::create_from_ascii(s_close_button_bitmap_data, s_close_button_bitmap_width, s_close_button_bitmap_height).leak_ref();
@@ -319,7 +319,7 @@ void WSWindowManager::paint_window_frame(WSWindow& window)
     m_back_painter->draw_text(
         titlebar_inner_rect,
         String::format("%d:%d", window.pid(), window.window_id()),
-        Painter::TextAlignment::CenterRight,
+        TextAlignment::CenterRight,
         metadata_color
     );
 #endif
@@ -476,8 +476,11 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event)
         return;
     }
 
+    // FIXME: Figure out an automatic menu dismissal logic that feels right.
+#if 0
     if (m_current_menu && event.type() == WSMouseEvent::MouseUp && event.button() == MouseButton::Left)
         close_current_menu();
+#endif
 
     for (auto* window = m_windows_in_order.tail(); window; window = window->prev()) {
         if (!window->is_visible())
@@ -610,10 +613,10 @@ void WSWindowManager::draw_menubar()
     m_current_menubar->for_each_menu([&] (WSMenu& menu) {
         Color text_color = Color::Black;
         if (&menu == m_current_menu) {
-            m_back_painter->fill_rect(menu.rect_in_menubar(), Color(0, 0, 128));
+            m_back_painter->fill_rect(menu.rect_in_menubar(), Color(0, 0, 104));
             text_color = Color::White;
         }
-        m_back_painter->draw_text(menu.text_rect_in_menubar(), menu.name(), Painter::TextAlignment::CenterLeft, text_color);
+        m_back_painter->draw_text(menu.text_rect_in_menubar(), menu.name(), TextAlignment::CenterLeft, text_color);
         return true;
     });
 }

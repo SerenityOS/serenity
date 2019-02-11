@@ -90,5 +90,5 @@ void paint(GraphicsBitmap& bitmap, int width, int height)
     Color color(r, g, b);
     Painter painter(bitmap);
     painter.fill_rect({0, 0, width, height}, color);
-    painter.draw_text({0, 0, width, height}, "Hello World!", Painter::TextAlignment::Center, Color::Black);
+    painter.draw_text({0, 0, width, height}, "Hello World!", TextAlignment::Center, Color::Black);
 }
