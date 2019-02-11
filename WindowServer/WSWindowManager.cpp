@@ -184,7 +184,8 @@ WSWindowManager::WSWindowManager()
         auto menubar = make<WSMenuBar>();
 
         {
-            auto menu = make<WSMenu>("Serenity");
+            byte system_menu_name[] = { 0xfc, 0 };
+            auto menu = make<WSMenu>(String((const char*)system_menu_name));
             menu->add_item(make<WSMenuItem>(0, "Launch Terminal"));
             menu->add_item(make<WSMenuItem>(WSMenuItem::Separator));
             menu->add_item(make<WSMenuItem>(1, "Hello again"));
