@@ -32,6 +32,9 @@ public:
 
     Point position() const { return rect().location(); }
 
+    void move_to(int x, int y) { move_to({ x, y }); }
+    void move_to(const Point& point) { set_rect({ point, size() }); }
+
     virtual void event(GEvent&) override;
 
     bool is_visible() const;
