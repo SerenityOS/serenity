@@ -29,8 +29,10 @@ Ext2FS::~Ext2FS()
 ByteBuffer Ext2FS::read_super_block() const
 {
     auto buffer = ByteBuffer::create_uninitialized(1024);
-    device().read_block(2, buffer.pointer());
-    device().read_block(3, buffer.offset_pointer(512));
+    bool success = device().read_block(2, buffer.pointer());
+    ASSERT(success);
+    success = device().read_block(3, buffer.offset_pointer(512));
+    ASSERT(success);
     return buffer;
 }
 
@@ -220,7 +222,8 @@ bool Ext2FS::write_block_list_for_inode(InodeIndex inode_index, ext2_inode& e2in
             --remaining_blocks;
         }
         stream.fill_to_end(0);
-        write_block(e2inode.i_block[EXT2_IND_BLOCK], block_contents);
+        bool success = write_block(e2inode.i_block[EXT2_IND_BLOCK], block_contents);
+        ASSERT(success);
     }
 
     if (!remaining_blocks)
@@ -540,6 +543,7 @@ ssize_t Ext2FSInode::write_bytes(off_t offset, size_t count, const byte* data, F
         bool success = fs().write_block(block_list[bi], block);
         if (!success) {
             kprintf("Ext2FSInode::write_bytes: write_block(%u) failed (lbi: %u)\n", block_list[bi], bi);
+            ASSERT_NOT_REACHED();
             return -EIO;
         }
         remaining_count -= num_bytes_to_copy;
@@ -826,8 +830,9 @@ bool Ext2FS::write_ext2_inode(unsigned inode, const ext2_inode& e2inode)
     if (!block)
         return false;
     memcpy(reinterpret_cast<ext2_inode*>(block.offset_pointer(offset)), &e2inode, inode_size());
-    write_block(block_index, block);
-    return true;
+    bool success = write_block(block_index, block);
+    ASSERT(success);
+    return success;
 }
 
 Vector<Ext2FS::BlockIndex> Ext2FS::allocate_blocks(unsigned group, unsigned count)
@@ -956,7 +961,8 @@ bool Ext2FS::set_inode_allocation_state(unsigned index, bool newState)
         return true;
 
     bitmap.set(bit_index, newState);
-    write_block(bgd.bg_inode_bitmap + bitmap_block_index, block);
+    bool success = write_block(bgd.bg_inode_bitmap + bitmap_block_index, block);
+    ASSERT(success);
 
     // Update superblock
     auto& sb = *reinterpret_cast<ext2_super_block*>(m_cached_super_block.pointer());
@@ -998,7 +1004,8 @@ bool Ext2FS::set_block_allocation_state(GroupIndex group, BlockIndex bi, bool ne
         return true;
 
     bitmap.set(bit_index, new_state);
-    write_block(bgd.bg_block_bitmap + bitmap_block_index, block);
+    bool success = write_block(bgd.bg_block_bitmap + bitmap_block_index, block);
+    ASSERT(success);
 
     // Update superblock
     auto& sb = *reinterpret_cast<ext2_super_block*>(m_cached_super_block.pointer());
