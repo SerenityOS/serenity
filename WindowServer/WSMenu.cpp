@@ -34,14 +34,14 @@ int WSMenu::width() const
             longest = max(longest, font().width(item->text()));
     }
 
-    return max(longest, rect_in_menubar().width()) + padding() * 2;
+    return max(longest, rect_in_menubar().width()) + horizontal_padding();
 }
 
 int WSMenu::height() const
 {
     if (m_items.is_empty())
         return 0;
-    return (m_items.last()->rect().bottom() - 1) + padding();
+    return (m_items.last()->rect().bottom() - 1) + vertical_padding();
 }
 
 void WSMenu::redraw()
@@ -54,14 +54,14 @@ void WSMenu::redraw()
 WSWindow& WSMenu::ensure_menu_window()
 {
     if (!m_menu_window) {
-        Point next_item_location(padding() / 2, padding() / 2);
+        Point next_item_location(1, vertical_padding() / 2);
         for (auto& item : m_items) {
             int height = 0;
             if (item->type() == WSMenuItem::Text)
                 height = item_height();
             else if (item->type() == WSMenuItem::Separator)
                 height = 7;
-            item->set_rect({ next_item_location, { width() - padding(), height } });
+            item->set_rect({ next_item_location, { width() - 2, height } });
             next_item_location.move_by(0, height);
         }
 
@@ -90,10 +90,10 @@ void WSMenu::draw()
                 painter.fill_rect(item->rect(), Color(0, 0, 104));
                 text_color = Color::White;
             }
-            painter.draw_text(item->rect(), item->text(), TextAlignment::CenterLeft, text_color);
+            painter.draw_text(item->rect().translated(left_padding(), 0), item->text(), TextAlignment::CenterLeft, text_color);
         } else if (item->type() == WSMenuItem::Separator) {
-            Point p1(padding(), item->rect().center().y());
-            Point p2(width() - padding(), item->rect().center().y());
+            Point p1(1, item->rect().center().y());
+            Point p2(width() - 2, item->rect().center().y());
             painter.draw_line(p1, p2, Color::MidGray);
         }
     }
