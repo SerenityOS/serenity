@@ -67,15 +67,8 @@ int WSMessageLoop::exec()
     }
 }
 
-void WSMessageLoop::post_message(WSMessageReceiver* receiver, OwnPtr<WSMessage>&& message, bool unsafe)
+void WSMessageLoop::post_message(WSMessageReceiver* receiver, OwnPtr<WSMessage>&& message)
 {
-    if (unsafe) {
-        // FIXME: This is such a hack. It should not exist.
-        m_queued_messages.append({ receiver, move(message) });
-        if (current != m_server_process)
-            m_server_process->request_wakeup();
-        return;
-    }
     LOCKER(m_lock);
 #ifdef WSEVENTLOOP_DEBUG
     dbgprintf("WSMessageLoop::post_message: {%u} << receiver=%p, message=%p\n", m_queued_messages.size(), receiver, message.ptr());
