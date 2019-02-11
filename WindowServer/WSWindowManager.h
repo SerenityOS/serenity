@@ -7,10 +7,12 @@
 #include <AK/InlineLinkedList.h>
 #include <AK/WeakPtr.h>
 #include <AK/Lock.h>
-#include <AK/CircularQueue.h>
+#include <AK/HashMap.h>
 #include "WSMessageReceiver.h"
+#include "WSMenuBar.h"
 
 class WSScreen;
+class WSMenuBar;
 class WSMouseEvent;
 class WSClientWantsToPaintMessage;
 class WSWindow;
@@ -32,6 +34,13 @@ public:
 
     void invalidate_cursor();
     void draw_cursor();
+    void draw_menubar();
+
+    Rect menubar_rect() const;
+    WSMenuBar* current_menubar() { return m_current_menubar; }
+    void set_current_menubar(WSMenuBar*);
+    WSMenu* current_menu() { return m_current_menu; }
+    void set_current_menu(WSMenu*);
 
     void invalidate(const WSWindow&);
     void invalidate(const WSWindow&, const Rect&);
@@ -47,10 +56,14 @@ private:
     virtual ~WSWindowManager() override;
 
     void process_mouse_event(WSMouseEvent&);
+    void handle_menu_mouse_event(WSMenu&, WSMouseEvent&);
+    void handle_menubar_mouse_event(WSMenuBar&, WSMouseEvent&);
     void handle_titlebar_mouse_event(WSWindow&, WSMouseEvent&);
     void handle_close_button_mouse_event(WSWindow&, WSMouseEvent&);
 
     void set_active_window(WSWindow*);
+
+    void close_current_menu();
     
     virtual void on_message(WSMessage&) override;
 
@@ -112,4 +125,8 @@ private:
 
     Lockable<bool> m_flash_flush;
     bool m_buffers_are_flipped { false };
+
+    WSMenuBar* m_current_menubar { nullptr };
+    WSMenu* m_current_menu { nullptr };
+    HashMap<int, OwnPtr<WSMenuBar>> m_menubars;
 };

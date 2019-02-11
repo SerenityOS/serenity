@@ -4,8 +4,15 @@
 #include "WSMessageLoop.h"
 #include "Process.h"
 
+WSWindow::WSWindow(WSMenu& menu)
+    : m_lock("WSWindow (menu)")
+    , m_menu(&menu)
+{
+    WSWindowManager::the().add_window(*this);
+}
+
 WSWindow::WSWindow(Process& process, int window_id)
-    : m_lock("WSWindow")
+    : m_lock("WSWindow (normal)")
     , m_process(&process)
     , m_window_id(window_id)
     , m_pid(process.pid())
@@ -35,13 +42,18 @@ void WSWindow::set_rect(const Rect& rect)
     Rect old_rect;
     {
         WSWindowLocker locker(*this);
-        if (!m_process)
+        if (!m_process && !m_menu)
             return;
         if (m_rect == rect)
             return;
         old_rect = m_rect;
         m_rect = rect;
-        m_backing = GraphicsBitmap::create(*m_process, m_rect.size());
+        if (!m_backing || old_rect.size() != rect.size()) {
+            if (m_process)
+                m_backing = GraphicsBitmap::create(*m_process, m_rect.size());
+            if (m_menu)
+                m_backing = GraphicsBitmap::create_kernel_only(m_rect.size());
+        }
     }
     WSWindowManager::the().notify_rect_changed(*this, old_rect, rect);
 }
@@ -59,6 +71,14 @@ static GUI_MouseButton to_api(MouseButton button)
 
 void WSWindow::on_message(WSMessage& message)
 {
+    if (m_menu) {
+        m_menu->on_window_message(message);
+        return;
+    }
+
+    if (!m_process)
+        return;
+
     GUI_Event gui_event;
     gui_event.window_id = window_id();
 
@@ -148,4 +168,17 @@ void WSWindow::set_global_cursor_tracking_enabled(bool enabled)
 {
     dbgprintf("WSWindow{%p} global_cursor_tracking <- %u\n", enabled);
     m_global_cursor_tracking_enabled = enabled;
+}
+
+void WSWindow::set_visible(bool b)
+{
+    if (m_visible == b)
+        return;
+    m_visible = b;
+    invalidate();
+}
+
+void WSWindow::invalidate()
+{
+    WSWindowManager::the().invalidate(*this);
 }

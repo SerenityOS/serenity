@@ -39,6 +39,25 @@ GraphicsBitmap::GraphicsBitmap(Process& process, const Size& size)
 
     m_data = (RGBA32*)m_server_region->laddr().as_ptr();
 }
+
+RetainPtr<GraphicsBitmap> GraphicsBitmap::create_kernel_only(const Size& size)
+{
+    return adopt(*new GraphicsBitmap(size));
+}
+
+GraphicsBitmap::GraphicsBitmap(const Size& size)
+    : m_size(size)
+    , m_pitch(size.width() * sizeof(RGBA32))
+{
+    InterruptDisabler disabler;
+    size_t size_in_bytes = size.width() * size.height() * sizeof(RGBA32);
+    auto vmo = VMObject::create_anonymous(size_in_bytes);
+    auto& server = WSMessageLoop::the().server_process();
+    m_server_region = server.allocate_region_with_vmo(LinearAddress(), size_in_bytes, move(vmo), 0, "GraphicsBitmap (server)", true, false);
+    m_server_region->set_shared(true);
+    m_server_region->set_is_bitmap(true);
+    m_data = (RGBA32*)m_server_region->laddr().as_ptr();
+}
 #endif
 
 RetainPtr<GraphicsBitmap> GraphicsBitmap::create_wrapper(const Size& size, RGBA32* data)

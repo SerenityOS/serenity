@@ -10,6 +10,9 @@
 #include <SharedGraphics/CharacterBitmap.h>
 #include <AK/StdLibExtras.h>
 #include <Kernel/BochsVGADevice.h>
+#include "WSMenu.h"
+#include "WSMenuBar.h"
+#include "WSMenuItem.h"
 
 //#define DEBUG_COUNTERS
 //#define DEBUG_WID_IN_TITLE_BAR
@@ -176,12 +179,56 @@ WSWindowManager::WSWindowManager()
         invalidate(m_screen_rect);
     });
 
+
+    {
+        auto menubar = make<WSMenuBar>();
+
+        {
+            auto menu = make<WSMenu>("Serenity");
+            menu->add_item(make<WSMenuItem>("Launch Terminal"));
+            menu->add_item(make<WSMenuItem>(WSMenuItem::Separator));
+            menu->add_item(make<WSMenuItem>("Hello again"));
+            menu->add_item(make<WSMenuItem>("To all my friends"));
+            menu->add_item(make<WSMenuItem>("Together we can play some rock&roll"));
+            menu->add_item(make<WSMenuItem>(WSMenuItem::Separator));
+            menu->add_item(make<WSMenuItem>("About..."));
+            menubar->add_menu(move(menu));
+        }
+        {
+            auto menu = make<WSMenu>("Application");
+            menu->add_item(make<WSMenuItem>("Bar!"));
+            menu->add_item(make<WSMenuItem>("Foo!"));
+            menubar->add_menu(move(menu));
+        }
+
+        set_current_menubar(menubar.ptr());
+        m_menubars.set(1, move(menubar));
+    }
+
     invalidate();
     compose();
 }
 
 WSWindowManager::~WSWindowManager()
 {
+}
+
+void WSWindowManager::set_current_menubar(WSMenuBar* menubar)
+{
+    if (m_current_menubar == menubar)
+        return;
+    m_current_menubar = menubar;
+    if (!m_current_menubar)
+        return;
+    int menu_margin = 16;
+    Point next_menu_location { menu_margin / 2, 3 };
+    m_current_menubar->for_each_menu([&] (WSMenu& menu) {
+        int text_width = font().width(menu.name());
+        menu.set_rect_in_menubar({ next_menu_location.x() - menu_margin / 2, 0, text_width + menu_margin, menubar_rect().height() - 1 });
+        menu.set_text_rect_in_menubar({ next_menu_location, { text_width, font().glyph_height() } });
+        next_menu_location.move_by(menu.rect_in_menubar().width(), 0);
+        return true;
+    });
 }
 
 static const char* s_close_button_bitmap_data = {
@@ -204,6 +251,11 @@ void WSWindowManager::paint_window_frame(WSWindow& window)
 {
     LOCKER(m_lock);
     //printf("[WM] paint_window_frame {%p}, rect: %d,%d %dx%d\n", &window, window.rect().x(), window.rect().y(), window.rect().width(), window.rect().height());
+
+    if (window.is_menu()) {
+        m_back_painter->draw_rect(window.rect().inflated(2, 2), Color::LightGray);
+        return;
+    }
 
     auto titlebar_rect = title_bar_rect(window.rect());
     auto titlebar_inner_rect = title_bar_text_rect(window.rect());
@@ -318,6 +370,43 @@ void WSWindowManager::notify_rect_changed(WSWindow& window, const Rect& old_rect
     invalidate(outer_window_rect(new_rect));
 }
 
+void WSWindowManager::handle_menu_mouse_event(WSMenu& menu, WSMouseEvent& event)
+{
+    if (event.type() == WSMouseEvent::MouseDown && event.button() == MouseButton::Left) {
+        dbgprintf("[WM] MouseDown on menu '%s'\n", menu.name().characters());
+        if (m_current_menu == &menu)
+            return;
+        close_current_menu();
+        auto& menu_window = menu.ensure_menu_window();
+        menu_window.move_to({ menu.rect_in_menubar().x(), menu.rect_in_menubar().bottom() });
+        menu_window.set_visible(true);
+        m_current_menu = &menu;
+        return;
+    }
+    if (event.type() == WSMouseEvent::MouseUp && event.button() == MouseButton::Left) {
+        close_current_menu();
+        return;
+    }
+}
+
+void WSWindowManager::close_current_menu()
+{
+    if (m_current_menu && m_current_menu->menu_window())
+        m_current_menu->menu_window()->set_visible(false);
+    m_current_menu = nullptr;
+}
+
+void WSWindowManager::handle_menubar_mouse_event(WSMenuBar& menu, WSMouseEvent& event)
+{
+    m_current_menubar->for_each_menu([&] (WSMenu& menu) {
+        if (menu.rect_in_menubar().contains(event.position())) {
+            handle_menu_mouse_event(menu, event);
+            return false;
+        }
+        return true;
+    });
+}
+
 void WSWindowManager::handle_titlebar_mouse_event(WSWindow& window, WSMouseEvent& event)
 {
     if (event.type() == WSMessage::MouseDown && event.button() == MouseButton::Left) {
@@ -376,12 +465,23 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event)
     for (auto* window = m_windows_in_order.tail(); window; window = window->prev()) {
         if (!window->global_cursor_tracking())
             continue;
+        ASSERT(window->is_visible()); // Maybe this should be supported? Idk. Let's catch it and think about it later.
         Point position { event.x() - window->rect().x(), event.y() - window->rect().y() };
         auto local_event = make<WSMouseEvent>(event.type(), position, event.buttons(), event.button());
         window->on_message(*local_event);
     }
 
+    if (m_current_menubar && menubar_rect().contains(event.position())) {
+        handle_menubar_mouse_event(*m_current_menubar, event);
+        return;
+    }
+
+    if (m_current_menu && event.type() == WSMouseEvent::MouseUp && event.button() == MouseButton::Left)
+        close_current_menu();
+
     for (auto* window = m_windows_in_order.tail(); window; window = window->prev()) {
+        if (!window->is_visible())
+            continue;
         if (title_bar_rect(window->rect()).contains(event.position())) {
             if (event.type() == WSMessage::MouseDown) {
                 move_to_front(*window);
@@ -423,6 +523,8 @@ void WSWindowManager::compose()
 
     auto any_window_contains_rect = [this] (const Rect& r) {
         for (auto* window = m_windows_in_order.head(); window; window = window->next()) {
+            if (!window->is_visible())
+                continue;
             if (outer_window_rect(window->rect()).contains(r))
                 return true;
         }
@@ -449,6 +551,8 @@ void WSWindowManager::compose()
             m_back_painter->blit(dirty_rect.location(), *m_wallpaper, dirty_rect);
     }
     for (auto* window = m_windows_in_order.head(); window; window = window->next()) {
+        if (!window->is_visible())
+            continue;
         WSWindowLocker locker(*window);
         RetainPtr<GraphicsBitmap> backing = window->backing();
         if (!backing)
@@ -470,8 +574,9 @@ void WSWindowManager::compose()
         }
         m_back_painter->clear_clip_rect();
     }
-    draw_cursor();
 
+    draw_menubar();
+    draw_cursor();
 
     if (m_flash_flush.lock_and_copy()) {
         for (auto& rect : dirty_rects)
@@ -489,6 +594,28 @@ void WSWindowManager::invalidate_cursor()
     auto cursor_location = m_screen.cursor_location();
     Rect cursor_rect { cursor_location.x(), cursor_location.y(), (int)m_cursor_bitmap_inner->width(), (int)m_cursor_bitmap_inner->height() };
     invalidate(cursor_rect);
+}
+
+Rect WSWindowManager::menubar_rect() const
+{
+    return { 0, 0, m_screen_rect.width(), 16 };
+}
+
+void WSWindowManager::draw_menubar()
+{
+    if (!m_current_menubar)
+        return;
+    m_back_painter->fill_rect(menubar_rect(), Color::LightGray);
+    m_back_painter->draw_line({ 0, menubar_rect().bottom() }, { menubar_rect().right(), menubar_rect().bottom() }, Color::White);
+    m_current_menubar->for_each_menu([&] (WSMenu& menu) {
+        Color text_color = Color::Black;
+        if (&menu == m_current_menu) {
+            m_back_painter->fill_rect(menu.rect_in_menubar(), Color(0, 0, 128));
+            text_color = Color::White;
+        }
+        m_back_painter->draw_text(menu.text_rect_in_menubar(), menu.name(), Painter::TextAlignment::CenterLeft, text_color);
+        return true;
+    });
 }
 
 void WSWindowManager::draw_cursor()
@@ -619,3 +746,4 @@ void WSWindowManager::flush(const Rect& a_rect)
         back_ptr = (RGBA32*)((byte*)back_ptr + pitch);
     }
 }
+

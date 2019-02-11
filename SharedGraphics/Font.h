@@ -58,6 +58,7 @@ public:
 
     byte glyph_width() const { return m_glyph_width; }
     byte glyph_height() const { return m_glyph_height; }
+    int width(const String& string) const { return string.length() * glyph_width(); }
 
     String name() const { return m_name; }
     void set_name(const String& name) { m_name = name; }
