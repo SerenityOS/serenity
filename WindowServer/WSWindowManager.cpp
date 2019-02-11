@@ -185,19 +185,26 @@ WSWindowManager::WSWindowManager()
 
         {
             auto menu = make<WSMenu>("Serenity");
-            menu->add_item(make<WSMenuItem>("Launch Terminal"));
+            menu->add_item(make<WSMenuItem>(0, "Launch Terminal"));
             menu->add_item(make<WSMenuItem>(WSMenuItem::Separator));
-            menu->add_item(make<WSMenuItem>("Hello again"));
-            menu->add_item(make<WSMenuItem>("To all my friends"));
-            menu->add_item(make<WSMenuItem>("Together we can play some rock&roll"));
+            menu->add_item(make<WSMenuItem>(1, "Hello again"));
+            menu->add_item(make<WSMenuItem>(2, "To all my friends"));
+            menu->add_item(make<WSMenuItem>(3, "Together we can play some rock&roll"));
             menu->add_item(make<WSMenuItem>(WSMenuItem::Separator));
-            menu->add_item(make<WSMenuItem>("About..."));
+            menu->add_item(make<WSMenuItem>(4, "About..."));
+            menu->on_item_activation = [] (WSMenuItem& item) {
+                kprintf("WSMenu 1 item activated: '%s'\n", item.text().characters());
+            };
             menubar->add_menu(move(menu));
         }
         {
             auto menu = make<WSMenu>("Application");
-            menu->add_item(make<WSMenuItem>("Bar!"));
-            menu->add_item(make<WSMenuItem>("Foo!"));
+            menu->add_item(make<WSMenuItem>(5, "Foo."));
+            menu->add_item(make<WSMenuItem>(6, "Bar?"));
+            menu->add_item(make<WSMenuItem>(7, "Baz!"));
+            menu->on_item_activation = [] (WSMenuItem& item) {
+                kprintf("WSMenu 2 item activated: '%s'\n", item.text().characters());
+            };
             menubar->add_menu(move(menu));
         }
 

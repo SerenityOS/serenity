@@ -1,7 +1,8 @@
 #include "WSMenuItem.h"
 
-WSMenuItem::WSMenuItem(const String& text)
+WSMenuItem::WSMenuItem(unsigned identifier, const String& text)
     : m_type(Text)
+    , m_identifier(identifier)
     , m_text(text)
 {
 }

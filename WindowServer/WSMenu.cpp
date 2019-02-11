@@ -107,7 +107,23 @@ void WSMenu::on_window_message(WSMessage& message)
             return;
         m_hovered_item = item;
         redraw();
+        return;
     }
+
+    if (message.type() == WSMessage::MouseUp) {
+        if (!m_hovered_item)
+            return;
+        did_activate(*m_hovered_item);
+        m_hovered_item = nullptr;
+        redraw();
+        return;
+    }
+}
+
+void WSMenu::did_activate(WSMenuItem& item)
+{
+    if (on_item_activation)
+        on_item_activation(item);
 }
 
 WSMenuItem* WSMenu::item_at(const Point& position)

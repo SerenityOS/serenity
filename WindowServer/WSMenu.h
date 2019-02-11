@@ -57,7 +57,11 @@ public:
     WSMenuItem* item_at(const Point&);
     void redraw();
 
+    Function<void(WSMenuItem&)> on_item_activation;
+
 private:
+    void did_activate(WSMenuItem&);
+
     String m_name;
     Rect m_rect_in_menubar;
     Rect m_text_rect_in_menubar;
