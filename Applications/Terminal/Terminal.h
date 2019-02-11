@@ -6,6 +6,7 @@
 #include <SharedGraphics/GraphicsBitmap.h>
 #include <SharedGraphics/Rect.h>
 #include <LibGUI/GWidget.h>
+#include <LibGUI/GNotifier.h>
 
 class Font;
 
@@ -140,4 +141,6 @@ private:
     bool m_need_full_flush { false };
 
     RetainPtr<Font> m_font;
+
+    GNotifier m_notifier;
 };
