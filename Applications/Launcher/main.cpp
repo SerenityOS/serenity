@@ -2,7 +2,7 @@
 #include <LibGUI/GWindow.h>
 #include <LibGUI/GWidget.h>
 #include <LibGUI/GButton.h>
-#include <LibGUI/GEventLoop.h>
+#include <LibGUI/GApplication.h>
 #include <sys/wait.h>
 #include <signal.h>
 #include <unistd.h>
@@ -19,17 +19,17 @@ void handle_sigchld(int)
     ASSERT(pid > 0);
 }
 
-int main(int, char**)
+int main(int argc, char** argv)
 {
-    signal(SIGCHLD, handle_sigchld);
+    GApplication app(argc, argv);
 
-    GEventLoop loop;
+    signal(SIGCHLD, handle_sigchld);
 
     auto* launcher_window = make_launcher_window();
     launcher_window->set_should_exit_app_on_close(true);
     launcher_window->show();
 
-    return loop.exec();
+    return app.exec();
 }
 
 class LauncherButton final : public GButton {

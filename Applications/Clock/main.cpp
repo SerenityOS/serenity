@@ -1,10 +1,10 @@
-#include <LibGUI/GEventLoop.h>
+#include <LibGUI/GApplication.h>
 #include <LibGUI/GWindow.h>
 #include "ClockWidget.h"
 
-int main(int, char**)
+int main(int argc, char** argv)
 {
-    GEventLoop loop;
+    GApplication app(argc, argv);
 
     auto* window = new GWindow;
     window->set_title("Clock");
@@ -16,7 +16,7 @@ int main(int, char**)
     window->set_main_widget(clock_widget);
 
     window->show();
-    return loop.exec();
+    return app.exec();
 }
 
 

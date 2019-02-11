@@ -1,7 +1,7 @@
 #include <LibGUI/GStyle.h>
 #include <SharedGraphics/Painter.h>
 
-GStyle* s_the;
+static GStyle* s_the;
 
 GStyle& GStyle::the()
 {

@@ -13,9 +13,9 @@
 #include <LibGUI/GWidget.h>
 #include <LibGUI/GLabel.h>
 #include <LibGUI/GButton.h>
-#include <LibGUI/GEventLoop.h>
 #include <LibGUI/GTextBox.h>
 #include <LibGUI/GCheckBox.h>
+#include <LibGUI/GApplication.h>
 #include <signal.h>
 
 static GWindow* make_font_test_window();
@@ -31,9 +31,10 @@ void handle_sigchld(int)
 
 int main(int argc, char** argv)
 {
+    GApplication app(argc, argv);
+
     signal(SIGCHLD, handle_sigchld);
 
-    GEventLoop loop;
 #if 0
     auto* font_test_window = make_font_test_window();
     font_test_window->show();
@@ -43,7 +44,7 @@ int main(int argc, char** argv)
     launcher_window->set_should_exit_app_on_close(true);
     launcher_window->show();
 
-    return loop.exec();
+    return app.exec();
 }
 
 GWindow* make_font_test_window()
