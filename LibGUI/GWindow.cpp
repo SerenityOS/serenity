@@ -9,6 +9,8 @@
 #include <LibC/unistd.h>
 #include <AK/HashMap.h>
 
+//#define UPDATE_COALESCING_DEBUG
+
 static HashMap<int, GWindow*>* s_windows;
 
 static HashMap<int, GWindow*>& windows()
@@ -199,7 +201,9 @@ void GWindow::update(const Rect& a_rect)
         return;
     for (auto& pending_rect : m_pending_paint_event_rects) {
         if (pending_rect.contains(a_rect)) {
+#ifdef UPDATE_COALESCING_DEBUG
             dbgprintf("Ignoring %s since it's contained by pending rect %s\n", a_rect.to_string().characters(), pending_rect.to_string().characters());
+#endif
             return;
         }
     }
