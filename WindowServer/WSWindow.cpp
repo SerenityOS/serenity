@@ -76,9 +76,6 @@ void WSWindow::on_message(WSMessage& message)
         return;
     }
 
-    if (!m_process)
-        return;
-
     GUI_Event gui_event;
     gui_event.window_id = window_id();
 
