@@ -41,7 +41,8 @@ private:
     word m_cylinders { 0 };
     word m_heads { 0 };
     word m_sectors_per_track { 0 };
-    mutable volatile bool m_interrupted { false };
+    volatile bool m_interrupted { false };
+    volatile byte m_device_error { 0 };
 
 };
 

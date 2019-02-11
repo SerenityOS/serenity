@@ -60,17 +60,14 @@ unsigned IDEDiskDevice::block_size() const
 
 bool IDEDiskDevice::read_block(unsigned index, byte* out) const
 {
-    const_cast<IDEDiskDevice&>(*this).read_sectors(index, 1, out);
-    return true;
+    return const_cast<IDEDiskDevice&>(*this).read_sectors(index, 1, out);
 }
 
 bool IDEDiskDevice::write_block(unsigned index, const byte* data)
 {
-    write_sectors(index, 1, data);
-    return true;
+    return write_sectors(index, 1, data);
 }
 
-#ifdef DISK_DEBUG
 static void print_ide_status(byte status)
 {
     kprintf("DRQ=%u BUSY=%u DRDY=%u SRV=%u DF=%u CORR=%u IDX=%u ERR=%u\n",
@@ -83,7 +80,6 @@ static void print_ide_status(byte status)
             (status & IDX) != 0,
             (status & ERR) != 0);
 }
-#endif
 
 bool IDEDiskDevice::wait_for_irq()
 {
@@ -98,13 +94,21 @@ bool IDEDiskDevice::wait_for_irq()
 #ifdef DISK_DEBUG
     kprintf("disk: got interrupt!\n");
 #endif
+    memory_barrier();
     return true;
 }
 
 void IDEDiskDevice::handle_irq()
 {
-#ifdef DISK_DEBUG
     byte status = IO::in8(0x1f7);
+    if (status & ERR) {
+        print_ide_status(status);
+        m_device_error = IO::in8(0x1f1);
+        kprintf("IDEDiskDevice: Error %b!\n", m_device_error);
+    } else {
+        m_device_error = 0;
+    }
+#ifdef DISK_DEBUG
     kprintf("disk:interrupt: DRQ=%u BUSY=%u DRDY=%u\n", (status & DRQ) != 0, (status & BUSY) != 0, (status & DRDY) != 0);
 #endif
     m_interrupted = true;
@@ -206,6 +210,9 @@ bool IDEDiskDevice::read_sectors(dword start_sector, word count, byte* outbuf)
     enable_irq();
     wait_for_irq();
 
+    if (m_device_error)
+        return false;
+
     byte status = IO::in8(0x1f7);
     if (status & DRQ) {
 #ifdef DISK_DEBUG
@@ -265,5 +272,5 @@ bool IDEDiskDevice::write_sectors(dword start_sector, word count, const byte* da
     enable_irq();
     wait_for_irq();
 
-    return true;
+    return !m_device_error;
 }
