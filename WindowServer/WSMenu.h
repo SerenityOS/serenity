@@ -48,7 +48,10 @@ public:
     int height() const;
 
     int item_height() const { return 16; }
-    int padding() const { return 4; }
+    int vertical_padding() const { return 4; }
+    int horizontal_padding() const { return left_padding() + right_padding(); }
+    int left_padding() const { return 14; }
+    int right_padding() const { return 14; }
 
     void on_window_message(WSMessage&);
     void draw();
