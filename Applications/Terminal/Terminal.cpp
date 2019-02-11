@@ -1,13 +1,16 @@
 #include "Terminal.h"
 #include "XtermColors.h"
+#include <string.h>
+#include <errno.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <stdio.h>
 #include <AK/AKString.h>
 #include <AK/StringBuilder.h>
 #include <SharedGraphics/Font.h>
 #include <SharedGraphics/Painter.h>
 #include <AK/StdLibExtras.h>
-#include <LibC/stdlib.h>
-#include <LibC/unistd.h>
-#include <LibC/stdio.h>
+#include <LibGUI/GApplication.h>
 #include <LibGUI/GWindow.h>
 #include <Kernel/KeyCode.h>
 
@@ -16,7 +19,27 @@
 Terminal::Terminal(int ptm_fd)
     : m_ptm_fd(ptm_fd)
     , m_font(Font::default_font())
+    , m_notifier(ptm_fd, GNotifier::Read)
 {
+    m_notifier.on_ready_to_read = [this] (GNotifier& notifier) {
+        byte buffer[BUFSIZ];
+        ssize_t nread = read(notifier.fd(), buffer, sizeof(buffer));
+        if (nread < 0) {
+            dbgprintf("Terminal read error: %s\n", strerror(errno));
+            perror("read(ptm)");
+            GApplication::the().exit(1);
+            return;
+        }
+        if (nread == 0) {
+            dbgprintf("Terminal: EOF on master pty, closing.\n");
+            GApplication::the().exit(0);
+            return;
+        }
+        for (ssize_t i = 0; i < nread; ++i)
+            on_char(buffer[i]);
+        flush_dirty_lines();
+    };
+
     set_fill_with_background_color(false);
 
     m_line_height = font().glyph_height() + m_line_spacing;

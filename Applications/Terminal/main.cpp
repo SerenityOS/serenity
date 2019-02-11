@@ -11,7 +11,6 @@
 #include "Terminal.h"
 #include <Kernel/KeyCode.h>
 #include <LibGUI/GApplication.h>
-#include <LibGUI/GNotifier.h>
 #include <LibGUI/GWidget.h>
 #include <LibGUI/GWindow.h>
 
@@ -70,29 +69,7 @@ int main(int argc, char** argv)
 
     Terminal terminal(ptm_fd);
     window->set_main_widget(&terminal);
-
     window->move_to(300, 300);
-
-    GNotifier ptm_notifier(ptm_fd, GNotifier::Read);
-    ptm_notifier.on_ready_to_read = [&terminal] (GNotifier& notifier) {
-        byte buffer[BUFSIZ];
-        ssize_t nread = read(notifier.fd(), buffer, sizeof(buffer));
-        if (nread < 0) {
-            dbgprintf("Terminal read error: %s\n", strerror(errno));
-            perror("read(ptm)");
-            GApplication::the().exit(1);
-            return;
-        }
-        if (nread == 0) {
-            dbgprintf("Terminal: EOF on master pty, closing.\n");
-            GApplication::the().exit(0);
-            return;
-        }
-        for (ssize_t i = 0; i < nread; ++i)
-            terminal.on_char(buffer[i]);
-        terminal.flush_dirty_lines();
-    };
-
     window->show();
 
     return app.exec();
