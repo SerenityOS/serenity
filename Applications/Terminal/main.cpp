@@ -71,6 +71,8 @@ int main(int, char**)
     Terminal terminal(ptm_fd);
     window->set_main_widget(&terminal);
 
+    window->move_to(300, 300);
+
     GNotifier ptm_notifier(ptm_fd, GNotifier::Read);
     ptm_notifier.on_ready_to_read = [&terminal] (GNotifier& notifier) {
         byte buffer[BUFSIZ];
