@@ -114,10 +114,17 @@ void WSMenu::on_window_message(WSMessage& message)
         if (!m_hovered_item)
             return;
         did_activate(*m_hovered_item);
-        m_hovered_item = nullptr;
-        redraw();
+        clear_hovered_item();
         return;
     }
+}
+
+void WSMenu::clear_hovered_item()
+{
+    if (!m_hovered_item)
+        return;
+    m_hovered_item = nullptr;
+    redraw();
 }
 
 void WSMenu::did_activate(WSMenuItem& item)
