@@ -199,7 +199,7 @@ WSWindowManager::WSWindowManager()
             menubar->add_menu(move(menu));
         }
         {
-            auto menu = make<WSMenu>("Terminal");
+            auto menu = make<WSMenu>("Dummy");
             menu->add_item(make<WSMenuItem>(5, "Foo."));
             menu->add_item(make<WSMenuItem>(6, "Bar?"));
             menu->add_item(make<WSMenuItem>(7, "Baz!"));
