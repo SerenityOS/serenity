@@ -20,6 +20,10 @@ mknod mnt/dev/tty0 c 4 0
 mknod mnt/dev/tty1 c 4 1
 mknod mnt/dev/tty2 c 4 2
 mknod mnt/dev/tty3 c 4 3
+mknod mnt/dev/random c 1 8
+mknod mnt/dev/null c 1 3
+mknod mnt/dev/zero c 1 5
+mknod mnt/dev/full c 1 7
 mknod mnt/dev/keyboard c 85 1
 mknod mnt/dev/psaux c 10 1
 mknod mnt/dev/ptmx c 5 2
