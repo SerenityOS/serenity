@@ -57,6 +57,9 @@ public:
     WSMenuItem* item_at(const Point&);
     void redraw();
 
+    const WSMenuItem* hovered_item() const { return m_hovered_item; }
+    void clear_hovered_item();
+
     Function<void(WSMenuItem&)> on_item_activation;
 
 private:

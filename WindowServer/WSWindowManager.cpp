@@ -485,6 +485,10 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event)
         return;
     }
 
+    if (m_current_menu && m_current_menu->hovered_item() && !m_current_menu->menu_window()->rect().contains(event.position())) {
+        m_current_menu->clear_hovered_item();
+    }
+
     // FIXME: Figure out an automatic menu dismissal logic that feels right.
 #if 0
     if (m_current_menu && event.type() == WSMouseEvent::MouseUp && event.button() == MouseButton::Left)
