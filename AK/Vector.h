@@ -173,7 +173,8 @@ public:
     void append(Vector<T>&& other)
     {
         if (!m_impl) {
-            m_impl = move(other.m_impl);
+            m_impl = other.m_impl;
+            other.m_impl = nullptr;
             return;
         }
         Vector<T> tmp = move(other);
