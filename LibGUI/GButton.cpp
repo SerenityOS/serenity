@@ -37,9 +37,9 @@ void GButton::paint_event(GPaintEvent&)
         }
         if (m_icon) {
             painter.blit_with_alpha(icon_location, *m_icon, m_icon->rect());
-            painter.draw_text(content_rect, caption(), Painter::TextAlignment::Center, Color::Black);
+            painter.draw_text(content_rect, caption(), TextAlignment::Center, Color::Black);
         } else {
-            painter.draw_text(content_rect, caption(), Painter::TextAlignment::Center, Color::Black);
+            painter.draw_text(content_rect, caption(), TextAlignment::Center, Color::Black);
         }
     }
 }

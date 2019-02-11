@@ -143,9 +143,9 @@ void DirectoryView::paint_event(GPaintEvent&)
             Rect size_rect(name_rect.right() + horizontal_padding, y, 64, item_height());
             painter.fill_rect(row_rect(painted_item_index), i % 2 ? Color(210, 210, 210) : Color::White);
             painter.blit_with_alpha(icon_rect.location(), icon_for(entry), { 0, 0, icon_size, icon_size });
-            painter.draw_text(name_rect, entry.name, Painter::TextAlignment::CenterLeft, Color::Black);
+            painter.draw_text(name_rect, entry.name, TextAlignment::CenterLeft, Color::Black);
             if (should_show_size_for(entry))
-                painter.draw_text(size_rect, pretty_byte_size(entry.size), Painter::TextAlignment::CenterRight, Color::Black);
+                painter.draw_text(size_rect, pretty_byte_size(entry.size), TextAlignment::CenterRight, Color::Black);
         }
     };
 

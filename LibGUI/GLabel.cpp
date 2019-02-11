@@ -24,5 +24,5 @@ void GLabel::paint_event(GPaintEvent& event)
     if (fill_with_background_color())
         painter.fill_rect({ 0, 0, width(), height() }, background_color());
     if (!text().is_empty())
-        painter.draw_text({ 4, 4, width(), height() }, text(), Painter::TextAlignment::TopLeft, foreground_color());
+        painter.draw_text({ 4, 4, width(), height() }, text(), TextAlignment::TopLeft, foreground_color());
 }

@@ -24,7 +24,7 @@ void ClockWidget::paint_event(GPaintEvent&)
 
     Painter painter(*this);
     painter.fill_rect(rect(), Color::LightGray);
-    painter.draw_text(rect(), timeBuf, Painter::TextAlignment::Center, Color::Black);
+    painter.draw_text(rect(), timeBuf, TextAlignment::Center, Color::Black);
 }
 
 void ClockWidget::timer_event(GTimerEvent&)

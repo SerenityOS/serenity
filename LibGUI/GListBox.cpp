@@ -39,7 +39,7 @@ void GListBox::paint_event(GPaintEvent&)
                 painter.fill_rect(item_rect, Color(96, 96, 96));
             item_text_color = Color::White;
         }
-        painter.draw_text(item_rect, m_items[i], Painter::TextAlignment::TopLeft, item_text_color);
+        painter.draw_text(item_rect, m_items[i], TextAlignment::TopLeft, item_text_color);
     }
 }
 
