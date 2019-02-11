@@ -53,6 +53,15 @@ public:
 
     void close_menu(WSMenu&);
 
+    int api$menubar_create();
+    int api$menubar_destroy(int menubar_id);
+    int api$menubar_add_menu(int menubar_id, int menu_id);
+    int api$menu_create(String&&);
+    int api$menu_destroy(int menu_id);
+    int api$menu_add_separator(int menu_id);
+    int api$menu_add_item(int menu_id, unsigned identifier, String&& text);
+    int api$app_set_menubar(int menubar_id);
+
 private:
     WSWindowManager();
     virtual ~WSWindowManager() override;
@@ -66,6 +75,7 @@ private:
     void set_active_window(WSWindow*);
 
     void close_current_menu();
+    WSMenu& create_menu(String&& name);
     
     virtual void on_message(WSMessage&) override;
 
@@ -128,7 +138,11 @@ private:
     Lockable<bool> m_flash_flush;
     bool m_buffers_are_flipped { false };
 
+    int m_next_menubar_id = 100;
+    int m_next_menu_id = 900;
+
     WSMenuBar* m_current_menubar { nullptr };
     WSMenu* m_current_menu { nullptr };
     HashMap<int, OwnPtr<WSMenuBar>> m_menubars;
+    HashMap<int, OwnPtr<WSMenu>> m_menus;
 };

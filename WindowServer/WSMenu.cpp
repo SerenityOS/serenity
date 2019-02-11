@@ -7,8 +7,9 @@
 #include <SharedGraphics/Painter.h>
 #include <SharedGraphics/Font.h>
 
-WSMenu::WSMenu(const String& name)
-    : m_name(name)
+WSMenu::WSMenu(int menu_id, String&& name)
+    : m_menu_id(menu_id)
+    , m_name(move(name))
 {
 }
 

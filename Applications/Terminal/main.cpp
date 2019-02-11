@@ -81,7 +81,7 @@ int main(int argc, char** argv)
 
     auto help_menu = make<GMenu>("?");
     help_menu->add_item(2, "About");
-    menubar->add_menu(move(app_menu));
+    menubar->add_menu(move(help_menu));
 
     app.set_menubar(move(menubar));
 

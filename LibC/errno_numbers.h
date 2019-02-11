@@ -46,6 +46,8 @@
     __ERROR(EBADWINDOW,     "Bad window ID") \
     __ERROR(EBADBACKING,    "Bad backing store ID") \
     __ERROR(ENOTEMPTY,      "Directory not empty") \
+    __ERROR(EBADMENUBAR,    "Bad menubar ID") \
+    __ERROR(EBADMENU,       "Bad menu ID") \
 
 
 enum __errno_values {

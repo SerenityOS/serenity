@@ -6,6 +6,7 @@
 #include <WindowServer/WSMessageLoop.h>
 #include <WindowServer/WSWindow.h>
 #include <WindowServer/WSWindowManager.h>
+#include <WindowServer/WSMenuBar.h>
 #include <Kernel/BochsVGADevice.h>
 
 //#define LOG_GUI_SYSCALLS
@@ -283,4 +284,49 @@ DisplayInfo Process::set_video_resolution(int width, int height)
 
     BochsVGADevice::the().set_resolution(width, height);
     return info;
+}
+
+int Process::gui$menubar_create()
+{
+    return WSWindowManager::the().api$menubar_create();
+}
+
+int Process::gui$menubar_destroy(int menubar_id)
+{
+    return WSWindowManager::the().api$menubar_destroy(menubar_id);
+}
+
+int Process::gui$menubar_add_menu(int menubar_id, int menu_id)
+{
+    return WSWindowManager::the().api$menubar_add_menu(menubar_id, menu_id);
+}
+
+int Process::gui$menu_create(const char* name)
+{
+    if (!validate_read_str(name))
+        return -EFAULT;
+    return WSWindowManager::the().api$menu_create(String(name));
+}
+
+int Process::gui$menu_destroy(int menu_id)
+{
+    return WSWindowManager::the().api$menu_destroy(menu_id);
+}
+
+int Process::gui$menu_add_separator(int menu_id)
+{
+    return WSWindowManager::the().api$menu_add_separator(menu_id);
+}
+
+int Process::gui$menu_add_item(int menu_id, unsigned identifier, const char* text)
+{
+    if (!validate_read_str(text))
+        return -EFAULT;
+    return WSWindowManager::the().api$menu_add_item(menu_id, identifier, String(text));
+}
+
+int Process::gui$set_menubar(int menubar_id)
+{
+    kprintf("gui$set_menubar %d\n", menubar_id);
+    return WSWindowManager::the().api$app_set_menubar(menubar_id);
 }

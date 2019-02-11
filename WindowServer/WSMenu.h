@@ -12,8 +12,10 @@ class Font;
 
 class WSMenu {
 public:
-    WSMenu(const String& name);
+    WSMenu(int menu_id, String&& name);
     ~WSMenu();
+
+    int menu_id() const { return m_menu_id; }
 
     WSMenuBar* menu_bar() { return m_menubar; }
     const WSMenuBar* menu_bar() const { return m_menubar; }
@@ -70,6 +72,7 @@ public:
 private:
     void did_activate(WSMenuItem&);
 
+    int m_menu_id { 0 };
     String m_name;
     Rect m_rect_in_menubar;
     Rect m_text_rect_in_menubar;

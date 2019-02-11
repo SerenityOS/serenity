@@ -18,5 +18,6 @@ public:
     void notify_removed_from_application(Badge<GApplication>);
 
 private:
+    int m_menubar_id { 0 };
     Vector<OwnPtr<GMenu>> m_menus;
 };
