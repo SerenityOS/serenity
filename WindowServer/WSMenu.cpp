@@ -33,7 +33,7 @@ int WSMenu::width() const
             longest = max(longest, font().width(item->text()));
     }
 
-    return max(longest, 80) + padding() * 2;
+    return max(longest, rect_in_menubar().width()) + padding() * 2;
 }
 
 int WSMenu::height() const
@@ -71,7 +71,6 @@ WSWindow& WSMenu::ensure_menu_window()
     }
     return *m_menu_window;
 }
-
 
 void WSMenu::draw()
 {
