@@ -12,6 +12,11 @@ public:
     void add_separator();
 
 private:
+    friend class GMenuBar;
+    int menu_id() const { return m_menu_id; }
+    int realize_menu();
+
+    int m_menu_id { 0 };
     String m_name;
     Vector<GMenuItem> m_items;
 };

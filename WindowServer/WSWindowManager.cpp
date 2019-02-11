@@ -10,6 +10,7 @@
 #include <SharedGraphics/CharacterBitmap.h>
 #include <AK/StdLibExtras.h>
 #include <Kernel/BochsVGADevice.h>
+#include <LibC/errno_numbers.h>
 #include "WSMenu.h"
 #include "WSMenuBar.h"
 #include "WSMenuItem.h"
@@ -185,28 +186,28 @@ WSWindowManager::WSWindowManager()
 
         {
             byte system_menu_name[] = { 0xfc, 0 };
-            auto menu = make<WSMenu>(String((const char*)system_menu_name));
-            menu->add_item(make<WSMenuItem>(0, "Launch Terminal"));
-            menu->add_item(make<WSMenuItem>(WSMenuItem::Separator));
-            menu->add_item(make<WSMenuItem>(1, "Hello again"));
-            menu->add_item(make<WSMenuItem>(2, "To all my friends"));
-            menu->add_item(make<WSMenuItem>(3, "Together we can play some rock&roll"));
-            menu->add_item(make<WSMenuItem>(WSMenuItem::Separator));
-            menu->add_item(make<WSMenuItem>(4, "About..."));
-            menu->on_item_activation = [] (WSMenuItem& item) {
+            auto& menu = create_menu(String((const char*)system_menu_name));
+            menu.add_item(make<WSMenuItem>(0, "Launch Terminal"));
+            menu.add_item(make<WSMenuItem>(WSMenuItem::Separator));
+            menu.add_item(make<WSMenuItem>(1, "Hello again"));
+            menu.add_item(make<WSMenuItem>(2, "To all my friends"));
+            menu.add_item(make<WSMenuItem>(3, "Together we can play some rock&roll"));
+            menu.add_item(make<WSMenuItem>(WSMenuItem::Separator));
+            menu.add_item(make<WSMenuItem>(4, "About..."));
+            menu.on_item_activation = [] (WSMenuItem& item) {
                 kprintf("WSMenu 1 item activated: '%s'\n", item.text().characters());
             };
-            menubar->add_menu(move(menu));
+            menubar->add_menu(&menu);
         }
         {
-            auto menu = make<WSMenu>("Dummy");
-            menu->add_item(make<WSMenuItem>(5, "Foo."));
-            menu->add_item(make<WSMenuItem>(6, "Bar?"));
-            menu->add_item(make<WSMenuItem>(7, "Baz!"));
-            menu->on_item_activation = [] (WSMenuItem& item) {
+            auto& menu = create_menu("Dummy");
+            menu.add_item(make<WSMenuItem>(5, "Foo."));
+            menu.add_item(make<WSMenuItem>(6, "Bar?"));
+            menu.add_item(make<WSMenuItem>(7, "Baz!"));
+            menu.on_item_activation = [] (WSMenuItem& item) {
                 kprintf("WSMenu 2 item activated: '%s'\n", item.text().characters());
             };
-            menubar->add_menu(move(menu));
+            menubar->add_menu(&menu);
         }
 
         set_current_menubar(menubar.ptr());
@@ -223,11 +224,10 @@ WSWindowManager::~WSWindowManager()
 
 void WSWindowManager::set_current_menubar(WSMenuBar* menubar)
 {
+    LOCKER(m_lock);
     if (m_current_menubar == menubar)
         return;
     m_current_menubar = menubar;
-    if (!m_current_menubar)
-        return;
     int menu_margin = 16;
     Point next_menu_location { menu_margin / 2, 3 };
     m_current_menubar->for_each_menu([&] (WSMenu& menu) {
@@ -237,6 +237,7 @@ void WSWindowManager::set_current_menubar(WSMenuBar* menubar)
         next_menu_location.move_by(menu.rect_in_menubar().width(), 0);
         return true;
     });
+    invalidate();
 }
 
 static const char* s_close_button_bitmap_data = {
@@ -445,6 +446,7 @@ void WSWindowManager::handle_close_button_mouse_event(WSWindow& window, WSMouseE
 
 void WSWindowManager::process_mouse_event(WSMouseEvent& event)
 {
+    LOCKER(m_lock);
     if (event.type() == WSMessage::MouseUp && event.button() == MouseButton::Left) {
         if (m_drag_window) {
 #ifdef DRAG_DEBUG
@@ -769,4 +771,107 @@ void WSWindowManager::close_menu(WSMenu& menu)
 {
     ASSERT(m_current_menu == &menu);
     close_current_menu();
+}
+
+WSMenu& WSWindowManager::create_menu(String&& name)
+{
+    int menu_id = m_next_menu_id++;
+    auto menu = make<WSMenu>(menu_id, move(name));
+    auto* menu_ptr = menu.ptr();
+    m_menus.set(menu_id, move(menu));
+    return *menu_ptr;
+}
+
+
+int WSWindowManager::api$menubar_create()
+{
+    LOCKER(m_lock);
+    auto menubar = make<WSMenuBar>();
+    int menubar_id = m_next_menubar_id++;
+    m_menubars.set(menubar_id, move(menubar));
+    return menubar_id;
+}
+
+int WSWindowManager::api$menubar_destroy(int menubar_id)
+{
+    LOCKER(m_lock);
+    auto it = m_menubars.find(menubar_id);
+    if (it == m_menubars.end())
+        return -EBADMENUBAR;
+    auto& menubar = *(*it).value;
+    if (&menubar == m_current_menubar)
+        ASSERT_NOT_REACHED();
+    m_menubars.remove(it);
+    return 0;
+}
+
+int WSWindowManager::api$menubar_add_menu(int menubar_id, int menu_id)
+{
+    LOCKER(m_lock);
+    auto it = m_menubars.find(menubar_id);
+    if (it == m_menubars.end())
+        return -EBADMENUBAR;
+    auto& menubar = *(*it).value;
+
+    auto jt = m_menus.find(menu_id);
+    if (jt == m_menus.end())
+        return -EBADMENU;
+    auto& menu = *(*jt).value;
+
+    menubar.add_menu(&menu);
+    return 0;
+}
+
+int WSWindowManager::api$menu_create(String&& name)
+{
+    LOCKER(m_lock);
+    return create_menu(move(name)).menu_id();
+}
+
+int WSWindowManager::api$menu_destroy(int menu_id)
+{
+    LOCKER(m_lock);
+    auto it = m_menus.find(menu_id);
+    if (it == m_menus.end())
+        return -EBADMENU;
+    m_menus.remove(it);
+    return 0;
+}
+
+int WSWindowManager::api$menu_add_separator(int menu_id)
+{
+    LOCKER(m_lock);
+    auto it = m_menus.find(menu_id);
+    if (it == m_menus.end())
+        return -EBADMENU;
+    auto& menu = *(*it).value;
+    menu.add_item(make<WSMenuItem>(WSMenuItem::Separator));
+    return 0;
+}
+
+int WSWindowManager::api$menu_add_item(int menu_id, unsigned identifier, String&& text)
+{
+    LOCKER(m_lock);
+    auto it = m_menus.find(menu_id);
+    if (it == m_menus.end())
+        return -EBADMENU;
+    auto& menu = *(*it).value;
+    menu.add_item(make<WSMenuItem>(identifier, move(text)));
+    return 0;
+}
+
+int WSWindowManager::api$app_set_menubar(int menubar_id)
+{
+    LOCKER(m_lock);
+    auto it = m_menubars.find(menubar_id);
+    if (it == m_menubars.end())
+        return -EBADMENUBAR;
+    auto& menubar = *(*it).value;
+    if (&menubar == m_current_menubar)
+        return 0;
+    set_current_menubar(&menubar);
+    // FIXME: Maybe leave the system menu even if the app menu changes?
+    close_current_menu();
+    invalidate();
+    return 0;
 }

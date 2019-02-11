@@ -8,7 +8,7 @@ public:
     WSMenuBar();
     ~WSMenuBar();
 
-    void add_menu(OwnPtr<WSMenu>&& menu) { m_menus.append(move(menu)); }
+    void add_menu(WSMenu* menu) { m_menus.append(menu); }
 
     template<typename Callback>
     void for_each_menu(Callback callback)
@@ -20,5 +20,5 @@ public:
     }
 
 private:
-    Vector<OwnPtr<WSMenu>> m_menus;
+    Vector<WSMenu*> m_menus;
 };

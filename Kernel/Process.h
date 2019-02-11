@@ -230,6 +230,14 @@ public:
     int gui$get_window_rect(int window_id, GUI_Rect*);
     int gui$set_window_rect(int window_id, const GUI_Rect*);
     int gui$set_global_cursor_tracking_enabled(int window_id, bool enabled);
+    int gui$menubar_create();
+    int gui$menubar_destroy(int menubar_id);
+    int gui$menubar_add_menu(int menubar_id, int menu_id);
+    int gui$menu_create(const char* name);
+    int gui$menu_destroy(int menu_id);
+    int gui$menu_add_separator(int menu_id);
+    int gui$menu_add_item(int menu_id, unsigned identifier, const char* text);
+    int gui$set_menubar(int menubar_id);
 
     DisplayInfo set_video_resolution(int width, int height);
 
