@@ -33,6 +33,10 @@ void GApplication::exit(int exit_code)
 
 void GApplication::set_menubar(OwnPtr<GMenuBar>&& menubar)
 {
+    if (m_menubar)
+        m_menubar->notify_removed_from_application(Badge<GApplication>());
     m_menubar = move(menubar);
+    if (m_menubar)
+        m_menubar->notify_added_to_application(Badge<GApplication>());
 }
 

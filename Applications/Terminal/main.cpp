@@ -13,6 +13,7 @@
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GWidget.h>
 #include <LibGUI/GWindow.h>
+#include <LibGUI/GMenuBar.h>
 
 static void make_shell(int ptm_fd)
 {
@@ -71,6 +72,18 @@ int main(int argc, char** argv)
     window->set_main_widget(&terminal);
     window->move_to(300, 300);
     window->show();
+
+    auto menubar = make<GMenuBar>();
+
+    auto app_menu = make<GMenu>("Terminal");
+    app_menu->add_item(1, "Quit");
+    menubar->add_menu(move(app_menu));
+
+    auto help_menu = make<GMenu>("?");
+    help_menu->add_item(2, "About");
+    menubar->add_menu(move(app_menu));
+
+    app.set_menubar(move(menubar));
 
     return app.exec();
 }
