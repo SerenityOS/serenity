@@ -15,6 +15,7 @@ class GraphicsBitmap : public Retainable<GraphicsBitmap> {
 public:
 #ifdef KERNEL
     static RetainPtr<GraphicsBitmap> create(Process&, const Size&);
+    static RetainPtr<GraphicsBitmap> create_kernel_only(const Size&);
 #endif
     static RetainPtr<GraphicsBitmap> create_wrapper(const Size&, RGBA32*);
     static RetainPtr<GraphicsBitmap> load_from_file(const String& path, const Size&);
@@ -37,6 +38,7 @@ public:
 private:
 #ifdef KERNEL
     GraphicsBitmap(Process&, const Size&);
+    GraphicsBitmap(const Size&);
 #endif
     GraphicsBitmap(const Size&, RGBA32*);
 
