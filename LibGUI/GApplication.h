@@ -7,9 +7,12 @@ class GMenuBar;
 
 class GApplication {
 public:
+    static GApplication& the();
     GApplication(int argc, char** argv);
+    ~GApplication();
 
     int exec();
+    void exit(int);
 
     void set_menubar(OwnPtr<GMenuBar>&&);
 

@@ -1,10 +1,12 @@
 #include "FontEditor.h"
-#include <LibGUI/GEventLoop.h>
+#include <LibGUI/GApplication.h>
 #include <LibGUI/GWindow.h>
 #include <stdio.h>
 
 int main(int argc, char** argv)
 {
+    GApplication app(argc, argv);
+
     RetainPtr<Font> edited_font;
     String path;
 
@@ -22,7 +24,6 @@ int main(int argc, char** argv)
     else
         edited_font = Font::default_font().clone();
 
-    GEventLoop loop;
     auto* window = new GWindow;
     window->set_title("FontEditor");
     window->set_rect({ 50, 50, 420, 200 });
@@ -31,5 +32,5 @@ int main(int argc, char** argv)
     window->set_main_widget(font_editor);
     window->set_should_exit_app_on_close(true);
     window->show();
-    return loop.exec();
+    return app.exec();
 }

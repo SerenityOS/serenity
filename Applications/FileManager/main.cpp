@@ -1,7 +1,7 @@
 #include <LibGUI/GWindow.h>
 #include <LibGUI/GWidget.h>
 #include <LibGUI/GBoxLayout.h>
-#include <LibGUI/GEventLoop.h>
+#include <LibGUI/GApplication.h>
 #include <LibGUI/GStatusBar.h>
 #include <unistd.h>
 #include <stdio.h>
@@ -9,15 +9,15 @@
 
 static GWindow* make_window();
 
-int main(int, char**)
+int main(int argc, char** argv)
 {
-    GEventLoop loop;
+    GApplication app(argc, argv);
 
     auto* window = make_window();
     window->set_should_exit_app_on_close(true);
     window->show();
 
-    return loop.exec();
+    return app.exec();
 }
 
 GWindow* make_window()

@@ -10,7 +10,7 @@
 #include <LibC/gui.h>
 #include "Terminal.h"
 #include <Kernel/KeyCode.h>
-#include <LibGUI/GEventLoop.h>
+#include <LibGUI/GApplication.h>
 #include <LibGUI/GNotifier.h>
 #include <LibGUI/GWidget.h>
 #include <LibGUI/GWindow.h>
@@ -53,8 +53,10 @@ static void make_shell(int ptm_fd)
     }
 }
 
-int main(int, char**)
+int main(int argc, char** argv)
 {
+    GApplication app(argc, argv);
+
     int ptm_fd = open("/dev/ptmx", O_RDWR);
     if (ptm_fd < 0) {
         perror("open(ptmx)");
@@ -62,8 +64,6 @@ int main(int, char**)
     }
 
     make_shell(ptm_fd);
-
-    GEventLoop loop;
 
     auto* window = new GWindow;
     window->set_should_exit_app_on_close(true);
@@ -80,12 +80,12 @@ int main(int, char**)
         if (nread < 0) {
             dbgprintf("Terminal read error: %s\n", strerror(errno));
             perror("read(ptm)");
-            GEventLoop::main().exit(1);
+            GApplication::the().exit(1);
             return;
         }
         if (nread == 0) {
             dbgprintf("Terminal: EOF on master pty, closing.\n");
-            GEventLoop::main().exit(0);
+            GApplication::the().exit(0);
             return;
         }
         for (ssize_t i = 0; i < nread; ++i)
@@ -95,84 +95,5 @@ int main(int, char**)
 
     window->show();
 
-    return loop.exec();
-
-#if 0
-    for (;;) {
-        fd_set rfds;
-        FD_ZERO(&rfds);
-        FD_SET(ptm_fd, &rfds);
-        FD_SET(event_fd, &rfds);
-        int nfds = select(max(ptm_fd, event_fd) + 1, &rfds, nullptr, nullptr, nullptr);
-        if (nfds < 0) {
-            dbgprintf("Terminal(%u) select() failed :( errno=%d\n", getpid(), errno);
-            return 1;
-        }
-
-        if (FD_ISSET(ptm_fd, &rfds)) {
-            byte buffer[4096];
-            ssize_t nread = read(ptm_fd, buffer, sizeof(buffer));
-            if (nread < 0) {
-                dbgprintf("Terminal read error: %s\n", strerror(errno));
-                perror("read(ptm)");
-                continue;
-            }
-            if (nread == 0) {
-                dbgprintf("Terminal: EOF on master pty, closing.\n");
-                break;
-            }
-            for (ssize_t i = 0; i < nread; ++i)
-                terminal.on_char(buffer[i]);
-            terminal.update();
-        }
-
-        if (FD_ISSET(event_fd, &rfds)) {
-            GUI_Event event;
-            ssize_t nread = read(event_fd, &event, sizeof(event));
-            if (nread < 0) {
-                perror("read(event)");
-                return 1;
-            }
-
-            assert(nread != 0);
-            assert(nread == sizeof(event));
-
-            if (event.type == GUI_Event::Type::Paint) {
-                terminal.update();
-            } else if (event.type == GUI_Event::Type::KeyDown) {
-                char ch = event.key.character;
-                if (event.key.ctrl) {
-                    if (ch >= 'a' && ch <= 'z') {
-                        ch = ch - 'a' + 1;
-                    } else if (ch == '\\') {
-                        ch = 0x1c;
-                    }
-                }
-                switch (event.key.key) {
-                case KeyCode::Key_Up:
-                    write(ptm_fd, "\033[A", 3);
-                    break;
-                case KeyCode::Key_Down:
-                    write(ptm_fd, "\033[B", 3);
-                    break;
-                case KeyCode::Key_Right:
-                    write(ptm_fd, "\033[C", 3);
-                    break;
-                case KeyCode::Key_Left:
-                    write(ptm_fd, "\033[D", 3);
-                    break;
-                default:
-                    write(ptm_fd, &ch, 1);
-                }
-            } else if (event.type == GUI_Event::Type::WindowActivated) {
-                terminal.set_in_active_window(true);
-            } else if (event.type == GUI_Event::Type::WindowDeactivated) {
-                terminal.set_in_active_window(false);
-            } else if (event.type == GUI_Event::Type::WindowCloseRequest) {
-                return 0;
-            }
-        }
-    }
-#endif
-    return 0;
+    return app.exec();
 }
