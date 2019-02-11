@@ -199,7 +199,7 @@ WSWindowManager::WSWindowManager()
             menubar->add_menu(move(menu));
         }
         {
-            auto menu = make<WSMenu>("Application");
+            auto menu = make<WSMenu>("Terminal");
             menu->add_item(make<WSMenuItem>(5, "Foo."));
             menu->add_item(make<WSMenuItem>(6, "Bar?"));
             menu->add_item(make<WSMenuItem>(7, "Baz!"));
@@ -380,8 +380,9 @@ void WSWindowManager::notify_rect_changed(WSWindow& window, const Rect& old_rect
 
 void WSWindowManager::handle_menu_mouse_event(WSMenu& menu, WSMouseEvent& event)
 {
-    bool should_open_menu = (event.type() == WSMouseEvent::MouseMove && event.buttons() & (unsigned)MouseButton::Left)
-            || (event.type() == WSMouseEvent::MouseDown && event.button() == MouseButton::Left);
+    bool is_hover_with_any_menu_open = event.type() == WSMouseEvent::MouseMove && m_current_menu;
+    bool is_mousedown_with_left_button = event.type() == WSMouseEvent::MouseDown && event.button() == MouseButton::Left;
+    bool should_open_menu = &menu != m_current_menu && (is_hover_with_any_menu_open || is_mousedown_with_left_button);
 
     if (should_open_menu) {
         if (m_current_menu == &menu)
@@ -393,7 +394,7 @@ void WSWindowManager::handle_menu_mouse_event(WSMenu& menu, WSMouseEvent& event)
         m_current_menu = &menu;
         return;
     }
-    if (event.type() == WSMouseEvent::MouseUp && event.button() == MouseButton::Left) {
+    if (event.type() == WSMouseEvent::MouseDown && event.button() == MouseButton::Left) {
         close_current_menu();
         return;
     }
@@ -486,15 +487,15 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event)
         return;
     }
 
-    if (m_current_menu && m_current_menu->hovered_item() && !m_current_menu->menu_window()->rect().contains(event.position())) {
-        m_current_menu->clear_hovered_item();
+    if (m_current_menu) {
+        bool event_is_inside_current_menu = m_current_menu->menu_window()->rect().contains(event.position());
+        if (!event_is_inside_current_menu) {
+            if (m_current_menu->hovered_item())
+                m_current_menu->clear_hovered_item();
+            if (event.type() == WSMessage::MouseDown || event.type() == WSMessage::MouseUp)
+                close_current_menu();
+        }
     }
-
-    // FIXME: Figure out an automatic menu dismissal logic that feels right.
-#if 0
-    if (m_current_menu && event.type() == WSMouseEvent::MouseUp && event.button() == MouseButton::Left)
-        close_current_menu();
-#endif
 
     for (auto* window = m_windows_in_order.tail(); window; window = window->prev()) {
         if (!window->is_visible())
@@ -764,3 +765,8 @@ void WSWindowManager::flush(const Rect& a_rect)
     }
 }
 
+void WSWindowManager::close_menu(WSMenu& menu)
+{
+    ASSERT(m_current_menu == &menu);
+    close_current_menu();
+}

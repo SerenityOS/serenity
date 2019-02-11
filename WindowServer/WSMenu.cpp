@@ -3,6 +3,7 @@
 #include "WSWindow.h"
 #include "WSMessage.h"
 #include "WSMessageLoop.h"
+#include "WSWindowManager.h"
 #include <SharedGraphics/Painter.h>
 #include <SharedGraphics/Font.h>
 
@@ -131,6 +132,7 @@ void WSMenu::did_activate(WSMenuItem& item)
 {
     if (on_item_activation)
         on_item_activation(item);
+    close();
 }
 
 WSMenuItem* WSMenu::item_at(const Point& position)
@@ -142,3 +144,8 @@ WSMenuItem* WSMenu::item_at(const Point& position)
     }
     return nullptr;
 }
+
+void WSMenu::close()
+{
+    WSWindowManager::the().close_menu(*this);
+};
