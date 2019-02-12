@@ -18,6 +18,7 @@ public:
     ~WSMenu();
 
     int menu_id() const { return m_menu_id; }
+    const Process* process() const { return m_process.ptr(); }
 
     WSMenuBar* menu_bar() { return m_menubar; }
     const WSMenuBar* menu_bar() const { return m_menubar; }

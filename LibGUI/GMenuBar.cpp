@@ -7,6 +7,10 @@ GMenuBar::GMenuBar()
 
 GMenuBar::~GMenuBar()
 {
+    if (m_menubar_id) {
+        gui_menubar_destroy(m_menubar_id);
+        m_menubar_id = 0;
+    }
 }
 
 void GMenuBar::add_menu(OwnPtr<GMenu>&& menu)

@@ -8,9 +8,11 @@ class Process;
 
 class WSMenuBar {
 public:
-    explicit WSMenuBar(Process&);
+    WSMenuBar(int menubar_id, Process&);
     ~WSMenuBar();
 
+    int menubar_id() const { return m_menubar_id; }
+    const Process* process() const { return m_process.ptr(); }
     void add_menu(WSMenu* menu) { m_menus.append(menu); }
 
     template<typename Callback>
@@ -23,6 +25,7 @@ public:
     }
 
 private:
+    int m_menubar_id { 0 };
     WeakPtr<Process> m_process;
     Vector<WSMenu*> m_menus;
 };

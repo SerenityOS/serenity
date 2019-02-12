@@ -62,6 +62,7 @@ public:
     int api$menu_add_separator(int menu_id);
     int api$menu_add_item(int menu_id, unsigned identifier, String&& text);
     int api$app_set_menubar(int menubar_id);
+    void destroy_all_menus(Process&);
 
 private:
     WSWindowManager();

@@ -257,6 +257,13 @@ int Process::gui$set_global_cursor_tracking_enabled(int window_id, bool enabled)
     return 0;
 }
 
+void Process::destroy_all_menus()
+{
+    if (!m_has_created_menus)
+        return;
+    WSWindowManager::the().destroy_all_menus(*this);
+}
+
 void Process::destroy_all_windows()
 {
     for (auto& it : m_windows) {
@@ -266,7 +273,6 @@ void Process::destroy_all_windows()
     }
     m_windows.clear();
 }
-
 
 DisplayInfo Process::set_video_resolution(int width, int height)
 {
@@ -288,6 +294,7 @@ DisplayInfo Process::set_video_resolution(int width, int height)
 
 int Process::gui$menubar_create()
 {
+    m_has_created_menus = true;
     return WSWindowManager::the().api$menubar_create();
 }
 
@@ -305,6 +312,7 @@ int Process::gui$menu_create(const char* name)
 {
     if (!validate_read_str(name))
         return -EFAULT;
+    m_has_created_menus = true;
     return WSWindowManager::the().api$menu_create(String(name));
 }
 

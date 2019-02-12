@@ -76,22 +76,29 @@ int main(int argc, char** argv)
     auto menubar = make<GMenuBar>();
 
     auto app_menu = make<GMenu>("Terminal");
-    app_menu->add_item(1, "Quit");
+    app_menu->add_item(0, "Quit");
+    app_menu->on_item_activation = [] (unsigned identifier) {
+        if (identifier == 0) {
+            dbgprintf("Terminal: Quit menu activated!\n");
+            GApplication::the().exit(0);
+            return;
+        }
+    };
     menubar->add_menu(move(app_menu));
 
     auto font_menu = make<GMenu>("Font");
-    font_menu->add_item(30, "Liza Thin");
-    font_menu->add_item(31, "Liza Regular");
-    font_menu->add_item(32, "Liza Bold");
+    font_menu->add_item(0, "Liza Thin");
+    font_menu->add_item(1, "Liza Regular");
+    font_menu->add_item(2, "Liza Bold");
     font_menu->on_item_activation = [&terminal] (unsigned identifier) {
         switch (identifier) {
-        case 30:
+        case 0:
             terminal.set_font(Font::load_from_file("/res/fonts/Liza8x10.font"));
             break;
-        case 31:
+        case 1:
             terminal.set_font(Font::load_from_file("/res/fonts/LizaRegular8x10.font"));
             break;
-        case 32:
+        case 2:
             terminal.set_font(Font::load_from_file("/res/fonts/LizaBold8x10.font"));
             break;
         }
@@ -100,7 +107,7 @@ int main(int argc, char** argv)
     menubar->add_menu(move(font_menu));
 
     auto help_menu = make<GMenu>("Help");
-    help_menu->add_item(2, "About");
+    help_menu->add_item(0, "About");
     menubar->add_menu(move(help_menu));
 
     app.set_menubar(move(menubar));

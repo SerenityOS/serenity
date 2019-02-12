@@ -244,6 +244,7 @@ public:
     static void initialize();
     static void initialize_gui_statics();
     int make_window_id();
+    void destroy_all_menus();
     void destroy_all_windows();
 
     void crash() NORETURN;
@@ -419,6 +420,7 @@ private:
     Vector<GUI_Event> m_gui_events;
     Lock m_gui_events_lock;
     int m_next_window_id { 1 };
+    bool m_has_created_menus { false };
 
     dword m_wakeup_requested { false };
     bool m_has_used_fpu { false };
