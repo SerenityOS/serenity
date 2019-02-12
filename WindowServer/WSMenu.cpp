@@ -137,7 +137,18 @@ void WSMenu::did_activate(WSMenuItem& item)
 {
     if (on_item_activation)
         on_item_activation(item);
+
     close();
+
+    GUI_Event gui_event;
+    gui_event.type = GUI_Event::Type::MenuItemActivated;
+    gui_event.menu.menu_id = m_menu_id;
+    gui_event.menu.identifier = item.identifier();
+
+    if (!m_process)
+        return;
+    LOCKER(m_process->gui_events_lock());
+    m_process->gui_events().append(move(gui_event));
 }
 
 WSMenuItem* WSMenu::item_at(const Point& position)

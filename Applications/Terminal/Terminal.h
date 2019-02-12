@@ -19,6 +19,7 @@ public:
     void on_char(byte);
 
     void flush_dirty_lines();
+    void force_repaint();
 
 private:
     virtual void event(GEvent&) override;

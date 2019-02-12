@@ -41,6 +41,7 @@ private:
     void handle_key_event(const GUI_Event&, GWindow&);
     void handle_window_activation_event(const GUI_Event&, GWindow&);
     void handle_window_close_request_event(const GUI_Event&, GWindow&);
+    void handle_menu_event(const GUI_Event&);
 
     void get_next_timer_expiration(timeval&);
 
