@@ -73,8 +73,5 @@ GWindow* make_launcher_window()
     auto* file_manager_button = new LauncherButton("/res/icons/FileManager.rgb", "/bin/FileManager", widget);
     file_manager_button->move_to(115, 5);
 
-    auto* guitest_button = new LauncherButton("/res/icons/generic.rgb", "/bin/guitest", widget);
-    guitest_button->move_to(170, 5);
-
     return window;
 }
