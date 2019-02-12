@@ -112,7 +112,7 @@ int main(int argc, char** argv)
     font_menu->on_item_activation = [&terminal] (unsigned identifier) {
         switch (identifier) {
         case 0:
-            terminal.set_font(Font::load_from_file("/res/fonts/Liza8x10.font"));
+            terminal.set_font(Font::load_from_file("/res/fonts/LizaThin8x10.font"));
             break;
         case 1:
             terminal.set_font(Font::load_from_file("/res/fonts/LizaRegular8x10.font"));
