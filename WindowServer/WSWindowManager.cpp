@@ -482,7 +482,7 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event)
         window->on_message(*local_event);
     }
 
-    if (m_current_menubar && menubar_rect().contains(event.position())) {
+    if (menubar_rect().contains(event.position())) {
         handle_menubar_mouse_event(*m_current_menubar, event);
         return;
     }
