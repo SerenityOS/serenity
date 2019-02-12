@@ -406,7 +406,7 @@ void WSWindowManager::close_current_menu()
     m_current_menu = nullptr;
 }
 
-void WSWindowManager::handle_menubar_mouse_event(WSMenuBar& menu, WSMouseEvent& event)
+void WSWindowManager::handle_menubar_mouse_event(WSMenuBar&, WSMouseEvent& event)
 {
     for_each_active_menubar_menu([&] (WSMenu& menu) {
         if (menu.rect_in_menubar().contains(event.position())) {
@@ -527,6 +527,18 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event)
     }
 }
 
+template<typename Callback>
+void WSWindowManager::for_each_visible_window_of_type(WSWindowType type, Callback callback)
+{
+    for (auto* window = m_windows_in_order.head(); window; window = window->next()) {
+        if (!window->is_visible())
+            continue;
+        if (window->type() != type)
+            continue;
+        callback(*window);
+    }
+}
+
 void WSWindowManager::compose()
 {
     LOCKER(m_lock);
@@ -568,30 +580,32 @@ void WSWindowManager::compose()
         else
             m_back_painter->blit(dirty_rect.location(), *m_wallpaper, dirty_rect);
     }
-    for (auto* window = m_windows_in_order.head(); window; window = window->next()) {
-        if (!window->is_visible())
-            continue;
-        WSWindowLocker locker(*window);
-        RetainPtr<GraphicsBitmap> backing = window->backing();
+
+    auto blit_dirty_rects_of_window = [&] (WSWindow& window) {
+        WSWindowLocker locker(window);
+        RetainPtr<GraphicsBitmap> backing = window.backing();
         if (!backing)
-            continue;
-        if (!any_dirty_rect_intersects_window(*window))
-            continue;
+            return;
+        if (!any_dirty_rect_intersects_window(window))
+            return;
         for (auto& dirty_rect : dirty_rects) {
             m_back_painter->set_clip_rect(dirty_rect);
-            paint_window_frame(*window);
-            Rect dirty_rect_in_window_coordinates = Rect::intersection(dirty_rect, window->rect());
+            paint_window_frame(window);
+            Rect dirty_rect_in_window_coordinates = Rect::intersection(dirty_rect, window.rect());
             if (dirty_rect_in_window_coordinates.is_empty())
                 continue;
-            dirty_rect_in_window_coordinates.set_x(dirty_rect_in_window_coordinates.x() - window->x());
-            dirty_rect_in_window_coordinates.set_y(dirty_rect_in_window_coordinates.y() - window->y());
-            auto dst = window->position();
+            dirty_rect_in_window_coordinates.set_x(dirty_rect_in_window_coordinates.x() - window.x());
+            dirty_rect_in_window_coordinates.set_y(dirty_rect_in_window_coordinates.y() - window.y());
+            auto dst = window.position();
             dst.move_by(dirty_rect_in_window_coordinates.location());
             m_back_painter->blit(dst, *backing, dirty_rect_in_window_coordinates);
             m_back_painter->clear_clip_rect();
         }
         m_back_painter->clear_clip_rect();
-    }
+    };
+
+    for_each_visible_window_of_type(WSWindowType::Normal, blit_dirty_rects_of_window);
+    for_each_visible_window_of_type(WSWindowType::Menu, blit_dirty_rects_of_window);
 
     draw_menubar();
     draw_cursor();
