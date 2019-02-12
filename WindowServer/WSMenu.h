@@ -2,6 +2,7 @@
 
 #include <AK/AKString.h>
 #include <AK/Vector.h>
+#include <AK/WeakPtr.h>
 #include <SharedGraphics/Rect.h>
 #include "WSMenuItem.h"
 
@@ -9,10 +10,11 @@ class WSMenuBar;
 class WSMessage;
 class WSWindow;
 class Font;
+class Process;
 
 class WSMenu {
 public:
-    WSMenu(int menu_id, String&& name);
+    WSMenu(Process&, int menu_id, String&& name);
     ~WSMenu();
 
     int menu_id() const { return m_menu_id; }
@@ -80,5 +82,6 @@ private:
     WSMenuItem* m_hovered_item { nullptr };
     Vector<OwnPtr<WSMenuItem>> m_items;
     OwnPtr<WSWindow> m_menu_window;
+    WeakPtr<Process> m_process;
 };
 

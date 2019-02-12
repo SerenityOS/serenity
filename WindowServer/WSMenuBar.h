@@ -2,10 +2,13 @@
 
 #include "WSMenu.h"
 #include <AK/Vector.h>
+#include <AK/WeakPtr.h>
+
+class Process;
 
 class WSMenuBar {
 public:
-    WSMenuBar();
+    explicit WSMenuBar(Process&);
     ~WSMenuBar();
 
     void add_menu(WSMenu* menu) { m_menus.append(menu); }
@@ -20,5 +23,6 @@ public:
     }
 
 private:
+    WeakPtr<Process> m_process;
     Vector<WSMenu*> m_menus;
 };
