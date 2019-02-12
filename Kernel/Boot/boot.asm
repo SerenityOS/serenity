@@ -50,7 +50,7 @@ boot:
 
     inc word [cur_lba]
     mov cx, word [cur_lba]
-    cmp cx, 600
+    cmp cx, 900
     jz .sector_loop_end
 
     mov bx, es
