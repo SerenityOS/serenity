@@ -54,11 +54,12 @@ void PS2MouseDevice::handle_irq()
         case 2:
             m_data_state = 0;
 #ifdef PS2MOUSE_DEBUG
-            dbgprintf("PS2Mouse: %d, %d %s %s\n",
+            dbgprintf("PS2Mouse: %d, %d %s %s (buffered: %u)\n",
                 m_data[1],
                 m_data[2],
                 (m_data[0] & 1) ? "Left" : "",
-                (m_data[0] & 2) ? "Right" : ""
+                (m_data[0] & 2) ? "Right" : "",
+                m_queue.size()
             );
 #endif
             m_queue.enqueue(m_data[0]);
