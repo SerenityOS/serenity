@@ -327,6 +327,5 @@ int Process::gui$menu_add_item(int menu_id, unsigned identifier, const char* tex
 
 int Process::gui$set_menubar(int menubar_id)
 {
-    kprintf("gui$set_menubar %d\n", menubar_id);
     return WSWindowManager::the().api$app_set_menubar(menubar_id);
 }
