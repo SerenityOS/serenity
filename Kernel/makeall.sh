@@ -18,6 +18,8 @@ make -C ../Applications/Launcher clean && \
 make -C ../Applications/Launcher && \
 make -C ../Applications/FileManager clean && \
 make -C ../Applications/FileManager && \
+make -C ../Applications/About clean && \
+make -C ../Applications/About && \
 make clean &&\
 make && \
 sudo ./sync.sh
