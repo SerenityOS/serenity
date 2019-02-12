@@ -23,6 +23,7 @@ public:
     WSMenuBar* menu_bar() { return m_menubar; }
     const WSMenuBar* menu_bar() const { return m_menubar; }
 
+    bool is_empty() const { return m_items.is_empty(); }
     int item_count() const { return m_items.size(); }
     WSMenuItem* item(int i) { return m_items[i].ptr(); }
     const WSMenuItem* item(int i) const { return m_items[i].ptr(); }

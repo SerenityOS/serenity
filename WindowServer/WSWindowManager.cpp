@@ -387,9 +387,11 @@ void WSWindowManager::handle_menu_mouse_event(WSMenu& menu, WSMouseEvent& event)
         if (m_current_menu == &menu)
             return;
         close_current_menu();
-        auto& menu_window = menu.ensure_menu_window();
-        menu_window.move_to({ menu.rect_in_menubar().x(), menu.rect_in_menubar().bottom() });
-        menu_window.set_visible(true);
+        if (!menu.is_empty()) {
+            auto& menu_window = menu.ensure_menu_window();
+            menu_window.move_to({ menu.rect_in_menubar().x(), menu.rect_in_menubar().bottom() });
+            menu_window.set_visible(true);
+        }
         m_current_menu = &menu;
         return;
     }
