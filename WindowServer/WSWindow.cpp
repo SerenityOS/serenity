@@ -6,6 +6,7 @@
 
 WSWindow::WSWindow(WSMenu& menu)
     : m_lock("WSWindow (menu)")
+    , m_type(WSWindowType::Menu)
     , m_menu(&menu)
 {
     WSWindowManager::the().add_window(*this);
@@ -13,6 +14,7 @@ WSWindow::WSWindow(WSMenu& menu)
 
 WSWindow::WSWindow(Process& process, int window_id)
     : m_lock("WSWindow (normal)")
+    , m_type(WSWindowType::Normal)
     , m_process(&process)
     , m_window_id(window_id)
     , m_pid(process.pid())

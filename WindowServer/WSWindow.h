@@ -8,6 +8,7 @@
 #include <AK/Badge.h>
 #include <Kernel/Process.h>
 #include "WSMessageReceiver.h"
+#include <WindowServer/WSWindowType.h>
 
 class Process;
 class WSMenu;
@@ -19,7 +20,7 @@ public:
     explicit WSWindow(WSMenu&);
     virtual ~WSWindow() override;
 
-    bool is_menu() const { return m_menu; }
+    WSWindowType type() const { return m_type; }
     int window_id() const { return m_window_id; }
 
     String title() const { return m_title; }
@@ -72,6 +73,7 @@ private:
     Lock m_lock;
     String m_title;
     Rect m_rect;
+    WSWindowType m_type { WSWindowType::Normal };
     bool m_is_being_dragged { false };
     bool m_global_cursor_tracking_enabled { false };
     bool m_visible { true };

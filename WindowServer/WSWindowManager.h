@@ -10,6 +10,7 @@
 #include <AK/HashMap.h>
 #include "WSMessageReceiver.h"
 #include "WSMenuBar.h"
+#include <WindowServer/WSWindowType.h>
 
 class WSScreen;
 class WSMenuBar;
@@ -75,7 +76,7 @@ private:
     void handle_close_button_mouse_event(WSWindow&, WSMouseEvent&);
 
     void set_active_window(WSWindow*);
-
+    template<typename Callback> void for_each_visible_window_of_type(WSWindowType, Callback);
     template<typename Callback> void for_each_active_menubar_menu(Callback);
     void close_current_menu();
     WSMenu& create_menu(String&& name);
