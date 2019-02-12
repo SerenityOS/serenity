@@ -504,34 +504,32 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event)
         }
     }
 
-    for (auto* window = m_windows_in_order.tail(); window; window = window->prev()) {
-        if (!window->is_visible())
-            continue;
-        if (window->type() != WSWindowType::Menu && title_bar_rect(window->rect()).contains(event.position())) {
+    for_each_visible_window([&] (WSWindow& window) {
+        if (window.type() != WSWindowType::Menu && title_bar_rect(window.rect()).contains(event.position())) {
             if (event.type() == WSMessage::MouseDown) {
-                move_to_front(*window);
-                set_active_window(window);
+                move_to_front(window);
+                set_active_window(&window);
             }
-            if (close_button_rect_for_window(window->rect()).contains(event.position())) {
-                handle_close_button_mouse_event(*window, event);
+            if (close_button_rect_for_window(window.rect()).contains(event.position())) {
+                handle_close_button_mouse_event(window, event);
                 return;
             }
-            handle_titlebar_mouse_event(*window, event);
+            handle_titlebar_mouse_event(window, event);
             return;
         }
 
-        if (window->rect().contains(event.position())) {
-            if (window->type() != WSWindowType::Menu && event.type() == WSMessage::MouseDown) {
-                move_to_front(*window);
-                set_active_window(window);
+        if (window.rect().contains(event.position())) {
+            if (window.type() != WSWindowType::Menu && event.type() == WSMessage::MouseDown) {
+                move_to_front(window);
+                set_active_window(&window);
             }
             // FIXME: Should we just alter the coordinates of the existing MouseEvent and pass it through?
-            Point position { event.x() - window->rect().x(), event.y() - window->rect().y() };
+            Point position { event.x() - window.rect().x(), event.y() - window.rect().y() };
             auto local_event = make<WSMouseEvent>(event.type(), position, event.buttons(), event.button());
-            window->on_message(*local_event);
+            window.on_message(*local_event);
             return;
         }
-    }
+    });
 }
 
 template<typename Callback>
@@ -544,6 +542,13 @@ void WSWindowManager::for_each_visible_window_of_type(WSWindowType type, Callbac
             continue;
         callback(*window);
     }
+}
+
+template<typename Callback>
+void WSWindowManager::for_each_visible_window(Callback callback)
+{
+    for_each_visible_window_of_type(WSWindowType::Normal, callback);
+    for_each_visible_window_of_type(WSWindowType::Menu, callback);
 }
 
 void WSWindowManager::compose()
@@ -588,7 +593,7 @@ void WSWindowManager::compose()
             m_back_painter->blit(dirty_rect.location(), *m_wallpaper, dirty_rect);
     }
 
-    auto blit_dirty_rects_of_window = [&] (WSWindow& window) {
+    for_each_visible_window([&] (WSWindow& window) {
         WSWindowLocker locker(window);
         RetainPtr<GraphicsBitmap> backing = window.backing();
         if (!backing)
@@ -609,10 +614,7 @@ void WSWindowManager::compose()
             m_back_painter->clear_clip_rect();
         }
         m_back_painter->clear_clip_rect();
-    };
-
-    for_each_visible_window_of_type(WSWindowType::Normal, blit_dirty_rects_of_window);
-    for_each_visible_window_of_type(WSWindowType::Menu, blit_dirty_rects_of_window);
+    });
 
     draw_menubar();
     draw_cursor();
