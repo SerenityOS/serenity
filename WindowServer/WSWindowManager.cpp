@@ -761,8 +761,8 @@ void WSWindowManager::flush(const Rect& a_rect)
 void WSWindowManager::close_menu(WSMenu& menu)
 {
     LOCKER(m_lock);
-    ASSERT(m_current_menu == &menu);
-    close_current_menu();
+    if (m_current_menu == &menu)
+        close_current_menu();
 }
 
 WSMenu& WSWindowManager::create_menu(String&& name)
@@ -779,8 +779,8 @@ WSMenu& WSWindowManager::create_menu(String&& name)
 int WSWindowManager::api$menubar_create()
 {
     LOCKER(m_lock);
-    auto menubar = make<WSMenuBar>(*current);
     int menubar_id = m_next_menubar_id++;
+    auto menubar = make<WSMenuBar>(menubar_id, *current);
     m_menubars.set(menubar_id, move(menubar));
     return menubar_id;
 }
@@ -793,7 +793,7 @@ int WSWindowManager::api$menubar_destroy(int menubar_id)
         return -EBADMENUBAR;
     auto& menubar = *(*it).value;
     if (&menubar == m_current_menubar)
-        ASSERT_NOT_REACHED();
+        set_current_menubar(nullptr);
     m_menubars.remove(it);
     return 0;
 }
@@ -827,6 +827,8 @@ int WSWindowManager::api$menu_destroy(int menu_id)
     auto it = m_menus.find(menu_id);
     if (it == m_menus.end())
         return -EBADMENU;
+    auto& menu = *(*it).value;
+    close_menu(menu);
     m_menus.remove(it);
     return 0;
 }
@@ -867,4 +869,34 @@ int WSWindowManager::api$app_set_menubar(int menubar_id)
     close_current_menu();
     invalidate();
     return 0;
+}
+
+void WSWindowManager::destroy_all_menus(Process& process)
+{
+    LOCKER(m_lock);
+    Vector<int> menu_ids;
+    bool should_close_current_menu = false;
+    for (auto& it : m_menus) {
+        if (it.value->process() == &process)
+            menu_ids.append(it.value->menu_id());
+        if (m_current_menu == it.value.ptr())
+            should_close_current_menu = true;
+    }
+    if (should_close_current_menu)
+        close_current_menu();
+    for (int menu_id : menu_ids)
+        m_menus.remove(menu_id);
+
+    Vector<int> menubar_ids;
+    bool should_close_current_menubar = false;
+    for (auto& it : m_menubars) {
+        if (it.value->process() == &process)
+            menubar_ids.append(it.value->menubar_id());
+        if (m_current_menubar == it.value.ptr())
+            should_close_current_menubar = true;
+    }
+    if (should_close_current_menubar)
+        set_current_menubar(nullptr);
+    for (int menubar_id : menubar_ids)
+        m_menubars.remove(menubar_id);
 }

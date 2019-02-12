@@ -2133,6 +2133,7 @@ void Process::finalize()
 {
     ASSERT(current == g_finalizer);
 
+    destroy_all_menus();
     destroy_all_windows();
     m_fds.clear();
     m_tty = nullptr;
