@@ -24,21 +24,40 @@ static void make_shell(int ptm_fd)
             perror("ptsname");
             exit(1);
         }
-        int rc = 0;
         close(ptm_fd);
         int pts_fd = open(tty_name, O_RDWR);
-        rc = ioctl(0, TIOCNOTTY);
-        if (rc < 0) {
-            perror("ioctl(TIOCNOTTY)");
+        if (pts_fd < 0) {
+            perror("open");
             exit(1);
         }
+
+        // NOTE: It's okay if this fails.
+        (void) ioctl(0, TIOCNOTTY);
+
         close(0);
         close(1);
         close(2);
-        dup2(pts_fd, 0);
-        dup2(pts_fd, 1);
-        dup2(pts_fd, 2);
-        close(pts_fd);
+
+        int rc = dup2(pts_fd, 0);
+        if (rc < 0) {
+            perror("dup2");
+            exit(1);
+        }
+        rc = dup2(pts_fd, 1);
+        if (rc < 0) {
+            perror("dup2");
+            exit(1);
+        }
+        rc = dup2(pts_fd, 2);
+        if (rc < 0) {
+            perror("dup2");
+            exit(1);
+        }
+        rc = close(pts_fd);
+        if (rc < 0) {
+            perror("close");
+            exit(1);
+        }
         rc = ioctl(0, TIOCSCTTY);
         if (rc < 0) {
             perror("ioctl(TIOCSCTTY)");

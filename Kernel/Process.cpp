@@ -6,6 +6,7 @@
 #include "system.h"
 #include <Kernel/FileDescriptor.h>
 #include <Kernel/VirtualFileSystem.h>
+#include <Kernel/NullDevice.h>
 #include "ELFLoader.h"
 #include "MemoryManager.h"
 #include "i8253.h"
@@ -623,12 +624,11 @@ Process::Process(String&& name, uid_t uid, gid_t gid, pid_t ppid, RingLevel ring
         }
     } else {
         m_fds.resize(m_max_open_file_descriptors);
-        if (tty) {
-            int error;
-            m_fds[0].set(tty->open(error, O_RDONLY));
-            m_fds[1].set(tty->open(error, O_WRONLY));
-            m_fds[2].set(tty->open(error, O_WRONLY));
-        }
+        auto& device_to_use_as_tty = tty ? (CharacterDevice&)*tty : NullDevice::the();
+        int error;
+        m_fds[0].set(device_to_use_as_tty.open(error, O_RDONLY));
+        m_fds[1].set(device_to_use_as_tty.open(error, O_WRONLY));
+        m_fds[2].set(device_to_use_as_tty.open(error, O_WRONLY));
     }
 
     if (fork_parent)

@@ -8,6 +8,8 @@ public:
     NullDevice();
     virtual ~NullDevice() override;
 
+    static NullDevice& the();
+
 private:
     // ^CharacterDevice
     virtual ssize_t read(Process&, byte* buffer, size_t bufferSize) override;
