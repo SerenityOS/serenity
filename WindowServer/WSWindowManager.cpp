@@ -193,6 +193,11 @@ WSWindowManager::WSWindowManager()
         m_system_menu->add_item(make<WSMenuItem>(WSMenuItem::Separator));
         m_system_menu->add_item(make<WSMenuItem>(4, "About..."));
         m_system_menu->on_item_activation = [] (WSMenuItem& item) {
+            if (item.identifier() == 0) {
+                int error;
+                Process::create_user_process("/bin/Terminal", 100, 100, current->pid(), error);
+                return;
+            }
             kprintf("WSMenu 1 item activated: '%s'\n", item.text().characters());
         };
     }
