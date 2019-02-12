@@ -103,26 +103,24 @@ static void init_stage2()
     vfs->mount(ProcFS::the(), "/proc");
     vfs->mount(DevPtsFS::the(), "/dev/pts");
 
-    Vector<String> environment;
-    environment.append("TERM=ansi");
-
     int error;
+
     //Process::create_user_process("/bin/sh", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, move(environment), tty0);
-    Process::create_user_process("/bin/Terminal", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, move(environment), tty0);
+    Process::create_user_process("/bin/Terminal", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, { }, tty0);
 #ifdef SPAWN_GUITEST
-    Process::create_user_process("/bin/guitest", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, move(environment), tty0);
+    Process::create_user_process("/bin/guitest", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, { }, tty0);
 #endif
 #ifdef SPAWN_GUITEST2
-    Process::create_user_process("/bin/guitest2", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, move(environment), tty0);
+    Process::create_user_process("/bin/guitest2", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, { }, tty0);
 #endif
 #ifdef SPAWN_LAUNCHER
-    Process::create_user_process("/bin/Launcher", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, move(environment), tty0);
+    Process::create_user_process("/bin/Launcher", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, { }, tty0);
 #endif
 #ifdef SPAWN_CLOCK
-    Process::create_user_process("/bin/Clock", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, move(environment), tty0);
+    Process::create_user_process("/bin/Clock", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, { }, tty0);
 #endif
 #ifdef SPAWN_FILE_MANAGER
-    Process::create_user_process("/bin/FileManager", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, move(environment), tty0);
+    Process::create_user_process("/bin/FileManager", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, { }, tty0);
 #endif
 #ifdef SPAWN_FONTEDITOR
     Process::create_user_process("/bin/FontEditor", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, move(environment), tty0);
