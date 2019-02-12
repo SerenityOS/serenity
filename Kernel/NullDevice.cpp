@@ -3,9 +3,18 @@
 #include <AK/StdLibExtras.h>
 #include <AK/kstdio.h>
 
+static NullDevice* s_the;
+
+NullDevice& NullDevice::the()
+{
+    ASSERT(s_the);
+    return *s_the;
+}
+
 NullDevice::NullDevice()
     : CharacterDevice(1, 3)
 {
+    s_the = this;
 }
 
 NullDevice::~NullDevice()

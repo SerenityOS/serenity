@@ -43,6 +43,7 @@ VirtualConsole* tty3;
 Keyboard* keyboard;
 PS2MouseDevice* ps2mouse;
 GUIEventDevice* gui_event_device;
+NullDevice* dev_null;
 VFS* vfs;
 
 #ifdef STRESS_TEST_SPAWNING
@@ -72,7 +73,6 @@ static void init_stage2()
     auto dev_zero = make<ZeroDevice>();
     vfs->register_character_device(*dev_zero);
 
-    auto dev_null = make<NullDevice>();
     vfs->register_character_device(*dev_null);
 
     auto dev_full = make<FullDevice>();
@@ -162,6 +162,7 @@ void init()
     keyboard = new Keyboard;
     ps2mouse = new PS2MouseDevice;
     gui_event_device = new GUIEventDevice;
+    dev_null = new NullDevice;
 
     VirtualConsole::initialize();
     tty0 = new VirtualConsole(0, VirtualConsole::AdoptCurrentVGABuffer);
