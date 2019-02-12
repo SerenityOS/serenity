@@ -1,3 +1,4 @@
+#include <LibGUI/GAction.h>
 #include <LibGUI/GMenu.h>
 #include <LibC/gui.h>
 #include <AK/HashMap.h>
@@ -32,26 +33,38 @@ GMenu::~GMenu()
     }
 }
 
-void GMenu::add_item(unsigned identifier, const String& text)
+void GMenu::add_action(OwnPtr<GAction>&& action)
 {
-    m_items.append({ identifier, text });
+    m_items.append(make<GMenuItem>(move(action)));
 }
 
 void GMenu::add_separator()
 {
-    m_items.append(GMenuItem(GMenuItem::Separator));
+    m_items.append(make<GMenuItem>(GMenuItem::Separator));
 }
 
 int GMenu::realize_menu()
 {
     m_menu_id = gui_menu_create(m_name.characters());
     ASSERT(m_menu_id > 0);
-    for (auto& item : m_items) {
-        if (item.type() == GMenuItem::Separator)
+    for (size_t i = 0; i < m_items.size(); ++i) {
+        auto& item = *m_items[i];
+        if (item.type() == GMenuItem::Separator) {
             gui_menu_add_separator(m_menu_id);
-        else if (item.type() == GMenuItem::Text)
-            gui_menu_add_item(m_menu_id, item.identifier(), item.text().characters());
+            continue;
+        }
+        if (item.type() == GMenuItem::Action) {
+            auto& action = *item.action();
+            gui_menu_add_item(m_menu_id, i, action.text().characters());
+        }
     }
     all_menus().set(m_menu_id, this);
     return m_menu_id;
+}
+
+GAction* GMenu::action_at(size_t index)
+{
+    if (index >= m_items.size())
+        return nullptr;
+    return m_items[index]->action();
 }

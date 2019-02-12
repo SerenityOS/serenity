@@ -4,6 +4,8 @@
 #include <AK/Function.h>
 #include <AK/Vector.h>
 
+class GAction;
+
 class GMenu {
 public:
     explicit GMenu(const String& name);
@@ -11,7 +13,9 @@ public:
 
     static GMenu* from_menu_id(int);
 
-    void add_item(unsigned identifier, const String& text);
+    GAction* action_at(size_t);
+
+    void add_action(OwnPtr<GAction>&&);
     void add_separator();
 
     Function<void(unsigned)> on_item_activation;
@@ -23,5 +27,5 @@ private:
 
     int m_menu_id { 0 };
     String m_name;
-    Vector<GMenuItem> m_items;
+    Vector<OwnPtr<GMenuItem>> m_items;
 };

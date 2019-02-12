@@ -1,14 +1,14 @@
 #include <LibGUI/GMenuItem.h>
+#include <LibGUI/GAction.h>
 
 GMenuItem::GMenuItem(Type type)
     : m_type(type)
 {
 }
 
-GMenuItem::GMenuItem(unsigned identifier, const String& text)
-    : m_type(Text)
-    , m_identifier(identifier)
-    , m_text(text)
+GMenuItem::GMenuItem(OwnPtr<GAction>&& action)
+    : m_type(Action)
+    , m_action(move(action))
 {
 }
 

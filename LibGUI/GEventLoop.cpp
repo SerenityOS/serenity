@@ -2,6 +2,7 @@
 #include "GEvent.h"
 #include "GObject.h"
 #include "GWindow.h"
+#include <LibGUI/GAction.h>
 #include <LibGUI/GNotifier.h>
 #include <LibGUI/GMenu.h>
 #include <LibC/unistd.h>
@@ -156,8 +157,8 @@ void GEventLoop::handle_menu_event(const GUI_Event& event)
             dbgprintf("GEventLoop received event for invalid window ID %d\n", event.window_id);
             return;
         }
-        if (menu->on_item_activation)
-            menu->on_item_activation(event.menu.identifier);
+        if (auto* action = menu->action_at(event.menu.identifier))
+            action->activate();
         return;
     }
     ASSERT_NOT_REACHED();

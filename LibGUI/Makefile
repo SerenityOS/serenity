@@ -25,6 +25,7 @@ LIBGUI_OBJS = \
     GMenu.o \
     GMenuItem.o \
     GApplication.o \
+    GAction.o \
     GWindow.o
 
 OBJS = $(SHAREDGRAPHICS_OBJS) $(LIBGUI_OBJS)
