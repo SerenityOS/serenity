@@ -1,12 +1,14 @@
 # Serenity
 
-x86 Unix-like operating system for IBM PC-compatibles
+x86 Unix-like operating system for IBM PC-compatibles.
 
 ## About
 
-![Screenshot as of f8fc892](https://raw.githubusercontent.com/awesomekling/serenity/master/Meta/screenshot-f8fc892.png)
-
 I always wanted to write my own operating system, but I never took it seriously. Until now.
+
+## Screenshot
+
+![Screenshot as of 000ccc0](https://raw.githubusercontent.com/awesomekling/serenity/master/Meta/screenshot-000ccc0.png)
 
 ## Current features
 
