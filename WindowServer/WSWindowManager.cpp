@@ -205,6 +205,13 @@ WSWindowManager::~WSWindowManager()
 {
 }
 
+template<typename Callback>
+void WSWindowManager::for_each_active_menubar_menu(Callback callback)
+{
+    callback(*m_system_menu);
+    m_current_menubar->for_each_menu(move(callback));
+}
+
 void WSWindowManager::set_current_menubar(WSMenuBar* menubar)
 {
     LOCKER(m_lock);
@@ -213,7 +220,7 @@ void WSWindowManager::set_current_menubar(WSMenuBar* menubar)
     m_current_menubar = menubar;
     int menu_margin = 16;
     Point next_menu_location { menu_margin / 2, 3 };
-    m_current_menubar->for_each_menu([&] (WSMenu& menu) {
+    for_each_active_menubar_menu([&] (WSMenu& menu) {
         int text_width = font().width(menu.name());
         menu.set_rect_in_menubar({ next_menu_location.x() - menu_margin / 2, 0, text_width + menu_margin, menubar_rect().height() - 1 });
         menu.set_text_rect_in_menubar({ next_menu_location, { text_width, font().glyph_height() } });
@@ -393,7 +400,7 @@ void WSWindowManager::close_current_menu()
 
 void WSWindowManager::handle_menubar_mouse_event(WSMenuBar& menu, WSMouseEvent& event)
 {
-    m_current_menubar->for_each_menu([&] (WSMenu& menu) {
+    for_each_active_menubar_menu([&] (WSMenu& menu) {
         if (menu.rect_in_menubar().contains(event.position())) {
             handle_menu_mouse_event(menu, event);
             return false;
@@ -610,7 +617,7 @@ void WSWindowManager::draw_menubar()
         return;
     m_back_painter->fill_rect(menubar_rect(), Color::LightGray);
     m_back_painter->draw_line({ 0, menubar_rect().bottom() }, { menubar_rect().right(), menubar_rect().bottom() }, Color::White);
-    m_current_menubar->for_each_menu([&] (WSMenu& menu) {
+    for_each_active_menubar_menu([&] (WSMenu& menu) {
         Color text_color = Color::Black;
         if (&menu == m_current_menu) {
             m_back_painter->fill_rect(menu.rect_in_menubar(), menu_selection_color());
