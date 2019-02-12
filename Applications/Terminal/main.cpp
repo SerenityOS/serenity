@@ -79,7 +79,13 @@ int main(int argc, char** argv)
     app_menu->add_item(1, "Quit");
     menubar->add_menu(move(app_menu));
 
-    auto help_menu = make<GMenu>("?");
+    auto font_menu = make<GMenu>("Font");
+    font_menu->add_item(30, "Liza 8x10");
+    font_menu->add_item(31, "LizaRegular 8x10");
+    font_menu->add_item(32, "LizaBold 8x10");
+    menubar->add_menu(move(font_menu));
+
+    auto help_menu = make<GMenu>("Help");
     help_menu->add_item(2, "About");
     menubar->add_menu(move(help_menu));
 

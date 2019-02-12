@@ -52,6 +52,7 @@ public:
     const Font& font() const { return *m_font; }
 
     void close_menu(WSMenu&);
+    Color menu_selection_color() const { return m_menu_selection_color; }
 
     int api$menubar_create();
     int api$menubar_destroy(int menubar_id);
@@ -141,6 +142,8 @@ private:
     int m_next_menubar_id = 100;
     int m_next_menu_id = 900;
 
+    OwnPtr<WSMenu> m_system_menu;
+    Color m_menu_selection_color;
     WSMenuBar* m_current_menubar { nullptr };
     WSMenu* m_current_menu { nullptr };
     HashMap<int, OwnPtr<WSMenuBar>> m_menubars;

@@ -7,9 +7,10 @@
 #include <SharedGraphics/Painter.h>
 #include <SharedGraphics/Font.h>
 
-WSMenu::WSMenu(int menu_id, String&& name)
+WSMenu::WSMenu(Process& process, int menu_id, String&& name)
     : m_menu_id(menu_id)
     , m_name(move(name))
+    , m_process(process.make_weak_ptr())
 {
 }
 
@@ -88,7 +89,7 @@ void WSMenu::draw()
         if (item->type() == WSMenuItem::Text) {
             Color text_color = Color::Black;
             if (item.ptr() == m_hovered_item) {
-                painter.fill_rect(item->rect(), Color(0, 0, 104));
+                painter.fill_rect(item->rect(), WSWindowManager::the().menu_selection_color());
                 text_color = Color::White;
             }
             painter.draw_text(item->rect().translated(left_padding(), 0), item->text(), TextAlignment::CenterLeft, text_color);

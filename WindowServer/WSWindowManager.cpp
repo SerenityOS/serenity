@@ -180,38 +180,21 @@ WSWindowManager::WSWindowManager()
         invalidate(m_screen_rect);
     });
 
+    m_menu_selection_color = Color(0x84351a);
 
     {
-        auto menubar = make<WSMenuBar>();
-
-        {
-            byte system_menu_name[] = { 0xfc, 0 };
-            auto& menu = create_menu(String((const char*)system_menu_name));
-            menu.add_item(make<WSMenuItem>(0, "Launch Terminal"));
-            menu.add_item(make<WSMenuItem>(WSMenuItem::Separator));
-            menu.add_item(make<WSMenuItem>(1, "Hello again"));
-            menu.add_item(make<WSMenuItem>(2, "To all my friends"));
-            menu.add_item(make<WSMenuItem>(3, "Together we can play some rock&roll"));
-            menu.add_item(make<WSMenuItem>(WSMenuItem::Separator));
-            menu.add_item(make<WSMenuItem>(4, "About..."));
-            menu.on_item_activation = [] (WSMenuItem& item) {
-                kprintf("WSMenu 1 item activated: '%s'\n", item.text().characters());
-            };
-            menubar->add_menu(&menu);
-        }
-        {
-            auto& menu = create_menu("Dummy");
-            menu.add_item(make<WSMenuItem>(5, "Foo."));
-            menu.add_item(make<WSMenuItem>(6, "Bar?"));
-            menu.add_item(make<WSMenuItem>(7, "Baz!"));
-            menu.on_item_activation = [] (WSMenuItem& item) {
-                kprintf("WSMenu 2 item activated: '%s'\n", item.text().characters());
-            };
-            menubar->add_menu(&menu);
-        }
-
-        set_current_menubar(menubar.ptr());
-        m_menubars.set(1, move(menubar));
+        byte system_menu_name[] = { 0xfc, 0 };
+        m_system_menu = make<WSMenu>(*current, -1, String((const char*)system_menu_name));
+        m_system_menu->add_item(make<WSMenuItem>(0, "Launch Terminal"));
+        m_system_menu->add_item(make<WSMenuItem>(WSMenuItem::Separator));
+        m_system_menu->add_item(make<WSMenuItem>(1, "Hello again"));
+        m_system_menu->add_item(make<WSMenuItem>(2, "To all my friends"));
+        m_system_menu->add_item(make<WSMenuItem>(3, "Together we can play some rock&roll"));
+        m_system_menu->add_item(make<WSMenuItem>(WSMenuItem::Separator));
+        m_system_menu->add_item(make<WSMenuItem>(4, "About..."));
+        m_system_menu->on_item_activation = [] (WSMenuItem& item) {
+            kprintf("WSMenu 1 item activated: '%s'\n", item.text().characters());
+        };
     }
 
     invalidate();
@@ -630,7 +613,7 @@ void WSWindowManager::draw_menubar()
     m_current_menubar->for_each_menu([&] (WSMenu& menu) {
         Color text_color = Color::Black;
         if (&menu == m_current_menu) {
-            m_back_painter->fill_rect(menu.rect_in_menubar(), Color(0, 0, 104));
+            m_back_painter->fill_rect(menu.rect_in_menubar(), menu_selection_color());
             text_color = Color::White;
         }
         m_back_painter->draw_text(menu.text_rect_in_menubar(), menu.name(), TextAlignment::CenterLeft, text_color);
@@ -769,14 +752,16 @@ void WSWindowManager::flush(const Rect& a_rect)
 
 void WSWindowManager::close_menu(WSMenu& menu)
 {
+    LOCKER(m_lock);
     ASSERT(m_current_menu == &menu);
     close_current_menu();
 }
 
 WSMenu& WSWindowManager::create_menu(String&& name)
 {
+    LOCKER(m_lock);
     int menu_id = m_next_menu_id++;
-    auto menu = make<WSMenu>(menu_id, move(name));
+    auto menu = make<WSMenu>(*current, menu_id, move(name));
     auto* menu_ptr = menu.ptr();
     m_menus.set(menu_id, move(menu));
     return *menu_ptr;
@@ -786,7 +771,7 @@ WSMenu& WSWindowManager::create_menu(String&& name)
 int WSWindowManager::api$menubar_create()
 {
     LOCKER(m_lock);
-    auto menubar = make<WSMenuBar>();
+    auto menubar = make<WSMenuBar>(*current);
     int menubar_id = m_next_menubar_id++;
     m_menubars.set(menubar_id, move(menubar));
     return menubar_id;
