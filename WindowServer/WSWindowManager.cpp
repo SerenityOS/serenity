@@ -183,7 +183,7 @@ WSWindowManager::WSWindowManager()
     m_menu_selection_color = Color(0x84351a);
 
     {
-        byte system_menu_name[] = { 0xfc, 0 };
+        byte system_menu_name[] = { 0xf8, 0 };
         m_system_menu = make<WSMenu>(*current, -1, String((const char*)system_menu_name));
         m_system_menu->add_item(make<WSMenuItem>(0, "Launch Terminal"));
         m_system_menu->add_item(make<WSMenuItem>(WSMenuItem::Separator));
