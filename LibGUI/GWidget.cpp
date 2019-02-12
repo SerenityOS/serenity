@@ -234,6 +234,7 @@ void GWidget::set_font(RetainPtr<Font>&& font)
         m_font = Font::default_font();
     else
         m_font = move(font);
+    update();
 }
 
 void GWidget::set_global_cursor_tracking(bool enabled)

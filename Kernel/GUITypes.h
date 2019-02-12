@@ -67,6 +67,7 @@ struct GUI_Event {
         WindowActivated,
         WindowDeactivated,
         WindowCloseRequest,
+        MenuItemActivated,
     };
     Type type { Invalid };
     int window_id { -1 };
@@ -88,6 +89,10 @@ struct GUI_Event {
             bool alt : 1;
             bool shift : 1;
         } key;
+        struct {
+            int menu_id;
+            unsigned identifier;
+        } menu;
     };
 };
 

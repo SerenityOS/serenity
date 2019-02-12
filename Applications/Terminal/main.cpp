@@ -80,9 +80,23 @@ int main(int argc, char** argv)
     menubar->add_menu(move(app_menu));
 
     auto font_menu = make<GMenu>("Font");
-    font_menu->add_item(30, "Liza 8x10");
-    font_menu->add_item(31, "LizaRegular 8x10");
-    font_menu->add_item(32, "LizaBold 8x10");
+    font_menu->add_item(30, "Liza Thin");
+    font_menu->add_item(31, "Liza Regular");
+    font_menu->add_item(32, "Liza Bold");
+    font_menu->on_item_activation = [&terminal] (unsigned identifier) {
+        switch (identifier) {
+        case 30:
+            terminal.set_font(Font::load_from_file("/res/fonts/Liza8x10.font"));
+            break;
+        case 31:
+            terminal.set_font(Font::load_from_file("/res/fonts/LizaRegular8x10.font"));
+            break;
+        case 32:
+            terminal.set_font(Font::load_from_file("/res/fonts/LizaBold8x10.font"));
+            break;
+        }
+        terminal.force_repaint();
+    };
     menubar->add_menu(move(font_menu));
 
     auto help_menu = make<GMenu>("Help");

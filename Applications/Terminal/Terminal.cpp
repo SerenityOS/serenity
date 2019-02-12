@@ -749,3 +749,11 @@ void Terminal::flush_dirty_lines()
     }
     update(rect);
 }
+
+void Terminal::force_repaint()
+{
+    for (int i = 0; i < m_rows; ++i)
+        line(i).dirty = true;
+    m_need_full_flush = true;
+    update();
+}

@@ -3,6 +3,7 @@
 #include "GObject.h"
 #include "GWindow.h"
 #include <LibGUI/GNotifier.h>
+#include <LibGUI/GMenu.h>
 #include <LibC/unistd.h>
 #include <LibC/stdio.h>
 #include <LibC/fcntl.h>
@@ -147,6 +148,21 @@ void GEventLoop::handle_mouse_event(const GUI_Event& event, GWindow& window)
     post_event(&window, make<GMouseEvent>(type, event.mouse.position, event.mouse.buttons, button));
 }
 
+void GEventLoop::handle_menu_event(const GUI_Event& event)
+{
+    if (event.type == GUI_Event::Type::MenuItemActivated) {
+        auto* menu = GMenu::from_menu_id(event.menu.menu_id);
+        if (!menu) {
+            dbgprintf("GEventLoop received event for invalid window ID %d\n", event.window_id);
+            return;
+        }
+        if (menu->on_item_activation)
+            menu->on_item_activation(event.menu.identifier);
+        return;
+    }
+    ASSERT_NOT_REACHED();
+}
+
 void GEventLoop::wait_for_event()
 {
     fd_set rfds;
@@ -219,6 +235,13 @@ void GEventLoop::wait_for_event()
         if (nread == 0)
             break;
         assert(nread == sizeof(event));
+
+        switch (event.type) {
+        case GUI_Event::MenuItemActivated:
+            handle_menu_event(event);
+            continue;
+        }
+
         auto* window = GWindow::from_window_id(event.window_id);
         if (!window) {
             dbgprintf("GEventLoop received event for invalid window ID %d\n", event.window_id);
@@ -243,6 +266,8 @@ void GEventLoop::wait_for_event()
         case GUI_Event::Type::KeyDown:
         case GUI_Event::Type::KeyUp:
             handle_key_event(event, *window);
+            break;
+        default:
             break;
         }
     }
