@@ -197,6 +197,9 @@ WSWindowManager::WSWindowManager()
         };
     }
 
+    // NOTE: This ensures that the system menu has the correct dimensions.
+    set_current_menubar(nullptr);
+
     invalidate();
     compose();
 }
@@ -209,15 +212,15 @@ template<typename Callback>
 void WSWindowManager::for_each_active_menubar_menu(Callback callback)
 {
     callback(*m_system_menu);
-    m_current_menubar->for_each_menu(move(callback));
+    if (m_current_menubar)
+        m_current_menubar->for_each_menu(callback);
 }
 
 void WSWindowManager::set_current_menubar(WSMenuBar* menubar)
 {
     LOCKER(m_lock);
-    if (m_current_menubar == menubar)
-        return;
     m_current_menubar = menubar;
+    dbgprintf("[WM] Current menubar is now %p\n", menubar);
     int menu_margin = 16;
     Point next_menu_location { menu_margin / 2, 3 };
     for_each_active_menubar_menu([&] (WSMenu& menu) {
@@ -613,8 +616,6 @@ Rect WSWindowManager::menubar_rect() const
 
 void WSWindowManager::draw_menubar()
 {
-    if (!m_current_menubar)
-        return;
     m_back_painter->fill_rect(menubar_rect(), Color::LightGray);
     m_back_painter->draw_line({ 0, menubar_rect().bottom() }, { menubar_rect().right(), menubar_rect().bottom() }, Color::White);
     for_each_active_menubar_menu([&] (WSMenu& menu) {
@@ -685,7 +686,7 @@ void WSWindowManager::invalidate()
 {
     LOCKER(m_lock);
     m_dirty_rects.clear_with_capacity();
-    m_dirty_rects.append(m_screen_rect);
+    invalidate(m_screen_rect);
 }
 
 void WSWindowManager::invalidate(const Rect& a_rect)

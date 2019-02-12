@@ -54,7 +54,7 @@ int WSMessageLoop::exec()
             auto* receiver = queued_message.receiver;
             auto& message = *queued_message.message;
 #ifdef WSEVENTLOOP_DEBUG
-            dbgprintf("WSMessageLoop: receiver{%p} message %u (%s)\n", receiver, (unsigned)event.type(), event.name());
+            dbgprintf("WSMessageLoop: receiver{%p} message %u\n", receiver, (unsigned)message.type());
 #endif
             if (!receiver) {
                 dbgprintf("WSMessage type %u with no receiver :(\n", message.type());
@@ -71,7 +71,7 @@ void WSMessageLoop::post_message(WSMessageReceiver* receiver, OwnPtr<WSMessage>&
 {
     LOCKER(m_lock);
 #ifdef WSEVENTLOOP_DEBUG
-    dbgprintf("WSMessageLoop::post_message: {%u} << receiver=%p, message=%p\n", m_queued_messages.size(), receiver, message.ptr());
+    dbgprintf("WSMessageLoop::post_message: {%u} << receiver=%p, message=%p (type=%u)\n", m_queued_messages.size(), receiver, message.ptr(), message->type());
 #endif
 
     if (message->type() == WSMessage::WM_ClientFinishedPaint) {
@@ -127,6 +127,7 @@ void WSMessageLoop::wait_for_message()
         params.timeout = nullptr;
     else
         params.timeout = &timeout;
+
     int rc = m_server_process->sys$select(&params);
     memory_barrier();
     if (rc < 0) {
