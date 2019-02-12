@@ -259,7 +259,7 @@ void WSWindowManager::paint_window_frame(WSWindow& window)
     LOCKER(m_lock);
     //printf("[WM] paint_window_frame {%p}, rect: %d,%d %dx%d\n", &window, window.rect().x(), window.rect().y(), window.rect().width(), window.rect().height());
 
-    if (window.is_menu()) {
+    if (window.type() == WSWindowType::Menu) {
         m_back_painter->draw_rect(window.rect().inflated(2, 2), Color::LightGray);
         return;
     }
