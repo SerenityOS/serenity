@@ -20,6 +20,8 @@ public:
     explicit WSWindow(WSMenu&);
     virtual ~WSWindow() override;
 
+    const Process* process() const { return m_process; }
+
     WSWindowType type() const { return m_type; }
     int window_id() const { return m_window_id; }
 
