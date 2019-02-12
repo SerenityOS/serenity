@@ -30,6 +30,7 @@ public:
     void notify_rect_changed(WSWindow&, const Rect& oldRect, const Rect& newRect);
 
     WSWindow* active_window() { return m_active_window.ptr(); }
+    const Process* active_process() const;
 
     void move_to_front(WSWindow&);
 
@@ -152,4 +153,5 @@ private:
     WSMenu* m_current_menu { nullptr };
     HashMap<int, OwnPtr<WSMenuBar>> m_menubars;
     HashMap<int, OwnPtr<WSMenu>> m_menus;
+    HashMap<const Process*, WSMenuBar*> m_app_menubars;
 };

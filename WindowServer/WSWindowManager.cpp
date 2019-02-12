@@ -707,6 +707,12 @@ void WSWindowManager::set_active_window(WSWindow* window)
     if (m_active_window) {
         WSMessageLoop::the().post_message(m_active_window.ptr(), make<WSMessage>(WSMessage::WindowActivated));
         invalidate(*m_active_window);
+
+        auto it = m_app_menubars.find(window->process());
+        if (it != m_app_menubars.end())
+            set_current_menubar((*it).value);
+        else
+            set_current_menubar(nullptr);
     }
 }
 
@@ -883,6 +889,13 @@ int WSWindowManager::api$menu_add_item(int menu_id, unsigned identifier, String&
     return 0;
 }
 
+const Process* WSWindowManager::active_process() const
+{
+    if (m_active_window)
+        return m_active_window->process();
+    return nullptr;
+}
+
 int WSWindowManager::api$app_set_menubar(int menubar_id)
 {
     LOCKER(m_lock);
@@ -890,11 +903,9 @@ int WSWindowManager::api$app_set_menubar(int menubar_id)
     if (it == m_menubars.end())
         return -EBADMENUBAR;
     auto& menubar = *(*it).value;
-    if (&menubar == m_current_menubar)
-        return 0;
-    set_current_menubar(&menubar);
-    // FIXME: Maybe leave the system menu even if the app menu changes?
-    close_current_menu();
+    m_app_menubars.set(current, &menubar);
+    if (active_process() == current)
+        set_current_menubar(&menubar);
     invalidate();
     return 0;
 }
@@ -927,4 +938,5 @@ void WSWindowManager::destroy_all_menus(Process& process)
         set_current_menubar(nullptr);
     for (int menubar_id : menubar_ids)
         m_menubars.remove(menubar_id);
+    m_app_menubars.remove(current);
 }
