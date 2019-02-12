@@ -198,6 +198,11 @@ WSWindowManager::WSWindowManager()
                 Process::create_user_process("/bin/Terminal", 100, 100, current->pid(), error);
                 return;
             }
+            if (item.identifier() == 4) {
+                int error;
+                Process::create_user_process("/bin/About", 100, 100, current->pid(), error);
+                return;
+            }
             kprintf("WSMenu 1 item activated: '%s'\n", item.text().characters());
         };
     }

@@ -10,6 +10,7 @@ GStatusBar::GStatusBar(GWidget* parent)
     set_preferred_size({ 0, 16 });
     set_layout(make<GBoxLayout>(Orientation::Horizontal));
     m_label = new GLabel(this);
+    m_label->set_text_alignment(TextAlignment::CenterLeft);
     m_label->set_fill_with_background_color(false);
 }
 
