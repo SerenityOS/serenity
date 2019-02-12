@@ -69,6 +69,7 @@ static GUI_MouseButton to_api(MouseButton button)
     case MouseButton::Right: return GUI_MouseButton::Right;
     case MouseButton::Middle: return GUI_MouseButton::Middle;
     }
+    ASSERT_NOT_REACHED();
 }
 
 void WSWindow::on_message(WSMessage& message)

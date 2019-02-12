@@ -12,13 +12,14 @@ static dword time_slice_for(Process::Priority priority)
 {
     // One time slice unit == 1ms
     switch (priority) {
-    case Process::LowPriority:
-        return 5;
-    case Process::NormalPriority:
-        return 15;
     case Process::HighPriority:
         return 50;
+    case Process::NormalPriority:
+        return 15;
+    case Process::LowPriority:
+        return 5;
     }
+    ASSERT_NOT_REACHED();
 }
 
 Process* current;

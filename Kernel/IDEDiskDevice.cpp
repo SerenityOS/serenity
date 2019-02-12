@@ -116,10 +116,8 @@ void IDEDiskDevice::handle_irq()
 
 void IDEDiskDevice::initialize()
 {
-    byte status;
-
-    status = IO::in8(IDE0_STATUS);
 #ifdef DISK_DEBUG
+    byte status = IO::in8(IDE0_STATUS);
     kprintf("initial status: ");
     print_ide_status(status);
 #endif

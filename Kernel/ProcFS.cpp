@@ -109,6 +109,7 @@ static inline InodeIdentifier to_parent_id(const InodeIdentifier& identifier)
     case PDI_PID_fd:
         return to_identifier(identifier.fsid(), PDI_PID, to_pid(identifier), FI_PID_fd);
     }
+    ASSERT_NOT_REACHED();
 }
 
 #if 0
