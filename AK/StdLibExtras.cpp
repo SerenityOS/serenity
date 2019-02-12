@@ -12,12 +12,13 @@ void* mmx_memcpy(void* dest, const void* src, size_t len)
 
     if ((dword)dest_ptr & 7) {
         dword prologue = 8 - ((dword)dest_ptr & 7);
+        len -= prologue;
         asm volatile(
             "rep movsb\n"
-            :: "S"(src_ptr), "D"(dest_ptr), "c"(prologue)
+            : "=S"(src_ptr), "=D"(dest_ptr), "=c"(prologue)
+            : "0"(src_ptr), "1"(dest_ptr), "2"(prologue)
             : "memory"
         );
-        len -= prologue;
     }
     for (dword i = len / 64; i; --i) {
         asm volatile(
