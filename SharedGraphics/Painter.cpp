@@ -282,7 +282,6 @@ void Painter::blit(const Point& position, const GraphicsBitmap& source, const Re
     const int first_row = clipped_rect.top() - dst_rect.top();
     const int last_row = clipped_rect.bottom() - dst_rect.top();
     const int first_column = clipped_rect.left() - dst_rect.left();
-    const int last_column = clipped_rect.right() - dst_rect.left();
     RGBA32* dst = m_target->scanline(clipped_rect.y()) + clipped_rect.x();
     const RGBA32* src = source.scanline(src_rect.top() + first_row) + src_rect.left() + first_column;
     const size_t dst_skip = m_target->width();
