@@ -15,6 +15,7 @@
 #include <LibGUI/GWindow.h>
 #include <LibGUI/GMenuBar.h>
 #include <LibGUI/GAction.h>
+#include <LibGUI/GFontDatabase.h>
 
 static void make_shell(int ptm_fd)
 {
@@ -104,14 +105,12 @@ int main(int argc, char** argv)
     menubar->add_menu(move(app_menu));
 
     auto font_menu = make<GMenu>("Font");
-    auto handle_font_selection = [&terminal] (const GAction& action) {
-        terminal.set_font(Font::load_from_file(action.custom_data()));
-        terminal.force_repaint();
-    };
-    font_menu->add_action(make<GAction>("Liza Thin", "/res/fonts/LizaThin8x10.font", move(handle_font_selection)));
-    font_menu->add_action(make<GAction>("Liza Regular", "/res/fonts/LizaRegular8x10.font", move(handle_font_selection)));
-    font_menu->add_action(make<GAction>("Liza Bold", "/res/fonts/LizaBold8x10.font", move(handle_font_selection)));
-
+    GFontDatabase::the().for_each_font([&] (const String& font_name) {
+        font_menu->add_action(make<GAction>(font_name, [&terminal] (const GAction& action) {
+            terminal.set_font(GFontDatabase::the().get_by_name(action.text()));
+            terminal.force_repaint();
+        }));
+    });
     menubar->add_menu(move(font_menu));
 
     auto help_menu = make<GMenu>("Help");
