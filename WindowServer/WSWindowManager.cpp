@@ -507,7 +507,7 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event)
     for (auto* window = m_windows_in_order.tail(); window; window = window->prev()) {
         if (!window->is_visible())
             continue;
-        if (title_bar_rect(window->rect()).contains(event.position())) {
+        if (window->type() != WSWindowType::Menu && title_bar_rect(window->rect()).contains(event.position())) {
             if (event.type() == WSMessage::MouseDown) {
                 move_to_front(*window);
                 set_active_window(window);
@@ -521,7 +521,7 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event)
         }
 
         if (window->rect().contains(event.position())) {
-            if (event.type() == WSMessage::MouseDown) {
+            if (window->type() != WSWindowType::Menu && event.type() == WSMessage::MouseDown) {
                 move_to_front(*window);
                 set_active_window(window);
             }
