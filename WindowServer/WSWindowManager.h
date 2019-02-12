@@ -75,6 +75,7 @@ private:
 
     void set_active_window(WSWindow*);
 
+    template<typename Callback> void for_each_active_menubar_menu(Callback);
     void close_current_menu();
     WSMenu& create_menu(String&& name);
     
