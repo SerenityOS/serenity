@@ -20,6 +20,8 @@ class WSWindow;
 class CharacterBitmap;
 class GraphicsBitmap;
 
+enum class IterationDecision { Continue, Abort };
+
 class WSWindowManager : public WSMessageReceiver {
 public:
     static WSWindowManager& the();
@@ -77,8 +79,10 @@ private:
     void handle_close_button_mouse_event(WSWindow&, WSMouseEvent&);
 
     void set_active_window(WSWindow*);
-    template<typename Callback> void for_each_visible_window_of_type(WSWindowType, Callback);
-    template<typename Callback> void for_each_visible_window(Callback);
+    template<typename Callback> IterationDecision for_each_visible_window_of_type_from_back_to_front(WSWindowType, Callback);
+    template<typename Callback> IterationDecision for_each_visible_window_of_type_from_front_to_back(WSWindowType, Callback);
+    template<typename Callback> IterationDecision for_each_visible_window_from_front_to_back(Callback);
+    template<typename Callback> IterationDecision for_each_visible_window_from_back_to_front(Callback);
     template<typename Callback> void for_each_active_menubar_menu(Callback);
     void close_current_menu();
     WSMenu& create_menu(String&& name);
