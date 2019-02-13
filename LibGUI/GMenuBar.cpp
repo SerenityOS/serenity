@@ -1,4 +1,5 @@
 #include <LibGUI/GMenuBar.h>
+#include <LibGUI/GEventLoop.h>
 #include <LibC/gui.h>
 
 GMenuBar::GMenuBar()
@@ -7,10 +8,7 @@ GMenuBar::GMenuBar()
 
 GMenuBar::~GMenuBar()
 {
-    if (m_menubar_id) {
-        gui_menubar_destroy(m_menubar_id);
-        m_menubar_id = 0;
-    }
+    unrealize_menubar();
 }
 
 void GMenuBar::add_menu(OwnPtr<GMenu>&& menu)
@@ -18,10 +16,29 @@ void GMenuBar::add_menu(OwnPtr<GMenu>&& menu)
     m_menus.append(move(menu));
 }
 
+int GMenuBar::realize_menubar()
+{
+    GUI_ClientMessage request;
+    request.type = GUI_ClientMessage::Type::CreateMenubar;
+    GUI_Event response = GEventLoop::main().sync_request(request, GUI_Event::Type::DidCreateMenubar);
+    return response.menu.menubar_id;
+}
+
+void GMenuBar::unrealize_menubar()
+{
+    if (!m_menubar_id)
+        return;
+    GUI_ClientMessage request;
+    request.type = GUI_ClientMessage::Type::DestroyMenubar;
+    request.menu.menubar_id = m_menubar_id;
+    GEventLoop::main().sync_request(request, GUI_Event::Type::DidDestroyMenubar);
+    m_menubar_id = 0;
+}
+
 void GMenuBar::notify_added_to_application(Badge<GApplication>)
 {
     ASSERT(!m_menubar_id);
-    m_menubar_id = gui_menubar_create();
+    m_menubar_id = realize_menubar();
     ASSERT(m_menubar_id > 0);
     for (auto& menu : m_menus) {
         ASSERT(menu);
@@ -35,7 +52,5 @@ void GMenuBar::notify_added_to_application(Badge<GApplication>)
 
 void GMenuBar::notify_removed_from_application(Badge<GApplication>)
 {
-    ASSERT(m_menubar_id);
-    gui_menubar_destroy(m_menubar_id);
-    m_menubar_id = 0;
+    unrealize_menubar();
 }

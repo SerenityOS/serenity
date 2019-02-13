@@ -67,6 +67,21 @@ int WSMessageLoop::exec()
     }
 }
 
+Process* WSMessageLoop::process_from_client_id(int client_id)
+{
+    // FIXME: This shouldn't work this way lol.
+    return (Process*)client_id;
+}
+
+void WSMessageLoop::post_message_to_client(int client_id, const GUI_Event& message)
+{
+    auto* process = process_from_client_id(client_id);
+    if (!process)
+        return;
+    LOCKER(process->gui_events_lock());
+    process->gui_events().append(move(message));
+}
+
 void WSMessageLoop::post_message(WSMessageReceiver* receiver, OwnPtr<WSMessage>&& message)
 {
     LOCKER(m_lock);
@@ -245,4 +260,20 @@ void WSMessageLoop::drain_keyboard()
         ASSERT(nread == sizeof(Keyboard::Event));
         screen.on_receive_keyboard_data(event);
     }
+}
+
+ssize_t WSMessageLoop::on_receive_from_client(int client_id, const byte* data, size_t size)
+{
+    LOCKER(m_lock);
+    ASSERT(size == sizeof(GUI_ClientMessage));
+    auto& message = *reinterpret_cast<const GUI_ClientMessage*>(data);
+    switch (message.type) {
+    case GUI_ClientMessage::Type::CreateMenubar:
+        post_message(&WSWindowManager::the(), make<WSAPICreateMenubarRequest>(client_id));
+        break;
+    case GUI_ClientMessage::Type::DestroyMenubar:
+        post_message(&WSWindowManager::the(), make<WSAPIDestroyMenubarRequest>(client_id, message.menu.menubar_id));
+        break;
+    }
+    return size;
 }

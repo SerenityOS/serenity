@@ -68,6 +68,8 @@ struct GUI_Event {
         WindowDeactivated,
         WindowCloseRequest,
         MenuItemActivated,
+        DidCreateMenubar,
+        DidDestroyMenubar,
     };
     Type type { Invalid };
     int window_id { -1 };
@@ -90,8 +92,26 @@ struct GUI_Event {
             bool shift : 1;
         } key;
         struct {
+            int menubar_id;
             int menu_id;
             unsigned identifier;
+        } menu;
+    };
+};
+
+struct GUI_ClientMessage {
+    enum Type : unsigned {
+        Invalid,
+        CreateMenubar,
+        DestroyMenubar,
+    };
+    Type type { Invalid };
+    int window_id { -1 };
+
+    union {
+        struct {
+            int menubar_id;
+            int menu_id;
         } menu;
     };
 };

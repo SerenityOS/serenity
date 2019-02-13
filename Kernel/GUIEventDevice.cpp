@@ -2,6 +2,7 @@
 #include <Kernel/Process.h>
 #include <AK/Lock.h>
 #include <LibC/errno_numbers.h>
+#include <WindowServer/WSMessageLoop.h>
 
 //#define GUIEVENTDEVICE_DEBUG
 
@@ -32,7 +33,7 @@ ssize_t GUIEventDevice::read(Process& process, byte* buffer, size_t size)
     return size;
 }
 
-ssize_t GUIEventDevice::write(Process&, const byte*, size_t)
+ssize_t GUIEventDevice::write(Process& process, const byte* data, size_t size)
 {
-    return -EINVAL;
+    return WSMessageLoop::the().on_receive_from_client(process.gui_client_id(), data, size);
 }

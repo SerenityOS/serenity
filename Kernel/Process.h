@@ -230,8 +230,6 @@ public:
     int gui$get_window_rect(int window_id, GUI_Rect*);
     int gui$set_window_rect(int window_id, const GUI_Rect*);
     int gui$set_global_cursor_tracking_enabled(int window_id, bool enabled);
-    int gui$menubar_create();
-    int gui$menubar_destroy(int menubar_id);
     int gui$menubar_add_menu(int menubar_id, int menu_id);
     int gui$menu_create(const char* name);
     int gui$menu_destroy(int menu_id);
@@ -312,6 +310,8 @@ public:
     FPUState& fpu_state() { return m_fpu_state; }
     bool has_used_fpu() const { return m_has_used_fpu; }
     void set_has_used_fpu(bool b) { m_has_used_fpu = b; }
+
+    int gui_client_id() const { return (int)this; }
 
 private:
     friend class MemoryManager;
@@ -420,7 +420,6 @@ private:
     Vector<GUI_Event> m_gui_events;
     Lock m_gui_events_lock;
     int m_next_window_id { 1 };
-    bool m_has_created_menus { false };
 
     dword m_wakeup_requested { false };
     bool m_has_used_fpu { false };

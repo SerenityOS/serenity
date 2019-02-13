@@ -259,7 +259,7 @@ int Process::gui$set_global_cursor_tracking_enabled(int window_id, bool enabled)
 
 void Process::destroy_all_menus()
 {
-    if (!m_has_created_menus)
+    if (!WSMessageLoop::the().running())
         return;
     WSWindowManager::the().destroy_all_menus(*this);
 }
@@ -292,17 +292,6 @@ DisplayInfo Process::set_video_resolution(int width, int height)
     return info;
 }
 
-int Process::gui$menubar_create()
-{
-    m_has_created_menus = true;
-    return WSWindowManager::the().api$menubar_create();
-}
-
-int Process::gui$menubar_destroy(int menubar_id)
-{
-    return WSWindowManager::the().api$menubar_destroy(menubar_id);
-}
-
 int Process::gui$menubar_add_menu(int menubar_id, int menu_id)
 {
     return WSWindowManager::the().api$menubar_add_menu(menubar_id, menu_id);
@@ -312,7 +301,6 @@ int Process::gui$menu_create(const char* name)
 {
     if (!validate_read_str(name))
         return -EFAULT;
-    m_has_created_menus = true;
     return WSWindowManager::the().api$menu_create(String(name));
 }
 

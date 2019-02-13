@@ -23,6 +23,11 @@ public:
         WindowActivated,
         WindowDeactivated,
         WindowCloseRequest,
+
+        __Begin_API_Client_Requests,
+        APICreateMenubarRequest,
+        APIDestroyMenubarRequest,
+        __End_API_Client_Requests,
     };
 
     WSMessage() { }
@@ -31,11 +36,48 @@ public:
 
     Type type() const { return m_type; }
 
+    bool is_client_request() const { return m_type > __Begin_API_Client_Requests && m_type < __End_API_Client_Requests; }
     bool is_mouse_event() const { return m_type == MouseMove || m_type == MouseDown || m_type == MouseUp; }
     bool is_key_event() const { return m_type == KeyUp || m_type == KeyDown; }
 
 private:
     Type m_type { Invalid };
+};
+
+class WSAPIClientRequest : public WSMessage {
+public:
+    WSAPIClientRequest(Type type, int client_id)
+        : WSMessage(type)
+        , m_client_id(client_id)
+    {
+    }
+
+    int client_id() const { return m_client_id; }
+
+private:
+    int m_client_id { 0 };
+};
+
+class WSAPICreateMenubarRequest : public WSAPIClientRequest {
+public:
+    WSAPICreateMenubarRequest(int client_id)
+        : WSAPIClientRequest(WSMessage::APICreateMenubarRequest, client_id)
+    {
+    }
+};
+
+class WSAPIDestroyMenubarRequest : public WSAPIClientRequest {
+public:
+    WSAPIDestroyMenubarRequest(int client_id, int menubar_id)
+        : WSAPIClientRequest(WSMessage::APIDestroyMenubarRequest, client_id)
+        , m_menubar_id(menubar_id)
+    {
+    }
+
+    int menubar_id() const { return m_menubar_id; }
+
+private:
+    int m_menubar_id { 0 };
 };
 
 class WSClientFinishedPaintMessage final : public WSMessage {

@@ -12,6 +12,8 @@
 #include <LibC/time.h>
 #include <LibC/sys/select.h>
 #include <LibC/gui.h>
+#include <errno.h>
+#include <string.h>
 
 //#define GEVENTLOOP_DEBUG
 
@@ -26,6 +28,12 @@ GEventLoop::GEventLoop()
 {
     if (!s_mainGEventLoop)
         s_mainGEventLoop = this;
+
+    m_event_fd = open("/dev/gui_events", O_RDWR | O_NONBLOCK | O_CLOEXEC);
+    if (m_event_fd < 0) {
+        perror("GEventLoop(): open");
+        exit(1);
+    }
 }
 
 GEventLoop::~GEventLoop()
@@ -46,12 +54,6 @@ void GEventLoop::exit(int code)
 
 int GEventLoop::exec()
 {
-    m_event_fd = open("/dev/gui_events", O_RDONLY | O_NONBLOCK | O_CLOEXEC);
-    if (m_event_fd < 0) {
-        perror("GEventLoop::exec(): open");
-        exit(1);
-    }
-
     m_running = true;
     for (;;) {
         if (m_exit_requested)
@@ -226,21 +228,17 @@ void GEventLoop::wait_for_event()
     if (!FD_ISSET(m_event_fd, &rfds))
         return;
 
-    for (;;) {
-        GUI_Event event;
-        ssize_t nread = read(m_event_fd, &event, sizeof(GUI_Event));
-        if (nread < 0) {
-            perror("read");
-            exit(1); // FIXME: This should cause EventLoop::exec() to return 1.
-        }
-        if (nread == 0)
-            break;
-        assert(nread == sizeof(event));
+    bool success = drain_events_from_server();
+    ASSERT(success);
 
+    auto unprocessed_events = move(m_unprocessed_events);
+    for (auto& event : unprocessed_events) {
         switch (event.type) {
         case GUI_Event::MenuItemActivated:
             handle_menu_event(event);
             continue;
+        default:
+            break;
         }
 
         auto* window = GWindow::from_window_id(event.window_id);
@@ -271,6 +269,23 @@ void GEventLoop::wait_for_event()
         default:
             break;
         }
+    }
+}
+
+bool GEventLoop::drain_events_from_server()
+{
+    for (;;) {
+        GUI_Event event;
+        ssize_t nread = read(m_event_fd, &event, sizeof(GUI_Event));
+        if (nread < 0) {
+            perror("read");
+            exit(1);
+            return false;
+        }
+        if (nread == 0)
+            return true;
+        assert(nread == sizeof(event));
+        m_unprocessed_events.append(move(event));
     }
 }
 
@@ -332,4 +347,37 @@ void GEventLoop::register_notifier(Badge<GNotifier>, GNotifier& notifier)
 void GEventLoop::unregister_notifier(Badge<GNotifier>, GNotifier& notifier)
 {
     m_notifiers.remove(&notifier);
+}
+
+bool GEventLoop::post_message_to_server(const GUI_ClientMessage& message)
+{
+    int nwritten = write(m_event_fd, &message, sizeof(GUI_ClientMessage));
+    return nwritten == sizeof(GUI_ClientMessage);
+}
+
+bool GEventLoop::wait_for_specific_event(GUI_Event::Type type, GUI_Event& event)
+{
+    for (;;) {
+        bool success = drain_events_from_server();
+        if (!success)
+            return false;
+        for (size_t i = 0; i < m_unprocessed_events.size(); ++i) {
+            if (m_unprocessed_events[i].type == type) {
+                event = move(m_unprocessed_events[i]);
+                m_unprocessed_events.remove(i);
+                return true;
+            }
+        }
+    }
+}
+
+GUI_Event GEventLoop::sync_request(const GUI_ClientMessage& request, GUI_Event::Type response_type)
+{
+    bool success = post_message_to_server(request);
+    ASSERT(success);
+
+    GUI_Event response;
+    success = GEventLoop::main().wait_for_specific_event(response_type, response);
+    ASSERT(success);
+    return response;
 }

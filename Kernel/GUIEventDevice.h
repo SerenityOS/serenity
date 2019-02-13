@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Kernel/CharacterDevice.h>
+#include <Kernel/DoubleBuffer.h>
 
 class GUIEventDevice final : public CharacterDevice {
 public:
