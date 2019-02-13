@@ -20,7 +20,7 @@ int GMenuBar::realize_menubar()
 {
     GUI_ClientMessage request;
     request.type = GUI_ClientMessage::Type::CreateMenubar;
-    GUI_Event response = GEventLoop::main().sync_request(request, GUI_Event::Type::DidCreateMenubar);
+    GUI_ServerMessage response = GEventLoop::main().sync_request(request, GUI_ServerMessage::Type::DidCreateMenubar);
     return response.menu.menubar_id;
 }
 
@@ -31,7 +31,7 @@ void GMenuBar::unrealize_menubar()
     GUI_ClientMessage request;
     request.type = GUI_ClientMessage::Type::DestroyMenubar;
     request.menu.menubar_id = m_menubar_id;
-    GEventLoop::main().sync_request(request, GUI_Event::Type::DidDestroyMenubar);
+    GEventLoop::main().sync_request(request, GUI_ServerMessage::Type::DidDestroyMenubar);
     m_menubar_id = 0;
 }
 

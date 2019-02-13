@@ -140,8 +140,8 @@ void WSMenu::did_activate(WSMenuItem& item)
 
     close();
 
-    GUI_Event gui_event;
-    gui_event.type = GUI_Event::Type::MenuItemActivated;
+    GUI_ServerMessage gui_event;
+    gui_event.type = GUI_ServerMessage::Type::MenuItemActivated;
     gui_event.menu.menu_id = m_menu_id;
     gui_event.menu.identifier = item.identifier();
 

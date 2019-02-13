@@ -51,30 +51,30 @@ int main(int argc, char** argv)
     }
 
     for (;;) {
-        GUI_Event event;
-        ssize_t nread = read(fd, &event, sizeof(event));
+        GUI_ServerMessage message;
+        ssize_t nread = read(fd, &message, sizeof(message));
         if (nread < 0) {
             perror("read");
             return 1;
         }
         dbgprintf("(%d) ", getpid());
-        assert(nread == sizeof(event));
-        switch (event.type) {
-        case GUI_Event::Type::Paint: dbgprintf("WID=%x Paint [%d,%d %dx%d]\n", event.window_id, event.paint.rect.location.x, event.paint.rect.location.y, event.paint.rect.size.width, event.paint.rect.size.height); break;
-        case GUI_Event::Type::MouseDown: dbgprintf("WID=%x MouseDown %d,%d\n", event.window_id, event.mouse.position.x, event.mouse.position.y); break;
-        case GUI_Event::Type::MouseUp: dbgprintf("WID=%x MouseUp %d,%d\n", event.window_id, event.mouse.position.x, event.mouse.position.y); break;
-        case GUI_Event::Type::MouseMove: dbgprintf("WID=%x MouseMove %d,%d\n", event.window_id, event.mouse.position.x, event.mouse.position.y); break;
-        case GUI_Event::Type::WindowActivated: dbgprintf("WID=%x WindowActivated\n", event.window_id); break;
-        case GUI_Event::Type::WindowDeactivated: dbgprintf("WID=%x WindowDeactivated\n", event.window_id); break;
-        case GUI_Event::Type::WindowCloseRequest: return 0;
+        assert(nread == sizeof(message));
+        switch (message.type) {
+        case GUI_ServerMessage::Type::Paint: dbgprintf("WID=%x Paint [%d,%d %dx%d]\n", message.window_id, message.paint.rect.location.x, message.paint.rect.location.y, message.paint.rect.size.width, message.paint.rect.size.height); break;
+        case GUI_ServerMessage::Type::MouseDown: dbgprintf("WID=%x MouseDown %d,%d\n", message.window_id, message.mouse.position.x, message.mouse.position.y); break;
+        case GUI_ServerMessage::Type::MouseUp: dbgprintf("WID=%x MouseUp %d,%d\n", message.window_id, message.mouse.position.x, message.mouse.position.y); break;
+        case GUI_ServerMessage::Type::MouseMove: dbgprintf("WID=%x MouseMove %d,%d\n", message.window_id, message.mouse.position.x, message.mouse.position.y); break;
+        case GUI_ServerMessage::Type::WindowActivated: dbgprintf("WID=%x WindowActivated\n", message.window_id); break;
+        case GUI_ServerMessage::Type::WindowDeactivated: dbgprintf("WID=%x WindowDeactivated\n", message.window_id); break;
+        case GUI_ServerMessage::Type::WindowCloseRequest: return 0;
         }
 
-        if (event.type == GUI_Event::Type::Paint) {
+        if (message.type == GUI_ServerMessage::Type::Paint) {
             paint(*bitmap, backing.size.width, backing.size.height);
             gui_notify_paint_finished(window_id, nullptr);
         }
 
-        if (event.type == GUI_Event::Type::MouseDown) {
+        if (message.type == GUI_ServerMessage::Type::MouseDown) {
             gui_invalidate_window(window_id, nullptr);
         }
 

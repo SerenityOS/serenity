@@ -93,7 +93,7 @@ void GEventLoop::post_event(GObject* receiver, OwnPtr<GEvent>&& event)
     m_queued_events.append({ receiver, move(event) });
 }
 
-void GEventLoop::handle_paint_event(const GUI_Event& event, GWindow& window)
+void GEventLoop::handle_paint_event(const GUI_ServerMessage& event, GWindow& window)
 {
 #ifdef GEVENTLOOP_DEBUG
     dbgprintf("WID=%x Paint [%d,%d %dx%d]\n", event.window_id, event.paint.rect.location.x, event.paint.rect.location.y, event.paint.rect.size.width, event.paint.rect.size.height);
@@ -101,25 +101,25 @@ void GEventLoop::handle_paint_event(const GUI_Event& event, GWindow& window)
     post_event(&window, make<GPaintEvent>(event.paint.rect));
 }
 
-void GEventLoop::handle_window_activation_event(const GUI_Event& event, GWindow& window)
+void GEventLoop::handle_window_activation_event(const GUI_ServerMessage& event, GWindow& window)
 {
 #ifdef GEVENTLOOP_DEBUG
     dbgprintf("WID=%x WindowActivation\n", event.window_id);
 #endif
-    post_event(&window, make<GEvent>(event.type == GUI_Event::Type::WindowActivated ? GEvent::WindowBecameActive : GEvent::WindowBecameInactive));
+    post_event(&window, make<GEvent>(event.type == GUI_ServerMessage::Type::WindowActivated ? GEvent::WindowBecameActive : GEvent::WindowBecameInactive));
 }
 
-void GEventLoop::handle_window_close_request_event(const GUI_Event&, GWindow& window)
+void GEventLoop::handle_window_close_request_event(const GUI_ServerMessage&, GWindow& window)
 {
     post_event(&window, make<GEvent>(GEvent::WindowCloseRequest));
 }
 
-void GEventLoop::handle_key_event(const GUI_Event& event, GWindow& window)
+void GEventLoop::handle_key_event(const GUI_ServerMessage& event, GWindow& window)
 {
 #ifdef GEVENTLOOP_DEBUG
     dbgprintf("WID=%x KeyEvent character=0x%b\n", event.window_id, event.key.character);
 #endif
-    auto key_event = make<GKeyEvent>(event.type == GUI_Event::Type::KeyDown ? GEvent::KeyDown : GEvent::KeyUp, event.key.key);
+    auto key_event = make<GKeyEvent>(event.type == GUI_ServerMessage::Type::KeyDown ? GEvent::KeyDown : GEvent::KeyUp, event.key.key);
     key_event->m_alt = event.key.alt;
     key_event->m_ctrl = event.key.ctrl;
     key_event->m_shift = event.key.shift;
@@ -128,16 +128,16 @@ void GEventLoop::handle_key_event(const GUI_Event& event, GWindow& window)
     post_event(&window, move(key_event));
 }
 
-void GEventLoop::handle_mouse_event(const GUI_Event& event, GWindow& window)
+void GEventLoop::handle_mouse_event(const GUI_ServerMessage& event, GWindow& window)
 {
 #ifdef GEVENTLOOP_DEBUG
     dbgprintf("WID=%x MouseEvent %d,%d\n", event.window_id, event.mouse.position.x, event.mouse.position.y);
 #endif
     GMouseEvent::Type type;
     switch (event.type) {
-    case GUI_Event::Type::MouseMove: type = GEvent::MouseMove; break;
-    case GUI_Event::Type::MouseUp: type = GEvent::MouseUp; break;
-    case GUI_Event::Type::MouseDown: type = GEvent::MouseDown; break;
+    case GUI_ServerMessage::Type::MouseMove: type = GEvent::MouseMove; break;
+    case GUI_ServerMessage::Type::MouseUp: type = GEvent::MouseUp; break;
+    case GUI_ServerMessage::Type::MouseDown: type = GEvent::MouseDown; break;
     default: ASSERT_NOT_REACHED(); break;
     }
     GMouseButton button { GMouseButton::None };
@@ -151,9 +151,9 @@ void GEventLoop::handle_mouse_event(const GUI_Event& event, GWindow& window)
     post_event(&window, make<GMouseEvent>(type, event.mouse.position, event.mouse.buttons, button));
 }
 
-void GEventLoop::handle_menu_event(const GUI_Event& event)
+void GEventLoop::handle_menu_event(const GUI_ServerMessage& event)
 {
-    if (event.type == GUI_Event::Type::MenuItemActivated) {
+    if (event.type == GUI_ServerMessage::Type::MenuItemActivated) {
         auto* menu = GMenu::from_menu_id(event.menu.menu_id);
         if (!menu) {
             dbgprintf("GEventLoop received event for invalid window ID %d\n", event.window_id);
@@ -228,13 +228,13 @@ void GEventLoop::wait_for_event()
     if (!FD_ISSET(m_event_fd, &rfds))
         return;
 
-    bool success = drain_events_from_server();
+    bool success = drain_messages_from_server();
     ASSERT(success);
 
-    auto unprocessed_events = move(m_unprocessed_events);
+    auto unprocessed_events = move(m_unprocessed_messages);
     for (auto& event : unprocessed_events) {
         switch (event.type) {
-        case GUI_Event::MenuItemActivated:
+        case GUI_ServerMessage::MenuItemActivated:
             handle_menu_event(event);
             continue;
         default:
@@ -247,23 +247,23 @@ void GEventLoop::wait_for_event()
             continue;
         }
         switch (event.type) {
-        case GUI_Event::Type::Paint:
+        case GUI_ServerMessage::Type::Paint:
             handle_paint_event(event, *window);
             break;
-        case GUI_Event::Type::MouseDown:
-        case GUI_Event::Type::MouseUp:
-        case GUI_Event::Type::MouseMove:
+        case GUI_ServerMessage::Type::MouseDown:
+        case GUI_ServerMessage::Type::MouseUp:
+        case GUI_ServerMessage::Type::MouseMove:
             handle_mouse_event(event, *window);
             break;
-        case GUI_Event::Type::WindowActivated:
-        case GUI_Event::Type::WindowDeactivated:
+        case GUI_ServerMessage::Type::WindowActivated:
+        case GUI_ServerMessage::Type::WindowDeactivated:
             handle_window_activation_event(event, *window);
             break;
-        case GUI_Event::Type::WindowCloseRequest:
+        case GUI_ServerMessage::Type::WindowCloseRequest:
             handle_window_close_request_event(event, *window);
             break;
-        case GUI_Event::Type::KeyDown:
-        case GUI_Event::Type::KeyUp:
+        case GUI_ServerMessage::Type::KeyDown:
+        case GUI_ServerMessage::Type::KeyUp:
             handle_key_event(event, *window);
             break;
         default:
@@ -272,11 +272,11 @@ void GEventLoop::wait_for_event()
     }
 }
 
-bool GEventLoop::drain_events_from_server()
+bool GEventLoop::drain_messages_from_server()
 {
     for (;;) {
-        GUI_Event event;
-        ssize_t nread = read(m_event_fd, &event, sizeof(GUI_Event));
+        GUI_ServerMessage message;
+        ssize_t nread = read(m_event_fd, &message, sizeof(GUI_ServerMessage));
         if (nread < 0) {
             perror("read");
             exit(1);
@@ -284,8 +284,8 @@ bool GEventLoop::drain_events_from_server()
         }
         if (nread == 0)
             return true;
-        assert(nread == sizeof(event));
-        m_unprocessed_events.append(move(event));
+        assert(nread == sizeof(message));
+        m_unprocessed_messages.append(move(message));
     }
 }
 
@@ -355,28 +355,28 @@ bool GEventLoop::post_message_to_server(const GUI_ClientMessage& message)
     return nwritten == sizeof(GUI_ClientMessage);
 }
 
-bool GEventLoop::wait_for_specific_event(GUI_Event::Type type, GUI_Event& event)
+bool GEventLoop::wait_for_specific_event(GUI_ServerMessage::Type type, GUI_ServerMessage& event)
 {
     for (;;) {
-        bool success = drain_events_from_server();
+        bool success = drain_messages_from_server();
         if (!success)
             return false;
-        for (size_t i = 0; i < m_unprocessed_events.size(); ++i) {
-            if (m_unprocessed_events[i].type == type) {
-                event = move(m_unprocessed_events[i]);
-                m_unprocessed_events.remove(i);
+        for (size_t i = 0; i < m_unprocessed_messages.size(); ++i) {
+            if (m_unprocessed_messages[i].type == type) {
+                event = move(m_unprocessed_messages[i]);
+                m_unprocessed_messages.remove(i);
                 return true;
             }
         }
     }
 }
 
-GUI_Event GEventLoop::sync_request(const GUI_ClientMessage& request, GUI_Event::Type response_type)
+GUI_ServerMessage GEventLoop::sync_request(const GUI_ClientMessage& request, GUI_ServerMessage::Type response_type)
 {
     bool success = post_message_to_server(request);
     ASSERT(success);
 
-    GUI_Event response;
+    GUI_ServerMessage response;
     success = GEventLoop::main().wait_for_specific_event(response_type, response);
     ASSERT(success);
     return response;

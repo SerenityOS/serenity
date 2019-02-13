@@ -741,10 +741,10 @@ void WSWindowManager::on_message(WSMessage& message)
             int menubar_id = m_next_menubar_id++;
             auto menubar = make<WSMenuBar>(menubar_id, *WSMessageLoop::process_from_client_id(request.client_id()));
             m_menubars.set(menubar_id, move(menubar));
-            GUI_Event event;
-            event.type = GUI_Event::Type::DidCreateMenubar;
-            event.menu.menubar_id = menubar_id;
-            WSMessageLoop::the().post_message_to_client(request.client_id(), event);
+            GUI_ServerMessage response;
+            response.type = GUI_ServerMessage::Type::DidCreateMenubar;
+            response.menu.menubar_id = menubar_id;
+            WSMessageLoop::the().post_message_to_client(request.client_id(), response);
             break;
         }
         case WSMessage::APIDestroyMenubarRequest: {
@@ -759,10 +759,10 @@ void WSWindowManager::on_message(WSMessage& message)
             if (&menubar == m_current_menubar)
                 set_current_menubar(nullptr);
             m_menubars.remove(it);
-            GUI_Event event;
-            event.type = GUI_Event::Type::DidDestroyMenubar;
-            event.menu.menubar_id = menubar_id;
-            WSMessageLoop::the().post_message_to_client(request.client_id(), event);
+            GUI_ServerMessage response;
+            response.type = GUI_ServerMessage::Type::DidDestroyMenubar;
+            response.menu.menubar_id = menubar_id;
+            WSMessageLoop::the().post_message_to_client(request.client_id(), response);
         }
         default:
             break;

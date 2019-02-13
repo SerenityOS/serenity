@@ -55,7 +55,7 @@ struct GUI_KeyModifiers { enum {
 }; };
 
 
-struct GUI_Event {
+struct GUI_ServerMessage {
     enum Type : unsigned {
         Invalid,
         Paint,
