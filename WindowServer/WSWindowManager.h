@@ -57,6 +57,7 @@ public:
 
     void close_menu(WSMenu&);
     Color menu_selection_color() const { return m_menu_selection_color; }
+    int menubar_menu_margin() const;
 
     int api$menubar_create();
     int api$menubar_destroy(int menubar_id);

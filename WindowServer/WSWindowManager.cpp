@@ -14,6 +14,7 @@
 #include "WSMenu.h"
 #include "WSMenuBar.h"
 #include "WSMenuItem.h"
+#include <Kernel/RTC.h>
 
 //#define DEBUG_COUNTERS
 //#define DEBUG_WID_IN_TITLE_BAR
@@ -210,6 +211,10 @@ WSWindowManager::WSWindowManager()
     // NOTE: This ensures that the system menu has the correct dimensions.
     set_current_menubar(nullptr);
 
+    WSMessageLoop::the().start_timer(300, [this] {
+        invalidate(menubar_rect());
+    });
+
     invalidate();
     compose();
 }
@@ -226,16 +231,20 @@ void WSWindowManager::for_each_active_menubar_menu(Callback callback)
         m_current_menubar->for_each_menu(callback);
 }
 
+int WSWindowManager::menubar_menu_margin() const
+{
+    return 16;
+}
+
 void WSWindowManager::set_current_menubar(WSMenuBar* menubar)
 {
     LOCKER(m_lock);
     m_current_menubar = menubar;
     dbgprintf("[WM] Current menubar is now %p\n", menubar);
-    int menu_margin = 16;
-    Point next_menu_location { menu_margin / 2, 3 };
+    Point next_menu_location { menubar_menu_margin() / 2, 3 };
     for_each_active_menubar_menu([&] (WSMenu& menu) {
         int text_width = font().width(menu.name());
-        menu.set_rect_in_menubar({ next_menu_location.x() - menu_margin / 2, 0, text_width + menu_margin, menubar_rect().height() - 1 });
+        menu.set_rect_in_menubar({ next_menu_location.x() - menubar_menu_margin() / 2, 0, text_width + menubar_menu_margin(), menubar_rect().height() - 1 });
         menu.set_text_rect_in_menubar({ next_menu_location, { text_width, font().glyph_height() } });
         next_menu_location.move_by(menu.rect_in_menubar().width(), 0);
         return true;
@@ -682,6 +691,12 @@ void WSWindowManager::draw_menubar()
         m_back_painter->draw_text(menu.text_rect_in_menubar(), menu.name(), TextAlignment::CenterLeft, text_color);
         return true;
     });
+
+    unsigned year, month, day, hour, minute, second;
+    RTC::read_registers(year, month, day, hour, minute, second);
+    auto time_text = String::format("%04u-%02u-%02u  %02u:%02u:%02u", year, month, day, hour, minute, second);
+    auto time_rect = menubar_rect().translated(-(menubar_menu_margin() / 2), 0);
+    m_back_painter->draw_text(time_rect, time_text, TextAlignment::CenterRight, Color::Black);
 }
 
 void WSWindowManager::draw_cursor()

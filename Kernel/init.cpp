@@ -28,7 +28,6 @@
 //#define SPAWN_GUITEST
 #define SPAWN_LAUNCHER
 //#define SPAWN_GUITEST2
-#define SPAWN_CLOCK
 #define SPAWN_FILE_MANAGER
 //#define SPAWN_FONTEDITOR
 //#define SPAWN_MULTIPLE_SHELLS
@@ -115,9 +114,6 @@ static void init_stage2()
 #endif
 #ifdef SPAWN_LAUNCHER
     Process::create_user_process("/bin/Launcher", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, { }, tty0);
-#endif
-#ifdef SPAWN_CLOCK
-    Process::create_user_process("/bin/Clock", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, { }, tty0);
 #endif
 #ifdef SPAWN_FILE_MANAGER
     Process::create_user_process("/bin/FileManager", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, { }, tty0);
