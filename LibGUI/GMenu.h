@@ -24,6 +24,7 @@ private:
     friend class GMenuBar;
     int menu_id() const { return m_menu_id; }
     int realize_menu();
+    void unrealize_menu();
 
     int m_menu_id { 0 };
     String m_name;

@@ -734,39 +734,109 @@ void WSWindowManager::on_message(WSMessage& message)
         return;
     }
 
-    if (message.is_client_request()) {
-        auto& request = static_cast<WSAPIClientRequest&>(message);
-        switch (request.type()) {
-        case WSMessage::APICreateMenubarRequest: {
-            int menubar_id = m_next_menubar_id++;
-            auto menubar = make<WSMenuBar>(menubar_id, *WSMessageLoop::process_from_client_id(request.client_id()));
-            m_menubars.set(menubar_id, move(menubar));
-            GUI_ServerMessage response;
-            response.type = GUI_ServerMessage::Type::DidCreateMenubar;
-            response.menu.menubar_id = menubar_id;
-            WSMessageLoop::the().post_message_to_client(request.client_id(), response);
-            break;
+    if (message.is_client_request())
+        handle_client_request(static_cast<WSAPIClientRequest&>(message));
+}
+
+void WSWindowManager::handle_client_request(WSAPIClientRequest& request)
+{
+    switch (request.type()) {
+    case WSMessage::APICreateMenubarRequest: {
+        int menubar_id = m_next_menubar_id++;
+        auto menubar = make<WSMenuBar>(menubar_id, *WSMessageLoop::process_from_client_id(request.client_id()));
+        m_menubars.set(menubar_id, move(menubar));
+        GUI_ServerMessage response;
+        response.type = GUI_ServerMessage::Type::DidCreateMenubar;
+        response.menu.menubar_id = menubar_id;
+        WSMessageLoop::the().post_message_to_client(request.client_id(), response);
+        break;
+    }
+    case WSMessage::APIDestroyMenubarRequest: {
+        int menubar_id = static_cast<WSAPIDestroyMenubarRequest&>(request).menubar_id();
+        auto it = m_menubars.find(menubar_id);
+        if (it == m_menubars.end()) {
+            ASSERT_NOT_REACHED();
+            // FIXME: Send an error.
+            return;
         }
-        case WSMessage::APIDestroyMenubarRequest: {
-            int menubar_id = static_cast<WSAPIDestroyMenubarRequest&>(request).menubar_id();
-            auto it = m_menubars.find(menubar_id);
-            if (it == m_menubars.end()) {
-                ASSERT_NOT_REACHED();
-                // FIXME: Send an error.
-                return;
-            }
-            auto& menubar = *(*it).value;
-            if (&menubar == m_current_menubar)
-                set_current_menubar(nullptr);
-            m_menubars.remove(it);
-            GUI_ServerMessage response;
-            response.type = GUI_ServerMessage::Type::DidDestroyMenubar;
-            response.menu.menubar_id = menubar_id;
-            WSMessageLoop::the().post_message_to_client(request.client_id(), response);
+        auto& menubar = *(*it).value;
+        if (&menubar == m_current_menubar)
+            set_current_menubar(nullptr);
+        m_menubars.remove(it);
+        GUI_ServerMessage response;
+        response.type = GUI_ServerMessage::Type::DidDestroyMenubar;
+        response.menu.menubar_id = menubar_id;
+        WSMessageLoop::the().post_message_to_client(request.client_id(), response);
+        break;
+    }
+    case WSMessage::APICreateMenuRequest: {
+        int menu_id = m_next_menu_id++;
+        auto menu = make<WSMenu>(*WSMessageLoop::process_from_client_id(request.client_id()), menu_id, static_cast<WSAPICreateMenuRequest&>(request).text());
+        m_menus.set(menu_id, move(menu));
+        GUI_ServerMessage response;
+        response.type = GUI_ServerMessage::Type::DidCreateMenu;
+        response.menu.menu_id = menu_id;
+        WSMessageLoop::the().post_message_to_client(request.client_id(), response);
+        break;
+    }
+    case WSMessage::APIDestroyMenuRequest: {
+        int menu_id = static_cast<WSAPIDestroyMenuRequest&>(request).menu_id();
+        auto it = m_menus.find(menu_id);
+        if (it == m_menus.end()) {
+            ASSERT_NOT_REACHED();
+            // FIXME: Send an error.
+            return;
         }
-        default:
-            break;
+        auto& menu = *(*it).value;
+        close_menu(menu);
+        m_menus.remove(it);
+        GUI_ServerMessage response;
+        response.type = GUI_ServerMessage::Type::DidDestroyMenu;
+        response.menu.menu_id = menu_id;
+        WSMessageLoop::the().post_message_to_client(request.client_id(), response);
+        break;
+    }
+    case WSMessage::APISetApplicationMenubarRequest: {
+        int menubar_id = static_cast<WSAPISetApplicationMenubarRequest&>(request).menubar_id();
+        auto it = m_menubars.find(menubar_id);
+        if (it == m_menubars.end()) {
+            ASSERT_NOT_REACHED();
+            // FIXME: Send an error.
+            return;
         }
+        auto& menubar = *(*it).value;
+        m_app_menubars.set(request.client_id(), &menubar);
+        if (active_client_id() == request.client_id())
+            set_current_menubar(&menubar);
+        invalidate();
+        GUI_ServerMessage response;
+        response.type = GUI_ServerMessage::Type::DidSetApplicationMenubar;
+        response.menu.menubar_id = menubar_id;
+        WSMessageLoop::the().post_message_to_client(request.client_id(), response);
+        break;
+    }
+    case WSMessage::APIAddMenuToMenubarRequest: {
+        int menubar_id = static_cast<WSAPIAddMenuToMenubarRequest&>(request).menubar_id();
+        int menu_id = static_cast<WSAPIAddMenuToMenubarRequest&>(request).menu_id();
+        auto it = m_menubars.find(menubar_id);
+        auto jt = m_menus.find(menu_id);
+        if (it == m_menubars.end() || jt == m_menus.end()) {
+            ASSERT_NOT_REACHED();
+            // FIXME: Send an error.
+            return;
+        }
+        auto& menubar = *(*it).value;
+        auto& menu = *(*jt).value;
+        menubar.add_menu(&menu);
+        GUI_ServerMessage response;
+        response.type = GUI_ServerMessage::Type::DidAddMenuToMenubar;
+        response.menu.menubar_id = menubar_id;
+        response.menu.menu_id = menu_id;
+        WSMessageLoop::the().post_message_to_client(request.client_id(), response);
+        break;
+    }
+    default:
+        break;
     }
 }
 
@@ -786,7 +856,7 @@ void WSWindowManager::set_active_window(WSWindow* window)
         invalidate(*m_active_window);
 
         ASSERT(window->process());
-        auto it = m_app_menubars.find(window->process());
+        auto it = m_app_menubars.find(window->process()->gui_client_id());
         if (it != m_app_menubars.end()) {
             auto* menubar = (*it).value;
             if (menubar != m_current_menubar)
@@ -880,51 +950,6 @@ void WSWindowManager::close_menu(WSMenu& menu)
         close_current_menu();
 }
 
-WSMenu& WSWindowManager::create_menu(String&& name)
-{
-    LOCKER(m_lock);
-    int menu_id = m_next_menu_id++;
-    auto menu = make<WSMenu>(*current, menu_id, move(name));
-    auto* menu_ptr = menu.ptr();
-    m_menus.set(menu_id, move(menu));
-    return *menu_ptr;
-}
-
-int WSWindowManager::api$menubar_add_menu(int menubar_id, int menu_id)
-{
-    LOCKER(m_lock);
-    auto it = m_menubars.find(menubar_id);
-    if (it == m_menubars.end())
-        return -EBADMENUBAR;
-    auto& menubar = *(*it).value;
-
-    auto jt = m_menus.find(menu_id);
-    if (jt == m_menus.end())
-        return -EBADMENU;
-    auto& menu = *(*jt).value;
-
-    menubar.add_menu(&menu);
-    return 0;
-}
-
-int WSWindowManager::api$menu_create(String&& name)
-{
-    LOCKER(m_lock);
-    return create_menu(move(name)).menu_id();
-}
-
-int WSWindowManager::api$menu_destroy(int menu_id)
-{
-    LOCKER(m_lock);
-    auto it = m_menus.find(menu_id);
-    if (it == m_menus.end())
-        return -EBADMENU;
-    auto& menu = *(*it).value;
-    close_menu(menu);
-    m_menus.remove(it);
-    return 0;
-}
-
 int WSWindowManager::api$menu_add_separator(int menu_id)
 {
     LOCKER(m_lock);
@@ -947,24 +972,10 @@ int WSWindowManager::api$menu_add_item(int menu_id, unsigned identifier, String&
     return 0;
 }
 
-const Process* WSWindowManager::active_process() const
+int WSWindowManager::active_client_id() const
 {
     if (m_active_window)
-        return m_active_window->process();
-    return nullptr;
-}
-
-int WSWindowManager::api$app_set_menubar(int menubar_id)
-{
-    LOCKER(m_lock);
-    auto it = m_menubars.find(menubar_id);
-    if (it == m_menubars.end())
-        return -EBADMENUBAR;
-    auto& menubar = *(*it).value;
-    m_app_menubars.set(current, &menubar);
-    if (active_process() == current)
-        set_current_menubar(&menubar);
-    invalidate();
+        return m_active_window->process()->gui_client_id();
     return 0;
 }
 
@@ -996,5 +1007,5 @@ void WSWindowManager::destroy_all_menus(Process& process)
         set_current_menubar(nullptr);
     for (int menubar_id : menubar_ids)
         m_menubars.remove(menubar_id);
-    m_app_menubars.remove(&process);
+    m_app_menubars.remove(process.gui_client_id());
 }

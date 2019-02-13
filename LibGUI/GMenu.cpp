@@ -1,5 +1,6 @@
 #include <LibGUI/GAction.h>
 #include <LibGUI/GMenu.h>
+#include <LibGUI/GEventLoop.h>
 #include <LibC/gui.h>
 #include <AK/HashMap.h>
 
@@ -26,11 +27,7 @@ GMenu::GMenu(const String& name)
 
 GMenu::~GMenu()
 {
-    if (m_menu_id) {
-        all_menus().remove(m_menu_id);
-        gui_menu_destroy(m_menu_id);
-        m_menu_id = 0;
-    }
+    unrealize_menu();
 }
 
 void GMenu::add_action(OwnPtr<GAction>&& action)
@@ -45,7 +42,15 @@ void GMenu::add_separator()
 
 int GMenu::realize_menu()
 {
-    m_menu_id = gui_menu_create(m_name.characters());
+    GUI_ClientMessage request;
+    request.type = GUI_ClientMessage::Type::CreateMenu;
+    ASSERT(m_name.length() < sizeof(request.menu.text));
+    strcpy(request.menu.text, m_name.characters());
+    request.menu.text_length = m_name.length();
+
+    auto response = GEventLoop::main().sync_request(request, GUI_ServerMessage::Type::DidCreateMenu);
+    m_menu_id = response.menu.menu_id;
+
     ASSERT(m_menu_id > 0);
     for (size_t i = 0; i < m_items.size(); ++i) {
         auto& item = *m_items[i];
@@ -60,6 +65,18 @@ int GMenu::realize_menu()
     }
     all_menus().set(m_menu_id, this);
     return m_menu_id;
+}
+
+void GMenu::unrealize_menu()
+{
+    if (!m_menu_id)
+        return;
+    all_menus().remove(m_menu_id);
+    GUI_ClientMessage request;
+    request.type = GUI_ClientMessage::Type::DestroyMenu;
+    request.menu.menu_id = m_menu_id;
+    GEventLoop::main().sync_request(request, GUI_ServerMessage::Type::DidDestroyMenu);
+    m_menu_id = 0;
 }
 
 GAction* GMenu::action_at(size_t index)
