@@ -79,34 +79,34 @@ void WSWindow::on_message(WSMessage& message)
         return;
     }
 
-    GUI_Event gui_event;
+    GUI_ServerMessage gui_event;
     gui_event.window_id = window_id();
 
     switch (message.type()) {
     case WSMessage::WM_ClientWantsToPaint:
-        gui_event.type = GUI_Event::Type::Paint;
+        gui_event.type = GUI_ServerMessage::Type::Paint;
         gui_event.paint.rect = static_cast<WSClientWantsToPaintMessage&>(message).rect();
         break;
     case WSMessage::MouseMove:
-        gui_event.type = GUI_Event::Type::MouseMove;
+        gui_event.type = GUI_ServerMessage::Type::MouseMove;
         gui_event.mouse.position = static_cast<WSMouseEvent&>(message).position();
         gui_event.mouse.button = GUI_MouseButton::NoButton;
         gui_event.mouse.buttons = static_cast<WSMouseEvent&>(message).buttons();
         break;
     case WSMessage::MouseDown:
-        gui_event.type = GUI_Event::Type::MouseDown;
+        gui_event.type = GUI_ServerMessage::Type::MouseDown;
         gui_event.mouse.position = static_cast<WSMouseEvent&>(message).position();
         gui_event.mouse.button = to_api(static_cast<WSMouseEvent&>(message).button());
         gui_event.mouse.buttons = static_cast<WSMouseEvent&>(message).buttons();
         break;
     case WSMessage::MouseUp:
-        gui_event.type = GUI_Event::Type::MouseUp;
+        gui_event.type = GUI_ServerMessage::Type::MouseUp;
         gui_event.mouse.position = static_cast<WSMouseEvent&>(message).position();
         gui_event.mouse.button = to_api(static_cast<WSMouseEvent&>(message).button());
         gui_event.mouse.buttons = static_cast<WSMouseEvent&>(message).buttons();
         break;
     case WSMessage::KeyDown:
-        gui_event.type = GUI_Event::Type::KeyDown;
+        gui_event.type = GUI_ServerMessage::Type::KeyDown;
         gui_event.key.character = static_cast<WSKeyEvent&>(message).character();
         gui_event.key.key = static_cast<WSKeyEvent&>(message).key();
         gui_event.key.alt = static_cast<WSKeyEvent&>(message).alt();
@@ -114,7 +114,7 @@ void WSWindow::on_message(WSMessage& message)
         gui_event.key.shift = static_cast<WSKeyEvent&>(message).shift();
         break;
     case WSMessage::KeyUp:
-        gui_event.type = GUI_Event::Type::KeyUp;
+        gui_event.type = GUI_ServerMessage::Type::KeyUp;
         gui_event.key.character = static_cast<WSKeyEvent&>(message).character();
         gui_event.key.key = static_cast<WSKeyEvent&>(message).key();
         gui_event.key.alt = static_cast<WSKeyEvent&>(message).alt();
@@ -134,19 +134,19 @@ void WSWindow::on_message(WSMessage& message)
         delete this;
         return;
     case WSMessage::WindowActivated:
-        gui_event.type = GUI_Event::Type::WindowActivated;
+        gui_event.type = GUI_ServerMessage::Type::WindowActivated;
         break;
     case WSMessage::WindowDeactivated:
-        gui_event.type = GUI_Event::Type::WindowDeactivated;
+        gui_event.type = GUI_ServerMessage::Type::WindowDeactivated;
         break;
     case WSMessage::WindowCloseRequest:
-        gui_event.type = GUI_Event::Type::WindowCloseRequest;
+        gui_event.type = GUI_ServerMessage::Type::WindowCloseRequest;
         break;
     default:
         break;
     }
 
-    if (gui_event.type == GUI_Event::Type::Invalid)
+    if (gui_event.type == GUI_ServerMessage::Type::Invalid)
         return;
 
     {

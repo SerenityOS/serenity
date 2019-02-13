@@ -23,13 +23,13 @@ bool GUIEventDevice::can_read(Process& process) const
 ssize_t GUIEventDevice::read(Process& process, byte* buffer, size_t size)
 {
 #ifdef GUIEVENTDEVICE_DEBUG
-    dbgprintf("GUIEventDevice::read(): %s<%u>, size=%u, sizeof(GUI_Event)=%u\n", process.name().characters(), process.pid(), size, sizeof(GUI_Event));
+    dbgprintf("GUIEventDevice::read(): %s<%u>, size=%u, sizeof(GUI_ServerMessage)=%u\n", process.name().characters(), process.pid(), size, sizeof(GUI_ServerMessage));
 #endif
     if (process.gui_events().is_empty())
         return 0;
     LOCKER(process.gui_events_lock());
-    ASSERT(size == sizeof(GUI_Event));
-    *reinterpret_cast<GUI_Event*>(buffer) = process.gui_events().take_first();
+    ASSERT(size == sizeof(GUI_ServerMessage));
+    *reinterpret_cast<GUI_ServerMessage*>(buffer) = process.gui_events().take_first();
     return size;
 }
 

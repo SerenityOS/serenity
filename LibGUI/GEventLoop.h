@@ -35,19 +35,19 @@ public:
     void exit(int);
 
     bool post_message_to_server(const GUI_ClientMessage&);
-    bool wait_for_specific_event(GUI_Event::Type, GUI_Event&);
+    bool wait_for_specific_event(GUI_ServerMessage::Type, GUI_ServerMessage&);
 
-    GUI_Event sync_request(const GUI_ClientMessage& request, GUI_Event::Type response_type);
+    GUI_ServerMessage sync_request(const GUI_ClientMessage& request, GUI_ServerMessage::Type response_type);
 
 private:
     void wait_for_event();
-    bool drain_events_from_server();
-    void handle_paint_event(const GUI_Event&, GWindow&);
-    void handle_mouse_event(const GUI_Event&, GWindow&);
-    void handle_key_event(const GUI_Event&, GWindow&);
-    void handle_window_activation_event(const GUI_Event&, GWindow&);
-    void handle_window_close_request_event(const GUI_Event&, GWindow&);
-    void handle_menu_event(const GUI_Event&);
+    bool drain_messages_from_server();
+    void handle_paint_event(const GUI_ServerMessage&, GWindow&);
+    void handle_mouse_event(const GUI_ServerMessage&, GWindow&);
+    void handle_key_event(const GUI_ServerMessage&, GWindow&);
+    void handle_window_activation_event(const GUI_ServerMessage&, GWindow&);
+    void handle_window_close_request_event(const GUI_ServerMessage&, GWindow&);
+    void handle_menu_event(const GUI_ServerMessage&);
     void get_next_timer_expiration(timeval&);
 
     struct QueuedEvent {
@@ -56,7 +56,7 @@ private:
     };
     Vector<QueuedEvent> m_queued_events;
 
-    Vector<GUI_Event> m_unprocessed_events;
+    Vector<GUI_ServerMessage> m_unprocessed_messages;
 
     int m_event_fd { -1 };
     bool m_running { false };

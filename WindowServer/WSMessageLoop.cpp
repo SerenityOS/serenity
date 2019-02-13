@@ -73,7 +73,7 @@ Process* WSMessageLoop::process_from_client_id(int client_id)
     return (Process*)client_id;
 }
 
-void WSMessageLoop::post_message_to_client(int client_id, const GUI_Event& message)
+void WSMessageLoop::post_message_to_client(int client_id, const GUI_ServerMessage& message)
 {
     auto* process = process_from_client_id(client_id);
     if (!process)

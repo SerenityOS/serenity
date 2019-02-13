@@ -301,7 +301,7 @@ public:
 
     bool is_root() const { return m_euid == 0; }
 
-    Vector<GUI_Event>& gui_events() { return m_gui_events; }
+    Vector<GUI_ServerMessage>& gui_events() { return m_gui_events; }
     Lock& gui_events_lock() { return m_gui_events_lock; }
 
     bool wakeup_requested() { return m_wakeup_requested; }
@@ -417,7 +417,7 @@ private:
     HashMap<int, OwnPtr<WSWindow>> m_windows;
     Vector<RetainPtr<GraphicsBitmap>> m_retained_backing_stores;
 
-    Vector<GUI_Event> m_gui_events;
+    Vector<GUI_ServerMessage> m_gui_events;
     Lock m_gui_events_lock;
     int m_next_window_id { 1 };
 
