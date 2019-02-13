@@ -160,6 +160,7 @@ void WSMessageLoop::wait_for_message()
         auto& timer = *it.value;
         if (!had_any_timer) {
             timeout = timer.next_fire_time;
+            had_any_timer = true;
             continue;
         }
         if (timer.next_fire_time.tv_sec > timeout.tv_sec || (timer.next_fire_time.tv_sec == timeout.tv_sec && timer.next_fire_time.tv_usec > timeout.tv_usec))
