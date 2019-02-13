@@ -47,7 +47,6 @@ int GMenu::realize_menu()
     ASSERT(m_name.length() < sizeof(request.menu.text));
     strcpy(request.menu.text, m_name.characters());
     request.menu.text_length = m_name.length();
-
     auto response = GEventLoop::main().sync_request(request, GUI_ServerMessage::Type::DidCreateMenu);
     m_menu_id = response.menu.menu_id;
 
@@ -55,12 +54,22 @@ int GMenu::realize_menu()
     for (size_t i = 0; i < m_items.size(); ++i) {
         auto& item = *m_items[i];
         if (item.type() == GMenuItem::Separator) {
-            gui_menu_add_separator(m_menu_id);
+            GUI_ClientMessage request;
+            request.type = GUI_ClientMessage::Type::AddMenuSeparator;
+            request.menu.menu_id = m_menu_id;
+            GEventLoop::main().sync_request(request, GUI_ServerMessage::Type::DidAddMenuSeparator);
             continue;
         }
         if (item.type() == GMenuItem::Action) {
             auto& action = *item.action();
-            gui_menu_add_item(m_menu_id, i, action.text().characters());
+            GUI_ClientMessage request;
+            request.type = GUI_ClientMessage::Type::AddMenuItem;
+            request.menu.menu_id = m_menu_id;
+            request.menu.identifier = i;
+            ASSERT(action.text().length() < sizeof(request.menu.text));
+            strcpy(request.menu.text, action.text().characters());
+            request.menu.text_length = action.text().length();
+            GEventLoop::main().sync_request(request, GUI_ServerMessage::Type::DidAddMenuItem);
         }
     }
     all_menus().set(m_menu_id, this);

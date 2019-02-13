@@ -74,6 +74,8 @@ struct GUI_ServerMessage {
         DidDestroyMenu,
         DidAddMenuToMenubar,
         DidSetApplicationMenubar,
+        DidAddMenuItem,
+        DidAddMenuSeparator,
     };
     Type type { Invalid };
     int window_id { -1 };
@@ -112,6 +114,8 @@ struct GUI_ClientMessage {
         DestroyMenu,
         AddMenuToMenubar,
         SetApplicationMenubar,
+        AddMenuItem,
+        AddMenuSeparator,
     };
     Type type { Invalid };
     int window_id { -1 };

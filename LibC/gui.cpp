@@ -68,15 +68,3 @@ int gui_set_global_cursor_tracking_enabled(int window_id, bool enabled)
     int rc = syscall(SC_gui_set_global_cursor_tracking_enabled, window_id, enabled);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
-
-int gui_menu_add_separator(int menu_id)
-{
-    int rc = syscall(SC_gui_menu_add_separator, menu_id);
-    __RETURN_WITH_ERRNO(rc, rc, -1);
-}
-
-int gui_menu_add_item(int menu_id, unsigned identifier, const char* text)
-{
-    int rc = syscall(SC_gui_menu_add_item, menu_id, identifier, text);
-    __RETURN_WITH_ERRNO(rc, rc, -1);
-}

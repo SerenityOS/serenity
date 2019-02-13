@@ -291,15 +291,3 @@ DisplayInfo Process::set_video_resolution(int width, int height)
     BochsVGADevice::the().set_resolution(width, height);
     return info;
 }
-
-int Process::gui$menu_add_separator(int menu_id)
-{
-    return WSWindowManager::the().api$menu_add_separator(menu_id);
-}
-
-int Process::gui$menu_add_item(int menu_id, unsigned identifier, const char* text)
-{
-    if (!validate_read_str(text))
-        return -EFAULT;
-    return WSWindowManager::the().api$menu_add_item(menu_id, identifier, String(text));
-}
