@@ -16,8 +16,6 @@ int gui_set_window_title(int window_id, const char*, size_t);
 int gui_get_window_rect(int window_id, GUI_Rect*);
 int gui_set_window_rect(int window_id, const GUI_Rect*);
 int gui_set_global_cursor_tracking_enabled(int window_id, bool);
-int gui_menu_add_separator(int menu_id);
-int gui_menu_add_item(int menu_id, unsigned identifier, const char* text);
 
 __END_DECLS
 

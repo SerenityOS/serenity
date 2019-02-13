@@ -287,6 +287,9 @@ ssize_t WSMessageLoop::on_receive_from_client(int client_id, const byte* data, s
     case GUI_ClientMessage::Type::DestroyMenu:
         post_message(&WSWindowManager::the(), make<WSAPIDestroyMenuRequest>(client_id, message.menu.menu_id));
         break;
+    case GUI_ClientMessage::Type::AddMenuItem:
+        ASSERT(message.menu.text_length < sizeof(message.menu.text));
+        post_message(&WSWindowManager::the(), make<WSAPIAddMenuItemRequest>(client_id, message.menu.menu_id, message.menu.identifier, String(message.menu.text, message.menu.text_length)));
     }
     return size;
 }

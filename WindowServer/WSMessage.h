@@ -31,6 +31,8 @@ public:
         APISetApplicationMenubarRequest,
         APICreateMenuRequest,
         APIDestroyMenuRequest,
+        APIAddMenuItemRequest,
+        APIAddMenuSeparatorRequest,
         __End_API_Client_Requests,
     };
 
@@ -129,11 +131,44 @@ private:
     String m_text;
 };
 
-
 class WSAPIDestroyMenuRequest : public WSAPIClientRequest {
 public:
     WSAPIDestroyMenuRequest(int client_id, int menu_id)
         : WSAPIClientRequest(WSMessage::APIDestroyMenuRequest, client_id)
+        , m_menu_id(menu_id)
+    {
+    }
+
+    int menu_id() const { return m_menu_id; }
+
+private:
+    int m_menu_id { 0 };
+};
+
+class WSAPIAddMenuItemRequest : public WSAPIClientRequest {
+public:
+    WSAPIAddMenuItemRequest(int client_id, int menu_id, unsigned identifier, const String& text)
+        : WSAPIClientRequest(WSMessage::APIAddMenuItemRequest, client_id)
+        , m_menu_id(menu_id)
+        , m_identifier(identifier)
+        , m_text(text)
+    {
+    }
+
+    int menu_id() const { return m_menu_id; }
+    unsigned identifier() const { return m_identifier; }
+    String text() const { return m_text; }
+
+private:
+    int m_menu_id { 0 };
+    unsigned m_identifier { 0 };
+    String m_text;
+};
+
+class WSAPIAddMenuSeparatorRequest : public WSAPIClientRequest {
+public:
+    WSAPIAddMenuSeparatorRequest(int client_id, int menu_id)
+        : WSAPIClientRequest(WSMessage::APIAddMenuSeparatorRequest, client_id)
         , m_menu_id(menu_id)
     {
     }

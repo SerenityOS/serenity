@@ -85,8 +85,6 @@
     __ENUMERATE_SYSCALL(rmdir) \
     __ENUMERATE_SYSCALL(chmod) \
     __ENUMERATE_SYSCALL(usleep) \
-    __ENUMERATE_SYSCALL(gui_menu_add_separator) \
-    __ENUMERATE_SYSCALL(gui_menu_add_item) \
 
 
 #ifdef SERENITY

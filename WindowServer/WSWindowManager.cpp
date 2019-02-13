@@ -822,8 +822,6 @@ void WSWindowManager::handle_client_request(WSAPIClientRequest& request)
         auto jt = m_menus.find(menu_id);
         if (it == m_menubars.end() || jt == m_menus.end()) {
             ASSERT_NOT_REACHED();
-            // FIXME: Send an error.
-            return;
         }
         auto& menubar = *(*it).value;
         auto& menu = *(*jt).value;
@@ -831,6 +829,37 @@ void WSWindowManager::handle_client_request(WSAPIClientRequest& request)
         GUI_ServerMessage response;
         response.type = GUI_ServerMessage::Type::DidAddMenuToMenubar;
         response.menu.menubar_id = menubar_id;
+        response.menu.menu_id = menu_id;
+        WSMessageLoop::the().post_message_to_client(request.client_id(), response);
+        break;
+    }
+    case WSMessage::APIAddMenuItemRequest: {
+        int menu_id = static_cast<WSAPIAddMenuItemRequest&>(request).menu_id();
+        unsigned identifier = static_cast<WSAPIAddMenuItemRequest&>(request).identifier();
+        String text = static_cast<WSAPIAddMenuItemRequest&>(request).text();
+        auto it = m_menus.find(menu_id);
+        if (it == m_menus.end()) {
+            ASSERT_NOT_REACHED();
+        }
+        auto& menu = *(*it).value;
+        menu.add_item(make<WSMenuItem>(identifier, move(text)));
+        GUI_ServerMessage response;
+        response.type = GUI_ServerMessage::Type::DidAddMenuItem;
+        response.menu.menu_id = menu_id;
+        response.menu.identifier = identifier;
+        WSMessageLoop::the().post_message_to_client(request.client_id(), response);
+        break;
+    }
+    case WSMessage::APIAddMenuSeparatorRequest: {
+        int menu_id = static_cast<WSAPIAddMenuSeparatorRequest&>(request).menu_id();
+        auto it = m_menus.find(menu_id);
+        if (it == m_menus.end()) {
+            ASSERT_NOT_REACHED();
+        }
+        auto& menu = *(*it).value;
+        menu.add_item(make<WSMenuItem>(WSMenuItem::Separator));
+        GUI_ServerMessage response;
+        response.type = GUI_ServerMessage::Type::DidAddMenuSeparator;
         response.menu.menu_id = menu_id;
         WSMessageLoop::the().post_message_to_client(request.client_id(), response);
         break;
@@ -948,28 +977,6 @@ void WSWindowManager::close_menu(WSMenu& menu)
     LOCKER(m_lock);
     if (m_current_menu == &menu)
         close_current_menu();
-}
-
-int WSWindowManager::api$menu_add_separator(int menu_id)
-{
-    LOCKER(m_lock);
-    auto it = m_menus.find(menu_id);
-    if (it == m_menus.end())
-        return -EBADMENU;
-    auto& menu = *(*it).value;
-    menu.add_item(make<WSMenuItem>(WSMenuItem::Separator));
-    return 0;
-}
-
-int WSWindowManager::api$menu_add_item(int menu_id, unsigned identifier, String&& text)
-{
-    LOCKER(m_lock);
-    auto it = m_menus.find(menu_id);
-    if (it == m_menus.end())
-        return -EBADMENU;
-    auto& menu = *(*it).value;
-    menu.add_item(make<WSMenuItem>(identifier, move(text)));
-    return 0;
 }
 
 int WSWindowManager::active_client_id() const
