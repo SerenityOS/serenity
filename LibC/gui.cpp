@@ -69,24 +69,6 @@ int gui_set_global_cursor_tracking_enabled(int window_id, bool enabled)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-int gui_menubar_add_menu(int menubar_id, int menu_id)
-{
-    int rc = syscall(SC_gui_menubar_add_menu, menubar_id, menu_id);
-    __RETURN_WITH_ERRNO(rc, rc, -1);
-}
-
-int gui_menu_create(const char* name)
-{
-    int rc = syscall(SC_gui_menu_create, name);
-    __RETURN_WITH_ERRNO(rc, rc, -1);
-}
-
-int gui_menu_destroy(int menu_id)
-{
-    int rc = syscall(SC_gui_menu_destroy, menu_id);
-    __RETURN_WITH_ERRNO(rc, rc, -1);
-}
-
 int gui_menu_add_separator(int menu_id)
 {
     int rc = syscall(SC_gui_menu_add_separator, menu_id);
@@ -96,11 +78,5 @@ int gui_menu_add_separator(int menu_id)
 int gui_menu_add_item(int menu_id, unsigned identifier, const char* text)
 {
     int rc = syscall(SC_gui_menu_add_item, menu_id, identifier, text);
-    __RETURN_WITH_ERRNO(rc, rc, -1);
-}
-
-int gui_app_set_menubar(int menubar_id)
-{
-    int rc = syscall(SC_gui_app_set_menubar, menubar_id);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }

@@ -12,6 +12,7 @@
 #include "WSMenuBar.h"
 #include <WindowServer/WSWindowType.h>
 
+class WSAPIClientRequest;
 class WSScreen;
 class WSMenuBar;
 class WSMouseEvent;
@@ -32,7 +33,7 @@ public:
     void notify_rect_changed(WSWindow&, const Rect& oldRect, const Rect& newRect);
 
     WSWindow* active_window() { return m_active_window.ptr(); }
-    const Process* active_process() const;
+    int active_client_id() const;
 
     void move_to_front(WSWindow&);
 
@@ -59,12 +60,8 @@ public:
     Color menu_selection_color() const { return m_menu_selection_color; }
     int menubar_menu_margin() const;
 
-    int api$menubar_add_menu(int menubar_id, int menu_id);
-    int api$menu_create(String&&);
-    int api$menu_destroy(int menu_id);
     int api$menu_add_separator(int menu_id);
     int api$menu_add_item(int menu_id, unsigned identifier, String&& text);
-    int api$app_set_menubar(int menubar_id);
     void destroy_all_menus(Process&);
 
 private:
@@ -76,6 +73,7 @@ private:
     void handle_menubar_mouse_event(WSMenuBar&, WSMouseEvent&);
     void handle_titlebar_mouse_event(WSWindow&, WSMouseEvent&);
     void handle_close_button_mouse_event(WSWindow&, WSMouseEvent&);
+    void handle_client_request(WSAPIClientRequest&);
 
     void set_active_window(WSWindow*);
     template<typename Callback> IterationDecision for_each_visible_window_of_type_from_back_to_front(WSWindowType, Callback);
@@ -84,7 +82,6 @@ private:
     template<typename Callback> IterationDecision for_each_visible_window_from_back_to_front(Callback);
     template<typename Callback> void for_each_active_menubar_menu(Callback);
     void close_current_menu();
-    WSMenu& create_menu(String&& name);
     
     virtual void on_message(WSMessage&) override;
 
@@ -156,5 +153,5 @@ private:
     WSMenu* m_current_menu { nullptr };
     HashMap<int, OwnPtr<WSMenuBar>> m_menubars;
     HashMap<int, OwnPtr<WSMenu>> m_menus;
-    HashMap<const Process*, WSMenuBar*> m_app_menubars;
+    HashMap<int, WSMenuBar*> m_app_menubars;
 };

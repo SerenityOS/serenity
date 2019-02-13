@@ -292,23 +292,6 @@ DisplayInfo Process::set_video_resolution(int width, int height)
     return info;
 }
 
-int Process::gui$menubar_add_menu(int menubar_id, int menu_id)
-{
-    return WSWindowManager::the().api$menubar_add_menu(menubar_id, menu_id);
-}
-
-int Process::gui$menu_create(const char* name)
-{
-    if (!validate_read_str(name))
-        return -EFAULT;
-    return WSWindowManager::the().api$menu_create(String(name));
-}
-
-int Process::gui$menu_destroy(int menu_id)
-{
-    return WSWindowManager::the().api$menu_destroy(menu_id);
-}
-
 int Process::gui$menu_add_separator(int menu_id)
 {
     return WSWindowManager::the().api$menu_add_separator(menu_id);
@@ -319,9 +302,4 @@ int Process::gui$menu_add_item(int menu_id, unsigned identifier, const char* tex
     if (!validate_read_str(text))
         return -EFAULT;
     return WSWindowManager::the().api$menu_add_item(menu_id, identifier, String(text));
-}
-
-int Process::gui$set_menubar(int menubar_id)
-{
-    return WSWindowManager::the().api$app_set_menubar(menubar_id);
 }

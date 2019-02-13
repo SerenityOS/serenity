@@ -44,10 +44,16 @@ void GMenuBar::notify_added_to_application(Badge<GApplication>)
         ASSERT(menu);
         int menu_id = menu->realize_menu();
         ASSERT(menu_id > 0);
-        int rc = gui_menubar_add_menu(m_menubar_id, menu_id);
-        ASSERT(rc == 0);
+        GUI_ClientMessage request;
+        request.type = GUI_ClientMessage::Type::AddMenuToMenubar;
+        request.menu.menubar_id = m_menubar_id;
+        request.menu.menu_id = menu_id;
+        GEventLoop::main().sync_request(request, GUI_ServerMessage::Type::DidAddMenuToMenubar);
     }
-    gui_app_set_menubar(m_menubar_id);
+    GUI_ClientMessage request;
+    request.type = GUI_ClientMessage::Type::SetApplicationMenubar;
+    request.menu.menubar_id = m_menubar_id;
+    GEventLoop::main().sync_request(request, GUI_ServerMessage::Type::DidSetApplicationMenubar);
 }
 
 void GMenuBar::notify_removed_from_application(Badge<GApplication>)

@@ -274,6 +274,19 @@ ssize_t WSMessageLoop::on_receive_from_client(int client_id, const byte* data, s
     case GUI_ClientMessage::Type::DestroyMenubar:
         post_message(&WSWindowManager::the(), make<WSAPIDestroyMenubarRequest>(client_id, message.menu.menubar_id));
         break;
+    case GUI_ClientMessage::Type::SetApplicationMenubar:
+        post_message(&WSWindowManager::the(), make<WSAPISetApplicationMenubarRequest>(client_id, message.menu.menubar_id));
+        break;
+    case GUI_ClientMessage::Type::AddMenuToMenubar:
+        post_message(&WSWindowManager::the(), make<WSAPIAddMenuToMenubarRequest>(client_id, message.menu.menubar_id, message.menu.menu_id));
+        break;
+    case GUI_ClientMessage::Type::CreateMenu:
+        ASSERT(message.menu.text_length < sizeof(message.menu.text));
+        post_message(&WSWindowManager::the(), make<WSAPICreateMenuRequest>(client_id, String(message.menu.text, message.menu.text_length)));
+        break;
+    case GUI_ClientMessage::Type::DestroyMenu:
+        post_message(&WSWindowManager::the(), make<WSAPIDestroyMenuRequest>(client_id, message.menu.menu_id));
+        break;
     }
     return size;
 }

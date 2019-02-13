@@ -70,6 +70,10 @@ struct GUI_ServerMessage {
         MenuItemActivated,
         DidCreateMenubar,
         DidDestroyMenubar,
+        DidCreateMenu,
+        DidDestroyMenu,
+        DidAddMenuToMenubar,
+        DidSetApplicationMenubar,
     };
     Type type { Invalid };
     int window_id { -1 };
@@ -104,6 +108,10 @@ struct GUI_ClientMessage {
         Invalid,
         CreateMenubar,
         DestroyMenubar,
+        CreateMenu,
+        DestroyMenu,
+        AddMenuToMenubar,
+        SetApplicationMenubar,
     };
     Type type { Invalid };
     int window_id { -1 };
@@ -112,6 +120,9 @@ struct GUI_ClientMessage {
         struct {
             int menubar_id;
             int menu_id;
+            unsigned identifier;
+            unsigned text_length;
+            char text[256];
         } menu;
     };
 };

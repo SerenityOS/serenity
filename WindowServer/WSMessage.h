@@ -27,6 +27,10 @@ public:
         __Begin_API_Client_Requests,
         APICreateMenubarRequest,
         APIDestroyMenubarRequest,
+        APIAddMenuToMenubarRequest,
+        APISetApplicationMenubarRequest,
+        APICreateMenuRequest,
+        APIDestroyMenuRequest,
         __End_API_Client_Requests,
     };
 
@@ -78,6 +82,66 @@ public:
 
 private:
     int m_menubar_id { 0 };
+};
+
+class WSAPISetApplicationMenubarRequest : public WSAPIClientRequest {
+public:
+    WSAPISetApplicationMenubarRequest(int client_id, int menubar_id)
+        : WSAPIClientRequest(WSMessage::APISetApplicationMenubarRequest, client_id)
+        , m_menubar_id(menubar_id)
+    {
+    }
+
+    int menubar_id() const { return m_menubar_id; }
+
+private:
+    int m_menubar_id { 0 };
+};
+
+class WSAPIAddMenuToMenubarRequest : public WSAPIClientRequest {
+public:
+    WSAPIAddMenuToMenubarRequest(int client_id, int menubar_id, int menu_id)
+        : WSAPIClientRequest(WSMessage::APIAddMenuToMenubarRequest, client_id)
+        , m_menubar_id(menubar_id)
+        , m_menu_id(menu_id)
+    {
+    }
+
+    int menubar_id() const { return m_menubar_id; }
+    int menu_id() const { return m_menu_id; }
+
+private:
+    int m_menubar_id { 0 };
+    int m_menu_id { 0 };
+};
+
+class WSAPICreateMenuRequest : public WSAPIClientRequest {
+public:
+    WSAPICreateMenuRequest(int client_id, const String& text)
+        : WSAPIClientRequest(WSMessage::APICreateMenuRequest, client_id)
+        , m_text(text)
+    {
+    }
+
+    String text() const { return m_text; }
+
+private:
+    String m_text;
+};
+
+
+class WSAPIDestroyMenuRequest : public WSAPIClientRequest {
+public:
+    WSAPIDestroyMenuRequest(int client_id, int menu_id)
+        : WSAPIClientRequest(WSMessage::APIDestroyMenuRequest, client_id)
+        , m_menu_id(menu_id)
+    {
+    }
+
+    int menu_id() const { return m_menu_id; }
+
+private:
+    int m_menu_id { 0 };
 };
 
 class WSClientFinishedPaintMessage final : public WSMessage {

@@ -223,18 +223,10 @@ static dword handle(RegisterDump& regs, dword function, dword arg1, dword arg2, 
         return current->sys$rmdir((const char*)arg1);
     case Syscall::SC_chmod:
         return current->sys$chmod((const char*)arg1, (mode_t)arg2);
-    case Syscall::SC_gui_menubar_add_menu:
-        return current->gui$menubar_add_menu((int)arg1, (int)arg2);
-    case Syscall::SC_gui_menu_create:
-        return current->gui$menu_create((const char*)arg1);
-    case Syscall::SC_gui_menu_destroy:
-        return current->gui$menu_destroy((int)arg1);
     case Syscall::SC_gui_menu_add_separator:
         return current->gui$menu_add_separator((int)arg1);
     case Syscall::SC_gui_menu_add_item:
         return current->gui$menu_add_item((int)arg1, (unsigned)arg2, (const char*)arg3);
-    case Syscall::SC_gui_app_set_menubar:
-        return current->gui$set_menubar((int)arg1);
     default:
         kprintf("<%u> int0x80: Unknown function %u requested {%x, %x, %x}\n", current->pid(), function, arg1, arg2, arg3);
         break;
