@@ -16,8 +16,6 @@ int gui_set_window_title(int window_id, const char*, size_t);
 int gui_get_window_rect(int window_id, GUI_Rect*);
 int gui_set_window_rect(int window_id, const GUI_Rect*);
 int gui_set_global_cursor_tracking_enabled(int window_id, bool);
-int gui_menubar_create();
-int gui_menubar_destroy(int menubar_id);
 int gui_menubar_add_menu(int menubar_id, int menu_id);
 int gui_menu_create(const char* name);
 int gui_menu_destroy(int menu_id);

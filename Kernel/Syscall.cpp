@@ -223,10 +223,6 @@ static dword handle(RegisterDump& regs, dword function, dword arg1, dword arg2, 
         return current->sys$rmdir((const char*)arg1);
     case Syscall::SC_chmod:
         return current->sys$chmod((const char*)arg1, (mode_t)arg2);
-    case Syscall::SC_gui_menubar_create:
-        return current->gui$menubar_create();
-    case Syscall::SC_gui_menubar_destroy:
-        return current->gui$menubar_destroy((int)arg1);
     case Syscall::SC_gui_menubar_add_menu:
         return current->gui$menubar_add_menu((int)arg1, (int)arg2);
     case Syscall::SC_gui_menu_create:

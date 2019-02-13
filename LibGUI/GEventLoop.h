@@ -5,11 +5,11 @@
 #include <AK/HashMap.h>
 #include <AK/OwnPtr.h>
 #include <AK/Vector.h>
+#include <Kernel/GUITypes.h>
 
 class GObject;
 class GNotifier;
 class GWindow;
-struct GUI_Event;
 
 class GEventLoop {
 public:
@@ -34,15 +34,20 @@ public:
 
     void exit(int);
 
+    bool post_message_to_server(const GUI_ClientMessage&);
+    bool wait_for_specific_event(GUI_Event::Type, GUI_Event&);
+
+    GUI_Event sync_request(const GUI_ClientMessage& request, GUI_Event::Type response_type);
+
 private:
     void wait_for_event();
+    bool drain_events_from_server();
     void handle_paint_event(const GUI_Event&, GWindow&);
     void handle_mouse_event(const GUI_Event&, GWindow&);
     void handle_key_event(const GUI_Event&, GWindow&);
     void handle_window_activation_event(const GUI_Event&, GWindow&);
     void handle_window_close_request_event(const GUI_Event&, GWindow&);
     void handle_menu_event(const GUI_Event&);
-
     void get_next_timer_expiration(timeval&);
 
     struct QueuedEvent {
@@ -50,6 +55,8 @@ private:
         OwnPtr<GEvent> event;
     };
     Vector<QueuedEvent> m_queued_events;
+
+    Vector<GUI_Event> m_unprocessed_events;
 
     int m_event_fd { -1 };
     bool m_running { false };

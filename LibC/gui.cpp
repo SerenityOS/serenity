@@ -69,18 +69,6 @@ int gui_set_global_cursor_tracking_enabled(int window_id, bool enabled)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-int gui_menubar_create()
-{
-    int rc = syscall(SC_gui_menubar_create);
-    __RETURN_WITH_ERRNO(rc, rc, -1);
-}
-
-int gui_menubar_destroy(int menubar_id)
-{
-    int rc = syscall(SC_gui_menubar_destroy, menubar_id);
-    __RETURN_WITH_ERRNO(rc, rc, -1);
-}
-
 int gui_menubar_add_menu(int menubar_id, int menu_id)
 {
     int rc = syscall(SC_gui_menubar_add_menu, menubar_id, menu_id);
