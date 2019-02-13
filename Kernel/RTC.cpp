@@ -64,6 +64,19 @@ static unsigned days_in_years_since_epoch(unsigned year)
     return days;
 }
 
+void read_registers(unsigned& year, unsigned& month, unsigned& day, unsigned& hour, unsigned& minute, unsigned& second)
+{
+    while (update_in_progress())
+        ;
+
+    year = (CMOS::read(0x32) * 100) + CMOS::read(0x09);
+    month = CMOS::read(0x08);
+    day = CMOS::read(0x07);
+    hour = CMOS::read(0x04);
+    minute = CMOS::read(0x02);
+    second = CMOS::read(0x00);
+}
+
 time_t now()
 {
     // FIXME: We should probably do something more robust here.
@@ -72,12 +85,8 @@ time_t now()
     while (update_in_progress())
         ;
 
-    unsigned year = (CMOS::read(0x32) * 100) + CMOS::read(0x09);
-    unsigned month = CMOS::read(0x08);
-    unsigned day = CMOS::read(0x07);
-    unsigned hour = CMOS::read(0x04);
-    unsigned minute = CMOS::read(0x02);
-    unsigned second = CMOS::read(0x00);
+    unsigned year, month, day, hour, minute, second;
+    read_registers(year, month, day, hour, minute, second);
 
     ASSERT(year >= 2018);
 

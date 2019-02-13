@@ -2,8 +2,10 @@
 
 #include "WSMessage.h"
 #include <AK/Lock.h>
+#include <AK/HashMap.h>
 #include <AK/OwnPtr.h>
 #include <AK/Vector.h>
+#include <AK/Function.h>
 
 class WSMessageReceiver;
 class Process;
@@ -24,6 +26,9 @@ public:
 
     void set_server_process(Process& process) { m_server_process = &process; }
 
+    int start_timer(int ms, Function<void()>&&);
+    int stop_timer(int timer_id);
+
 private:
     void wait_for_message();
     void drain_mouse();
@@ -42,4 +47,16 @@ private:
 
     int m_keyboard_fd { -1 };
     int m_mouse_fd { -1 };
+
+    struct Timer {
+        void reload();
+
+        int timer_id { 0 };
+        int interval { 0 };
+        struct timeval next_fire_time { 0, 0 };
+        Function<void()> callback;
+    };
+
+    int m_next_timer_id { 1 };
+    HashMap<int, OwnPtr<Timer>> m_timers;
 };

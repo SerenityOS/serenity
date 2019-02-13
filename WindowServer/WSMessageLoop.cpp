@@ -110,6 +110,37 @@ void WSMessageLoop::post_message(WSMessageReceiver* receiver, OwnPtr<WSMessage>&
         m_server_process->request_wakeup();
 }
 
+void WSMessageLoop::Timer::reload()
+{
+    struct timeval now;
+    current->sys$gettimeofday(&now);
+    next_fire_time = {
+        now.tv_sec + (interval / 1000),
+        now.tv_usec + (interval % 1000)
+    };
+}
+
+int WSMessageLoop::start_timer(int interval, Function<void()>&& callback)
+{
+    auto timer = make<Timer>();
+    int timer_id = m_next_timer_id++;
+    timer->timer_id = timer_id;
+    timer->callback = move(callback);
+    timer->interval = interval;
+    timer->reload();
+    m_timers.set(timer_id, move(timer));
+    return timer_id;
+}
+
+int WSMessageLoop::stop_timer(int timer_id)
+{
+    auto it = m_timers.find(timer_id);
+    if (it == m_timers.end())
+        return -1;
+    m_timers.remove(it);
+    return 0;
+}
+
 void WSMessageLoop::wait_for_message()
 {
     fd_set rfds;
@@ -123,7 +154,19 @@ void WSMessageLoop::wait_for_message()
     params.writefds = nullptr;
     params.exceptfds = nullptr;
     struct timeval timeout = { 0, 0 };
-    if (m_queued_messages.is_empty())
+    bool had_any_timer = false;
+
+    for (auto& it : m_timers) {
+        auto& timer = *it.value;
+        if (!had_any_timer) {
+            timeout = timer.next_fire_time;
+            continue;
+        }
+        if (timer.next_fire_time.tv_sec > timeout.tv_sec || (timer.next_fire_time.tv_sec == timeout.tv_sec && timer.next_fire_time.tv_usec > timeout.tv_usec))
+            timeout = timer.next_fire_time;
+    }
+
+    if (m_timers.is_empty() && m_queued_messages.is_empty())
         params.timeout = nullptr;
     else
         params.timeout = &timeout;
@@ -132,6 +175,16 @@ void WSMessageLoop::wait_for_message()
     memory_barrier();
     if (rc < 0) {
         ASSERT_NOT_REACHED();
+    }
+
+    struct timeval now;
+    current->sys$gettimeofday(&now);
+    for (auto& it : m_timers) {
+        auto& timer = *it.value;
+        if (now.tv_sec > timer.next_fire_time.tv_sec || (now.tv_sec == timer.next_fire_time.tv_sec && now.tv_usec > timer.next_fire_time.tv_usec)) {
+            timer.callback();
+            timer.reload();
+        }
     }
 
     if (bitmap.get(m_keyboard_fd))
