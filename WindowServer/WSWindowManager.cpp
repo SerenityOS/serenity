@@ -196,12 +196,12 @@ WSWindowManager::WSWindowManager()
         m_system_menu->on_item_activation = [] (WSMenuItem& item) {
             if (item.identifier() == 0) {
                 int error;
-                Process::create_user_process("/bin/Terminal", 100, 100, current->pid(), error);
+                Process::create_user_process("/bin/Terminal", 100, 100, 0, error);
                 return;
             }
             if (item.identifier() == 4) {
                 int error;
-                Process::create_user_process("/bin/About", 100, 100, current->pid(), error);
+                Process::create_user_process("/bin/About", 100, 100, 0, error);
                 return;
             }
             kprintf("WSMenu 1 item activated: '%s'\n", item.text().characters());
