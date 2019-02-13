@@ -191,7 +191,7 @@ void GEventLoop::wait_for_event()
     struct timeval timeout = { 0, 0 };
     if (!m_timers.is_empty())
         get_next_timer_expiration(timeout);
-    int rc = select(m_event_fd + 1, &rfds, &wfds, nullptr, (m_queued_events.is_empty() && m_timers.is_empty()) ? nullptr : &timeout);
+    int rc = select(max_fd + 1, &rfds, &wfds, nullptr, (m_queued_events.is_empty() && m_timers.is_empty()) ? nullptr : &timeout);
     if (rc < 0) {
         ASSERT_NOT_REACHED();
     }
