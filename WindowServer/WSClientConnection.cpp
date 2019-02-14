@@ -46,6 +46,17 @@ WSClientConnection::~WSClientConnection()
     s_connections->resource().remove(m_client_id);
 }
 
+void WSClientConnection::post_error(const String& error_message)
+{
+    dbgprintf("WSClientConnection::post_error: client_id=%d: %s\n", m_client_id, error_message.characters());
+    GUI_ServerMessage message;
+    message.type = GUI_ServerMessage::Type::Error;
+    ASSERT(error_message.length() < sizeof(message.text));
+    strcpy(message.text, error_message.characters());
+    message.text_length = error_message.length();
+    WSMessageLoop::the().post_message_to_client(m_client_id, message);
+}
+
 void WSClientConnection::on_message(WSMessage& message)
 {
     if (message.is_client_request()) {
@@ -106,8 +117,7 @@ void WSClientConnection::handle_request(WSAPIDestroyMenuRequest& request)
     int menu_id = static_cast<WSAPIDestroyMenuRequest&>(request).menu_id();
     auto it = m_menus.find(menu_id);
     if (it == m_menus.end()) {
-        ASSERT_NOT_REACHED();
-        // FIXME: Send an error.
+        post_error("Bad menu ID");
         return;
     }
     auto& menu = *(*it).value;
@@ -124,8 +134,7 @@ void WSClientConnection::handle_request(WSAPISetApplicationMenubarRequest& reque
     int menubar_id = request.menubar_id();
     auto it = m_menubars.find(menubar_id);
     if (it == m_menubars.end()) {
-        ASSERT_NOT_REACHED();
-        // FIXME: Send an error.
+        post_error("Bad menubar ID");
         return;
     }
     auto& menubar = *(*it).value;
@@ -143,8 +152,13 @@ void WSClientConnection::handle_request(WSAPIAddMenuToMenubarRequest& request)
     int menu_id = request.menu_id();
     auto it = m_menubars.find(menubar_id);
     auto jt = m_menus.find(menu_id);
-    if (it == m_menubars.end() || jt == m_menus.end()) {
-        ASSERT_NOT_REACHED();
+    if (it == m_menubars.end()) {
+        post_error("Bad menubar ID");
+        return;
+    }
+    if (jt == m_menus.end()) {
+        post_error("Bad menu ID");
+        return;
     }
     auto& menubar = *(*it).value;
     auto& menu = *(*jt).value;
@@ -163,7 +177,8 @@ void WSClientConnection::handle_request(WSAPIAddMenuItemRequest& request)
     String text = request.text();
     auto it = m_menus.find(menu_id);
     if (it == m_menus.end()) {
-        ASSERT_NOT_REACHED();
+        post_error("Bad menu ID");
+        return;
     }
     auto& menu = *(*it).value;
     menu.add_item(make<WSMenuItem>(identifier, move(text)));
@@ -179,7 +194,8 @@ void WSClientConnection::handle_request(WSAPIAddMenuSeparatorRequest& request)
     int menu_id = request.menu_id();
     auto it = m_menus.find(menu_id);
     if (it == m_menus.end()) {
-        ASSERT_NOT_REACHED();
+        post_error("Bad menu ID");
+        return;
     }
     auto& menu = *(*it).value;
     menu.add_item(make<WSMenuItem>(WSMenuItem::Separator));
@@ -194,7 +210,8 @@ void WSClientConnection::handle_request(WSAPISetWindowTitleRequest& request)
     int window_id = request.window_id();
     auto it = m_windows.find(window_id);
     if (it == m_windows.end()) {
-        ASSERT_NOT_REACHED();
+        post_error("Bad window ID");
+        return;
     }
     auto& window = *(*it).value;
     window.set_title(request.title());
@@ -205,7 +222,8 @@ void WSClientConnection::handle_request(WSAPIGetWindowTitleRequest& request)
     int window_id = request.window_id();
     auto it = m_windows.find(window_id);
     if (it == m_windows.end()) {
-        ASSERT_NOT_REACHED();
+        post_error("Bad window ID");
+        return;
     }
     auto& window = *(*it).value;
     GUI_ServerMessage response;
@@ -222,7 +240,8 @@ void WSClientConnection::handle_request(WSAPISetWindowRectRequest& request)
     int window_id = request.window_id();
     auto it = m_windows.find(window_id);
     if (it == m_windows.end()) {
-        ASSERT_NOT_REACHED();
+        post_error("Bad window ID");
+        return;
     }
     auto& window = *(*it).value;
     window.set_rect(request.rect());
@@ -233,7 +252,8 @@ void WSClientConnection::handle_request(WSAPIGetWindowRectRequest& request)
     int window_id = request.window_id();
     auto it = m_windows.find(window_id);
     if (it == m_windows.end()) {
-        ASSERT_NOT_REACHED();
+        post_error("Bad window ID");
+        return;
     }
     auto& window = *(*it).value;
     GUI_ServerMessage response;
@@ -261,7 +281,8 @@ void WSClientConnection::handle_request(WSAPIDestroyWindowRequest& request)
     int window_id = request.window_id();
     auto it = m_windows.find(window_id);
     if (it == m_windows.end()) {
-        ASSERT_NOT_REACHED();
+        post_error("Bad window ID");
+        return;
     }
     auto& window = *(*it).value;
     WSWindowManager::the().invalidate(window);
@@ -273,7 +294,8 @@ void WSClientConnection::handle_request(WSAPIInvalidateRectRequest& request)
     int window_id = request.window_id();
     auto it = m_windows.find(window_id);
     if (it == m_windows.end()) {
-        ASSERT_NOT_REACHED();
+        post_error("Bad window ID");
+        return;
     }
     GUI_ServerMessage response;
     response.type = GUI_ServerMessage::Type::Paint;
@@ -287,7 +309,8 @@ void WSClientConnection::handle_request(WSAPIDidFinishPaintingNotification& requ
     int window_id = request.window_id();
     auto it = m_windows.find(window_id);
     if (it == m_windows.end()) {
-        ASSERT_NOT_REACHED();
+        post_error("Bad window ID");
+        return;
     }
     auto& window = *(*it).value;
     WSWindowManager::the().invalidate(window, request.rect());
@@ -298,7 +321,8 @@ void WSClientConnection::handle_request(WSAPIGetWindowBackingStoreRequest& reque
     int window_id = request.window_id();
     auto it = m_windows.find(window_id);
     if (it == m_windows.end()) {
-        ASSERT_NOT_REACHED();
+        post_error("Bad window ID");
+        return;
     }
     auto& window = *(*it).value;
     auto* backing_store = window.backing();
@@ -330,7 +354,8 @@ void WSClientConnection::handle_request(WSAPISetGlobalCursorTrackingRequest& req
     int window_id = request.window_id();
     auto it = m_windows.find(window_id);
     if (it == m_windows.end()) {
-        ASSERT_NOT_REACHED();
+        post_error("Bad window ID");
+        return;
     }
     auto& window = *(*it).value;
     window.set_global_cursor_tracking_enabled(request.value());

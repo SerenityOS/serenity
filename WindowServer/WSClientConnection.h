@@ -51,6 +51,8 @@ private:
     void handle_request(WSAPIReleaseWindowBackingStoreRequest&);
     void handle_request(WSAPISetGlobalCursorTrackingRequest&);
 
+    void post_error(const String&);
+
     int m_client_id { 0 };
 
     HashMap<int, OwnPtr<WSWindow>> m_windows;
