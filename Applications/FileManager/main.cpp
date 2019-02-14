@@ -3,6 +3,8 @@
 #include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GStatusBar.h>
+#include <LibGUI/GMenuBar.h>
+#include <LibGUI/GAction.h>
 #include <unistd.h>
 #include <stdio.h>
 #include "DirectoryView.h"
@@ -12,6 +14,26 @@ static GWindow* make_window();
 int main(int argc, char** argv)
 {
     GApplication app(argc, argv);
+
+    auto menubar = make<GMenuBar>();
+
+    auto app_menu = make<GMenu>("FileManager");
+    app_menu->add_action(make<GAction>("Quit", String(), [] (const GAction&) {
+        GApplication::the().exit(0);
+        return;
+    }));
+    menubar->add_menu(move(app_menu));
+
+    auto file_menu = make<GMenu>("File");
+    menubar->add_menu(move(file_menu));
+
+    auto help_menu = make<GMenu>("Help");
+    help_menu->add_action(make<GAction>("About", [] (const GAction&) {
+        dbgprintf("FIXME: Implement Help/About\n");
+    }));
+    menubar->add_menu(move(help_menu));
+
+    app.set_menubar(move(menubar));
 
     auto* window = make_window();
     window->set_should_exit_app_on_close(true);
