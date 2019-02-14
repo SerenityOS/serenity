@@ -118,7 +118,7 @@ void WSClientConnection::handle_request(WSAPIDestroyMenubarRequest& request)
 void WSClientConnection::handle_request(WSAPICreateMenuRequest& request)
 {
     int menu_id = m_next_menu_id++;
-    auto menu = make<WSMenu>(*WSMessageLoop::process_from_client_id(request.client_id()), menu_id, request.text());
+    auto menu = make<WSMenu>(request.client_id(), menu_id, request.text());
     m_menus.set(menu_id, move(menu));
     GUI_ServerMessage response;
     response.type = GUI_ServerMessage::Type::DidCreateMenu;

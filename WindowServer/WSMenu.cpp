@@ -4,13 +4,14 @@
 #include "WSMessage.h"
 #include "WSMessageLoop.h"
 #include "WSWindowManager.h"
+#include <WindowServer/WSClientConnection.h>
 #include <SharedGraphics/Painter.h>
 #include <SharedGraphics/Font.h>
 
-WSMenu::WSMenu(Process& process, int menu_id, String&& name)
-    : m_menu_id(menu_id)
+WSMenu::WSMenu(int client_id, int menu_id, String&& name)
+    : m_client_id(client_id)
+    , m_menu_id(menu_id)
     , m_name(move(name))
-    , m_process(process.make_weak_ptr())
 {
 }
 
@@ -137,15 +138,13 @@ void WSMenu::did_activate(WSMenuItem& item)
 
     close();
 
-    GUI_ServerMessage gui_event;
-    gui_event.type = GUI_ServerMessage::Type::MenuItemActivated;
-    gui_event.menu.menu_id = m_menu_id;
-    gui_event.menu.identifier = item.identifier();
+    GUI_ServerMessage message;
+    message.type = GUI_ServerMessage::Type::MenuItemActivated;
+    message.menu.menu_id = m_menu_id;
+    message.menu.identifier = item.identifier();
 
-    if (!m_process)
-        return;
-    LOCKER(m_process->gui_events_lock());
-    m_process->gui_events().append(move(gui_event));
+    if (auto* client = WSClientConnection::from_client_id(m_client_id))
+        client->post_message(move(message));
 }
 
 WSMenuItem* WSMenu::item_at(const Point& position)
