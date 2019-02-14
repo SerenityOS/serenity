@@ -19,6 +19,16 @@ LocalSocket::~LocalSocket()
 {
 }
 
+bool LocalSocket::get_address(sockaddr* address, socklen_t* address_size)
+{
+    // FIXME: Look into what fallback behavior we should have here.
+    if (*address_size != sizeof(sockaddr_un))
+        return false;
+    memcpy(address, &m_address, sizeof(sockaddr_un));
+    *address_size = sizeof(sockaddr_un);
+    return true;
+}
+
 bool LocalSocket::bind(const sockaddr* address, socklen_t address_size, int& error)
 {
     if (address_size != sizeof(sockaddr_un)) {
@@ -37,11 +47,14 @@ bool LocalSocket::bind(const sockaddr* address, socklen_t address_size, int& err
 
     kprintf("%s(%u) LocalSocket{%p} bind(%s)\n", current->name().characters(), current->pid(), safe_address);
 
-    auto descriptor = VFS::the().open(safe_address, error, O_CREAT | O_EXCL, S_IFSOCK | 0666, *current->cwd_inode());
-    if (!descriptor) {
+    m_file = VFS::the().open(safe_address, error, O_CREAT | O_EXCL, S_IFSOCK | 0666, *current->cwd_inode());
+    if (!m_file) {
         if (error == -EEXIST)
             error = -EADDRINUSE;
         return error;
     }
+
+    m_address = local_address;
+    m_bound = true;
     return true;
 }
