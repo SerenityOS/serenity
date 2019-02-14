@@ -78,6 +78,8 @@ int print_name(struct stat& st, const char* name, const char* path_for_link_reso
             begin_color = "\033[34;1m";
         else if (st.st_mode & 0111)
             begin_color = "\033[32;1m";
+        else if (S_ISSOCK(st.st_mode))
+            begin_color = "\033[35;1m";
         else if (S_ISCHR(st.st_mode) || S_ISBLK(st.st_mode))
             begin_color = "\033[33;1m";
         printf("%s%s%s", begin_color, name, end_color);
@@ -136,6 +138,8 @@ int do_dir(const char* path)
             printf("c");
         else if (S_ISFIFO(st.st_mode))
             printf("f");
+        else if (S_ISSOCK(st.st_mode))
+            printf("s");
         else if (S_ISREG(st.st_mode))
             printf("-");
         else
