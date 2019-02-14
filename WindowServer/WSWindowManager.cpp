@@ -741,6 +741,11 @@ void WSWindowManager::on_message(WSMessage& message)
 void WSWindowManager::set_active_window(WSWindow* window)
 {
     LOCKER(m_lock);
+    if (window->type() == WSWindowType::Menu) {
+        dbgprintf("WSWindowManager: Attempted to make a menu window active.\n");
+        return;
+    }
+
     if (window == m_active_window.ptr())
         return;
 
