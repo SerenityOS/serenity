@@ -755,7 +755,10 @@ void WSWindowManager::set_active_window(WSWindow* window)
 
         int client_id = window->client_id();
         auto* client = WSClientConnection::from_client_id(client_id);
-        ASSERT(client);
+        if (!client) {
+            dbgprintf("WSWindow{%p} (type=%u) has no client! (id=%d)\n", window, window->type(), client_id);
+            ASSERT_NOT_REACHED();
+        }
         set_current_menubar(client->app_menubar());
     }
 }
