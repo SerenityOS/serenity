@@ -10,15 +10,14 @@ class WSMenuBar;
 class WSMessage;
 class WSWindow;
 class Font;
-class Process;
 
 class WSMenu : public Weakable<WSMenu> {
 public:
-    WSMenu(Process&, int menu_id, String&& name);
+    WSMenu(int client_id, int menu_id, String&& name);
     ~WSMenu();
 
+    int client_id() const { return m_client_id; }
     int menu_id() const { return m_menu_id; }
-    const Process* process() const { return m_process.ptr(); }
 
     WSMenuBar* menu_bar() { return m_menubar; }
     const WSMenuBar* menu_bar() const { return m_menubar; }
@@ -75,7 +74,7 @@ public:
 
 private:
     void did_activate(WSMenuItem&);
-
+    int m_client_id { 0 };
     int m_menu_id { 0 };
     String m_name;
     Rect m_rect_in_menubar;
@@ -84,6 +83,5 @@ private:
     WSMenuItem* m_hovered_item { nullptr };
     Vector<OwnPtr<WSMenuItem>> m_items;
     OwnPtr<WSWindow> m_menu_window;
-    WeakPtr<Process> m_process;
 };
 
