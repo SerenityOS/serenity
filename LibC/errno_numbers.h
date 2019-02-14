@@ -46,6 +46,7 @@
     __ERROR(EADDRINUSE,     "Address in use") \
     __ERROR(EWHYTHO,        "Failed without setting an error code (Bug!)") \
     __ERROR(ENOTEMPTY,      "Directory not empty") \
+    __ERROR(ECONNREFUSED,   "Connection refused") \
 
 
 enum __errno_values {
