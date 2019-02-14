@@ -12,7 +12,7 @@ RetainPtr<LocalSocket> LocalSocket::create(int type)
 LocalSocket::LocalSocket(int type)
     : Socket(AF_LOCAL, type, 0)
 {
-    kprintf("%s(%u) LocalSocket{%p} created with type=%u\n", current->name().characters(), current->pid(), type);
+    kprintf("%s(%u) LocalSocket{%p} created with type=%u\n", current->name().characters(), current->pid(), this, type);
 }
 
 LocalSocket::~LocalSocket()

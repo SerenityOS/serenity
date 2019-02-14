@@ -37,7 +37,7 @@ bool Socket::listen(int backlog, int& error)
     }
     m_backlog = backlog;
     m_listening = true;
-    kprintf("Socket{%p} listening with backlog=%d\n", m_backlog);
+    kprintf("Socket{%p} listening with backlog=%d\n", this, m_backlog);
     return true;
 }
 
