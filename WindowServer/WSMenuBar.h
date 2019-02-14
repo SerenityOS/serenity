@@ -2,11 +2,12 @@
 
 #include "WSMenu.h"
 #include <AK/Vector.h>
+#include <AK/Weakable.h>
 #include <AK/WeakPtr.h>
 
 class Process;
 
-class WSMenuBar {
+class WSMenuBar : public Weakable<WSMenuBar> {
 public:
     WSMenuBar(int menubar_id, Process&);
     ~WSMenuBar();

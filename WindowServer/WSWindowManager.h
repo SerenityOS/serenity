@@ -18,6 +18,7 @@ class WSMenuBar;
 class WSMouseEvent;
 class WSClientWantsToPaintMessage;
 class WSWindow;
+class WSClientConnection;
 class CharacterBitmap;
 class GraphicsBitmap;
 
@@ -31,6 +32,7 @@ public:
 
     void notify_title_changed(WSWindow&);
     void notify_rect_changed(WSWindow&, const Rect& oldRect, const Rect& newRect);
+    void notify_client_changed_app_menubar(WSClientConnection&);
 
     WSWindow* active_window() { return m_active_window.ptr(); }
     int active_client_id() const;
@@ -42,9 +44,9 @@ public:
     void draw_menubar();
 
     Rect menubar_rect() const;
-    WSMenuBar* current_menubar() { return m_current_menubar; }
+    WSMenuBar* current_menubar() { return m_current_menubar.ptr(); }
     void set_current_menubar(WSMenuBar*);
-    WSMenu* current_menu() { return m_current_menu; }
+    WSMenu* current_menu() { return m_current_menu.ptr(); }
     void set_current_menu(WSMenu*);
 
     void invalidate(const WSWindow&);
@@ -57,6 +59,7 @@ public:
     const Font& font() const { return *m_font; }
 
     void close_menu(WSMenu&);
+    void close_menubar(WSMenuBar&);
     Color menu_selection_color() const { return m_menu_selection_color; }
     int menubar_menu_margin() const;
 
@@ -70,7 +73,7 @@ private:
 
     void process_mouse_event(WSMouseEvent&);
     void handle_menu_mouse_event(WSMenu&, WSMouseEvent&);
-    void handle_menubar_mouse_event(WSMenuBar&, WSMouseEvent&);
+    void handle_menubar_mouse_event(WSMouseEvent&);
     void handle_titlebar_mouse_event(WSWindow&, WSMouseEvent&);
     void handle_close_button_mouse_event(WSWindow&, WSMouseEvent&);
     void handle_client_request(WSAPIClientRequest&);
@@ -145,15 +148,8 @@ private:
     Lockable<bool> m_flash_flush;
     bool m_buffers_are_flipped { false };
 
-    int m_next_menubar_id { 100 };
-    int m_next_menu_id { 100 };
-    int m_next_window_id { 1982 };
-
     OwnPtr<WSMenu> m_system_menu;
     Color m_menu_selection_color;
-    WSMenuBar* m_current_menubar { nullptr };
-    WSMenu* m_current_menu { nullptr };
-    HashMap<int, OwnPtr<WSMenuBar>> m_menubars;
-    HashMap<int, OwnPtr<WSMenu>> m_menus;
-    HashMap<int, WSMenuBar*> m_app_menubars;
+    WeakPtr<WSMenuBar> m_current_menubar;
+    WeakPtr<WSMenu> m_current_menu;
 };

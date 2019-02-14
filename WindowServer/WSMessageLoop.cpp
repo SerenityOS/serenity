@@ -3,6 +3,7 @@
 #include "WSMessageReceiver.h"
 #include "WSWindowManager.h"
 #include "WSScreen.h"
+#include <WindowServer/WSClientConnection.h>
 #include "PS2MouseDevice.h"
 #include <Kernel/Keyboard.h>
 #include <AK/Bitmap.h>
@@ -267,7 +268,10 @@ void WSMessageLoop::drain_keyboard()
 void WSMessageLoop::notify_client_died(int client_id)
 {
     LOCKER(m_lock);
-    post_message(&WSWindowManager::the(), make<WSClientDisconnectedNotification>(client_id));
+    auto* client = WSClientConnection::from_client_id(client_id);
+    if (!client)
+        return;
+    post_message(client, make<WSClientDisconnectedNotification>(client_id));
 }
 
 ssize_t WSMessageLoop::on_receive_from_client(int client_id, const byte* data, size_t size)
@@ -277,67 +281,70 @@ ssize_t WSMessageLoop::on_receive_from_client(int client_id, const byte* data, s
         Scheduler::yield();
 
     LOCKER(m_lock);
+
+    WSClientConnection* client = WSClientConnection::ensure_for_client_id(client_id);
+
     ASSERT(size == sizeof(GUI_ClientMessage));
     auto& message = *reinterpret_cast<const GUI_ClientMessage*>(data);
     switch (message.type) {
     case GUI_ClientMessage::Type::CreateMenubar:
-        post_message(&WSWindowManager::the(), make<WSAPICreateMenubarRequest>(client_id));
+        post_message(client, make<WSAPICreateMenubarRequest>(client_id));
         break;
     case GUI_ClientMessage::Type::DestroyMenubar:
-        post_message(&WSWindowManager::the(), make<WSAPIDestroyMenubarRequest>(client_id, message.menu.menubar_id));
+        post_message(client, make<WSAPIDestroyMenubarRequest>(client_id, message.menu.menubar_id));
         break;
     case GUI_ClientMessage::Type::SetApplicationMenubar:
-        post_message(&WSWindowManager::the(), make<WSAPISetApplicationMenubarRequest>(client_id, message.menu.menubar_id));
+        post_message(client, make<WSAPISetApplicationMenubarRequest>(client_id, message.menu.menubar_id));
         break;
     case GUI_ClientMessage::Type::AddMenuToMenubar:
-        post_message(&WSWindowManager::the(), make<WSAPIAddMenuToMenubarRequest>(client_id, message.menu.menubar_id, message.menu.menu_id));
+        post_message(client, make<WSAPIAddMenuToMenubarRequest>(client_id, message.menu.menubar_id, message.menu.menu_id));
         break;
     case GUI_ClientMessage::Type::CreateMenu:
         ASSERT(message.text_length < sizeof(message.text));
-        post_message(&WSWindowManager::the(), make<WSAPICreateMenuRequest>(client_id, String(message.text, message.text_length)));
+        post_message(client, make<WSAPICreateMenuRequest>(client_id, String(message.text, message.text_length)));
         break;
     case GUI_ClientMessage::Type::DestroyMenu:
-        post_message(&WSWindowManager::the(), make<WSAPIDestroyMenuRequest>(client_id, message.menu.menu_id));
+        post_message(client, make<WSAPIDestroyMenuRequest>(client_id, message.menu.menu_id));
         break;
     case GUI_ClientMessage::Type::AddMenuItem:
         ASSERT(message.text_length < sizeof(message.text));
-        post_message(&WSWindowManager::the(), make<WSAPIAddMenuItemRequest>(client_id, message.menu.menu_id, message.menu.identifier, String(message.text, message.text_length)));
+        post_message(client, make<WSAPIAddMenuItemRequest>(client_id, message.menu.menu_id, message.menu.identifier, String(message.text, message.text_length)));
         break;
     case GUI_ClientMessage::Type::CreateWindow:
         ASSERT(message.text_length < sizeof(message.text));
-        post_message(&WSWindowManager::the(), make<WSAPICreateWindowRequest>(client_id, message.window.rect, String(message.text, message.text_length)));
+        post_message(client, make<WSAPICreateWindowRequest>(client_id, message.window.rect, String(message.text, message.text_length)));
         break;
     case GUI_ClientMessage::Type::DestroyWindow:
-        post_message(&WSWindowManager::the(), make<WSAPIDestroyWindowRequest>(client_id, message.window_id));
+        post_message(client, make<WSAPIDestroyWindowRequest>(client_id, message.window_id));
         break;
     case GUI_ClientMessage::Type::SetWindowTitle:
         ASSERT(message.text_length < sizeof(message.text));
-        post_message(&WSWindowManager::the(), make<WSAPISetWindowTitleRequest>(client_id, message.window_id, String(message.text, message.text_length)));
+        post_message(client, make<WSAPISetWindowTitleRequest>(client_id, message.window_id, String(message.text, message.text_length)));
         break;
     case GUI_ClientMessage::Type::GetWindowTitle:
         ASSERT(message.text_length < sizeof(message.text));
-        post_message(&WSWindowManager::the(), make<WSAPIGetWindowTitleRequest>(client_id, message.window_id));
+        post_message(client, make<WSAPIGetWindowTitleRequest>(client_id, message.window_id));
         break;
     case GUI_ClientMessage::Type::SetWindowRect:
-        post_message(&WSWindowManager::the(), make<WSAPISetWindowRectRequest>(client_id, message.window_id, message.window.rect));
+        post_message(client, make<WSAPISetWindowRectRequest>(client_id, message.window_id, message.window.rect));
         break;
     case GUI_ClientMessage::Type::GetWindowRect:
-        post_message(&WSWindowManager::the(), make<WSAPIGetWindowRectRequest>(client_id, message.window_id));
+        post_message(client, make<WSAPIGetWindowRectRequest>(client_id, message.window_id));
         break;
     case GUI_ClientMessage::Type::InvalidateRect:
-        post_message(&WSWindowManager::the(), make<WSAPIInvalidateRectRequest>(client_id, message.window_id, message.window.rect));
+        post_message(client, make<WSAPIInvalidateRectRequest>(client_id, message.window_id, message.window.rect));
         break;
     case GUI_ClientMessage::Type::DidFinishPainting:
-        post_message(&WSWindowManager::the(), make<WSAPIDidFinishPaintingNotification>(client_id, message.window_id, message.window.rect));
+        post_message(client, make<WSAPIDidFinishPaintingNotification>(client_id, message.window_id, message.window.rect));
         break;
     case GUI_ClientMessage::Type::GetWindowBackingStore:
-        post_message(&WSWindowManager::the(), make<WSAPIGetWindowBackingStoreRequest>(client_id, message.window_id));
+        post_message(client, make<WSAPIGetWindowBackingStoreRequest>(client_id, message.window_id));
         break;
     case GUI_ClientMessage::Type::ReleaseWindowBackingStore:
-        post_message(&WSWindowManager::the(), make<WSAPIReleaseWindowBackingStoreRequest>(client_id, (int)message.backing.backing_store_id));
+        post_message(client, make<WSAPIReleaseWindowBackingStoreRequest>(client_id, (int)message.backing.backing_store_id));
         break;
     case GUI_ClientMessage::Type::SetGlobalCursorTracking:
-        post_message(&WSWindowManager::the(), make<WSAPISetGlobalCursorTrackingRequest>(client_id, message.value));
+        post_message(client, make<WSAPISetGlobalCursorTrackingRequest>(client_id, message.value));
         break;
     }
     server_process().request_wakeup();

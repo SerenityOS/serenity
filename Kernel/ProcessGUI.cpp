@@ -20,6 +20,7 @@ void Process::destroy_all_windows()
 {
     if (!WSMessageLoop::the().running())
         return;
+    dbgprintf("Sending death notification for client_id %d\n", gui_client_id());
     WSMessageLoop::the().notify_client_died(gui_client_id());
 }
 
