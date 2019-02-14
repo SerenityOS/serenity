@@ -65,6 +65,13 @@ void WSClientConnection::post_message(GUI_ServerMessage&& message)
     m_process->gui_events().append(move(message));
 }
 
+RetainPtr<GraphicsBitmap> WSClientConnection::create_bitmap(const Size& size)
+{
+    if (!m_process)
+        return nullptr;
+    return GraphicsBitmap::create(*m_process, size);
+}
+
 void WSClientConnection::on_message(WSMessage& message)
 {
     if (message.is_client_request()) {

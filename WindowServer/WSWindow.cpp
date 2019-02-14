@@ -2,7 +2,6 @@
 #include "WSWindowManager.h"
 #include "WSMessage.h"
 #include "WSMessageLoop.h"
-#include "Process.h"
 #include <WindowServer/WSClientConnection.h>
 
 WSWindow::WSWindow(WSMenu& menu)
@@ -44,23 +43,19 @@ void WSWindow::set_rect(const Rect& rect)
     Rect old_rect;
     {
         WSWindowLocker locker(*this);
-
-        Process* process = nullptr;
         auto* client = WSClientConnection::from_client_id(m_client_id);
-        if (client)
-            process = client->process();
-
-        if (!process && !m_menu)
+        if (!client && !m_menu)
             return;
         if (m_rect == rect)
             return;
         old_rect = m_rect;
         m_rect = rect;
         if (!m_backing || old_rect.size() != rect.size()) {
-            if (process)
-                m_backing = GraphicsBitmap::create(*process, m_rect.size());
             if (m_menu)
                 m_backing = GraphicsBitmap::create_kernel_only(m_rect.size());
+            else if (client)
+                m_backing = client->create_bitmap(m_rect.size());
+
         }
     }
     WSWindowManager::the().notify_rect_changed(*this, old_rect, rect);

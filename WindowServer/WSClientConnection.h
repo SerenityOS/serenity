@@ -3,6 +3,7 @@
 #include <AK/HashMap.h>
 #include <AK/OwnPtr.h>
 #include <AK/WeakPtr.h>
+#include <SharedGraphics/GraphicsBitmap.h>
 #include <WindowServer/WSMessageReceiver.h>
 #include <WindowServer/WSMessage.h>
 
@@ -23,9 +24,7 @@ public:
     static WSClientConnection* ensure_for_client_id(int client_id);
 
     void post_message(GUI_ServerMessage&&);
-
-    // FIXME: Remove.
-    Process* process() { return m_process.ptr(); }
+    RetainPtr<GraphicsBitmap> create_bitmap(const Size&);
 
     int client_id() const { return m_client_id; }
     WSMenuBar* app_menubar() { return m_app_menubar.ptr(); }
