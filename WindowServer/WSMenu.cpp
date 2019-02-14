@@ -144,7 +144,7 @@ void WSMenu::did_activate(WSMenuItem& item)
     message.menu.identifier = item.identifier();
 
     if (auto* client = WSClientConnection::from_client_id(m_client_id))
-        client->post_message(move(message));
+        client->post_message(message);
 }
 
 WSMenuItem* WSMenu::item_at(const Point& position)

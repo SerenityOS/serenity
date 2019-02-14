@@ -1,6 +1,7 @@
 #include <Kernel/Socket.h>
 #include <Kernel/LocalSocket.h>
 #include <Kernel/UnixTypes.h>
+#include <Kernel/Process.h>
 #include <LibC/errno_numbers.h>
 
 RetainPtr<Socket> Socket::create(int domain, int type, int protocol, int& error)
@@ -20,6 +21,7 @@ Socket::Socket(int domain, int type, int protocol)
     , m_type(type)
     , m_protocol(protocol)
 {
+    m_origin_pid = current->pid();
 }
 
 Socket::~Socket()
@@ -45,6 +47,19 @@ RetainPtr<Socket> Socket::accept()
     if (m_pending.is_empty())
         return nullptr;
     auto client = m_pending.take_first();
+    ASSERT(!client->is_connected());
+    client->m_connected = true;
     m_clients.append(client.copy_ref());
     return client;
+}
+
+bool Socket::queue_connection_from(Socket& peer, int& error)
+{
+    LOCKER(m_lock);
+    if (m_pending.size() >= m_backlog) {
+        error = -ECONNREFUSED;
+        return false;
+    }
+    m_pending.append(peer);
+    return true;
 }

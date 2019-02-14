@@ -54,6 +54,7 @@ private:
 
     int m_keyboard_fd { -1 };
     int m_mouse_fd { -1 };
+    int m_server_fd { -1 };
 
     struct Timer {
         void reload();

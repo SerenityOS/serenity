@@ -78,6 +78,7 @@ public:
         BlockedWrite,
         BlockedSignal,
         BlockedSelect,
+        BlockedConnect,
     };
 
     enum Priority {
@@ -226,6 +227,8 @@ public:
 
     DisplayInfo set_video_resolution(int width, int height);
 
+    bool wait_for_connect(Socket&, int& error);
+
     static void initialize();
 
     void crash() NORETURN;
@@ -356,6 +359,7 @@ private:
     SignalActionData m_signal_action_data[32];
     dword m_pending_signals { 0 };
     dword m_signal_mask { 0xffffffff };
+    RetainPtr<Socket> m_blocked_connecting_socket;
 
     byte m_termination_status { 0 };
     byte m_termination_signal { 0 };
@@ -456,6 +460,7 @@ static inline const char* to_string(Process::State state)
     case Process::BlockedSignal: return "Signal";
     case Process::BlockedSelect: return "Select";
     case Process::BlockedLurking: return "Lurking";
+    case Process::BlockedConnect: return "Connect";
     case Process::BeingInspected: return "Inspect";
     }
     ASSERT_NOT_REACHED();

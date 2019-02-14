@@ -7,9 +7,19 @@
 #include <WindowServer/WSWindowManager.h>
 #include <Kernel/GUITypes.h>
 #include <Kernel/MemoryManager.h>
+#include <Kernel/Process.h>
 
 Lockable<HashMap<int, WSClientConnection*>>* s_connections;
 
+void WSClientConnection::for_each_client(Function<void(WSClientConnection&)> callback)
+{
+    if (!s_connections)
+        return;
+    LOCKER(s_connections->lock());
+    for (auto& it : s_connections->resource()) {
+        callback(*it.value);
+    }
+}
 
 WSClientConnection* WSClientConnection::from_client_id(int client_id)
 {
@@ -29,15 +39,25 @@ WSClientConnection* WSClientConnection::ensure_for_client_id(int client_id)
     return new WSClientConnection(client_id);
 }
 
-WSClientConnection::WSClientConnection(int client_id)
-    : m_client_id(client_id)
+WSClientConnection::WSClientConnection(int fd)
+    : m_fd(fd)
 {
+    pid_t pid;
+    int rc = WSMessageLoop::the().server_process().sys$ioctl(m_fd, 413, (int)&pid);
+    ASSERT(rc == 0);
+
+    {
+        InterruptDisabler disabler;
+        auto* process = Process::from_pid(pid);
+        ASSERT(process);
+        m_process = process->make_weak_ptr();
+        m_client_id = (int)process;
+    }
+
     if (!s_connections)
         s_connections = new Lockable<HashMap<int, WSClientConnection*>>;
     LOCKER(s_connections->lock());
-    s_connections->resource().set(client_id, this);
-
-    m_process = ((Process*)m_client_id)->make_weak_ptr();
+    s_connections->resource().set(m_client_id, this);
 }
 
 WSClientConnection::~WSClientConnection()
@@ -57,12 +77,10 @@ void WSClientConnection::post_error(const String& error_message)
     WSMessageLoop::the().post_message_to_client(m_client_id, message);
 }
 
-void WSClientConnection::post_message(GUI_ServerMessage&& message)
+void WSClientConnection::post_message(const GUI_ServerMessage& message)
 {
-    if (!m_process)
-        return;
-    LOCKER(m_process->gui_events_lock());
-    m_process->gui_events().append(move(message));
+    int nwritten = WSMessageLoop::the().server_process().sys$write(m_fd, &message, sizeof(message));
+    ASSERT(nwritten == sizeof(message));
 }
 
 RetainPtr<GraphicsBitmap> WSClientConnection::create_bitmap(const Size& size)

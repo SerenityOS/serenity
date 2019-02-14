@@ -126,7 +126,7 @@ void WSWindow::on_message(WSMessage& message)
         return;
 
     if (auto* client = WSClientConnection::from_client_id(m_client_id))
-        client->post_message(move(server_message));
+        client->post_message(server_message);
 }
 
 void WSWindow::set_global_cursor_tracking_enabled(bool enabled)

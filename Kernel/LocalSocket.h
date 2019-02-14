@@ -11,7 +11,7 @@ public:
     virtual ~LocalSocket() override;
 
     virtual bool bind(const sockaddr*, socklen_t, int& error) override;
-    virtual RetainPtr<Socket> connect(const sockaddr*, socklen_t, int& error) override;
+    virtual bool connect(const sockaddr*, socklen_t, int& error) override;
     virtual bool get_address(sockaddr*, socklen_t*) override;
 
     virtual bool can_read(SocketRole) const override;
@@ -27,7 +27,6 @@ private:
     RetainPtr<LocalSocket> m_peer;
 
     bool m_bound { false };
-    bool m_connected { false };
     sockaddr_un m_address;
 
     DoubleBuffer m_for_client;

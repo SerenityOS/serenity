@@ -37,6 +37,18 @@ int WSMessageLoop::exec()
     m_keyboard_fd = m_server_process->sys$open("/dev/keyboard", O_RDONLY);
     m_mouse_fd = m_server_process->sys$open("/dev/psaux", O_RDONLY);
 
+    m_server_process->sys$unlink("/wsportal");
+
+    m_server_fd = m_server_process->sys$socket(AF_LOCAL, SOCK_STREAM, 0);
+    ASSERT(m_server_fd >= 0);
+    sockaddr_un address;
+    address.sun_family = AF_LOCAL;
+    strcpy(address.sun_path, "/wsportal");
+    int rc = m_server_process->sys$bind(m_server_fd, (const sockaddr*)&address, sizeof(address));
+    ASSERT(rc == 0);
+    rc = m_server_process->sys$listen(m_server_fd, 5);
+    ASSERT(rc == 0);
+
     ASSERT(m_keyboard_fd >= 0);
     ASSERT(m_mouse_fd >= 0);
 
@@ -76,11 +88,10 @@ Process* WSMessageLoop::process_from_client_id(int client_id)
 
 void WSMessageLoop::post_message_to_client(int client_id, const GUI_ServerMessage& message)
 {
-    auto* process = process_from_client_id(client_id);
-    if (!process)
+    auto* client = WSClientConnection::from_client_id(client_id);
+    if (!client)
         return;
-    LOCKER(process->gui_events_lock());
-    process->gui_events().append(move(message));
+    client->post_message(message);
 }
 
 void WSMessageLoop::post_message(WSMessageReceiver* receiver, OwnPtr<WSMessage>&& message)
@@ -164,10 +175,23 @@ void WSMessageLoop::wait_for_message()
     fd_set rfds;
     memset(&rfds, 0, sizeof(rfds));
     auto bitmap = Bitmap::wrap((byte*)&rfds, FD_SETSIZE);
-    bitmap.set(m_keyboard_fd, true);
-    bitmap.set(m_mouse_fd, true);
+    int max_fd = 0;
+    auto add_fd_to_set = [&max_fd] (int fd, auto& bitmap) {
+        bitmap.set(fd, true);
+        if (fd > max_fd)
+            max_fd = fd;
+    };
+
+    add_fd_to_set(m_keyboard_fd, bitmap);
+    add_fd_to_set(m_mouse_fd, bitmap);
+    add_fd_to_set(m_server_fd, bitmap);
+
+    WSClientConnection::for_each_client([&] (WSClientConnection& client) {
+        add_fd_to_set(client.fd(), bitmap);
+    });
+
     Syscall::SC_select_params params;
-    params.nfds = max(m_keyboard_fd, m_mouse_fd) + 1;
+    params.nfds = max_fd + 1;
     params.readfds = &rfds;
     params.writefds = nullptr;
     params.exceptfds = nullptr;
@@ -210,6 +234,20 @@ void WSMessageLoop::wait_for_message()
         drain_keyboard();
     if (bitmap.get(m_mouse_fd))
         drain_mouse();
+    if (bitmap.get(m_server_fd)) {
+        sockaddr_un address;
+        socklen_t address_size = sizeof(address);
+        int client_fd = m_server_process->sys$accept(m_server_fd, (sockaddr*)&address, &address_size);
+        kprintf("accept() returned fd=%d, address=%s\n", client_fd, address.sun_path);
+        new WSClientConnection(client_fd);
+    }
+    WSClientConnection::for_each_client([&] (WSClientConnection& client) {
+        if (bitmap.get(client.fd())) {
+            byte buffer[4096];
+            ssize_t nread = m_server_process->sys$read(client.fd(), buffer, sizeof(GUI_ClientMessage));
+            on_receive_from_client(client.client_id(), buffer, nread);
+        }
+    });
 }
 
 void WSMessageLoop::drain_mouse()
