@@ -6,21 +6,19 @@
 #include <AK/InlineLinkedList.h>
 #include <AK/Lock.h>
 #include <AK/Badge.h>
-#include <Kernel/Process.h>
 #include "WSMessageReceiver.h"
 #include <WindowServer/WSWindowType.h>
 
-class Process;
 class WSMenu;
 
 class WSWindow final : public WSMessageReceiver, public InlineLinkedListNode<WSWindow> {
     friend class WSWindowLocker;
 public:
-    WSWindow(Process&, int window_id);
+    WSWindow(int client_id, int window_id);
     explicit WSWindow(WSMenu&);
     virtual ~WSWindow() override;
 
-    const Process* process() const { return m_process; }
+    int client_id() const { return m_client_id; }
 
     WSWindowType type() const { return m_type; }
     int window_id() const { return m_window_id; }
@@ -59,12 +57,8 @@ public:
 
     GraphicsBitmap* backing() { return m_backing.ptr(); }
 
-    pid_t pid() const { return m_pid; }
-
     void set_global_cursor_tracking_enabled(bool);
     bool global_cursor_tracking() const { return m_global_cursor_tracking_enabled; }
-
-    void notify_process_died(Badge<Process>);
 
     // For InlineLinkedList.
     // FIXME: Maybe make a ListHashSet and then WSWindowManager can just use that.
@@ -73,6 +67,7 @@ public:
 
 private:
     Lock m_lock;
+    int m_client_id { 0 };
     String m_title;
     Rect m_rect;
     WSWindowType m_type { WSWindowType::Normal };
@@ -83,9 +78,7 @@ private:
     WSMenu* m_menu { nullptr };
 
     RetainPtr<GraphicsBitmap> m_backing;
-    Process* m_process { nullptr };
     int m_window_id { -1 };
-    pid_t m_pid { -1 };
 };
 
 class WSWindowLocker {

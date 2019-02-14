@@ -12,7 +12,7 @@ class WSWindow;
 class Font;
 class Process;
 
-class WSMenu {
+class WSMenu : public Weakable<WSMenu> {
 public:
     WSMenu(Process&, int menu_id, String&& name);
     ~WSMenu();

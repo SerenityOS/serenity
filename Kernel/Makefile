@@ -66,6 +66,7 @@ WINDOWSERVER_OBJS = \
     ../WindowServer/WSMenuBar.o \
     ../WindowServer/WSMenu.o \
     ../WindowServer/WSMenuItem.o \
+    ../WindowServer/WSClientConnection.o \
     ../WindowServer/main.o
 
 AK_OBJS = \

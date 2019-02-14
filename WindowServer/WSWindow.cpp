@@ -3,6 +3,7 @@
 #include "WSMessage.h"
 #include "WSMessageLoop.h"
 #include "Process.h"
+#include <WindowServer/WSClientConnection.h>
 
 WSWindow::WSWindow(WSMenu& menu)
     : m_lock("WSWindow (menu)")
@@ -12,12 +13,11 @@ WSWindow::WSWindow(WSMenu& menu)
     WSWindowManager::the().add_window(*this);
 }
 
-WSWindow::WSWindow(Process& process, int window_id)
+WSWindow::WSWindow(int client_id, int window_id)
     : m_lock("WSWindow (normal)")
+    , m_client_id(client_id)
     , m_type(WSWindowType::Normal)
-    , m_process(&process)
     , m_window_id(window_id)
-    , m_pid(process.pid())
 {
     WSWindowManager::the().add_window(*this);
 }
@@ -44,15 +44,21 @@ void WSWindow::set_rect(const Rect& rect)
     Rect old_rect;
     {
         WSWindowLocker locker(*this);
-        if (!m_process && !m_menu)
+
+        Process* process = nullptr;
+        auto* client = WSClientConnection::from_client_id(m_client_id);
+        if (client)
+            process = client->process();
+
+        if (!process && !m_menu)
             return;
         if (m_rect == rect)
             return;
         old_rect = m_rect;
         m_rect = rect;
         if (!m_backing || old_rect.size() != rect.size()) {
-            if (m_process)
-                m_backing = GraphicsBitmap::create(*m_process, m_rect.size());
+            if (process)
+                m_backing = GraphicsBitmap::create(*process, m_rect.size());
             if (m_menu)
                 m_backing = GraphicsBitmap::create_kernel_only(m_rect.size());
         }
@@ -135,17 +141,13 @@ void WSWindow::on_message(WSMessage& message)
 
     {
         WSWindowLocker window_locker(*this);
-        if (!m_process)
-            return;
-        LOCKER(m_process->gui_events_lock());
-        m_process->gui_events().append(move(gui_event));
+        if (auto* client = WSClientConnection::from_client_id(m_client_id)) {
+            if (auto* process = client->process()) {
+                LOCKER(process->gui_events_lock());
+                process->gui_events().append(move(gui_event));
+            }
+        }
     }
-}
-
-void WSWindow::notify_process_died(Badge<Process>)
-{
-    WSWindowLocker locker(*this);
-    m_process = nullptr;
 }
 
 void WSWindow::set_global_cursor_tracking_enabled(bool enabled)
