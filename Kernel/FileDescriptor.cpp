@@ -7,6 +7,7 @@
 #include "FIFO.h"
 #include "TTY.h"
 #include "MasterPTY.h"
+#include <Kernel/Socket.h>
 
 RetainPtr<FileDescriptor> FileDescriptor::create(RetainPtr<Inode>&& inode)
 {
@@ -16,6 +17,11 @@ RetainPtr<FileDescriptor> FileDescriptor::create(RetainPtr<Inode>&& inode)
 RetainPtr<FileDescriptor> FileDescriptor::create(RetainPtr<CharacterDevice>&& device)
 {
     return adopt(*new FileDescriptor(move(device)));
+}
+
+RetainPtr<FileDescriptor> FileDescriptor::create(RetainPtr<Socket>&& socket)
+{
+    return adopt(*new FileDescriptor(move(socket)));
 }
 
 RetainPtr<FileDescriptor> FileDescriptor::create_pipe_writer(FIFO& fifo)
@@ -35,6 +41,11 @@ FileDescriptor::FileDescriptor(RetainPtr<Inode>&& inode)
 
 FileDescriptor::FileDescriptor(RetainPtr<CharacterDevice>&& device)
     : m_device(move(device))
+{
+}
+
+FileDescriptor::FileDescriptor(RetainPtr<Socket>&& socket)
+    : m_socket(move(socket))
 {
 }
 
