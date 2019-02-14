@@ -97,6 +97,9 @@ RetainPtr<Socket> LocalSocket::connect(const sockaddr* address, socklen_t addres
 
 bool LocalSocket::can_read(SocketRole role) const
 {
+    if (m_bound && is_listening())
+        return can_accept();
+
     if (role == SocketRole::Accepted)
         return !m_for_server.is_empty();
     else
