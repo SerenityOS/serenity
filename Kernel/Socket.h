@@ -7,6 +7,8 @@
 #include <AK/Vector.h>
 #include <Kernel/UnixTypes.h>
 
+enum class SocketRole { None, Accepted, Connected };
+
 class Socket : public Retainable<Socket> {
 public:
     static RetainPtr<Socket> create(int domain, int type, int protocol, int& error);
@@ -26,6 +28,11 @@ public:
     virtual RetainPtr<Socket> connect(const sockaddr*, socklen_t, int& error) = 0;
     virtual bool get_address(sockaddr*, socklen_t*) = 0;
     virtual bool is_local() const { return false; }
+
+    virtual bool can_read(SocketRole) const = 0;
+    virtual ssize_t read(SocketRole, byte*, size_t) = 0;
+    virtual ssize_t write(SocketRole, const byte*, size_t) = 0;
+    virtual bool can_write(SocketRole) const = 0;
 
 protected:
     Socket(int domain, int type, int protocol);

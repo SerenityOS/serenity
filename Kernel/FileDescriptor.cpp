@@ -167,6 +167,8 @@ ssize_t FileDescriptor::read(Process& process, byte* buffer, size_t count)
         // FIXME: What should happen to m_currentOffset?
         return m_device->read(process, buffer, count);
     }
+    if (m_socket)
+        return m_socket->read(m_socket_role, buffer, count);
     ASSERT(inode());
     ssize_t nread = inode()->read_bytes(m_current_offset, count, buffer, this);
     m_current_offset += nread;
@@ -183,6 +185,8 @@ ssize_t FileDescriptor::write(Process& process, const byte* data, size_t size)
         // FIXME: What should happen to m_currentOffset?
         return m_device->write(process, data, size);
     }
+    if (m_socket)
+        return m_socket->write(m_socket_role, data, size);
     ASSERT(m_inode);
     ssize_t nwritten = m_inode->write_bytes(m_current_offset, size, data, this);
     m_current_offset += nwritten;
@@ -197,6 +201,8 @@ bool FileDescriptor::can_write(Process& process)
     }
     if (m_device)
         return m_device->can_write(process);
+    if (m_socket)
+        return m_socket->can_write(m_socket_role);
     return true;
 }
 
@@ -208,6 +214,8 @@ bool FileDescriptor::can_read(Process& process)
     }
     if (m_device)
         return m_device->can_read(process);
+    if (m_socket)
+        return m_socket->can_read(m_socket_role);
     return true;
 }
 
