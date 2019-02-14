@@ -94,3 +94,35 @@ RetainPtr<Socket> LocalSocket::connect(const sockaddr* address, socklen_t addres
     m_connected = true;
     return m_peer;
 }
+
+bool LocalSocket::can_read(SocketRole role) const
+{
+    if (role == SocketRole::Accepted)
+        return !m_for_server.is_empty();
+    else
+        return !m_for_client.is_empty();
+}
+
+ssize_t LocalSocket::read(SocketRole role, byte* buffer, size_t size)
+{
+    if (role == SocketRole::Accepted)
+        return m_for_server.read(buffer, size);
+    else
+        return m_for_client.read(buffer, size);
+}
+
+ssize_t LocalSocket::write(SocketRole role, const byte* data, size_t size)
+{
+    if (role == SocketRole::Accepted)
+        return m_for_client.write(data, size);
+    else
+        return m_for_server.write(data, size);
+}
+
+bool LocalSocket::can_write(SocketRole role) const
+{
+    if (role == SocketRole::Accepted)
+        return !m_for_client.is_empty();
+    else
+        return !m_for_server.is_empty();
+}

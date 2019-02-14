@@ -7,13 +7,11 @@
 #include <AK/CircularQueue.h>
 #include <AK/Retainable.h>
 #include <AK/Badge.h>
+#include <Kernel/Socket.h>
 
 class TTY;
 class MasterPTY;
 class Process;
-class Socket;
-
-enum class SocketRole { None, Accepted, Connected };
 
 class FileDescriptor : public Retainable<FileDescriptor> {
 public:
