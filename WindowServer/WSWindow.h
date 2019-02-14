@@ -4,15 +4,12 @@
 #include <SharedGraphics/GraphicsBitmap.h>
 #include <AK/AKString.h>
 #include <AK/InlineLinkedList.h>
-#include <AK/Lock.h>
-#include <AK/Badge.h>
 #include "WSMessageReceiver.h"
 #include <WindowServer/WSWindowType.h>
 
 class WSMenu;
 
 class WSWindow final : public WSMessageReceiver, public InlineLinkedListNode<WSWindow> {
-    friend class WSWindowLocker;
 public:
     WSWindow(int client_id, int window_id);
     explicit WSWindow(WSMenu&);
@@ -66,7 +63,6 @@ public:
     WSWindow* m_prev { nullptr };
 
 private:
-    Lock m_lock;
     int m_client_id { 0 };
     String m_title;
     Rect m_rect;
@@ -80,12 +76,3 @@ private:
     RetainPtr<GraphicsBitmap> m_backing;
     int m_window_id { -1 };
 };
-
-class WSWindowLocker {
-public:
-    WSWindowLocker(WSWindow& window) : m_locker(window.m_lock) { }
-    ~WSWindowLocker() { }
-private:
-    Locker m_locker;
-};
-

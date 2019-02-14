@@ -68,7 +68,6 @@ WSWindow& WSMenu::ensure_menu_window()
         }
 
         auto window = make<WSWindow>(*this);
-        WSWindowLocker locker(*window);
         window->set_rect(0, 0, width(), height());
         m_menu_window = move(window);
         draw();
@@ -79,7 +78,6 @@ WSWindow& WSMenu::ensure_menu_window()
 void WSMenu::draw()
 {
     ASSERT(menu_window());
-    WSWindowLocker locker(*menu_window());
     ASSERT(menu_window()->backing());
     Painter painter(*menu_window()->backing());
 
@@ -105,7 +103,6 @@ void WSMenu::draw()
 
 void WSMenu::on_window_message(WSMessage& message)
 {
-    WSWindowLocker locker(*menu_window());
     ASSERT(menu_window());
     if (message.type() == WSMessage::MouseMove) {
         auto* item = item_at(static_cast<WSMouseEvent&>(message).position());
