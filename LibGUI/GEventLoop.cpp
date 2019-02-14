@@ -365,6 +365,12 @@ bool GEventLoop::post_message_to_server(const GUI_ClientMessage& message)
 bool GEventLoop::wait_for_specific_event(GUI_ServerMessage::Type type, GUI_ServerMessage& event)
 {
     for (;;) {
+        fd_set rfds;
+        FD_ZERO(&rfds);
+        FD_SET(m_event_fd, &rfds);
+        int rc = select(m_event_fd + 1, &rfds, nullptr, nullptr, nullptr);
+        ASSERT(rc > 0);
+        ASSERT(FD_ISSET(m_event_fd, &rfds));
         bool success = drain_messages_from_server();
         if (!success)
             return false;
