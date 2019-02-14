@@ -11,9 +11,11 @@
 class TTY;
 class MasterPTY;
 class Process;
+class Socket;
 
 class FileDescriptor : public Retainable<FileDescriptor> {
 public:
+    static RetainPtr<FileDescriptor> create(RetainPtr<Socket>&&);
     static RetainPtr<FileDescriptor> create(RetainPtr<Inode>&&);
     static RetainPtr<FileDescriptor> create(RetainPtr<CharacterDevice>&&);
     static RetainPtr<FileDescriptor> create_pipe_writer(FIFO&);
@@ -64,6 +66,10 @@ public:
     dword file_flags() const { return m_file_flags; }
     void set_file_flags(dword flags) { m_file_flags = flags; }
 
+    bool is_socket() const { return m_socket; }
+    Socket* socket() { return m_socket.ptr(); }
+    const Socket* socket() const { return m_socket.ptr(); }
+
     bool is_fifo() const { return m_fifo; }
     FIFO::Direction fifo_direction() { return m_fifo_direction; }
 
@@ -73,6 +79,7 @@ public:
 
 private:
     friend class VFS;
+    explicit FileDescriptor(RetainPtr<Socket>&&);
     explicit FileDescriptor(RetainPtr<Inode>&&);
     explicit FileDescriptor(RetainPtr<CharacterDevice>&&);
     FileDescriptor(FIFO&, FIFO::Direction);
@@ -86,6 +93,8 @@ private:
 
     bool m_is_blocking { true };
     dword m_file_flags { 0 };
+
+    RetainPtr<Socket> m_socket;
 
     RetainPtr<FIFO> m_fifo;
     FIFO::Direction m_fifo_direction { FIFO::Neither };

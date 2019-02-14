@@ -219,6 +219,7 @@ typedef dword nlink_t;
 typedef dword uid_t;
 typedef dword gid_t;
 typedef dword clock_t;
+typedef dword socklen_t;
 
 struct tms {
     clock_t tms_utime;
@@ -303,4 +304,19 @@ struct pollfd {
     int   fd;
     short events;
     short revents;
+};
+
+#define AF_UNSPEC 0
+#define AF_LOCAL 1
+
+struct sockaddr {
+    word sa_family;
+    char sa_data[14];
+};
+
+#define UNIX_PATH_MAX 108
+
+struct sockaddr_un {
+    word sun_family;
+    char sun_path[UNIX_PATH_MAX];
 };

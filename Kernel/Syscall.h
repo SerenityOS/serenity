@@ -74,6 +74,11 @@
     __ENUMERATE_SYSCALL(rmdir) \
     __ENUMERATE_SYSCALL(chmod) \
     __ENUMERATE_SYSCALL(usleep) \
+    __ENUMERATE_SYSCALL(socket) \
+    __ENUMERATE_SYSCALL(bind) \
+    __ENUMERATE_SYSCALL(accept) \
+    __ENUMERATE_SYSCALL(listen) \
+    __ENUMERATE_SYSCALL(connect) \
 
 
 #ifdef SERENITY

@@ -20,6 +20,7 @@
 #include "KSyms.h"
 #include <WindowServer/WSMessageLoop.h>
 #include <Kernel/BochsVGADevice.h>
+#include <Kernel/Socket.h>
 #include "MasterPTY.h"
 #include "elf.h"
 
@@ -2241,4 +2242,42 @@ DisplayInfo Process::set_video_resolution(int width, int height)
 
     BochsVGADevice::the().set_resolution(width, height);
     return info;
+}
+
+int Process::sys$socket(int domain, int type, int protocol)
+{
+    if (number_of_open_file_descriptors() >= m_max_open_file_descriptors)
+        return -EMFILE;
+    int fd = 0;
+    for (; fd < (int)m_max_open_file_descriptors; ++fd) {
+        if (!m_fds[fd])
+            break;
+    }
+    int error;
+    auto socket = Socket::create(domain, type, protocol, error);
+    if (!socket)
+        return error;
+    auto descriptor = FileDescriptor::create(move(socket));
+    m_fds[fd].set(move(descriptor));
+    return fd;
+}
+
+int Process::sys$bind(int sockfd, const sockaddr* addr, socklen_t)
+{
+    return -ENOTIMPL;
+}
+
+int Process::sys$listen(int sockfd, int backlog)
+{
+    return -ENOTIMPL;
+}
+
+int Process::sys$accept(int sockfd, sockaddr*, socklen_t)
+{
+    return -ENOTIMPL;
+}
+
+int Process::sys$connect(int sockfd, const sockaddr*, socklen_t)
+{
+    return -ENOTIMPL;
 }
