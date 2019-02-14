@@ -306,8 +306,14 @@ struct pollfd {
     short revents;
 };
 
+#define AF_MASK 0xff
 #define AF_UNSPEC 0
 #define AF_LOCAL 1
+
+#define SOCK_TYPE_MASK 0xff
+#define SOCK_STREAM 1
+#define SOCK_NONBLOCK 04000
+#define SOCK_CLOEXEC 02000000
 
 struct sockaddr {
     word sa_family;

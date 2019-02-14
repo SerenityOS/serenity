@@ -221,7 +221,7 @@ public:
     int sys$socket(int domain, int type, int protocol);
     int sys$bind(int sockfd, const sockaddr* addr, socklen_t);
     int sys$listen(int sockfd, int backlog);
-    int sys$accept(int sockfd, sockaddr*, socklen_t);
+    int sys$accept(int sockfd, sockaddr*, socklen_t*);
     int sys$connect(int sockfd, const sockaddr*, socklen_t);
 
     DisplayInfo set_video_resolution(int width, int height);

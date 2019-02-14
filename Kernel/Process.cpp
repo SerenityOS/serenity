@@ -2258,7 +2258,12 @@ int Process::sys$socket(int domain, int type, int protocol)
     if (!socket)
         return error;
     auto descriptor = FileDescriptor::create(move(socket));
-    m_fds[fd].set(move(descriptor));
+    unsigned flags = 0;
+    if (type & SOCK_CLOEXEC)
+        flags |= O_CLOEXEC;
+    if (type & SOCK_NONBLOCK)
+        descriptor->set_blocking(false);
+    m_fds[fd].set(move(descriptor), flags);
     return fd;
 }
 
@@ -2280,12 +2285,38 @@ int Process::sys$bind(int sockfd, const sockaddr* address, socklen_t address_len
 
 int Process::sys$listen(int sockfd, int backlog)
 {
-    return -ENOTIMPL;
+    auto* descriptor = file_descriptor(sockfd);
+    if (!descriptor)
+        return -EBADF;
+    if (!descriptor->is_socket())
+        return -ENOTSOCK;
+    auto& socket = *descriptor->socket();
+    int error;
+    if (!socket.listen(backlog, error))
+        return error;
+    return 0;
 }
 
-int Process::sys$accept(int sockfd, sockaddr*, socklen_t)
+int Process::sys$accept(int sockfd, sockaddr* address, socklen_t* address_size)
 {
-    return -ENOTIMPL;
+    if (!validate_write_typed(address_size))
+        return -EFAULT;
+    if (!validate_write(address, *address_size))
+        return -EFAULT;
+    auto* descriptor = file_descriptor(sockfd);
+    if (!descriptor)
+        return -EBADF;
+    if (!descriptor->is_socket())
+        return -ENOTSOCK;
+    auto& socket = *descriptor->socket();
+    if (!socket.can_accept()) {
+        ASSERT(!descriptor->is_blocking());
+        return -EAGAIN;
+    }
+    auto client = socket.accept();
+    ASSERT(client);
+    client->get_address(address, address_size);
+    return 0;
 }
 
 int Process::sys$connect(int sockfd, const sockaddr*, socklen_t)
