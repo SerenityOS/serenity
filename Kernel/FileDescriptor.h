@@ -78,6 +78,8 @@ public:
 
     void set_original_inode(Badge<VFS>, RetainPtr<Inode>&& inode) { m_inode = move(inode); }
 
+    void set_socket_role(SocketRole role) { m_socket_role = role; }
+
 private:
     friend class VFS;
     FileDescriptor(RetainPtr<Socket>&&, SocketRole);

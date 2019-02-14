@@ -1784,6 +1784,13 @@ int Process::sys$ioctl(int fd, unsigned request, unsigned arg)
     auto* descriptor = file_descriptor(fd);
     if (!descriptor)
         return -EBADF;
+    if (descriptor->is_socket() && request == 413) {
+        auto* pid = (pid_t*)arg;
+        if (!validate_write_typed(pid))
+            return -EFAULT;
+        *pid = descriptor->socket()->origin_pid();
+        return 0;
+    }
     if (!descriptor->is_character_device())
         return -ENOTTY;
     return descriptor->character_device()->ioctl(*this, request, arg);
@@ -2347,10 +2354,23 @@ int Process::sys$connect(int sockfd, const sockaddr* address, socklen_t address_
         return -ENOTSOCK;
     auto& socket = *descriptor->socket();
     int error;
-    auto server = socket.connect(address, address_size, error);
-    if (!server)
+    if (!socket.connect(address, address_size, error))
         return error;
-    auto server_descriptor = FileDescriptor::create(move(server), SocketRole::Connected);
-    m_fds[fd].set(move(server_descriptor));
-    return fd;
+    descriptor->set_socket_role(SocketRole::Connected);
+    return 0;
+}
+
+bool Process::wait_for_connect(Socket& socket, int& error)
+{
+    if (socket.is_connected())
+        return true;
+    m_blocked_connecting_socket = socket;
+    block(BlockedConnect);
+    Scheduler::yield();
+    m_blocked_connecting_socket = nullptr;
+    if (!socket.is_connected()) {
+        error = -ECONNREFUSED;
+        return false;
+    }
+    return true;
 }

@@ -11,8 +11,10 @@
 #include <LibC/string.h>
 #include <LibC/time.h>
 #include <LibC/sys/select.h>
-#include <errno.h>
-#include <string.h>
+#include <LibC/sys/socket.h>
+#include <LibC/errno.h>
+#include <LibC/string.h>
+#include <LibC/stdlib.h>
 
 //#define GEVENTLOOP_DEBUG
 
@@ -28,10 +30,20 @@ GEventLoop::GEventLoop()
     if (!s_mainGEventLoop)
         s_mainGEventLoop = this;
 
-    m_event_fd = open("/dev/gui_events", O_RDWR | O_NONBLOCK | O_CLOEXEC);
+    m_event_fd = socket(AF_LOCAL, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0);
     if (m_event_fd < 0) {
-        perror("GEventLoop(): open");
-        exit(1);
+        perror("socket");
+        ASSERT_NOT_REACHED();
+    }
+
+    sockaddr_un address;
+    address.sun_family = AF_LOCAL;
+    strcpy(address.sun_path, "/wsportal");
+    int rc = connect(m_event_fd, (const sockaddr*)&address, sizeof(address));
+    if (rc < 0) {
+        dbgprintf("connect failed: %d, %s\n", errno, strerror(errno));
+        perror("connect");
+        ASSERT_NOT_REACHED();
     }
 }
 

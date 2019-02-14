@@ -91,6 +91,13 @@ bool Scheduler::pick_next()
             return true;
         }
 
+        if (process.state() == Process::BlockedConnect) {
+            ASSERT(process.m_blocked_connecting_socket);
+            if (process.m_blocked_connecting_socket->is_connected())
+                process.unblock();
+            return true;
+        }
+
         if (process.state() == Process::BlockedSelect) {
             if (process.wakeup_requested()) {
                 process.m_wakeup_requested = false;

@@ -3,6 +3,7 @@
 #include <AK/HashMap.h>
 #include <AK/OwnPtr.h>
 #include <AK/WeakPtr.h>
+#include <AK/Function.h>
 #include <SharedGraphics/GraphicsBitmap.h>
 #include <WindowServer/WSMessageReceiver.h>
 #include <WindowServer/WSMessage.h>
@@ -17,17 +18,20 @@ class Process;
 
 class WSClientConnection final : public WSMessageReceiver {
 public:
-    explicit WSClientConnection(int client_id);
+    explicit WSClientConnection(int fd);
     virtual ~WSClientConnection() override;
 
     static WSClientConnection* from_client_id(int client_id);
     static WSClientConnection* ensure_for_client_id(int client_id);
+    static void for_each_client(Function<void(WSClientConnection&)>);
 
-    void post_message(GUI_ServerMessage&&);
+    void post_message(const GUI_ServerMessage&);
     RetainPtr<GraphicsBitmap> create_bitmap(const Size&);
 
     int client_id() const { return m_client_id; }
     WSMenuBar* app_menubar() { return m_app_menubar.ptr(); }
+
+    int fd() const { return m_fd; }
 
 private:
     virtual void on_message(WSMessage&) override;
@@ -56,6 +60,7 @@ private:
     void post_error(const String&);
 
     int m_client_id { 0 };
+    int m_fd { -1 };
 
     HashMap<int, OwnPtr<WSWindow>> m_windows;
     HashMap<int, OwnPtr<WSMenuBar>> m_menubars;

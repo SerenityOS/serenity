@@ -31,7 +31,7 @@ bool LocalSocket::get_address(sockaddr* address, socklen_t* address_size)
 
 bool LocalSocket::bind(const sockaddr* address, socklen_t address_size, int& error)
 {
-    ASSERT(!m_connected);
+    ASSERT(!is_connected());
     if (address_size != sizeof(sockaddr_un)) {
         error = -EINVAL;
         return false;
@@ -45,7 +45,7 @@ bool LocalSocket::bind(const sockaddr* address, socklen_t address_size, int& err
     char safe_address[sizeof(local_address.sun_path) + 1];
     memcpy(safe_address, local_address.sun_path, sizeof(local_address.sun_path));
 
-    kprintf("%s(%u) LocalSocket{%p} bind(%s)\n", current->name().characters(), current->pid(), safe_address);
+    kprintf("%s(%u) LocalSocket{%p} bind(%s)\n", current->name().characters(), current->pid(), this, safe_address);
 
     m_file = VFS::the().open(safe_address, error, O_CREAT | O_EXCL, S_IFSOCK | 0666, *current->cwd_inode());
     if (!m_file) {
@@ -62,37 +62,48 @@ bool LocalSocket::bind(const sockaddr* address, socklen_t address_size, int& err
     return true;
 }
 
-RetainPtr<Socket> LocalSocket::connect(const sockaddr* address, socklen_t address_size, int& error)
+bool LocalSocket::connect(const sockaddr* address, socklen_t address_size, int& error)
 {
     ASSERT(!m_bound);
     if (address_size != sizeof(sockaddr_un)) {
         error = -EINVAL;
-        return nullptr;
+        return false;
     }
     if (address->sa_family != AF_LOCAL) {
         error = -EINVAL;
-        return nullptr;
+        return false;
     }
 
     const sockaddr_un& local_address = *reinterpret_cast<const sockaddr_un*>(address);
     char safe_address[sizeof(local_address.sun_path) + 1];
     memcpy(safe_address, local_address.sun_path, sizeof(local_address.sun_path));
 
-    kprintf("%s(%u) LocalSocket{%p} connect(%s)\n", current->name().characters(), current->pid(), safe_address);
+    kprintf("%s(%u) LocalSocket{%p} connect(%s)\n", current->name().characters(), current->pid(), this, safe_address);
 
     m_file = VFS::the().open(safe_address, error, 0, 0, *current->cwd_inode());
     if (!m_file) {
         error = -ECONNREFUSED;
-        return nullptr;
+        return false;
+    }
+    ASSERT(m_file->inode());
+    if (!m_file->inode()->socket()) {
+        error = -ECONNREFUSED;
+        return false;
     }
 
-    ASSERT(m_file->inode());
-    ASSERT(m_file->inode()->socket());
-
-    m_peer = m_file->inode()->socket();
     m_address = local_address;
-    m_connected = true;
-    return m_peer;
+
+    auto peer = m_file->inode()->socket();
+    kprintf("Queueing up connection\n");
+    if (!peer->queue_connection_from(*this, error))
+        return false;
+
+    kprintf("Waiting for connect...\n");
+    if (!current->wait_for_connect(*this, error))
+        return false;
+
+    kprintf("CONNECTED!\n");
+    return true;
 }
 
 bool LocalSocket::can_read(SocketRole role) const
@@ -125,7 +136,7 @@ ssize_t LocalSocket::write(SocketRole role, const byte* data, size_t size)
 bool LocalSocket::can_write(SocketRole role) const
 {
     if (role == SocketRole::Accepted)
-        return !m_for_client.is_empty();
+        return m_for_client.bytes_in_write_buffer() < 4096;
     else
-        return !m_for_server.is_empty();
+        return m_for_server.bytes_in_write_buffer() < 4096;
 }
