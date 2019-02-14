@@ -87,15 +87,18 @@ private:
 
 class WSAPISetGlobalCursorTrackingRequest : public WSAPIClientRequest {
 public:
-    WSAPISetGlobalCursorTrackingRequest(int client_id, bool value)
+    WSAPISetGlobalCursorTrackingRequest(int client_id, int window_id, bool value)
         : WSAPIClientRequest(WSMessage::APISetGlobalCursorTrackingRequest, client_id)
+        , m_window_id(window_id)
         , m_value(value)
     {
     }
 
+    int window_id() const { return m_window_id; }
     bool value() const { return m_value; }
 
 private:
+    int m_window_id { 0 };
     bool m_value { false };
 };
 

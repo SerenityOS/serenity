@@ -344,7 +344,7 @@ ssize_t WSMessageLoop::on_receive_from_client(int client_id, const byte* data, s
         post_message(client, make<WSAPIReleaseWindowBackingStoreRequest>(client_id, (int)message.backing.backing_store_id));
         break;
     case GUI_ClientMessage::Type::SetGlobalCursorTracking:
-        post_message(client, make<WSAPISetGlobalCursorTrackingRequest>(client_id, message.value));
+        post_message(client, make<WSAPISetGlobalCursorTrackingRequest>(client_id, message.window_id, message.value));
         break;
     }
     server_process().request_wakeup();

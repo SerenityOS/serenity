@@ -4,11 +4,11 @@
 #include <AK/OwnPtr.h>
 #include <AK/WeakPtr.h>
 #include <WindowServer/WSMessageReceiver.h>
+#include <WindowServer/WSMessage.h>
 
 class WSWindow;
 class WSMenu;
 class WSMenuBar;
-class WSAPIClientRequest;
 
 // FIXME: Remove.
 class Process;
@@ -30,7 +30,26 @@ public:
 private:
     virtual void on_message(WSMessage&) override;
 
-    void handle_client_request(WSAPIClientRequest&);
+    void on_request(WSAPIClientRequest&);
+    void handle_request(WSAPICreateMenubarRequest&);
+    void handle_request(WSAPIDestroyMenubarRequest&);
+    void handle_request(WSAPICreateMenuRequest&);
+    void handle_request(WSAPIDestroyMenuRequest&);
+    void handle_request(WSAPISetApplicationMenubarRequest&);
+    void handle_request(WSAPIAddMenuToMenubarRequest&);
+    void handle_request(WSAPIAddMenuItemRequest&);
+    void handle_request(WSAPIAddMenuSeparatorRequest&);
+    void handle_request(WSAPISetWindowTitleRequest&);
+    void handle_request(WSAPIGetWindowTitleRequest&);
+    void handle_request(WSAPISetWindowRectRequest&);
+    void handle_request(WSAPIGetWindowRectRequest&);
+    void handle_request(WSAPICreateWindowRequest&);
+    void handle_request(WSAPIDestroyWindowRequest&);
+    void handle_request(WSAPIInvalidateRectRequest&);
+    void handle_request(WSAPIDidFinishPaintingNotification&);
+    void handle_request(WSAPIGetWindowBackingStoreRequest&);
+    void handle_request(WSAPIReleaseWindowBackingStoreRequest&);
+    void handle_request(WSAPISetGlobalCursorTrackingRequest&);
 
     int m_client_id { 0 };
 
