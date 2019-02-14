@@ -8,6 +8,8 @@ public:
     static RetainPtr<LocalSocket> create(int type);
     virtual ~LocalSocket() override;
 
+    virtual bool bind(const sockaddr*, socklen_t, int& error) override;
+
 private:
     explicit LocalSocket(int type);
 
