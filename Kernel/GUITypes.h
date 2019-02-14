@@ -58,6 +58,7 @@ struct GUI_KeyModifiers { enum {
 struct GUI_ServerMessage {
     enum Type : unsigned {
         Invalid,
+        Error,
         Paint,
         MouseMove,
         MouseDown,

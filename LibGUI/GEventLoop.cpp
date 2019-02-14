@@ -232,6 +232,14 @@ void GEventLoop::wait_for_event()
 
     auto unprocessed_events = move(m_unprocessed_messages);
     for (auto& event : unprocessed_events) {
+
+        if (event.type == GUI_ServerMessage::Error) {
+            dbgprintf("GEventLoop got error message from server\n");
+            dbgprintf("  - error message: %s\n", String(event.text, event.text_length).characters());
+            exit(1);
+            return;
+        }
+
         switch (event.type) {
         case GUI_ServerMessage::MenuItemActivated:
             handle_menu_event(event);
