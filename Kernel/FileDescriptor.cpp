@@ -19,9 +19,9 @@ RetainPtr<FileDescriptor> FileDescriptor::create(RetainPtr<CharacterDevice>&& de
     return adopt(*new FileDescriptor(move(device)));
 }
 
-RetainPtr<FileDescriptor> FileDescriptor::create(RetainPtr<Socket>&& socket)
+RetainPtr<FileDescriptor> FileDescriptor::create(RetainPtr<Socket>&& socket, SocketRole role)
 {
-    return adopt(*new FileDescriptor(move(socket)));
+    return adopt(*new FileDescriptor(move(socket), role));
 }
 
 RetainPtr<FileDescriptor> FileDescriptor::create_pipe_writer(FIFO& fifo)
@@ -44,8 +44,9 @@ FileDescriptor::FileDescriptor(RetainPtr<CharacterDevice>&& device)
 {
 }
 
-FileDescriptor::FileDescriptor(RetainPtr<Socket>&& socket)
+FileDescriptor::FileDescriptor(RetainPtr<Socket>&& socket, SocketRole role)
     : m_socket(move(socket))
+    , m_socket_role(role)
 {
 }
 

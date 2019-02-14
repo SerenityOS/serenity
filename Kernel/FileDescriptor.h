@@ -13,9 +13,12 @@ class MasterPTY;
 class Process;
 class Socket;
 
+enum class SocketRole { None, Accepted, Connected };
+
 class FileDescriptor : public Retainable<FileDescriptor> {
 public:
-    static RetainPtr<FileDescriptor> create(RetainPtr<Socket>&&);
+
+    static RetainPtr<FileDescriptor> create(RetainPtr<Socket>&&, SocketRole = SocketRole::None);
     static RetainPtr<FileDescriptor> create(RetainPtr<Inode>&&);
     static RetainPtr<FileDescriptor> create(RetainPtr<CharacterDevice>&&);
     static RetainPtr<FileDescriptor> create_pipe_writer(FIFO&);
@@ -79,7 +82,7 @@ public:
 
 private:
     friend class VFS;
-    explicit FileDescriptor(RetainPtr<Socket>&&);
+    FileDescriptor(RetainPtr<Socket>&&, SocketRole);
     explicit FileDescriptor(RetainPtr<Inode>&&);
     explicit FileDescriptor(RetainPtr<CharacterDevice>&&);
     FileDescriptor(FIFO&, FIFO::Direction);
@@ -95,6 +98,7 @@ private:
     dword m_file_flags { 0 };
 
     RetainPtr<Socket> m_socket;
+    SocketRole m_socket_role { SocketRole::None };
 
     RetainPtr<FIFO> m_fifo;
     FIFO::Direction m_fifo_direction { FIFO::Neither };
