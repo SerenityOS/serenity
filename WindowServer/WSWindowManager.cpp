@@ -633,7 +633,6 @@ void WSWindowManager::compose()
     }
 
     for_each_visible_window_from_back_to_front([&] (WSWindow& window) {
-        WSWindowLocker locker(window);
         RetainPtr<GraphicsBitmap> backing = window.backing();
         if (!backing)
             return IterationDecision::Continue;

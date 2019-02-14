@@ -5,16 +5,14 @@
 #include <WindowServer/WSClientConnection.h>
 
 WSWindow::WSWindow(WSMenu& menu)
-    : m_lock("WSWindow (menu)")
-    , m_type(WSWindowType::Menu)
+    : m_type(WSWindowType::Menu)
     , m_menu(&menu)
 {
     WSWindowManager::the().add_window(*this);
 }
 
 WSWindow::WSWindow(int client_id, int window_id)
-    : m_lock("WSWindow (normal)")
-    , m_client_id(client_id)
+    : m_client_id(client_id)
     , m_type(WSWindowType::Normal)
     , m_window_id(window_id)
 {
@@ -28,35 +26,28 @@ WSWindow::~WSWindow()
 
 void WSWindow::set_title(String&& title)
 {
-    {
-        WSWindowLocker locker(*this);
-        if (m_title == title)
-            return;
-        m_title = move(title);
-    }
-
+    if (m_title == title)
+        return;
+    m_title = move(title);
     WSWindowManager::the().notify_title_changed(*this);
 }
 
 void WSWindow::set_rect(const Rect& rect)
 {
     Rect old_rect;
-    {
-        WSWindowLocker locker(*this);
-        auto* client = WSClientConnection::from_client_id(m_client_id);
-        if (!client && !m_menu)
-            return;
-        if (m_rect == rect)
-            return;
-        old_rect = m_rect;
-        m_rect = rect;
-        if (!m_backing || old_rect.size() != rect.size()) {
-            if (m_menu)
-                m_backing = GraphicsBitmap::create_kernel_only(m_rect.size());
-            else if (client)
-                m_backing = client->create_bitmap(m_rect.size());
+    auto* client = WSClientConnection::from_client_id(m_client_id);
+    if (!client && !m_menu)
+        return;
+    if (m_rect == rect)
+        return;
+    old_rect = m_rect;
+    m_rect = rect;
+    if (!m_backing || old_rect.size() != rect.size()) {
+        if (m_menu)
+            m_backing = GraphicsBitmap::create_kernel_only(m_rect.size());
+        else if (client)
+            m_backing = client->create_bitmap(m_rect.size());
 
-        }
     }
     WSWindowManager::the().notify_rect_changed(*this, old_rect, rect);
 }
