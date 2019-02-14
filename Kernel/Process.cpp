@@ -2303,6 +2303,13 @@ int Process::sys$accept(int sockfd, sockaddr* address, socklen_t* address_size)
         return -EFAULT;
     if (!validate_write(address, *address_size))
         return -EFAULT;
+    if (number_of_open_file_descriptors() >= m_max_open_file_descriptors)
+        return -EMFILE;
+    int fd = 0;
+    for (; fd < (int)m_max_open_file_descriptors; ++fd) {
+        if (!m_fds[fd])
+            break;
+    }
     auto* descriptor = file_descriptor(sockfd);
     if (!descriptor)
         return -EBADF;
@@ -2315,8 +2322,11 @@ int Process::sys$accept(int sockfd, sockaddr* address, socklen_t* address_size)
     }
     auto client = socket.accept();
     ASSERT(client);
-    client->get_address(address, address_size);
-    return 0;
+    bool success = client->get_address(address, address_size);
+    ASSERT(success);
+    auto client_descriptor = FileDescriptor::create(move(client), SocketRole::Accepted);
+    m_fds[fd].set(move(client_descriptor));
+    return fd;
 }
 
 int Process::sys$connect(int sockfd, const sockaddr*, socklen_t)
