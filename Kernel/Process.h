@@ -222,8 +222,6 @@ public:
     DisplayInfo set_video_resolution(int width, int height);
 
     static void initialize();
-    static void initialize_gui_statics();
-    void destroy_all_windows();
 
     void crash() NORETURN;
     static int reap(Process&) WARN_UNUSED_RESULT;

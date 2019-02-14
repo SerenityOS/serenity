@@ -18,7 +18,8 @@
 #include "Scheduler.h"
 #include "FIFO.h"
 #include "KSyms.h"
-#include <WindowServer/WSWindow.h>
+#include <WindowServer/WSMessageLoop.h>
+#include <Kernel/BochsVGADevice.h>
 #include "MasterPTY.h"
 #include "elf.h"
 
@@ -48,7 +49,7 @@ void Process::initialize()
     s_hostname = new String("courage");
     s_hostname_lock = new Lock;
     Scheduler::initialize();
-    initialize_gui_statics();
+    new WSMessageLoop;
 }
 
 Vector<pid_t> Process::all_pids()
@@ -2133,7 +2134,9 @@ void Process::finalize()
 {
     ASSERT(current == g_finalizer);
 
-    destroy_all_windows();
+    if (WSMessageLoop::the().running())
+        WSMessageLoop::the().notify_client_died(gui_client_id());
+
     m_fds.clear();
     m_tty = nullptr;
 
@@ -2220,4 +2223,22 @@ bool Process::tick()
     else
         ++m_ticks_in_kernel;
     return --m_ticks_left;
+}
+
+DisplayInfo Process::set_video_resolution(int width, int height)
+{
+    DisplayInfo info;
+    info.width = width;
+    info.height = height;
+    info.bpp = 32;
+    info.pitch = width * 4;
+    size_t framebuffer_size = width * height * 4 * 2;
+    if (!m_display_framebuffer_region) {
+        auto framebuffer_vmo = VMObject::create_framebuffer_wrapper(BochsVGADevice::the().framebuffer_address(), framebuffer_size);
+        m_display_framebuffer_region = allocate_region_with_vmo(LinearAddress(0xe0000000), framebuffer_size, move(framebuffer_vmo), 0, "framebuffer", true, true);
+    }
+    info.framebuffer = m_display_framebuffer_region->laddr().as_ptr();
+
+    BochsVGADevice::the().set_resolution(width, height);
+    return info;
 }
