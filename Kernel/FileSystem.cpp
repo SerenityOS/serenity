@@ -4,6 +4,7 @@
 #include <LibC/errno_numbers.h>
 #include "FileSystem.h"
 #include "MemoryManager.h"
+#include <Kernel/LocalSocket.h>
 
 static dword s_lastFileSystemID;
 static HashMap<dword, FS*>* s_fs_map;
@@ -151,4 +152,18 @@ void FS::sync()
 void Inode::set_vmo(VMObject& vmo)
 {
     m_vmo = vmo.make_weak_ptr();
+}
+
+bool Inode::bind_socket(LocalSocket& socket)
+{
+    ASSERT(!m_socket);
+    m_socket = socket;
+    return true;
+}
+
+bool Inode::unbind_socket()
+{
+    ASSERT(m_socket);
+    m_socket = nullptr;
+    return true;
 }

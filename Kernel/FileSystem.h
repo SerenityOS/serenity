@@ -20,6 +20,7 @@ static const dword mepoch = 476763780;
 
 class Inode;
 class FileDescriptor;
+class LocalSocket;
 class VMObject;
 
 class FS : public Retainable<FS> {
@@ -92,6 +93,11 @@ public:
     virtual size_t directory_entry_count() const = 0;
     virtual bool chmod(mode_t, int& error) = 0;
 
+    LocalSocket* socket() { return m_socket.ptr(); }
+    const LocalSocket* socket() const { return m_socket.ptr(); }
+    bool bind_socket(LocalSocket&);
+    bool unbind_socket();
+
     bool is_metadata_dirty() const { return m_metadata_dirty; }
 
     virtual int set_atime(time_t);
@@ -120,6 +126,7 @@ private:
     FS& m_fs;
     unsigned m_index { 0 };
     WeakPtr<VMObject> m_vmo;
+    RetainPtr<LocalSocket> m_socket;
     bool m_metadata_dirty { false };
 };
 

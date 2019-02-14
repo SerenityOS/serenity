@@ -23,7 +23,9 @@ public:
     bool listen(int backlog, int& error);
 
     virtual bool bind(const sockaddr*, socklen_t, int& error) = 0;
+    virtual RetainPtr<Socket> connect(const sockaddr*, socklen_t, int& error) = 0;
     virtual bool get_address(sockaddr*, socklen_t*) = 0;
+    virtual bool is_local() const { return false; }
 
 protected:
     Socket(int domain, int type, int protocol);

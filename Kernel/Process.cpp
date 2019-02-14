@@ -2329,7 +2329,28 @@ int Process::sys$accept(int sockfd, sockaddr* address, socklen_t* address_size)
     return fd;
 }
 
-int Process::sys$connect(int sockfd, const sockaddr*, socklen_t)
+int Process::sys$connect(int sockfd, const sockaddr* address, socklen_t address_size)
 {
-    return -ENOTIMPL;
+    if (!validate_read(address, address_size))
+        return -EFAULT;
+    if (number_of_open_file_descriptors() >= m_max_open_file_descriptors)
+        return -EMFILE;
+    int fd = 0;
+    for (; fd < (int)m_max_open_file_descriptors; ++fd) {
+        if (!m_fds[fd])
+            break;
+    }
+    auto* descriptor = file_descriptor(sockfd);
+    if (!descriptor)
+        return -EBADF;
+    if (!descriptor->is_socket())
+        return -ENOTSOCK;
+    auto& socket = *descriptor->socket();
+    int error;
+    auto server = socket.connect(address, address_size, error);
+    if (!server)
+        return error;
+    auto server_descriptor = FileDescriptor::create(move(server), SocketRole::Connected);
+    m_fds[fd].set(move(server_descriptor));
+    return fd;
 }
