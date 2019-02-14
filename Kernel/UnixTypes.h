@@ -314,6 +314,7 @@ struct sockaddr {
     char sa_data[14];
 };
 
+#define	S_IFSOCK 0140000
 #define UNIX_PATH_MAX 108
 
 struct sockaddr_un {

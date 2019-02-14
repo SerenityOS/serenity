@@ -2262,9 +2262,20 @@ int Process::sys$socket(int domain, int type, int protocol)
     return fd;
 }
 
-int Process::sys$bind(int sockfd, const sockaddr* addr, socklen_t)
+int Process::sys$bind(int sockfd, const sockaddr* address, socklen_t address_length)
 {
-    return -ENOTIMPL;
+    if (!validate_read(address, address_length))
+        return -EFAULT;
+    auto* descriptor = file_descriptor(sockfd);
+    if (!descriptor)
+        return -EBADF;
+    if (!descriptor->is_socket())
+        return -ENOTSOCK;
+    auto& socket = *descriptor->socket();
+    int error;
+    if (!socket.bind(address, address_length, error))
+        return error;
+    return 0;
 }
 
 int Process::sys$listen(int sockfd, int backlog)

@@ -2,6 +2,7 @@
 
 #include <AK/Retainable.h>
 #include <AK/RetainPtr.h>
+#include <Kernel/UnixTypes.h>
 
 class Socket : public Retainable<Socket> {
 public:
@@ -11,6 +12,8 @@ public:
     int domain() const { return m_domain; }
     int type() const { return m_type; }
     int protocol() const { return m_protocol; }
+
+    virtual bool bind(const sockaddr*, socklen_t, int& error) = 0;
 
 protected:
     Socket(int domain, int type, int protocol);

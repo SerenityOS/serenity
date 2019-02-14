@@ -42,6 +42,8 @@
     __ERROR(ENOSYS,         "No such syscall") \
     __ERROR(ENOTIMPL,       "Not implemented") \
     __ERROR(EAFNOSUPPORT,   "Address family not supported") \
+    __ERROR(ENOTSOCK,       "Not a socket") \
+    __ERROR(EADDRINUSE,     "Address in use") \
     __ERROR(EWHYTHO,        "Failed without setting an error code (Bug!)") \
     __ERROR(EBADWINDOW,     "Bad window ID") \
     __ERROR(EBADBACKING,    "Bad backing store ID") \

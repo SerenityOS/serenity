@@ -134,11 +134,16 @@ RetainPtr<FileDescriptor> VFS::open(const String& path, int& error, int options,
 {
     auto inode_id = resolve_path(path, base.identifier(), error, options);
     auto inode = get_inode(inode_id);
-    if (!inode) {
-        if (options & O_CREAT)
+    if (options & O_CREAT) {
+        if (!inode)
             return create(path, error, options, mode, base);
-        return nullptr;
+        else if (options & O_EXCL) {
+            error = -EEXIST;
+            return nullptr;
+        }
     }
+    if (!inode)
+        return nullptr;
     auto metadata = inode->metadata();
     if (!(options & O_DONT_OPEN_DEVICE) && metadata.is_character_device()) {
         auto it = m_character_devices.find(encoded_device(metadata.major_device, metadata.minor_device));
