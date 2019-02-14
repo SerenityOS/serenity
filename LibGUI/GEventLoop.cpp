@@ -39,10 +39,18 @@ GEventLoop::GEventLoop()
     sockaddr_un address;
     address.sun_family = AF_LOCAL;
     strcpy(address.sun_path, "/wsportal");
-    int rc = connect(m_event_fd, (const sockaddr*)&address, sizeof(address));
-    if (rc < 0) {
+
+    int retries = 10;
+    int rc = 0;
+    while (retries) {
+        rc = connect(m_event_fd, (const sockaddr*)&address, sizeof(address));
+        if (rc == 0)
+            break;
         dbgprintf("connect failed: %d, %s\n", errno, strerror(errno));
-        perror("connect");
+        sleep(1);
+        --retries;
+    }
+    if (rc < 0) {
         ASSERT_NOT_REACHED();
     }
 }
