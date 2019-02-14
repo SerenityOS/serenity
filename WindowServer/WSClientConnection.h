@@ -9,6 +9,7 @@
 class WSWindow;
 class WSMenu;
 class WSMenuBar;
+struct GUI_ServerMessage;
 
 // FIXME: Remove.
 class Process;
@@ -20,6 +21,8 @@ public:
 
     static WSClientConnection* from_client_id(int client_id);
     static WSClientConnection* ensure_for_client_id(int client_id);
+
+    void post_message(GUI_ServerMessage&&);
 
     // FIXME: Remove.
     Process* process() { return m_process.ptr(); }

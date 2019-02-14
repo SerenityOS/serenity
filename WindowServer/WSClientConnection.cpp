@@ -57,6 +57,14 @@ void WSClientConnection::post_error(const String& error_message)
     WSMessageLoop::the().post_message_to_client(m_client_id, message);
 }
 
+void WSClientConnection::post_message(GUI_ServerMessage&& message)
+{
+    if (!m_process)
+        return;
+    LOCKER(m_process->gui_events_lock());
+    m_process->gui_events().append(move(message));
+}
+
 void WSClientConnection::on_message(WSMessage& message)
 {
     if (message.is_client_request()) {
