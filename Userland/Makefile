@@ -19,7 +19,6 @@ OBJS = \
        mkdir.o \
        touch.o \
        more.o \
-       guitest.o \
        guitest2.o \
        sysctl.o \
        pape.o \
@@ -52,7 +51,6 @@ APPS = \
        touch \
        sync \
        more \
-       guitest \
        guitest2 \
        sysctl \
        pape \
@@ -145,9 +143,6 @@ sync: sync.o
 	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
 
 more: more.o
-	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
-
-guitest: guitest.o
 	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
 
 guitest2: guitest2.o

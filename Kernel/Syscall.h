@@ -71,17 +71,6 @@
     __ENUMERATE_SYSCALL(unlink) \
     __ENUMERATE_SYSCALL(poll) \
     __ENUMERATE_SYSCALL(read_tsc) \
-    __ENUMERATE_SYSCALL(gui_create_window) \
-    __ENUMERATE_SYSCALL(gui_destroy_window) \
-    __ENUMERATE_SYSCALL(gui_get_window_backing_store) \
-    __ENUMERATE_SYSCALL(gui_release_window_backing_store) \
-    __ENUMERATE_SYSCALL(gui_invalidate_window) \
-    __ENUMERATE_SYSCALL(gui_get_window_title) \
-    __ENUMERATE_SYSCALL(gui_set_window_title) \
-    __ENUMERATE_SYSCALL(gui_get_window_rect) \
-    __ENUMERATE_SYSCALL(gui_set_window_rect) \
-    __ENUMERATE_SYSCALL(gui_notify_paint_finished) \
-    __ENUMERATE_SYSCALL(gui_set_global_cursor_tracking_enabled) \
     __ENUMERATE_SYSCALL(rmdir) \
     __ENUMERATE_SYSCALL(chmod) \
     __ENUMERATE_SYSCALL(usleep) \

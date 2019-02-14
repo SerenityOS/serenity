@@ -57,7 +57,6 @@ cp -v ../Userland/more mnt/bin/more
 cp -v ../Userland/rm mnt/bin/rm
 cp -v ../Userland/rmdir mnt/bin/rmdir
 cp -v ../Userland/cp mnt/bin/cp
-cp -v ../Userland/guitest mnt/bin/guitest
 cp -v ../Userland/guitest2 mnt/bin/guitest2
 cp -v ../Userland/sysctl mnt/bin/sysctl
 cp -v ../Userland/pape mnt/bin/pape

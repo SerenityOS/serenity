@@ -7,7 +7,7 @@
 #ifdef USERLAND
 #include <LibGUI/GWidget.h>
 #include <LibGUI/GWindow.h>
-#include <LibC/gui.h>
+#include <LibGUI/GEventLoop.h>
 #include <LibC/stdio.h>
 #include <LibC/errno.h>
 #include <LibC/string.h>
@@ -26,15 +26,13 @@ Painter::Painter(GraphicsBitmap& bitmap)
 Painter::Painter(GWidget& widget)
     : m_font(&widget.font())
 {
-    GUI_WindowBackingStoreInfo backing;
-    int rc = gui_get_window_backing_store(widget.window()->window_id(), &backing);
-    if (rc < 0) {
-        perror("gui_get_window_backing_store");
-        ASSERT_NOT_REACHED();
-    }
-    m_backing_store_id = backing.backing_store_id;
+    GUI_ClientMessage request;
+    request.type = GUI_ClientMessage::Type::GetWindowBackingStore;
+    request.window_id = widget.window()->window_id();
+    auto response = GEventLoop::main().sync_request(request, GUI_ServerMessage::DidGetWindowBackingStore);
+    m_backing_store_id = response.backing.backing_store_id;
 
-    m_target = GraphicsBitmap::create_wrapper(backing.size, backing.pixels);
+    m_target = GraphicsBitmap::create_wrapper(response.backing.size, response.backing.pixels);
     ASSERT(m_target);
     m_window = widget.window();
     m_translation.move_by(widget.window_relative_rect().location());
@@ -55,11 +53,10 @@ Painter::~Painter()
 #ifdef USERLAND
     m_target = nullptr;
     if (m_backing_store_id) {
-        int rc = gui_release_window_backing_store(m_backing_store_id);
-        if (rc < 0) {
-            perror("gui_release_window_backing_store");
-            ASSERT_NOT_REACHED();
-        }
+        GUI_ClientMessage request;
+        request.type = GUI_ClientMessage::Type::ReleaseWindowBackingStore;
+        request.backing.backing_store_id = m_backing_store_id;
+        GEventLoop::main().post_message_to_server(request);
     }
 #endif
 }

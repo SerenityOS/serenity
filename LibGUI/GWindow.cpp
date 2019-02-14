@@ -3,7 +3,6 @@
 #include "GEventLoop.h"
 #include "GWidget.h"
 #include <SharedGraphics/GraphicsBitmap.h>
-#include <LibC/gui.h>
 #include <LibC/stdio.h>
 #include <LibC/stdlib.h>
 #include <LibC/unistd.h>
@@ -56,15 +55,15 @@ void GWindow::show()
     if (m_window_id)
         return;
 
-    GUI_WindowParameters wparams;
-    wparams.rect = m_rect_when_windowless;
-    wparams.background_color = 0xffc0c0;
-    strcpy(wparams.title, m_title_when_windowless.characters());
-    m_window_id = gui_create_window(&wparams);
-    if (m_window_id < 0) {
-        perror("gui_create_window");
-        exit(1);
-    }
+    GUI_ClientMessage request;
+    request.type = GUI_ClientMessage::Type::CreateWindow;
+    request.window_id = m_window_id;
+    request.window.rect = m_rect_when_windowless;
+    ASSERT(m_title_when_windowless.length() < sizeof(request.text));
+    strcpy(request.text, m_title_when_windowless.characters());
+    request.text_length = m_title_when_windowless.length();
+    auto response = GEventLoop::main().sync_request(request, GUI_ServerMessage::Type::DidCreateWindow);
+    m_window_id = response.window_id;
 
     windows().set(m_window_id, this);
     update();
@@ -75,55 +74,68 @@ void GWindow::hide()
     if (!m_window_id)
         return;
     windows().remove(m_window_id);
-    int rc = gui_destroy_window(m_window_id);
-    if (rc < 0) {
-        perror("gui_destroy_window");
-        exit(1);
-    }
+    GUI_ClientMessage request;
+    request.type = GUI_ClientMessage::Type::DestroyWindow;
+    request.window_id = m_window_id;
+    ASSERT(m_title_when_windowless.length() < sizeof(request.text));
+    strcpy(request.text, m_title_when_windowless.characters());
+    request.text_length = m_title_when_windowless.length();
+    GEventLoop::main().post_message_to_server(request);
 }
 
 void GWindow::set_title(String&& title)
 {
-    m_title_when_windowless = title;
-    if (m_window_id) {
-        int rc = gui_set_window_title(m_window_id, title.characters(), title.length());
-        if (rc < 0) {
-            perror("gui_set_window_title");
-            exit(1);
-        }
-    }
+    m_title_when_windowless = move(title);
+    if (!m_window_id)
+        return;
+
+    GUI_ClientMessage request;
+    request.type = GUI_ClientMessage::Type::SetWindowTitle;
+    request.window_id = m_window_id;
+    ASSERT(m_title_when_windowless.length() < sizeof(request.text));
+    strcpy(request.text, m_title_when_windowless.characters());
+    request.text_length = m_title_when_windowless.length();
+    GEventLoop::main().post_message_to_server(request);
 }
 
 String GWindow::title() const
 {
-    if (m_window_id) {
-        char buffer[256];
-        int rc = gui_get_window_title(m_window_id, buffer, sizeof(buffer));
-        ASSERT(rc >= 0);
-        return String(buffer, rc);
-    }
-    return m_title_when_windowless;
+    if (!m_window_id)
+        return m_title_when_windowless;
+
+    GUI_ClientMessage request;
+    request.type = GUI_ClientMessage::Type::GetWindowTitle;
+    request.window_id = m_window_id;
+    ASSERT(m_title_when_windowless.length() < sizeof(request.text));
+    strcpy(request.text, m_title_when_windowless.characters());
+    request.text_length = m_title_when_windowless.length();
+    auto response = GEventLoop::main().sync_request(request, GUI_ServerMessage::Type::DidGetWindowTitle);
+    return String(response.text, response.text_length);
 }
 
 Rect GWindow::rect() const
 {
-    if (m_window_id) {
-        GUI_Rect buffer;
-        int rc = gui_get_window_rect(m_window_id, &buffer);
-        ASSERT(rc >= 0);
-        return buffer;
-    }
-    return m_rect_when_windowless;
+    if (!m_window_id)
+        return m_rect_when_windowless;
+
+    GUI_ClientMessage request;
+    request.type = GUI_ClientMessage::Type::GetWindowRect;
+    request.window_id = m_window_id;
+    auto response = GEventLoop::main().sync_request(request, GUI_ServerMessage::Type::DidGetWindowRect);
+    ASSERT(response.window_id == m_window_id);
+    return response.window.rect;
 }
 
 void GWindow::set_rect(const Rect& a_rect)
 {
     m_rect_when_windowless = a_rect;
-    if (m_window_id) {
-        GUI_Rect rect = a_rect;
-        int rc = gui_set_window_rect(m_window_id, &rect);
-        ASSERT(rc == 0);
-    }
+    if (!m_window_id)
+        return;
+    GUI_ClientMessage request;
+    request.type = GUI_ClientMessage::Type::SetWindowRect;
+    request.window_id = m_window_id;
+    request.window.rect = a_rect;
+    GEventLoop::main().post_message_to_server(request);
 }
 
 void GWindow::event(GEvent& event)
@@ -158,9 +170,11 @@ void GWindow::event(GEvent& event)
             rect = m_main_widget->rect();
         m_main_widget->event(*make<GPaintEvent>(rect));
         if (m_window_id) {
-            GUI_Rect gui_rect = rect;
-            int rc = gui_notify_paint_finished(m_window_id, &gui_rect);
-            ASSERT(rc == 0);
+            GUI_ClientMessage message;
+            message.type = GUI_ClientMessage::Type::DidFinishPainting;
+            message.window_id = m_window_id;
+            message.window.rect = rect;
+            GEventLoop::main().post_message_to_server(message);
         }
         return;
     }
@@ -209,9 +223,11 @@ void GWindow::update(const Rect& a_rect)
     }
     m_pending_paint_event_rects.append(a_rect);
 
-    GUI_Rect rect = a_rect;
-    int rc = gui_invalidate_window(m_window_id, a_rect.is_null() ? nullptr : &rect);
-    ASSERT(rc == 0);
+    GUI_ClientMessage request;
+    request.type = GUI_ClientMessage::Type::InvalidateRect;
+    request.window_id = m_window_id;
+    request.window.rect = a_rect;
+    GEventLoop::main().post_message_to_server(request);
 }
 
 void GWindow::set_main_widget(GWidget* widget)
@@ -255,5 +271,12 @@ void GWindow::set_global_cursor_tracking_widget(GWidget* widget)
     if (widget == m_global_cursor_tracking_widget.ptr())
         return;
     m_global_cursor_tracking_widget = widget ? widget->make_weak_ptr() : nullptr;
-    gui_set_global_cursor_tracking_enabled(m_window_id, widget != nullptr);
+
+    GUI_ClientMessage request;
+    request.type = GUI_ClientMessage::Type::SetGlobalCursorTracking;
+    request.window_id = m_window_id;
+    request.value = widget != nullptr;
+    // FIXME: What if the cursor moves out of our interest range before the server can handle this?
+    //        Maybe there could be a response that includes the current cursor location as of enabling.
+    GEventLoop::main().post_message_to_server(request);
 }
