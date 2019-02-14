@@ -42,6 +42,7 @@ LIBC_OBJS = \
        math.o \
        utime.o \
        sys/select.o \
+       sys/socket.o \
        poll.o \
        locale.o \
        entry.o

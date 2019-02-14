@@ -201,6 +201,16 @@ static dword handle(RegisterDump& regs, dword function, dword arg1, dword arg2, 
         return current->sys$rmdir((const char*)arg1);
     case Syscall::SC_chmod:
         return current->sys$chmod((const char*)arg1, (mode_t)arg2);
+    case Syscall::SC_socket:
+        return current->sys$socket((int)arg1, (int)arg2, (int)arg3);
+    case Syscall::SC_bind:
+        return current->sys$bind((int)arg1, (const sockaddr*)arg2, (socklen_t)arg3);
+    case Syscall::SC_listen:
+        return current->sys$listen((int)arg1, (int)arg2);
+    case Syscall::SC_accept:
+        return current->sys$accept((int)arg1, (sockaddr*)arg2, (socklen_t*)arg3);
+    case Syscall::SC_connect:
+        return current->sys$connect((int)arg1, (const sockaddr*)arg2, (socklen_t)arg3);
     default:
         kprintf("<%u> int0x80: Unknown function %u requested {%x, %x, %x}\n", current->pid(), function, arg1, arg2, arg3);
         break;
