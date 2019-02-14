@@ -90,7 +90,7 @@ void WSClientConnection::on_message(WSMessage& message)
 void WSClientConnection::handle_request(WSAPICreateMenubarRequest& request)
 {
     int menubar_id = m_next_menubar_id++;
-    auto menubar = make<WSMenuBar>(menubar_id, *WSMessageLoop::process_from_client_id(request.client_id()));
+    auto menubar = make<WSMenuBar>(request.client_id(), menubar_id);
     m_menubars.set(menubar_id, move(menubar));
     GUI_ServerMessage response;
     response.type = GUI_ServerMessage::Type::DidCreateMenubar;
