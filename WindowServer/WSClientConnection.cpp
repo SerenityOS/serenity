@@ -103,8 +103,7 @@ void WSClientConnection::handle_request(WSAPIDestroyMenubarRequest& request)
     int menubar_id = request.menubar_id();
     auto it = m_menubars.find(menubar_id);
     if (it == m_menubars.end()) {
-        ASSERT_NOT_REACHED();
-        // FIXME: Send an error.
+        post_error("Bad menubar ID");
         return;
     }
     auto& menubar = *(*it).value;
