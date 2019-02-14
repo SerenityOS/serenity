@@ -7,7 +7,6 @@
 #include <assert.h>
 #include <sys/ioctl.h>
 #include <sys/select.h>
-#include <LibC/gui.h>
 #include "Terminal.h"
 #include <Kernel/KeyCode.h>
 #include <LibGUI/GApplication.h>

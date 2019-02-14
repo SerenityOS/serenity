@@ -34,6 +34,7 @@ public:
     ssize_t on_receive_from_client(int client_id, const byte*, size_t);
 
     static Process* process_from_client_id(int client_id);
+    void notify_client_died(int client_id);
 
 private:
     void wait_for_message();

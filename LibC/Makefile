@@ -41,7 +41,6 @@ LIBC_OBJS = \
        ioctl.o \
        math.o \
        utime.o \
-       gui.o \
        sys/select.o \
        poll.o \
        locale.o \

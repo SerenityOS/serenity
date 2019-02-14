@@ -1,7 +1,6 @@
 #include <LibGUI/GAction.h>
 #include <LibGUI/GMenu.h>
 #include <LibGUI/GEventLoop.h>
-#include <LibC/gui.h>
 #include <AK/HashMap.h>
 
 static HashMap<int, GMenu*>& all_menus()
@@ -44,9 +43,9 @@ int GMenu::realize_menu()
 {
     GUI_ClientMessage request;
     request.type = GUI_ClientMessage::Type::CreateMenu;
-    ASSERT(m_name.length() < sizeof(request.menu.text));
-    strcpy(request.menu.text, m_name.characters());
-    request.menu.text_length = m_name.length();
+    ASSERT(m_name.length() < sizeof(request.text));
+    strcpy(request.text, m_name.characters());
+    request.text_length = m_name.length();
     auto response = GEventLoop::main().sync_request(request, GUI_ServerMessage::Type::DidCreateMenu);
     m_menu_id = response.menu.menu_id;
 
@@ -66,9 +65,9 @@ int GMenu::realize_menu()
             request.type = GUI_ClientMessage::Type::AddMenuItem;
             request.menu.menu_id = m_menu_id;
             request.menu.identifier = i;
-            ASSERT(action.text().length() < sizeof(request.menu.text));
-            strcpy(request.menu.text, action.text().characters());
-            request.menu.text_length = action.text().length();
+            ASSERT(action.text().length() < sizeof(request.text));
+            strcpy(request.text, action.text().characters());
+            request.text_length = action.text().length();
             GEventLoop::main().sync_request(request, GUI_ServerMessage::Type::DidAddMenuItem);
         }
     }

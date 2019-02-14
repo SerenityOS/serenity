@@ -734,8 +734,26 @@ void WSWindowManager::on_message(WSMessage& message)
         return;
     }
 
-    if (message.is_client_request())
+    if (message.is_client_request()) {
         handle_client_request(static_cast<WSAPIClientRequest&>(message));
+        return;
+    }
+
+    if (message.type() == WSMessage::WM_ClientDisconnected) {
+        int client_id = static_cast<WSClientDisconnectedNotification&>(message).client_id();
+        dbgprintf("[WM] Client disconnected: %d\n", client_id);
+
+        destroy_all_menus(*WSMessageLoop::process_from_client_id(client_id));
+        Vector<int> windows_belonging_to_client;
+        for (auto& it : m_windows_by_id) {
+            if (it.value->process()->gui_client_id() == client_id)
+                windows_belonging_to_client.append(it.value->window_id());
+        }
+        for (int window_id : windows_belonging_to_client) {
+            m_windows_by_id.remove(window_id);
+        }
+        return;
+    }
 }
 
 void WSWindowManager::handle_client_request(WSAPIClientRequest& request)
@@ -862,6 +880,132 @@ void WSWindowManager::handle_client_request(WSAPIClientRequest& request)
         response.type = GUI_ServerMessage::Type::DidAddMenuSeparator;
         response.menu.menu_id = menu_id;
         WSMessageLoop::the().post_message_to_client(request.client_id(), response);
+        break;
+    }
+    case WSMessage::APISetWindowTitleRequest: {
+        int window_id = static_cast<WSAPISetWindowTitleRequest&>(request).window_id();
+        auto it = m_windows_by_id.find(window_id);
+        if (it == m_windows_by_id.end()) {
+            ASSERT_NOT_REACHED();
+        }
+        auto& window = *(*it).value;
+        window.set_title(static_cast<WSAPISetWindowTitleRequest&>(request).title());
+        break;
+    }
+    case WSMessage::APIGetWindowTitleRequest: {
+        int window_id = static_cast<WSAPIGetWindowTitleRequest&>(request).window_id();
+        auto it = m_windows_by_id.find(window_id);
+        if (it == m_windows_by_id.end()) {
+            ASSERT_NOT_REACHED();
+        }
+        auto& window = *(*it).value;
+        GUI_ServerMessage response;
+        response.type = GUI_ServerMessage::Type::DidGetWindowTitle;
+        response.window_id = window.window_id();
+        ASSERT(window.title().length() < sizeof(response.text));
+        strcpy(response.text, window.title().characters());
+        response.text_length = window.title().length();
+        WSMessageLoop::the().post_message_to_client(request.client_id(), response);
+        break;
+    }
+    case WSMessage::APISetWindowRectRequest: {
+        int window_id = static_cast<WSAPISetWindowRectRequest&>(request).window_id();
+        auto it = m_windows_by_id.find(window_id);
+        if (it == m_windows_by_id.end()) {
+            ASSERT_NOT_REACHED();
+        }
+        auto& window = *(*it).value;
+        window.set_rect(static_cast<WSAPISetWindowRectRequest&>(request).rect());
+        break;
+    }
+    case WSMessage::APIGetWindowRectRequest: {
+        int window_id = static_cast<WSAPIGetWindowRectRequest&>(request).window_id();
+        auto it = m_windows_by_id.find(window_id);
+        if (it == m_windows_by_id.end()) {
+            ASSERT_NOT_REACHED();
+        }
+        auto& window = *(*it).value;
+        GUI_ServerMessage response;
+        response.type = GUI_ServerMessage::Type::DidGetWindowRect;
+        response.window_id = window.window_id();
+        response.window.rect = window.rect();
+        WSMessageLoop::the().post_message_to_client(request.client_id(), response);
+        break;
+    }
+    case WSMessage::APICreateWindowRequest: {
+        int window_id = m_next_window_id++;
+        auto window = make<WSWindow>(*WSMessageLoop::process_from_client_id(request.client_id()), window_id);
+        window->set_title(static_cast<WSAPICreateWindowRequest&>(request).title());
+        window->set_rect(static_cast<WSAPICreateWindowRequest&>(request).rect());
+        m_windows_by_id.set(window_id, move(window));
+        GUI_ServerMessage response;
+        response.type = GUI_ServerMessage::Type::DidCreateWindow;
+        response.window_id = window_id;
+        WSMessageLoop::the().post_message_to_client(request.client_id(), response);
+        break;
+    }
+    case WSMessage::APIDestroyWindowRequest: {
+        int window_id = static_cast<WSAPIGetWindowRectRequest&>(request).window_id();
+        auto it = m_windows_by_id.find(window_id);
+        if (it == m_windows_by_id.end()) {
+            ASSERT_NOT_REACHED();
+        }
+        auto& window = *(*it).value;
+        invalidate(window);
+        m_windows_by_id.remove(it);
+        break;
+    }
+    case WSMessage::APIInvalidateRectRequest: {
+        int window_id = static_cast<WSAPIInvalidateRectRequest&>(request).window_id();
+        auto it = m_windows_by_id.find(window_id);
+        if (it == m_windows_by_id.end()) {
+            ASSERT_NOT_REACHED();
+        }
+        GUI_ServerMessage response;
+        response.type = GUI_ServerMessage::Type::Paint;
+        response.window_id = window_id;
+        response.paint.rect = static_cast<WSAPIInvalidateRectRequest&>(request).rect();
+        WSMessageLoop::the().post_message_to_client(request.client_id(), response);
+        break;
+    }
+    case WSMessage::APIDidFinishPaintingNotification: {
+        int window_id = static_cast<WSAPIDidFinishPaintingNotification&>(request).window_id();
+        auto it = m_windows_by_id.find(window_id);
+        if (it == m_windows_by_id.end()) {
+            ASSERT_NOT_REACHED();
+        }
+        auto& window = *(*it).value;
+        invalidate(window, static_cast<WSAPIDidFinishPaintingNotification&>(request).rect());
+        break;
+    }
+    case WSMessage::APIGetWindowBackingStoreRequest: {
+        int window_id = static_cast<WSAPIGetWindowBackingStoreRequest&>(request).window_id();
+        auto it = m_windows_by_id.find(window_id);
+        if (it == m_windows_by_id.end()) {
+            ASSERT_NOT_REACHED();
+        }
+        auto& window = *(*it).value;
+        auto* backing_store = window.backing();
+
+        // FIXME: It shouldn't work this way!
+        backing_store->retain();
+
+        GUI_ServerMessage response;
+        response.type = GUI_ServerMessage::Type::DidGetWindowBackingStore;
+        response.window_id = window_id;
+        response.backing.backing_store_id = backing_store;
+        response.backing.bpp = sizeof(RGBA32);
+        response.backing.pitch = backing_store->pitch();
+        response.backing.size = backing_store->size();
+        response.backing.pixels = reinterpret_cast<RGBA32*>(backing_store->client_region()->laddr().as_ptr());
+        WSMessageLoop::the().post_message_to_client(request.client_id(), response);
+        break;
+    }
+    case WSMessage::APIReleaseWindowBackingStoreRequest: {
+        int backing_store_id = static_cast<WSAPIReleaseWindowBackingStoreRequest&>(request).backing_store_id();
+        // FIXME: It shouldn't work this way!
+        auto* backing_store = (GraphicsBitmap*)backing_store_id;
+        backing_store->release();
         break;
     }
     default:

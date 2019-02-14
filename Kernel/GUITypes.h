@@ -76,11 +76,21 @@ struct GUI_ServerMessage {
         DidSetApplicationMenubar,
         DidAddMenuItem,
         DidAddMenuSeparator,
+        DidCreateWindow,
+        DidDestroyWindow,
+        DidGetWindowTitle,
+        DidGetWindowRect,
+        DidGetWindowBackingStore,
     };
     Type type { Invalid };
     int window_id { -1 };
+    size_t text_length;
+    char text[256];
 
     union {
+        struct {
+            GUI_Rect rect;
+        } window;
         struct {
             GUI_Rect rect;
         } paint;
@@ -102,6 +112,13 @@ struct GUI_ServerMessage {
             int menu_id;
             unsigned identifier;
         } menu;
+        struct {
+            void* backing_store_id;
+            GUI_Size size;
+            size_t bpp;
+            size_t pitch;
+            RGBA32* pixels;
+        } backing;
     };
 };
 
@@ -116,18 +133,36 @@ struct GUI_ClientMessage {
         SetApplicationMenubar,
         AddMenuItem,
         AddMenuSeparator,
+        CreateWindow,
+        DestroyWindow,
+        SetWindowTitle,
+        GetWindowTitle,
+        SetWindowRect,
+        GetWindowRect,
+        InvalidateRect,
+        DidFinishPainting,
+        GetWindowBackingStore,
+        ReleaseWindowBackingStore,
+        SetGlobalCursorTracking,
     };
     Type type { Invalid };
     int window_id { -1 };
+    size_t text_length;
+    char text[256];
+    int value { 0 };
 
     union {
         struct {
             int menubar_id;
             int menu_id;
             unsigned identifier;
-            unsigned text_length;
-            char text[256];
         } menu;
+        struct {
+            GUI_Rect rect;
+        } window;
+        struct {
+            void* backing_store_id;
+        } backing;
     };
 };
 

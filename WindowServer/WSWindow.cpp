@@ -83,10 +83,6 @@ void WSWindow::on_message(WSMessage& message)
     gui_event.window_id = window_id();
 
     switch (message.type()) {
-    case WSMessage::WM_ClientWantsToPaint:
-        gui_event.type = GUI_ServerMessage::Type::Paint;
-        gui_event.paint.rect = static_cast<WSClientWantsToPaintMessage&>(message).rect();
-        break;
     case WSMessage::MouseMove:
         gui_event.type = GUI_ServerMessage::Type::MouseMove;
         gui_event.mouse.position = static_cast<WSMouseEvent&>(message).position();
@@ -121,18 +117,6 @@ void WSWindow::on_message(WSMessage& message)
         gui_event.key.ctrl = static_cast<WSKeyEvent&>(message).ctrl();
         gui_event.key.shift = static_cast<WSKeyEvent&>(message).shift();
         break;
-    case WSMessage::WM_ClientFinishedPaint:
-        WSWindowManager::the().invalidate(*this, static_cast<WSClientFinishedPaintMessage&>(message).rect());
-        return;
-    case WSMessage::WM_SetWindowRect:
-        set_rect(static_cast<WSSetWindowRectMessage&>(message).rect());
-        return;
-    case WSMessage::WM_SetWindowTitle:
-        set_title(static_cast<WSSetWindowTitleMessage&>(message).title());
-        return;
-    case WSMessage::WM_DestroyWindow:
-        delete this;
-        return;
     case WSMessage::WindowActivated:
         gui_event.type = GUI_ServerMessage::Type::WindowActivated;
         break;

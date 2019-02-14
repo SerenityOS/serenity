@@ -9,12 +9,8 @@ class WSMessage {
 public:
     enum Type {
         Invalid = 0,
-        WM_ClientWantsToPaint,
-        WM_ClientFinishedPaint,
-        WM_SetWindowTitle,
-        WM_SetWindowRect,
         WM_DeferredCompose,
-        WM_DestroyWindow,
+        WM_ClientDisconnected,
         MouseMove,
         MouseDown,
         MouseUp,
@@ -33,6 +29,17 @@ public:
         APIDestroyMenuRequest,
         APIAddMenuItemRequest,
         APIAddMenuSeparatorRequest,
+        APICreateWindowRequest,
+        APIDestroyWindowRequest,
+        APISetWindowTitleRequest,
+        APIGetWindowTitleRequest,
+        APISetWindowRectRequest,
+        APIGetWindowRectRequest,
+        APIInvalidateRectRequest,
+        APIDidFinishPaintingNotification,
+        APIGetWindowBackingStoreRequest,
+        APIReleaseWindowBackingStoreRequest,
+        APISetGlobalCursorTrackingRequest,
         __End_API_Client_Requests,
     };
 
@@ -50,6 +57,20 @@ private:
     Type m_type { Invalid };
 };
 
+class WSClientDisconnectedNotification : public WSMessage {
+public:
+    explicit WSClientDisconnectedNotification(int client_id)
+        : WSMessage(WM_ClientDisconnected)
+        , m_client_id(client_id)
+    {
+    }
+
+    int client_id() const { return m_client_id; }
+
+private:
+    int m_client_id { 0 };
+};
+
 class WSAPIClientRequest : public WSMessage {
 public:
     WSAPIClientRequest(Type type, int client_id)
@@ -62,6 +83,20 @@ public:
 
 private:
     int m_client_id { 0 };
+};
+
+class WSAPISetGlobalCursorTrackingRequest : public WSAPIClientRequest {
+public:
+    WSAPISetGlobalCursorTrackingRequest(int client_id, bool value)
+        : WSAPIClientRequest(WSMessage::APISetGlobalCursorTrackingRequest, client_id)
+        , m_value(value)
+    {
+    }
+
+    bool value() const { return m_value; }
+
+private:
+    bool m_value { false };
 };
 
 class WSAPICreateMenubarRequest : public WSAPIClientRequest {
@@ -179,58 +214,170 @@ private:
     int m_menu_id { 0 };
 };
 
-class WSClientFinishedPaintMessage final : public WSMessage {
+class WSAPISetWindowTitleRequest final : public WSAPIClientRequest {
 public:
-    explicit WSClientFinishedPaintMessage(const Rect& rect = Rect())
-        : WSMessage(WSMessage::WM_ClientFinishedPaint)
-        , m_rect(rect)
-    {
-    }
-
-    const Rect& rect() const { return m_rect; }
-private:
-    Rect m_rect;
-};
-
-class WSSetWindowTitleMessage final : public WSMessage {
-public:
-    explicit WSSetWindowTitleMessage(String&& title)
-        : WSMessage(WSMessage::WM_SetWindowTitle)
+    explicit WSAPISetWindowTitleRequest(int client_id, int window_id, String&& title)
+        : WSAPIClientRequest(WSMessage::APISetWindowTitleRequest, client_id)
+        , m_client_id(client_id)
+        , m_window_id(window_id)
         , m_title(move(title))
     {
     }
 
+    int client_id() const { return m_client_id; }
+    int window_id() const { return m_window_id; }
     String title() const { return m_title; }
 
 private:
+    int m_client_id { 0 };
+    int m_window_id { 0 };
     String m_title;
 };
 
-class WSSetWindowRectMessage final : public WSMessage {
+class WSAPIGetWindowTitleRequest final : public WSAPIClientRequest {
 public:
-    explicit WSSetWindowRectMessage(const Rect& rect)
-        : WSMessage(WSMessage::WM_SetWindowRect)
+    explicit WSAPIGetWindowTitleRequest(int client_id, int window_id)
+        : WSAPIClientRequest(WSMessage::APIGetWindowTitleRequest, client_id)
+        , m_client_id(client_id)
+        , m_window_id(window_id)
+    {
+    }
+
+    int client_id() const { return m_client_id; }
+    int window_id() const { return m_window_id; }
+
+private:
+    int m_client_id { 0 };
+    int m_window_id { 0 };
+};
+
+class WSAPISetWindowRectRequest final : public WSAPIClientRequest {
+public:
+    explicit WSAPISetWindowRectRequest(int client_id, int window_id, const Rect& rect)
+        : WSAPIClientRequest(WSMessage::APISetWindowRectRequest, client_id)
+        , m_client_id(client_id)
+        , m_window_id(window_id)
         , m_rect(rect)
+    {
+    }
+
+    int client_id() const { return m_client_id; }
+    int window_id() const { return m_window_id; }
+    Rect rect() const { return m_rect; }
+
+private:
+    int m_client_id { 0 };
+    int m_window_id { 0 };
+    Rect m_rect;
+};
+
+class WSAPIGetWindowRectRequest final : public WSAPIClientRequest {
+public:
+    explicit WSAPIGetWindowRectRequest(int client_id, int window_id)
+        : WSAPIClientRequest(WSMessage::APIGetWindowRectRequest, client_id)
+        , m_client_id(client_id)
+        , m_window_id(window_id)
+    {
+    }
+
+    int client_id() const { return m_client_id; }
+    int window_id() const { return m_window_id; }
+
+private:
+    int m_client_id { 0 };
+    int m_window_id { 0 };
+};
+
+class WSAPICreateWindowRequest : public WSAPIClientRequest {
+public:
+    WSAPICreateWindowRequest(int client_id, const Rect& rect, const String& title)
+        : WSAPIClientRequest(WSMessage::APICreateWindowRequest, client_id)
+        , m_rect(rect)
+        , m_title(title)
     {
     }
 
     Rect rect() const { return m_rect; }
+    String title() const { return m_title; }
 
 private:
     Rect m_rect;
+    String m_title;
 };
 
-class WSClientWantsToPaintMessage final : public WSMessage {
+class WSAPIDestroyWindowRequest : public WSAPIClientRequest {
 public:
-    explicit WSClientWantsToPaintMessage(const Rect& rect = Rect())
-        : WSMessage(WSMessage::WM_ClientWantsToPaint)
+    WSAPIDestroyWindowRequest(int client_id, int window_id)
+        : WSAPIClientRequest(WSMessage::APIDestroyWindowRequest, client_id)
+        , m_window_id(window_id)
+    {
+    }
+
+    int window_id() const { return m_window_id; }
+
+private:
+    int m_window_id { 0 };
+};
+
+class WSAPIInvalidateRectRequest final : public WSAPIClientRequest {
+public:
+    explicit WSAPIInvalidateRectRequest(int client_id, int window_id, const Rect& rect)
+        : WSAPIClientRequest(WSMessage::APIInvalidateRectRequest, client_id)
+        , m_window_id(window_id)
         , m_rect(rect)
     {
     }
 
-    const Rect& rect() const { return m_rect; }
+    int window_id() const { return m_window_id; }
+    Rect rect() const { return m_rect; }
+
 private:
-    friend class WSWindowManager;
+    int m_window_id { 0 };
+    Rect m_rect;
+};
+
+class WSAPIGetWindowBackingStoreRequest final : public WSAPIClientRequest {
+public:
+    explicit WSAPIGetWindowBackingStoreRequest(int client_id, int window_id)
+        : WSAPIClientRequest(WSMessage::APIGetWindowBackingStoreRequest, client_id)
+        , m_window_id(window_id)
+    {
+    }
+
+    int window_id() const { return m_window_id; }
+
+private:
+    int m_window_id { 0 };
+};
+
+class WSAPIReleaseWindowBackingStoreRequest final : public WSAPIClientRequest {
+public:
+    explicit WSAPIReleaseWindowBackingStoreRequest(int client_id, int backing_store_id)
+        : WSAPIClientRequest(WSMessage::APIReleaseWindowBackingStoreRequest, client_id)
+        , m_backing_store_id(backing_store_id)
+    {
+    }
+
+    int backing_store_id() const { return m_backing_store_id; }
+
+private:
+    int m_backing_store_id { 0 };
+};
+
+class WSAPIDidFinishPaintingNotification final : public WSAPIClientRequest {
+public:
+    explicit WSAPIDidFinishPaintingNotification(int client_id, int window_id, const Rect& rect)
+        : WSAPIClientRequest(WSMessage::APIDidFinishPaintingNotification, client_id)
+        , m_window_id(window_id)
+        , m_rect(rect)
+    {
+    }
+
+    int window_id() const { return m_window_id; }
+    Rect rect() const { return m_rect; }
+
+private:
+    int m_window_id { 0 };
     Rect m_rect;
 };
 

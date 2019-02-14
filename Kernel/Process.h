@@ -219,24 +219,10 @@ public:
     int sys$read_tsc(dword* lsw, dword* msw);
     int sys$chmod(const char* pathname, mode_t);
 
-    int gui$create_window(const GUI_WindowParameters*);
-    int gui$destroy_window(int window_id);
-    int gui$get_window_backing_store(int window_id, GUI_WindowBackingStoreInfo*);
-    int gui$release_window_backing_store(void* backing_store_id);
-    int gui$invalidate_window(int window_id, const GUI_Rect*);
-    int gui$notify_paint_finished(int window_id, const GUI_Rect*);
-    int gui$get_window_title(int window_id, char* buffer, size_t size);
-    int gui$set_window_title(int window_id, const char* title, size_t size);
-    int gui$get_window_rect(int window_id, GUI_Rect*);
-    int gui$set_window_rect(int window_id, const GUI_Rect*);
-    int gui$set_global_cursor_tracking_enabled(int window_id, bool enabled);
-
     DisplayInfo set_video_resolution(int width, int height);
 
     static void initialize();
     static void initialize_gui_statics();
-    int make_window_id();
-    void destroy_all_menus();
     void destroy_all_windows();
 
     void crash() NORETURN;
@@ -408,12 +394,8 @@ private:
 
     RetainPtr<Region> m_display_framebuffer_region;
 
-    HashMap<int, OwnPtr<WSWindow>> m_windows;
-    Vector<RetainPtr<GraphicsBitmap>> m_retained_backing_stores;
-
     Vector<GUI_ServerMessage> m_gui_events;
     Lock m_gui_events_lock;
-    int m_next_window_id { 1 };
 
     dword m_wakeup_requested { false };
     bool m_has_used_fpu { false };

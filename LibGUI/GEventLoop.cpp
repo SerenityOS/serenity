@@ -11,7 +11,6 @@
 #include <LibC/string.h>
 #include <LibC/time.h>
 #include <LibC/sys/select.h>
-#include <LibC/gui.h>
 #include <errno.h>
 #include <string.h>
 

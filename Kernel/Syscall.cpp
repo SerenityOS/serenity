@@ -195,30 +195,8 @@ static dword handle(RegisterDump& regs, dword function, dword arg1, dword arg2, 
         return sync();
     case Syscall::SC_unlink:
         return current->sys$unlink((const char*)arg1);
-    case Syscall::SC_gui_create_window:
-        return current->gui$create_window((const GUI_WindowParameters*)arg1);
-    case Syscall::SC_gui_destroy_window:
-        return current->gui$destroy_window((int)arg1);
-    case Syscall::SC_gui_get_window_backing_store:
-        return current->gui$get_window_backing_store((int)arg1, (GUI_WindowBackingStoreInfo*)arg2);
-    case Syscall::SC_gui_release_window_backing_store:
-        return current->gui$release_window_backing_store((void*)arg1);
-    case Syscall::SC_gui_invalidate_window:
-        return current->gui$invalidate_window((int)arg1, (const GUI_Rect*)arg2);
-    case Syscall::SC_gui_set_window_title:
-        return current->gui$set_window_title((int)arg1, (const char*)arg2, (size_t)arg3);
-    case Syscall::SC_gui_get_window_title:
-        return current->gui$get_window_title((int)arg1, (char*)arg2, (size_t)arg3);
-    case Syscall::SC_gui_set_window_rect:
-        return current->gui$set_window_rect((int)arg1, (const GUI_Rect*)arg2);
-    case Syscall::SC_gui_get_window_rect:
-        return current->gui$get_window_rect((int)arg1, (GUI_Rect*)arg2);
     case Syscall::SC_read_tsc:
         return current->sys$read_tsc((dword*)arg1, (dword*)arg2);
-    case Syscall::SC_gui_notify_paint_finished:
-        return current->gui$notify_paint_finished((int)arg1, (const GUI_Rect*)arg2);
-    case Syscall::SC_gui_set_global_cursor_tracking_enabled:
-        return current->gui$set_global_cursor_tracking_enabled((int)arg1, (bool)arg2);
     case Syscall::SC_rmdir:
         return current->sys$rmdir((const char*)arg1);
     case Syscall::SC_chmod:

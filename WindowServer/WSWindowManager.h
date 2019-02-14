@@ -103,6 +103,7 @@ private:
     Color m_dragging_window_border_color2;
     Color m_dragging_window_title_color;
 
+    HashMap<int, OwnPtr<WSWindow>> m_windows_by_id;
     HashTable<WSWindow*> m_windows;
     InlineLinkedList<WSWindow> m_windows_in_order;
 
@@ -144,8 +145,9 @@ private:
     Lockable<bool> m_flash_flush;
     bool m_buffers_are_flipped { false };
 
-    int m_next_menubar_id = 100;
-    int m_next_menu_id = 900;
+    int m_next_menubar_id { 100 };
+    int m_next_menu_id { 100 };
+    int m_next_window_id { 1982 };
 
     OwnPtr<WSMenu> m_system_menu;
     Color m_menu_selection_color;
