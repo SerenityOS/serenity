@@ -5,7 +5,7 @@
 #include <WindowServer/WSMenuItem.h>
 #include <WindowServer/WSWindow.h>
 #include <WindowServer/WSWindowManager.h>
-#include <Kernel/GUITypes.h>
+#include <WindowServer/WSAPITypes.h>
 #include <Kernel/MemoryManager.h>
 #include <Kernel/Process.h>
 
