@@ -754,7 +754,6 @@ void Process::terminate_due_to_signal(byte signal)
 
 void Process::send_signal(byte signal, Process* sender)
 {
-    ASSERT_INTERRUPTS_DISABLED();
     ASSERT(signal < 32);
 
     if (sender)
@@ -762,6 +761,7 @@ void Process::send_signal(byte signal, Process* sender)
     else
         dbgprintf("signal: kernel sent %d to %s(%u)\n", signal, name().characters(), pid());
 
+    InterruptDisabler disabler;
     m_pending_signals |= 1 << signal;
 }
 
