@@ -26,10 +26,10 @@ Painter::Painter(GraphicsBitmap& bitmap)
 Painter::Painter(GWidget& widget)
     : m_font(&widget.font())
 {
-    GUI_ClientMessage request;
-    request.type = GUI_ClientMessage::Type::GetWindowBackingStore;
+    WSAPI_ClientMessage request;
+    request.type = WSAPI_ClientMessage::Type::GetWindowBackingStore;
     request.window_id = widget.window()->window_id();
-    auto response = GEventLoop::main().sync_request(request, GUI_ServerMessage::DidGetWindowBackingStore);
+    auto response = GEventLoop::main().sync_request(request, WSAPI_ServerMessage::DidGetWindowBackingStore);
     m_backing_store_id = response.backing.backing_store_id;
 
     m_target = GraphicsBitmap::create_wrapper(response.backing.size, response.backing.pixels);
@@ -53,8 +53,8 @@ Painter::~Painter()
 #ifdef USERLAND
     m_target = nullptr;
     if (m_backing_store_id) {
-        GUI_ClientMessage request;
-        request.type = GUI_ClientMessage::Type::ReleaseWindowBackingStore;
+        WSAPI_ClientMessage request;
+        request.type = WSAPI_ClientMessage::Type::ReleaseWindowBackingStore;
         request.backing.backing_store_id = m_backing_store_id;
         GEventLoop::main().post_message_to_server(request);
     }

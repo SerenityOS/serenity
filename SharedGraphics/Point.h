@@ -3,13 +3,13 @@
 #include <AK/AKString.h>
 
 class Rect;
-struct GUI_Point;
+struct WSAPI_Point;
 
 class Point {
 public:
     Point() { }
     Point(int x, int y) : m_x(x) , m_y(y) { }
-    Point(const GUI_Point&);
+    Point(const WSAPI_Point&);
 
     int x() const { return m_x; }
     int y() const { return m_y; }
@@ -48,7 +48,7 @@ public:
         return !(*this == other);
     }
 
-    operator GUI_Point() const;
+    operator WSAPI_Point() const;
     String to_string() const { return String::format("[%d,%d]", x(), y()); }
 
 private:

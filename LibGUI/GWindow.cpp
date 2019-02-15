@@ -55,14 +55,14 @@ void GWindow::show()
     if (m_window_id)
         return;
 
-    GUI_ClientMessage request;
-    request.type = GUI_ClientMessage::Type::CreateWindow;
+    WSAPI_ClientMessage request;
+    request.type = WSAPI_ClientMessage::Type::CreateWindow;
     request.window_id = m_window_id;
     request.window.rect = m_rect_when_windowless;
     ASSERT(m_title_when_windowless.length() < sizeof(request.text));
     strcpy(request.text, m_title_when_windowless.characters());
     request.text_length = m_title_when_windowless.length();
-    auto response = GEventLoop::main().sync_request(request, GUI_ServerMessage::Type::DidCreateWindow);
+    auto response = GEventLoop::main().sync_request(request, WSAPI_ServerMessage::Type::DidCreateWindow);
     m_window_id = response.window_id;
 
     windows().set(m_window_id, this);
@@ -74,8 +74,8 @@ void GWindow::hide()
     if (!m_window_id)
         return;
     windows().remove(m_window_id);
-    GUI_ClientMessage request;
-    request.type = GUI_ClientMessage::Type::DestroyWindow;
+    WSAPI_ClientMessage request;
+    request.type = WSAPI_ClientMessage::Type::DestroyWindow;
     request.window_id = m_window_id;
     ASSERT(m_title_when_windowless.length() < sizeof(request.text));
     strcpy(request.text, m_title_when_windowless.characters());
@@ -89,8 +89,8 @@ void GWindow::set_title(String&& title)
     if (!m_window_id)
         return;
 
-    GUI_ClientMessage request;
-    request.type = GUI_ClientMessage::Type::SetWindowTitle;
+    WSAPI_ClientMessage request;
+    request.type = WSAPI_ClientMessage::Type::SetWindowTitle;
     request.window_id = m_window_id;
     ASSERT(m_title_when_windowless.length() < sizeof(request.text));
     strcpy(request.text, m_title_when_windowless.characters());
@@ -103,13 +103,13 @@ String GWindow::title() const
     if (!m_window_id)
         return m_title_when_windowless;
 
-    GUI_ClientMessage request;
-    request.type = GUI_ClientMessage::Type::GetWindowTitle;
+    WSAPI_ClientMessage request;
+    request.type = WSAPI_ClientMessage::Type::GetWindowTitle;
     request.window_id = m_window_id;
     ASSERT(m_title_when_windowless.length() < sizeof(request.text));
     strcpy(request.text, m_title_when_windowless.characters());
     request.text_length = m_title_when_windowless.length();
-    auto response = GEventLoop::main().sync_request(request, GUI_ServerMessage::Type::DidGetWindowTitle);
+    auto response = GEventLoop::main().sync_request(request, WSAPI_ServerMessage::Type::DidGetWindowTitle);
     return String(response.text, response.text_length);
 }
 
@@ -118,10 +118,10 @@ Rect GWindow::rect() const
     if (!m_window_id)
         return m_rect_when_windowless;
 
-    GUI_ClientMessage request;
-    request.type = GUI_ClientMessage::Type::GetWindowRect;
+    WSAPI_ClientMessage request;
+    request.type = WSAPI_ClientMessage::Type::GetWindowRect;
     request.window_id = m_window_id;
-    auto response = GEventLoop::main().sync_request(request, GUI_ServerMessage::Type::DidGetWindowRect);
+    auto response = GEventLoop::main().sync_request(request, WSAPI_ServerMessage::Type::DidGetWindowRect);
     ASSERT(response.window_id == m_window_id);
     return response.window.rect;
 }
@@ -131,8 +131,8 @@ void GWindow::set_rect(const Rect& a_rect)
     m_rect_when_windowless = a_rect;
     if (!m_window_id)
         return;
-    GUI_ClientMessage request;
-    request.type = GUI_ClientMessage::Type::SetWindowRect;
+    WSAPI_ClientMessage request;
+    request.type = WSAPI_ClientMessage::Type::SetWindowRect;
     request.window_id = m_window_id;
     request.window.rect = a_rect;
     GEventLoop::main().post_message_to_server(request);
@@ -170,8 +170,8 @@ void GWindow::event(GEvent& event)
             rect = m_main_widget->rect();
         m_main_widget->event(*make<GPaintEvent>(rect));
         if (m_window_id) {
-            GUI_ClientMessage message;
-            message.type = GUI_ClientMessage::Type::DidFinishPainting;
+            WSAPI_ClientMessage message;
+            message.type = WSAPI_ClientMessage::Type::DidFinishPainting;
             message.window_id = m_window_id;
             message.window.rect = rect;
             GEventLoop::main().post_message_to_server(message);
@@ -223,8 +223,8 @@ void GWindow::update(const Rect& a_rect)
     }
     m_pending_paint_event_rects.append(a_rect);
 
-    GUI_ClientMessage request;
-    request.type = GUI_ClientMessage::Type::InvalidateRect;
+    WSAPI_ClientMessage request;
+    request.type = WSAPI_ClientMessage::Type::InvalidateRect;
     request.window_id = m_window_id;
     request.window.rect = a_rect;
     GEventLoop::main().post_message_to_server(request);
@@ -272,8 +272,8 @@ void GWindow::set_global_cursor_tracking_widget(GWidget* widget)
         return;
     m_global_cursor_tracking_widget = widget ? widget->make_weak_ptr() : nullptr;
 
-    GUI_ClientMessage request;
-    request.type = GUI_ClientMessage::Type::SetGlobalCursorTracking;
+    WSAPI_ClientMessage request;
+    request.type = WSAPI_ClientMessage::Type::SetGlobalCursorTracking;
     request.window_id = m_window_id;
     request.value = widget != nullptr;
     // FIXME: What if the cursor moves out of our interest range before the server can handle this?

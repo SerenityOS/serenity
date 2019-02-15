@@ -4,7 +4,7 @@
 #include "Size.h"
 #include <AK/AKString.h>
 
-struct GUI_Rect;
+struct WSAPI_Rect;
 
 class Rect {
 public:
@@ -25,7 +25,7 @@ public:
     {
     }
 
-    Rect(const GUI_Rect&);
+    Rect(const WSAPI_Rect&);
 
     bool is_null() const
     {
@@ -170,7 +170,7 @@ public:
     Point location() const { return m_location; }
     Size size() const { return m_size; }
 
-    operator GUI_Rect() const;
+    operator WSAPI_Rect() const;
 
     bool operator==(const Rect& other) const
     {
