@@ -39,6 +39,7 @@ VFS_OBJS = \
     DiskDevice.o \
     Device.o \
     CharacterDevice.o \
+    BlockDevice.o \
     NullDevice.o \
     FullDevice.o \
     ZeroDevice.o \
