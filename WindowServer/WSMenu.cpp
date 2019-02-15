@@ -4,6 +4,7 @@
 #include "WSMessage.h"
 #include "WSMessageLoop.h"
 #include "WSWindowManager.h"
+#include <Kernel/GUITypes.h>
 #include <WindowServer/WSClientConnection.h>
 #include <SharedGraphics/Painter.h>
 #include <SharedGraphics/Font.h>

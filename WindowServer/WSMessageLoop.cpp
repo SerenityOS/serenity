@@ -6,6 +6,7 @@
 #include <WindowServer/WSClientConnection.h>
 #include "PS2MouseDevice.h"
 #include <Kernel/Keyboard.h>
+#include <Kernel/GUITypes.h>
 #include <AK/Bitmap.h>
 #include "Process.h"
 

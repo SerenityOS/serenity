@@ -14,7 +14,6 @@
 #include <Kernel/RandomDevice.h>
 #include <Kernel/Ext2FileSystem.h>
 #include <Kernel/VirtualFileSystem.h>
-#include "GUIEventDevice.h"
 #include "MemoryManager.h"
 #include "ProcFS.h"
 #include "RTC.h"
@@ -41,7 +40,6 @@ VirtualConsole* tty2;
 VirtualConsole* tty3;
 Keyboard* keyboard;
 PS2MouseDevice* ps2mouse;
-GUIEventDevice* gui_event_device;
 NullDevice* dev_null;
 VFS* vfs;
 
@@ -85,7 +83,6 @@ static void init_stage2()
 
     vfs->register_character_device(*keyboard);
     vfs->register_character_device(*ps2mouse);
-    vfs->register_character_device(*gui_event_device);
     vfs->register_character_device(*tty0);
     vfs->register_character_device(*tty1);
     vfs->register_character_device(*tty2);
@@ -157,7 +154,6 @@ void init()
 
     keyboard = new Keyboard;
     ps2mouse = new PS2MouseDevice;
-    gui_event_device = new GUIEventDevice;
     dev_null = new NullDevice;
 
     VirtualConsole::initialize();

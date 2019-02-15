@@ -27,7 +27,6 @@ mknod mnt/dev/full c 1 7
 mknod mnt/dev/keyboard c 85 1
 mknod mnt/dev/psaux c 10 1
 mknod mnt/dev/ptmx c 5 2
-mknod mnt/dev/gui_events c 66 1
 ln -s /proc/self/fd/0 mnt/dev/stdin
 ln -s /proc/self/fd/1 mnt/dev/stdout
 ln -s /proc/self/fd/2 mnt/dev/stderr
