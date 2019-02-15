@@ -5,7 +5,6 @@
 #include "i386.h"
 #include "TTY.h"
 #include "Syscall.h"
-#include "GUITypes.h"
 #include <Kernel/VirtualFileSystem.h>
 #include <Kernel/UnixTypes.h>
 #include <AK/InlineLinkedList.h>
@@ -287,9 +286,6 @@ public:
 
     bool is_root() const { return m_euid == 0; }
 
-    Vector<GUI_ServerMessage>& gui_events() { return m_gui_events; }
-    Lock& gui_events_lock() { return m_gui_events_lock; }
-
     bool wakeup_requested() { return m_wakeup_requested; }
     void request_wakeup() { m_wakeup_requested = true; }
 
@@ -400,9 +396,6 @@ private:
     Region* m_signal_stack_kernel_region { nullptr };
 
     RetainPtr<Region> m_display_framebuffer_region;
-
-    Vector<GUI_ServerMessage> m_gui_events;
-    Lock m_gui_events_lock;
 
     dword m_wakeup_requested { false };
     bool m_has_used_fpu { false };

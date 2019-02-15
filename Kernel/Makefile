@@ -32,7 +32,6 @@ KERNEL_OBJS = \
        BochsVGADevice.o \
        PCI.o \
        PS2MouseDevice.o \
-       GUIEventDevice.o \
        Socket.o \
        LocalSocket.o
 

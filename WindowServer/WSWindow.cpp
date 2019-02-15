@@ -2,6 +2,7 @@
 #include "WSWindowManager.h"
 #include "WSMessage.h"
 #include "WSMessageLoop.h"
+#include <Kernel/GUITypes.h>
 #include <WindowServer/WSClientConnection.h>
 
 WSWindow::WSWindow(WSMenu& menu)
