@@ -37,6 +37,7 @@ KERNEL_OBJS = \
 
 VFS_OBJS = \
     DiskDevice.o \
+    Device.o \
     CharacterDevice.o \
     NullDevice.o \
     FullDevice.o \

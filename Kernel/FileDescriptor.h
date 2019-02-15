@@ -18,7 +18,7 @@ public:
 
     static RetainPtr<FileDescriptor> create(RetainPtr<Socket>&&, SocketRole = SocketRole::None);
     static RetainPtr<FileDescriptor> create(RetainPtr<Inode>&&);
-    static RetainPtr<FileDescriptor> create(RetainPtr<CharacterDevice>&&);
+    static RetainPtr<FileDescriptor> create(RetainPtr<Device>&&);
     static RetainPtr<FileDescriptor> create_pipe_writer(FIFO&);
     static RetainPtr<FileDescriptor> create_pipe_reader(FIFO&);
     ~FileDescriptor();
@@ -44,8 +44,8 @@ public:
     bool is_directory() const;
 
     bool is_character_device() const { return m_device.ptr(); }
-    CharacterDevice* character_device() { return m_device.ptr(); }
-    const CharacterDevice* character_device() const { return m_device.ptr(); }
+    Device* character_device() { return m_device.ptr(); }
+    const Device* character_device() const { return m_device.ptr(); }
 
     bool is_tty() const;
     const TTY* tty() const;
@@ -84,11 +84,11 @@ private:
     friend class VFS;
     FileDescriptor(RetainPtr<Socket>&&, SocketRole);
     explicit FileDescriptor(RetainPtr<Inode>&&);
-    explicit FileDescriptor(RetainPtr<CharacterDevice>&&);
+    explicit FileDescriptor(RetainPtr<Device>&&);
     FileDescriptor(FIFO&, FIFO::Direction);
 
     RetainPtr<Inode> m_inode;
-    RetainPtr<CharacterDevice> m_device;
+    RetainPtr<Device> m_device;
 
     off_t m_current_offset { 0 };
 

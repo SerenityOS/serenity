@@ -122,7 +122,7 @@ void VFS::traverse_directory_inode(Inode& dir_inode, Function<bool(const FS::Dir
     });
 }
 
-RetainPtr<FileDescriptor> VFS::open(RetainPtr<CharacterDevice>&& device, int& error, int options)
+RetainPtr<FileDescriptor> VFS::open(RetainPtr<Device>&& device, int& error, int options)
 {
     // FIXME: Respect options.
     (void) options;
@@ -146,9 +146,9 @@ RetainPtr<FileDescriptor> VFS::open(const String& path, int& error, int options,
         return nullptr;
     auto metadata = inode->metadata();
     if (!(options & O_DONT_OPEN_DEVICE) && metadata.is_character_device()) {
-        auto it = m_character_devices.find(encoded_device(metadata.major_device, metadata.minor_device));
-        if (it == m_character_devices.end()) {
-            kprintf("VFS::open: no such character device %u,%u\n", metadata.major_device, metadata.minor_device);
+        auto it = m_devices.find(encoded_device(metadata.major_device, metadata.minor_device));
+        if (it == m_devices.end()) {
+            kprintf("VFS::open: no such device %u,%u\n", metadata.major_device, metadata.minor_device);
             return nullptr;
         }
         auto descriptor = (*it).value->open(error, options);
@@ -516,20 +516,20 @@ VFS::Mount::Mount(InodeIdentifier host, RetainPtr<FS>&& guest_fs)
 {
 }
 
-void VFS::register_character_device(CharacterDevice& device)
+void VFS::register_device(Device& device)
 {
-    m_character_devices.set(encoded_device(device.major(), device.minor()), &device);
+    m_devices.set(encoded_device(device.major(), device.minor()), &device);
 }
 
-void VFS::unregister_character_device(CharacterDevice& device)
+void VFS::unregister_device(Device& device)
 {
-    m_character_devices.remove(encoded_device(device.major(), device.minor()));
+    m_devices.remove(encoded_device(device.major(), device.minor()));
 }
 
-CharacterDevice* VFS::get_device(unsigned major, unsigned minor)
+Device* VFS::get_device(unsigned major, unsigned minor)
 {
-    auto it = m_character_devices.find(encoded_device(major, minor));
-    if (it == m_character_devices.end())
+    auto it = m_devices.find(encoded_device(major, minor));
+    if (it == m_devices.end())
         return nullptr;
     return (*it).value;
 }
