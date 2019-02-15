@@ -477,9 +477,11 @@ InodeIdentifier VFS::resolve_path(const String& path, InodeIdentifier base, int&
 #endif
             auto mount = find_mount_for_guest(crumb_id);
             auto dir_inode = get_inode(mount->host());
+            ASSERT(dir_inode);
             crumb_id = dir_inode->lookup("..");
         }
         crumb_inode = get_inode(crumb_id);
+        ASSERT(crumb_inode);
         metadata = crumb_inode->metadata();
         if (metadata.is_directory()) {
             if (i != parts.size() - 1) {
