@@ -5,7 +5,7 @@
 #include <AK/HashMap.h>
 #include <AK/OwnPtr.h>
 #include <AK/Vector.h>
-#include <Kernel/GUITypes.h>
+#include <WindowServer/WSAPITypes.h>
 
 class GObject;
 class GNotifier;
