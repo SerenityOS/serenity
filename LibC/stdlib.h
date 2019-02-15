@@ -9,10 +9,10 @@ __BEGIN_DECLS
 #define EXIT_FAILURE 1
 #define MB_CUR_MAX 1
 
-[[gnu::malloc, gnu::returns_nonnull, gnu::alloc_size(1)]] void* malloc(size_t);
-[[gnu::malloc, gnu::returns_nonnull, gnu::alloc_size(1, 2)]] void* calloc(size_t nmemb, size_t);
+[[gnu::malloc, gnu::alloc_size(1)]] void* malloc(size_t);
+[[gnu::malloc, gnu::alloc_size(1, 2)]] void* calloc(size_t nmemb, size_t);
 void free(void*);
-[[gnu::returns_nonnull]] void* realloc(void *ptr, size_t);
+void* realloc(void *ptr, size_t);
 char* getenv(const char* name);
 int atoi(const char*);
 long atol(const char*);
