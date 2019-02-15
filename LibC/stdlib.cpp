@@ -9,6 +9,7 @@
 #include <AK/Assertions.h>
 #include <AK/Types.h>
 #include <Kernel/Syscall.h>
+#include <AK/StdLibExtras.h>
 
 extern "C" {
 
@@ -160,8 +161,11 @@ void* realloc(void *ptr, size_t size)
     validate_mallocation(ptr, "realloc()");
     auto* header = (MallocHeader*)((((byte*)ptr) - sizeof(MallocHeader)));
     size_t old_size = header->size;
+    if (size == old_size)
+        return ptr;
     auto* new_ptr = malloc(size);
-    memcpy(new_ptr, ptr, old_size);
+    memcpy(new_ptr, ptr, min(old_size, size));
+    free(ptr);
     return new_ptr;
 }
 
