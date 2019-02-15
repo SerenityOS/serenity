@@ -40,7 +40,7 @@ int WSMessageLoop::exec()
 
     m_server_process->sys$unlink("/wsportal");
 
-    m_server_fd = m_server_process->sys$socket(AF_LOCAL, SOCK_STREAM, 0);
+    m_server_fd = m_server_process->sys$socket(AF_LOCAL, SOCK_STREAM | SOCK_NONBLOCK, 0);
     ASSERT(m_server_fd >= 0);
     sockaddr_un address;
     address.sun_family = AF_LOCAL;
@@ -244,9 +244,17 @@ void WSMessageLoop::wait_for_message()
     }
     WSClientConnection::for_each_client([&] (WSClientConnection& client) {
         if (bitmap.get(client.fd())) {
-            byte buffer[4096];
-            ssize_t nread = m_server_process->sys$read(client.fd(), buffer, sizeof(WSAPI_ClientMessage));
-            on_receive_from_client(client.client_id(), buffer, nread);
+            for (;;) {
+                WSAPI_ClientMessage message;
+                // FIXME: Don't go one message at a time, that's so much context switching, oof.
+                ssize_t nread = m_server_process->sys$read(client.fd(), &message, sizeof(WSAPI_ClientMessage));
+                if (nread == 0)
+                    break;
+                if (nread < 0) {
+                    ASSERT_NOT_REACHED();
+                }
+                on_receive_from_client(client.client_id(), message);
+            }
         }
     });
 }
@@ -313,18 +321,14 @@ void WSMessageLoop::notify_client_died(int client_id)
     post_message(client, make<WSClientDisconnectedNotification>(client_id));
 }
 
-ssize_t WSMessageLoop::on_receive_from_client(int client_id, const byte* data, size_t size)
+void WSMessageLoop::on_receive_from_client(int client_id, const WSAPI_ClientMessage& message)
 {
     // FIXME: This should not be necessary.. why is this necessary?
     while (!running())
         Scheduler::yield();
 
     LOCKER(m_lock);
-
     WSClientConnection* client = WSClientConnection::ensure_for_client_id(client_id);
-
-    ASSERT(size == sizeof(WSAPI_ClientMessage));
-    auto& message = *reinterpret_cast<const WSAPI_ClientMessage*>(data);
     switch (message.type) {
     case WSAPI_ClientMessage::Type::CreateMenubar:
         post_message(client, make<WSAPICreateMenubarRequest>(client_id));
@@ -386,6 +390,4 @@ ssize_t WSMessageLoop::on_receive_from_client(int client_id, const byte* data, s
         post_message(client, make<WSAPISetGlobalCursorTrackingRequest>(client_id, message.window_id, message.value));
         break;
     }
-    server_process().request_wakeup();
-    return size;
 }
