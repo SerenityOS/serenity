@@ -171,8 +171,8 @@ public:
     int sys$lseek(int fd, off_t, int whence);
     int sys$kill(pid_t pid, int sig);
     int sys$geterror() { return m_error; }
-    void sys$exit(int status) NORETURN;
-    void sys$sigreturn() NORETURN;
+    [[noreturn]] void sys$exit(int status);
+    [[noreturn]] void sys$sigreturn();
     pid_t sys$waitpid(pid_t, int* wstatus, int options);
     void* sys$mmap(const Syscall::SC_mmap_params*);
     int sys$munmap(void*, size_t size);
@@ -230,8 +230,8 @@ public:
 
     static void initialize();
 
-    void crash() NORETURN;
-    static int reap(Process&) WARN_UNUSED_RESULT;
+    [[noreturn]] void crash();
+    [[nodiscard]] static int reap(Process&);
 
     const TTY* tty() const { return m_tty; }
     void set_tty(TTY* tty) { m_tty = tty; }

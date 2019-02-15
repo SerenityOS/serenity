@@ -291,7 +291,7 @@ void Painter::blit(const Point& position, const GraphicsBitmap& source, const Re
     }
 }
 
-FLATTEN void Painter::draw_glyph(const Point& point, char ch, Color color)
+[[gnu::flatten]] void Painter::draw_glyph(const Point& point, char ch, Color color)
 {
     draw_bitmap(point, font().glyph_bitmap(ch), color);
 }
@@ -332,7 +332,7 @@ void Painter::set_pixel(const Point& p, Color color)
     m_target->scanline(point.y())[point.x()] = color.value();
 }
 
-ALWAYS_INLINE void Painter::set_pixel_with_draw_op(dword& pixel, const Color& color)
+[[gnu::always_inline]] void Painter::set_pixel_with_draw_op(dword& pixel, const Color& color)
 {
     if (m_draw_op == DrawOp::Copy)
         pixel = color.value();

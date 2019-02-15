@@ -2,7 +2,7 @@
 
 #include <AK/Types.h>
 
-struct TSS32 {
+struct [[gnu::packed]] TSS32 {
     word backlink, __blh;
     dword esp0;
     word ss0, __ss0h;
@@ -20,4 +20,4 @@ struct TSS32 {
     word gs, __gsh;
     word ldt, __ldth;
     word trace, iomapbase;
-} PACKED;
+};

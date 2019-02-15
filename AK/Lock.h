@@ -44,10 +44,10 @@ private:
 
 class Locker {
 public:
-    ALWAYS_INLINE explicit Locker(Lock& l) : m_lock(l) { lock(); }
-    ALWAYS_INLINE ~Locker() { unlock(); }
-    ALWAYS_INLINE void unlock() { m_lock.unlock(); }
-    ALWAYS_INLINE void lock() { m_lock.lock(); }
+    [[gnu::always_inline]] explicit Locker(Lock& l) : m_lock(l) { lock(); }
+    [[gnu::always_inline]] ~Locker() { unlock(); }
+    [[gnu::always_inline]] void unlock() { m_lock.unlock(); }
+    [[gnu::always_inline]] void lock() { m_lock.lock(); }
 
 private:
     Lock& m_lock;

@@ -1,10 +1,6 @@
 #pragma once
 
-#include <AK/Compiler.h>
 #include <AK/Types.h>
-
-#define PACKED __attribute__ ((packed))
-#define PURE __attribute__ ((pure))
 
 typedef dword __u32;
 typedef word __u16;
@@ -43,10 +39,10 @@ typedef dword nlink_t;
 typedef dword blksize_t;
 typedef dword blkcnt_t;
 
-struct FarPtr {
+struct [[gnu::packed]] FarPtr {
     dword offset { 0 };
     word selector { 0 };
-} PACKED;
+};
 
 class PhysicalAddress {
 public:

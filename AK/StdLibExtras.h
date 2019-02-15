@@ -11,7 +11,7 @@
 
 void* mmx_memcpy(void* to, const void* from, size_t);
 
-ALWAYS_INLINE void fast_dword_copy(dword* dest, const dword* src, size_t count)
+[[gnu::always_inline]] inline void fast_dword_copy(dword* dest, const dword* src, size_t count)
 {
     if (count >= 256) {
         mmx_memcpy(dest, src, count * sizeof(count));
@@ -25,7 +25,7 @@ ALWAYS_INLINE void fast_dword_copy(dword* dest, const dword* src, size_t count)
     );
 }
 
-ALWAYS_INLINE void fast_dword_fill(dword* dest, dword value, size_t count)
+[[gnu::always_inline]] inline void fast_dword_fill(dword* dest, dword value, size_t count)
 {
     asm volatile(
         "rep stosl\n"

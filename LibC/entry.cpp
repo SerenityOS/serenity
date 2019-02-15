@@ -3,15 +3,17 @@
 #include <Kernel/Syscall.h>
 #include <AK/StringImpl.h>
 
-extern "C" int main(int, char**);
+extern "C" {
+
+int main(int, char**);
 
 int errno;
 char** environ;
 
-extern "C" void __malloc_init();
-extern "C" void __stdio_init();
+void __malloc_init();
+void __stdio_init();
 
-extern "C" int _start()
+int _start()
 {
     errno = 0;
 
@@ -39,8 +41,9 @@ epilogue:
     return 20150614;
 }
 
-extern "C" void __cxa_pure_virtual() NORETURN;
-extern "C" void __cxa_pure_virtual()
+[[noreturn]] void __cxa_pure_virtual()
 {
     ASSERT_NOT_REACHED();
+}
+
 }

@@ -481,27 +481,26 @@ void Terminal::on_char(byte ch)
             return;
         }
         m_escape_state = ExpectXtermFinal;
-        // fall through
+        [[fallthrough]];
     case ExpectXtermFinal:
         m_escape_state = Normal;
         if (ch == '\007')
             execute_xterm_command();
         return;
-
     case ExpectParameter:
         if (is_valid_parameter_character(ch)) {
             m_parameters.append(ch);
             return;
         }
         m_escape_state = ExpectIntermediate;
-        // fall through
+        [[fallthrough]];
     case ExpectIntermediate:
         if (is_valid_intermediate_character(ch)) {
             m_intermediates.append(ch);
             return;
         }
         m_escape_state = ExpectFinal;
-        // fall through
+        [[fallthrough]];
     case ExpectFinal:
         if (is_valid_final_character(ch)) {
             m_escape_state = Normal;

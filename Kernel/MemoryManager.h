@@ -217,7 +217,7 @@ class MemoryManager {
     friend class VMObject;
     friend ByteBuffer procfs$mm(InodeIdentifier);
 public:
-    static MemoryManager& the() PURE;
+    [[gnu::pure]] static MemoryManager& the();
 
     static void initialize();
 

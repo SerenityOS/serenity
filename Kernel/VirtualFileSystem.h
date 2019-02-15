@@ -54,7 +54,7 @@ public:
         RetainPtr<FS> m_guest_fs;
     };
 
-    static VFS& the() PURE;
+    [[gnu::pure]] static VFS& the();
 
     VFS();
     ~VFS();

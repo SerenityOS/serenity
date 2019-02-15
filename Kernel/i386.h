@@ -6,7 +6,7 @@
 #define PAGE_SIZE 4096
 #define PAGE_MASK 0xfffff000
 
-union Descriptor {
+union [[gnu::packed]] Descriptor {
     struct {
         word limit_lo;
         word base_lo;
@@ -55,7 +55,7 @@ union Descriptor {
         limit_lo = (dword)l & 0xffff;
         limit_hi = ((dword)l >> 16) & 0xff;
     }
-} PACKED;
+};
 
 class IRQHandler;
 
@@ -73,7 +73,12 @@ void gdt_free_entry(word);
 Descriptor& get_gdt_entry(word selector);
 void write_gdt_entry(word selector, Descriptor&);
 
-#define HANG asm volatile( "cli; hlt" );
+[[noreturn]] static inline void hang()
+{
+    asm volatile("cli; hlt");
+    for (;;) { }
+}
+
 #define LSW(x) ((dword)(x) & 0xFFFF)
 #define MSW(x) (((dword)(x) >> 16) & 0xFFFF)
 #define LSB(x) ((x) & 0xFF)
@@ -182,7 +187,7 @@ private:
     LinearAddress m_laddr;
 };
 
-struct RegisterDump {
+struct [[gnu::packed]] RegisterDump {
     word ss;
     word gs;
     word fs;
@@ -202,9 +207,9 @@ struct RegisterDump {
     dword eflags;
     dword esp_if_crossRing;
     word ss_if_crossRing;
-} PACKED;
+};
 
-struct RegisterDumpWithExceptionCode {
+struct [[gnu::packed]] RegisterDumpWithExceptionCode {
     word ss;
     word gs;
     word fs;
@@ -226,7 +231,7 @@ struct RegisterDumpWithExceptionCode {
     dword eflags;
     dword esp_if_crossRing;
     word ss_if_crossRing;
-} PACKED;
+};
 
 struct FPUState {
     dword cwd;
