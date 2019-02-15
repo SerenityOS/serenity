@@ -9,6 +9,7 @@
 
 class WSMessageReceiver;
 class Process;
+struct WSAPI_ClientMessage;
 struct WSAPI_ServerMessage;
 
 class WSMessageLoop {
@@ -31,7 +32,7 @@ public:
     int stop_timer(int timer_id);
 
     void post_message_to_client(int client_id, const WSAPI_ServerMessage&);
-    ssize_t on_receive_from_client(int client_id, const byte*, size_t);
+    void on_receive_from_client(int client_id, const WSAPI_ClientMessage&);
 
     static Process* process_from_client_id(int client_id);
     void notify_client_died(int client_id);

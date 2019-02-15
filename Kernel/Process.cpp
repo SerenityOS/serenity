@@ -2304,7 +2304,7 @@ int Process::sys$listen(int sockfd, int backlog)
     return 0;
 }
 
-int Process::sys$accept(int sockfd, sockaddr* address, socklen_t* address_size)
+int Process::sys$accept(int accepting_socket_fd, sockaddr* address, socklen_t* address_size)
 {
     if (!validate_write_typed(address_size))
         return -EFAULT;
@@ -2312,28 +2312,31 @@ int Process::sys$accept(int sockfd, sockaddr* address, socklen_t* address_size)
         return -EFAULT;
     if (number_of_open_file_descriptors() >= m_max_open_file_descriptors)
         return -EMFILE;
-    int fd = 0;
-    for (; fd < (int)m_max_open_file_descriptors; ++fd) {
-        if (!m_fds[fd])
+    int accepted_socket_fd = 0;
+    for (; accepted_socket_fd < (int)m_max_open_file_descriptors; ++accepted_socket_fd) {
+        if (!m_fds[accepted_socket_fd])
             break;
     }
-    auto* descriptor = file_descriptor(sockfd);
-    if (!descriptor)
+    auto* accepting_socket_descriptor = file_descriptor(accepting_socket_fd);
+    if (!accepting_socket_descriptor)
         return -EBADF;
-    if (!descriptor->is_socket())
+    if (!accepting_socket_descriptor->is_socket())
         return -ENOTSOCK;
-    auto& socket = *descriptor->socket();
+    auto& socket = *accepting_socket_descriptor->socket();
     if (!socket.can_accept()) {
-        ASSERT(!descriptor->is_blocking());
+        ASSERT(!accepting_socket_descriptor->is_blocking());
         return -EAGAIN;
     }
-    auto client = socket.accept();
-    ASSERT(client);
-    bool success = client->get_address(address, address_size);
+    auto accepted_socket = socket.accept();
+    ASSERT(accepted_socket);
+    bool success = accepted_socket->get_address(address, address_size);
     ASSERT(success);
-    auto client_descriptor = FileDescriptor::create(move(client), SocketRole::Accepted);
-    m_fds[fd].set(move(client_descriptor));
-    return fd;
+    auto accepted_socket_descriptor = FileDescriptor::create(move(accepted_socket), SocketRole::Accepted);
+    // NOTE: The accepted socket inherits fd flags from the accepting socket.
+    //       I'm not sure if this matches other systems but it makes sense to me.
+    accepted_socket_descriptor->set_blocking(accepting_socket_descriptor->is_blocking());
+    m_fds[accepted_socket_fd].set(move(accepted_socket_descriptor), m_fds[accepting_socket_fd].flags);
+    return accepted_socket_fd;
 }
 
 int Process::sys$connect(int sockfd, const sockaddr* address, socklen_t address_size)
