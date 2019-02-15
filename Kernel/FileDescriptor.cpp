@@ -14,7 +14,7 @@ RetainPtr<FileDescriptor> FileDescriptor::create(RetainPtr<Inode>&& inode)
     return adopt(*new FileDescriptor(move(inode)));
 }
 
-RetainPtr<FileDescriptor> FileDescriptor::create(RetainPtr<CharacterDevice>&& device)
+RetainPtr<FileDescriptor> FileDescriptor::create(RetainPtr<Device>&& device)
 {
     return adopt(*new FileDescriptor(move(device)));
 }
@@ -39,7 +39,7 @@ FileDescriptor::FileDescriptor(RetainPtr<Inode>&& inode)
 {
 }
 
-FileDescriptor::FileDescriptor(RetainPtr<CharacterDevice>&& device)
+FileDescriptor::FileDescriptor(RetainPtr<Device>&& device)
     : m_device(move(device))
 {
 }

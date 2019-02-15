@@ -26,7 +26,7 @@
 #define O_NOFOLLOW_NOERROR 0x4000000
 #define O_DONT_OPEN_DEVICE 0x8000000
 
-class CharacterDevice;
+class Device;
 class FileDescriptor;
 
 inline constexpr dword encoded_device(unsigned major, unsigned minor)
@@ -62,7 +62,7 @@ public:
     bool mount_root(RetainPtr<FS>&&);
     bool mount(RetainPtr<FS>&&, const String& path);
 
-    RetainPtr<FileDescriptor> open(RetainPtr<CharacterDevice>&&, int& error, int options);
+    RetainPtr<FileDescriptor> open(RetainPtr<Device>&&, int& error, int options);
     RetainPtr<FileDescriptor> open(const String& path, int& error, int options, mode_t mode, Inode& base);
     RetainPtr<FileDescriptor> create(const String& path, int& error, int options, mode_t mode, Inode& base);
     bool mkdir(const String& path, mode_t mode, Inode& base, int& error);
@@ -70,8 +70,8 @@ public:
     bool rmdir(const String& path, Inode& base, int& error);
     bool chmod(const String& path, mode_t, Inode& base, int& error);
 
-    void register_character_device(CharacterDevice&);
-    void unregister_character_device(CharacterDevice&);
+    void register_device(Device&);
+    void unregister_device(Device&);
 
     size_t mount_count() const { return m_mounts.size(); }
     void for_each_mount(Function<void(const Mount&)>) const;
@@ -85,7 +85,7 @@ public:
 
     void sync();
 
-    CharacterDevice* get_device(unsigned major, unsigned minor);
+    Device* get_device(unsigned major, unsigned minor);
 
 private:
     friend class FileDescriptor;
@@ -103,6 +103,6 @@ private:
 
     RetainPtr<Inode> m_root_inode;
     Vector<OwnPtr<Mount>> m_mounts;
-    HashMap<dword, CharacterDevice*> m_character_devices;
+    HashMap<dword, Device*> m_devices;
 };
 
