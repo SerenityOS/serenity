@@ -8,7 +8,7 @@ struct KSym {
     const char* name;
 };
 
-const KSym* ksymbolicate(dword address) PURE;
+const KSym* ksymbolicate(dword address);
 void load_ksyms();
 void init_ksyms();
 

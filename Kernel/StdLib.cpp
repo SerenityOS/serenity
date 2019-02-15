@@ -125,8 +125,7 @@ int memcmp(const void* v1, const void* v2, size_t n)
     return 0;
 }
 
-void __cxa_pure_virtual() NORETURN;
-void __cxa_pure_virtual()
+[[noreturn]] void __cxa_pure_virtual()
 {
     ASSERT_NOT_REACHED();
 }

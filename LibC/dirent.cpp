@@ -35,7 +35,7 @@ int closedir(DIR* dirp)
     return rc;
 }
 
-struct sys_dirent {
+struct [[gnu::packed]] sys_dirent {
     ino_t ino;
     byte file_type;
     size_t namelen;
@@ -44,7 +44,7 @@ struct sys_dirent {
     {
         return sizeof(ino_t) + sizeof(byte) + sizeof(size_t) + sizeof(char) * namelen;
     }
-} __attribute__ ((packed));
+};
 
 dirent* readdir(DIR* dirp)
 {

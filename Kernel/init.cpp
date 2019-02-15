@@ -44,8 +44,7 @@ NullDevice* dev_null;
 VFS* vfs;
 
 #ifdef STRESS_TEST_SPAWNING
-static void spawn_stress() NORETURN;
-static void spawn_stress()
+[[noreturn]] static void spawn_stress()
 {
     dword last_sum_alloc = sum_alloc;
 
@@ -62,8 +61,7 @@ static void spawn_stress()
 }
 #endif
 
-static void init_stage2() NORETURN;
-static void init_stage2()
+[[noreturn]] static void init_stage2()
 {
     Syscall::initialize();
 
@@ -135,8 +133,7 @@ static void init_stage2()
     ASSERT_NOT_REACHED();
 }
 
-void init() NORETURN;
-void init()
+[[noreturn]] void init()
 {
     cli();
 

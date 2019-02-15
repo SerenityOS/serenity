@@ -29,7 +29,7 @@ public:
         bool is_press() const { return flags & Is_Press; }
     };
 
-    static Keyboard& the() PURE;
+    [[gnu::pure]] static Keyboard& the();
 
     virtual ~Keyboard() override;
     Keyboard();

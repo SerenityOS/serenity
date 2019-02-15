@@ -1,7 +1,5 @@
 #pragma once
 
-#include "Compiler.h"
-
 #if defined(SERENITY) && defined(KERNEL)
 #define AK_MAKE_ETERNAL \
 public: \
@@ -18,11 +16,10 @@ private:
 
 extern "C" {
 
-void* kcalloc(size_t nmemb, size_t size);
-void* kmalloc(size_t size) MALLOC_ATTR;
+[[gnu::malloc, gnu::returns_nonnull]] void* kmalloc(size_t size);
+[[gnu::malloc, gnu::returns_nonnull]] void* kmalloc_eternal(size_t);
+[[gnu::returns_nonnull]] void* krealloc(void* ptr, size_t size);
 void kfree(void* ptr);
-void* krealloc(void* ptr, size_t size);
-void* kmalloc_eternal(size_t) MALLOC_ATTR;
 
 }
 

@@ -74,11 +74,11 @@ static void load_ksyms_from_data(const ByteBuffer& buffer)
 void dump_backtrace(bool use_ksyms)
 {
     if (!current) {
-        HANG;
+        hang();
         return;
     }
     if (use_ksyms && !ksyms_ready) {
-        HANG;
+        hang();
         return;
     }
     struct RecognizedSymbol {

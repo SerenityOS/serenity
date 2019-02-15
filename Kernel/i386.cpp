@@ -10,10 +10,10 @@
 
 //#define PAGE_FAULT_DEBUG
 
-struct DescriptorTablePointer {
+struct [[gnu::packed]] DescriptorTablePointer {
     word size;
     void* address;
-} PACKED;
+};
 
 static DescriptorTablePointer s_idtr;
 static DescriptorTablePointer s_gdtr;
@@ -144,9 +144,9 @@ void exception_6_handler(RegisterDump& regs)
 
     if (current->is_ring0()) {
         kprintf("Oh shit, we've crashed in ring 0 :(\n");
-        HANG;
+        hang();
     }
-    HANG;
+    hang();
 
     current->crash();
 }
@@ -219,7 +219,7 @@ void exception_13_handler(RegisterDumpWithExceptionCode& regs)
 
     if (current->is_ring0()) {
         kprintf("Oh shit, we've crashed in ring 0 :(\n");
-        HANG;
+        hang();
     }
 
     current->crash();
@@ -313,7 +313,7 @@ void exception_14_handler(RegisterDumpWithExceptionCode& regs)
         asm ("movl %%cr3, %%eax":"=a"(cr3)); \
         asm ("movl %%cr4, %%eax":"=a"(cr4)); \
         kprintf("CR0=%x CR2=%x CR3=%x CR4=%x\n", cr0, cr2, cr3, cr4); \
-        HANG; \
+        hang(); \
     }
 
 EH(0, "Divide error")
@@ -385,7 +385,7 @@ void gdt_init()
 static void unimp_trap()
 {
     kprintf("Unhandled IRQ.");
-    HANG;
+    hang();
 }
 
 void register_irq_handler(byte irq, IRQHandler& handler)

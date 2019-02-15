@@ -1,7 +1,6 @@
 #pragma once
 
 #include <AK/CircularQueue.h>
-#include <AK/Compiler.h>
 #include <AK/Vector.h>
 #include <Kernel/CharacterDevice.h>
 
@@ -14,7 +13,7 @@ public:
 class Console final : public CharacterDevice {
     AK_MAKE_ETERNAL
 public:
-    static Console& the() PURE;
+    static Console& the();
 
     Console();
     virtual ~Console() override;

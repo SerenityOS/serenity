@@ -14,11 +14,10 @@
 
 #define SANITIZE_KMALLOC
 
-typedef struct
-{
+struct [[gnu::packed]] allocation_t {
     dword start;
     dword nchunk;
-} PACKED allocation_t;
+};
 
 #define CHUNK_SIZE  128
 #define POOL_SIZE   (1024 * 1024)
@@ -103,8 +102,7 @@ void* kmalloc_impl(dword size)
 
     if (sum_free < real_size) {
         kprintf("%s<%u> kmalloc(): PANIC! Out of memory (sucks, dude)\nsum_free=%u, real_size=%x\n", current->name().characters(), current->pid(), sum_free, real_size);
-        HANG;
-        return 0L;
+        hang();
     }
 
     chunks_needed = real_size / CHUNK_SIZE;
@@ -164,9 +162,7 @@ void* kmalloc_impl(dword size)
     }
 
     kprintf("%s<%u> kmalloc(): PANIC! Out of memory (no suitable block for size %u)\n", current->name().characters(), current->pid(), size);
-    HANG;
-
-    return nullptr;
+    hang();
 }
 
 void kfree(void *ptr)

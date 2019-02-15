@@ -3,7 +3,7 @@
 #include "kprintf.h"
 #include "i386.h"
 
-void __assertion_failed(const char* msg, const char* file, unsigned line, const char* func) NORETURN;
+[[noreturn]] void __assertion_failed(const char* msg, const char* file, unsigned line, const char* func);
 
 #define ASSERT(expr) (static_cast<bool>(expr) ? (void)0 : __assertion_failed(#expr, __FILE__, __LINE__, __PRETTY_FUNCTION__))
 #define CRASH() do { asm volatile("ud2"); } while(0)

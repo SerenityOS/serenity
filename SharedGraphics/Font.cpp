@@ -36,14 +36,14 @@ static constexpr const char* error_glyph {
 static Font* s_default_font;
 static Font* s_default_bold_font;
 
-struct FontFileHeader {
+struct [[gnu::packed]] FontFileHeader {
     char magic[4];
     byte glyph_width;
     byte glyph_height;
     byte type;
     byte unused[7];
     char name[64];
-} PACKED;
+};
 
 static inline constexpr size_t font_file_size(unsigned glyph_height)
 {
