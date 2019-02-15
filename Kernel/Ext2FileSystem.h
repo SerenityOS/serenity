@@ -92,6 +92,7 @@ private:
     unsigned allocate_inode(unsigned preferredGroup, unsigned expectedSize);
     Vector<BlockIndex> allocate_blocks(unsigned group, unsigned count);
     unsigned group_index_from_inode(unsigned) const;
+    GroupIndex group_index_from_block_index(BlockIndex) const;
 
     Vector<unsigned> block_list_for_inode(const ext2_inode&, bool include_block_list_blocks = false) const;
     bool write_block_list_for_inode(InodeIndex, ext2_inode&, const Vector<BlockIndex>&);
@@ -106,7 +107,7 @@ private:
     bool write_directory_inode(unsigned directoryInode, Vector<DirectoryEntry>&&);
     bool get_inode_allocation_state(InodeIndex) const;
     bool set_inode_allocation_state(unsigned inode, bool);
-    bool set_block_allocation_state(GroupIndex, BlockIndex, bool);
+    bool set_block_allocation_state(BlockIndex, bool);
 
     void uncache_inode(InodeIndex);
     void free_inode(Ext2FSInode&);

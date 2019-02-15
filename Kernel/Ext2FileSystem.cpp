@@ -190,8 +190,8 @@ bool Ext2FS::write_block_list_for_inode(InodeIndex inode_index, ext2_inode& e2in
     Vector<BlockIndex> new_meta_blocks;
     if (new_shape.meta_blocks > old_shape.meta_blocks) {
         new_meta_blocks = allocate_blocks(group_index_from_inode(inode_index), new_shape.meta_blocks - old_shape.meta_blocks);
-        for (auto bi : new_meta_blocks)
-            set_block_allocation_state(group_index_from_inode(inode_index), bi, true);
+        for (auto block_index : new_meta_blocks)
+            set_block_allocation_state(block_index, true);
     }
 
     e2inode.i_blocks = (blocks.size() + new_shape.meta_blocks) * (block_size() / 512);
@@ -311,9 +311,8 @@ void Ext2FS::free_inode(Ext2FSInode& inode)
 
     auto block_list = block_list_for_inode(inode.m_raw_inode, true);
 
-    auto group_index = group_index_from_inode(inode.index());
     for (auto block_index : block_list)
-        set_block_allocation_state(group_index, block_index, false);
+        set_block_allocation_state(block_index, false);
 
     set_inode_allocation_state(inode.index(), false);
 
@@ -497,7 +496,7 @@ ssize_t Ext2FSInode::write_bytes(off_t offset, size_t count, const byte* data, F
     if (blocks_needed_after > blocks_needed_before) {
         auto new_blocks = fs().allocate_blocks(fs().group_index_from_inode(index()), blocks_needed_after - blocks_needed_before);
         for (auto new_block_index : new_blocks)
-            fs().set_block_allocation_state(fs().group_index_from_inode(index()), new_block_index, true);
+            fs().set_block_allocation_state(new_block_index, true);
         block_list.append(move(new_blocks));
     } else if (blocks_needed_after < blocks_needed_before) {
         // FIXME: Implement block list shrinking!
@@ -787,36 +786,40 @@ void Ext2FS::dump_inode_bitmap(unsigned groupIndex) const
 }
 
 template<typename F>
-void Ext2FS::traverse_inode_bitmap(unsigned groupIndex, F callback) const
+void Ext2FS::traverse_inode_bitmap(unsigned group_index, F callback) const
 {
-    ASSERT(groupIndex <= m_block_group_count);
-    auto& bgd = group_descriptor(groupIndex);
+    ASSERT(group_index <= m_block_group_count);
+    auto& bgd = group_descriptor(group_index);
 
     unsigned inodes_in_group = min(inodes_per_group(), super_block().s_inodes_count);
     unsigned block_count = ceil_div(inodes_in_group, 8u);
+    unsigned first_inode_in_group = (group_index - 1) * inodes_per_group();
+    unsigned bits_per_block = block_size() * 8;
 
     for (unsigned i = 0; i < block_count; ++i) {
         auto block = read_block(bgd.bg_inode_bitmap + i);
         ASSERT(block);
-        bool should_continue = callback(i * (block_size() / 8) + 1, Bitmap::wrap(block.pointer(), inodes_in_group));
+        bool should_continue = callback(first_inode_in_group + i * (i * bits_per_block) + 1, Bitmap::wrap(block.pointer(), inodes_in_group));
         if (!should_continue)
             break;
     }
 }
 
 template<typename F>
-void Ext2FS::traverse_block_bitmap(unsigned groupIndex, F callback) const
+void Ext2FS::traverse_block_bitmap(unsigned group_index, F callback) const
 {
-    ASSERT(groupIndex <= m_block_group_count);
-    auto& bgd = group_descriptor(groupIndex);
+    ASSERT(group_index <= m_block_group_count);
+    auto& bgd = group_descriptor(group_index);
 
     unsigned blocks_in_group = min(blocks_per_group(), super_block().s_blocks_count);
     unsigned block_count = ceil_div(blocks_in_group, 8u);
+    unsigned first_block_in_group = (group_index - 1) * blocks_per_group();
+    unsigned bits_per_block = block_size() * 8;
 
     for (unsigned i = 0; i < block_count; ++i) {
         auto block = read_block(bgd.bg_block_bitmap + i);
         ASSERT(block);
-        bool should_continue = callback(i * (block_size() / 8) + 1, Bitmap::wrap(block.pointer(), blocks_in_group));
+        bool should_continue = callback(first_block_in_group + (i * bits_per_block) + 1, Bitmap::wrap(block.pointer(), blocks_in_group));
         if (!should_continue)
             break;
     }
@@ -917,9 +920,18 @@ unsigned Ext2FS::allocate_inode(unsigned preferred_group, unsigned expected_size
     unsigned inode = firstFreeInodeInGroup;
     dbgprintf("Ext2FS: found suitable inode %u\n", inode);
 
+    ASSERT(get_inode_allocation_state(inode) == false);
+
     // FIXME: allocate blocks if needed!
 
     return inode;
+}
+
+Ext2FS::GroupIndex Ext2FS::group_index_from_block_index(BlockIndex block_index) const
+{
+    if (!block_index)
+        return 0;
+    return (block_index - 1) / blocks_per_group() + 1;
 }
 
 unsigned Ext2FS::group_index_from_inode(unsigned inode) const
@@ -987,22 +999,25 @@ bool Ext2FS::set_inode_allocation_state(unsigned index, bool newState)
     return true;
 }
 
-bool Ext2FS::set_block_allocation_state(GroupIndex group, BlockIndex bi, bool new_state)
+bool Ext2FS::set_block_allocation_state(BlockIndex block_index, bool new_state)
 {
-    dbgprintf("Ext2FS: set_block_allocation_state(group=%u, block=%u, state=%u)\n", group, bi, new_state);
-    auto& bgd = group_descriptor(group);
-
-    BlockIndex index_in_group = bi - ((group - 1) * blocks_per_group());
-
-    // Update block bitmap
+    dbgprintf("Ext2FS: set_block_allocation_state(block=%u, state=%u)\n", block_index, new_state);
+    unsigned group_index = group_index_from_block_index(block_index);
+    auto& bgd = group_descriptor(group_index);
+    BlockIndex index_in_group = block_index - ((group_index - 1) * blocks_per_group());
     unsigned blocks_per_bitmap_block = block_size() * 8;
     unsigned bitmap_block_index = (index_in_group - 1) / blocks_per_bitmap_block;
     unsigned bit_index = (index_in_group - 1) % blocks_per_bitmap_block;
+    dbgprintf("  index_in_group: %u\n", index_in_group);
+    dbgprintf("  blocks_per_bitmap_block: %u\n", blocks_per_bitmap_block);
+    dbgprintf("  bitmap_block_index: %u\n", bitmap_block_index);
+    dbgprintf("  bit_index: %u\n", bit_index);
+    dbgprintf("  read_block(%u + %u = %u)\n", bgd.bg_block_bitmap, bitmap_block_index, bgd.bg_block_bitmap + bitmap_block_index);
     auto block = read_block(bgd.bg_block_bitmap + bitmap_block_index);
     ASSERT(block);
     auto bitmap = Bitmap::wrap(block.pointer(), blocks_per_bitmap_block);
     bool current_state = bitmap.get(bit_index);
-    dbgprintf("Ext2FS:      block %u state: %u -> %u\n", bi, current_state, new_state);
+    dbgprintf("Ext2FS:      block %u state: %u -> %u\n", block_index, current_state, new_state);
 
     if (current_state == new_state)
         return true;
@@ -1119,8 +1134,8 @@ RetainPtr<Inode> Ext2FS::create_inode(InodeIdentifier parent_id, const String& n
     success = set_inode_allocation_state(inode_id, true);
     ASSERT(success);
 
-    for (auto bi : blocks) {
-        success = set_block_allocation_state(group_index_from_inode(inode_id), bi, true);
+    for (auto block_index : blocks) {
+        success = set_block_allocation_state(block_index, true);
         ASSERT(success);
     }
 
