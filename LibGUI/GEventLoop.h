@@ -34,20 +34,20 @@ public:
 
     void exit(int);
 
-    bool post_message_to_server(const GUI_ClientMessage&);
-    bool wait_for_specific_event(GUI_ServerMessage::Type, GUI_ServerMessage&);
+    bool post_message_to_server(const WSAPI_ClientMessage&);
+    bool wait_for_specific_event(WSAPI_ServerMessage::Type, WSAPI_ServerMessage&);
 
-    GUI_ServerMessage sync_request(const GUI_ClientMessage& request, GUI_ServerMessage::Type response_type);
+    WSAPI_ServerMessage sync_request(const WSAPI_ClientMessage& request, WSAPI_ServerMessage::Type response_type);
 
 private:
     void wait_for_event();
     bool drain_messages_from_server();
-    void handle_paint_event(const GUI_ServerMessage&, GWindow&);
-    void handle_mouse_event(const GUI_ServerMessage&, GWindow&);
-    void handle_key_event(const GUI_ServerMessage&, GWindow&);
-    void handle_window_activation_event(const GUI_ServerMessage&, GWindow&);
-    void handle_window_close_request_event(const GUI_ServerMessage&, GWindow&);
-    void handle_menu_event(const GUI_ServerMessage&);
+    void handle_paint_event(const WSAPI_ServerMessage&, GWindow&);
+    void handle_mouse_event(const WSAPI_ServerMessage&, GWindow&);
+    void handle_key_event(const WSAPI_ServerMessage&, GWindow&);
+    void handle_window_activation_event(const WSAPI_ServerMessage&, GWindow&);
+    void handle_window_close_request_event(const WSAPI_ServerMessage&, GWindow&);
+    void handle_menu_event(const WSAPI_ServerMessage&);
     void get_next_timer_expiration(timeval&);
 
     struct QueuedEvent {
@@ -56,7 +56,7 @@ private:
     };
     Vector<QueuedEvent> m_queued_events;
 
-    Vector<GUI_ServerMessage> m_unprocessed_messages;
+    Vector<WSAPI_ServerMessage> m_unprocessed_messages;
 
     int m_event_fd { -1 };
     bool m_running { false };

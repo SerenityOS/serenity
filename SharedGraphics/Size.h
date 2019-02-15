@@ -2,13 +2,13 @@
 
 #include <AK/AKString.h>
 
-struct GUI_Size;
+struct WSAPI_Size;
 
 class Size {
 public:
     Size() { }
     Size(int w, int h) : m_width(w), m_height(h) { }
-    Size(const GUI_Size&);
+    Size(const WSAPI_Size&);
 
     bool is_empty() const { return !m_width || !m_height; }
 
@@ -38,7 +38,7 @@ public:
         return *this;
     }
 
-    operator GUI_Size() const;
+    operator WSAPI_Size() const;
 
     String to_string() const { return String::format("[%d,%d]", m_width, m_height); }
 

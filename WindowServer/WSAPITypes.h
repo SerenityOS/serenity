@@ -5,57 +5,57 @@
 
 // GUI system call API types.
 
-struct GUI_WindowFlags { enum {
+struct WSAPI_WindowFlags { enum {
     Visible = 1 << 0,
 }; };
 
-typedef unsigned GUI_Color;
+typedef unsigned WSAPI_Color;
 
-struct GUI_Point {
+struct WSAPI_Point {
     int x;
     int y;
 };
 
-struct GUI_Size {
+struct WSAPI_Size {
     int width;
     int height;
 };
 
-struct GUI_Rect {
-    GUI_Point location;
-    GUI_Size size;
+struct WSAPI_Rect {
+    WSAPI_Point location;
+    WSAPI_Size size;
 };
 
-struct GUI_WindowParameters {
-    GUI_Rect rect;
+struct WSAPI_WindowParameters {
+    WSAPI_Rect rect;
     Color background_color;
     unsigned flags { 0 };
     char title[128];
 };
 
-struct GUI_WindowBackingStoreInfo {
+struct WSAPI_WindowBackingStoreInfo {
     void* backing_store_id;
-    GUI_Size size;
+    WSAPI_Size size;
     size_t bpp;
     size_t pitch;
     RGBA32* pixels;
 };
 
-enum class GUI_MouseButton : unsigned char {
+enum class WSAPI_MouseButton : unsigned char {
     NoButton = 0,
     Left     = 1,
     Right    = 2,
     Middle   = 4,
 };
 
-struct GUI_KeyModifiers { enum {
+struct WSAPI_KeyModifiers { enum {
     Shift = 1 << 0,
     Alt   = 1 << 1,
     Ctrl  = 1 << 2,
 }; };
 
 
-struct GUI_ServerMessage {
+struct WSAPI_ServerMessage {
     enum Type : unsigned {
         Invalid,
         Error,
@@ -90,14 +90,14 @@ struct GUI_ServerMessage {
 
     union {
         struct {
-            GUI_Rect rect;
+            WSAPI_Rect rect;
         } window;
         struct {
-            GUI_Rect rect;
+            WSAPI_Rect rect;
         } paint;
         struct {
-            GUI_Point position;
-            GUI_MouseButton button;
+            WSAPI_Point position;
+            WSAPI_MouseButton button;
             unsigned buttons;
         } mouse;
         struct {
@@ -115,7 +115,7 @@ struct GUI_ServerMessage {
         } menu;
         struct {
             void* backing_store_id;
-            GUI_Size size;
+            WSAPI_Size size;
             size_t bpp;
             size_t pitch;
             RGBA32* pixels;
@@ -123,7 +123,7 @@ struct GUI_ServerMessage {
     };
 };
 
-struct GUI_ClientMessage {
+struct WSAPI_ClientMessage {
     enum Type : unsigned {
         Invalid,
         CreateMenubar,
@@ -159,7 +159,7 @@ struct GUI_ClientMessage {
             unsigned identifier;
         } menu;
         struct {
-            GUI_Rect rect;
+            WSAPI_Rect rect;
         } window;
         struct {
             void* backing_store_id;
@@ -167,9 +167,9 @@ struct GUI_ClientMessage {
     };
 };
 
-inline Rect::Rect(const GUI_Rect& r) : Rect(r.location, r.size) { }
-inline Point::Point(const GUI_Point& p) : Point(p.x, p.y) { }
-inline Size::Size(const GUI_Size& s) : Size(s.width, s.height) { }
-inline Rect::operator GUI_Rect() const { return { m_location, m_size }; }
-inline Point::operator GUI_Point() const { return { m_x, m_y }; }
-inline Size::operator GUI_Size() const { return { m_width, m_height }; }
+inline Rect::Rect(const WSAPI_Rect& r) : Rect(r.location, r.size) { }
+inline Point::Point(const WSAPI_Point& p) : Point(p.x, p.y) { }
+inline Size::Size(const WSAPI_Size& s) : Size(s.width, s.height) { }
+inline Rect::operator WSAPI_Rect() const { return { m_location, m_size }; }
+inline Point::operator WSAPI_Point() const { return { m_x, m_y }; }
+inline Size::operator WSAPI_Size() const { return { m_width, m_height }; }

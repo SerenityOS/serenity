@@ -139,8 +139,8 @@ void WSMenu::did_activate(WSMenuItem& item)
 
     close();
 
-    GUI_ServerMessage message;
-    message.type = GUI_ServerMessage::Type::MenuItemActivated;
+    WSAPI_ServerMessage message;
+    message.type = WSAPI_ServerMessage::Type::MenuItemActivated;
     message.menu.menu_id = m_menu_id;
     message.menu.identifier = item.identifier();
 

@@ -54,13 +54,13 @@ void WSWindow::set_rect(const Rect& rect)
 }
 
 // FIXME: Just use the same types.
-static GUI_MouseButton to_api(MouseButton button)
+static WSAPI_MouseButton to_api(MouseButton button)
 {
     switch (button) {
-    case MouseButton::None: return GUI_MouseButton::NoButton;
-    case MouseButton::Left: return GUI_MouseButton::Left;
-    case MouseButton::Right: return GUI_MouseButton::Right;
-    case MouseButton::Middle: return GUI_MouseButton::Middle;
+    case MouseButton::None: return WSAPI_MouseButton::NoButton;
+    case MouseButton::Left: return WSAPI_MouseButton::Left;
+    case MouseButton::Right: return WSAPI_MouseButton::Right;
+    case MouseButton::Middle: return WSAPI_MouseButton::Middle;
     }
     ASSERT_NOT_REACHED();
 }
@@ -72,30 +72,30 @@ void WSWindow::on_message(WSMessage& message)
         return;
     }
 
-    GUI_ServerMessage server_message;
+    WSAPI_ServerMessage server_message;
     server_message.window_id = window_id();
 
     switch (message.type()) {
     case WSMessage::MouseMove:
-        server_message.type = GUI_ServerMessage::Type::MouseMove;
+        server_message.type = WSAPI_ServerMessage::Type::MouseMove;
         server_message.mouse.position = static_cast<WSMouseEvent&>(message).position();
-        server_message.mouse.button = GUI_MouseButton::NoButton;
+        server_message.mouse.button = WSAPI_MouseButton::NoButton;
         server_message.mouse.buttons = static_cast<WSMouseEvent&>(message).buttons();
         break;
     case WSMessage::MouseDown:
-        server_message.type = GUI_ServerMessage::Type::MouseDown;
+        server_message.type = WSAPI_ServerMessage::Type::MouseDown;
         server_message.mouse.position = static_cast<WSMouseEvent&>(message).position();
         server_message.mouse.button = to_api(static_cast<WSMouseEvent&>(message).button());
         server_message.mouse.buttons = static_cast<WSMouseEvent&>(message).buttons();
         break;
     case WSMessage::MouseUp:
-        server_message.type = GUI_ServerMessage::Type::MouseUp;
+        server_message.type = WSAPI_ServerMessage::Type::MouseUp;
         server_message.mouse.position = static_cast<WSMouseEvent&>(message).position();
         server_message.mouse.button = to_api(static_cast<WSMouseEvent&>(message).button());
         server_message.mouse.buttons = static_cast<WSMouseEvent&>(message).buttons();
         break;
     case WSMessage::KeyDown:
-        server_message.type = GUI_ServerMessage::Type::KeyDown;
+        server_message.type = WSAPI_ServerMessage::Type::KeyDown;
         server_message.key.character = static_cast<WSKeyEvent&>(message).character();
         server_message.key.key = static_cast<WSKeyEvent&>(message).key();
         server_message.key.alt = static_cast<WSKeyEvent&>(message).alt();
@@ -103,7 +103,7 @@ void WSWindow::on_message(WSMessage& message)
         server_message.key.shift = static_cast<WSKeyEvent&>(message).shift();
         break;
     case WSMessage::KeyUp:
-        server_message.type = GUI_ServerMessage::Type::KeyUp;
+        server_message.type = WSAPI_ServerMessage::Type::KeyUp;
         server_message.key.character = static_cast<WSKeyEvent&>(message).character();
         server_message.key.key = static_cast<WSKeyEvent&>(message).key();
         server_message.key.alt = static_cast<WSKeyEvent&>(message).alt();
@@ -111,19 +111,19 @@ void WSWindow::on_message(WSMessage& message)
         server_message.key.shift = static_cast<WSKeyEvent&>(message).shift();
         break;
     case WSMessage::WindowActivated:
-        server_message.type = GUI_ServerMessage::Type::WindowActivated;
+        server_message.type = WSAPI_ServerMessage::Type::WindowActivated;
         break;
     case WSMessage::WindowDeactivated:
-        server_message.type = GUI_ServerMessage::Type::WindowDeactivated;
+        server_message.type = WSAPI_ServerMessage::Type::WindowDeactivated;
         break;
     case WSMessage::WindowCloseRequest:
-        server_message.type = GUI_ServerMessage::Type::WindowCloseRequest;
+        server_message.type = WSAPI_ServerMessage::Type::WindowCloseRequest;
         break;
     default:
         break;
     }
 
-    if (server_message.type == GUI_ServerMessage::Type::Invalid)
+    if (server_message.type == WSAPI_ServerMessage::Type::Invalid)
         return;
 
     if (auto* client = WSClientConnection::from_client_id(m_client_id))

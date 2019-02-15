@@ -69,15 +69,15 @@ WSClientConnection::~WSClientConnection()
 void WSClientConnection::post_error(const String& error_message)
 {
     dbgprintf("WSClientConnection::post_error: client_id=%d: %s\n", m_client_id, error_message.characters());
-    GUI_ServerMessage message;
-    message.type = GUI_ServerMessage::Type::Error;
+    WSAPI_ServerMessage message;
+    message.type = WSAPI_ServerMessage::Type::Error;
     ASSERT(error_message.length() < sizeof(message.text));
     strcpy(message.text, error_message.characters());
     message.text_length = error_message.length();
     WSMessageLoop::the().post_message_to_client(m_client_id, message);
 }
 
-void WSClientConnection::post_message(const GUI_ServerMessage& message)
+void WSClientConnection::post_message(const WSAPI_ServerMessage& message)
 {
     int nwritten = WSMessageLoop::the().server_process().sys$write(m_fd, &message, sizeof(message));
     ASSERT(nwritten == sizeof(message));
@@ -110,8 +110,8 @@ void WSClientConnection::handle_request(WSAPICreateMenubarRequest& request)
     int menubar_id = m_next_menubar_id++;
     auto menubar = make<WSMenuBar>(request.client_id(), menubar_id);
     m_menubars.set(menubar_id, move(menubar));
-    GUI_ServerMessage response;
-    response.type = GUI_ServerMessage::Type::DidCreateMenubar;
+    WSAPI_ServerMessage response;
+    response.type = WSAPI_ServerMessage::Type::DidCreateMenubar;
     response.menu.menubar_id = menubar_id;
     WSMessageLoop::the().post_message_to_client(request.client_id(), response);
 }
@@ -127,8 +127,8 @@ void WSClientConnection::handle_request(WSAPIDestroyMenubarRequest& request)
     auto& menubar = *(*it).value;
     WSWindowManager::the().close_menubar(menubar);
     m_menubars.remove(it);
-    GUI_ServerMessage response;
-    response.type = GUI_ServerMessage::Type::DidDestroyMenubar;
+    WSAPI_ServerMessage response;
+    response.type = WSAPI_ServerMessage::Type::DidDestroyMenubar;
     response.menu.menubar_id = menubar_id;
     WSMessageLoop::the().post_message_to_client(request.client_id(), response);
 }
@@ -138,8 +138,8 @@ void WSClientConnection::handle_request(WSAPICreateMenuRequest& request)
     int menu_id = m_next_menu_id++;
     auto menu = make<WSMenu>(request.client_id(), menu_id, request.text());
     m_menus.set(menu_id, move(menu));
-    GUI_ServerMessage response;
-    response.type = GUI_ServerMessage::Type::DidCreateMenu;
+    WSAPI_ServerMessage response;
+    response.type = WSAPI_ServerMessage::Type::DidCreateMenu;
     response.menu.menu_id = menu_id;
     WSMessageLoop::the().post_message_to_client(request.client_id(), response);
 }
@@ -155,8 +155,8 @@ void WSClientConnection::handle_request(WSAPIDestroyMenuRequest& request)
     auto& menu = *(*it).value;
     WSWindowManager::the().close_menu(menu);
     m_menus.remove(it);
-    GUI_ServerMessage response;
-    response.type = GUI_ServerMessage::Type::DidDestroyMenu;
+    WSAPI_ServerMessage response;
+    response.type = WSAPI_ServerMessage::Type::DidDestroyMenu;
     response.menu.menu_id = menu_id;
     WSMessageLoop::the().post_message_to_client(request.client_id(), response);
 }
@@ -172,8 +172,8 @@ void WSClientConnection::handle_request(WSAPISetApplicationMenubarRequest& reque
     auto& menubar = *(*it).value;
     m_app_menubar = menubar.make_weak_ptr();
     WSWindowManager::the().notify_client_changed_app_menubar(*this);
-    GUI_ServerMessage response;
-    response.type = GUI_ServerMessage::Type::DidSetApplicationMenubar;
+    WSAPI_ServerMessage response;
+    response.type = WSAPI_ServerMessage::Type::DidSetApplicationMenubar;
     response.menu.menubar_id = menubar_id;
     WSMessageLoop::the().post_message_to_client(request.client_id(), response);
 }
@@ -195,8 +195,8 @@ void WSClientConnection::handle_request(WSAPIAddMenuToMenubarRequest& request)
     auto& menubar = *(*it).value;
     auto& menu = *(*jt).value;
     menubar.add_menu(&menu);
-    GUI_ServerMessage response;
-    response.type = GUI_ServerMessage::Type::DidAddMenuToMenubar;
+    WSAPI_ServerMessage response;
+    response.type = WSAPI_ServerMessage::Type::DidAddMenuToMenubar;
     response.menu.menubar_id = menubar_id;
     response.menu.menu_id = menu_id;
     WSMessageLoop::the().post_message_to_client(request.client_id(), response);
@@ -214,8 +214,8 @@ void WSClientConnection::handle_request(WSAPIAddMenuItemRequest& request)
     }
     auto& menu = *(*it).value;
     menu.add_item(make<WSMenuItem>(identifier, move(text)));
-    GUI_ServerMessage response;
-    response.type = GUI_ServerMessage::Type::DidAddMenuItem;
+    WSAPI_ServerMessage response;
+    response.type = WSAPI_ServerMessage::Type::DidAddMenuItem;
     response.menu.menu_id = menu_id;
     response.menu.identifier = identifier;
     WSMessageLoop::the().post_message_to_client(request.client_id(), response);
@@ -231,8 +231,8 @@ void WSClientConnection::handle_request(WSAPIAddMenuSeparatorRequest& request)
     }
     auto& menu = *(*it).value;
     menu.add_item(make<WSMenuItem>(WSMenuItem::Separator));
-    GUI_ServerMessage response;
-    response.type = GUI_ServerMessage::Type::DidAddMenuSeparator;
+    WSAPI_ServerMessage response;
+    response.type = WSAPI_ServerMessage::Type::DidAddMenuSeparator;
     response.menu.menu_id = menu_id;
     WSMessageLoop::the().post_message_to_client(request.client_id(), response);
 }
@@ -258,8 +258,8 @@ void WSClientConnection::handle_request(WSAPIGetWindowTitleRequest& request)
         return;
     }
     auto& window = *(*it).value;
-    GUI_ServerMessage response;
-    response.type = GUI_ServerMessage::Type::DidGetWindowTitle;
+    WSAPI_ServerMessage response;
+    response.type = WSAPI_ServerMessage::Type::DidGetWindowTitle;
     response.window_id = window.window_id();
     ASSERT(window.title().length() < sizeof(response.text));
     strcpy(response.text, window.title().characters());
@@ -288,8 +288,8 @@ void WSClientConnection::handle_request(WSAPIGetWindowRectRequest& request)
         return;
     }
     auto& window = *(*it).value;
-    GUI_ServerMessage response;
-    response.type = GUI_ServerMessage::Type::DidGetWindowRect;
+    WSAPI_ServerMessage response;
+    response.type = WSAPI_ServerMessage::Type::DidGetWindowRect;
     response.window_id = window.window_id();
     response.window.rect = window.rect();
     WSMessageLoop::the().post_message_to_client(request.client_id(), response);
@@ -302,8 +302,8 @@ void WSClientConnection::handle_request(WSAPICreateWindowRequest& request)
     window->set_title(request.title());
     window->set_rect(request.rect());
     m_windows.set(window_id, move(window));
-    GUI_ServerMessage response;
-    response.type = GUI_ServerMessage::Type::DidCreateWindow;
+    WSAPI_ServerMessage response;
+    response.type = WSAPI_ServerMessage::Type::DidCreateWindow;
     response.window_id = window_id;
     WSMessageLoop::the().post_message_to_client(request.client_id(), response);
 }
@@ -329,8 +329,8 @@ void WSClientConnection::handle_request(WSAPIInvalidateRectRequest& request)
         post_error("Bad window ID");
         return;
     }
-    GUI_ServerMessage response;
-    response.type = GUI_ServerMessage::Type::Paint;
+    WSAPI_ServerMessage response;
+    response.type = WSAPI_ServerMessage::Type::Paint;
     response.window_id = window_id;
     response.paint.rect = request.rect();
     WSMessageLoop::the().post_message_to_client(request.client_id(), response);
@@ -362,8 +362,8 @@ void WSClientConnection::handle_request(WSAPIGetWindowBackingStoreRequest& reque
     // FIXME: It shouldn't work this way!
     backing_store->retain();
 
-    GUI_ServerMessage response;
-    response.type = GUI_ServerMessage::Type::DidGetWindowBackingStore;
+    WSAPI_ServerMessage response;
+    response.type = WSAPI_ServerMessage::Type::DidGetWindowBackingStore;
     response.window_id = window_id;
     response.backing.backing_store_id = backing_store;
     response.backing.bpp = sizeof(RGBA32);

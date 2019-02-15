@@ -11,7 +11,7 @@
 class WSWindow;
 class WSMenu;
 class WSMenuBar;
-struct GUI_ServerMessage;
+struct WSAPI_ServerMessage;
 
 // FIXME: Remove.
 class Process;
@@ -25,7 +25,7 @@ public:
     static WSClientConnection* ensure_for_client_id(int client_id);
     static void for_each_client(Function<void(WSClientConnection&)>);
 
-    void post_message(const GUI_ServerMessage&);
+    void post_message(const WSAPI_ServerMessage&);
     RetainPtr<GraphicsBitmap> create_bitmap(const Size&);
 
     int client_id() const { return m_client_id; }

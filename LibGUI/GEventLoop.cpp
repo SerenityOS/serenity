@@ -112,7 +112,7 @@ void GEventLoop::post_event(GObject* receiver, OwnPtr<GEvent>&& event)
     m_queued_events.append({ receiver, move(event) });
 }
 
-void GEventLoop::handle_paint_event(const GUI_ServerMessage& event, GWindow& window)
+void GEventLoop::handle_paint_event(const WSAPI_ServerMessage& event, GWindow& window)
 {
 #ifdef GEVENTLOOP_DEBUG
     dbgprintf("WID=%x Paint [%d,%d %dx%d]\n", event.window_id, event.paint.rect.location.x, event.paint.rect.location.y, event.paint.rect.size.width, event.paint.rect.size.height);
@@ -120,25 +120,25 @@ void GEventLoop::handle_paint_event(const GUI_ServerMessage& event, GWindow& win
     post_event(&window, make<GPaintEvent>(event.paint.rect));
 }
 
-void GEventLoop::handle_window_activation_event(const GUI_ServerMessage& event, GWindow& window)
+void GEventLoop::handle_window_activation_event(const WSAPI_ServerMessage& event, GWindow& window)
 {
 #ifdef GEVENTLOOP_DEBUG
     dbgprintf("WID=%x WindowActivation\n", event.window_id);
 #endif
-    post_event(&window, make<GEvent>(event.type == GUI_ServerMessage::Type::WindowActivated ? GEvent::WindowBecameActive : GEvent::WindowBecameInactive));
+    post_event(&window, make<GEvent>(event.type == WSAPI_ServerMessage::Type::WindowActivated ? GEvent::WindowBecameActive : GEvent::WindowBecameInactive));
 }
 
-void GEventLoop::handle_window_close_request_event(const GUI_ServerMessage&, GWindow& window)
+void GEventLoop::handle_window_close_request_event(const WSAPI_ServerMessage&, GWindow& window)
 {
     post_event(&window, make<GEvent>(GEvent::WindowCloseRequest));
 }
 
-void GEventLoop::handle_key_event(const GUI_ServerMessage& event, GWindow& window)
+void GEventLoop::handle_key_event(const WSAPI_ServerMessage& event, GWindow& window)
 {
 #ifdef GEVENTLOOP_DEBUG
     dbgprintf("WID=%x KeyEvent character=0x%b\n", event.window_id, event.key.character);
 #endif
-    auto key_event = make<GKeyEvent>(event.type == GUI_ServerMessage::Type::KeyDown ? GEvent::KeyDown : GEvent::KeyUp, event.key.key);
+    auto key_event = make<GKeyEvent>(event.type == WSAPI_ServerMessage::Type::KeyDown ? GEvent::KeyDown : GEvent::KeyUp, event.key.key);
     key_event->m_alt = event.key.alt;
     key_event->m_ctrl = event.key.ctrl;
     key_event->m_shift = event.key.shift;
@@ -147,32 +147,32 @@ void GEventLoop::handle_key_event(const GUI_ServerMessage& event, GWindow& windo
     post_event(&window, move(key_event));
 }
 
-void GEventLoop::handle_mouse_event(const GUI_ServerMessage& event, GWindow& window)
+void GEventLoop::handle_mouse_event(const WSAPI_ServerMessage& event, GWindow& window)
 {
 #ifdef GEVENTLOOP_DEBUG
     dbgprintf("WID=%x MouseEvent %d,%d\n", event.window_id, event.mouse.position.x, event.mouse.position.y);
 #endif
     GMouseEvent::Type type;
     switch (event.type) {
-    case GUI_ServerMessage::Type::MouseMove: type = GEvent::MouseMove; break;
-    case GUI_ServerMessage::Type::MouseUp: type = GEvent::MouseUp; break;
-    case GUI_ServerMessage::Type::MouseDown: type = GEvent::MouseDown; break;
+    case WSAPI_ServerMessage::Type::MouseMove: type = GEvent::MouseMove; break;
+    case WSAPI_ServerMessage::Type::MouseUp: type = GEvent::MouseUp; break;
+    case WSAPI_ServerMessage::Type::MouseDown: type = GEvent::MouseDown; break;
     default: ASSERT_NOT_REACHED(); break;
     }
     GMouseButton button { GMouseButton::None };
     switch (event.mouse.button) {
-    case GUI_MouseButton::NoButton: button = GMouseButton::None; break;
-    case GUI_MouseButton::Left: button = GMouseButton::Left; break;
-    case GUI_MouseButton::Right: button = GMouseButton::Right; break;
-    case GUI_MouseButton::Middle: button = GMouseButton::Middle; break;
+    case WSAPI_MouseButton::NoButton: button = GMouseButton::None; break;
+    case WSAPI_MouseButton::Left: button = GMouseButton::Left; break;
+    case WSAPI_MouseButton::Right: button = GMouseButton::Right; break;
+    case WSAPI_MouseButton::Middle: button = GMouseButton::Middle; break;
     default: ASSERT_NOT_REACHED(); break;
     }
     post_event(&window, make<GMouseEvent>(type, event.mouse.position, event.mouse.buttons, button));
 }
 
-void GEventLoop::handle_menu_event(const GUI_ServerMessage& event)
+void GEventLoop::handle_menu_event(const WSAPI_ServerMessage& event)
 {
-    if (event.type == GUI_ServerMessage::Type::MenuItemActivated) {
+    if (event.type == WSAPI_ServerMessage::Type::MenuItemActivated) {
         auto* menu = GMenu::from_menu_id(event.menu.menu_id);
         if (!menu) {
             dbgprintf("GEventLoop received event for invalid window ID %d\n", event.window_id);
@@ -253,7 +253,7 @@ void GEventLoop::wait_for_event()
     auto unprocessed_events = move(m_unprocessed_messages);
     for (auto& event : unprocessed_events) {
 
-        if (event.type == GUI_ServerMessage::Error) {
+        if (event.type == WSAPI_ServerMessage::Error) {
             dbgprintf("GEventLoop got error message from server\n");
             dbgprintf("  - error message: %s\n", String(event.text, event.text_length).characters());
             exit(1);
@@ -261,7 +261,7 @@ void GEventLoop::wait_for_event()
         }
 
         switch (event.type) {
-        case GUI_ServerMessage::MenuItemActivated:
+        case WSAPI_ServerMessage::MenuItemActivated:
             handle_menu_event(event);
             continue;
         default:
@@ -274,23 +274,23 @@ void GEventLoop::wait_for_event()
             continue;
         }
         switch (event.type) {
-        case GUI_ServerMessage::Type::Paint:
+        case WSAPI_ServerMessage::Type::Paint:
             handle_paint_event(event, *window);
             break;
-        case GUI_ServerMessage::Type::MouseDown:
-        case GUI_ServerMessage::Type::MouseUp:
-        case GUI_ServerMessage::Type::MouseMove:
+        case WSAPI_ServerMessage::Type::MouseDown:
+        case WSAPI_ServerMessage::Type::MouseUp:
+        case WSAPI_ServerMessage::Type::MouseMove:
             handle_mouse_event(event, *window);
             break;
-        case GUI_ServerMessage::Type::WindowActivated:
-        case GUI_ServerMessage::Type::WindowDeactivated:
+        case WSAPI_ServerMessage::Type::WindowActivated:
+        case WSAPI_ServerMessage::Type::WindowDeactivated:
             handle_window_activation_event(event, *window);
             break;
-        case GUI_ServerMessage::Type::WindowCloseRequest:
+        case WSAPI_ServerMessage::Type::WindowCloseRequest:
             handle_window_close_request_event(event, *window);
             break;
-        case GUI_ServerMessage::Type::KeyDown:
-        case GUI_ServerMessage::Type::KeyUp:
+        case WSAPI_ServerMessage::Type::KeyDown:
+        case WSAPI_ServerMessage::Type::KeyUp:
             handle_key_event(event, *window);
             break;
         default:
@@ -302,8 +302,8 @@ void GEventLoop::wait_for_event()
 bool GEventLoop::drain_messages_from_server()
 {
     for (;;) {
-        GUI_ServerMessage message;
-        ssize_t nread = read(m_event_fd, &message, sizeof(GUI_ServerMessage));
+        WSAPI_ServerMessage message;
+        ssize_t nread = read(m_event_fd, &message, sizeof(WSAPI_ServerMessage));
         if (nread < 0) {
             perror("read");
             exit(1);
@@ -376,13 +376,13 @@ void GEventLoop::unregister_notifier(Badge<GNotifier>, GNotifier& notifier)
     m_notifiers.remove(&notifier);
 }
 
-bool GEventLoop::post_message_to_server(const GUI_ClientMessage& message)
+bool GEventLoop::post_message_to_server(const WSAPI_ClientMessage& message)
 {
-    int nwritten = write(m_event_fd, &message, sizeof(GUI_ClientMessage));
-    return nwritten == sizeof(GUI_ClientMessage);
+    int nwritten = write(m_event_fd, &message, sizeof(WSAPI_ClientMessage));
+    return nwritten == sizeof(WSAPI_ClientMessage);
 }
 
-bool GEventLoop::wait_for_specific_event(GUI_ServerMessage::Type type, GUI_ServerMessage& event)
+bool GEventLoop::wait_for_specific_event(WSAPI_ServerMessage::Type type, WSAPI_ServerMessage& event)
 {
     for (;;) {
         fd_set rfds;
@@ -404,12 +404,12 @@ bool GEventLoop::wait_for_specific_event(GUI_ServerMessage::Type type, GUI_Serve
     }
 }
 
-GUI_ServerMessage GEventLoop::sync_request(const GUI_ClientMessage& request, GUI_ServerMessage::Type response_type)
+WSAPI_ServerMessage GEventLoop::sync_request(const WSAPI_ClientMessage& request, WSAPI_ServerMessage::Type response_type)
 {
     bool success = post_message_to_server(request);
     ASSERT(success);
 
-    GUI_ServerMessage response;
+    WSAPI_ServerMessage response;
     success = GEventLoop::main().wait_for_specific_event(response_type, response);
     ASSERT(success);
     return response;
