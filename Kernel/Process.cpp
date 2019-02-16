@@ -19,7 +19,6 @@
 #include "FIFO.h"
 #include "KSyms.h"
 #include <WindowServer/WSMessageLoop.h>
-#include <Kernel/BochsVGADevice.h>
 #include <Kernel/Socket.h>
 #include "MasterPTY.h"
 #include "elf.h"
@@ -2226,17 +2225,6 @@ bool Process::tick()
     else
         ++m_ticks_in_kernel;
     return --m_ticks_left;
-}
-
-DisplayInfo Process::set_video_resolution(int width, int height)
-{
-    DisplayInfo info;
-    info.width = width;
-    info.height = height;
-    info.bpp = 32;
-    info.pitch = width * 4;
-    BochsVGADevice::the().set_resolution(width, height);
-    return info;
 }
 
 int Process::sys$socket(int domain, int type, int protocol)

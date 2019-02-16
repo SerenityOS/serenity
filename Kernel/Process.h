@@ -223,8 +223,6 @@ public:
     int sys$accept(int sockfd, sockaddr*, socklen_t*);
     int sys$connect(int sockfd, const sockaddr*, socklen_t);
 
-    DisplayInfo set_video_resolution(int width, int height);
-
     bool wait_for_connect(Socket&, int& error);
 
     static void initialize();
