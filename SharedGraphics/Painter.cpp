@@ -1,6 +1,7 @@
 #include "Painter.h"
 #include "Font.h"
 #include "GraphicsBitmap.h"
+#include <SharedGraphics/CharacterBitmap.h>
 #include <AK/Assertions.h>
 #include <AK/StdLibExtras.h>
 

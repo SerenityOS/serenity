@@ -1,5 +1,6 @@
 #include <LibGUI/GScrollBar.h>
 #include <LibGUI/GStyle.h>
+#include <SharedGraphics/CharacterBitmap.h>
 #include <SharedGraphics/GraphicsBitmap.h>
 #include <SharedGraphics/Painter.h>
 

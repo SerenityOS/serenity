@@ -1,6 +1,6 @@
 #pragma once
 
-#include "CharacterBitmap.h"
+#include <SharedGraphics/Rect.h>
 #include <AK/Retainable.h>
 #include <AK/RetainPtr.h>
 #include <AK/AKString.h>
@@ -68,8 +68,6 @@ private:
 
     unsigned* m_rows { nullptr };
     void* m_mmap_ptr { nullptr };
-
-    RetainPtr<CharacterBitmap> m_error_bitmap;
 
     byte m_glyph_width { 0 };
     byte m_glyph_height { 0 };

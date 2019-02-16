@@ -9,21 +9,6 @@
 #include <LibC/errno.h>
 #include <LibC/mman.h>
 
-static const byte error_glyph_width = 8;
-static const byte error_glyph_height = 10;
-static constexpr const char* error_glyph {
-    "  ####  "
-    " #    # "
-    " #    # "
-    " # ## # "
-    " # ## # "
-    "  ####  "
-    "   ##   "
-    " ###### "
-    "   ##   "
-    "   ##   ",
-};
-
 static Font* s_default_font;
 static Font* s_default_bold_font;
 
@@ -35,11 +20,6 @@ struct [[gnu::packed]] FontFileHeader {
     byte unused[7];
     char name[64];
 };
-
-static inline constexpr size_t font_file_size(unsigned glyph_height)
-{
-    return sizeof(FontFileHeader) + 256 * sizeof(dword) * glyph_height;
-}
 
 Font& Font::default_font()
 {
@@ -76,9 +56,6 @@ Font::Font(const String& name, unsigned* rows, byte glyph_width, byte glyph_heig
     , m_glyph_width(glyph_width)
     , m_glyph_height(glyph_height)
 {
-    ASSERT(m_glyph_width == error_glyph_width);
-    ASSERT(m_glyph_height == error_glyph_height);
-    m_error_bitmap = CharacterBitmap::create_from_ascii(error_glyph, error_glyph_width, error_glyph_height);
 }
 
 Font::~Font()
