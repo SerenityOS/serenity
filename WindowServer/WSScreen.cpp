@@ -3,7 +3,6 @@
 #include "WSMessage.h"
 #include "WSWindowManager.h"
 #include <AK/Assertions.h>
-#include <Kernel/IO.h>
 
 static WSScreen* s_the;
 
