@@ -13,9 +13,6 @@ class WSMenu;
 class WSMenuBar;
 struct WSAPI_ServerMessage;
 
-// FIXME: Remove.
-class Process;
-
 class WSClientConnection final : public WSMessageReceiver {
 public:
     explicit WSClientConnection(int fd);
@@ -72,7 +69,4 @@ private:
     int m_next_menubar_id { 10000 };
     int m_next_menu_id { 20000 };
     int m_next_window_id { 1982 };
-
-    // FIXME: Remove.
-    WeakPtr<Process> m_process;
 };

@@ -4,7 +4,6 @@
 #include "WSMessageLoop.h"
 #include "Process.h"
 #include "MemoryManager.h"
-#include <Kernel/ProcFS.h>
 #include <SharedGraphics/Font.h>
 #include <SharedGraphics/Painter.h>
 #include <SharedGraphics/CharacterBitmap.h>
@@ -14,7 +13,11 @@
 #include "WSMenuBar.h"
 #include "WSMenuItem.h"
 #include <WindowServer/WSClientConnection.h>
+
+#ifdef KERNEL
+#include <Kernel/ProcFS.h>
 #include <Kernel/RTC.h>
+#endif
 
 //#define DEBUG_COUNTERS
 //#define DEBUG_WID_IN_TITLE_BAR
@@ -175,12 +178,14 @@ WSWindowManager::WSWindowManager()
         m_wallpaper = GraphicsBitmap::load_from_file(m_wallpaper_path.resource(), m_screen_rect.size());
     }
 
+#ifdef KERNEL
     ProcFS::the().add_sys_bool("wm_flash_flush", m_flash_flush);
     ProcFS::the().add_sys_string("wm_wallpaper", m_wallpaper_path, [this] {
         LOCKER(m_wallpaper_path.lock());
         m_wallpaper = GraphicsBitmap::load_from_file(m_wallpaper_path.resource(), m_screen_rect.size());
         invalidate(m_screen_rect);
     });
+#endif
 
     m_menu_selection_color = Color(0x84351a);
 
@@ -695,11 +700,13 @@ void WSWindowManager::draw_menubar()
         return true;
     });
 
+#ifdef KERNEL
     unsigned year, month, day, hour, minute, second;
     RTC::read_registers(year, month, day, hour, minute, second);
     auto time_text = String::format("%04u-%02u-%02u  %02u:%02u:%02u", year, month, day, hour, minute, second);
     auto time_rect = menubar_rect().translated(-(menubar_menu_margin() / 2), 0);
     m_back_painter->draw_text(time_rect, time_text, TextAlignment::CenterRight, Color::Black);
+#endif
 }
 
 void WSWindowManager::draw_cursor()

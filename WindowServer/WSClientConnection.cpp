@@ -6,7 +6,6 @@
 #include <WindowServer/WSWindow.h>
 #include <WindowServer/WSWindowManager.h>
 #include <WindowServer/WSAPITypes.h>
-#include <Kernel/MemoryManager.h>
 #include <Kernel/Process.h>
 
 Lockable<HashMap<int, WSClientConnection*>>* s_connections;
@@ -42,16 +41,8 @@ WSClientConnection* WSClientConnection::ensure_for_client_id(int client_id)
 WSClientConnection::WSClientConnection(int fd)
     : m_fd(fd)
 {
-    int rc = WSMessageLoop::the().server_process().sys$ioctl(m_fd, 413, (int)&m_pid);
+    int rc = current->sys$ioctl(m_fd, 413, (int)&m_pid);
     ASSERT(rc == 0);
-
-    {
-        InterruptDisabler disabler;
-        auto* process = Process::from_pid(m_pid);
-        ASSERT(process);
-        m_process = process->make_weak_ptr();
-        m_client_id = (int)process;
-    }
 
     if (!s_connections)
         s_connections = new Lockable<HashMap<int, WSClientConnection*>>;
