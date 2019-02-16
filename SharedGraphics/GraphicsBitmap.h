@@ -11,9 +11,7 @@ class Region;
 
 class GraphicsBitmap : public Retainable<GraphicsBitmap> {
 public:
-#ifdef KERNEL
-    static RetainPtr<GraphicsBitmap> create_kernel_only(const Size&);
-#endif
+    static RetainPtr<GraphicsBitmap> create(const Size&);
     static RetainPtr<GraphicsBitmap> create_wrapper(const Size&, RGBA32*);
     static RetainPtr<GraphicsBitmap> load_from_file(const String& path, const Size&);
     static RetainPtr<GraphicsBitmap> create_with_shared_buffer(int shared_buffer_id, const Size&, RGBA32* buffer = nullptr);
@@ -44,11 +42,7 @@ private:
     Size m_size;
     RGBA32* m_data { nullptr };
     size_t m_pitch { 0 };
-
-#ifdef USERLAND
     bool m_mmaped { false };
-#endif
-
     int m_shared_buffer_id { -1 };
 
 #ifdef KERNEL
