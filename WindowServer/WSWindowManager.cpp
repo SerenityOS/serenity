@@ -9,7 +9,6 @@
 #include <SharedGraphics/Painter.h>
 #include <SharedGraphics/CharacterBitmap.h>
 #include <AK/StdLibExtras.h>
-#include <Kernel/BochsVGADevice.h>
 #include <LibC/errno_numbers.h>
 #include "WSMenu.h"
 #include "WSMenuBar.h"
@@ -126,10 +125,11 @@ void WSWindowManager::flip_buffers()
 {
     swap(m_front_bitmap, m_back_bitmap);
     swap(m_front_painter, m_back_painter);
-    if (m_buffers_are_flipped)
-        BochsVGADevice::the().set_y_offset(0);
-    else
-        BochsVGADevice::the().set_y_offset(m_screen_rect.height());
+    if (m_framebuffer_fd != -1) {
+        int new_y_offset = m_buffers_are_flipped ? 0 : m_screen_rect.height();
+        int rc = current->sys$ioctl(m_framebuffer_fd, 1982, new_y_offset);
+        ASSERT(rc == 0);
+    }
     m_buffers_are_flipped = !m_buffers_are_flipped;
 }
 

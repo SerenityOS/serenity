@@ -3,6 +3,7 @@
 #include <Kernel/PCI.h>
 #include <Kernel/MemoryManager.h>
 #include <Kernel/Process.h>
+#include <LibC/errno_numbers.h>
 
 #define VBE_DISPI_IOPORT_INDEX           0x01CE
 #define VBE_DISPI_IOPORT_DATA            0x01CF
@@ -20,6 +21,13 @@
 #define VBE_DISPI_DISABLED               0x00
 #define VBE_DISPI_ENABLED                0x01
 #define VBE_DISPI_LFB_ENABLED            0x40
+
+#define BXVGA_DEV_IOCTL_SET_Y_OFFSET     1982
+#define BXVGA_DEV_IOCTL_SET_RESOLUTION   1985
+struct BXVGAResolution {
+    int width;
+    int height;
+};
 
 static BochsVGADevice* s_the;
 
@@ -85,6 +93,24 @@ dword BochsVGADevice::find_framebuffer_address()
         }
     });
     return framebuffer_address;
+}
+
+int BochsVGADevice::ioctl(Process& process, unsigned int request, unsigned int arg)
+{
+    switch (request) {
+    case BXVGA_DEV_IOCTL_SET_Y_OFFSET:
+        set_y_offset(arg);
+        return 0;
+    case BXVGA_DEV_IOCTL_SET_RESOLUTION: {
+        auto* resolution = (const BXVGAResolution*)arg;
+        if (!process.validate_read_typed(resolution))
+            return -EFAULT;
+        set_resolution(resolution->width, resolution->height);
+        return 0;
+    }
+    default:
+        return -EINVAL;
+    };
 }
 
 bool BochsVGADevice::can_read(Process&) const

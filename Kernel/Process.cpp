@@ -1786,9 +1786,9 @@ int Process::sys$ioctl(int fd, unsigned request, unsigned arg)
         *pid = descriptor->socket()->origin_pid();
         return 0;
     }
-    if (!descriptor->is_character_device())
+    if (!descriptor->is_device())
         return -ENOTTY;
-    return descriptor->character_device()->ioctl(*this, request, arg);
+    return descriptor->device()->ioctl(*this, request, arg);
 }
 
 int Process::sys$getdtablesize()
