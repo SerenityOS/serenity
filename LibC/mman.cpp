@@ -9,7 +9,11 @@ void* mmap(void* addr, size_t size, int prot, int flags, int fd, off_t offset)
 {
     Syscall::SC_mmap_params params { (dword)addr, size, prot, flags, fd, offset };
     int rc = syscall(SC_mmap, &params);
-    __RETURN_WITH_ERRNO(rc, (void*)rc, (void*)-1);
+    if (rc < 0 && -rc < EMAXERRNO) {
+        errno = -rc;
+        return (void*)-1;
+    }
+    return (void*)rc;
 }
 
 int munmap(void* addr, size_t size)
