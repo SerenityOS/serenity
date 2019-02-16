@@ -101,10 +101,12 @@ VFS* vfs;
 
     int error;
 
-    Process::create_user_process("/bin/WindowServer", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, { }, tty0);
+    auto* window_server_process = Process::create_user_process("/bin/WindowServer", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, { }, tty0);
     if (error != 0) {
         dbgprintf("error: %d\n", error);
+        hang();
     }
+    window_server_process->set_priority(Process::HighPriority);
     //Process::create_user_process("/bin/sh", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, move(environment), tty0);
     Process::create_user_process("/bin/Terminal", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, { }, tty0);
 #ifdef SPAWN_GUITEST
