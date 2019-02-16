@@ -35,6 +35,9 @@ public:
     uid_t uid() const { return m_uid; }
     uid_t gid() const { return m_gid; }
 
+    virtual bool is_block_device() const { return false; }
+    virtual bool is_character_device() const { return false; }
+
 protected:
     Device(unsigned major, unsigned minor) : m_major(major), m_minor(minor) { }
     void set_uid(uid_t uid) { m_uid = uid; }

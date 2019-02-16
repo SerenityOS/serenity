@@ -145,7 +145,7 @@ RetainPtr<FileDescriptor> VFS::open(const String& path, int& error, int options,
     if (!inode)
         return nullptr;
     auto metadata = inode->metadata();
-    if (!(options & O_DONT_OPEN_DEVICE) && metadata.is_character_device()) {
+    if (!(options & O_DONT_OPEN_DEVICE) && metadata.is_device()) {
         auto it = m_devices.find(encoded_device(metadata.major_device, metadata.minor_device));
         if (it == m_devices.end()) {
             kprintf("VFS::open: no such device %u,%u\n", metadata.major_device, metadata.minor_device);

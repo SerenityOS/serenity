@@ -1,6 +1,8 @@
 #include <Kernel/BochsVGADevice.h>
 #include <Kernel/IO.h>
 #include <Kernel/PCI.h>
+#include <Kernel/MemoryManager.h>
+#include <Kernel/Process.h>
 
 #define VBE_DISPI_IOPORT_INDEX           0x01CE
 #define VBE_DISPI_IOPORT_DATA            0x01CF
@@ -27,9 +29,23 @@ BochsVGADevice& BochsVGADevice::the()
 }
 
 BochsVGADevice::BochsVGADevice()
+    : BlockDevice(82, 413)
 {
     s_the = this;
     m_framebuffer_address = PhysicalAddress(find_framebuffer_address());
+}
+
+Region* BochsVGADevice::mmap(Process& process, LinearAddress preferred_laddr, size_t offset, size_t size)
+{
+    ASSERT(offset == 0);
+    ASSERT(size == framebuffer_size_in_bytes());
+    auto framebuffer_vmo = VMObject::create_framebuffer_wrapper(framebuffer_address(), framebuffer_size_in_bytes());
+    auto* region = process.allocate_region_with_vmo(preferred_laddr, framebuffer_size_in_bytes(), move(framebuffer_vmo), 0, "BochsVGADevice Framebuffer", true, true);
+    kprintf("BochsVGADevice::mmap for %s(%u) mapped region %p for fb addr %p\n",
+            process.name().characters(), process.pid(),
+            region, framebuffer_address());
+    ASSERT(region);
+    return region;
 }
 
 void BochsVGADevice::set_register(word index, word data)
@@ -48,6 +64,8 @@ void BochsVGADevice::set_resolution(int width, int height)
     set_register(VBE_DISPI_INDEX_BPP, 32);
     set_register(VBE_DISPI_INDEX_ENABLE, VBE_DISPI_ENABLED | VBE_DISPI_LFB_ENABLED);
     set_register(VBE_DISPI_INDEX_BANK, 0);
+
+    m_framebuffer_size = { width, height };
 }
 
 void BochsVGADevice::set_y_offset(int offset)
@@ -67,4 +85,24 @@ dword BochsVGADevice::find_framebuffer_address()
         }
     });
     return framebuffer_address;
+}
+
+bool BochsVGADevice::can_read(Process&) const
+{
+    ASSERT_NOT_REACHED();
+}
+
+bool BochsVGADevice::can_write(Process&) const
+{
+    ASSERT_NOT_REACHED();
+}
+
+ssize_t BochsVGADevice::read(Process&, byte*, size_t)
+{
+    ASSERT_NOT_REACHED();
+}
+
+ssize_t BochsVGADevice::write(Process&, const byte*, size_t)
+{
+    ASSERT_NOT_REACHED();
 }

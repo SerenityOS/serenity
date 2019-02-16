@@ -8,6 +8,8 @@
 #include "TTY.h"
 #include "MasterPTY.h"
 #include <Kernel/Socket.h>
+#include <Kernel/Process.h>
+#include <Kernel/BlockDevice.h>
 
 RetainPtr<FileDescriptor> FileDescriptor::create(RetainPtr<Inode>&& inode)
 {
@@ -337,4 +339,50 @@ InodeMetadata FileDescriptor::metadata() const
     if (m_inode)
         return m_inode->metadata();
     return { };
+}
+
+bool FileDescriptor::supports_mmap() const
+{
+    if (m_inode)
+        return true;
+    if (m_device)
+        return m_device->is_block_device();
+    return false;
+}
+
+Region* FileDescriptor::mmap(Process& process, LinearAddress laddr, size_t offset, size_t size, int prot)
+{
+    ASSERT(supports_mmap());
+
+    if (is_block_device())
+        return static_cast<BlockDevice&>(*m_device).mmap(process, laddr, offset, size);
+
+    ASSERT(m_inode);
+    // FIXME: If PROT_EXEC, check that the underlying file system isn't mounted noexec.
+    auto region_name = absolute_path();
+    InterruptDisabler disabler;
+    // FIXME: Implement mapping at a client-specified address. Most of the support is already in plcae.
+    ASSERT(laddr.as_ptr() == nullptr);
+    auto* region = process.allocate_file_backed_region(LinearAddress(), size, inode(), move(region_name), prot & PROT_READ, prot & PROT_WRITE);
+    return region;
+}
+
+bool FileDescriptor::is_block_device() const
+{
+    return m_device && m_device->is_block_device();
+}
+
+bool FileDescriptor::is_character_device() const
+{
+    return m_device && m_device->is_character_device();
+}
+
+CharacterDevice* FileDescriptor::character_device()
+{
+    return is_character_device() ? static_cast<CharacterDevice*>(device()) : nullptr;
+}
+
+const CharacterDevice* FileDescriptor::character_device() const
+{
+    return is_character_device() ? static_cast<const CharacterDevice*>(device()) : nullptr;
 }

@@ -182,12 +182,7 @@ void* Process::sys$mmap(const Syscall::SC_mmap_params* params)
         return (void*)-EBADF;
     if (!descriptor->supports_mmap())
         return (void*)-ENODEV;
-    // FIXME: If PROT_EXEC, check that the underlying file system isn't mounted noexec.
-    auto region_name = descriptor->absolute_path();
-    InterruptDisabler disabler;
-    // FIXME: Implement mapping at a client-specified address. Most of the support is already in plcae.
-    ASSERT(addr == nullptr);
-    auto* region = allocate_file_backed_region(LinearAddress(), size, descriptor->inode(), move(region_name), prot & PROT_READ, prot & PROT_WRITE);
+    auto* region = descriptor->mmap(*this, LinearAddress((dword)addr), offset, size, prot);
     if (!region)
         return (void*)-ENOMEM;
     return region->laddr().as_ptr();
@@ -2240,13 +2235,6 @@ DisplayInfo Process::set_video_resolution(int width, int height)
     info.height = height;
     info.bpp = 32;
     info.pitch = width * 4;
-    size_t framebuffer_size = width * height * 4 * 2;
-    if (!m_display_framebuffer_region) {
-        auto framebuffer_vmo = VMObject::create_framebuffer_wrapper(BochsVGADevice::the().framebuffer_address(), framebuffer_size);
-        m_display_framebuffer_region = allocate_region_with_vmo(LinearAddress(0xe0000000), framebuffer_size, move(framebuffer_vmo), 0, "framebuffer", true, true);
-    }
-    info.framebuffer = m_display_framebuffer_region->laddr().as_ptr();
-
     BochsVGADevice::the().set_resolution(width, height);
     return info;
 }

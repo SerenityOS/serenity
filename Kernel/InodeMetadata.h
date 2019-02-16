@@ -30,6 +30,7 @@ struct InodeMetadata {
     bool is_directory() const { return ::is_directory(mode); }
     bool is_character_device() const { return ::is_character_device(mode); }
     bool is_block_device() const { return ::is_block_device(mode); }
+    bool is_device() const { return is_character_device() || is_block_device(); }
     bool is_regular_file() const { return ::is_regular_file(mode); }
     bool is_fifo() const { return ::is_fifo(mode); }
     bool is_symlink() const { return ::is_symlink(mode); }

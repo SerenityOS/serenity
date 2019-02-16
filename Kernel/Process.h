@@ -44,7 +44,6 @@ struct DisplayInfo {
     unsigned height;
     unsigned bpp;
     unsigned pitch;
-    byte* framebuffer;
 };
 
 class Process : public InlineLinkedListNode<Process>, public Weakable<Process> {
@@ -295,6 +294,9 @@ public:
 
     int gui_client_id() const { return (int)this; }
 
+    Region* allocate_region_with_vmo(LinearAddress, size_t, RetainPtr<VMObject>&&, size_t offset_in_vmo, String&& name, bool is_readable, bool is_writable);
+    Region* allocate_file_backed_region(LinearAddress, size_t, RetainPtr<Inode>&&, String&& name, bool is_readable, bool is_writable);
+
 private:
     friend class MemoryManager;
     friend class Scheduler;
@@ -366,8 +368,6 @@ private:
     TTY* m_tty { nullptr };
 
     Region* allocate_region(LinearAddress, size_t, String&& name, bool is_readable = true, bool is_writable = true, bool commit = true);
-    Region* allocate_file_backed_region(LinearAddress, size_t, RetainPtr<Inode>&&, String&& name, bool is_readable, bool is_writable);
-    Region* allocate_region_with_vmo(LinearAddress, size_t, RetainPtr<VMObject>&&, size_t offset_in_vmo, String&& name, bool is_readable, bool is_writable);
     bool deallocate_region(Region& region);
 
     Region* region_from_range(LinearAddress, size_t);

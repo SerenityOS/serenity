@@ -12,6 +12,8 @@
 class TTY;
 class MasterPTY;
 class Process;
+class Region;
+class CharacterDevice;
 
 class FileDescriptor : public Retainable<FileDescriptor> {
 public:
@@ -43,9 +45,14 @@ public:
 
     bool is_directory() const;
 
-    bool is_character_device() const { return m_device.ptr(); }
-    Device* character_device() { return m_device.ptr(); }
-    const Device* character_device() const { return m_device.ptr(); }
+    bool is_device() const { return m_device.ptr(); }
+    Device* device() { return m_device.ptr(); }
+    const Device* device() const { return m_device.ptr(); }
+
+    bool is_block_device() const;
+    bool is_character_device() const;
+    CharacterDevice* character_device();
+    const CharacterDevice* character_device() const;
 
     bool is_tty() const;
     const TTY* tty() const;
@@ -59,7 +66,8 @@ public:
     Inode* inode() { return m_inode.ptr(); }
     const Inode* inode() const { return m_inode.ptr(); }
 
-    bool supports_mmap() const { return m_inode && !m_device; }
+    bool supports_mmap() const;
+    Region* mmap(Process&, LinearAddress, size_t offset, size_t, int prot);
 
     bool is_blocking() const { return m_is_blocking; }
     void set_blocking(bool b) { m_is_blocking = b; }
