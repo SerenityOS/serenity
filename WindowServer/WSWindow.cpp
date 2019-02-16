@@ -45,7 +45,7 @@ void WSWindow::set_rect(const Rect& rect)
     m_rect = rect;
     if (!m_backing || old_rect.size() != rect.size()) {
         if (m_menu)
-            m_backing = GraphicsBitmap::create_kernel_only(m_rect.size());
+            m_backing = GraphicsBitmap::create(m_rect.size());
         else if (client)
             m_backing = client->create_bitmap(m_rect.size());
 

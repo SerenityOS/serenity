@@ -14,8 +14,7 @@
 #include <stdio.h>
 #endif
 
-#ifdef KERNEL
-RetainPtr<GraphicsBitmap> GraphicsBitmap::create_kernel_only(const Size& size)
+RetainPtr<GraphicsBitmap> GraphicsBitmap::create(const Size& size)
 {
     return adopt(*new GraphicsBitmap(size));
 }
@@ -24,16 +23,19 @@ GraphicsBitmap::GraphicsBitmap(const Size& size)
     : m_size(size)
     , m_pitch(size.width() * sizeof(RGBA32))
 {
-    InterruptDisabler disabler;
-    size_t size_in_bytes = size.width() * size.height() * sizeof(RGBA32);
-    auto vmo = VMObject::create_anonymous(size_in_bytes);
-    auto& server = WSMessageLoop::the().server_process();
-    m_server_region = server.allocate_region_with_vmo(LinearAddress(), size_in_bytes, move(vmo), 0, "GraphicsBitmap (server)", true, false);
-    m_server_region->set_shared(true);
-    m_server_region->set_is_bitmap(true);
-    m_data = (RGBA32*)m_server_region->laddr().as_ptr();
-}
+#ifdef KERNEL
+    Syscall::SC_mmap_params params;
+    memset(&params, 0, sizeof(params));
+    params.fd = 0;
+    params.prot = PROT_READ | PROT_WRITE;
+    params.flags = MAP_ANONYMOUS | MAP_PRIVATE;
+    params.size = size.area() * sizeof(RGBA32);
+    params.offset = 0;
+    m_data = (RGBA32*)current->sys$mmap(&params);
+    ASSERT(m_data && m_data != (void*)-1);
+    m_mmaped = true;
 #endif
+}
 
 RetainPtr<GraphicsBitmap> GraphicsBitmap::create_wrapper(const Size& size, RGBA32* data)
 {
@@ -115,15 +117,14 @@ GraphicsBitmap::GraphicsBitmap(int shared_buffer_id, const Size& size, RGBA32* d
 
 GraphicsBitmap::~GraphicsBitmap()
 {
-#ifdef KERNEL
-    if (m_server_region)
-        WSMessageLoop::the().server_process().deallocate_region(*m_server_region);
-#else
     if (m_mmaped) {
+#ifdef KERNEL
+        int rc = current->sys$munmap(m_data, m_size.area() * 4);
+#else
         int rc = munmap(m_data, m_size.area() * 4);
+#endif
         ASSERT(rc == 0);
     }
-#endif
     if (m_shared_buffer_id != -1) {
         int rc;
 #ifdef KERNEL
