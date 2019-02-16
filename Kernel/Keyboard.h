@@ -12,22 +12,7 @@ class KeyboardClient;
 class Keyboard final : public IRQHandler, public CharacterDevice {
     AK_MAKE_ETERNAL
 public:
-    enum Modifier {
-        Mod_Alt = 0x01,
-        Mod_Ctrl = 0x02,
-        Mod_Shift = 0x04,
-        Is_Press = 0x80,
-    };
-
-    struct Event {
-        KeyCode key { Key_Invalid };
-        byte character { 0 };
-        byte flags { 0 };
-        bool alt() const { return flags & Mod_Alt; }
-        bool ctrl() const { return flags & Mod_Ctrl; }
-        bool shift() const { return flags & Mod_Shift; }
-        bool is_press() const { return flags & Is_Press; }
-    };
+    using Event = KeyEvent;
 
     [[gnu::pure]] static Keyboard& the();
 

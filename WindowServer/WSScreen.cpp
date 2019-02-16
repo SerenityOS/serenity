@@ -2,7 +2,6 @@
 #include "WSMessageLoop.h"
 #include "WSMessage.h"
 #include "WSWindowManager.h"
-#include <AK/Assertions.h>
 
 static WSScreen* s_the;
 
@@ -61,7 +60,7 @@ void WSScreen::on_receive_mouse_data(int dx, int dy, bool left_button, bool righ
         WSWindowManager::the().invalidate_cursor();
 }
 
-void WSScreen::on_receive_keyboard_data(Keyboard::Event kernel_event)
+void WSScreen::on_receive_keyboard_data(KeyEvent kernel_event)
 {
     auto message = make<WSKeyEvent>(kernel_event.is_press() ? WSMessage::KeyDown : WSMessage::KeyUp, kernel_event.key, kernel_event.character);
     message->m_shift = kernel_event.shift();

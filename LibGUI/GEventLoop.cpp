@@ -40,7 +40,7 @@ GEventLoop::GEventLoop()
     address.sun_family = AF_LOCAL;
     strcpy(address.sun_path, "/wsportal");
 
-    int retries = 10;
+    int retries = 1000;
     int rc = 0;
     while (retries) {
         rc = connect(m_event_fd, (const sockaddr*)&address, sizeof(address));
@@ -53,6 +53,7 @@ GEventLoop::GEventLoop()
     if (rc < 0) {
         ASSERT_NOT_REACHED();
     }
+    dbgprintf("(%u) GEventLoop constructed :)\n", getpid());
 }
 
 GEventLoop::~GEventLoop()

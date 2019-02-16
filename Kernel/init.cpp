@@ -25,9 +25,9 @@
 #include "BochsVGADevice.h"
 
 //#define SPAWN_GUITEST
-#define SPAWN_LAUNCHER
+//#define SPAWN_LAUNCHER
 //#define SPAWN_GUITEST2
-#define SPAWN_FILE_MANAGER
+//#define SPAWN_FILE_MANAGER
 //#define SPAWN_FONTEDITOR
 //#define SPAWN_MULTIPLE_SHELLS
 //#define STRESS_TEST_SPAWNING
@@ -101,6 +101,10 @@ VFS* vfs;
 
     int error;
 
+    Process::create_user_process("/bin/WindowServer", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, { }, tty0);
+    if (error != 0) {
+        dbgprintf("error: %d\n", error);
+    }
     //Process::create_user_process("/bin/sh", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, move(environment), tty0);
     Process::create_user_process("/bin/Terminal", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, { }, tty0);
 #ifdef SPAWN_GUITEST
@@ -127,9 +131,6 @@ VFS* vfs;
 #ifdef STRESS_TEST_SPAWNING
     Process::create_kernel_process("spawn_stress", spawn_stress);
 #endif
-
-    extern void WindowServer_main();
-    Process::create_kernel_process("WindowServer", WindowServer_main);
 
     current->sys$exit(0);
     ASSERT_NOT_REACHED();

@@ -142,6 +142,7 @@ public:
     const VMObject& vmo() const { return *m_vmo; }
     VMObject& vmo() { return *m_vmo; }
 
+    bool is_shared() const { return m_shared; }
     void set_shared(bool shared) { m_shared = shared; }
 
     bool is_bitmap() const { return m_is_bitmap; }

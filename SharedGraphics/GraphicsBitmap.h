@@ -7,8 +7,6 @@
 #include <AK/RetainPtr.h>
 #include <AK/AKString.h>
 
-class Region;
-
 class GraphicsBitmap : public Retainable<GraphicsBitmap> {
 public:
     static RetainPtr<GraphicsBitmap> create(const Size&);
@@ -25,17 +23,10 @@ public:
     int width() const { return m_size.width(); }
     int height() const { return m_size.height(); }
     size_t pitch() const { return m_pitch; }
-
-#ifdef KERNEL
-    Region* server_region() { return m_server_region; }
-#endif
-
     int shared_buffer_id() const { return m_shared_buffer_id; }
 
 private:
-#ifdef KERNEL
     GraphicsBitmap(const Size&);
-#endif
     GraphicsBitmap(const Size&, RGBA32*);
     GraphicsBitmap(int shared_buffer_id, const Size&, RGBA32*);
 
@@ -44,10 +35,6 @@ private:
     size_t m_pitch { 0 };
     bool m_mmaped { false };
     int m_shared_buffer_id { -1 };
-
-#ifdef KERNEL
-    Region* m_server_region { nullptr };
-#endif
 };
 
 inline RGBA32* GraphicsBitmap::scanline(int y)

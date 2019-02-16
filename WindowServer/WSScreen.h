@@ -3,7 +3,7 @@
 #include <SharedGraphics/Rect.h>
 #include <SharedGraphics/Size.h>
 #include <SharedGraphics/Color.h>
-#include <Kernel/Keyboard.h>
+#include <Kernel/KeyCode.h>
 
 class WSScreen {
 public:
@@ -26,7 +26,7 @@ public:
     bool right_mouse_button_pressed() const { return m_right_mouse_button_pressed; }
 
     void on_receive_mouse_data(int dx, int dy, bool left_button, bool right_button);
-    void on_receive_keyboard_data(Keyboard::Event);
+    void on_receive_keyboard_data(KeyEvent);
 
 protected:
     WSScreen(unsigned width, unsigned height);

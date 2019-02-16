@@ -38,7 +38,6 @@ public:
         APIInvalidateRectRequest,
         APIDidFinishPaintingNotification,
         APIGetWindowBackingStoreRequest,
-        APIReleaseWindowBackingStoreRequest,
         APISetGlobalCursorTrackingRequest,
         __End_API_Client_Requests,
     };
@@ -351,20 +350,6 @@ public:
 
 private:
     int m_window_id { 0 };
-};
-
-class WSAPIReleaseWindowBackingStoreRequest final : public WSAPIClientRequest {
-public:
-    explicit WSAPIReleaseWindowBackingStoreRequest(int client_id, int backing_store_id)
-        : WSAPIClientRequest(WSMessage::APIReleaseWindowBackingStoreRequest, client_id)
-        , m_backing_store_id(backing_store_id)
-    {
-    }
-
-    int backing_store_id() const { return m_backing_store_id; }
-
-private:
-    int m_backing_store_id { 0 };
 };
 
 class WSAPIDidFinishPaintingNotification final : public WSAPIClientRequest {

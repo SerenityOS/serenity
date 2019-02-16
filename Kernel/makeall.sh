@@ -10,6 +10,8 @@ $make_cmd -C ../LibGUI clean && \
 $make_cmd -C ../LibGUI && \
 $make_cmd -C ../Userland clean && \
 $make_cmd -C ../Userland && \
+$make_cmd -C ../WindowServer clean && \
+$make_cmd -C ../WindowServer && \
 $make_cmd -C ../Applications/Terminal clean && \
 $make_cmd -C ../Applications/Terminal && \
 $make_cmd -C ../Applications/FontEditor clean && \

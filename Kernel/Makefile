@@ -51,26 +51,6 @@ VFS_OBJS = \
     FileDescriptor.o \
     SyntheticFileSystem.o
 
-SHAREDGRAPHICS_OBJS = \
-    ../SharedGraphics/Rect.o \
-    ../SharedGraphics/Painter.o \
-    ../SharedGraphics/Font.o \
-    ../SharedGraphics/Color.o \
-    ../SharedGraphics/CharacterBitmap.o \
-    ../SharedGraphics/GraphicsBitmap.o
-
-WINDOWSERVER_OBJS = \
-    ../WindowServer/WSMessageReceiver.o \
-    ../WindowServer/WSMessageLoop.o \
-    ../WindowServer/WSWindow.o \
-    ../WindowServer/WSWindowManager.o \
-    ../WindowServer/WSScreen.o \
-    ../WindowServer/WSMenuBar.o \
-    ../WindowServer/WSMenu.o \
-    ../WindowServer/WSMenuItem.o \
-    ../WindowServer/WSClientConnection.o \
-    ../WindowServer/main.o
-
 AK_OBJS = \
     ../AK/String.o \
     ../AK/StringImpl.o \
@@ -78,7 +58,7 @@ AK_OBJS = \
     ../AK/FileSystemPath.o \
     ../AK/StdLibExtras.o
 
-OBJS = $(KERNEL_OBJS) $(VFS_OBJS) $(AK_OBJS) $(WINDOWSERVER_OBJS) $(SHAREDGRAPHICS_OBJS)
+OBJS = $(KERNEL_OBJS) $(VFS_OBJS) $(AK_OBJS)
 
 NASM = nasm
 KERNEL = kernel
@@ -89,7 +69,7 @@ STANDARD_FLAGS = -std=c++17 -nostdinc++ -nostdlib -nostdinc
 KERNEL_FLAGS = -ffreestanding -fno-stack-protector -fno-ident -fno-builtin
 WARNING_FLAGS = -Wextra -Wall -Wundef -Wcast-qual -Wwrite-strings -Wimplicit-fallthrough
 FLAVOR_FLAGS = -mregparm=3 -march=i386 -m32 -fno-exceptions -fno-rtti -fmerge-all-constants -fno-unroll-loops -fno-pie -fno-pic
-OPTIMIZATION_FLAGS = -Oz -fno-asynchronous-unwind-tables -fno-omit-frame-pointer
+OPTIMIZATION_FLAGS = -Os -fno-asynchronous-unwind-tables -fno-omit-frame-pointer
 INCLUDE_FLAGS = -I.. -I.
 #SUGGEST_FLAGS = -Wsuggest-final-types -Wsuggest-final-methods -Wsuggest-override #-Wsuggest-attribute=noreturn 
 

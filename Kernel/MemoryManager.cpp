@@ -581,9 +581,12 @@ bool MemoryManager::validate_user_write(const Process& process, LinearAddress la
 
 RetainPtr<Region> Region::clone()
 {
-    InterruptDisabler disabler;
-
     if (m_shared || (m_readable && !m_writable)) {
+        dbgprintf("%s<%u> Region::clone(): sharing %s (L%x)\n",
+                  current->name().characters(),
+                  current->pid(),
+                  m_name.characters(),
+                  laddr().get());
         // Create a new region backed by the same VMObject.
         return adopt(*new Region(laddr(), size(), m_vmo.copy_ref(), m_offset_in_vmo, String(m_name), m_readable, m_writable));
     }

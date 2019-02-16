@@ -95,9 +95,9 @@ Region* BochsVGADevice::mmap(Process& process, LinearAddress preferred_laddr, si
         0,
         "BochsVGA Framebuffer",
         true, true);
-    kprintf("BochsVGA: %s(%u) created Region{%p} for framebuffer P%x\n",
+    kprintf("BochsVGA: %s(%u) created Region{%p} with size %u for framebuffer P%x with laddr L%x\n",
             process.name().characters(), process.pid(),
-            region, framebuffer_address().as_ptr());
+            region, region->size(), framebuffer_address().as_ptr(), region->laddr().get());
     ASSERT(region);
     return region;
 }

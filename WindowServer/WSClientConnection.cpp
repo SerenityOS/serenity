@@ -6,16 +6,18 @@
 #include <WindowServer/WSWindow.h>
 #include <WindowServer/WSWindowManager.h>
 #include <WindowServer/WSAPITypes.h>
-#include <Kernel/Process.h>
+#include <sys/ioctl.h>
+#include <unistd.h>
+#include <errno.h>
+#include <stdio.h>
 
-Lockable<HashMap<int, WSClientConnection*>>* s_connections;
+HashMap<int, WSClientConnection*>* s_connections;
 
 void WSClientConnection::for_each_client(Function<void(WSClientConnection&)> callback)
 {
     if (!s_connections)
         return;
-    LOCKER(s_connections->lock());
-    for (auto& it : s_connections->resource()) {
+    for (auto& it : *s_connections) {
         callback(*it.value);
     }
 }
@@ -24,36 +26,29 @@ WSClientConnection* WSClientConnection::from_client_id(int client_id)
 {
     if (!s_connections)
         return nullptr;
-    LOCKER(s_connections->lock());
-    auto it = s_connections->resource().find(client_id);
-    if (it == s_connections->resource().end())
+    auto it = s_connections->find(client_id);
+    if (it == s_connections->end())
         return nullptr;
     return (*it).value;
-}
-
-WSClientConnection* WSClientConnection::ensure_for_client_id(int client_id)
-{
-    if (auto* client = from_client_id(client_id))
-        return client;
-    return new WSClientConnection(client_id);
 }
 
 WSClientConnection::WSClientConnection(int fd)
     : m_fd(fd)
 {
-    int rc = current->sys$ioctl(m_fd, 413, (int)&m_pid);
+    static int s_next_client_id = 0;
+    m_client_id = ++s_next_client_id;
+
+    int rc = ioctl(m_fd, 413, (int)&m_pid);
     ASSERT(rc == 0);
 
     if (!s_connections)
-        s_connections = new Lockable<HashMap<int, WSClientConnection*>>;
-    LOCKER(s_connections->lock());
-    s_connections->resource().set(m_client_id, this);
+        s_connections = new HashMap<int, WSClientConnection*>;
+    s_connections->set(m_client_id, this);
 }
 
 WSClientConnection::~WSClientConnection()
 {
-    LOCKER(s_connections->lock());
-    s_connections->resource().remove(m_client_id);
+    s_connections->remove(m_client_id);
 }
 
 void WSClientConnection::post_error(const String& error_message)
@@ -69,14 +64,23 @@ void WSClientConnection::post_error(const String& error_message)
 
 void WSClientConnection::post_message(const WSAPI_ServerMessage& message)
 {
-    int nwritten = WSMessageLoop::the().server_process().sys$write(m_fd, &message, sizeof(message));
+    int nwritten = write(m_fd, &message, sizeof(message));
+    if (nwritten < 0) {
+        if (errno == EPIPE) {
+            dbgprintf("WSClientConnection::post_message: Disconnected from peer.\n");
+            return;
+        }
+        perror("WSClientConnection::post_message write");
+        ASSERT_NOT_REACHED();
+    }
+
     ASSERT(nwritten == sizeof(message));
 }
 
-RetainPtr<GraphicsBitmap> WSClientConnection::create_bitmap(const Size& size)
+RetainPtr<GraphicsBitmap> WSClientConnection::create_shared_bitmap(const Size& size)
 {
     RGBA32* buffer;
-    int shared_buffer_id = current->sys$create_shared_buffer(m_pid, size.area() * sizeof(RGBA32), (void**)&buffer);
+    int shared_buffer_id = create_shared_buffer(m_pid, size.area() * sizeof(RGBA32), (void**)&buffer);
     ASSERT(shared_buffer_id >= 0);
     ASSERT(buffer);
     ASSERT(buffer != (void*)-1);
@@ -352,26 +356,14 @@ void WSClientConnection::handle_request(WSAPIGetWindowBackingStoreRequest& reque
     auto& window = *(*it).value;
     auto* backing_store = window.backing();
 
-    // FIXME: It shouldn't work this way!
-    backing_store->retain();
-
     WSAPI_ServerMessage response;
     response.type = WSAPI_ServerMessage::Type::DidGetWindowBackingStore;
     response.window_id = window_id;
-    response.backing.backing_store_id = backing_store;
     response.backing.bpp = sizeof(RGBA32);
     response.backing.pitch = backing_store->pitch();
     response.backing.size = backing_store->size();
     response.backing.shared_buffer_id = backing_store->shared_buffer_id();
     WSMessageLoop::the().post_message_to_client(request.client_id(), response);
-}
-
-void WSClientConnection::handle_request(WSAPIReleaseWindowBackingStoreRequest& request)
-{
-    int backing_store_id = request.backing_store_id();
-    // FIXME: It shouldn't work this way!
-    auto* backing_store = (GraphicsBitmap*)backing_store_id;
-    backing_store->release();
 }
 
 void WSClientConnection::handle_request(WSAPISetGlobalCursorTrackingRequest& request)
@@ -423,8 +415,6 @@ void WSClientConnection::on_request(WSAPIClientRequest& request)
         return handle_request(static_cast<WSAPIDidFinishPaintingNotification&>(request));
     case WSMessage::APIGetWindowBackingStoreRequest:
         return handle_request(static_cast<WSAPIGetWindowBackingStoreRequest&>(request));
-    case WSMessage::APIReleaseWindowBackingStoreRequest:
-        return handle_request(static_cast<WSAPIReleaseWindowBackingStoreRequest&>(request));
     case WSMessage::APISetGlobalCursorTrackingRequest:
         return handle_request(static_cast<WSAPISetGlobalCursorTrackingRequest&>(request));
     default:

@@ -18,16 +18,17 @@
 #include "Scheduler.h"
 #include "FIFO.h"
 #include "KSyms.h"
-#include <WindowServer/WSMessageLoop.h>
 #include <Kernel/Socket.h>
 #include "MasterPTY.h"
 #include "elf.h"
+#include <AK/StringBuilder.h>
 
 //#define DEBUG_IO
 //#define TASK_DEBUG
 //#define FORK_DEBUG
 #define SIGNAL_DEBUG
 #define MAX_PROCESS_GIDS 32
+//#define SHARED_BUFFER_DEBUG
 
 static const dword default_kernel_stack_size = 16384;
 static const dword default_userspace_stack_size = 65536;
@@ -49,7 +50,6 @@ void Process::initialize()
     s_hostname = new String("courage");
     s_hostname_lock = new Lock;
     Scheduler::initialize();
-    new WSMessageLoop;
 }
 
 Vector<pid_t> Process::all_pids()
@@ -167,11 +167,11 @@ void* Process::sys$mmap(const Syscall::SC_mmap_params* params)
     if ((dword)addr & ~PAGE_MASK)
         return (void*)-EINVAL;
     if (flags & MAP_ANONYMOUS) {
-        // FIXME: Implement mapping at a client-specified address. Most of the support is already in plcae.
-        ASSERT(addr == nullptr);
-        auto* region = allocate_region(LinearAddress(), size, "mmap", prot & PROT_READ, prot & PROT_WRITE, false);
+        auto* region = allocate_region(LinearAddress((dword)addr), size, "mmap", prot & PROT_READ, prot & PROT_WRITE, false);
         if (!region)
             return (void*)-ENOMEM;
+        if (flags & MAP_SHARED)
+            region->set_shared(true);
         return region->laddr().as_ptr();
     }
     if (offset & ~PAGE_MASK)
@@ -184,6 +184,8 @@ void* Process::sys$mmap(const Syscall::SC_mmap_params* params)
     auto* region = descriptor->mmap(*this, LinearAddress((dword)addr), offset, size, prot);
     if (!region)
         return (void*)-ENOMEM;
+    if (flags & MAP_SHARED)
+        region->set_shared(true);
     return region->laddr().as_ptr();
 }
 
@@ -191,9 +193,9 @@ int Process::sys$munmap(void* addr, size_t size)
 {
     auto* region = region_from_range(LinearAddress((dword)addr), size);
     if (!region)
-        return -1;
+        return -EINVAL;
     if (!deallocate_region(*region))
-        return -1;
+        return -EINVAL;
     return 0;
 }
 
@@ -2136,9 +2138,6 @@ void Process::finalize()
 {
     ASSERT(current == g_finalizer);
 
-    if (WSMessageLoop::the().running())
-        WSMessageLoop::the().notify_client_died(gui_client_id());
-
     m_fds.clear();
     m_tty = nullptr;
     disown_all_shared_buffers();
@@ -2367,13 +2366,17 @@ struct SharedBuffer {
     {
         if (m_pid1 == process.pid()) {
             ++m_pid1_retain_count;
-            if (!m_pid1_region)
+            if (!m_pid1_region) {
                 m_pid1_region = process.allocate_region_with_vmo(LinearAddress(), size(), m_vmo.copy_ref(), 0, "SharedBuffer", true, true);
+                m_pid1_region->set_shared(true);
+            }
             return m_pid1_region->laddr().as_ptr();
         } else if (m_pid2 == process.pid()) {
             ++m_pid2_retain_count;
-            if (!m_pid2_region)
+            if (!m_pid2_region) {
                 m_pid2_region = process.allocate_region_with_vmo(LinearAddress(), size(), m_vmo.copy_ref(), 0, "SharedBuffer", true, true);
+                m_pid2_region->set_shared(true);
+            }
             return m_pid2_region->laddr().as_ptr();
         }
         return nullptr;
@@ -2445,7 +2448,9 @@ void SharedBuffer::destroy_if_unused()
 {
     if (!m_pid1_retain_count && !m_pid2_retain_count) {
         LOCKER(shared_buffers().lock());
-        kprintf("Destroying unused SharedBuffer{%p} (pid1: %d, pid2: %d)\n", this, m_pid1, m_pid2);
+#ifdef SHARED_BUFFER_DEBUG
+        dbgprintf("Destroying unused SharedBuffer{%p} (pid1: %d, pid2: %d)\n", this, m_pid1, m_pid2);
+#endif
         shared_buffers().resource().remove(m_shared_buffer_id);
     }
 }
@@ -2474,7 +2479,11 @@ int Process::sys$create_shared_buffer(pid_t peer_pid, size_t size, void** buffer
     int shared_buffer_id = ++s_next_shared_buffer_id;
     auto shared_buffer = make<SharedBuffer>(m_pid, peer_pid, size);
     shared_buffer->m_pid1_region = allocate_region_with_vmo(LinearAddress(), shared_buffer->size(), shared_buffer->m_vmo.copy_ref(), 0, "SharedBuffer", true, true);
+    shared_buffer->m_pid1_region->set_shared(true);
     *buffer = shared_buffer->m_pid1_region->laddr().as_ptr();
+#ifdef SHARED_BUFFER_DEBUG
+    dbgprintf("%s(%u): Created shared buffer %d (%u bytes, vmo is %u) for sharing with %d\n", name().characters(), pid(),shared_buffer_id, size, shared_buffer->size(), peer_pid);
+#endif
     shared_buffers().resource().set(shared_buffer_id, move(shared_buffer));
     return shared_buffer_id;
 }
@@ -2486,6 +2495,9 @@ int Process::sys$release_shared_buffer(int shared_buffer_id)
     if (it == shared_buffers().resource().end())
         return -EINVAL;
     auto& shared_buffer = *(*it).value;
+#ifdef SHARED_BUFFER_DEBUG
+    dbgprintf("%s(%u): Releasing shared buffer %d\n", name().characters(), pid(), shared_buffer_id);
+#endif
     shared_buffer.release(*this);
     return 0;
 }
@@ -2499,5 +2511,8 @@ void* Process::sys$get_shared_buffer(int shared_buffer_id)
     auto& shared_buffer = *(*it).value;
     if (shared_buffer.pid1() != m_pid && shared_buffer.pid2() != m_pid)
         return (void*)-EINVAL;
+#ifdef SHARED_BUFFER_DEBUG
+    dbgprintf("%s(%u): Retaining shared buffer %d\n", name().characters(), pid(), shared_buffer_id);
+#endif
     return shared_buffer.retain(*this);
 }

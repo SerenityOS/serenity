@@ -108,3 +108,20 @@ enum KeyCode : byte {
     Key_Tilde,
     Key_Backtick,
 };
+
+enum KeyModifier {
+    Mod_Alt = 0x01,
+    Mod_Ctrl = 0x02,
+    Mod_Shift = 0x04,
+    Is_Press = 0x80,
+};
+
+struct KeyEvent {
+    KeyCode key { Key_Invalid };
+    byte character { 0 };
+    byte flags { 0 };
+    bool alt() const { return flags & Mod_Alt; }
+    bool ctrl() const { return flags & Mod_Ctrl; }
+    bool shift() const { return flags & Mod_Shift; }
+    bool is_press() const { return flags & Is_Press; }
+};

@@ -4,18 +4,21 @@
 #include "WSWindowManager.h"
 #include "WSScreen.h"
 #include <WindowServer/WSClientConnection.h>
-#include "PS2MouseDevice.h"
-#include <Kernel/Keyboard.h>
+#include <Kernel/KeyCode.h>
 #include <WindowServer/WSAPITypes.h>
-#include <AK/Bitmap.h>
-#include "Process.h"
+#include <unistd.h>
+#include <time.h>
+#include <sys/socket.h>
+#include <sys/select.h>
+#include <fcntl.h>
+#include <stdio.h>
+#include <errno.h>
 
 //#define WSEVENTLOOP_DEBUG
 
 static WSMessageLoop* s_the;
 
 WSMessageLoop::WSMessageLoop()
-    : m_lock("WSMessageLoop")
 {
     if (!s_the)
         s_the = this;
@@ -33,21 +36,19 @@ WSMessageLoop& WSMessageLoop::the()
 
 int WSMessageLoop::exec()
 {
-    ASSERT(m_server_process == current);
+    m_keyboard_fd = open("/dev/keyboard", O_RDONLY | O_NONBLOCK | O_CLOEXEC);
+    m_mouse_fd = open("/dev/psaux", O_RDONLY | O_NONBLOCK | O_CLOEXEC);
 
-    m_keyboard_fd = m_server_process->sys$open("/dev/keyboard", O_RDONLY);
-    m_mouse_fd = m_server_process->sys$open("/dev/psaux", O_RDONLY);
+    unlink("/wsportal");
 
-    m_server_process->sys$unlink("/wsportal");
-
-    m_server_fd = m_server_process->sys$socket(AF_LOCAL, SOCK_STREAM | SOCK_NONBLOCK, 0);
+    m_server_fd = socket(AF_LOCAL, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0);
     ASSERT(m_server_fd >= 0);
     sockaddr_un address;
     address.sun_family = AF_LOCAL;
     strcpy(address.sun_path, "/wsportal");
-    int rc = m_server_process->sys$bind(m_server_fd, (const sockaddr*)&address, sizeof(address));
+    int rc = bind(m_server_fd, (const sockaddr*)&address, sizeof(address));
     ASSERT(rc == 0);
-    rc = m_server_process->sys$listen(m_server_fd, 5);
+    rc = listen(m_server_fd, 5);
     ASSERT(rc == 0);
 
     ASSERT(m_keyboard_fd >= 0);
@@ -56,13 +57,7 @@ int WSMessageLoop::exec()
     m_running = true;
     for (;;) {
         wait_for_message();
-
-        Vector<QueuedMessage> messages;
-        {
-            ASSERT_INTERRUPTS_ENABLED();
-            LOCKER(m_lock);
-            messages = move(m_queued_messages);
-        }
+        Vector<QueuedMessage> messages = move(m_queued_messages);
 
         for (auto& queued_message : messages) {
             auto* receiver = queued_message.receiver;
@@ -81,12 +76,6 @@ int WSMessageLoop::exec()
     }
 }
 
-Process* WSMessageLoop::process_from_client_id(int client_id)
-{
-    // FIXME: This shouldn't work this way lol.
-    return (Process*)client_id;
-}
-
 void WSMessageLoop::post_message_to_client(int client_id, const WSAPI_ServerMessage& message)
 {
     auto* client = WSClientConnection::from_client_id(client_id);
@@ -97,53 +86,16 @@ void WSMessageLoop::post_message_to_client(int client_id, const WSAPI_ServerMess
 
 void WSMessageLoop::post_message(WSMessageReceiver* receiver, OwnPtr<WSMessage>&& message)
 {
-    LOCKER(m_lock);
 #ifdef WSEVENTLOOP_DEBUG
     dbgprintf("WSMessageLoop::post_message: {%u} << receiver=%p, message=%p (type=%u)\n", m_queued_messages.size(), receiver, message.ptr(), message->type());
 #endif
-
-#if 0
-    if (message->type() == WSMessage::WM_ClientFinishedPaint) {
-        auto& invalidation_message = static_cast<WSClientFinishedPaintMessage&>(*message);
-        for (auto& queued_message : m_queued_messages) {
-            if (receiver == queued_message.receiver && queued_message.message->type() == WSMessage::WM_ClientFinishedPaint) {
-                auto& queued_invalidation_message = static_cast<WSClientFinishedPaintMessage&>(*queued_message.message);
-                if (queued_invalidation_message.rect().is_empty() || queued_invalidation_message.rect().contains(invalidation_message.rect())) {
-#ifdef WSEVENTLOOP_DEBUG
-                    dbgprintf("Swallow WM_ClientFinishedPaint\n");
-#endif
-                    return;
-                }
-            }
-        }
-    }
-
-    if (message->type() == WSMessage::WM_ClientWantsToPaint) {
-        auto& invalidation_message = static_cast<WSClientWantsToPaintMessage&>(*message);
-        for (auto& queued_message : m_queued_messages) {
-            if (receiver == queued_message.receiver && queued_message.message->type() == WSMessage::WM_ClientWantsToPaint) {
-                auto& queued_invalidation_message = static_cast<WSClientWantsToPaintMessage&>(*queued_message.message);
-                if (queued_invalidation_message.rect().is_empty() || queued_invalidation_message.rect().contains(invalidation_message.rect())) {
-#ifdef WSEVENTLOOP_DEBUG
-                    dbgprintf("Swallow WM_ClientWantsToPaint\n");
-#endif
-                    return;
-                }
-            }
-        }
-    }
-#endif
-
     m_queued_messages.append({ receiver, move(message) });
-
-    if (current != m_server_process)
-        m_server_process->request_wakeup();
 }
 
 void WSMessageLoop::Timer::reload()
 {
     struct timeval now;
-    current->sys$gettimeofday(&now);
+    gettimeofday(&now, nullptr);
     next_fire_time = {
         now.tv_sec + (interval / 1000),
         now.tv_usec + (interval % 1000)
@@ -174,28 +126,22 @@ int WSMessageLoop::stop_timer(int timer_id)
 void WSMessageLoop::wait_for_message()
 {
     fd_set rfds;
-    memset(&rfds, 0, sizeof(rfds));
-    auto bitmap = Bitmap::wrap((byte*)&rfds, FD_SETSIZE);
+    FD_ZERO(&rfds);
     int max_fd = 0;
-    auto add_fd_to_set = [&max_fd] (int fd, auto& bitmap) {
-        bitmap.set(fd, true);
+    auto add_fd_to_set = [&max_fd] (int fd, auto& set) {
+        FD_SET(fd, &set);
         if (fd > max_fd)
             max_fd = fd;
     };
 
-    add_fd_to_set(m_keyboard_fd, bitmap);
-    add_fd_to_set(m_mouse_fd, bitmap);
-    add_fd_to_set(m_server_fd, bitmap);
+    add_fd_to_set(m_keyboard_fd, rfds);
+    add_fd_to_set(m_mouse_fd, rfds);
+    add_fd_to_set(m_server_fd, rfds);
 
     WSClientConnection::for_each_client([&] (WSClientConnection& client) {
-        add_fd_to_set(client.fd(), bitmap);
+        add_fd_to_set(client.fd(), rfds);
     });
 
-    Syscall::SC_select_params params;
-    params.nfds = max_fd + 1;
-    params.readfds = &rfds;
-    params.writefds = nullptr;
-    params.exceptfds = nullptr;
     struct timeval timeout = { 0, 0 };
     bool had_any_timer = false;
 
@@ -210,19 +156,13 @@ void WSMessageLoop::wait_for_message()
             timeout = timer.next_fire_time;
     }
 
-    if (m_timers.is_empty() && m_queued_messages.is_empty())
-        params.timeout = nullptr;
-    else
-        params.timeout = &timeout;
-
-    int rc = m_server_process->sys$select(&params);
-    memory_barrier();
+    int rc = select(max_fd + 1, &rfds, nullptr, nullptr, m_timers.is_empty() && m_queued_messages.is_empty() ? nullptr : &timeout);
     if (rc < 0) {
         ASSERT_NOT_REACHED();
     }
 
     struct timeval now;
-    current->sys$gettimeofday(&now);
+    gettimeofday(&now, nullptr);
     for (auto& it : m_timers) {
         auto& timer = *it.value;
         if (now.tv_sec > timer.next_fire_time.tv_sec || (now.tv_sec == timer.next_fire_time.tv_sec && now.tv_usec > timer.next_fire_time.tv_usec)) {
@@ -231,30 +171,37 @@ void WSMessageLoop::wait_for_message()
         }
     }
 
-    if (bitmap.get(m_keyboard_fd))
+    if (FD_ISSET(m_keyboard_fd, &rfds))
         drain_keyboard();
-    if (bitmap.get(m_mouse_fd))
+    if (FD_ISSET(m_mouse_fd, &rfds))
         drain_mouse();
-    if (bitmap.get(m_server_fd)) {
+    if (FD_ISSET(m_server_fd, &rfds)) {
         sockaddr_un address;
         socklen_t address_size = sizeof(address);
-        int client_fd = m_server_process->sys$accept(m_server_fd, (sockaddr*)&address, &address_size);
-        kprintf("accept() returned fd=%d, address=%s\n", client_fd, address.sun_path);
+        int client_fd = accept(m_server_fd, (sockaddr*)&address, &address_size);
+        dbgprintf("accept() returned fd=%d, address=%s\n", client_fd, address.sun_path);
+        ASSERT(client_fd >= 0);
         new WSClientConnection(client_fd);
     }
     WSClientConnection::for_each_client([&] (WSClientConnection& client) {
-        if (bitmap.get(client.fd())) {
-            for (;;) {
-                WSAPI_ClientMessage message;
-                // FIXME: Don't go one message at a time, that's so much context switching, oof.
-                ssize_t nread = m_server_process->sys$read(client.fd(), &message, sizeof(WSAPI_ClientMessage));
-                if (nread == 0)
-                    break;
-                if (nread < 0) {
-                    ASSERT_NOT_REACHED();
-                }
-                on_receive_from_client(client.client_id(), message);
+        if (!FD_ISSET(client.fd(), &rfds))
+            return;
+        unsigned messages_received = 0;
+        for (;;) {
+            WSAPI_ClientMessage message;
+            // FIXME: Don't go one message at a time, that's so much context switching, oof.
+            ssize_t nread = read(client.fd(), &message, sizeof(WSAPI_ClientMessage));
+            if (nread == 0) {
+                if (!messages_received)
+                    notify_client_disconnected(client.client_id());
+                break;
             }
+            if (nread < 0) {
+                perror("read");
+                ASSERT_NOT_REACHED();
+            }
+            on_receive_from_client(client.client_id(), message);
+            ++messages_received;
         }
     });
 }
@@ -262,14 +209,17 @@ void WSMessageLoop::wait_for_message()
 void WSMessageLoop::drain_mouse()
 {
     auto& screen = WSScreen::the();
-    auto& mouse = PS2MouseDevice::the();
     bool prev_left_button = screen.left_mouse_button_pressed();
     bool prev_right_button = screen.right_mouse_button_pressed();
     int dx = 0;
     int dy = 0;
-    while (mouse.can_read(*m_server_process)) {
+    bool left_button = prev_left_button;
+    bool right_button = prev_right_button;
+    for (;;) {
         byte data[3];
-        ssize_t nread = mouse.read(*m_server_process, (byte*)data, sizeof(data));
+        ssize_t nread = read(m_mouse_fd, data, sizeof(data));
+        if (nread == 0)
+            break;
         ASSERT(nread == sizeof(data));
         bool left_button = data[0] & 1;
         bool right_button = data[0] & 2;
@@ -290,7 +240,7 @@ void WSMessageLoop::drain_mouse()
 
         dx += x;
         dy += -y;
-        if (left_button != prev_left_button || right_button != prev_right_button || !mouse.can_read(*m_server_process)) {
+        if (left_button != prev_left_button || right_button != prev_right_button) {
             prev_left_button = left_button;
             prev_right_button = right_button;
             screen.on_receive_mouse_data(dx, dy, left_button, right_button);
@@ -298,23 +248,26 @@ void WSMessageLoop::drain_mouse()
             dy = 0;
         }
     }
+    if (dx || dy) {
+        screen.on_receive_mouse_data(dx, dy, left_button, right_button);
+    }
 }
 
 void WSMessageLoop::drain_keyboard()
 {
     auto& screen = WSScreen::the();
-    auto& keyboard = Keyboard::the();
-    while (keyboard.can_read(*m_server_process)) {
-        Keyboard::Event event;
-        ssize_t nread = keyboard.read(*m_server_process, (byte*)&event, sizeof(Keyboard::Event));
-        ASSERT(nread == sizeof(Keyboard::Event));
+    for (;;) {
+        KeyEvent event;
+        ssize_t nread = read(m_keyboard_fd, (byte*)&event, sizeof(KeyEvent));
+        if (nread == 0)
+            break;
+        ASSERT(nread == sizeof(KeyEvent));
         screen.on_receive_keyboard_data(event);
     }
 }
 
-void WSMessageLoop::notify_client_died(int client_id)
+void WSMessageLoop::notify_client_disconnected(int client_id)
 {
-    LOCKER(m_lock);
     auto* client = WSClientConnection::from_client_id(client_id);
     if (!client)
         return;
@@ -323,12 +276,14 @@ void WSMessageLoop::notify_client_died(int client_id)
 
 void WSMessageLoop::on_receive_from_client(int client_id, const WSAPI_ClientMessage& message)
 {
+#if 0
     // FIXME: This should not be necessary.. why is this necessary?
     while (!running())
-        Scheduler::yield();
+        sched_yield();
+#endif
 
-    LOCKER(m_lock);
-    WSClientConnection* client = WSClientConnection::ensure_for_client_id(client_id);
+    WSClientConnection* client = WSClientConnection::from_client_id(client_id);
+    ASSERT(client);
     switch (message.type) {
     case WSAPI_ClientMessage::Type::CreateMenubar:
         post_message(client, make<WSAPICreateMenubarRequest>(client_id));
@@ -382,9 +337,6 @@ void WSMessageLoop::on_receive_from_client(int client_id, const WSAPI_ClientMess
         break;
     case WSAPI_ClientMessage::Type::GetWindowBackingStore:
         post_message(client, make<WSAPIGetWindowBackingStoreRequest>(client_id, message.window_id));
-        break;
-    case WSAPI_ClientMessage::Type::ReleaseWindowBackingStore:
-        post_message(client, make<WSAPIReleaseWindowBackingStoreRequest>(client_id, (int)message.backing.backing_store_id));
         break;
     case WSAPI_ClientMessage::Type::SetGlobalCursorTracking:
         post_message(client, make<WSAPISetGlobalCursorTrackingRequest>(client_id, message.window_id, message.value));

@@ -3,20 +3,11 @@
 #include <AK/BufferStream.h>
 #include <AK/StdLibExtras.h>
 
-#ifdef KERNEL
-#include <Kernel/Process.h>
-#include <Kernel/MemoryManager.h>
-#include <Kernel/FileDescriptor.h>
-#include <Kernel/VirtualFileSystem.h>
-#endif
-
-#ifdef USERLAND
 #include <LibC/unistd.h>
 #include <LibC/stdio.h>
 #include <LibC/fcntl.h>
 #include <LibC/errno.h>
 #include <LibC/mman.h>
-#endif
 
 static const byte error_glyph_width = 8;
 static const byte error_glyph_height = 10;
@@ -54,19 +45,7 @@ Font& Font::default_font()
 {
     static const char* default_font_path = "/res/fonts/LizaRegular8x10.font";
     if (!s_default_font) {
-#ifdef USERLAND
         s_default_font = Font::load_from_file(default_font_path).leak_ref();
-#else
-        int error;
-        auto descriptor = VFS::the().open(default_font_path, error, 0, 0, *VFS::the().root_inode());
-        if (!descriptor) {
-            kprintf("Failed to open default font (%s)\n", default_font_path);
-            ASSERT_NOT_REACHED();
-        }
-        auto* region = current->allocate_file_backed_region(LinearAddress(), font_file_size(10), descriptor->inode(), "default_font", /*readable*/true, /*writable*/false);
-        ASSERT(region);
-        s_default_font = Font::load_from_memory(region->laddr().as_ptr()).leak_ref();
-#endif
         ASSERT(s_default_font);
     }
     return *s_default_font;
@@ -76,19 +55,7 @@ Font& Font::default_bold_font()
 {
     static const char* default_bold_font_path = "/res/fonts/LizaBold8x10.font";
     if (!s_default_bold_font) {
-#ifdef USERLAND
         s_default_bold_font = Font::load_from_file(default_bold_font_path).leak_ref();
-#else
-        int error;
-        auto descriptor = VFS::the().open(default_bold_font_path, error, 0, 0, *VFS::the().root_inode());
-        if (!descriptor) {
-            kprintf("Failed to open default bold font (%s)\n", default_bold_font_path);
-            ASSERT_NOT_REACHED();
-        }
-        auto* region = current->allocate_file_backed_region(LinearAddress(), font_file_size(10), descriptor->inode(), "default_bold_font", /*readable*/true, /*writable*/false);
-        ASSERT(region);
-        s_default_bold_font = Font::load_from_memory(region->laddr().as_ptr()).leak_ref();
-#endif
         ASSERT(s_default_bold_font);
     }
     return *s_default_bold_font;
@@ -116,6 +83,10 @@ Font::Font(const String& name, unsigned* rows, byte glyph_width, byte glyph_heig
 
 Font::~Font()
 {
+    if (m_mmap_ptr) {
+        int rc = munmap(m_mmap_ptr, 4096 * 3);
+        ASSERT(rc == 0);
+    }
 }
 
 RetainPtr<Font> Font::load_from_memory(const byte* data)
@@ -134,7 +105,6 @@ RetainPtr<Font> Font::load_from_memory(const byte* data)
     return adopt(*new Font(String(header.name), rows, header.glyph_width, header.glyph_height));
 }
 
-#ifdef USERLAND
 RetainPtr<Font> Font::load_from_file(const String& path)
 {
     int fd = open(path.characters(), O_RDONLY, 0644);
@@ -152,6 +122,7 @@ RetainPtr<Font> Font::load_from_file(const String& path)
     }
 
     auto font = load_from_memory(mapped_file);
+    font->m_mmap_ptr = mapped_file;
 
     int rc = close(fd);
     ASSERT(rc == 0);
@@ -189,4 +160,3 @@ bool Font::write_to_file(const String& path)
     ASSERT(rc == 0);
     return true;
 }
-#endif

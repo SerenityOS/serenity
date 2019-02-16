@@ -2,8 +2,6 @@
 #include "WSWindow.h"
 #include "WSScreen.h"
 #include "WSMessageLoop.h"
-#include "Process.h"
-#include "MemoryManager.h"
 #include <SharedGraphics/Font.h>
 #include <SharedGraphics/Painter.h>
 #include <SharedGraphics/CharacterBitmap.h>
@@ -13,6 +11,9 @@
 #include "WSMenuBar.h"
 #include "WSMenuItem.h"
 #include <WindowServer/WSClientConnection.h>
+#include <sys/ioctl.h>
+#include <unistd.h>
+#include <stdio.h>
 
 #ifdef KERNEL
 #include <Kernel/ProcFS.h>
@@ -79,8 +80,7 @@ static WSWindowManager* s_the;
 
 WSWindowManager& WSWindowManager::the()
 {
-    if (!s_the)
-        s_the = new WSWindowManager;
+    ASSERT(s_the);
     return *s_the;
 }
 
@@ -130,7 +130,7 @@ void WSWindowManager::flip_buffers()
     swap(m_front_painter, m_back_painter);
     if (m_framebuffer_fd != -1) {
         int new_y_offset = m_buffers_are_flipped ? 0 : m_screen_rect.height();
-        int rc = current->sys$ioctl(m_framebuffer_fd, 1982, new_y_offset);
+        int rc = ioctl(m_framebuffer_fd, 1982, new_y_offset);
         ASSERT(rc == 0);
     }
     m_buffers_are_flipped = !m_buffers_are_flipped;
@@ -139,9 +139,10 @@ void WSWindowManager::flip_buffers()
 WSWindowManager::WSWindowManager()
     : m_screen(WSScreen::the())
     , m_screen_rect(m_screen.rect())
-    , m_lock("WSWindowManager")
     , m_flash_flush(false)
 {
+    s_the = this;
+
 #ifndef DEBUG_COUNTERS
     (void)m_compose_count;
     (void)m_flush_count;
@@ -172,17 +173,13 @@ WSWindowManager::WSWindowManager()
     m_cursor_bitmap_inner = CharacterBitmap::create_from_ascii(cursor_bitmap_inner_ascii, 12, 17);
     m_cursor_bitmap_outer = CharacterBitmap::create_from_ascii(cursor_bitmap_outer_ascii, 12, 17);
 
-    {
-        LOCKER(m_wallpaper_path.lock());
-        m_wallpaper_path.resource() = "/res/wallpapers/cool.rgb";
-        m_wallpaper = GraphicsBitmap::load_from_file(m_wallpaper_path.resource(), m_screen_rect.size());
-    }
+    m_wallpaper_path = "/res/wallpapers/cool.rgb";
+    m_wallpaper = GraphicsBitmap::load_from_file(m_wallpaper_path, m_screen_rect.size());
 
 #ifdef KERNEL
     ProcFS::the().add_sys_bool("wm_flash_flush", m_flash_flush);
     ProcFS::the().add_sys_string("wm_wallpaper", m_wallpaper_path, [this] {
-        LOCKER(m_wallpaper_path.lock());
-        m_wallpaper = GraphicsBitmap::load_from_file(m_wallpaper_path.resource(), m_screen_rect.size());
+        m_wallpaper = GraphicsBitmap::load_from_file(m_wallpaper_path, m_screen_rect.size());
         invalidate(m_screen_rect);
     });
 #endif
@@ -201,25 +198,31 @@ WSWindowManager::WSWindowManager()
         m_system_menu->add_item(make<WSMenuItem>(4, "About..."));
         m_system_menu->on_item_activation = [] (WSMenuItem& item) {
             if (item.identifier() == 0) {
-                int error;
-                Process::create_user_process("/bin/Terminal", 100, 100, 0, error);
+                if (fork() == 0) {
+                    execl("/bin/Terminal", "/bin/Terminal", nullptr);
+                    ASSERT_NOT_REACHED();
+                }
                 return;
             }
             if (item.identifier() == 4) {
-                int error;
-                Process::create_user_process("/bin/About", 100, 100, 0, error);
+                if (fork() == 0) {
+                    execl("/bin/About", "/bin/About", nullptr);
+                    ASSERT_NOT_REACHED();
+                }
                 return;
             }
-            kprintf("WSMenu 1 item activated: '%s'\n", item.text().characters());
+            dbgprintf("WSMenu 1 item activated: '%s'\n", item.text().characters());
         };
     }
 
     // NOTE: This ensures that the system menu has the correct dimensions.
     set_current_menubar(nullptr);
 
+#if 0
     WSMessageLoop::the().start_timer(300, [this] {
         invalidate(menubar_rect());
     });
+#endif
 
     invalidate();
     compose();
@@ -244,7 +247,6 @@ int WSWindowManager::menubar_menu_margin() const
 
 void WSWindowManager::set_current_menubar(WSMenuBar* menubar)
 {
-    LOCKER(m_lock);
     if (menubar)
         m_current_menubar = menubar->make_weak_ptr();
     else
@@ -279,7 +281,6 @@ static const int s_close_button_bitmap_height = 9;
 
 void WSWindowManager::paint_window_frame(WSWindow& window)
 {
-    LOCKER(m_lock);
     //printf("[WM] paint_window_frame {%p}, rect: %d,%d %dx%d\n", &window, window.rect().x(), window.rect().y(), window.rect().width(), window.rect().height());
 
     if (window.type() == WSWindowType::Menu) {
@@ -357,7 +358,6 @@ void WSWindowManager::paint_window_frame(WSWindow& window)
 
 void WSWindowManager::add_window(WSWindow& window)
 {
-    LOCKER(m_lock);
     m_windows.set(&window);
     m_windows_in_order.append(&window);
     if (!active_window())
@@ -366,7 +366,6 @@ void WSWindowManager::add_window(WSWindow& window)
 
 void WSWindowManager::move_to_front(WSWindow& window)
 {
-    LOCKER(m_lock);
     if (m_windows_in_order.tail() != &window)
         invalidate(window);
     m_windows_in_order.remove(&window);
@@ -375,7 +374,6 @@ void WSWindowManager::move_to_front(WSWindow& window)
 
 void WSWindowManager::remove_window(WSWindow& window)
 {
-    LOCKER(m_lock);
     if (!m_windows.contains(&window))
         return;
 
@@ -395,7 +393,6 @@ void WSWindowManager::notify_title_changed(WSWindow& window)
 void WSWindowManager::notify_rect_changed(WSWindow& window, const Rect& old_rect, const Rect& new_rect)
 {
     printf("[WM] WSWindow %p rect changed (%d,%d %dx%d) -> (%d,%d %dx%d)\n", &window, old_rect.x(), old_rect.y(), old_rect.width(), old_rect.height(), new_rect.x(), new_rect.y(), new_rect.width(), new_rect.height());
-    ASSERT_INTERRUPTS_ENABLED();
     invalidate(outer_window_rect(old_rect));
     invalidate(outer_window_rect(new_rect));
 }
@@ -469,7 +466,6 @@ void WSWindowManager::handle_close_button_mouse_event(WSWindow& window, WSMouseE
 
 void WSWindowManager::process_mouse_event(WSMouseEvent& event)
 {
-    LOCKER(m_lock);
     if (event.type() == WSMessage::MouseUp && event.button() == MouseButton::Left) {
         if (m_drag_window) {
 #ifdef DRAG_DEBUG
@@ -597,14 +593,12 @@ IterationDecision WSWindowManager::for_each_visible_window_from_front_to_back(Ca
 
 void WSWindowManager::compose()
 {
-    LOCKER(m_lock);
     auto dirty_rects = move(m_dirty_rects);
     auto cursor_location = m_screen.cursor_location();
     dirty_rects.append(m_last_cursor_rect);
     dirty_rects.append({ cursor_location.x(), cursor_location.y(), (int)m_cursor_bitmap_inner->width(), (int)m_cursor_bitmap_inner->height() });
 #ifdef DEBUG_COUNTERS
     dbgprintf("[WM] compose #%u (%u rects)\n", ++m_compose_count, dirty_rects.size());
-    dbgprintf("kmalloc stats: alloc:%u free:%u eternal:%u\n", sum_alloc, sum_free, kmalloc_sum_eternal);
 #endif
 
     auto any_window_contains_rect = [this] (const Rect& r) {
@@ -630,7 +624,6 @@ void WSWindowManager::compose()
         if (any_window_contains_rect(dirty_rect)) {
             continue;
         }
-        LOCKER(m_wallpaper_path.lock());
         if (!m_wallpaper)
             m_back_painter->fill_rect(dirty_rect, m_background_color);
         else
@@ -663,7 +656,7 @@ void WSWindowManager::compose()
     draw_menubar();
     draw_cursor();
 
-    if (m_flash_flush.lock_and_copy()) {
+    if (m_flash_flush) {
         for (auto& rect : dirty_rects)
             m_front_painter->fill_rect(rect, Color::Yellow);
     }
@@ -675,7 +668,6 @@ void WSWindowManager::compose()
 
 void WSWindowManager::invalidate_cursor()
 {
-    LOCKER(m_lock);
     auto cursor_location = m_screen.cursor_location();
     Rect cursor_rect { cursor_location.x(), cursor_location.y(), (int)m_cursor_bitmap_inner->width(), (int)m_cursor_bitmap_inner->height() };
     invalidate(cursor_rect);
@@ -711,8 +703,6 @@ void WSWindowManager::draw_menubar()
 
 void WSWindowManager::draw_cursor()
 {
-    ASSERT_INTERRUPTS_ENABLED();
-    LOCKER(m_lock);
     auto cursor_location = m_screen.cursor_location();
     Rect cursor_rect { cursor_location.x(), cursor_location.y(), (int)m_cursor_bitmap_inner->width(), (int)m_cursor_bitmap_inner->height() };
     Color inner_color = Color::White;
@@ -726,8 +716,6 @@ void WSWindowManager::draw_cursor()
 
 void WSWindowManager::on_message(WSMessage& message)
 {
-    ASSERT_INTERRUPTS_ENABLED();
-    LOCKER(m_lock);
     if (message.is_mouse_event())
         return process_mouse_event(static_cast<WSMouseEvent&>(message));
 
@@ -747,7 +735,6 @@ void WSWindowManager::on_message(WSMessage& message)
 
 void WSWindowManager::set_active_window(WSWindow* window)
 {
-    LOCKER(m_lock);
     if (window->type() == WSWindowType::Menu) {
         dbgprintf("WSWindowManager: Attempted to make a menu window active.\n");
         return;
@@ -777,14 +764,12 @@ void WSWindowManager::set_active_window(WSWindow* window)
 
 void WSWindowManager::invalidate()
 {
-    LOCKER(m_lock);
     m_dirty_rects.clear_with_capacity();
     invalidate(m_screen_rect);
 }
 
 void WSWindowManager::invalidate(const Rect& a_rect)
 {
-    LOCKER(m_lock);
     auto rect = Rect::intersection(a_rect, m_screen_rect);
     if (rect.is_empty())
         return;
@@ -803,7 +788,6 @@ void WSWindowManager::invalidate(const Rect& a_rect)
     m_dirty_rects.append(rect);
 
     if (!m_pending_compose_event) {
-        ASSERT_INTERRUPTS_ENABLED();
         WSMessageLoop::the().post_message(this, make<WSMessage>(WSMessage::WM_DeferredCompose));
         m_pending_compose_event = true;
     }
@@ -811,8 +795,6 @@ void WSWindowManager::invalidate(const Rect& a_rect)
 
 void WSWindowManager::invalidate(const WSWindow& window)
 {
-    ASSERT_INTERRUPTS_ENABLED();
-    LOCKER(m_lock);
     invalidate(outer_window_rect(window.rect()));
 }
 
@@ -822,8 +804,6 @@ void WSWindowManager::invalidate(const WSWindow& window, const Rect& rect)
         invalidate(window);
         return;
     }
-    ASSERT_INTERRUPTS_ENABLED();
-    LOCKER(m_lock);
     auto outer_rect = outer_window_rect(window.rect());
     auto inner_rect = rect;
     inner_rect.move_by(window.position());
@@ -853,14 +833,12 @@ void WSWindowManager::flush(const Rect& a_rect)
 
 void WSWindowManager::close_menu(WSMenu& menu)
 {
-    LOCKER(m_lock);
     if (current_menu() == &menu)
         close_current_menu();
 }
 
 void WSWindowManager::close_menubar(WSMenuBar& menubar)
 {
-    LOCKER(m_lock);
     if (current_menubar() == &menubar)
         set_current_menubar(nullptr);
 }

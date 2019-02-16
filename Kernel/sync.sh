@@ -69,6 +69,7 @@ cp -v ../Applications/Launcher/Launcher mnt/bin/Launcher
 cp -v ../Applications/Clock/Clock mnt/bin/Clock
 cp -v ../Applications/FileManager/FileManager mnt/bin/FileManager
 cp -v ../Applications/About/About mnt/bin/About
+cp -v ../WindowServer/WindowServer mnt/bin/WindowServer
 cp -v kernel.map mnt/
 sh sync-local.sh
 umount mnt
