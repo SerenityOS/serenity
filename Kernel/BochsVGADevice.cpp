@@ -43,19 +43,6 @@ BochsVGADevice::BochsVGADevice()
     m_framebuffer_address = PhysicalAddress(find_framebuffer_address());
 }
 
-Region* BochsVGADevice::mmap(Process& process, LinearAddress preferred_laddr, size_t offset, size_t size)
-{
-    ASSERT(offset == 0);
-    ASSERT(size == framebuffer_size_in_bytes());
-    auto framebuffer_vmo = VMObject::create_framebuffer_wrapper(framebuffer_address(), framebuffer_size_in_bytes());
-    auto* region = process.allocate_region_with_vmo(preferred_laddr, framebuffer_size_in_bytes(), move(framebuffer_vmo), 0, "BochsVGADevice Framebuffer", true, true);
-    kprintf("BochsVGADevice::mmap for %s(%u) mapped region %p for fb addr %p\n",
-            process.name().characters(), process.pid(),
-            region, framebuffer_address());
-    ASSERT(region);
-    return region;
-}
-
 void BochsVGADevice::set_register(word index, word data)
 {
     IO::out16(VBE_DISPI_IOPORT_INDEX, index);
@@ -65,10 +52,10 @@ void BochsVGADevice::set_register(word index, word data)
 void BochsVGADevice::set_resolution(int width, int height)
 {
     set_register(VBE_DISPI_INDEX_ENABLE, VBE_DISPI_DISABLED);
-    set_register(VBE_DISPI_INDEX_XRES, width);
-    set_register(VBE_DISPI_INDEX_YRES, height);
-    set_register(VBE_DISPI_INDEX_VIRT_WIDTH, width);
-    set_register(VBE_DISPI_INDEX_VIRT_HEIGHT, height * 2);
+    set_register(VBE_DISPI_INDEX_XRES, (word)width);
+    set_register(VBE_DISPI_INDEX_YRES, (word)height);
+    set_register(VBE_DISPI_INDEX_VIRT_WIDTH, (word)width);
+    set_register(VBE_DISPI_INDEX_VIRT_HEIGHT, (word)height * 2);
     set_register(VBE_DISPI_INDEX_BPP, 32);
     set_register(VBE_DISPI_INDEX_ENABLE, VBE_DISPI_ENABLED | VBE_DISPI_LFB_ENABLED);
     set_register(VBE_DISPI_INDEX_BANK, 0);
@@ -78,7 +65,8 @@ void BochsVGADevice::set_resolution(int width, int height)
 
 void BochsVGADevice::set_y_offset(int offset)
 {
-    set_register(VBE_DISPI_INDEX_Y_OFFSET, offset);
+    ASSERT(offset <= m_framebuffer_size.height());
+    set_register(VBE_DISPI_INDEX_Y_OFFSET, (word)offset);
 }
 
 dword BochsVGADevice::find_framebuffer_address()
@@ -95,11 +83,32 @@ dword BochsVGADevice::find_framebuffer_address()
     return framebuffer_address;
 }
 
-int BochsVGADevice::ioctl(Process& process, unsigned int request, unsigned int arg)
+Region* BochsVGADevice::mmap(Process& process, LinearAddress preferred_laddr, size_t offset, size_t size)
+{
+    ASSERT(offset == 0);
+    ASSERT(size == framebuffer_size_in_bytes());
+    auto vmo = VMObject::create_for_physical_range(framebuffer_address(), framebuffer_size_in_bytes());
+    auto* region = process.allocate_region_with_vmo(
+        preferred_laddr,
+        framebuffer_size_in_bytes(),
+        move(vmo),
+        0,
+        "BochsVGA Framebuffer",
+        true, true);
+    kprintf("BochsVGA: %s(%u) created Region{%p} for framebuffer P%x\n",
+            process.name().characters(), process.pid(),
+            region, framebuffer_address().as_ptr());
+    ASSERT(region);
+    return region;
+}
+
+int BochsVGADevice::ioctl(Process& process, unsigned request, unsigned arg)
 {
     switch (request) {
     case BXVGA_DEV_IOCTL_SET_Y_OFFSET:
-        set_y_offset(arg);
+        if (arg > (unsigned)m_framebuffer_size.height() * 2)
+            return -EINVAL;
+        set_y_offset((int)arg);
         return 0;
     case BXVGA_DEV_IOCTL_SET_RESOLUTION: {
         auto* resolution = (const BXVGAResolution*)arg;

@@ -83,7 +83,7 @@ class VMObject : public Retainable<VMObject>, public Weakable<VMObject> {
 public:
     static RetainPtr<VMObject> create_file_backed(RetainPtr<Inode>&&);
     static RetainPtr<VMObject> create_anonymous(size_t);
-    static RetainPtr<VMObject> create_framebuffer_wrapper(PhysicalAddress, size_t);
+    static RetainPtr<VMObject> create_for_physical_range(PhysicalAddress, size_t);
     RetainPtr<VMObject> clone();
 
     ~VMObject();

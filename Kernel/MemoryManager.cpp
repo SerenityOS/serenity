@@ -683,7 +683,7 @@ RetainPtr<VMObject> VMObject::create_anonymous(size_t size)
     return adopt(*new VMObject(size));
 }
 
-RetainPtr<VMObject> VMObject::create_framebuffer_wrapper(PhysicalAddress paddr, size_t size)
+RetainPtr<VMObject> VMObject::create_for_physical_range(PhysicalAddress paddr, size_t size)
 {
     size = ceil_div(size, PAGE_SIZE) * PAGE_SIZE;
     auto vmo = adopt(*new VMObject(paddr, size));
