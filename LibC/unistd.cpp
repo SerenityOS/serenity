@@ -357,7 +357,11 @@ int create_shared_buffer(pid_t peer_pid, size_t size, void** buffer)
 void* get_shared_buffer(int shared_buffer_id)
 {
     int rc = syscall(SC_get_shared_buffer, shared_buffer_id);
-    __RETURN_WITH_ERRNO(rc, (void*)rc, (void*)-1);
+    if (rc < 0 && -rc < EMAXERRNO) {
+        errno = -rc;
+        return (void*)-1;
+    }
+    return (void*)rc;
 }
 
 int release_shared_buffer(int shared_buffer_id)

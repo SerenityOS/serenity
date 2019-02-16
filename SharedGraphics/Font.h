@@ -47,10 +47,8 @@ public:
 
     static RetainPtr<Font> load_from_memory(const byte*);
 
-#ifdef USERLAND
     static RetainPtr<Font> load_from_file(const String& path);
     bool write_to_file(const String& path);
-#endif
 
     ~Font();
 
@@ -69,6 +67,7 @@ private:
     String m_name;
 
     unsigned* m_rows { nullptr };
+    void* m_mmap_ptr { nullptr };
 
     RetainPtr<CharacterBitmap> m_error_bitmap;
 

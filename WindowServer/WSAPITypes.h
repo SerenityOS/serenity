@@ -34,7 +34,6 @@ struct WSAPI_WindowParameters {
 };
 
 struct WSAPI_WindowBackingStoreInfo {
-    void* backing_store_id;
     WSAPI_Size size;
     size_t bpp;
     size_t pitch;
@@ -114,7 +113,6 @@ struct WSAPI_ServerMessage {
             unsigned identifier;
         } menu;
         struct {
-            void* backing_store_id;
             WSAPI_Size size;
             size_t bpp;
             size_t pitch;
@@ -143,7 +141,6 @@ struct WSAPI_ClientMessage {
         InvalidateRect,
         DidFinishPainting,
         GetWindowBackingStore,
-        ReleaseWindowBackingStore,
         SetGlobalCursorTracking,
     };
     Type type { Invalid };
@@ -161,9 +158,6 @@ struct WSAPI_ClientMessage {
         struct {
             WSAPI_Rect rect;
         } window;
-        struct {
-            void* backing_store_id;
-        } backing;
     };
 };
 

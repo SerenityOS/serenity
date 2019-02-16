@@ -19,11 +19,10 @@ public:
     virtual ~WSClientConnection() override;
 
     static WSClientConnection* from_client_id(int client_id);
-    static WSClientConnection* ensure_for_client_id(int client_id);
     static void for_each_client(Function<void(WSClientConnection&)>);
 
     void post_message(const WSAPI_ServerMessage&);
-    RetainPtr<GraphicsBitmap> create_bitmap(const Size&);
+    RetainPtr<GraphicsBitmap> create_shared_bitmap(const Size&);
 
     int client_id() const { return m_client_id; }
     WSMenuBar* app_menubar() { return m_app_menubar.ptr(); }
@@ -52,7 +51,6 @@ private:
     void handle_request(WSAPIInvalidateRectRequest&);
     void handle_request(WSAPIDidFinishPaintingNotification&);
     void handle_request(WSAPIGetWindowBackingStoreRequest&);
-    void handle_request(WSAPIReleaseWindowBackingStoreRequest&);
     void handle_request(WSAPISetGlobalCursorTrackingRequest&);
 
     void post_error(const String&);

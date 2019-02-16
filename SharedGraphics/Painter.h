@@ -11,7 +11,7 @@ class GlyphBitmap;
 class GraphicsBitmap;
 class Font;
 
-#ifndef KERNEL
+#ifdef USERLAND
 class GWidget;
 class GWindow;
 #endif
@@ -20,7 +20,7 @@ enum class TextAlignment { TopLeft, CenterLeft, Center, CenterRight };
 
 class Painter {
 public:
-#ifndef KERNEL
+#ifdef USERLAND
     explicit Painter(GWidget&);
 #endif
     explicit Painter(GraphicsBitmap&);
@@ -63,9 +63,8 @@ private:
     Point m_translation;
     Rect m_clip_rect;
     RetainPtr<GraphicsBitmap> m_target;
-#ifndef KERNEL
+#ifdef LIBGUI
     GWindow* m_window { nullptr };
-    void* m_backing_store_id { nullptr };
 #endif
     DrawOp m_draw_op { DrawOp::Copy };
 };

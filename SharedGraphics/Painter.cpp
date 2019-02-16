@@ -4,7 +4,7 @@
 #include <AK/Assertions.h>
 #include <AK/StdLibExtras.h>
 
-#ifdef USERLAND
+#ifdef LIBGUI
 #include <LibGUI/GWidget.h>
 #include <LibGUI/GWindow.h>
 #include <LibGUI/GEventLoop.h>
@@ -22,7 +22,7 @@ Painter::Painter(GraphicsBitmap& bitmap)
     m_clip_rect = { { 0, 0 }, bitmap.size() };
 }
 
-#ifdef USERLAND
+#ifdef LIBGUI
 Painter::Painter(GWidget& widget)
     : m_font(&widget.font())
 {
@@ -30,7 +30,6 @@ Painter::Painter(GWidget& widget)
     request.type = WSAPI_ClientMessage::Type::GetWindowBackingStore;
     request.window_id = widget.window()->window_id();
     auto response = GEventLoop::main().sync_request(request, WSAPI_ServerMessage::DidGetWindowBackingStore);
-    m_backing_store_id = response.backing.backing_store_id;
 
     m_target = GraphicsBitmap::create_with_shared_buffer(response.backing.shared_buffer_id, response.backing.size);
     ASSERT(m_target);
@@ -50,15 +49,7 @@ Painter::Painter(GWidget& widget)
 
 Painter::~Painter()
 {
-#ifdef USERLAND
     m_target = nullptr;
-    if (m_backing_store_id) {
-        WSAPI_ClientMessage request;
-        request.type = WSAPI_ClientMessage::Type::ReleaseWindowBackingStore;
-        request.backing.backing_store_id = m_backing_store_id;
-        GEventLoop::main().post_message_to_server(request);
-    }
-#endif
 }
 
 void Painter::fill_rect_with_draw_op(const Rect& a_rect, Color color)

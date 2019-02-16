@@ -47,6 +47,7 @@
     __ERROR(EWHYTHO,        "Failed without setting an error code (Bug!)") \
     __ERROR(ENOTEMPTY,      "Directory not empty") \
     __ERROR(ECONNREFUSED,   "Connection refused") \
+    __ERROR(EMAXERRNO,      "The highest errno +1 :^)")
 
 
 enum __errno_values {

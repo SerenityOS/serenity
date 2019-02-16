@@ -28,7 +28,7 @@ public:
     virtual bool connect(const sockaddr*, socklen_t, int& error) = 0;
     virtual bool get_address(sockaddr*, socklen_t*) = 0;
     virtual bool is_local() const { return false; }
-
+    virtual void close(SocketRole) = 0;
     virtual bool can_read(SocketRole) const = 0;
     virtual ssize_t read(SocketRole, byte*, size_t) = 0;
     virtual ssize_t write(SocketRole, const byte*, size_t) = 0;

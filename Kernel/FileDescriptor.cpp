@@ -10,6 +10,7 @@
 #include <Kernel/Socket.h>
 #include <Kernel/Process.h>
 #include <Kernel/BlockDevice.h>
+#include <Kernel/MemoryManager.h>
 
 RetainPtr<FileDescriptor> FileDescriptor::create(RetainPtr<Inode>&& inode)
 {
@@ -54,6 +55,10 @@ FileDescriptor::FileDescriptor(RetainPtr<Socket>&& socket, SocketRole role)
 
 FileDescriptor::~FileDescriptor()
 {
+    if (m_socket) {
+        m_socket->close(m_socket_role);
+        m_socket = nullptr;
+    }
     if (m_device) {
         m_device->close();
         m_device = nullptr;
@@ -364,6 +369,7 @@ Region* FileDescriptor::mmap(Process& process, LinearAddress laddr, size_t offse
     // FIXME: Implement mapping at a client-specified address. Most of the support is already in plcae.
     ASSERT(laddr.as_ptr() == nullptr);
     auto* region = process.allocate_file_backed_region(LinearAddress(), size, inode(), move(region_name), prot & PROT_READ, prot & PROT_WRITE);
+    region->page_in();
     return region;
 }
 

@@ -47,7 +47,7 @@ void WSWindow::set_rect(const Rect& rect)
         if (m_menu)
             m_backing = GraphicsBitmap::create(m_rect.size());
         else if (client)
-            m_backing = client->create_bitmap(m_rect.size());
+            m_backing = client->create_shared_bitmap(m_rect.size());
 
     }
     WSWindowManager::the().notify_rect_changed(*this, old_rect, rect);

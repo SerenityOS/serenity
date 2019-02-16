@@ -6,7 +6,6 @@
 #include <AK/HashTable.h>
 #include <AK/InlineLinkedList.h>
 #include <AK/WeakPtr.h>
-#include <AK/Lock.h>
 #include <AK/HashMap.h>
 #include "WSMessageReceiver.h"
 #include "WSMenuBar.h"
@@ -27,6 +26,10 @@ enum class IterationDecision { Continue, Abort };
 class WSWindowManager : public WSMessageReceiver {
 public:
     static WSWindowManager& the();
+
+    WSWindowManager();
+    virtual ~WSWindowManager() override;
+
     void add_window(WSWindow&);
     void remove_window(WSWindow&);
 
@@ -67,9 +70,6 @@ public:
     void set_framebuffer_fd(int fd) { m_framebuffer_fd = fd; }
 
 private:
-    WSWindowManager();
-    virtual ~WSWindowManager() override;
-
     void process_mouse_event(WSMouseEvent&);
     void handle_menu_mouse_event(WSMenu&, WSMouseEvent&);
     void handle_menubar_mouse_event(WSMouseEvent&);
@@ -139,12 +139,10 @@ private:
 
     RetainPtr<Font> m_font;
 
-    Lockable<String> m_wallpaper_path;
+    String m_wallpaper_path;
     RetainPtr<GraphicsBitmap> m_wallpaper;
 
-    mutable Lock m_lock;
-
-    Lockable<bool> m_flash_flush;
+    bool m_flash_flush { false };
     bool m_buffers_are_flipped { false };
 
     OwnPtr<WSMenu> m_system_menu;
