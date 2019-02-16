@@ -63,8 +63,8 @@ public:
     Color menu_selection_color() const { return m_menu_selection_color; }
     int menubar_menu_margin() const;
 
-    int api$menu_add_separator(int menu_id);
-    int api$menu_add_item(int menu_id, unsigned identifier, String&& text);
+    int framebuffer_fd() const { return m_framebuffer_fd; }
+    void set_framebuffer_fd(int fd) { m_framebuffer_fd = fd; }
 
 private:
     WSWindowManager();
@@ -151,4 +151,6 @@ private:
     Color m_menu_selection_color;
     WeakPtr<WSMenuBar> m_current_menubar;
     WeakPtr<WSMenu> m_current_menu;
+
+    int m_framebuffer_fd { -1 };
 };
