@@ -7,18 +7,16 @@
 #include <AK/RetainPtr.h>
 #include <AK/AKString.h>
 
-#ifdef KERNEL
-#include "Process.h"
-#endif
+class Region;
 
 class GraphicsBitmap : public Retainable<GraphicsBitmap> {
 public:
 #ifdef KERNEL
-    static RetainPtr<GraphicsBitmap> create(Process&, const Size&);
     static RetainPtr<GraphicsBitmap> create_kernel_only(const Size&);
 #endif
     static RetainPtr<GraphicsBitmap> create_wrapper(const Size&, RGBA32*);
     static RetainPtr<GraphicsBitmap> load_from_file(const String& path, const Size&);
+    static RetainPtr<GraphicsBitmap> create_with_shared_buffer(int shared_buffer_id, const Size&, RGBA32* buffer = nullptr);
     ~GraphicsBitmap();
 
     RGBA32* scanline(int y);
@@ -31,16 +29,17 @@ public:
     size_t pitch() const { return m_pitch; }
 
 #ifdef KERNEL
-    Region* client_region() { return m_client_region; }
     Region* server_region() { return m_server_region; }
 #endif
 
+    int shared_buffer_id() const { return m_shared_buffer_id; }
+
 private:
 #ifdef KERNEL
-    GraphicsBitmap(Process&, const Size&);
     GraphicsBitmap(const Size&);
 #endif
     GraphicsBitmap(const Size&, RGBA32*);
+    GraphicsBitmap(int shared_buffer_id, const Size&, RGBA32*);
 
     Size m_size;
     RGBA32* m_data { nullptr };
@@ -50,9 +49,9 @@ private:
     bool m_mmaped { false };
 #endif
 
+    int m_shared_buffer_id { -1 };
+
 #ifdef KERNEL
-    WeakPtr<Process> m_client_process;
-    Region* m_client_region { nullptr };
     Region* m_server_region { nullptr };
 #endif
 };

@@ -348,4 +348,22 @@ int read_tsc(unsigned* lsw, unsigned* msw)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
+int create_shared_buffer(pid_t peer_pid, size_t size, void** buffer)
+{
+    int rc = syscall(SC_create_shared_buffer, peer_pid, size, buffer);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
+void* get_shared_buffer(int shared_buffer_id)
+{
+    int rc = syscall(SC_get_shared_buffer, shared_buffer_id);
+    __RETURN_WITH_ERRNO(rc, (void*)rc, (void*)-1);
+}
+
+int release_shared_buffer(int shared_buffer_id)
+{
+    int rc = syscall(SC_release_shared_buffer, shared_buffer_id);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
 }

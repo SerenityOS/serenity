@@ -2141,7 +2141,7 @@ void Process::finalize()
 
     m_fds.clear();
     m_tty = nullptr;
-
+    disown_all_shared_buffers();
     {
         InterruptDisabler disabler;
         if (auto* parent_process = Process::from_pid(m_ppid)) {
@@ -2352,4 +2352,152 @@ bool Process::wait_for_connect(Socket& socket, int& error)
         return false;
     }
     return true;
+}
+
+struct SharedBuffer {
+    SharedBuffer(pid_t pid1, pid_t pid2, size_t size)
+        : m_pid1(pid1)
+        , m_pid2(pid2)
+        , m_vmo(VMObject::create_anonymous(size))
+    {
+        ASSERT(pid1 != pid2);
+    }
+
+    void* retain(Process& process)
+    {
+        if (m_pid1 == process.pid()) {
+            ++m_pid1_retain_count;
+            if (!m_pid1_region)
+                m_pid1_region = process.allocate_region_with_vmo(LinearAddress(), size(), m_vmo.copy_ref(), 0, "SharedBuffer", true, true);
+            return m_pid1_region->laddr().as_ptr();
+        } else if (m_pid2 == process.pid()) {
+            ++m_pid2_retain_count;
+            if (!m_pid2_region)
+                m_pid2_region = process.allocate_region_with_vmo(LinearAddress(), size(), m_vmo.copy_ref(), 0, "SharedBuffer", true, true);
+            return m_pid2_region->laddr().as_ptr();
+        }
+        return nullptr;
+    }
+
+    void release(Process& process)
+    {
+        if (m_pid1 == process.pid()) {
+            ASSERT(m_pid1_retain_count);
+            --m_pid1_retain_count;
+            if (!m_pid1_retain_count) {
+                if (m_pid1_region)
+                    process.deallocate_region(*m_pid1_region);
+                m_pid1_region = nullptr;
+            }
+            destroy_if_unused();
+        } else if (m_pid2 == process.pid()) {
+            ASSERT(m_pid2_retain_count);
+            --m_pid2_retain_count;
+            if (!m_pid2_retain_count) {
+                if (m_pid2_region)
+                    process.deallocate_region(*m_pid2_region);
+                m_pid2_region = nullptr;
+            }
+            destroy_if_unused();
+        }
+    }
+
+    void disown(pid_t pid)
+    {
+        if (m_pid1 == pid) {
+            m_pid1 = 0;
+            m_pid1_retain_count = 0;
+            destroy_if_unused();
+        } else if (m_pid2 == pid) {
+            m_pid2 = 0;
+            m_pid2_retain_count = 0;
+            destroy_if_unused();
+        }
+    }
+
+    pid_t pid1() const { return m_pid1; }
+    pid_t pid2() const { return m_pid2; }
+    unsigned pid1_retain_count() const { return m_pid1_retain_count; }
+    unsigned pid2_retain_count() const { return m_pid2_retain_count; }
+    size_t size() const { return m_vmo->size(); }
+    void destroy_if_unused();
+
+    int m_shared_buffer_id { -1 };
+    pid_t m_pid1;
+    pid_t m_pid2;
+    unsigned m_pid1_retain_count { 1 };
+    unsigned m_pid2_retain_count { 0 };
+    Region* m_pid1_region { nullptr };
+    Region* m_pid2_region { nullptr };
+    RetainPtr<VMObject> m_vmo;
+};
+
+static int s_next_shared_buffer_id;
+Lockable<HashMap<int, OwnPtr<SharedBuffer>>>& shared_buffers()
+{
+    static Lockable<HashMap<int, OwnPtr<SharedBuffer>>>* map;
+    if (!map)
+        map = new Lockable<HashMap<int, OwnPtr<SharedBuffer>>>;
+    return *map;
+}
+
+void SharedBuffer::destroy_if_unused()
+{
+    if (!m_pid1_retain_count && !m_pid2_retain_count) {
+        LOCKER(shared_buffers().lock());
+        kprintf("Destroying unused SharedBuffer{%p} (pid1: %d, pid2: %d)\n", this, m_pid1, m_pid2);
+        shared_buffers().resource().remove(m_shared_buffer_id);
+    }
+}
+
+void Process::disown_all_shared_buffers()
+{
+    LOCKER(shared_buffers().lock());
+    for (auto& it : shared_buffers().resource()) {
+        (*it.value).disown(m_pid);
+    }
+}
+
+int Process::sys$create_shared_buffer(pid_t peer_pid, size_t size, void** buffer)
+{
+    if (!peer_pid || peer_pid < 0 || peer_pid == m_pid)
+        return -EINVAL;
+    if (!validate_write_typed(buffer))
+        return -EFAULT;
+    {
+        InterruptDisabler disabler;
+        auto* peer = Process::from_pid(peer_pid);
+        if (!peer)
+            return -ESRCH;
+    }
+    LOCKER(shared_buffers().lock());
+    int shared_buffer_id = ++s_next_shared_buffer_id;
+    auto shared_buffer = make<SharedBuffer>(m_pid, peer_pid, size);
+    shared_buffer->m_pid1_region = allocate_region_with_vmo(LinearAddress(), shared_buffer->size(), shared_buffer->m_vmo.copy_ref(), 0, "SharedBuffer", true, true);
+    *buffer = shared_buffer->m_pid1_region->laddr().as_ptr();
+    shared_buffers().resource().set(shared_buffer_id, move(shared_buffer));
+    return shared_buffer_id;
+}
+
+int Process::sys$release_shared_buffer(int shared_buffer_id)
+{
+    LOCKER(shared_buffers().lock());
+    auto it = shared_buffers().resource().find(shared_buffer_id);
+    if (it == shared_buffers().resource().end())
+        return -EINVAL;
+    auto& shared_buffer = *(*it).value;
+    shared_buffer.release(*this);
+    return 0;
+}
+
+void* Process::sys$get_shared_buffer(int shared_buffer_id)
+{
+    LOCKER(shared_buffers().lock());
+    auto it = shared_buffers().resource().find(shared_buffer_id);
+    if (it == shared_buffers().resource().end())
+        return (void*)-EINVAL;
+    auto& shared_buffer = *(*it).value;
+    if (shared_buffer.pid1() != m_pid && shared_buffer.pid2() != m_pid)
+        return (void*)-EINVAL;
+    return shared_buffer.retain(*this);
 }

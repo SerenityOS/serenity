@@ -15,31 +15,6 @@
 #endif
 
 #ifdef KERNEL
-RetainPtr<GraphicsBitmap> GraphicsBitmap::create(Process& process, const Size& size)
-{
-    return adopt(*new GraphicsBitmap(process, size));
-}
-
-GraphicsBitmap::GraphicsBitmap(Process& process, const Size& size)
-    : m_size(size)
-    , m_pitch(size.width() * sizeof(RGBA32))
-    , m_client_process(process.make_weak_ptr())
-{
-    InterruptDisabler disabler;
-    size_t size_in_bytes = size.width() * size.height() * sizeof(RGBA32);
-    auto vmo = VMObject::create_anonymous(size_in_bytes);
-    m_client_region = process.allocate_region_with_vmo(LinearAddress(), size_in_bytes, vmo.copy_ref(), 0, "GraphicsBitmap (client)", true, true);
-    m_client_region->set_shared(true);
-    m_client_region->set_is_bitmap(true);
-    m_client_region->commit();
-    auto& server = WSMessageLoop::the().server_process();
-    m_server_region = server.allocate_region_with_vmo(LinearAddress(), size_in_bytes, move(vmo), 0, "GraphicsBitmap (server)", true, false);
-    m_server_region->set_shared(true);
-    m_server_region->set_is_bitmap(true);
-
-    m_data = (RGBA32*)m_server_region->laddr().as_ptr();
-}
-
 RetainPtr<GraphicsBitmap> GraphicsBitmap::create_kernel_only(const Size& size)
 {
     return adopt(*new GraphicsBitmap(size));
@@ -115,11 +90,32 @@ GraphicsBitmap::GraphicsBitmap(const Size& size, RGBA32* data)
 {
 }
 
+RetainPtr<GraphicsBitmap> GraphicsBitmap::create_with_shared_buffer(int shared_buffer_id, const Size& size, RGBA32* data)
+{
+    if (!data) {
+#ifdef KERNEL
+        void* shared_buffer = current->sys$get_shared_buffer(shared_buffer_id);
+#else
+        void* shared_buffer = get_shared_buffer(shared_buffer_id);
+#endif
+        if (!shared_buffer || shared_buffer == (void*)-1)
+            return nullptr;
+        data = (RGBA32*)shared_buffer;
+    }
+    return adopt(*new GraphicsBitmap(shared_buffer_id, size, data));
+}
+
+GraphicsBitmap::GraphicsBitmap(int shared_buffer_id, const Size& size, RGBA32* data)
+    : m_size(size)
+    , m_data(data)
+    , m_pitch(size.width() * sizeof(RGBA32))
+    , m_shared_buffer_id(shared_buffer_id)
+{
+}
+
 GraphicsBitmap::~GraphicsBitmap()
 {
 #ifdef KERNEL
-    if (m_client_region && m_client_process)
-        m_client_process->deallocate_region(*m_client_region);
     if (m_server_region)
         WSMessageLoop::the().server_process().deallocate_region(*m_server_region);
 #else
@@ -128,6 +124,15 @@ GraphicsBitmap::~GraphicsBitmap()
         ASSERT(rc == 0);
     }
 #endif
+    if (m_shared_buffer_id != -1) {
+        int rc;
+#ifdef KERNEL
+        rc = current->sys$release_shared_buffer(m_shared_buffer_id);
+#else
+        rc = release_shared_buffer(m_shared_buffer_id);
+#endif
+        ASSERT(rc == 0);
+    }
     m_data = nullptr;
 }
 

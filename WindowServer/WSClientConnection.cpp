@@ -42,13 +42,12 @@ WSClientConnection* WSClientConnection::ensure_for_client_id(int client_id)
 WSClientConnection::WSClientConnection(int fd)
     : m_fd(fd)
 {
-    pid_t pid;
-    int rc = WSMessageLoop::the().server_process().sys$ioctl(m_fd, 413, (int)&pid);
+    int rc = WSMessageLoop::the().server_process().sys$ioctl(m_fd, 413, (int)&m_pid);
     ASSERT(rc == 0);
 
     {
         InterruptDisabler disabler;
-        auto* process = Process::from_pid(pid);
+        auto* process = Process::from_pid(m_pid);
         ASSERT(process);
         m_process = process->make_weak_ptr();
         m_client_id = (int)process;
@@ -85,9 +84,12 @@ void WSClientConnection::post_message(const WSAPI_ServerMessage& message)
 
 RetainPtr<GraphicsBitmap> WSClientConnection::create_bitmap(const Size& size)
 {
-    if (!m_process)
-        return nullptr;
-    return GraphicsBitmap::create(*m_process, size);
+    RGBA32* buffer;
+    int shared_buffer_id = current->sys$create_shared_buffer(m_pid, size.area() * sizeof(RGBA32), (void**)&buffer);
+    ASSERT(shared_buffer_id >= 0);
+    ASSERT(buffer);
+    ASSERT(buffer != (void*)-1);
+    return GraphicsBitmap::create_with_shared_buffer(shared_buffer_id, size, buffer);
 }
 
 void WSClientConnection::on_message(WSMessage& message)
@@ -369,7 +371,7 @@ void WSClientConnection::handle_request(WSAPIGetWindowBackingStoreRequest& reque
     response.backing.bpp = sizeof(RGBA32);
     response.backing.pitch = backing_store->pitch();
     response.backing.size = backing_store->size();
-    response.backing.pixels = reinterpret_cast<RGBA32*>(backing_store->client_region()->laddr().as_ptr());
+    response.backing.shared_buffer_id = backing_store->shared_buffer_id();
     WSMessageLoop::the().post_message_to_client(request.client_id(), response);
 }
 

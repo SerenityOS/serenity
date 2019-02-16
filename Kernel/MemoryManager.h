@@ -103,6 +103,8 @@ public:
     void inode_contents_changed(Badge<Inode>, off_t, size_t, const byte*);
     void inode_size_changed(Badge<Inode>, size_t old_size, size_t new_size);
 
+    size_t size() const { return m_size; }
+
 private:
     VMObject(RetainPtr<Inode>&&);
     explicit VMObject(VMObject&);

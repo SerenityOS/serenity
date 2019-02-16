@@ -223,6 +223,10 @@ public:
     int sys$accept(int sockfd, sockaddr*, socklen_t*);
     int sys$connect(int sockfd, const sockaddr*, socklen_t);
 
+    int sys$create_shared_buffer(pid_t peer_pid, size_t, void** buffer);
+    void* sys$get_shared_buffer(int shared_buffer_id);
+    int sys$release_shared_buffer(int shared_buffer_id);
+
     bool wait_for_connect(Socket&, int& error);
 
     static void initialize();
@@ -294,6 +298,8 @@ public:
 
     Region* allocate_region_with_vmo(LinearAddress, size_t, RetainPtr<VMObject>&&, size_t offset_in_vmo, String&& name, bool is_readable, bool is_writable);
     Region* allocate_file_backed_region(LinearAddress, size_t, RetainPtr<Inode>&&, String&& name, bool is_readable, bool is_writable);
+    Region* allocate_region(LinearAddress, size_t, String&& name, bool is_readable = true, bool is_writable = true, bool commit = true);
+    bool deallocate_region(Region& region);
 
 private:
     friend class MemoryManager;
@@ -307,6 +313,7 @@ private:
 
     int alloc_fd();
     void set_default_signal_dispositions();
+    void disown_all_shared_buffers();
 
     RetainPtr<PageDirectory> m_page_directory;
 
@@ -364,9 +371,6 @@ private:
     RetainPtr<Inode> m_executable;
 
     TTY* m_tty { nullptr };
-
-    Region* allocate_region(LinearAddress, size_t, String&& name, bool is_readable = true, bool is_writable = true, bool commit = true);
-    bool deallocate_region(Region& region);
 
     Region* region_from_range(LinearAddress, size_t);
 

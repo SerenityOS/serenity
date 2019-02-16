@@ -118,7 +118,7 @@ struct WSAPI_ServerMessage {
             WSAPI_Size size;
             size_t bpp;
             size_t pitch;
-            RGBA32* pixels;
+            int shared_buffer_id;
         } backing;
     };
 };
