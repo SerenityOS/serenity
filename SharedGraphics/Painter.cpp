@@ -32,7 +32,7 @@ Painter::Painter(GWidget& widget)
     auto response = GEventLoop::main().sync_request(request, WSAPI_ServerMessage::DidGetWindowBackingStore);
     m_backing_store_id = response.backing.backing_store_id;
 
-    m_target = GraphicsBitmap::create_wrapper(response.backing.size, response.backing.pixels);
+    m_target = GraphicsBitmap::create_with_shared_buffer(response.backing.shared_buffer_id, response.backing.size);
     ASSERT(m_target);
     m_window = widget.window();
     m_translation.move_by(widget.window_relative_rect().location());

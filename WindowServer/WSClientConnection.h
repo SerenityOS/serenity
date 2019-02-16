@@ -32,6 +32,7 @@ public:
     WSMenuBar* app_menubar() { return m_app_menubar.ptr(); }
 
     int fd() const { return m_fd; }
+    pid_t pid() const { return m_pid; }
 
 private:
     virtual void on_message(WSMessage&) override;
@@ -61,6 +62,7 @@ private:
 
     int m_client_id { 0 };
     int m_fd { -1 };
+    pid_t m_pid { 0 };
 
     HashMap<int, OwnPtr<WSWindow>> m_windows;
     HashMap<int, OwnPtr<WSMenuBar>> m_menubars;

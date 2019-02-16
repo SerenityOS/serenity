@@ -211,6 +211,12 @@ static dword handle(RegisterDump& regs, dword function, dword arg1, dword arg2, 
         return current->sys$accept((int)arg1, (sockaddr*)arg2, (socklen_t*)arg3);
     case Syscall::SC_connect:
         return current->sys$connect((int)arg1, (const sockaddr*)arg2, (socklen_t)arg3);
+    case Syscall::SC_create_shared_buffer:
+        return current->sys$create_shared_buffer((pid_t)arg1, (size_t)arg2, (void**)arg3);
+    case Syscall::SC_get_shared_buffer:
+        return (dword)current->sys$get_shared_buffer((int)arg1);
+    case Syscall::SC_release_shared_buffer:
+        return current->sys$release_shared_buffer((int)arg1);
     default:
         kprintf("<%u> int0x80: Unknown function %u requested {%x, %x, %x}\n", current->pid(), function, arg1, arg2, arg3);
         break;
