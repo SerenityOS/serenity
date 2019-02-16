@@ -86,6 +86,8 @@ VFS* vfs;
     vfs->register_device(*tty2);
     vfs->register_device(*tty3);
 
+    vfs->register_device(BochsVGADevice::the());
+
     auto dev_hd0 = IDEDiskDevice::create();
     auto e2fs = Ext2FS::create(dev_hd0.copy_ref());
     e2fs->initialize();

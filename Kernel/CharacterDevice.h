@@ -8,4 +8,7 @@ public:
 
 protected:
     CharacterDevice(unsigned major, unsigned minor) : Device(major, minor) { }
+
+private:
+    virtual bool is_character_device() const final { return true; }
 };

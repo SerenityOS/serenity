@@ -16,6 +16,7 @@ mkdir -vp mnt/tmp
 chmod 1777 mnt/tmp
 mkdir -vp mnt/dev
 mkdir -vp mnt/dev/pts
+mknod mnt/dev/bxvga b 82 413
 mknod mnt/dev/tty0 c 4 0
 mknod mnt/dev/tty1 c 4 1
 mknod mnt/dev/tty2 c 4 2
