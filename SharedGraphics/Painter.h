@@ -63,7 +63,7 @@ private:
     Point m_translation;
     Rect m_clip_rect;
     RetainPtr<GraphicsBitmap> m_target;
-#ifdef LIBGUI
+#ifdef USERLAND
     GWindow* m_window { nullptr };
 #endif
     DrawOp m_draw_op { DrawOp::Copy };
