@@ -2236,7 +2236,7 @@ int Process::sys$socket(int domain, int type, int protocol)
     auto descriptor = FileDescriptor::create(move(socket));
     unsigned flags = 0;
     if (type & SOCK_CLOEXEC)
-        flags |= O_CLOEXEC;
+        flags |= FD_CLOEXEC;
     if (type & SOCK_NONBLOCK)
         descriptor->set_blocking(false);
     m_fds[fd].set(move(descriptor), flags);
