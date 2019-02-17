@@ -3,7 +3,7 @@
 #include "i386.h"
 #include "IO.h"
 #include "StdLib.h"
-#include "Keyboard.h"
+#include "KeyboardDevice.h"
 #include <AK/AKString.h>
 
 static byte* s_vga_buffer;
@@ -476,7 +476,7 @@ void VirtualConsole::on_char(byte ch)
     set_cursor(m_cursor_row, m_cursor_column);
 }
 
-void VirtualConsole::on_key_pressed(Keyboard::Event key)
+void VirtualConsole::on_key_pressed(KeyboardDevice::Event key)
 {
     if (key.ctrl()) {
         if (key.character >= 'a' && key.character <= 'z') {
