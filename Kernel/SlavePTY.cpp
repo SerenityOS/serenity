@@ -10,7 +10,6 @@ SlavePTY::SlavePTY(MasterPTY& master, unsigned index)
 {
     set_uid(current->uid());
     set_gid(current->gid());
-    VFS::the().register_device(*this);
     DevPtsFS::the().register_slave_pty(*this);
     set_size(80, 25);
 }
@@ -19,7 +18,6 @@ SlavePTY::~SlavePTY()
 {
     dbgprintf("~SlavePTY(%u)\n", m_index);
     DevPtsFS::the().unregister_slave_pty(*this);
-    VFS::the().unregister_device(*this);
 }
 
 String SlavePTY::tty_name() const
