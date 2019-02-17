@@ -66,28 +66,9 @@ VFS* vfs;
     Syscall::initialize();
 
     auto dev_zero = make<ZeroDevice>();
-    vfs->register_device(*dev_zero);
-
-    vfs->register_device(*dev_null);
-
     auto dev_full = make<FullDevice>();
-    vfs->register_device(*dev_full);
-
     auto dev_random = make<RandomDevice>();
-    vfs->register_device(*dev_random);
-
     auto dev_ptmx = make<PTYMultiplexer>();
-    vfs->register_device(*dev_ptmx);
-
-    vfs->register_device(*keyboard);
-    vfs->register_device(*ps2mouse);
-    vfs->register_device(*tty0);
-    vfs->register_device(*tty1);
-    vfs->register_device(*tty2);
-    vfs->register_device(*tty3);
-
-    vfs->register_device(BXVGADevice::the());
-
     auto dev_hd0 = IDEDiskDevice::create();
     auto e2fs = Ext2FS::create(dev_hd0.copy_ref());
     e2fs->initialize();
@@ -145,14 +126,14 @@ VFS* vfs;
     kmalloc_init();
     init_ksyms();
 
+    vfs = new VFS;
+
     auto console = make<Console>();
 
     RTC::initialize();
     PIC::initialize();
     gdt_init();
     idt_init();
-
-    vfs = new VFS;
 
     keyboard = new KeyboardDevice;
     ps2mouse = new PS2MouseDevice;
