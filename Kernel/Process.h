@@ -279,7 +279,7 @@ public:
     size_t amount_shared() const;
 
     Process* fork(RegisterDump&);
-    int exec(const String& path, Vector<String>&& arguments, Vector<String>&& environment);
+    int exec(String path, Vector<String> arguments, Vector<String> environment);
 
     bool is_root() const { return m_euid == 0; }
 
@@ -302,7 +302,7 @@ private:
 
     Process(String&& name, uid_t, gid_t, pid_t ppid, RingLevel, RetainPtr<Inode>&& cwd = nullptr, RetainPtr<Inode>&& executable = nullptr, TTY* = nullptr, Process* fork_parent = nullptr);
 
-    int do_exec(const String& path, Vector<String>&& arguments, Vector<String>&& environment);
+    int do_exec(String path, Vector<String> arguments, Vector<String> environment);
     void push_value_on_stack(dword);
 
     int alloc_fd();
