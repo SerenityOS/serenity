@@ -7,10 +7,11 @@
 
 class WSMenuBar : public Weakable<WSMenuBar> {
 public:
-    WSMenuBar(int client_id, int menubar_id);
+    WSMenuBar(WSClientConnection& client, int menubar_id);
     ~WSMenuBar();
 
-    int client_id() const { return m_client_id; }
+    WSClientConnection& client() { return m_client; }
+    const WSClientConnection& client() const { return m_client; }
     int menubar_id() const { return m_menubar_id; }
     void add_menu(WSMenu* menu) { m_menus.append(menu); }
 
@@ -24,7 +25,7 @@ public:
     }
 
 private:
-    int m_client_id { 0 };
+    WSClientConnection& m_client;
     int m_menubar_id { 0 };
     Vector<WSMenu*> m_menus;
 };

@@ -102,10 +102,10 @@ void WSClientConnection::on_message(WSMessage& message)
     }
 }
 
-void WSClientConnection::handle_request(WSAPICreateMenubarRequest& request)
+void WSClientConnection::handle_request(WSAPICreateMenubarRequest&)
 {
     int menubar_id = m_next_menubar_id++;
-    auto menubar = make<WSMenuBar>(request.client_id(), menubar_id);
+    auto menubar = make<WSMenuBar>(*this, menubar_id);
     m_menubars.set(menubar_id, move(menubar));
     WSAPI_ServerMessage response;
     response.type = WSAPI_ServerMessage::Type::DidCreateMenubar;
@@ -133,7 +133,7 @@ void WSClientConnection::handle_request(WSAPIDestroyMenubarRequest& request)
 void WSClientConnection::handle_request(WSAPICreateMenuRequest& request)
 {
     int menu_id = m_next_menu_id++;
-    auto menu = make<WSMenu>(request.client_id(), menu_id, request.text());
+    auto menu = make<WSMenu>(this, menu_id, request.text());
     m_menus.set(menu_id, move(menu));
     WSAPI_ServerMessage response;
     response.type = WSAPI_ServerMessage::Type::DidCreateMenu;

@@ -184,7 +184,7 @@ WSWindowManager::WSWindowManager()
 
     {
         byte system_menu_name[] = { 0xf8, 0 };
-        m_system_menu = make<WSMenu>(-1, -1, String((const char*)system_menu_name));
+        m_system_menu = make<WSMenu>(nullptr, -1, String((const char*)system_menu_name));
         m_system_menu->add_item(make<WSMenuItem>(0, "Launch Terminal"));
         m_system_menu->add_item(make<WSMenuItem>(WSMenuItem::Separator));
         m_system_menu->add_item(make<WSMenuItem>(1, "Hello again"));
