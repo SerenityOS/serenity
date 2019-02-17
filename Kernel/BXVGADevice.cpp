@@ -1,4 +1,4 @@
-#include <Kernel/BochsVGADevice.h>
+#include <Kernel/BXVGADevice.h>
 #include <Kernel/IO.h>
 #include <Kernel/PCI.h>
 #include <Kernel/MemoryManager.h>
@@ -29,27 +29,27 @@ struct BXVGAResolution {
     int height;
 };
 
-static BochsVGADevice* s_the;
+static BXVGADevice* s_the;
 
-BochsVGADevice& BochsVGADevice::the()
+BXVGADevice& BXVGADevice::the()
 {
     return *s_the;
 }
 
-BochsVGADevice::BochsVGADevice()
+BXVGADevice::BXVGADevice()
     : BlockDevice(82, 413)
 {
     s_the = this;
     m_framebuffer_address = PhysicalAddress(find_framebuffer_address());
 }
 
-void BochsVGADevice::set_register(word index, word data)
+void BXVGADevice::set_register(word index, word data)
 {
     IO::out16(VBE_DISPI_IOPORT_INDEX, index);
     IO::out16(VBE_DISPI_IOPORT_DATA, data);
 }
 
-void BochsVGADevice::set_resolution(int width, int height)
+void BXVGADevice::set_resolution(int width, int height)
 {
     set_register(VBE_DISPI_INDEX_ENABLE, VBE_DISPI_DISABLED);
     set_register(VBE_DISPI_INDEX_XRES, (word)width);
@@ -63,13 +63,13 @@ void BochsVGADevice::set_resolution(int width, int height)
     m_framebuffer_size = { width, height };
 }
 
-void BochsVGADevice::set_y_offset(int offset)
+void BXVGADevice::set_y_offset(int offset)
 {
     ASSERT(offset <= m_framebuffer_size.height());
     set_register(VBE_DISPI_INDEX_Y_OFFSET, (word)offset);
 }
 
-dword BochsVGADevice::find_framebuffer_address()
+dword BXVGADevice::find_framebuffer_address()
 {
     static const PCI::ID bochs_vga_id = { 0x1234, 0x1111 };
     static const PCI::ID virtualbox_vga_id = { 0x80ee, 0xbeef };
@@ -83,7 +83,7 @@ dword BochsVGADevice::find_framebuffer_address()
     return framebuffer_address;
 }
 
-Region* BochsVGADevice::mmap(Process& process, LinearAddress preferred_laddr, size_t offset, size_t size)
+Region* BXVGADevice::mmap(Process& process, LinearAddress preferred_laddr, size_t offset, size_t size)
 {
     ASSERT(offset == 0);
     ASSERT(size == framebuffer_size_in_bytes());
@@ -102,7 +102,7 @@ Region* BochsVGADevice::mmap(Process& process, LinearAddress preferred_laddr, si
     return region;
 }
 
-int BochsVGADevice::ioctl(Process& process, unsigned request, unsigned arg)
+int BXVGADevice::ioctl(Process& process, unsigned request, unsigned arg)
 {
     switch (request) {
     case BXVGA_DEV_IOCTL_SET_Y_OFFSET:
@@ -122,22 +122,22 @@ int BochsVGADevice::ioctl(Process& process, unsigned request, unsigned arg)
     };
 }
 
-bool BochsVGADevice::can_read(Process&) const
+bool BXVGADevice::can_read(Process&) const
 {
     ASSERT_NOT_REACHED();
 }
 
-bool BochsVGADevice::can_write(Process&) const
+bool BXVGADevice::can_write(Process&) const
 {
     ASSERT_NOT_REACHED();
 }
 
-ssize_t BochsVGADevice::read(Process&, byte*, size_t)
+ssize_t BXVGADevice::read(Process&, byte*, size_t)
 {
     ASSERT_NOT_REACHED();
 }
 
-ssize_t BochsVGADevice::write(Process&, const byte*, size_t)
+ssize_t BXVGADevice::write(Process&, const byte*, size_t)
 {
     ASSERT_NOT_REACHED();
 }

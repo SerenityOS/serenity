@@ -29,7 +29,7 @@ KERNEL_OBJS = \
        ELFLoader.o \
        KSyms.o \
        DevPtsFS.o \
-       BochsVGADevice.o \
+       BXVGADevice.o \
        PCI.o \
        PS2MouseDevice.o \
        Socket.o \

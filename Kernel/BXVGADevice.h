@@ -6,12 +6,12 @@
 #include <Kernel/types.h>
 #include <Kernel/BlockDevice.h>
 
-class BochsVGADevice final : public BlockDevice {
+class BXVGADevice final : public BlockDevice {
     AK_MAKE_ETERNAL
 public:
-    static BochsVGADevice& the();
+    static BXVGADevice& the();
 
-    BochsVGADevice();
+    BXVGADevice();
 
     PhysicalAddress framebuffer_address() const { return m_framebuffer_address; }
     void set_resolution(int width, int height);
@@ -24,7 +24,7 @@ public:
     Size framebuffer_size() const { return m_framebuffer_size; }
 
 private:
-    virtual const char* class_name() const override { return "BochsVGADevice"; }
+    virtual const char* class_name() const override { return "BXVGA"; }
     virtual bool can_read(Process&) const override;
     virtual bool can_write(Process&) const override;
     virtual ssize_t read(Process&, byte*, size_t) override;
