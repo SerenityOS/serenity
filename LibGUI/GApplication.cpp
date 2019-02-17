@@ -26,9 +26,9 @@ int GApplication::exec()
     return m_event_loop->exec();
 }
 
-void GApplication::exit(int exit_code)
+void GApplication::quit(int exit_code)
 {
-    m_event_loop->exit(exit_code);
+    m_event_loop->quit(exit_code);
 }
 
 void GApplication::set_menubar(OwnPtr<GMenuBar>&& menubar)

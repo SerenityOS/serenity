@@ -32,7 +32,7 @@ public:
     void register_notifier(Badge<GNotifier>, GNotifier&);
     void unregister_notifier(Badge<GNotifier>, GNotifier&);
 
-    void exit(int);
+    void quit(int);
 
     bool post_message_to_server(const WSAPI_ClientMessage&);
     bool wait_for_specific_event(WSAPI_ServerMessage::Type, WSAPI_ServerMessage&);

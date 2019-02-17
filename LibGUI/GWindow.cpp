@@ -46,7 +46,7 @@ void GWindow::close()
     // FIXME: If we exit the event loop, we're never gonna deal with the delete_later request!
     //        This will become relevant once we support nested event loops.
     if (should_exit_app_on_close())
-        GEventLoop::main().exit(0);
+        GEventLoop::main().quit(0);
     delete_later();
 }
 

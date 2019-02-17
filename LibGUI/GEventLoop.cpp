@@ -66,7 +66,7 @@ GEventLoop& GEventLoop::main()
     return *s_mainGEventLoop;
 }
 
-void GEventLoop::exit(int code)
+void GEventLoop::quit(int code)
 {
     m_exit_requested = true;
     m_exit_code = code;
@@ -257,7 +257,7 @@ void GEventLoop::wait_for_event()
         if (event.type == WSAPI_ServerMessage::Error) {
             dbgprintf("GEventLoop got error message from server\n");
             dbgprintf("  - error message: %s\n", String(event.text, event.text_length).characters());
-            exit(1);
+            quit(1);
             return;
         }
 
@@ -307,7 +307,7 @@ bool GEventLoop::drain_messages_from_server()
         ssize_t nread = read(m_event_fd, &message, sizeof(WSAPI_ServerMessage));
         if (nread < 0) {
             perror("read");
-            exit(1);
+            quit(1);
             return false;
         }
         if (nread == 0)

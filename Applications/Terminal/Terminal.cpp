@@ -27,12 +27,12 @@ Terminal::Terminal(int ptm_fd)
         if (nread < 0) {
             dbgprintf("Terminal read error: %s\n", strerror(errno));
             perror("read(ptm)");
-            GApplication::the().exit(1);
+            GApplication::the().quit(1);
             return;
         }
         if (nread == 0) {
             dbgprintf("Terminal: EOF on master pty, closing.\n");
-            GApplication::the().exit(0);
+            GApplication::the().quit(0);
             return;
         }
         for (ssize_t i = 0; i < nread; ++i)

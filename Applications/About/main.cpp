@@ -39,7 +39,7 @@ int main(int argc, char** argv)
     quit_button->set_caption("Okay");
     quit_button->set_relative_rect(80, 100, widget->width() - 160, 20);
     quit_button->on_click = [] (GButton&) {
-        GApplication::the().exit(0);
+        GApplication::the().quit(0);
     };
 
     window->show();
