@@ -505,7 +505,7 @@ ByteBuffer procfs$all(InodeIdentifier)
     auto processes = Process::all_processes();
     StringBuilder builder;
     auto build_process_line = [&builder] (Process* process) {
-        builder.appendf("%u,%u,%u,%u,%u,%u,%u,%s,%u,%u,%s,%s,%u,%u,%u,%u,%u,%s\n",
+        builder.appendf("%u,%u,%u,%u,%u,%u,%u,%s,%u,%u,%s,%s,%u,%u,%u,%u,%s\n",
             process->pid(),
             process->times_scheduled(),
             process->tty() ? process->tty()->pgid() : 0,
@@ -521,7 +521,6 @@ ByteBuffer procfs$all(InodeIdentifier)
             process->amount_virtual(),
             process->amount_resident(),
             process->amount_shared(),
-            process->amount_in_bitmaps(),
             process->ticks(),
             to_string(process->priority())
         );
