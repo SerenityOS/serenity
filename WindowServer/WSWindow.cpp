@@ -12,8 +12,8 @@ WSWindow::WSWindow(WSMenu& menu)
     WSWindowManager::the().add_window(*this);
 }
 
-WSWindow::WSWindow(int client_id, int window_id)
-    : m_client_id(client_id)
+WSWindow::WSWindow(WSClientConnection& client, int window_id)
+    : m_client(&client)
     , m_type(WSWindowType::Normal)
     , m_window_id(window_id)
 {
@@ -36,8 +36,7 @@ void WSWindow::set_title(String&& title)
 void WSWindow::set_rect(const Rect& rect)
 {
     Rect old_rect;
-    auto* client = WSClientConnection::from_client_id(m_client_id);
-    if (!client && !m_menu)
+    if (!m_client && !m_menu)
         return;
     if (m_rect == rect)
         return;
@@ -46,8 +45,8 @@ void WSWindow::set_rect(const Rect& rect)
     if (!m_backing || old_rect.size() != rect.size()) {
         if (m_menu)
             m_backing = GraphicsBitmap::create(m_rect.size());
-        else if (client)
-            m_backing = client->create_shared_bitmap(m_rect.size());
+        else if (m_client)
+            m_backing = m_client->create_shared_bitmap(m_rect.size());
 
     }
     WSWindowManager::the().notify_rect_changed(*this, old_rect, rect);
@@ -126,8 +125,8 @@ void WSWindow::on_message(WSMessage& message)
     if (server_message.type == WSAPI_ServerMessage::Type::Invalid)
         return;
 
-    if (auto* client = WSClientConnection::from_client_id(m_client_id))
-        client->post_message(server_message);
+    ASSERT(m_client);
+    m_client->post_message(server_message);
 }
 
 void WSWindow::set_global_cursor_tracking_enabled(bool enabled)

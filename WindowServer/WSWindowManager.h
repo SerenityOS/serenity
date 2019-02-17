@@ -38,7 +38,7 @@ public:
     void notify_client_changed_app_menubar(WSClientConnection&);
 
     WSWindow* active_window() { return m_active_window.ptr(); }
-    int active_client_id() const;
+    const WSClientConnection* active_client() const;
 
     void move_to_front(WSWindow&);
 

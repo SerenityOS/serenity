@@ -755,12 +755,8 @@ void WSWindowManager::set_active_window(WSWindow* window)
         WSMessageLoop::the().post_message(m_active_window.ptr(), make<WSMessage>(WSMessage::WindowActivated));
         invalidate(*m_active_window);
 
-        int client_id = window->client_id();
-        auto* client = WSClientConnection::from_client_id(client_id);
-        if (!client) {
-            dbgprintf("WSWindow{%p} (type=%u) has no client! (id=%d)\n", window, window->type(), client_id);
-            ASSERT_NOT_REACHED();
-        }
+        auto* client = window->client();
+        ASSERT(client);
         set_current_menubar(client->app_menubar());
     }
 }
@@ -846,16 +842,16 @@ void WSWindowManager::close_menubar(WSMenuBar& menubar)
         set_current_menubar(nullptr);
 }
 
-int WSWindowManager::active_client_id() const
+const WSClientConnection* WSWindowManager::active_client() const
 {
     if (m_active_window)
-        return m_active_window->client_id();
+        return m_active_window->client();
     return 0;
 }
 
 void WSWindowManager::notify_client_changed_app_menubar(WSClientConnection& client)
 {
-    if (active_client_id() == client.client_id())
+    if (active_client() == &client)
         set_current_menubar(client.app_menubar());
     invalidate();
 }
