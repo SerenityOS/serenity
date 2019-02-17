@@ -165,9 +165,9 @@ Rect GScrollBar::scrubber_rect() const
         return { };
     float x_or_y;
     if (m_value == m_min)
-        x_or_y = button_size();
+        x_or_y = button_size() - 1;
     else if (m_value == m_max)
-        x_or_y = (orientation() == Orientation::Vertical ? height() : width()) - (button_size() * 2);
+        x_or_y = ((orientation() == Orientation::Vertical ? height() : width()) - (button_size() * 2)) + 1;
     else {
         float range_size = m_max - m_min;
         float available = scrubbable_range_in_pixels();
@@ -194,7 +194,7 @@ void GScrollBar::paint_event(GPaintEvent&)
     painter.draw_bitmap(down_button_rect().location().translated(3, 3), orientation() == Orientation::Vertical ? *s_down_arrow_bitmap : *s_right_arrow_bitmap, has_scrubber() ? Color::Black : Color::MidGray);
 
     if (has_scrubber())
-        GStyle::the().paint_button(painter, scrubber_rect(), m_scrubbing);
+        GStyle::the().paint_button(painter, scrubber_rect(), false);
 }
 
 void GScrollBar::mousedown_event(GMouseEvent& event)
