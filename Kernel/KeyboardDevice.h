@@ -9,15 +9,15 @@
 
 class KeyboardClient;
 
-class Keyboard final : public IRQHandler, public CharacterDevice {
+class KeyboardDevice final : public IRQHandler, public CharacterDevice {
     AK_MAKE_ETERNAL
 public:
     using Event = KeyEvent;
 
-    [[gnu::pure]] static Keyboard& the();
+    [[gnu::pure]] static KeyboardDevice& the();
 
-    virtual ~Keyboard() override;
-    Keyboard();
+    virtual ~KeyboardDevice() override;
+    KeyboardDevice();
 
     void set_client(KeyboardClient* client) { m_client = client; }
 
@@ -32,7 +32,7 @@ private:
     virtual void handle_irq() override;
 
     // ^CharacterDevice
-    virtual const char* class_name() const override { return "Keyboard"; }
+    virtual const char* class_name() const override { return "KeyboardDevice"; }
 
     void key_state_changed(byte raw, bool pressed);
     void update_modifier(byte modifier, bool state)
@@ -51,5 +51,5 @@ private:
 class KeyboardClient {
 public:
     virtual ~KeyboardClient();
-    virtual void on_key_pressed(Keyboard::Event) = 0;
+    virtual void on_key_pressed(KeyboardDevice::Event) = 0;
 };

@@ -2,7 +2,7 @@
 #include "i386.h"
 #include "IO.h"
 #include "PIC.h"
-#include "Keyboard.h"
+#include "KeyboardDevice.h"
 #include "VirtualConsole.h"
 #include <AK/Assertions.h>
 
@@ -97,7 +97,7 @@ static KeyCode shifted_key_map[0x100] =
     Key_Down, // 80
 };
 
-void Keyboard::key_state_changed(byte raw, bool pressed)
+void KeyboardDevice::key_state_changed(byte raw, bool pressed)
 {
     Event event;
     event.key = (m_modifiers & Mod_Shift) ? shifted_key_map[raw] : unshifted_key_map[raw];
@@ -110,7 +110,7 @@ void Keyboard::key_state_changed(byte raw, bool pressed)
     m_queue.enqueue(event);
 }
 
-void Keyboard::handle_irq()
+void KeyboardDevice::handle_irq()
 {
     for (;;) {
         byte status = IO::in8(I8042_STATUS);
@@ -146,15 +146,15 @@ void Keyboard::handle_irq()
     }
 }
 
-static Keyboard* s_the;
+static KeyboardDevice* s_the;
 
-Keyboard& Keyboard::the()
+KeyboardDevice& KeyboardDevice::the()
 {
     ASSERT(s_the);
     return *s_the;
 }
 
-Keyboard::Keyboard()
+KeyboardDevice::KeyboardDevice()
     : IRQHandler(IRQ_KEYBOARD)
     , CharacterDevice(85, 1)
 {
@@ -168,16 +168,16 @@ Keyboard::Keyboard()
     enable_irq();
 }
 
-Keyboard::~Keyboard()
+KeyboardDevice::~KeyboardDevice()
 {
 }
 
-bool Keyboard::can_read(Process&) const
+bool KeyboardDevice::can_read(Process&) const
 {
     return !m_queue.is_empty();
 }
 
-ssize_t Keyboard::read(Process&, byte* buffer, size_t size)
+ssize_t KeyboardDevice::read(Process&, byte* buffer, size_t size)
 {
     ssize_t nread = 0;
     while ((size_t)nread < size) {
@@ -193,7 +193,7 @@ ssize_t Keyboard::read(Process&, byte* buffer, size_t size)
     return nread;
 }
 
-ssize_t Keyboard::write(Process&, const byte*, size_t)
+ssize_t KeyboardDevice::write(Process&, const byte*, size_t)
 {
     return 0;
 }

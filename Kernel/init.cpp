@@ -2,7 +2,7 @@
 #include "kmalloc.h"
 #include "i386.h"
 #include "i8253.h"
-#include "Keyboard.h"
+#include "KeyboardDevice.h"
 #include "Process.h"
 #include "system.h"
 #include "PIC.h"
@@ -38,7 +38,7 @@ VirtualConsole* tty0;
 VirtualConsole* tty1;
 VirtualConsole* tty2;
 VirtualConsole* tty3;
-Keyboard* keyboard;
+KeyboardDevice* keyboard;
 PS2MouseDevice* ps2mouse;
 NullDevice* dev_null;
 VFS* vfs;
@@ -154,7 +154,7 @@ VFS* vfs;
 
     vfs = new VFS;
 
-    keyboard = new Keyboard;
+    keyboard = new KeyboardDevice;
     ps2mouse = new PS2MouseDevice;
     dev_null = new NullDevice;
 

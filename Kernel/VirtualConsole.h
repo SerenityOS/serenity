@@ -1,7 +1,7 @@
 #pragma once
 
 #include "TTY.h"
-#include "Keyboard.h"
+#include "KeyboardDevice.h"
 #include "Console.h"
 
 class VirtualConsole final : public TTY, public KeyboardClient, public ConsoleImplementation {
@@ -17,7 +17,7 @@ public:
 
 private:
     // ^KeyboardClient
-    virtual void on_key_pressed(Keyboard::Event) override;
+    virtual void on_key_pressed(KeyboardDevice::Event) override;
 
     // ^ConsoleImplementation
     virtual void on_sysconsole_receive(byte) override;
