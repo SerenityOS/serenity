@@ -2,6 +2,10 @@
 #include "WSMessageLoop.h"
 #include "WSMessage.h"
 #include "WSWindowManager.h"
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/ioctl.h>
+#include <sys/mman.h>
 
 static WSScreen* s_the;
 
@@ -11,15 +15,29 @@ WSScreen& WSScreen::the()
     return *s_the;
 }
 
-WSScreen::WSScreen(RGBA32* framebuffer, unsigned width, unsigned height)
-    : m_framebuffer(framebuffer)
-    , m_width(width)
+WSScreen::WSScreen(unsigned width, unsigned height)
+    : m_width(width)
     , m_height(height)
 {
     ASSERT(!s_the);
     s_the = this;
 
     m_cursor_location = rect().center();
+
+    m_framebuffer_fd = open("/dev/bxvga", O_RDWR);
+    ASSERT(m_framebuffer_fd >= 0);
+
+    struct BXVGAResolution {
+        int width;
+        int height;
+    };
+    BXVGAResolution resolution { (int)width, (int)height};
+    int rc = ioctl(m_framebuffer_fd, 1985, (int)&resolution);
+    ASSERT(rc == 0);
+
+    size_t framebuffer_size_in_bytes = resolution.width * resolution.height * sizeof(RGBA32) * 2;
+    m_framebuffer = (RGBA32*)mmap(nullptr, framebuffer_size_in_bytes, PROT_READ | PROT_WRITE, MAP_SHARED, m_framebuffer_fd, 0);
+    ASSERT(m_framebuffer && m_framebuffer != (void*)-1);
 }
 
 WSScreen::~WSScreen()
@@ -67,4 +85,10 @@ void WSScreen::on_receive_keyboard_data(KeyEvent kernel_event)
     message->m_ctrl = kernel_event.ctrl();
     message->m_alt = kernel_event.alt();
     WSMessageLoop::the().post_message(&WSWindowManager::the(), move(message));
+}
+
+void WSScreen::set_y_offset(int offset)
+{
+    int rc = ioctl(m_framebuffer_fd, 1982, offset);
+    ASSERT(rc == 0);
 }

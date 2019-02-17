@@ -66,9 +66,6 @@ public:
     Color menu_selection_color() const { return m_menu_selection_color; }
     int menubar_menu_margin() const;
 
-    int framebuffer_fd() const { return m_framebuffer_fd; }
-    void set_framebuffer_fd(int fd) { m_framebuffer_fd = fd; }
-
 private:
     void process_mouse_event(WSMouseEvent&);
     void handle_menu_mouse_event(WSMenu&, WSMouseEvent&);
@@ -149,6 +146,4 @@ private:
     Color m_menu_selection_color;
     WeakPtr<WSMenuBar> m_current_menubar;
     WeakPtr<WSMenu> m_current_menu;
-
-    int m_framebuffer_fd { -1 };
 };

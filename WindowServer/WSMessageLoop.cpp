@@ -1,18 +1,18 @@
-#include "WSMessageLoop.h"
-#include "WSMessage.h"
-#include "WSMessageReceiver.h"
-#include "WSWindowManager.h"
-#include "WSScreen.h"
+#include <WindowServer/WSMessageLoop.h>
+#include <WindowServer/WSMessage.h>
+#include <WindowServer/WSMessageReceiver.h>
+#include <WindowServer/WSWindowManager.h>
+#include <WindowServer/WSScreen.h>
 #include <WindowServer/WSClientConnection.h>
-#include <Kernel/KeyCode.h>
 #include <WindowServer/WSAPITypes.h>
-#include <unistd.h>
-#include <time.h>
-#include <sys/socket.h>
-#include <sys/select.h>
-#include <fcntl.h>
-#include <stdio.h>
-#include <errno.h>
+#include <Kernel/KeyCode.h>
+#include <LibC/sys/socket.h>
+#include <LibC/sys/select.h>
+#include <LibC/unistd.h>
+#include <LibC/time.h>
+#include <LibC/fcntl.h>
+#include <LibC/stdio.h>
+#include <LibC/errno.h>
 
 //#define WSEVENTLOOP_DEBUG
 
