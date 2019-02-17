@@ -282,7 +282,7 @@ pid_t Process::sys$fork(RegisterDump& regs)
     return child->pid();
 }
 
-int Process::do_exec(const String& path, Vector<String>&& arguments, Vector<String>&& environment)
+int Process::do_exec(String path, Vector<String> arguments, Vector<String> environment)
 {
     ASSERT(is_ring3());
 
@@ -419,11 +419,11 @@ int Process::do_exec(const String& path, Vector<String>&& arguments, Vector<Stri
     return 0;
 }
 
-int Process::exec(const String& path, Vector<String>&& arguments, Vector<String>&& environment)
+int Process::exec(String path, Vector<String> arguments, Vector<String> environment)
 {
     // The bulk of exec() is done by do_exec(), which ensures that all locals
     // are cleaned up by the time we yield-teleport below.
-    int rc = do_exec(path, move(arguments), move(environment));
+    int rc = do_exec(move(path), move(arguments), move(environment));
     if (rc < 0)
         return rc;
 
@@ -436,6 +436,8 @@ int Process::exec(const String& path, Vector<String>&& arguments, Vector<String>
 
 int Process::sys$execve(const char* filename, const char** argv, const char** envp)
 {
+    // NOTE: Be extremely careful with allocating any kernel memory in exec().
+    //       On success, the kernel stack will be lost.
     if (!validate_read_str(filename))
         return -EFAULT;
     if (argv) {
@@ -456,24 +458,25 @@ int Process::sys$execve(const char* filename, const char** argv, const char** en
     }
 
     String path(filename);
-    auto parts = path.split('/');
-
     Vector<String> arguments;
-    if (argv) {
-        for (size_t i = 0; argv[i]; ++i) {
-            arguments.append(argv[i]);
-        }
-    } else {
-        arguments.append(parts.last());
-    }
-
     Vector<String> environment;
-    if (envp) {
-        for (size_t i = 0; envp[i]; ++i)
-            environment.append(envp[i]);
+    {
+        auto parts = path.split('/');
+        if (argv) {
+            for (size_t i = 0; argv[i]; ++i) {
+                arguments.append(argv[i]);
+            }
+        } else {
+            arguments.append(parts.last());
+        }
+
+        if (envp) {
+            for (size_t i = 0; envp[i]; ++i)
+                environment.append(envp[i]);
+        }
     }
 
-    int rc = exec(path, move(arguments), move(environment));
+    int rc = exec(move(path), move(arguments), move(environment));
     ASSERT(rc < 0); // We should never continue after a successful exec!
     return rc;
 }
