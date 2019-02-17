@@ -134,6 +134,7 @@ bool Process::deallocate_region(Region& region)
 
 Region* Process::region_from_range(LinearAddress laddr, size_t size)
 {
+    size = PAGE_ROUND_UP(size);
     for (auto& region : m_regions) {
         if (region->laddr() == laddr && region->size() == size)
             return region.ptr();
