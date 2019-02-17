@@ -325,8 +325,10 @@ String FileDescriptor::absolute_path()
         return tty()->tty_name();
     if (is_fifo())
         return String::format("fifo:%x", m_fifo.ptr());
-    if (is_character_device())
+    if (is_device())
         return String::format("device:%u,%u (%s)", m_device->major(), m_device->minor(), m_device->class_name());
+    if (is_socket())
+        return String::format("socket:%x (role: %u)", m_socket.ptr(), m_socket_role);
     ASSERT(m_inode);
     return VFS::the().absolute_path(*m_inode);
 }
