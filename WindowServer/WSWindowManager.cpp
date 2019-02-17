@@ -170,7 +170,7 @@ WSWindowManager::WSWindowManager()
     m_cursor_bitmap_outer = CharacterBitmap::create_from_ascii(cursor_bitmap_outer_ascii, 12, 17);
 
     m_wallpaper_path = "/res/wallpapers/cool.rgb";
-    m_wallpaper = GraphicsBitmap::load_from_file(m_wallpaper_path, m_screen_rect.size());
+    m_wallpaper = GraphicsBitmap::load_from_file(m_wallpaper_path, { 1024, 768 });
 
 #ifdef KERNEL
     ProcFS::the().add_sys_bool("wm_flash_flush", m_flash_flush);
