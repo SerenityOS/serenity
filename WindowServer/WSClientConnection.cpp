@@ -49,6 +49,8 @@ WSClientConnection::WSClientConnection(int fd)
 WSClientConnection::~WSClientConnection()
 {
     s_connections->remove(m_client_id);
+    int rc = close(m_fd);
+    ASSERT(rc == 0);
 }
 
 void WSClientConnection::post_error(const String& error_message)
