@@ -3,6 +3,8 @@
 #include "kmalloc.h"
 #include "HashTable.h"
 
+//#define DEBUG_STRINGIMPL
+
 #ifdef DEBUG_STRINGIMPL
 unsigned g_stringimpl_count;
 static HashTable<StringImpl*>* g_all_live_stringimpls;
@@ -33,6 +35,8 @@ StringImpl::StringImpl(ConstructWithInlineBufferTag, size_t length)
     , m_characters(m_inline_buffer)
 {
 #ifdef DEBUG_STRINGIMPL
+    if (!g_all_live_stringimpls)
+        g_all_live_stringimpls = new HashTable<StringImpl*>;
     ++g_stringimpl_count;
     g_all_live_stringimpls->set(this);
 #endif
