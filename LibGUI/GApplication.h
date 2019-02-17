@@ -12,7 +12,7 @@ public:
     ~GApplication();
 
     int exec();
-    void exit(int);
+    void quit(int);
 
     void set_menubar(OwnPtr<GMenuBar>&&);
 

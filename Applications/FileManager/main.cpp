@@ -19,7 +19,7 @@ int main(int argc, char** argv)
 
     auto app_menu = make<GMenu>("FileManager");
     app_menu->add_action(make<GAction>("Quit", String(), [] (const GAction&) {
-        GApplication::the().exit(0);
+        GApplication::the().quit(0);
         return;
     }));
     menubar->add_menu(move(app_menu));
