@@ -295,7 +295,7 @@ void WSClientConnection::handle_request(WSAPIGetWindowRectRequest& request)
 void WSClientConnection::handle_request(WSAPICreateWindowRequest& request)
 {
     int window_id = m_next_window_id++;
-    auto window = make<WSWindow>(request.client_id(), window_id);
+    auto window = make<WSWindow>(*this, window_id);
     window->set_title(request.title());
     window->set_rect(request.rect());
     m_windows.set(window_id, move(window));

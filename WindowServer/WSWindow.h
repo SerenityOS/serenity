@@ -7,15 +7,17 @@
 #include "WSMessageReceiver.h"
 #include <WindowServer/WSWindowType.h>
 
+class WSClientConnection;
 class WSMenu;
 
 class WSWindow final : public WSMessageReceiver, public InlineLinkedListNode<WSWindow> {
 public:
-    WSWindow(int client_id, int window_id);
+    WSWindow(WSClientConnection&, int window_id);
     explicit WSWindow(WSMenu&);
     virtual ~WSWindow() override;
 
-    int client_id() const { return m_client_id; }
+    WSClientConnection* client() { return m_client; }
+    const WSClientConnection* client() const { return m_client; }
 
     WSWindowType type() const { return m_type; }
     int window_id() const { return m_window_id; }
@@ -63,7 +65,7 @@ public:
     WSWindow* m_prev { nullptr };
 
 private:
-    int m_client_id { 0 };
+    WSClientConnection* m_client { nullptr };
     String m_title;
     Rect m_rect;
     WSWindowType m_type { WSWindowType::Normal };
