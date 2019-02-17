@@ -6,6 +6,7 @@
 #include <SharedGraphics/Rect.h>
 #include "WSMenuItem.h"
 
+class WSClientConnection;
 class WSMenuBar;
 class WSMessage;
 class WSWindow;
@@ -13,10 +14,11 @@ class Font;
 
 class WSMenu : public Weakable<WSMenu> {
 public:
-    WSMenu(int client_id, int menu_id, String&& name);
+    WSMenu(WSClientConnection*, int menu_id, String&& name);
     ~WSMenu();
 
-    int client_id() const { return m_client_id; }
+    WSClientConnection* client() { return m_client; }
+    const WSClientConnection* client() const { return m_client; }
     int menu_id() const { return m_menu_id; }
 
     WSMenuBar* menu_bar() { return m_menubar; }
@@ -74,7 +76,7 @@ public:
 
 private:
     void did_activate(WSMenuItem&);
-    int m_client_id { 0 };
+    WSClientConnection* m_client { nullptr };
     int m_menu_id { 0 };
     String m_name;
     Rect m_rect_in_menubar;

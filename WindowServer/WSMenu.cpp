@@ -9,8 +9,8 @@
 #include <SharedGraphics/Painter.h>
 #include <SharedGraphics/Font.h>
 
-WSMenu::WSMenu(int client_id, int menu_id, String&& name)
-    : m_client_id(client_id)
+WSMenu::WSMenu(WSClientConnection* client, int menu_id, String&& name)
+    : m_client(client)
     , m_menu_id(menu_id)
     , m_name(move(name))
 {
@@ -144,8 +144,8 @@ void WSMenu::did_activate(WSMenuItem& item)
     message.menu.menu_id = m_menu_id;
     message.menu.identifier = item.identifier();
 
-    if (auto* client = WSClientConnection::from_client_id(m_client_id))
-        client->post_message(message);
+    if (m_client)
+        m_client->post_message(message);
 }
 
 WSMenuItem* WSMenu::item_at(const Point& position)
