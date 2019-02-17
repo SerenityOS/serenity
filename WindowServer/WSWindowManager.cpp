@@ -14,10 +14,10 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <time.h>
 
 #ifdef KERNEL
 #include <Kernel/ProcFS.h>
-#include <Kernel/RTC.h>
 #endif
 
 //#define DEBUG_COUNTERS
@@ -218,11 +218,14 @@ WSWindowManager::WSWindowManager()
     // NOTE: This ensures that the system menu has the correct dimensions.
     set_current_menubar(nullptr);
 
-#if 0
     WSMessageLoop::the().start_timer(300, [this] {
-        invalidate(menubar_rect());
+        static time_t last_update_time;
+        time_t now = time(nullptr);
+        if (now != last_update_time) {
+            invalidate(menubar_rect());
+            last_update_time = now;
+        }
     });
-#endif
 
     invalidate();
     compose();
@@ -692,13 +695,17 @@ void WSWindowManager::draw_menubar()
         return true;
     });
 
-#ifdef KERNEL
-    unsigned year, month, day, hour, minute, second;
-    RTC::read_registers(year, month, day, hour, minute, second);
-    auto time_text = String::format("%04u-%02u-%02u  %02u:%02u:%02u", year, month, day, hour, minute, second);
+    time_t now = time(nullptr);
+    auto* tm = localtime(&now);
+    auto time_text = String::format("%4u-%02u-%02u %02u:%02u:%02u\n",
+        tm->tm_year + 1900,
+        tm->tm_mon + 1,
+        tm->tm_mday,
+        tm->tm_hour,
+        tm->tm_min,
+        tm->tm_sec);
     auto time_rect = menubar_rect().translated(-(menubar_menu_margin() / 2), 0);
     m_back_painter->draw_text(time_rect, time_text, TextAlignment::CenterRight, Color::Black);
-#endif
 }
 
 void WSWindowManager::draw_cursor()
