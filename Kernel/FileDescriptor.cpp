@@ -49,14 +49,14 @@ FileDescriptor::FileDescriptor(RetainPtr<Device>&& device)
 
 FileDescriptor::FileDescriptor(RetainPtr<Socket>&& socket, SocketRole role)
     : m_socket(move(socket))
-    , m_socket_role(role)
 {
+    set_socket_role(role);
 }
 
 FileDescriptor::~FileDescriptor()
 {
     if (m_socket) {
-        m_socket->close(m_socket_role);
+        m_socket->detach_fd(m_socket_role);
         m_socket = nullptr;
     }
     if (m_device) {
@@ -70,6 +70,16 @@ FileDescriptor::~FileDescriptor()
     m_inode = nullptr;
 }
 
+void FileDescriptor::set_socket_role(SocketRole role)
+{
+    if (role == m_socket_role)
+        return;
+
+    ASSERT(m_socket);
+    m_socket_role = role;
+    m_socket->attach_fd(role);
+}
+
 RetainPtr<FileDescriptor> FileDescriptor::clone()
 {
     RetainPtr<FileDescriptor> descriptor;
@@ -80,6 +90,9 @@ RetainPtr<FileDescriptor> FileDescriptor::clone()
     } else {
         if (m_device) {
             descriptor = FileDescriptor::create(m_device.copy_ref());
+            descriptor->m_inode = m_inode.copy_ref();
+        } else if (m_socket) {
+            descriptor = FileDescriptor::create(m_socket.copy_ref(), m_socket_role);
             descriptor->m_inode = m_inode.copy_ref();
         } else {
             descriptor = FileDescriptor::create(m_inode.copy_ref());
