@@ -160,7 +160,7 @@ VFS* vfs;
     Process::create_kernel_process("syncd", [] {
         for (;;) {
             Syscall::sync();
-            sleep(10 * TICKS_PER_SECOND);
+            sleep(1 * TICKS_PER_SECOND);
         }
     });
     Process::create_kernel_process("Finalizer", [] {
