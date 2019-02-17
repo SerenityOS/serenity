@@ -14,7 +14,6 @@ public:
     static RetainPtr<Socket> create(int domain, int type, int protocol, int& error);
     virtual ~Socket();
 
-    bool is_listening() const { return m_listening; }
     int domain() const { return m_domain; }
     int type() const { return m_type; }
     int protocol() const { return m_protocol; }
@@ -28,7 +27,8 @@ public:
     virtual bool connect(const sockaddr*, socklen_t, int& error) = 0;
     virtual bool get_address(sockaddr*, socklen_t*) = 0;
     virtual bool is_local() const { return false; }
-    virtual void close(SocketRole) = 0;
+    virtual void attach_fd(SocketRole) = 0;
+    virtual void detach_fd(SocketRole) = 0;
     virtual bool can_read(SocketRole) const = 0;
     virtual ssize_t read(SocketRole, byte*, size_t) = 0;
     virtual ssize_t write(SocketRole, const byte*, size_t) = 0;
@@ -48,7 +48,6 @@ private:
     int m_type { 0 };
     int m_protocol { 0 };
     int m_backlog { 0 };
-    bool m_listening { false };
     bool m_connected { false };
 
     Vector<RetainPtr<Socket>> m_pending;

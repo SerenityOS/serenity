@@ -106,23 +106,34 @@ bool LocalSocket::connect(const sockaddr* address, socklen_t address_size, int& 
     return true;
 }
 
-void LocalSocket::close(SocketRole role)
+void LocalSocket::attach_fd(SocketRole role)
 {
-    if (role == SocketRole::Accepted)
-        m_server_closed = true;
-    else if (role == SocketRole::Connected)
-        m_client_closed = true;
+    if (role == SocketRole::Accepted) {
+        ++m_accepted_fds_open;
+    } else if (role == SocketRole::Connected) {
+        ++m_connected_fds_open;
+    }
+}
+
+void LocalSocket::detach_fd(SocketRole role)
+{
+    if (role == SocketRole::Accepted) {
+        ASSERT(m_accepted_fds_open);
+        --m_accepted_fds_open;
+    } else if (role == SocketRole::Connected) {
+        ASSERT(m_connected_fds_open);
+        --m_connected_fds_open;
+    }
 }
 
 bool LocalSocket::can_read(SocketRole role) const
 {
-    if (m_bound && is_listening())
+    if (role == SocketRole::Listener)
         return can_accept();
-
     if (role == SocketRole::Accepted)
-        return m_client_closed || !m_for_server.is_empty();
-    else if (role == SocketRole::Connected)
-        return m_server_closed || !m_for_client.is_empty();
+        return !m_connected_fds_open || !m_for_server.is_empty();
+    if (role == SocketRole::Connected)
+        return !m_accepted_fds_open || !m_for_client.is_empty();
     ASSERT_NOT_REACHED();
 }
 
@@ -130,7 +141,7 @@ ssize_t LocalSocket::read(SocketRole role, byte* buffer, size_t size)
 {
     if (role == SocketRole::Accepted)
         return m_for_server.read(buffer, size);
-    else if (role == SocketRole::Connected)
+    if (role == SocketRole::Connected)
         return m_for_client.read(buffer, size);
     ASSERT_NOT_REACHED();
 }
@@ -138,11 +149,12 @@ ssize_t LocalSocket::read(SocketRole role, byte* buffer, size_t size)
 ssize_t LocalSocket::write(SocketRole role, const byte* data, size_t size)
 {
     if (role == SocketRole::Accepted) {
-        if (m_client_closed)
+        if (!m_accepted_fds_open)
             return -EPIPE;
         return m_for_client.write(data, size);
-    } else if (role == SocketRole::Connected) {
-        if (m_client_closed)
+    }
+    if (role == SocketRole::Connected) {
+        if (!m_connected_fds_open)
             return -EPIPE;
         return m_for_server.write(data, size);
     }
@@ -152,8 +164,8 @@ ssize_t LocalSocket::write(SocketRole role, const byte* data, size_t size)
 bool LocalSocket::can_write(SocketRole role) const
 {
     if (role == SocketRole::Accepted)
-        return m_client_closed || m_for_client.bytes_in_write_buffer() < 4096;
-    else if (role == SocketRole::Connected)
-        return m_server_closed || m_for_server.bytes_in_write_buffer() < 4096;
+        return !m_connected_fds_open || m_for_client.bytes_in_write_buffer() < 4096;
+    if (role == SocketRole::Connected)
+        return !m_accepted_fds_open || m_for_server.bytes_in_write_buffer() < 4096;
     ASSERT_NOT_REACHED();
 }
