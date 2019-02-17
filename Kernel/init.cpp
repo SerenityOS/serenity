@@ -24,10 +24,9 @@
 #include "DevPtsFS.h"
 #include "BXVGADevice.h"
 
-//#define SPAWN_GUITEST
-//#define SPAWN_LAUNCHER
+#define SPAWN_LAUNCHER
 //#define SPAWN_GUITEST2
-//#define SPAWN_FILE_MANAGER
+#define SPAWN_FILE_MANAGER
 //#define SPAWN_FONTEDITOR
 //#define SPAWN_MULTIPLE_SHELLS
 //#define STRESS_TEST_SPAWNING
@@ -90,9 +89,6 @@ VFS* vfs;
     window_server_process->set_priority(Process::HighPriority);
     //Process::create_user_process("/bin/sh", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, move(environment), tty0);
     Process::create_user_process("/bin/Terminal", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, { }, tty0);
-#ifdef SPAWN_GUITEST
-    Process::create_user_process("/bin/guitest", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, { }, tty0);
-#endif
 #ifdef SPAWN_GUITEST2
     Process::create_user_process("/bin/guitest2", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, { }, tty0);
 #endif
