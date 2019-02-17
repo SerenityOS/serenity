@@ -6,10 +6,10 @@ APP = FontEditor
 
 ARCH_FLAGS =
 STANDARD_FLAGS = -std=c++17 -nostdinc++ -nostdlib -nostdinc
-USERLAND_FLAGS = -ffreestanding -fno-stack-protector -fno-ident
+USERLAND_FLAGS = -ffreestanding -fno-stack-protector
 WARNING_FLAGS = -Wextra -Wall -Wundef -Wcast-qual -Wwrite-strings -Wimplicit-fallthrough
-FLAVOR_FLAGS = -march=i386 -m32 -fno-exceptions -fno-rtti -fmerge-all-constants -fno-unroll-loops -fno-pie -fno-pic
-OPTIMIZATION_FLAGS = -Oz -fno-asynchronous-unwind-tables
+FLAVOR_FLAGS = -march=i686 -m32 -fno-exceptions -fno-rtti
+OPTIMIZATION_FLAGS = -Os
 INCLUDE_FLAGS = -I../.. -I. -I../../LibC
 
 DEFINES = -DSERENITY -DSANITIZE_PTRS -DUSERLAND

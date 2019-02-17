@@ -66,10 +66,10 @@ BOOTLOADER = Boot/boot.bin
 IMAGE = .floppy-image
 ARCH_FLAGS =
 STANDARD_FLAGS = -std=c++17 -nostdinc++ -nostdlib -nostdinc
-KERNEL_FLAGS = -ffreestanding -fno-stack-protector -fno-ident -fno-builtin
+KERNEL_FLAGS = -ffreestanding -fno-stack-protector -fno-builtin
 WARNING_FLAGS = -Wextra -Wall -Wundef -Wcast-qual -Wwrite-strings -Wimplicit-fallthrough
-FLAVOR_FLAGS = -mregparm=3 -march=i386 -m32 -fno-exceptions -fno-rtti -fmerge-all-constants -fno-unroll-loops -fno-pie -fno-pic
-OPTIMIZATION_FLAGS = -Os -fno-asynchronous-unwind-tables -fno-omit-frame-pointer
+FLAVOR_FLAGS = -mregparm=3 -march=i686 -m32 -fno-exceptions -fno-rtti
+OPTIMIZATION_FLAGS = -Os
 INCLUDE_FLAGS = -I.. -I.
 #SUGGEST_FLAGS = -Wsuggest-final-types -Wsuggest-final-methods -Wsuggest-override #-Wsuggest-attribute=noreturn 
 

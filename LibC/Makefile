@@ -54,10 +54,10 @@ CPP_OBJS = $(AK_OBJS) $(WIDGETS_OBJS) $(LIBC_OBJS) $(SHAREDGRAPHICS_OBJS)
 LIBRARY = LibC.a
 ARCH_FLAGS =
 STANDARD_FLAGS = -std=c++17 -nostdinc++ -nostdlib -nostdinc
-LIBC_FLAGS = -ffreestanding -fno-stack-protector -fno-ident
+LIBC_FLAGS = -ffreestanding -fno-stack-protector -fno-builtin
 WARNING_FLAGS = -Wextra -Wall -Wundef -Wcast-qual -Wwrite-strings -Wimplicit-fallthrough
-FLAVOR_FLAGS = -fomit-frame-pointer -march=i386 -m32 -fno-exceptions -fno-rtti -ffunction-sections -fdata-sections -fmerge-all-constants -fno-unroll-loops -fno-pie -fno-pic
-OPTIMIZATION_FLAGS = -Os -fno-asynchronous-unwind-tables
+FLAVOR_FLAGS = -march=i686 -m32 -fno-exceptions -fno-rtti
+OPTIMIZATION_FLAGS = -Os
 INCLUDE_FLAGS = -I.. -I.
 
 DEFINES = -DSERENITY -DUSERLAND -DSANITIZE_PTRS
