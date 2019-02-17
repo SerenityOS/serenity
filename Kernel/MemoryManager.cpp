@@ -42,7 +42,7 @@ MemoryManager::~MemoryManager()
 
 PageDirectory::PageDirectory(PhysicalAddress paddr)
 {
-    m_directory_page = adopt(*new PhysicalPage(paddr, true));
+    m_directory_page = PhysicalPage::create_eternal(paddr, true);
 }
 
 PageDirectory::PageDirectory()
@@ -87,11 +87,11 @@ void MemoryManager::initialize_paging()
     // 3 MB   -> 4 MB           Supervisor physical pages (available for allocation!)
     // 4 MB   -> (max) MB       Userspace physical pages (available for allocation!)
     for (size_t i = (2 * MB); i < (4 * MB); i += PAGE_SIZE)
-        m_free_supervisor_physical_pages.append(adopt(*new PhysicalPage(PhysicalAddress(i), true)));
+        m_free_supervisor_physical_pages.append(PhysicalPage::create_eternal(PhysicalAddress(i), true));
 
     dbgprintf("MM: 4MB-%uMB available for allocation\n", m_ram_size / 1048576);
     for (size_t i = (4 * MB); i < m_ram_size; i += PAGE_SIZE)
-        m_free_physical_pages.append(adopt(*new PhysicalPage(PhysicalAddress(i), false)));
+        m_free_physical_pages.append(PhysicalPage::create_eternal(PhysicalAddress(i), false));
     m_quickmap_addr = LinearAddress((1 * MB) - PAGE_SIZE);
 #ifdef MM_DEBUG
     dbgprintf("MM: Quickmap will use P%x\n", m_quickmap_addr.get());
@@ -650,8 +650,23 @@ Region::~Region()
     MM.unregister_region(*this);
 }
 
-PhysicalPage::PhysicalPage(PhysicalAddress paddr, bool supervisor)
-    : m_supervisor(supervisor)
+RetainPtr<PhysicalPage> PhysicalPage::create_eternal(PhysicalAddress paddr, bool supervisor)
+{
+    void* slot = kmalloc_eternal(sizeof(PhysicalPage));
+    new (slot) PhysicalPage(paddr, supervisor);
+    return adopt(*(PhysicalPage*)slot);
+}
+
+RetainPtr<PhysicalPage> PhysicalPage::create(PhysicalAddress paddr, bool supervisor)
+{
+    void* slot = kmalloc(sizeof(PhysicalPage));
+    new (slot) PhysicalPage(paddr, supervisor, false);
+    return adopt(*(PhysicalPage*)slot);
+}
+
+PhysicalPage::PhysicalPage(PhysicalAddress paddr, bool supervisor, bool may_return_to_freelist)
+    : m_may_return_to_freelist(may_return_to_freelist)
+    , m_supervisor(supervisor)
     , m_paddr(paddr)
 {
 }
@@ -724,7 +739,7 @@ VMObject::VMObject(PhysicalAddress paddr, size_t size)
 {
     MM.register_vmo(*this);
     for (size_t i = 0; i < size; i += PAGE_SIZE) {
-        m_physical_pages.append(adopt(*new PhysicalPage(paddr.offset(i), false)));
+        m_physical_pages.append(PhysicalPage::create(paddr.offset(i), false));
     }
     ASSERT(m_physical_pages.size() == page_count());
 }

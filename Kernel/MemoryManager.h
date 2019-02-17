@@ -25,7 +25,6 @@ enum class PageFaultResponse {
 };
 
 class PhysicalPage {
-    AK_MAKE_ETERNAL
     friend class MemoryManager;
     friend class PageDirectory;
     friend class VMObject;
@@ -41,19 +40,27 @@ public:
     void release()
     {
         ASSERT(m_retain_count);
-        if (!--m_retain_count)
-            return_to_freelist();
+        if (!--m_retain_count) {
+            if (m_may_return_to_freelist)
+                return_to_freelist();
+            else
+                delete this;
+        }
     }
+
+    static RetainPtr<PhysicalPage> create_eternal(PhysicalAddress, bool supervisor);
+    static RetainPtr<PhysicalPage> create(PhysicalAddress, bool supervisor);
 
     unsigned short retain_count() const { return m_retain_count; }
 
 private:
-    PhysicalPage(PhysicalAddress paddr, bool supervisor);
-    ~PhysicalPage() = delete;
+    PhysicalPage(PhysicalAddress paddr, bool supervisor, bool may_return_to_freelist = true);
+    ~PhysicalPage() { }
 
     void return_to_freelist();
 
     unsigned short m_retain_count { 1 };
+    bool m_may_return_to_freelist { true };
     bool m_supervisor { false };
     PhysicalAddress m_paddr;
 };

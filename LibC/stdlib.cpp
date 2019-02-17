@@ -50,7 +50,7 @@ void* malloc(size_t size)
     size_t real_size = size + sizeof(MallocHeader) + sizeof(MallocFooter);
 
     if (s_malloc_sum_free < real_size) {
-        fprintf(stderr, "malloc(): Out of memory\ns_malloc_sum_free=%u, real_size=%x\n", s_malloc_sum_free, real_size);
+        fprintf(stderr, "malloc(): Out of memory\ns_malloc_sum_free=%u, real_size=%u\n", s_malloc_sum_free, real_size);
         assert(false);
     }
 

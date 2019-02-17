@@ -187,18 +187,23 @@ WSWindowManager::WSWindowManager()
         m_system_menu = make<WSMenu>(nullptr, -1, String((const char*)system_menu_name));
         m_system_menu->add_item(make<WSMenuItem>(0, "Launch Terminal"));
         m_system_menu->add_item(make<WSMenuItem>(WSMenuItem::Separator));
-        m_system_menu->add_item(make<WSMenuItem>(1, "Hello again"));
-        m_system_menu->add_item(make<WSMenuItem>(2, "To all my friends"));
-        m_system_menu->add_item(make<WSMenuItem>(3, "Together we can play some rock&roll"));
+        m_system_menu->add_item(make<WSMenuItem>(1, "640x480"));
+        m_system_menu->add_item(make<WSMenuItem>(2, "800x600"));
+        m_system_menu->add_item(make<WSMenuItem>(3, "1024x768"));
         m_system_menu->add_item(make<WSMenuItem>(WSMenuItem::Separator));
         m_system_menu->add_item(make<WSMenuItem>(4, "About..."));
-        m_system_menu->on_item_activation = [] (WSMenuItem& item) {
+        m_system_menu->on_item_activation = [this] (WSMenuItem& item) {
             if (item.identifier() == 0) {
                 if (fork() == 0) {
                     execl("/bin/Terminal", "/bin/Terminal", nullptr);
                     ASSERT_NOT_REACHED();
                 }
                 return;
+            }
+            switch (item.identifier()) {
+            case 1: set_resolution(640, 480); break;
+            case 2: set_resolution(800, 600); break;
+            case 3: set_resolution(1024, 768); break;
             }
             if (item.identifier() == 4) {
                 if (fork() == 0) {
@@ -229,6 +234,21 @@ WSWindowManager::WSWindowManager()
 
 WSWindowManager::~WSWindowManager()
 {
+}
+
+void WSWindowManager::set_resolution(int width, int height)
+{
+    if (m_screen_rect.width() == width && m_screen_rect.height() == height)
+        return;
+    m_screen.set_resolution(width, height);
+    m_screen_rect = m_screen.rect();
+    m_front_bitmap = GraphicsBitmap::create_wrapper({ width, height }, m_screen.scanline(0));
+    m_back_bitmap = GraphicsBitmap::create_wrapper({ width, height }, m_screen.scanline(height));
+    m_front_painter = make<Painter>(*m_front_bitmap);
+    m_back_painter = make<Painter>(*m_back_bitmap);
+    m_buffers_are_flipped = false;
+    invalidate();
+    compose();
 }
 
 template<typename Callback>
@@ -767,7 +787,13 @@ void WSWindowManager::invalidate()
     invalidate(m_screen_rect);
 }
 
-void WSWindowManager::invalidate(const Rect& a_rect)
+void WSWindowManager::recompose_immediately()
+{
+    m_dirty_rects.clear_with_capacity();
+    invalidate(m_screen_rect, false);
+}
+
+void WSWindowManager::invalidate(const Rect& a_rect, bool should_schedule_compose_event)
 {
     auto rect = Rect::intersection(a_rect, m_screen_rect);
     if (rect.is_empty())
@@ -786,7 +812,7 @@ void WSWindowManager::invalidate(const Rect& a_rect)
 
     m_dirty_rects.append(rect);
 
-    if (!m_pending_compose_event) {
+    if (should_schedule_compose_event && !m_pending_compose_event) {
         WSMessageLoop::the().post_message(this, make<WSMessage>(WSMessage::WM_DeferredCompose));
         m_pending_compose_event = true;
     }

@@ -101,7 +101,7 @@ void* kmalloc_impl(dword size)
     real_size = size + sizeof(allocation_t);
 
     if (sum_free < real_size) {
-        kprintf("%s<%u> kmalloc(): PANIC! Out of memory (sucks, dude)\nsum_free=%u, real_size=%x\n", current->name().characters(), current->pid(), sum_free, real_size);
+        kprintf("%s<%u> kmalloc(): PANIC! Out of memory (sucks, dude)\nsum_free=%u, real_size=%u\n", current->name().characters(), current->pid(), sum_free, real_size);
         hang();
     }
 
