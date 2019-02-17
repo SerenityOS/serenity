@@ -318,6 +318,20 @@ int FileDescriptor::close()
     return 0;
 }
 
+const char* to_string(SocketRole role)
+{
+    switch (role) {
+    case SocketRole::Listener:
+        return "Listener";
+    case SocketRole::Accepted:
+        return "Accepted";
+    case SocketRole::Connected:
+        return "Connected";
+    default:
+        return "None";
+    }
+}
+
 String FileDescriptor::absolute_path()
 {
     Stopwatch sw("absolute_path");
@@ -328,7 +342,7 @@ String FileDescriptor::absolute_path()
     if (is_device())
         return String::format("device:%u,%u (%s)", m_device->major(), m_device->minor(), m_device->class_name());
     if (is_socket())
-        return String::format("socket:%x (role: %u)", m_socket.ptr(), m_socket_role);
+        return String::format("socket:%x (role: %s)", m_socket.ptr(), to_string(m_socket_role));
     ASSERT(m_inode);
     return VFS::the().absolute_path(*m_inode);
 }

@@ -7,7 +7,7 @@
 #include <AK/Vector.h>
 #include <Kernel/UnixTypes.h>
 
-enum class SocketRole { None, Accepted, Connected };
+enum class SocketRole { None, Listener, Accepted, Connected };
 
 class Socket : public Retainable<Socket> {
 public:
