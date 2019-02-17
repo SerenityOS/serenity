@@ -22,7 +22,7 @@
 #include "PS2MouseDevice.h"
 #include "PTYMultiplexer.h"
 #include "DevPtsFS.h"
-#include "BochsVGADevice.h"
+#include "BXVGADevice.h"
 
 //#define SPAWN_GUITEST
 //#define SPAWN_LAUNCHER
@@ -86,7 +86,7 @@ VFS* vfs;
     vfs->register_device(*tty2);
     vfs->register_device(*tty3);
 
-    vfs->register_device(BochsVGADevice::the());
+    vfs->register_device(BXVGADevice::the());
 
     auto dev_hd0 = IDEDiskDevice::create();
     auto e2fs = Ext2FS::create(dev_hd0.copy_ref());
@@ -170,7 +170,7 @@ VFS* vfs;
     MemoryManager::initialize();
     PIT::initialize();
 
-    new BochsVGADevice;
+    new BXVGADevice;
 
     auto new_procfs = ProcFS::create();
     new_procfs->initialize();
