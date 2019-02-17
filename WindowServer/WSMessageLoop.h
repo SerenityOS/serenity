@@ -26,7 +26,6 @@ public:
     int start_timer(int ms, Function<void()>&&);
     int stop_timer(int timer_id);
 
-    void post_message_to_client(int client_id, const WSAPI_ServerMessage&);
     void on_receive_from_client(int client_id, const WSAPI_ClientMessage&);
 
     void notify_client_disconnected(int client_id);

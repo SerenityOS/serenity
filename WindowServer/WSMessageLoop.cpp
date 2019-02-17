@@ -76,14 +76,6 @@ int WSMessageLoop::exec()
     }
 }
 
-void WSMessageLoop::post_message_to_client(int client_id, const WSAPI_ServerMessage& message)
-{
-    auto* client = WSClientConnection::from_client_id(client_id);
-    if (!client)
-        return;
-    client->post_message(message);
-}
-
 void WSMessageLoop::post_message(WSMessageReceiver* receiver, OwnPtr<WSMessage>&& message)
 {
 #ifdef WSEVENTLOOP_DEBUG

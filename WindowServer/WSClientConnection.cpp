@@ -59,7 +59,7 @@ void WSClientConnection::post_error(const String& error_message)
     ASSERT(error_message.length() < sizeof(message.text));
     strcpy(message.text, error_message.characters());
     message.text_length = error_message.length();
-    WSMessageLoop::the().post_message_to_client(m_client_id, message);
+    post_message(message);
 }
 
 void WSClientConnection::post_message(const WSAPI_ServerMessage& message)
@@ -110,7 +110,7 @@ void WSClientConnection::handle_request(WSAPICreateMenubarRequest& request)
     WSAPI_ServerMessage response;
     response.type = WSAPI_ServerMessage::Type::DidCreateMenubar;
     response.menu.menubar_id = menubar_id;
-    WSMessageLoop::the().post_message_to_client(request.client_id(), response);
+    post_message(response);
 }
 
 void WSClientConnection::handle_request(WSAPIDestroyMenubarRequest& request)
@@ -127,7 +127,7 @@ void WSClientConnection::handle_request(WSAPIDestroyMenubarRequest& request)
     WSAPI_ServerMessage response;
     response.type = WSAPI_ServerMessage::Type::DidDestroyMenubar;
     response.menu.menubar_id = menubar_id;
-    WSMessageLoop::the().post_message_to_client(request.client_id(), response);
+    post_message(response);
 }
 
 void WSClientConnection::handle_request(WSAPICreateMenuRequest& request)
@@ -138,7 +138,7 @@ void WSClientConnection::handle_request(WSAPICreateMenuRequest& request)
     WSAPI_ServerMessage response;
     response.type = WSAPI_ServerMessage::Type::DidCreateMenu;
     response.menu.menu_id = menu_id;
-    WSMessageLoop::the().post_message_to_client(request.client_id(), response);
+    post_message(response);
 }
 
 void WSClientConnection::handle_request(WSAPIDestroyMenuRequest& request)
@@ -155,7 +155,7 @@ void WSClientConnection::handle_request(WSAPIDestroyMenuRequest& request)
     WSAPI_ServerMessage response;
     response.type = WSAPI_ServerMessage::Type::DidDestroyMenu;
     response.menu.menu_id = menu_id;
-    WSMessageLoop::the().post_message_to_client(request.client_id(), response);
+    post_message(response);
 }
 
 void WSClientConnection::handle_request(WSAPISetApplicationMenubarRequest& request)
@@ -172,7 +172,7 @@ void WSClientConnection::handle_request(WSAPISetApplicationMenubarRequest& reque
     WSAPI_ServerMessage response;
     response.type = WSAPI_ServerMessage::Type::DidSetApplicationMenubar;
     response.menu.menubar_id = menubar_id;
-    WSMessageLoop::the().post_message_to_client(request.client_id(), response);
+    post_message(response);
 }
 
 void WSClientConnection::handle_request(WSAPIAddMenuToMenubarRequest& request)
@@ -196,7 +196,7 @@ void WSClientConnection::handle_request(WSAPIAddMenuToMenubarRequest& request)
     response.type = WSAPI_ServerMessage::Type::DidAddMenuToMenubar;
     response.menu.menubar_id = menubar_id;
     response.menu.menu_id = menu_id;
-    WSMessageLoop::the().post_message_to_client(request.client_id(), response);
+    post_message(response);
 }
 
 void WSClientConnection::handle_request(WSAPIAddMenuItemRequest& request)
@@ -215,7 +215,7 @@ void WSClientConnection::handle_request(WSAPIAddMenuItemRequest& request)
     response.type = WSAPI_ServerMessage::Type::DidAddMenuItem;
     response.menu.menu_id = menu_id;
     response.menu.identifier = identifier;
-    WSMessageLoop::the().post_message_to_client(request.client_id(), response);
+    post_message(response);
 }
 
 void WSClientConnection::handle_request(WSAPIAddMenuSeparatorRequest& request)
@@ -231,7 +231,7 @@ void WSClientConnection::handle_request(WSAPIAddMenuSeparatorRequest& request)
     WSAPI_ServerMessage response;
     response.type = WSAPI_ServerMessage::Type::DidAddMenuSeparator;
     response.menu.menu_id = menu_id;
-    WSMessageLoop::the().post_message_to_client(request.client_id(), response);
+    post_message(response);
 }
 
 void WSClientConnection::handle_request(WSAPISetWindowTitleRequest& request)
@@ -261,7 +261,7 @@ void WSClientConnection::handle_request(WSAPIGetWindowTitleRequest& request)
     ASSERT(window.title().length() < sizeof(response.text));
     strcpy(response.text, window.title().characters());
     response.text_length = window.title().length();
-    WSMessageLoop::the().post_message_to_client(request.client_id(), response);
+    post_message(response);
 }
 
 void WSClientConnection::handle_request(WSAPISetWindowRectRequest& request)
@@ -289,7 +289,7 @@ void WSClientConnection::handle_request(WSAPIGetWindowRectRequest& request)
     response.type = WSAPI_ServerMessage::Type::DidGetWindowRect;
     response.window_id = window.window_id();
     response.window.rect = window.rect();
-    WSMessageLoop::the().post_message_to_client(request.client_id(), response);
+    post_message(response);
 }
 
 void WSClientConnection::handle_request(WSAPICreateWindowRequest& request)
@@ -302,7 +302,7 @@ void WSClientConnection::handle_request(WSAPICreateWindowRequest& request)
     WSAPI_ServerMessage response;
     response.type = WSAPI_ServerMessage::Type::DidCreateWindow;
     response.window_id = window_id;
-    WSMessageLoop::the().post_message_to_client(request.client_id(), response);
+    post_message(response);
 }
 
 void WSClientConnection::handle_request(WSAPIDestroyWindowRequest& request)
@@ -330,7 +330,7 @@ void WSClientConnection::handle_request(WSAPIInvalidateRectRequest& request)
     response.type = WSAPI_ServerMessage::Type::Paint;
     response.window_id = window_id;
     response.paint.rect = request.rect();
-    WSMessageLoop::the().post_message_to_client(request.client_id(), response);
+    post_message(response);
 }
 
 void WSClientConnection::handle_request(WSAPIDidFinishPaintingNotification& request)
@@ -363,7 +363,7 @@ void WSClientConnection::handle_request(WSAPIGetWindowBackingStoreRequest& reque
     response.backing.pitch = backing_store->pitch();
     response.backing.size = backing_store->size();
     response.backing.shared_buffer_id = backing_store->shared_buffer_id();
-    WSMessageLoop::the().post_message_to_client(request.client_id(), response);
+    post_message(response);
 }
 
 void WSClientConnection::handle_request(WSAPISetGlobalCursorTrackingRequest& request)
