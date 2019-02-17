@@ -74,9 +74,7 @@ void GWidget::handle_paint_event(GPaintEvent& event)
         Painter painter(*this);
         painter.fill_rect(event.rect(), background_color());
     }
-    dbgprintf("GWidget{%p} handle_paint_event %s before calling paint_event()\n", this, event.rect().to_string().characters());
     paint_event(event);
-    dbgprintf("GWidget{%p} handle_paint_event %s after calling paint_event()\n", this, event.rect().to_string().characters());
     for (auto* ch : children()) {
         auto* child = (GWidget*)ch;
         if (child->relative_rect().intersects(event.rect())) {
