@@ -14,8 +14,10 @@ GraphicsBitmap::GraphicsBitmap(const Size& size)
     : m_size(size)
     , m_pitch(size.width() * sizeof(RGBA32))
 {
-    m_data = (RGBA32*)mmap(nullptr, size.area() * sizeof(RGBA32), PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0);
+    size_t size_in_bytes = size.area() * sizeof(RGBA32);
+    m_data = (RGBA32*)mmap(nullptr, size_in_bytes, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0);
     ASSERT(m_data && m_data != (void*)-1);
+    set_mmap_name(m_data, size_in_bytes, String::format("GraphicsBitmap [%dx%d]", width(), height()).characters());
     m_mmaped = true;
 }
 
