@@ -11,7 +11,6 @@
 #include "WSMenuBar.h"
 #include "WSMenuItem.h"
 #include <WindowServer/WSClientConnection.h>
-#include <sys/ioctl.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <time.h>
@@ -128,11 +127,8 @@ void WSWindowManager::flip_buffers()
 {
     swap(m_front_bitmap, m_back_bitmap);
     swap(m_front_painter, m_back_painter);
-    if (m_framebuffer_fd != -1) {
-        int new_y_offset = m_buffers_are_flipped ? 0 : m_screen_rect.height();
-        int rc = ioctl(m_framebuffer_fd, 1982, new_y_offset);
-        ASSERT(rc == 0);
-    }
+    int new_y_offset = m_buffers_are_flipped ? 0 : m_screen_rect.height();
+    WSScreen::the().set_y_offset(new_y_offset);
     m_buffers_are_flipped = !m_buffers_are_flipped;
 }
 
