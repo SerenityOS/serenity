@@ -2168,16 +2168,6 @@ size_t Process::amount_virtual() const
     return amount;
 }
 
-size_t Process::amount_in_bitmaps() const
-{
-    size_t amount = 0;
-    for (auto& region : m_regions) {
-        if (region->is_bitmap())
-            amount += region->size();
-    }
-    return amount;
-}
-
 size_t Process::amount_resident() const
 {
     // FIXME: This will double count if multiple regions use the same physical page.
