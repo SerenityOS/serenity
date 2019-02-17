@@ -2267,6 +2267,7 @@ int Process::sys$listen(int sockfd, int backlog)
     int error;
     if (!socket.listen(backlog, error))
         return error;
+    descriptor->set_socket_role(SocketRole::Listener);
     return 0;
 }
 
