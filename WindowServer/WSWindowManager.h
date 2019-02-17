@@ -54,8 +54,9 @@ public:
 
     void invalidate(const WSWindow&);
     void invalidate(const WSWindow&, const Rect&);
-    void invalidate(const Rect&);
+    void invalidate(const Rect&, bool should_schedule_compose_event = true);
     void invalidate();
+    void recompose_immediately();
     void flush(const Rect&);
 
     Font& font() { return *m_font; }
@@ -65,6 +66,8 @@ public:
     void close_menubar(WSMenuBar&);
     Color menu_selection_color() const { return m_menu_selection_color; }
     int menubar_menu_margin() const;
+
+    void set_resolution(int width, int height);
 
 private:
     void process_mouse_event(WSMouseEvent&);

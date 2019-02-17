@@ -21,12 +21,19 @@ WSScreen::WSScreen(unsigned width, unsigned height)
 {
     ASSERT(!s_the);
     s_the = this;
-
     m_cursor_location = rect().center();
-
     m_framebuffer_fd = open("/dev/bxvga", O_RDWR);
     ASSERT(m_framebuffer_fd >= 0);
 
+    set_resolution(width, height);
+}
+
+WSScreen::~WSScreen()
+{
+}
+
+void WSScreen::set_resolution(int width, int height)
+{
     struct BXVGAResolution {
         int width;
         int height;
@@ -35,13 +42,20 @@ WSScreen::WSScreen(unsigned width, unsigned height)
     int rc = ioctl(m_framebuffer_fd, 1985, (int)&resolution);
     ASSERT(rc == 0);
 
-    size_t framebuffer_size_in_bytes = resolution.width * resolution.height * sizeof(RGBA32) * 2;
+    if (m_framebuffer) {
+        size_t previous_size_in_bytes = m_width * m_height * sizeof(RGBA32) * 2;
+        int rc = munmap(m_framebuffer, previous_size_in_bytes);
+        ASSERT(rc == 0);
+    }
+
+    size_t framebuffer_size_in_bytes = width * height * sizeof(RGBA32) * 2;
     m_framebuffer = (RGBA32*)mmap(nullptr, framebuffer_size_in_bytes, PROT_READ | PROT_WRITE, MAP_SHARED, m_framebuffer_fd, 0);
     ASSERT(m_framebuffer && m_framebuffer != (void*)-1);
-}
 
-WSScreen::~WSScreen()
-{
+    m_width = width;
+    m_height = height;
+
+    m_cursor_location.constrain(rect());
 }
 
 void WSScreen::on_receive_mouse_data(int dx, int dy, bool left_button, bool right_button)
