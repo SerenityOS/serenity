@@ -12,9 +12,9 @@
 DirectoryView::DirectoryView(GWidget* parent)
     : GWidget(parent)
 {
-    m_directory_icon = GraphicsBitmap::load_from_file("/res/icons/folder16.rgb", { 16, 16 });
-    m_file_icon = GraphicsBitmap::load_from_file("/res/icons/file16.rgb", { 16, 16 });
-    m_symlink_icon = GraphicsBitmap::load_from_file("/res/icons/link16.rgb", { 16, 16 });
+    m_directory_icon = GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/folder16.rgb", { 16, 16 });
+    m_file_icon = GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/file16.rgb", { 16, 16 });
+    m_symlink_icon = GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/link16.rgb", { 16, 16 });
 
     m_scrollbar = new GScrollBar(Orientation::Vertical, this);
     m_scrollbar->set_step(4);
@@ -142,7 +142,7 @@ void DirectoryView::paint_event(GPaintEvent&)
             Rect name_rect(icon_rect.right() + horizontal_padding, y, 100, item_height());
             Rect size_rect(name_rect.right() + horizontal_padding, y, 64, item_height());
             painter.fill_rect(row_rect(painted_item_index), i % 2 ? Color(210, 210, 210) : Color::White);
-            painter.blit_with_alpha(icon_rect.location(), icon_for(entry), { 0, 0, icon_size, icon_size });
+            painter.blit(icon_rect.location(), icon_for(entry), { 0, 0, icon_size, icon_size });
             painter.draw_text(name_rect, entry.name, TextAlignment::CenterLeft, Color::Black);
             if (should_show_size_for(entry))
                 painter.draw_text(size_rect, pretty_byte_size(entry.size), TextAlignment::CenterRight, Color::Black);

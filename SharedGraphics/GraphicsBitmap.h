@@ -9,10 +9,12 @@
 
 class GraphicsBitmap : public Retainable<GraphicsBitmap> {
 public:
-    static RetainPtr<GraphicsBitmap> create(const Size&);
-    static RetainPtr<GraphicsBitmap> create_wrapper(const Size&, RGBA32*);
-    static RetainPtr<GraphicsBitmap> load_from_file(const String& path, const Size&);
-    static RetainPtr<GraphicsBitmap> create_with_shared_buffer(int shared_buffer_id, const Size&, RGBA32* buffer = nullptr);
+    enum class Format { Invalid, RGB32, RGBA32 };
+
+    static RetainPtr<GraphicsBitmap> create(Format, const Size&);
+    static RetainPtr<GraphicsBitmap> create_wrapper(Format, const Size&, RGBA32*);
+    static RetainPtr<GraphicsBitmap> load_from_file(Format, const String& path, const Size&);
+    static RetainPtr<GraphicsBitmap> create_with_shared_buffer(Format, int shared_buffer_id, const Size&, RGBA32* buffer = nullptr);
     ~GraphicsBitmap();
 
     RGBA32* scanline(int y);
@@ -25,14 +27,17 @@ public:
     size_t pitch() const { return m_pitch; }
     int shared_buffer_id() const { return m_shared_buffer_id; }
 
+    bool has_alpha_channel() const { return m_format == Format::RGBA32; }
+
 private:
-    GraphicsBitmap(const Size&);
-    GraphicsBitmap(const Size&, RGBA32*);
-    GraphicsBitmap(int shared_buffer_id, const Size&, RGBA32*);
+    GraphicsBitmap(Format, const Size&);
+    GraphicsBitmap(Format, const Size&, RGBA32*);
+    GraphicsBitmap(Format, int shared_buffer_id, const Size&, RGBA32*);
 
     Size m_size;
     RGBA32* m_data { nullptr };
     size_t m_pitch { 0 };
+    Format m_format { Format::Invalid };
     bool m_mmaped { false };
     int m_shared_buffer_id { -1 };
 };

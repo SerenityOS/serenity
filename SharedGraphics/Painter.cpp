@@ -32,7 +32,10 @@ Painter::Painter(GWidget& widget)
     request.window_id = widget.window()->window_id();
     auto response = GEventLoop::main().sync_request(request, WSAPI_ServerMessage::DidGetWindowBackingStore);
 
-    m_target = GraphicsBitmap::create_with_shared_buffer(response.backing.shared_buffer_id, response.backing.size);
+    m_target = GraphicsBitmap::create_with_shared_buffer(
+                   response.backing.has_alpha_channel ? GraphicsBitmap::Format::RGBA32 : GraphicsBitmap::Format::RGB32,
+                   response.backing.shared_buffer_id,
+                   response.backing.size);
     ASSERT(m_target);
     m_window = widget.window();
     m_translation.move_by(widget.window_relative_rect().location());
@@ -67,7 +70,7 @@ void Painter::fill_rect_with_draw_op(const Rect& a_rect, Color color)
 
     for (int i = rect.height() - 1; i >= 0; --i) {
         for (int j = 0; j < rect.width(); ++j)
-            set_pixel_with_draw_op(dst[j], color.value());
+            set_pixel_with_draw_op(dst[j], color);
         dst += dst_skip;
     }
 }
@@ -230,8 +233,17 @@ void Painter::draw_bitmap(const Point& p, const GlyphBitmap& bitmap, Color color
     }
 }
 
-void Painter::blit_with_alpha(const Point& position, const GraphicsBitmap& source, const Rect& src_rect)
+void Painter::blit_with_opacity(const Point& position, const GraphicsBitmap& source, const Rect& src_rect, float opacity)
 {
+    ASSERT(!m_target->has_alpha_channel());
+
+    if (!opacity)
+        return;
+    if (opacity >= 1.0f)
+        return blit(position, source, src_rect);
+
+    byte alpha = 255 * opacity;
+
     Rect dst_rect(position, src_rect.size());
     dst_rect.move_by(m_translation);
     auto clipped_rect = Rect::intersection(dst_rect, m_clip_rect);
@@ -248,13 +260,42 @@ void Painter::blit_with_alpha(const Point& position, const GraphicsBitmap& sourc
 
     for (int row = first_row; row <= last_row; ++row) {
         for (int x = 0; x <= (last_column - first_column); ++x) {
-            byte alpha = Color(src[x]).alpha();
+            Color src_color_with_alpha = Color::from_rgb(src[x]);
+            src_color_with_alpha.set_alpha(alpha);
+            Color dst_color = Color::from_rgb(dst[x]);
+            dst[x] = dst_color.blend(src_color_with_alpha).value();
+        }
+        dst += dst_skip;
+        src += src_skip;
+    }
+}
+
+void Painter::blit_with_alpha(const Point& position, const GraphicsBitmap& source, const Rect& src_rect)
+{
+    ASSERT(source.has_alpha_channel());
+    Rect dst_rect(position, src_rect.size());
+    dst_rect.move_by(m_translation);
+    auto clipped_rect = Rect::intersection(dst_rect, m_clip_rect);
+    if (clipped_rect.is_empty())
+        return;
+    const int first_row = clipped_rect.top() - dst_rect.top();
+    const int last_row = clipped_rect.bottom() - dst_rect.top();
+    const int first_column = clipped_rect.left() - dst_rect.left();
+    const int last_column = clipped_rect.right() - dst_rect.left();
+    RGBA32* dst = m_target->scanline(clipped_rect.y()) + clipped_rect.x();
+    const RGBA32* src = source.scanline(src_rect.top() + first_row) + src_rect.left() + first_column;
+    const size_t dst_skip = m_target->width();
+    const unsigned src_skip = source.width();
+
+    for (int row = first_row; row <= last_row; ++row) {
+        for (int x = 0; x <= (last_column - first_column); ++x) {
+            byte alpha = Color::from_rgba(src[x]).alpha();
             if (alpha == 0xff)
                 dst[x] = src[x];
             else if (!alpha)
                 continue;
             else
-                dst[x] = Color(dst[x]).blend(src[x]).value();
+                dst[x] = Color::from_rgba(dst[x]).blend(Color::from_rgba(src[x])).value();
         }
         dst += dst_skip;
         src += src_skip;
@@ -263,6 +304,8 @@ void Painter::blit_with_alpha(const Point& position, const GraphicsBitmap& sourc
 
 void Painter::blit(const Point& position, const GraphicsBitmap& source, const Rect& src_rect)
 {
+    if (source.has_alpha_channel())
+        return blit_with_alpha(position, source, src_rect);
     Rect dst_rect(position, src_rect.size());
     dst_rect.move_by(m_translation);
     auto clipped_rect = Rect::intersection(dst_rect, m_clip_rect);

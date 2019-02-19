@@ -117,6 +117,7 @@ struct WSAPI_ServerMessage {
             size_t bpp;
             size_t pitch;
             int shared_buffer_id;
+            bool has_alpha_channel;
         } backing;
     };
 };
@@ -142,6 +143,7 @@ struct WSAPI_ClientMessage {
         DidFinishPainting,
         GetWindowBackingStore,
         SetGlobalCursorTracking,
+        SetWindowOpacity,
     };
     Type type { Invalid };
     int window_id { -1 };
@@ -157,6 +159,8 @@ struct WSAPI_ClientMessage {
         } menu;
         struct {
             WSAPI_Rect rect;
+            bool has_alpha_channel;
+            float opacity;
         } window;
     };
 };

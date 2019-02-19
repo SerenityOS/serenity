@@ -25,6 +25,9 @@ public:
     String title() const { return m_title; }
     void set_title(String&&);
 
+    float opacity() const { return m_opacity; }
+    void set_opacity(float opacity) { m_opacity = opacity; }
+
     int x() const { return m_rect.x(); }
     int y() const { return m_rect.y(); }
     int width() const { return m_rect.width(); }
@@ -59,6 +62,9 @@ public:
     void set_global_cursor_tracking_enabled(bool);
     bool global_cursor_tracking() const { return m_global_cursor_tracking_enabled; }
 
+    bool has_alpha_channel() const { return m_has_alpha_channel; }
+    void set_has_alpha_channel(bool value) { m_has_alpha_channel = value; }
+
     // For InlineLinkedList.
     // FIXME: Maybe make a ListHashSet and then WSWindowManager can just use that.
     WSWindow* m_next { nullptr };
@@ -72,9 +78,9 @@ private:
     bool m_is_being_dragged { false };
     bool m_global_cursor_tracking_enabled { false };
     bool m_visible { true };
-
+    bool m_has_alpha_channel { false };
     WSMenu* m_menu { nullptr };
-
     RetainPtr<GraphicsBitmap> m_backing;
     int m_window_id { -1 };
+    float m_opacity { 1 };
 };

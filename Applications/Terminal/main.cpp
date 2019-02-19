@@ -89,6 +89,7 @@ int main(int argc, char** argv)
     window->set_should_exit_app_on_close(true);
 
     Terminal terminal(ptm_fd);
+    window->set_has_alpha_channel(true);
     window->set_main_widget(&terminal);
     window->move_to(300, 300);
     window->show();

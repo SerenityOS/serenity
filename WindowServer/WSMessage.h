@@ -39,6 +39,7 @@ public:
         APIDidFinishPaintingNotification,
         APIGetWindowBackingStoreRequest,
         APISetGlobalCursorTrackingRequest,
+        APISetWindowOpacityRequest,
         __End_API_Client_Requests,
     };
 
@@ -253,6 +254,26 @@ private:
     int m_window_id { 0 };
 };
 
+class WSAPISetWindowOpacityRequest final : public WSAPIClientRequest {
+public:
+    explicit WSAPISetWindowOpacityRequest(int client_id, int window_id, float opacity)
+        : WSAPIClientRequest(WSMessage::APISetWindowOpacityRequest, client_id)
+        , m_client_id(client_id)
+        , m_window_id(window_id)
+        , m_opacity(opacity)
+    {
+    }
+
+    int client_id() const { return m_client_id; }
+    int window_id() const { return m_window_id; }
+    float opacity() const { return m_opacity; }
+
+private:
+    int m_client_id { 0 };
+    int m_window_id { 0 };
+    float m_opacity { 0 };
+};
+
 class WSAPISetWindowRectRequest final : public WSAPIClientRequest {
 public:
     explicit WSAPISetWindowRectRequest(int client_id, int window_id, const Rect& rect)
@@ -292,19 +313,25 @@ private:
 
 class WSAPICreateWindowRequest : public WSAPIClientRequest {
 public:
-    WSAPICreateWindowRequest(int client_id, const Rect& rect, const String& title)
+    WSAPICreateWindowRequest(int client_id, const Rect& rect, const String& title, bool has_alpha_channel, float opacity)
         : WSAPIClientRequest(WSMessage::APICreateWindowRequest, client_id)
         , m_rect(rect)
         , m_title(title)
+        , m_opacity(opacity)
+        , m_has_alpha_channel(has_alpha_channel)
     {
     }
 
     Rect rect() const { return m_rect; }
     String title() const { return m_title; }
+    bool has_alpha_channel() const { return m_has_alpha_channel; }
+    float opacity() const { return m_opacity; }
 
 private:
     Rect m_rect;
     String m_title;
+    float m_opacity { 0 };
+    bool m_has_alpha_channel { false };
 };
 
 class WSAPIDestroyWindowRequest : public WSAPIClientRequest {

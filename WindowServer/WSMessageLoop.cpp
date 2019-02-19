@@ -302,7 +302,7 @@ void WSMessageLoop::on_receive_from_client(int client_id, const WSAPI_ClientMess
         break;
     case WSAPI_ClientMessage::Type::CreateWindow:
         ASSERT(message.text_length < sizeof(message.text));
-        post_message(client, make<WSAPICreateWindowRequest>(client_id, message.window.rect, String(message.text, message.text_length)));
+        post_message(client, make<WSAPICreateWindowRequest>(client_id, message.window.rect, String(message.text, message.text_length), message.window.has_alpha_channel, message.window.opacity));
         break;
     case WSAPI_ClientMessage::Type::DestroyWindow:
         post_message(client, make<WSAPIDestroyWindowRequest>(client_id, message.window_id));

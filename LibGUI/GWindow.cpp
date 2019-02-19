@@ -59,6 +59,8 @@ void GWindow::show()
     request.type = WSAPI_ClientMessage::Type::CreateWindow;
     request.window_id = m_window_id;
     request.window.rect = m_rect_when_windowless;
+    request.window.has_alpha_channel = m_has_alpha_channel;
+    request.window.opacity = m_opacity_when_windowless;
     ASSERT(m_title_when_windowless.length() < sizeof(request.text));
     strcpy(request.text, m_title_when_windowless.characters());
     request.text_length = m_title_when_windowless.length();
@@ -278,5 +280,24 @@ void GWindow::set_global_cursor_tracking_widget(GWidget* widget)
     request.value = widget != nullptr;
     // FIXME: What if the cursor moves out of our interest range before the server can handle this?
     //        Maybe there could be a response that includes the current cursor location as of enabling.
+    GEventLoop::main().post_message_to_server(request);
+}
+
+void GWindow::set_has_alpha_channel(bool value)
+{
+    ASSERT(!m_window_id);
+    m_has_alpha_channel = value;
+}
+
+void GWindow::set_opacity(float opacity)
+{
+    m_opacity_when_windowless = opacity;
+    if (!m_window_id)
+        return;
+    WSAPI_ClientMessage request;
+    request.type = WSAPI_ClientMessage::Type::SetWindowOpacity;
+    request.window_id = m_window_id;
+    request.window.opacity = opacity;
+    m_opacity_when_windowless = opacity;
     GEventLoop::main().post_message_to_server(request);
 }

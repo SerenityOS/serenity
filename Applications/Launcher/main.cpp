@@ -38,7 +38,7 @@ public:
         : GButton(parent)
         , m_executable_path(exec_path)
     {
-        set_icon(GraphicsBitmap::load_from_file(icon_path, { 32, 32 }));
+        set_icon(GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, icon_path, { 32, 32 }));
         resize(50, 50);
         on_click = [this] (GButton&) {
             pid_t child_pid = fork();

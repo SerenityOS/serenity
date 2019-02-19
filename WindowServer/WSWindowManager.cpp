@@ -144,8 +144,8 @@ WSWindowManager::WSWindowManager()
     (void)m_flush_count;
 #endif
     auto size = m_screen_rect.size();
-    m_front_bitmap = GraphicsBitmap::create_wrapper(size, m_screen.scanline(0));
-    m_back_bitmap = GraphicsBitmap::create_wrapper(size, m_screen.scanline(size.height()));
+    m_front_bitmap = GraphicsBitmap::create_wrapper(GraphicsBitmap::Format::RGB32, size, m_screen.scanline(0));
+    m_back_bitmap = GraphicsBitmap::create_wrapper(GraphicsBitmap::Format::RGB32, size, m_screen.scanline(size.height()));
 
     m_front_painter = make<Painter>(*m_front_bitmap);
     m_back_painter = make<Painter>(*m_back_bitmap);
@@ -170,17 +170,17 @@ WSWindowManager::WSWindowManager()
     m_cursor_bitmap_outer = CharacterBitmap::create_from_ascii(cursor_bitmap_outer_ascii, 12, 17);
 
     m_wallpaper_path = "/res/wallpapers/cool.rgb";
-    m_wallpaper = GraphicsBitmap::load_from_file(m_wallpaper_path, { 1024, 768 });
+    m_wallpaper = GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, m_wallpaper_path, { 1024, 768 });
 
 #ifdef KERNEL
     ProcFS::the().add_sys_bool("wm_flash_flush", m_flash_flush);
     ProcFS::the().add_sys_string("wm_wallpaper", m_wallpaper_path, [this] {
-        m_wallpaper = GraphicsBitmap::load_from_file(m_wallpaper_path, m_screen_rect.size());
+        m_wallpaper = GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, m_wallpaper_path, m_screen_rect.size());
         invalidate(m_screen_rect);
     });
 #endif
 
-    m_menu_selection_color = Color(0x84351a);
+    m_menu_selection_color = Color::from_rgb(0x84351a);
 
     {
         byte system_menu_name[] = { 0xf8, 0 };
@@ -242,8 +242,8 @@ void WSWindowManager::set_resolution(int width, int height)
         return;
     m_screen.set_resolution(width, height);
     m_screen_rect = m_screen.rect();
-    m_front_bitmap = GraphicsBitmap::create_wrapper({ width, height }, m_screen.scanline(0));
-    m_back_bitmap = GraphicsBitmap::create_wrapper({ width, height }, m_screen.scanline(height));
+    m_front_bitmap = GraphicsBitmap::create_wrapper(GraphicsBitmap::Format::RGB32, { width, height }, m_screen.scanline(0));
+    m_back_bitmap = GraphicsBitmap::create_wrapper(GraphicsBitmap::Format::RGB32, { width, height }, m_screen.scanline(height));
     m_front_painter = make<Painter>(*m_front_bitmap);
     m_back_painter = make<Painter>(*m_back_bitmap);
     m_buffers_are_flipped = false;
@@ -620,10 +620,17 @@ void WSWindowManager::compose()
     dbgprintf("[WM] compose #%u (%u rects)\n", ++m_compose_count, dirty_rects.size());
 #endif
 
-    auto any_window_contains_rect = [this] (const Rect& r) {
+    auto any_opaque_window_contains_rect = [this] (const Rect& r) {
         for (auto* window = m_windows_in_order.head(); window; window = window->next()) {
             if (!window->is_visible())
                 continue;
+            if (window->opacity() < 1.0f)
+                continue;
+            if (window->has_alpha_channel()) {
+                // FIXME: Just because the window has an alpha channel doesn't mean it's not opaque.
+                //        Maybe there's some way we could know this?
+                continue;
+            }
             if (outer_window_rect(window->rect()).contains(r))
                 return true;
         }
@@ -640,9 +647,8 @@ void WSWindowManager::compose()
     };
 
     for (auto& dirty_rect : dirty_rects) {
-        if (any_window_contains_rect(dirty_rect)) {
+        if (any_opaque_window_contains_rect(dirty_rect))
             continue;
-        }
         if (!m_wallpaper)
             m_back_painter->fill_rect(dirty_rect, m_background_color);
         else
@@ -665,7 +671,10 @@ void WSWindowManager::compose()
             dirty_rect_in_window_coordinates.set_y(dirty_rect_in_window_coordinates.y() - window.y());
             auto dst = window.position();
             dst.move_by(dirty_rect_in_window_coordinates.location());
-            m_back_painter->blit(dst, *backing, dirty_rect_in_window_coordinates);
+            if (window.opacity() == 1.0f)
+                m_back_painter->blit(dst, *backing, dirty_rect_in_window_coordinates);
+            else
+                m_back_painter->blit_with_opacity(dst, *backing, dirty_rect_in_window_coordinates, window.opacity());
             m_back_painter->clear_clip_rect();
         }
         m_back_painter->clear_clip_rect();

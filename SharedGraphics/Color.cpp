@@ -23,5 +23,5 @@ Color::Color(NamedColor named)
     default: ASSERT_NOT_REACHED(); break;
     }
 
-    m_value = (rgb.r << 16) | (rgb.g << 8) | rgb.b;
+    m_value = 0xff000000 | (rgb.r << 16) | (rgb.g << 8) | rgb.b;
 }

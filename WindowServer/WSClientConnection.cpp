@@ -79,14 +79,14 @@ void WSClientConnection::post_message(const WSAPI_ServerMessage& message)
     ASSERT(nwritten == sizeof(message));
 }
 
-RetainPtr<GraphicsBitmap> WSClientConnection::create_shared_bitmap(const Size& size)
+RetainPtr<GraphicsBitmap> WSClientConnection::create_shared_bitmap(GraphicsBitmap::Format format, const Size& size)
 {
     RGBA32* buffer;
     int shared_buffer_id = create_shared_buffer(m_pid, size.area() * sizeof(RGBA32), (void**)&buffer);
     ASSERT(shared_buffer_id >= 0);
     ASSERT(buffer);
     ASSERT(buffer != (void*)-1);
-    return GraphicsBitmap::create_with_shared_buffer(shared_buffer_id, size, buffer);
+    return GraphicsBitmap::create_with_shared_buffer(format, shared_buffer_id, size, buffer);
 }
 
 void WSClientConnection::on_message(WSMessage& message)
@@ -236,6 +236,18 @@ void WSClientConnection::handle_request(WSAPIAddMenuSeparatorRequest& request)
     post_message(response);
 }
 
+void WSClientConnection::handle_request(WSAPISetWindowOpacityRequest& request)
+{
+    int window_id = request.window_id();
+    auto it = m_windows.find(window_id);
+    if (it == m_windows.end()) {
+        post_error("Bad window ID");
+        return;
+    }
+    auto& window = *(*it).value;
+    window.set_opacity(request.opacity());
+}
+
 void WSClientConnection::handle_request(WSAPISetWindowTitleRequest& request)
 {
     int window_id = request.window_id();
@@ -298,8 +310,10 @@ void WSClientConnection::handle_request(WSAPICreateWindowRequest& request)
 {
     int window_id = m_next_window_id++;
     auto window = make<WSWindow>(*this, window_id);
+    window->set_has_alpha_channel(request.has_alpha_channel());
     window->set_title(request.title());
     window->set_rect(request.rect());
+    window->set_opacity(request.opacity());
     m_windows.set(window_id, move(window));
     WSAPI_ServerMessage response;
     response.type = WSAPI_ServerMessage::Type::DidCreateWindow;
@@ -364,6 +378,7 @@ void WSClientConnection::handle_request(WSAPIGetWindowBackingStoreRequest& reque
     response.backing.bpp = sizeof(RGBA32);
     response.backing.pitch = backing_store->pitch();
     response.backing.size = backing_store->size();
+    response.backing.has_alpha_channel = backing_store->has_alpha_channel();
     response.backing.shared_buffer_id = backing_store->shared_buffer_id();
     post_message(response);
 }
@@ -419,6 +434,8 @@ void WSClientConnection::on_request(WSAPIClientRequest& request)
         return handle_request(static_cast<WSAPIGetWindowBackingStoreRequest&>(request));
     case WSMessage::APISetGlobalCursorTrackingRequest:
         return handle_request(static_cast<WSAPISetGlobalCursorTrackingRequest&>(request));
+    case WSMessage::APISetWindowOpacityRequest:
+        return handle_request(static_cast<WSAPISetWindowOpacityRequest&>(request));
     default:
         break;
     }

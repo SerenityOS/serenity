@@ -22,7 +22,7 @@ public:
     static void for_each_client(Function<void(WSClientConnection&)>);
 
     void post_message(const WSAPI_ServerMessage&);
-    RetainPtr<GraphicsBitmap> create_shared_bitmap(const Size&);
+    RetainPtr<GraphicsBitmap> create_shared_bitmap(GraphicsBitmap::Format, const Size&);
 
     int client_id() const { return m_client_id; }
     WSMenuBar* app_menubar() { return m_app_menubar.ptr(); }
@@ -52,6 +52,7 @@ private:
     void handle_request(WSAPIDidFinishPaintingNotification&);
     void handle_request(WSAPIGetWindowBackingStoreRequest&);
     void handle_request(WSAPISetGlobalCursorTrackingRequest&);
+    void handle_request(WSAPISetWindowOpacityRequest&);
 
     void post_error(const String&);
 
