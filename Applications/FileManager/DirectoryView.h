@@ -53,6 +53,7 @@ private:
     RetainPtr<GraphicsBitmap> m_directory_icon;
     RetainPtr<GraphicsBitmap> m_file_icon;
     RetainPtr<GraphicsBitmap> m_symlink_icon;
+    RetainPtr<GraphicsBitmap> m_socket_icon;
 
     GScrollBar* m_scrollbar { nullptr };
 };
