@@ -24,6 +24,11 @@
 
 static const int window_titlebar_height = 16;
 
+static inline Rect menu_window_rect(const Rect& rect)
+{
+    return rect.inflated(2, 2);
+}
+
 static inline Rect title_bar_rect(const Rect& window)
 {
     return {
@@ -303,7 +308,7 @@ void WSWindowManager::paint_window_frame(WSWindow& window)
     //printf("[WM] paint_window_frame {%p}, rect: %d,%d %dx%d\n", &window, window.rect().x(), window.rect().y(), window.rect().width(), window.rect().height());
 
     if (window.type() == WSWindowType::Menu) {
-        m_back_painter->draw_rect(window.rect().inflated(2, 2), Color::LightGray);
+        m_back_painter->draw_rect(menu_window_rect(window.rect()), Color::LightGray);
         return;
     }
 
@@ -527,7 +532,7 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event)
         return;
     }
 
-    if (m_current_menu) {
+    if (m_current_menu && m_current_menu->menu_window()) {
         bool event_is_inside_current_menu = m_current_menu->menu_window()->rect().contains(event.position());
         if (!event_is_inside_current_menu) {
             if (m_current_menu->hovered_item())
@@ -818,7 +823,15 @@ void WSWindowManager::invalidate(const Rect& a_rect, bool should_schedule_compos
 
 void WSWindowManager::invalidate(const WSWindow& window)
 {
-    invalidate(outer_window_rect(window.rect()));
+    if (window.type() == WSWindowType::Menu) {
+        invalidate(menu_window_rect(window.rect()));
+        return;
+    }
+    if (window.type() == WSWindowType::Normal) {
+        invalidate(outer_window_rect(window.rect()));
+        return;
+    }
+    ASSERT_NOT_REACHED();
 }
 
 void WSWindowManager::invalidate(const WSWindow& window, const Rect& rect)
