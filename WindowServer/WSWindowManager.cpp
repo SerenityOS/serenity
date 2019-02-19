@@ -614,10 +614,10 @@ void WSWindowManager::compose()
 {
     auto dirty_rects = move(m_dirty_rects);
     auto cursor_location = m_screen.cursor_location();
-    dirty_rects.append(m_last_cursor_rect);
-    dirty_rects.append({ cursor_location.x(), cursor_location.y(), (int)m_cursor_bitmap_inner->width(), (int)m_cursor_bitmap_inner->height() });
+    dirty_rects.add(m_last_cursor_rect);
+    dirty_rects.add({ cursor_location.x(), cursor_location.y(), (int)m_cursor_bitmap_inner->width(), (int)m_cursor_bitmap_inner->height() });
 #ifdef DEBUG_COUNTERS
-    dbgprintf("[WM] compose #%u (%u rects)\n", ++m_compose_count, dirty_rects.size());
+    dbgprintf("[WM] compose #%u (%u rects)\n", ++m_compose_count, dirty_rects.rects().size());
 #endif
 
     auto any_opaque_window_contains_rect = [this] (const Rect& r) {
@@ -639,14 +639,14 @@ void WSWindowManager::compose()
 
     auto any_dirty_rect_intersects_window = [&dirty_rects] (const WSWindow& window) {
         auto window_rect = outer_window_rect(window.rect());
-        for (auto& dirty_rect : dirty_rects) {
+        for (auto& dirty_rect : dirty_rects.rects()) {
             if (dirty_rect.intersects(window_rect))
                 return true;
         }
         return false;
     };
 
-    for (auto& dirty_rect : dirty_rects) {
+    for (auto& dirty_rect : dirty_rects.rects()) {
         if (any_opaque_window_contains_rect(dirty_rect))
             continue;
         if (!m_wallpaper)
@@ -661,7 +661,7 @@ void WSWindowManager::compose()
             return IterationDecision::Continue;
         if (!any_dirty_rect_intersects_window(window))
             return IterationDecision::Continue;
-        for (auto& dirty_rect : dirty_rects) {
+        for (auto& dirty_rect : dirty_rects.rects()) {
             m_back_painter->set_clip_rect(dirty_rect);
             paint_window_frame(window);
             Rect dirty_rect_in_window_coordinates = Rect::intersection(dirty_rect, window.rect());
@@ -685,12 +685,12 @@ void WSWindowManager::compose()
     draw_cursor();
 
     if (m_flash_flush) {
-        for (auto& rect : dirty_rects)
+        for (auto& rect : dirty_rects.rects())
             m_front_painter->fill_rect(rect, Color::Yellow);
     }
 
     flip_buffers();
-    for (auto& r : dirty_rects)
+    for (auto& r : dirty_rects.rects())
         flush(r);
 }
 
@@ -808,18 +808,7 @@ void WSWindowManager::invalidate(const Rect& a_rect, bool should_schedule_compos
     if (rect.is_empty())
         return;
 
-    for (auto& r : m_dirty_rects) {
-        if (r.contains(rect))
-            return;
-        if (r.intersects(rect)) {
-            // Unite with the existing dirty rect.
-            // FIXME: It would be much nicer to compute the exact rects needing repaint.
-            r = r.united(rect);
-            return;
-        }
-    }
-
-    m_dirty_rects.append(rect);
+    m_dirty_rects.add(rect);
 
     if (should_schedule_compose_event && !m_pending_compose_event) {
         WSMessageLoop::the().post_message(this, make<WSMessage>(WSMessage::WM_DeferredCompose));

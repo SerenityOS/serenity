@@ -4,6 +4,7 @@ SHAREDGRAPHICS_OBJS = \
     ../SharedGraphics/Rect.o \
     ../SharedGraphics/GraphicsBitmap.o \
     ../SharedGraphics/CharacterBitmap.o \
+    ../SharedGraphics/DisjointRectSet.o \
     ../SharedGraphics/Color.o
 
 WINDOWSERVER_OBJS = \
