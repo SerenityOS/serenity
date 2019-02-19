@@ -15,13 +15,13 @@ void DisjointRectSet::add(const Rect& new_rect)
 void DisjointRectSet::shatter()
 {
     Vector<Rect> output;
+    output.ensure_capacity(m_rects.size());
     bool pass_had_intersections = false;
     do {
         pass_had_intersections = false;
         output.clear_with_capacity();
         for (size_t i = 0; i < m_rects.size(); ++i) {
             auto& r1 = m_rects[i];
-            bool r1_had_intersections = false;
             for (size_t j = 0; j < m_rects.size(); ++j) {
                 if (i == j)
                     continue;
@@ -37,8 +37,7 @@ void DisjointRectSet::shatter()
                     output.append(m_rects[i]);
                 goto next_pass;
             }
-            if (!r1_had_intersections)
-                output.append(r1);
+            output.append(r1);
         }
 next_pass:
         swap(output, m_rects);

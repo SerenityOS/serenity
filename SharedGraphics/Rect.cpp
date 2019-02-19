@@ -39,7 +39,6 @@ Vector<Rect> Rect::shatter(const Rect& hammer) const
     Vector<Rect> pieces;
     if (!intersects(hammer)) {
         pieces.append(*this);
-        pieces.append(hammer);
         return pieces;
     }
     Rect top_shard {
@@ -63,7 +62,7 @@ Vector<Rect> Rect::shatter(const Rect& hammer) const
     Rect right_shard {
         hammer.x() + hammer.width(),
         max(hammer.y(), y()),
-        (x() + width() - 1) - (hammer.x() + hammer.width() - 1),
+        right() - hammer.right(),
         min((hammer.y() + hammer.height()), (y() + height())) - max(hammer.y(), y())
     };
     if (intersects(top_shard))
