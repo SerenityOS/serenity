@@ -47,8 +47,6 @@ public:
     void set_rect_in_menubar(const Rect& rect) { m_rect_in_menubar = rect; }
 
     WSWindow* menu_window() { return m_menu_window.ptr(); }
-    void set_menu_window(OwnPtr<WSWindow>&&);
-
     WSWindow& ensure_menu_window();
 
     int width() const;

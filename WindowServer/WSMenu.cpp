@@ -20,11 +20,6 @@ WSMenu::~WSMenu()
 {
 }
 
-void WSMenu::set_menu_window(OwnPtr<WSWindow>&& menu_window)
-{
-    m_menu_window = move(menu_window);
-}
-
 const Font& WSMenu::font() const
 {
     return Font::default_font();
@@ -70,6 +65,7 @@ WSWindow& WSMenu::ensure_menu_window()
         }
 
         auto window = make<WSWindow>(*this);
+        window->set_opacity(0.95f);
         window->set_rect(0, 0, width(), height());
         m_menu_window = move(window);
         draw();
