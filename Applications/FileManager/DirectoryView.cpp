@@ -15,6 +15,7 @@ DirectoryView::DirectoryView(GWidget* parent)
     m_directory_icon = GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/folder16.rgb", { 16, 16 });
     m_file_icon = GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/file16.rgb", { 16, 16 });
     m_symlink_icon = GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/link16.rgb", { 16, 16 });
+    m_socket_icon = GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/socket16.rgb", { 16, 16 });
 
     m_scrollbar = new GScrollBar(Orientation::Vertical, this);
     m_scrollbar->set_step(4);
@@ -91,6 +92,8 @@ const GraphicsBitmap& DirectoryView::icon_for(const Entry& entry) const
         return *m_directory_icon;
     if (S_ISLNK(entry.mode))
         return *m_symlink_icon;
+    if (S_ISSOCK(entry.mode))
+        return *m_socket_icon;
     return *m_file_icon;
 }
 
