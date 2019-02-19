@@ -144,4 +144,7 @@ private:
     RetainPtr<Font> m_font;
 
     GNotifier m_notifier;
+
+    float m_opacity { 0.8f };
+    bool m_needs_background_fill { true };
 };

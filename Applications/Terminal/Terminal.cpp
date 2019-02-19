@@ -143,7 +143,7 @@ unsigned parse_uint(const String& str, bool& ok)
 
 static inline Color lookup_color(unsigned color)
 {
-    return xterm_colors[color];
+    return Color::from_rgb(xterm_colors[color]);
 }
 
 void Terminal::escape$m(const Vector<unsigned>& params)
@@ -668,9 +668,13 @@ void Terminal::keydown_event(GKeyEvent& event)
 }
 
 void Terminal::paint_event(GPaintEvent&)
-{
-    Rect rect { 0, 0, m_pixel_width, m_pixel_height };
+{   
     Painter painter(*this);
+
+    if (m_needs_background_fill) {
+        m_needs_background_fill = false;
+        painter.fill_rect(rect(), Color(Color::Black).with_alpha(255 * m_opacity));
+    }
 
     if (m_rows_to_scroll_backing_store && m_rows_to_scroll_backing_store < m_rows) {
         int first_scanline = m_inset;
@@ -695,7 +699,7 @@ void Terminal::paint_event(GPaintEvent&)
         line.dirty = false;
         bool has_only_one_background_color = line.has_only_one_background_color();
         if (has_only_one_background_color) {
-            painter.fill_rect(row_rect(row), lookup_color(line.attributes[0].background_color));
+            painter.fill_rect(row_rect(row), lookup_color(line.attributes[0].background_color).with_alpha(255 * m_opacity));
         }
         for (word column = 0; column < m_columns; ++column) {
             bool should_reverse_fill_for_cursor = m_in_active_window && row == m_cursor_row && column == m_cursor_column;
@@ -704,7 +708,7 @@ void Terminal::paint_event(GPaintEvent&)
             auto character_rect = glyph_rect(row, column);
             if (!has_only_one_background_color || should_reverse_fill_for_cursor) {
                 auto cell_rect = character_rect.inflated(0, m_line_spacing);
-                painter.fill_rect(cell_rect, lookup_color(should_reverse_fill_for_cursor ? attribute.foreground_color : attribute.background_color));
+                painter.fill_rect(cell_rect, lookup_color(should_reverse_fill_for_cursor ? attribute.foreground_color : attribute.background_color).with_alpha(255 * m_opacity));
             }
             if (ch == ' ')
                 continue;
@@ -718,7 +722,7 @@ void Terminal::paint_event(GPaintEvent&)
     }
 
     if (m_belling)
-        painter.draw_rect(rect, Color::Red);
+        painter.draw_rect(rect(), Color::Red);
 }
 
 void Terminal::set_window_title(String&& title)

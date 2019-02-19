@@ -17,7 +17,7 @@ int main(int argc, char** argv)
     window->set_main_widget(widget);
 
     auto* icon_label = new GLabel(widget);
-    icon_label->set_icon(GraphicsBitmap::load_from_file("/res/icons/Serenity.rgb", { 32, 32 }));
+    icon_label->set_icon(GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/Serenity.rgb", { 32, 32 }));
     icon_label->set_relative_rect(
         widget->rect().center().x() - 16,
         10,

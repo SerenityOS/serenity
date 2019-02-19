@@ -31,7 +31,7 @@ void GLabel::paint_event(GPaintEvent&)
         painter.fill_rect({ 0, 0, width(), height() }, background_color());
     if (m_icon) {
         auto icon_location = rect().center().translated(-(m_icon->width() / 2), -(m_icon->height() / 2));
-        painter.blit_with_alpha(icon_location, *m_icon, m_icon->rect());
+        painter.blit(icon_location, *m_icon, m_icon->rect());
     }
     if (!text().is_empty())
         painter.draw_text({ 0, 0, width(), height() }, text(), m_text_alignment, foreground_color());

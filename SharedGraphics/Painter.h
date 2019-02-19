@@ -34,7 +34,7 @@ public:
     void draw_line(const Point&, const Point&, Color);
     void draw_focus_rect(const Rect&);
     void blit(const Point&, const GraphicsBitmap&, const Rect& src_rect);
-    void blit_with_alpha(const Point&, const GraphicsBitmap&, const Rect& src_rect);
+    void blit_with_opacity(const Point&, const GraphicsBitmap&, const Rect& src_rect, float opacity);
 
     void draw_text(const Rect&, const String&, TextAlignment = TextAlignment::TopLeft, Color = Color());
     void draw_glyph(const Point&, char, Color);
@@ -58,6 +58,7 @@ public:
 private:
     void set_pixel_with_draw_op(dword& pixel, const Color&);
     void fill_rect_with_draw_op(const Rect&, Color);
+    void blit_with_alpha(const Point&, const GraphicsBitmap&, const Rect& src_rect);
 
     const Font* m_font;
     Point m_translation;

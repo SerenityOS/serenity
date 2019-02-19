@@ -128,8 +128,8 @@ private:
     OwnPtr<GLayout> m_layout;
 
     Rect m_relative_rect;
-    Color m_background_color { 0xffffff };
-    Color m_foreground_color { 0x000000 };
+    Color m_background_color;
+    Color m_foreground_color;
     RetainPtr<Font> m_font;
 
     SizePolicy m_horizontal_size_policy { SizePolicy::Fill };

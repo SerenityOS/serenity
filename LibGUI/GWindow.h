@@ -15,6 +15,9 @@ public:
 
     static GWindow* from_window_id(int);
 
+    void set_has_alpha_channel(bool);
+    void set_opacity(float);
+
     int window_id() const { return m_window_id; }
 
     String title() const;
@@ -66,13 +69,15 @@ private:
 
     RetainPtr<GraphicsBitmap> m_backing;
     int m_window_id { 0 };
-    bool m_is_active { false };
+    float m_opacity_when_windowless { 1.0f };
     GWidget* m_main_widget { nullptr };
     GWidget* m_focused_widget { nullptr };
     WeakPtr<GWidget> m_global_cursor_tracking_widget;
     Rect m_rect_when_windowless;
     String m_title_when_windowless;
     Vector<Rect> m_pending_paint_event_rects;
+    bool m_is_active { false };
     bool m_should_exit_app_on_close { false };
+    bool m_has_alpha_channel { false };
 };
 

@@ -36,7 +36,7 @@ void GButton::paint_event(GPaintEvent&)
             icon_location.move_by(1, 1);
         }
         if (m_icon) {
-            painter.blit_with_alpha(icon_location, *m_icon, m_icon->rect());
+            painter.blit(icon_location, *m_icon, m_icon->rect());
             painter.draw_text(content_rect, caption(), TextAlignment::Center, Color::Black);
         } else {
             painter.draw_text(content_rect, caption(), TextAlignment::Center, Color::Black);
