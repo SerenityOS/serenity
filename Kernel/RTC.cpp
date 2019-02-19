@@ -92,7 +92,7 @@ time_t now()
 
     return days_in_years_since_epoch(year - 1) * 86400
          + days_in_months_since_start_of_year(month - 1, year) * 86400
-         + day * 86400
+         + (day - 1) * 86400
          + hour * 3600
          + minute * 60
          + second;
