@@ -33,3 +33,47 @@ Rect Rect::united(const Rect& other) const
     rect.set_bottom(max(bottom(), other.bottom()));
     return rect;
 }
+
+Vector<Rect> Rect::shatter(const Rect& hammer) const
+{
+    Vector<Rect> pieces;
+    if (!intersects(hammer)) {
+        pieces.append(*this);
+        pieces.append(hammer);
+        return pieces;
+    }
+    Rect top_shard {
+        x(),
+        y(),
+        width(),
+        hammer.y() - y()
+    };
+    Rect bottom_shard {
+        x(),
+        hammer.y() + hammer.height(),
+        width(),
+        (y() + height()) - (hammer.y() + hammer.height())
+    };
+    Rect left_shard {
+        x(),
+        max(hammer.y(), y()),
+        hammer.x() - x(),
+        min((hammer.y() + hammer.height()), (y() + height())) - max(hammer.y(), y())
+    };
+    Rect right_shard {
+        hammer.x() + hammer.width(),
+        max(hammer.y(), y()),
+        (x() + width() - 1) - (hammer.x() + hammer.width() - 1),
+        min((hammer.y() + hammer.height()), (y() + height())) - max(hammer.y(), y())
+    };
+    if (intersects(top_shard))
+        pieces.append(top_shard);
+    if (intersects(bottom_shard))
+        pieces.append(bottom_shard);
+    if (intersects(left_shard))
+        pieces.append(left_shard);
+    if (intersects(right_shard))
+        pieces.append(right_shard);
+
+    return pieces;
+}

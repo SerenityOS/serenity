@@ -3,6 +3,7 @@
 #include <SharedGraphics/Rect.h>
 #include <SharedGraphics/Color.h>
 #include <SharedGraphics/Painter.h>
+#include <SharedGraphics/DisjointRectSet.h>
 #include <AK/HashTable.h>
 #include <AK/InlineLinkedList.h>
 #include <AK/WeakPtr.h>
@@ -127,7 +128,7 @@ private:
     RetainPtr<GraphicsBitmap> m_front_bitmap;
     RetainPtr<GraphicsBitmap> m_back_bitmap;
 
-    Vector<Rect> m_dirty_rects;
+    DisjointRectSet m_dirty_rects;
 
     bool m_pending_compose_event { false };
 
