@@ -284,7 +284,7 @@ void WSWindowManager::set_current_menubar(WSMenuBar* menubar)
         next_menu_location.move_by(menu.rect_in_menubar().width(), 0);
         return true;
     });
-    invalidate();
+    invalidate(menubar_rect());
 }
 
 static const char* s_close_button_bitmap_data = {
