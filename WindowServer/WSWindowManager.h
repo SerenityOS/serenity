@@ -117,9 +117,6 @@ private:
 
     Point m_drag_origin;
     Point m_drag_window_origin;
-    Rect m_last_drag_rect;
-    Rect m_drag_start_rect;
-    Rect m_drag_end_rect;
 
     Rect m_last_cursor_rect;
 

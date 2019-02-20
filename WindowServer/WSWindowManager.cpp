@@ -472,7 +472,6 @@ void WSWindowManager::handle_titlebar_mouse_event(WSWindow& window, WSMouseEvent
         m_drag_window = window.make_weak_ptr();;
         m_drag_origin = event.position();
         m_drag_window_origin = window.position();
-        m_drag_start_rect = outer_window_rect(window.rect());
         window.set_is_being_dragged(true);
         invalidate(window);
         return;
@@ -499,7 +498,6 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event, WSWindow*& event_
 #endif
             invalidate(*m_drag_window);
             m_drag_window->set_is_being_dragged(false);
-            m_drag_end_rect = outer_window_rect(m_drag_window->rect());
             m_drag_window = nullptr;
             return;
         }
