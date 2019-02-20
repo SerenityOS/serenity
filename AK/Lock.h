@@ -44,18 +44,21 @@ private:
 
 class Locker {
 public:
-    [[gnu::always_inline]] explicit Locker(Lock& l) : m_lock(l) { lock(); }
-    [[gnu::always_inline]] ~Locker() { unlock(); }
-    [[gnu::always_inline]] void unlock() { m_lock.unlock(); }
-    [[gnu::always_inline]] void lock() { m_lock.lock(); }
+    [[gnu::always_inline]] inline explicit Locker(Lock& l) : m_lock(l) { lock(); }
+    [[gnu::always_inline]] inline ~Locker() { unlock(); }
+    [[gnu::always_inline]] inline void unlock() { m_lock.unlock(); }
+    [[gnu::always_inline]] inline void lock() { m_lock.lock(); }
 
 private:
     Lock& m_lock;
 };
 
-inline void Lock::lock()
+[[gnu::always_inline]] inline void Lock::lock()
 {
-    ASSERT_INTERRUPTS_ENABLED();
+    if (!are_interrupts_enabled()) {
+        kprintf("Interrupts disabled when trying to take Lock{%s}\n", m_name);
+        hang();
+    }
     ASSERT(!Scheduler::is_active());
     for (;;) {
         if (CAS(&m_lock, 1, 0) == 0) {
