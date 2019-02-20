@@ -71,7 +71,7 @@ public:
     void set_resolution(int width, int height);
 
 private:
-    void process_mouse_event(WSMouseEvent&);
+    void process_mouse_event(WSMouseEvent&, WSWindow*& event_window);
     void handle_menu_mouse_event(WSMenu&, WSMouseEvent&);
     void handle_menubar_mouse_event(WSMouseEvent&);
     void handle_titlebar_mouse_event(WSWindow&, WSMouseEvent&);
@@ -79,6 +79,7 @@ private:
     void handle_client_request(WSAPIClientRequest&);
 
     void set_active_window(WSWindow*);
+    void set_hovered_window(WSWindow*);
     template<typename Callback> IterationDecision for_each_visible_window_of_type_from_back_to_front(WSWindowType, Callback);
     template<typename Callback> IterationDecision for_each_visible_window_of_type_from_front_to_back(WSWindowType, Callback);
     template<typename Callback> IterationDecision for_each_visible_window_from_front_to_back(Callback);
@@ -111,7 +112,7 @@ private:
     InlineLinkedList<WSWindow> m_windows_in_order;
 
     WeakPtr<WSWindow> m_active_window;
-
+    WeakPtr<WSWindow> m_hovered_window;
     WeakPtr<WSWindow> m_drag_window;
 
     Point m_drag_origin;

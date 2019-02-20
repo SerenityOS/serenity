@@ -89,3 +89,14 @@ void GButton::mouseup_event(GMouseEvent& event)
     GWidget::mouseup_event(event);
 }
 
+void GButton::enter_event(GEvent&)
+{
+    m_hovered = true;
+    update();
+}
+
+void GButton::leave_event(GEvent&)
+{
+    m_hovered = false;
+    update();
+}

@@ -64,6 +64,10 @@ public:
     bool should_exit_app_on_close() const { return m_should_exit_app_on_close; }
     void set_should_exit_app_on_close(bool b) { m_should_exit_app_on_close = b; }
 
+    GWidget* hovered_widget() { return m_hovered_widget.ptr(); }
+    const GWidget* hovered_widget() const { return m_hovered_widget.ptr(); }
+    void set_hovered_widget(GWidget*);
+
 private:
     virtual const char* class_name() const override { return "GWindow"; }
 
@@ -73,6 +77,7 @@ private:
     GWidget* m_main_widget { nullptr };
     GWidget* m_focused_widget { nullptr };
     WeakPtr<GWidget> m_global_cursor_tracking_widget;
+    WeakPtr<GWidget> m_hovered_widget;
     Rect m_rect_when_windowless;
     String m_title_when_windowless;
     Vector<Rect> m_pending_paint_event_rects;
