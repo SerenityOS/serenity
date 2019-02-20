@@ -121,12 +121,9 @@ asm( \
     "    iret\n" \
 );
 
-// 6: Invalid Opcode
-EH_ENTRY_NO_CODE(6);
-void exception_6_handler(RegisterDump& regs)
+template<typename DumpType>
+static void dump(const DumpType& regs)
 {
-    kprintf("%s invalid opcode: %u(%s)\n", current->is_ring0() ? "Kernel" : "Process", current->pid(), current->name().characters());
-
     word ss;
     dword esp;
     if (current->is_ring0()) {
@@ -137,10 +134,36 @@ void exception_6_handler(RegisterDump& regs)
         esp = regs.esp_if_crossRing;
     }
 
+    if constexpr (IsSame<DumpType, RegisterDumpWithExceptionCode>::value) {
+        kprintf("exception code: %w\n", regs.exception_code);
+    }
     kprintf("pc=%w:%x ds=%w es=%w fs=%w gs=%w\n", regs.cs, regs.eip, regs.ds, regs.es, regs.fs, regs.gs);
     kprintf("stk=%w:%x\n", ss, esp);
     kprintf("eax=%x ebx=%x ecx=%x edx=%x\n", regs.eax, regs.ebx, regs.ecx, regs.edx);
     kprintf("ebp=%x esp=%x esi=%x edi=%x\n", regs.ebp, esp, regs.esi, regs.edi);
+
+    if (current->validate_read((void*)regs.eip, 8)) {
+        byte* codeptr = (byte*)regs.eip;
+        kprintf("code: %b %b %b %b %b %b %b %b\n",
+            codeptr[0],
+            codeptr[1],
+            codeptr[2],
+            codeptr[3],
+            codeptr[4],
+            codeptr[5],
+            codeptr[6],
+            codeptr[7]);
+    }
+}
+
+
+// 6: Invalid Opcode
+EH_ENTRY_NO_CODE(6);
+void exception_6_handler(RegisterDump& regs)
+{
+    kprintf("%s invalid opcode: %u(%s)\n", current->is_ring0() ? "Kernel" : "Process", current->pid(), current->name().characters());
+
+    dump(regs);
 
     if (current->is_ring0()) {
         kprintf("Oh shit, we've crashed in ring 0 :(\n");
@@ -176,21 +199,7 @@ void exception_7_handler(RegisterDump& regs)
 
 #ifdef FPU_EXCEPTION_DEBUG
     kprintf("%s FPU not available exception: %u(%s)\n", current->is_ring0() ? "Kernel" : "Process", current->pid(), current->name().characters());
-
-    word ss;
-    dword esp;
-    if (current->is_ring0()) {
-        ss = regs.ds;
-        esp = regs.esp;
-    } else {
-        ss = regs.ss_if_crossRing;
-        esp = regs.esp_if_crossRing;
-    }
-
-    kprintf("pc=%w:%x ds=%w es=%w fs=%w gs=%w\n", regs.cs, regs.eip, regs.ds, regs.es, regs.fs, regs.gs);
-    kprintf("stk=%w:%x\n", ss, esp);
-    kprintf("eax=%x ebx=%x ecx=%x edx=%x\n", regs.eax, regs.ebx, regs.ecx, regs.edx);
-    kprintf("ebp=%x esp=%x esi=%x edi=%x\n", regs.ebp, esp, regs.esi, regs.edi);
+    dump(regs);
 #endif
 }
 
@@ -201,20 +210,7 @@ void exception_0_handler(RegisterDump& regs)
 {
     kprintf("%s DIVIDE ERROR: %u(%s)\n", current->is_ring0() ? "Kernel" : "User", current->pid(), current->name().characters());
 
-    word ss;
-    dword esp;
-    if (current->is_ring0()) {
-        ss = regs.ds;
-        esp = regs.esp;
-    } else {
-        ss = regs.ss_if_crossRing;
-        esp = regs.esp_if_crossRing;
-    }
-
-    kprintf("pc=%w:%x ds=%w es=%w fs=%w gs=%w\n", regs.cs, regs.eip, regs.ds, regs.es, regs.fs, regs.gs);
-    kprintf("stk=%w:%x\n", ss, esp);
-    kprintf("eax=%x ebx=%x ecx=%x edx=%x\n", regs.eax, regs.ebx, regs.ecx, regs.edx);
-    kprintf("ebp=%x esp=%x esi=%x edi=%x\n", regs.ebp, esp, regs.esi, regs.edi);
+    dump(regs);
 
     if (current->is_ring0()) {
         kprintf("Oh shit, we've crashed in ring 0 :(\n");
@@ -231,21 +227,7 @@ void exception_13_handler(RegisterDumpWithExceptionCode& regs)
 {
     kprintf("%s GPF: %u(%s)\n", current->is_ring0() ? "Kernel" : "User", current->pid(), current->name().characters());
 
-    word ss;
-    dword esp;
-    if (current->is_ring0()) {
-        ss = regs.ds;
-        esp = regs.esp;
-    } else {
-        ss = regs.ss_if_crossRing;
-        esp = regs.esp_if_crossRing;
-    }
-
-    kprintf("exception code: %w\n", regs.exception_code);
-    kprintf("pc=%w:%x ds=%w es=%w fs=%w gs=%w\n", regs.cs, regs.eip, regs.ds, regs.es, regs.fs, regs.gs);
-    kprintf("stk=%w:%x\n", ss, esp);
-    kprintf("eax=%x ebx=%x ecx=%x edx=%x\n", regs.eax, regs.ebx, regs.ecx, regs.edx);
-    kprintf("ebp=%x esp=%x esi=%x edi=%x\n", regs.ebp, esp, regs.esi, regs.edi);
+    dump(regs);
 
     if (current->is_ring0()) {
         kprintf("Oh shit, we've crashed in ring 0 :(\n");
@@ -278,40 +260,8 @@ void exception_14_handler(RegisterDumpWithExceptionCode& regs)
         faultAddress);
 #endif
 
-    word ss;
-    dword esp;
-    if (current->is_ring0()) {
-        ss = regs.ds;
-        esp = regs.esp;
-    } else {
-        ss = regs.ss_if_crossRing;
-        esp = regs.esp_if_crossRing;
-    }
-
-    auto dump_registers_and_code = [&] {
-    dbgprintf("exception code: %w\n", regs.exception_code);
-    dbgprintf("pc=%w:%x ds=%w es=%w fs=%w gs=%w\n", regs.cs, regs.eip, regs.ds, regs.es, regs.fs, regs.gs);
-    dbgprintf("stk=%w:%x\n", ss, esp);
-    dbgprintf("eax=%x ebx=%x ecx=%x edx=%x\n", regs.eax, regs.ebx, regs.ecx, regs.edx);
-    dbgprintf("ebp=%x esp=%x esi=%x edi=%x\n", regs.ebp, esp, regs.esi, regs.edi);
-
-    if (current->validate_read((void*)regs.eip, 8)) {
-        byte* codeptr = (byte*)regs.eip;
-        dbgprintf("code: %b %b %b %b %b %b %b %b\n",
-            codeptr[0],
-            codeptr[1],
-            codeptr[2],
-            codeptr[3],
-            codeptr[4],
-            codeptr[5],
-            codeptr[6],
-            codeptr[7]
-        );
-    }
-    };
-
 #ifdef PAGE_FAULT_DEBUG
-    dump_registers_and_code();
+    dump(regs);
 #endif
 
     auto response = MM.handle_page_fault(PageFault(regs.exception_code, LinearAddress(faultAddress)));
@@ -322,7 +272,7 @@ void exception_14_handler(RegisterDumpWithExceptionCode& regs)
             current->pid(),
             regs.exception_code & 2 ? "write" : "read",
             faultAddress);
-        dump_registers_and_code();
+        dump(regs);
         current->crash();
     } else if (response == PageFaultResponse::Continue) {
 #ifdef PAGE_FAULT_DEBUG
