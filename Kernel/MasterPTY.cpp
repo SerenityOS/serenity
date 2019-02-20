@@ -4,6 +4,7 @@
 #include <Kernel/Process.h>
 #include <LibC/errno_numbers.h>
 #include <LibC/signal_numbers.h>
+#include <LibC/sys/ioctl_numbers.h>
 
 MasterPTY::MasterPTY(unsigned index)
     : CharacterDevice(10, index)
@@ -86,4 +87,11 @@ void MasterPTY::close()
 
         m_slave->hang_up();
     }
+}
+
+int MasterPTY::ioctl(Process& process, unsigned request, unsigned arg)
+{
+    if (request == TIOCSWINSZ)
+        return m_slave->ioctl(process, request, arg);
+    return -EINVAL;
 }

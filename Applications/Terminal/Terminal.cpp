@@ -13,6 +13,7 @@
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GWindow.h>
 #include <Kernel/KeyCode.h>
+#include <sys/ioctl.h>
 
 //#define TERMINAL_DEBUG
 
@@ -45,21 +46,6 @@ Terminal::Terminal(int ptm_fd)
     m_line_height = font().glyph_height() + m_line_spacing;
 
     set_size(80, 25);
-    m_horizontal_tabs = static_cast<byte*>(malloc(columns()));
-    for (unsigned i = 0; i < columns(); ++i)
-        m_horizontal_tabs[i] = (i % 8) == 0;
-    // Rightmost column is always last tab on line.
-    m_horizontal_tabs[columns() - 1] = 1;
-
-    m_lines = new Line*[rows()];
-    for (size_t i = 0; i < rows(); ++i)
-        m_lines[i] = new Line(columns());
-
-    m_pixel_width = m_columns * font().glyph_width() + m_inset * 2;
-    m_pixel_height = (m_rows * (font().glyph_height() + m_line_spacing)) + (m_inset * 2) - m_line_spacing;
-
-    set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
-    set_preferred_size({ m_pixel_width, m_pixel_height });
 }
 
 Terminal::Line::Line(word columns)
@@ -596,8 +582,50 @@ void Terminal::unimplemented_xterm_escape()
 
 void Terminal::set_size(word columns, word rows)
 {
+    if (columns == m_columns && rows == m_rows)
+        return;
+
+    if (m_lines) {
+        for (size_t i = 0; i < m_rows; ++i)
+            delete m_lines[i];
+        delete m_lines;
+    }
+
     m_columns = columns;
     m_rows = rows;
+
+    m_cursor_row = 0;
+    m_cursor_column = 0;
+    m_saved_cursor_row = 0;
+    m_saved_cursor_column = 0;
+
+    if (m_horizontal_tabs)
+        free(m_horizontal_tabs);
+    m_horizontal_tabs = static_cast<byte*>(malloc(columns));
+    for (unsigned i = 0; i < columns; ++i)
+        m_horizontal_tabs[i] = (i % 8) == 0;
+    // Rightmost column is always last tab on line.
+    m_horizontal_tabs[columns - 1] = 1;
+
+    m_lines = new Line*[rows];
+    for (size_t i = 0; i < rows; ++i)
+        m_lines[i] = new Line(columns);
+
+    m_pixel_width = m_columns * font().glyph_width() + m_inset * 2;
+    m_pixel_height = (m_rows * (font().glyph_height() + m_line_spacing)) + (m_inset * 2) - m_line_spacing;
+
+    set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
+    set_preferred_size({ m_pixel_width, m_pixel_height });
+
+    m_rows_to_scroll_backing_store = 0;
+    m_needs_background_fill = true;
+    force_repaint();
+
+    winsize ws;
+    ws.ws_row = rows;
+    ws.ws_col = columns;
+    int rc = ioctl(m_ptm_fd, TIOCSWINSZ, &ws);
+    ASSERT(rc == 0);
 }
 
 Rect Terminal::glyph_rect(word row, word column)
@@ -761,8 +789,9 @@ void Terminal::force_repaint()
     update();
 }
 
-void Terminal::resize_event(GResizeEvent&)
+void Terminal::resize_event(GResizeEvent& event)
 {
-    m_needs_background_fill = true;
-    force_repaint();
+    int new_columns = event.size().width() / m_font->glyph_width();
+    int new_rows = event.size().height() / m_line_height;
+    set_size(new_columns, new_rows);
 }
