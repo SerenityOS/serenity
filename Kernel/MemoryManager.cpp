@@ -233,6 +233,17 @@ bool MemoryManager::zero_page(Region& region, unsigned page_index_in_region)
 {
     ASSERT_INTERRUPTS_DISABLED();
     auto& vmo = region.vmo();
+    auto& vmo_page = vmo.physical_pages()[region.first_page_index() + page_index_in_region];
+    sti();
+    LOCKER(vmo.m_paging_lock);
+    cli();
+    if (!vmo_page.is_null()) {
+#ifdef PAGE_FAULT_DEBUG
+        dbgprintf("MM: zero_page() but page already present. Fine with me!\n");
+#endif
+        remap_region_page(region, page_index_in_region, true);
+        return true;
+    }
     auto physical_page = allocate_physical_page(ShouldZeroFill::Yes);
 #ifdef PAGE_FAULT_DEBUG
     dbgprintf("      >> ZERO P%x\n", physical_page->paddr().get());
