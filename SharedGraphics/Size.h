@@ -10,7 +10,8 @@ public:
     Size(int w, int h) : m_width(w), m_height(h) { }
     Size(const WSAPI_Size&);
 
-    bool is_empty() const { return !m_width || !m_height; }
+    bool is_null() const { return !m_width && !m_height; }
+    bool is_empty() const { return m_width <= 0 || m_height <= 0; }
 
     int width() const { return m_width; }
     int height() const { return m_height; }

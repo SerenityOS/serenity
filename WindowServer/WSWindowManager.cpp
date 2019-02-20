@@ -548,6 +548,14 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event, WSWindow*& event_
             auto new_rect = m_resize_window_original_rect;
             new_rect.set_width(max(50, new_rect.width() + dx));
             new_rect.set_height(max(50, new_rect.height() + dy));
+
+            if (!m_resize_window->size_increment().is_null()) {
+                int horizontal_incs = (new_rect.width() - m_resize_window->base_size().width()) / m_resize_window->size_increment().width();
+                new_rect.set_width(m_resize_window->base_size().width() + horizontal_incs * m_resize_window->size_increment().width());
+                int vertical_incs = (new_rect.height() - m_resize_window->base_size().height()) / m_resize_window->size_increment().height();
+                new_rect.set_height(m_resize_window->base_size().height() + vertical_incs * m_resize_window->size_increment().height());
+            }
+
             if (m_resize_window->rect() == new_rect)
                 return;
 #ifdef RESIZE_DEBUG

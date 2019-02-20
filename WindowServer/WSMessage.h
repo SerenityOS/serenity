@@ -349,12 +349,14 @@ private:
 
 class WSAPICreateWindowRequest : public WSAPIClientRequest {
 public:
-    WSAPICreateWindowRequest(int client_id, const Rect& rect, const String& title, bool has_alpha_channel, float opacity)
+    WSAPICreateWindowRequest(int client_id, const Rect& rect, const String& title, bool has_alpha_channel, float opacity, const Size& base_size, const Size& size_increment)
         : WSAPIClientRequest(WSMessage::APICreateWindowRequest, client_id)
         , m_rect(rect)
         , m_title(title)
         , m_opacity(opacity)
         , m_has_alpha_channel(has_alpha_channel)
+        , m_base_size(base_size)
+        , m_size_increment(size_increment)
     {
     }
 
@@ -362,12 +364,16 @@ public:
     String title() const { return m_title; }
     bool has_alpha_channel() const { return m_has_alpha_channel; }
     float opacity() const { return m_opacity; }
+    Size size_increment() const { return m_size_increment; }
+    Size base_size() const { return m_base_size; }
 
 private:
     Rect m_rect;
     String m_title;
     float m_opacity { 0 };
     bool m_has_alpha_channel { false };
+    Size m_size_increment;
+    Size m_base_size;
 };
 
 class WSAPIDestroyWindowRequest : public WSAPIClientRequest {

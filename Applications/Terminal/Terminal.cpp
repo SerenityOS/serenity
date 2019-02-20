@@ -785,7 +785,6 @@ void Terminal::force_repaint()
 {
     for (int i = 0; i < m_rows; ++i)
         line(i).dirty = true;
-    m_need_full_flush = true;
     update();
 }
 
@@ -794,4 +793,10 @@ void Terminal::resize_event(GResizeEvent& event)
     int new_columns = event.size().width() / m_font->glyph_width();
     int new_rows = event.size().height() / m_line_height;
     set_size(new_columns, new_rows);
+}
+
+void Terminal::apply_size_increments_to_window(GWindow& window)
+{
+    window.set_size_increment({ font().glyph_width(), m_line_height });
+    window.set_base_size({ m_inset, m_inset });
 }

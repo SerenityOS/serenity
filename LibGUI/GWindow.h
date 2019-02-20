@@ -70,6 +70,11 @@ public:
 
     GraphicsBitmap* backing() { return m_backing.ptr(); }
 
+    Size size_increment() const { return m_size_increment; }
+    void set_size_increment(const Size& increment) { m_size_increment = increment; }
+    Size base_size() const { return m_base_size; }
+    void set_base_size(const Size& size) { m_base_size = size; }
+
 private:
     virtual const char* class_name() const override { return "GWindow"; }
 
@@ -83,6 +88,8 @@ private:
     Rect m_rect_when_windowless;
     String m_title_when_windowless;
     Vector<Rect> m_pending_paint_event_rects;
+    Size m_size_increment;
+    Size m_base_size;
     bool m_is_active { false };
     bool m_should_exit_app_on_close { false };
     bool m_has_alpha_channel { false };
