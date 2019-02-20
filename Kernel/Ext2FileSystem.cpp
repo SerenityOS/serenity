@@ -399,16 +399,16 @@ void Ext2FSInode::flush_metadata()
 
 RetainPtr<Inode> Ext2FS::get_inode(InodeIdentifier inode) const
 {
+    LOCKER(m_lock);
     ASSERT(inode.fsid() == fsid());
+
     {
-        LOCKER(m_inode_cache_lock);
         auto it = m_inode_cache.find(inode.index());
         if (it != m_inode_cache.end())
             return (*it).value;
     }
 
     if (!get_inode_allocation_state(inode.index())) {
-        LOCKER(m_inode_cache_lock);
         m_inode_cache.set(inode.index(), nullptr);
         return nullptr;
     }
@@ -419,7 +419,6 @@ RetainPtr<Inode> Ext2FS::get_inode(InodeIdentifier inode) const
     if (!block)
         return { };
 
-    LOCKER(m_inode_cache_lock);
     auto it = m_inode_cache.find(inode.index());
     if (it != m_inode_cache.end())
         return (*it).value;
@@ -1199,11 +1198,9 @@ RetainPtr<Inode> Ext2FS::create_inode(InodeIdentifier parent_id, const String& n
     success = write_ext2_inode(inode_id, e2inode);
     ASSERT(success);
 
-    {
-        // We might have cached the fact that this inode didn't exist. Wipe the slate.
-        LOCKER(m_inode_cache_lock);
-        m_inode_cache.remove(inode_id);
-    }
+    // We might have cached the fact that this inode didn't exist. Wipe the slate.
+    m_inode_cache.remove(inode_id);
+
     return get_inode({ fsid(), inode_id });
 }
 
@@ -1338,8 +1335,7 @@ int Ext2FSInode::decrement_link_count()
 
 void Ext2FS::uncache_inode(InodeIndex index)
 {
-    LOCKER(m_inode_cache_lock);
-    m_inode_cache.remove(index);
+    LOCKER(m_lock);
 }
 
 size_t Ext2FSInode::directory_entry_count() const
