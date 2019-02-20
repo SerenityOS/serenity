@@ -51,6 +51,7 @@ private:
     void handle_request(WSAPIInvalidateRectRequest&);
     void handle_request(WSAPIDidFinishPaintingNotification&);
     void handle_request(WSAPIGetWindowBackingStoreRequest&);
+    void handle_request(WSAPISetWindowBackingStoreRequest&);
     void handle_request(WSAPISetGlobalCursorTrackingRequest&);
     void handle_request(WSAPISetWindowOpacityRequest&);
 

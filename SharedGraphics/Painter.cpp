@@ -25,17 +25,9 @@ Painter::Painter(GraphicsBitmap& bitmap)
 Painter::Painter(GWidget& widget)
     : m_font(&widget.font())
 {
-    WSAPI_ClientMessage request;
-    request.type = WSAPI_ClientMessage::Type::GetWindowBackingStore;
-    request.window_id = widget.window()->window_id();
-    auto response = GEventLoop::main().sync_request(request, WSAPI_ServerMessage::DidGetWindowBackingStore);
-
-    m_target = GraphicsBitmap::create_with_shared_buffer(
-                   response.backing.has_alpha_channel ? GraphicsBitmap::Format::RGBA32 : GraphicsBitmap::Format::RGB32,
-                   response.backing.shared_buffer_id,
-                   response.backing.size);
-    ASSERT(m_target);
     m_window = widget.window();
+    m_target = m_window->backing();
+    ASSERT(m_target);
     m_translation.move_by(widget.window_relative_rect().location());
     // NOTE: m_clip_rect is in Window coordinates since we are painting into its backing store.
     m_clip_rect = widget.window_relative_rect();
@@ -236,7 +228,8 @@ void Painter::blit_with_opacity(const Point& position, const GraphicsBitmap& sou
 
     byte alpha = 255 * opacity;
 
-    Rect dst_rect(position, src_rect.size());
+    Rect safe_src_rect = Rect::intersection(src_rect, source.rect());
+    Rect dst_rect(position, safe_src_rect.size());
     dst_rect.move_by(m_translation);
     auto clipped_rect = Rect::intersection(dst_rect, m_clip_rect);
     if (clipped_rect.is_empty())
@@ -265,7 +258,8 @@ void Painter::blit_with_opacity(const Point& position, const GraphicsBitmap& sou
 void Painter::blit_with_alpha(const Point& position, const GraphicsBitmap& source, const Rect& src_rect)
 {
     ASSERT(source.has_alpha_channel());
-    Rect dst_rect(position, src_rect.size());
+    Rect safe_src_rect = Rect::intersection(src_rect, source.rect());
+    Rect dst_rect(position, safe_src_rect.size());
     dst_rect.move_by(m_translation);
     auto clipped_rect = Rect::intersection(dst_rect, m_clip_rect);
     if (clipped_rect.is_empty())
@@ -298,7 +292,9 @@ void Painter::blit(const Point& position, const GraphicsBitmap& source, const Re
 {
     if (source.has_alpha_channel())
         return blit_with_alpha(position, source, src_rect);
-    Rect dst_rect(position, src_rect.size());
+    auto safe_src_rect = Rect::intersection(src_rect, source.rect());
+    ASSERT(source.rect().contains(safe_src_rect));
+    Rect dst_rect(position, safe_src_rect.size());
     dst_rect.move_by(m_translation);
     auto clipped_rect = Rect::intersection(dst_rect, m_clip_rect);
     if (clipped_rect.is_empty())

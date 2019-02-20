@@ -55,7 +55,8 @@ public:
 
     virtual void on_message(WSMessage&) override;
 
-    GraphicsBitmap* backing() { return m_backing.ptr(); }
+    GraphicsBitmap* backing_store() { return m_backing_store.ptr(); }
+    void set_backing_store(RetainPtr<GraphicsBitmap>&& backing_store) { m_backing_store = move(backing_store); }
 
     void set_global_cursor_tracking_enabled(bool);
     bool global_cursor_tracking() const { return m_global_cursor_tracking_enabled; }
@@ -63,8 +64,11 @@ public:
     bool has_alpha_channel() const { return m_has_alpha_channel; }
     void set_has_alpha_channel(bool value) { m_has_alpha_channel = value; }
 
-    void set_has_painted_since_last_resize(bool b) { m_has_painted_since_last_resize = b; }
+    void set_last_lazy_resize_rect(const Rect& rect) { m_last_lazy_resize_rect = rect; }
+    Rect last_lazy_resize_rect() const { return m_last_lazy_resize_rect; }
+
     bool has_painted_since_last_resize() const { return m_has_painted_since_last_resize; }
+    void set_has_painted_since_last_resize(bool b) { m_has_painted_since_last_resize = b; }
 
     // For InlineLinkedList.
     // FIXME: Maybe make a ListHashSet and then WSWindowManager can just use that.
@@ -81,7 +85,8 @@ private:
     bool m_has_alpha_channel { false };
     bool m_has_painted_since_last_resize { false };
     WSMenu* m_menu { nullptr };
-    RetainPtr<GraphicsBitmap> m_backing;
+    RetainPtr<GraphicsBitmap> m_backing_store;
     int m_window_id { -1 };
     float m_opacity { 1 };
+    Rect m_last_lazy_resize_rect;
 };

@@ -28,11 +28,14 @@ void GWidget::set_relative_rect(const Rect& rect)
 {
     if (rect == m_relative_rect)
         return;
-    if (m_relative_rect.size() != rect.size()) {
-        auto event = make<GResizeEvent>(m_relative_rect.size(), rect.size());
-        GEventLoop::main().post_event(this, move(event));
-    }
+    bool size_changed = m_relative_rect.size() != rect.size();
     m_relative_rect = rect;
+
+    if (size_changed) {
+        GResizeEvent resize_event(m_relative_rect.size(), rect.size());
+        event(resize_event);
+    }
+
     update();
 }
 

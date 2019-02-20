@@ -78,8 +78,11 @@ int GEventLoop::exec()
     for (;;) {
         if (m_exit_requested)
             return m_exit_code;
-        if (m_queued_events.is_empty())
+        process_unprocessed_messages();
+        if (m_queued_events.is_empty()) {
             wait_for_event();
+            process_unprocessed_messages();
+        }
         Vector<QueuedEvent> events = move(m_queued_events);
         for (auto& queued_event : events) {
             auto* receiver = queued_event.receiver;
@@ -223,6 +226,7 @@ void GEventLoop::wait_for_event()
     struct timeval timeout = { 0, 0 };
     if (!m_timers.is_empty())
         get_next_timer_expiration(timeout);
+    ASSERT(m_unprocessed_messages.is_empty());
     int rc = select(max_fd + 1, &rfds, &wfds, nullptr, (m_queued_events.is_empty() && m_timers.is_empty()) ? nullptr : &timeout);
     if (rc < 0) {
         ASSERT_NOT_REACHED();
@@ -260,9 +264,16 @@ void GEventLoop::wait_for_event()
 
     bool success = drain_messages_from_server();
     ASSERT(success);
+}
 
+void GEventLoop::process_unprocessed_messages()
+{
     auto unprocessed_events = move(m_unprocessed_messages);
     for (auto& event : unprocessed_events) {
+        if (event.type == WSAPI_ServerMessage::Type::Greeting) {
+            m_server_pid = event.greeting.server_pid;
+            continue;
+        }
 
         if (event.type == WSAPI_ServerMessage::Error) {
             dbgprintf("GEventLoop got error message from server\n");
@@ -315,6 +326,9 @@ void GEventLoop::wait_for_event()
             break;
         }
     }
+
+    if (!m_unprocessed_messages.is_empty())
+        process_unprocessed_messages();
 }
 
 bool GEventLoop::drain_messages_from_server()

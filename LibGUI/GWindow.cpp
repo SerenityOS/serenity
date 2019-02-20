@@ -169,9 +169,36 @@ void GWindow::event(GEvent& event)
             return;
         auto& paint_event = static_cast<GPaintEvent&>(event);
         auto rect = paint_event.rect();
-        if (rect.is_empty())
+        bool created_new_backing_store = !m_backing;
+        if (!m_backing) {
+            // NOTE: size() may change at any time since it's synchronously retrieved from the WindowServer.
+            ASSERT(GEventLoop::main().server_pid());
+            Size new_backing_store_size = size();
+            size_t size_in_bytes = new_backing_store_size.area() * sizeof(RGBA32);
+            void* buffer;
+            int shared_buffer_id = create_shared_buffer(GEventLoop::main().server_pid(), size_in_bytes, (void**)&buffer);
+            ASSERT(shared_buffer_id >= 0);
+            ASSERT(buffer);
+            ASSERT(buffer != (void*)-1);
+            m_backing = GraphicsBitmap::create_with_shared_buffer(
+                        m_has_alpha_channel ? GraphicsBitmap::Format::RGBA32 : GraphicsBitmap::Format::RGB32,
+                        shared_buffer_id,
+                        new_backing_store_size, (RGBA32*)buffer);
+        }
+        if (rect.is_empty() || created_new_backing_store)
             rect = m_main_widget->rect();
         m_main_widget->event(*make<GPaintEvent>(rect));
+        if (created_new_backing_store) {
+            WSAPI_ClientMessage message;
+            message.type = WSAPI_ClientMessage::Type::SetWindowBackingStore;
+            message.window_id = m_window_id;
+            message.backing.bpp = 32;
+            message.backing.pitch = m_backing->pitch();
+            message.backing.shared_buffer_id = m_backing->shared_buffer_id();
+            message.backing.has_alpha_channel = m_backing->has_alpha_channel();
+            message.backing.size = m_backing->size();
+            GEventLoop::main().post_message_to_server(message);
+        }
         if (m_window_id) {
             WSAPI_ClientMessage message;
             message.type = WSAPI_ClientMessage::Type::DidFinishPainting;
@@ -210,6 +237,7 @@ void GWindow::event(GEvent& event)
     }
 
     if (event.type() == GEvent::Resize) {
+        m_backing = nullptr;
         m_pending_paint_event_rects.clear();
         m_rect_when_windowless = { { }, static_cast<GResizeEvent&>(event).size() };
         m_main_widget->set_relative_rect({ { }, static_cast<GResizeEvent&>(event).size() });
@@ -233,7 +261,7 @@ void GWindow::update(const Rect& a_rect)
 #ifdef UPDATE_COALESCING_DEBUG
             dbgprintf("Ignoring %s since it's contained by pending rect %s\n", a_rect.to_string().characters(), pending_rect.to_string().characters());
 #endif
-            return;
+            //return;
         }
     }
     m_pending_paint_event_rects.append(a_rect);

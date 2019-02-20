@@ -76,8 +76,8 @@ WSWindow& WSMenu::ensure_menu_window()
 void WSMenu::draw()
 {
     ASSERT(menu_window());
-    ASSERT(menu_window()->backing());
-    Painter painter(*menu_window()->backing());
+    ASSERT(menu_window()->backing_store());
+    Painter painter(*menu_window()->backing_store());
 
     Rect rect { { }, menu_window()->size() };
     painter.draw_rect(rect, Color::White);
