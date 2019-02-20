@@ -63,6 +63,9 @@ public:
     bool has_alpha_channel() const { return m_has_alpha_channel; }
     void set_has_alpha_channel(bool value) { m_has_alpha_channel = value; }
 
+    void set_has_painted_since_last_resize(bool b) { m_has_painted_since_last_resize = b; }
+    bool has_painted_since_last_resize() const { return m_has_painted_since_last_resize; }
+
     // For InlineLinkedList.
     // FIXME: Maybe make a ListHashSet and then WSWindowManager can just use that.
     WSWindow* m_next { nullptr };
@@ -76,6 +79,7 @@ private:
     bool m_global_cursor_tracking_enabled { false };
     bool m_visible { true };
     bool m_has_alpha_channel { false };
+    bool m_has_painted_since_last_resize { false };
     WSMenu* m_menu { nullptr };
     RetainPtr<GraphicsBitmap> m_backing;
     int m_window_id { -1 };
