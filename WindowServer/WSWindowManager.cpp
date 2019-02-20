@@ -531,7 +531,7 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event, WSWindow*& event_
 #ifdef RESIZE_DEBUG
             printf("[WM] Finish resizing WSWindow{%p}\n", m_resize_window.ptr());
 #endif
-            invalidate(*m_resize_window);
+            WSMessageLoop::the().post_message(m_resize_window.ptr(), make<WSResizeEvent>(m_resize_window->rect(), m_resize_window->rect()));
             m_resize_window = nullptr;
             return;
         }
@@ -553,7 +553,10 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event, WSWindow*& event_
             if (new_rect.height() < 50)
                 new_rect.set_height(50);
             m_resize_window->set_rect(new_rect);
-            WSMessageLoop::the().post_message(m_resize_window.ptr(), make<WSResizeEvent>(old_rect, new_rect));
+            if (m_resize_window->has_painted_since_last_resize()) {
+                m_resize_window->set_has_painted_since_last_resize(false);
+                WSMessageLoop::the().post_message(m_resize_window.ptr(), make<WSResizeEvent>(old_rect, new_rect));
+            }
             return;
         }
     }
