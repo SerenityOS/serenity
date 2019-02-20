@@ -8,8 +8,10 @@ GToolBar::GToolBar(GWidget* parent)
     : GWidget(parent)
 {
     set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-    set_preferred_size({ 0, 24 });
+    set_preferred_size({ 0, 25 });
     set_layout(make<GBoxLayout>(Orientation::Horizontal));
+    layout()->set_spacing(1);
+    layout()->set_margins({1, 1, 1, 1});
 }
 
 GToolBar::~GToolBar()
@@ -33,11 +35,8 @@ void GToolBar::add_action(RetainPtr<GAction>&& action)
         raw_action_ptr->activate();
     };
 
-#if 0
-    // FIXME: Gotta fix GBoxLayout for this to work.
     button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
-    button->set_preferred_size({ 16, 16 });
-#endif
+    button->set_preferred_size({ 22, 22 });
 
     m_items.append(move(item));
 }

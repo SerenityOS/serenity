@@ -66,25 +66,22 @@ void GBoxLayout::run(GWidget& widget)
     dbgprintf("GBoxLayout: automatic_size=%s\n", automatic_size.to_string().characters());
 #endif
 
-    int current_x = 0;
-    int current_y = 0;
- for (auto& entry : m_entries) {
+    // FIXME: We should also respect the bottom and right margins.
+    int current_x = margins().left();
+    int current_y = margins().top();
+
+    for (auto& entry : m_entries) {
         Rect rect(current_x, current_y, 0, 0);
         if (entry.layout) {
             // FIXME: Implement recursive layout.
             ASSERT_NOT_REACHED();
         }
         ASSERT(entry.widget);
-        if (entry.widget->size_policy(orientation()) == SizePolicy::Fixed) {
-            rect.set_size(automatic_size);
-            if (orientation() == Orientation::Vertical) {
-                rect.set_height(entry.widget->preferred_size().height());
-            } else {
-                rect.set_width(entry.widget->preferred_size().height());
-            }
-        } else {
-            rect.set_size(automatic_size);
-        }
+        rect.set_size(automatic_size);
+        if (entry.widget->size_policy(Orientation::Vertical) == SizePolicy::Fixed)
+            rect.set_height(entry.widget->preferred_size().height());
+        if (entry.widget->size_policy(Orientation::Horizontal) == SizePolicy::Fixed)
+            rect.set_width(entry.widget->preferred_size().height());
 
 #ifdef GBOXLAYOUT_DEBUG
         dbgprintf("GBoxLayout: apply, %s{%p} <- %s\n", entry.widget->class_name(), entry.widget.ptr(), rect.to_string().characters());
@@ -92,8 +89,8 @@ void GBoxLayout::run(GWidget& widget)
         entry.widget->set_relative_rect(rect);
 
         if (orientation() == Orientation::Horizontal)
-            current_x += rect.width();
+            current_x += rect.width() + spacing();
         else
-            current_y += rect.height();
+            current_y += rect.height() + spacing();
     }
 }
