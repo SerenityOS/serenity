@@ -2455,13 +2455,18 @@ void SharedBuffer::destroy_if_unused()
 void Process::disown_all_shared_buffers()
 {
     LOCKER(shared_buffers().lock());
-    for (auto& it : shared_buffers().resource()) {
-        (*it.value).disown(m_pid);
-    }
+    Vector<SharedBuffer*> buffers_to_disown;
+    for (auto& it : shared_buffers().resource())
+        buffers_to_disown.append(it.value.ptr());
+    for (auto* shared_buffer : buffers_to_disown)
+        shared_buffer->disown(m_pid);
 }
 
 int Process::sys$create_shared_buffer(pid_t peer_pid, size_t size, void** buffer)
 {
+    if (!size)
+        return -EINVAL;
+    size = PAGE_ROUND_UP(size);
     if (!peer_pid || peer_pid < 0 || peer_pid == m_pid)
         return -EINVAL;
     if (!validate_write_typed(buffer))
@@ -2476,6 +2481,7 @@ int Process::sys$create_shared_buffer(pid_t peer_pid, size_t size, void** buffer
     int shared_buffer_id = ++s_next_shared_buffer_id;
     auto shared_buffer = make<SharedBuffer>(m_pid, peer_pid, size);
     shared_buffer->m_shared_buffer_id = shared_buffer_id;
+    ASSERT(shared_buffer->size() >= size);
     shared_buffer->m_pid1_region = allocate_region_with_vmo(LinearAddress(), shared_buffer->size(), shared_buffer->m_vmo.copy_ref(), 0, "SharedBuffer", true, true);
     shared_buffer->m_pid1_region->set_shared(true);
     *buffer = shared_buffer->m_pid1_region->laddr().as_ptr();
