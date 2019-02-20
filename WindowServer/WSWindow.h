@@ -70,6 +70,12 @@ public:
     bool has_painted_since_last_resize() const { return m_has_painted_since_last_resize; }
     void set_has_painted_since_last_resize(bool b) { m_has_painted_since_last_resize = b; }
 
+    Size size_increment() const { return m_size_increment; }
+    void set_size_increment(const Size& increment) { m_size_increment = increment; }
+
+    Size base_size() const { return m_base_size; }
+    void set_base_size(const Size& size) { m_base_size = size; }
+
     // For InlineLinkedList.
     // FIXME: Maybe make a ListHashSet and then WSWindowManager can just use that.
     WSWindow* m_next { nullptr };
@@ -89,4 +95,6 @@ private:
     int m_window_id { -1 };
     float m_opacity { 1 };
     Rect m_last_lazy_resize_rect;
+    Size m_size_increment;
+    Size m_base_size;
 };

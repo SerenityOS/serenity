@@ -319,6 +319,7 @@ void WSClientConnection::handle_request(WSAPICreateWindowRequest& request)
     window->set_title(request.title());
     window->set_rect(request.rect());
     window->set_opacity(request.opacity());
+    window->set_size_increment(request.size_increment());
     m_windows.set(window_id, move(window));
     WSAPI_ServerMessage response;
     response.type = WSAPI_ServerMessage::Type::DidCreateWindow;

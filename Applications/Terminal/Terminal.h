@@ -21,6 +21,8 @@ public:
     void flush_dirty_lines();
     void force_repaint();
 
+    void apply_size_increments_to_window(GWindow&);
+
 private:
     virtual void event(GEvent&) override;
     virtual void paint_event(GPaintEvent&) override;

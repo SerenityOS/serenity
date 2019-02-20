@@ -61,6 +61,8 @@ void GWindow::show()
     request.window.rect = m_rect_when_windowless;
     request.window.has_alpha_channel = m_has_alpha_channel;
     request.window.opacity = m_opacity_when_windowless;
+    request.window.size_increment = m_size_increment;
+    request.window.base_size = m_base_size;
     ASSERT(m_title_when_windowless.length() < sizeof(request.text));
     strcpy(request.text, m_title_when_windowless.characters());
     request.text_length = m_title_when_windowless.length();

@@ -170,6 +170,8 @@ struct WSAPI_ClientMessage {
             WSAPI_Rect rect;
             bool has_alpha_channel;
             float opacity;
+            WSAPI_Size base_size;
+            WSAPI_Size size_increment;
         } window;
         struct {
             WSAPI_Size size;
