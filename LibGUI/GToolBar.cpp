@@ -35,6 +35,7 @@ void GToolBar::add_action(RetainPtr<GAction>&& action)
         raw_action_ptr->activate();
     };
 
+    button->set_button_style(GButtonStyle::CoolBar);
     button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
     button->set_preferred_size({ 22, 22 });
 
