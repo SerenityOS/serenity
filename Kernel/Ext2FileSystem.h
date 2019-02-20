@@ -128,8 +128,6 @@ private:
     mutable ByteBuffer m_cached_group_descriptor_table;
 
     mutable Lock m_lock;
-
-    mutable Lock m_inode_cache_lock;
     mutable HashMap<BlockIndex, RetainPtr<Ext2FSInode>> m_inode_cache;
 };
 
