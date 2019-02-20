@@ -491,8 +491,8 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event, WSWindow*& event_
 {
     event_window = nullptr;
 
-    if (event.type() == WSMessage::MouseUp && event.button() == MouseButton::Left) {
-        if (m_drag_window) {
+    if (m_drag_window) {
+        if (event.type() == WSMessage::MouseUp && event.button() == MouseButton::Left) {
 #ifdef DRAG_DEBUG
             printf("[WM] Finish dragging WSWindow{%p}\n", m_drag_window.ptr());
 #endif
@@ -501,10 +501,8 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event, WSWindow*& event_
             m_drag_window = nullptr;
             return;
         }
-    }
 
-    if (event.type() == WSMessage::MouseMove) {
-        if (m_drag_window) {
+        if (event.type() == WSMessage::MouseMove) {
             auto old_window_rect = m_drag_window->rect();
             Point pos = m_drag_window_origin;
 #ifdef DRAG_DEBUG
