@@ -1868,6 +1868,7 @@ void Process::set_default_signal_dispositions()
     // FIXME: Set up all the right default actions. See signal(7).
     memset(&m_signal_action_data, 0, sizeof(m_signal_action_data));
     m_signal_action_data[SIGCHLD].handler_or_sigaction = LinearAddress((dword)SIG_IGN);
+    m_signal_action_data[SIGWINCH].handler_or_sigaction = LinearAddress((dword)SIG_IGN);
 }
 
 int Process::sys$sigaction(int signum, const sigaction* act, sigaction* old_act)

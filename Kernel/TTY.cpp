@@ -112,8 +112,13 @@ int TTY::ioctl(Process& process, unsigned request, unsigned arg)
     termios* tp;
     winsize* ws;
 
-    if (process.tty() && process.tty() != this)
+#if 0
+    // FIXME: When should we block things?
+    //        How do we make this work together with MasterPTY forwarding to us?
+    if (process.tty() && process.tty() != this) {
         return -ENOTTY;
+    }
+#endif
     switch (request) {
     case TIOCGPGRP:
         return m_pgid;
@@ -144,6 +149,16 @@ int TTY::ioctl(Process& process, unsigned request, unsigned arg)
             return -EFAULT;
         ws->ws_row = m_rows;
         ws->ws_col = m_columns;
+        return 0;
+    case TIOCSWINSZ:
+        ws = reinterpret_cast<winsize*>(arg);
+        if (!process.validate_read(ws, sizeof(winsize)))
+            return -EFAULT;
+        if (ws->ws_col == m_columns && ws->ws_row == m_rows)
+            return 0;
+        m_rows = ws->ws_row;
+        m_columns = ws->ws_col;
+        generate_signal(SIGWINCH);
         return 0;
     case TIOCSCTTY:
         process.set_tty(this);

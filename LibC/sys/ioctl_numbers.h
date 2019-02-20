@@ -10,5 +10,6 @@ enum IOCtlNumber {
     TIOCGWINSZ,
     TIOCSCTTY,
     TIOCNOTTY,
+    TIOCSWINSZ,
 };
 
