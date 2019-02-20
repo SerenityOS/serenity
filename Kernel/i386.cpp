@@ -195,6 +195,36 @@ void exception_7_handler(RegisterDump& regs)
 }
 
 
+// 0: Divide error
+EH_ENTRY_NO_CODE(0);
+void exception_0_handler(RegisterDump& regs)
+{
+    kprintf("%s DIVIDE ERROR: %u(%s)\n", current->is_ring0() ? "Kernel" : "User", current->pid(), current->name().characters());
+
+    word ss;
+    dword esp;
+    if (current->is_ring0()) {
+        ss = regs.ds;
+        esp = regs.esp;
+    } else {
+        ss = regs.ss_if_crossRing;
+        esp = regs.esp_if_crossRing;
+    }
+
+    kprintf("pc=%w:%x ds=%w es=%w fs=%w gs=%w\n", regs.cs, regs.eip, regs.ds, regs.es, regs.fs, regs.gs);
+    kprintf("stk=%w:%x\n", ss, esp);
+    kprintf("eax=%x ebx=%x ecx=%x edx=%x\n", regs.eax, regs.ebx, regs.ecx, regs.edx);
+    kprintf("ebp=%x esp=%x esi=%x edi=%x\n", regs.ebp, esp, regs.esi, regs.edi);
+
+    if (current->is_ring0()) {
+        kprintf("Oh shit, we've crashed in ring 0 :(\n");
+        hang();
+    }
+
+    current->crash();
+}
+
+
 // 13: General Protection Fault
 EH_ENTRY(13);
 void exception_13_handler(RegisterDumpWithExceptionCode& regs)
@@ -316,7 +346,6 @@ void exception_14_handler(RegisterDumpWithExceptionCode& regs)
         hang(); \
     }
 
-EH(0, "Divide error")
 EH(1, "Debug exception")
 EH(2, "Unknown error")
 EH(3, "Breakpoint")
@@ -442,7 +471,7 @@ void idt_init()
     for (byte i = 0xff; i > 0x10; --i)
         register_interrupt_handler(i, unimp_trap);
 
-    register_interrupt_handler(0x00, _exception0);
+    register_interrupt_handler(0x00, exception_0_entry);
     register_interrupt_handler(0x01, _exception1);
     register_interrupt_handler(0x02, _exception2);
     register_interrupt_handler(0x03, _exception3);

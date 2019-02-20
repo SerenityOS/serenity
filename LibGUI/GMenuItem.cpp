@@ -6,7 +6,7 @@ GMenuItem::GMenuItem(Type type)
 {
 }
 
-GMenuItem::GMenuItem(OwnPtr<GAction>&& action)
+GMenuItem::GMenuItem(RetainPtr<GAction>&& action)
     : m_type(Action)
     , m_action(move(action))
 {

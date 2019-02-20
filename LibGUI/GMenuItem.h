@@ -9,7 +9,7 @@ public:
     enum Type { Invalid, Action, Separator };
 
     explicit GMenuItem(Type);
-    explicit GMenuItem(OwnPtr<GAction>&&);
+    explicit GMenuItem(RetainPtr<GAction>&&);
     ~GMenuItem();
 
     Type type() const { return m_type; }
@@ -21,6 +21,6 @@ public:
 private:
     Type m_type { Invalid };
     unsigned m_identifier { 0 };
-    OwnPtr<GAction> m_action;
+    RetainPtr<GAction> m_action;
 };
 

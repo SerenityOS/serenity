@@ -52,12 +52,14 @@ void GBoxLayout::run(GWidget& widget)
 
     Size automatic_size;
 
-    if (m_orientation == Orientation::Horizontal) {
-        automatic_size.set_width(available_size.width() / number_of_entries_with_automatic_size);
-        automatic_size.set_height(widget.height());
-    } else {
-        automatic_size.set_width(widget.width());
-        automatic_size.set_height(available_size.height() / number_of_entries_with_automatic_size);
+    if (number_of_entries_with_automatic_size) {
+        if (m_orientation == Orientation::Horizontal) {
+            automatic_size.set_width(available_size.width() / number_of_entries_with_automatic_size);
+            automatic_size.set_height(widget.height());
+        } else {
+            automatic_size.set_width(widget.width());
+            automatic_size.set_height(available_size.height() / number_of_entries_with_automatic_size);
+        }
     }
 
 #ifdef GBOXLAYOUT_DEBUG

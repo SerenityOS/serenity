@@ -1,0 +1,58 @@
+#include <LibGUI/GToolBar.h>
+#include <LibGUI/GBoxLayout.h>
+#include <LibGUI/GButton.h>
+#include <LibGUI/GAction.h>
+#include <SharedGraphics/Painter.h>
+
+GToolBar::GToolBar(GWidget* parent)
+    : GWidget(parent)
+{
+    set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+    set_preferred_size({ 0, 24 });
+    set_layout(make<GBoxLayout>(Orientation::Horizontal));
+}
+
+GToolBar::~GToolBar()
+{
+}
+
+void GToolBar::add_action(RetainPtr<GAction>&& action)
+{
+    ASSERT(action);
+    GAction* raw_action_ptr = action.ptr();
+    auto item = make<Item>();
+    item->type = Item::Action;
+    item->action = move(action);
+
+    auto* button = new GButton(this);
+    if (item->action->icon())
+        button->set_icon(item->action->icon());
+    else
+        button->set_caption(item->action->text());
+    button->on_click = [raw_action_ptr] (const GButton&) {
+        raw_action_ptr->activate();
+    };
+
+#if 0
+    // FIXME: Gotta fix GBoxLayout for this to work.
+    button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
+    button->set_preferred_size({ 16, 16 });
+#endif
+
+    m_items.append(move(item));
+}
+
+void GToolBar::add_separator()
+{
+    auto item = make<Item>();
+    item->type = Item::Separator;
+    m_items.append(move(item));
+}
+
+void GToolBar::paint_event(GPaintEvent& event)
+{
+    Painter painter(*this);
+    painter.set_clip_rect(event.rect());
+    painter.fill_rect({ 0, 0, width(), height() - 1 }, Color::LightGray);
+    painter.draw_line({ 0, rect().bottom() }, { width() - 1, rect().bottom() }, Color::DarkGray);
+}

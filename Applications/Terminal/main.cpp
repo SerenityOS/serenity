@@ -97,7 +97,7 @@ int main(int argc, char** argv)
     auto menubar = make<GMenuBar>();
 
     auto app_menu = make<GMenu>("Terminal");
-    app_menu->add_action(make<GAction>("Quit", String(), [] (const GAction&) {
+    app_menu->add_action(GAction::create("Quit", String(), [] (const GAction&) {
         dbgprintf("Terminal: Quit menu activated!\n");
         GApplication::the().quit(0);
         return;
@@ -106,7 +106,7 @@ int main(int argc, char** argv)
 
     auto font_menu = make<GMenu>("Font");
     GFontDatabase::the().for_each_font([&] (const String& font_name) {
-        font_menu->add_action(make<GAction>(font_name, [&terminal] (const GAction& action) {
+        font_menu->add_action(GAction::create(font_name, [&terminal] (const GAction& action) {
             terminal.set_font(GFontDatabase::the().get_by_name(action.text()));
             terminal.force_repaint();
         }));
@@ -114,7 +114,7 @@ int main(int argc, char** argv)
     menubar->add_menu(move(font_menu));
 
     auto help_menu = make<GMenu>("Help");
-    help_menu->add_action(make<GAction>("About", [] (const GAction&) {
+    help_menu->add_action(GAction::create("About", [] (const GAction&) {
         dbgprintf("FIXME: Implement Help/About\n");
     }));
     menubar->add_menu(move(help_menu));

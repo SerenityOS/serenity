@@ -73,6 +73,13 @@ void GWidget::handle_paint_event(GPaintEvent& event)
     if (fill_with_background_color()) {
         Painter painter(*this);
         painter.fill_rect(event.rect(), background_color());
+    } else {
+#ifdef DEBUG_WIDGET_UNDERDRAW
+        // FIXME: This is a bit broken.
+        // If the widget is not opaque, let's not mess it up with debugging color.
+        Painter painter(*this);
+        painter.fill_rect(rect(), Color::Red);
+#endif
     }
     paint_event(event);
     for (auto* ch : children()) {
