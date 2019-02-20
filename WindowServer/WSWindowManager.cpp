@@ -21,6 +21,7 @@
 
 //#define DEBUG_COUNTERS
 //#define DEBUG_WID_IN_TITLE_BAR
+#define RESIZE_DEBUG
 
 static const int window_titlebar_height = 16;
 
@@ -472,7 +473,6 @@ void WSWindowManager::handle_titlebar_mouse_event(WSWindow& window, WSMouseEvent
         m_drag_window = window.make_weak_ptr();;
         m_drag_origin = event.position();
         m_drag_window_origin = window.position();
-        window.set_is_being_dragged(true);
         invalidate(window);
         return;
     }
@@ -487,6 +487,17 @@ void WSWindowManager::handle_close_button_mouse_event(WSWindow& window, WSMouseE
     }
 }
 
+void WSWindowManager::start_window_resize(WSWindow& window, WSMouseEvent& event)
+{
+#ifdef RESIZE_DEBUG
+    printf("[WM] Begin resizing WSWindow{%p}\n", &window);
+#endif
+    m_resize_window = window.make_weak_ptr();;
+    m_resize_origin = event.position();
+    m_resize_window_original_rect = window.rect();
+    invalidate(window);
+}
+
 void WSWindowManager::process_mouse_event(WSMouseEvent& event, WSWindow*& event_window)
 {
     event_window = nullptr;
@@ -497,7 +508,6 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event, WSWindow*& event_
             printf("[WM] Finish dragging WSWindow{%p}\n", m_drag_window.ptr());
 #endif
             invalidate(*m_drag_window);
-            m_drag_window->set_is_being_dragged(false);
             m_drag_window = nullptr;
             return;
         }
@@ -512,6 +522,38 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event, WSWindow*& event_
             m_drag_window->set_position_without_repaint(pos);
             invalidate(outer_window_rect(old_window_rect));
             invalidate(outer_window_rect(m_drag_window->rect()));
+            return;
+        }
+    }
+
+    if (m_resize_window) {
+        if (event.type() == WSMessage::MouseUp && event.button() == MouseButton::Right) {
+#ifdef RESIZE_DEBUG
+            printf("[WM] Finish resizing WSWindow{%p}\n", m_resize_window.ptr());
+#endif
+            invalidate(*m_resize_window);
+            m_resize_window = nullptr;
+            return;
+        }
+
+        if (event.type() == WSMessage::MouseMove) {
+            auto old_rect = m_resize_window->rect();
+            int dx = event.x() - m_resize_origin.x();
+            int dy = event.y() - m_resize_origin.y();
+            auto new_rect = m_resize_window_original_rect;
+            new_rect.set_width(new_rect.width() + dx);
+            new_rect.set_height(new_rect.height() + dy);
+#ifdef RESIZE_DEBUG
+            dbgprintf("[WM] Resizing [original: %s] now: %s\n",
+                m_resize_window_original_rect.to_string().characters(),
+                new_rect.to_string().characters());
+#endif
+            if (new_rect.width() < 50)
+                new_rect.set_width(50);
+            if (new_rect.height() < 50)
+                new_rect.set_height(50);
+            m_resize_window->set_rect(new_rect);
+            WSMessageLoop::the().post_message(m_resize_window.ptr(), make<WSResizeEvent>(old_rect, new_rect));
             return;
         }
     }
@@ -558,6 +600,10 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event, WSWindow*& event_
             if (window.type() != WSWindowType::Menu && event.type() == WSMessage::MouseDown) {
                 move_to_front(window);
                 set_active_window(&window);
+            }
+            if (event.type() == WSMessage::MouseDown && event.button() == MouseButton::Right) {
+                start_window_resize(window, event);
+                return IterationDecision::Abort;
             }
             event_window = &window;
             // FIXME: Should we just alter the coordinates of the existing MouseEvent and pass it through?

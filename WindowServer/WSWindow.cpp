@@ -48,7 +48,6 @@ void WSWindow::set_rect(const Rect& rect)
         else if (m_client) {
             m_backing = m_client->create_shared_bitmap(m_has_alpha_channel ? GraphicsBitmap::Format::RGBA32 : GraphicsBitmap::Format::RGB32, m_rect.size());
         }
-
     }
     WSWindowManager::the().notify_rect_changed(*this, old_rect, rect);
 }
@@ -124,6 +123,11 @@ void WSWindow::on_message(WSMessage& message)
         break;
     case WSMessage::WindowCloseRequest:
         server_message.type = WSAPI_ServerMessage::Type::WindowCloseRequest;
+        break;
+    case WSMessage::WindowResized:
+        server_message.type = WSAPI_ServerMessage::Type::WindowResized;
+        server_message.window.old_rect = static_cast<WSResizeEvent&>(message).old_rect();
+        server_message.window.rect = static_cast<WSResizeEvent&>(message).rect();
         break;
     default:
         break;

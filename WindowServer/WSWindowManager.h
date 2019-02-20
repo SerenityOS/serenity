@@ -23,6 +23,7 @@ class CharacterBitmap;
 class GraphicsBitmap;
 
 enum class IterationDecision { Continue, Abort };
+enum class ResizeDirection { None, Left, UpLeft, Up, UpRight, Right, DownRight, Down, DownLeft };
 
 class WSWindowManager : public WSMessageReceiver {
 public:
@@ -76,6 +77,7 @@ private:
     void handle_menubar_mouse_event(WSMouseEvent&);
     void handle_titlebar_mouse_event(WSWindow&, WSMouseEvent&);
     void handle_close_button_mouse_event(WSWindow&, WSMouseEvent&);
+    void start_window_resize(WSWindow&, WSMouseEvent&);
     void handle_client_request(WSAPIClientRequest&);
 
     void set_active_window(WSWindow*);
@@ -113,10 +115,15 @@ private:
 
     WeakPtr<WSWindow> m_active_window;
     WeakPtr<WSWindow> m_hovered_window;
-    WeakPtr<WSWindow> m_drag_window;
 
+    WeakPtr<WSWindow> m_drag_window;
     Point m_drag_origin;
     Point m_drag_window_origin;
+
+    WeakPtr<WSWindow> m_resize_window;
+    Rect m_resize_window_original_rect;
+    Point m_resize_origin;
+    ResizeDirection m_resize_direction { ResizeDirection::None };
 
     Rect m_last_cursor_rect;
 

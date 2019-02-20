@@ -43,6 +43,7 @@ private:
     void wait_for_event();
     bool drain_messages_from_server();
     void handle_paint_event(const WSAPI_ServerMessage&, GWindow&);
+    void handle_resize_event(const WSAPI_ServerMessage&, GWindow&);
     void handle_mouse_event(const WSAPI_ServerMessage&, GWindow&);
     void handle_key_event(const WSAPI_ServerMessage&, GWindow&);
     void handle_window_activation_event(const WSAPI_ServerMessage&, GWindow&);

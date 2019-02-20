@@ -2444,9 +2444,11 @@ void SharedBuffer::destroy_if_unused()
     if (!m_pid1_retain_count && !m_pid2_retain_count) {
         LOCKER(shared_buffers().lock());
 #ifdef SHARED_BUFFER_DEBUG
-        dbgprintf("Destroying unused SharedBuffer{%p} (pid1: %d, pid2: %d)\n", this, m_pid1, m_pid2);
+        dbgprintf("Destroying unused SharedBuffer{%p} id: %d (pid1: %d, pid2: %d)\n", this, m_shared_buffer_id, m_pid1, m_pid2);
 #endif
+        size_t count_before = shared_buffers().resource().size();
         shared_buffers().resource().remove(m_shared_buffer_id);
+        ASSERT(count_before != shared_buffers().resource().size());
     }
 }
 
@@ -2473,6 +2475,7 @@ int Process::sys$create_shared_buffer(pid_t peer_pid, size_t size, void** buffer
     LOCKER(shared_buffers().lock());
     int shared_buffer_id = ++s_next_shared_buffer_id;
     auto shared_buffer = make<SharedBuffer>(m_pid, peer_pid, size);
+    shared_buffer->m_shared_buffer_id = shared_buffer_id;
     shared_buffer->m_pid1_region = allocate_region_with_vmo(LinearAddress(), shared_buffer->size(), shared_buffer->m_vmo.copy_ref(), 0, "SharedBuffer", true, true);
     shared_buffer->m_pid1_region->set_shared(true);
     *buffer = shared_buffer->m_pid1_region->laddr().as_ptr();
@@ -2491,7 +2494,7 @@ int Process::sys$release_shared_buffer(int shared_buffer_id)
         return -EINVAL;
     auto& shared_buffer = *(*it).value;
 #ifdef SHARED_BUFFER_DEBUG
-    dbgprintf("%s(%u): Releasing shared buffer %d\n", name().characters(), pid(), shared_buffer_id);
+    dbgprintf("%s(%u): Releasing shared buffer %d, buffer count: %u\n", name().characters(), pid(), shared_buffer_id, shared_buffers().resource().size());
 #endif
     shared_buffer.release(*this);
     return 0;
@@ -2507,7 +2510,7 @@ void* Process::sys$get_shared_buffer(int shared_buffer_id)
     if (shared_buffer.pid1() != m_pid && shared_buffer.pid2() != m_pid)
         return (void*)-EINVAL;
 #ifdef SHARED_BUFFER_DEBUG
-    dbgprintf("%s(%u): Retaining shared buffer %d\n", name().characters(), pid(), shared_buffer_id);
+    dbgprintf("%s(%u): Retaining shared buffer %d, buffer count: %u\n", name().characters(), pid(), shared_buffer_id, shared_buffers().resource().size());
 #endif
     return shared_buffer.retain(*this);
 }

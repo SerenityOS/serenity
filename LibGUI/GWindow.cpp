@@ -209,6 +209,13 @@ void GWindow::event(GEvent& event)
         return;
     }
 
+    if (event.type() == GEvent::Resize) {
+        m_pending_paint_event_rects.clear();
+        m_rect_when_windowless = { { }, static_cast<GResizeEvent&>(event).size() };
+        m_main_widget->set_relative_rect({ { }, static_cast<GResizeEvent&>(event).size() });
+        return;
+    }
+
     GObject::event(event);
 }
 

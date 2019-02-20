@@ -40,6 +40,7 @@ public:
     void set_rect(const Rect&);
     void set_rect(int x, int y, int width, int height) { set_rect({ x, y, width, height }); }
     void set_rect_without_repaint(const Rect& rect) { m_rect = rect; }
+    void set_rect_from_window_manager_resize(const Rect&);
 
     void move_to(const Point& position) { set_rect({ position, size() }); }
     void move_to(int x, int y) { move_to({ x, y }); }
@@ -53,9 +54,6 @@ public:
     void invalidate();
 
     virtual void on_message(WSMessage&) override;
-
-    bool is_being_dragged() const { return m_is_being_dragged; }
-    void set_is_being_dragged(bool b) { m_is_being_dragged = b; }
 
     GraphicsBitmap* backing() { return m_backing.ptr(); }
 
@@ -75,7 +73,6 @@ private:
     String m_title;
     Rect m_rect;
     WSWindowType m_type { WSWindowType::Normal };
-    bool m_is_being_dragged { false };
     bool m_global_cursor_tracking_enabled { false };
     bool m_visible { true };
     bool m_has_alpha_channel { false };
