@@ -171,6 +171,16 @@ template<class T> struct RemovePointer<T* const> { typedef T Type; };
 template<class T> struct RemovePointer<T* volatile> { typedef T Type; };
 template<class T> struct RemovePointer<T* const volatile> { typedef T Type; };
 
+template<typename T, typename U>
+struct IsSame {
+    enum { value = 0 };
+};
+
+template<typename T>
+struct IsSame<T, T> {
+    enum { value = 1 };
+};
+
 }
 
 using AK::min;
@@ -180,4 +190,4 @@ using AK::forward;
 using AK::exchange;
 using AK::swap;
 using AK::ceil_div;
-
+using AK::IsSame;
