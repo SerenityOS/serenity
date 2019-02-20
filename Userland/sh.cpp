@@ -415,9 +415,10 @@ int main(int argc, char** argv)
             return 0;
         if (nread < 0) {
             if (errno == EINTR) {
-                ASSERT(g->was_interrupted);
-                if (linedx != 0)
-                    printf("^C");
+                if (g->was_interrupted) {
+                    if (linedx != 0)
+                        printf("^C");
+                }
                 g->was_interrupted = false;
                 linebuf[0] = '\0';
                 linedx = 0;
