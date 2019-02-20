@@ -68,6 +68,7 @@ struct WSAPI_ServerMessage {
         KeyUp,
         WindowActivated,
         WindowDeactivated,
+        WindowResized,
         WindowCloseRequest,
         MenuItemActivated,
         DidCreateMenubar,
@@ -92,6 +93,7 @@ struct WSAPI_ServerMessage {
     union {
         struct {
             WSAPI_Rect rect;
+            WSAPI_Rect old_rect;
         } window;
         struct {
             WSAPI_Rect rect;

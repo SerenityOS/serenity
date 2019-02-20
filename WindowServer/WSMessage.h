@@ -21,6 +21,7 @@ public:
         WindowActivated,
         WindowDeactivated,
         WindowCloseRequest,
+        WindowResized,
 
         __Begin_API_Client_Requests,
         APICreateMenubarRequest,
@@ -450,4 +451,21 @@ private:
     Point m_position;
     unsigned m_buttons { 0 };
     MouseButton m_button { MouseButton::None };
+};
+
+class WSResizeEvent final : public WSMessage {
+public:
+    WSResizeEvent(const Rect& old_rect, const Rect& rect)
+        : WSMessage(WSMessage::WindowResized)
+        , m_old_rect(old_rect)
+        , m_rect(rect)
+    {
+    }
+
+    Rect old_rect() const { return m_old_rect; }
+    Rect rect() const { return m_rect; }
+
+private:
+    Rect m_old_rect;
+    Rect m_rect;
 };

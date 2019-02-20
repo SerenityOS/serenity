@@ -121,6 +121,11 @@ void GEventLoop::handle_paint_event(const WSAPI_ServerMessage& event, GWindow& w
     post_event(&window, make<GPaintEvent>(event.paint.rect));
 }
 
+void GEventLoop::handle_resize_event(const WSAPI_ServerMessage& event, GWindow& window)
+{
+    post_event(&window, make<GResizeEvent>(event.window.old_rect.size, event.window.rect.size));
+}
+
 void GEventLoop::handle_window_activation_event(const WSAPI_ServerMessage& event, GWindow& window)
 {
 #ifdef GEVENTLOOP_DEBUG
@@ -302,6 +307,9 @@ void GEventLoop::wait_for_event()
         case WSAPI_ServerMessage::Type::WindowEntered:
         case WSAPI_ServerMessage::Type::WindowLeft:
             handle_window_entered_or_left_event(event, *window);
+            break;
+        case WSAPI_ServerMessage::Type::WindowResized:
+            handle_resize_event(event, *window);
             break;
         default:
             break;

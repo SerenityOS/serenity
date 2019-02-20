@@ -389,8 +389,11 @@ PageFaultResponse MemoryManager::handle_page_fault(const PageFault& fault)
 RetainPtr<PhysicalPage> MemoryManager::allocate_physical_page(ShouldZeroFill should_zero_fill)
 {
     InterruptDisabler disabler;
-    if (1 > m_free_physical_pages.size())
+    if (1 > m_free_physical_pages.size()) {
+        kprintf("FUCK! No physical pages available.\n");
+        ASSERT_NOT_REACHED();
         return { };
+    }
 #ifdef MM_DEBUG
     dbgprintf("MM: allocate_physical_page vending P%x (%u remaining)\n", m_free_physical_pages.last()->paddr().get(), m_free_physical_pages.size());
 #endif
@@ -406,8 +409,11 @@ RetainPtr<PhysicalPage> MemoryManager::allocate_physical_page(ShouldZeroFill sho
 RetainPtr<PhysicalPage> MemoryManager::allocate_supervisor_physical_page()
 {
     InterruptDisabler disabler;
-    if (1 > m_free_supervisor_physical_pages.size())
+    if (1 > m_free_supervisor_physical_pages.size()) {
+        kprintf("FUCK! No physical pages available.\n");
+        ASSERT_NOT_REACHED();
         return { };
+    }
 #ifdef MM_DEBUG
     dbgprintf("MM: allocate_supervisor_physical_page vending P%x (%u remaining)\n", m_free_supervisor_physical_pages.last()->paddr().get(), m_free_supervisor_physical_pages.size());
 #endif
