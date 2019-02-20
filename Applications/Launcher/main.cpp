@@ -38,6 +38,7 @@ public:
         : GButton(parent)
         , m_executable_path(exec_path)
     {
+        set_button_style(GButtonStyle::CoolBar);
         set_icon(GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, icon_path, { 32, 32 }));
         resize(50, 50);
         on_click = [this] (GButton&) {
