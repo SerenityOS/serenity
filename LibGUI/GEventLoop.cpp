@@ -134,6 +134,11 @@ void GEventLoop::handle_window_close_request_event(const WSAPI_ServerMessage&, G
     post_event(&window, make<GEvent>(GEvent::WindowCloseRequest));
 }
 
+void GEventLoop::handle_window_entered_or_left_event(const WSAPI_ServerMessage& message, GWindow& window)
+{
+    post_event(&window, make<GEvent>(message.type == WSAPI_ServerMessage::Type::WindowEntered ? GEvent::WindowEntered : GEvent::WindowLeft));
+}
+
 void GEventLoop::handle_key_event(const WSAPI_ServerMessage& event, GWindow& window)
 {
 #ifdef GEVENTLOOP_DEBUG
@@ -293,6 +298,10 @@ void GEventLoop::wait_for_event()
         case WSAPI_ServerMessage::Type::KeyDown:
         case WSAPI_ServerMessage::Type::KeyUp:
             handle_key_event(event, *window);
+            break;
+        case WSAPI_ServerMessage::Type::WindowEntered:
+        case WSAPI_ServerMessage::Type::WindowLeft:
+            handle_window_entered_or_left_event(event, *window);
             break;
         default:
             break;

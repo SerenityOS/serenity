@@ -63,6 +63,10 @@ void GWidget::event(GEvent& event)
         return mousedown_event(static_cast<GMouseEvent&>(event));
     case GEvent::MouseUp:
         return mouseup_event(static_cast<GMouseEvent&>(event));
+    case GEvent::Enter:
+        return enter_event(event);
+    case GEvent::Leave:
+        return leave_event(event);
     default:
         return GObject::event(event);
     }
@@ -170,6 +174,14 @@ void GWidget::focusin_event(GEvent&)
 }
 
 void GWidget::focusout_event(GEvent&)
+{
+}
+
+void GWidget::enter_event(GEvent&)
+{
+}
+
+void GWidget::leave_event(GEvent&)
 {
 }
 

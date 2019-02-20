@@ -157,6 +157,7 @@ void GWindow::event(GEvent& event)
             auto result = m_main_widget->hit_test(mouse_event.x(), mouse_event.y());
             auto local_event = make<GMouseEvent>(event.type(), Point { result.localX, result.localY }, mouse_event.buttons(), mouse_event.button());
             ASSERT(result.widget);
+            set_hovered_widget(result.widget);
             return result.widget->event(*local_event);
         }
         return;
@@ -200,6 +201,11 @@ void GWindow::event(GEvent& event)
 
     if (event.type() == GEvent::WindowCloseRequest) {
         close();
+        return;
+    }
+
+    if (event.type() == GEvent::WindowLeft) {
+        set_hovered_widget(nullptr);
         return;
     }
 
@@ -300,4 +306,18 @@ void GWindow::set_opacity(float opacity)
     request.window.opacity = opacity;
     m_opacity_when_windowless = opacity;
     GEventLoop::main().post_message_to_server(request);
+}
+
+void GWindow::set_hovered_widget(GWidget* widget)
+{
+    if (widget == m_hovered_widget.ptr())
+        return;
+
+    if (m_hovered_widget)
+        GEventLoop::main().post_event(m_hovered_widget.ptr(), make<GEvent>(GEvent::Leave));
+
+    m_hovered_widget = widget ? widget->make_weak_ptr() : nullptr;
+
+    if (m_hovered_widget)
+        GEventLoop::main().post_event(m_hovered_widget.ptr(), make<GEvent>(GEvent::Enter));
 }

@@ -94,6 +94,12 @@ void WSWindow::on_message(WSMessage& message)
         server_message.mouse.button = to_api(static_cast<WSMouseEvent&>(message).button());
         server_message.mouse.buttons = static_cast<WSMouseEvent&>(message).buttons();
         break;
+    case WSMessage::WindowEntered:
+        server_message.type = WSAPI_ServerMessage::Type::WindowEntered;
+        break;
+    case WSMessage::WindowLeft:
+        server_message.type = WSAPI_ServerMessage::Type::WindowLeft;
+        break;
     case WSMessage::KeyDown:
         server_message.type = WSAPI_ServerMessage::Type::KeyDown;
         server_message.key.character = static_cast<WSKeyEvent&>(message).character();

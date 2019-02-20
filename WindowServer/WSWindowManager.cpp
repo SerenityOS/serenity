@@ -488,8 +488,10 @@ void WSWindowManager::handle_close_button_mouse_event(WSWindow& window, WSMouseE
     }
 }
 
-void WSWindowManager::process_mouse_event(WSMouseEvent& event)
+void WSWindowManager::process_mouse_event(WSMouseEvent& event, WSWindow*& event_window)
 {
+    event_window = nullptr;
+
     if (event.type() == WSMessage::MouseUp && event.button() == MouseButton::Left) {
         if (m_drag_window) {
 #ifdef DRAG_DEBUG
@@ -561,6 +563,7 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event)
                 move_to_front(window);
                 set_active_window(&window);
             }
+            event_window = &window;
             // FIXME: Should we just alter the coordinates of the existing MouseEvent and pass it through?
             Point position { event.x() - window.rect().x(), event.y() - window.rect().y() };
             auto local_event = make<WSMouseEvent>(event.type(), position, event.buttons(), event.button());
@@ -753,8 +756,12 @@ void WSWindowManager::draw_cursor()
 
 void WSWindowManager::on_message(WSMessage& message)
 {
-    if (message.is_mouse_event())
-        return process_mouse_event(static_cast<WSMouseEvent&>(message));
+    if (message.is_mouse_event()) {
+        WSWindow* event_window = nullptr;
+        process_mouse_event(static_cast<WSMouseEvent&>(message), event_window);
+        set_hovered_window(event_window);
+        return;
+    }
 
     if (message.is_key_event()) {
         // FIXME: This is a good place to hook key events globally. :)
@@ -793,6 +800,20 @@ void WSWindowManager::set_active_window(WSWindow* window)
         ASSERT(client);
         set_current_menubar(client->app_menubar());
     }
+}
+
+void WSWindowManager::set_hovered_window(WSWindow* window)
+{
+    if (m_hovered_window.ptr() == window)
+        return;
+
+    if (m_hovered_window)
+        WSMessageLoop::the().post_message(m_hovered_window.ptr(), make<WSMessage>(WSMessage::WindowLeft));
+
+    m_hovered_window = window ? window->make_weak_ptr() : nullptr;
+
+    if (m_hovered_window)
+        WSMessageLoop::the().post_message(m_hovered_window.ptr(), make<WSMessage>(WSMessage::WindowEntered));
 }
 
 void WSWindowManager::invalidate()

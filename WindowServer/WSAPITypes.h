@@ -62,6 +62,8 @@ struct WSAPI_ServerMessage {
         MouseMove,
         MouseDown,
         MouseUp,
+        WindowEntered,
+        WindowLeft,
         KeyDown,
         KeyUp,
         WindowActivated,
