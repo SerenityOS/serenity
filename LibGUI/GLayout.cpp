@@ -39,3 +39,21 @@ void GLayout::add_widget(GWidget& widget)
     if (m_owner)
         m_owner->notify_layout_changed(Badge<GLayout>());
 }
+
+void GLayout::set_spacing(int spacing)
+{
+    if (m_spacing == spacing)
+        return;
+    m_spacing = spacing;
+    if (m_owner)
+        m_owner->notify_layout_changed(Badge<GLayout>());
+}
+
+void GLayout::set_margins(const GMargins& margins)
+{
+    if (m_margins == margins)
+        return;
+    m_margins = margins;
+    if (m_owner)
+        m_owner->notify_layout_changed(Badge<GLayout>());
+}
