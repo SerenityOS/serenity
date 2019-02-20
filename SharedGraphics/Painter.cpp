@@ -14,8 +14,6 @@
 #include <LibC/string.h>
 #endif
 
-#define DEBUG_WIDGET_UNDERDRAW
-
 Painter::Painter(GraphicsBitmap& bitmap)
 {
     m_font = &Font::default_font();
@@ -42,12 +40,6 @@ Painter::Painter(GWidget& widget)
     // NOTE: m_clip_rect is in Window coordinates since we are painting into its backing store.
     m_clip_rect = widget.window_relative_rect();
     m_clip_rect.intersect(m_target->rect());
-
-#ifdef DEBUG_WIDGET_UNDERDRAW
-    // If the widget is not opaque, let's not mess it up with debugging color.
-    if (widget.fill_with_background_color() && m_window->main_widget() != &widget)
-        fill_rect(widget.rect(), Color::Red);
-#endif
 }
 #endif
 
