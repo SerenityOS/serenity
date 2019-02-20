@@ -26,7 +26,7 @@ void GButton::paint_event(GPaintEvent&)
 {
     Painter painter(*this);
 
-    GStyle::the().paint_button(painter, rect(), m_being_pressed);
+    GStyle::the().paint_button(painter, rect(), m_button_style, m_being_pressed, m_hovered);
 
     if (!caption().is_empty() || m_icon) {
         auto content_rect = rect();
