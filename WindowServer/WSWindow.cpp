@@ -36,18 +36,13 @@ void WSWindow::set_title(String&& title)
 void WSWindow::set_rect(const Rect& rect)
 {
     Rect old_rect;
-    if (!m_client && !m_menu)
-        return;
+    ASSERT(m_client || m_menu);
     if (m_rect == rect)
         return;
     old_rect = m_rect;
     m_rect = rect;
-    if (!m_backing || old_rect.size() != rect.size()) {
-        if (m_menu)
-            m_backing = GraphicsBitmap::create(GraphicsBitmap::Format::RGB32, m_rect.size());
-        else if (m_client) {
-            m_backing = m_client->create_shared_bitmap(m_has_alpha_channel ? GraphicsBitmap::Format::RGBA32 : GraphicsBitmap::Format::RGB32, m_rect.size());
-        }
+    if (m_menu && (!m_backing_store || old_rect.size() != rect.size())) {
+        m_backing_store = GraphicsBitmap::create(GraphicsBitmap::Format::RGB32, m_rect.size());
     }
     WSWindowManager::the().notify_rect_changed(*this, old_rect, rect);
 }

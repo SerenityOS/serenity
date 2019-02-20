@@ -84,6 +84,7 @@ struct WSAPI_ServerMessage {
         DidGetWindowTitle,
         DidGetWindowRect,
         DidGetWindowBackingStore,
+        Greeting,
     };
     Type type { Invalid };
     int window_id { -1 };
@@ -91,6 +92,9 @@ struct WSAPI_ServerMessage {
     char text[256];
 
     union {
+        struct {
+            int server_pid;
+        } greeting;
         struct {
             WSAPI_Rect rect;
             WSAPI_Rect old_rect;
@@ -148,6 +152,7 @@ struct WSAPI_ClientMessage {
         GetWindowBackingStore,
         SetGlobalCursorTracking,
         SetWindowOpacity,
+        SetWindowBackingStore,
     };
     Type type { Invalid };
     int window_id { -1 };
@@ -166,6 +171,13 @@ struct WSAPI_ClientMessage {
             bool has_alpha_channel;
             float opacity;
         } window;
+        struct {
+            WSAPI_Size size;
+            size_t bpp;
+            size_t pitch;
+            int shared_buffer_id;
+            bool has_alpha_channel;
+        } backing;
     };
 };
 

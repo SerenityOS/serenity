@@ -39,9 +39,12 @@ public:
 
     WSAPI_ServerMessage sync_request(const WSAPI_ClientMessage& request, WSAPI_ServerMessage::Type response_type);
 
+    pid_t server_pid() const { return m_server_pid; }
+
 private:
     void wait_for_event();
     bool drain_messages_from_server();
+    void process_unprocessed_messages();
     void handle_paint_event(const WSAPI_ServerMessage&, GWindow&);
     void handle_resize_event(const WSAPI_ServerMessage&, GWindow&);
     void handle_mouse_event(const WSAPI_ServerMessage&, GWindow&);
@@ -64,8 +67,8 @@ private:
     bool m_running { false };
     bool m_exit_requested { false };
     int m_exit_code { 0 };
-
     int m_next_timer_id { 1 };
+    pid_t m_server_pid { 0 };
 
     struct EventLoopTimer {
         int timer_id { 0 };

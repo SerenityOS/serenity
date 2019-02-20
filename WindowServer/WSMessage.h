@@ -43,6 +43,7 @@ public:
         APIGetWindowBackingStoreRequest,
         APISetGlobalCursorTrackingRequest,
         APISetWindowOpacityRequest,
+        APISetWindowBackingStoreRequest,
         __End_API_Client_Requests,
     };
 
@@ -275,6 +276,38 @@ private:
     int m_client_id { 0 };
     int m_window_id { 0 };
     float m_opacity { 0 };
+};
+
+class WSAPISetWindowBackingStoreRequest final : public WSAPIClientRequest {
+public:
+    explicit WSAPISetWindowBackingStoreRequest(int client_id, int window_id, int shared_buffer_id, const Size& size, size_t bpp, size_t pitch, bool has_alpha_channel)
+        : WSAPIClientRequest(WSMessage::APISetWindowBackingStoreRequest, client_id)
+        , m_client_id(client_id)
+        , m_window_id(window_id)
+        , m_shared_buffer_id(shared_buffer_id)
+        , m_size(size)
+        , m_bpp(bpp)
+        , m_pitch(pitch)
+        , m_has_alpha_channel(has_alpha_channel)
+    {
+    }
+
+    int client_id() const { return m_client_id; }
+    int window_id() const { return m_window_id; }
+    int shared_buffer_id() const { return m_shared_buffer_id; }
+    Size size() const { return m_size; }
+    size_t bpp() const { return m_bpp; }
+    size_t pitch() const { return m_pitch; }
+    bool has_alpha_channel() const { return m_has_alpha_channel; }
+
+private:
+    int m_client_id { 0 };
+    int m_window_id { 0 };
+    int m_shared_buffer_id { 0 };
+    Size m_size;
+    size_t m_bpp;
+    size_t m_pitch;
+    bool m_has_alpha_channel;
 };
 
 class WSAPISetWindowRectRequest final : public WSAPIClientRequest {

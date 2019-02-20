@@ -22,6 +22,7 @@
 //#define DEBUG_COUNTERS
 //#define DEBUG_WID_IN_TITLE_BAR
 #define RESIZE_DEBUG
+#define USE_WALLPAPER
 
 static const int window_titlebar_height = 16;
 
@@ -175,8 +176,10 @@ WSWindowManager::WSWindowManager()
     m_cursor_bitmap_inner = CharacterBitmap::create_from_ascii(cursor_bitmap_inner_ascii, 12, 17);
     m_cursor_bitmap_outer = CharacterBitmap::create_from_ascii(cursor_bitmap_outer_ascii, 12, 17);
 
+#ifdef USE_WALLPAPER
     m_wallpaper_path = "/res/wallpapers/cool.rgb";
     m_wallpaper = GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, m_wallpaper_path, { 1024, 768 });
+#endif
 
 #ifdef KERNEL
     ProcFS::the().add_sys_bool("wm_flash_flush", m_flash_flush);
@@ -495,6 +498,7 @@ void WSWindowManager::start_window_resize(WSWindow& window, WSMouseEvent& event)
     m_resize_window = window.make_weak_ptr();;
     m_resize_origin = event.position();
     m_resize_window_original_rect = window.rect();
+    m_resize_window->set_has_painted_since_last_resize(true);
     invalidate(window);
 }
 
@@ -532,6 +536,7 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event, WSWindow*& event_
             printf("[WM] Finish resizing WSWindow{%p}\n", m_resize_window.ptr());
 #endif
             WSMessageLoop::the().post_message(m_resize_window.ptr(), make<WSResizeEvent>(m_resize_window->rect(), m_resize_window->rect()));
+            invalidate(*m_resize_window);
             m_resize_window = nullptr;
             return;
         }
@@ -541,20 +546,20 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event, WSWindow*& event_
             int dx = event.x() - m_resize_origin.x();
             int dy = event.y() - m_resize_origin.y();
             auto new_rect = m_resize_window_original_rect;
-            new_rect.set_width(new_rect.width() + dx);
-            new_rect.set_height(new_rect.height() + dy);
+            new_rect.set_width(max(50, new_rect.width() + dx));
+            new_rect.set_height(max(50, new_rect.height() + dy));
+            if (m_resize_window->rect() == new_rect)
+                return;
 #ifdef RESIZE_DEBUG
             dbgprintf("[WM] Resizing [original: %s] now: %s\n",
                 m_resize_window_original_rect.to_string().characters(),
                 new_rect.to_string().characters());
 #endif
-            if (new_rect.width() < 50)
-                new_rect.set_width(50);
-            if (new_rect.height() < 50)
-                new_rect.set_height(50);
             m_resize_window->set_rect(new_rect);
             if (m_resize_window->has_painted_since_last_resize()) {
                 m_resize_window->set_has_painted_since_last_resize(false);
+                dbgprintf("I'm gonna wait for %s\n", new_rect.to_string().characters());
+                m_resize_window->set_last_lazy_resize_rect(new_rect);
                 WSMessageLoop::the().post_message(m_resize_window.ptr(), make<WSResizeEvent>(old_rect, new_rect));
             }
             return;
@@ -709,8 +714,8 @@ void WSWindowManager::compose()
     }
 
     for_each_visible_window_from_back_to_front([&] (WSWindow& window) {
-        RetainPtr<GraphicsBitmap> backing = window.backing();
-        if (!backing)
+        RetainPtr<GraphicsBitmap> backing_store = window.backing_store();
+        if (!backing_store)
             return IterationDecision::Continue;
         if (!any_dirty_rect_intersects_window(window))
             return IterationDecision::Continue;
@@ -725,9 +730,9 @@ void WSWindowManager::compose()
             auto dst = window.position();
             dst.move_by(dirty_rect_in_window_coordinates.location());
             if (window.opacity() == 1.0f)
-                m_back_painter->blit(dst, *backing, dirty_rect_in_window_coordinates);
+                m_back_painter->blit(dst, *backing_store, dirty_rect_in_window_coordinates);
             else
-                m_back_painter->blit_with_opacity(dst, *backing, dirty_rect_in_window_coordinates, window.opacity());
+                m_back_painter->blit_with_opacity(dst, *backing_store, dirty_rect_in_window_coordinates, window.opacity());
             m_back_painter->clear_clip_rect();
         }
         m_back_painter->clear_clip_rect();

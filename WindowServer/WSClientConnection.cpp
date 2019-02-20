@@ -44,6 +44,11 @@ WSClientConnection::WSClientConnection(int fd)
     if (!s_connections)
         s_connections = new HashMap<int, WSClientConnection*>;
     s_connections->set(m_client_id, this);
+
+    WSAPI_ServerMessage message;
+    message.type = WSAPI_ServerMessage::Type::Greeting;
+    message.greeting.server_pid = getpid();
+    post_message(message);
 }
 
 WSClientConnection::~WSClientConnection()
@@ -358,7 +363,13 @@ void WSClientConnection::handle_request(WSAPIDidFinishPaintingNotification& requ
         return;
     }
     auto& window = *(*it).value;
-    window.set_has_painted_since_last_resize(true);
+
+    if (!window.has_painted_since_last_resize()) {
+        if (window.last_lazy_resize_rect().size() == request.rect().size()) {
+            window.set_has_painted_since_last_resize(true);
+            WSMessageLoop::the().post_message(&window, make<WSResizeEvent>(window.last_lazy_resize_rect(), window.rect()));
+        }
+    }
     WSWindowManager::the().invalidate(window, request.rect());
 }
 
@@ -371,7 +382,7 @@ void WSClientConnection::handle_request(WSAPIGetWindowBackingStoreRequest& reque
         return;
     }
     auto& window = *(*it).value;
-    auto* backing_store = window.backing();
+    auto* backing_store = window.backing_store();
 
     WSAPI_ServerMessage response;
     response.type = WSAPI_ServerMessage::Type::DidGetWindowBackingStore;
@@ -382,6 +393,25 @@ void WSClientConnection::handle_request(WSAPIGetWindowBackingStoreRequest& reque
     response.backing.has_alpha_channel = backing_store->has_alpha_channel();
     response.backing.shared_buffer_id = backing_store->shared_buffer_id();
     post_message(response);
+}
+
+void WSClientConnection::handle_request(WSAPISetWindowBackingStoreRequest& request)
+{
+    int window_id = request.window_id();
+    auto it = m_windows.find(window_id);
+    if (it == m_windows.end()) {
+        post_error("Bad window ID");
+        return;
+    }
+    auto& window = *(*it).value;
+    auto backing_store = GraphicsBitmap::create_with_shared_buffer(
+        request.has_alpha_channel() ? GraphicsBitmap::Format::RGBA32 : GraphicsBitmap::Format::RGB32,
+        request.shared_buffer_id(),
+        request.size());
+    if (!backing_store)
+        return;
+    window.set_backing_store(move(backing_store));
+    window.invalidate();
 }
 
 void WSClientConnection::handle_request(WSAPISetGlobalCursorTrackingRequest& request)
@@ -437,6 +467,8 @@ void WSClientConnection::on_request(WSAPIClientRequest& request)
         return handle_request(static_cast<WSAPISetGlobalCursorTrackingRequest&>(request));
     case WSMessage::APISetWindowOpacityRequest:
         return handle_request(static_cast<WSAPISetWindowOpacityRequest&>(request));
+    case WSMessage::APISetWindowBackingStoreRequest:
+        return handle_request(static_cast<WSAPISetWindowBackingStoreRequest&>(request));
     default:
         break;
     }

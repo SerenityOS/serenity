@@ -68,6 +68,8 @@ public:
     const GWidget* hovered_widget() const { return m_hovered_widget.ptr(); }
     void set_hovered_widget(GWidget*);
 
+    GraphicsBitmap* backing() { return m_backing.ptr(); }
+
 private:
     virtual const char* class_name() const override { return "GWindow"; }
 

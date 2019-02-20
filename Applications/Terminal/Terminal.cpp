@@ -760,3 +760,9 @@ void Terminal::force_repaint()
     m_need_full_flush = true;
     update();
 }
+
+void Terminal::resize_event(GResizeEvent&)
+{
+    m_needs_background_fill = true;
+    force_repaint();
+}
