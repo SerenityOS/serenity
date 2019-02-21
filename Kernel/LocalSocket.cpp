@@ -47,7 +47,7 @@ bool LocalSocket::bind(const sockaddr* address, socklen_t address_size, int& err
 
     kprintf("%s(%u) LocalSocket{%p} bind(%s)\n", current->name().characters(), current->pid(), this, safe_address);
 
-    m_file = VFS::the().open(safe_address, error, O_CREAT | O_EXCL, S_IFSOCK | 0666, *current->cwd_inode());
+    m_file = VFS::the().open(safe_address, error, O_CREAT | O_EXCL, S_IFSOCK | 0666, current->cwd_inode());
     if (!m_file) {
         if (error == -EEXIST)
             error = -EADDRINUSE;
@@ -80,7 +80,7 @@ bool LocalSocket::connect(const sockaddr* address, socklen_t address_size, int& 
 
     kprintf("%s(%u) LocalSocket{%p} connect(%s)\n", current->name().characters(), current->pid(), this, safe_address);
 
-    m_file = VFS::the().open(safe_address, error, 0, 0, *current->cwd_inode());
+    m_file = VFS::the().open(safe_address, error, 0, 0, current->cwd_inode());
     if (!m_file) {
         error = -ECONNREFUSED;
         return false;

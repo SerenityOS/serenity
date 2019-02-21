@@ -263,7 +263,7 @@ public:
     template<typename T> bool validate_read_typed(T* value, size_t count = 1) { return validate_read(value, sizeof(T) * count); }
     template<typename T> bool validate_write_typed(T* value, size_t count = 1) { return validate_write(value, sizeof(T) * count); }
 
-    Inode* cwd_inode();
+    Inode& cwd_inode();
     Inode* executable_inode() { return m_executable.ptr(); }
 
     size_t number_of_open_file_descriptors() const;
