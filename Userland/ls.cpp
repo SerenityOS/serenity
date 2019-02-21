@@ -148,10 +148,10 @@ int do_dir(const char* path)
         printf("%c%c%c%c%c%c%c%c",
             st.st_mode & S_IRUSR ? 'r' : '-',
             st.st_mode & S_IWUSR ? 'w' : '-',
-            st.st_mode & S_IXUSR ? 'x' : '-',
+            st.st_mode & S_ISUID ? 's' : (st.st_mode & S_IXUSR ? 'x' : '-'),
             st.st_mode & S_IRGRP ? 'r' : '-',
             st.st_mode & S_IWGRP ? 'w' : '-',
-            st.st_mode & S_IXGRP ? 'x' : '-',
+            st.st_mode & S_ISGID ? 's' : (st.st_mode & S_IXGRP ? 'x' : '-'),
             st.st_mode & S_IROTH ? 'r' : '-',
             st.st_mode & S_IWOTH ? 'w' : '-'
         );

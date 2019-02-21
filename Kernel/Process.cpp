@@ -411,6 +411,11 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
     m_initial_arguments = move(arguments);
     m_initial_environment = move(environment);
 
+    if (descriptor->metadata().is_setuid())
+        m_euid = descriptor->metadata().uid;
+    if (descriptor->metadata().is_setgid())
+        m_egid = descriptor->metadata().gid;
+
 #ifdef TASK_DEBUG
     kprintf("Process %u (%s) exec'd %s @ %p\n", pid(), name().characters(), path.characters(), m_tss.eip);
 #endif
@@ -1352,14 +1357,22 @@ int Process::sys$killpg(int pgrp, int signum)
     ASSERT_NOT_REACHED();
 }
 
-int Process::sys$setuid(uid_t)
+int Process::sys$setuid(uid_t uid)
 {
-    ASSERT_NOT_REACHED();
+    if (uid != m_uid && !is_superuser())
+        return -EPERM;
+    m_uid = uid;
+    m_euid = uid;
+    return 0;
 }
 
-int Process::sys$setgid(gid_t)
+int Process::sys$setgid(gid_t gid)
 {
-    ASSERT_NOT_REACHED();
+    if (gid != m_gid && !is_superuser())
+        return -EPERM;
+    m_gid = gid;
+    m_egid = gid;
+    return 0;
 }
 
 unsigned Process::sys$alarm(unsigned seconds)
@@ -1900,7 +1913,7 @@ int Process::sys$getgroups(int count, gid_t* gids)
 
 int Process::sys$setgroups(size_t count, const gid_t* gids)
 {
-    if (!is_root())
+    if (!is_superuser())
         return -EPERM;
     if (count >= MAX_PROCESS_GIDS)
         return -EINVAL;
