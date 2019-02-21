@@ -306,6 +306,7 @@ private:
 
     int do_exec(String path, Vector<String> arguments, Vector<String> environment);
     void push_value_on_stack(dword);
+    void make_userspace_stack(Vector<String> arguments, Vector<String> environment);
 
     int alloc_fd();
     void set_default_signal_dispositions();
@@ -389,7 +390,6 @@ private:
     Vector<String> m_initial_environment;
     HashTable<gid_t> m_gids;
 
-    Region* m_stack_region { nullptr };
     Region* m_signal_stack_user_region { nullptr };
     Region* m_signal_stack_kernel_region { nullptr };
 
