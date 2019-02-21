@@ -1820,7 +1820,7 @@ int Process::sys$dup2(int old_fd, int new_fd)
 int Process::sys$sigprocmask(int how, const sigset_t* set, sigset_t* old_set)
 {
     if (old_set) {
-        if (!validate_read_typed(old_set))
+        if (!validate_write_typed(old_set))
             return -EFAULT;
         *old_set = m_signal_mask;
     }
@@ -1846,7 +1846,7 @@ int Process::sys$sigprocmask(int how, const sigset_t* set, sigset_t* old_set)
 
 int Process::sys$sigpending(sigset_t* set)
 {
-    if (!validate_read_typed(set))
+    if (!validate_write_typed(set))
         return -EFAULT;
     *set = m_pending_signals;
     return 0;
