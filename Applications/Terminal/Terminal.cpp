@@ -798,5 +798,5 @@ void Terminal::resize_event(GResizeEvent& event)
 void Terminal::apply_size_increments_to_window(GWindow& window)
 {
     window.set_size_increment({ font().glyph_width(), m_line_height });
-    window.set_base_size({ m_inset, m_inset });
+    window.set_base_size({ m_inset * 2, m_inset * 2});
 }

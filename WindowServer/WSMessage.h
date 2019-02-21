@@ -355,8 +355,8 @@ public:
         , m_title(title)
         , m_opacity(opacity)
         , m_has_alpha_channel(has_alpha_channel)
-        , m_base_size(base_size)
         , m_size_increment(size_increment)
+        , m_base_size(base_size)
     {
     }
 
