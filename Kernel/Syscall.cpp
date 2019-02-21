@@ -193,6 +193,8 @@ static dword handle(RegisterDump& regs, dword function, dword arg1, dword arg2, 
         return current->sys$utime((const char*)arg1, (const utimbuf*)arg2);
     case Syscall::SC_sync:
         return sync();
+    case Syscall::SC_link:
+        return current->sys$link((const char*)arg1, (const char*)arg2);
     case Syscall::SC_unlink:
         return current->sys$unlink((const char*)arg1);
     case Syscall::SC_read_tsc:

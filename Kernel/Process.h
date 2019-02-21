@@ -210,6 +210,7 @@ public:
     int sys$mkdir(const char* pathname, mode_t mode);
     clock_t sys$times(tms*);
     int sys$utime(const char* pathname, const struct utimbuf*);
+    int sys$link(const char* old_path, const char* new_path);
     int sys$unlink(const char* pathname);
     int sys$rmdir(const char* pathname);
     int sys$read_tsc(dword* lsw, dword* msw);
