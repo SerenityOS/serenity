@@ -350,8 +350,12 @@ bool VFS::link(const String& old_path, const String& new_path, Inode& base, int&
         error = -EROFS;
         return false;
     }
+    if (!parent_inode->metadata().may_write(*current)) {
+        error = -EACCES;
+        return false;
+    }
 
-    if (!parent_inode->add_child(old_inode->identifier(), FileSystemPath(old_path).basename(), 0, error))
+    if (!parent_inode->add_child(old_inode->identifier(), FileSystemPath(new_path).basename(), 0, error))
         return false;
     error = 0;
     return true;
