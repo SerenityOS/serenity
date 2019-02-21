@@ -29,6 +29,7 @@ OBJS = \
        top.o \
        df.o \
        ln.o \
+       su.o \
        rm.o
 
 APPS = \
@@ -63,6 +64,7 @@ APPS = \
        top \
        ln \
        df \
+       su \
        rm
 
 ARCH_FLAGS =
@@ -177,6 +179,9 @@ ln: ln.o
 	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
 
 df: df.o
+	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
+
+su: su.o
 	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
 
 .cpp.o:

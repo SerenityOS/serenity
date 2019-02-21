@@ -283,7 +283,7 @@ public:
     Process* fork(RegisterDump&);
     int exec(String path, Vector<String> arguments, Vector<String> environment);
 
-    bool is_root() const { return m_euid == 0; }
+    bool is_superuser() const { return m_euid == 0; }
 
     bool wakeup_requested() { return m_wakeup_requested; }
     void request_wakeup() { m_wakeup_requested = true; }

@@ -32,7 +32,10 @@ ln -s /proc/self/fd/0 mnt/dev/stdin
 ln -s /proc/self/fd/1 mnt/dev/stdout
 ln -s /proc/self/fd/2 mnt/dev/stderr
 cp -vR ../Base/* mnt/
+mkdir mnt/home/anon
+mkdir mnt/home/nona
 chown -vR 100:100 mnt/home/anon
+chown -vR 200:200 mnt/home/nona
 cp -v ../Userland/sh mnt/bin/sh
 cp -v ../Userland/id mnt/bin/id
 cp -v ../Userland/ps mnt/bin/ps
@@ -65,6 +68,8 @@ cp -v ../Userland/chmod mnt/bin/chmod
 cp -v ../Userland/top mnt/bin/top
 cp -v ../Userland/ln mnt/bin/ln
 cp -v ../Userland/df mnt/bin/df
+cp -v ../Userland/su mnt/bin/su
+chmod 4755 mnt/bin/su
 cp -v ../Applications/Terminal/Terminal mnt/bin/Terminal
 cp -v ../Applications/FontEditor/FontEditor mnt/bin/FontEditor
 cp -v ../Applications/Launcher/Launcher mnt/bin/Launcher
