@@ -637,12 +637,14 @@ bool Ext2FSInode::add_child(InodeIdentifier child_id, const String& name, byte f
         return false;
     }
 
+    auto child_inode = fs().get_inode(child_id);
+    if (child_inode)
+        child_inode->increment_link_count();
+
     entries.append({ name.characters(), name.length(), child_id, file_type });
     bool success = fs().write_directory_inode(index(), move(entries));
-    if (success) {
-        LOCKER(m_lock);
+    if (success)
         m_lookup_cache.set(name, child_id.index());
-    }
     return success;
 }
 
@@ -672,8 +674,8 @@ bool Ext2FSInode::remove_child(const String& name, int& error)
 
     Vector<FS::DirectoryEntry> entries;
     traverse_as_directory([&] (auto& entry) {
-        if (entry.inode != child_id)
-        entries.append(entry);
+        if (strcmp(entry.name, name.characters()) != 0)
+            entries.append(entry);
         return true;
     });
 
@@ -1336,6 +1338,7 @@ int Ext2FSInode::decrement_link_count()
 void Ext2FS::uncache_inode(InodeIndex index)
 {
     LOCKER(m_lock);
+    m_inode_cache.remove(index);
 }
 
 size_t Ext2FSInode::directory_entry_count() const

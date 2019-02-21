@@ -66,6 +66,7 @@ public:
     RetainPtr<FileDescriptor> open(const String& path, int& error, int options, mode_t mode, Inode& base);
     RetainPtr<FileDescriptor> create(const String& path, int& error, int options, mode_t mode, Inode& base);
     bool mkdir(const String& path, mode_t mode, Inode& base, int& error);
+    bool link(const String& old_path, const String& new_path, Inode& base, int& error);
     bool unlink(const String& path, Inode& base, int& error);
     bool rmdir(const String& path, Inode& base, int& error);
     bool chmod(const String& path, mode_t, Inode& base, int& error);
@@ -96,6 +97,7 @@ private:
 
     void traverse_directory_inode(Inode&, Function<bool(const FS::DirectoryEntry&)>);
     InodeIdentifier resolve_path(const String& path, InodeIdentifier base, int& error, int options = 0, InodeIdentifier* parent_id = nullptr);
+    RetainPtr<Inode> resolve_path_to_inode(const String& path, Inode& base, int& error, RetainPtr<Inode>* parent_id = nullptr);
     InodeIdentifier resolve_symbolic_link(InodeIdentifier base, Inode& symlink_inode, int& error);
 
     Mount* find_mount_for_host(InodeIdentifier);

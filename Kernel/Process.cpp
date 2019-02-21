@@ -1143,9 +1143,11 @@ int Process::sys$utime(const char* pathname, const utimbuf* buf)
         mtime = now;
         atime = now;
     }
-    inode.set_atime(atime);
-    inode.set_mtime(mtime);
-    return 0;
+    error = inode.set_atime(atime);
+    if (error)
+        return error;
+    error = inode.set_mtime(mtime);
+    return error;
 }
 
 int Process::sys$access(const char* pathname, int mode)
@@ -2097,6 +2099,18 @@ Inode* Process::cwd_inode()
     if (!m_cwd)
         m_cwd = VFS::the().root_inode();
     return m_cwd.ptr();
+}
+
+int Process::sys$link(const char* old_path, const char* new_path)
+{
+    if (!validate_read_str(old_path))
+        return -EFAULT;
+    if (!validate_read_str(new_path))
+        return -EFAULT;
+    int error;
+    if (!VFS::the().link(String(old_path), String(new_path), *cwd_inode(), error))
+        return error;
+    return 0;
 }
 
 int Process::sys$unlink(const char* pathname)

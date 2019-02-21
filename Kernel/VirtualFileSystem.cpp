@@ -168,28 +168,22 @@ RetainPtr<FileDescriptor> VFS::create(const String& path, int& error, int option
         mode |= 0100000;
     }
 
-    // FIXME: This won't work nicely across mount boundaries.
-    FileSystemPath p(path);
-    if (!p.is_valid()) {
-        error = -EINVAL;
-        return nullptr;
-    }
-
-    InodeIdentifier parent_dir;
-    auto existing_file = resolve_path(path, base.identifier(), error, 0, &parent_dir);
-    if (existing_file.is_valid()) {
+    RetainPtr<Inode> parent_inode;
+    auto existing_file = resolve_path_to_inode(path, base, error, &parent_inode);
+    if (existing_file) {
         error = -EEXIST;
         return nullptr;
     }
-    if (!parent_dir.is_valid()) {
+    if (!parent_inode) {
         error = -ENOENT;
         return nullptr;
     }
     if (error != -ENOENT) {
         return nullptr;
     }
-    dbgprintf("VFS::create_file: '%s' in %u:%u\n", p.basename().characters(), parent_dir.fsid(), parent_dir.index());
-    auto new_file = parent_dir.fs()->create_inode(parent_dir, p.basename(), mode, 0, error);
+    FileSystemPath p(path);
+    dbgprintf("VFS::create_file: '%s' in %u:%u\n", p.basename().characters(), parent_inode->fsid(), parent_inode->index());
+    auto new_file = parent_inode->fs().create_inode(parent_inode->identifier(), p.basename(), mode, 0, error);
     if (!new_file)
         return nullptr;
 
@@ -200,28 +194,23 @@ RetainPtr<FileDescriptor> VFS::create(const String& path, int& error, int option
 bool VFS::mkdir(const String& path, mode_t mode, Inode& base, int& error)
 {
     error = -EWHYTHO;
-    // FIXME: This won't work nicely across mount boundaries.
-    FileSystemPath p(path);
-    if (!p.is_valid()) {
-        error = -EINVAL;
-        return false;
-    }
 
-    InodeIdentifier parent_dir;
-    auto existing_dir = resolve_path(path, base.identifier(), error, 0, &parent_dir);
-    if (existing_dir.is_valid()) {
+    RetainPtr<Inode> parent_inode;
+    auto existing_dir = resolve_path_to_inode(path, base, error, &parent_inode);
+    if (existing_dir) {
         error = -EEXIST;
         return false;
     }
-    if (!parent_dir.is_valid()) {
+    if (!parent_inode) {
         error = -ENOENT;
         return false;
     }
     if (error != -ENOENT) {
         return false;
     }
-    dbgprintf("VFS::mkdir: '%s' in %u:%u\n", p.basename().characters(), parent_dir.fsid(), parent_dir.index());
-    auto new_dir = parent_dir.fs()->create_directory(parent_dir, p.basename(), mode, error);
+    FileSystemPath p(path);
+    dbgprintf("VFS::mkdir: '%s' in %u:%u\n", p.basename().characters(), parent_inode->fsid(), parent_inode->index());
+    auto new_dir = parent_inode->fs().create_directory(parent_inode->identifier(), p.basename(), mode, error);
     if (new_dir) {
         error = 0;
         return true;
@@ -232,29 +221,67 @@ bool VFS::mkdir(const String& path, mode_t mode, Inode& base, int& error)
 bool VFS::chmod(const String& path, mode_t mode, Inode& base, int& error)
 {
     error = -EWHYTHO;
-    // FIXME: This won't work nicely across mount boundaries.
-    FileSystemPath p(path);
-    if (!p.is_valid()) {
-        error = -EINVAL;
+    auto inode = resolve_path_to_inode(path, base, error);
+    if (!inode)
         return false;
-    }
-
-    InodeIdentifier parent_dir;
-    auto inode_id = resolve_path(path, base.identifier(), error, 0, &parent_dir);
-    if (!inode_id.is_valid()) {
-        error = -ENOENT;
-        return false;
-    }
-
-    auto inode = get_inode(inode_id);
 
     // FIXME: Permission checks.
 
     // Only change the permission bits.
     mode = (inode->mode() & ~04777) | (mode & 04777);
 
-    kprintf("VFS::chmod(): %u:%u mode %o\n", inode_id.fsid(), inode_id.index(), mode);
+    kprintf("VFS::chmod(): %u:%u mode %o\n", inode->fsid(), inode->index(), mode);
     if (!inode->chmod(mode, error))
+        return false;
+    error = 0;
+    return true;
+}
+
+RetainPtr<Inode> VFS::resolve_path_to_inode(const String& path, Inode& base, int& error, RetainPtr<Inode>* parent_inode)
+{
+    // FIXME: This won't work nicely across mount boundaries.
+    FileSystemPath p(path);
+    if (!p.is_valid()) {
+        error = -EINVAL;
+        return nullptr;
+    }
+    InodeIdentifier parent_id;
+    auto inode_id = resolve_path(path, base.identifier(), error, 0, &parent_id);
+    if (parent_inode && parent_id.is_valid())
+        *parent_inode = get_inode(parent_id);
+    if (!inode_id.is_valid()) {
+        error = -ENOENT;
+        return nullptr;
+    }
+    return get_inode(inode_id);
+}
+
+bool VFS::link(const String& old_path, const String& new_path, Inode& base, int& error)
+{
+    auto old_inode = resolve_path_to_inode(old_path, base, error);
+    if (!old_inode)
+        return false;
+
+    RetainPtr<Inode> parent_inode;
+    auto new_inode = resolve_path_to_inode(new_path, base, error, &parent_inode);
+    if (new_inode) {
+        error = -EEXIST;
+        return false;
+    }
+    if (!parent_inode) {
+        error = -ENOENT;
+        return false;
+    }
+    if (parent_inode->fsid() != old_inode->fsid()) {
+        error = -EXDEV;
+        return false;
+    }
+    if (parent_inode->fs().is_readonly()) {
+        error = -EROFS;
+        return false;
+    }
+
+    if (!parent_inode->add_child(old_inode->identifier(), FileSystemPath(old_path).basename(), 0, error))
         return false;
     error = 0;
     return true;
@@ -262,30 +289,17 @@ bool VFS::chmod(const String& path, mode_t mode, Inode& base, int& error)
 
 bool VFS::unlink(const String& path, Inode& base, int& error)
 {
-    error = -EWHYTHO;
-    // FIXME: This won't work nicely across mount boundaries.
-    FileSystemPath p(path);
-    if (!p.is_valid()) {
-        error = -EINVAL;
+    RetainPtr<Inode> parent_inode;
+    auto inode = resolve_path_to_inode(path, base, error, &parent_inode);
+    if (!inode)
         return false;
-    }
 
-    InodeIdentifier parent_dir;
-    auto inode_id = resolve_path(path, base.identifier(), error, 0, &parent_dir);
-    if (!inode_id.is_valid()) {
-        error = -ENOENT;
-        return false;
-    }
-
-    auto inode = get_inode(inode_id);
     if (inode->is_directory()) {
         error = -EISDIR;
         return false;
     }
 
-    auto parent_inode = get_inode(parent_dir);
-    // FIXME: The reverse_lookup here can definitely be avoided.
-    if (!parent_inode->remove_child(parent_inode->reverse_lookup(inode_id), error))
+    if (!parent_inode->remove_child(FileSystemPath(path).basename(), error))
         return false;
 
     error = 0;
@@ -295,21 +309,13 @@ bool VFS::unlink(const String& path, Inode& base, int& error)
 bool VFS::rmdir(const String& path, Inode& base, int& error)
 {
     error = -EWHYTHO;
-    // FIXME: This won't work nicely across mount boundaries.
-    FileSystemPath p(path);
-    if (!p.is_valid()) {
-        error = -EINVAL;
-        return false;
-    }
 
-    InodeIdentifier parent_dir;
-    auto inode_id = resolve_path(path, base.identifier(), error, 0, &parent_dir);
-    if (!inode_id.is_valid()) {
-        error = -ENOENT;
+    RetainPtr<Inode> parent_inode;
+    auto inode = resolve_path_to_inode(path, base, error, &parent_inode);
+    if (!inode)
         return false;
-    }
 
-    if (inode_id.fs()->is_readonly()) {
+    if (inode->fs().is_readonly()) {
         error = -EROFS;
         return false;
     }
@@ -317,7 +323,6 @@ bool VFS::rmdir(const String& path, Inode& base, int& error)
     // FIXME: We should return EINVAL if the last component of the path is "."
     // FIXME: We should return ENOTEMPTY if the last component of the path is ".."
 
-    auto inode = get_inode(inode_id);
     if (!inode->is_directory()) {
         error = -ENOTDIR;
         return false;
@@ -328,10 +333,7 @@ bool VFS::rmdir(const String& path, Inode& base, int& error)
         return false;
     }
 
-    auto parent_inode = get_inode(parent_dir);
-    ASSERT(parent_inode);
-
-    dbgprintf("VFS::rmdir: Removing inode %u:%u from parent %u:%u\n", inode_id.fsid(), inode_id.index(), parent_dir.fsid(), parent_dir.index());
+    dbgprintf("VFS::rmdir: Removing inode %u:%u from parent %u:%u\n", inode->fsid(), inode->index(), parent_inode->fsid(), parent_inode->index());
 
     // To do:
     // - Remove '.' in target (--child.link_count)
@@ -344,7 +346,7 @@ bool VFS::rmdir(const String& path, Inode& base, int& error)
         return false;
 
     // FIXME: The reverse_lookup here can definitely be avoided.
-    if (!parent_inode->remove_child(parent_inode->reverse_lookup(inode_id), error))
+    if (!parent_inode->remove_child(parent_inode->reverse_lookup(inode->identifier()), error))
         return false;
 
     error = 0;

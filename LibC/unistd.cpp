@@ -229,9 +229,10 @@ off_t lseek(int fd, off_t offset, int whence)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-int link(const char*, const char*)
+int link(const char* old_path, const char* new_path)
 {
-    assert(false);
+    int rc = syscall(SC_link, old_path, new_path);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
 int unlink(const char* pathname)

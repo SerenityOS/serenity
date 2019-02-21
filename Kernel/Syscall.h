@@ -82,6 +82,7 @@
     __ENUMERATE_SYSCALL(create_shared_buffer) \
     __ENUMERATE_SYSCALL(get_shared_buffer) \
     __ENUMERATE_SYSCALL(release_shared_buffer) \
+    __ENUMERATE_SYSCALL(link) \
 
 
 #ifdef SERENITY

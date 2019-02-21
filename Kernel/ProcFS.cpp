@@ -1038,19 +1038,13 @@ ssize_t ProcFSInode::write_bytes(off_t offset, size_t size, const byte* buffer, 
 
 bool ProcFSInode::add_child(InodeIdentifier child_id, const String& name, byte file_type, int& error)
 {
-    (void) child_id;
-    (void) name;
-    (void) file_type;
-    (void) error;
-    ASSERT_NOT_REACHED();
+    error = -EPERM;
     return false;
 }
 
 bool ProcFSInode::remove_child(const String& name, int& error)
 {
-    (void) name;
-    (void) error;
-    ASSERT_NOT_REACHED();
+    error = -EPERM;
     return false;
 }
 
