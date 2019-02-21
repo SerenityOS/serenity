@@ -1359,3 +1359,27 @@ bool Ext2FSInode::chmod(mode_t mode, int& error)
     set_metadata_dirty(true);
     return true;
 }
+
+unsigned Ext2FS::total_block_count() const
+{
+    LOCKER(m_lock);
+    return super_block().s_blocks_count;
+}
+
+unsigned Ext2FS::free_block_count() const
+{
+    LOCKER(m_lock);
+    return super_block().s_free_blocks_count;
+}
+
+unsigned Ext2FS::total_inode_count() const
+{
+    LOCKER(m_lock);
+    return super_block().s_inodes_count;
+}
+
+unsigned Ext2FS::free_inode_count() const
+{
+    LOCKER(m_lock);
+    return super_block().s_free_inodes_count;
+}

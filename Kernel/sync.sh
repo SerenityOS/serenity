@@ -64,6 +64,7 @@ cp -v ../Userland/dmesg mnt/bin/dmesg
 cp -v ../Userland/chmod mnt/bin/chmod
 cp -v ../Userland/top mnt/bin/top
 cp -v ../Userland/ln mnt/bin/ln
+cp -v ../Userland/df mnt/bin/df
 cp -v ../Applications/Terminal/Terminal mnt/bin/Terminal
 cp -v ../Applications/FontEditor/FontEditor mnt/bin/FontEditor
 cp -v ../Applications/Launcher/Launcher mnt/bin/Launcher

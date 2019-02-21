@@ -37,6 +37,11 @@ public:
 
     bool is_readonly() const { return m_readonly; }
 
+    virtual unsigned total_block_count() const { return 0; }
+    virtual unsigned free_block_count() const { return 0; }
+    virtual unsigned total_inode_count() const { return 0; }
+    virtual unsigned free_inode_count() const { return 0; }
+
     struct DirectoryEntry {
         DirectoryEntry(const char* name, InodeIdentifier, byte file_type);
         DirectoryEntry(const char* name, size_t name_length, InodeIdentifier, byte file_type);
