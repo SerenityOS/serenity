@@ -24,7 +24,6 @@
 #define O_NOFOLLOW 00400000
 #define O_CLOEXEC 02000000
 #define O_NOFOLLOW_NOERROR 0x4000000
-#define O_DONT_OPEN_DEVICE 0x8000000
 
 class Device;
 class FileDescriptor;
@@ -70,6 +69,7 @@ public:
     bool unlink(const String& path, Inode& base, int& error);
     bool rmdir(const String& path, Inode& base, int& error);
     bool chmod(const String& path, mode_t, Inode& base, int& error);
+    bool stat(const String& path, int& error, int options, Inode& base, struct stat&);
 
     void register_device(Device&);
     void unregister_device(Device&);
