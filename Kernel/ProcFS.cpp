@@ -28,6 +28,7 @@ enum ProcFileType {
     __FI_Root_Start,
     FI_Root_mm,
     FI_Root_mounts,
+    FI_Root_df,
     FI_Root_kmalloc,
     FI_Root_all,
     FI_Root_summary,
@@ -393,6 +394,27 @@ ByteBuffer procfs$mounts(InodeIdentifier)
             auto path = VFS::the().absolute_path(mount.host());
             builder.append(' ');
             builder.append(path);
+        }
+        builder.append('\n');
+    });
+    return builder.to_byte_buffer();
+}
+
+ByteBuffer procfs$df(InodeIdentifier)
+{
+    // FIXME: This is obviously racy against the VFS mounts changing.
+    StringBuilder builder;
+    VFS::the().for_each_mount([&builder] (auto& mount) {
+        auto& fs = mount.guest_fs();
+        builder.appendf("%s,", fs.class_name());
+        builder.appendf("%u,", fs.total_block_count());
+        builder.appendf("%u,", fs.free_block_count());
+        builder.appendf("%u,", fs.total_inode_count());
+        builder.appendf("%u,", fs.free_inode_count());
+        if (!mount.host().is_valid())
+            builder.append("/");
+        else {
+            builder.append(VFS::the().absolute_path(mount.host()));
         }
         builder.append('\n');
     });
@@ -1076,6 +1098,7 @@ ProcFS::ProcFS()
     m_entries.resize(FI_MaxStaticFileIndex);
     m_entries[FI_Root_mm] = { "mm", FI_Root_mm, procfs$mm };
     m_entries[FI_Root_mounts] = { "mounts", FI_Root_mounts, procfs$mounts };
+    m_entries[FI_Root_df] = { "df", FI_Root_df, procfs$df };
     m_entries[FI_Root_kmalloc] = { "kmalloc", FI_Root_kmalloc, procfs$kmalloc };
     m_entries[FI_Root_all] = { "all", FI_Root_all, procfs$all };
     m_entries[FI_Root_summary] = { "summary", FI_Root_summary, procfs$summary };

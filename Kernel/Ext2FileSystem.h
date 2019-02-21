@@ -62,6 +62,11 @@ public:
     virtual ~Ext2FS() override;
     virtual bool initialize() override;
 
+    virtual unsigned total_block_count() const override;
+    virtual unsigned free_block_count() const override;
+    virtual unsigned total_inode_count() const override;
+    virtual unsigned free_inode_count() const override;
+
 private:
     typedef unsigned BlockIndex;
     typedef unsigned GroupIndex;

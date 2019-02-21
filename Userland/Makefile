@@ -27,6 +27,7 @@ OBJS = \
        dmesg.o \
        chmod.o \
        top.o \
+       df.o \
        ln.o \
        rm.o
 
@@ -61,6 +62,7 @@ APPS = \
        chmod \
        top \
        ln \
+       df \
        rm
 
 ARCH_FLAGS =
@@ -172,6 +174,9 @@ top: top.o
 	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
 
 ln: ln.o
+	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
+
+df: df.o
 	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
 
 .cpp.o:
