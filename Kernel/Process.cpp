@@ -399,17 +399,12 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
     m_tss.gs = 0x23;
     m_tss.ss = 0x23;
     m_tss.cr3 = page_directory().cr3();
-    m_stack_region = allocate_region(LinearAddress(), default_userspace_stack_size, "stack");
-    ASSERT(m_stack_region);
-    m_stack_top3 = m_stack_region->laddr().offset(default_userspace_stack_size).get();
-    m_tss.esp = m_stack_top3;
+    make_userspace_stack(move(arguments), move(environment));
     m_tss.ss0 = 0x10;
     m_tss.esp0 = old_esp0;
     m_tss.ss2 = m_pid;
 
     m_executable = descriptor->inode();
-    m_initial_arguments = move(arguments);
-    m_initial_environment = move(environment);
 
     if (descriptor->metadata().is_setuid())
         m_euid = descriptor->metadata().uid;
@@ -422,6 +417,17 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
 
     set_state(Skip1SchedulerPass);
     return 0;
+}
+
+void Process::make_userspace_stack(Vector<String> arguments, Vector<String> environment)
+{
+    auto* region = allocate_region(LinearAddress(), default_userspace_stack_size, "stack");
+    ASSERT(region);
+    m_stack_top3 = region->laddr().offset(default_userspace_stack_size).get();
+    m_tss.esp = m_stack_top3;
+
+    m_initial_arguments = move(arguments);
+    m_initial_environment = move(environment);
 }
 
 int Process::exec(String path, Vector<String> arguments, Vector<String> environment)
@@ -679,17 +685,6 @@ Process::Process(String&& name, uid_t uid, gid_t gid, pid_t ppid, RingLevel ring
         m_stack_top0 = (stack_bottom + default_kernel_stack_size) & 0xffffff8;
         m_tss.esp = m_stack_top0;
     } else {
-        if (fork_parent) {
-            m_stack_top3 = fork_parent->m_stack_top3;
-        } else {
-            auto* region = allocate_region(LinearAddress(), default_userspace_stack_size, "stack");
-            ASSERT(region);
-            m_stack_top3 = region->laddr().offset(default_userspace_stack_size).get();
-            m_tss.esp = m_stack_top3;
-        }
-    }
-
-    if (is_ring3()) {
         // Ring3 processes need a separate stack for Ring0.
         m_kernel_stack = kmalloc(default_kernel_stack_size);
         m_stack_top0 = ((dword)m_kernel_stack + default_kernel_stack_size) & 0xffffff8;
