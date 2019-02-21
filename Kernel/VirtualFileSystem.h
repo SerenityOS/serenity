@@ -70,6 +70,7 @@ public:
     bool rmdir(const String& path, Inode& base, int& error);
     bool chmod(const String& path, mode_t, Inode& base, int& error);
     bool stat(const String& path, int& error, int options, Inode& base, struct stat&);
+    bool utime(const String& path, int& error, Inode& base, time_t atime, time_t mtime);
 
     void register_device(Device&);
     void unregister_device(Device&);
