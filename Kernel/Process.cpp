@@ -291,7 +291,7 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
         return -ENOENT;
 
     int error;
-    auto descriptor = VFS::the().open(path, error, 0, 0, *cwd_inode());
+    auto descriptor = VFS::the().open(path, error, 0, 0, cwd_inode());
     if (!descriptor) {
         ASSERT(error != 0);
         return error;
@@ -1127,7 +1127,7 @@ int Process::sys$utime(const char* pathname, const utimbuf* buf)
         return -EFAULT;
     String path(pathname);
     int error;
-    auto descriptor = VFS::the().open(move(path), error, 0, 0, *cwd_inode());
+    auto descriptor = VFS::the().open(move(path), error, 0, 0, cwd_inode());
     if (!descriptor)
         return error;
     auto& inode = *descriptor->inode();
@@ -1217,7 +1217,7 @@ int Process::sys$lstat(const char* path, stat* statbuf)
     if (!validate_write_typed(statbuf))
         return -EFAULT;
     int error;
-    if (!VFS::the().stat(move(path), error, O_NOFOLLOW_NOERROR, *cwd_inode(), *statbuf))
+    if (!VFS::the().stat(move(path), error, O_NOFOLLOW_NOERROR, cwd_inode(), *statbuf))
         return error;
     return 0;
 }
@@ -1227,7 +1227,7 @@ int Process::sys$stat(const char* path, stat* statbuf)
     if (!validate_write_typed(statbuf))
         return -EFAULT;
     int error;
-    if (!VFS::the().stat(move(path), error, 0, *cwd_inode(), *statbuf))
+    if (!VFS::the().stat(move(path), error, 0, cwd_inode(), *statbuf))
         return error;
     return 0;
 }
@@ -1240,7 +1240,7 @@ int Process::sys$readlink(const char* path, char* buffer, size_t size)
         return -EFAULT;
 
     int error;
-    auto descriptor = VFS::the().open(path, error, O_RDONLY | O_NOFOLLOW_NOERROR, 0, *cwd_inode());
+    auto descriptor = VFS::the().open(path, error, O_RDONLY | O_NOFOLLOW_NOERROR, 0, cwd_inode());
     if (!descriptor)
         return error;
 
@@ -1262,7 +1262,7 @@ int Process::sys$chdir(const char* path)
     if (!validate_read_str(path))
         return -EFAULT;
     int error;
-    auto descriptor = VFS::the().open(path, error, 0, 0, *cwd_inode());
+    auto descriptor = VFS::the().open(path, error, 0, 0, cwd_inode());
     if (!descriptor)
         return error;
     if (!descriptor->is_directory())
@@ -1275,8 +1275,7 @@ int Process::sys$getcwd(char* buffer, size_t size)
 {
     if (!validate_write(buffer, size))
         return -EFAULT;
-    ASSERT(cwd_inode());
-    auto path = VFS::the().absolute_path(*cwd_inode());
+    auto path = VFS::the().absolute_path(cwd_inode());
     if (path.is_null())
         return -EINVAL;
     if (size < path.length() + 1)
@@ -1305,8 +1304,7 @@ int Process::sys$open(const char* path, int options, mode_t mode)
     if (number_of_open_file_descriptors() >= m_max_open_file_descriptors)
         return -EMFILE;
     int error = -EWHYTHO;
-    ASSERT(cwd_inode());
-    auto descriptor = VFS::the().open(path, error, options, mode, *cwd_inode());
+    auto descriptor = VFS::the().open(path, error, options, mode, cwd_inode());
     if (!descriptor)
         return error;
     if (options & O_DIRECTORY && !descriptor->is_directory())
@@ -1934,7 +1932,7 @@ int Process::sys$mkdir(const char* pathname, mode_t mode)
     if (pathname_length >= 255)
         return -ENAMETOOLONG;
     int error;
-    if (!VFS::the().mkdir(String(pathname, pathname_length), mode, *cwd_inode(), error))
+    if (!VFS::the().mkdir(String(pathname, pathname_length), mode, cwd_inode(), error))
         return error;
     return 0;
 }
@@ -2091,12 +2089,12 @@ int Process::sys$poll(pollfd* fds, int nfds, int timeout)
     return fds_with_revents;
 }
 
-Inode* Process::cwd_inode()
+Inode& Process::cwd_inode()
 {
     // FIXME: This is retarded factoring.
     if (!m_cwd)
         m_cwd = VFS::the().root_inode();
-    return m_cwd.ptr();
+    return *m_cwd;
 }
 
 int Process::sys$link(const char* old_path, const char* new_path)
@@ -2106,7 +2104,7 @@ int Process::sys$link(const char* old_path, const char* new_path)
     if (!validate_read_str(new_path))
         return -EFAULT;
     int error;
-    if (!VFS::the().link(String(old_path), String(new_path), *cwd_inode(), error))
+    if (!VFS::the().link(String(old_path), String(new_path), cwd_inode(), error))
         return error;
     return 0;
 }
@@ -2116,7 +2114,7 @@ int Process::sys$unlink(const char* pathname)
     if (!validate_read_str(pathname))
         return -EFAULT;
     int error;
-    if (!VFS::the().unlink(String(pathname), *cwd_inode(), error))
+    if (!VFS::the().unlink(String(pathname), cwd_inode(), error))
         return error;
     return 0;
 }
@@ -2126,7 +2124,7 @@ int Process::sys$rmdir(const char* pathname)
     if (!validate_read_str(pathname))
         return -EFAULT;
     int error;
-    if (!VFS::the().rmdir(String(pathname), *cwd_inode(), error))
+    if (!VFS::the().rmdir(String(pathname), cwd_inode(), error))
         return error;
     return 0;
 }
@@ -2146,7 +2144,7 @@ int Process::sys$chmod(const char* pathname, mode_t mode)
     if (!validate_read_str(pathname))
         return -EFAULT;
     int error;
-    if (!VFS::the().chmod(String(pathname), mode, *cwd_inode(), error))
+    if (!VFS::the().chmod(String(pathname), mode, cwd_inode(), error))
         return error;
     return 0;
 }
