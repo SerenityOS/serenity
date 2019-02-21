@@ -131,6 +131,29 @@ RetainPtr<FileDescriptor> VFS::open(RetainPtr<Device>&& device, int& error, int 
     return FileDescriptor::create(move(device));
 }
 
+bool VFS::utime(const String& path, int& error, Inode& base, time_t atime, time_t mtime)
+{
+    auto descriptor = VFS::the().open(move(path), error, 0, 0, base);
+    if (!descriptor)
+        return false;
+    auto& inode = *descriptor->inode();
+    if (inode.fs().is_readonly()) {
+        error = -EROFS;
+        return false;
+    }
+    if (inode.metadata().uid != current->euid()) {
+        error = -EACCES;
+        return false;
+    }
+    error = inode.set_atime(atime);
+    if (error)
+        return false;
+    error = inode.set_mtime(mtime);
+    if (error)
+        return false;
+    return true;
+}
+
 bool VFS::stat(const String& path, int& error, int options, Inode& base, struct stat& statbuf)
 {
     auto inode_id = resolve_path(path, base.identifier(), error, options);

@@ -1125,14 +1125,6 @@ int Process::sys$utime(const char* pathname, const utimbuf* buf)
         return -EFAULT;
     if (buf && !validate_read_typed(buf))
         return -EFAULT;
-    String path(pathname);
-    int error;
-    auto descriptor = VFS::the().open(move(path), error, 0, 0, cwd_inode());
-    if (!descriptor)
-        return error;
-    auto& inode = *descriptor->inode();
-    if (inode.fs().is_readonly())
-        return -EROFS;
     time_t atime;
     time_t mtime;
     if (buf) {
@@ -1143,11 +1135,10 @@ int Process::sys$utime(const char* pathname, const utimbuf* buf)
         mtime = now;
         atime = now;
     }
-    error = inode.set_atime(atime);
-    if (error)
+    int error;
+    if (!VFS::the().utime(String(pathname), error, cwd_inode(), atime, mtime))
         return error;
-    error = inode.set_mtime(mtime);
-    return error;
+    return 0;
 }
 
 int Process::sys$access(const char* pathname, int mode)
