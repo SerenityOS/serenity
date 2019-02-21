@@ -9,6 +9,7 @@
 #include <AK/kstdio.h>
 #include <AK/BufferStream.h>
 #include <LibC/errno_numbers.h>
+#include <Kernel/Process.h>
 
 //#define EXT2_DEBUG
 
@@ -1183,13 +1184,13 @@ RetainPtr<Inode> Ext2FS::create_inode(InodeIdentifier parent_id, const String& n
     ext2_inode e2inode;
     memset(&e2inode, 0, sizeof(ext2_inode));
     e2inode.i_mode = mode;
-    e2inode.i_uid = 0;
+    e2inode.i_uid = current->euid();
+    e2inode.i_gid = current->egid();
     e2inode.i_size = size;
     e2inode.i_atime = timestamp;
     e2inode.i_ctime = timestamp;
     e2inode.i_mtime = timestamp;
     e2inode.i_dtime = 0;
-    e2inode.i_gid = 0;
     e2inode.i_links_count = initial_links_count;
 
     success = write_block_list_for_inode(inode_id, e2inode, blocks);

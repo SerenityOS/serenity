@@ -8,6 +8,7 @@
 #include <AK/ktime.h>
 #include "CharacterDevice.h"
 #include <LibC/errno_numbers.h>
+#include <Kernel/Process.h>
 
 //#define VFS_DEBUG
 
@@ -145,6 +146,20 @@ RetainPtr<FileDescriptor> VFS::open(const String& path, int& error, int options,
     if (!inode)
         return nullptr;
     auto metadata = inode->metadata();
+    // NOTE: Read permission is a bit weird, since O_RDONLY == 0,
+    //       so we check if (NOT write_only OR read_and_write)
+    if (!(options & O_WRONLY) || (options & O_RDWR)) {
+        if (!metadata.may_read(*current)) {
+            error = -EACCES;
+            return nullptr;
+        }
+    }
+    if ((options & O_WRONLY) || (options & O_RDWR)) {
+        if (!metadata.may_write(*current)) {
+            error = -EACCES;
+            return nullptr;
+        }
+    }
     if (!(options & O_DONT_OPEN_DEVICE) && metadata.is_device()) {
         auto it = m_devices.find(encoded_device(metadata.major_device, metadata.minor_device));
         if (it == m_devices.end()) {
@@ -181,6 +196,11 @@ RetainPtr<FileDescriptor> VFS::create(const String& path, int& error, int option
     if (error != -ENOENT) {
         return nullptr;
     }
+    if (!parent_inode->metadata().may_write(*current)) {
+        error = -EACCES;
+        return nullptr;
+    }
+
     FileSystemPath p(path);
     dbgprintf("VFS::create_file: '%s' in %u:%u\n", p.basename().characters(), parent_inode->fsid(), parent_inode->index());
     auto new_file = parent_inode->fs().create_inode(parent_inode->identifier(), p.basename(), mode, 0, error);
@@ -208,6 +228,11 @@ bool VFS::mkdir(const String& path, mode_t mode, Inode& base, int& error)
     if (error != -ENOENT) {
         return false;
     }
+    if (!parent_inode->metadata().may_write(*current)) {
+        error = -EACCES;
+        return false;
+    }
+
     FileSystemPath p(path);
     dbgprintf("VFS::mkdir: '%s' in %u:%u\n", p.basename().characters(), parent_inode->fsid(), parent_inode->index());
     auto new_dir = parent_inode->fs().create_directory(parent_inode->identifier(), p.basename(), mode, error);
@@ -225,7 +250,15 @@ bool VFS::chmod(const String& path, mode_t mode, Inode& base, int& error)
     if (!inode)
         return false;
 
-    // FIXME: Permission checks.
+    if (inode->fs().is_readonly()) {
+        error = -EROFS;
+        return false;
+    }
+
+    if (current->euid() != inode->metadata().uid) {
+        error = -EPERM;
+        return false;
+    }
 
     // Only change the permission bits.
     mode = (inode->mode() & ~04777) | (mode & 04777);
@@ -299,6 +332,11 @@ bool VFS::unlink(const String& path, Inode& base, int& error)
         return false;
     }
 
+    if (!parent_inode->metadata().may_write(*current)) {
+        error = -EACCES;
+        return false;
+    }
+
     if (!parent_inode->remove_child(FileSystemPath(path).basename(), error))
         return false;
 
@@ -325,6 +363,11 @@ bool VFS::rmdir(const String& path, Inode& base, int& error)
 
     if (!inode->is_directory()) {
         error = -ENOTDIR;
+        return false;
+    }
+
+    if (!parent_inode->metadata().may_write(*current)) {
+        error = -EACCES;
         return false;
     }
 
@@ -453,6 +496,10 @@ InodeIdentifier VFS::resolve_path(const String& path, InodeIdentifier base, int&
             kprintf("parent of <%s> not directory, it's inode %u:%u / %u:%u, mode: %u, size: %u\n", part.characters(), crumb_id.fsid(), crumb_id.index(), metadata.inode.fsid(), metadata.inode.index(), metadata.mode, metadata.size);
 #endif
             error = -ENOTDIR;
+            return { };
+        }
+        if (!metadata.may_execute(*current)) {
+            error = -EACCES;
             return { };
         }
         auto parent = crumb_id;
