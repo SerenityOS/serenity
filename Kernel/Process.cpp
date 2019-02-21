@@ -1217,10 +1217,9 @@ int Process::sys$lstat(const char* path, stat* statbuf)
     if (!validate_write_typed(statbuf))
         return -EFAULT;
     int error;
-    auto descriptor = VFS::the().open(move(path), error, O_NOFOLLOW_NOERROR | O_DONT_OPEN_DEVICE, 0, *cwd_inode());
-    if (!descriptor)
+    if (!VFS::the().stat(move(path), error, O_NOFOLLOW_NOERROR, *cwd_inode(), *statbuf))
         return error;
-    return descriptor->fstat(statbuf);
+    return 0;
 }
 
 int Process::sys$stat(const char* path, stat* statbuf)
@@ -1228,10 +1227,9 @@ int Process::sys$stat(const char* path, stat* statbuf)
     if (!validate_write_typed(statbuf))
         return -EFAULT;
     int error;
-    auto descriptor = VFS::the().open(move(path), error, O_DONT_OPEN_DEVICE, 0, *cwd_inode());
-    if (!descriptor)
+    if (!VFS::the().stat(move(path), error, 0, *cwd_inode(), *statbuf))
         return error;
-    return descriptor->fstat(statbuf);
+    return 0;
 }
 
 int Process::sys$readlink(const char* path, char* buffer, size_t size)

@@ -131,6 +131,17 @@ RetainPtr<FileDescriptor> VFS::open(RetainPtr<Device>&& device, int& error, int 
     return FileDescriptor::create(move(device));
 }
 
+bool VFS::stat(const String& path, int& error, int options, Inode& base, struct stat& statbuf)
+{
+    auto inode_id = resolve_path(path, base.identifier(), error, options);
+    if (!inode_id.is_valid())
+        return false;
+    error = FileDescriptor::create(get_inode(inode_id))->fstat(&statbuf);
+    if (error)
+        return false;
+    return true;
+}
+
 RetainPtr<FileDescriptor> VFS::open(const String& path, int& error, int options, mode_t mode, Inode& base)
 {
     auto inode_id = resolve_path(path, base.identifier(), error, options);
@@ -145,7 +156,9 @@ RetainPtr<FileDescriptor> VFS::open(const String& path, int& error, int options,
     }
     if (!inode)
         return nullptr;
+
     auto metadata = inode->metadata();
+
     // NOTE: Read permission is a bit weird, since O_RDONLY == 0,
     //       so we check if (NOT write_only OR read_and_write)
     if (!(options & O_WRONLY) || (options & O_RDWR)) {
@@ -160,7 +173,8 @@ RetainPtr<FileDescriptor> VFS::open(const String& path, int& error, int options,
             return nullptr;
         }
     }
-    if (!(options & O_DONT_OPEN_DEVICE) && metadata.is_device()) {
+
+    if (metadata.is_device()) {
         auto it = m_devices.find(encoded_device(metadata.major_device, metadata.minor_device));
         if (it == m_devices.end()) {
             kprintf("VFS::open: no such device %u,%u\n", metadata.major_device, metadata.minor_device);
