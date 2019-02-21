@@ -115,6 +115,7 @@ public:
     State state() const { return m_state; }
     uid_t uid() const { return m_uid; }
     gid_t gid() const { return m_gid; }
+    const HashTable<gid_t>& gids() const { return m_gids; }
     uid_t euid() const { return m_euid; }
     gid_t egid() const { return m_egid; }
     pid_t ppid() const { return m_ppid; }
@@ -536,4 +537,19 @@ inline void Process::for_each_living(Callback callback)
             callback(*process);
         process = next_process;
     }
+}
+
+inline bool InodeMetadata::may_read(Process& process) const
+{
+    return may_read(process.euid(), process.gids());
+}
+
+inline bool InodeMetadata::may_write(Process& process) const
+{
+    return may_write(process.euid(), process.gids());
+}
+
+inline bool InodeMetadata::may_execute(Process& process) const
+{
+    return may_execute(process.euid(), process.gids());
 }

@@ -38,7 +38,7 @@ GEventLoop::GEventLoop()
 
     sockaddr_un address;
     address.sun_family = AF_LOCAL;
-    strcpy(address.sun_path, "/wsportal");
+    strcpy(address.sun_path, "/tmp/wsportal");
 
     int retries = 1000;
     int rc = 0;

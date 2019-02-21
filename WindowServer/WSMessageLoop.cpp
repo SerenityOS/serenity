@@ -39,13 +39,13 @@ int WSMessageLoop::exec()
     m_keyboard_fd = open("/dev/keyboard", O_RDONLY | O_NONBLOCK | O_CLOEXEC);
     m_mouse_fd = open("/dev/psaux", O_RDONLY | O_NONBLOCK | O_CLOEXEC);
 
-    unlink("/wsportal");
+    unlink("/tmp/wsportal");
 
     m_server_fd = socket(AF_LOCAL, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0);
     ASSERT(m_server_fd >= 0);
     sockaddr_un address;
     address.sun_family = AF_LOCAL;
-    strcpy(address.sun_path, "/wsportal");
+    strcpy(address.sun_path, "/tmp/wsportal");
     int rc = bind(m_server_fd, (const sockaddr*)&address, sizeof(address));
     ASSERT(rc == 0);
     rc = listen(m_server_fd, 5);

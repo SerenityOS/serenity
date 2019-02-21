@@ -4,6 +4,8 @@
 #include "UnixTypes.h"
 #include <AK/HashTable.h>
 
+class Process;
+
 inline bool is_directory(mode_t mode) { return (mode & 0170000) == 0040000; }
 inline bool is_character_device(mode_t mode) { return (mode & 0170000) == 0020000; }
 inline bool is_block_device(mode_t mode) { return (mode & 0170000) == 0060000; }
@@ -17,6 +19,28 @@ inline bool is_setgid(mode_t mode) { return mode & 02000; }
 
 struct InodeMetadata {
     bool is_valid() const { return inode.is_valid(); }
+
+    bool may_read(Process&) const;
+    bool may_write(Process&) const;
+    bool may_execute(Process&) const;
+
+    bool may_read(uid_t u, const HashTable<gid_t>& g) const
+    {
+        if (uid == u)
+            return mode & 0400;
+        if (g.contains(gid))
+            return mode & 0040;
+        return mode & 0004;
+    }
+
+    bool may_write(uid_t u, const HashTable<gid_t>& g) const
+    {
+        if (uid == u)
+            return mode & 0200;
+        if (g.contains(gid))
+            return mode & 0020;
+        return mode & 0002;
+    }
 
     bool may_execute(uid_t u, const HashTable<gid_t>& g) const
     {

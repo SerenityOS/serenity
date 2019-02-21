@@ -16,7 +16,7 @@ mkdir -vp mnt/tmp
 chmod 1777 mnt/tmp
 mkdir -vp mnt/dev
 mkdir -vp mnt/dev/pts
-mknod mnt/dev/bxvga b 82 413
+mknod -m 666 mnt/dev/bxvga b 82 413
 mknod mnt/dev/tty0 c 4 0
 mknod mnt/dev/tty1 c 4 1
 mknod mnt/dev/tty2 c 4 2
@@ -27,7 +27,7 @@ mknod mnt/dev/zero c 1 5
 mknod mnt/dev/full c 1 7
 mknod mnt/dev/keyboard c 85 1
 mknod mnt/dev/psaux c 10 1
-mknod mnt/dev/ptmx c 5 2
+mknod -m 666 mnt/dev/ptmx c 5 2
 ln -s /proc/self/fd/0 mnt/dev/stdin
 ln -s /proc/self/fd/1 mnt/dev/stdout
 ln -s /proc/self/fd/2 mnt/dev/stderr
