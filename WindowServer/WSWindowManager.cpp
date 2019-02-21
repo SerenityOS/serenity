@@ -492,6 +492,20 @@ void WSWindowManager::handle_close_button_mouse_event(WSWindow& window, WSMouseE
 
 void WSWindowManager::start_window_resize(WSWindow& window, WSMouseEvent& event)
 {
+    constexpr ResizeDirection direction_for_hot_area[3][3] = {
+        { ResizeDirection::UpLeft, ResizeDirection::Up, ResizeDirection::UpRight },
+        { ResizeDirection::Left, ResizeDirection::None, ResizeDirection::Right },
+        { ResizeDirection::DownLeft, ResizeDirection::Down, ResizeDirection::DownRight },
+    };
+    Rect window_rect = window.rect();
+    int window_relative_x = event.x() - window_rect.x();
+    int window_relative_y = event.y() - window_rect.y();
+    int hot_area_row = window_relative_y / (window_rect.height() / 3);
+    int hot_area_column = window_relative_x / (window_rect.width() / 3);
+    m_resize_direction = direction_for_hot_area[hot_area_row][hot_area_column];
+    if (m_resize_direction == ResizeDirection::None)
+        return;
+
 #ifdef RESIZE_DEBUG
     printf("[WM] Begin resizing WSWindow{%p}\n", &window);
 #endif
@@ -499,6 +513,7 @@ void WSWindowManager::start_window_resize(WSWindow& window, WSMouseEvent& event)
     m_resize_origin = event.position();
     m_resize_window_original_rect = window.rect();
     m_resize_window->set_has_painted_since_last_resize(true);
+
     invalidate(window);
 }
 
@@ -543,11 +558,61 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event, WSWindow*& event_
 
         if (event.type() == WSMessage::MouseMove) {
             auto old_rect = m_resize_window->rect();
-            int dx = event.x() - m_resize_origin.x();
-            int dy = event.y() - m_resize_origin.y();
+
+            int diff_x = event.x() - m_resize_origin.x();
+            int diff_y = event.y() - m_resize_origin.y();
+
+            int change_x = 0;
+            int change_y = 0;
+            int change_w = 0;
+            int change_h = 0;
+
+            switch (m_resize_direction) {
+            case ResizeDirection::DownRight:
+                change_w = diff_x;
+                change_h = diff_y;
+                break;
+            case ResizeDirection::Right:
+                change_w = diff_x;
+                break;
+            case ResizeDirection::UpRight:
+                change_w = diff_x;
+                change_y = diff_y;
+                change_h = -diff_y;
+                break;
+            case ResizeDirection::Up:
+                change_y = diff_y;
+                change_h = -diff_y;
+                break;
+            case ResizeDirection::UpLeft:
+                change_x = diff_x;
+                change_w = -diff_x;
+                change_y = diff_y;
+                change_h = -diff_y;
+                break;
+            case ResizeDirection::Left:
+                change_x = diff_x;
+                change_w = -diff_x;
+                break;
+            case ResizeDirection::DownLeft:
+                change_x = diff_x;
+                change_w = -diff_x;
+                change_h = diff_y;
+                break;
+            case ResizeDirection::Down:
+                change_h = diff_y;
+                break;
+            default:
+                ASSERT_NOT_REACHED();
+            }
+
             auto new_rect = m_resize_window_original_rect;
-            new_rect.set_width(max(50, new_rect.width() + dx));
-            new_rect.set_height(max(50, new_rect.height() + dy));
+            Size minimum_size { 50, 50 };
+
+            new_rect.set_x(new_rect.x() + change_x);
+            new_rect.set_y(new_rect.y() + change_y);
+            new_rect.set_width(max(minimum_size.width(), new_rect.width() + change_w));
+            new_rect.set_height(max(minimum_size.height(), new_rect.height() + change_h));
 
             if (!m_resize_window->size_increment().is_null()) {
                 int horizontal_incs = (new_rect.width() - m_resize_window->base_size().width()) / m_resize_window->size_increment().width();
