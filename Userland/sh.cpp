@@ -348,17 +348,6 @@ static int runcmd(char* cmd)
     return retval;
 }
 
-static void greeting()
-{
-    utsname uts;
-    int rc = uname(&uts);
-    if (rc < 0) {
-        perror("uname");
-        return;
-    }
-    printf("\n%s/%s on %s\n\n", uts.sysname, uts.machine, g->ttyname);
-}
-
 int main(int argc, char** argv)
 {
     g = new GlobalState;
@@ -395,8 +384,6 @@ int main(int argc, char** argv)
         fprintf(stderr, "FIXME: Implement /bin/sh -c\n");
         return 1;
     }
-
-    greeting();
 
     char linebuf[128];
     int linedx = 0;
