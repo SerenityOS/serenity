@@ -16,7 +16,7 @@ int main(int argc, char** argv)
     struct passwd* pw = getpwuid(uid);
     struct group* gr = getgrgid(gid);
 
-    printf("uid=%u(%s), gid=%u(%s)", uid, pw ? pw->pw_name : "n/a", gid, gr ? gr->gr_name : "n/a", getpid());
+    printf("uid=%u(%s), gid=%u(%s)", uid, pw ? pw->pw_name : "n/a", gid, gr ? gr->gr_name : "n/a");
 
     int extra_gid_count = getgroups(0, nullptr);
     if (extra_gid_count) {
