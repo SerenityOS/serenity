@@ -17,7 +17,7 @@ typedef signed_dword ssize_t;
 static_assert(sizeof(size_t) == sizeof(dword));
 static_assert(sizeof(ssize_t) == sizeof(signed_dword));
 
-typedef signed_dword ptrdiff_t;
+typedef __PTRDIFF_TYPE__ ptrdiff_t;
 
 typedef byte uint8_t;
 typedef word uint16_t;

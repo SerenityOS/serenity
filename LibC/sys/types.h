@@ -7,7 +7,7 @@ __BEGIN_DECLS
 
 typedef unsigned int u_int;
 typedef unsigned long u_long;
-typedef int ptrdiff_t;
+typedef __PTRDIFF_TYPE__ ptrdiff_t;
 typedef unsigned long int __uintmax_t;
 typedef __uintmax_t uintmax_t;
 typedef long int __intmax_t;
