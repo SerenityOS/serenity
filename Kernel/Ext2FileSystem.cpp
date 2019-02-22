@@ -1126,7 +1126,7 @@ RetainPtr<Inode> Ext2FS::create_inode(InodeIdentifier parent_id, const String& n
     ASSERT(parent_id.fsid() == fsid());
     auto parent_inode = get_inode(parent_id);
 
-    dbgprintf("Ext2FS: Adding inode '%s' (mode %u) to parent directory %u:\n", name.characters(), mode, parent_inode->identifier().index());
+    dbgprintf("Ext2FS: Adding inode '%s' (mode %o) to parent directory %u:\n", name.characters(), mode, parent_inode->identifier().index());
 
     // NOTE: This doesn't commit the inode allocation just yet!
     auto inode_id = allocate_inode(0, size);
