@@ -16,8 +16,6 @@ $make_cmd -C ../Applications/Terminal clean && \
 $make_cmd -C ../Applications/Terminal && \
 $make_cmd -C ../Applications/FontEditor clean && \
 $make_cmd -C ../Applications/FontEditor && \
-$make_cmd -C ../Applications/Clock clean && \
-$make_cmd -C ../Applications/Clock && \
 $make_cmd -C ../Applications/Launcher clean && \
 $make_cmd -C ../Applications/Launcher && \
 $make_cmd -C ../Applications/FileManager clean && \
