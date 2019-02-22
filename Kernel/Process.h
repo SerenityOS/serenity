@@ -120,6 +120,8 @@ public:
     gid_t egid() const { return m_egid; }
     pid_t ppid() const { return m_ppid; }
 
+    mode_t umask() const { return m_umask; }
+
     const FarPtr& far_ptr() const { return m_far_ptr; }
 
     FileDescriptor* file_descriptor(int fd);
