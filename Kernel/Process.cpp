@@ -688,6 +688,12 @@ Process::Process(String&& name, uid_t uid, gid_t gid, pid_t ppid, RingLevel ring
         m_tss.esp0 = m_stack_top0;
     }
 
+    if (fork_parent) {
+        m_sid = fork_parent->m_sid;
+        m_pgid = fork_parent->m_pgid;
+        m_umask = fork_parent->m_umask;
+    }
+
     // HACK: Ring2 SS in the TSS is the current PID.
     m_tss.ss2 = m_pid;
     m_far_ptr.offset = 0x98765432;
@@ -1291,7 +1297,7 @@ int Process::sys$open(const char* path, int options, mode_t mode)
     if (number_of_open_file_descriptors() >= m_max_open_file_descriptors)
         return -EMFILE;
     int error = -EWHYTHO;
-    auto descriptor = VFS::the().open(path, error, options, mode, cwd_inode());
+    auto descriptor = VFS::the().open(path, error, options, mode & ~umask(), cwd_inode());
     if (!descriptor)
         return error;
     if (options & O_DIRECTORY && !descriptor->is_directory())
@@ -1487,7 +1493,7 @@ pid_t Process::sys$getppid()
 mode_t Process::sys$umask(mode_t mask)
 {
     auto old_mask = m_umask;
-    m_umask = mask;
+    m_umask = mask & 0777;
     return old_mask;
 }
 
@@ -1927,7 +1933,7 @@ int Process::sys$mkdir(const char* pathname, mode_t mode)
     if (pathname_length >= 255)
         return -ENAMETOOLONG;
     int error;
-    if (!VFS::the().mkdir(String(pathname, pathname_length), mode, cwd_inode(), error))
+    if (!VFS::the().mkdir(String(pathname, pathname_length), mode & ~umask(), cwd_inode(), error))
         return error;
     return 0;
 }
