@@ -111,7 +111,7 @@ int do_dir(const char* path)
         perror("opendir");
         return 1;
     }
-    char pathbuf[256];
+    char pathbuf[PATH_MAX];
 
     while (auto* de = readdir(dirp)) {
         if (de->d_name[0] == '.' && !flag_show_dotfiles)

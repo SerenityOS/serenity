@@ -10,7 +10,7 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    mode_t mode;
+    unsigned mode;
     int rc = sscanf(argv[1], "%o", &mode);
     if (rc != 1) {
         perror("sscanf");
