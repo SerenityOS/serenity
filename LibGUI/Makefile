@@ -37,19 +37,18 @@ LIBS = ../LibC/LibC.a
 LIBRARY = LibGUI.a
 ARCH_FLAGS =
 STANDARD_FLAGS = -std=c++17 -nostdinc++ -nostdlib -nostdinc
-LIBC_FLAGS = -ffreestanding -fno-stack-protector -fno-ident
 WARNING_FLAGS = -Wextra -Wall -Wundef -Wcast-qual -Wwrite-strings -Wimplicit-fallthrough
-FLAVOR_FLAGS = -march=i686 -m32 -fno-exceptions -fno-rtti
+FLAVOR_FLAGS = -fno-exceptions -fno-rtti
 OPTIMIZATION_FLAGS = -Os
 INCLUDE_FLAGS = -I../LibC -I.. -I.
 
 DEFINES = -DSERENITY -DUSERLAND -DSANITIZE_PTRS -DLIBGUI
 
-CXXFLAGS = -MMD -MP $(WARNING_FLAGS) $(OPTIMIZATION_FLAGS) $(LIBC_FLAGS) $(FLAVOR_FLAGS) $(ARCH_FLAGS) $(STANDARD_FLAGS) $(INCLUDE_FLAGS) $(DEFINES)
-CXX = clang
-LD = ld
+CXXFLAGS = -MMD -MP $(WARNING_FLAGS) $(OPTIMIZATION_FLAGS) $(FLAVOR_FLAGS) $(ARCH_FLAGS) $(STANDARD_FLAGS) $(INCLUDE_FLAGS) $(DEFINES)
+CXX = i686-elf-g++
+LD = i686-elf-ld
 AR = ar
-LDFLAGS = -T linker.ld --strip-debug -melf_i386 --gc-sections
+LDFLAGS =
 
 all: $(LIBRARY)
 

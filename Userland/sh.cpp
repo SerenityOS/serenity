@@ -19,7 +19,7 @@ struct GlobalState {
     char hostname[32];
     pid_t sid;
     uid_t uid;
-    termios termios;
+    struct termios termios;
     bool was_interrupted { false };
 };
 static GlobalState* g;
@@ -159,7 +159,7 @@ static int sh_mp(int, char**)
         return 1;
     }
     printf("mapped file @ %p\n", data);
-    printf("contents: %c%c%c%c%c%c%c...\n", data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7]);
+    printf("contents: %c%c%c%c%c%c%c%c...\n", data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7]);
 
     printf("leaving it open :)\n");
     return 0;

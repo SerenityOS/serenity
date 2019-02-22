@@ -23,11 +23,13 @@ I always wanted to write my own operating system, but I never took it seriously.
 
 ## How do I get it to run?
 
-I've only tested this on an Ubuntu 18.10 host with clang, so I'm not sure it works anywhere else. If you'd like to run it, here's how you'd get it to boot:
+You need a cross-compiler for the i686-elf target.
+I've only tested this on an Ubuntu 18.10 host with GCC, so I'm not sure it works anywhere else.
+
+If you'd like to run it, here's how you'd get it to boot:
 
     cd Kernel
     ./makeall.sh
-    sudo ./sync.sh
     ./run q          # Runs in QEMU
     ./run            # Runs in bochs
 

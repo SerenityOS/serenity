@@ -6,14 +6,6 @@ AK_OBJS = \
     ../AK/StdLibExtras.o \
     ../AK/kmalloc.o
 
-SHAREDGRAPHICS_OBJS = \
-    ../SharedGraphics/Painter.o \
-    ../SharedGraphics/Font.o \
-    ../SharedGraphics/Rect.o \
-    ../SharedGraphics/GraphicsBitmap.o \
-    ../SharedGraphics/CharacterBitmap.o \
-    ../SharedGraphics/Color.o
-
 LIBC_OBJS = \
        stdio.o \
        unistd.o \
@@ -49,24 +41,24 @@ LIBC_OBJS = \
 
 ASM_OBJS = setjmp.no
 
-CPP_OBJS = $(AK_OBJS) $(WIDGETS_OBJS) $(LIBC_OBJS) $(SHAREDGRAPHICS_OBJS)
+CPP_OBJS = $(AK_OBJS) $(WIDGETS_OBJS) $(LIBC_OBJS)
 
 LIBRARY = LibC.a
 ARCH_FLAGS =
 STANDARD_FLAGS = -std=c++17 -nostdinc++ -nostdlib -nostdinc
-LIBC_FLAGS = -ffreestanding -fno-stack-protector -fno-builtin
+LIBC_FLAGS =
 WARNING_FLAGS = -Wextra -Wall -Wundef -Wcast-qual -Wwrite-strings -Wimplicit-fallthrough
-FLAVOR_FLAGS = -march=i686 -m32 -fno-exceptions -fno-rtti
+FLAVOR_FLAGS = -fno-exceptions -fno-rtti
 OPTIMIZATION_FLAGS = -Os
 INCLUDE_FLAGS = -I.. -I.
 
 DEFINES = -DSERENITY -DUSERLAND -DSANITIZE_PTRS
 
 CXXFLAGS = -MMD -MP $(WARNING_FLAGS) $(OPTIMIZATION_FLAGS) $(LIBC_FLAGS) $(FLAVOR_FLAGS) $(ARCH_FLAGS) $(STANDARD_FLAGS) $(INCLUDE_FLAGS) $(DEFINES)
-CXX = clang
-LD = ld
+CXX = i686-elf-g++
+LD = i686-elf-ld
 AR = ar
-LDFLAGS = -T linker.ld --strip-debug -melf_i386 --gc-sections
+LDFLAGS = -T linker.ld
 
 all: $(LIBRARY)
 

@@ -66,9 +66,9 @@ BOOTLOADER = Boot/boot.bin
 IMAGE = .floppy-image
 ARCH_FLAGS =
 STANDARD_FLAGS = -std=c++17 -nostdinc++ -nostdlib -nostdinc
-KERNEL_FLAGS = -ffreestanding -fno-stack-protector -fno-builtin
+KERNEL_FLAGS =
 WARNING_FLAGS = -Wextra -Wall -Wundef -Wcast-qual -Wwrite-strings -Wimplicit-fallthrough
-FLAVOR_FLAGS = -mregparm=3 -march=i686 -m32 -fno-exceptions -fno-rtti
+FLAVOR_FLAGS = -mregparm=3 -fno-exceptions -fno-rtti
 OPTIMIZATION_FLAGS = -Os
 INCLUDE_FLAGS = -I.. -I.
 #SUGGEST_FLAGS = -Wsuggest-final-types -Wsuggest-final-methods -Wsuggest-override #-Wsuggest-attribute=noreturn 
@@ -76,9 +76,9 @@ INCLUDE_FLAGS = -I.. -I.
 DEFINES = -DSERENITY -DKERNEL -DSANITIZE_PTRS
 
 CXXFLAGS = -MMD -MP $(WARNING_FLAGS) $(OPTIMIZATION_FLAGS) $(KERNEL_FLAGS) $(FLAVOR_FLAGS) $(ARCH_FLAGS) $(STANDARD_FLAGS) $(SUGGEST_FLAGS) $(INCLUDE_FLAGS) $(DEFINES)
-CXX = clang
-LD = ld
-LDFLAGS = -T linker.ld --strip-debug -melf_i386 --gc-sections
+CXX = ~/opt/cross/bin/i686-elf-g++
+LD = ~/opt/cross/bin/i686-elf-ld
+LDFLAGS = -T linker.ld
 
 all: $(KERNEL) $(IMAGE) kernel.map
 

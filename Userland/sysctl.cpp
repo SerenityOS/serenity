@@ -52,7 +52,7 @@ int show_all()
         perror("opendir");
         return 1;
     }
-    char pathbuf[256];
+    char pathbuf[PATH_MAX];
 
     while (auto* de = readdir(dirp)) {
         if (de->d_name[0] == '.')
