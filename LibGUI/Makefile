@@ -35,8 +35,7 @@ OBJS = $(SHAREDGRAPHICS_OBJS) $(LIBGUI_OBJS)
 LIBS = ../LibC/LibC.a
 
 LIBRARY = LibGUI.a
-ARCH_FLAGS =
-STANDARD_FLAGS = -std=c++17 -nostdinc++ -nostdlib -nostdinc
+STANDARD_FLAGS = -std=c++17
 WARNING_FLAGS = -Wextra -Wall -Wundef -Wcast-qual -Wwrite-strings -Wimplicit-fallthrough
 FLAVOR_FLAGS = -fno-exceptions -fno-rtti
 OPTIMIZATION_FLAGS = -Os
@@ -44,11 +43,10 @@ INCLUDE_FLAGS = -I../LibC -I.. -I.
 
 DEFINES = -DSERENITY -DUSERLAND -DSANITIZE_PTRS -DLIBGUI
 
-CXXFLAGS = -MMD -MP $(WARNING_FLAGS) $(OPTIMIZATION_FLAGS) $(FLAVOR_FLAGS) $(ARCH_FLAGS) $(STANDARD_FLAGS) $(INCLUDE_FLAGS) $(DEFINES)
-CXX = i686-elf-g++
-LD = i686-elf-ld
-AR = ar
-LDFLAGS =
+CXXFLAGS = -MMD -MP $(WARNING_FLAGS) $(OPTIMIZATION_FLAGS) $(FLAVOR_FLAGS) $(STANDARD_FLAGS) $(INCLUDE_FLAGS) $(DEFINES)
+CXX = i686-pc-serenity-g++
+LD = i686-pc-serenity-ld
+AR = i686-pc-serenity-ar
 
 all: $(LIBRARY)
 
