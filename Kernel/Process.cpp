@@ -223,9 +223,6 @@ Process* Process::fork(RegisterDump& regs)
     dbgprintf("fork: child=%p\n", child);
 #endif
 
-    child->m_initial_arguments = m_initial_arguments;
-    child->m_initial_environment = m_initial_environment;
-
     for (auto& region : m_regions) {
 #ifdef FORK_DEBUG
         dbgprintf("fork: cloning Region{%p} \"%s\" L%x\n", region.ptr(), region->name.characters(), region->laddr().get());
@@ -426,8 +423,46 @@ void Process::make_userspace_stack(Vector<String> arguments, Vector<String> envi
     m_stack_top3 = region->laddr().offset(default_userspace_stack_size).get();
     m_tss.esp = m_stack_top3;
 
-    m_initial_arguments = move(arguments);
-    m_initial_environment = move(environment);
+    char* stack_base = (char*)region->laddr().get();
+    int argc = arguments.size();
+    char** argv = (char**)stack_base;
+    char** env = argv + arguments.size() + 1;
+    char* bufptr = stack_base + (sizeof(char*) * (arguments.size() + 1)) + (sizeof(char*) * (environment.size() + 1));
+
+    size_t total_blob_size = 0;
+    for (auto& a : arguments)
+        total_blob_size += a.length() + 1;
+    for (auto& e : environment)
+        total_blob_size += e.length() + 1;
+
+    size_t total_meta_size = sizeof(char*) * (arguments.size() + 1) + sizeof(char*) * (environment.size() + 1);
+
+    // FIXME: It would be better if this didn't make us panic.
+    ASSERT((total_blob_size + total_meta_size) < default_userspace_stack_size);
+
+    for (size_t i = 0; i < arguments.size(); ++i) {
+        argv[i] = bufptr;
+        memcpy(bufptr, arguments[i].characters(), arguments[i].length());
+        bufptr += arguments[i].length();
+        *(bufptr++) = '\0';
+        printf("argv[%u] = %p (%s)\n", i, argv[i], argv[i]);
+    }
+    argv[arguments.size()] = nullptr;
+
+    for (size_t i = 0; i < environment.size(); ++i) {
+        env[i] = bufptr;
+        memcpy(bufptr, environment[i].characters(), environment[i].length());
+        bufptr += environment[i].length();
+        *(bufptr++) = '\0';
+        printf("env[%u] = %p (%s)\n", i, env[i], env[i]);
+    }
+    env[environment.size()] = nullptr;
+
+    // NOTE: The stack needs to be 16-byte aligned.
+    push_value_on_stack((dword)env);
+    push_value_on_stack((dword)argv);
+    push_value_on_stack((dword)argc);
+    push_value_on_stack(0);
 }
 
 int Process::exec(String path, Vector<String> arguments, Vector<String> environment)
@@ -527,45 +562,6 @@ Process* Process::create_user_process(const String& path, uid_t uid, gid_t gid, 
 #endif
     error = 0;
     return process;
-}
-
-int Process::sys$get_environment(char*** environ)
-{
-    auto* region = allocate_region(LinearAddress(), PAGE_SIZE, "environ");
-    if (!region)
-        return -ENOMEM;
-    MM.map_region(*this, *region);
-    char* envpage = (char*)region->laddr().get();
-    *environ = (char**)envpage;
-    char* bufptr = envpage + (sizeof(char*) * (m_initial_environment.size() + 1));
-    for (size_t i = 0; i < m_initial_environment.size(); ++i) {
-        (*environ)[i] = bufptr;
-        memcpy(bufptr, m_initial_environment[i].characters(), m_initial_environment[i].length());
-        bufptr += m_initial_environment[i].length();
-        *(bufptr++) = '\0';
-    }
-    (*environ)[m_initial_environment.size()] = nullptr;
-    return 0;
-}
-
-int Process::sys$get_arguments(int* argc, char*** argv)
-{
-    auto* region = allocate_region(LinearAddress(), PAGE_SIZE, "argv");
-    if (!region)
-        return -ENOMEM;
-    MM.map_region(*this, *region);
-    char* argpage = (char*)region->laddr().get();
-    *argc = m_initial_arguments.size();
-    *argv = (char**)argpage;
-    char* bufptr = argpage + (sizeof(char*) * (m_initial_arguments.size() + 1));
-    for (size_t i = 0; i < m_initial_arguments.size(); ++i) {
-        (*argv)[i] = bufptr;
-        memcpy(bufptr, m_initial_arguments[i].characters(), m_initial_arguments[i].length());
-        bufptr += m_initial_arguments[i].length();
-        *(bufptr++) = '\0';
-    }
-    (*argv)[m_initial_arguments.size()] = nullptr;
-    return 0;
 }
 
 Process* Process::create_kernel_process(String&& name, void (*e)())

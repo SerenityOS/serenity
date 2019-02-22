@@ -13,28 +13,19 @@ char** environ;
 void __malloc_init();
 void __stdio_init();
 
-int _start()
+int _start(int argc, char** argv, char** env)
 {
     errno = 0;
+    environ = env;
 
     __stdio_init();
     __malloc_init();
 
-    int status = 254;
-    int argc;
-    char** argv;
-    int rc = syscall(SC_get_arguments, &argc, &argv);
-    if (rc < 0)
-        goto epilogue;
-    rc = syscall(SC_get_environment, &environ);
-    if (rc < 0)
-        goto epilogue;
-    status = main(argc, argv);
+    int status = main(argc, argv);
 
     fflush(stdout);
     fflush(stderr);
 
-epilogue:
     syscall(SC_exit, status);
 
     // Birger's birthday <3
