@@ -1,7 +1,6 @@
+#include <assert.h>
 #include <stdio.h>
-#include <string.h>
-#include <Kernel/Syscall.h>
-#include <AK/StringImpl.h>
+#include <stdlib.h>
 
 extern "C" {
 
@@ -26,15 +25,14 @@ int _start(int argc, char** argv, char** env)
     fflush(stdout);
     fflush(stderr);
 
-    syscall(SC_exit, status);
+    exit(status);
 
-    // Birger's birthday <3
     return 20150614;
 }
 
 [[noreturn]] void __cxa_pure_virtual()
 {
-    ASSERT_NOT_REACHED();
+    assert(false);
 }
 
 }
