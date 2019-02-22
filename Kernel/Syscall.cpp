@@ -111,10 +111,6 @@ static dword handle(RegisterDump& regs, dword function, dword arg1, dword arg2, 
         current->sys$exit((int)arg1);
         ASSERT_NOT_REACHED();
         return 0;
-    case Syscall::SC_get_arguments:
-        return current->sys$get_arguments((int*)arg1, (char***)arg2);
-    case Syscall::SC_get_environment:
-        return current->sys$get_environment((char***)arg1);
     case Syscall::SC_chdir:
         return current->sys$chdir((const char*)arg1);
     case Syscall::SC_uname:

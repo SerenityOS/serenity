@@ -183,8 +183,6 @@ public:
     int sys$usleep(useconds_t usec);
     int sys$gettimeofday(timeval*);
     int sys$gethostname(char* name, size_t length);
-    int sys$get_arguments(int* argc, char*** argv);
-    int sys$get_environment(char*** environ);
     int sys$uname(utsname*);
     int sys$readlink(const char*, char*, size_t);
     int sys$ttyname_r(int fd, char*, size_t);
@@ -386,8 +384,6 @@ private:
 
     static void notify_waiters(pid_t waitee, int exit_status, int signal);
 
-    Vector<String> m_initial_arguments;
-    Vector<String> m_initial_environment;
     HashTable<gid_t> m_gids;
 
     Region* m_signal_stack_user_region { nullptr };

@@ -23,7 +23,6 @@
     __ENUMERATE_SYSCALL(getcwd) \
     __ENUMERATE_SYSCALL(gettimeofday) \
     __ENUMERATE_SYSCALL(gethostname) \
-    __ENUMERATE_SYSCALL(get_arguments) \
     __ENUMERATE_SYSCALL(chdir) \
     __ENUMERATE_SYSCALL(uname) \
     __ENUMERATE_SYSCALL(set_mmap_name) \
@@ -31,7 +30,6 @@
     __ENUMERATE_SYSCALL(write) \
     __ENUMERATE_SYSCALL(ttyname_r) \
     __ENUMERATE_SYSCALL(stat) \
-    __ENUMERATE_SYSCALL(get_environment) \
     __ENUMERATE_SYSCALL(getsid) \
     __ENUMERATE_SYSCALL(setsid) \
     __ENUMERATE_SYSCALL(getpgid) \
