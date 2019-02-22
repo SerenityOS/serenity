@@ -15,8 +15,8 @@
 #define SANITIZE_KMALLOC
 
 struct [[gnu::packed]] allocation_t {
-    dword start;
-    dword nchunk;
+    size_t start;
+    size_t nchunk;
 };
 
 #define CHUNK_SIZE  64
@@ -41,7 +41,7 @@ bool is_kmalloc_address(const void* ptr)
 {
     if (ptr >= (byte*)ETERNAL_BASE_PHYSICAL && ptr < s_next_eternal_ptr)
         return true;
-    return (dword)ptr >= BASE_PHYSICAL && (dword)ptr <= (BASE_PHYSICAL + POOL_SIZE);
+    return (size_t)ptr >= BASE_PHYSICAL && (size_t)ptr <= (BASE_PHYSICAL + POOL_SIZE);
 }
 
 void kmalloc_init()
@@ -69,7 +69,7 @@ void* kmalloc_eternal(size_t size)
 void* kmalloc_aligned(size_t size, size_t alignment)
 {
     void* ptr = kmalloc(size + alignment + sizeof(void*));
-    dword max_addr = (dword)ptr + alignment;
+    size_t max_addr = (size_t)ptr + alignment;
     void* aligned_ptr = (void*)(max_addr - (max_addr % alignment));
 
     ((void**)aligned_ptr)[-1] = ptr;
@@ -84,18 +84,18 @@ void kfree_aligned(void* ptr)
 void* kmalloc_page_aligned(size_t size)
 {
     void* ptr = kmalloc_aligned(size, PAGE_SIZE);
-    dword d = (dword)ptr;
+    size_t d = (size_t)ptr;
     ASSERT((d & PAGE_MASK) == d);
     return ptr;
 }
 
-void* kmalloc_impl(dword size)
+void* kmalloc_impl(size_t size)
 {
     InterruptDisabler disabler;
 
-    dword chunks_needed, chunks_here, first_chunk;
-    dword real_size;
-    dword i, j, k;
+    size_t chunks_needed, chunks_here, first_chunk;
+    size_t real_size;
+    size_t i, j, k;
 
     /* We need space for the allocation_t structure at the head of the block. */
     real_size = size + sizeof(allocation_t);
@@ -174,16 +174,8 @@ void kfree(void *ptr)
 
     allocation_t *a = (allocation_t *)((((byte *)ptr) - sizeof(allocation_t)));
 
-#if 0
-    dword hdr = (dword)a;
-    dword mhdr = hdr & ~0x7;
-    kprintf("hdr / mhdr %p / %p\n", hdr, mhdr);
-    ASSERT(hdr == mhdr);
-#endif
-
-    for (dword k = a->start; k < (a->start + a->nchunk); ++k) {
+    for (size_t k = a->start; k < (a->start + a->nchunk); ++k)
         alloc_map[k / 8] &= ~(1 << (k % 8));
-    }
 
     sum_alloc -= a->nchunk * CHUNK_SIZE;
     sum_free  += a->nchunk * CHUNK_SIZE;
@@ -213,12 +205,12 @@ void operator delete[](void* ptr)
     return kfree(ptr);
 }
 
-void operator delete(void* ptr, unsigned int)
+void operator delete(void* ptr, size_t)
 {
     return kfree(ptr);
 }
 
-void operator delete[](void* ptr, unsigned int)
+void operator delete[](void* ptr, size_t)
 {
     return kfree(ptr);
 }

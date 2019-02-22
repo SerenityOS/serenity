@@ -6,38 +6,41 @@
 
 extern "C" {
 
-void memcpy(void* dest_ptr, const void* src_ptr, dword n)
+void* memcpy(void* dest_ptr, const void* src_ptr, size_t n)
 {
     if (n >= 1024) {
-        mmx_memcpy(dest_ptr, src_ptr, n);
-        return;
+        return mmx_memcpy(dest_ptr, src_ptr, n);
     }
 
-    dword dest = (dword)dest_ptr;
-    dword src = (dword)src_ptr;
+    size_t dest = (size_t)dest_ptr;
+    size_t src = (size_t)src_ptr;
     // FIXME: Support starting at an unaligned address.
     if (!(dest & 0x3) && !(src & 0x3) && n >= 12) {
-        size_t dwords = n / sizeof(dword);
+        size_t size_ts = n / sizeof(size_t);
         asm volatile(
             "rep movsl\n"
             : "=S"(src), "=D"(dest)
-            : "S"(src), "D"(dest), "c"(dwords)
+            : "S"(src), "D"(dest), "c"(size_ts)
             : "memory"
         );
-        n -= dwords * sizeof(dword);
+        n -= size_ts * sizeof(size_t);
         if (n == 0)
-            return;
+            return dest_ptr;
     }
     asm volatile(
         "rep movsb\n"
         :: "S"(src), "D"(dest), "c"(n)
         : "memory"
     );
+    return dest_ptr;
 }
 
-void strcpy(char* dest, const char *src)
+char* strcpy(char* dest, const char *src)
 {
-    while ((*dest++ = *src++) != '\0');
+    auto* dest_ptr = dest;
+    auto* src_ptr = src;
+    while ((*dest_ptr++ = *src_ptr++) != '\0');
+    return dest;
 }
 
 char* strncpy(char* dest, const char* src, size_t n)
@@ -50,22 +53,22 @@ char* strncpy(char* dest, const char* src, size_t n)
     return dest;
 }
 
-void* memset(void* dest_ptr, byte c, dword n)
+void* memset(void* dest_ptr, int c, size_t n)
 {
-    dword dest = (dword)dest_ptr;
+    size_t dest = (size_t)dest_ptr;
     // FIXME: Support starting at an unaligned address.
     if (!(dest & 0x3) && n >= 12) {
-        size_t dwords = n / sizeof(dword);
-        dword expanded_c = c;
+        size_t size_ts = n / sizeof(size_t);
+        size_t expanded_c = (byte)c;
         expanded_c |= expanded_c << 8;
         expanded_c |= expanded_c << 16;
         asm volatile(
             "rep stosl\n"
             : "=D"(dest)
-            : "D"(dest), "c"(dwords), "a"(expanded_c)
+            : "D"(dest), "c"(size_ts), "a"(expanded_c)
             : "memory"
         );
-        n -= dwords * sizeof(dword);
+        n -= size_ts * sizeof(size_t);
         if (n == 0)
             return dest_ptr;
     }
@@ -89,9 +92,9 @@ char* strrchr(const char* str, int ch)
     return last;
 }
 
-dword strlen(const char* str)
+size_t strlen(const char* str)
 {
-    dword len = 0;
+    size_t len = 0;
     while (*(str++))
         ++len;
     return len;
