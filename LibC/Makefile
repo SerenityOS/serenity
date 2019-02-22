@@ -45,7 +45,7 @@ LIBC_OBJS = \
        sys/socket.o \
        poll.o \
        locale.o \
-       entry.o
+       crt0.o
 
 ASM_OBJS = setjmp.no
 
