@@ -149,11 +149,12 @@ void __malloc_init()
         perror("set_mmap_name failed");
 }
 
-void* calloc(size_t nmemb, size_t)
+void* calloc(size_t count, size_t size)
 {
-    (void) nmemb;
-    ASSERT_NOT_REACHED();
-    return nullptr;
+    size_t new_size = count * size;
+    auto* ptr = malloc(new_size);
+    memset(ptr, 0, new_size);
+    return ptr;
 }
 
 void* realloc(void *ptr, size_t size)
@@ -198,6 +199,11 @@ char* getenv(const char* name)
         }
     }
     return nullptr;
+}
+
+double atof(const char*)
+{
+    assert(false);
 }
 
 int atoi(const char* str)
@@ -296,6 +302,11 @@ ldiv_t ldiv(long numerator, long denominator)
     result.quot = numerator / denominator;
     result.rem = numerator % denominator;
     return result;
+}
+
+size_t mbstowcs(wchar_t*, const char*, size_t)
+{
+    assert(false);
 }
 
 }

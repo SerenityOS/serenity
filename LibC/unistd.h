@@ -6,6 +6,8 @@
 
 __BEGIN_DECLS
 
+#define HZ 1000
+
 extern char** environ;
 
 int create_shared_buffer(pid_t peer_pid, size_t, void** buffer);

@@ -14,6 +14,11 @@
 
 extern "C" {
 
+int chown(const char* pathname, uid_t owner, gid_t group)
+{
+    assert(false);
+}
+
 pid_t fork()
 {
     int rc = syscall(SC_fork);

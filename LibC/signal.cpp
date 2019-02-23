@@ -18,6 +18,12 @@ int killpg(int pgrp, int sig)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
+int raise(int sig)
+{
+    // FIXME: Support multi-threaded programs.
+    return kill(getpid(), sig);
+}
+
 sighandler_t signal(int signum, sighandler_t handler)
 {
     struct sigaction new_act;
