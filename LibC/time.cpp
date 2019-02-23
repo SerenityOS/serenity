@@ -83,6 +83,16 @@ struct tm* localtime(const time_t* t)
     return &tm_buf;
 }
 
+struct tm* gmtime(const time_t* t)
+{
+    return localtime(t);
+}
+
+size_t strftime(char *s, size_t max, const char *format, const struct tm *tm)
+{
+    assert(false);
+}
+
 long timezone;
 long altzone;
 char* tzname[2];

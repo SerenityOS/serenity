@@ -4,7 +4,7 @@ if [ $(id -u) != 0 ]; then
 fi
 rm -vf _fs_contents.lock
 rm -vf _fs_contents
-dd if=/dev/zero of=_fs_contents bs=1M count=12
+dd if=/dev/zero of=_fs_contents bs=1M count=256
 mke2fs _fs_contents
 chown 1000:1000 _fs_contents
 mkdir -vp mnt
@@ -32,6 +32,7 @@ ln -s /proc/self/fd/0 mnt/dev/stdin
 ln -s /proc/self/fd/1 mnt/dev/stdout
 ln -s /proc/self/fd/2 mnt/dev/stderr
 cp -vR ../Base/* mnt/
+cp -vR ../Root/* mnt/
 mkdir mnt/home/anon
 mkdir mnt/home/nona
 chown -vR 100:100 mnt/home/anon

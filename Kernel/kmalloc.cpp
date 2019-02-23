@@ -19,7 +19,7 @@ struct [[gnu::packed]] allocation_t {
     size_t nchunk;
 };
 
-#define CHUNK_SIZE  64
+#define CHUNK_SIZE  32
 #define POOL_SIZE   (1024 * 1024)
 
 #define ETERNAL_BASE_PHYSICAL 0x100000

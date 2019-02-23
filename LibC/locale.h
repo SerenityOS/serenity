@@ -6,6 +6,7 @@ enum {
     LC_ALL,
     LC_NUMERIC,
     LC_CTYPE,
+    LC_COLLATE,
 };
 
 __BEGIN_DECLS

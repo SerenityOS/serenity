@@ -263,10 +263,20 @@ static int try_exec(const char* path, char** argv)
     int ret = execve(path, argv, environ);
     assert(ret < 0);
 
+    {
     const char* search_path = "/bin";
     char pathbuf[128];
     sprintf(pathbuf, "%s/%s", search_path, argv[0]);
     ret = execve(pathbuf, argv, environ);
+    assert(ret < 0);
+    }
+
+    {
+    const char* search_path = "/usr/bin";
+    char pathbuf[128];
+    sprintf(pathbuf, "%s/%s", search_path, argv[0]);
+    ret = execve(pathbuf, argv, environ);
+    }
     if (ret == -1)
         return -1;
     return ret;
