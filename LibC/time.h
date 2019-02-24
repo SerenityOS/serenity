@@ -29,9 +29,11 @@ extern int daylight;
 
 int gettimeofday(struct timeval*, struct timezone* tz);
 struct tm* localtime(const time_t*);
+struct tm *gmtime(const time_t*);
 time_t time(time_t*);
 char* ctime(const time_t*);
 void tzset();
+char *asctime(const struct tm*);
 
 #define difftime(t1,t0) (double)(t1 - t0)
 

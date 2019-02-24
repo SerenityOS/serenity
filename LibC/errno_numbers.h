@@ -46,14 +46,15 @@
     __ERROR(EADDRINUSE,     "Address in use") \
     __ERROR(EWHYTHO,        "Failed without setting an error code (Bug!)") \
     __ERROR(ENOTEMPTY,      "Directory not empty") \
+    __ERROR(EDOM,           "Math argument out of domain") \
     __ERROR(ECONNREFUSED,   "Connection refused") \
     __ERROR(EMAXERRNO,      "The highest errno +1 :^)")
 
 
 enum __errno_values {
-#undef __ERROR
+#undef __ENUMERATE_ERROR
 #define __ERROR(a, b) a,
     __ENUMERATE_ALL_ERRORS
-#undef __ERROR
+#undef __ENUMERATE_ERROR
     __errno_count
 };

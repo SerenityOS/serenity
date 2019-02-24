@@ -355,6 +355,14 @@ FILE* fopen(const char* pathname, const char* mode)
     return make_FILE(fd);
 }
 
+FILE* freopen(const char* pathname, const char* mode, FILE* stream)
+{
+    (void)pathname;
+    (void)mode;
+    (void)stream;
+    assert(false);
+}
+
 FILE* fdopen(int fd, const char* mode)
 {
     assert(!strcmp(mode, "r") || !strcmp(mode, "rb"));

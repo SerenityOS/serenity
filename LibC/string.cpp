@@ -247,11 +247,11 @@ const char* sys_errlist[] = {
     __ENUMERATE_ALL_ERRORS
 #undef __ERROR
 };
-int sys_nerr = __errno_count;
+int sys_nerr = EMAXERRNO;
 
 char* strerror(int errnum)
 {
-    if (errnum >= __errno_count) {
+    if (errnum >= EMAXERRNO) {
         printf("strerror() missing string for errnum=%d\n", errnum);
         return const_cast<char*>("Unknown error");
     }

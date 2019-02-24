@@ -7,18 +7,18 @@ __BEGIN_DECLS
 
 typedef unsigned int u_int;
 typedef unsigned long u_long;
-typedef __PTRDIFF_TYPE__ ptrdiff_t;
-typedef unsigned long int __uintmax_t;
-typedef __uintmax_t uintmax_t;
-typedef long int __intmax_t;
-typedef __intmax_t intmax_t;
 
 typedef uint32_t uid_t;
 typedef uint32_t gid_t;
-typedef int16_t pid_t;
+
+typedef int __pid_t;
+#define pid_t __pid_t
 
 typedef __SIZE_TYPE__ size_t;
-typedef int32_t ssize_t;
+typedef int __ssize_t;
+#define ssize_t __ssize_t
+
+typedef __WINT_TYPE__ wint_t;
 
 typedef uint32_t ino_t;
 typedef int32_t off_t;

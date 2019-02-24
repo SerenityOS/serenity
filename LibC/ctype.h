@@ -70,6 +70,28 @@ ALWAYS_INLINE int __iscntrl(int c)
     return (c >= 0 && c <= 0x1f) || c == 0x7f;
 }
 
+ALWAYS_INLINE int __isxdigit(int c)
+{
+    return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
+}
+
+#ifdef __cplusplus
+#define __CTYPE_FUNC(name) static inline int name(int c) { return __ ## name(c); }
+
+__CTYPE_FUNC(isascii)
+__CTYPE_FUNC(isspace)
+__CTYPE_FUNC(islower)
+__CTYPE_FUNC(isupper)
+__CTYPE_FUNC(tolower)
+__CTYPE_FUNC(toupper)
+__CTYPE_FUNC(isdigit)
+__CTYPE_FUNC(ispunct)
+__CTYPE_FUNC(isprint)
+__CTYPE_FUNC(isalpha)
+__CTYPE_FUNC(isalnum)
+__CTYPE_FUNC(iscntrl)
+__CTYPE_FUNC(isxdigit)
+#else
 #define isascii(c) __isascii(c)
 #define isspace(c) __isspace(c)
 #define islower(c) __islower(c)
@@ -82,5 +104,7 @@ ALWAYS_INLINE int __iscntrl(int c)
 #define isalpha(c) __isalpha(c)
 #define isalnum(c) __isalnum(c)
 #define iscntrl(c) __iscntrl(c)
+#define isxdigit(c) __isxdigit(c)
+#endif
 
 __END_DECLS

@@ -85,7 +85,13 @@ struct tm* localtime(const time_t* t)
 
 struct tm* gmtime(const time_t* t)
 {
+    // FIXME: This is obviously not correct. What about timezones bro?
     return localtime(t);
+}
+
+char *asctime(const struct tm*)
+{
+    assert(false);
 }
 
 size_t strftime(char *s, size_t max, const char *format, const struct tm *tm)

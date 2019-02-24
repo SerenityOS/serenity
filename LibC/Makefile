@@ -10,6 +10,7 @@ LIBC_OBJS = \
        stdio.o \
        unistd.o \
        string.o \
+       strings.o \
        mman.o \
        dirent.o \
        stdlib.o \
@@ -35,6 +36,7 @@ LIBC_OBJS = \
        utime.o \
        sys/select.o \
        sys/socket.o \
+       sys/wait.o \
        poll.o \
        locale.o \
        crt0.o

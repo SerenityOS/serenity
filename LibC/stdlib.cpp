@@ -309,4 +309,24 @@ size_t mbstowcs(wchar_t*, const char*, size_t)
     assert(false);
 }
 
+int atexit(void (*function)())
+{
+    (void)function;
+    assert(false);
+}
+
+long strtol(const char*, char** endptr, int base)
+{
+    (void)endptr;
+    (void)base;
+    assert(false);
+}
+
+unsigned long strtoul(const char*, char** endptr, int base)
+{
+    (void)endptr;
+    (void)base;
+    assert(false);
+}
+
 }
