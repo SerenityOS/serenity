@@ -18,6 +18,6 @@
 #define offsetof(type, member) __builtin_offsetof(type, member)
 
 #ifdef __cplusplus
-extern "C" int main(int, char**);
+//extern "C" int main(int, char**);
 #endif
 

@@ -16,6 +16,8 @@ void* realloc(void *ptr, size_t);
 char* getenv(const char* name);
 int atoi(const char*);
 long atol(const char*);
+long strtol(const char*, char** endptr, int base);
+unsigned long strtoul(const char*, char** endptr, int base);
 void qsort(void* base, size_t nmemb, size_t size, int (*compar)(const void *, const void *));
 __attribute__((noreturn)) void exit(int status);
 __attribute__((noreturn)) void abort();

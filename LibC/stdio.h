@@ -1,5 +1,7 @@
 #pragma once
 
+#define _STDIO_H // Make GMP believe we exist.
+
 #include <sys/cdefs.h>
 #include <sys/types.h>
 #include <stdarg.h>
@@ -36,6 +38,7 @@ extern FILE* stdout;
 extern FILE* stderr;
 
 char* fgets(char* buffer, int size, FILE*);
+int fputc(int ch, FILE*);
 int fileno(FILE*);
 int fgetc(FILE*);
 int getc(FILE*);
