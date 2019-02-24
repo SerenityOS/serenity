@@ -15,3 +15,5 @@ void init_ksyms();
 extern bool ksyms_ready;
 extern dword ksym_lowest_address;
 extern dword ksym_highest_address;
+
+void dump_backtrace(bool use_ksyms);

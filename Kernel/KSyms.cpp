@@ -71,7 +71,7 @@ static void load_ksyms_from_data(const ByteBuffer& buffer)
     ksyms_ready = true;
 }
 
-void dump_backtrace(bool use_ksyms)
+[[gnu::noinline]] void dump_backtrace_impl(dword ebp, bool use_ksyms)
 {
     if (!current) {
         hang();
@@ -87,13 +87,13 @@ void dump_backtrace(bool use_ksyms)
     };
     Vector<RecognizedSymbol> recognized_symbols;
     if (use_ksyms) {
-        for (dword* stack_ptr = (dword*)&use_ksyms; current->validate_read_from_kernel(LinearAddress((dword)stack_ptr)); stack_ptr = (dword*)*stack_ptr) {
+        for (dword* stack_ptr = (dword*)ebp; current->validate_read_from_kernel(LinearAddress((dword)stack_ptr)); stack_ptr = (dword*)*stack_ptr) {
             dword retaddr = stack_ptr[1];
             if (auto* ksym = ksymbolicate(retaddr))
                 recognized_symbols.append({ retaddr, ksym });
         }
     } else{
-        for (dword* stack_ptr = (dword*)&use_ksyms; current->validate_read_from_kernel(LinearAddress((dword)stack_ptr)); stack_ptr = (dword*)*stack_ptr) {
+        for (dword* stack_ptr = (dword*)ebp; current->validate_read_from_kernel(LinearAddress((dword)stack_ptr)); stack_ptr = (dword*)*stack_ptr) {
             dword retaddr = stack_ptr[1];
             kprintf("%x (next: %x)\n", retaddr, stack_ptr ? (dword*)*stack_ptr : 0);
         }
@@ -105,8 +105,15 @@ void dump_backtrace(bool use_ksyms)
     }
     for (auto& symbol : recognized_symbols) {
         unsigned offset = symbol.address - symbol.ksym->address;
-        dbgprintf("%p  %s +%u\n", symbol.address, symbol.ksym->name, offset);
+        kprintf("%p  %s +%u\n", symbol.address, symbol.ksym->name, offset);
     }
+}
+
+void dump_backtrace(bool use_ksyms)
+{
+    dword ebp;
+    asm volatile("movl %%ebp, %%eax":"=a"(ebp));
+    dump_backtrace_impl(ebp, use_ksyms);
 }
 
 void init_ksyms()
