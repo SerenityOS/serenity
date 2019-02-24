@@ -424,7 +424,7 @@ RetainPtr<Inode> Ext2FS::get_inode(InodeIdentifier inode) const
     if (it != m_inode_cache.end())
         return (*it).value;
     auto new_inode = adopt(*new Ext2FSInode(const_cast<Ext2FS&>(*this), inode.index()));
-    memcpy(&new_inode->m_raw_inode, reinterpret_cast<ext2_inode*>(block.offset_pointer(offset)), inode_size());
+    memcpy(&new_inode->m_raw_inode, reinterpret_cast<ext2_inode*>(block.offset_pointer(offset)), sizeof(ext2_inode));
     m_inode_cache.set(inode.index(), new_inode.copy_ref());
     return new_inode;
 }
