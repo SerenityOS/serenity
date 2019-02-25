@@ -94,7 +94,7 @@ char *asctime(const struct tm*)
     assert(false);
 }
 
-size_t strftime(char *s, size_t max, const char *format, const struct tm *tm)
+size_t strftime(char*, size_t, const char*, const struct tm*)
 {
     assert(false);
 }

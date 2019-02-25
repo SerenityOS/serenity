@@ -16,6 +16,9 @@ extern "C" {
 
 int chown(const char* pathname, uid_t owner, gid_t group)
 {
+    (void)pathname;
+    (void)owner;
+    (void)group;
     assert(false);
 }
 

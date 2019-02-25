@@ -12,6 +12,8 @@ GApplication& GApplication::the()
 
 GApplication::GApplication(int argc, char** argv)
 {
+    (void)argc;
+    (void)argv;
     ASSERT(!s_the);
     s_the = this;
     m_event_loop = make<GEventLoop>();

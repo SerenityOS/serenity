@@ -18,7 +18,6 @@
 #include <LibGUI/GApplication.h>
 #include <signal.h>
 
-static GWindow* make_font_test_window();
 static GWindow* make_launcher_window();
 
 void handle_sigchld(int)
@@ -35,45 +34,11 @@ int main(int argc, char** argv)
 
     signal(SIGCHLD, handle_sigchld);
 
-#if 0
-    auto* font_test_window = make_font_test_window();
-    font_test_window->show();
-#endif
-
     auto* launcher_window = make_launcher_window();
     launcher_window->set_should_exit_app_on_close(true);
     launcher_window->show();
 
     return app.exec();
-}
-
-GWindow* make_font_test_window()
-{
-    auto* window = new GWindow;
-    window->set_title("Font test");
-    window->set_rect({ 480, 100, 300, 80 });
-
-    auto* widget = new GWidget;
-    window->set_main_widget(widget);
-    widget->set_relative_rect({ 0, 0, 300, 80 });
-
-    auto* l1 = new GLabel(widget);
-    l1->set_relative_rect({ 0, 0, 300, 20 });
-    l1->set_text("0123456789");
-
-    auto* l2 = new GLabel(widget);
-    l2->set_relative_rect({ 0, 20, 300, 20 });
-    l2->set_text("ABCDEFGHIJKLMNOPQRSTUVWXYZ");
-
-    auto* l3 = new GLabel(widget);
-    l3->set_relative_rect({ 0, 40, 300, 20 });
-    l3->set_text("abcdefghijklmnopqrstuvwxyz");
-
-    auto* l4 = new GLabel(widget);
-    l4->set_relative_rect({ 0, 60, 300, 20 });
-    l4->set_text("!\"#$%&'()*+,-./:;<=>?@[\\]^_{|}~");
-
-    return window;
 }
 
 GWindow* make_launcher_window()
