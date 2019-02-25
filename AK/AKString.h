@@ -44,6 +44,11 @@ public:
     {
     }
 
+    String(Retained<StringImpl>&& impl)
+        : m_impl(move(impl))
+    {
+    }
+
     unsigned to_uint(bool& ok) const;
 
     String to_lowercase() const

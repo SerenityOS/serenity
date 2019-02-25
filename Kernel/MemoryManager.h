@@ -134,7 +134,7 @@ class Region : public Retainable<Region> {
     friend class MemoryManager;
 public:
     Region(LinearAddress, size_t, String&&, bool r, bool w, bool cow = false);
-    Region(LinearAddress, size_t, RetainPtr<VMObject>&&, size_t offset_in_vmo, String&&, bool r, bool w, bool cow = false);
+    Region(LinearAddress, size_t, Retained<VMObject>&&, size_t offset_in_vmo, String&&, bool r, bool w, bool cow = false);
     Region(LinearAddress, size_t, RetainPtr<Inode>&&, String&&, bool r, bool w);
     ~Region();
 
@@ -155,7 +155,7 @@ public:
     bool is_bitmap() const { return m_is_bitmap; }
     void set_is_bitmap(bool b) { m_is_bitmap = b; }
 
-    RetainPtr<Region> clone();
+    Retained<Region> clone();
     bool contains(LinearAddress laddr) const
     {
         return laddr >= m_laddr && laddr < m_laddr.offset(size());
@@ -208,7 +208,7 @@ private:
     LinearAddress m_laddr;
     size_t m_size { 0 };
     size_t m_offset_in_vmo { 0 };
-    RetainPtr<VMObject> m_vmo;
+    Retained<VMObject> m_vmo;
     String m_name;
     bool m_readable { true };
     bool m_writable { true };
@@ -388,8 +388,8 @@ private:
 
     LinearAddress m_quickmap_addr;
 
-    Vector<RetainPtr<PhysicalPage>> m_free_physical_pages;
-    Vector<RetainPtr<PhysicalPage>> m_free_supervisor_physical_pages;
+    Vector<Retained<PhysicalPage>> m_free_physical_pages;
+    Vector<Retained<PhysicalPage>> m_free_supervisor_physical_pages;
 
     HashTable<VMObject*> m_vmos;
     HashTable<Region*> m_regions;

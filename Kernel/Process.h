@@ -237,7 +237,7 @@ public:
     void set_tty(TTY* tty) { m_tty = tty; }
 
     size_t region_count() const { return m_regions.size(); }
-    const Vector<RetainPtr<Region>>& regions() const { return m_regions; }
+    const Vector<Retained<Region>>& regions() const { return m_regions; }
     void dump_regions();
 
     void did_schedule() { ++m_times_scheduled; }
@@ -292,7 +292,7 @@ public:
     bool has_used_fpu() const { return m_has_used_fpu; }
     void set_has_used_fpu(bool b) { m_has_used_fpu = b; }
 
-    Region* allocate_region_with_vmo(LinearAddress, size_t, RetainPtr<VMObject>&&, size_t offset_in_vmo, String&& name, bool is_readable, bool is_writable);
+    Region* allocate_region_with_vmo(LinearAddress, size_t, Retained<VMObject>&&, size_t offset_in_vmo, String&& name, bool is_readable, bool is_writable);
     Region* allocate_file_backed_region(LinearAddress, size_t, RetainPtr<Inode>&&, String&& name, bool is_readable, bool is_writable);
     Region* allocate_region(LinearAddress, size_t, String&& name, bool is_readable = true, bool is_writable = true, bool commit = true);
     bool deallocate_region(Region& region);
@@ -371,7 +371,7 @@ private:
 
     Region* region_from_range(LinearAddress, size_t);
 
-    Vector<RetainPtr<Region>> m_regions;
+    Vector<Retained<Region>> m_regions;
 
     // FIXME: Implement some kind of ASLR?
     LinearAddress m_next_region;

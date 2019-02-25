@@ -63,13 +63,13 @@ GScrollBar::GScrollBar(Orientation orientation, GWidget* parent)
     , m_orientation(orientation)
 {
     if (!s_up_arrow_bitmap)
-        s_up_arrow_bitmap = CharacterBitmap::create_from_ascii(s_up_arrow_bitmap_data, 9, 9).leak_ref();
+        s_up_arrow_bitmap = &CharacterBitmap::create_from_ascii(s_up_arrow_bitmap_data, 9, 9).leak_ref();
     if (!s_down_arrow_bitmap)
-        s_down_arrow_bitmap = CharacterBitmap::create_from_ascii(s_down_arrow_bitmap_data, 9, 9).leak_ref();
+        s_down_arrow_bitmap = &CharacterBitmap::create_from_ascii(s_down_arrow_bitmap_data, 9, 9).leak_ref();
     if (!s_left_arrow_bitmap)
-        s_left_arrow_bitmap = CharacterBitmap::create_from_ascii(s_left_arrow_bitmap_data, 9, 9).leak_ref();
+        s_left_arrow_bitmap = &CharacterBitmap::create_from_ascii(s_left_arrow_bitmap_data, 9, 9).leak_ref();
     if (!s_right_arrow_bitmap)
-        s_right_arrow_bitmap = CharacterBitmap::create_from_ascii(s_right_arrow_bitmap_data, 9, 9).leak_ref();
+        s_right_arrow_bitmap = &CharacterBitmap::create_from_ascii(s_right_arrow_bitmap_data, 9, 9).leak_ref();
 
     if (m_orientation == Orientation::Vertical) {
         set_preferred_size({ 15, 0 });

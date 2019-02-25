@@ -10,11 +10,11 @@ enum ShouldChomp { NoChomp, Chomp };
 
 class StringImpl : public Retainable<StringImpl> {
 public:
-    static RetainPtr<StringImpl> create_uninitialized(size_t length, char*& buffer);
+    static Retained<StringImpl> create_uninitialized(size_t length, char*& buffer);
     static RetainPtr<StringImpl> create(const char* cstring, ShouldChomp = NoChomp);
     static RetainPtr<StringImpl> create(const char* cstring, size_t length, ShouldChomp = NoChomp);
-    RetainPtr<StringImpl> to_lowercase() const;
-    RetainPtr<StringImpl> to_uppercase() const;
+    Retained<StringImpl> to_lowercase() const;
+    Retained<StringImpl> to_uppercase() const;
 
     static StringImpl& the_empty_stringimpl();
 

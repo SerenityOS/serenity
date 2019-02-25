@@ -15,19 +15,18 @@
 #endif
 
 Painter::Painter(GraphicsBitmap& bitmap)
+    : m_target(bitmap)
 {
     m_font = &Font::default_font();
-    m_target = &bitmap;
     m_clip_rect = { { 0, 0 }, bitmap.size() };
 }
 
 #ifdef LIBGUI
 Painter::Painter(GWidget& widget)
     : m_font(&widget.font())
+    , m_window(widget.window())
+    , m_target(*m_window->backing())
 {
-    m_window = widget.window();
-    m_target = m_window->backing();
-    ASSERT(m_target);
     m_translation.move_by(widget.window_relative_rect().location());
     // NOTE: m_clip_rect is in Window coordinates since we are painting into its backing store.
     m_clip_rect = widget.window_relative_rect();
@@ -37,7 +36,6 @@ Painter::Painter(GWidget& widget)
 
 Painter::~Painter()
 {
-    m_target = nullptr;
 }
 
 void Painter::fill_rect_with_draw_op(const Rect& a_rect, Color color)

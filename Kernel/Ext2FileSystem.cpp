@@ -1216,14 +1216,14 @@ RetainPtr<Inode> Ext2FSInode::parent() const
     unsigned group_index = fs().group_index_from_inode(index());
     unsigned first_inode_in_group = fs().inodes_per_group() * (group_index - 1);
 
-    Vector<RetainPtr<Ext2FSInode>> directories_in_group;
+    Vector<Retained<Ext2FSInode>> directories_in_group;
 
     for (unsigned i = 0; i < fs().inodes_per_group(); ++i) {
         auto group_member = fs().get_inode({ fsid(), first_inode_in_group + i });
         if (!group_member)
             continue;
         if (group_member->is_directory())
-            directories_in_group.append(move(group_member));
+            directories_in_group.append(*group_member);
     }
 
     for (auto& directory : directories_in_group) {
