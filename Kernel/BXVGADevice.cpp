@@ -132,12 +132,12 @@ bool BXVGADevice::can_write(Process&) const
     ASSERT_NOT_REACHED();
 }
 
-ssize_t BXVGADevice::read(Process&, byte*, size_t)
+ssize_t BXVGADevice::read(Process&, byte*, ssize_t)
 {
     ASSERT_NOT_REACHED();
 }
 
-ssize_t BXVGADevice::write(Process&, const byte*, size_t)
+ssize_t BXVGADevice::write(Process&, const byte*, ssize_t)
 {
     ASSERT_NOT_REACHED();
 }

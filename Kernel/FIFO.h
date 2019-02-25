@@ -16,8 +16,8 @@ public:
     void open(Direction);
     void close(Direction);
 
-    ssize_t write(const byte*, size_t);
-    ssize_t read(byte*, size_t);
+    ssize_t write(const byte*, ssize_t);
+    ssize_t read(byte*, ssize_t);
 
     bool can_read() const;
     bool can_write() const;

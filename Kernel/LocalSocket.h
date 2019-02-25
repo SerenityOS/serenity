@@ -16,8 +16,8 @@ public:
     virtual void attach_fd(SocketRole) override;
     virtual void detach_fd(SocketRole) override;
     virtual bool can_read(SocketRole) const override;
-    virtual ssize_t read(SocketRole, byte*, size_t) override;
-    virtual ssize_t write(SocketRole, const byte*, size_t) override;
+    virtual ssize_t read(SocketRole, byte*, ssize_t) override;
+    virtual ssize_t write(SocketRole, const byte*, ssize_t) override;
     virtual bool can_write(SocketRole) const override;
 
 private:

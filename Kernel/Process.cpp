@@ -199,8 +199,10 @@ int Process::sys$munmap(void* addr, size_t size)
     return 0;
 }
 
-int Process::sys$gethostname(char* buffer, size_t size)
+int Process::sys$gethostname(char* buffer, ssize_t size)
 {
+    if (size < 0)
+        return -EINVAL;
     if (!validate_write(buffer, size))
         return -EFAULT;
     LOCKER(*s_hostname_lock);
@@ -971,8 +973,10 @@ const FileDescriptor* Process::file_descriptor(int fd) const
     return nullptr;
 }
 
-ssize_t Process::sys$get_dir_entries(int fd, void* buffer, size_t size)
+ssize_t Process::sys$get_dir_entries(int fd, void* buffer, ssize_t size)
 {
+    if (size < 0)
+        return -EINVAL;
     if (!validate_write(buffer, size))
         return -EFAULT;
     auto* descriptor = file_descriptor(fd);
@@ -989,8 +993,10 @@ int Process::sys$lseek(int fd, off_t offset, int whence)
     return descriptor->seek(offset, whence);
 }
 
-int Process::sys$ttyname_r(int fd, char* buffer, size_t size)
+int Process::sys$ttyname_r(int fd, char* buffer, ssize_t size)
 {
+    if (size < 0)
+        return -EINVAL;
     if (!validate_write(buffer, size))
         return -EFAULT;
     auto* descriptor = file_descriptor(fd);
@@ -1005,8 +1011,10 @@ int Process::sys$ttyname_r(int fd, char* buffer, size_t size)
     return 0;
 }
 
-int Process::sys$ptsname_r(int fd, char* buffer, size_t size)
+int Process::sys$ptsname_r(int fd, char* buffer, ssize_t size)
 {
+    if (size < 0)
+        return -EINVAL;
     if (!validate_write(buffer, size))
         return -EFAULT;
     auto* descriptor = file_descriptor(fd);
@@ -1022,8 +1030,10 @@ int Process::sys$ptsname_r(int fd, char* buffer, size_t size)
     return 0;
 }
 
-ssize_t Process::sys$write(int fd, const void* data, size_t size)
+ssize_t Process::sys$write(int fd, const byte* data, ssize_t size)
 {
+    if (size < 0)
+        return -EINVAL;
     if (!validate_read(data, size))
         return -EFAULT;
 #ifdef DEBUG_IO
@@ -1074,26 +1084,21 @@ ssize_t Process::sys$write(int fd, const void* data, size_t size)
         if (nwritten == 0)
             return -EINTR;
     }
-#ifdef DEBUG_IO
-    dbgprintf("%s(%u) sys$write: nwritten=%u\n", name().characters(), pid(), nwritten);
-#endif
     return nwritten;
 }
 
-ssize_t Process::sys$read(int fd, void* outbuf, size_t nread)
+ssize_t Process::sys$read(int fd, byte* buffer, ssize_t size)
 {
-    if (!validate_write(outbuf, nread))
+    if (size < 0)
+        return -EINVAL;
+    if (!validate_write(buffer, size))
         return -EFAULT;
 #ifdef DEBUG_IO
-    dbgprintf("%s(%u) sys$read(%d, %p, %u)\n", name().characters(), pid(), fd, outbuf, nread);
+    dbgprintf("%s(%u) sys$read(%d, %p, %u)\n", name().characters(), pid(), fd, buffer, size);
 #endif
     auto* descriptor = file_descriptor(fd);
     if (!descriptor)
         return -EBADF;
-#ifdef DEBUG_IO
-    dbgprintf("   > descriptor:%p, is_blocking:%u, can_read:%u\n", descriptor, descriptor->is_blocking(), descriptor->can_read(*this));
-    dbgprintf("   > inode:K%x, device:K%x\n", descriptor->inode(), descriptor->character_device());
-#endif
     if (descriptor->is_blocking()) {
         if (!descriptor->can_read(*this)) {
             m_blocked_fd = fd;
@@ -1103,11 +1108,7 @@ ssize_t Process::sys$read(int fd, void* outbuf, size_t nread)
                 return -EINTR;
         }
     }
-    nread = descriptor->read(*this, (byte*)outbuf, nread);
-#ifdef DEBUG_IO
-    dbgprintf("%s(%u) Process::sys$read: nread=%u\n", name().characters(), pid(), nread);
-#endif
-    return nread;
+    return descriptor->read(*this, buffer, size);
 }
 
 int Process::sys$close(int fd)
@@ -1221,8 +1222,10 @@ int Process::sys$stat(const char* path, stat* statbuf)
     return 0;
 }
 
-int Process::sys$readlink(const char* path, char* buffer, size_t size)
+int Process::sys$readlink(const char* path, char* buffer, ssize_t size)
 {
+    if (size < 0)
+        return -EINVAL;
     if (!validate_read_str(path))
         return -EFAULT;
     if (!validate_write(buffer, size))
@@ -1240,7 +1243,7 @@ int Process::sys$readlink(const char* path, char* buffer, size_t size)
     if (!contents)
         return -EIO; // FIXME: Get a more detailed error from VFS.
 
-    memcpy(buffer, contents.pointer(), min(size, contents.size()));
+    memcpy(buffer, contents.pointer(), min(size, (ssize_t)contents.size()));
     if (contents.size() + 1 < size)
         buffer[contents.size()] = '\0';
     return 0;
@@ -1260,8 +1263,10 @@ int Process::sys$chdir(const char* path)
     return 0;
 }
 
-int Process::sys$getcwd(char* buffer, size_t size)
+int Process::sys$getcwd(char* buffer, ssize_t size)
 {
+    if (size < 0)
+        return -EINVAL;
     if (!validate_write(buffer, size))
         return -EFAULT;
     auto path = VFS::the().absolute_path(cwd_inode());
@@ -1655,8 +1660,9 @@ bool Process::validate_read_str(const char* str)
     return validate_read(str, strlen(str) + 1);
 }
 
-bool Process::validate_read(const void* address, size_t size) const
+bool Process::validate_read(const void* address, ssize_t size) const
 {
+    ASSERT(size >= 0);
     LinearAddress first_address((dword)address);
     LinearAddress last_address = first_address.offset(size - 1);
     if (is_ring0()) {
@@ -1678,8 +1684,9 @@ bool Process::validate_read(const void* address, size_t size) const
     return MM.validate_user_read(*this, first_address);
 }
 
-bool Process::validate_write(void* address, size_t size) const
+bool Process::validate_write(void* address, ssize_t size) const
 {
+    ASSERT(size >= 0);
     LinearAddress first_address((dword)address);
     LinearAddress last_address = first_address.offset(size - 1);
     if (is_ring0()) {

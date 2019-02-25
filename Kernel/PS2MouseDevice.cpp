@@ -144,10 +144,10 @@ bool PS2MouseDevice::can_read(Process&) const
     return !m_queue.is_empty();
 }
 
-ssize_t PS2MouseDevice::read(Process&, byte* buffer, size_t size)
+ssize_t PS2MouseDevice::read(Process&, byte* buffer, ssize_t size)
 {
     ssize_t nread = 0;
-    while ((size_t)nread < size) {
+    while (nread < size) {
         if (m_queue.is_empty())
             break;
         // FIXME: Don't return partial data frames.
@@ -156,7 +156,7 @@ ssize_t PS2MouseDevice::read(Process&, byte* buffer, size_t size)
     return nread;
 }
 
-ssize_t PS2MouseDevice::write(Process&, const byte*, size_t)
+ssize_t PS2MouseDevice::write(Process&, const byte*, ssize_t)
 {
     return 0;
 }

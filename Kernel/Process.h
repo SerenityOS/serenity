@@ -162,8 +162,8 @@ public:
     mode_t sys$umask(mode_t);
     int sys$open(const char* path, int options, mode_t mode = 0);
     int sys$close(int fd);
-    ssize_t sys$read(int fd, void* outbuf, size_t nread);
-    ssize_t sys$write(int fd, const void*, size_t);
+    ssize_t sys$read(int fd, byte*, ssize_t);
+    ssize_t sys$write(int fd, const byte*, ssize_t);
     int sys$fstat(int fd, stat*);
     int sys$lstat(const char*, stat*);
     int sys$stat(const char*, stat*);
@@ -178,17 +178,17 @@ public:
     int sys$set_mmap_name(void*, size_t, const char*);
     int sys$select(const Syscall::SC_select_params*);
     int sys$poll(pollfd*, int nfds, int timeout);
-    ssize_t sys$get_dir_entries(int fd, void*, size_t);
-    int sys$getcwd(char*, size_t);
+    ssize_t sys$get_dir_entries(int fd, void*, ssize_t);
+    int sys$getcwd(char*, ssize_t);
     int sys$chdir(const char*);
     int sys$sleep(unsigned seconds);
     int sys$usleep(useconds_t usec);
     int sys$gettimeofday(timeval*);
-    int sys$gethostname(char* name, size_t length);
+    int sys$gethostname(char*, ssize_t);
     int sys$uname(utsname*);
-    int sys$readlink(const char*, char*, size_t);
-    int sys$ttyname_r(int fd, char*, size_t);
-    int sys$ptsname_r(int fd, char*, size_t);
+    int sys$readlink(const char*, char*, ssize_t);
+    int sys$ttyname_r(int fd, char*, ssize_t);
+    int sys$ptsname_r(int fd, char*, ssize_t);
     pid_t sys$fork(RegisterDump&);
     int sys$execve(const char* filename, const char** argv, const char** envp);
     int sys$isatty(int fd);
@@ -257,8 +257,8 @@ public:
 
     bool validate_read_from_kernel(LinearAddress) const;
 
-    bool validate_read(const void*, size_t) const;
-    bool validate_write(void*, size_t) const;
+    bool validate_read(const void*, ssize_t) const;
+    bool validate_write(void*, ssize_t) const;
     bool validate_read_str(const char* str);
     template<typename T> bool validate_read_typed(T* value, size_t count = 1) { return validate_read(value, sizeof(T) * count); }
     template<typename T> bool validate_write_typed(T* value, size_t count = 1) { return validate_write(value, sizeof(T) * count); }

@@ -23,7 +23,7 @@ private:
     virtual void on_sysconsole_receive(byte) override;
 
     // ^TTY
-    virtual ssize_t on_tty_write(const byte*, size_t) override;
+    virtual ssize_t on_tty_write(const byte*, ssize_t) override;
     virtual String tty_name() const override;
 
     // ^CharacterDevice

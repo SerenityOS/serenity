@@ -27,8 +27,8 @@ private:
     virtual const char* class_name() const override { return "BXVGA"; }
     virtual bool can_read(Process&) const override;
     virtual bool can_write(Process&) const override;
-    virtual ssize_t read(Process&, byte*, size_t) override;
-    virtual ssize_t write(Process&, const byte*, size_t) override;
+    virtual ssize_t read(Process&, byte*, ssize_t) override;
+    virtual ssize_t write(Process&, const byte*, ssize_t) override;
 
     void set_register(word index, word value);
     dword find_framebuffer_address();

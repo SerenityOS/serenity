@@ -176,7 +176,7 @@ off_t FileDescriptor::seek(off_t offset, int whence)
     return m_current_offset;
 }
 
-ssize_t FileDescriptor::read(Process& process, byte* buffer, size_t count)
+ssize_t FileDescriptor::read(Process& process, byte* buffer, ssize_t count)
 {
     if (is_fifo()) {
         ASSERT(fifo_direction() == FIFO::Reader);
@@ -194,7 +194,7 @@ ssize_t FileDescriptor::read(Process& process, byte* buffer, size_t count)
     return nread;
 }
 
-ssize_t FileDescriptor::write(Process& process, const byte* data, size_t size)
+ssize_t FileDescriptor::write(Process& process, const byte* data, ssize_t size)
 {
     if (is_fifo()) {
         ASSERT(fifo_direction() == FIFO::Writer);
@@ -245,6 +245,7 @@ ByteBuffer FileDescriptor::read_entire_file(Process& process)
     if (m_device) {
         auto buffer = ByteBuffer::create_uninitialized(1024);
         ssize_t nread = m_device->read(process, buffer.pointer(), buffer.size());
+        ASSERT(nread >= 0);
         buffer.trim(nread);
         return buffer;
     }
@@ -259,7 +260,7 @@ bool FileDescriptor::is_directory() const
     return metadata().is_directory();
 }
 
-ssize_t FileDescriptor::get_dir_entries(byte* buffer, size_t size)
+ssize_t FileDescriptor::get_dir_entries(byte* buffer, ssize_t size)
 {
     auto metadata = this->metadata();
     if (!metadata.is_valid())

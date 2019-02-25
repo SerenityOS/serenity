@@ -26,14 +26,14 @@ String MasterPTY::pts_name() const
     return String::format("/dev/pts/%u", m_index);
 }
 
-ssize_t MasterPTY::read(Process&, byte* buffer, size_t size)
+ssize_t MasterPTY::read(Process&, byte* buffer, ssize_t size)
 {
     if (!m_slave && m_buffer.is_empty())
         return 0;
     return m_buffer.read(buffer, size);
 }
 
-ssize_t MasterPTY::write(Process&, const byte* buffer, size_t size)
+ssize_t MasterPTY::write(Process&, const byte* buffer, ssize_t size)
 {
     if (!m_slave)
         return -EIO;
@@ -62,7 +62,7 @@ void MasterPTY::notify_slave_closed(Badge<SlavePTY>)
         m_slave = nullptr;
 }
 
-ssize_t MasterPTY::on_slave_write(const byte* data, size_t size)
+ssize_t MasterPTY::on_slave_write(const byte* data, ssize_t size)
 {
     if (m_closed)
         return -EIO;

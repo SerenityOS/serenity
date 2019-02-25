@@ -19,8 +19,8 @@ public:
     virtual bool can_read(Process&) const = 0;
     virtual bool can_write(Process&) const = 0;
 
-    virtual ssize_t read(Process&, byte* buffer, size_t bufferSize) = 0;
-    virtual ssize_t write(Process&, const byte* buffer, size_t bufferSize) = 0;
+    virtual ssize_t read(Process&, byte*, ssize_t) = 0;
+    virtual ssize_t write(Process&, const byte*, ssize_t) = 0;
 
     unsigned major() const { return m_major; }
     unsigned minor() const { return m_minor; }

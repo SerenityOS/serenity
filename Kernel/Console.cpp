@@ -28,20 +28,20 @@ bool Console::can_read(Process&) const
     return false;
 }
 
-ssize_t Console::read(Process&, byte*, size_t)
+ssize_t Console::read(Process&, byte*, ssize_t)
 {
     // FIXME: Implement reading from the console.
     //        Maybe we could use a ring buffer for this device?
     return 0;
 }
 
-ssize_t Console::write(Process&, const byte* data, size_t size)
+ssize_t Console::write(Process&, const byte* data, ssize_t size)
 {
     if (!size)
         return 0;
     if (!m_implementation)
         return 0;
-    for (size_t i = 0; i < size; ++i)
+    for (ssize_t i = 0; i < size; ++i)
         put_char(data[i]);
     return size;
 }

@@ -26,13 +26,13 @@ bool NullDevice::can_read(Process&) const
     return true;
 }
 
-ssize_t NullDevice::read(Process&, byte*, size_t)
+ssize_t NullDevice::read(Process&, byte*, ssize_t)
 {
     return 0;
 }
 
-ssize_t NullDevice::write(Process&, const byte*, size_t bufferSize)
+ssize_t NullDevice::write(Process&, const byte*, ssize_t buffer_size)
 {
-    return min(GoodBufferSize, bufferSize);
+    return min(GoodBufferSize, buffer_size);
 }
 

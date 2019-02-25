@@ -10,8 +10,8 @@ class TTY : public CharacterDevice {
 public:
     virtual ~TTY() override;
 
-    virtual ssize_t read(Process&, byte*, size_t) override;
-    virtual ssize_t write(Process&, const byte*, size_t) override;
+    virtual ssize_t read(Process&, byte*, ssize_t) override;
+    virtual ssize_t write(Process&, const byte*, ssize_t) override;
     virtual bool can_read(Process&) const override;
     virtual bool can_write(Process&) const override;
     virtual int ioctl(Process&, unsigned request, unsigned arg) override final;
@@ -33,7 +33,7 @@ public:
     void hang_up();
 
 protected:
-    virtual ssize_t on_tty_write(const byte*, size_t) = 0;
+    virtual ssize_t on_tty_write(const byte*, ssize_t) = 0;
     void set_size(unsigned short columns, unsigned short rows);
 
     TTY(unsigned major, unsigned minor);
