@@ -74,7 +74,7 @@
     __ERROR(EMAXERRNO,      "The highest errno +1 :^)")
 
 
-enum __errno_values {
+enum __errno_value {
 #undef __ENUMERATE_ERROR
 #define __ERROR(a, b) a,
     __ENUMERATE_ALL_ERRORS

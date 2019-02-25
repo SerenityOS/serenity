@@ -41,7 +41,7 @@ private:
     virtual int increment_link_count() override;
     virtual int decrement_link_count() override;
     virtual size_t directory_entry_count() const override;
-    virtual bool chmod(mode_t, int& error) override;
+    virtual KResult chmod(mode_t) override;
 
     void populate_lookup_cache() const;
 
