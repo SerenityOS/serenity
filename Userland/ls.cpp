@@ -55,7 +55,7 @@ int main(int argc, char** argv)
     return do_dir_short(path);
 }
 
-void get_geometry(unsigned& rows, unsigned& columns)
+void get_geometry(int& rows, int& columns)
 {
     struct winsize ws;
     ioctl(0, TIOCGWINSZ, &ws);
@@ -187,8 +187,8 @@ int do_dir(const char* path)
 
 int do_dir_short(const char* path)
 {
-    unsigned rows;
-    unsigned columns;
+    int rows;
+    int columns;
     get_geometry(rows, columns);
 
     DIR* dirp = opendir(path);
@@ -198,7 +198,7 @@ int do_dir_short(const char* path)
     }
 
     Vector<String> names;
-    size_t longest_name = 0;
+    int longest_name = 0;
     while (auto* de = readdir(dirp)) {
         if (de->d_name[0] == '.' && !flag_show_dotfiles)
             continue;
@@ -210,7 +210,7 @@ int do_dir_short(const char* path)
 
     int printed_on_row = 0;
 
-    for (size_t i = 0; i < names.size(); ++i) {
+    for (int i = 0; i < names.size(); ++i) {
         auto& name = names[i];
         struct stat st;
         char pathbuf[256];
@@ -221,11 +221,11 @@ int do_dir_short(const char* path)
             return 2;
         }
 
-        unsigned nprinted = print_name(st, name.characters());
-        unsigned column_width = 14;
+        int nprinted = print_name(st, name.characters());
+        int column_width = 14;
         printed_on_row += column_width;
 
-        for (unsigned i = nprinted; i < column_width; ++i)
+        for (int i = nprinted; i < column_width; ++i)
             printf(" ");
         if ((printed_on_row + column_width) >= columns) {
             if (i != names.size() - 1)

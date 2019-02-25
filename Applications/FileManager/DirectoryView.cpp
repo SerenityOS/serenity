@@ -138,7 +138,7 @@ void DirectoryView::paint_event(GPaintEvent&)
     int painted_item_index = 0;
 
     auto process_entries = [&] (const Vector<Entry>& entries) {
-        for (size_t i = 0; i < entries.size(); ++i, ++painted_item_index) {
+        for (int i = 0; i < entries.size(); ++i, ++painted_item_index) {
             auto& entry = entries[i];
             int y = painted_item_index * item_height();
             Rect icon_rect(horizontal_padding, y, icon_size, item_height());

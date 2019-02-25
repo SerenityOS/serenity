@@ -29,7 +29,7 @@ public:
     {
     }
 
-    String(const char* cstring, size_t length, ShouldChomp shouldChomp = NoChomp)
+    String(const char* cstring, ssize_t length, ShouldChomp shouldChomp = NoChomp)
         : m_impl(StringImpl::create(cstring, length, shouldChomp))
     {
     }
@@ -66,13 +66,13 @@ public:
     }
 
     Vector<String> split(char separator) const;
-    String substring(size_t start, size_t length) const;
+    String substring(ssize_t start, ssize_t length) const;
 
     bool is_null() const { return !m_impl; }
     bool is_empty() const { return length() == 0; }
-    size_t length() const { return m_impl ? m_impl->length() : 0; }
+    ssize_t length() const { return m_impl ? m_impl->length() : 0; }
     const char* characters() const { return m_impl ? m_impl->characters() : nullptr; }
-    char operator[](size_t i) const { ASSERT(m_impl); return (*m_impl)[i]; }
+    char operator[](ssize_t i) const { ASSERT(m_impl); return (*m_impl)[i]; }
 
     bool operator==(const String&) const;
     bool operator!=(const String& other) const { return !(*this == other); }

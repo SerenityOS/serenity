@@ -104,7 +104,7 @@ void Inode::will_be_destroyed()
         flush_metadata();
 }
 
-void Inode::inode_contents_changed(off_t offset, size_t size, const byte* data)
+void Inode::inode_contents_changed(off_t offset, ssize_t size, const byte* data)
 {
     if (m_vmo)
         m_vmo->inode_contents_changed(Badge<Inode>(), offset, size, data);

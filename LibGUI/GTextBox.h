@@ -27,7 +27,7 @@ private:
     void handle_backspace();
 
     String m_text;
-    unsigned m_cursor_position { 0 };
+    int m_cursor_position { 0 };
     bool m_cursor_blink_state { false };
 };
 

@@ -37,20 +37,21 @@ public:
 
     void operator<<(const char* str)
     {
-        size_t len = strlen(str);
-        for (unsigned i = 0; i < len; ++i)
+        ssize_t len = strlen(str);
+        ASSERT(len >= 0);
+        for (ssize_t i = 0; i < len; ++i)
             m_buffer[m_offset++] = str[i];
     }
 
     void operator<<(const String& value)
     {
-        for (unsigned i = 0; i < value.length(); ++i)
+        for (ssize_t i = 0; i < value.length(); ++i)
             m_buffer[m_offset++] = value[i];
     }
 
     void operator<<(const ByteBuffer& value)
     {
-        for (size_t i = 0; i < value.size(); ++i)
+        for (ssize_t i = 0; i < value.size(); ++i)
             m_buffer[m_offset++] = value[i];
     }
 
@@ -65,11 +66,11 @@ public:
             m_buffer[m_offset++] = ch;
     }
 
-    size_t offset() const { return m_offset; }
+    ssize_t offset() const { return m_offset; }
 
 private:
     ByteBuffer& m_buffer;
-    size_t m_offset { 0 };
+    ssize_t m_offset { 0 };
 };
 
 }

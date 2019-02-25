@@ -11,13 +11,13 @@ static unsigned parse_uint(const String& str, bool& ok)
         return 0;
     }
     unsigned value = 0;
-    for (size_t i = 0; i < str.length(); ++i) {
+    for (int i = 0; i < str.length(); ++i) {
         if (str[i] < '0' || str[i] > '9') {
             ok = false;
             return 0;
         }
         value = value * 10;
-        value += str[i] - '0';
+        value += (unsigned)(str[i] - '0');
     }
     ok = true;
     return value;

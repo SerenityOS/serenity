@@ -190,7 +190,7 @@ bool Ext2FS::write_block_list_for_inode(InodeIndex inode_index, ext2_inode& e2in
 {
     LOCKER(m_lock);
 
-    dbgprintf("Ext2FS: writing %u block(s) to i_block array\n", min((size_t)EXT2_NDIR_BLOCKS, blocks.size()));
+    dbgprintf("Ext2FS: writing %u block(s) to i_block array\n", min(EXT2_NDIR_BLOCKS, blocks.size()));
 
     auto old_shape = compute_block_list_shape(e2inode.i_blocks / (2 << super_block().s_log_block_size));
     auto new_shape = compute_block_list_shape(blocks.size());
@@ -429,7 +429,7 @@ RetainPtr<Inode> Ext2FS::get_inode(InodeIdentifier inode) const
     return new_inode;
 }
 
-ssize_t Ext2FSInode::read_bytes(off_t offset, size_t count, byte* buffer, FileDescriptor*) const
+ssize_t Ext2FSInode::read_bytes(off_t offset, ssize_t count, byte* buffer, FileDescriptor*) const
 {
     Locker inode_locker(m_lock);
     ASSERT(offset >= 0);
@@ -441,7 +441,7 @@ ssize_t Ext2FSInode::read_bytes(off_t offset, size_t count, byte* buffer, FileDe
     static const unsigned max_inline_symlink_length = 60;
     if (is_symlink() && size() < max_inline_symlink_length) {
         ssize_t nread = min((off_t)size() - offset, static_cast<off_t>(count));
-        memcpy(buffer, m_raw_inode.i_block + offset, nread);
+        memcpy(buffer, m_raw_inode.i_block + offset, (size_t)nread);
         return nread;
     }
 
@@ -494,7 +494,7 @@ ssize_t Ext2FSInode::read_bytes(off_t offset, size_t count, byte* buffer, FileDe
     return nread;
 }
 
-ssize_t Ext2FSInode::write_bytes(off_t offset, size_t count, const byte* data, FileDescriptor*)
+ssize_t Ext2FSInode::write_bytes(off_t offset, ssize_t count, const byte* data, FileDescriptor*)
 {
     Locker inode_locker(m_lock);
     Locker fs_locker(fs().m_lock);
@@ -504,7 +504,7 @@ ssize_t Ext2FSInode::write_bytes(off_t offset, size_t count, const byte* data, F
 
     ASSERT(offset >= 0);
 
-    const size_t block_size = fs().block_size();
+    const ssize_t block_size = fs().block_size();
     size_t old_size = size();
     size_t new_size = max(static_cast<size_t>(offset) + count, size());
 
@@ -539,8 +539,8 @@ ssize_t Ext2FSInode::write_bytes(off_t offset, size_t count, const byte* data, F
 
     auto buffer_block = ByteBuffer::create_uninitialized(block_size);
     for (dword bi = first_block_logical_index; remaining_count && bi <= last_block_logical_index; ++bi) {
-        dword offset_into_block = (bi == first_block_logical_index) ? offset_into_first_block : 0;
-        dword num_bytes_to_copy = min(block_size - offset_into_block, remaining_count);
+        size_t offset_into_block = (bi == first_block_logical_index) ? offset_into_first_block : 0;
+        size_t num_bytes_to_copy = min((size_t)block_size - offset_into_block, remaining_count);
 
         ByteBuffer block;
         if (offset_into_block != 0) {
@@ -702,24 +702,24 @@ bool Ext2FS::write_directory_inode(unsigned directoryInode, Vector<DirectoryEntr
     LOCKER(m_lock);
     dbgprintf("Ext2FS: New directory inode %u contents to write:\n", directoryInode);
 
-    unsigned directory_size = 0;
+    int directory_size = 0;
     for (auto& entry : entries) {
         //kprintf("  - %08u %s\n", entry.inode.index(), entry.name);
         directory_size += EXT2_DIR_REC_LEN(entry.name_length);
     }
 
-    unsigned blocks_needed = ceil_div(directory_size, block_size());
-    unsigned occupied_size = blocks_needed * block_size();
+    int blocks_needed = ceil_div(directory_size, block_size());
+    int occupied_size = blocks_needed * block_size();
 
     dbgprintf("Ext2FS: directory size: %u (occupied: %u)\n", directory_size, occupied_size);
 
     auto directory_data = ByteBuffer::create_uninitialized(occupied_size);
 
     BufferStream stream(directory_data);
-    for (unsigned i = 0; i < entries.size(); ++i) {
+    for (int i = 0; i < entries.size(); ++i) {
         auto& entry = entries[i];
 
-        unsigned record_length = EXT2_DIR_REC_LEN(entry.name_length);
+        int record_length = EXT2_DIR_REC_LEN(entry.name_length);
         if (i == entries.size() - 1)
             record_length += occupied_size - directory_size;
 
@@ -735,26 +735,12 @@ bool Ext2FS::write_directory_inode(unsigned directoryInode, Vector<DirectoryEntr
         stream << byte(entry.file_type);
         stream << entry.name;
 
-        unsigned padding = record_length - entry.name_length - 8;
-        //dbgprintf("  *** pad %u bytes\n", padding);
-        for (unsigned j = 0; j < padding; ++j) {
+        int padding = record_length - entry.name_length - 8;
+        for (int j = 0; j < padding; ++j)
             stream << byte(0);
-        }
     }
 
     stream.fill_to_end(0);
-
-#if 0
-    kprintf("data to write (%u):\n", directory_data.size());
-    for (unsigned i = 0; i < directory_data.size(); ++i) {
-        kprintf("%02x ", directory_data[i]);
-        if ((i + 1) % 8 == 0)
-            kprintf(" ");
-        if ((i + 1) % 16 == 0)
-            kprintf("\n");
-    }
-    kprintf("\n");
-#endif
 
     auto directory_inode = get_inode({ fsid(), directoryInode });
     ssize_t nwritten = directory_inode->write_bytes(0, directory_data.size(), directory_data.pointer(), nullptr);
@@ -806,7 +792,7 @@ void Ext2FS::dump_inode_bitmap(unsigned groupIndex) const
 {
     LOCKER(m_lock);
     traverse_inode_bitmap(groupIndex, [] (unsigned, const Bitmap& bitmap) {
-        for (unsigned i = 0; i < bitmap.size(); ++i)
+        for (int i = 0; i < bitmap.size(); ++i)
             kprintf("%c", bitmap.get(i) ? '1' : '0');
         return true;
     });
@@ -882,7 +868,7 @@ Vector<Ext2FS::BlockIndex> Ext2FS::allocate_blocks(unsigned group, unsigned coun
     // FIXME: Implement a scan that finds consecutive blocks if possible.
     Vector<BlockIndex> blocks;
     traverse_block_bitmap(group, [&blocks, count] (unsigned first_block_in_bitmap, const Bitmap& bitmap) {
-        for (unsigned i = 0; i < bitmap.size(); ++i) {
+        for (int i = 0; i < bitmap.size(); ++i) {
             if (!bitmap.get(i)) {
                 blocks.append(first_block_in_bitmap + i);
                 if (blocks.size() == count)
@@ -931,23 +917,23 @@ unsigned Ext2FS::allocate_inode(unsigned preferred_group, unsigned expected_size
 
     dbgprintf("Ext2FS: allocate_inode: found suitable group [%u] for new inode with %u blocks needed :^)\n", groupIndex, needed_blocks);
 
-    unsigned firstFreeInodeInGroup = 0;
-    traverse_inode_bitmap(groupIndex, [&firstFreeInodeInGroup] (unsigned firstInodeInBitmap, const Bitmap& bitmap) {
-        for (unsigned i = 0; i < bitmap.size(); ++i) {
+    unsigned first_free_inode_in_group = 0;
+    traverse_inode_bitmap(groupIndex, [&first_free_inode_in_group] (unsigned firstInodeInBitmap, const Bitmap& bitmap) {
+        for (int i = 0; i < bitmap.size(); ++i) {
             if (!bitmap.get(i)) {
-                firstFreeInodeInGroup = firstInodeInBitmap + i;
+                first_free_inode_in_group = firstInodeInBitmap + i;
                 return false;
             }
         }
         return true;
     });
 
-    if (!firstFreeInodeInGroup) {
+    if (!first_free_inode_in_group) {
         kprintf("Ext2FS: first_free_inode_in_group returned no inode, despite bgd claiming there are inodes :(\n");
         return 0;
     }
 
-    unsigned inode = firstFreeInodeInGroup;
+    unsigned inode = first_free_inode_in_group;
     dbgprintf("Ext2FS: found suitable inode %u\n", inode);
 
     ASSERT(get_inode_allocation_state(inode) == false);

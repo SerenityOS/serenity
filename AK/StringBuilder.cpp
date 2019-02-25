@@ -5,13 +5,13 @@
 
 namespace AK {
 
-inline void StringBuilder::will_append(size_t size)
+inline void StringBuilder::will_append(ssize_t size)
 {
     if ((m_length + size) > m_buffer.size())
-        m_buffer.grow(max((size_t)16, m_buffer.size() * 2 + size));
+        m_buffer.grow(max((ssize_t)16, m_buffer.size() * 2 + size));
 }
 
-StringBuilder::StringBuilder(size_t initial_capacity)
+StringBuilder::StringBuilder(ssize_t initial_capacity)
 {
     m_buffer.grow(initial_capacity);
 }
@@ -25,7 +25,7 @@ void StringBuilder::append(const String& str)
     m_length += str.length();
 }
 
-void StringBuilder::append(const char* characters, size_t length)
+void StringBuilder::append(const char* characters, ssize_t length)
 {
     if (!length)
         return;

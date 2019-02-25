@@ -426,7 +426,7 @@ bool GEventLoop::wait_for_specific_event(WSAPI_ServerMessage::Type type, WSAPI_S
         bool success = drain_messages_from_server();
         if (!success)
             return false;
-        for (size_t i = 0; i < m_unprocessed_messages.size(); ++i) {
+        for (ssize_t i = 0; i < m_unprocessed_messages.size(); ++i) {
             if (m_unprocessed_messages[i].type == type) {
                 event = move(m_unprocessed_messages[i]);
                 m_unprocessed_messages.remove(i);

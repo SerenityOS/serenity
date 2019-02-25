@@ -37,7 +37,7 @@ private:
         bool is_directory() const { return S_ISDIR(mode); }
     };
 
-    const Entry& entry(size_t index) const
+    const Entry& entry(int index) const
     {
         if (index < m_directories.size())
             return m_directories[index];

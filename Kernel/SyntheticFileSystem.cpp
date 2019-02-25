@@ -112,10 +112,9 @@ bool SynthFS::remove_file(InodeIndex inode)
     if (pit == m_inodes.end())
         return false;
     auto& parent = *(*pit).value;
-    for (size_t i = 0; i < parent.m_children.size(); ++i) {
-        if (parent.m_children[i]->m_metadata.inode.index() != inode) {
+    for (ssize_t i = 0; i < parent.m_children.size(); ++i) {
+        if (parent.m_children[i]->m_metadata.inode.index() != inode)
             continue;
-        }
         parent.m_children.remove(i);
         break;
     }
@@ -193,7 +192,7 @@ InodeMetadata SynthFSInode::metadata() const
     return m_metadata;
 }
 
-ssize_t SynthFSInode::read_bytes(off_t offset, size_t count, byte* buffer, FileDescriptor* descriptor) const
+ssize_t SynthFSInode::read_bytes(off_t offset, ssize_t count, byte* buffer, FileDescriptor* descriptor) const
 {
     LOCKER(m_lock);
 #ifdef SYNTHFS_DEBUG
@@ -269,7 +268,7 @@ void SynthFSInode::flush_metadata()
 {
 }
 
-ssize_t SynthFSInode::write_bytes(off_t offset, size_t size, const byte* buffer, FileDescriptor*)
+ssize_t SynthFSInode::write_bytes(off_t offset, ssize_t size, const byte* buffer, FileDescriptor*)
 {
     LOCKER(m_lock);
     if (!m_write_callback)

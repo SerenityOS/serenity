@@ -791,6 +791,7 @@ void VMObject::for_each_region(Callback callback)
 
 void VMObject::inode_size_changed(Badge<Inode>, size_t old_size, size_t new_size)
 {
+    (void)old_size;
     InterruptDisabler disabler;
 
     size_t old_page_count = page_count();
@@ -813,7 +814,7 @@ void VMObject::inode_size_changed(Badge<Inode>, size_t old_size, size_t new_size
     });
 }
 
-void VMObject::inode_contents_changed(Badge<Inode>, off_t offset, size_t size, const byte* data)
+void VMObject::inode_contents_changed(Badge<Inode>, off_t offset, ssize_t size, const byte* data)
 {
     (void)size;
     (void)data;

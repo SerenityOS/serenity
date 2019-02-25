@@ -88,7 +88,7 @@ struct WSAPI_ServerMessage {
     };
     Type type { Invalid };
     int window_id { -1 };
-    size_t text_length;
+    int text_length { 0 };
     char text[256];
 
     union {
@@ -156,7 +156,7 @@ struct WSAPI_ClientMessage {
     };
     Type type { Invalid };
     int window_id { -1 };
-    size_t text_length;
+    int text_length { 0 };
     char text[256];
     int value { 0 };
 

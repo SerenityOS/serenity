@@ -336,7 +336,7 @@ void Painter::draw_text(const Rect& rect, const String& text, TextAlignment alig
         ASSERT_NOT_REACHED();
     }
 
-    for (unsigned i = 0; i < text.length(); ++i, point.move_by(font().glyph_width(), 0)) {
+    for (ssize_t i = 0; i < text.length(); ++i, point.move_by(font().glyph_width(), 0)) {
         byte ch = text[i];
         if (ch == ' ')
             continue;

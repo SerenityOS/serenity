@@ -13,7 +13,7 @@ public:
 
     static GMenu* from_menu_id(int);
 
-    GAction* action_at(size_t);
+    GAction* action_at(int);
 
     void add_action(RetainPtr<GAction>&&);
     void add_separator();
