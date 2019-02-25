@@ -25,13 +25,13 @@ String SlavePTY::tty_name() const
     return String::format("/dev/pts/%u", m_index);
 }
 
-void SlavePTY::on_master_write(const byte* buffer, size_t size)
+void SlavePTY::on_master_write(const byte* buffer, ssize_t size)
 {
-    for (size_t i = 0; i < size; ++i)
+    for (ssize_t i = 0; i < size; ++i)
         emit(buffer[i]);
 }
 
-ssize_t SlavePTY::on_tty_write(const byte* data, size_t size)
+ssize_t SlavePTY::on_tty_write(const byte* data, ssize_t size)
 {
     return m_master->on_slave_write(data, size);
 }
@@ -48,7 +48,7 @@ bool SlavePTY::can_read(Process& process) const
     return TTY::can_read(process);
 }
 
-ssize_t SlavePTY::read(Process& process, byte* buffer, size_t size)
+ssize_t SlavePTY::read(Process& process, byte* buffer, ssize_t size)
 {
     if (m_master->is_closed())
         return 0;

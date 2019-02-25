@@ -54,21 +54,21 @@ bool FIFO::can_write() const
     return m_buffer.bytes_in_write_buffer() < 4096;
 }
 
-ssize_t FIFO::read(byte* buffer, size_t size)
+ssize_t FIFO::read(byte* buffer, ssize_t size)
 {
     if (!m_writers && m_buffer.is_empty())
         return 0;
 #ifdef FIFO_DEBUG
     dbgprintf("fifo: read(%u)\n",size);
 #endif
-    size_t nread = m_buffer.read(buffer, size);
+    ssize_t nread = m_buffer.read(buffer, size);
 #ifdef FIFO_DEBUG
     dbgprintf("   -> read (%c) %u\n", buffer[0], nread);
 #endif
     return nread;
 }
 
-ssize_t FIFO::write(const byte* buffer, size_t size)
+ssize_t FIFO::write(const byte* buffer, ssize_t size)
 {
     if (!m_readers)
         return 0;

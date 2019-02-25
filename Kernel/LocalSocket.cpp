@@ -137,7 +137,7 @@ bool LocalSocket::can_read(SocketRole role) const
     ASSERT_NOT_REACHED();
 }
 
-ssize_t LocalSocket::read(SocketRole role, byte* buffer, size_t size)
+ssize_t LocalSocket::read(SocketRole role, byte* buffer, ssize_t size)
 {
     if (role == SocketRole::Accepted)
         return m_for_server.read(buffer, size);
@@ -146,7 +146,7 @@ ssize_t LocalSocket::read(SocketRole role, byte* buffer, size_t size)
     ASSERT_NOT_REACHED();
 }
 
-ssize_t LocalSocket::write(SocketRole role, const byte* data, size_t size)
+ssize_t LocalSocket::write(SocketRole role, const byte* data, ssize_t size)
 {
     if (role == SocketRole::Accepted) {
         if (!m_accepted_fds_open)

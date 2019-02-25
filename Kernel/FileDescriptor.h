@@ -30,14 +30,14 @@ public:
     int close();
 
     off_t seek(off_t, int whence);
-    ssize_t read(Process&, byte*, size_t);
-    ssize_t write(Process&, const byte* data, size_t);
+    ssize_t read(Process&, byte*, ssize_t);
+    ssize_t write(Process&, const byte* data, ssize_t);
     int fstat(stat*);
 
     bool can_read(Process&);
     bool can_write(Process&);
 
-    ssize_t get_dir_entries(byte* buffer, size_t);
+    ssize_t get_dir_entries(byte* buffer, ssize_t);
 
     ByteBuffer read_entire_file(Process&);
 

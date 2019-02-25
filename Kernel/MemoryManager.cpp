@@ -815,6 +815,8 @@ void VMObject::inode_size_changed(Badge<Inode>, size_t old_size, size_t new_size
 
 void VMObject::inode_contents_changed(Badge<Inode>, off_t offset, size_t size, const byte* data)
 {
+    (void)size;
+    (void)data;
     InterruptDisabler disabler;
     ASSERT(offset >= 0);
 

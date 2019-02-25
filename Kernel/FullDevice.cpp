@@ -18,16 +18,16 @@ bool FullDevice::can_read(Process&) const
     return true;
 }
 
-ssize_t FullDevice::read(Process&, byte* buffer, size_t bufferSize)
+ssize_t FullDevice::read(Process&, byte* buffer, ssize_t size)
 {
-    size_t count = min(GoodBufferSize, bufferSize);
-    memset(buffer, 0, count);
+    ssize_t count = min(GoodBufferSize, size);
+    memset(buffer, 0, (size_t)count);
     return count;
 }
 
-ssize_t FullDevice::write(Process&, const byte*, size_t bufferSize)
+ssize_t FullDevice::write(Process&, const byte*, ssize_t size)
 {
-    if (bufferSize == 0)
+    if (size == 0)
         return 0;
     return -ENOSPC;
 }

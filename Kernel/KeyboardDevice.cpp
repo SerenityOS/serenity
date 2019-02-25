@@ -177,14 +177,14 @@ bool KeyboardDevice::can_read(Process&) const
     return !m_queue.is_empty();
 }
 
-ssize_t KeyboardDevice::read(Process&, byte* buffer, size_t size)
+ssize_t KeyboardDevice::read(Process&, byte* buffer, ssize_t size)
 {
     ssize_t nread = 0;
-    while ((size_t)nread < size) {
+    while (nread < size) {
         if (m_queue.is_empty())
             break;
         // Don't return partial data frames.
-        if ((size - nread) < sizeof(Event))
+        if ((size - nread) < (ssize_t)sizeof(Event))
             break;
         auto event = m_queue.dequeue();
         memcpy(buffer, &event, sizeof(Event));
@@ -193,7 +193,7 @@ ssize_t KeyboardDevice::read(Process&, byte* buffer, size_t size)
     return nread;
 }
 
-ssize_t KeyboardDevice::write(Process&, const byte*, size_t)
+ssize_t KeyboardDevice::write(Process&, const byte*, ssize_t)
 {
     return 0;
 }

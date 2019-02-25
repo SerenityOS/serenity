@@ -77,11 +77,11 @@ static dword handle(RegisterDump& regs, dword function, dword arg1, dword arg2, 
     case Syscall::SC_open:
         return current->sys$open((const char*)arg1, (int)arg2, (mode_t)arg3);
     case Syscall::SC_write:
-        return current->sys$write((int)arg1, (const void*)arg2, (size_t)arg3);
+        return current->sys$write((int)arg1, (const byte*)arg2, (ssize_t)arg3);
     case Syscall::SC_close:
         return current->sys$close((int)arg1);
     case Syscall::SC_read:
-        return current->sys$read((int)arg1, (void*)arg2, (size_t)arg3);
+        return current->sys$read((int)arg1, (byte*)arg2, (ssize_t)arg3);
     case Syscall::SC_lseek:
         return current->sys$lseek((int)arg1, (off_t)arg2, (int)arg3);
     case Syscall::SC_kill:
