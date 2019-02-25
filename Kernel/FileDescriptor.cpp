@@ -12,27 +12,27 @@
 #include <Kernel/BlockDevice.h>
 #include <Kernel/MemoryManager.h>
 
-RetainPtr<FileDescriptor> FileDescriptor::create(RetainPtr<Inode>&& inode)
+Retained<FileDescriptor> FileDescriptor::create(RetainPtr<Inode>&& inode)
 {
     return adopt(*new FileDescriptor(move(inode)));
 }
 
-RetainPtr<FileDescriptor> FileDescriptor::create(RetainPtr<Device>&& device)
+Retained<FileDescriptor> FileDescriptor::create(RetainPtr<Device>&& device)
 {
     return adopt(*new FileDescriptor(move(device)));
 }
 
-RetainPtr<FileDescriptor> FileDescriptor::create(RetainPtr<Socket>&& socket, SocketRole role)
+Retained<FileDescriptor> FileDescriptor::create(RetainPtr<Socket>&& socket, SocketRole role)
 {
     return adopt(*new FileDescriptor(move(socket), role));
 }
 
-RetainPtr<FileDescriptor> FileDescriptor::create_pipe_writer(FIFO& fifo)
+Retained<FileDescriptor> FileDescriptor::create_pipe_writer(FIFO& fifo)
 {
     return adopt(*new FileDescriptor(fifo, FIFO::Writer));
 }
 
-RetainPtr<FileDescriptor> FileDescriptor::create_pipe_reader(FIFO& fifo)
+Retained<FileDescriptor> FileDescriptor::create_pipe_reader(FIFO& fifo)
 {
     return adopt(*new FileDescriptor(fifo, FIFO::Reader));
 }
@@ -80,7 +80,7 @@ void FileDescriptor::set_socket_role(SocketRole role)
     m_socket->attach_fd(role);
 }
 
-RetainPtr<FileDescriptor> FileDescriptor::clone()
+Retained<FileDescriptor> FileDescriptor::clone()
 {
     RetainPtr<FileDescriptor> descriptor;
     if (is_fifo()) {
@@ -98,12 +98,11 @@ RetainPtr<FileDescriptor> FileDescriptor::clone()
             descriptor = FileDescriptor::create(m_inode.copy_ref());
         }
     }
-    if (!descriptor)
-        return nullptr;
+    ASSERT(descriptor);
     descriptor->m_current_offset = m_current_offset;
     descriptor->m_is_blocking = m_is_blocking;
     descriptor->m_file_flags = m_file_flags;
-    return descriptor;
+    return *descriptor;
 }
 
 bool addition_would_overflow(off_t a, off_t b)

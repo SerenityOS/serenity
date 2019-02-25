@@ -166,7 +166,7 @@ ProcFS& ProcFS::the()
     return *s_the;
 }
 
-RetainPtr<ProcFS> ProcFS::create()
+Retained<ProcFS> ProcFS::create()
 {
     return adopt(*new ProcFS);
 }

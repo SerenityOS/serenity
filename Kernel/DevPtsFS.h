@@ -11,7 +11,7 @@ public:
     [[gnu::pure]] static DevPtsFS& the();
 
     virtual ~DevPtsFS() override;
-    static RetainPtr<DevPtsFS> create();
+    static Retained<DevPtsFS> create();
 
     virtual bool initialize() override;
     virtual const char* class_name() const override;
@@ -22,7 +22,7 @@ public:
 private:
     DevPtsFS();
 
-    RetainPtr<SynthFSInode> create_slave_pty_device_file(unsigned index);
+    Retained<SynthFSInode> create_slave_pty_device_file(unsigned index);
 
     HashTable<SlavePTY*> m_slave_ptys;
 };

@@ -11,7 +11,7 @@ DevPtsFS& DevPtsFS::the()
     return *s_the;
 }
 
-RetainPtr<DevPtsFS> DevPtsFS::create()
+Retained<DevPtsFS> DevPtsFS::create()
 {
     return adopt(*new DevPtsFS);
 }
@@ -36,7 +36,7 @@ const char* DevPtsFS::class_name() const
     return "DevPtsFS";
 }
 
-RetainPtr<SynthFSInode> DevPtsFS::create_slave_pty_device_file(unsigned index)
+Retained<SynthFSInode> DevPtsFS::create_slave_pty_device_file(unsigned index)
 {
     auto file = adopt(*new SynthFSInode(*this, generate_inode_index()));
 

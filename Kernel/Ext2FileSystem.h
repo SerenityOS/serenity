@@ -58,7 +58,7 @@ private:
 class Ext2FS final : public DiskBackedFS {
     friend class Ext2FSInode;
 public:
-    static RetainPtr<Ext2FS> create(RetainPtr<DiskDevice>&&);
+    static Retained <Ext2FS> create(Retained<DiskDevice>&&);
     virtual ~Ext2FS() override;
     virtual bool initialize() override;
 
@@ -71,7 +71,7 @@ private:
     typedef unsigned BlockIndex;
     typedef unsigned GroupIndex;
     typedef unsigned InodeIndex;
-    explicit Ext2FS(RetainPtr<DiskDevice>&&);
+    explicit Ext2FS(Retained<DiskDevice>&&);
 
     const ext2_super_block& super_block() const;
     const ext2_group_desc& group_descriptor(unsigned groupIndex) const;

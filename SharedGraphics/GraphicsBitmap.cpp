@@ -5,7 +5,7 @@
 #include <errno.h>
 #include <stdio.h>
 
-RetainPtr<GraphicsBitmap> GraphicsBitmap::create(Format format, const Size& size)
+Retained<GraphicsBitmap> GraphicsBitmap::create(Format format, const Size& size)
 {
     return adopt(*new GraphicsBitmap(format, size));
 }
@@ -22,7 +22,7 @@ GraphicsBitmap::GraphicsBitmap(Format format, const Size& size)
     m_mmaped = true;
 }
 
-RetainPtr<GraphicsBitmap> GraphicsBitmap::create_wrapper(Format format, const Size& size, RGBA32* data)
+Retained<GraphicsBitmap> GraphicsBitmap::create_wrapper(Format format, const Size& size, RGBA32* data)
 {
     return adopt(*new GraphicsBitmap(format, size, data));
 }

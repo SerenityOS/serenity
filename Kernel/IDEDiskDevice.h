@@ -7,7 +7,7 @@
 
 class IDEDiskDevice final : public IRQHandler, public DiskDevice {
 public:
-    static RetainPtr<IDEDiskDevice> create();
+    static Retained<IDEDiskDevice> create();
     virtual ~IDEDiskDevice() override;
 
     // ^DiskDevice

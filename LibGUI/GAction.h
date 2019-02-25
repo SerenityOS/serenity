@@ -3,20 +3,20 @@
 #include <AK/AKString.h>
 #include <AK/Function.h>
 #include <AK/Retainable.h>
-#include <AK/RetainPtr.h>
+#include <AK/Retained.h>
 #include <SharedGraphics/GraphicsBitmap.h>
 
 class GAction : public Retainable<GAction> {
 public:
-    static RetainPtr<GAction> create(const String& text, Function<void(const GAction&)> callback)
+    static Retained<GAction> create(const String& text, Function<void(const GAction&)> callback)
     {
         return adopt(*new GAction(text, move(callback)));
     }
-    static RetainPtr<GAction> create(const String& text, const String& custom_data, Function<void(const GAction&)> callback)
+    static Retained<GAction> create(const String& text, const String& custom_data, Function<void(const GAction&)> callback)
     {
         return adopt(*new GAction(text, custom_data, move(callback)));
     }
-    static RetainPtr<GAction> create(const String& text, RetainPtr<GraphicsBitmap>&& icon, Function<void(const GAction&)> callback)
+    static Retained<GAction> create(const String& text, RetainPtr<GraphicsBitmap>&& icon, Function<void(const GAction&)> callback)
     {
         return adopt(*new GAction(text, move(icon), move(callback)));
     }

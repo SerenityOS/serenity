@@ -11,7 +11,7 @@ public:
         Neither, Reader, Writer
     };
 
-    static RetainPtr<FIFO> create();
+    static Retained<FIFO> create();
 
     void open(Direction);
     void close(Direction);

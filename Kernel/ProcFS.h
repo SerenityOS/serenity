@@ -14,7 +14,7 @@ public:
     [[gnu::pure]] static ProcFS& the();
 
     virtual ~ProcFS() override;
-    static RetainPtr<ProcFS> create();
+    static Retained<ProcFS> create();
 
     virtual bool initialize() override;
     virtual const char* class_name() const override;

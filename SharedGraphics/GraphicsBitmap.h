@@ -11,8 +11,8 @@ class GraphicsBitmap : public Retainable<GraphicsBitmap> {
 public:
     enum class Format { Invalid, RGB32, RGBA32 };
 
-    static RetainPtr<GraphicsBitmap> create(Format, const Size&);
-    static RetainPtr<GraphicsBitmap> create_wrapper(Format, const Size&, RGBA32*);
+    static Retained<GraphicsBitmap> create(Format, const Size&);
+    static Retained<GraphicsBitmap> create_wrapper(Format, const Size&, RGBA32*);
     static RetainPtr<GraphicsBitmap> load_from_file(Format, const String& path, const Size&);
     static RetainPtr<GraphicsBitmap> create_with_shared_buffer(Format, int shared_buffer_id, const Size&, RGBA32* buffer = nullptr);
     ~GraphicsBitmap();

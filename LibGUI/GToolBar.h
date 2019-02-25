@@ -9,7 +9,7 @@ public:
     explicit GToolBar(GWidget* parent);
     virtual ~GToolBar() override;
 
-    void add_action(RetainPtr<GAction>&&);
+    void add_action(Retained<GAction>&&);
     void add_separator();
 
 private:

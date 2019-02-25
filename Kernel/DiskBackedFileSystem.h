@@ -13,7 +13,7 @@ public:
     size_t block_size() const { return m_block_size; }
 
 protected:
-    explicit DiskBackedFS(RetainPtr<DiskDevice>&&);
+    explicit DiskBackedFS(Retained<DiskDevice>&&);
 
     void set_block_size(unsigned);
 
@@ -25,5 +25,5 @@ protected:
 
 private:
     size_t m_block_size { 0 };
-    RetainPtr<DiskDevice> m_device;
+    Retained<DiskDevice> m_device;
 };

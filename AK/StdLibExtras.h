@@ -60,11 +60,18 @@ static inline T ceil_div(T a, U b)
     return result;
 }
 
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wconsumed"
+#endif
 template <typename T>
 T&& move(T& arg)
 {
     return static_cast<T&&>(arg);
 }
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif
 
 template<typename T>
 struct Identity {
