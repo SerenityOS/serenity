@@ -85,7 +85,7 @@ int GEventLoop::exec()
         }
         Vector<QueuedEvent> events = move(m_queued_events);
         for (auto& queued_event : events) {
-            auto* receiver = queued_event.receiver;
+            auto* receiver = queued_event.receiver.ptr();
             auto& event = *queued_event.event;
 #ifdef GEVENTLOOP_DEBUG
             dbgprintf("GEventLoop: %s{%p} event %u\n", receiver->class_name(), receiver, (unsigned)event.type());
@@ -96,9 +96,7 @@ int GEventLoop::exec()
                     ASSERT_NOT_REACHED();
                     return 0;
                 default:
-                    dbgprintf("event type %u with no receiver :(\n", event.type());
-                    ASSERT_NOT_REACHED();
-                    return 1;
+                    dbgprintf("Event type %u with no receiver :(\n", event.type());
                 }
             } else {
                 receiver->event(event);
@@ -108,12 +106,12 @@ int GEventLoop::exec()
     ASSERT_NOT_REACHED();
 }
 
-void GEventLoop::post_event(GObject* receiver, OwnPtr<GEvent>&& event)
+void GEventLoop::post_event(GObject& receiver, OwnPtr<GEvent>&& event)
 {
 #ifdef GEVENTLOOP_DEBUG
-    dbgprintf("GEventLoop::post_event: {%u} << receiver=%p, event=%p\n", m_queued_events.size(), receiver, event.ptr());
+    dbgprintf("GEventLoop::post_event: {%u} << receiver=%p, event=%p\n", m_queued_events.size(), &receiver, event.ptr());
 #endif
-    m_queued_events.append({ receiver, move(event) });
+    m_queued_events.append({ receiver.make_weak_ptr(), move(event) });
 }
 
 void GEventLoop::handle_paint_event(const WSAPI_ServerMessage& event, GWindow& window)
@@ -121,12 +119,12 @@ void GEventLoop::handle_paint_event(const WSAPI_ServerMessage& event, GWindow& w
 #ifdef GEVENTLOOP_DEBUG
     dbgprintf("WID=%x Paint [%d,%d %dx%d]\n", event.window_id, event.paint.rect.location.x, event.paint.rect.location.y, event.paint.rect.size.width, event.paint.rect.size.height);
 #endif
-    post_event(&window, make<GPaintEvent>(event.paint.rect));
+    post_event(window, make<GPaintEvent>(event.paint.rect));
 }
 
 void GEventLoop::handle_resize_event(const WSAPI_ServerMessage& event, GWindow& window)
 {
-    post_event(&window, make<GResizeEvent>(event.window.old_rect.size, event.window.rect.size));
+    post_event(window, make<GResizeEvent>(event.window.old_rect.size, event.window.rect.size));
 }
 
 void GEventLoop::handle_window_activation_event(const WSAPI_ServerMessage& event, GWindow& window)
@@ -134,17 +132,17 @@ void GEventLoop::handle_window_activation_event(const WSAPI_ServerMessage& event
 #ifdef GEVENTLOOP_DEBUG
     dbgprintf("WID=%x WindowActivation\n", event.window_id);
 #endif
-    post_event(&window, make<GEvent>(event.type == WSAPI_ServerMessage::Type::WindowActivated ? GEvent::WindowBecameActive : GEvent::WindowBecameInactive));
+    post_event(window, make<GEvent>(event.type == WSAPI_ServerMessage::Type::WindowActivated ? GEvent::WindowBecameActive : GEvent::WindowBecameInactive));
 }
 
 void GEventLoop::handle_window_close_request_event(const WSAPI_ServerMessage&, GWindow& window)
 {
-    post_event(&window, make<GEvent>(GEvent::WindowCloseRequest));
+    post_event(window, make<GEvent>(GEvent::WindowCloseRequest));
 }
 
 void GEventLoop::handle_window_entered_or_left_event(const WSAPI_ServerMessage& message, GWindow& window)
 {
-    post_event(&window, make<GEvent>(message.type == WSAPI_ServerMessage::Type::WindowEntered ? GEvent::WindowEntered : GEvent::WindowLeft));
+    post_event(window, make<GEvent>(message.type == WSAPI_ServerMessage::Type::WindowEntered ? GEvent::WindowEntered : GEvent::WindowLeft));
 }
 
 void GEventLoop::handle_key_event(const WSAPI_ServerMessage& event, GWindow& window)
@@ -158,7 +156,7 @@ void GEventLoop::handle_key_event(const WSAPI_ServerMessage& event, GWindow& win
     key_event->m_shift = event.key.shift;
     if (event.key.character != '\0')
         key_event->m_text = String(&event.key.character, 1);
-    post_event(&window, move(key_event));
+    post_event(window, move(key_event));
 }
 
 void GEventLoop::handle_mouse_event(const WSAPI_ServerMessage& event, GWindow& window)
@@ -181,7 +179,7 @@ void GEventLoop::handle_mouse_event(const WSAPI_ServerMessage& event, GWindow& w
     case WSAPI_MouseButton::Middle: button = GMouseButton::Middle; break;
     default: ASSERT_NOT_REACHED(); break;
     }
-    post_event(&window, make<GMouseEvent>(type, event.mouse.position, event.mouse.buttons, button));
+    post_event(window, make<GMouseEvent>(type, event.mouse.position, event.mouse.buttons, button));
 }
 
 void GEventLoop::handle_menu_event(const WSAPI_ServerMessage& event)
@@ -239,7 +237,7 @@ void GEventLoop::wait_for_event()
 #ifdef GEVENTLOOP_DEBUG
         dbgprintf("GEventLoop: Timer %d has expired, sending GTimerEvent to %p\n", timer.timer_id, timer.owner);
 #endif
-        post_event(timer.owner, make<GTimerEvent>(timer.timer_id));
+        post_event(*timer.owner, make<GTimerEvent>(timer.timer_id));
         if (timer.should_reload) {
             timer.reload();
         } else {
@@ -378,7 +376,7 @@ int GEventLoop::register_timer(GObject& object, int milliseconds, bool should_re
 {
     ASSERT(milliseconds >= 0);
     auto timer = make<EventLoopTimer>();
-    timer->owner = &object;
+    timer->owner = object.make_weak_ptr();
     timer->interval = milliseconds;
     timer->reload();
     timer->should_reload = should_reload;

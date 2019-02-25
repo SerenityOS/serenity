@@ -5,6 +5,7 @@
 #include <AK/HashMap.h>
 #include <AK/OwnPtr.h>
 #include <AK/Vector.h>
+#include <AK/WeakPtr.h>
 #include <WindowServer/WSAPITypes.h>
 
 class GObject;
@@ -18,7 +19,7 @@ public:
 
     int exec();
 
-    void post_event(GObject* receiver, OwnPtr<GEvent>&&);
+    void post_event(GObject& receiver, OwnPtr<GEvent>&&);
 
     static GEventLoop& main();
 
@@ -56,7 +57,7 @@ private:
     void get_next_timer_expiration(timeval&);
 
     struct QueuedEvent {
-        GObject* receiver { nullptr };
+        WeakPtr<GObject> receiver;
         OwnPtr<GEvent> event;
     };
     Vector<QueuedEvent> m_queued_events;
@@ -75,7 +76,7 @@ private:
         int interval { 0 };
         timeval fire_time;
         bool should_reload { false };
-        GObject* owner { nullptr };
+        WeakPtr<GObject> owner;
 
         void reload();
         bool has_expired() const;
