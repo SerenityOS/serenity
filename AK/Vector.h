@@ -9,12 +9,12 @@ namespace AK {
 template<typename T, typename Allocator> class Vector;
 
 struct KmallocAllocator {
-    static void* allocate(size_t size) { return kmalloc(size); }
+    static void* allocate(ssize_t size) { return kmalloc(size); }
     static void deallocate(void* ptr) { kfree(ptr); }
 };
 
 struct KmallocEternalAllocator {
-    static void* allocate(size_t size) { return kmalloc_eternal(size); }
+    static void* allocate(ssize_t size) { return kmalloc_eternal(size); }
     static void deallocate(void*) { }
 };
 
@@ -22,25 +22,25 @@ template<typename T, typename Allocator>
 class VectorImpl {
 public:
     ~VectorImpl() { }
-    static VectorImpl* create(size_t capacity)
+    static VectorImpl* create(ssize_t capacity)
     {
-        size_t size = sizeof(VectorImpl) + sizeof(T) * capacity;
+        ssize_t size = sizeof(VectorImpl) + sizeof(T) * capacity;
         void* slot = Allocator::allocate(size);
         new (slot) VectorImpl(capacity);
         return (VectorImpl*)slot;
     }
 
-    size_t size() const { return m_size; }
-    size_t capacity() const { return m_capacity; }
+    ssize_t size() const { return m_size; }
+    ssize_t capacity() const { return m_capacity; }
 
-    T& at(size_t i) { ASSERT(i < m_size); return *slot(i); }
-    const T& at(size_t i) const { ASSERT(i < m_size); return *slot(i); }
+    T& at(ssize_t i) { ASSERT(i < m_size); return *slot(i); }
+    const T& at(ssize_t i) const { ASSERT(i < m_size); return *slot(i); }
 
-    void remove(size_t index)
+    void remove(ssize_t index)
     {
         ASSERT(index < m_size);
         at(index).~T();
-        for (size_t i = index + 1; i < m_size; ++i) {
+        for (ssize_t i = index + 1; i < m_size; ++i) {
             new (slot(i - 1)) T(move(at(i)));
             at(i).~T();
         }
@@ -51,16 +51,16 @@ public:
 //private:
     friend class Vector<T, Allocator>;
 
-    VectorImpl(size_t capacity) : m_capacity(capacity) { }
+    VectorImpl(ssize_t capacity) : m_capacity(capacity) { }
 
     T* tail() { return reinterpret_cast<T*>(this + 1); }
-    T* slot(size_t i) { return &tail()[i]; }
+    T* slot(ssize_t i) { return &tail()[i]; }
 
     const T* tail() const { return reinterpret_cast<const T*>(this + 1); }
-    const T* slot(size_t i) const { return &tail()[i]; }
+    const T* slot(ssize_t i) const { return &tail()[i]; }
 
-    size_t m_size { 0 };
-    size_t m_capacity;
+    ssize_t m_size { 0 };
+    ssize_t m_capacity;
 };
 
 template<typename T, typename Allocator = KmallocAllocator>
@@ -78,7 +78,7 @@ public:
     Vector(const Vector& other)
     {
         ensure_capacity(other.size());
-        for (size_t i = 0; i < other.size(); ++i)
+        for (ssize_t i = 0; i < other.size(); ++i)
             unchecked_append(other[i]);
     }
 
@@ -93,7 +93,7 @@ public:
 
     void clear()
     {
-        for (size_t i = 0; i < size(); ++i) {
+        for (ssize_t i = 0; i < size(); ++i) {
             at(i).~T();
         }
         Allocator::deallocate(m_impl);
@@ -104,14 +104,14 @@ public:
     {
         if (!m_impl)
             return;
-        for (size_t i = 0; i < size(); ++i)
+        for (ssize_t i = 0; i < size(); ++i)
             at(i).~T();
         m_impl->m_size = 0;
     }
 
     bool contains_slow(const T& value) const
     {
-        for (size_t i = 0; i < size(); ++i) {
+        for (ssize_t i = 0; i < size(); ++i) {
             if (at(i) == value)
                 return true;
         }
@@ -119,17 +119,17 @@ public:
     }
 
     bool is_empty() const { return size() == 0; }
-    size_t size() const { return m_impl ? m_impl->size() : 0; }
-    size_t capacity() const { return m_impl ? m_impl->capacity() : 0; }
+    ssize_t size() const { return m_impl ? m_impl->size() : 0; }
+    ssize_t capacity() const { return m_impl ? m_impl->capacity() : 0; }
 
     T* data() { return m_impl ? m_impl->slot(0) : nullptr; }
     const T* data() const { return m_impl ? m_impl->slot(0) : nullptr; }
 
-    const T& at(size_t i) const { return m_impl->at(i); }
-    T& at(size_t i) { return m_impl->at(i); }
+    const T& at(ssize_t i) const { return m_impl->at(i); }
+    T& at(ssize_t i) { return m_impl->at(i); }
 
-    const T& operator[](size_t i) const { return at(i); }
-    T& operator[](size_t i) { return at(i); }
+    const T& operator[](ssize_t i) const { return at(i); }
+    T& operator[](ssize_t i) { return at(i); }
 
     const T& first() const { return at(0); }
     T& first() { return at(0); }
@@ -154,7 +154,7 @@ public:
         return value;
     }
 
-    void remove(size_t index)
+    void remove(ssize_t index)
     {
         m_impl->remove(index);
     }
@@ -211,23 +211,23 @@ public:
         ++m_impl->m_size;
     }
 
-    void append(const T* values, size_t count)
+    void append(const T* values, ssize_t count)
     {
         ensure_capacity(size() + count);
-        for (size_t i = 0; i < count; ++i)
+        for (ssize_t i = 0; i < count; ++i)
             new (m_impl->slot(m_impl->m_size + i)) T(values[i]);
         m_impl->m_size += count;
     }
 
-    void ensure_capacity(size_t neededCapacity)
+    void ensure_capacity(ssize_t neededCapacity)
     {
         if (capacity() >= neededCapacity)
             return;
-        size_t new_capacity = padded_capacity(neededCapacity);
+        ssize_t new_capacity = padded_capacity(neededCapacity);
         auto new_impl = VectorImpl<T, Allocator>::create(new_capacity);
         if (m_impl) {
             new_impl->m_size = m_impl->m_size;
-            for (size_t i = 0; i < size(); ++i) {
+            for (ssize_t i = 0; i < size(); ++i) {
                 new (new_impl->slot(i)) T(move(m_impl->at(i)));
                 m_impl->at(i).~T();
             }
@@ -236,13 +236,13 @@ public:
         m_impl = new_impl;
     }
 
-    void resize(size_t new_size)
+    void resize(ssize_t new_size)
     {
         ASSERT(new_size >= size());
         if (!new_size)
             return;
         ensure_capacity(new_size);
-        for (size_t i = size(); i < new_size; ++i)
+        for (ssize_t i = size(); i < new_size; ++i)
             new (m_impl->slot(i)) T;
         m_impl->m_size = new_size;
     }
@@ -254,9 +254,9 @@ public:
         T& operator*() { return m_vector[m_index]; }
     private:
         friend class Vector;
-        Iterator(Vector& vector, size_t index) : m_vector(vector), m_index(index) { }
+        Iterator(Vector& vector, ssize_t index) : m_vector(vector), m_index(index) { }
         Vector& m_vector;
-        size_t m_index { 0 };
+        ssize_t m_index { 0 };
     };
 
     Iterator begin() { return Iterator(*this, 0); }
@@ -269,18 +269,18 @@ public:
         const T& operator*() const { return m_vector[m_index]; }
     private:
         friend class Vector;
-        ConstIterator(const Vector& vector, const size_t index) : m_vector(vector), m_index(index) { }
+        ConstIterator(const Vector& vector, const ssize_t index) : m_vector(vector), m_index(index) { }
         const Vector& m_vector;
-        size_t m_index { 0 };
+        ssize_t m_index { 0 };
     };
 
     ConstIterator begin() const { return ConstIterator(*this, 0); }
     ConstIterator end() const { return ConstIterator(*this, size()); }
 
 //private:
-    static size_t padded_capacity(size_t capacity)
+    static ssize_t padded_capacity(ssize_t capacity)
     {
-        return max(size_t(4), capacity + (capacity / 4) + 4);
+        return max(ssize_t(4), capacity + (capacity / 4) + 4);
     }
 
     VectorImpl<T, Allocator>* m_impl { nullptr };

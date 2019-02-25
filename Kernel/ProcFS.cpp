@@ -808,7 +808,7 @@ InodeMetadata ProcFSInode::metadata() const
     return metadata;
 }
 
-ssize_t ProcFSInode::read_bytes(off_t offset, size_t count, byte* buffer, FileDescriptor* descriptor) const
+ssize_t ProcFSInode::read_bytes(off_t offset, ssize_t count, byte* buffer, FileDescriptor* descriptor) const
 {
 #ifdef PROCFS_DEBUG
     dbgprintf("ProcFS: read_bytes %u\n", index());
@@ -1034,7 +1034,7 @@ void ProcFSInode::flush_metadata()
 {
 }
 
-ssize_t ProcFSInode::write_bytes(off_t offset, size_t size, const byte* buffer, FileDescriptor*)
+ssize_t ProcFSInode::write_bytes(off_t offset, ssize_t size, const byte* buffer, FileDescriptor*)
 {
     auto* directory_entry = fs().get_directory_entry(identifier());
     if (!directory_entry || !directory_entry->write_callback)

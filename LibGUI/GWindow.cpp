@@ -63,7 +63,7 @@ void GWindow::show()
     request.window.opacity = m_opacity_when_windowless;
     request.window.size_increment = m_size_increment;
     request.window.base_size = m_base_size;
-    ASSERT(m_title_when_windowless.length() < sizeof(request.text));
+    ASSERT(m_title_when_windowless.length() < (ssize_t)sizeof(request.text));
     strcpy(request.text, m_title_when_windowless.characters());
     request.text_length = m_title_when_windowless.length();
     auto response = GEventLoop::main().sync_request(request, WSAPI_ServerMessage::Type::DidCreateWindow);
@@ -81,9 +81,6 @@ void GWindow::hide()
     WSAPI_ClientMessage request;
     request.type = WSAPI_ClientMessage::Type::DestroyWindow;
     request.window_id = m_window_id;
-    ASSERT(m_title_when_windowless.length() < sizeof(request.text));
-    strcpy(request.text, m_title_when_windowless.characters());
-    request.text_length = m_title_when_windowless.length();
     GEventLoop::main().post_message_to_server(request);
 }
 
@@ -96,7 +93,7 @@ void GWindow::set_title(String&& title)
     WSAPI_ClientMessage request;
     request.type = WSAPI_ClientMessage::Type::SetWindowTitle;
     request.window_id = m_window_id;
-    ASSERT(m_title_when_windowless.length() < sizeof(request.text));
+    ASSERT(m_title_when_windowless.length() < (ssize_t)sizeof(request.text));
     strcpy(request.text, m_title_when_windowless.characters());
     request.text_length = m_title_when_windowless.length();
     GEventLoop::main().post_message_to_server(request);
@@ -110,9 +107,6 @@ String GWindow::title() const
     WSAPI_ClientMessage request;
     request.type = WSAPI_ClientMessage::Type::GetWindowTitle;
     request.window_id = m_window_id;
-    ASSERT(m_title_when_windowless.length() < sizeof(request.text));
-    strcpy(request.text, m_title_when_windowless.characters());
-    request.text_length = m_title_when_windowless.length();
     auto response = GEventLoop::main().sync_request(request, WSAPI_ServerMessage::Type::DidGetWindowTitle);
     return String(response.text, response.text_length);
 }

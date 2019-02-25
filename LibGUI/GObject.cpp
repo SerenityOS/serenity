@@ -43,7 +43,7 @@ void GObject::add_child(GObject& object)
 
 void GObject::remove_child(GObject& object)
 {
-    for (unsigned i = 0; i < m_children.size(); ++i) {
+    for (ssize_t i = 0; i < m_children.size(); ++i) {
         if (m_children[i] == &object) {
             m_children.remove(i);
             return;

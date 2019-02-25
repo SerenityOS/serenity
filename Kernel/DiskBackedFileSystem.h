@@ -10,7 +10,7 @@ public:
     DiskDevice& device() { return *m_device; }
     const DiskDevice& device() const { return *m_device; }
 
-    size_t block_size() const { return m_block_size; }
+    int block_size() const { return m_block_size; }
 
 protected:
     explicit DiskBackedFS(Retained<DiskDevice>&&);
@@ -24,6 +24,6 @@ protected:
     bool write_blocks(unsigned index, unsigned count, const ByteBuffer&);
 
 private:
-    size_t m_block_size { 0 };
+    int m_block_size { 0 };
     Retained<DiskDevice> m_device;
 };

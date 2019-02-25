@@ -84,7 +84,7 @@ void Terminal::Line::clear(Attribute attribute)
 
 Terminal::~Terminal()
 {
-    for (size_t i = 0; i < m_rows; ++i)
+    for (int i = 0; i < m_rows; ++i)
         delete m_lines[i];
     delete [] m_lines;
     free(m_horizontal_tabs);
@@ -115,7 +115,7 @@ inline bool is_valid_final_character(byte ch)
 unsigned parse_uint(const String& str, bool& ok)
 {
     unsigned value = 0;
-    for (size_t i = 0; i < str.length(); ++i) {
+    for (int i = 0; i < str.length(); ++i) {
         if (str[i] < '0' || str[i] > '9') {
             ok = false;
             return 0;
@@ -552,7 +552,7 @@ void Terminal::on_char(byte ch)
 
 void Terminal::inject_string(const String& str)
 {
-    for (size_t i = 0; i < str.length(); ++i)
+    for (int i = 0; i < str.length(); ++i)
         on_char(str[i]);
 }
 
@@ -562,12 +562,12 @@ void Terminal::unimplemented_escape()
     builder.appendf("((Unimplemented escape: %c", m_final);
     if (!m_parameters.is_empty()) {
         builder.append(" parameters:");
-        for (size_t i = 0; i < m_parameters.size(); ++i)
+        for (int i = 0; i < m_parameters.size(); ++i)
             builder.append((char)m_parameters[i]);
     }
     if (!m_intermediates.is_empty()) {
         builder.append(" intermediates:");
-        for (size_t i = 0; i < m_intermediates.size(); ++i)
+        for (int i = 0; i < m_intermediates.size(); ++i)
             builder.append((char)m_intermediates[i]);
     }
     builder.append("))");

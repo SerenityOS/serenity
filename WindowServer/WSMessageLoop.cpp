@@ -290,29 +290,29 @@ void WSMessageLoop::on_receive_from_client(int client_id, const WSAPI_ClientMess
         post_message(client, make<WSAPIAddMenuToMenubarRequest>(client_id, message.menu.menubar_id, message.menu.menu_id));
         break;
     case WSAPI_ClientMessage::Type::CreateMenu:
-        ASSERT(message.text_length < sizeof(message.text));
+        ASSERT(message.text_length < (ssize_t)sizeof(message.text));
         post_message(client, make<WSAPICreateMenuRequest>(client_id, String(message.text, message.text_length)));
         break;
     case WSAPI_ClientMessage::Type::DestroyMenu:
         post_message(client, make<WSAPIDestroyMenuRequest>(client_id, message.menu.menu_id));
         break;
     case WSAPI_ClientMessage::Type::AddMenuItem:
-        ASSERT(message.text_length < sizeof(message.text));
+        ASSERT(message.text_length < (ssize_t)sizeof(message.text));
         post_message(client, make<WSAPIAddMenuItemRequest>(client_id, message.menu.menu_id, message.menu.identifier, String(message.text, message.text_length)));
         break;
     case WSAPI_ClientMessage::Type::CreateWindow:
-        ASSERT(message.text_length < sizeof(message.text));
+        ASSERT(message.text_length < (ssize_t)sizeof(message.text));
         post_message(client, make<WSAPICreateWindowRequest>(client_id, message.window.rect, String(message.text, message.text_length), message.window.has_alpha_channel, message.window.opacity, message.window.base_size, message.window.size_increment));
         break;
     case WSAPI_ClientMessage::Type::DestroyWindow:
         post_message(client, make<WSAPIDestroyWindowRequest>(client_id, message.window_id));
         break;
     case WSAPI_ClientMessage::Type::SetWindowTitle:
-        ASSERT(message.text_length < sizeof(message.text));
+        ASSERT(message.text_length < (ssize_t)sizeof(message.text));
         post_message(client, make<WSAPISetWindowTitleRequest>(client_id, message.window_id, String(message.text, message.text_length)));
         break;
     case WSAPI_ClientMessage::Type::GetWindowTitle:
-        ASSERT(message.text_length < sizeof(message.text));
+        ASSERT(message.text_length < (ssize_t)sizeof(message.text));
         post_message(client, make<WSAPIGetWindowTitleRequest>(client_id, message.window_id));
         break;
     case WSAPI_ClientMessage::Type::SetWindowRect:

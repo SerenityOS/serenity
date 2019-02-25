@@ -42,6 +42,9 @@ int main(int, char**)
         ASSERT(ok);
         String mount_point = parts[5];
 
+        (void)total_inode_count;
+        (void)free_inode_count;
+
         printf("% 10s", fs.characters());
         printf("%10u  ", total_block_count);
         printf("%10u   ", total_block_count - free_block_count);

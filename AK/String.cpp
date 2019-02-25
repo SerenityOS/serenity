@@ -36,7 +36,7 @@ String String::isolated_copy() const
     return String(move(*impl));
 }
 
-String String::substring(size_t start, size_t length) const
+String String::substring(ssize_t start, ssize_t length) const
 {
     ASSERT(m_impl);
     ASSERT(start + length <= m_impl->length());
@@ -54,17 +54,17 @@ Vector<String> String::split(const char separator) const
         return { };
 
     Vector<String> v;
-    size_t substart = 0;
-    for (size_t i = 0; i < length(); ++i) {
+    ssize_t substart = 0;
+    for (ssize_t i = 0; i < length(); ++i) {
         char ch = characters()[i];
         if (ch == separator) {
-            size_t sublen = i - substart;
+            ssize_t sublen = i - substart;
             if (sublen != 0)
                 v.append(substring(substart, sublen));
             substart = i + 1;
         }
     }
-    size_t taillen = length() - substart;
+    ssize_t taillen = length() - substart;
     if (taillen != 0)
         v.append(substring(substart, taillen));
     if (characters()[length() - 1] == separator)
@@ -82,7 +82,7 @@ ByteBuffer String::to_byte_buffer() const
 unsigned String::to_uint(bool& ok) const
 {
     unsigned value = 0;
-    for (size_t i = 0; i < length(); ++i) {
+    for (ssize_t i = 0; i < length(); ++i) {
         if (characters()[i] < '0' || characters()[i] > '9') {
             ok = false;
             return 0;

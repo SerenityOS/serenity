@@ -154,9 +154,9 @@ static dword handle(RegisterDump& regs, dword function, dword arg1, dword arg2, 
     case Syscall::SC_umask:
         return current->sys$umask((mode_t)arg1);
     case Syscall::SC_getgroups:
-        return current->sys$getgroups((int)arg1, (gid_t*)arg2);
+        return current->sys$getgroups((ssize_t)arg1, (gid_t*)arg2);
     case Syscall::SC_setgroups:
-        return current->sys$setgroups((size_t)arg1, (const gid_t*)arg2);
+        return current->sys$setgroups((ssize_t)arg1, (const gid_t*)arg2);
     case Syscall::SC_sigreturn:
         current->sys$sigreturn();
         ASSERT_NOT_REACHED();

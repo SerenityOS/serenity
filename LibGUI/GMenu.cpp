@@ -43,14 +43,14 @@ int GMenu::realize_menu()
 {
     WSAPI_ClientMessage request;
     request.type = WSAPI_ClientMessage::Type::CreateMenu;
-    ASSERT(m_name.length() < sizeof(request.text));
+    ASSERT(m_name.length() < (ssize_t)sizeof(request.text));
     strcpy(request.text, m_name.characters());
     request.text_length = m_name.length();
     auto response = GEventLoop::main().sync_request(request, WSAPI_ServerMessage::Type::DidCreateMenu);
     m_menu_id = response.menu.menu_id;
 
     ASSERT(m_menu_id > 0);
-    for (size_t i = 0; i < m_items.size(); ++i) {
+    for (int i = 0; i < m_items.size(); ++i) {
         auto& item = *m_items[i];
         if (item.type() == GMenuItem::Separator) {
             WSAPI_ClientMessage request;
@@ -65,7 +65,7 @@ int GMenu::realize_menu()
             request.type = WSAPI_ClientMessage::Type::AddMenuItem;
             request.menu.menu_id = m_menu_id;
             request.menu.identifier = i;
-            ASSERT(action.text().length() < sizeof(request.text));
+            ASSERT(action.text().length() < (ssize_t)sizeof(request.text));
             strcpy(request.text, action.text().characters());
             request.text_length = action.text().length();
             GEventLoop::main().sync_request(request, WSAPI_ServerMessage::Type::DidAddMenuItem);
@@ -87,7 +87,7 @@ void GMenu::unrealize_menu()
     m_menu_id = 0;
 }
 
-GAction* GMenu::action_at(size_t index)
+GAction* GMenu::action_at(int index)
 {
     if (index >= m_items.size())
         return nullptr;

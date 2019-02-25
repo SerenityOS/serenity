@@ -121,7 +121,7 @@ Region* Process::allocate_region_with_vmo(LinearAddress laddr, size_t size, Reta
 bool Process::deallocate_region(Region& region)
 {
     InterruptDisabler disabler;
-    for (size_t i = 0; i < m_regions.size(); ++i) {
+    for (int i = 0; i < m_regions.size(); ++i) {
         if (m_regions[i].ptr() == &region) {
             MM.unmap_region(region);
             m_regions.remove(i);
@@ -367,7 +367,7 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
     m_signal_mask = 0xffffffff;
     m_pending_signals = 0;
 
-    for (size_t i = 0; i < m_fds.size(); ++i) {
+    for (int i = 0; i < m_fds.size(); ++i) {
         auto& daf = m_fds[i];
         if (daf.descriptor && daf.flags & FD_CLOEXEC) {
             daf.descriptor->close();
@@ -441,21 +441,19 @@ void Process::make_userspace_stack(Vector<String> arguments, Vector<String> envi
     // FIXME: It would be better if this didn't make us panic.
     ASSERT((total_blob_size + total_meta_size) < default_userspace_stack_size);
 
-    for (size_t i = 0; i < arguments.size(); ++i) {
+    for (int i = 0; i < arguments.size(); ++i) {
         argv[i] = bufptr;
         memcpy(bufptr, arguments[i].characters(), arguments[i].length());
         bufptr += arguments[i].length();
         *(bufptr++) = '\0';
-        printf("argv[%u] = %p (%s)\n", i, argv[i], argv[i]);
     }
     argv[arguments.size()] = nullptr;
 
-    for (size_t i = 0; i < environment.size(); ++i) {
+    for (int i = 0; i < environment.size(); ++i) {
         env[i] = bufptr;
         memcpy(bufptr, environment[i].characters(), environment[i].length());
         bufptr += environment[i].length();
         *(bufptr++) = '\0';
-        printf("env[%u] = %p (%s)\n", i, env[i], env[i]);
     }
     env[environment.size()] = nullptr;
 
@@ -623,7 +621,7 @@ Process::Process(String&& name, uid_t uid, gid_t gid, pid_t ppid, RingLevel ring
 
     if (fork_parent) {
         m_fds.resize(fork_parent->m_fds.size());
-        for (size_t i = 0; i < fork_parent->m_fds.size(); ++i) {
+        for (int i = 0; i < fork_parent->m_fds.size(); ++i) {
             if (!fork_parent->m_fds[i].descriptor)
                 continue;
 #ifdef FORK_DEBUG
@@ -959,7 +957,7 @@ FileDescriptor* Process::file_descriptor(int fd)
 {
     if (fd < 0)
         return nullptr;
-    if ((size_t)fd < m_fds.size())
+    if (fd < m_fds.size())
         return m_fds[fd].descriptor.ptr();
     return nullptr;
 }
@@ -968,7 +966,7 @@ const FileDescriptor* Process::file_descriptor(int fd) const
 {
     if (fd < 0)
         return nullptr;
-    if ((size_t)fd < m_fds.size())
+    if (fd < m_fds.size())
         return m_fds[fd].descriptor.ptr();
     return nullptr;
 }
@@ -1894,7 +1892,7 @@ int Process::sys$sigaction(int signum, const sigaction* act, sigaction* old_act)
     return 0;
 }
 
-int Process::sys$getgroups(int count, gid_t* gids)
+int Process::sys$getgroups(ssize_t count, gid_t* gids)
 {
     if (count < 0)
         return -EINVAL;
@@ -1911,8 +1909,10 @@ int Process::sys$getgroups(int count, gid_t* gids)
     return 0;
 }
 
-int Process::sys$setgroups(size_t count, const gid_t* gids)
+int Process::sys$setgroups(ssize_t count, const gid_t* gids)
 {
+    if (count < 0)
+        return -EINVAL;
     if (!is_superuser())
         return -EPERM;
     if (count >= MAX_PROCESS_GIDS)
@@ -1921,7 +1921,7 @@ int Process::sys$setgroups(size_t count, const gid_t* gids)
         return -EFAULT;
     m_gids.clear();
     m_gids.set(m_gid);
-    for (size_t i = 0; i < count; ++i)
+    for (int i = 0; i < count; ++i)
         m_gids.set(gids[i]);
     return 0;
 }

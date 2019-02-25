@@ -63,7 +63,7 @@ void WSClientConnection::post_error(const String& error_message)
     dbgprintf("WSClientConnection::post_error: client_id=%d: %s\n", m_client_id, error_message.characters());
     WSAPI_ServerMessage message;
     message.type = WSAPI_ServerMessage::Type::Error;
-    ASSERT(error_message.length() < sizeof(message.text));
+    ASSERT(error_message.length() < (ssize_t)sizeof(message.text));
     strcpy(message.text, error_message.characters());
     message.text_length = error_message.length();
     post_message(message);
@@ -277,7 +277,7 @@ void WSClientConnection::handle_request(WSAPIGetWindowTitleRequest& request)
     WSAPI_ServerMessage response;
     response.type = WSAPI_ServerMessage::Type::DidGetWindowTitle;
     response.window_id = window.window_id();
-    ASSERT(window.title().length() < sizeof(response.text));
+    ASSERT(window.title().length() < (ssize_t)sizeof(response.text));
     strcpy(response.text, window.title().characters());
     response.text_length = window.title().length();
     post_message(response);

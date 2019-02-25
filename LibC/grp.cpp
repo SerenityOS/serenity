@@ -107,7 +107,7 @@ next_entry:
     __grdb_entry->gr_gid = e_gid;
     __grdb_entry->gr_name = __grdb_entry->name_buffer;
     __grdb_entry->gr_passwd = __grdb_entry->passwd_buffer;
-    for (size_t i = 0; i < members.size(); ++i) {
+    for (ssize_t i = 0; i < members.size(); ++i) {
         __grdb_entry->members[i] = __grdb_entry->members_buffer[i];
         strcpy(__grdb_entry->members_buffer[i], members[i].characters());
     }

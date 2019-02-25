@@ -35,13 +35,13 @@ void GTextBox::paint_event(GPaintEvent&)
     Rect inner_rect = rect();
     inner_rect.shrink(6, 6);
 
-    size_t max_chars_to_paint = inner_rect.width() / font().glyph_width();
+    ssize_t max_chars_to_paint = inner_rect.width() / font().glyph_width();
 
     int first_visible_char = max((int)m_cursor_position - (int)max_chars_to_paint, 0);
-    size_t chars_to_paint = min(m_text.length() - first_visible_char, max_chars_to_paint);
+    ssize_t chars_to_paint = min(m_text.length() - first_visible_char, max_chars_to_paint);
 
     int y = inner_rect.center().y() - font().glyph_height() / 2;
-    for (size_t i = 0; i < chars_to_paint; ++i) {
+    for (ssize_t i = 0; i < chars_to_paint; ++i) {
         char ch = m_text[first_visible_char + i];
         if (ch == ' ')
             continue;

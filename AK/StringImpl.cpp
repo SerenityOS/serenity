@@ -30,7 +30,7 @@ StringImpl& StringImpl::the_empty_stringimpl()
     return *s_the_empty_stringimpl;
 }
 
-StringImpl::StringImpl(ConstructWithInlineBufferTag, size_t length)
+StringImpl::StringImpl(ConstructWithInlineBufferTag, ssize_t length)
     : m_length(length)
     , m_characters(m_inline_buffer)
 {
@@ -50,12 +50,12 @@ StringImpl::~StringImpl()
 #endif
 }
 
-static inline size_t allocation_size_for_stringimpl(size_t length)
+static inline ssize_t allocation_size_for_stringimpl(ssize_t length)
 {
     return sizeof(StringImpl) + (sizeof(char) * length) + sizeof(char);
 }
 
-Retained<StringImpl> StringImpl::create_uninitialized(size_t length, char*& buffer)
+Retained<StringImpl> StringImpl::create_uninitialized(ssize_t length, char*& buffer)
 {
     ASSERT(length);
     void* slot = kmalloc(allocation_size_for_stringimpl(length));
@@ -66,7 +66,7 @@ Retained<StringImpl> StringImpl::create_uninitialized(size_t length, char*& buff
     return new_stringimpl;
 }
 
-RetainPtr<StringImpl> StringImpl::create(const char* cstring, size_t length, ShouldChomp shouldChomp)
+RetainPtr<StringImpl> StringImpl::create(const char* cstring, ssize_t length, ShouldChomp shouldChomp)
 {
     if (!cstring)
         return nullptr;
@@ -123,7 +123,7 @@ static inline char to_ascii_uppercase(char c)
 
 Retained<StringImpl> StringImpl::to_lowercase() const
 {
-    for (size_t i = 0; i < m_length; ++i) {
+    for (ssize_t i = 0; i < m_length; ++i) {
         if (!is_ascii_lowercase(m_characters[i]))
             goto slow_path;
     }
@@ -132,14 +132,14 @@ Retained<StringImpl> StringImpl::to_lowercase() const
 slow_path:
     char* buffer;
     auto lowercased = create_uninitialized(m_length, buffer);
-    for (size_t i = 0; i < m_length; ++i)
+    for (ssize_t i = 0; i < m_length; ++i)
         buffer[i] = to_ascii_lowercase(m_characters[i]);
     return lowercased;
 }
 
 Retained<StringImpl> StringImpl::to_uppercase() const
 {
-    for (size_t i = 0; i < m_length; ++i) {
+    for (ssize_t i = 0; i < m_length; ++i) {
         if (!is_ascii_uppercase(m_characters[i]))
             goto slow_path;
     }
@@ -148,7 +148,7 @@ Retained<StringImpl> StringImpl::to_uppercase() const
 slow_path:
     char* buffer;
     auto uppercased = create_uninitialized(m_length, buffer);
-    for (size_t i = 0; i < m_length; ++i)
+    for (ssize_t i = 0; i < m_length; ++i)
         buffer[i] = to_ascii_uppercase(m_characters[i]);
     return uppercased;
 }
@@ -159,7 +159,7 @@ void StringImpl::compute_hash() const
         m_hash = 0;
     } else {
         unsigned hash = 0;
-        for (size_t i = 0; i < m_length; ++i) {
+        for (ssize_t i = 0; i < m_length; ++i) {
             hash += m_characters[i];
             hash += (hash << 10);
             hash ^= (hash >> 6);

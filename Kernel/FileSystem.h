@@ -47,7 +47,7 @@ public:
         DirectoryEntry(const char* name, InodeIdentifier, byte file_type);
         DirectoryEntry(const char* name, size_t name_length, InodeIdentifier, byte file_type);
         char name[256];
-        size_t name_length { 0 };
+        int name_length { 0 };
         InodeIdentifier inode;
         byte file_type { 0 };
     };
@@ -88,11 +88,11 @@ public:
 
     ByteBuffer read_entire(FileDescriptor* = nullptr) const;
 
-    virtual ssize_t read_bytes(off_t, size_t, byte* buffer, FileDescriptor*) const = 0;
+    virtual ssize_t read_bytes(off_t, ssize_t, byte* buffer, FileDescriptor*) const = 0;
     virtual bool traverse_as_directory(Function<bool(const FS::DirectoryEntry&)>) const = 0;
     virtual InodeIdentifier lookup(const String& name) = 0;
     virtual String reverse_lookup(InodeIdentifier) = 0;
-    virtual ssize_t write_bytes(off_t, size_t, const byte* data, FileDescriptor*) = 0;
+    virtual ssize_t write_bytes(off_t, ssize_t, const byte* data, FileDescriptor*) = 0;
     virtual bool add_child(InodeIdentifier child_id, const String& name, byte file_type, int& error) = 0;
     virtual bool remove_child(const String& name, int& error) = 0;
     virtual RetainPtr<Inode> parent() const = 0;
@@ -123,7 +123,7 @@ public:
 protected:
     Inode(FS& fs, unsigned index);
     void set_metadata_dirty(bool b) { m_metadata_dirty = b; }
-    void inode_contents_changed(off_t, size_t, const byte*);
+    void inode_contents_changed(off_t, ssize_t, const byte*);
     void inode_size_changed(size_t old_size, size_t new_size);
 
     mutable Lock m_lock;
