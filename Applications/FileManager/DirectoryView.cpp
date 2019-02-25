@@ -38,6 +38,10 @@ void DirectoryView::open(const String& path)
 {
     if (m_path == path)
         return;
+    DIR* dirp = opendir(path.characters());
+    if (!dirp)
+        return;
+    closedir(dirp);
     m_path = path;
     reload();
     if (on_path_change)
