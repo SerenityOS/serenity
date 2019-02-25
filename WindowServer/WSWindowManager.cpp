@@ -364,7 +364,7 @@ void WSWindowManager::paint_window_frame(WSWindow& window)
     m_back_painter->draw_text(titlebar_title_rect, window.title(), TextAlignment::CenterLeft, title_color);
 
     if (!s_close_button_bitmap)
-        s_close_button_bitmap = CharacterBitmap::create_from_ascii(s_close_button_bitmap_data, s_close_button_bitmap_width, s_close_button_bitmap_height).leak_ref();
+        s_close_button_bitmap = &CharacterBitmap::create_from_ascii(s_close_button_bitmap_data, s_close_button_bitmap_width, s_close_button_bitmap_height).leak_ref();
 
     m_back_painter->fill_rect_with_gradient(close_button_rect.shrunken(2, 2), Color::LightGray, Color::White);
 

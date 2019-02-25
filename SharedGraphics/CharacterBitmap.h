@@ -6,7 +6,7 @@
 
 class CharacterBitmap : public Retainable<CharacterBitmap> {
 public:
-    static RetainPtr<CharacterBitmap> create_from_ascii(const char* asciiData, unsigned width, unsigned height);
+    static Retained<CharacterBitmap> create_from_ascii(const char* asciiData, unsigned width, unsigned height);
     ~CharacterBitmap();
 
     bool bit_at(unsigned x, unsigned y) const { return m_bits[y * width() + x] == '#'; }

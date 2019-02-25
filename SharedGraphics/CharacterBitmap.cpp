@@ -10,7 +10,7 @@ CharacterBitmap::~CharacterBitmap()
 {
 }
 
-RetainPtr<CharacterBitmap> CharacterBitmap::create_from_ascii(const char* asciiData, unsigned width, unsigned height)
+Retained<CharacterBitmap> CharacterBitmap::create_from_ascii(const char* asciiData, unsigned width, unsigned height)
 {
     return adopt(*new CharacterBitmap(asciiData, width, height));
 }

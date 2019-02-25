@@ -102,9 +102,8 @@ Region* Process::allocate_file_backed_region(LinearAddress laddr, size_t size, R
     return m_regions.last().ptr();
 }
 
-Region* Process::allocate_region_with_vmo(LinearAddress laddr, size_t size, RetainPtr<VMObject>&& vmo, size_t offset_in_vmo, String&& name, bool is_readable, bool is_writable)
+Region* Process::allocate_region_with_vmo(LinearAddress laddr, size_t size, Retained<VMObject>&& vmo, size_t offset_in_vmo, String&& name, bool is_readable, bool is_writable)
 {
-    ASSERT(vmo);
     size = PAGE_ROUND_UP(size);
     // FIXME: This needs sanity checks. What if this overlaps existing regions?
     if (laddr.is_null()) {
@@ -2439,7 +2438,7 @@ struct SharedBuffer {
     unsigned m_pid2_retain_count { 0 };
     Region* m_pid1_region { nullptr };
     Region* m_pid2_region { nullptr };
-    RetainPtr<VMObject> m_vmo;
+    Retained<VMObject> m_vmo;
 };
 
 static int s_next_shared_buffer_id;

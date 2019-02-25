@@ -63,9 +63,7 @@ private:
     const Font* m_font;
     Point m_translation;
     Rect m_clip_rect;
-    RetainPtr<GraphicsBitmap> m_target;
-#ifdef USERLAND
     GWindow* m_window { nullptr };
-#endif
+    Retained<GraphicsBitmap> m_target;
     DrawOp m_draw_op { DrawOp::Copy };
 };

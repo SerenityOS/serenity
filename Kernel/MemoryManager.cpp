@@ -596,7 +596,7 @@ bool MemoryManager::validate_user_write(const Process& process, LinearAddress la
     return region && region->is_writable();
 }
 
-RetainPtr<Region> Region::clone()
+Retained<Region> Region::clone()
 {
     if (m_shared || (m_readable && !m_writable)) {
         dbgprintf("%s<%u> Region::clone(): sharing %s (L%x)\n",
@@ -645,7 +645,7 @@ Region::Region(LinearAddress a, size_t s, RetainPtr<Inode>&& inode, String&& n, 
     MM.register_region(*this);
 }
 
-Region::Region(LinearAddress a, size_t s, RetainPtr<VMObject>&& vmo, size_t offset_in_vmo, String&& n, bool r, bool w, bool cow)
+Region::Region(LinearAddress a, size_t s, Retained<VMObject>&& vmo, size_t offset_in_vmo, String&& n, bool r, bool w, bool cow)
     : m_laddr(a)
     , m_size(s)
     , m_offset_in_vmo(offset_in_vmo)
