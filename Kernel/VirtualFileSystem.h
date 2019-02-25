@@ -10,6 +10,7 @@
 #include "InodeMetadata.h"
 #include "Limits.h"
 #include "FileSystem.h"
+#include <Kernel/KResult.h>
 
 #define O_RDONLY 0
 #define O_WRONLY 1
@@ -64,13 +65,13 @@ public:
     RetainPtr<FileDescriptor> open(RetainPtr<Device>&&, int& error, int options);
     RetainPtr<FileDescriptor> open(const String& path, int& error, int options, mode_t mode, Inode& base);
     RetainPtr<FileDescriptor> create(const String& path, int& error, int options, mode_t mode, Inode& base);
-    bool mkdir(const String& path, mode_t mode, Inode& base, int& error);
+    KResult mkdir(const String& path, mode_t mode, Inode& base);
     bool link(const String& old_path, const String& new_path, Inode& base, int& error);
     bool unlink(const String& path, Inode& base, int& error);
     bool rmdir(const String& path, Inode& base, int& error);
-    bool chmod(const String& path, mode_t, Inode& base, int& error);
+    KResult chmod(const String& path, mode_t, Inode& base);
     bool stat(const String& path, int& error, int options, Inode& base, struct stat&);
-    bool utime(const String& path, int& error, Inode& base, time_t atime, time_t mtime);
+    KResult utime(const String& path, Inode& base, time_t atime, time_t mtime);
 
     void register_device(Device&);
     void unregister_device(Device&);
@@ -97,9 +98,11 @@ private:
     bool is_vfs_root(InodeIdentifier) const;
 
     void traverse_directory_inode(Inode&, Function<bool(const FS::DirectoryEntry&)>);
-    InodeIdentifier resolve_path(const String& path, InodeIdentifier base, int& error, int options = 0, InodeIdentifier* parent_id = nullptr);
+    InodeIdentifier old_resolve_path(const String& path, InodeIdentifier base, int& error, int options = 0, InodeIdentifier* parent_id = nullptr);
+    KResultOr<InodeIdentifier> resolve_path(const String& path, InodeIdentifier base, int options = 0, InodeIdentifier* parent_id = nullptr);
     RetainPtr<Inode> resolve_path_to_inode(const String& path, Inode& base, int& error, RetainPtr<Inode>* parent_id = nullptr);
-    InodeIdentifier resolve_symbolic_link(InodeIdentifier base, Inode& symlink_inode, int& error);
+    KResultOr<RetainPtr<Inode>> resolve_path_to_inode(const String& path, Inode& base, RetainPtr<Inode>* parent_id = nullptr);
+    KResultOr<InodeIdentifier> resolve_symbolic_link(InodeIdentifier base, Inode& symlink_inode);
 
     Mount* find_mount_for_host(InodeIdentifier);
     Mount* find_mount_for_guest(InodeIdentifier);

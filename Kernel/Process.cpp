@@ -1136,10 +1136,7 @@ int Process::sys$utime(const char* pathname, const utimbuf* buf)
         mtime = now;
         atime = now;
     }
-    int error;
-    if (!VFS::the().utime(String(pathname), error, cwd_inode(), atime, mtime))
-        return error;
-    return 0;
+    return VFS::the().utime(String(pathname), cwd_inode(), atime, mtime);
 }
 
 int Process::sys$access(const char* pathname, int mode)
@@ -1931,10 +1928,7 @@ int Process::sys$mkdir(const char* pathname, mode_t mode)
         return -EINVAL;
     if (pathname_length >= 255)
         return -ENAMETOOLONG;
-    int error;
-    if (!VFS::the().mkdir(String(pathname, pathname_length), mode & ~umask(), cwd_inode(), error))
-        return error;
-    return 0;
+    return VFS::the().mkdir(String(pathname, pathname_length), mode & ~umask(), cwd_inode());
 }
 
 clock_t Process::sys$times(tms* times)
@@ -2143,10 +2137,7 @@ int Process::sys$chmod(const char* pathname, mode_t mode)
 {
     if (!validate_read_str(pathname))
         return -EFAULT;
-    int error;
-    if (!VFS::the().chmod(String(pathname), mode, cwd_inode(), error))
-        return error;
-    return 0;
+    return VFS::the().chmod(String(pathname), mode, cwd_inode());
 }
 
 void Process::finalize()

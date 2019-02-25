@@ -15,6 +15,7 @@
 #include <AK/kstdio.h>
 #include <AK/Lock.h>
 #include <AK/WeakPtr.h>
+#include <Kernel/KResult.h>
 
 static const dword mepoch = 476763780;
 
@@ -96,7 +97,7 @@ public:
     virtual bool remove_child(const String& name, int& error) = 0;
     virtual RetainPtr<Inode> parent() const = 0;
     virtual size_t directory_entry_count() const = 0;
-    virtual bool chmod(mode_t, int& error) = 0;
+    virtual KResult chmod(mode_t) = 0;
 
     LocalSocket* socket() { return m_socket.ptr(); }
     const LocalSocket* socket() const { return m_socket.ptr(); }

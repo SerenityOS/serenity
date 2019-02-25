@@ -42,7 +42,7 @@ bool VFS::mount(RetainPtr<FS>&& file_system, const String& path)
 {
     ASSERT(file_system);
     int error;
-    auto inode = resolve_path(path, root_inode_id(), error);
+    auto inode = old_resolve_path(path, root_inode_id(), error);
     if (!inode.is_valid()) {
         kprintf("VFS: mount can't resolve mount point '%s'\n", path.characters());
         return false;
@@ -131,32 +131,29 @@ RetainPtr<FileDescriptor> VFS::open(RetainPtr<Device>&& device, int& error, int 
     return FileDescriptor::create(move(device));
 }
 
-bool VFS::utime(const String& path, int& error, Inode& base, time_t atime, time_t mtime)
+KResult VFS::utime(const String& path, Inode& base, time_t atime, time_t mtime)
 {
+    int error;
     auto descriptor = VFS::the().open(move(path), error, 0, 0, base);
     if (!descriptor)
-        return false;
+        return KResult(error);
     auto& inode = *descriptor->inode();
-    if (inode.fs().is_readonly()) {
-        error = -EROFS;
-        return false;
-    }
-    if (inode.metadata().uid != current->euid()) {
-        error = -EACCES;
-        return false;
-    }
+    if (inode.fs().is_readonly())
+        return KResult(-EROFS);
+    if (inode.metadata().uid != current->euid())
+        return KResult(-EACCES);
     error = inode.set_atime(atime);
     if (error)
-        return false;
+        return KResult(error);
     error = inode.set_mtime(mtime);
     if (error)
-        return false;
-    return true;
+        return KResult(error);
+    return KSuccess;
 }
 
 bool VFS::stat(const String& path, int& error, int options, Inode& base, struct stat& statbuf)
 {
-    auto inode_id = resolve_path(path, base.identifier(), error, options);
+    auto inode_id = old_resolve_path(path, base.identifier(), error, options);
     if (!inode_id.is_valid())
         return false;
     error = FileDescriptor::create(get_inode(inode_id))->fstat(&statbuf);
@@ -167,7 +164,7 @@ bool VFS::stat(const String& path, int& error, int options, Inode& base, struct 
 
 RetainPtr<FileDescriptor> VFS::open(const String& path, int& error, int options, mode_t mode, Inode& base)
 {
-    auto inode_id = resolve_path(path, base.identifier(), error, options);
+    auto inode_id = old_resolve_path(path, base.identifier(), error, options);
     auto inode = get_inode(inode_id);
     if (options & O_CREAT) {
         if (!inode)
@@ -248,63 +245,62 @@ RetainPtr<FileDescriptor> VFS::create(const String& path, int& error, int option
     return FileDescriptor::create(move(new_file));
 }
 
-bool VFS::mkdir(const String& path, mode_t mode, Inode& base, int& error)
+KResult VFS::mkdir(const String& path, mode_t mode, Inode& base)
 {
-    error = -EWHYTHO;
-
     RetainPtr<Inode> parent_inode;
-    auto existing_dir = resolve_path_to_inode(path, base, error, &parent_inode);
-    if (existing_dir) {
-        error = -EEXIST;
-        return false;
-    }
-    if (!parent_inode) {
-        error = -ENOENT;
-        return false;
-    }
-    if (error != -ENOENT) {
-        return false;
-    }
-    if (!parent_inode->metadata().may_write(*current)) {
-        error = -EACCES;
-        return false;
-    }
+    auto result = resolve_path_to_inode(path, base, &parent_inode);
+    if (!result.is_error())
+        return KResult(-EEXIST);
+    if (!parent_inode)
+        return KResult(-ENOENT);
+    if (result.error() != -ENOENT)
+        return result.error();
+
+    if (!parent_inode->metadata().may_write(*current))
+        return KResult(-EACCES);
 
     FileSystemPath p(path);
     dbgprintf("VFS::mkdir: '%s' in %u:%u\n", p.basename().characters(), parent_inode->fsid(), parent_inode->index());
+    int error;
     auto new_dir = parent_inode->fs().create_directory(parent_inode->identifier(), p.basename(), mode, error);
-    if (new_dir) {
-        error = 0;
-        return true;
-    }
-    return false;
+    if (new_dir)
+        return KSuccess;
+    return KResult(error);
 }
 
-bool VFS::chmod(const String& path, mode_t mode, Inode& base, int& error)
+KResult VFS::chmod(const String& path, mode_t mode, Inode& base)
 {
-    error = -EWHYTHO;
-    auto inode = resolve_path_to_inode(path, base, error);
-    if (!inode)
-        return false;
+    auto inode_or_error = resolve_path_to_inode(path, base);
+    if (inode_or_error.is_error())
+        return inode_or_error.error();
+    auto inode = inode_or_error.value();
 
-    if (inode->fs().is_readonly()) {
-        error = -EROFS;
-        return false;
-    }
+    if (inode->fs().is_readonly())
+        return KResult(-EROFS);
 
-    if (current->euid() != inode->metadata().uid) {
-        error = -EPERM;
-        return false;
-    }
+    if (current->euid() != inode->metadata().uid)
+        return KResult(-EPERM);
 
     // Only change the permission bits.
     mode = (inode->mode() & ~04777) | (mode & 04777);
 
     kprintf("VFS::chmod(): %u:%u mode %o\n", inode->fsid(), inode->index(), mode);
-    if (!inode->chmod(mode, error))
-        return false;
-    error = 0;
-    return true;
+    return inode->chmod(mode);
+}
+
+KResultOr<RetainPtr<Inode>> VFS::resolve_path_to_inode(const String& path, Inode& base, RetainPtr<Inode>* parent_inode)
+{
+    // FIXME: This won't work nicely across mount boundaries.
+    FileSystemPath p(path);
+    if (!p.is_valid())
+        return KResult(-EINVAL);
+    InodeIdentifier parent_id;
+    auto result = resolve_path(path, base.identifier(), 0, &parent_id);
+    if (parent_inode && parent_id.is_valid())
+        *parent_inode = get_inode(parent_id);
+    if (result.is_error())
+        return result.error();
+    return get_inode(result.value());
 }
 
 RetainPtr<Inode> VFS::resolve_path_to_inode(const String& path, Inode& base, int& error, RetainPtr<Inode>* parent_inode)
@@ -316,7 +312,7 @@ RetainPtr<Inode> VFS::resolve_path_to_inode(const String& path, Inode& base, int
         return nullptr;
     }
     InodeIdentifier parent_id;
-    auto inode_id = resolve_path(path, base.identifier(), error, 0, &parent_id);
+    auto inode_id = old_resolve_path(path, base.identifier(), error, 0, &parent_id);
     if (parent_inode && parent_id.is_valid())
         *parent_inode = get_inode(parent_id);
     if (!inode_id.is_valid()) {
@@ -437,16 +433,16 @@ bool VFS::rmdir(const String& path, Inode& base, int& error)
     return true;
 }
 
-InodeIdentifier VFS::resolve_symbolic_link(InodeIdentifier base, Inode& symlink_inode, int& error)
+KResultOr<InodeIdentifier> VFS::resolve_symbolic_link(InodeIdentifier base, Inode& symlink_inode)
 {
     auto symlink_contents = symlink_inode.read_entire();
     if (!symlink_contents)
-        return { };
+        return KResult(-ENOENT);
     auto linkee = String((const char*)symlink_contents.pointer(), symlink_contents.size());
 #ifdef VFS_DEBUG
     kprintf("linkee (%s)(%u) from %u:%u\n", linkee.characters(), linkee.length(), base.fsid(), base.index());
 #endif
-    return resolve_path(linkee, base, error);
+    return resolve_path(linkee, base);
 }
 
 RetainPtr<Inode> VFS::get_inode(InodeIdentifier inode_id)
@@ -477,7 +473,7 @@ String VFS::absolute_path(Inode& core_inode)
 
         InodeIdentifier parent_id;
         if (inode->is_directory()) {
-            parent_id = resolve_path("..", inode->identifier(), error);
+            parent_id = old_resolve_path("..", inode->identifier(), error);
         } else {
             parent_id = inode->parent()->identifier();
         }
@@ -500,12 +496,10 @@ String VFS::absolute_path(Inode& core_inode)
     return builder.to_string();
 }
 
-InodeIdentifier VFS::resolve_path(const String& path, InodeIdentifier base, int& error, int options, InodeIdentifier* parent_id)
+KResultOr<InodeIdentifier> VFS::resolve_path(const String& path, InodeIdentifier base, int options, InodeIdentifier* parent_id)
 {
-    if (path.is_empty()) {
-        error = -EINVAL;
-        return { };
-    }
+    if (path.is_empty())
+        return KResult(-EINVAL);
 
     auto parts = path.split('/');
     InodeIdentifier crumb_id;
@@ -528,29 +522,24 @@ InodeIdentifier VFS::resolve_path(const String& path, InodeIdentifier base, int&
 #ifdef VFS_DEBUG
             kprintf("invalid metadata\n");
 #endif
-            error = -EIO;
-            return { };
+            return KResult(-EIO);
         }
         auto metadata = crumb_inode->metadata();
         if (!metadata.is_directory()) {
 #ifdef VFS_DEBUG
             kprintf("parent of <%s> not directory, it's inode %u:%u / %u:%u, mode: %u, size: %u\n", part.characters(), crumb_id.fsid(), crumb_id.index(), metadata.inode.fsid(), metadata.inode.index(), metadata.mode, metadata.size);
 #endif
-            error = -ENOTDIR;
-            return { };
+            return KResult(-ENOTDIR);
         }
-        if (!metadata.may_execute(*current)) {
-            error = -EACCES;
-            return { };
-        }
+        if (!metadata.may_execute(*current))
+            return KResult(-EACCES);
         auto parent = crumb_id;
         crumb_id = crumb_inode->lookup(part);
         if (!crumb_id.is_valid()) {
 #ifdef VFS_DEBUG
             kprintf("child <%s>(%u) not found in directory, %02u:%08u\n", part.characters(), part.length(), parent.fsid(), parent.index());
 #endif
-            error = -ENOENT;
-            return { };
+            return KResult(-ENOENT);
         }
 #ifdef VFS_DEBUG
         kprintf("<%s> %u:%u\n", part.characters(), crumb_id.fsid(), crumb_id.index());
@@ -581,22 +570,30 @@ InodeIdentifier VFS::resolve_path(const String& path, InodeIdentifier base, int&
         }
         if (metadata.is_symlink()) {
             if (i == parts.size() - 1) {
-                if (options & O_NOFOLLOW) {
-                    error = -ELOOP;
-                    return { };
-                }
+                if (options & O_NOFOLLOW)
+                    return KResult(-ELOOP);
                 if (options & O_NOFOLLOW_NOERROR)
                     return crumb_id;
             }
-            crumb_id = resolve_symbolic_link(parent, *crumb_inode, error);
-            if (!crumb_id.is_valid()) {
-                kprintf("Symbolic link resolution failed :(\n");
-                return { };
-            }
+            auto result = resolve_symbolic_link(parent, *crumb_inode);
+            if (result.is_error())
+                return KResult(-ENOENT);
+            crumb_id = result.value();
+            ASSERT(crumb_id.is_valid());
         }
     }
 
     return crumb_id;
+}
+
+InodeIdentifier VFS::old_resolve_path(const String& path, InodeIdentifier base, int& error, int options, InodeIdentifier* parent_id)
+{
+    auto result = resolve_path(path, base, options, parent_id);
+    if (result.is_error()) {
+        error = result.error();
+        return { };
+    }
+    return result.value();
 }
 
 VFS::Mount::Mount(InodeIdentifier host, RetainPtr<FS>&& guest_fs)

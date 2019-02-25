@@ -311,8 +311,7 @@ size_t SynthFSInode::directory_entry_count() const
     return m_children.size() + 2;
 }
 
-bool SynthFSInode::chmod(mode_t, int& error)
+KResult SynthFSInode::chmod(mode_t)
 {
-    error = -EPERM;
-    return false;
+    return KResult(-EPERM);
 }

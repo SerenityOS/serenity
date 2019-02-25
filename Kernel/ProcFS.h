@@ -87,7 +87,7 @@ private:
     virtual bool remove_child(const String& name, int& error) override;
     virtual RetainPtr<Inode> parent() const override;
     virtual size_t directory_entry_count() const override;
-    virtual bool chmod(mode_t, int& error) override;
+    virtual KResult chmod(mode_t) override;
 
     ProcFS& fs() { return static_cast<ProcFS&>(Inode::fs()); }
     const ProcFS& fs() const { return static_cast<const ProcFS&>(Inode::fs()); }

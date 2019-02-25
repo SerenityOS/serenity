@@ -1350,15 +1350,14 @@ size_t Ext2FSInode::directory_entry_count() const
     return m_lookup_cache.size();
 }
 
-bool Ext2FSInode::chmod(mode_t mode, int& error)
+KResult Ext2FSInode::chmod(mode_t mode)
 {
     LOCKER(m_lock);
-    error = 0;
     if (m_raw_inode.i_mode == mode)
-        return true;
+        return KSuccess;
     m_raw_inode.i_mode = mode;
     set_metadata_dirty(true);
-    return true;
+    return KSuccess;
 }
 
 unsigned Ext2FS::total_block_count() const
