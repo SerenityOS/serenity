@@ -60,28 +60,23 @@ int WSMessageLoop::exec()
         Vector<QueuedMessage> messages = move(m_queued_messages);
 
         for (auto& queued_message : messages) {
-            auto* receiver = queued_message.receiver;
+            auto* receiver = queued_message.receiver.ptr();
             auto& message = *queued_message.message;
 #ifdef WSEVENTLOOP_DEBUG
             dbgprintf("WSMessageLoop: receiver{%p} message %u\n", receiver, (unsigned)message.type());
 #endif
-            if (!receiver) {
-                dbgprintf("WSMessage type %u with no receiver :(\n", message.type());
-                ASSERT_NOT_REACHED();
-                return 1;
-            } else {
+            if (receiver)
                 receiver->on_message(message);
-            }
         }
     }
 }
 
-void WSMessageLoop::post_message(WSMessageReceiver* receiver, OwnPtr<WSMessage>&& message)
+void WSMessageLoop::post_message(WSMessageReceiver& receiver, OwnPtr<WSMessage>&& message)
 {
 #ifdef WSEVENTLOOP_DEBUG
     dbgprintf("WSMessageLoop::post_message: {%u} << receiver=%p, message=%p (type=%u)\n", m_queued_messages.size(), receiver, message.ptr(), message->type());
 #endif
-    m_queued_messages.append({ receiver, move(message) });
+    m_queued_messages.append({ receiver.make_weak_ptr(), move(message) });
 }
 
 void WSMessageLoop::Timer::reload()
@@ -263,7 +258,7 @@ void WSMessageLoop::notify_client_disconnected(int client_id)
     auto* client = WSClientConnection::from_client_id(client_id);
     if (!client)
         return;
-    post_message(client, make<WSClientDisconnectedNotification>(client_id));
+    post_message(*client, make<WSClientDisconnectedNotification>(client_id));
 }
 
 void WSMessageLoop::on_receive_from_client(int client_id, const WSAPI_ClientMessage& message)
@@ -274,8 +269,7 @@ void WSMessageLoop::on_receive_from_client(int client_id, const WSAPI_ClientMess
         sched_yield();
 #endif
 
-    WSClientConnection* client = WSClientConnection::from_client_id(client_id);
-    ASSERT(client);
+    WSClientConnection& client = *WSClientConnection::from_client_id(client_id);
     switch (message.type) {
     case WSAPI_ClientMessage::Type::CreateMenubar:
         post_message(client, make<WSAPICreateMenubarRequest>(client_id));
@@ -335,6 +329,8 @@ void WSMessageLoop::on_receive_from_client(int client_id, const WSAPI_ClientMess
         break;
     case WSAPI_ClientMessage::Type::SetGlobalCursorTracking:
         post_message(client, make<WSAPISetGlobalCursorTrackingRequest>(client_id, message.window_id, message.value));
+        break;
+    default:
         break;
     }
 }

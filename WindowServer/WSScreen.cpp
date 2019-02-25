@@ -74,7 +74,7 @@ void WSScreen::on_receive_mouse_data(int dx, int dy, bool left_button, bool righ
         buttons |= (unsigned)MouseButton::Right;
     if (m_cursor_location != prev_location) {
         auto message = make<WSMouseEvent>(WSMessage::MouseMove, m_cursor_location, buttons);
-        WSMessageLoop::the().post_message(&WSWindowManager::the(), move(message));
+        WSMessageLoop::the().post_message(WSWindowManager::the(), move(message));
     }
     bool prev_left_button = m_left_mouse_button_pressed;
     bool prev_right_button = m_right_mouse_button_pressed;
@@ -82,11 +82,11 @@ void WSScreen::on_receive_mouse_data(int dx, int dy, bool left_button, bool righ
     m_right_mouse_button_pressed = right_button;
     if (prev_left_button != left_button) {
         auto message = make<WSMouseEvent>(left_button ? WSMessage::MouseDown : WSMessage::MouseUp, m_cursor_location, buttons, MouseButton::Left);
-        WSMessageLoop::the().post_message(&WSWindowManager::the(), move(message));
+        WSMessageLoop::the().post_message(WSWindowManager::the(), move(message));
     }
     if (prev_right_button != right_button) {
         auto message = make<WSMouseEvent>(right_button ? WSMessage::MouseDown : WSMessage::MouseUp, m_cursor_location, buttons, MouseButton::Right);
-        WSMessageLoop::the().post_message(&WSWindowManager::the(), move(message));
+        WSMessageLoop::the().post_message(WSWindowManager::the(), move(message));
     }
     if (m_cursor_location != prev_location || prev_left_button != left_button)
         WSWindowManager::the().invalidate_cursor();
@@ -98,7 +98,7 @@ void WSScreen::on_receive_keyboard_data(KeyEvent kernel_event)
     message->m_shift = kernel_event.shift();
     message->m_ctrl = kernel_event.ctrl();
     message->m_alt = kernel_event.alt();
-    WSMessageLoop::the().post_message(&WSWindowManager::the(), move(message));
+    WSMessageLoop::the().post_message(WSWindowManager::the(), move(message));
 }
 
 void WSScreen::set_y_offset(int offset)
