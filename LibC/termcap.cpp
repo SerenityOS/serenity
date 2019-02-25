@@ -15,6 +15,8 @@ char* BC;
 
 int tgetent(char* bp, const char* name)
 {
+    (void)bp;
+    (void)name;
 #ifdef TERMCAP_DEBUG
     fprintf(stderr, "tgetent: bp=%p, name='%s'\n", bp, name);
 #endif
@@ -67,7 +69,7 @@ void ensure_caps()
     caps->set("li", "25");
 }
 
-char* tgetstr(char* id, char** area)
+char* tgetstr(const char* id, char** area)
 {
     ensure_caps();
 #ifdef TERMCAP_DEBUG
@@ -85,8 +87,9 @@ char* tgetstr(char* id, char** area)
     return nullptr;
 }
 
-int tgetflag(char* id)
+int tgetflag(const char* id)
 {
+    (void)id;
 #ifdef TERMCAP_DEBUG
     fprintf(stderr, "tgetflag: '%s'\n", id);
 #endif
@@ -96,7 +99,7 @@ int tgetflag(char* id)
     return 0;
 }
 
-int tgetnum(char* id)
+int tgetnum(const char* id)
 {
 #ifdef TERMCAP_DEBUG
     fprintf(stderr, "tgetnum: '%s'\n", id);
@@ -109,11 +112,15 @@ int tgetnum(char* id)
 
 char* tgoto(const char* cap, int col, int row)
 {
+    (void)cap;
+    (void)col;
+    (void)row;
     assert(false);
 }
 
 int tputs(const char* str, int affcnt, int (*putc)(int))
 {
+    (void)affcnt;
     size_t len = strlen(str);
     for (size_t i = 0; i < len; ++i)
         putc(str[i]);

@@ -9,9 +9,9 @@ extern char* UP;
 extern char* BC;
 
 int tgetent(char* bp, const char* name);
-int tgetflag(char* id);
-int tgetnum(char* id);
-char* tgetstr(char* id, char** area);
+int tgetflag(const char* id);
+int tgetnum(const char* id);
+char* tgetstr(const char* id, char** area);
 char* tgoto(const char* cap, int col, int row);
 int tputs(const char* str, int affcnt, int (*putc)(int));
 

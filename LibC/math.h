@@ -34,8 +34,8 @@ double round(double);
 float roundf(float);
 double fabs(double);
 float fabsf(float);
-double fmod(double);
-float fmodf(float);
+double fmod(double, double);
+float fmodf(float, float);
 double exp(double);
 float expf(float);
 double frexp(double, int* exp);
@@ -49,7 +49,7 @@ float sqrtf(float);
 double modf(double, double*);
 float modff(float, float*);
 double ldexp(double, int exp);
-double ldexpf(float, int exp);
+float ldexpf(float, int exp);
 
 double pow(double x, double y);
 

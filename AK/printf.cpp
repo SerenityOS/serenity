@@ -13,7 +13,7 @@ typedef unsigned int dword;
 static constexpr const char* h = "0123456789abcdef";
 
 template<typename PutChFunc>
-[[gnu::always_inline]] int print_hex(PutChFunc putch, char*& bufptr, dword number, byte fields)
+[[gnu::always_inline]] inline int print_hex(PutChFunc putch, char*& bufptr, dword number, byte fields)
 {
     int ret = 0;
     byte shr_count = fields * 4;
@@ -26,7 +26,7 @@ template<typename PutChFunc>
 }
 
 template<typename PutChFunc>
-[[gnu::always_inline]] int print_number(PutChFunc putch, char*& bufptr, dword number, bool leftPad, bool zeroPad, dword fieldWidth)
+[[gnu::always_inline]] inline int print_number(PutChFunc putch, char*& bufptr, dword number, bool leftPad, bool zeroPad, dword fieldWidth)
 {
     dword divisor = 1000000000;
     char ch;
@@ -67,7 +67,7 @@ template<typename PutChFunc>
 }
 
 template<typename PutChFunc>
-[[gnu::always_inline]] int print_octal_number(PutChFunc putch, char*& bufptr, dword number, bool leftPad, bool zeroPad, dword fieldWidth)
+[[gnu::always_inline]] inline int print_octal_number(PutChFunc putch, char*& bufptr, dword number, bool leftPad, bool zeroPad, dword fieldWidth)
 {
     dword divisor = 134217728;
     char ch;
@@ -108,7 +108,7 @@ template<typename PutChFunc>
 }
 
 template<typename PutChFunc>
-[[gnu::always_inline]] int print_string(PutChFunc putch, char*& bufptr, const char* str, bool leftPad, dword fieldWidth)
+[[gnu::always_inline]] inline int print_string(PutChFunc putch, char*& bufptr, const char* str, bool leftPad, dword fieldWidth)
 {
     size_t len = strlen(str);
     if (!fieldWidth || fieldWidth < len)
@@ -129,7 +129,7 @@ template<typename PutChFunc>
 
 
 template<typename PutChFunc>
-[[gnu::always_inline]] int print_signed_number(PutChFunc putch, char*& bufptr, int number, bool leftPad, bool zeroPad, dword fieldWidth)
+[[gnu::always_inline]] inline int print_signed_number(PutChFunc putch, char*& bufptr, int number, bool leftPad, bool zeroPad, dword fieldWidth)
 {
     if (number < 0) {
         putch(bufptr, '-');
@@ -139,7 +139,7 @@ template<typename PutChFunc>
 }
 
 template<typename PutChFunc>
-[[gnu::always_inline]] int printf_internal(PutChFunc putch, char* buffer, const char*& fmt, char*& ap)
+[[gnu::always_inline]] inline int printf_internal(PutChFunc putch, char* buffer, const char*& fmt, char*& ap)
 {
     const char *p;
 
