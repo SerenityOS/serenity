@@ -75,6 +75,11 @@ ALWAYS_INLINE int __isxdigit(int c)
     return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
 }
 
+ALWAYS_INLINE int __isgraph(int c)
+{
+    return __isalnum(c) || __ispunct(c);
+}
+
 #ifdef __cplusplus
 #define __CTYPE_FUNC(name) static inline int name(int c) { return __ ## name(c); }
 
@@ -91,6 +96,7 @@ __CTYPE_FUNC(isalpha)
 __CTYPE_FUNC(isalnum)
 __CTYPE_FUNC(iscntrl)
 __CTYPE_FUNC(isxdigit)
+__CTYPE_FUNC(isgraph)
 #else
 #define isascii(c) __isascii(c)
 #define isspace(c) __isspace(c)
@@ -105,6 +111,7 @@ __CTYPE_FUNC(isxdigit)
 #define isalnum(c) __isalnum(c)
 #define iscntrl(c) __iscntrl(c)
 #define isxdigit(c) __isxdigit(c)
+#define isgraph(c) __isgraph(c)
 #endif
 
 __END_DECLS

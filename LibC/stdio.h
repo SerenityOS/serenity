@@ -37,6 +37,12 @@ extern FILE* stdin;
 extern FILE* stdout;
 extern FILE* stderr;
 
+typedef size_t fpos_t;
+
+int fseek(FILE*, long offset, int whence);
+int fgetpos(FILE*, fpos_t*);
+int fsetpos(FILE*, const fpos_t*);
+long ftell(FILE*);
 char* fgets(char* buffer, int size, FILE*);
 int fputc(int ch, FILE*);
 int fileno(FILE*);
@@ -44,8 +50,9 @@ int fgetc(FILE*);
 int getc(FILE*);
 int getchar();
 int ungetc(int c, FILE*);
+int remove(const char* pathname);
 FILE* fdopen(int fd, const char* mode);
-FILE* fopen(const char* pathname, const char* mode);
+FILE* fopen(const char* pathname, const char* mode); FILE* freopen(const char* pathname, const char* mode, FILE*);
 int fclose(FILE*);
 void rewind(FILE*);
 void clearerr(FILE*);
@@ -68,12 +75,14 @@ int putc(int ch, FILE*);
 int puts(const char*);
 int fputs(const char*, FILE*);
 void perror(const char*);
-int sscanf (const char* buf, const char* fmt, ...);
+int scanf(const char* fmt, ...);
+int sscanf (const char* str, const char* fmt, ...);
 int fscanf(FILE*, const char* fmt, ...);
 int setvbuf(FILE*, char* buf, int mode, size_t);
 void setbuf(FILE*, char* buf);
 void setlinebuf(FILE*);
 int rename(const char* oldpath, const char* newpath);
+FILE* tmpfile();
 
 __END_DECLS
 

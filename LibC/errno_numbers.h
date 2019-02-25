@@ -48,6 +48,29 @@
     __ERROR(ENOTEMPTY,      "Directory not empty") \
     __ERROR(EDOM,           "Math argument out of domain") \
     __ERROR(ECONNREFUSED,   "Connection refused") \
+    __ERROR(EADDRNOTAVAIL,  "Address not available") \
+    __ERROR(EISCONN,        "Already connected") \
+    __ERROR(ECONNABORTED,   "Connection aborted") \
+    __ERROR(EALREADY,       "Connection already in progress") \
+    __ERROR(ECONNRESET,     "Connection reset") \
+    __ERROR(EDESTADDRREQ,   "Desination address required") \
+    __ERROR(EHOSTUNREACH,   "Host unreachable") \
+    __ERROR(EILSEQ,         "Illegal byte sequence") \
+    __ERROR(EMSGSIZE,       "Message size") \
+    __ERROR(ENETDOWN,       "Network down") \
+    __ERROR(ENETUNREACH,    "Network unreachable") \
+    __ERROR(ENETRESET,      "Network reset") \
+    __ERROR(ENOBUFS,        "No buffer space") \
+    __ERROR(ENOLCK,         "No lock available") \
+    __ERROR(ENOMSG,         "No message") \
+    __ERROR(ENOPROTOOPT,    "No protocol option") \
+    __ERROR(ENOTCONN,       "Not connected") \
+    __ERROR(EWOULDBLOCK,    "Operation would block") \
+    __ERROR(EPROTONOSUPPORT,"Protocol not supported") \
+    __ERROR(EDEADLK,        "Resource deadlock would occur") \
+    __ERROR(ETIMEDOUT,      "Timed out") \
+    __ERROR(EPROTOTYPE,     "Wrong protocol type") \
+    __ERROR(EINPROGRESS,    "Operation in progress") \
     __ERROR(EMAXERRNO,      "The highest errno +1 :^)")
 
 
