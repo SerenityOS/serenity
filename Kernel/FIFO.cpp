@@ -3,7 +3,7 @@
 
 //#define FIFO_DEBUG
 
-RetainPtr<FIFO> FIFO::create()
+Retained<FIFO> FIFO::create()
 {
     return adopt(*new FIFO);
 }

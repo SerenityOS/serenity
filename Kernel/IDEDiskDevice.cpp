@@ -32,7 +32,7 @@ enum IDEStatus : byte {
     ERR  = (1 << 0),
 };
 
-RetainPtr<IDEDiskDevice> IDEDiskDevice::create()
+Retained<IDEDiskDevice> IDEDiskDevice::create()
 {
     return adopt(*new IDEDiskDevice);
 }

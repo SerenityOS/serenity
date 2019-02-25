@@ -18,14 +18,14 @@ class CharacterDevice;
 class FileDescriptor : public Retainable<FileDescriptor> {
 public:
 
-    static RetainPtr<FileDescriptor> create(RetainPtr<Socket>&&, SocketRole = SocketRole::None);
-    static RetainPtr<FileDescriptor> create(RetainPtr<Inode>&&);
-    static RetainPtr<FileDescriptor> create(RetainPtr<Device>&&);
-    static RetainPtr<FileDescriptor> create_pipe_writer(FIFO&);
-    static RetainPtr<FileDescriptor> create_pipe_reader(FIFO&);
+    static Retained<FileDescriptor> create(RetainPtr<Socket>&&, SocketRole = SocketRole::None);
+    static Retained<FileDescriptor> create(RetainPtr<Inode>&&);
+    static Retained<FileDescriptor> create(RetainPtr<Device>&&);
+    static Retained<FileDescriptor> create_pipe_writer(FIFO&);
+    static Retained<FileDescriptor> create_pipe_reader(FIFO&);
     ~FileDescriptor();
 
-    RetainPtr<FileDescriptor> clone();
+    Retained<FileDescriptor> clone();
 
     int close();
 

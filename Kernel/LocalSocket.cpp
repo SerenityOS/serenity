@@ -4,7 +4,7 @@
 #include <Kernel/VirtualFileSystem.h>
 #include <LibC/errno_numbers.h>
 
-RetainPtr<LocalSocket> LocalSocket::create(int type)
+Retained<LocalSocket> LocalSocket::create(int type)
 {
     return adopt(*new LocalSocket(type));
 }

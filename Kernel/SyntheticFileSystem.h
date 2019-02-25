@@ -9,7 +9,7 @@ class SynthFSInode;
 class SynthFS : public FS {
 public:
     virtual ~SynthFS() override;
-    static RetainPtr<SynthFS> create();
+    static Retained<SynthFS> create();
 
     virtual bool initialize() override;
     virtual const char* class_name() const override;
@@ -26,10 +26,10 @@ protected:
 
     SynthFS();
 
-    RetainPtr<SynthFSInode> create_directory(String&& name);
-    RetainPtr<SynthFSInode> create_text_file(String&& name, ByteBuffer&&, mode_t = 0010644);
-    RetainPtr<SynthFSInode> create_generated_file(String&& name, Function<ByteBuffer(SynthFSInode&)>&&, mode_t = 0100644);
-    RetainPtr<SynthFSInode> create_generated_file(String&& name, Function<ByteBuffer(SynthFSInode&)>&&, Function<ssize_t(SynthFSInode&, const ByteBuffer&)>&&, mode_t = 0100644);
+    Retained<SynthFSInode> create_directory(String&& name);
+    Retained<SynthFSInode> create_text_file(String&& name, ByteBuffer&&, mode_t = 0010644);
+    Retained<SynthFSInode> create_generated_file(String&& name, Function<ByteBuffer(SynthFSInode&)>&&, mode_t = 0100644);
+    Retained<SynthFSInode> create_generated_file(String&& name, Function<ByteBuffer(SynthFSInode&)>&&, Function<ssize_t(SynthFSInode&, const ByteBuffer&)>&&, mode_t = 0100644);
 
     InodeIdentifier add_file(RetainPtr<SynthFSInode>&&, InodeIndex parent = RootInodeIndex);
     bool remove_file(InodeIndex);

@@ -13,12 +13,12 @@
 
 //#define EXT2_DEBUG
 
-RetainPtr<Ext2FS> Ext2FS::create(RetainPtr<DiskDevice>&& device)
+Retained<Ext2FS> Ext2FS::create(Retained<DiskDevice>&& device)
 {
     return adopt(*new Ext2FS(move(device)));
 }
 
-Ext2FS::Ext2FS(RetainPtr<DiskDevice>&& device)
+Ext2FS::Ext2FS(Retained<DiskDevice>&& device)
     : DiskBackedFS(move(device))
     , m_lock("Ext2FS")
 {

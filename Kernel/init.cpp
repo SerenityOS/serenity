@@ -149,7 +149,7 @@ VFS* vfs;
 
     new BXVGADevice;
 
-    auto new_procfs = ProcFS::create();
+    Retained<ProcFS> new_procfs = ProcFS::create();
     new_procfs->initialize();
 
     auto devptsfs = DevPtsFS::create();

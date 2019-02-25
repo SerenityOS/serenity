@@ -667,14 +667,14 @@ Region::~Region()
     MM.unregister_region(*this);
 }
 
-RetainPtr<PhysicalPage> PhysicalPage::create_eternal(PhysicalAddress paddr, bool supervisor)
+Retained<PhysicalPage> PhysicalPage::create_eternal(PhysicalAddress paddr, bool supervisor)
 {
     void* slot = kmalloc_eternal(sizeof(PhysicalPage));
     new (slot) PhysicalPage(paddr, supervisor);
     return adopt(*(PhysicalPage*)slot);
 }
 
-RetainPtr<PhysicalPage> PhysicalPage::create(PhysicalAddress paddr, bool supervisor)
+Retained<PhysicalPage> PhysicalPage::create(PhysicalAddress paddr, bool supervisor)
 {
     void* slot = kmalloc(sizeof(PhysicalPage));
     new (slot) PhysicalPage(paddr, supervisor, false);
@@ -702,23 +702,23 @@ void PhysicalPage::return_to_freelist()
 #endif
 }
 
-RetainPtr<VMObject> VMObject::create_file_backed(RetainPtr<Inode>&& inode)
+Retained<VMObject> VMObject::create_file_backed(RetainPtr<Inode>&& inode)
 {
     InterruptDisabler disabler;
     if (inode->vmo())
-        return static_cast<VMObject*>(inode->vmo());
+        return *inode->vmo();
     auto vmo = adopt(*new VMObject(move(inode)));
     vmo->inode()->set_vmo(*vmo);
     return vmo;
 }
 
-RetainPtr<VMObject> VMObject::create_anonymous(size_t size)
+Retained<VMObject> VMObject::create_anonymous(size_t size)
 {
     size = ceil_div(size, PAGE_SIZE) * PAGE_SIZE;
     return adopt(*new VMObject(size));
 }
 
-RetainPtr<VMObject> VMObject::create_for_physical_range(PhysicalAddress paddr, size_t size)
+Retained<VMObject> VMObject::create_for_physical_range(PhysicalAddress paddr, size_t size)
 {
     size = ceil_div(size, PAGE_SIZE) * PAGE_SIZE;
     auto vmo = adopt(*new VMObject(paddr, size));
@@ -726,7 +726,7 @@ RetainPtr<VMObject> VMObject::create_for_physical_range(PhysicalAddress paddr, s
     return vmo;
 }
 
-RetainPtr<VMObject> VMObject::clone()
+Retained<VMObject> VMObject::clone()
 {
     return adopt(*new VMObject(*this));
 }

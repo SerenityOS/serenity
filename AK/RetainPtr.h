@@ -1,22 +1,9 @@
 #pragma once
 
-#include "Types.h"
+#include <AK/Types.h>
+#include <AK/Retained.h>
 
 namespace AK {
-
-template<typename T>
-inline void retain_if_not_null(T* ptr)
-{
-    if (ptr)
-        ptr->retain();
-}
-
-template<typename T>
-inline void release_if_not_null(T* ptr)
-{
-    if (ptr)
-        ptr->release();
-}
 
 template<typename T>
 class RetainPtr {
@@ -30,6 +17,7 @@ public:
     RetainPtr(AdoptTag, T& object) : m_ptr(&object) { }
     RetainPtr(RetainPtr& other) : m_ptr(other.copy_ref().leak_ref()) { }
     RetainPtr(RetainPtr&& other) : m_ptr(other.leak_ref()) { }
+    template<typename U> RetainPtr(Retained<U>&& other) : m_ptr(static_cast<T*>(&other.leak_ref())) { }
     template<typename U> RetainPtr(RetainPtr<U>&& other) : m_ptr(static_cast<T*>(other.leak_ref())) { }
     RetainPtr(const RetainPtr& other) : m_ptr(const_cast<RetainPtr&>(other).copy_ref().leak_ref()) { }
     template<typename U> RetainPtr(const RetainPtr<U>& other) : m_ptr(const_cast<RetainPtr<U>&>(other).copy_ref().leak_ref()) { }
@@ -128,14 +116,7 @@ private:
     T* m_ptr = nullptr;
 };
 
-template<typename T>
-inline RetainPtr<T> adopt(T& object)
-{
-    return RetainPtr<T>(RetainPtr<T>::Adopt, object);
-}
-
 }
 
 using AK::RetainPtr;
-using AK::adopt;
 

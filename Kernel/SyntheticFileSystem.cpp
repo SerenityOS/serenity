@@ -5,7 +5,7 @@
 
 //#define SYNTHFS_DEBUG
 
-RetainPtr<SynthFS> SynthFS::create()
+Retained<SynthFS> SynthFS::create()
 {
     return adopt(*new SynthFS);
 }
@@ -34,7 +34,7 @@ bool SynthFS::initialize()
     return true;
 }
 
-RetainPtr<SynthFSInode> SynthFS::create_directory(String&& name)
+Retained<SynthFSInode> SynthFS::create_directory(String&& name)
 {
     auto file = adopt(*new SynthFSInode(*this, generate_inode_index()));
     file->m_name = move(name);
@@ -46,7 +46,7 @@ RetainPtr<SynthFSInode> SynthFS::create_directory(String&& name)
     return file;
 }
 
-RetainPtr<SynthFSInode> SynthFS::create_text_file(String&& name, ByteBuffer&& contents, mode_t mode)
+Retained<SynthFSInode> SynthFS::create_text_file(String&& name, ByteBuffer&& contents, mode_t mode)
 {
     auto file = adopt(*new SynthFSInode(*this, generate_inode_index()));
     file->m_data = contents;
@@ -59,7 +59,7 @@ RetainPtr<SynthFSInode> SynthFS::create_text_file(String&& name, ByteBuffer&& co
     return file;
 }
 
-RetainPtr<SynthFSInode> SynthFS::create_generated_file(String&& name, Function<ByteBuffer(SynthFSInode&)>&& generator, mode_t mode)
+Retained<SynthFSInode> SynthFS::create_generated_file(String&& name, Function<ByteBuffer(SynthFSInode&)>&& generator, mode_t mode)
 {
     auto file = adopt(*new SynthFSInode(*this, generate_inode_index()));
     file->m_generator = move(generator);
@@ -72,7 +72,7 @@ RetainPtr<SynthFSInode> SynthFS::create_generated_file(String&& name, Function<B
     return file;
 }
 
-RetainPtr<SynthFSInode> SynthFS::create_generated_file(String&& name, Function<ByteBuffer(SynthFSInode&)>&& read_callback, Function<ssize_t(SynthFSInode&, const ByteBuffer&)>&& write_callback, mode_t mode)
+Retained<SynthFSInode> SynthFS::create_generated_file(String&& name, Function<ByteBuffer(SynthFSInode&)>&& read_callback, Function<ssize_t(SynthFSInode&, const ByteBuffer&)>&& write_callback, mode_t mode)
 {
     auto file = adopt(*new SynthFSInode(*this, generate_inode_index()));
     file->m_generator = move(read_callback);

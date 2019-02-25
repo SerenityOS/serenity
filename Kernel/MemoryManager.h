@@ -48,8 +48,8 @@ public:
         }
     }
 
-    static RetainPtr<PhysicalPage> create_eternal(PhysicalAddress, bool supervisor);
-    static RetainPtr<PhysicalPage> create(PhysicalAddress, bool supervisor);
+    static Retained<PhysicalPage> create_eternal(PhysicalAddress, bool supervisor);
+    static Retained<PhysicalPage> create(PhysicalAddress, bool supervisor);
 
     unsigned short retain_count() const { return m_retain_count; }
 
@@ -68,8 +68,8 @@ private:
 class PageDirectory : public Retainable<PageDirectory> {
     friend class MemoryManager;
 public:
-    static RetainPtr<PageDirectory> create() { return adopt(*new PageDirectory); }
-    static RetainPtr<PageDirectory> create_at_fixed_address(PhysicalAddress paddr) { return adopt(*new PageDirectory(paddr)); }
+    static Retained<PageDirectory> create() { return adopt(*new PageDirectory); }
+    static Retained<PageDirectory> create_at_fixed_address(PhysicalAddress paddr) { return adopt(*new PageDirectory(paddr)); }
     ~PageDirectory();
 
     dword cr3() const { return m_directory_page->paddr().get(); }
@@ -88,10 +88,10 @@ private:
 class VMObject : public Retainable<VMObject>, public Weakable<VMObject> {
     friend class MemoryManager;
 public:
-    static RetainPtr<VMObject> create_file_backed(RetainPtr<Inode>&&);
-    static RetainPtr<VMObject> create_anonymous(size_t);
-    static RetainPtr<VMObject> create_for_physical_range(PhysicalAddress, size_t);
-    RetainPtr<VMObject> clone();
+    static Retained<VMObject> create_file_backed(RetainPtr<Inode>&&);
+    static Retained<VMObject> create_anonymous(size_t);
+    static Retained<VMObject> create_for_physical_range(PhysicalAddress, size_t);
+    Retained<VMObject> clone();
 
     ~VMObject();
     bool is_anonymous() const { return m_anonymous; }

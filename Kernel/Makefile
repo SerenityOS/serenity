@@ -71,13 +71,15 @@ WARNING_FLAGS = -Wextra -Wall -Wundef -Wcast-qual -Wwrite-strings -Wimplicit-fal
 FLAVOR_FLAGS = -mregparm=3 -fno-exceptions -fno-rtti
 OPTIMIZATION_FLAGS = -Os
 INCLUDE_FLAGS = -I.. -I.
+CLANG_FLAGS = -Wconsumed -m32 -ffreestanding -march=i686
 #SUGGEST_FLAGS = -Wsuggest-final-types -Wsuggest-final-methods -Wsuggest-override #-Wsuggest-attribute=noreturn 
 
 DEFINES = -DSERENITY -DKERNEL -DSANITIZE_PTRS
 
 CXXFLAGS = -MMD -MP $(WARNING_FLAGS) $(OPTIMIZATION_FLAGS) $(KERNEL_FLAGS) $(FLAVOR_FLAGS) $(ARCH_FLAGS) $(STANDARD_FLAGS) $(SUGGEST_FLAGS) $(INCLUDE_FLAGS) $(DEFINES)
-CXX = ~/opt/cross/bin/i686-elf-g++
-LD = ~/opt/cross/bin/i686-elf-ld
+#CXX = clang $(CLANG_FLAGS)
+CXX = i686-elf-g++
+LD = i686-elf-ld
 LDFLAGS = -T linker.ld
 
 all: $(KERNEL) $(IMAGE) kernel.map

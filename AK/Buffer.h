@@ -11,10 +11,10 @@ namespace AK {
 template<typename T>
 class Buffer : public Retainable<Buffer<T>> {
 public:
-    static RetainPtr<Buffer> create_uninitialized(size_t count);
-    static RetainPtr<Buffer> copy(const T*, size_t count);
-    static RetainPtr<Buffer> wrap(T*, size_t count);
-    static RetainPtr<Buffer> adopt(T*, size_t count);
+    static Retained<Buffer> create_uninitialized(size_t count);
+    static Retained<Buffer> copy(const T*, size_t count);
+    static Retained<Buffer> wrap(T*, size_t count);
+    static Retained<Buffer> adopt(T*, size_t count);
 
     ~Buffer() { clear(); }
 
@@ -105,25 +105,25 @@ inline void Buffer<T>::grow(size_t size)
 }
 
 template<typename T>
-inline RetainPtr<Buffer<T>> Buffer<T>::create_uninitialized(size_t size)
+inline Retained<Buffer<T>> Buffer<T>::create_uninitialized(size_t size)
 {
     return ::adopt(*new Buffer<T>(size));
 }
 
 template<typename T>
-inline RetainPtr<Buffer<T>> Buffer<T>::copy(const T* elements, size_t size)
+inline Retained<Buffer<T>> Buffer<T>::copy(const T* elements, size_t size)
 {
     return ::adopt(*new Buffer<T>(elements, size, Copy));
 }
 
 template<typename T>
-inline RetainPtr<Buffer<T>> Buffer<T>::wrap(T* elements, size_t size)
+inline Retained<Buffer<T>> Buffer<T>::wrap(T* elements, size_t size)
 {
     return ::adopt(*new Buffer<T>(elements, size, Wrap));
 }
 
 template<typename T>
-inline RetainPtr<Buffer<T>> Buffer<T>::adopt(T* elements, size_t size)
+inline Retained<Buffer<T>> Buffer<T>::adopt(T* elements, size_t size)
 {
     return ::adopt(*new Buffer<T>(elements, size, Adopt));
 }

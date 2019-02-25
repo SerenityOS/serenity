@@ -18,9 +18,8 @@ GToolBar::~GToolBar()
 {
 }
 
-void GToolBar::add_action(RetainPtr<GAction>&& action)
+void GToolBar::add_action(Retained<GAction>&& action)
 {
-    ASSERT(action);
     GAction* raw_action_ptr = action.ptr();
     auto item = make<Item>();
     item->type = Item::Action;
