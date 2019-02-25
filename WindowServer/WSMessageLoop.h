@@ -5,6 +5,7 @@
 #include <AK/OwnPtr.h>
 #include <AK/Vector.h>
 #include <AK/Function.h>
+#include <AK/WeakPtr.h>
 
 class WSMessageReceiver;
 struct WSAPI_ClientMessage;
@@ -17,7 +18,7 @@ public:
 
     int exec();
 
-    void post_message(WSMessageReceiver* receiver, OwnPtr<WSMessage>&&);
+    void post_message(WSMessageReceiver& receiver, OwnPtr<WSMessage>&&);
 
     static WSMessageLoop& the();
 
@@ -36,7 +37,7 @@ private:
     void drain_keyboard();
 
     struct QueuedMessage {
-        WSMessageReceiver* receiver { nullptr };
+        WeakPtr<WSMessageReceiver> receiver;
         OwnPtr<WSMessage> message;
     };
     Vector<QueuedMessage> m_queued_messages;

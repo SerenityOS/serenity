@@ -502,9 +502,13 @@ void WSWindowManager::start_window_resize(WSWindow& window, WSMouseEvent& event)
     int window_relative_y = event.y() - window_rect.y();
     int hot_area_row = window_relative_y / (window_rect.height() / 3);
     int hot_area_column = window_relative_x / (window_rect.width() / 3);
+    ASSERT(hot_area_row >= 0 && hot_area_row <= 2);
+    ASSERT(hot_area_column >= 0 && hot_area_column <= 2);
     m_resize_direction = direction_for_hot_area[hot_area_row][hot_area_column];
-    if (m_resize_direction == ResizeDirection::None)
+    if (m_resize_direction == ResizeDirection::None) {
+        ASSERT(!m_resize_window);
         return;
+    }
 
 #ifdef RESIZE_DEBUG
     printf("[WM] Begin resizing WSWindow{%p}\n", &window);
@@ -550,7 +554,7 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event, WSWindow*& event_
 #ifdef RESIZE_DEBUG
             printf("[WM] Finish resizing WSWindow{%p}\n", m_resize_window.ptr());
 #endif
-            WSMessageLoop::the().post_message(m_resize_window.ptr(), make<WSResizeEvent>(m_resize_window->rect(), m_resize_window->rect()));
+            WSMessageLoop::the().post_message(*m_resize_window, make<WSResizeEvent>(m_resize_window->rect(), m_resize_window->rect()));
             invalidate(*m_resize_window);
             m_resize_window = nullptr;
             return;
@@ -633,7 +637,7 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event, WSWindow*& event_
                 m_resize_window->set_has_painted_since_last_resize(false);
                 dbgprintf("I'm gonna wait for %s\n", new_rect.to_string().characters());
                 m_resize_window->set_last_lazy_resize_rect(new_rect);
-                WSMessageLoop::the().post_message(m_resize_window.ptr(), make<WSResizeEvent>(old_rect, new_rect));
+                WSMessageLoop::the().post_message(*m_resize_window, make<WSResizeEvent>(old_rect, new_rect));
             }
             return;
         }
@@ -911,12 +915,12 @@ void WSWindowManager::set_active_window(WSWindow* window)
         return;
 
     if (auto* previously_active_window = m_active_window.ptr()) {
-        WSMessageLoop::the().post_message(previously_active_window, make<WSMessage>(WSMessage::WindowDeactivated));
+        WSMessageLoop::the().post_message(*previously_active_window, make<WSMessage>(WSMessage::WindowDeactivated));
         invalidate(*previously_active_window);
     }
     m_active_window = window->make_weak_ptr();
     if (m_active_window) {
-        WSMessageLoop::the().post_message(m_active_window.ptr(), make<WSMessage>(WSMessage::WindowActivated));
+        WSMessageLoop::the().post_message(*m_active_window, make<WSMessage>(WSMessage::WindowActivated));
         invalidate(*m_active_window);
 
         auto* client = window->client();
@@ -931,12 +935,12 @@ void WSWindowManager::set_hovered_window(WSWindow* window)
         return;
 
     if (m_hovered_window)
-        WSMessageLoop::the().post_message(m_hovered_window.ptr(), make<WSMessage>(WSMessage::WindowLeft));
+        WSMessageLoop::the().post_message(*m_hovered_window, make<WSMessage>(WSMessage::WindowLeft));
 
     m_hovered_window = window ? window->make_weak_ptr() : nullptr;
 
     if (m_hovered_window)
-        WSMessageLoop::the().post_message(m_hovered_window.ptr(), make<WSMessage>(WSMessage::WindowEntered));
+        WSMessageLoop::the().post_message(*m_hovered_window, make<WSMessage>(WSMessage::WindowEntered));
 }
 
 void WSWindowManager::invalidate()
@@ -960,7 +964,7 @@ void WSWindowManager::invalidate(const Rect& a_rect, bool should_schedule_compos
     m_dirty_rects.add(rect);
 
     if (should_schedule_compose_event && !m_pending_compose_event) {
-        WSMessageLoop::the().post_message(this, make<WSMessage>(WSMessage::WM_DeferredCompose));
+        WSMessageLoop::the().post_message(*this, make<WSMessage>(WSMessage::WM_DeferredCompose));
         m_pending_compose_event = true;
     }
 }
