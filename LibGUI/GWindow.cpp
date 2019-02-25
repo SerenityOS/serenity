@@ -294,12 +294,12 @@ void GWindow::set_focused_widget(GWidget* widget)
     if (m_focused_widget == widget)
         return;
     if (m_focused_widget) {
-        GEventLoop::main().post_event(m_focused_widget, make<GEvent>(GEvent::FocusOut));
+        GEventLoop::main().post_event(*m_focused_widget, make<GEvent>(GEvent::FocusOut));
         m_focused_widget->update();
     }
     m_focused_widget = widget;
     if (m_focused_widget) {
-        GEventLoop::main().post_event(m_focused_widget, make<GEvent>(GEvent::FocusIn));
+        GEventLoop::main().post_event(*m_focused_widget, make<GEvent>(GEvent::FocusIn));
         m_focused_widget->update();
     }
 }
@@ -345,10 +345,10 @@ void GWindow::set_hovered_widget(GWidget* widget)
         return;
 
     if (m_hovered_widget)
-        GEventLoop::main().post_event(m_hovered_widget.ptr(), make<GEvent>(GEvent::Leave));
+        GEventLoop::main().post_event(*m_hovered_widget, make<GEvent>(GEvent::Leave));
 
     m_hovered_widget = widget ? widget->make_weak_ptr() : nullptr;
 
     if (m_hovered_widget)
-        GEventLoop::main().post_event(m_hovered_widget.ptr(), make<GEvent>(GEvent::Enter));
+        GEventLoop::main().post_event(*m_hovered_widget, make<GEvent>(GEvent::Enter));
 }
