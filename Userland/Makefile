@@ -82,110 +82,111 @@ CXXFLAGS = -MMD -MP $(WARNING_FLAGS) $(OPTIMIZATION_FLAGS) $(FLAVOR_FLAGS) $(ARC
 CXX = i686-pc-serenity-g++
 LD = i686-pc-serenity-ld
 AR = i686-pc-serenity-r
+LDFLAGS = -L ../LibC
 
 all: $(OBJS) $(APPS)
 
 id: id.o
-	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
+	$(LD) -o $@ $(LDFLAGS) $< -lc
 
 sh: sh.o
-	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
+	$(LD) -o $@ $(LDFLAGS) $< -lc
 
 ps: ps.o
-	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
+	$(LD) -o $@ $(LDFLAGS) $< -lc
 
 ls: ls.o
-	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
+	$(LD) -o $@ $(LDFLAGS) $< -lc
 
 fgrep: fgrep.o
-	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
+	$(LD) -o $@ $(LDFLAGS) $< -lc
 
 sleep: sleep.o
-	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
+	$(LD) -o $@ $(LDFLAGS) $< -lc
 
 date: date.o
-	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
+	$(LD) -o $@ $(LDFLAGS) $< -lc
 
 true: true.o
-	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
+	$(LD) -o $@ $(LDFLAGS) $< -lc
 
 false: false.o
-	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
+	$(LD) -o $@ $(LDFLAGS) $< -lc
 
 hostname: hostname.o
-	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
+	$(LD) -o $@ $(LDFLAGS) $< -lc
 
 cat: cat.o
-	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
+	$(LD) -o $@ $(LDFLAGS) $< -lc
 
 uname: uname.o
-	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
+	$(LD) -o $@ $(LDFLAGS) $< -lc
 
 clear: clear.o
-	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
+	$(LD) -o $@ $(LDFLAGS) $< -lc
 
 tst: tst.o
-	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
+	$(LD) -o $@ $(LDFLAGS) $< -lc
 
 mm: mm.o
-	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
+	$(LD) -o $@ $(LDFLAGS) $< -lc
 
 dmesg: dmesg.o
-	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
+	$(LD) -o $@ $(LDFLAGS) $< -lc
 
 kill: kill.o
-	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
+	$(LD) -o $@ $(LDFLAGS) $< -lc
 
 tty: tty.o
-	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
+	$(LD) -o $@ $(LDFLAGS) $< -lc
 
 mkdir: mkdir.o
-	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
+	$(LD) -o $@ $(LDFLAGS) $< -lc
 
 touch: touch.o
-	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
+	$(LD) -o $@ $(LDFLAGS) $< -lc
 
 sync: sync.o
-	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
+	$(LD) -o $@ $(LDFLAGS) $< -lc
 
 more: more.o
-	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
+	$(LD) -o $@ $(LDFLAGS) $< -lc
 
 guitest2: guitest2.o
-	$(LD) -o $@ $(LDFLAGS) $< ../LibGUI/LibGUI.a ../LibC/LibC.a
+	$(LD) -o $@ $(LDFLAGS) -L../LibGUI $< -lgui -lc
 
 sysctl: sysctl.o
-	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
+	$(LD) -o $@ $(LDFLAGS) $< -lc
 
 pape: pape.o
-	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
+	$(LD) -o $@ $(LDFLAGS) $< -lc
 
 cp: cp.o
-	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
+	$(LD) -o $@ $(LDFLAGS) $< -lc
 
 rm: rm.o
-	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
+	$(LD) -o $@ $(LDFLAGS) $< -lc
 
 rmdir: rmdir.o
-	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
+	$(LD) -o $@ $(LDFLAGS) $< -lc
 
 chmod: chmod.o
-	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
+	$(LD) -o $@ $(LDFLAGS) $< -lc
 
 top: top.o
-	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
+	$(LD) -o $@ $(LDFLAGS) $< -lc
 
 ln: ln.o
-	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
+	$(LD) -o $@ $(LDFLAGS) $< -lc
 
 df: df.o
-	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
+	$(LD) -o $@ $(LDFLAGS) $< -lc
 
 su: su.o
-	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
+	$(LD) -o $@ $(LDFLAGS) $< -lc
 
 env: env.o
-	$(LD) -o $@ $(LDFLAGS) $< ../LibC/LibC.a
+	$(LD) -o $@ $(LDFLAGS) $< -lc
 
 .cpp.o:
 	@echo "CXX $<"; $(CXX) $(CXXFLAGS) -o $@ -c $<

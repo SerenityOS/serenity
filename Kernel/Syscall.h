@@ -1,6 +1,7 @@
 #pragma once
 
 #include <AK/Types.h>
+#include <LibC/fd_set.h>
 
 #define ENUMERATE_SYSCALLS \
     __ENUMERATE_SYSCALL(sleep) \
@@ -82,10 +83,6 @@
     __ENUMERATE_SYSCALL(release_shared_buffer) \
     __ENUMERATE_SYSCALL(link) \
 
-
-#ifdef SERENITY
-struct fd_set;
-#endif
 
 namespace Syscall {
 

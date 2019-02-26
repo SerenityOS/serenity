@@ -27,6 +27,7 @@ WARNING_FLAGS = -Wextra -Wall -Wundef -Wcast-qual -Wwrite-strings -Wimplicit-fal
 FLAVOR_FLAGS = -fno-exceptions -fno-rtti
 OPTIMIZATION_FLAGS = -Os
 INCLUDE_FLAGS = -I.. -I. -I../LibC
+LDFLAGS = -L../LibC
 
 DEFINES = -DSERENITY -DSANITIZE_PTRS -DUSERLAND
 
@@ -38,7 +39,7 @@ AR = i686-pc-serenity-ar
 all: $(APP)
 
 $(APP): $(OBJS)
-	$(LD) -o $(APP) $(LDFLAGS) $(OBJS) ../LibC/LibC.a
+	$(LD) -o $(APP) $(LDFLAGS) $(OBJS) -lc
 
 .cpp.o:
 	@echo "CXX $<"; $(CXX) $(CXXFLAGS) -o $@ -c $<

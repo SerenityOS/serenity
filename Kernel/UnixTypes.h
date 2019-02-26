@@ -1,8 +1,5 @@
 #pragma once
 
-#define FD_SETSIZE 64
-struct fd_set { unsigned char bits[FD_SETSIZE / 8];  };
-
 #define WNOHANG 1
 
 #define SIG_DFL ((void*)0)

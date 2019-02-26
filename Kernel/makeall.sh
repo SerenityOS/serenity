@@ -4,8 +4,15 @@ sudo id
 
 make_cmd="make -j2"
 
+rm -r ../Root/usr && \
 $make_cmd -C ../LibC clean && \
 $make_cmd -C ../LibC && \
+(cd ../LibC && ./install.sh) && \
+$make_cmd -C ../LibM clean && \
+$make_cmd -C ../LibM && \
+(cd ../LibM && ./install.sh) && \
+$make_cmd -C ../LibM clean && \
+$make_cmd -C ../LibM clean && \
 $make_cmd -C ../LibGUI clean && \
 $make_cmd -C ../LibGUI && \
 $make_cmd -C ../Userland clean && \
