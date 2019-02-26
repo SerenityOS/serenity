@@ -21,7 +21,7 @@
 
 //#define DEBUG_COUNTERS
 //#define DEBUG_WID_IN_TITLE_BAR
-#define RESIZE_DEBUG
+//#define RESIZE_DEBUG
 #define USE_WALLPAPER
 
 static const int window_titlebar_height = 18;
@@ -684,7 +684,9 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event, WSWindow*& event_
             m_resize_window->set_rect(new_rect);
             if (m_resize_window->has_painted_since_last_resize()) {
                 m_resize_window->set_has_painted_since_last_resize(false);
-                dbgprintf("I'm gonna wait for %s\n", new_rect.to_string().characters());
+#ifdef RESIZE_DEBUG
+                dbgprintf("[WM] I'm gonna wait for %s\n", new_rect.to_string().characters());
+#endif
                 m_resize_window->set_last_lazy_resize_rect(new_rect);
                 WSMessageLoop::the().post_message(*m_resize_window, make<WSResizeEvent>(old_rect, new_rect));
             }
