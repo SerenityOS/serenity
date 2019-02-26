@@ -140,9 +140,9 @@ void GWindow::event(GEvent& event)
 {
     if (event.is_mouse_event()) {
         if (m_global_cursor_tracking_widget) {
-            // FIXME: This won't work for widgets-within-widgets.
             auto& mouse_event = static_cast<GMouseEvent&>(event);
-            Point local_point { mouse_event.x() - m_global_cursor_tracking_widget->relative_rect().x(), mouse_event.y() - m_global_cursor_tracking_widget->relative_rect().y() };
+            auto window_relative_rect = m_global_cursor_tracking_widget->window_relative_rect();
+            Point local_point { mouse_event.x() - window_relative_rect.x(), mouse_event.y() - window_relative_rect.y() };
             auto local_event = make<GMouseEvent>(event.type(), local_point, mouse_event.buttons(), mouse_event.button());
             m_global_cursor_tracking_widget->event(*local_event);
         }
@@ -154,7 +154,8 @@ void GWindow::event(GEvent& event)
             auto local_event = make<GMouseEvent>(event.type(), Point { result.localX, result.localY }, mouse_event.buttons(), mouse_event.button());
             ASSERT(result.widget);
             set_hovered_widget(result.widget);
-            return result.widget->event(*local_event);
+            if (result.widget != m_global_cursor_tracking_widget.ptr())
+                return result.widget->event(*local_event);
         }
         return;
     }
