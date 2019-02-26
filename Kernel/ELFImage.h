@@ -47,7 +47,8 @@ public:
     class ProgramHeader {
     public:
         ProgramHeader(const ELFImage& image, unsigned program_header_index)
-            : m_program_header(image.program_header_internal(program_header_index))
+            : m_image(image)
+            , m_program_header(image.program_header_internal(program_header_index))
             , m_program_header_index(program_header_index)
         {
         }
@@ -64,7 +65,9 @@ public:
         bool is_readable() const { return flags() & PF_R; }
         bool is_writable() const { return flags() & PF_W; }
         bool is_executable() const { return flags() & PF_X; }
+        const char* raw_data() const { return m_image.raw_data(m_program_header.p_offset); }
     private:
+        const ELFImage& m_image;
         const Elf32_Phdr& m_program_header;
         unsigned m_program_header_index { 0 };
     };
