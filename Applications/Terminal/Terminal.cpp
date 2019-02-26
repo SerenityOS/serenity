@@ -190,6 +190,13 @@ void Terminal::escape$u(const Vector<unsigned>&)
     set_cursor(m_saved_cursor_row, m_saved_cursor_column);
 }
 
+void Terminal::escape$t(const Vector<unsigned>& params)
+{
+    if (params.size() < 1)
+        return;
+    dbgprintf("escape$t: Ps: %u\n", params[0]);
+}
+
 void Terminal::escape$H(const Vector<unsigned>& params)
 {
     unsigned row = 1;
@@ -380,6 +387,7 @@ void Terminal::execute_escape_sequence(byte final)
     case 'm': escape$m(params); break;
     case 's': escape$s(params); break;
     case 'u': escape$u(params); break;
+    case 't': escape$t(params); break;
     default:
         dbgprintf("Terminal::execute_escape_sequence: Unhandled final '%c'\n", final);
         break;

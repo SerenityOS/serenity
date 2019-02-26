@@ -33,7 +33,7 @@ struct MallocFooter {
     uint32_t xorcheck;
 };
 
-#define CHUNK_SIZE  16
+#define CHUNK_SIZE  32
 #define POOL_SIZE   4 * 1048576
 
 static const size_t malloc_budget = POOL_SIZE;
@@ -248,6 +248,14 @@ int putenv(char* new_var)
     }
     environ[environment.size()] = nullptr;
     return 0;
+}
+
+double strtod(const char* str, char** endptr)
+{
+    (void)str;
+    (void)endptr;
+    dbgprintf("LibC: strtod: '%s'\n", str);
+    assert(false);
 }
 
 double atof(const char* str)

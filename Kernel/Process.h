@@ -353,6 +353,7 @@ private:
     int m_blocked_fd { -1 };
     Vector<int> m_select_read_fds;
     Vector<int> m_select_write_fds;
+    Vector<int> m_select_exceptional_fds;
     timeval m_select_timeout;
     bool m_select_has_timeout { false };
     size_t m_max_open_file_descriptors { 16 };
