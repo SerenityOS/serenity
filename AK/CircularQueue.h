@@ -5,25 +5,25 @@
 
 namespace AK {
 
-template<typename T, size_t Capacity>
+template<typename T, int Capacity>
 class CircularQueue {
 public:
     CircularQueue()
     {
-        for (size_t i = 0; i < Capacity; ++i)
+        for (int i = 0; i < Capacity; ++i)
             m_elements[i] = T();
     }
 
     bool is_empty() const { return !m_size; }
-    size_t size() const { return m_size; }
+    int size() const { return m_size; }
 
-    size_t capacity() const { return Capacity; }
+    int capacity() const { return Capacity; }
 
     void dump() const
     {
         kprintf("CircularQueue<%zu>:\n", Capacity);
         kprintf(" size: %zu\n", m_size);
-        for (size_t i = 0; i < Capacity; ++i) {
+        for (int i = 0; i < Capacity; ++i) {
             kprintf(" [%zu] %d %c\n", i, m_elements[i], i == m_head ? '*' : ' ');
         }
     }
@@ -60,9 +60,9 @@ public:
         const T& operator*() const { return m_queue.m_elements[m_index]; }
     private:
         friend class CircularQueue;
-        ConstIterator(const CircularQueue& queue, const size_t index) : m_queue(queue), m_index(index) { }
+        ConstIterator(const CircularQueue& queue, const int index) : m_queue(queue), m_index(index) { }
         const CircularQueue& m_queue;
-        size_t m_index { 0 };
+        int m_index { 0 };
     };
 
     ConstIterator begin() const { return ConstIterator(*this, m_head); }
@@ -71,8 +71,8 @@ public:
 private:
     friend class ConstIterator;
     T m_elements[Capacity];
-    size_t m_size { 0 };
-    size_t m_head { 0 };
+    int m_size { 0 };
+    int m_head { 0 };
 };
 
 }

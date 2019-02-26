@@ -11,6 +11,7 @@
 #include "WSMessageReceiver.h"
 #include "WSMenuBar.h"
 #include <WindowServer/WSWindowType.h>
+#include <AK/CircularQueue.h>
 
 class WSAPIClientRequest;
 class WSScreen;
@@ -79,7 +80,6 @@ private:
     void handle_close_button_mouse_event(WSWindow&, WSMouseEvent&);
     void start_window_resize(WSWindow&, WSMouseEvent&);
     void handle_client_request(WSAPIClientRequest&);
-
     void set_active_window(WSWindow*);
     void set_hovered_window(WSWindow*);
     template<typename Callback> IterationDecision for_each_visible_window_of_type_from_back_to_front(WSWindowType, Callback);
@@ -88,12 +88,11 @@ private:
     template<typename Callback> IterationDecision for_each_visible_window_from_back_to_front(Callback);
     template<typename Callback> void for_each_active_menubar_menu(Callback);
     void close_current_menu();
-    
     virtual void on_message(WSMessage&) override;
-
     void compose();
     void paint_window_frame(WSWindow&);
     void flip_buffers();
+    void tick_clock();
 
     WSScreen& m_screen;
     Rect m_screen_rect;
@@ -155,4 +154,6 @@ private:
     Color m_menu_selection_color;
     WeakPtr<WSMenuBar> m_current_menubar;
     WeakPtr<WSMenu> m_current_menu;
+
+    CircularQueue<float, 30> m_cpu_history;
 };
