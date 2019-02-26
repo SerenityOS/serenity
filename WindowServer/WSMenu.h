@@ -52,7 +52,7 @@ public:
     int width() const;
     int height() const;
 
-    int item_height() const { return 16; }
+    int item_height() const { return 18; }
     int vertical_padding() const { return 4; }
     int horizontal_padding() const { return left_padding() + right_padding(); }
     int left_padding() const { return 14; }

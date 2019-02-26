@@ -24,7 +24,7 @@
 #define RESIZE_DEBUG
 #define USE_WALLPAPER
 
-static const int window_titlebar_height = 16;
+static const int window_titlebar_height = 18;
 
 static inline Rect menu_window_rect(const Rect& rect)
 {
@@ -329,11 +329,11 @@ void WSWindowManager::set_current_menubar(WSMenuBar* menubar)
     else
         m_current_menubar = nullptr;
     dbgprintf("[WM] Current menubar is now %p\n", menubar);
-    Point next_menu_location { menubar_menu_margin() / 2, 3 };
+    Point next_menu_location { menubar_menu_margin() / 2, 0 };
     for_each_active_menubar_menu([&] (WSMenu& menu) {
         int text_width = font().width(menu.name());
         menu.set_rect_in_menubar({ next_menu_location.x() - menubar_menu_margin() / 2, 0, text_width + menubar_menu_margin(), menubar_rect().height() - 1 });
-        menu.set_text_rect_in_menubar({ next_menu_location, { text_width, font().glyph_height() } });
+        menu.set_text_rect_in_menubar({ next_menu_location, { text_width, menubar_rect().height() } });
         next_menu_location.move_by(menu.rect_in_menubar().width(), 0);
         return true;
     });
@@ -889,7 +889,7 @@ void WSWindowManager::invalidate_cursor()
 
 Rect WSWindowManager::menubar_rect() const
 {
-    return { 0, 0, m_screen_rect.width(), 16 };
+    return { 0, 0, m_screen_rect.width(), 18 };
 }
 
 void WSWindowManager::draw_menubar()
