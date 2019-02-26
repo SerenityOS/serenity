@@ -1968,7 +1968,9 @@ int Process::sys$select(const Syscall::SC_select_params* params)
     auto* timeout = params->timeout;
 
     // FIXME: Implement exceptfds support.
-    ASSERT(!exceptfds);
+    //ASSERT(!exceptfds);
+    if (exceptfds)
+        kprintf("%s(%u): FIXME: select() with exceptfds\n", name().characters(), pid());
 
     if (timeout) {
         m_select_timeout = *timeout;

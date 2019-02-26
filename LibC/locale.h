@@ -13,7 +13,9 @@ enum {
 };
 
 struct lconv {
-    char *decimal_point;
+    char* decimal_point;
+    char* thousands_sep;
+    char* grouping;
 };
 
 struct lconv* localeconv();

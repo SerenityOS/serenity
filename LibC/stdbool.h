@@ -1,5 +1,7 @@
 #pragma once
 
+#ifndef __cplusplus
+
 #include <sys/cdefs.h>
 
 __BEGIN_DECLS
@@ -11,3 +13,4 @@ __BEGIN_DECLS
 
 __END_DECLS
 
+#endif
