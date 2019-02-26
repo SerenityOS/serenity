@@ -46,49 +46,10 @@ bool ELFLoader::layout()
 #endif
         if (program_header.is_writable()) {
             allocate_section(program_header.laddr(), program_header.size_in_memory(), program_header.alignment(), program_header.is_readable(), program_header.is_writable());
+            memcpy(program_header.laddr().as_ptr(), program_header.raw_data(), program_header.size_in_image());
         } else {
             map_section(program_header.laddr(), program_header.size_in_memory(), program_header.alignment(), program_header.offset(), program_header.is_readable(), program_header.is_writable());
         }
-    });
-
-    m_image.for_each_section_of_type(SHT_PROGBITS, [] (const ELFImage::Section& section) {
-#ifdef ELFLOADER_DEBUG
-        kprintf("ELFLoader: Copying progbits section: %s\n", section.name());
-#endif
-        if (!section.size())
-            return true;
-        char* ptr = (char*)section.address();
-        if (!ptr) {
-#ifdef ELFLOADER_DEBUG
-            kprintf("ELFLoader: ignoring section '%s' with null address\n", section.name());
-#endif
-            return true;
-        }
-        // If this section isn't writable, it's already mmapped.
-        if (section.is_writable())
-            memcpy(ptr, section.raw_data(), section.size());
-#ifdef SUPPORT_RELOCATIONS
-        m_sections.set(section.name(), move(ptr));
-#endif
-        return true;
-    });
-    m_image.for_each_section_of_type(SHT_NOBITS, [&failed] (const ELFImage::Section& section) {
-#ifdef ELFLOADER_DEBUG
-        kprintf("ELFLoader: Copying nobits section: %s\n", section.name());
-#endif
-        if (!section.size())
-            return true;
-        char* ptr = (char*)section.address();
-        if (!ptr) {
-            kprintf("ELFLoader: failed to allocate section '%s'\n", section.name());
-            failed = true;
-            return false;
-        }
-        memset(ptr, 0, section.size());
-#ifdef SUPPORT_RELOCATIONS
-        m_sections.set(section.name(), move(ptr));
-#endif
-        return true;
     });
     return !failed;
 }
