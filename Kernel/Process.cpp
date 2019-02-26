@@ -886,8 +886,8 @@ ShouldUnblockProcess Process::dispatch_signal(byte signal)
         *code_ptr++ = 0xb8; // mov eax, <dword>
         *(dword*)code_ptr = Syscall::SC_sigreturn;
         code_ptr += sizeof(dword);
-        *code_ptr++ = 0xcd; // int 0x80
-        *code_ptr++ = 0x80;
+        *code_ptr++ = 0xcd; // int 0x82
+        *code_ptr++ = 0x82;
         *code_ptr++ = 0x0f; // ud2
         *code_ptr++ = 0x0b;
 

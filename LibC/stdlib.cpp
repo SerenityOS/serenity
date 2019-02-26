@@ -201,6 +201,11 @@ char* getenv(const char* name)
     return nullptr;
 }
 
+int putenv(char*)
+{
+    assert(false);
+}
+
 double atof(const char*)
 {
     assert(false);

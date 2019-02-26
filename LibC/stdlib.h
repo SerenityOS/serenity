@@ -14,6 +14,7 @@ __attribute__((malloc)) __attribute__((alloc_size(1, 2))) void* calloc(size_t nm
 void free(void*);
 void* realloc(void *ptr, size_t);
 char* getenv(const char* name);
+int putenv(char*);
 int atoi(const char*);
 long atol(const char*);
 double strtod(const char*, char** endptr);

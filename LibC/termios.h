@@ -9,6 +9,7 @@ __BEGIN_DECLS
 
 typedef uint32_t tcflag_t;
 typedef uint8_t cc_t;
+typedef uint32_t speed_t;
 
 struct termios {
     tcflag_t c_iflag;
@@ -21,6 +22,7 @@ struct termios {
 int tcgetattr(int fd, struct termios*);
 int tcsetattr(int fd, int optional_actions, const struct termios*);
 int tcflow(int fd, int action);
+int tcflush(int fd, int queue_selector);
 
 /* c_cc characters */
 #define VINTR 0

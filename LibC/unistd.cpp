@@ -379,4 +379,9 @@ int release_shared_buffer(int shared_buffer_id)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
+char* getlogin()
+{
+    assert(false);
+}
+
 }

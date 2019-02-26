@@ -40,8 +40,8 @@ namespace Syscall {
 
 void initialize()
 {
-    register_user_callable_interrupt_handler(0x80, syscall_trap_handler);
-    kprintf("Syscall: int 0x80 handler installed\n");
+    register_user_callable_interrupt_handler(0x82, syscall_trap_handler);
+    kprintf("Syscall: int 0x82 handler installed\n");
 }
 
 int sync()

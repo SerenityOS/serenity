@@ -131,7 +131,7 @@ int sync();
 inline dword invoke(Function function)
 {
     dword result;
-    asm volatile("int $0x80":"=a"(result):"a"(function):"memory");
+    asm volatile("int $0x82":"=a"(result):"a"(function):"memory");
     return result;
 }
 
@@ -139,7 +139,7 @@ template<typename T1>
 inline dword invoke(Function function, T1 arg1)
 {
     dword result;
-    asm volatile("int $0x80":"=a"(result):"a"(function),"d"((dword)arg1):"memory");
+    asm volatile("int $0x82":"=a"(result):"a"(function),"d"((dword)arg1):"memory");
     return result;
 }
 
@@ -147,7 +147,7 @@ template<typename T1, typename T2>
 inline dword invoke(Function function, T1 arg1, T2 arg2)
 {
     dword result;
-    asm volatile("int $0x80":"=a"(result):"a"(function),"d"((dword)arg1),"c"((dword)arg2):"memory");
+    asm volatile("int $0x82":"=a"(result):"a"(function),"d"((dword)arg1),"c"((dword)arg2):"memory");
     return result;
 }
 
@@ -155,7 +155,7 @@ template<typename T1, typename T2, typename T3>
 inline dword invoke(Function function, T1 arg1, T2 arg2, T3 arg3)
 {
     dword result;
-    asm volatile("int $0x80":"=a"(result):"a"(function),"d"((dword)arg1),"c"((dword)arg2),"b"((dword)arg3):"memory");
+    asm volatile("int $0x82":"=a"(result):"a"(function),"d"((dword)arg1),"c"((dword)arg2),"b"((dword)arg3):"memory");
     return result;
 }
 #endif

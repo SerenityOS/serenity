@@ -32,5 +32,17 @@ int tcflow(int fd, int action)
     assert(false);
 }
 
+int tcflush(int fd, int queue_selector)
+{
+    (void)fd;
+    (void)queue_selector;
+    assert(false);
+}
+
+speed_t cfgetospeed(const struct termios*)
+{
+    assert(false);
+}
+
 }
 

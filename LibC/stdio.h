@@ -83,6 +83,9 @@ void setbuf(FILE*, char* buf);
 void setlinebuf(FILE*);
 int rename(const char* oldpath, const char* newpath);
 FILE* tmpfile();
+char* tmpnam(char*);
+FILE* popen(const char* command, const char* type);
+int pclose(FILE*);
 
 __END_DECLS
 

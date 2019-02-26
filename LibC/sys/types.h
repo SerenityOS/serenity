@@ -55,6 +55,11 @@ struct stat {
     time_t    st_ctime;   /* time of last status change */
 };
 
+struct utimbuf {
+    time_t actime;
+    time_t modtime;
+};
+
 #ifdef __cplusplus
 #define NULL nullptr
 #else
