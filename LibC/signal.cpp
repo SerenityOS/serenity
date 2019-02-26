@@ -102,10 +102,38 @@ int sigpending(sigset_t* set)
 }
 
 const char* sys_siglist[NSIG] = {
-#undef __SIGNAL
-#define __SIGNAL(a, b) b,
-    __ENUMERATE_ALL_SIGNALS
-#undef __SIGNAL
+    "Invalid signal number",
+    "Hangup",
+    "Interrupt",
+    "Quit",
+    "Illegal instruction",
+    "Trap",
+    "Aborted",
+    "Bus error",
+    "FP exception",
+    "Killed",
+    "User signal 1",
+    "Segmentation violation",
+    "User signal 2",
+    "Broken pipe",
+    "Alarm clock",
+    "Terminated",
+    "Stack fault",
+    "Child exited",
+    "Continued",
+    "Stopped (signal)",
+    "Stopped",
+    "Stopped (tty input)",
+    "Stopped (tty output)",
+    "Urgent I/O condition)",
+    "CPU limit exceeded",
+    "File size limit exceeded",
+    "Virtual timer expired",
+    "Profiling timer expired",
+    "Window changed",
+    "I/O possible",
+    "Power failure",
+    "Bad system call",
 };
 
 int sigsetjmp(jmp_buf env, int savesigs)

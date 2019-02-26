@@ -226,7 +226,7 @@ Process* Process::fork(RegisterDump& regs)
 
     for (auto& region : m_regions) {
 #ifdef FORK_DEBUG
-        dbgprintf("fork: cloning Region{%p} \"%s\" L%x\n", region.ptr(), region->name.characters(), region->laddr().get());
+        dbgprintf("fork: cloning Region{%p} \"%s\" L%x\n", region.ptr(), region->name().characters(), region->laddr().get());
 #endif
         auto cloned_region = region->clone();
         child->m_regions.append(move(cloned_region));
@@ -1140,10 +1140,9 @@ int Process::sys$utime(const char* pathname, const utimbuf* buf)
 
 int Process::sys$access(const char* pathname, int mode)
 {
-    (void) mode;
     if (!validate_read_str(pathname))
         return -EFAULT;
-    ASSERT_NOT_REACHED();
+    return VFS::the().access(String(pathname), mode, cwd_inode());
 }
 
 int Process::sys$fcntl(int fd, int cmd, dword arg)

@@ -2,6 +2,11 @@
 
 #define WNOHANG 1
 
+#define R_OK 4
+#define W_OK 2
+#define X_OK 1
+#define F_OK 0
+
 #define SIG_DFL ((void*)0)
 #define SIG_ERR ((void*)-1)
 #define SIG_IGN ((void*)1)
@@ -265,6 +270,7 @@ typedef dword blkcnt_t;
 
 typedef uint32_t tcflag_t;
 typedef uint8_t cc_t;
+typedef uint32_t speed_t;
 
 struct termios {
     tcflag_t c_iflag;
@@ -272,6 +278,8 @@ struct termios {
     tcflag_t c_cflag;
     tcflag_t c_lflag;
     cc_t     c_cc[NCCS];
+    speed_t  c_ispeed;
+    speed_t  c_ospeed;
 };
 
 struct stat {
