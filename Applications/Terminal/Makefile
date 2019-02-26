@@ -16,11 +16,12 @@ CXXFLAGS = -MMD -MP $(WARNING_FLAGS) $(OPTIMIZATION_FLAGS) $(FLAVOR_FLAGS) $(STA
 CXX = i686-pc-serenity-g++
 LD = i686-pc-serenity-ld
 AR = i686-pc-serenity-ar
+LDFLAGS = -L../../LibC -L../../LibGUI
 
 all: $(APP)
 
 $(APP): $(OBJS)
-	$(LD) -o $(APP) $(LDFLAGS) $(OBJS) ../../LibGUI/LibGUI.a ../../LibC/LibC.a
+	$(LD) -o $(APP) $(LDFLAGS) $(OBJS) -lgui -lc
 
 .cpp.o:
 	@echo "CXX $<"; $(CXX) $(CXXFLAGS) -o $@ -c $<

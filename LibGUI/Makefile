@@ -32,9 +32,9 @@ LIBGUI_OBJS = \
 
 OBJS = $(SHAREDGRAPHICS_OBJS) $(LIBGUI_OBJS)
 
-LIBS = ../LibC/LibC.a
+LIBS = -lc
 
-LIBRARY = LibGUI.a
+LIBRARY = libgui.a
 STANDARD_FLAGS = -std=c++17
 WARNING_FLAGS = -Wextra -Wall -Wundef -Wcast-qual -Wwrite-strings -Wimplicit-fallthrough
 FLAVOR_FLAGS = -fno-exceptions -fno-rtti

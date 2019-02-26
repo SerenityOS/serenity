@@ -32,7 +32,6 @@ LIBC_OBJS = \
        ulimit.o \
        qsort.o \
        ioctl.o \
-       math.o \
        utime.o \
        sys/select.o \
        sys/socket.o \
@@ -45,7 +44,7 @@ ASM_OBJS = setjmp.no
 
 CPP_OBJS = $(AK_OBJS) $(WIDGETS_OBJS) $(LIBC_OBJS)
 
-LIBRARY = LibC.a
+LIBRARY = libc.a
 STANDARD_FLAGS = -std=c++17
 WARNING_FLAGS = -Wextra -Wall -Wundef -Wcast-qual -Wwrite-strings -Wimplicit-fallthrough
 FLAVOR_FLAGS = -fno-exceptions -fno-rtti
