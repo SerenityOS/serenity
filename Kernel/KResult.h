@@ -7,7 +7,6 @@ enum KSuccessTag { KSuccess };
 
 class KResult {
 public:
-    explicit KResult(__errno_value e) : m_error(-e) { }
     explicit KResult(int negative_e) : m_error(negative_e) { ASSERT(negative_e <= 0); }
     KResult(KSuccessTag) : m_error(0) { }
     operator int() const { return m_error; }
