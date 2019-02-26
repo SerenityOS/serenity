@@ -39,7 +39,6 @@ void GStyle::paint_button(Painter& painter, const Rect& rect, GButtonStyle butto
     } else if (button_style == GButtonStyle::Normal || (button_style == GButtonStyle::CoolBar && hovered)) {
         // Base
         painter.fill_rect({ 3, 3, rect.width() - 5, rect.height() - 5 }, button_color);
-        painter.fill_rect_with_gradient({ 2, 2, rect.width() - 3, rect.height() - 3 }, button_color, Color::White);
 
         // White highlight
         painter.draw_line({ 1, 1 }, { rect.width() - 2, 1 }, highlight_color);
