@@ -8,7 +8,7 @@ GToolBar::GToolBar(GWidget* parent)
     : GWidget(parent)
 {
     set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-    set_preferred_size({ 0, 25 });
+    set_preferred_size({ 0, 29 });
     set_layout(make<GBoxLayout>(Orientation::Horizontal));
     layout()->set_spacing(0);
     layout()->set_margins({1, 1, 1, 1});
@@ -36,7 +36,7 @@ void GToolBar::add_action(Retained<GAction>&& action)
 
     button->set_button_style(GButtonStyle::CoolBar);
     button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
-    button->set_preferred_size({ 22, 22 });
+    button->set_preferred_size({ 26, 26 });
 
     m_items.append(move(item));
 }
