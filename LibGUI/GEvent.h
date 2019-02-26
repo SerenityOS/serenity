@@ -56,15 +56,19 @@ public:
 
 class GPaintEvent final : public GEvent {
 public:
-    explicit GPaintEvent(const Rect& rect = Rect())
+    explicit GPaintEvent(const Rect& rect, const Size& window_size = Size())
         : GEvent(GEvent::Paint)
         , m_rect(rect)
+        , m_window_size(window_size)
     {
     }
 
-    const Rect& rect() const { return m_rect; }
+    Rect rect() const { return m_rect; }
+    Size window_size() const { return m_window_size; }
+
 private:
     Rect m_rect;
+    Size m_window_size;
 };
 
 class GResizeEvent final : public GEvent {

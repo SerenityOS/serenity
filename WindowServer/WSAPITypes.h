@@ -101,6 +101,7 @@ struct WSAPI_ServerMessage {
         } window;
         struct {
             WSAPI_Rect rect;
+            WSAPI_Size window_size;
         } paint;
         struct {
             WSAPI_Point position;

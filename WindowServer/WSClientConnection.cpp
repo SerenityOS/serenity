@@ -349,10 +349,12 @@ void WSClientConnection::handle_request(WSAPIInvalidateRectRequest& request)
         post_error("Bad window ID");
         return;
     }
+    auto& window = *(*it).value;
     WSAPI_ServerMessage response;
     response.type = WSAPI_ServerMessage::Type::Paint;
     response.window_id = window_id;
     response.paint.rect = request.rect();
+    response.paint.window_size = window.size();
     post_message(response);
 }
 
