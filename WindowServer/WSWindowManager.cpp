@@ -199,8 +199,9 @@ WSWindowManager::WSWindowManager()
         m_system_menu->add_item(make<WSMenuItem>(1, "640x480"));
         m_system_menu->add_item(make<WSMenuItem>(2, "800x600"));
         m_system_menu->add_item(make<WSMenuItem>(3, "1024x768"));
+        m_system_menu->add_item(make<WSMenuItem>(4, "1920x1080"));
         m_system_menu->add_item(make<WSMenuItem>(WSMenuItem::Separator));
-        m_system_menu->add_item(make<WSMenuItem>(4, "About..."));
+        m_system_menu->add_item(make<WSMenuItem>(5, "About..."));
         m_system_menu->on_item_activation = [this] (WSMenuItem& item) {
             if (item.identifier() == 0) {
                 if (fork() == 0) {
@@ -213,8 +214,9 @@ WSWindowManager::WSWindowManager()
             case 1: set_resolution(640, 480); break;
             case 2: set_resolution(800, 600); break;
             case 3: set_resolution(1024, 768); break;
+            case 4: set_resolution(1920, 1080); break;
             }
-            if (item.identifier() == 4) {
+            if (item.identifier() == 5) {
                 if (fork() == 0) {
                     execl("/bin/About", "/bin/About", nullptr);
                     ASSERT_NOT_REACHED();
@@ -298,6 +300,8 @@ void WSWindowManager::set_resolution(int width, int height)
 {
     if (m_screen_rect.width() == width && m_screen_rect.height() == height)
         return;
+    m_wallpaper_path = { };
+    m_wallpaper = nullptr;
     m_screen.set_resolution(width, height);
     m_screen_rect = m_screen.rect();
     m_front_bitmap = GraphicsBitmap::create_wrapper(GraphicsBitmap::Format::RGB32, { width, height }, m_screen.scanline(0));
