@@ -740,10 +740,12 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event, WSWindow*& event_
                 return IterationDecision::Abort;
             }
             event_window = &window;
-            // FIXME: Should we just alter the coordinates of the existing MouseEvent and pass it through?
-            Point position { event.x() - window.rect().x(), event.y() - window.rect().y() };
-            auto local_event = make<WSMouseEvent>(event.type(), position, event.buttons(), event.button());
-            window.on_message(*local_event);
+            if (!window.global_cursor_tracking()) {
+                // FIXME: Should we just alter the coordinates of the existing MouseEvent and pass it through?
+                Point position { event.x() - window.rect().x(), event.y() - window.rect().y() };
+                auto local_event = make<WSMouseEvent>(event.type(), position, event.buttons(), event.button());
+                window.on_message(*local_event);
+            }
             return IterationDecision::Abort;
         }
         return IterationDecision::Continue;
