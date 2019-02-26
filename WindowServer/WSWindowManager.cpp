@@ -1031,12 +1031,12 @@ const WSClientConnection* WSWindowManager::active_client() const
 {
     if (m_active_window)
         return m_active_window->client();
-    return 0;
+    return nullptr;
 }
 
 void WSWindowManager::notify_client_changed_app_menubar(WSClientConnection& client)
 {
     if (active_client() == &client)
         set_current_menubar(client.app_menubar());
-    invalidate();
+    invalidate(menubar_rect());
 }
