@@ -1,83 +1,73 @@
 #pragma once
 
-#define __ENUMERATE_ALL_ERRORS \
-    __ERROR(ESUCCESS,       "Success (not an error)") \
-    __ERROR(EPERM,          "Operation not permitted") \
-    __ERROR(ENOENT,         "No such file or directory") \
-    __ERROR(ESRCH,          "No such process") \
-    __ERROR(EINTR,          "Interrupted syscall") \
-    __ERROR(EIO,            "I/O error") \
-    __ERROR(ENXIO,          "No such device or address") \
-    __ERROR(E2BIG,          "Argument list too long") \
-    __ERROR(ENOEXEC,        "Exec format error") \
-    __ERROR(EBADF,          "Bad fd number") \
-    __ERROR(ECHILD,         "No child processes") \
-    __ERROR(EAGAIN,         "Try again") \
-    __ERROR(ENOMEM,         "Out of memory") \
-    __ERROR(EACCES,         "Permission denied") \
-    __ERROR(EFAULT,         "Bad address") \
-    __ERROR(ENOTBLK,        "Block device required") \
-    __ERROR(EBUSY,          "Device or resource busy") \
-    __ERROR(EEXIST,         "File already exists") \
-    __ERROR(EXDEV,          "Cross-device link") \
-    __ERROR(ENODEV,         "No such device") \
-    __ERROR(ENOTDIR,        "Not a directory") \
-    __ERROR(EISDIR,         "Is a directory") \
-    __ERROR(EINVAL,         "Invalid argument") \
-    __ERROR(ENFILE,         "File table overflow") \
-    __ERROR(EMFILE,         "Too many open files") \
-    __ERROR(ENOTTY,         "Not a TTY") \
-    __ERROR(ETXTBSY,        "Text file busy") \
-    __ERROR(EFBIG,          "File too large") \
-    __ERROR(ENOSPC,         "No space left on device") \
-    __ERROR(ESPIPE,         "Illegal seek") \
-    __ERROR(EROFS,          "Read-only filesystem") \
-    __ERROR(EMLINK,         "Too many links") \
-    __ERROR(EPIPE,          "Broken pipe") \
-    __ERROR(ERANGE,         "Range error") \
-    __ERROR(ENAMETOOLONG,   "Name too long") \
-    __ERROR(ELOOP,          "Too many symlinks") \
-    __ERROR(EOVERFLOW,      "Overflow") \
-    __ERROR(EOPNOTSUPP,     "Operation not supported") \
-    __ERROR(ENOSYS,         "No such syscall") \
-    __ERROR(ENOTIMPL,       "Not implemented") \
-    __ERROR(EAFNOSUPPORT,   "Address family not supported") \
-    __ERROR(ENOTSOCK,       "Not a socket") \
-    __ERROR(EADDRINUSE,     "Address in use") \
-    __ERROR(EWHYTHO,        "Failed without setting an error code (Bug!)") \
-    __ERROR(ENOTEMPTY,      "Directory not empty") \
-    __ERROR(EDOM,           "Math argument out of domain") \
-    __ERROR(ECONNREFUSED,   "Connection refused") \
-    __ERROR(EADDRNOTAVAIL,  "Address not available") \
-    __ERROR(EISCONN,        "Already connected") \
-    __ERROR(ECONNABORTED,   "Connection aborted") \
-    __ERROR(EALREADY,       "Connection already in progress") \
-    __ERROR(ECONNRESET,     "Connection reset") \
-    __ERROR(EDESTADDRREQ,   "Desination address required") \
-    __ERROR(EHOSTUNREACH,   "Host unreachable") \
-    __ERROR(EILSEQ,         "Illegal byte sequence") \
-    __ERROR(EMSGSIZE,       "Message size") \
-    __ERROR(ENETDOWN,       "Network down") \
-    __ERROR(ENETUNREACH,    "Network unreachable") \
-    __ERROR(ENETRESET,      "Network reset") \
-    __ERROR(ENOBUFS,        "No buffer space") \
-    __ERROR(ENOLCK,         "No lock available") \
-    __ERROR(ENOMSG,         "No message") \
-    __ERROR(ENOPROTOOPT,    "No protocol option") \
-    __ERROR(ENOTCONN,       "Not connected") \
-    __ERROR(EWOULDBLOCK,    "Operation would block") \
-    __ERROR(EPROTONOSUPPORT,"Protocol not supported") \
-    __ERROR(EDEADLK,        "Resource deadlock would occur") \
-    __ERROR(ETIMEDOUT,      "Timed out") \
-    __ERROR(EPROTOTYPE,     "Wrong protocol type") \
-    __ERROR(EINPROGRESS,    "Operation in progress") \
-    __ERROR(EMAXERRNO,      "The highest errno +1 :^)")
-
-
-enum __errno_value {
-#undef __ENUMERATE_ERROR
-#define __ERROR(a, b) a,
-    __ENUMERATE_ALL_ERRORS
-#undef __ENUMERATE_ERROR
-    __errno_count
-};
+#define ESUCCESS         0
+#define EPERM            1
+#define ENOENT           2
+#define ESRCH            3
+#define EINTR            4
+#define EIO              5
+#define ENXIO            6
+#define E2BIG            7
+#define ENOEXEC          8
+#define EBADF            9
+#define ECHILD          10
+#define EAGAIN          11
+#define ENOMEM          12
+#define EACCES          13
+#define EFAULT          14
+#define ENOTBLK         15
+#define EBUSY           16
+#define EEXIST          17
+#define EXDEV           18
+#define ENODEV          19
+#define ENOTDIR         20
+#define EISDIR          21
+#define EINVAL          22
+#define ENFILE          23
+#define EMFILE          24
+#define ENOTTY          25
+#define ETXTBSY         26
+#define EFBIG           27
+#define ENOSPC          28
+#define ESPIPE          29
+#define EROFS           30
+#define EMLINK          31
+#define EPIPE           32
+#define ERANGE          33
+#define ENAMETOOLONG    34
+#define ELOOP           35
+#define EOVERFLOW       36
+#define EOPNOTSUPP      37
+#define ENOSYS          38
+#define ENOTIMPL        39
+#define EAFNOSUPPORT    40
+#define ENOTSOCK        41
+#define EADDRINUSE      42
+#define EWHYTHO         43
+#define ENOTEMPTY       44
+#define EDOM            45
+#define ECONNREFUSED    46
+#define EADDRNOTAVAIL   47
+#define EISCONN         48
+#define ECONNABORTED    49
+#define EALREADY        50
+#define ECONNRESET      51
+#define EDESTADDRREQ    52
+#define EHOSTUNREACH    53
+#define EILSEQ          54
+#define EMSGSIZE        55
+#define ENETDOWN        56
+#define ENETUNREACH     57
+#define ENETRESET       58
+#define ENOBUFS         59
+#define ENOLCK          60
+#define ENOMSG          61
+#define ENOPROTOOPT     62
+#define ENOTCONN        63
+#define EWOULDBLOCK     64
+#define EPROTONOSUPPORT 65
+#define EDEADLK         66
+#define ETIMEDOUT       67
+#define EPROTOTYPE      68
+#define EINPROGRESS     69
+#define EMAXERRNO       70
