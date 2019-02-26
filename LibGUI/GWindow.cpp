@@ -168,9 +168,9 @@ void GWindow::event(GEvent& event)
         auto rect = paint_event.rect();
         bool created_new_backing_store = !m_backing;
         if (!m_backing) {
-            // NOTE: size() may change at any time since it's synchronously retrieved from the WindowServer.
             ASSERT(GEventLoop::main().server_pid());
-            Size new_backing_store_size = size();
+            ASSERT(!paint_event.window_size().is_empty());
+            Size new_backing_store_size = paint_event.window_size();
             size_t size_in_bytes = new_backing_store_size.area() * sizeof(RGBA32);
             void* buffer;
             int shared_buffer_id = create_shared_buffer(GEventLoop::main().server_pid(), size_in_bytes, (void**)&buffer);
