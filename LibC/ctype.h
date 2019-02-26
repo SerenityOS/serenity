@@ -25,19 +25,8 @@ ALWAYS_INLINE int __isupper(int c)
     return c >= 'A' && c <= 'Z';
 }
 
-ALWAYS_INLINE int __tolower(int c)
-{
-    if (__isupper(c))
-        return c | 0x20;
-    return c;
-}
-
-ALWAYS_INLINE int __toupper(int c)
-{
-    if (__islower(c))
-        return c & ~0x20;
-    return c;
-}
+int __tolower(int);
+int __toupper(int);
 
 ALWAYS_INLINE int __isdigit(int c)
 {

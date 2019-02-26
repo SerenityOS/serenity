@@ -1,16 +1,36 @@
 #include <strings.h>
 #include <assert.h>
+#include <ctype.h>
 
 extern "C" {
 
-int strcasecmp(const char*, const char*)
+static char foldcase(char ch)
 {
-    assert(false);
+    if (isalpha(ch))
+        return tolower(ch);
+    return ch;
 }
 
-int strncasecmp(const char*, const char*, size_t)
+int strcasecmp(const char* s1, const char* s2)
 {
-    assert(false);
+    for (; foldcase(*s1) == foldcase(*s2); ++s1, ++s2) {
+        if (*s1 == 0)
+            return 0;
+    }
+    return foldcase(*(const unsigned char*)s1) < foldcase(*(const unsigned char*)s2) ? -1 : 1;
+}
+
+int strncasecmp(const char* s1, const char* s2, size_t n)
+{
+    if (!n)
+        return 0;
+    do {
+        if (foldcase(*s1) != foldcase(*s2++))
+            return foldcase(*(const unsigned char*)s1) - foldcase(*(const unsigned char*)--s2);
+        if (*s1++ == 0)
+            break;
+    } while (--n);
+    return 0;
 }
 
 }

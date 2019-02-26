@@ -260,7 +260,7 @@ char* strerror(int errnum)
 
 char* strsignal(int signum)
 {
-    if (signum >= __signal_count) {
+    if (signum >= NSIG) {
         printf("strsignal() missing string for signum=%d\n", signum);
         return const_cast<char*>("Unknown signal");
     }

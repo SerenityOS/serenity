@@ -10,6 +10,8 @@
 #include <AK/Types.h>
 #include <Kernel/Syscall.h>
 #include <AK/StdLibExtras.h>
+#include <AK/HashMap.h>
+#include <AK/AKString.h>
 
 extern "C" {
 
@@ -31,8 +33,8 @@ struct MallocFooter {
     uint32_t xorcheck;
 };
 
-#define CHUNK_SIZE  8
-#define POOL_SIZE   128 * 1024
+#define CHUNK_SIZE  16
+#define POOL_SIZE   4 * 1048576
 
 static const size_t malloc_budget = POOL_SIZE;
 static byte s_malloc_map[POOL_SIZE / CHUNK_SIZE / 8];
@@ -201,13 +203,56 @@ char* getenv(const char* name)
     return nullptr;
 }
 
-int putenv(char*)
+int putenv(char* new_var)
 {
-    assert(false);
+    HashMap<String, String> environment;
+
+    auto handle_environment_entry = [&environment] (const char* decl) {
+        char* eq = strchr(decl, '=');
+        if (!eq)
+            return;
+        size_t var_length = eq - decl;
+        char* var = (char*)alloca(var_length + 1);
+        memcpy(var, decl, var_length);
+        var[var_length] = '\0';
+        const char* value = eq + 1;
+        environment.set(var, value);
+    };
+    for (size_t i = 0; environ[i]; ++i)
+        handle_environment_entry(environ[i]);
+    handle_environment_entry(new_var);
+
+    //extern bool __environ_is_malloced;
+    //if (__environ_is_malloced)
+    //    free(environ);
+    //__environ_is_malloced = true;
+
+    int environment_size = sizeof(char*); // For the null sentinel.
+    for (auto& it : environment)
+        environment_size += (int)sizeof(char*) + it.key.length() + 1 + it.value.length() + 1;
+
+    char* buffer = (char*)malloc(environment_size);
+    environ = (char**)buffer;
+    char* bufptr = buffer + sizeof(char*) * (environment.size() + 1);
+
+    int i = 0;
+    for (auto& it : environment) {
+        environ[i] = bufptr;
+        memcpy(bufptr, it.key.characters(), it.key.length());
+        bufptr += it.key.length();
+        *(bufptr++) = '=';
+        memcpy(bufptr, it.value.characters(), it.value.length());
+        bufptr += it.value.length();
+        *(bufptr++) = '\0';
+        ++i;
+    }
+    environ[environment.size()] = nullptr;
+    return 0;
 }
 
-double atof(const char*)
+double atof(const char* str)
 {
+    dbgprintf("LibC: atof: '%s'\n", str);
     assert(false);
 }
 

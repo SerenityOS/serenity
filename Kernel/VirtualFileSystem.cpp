@@ -268,6 +268,28 @@ KResult VFS::mkdir(const String& path, mode_t mode, Inode& base)
     return KResult(error);
 }
 
+KResult VFS::access(const String& path, int mode, Inode& base)
+{
+    auto inode_or_error = resolve_path_to_inode(path, base);
+    if (inode_or_error.is_error())
+        return inode_or_error.error();
+    auto inode = inode_or_error.value();
+    auto metadata = inode->metadata();
+    if (mode & R_OK) {
+        if (!metadata.may_read(*current))
+            return KResult(-EACCES);
+    }
+    if (mode & W_OK) {
+        if (!metadata.may_write(*current))
+            return KResult(-EACCES);
+    }
+    if (mode & X_OK) {
+        if (!metadata.may_execute(*current))
+            return KResult(-EACCES);
+    }
+    return KSuccess;
+}
+
 KResult VFS::chmod(const String& path, mode_t mode, Inode& base)
 {
     auto inode_or_error = resolve_path_to_inode(path, base);

@@ -35,7 +35,6 @@ int sigprocmask(int how, const sigset_t* set, sigset_t* old_set);
 int sigpending(sigset_t*);
 int raise(int sig);
 
-#define NSIG 32
 extern const char* sys_siglist[NSIG];
 
 #define SIG_DFL ((__sighandler_t)0)

@@ -389,7 +389,7 @@ PageFaultResponse MemoryManager::handle_page_fault(const PageFault& fault)
             ASSERT(success);
             return PageFaultResponse::Continue;
         }
-        kprintf("PV(error) fault in Region{%p}[%u]\n", region, page_index_in_region);
+        kprintf("PV(error) fault in Region{%p}[%u] at L%x\n", region, page_index_in_region, fault.laddr().get());
     } else {
         ASSERT_NOT_REACHED();
     }
