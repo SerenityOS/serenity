@@ -2,6 +2,8 @@
 #include <errno.h>
 #include <signal.h>
 #include <stdio.h>
+#include <setjmp.h>
+#include <assert.h>
 #include <Kernel/Syscall.h>
 
 extern "C" {
@@ -105,5 +107,25 @@ const char* sys_siglist[NSIG] = {
     __ENUMERATE_ALL_SIGNALS
 #undef __SIGNAL
 };
+
+int sigsetjmp(jmp_buf env, int savesigs)
+{
+    if (savesigs) {
+        int rc = sigprocmask(0, nullptr, &env->saved_signal_mask);
+        assert(rc == 0);
+        env->did_save_signal_mask = true;
+    } else {
+        env->did_save_signal_mask = false;
+    }
+    return setjmp(env);
+}
+void siglongjmp(jmp_buf env, int val)
+{
+    if (env->did_save_signal_mask) {
+        int rc = sigprocmask(SIG_SETMASK, &env->saved_signal_mask, nullptr);
+        assert(rc == 0);
+    }
+    longjmp(env, val);
+}
 
 }

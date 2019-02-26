@@ -35,6 +35,7 @@ gid_t getegid();
 uid_t getuid();
 gid_t getgid();
 pid_t getpid();
+pid_t getppid();
 int getgroups(int size, gid_t list[]);
 int setgroups(size_t, const gid_t*);
 int setuid(uid_t);
