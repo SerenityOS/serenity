@@ -12,9 +12,11 @@ __BEGIN_DECLS
 #define FD_SET(fd, set) ((set)->bits[(fd / 8)] |= (1 << (fd) % 8))
 #define FD_ISSET(fd, set) ((set)->bits[(fd / 8)] & (1 << (fd) % 8))
 
-struct fd_set {
+struct __fd_set {
     unsigned char bits[FD_SETSIZE / 8];
 };
+
+typedef struct __fd_set fd_set;
 
 int select(int nfds, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, struct timeval* timeout);
 

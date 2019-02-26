@@ -384,5 +384,22 @@ int rename(const char* oldpath, const char* newpath)
     ASSERT_NOT_REACHED();
 }
 
+char* tmpnam(char*)
+{
+    assert(false);
+}
+
+FILE* popen(const char* command, const char* type)
+{
+    (void)command;
+    (void)type;
+    assert(false);
+}
+
+int pclose(FILE*)
+{
+    assert(false);
+}
+
 }
 

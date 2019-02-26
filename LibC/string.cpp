@@ -293,5 +293,12 @@ char* strpbrk(const char* s, const char* accept)
     return nullptr;
 }
 
+char *strtok(char* str, const char* delim)
+{
+    (void)str;
+    (void)delim;
+    assert(false);
+}
+
 }
 

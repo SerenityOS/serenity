@@ -9,9 +9,11 @@ enum {
     LC_NUMERIC,
     LC_CTYPE,
     LC_COLLATE,
+    LC_TIME,
 };
 
 struct lconv {
+    char *decimal_point;
 };
 
 struct lconv* localeconv();

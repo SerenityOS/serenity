@@ -10,4 +10,9 @@ char* setlocale(int category, const char* locale)
     return nullptr;
 }
 
+struct lconv* localeconv()
+{
+    assert(false);
+}
+
 }

@@ -3,10 +3,14 @@
 #include <sys/cdefs.h>
 #include <sys/types.h>
 #include <limits.h>
+#include <errno.h>
 
 __BEGIN_DECLS
 
 #define HZ 1000
+#define STDIN_FILENO 0
+#define STDOUT_FILENO 1
+#define STDERR_FILENO 2
 
 extern char** environ;
 
@@ -68,6 +72,7 @@ int isatty(int fd);
 int mknod(const char* pathname, mode_t, dev_t);
 long fpathconf(int fd, int name);
 long pathconf(const char *path, int name);
+char* getlogin();
 
 enum {
     _PC_NAME_MAX,
