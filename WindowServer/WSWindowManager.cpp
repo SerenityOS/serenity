@@ -232,7 +232,7 @@ WSWindowManager::WSWindowManager()
         static time_t last_update_time;
         time_t now = time(nullptr);
         if (now != last_update_time) {
-            invalidate(menubar_rect());
+            tick_clock();
             last_update_time = now;
         }
     });
@@ -243,6 +243,55 @@ WSWindowManager::WSWindowManager()
 
 WSWindowManager::~WSWindowManager()
 {
+}
+
+static void get_cpu_usage(unsigned& busy, unsigned& idle)
+{
+    busy = 0;
+    idle = 0;
+
+    FILE* fp = fopen("/proc/all", "r");
+    if (!fp) {
+        perror("failed to open /proc/all");
+        exit(1);
+    }
+    for (;;) {
+        char buf[BUFSIZ];
+        char* ptr = fgets(buf, sizeof(buf), fp);
+        if (!ptr)
+            break;
+        auto parts = String(buf, Chomp).split(',');
+        if (parts.size() < 17)
+            break;
+        bool ok;
+        pid_t pid = parts[0].to_uint(ok);
+        ASSERT(ok);
+        unsigned nsched = parts[1].to_uint(ok);
+        ASSERT(ok);
+
+        if (pid == 0)
+            idle += nsched;
+        else
+            busy += nsched;
+    }
+    int rc = fclose(fp);
+    ASSERT(rc == 0);
+}
+
+void WSWindowManager::tick_clock()
+{
+    static unsigned last_busy;
+    static unsigned last_idle;
+    unsigned busy;
+    unsigned idle;
+    get_cpu_usage(busy, idle);
+    unsigned busy_diff = busy - last_busy;
+    unsigned idle_diff = idle - last_idle;
+    last_busy = busy;
+    last_idle = idle;
+    float cpu = (float)busy_diff / (float)(busy_diff + idle_diff);
+    m_cpu_history.enqueue(cpu);
+    invalidate(menubar_rect());
 }
 
 void WSWindowManager::set_resolution(int width, int height)
@@ -866,6 +915,18 @@ void WSWindowManager::draw_menubar()
         tm->tm_sec);
     auto time_rect = menubar_rect().translated(-(menubar_menu_margin() / 2), 0);
     m_back_painter->draw_text(time_rect, time_text, TextAlignment::CenterRight, Color::Black);
+
+    Rect cpu_rect { time_rect.right() - font().glyph_width() * time_text.length() - (int)m_cpu_history.capacity() - 10, time_rect.y() + 1, (int)m_cpu_history.capacity(), time_rect.height() - 2 };
+    m_back_painter->fill_rect(cpu_rect, Color::Black);
+    int i = m_cpu_history.capacity() - m_cpu_history.size();
+    for (auto cpu_usage : m_cpu_history) {
+        m_back_painter->draw_line(
+            { cpu_rect.x() + i, cpu_rect.bottom() },
+            { cpu_rect.x() + i, (int)(cpu_rect.y() + (cpu_rect.height() - (cpu_usage * (float)cpu_rect.height()))) },
+            Color(0, 200, 0)
+        );
+        ++i;
+    }
 }
 
 void WSWindowManager::draw_cursor()
