@@ -104,8 +104,11 @@ char* fgets(char* buffer, int size, FILE* stream)
         if (nread >= size)
             break;
         int ch = fgetc(stream);
-        if (ch == EOF)
+        if (ch == EOF) {
+            if (nread == 0)
+                return nullptr;
             break;
+        }
         buffer[nread++] = ch;
         if (!ch || ch == '\n')
             break;
