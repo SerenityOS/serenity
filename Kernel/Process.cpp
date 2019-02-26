@@ -313,7 +313,12 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
     ProcessPagingScope paging_scope(*this);
 
     auto vmo = VMObject::create_file_backed(descriptor->inode());
+#if 0
+    // FIXME: I would like to do this, but it would instantiate all the damn inodes.
     vmo->set_name(descriptor->absolute_path());
+#else
+    vmo->set_name("ELF image");
+#endif
     RetainPtr<Region> region = allocate_region_with_vmo(LinearAddress(), descriptor->metadata().size, vmo.copy_ref(), 0, "executable", true, false);
 
     // FIXME: Should we consider doing on-demand paging here? Is it actually useful?
@@ -1547,6 +1552,7 @@ pid_t Process::sys$waitpid(pid_t waitee, int* wstatus, int options)
             return reaped_pid;
         } else {
             ASSERT(waitee > 0); // FIXME: Implement other PID specs.
+            InterruptDisabler disabler;
             auto* waitee_process = Process::from_pid(waitee);
             if (!waitee_process)
                 return -ECHILD;
@@ -1967,9 +1973,7 @@ int Process::sys$select(const Syscall::SC_select_params* params)
     auto* timeout = params->timeout;
 
     // FIXME: Implement exceptfds support.
-    //ASSERT(!exceptfds);
-    if (exceptfds)
-        kprintf("%s(%u): FIXME: select() with exceptfds\n", name().characters(), pid());
+    (void)exceptfds;
 
     if (timeout) {
         m_select_timeout = *timeout;
@@ -2004,6 +2008,9 @@ int Process::sys$select(const Syscall::SC_select_params* params)
     if (error)
         return error;
     error = transfer_fds(readfds, m_select_read_fds);
+    if (error)
+        return error;
+    error = transfer_fds(readfds, m_select_exceptional_fds);
     if (error)
         return error;
 
@@ -2046,6 +2053,8 @@ int Process::sys$select(const Syscall::SC_select_params* params)
             }
         }
     }
+
+    // FIXME: Check for exceptional conditions.
 
     return markedfds;
 }

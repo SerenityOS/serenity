@@ -393,7 +393,13 @@ Region* FileDescriptor::mmap(Process& process, LinearAddress laddr, size_t offse
 
     ASSERT(m_inode);
     // FIXME: If PROT_EXEC, check that the underlying file system isn't mounted noexec.
-    auto region_name = absolute_path();
+    String region_name;
+#if 0
+    // FIXME: I would like to do this, but it would instantiate all the damn inodes.
+    region_name = absolute_path();
+#else
+    region_name = "Memory-mapped file";
+#endif
     InterruptDisabler disabler;
     // FIXME: Implement mapping at a client-specified address. Most of the support is already in plcae.
     ASSERT(laddr.as_ptr() == nullptr);
