@@ -150,6 +150,7 @@ template<typename PutChFunc>
         bool leftPad = false;
         bool zeroPad = false;
         unsigned fieldWidth = 0;
+        unsigned long_qualifiers = 0;
         if (*p == '%' && *(p + 1)) {
 one_more:
             ++p;
@@ -168,6 +169,10 @@ one_more:
                 fieldWidth += *p - '0';
                 if (*(p + 1))
                     goto one_more;
+            }
+            if (*p == 'l') {
+                ++long_qualifiers;
+                goto one_more;
             }
             switch( *p )
             {
