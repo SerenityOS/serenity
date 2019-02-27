@@ -1324,8 +1324,8 @@ void Ext2FS::uncache_inode(InodeIndex index)
 size_t Ext2FSInode::directory_entry_count() const
 {
     ASSERT(is_directory());
-    populate_lookup_cache();
     LOCKER(m_lock);
+    populate_lookup_cache();
     return m_lookup_cache.size();
 }
 
