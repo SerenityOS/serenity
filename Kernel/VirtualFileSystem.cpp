@@ -300,8 +300,7 @@ KResult VFS::chmod(const String& path, mode_t mode, Inode& base)
     if (inode->fs().is_readonly())
         return KResult(-EROFS);
 
-    // FIXME: Superuser should always be allowed to chmod.
-    if (current->euid() != inode->metadata().uid)
+    if (current->euid() != inode->metadata().uid && !current->is_superuser())
         return KResult(-EPERM);
 
     // Only change the permission bits.
