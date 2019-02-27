@@ -613,7 +613,7 @@ bool Ext2FSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry&)
     return true;
 }
 
-bool Ext2FSInode::add_child(InodeIdentifier child_id, const String& name, byte file_type, int& error)
+KResult Ext2FSInode::add_child(InodeIdentifier child_id, const String& name, byte file_type)
 {
     LOCKER(m_lock);
     ASSERT(is_directory());
@@ -634,8 +634,7 @@ bool Ext2FSInode::add_child(InodeIdentifier child_id, const String& name, byte f
     });
     if (name_already_exists) {
         kprintf("Ext2FS: Name '%s' already exists in directory inode %u\n", name.characters(), index());
-        error = -EEXIST;
-        return false;
+        return KResult(-EEXIST);
     }
 
     auto child_inode = fs().get_inode(child_id);
@@ -646,7 +645,7 @@ bool Ext2FSInode::add_child(InodeIdentifier child_id, const String& name, byte f
     bool success = fs().write_directory_inode(index(), move(entries));
     if (success)
         m_lookup_cache.set(name, child_id.index());
-    return success;
+    return KSuccess;
 }
 
 KResult Ext2FSInode::remove_child(const String& name)
@@ -1139,12 +1138,14 @@ RetainPtr<Inode> Ext2FS::create_inode(InodeIdentifier parent_id, const String& n
         file_type = EXT2_FT_SYMLINK;
 
     // Try adding it to the directory first, in case the name is already in use.
-    bool success = parent_inode->add_child({ fsid(), inode_id }, name, file_type, error);
-    if (!success)
+    auto result = parent_inode->add_child({ fsid(), inode_id }, name, file_type);
+    if (result.is_error()) {
+        error = result;
         return { };
+    }
 
     // Looks like we're good, time to update the inode bitmap and group+global inode counters.
-    success = set_inode_allocation_state(inode_id, true);
+    bool success = set_inode_allocation_state(inode_id, true);
     ASSERT(success);
 
     for (auto block_index : blocks) {

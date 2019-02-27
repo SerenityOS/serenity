@@ -1047,13 +1047,12 @@ ssize_t ProcFSInode::write_bytes(off_t offset, ssize_t size, const byte* buffer,
     return 0;
 }
 
-bool ProcFSInode::add_child(InodeIdentifier child_id, const String& name, byte file_type, int& error)
+KResult ProcFSInode::add_child(InodeIdentifier child_id, const String& name, byte file_type)
 {
     (void)child_id;
     (void)name;
     (void)file_type;
-    error = -EPERM;
-    return false;
+    return KResult(-EPERM);
 }
 
 KResult ProcFSInode::remove_child(const String& name)
