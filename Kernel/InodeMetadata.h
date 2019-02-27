@@ -26,6 +26,8 @@ struct InodeMetadata {
 
     bool may_read(uid_t u, const HashTable<gid_t>& g) const
     {
+        if (u == 0)
+            return true;
         if (uid == u)
             return mode & 0400;
         if (g.contains(gid))
@@ -35,6 +37,8 @@ struct InodeMetadata {
 
     bool may_write(uid_t u, const HashTable<gid_t>& g) const
     {
+        if (u == 0)
+            return true;
         if (uid == u)
             return mode & 0200;
         if (g.contains(gid))
@@ -44,6 +48,8 @@ struct InodeMetadata {
 
     bool may_execute(uid_t u, const HashTable<gid_t>& g) const
     {
+        if (u == 0)
+            return true;
         if (uid == u)
             return mode & 0100;
         if (g.contains(gid))
