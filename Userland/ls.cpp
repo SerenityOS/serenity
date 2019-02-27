@@ -163,7 +163,7 @@ int do_dir(const char* path)
 
         printf(" %4u %4u", st.st_uid, st.st_gid);
 
-        if (S_ISCHR(st.st_mode))
+        if (S_ISCHR(st.st_mode) || S_ISBLK(st.st_mode))
             printf("  %4u,%4u ", major(st.st_rdev), minor(st.st_rdev));
         else
             printf(" %10u ", st.st_size);
