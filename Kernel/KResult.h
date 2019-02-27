@@ -11,6 +11,9 @@ public:
     KResult(KSuccessTag) : m_error(0) { }
     operator int() const { return m_error; }
 
+    bool is_success() const { return m_error == ESUCCESS; }
+    bool is_error() const { return !is_success(); }
+
 private:
     template<typename T> friend class KResultOr;
     KResult() { }
