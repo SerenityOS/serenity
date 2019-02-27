@@ -26,6 +26,7 @@ OBJS = \
        rmdir.o \
        dmesg.o \
        chmod.o \
+       chown.o \
        top.o \
        df.o \
        ln.o \
@@ -62,6 +63,7 @@ APPS = \
        rmdir \
        dmesg \
        chmod \
+       chown \
        top \
        ln \
        df \
@@ -171,6 +173,9 @@ rmdir: rmdir.o
 	$(LD) -o $@ $(LDFLAGS) $< -lc
 
 chmod: chmod.o
+	$(LD) -o $@ $(LDFLAGS) $< -lc
+
+chown: chown.o
 	$(LD) -o $@ $(LDFLAGS) $< -lc
 
 top: top.o

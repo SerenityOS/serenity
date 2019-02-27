@@ -1124,3 +1124,8 @@ ProcFS::ProcFSDirectoryEntry* ProcFS::get_directory_entry(InodeIdentifier identi
         return const_cast<ProcFSDirectoryEntry*>(&m_entries[proc_file_type]);
     return nullptr;
 }
+
+KResult ProcFSInode::chown(uid_t, gid_t)
+{
+    return KResult(-EPERM);
+}

@@ -74,6 +74,7 @@ int mknod(const char* pathname, mode_t, dev_t);
 long fpathconf(int fd, int name);
 long pathconf(const char *path, int name);
 char* getlogin();
+int chown(const char* pathname, uid_t, gid_t);
 
 enum {
     _PC_NAME_MAX,

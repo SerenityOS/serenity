@@ -72,6 +72,11 @@ Vector<Process*> Process::all_processes()
     return processes;
 }
 
+bool Process::in_group(gid_t gid) const
+{
+    return m_gids.contains(gid);
+}
+
 Region* Process::allocate_region(LinearAddress laddr, size_t size, String&& name, bool is_readable, bool is_writable, bool commit)
 {
     size = PAGE_ROUND_UP(size);
@@ -2155,6 +2160,13 @@ int Process::sys$chmod(const char* pathname, mode_t mode)
     if (!validate_read_str(pathname))
         return -EFAULT;
     return VFS::the().chmod(String(pathname), mode, cwd_inode());
+}
+
+int Process::sys$chown(const char* pathname, uid_t uid, gid_t gid)
+{
+    if (!validate_read_str(pathname))
+        return -EFAULT;
+    return VFS::the().chown(String(pathname), uid, gid, cwd_inode());
 }
 
 void Process::finalize()

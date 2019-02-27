@@ -66,6 +66,7 @@ cp -v ../Userland/sysctl mnt/bin/sysctl
 cp -v ../Userland/pape mnt/bin/pape
 cp -v ../Userland/dmesg mnt/bin/dmesg
 cp -v ../Userland/chmod mnt/bin/chmod
+cp -v ../Userland/chown mnt/bin/chown
 cp -v ../Userland/top mnt/bin/top
 cp -v ../Userland/ln mnt/bin/ln
 cp -v ../Userland/df mnt/bin/df
