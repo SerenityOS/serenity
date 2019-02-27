@@ -300,6 +300,7 @@ KResult VFS::chmod(const String& path, mode_t mode, Inode& base)
     if (inode->fs().is_readonly())
         return KResult(-EROFS);
 
+    // FIXME: Superuser should always be allowed to chmod.
     if (current->euid() != inode->metadata().uid)
         return KResult(-EPERM);
 
@@ -308,6 +309,37 @@ KResult VFS::chmod(const String& path, mode_t mode, Inode& base)
 
     kprintf("VFS::chmod(): %u:%u mode %o\n", inode->fsid(), inode->index(), mode);
     return inode->chmod(mode);
+}
+
+KResult VFS::chown(const String& path, uid_t a_uid, gid_t a_gid, Inode& base)
+{
+    auto inode_or_error = resolve_path_to_inode(path, base);
+    if (inode_or_error.is_error())
+        return inode_or_error.error();
+    auto inode = inode_or_error.value();
+
+    if (inode->fs().is_readonly())
+        return KResult(-EROFS);
+
+    if (current->euid() != inode->metadata().uid && !current->is_superuser())
+        return KResult(-EPERM);
+
+    uid_t new_uid = inode->metadata().uid;
+    gid_t new_gid = inode->metadata().gid;
+
+    if (a_uid != (uid_t)-1) {
+        if (current->euid() != a_uid && !current->is_superuser())
+            return KResult(-EPERM);
+        new_uid = a_uid;
+    }
+    if (a_gid != (gid_t)-1) {
+        if (!current->in_group(a_gid) && !current->is_superuser())
+            return KResult(-EPERM);
+        new_gid = a_gid;
+    }
+
+    dbgprintf("VFS::chown(): inode %u:%u <- uid:%d, gid:%d\n", inode->fsid(), inode->index(), new_uid, new_gid);
+    return inode->chown(new_uid, new_gid);
 }
 
 KResultOr<RetainPtr<Inode>> VFS::resolve_path_to_inode(const String& path, Inode& base, RetainPtr<Inode>* parent_inode)

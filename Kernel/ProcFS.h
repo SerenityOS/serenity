@@ -88,6 +88,7 @@ private:
     virtual RetainPtr<Inode> parent() const override;
     virtual size_t directory_entry_count() const override;
     virtual KResult chmod(mode_t) override;
+    virtual KResult chown(uid_t, gid_t) override;
 
     ProcFS& fs() { return static_cast<ProcFS&>(Inode::fs()); }
     const ProcFS& fs() const { return static_cast<const ProcFS&>(Inode::fs()); }

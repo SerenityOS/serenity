@@ -82,6 +82,7 @@
     __ENUMERATE_SYSCALL(get_shared_buffer) \
     __ENUMERATE_SYSCALL(release_shared_buffer) \
     __ENUMERATE_SYSCALL(link) \
+    __ENUMERATE_SYSCALL(chown) \
 
 
 namespace Syscall {

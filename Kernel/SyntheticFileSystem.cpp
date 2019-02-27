@@ -314,3 +314,8 @@ KResult SynthFSInode::chmod(mode_t)
 {
     return KResult(-EPERM);
 }
+
+KResult SynthFSInode::chown(uid_t, gid_t)
+{
+    return KResult(-EPERM);
+}

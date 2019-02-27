@@ -215,6 +215,8 @@ static dword handle(RegisterDump& regs, dword function, dword arg1, dword arg2, 
         return (dword)current->sys$get_shared_buffer((int)arg1);
     case Syscall::SC_release_shared_buffer:
         return current->sys$release_shared_buffer((int)arg1);
+    case Syscall::SC_chown:
+        return current->sys$chown((const char*)arg1, (uid_t)arg2, (gid_t)arg3);
     default:
         kprintf("<%u> int0x80: Unknown function %u requested {%x, %x, %x}\n", current->pid(), function, arg1, arg2, arg3);
         break;

@@ -14,12 +14,10 @@
 
 extern "C" {
 
-int chown(const char* pathname, uid_t owner, gid_t group)
+int chown(const char* pathname, uid_t uid, gid_t gid)
 {
-    (void)pathname;
-    (void)owner;
-    (void)group;
-    assert(false);
+    int rc = syscall(SC_chown, pathname, uid, gid);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
 pid_t fork()

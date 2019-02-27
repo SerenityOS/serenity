@@ -1346,6 +1346,17 @@ KResult Ext2FSInode::chmod(mode_t mode)
     return KSuccess;
 }
 
+KResult Ext2FSInode::chown(uid_t uid, gid_t gid)
+{
+    LOCKER(m_lock);
+    if (m_raw_inode.i_uid == uid && m_raw_inode.i_gid == gid)
+        return KSuccess;
+    m_raw_inode.i_uid = uid;
+    m_raw_inode.i_gid = gid;
+    set_metadata_dirty(true);
+    return KSuccess;
+}
+
 unsigned Ext2FS::total_block_count() const
 {
     LOCKER(m_lock);
