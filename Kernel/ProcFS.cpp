@@ -1056,11 +1056,10 @@ bool ProcFSInode::add_child(InodeIdentifier child_id, const String& name, byte f
     return false;
 }
 
-bool ProcFSInode::remove_child(const String& name, int& error)
+KResult ProcFSInode::remove_child(const String& name)
 {
     (void)name;
-    error = -EPERM;
-    return false;
+    return KResult(-EPERM);
 }
 
 ProcFSInodeCustomData::~ProcFSInodeCustomData()

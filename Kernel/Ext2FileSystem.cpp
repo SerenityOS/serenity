@@ -649,7 +649,7 @@ bool Ext2FSInode::add_child(InodeIdentifier child_id, const String& name, byte f
     return success;
 }
 
-bool Ext2FSInode::remove_child(const String& name, int& error)
+KResult Ext2FSInode::remove_child(const String& name)
 {
     LOCKER(m_lock);
 #ifdef EXT2_DEBUG
@@ -658,15 +658,11 @@ bool Ext2FSInode::remove_child(const String& name, int& error)
     ASSERT(is_directory());
 
     unsigned child_inode_index;
-    {
-        LOCKER(m_lock);
-        auto it = m_lookup_cache.find(name);
-        if (it == m_lookup_cache.end()) {
-            error = -ENOENT;
-            return false;
-        }
-        child_inode_index = (*it).value;
-    }
+    auto it = m_lookup_cache.find(name);
+    if (it == m_lookup_cache.end())
+        return KResult(-ENOENT);
+    child_inode_index = (*it).value;
+
     InodeIdentifier child_id { fsid(), child_inode_index };
 
 //#ifdef EXT2_DEBUG
@@ -683,18 +679,14 @@ bool Ext2FSInode::remove_child(const String& name, int& error)
     bool success = fs().write_directory_inode(index(), move(entries));
     if (!success) {
         // FIXME: Plumb error from write_directory_inode().
-        error = -EIO;
-        return false;
+        return KResult(-EIO);
     }
 
-    {
-        LOCKER(m_lock);
-        m_lookup_cache.remove(name);
-    }
+    m_lookup_cache.remove(name);
 
     auto child_inode = fs().get_inode(child_id);
     child_inode->decrement_link_count();
-    return success;
+    return KSuccess;
 }
 
 bool Ext2FS::write_directory_inode(unsigned directoryInode, Vector<DirectoryEntry>&& entries)

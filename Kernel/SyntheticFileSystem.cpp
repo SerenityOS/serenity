@@ -290,12 +290,10 @@ bool SynthFSInode::add_child(InodeIdentifier child_id, const String& name, byte 
     return false;
 }
 
-bool SynthFSInode::remove_child(const String& name, int& error)
+KResult SynthFSInode::remove_child(const String& name)
 {
-    (void) name;
-    (void) error;
+    (void)name;
     ASSERT_NOT_REACHED();
-    return false;
 }
 
 SynthFSInodeCustomData::~SynthFSInodeCustomData()

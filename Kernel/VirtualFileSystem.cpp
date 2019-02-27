@@ -410,80 +410,56 @@ bool VFS::link(const String& old_path, const String& new_path, Inode& base, int&
     return true;
 }
 
-bool VFS::unlink(const String& path, Inode& base, int& error)
+KResult VFS::unlink(const String& path, Inode& base)
 {
     RetainPtr<Inode> parent_inode;
-    auto inode = resolve_path_to_inode(path, base, error, &parent_inode);
-    if (!inode)
-        return false;
+    auto inode_or_error = resolve_path_to_inode(path, base, &parent_inode);
+    if (inode_or_error.is_error())
+        return inode_or_error.error();
+    auto inode = inode_or_error.value();
 
-    if (inode->is_directory()) {
-        error = -EISDIR;
-        return false;
-    }
+    if (inode->is_directory())
+        return KResult(-EISDIR);
 
-    if (!parent_inode->metadata().may_write(*current)) {
-        error = -EACCES;
-        return false;
-    }
+    if (!parent_inode->metadata().may_write(*current))
+        return KResult(-EACCES);
 
-    if (!parent_inode->remove_child(FileSystemPath(path).basename(), error))
-        return false;
-
-    error = 0;
-    return true;
+    return parent_inode->remove_child(FileSystemPath(path).basename());
 }
 
-bool VFS::rmdir(const String& path, Inode& base, int& error)
+KResult VFS::rmdir(const String& path, Inode& base)
 {
-    error = -EWHYTHO;
-
     RetainPtr<Inode> parent_inode;
-    auto inode = resolve_path_to_inode(path, base, error, &parent_inode);
-    if (!inode)
-        return false;
+    auto inode_or_error = resolve_path_to_inode(path, base, &parent_inode);
+    if (inode_or_error.is_error())
+        return KResult(inode_or_error.error());
 
-    if (inode->fs().is_readonly()) {
-        error = -EROFS;
-        return false;
-    }
+    auto inode = inode_or_error.value();
+    if (inode->fs().is_readonly())
+        return KResult(-EROFS);
 
     // FIXME: We should return EINVAL if the last component of the path is "."
     // FIXME: We should return ENOTEMPTY if the last component of the path is ".."
 
-    if (!inode->is_directory()) {
-        error = -ENOTDIR;
-        return false;
-    }
+    if (!inode->is_directory())
+        return KResult(-ENOTDIR);
 
-    if (!parent_inode->metadata().may_write(*current)) {
-        error = -EACCES;
-        return false;
-    }
+    if (!parent_inode->metadata().may_write(*current))
+        return KResult(-EACCES);
 
-    if (inode->directory_entry_count() != 2) {
-        error = -ENOTEMPTY;
-        return false;
-    }
+    if (inode->directory_entry_count() != 2)
+        return KResult(-ENOTEMPTY);
 
-    dbgprintf("VFS::rmdir: Removing inode %u:%u from parent %u:%u\n", inode->fsid(), inode->index(), parent_inode->fsid(), parent_inode->index());
+    auto result = inode->remove_child(".");
+    if (result.is_error())
+        return result;
 
-    // To do:
-    // - Remove '.' in target (--child.link_count)
-    // - Remove '..' in target (--parent.link_count)
-    // - Remove target from its parent (--parent.link_count)
-    if (!inode->remove_child(".", error))
-        return false;
-
-    if (!inode->remove_child("..", error))
-        return false;
+    result = inode->remove_child("..");
+    if (result.is_error())
+        return result;
 
     // FIXME: The reverse_lookup here can definitely be avoided.
-    if (!parent_inode->remove_child(parent_inode->reverse_lookup(inode->identifier()), error))
-        return false;
-
-    error = 0;
-    return true;
+    return parent_inode->remove_child(parent_inode->reverse_lookup(inode->identifier()));
 }
 
 KResultOr<InodeIdentifier> VFS::resolve_symbolic_link(InodeIdentifier base, Inode& symlink_inode)

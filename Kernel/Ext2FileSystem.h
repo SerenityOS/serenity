@@ -33,7 +33,7 @@ private:
     virtual void flush_metadata() override;
     virtual ssize_t write_bytes(off_t, ssize_t, const byte* data, FileDescriptor*) override;
     virtual bool add_child(InodeIdentifier child_id, const String& name, byte file_type, int& error) override;
-    virtual bool remove_child(const String& name, int& error) override;
+    virtual KResult remove_child(const String& name) override;
     virtual RetainPtr<Inode> parent() const override;
     virtual int set_atime(time_t) override;
     virtual int set_ctime(time_t) override;

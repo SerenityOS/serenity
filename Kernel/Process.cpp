@@ -2129,20 +2129,14 @@ int Process::sys$unlink(const char* pathname)
 {
     if (!validate_read_str(pathname))
         return -EFAULT;
-    int error;
-    if (!VFS::the().unlink(String(pathname), cwd_inode(), error))
-        return error;
-    return 0;
+    return VFS::the().unlink(String(pathname), cwd_inode());
 }
 
 int Process::sys$rmdir(const char* pathname)
 {
     if (!validate_read_str(pathname))
         return -EFAULT;
-    int error;
-    if (!VFS::the().rmdir(String(pathname), cwd_inode(), error))
-        return error;
-    return 0;
+    return VFS::the().rmdir(String(pathname), cwd_inode());
 }
 
 int Process::sys$read_tsc(dword* lsw, dword* msw)

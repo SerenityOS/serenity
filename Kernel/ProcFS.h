@@ -84,7 +84,7 @@ private:
     virtual void flush_metadata() override;
     virtual ssize_t write_bytes(off_t, ssize_t, const byte* buffer, FileDescriptor*) override;
     virtual bool add_child(InodeIdentifier child_id, const String& name, byte file_type, int& error) override;
-    virtual bool remove_child(const String& name, int& error) override;
+    virtual KResult remove_child(const String& name) override;
     virtual RetainPtr<Inode> parent() const override;
     virtual size_t directory_entry_count() const override;
     virtual KResult chmod(mode_t) override;
