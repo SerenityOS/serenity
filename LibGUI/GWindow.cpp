@@ -234,10 +234,12 @@ void GWindow::event(GEvent& event)
     }
 
     if (event.type() == GEvent::Resize) {
-        m_backing = nullptr;
+        auto new_size = static_cast<GResizeEvent&>(event).size();
+        if (m_backing && m_backing->size() != new_size)
+            m_backing = nullptr;
         m_pending_paint_event_rects.clear();
-        m_rect_when_windowless = { { }, static_cast<GResizeEvent&>(event).size() };
-        m_main_widget->set_relative_rect({ { }, static_cast<GResizeEvent&>(event).size() });
+        m_rect_when_windowless = { { }, new_size };
+        m_main_widget->set_relative_rect({ { }, new_size });
         return;
     }
 
