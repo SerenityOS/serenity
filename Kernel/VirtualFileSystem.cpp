@@ -375,39 +375,31 @@ RetainPtr<Inode> VFS::resolve_path_to_inode(const String& path, Inode& base, int
     return get_inode(inode_id);
 }
 
-bool VFS::link(const String& old_path, const String& new_path, Inode& base, int& error)
+KResult VFS::link(const String& old_path, const String& new_path, Inode& base)
 {
-    auto old_inode = resolve_path_to_inode(old_path, base, error);
-    if (!old_inode)
-        return false;
+    auto old_inode_or_error = resolve_path_to_inode(old_path, base);
+    if (old_inode_or_error.is_error())
+        return old_inode_or_error.error();
+    auto old_inode = old_inode_or_error.value();
 
     RetainPtr<Inode> parent_inode;
-    auto new_inode = resolve_path_to_inode(new_path, base, error, &parent_inode);
-    if (new_inode) {
-        error = -EEXIST;
-        return false;
-    }
-    if (!parent_inode) {
-        error = -ENOENT;
-        return false;
-    }
-    if (parent_inode->fsid() != old_inode->fsid()) {
-        error = -EXDEV;
-        return false;
-    }
-    if (parent_inode->fs().is_readonly()) {
-        error = -EROFS;
-        return false;
-    }
-    if (!parent_inode->metadata().may_write(*current)) {
-        error = -EACCES;
-        return false;
-    }
+    auto new_inode_or_error = resolve_path_to_inode(new_path, base, &parent_inode);
+    if (!new_inode_or_error.is_error())
+        return KResult(-EEXIST);
 
-    if (!parent_inode->add_child(old_inode->identifier(), FileSystemPath(new_path).basename(), 0, error))
-        return false;
-    error = 0;
-    return true;
+    if (!parent_inode)
+        return KResult(-ENOENT);
+
+    if (parent_inode->fsid() != old_inode->fsid())
+        return KResult(-EXDEV);
+
+    if (parent_inode->fs().is_readonly())
+        return KResult(-EROFS);
+
+    if (!parent_inode->metadata().may_write(*current))
+        return KResult(-EACCES);
+
+    return parent_inode->add_child(old_inode->identifier(), FileSystemPath(new_path).basename(), 0);
 }
 
 KResult VFS::unlink(const String& path, Inode& base)

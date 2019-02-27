@@ -280,14 +280,12 @@ ssize_t SynthFSInode::write_bytes(off_t offset, ssize_t size, const byte* buffer
     return 0;
 }
 
-bool SynthFSInode::add_child(InodeIdentifier child_id, const String& name, byte file_type, int& error)
+KResult SynthFSInode::add_child(InodeIdentifier child_id, const String& name, byte file_type)
 {
-    (void) child_id;
-    (void) name;
-    (void) file_type;
-    (void) error;
+    (void)child_id;
+    (void)name;
+    (void)file_type;
     ASSERT_NOT_REACHED();
-    return false;
 }
 
 KResult SynthFSInode::remove_child(const String& name)

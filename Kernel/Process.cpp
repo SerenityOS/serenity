@@ -2119,10 +2119,7 @@ int Process::sys$link(const char* old_path, const char* new_path)
         return -EFAULT;
     if (!validate_read_str(new_path))
         return -EFAULT;
-    int error;
-    if (!VFS::the().link(String(old_path), String(new_path), cwd_inode(), error))
-        return error;
-    return 0;
+    return VFS::the().link(String(old_path), String(new_path), cwd_inode());
 }
 
 int Process::sys$unlink(const char* pathname)

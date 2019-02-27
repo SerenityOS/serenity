@@ -66,7 +66,7 @@ public:
     RetainPtr<FileDescriptor> open(const String& path, int& error, int options, mode_t mode, Inode& base);
     RetainPtr<FileDescriptor> create(const String& path, int& error, int options, mode_t mode, Inode& base);
     KResult mkdir(const String& path, mode_t mode, Inode& base);
-    bool link(const String& old_path, const String& new_path, Inode& base, int& error);
+    KResult link(const String& old_path, const String& new_path, Inode& base);
     KResult unlink(const String& path, Inode& base);
     KResult rmdir(const String& path, Inode& base);
     KResult chmod(const String& path, mode_t, Inode& base);
