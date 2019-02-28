@@ -4,14 +4,15 @@
 #include <pwd.h>
 
 enum Column {
-    PID = 0,
+    Icon = 0,
+    Name,
+    CPU,
     State,
-    User,
     Priority,
+    User,
+    PID,
     Linear,
     Physical,
-    CPU,
-    Name,
     __Count
 };
 
@@ -21,6 +22,9 @@ ProcessTableModel::ProcessTableModel()
     while (auto* passwd = getpwent())
         m_usernames.set(passwd->pw_uid, passwd->pw_name);
     endpwent();
+
+    m_generic_process_icon = GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/gear16.rgb", { 16, 16 });
+    ASSERT(m_generic_process_icon);
 }
 
 ProcessTableModel::~ProcessTableModel()
@@ -40,6 +44,7 @@ int ProcessTableModel::column_count() const
 String ProcessTableModel::column_name(int column) const
 {
     switch (column) {
+    case Column::Icon: return "";
     case Column::PID: return "PID";
     case Column::State: return "State";
     case Column::User: return "User";
@@ -55,14 +60,15 @@ String ProcessTableModel::column_name(int column) const
 GTableModel::ColumnMetadata ProcessTableModel::column_metadata(int column) const
 {
     switch (column) {
-    case Column::PID: return { 30, TextAlignment::CenterRight };
-    case Column::State: return { 80, TextAlignment::CenterLeft };
-    case Column::Priority: return { 75, TextAlignment::CenterLeft };
-    case Column::User: return { 60, TextAlignment::CenterLeft };
-    case Column::Linear: return { 70, TextAlignment::CenterRight };
-    case Column::Physical: return { 70, TextAlignment::CenterRight };
-    case Column::CPU: return { 30, TextAlignment::CenterRight };
-    case Column::Name: return { 200, TextAlignment::CenterLeft };
+    case Column::Icon: return { 16, TextAlignment::CenterLeft };
+    case Column::PID: return { 25, TextAlignment::CenterRight };
+    case Column::State: return { 75, TextAlignment::CenterLeft };
+    case Column::Priority: return { 65, TextAlignment::CenterLeft };
+    case Column::User: return { 50, TextAlignment::CenterLeft };
+    case Column::Linear: return { 65, TextAlignment::CenterRight };
+    case Column::Physical: return { 65, TextAlignment::CenterRight };
+    case Column::CPU: return { 25, TextAlignment::CenterRight };
+    case Column::Name: return { 140, TextAlignment::CenterLeft };
     default: ASSERT_NOT_REACHED();
     }
 }
@@ -93,6 +99,7 @@ GVariant ProcessTableModel::data(int row, int column) const
     auto it = m_processes.find(m_pids[row]);
     auto& process = *(*it).value;
     switch (column) {
+    case Column::Icon: return *m_generic_process_icon;
     case Column::PID: return process.current_state.pid;
     case Column::State: return process.current_state.state;
     case Column::User: return process.current_state.user;
