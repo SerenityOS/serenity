@@ -65,6 +65,7 @@ public:
         Skip0SchedulerPasses,
         Dying,
         Dead,
+        Stopped,
         BeingInspected,
         BlockedLurking,
         BlockedSleep,
@@ -89,7 +90,7 @@ public:
 
     bool is_ring0() const { return m_ring == Ring0; }
     bool is_ring3() const { return m_ring == Ring3; }
-
+    bool is_stopped() const { return m_state == Stopped; }
     bool is_blocked() const
     {
         return m_state == BlockedSleep || m_state == BlockedWait || m_state == BlockedRead || m_state == BlockedWrite || m_state == BlockedSignal || m_state == BlockedSelect;
@@ -444,6 +445,7 @@ static inline const char* to_string(Process::State state)
     case Process::Running: return "Running";
     case Process::Dying: return "Dying";
     case Process::Dead: return "Dead";
+    case Process::Stopped: return "Stopped";
     case Process::Skip1SchedulerPass: return "Skip1";
     case Process::Skip0SchedulerPasses: return "Skip0";
     case Process::BlockedSleep: return "Sleep";
