@@ -149,7 +149,7 @@ void FS::sync()
         InterruptDisabler disabler;
         for (auto* inode : all_inodes()) {
             if (inode->is_metadata_dirty())
-                inodes.unchecked_append(*inode);
+                inodes.append(*inode);
         }
     }
 
