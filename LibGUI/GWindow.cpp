@@ -260,7 +260,7 @@ void GWindow::update(const Rect& a_rect)
 #ifdef UPDATE_COALESCING_DEBUG
             dbgprintf("Ignoring %s since it's contained by pending rect %s\n", a_rect.to_string().characters(), pending_rect.to_string().characters());
 #endif
-            //return;
+            return;
         }
     }
     m_pending_paint_event_rects.append(a_rect);
