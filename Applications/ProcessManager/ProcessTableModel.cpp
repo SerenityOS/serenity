@@ -2,6 +2,17 @@
 #include <fcntl.h>
 #include <stdio.h>
 
+enum Column {
+    PID = 0,
+    State,
+    Priority,
+    Linear,
+    Committed,
+    CPU,
+    Name,
+    __Count
+};
+
 ProcessTableModel::ProcessTableModel()
 {
 }
@@ -17,16 +28,19 @@ int ProcessTableModel::row_count() const
 
 int ProcessTableModel::column_count() const
 {
-    return 4;
+    return Column::__Count;
 }
 
 String ProcessTableModel::column_name(int column) const
 {
     switch (column) {
-    case 0: return "PID";
-    case 1: return "State";
-    case 2: return "CPU";
-    case 3: return "Name";
+    case Column::PID: return "PID";
+    case Column::State: return "State";
+    case Column::Priority: return "Priority";
+    case Column::Linear: return "Linear";
+    case Column::Committed: return "Committed";
+    case Column::CPU: return "CPU";
+    case Column::Name: return "Name";
     default: ASSERT_NOT_REACHED();
     }
 }
@@ -34,10 +48,13 @@ String ProcessTableModel::column_name(int column) const
 int ProcessTableModel::column_width(int column) const
 {
     switch (column) {
-    case 0: return 30;
-    case 1: return 80;
-    case 2: return 30;
-    case 3: return 200;
+    case Column::PID: return 30;
+    case Column::State: return 80;
+    case Column::Priority: return 80;
+    case Column::Linear: return 80;
+    case Column::Committed: return 80;
+    case Column::CPU: return 30;
+    case Column::Name: return 200;
     default: ASSERT_NOT_REACHED();
     }
 }
@@ -53,16 +70,24 @@ void ProcessTableModel::set_selected_index(GModelIndex index)
         m_selected_row = index.row();
 }
 
+static String pretty_byte_size(size_t size)
+{
+    return String::format("%uK", size / 1024);
+}
+
 String ProcessTableModel::data(int row, int column) const
 {
     ASSERT(is_valid({ row, column }));
     auto it = m_processes.find(m_pids[row]);
     auto& process = *(*it).value;
     switch (column) {
-    case 0: return String::format("%d", process.current_state.pid);
-    case 1: return process.current_state.state;
-    case 2: return String::format("%d", (int)process.current_state.cpu_percent);
-    case 3: return process.current_state.name;
+    case Column::PID: return String::format("%d", process.current_state.pid);
+    case Column::State: return process.current_state.state;
+    case Column::Priority: return process.current_state.priority;
+    case Column::Linear: return pretty_byte_size(process.current_state.linear);
+    case Column::Committed: return pretty_byte_size(process.current_state.committed);
+    case Column::CPU: return String::format("%d", (int)process.current_state.cpu_percent);
+    case Column::Name: return process.current_state.name;
     }
     ASSERT_NOT_REACHED();
 }
