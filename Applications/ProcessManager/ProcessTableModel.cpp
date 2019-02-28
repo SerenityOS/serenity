@@ -1,10 +1,12 @@
 #include "ProcessTableModel.h"
 #include <fcntl.h>
 #include <stdio.h>
+#include <pwd.h>
 
 enum Column {
     PID = 0,
     State,
+    User,
     Priority,
     Linear,
     Physical,
@@ -15,6 +17,10 @@ enum Column {
 
 ProcessTableModel::ProcessTableModel()
 {
+    setpwent();
+    while (auto* passwd = getpwent())
+        m_usernames.set(passwd->pw_uid, passwd->pw_name);
+    endpwent();
 }
 
 ProcessTableModel::~ProcessTableModel()
@@ -36,6 +42,7 @@ String ProcessTableModel::column_name(int column) const
     switch (column) {
     case Column::PID: return "PID";
     case Column::State: return "State";
+    case Column::User: return "User";
     case Column::Priority: return "Priority";
     case Column::Linear: return "Linear";
     case Column::Physical: return "Physical";
@@ -51,6 +58,7 @@ GTableModel::ColumnMetadata ProcessTableModel::column_metadata(int column) const
     case Column::PID: return { 30, TextAlignment::CenterRight };
     case Column::State: return { 80, TextAlignment::CenterLeft };
     case Column::Priority: return { 75, TextAlignment::CenterLeft };
+    case Column::User: return { 60, TextAlignment::CenterLeft };
     case Column::Linear: return { 70, TextAlignment::CenterRight };
     case Column::Physical: return { 70, TextAlignment::CenterRight };
     case Column::CPU: return { 30, TextAlignment::CenterRight };
@@ -87,6 +95,7 @@ String ProcessTableModel::data(int row, int column) const
     switch (column) {
     case Column::PID: return String::format("%d", process.current_state.pid);
     case Column::State: return process.current_state.state;
+    case Column::User: return process.current_state.user;
     case Column::Priority: return process.current_state.priority;
     case Column::Linear: return pretty_byte_size(process.current_state.linear);
     case Column::Physical: return pretty_byte_size(process.current_state.physical);
@@ -128,8 +137,13 @@ void ProcessTableModel::update()
         state.nsched = nsched;
         unsigned uid = parts[5].to_uint(ok);
         ASSERT(ok);
-        //state.user = s_usernames->get(uid);
-        state.user = String::format("%u", uid);
+        {
+            auto it = m_usernames.find((uid_t)uid);
+            if (it != m_usernames.end())
+                state.user = String::format("%s", (*it).value.characters());
+            else
+                state.user = String::format("%u", uid);
+        }
         state.priority = parts[16];
         state.state = parts[7];
         state.name = parts[11];
