@@ -1411,6 +1411,8 @@ int Process::sys$isatty(int fd)
 
 int Process::sys$kill(pid_t pid, int signal)
 {
+    if (signal < 0 || signal >= 32)
+        return -EINVAL;
     if (pid == 0) {
         // FIXME: Send to same-group processes.
         ASSERT(pid != 0);
@@ -1424,13 +1426,18 @@ int Process::sys$kill(pid_t pid, int signal)
         Scheduler::yield();
         return 0;
     }
-    Process* peer = nullptr;
-    {
-        InterruptDisabler disabler;
-        peer = Process::from_pid(pid);
-    }
+    InterruptDisabler disabler;
+    auto* peer = Process::from_pid(pid);
     if (!peer)
         return -ESRCH;
+    // FIXME: Allow sending SIGCONT to everyone in the process group.
+    // FIXME: Should setuid processes have some special treatment here?
+    if (!is_superuser() && m_euid != peer->m_uid && m_uid != peer->m_uid)
+        return -EPERM;
+    if (peer->is_ring0() && signal == SIGKILL) {
+        kprintf("%s(%u) attempted to send SIGKILL to ring 0 process %s(%u)\n", name().characters(), m_pid, peer->name().characters(), peer->pid());
+        return -EPERM;
+    }
     peer->send_signal(signal, this);
     return 0;
 }

@@ -52,7 +52,9 @@ int main(int argc, char** argv)
         return 3;
     }
 
-    kill((pid_t)pid, signum);
+    int rc = kill((pid_t)pid, signum);
+    if (rc < 0)
+        perror("kill");
     return 0;
 }
 
