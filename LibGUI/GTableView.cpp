@@ -6,6 +6,7 @@
 GTableView::GTableView(GWidget* parent)
     : GWidget(parent)
 {
+    set_fill_with_background_color(false);
     m_scrollbar = new GScrollBar(Orientation::Vertical, this);
     m_scrollbar->set_step(4);
     m_scrollbar->set_big_step(30);
