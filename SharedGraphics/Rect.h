@@ -191,6 +191,11 @@ public:
 
     Rect united(const Rect&) const;
 
+    Point top_left() const { return { left(), top() }; }
+    Point top_right() const { return { right(), top() }; }
+    Point bottom_left() const { return { left(), bottom() }; }
+    Point bottom_right() const { return { right(), bottom() }; }
+
     String to_string() const { return String::format("[%d,%d %dx%d]", x(), y(), width(), height()); }
 
 private:
