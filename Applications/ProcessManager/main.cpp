@@ -9,7 +9,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <signal.h>
-#include "ProcessView.h"
+#include "ProcessTableView.h"
 
 int main(int argc, char** argv)
 {
@@ -19,14 +19,14 @@ int main(int argc, char** argv)
     widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
 
     auto* toolbar = new GToolBar(widget);
-    auto* process_view = new ProcessView(widget);
+    auto* process_table_view = new ProcessTableView(widget);
     auto* statusbar = new GStatusBar(widget);
-    process_view->on_status_message = [statusbar] (String message) {
+    process_table_view->on_status_message = [statusbar] (String message) {
         statusbar->set_text(move(message));
     };
 
-    auto kill_action = GAction::create("Kill process", GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/kill16.rgb", { 16, 16 }), [process_view] (const GAction&) {
-        pid_t pid = process_view->selected_pid();
+    auto kill_action = GAction::create("Kill process", GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/kill16.rgb", { 16, 16 }), [process_table_view] (const GAction&) {
+        pid_t pid = process_table_view->selected_pid();
         if (pid != -1)
             kill(pid, SIGKILL);
     });

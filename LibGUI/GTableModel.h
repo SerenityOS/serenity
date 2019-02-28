@@ -1,12 +1,16 @@
 #pragma once
 
 #include <AK/AKString.h>
+#include <AK/Badge.h>
+#include <AK/Function.h>
+#include <AK/HashTable.h>
 #include <LibGUI/GModelIndex.h>
+
+class GTableView;
 
 class GTableModel {
 public:
-    GTableModel() { }
-    virtual ~GTableModel() { }
+    virtual ~GTableModel();
 
     virtual int row_count() const = 0;
     virtual int column_count() const = 0;
@@ -22,4 +26,16 @@ public:
     {
         return index.row() >= 0 && index.row() < row_count() && index.column() >= 0 && index.column() < column_count();
     }
+
+    void register_view(Badge<GTableView>, GTableView&);
+    void unregister_view(Badge<GTableView>, GTableView&);
+
+protected:
+    GTableModel();
+
+    void for_each_view(Function<void(GTableView&)>);
+    void did_update();
+
+private:
+    HashTable<GTableView*> m_views;
 };
