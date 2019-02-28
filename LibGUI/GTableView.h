@@ -21,15 +21,20 @@ public:
 
     void did_update_model();
 
+    int content_width() const;
+    int horizontal_padding() const { return m_horizontal_padding; }
+
 private:
     virtual void paint_event(GPaintEvent&) override;
     virtual void resize_event(GResizeEvent&) override;
     virtual void mousedown_event(GMouseEvent&) override;
 
-    void update_scrollbar_range();
+    void update_scrollbar_ranges();
     int item_count() const;
     Rect row_rect(int item_index) const;
 
-    GScrollBar* m_scrollbar { nullptr };
+    GScrollBar* m_vertical_scrollbar { nullptr };
+    GScrollBar* m_horizontal_scrollbar { nullptr };
     OwnPtr<GTableModel> m_model;
+    int m_horizontal_padding { 5 };
 };
