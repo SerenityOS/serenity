@@ -14,7 +14,7 @@ public:
     virtual int row_count() const override;
     virtual int column_count() const override;
     virtual String column_name(int column) const override;
-    virtual int column_width(int column) const override;
+    virtual ColumnMetadata column_metadata(int column) const override;
     virtual GModelIndex selected_index() const override;
     virtual void set_selected_index(GModelIndex) override;
     virtual String data(int row, int column) const override;
@@ -30,8 +30,8 @@ private:
         String state;
         String user;
         String priority;
-        unsigned linear;
-        unsigned committed;
+        size_t linear;
+        size_t physical;
         float cpu_percent;
     };
 

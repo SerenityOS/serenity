@@ -5,18 +5,24 @@
 #include <AK/Function.h>
 #include <AK/HashTable.h>
 #include <LibGUI/GModelIndex.h>
+#include <SharedGraphics/TextAlignment.h>
 
 class GTableView;
 
 class GTableModel {
 public:
+    struct ColumnMetadata {
+        int preferred_width { 0 };
+        TextAlignment text_alignment { TextAlignment::CenterLeft };
+    };
+
     virtual ~GTableModel();
 
     virtual int row_count() const = 0;
     virtual int column_count() const = 0;
     virtual String row_name(int) const { return { }; }
     virtual String column_name(int) const { return { }; }
-    virtual int column_width(int) const { return 0; }
+    virtual ColumnMetadata column_metadata(int) const { return { }; }
     virtual String data(int row, int column) const = 0;
     virtual void set_selected_index(GModelIndex) { }
     virtual GModelIndex selected_index() const { return GModelIndex(); }

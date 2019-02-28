@@ -7,7 +7,7 @@ enum Column {
     State,
     Priority,
     Linear,
-    Committed,
+    Physical,
     CPU,
     Name,
     __Count
@@ -38,23 +38,23 @@ String ProcessTableModel::column_name(int column) const
     case Column::State: return "State";
     case Column::Priority: return "Priority";
     case Column::Linear: return "Linear";
-    case Column::Committed: return "Committed";
+    case Column::Physical: return "Physical";
     case Column::CPU: return "CPU";
     case Column::Name: return "Name";
     default: ASSERT_NOT_REACHED();
     }
 }
 
-int ProcessTableModel::column_width(int column) const
+GTableModel::ColumnMetadata ProcessTableModel::column_metadata(int column) const
 {
     switch (column) {
-    case Column::PID: return 30;
-    case Column::State: return 80;
-    case Column::Priority: return 80;
-    case Column::Linear: return 80;
-    case Column::Committed: return 80;
-    case Column::CPU: return 30;
-    case Column::Name: return 200;
+    case Column::PID: return { 30, TextAlignment::CenterRight };
+    case Column::State: return { 80, TextAlignment::CenterLeft };
+    case Column::Priority: return { 80, TextAlignment::CenterLeft };
+    case Column::Linear: return { 70, TextAlignment::CenterRight };
+    case Column::Physical: return { 70, TextAlignment::CenterRight };
+    case Column::CPU: return { 30, TextAlignment::CenterRight };
+    case Column::Name: return { 200, TextAlignment::CenterLeft };
     default: ASSERT_NOT_REACHED();
     }
 }
@@ -85,7 +85,7 @@ String ProcessTableModel::data(int row, int column) const
     case Column::State: return process.current_state.state;
     case Column::Priority: return process.current_state.priority;
     case Column::Linear: return pretty_byte_size(process.current_state.linear);
-    case Column::Committed: return pretty_byte_size(process.current_state.committed);
+    case Column::Physical: return pretty_byte_size(process.current_state.physical);
     case Column::CPU: return String::format("%d", (int)process.current_state.cpu_percent);
     case Column::Name: return process.current_state.name;
     }
@@ -131,7 +131,7 @@ void ProcessTableModel::update()
         state.name = parts[11];
         state.linear = parts[12].to_uint(ok);
         ASSERT(ok);
-        state.committed = parts[13].to_uint(ok);
+        state.physical = parts[13].to_uint(ok);
         ASSERT(ok);
 
         {

@@ -4,6 +4,7 @@
 #include "Point.h"
 #include "Rect.h"
 #include "Size.h"
+#include <SharedGraphics/TextAlignment.h>
 #include <AK/AKString.h>
 
 class CharacterBitmap;
@@ -15,8 +16,6 @@ class Font;
 class GWidget;
 class GWindow;
 #endif
-
-enum class TextAlignment { TopLeft, CenterLeft, Center, CenterRight };
 
 class Painter {
 public:
