@@ -28,9 +28,10 @@ String GStatusBar::text() const
     return m_label->text();
 }
 
-void GStatusBar::paint_event(GPaintEvent&)
+void GStatusBar::paint_event(GPaintEvent& event)
 {
     Painter painter(*this);
+    painter.set_clip_rect(event.rect());
     painter.fill_rect({ 0, 1, width(), height() - 1 }, Color::LightGray);
     painter.draw_line({ 0, 0 }, { width() - 1, 0 }, Color::DarkGray);
 }

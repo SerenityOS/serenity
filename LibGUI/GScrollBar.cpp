@@ -181,9 +181,10 @@ Rect GScrollBar::scrubber_rect() const
         return { (int)x_or_y, 0, button_size(), button_size() };
 }
 
-void GScrollBar::paint_event(GPaintEvent&)
+void GScrollBar::paint_event(GPaintEvent& event)
 {
     Painter painter(*this);
+    painter.set_clip_rect(event.rect());
 
     painter.fill_rect(rect(), Color(164, 164, 164));
 

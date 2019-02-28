@@ -92,9 +92,10 @@ void GTableView::mousedown_event(GMouseEvent& event)
     update();
 }
 
-void GTableView::paint_event(GPaintEvent&)
+void GTableView::paint_event(GPaintEvent& event)
 {
     Painter painter(*this);
+    painter.set_clip_rect(event.rect());
     painter.translate(-m_horizontal_scrollbar->value(), -m_vertical_scrollbar->value());
 
     int exposed_width = max(content_width(), width());
