@@ -1,6 +1,6 @@
 OBJS = \
     ProcessTableModel.o \
-    ProcessView.o \
+    ProcessTableView.o \
     main.o
 
 APP = ProcessManager

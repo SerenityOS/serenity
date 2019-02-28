@@ -28,6 +28,8 @@ LIBGUI_OBJS = \
     GAction.o \
     GFontDatabase.o \
     GToolBar.o \
+    GTableView.o \
+    GTableModel.o \
     GWindow.o
 
 OBJS = $(SHAREDGRAPHICS_OBJS) $(LIBGUI_OBJS)

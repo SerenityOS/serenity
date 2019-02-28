@@ -141,6 +141,8 @@ void ProcessTableModel::update()
     }
     for (auto pid : pids_to_remove)
         m_processes.remove(pid);
+
+    did_update();
 }
 
 pid_t ProcessTableModel::selected_pid() const

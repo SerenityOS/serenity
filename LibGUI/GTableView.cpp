@@ -1,65 +1,52 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <AK/FileSystemPath.h>
-#include <AK/HashMap.h>
-#include <SharedGraphics/GraphicsBitmap.h>
-#include <SharedGraphics/Painter.h>
+#include <LibGUI/GTableView.h>
+#include <LibGUI/GTableModel.h>
 #include <LibGUI/GScrollBar.h>
-#include "ProcessTableModel.h"
-#include "ProcessView.h"
+#include <SharedGraphics/Painter.h>
 
-static HashMap<unsigned, String>* s_usernames;
-
-ProcessView::ProcessView(GWidget* parent)
+GTableView::GTableView(GWidget* parent)
     : GWidget(parent)
 {
-    m_process_icon = GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/gear16.rgb", { 16, 16 });
-
     m_scrollbar = new GScrollBar(Orientation::Vertical, this);
     m_scrollbar->set_step(4);
     m_scrollbar->set_big_step(30);
     m_scrollbar->on_change = [this] (int) {
         update();
     };
-
-    m_model = make<ProcessTableModel>();
-
-    start_timer(1000);
-    reload();
 }
 
-ProcessView::~ProcessView()
+GTableView::~GTableView()
 {
 }
 
-void ProcessView::timer_event(GTimerEvent&)
+void GTableView::set_model(OwnPtr<GTableModel>&& model)
 {
-    reload();
+    if (model.ptr() == m_model.ptr())
+        return;
+    if (m_model)
+        m_model->unregister_view(Badge<GTableView>(), *this);
+    m_model = move(model);
+    if (m_model)
+        m_model->register_view(Badge<GTableView>(), *this);
 }
 
-void ProcessView::resize_event(GResizeEvent& event)
+void GTableView::resize_event(GResizeEvent& event)
 {
     m_scrollbar->set_relative_rect(event.size().width() - m_scrollbar->preferred_size().width(), 0, m_scrollbar->preferred_size().width(), event.size().height());
 }
 
-void ProcessView::reload()
+void GTableView::did_update_model()
 {
-    m_model->update();
-
     int excess_height = max(0, (item_count() * item_height()) - height());
     m_scrollbar->set_range(0, excess_height);
-
-    set_status_message(String::format("%d processes", item_count()));
     update();
 }
 
-Rect ProcessView::row_rect(int item_index) const
+Rect GTableView::row_rect(int item_index) const
 {
     return { 0, header_height() + (item_index * item_height()), width(), item_height() };
 }
 
-void ProcessView::mousedown_event(GMouseEvent& event)
+void GTableView::mousedown_event(GMouseEvent& event)
 {
     auto adjusted_position = event.position().translated(0, m_scrollbar->value());
     if (event.button() == GMouseButton::Left) {
@@ -72,7 +59,7 @@ void ProcessView::mousedown_event(GMouseEvent& event)
     }
 }
 
-void ProcessView::paint_event(GPaintEvent&)
+void GTableView::paint_event(GPaintEvent&)
 {
     Painter painter(*this);
 
@@ -124,18 +111,7 @@ void ProcessView::paint_event(GPaintEvent&)
     painter.draw_line({ 0, header_height() - 1 }, { width() - 1, header_height() - 1 }, Color::DarkGray);
 }
 
-void ProcessView::set_status_message(String&& message)
-{
-    if (on_status_message)
-        on_status_message(move(message));
-}
-
-int ProcessView::item_count() const
+int GTableView::item_count() const
 {
     return m_model->row_count();
-}
-
-pid_t ProcessView::selected_pid() const
-{
-    return m_model->selected_pid();
 }
