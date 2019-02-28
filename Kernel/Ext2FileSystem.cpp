@@ -20,7 +20,6 @@ Retained<Ext2FS> Ext2FS::create(Retained<DiskDevice>&& device)
 
 Ext2FS::Ext2FS(Retained<DiskDevice>&& device)
     : DiskBackedFS(move(device))
-    , m_lock("Ext2FS")
 {
 }
 
