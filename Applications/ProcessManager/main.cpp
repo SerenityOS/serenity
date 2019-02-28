@@ -30,7 +30,15 @@ int main(int argc, char** argv)
         if (pid != -1)
             kill(pid, SIGKILL);
     });
+
+    auto stop_action = GAction::create("Stop process", GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/stop16.rgb", { 16, 16 }), [process_table_view] (const GAction&) {
+        pid_t pid = process_table_view->selected_pid();
+        if (pid != -1)
+            kill(pid, SIGSTOP);
+    });
+
     toolbar->add_action(kill_action.copy_ref());
+    toolbar->add_action(stop_action.copy_ref());
 
     auto menubar = make<GMenuBar>();
     auto app_menu = make<GMenu>("ProcessManager");
@@ -42,6 +50,7 @@ int main(int argc, char** argv)
 
     auto file_menu = make<GMenu>("Process");
     file_menu->add_action(kill_action.copy_ref());
+    file_menu->add_action(stop_action.copy_ref());
     menubar->add_menu(move(file_menu));
 
     auto help_menu = make<GMenu>("Help");
