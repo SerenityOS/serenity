@@ -1,4 +1,5 @@
 OBJS = \
+    ProcessTableModel.o \
     ProcessView.o \
     main.o
 
