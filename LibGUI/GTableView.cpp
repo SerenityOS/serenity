@@ -7,10 +7,18 @@ GTableView::GTableView(GWidget* parent)
     : GWidget(parent)
 {
     set_fill_with_background_color(false);
-    m_scrollbar = new GScrollBar(Orientation::Vertical, this);
-    m_scrollbar->set_step(4);
-    m_scrollbar->set_big_step(30);
-    m_scrollbar->on_change = [this] (int) {
+
+    m_vertical_scrollbar = new GScrollBar(Orientation::Vertical, this);
+    m_vertical_scrollbar->set_step(4);
+    m_vertical_scrollbar->set_big_step(30);
+    m_vertical_scrollbar->on_change = [this] (int) {
+        update();
+    };
+
+    m_horizontal_scrollbar = new GScrollBar(Orientation::Horizontal, this);
+    m_horizontal_scrollbar->set_step(4);
+    m_horizontal_scrollbar->set_big_step(30);
+    m_horizontal_scrollbar->on_change = [this] (int) {
         update();
     };
 }
@@ -32,30 +40,45 @@ void GTableView::set_model(OwnPtr<GTableModel>&& model)
 
 void GTableView::resize_event(GResizeEvent& event)
 {
-    m_scrollbar->set_relative_rect(event.size().width() - m_scrollbar->preferred_size().width(), 0, m_scrollbar->preferred_size().width(), event.size().height());
-    update_scrollbar_range();
+    update_scrollbar_ranges();
+    m_vertical_scrollbar->set_relative_rect(event.size().width() - m_vertical_scrollbar->preferred_size().width(), 0, m_vertical_scrollbar->preferred_size().width(), event.size().height() - m_horizontal_scrollbar->preferred_size().height());
+    m_horizontal_scrollbar->set_relative_rect(0, event.size().height() - m_horizontal_scrollbar->preferred_size().height(), event.size().width() - m_vertical_scrollbar->preferred_size().width(), m_horizontal_scrollbar->preferred_size().height());
 }
 
-void GTableView::update_scrollbar_range()
+void GTableView::update_scrollbar_ranges()
 {
     int excess_height = max(0, (item_count() * item_height()) - height());
-    m_scrollbar->set_range(0, excess_height);
+    m_vertical_scrollbar->set_range(0, excess_height);
+
+    int excess_width = max(0, content_width() - width());
+    m_horizontal_scrollbar->set_range(0, excess_width);
+}
+
+int GTableView::content_width() const
+{
+    if (!m_model)
+        return 0;
+    int width = 0;
+    int column_count = m_model->column_count();
+    for (int i = 0; i < column_count; ++i)
+        width += m_model->column_metadata(i).preferred_width + horizontal_padding() * 2;
+    return width;
 }
 
 void GTableView::did_update_model()
 {
-    update_scrollbar_range();
+    update_scrollbar_ranges();
     update();
 }
 
 Rect GTableView::row_rect(int item_index) const
 {
-    return { 0, header_height() + (item_index * item_height()), width(), item_height() };
+    return { 0, header_height() + (item_index * item_height()), max(content_width(), width()), item_height() };
 }
 
 void GTableView::mousedown_event(GMouseEvent& event)
 {
-    auto adjusted_position = event.position().translated(0, m_scrollbar->value());
+    auto adjusted_position = event.position().translated(0, m_vertical_scrollbar->value());
     if (event.button() == GMouseButton::Left) {
         for (int i = 0; i < item_count(); ++i) {
             if (row_rect(i).contains(adjusted_position)) {
@@ -72,12 +95,10 @@ void GTableView::mousedown_event(GMouseEvent& event)
 void GTableView::paint_event(GPaintEvent&)
 {
     Painter painter(*this);
+    painter.translate(-m_horizontal_scrollbar->value(), -m_vertical_scrollbar->value());
 
-    painter.translate(0, -m_scrollbar->value());
-
-    int horizontal_padding = 5;
+    int exposed_width = max(content_width(), width());
     int painted_item_index = 0;
-
     int y_offset = header_height();
 
     for (int row_index = 0; row_index < m_model->row_count(); ++row_index) {
@@ -98,32 +119,35 @@ void GTableView::paint_event(GPaintEvent&)
         for (int column_index = 0; column_index < m_model->column_count(); ++column_index) {
             auto column_metadata = m_model->column_metadata(column_index);
             int column_width = column_metadata.preferred_width;
-            Rect cell_rect(horizontal_padding + x_offset, y, column_width, item_height());
+            Rect cell_rect(horizontal_padding() + x_offset, y, column_width, item_height());
             painter.draw_text(cell_rect, m_model->data(row_index, column_index).to_string(), column_metadata.text_alignment, text_color);
-            x_offset += column_width + horizontal_padding * 2;
+            x_offset += column_width + horizontal_padding() * 2;
         }
         ++painted_item_index;
     };
 
-    Rect unpainted_rect(0, header_height() + painted_item_index * item_height(), width(), height());
-    unpainted_rect.intersect(rect());
+    Rect unpainted_rect(0, header_height() + painted_item_index * item_height(), exposed_width, height());
     painter.fill_rect(unpainted_rect, Color::White);
 
     // Untranslate the painter and paint the column headers.
-    painter.translate(0, m_scrollbar->value());
-    painter.fill_rect({ 0, 0, width(), header_height() }, Color::LightGray);
+    painter.translate(0, m_vertical_scrollbar->value());
+    painter.fill_rect({ 0, 0, exposed_width, header_height() }, Color::LightGray);
     int x_offset = 0;
     for (int column_index = 0; column_index < m_model->column_count(); ++column_index) {
         auto column_metadata = m_model->column_metadata(column_index);
         int column_width = column_metadata.preferred_width;
-        Rect cell_rect(x_offset, 0, column_width + horizontal_padding * 2, item_height());
-        painter.draw_text(cell_rect.translated(horizontal_padding, 0), m_model->column_name(column_index), TextAlignment::CenterLeft, Color::Black);
-        x_offset += column_width + horizontal_padding * 2;
+        Rect cell_rect(x_offset, 0, column_width + horizontal_padding() * 2, item_height());
+        painter.draw_text(cell_rect.translated(horizontal_padding(), 0), m_model->column_name(column_index), TextAlignment::CenterLeft, Color::Black);
+        x_offset += column_width + horizontal_padding() * 2;
         painter.draw_line(cell_rect.top_left(), cell_rect.bottom_left(), Color::White);
         painter.draw_line(cell_rect.top_right(), cell_rect.bottom_right(), Color::DarkGray);
     }
-    painter.draw_line({ 0, 0 }, { width() - 1, 0 }, Color::White);
-    painter.draw_line({ 0, header_height() - 1 }, { width() - 1, header_height() - 1 }, Color::DarkGray);
+    painter.draw_line({ 0, 0 }, { exposed_width - 1, 0 }, Color::White);
+    painter.draw_line({ 0, header_height() - 1 }, { exposed_width - 1, header_height() - 1 }, Color::DarkGray);
+
+    // Then untranslate and fill in the scroll corner. This is pretty messy, tbh.
+    painter.translate(m_horizontal_scrollbar->value(), 0);
+    painter.fill_rect({ m_horizontal_scrollbar->relative_rect().top_right().translated(1, 0), { m_vertical_scrollbar->preferred_size().width(), m_horizontal_scrollbar->preferred_size().height() } }, Color::LightGray);
 }
 
 int GTableView::item_count() const
