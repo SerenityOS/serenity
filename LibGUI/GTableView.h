@@ -26,6 +26,7 @@ private:
     virtual void resize_event(GResizeEvent&) override;
     virtual void mousedown_event(GMouseEvent&) override;
 
+    void update_scrollbar_range();
     int item_count() const;
     Rect row_rect(int item_index) const;
 

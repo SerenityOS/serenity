@@ -32,12 +32,18 @@ void GTableView::set_model(OwnPtr<GTableModel>&& model)
 void GTableView::resize_event(GResizeEvent& event)
 {
     m_scrollbar->set_relative_rect(event.size().width() - m_scrollbar->preferred_size().width(), 0, m_scrollbar->preferred_size().width(), event.size().height());
+    update_scrollbar_range();
+}
+
+void GTableView::update_scrollbar_range()
+{
+    int excess_height = max(0, (item_count() * item_height()) - height());
+    m_scrollbar->set_range(0, excess_height);
 }
 
 void GTableView::did_update_model()
 {
-    int excess_height = max(0, (item_count() * item_height()) - height());
-    m_scrollbar->set_range(0, excess_height);
+    update_scrollbar_range();
     update();
 }
 
