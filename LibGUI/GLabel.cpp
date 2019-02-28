@@ -24,9 +24,10 @@ void GLabel::set_text(String&& text)
     update();
 }
 
-void GLabel::paint_event(GPaintEvent&)
+void GLabel::paint_event(GPaintEvent& event)
 {
     Painter painter(*this);
+    painter.set_clip_rect(event.rect());
     if (fill_with_background_color())
         painter.fill_rect({ 0, 0, width(), height() }, background_color());
     if (m_icon) {

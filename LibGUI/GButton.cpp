@@ -22,9 +22,10 @@ void GButton::set_caption(String&& caption)
     update();
 }
 
-void GButton::paint_event(GPaintEvent&)
+void GButton::paint_event(GPaintEvent& event)
 {
     Painter painter(*this);
+    painter.set_clip_rect(event.rect());
 
     GStyle::the().paint_button(painter, rect(), m_button_style, m_being_pressed, m_hovered);
 
