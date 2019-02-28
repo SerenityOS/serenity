@@ -37,8 +37,15 @@ int main(int argc, char** argv)
             kill(pid, SIGSTOP);
     });
 
+    auto continue_action = GAction::create("Continue process", GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/continue16.rgb", { 16, 16 }), [process_table_view] (const GAction&) {
+        pid_t pid = process_table_view->selected_pid();
+        if (pid != -1)
+            kill(pid, SIGCONT);
+    });
+
     toolbar->add_action(kill_action.copy_ref());
     toolbar->add_action(stop_action.copy_ref());
+    toolbar->add_action(continue_action.copy_ref());
 
     auto menubar = make<GMenuBar>();
     auto app_menu = make<GMenu>("ProcessManager");
@@ -48,10 +55,11 @@ int main(int argc, char** argv)
     }));
     menubar->add_menu(move(app_menu));
 
-    auto file_menu = make<GMenu>("Process");
-    file_menu->add_action(kill_action.copy_ref());
-    file_menu->add_action(stop_action.copy_ref());
-    menubar->add_menu(move(file_menu));
+    auto process_menu = make<GMenu>("Process");
+    process_menu->add_action(kill_action.copy_ref());
+    process_menu->add_action(stop_action.copy_ref());
+    process_menu->add_action(continue_action.copy_ref());
+    menubar->add_menu(move(process_menu));
 
     auto help_menu = make<GMenu>("Help");
     help_menu->add_action(GAction::create("About", [] (const GAction&) {
