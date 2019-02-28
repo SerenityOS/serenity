@@ -17,9 +17,10 @@ Rect GListBox::item_rect(int index) const
     return Rect { 2, 2 + (index * item_height), width() - 4, item_height };
 }
 
-void GListBox::paint_event(GPaintEvent&)
+void GListBox::paint_event(GPaintEvent& event)
 {
     Painter painter(*this);
+    painter.set_clip_rect(event.rect());
 
     painter.fill_rect({ rect().x() + 1, rect().y() + 1, rect().width() - 2, rect().height() - 2 }, background_color());
     painter.draw_rect(rect(), foreground_color());
