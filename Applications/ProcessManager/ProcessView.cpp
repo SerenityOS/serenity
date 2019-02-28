@@ -75,17 +75,10 @@ void ProcessView::paint_event(GPaintEvent&)
 {
     Painter painter(*this);
 
+    painter.translate(0, -m_scrollbar->value());
+
     int horizontal_padding = 5;
     int painted_item_index = 0;
-
-    int x_offset = 0;
-    for (int column_index = 0; column_index < m_model->column_count(); ++column_index) {
-        Rect cell_rect(horizontal_padding + x_offset, 0, m_model->column_width(column_index), item_height());
-        painter.draw_text(cell_rect, m_model->column_name(column_index), TextAlignment::CenterLeft, Color::Black);
-        x_offset += m_model->column_width(column_index) + horizontal_padding;
-    }
-    painter.draw_line({ 0, 0 }, { width() - 1, 0 }, Color::White);
-    painter.draw_line({ 0, header_height() - 1 }, { width() - 1, header_height() - 1 }, Color::DarkGray);
 
     int y_offset = header_height();
 
@@ -116,6 +109,18 @@ void ProcessView::paint_event(GPaintEvent&)
     Rect unpainted_rect(0, painted_item_index * item_height(), width(), height());
     unpainted_rect.intersect(rect());
     painter.fill_rect(unpainted_rect, Color::White);
+
+    // Untranslate the painter and paint the column headers.
+    painter.translate(0, m_scrollbar->value());
+    painter.fill_rect({ 0, 0, width(), header_height() }, Color::LightGray);
+    int x_offset = 0;
+    for (int column_index = 0; column_index < m_model->column_count(); ++column_index) {
+        Rect cell_rect(horizontal_padding + x_offset, 0, m_model->column_width(column_index), item_height());
+        painter.draw_text(cell_rect, m_model->column_name(column_index), TextAlignment::CenterLeft, Color::Black);
+        x_offset += m_model->column_width(column_index) + horizontal_padding;
+    }
+    painter.draw_line({ 0, 0 }, { width() - 1, 0 }, Color::White);
+    painter.draw_line({ 0, header_height() - 1 }, { width() - 1, header_height() - 1 }, Color::DarkGray);
 }
 
 void ProcessView::set_status_message(String&& message)
