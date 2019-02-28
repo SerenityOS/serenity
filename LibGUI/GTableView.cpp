@@ -100,7 +100,7 @@ void GTableView::paint_event(GPaintEvent&)
             auto column_metadata = m_model->column_metadata(column_index);
             int column_width = column_metadata.preferred_width;
             Rect cell_rect(horizontal_padding + x_offset, y, column_width, item_height());
-            painter.draw_text(cell_rect, m_model->data(row_index, column_index), column_metadata.text_alignment, text_color);
+            painter.draw_text(cell_rect, m_model->data(row_index, column_index).to_string(), column_metadata.text_alignment, text_color);
             x_offset += column_width + horizontal_padding * 2;
         }
         ++painted_item_index;

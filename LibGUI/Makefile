@@ -30,6 +30,7 @@ LIBGUI_OBJS = \
     GToolBar.o \
     GTableView.o \
     GTableModel.o \
+    GVariant.o \
     GWindow.o
 
 OBJS = $(SHAREDGRAPHICS_OBJS) $(LIBGUI_OBJS)

@@ -5,6 +5,7 @@
 #include <AK/Function.h>
 #include <AK/HashTable.h>
 #include <LibGUI/GModelIndex.h>
+#include <LibGUI/GVariant.h>
 #include <SharedGraphics/TextAlignment.h>
 
 class GTableView;
@@ -23,7 +24,7 @@ public:
     virtual String row_name(int) const { return { }; }
     virtual String column_name(int) const { return { }; }
     virtual ColumnMetadata column_metadata(int) const { return { }; }
-    virtual String data(int row, int column) const = 0;
+    virtual GVariant data(int row, int column) const = 0;
     virtual void set_selected_index(GModelIndex) { }
     virtual GModelIndex selected_index() const { return GModelIndex(); }
     virtual void update() = 0;

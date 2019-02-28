@@ -17,7 +17,7 @@ public:
     virtual ColumnMetadata column_metadata(int column) const override;
     virtual GModelIndex selected_index() const override;
     virtual void set_selected_index(GModelIndex) override;
-    virtual String data(int row, int column) const override;
+    virtual GVariant data(int row, int column) const override;
     virtual void update() override;
 
     pid_t selected_pid() const;

@@ -191,6 +191,11 @@ one_more:
                     ret += print_number(putch, bufptr, va_arg(ap, dword), leftPad, zeroPad, fieldWidth);
                     break;
 
+                case 'f':
+                    // FIXME: Print as float!
+                    ret += print_number(putch, bufptr, (int)va_arg(ap, double), leftPad, zeroPad, fieldWidth);
+                    break;
+
                 case 'o':
                     ret += print_octal_number(putch, bufptr, va_arg(ap, dword), leftPad, zeroPad, fieldWidth);
                     break;
