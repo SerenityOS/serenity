@@ -24,7 +24,9 @@ ProcessTableModel::ProcessTableModel()
     endpwent();
 
     m_generic_process_icon = GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/gear16.rgb", { 16, 16 });
-    ASSERT(m_generic_process_icon);
+    m_high_priority_icon = GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/highpriority16.rgb", { 16, 16 });
+    m_low_priority_icon = GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/lowpriority16.rgb", { 16, 16 });
+    m_normal_priority_icon = GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/normalpriority16.rgb", { 16, 16 });
 }
 
 ProcessTableModel::~ProcessTableModel()
@@ -48,7 +50,7 @@ String ProcessTableModel::column_name(int column) const
     case Column::PID: return "PID";
     case Column::State: return "State";
     case Column::User: return "User";
-    case Column::Priority: return "Priority";
+    case Column::Priority: return "Pr";
     case Column::Linear: return "Linear";
     case Column::Physical: return "Physical";
     case Column::CPU: return "CPU";
@@ -63,7 +65,7 @@ GTableModel::ColumnMetadata ProcessTableModel::column_metadata(int column) const
     case Column::Icon: return { 16, TextAlignment::CenterLeft };
     case Column::PID: return { 25, TextAlignment::CenterRight };
     case Column::State: return { 75, TextAlignment::CenterLeft };
-    case Column::Priority: return { 65, TextAlignment::CenterLeft };
+    case Column::Priority: return { 16, TextAlignment::CenterLeft };
     case Column::User: return { 50, TextAlignment::CenterLeft };
     case Column::Linear: return { 65, TextAlignment::CenterRight };
     case Column::Physical: return { 65, TextAlignment::CenterRight };
@@ -103,7 +105,14 @@ GVariant ProcessTableModel::data(int row, int column) const
     case Column::PID: return process.current_state.pid;
     case Column::State: return process.current_state.state;
     case Column::User: return process.current_state.user;
-    case Column::Priority: return process.current_state.priority;
+    case Column::Priority:
+        if (process.current_state.priority == "High")
+            return *m_high_priority_icon;
+        if (process.current_state.priority == "Low")
+            return *m_low_priority_icon;
+        if (process.current_state.priority == "Normal")
+            return *m_normal_priority_icon;
+        return process.current_state.priority;
     case Column::Linear: return pretty_byte_size(process.current_state.linear);
     case Column::Physical: return pretty_byte_size(process.current_state.physical);
     case Column::CPU: return process.current_state.cpu_percent;
