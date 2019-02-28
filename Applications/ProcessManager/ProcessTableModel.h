@@ -40,6 +40,7 @@ private:
         ProcessState previous_state;
     };
 
+    HashMap<uid_t, String> m_usernames;
     HashMap<pid_t, OwnPtr<Process>> m_processes;
     Vector<pid_t> m_pids;
     int m_selected_row { -1 };
