@@ -66,6 +66,10 @@ GModelIndex ProcessTableModel::selected_index() const
 
 void ProcessTableModel::set_selected_index(GModelIndex index)
 {
+    if (!index.is_valid()) {
+        m_selected_row = -1;
+        return;
+    }
     if (index.row() >= 0 && index.row() < m_pids.size())
         m_selected_row = index.row();
 }
