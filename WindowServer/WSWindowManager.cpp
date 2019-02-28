@@ -865,8 +865,10 @@ void WSWindowManager::compose()
             m_back_painter->set_clip_rect(dirty_rect);
             paint_window_frame(window);
             Rect dirty_rect_in_window_coordinates = Rect::intersection(dirty_rect, window.rect());
-            if (dirty_rect_in_window_coordinates.is_empty())
+            if (dirty_rect_in_window_coordinates.is_empty()) {
+                m_back_painter->clear_clip_rect();
                 continue;
+            }
             dirty_rect_in_window_coordinates.set_x(dirty_rect_in_window_coordinates.x() - window.x());
             dirty_rect_in_window_coordinates.set_y(dirty_rect_in_window_coordinates.y() - window.y());
             auto dst = window.position();

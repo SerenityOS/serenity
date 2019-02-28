@@ -14,11 +14,14 @@
 #include <LibC/string.h>
 #endif
 
+#include <unistd.h>
+
 Painter::Painter(GraphicsBitmap& bitmap)
     : m_target(bitmap)
 {
     m_font = &Font::default_font();
     m_clip_rect = { { 0, 0 }, bitmap.size() };
+    m_clip_origin = m_clip_rect;
 }
 
 #ifdef LIBGUI
@@ -27,9 +30,10 @@ Painter::Painter(GWidget& widget)
     , m_window(widget.window())
     , m_target(*m_window->backing())
 {
-    m_translation.move_by(widget.window_relative_rect().location());
-    // NOTE: m_clip_rect is in Window coordinates since we are painting into its backing store.
-    m_clip_rect = widget.window_relative_rect();
+    auto origin_rect = widget.window_relative_rect();
+    m_translation.move_by(origin_rect.location());
+    m_clip_rect = origin_rect;
+    m_clip_origin = origin_rect;
     m_clip_rect.intersect(m_target->rect());
 }
 #endif
@@ -446,10 +450,11 @@ void Painter::draw_focus_rect(const Rect& rect)
 
 void Painter::set_clip_rect(const Rect& rect)
 {
-    m_clip_rect = Rect::intersection(rect, m_target->rect());
+    m_clip_rect.intersect(rect.translated(m_clip_origin.location()));
+    m_clip_rect.intersect(m_target->rect());
 }
 
 void Painter::clear_clip_rect()
 {
-    m_clip_rect = m_target->rect();
+    m_clip_rect = m_clip_origin;
 }
