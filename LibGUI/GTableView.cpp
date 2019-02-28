@@ -94,7 +94,6 @@ void GTableView::paint_event(GPaintEvent&)
         }
 
         painter.fill_rect(row_rect(painted_item_index), background_color);
-
         int x_offset = 0;
         for (int column_index = 0; column_index < m_model->column_count(); ++column_index) {
             auto column_metadata = m_model->column_metadata(column_index);
@@ -106,7 +105,7 @@ void GTableView::paint_event(GPaintEvent&)
         ++painted_item_index;
     };
 
-    Rect unpainted_rect(0, painted_item_index * item_height(), width(), height());
+    Rect unpainted_rect(0, header_height() + painted_item_index * item_height(), width(), height());
     unpainted_rect.intersect(rect());
     painter.fill_rect(unpainted_rect, Color::White);
 
