@@ -45,4 +45,7 @@ private:
     Vector<pid_t> m_pids;
     int m_selected_row { -1 };
     RetainPtr<GraphicsBitmap> m_generic_process_icon;
+    RetainPtr<GraphicsBitmap> m_high_priority_icon;
+    RetainPtr<GraphicsBitmap> m_low_priority_icon;
+    RetainPtr<GraphicsBitmap> m_normal_priority_icon;
 };
