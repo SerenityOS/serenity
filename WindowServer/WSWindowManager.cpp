@@ -194,14 +194,15 @@ WSWindowManager::WSWindowManager()
     {
         byte system_menu_name[] = { 0xf8, 0 };
         m_system_menu = make<WSMenu>(nullptr, -1, String((const char*)system_menu_name));
-        m_system_menu->add_item(make<WSMenuItem>(0, "Launch Terminal"));
+        m_system_menu->add_item(make<WSMenuItem>(0, "Open Terminal..."));
+        m_system_menu->add_item(make<WSMenuItem>(1, "Open ProcessManager..."));
         m_system_menu->add_item(make<WSMenuItem>(WSMenuItem::Separator));
-        m_system_menu->add_item(make<WSMenuItem>(1, "640x480"));
-        m_system_menu->add_item(make<WSMenuItem>(2, "800x600"));
-        m_system_menu->add_item(make<WSMenuItem>(3, "1024x768"));
-        m_system_menu->add_item(make<WSMenuItem>(4, "1920x1080"));
+        m_system_menu->add_item(make<WSMenuItem>(100, "640x480"));
+        m_system_menu->add_item(make<WSMenuItem>(101, "800x600"));
+        m_system_menu->add_item(make<WSMenuItem>(102, "1024x768"));
+        m_system_menu->add_item(make<WSMenuItem>(103, "1920x1080"));
         m_system_menu->add_item(make<WSMenuItem>(WSMenuItem::Separator));
-        m_system_menu->add_item(make<WSMenuItem>(5, "About..."));
+        m_system_menu->add_item(make<WSMenuItem>(200, "About..."));
         m_system_menu->on_item_activation = [this] (WSMenuItem& item) {
             if (item.identifier() == 0) {
                 if (fork() == 0) {
@@ -210,13 +211,20 @@ WSWindowManager::WSWindowManager()
                 }
                 return;
             }
-            switch (item.identifier()) {
-            case 1: set_resolution(640, 480); break;
-            case 2: set_resolution(800, 600); break;
-            case 3: set_resolution(1024, 768); break;
-            case 4: set_resolution(1920, 1080); break;
+            if (item.identifier() == 1) {
+                if (fork() == 0) {
+                    execl("/bin/ProcessManager", "/bin/ProcessManager", nullptr);
+                    ASSERT_NOT_REACHED();
+                }
+                return;
             }
-            if (item.identifier() == 5) {
+            switch (item.identifier()) {
+            case 100: set_resolution(640, 480); break;
+            case 101: set_resolution(800, 600); break;
+            case 102: set_resolution(1024, 768); break;
+            case 103: set_resolution(1920, 1080); break;
+            }
+            if (item.identifier() == 200) {
                 if (fork() == 0) {
                     execl("/bin/About", "/bin/About", nullptr);
                     ASSERT_NOT_REACHED();
