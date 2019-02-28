@@ -61,9 +61,10 @@ Rect ProcessView::row_rect(int item_index) const
 
 void ProcessView::mousedown_event(GMouseEvent& event)
 {
+    auto adjusted_position = event.position().translated(0, m_scrollbar->value());
     if (event.button() == GMouseButton::Left) {
         for (int i = 0; i < item_count(); ++i) {
-            if (!row_rect(i).contains(event.position()))
+            if (!row_rect(i).contains(adjusted_position))
                 continue;
             m_model->set_selected_index({ i, 0 });
             update();
