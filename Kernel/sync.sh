@@ -78,6 +78,7 @@ cp -v ../Applications/Terminal/Terminal mnt/bin/Terminal
 cp -v ../Applications/FontEditor/FontEditor mnt/bin/FontEditor
 cp -v ../Applications/Launcher/Launcher mnt/bin/Launcher
 cp -v ../Applications/FileManager/FileManager mnt/bin/FileManager
+cp -v ../Applications/ProcessManager/ProcessManager mnt/bin/ProcessManager
 cp -v ../Applications/About/About mnt/bin/About
 cp -v ../WindowServer/WindowServer mnt/bin/WindowServer
 cp -v kernel.map mnt/
