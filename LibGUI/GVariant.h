@@ -23,6 +23,11 @@ public:
     };
 
     bool is_valid() const { return m_type != Type::Invalid; }
+    bool is_bool() const { return m_type == Type::Bool; }
+    bool is_int() const { return m_type == Type::Int; }
+    bool is_float() const { return m_type == Type::Float; }
+    bool is_string() const { return m_type == Type::String; }
+    bool is_bitmap() const { return m_type == Type::Bitmap; }
     Type type() const { return m_type; }
 
     bool as_bool() const
