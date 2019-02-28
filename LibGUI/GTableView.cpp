@@ -103,9 +103,11 @@ void GTableView::paint_event(GPaintEvent&)
     painter.fill_rect({ 0, 0, width(), header_height() }, Color::LightGray);
     int x_offset = 0;
     for (int column_index = 0; column_index < m_model->column_count(); ++column_index) {
-        Rect cell_rect(horizontal_padding + x_offset, 0, m_model->column_width(column_index), item_height());
-        painter.draw_text(cell_rect, m_model->column_name(column_index), TextAlignment::CenterLeft, Color::Black);
+        Rect cell_rect(x_offset, 0, m_model->column_width(column_index) + horizontal_padding, item_height());
+        painter.draw_text(cell_rect.translated(horizontal_padding, 0), m_model->column_name(column_index), TextAlignment::CenterLeft, Color::Black);
         x_offset += m_model->column_width(column_index) + horizontal_padding;
+        painter.draw_line(cell_rect.top_left(), cell_rect.bottom_left(), Color::White);
+        painter.draw_line(cell_rect.top_right(), cell_rect.bottom_right(), Color::DarkGray);
     }
     painter.draw_line({ 0, 0 }, { width() - 1, 0 }, Color::White);
     painter.draw_line({ 0, header_height() - 1 }, { width() - 1, header_height() - 1 }, Color::DarkGray);
