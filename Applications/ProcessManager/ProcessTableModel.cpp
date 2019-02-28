@@ -87,19 +87,19 @@ static String pretty_byte_size(size_t size)
     return String::format("%uK", size / 1024);
 }
 
-String ProcessTableModel::data(int row, int column) const
+GVariant ProcessTableModel::data(int row, int column) const
 {
     ASSERT(is_valid({ row, column }));
     auto it = m_processes.find(m_pids[row]);
     auto& process = *(*it).value;
     switch (column) {
-    case Column::PID: return String::format("%d", process.current_state.pid);
+    case Column::PID: return process.current_state.pid;
     case Column::State: return process.current_state.state;
     case Column::User: return process.current_state.user;
     case Column::Priority: return process.current_state.priority;
     case Column::Linear: return pretty_byte_size(process.current_state.linear);
     case Column::Physical: return pretty_byte_size(process.current_state.physical);
-    case Column::CPU: return String::format("%d", (int)process.current_state.cpu_percent);
+    case Column::CPU: return process.current_state.cpu_percent;
     case Column::Name: return process.current_state.name;
     }
     ASSERT_NOT_REACHED();
