@@ -58,12 +58,15 @@ void GTableView::mousedown_event(GMouseEvent& event)
     auto adjusted_position = event.position().translated(0, m_scrollbar->value());
     if (event.button() == GMouseButton::Left) {
         for (int i = 0; i < item_count(); ++i) {
-            if (!row_rect(i).contains(adjusted_position))
-                continue;
-            m_model->set_selected_index({ i, 0 });
-            update();
+            if (row_rect(i).contains(adjusted_position)) {
+                m_model->set_selected_index({ i, 0 });
+                update();
+                return;
+            }
         }
     }
+    m_model->set_selected_index({ });
+    update();
 }
 
 void GTableView::paint_event(GPaintEvent&)
