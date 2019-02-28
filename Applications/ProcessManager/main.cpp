@@ -54,7 +54,7 @@ int main(int argc, char** argv)
 
     auto* window = new GWindow;
     window->set_title("ProcessManager");
-    window->set_rect(20, 200, 320, 300);
+    window->set_rect(20, 200, 600, 400);
     window->set_main_widget(widget);
     window->set_should_exit_app_on_close(true);
     window->show();
