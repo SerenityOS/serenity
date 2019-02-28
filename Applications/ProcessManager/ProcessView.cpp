@@ -20,14 +20,15 @@ public:
     virtual ~ProcessTableModel() override { }
 
     virtual int row_count() const override { return m_processes.size(); }
-    virtual int column_count() const override { return 3; }
+    virtual int column_count() const override { return 4; }
 
     virtual String column_name(int column) const override
     {
         switch (column) {
         case 0: return "PID";
         case 1: return "State";
-        case 2: return "Name";
+        case 2: return "CPU";
+        case 3: return "Name";
         default: ASSERT_NOT_REACHED();
         }
     }
@@ -36,7 +37,8 @@ public:
         switch (column) {
         case 0: return 30;
         case 1: return 80;
-        case 2: return 100;
+        case 2: return 30;
+        case 3: return 200;
         default: ASSERT_NOT_REACHED();
         }
     }
@@ -59,7 +61,8 @@ public:
         switch (column) {
         case 0: return String::format("%d", process.current_state.pid);
         case 1: return process.current_state.state;
-        case 2: return process.current_state.name;
+        case 2: return String::format("%d", (int)process.current_state.cpu_percent);
+        case 3: return process.current_state.name;
         }
         ASSERT_NOT_REACHED();
     }
@@ -72,7 +75,12 @@ public:
             exit(1);
         }
 
+        unsigned last_sum_nsched = 0;
+        for (auto& it : m_processes)
+            last_sum_nsched += it.value->current_state.nsched;
+
         HashTable<pid_t> live_pids;
+        unsigned sum_nsched = 0;
         for (;;) {
             char buf[BUFSIZ];
             char* ptr = fgets(buf, sizeof(buf), fp);
@@ -112,6 +120,8 @@ public:
             (*it).value->current_state = state;
 
             live_pids.set(pid);
+
+            sum_nsched += nsched;
         }
         int rc = fclose(fp);
         ASSERT(rc == 0);
@@ -123,6 +133,10 @@ public:
                 pids_to_remove.append(it.key);
                 continue;
             }
+
+            auto& process = *it.value;
+            dword nsched_diff = process.current_state.nsched - process.previous_state.nsched;
+            process.current_state.cpu_percent = ((float)nsched_diff * 100) / (float)(sum_nsched - last_sum_nsched);
             m_pids.append(it.key);
         }
         for (auto pid : pids_to_remove)
@@ -146,7 +160,6 @@ private:
         String priority;
         unsigned linear;
         unsigned committed;
-        unsigned nsched_since_prev;
         float cpu_percent;
     };
 
