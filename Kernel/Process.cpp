@@ -1419,7 +1419,11 @@ int Process::sys$kill(pid_t pid, int signal)
         // FIXME: Send to all processes.
         ASSERT(pid != -1);
     }
-    ASSERT(pid != current->pid()); // FIXME: Support this scenario.
+    if (pid == m_pid) {
+        send_signal(signal, this);
+        Scheduler::yield();
+        return 0;
+    }
     Process* peer = nullptr;
     {
         InterruptDisabler disabler;
