@@ -15,6 +15,9 @@ public:
 
     Function<void(String)> on_status_message;
 
+protected:
+    virtual void model_notification(const GModelNotification&) override;
+
 private:
     virtual void timer_event(GTimerEvent&) override;
 
