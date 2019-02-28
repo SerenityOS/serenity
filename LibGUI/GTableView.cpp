@@ -91,7 +91,7 @@ void GTableView::paint_event(GPaintEvent&)
             int column_width = column_metadata.preferred_width;
             Rect cell_rect(horizontal_padding + x_offset, y, column_width, item_height());
             painter.draw_text(cell_rect, m_model->data(row_index, column_index), column_metadata.text_alignment, text_color);
-            x_offset += column_width + horizontal_padding;
+            x_offset += column_width + horizontal_padding * 2;
         }
         ++painted_item_index;
     };
@@ -107,9 +107,9 @@ void GTableView::paint_event(GPaintEvent&)
     for (int column_index = 0; column_index < m_model->column_count(); ++column_index) {
         auto column_metadata = m_model->column_metadata(column_index);
         int column_width = column_metadata.preferred_width;
-        Rect cell_rect(x_offset, 0, column_width + horizontal_padding, item_height());
+        Rect cell_rect(x_offset, 0, column_width + horizontal_padding * 2, item_height());
         painter.draw_text(cell_rect.translated(horizontal_padding, 0), m_model->column_name(column_index), TextAlignment::CenterLeft, Color::Black);
-        x_offset += column_width + horizontal_padding;
+        x_offset += column_width + horizontal_padding * 2;
         painter.draw_line(cell_rect.top_left(), cell_rect.bottom_left(), Color::White);
         painter.draw_line(cell_rect.top_right(), cell_rect.bottom_right(), Color::DarkGray);
     }
