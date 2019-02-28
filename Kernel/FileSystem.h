@@ -25,6 +25,7 @@ class LocalSocket;
 class VMObject;
 
 class FS : public Retainable<FS> {
+    friend class Inode;
 public:
     virtual ~FS();
 
@@ -60,6 +61,8 @@ public:
 protected:
     FS();
 
+    mutable Lock m_lock;
+
 private:
     unsigned m_fsid { 0 };
     bool m_readonly { false };
@@ -67,6 +70,7 @@ private:
 
 class Inode : public Retainable<Inode> {
     friend class VFS;
+    friend class FS;
 public:
     virtual ~Inode();
 

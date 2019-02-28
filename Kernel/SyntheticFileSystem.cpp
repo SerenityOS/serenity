@@ -11,7 +11,6 @@ Retained<SynthFS> SynthFS::create()
 }
 
 SynthFS::SynthFS()
-    : m_lock("SynthFS")
 {
 }
 

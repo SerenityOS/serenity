@@ -25,7 +25,8 @@ HashTable<Inode*>& all_inodes()
 }
 
 FS::FS()
-    : m_fsid(++s_lastFileSystemID)
+    : m_lock("FS")
+    , m_fsid(++s_lastFileSystemID)
 {
     all_fses().set(m_fsid, this);
 }
@@ -143,9 +144,18 @@ int Inode::decrement_link_count()
 
 void FS::sync()
 {
-    for (auto* inode : all_inodes()) {
-        if (inode->is_metadata_dirty())
-            inode->flush_metadata();
+    Vector<Retained<Inode>> inodes;
+    {
+        InterruptDisabler disabler;
+        for (auto* inode : all_inodes()) {
+            if (inode->is_metadata_dirty())
+                inodes.unchecked_append(*inode);
+        }
+    }
+
+    for (auto& inode : inodes) {
+        ASSERT(inode->is_metadata_dirty());
+        inode->flush_metadata();
     }
 }
 
