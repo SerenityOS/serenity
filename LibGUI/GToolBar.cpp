@@ -53,5 +53,6 @@ void GToolBar::paint_event(GPaintEvent& event)
     Painter painter(*this);
     painter.set_clip_rect(event.rect());
     painter.fill_rect({ 0, 0, width(), height() - 1 }, Color::LightGray);
+    painter.draw_line({ 0, 0 }, { width() - 1, 0 }, Color::White);
     painter.draw_line({ 0, rect().bottom() }, { width() - 1, rect().bottom() }, Color::DarkGray);
 }
