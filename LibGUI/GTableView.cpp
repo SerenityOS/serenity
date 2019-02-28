@@ -65,10 +65,15 @@ int GTableView::content_width() const
     return width;
 }
 
+void GTableView::model_notification(const GModelNotification&)
+{
+}
+
 void GTableView::did_update_model()
 {
     update_scrollbar_ranges();
     update();
+    model_notification(GModelNotification(GModelNotification::ModelUpdated));
 }
 
 Rect GTableView::row_rect(int item_index) const

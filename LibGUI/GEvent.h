@@ -165,4 +165,3 @@ public:
 private:
     int m_timer_id;
 };
-

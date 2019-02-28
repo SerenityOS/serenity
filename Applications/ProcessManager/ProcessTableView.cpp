@@ -19,6 +19,15 @@ void ProcessTableView::timer_event(GTimerEvent&)
     model().update();
 }
 
+void ProcessTableView::model_notification(const GModelNotification& notification)
+{
+    if (notification.type() == GModelNotification::ModelUpdated) {
+        if (on_status_message)
+            on_status_message(String::format("%d processes", model().row_count()));
+        return;
+    }
+}
+
 pid_t ProcessTableView::selected_pid() const
 {
     return model().selected_pid();

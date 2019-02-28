@@ -1,11 +1,11 @@
 #pragma once
 
+#include <LibGUI/GTableModel.h>
 #include <LibGUI/GWidget.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>
 
 class GScrollBar;
-class GTableModel;
 
 class GTableView : public GWidget {
 public:
@@ -25,6 +25,8 @@ public:
     int horizontal_padding() const { return m_horizontal_padding; }
 
 private:
+    virtual void model_notification(const GModelNotification&);
+
     virtual void paint_event(GPaintEvent&) override;
     virtual void resize_event(GResizeEvent&) override;
     virtual void mousedown_event(GMouseEvent&) override;
