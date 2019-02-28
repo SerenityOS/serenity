@@ -168,7 +168,7 @@ bool Scheduler::pick_next()
         // FIXME: Maybe we could check when returning from a syscall if there's a pending
         //        signal and dispatch it then and there? Would that be doable without the
         //        syscall effectively being "interrupted" despite having completed?
-        if (process.in_kernel() && !process.is_blocked())
+        if (process.in_kernel() && !process.is_blocked() && !process.is_stopped())
             return true;
         // NOTE: dispatch_one_pending_signal() may unblock the process.
         bool was_blocked = process.is_blocked();

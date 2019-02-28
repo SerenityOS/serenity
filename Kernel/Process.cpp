@@ -810,10 +810,23 @@ ShouldUnblockProcess Process::dispatch_signal(byte signal)
     // Mark this signal as handled.
     m_pending_signals &= ~(1 << signal);
 
+    if (signal == SIGSTOP) {
+        set_state(Stopped);
+        return ShouldUnblockProcess::No;
+    }
+    if (signal == SIGCONT && state() == Stopped) {
+        set_state(Runnable);
+        return ShouldUnblockProcess::Yes;
+    }
+
     auto handler_laddr = action.handler_or_sigaction;
     if (handler_laddr.is_null()) {
-        // FIXME: Is termination really always the appropriate action?
-        terminate_due_to_signal(signal);
+        if (signal == SIGSTOP) {
+            set_state(Stopped);
+        } else {
+            // FIXME: Is termination really always the appropriate action?
+            terminate_due_to_signal(signal);
+        }
         return ShouldUnblockProcess::No;
     }
 
