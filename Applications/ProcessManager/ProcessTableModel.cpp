@@ -50,7 +50,7 @@ GTableModel::ColumnMetadata ProcessTableModel::column_metadata(int column) const
     switch (column) {
     case Column::PID: return { 30, TextAlignment::CenterRight };
     case Column::State: return { 80, TextAlignment::CenterLeft };
-    case Column::Priority: return { 80, TextAlignment::CenterLeft };
+    case Column::Priority: return { 75, TextAlignment::CenterLeft };
     case Column::Linear: return { 70, TextAlignment::CenterRight };
     case Column::Physical: return { 70, TextAlignment::CenterRight };
     case Column::CPU: return { 30, TextAlignment::CenterRight };
