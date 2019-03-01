@@ -2,6 +2,7 @@
 #include <LibGUI/GTableModel.h>
 #include <LibGUI/GScrollBar.h>
 #include <SharedGraphics/Painter.h>
+#include <Kernel/KeyCode.h>
 
 GTableView::GTableView(GWidget* parent)
     : GWidget(parent)
@@ -166,4 +167,26 @@ void GTableView::paint_event(GPaintEvent& event)
 int GTableView::item_count() const
 {
     return m_model->row_count();
+}
+
+void GTableView::keydown_event(GKeyEvent& event)
+{
+    if (!model())
+        return;
+    auto& model = *this->model();
+    if (event.key() == KeyCode::Key_Return) {
+        model.activate(model.selected_index());
+        return;
+    }
+    if (event.key() == KeyCode::Key_Up) {
+        model.set_selected_index({ model.selected_index().row() - 1, model.selected_index().column() });
+        update();
+        return;
+    }
+    if (event.key() == KeyCode::Key_Down) {
+        model.set_selected_index({ model.selected_index().row() + 1, model.selected_index().column() });
+        update();
+        return;
+    }
+    return GTableView::keydown_event(event);
 }
