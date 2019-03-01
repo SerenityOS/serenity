@@ -23,6 +23,9 @@ void DirectoryTableView::model_notification(const GModelNotification& notificati
         model().row_count() != 1 ? "s" : "",
         model().bytes_in_files(),
         model().bytes_in_files() != 1 ? "s" : ""));
+
+        if (on_path_change)
+            on_path_change(model().path());
     }
 }
 
