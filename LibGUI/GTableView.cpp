@@ -179,14 +179,54 @@ void GTableView::keydown_event(GKeyEvent& event)
         return;
     }
     if (event.key() == KeyCode::Key_Up) {
-        model.set_selected_index({ model.selected_index().row() - 1, model.selected_index().column() });
-        update();
+        GModelIndex new_index(model.selected_index().row() - 1, model.selected_index().column());
+        if (model.is_valid(new_index)) {
+            model.set_selected_index(new_index);
+            scroll_into_view(new_index, Orientation::Vertical);
+            update();
+        }
         return;
     }
     if (event.key() == KeyCode::Key_Down) {
-        model.set_selected_index({ model.selected_index().row() + 1, model.selected_index().column() });
-        update();
+        GModelIndex new_index(model.selected_index().row() + 1, model.selected_index().column());
+        if (model.is_valid(new_index)) {
+            model.set_selected_index(new_index);
+            scroll_into_view(new_index, Orientation::Vertical);
+            update();
+        }
         return;
     }
-    return GTableView::keydown_event(event);
+    return GWidget::keydown_event(event);
 }
+
+Rect GTableView::visible_content_rect() const
+{
+    return {
+        m_horizontal_scrollbar->value(),
+        m_vertical_scrollbar->value(),
+        width() - m_vertical_scrollbar->width(),
+        height() - header_height() - m_horizontal_scrollbar->height()
+    };
+}
+
+void GTableView::scroll_into_view(const GModelIndex& index, Orientation orientation)
+{
+    auto visible_content_rect = this->visible_content_rect();
+    auto rect = row_rect(index.row()).translated(0, -header_height());
+
+    if (visible_content_rect.contains(rect))
+        return;
+
+    if (orientation == Orientation::Vertical) {
+        if (rect.top() < visible_content_rect.top())
+            m_vertical_scrollbar->set_value(rect.top());
+        else if (rect.bottom() > visible_content_rect.bottom())
+            m_vertical_scrollbar->set_value(rect.bottom() - visible_content_rect.height());
+    } else {
+        if (rect.left() < visible_content_rect.left())
+            m_horizontal_scrollbar->set_value(rect.left());
+        else if (rect.right() > visible_content_rect.right())
+            m_horizontal_scrollbar->set_value(rect.right() - visible_content_rect.width());
+    }
+}
+

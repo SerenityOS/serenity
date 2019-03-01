@@ -26,6 +26,9 @@ public:
 
     virtual bool accepts_focus() const override { return true; }
 
+    Rect visible_content_rect() const;
+    void scroll_into_view(const GModelIndex&, Orientation);
+
 private:
     virtual void model_notification(const GModelNotification&);
 
