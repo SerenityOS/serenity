@@ -1273,13 +1273,10 @@ int Process::sys$chdir(const char* path)
 {
     if (!validate_read_str(path))
         return -EFAULT;
-    int error;
-    auto descriptor = VFS::the().open(path, error, 0, 0, cwd_inode());
-    if (!descriptor)
-        return error;
-    if (!descriptor->is_directory())
-        return -ENOTDIR;
-    m_cwd = descriptor->inode();
+    auto directory_or_error = VFS::the().open_directory(String(path), cwd_inode());
+    if (directory_or_error.is_error())
+        return directory_or_error.error();
+    m_cwd = *directory_or_error.value();
     return 0;
 }
 
