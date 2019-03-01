@@ -47,10 +47,12 @@ void GTableView::resize_event(GResizeEvent& event)
 
 void GTableView::update_scrollbar_ranges()
 {
-    int excess_height = max(0, (item_count() * item_height()) - height());
+    int available_height = height() - header_height() - m_horizontal_scrollbar->height();
+    int excess_height = max(0, (item_count() * item_height()) - available_height);
     m_vertical_scrollbar->set_range(0, excess_height);
 
-    int excess_width = max(0, content_width() - width());
+    int available_width = width() - m_vertical_scrollbar->width();
+    int excess_width = max(0, content_width() - available_width);
     m_horizontal_scrollbar->set_range(0, excess_width);
 }
 
