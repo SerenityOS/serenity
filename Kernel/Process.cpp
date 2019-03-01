@@ -1219,27 +1219,21 @@ int Process::sys$fstat(int fd, stat* statbuf)
     auto* descriptor = file_descriptor(fd);
     if (!descriptor)
         return -EBADF;
-    return descriptor->fstat(statbuf);
+    return descriptor->fstat(*statbuf);
 }
 
 int Process::sys$lstat(const char* path, stat* statbuf)
 {
     if (!validate_write_typed(statbuf))
         return -EFAULT;
-    int error;
-    if (!VFS::the().stat(move(path), error, O_NOFOLLOW_NOERROR, cwd_inode(), *statbuf))
-        return error;
-    return 0;
+    return VFS::the().stat(String(path), O_NOFOLLOW_NOERROR, cwd_inode(), *statbuf);
 }
 
 int Process::sys$stat(const char* path, stat* statbuf)
 {
     if (!validate_write_typed(statbuf))
         return -EFAULT;
-    int error;
-    if (!VFS::the().stat(move(path), error, 0, cwd_inode(), *statbuf))
-        return error;
-    return 0;
+    return VFS::the().stat(String(path), O_NOFOLLOW_NOERROR, cwd_inode(), *statbuf);
 }
 
 int Process::sys$readlink(const char* path, char* buffer, ssize_t size)

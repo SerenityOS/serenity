@@ -73,7 +73,7 @@ public:
     KResult chmod(Inode&, mode_t);
     KResult chown(const String& path, uid_t, gid_t, Inode& base);
     KResult access(const String& path, int mode, Inode& base);
-    bool stat(const String& path, int& error, int options, Inode& base, struct stat&);
+    KResult stat(const String& path, int options, Inode& base, struct stat&);
     KResult utime(const String& path, Inode& base, time_t atime, time_t mtime);
     KResultOr<Retained<Inode>> open_directory(const String& path, Inode& base);
 
@@ -105,7 +105,7 @@ private:
     InodeIdentifier old_resolve_path(const String& path, InodeIdentifier base, int& error, int options = 0, InodeIdentifier* parent_id = nullptr);
     KResultOr<InodeIdentifier> resolve_path(const String& path, InodeIdentifier base, int options = 0, InodeIdentifier* parent_id = nullptr);
     RetainPtr<Inode> resolve_path_to_inode(const String& path, Inode& base, int& error, RetainPtr<Inode>* parent_id = nullptr);
-    KResultOr<RetainPtr<Inode>> resolve_path_to_inode(const String& path, Inode& base, RetainPtr<Inode>* parent_id = nullptr);
+    KResultOr<Retained<Inode>> resolve_path_to_inode(const String& path, Inode& base, RetainPtr<Inode>* parent_id = nullptr, int options = 0);
     KResultOr<InodeIdentifier> resolve_symbolic_link(InodeIdentifier base, Inode& symlink_inode);
 
     Mount* find_mount_for_host(InodeIdentifier);

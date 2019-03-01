@@ -151,15 +151,12 @@ KResult VFS::utime(const String& path, Inode& base, time_t atime, time_t mtime)
     return KSuccess;
 }
 
-bool VFS::stat(const String& path, int& error, int options, Inode& base, struct stat& statbuf)
+KResult VFS::stat(const String& path, int options, Inode& base, struct stat& statbuf)
 {
-    auto inode_id = old_resolve_path(path, base.identifier(), error, options);
-    if (!inode_id.is_valid())
-        return false;
-    error = FileDescriptor::create(get_inode(inode_id))->fstat(&statbuf);
-    if (error)
-        return false;
-    return true;
+    auto inode_or_error = resolve_path_to_inode(path, base, nullptr, options);
+    if (inode_or_error.is_error())
+        return inode_or_error.error();
+    return FileDescriptor::create(inode_or_error.value().ptr())->fstat(statbuf);
 }
 
 RetainPtr<FileDescriptor> VFS::open(const String& path, int& error, int options, mode_t mode, Inode& base)
@@ -356,19 +353,19 @@ KResult VFS::chown(const String& path, uid_t a_uid, gid_t a_gid, Inode& base)
     return inode->chown(new_uid, new_gid);
 }
 
-KResultOr<RetainPtr<Inode>> VFS::resolve_path_to_inode(const String& path, Inode& base, RetainPtr<Inode>* parent_inode)
+KResultOr<Retained<Inode>> VFS::resolve_path_to_inode(const String& path, Inode& base, RetainPtr<Inode>* parent_inode, int options)
 {
     // FIXME: This won't work nicely across mount boundaries.
     FileSystemPath p(path);
     if (!p.is_valid())
         return KResult(-EINVAL);
     InodeIdentifier parent_id;
-    auto result = resolve_path(path, base.identifier(), 0, &parent_id);
+    auto result = resolve_path(path, base.identifier(), options, &parent_id);
     if (parent_inode && parent_id.is_valid())
         *parent_inode = get_inode(parent_id);
     if (result.is_error())
         return result.error();
-    return get_inode(result.value());
+    return Retained<Inode>(*get_inode(result.value()));
 }
 
 RetainPtr<Inode> VFS::resolve_path_to_inode(const String& path, Inode& base, int& error, RetainPtr<Inode>* parent_inode)
