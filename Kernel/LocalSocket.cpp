@@ -4,6 +4,8 @@
 #include <Kernel/VirtualFileSystem.h>
 #include <LibC/errno_numbers.h>
 
+//#define DEBUG_LOCAL_SOCKET
+
 Retained<LocalSocket> LocalSocket::create(int type)
 {
     return adopt(*new LocalSocket(type));
@@ -12,7 +14,9 @@ Retained<LocalSocket> LocalSocket::create(int type)
 LocalSocket::LocalSocket(int type)
     : Socket(AF_LOCAL, type, 0)
 {
+#ifdef DEBUG_LOCAL_SOCKET
     kprintf("%s(%u) LocalSocket{%p} created with type=%u\n", current->name().characters(), current->pid(), this, type);
+#endif
 }
 
 LocalSocket::~LocalSocket()
@@ -45,7 +49,9 @@ bool LocalSocket::bind(const sockaddr* address, socklen_t address_size, int& err
     char safe_address[sizeof(local_address.sun_path) + 1];
     memcpy(safe_address, local_address.sun_path, sizeof(local_address.sun_path));
 
+#ifdef DEBUG_LOCAL_SOCKET
     kprintf("%s(%u) LocalSocket{%p} bind(%s)\n", current->name().characters(), current->pid(), this, safe_address);
+#endif
 
     m_file = VFS::the().open(safe_address, error, O_CREAT | O_EXCL, S_IFSOCK | 0666, current->cwd_inode());
     if (!m_file) {
@@ -78,7 +84,9 @@ bool LocalSocket::connect(const sockaddr* address, socklen_t address_size, int& 
     char safe_address[sizeof(local_address.sun_path) + 1];
     memcpy(safe_address, local_address.sun_path, sizeof(local_address.sun_path));
 
+#ifdef DEBUG_LOCAL_SOCKET
     kprintf("%s(%u) LocalSocket{%p} connect(%s)\n", current->name().characters(), current->pid(), this, safe_address);
+#endif
 
     m_file = VFS::the().open(safe_address, error, 0, 0, current->cwd_inode());
     if (!m_file) {
@@ -94,15 +102,21 @@ bool LocalSocket::connect(const sockaddr* address, socklen_t address_size, int& 
     m_address = local_address;
 
     auto peer = m_file->inode()->socket();
+#ifdef DEBUG_LOCAL_SOCKET
     kprintf("Queueing up connection\n");
+#endif
     if (!peer->queue_connection_from(*this, error))
         return false;
 
+#ifdef DEBUG_LOCAL_SOCKET
     kprintf("Waiting for connect...\n");
+#endif
     if (!current->wait_for_connect(*this, error))
         return false;
 
+#ifdef DEBUG_LOCAL_SOCKET
     kprintf("CONNECTED!\n");
+#endif
     return true;
 }
 

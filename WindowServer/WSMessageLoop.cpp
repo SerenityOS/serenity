@@ -14,7 +14,7 @@
 #include <LibC/stdio.h>
 #include <LibC/errno.h>
 
-//#define WSEVENTLOOP_DEBUG
+//#define WSMESSAGELOOP_DEBUG
 
 static WSMessageLoop* s_the;
 
@@ -62,7 +62,7 @@ int WSMessageLoop::exec()
         for (auto& queued_message : messages) {
             auto* receiver = queued_message.receiver.ptr();
             auto& message = *queued_message.message;
-#ifdef WSEVENTLOOP_DEBUG
+#ifdef WSMESSAGELOOP_DEBUG
             dbgprintf("WSMessageLoop: receiver{%p} message %u\n", receiver, (unsigned)message.type());
 #endif
             if (receiver)
@@ -73,7 +73,7 @@ int WSMessageLoop::exec()
 
 void WSMessageLoop::post_message(WSMessageReceiver& receiver, OwnPtr<WSMessage>&& message)
 {
-#ifdef WSEVENTLOOP_DEBUG
+#ifdef WSMESSAGELOOP_DEBUG
     dbgprintf("WSMessageLoop::post_message: {%u} << receiver=%p, message=%p (type=%u)\n", m_queued_messages.size(), receiver, message.ptr(), message->type());
 #endif
     m_queued_messages.append({ receiver.make_weak_ptr(), move(message) });
@@ -166,7 +166,9 @@ void WSMessageLoop::wait_for_message()
         sockaddr_un address;
         socklen_t address_size = sizeof(address);
         int client_fd = accept(m_server_fd, (sockaddr*)&address, &address_size);
+#ifdef WSMESSAGELOOP_DEBUG
         dbgprintf("accept() returned fd=%d, address=%s\n", client_fd, address.sun_path);
+#endif
         ASSERT(client_fd >= 0);
         new WSClientConnection(client_fd);
     }
