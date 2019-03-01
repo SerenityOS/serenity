@@ -219,6 +219,7 @@ public:
     int sys$rmdir(const char* pathname);
     int sys$read_tsc(dword* lsw, dword* msw);
     int sys$chmod(const char* pathname, mode_t);
+    int sys$fchmod(int fd, mode_t);
     int sys$chown(const char* pathname, uid_t, gid_t);
     int sys$socket(int domain, int type, int protocol);
     int sys$bind(int sockfd, const sockaddr* addr, socklen_t);

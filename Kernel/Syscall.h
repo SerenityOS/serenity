@@ -83,6 +83,7 @@
     __ENUMERATE_SYSCALL(release_shared_buffer) \
     __ENUMERATE_SYSCALL(link) \
     __ENUMERATE_SYSCALL(chown) \
+    __ENUMERATE_SYSCALL(fchmod) \
 
 
 namespace Syscall {

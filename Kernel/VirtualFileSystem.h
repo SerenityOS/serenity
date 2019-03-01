@@ -70,6 +70,7 @@ public:
     KResult unlink(const String& path, Inode& base);
     KResult rmdir(const String& path, Inode& base);
     KResult chmod(const String& path, mode_t, Inode& base);
+    KResult chmod(Inode&, mode_t);
     KResult chown(const String& path, uid_t, gid_t, Inode& base);
     KResult access(const String& path, int mode, Inode& base);
     bool stat(const String& path, int& error, int options, Inode& base, struct stat&);

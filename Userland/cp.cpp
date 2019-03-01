@@ -2,6 +2,7 @@
 #include <fcntl.h>
 #include <assert.h>
 #include <stdio.h>
+#include <sys/stat.h>
 
 int main(int argc, char** argv)
 {
@@ -9,6 +10,7 @@ int main(int argc, char** argv)
         printf("usage: cp <source> <destination>\n");
         return 0;
     }
+
     int src_fd = open(argv[1], O_RDONLY);
     if (src_fd < 0) {
         perror("open src");
@@ -17,6 +19,13 @@ int main(int argc, char** argv)
     int dst_fd = open(argv[2], O_WRONLY | O_CREAT);
     if (dst_fd < 0) {
         perror("open dst");
+        return 1;
+    }
+
+    struct stat src_stat;
+    int rc = fstat(src_fd, &src_stat);
+    if (rc < 0) {
+        perror("stat src");
         return 1;
     }
 
@@ -42,6 +51,13 @@ int main(int argc, char** argv)
             bufptr += nwritten;
         }
     }
+
+    rc = fchmod(dst_fd, src_stat.st_mode);
+    if (rc < 0) {
+        perror("fchmod dst");
+        return 1;
+    }
+
     close(src_fd);
     close(dst_fd);
     return 0;

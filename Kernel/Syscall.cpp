@@ -199,6 +199,8 @@ static dword handle(RegisterDump& regs, dword function, dword arg1, dword arg2, 
         return current->sys$rmdir((const char*)arg1);
     case Syscall::SC_chmod:
         return current->sys$chmod((const char*)arg1, (mode_t)arg2);
+    case Syscall::SC_fchmod:
+        return current->sys$fchmod((int)arg1, (mode_t)arg2);
     case Syscall::SC_socket:
         return current->sys$socket((int)arg1, (int)arg2, (int)arg3);
     case Syscall::SC_bind:
