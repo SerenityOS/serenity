@@ -46,14 +46,18 @@ GEventLoop::GEventLoop()
         rc = connect(m_event_fd, (const sockaddr*)&address, sizeof(address));
         if (rc == 0)
             break;
+#ifdef GEVENTLOOP_DEBUG
         dbgprintf("connect failed: %d, %s\n", errno, strerror(errno));
+#endif
         sleep(1);
         --retries;
     }
     if (rc < 0) {
         ASSERT_NOT_REACHED();
     }
+#ifdef GEVENTLOOP_DEBUG
     dbgprintf("(%u) GEventLoop constructed :)\n", getpid());
+#endif
 }
 
 GEventLoop::~GEventLoop()

@@ -231,7 +231,9 @@ WSWindowManager::WSWindowManager()
                 }
                 return;
             }
+#ifdef DEBUG_MENUS
             dbgprintf("WSMenu 1 item activated: '%s'\n", item.text().characters());
+#endif
         };
     }
 
@@ -340,7 +342,9 @@ void WSWindowManager::set_current_menubar(WSMenuBar* menubar)
         m_current_menubar = menubar->make_weak_ptr();
     else
         m_current_menubar = nullptr;
+#ifdef DEBUG_MENUS
     dbgprintf("[WM] Current menubar is now %p\n", menubar);
+#endif
     Point next_menu_location { menubar_menu_margin() / 2, 0 };
     for_each_active_menubar_menu([&] (WSMenu& menu) {
         int text_width = font().width(menu.name());
