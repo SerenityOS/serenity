@@ -23,7 +23,7 @@ struct [[gnu::packed]] FontFileHeader {
 
 Font& Font::default_font()
 {
-    static const char* default_font_path = "/res/fonts/LizaRegular8x10.font";
+    static const char* default_font_path = "/res/fonts/CsillaThin7x10.font";
     if (!s_default_font) {
         s_default_font = Font::load_from_file(default_font_path).leak_ref();
         ASSERT(s_default_font);
