@@ -138,7 +138,7 @@ bool Scheduler::pick_next()
         }
 
         if (process.state() == Process::Dead) {
-            if (current != &process && !Process::from_pid(process.ppid())) {
+            if (current != &process && (!process.ppid() || !Process::from_pid(process.ppid()))) {
                 auto name = process.name();
                 auto pid = process.pid();
                 auto exit_status = Process::reap(process);
