@@ -33,7 +33,7 @@ Font& Font::default_font()
 
 Font& Font::default_bold_font()
 {
-    static const char* default_bold_font_path = "/res/fonts/LizaBold8x10.font";
+    static const char* default_bold_font_path = "/res/fonts/CsillaBold7x10.font";
     if (!s_default_bold_font) {
         s_default_bold_font = Font::load_from_file(default_bold_font_path).leak_ref();
         ASSERT(s_default_bold_font);

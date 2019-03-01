@@ -422,7 +422,10 @@ void WSWindowManager::paint_window_frame(WSWindow& window)
     m_back_painter->draw_rect(border_rect, middle_border_color);
     m_back_painter->draw_rect(outer_rect, border_color);
     m_back_painter->draw_rect(inner_border_rect, border_color);
+
+    m_back_painter->set_font(Font::default_bold_font());
     m_back_painter->draw_text(titlebar_title_rect, window.title(), TextAlignment::CenterLeft, title_color);
+    m_back_painter->set_font(font());
 
     if (!s_close_button_bitmap)
         s_close_button_bitmap = &CharacterBitmap::create_from_ascii(s_close_button_bitmap_data, s_close_button_bitmap_width, s_close_button_bitmap_height).leak_ref();
@@ -912,13 +915,19 @@ void WSWindowManager::draw_menubar()
 {
     m_back_painter->fill_rect(menubar_rect(), Color::LightGray);
     m_back_painter->draw_line({ 0, menubar_rect().bottom() }, { menubar_rect().right(), menubar_rect().bottom() }, Color::White);
+    int index = 0;
     for_each_active_menubar_menu([&] (WSMenu& menu) {
         Color text_color = Color::Black;
         if (&menu == current_menu()) {
             m_back_painter->fill_rect(menu.rect_in_menubar(), menu_selection_color());
             text_color = Color::White;
         }
+        if (index == 1)
+            m_back_painter->set_font(Font::default_bold_font());
         m_back_painter->draw_text(menu.text_rect_in_menubar(), menu.name(), TextAlignment::CenterLeft, text_color);
+        if (index == 1)
+            m_back_painter->set_font(font());
+         ++index;
         return true;
     });
 

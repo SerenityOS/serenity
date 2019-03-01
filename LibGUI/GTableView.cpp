@@ -147,6 +147,7 @@ void GTableView::paint_event(GPaintEvent& event)
         auto column_metadata = m_model->column_metadata(column_index);
         int column_width = column_metadata.preferred_width;
         Rect cell_rect(x_offset, 0, column_width + horizontal_padding() * 2, item_height());
+        painter.set_font(Font::default_bold_font());
         painter.draw_text(cell_rect.translated(horizontal_padding(), 0), m_model->column_name(column_index), TextAlignment::CenterLeft, Color::Black);
         x_offset += column_width + horizontal_padding() * 2;
         painter.draw_line(cell_rect.top_left(), cell_rect.bottom_left(), Color::White);
