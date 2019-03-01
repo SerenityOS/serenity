@@ -8,7 +8,7 @@
 #include <LibGUI/GAction.h>
 #include <unistd.h>
 #include <stdio.h>
-#include "DirectoryView.h"
+#include "DirectoryTableView.h"
 
 int main(int argc, char** argv)
 {
@@ -63,20 +63,21 @@ int main(int argc, char** argv)
     toolbar->add_action(copy_action.copy_ref());
     toolbar->add_action(delete_action.copy_ref());
 
-    auto* directory_view = new DirectoryView(widget);
+    auto* directory_table_view = new DirectoryTableView(widget);
 
     auto* statusbar = new GStatusBar(widget);
     statusbar->set_text("Welcome!");
 
-    directory_view->on_path_change = [window] (const String& new_path) {
+    directory_table_view->on_path_change = [window] (const String& new_path) {
         window->set_title(String::format("FileManager: %s", new_path.characters()));
     };
 
-    directory_view->on_status_message = [statusbar] (String message) {
+    directory_table_view->on_status_message = [statusbar] (String message) {
         statusbar->set_text(move(message));
     };
 
-    directory_view->open("/");
+    directory_table_view->open("/");
+    directory_table_view->set_focus(true);
 
     window->set_should_exit_app_on_close(true);
     window->show();
