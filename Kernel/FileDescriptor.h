@@ -32,7 +32,7 @@ public:
     off_t seek(off_t, int whence);
     ssize_t read(Process&, byte*, ssize_t);
     ssize_t write(Process&, const byte* data, ssize_t);
-    int fstat(stat*);
+    KResult fstat(stat&);
 
     KResult fchmod(mode_t);
 
