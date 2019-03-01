@@ -47,13 +47,18 @@ public:
     virtual ColumnMetadata column_metadata(int) const { return { }; }
     virtual GVariant data(int row, int column) const = 0;
     virtual void update() = 0;
+    virtual void activate(const GModelIndex&) { }
 
     bool is_valid(GModelIndex index) const
     {
         return index.row() >= 0 && index.row() < row_count() && index.column() >= 0 && index.column() < column_count();
     }
 
-    void set_selected_index(const GModelIndex& index) { m_selected_index = index; }
+    void set_selected_index(const GModelIndex& index)
+    {
+        if (is_valid(index))
+            m_selected_index = index;
+    }
     GModelIndex selected_index() const { return m_selected_index; }
 
     void register_view(Badge<GTableView>, GTableView&);

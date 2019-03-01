@@ -24,12 +24,15 @@ public:
     int content_width() const;
     int horizontal_padding() const { return m_horizontal_padding; }
 
+    virtual bool accepts_focus() const override { return true; }
+
 private:
     virtual void model_notification(const GModelNotification&);
 
     virtual void paint_event(GPaintEvent&) override;
     virtual void resize_event(GResizeEvent&) override;
     virtual void mousedown_event(GMouseEvent&) override;
+    virtual void keydown_event(GKeyEvent&) override;
 
     void update_scrollbar_ranges();
     int item_count() const;
