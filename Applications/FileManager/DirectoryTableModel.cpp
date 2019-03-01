@@ -11,6 +11,7 @@ DirectoryTableModel::DirectoryTableModel()
     m_file_icon = GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/file16.rgb", { 16, 16 });
     m_symlink_icon = GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/link16.rgb", { 16, 16 });
     m_socket_icon = GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/socket16.rgb", { 16, 16 });
+    m_executable_icon = GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/executable16.rgb", { 16, 16 });
 }
 
 DirectoryTableModel::~DirectoryTableModel()
@@ -63,6 +64,8 @@ const GraphicsBitmap& DirectoryTableModel::icon_for(const Entry& entry) const
         return *m_symlink_icon;
     if (S_ISSOCK(entry.mode))
         return *m_socket_icon;
+    if (entry.mode & S_IXUSR)
+        return *m_executable_icon;
     return *m_file_icon;
 }
 
@@ -173,8 +176,18 @@ void DirectoryTableModel::open(const String& path)
 void DirectoryTableModel::activate(const GModelIndex& index)
 {
     auto& entry = this->entry(index.row());
+    FileSystemPath path(String::format("%s/%s", m_path.characters(), entry.name.characters()));
     if (entry.is_directory()) {
-        FileSystemPath new_path(String::format("%s/%s", m_path.characters(), entry.name.characters()));
-        open(new_path.string());
+        open(path.string());
+        return;
+    }
+    if (entry.is_executable()) {
+        if (fork() == 0) {
+            int rc = execl(path.string().characters(), path.string().characters(), nullptr);
+            if (rc < 0)
+                perror("exec");
+            ASSERT_NOT_REACHED();
+        }
+        return;
     }
 }

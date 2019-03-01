@@ -40,6 +40,7 @@ private:
         uid_t gid { 0 };
         ino_t inode { 0 };
         bool is_directory() const { return S_ISDIR(mode); }
+        bool is_executable() const { return mode & S_IXUSR; }
     };
 
     const Entry& entry(int index) const
@@ -59,4 +60,5 @@ private:
     RetainPtr<GraphicsBitmap> m_file_icon;
     RetainPtr<GraphicsBitmap> m_symlink_icon;
     RetainPtr<GraphicsBitmap> m_socket_icon;
+    RetainPtr<GraphicsBitmap> m_executable_icon;
 };
