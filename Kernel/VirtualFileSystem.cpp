@@ -290,6 +290,19 @@ KResult VFS::access(const String& path, int mode, Inode& base)
     return KSuccess;
 }
 
+KResultOr<Retained<Inode>> VFS::open_directory(const String& path, Inode& base)
+{
+    auto inode_or_error = resolve_path_to_inode(path, base);
+    if (inode_or_error.is_error())
+        return inode_or_error.error();
+    auto inode = inode_or_error.value();
+    if (!inode->is_directory())
+        return KResult(-ENOTDIR);
+    if (!inode->metadata().may_execute(*current) && !current->is_superuser())
+        return KResult(-EACCES);
+    return Retained<Inode>(*inode);
+}
+
 KResult VFS::chmod(Inode& inode, mode_t mode)
 {
     if (inode.fs().is_readonly())
@@ -554,7 +567,7 @@ KResultOr<InodeIdentifier> VFS::resolve_path(const String& path, InodeIdentifier
 #endif
             return KResult(-ENOTDIR);
         }
-        if (!metadata.may_execute(*current))
+        if (!metadata.may_execute(*current) && !current->is_superuser())
             return KResult(-EACCES);
         auto parent = crumb_id;
         crumb_id = crumb_inode->lookup(part);
