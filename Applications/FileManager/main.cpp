@@ -7,11 +7,22 @@
 #include <LibGUI/GMenuBar.h>
 #include <LibGUI/GAction.h>
 #include <unistd.h>
+#include <signal.h>
 #include <stdio.h>
 #include "DirectoryTableView.h"
 
 int main(int argc, char** argv)
 {
+    struct sigaction act;
+    memset(&act, 0, sizeof(act));
+    act.sa_flags = SA_NOCLDWAIT;
+    act.sa_handler = SIG_IGN;
+    int rc = sigaction(SIGCHLD, &act, nullptr);
+    if (rc < 0) {
+        perror("sigaction");
+        return 1;
+    }
+
     GApplication app(argc, argv);
 
     auto mkdir_action = GAction::create("New directory...", GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/mkdir16.rgb", { 16, 16 }), [] (const GAction&) {

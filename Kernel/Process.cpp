@@ -2202,7 +2202,12 @@ void Process::finalize()
     {
         InterruptDisabler disabler;
         if (auto* parent_process = Process::from_pid(m_ppid)) {
-            parent_process->send_signal(SIGCHLD, this);
+            if (parent_process->m_signal_action_data[SIGCHLD].flags & SA_NOCLDWAIT) {
+                // NOTE: If the parent doesn't care about this process, let it go.
+                m_ppid = 0;
+            } else {
+                parent_process->send_signal(SIGCHLD, this);
+            }
         }
     }
 
