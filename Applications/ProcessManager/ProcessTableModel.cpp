@@ -75,21 +75,6 @@ GTableModel::ColumnMetadata ProcessTableModel::column_metadata(int column) const
     }
 }
 
-GModelIndex ProcessTableModel::selected_index() const
-{
-    return { m_selected_row, 0 };
-}
-
-void ProcessTableModel::set_selected_index(GModelIndex index)
-{
-    if (!index.is_valid()) {
-        m_selected_row = -1;
-        return;
-    }
-    if (index.row() >= 0 && index.row() < m_pids.size())
-        m_selected_row = index.row();
-}
-
 static String pretty_byte_size(size_t size)
 {
     return String::format("%uK", size / 1024);
@@ -207,7 +192,7 @@ void ProcessTableModel::update()
 
 pid_t ProcessTableModel::selected_pid() const
 {
-    if (m_selected_row == -1)
+    if (!selected_index().is_valid())
         return -1;
-    return m_pids[m_selected_row];
+    return m_pids[selected_index().row()];
 }

@@ -15,8 +15,6 @@ public:
     virtual int column_count() const override;
     virtual String column_name(int column) const override;
     virtual ColumnMetadata column_metadata(int column) const override;
-    virtual GModelIndex selected_index() const override;
-    virtual void set_selected_index(GModelIndex) override;
     virtual GVariant data(int row, int column) const override;
     virtual void update() override;
 
@@ -43,7 +41,6 @@ private:
     HashMap<uid_t, String> m_usernames;
     HashMap<pid_t, OwnPtr<Process>> m_processes;
     Vector<pid_t> m_pids;
-    int m_selected_row { -1 };
     RetainPtr<GraphicsBitmap> m_generic_process_icon;
     RetainPtr<GraphicsBitmap> m_high_priority_icon;
     RetainPtr<GraphicsBitmap> m_low_priority_icon;
