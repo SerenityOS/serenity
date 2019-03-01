@@ -290,24 +290,26 @@ KResult VFS::access(const String& path, int mode, Inode& base)
     return KSuccess;
 }
 
+KResult VFS::chmod(Inode& inode, mode_t mode)
+{
+    if (inode.fs().is_readonly())
+        return KResult(-EROFS);
+
+    if (current->euid() != inode.metadata().uid && !current->is_superuser())
+        return KResult(-EPERM);
+
+    // Only change the permission bits.
+    mode = (inode.mode() & ~04777u) | (mode & 04777u);
+    return inode.chmod(mode);
+}
+
 KResult VFS::chmod(const String& path, mode_t mode, Inode& base)
 {
     auto inode_or_error = resolve_path_to_inode(path, base);
     if (inode_or_error.is_error())
         return inode_or_error.error();
     auto inode = inode_or_error.value();
-
-    if (inode->fs().is_readonly())
-        return KResult(-EROFS);
-
-    if (current->euid() != inode->metadata().uid && !current->is_superuser())
-        return KResult(-EPERM);
-
-    // Only change the permission bits.
-    mode = (inode->mode() & ~04777) | (mode & 04777);
-
-    kprintf("VFS::chmod(): %u:%u mode %o\n", inode->fsid(), inode->index(), mode);
-    return inode->chmod(mode);
+    return chmod(*inode, mode);
 }
 
 KResult VFS::chown(const String& path, uid_t a_uid, gid_t a_gid, Inode& base)

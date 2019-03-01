@@ -34,6 +34,8 @@ public:
     ssize_t write(Process&, const byte* data, ssize_t);
     int fstat(stat*);
 
+    KResult fchmod(mode_t);
+
     bool can_read(Process&);
     bool can_write(Process&);
 

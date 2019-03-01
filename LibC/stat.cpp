@@ -25,8 +25,8 @@ int chmod(const char* pathname, mode_t mode)
 
 int fchmod(int fd, mode_t mode)
 {
-    dbgprintf("FIXME(LibC): fchmod(%d, %o)\n", fd, mode);
-    ASSERT_NOT_REACHED();
+    int rc = syscall(SC_fchmod, fd, mode);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
 }

@@ -2177,6 +2177,14 @@ int Process::sys$chmod(const char* pathname, mode_t mode)
     return VFS::the().chmod(String(pathname), mode, cwd_inode());
 }
 
+int Process::sys$fchmod(int fd, mode_t mode)
+{
+    auto* descriptor = file_descriptor(fd);
+    if (!descriptor)
+        return -EBADF;
+    return descriptor->fchmod(mode);
+}
+
 int Process::sys$chown(const char* pathname, uid_t uid, gid_t gid)
 {
     if (!validate_read_str(pathname))
