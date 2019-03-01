@@ -1,9 +1,21 @@
 #include <WindowServer/WSScreen.h>
 #include <WindowServer/WSWindowManager.h>
 #include <WindowServer/WSMessageLoop.h>
+#include <signal.h>
+#include <stdio.h>
 
 int main(int, char**)
 {
+    struct sigaction act;
+    memset(&act, 0, sizeof(act));
+    act.sa_flags = SA_NOCLDWAIT;
+    act.sa_handler = SIG_IGN;
+    int rc = sigaction(SIGCHLD, &act, nullptr);
+    if (rc < 0) {
+        perror("sigaction");
+        return 1;
+    }
+
     WSMessageLoop loop;
     WSScreen screen(1024, 768);
     WSWindowManager window_manager;
