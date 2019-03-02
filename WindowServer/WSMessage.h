@@ -189,22 +189,25 @@ private:
 
 class WSAPIAddMenuItemRequest : public WSAPIClientRequest {
 public:
-    WSAPIAddMenuItemRequest(int client_id, int menu_id, unsigned identifier, const String& text)
+    WSAPIAddMenuItemRequest(int client_id, int menu_id, unsigned identifier, const String& text, const String& shortcut_text)
         : WSAPIClientRequest(WSMessage::APIAddMenuItemRequest, client_id)
         , m_menu_id(menu_id)
         , m_identifier(identifier)
         , m_text(text)
+        , m_shortcut_text(shortcut_text)
     {
     }
 
     int menu_id() const { return m_menu_id; }
     unsigned identifier() const { return m_identifier; }
     String text() const { return m_text; }
+    String shortcut_text() const { return m_shortcut_text; }
 
 private:
     int m_menu_id { 0 };
     unsigned m_identifier { 0 };
     String m_text;
+    String m_shortcut_text;
 };
 
 class WSAPIAddMenuSeparatorRequest : public WSAPIClientRequest {

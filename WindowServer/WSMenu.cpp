@@ -29,8 +29,13 @@ int WSMenu::width() const
 {
     int longest = 0;
     for (auto& item : m_items) {
-        if (item->type() == WSMenuItem::Text)
-            longest = max(longest, font().width(item->text()));
+        if (item->type() == WSMenuItem::Text) {
+            int item_width = font().width(item->text());
+            if (!item->shortcut_text().is_empty())
+                item_width += padding_between_text_and_shortcut() + font().width(item->shortcut_text());
+
+            longest = max(longest, item_width);
+        }
     }
 
     return max(longest, rect_in_menubar().width()) + horizontal_padding();
@@ -91,6 +96,9 @@ void WSMenu::draw()
                 text_color = Color::White;
             }
             painter.draw_text(item->rect().translated(left_padding(), 0), item->text(), TextAlignment::CenterLeft, text_color);
+            if (!item->shortcut_text().is_empty()) {
+                painter.draw_text(item->rect().translated(-right_padding(), 0), item->shortcut_text(), TextAlignment::CenterRight, text_color);
+            }
         } else if (item->type() == WSMenuItem::Separator) {
             Point p1(1, item->rect().center().y());
             Point p2(width() - 2, item->rect().center().y());

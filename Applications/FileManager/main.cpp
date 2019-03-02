@@ -37,7 +37,7 @@ int main(int argc, char** argv)
     auto* directory_table_view = new DirectoryTableView(widget);
     auto* statusbar = new GStatusBar(widget);
 
-    auto open_parent_directory_action = GAction::create("Open parent directory", GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/parentdirectory16.rgb", { 16, 16 }), [directory_table_view] (const GAction&) {
+    auto open_parent_directory_action = GAction::create("Open parent directory", { Mod_Alt, Key_Up }, GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/parentdirectory16.rgb", { 16, 16 }), [directory_table_view] (const GAction&) {
         directory_table_view->open_parent_directory();
     });
 
