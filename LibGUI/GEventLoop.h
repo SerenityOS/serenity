@@ -1,13 +1,14 @@
 #pragma once
 
-#include "GEvent.h"
 #include <AK/Badge.h>
 #include <AK/HashMap.h>
 #include <AK/OwnPtr.h>
 #include <AK/Vector.h>
 #include <AK/WeakPtr.h>
 #include <WindowServer/WSAPITypes.h>
+#include <LibGUI/GEvent.h>
 
+class GAction;
 class GObject;
 class GNotifier;
 class GWindow;
@@ -22,8 +23,6 @@ public:
     void post_event(GObject& receiver, OwnPtr<GEvent>&&);
 
     static GEventLoop& main();
-
-    static void initialize();
 
     bool running() const { return m_running; }
 
@@ -41,6 +40,9 @@ public:
     WSAPI_ServerMessage sync_request(const WSAPI_ClientMessage& request, WSAPI_ServerMessage::Type response_type);
 
     pid_t server_pid() const { return m_server_pid; }
+
+    static void register_action_with_shortcut(Badge<GAction>, GAction&);
+    static void unregister_action_with_shortcut(Badge<GAction>, GAction&);
 
 private:
     void wait_for_event();

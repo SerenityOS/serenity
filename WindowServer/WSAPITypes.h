@@ -166,6 +166,8 @@ struct WSAPI_ClientMessage {
             int menubar_id;
             int menu_id;
             unsigned identifier;
+            char shortcut_text[32];
+            int shortcut_text_length;
         } menu;
         struct {
             WSAPI_Rect rect;

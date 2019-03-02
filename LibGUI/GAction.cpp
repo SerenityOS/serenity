@@ -1,4 +1,5 @@
 #include <LibGUI/GAction.h>
+#include <LibGUI/GEventLoop.h>
 
 GAction::GAction(const String& text, const String& custom_data, Function<void(const GAction&)> on_activation_callback)
     : on_activation(move(on_activation_callback))
@@ -19,8 +20,19 @@ GAction::GAction(const String& text, RetainPtr<GraphicsBitmap>&& icon, Function<
 {
 }
 
+GAction::GAction(const String& text, const GShortcut& shortcut, RetainPtr<GraphicsBitmap>&& icon, Function<void(const GAction&)> on_activation_callback)
+    : on_activation(move(on_activation_callback))
+    , m_text(text)
+    , m_icon(move(icon))
+    , m_shortcut(shortcut)
+{
+    GEventLoop::register_action_with_shortcut(Badge<GAction>(), *this);
+}
+
 GAction::~GAction()
 {
+    if (m_shortcut.is_valid())
+        GEventLoop::unregister_action_with_shortcut(Badge<GAction>(), *this);
 }
 
 void GAction::activate()

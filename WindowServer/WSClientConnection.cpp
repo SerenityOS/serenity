@@ -210,14 +210,13 @@ void WSClientConnection::handle_request(WSAPIAddMenuItemRequest& request)
 {
     int menu_id = request.menu_id();
     unsigned identifier = request.identifier();
-    String text = request.text();
     auto it = m_menus.find(menu_id);
     if (it == m_menus.end()) {
         post_error("Bad menu ID");
         return;
     }
     auto& menu = *(*it).value;
-    menu.add_item(make<WSMenuItem>(identifier, move(text)));
+    menu.add_item(make<WSMenuItem>(identifier, request.text(), request.shortcut_text()));
     WSAPI_ServerMessage response;
     response.type = WSAPI_ServerMessage::Type::DidAddMenuItem;
     response.menu.menu_id = menu_id;

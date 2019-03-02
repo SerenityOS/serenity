@@ -68,6 +68,16 @@ int GMenu::realize_menu()
             ASSERT(action.text().length() < (ssize_t)sizeof(request.text));
             strcpy(request.text, action.text().characters());
             request.text_length = action.text().length();
+
+            if (action.shortcut().is_valid()) {
+                auto shortcut_text = action.shortcut().to_string();
+                ASSERT(shortcut_text.length() < (ssize_t)sizeof(request.menu.shortcut_text));
+                strcpy(request.menu.shortcut_text, shortcut_text.characters());
+                request.menu.shortcut_text_length = shortcut_text.length();
+            } else {
+                request.menu.shortcut_text_length = 0;
+            }
+
             GEventLoop::main().sync_request(request, WSAPI_ServerMessage::Type::DidAddMenuItem);
         }
     }

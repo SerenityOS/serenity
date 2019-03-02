@@ -18,17 +18,16 @@
 
 //#define GEVENTLOOP_DEBUG
 
+static HashMap<GShortcut, GAction*>* g_actions;
 static GEventLoop* s_mainGEventLoop;
-
-void GEventLoop::initialize()
-{
-    s_mainGEventLoop = nullptr;
-}
 
 GEventLoop::GEventLoop()
 {
     if (!s_mainGEventLoop)
         s_mainGEventLoop = this;
+
+    if (!g_actions)
+        g_actions = new HashMap<GShortcut, GAction*>;
 
     m_event_fd = socket(AF_LOCAL, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0);
     if (m_event_fd < 0) {
@@ -154,6 +153,14 @@ void GEventLoop::handle_key_event(const WSAPI_ServerMessage& event, GWindow& win
 #ifdef GEVENTLOOP_DEBUG
     dbgprintf("WID=%x KeyEvent character=0x%b\n", event.window_id, event.key.character);
 #endif
+
+    unsigned modifiers = (event.key.alt * Mod_Alt) + (event.key.ctrl * Mod_Ctrl) + (event.key.shift * Mod_Shift);
+    auto it = g_actions->find(GShortcut(modifiers, (KeyCode)event.key.key));
+    if (it != g_actions->end()) {
+        (*it).value->activate();
+        return;
+    }
+
     auto key_event = make<GKeyEvent>(event.type == WSAPI_ServerMessage::Type::KeyDown ? GEvent::KeyDown : GEvent::KeyUp, event.key.key);
     key_event->m_alt = event.key.alt;
     key_event->m_ctrl = event.key.ctrl;
@@ -447,4 +454,14 @@ WSAPI_ServerMessage GEventLoop::sync_request(const WSAPI_ClientMessage& request,
     success = GEventLoop::main().wait_for_specific_event(response_type, response);
     ASSERT(success);
     return response;
+}
+
+void GEventLoop::register_action_with_shortcut(Badge<GAction>, GAction& action)
+{
+    g_actions->set(action.shortcut(), &action);
+}
+
+void GEventLoop::unregister_action_with_shortcut(Badge<GAction>, GAction& action)
+{
+    g_actions->remove(action.shortcut());
 }

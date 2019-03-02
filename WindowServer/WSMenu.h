@@ -73,6 +73,7 @@ public:
     void close();
 
 private:
+    int padding_between_text_and_shortcut() const { return 50; }
     void did_activate(WSMenuItem&);
     WSClientConnection* m_client { nullptr };
     int m_menu_id { 0 };
