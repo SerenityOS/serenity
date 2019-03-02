@@ -66,7 +66,6 @@ void GBoxLayout::run(GWidget& widget)
     dbgprintf("GBoxLayout: automatic_size=%s\n", automatic_size.to_string().characters());
 #endif
 
-    // FIXME: We should also respect the bottom and right margins.
     int current_x = margins().left();
     int current_y = margins().top();
 
@@ -77,7 +76,7 @@ void GBoxLayout::run(GWidget& widget)
             ASSERT_NOT_REACHED();
         }
         ASSERT(entry.widget);
-        rect.set_size(automatic_size);
+        rect.set_size({ automatic_size.width() - margins().left() - margins().right(), automatic_size.height() - margins().top() - margins().bottom() });
         if (entry.widget->size_policy(Orientation::Vertical) == SizePolicy::Fixed)
             rect.set_height(entry.widget->preferred_size().height());
         if (entry.widget->size_policy(Orientation::Horizontal) == SizePolicy::Fixed)

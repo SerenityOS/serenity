@@ -8,10 +8,10 @@ GToolBar::GToolBar(GWidget* parent)
     : GWidget(parent)
 {
     set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-    set_preferred_size({ 0, 29 });
+    set_preferred_size({ 0, 30 });
     set_layout(make<GBoxLayout>(Orientation::Horizontal));
     layout()->set_spacing(0);
-    layout()->set_margins({1, 1, 1, 1});
+    layout()->set_margins({ 2, 2, 2, 2 });
 }
 
 GToolBar::~GToolBar()

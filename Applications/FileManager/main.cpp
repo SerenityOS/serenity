@@ -3,6 +3,7 @@
 #include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GStatusBar.h>
+#include <LibGUI/GTextBox.h>
 #include <LibGUI/GToolBar.h>
 #include <LibGUI/GMenuBar.h>
 #include <LibGUI/GAction.h>
@@ -33,9 +34,16 @@ int main(int argc, char** argv)
     auto* widget = new GWidget;
     widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
 
-    auto* toolbar = new GToolBar(widget);
+    auto* main_toolbar = new GToolBar(widget);
+    auto* location_toolbar = new GToolBar(widget);
+    auto* location_textbox = new GTextBox(location_toolbar);
+
     auto* directory_table_view = new DirectoryTableView(widget);
     auto* statusbar = new GStatusBar(widget);
+
+    location_textbox->on_return_pressed = [directory_table_view] (GTextBox& textbox) {
+        directory_table_view->open(textbox.text());
+    };
 
     auto open_parent_directory_action = GAction::create("Open parent directory", { Mod_Alt, Key_Up }, GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/parentdirectory16.rgb", { 16, 16 }), [directory_table_view] (const GAction&) {
         directory_table_view->open_parent_directory();
@@ -77,13 +85,14 @@ int main(int argc, char** argv)
 
     app.set_menubar(move(menubar));
 
-    toolbar->add_action(open_parent_directory_action.copy_ref());
-    toolbar->add_action(mkdir_action.copy_ref());
-    toolbar->add_action(copy_action.copy_ref());
-    toolbar->add_action(delete_action.copy_ref());
+    main_toolbar->add_action(open_parent_directory_action.copy_ref());
+    main_toolbar->add_action(mkdir_action.copy_ref());
+    main_toolbar->add_action(copy_action.copy_ref());
+    main_toolbar->add_action(delete_action.copy_ref());
 
-    directory_table_view->on_path_change = [window] (const String& new_path) {
+    directory_table_view->on_path_change = [window, location_textbox] (const String& new_path) {
         window->set_title(String::format("FileManager: %s", new_path.characters()));
+        location_textbox->set_text(new_path);
     };
 
     directory_table_view->on_status_message = [statusbar] (String message) {
