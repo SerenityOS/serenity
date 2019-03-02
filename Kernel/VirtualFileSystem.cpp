@@ -431,6 +431,31 @@ KResult VFS::unlink(const String& path, Inode& base)
     return parent_inode->remove_child(FileSystemPath(path).basename());
 }
 
+KResult VFS::symlink(const String& target, const String& linkpath, Inode& base)
+{
+    RetainPtr<Inode> parent_inode;
+    auto existing_file_or_error = resolve_path_to_inode(linkpath, base, &parent_inode);
+    if (!existing_file_or_error.is_error())
+        return KResult(-EEXIST);
+    if (!parent_inode)
+        return KResult(-ENOENT);
+    if (existing_file_or_error.error() != -ENOENT)
+        return existing_file_or_error.error();
+    if (!parent_inode->metadata().may_write(*current))
+        return KResult(-EACCES);
+
+    FileSystemPath p(linkpath);
+    dbgprintf("VFS::symlink: '%s' (-> '%s') in %u:%u\n", p.basename().characters(), target.characters(), parent_inode->fsid(), parent_inode->index());
+    int error;
+    auto new_file = parent_inode->fs().create_inode(parent_inode->identifier(), p.basename(), 0120644, 0, error);
+    if (!new_file)
+        return KResult(error);
+    ssize_t nwritten = new_file->write_bytes(0, target.length(), (const byte*)target.characters(), nullptr);
+    if (nwritten < 0)
+        return KResult(nwritten);
+    return KSuccess;
+}
+
 KResult VFS::rmdir(const String& path, Inode& base)
 {
     RetainPtr<Inode> parent_inode;

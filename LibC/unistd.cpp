@@ -247,6 +247,12 @@ int unlink(const char* pathname)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
+int symlink(const char* target, const char* linkpath)
+{
+    int rc = syscall(SC_symlink, target, linkpath);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
 int rmdir(const char* pathname)
 {
     int rc = syscall(SC_rmdir, pathname);

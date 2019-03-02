@@ -13,6 +13,8 @@
 
 //#define EXT2_DEBUG
 
+static const ssize_t max_inline_symlink_length = 60;
+
 Retained<Ext2FS> Ext2FS::create(Retained<DiskDevice>&& device)
 {
     return adopt(*new Ext2FS(move(device)));
@@ -437,10 +439,9 @@ ssize_t Ext2FSInode::read_bytes(off_t offset, ssize_t count, byte* buffer, FileD
 
     // Symbolic links shorter than 60 characters are store inline inside the i_block array.
     // This avoids wasting an entire block on short links. (Most links are short.)
-    static const unsigned max_inline_symlink_length = 60;
     if (is_symlink() && size() < max_inline_symlink_length) {
         ssize_t nread = min((off_t)size() - offset, static_cast<off_t>(count));
-        memcpy(buffer, m_raw_inode.i_block + offset, (size_t)nread);
+        memcpy(buffer, ((byte*)m_raw_inode.i_block) + offset, (size_t)nread);
         return nread;
     }
 
@@ -495,13 +496,24 @@ ssize_t Ext2FSInode::read_bytes(off_t offset, ssize_t count, byte* buffer, FileD
 
 ssize_t Ext2FSInode::write_bytes(off_t offset, ssize_t count, const byte* data, FileDescriptor*)
 {
+    ASSERT(offset >= 0);
+    ASSERT(count >= 0);
+
     Locker inode_locker(m_lock);
     Locker fs_locker(fs().m_lock);
 
-    // FIXME: Support writing to symlink inodes.
-    ASSERT(!is_symlink());
-
-    ASSERT(offset >= 0);
+    if (is_symlink()) {
+        if ((offset + count) < max_inline_symlink_length) {
+#ifdef EXT2_DEBUG
+            dbgprintf("Ext2FSInode: write_bytes poking into i_block array for inline symlink '%s' (%u bytes)\n", String((const char*)data, count).characters(), count);
+#endif
+            memcpy(((byte*)m_raw_inode.i_block) + offset, data, (size_t)count);
+            if ((offset + count) > m_raw_inode.i_size)
+                m_raw_inode.i_size = offset + count;
+            set_metadata_dirty(true);
+            return count;
+        }
+    }
 
     const ssize_t block_size = fs().block_size();
     size_t old_size = size();
@@ -528,6 +540,8 @@ ssize_t Ext2FSInode::write_bytes(off_t offset, ssize_t count, const byte* data, 
 
     dword offset_into_first_block = offset % block_size;
 
+    dword last_logical_block_index_in_file = size() / block_size;
+
     ssize_t nwritten = 0;
     size_t remaining_count = min((off_t)count, (off_t)new_size - offset);
     const byte* in = data;
@@ -542,7 +556,7 @@ ssize_t Ext2FSInode::write_bytes(off_t offset, ssize_t count, const byte* data, 
         size_t num_bytes_to_copy = min((size_t)block_size - offset_into_block, remaining_count);
 
         ByteBuffer block;
-        if (offset_into_block != 0) {
+        if (offset_into_block != 0 || num_bytes_to_copy != block_size) {
             block = fs().read_block(block_list[bi]);
             if (!block) {
                 kprintf("Ext2FSInode::write_bytes: read_block(%u) failed (lbi: %u)\n", block_list[bi], bi);
@@ -552,8 +566,14 @@ ssize_t Ext2FSInode::write_bytes(off_t offset, ssize_t count, const byte* data, 
             block = buffer_block;
 
         memcpy(block.pointer() + offset_into_block, in, num_bytes_to_copy);
-        if (offset_into_block == 0 && !num_bytes_to_copy)
-            memset(block.pointer() + num_bytes_to_copy, 0, block_size - num_bytes_to_copy);
+        if (bi == last_logical_block_index_in_file && num_bytes_to_copy < block_size) {
+            size_t padding_start = new_size % block_size;
+            size_t padding_bytes = block_size - padding_start;
+#ifdef EXT2_DEBUG
+            dbgprintf("Ext2FSInode::write_bytes padding last block of file with zero x %u (new_size=%u, offset_into_block=%u, num_bytes_to_copy=%u)\n", padding_bytes, new_size, offset_into_block, num_bytes_to_copy);
+#endif
+            memset(block.pointer() + padding_start, 0, padding_bytes);
+        }
 #ifdef EXT2_DEBUG
         dbgprintf("Ext2FSInode::write_bytes: writing block %u (offset_into_block: %u)\n", block_list[bi], offset_into_block);
 #endif
