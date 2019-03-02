@@ -56,7 +56,7 @@ static KeyCode unshifted_key_map[0x80] =
     Key_Invalid, // 70
     Key_Invalid,
     Key_Up,
-    Key_Invalid,
+    Key_PageUp,
     Key_Invalid,
     Key_Left,
     Key_Invalid,
@@ -64,6 +64,7 @@ static KeyCode unshifted_key_map[0x80] =
     Key_Invalid,
     Key_Invalid,
     Key_Down, // 80
+    Key_PageDown,
 };
 
 static KeyCode shifted_key_map[0x100] =
@@ -87,7 +88,7 @@ static KeyCode shifted_key_map[0x100] =
     Key_Invalid, // 70
     Key_Invalid,
     Key_Up,
-    Key_Invalid,
+    Key_PageUp,
     Key_Invalid,
     Key_Left,
     Key_Invalid,
@@ -95,6 +96,7 @@ static KeyCode shifted_key_map[0x100] =
     Key_Invalid,
     Key_Invalid,
     Key_Down, // 80
+    Key_PageDown,
 };
 
 void KeyboardDevice::key_state_changed(byte raw, bool pressed)
