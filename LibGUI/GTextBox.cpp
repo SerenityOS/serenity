@@ -15,9 +15,11 @@ GTextBox::~GTextBox()
 {
 }
 
-void GTextBox::set_text(String&& text)
+void GTextBox::set_text(const String& text)
 {
-    m_text = move(text);
+    if (m_text == text)
+        return;
+    m_text = text;
     m_cursor_position = m_text.length();
     update();
 }

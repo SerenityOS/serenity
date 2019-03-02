@@ -9,7 +9,7 @@ public:
     virtual ~GTextBox() override;
 
     String text() const { return m_text; }
-    void set_text(String&&);
+    void set_text(const String&);
 
     Function<void(GTextBox&)> on_return_pressed;
     Function<void(GTextBox&)> on_change;
