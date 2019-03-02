@@ -84,6 +84,7 @@
     __ENUMERATE_SYSCALL(link) \
     __ENUMERATE_SYSCALL(chown) \
     __ENUMERATE_SYSCALL(fchmod) \
+    __ENUMERATE_SYSCALL(symlink) \
 
 
 namespace Syscall {

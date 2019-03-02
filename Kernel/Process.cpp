@@ -2144,6 +2144,15 @@ int Process::sys$unlink(const char* pathname)
     return VFS::the().unlink(String(pathname), cwd_inode());
 }
 
+int Process::sys$symlink(const char* target, const char* linkpath)
+{
+    if (!validate_read_str(target))
+        return -EFAULT;
+    if (!validate_read_str(linkpath))
+        return -EFAULT;
+    return VFS::the().symlink(String(target), String(linkpath), cwd_inode());
+}
+
 int Process::sys$rmdir(const char* pathname)
 {
     if (!validate_read_str(pathname))

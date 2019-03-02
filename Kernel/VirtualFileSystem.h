@@ -68,6 +68,7 @@ public:
     KResult mkdir(const String& path, mode_t mode, Inode& base);
     KResult link(const String& old_path, const String& new_path, Inode& base);
     KResult unlink(const String& path, Inode& base);
+    KResult symlink(const String& target, const String& linkpath, Inode& base);
     KResult rmdir(const String& path, Inode& base);
     KResult chmod(const String& path, mode_t, Inode& base);
     KResult chmod(Inode&, mode_t);

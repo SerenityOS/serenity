@@ -62,6 +62,7 @@ int ttyname_r(int fd, char* buffer, size_t);
 off_t lseek(int fd, off_t, int whence);
 int link(const char* oldpath, const char* newpath);
 int unlink(const char* pathname);
+int symlink(const char* target, const char* linkpath);
 int rmdir(const char* pathname);
 int getdtablesize();
 int dup(int old_fd);
