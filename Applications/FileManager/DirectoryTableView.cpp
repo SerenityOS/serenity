@@ -34,3 +34,8 @@ void DirectoryTableView::set_status_message(const String& message)
     if (on_status_message)
         on_status_message(message);
 }
+
+void DirectoryTableView::open_parent_directory()
+{
+    model().open("..");
+}

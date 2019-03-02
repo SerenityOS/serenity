@@ -25,8 +25,20 @@ int main(int argc, char** argv)
 
     GApplication app(argc, argv);
 
-    auto open_parent_directory_action = GAction::create("Open parent directory", GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/parentdirectory16.rgb", { 16, 16 }), [] (const GAction&) {
-        dbgprintf("'Parent directory' action activated!\n");
+    auto* window = new GWindow;
+    window->set_title("FileManager");
+    window->set_rect(20, 200, 640, 480);
+    window->set_should_exit_app_on_close(true);
+
+    auto* widget = new GWidget;
+    widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
+
+    auto* toolbar = new GToolBar(widget);
+    auto* directory_table_view = new DirectoryTableView(widget);
+    auto* statusbar = new GStatusBar(widget);
+
+    auto open_parent_directory_action = GAction::create("Open parent directory", GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/parentdirectory16.rgb", { 16, 16 }), [directory_table_view] (const GAction&) {
+        directory_table_view->open_parent_directory();
     });
 
     auto mkdir_action = GAction::create("New directory...", GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/mkdir16.rgb", { 16, 16 }), [] (const GAction&) {
@@ -65,25 +77,10 @@ int main(int argc, char** argv)
 
     app.set_menubar(move(menubar));
 
-    auto* window = new GWindow;
-    window->set_title("FileManager");
-    window->set_rect(20, 200, 240, 300);
-
-    auto* widget = new GWidget;
-    window->set_main_widget(widget);
-
-    widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
-
-    auto* toolbar = new GToolBar(widget);
     toolbar->add_action(open_parent_directory_action.copy_ref());
     toolbar->add_action(mkdir_action.copy_ref());
     toolbar->add_action(copy_action.copy_ref());
     toolbar->add_action(delete_action.copy_ref());
-
-    auto* directory_table_view = new DirectoryTableView(widget);
-
-    auto* statusbar = new GStatusBar(widget);
-    statusbar->set_text("Welcome!");
 
     directory_table_view->on_path_change = [window] (const String& new_path) {
         window->set_title(String::format("FileManager: %s", new_path.characters()));
@@ -96,7 +93,7 @@ int main(int argc, char** argv)
     directory_table_view->open("/");
     directory_table_view->set_focus(true);
 
-    window->set_should_exit_app_on_close(true);
+    window->set_main_widget(widget);
     window->show();
 
     return app.exec();
