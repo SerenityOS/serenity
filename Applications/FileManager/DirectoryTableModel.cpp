@@ -2,6 +2,8 @@
 #include <dirent.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <grp.h>
+#include <pwd.h>
 #include <AK/FileSystemPath.h>
 #include <AK/StringBuilder.h>
 
@@ -12,6 +14,16 @@ DirectoryTableModel::DirectoryTableModel()
     m_symlink_icon = GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/link16.rgb", { 16, 16 });
     m_socket_icon = GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/socket16.rgb", { 16, 16 });
     m_executable_icon = GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/executable16.rgb", { 16, 16 });
+
+    setpwent();
+    while (auto* passwd = getpwent())
+        m_user_names.set(passwd->pw_uid, passwd->pw_name);
+    endpwent();
+
+    setgrent();
+    while (auto* group = getgrent())
+        m_group_names.set(group->gr_gid, group->gr_name);
+    endgrent();
 }
 
 DirectoryTableModel::~DirectoryTableModel()
@@ -34,8 +46,8 @@ String DirectoryTableModel::column_name(int column) const
     case Column::Icon: return "";
     case Column::Name: return "Name";
     case Column::Size: return "Size";
-    case Column::UID: return "UID";
-    case Column::GID: return "GID";
+    case Column::Owner: return "Owner";
+    case Column::Group: return "Group";
     case Column::Permissions: return "Mode";
     case Column::Inode: return "Inode";
     }
@@ -48,9 +60,9 @@ GTableModel::ColumnMetadata DirectoryTableModel::column_metadata(int column) con
     case Column::Icon: return { 16, TextAlignment::Center };
     case Column::Name: return { 120, TextAlignment::CenterLeft };
     case Column::Size: return { 80, TextAlignment::CenterRight };
-    case Column::UID: return { 80, TextAlignment::CenterRight };
-    case Column::GID: return { 80, TextAlignment::CenterRight };
-    case Column::Permissions: return { 100, TextAlignment::CenterLeft };
+    case Column::Owner: return { 50, TextAlignment::CenterLeft };
+    case Column::Group: return { 50, TextAlignment::CenterLeft };
+    case Column::Permissions: return { 80, TextAlignment::CenterLeft };
     case Column::Inode: return { 80, TextAlignment::CenterRight };
     }
     ASSERT_NOT_REACHED();
@@ -68,7 +80,6 @@ const GraphicsBitmap& DirectoryTableModel::icon_for(const Entry& entry) const
         return *m_executable_icon;
     return *m_file_icon;
 }
-
 
 static String permission_string(mode_t mode)
 {
@@ -108,6 +119,22 @@ static String permission_string(mode_t mode)
     return builder.to_string();
 }
 
+String DirectoryTableModel::name_for_uid(uid_t uid) const
+{
+    auto it = m_user_names.find(uid);
+    if (it == m_user_names.end())
+        return String::format("%u", uid);
+    return (*it).value;
+}
+
+String DirectoryTableModel::name_for_gid(uid_t gid) const
+{
+    auto it = m_user_names.find(gid);
+    if (it == m_user_names.end())
+        return String::format("%u", gid);
+    return (*it).value;
+}
+
 GVariant DirectoryTableModel::data(int row, int column) const
 {
     auto& entry = this->entry(row);
@@ -115,8 +142,8 @@ GVariant DirectoryTableModel::data(int row, int column) const
     case Column::Icon: return icon_for(entry);
     case Column::Name: return entry.name;
     case Column::Size: return (int)entry.size;
-    case Column::UID: return (int)entry.uid;
-    case Column::GID: return (int)entry.gid;
+    case Column::Owner: return name_for_uid(entry.uid);
+    case Column::Group: return name_for_gid(entry.gid);
     case Column::Permissions: return permission_string(entry.mode);
     case Column::Inode: return (int)entry.inode;
     }

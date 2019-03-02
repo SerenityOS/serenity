@@ -1,6 +1,7 @@
 #pragma once
 
 #include <LibGUI/GTableModel.h>
+#include <AK/HashMap.h>
 #include <sys/stat.h>
 
 class DirectoryTableModel final : public GTableModel {
@@ -12,8 +13,8 @@ public:
         Icon = 0,
         Name,
         Size,
-        UID,
-        GID,
+        Owner,
+        Group,
         Permissions,
         Inode,
         __Count,
@@ -32,6 +33,9 @@ public:
     size_t bytes_in_files() const { return m_bytes_in_files; }
 
 private:
+    String name_for_uid(uid_t) const;
+    String name_for_gid(gid_t) const;
+
     struct Entry {
         String name;
         size_t size { 0 };
@@ -61,4 +65,7 @@ private:
     RetainPtr<GraphicsBitmap> m_symlink_icon;
     RetainPtr<GraphicsBitmap> m_socket_icon;
     RetainPtr<GraphicsBitmap> m_executable_icon;
+
+    HashMap<uid_t, String> m_user_names;
+    HashMap<gid_t, String> m_group_names;
 };
