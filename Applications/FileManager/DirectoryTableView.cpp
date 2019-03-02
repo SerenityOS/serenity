@@ -37,5 +37,5 @@ void DirectoryTableView::set_status_message(const String& message)
 
 void DirectoryTableView::open_parent_directory()
 {
-    model().open("..");
+    model().open(String::format("%s/..", model().path().characters()));
 }
