@@ -187,8 +187,10 @@ void DirectoryTableModel::update()
     did_update();
 }
 
-void DirectoryTableModel::open(const String& path)
+void DirectoryTableModel::open(const String& a_path)
 {
+    FileSystemPath canonical_path(a_path);
+    auto path = canonical_path.string();
     if (m_path == path)
         return;
     DIR* dirp = opendir(path.characters());
