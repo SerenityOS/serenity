@@ -11,7 +11,6 @@ GTableView::GTableView(GWidget* parent)
 
     m_vertical_scrollbar = new GScrollBar(Orientation::Vertical, this);
     m_vertical_scrollbar->set_step(4);
-    m_vertical_scrollbar->set_big_step(30);
     m_vertical_scrollbar->on_change = [this] (int) {
         update();
     };
@@ -55,6 +54,8 @@ void GTableView::update_scrollbar_ranges()
     int available_width = width() - m_vertical_scrollbar->width();
     int excess_width = max(0, content_width() - available_width);
     m_horizontal_scrollbar->set_range(0, excess_width);
+
+    m_vertical_scrollbar->set_big_step(visible_content_rect().height() - item_height());
 }
 
 int GTableView::content_width() const
@@ -189,6 +190,26 @@ void GTableView::keydown_event(GKeyEvent& event)
     }
     if (event.key() == KeyCode::Key_Down) {
         GModelIndex new_index(model.selected_index().row() + 1, model.selected_index().column());
+        if (model.is_valid(new_index)) {
+            model.set_selected_index(new_index);
+            scroll_into_view(new_index, Orientation::Vertical);
+            update();
+        }
+        return;
+    }
+    if (event.key() == KeyCode::Key_PageUp) {
+        int items_per_page = visible_content_rect().height() / item_height();
+        GModelIndex new_index(max(0, model.selected_index().row() - items_per_page), model.selected_index().column());
+        if (model.is_valid(new_index)) {
+            model.set_selected_index(new_index);
+            scroll_into_view(new_index, Orientation::Vertical);
+            update();
+        }
+        return;
+    }
+    if (event.key() == KeyCode::Key_PageDown) {
+        int items_per_page = visible_content_rect().height() / item_height();
+        GModelIndex new_index(min(model.row_count() - 1, model.selected_index().row() + items_per_page), model.selected_index().column());
         if (model.is_valid(new_index)) {
             model.set_selected_index(new_index);
             scroll_into_view(new_index, Orientation::Vertical);
