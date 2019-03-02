@@ -25,6 +25,10 @@ int main(int argc, char** argv)
 
     GApplication app(argc, argv);
 
+    auto open_parent_directory_action = GAction::create("Open parent directory", GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/parentdirectory16.rgb", { 16, 16 }), [] (const GAction&) {
+        dbgprintf("'Parent directory' action activated!\n");
+    });
+
     auto mkdir_action = GAction::create("New directory...", GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/mkdir16.rgb", { 16, 16 }), [] (const GAction&) {
         dbgprintf("'New directory' action activated!\n");
     });
@@ -47,6 +51,7 @@ int main(int argc, char** argv)
     menubar->add_menu(move(app_menu));
 
     auto file_menu = make<GMenu>("File");
+    file_menu->add_action(open_parent_directory_action.copy_ref());
     file_menu->add_action(mkdir_action.copy_ref());
     file_menu->add_action(copy_action.copy_ref());
     file_menu->add_action(delete_action.copy_ref());
@@ -70,6 +75,7 @@ int main(int argc, char** argv)
     widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
 
     auto* toolbar = new GToolBar(widget);
+    toolbar->add_action(open_parent_directory_action.copy_ref());
     toolbar->add_action(mkdir_action.copy_ref());
     toolbar->add_action(copy_action.copy_ref());
     toolbar->add_action(delete_action.copy_ref());
