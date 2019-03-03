@@ -94,10 +94,7 @@ void WSScreen::on_receive_mouse_data(int dx, int dy, bool left_button, bool righ
 
 void WSScreen::on_receive_keyboard_data(KeyEvent kernel_event)
 {
-    auto message = make<WSKeyEvent>(kernel_event.is_press() ? WSMessage::KeyDown : WSMessage::KeyUp, kernel_event.key, kernel_event.character);
-    message->m_shift = kernel_event.shift();
-    message->m_ctrl = kernel_event.ctrl();
-    message->m_alt = kernel_event.alt();
+    auto message = make<WSKeyEvent>(kernel_event.is_press() ? WSMessage::KeyDown : WSMessage::KeyUp, kernel_event.key, kernel_event.character, kernel_event.modifiers());
     WSMessageLoop::the().post_message(WSWindowManager::the(), move(message));
 }
 

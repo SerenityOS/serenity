@@ -2,6 +2,7 @@
 #include "GEvent.h"
 #include "GObject.h"
 #include "GWindow.h"
+#include <LibGUI/GApplication.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GNotifier.h>
 #include <LibGUI/GMenu.h>
@@ -153,20 +154,14 @@ void GEventLoop::handle_key_event(const WSAPI_ServerMessage& event, GWindow& win
 #ifdef GEVENTLOOP_DEBUG
     dbgprintf("WID=%x KeyEvent character=0x%b\n", event.window_id, event.key.character);
 #endif
-
-    unsigned modifiers = (event.key.alt * Mod_Alt) + (event.key.ctrl * Mod_Ctrl) + (event.key.shift * Mod_Shift);
-    auto it = g_actions->find(GShortcut(modifiers, (KeyCode)event.key.key));
-    if (it != g_actions->end()) {
-        (*it).value->activate();
-        return;
-    }
-
-    auto key_event = make<GKeyEvent>(event.type == WSAPI_ServerMessage::Type::KeyDown ? GEvent::KeyDown : GEvent::KeyUp, event.key.key);
-    key_event->m_alt = event.key.alt;
-    key_event->m_ctrl = event.key.ctrl;
-    key_event->m_shift = event.key.shift;
+    auto key_event = make<GKeyEvent>(event.type == WSAPI_ServerMessage::Type::KeyDown ? GEvent::KeyDown : GEvent::KeyUp, event.key.key, event.key.modifiers);
     if (event.key.character != '\0')
         key_event->m_text = String(&event.key.character, 1);
+
+    if (auto* action = GApplication::the().action_for_key_event(*key_event)) {
+        action->activate();
+        return;
+    }
     post_event(window, move(key_event));
 }
 
@@ -454,14 +449,4 @@ WSAPI_ServerMessage GEventLoop::sync_request(const WSAPI_ClientMessage& request,
     success = GEventLoop::main().wait_for_specific_event(response_type, response);
     ASSERT(success);
     return response;
-}
-
-void GEventLoop::register_action_with_shortcut(Badge<GAction>, GAction& action)
-{
-    g_actions->set(action.shortcut(), &action);
-}
-
-void GEventLoop::unregister_action_with_shortcut(Badge<GAction>, GAction& action)
-{
-    g_actions->remove(action.shortcut());
 }
