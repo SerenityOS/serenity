@@ -756,7 +756,7 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event, WSWindow*& event_
                 move_to_front(window);
                 set_active_window(&window);
             }
-            if (event.type() == WSMessage::MouseDown && event.button() == MouseButton::Right) {
+            if (m_keyboard_modifiers == Mod_Logo && event.type() == WSMessage::MouseDown && event.button() == MouseButton::Right) {
                 start_window_resize(window, event);
                 return IterationDecision::Abort;
             }
@@ -984,6 +984,7 @@ void WSWindowManager::on_message(WSMessage& message)
 
     if (message.is_key_event()) {
         // FIXME: This is a good place to hook key events globally. :)
+        m_keyboard_modifiers = static_cast<WSKeyEvent&>(message).modifiers();
         if (m_active_window)
             return m_active_window->on_message(message);
         return;

@@ -72,6 +72,9 @@ static KeyCode unshifted_key_map[0x80] =
     Key_Invalid,
     Key_F11,
     Key_F12,
+    Key_Invalid,
+    Key_Invalid,
+    Key_Logo,
 };
 
 static KeyCode shifted_key_map[0x100] =
@@ -111,6 +114,9 @@ static KeyCode shifted_key_map[0x100] =
     Key_Invalid,
     Key_F11,
     Key_F12,
+    Key_Invalid,
+    Key_Invalid,
+    Key_Logo,
 };
 
 void KeyboardDevice::key_state_changed(byte raw, bool pressed)
@@ -143,6 +149,9 @@ void KeyboardDevice::handle_irq()
         case 0x38: update_modifier(Mod_Alt, pressed); break;
         case 0x1d: update_modifier(Mod_Ctrl, pressed); break;
         case 0x2a: update_modifier(Mod_Shift, pressed); break;
+        case 0x5b: update_modifier(Mod_Logo, pressed); break;
+        }
+        switch (ch) {
         case I8042_ACK: break;
         default:
             if (m_modifiers & Mod_Alt) {

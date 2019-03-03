@@ -124,6 +124,7 @@ public:
     bool ctrl() const { return m_modifiers & Mod_Ctrl; }
     bool alt() const { return m_modifiers & Mod_Alt; }
     bool shift() const { return m_modifiers & Mod_Shift; }
+    bool logo() const { return m_modifiers & Mod_Logo; }
     byte modifiers() const { return m_modifiers; }
     String text() const { return m_text; }
 
