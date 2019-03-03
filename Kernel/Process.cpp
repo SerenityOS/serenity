@@ -796,6 +796,59 @@ ShouldUnblockProcess Process::dispatch_one_pending_signal()
     return dispatch_signal(signal);
 }
 
+enum class DefaultSignalAction {
+    Terminate,
+    Ignore,
+    DumpCore,
+    Stop,
+    Continue,
+};
+
+DefaultSignalAction default_signal_action(byte signal)
+{
+    ASSERT(signal && signal < NSIG);
+
+    switch (signal) {
+    case SIGHUP:
+    case SIGINT:
+    case SIGKILL:
+    case SIGPIPE:
+    case SIGALRM:
+    case SIGUSR1:
+    case SIGUSR2:
+    case SIGVTALRM:
+    case SIGSTKFLT:
+    case SIGIO:
+    case SIGPROF:
+    case SIGTERM:
+    case SIGPWR:
+        return DefaultSignalAction::Terminate;
+    case SIGCHLD:
+    case SIGURG:
+    case SIGWINCH:
+        return DefaultSignalAction::Ignore;
+    case SIGQUIT:
+    case SIGILL:
+    case SIGTRAP:
+    case SIGABRT:
+    case SIGBUS:
+    case SIGFPE:
+    case SIGSEGV:
+    case SIGXCPU:
+    case SIGXFSZ:
+    case SIGSYS:
+        return DefaultSignalAction::DumpCore;
+    case SIGCONT:
+        return DefaultSignalAction::Continue;
+    case SIGSTOP:
+    case SIGTSTP:
+    case SIGTTIN:
+    case SIGTTOU:
+        return DefaultSignalAction::Stop;
+    }
+    ASSERT_NOT_REACHED();
+}
+
 ShouldUnblockProcess Process::dispatch_signal(byte signal)
 {
     ASSERT_INTERRUPTS_DISABLED();
@@ -814,20 +867,29 @@ ShouldUnblockProcess Process::dispatch_signal(byte signal)
         set_state(Stopped);
         return ShouldUnblockProcess::No;
     }
+
+    bool did_continue_stopped_process = false;
     if (signal == SIGCONT && state() == Stopped) {
         set_state(Runnable);
-        return ShouldUnblockProcess::Yes;
+        did_continue_stopped_process = true;
     }
 
     auto handler_laddr = action.handler_or_sigaction;
     if (handler_laddr.is_null()) {
-        if (signal == SIGSTOP) {
+        switch (default_signal_action(signal)) {
+        case DefaultSignalAction::Stop:
             set_state(Stopped);
-        } else {
-            // FIXME: Is termination really always the appropriate action?
+            return ShouldUnblockProcess::No;
+        case DefaultSignalAction::Continue:
+            return did_continue_stopped_process ? ShouldUnblockProcess::Yes : ShouldUnblockProcess::No;
+        case DefaultSignalAction::DumpCore:
+        case DefaultSignalAction::Terminate:
             terminate_due_to_signal(signal);
+            return ShouldUnblockProcess::No;
+        case DefaultSignalAction::Ignore:
+            return ShouldUnblockProcess::No;
         }
-        return ShouldUnblockProcess::No;
+        ASSERT_NOT_REACHED();
     }
 
     if (handler_laddr.as_ptr() == SIG_IGN) {
