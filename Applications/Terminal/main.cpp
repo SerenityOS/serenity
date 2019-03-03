@@ -100,7 +100,7 @@ int main(int argc, char** argv)
     auto menubar = make<GMenuBar>();
 
     auto app_menu = make<GMenu>("Terminal");
-    app_menu->add_action(GAction::create("Quit", String(), [] (const GAction&) {
+    app_menu->add_action(GAction::create("Quit", { Mod_Alt, Key_F4 }, [] (const GAction&) {
         dbgprintf("Terminal: Quit menu activated!\n");
         GApplication::the().quit(0);
         return;
