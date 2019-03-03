@@ -20,6 +20,12 @@ GAction::GAction(const String& text, RetainPtr<GraphicsBitmap>&& icon, Function<
 {
 }
 
+GAction::GAction(const String& text, const GShortcut& shortcut, Function<void(const GAction&)> on_activation_callback)
+    : GAction(text, shortcut, nullptr, move(on_activation_callback))
+{
+}
+
+
 GAction::GAction(const String& text, const GShortcut& shortcut, RetainPtr<GraphicsBitmap>&& icon, Function<void(const GAction&)> on_activation_callback)
     : on_activation(move(on_activation_callback))
     , m_text(text)

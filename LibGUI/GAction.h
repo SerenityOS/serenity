@@ -21,6 +21,10 @@ public:
     {
         return adopt(*new GAction(text, move(icon), move(callback)));
     }
+    static Retained<GAction> create(const String& text, const GShortcut& shortcut, Function<void(const GAction&)> callback)
+    {
+        return adopt(*new GAction(text, shortcut, move(callback)));
+    }
     static Retained<GAction> create(const String& text, const GShortcut& shortcut, RetainPtr<GraphicsBitmap>&& icon, Function<void(const GAction&)> callback)
     {
         return adopt(*new GAction(text, shortcut, move(icon), move(callback)));
@@ -38,6 +42,7 @@ public:
 
 private:
     GAction(const String& text, Function<void(const GAction&)> = nullptr);
+    GAction(const String& text, const GShortcut&, Function<void(const GAction&)> = nullptr);
     GAction(const String& text, const GShortcut&, RetainPtr<GraphicsBitmap>&& icon, Function<void(const GAction&)> = nullptr);
     GAction(const String& text, RetainPtr<GraphicsBitmap>&& icon, Function<void(const GAction&)> = nullptr);
     GAction(const String& text, const String& custom_data = String(), Function<void(const GAction&)> = nullptr);
