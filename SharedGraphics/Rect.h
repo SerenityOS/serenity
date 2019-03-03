@@ -196,6 +196,12 @@ public:
     Point bottom_left() const { return { left(), bottom() }; }
     Point bottom_right() const { return { right(), bottom() }; }
 
+    void center_within(const Rect& other)
+    {
+        set_x(other.center().x() - width() / 2);
+        set_y(other.center().y() - height() / 2);
+    }
+
     String to_string() const { return String::format("[%d,%d %dx%d]", x(), y(), width(), height()); }
 
 private:
