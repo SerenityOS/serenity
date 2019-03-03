@@ -10,7 +10,9 @@
 #include <AK/HashMap.h>
 #include "WSMessageReceiver.h"
 #include "WSMenuBar.h"
+#include <WindowServer/WSWindowSwitcher.h>
 #include <WindowServer/WSWindowType.h>
+#include <WindowServer/WSWindow.h>
 #include <AK/CircularQueue.h>
 
 class WSAPIClientRequest;
@@ -20,6 +22,7 @@ class WSMouseEvent;
 class WSClientWantsToPaintMessage;
 class WSWindow;
 class WSClientConnection;
+class WSWindowSwitcher;
 class CharacterBitmap;
 class GraphicsBitmap;
 
@@ -27,6 +30,7 @@ enum class IterationDecision { Continue, Abort };
 enum class ResizeDirection { None, Left, UpLeft, Up, UpRight, Right, DownRight, Down, DownLeft };
 
 class WSWindowManager : public WSMessageReceiver {
+    friend class WSWindowSwitcher;
 public:
     static WSWindowManager& the();
 
@@ -43,11 +47,15 @@ public:
     WSWindow* active_window() { return m_active_window.ptr(); }
     const WSClientConnection* active_client() const;
 
+    WSWindow* highlight_window() { return m_highlight_window.ptr(); }
+    void set_highlight_window(WSWindow*);
+
     void move_to_front(WSWindow&);
 
     void invalidate_cursor();
     void draw_cursor();
     void draw_menubar();
+    void draw_window_switcher();
 
     Rect menubar_rect() const;
     WSMenuBar* current_menubar() { return m_current_menubar.ptr(); }
@@ -107,6 +115,9 @@ private:
     Color m_dragging_window_border_color;
     Color m_dragging_window_border_color2;
     Color m_dragging_window_title_color;
+    Color m_highlight_window_border_color;
+    Color m_highlight_window_border_color2;
+    Color m_highlight_window_title_color;
 
     HashMap<int, OwnPtr<WSWindow>> m_windows_by_id;
     HashTable<WSWindow*> m_windows;
@@ -114,6 +125,7 @@ private:
 
     WeakPtr<WSWindow> m_active_window;
     WeakPtr<WSWindow> m_hovered_window;
+    WeakPtr<WSWindow> m_highlight_window;
 
     WeakPtr<WSWindow> m_drag_window;
     Point m_drag_origin;
@@ -157,5 +169,51 @@ private:
     WeakPtr<WSMenuBar> m_current_menubar;
     WeakPtr<WSMenu> m_current_menu;
 
+    WSWindowSwitcher m_switcher;
+
     CircularQueue<float, 30> m_cpu_history;
 };
+
+template<typename Callback>
+IterationDecision WSWindowManager::for_each_visible_window_of_type_from_back_to_front(WSWindowType type, Callback callback)
+{
+    for (auto* window = m_windows_in_order.head(); window; window = window->next()) {
+        if (!window->is_visible())
+            continue;
+        if (window->type() != type)
+            continue;
+        if (callback(*window) == IterationDecision::Abort)
+            return IterationDecision::Abort;
+    }
+    return IterationDecision::Continue;
+}
+
+template<typename Callback>
+IterationDecision WSWindowManager::for_each_visible_window_from_back_to_front(Callback callback)
+{
+    if (for_each_visible_window_of_type_from_back_to_front(WSWindowType::Normal, callback) == IterationDecision::Abort)
+        return IterationDecision::Abort;
+    return for_each_visible_window_of_type_from_back_to_front(WSWindowType::Menu, callback);
+}
+
+template<typename Callback>
+IterationDecision WSWindowManager::for_each_visible_window_of_type_from_front_to_back(WSWindowType type, Callback callback)
+{
+    for (auto* window = m_windows_in_order.tail(); window; window = window->prev()) {
+        if (!window->is_visible())
+            continue;
+        if (window->type() != type)
+            continue;
+        if (callback(*window) == IterationDecision::Abort)
+            return IterationDecision::Abort;
+    }
+    return IterationDecision::Continue;
+}
+
+template<typename Callback>
+IterationDecision WSWindowManager::for_each_visible_window_from_front_to_back(Callback callback)
+{
+    if (for_each_visible_window_of_type_from_front_to_back(WSWindowType::Menu, callback) == IterationDecision::Abort)
+        return IterationDecision::Abort;
+    return for_each_visible_window_of_type_from_front_to_back(WSWindowType::Normal, callback);
+}

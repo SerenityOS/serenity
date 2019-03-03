@@ -33,6 +33,8 @@ public:
     int width() const { return m_rect.width(); }
     int height() const { return m_rect.height(); }
 
+    bool is_active() const;
+
     bool is_visible() const { return m_visible; }
     void set_visible(bool);
 

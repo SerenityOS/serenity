@@ -17,6 +17,7 @@ WINDOWSERVER_OBJS = \
     WSMenu.o \
     WSMenuItem.o \
     WSClientConnection.o \
+    WSWindowSwitcher.o \
     main.o
 
 APP = WindowServer

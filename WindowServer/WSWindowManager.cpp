@@ -172,6 +172,9 @@ WSWindowManager::WSWindowManager()
     m_dragging_window_border_color = Color(161, 50, 13);
     m_dragging_window_border_color2 = Color(250, 220, 187);
     m_dragging_window_title_color = Color::White;
+    m_highlight_window_border_color = Color::from_rgb(0xa10d0d);
+    m_highlight_window_border_color2 = Color::from_rgb(0xfabbbb);
+    m_highlight_window_title_color = Color::White;
 
     m_cursor_bitmap_inner = CharacterBitmap::create_from_ascii(cursor_bitmap_inner_ascii, 12, 17);
     m_cursor_bitmap_outer = CharacterBitmap::create_from_ascii(cursor_bitmap_outer_ascii, 12, 17);
@@ -402,7 +405,12 @@ void WSWindowManager::paint_window_frame(WSWindow& window)
     Color border_color2;
     Color middle_border_color;
 
-    if (&window == m_drag_window.ptr()) {
+    if (&window == m_highlight_window.ptr()) {
+        border_color = m_highlight_window_border_color;
+        border_color2 = m_highlight_window_border_color2;
+        title_color = m_highlight_window_title_color;
+        middle_border_color = Color::White;
+    } else if (&window == m_drag_window.ptr()) {
         border_color = m_dragging_window_border_color;
         border_color2 = m_dragging_window_border_color2;
         title_color = m_dragging_window_title_color;
@@ -458,6 +466,8 @@ void WSWindowManager::add_window(WSWindow& window)
     m_windows_in_order.append(&window);
     if (!active_window())
         set_active_window(&window);
+    if (m_switcher.is_visible())
+        m_switcher.invalidate();
 }
 
 void WSWindowManager::move_to_front(WSWindow& window)
@@ -478,12 +488,16 @@ void WSWindowManager::remove_window(WSWindow& window)
     m_windows_in_order.remove(&window);
     if (!active_window() && !m_windows.is_empty())
         set_active_window(*m_windows.begin());
+    if (m_switcher.is_visible())
+        m_switcher.invalidate();
 }
 
 void WSWindowManager::notify_title_changed(WSWindow& window)
 {
     printf("[WM] WSWindow{%p} title set to '%s'\n", &window, window.title().characters());
     invalidate(outer_window_rect(window.rect()));
+    if (m_switcher.is_visible())
+        m_switcher.invalidate();
 }
 
 void WSWindowManager::notify_rect_changed(WSWindow& window, const Rect& old_rect, const Rect& new_rect)
@@ -491,6 +505,8 @@ void WSWindowManager::notify_rect_changed(WSWindow& window, const Rect& old_rect
     printf("[WM] WSWindow %p rect changed (%d,%d %dx%d) -> (%d,%d %dx%d)\n", &window, old_rect.x(), old_rect.y(), old_rect.width(), old_rect.height(), new_rect.x(), new_rect.y(), new_rect.width(), new_rect.height());
     invalidate(outer_window_rect(old_rect));
     invalidate(outer_window_rect(new_rect));
+    if (m_switcher.is_visible())
+        m_switcher.invalidate();
 }
 
 void WSWindowManager::handle_menu_mouse_event(WSMenu& menu, WSMouseEvent& event)
@@ -777,50 +793,6 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event, WSWindow*& event_
     });
 }
 
-template<typename Callback>
-IterationDecision WSWindowManager::for_each_visible_window_of_type_from_back_to_front(WSWindowType type, Callback callback)
-{
-    for (auto* window = m_windows_in_order.head(); window; window = window->next()) {
-        if (!window->is_visible())
-            continue;
-        if (window->type() != type)
-            continue;
-        if (callback(*window) == IterationDecision::Abort)
-            return IterationDecision::Abort;
-    }
-    return IterationDecision::Continue;
-}
-
-template<typename Callback>
-IterationDecision WSWindowManager::for_each_visible_window_from_back_to_front(Callback callback)
-{
-    if (for_each_visible_window_of_type_from_back_to_front(WSWindowType::Normal, callback) == IterationDecision::Abort)
-        return IterationDecision::Abort;
-    return for_each_visible_window_of_type_from_back_to_front(WSWindowType::Menu, callback);
-}
-
-template<typename Callback>
-IterationDecision WSWindowManager::for_each_visible_window_of_type_from_front_to_back(WSWindowType type, Callback callback)
-{
-    for (auto* window = m_windows_in_order.tail(); window; window = window->prev()) {
-        if (!window->is_visible())
-            continue;
-        if (window->type() != type)
-            continue;
-        if (callback(*window) == IterationDecision::Abort)
-            return IterationDecision::Abort;
-    }
-    return IterationDecision::Continue;
-}
-
-template<typename Callback>
-IterationDecision WSWindowManager::for_each_visible_window_from_front_to_back(Callback callback)
-{
-    if (for_each_visible_window_of_type_from_front_to_back(WSWindowType::Menu, callback) == IterationDecision::Abort)
-        return IterationDecision::Abort;
-    return for_each_visible_window_of_type_from_front_to_back(WSWindowType::Normal, callback);
-}
-
 void WSWindowManager::compose()
 {
     auto dirty_rects = move(m_dirty_rects);
@@ -866,12 +838,12 @@ void WSWindowManager::compose()
             m_back_painter->blit(dirty_rect.location(), *m_wallpaper, dirty_rect);
     }
 
-    for_each_visible_window_from_back_to_front([&] (WSWindow& window) {
+    auto compose_window = [&] (WSWindow& window) {
         RetainPtr<GraphicsBitmap> backing_store = window.backing_store();
         if (!backing_store)
-            return IterationDecision::Continue;
+            return;
         if (!any_dirty_rect_intersects_window(window))
-            return IterationDecision::Continue;
+            return;
         for (auto& dirty_rect : dirty_rects.rects()) {
             m_back_painter->set_clip_rect(dirty_rect);
             paint_window_frame(window);
@@ -891,10 +863,19 @@ void WSWindowManager::compose()
             m_back_painter->clear_clip_rect();
         }
         m_back_painter->clear_clip_rect();
+    };
+
+    for_each_visible_window_from_back_to_front([&] (WSWindow& window) {
+        if (&window != m_highlight_window.ptr())
+            compose_window(window);
         return IterationDecision::Continue;
     });
 
+    if (m_highlight_window)
+        compose_window(*m_highlight_window);
+
     draw_menubar();
+    draw_window_switcher();
     draw_cursor();
 
     if (m_flash_flush) {
@@ -964,6 +945,12 @@ void WSWindowManager::draw_menubar()
     }
 }
 
+void WSWindowManager::draw_window_switcher()
+{
+    if (m_switcher.is_visible())
+        m_switcher.draw(*m_back_painter);
+}
+
 void WSWindowManager::draw_cursor()
 {
     auto cursor_location = m_screen.cursor_location();
@@ -987,8 +974,15 @@ void WSWindowManager::on_message(WSMessage& message)
     }
 
     if (message.is_key_event()) {
-        // FIXME: This is a good place to hook key events globally. :)
-        m_keyboard_modifiers = static_cast<WSKeyEvent&>(message).modifiers();
+        auto& key_event = static_cast<WSKeyEvent&>(message);
+        m_keyboard_modifiers = key_event.modifiers();
+
+        if (key_event.type() == WSMessage::KeyDown && key_event.modifiers() == Mod_Logo && key_event.key() == Key_Tab)
+            m_switcher.show();
+        if (m_switcher.is_visible()) {
+            m_switcher.on_key_event(key_event);
+            return;
+        }
         if (m_active_window)
             return m_active_window->on_message(message);
         return;
@@ -999,6 +993,17 @@ void WSWindowManager::on_message(WSMessage& message)
         compose();
         return;
     }
+}
+
+void WSWindowManager::set_highlight_window(WSWindow* window)
+{
+    if (window == m_highlight_window.ptr())
+        return;
+    if (auto* previous_highlight_window = m_highlight_window.ptr())
+        invalidate(*previous_highlight_window);
+    m_highlight_window = window ? window->make_weak_ptr() : nullptr;
+    if (m_highlight_window)
+        invalidate(*m_highlight_window);
 }
 
 void WSWindowManager::set_active_window(WSWindow* window)

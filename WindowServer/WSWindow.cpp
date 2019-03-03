@@ -148,3 +148,8 @@ void WSWindow::invalidate()
 {
     WSWindowManager::the().invalidate(*this);
 }
+
+bool WSWindow::is_active() const
+{
+    return WSWindowManager::the().active_window() == this;
+}
