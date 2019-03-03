@@ -41,9 +41,6 @@ public:
 
     pid_t server_pid() const { return m_server_pid; }
 
-    static void register_action_with_shortcut(Badge<GAction>, GAction&);
-    static void unregister_action_with_shortcut(Badge<GAction>, GAction&);
-
 private:
     void wait_for_event();
     bool drain_messages_from_server();

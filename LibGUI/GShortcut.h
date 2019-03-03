@@ -7,14 +7,14 @@
 class GShortcut {
 public:
     GShortcut() { }
-    GShortcut(unsigned modifiers, KeyCode key)
+    GShortcut(byte modifiers, KeyCode key)
         : m_modifiers(modifiers)
         , m_key(key)
     {
     }
 
     bool is_valid() const { return m_key != KeyCode::Key_Invalid; }
-    unsigned modifiers() const { return m_modifiers; }
+    byte modifiers() const { return m_modifiers; }
     KeyCode key() const { return m_key; }
     String to_string() const;
 
@@ -25,7 +25,7 @@ public:
     }
 
 private:
-    unsigned m_modifiers { 0 };
+    byte m_modifiers { 0 };
     KeyCode m_key { KeyCode::Key_Invalid };
 };
 

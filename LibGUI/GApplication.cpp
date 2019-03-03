@@ -1,6 +1,7 @@
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GEventLoop.h>
 #include <LibGUI/GMenuBar.h>
+#include <LibGUI/GAction.h>
 
 static GApplication* s_the;
 
@@ -42,3 +43,20 @@ void GApplication::set_menubar(OwnPtr<GMenuBar>&& menubar)
         m_menubar->notify_added_to_application(Badge<GApplication>());
 }
 
+void GApplication::register_shortcut_action(Badge<GAction>, GAction& action)
+{
+    m_shortcut_actions.set(action.shortcut(), &action);
+}
+
+void GApplication::unregister_shortcut_action(Badge<GAction>, GAction& action)
+{
+    m_shortcut_actions.remove(action.shortcut());
+}
+
+GAction* GApplication::action_for_key_event(const GKeyEvent& event)
+{
+    auto it = m_shortcut_actions.find(GShortcut(event.modifiers(), (KeyCode)event.key()));
+    if (it == m_shortcut_actions.end())
+        return nullptr;
+    return (*it).value;
+}

@@ -4,6 +4,7 @@
 #include <SharedGraphics/Rect.h>
 #include <AK/AKString.h>
 #include <AK/Types.h>
+#include <Kernel/KeyCode.h>
 
 class GEvent {
 public:
@@ -112,24 +113,24 @@ enum GMouseButton : byte {
 
 class GKeyEvent final : public GEvent {
 public:
-    GKeyEvent(Type type, int key)
+    GKeyEvent(Type type, int key, byte modifiers)
         : GEvent(type)
         , m_key(key)
+        , m_modifiers(modifiers)
     {
     }
 
     int key() const { return m_key; }
-    bool ctrl() const { return m_ctrl; }
-    bool alt() const { return m_alt; }
-    bool shift() const { return m_shift; }
+    bool ctrl() const { return m_modifiers & Mod_Ctrl; }
+    bool alt() const { return m_modifiers & Mod_Alt; }
+    bool shift() const { return m_modifiers & Mod_Shift; }
+    byte modifiers() const { return m_modifiers; }
     String text() const { return m_text; }
 
 private:
     friend class GEventLoop;
     int m_key { 0 };
-    bool m_ctrl { false };
-    bool m_alt { false };
-    bool m_shift { false };
+    byte m_modifiers { 0 };
     String m_text;
 };
 

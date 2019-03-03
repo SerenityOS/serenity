@@ -98,17 +98,13 @@ void WSWindow::on_message(WSMessage& message)
         server_message.type = WSAPI_ServerMessage::Type::KeyDown;
         server_message.key.character = static_cast<WSKeyEvent&>(message).character();
         server_message.key.key = static_cast<WSKeyEvent&>(message).key();
-        server_message.key.alt = static_cast<WSKeyEvent&>(message).alt();
-        server_message.key.ctrl = static_cast<WSKeyEvent&>(message).ctrl();
-        server_message.key.shift = static_cast<WSKeyEvent&>(message).shift();
+        server_message.key.modifiers = static_cast<WSKeyEvent&>(message).modifiers();
         break;
     case WSMessage::KeyUp:
         server_message.type = WSAPI_ServerMessage::Type::KeyUp;
         server_message.key.character = static_cast<WSKeyEvent&>(message).character();
         server_message.key.key = static_cast<WSKeyEvent&>(message).key();
-        server_message.key.alt = static_cast<WSKeyEvent&>(message).alt();
-        server_message.key.ctrl = static_cast<WSKeyEvent&>(message).ctrl();
-        server_message.key.shift = static_cast<WSKeyEvent&>(message).shift();
+        server_message.key.modifiers = static_cast<WSKeyEvent&>(message).modifiers();
         break;
     case WSMessage::WindowActivated:
         server_message.type = WSAPI_ServerMessage::Type::WindowActivated;

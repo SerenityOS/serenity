@@ -4,6 +4,7 @@
 #include <SharedGraphics/Rect.h>
 #include <AK/AKString.h>
 #include <AK/Types.h>
+#include <Kernel/KeyCode.h>
 
 class WSMessage {
 public:
@@ -450,27 +451,27 @@ enum class MouseButton : byte {
 
 class WSKeyEvent final : public WSMessage {
 public:
-    WSKeyEvent(Type type, int key, char character)
+    WSKeyEvent(Type type, int key, char character, byte modifiers)
         : WSMessage(type)
         , m_key(key)
         , m_character(character)
+        , m_modifiers(modifiers)
     {
     }
 
     int key() const { return m_key; }
-    bool ctrl() const { return m_ctrl; }
-    bool alt() const { return m_alt; }
-    bool shift() const { return m_shift; }
+    bool ctrl() const { return m_modifiers & Mod_Ctrl; }
+    bool alt() const { return m_modifiers & Mod_Alt; }
+    bool shift() const { return m_modifiers & Mod_Shift; }
+    byte modifiers() const { return m_modifiers; }
     char character() const { return m_character; }
 
 private:
     friend class WSMessageLoop;
     friend class WSScreen;
     int m_key { 0 };
-    bool m_ctrl { false };
-    bool m_alt { false };
-    bool m_shift { false };
     char m_character { 0 };
+    byte m_modifiers { 0 };
 };
 
 class WSMouseEvent final : public WSMessage {
