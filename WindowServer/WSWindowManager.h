@@ -150,6 +150,8 @@ private:
     bool m_flash_flush { false };
     bool m_buffers_are_flipped { false };
 
+    byte m_keyboard_modifiers { 0 };
+
     OwnPtr<WSMenu> m_system_menu;
     Color m_menu_selection_color;
     WeakPtr<WSMenuBar> m_current_menubar;

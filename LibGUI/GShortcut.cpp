@@ -124,6 +124,8 @@ String GShortcut::to_string() const
         parts.append("Shift");
     if (m_modifiers & Mod_Alt)
         parts.append("Alt");
+    if (m_modifiers & Mod_Logo)
+        parts.append("Logo");
 
     parts.append(::to_string(m_key));
 
