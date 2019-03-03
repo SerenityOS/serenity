@@ -19,7 +19,7 @@
 
 static char map[0x80] =
 {
-    0, '\033', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 0x08, 0,
+    0, '\033', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 0x08, '\t',
     'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']', '\n', 0,
     'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', '\'', '`', 0, '\\',
     'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/',
@@ -28,7 +28,7 @@ static char map[0x80] =
 
 static char shift_map[0x80] =
 {
-    0, '\033', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+', 0x08, 0,
+    0, '\033', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+', 0x08, '\t',
     'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '{', '}', '\n', 0,
     'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ':', '"', '~', 0, '|',
     'Z', 'X', 'C', 'V', 'B', 'N', 'M', '<', '>', '?',
@@ -39,7 +39,7 @@ static KeyCode unshifted_key_map[0x80] =
 {
     Key_Invalid, Key_Escape,
     Key_1, Key_2, Key_3, Key_4, Key_5, Key_6, Key_7, Key_8, Key_9, Key_0, Key_Minus, Key_Equal, Key_Backspace,
-    Key_Invalid, //15
+    Key_Tab, //15
     Key_Q, Key_W, Key_E, Key_R, Key_T, Key_Y, Key_U, Key_I, Key_O, Key_P, Key_LeftBracket, Key_RightBracket,
     Key_Return, // 28
     Key_Control, // 29
@@ -81,7 +81,7 @@ static KeyCode shifted_key_map[0x100] =
 {
     Key_Invalid, Key_Escape,
     Key_ExclamationPoint, Key_AtSign, Key_Hashtag, Key_Dollar, Key_Percent, Key_Circumflex, Key_Ampersand, Key_Asterisk, Key_LeftParen, Key_RightParen, Key_Underscore, Key_Plus, Key_Backspace,
-    Key_Invalid,
+    Key_Tab,
     Key_Q, Key_W, Key_E, Key_R, Key_T, Key_Y, Key_U, Key_I, Key_O, Key_P, Key_LeftBrace, Key_RightBrace,
     Key_Return,
     Key_Control,
