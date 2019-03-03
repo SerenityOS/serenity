@@ -76,9 +76,9 @@ private:
     void process_mouse_event(WSMouseEvent&, WSWindow*& event_window);
     void handle_menu_mouse_event(WSMenu&, WSMouseEvent&);
     void handle_menubar_mouse_event(WSMouseEvent&);
-    void handle_titlebar_mouse_event(WSWindow&, WSMouseEvent&);
     void handle_close_button_mouse_event(WSWindow&, WSMouseEvent&);
     void start_window_resize(WSWindow&, WSMouseEvent&);
+    void start_window_drag(WSWindow&, WSMouseEvent&);
     void handle_client_request(WSAPIClientRequest&);
     void set_active_window(WSWindow*);
     void set_hovered_window(WSWindow*);
