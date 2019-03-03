@@ -535,20 +535,6 @@ void WSWindowManager::handle_menubar_mouse_event(WSMouseEvent& event)
     });
 }
 
-void WSWindowManager::handle_titlebar_mouse_event(WSWindow& window, WSMouseEvent& event)
-{
-    if (event.type() == WSMessage::MouseDown && event.button() == MouseButton::Left) {
-#ifdef DRAG_DEBUG
-        printf("[WM] Begin dragging WSWindow{%p}\n", &window);
-#endif
-        m_drag_window = window.make_weak_ptr();;
-        m_drag_origin = event.position();
-        m_drag_window_origin = window.position();
-        invalidate(window);
-        return;
-    }
-}
-
 void WSWindowManager::handle_close_button_mouse_event(WSWindow& window, WSMouseEvent& event)
 {
     if (event.type() == WSMessage::MouseDown && event.button() == MouseButton::Left) {
@@ -556,6 +542,17 @@ void WSWindowManager::handle_close_button_mouse_event(WSWindow& window, WSMouseE
         window.on_message(message);
         return;
     }
+}
+
+void WSWindowManager::start_window_drag(WSWindow& window, WSMouseEvent& event)
+{
+#ifdef DRAG_DEBUG
+    printf("[WM] Begin dragging WSWindow{%p}\n", &window);
+#endif
+    m_drag_window = window.make_weak_ptr();;
+    m_drag_origin = event.position();
+    m_drag_window_origin = window.position();
+    invalidate(window);
 }
 
 void WSWindowManager::start_window_resize(WSWindow& window, WSMouseEvent& event)
@@ -738,6 +735,16 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event, WSWindow*& event_
     }
 
     for_each_visible_window_from_front_to_back([&] (WSWindow& window) {
+        if (window.type() != WSWindowType::Menu && outer_window_rect(window.rect()).contains(event.position())) {
+            if (m_keyboard_modifiers == Mod_Logo && event.type() == WSMessage::MouseDown && event.button() == MouseButton::Left) {
+                start_window_drag(window, event);
+                return IterationDecision::Abort;
+            }
+            if (m_keyboard_modifiers == Mod_Logo && event.type() == WSMessage::MouseDown && event.button() == MouseButton::Right) {
+                start_window_resize(window, event);
+                return IterationDecision::Abort;
+            }
+        }
         if (window.type() != WSWindowType::Menu && title_bar_rect(window.rect()).contains(event.position())) {
             if (event.type() == WSMessage::MouseDown) {
                 move_to_front(window);
@@ -747,7 +754,8 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event, WSWindow*& event_
                 handle_close_button_mouse_event(window, event);
                 return IterationDecision::Abort;
             }
-            handle_titlebar_mouse_event(window, event);
+            if (event.type() == WSMessage::MouseDown)
+                start_window_drag(window, event);
             return IterationDecision::Abort;
         }
 
@@ -755,10 +763,6 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event, WSWindow*& event_
             if (window.type() != WSWindowType::Menu && event.type() == WSMessage::MouseDown) {
                 move_to_front(window);
                 set_active_window(&window);
-            }
-            if (m_keyboard_modifiers == Mod_Logo && event.type() == WSMessage::MouseDown && event.button() == MouseButton::Right) {
-                start_window_resize(window, event);
-                return IterationDecision::Abort;
             }
             event_window = &window;
             if (!window.global_cursor_tracking()) {
