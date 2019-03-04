@@ -11,7 +11,7 @@ GToolBar::GToolBar(GWidget* parent)
     set_preferred_size({ 0, 30 });
     set_layout(make<GBoxLayout>(Orientation::Horizontal));
     layout()->set_spacing(0);
-    layout()->set_margins({ 2, 2, 2, 2 });
+    layout()->set_margins({ 3, 3, 3, 3 });
 }
 
 GToolBar::~GToolBar()
@@ -36,7 +36,7 @@ void GToolBar::add_action(Retained<GAction>&& action)
 
     button->set_button_style(GButtonStyle::CoolBar);
     button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
-    button->set_preferred_size({ 26, 26 });
+    button->set_preferred_size({ 24, 24 });
 
     m_items.append(move(item));
 }
@@ -52,7 +52,5 @@ void GToolBar::paint_event(GPaintEvent& event)
 {
     Painter painter(*this);
     painter.set_clip_rect(event.rect());
-    painter.fill_rect({ 0, 0, width(), height() - 1 }, Color::LightGray);
-    painter.draw_line({ 0, 0 }, { width() - 1, 0 }, Color::White);
-    painter.draw_line({ 0, rect().bottom() }, { width() - 1, rect().bottom() }, Color::DarkGray);
+    GStyle::the().paint_surface(painter, rect());
 }
