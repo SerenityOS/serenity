@@ -155,13 +155,17 @@ void GTableView::paint_event(GPaintEvent& event)
     for (int column_index = 0; column_index < m_model->column_count(); ++column_index) {
         auto column_metadata = m_model->column_metadata(column_index);
         int column_width = column_metadata.preferred_width;
-        Rect cell_rect(x_offset, 0, column_width + horizontal_padding() * 2, item_height());
+        Rect cell_rect(x_offset, 0, column_width + horizontal_padding() * 2, header_height());
         painter.set_font(Font::default_bold_font());
         painter.draw_text(cell_rect.translated(horizontal_padding(), 0), m_model->column_name(column_index), TextAlignment::CenterLeft, Color::Black);
         x_offset += column_width + horizontal_padding() * 2;
+        // Draw column separator.
         painter.draw_line(cell_rect.top_left(), cell_rect.bottom_left(), Color::White);
         painter.draw_line(cell_rect.top_right(), cell_rect.bottom_right(), Color::DarkGray);
     }
+    // Draw the "start" of a new column to make the last separator look right.
+    painter.draw_line({ x_offset, 0 }, { x_offset, header_height() - 1 }, Color::White);
+
     painter.draw_line({ 0, 0 }, { exposed_width - 1, 0 }, Color::White);
     painter.draw_line({ 0, header_height() - 1 }, { exposed_width - 1, header_height() - 1 }, Color::DarkGray);
 
