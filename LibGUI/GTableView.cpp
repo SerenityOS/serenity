@@ -122,7 +122,7 @@ void GTableView::paint_event(GPaintEvent& event)
         Color background_color;
         Color text_color;
         if (row_index == m_model->selected_index().row()) {
-            background_color = Color::from_rgb(0x84351a);
+            background_color = is_focused() ? Color::from_rgb(0x84351a) : Color::from_rgb(0x606060);
             text_color = Color::White;
         } else {
             background_color = painted_item_index % 2 ? Color(210, 210, 210) : Color::White;
