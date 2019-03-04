@@ -868,11 +868,8 @@ ShouldUnblockProcess Process::dispatch_signal(byte signal)
         return ShouldUnblockProcess::No;
     }
 
-    bool did_continue_stopped_process = false;
-    if (signal == SIGCONT && state() == Stopped) {
+    if (signal == SIGCONT && state() == Stopped)
         set_state(Runnable);
-        did_continue_stopped_process = true;
-    }
 
     auto handler_laddr = action.handler_or_sigaction;
     if (handler_laddr.is_null()) {
@@ -880,14 +877,14 @@ ShouldUnblockProcess Process::dispatch_signal(byte signal)
         case DefaultSignalAction::Stop:
             set_state(Stopped);
             return ShouldUnblockProcess::No;
-        case DefaultSignalAction::Continue:
-            return did_continue_stopped_process ? ShouldUnblockProcess::Yes : ShouldUnblockProcess::No;
         case DefaultSignalAction::DumpCore:
         case DefaultSignalAction::Terminate:
             terminate_due_to_signal(signal);
             return ShouldUnblockProcess::No;
         case DefaultSignalAction::Ignore:
             return ShouldUnblockProcess::No;
+        case DefaultSignalAction::Continue:
+            return ShouldUnblockProcess::Yes;
         }
         ASSERT_NOT_REACHED();
     }
