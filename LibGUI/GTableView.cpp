@@ -87,6 +87,11 @@ Rect GTableView::row_rect(int item_index) const
 
 void GTableView::mousedown_event(GMouseEvent& event)
 {
+    if (event.y() < header_height()) {
+        // FIXME: Do something when clicking on a header.
+        return;
+    }
+
     auto adjusted_position = event.position().translated(0, m_vertical_scrollbar->value());
     if (event.button() == GMouseButton::Left) {
         for (int i = 0; i < item_count(); ++i) {
