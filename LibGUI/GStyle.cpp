@@ -51,3 +51,12 @@ void GStyle::paint_button(Painter& painter, const Rect& rect, GButtonStyle butto
 
     painter.translate(-rect.location().x(), -rect.location().y());
 }
+
+void GStyle::paint_surface(Painter& painter, const Rect& rect)
+{
+    painter.fill_rect({ rect.x(), rect.y() + 1, rect.width(), rect.height() - 2 }, Color::LightGray);
+    painter.draw_line(rect.top_left(), rect.top_right(), Color::White);
+    painter.draw_line(rect.bottom_left(), rect.bottom_right(), Color::DarkGray);
+    painter.draw_line(rect.top_left().translated(0, 1), rect.bottom_left().translated(0, -1), Color::White);
+    painter.draw_line(rect.top_right(), rect.bottom_right().translated(0, -1), Color::DarkGray);
+}
