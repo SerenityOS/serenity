@@ -578,11 +578,12 @@ void WSWindowManager::start_window_resize(WSWindow& window, WSMouseEvent& event)
         { ResizeDirection::Left, ResizeDirection::None, ResizeDirection::Right },
         { ResizeDirection::DownLeft, ResizeDirection::Down, ResizeDirection::DownRight },
     };
-    Rect window_rect = window.rect();
-    int window_relative_x = event.x() - window_rect.x();
-    int window_relative_y = event.y() - window_rect.y();
-    int hot_area_row = window_relative_y / (window_rect.height() / 3);
-    int hot_area_column = window_relative_x / (window_rect.width() / 3);
+    Rect outer_rect = outer_window_rect(window.rect());
+    ASSERT(outer_rect.contains(event.position()));
+    int window_relative_x = event.x() - outer_rect.x();
+    int window_relative_y = event.y() - outer_rect.y();
+    int hot_area_row = window_relative_y / (outer_rect.height() / 3);
+    int hot_area_column = window_relative_x / (outer_rect.width() / 3);
     ASSERT(hot_area_row >= 0 && hot_area_row <= 2);
     ASSERT(hot_area_column >= 0 && hot_area_column <= 2);
     m_resize_direction = direction_for_hot_area[hot_area_row][hot_area_column];
