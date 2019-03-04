@@ -445,7 +445,7 @@ void Painter::draw_focus_rect(const Rect& rect)
     focus_rect.move_by(1, 1);
     focus_rect.set_width(focus_rect.width() - 2);
     focus_rect.set_height(focus_rect.height() - 2);
-    draw_rect(focus_rect, Color(96, 96, 192));
+    draw_rect(focus_rect, Color::from_rgb(0x84351a));
 }
 
 void Painter::set_clip_rect(const Rect& rect)
