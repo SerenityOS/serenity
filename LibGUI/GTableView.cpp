@@ -163,6 +163,16 @@ void GTableView::paint_event(GPaintEvent& event)
     // Then untranslate and fill in the scroll corner. This is pretty messy, tbh.
     painter.translate(m_horizontal_scrollbar->value(), 0);
     painter.fill_rect({ m_horizontal_scrollbar->relative_rect().top_right().translated(1, 0), { m_vertical_scrollbar->preferred_size().width(), m_horizontal_scrollbar->preferred_size().height() } }, Color::LightGray);
+
+    if (is_focused()) {
+        Rect item_area_rect {
+            0,
+            header_height(),
+            width() - m_vertical_scrollbar->width(),
+            height() - header_height() - m_horizontal_scrollbar->height()
+        };
+        painter.draw_rect(item_area_rect, Color::from_rgb(0x84351a));
+    };
 }
 
 int GTableView::item_count() const
