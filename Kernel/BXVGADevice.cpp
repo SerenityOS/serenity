@@ -61,8 +61,6 @@ void BXVGADevice::set_resolution(int width, int height)
     set_register(VBE_DISPI_INDEX_BPP, 32);
     set_register(VBE_DISPI_INDEX_ENABLE, VBE_DISPI_ENABLED | VBE_DISPI_LFB_ENABLED);
     set_register(VBE_DISPI_INDEX_BANK, 0);
-
-    m_framebuffer_size = { width, height };
 }
 
 void BXVGADevice::set_y_offset(int offset)

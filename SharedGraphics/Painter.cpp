@@ -75,6 +75,8 @@ void Painter::fill_rect(const Rect& a_rect, Color color)
     if (rect.is_empty())
         return;
 
+    ASSERT(m_target->rect().contains(rect));
+
     RGBA32* dst = m_target->scanline(rect.top()) + rect.left();
     const unsigned dst_skip = m_target->width();
 
