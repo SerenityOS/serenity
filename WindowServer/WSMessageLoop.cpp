@@ -199,38 +199,29 @@ void WSMessageLoop::wait_for_message()
 void WSMessageLoop::drain_mouse()
 {
     auto& screen = WSScreen::the();
-    bool prev_left_button = screen.left_mouse_button_pressed();
-    bool prev_right_button = screen.right_mouse_button_pressed();
-    bool prev_middle_button = screen.middle_mouse_button_pressed();
+    unsigned prev_buttons = screen.mouse_button_state();
     int dx = 0;
     int dy = 0;
-    bool left_button = prev_left_button;
-    bool right_button = prev_right_button;
-    bool middle_button = prev_middle_button;
+    unsigned buttons = prev_buttons;
     for (;;) {
         MousePacket packet;
         ssize_t nread = read(m_mouse_fd, &packet, sizeof(MousePacket));
         if (nread == 0)
             break;
         ASSERT(nread == sizeof(packet));
-        left_button = packet.buttons & 1;
-        right_button = packet.buttons & 2;
-        middle_button = packet.buttons & 4;
+        buttons = packet.buttons;
 
         dx += packet.dx;
         dy += -packet.dy;
-        if (left_button != prev_left_button || right_button != prev_right_button || middle_button != prev_middle_button) {
-            prev_left_button = left_button;
-            prev_right_button = right_button;
-            prev_middle_button = middle_button;
-            screen.on_receive_mouse_data(dx, dy, left_button, right_button, middle_button);
+        if (buttons != prev_buttons) {
+            screen.on_receive_mouse_data(dx, dy, buttons);
             dx = 0;
             dy = 0;
+            prev_buttons = buttons;
         }
     }
-    if (dx || dy) {
-        screen.on_receive_mouse_data(dx, dy, left_button, right_button, middle_button);
-    }
+    if (dx || dy)
+        screen.on_receive_mouse_data(dx, dy, buttons);
 }
 
 void WSMessageLoop::drain_keyboard()
