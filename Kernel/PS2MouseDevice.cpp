@@ -62,12 +62,33 @@ void PS2MouseDevice::handle_irq()
                 m_queue.size()
             );
 #endif
-            m_queue.enqueue(m_data[0]);
-            m_queue.enqueue(m_data[1]);
-            m_queue.enqueue(m_data[2]);
+            parse_data_packet();
             break;
         }
     }
+}
+
+void PS2MouseDevice::parse_data_packet()
+{
+    int x = m_data[1];
+    int y = m_data[2];
+    bool x_overflow = m_data[0] & 0x40;
+    bool y_overflow = m_data[0] & 0x80;
+    bool x_sign = m_data[0] & 0x10;
+    bool y_sign = m_data[0] & 0x20;
+    if (x && x_sign)
+        x -= 0x100;
+    if (y && y_sign)
+        y -= 0x100;
+    if (x_overflow || y_overflow) {
+        x = 0;
+        y = 0;
+    }
+    MousePacket packet;
+    packet.dx = x;
+    packet.dy = y;
+    packet.buttons = m_data[0] & 0x07;
+    m_queue.enqueue(packet);
 }
 
 void PS2MouseDevice::wait_then_write(byte port, byte data)
@@ -150,8 +171,12 @@ ssize_t PS2MouseDevice::read(Process&, byte* buffer, ssize_t size)
     while (nread < size) {
         if (m_queue.is_empty())
             break;
-        // FIXME: Don't return partial data frames.
-        buffer[nread++] = m_queue.dequeue();
+        // Don't return partial data frames.
+        if ((size - nread) < (ssize_t)sizeof(MousePacket))
+            break;
+        auto packet = m_queue.dequeue();
+        memcpy(buffer, &packet, sizeof(MousePacket));
+        nread += sizeof(MousePacket);
     }
     return nread;
 }

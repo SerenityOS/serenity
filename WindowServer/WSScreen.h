@@ -26,8 +26,9 @@ public:
     Point cursor_location() const { return m_cursor_location; }
     bool left_mouse_button_pressed() const { return m_left_mouse_button_pressed; }
     bool right_mouse_button_pressed() const { return m_right_mouse_button_pressed; }
+    bool middle_mouse_button_pressed() const { return m_middle_mouse_button_pressed; }
 
-    void on_receive_mouse_data(int dx, int dy, bool left_button, bool right_button);
+    void on_receive_mouse_data(int dx, int dy, bool left_button, bool right_button, bool middle_button);
     void on_receive_keyboard_data(KeyEvent);
 
 private:
@@ -40,6 +41,7 @@ private:
     Point m_cursor_location;
     bool m_left_mouse_button_pressed { false };
     bool m_right_mouse_button_pressed { false };
+    bool m_middle_mouse_button_pressed { false };
 };
 
 inline RGBA32* WSScreen::scanline(int y)

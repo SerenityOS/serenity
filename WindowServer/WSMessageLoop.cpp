@@ -6,6 +6,7 @@
 #include <WindowServer/WSClientConnection.h>
 #include <WindowServer/WSAPITypes.h>
 #include <Kernel/KeyCode.h>
+#include <Kernel/MousePacket.h>
 #include <LibC/sys/socket.h>
 #include <LibC/sys/select.h>
 #include <LibC/unistd.h>
@@ -200,45 +201,35 @@ void WSMessageLoop::drain_mouse()
     auto& screen = WSScreen::the();
     bool prev_left_button = screen.left_mouse_button_pressed();
     bool prev_right_button = screen.right_mouse_button_pressed();
+    bool prev_middle_button = screen.middle_mouse_button_pressed();
     int dx = 0;
     int dy = 0;
     bool left_button = prev_left_button;
     bool right_button = prev_right_button;
+    bool middle_button = prev_middle_button;
     for (;;) {
-        byte data[3];
-        ssize_t nread = read(m_mouse_fd, data, sizeof(data));
+        MousePacket packet;
+        ssize_t nread = read(m_mouse_fd, &packet, sizeof(MousePacket));
         if (nread == 0)
             break;
-        ASSERT(nread == sizeof(data));
-        bool left_button = data[0] & 1;
-        bool right_button = data[0] & 2;
-        bool x_overflow = data[0] & 0x40;
-        bool y_overflow = data[0] & 0x80;
-        bool x_sign = data[0] & 0x10;
-        bool y_sign = data[0] & 0x20;
+        ASSERT(nread == sizeof(packet));
+        left_button = packet.buttons & 1;
+        right_button = packet.buttons & 2;
+        middle_button = packet.buttons & 4;
 
-        if (x_overflow || y_overflow)
-            continue;
-
-        int x = data[1];
-        int y = data[2];
-        if (x && x_sign)
-            x -= 0x100;
-        if (y && y_sign)
-            y -= 0x100;
-
-        dx += x;
-        dy += -y;
-        if (left_button != prev_left_button || right_button != prev_right_button) {
+        dx += packet.dx;
+        dy += -packet.dy;
+        if (left_button != prev_left_button || right_button != prev_right_button || middle_button != prev_middle_button) {
             prev_left_button = left_button;
             prev_right_button = right_button;
-            screen.on_receive_mouse_data(dx, dy, left_button, right_button);
+            prev_middle_button = middle_button;
+            screen.on_receive_mouse_data(dx, dy, left_button, right_button, middle_button);
             dx = 0;
             dy = 0;
         }
     }
     if (dx || dy) {
-        screen.on_receive_mouse_data(dx, dy, left_button, right_button);
+        screen.on_receive_mouse_data(dx, dy, left_button, right_button, middle_button);
     }
 }
 
