@@ -374,7 +374,7 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
     m_signal_stack_user_region = nullptr;
     m_display_framebuffer_region = nullptr;
     set_default_signal_dispositions();
-    m_signal_mask = 0xffffffff;
+    m_signal_mask = 0;
     m_pending_signals = 0;
 
     for (int i = 0; i < m_fds.size(); ++i) {
@@ -778,13 +778,13 @@ void Process::send_signal(byte signal, Process* sender)
 
 bool Process::has_unmasked_pending_signals() const
 {
-    return m_pending_signals & m_signal_mask;
+    return m_pending_signals & ~m_signal_mask;
 }
 
 ShouldUnblockProcess Process::dispatch_one_pending_signal()
 {
     ASSERT_INTERRUPTS_DISABLED();
-    dword signal_candidates = m_pending_signals & m_signal_mask;
+    dword signal_candidates = m_pending_signals & ~m_signal_mask;
     ASSERT(signal_candidates);
 
     byte signal = 0;
@@ -854,7 +854,9 @@ ShouldUnblockProcess Process::dispatch_signal(byte signal)
     ASSERT_INTERRUPTS_DISABLED();
     ASSERT(signal < 32);
 
-    dbgprintf("dispatch_signal %s(%u) <- %u\n", name().characters(), pid(), signal);
+#ifdef SIGNAL_DEBUG
+    kprintf("dispatch_signal %s(%u) <- %u\n", name().characters(), pid(), signal);
+#endif
 
     auto& action = m_signal_action_data[signal];
     // FIXME: Implement SA_SIGINFO signal handlers.
@@ -890,9 +892,20 @@ ShouldUnblockProcess Process::dispatch_signal(byte signal)
     }
 
     if (handler_laddr.as_ptr() == SIG_IGN) {
-        dbgprintf("%s(%u) ignored signal %u\n", name().characters(), pid(), signal);
+#ifdef SIGNAL_DEBUG
+        kprintf("%s(%u) ignored signal %u\n", name().characters(), pid(), signal);
+#endif
         return ShouldUnblockProcess::Yes;
     }
+
+    dword old_signal_mask = m_signal_mask;
+    dword new_signal_mask = action.mask;
+    if (action.flags & SA_NODEFER)
+        new_signal_mask &= ~(1 << signal);
+    else
+        new_signal_mask |= 1 << signal;
+
+    m_signal_mask |= new_signal_mask;
 
     Scheduler::prepare_to_modify_tss(*this);
 
@@ -902,11 +915,13 @@ ShouldUnblockProcess Process::dispatch_signal(byte signal)
 
     bool interrupting_in_kernel = (ret_cs & 3) == 0;
     if (interrupting_in_kernel) {
-        dbgprintf("dispatch_signal to %s(%u) in state=%s with return to %w:%x\n", name().characters(), pid(), to_string(state()), ret_cs, ret_eip);
+#ifdef SIGNAL_DEBUG
+        kprintf("dispatch_signal to %s(%u) in state=%s with return to %w:%x\n", name().characters(), pid(), to_string(state()), ret_cs, ret_eip);
+#endif
         ASSERT(is_blocked());
         m_tss_to_resume_kernel = m_tss;
 #ifdef SIGNAL_DEBUG
-        dbgprintf("resume tss pc: %w:%x\n", m_tss_to_resume_kernel.cs, m_tss_to_resume_kernel.eip);
+        kprintf("resume tss pc: %w:%x\n", m_tss_to_resume_kernel.cs, m_tss_to_resume_kernel.eip);
 #endif
     }
 
@@ -917,33 +932,31 @@ ShouldUnblockProcess Process::dispatch_signal(byte signal)
             m_signal_stack_user_region = allocate_region(LinearAddress(), default_userspace_stack_size, "signal stack (user)");
             ASSERT(m_signal_stack_user_region);
             m_signal_stack_kernel_region = allocate_region(LinearAddress(), default_userspace_stack_size, "signal stack (kernel)");
-            ASSERT(m_signal_stack_user_region);
+            ASSERT(m_signal_stack_kernel_region);
         }
         m_tss.ss = 0x23;
-        m_tss.esp = m_signal_stack_user_region->laddr().offset(default_userspace_stack_size).get() & 0xfffffff8;
+        m_tss.esp = m_signal_stack_user_region->laddr().offset(default_userspace_stack_size).get();
         m_tss.ss0 = 0x10;
-        m_tss.esp0 = m_signal_stack_kernel_region->laddr().offset(default_userspace_stack_size).get() & 0xfffffff8;
-        push_value_on_stack(ret_eflags);
-        push_value_on_stack(ret_cs);
-        push_value_on_stack(ret_eip);
+        m_tss.esp0 = m_signal_stack_kernel_region->laddr().offset(default_userspace_stack_size).get();
     } else {
-        push_value_on_stack(ret_cs);
         push_value_on_stack(ret_eip);
         push_value_on_stack(ret_eflags);
+
+        // PUSHA
+        dword old_esp = m_tss.esp;
+        push_value_on_stack(m_tss.eax);
+        push_value_on_stack(m_tss.ecx);
+        push_value_on_stack(m_tss.edx);
+        push_value_on_stack(m_tss.ebx);
+        push_value_on_stack(old_esp);
+        push_value_on_stack(m_tss.ebp);
+        push_value_on_stack(m_tss.esi);
+        push_value_on_stack(m_tss.edi);
     }
 
-    // PUSHA
-    dword old_esp = m_tss.esp;
-    push_value_on_stack(m_tss.eax);
-    push_value_on_stack(m_tss.ecx);
-    push_value_on_stack(m_tss.edx);
-    push_value_on_stack(m_tss.ebx);
-    push_value_on_stack(old_esp);
-    push_value_on_stack(m_tss.ebp);
-    push_value_on_stack(m_tss.esi);
-    push_value_on_stack(m_tss.edi);
+    // PUSH old_signal_mask
+    push_value_on_stack(old_signal_mask);
 
-    m_tss.eax = (dword)signal;
     m_tss.cs = 0x1b;
     m_tss.ds = 0x23;
     m_tss.es = 0x23;
@@ -957,6 +970,12 @@ ShouldUnblockProcess Process::dispatch_signal(byte signal)
         auto* region = allocate_region(LinearAddress(), PAGE_SIZE, "signal_trampoline", true, true);
         m_return_to_ring3_from_signal_trampoline = region->laddr();
         byte* code_ptr = m_return_to_ring3_from_signal_trampoline.as_ptr();
+        *code_ptr++ = 0x5a; // pop edx
+        *code_ptr++ = 0xb8; // mov eax, <dword>
+        *(dword*)code_ptr = Syscall::SC_restore_signal_mask;
+        code_ptr += sizeof(dword);
+        *code_ptr++ = 0xcd; // int 0x82
+        *code_ptr++ = 0x82;
         *code_ptr++ = 0x61; // popa
         *code_ptr++ = 0x9d; // popf
         *code_ptr++ = 0xc3; // ret
@@ -964,7 +983,12 @@ ShouldUnblockProcess Process::dispatch_signal(byte signal)
         *code_ptr++ = 0x0b;
 
         m_return_to_ring0_from_signal_trampoline = LinearAddress((dword)code_ptr);
-        *code_ptr++ = 0x61; // popa
+        *code_ptr++ = 0x5a; // pop edx
+        *code_ptr++ = 0xb8; // mov eax, <dword>
+        *(dword*)code_ptr = Syscall::SC_restore_signal_mask;
+        code_ptr += sizeof(dword);
+        *code_ptr++ = 0xcd; // int 0x82
+        *code_ptr++ = 0x82;
         *code_ptr++ = 0xb8; // mov eax, <dword>
         *(dword*)code_ptr = Syscall::SC_sigreturn;
         code_ptr += sizeof(dword);
@@ -972,11 +996,10 @@ ShouldUnblockProcess Process::dispatch_signal(byte signal)
         *code_ptr++ = 0x82;
         *code_ptr++ = 0x0f; // ud2
         *code_ptr++ = 0x0b;
-
-        // FIXME: For !SA_NODEFER, maybe we could do something like emitting an int 0x80 syscall here that
-        //        unmasks the signal so it can be received again? I guess then I would need one trampoline
-        //        per signal number if it's hard-coded, but it's just a few bytes per each.
     }
+
+    // FIXME: Should we worry about the stack being 16 byte aligned when entering a signal handler?
+    push_value_on_stack(signal);
 
     if (interrupting_in_kernel)
         push_value_on_stack(m_return_to_ring0_from_signal_trampoline.get());
@@ -987,9 +1010,15 @@ ShouldUnblockProcess Process::dispatch_signal(byte signal)
     set_state(Skip1SchedulerPass);
 
 #ifdef SIGNAL_DEBUG
-    dbgprintf("signal: Okay, %s(%u) {%s} has been primed with signal handler %w:%x\n", name().characters(), pid(), to_string(state()), m_tss.cs, m_tss.eip);
+    kprintf("signal: Okay, %s(%u) {%s} has been primed with signal handler %w:%x\n", name().characters(), pid(), to_string(state()), m_tss.cs, m_tss.eip);
 #endif
     return ShouldUnblockProcess::Yes;
+}
+
+int Process::sys$restore_signal_mask(dword mask)
+{
+    m_signal_mask = mask;
+    return 0;
 }
 
 void Process::sys$sigreturn()
@@ -998,8 +1027,8 @@ void Process::sys$sigreturn()
     Scheduler::prepare_to_modify_tss(*this);
     m_tss = m_tss_to_resume_kernel;
 #ifdef SIGNAL_DEBUG
-    dbgprintf("sys$sigreturn in %s(%u)\n", name().characters(), pid());
-    dbgprintf(" -> resuming execution at %w:%x\n", m_tss.cs, m_tss.eip);
+    kprintf("sys$sigreturn in %s(%u)\n", name().characters(), pid());
+    kprintf(" -> resuming execution at %w:%x\n", m_tss.cs, m_tss.eip);
 #endif
     set_state(Skip1SchedulerPass);
     Scheduler::yield();
@@ -2637,4 +2666,42 @@ void* Process::sys$get_shared_buffer(int shared_buffer_id)
     dbgprintf("%s(%u): Retaining shared buffer %d, buffer count: %u\n", name().characters(), pid(), shared_buffer_id, shared_buffers().resource().size());
 #endif
     return shared_buffer.retain(*this);
+}
+
+const char* to_string(Process::State state)
+{
+    switch (state) {
+    case Process::Invalid: return "Invalid";
+    case Process::Runnable: return "Runnable";
+    case Process::Running: return "Running";
+    case Process::Dying: return "Dying";
+    case Process::Dead: return "Dead";
+    case Process::Stopped: return "Stopped";
+    case Process::Skip1SchedulerPass: return "Skip1";
+    case Process::Skip0SchedulerPasses: return "Skip0";
+    case Process::BlockedSleep: return "Sleep";
+    case Process::BlockedWait: return "Wait";
+    case Process::BlockedRead: return "Read";
+    case Process::BlockedWrite: return "Write";
+    case Process::BlockedSignal: return "Signal";
+    case Process::BlockedSelect: return "Select";
+    case Process::BlockedLurking: return "Lurking";
+    case Process::BlockedConnect: return "Connect";
+    case Process::BeingInspected: return "Inspect";
+    }
+    kprintf("to_string(Process::State): Invalid state: %u\n", state);
+    ASSERT_NOT_REACHED();
+    return nullptr;
+}
+
+const char* to_string(Process::Priority priority)
+{
+    switch (priority) {
+    case Process::LowPriority: return "Low";
+    case Process::NormalPriority: return "Normal";
+    case Process::HighPriority: return "High";
+    }
+    kprintf("to_string(Process::Priority): Invalid priority: %u\n", priority);
+    ASSERT_NOT_REACHED();
+    return nullptr;
 }
