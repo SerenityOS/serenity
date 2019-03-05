@@ -295,9 +295,6 @@ public:
 
     bool is_superuser() const { return m_euid == 0; }
 
-    bool wakeup_requested() { return m_wakeup_requested; }
-    void request_wakeup() { m_wakeup_requested = true; }
-
     FPUState& fpu_state() { return m_fpu_state; }
     bool has_used_fpu() const { return m_has_used_fpu; }
     void set_has_used_fpu(bool b) { m_has_used_fpu = b; }
@@ -406,7 +403,6 @@ private:
 
     RetainPtr<Region> m_display_framebuffer_region;
 
-    dword m_wakeup_requested { false };
     bool m_has_used_fpu { false };
 };
 

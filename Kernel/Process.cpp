@@ -1029,10 +1029,8 @@ void Process::create_signal_trampolines_if_needed()
     *(dword*)code_ptr = Syscall::SC_restore_signal_mask;
     code_ptr += sizeof(dword);
     *code_ptr++ = 0xcd; // int 0x82
-
     // NOTE: Stack alignment padding doesn't matter when returning to ring0.
     //       Nothing matters really, as we're returning by replacing the entire TSS.
-
     *code_ptr++ = 0x82;
     *code_ptr++ = 0xb8; // mov eax, <dword>
     *(dword*)code_ptr = Syscall::SC_sigreturn;
@@ -2151,14 +2149,13 @@ int Process::sys$select(const Syscall::SC_select_params* params)
         return error;
 
 #ifdef DEBUG_IO
-    dbgprintf("%s<%u> selecting on (read:%u, write:%u), wakeup_req:%u, timeout=%p\n", name().characters(), pid(), m_select_read_fds.size(), m_select_write_fds.size(), m_wakeup_requested, timeout);
+    dbgprintf("%s<%u> selecting on (read:%u, write:%u), timeout=%p\n", name().characters(), pid(), m_select_read_fds.size(), m_select_write_fds.size(), timeout);
 #endif
 
-    if (!m_wakeup_requested && (!timeout || (timeout->tv_sec || timeout->tv_usec))) {
+    if (!timeout || (timeout->tv_sec || timeout->tv_usec)) {
         block(BlockedSelect);
         Scheduler::yield();
     }
-    m_wakeup_requested = false;
 
     int markedfds = 0;
 
@@ -2209,11 +2206,10 @@ int Process::sys$poll(pollfd* fds, int nfds, int timeout)
             m_select_write_fds.append(fds[i].fd);
     }
 
-    if (!m_wakeup_requested && timeout < 0) {
+    if (timeout < 0) {
         block(BlockedSelect);
         Scheduler::yield();
     }
-    m_wakeup_requested = false;
 
     int fds_with_revents = 0;
 
