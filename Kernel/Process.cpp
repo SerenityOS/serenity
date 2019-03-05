@@ -970,6 +970,7 @@ ShouldUnblockProcess Process::dispatch_signal(byte signal)
         auto* region = allocate_region(LinearAddress(), PAGE_SIZE, "signal_trampoline", true, true);
         m_return_to_ring3_from_signal_trampoline = region->laddr();
         byte* code_ptr = m_return_to_ring3_from_signal_trampoline.as_ptr();
+        *code_ptr++ = 0x58; // pop eax (Skip over signal argument)
         *code_ptr++ = 0x5a; // pop edx
         *code_ptr++ = 0xb8; // mov eax, <dword>
         *(dword*)code_ptr = Syscall::SC_restore_signal_mask;
@@ -983,6 +984,7 @@ ShouldUnblockProcess Process::dispatch_signal(byte signal)
         *code_ptr++ = 0x0b;
 
         m_return_to_ring0_from_signal_trampoline = LinearAddress((dword)code_ptr);
+        *code_ptr++ = 0x58; // pop eax (Skip over signal argument)
         *code_ptr++ = 0x5a; // pop edx
         *code_ptr++ = 0xb8; // mov eax, <dword>
         *(dword*)code_ptr = Syscall::SC_restore_signal_mask;
