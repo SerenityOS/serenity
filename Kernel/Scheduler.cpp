@@ -99,11 +99,6 @@ bool Scheduler::pick_next()
         }
 
         if (process.state() == Process::BlockedSelect) {
-            if (process.wakeup_requested()) {
-                process.m_wakeup_requested = false;
-                process.unblock();
-                return true;
-            }
             if (process.m_select_has_timeout) {
                 auto now_sec = RTC::now();
                 auto now_usec = PIT::ticks_since_boot() % 1000;
