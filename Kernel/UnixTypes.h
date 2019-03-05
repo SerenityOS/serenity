@@ -249,6 +249,7 @@ struct sigaction {
 #define SA_NOCLDSTOP 1
 #define SA_NOCLDWAIT 2
 #define SA_SIGINFO 4
+#define SA_NODEFER 0x40000000
 
 #define SIG_BLOCK 0
 #define SIG_UNBLOCK 1

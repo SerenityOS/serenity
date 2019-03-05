@@ -51,6 +51,8 @@ void BXVGADevice::set_register(word index, word data)
 
 void BXVGADevice::set_resolution(int width, int height)
 {
+    m_framebuffer_size = { width, height };
+
     set_register(VBE_DISPI_INDEX_ENABLE, VBE_DISPI_DISABLED);
     set_register(VBE_DISPI_INDEX_XRES, (word)width);
     set_register(VBE_DISPI_INDEX_YRES, (word)height);

@@ -227,6 +227,7 @@ public:
     int sys$listen(int sockfd, int backlog);
     int sys$accept(int sockfd, sockaddr*, socklen_t*);
     int sys$connect(int sockfd, const sockaddr*, socklen_t);
+    int sys$restore_signal_mask(dword mask);
 
     int sys$create_shared_buffer(pid_t peer_pid, size_t, void** buffer);
     void* sys$get_shared_buffer(int shared_buffer_id);
@@ -365,7 +366,7 @@ private:
     size_t m_max_open_file_descriptors { 16 };
     SignalActionData m_signal_action_data[32];
     dword m_pending_signals { 0 };
-    dword m_signal_mask { 0xffffffff };
+    dword m_signal_mask { 0 };
     RetainPtr<Socket> m_blocked_connecting_socket;
 
     byte m_termination_status { 0 };
@@ -439,41 +440,8 @@ private:
     Process::State m_original_state { Process::Invalid };
 };
 
-static inline const char* to_string(Process::State state)
-{
-    switch (state) {
-    case Process::Invalid: return "Invalid";
-    case Process::Runnable: return "Runnable";
-    case Process::Running: return "Running";
-    case Process::Dying: return "Dying";
-    case Process::Dead: return "Dead";
-    case Process::Stopped: return "Stopped";
-    case Process::Skip1SchedulerPass: return "Skip1";
-    case Process::Skip0SchedulerPasses: return "Skip0";
-    case Process::BlockedSleep: return "Sleep";
-    case Process::BlockedWait: return "Wait";
-    case Process::BlockedRead: return "Read";
-    case Process::BlockedWrite: return "Write";
-    case Process::BlockedSignal: return "Signal";
-    case Process::BlockedSelect: return "Select";
-    case Process::BlockedLurking: return "Lurking";
-    case Process::BlockedConnect: return "Connect";
-    case Process::BeingInspected: return "Inspect";
-    }
-    ASSERT_NOT_REACHED();
-    return nullptr;
-}
-
-static inline const char* to_string(Process::Priority state)
-{
-    switch (state) {
-    case Process::LowPriority: return "Low";
-    case Process::NormalPriority: return "Normal";
-    case Process::HighPriority: return "High";
-    }
-    ASSERT_NOT_REACHED();
-    return nullptr;
-}
+extern const char* to_string(Process::State);
+extern const char* to_string(Process::Priority);
 
 extern void block(Process::State);
 extern void sleep(dword ticks);

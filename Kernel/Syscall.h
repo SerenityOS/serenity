@@ -85,6 +85,7 @@
     __ENUMERATE_SYSCALL(chown) \
     __ENUMERATE_SYSCALL(fchmod) \
     __ENUMERATE_SYSCALL(symlink) \
+    __ENUMERATE_SYSCALL(restore_signal_mask) \
 
 
 namespace Syscall {
