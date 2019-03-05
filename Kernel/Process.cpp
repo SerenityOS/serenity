@@ -26,7 +26,7 @@
 //#define DEBUG_IO
 //#define TASK_DEBUG
 //#define FORK_DEBUG
-#define SIGNAL_DEBUG
+//#define SIGNAL_DEBUG
 #define MAX_PROCESS_GIDS 32
 //#define SHARED_BUFFER_DEBUG
 
@@ -370,7 +370,8 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
         }
     }
 
-    m_signal_stack_kernel_region = nullptr;
+    kfree(m_kernel_stack_for_signal_handler);
+    m_kernel_stack_for_signal_handler = nullptr;
     m_signal_stack_user_region = nullptr;
     m_display_framebuffer_region = nullptr;
     set_default_signal_dispositions();
@@ -725,6 +726,11 @@ Process::~Process()
         kfree(m_kernel_stack);
         m_kernel_stack = nullptr;
     }
+
+    if (m_kernel_stack_for_signal_handler) {
+        kfree(m_kernel_stack_for_signal_handler);
+        m_kernel_stack_for_signal_handler = nullptr;
+    }
 }
 
 void Process::dump_regions()
@@ -912,8 +918,11 @@ ShouldUnblockProcess Process::dispatch_signal(byte signal)
     word ret_cs = m_tss.cs;
     dword ret_eip = m_tss.eip;
     dword ret_eflags = m_tss.eflags;
-
     bool interrupting_in_kernel = (ret_cs & 3) == 0;
+
+    ProcessPagingScope paging_scope(*this);
+    create_signal_trampolines_if_needed();
+
     if (interrupting_in_kernel) {
 #ifdef SIGNAL_DEBUG
         kprintf("dispatch_signal to %s(%u) in state=%s with return to %w:%x\n", name().characters(), pid(), to_string(state()), ret_cs, ret_eip);
@@ -921,23 +930,23 @@ ShouldUnblockProcess Process::dispatch_signal(byte signal)
         ASSERT(is_blocked());
         m_tss_to_resume_kernel = m_tss;
 #ifdef SIGNAL_DEBUG
-        kprintf("resume tss pc: %w:%x\n", m_tss_to_resume_kernel.cs, m_tss_to_resume_kernel.eip);
+        kprintf("resume tss pc: %w:%x stack: %w:%x flags: %x cr3: %x\n", m_tss_to_resume_kernel.cs, m_tss_to_resume_kernel.eip, m_tss_to_resume_kernel.ss, m_tss_to_resume_kernel.esp, m_tss_to_resume_kernel.eflags, m_tss_to_resume_kernel.cr3);
 #endif
-    }
 
-    ProcessPagingScope paging_scope(*this);
-
-    if (interrupting_in_kernel) {
         if (!m_signal_stack_user_region) {
-            m_signal_stack_user_region = allocate_region(LinearAddress(), default_userspace_stack_size, "signal stack (user)");
+            m_signal_stack_user_region = allocate_region(LinearAddress(), default_userspace_stack_size, "Signal stack (user)");
             ASSERT(m_signal_stack_user_region);
-            m_signal_stack_kernel_region = allocate_region(LinearAddress(), default_userspace_stack_size, "signal stack (kernel)");
-            ASSERT(m_signal_stack_kernel_region);
+        }
+        if (!m_kernel_stack_for_signal_handler) {
+            m_kernel_stack_for_signal_handler = kmalloc(default_kernel_stack_size);
+            ASSERT(m_kernel_stack_for_signal_handler);
         }
         m_tss.ss = 0x23;
         m_tss.esp = m_signal_stack_user_region->laddr().offset(default_userspace_stack_size).get();
         m_tss.ss0 = 0x10;
-        m_tss.esp0 = m_signal_stack_kernel_region->laddr().offset(default_userspace_stack_size).get();
+        m_tss.esp0 = (dword)m_kernel_stack_for_signal_handler + default_kernel_stack_size;
+
+        push_value_on_stack(0);
     } else {
         push_value_on_stack(ret_eip);
         push_value_on_stack(ret_eflags);
@@ -952,6 +961,9 @@ ShouldUnblockProcess Process::dispatch_signal(byte signal)
         push_value_on_stack(m_tss.ebp);
         push_value_on_stack(m_tss.esi);
         push_value_on_stack(m_tss.edi);
+
+        // Align the stack.
+        m_tss.esp -= 12;
     }
 
     // PUSH old_signal_mask
@@ -964,42 +976,6 @@ ShouldUnblockProcess Process::dispatch_signal(byte signal)
     m_tss.gs = 0x23;
     m_tss.eip = handler_laddr.get();
 
-    if (m_return_to_ring3_from_signal_trampoline.is_null()) {
-        // FIXME: This should be a global trampoline shared by all processes, not one created per process!
-        // FIXME: Remap as read-only after setup.
-        auto* region = allocate_region(LinearAddress(), PAGE_SIZE, "signal_trampoline", true, true);
-        m_return_to_ring3_from_signal_trampoline = region->laddr();
-        byte* code_ptr = m_return_to_ring3_from_signal_trampoline.as_ptr();
-        *code_ptr++ = 0x58; // pop eax (Skip over signal argument)
-        *code_ptr++ = 0x5a; // pop edx
-        *code_ptr++ = 0xb8; // mov eax, <dword>
-        *(dword*)code_ptr = Syscall::SC_restore_signal_mask;
-        code_ptr += sizeof(dword);
-        *code_ptr++ = 0xcd; // int 0x82
-        *code_ptr++ = 0x82;
-        *code_ptr++ = 0x61; // popa
-        *code_ptr++ = 0x9d; // popf
-        *code_ptr++ = 0xc3; // ret
-        *code_ptr++ = 0x0f; // ud2
-        *code_ptr++ = 0x0b;
-
-        m_return_to_ring0_from_signal_trampoline = LinearAddress((dword)code_ptr);
-        *code_ptr++ = 0x58; // pop eax (Skip over signal argument)
-        *code_ptr++ = 0x5a; // pop edx
-        *code_ptr++ = 0xb8; // mov eax, <dword>
-        *(dword*)code_ptr = Syscall::SC_restore_signal_mask;
-        code_ptr += sizeof(dword);
-        *code_ptr++ = 0xcd; // int 0x82
-        *code_ptr++ = 0x82;
-        *code_ptr++ = 0xb8; // mov eax, <dword>
-        *(dword*)code_ptr = Syscall::SC_sigreturn;
-        code_ptr += sizeof(dword);
-        *code_ptr++ = 0xcd; // int 0x82
-        *code_ptr++ = 0x82;
-        *code_ptr++ = 0x0f; // ud2
-        *code_ptr++ = 0x0b;
-    }
-
     // FIXME: Should we worry about the stack being 16 byte aligned when entering a signal handler?
     push_value_on_stack(signal);
 
@@ -1008,6 +984,8 @@ ShouldUnblockProcess Process::dispatch_signal(byte signal)
     else
         push_value_on_stack(m_return_to_ring3_from_signal_trampoline.get());
 
+    ASSERT((m_tss.esp % 16) == 0);
+
     // FIXME: This state is such a hack. It avoids trouble if 'current' is the process receiving a signal.
     set_state(Skip1SchedulerPass);
 
@@ -1015,6 +993,54 @@ ShouldUnblockProcess Process::dispatch_signal(byte signal)
     kprintf("signal: Okay, %s(%u) {%s} has been primed with signal handler %w:%x\n", name().characters(), pid(), to_string(state()), m_tss.cs, m_tss.eip);
 #endif
     return ShouldUnblockProcess::Yes;
+}
+
+void Process::create_signal_trampolines_if_needed()
+{
+    if (!m_return_to_ring3_from_signal_trampoline.is_null())
+        return;
+    // FIXME: This should be a global trampoline shared by all processes, not one created per process!
+    // FIXME: Remap as read-only after setup.
+    auto* region = allocate_region(LinearAddress(), PAGE_SIZE, "Signal trampolines", true, true);
+    m_return_to_ring3_from_signal_trampoline = region->laddr();
+    byte* code_ptr = m_return_to_ring3_from_signal_trampoline.as_ptr();
+    *code_ptr++ = 0x58; // pop eax (Argument to signal handler (ignored here))
+    *code_ptr++ = 0x5a; // pop edx (Original signal mask to restore)
+    *code_ptr++ = 0xb8; // mov eax, <dword>
+    *(dword*)code_ptr = Syscall::SC_restore_signal_mask;
+    code_ptr += sizeof(dword);
+    *code_ptr++ = 0xcd; // int 0x82
+    *code_ptr++ = 0x82;
+
+    *code_ptr++ = 0x83; // add esp, (stack alignment padding)
+    *code_ptr++ = 0xc4;
+    *code_ptr++ = sizeof(dword) * 3;
+
+    *code_ptr++ = 0x61; // popa
+    *code_ptr++ = 0x9d; // popf
+    *code_ptr++ = 0xc3; // ret
+    *code_ptr++ = 0x0f; // ud2
+    *code_ptr++ = 0x0b;
+
+    m_return_to_ring0_from_signal_trampoline = LinearAddress((dword)code_ptr);
+    *code_ptr++ = 0x58; // pop eax (Argument to signal handler (ignored here))
+    *code_ptr++ = 0x5a; // pop edx (Original signal mask to restore)
+    *code_ptr++ = 0xb8; // mov eax, <dword>
+    *(dword*)code_ptr = Syscall::SC_restore_signal_mask;
+    code_ptr += sizeof(dword);
+    *code_ptr++ = 0xcd; // int 0x82
+
+    // NOTE: Stack alignment padding doesn't matter when returning to ring0.
+    //       Nothing matters really, as we're returning by replacing the entire TSS.
+
+    *code_ptr++ = 0x82;
+    *code_ptr++ = 0xb8; // mov eax, <dword>
+    *(dword*)code_ptr = Syscall::SC_sigreturn;
+    code_ptr += sizeof(dword);
+    *code_ptr++ = 0xcd; // int 0x82
+    *code_ptr++ = 0x82;
+    *code_ptr++ = 0x0f; // ud2
+    *code_ptr++ = 0x0b;
 }
 
 int Process::sys$restore_signal_mask(dword mask)
@@ -1030,7 +1056,7 @@ void Process::sys$sigreturn()
     m_tss = m_tss_to_resume_kernel;
 #ifdef SIGNAL_DEBUG
     kprintf("sys$sigreturn in %s(%u)\n", name().characters(), pid());
-    kprintf(" -> resuming execution at %w:%x\n", m_tss.cs, m_tss.eip);
+    kprintf(" -> resuming execution at %w:%x stack %w:%x flags %x cr3 %x\n", m_tss.cs, m_tss.eip, m_tss.ss, m_tss.esp, m_tss.eflags, m_tss.cr3);
 #endif
     set_state(Skip1SchedulerPass);
     Scheduler::yield();

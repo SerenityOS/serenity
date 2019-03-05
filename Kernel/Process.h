@@ -146,6 +146,9 @@ public:
     void set_ticks_left(dword t) { m_ticks_left = t; }
     dword ticks_left() const { return m_ticks_left; }
 
+    dword kernel_stack_base() const { return (dword)m_kernel_stack; };
+    dword kernel_stack_for_signal_handler_base() const { return (dword)m_kernel_stack_for_signal_handler; };
+
     void set_selector(word s) { m_far_ptr.selector = s; }
     void set_state(State s) { m_state = s; }
     void die();
@@ -319,6 +322,8 @@ private:
     void set_default_signal_dispositions();
     void disown_all_shared_buffers();
 
+    void create_signal_trampolines_if_needed();
+
     RetainPtr<PageDirectory> m_page_directory;
 
     Process* m_prev { nullptr };
@@ -355,6 +360,7 @@ private:
     RingLevel m_ring { Ring0 };
     int m_error { 0 };
     void* m_kernel_stack { nullptr };
+    void* m_kernel_stack_for_signal_handler { nullptr };
     dword m_times_scheduled { 0 };
     pid_t m_waitee_pid { -1 };
     int m_blocked_fd { -1 };
@@ -397,7 +403,6 @@ private:
     HashTable<gid_t> m_gids;
 
     Region* m_signal_stack_user_region { nullptr };
-    Region* m_signal_stack_kernel_region { nullptr };
 
     RetainPtr<Region> m_display_framebuffer_region;
 

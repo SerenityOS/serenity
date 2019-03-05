@@ -162,6 +162,11 @@ bool Scheduler::pick_next()
     Process::for_each_living([] (auto& process) {
         if (!process.has_unmasked_pending_signals())
             return true;
+        // FIXME: It would be nice if the Scheduler didn't have to worry about who is "current"
+        //        For now, avoid dispatching signals to "current" and do it in a scheduling pass
+        //        while some other process is interrupted. Otherwise a mess will be made.
+        if (&process == current)
+            return true;
         // We know how to interrupt blocked processes, but if they are just executing
         // at some random point in the kernel, let them continue. They'll be in userspace
         // sooner or later and we can deliver the signal then.
@@ -199,7 +204,7 @@ bool Scheduler::pick_next()
 
         if (process->state() == Process::Runnable || process->state() == Process::Running) {
 #ifdef SCHEDULER_DEBUG
-            dbgprintf("switch to %s(%u) @ %w:%x\n", process->name().characters(), process->pid(), process->tss().cs, process->tss().eip);
+            kprintf("switch to %s(%u) @ %w:%x\n", process->name().characters(), process->pid(), process->tss().cs, process->tss().eip);
 #endif
             return context_switch(*process);
         }

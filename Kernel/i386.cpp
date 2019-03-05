@@ -137,8 +137,10 @@ static void dump(const DumpType& regs)
     if constexpr (IsSame<DumpType, RegisterDumpWithExceptionCode>::value) {
         kprintf("exception code: %w\n", regs.exception_code);
     }
-    kprintf("pc=%w:%x ds=%w es=%w fs=%w gs=%w\n", regs.cs, regs.eip, regs.ds, regs.es, regs.fs, regs.gs);
-    kprintf("stk=%w:%x\n", ss, esp);
+    kprintf("  pc=%w:%x ds=%w es=%w fs=%w gs=%w\n", regs.cs, regs.eip, regs.ds, regs.es, regs.fs, regs.gs);
+    kprintf(" stk=%w:%x\n", ss, esp);
+    if (current)
+        kprintf("kstk=%w:%x, base=%x, sigbase=%x\n", current->tss().ss0, current->tss().esp0, current->kernel_stack_base(), current->kernel_stack_for_signal_handler_base());
     kprintf("eax=%x ebx=%x ecx=%x edx=%x\n", regs.eax, regs.ebx, regs.ecx, regs.edx);
     kprintf("ebp=%x esp=%x esi=%x edi=%x\n", regs.ebp, esp, regs.esi, regs.edi);
 
