@@ -958,7 +958,7 @@ void WSWindowManager::draw_cursor()
     Rect cursor_rect { cursor_location.x(), cursor_location.y(), (int)m_cursor_bitmap_inner->width(), (int)m_cursor_bitmap_inner->height() };
     Color inner_color = Color::White;
     Color outer_color = Color::Black;
-    if (m_screen.left_mouse_button_pressed())
+    if (m_screen.mouse_button_state() & (unsigned)MouseButton::Left)
         swap(inner_color, outer_color);
     m_back_painter->draw_bitmap(cursor_location, *m_cursor_bitmap_inner, inner_color);
     m_back_painter->draw_bitmap(cursor_location, *m_cursor_bitmap_outer, outer_color);

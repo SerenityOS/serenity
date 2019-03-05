@@ -58,42 +58,29 @@ void WSScreen::set_resolution(int width, int height)
     m_cursor_location.constrain(rect());
 }
 
-void WSScreen::on_receive_mouse_data(int dx, int dy, bool left_button, bool right_button, bool middle_button)
+void WSScreen::on_receive_mouse_data(int dx, int dy, unsigned buttons)
 {
     auto prev_location = m_cursor_location;
     m_cursor_location.move_by(dx, dy);
     m_cursor_location.constrain(rect());
-    unsigned buttons = 0;
-    if (left_button)
-        buttons |= (unsigned)MouseButton::Left;
-    if (right_button)
-        buttons |= (unsigned)MouseButton::Right;
-    if (middle_button)
-        buttons |= (unsigned)MouseButton::Middle;
-    bool prev_left_button = m_left_mouse_button_pressed;
-    bool prev_right_button = m_right_mouse_button_pressed;
-    bool prev_middle_button = m_middle_mouse_button_pressed;
-    m_left_mouse_button_pressed = left_button;
-    m_right_mouse_button_pressed = right_button;
-    m_middle_mouse_button_pressed = middle_button;
-    if (prev_left_button != left_button) {
-        auto message = make<WSMouseEvent>(left_button ? WSMessage::MouseDown : WSMessage::MouseUp, m_cursor_location, buttons, MouseButton::Left);
+    unsigned prev_buttons = m_mouse_button_state;
+    m_mouse_button_state = buttons;
+    unsigned changed_buttons = prev_buttons ^ buttons;
+    auto post_mousedown_or_mouseup_if_needed = [&] (MouseButton button) {
+        if (!(changed_buttons & (unsigned)button))
+            return;
+        auto message = make<WSMouseEvent>(buttons & (unsigned)button ? WSMessage::MouseDown : WSMessage::MouseUp, m_cursor_location, buttons, button);
         WSMessageLoop::the().post_message(WSWindowManager::the(), move(message));
-    }
-    if (prev_right_button != right_button) {
-        auto message = make<WSMouseEvent>(right_button ? WSMessage::MouseDown : WSMessage::MouseUp, m_cursor_location, buttons, MouseButton::Right);
-        WSMessageLoop::the().post_message(WSWindowManager::the(), move(message));
-    }
-    if (prev_middle_button != middle_button) {
-        auto message = make<WSMouseEvent>(middle_button ? WSMessage::MouseDown : WSMessage::MouseUp, m_cursor_location, buttons, MouseButton::Middle);
-        WSMessageLoop::the().post_message(WSWindowManager::the(), move(message));
-    }
+    };
+    post_mousedown_or_mouseup_if_needed(MouseButton::Left);
+    post_mousedown_or_mouseup_if_needed(MouseButton::Right);
+    post_mousedown_or_mouseup_if_needed(MouseButton::Middle);
     if (m_cursor_location != prev_location) {
         auto message = make<WSMouseEvent>(WSMessage::MouseMove, m_cursor_location, buttons);
         WSMessageLoop::the().post_message(WSWindowManager::the(), move(message));
     }
     // NOTE: Invalidate the cursor if it moved, or if the left button changed state (for the cursor color inversion.)
-    if (m_cursor_location != prev_location || prev_left_button != left_button)
+    if (m_cursor_location != prev_location || changed_buttons & (unsigned)MouseButton::Left)
         WSWindowManager::the().invalidate_cursor();
 }
 
