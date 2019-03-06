@@ -342,7 +342,7 @@ void Painter::draw_text(const Rect& rect, const String& text, TextAlignment alig
         ASSERT_NOT_REACHED();
     }
 
-    int space_width = font().glyph_width(' ');
+    int space_width = font().glyph_width(' ') + font().glyph_spacing();
     for (ssize_t i = 0; i < text.length(); ++i) {
         byte ch = text[i];
         if (ch == ' ') {
@@ -350,7 +350,7 @@ void Painter::draw_text(const Rect& rect, const String& text, TextAlignment alig
             continue;
         }
         draw_glyph(point, ch, color);
-        point.move_by(font().glyph_width(ch), 0);
+        point.move_by(font().glyph_width(ch) + font().glyph_spacing(), 0);
     }
 }
 

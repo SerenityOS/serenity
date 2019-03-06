@@ -58,15 +58,23 @@ public:
     byte glyph_height() const { return m_glyph_height; }
     byte min_glyph_width() const { return m_min_glyph_width; }
     byte max_glyph_width() const { return m_max_glyph_width; }
+    byte glyph_spacing() const { return m_fixed_width ? 0 : 1; }
     int width(const String& string) const;
 
     String name() const { return m_name; }
     void set_name(const String& name) { m_name = name; }
 
     bool is_fixed_width() const { return m_fixed_width; }
+    void set_fixed_width(bool b) { m_fixed_width = b; }
+
+    void set_glyph_width(char ch, byte width)
+    {
+        ASSERT(m_glyph_widths);
+        m_glyph_widths[(byte)ch] = width;
+    }
 
 private:
-    Font(const String& name, unsigned* rows, byte glyph_width, byte glyph_height);
+    Font(const String& name, unsigned* rows, byte* widths, bool is_fixed_width, byte glyph_width, byte glyph_height);
 
     String m_name;
 
