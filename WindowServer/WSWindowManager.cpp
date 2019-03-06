@@ -786,7 +786,7 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event, WSWindow*& event_
                 handle_close_button_mouse_event(window, event);
                 return IterationDecision::Abort;
             }
-            if (event.type() == WSMessage::MouseDown)
+            if (event.type() == WSMessage::MouseDown && event.button() == MouseButton::Left)
                 start_window_drag(window, event);
             return IterationDecision::Abort;
         }
