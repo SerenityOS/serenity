@@ -80,12 +80,12 @@ static String pretty_byte_size(size_t size)
     return String::format("%uK", size / 1024);
 }
 
-GVariant ProcessTableModel::data(int row, int column) const
+GVariant ProcessTableModel::data(const GModelIndex& index) const
 {
-    ASSERT(is_valid({ row, column }));
-    auto it = m_processes.find(m_pids[row]);
+    ASSERT(is_valid(index));
+    auto it = m_processes.find(m_pids[index.row()]);
     auto& process = *(*it).value;
-    switch (column) {
+    switch (index.column()) {
     case Column::Icon: return *m_generic_process_icon;
     case Column::PID: return process.current_state.pid;
     case Column::State: return process.current_state.state;

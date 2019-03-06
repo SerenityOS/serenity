@@ -135,7 +135,7 @@ void GTableView::paint_event(GPaintEvent& event)
             auto column_metadata = m_model->column_metadata(column_index);
             int column_width = column_metadata.preferred_width;
             Rect cell_rect(horizontal_padding() + x_offset, y, column_width, item_height());
-            auto data = m_model->data(row_index, column_index);
+            auto data = m_model->data({ row_index, column_index });
             if (data.is_bitmap())
                 painter.blit(cell_rect.location(), data.as_bitmap(), data.as_bitmap().rect());
             else
