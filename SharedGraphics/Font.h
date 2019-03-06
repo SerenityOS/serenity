@@ -54,7 +54,7 @@ public:
 
     ~Font();
 
-    GlyphBitmap glyph_bitmap(char ch) const { return GlyphBitmap(&m_rows[(byte)ch * m_glyph_height], { m_glyph_width, m_glyph_height }); }
+    GlyphBitmap glyph_bitmap(char ch) const { return GlyphBitmap(&m_rows[(byte)ch * m_glyph_height], { glyph_width(ch), m_glyph_height }); }
 
     byte glyph_width(char ch) const { return m_fixed_width ? m_glyph_width : m_glyph_widths[(byte)ch]; }
     byte glyph_height() const { return m_glyph_height; }

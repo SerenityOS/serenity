@@ -76,7 +76,7 @@ void GTextBox::paint_event(GPaintEvent& event)
     Painter painter(*this);
     painter.set_clip_rect(event.rect());
 
-    painter.fill_rect({ rect().x() + 1, rect().y() + 1, rect().width() - 2, rect().height() - 2 }, background_color());
+    painter.fill_rect(rect().shrunken(2, 2), background_color());
     painter.draw_rect(rect(), foreground_color());
 
     if (is_focused())
@@ -88,9 +88,9 @@ void GTextBox::paint_event(GPaintEvent& event)
     painter.set_clip_rect(inner_rect);
     painter.translate(-m_scroll_offset, 0);
 
-    int y = inner_rect.center().y() - font().glyph_height() / 2;    
     int space_width = font().glyph_width(' ') + font().glyph_spacing();
     int x = inner_rect.x();
+    int y = inner_rect.center().y() - font().glyph_height() / 2;
 
     for (int i = 0; i < m_text.length(); ++i) {
         char ch = m_text[i];
@@ -103,7 +103,12 @@ void GTextBox::paint_event(GPaintEvent& event)
     }
 
     if (is_focused() && m_cursor_blink_state) {
-        Rect cursor_rect(inner_rect.x() + cursor_content_position().x(), inner_rect.y(), 1, inner_rect.height());
+        Rect cursor_rect {
+            inner_rect.x() + cursor_content_position().x(),
+            inner_rect.y(),
+            1,
+            inner_rect.height()
+        };
         painter.fill_rect(cursor_rect, foreground_color());
     }
 }
