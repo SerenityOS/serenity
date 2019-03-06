@@ -28,6 +28,8 @@ $make_cmd -C ../Applications/FileManager clean && \
 $make_cmd -C ../Applications/FileManager && \
 $make_cmd -C ../Applications/ProcessManager clean && \
 $make_cmd -C ../Applications/ProcessManager && \
+$make_cmd -C ../Applications/TextEditor clean && \
+$make_cmd -C ../Applications/TextEditor && \
 $make_cmd -C ../Applications/About clean && \
 $make_cmd -C ../Applications/About && \
 $make_cmd clean &&\
