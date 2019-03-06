@@ -56,7 +56,7 @@ String GVariant::to_string() const
     case Type::Int:
         return String::format("%d", as_int());
     case Type::Float:
-        return String::format("%f", as_float());
+        return String::format("%f", (double)as_float());
     case Type::String:
         return as_string();
     case Type::Bitmap:
