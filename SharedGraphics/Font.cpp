@@ -44,7 +44,7 @@ Font& Font::default_fixed_width_font()
 Font& Font::default_bold_font()
 {
     static Font* s_default_bold_font;
-    static const char* default_bold_font_path = "/res/fonts/CsillaBold7x10.font";
+    static const char* default_bold_font_path = "/res/fonts/KaticaBold10.font";
     if (!s_default_bold_font) {
         s_default_bold_font = Font::load_from_file(default_bold_font_path).leak_ref();
         ASSERT(s_default_bold_font);
