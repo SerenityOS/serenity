@@ -30,7 +30,6 @@ private:
     virtual void keydown_event(GKeyEvent&) override;
     virtual const char* class_name() const override { return "Terminal"; }
 
-    Font& font() { return *m_font; }
     void scroll_up();
     void newline();
     void set_cursor(unsigned row, unsigned column);
@@ -144,8 +143,6 @@ private:
 
     bool m_in_active_window { false };
     bool m_need_full_flush { false };
-
-    RetainPtr<Font> m_font;
 
     GNotifier m_notifier;
 

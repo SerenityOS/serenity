@@ -12,10 +12,17 @@ public:
 
     RetainPtr<Font> get_by_name(const String&);
     void for_each_font(Function<void(const String&)>);
+    void for_each_fixed_width_font(Function<void(const String&)>);
 
 private:
     GFontDatabase();
     ~GFontDatabase();
 
-    HashMap<String, String> m_name_to_path;
+    struct Metadata {
+        String path;
+        bool is_fixed_width;
+        int glyph_height;
+    };
+
+    HashMap<String, Metadata> m_name_to_metadata;
 };

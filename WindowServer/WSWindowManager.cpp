@@ -359,11 +359,13 @@ void WSWindowManager::set_current_menubar(WSMenuBar* menubar)
     dbgprintf("[WM] Current menubar is now %p\n", menubar);
 #endif
     Point next_menu_location { menubar_menu_margin() / 2, 0 };
+    int index = 0;
     for_each_active_menubar_menu([&] (WSMenu& menu) {
-        int text_width = font().width(menu.name());
+        int text_width = index == 1 ? Font::default_bold_font().width(menu.name()) : font().width(menu.name());
         menu.set_rect_in_menubar({ next_menu_location.x() - menubar_menu_margin() / 2, 0, text_width + menubar_menu_margin(), menubar_rect().height() - 1 });
         menu.set_text_rect_in_menubar({ next_menu_location, { text_width, menubar_rect().height() } });
         next_menu_location.move_by(menu.rect_in_menubar().width(), 0);
+        ++index;
         return true;
     });
     invalidate(menubar_rect());

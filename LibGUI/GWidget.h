@@ -14,6 +14,8 @@ class GWindow;
 
 enum class SizePolicy { Fixed, Fill };
 enum class Orientation { Horizontal, Vertical };
+enum class HorizontalDirection { Left, Right };
+enum class VerticalDirection { Up, Down };
 
 class GWidget : public GObject {
 public:

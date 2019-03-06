@@ -99,6 +99,7 @@ GWindow* make_launcher_window()
 
     auto* other_textbox = new GTextBox(widget);
     other_textbox->set_relative_rect({ 5, 140, 90, 20 });
+    other_textbox->set_text("Hello there I am text.");
 
     auto* checkbox = new GCheckBox(widget);
     checkbox->set_relative_rect({ 5, 170, 90, 20 });

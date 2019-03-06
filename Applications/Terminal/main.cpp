@@ -108,7 +108,7 @@ int main(int argc, char** argv)
     menubar->add_menu(move(app_menu));
 
     auto font_menu = make<GMenu>("Font");
-    GFontDatabase::the().for_each_font([&] (const String& font_name) {
+    GFontDatabase::the().for_each_fixed_width_font([&] (const String& font_name) {
         font_menu->add_action(GAction::create(font_name, [&terminal] (const GAction& action) {
             terminal.set_font(GFontDatabase::the().get_by_name(action.text()));
             terminal.force_repaint();
