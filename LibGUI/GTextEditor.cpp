@@ -7,7 +7,7 @@
 GTextEditor::GTextEditor(GWidget* parent)
     : GWidget(parent)
 {
-    set_font(GFontDatabase::the().get_by_name("Liza Thin"));
+    set_font(GFontDatabase::the().get_by_name("Csilla Thin"));
 
     set_fill_with_background_color(false);
 
@@ -48,7 +48,7 @@ void GTextEditor::set_text(const String& text)
             add_line(i);
     }
     add_line(i);
-    m_cursor = GTextPosition(0, 0);
+    set_cursor(0, 0);
     update();
 }
 
@@ -116,35 +116,31 @@ void GTextEditor::keydown_event(GKeyEvent& event)
 {
     if (event.key() == KeyCode::Key_Up) {
         if (m_cursor.line() > 0) {
-            update_cursor();
-            m_cursor.set_line(m_cursor.line() - 1);
-            m_cursor.set_column(min(m_cursor.column(), m_lines[m_cursor.line()].length()));
-            update_cursor();
+            int new_line = m_cursor.line() - 1;
+            int new_column = min(m_cursor.column(), m_lines[new_line].length());
+            set_cursor(new_line, new_column);
         }
         return;
     }
     if (event.key() == KeyCode::Key_Down) {
         if (m_cursor.line() < (m_lines.size() - 1)) {
-            update_cursor();
-            m_cursor.set_line(m_cursor.line() + 1);
-            m_cursor.set_column(min(m_cursor.column(), m_lines[m_cursor.line()].length()));
-            update_cursor();
+            int new_line = m_cursor.line() + 1;
+            int new_column = min(m_cursor.column(), m_lines[new_line].length());
+            set_cursor(new_line, new_column);
         }
         return;
     }
     if (event.key() == KeyCode::Key_Left) {
         if (m_cursor.column() > 0) {
-            update_cursor();
-            m_cursor.set_column(m_cursor.column() - 1);
-            update_cursor();
+            int new_column = m_cursor.column() - 1;
+            set_cursor(m_cursor.line(), new_column);
         }
         return;
     }
     if (event.key() == KeyCode::Key_Right) {
         if (m_cursor.column() < (m_lines[m_cursor.line()].length())) {
-            update_cursor();
-            m_cursor.set_column(m_cursor.column() + 1);
-            update_cursor();
+            int new_column = m_cursor.column() + 1;
+            set_cursor(m_cursor.line(), new_column);
         }
         return;
     }
@@ -208,6 +204,17 @@ Rect GTextEditor::line_content_rect(int line_index) const
 void GTextEditor::update_cursor()
 {
     update();
+}
+
+void GTextEditor::set_cursor(int line, int column)
+{
+    if (m_cursor.line() == line && m_cursor.column() == column)
+        return;
+    update_cursor();
+    m_cursor = GTextPosition(line, column);
+    update_cursor();
+    if (on_cursor_change)
+        on_cursor_change(*this);
 }
 
 void GTextEditor::Line::set_text(const String& text)
