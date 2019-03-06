@@ -352,7 +352,7 @@ const char* to_string(SocketRole role)
     }
 }
 
-String FileDescriptor::absolute_path()
+KResultOr<String> FileDescriptor::absolute_path()
 {
     Stopwatch sw("absolute_path");
     if (is_tty())

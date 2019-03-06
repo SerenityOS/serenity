@@ -1391,18 +1391,19 @@ int Process::sys$getcwd(char* buffer, ssize_t size)
         return -EINVAL;
     if (!validate_write(buffer, size))
         return -EFAULT;
-    auto path = VFS::the().absolute_path(cwd_inode());
-    if (path.is_null())
-        return -EINVAL;
+    auto path_or_error = VFS::the().absolute_path(cwd_inode());
+    if (path_or_error.is_error())
+        return path_or_error.error();
+    auto path = path_or_error.value();
     if (size < path.length() + 1)
         return -ERANGE;
     strcpy(buffer, path.characters());
     return 0;
 }
 
-size_t Process::number_of_open_file_descriptors() const
+int Process::number_of_open_file_descriptors() const
 {
-    size_t count = 0;
+    int count = 0;
     for (auto& descriptor : m_fds) {
         if (descriptor)
             ++count;

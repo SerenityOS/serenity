@@ -276,8 +276,8 @@ public:
     Inode& cwd_inode();
     Inode* executable_inode() { return m_executable.ptr(); }
 
-    size_t number_of_open_file_descriptors() const;
-    size_t max_open_file_descriptors() const { return m_max_open_file_descriptors; }
+    int number_of_open_file_descriptors() const;
+    int max_open_file_descriptors() const { return m_max_open_file_descriptors; }
 
     void send_signal(byte signal, Process* sender);
 
@@ -366,7 +366,7 @@ private:
     Vector<int> m_select_exceptional_fds;
     timeval m_select_timeout;
     bool m_select_has_timeout { false };
-    size_t m_max_open_file_descriptors { 16 };
+    int m_max_open_file_descriptors { 16 };
     SignalActionData m_signal_action_data[32];
     dword m_pending_signals { 0 };
     dword m_signal_mask { 0 };
