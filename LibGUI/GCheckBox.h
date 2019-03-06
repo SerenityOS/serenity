@@ -2,6 +2,7 @@
 
 #include "GWidget.h"
 #include <AK/AKString.h>
+#include <AK/Function.h>
 
 class GCheckBox final : public GWidget {
 public:
@@ -13,6 +14,8 @@ public:
 
     bool is_checked() const { return m_checked; }
     void set_checked(bool);
+
+    Function<void(GCheckBox&, bool)> on_change;
 
 private:
     virtual void paint_event(GPaintEvent&) override;

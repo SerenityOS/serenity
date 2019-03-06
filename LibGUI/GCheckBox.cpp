@@ -47,6 +47,8 @@ void GCheckBox::set_checked(bool b)
     if (m_checked == b)
         return;
     m_checked = b;
+    if (on_change)
+        on_change(*this, b);
     update();
 }
 

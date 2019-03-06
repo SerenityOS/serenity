@@ -17,7 +17,8 @@ struct [[gnu::packed]] FontFileHeader {
     byte glyph_width;
     byte glyph_height;
     byte type;
-    byte unused[7];
+    byte is_variable_width;
+    byte unused[6];
     char name[64];
 };
 
@@ -47,23 +48,33 @@ RetainPtr<Font> Font::clone() const
     // FIXME: This is leaked!
     auto* new_rows = static_cast<unsigned*>(kmalloc(bytes_per_glyph * 256));
     memcpy(new_rows, m_rows, bytes_per_glyph * 256);
-    return adopt(*new Font(m_name, new_rows, m_glyph_width, m_glyph_height));
+    auto* new_widths = static_cast<byte*>(kmalloc(256));
+    if (m_glyph_widths)
+        memcpy(new_widths, m_glyph_widths, 256);
+    else
+        memset(new_widths, m_glyph_width, 256);
+    return adopt(*new Font(m_name, new_rows, new_widths, m_fixed_width, m_glyph_width, m_glyph_height));
 }
 
-Font::Font(const String& name, unsigned* rows, byte glyph_width, byte glyph_height)
+Font::Font(const String& name, unsigned* rows, byte* widths, bool is_fixed_width, byte glyph_width, byte glyph_height)
     : m_name(name)
     , m_rows(rows)
+    , m_glyph_widths(widths)
     , m_glyph_width(glyph_width)
     , m_glyph_height(glyph_height)
     , m_min_glyph_width(glyph_width)
     , m_max_glyph_width(glyph_width)
+    , m_fixed_width(is_fixed_width)
 {
-    m_fixed_width = true;
     if (!m_fixed_width) {
+        byte maximum = 0;
         byte minimum = 255;
-        for (int i = 0; i < 256; ++i)
+        for (int i = 0; i < 256; ++i) {
             minimum = min(minimum, m_glyph_widths[i]);
+            maximum = max(maximum, m_glyph_widths[i]);
+        }
         m_min_glyph_width = minimum;
+        m_max_glyph_width = maximum;
     }
 }
 
@@ -87,8 +98,13 @@ RetainPtr<Font> Font::load_from_memory(const byte* data)
         return nullptr;
     }
 
+    size_t bytes_per_glyph = sizeof(unsigned) * header.glyph_height;
+
     auto* rows = (unsigned*)(data + sizeof(FontFileHeader));
-    return adopt(*new Font(String(header.name), rows, header.glyph_width, header.glyph_height));
+    byte* widths = nullptr;
+    if (header.is_variable_width)
+        widths = (byte*)(rows) + 256 * bytes_per_glyph;
+    return adopt(*new Font(String(header.name), rows, widths, !header.is_variable_width, header.glyph_width, header.glyph_height));
 }
 
 RetainPtr<Font> Font::load_from_file(const String& path)
@@ -129,15 +145,17 @@ bool Font::write_to_file(const String& path)
     header.glyph_width = m_glyph_width;
     header.glyph_height = m_glyph_height;
     header.type = 0;
+    header.is_variable_width = !m_fixed_width;
     memcpy(header.name, m_name.characters(), min(m_name.length(), 63));
 
     size_t bytes_per_glyph = sizeof(unsigned) * m_glyph_height;
 
-    auto buffer = ByteBuffer::create_uninitialized(sizeof(FontFileHeader) + (256 * bytes_per_glyph));
+    auto buffer = ByteBuffer::create_uninitialized(sizeof(FontFileHeader) + (256 * bytes_per_glyph) + 256);
     BufferStream stream(buffer);
 
     stream << ByteBuffer::wrap((byte*)&header, sizeof(FontFileHeader));
     stream << ByteBuffer::wrap((byte*)m_rows, (256 * bytes_per_glyph));
+    stream << ByteBuffer::wrap((byte*)m_glyph_widths, 256);
 
     ASSERT(stream.at_end());
     ssize_t nwritten = write(fd, buffer.pointer(), buffer.size());
@@ -154,6 +172,6 @@ int Font::width(const String& string) const
 
     int width = 0;
     for (int i = 0; i < string.length(); ++i)
-        width += glyph_width(string[i]);
+        width += glyph_width(string[i]) + 1;
     return width;
 }
