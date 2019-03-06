@@ -86,7 +86,7 @@ GlyphMapWidget::~GlyphMapWidget()
 
 int GlyphMapWidget::preferred_width() const
 {
-    return columns() * (font().glyph_width() + m_horizontal_spacing) + 2;
+    return columns() * (font().max_glyph_width() + m_horizontal_spacing) + 2;
 }
 
 int GlyphMapWidget::preferred_height() const
@@ -109,9 +109,9 @@ Rect GlyphMapWidget::get_outer_rect(byte glyph) const
     int row = glyph / columns();
     int column = glyph % columns();
     return {
-        column * (font().glyph_width() + m_horizontal_spacing) + 1,
+        column * (font().max_glyph_width() + m_horizontal_spacing) + 1,
         row * (font().glyph_height() + m_vertical_spacing) + 1,
-        font().glyph_width() + m_horizontal_spacing,
+        font().max_glyph_width() + m_horizontal_spacing,
         font().glyph_height() + m_horizontal_spacing
     };
 }
@@ -131,7 +131,7 @@ void GlyphMapWidget::paint_event(GPaintEvent&)
             Rect inner_rect(
                 outer_rect.x() + m_horizontal_spacing / 2,
                 outer_rect.y() + m_vertical_spacing / 2,
-                font().glyph_width(),
+                font().max_glyph_width(),
                 font().glyph_height()
             );
             if (glyph == m_selected_glyph) {
@@ -184,9 +184,9 @@ void GlyphEditorWidget::paint_event(GPaintEvent&)
     painter.draw_rect(rect(), Color::Black);
 
     for (int y = 0; y < font().glyph_height(); ++y)
-        painter.draw_line({ 0, y * m_scale }, { font().glyph_width() * m_scale, y * m_scale }, Color::Black);
+        painter.draw_line({ 0, y * m_scale }, { font().max_glyph_width() * m_scale, y * m_scale }, Color::Black);
 
-    for (int x = 0; x < font().glyph_width(); ++x)
+    for (int x = 0; x < font().max_glyph_width(); ++x)
         painter.draw_line({ x * m_scale, 0 }, { x * m_scale, font().glyph_height() * m_scale }, Color::Black);
 
     painter.translate(1, 1);
@@ -194,7 +194,7 @@ void GlyphEditorWidget::paint_event(GPaintEvent&)
     auto bitmap = font().glyph_bitmap(m_glyph);
 
     for (int y = 0; y < font().glyph_height(); ++y) {
-        for (int x = 0; x < font().glyph_width(); ++x) {
+        for (int x = 0; x < font().max_glyph_width(); ++x) {
             Rect rect { x * m_scale, y * m_scale, m_scale, m_scale };
             if (bitmap.bit_at(x, y))
                 painter.fill_rect(rect, Color::Black);
@@ -239,7 +239,7 @@ void GlyphEditorWidget::draw_at_mouse(const GMouseEvent& event)
 
 int GlyphEditorWidget::preferred_width() const
 {
-    return font().glyph_width() * m_scale + 1;
+    return font().max_glyph_width() * m_scale + 1;
 }
 
 int GlyphEditorWidget::preferred_height() const

@@ -151,4 +151,6 @@ private:
 
     float m_opacity { 0.8f };
     bool m_needs_background_fill { true };
+
+    int m_glyph_width { 0 };
 };

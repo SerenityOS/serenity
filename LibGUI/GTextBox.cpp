@@ -26,6 +26,7 @@ void GTextBox::set_text(const String& text)
 
 void GTextBox::paint_event(GPaintEvent& event)
 {
+    ASSERT(font().is_fixed_width());
     Painter painter(*this);
     painter.set_clip_rect(event.rect());
 
@@ -38,23 +39,27 @@ void GTextBox::paint_event(GPaintEvent& event)
     Rect inner_rect = rect();
     inner_rect.shrink(6, 6);
 
-    ssize_t max_chars_to_paint = inner_rect.width() / font().glyph_width();
+    ssize_t max_chars_to_paint = inner_rect.width() / font().min_glyph_width();
 
     int first_visible_char = max((int)m_cursor_position - (int)max_chars_to_paint, 0);
     ssize_t chars_to_paint = min(m_text.length() - first_visible_char, max_chars_to_paint);
+    int y = inner_rect.center().y() - font().glyph_height() / 2;    
+    int space_width = font().glyph_width(' ');
+    int x = inner_rect.x();
 
-    int y = inner_rect.center().y() - font().glyph_height() / 2;
     for (ssize_t i = 0; i < chars_to_paint; ++i) {
         char ch = m_text[first_visible_char + i];
-        if (ch == ' ')
+        if (ch == ' ') {
+            x += space_width;
             continue;
-        int x = inner_rect.x() + (i * font().glyph_width());
+        }
         painter.draw_glyph({x, y}, ch, Color::Black);
+        x += font().glyph_width(ch);
     }
 
     if (is_focused() && m_cursor_blink_state) {
-        unsigned visible_cursor_position = m_cursor_position - first_visible_char;
-        Rect cursor_rect(inner_rect.x() + visible_cursor_position * font().glyph_width(), inner_rect.y(), 1, inner_rect.height());
+        int visible_cursor_position = m_cursor_position - first_visible_char;
+        Rect cursor_rect(inner_rect.x() + visible_cursor_position * font().glyph_width('x'), inner_rect.y(), 1, inner_rect.height());
         painter.fill_rect(cursor_rect, foreground_color());
     }
 }
