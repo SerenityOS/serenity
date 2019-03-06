@@ -33,16 +33,15 @@ public:
     explicit GTextEditor(GWidget* parent);
     virtual ~GTextEditor() override;
 
+    Function<void(GTextEditor&)> on_cursor_change;
+
     void set_text(const String&);
-
     int content_width() const;
-
     Rect visible_content_rect() const;
     void scroll_into_view(const GTextPosition&, Orientation);
-
     int line_count() const { return m_lines.size(); }
-
     int padding() const { return 2; }
+    GTextPosition cursor() const { return m_cursor; }
 
 private:
     virtual void paint_event(GPaintEvent&) override;
@@ -55,6 +54,7 @@ private:
     Rect line_content_rect(int item_index) const;
     Rect cursor_content_rect() const;
     void update_cursor();
+    void set_cursor(int line, int column);
 
     GScrollBar* m_vertical_scrollbar { nullptr };
     GScrollBar* m_horizontal_scrollbar { nullptr };

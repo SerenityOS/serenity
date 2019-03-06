@@ -25,6 +25,10 @@ int main(int argc, char** argv)
     auto* text_editor = new GTextEditor(widget);
     auto* statusbar = new GStatusBar(widget);
 
+    text_editor->on_cursor_change = [statusbar] (GTextEditor& editor) {
+        statusbar->set_text(String::format("Line: %d, Column: %d", editor.cursor().line(), editor.cursor().column()));
+    };
+
     {
         StringBuilder builder;
         int fd = open("/home/anon/ReadMe.md", O_RDONLY);
