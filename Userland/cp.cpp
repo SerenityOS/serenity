@@ -3,6 +3,9 @@
 #include <assert.h>
 #include <stdio.h>
 #include <sys/stat.h>
+#include <AK/AKString.h>
+#include <AK/StringBuilder.h>
+#include <AK/FileSystemPath.h>
 
 int main(int argc, char** argv)
 {
@@ -10,15 +13,12 @@ int main(int argc, char** argv)
         printf("usage: cp <source> <destination>\n");
         return 0;
     }
+    String src_path = argv[1];
+    String dst_path = argv[2];
 
-    int src_fd = open(argv[1], O_RDONLY);
+    int src_fd = open(src_path.characters(), O_RDONLY);
     if (src_fd < 0) {
         perror("open src");
-        return 1;
-    }
-    int dst_fd = open(argv[2], O_WRONLY | O_CREAT);
-    if (dst_fd < 0) {
-        perror("open dst");
         return 1;
     }
 
@@ -27,6 +27,37 @@ int main(int argc, char** argv)
     if (rc < 0) {
         perror("stat src");
         return 1;
+    }
+
+    if (S_ISDIR(src_stat.st_mode)) {
+        fprintf(stderr, "cp: FIXME: Copying directories is not yet supported\n");
+        return 1;
+    }
+
+    int dst_fd = open(dst_path.characters(), O_WRONLY | O_CREAT);
+    if (dst_fd < 0) {
+        perror("open dst");
+        return 1;
+    }
+
+    struct stat dst_stat;
+    rc = fstat(dst_fd, &dst_stat);
+    if (rc < 0) {
+        perror("stat dst");
+        return 1;
+    }
+
+    if (S_ISDIR(dst_stat.st_mode)) {
+        StringBuilder builder;
+        builder.append(dst_path);
+        builder.append('/');
+        builder.append(FileSystemPath(src_path).basename());
+        dst_path = builder.to_string();
+        dst_fd = open(dst_path.characters(), O_WRONLY | O_CREAT);
+        if (dst_fd < 0) {
+            perror("open dst");
+            return 1;
+        }
     }
 
     for (;;) {
