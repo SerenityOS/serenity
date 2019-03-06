@@ -619,7 +619,7 @@ void Terminal::set_size(word columns, word rows)
     for (size_t i = 0; i < rows; ++i)
         m_lines[i] = new Line(columns);
 
-    m_pixel_width = m_columns * font().glyph_width() + m_inset * 2;
+    m_pixel_width = m_columns * font().glyph_width('x') + m_inset * 2;
     m_pixel_height = (m_rows * (font().glyph_height() + m_line_spacing)) + (m_inset * 2) - m_line_spacing;
 
     set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
@@ -639,14 +639,14 @@ void Terminal::set_size(word columns, word rows)
 Rect Terminal::glyph_rect(word row, word column)
 {
     int y = row * m_line_height;
-    int x = column * font().glyph_width();
-    return { x + m_inset, y + m_inset, font().glyph_width(), font().glyph_height() };
+    int x = column * font().glyph_width('x');
+    return { x + m_inset, y + m_inset, font().glyph_width('x'), font().glyph_height() };
 }
 
 Rect Terminal::row_rect(word row)
 {
     int y = row * m_line_height;
-    Rect rect = { m_inset, y + m_inset, font().glyph_width() * m_columns, font().glyph_height() };
+    Rect rect = { m_inset, y + m_inset, font().glyph_width('x') * m_columns, font().glyph_height() };
     rect.inflate(0, m_line_spacing);
     return rect;
 }
@@ -798,13 +798,13 @@ void Terminal::force_repaint()
 
 void Terminal::resize_event(GResizeEvent& event)
 {
-    int new_columns = event.size().width() / m_font->glyph_width();
+    int new_columns = event.size().width() / m_font->glyph_width('x');
     int new_rows = event.size().height() / m_line_height;
     set_size(new_columns, new_rows);
 }
 
 void Terminal::apply_size_increments_to_window(GWindow& window)
 {
-    window.set_size_increment({ font().glyph_width(), m_line_height });
+    window.set_size_increment({ font().glyph_width('x'), m_line_height });
     window.set_base_size({ m_inset * 2, m_inset * 2});
 }

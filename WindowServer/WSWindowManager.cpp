@@ -404,7 +404,7 @@ void WSWindowManager::paint_window_frame(WSWindow& window)
     auto close_button_rect = close_button_rect_for_window(window.rect());
 
     auto titlebar_title_rect = titlebar_inner_rect;
-    titlebar_title_rect.set_width(font().glyph_width() * window.title().length());
+    titlebar_title_rect.set_width(font().width(window.title()));
 
     Rect inner_border_rect {
         window.x() - 1,
@@ -948,7 +948,7 @@ void WSWindowManager::draw_menubar()
     auto time_rect = menubar_rect().translated(-(menubar_menu_margin() / 2), 0);
     m_back_painter->draw_text(time_rect, time_text, TextAlignment::CenterRight, Color::Black);
 
-    Rect cpu_rect { time_rect.right() - font().glyph_width() * time_text.length() - (int)m_cpu_history.capacity() - 10, time_rect.y() + 1, (int)m_cpu_history.capacity(), time_rect.height() - 2 };
+    Rect cpu_rect { time_rect.right() - font().width(time_text) - (int)m_cpu_history.capacity() - 10, time_rect.y() + 1, (int)m_cpu_history.capacity(), time_rect.height() - 2 };
     m_back_painter->fill_rect(cpu_rect, Color::Black);
     int i = m_cpu_history.capacity() - m_cpu_history.size();
     for (auto cpu_usage : m_cpu_history) {

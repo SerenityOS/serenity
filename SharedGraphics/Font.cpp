@@ -55,7 +55,16 @@ Font::Font(const String& name, unsigned* rows, byte glyph_width, byte glyph_heig
     , m_rows(rows)
     , m_glyph_width(glyph_width)
     , m_glyph_height(glyph_height)
+    , m_min_glyph_width(glyph_width)
+    , m_max_glyph_width(glyph_width)
 {
+    m_fixed_width = true;
+    if (!m_fixed_width) {
+        byte minimum = 255;
+        for (int i = 0; i < 256; ++i)
+            minimum = min(minimum, m_glyph_widths[i]);
+        m_min_glyph_width = minimum;
+    }
 }
 
 Font::~Font()
@@ -136,4 +145,15 @@ bool Font::write_to_file(const String& path)
     int rc = close(fd);
     ASSERT(rc == 0);
     return true;
+}
+
+int Font::width(const String& string) const
+{
+    if (m_fixed_width)
+        return string.length() * m_glyph_width;
+
+    int width = 0;
+    for (int i = 0; i < string.length(); ++i)
+        width += glyph_width(string[i]);
+    return width;
 }

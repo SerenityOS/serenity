@@ -332,21 +332,25 @@ void Painter::draw_text(const Rect& rect, const String& text, TextAlignment alig
     } else if (alignment == TextAlignment::CenterLeft) {
         point = { rect.x(), rect.center().y() - (font().glyph_height() / 2) };
     } else if (alignment == TextAlignment::CenterRight) {
-        int text_width = text.length() * font().glyph_width();
+        int text_width = font().width(text);
         point = { rect.right() - text_width, rect.center().y() - (font().glyph_height() / 2) };
     } else if (alignment == TextAlignment::Center) {
-        int text_width = text.length() * font().glyph_width();
+        int text_width = font().width(text);
         point = rect.center();
         point.move_by(-(text_width / 2), -(font().glyph_height() / 2));
     } else {
         ASSERT_NOT_REACHED();
     }
 
-    for (ssize_t i = 0; i < text.length(); ++i, point.move_by(font().glyph_width(), 0)) {
+    int space_width = font().glyph_width(' ');
+    for (ssize_t i = 0; i < text.length(); ++i) {
         byte ch = text[i];
-        if (ch == ' ')
+        if (ch == ' ') {
+            point.move_by(space_width, 0);
             continue;
+        }
         draw_glyph(point, ch, color);
+        point.move_by(font().glyph_width(ch), 0);
     }
 }
 

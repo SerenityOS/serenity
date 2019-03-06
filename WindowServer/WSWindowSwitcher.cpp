@@ -95,10 +95,10 @@ void WSWindowSwitcher::refresh()
     m_windows.clear();
     m_selected_index = 0;
     int window_count = 0;
-    int longest_title = 0;
+    int longest_title_width = 0;
     WSWindowManager::the().for_each_visible_window_of_type_from_back_to_front(WSWindowType::Normal, [&] (WSWindow& window) {
         ++window_count;
-        longest_title = max(longest_title, window.title().length());
+        longest_title_width = max(longest_title_width, WSWindowManager::the().font().width(window.title()));
         if (selected_window == &window)
             m_selected_index = m_windows.size();
         m_windows.append(window.make_weak_ptr());
@@ -108,8 +108,8 @@ void WSWindowSwitcher::refresh()
         hide();
         return;
     }
-    int space_for_window_rect = WSWindowManager::the().font().glyph_width() * 24;
-    m_rect.set_width(longest_title * WSWindowManager::the().font().glyph_width() + space_for_window_rect + padding() * 2);
+    int space_for_window_rect = 180;
+    m_rect.set_width(longest_title_width + space_for_window_rect + padding() * 2);
     m_rect.set_height(window_count * item_height() + padding() * 2);
     m_rect.center_within(WSWindowManager::the().m_screen_rect);
     if (!m_switcher_window)

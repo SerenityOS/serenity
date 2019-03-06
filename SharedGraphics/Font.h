@@ -54,12 +54,16 @@ public:
 
     GlyphBitmap glyph_bitmap(char ch) const { return GlyphBitmap(&m_rows[(byte)ch * m_glyph_height], { m_glyph_width, m_glyph_height }); }
 
-    byte glyph_width() const { return m_glyph_width; }
+    byte glyph_width(char ch) const { return m_fixed_width ? m_glyph_width : m_glyph_widths[(byte)ch]; }
     byte glyph_height() const { return m_glyph_height; }
-    int width(const String& string) const { return string.length() * glyph_width(); }
+    byte min_glyph_width() const { return m_min_glyph_width; }
+    byte max_glyph_width() const { return m_max_glyph_width; }
+    int width(const String& string) const;
 
     String name() const { return m_name; }
     void set_name(const String& name) { m_name = name; }
+
+    bool is_fixed_width() const { return m_fixed_width; }
 
 private:
     Font(const String& name, unsigned* rows, byte glyph_width, byte glyph_height);
@@ -67,8 +71,13 @@ private:
     String m_name;
 
     unsigned* m_rows { nullptr };
+    byte* m_glyph_widths { nullptr };
     void* m_mmap_ptr { nullptr };
 
     byte m_glyph_width { 0 };
     byte m_glyph_height { 0 };
+    byte m_min_glyph_width { 0 };
+    byte m_max_glyph_width { 0 };
+
+    bool m_fixed_width { false };
 };
