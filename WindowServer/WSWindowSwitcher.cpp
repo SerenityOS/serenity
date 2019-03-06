@@ -16,11 +16,11 @@ void WSWindowSwitcher::set_visible(bool visible)
     if (m_visible == visible)
         return;
     m_visible = visible;
-    if (!m_visible) {
-        WSWindowManager::the().invalidate(m_rect);
+    if (m_switcher_window)
+        m_switcher_window->set_visible(visible);
+    if (!m_visible)
         return;
-    }
-    invalidate();
+    refresh();
 }
 
 WSWindow* WSWindowSwitcher::selected_window()
@@ -53,15 +53,15 @@ void WSWindowSwitcher::on_key_event(const WSKeyEvent& event)
     auto* highlight_window = m_windows.at(m_selected_index).ptr();
     ASSERT(highlight_window);
     WSWindowManager::the().set_highlight_window(highlight_window);
+    draw();
     WSWindowManager::the().invalidate(m_rect);
 }
 
-void WSWindowSwitcher::draw(Painter& painter)
+void WSWindowSwitcher::draw()
 {
-    painter.translate(m_rect.location());
+    Painter painter(*m_switcher_window->backing_store());
     painter.fill_rect({ { }, m_rect.size() }, Color::LightGray);
     painter.draw_rect({ { }, m_rect.size() }, Color::DarkGray);
-
     for (int index = 0; index < m_windows.size(); ++index) {
         auto& window = *m_windows.at(index);
         Rect item_rect {
@@ -80,16 +80,14 @@ void WSWindowSwitcher::draw(Painter& painter)
             text_color = Color::Black;
             rect_text_color = Color::DarkGray;
         }
-
         painter.set_font(Font::default_bold_font());
         painter.draw_text(item_rect, window.title(), TextAlignment::CenterLeft, text_color);
         painter.set_font(WSWindowManager::the().font());
         painter.draw_text(item_rect, window.rect().to_string(), TextAlignment::CenterRight, rect_text_color);
     }
-    painter.translate(-m_rect.x(), -m_rect.y());
 }
 
-void WSWindowSwitcher::invalidate()
+void WSWindowSwitcher::refresh()
 {
     WSWindow* selected_window = nullptr;
     if (m_selected_index > 0 && m_windows[m_selected_index])
@@ -114,5 +112,13 @@ void WSWindowSwitcher::invalidate()
     m_rect.set_width(longest_title * WSWindowManager::the().font().glyph_width() + space_for_window_rect + padding() * 2);
     m_rect.set_height(window_count * item_height() + padding() * 2);
     m_rect.center_within(WSWindowManager::the().m_screen_rect);
-    WSWindowManager::the().invalidate(m_rect);
+    if (!m_switcher_window)
+        m_switcher_window = make<WSWindow>(*this, WSWindowType::WindowSwitcher);
+    m_switcher_window->set_rect(m_rect);
+    draw();
+}
+
+void WSWindowSwitcher::on_message(WSMessage& message)
+{
+
 }

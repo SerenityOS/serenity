@@ -69,7 +69,7 @@ WSWindow& WSMenu::ensure_menu_window()
             next_item_location.move_by(0, height);
         }
 
-        auto window = make<WSWindow>(*this);
+        auto window = make<WSWindow>(*this, WSWindowType::Menu);
         window->set_opacity(0.95f);
         window->set_rect(0, 0, width(), height());
         m_menu_window = move(window);
@@ -107,7 +107,7 @@ void WSMenu::draw()
     }
 }
 
-void WSMenu::on_window_message(WSMessage& message)
+void WSMenu::on_message(WSMessage& message)
 {
     ASSERT(menu_window());
     if (message.type() == WSMessage::MouseMove) {

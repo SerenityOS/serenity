@@ -5,9 +5,9 @@
 #include <WindowServer/WSAPITypes.h>
 #include <WindowServer/WSClientConnection.h>
 
-WSWindow::WSWindow(WSMenu& menu)
-    : m_type(WSWindowType::Menu)
-    , m_menu(&menu)
+WSWindow::WSWindow(WSMessageReceiver& internal_owner, WSWindowType type)
+    : m_internal_owner(&internal_owner)
+    , m_type(type)
 {
     WSWindowManager::the().add_window(*this);
 }
@@ -36,12 +36,11 @@ void WSWindow::set_title(String&& title)
 void WSWindow::set_rect(const Rect& rect)
 {
     Rect old_rect;
-    ASSERT(m_client || m_menu);
     if (m_rect == rect)
         return;
     old_rect = m_rect;
     m_rect = rect;
-    if (m_menu && (!m_backing_store || old_rect.size() != rect.size())) {
+    if (!m_client && (!m_backing_store || old_rect.size() != rect.size())) {
         m_backing_store = GraphicsBitmap::create(GraphicsBitmap::Format::RGB32, m_rect.size());
     }
     WSWindowManager::the().notify_rect_changed(*this, old_rect, rect);
@@ -61,10 +60,8 @@ static WSAPI_MouseButton to_api(MouseButton button)
 
 void WSWindow::on_message(WSMessage& message)
 {
-    if (m_menu) {
-        m_menu->on_window_message(message);
-        return;
-    }
+    if (m_internal_owner)
+        return m_internal_owner->on_message(message);
 
     WSAPI_ServerMessage server_message;
     server_message.window_id = window_id();

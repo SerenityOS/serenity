@@ -82,6 +82,16 @@ static inline Rect outer_window_rect(const Rect& window)
     return rect;
 }
 
+static inline Rect outer_window_rect(const WSWindow& window)
+{
+    if (window.type() == WSWindowType::Menu)
+        return menu_window_rect(window.rect());
+    if (window.type() == WSWindowType::WindowSwitcher)
+        return window.rect();
+    ASSERT(window.type() == WSWindowType::Normal);
+    return outer_window_rect(window.rect());
+}
+
 static WSWindowManager* s_the;
 
 WSWindowManager& WSWindowManager::the()
@@ -384,9 +394,12 @@ void WSWindowManager::paint_window_frame(WSWindow& window)
         return;
     }
 
+    if (window.type() == WSWindowType::WindowSwitcher)
+        return;
+
     auto titlebar_rect = title_bar_rect(window.rect());
     auto titlebar_inner_rect = title_bar_text_rect(window.rect());
-    auto outer_rect = outer_window_rect(window.rect());
+    auto outer_rect = outer_window_rect(window);
     auto border_rect = border_window_rect(window.rect());
     auto close_button_rect = close_button_rect_for_window(window.rect());
 
@@ -466,8 +479,8 @@ void WSWindowManager::add_window(WSWindow& window)
     m_windows_in_order.append(&window);
     if (!active_window())
         set_active_window(&window);
-    if (m_switcher.is_visible())
-        m_switcher.invalidate();
+    if (m_switcher.is_visible() && window.type() != WSWindowType::WindowSwitcher)
+        m_switcher.refresh();
 }
 
 void WSWindowManager::move_to_front(WSWindow& window)
@@ -488,25 +501,25 @@ void WSWindowManager::remove_window(WSWindow& window)
     m_windows_in_order.remove(&window);
     if (!active_window() && !m_windows.is_empty())
         set_active_window(*m_windows.begin());
-    if (m_switcher.is_visible())
-        m_switcher.invalidate();
+    if (m_switcher.is_visible() && window.type() != WSWindowType::WindowSwitcher)
+        m_switcher.refresh();
 }
 
 void WSWindowManager::notify_title_changed(WSWindow& window)
 {
-    printf("[WM] WSWindow{%p} title set to '%s'\n", &window, window.title().characters());
-    invalidate(outer_window_rect(window.rect()));
+    dbgprintf("[WM] WSWindow{%p} title set to '%s'\n", &window, window.title().characters());
+    invalidate(outer_window_rect(window));
     if (m_switcher.is_visible())
-        m_switcher.invalidate();
+        m_switcher.refresh();
 }
 
 void WSWindowManager::notify_rect_changed(WSWindow& window, const Rect& old_rect, const Rect& new_rect)
 {
-    printf("[WM] WSWindow %p rect changed (%d,%d %dx%d) -> (%d,%d %dx%d)\n", &window, old_rect.x(), old_rect.y(), old_rect.width(), old_rect.height(), new_rect.x(), new_rect.y(), new_rect.width(), new_rect.height());
+    dbgprintf("[WM] WSWindow %p rect changed (%d,%d %dx%d) -> (%d,%d %dx%d)\n", &window, old_rect.x(), old_rect.y(), old_rect.width(), old_rect.height(), new_rect.x(), new_rect.y(), new_rect.width(), new_rect.height());
     invalidate(outer_window_rect(old_rect));
     invalidate(outer_window_rect(new_rect));
-    if (m_switcher.is_visible())
-        m_switcher.invalidate();
+    if (m_switcher.is_visible() && window.type() != WSWindowType::WindowSwitcher)
+        m_switcher.refresh();
 }
 
 void WSWindowManager::handle_menu_mouse_event(WSMenu& menu, WSMouseEvent& event)
@@ -578,7 +591,7 @@ void WSWindowManager::start_window_resize(WSWindow& window, WSMouseEvent& event)
         { ResizeDirection::Left, ResizeDirection::None, ResizeDirection::Right },
         { ResizeDirection::DownLeft, ResizeDirection::Down, ResizeDirection::DownRight },
     };
-    Rect outer_rect = outer_window_rect(window.rect());
+    Rect outer_rect = outer_window_rect(window);
     ASSERT(outer_rect.contains(event.position()));
     int window_relative_x = event.x() - outer_rect.x();
     int window_relative_y = event.y() - outer_rect.y();
@@ -752,7 +765,7 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event, WSWindow*& event_
     }
 
     for_each_visible_window_from_front_to_back([&] (WSWindow& window) {
-        if (window.type() != WSWindowType::Menu && outer_window_rect(window.rect()).contains(event.position())) {
+        if (window.type() == WSWindowType::Normal && outer_window_rect(window).contains(event.position())) {
             if (m_keyboard_modifiers == Mod_Logo && event.type() == WSMessage::MouseDown && event.button() == MouseButton::Left) {
                 start_window_drag(window, event);
                 return IterationDecision::Abort;
@@ -762,7 +775,7 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event, WSWindow*& event_
                 return IterationDecision::Abort;
             }
         }
-        if (window.type() != WSWindowType::Menu && title_bar_rect(window.rect()).contains(event.position())) {
+        if (window.type() == WSWindowType::Normal && title_bar_rect(window.rect()).contains(event.position())) {
             if (event.type() == WSMessage::MouseDown) {
                 move_to_front(window);
                 set_active_window(&window);
@@ -777,7 +790,7 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event, WSWindow*& event_
         }
 
         if (window.rect().contains(event.position())) {
-            if (window.type() != WSWindowType::Menu && event.type() == WSMessage::MouseDown) {
+            if (window.type() == WSWindowType::Normal && event.type() == WSMessage::MouseDown) {
                 move_to_front(window);
                 set_active_window(&window);
             }
@@ -815,14 +828,14 @@ void WSWindowManager::compose()
                 //        Maybe there's some way we could know this?
                 continue;
             }
-            if (outer_window_rect(window->rect()).contains(r))
+            if (outer_window_rect(*window).contains(r))
                 return true;
         }
         return false;
     };
 
     auto any_dirty_rect_intersects_window = [&dirty_rects] (const WSWindow& window) {
-        auto window_rect = outer_window_rect(window.rect());
+        auto window_rect = outer_window_rect(window);
         for (auto& dirty_rect : dirty_rects.rects()) {
             if (dirty_rect.intersects(window_rect))
                 return true;
@@ -876,7 +889,9 @@ void WSWindowManager::compose()
         compose_window(*m_highlight_window);
 
     draw_menubar();
-    draw_window_switcher();
+    if (m_switcher.is_visible())
+        compose_window(*m_switcher.switcher_window());
+
     draw_cursor();
 
     if (m_flash_flush) {
@@ -949,7 +964,7 @@ void WSWindowManager::draw_menubar()
 void WSWindowManager::draw_window_switcher()
 {
     if (m_switcher.is_visible())
-        m_switcher.draw(*m_back_painter);
+        m_switcher.draw();
 }
 
 void WSWindowManager::draw_cursor()
@@ -1009,8 +1024,8 @@ void WSWindowManager::set_highlight_window(WSWindow* window)
 
 void WSWindowManager::set_active_window(WSWindow* window)
 {
-    if (window->type() == WSWindowType::Menu) {
-        dbgprintf("WSWindowManager: Attempted to make a menu window active.\n");
+    if (window->type() != WSWindowType::Normal) {
+        dbgprintf("WSWindowManager: Attempted to make a non-normal window active.\n");
         return;
     }
 
@@ -1079,7 +1094,11 @@ void WSWindowManager::invalidate(const WSWindow& window)
         return;
     }
     if (window.type() == WSWindowType::Normal) {
-        invalidate(outer_window_rect(window.rect()));
+        invalidate(outer_window_rect(window));
+        return;
+    }
+    if (window.type() == WSWindowType::WindowSwitcher) {
+        invalidate(window.rect());
         return;
     }
     ASSERT_NOT_REACHED();
@@ -1091,7 +1110,7 @@ void WSWindowManager::invalidate(const WSWindow& window, const Rect& rect)
         invalidate(window);
         return;
     }
-    auto outer_rect = outer_window_rect(window.rect());
+    auto outer_rect = outer_window_rect(window);
     auto inner_rect = rect;
     inner_rect.move_by(window.position());
     // FIXME: This seems slightly wrong; the inner rect shouldn't intersect the border part of the outer rect.
@@ -1107,13 +1126,13 @@ void WSWindowManager::flush(const Rect& a_rect)
     dbgprintf("[WM] flush #%u (%d,%d %dx%d)\n", ++m_flush_count, rect.x(), rect.y(), rect.width(), rect.height());
 #endif
 
-    RGBA32* front_ptr = m_front_bitmap->scanline(rect.y()) + rect.x();
+    const RGBA32* front_ptr = m_front_bitmap->scanline(rect.y()) + rect.x();
     RGBA32* back_ptr = m_back_bitmap->scanline(rect.y()) + rect.x();
     size_t pitch = m_back_bitmap->pitch();
 
     for (int y = 0; y < rect.height(); ++y) {
         fast_dword_copy(back_ptr, front_ptr, rect.width());
-        front_ptr = (RGBA32*)((byte*)front_ptr + pitch);
+        front_ptr = (const RGBA32*)((const byte*)front_ptr + pitch);
         back_ptr = (RGBA32*)((byte*)back_ptr + pitch);
     }
 }
