@@ -5,9 +5,18 @@
 #include <WindowServer/WSAPITypes.h>
 #include <WindowServer/WSClientConnection.h>
 
+static GraphicsBitmap& default_window_icon()
+{
+    static GraphicsBitmap* s_icon;
+    if (!s_icon)
+        s_icon = GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/window16.rgb", { 16, 16 }).leak_ref();
+    return *s_icon;
+}
+
 WSWindow::WSWindow(WSMessageReceiver& internal_owner, WSWindowType type)
     : m_internal_owner(&internal_owner)
     , m_type(type)
+    , m_icon(default_window_icon())
 {
     WSWindowManager::the().add_window(*this);
 }
@@ -16,6 +25,7 @@ WSWindow::WSWindow(WSClientConnection& client, int window_id)
     : m_client(&client)
     , m_type(WSWindowType::Normal)
     , m_window_id(window_id)
+    , m_icon(default_window_icon())
 {
     WSWindowManager::the().add_window(*this);
 }
