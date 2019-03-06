@@ -135,10 +135,10 @@ String DirectoryTableModel::name_for_gid(uid_t gid) const
     return (*it).value;
 }
 
-GVariant DirectoryTableModel::data(int row, int column) const
+GVariant DirectoryTableModel::data(const GModelIndex& index) const
 {
-    auto& entry = this->entry(row);
-    switch (column) {
+    auto& entry = this->entry(index.row());
+    switch (index.column()) {
     case Column::Icon: return icon_for(entry);
     case Column::Name: return entry.name;
     case Column::Size: return (int)entry.size;

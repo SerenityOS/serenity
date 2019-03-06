@@ -45,11 +45,11 @@ public:
     virtual String row_name(int) const { return { }; }
     virtual String column_name(int) const { return { }; }
     virtual ColumnMetadata column_metadata(int) const { return { }; }
-    virtual GVariant data(int row, int column) const = 0;
+    virtual GVariant data(const GModelIndex&) const = 0;
     virtual void update() = 0;
     virtual void activate(const GModelIndex&) { }
 
-    bool is_valid(GModelIndex index) const
+    bool is_valid(const GModelIndex& index) const
     {
         return index.row() >= 0 && index.row() < row_count() && index.column() >= 0 && index.column() < column_count();
     }
