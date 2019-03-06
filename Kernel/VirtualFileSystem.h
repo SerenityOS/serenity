@@ -84,8 +84,8 @@ public:
     size_t mount_count() const { return m_mounts.size(); }
     void for_each_mount(Function<void(const Mount&)>) const;
 
-    String absolute_path(Inode&);
-    String absolute_path(InodeIdentifier);
+    KResultOr<String> absolute_path(Inode&);
+    KResultOr<String> absolute_path(InodeIdentifier);
 
     InodeIdentifier root_inode_id() const;
     Inode* root_inode() { return m_root_inode.ptr(); }
@@ -105,7 +105,6 @@ private:
     void traverse_directory_inode(Inode&, Function<bool(const FS::DirectoryEntry&)>);
     InodeIdentifier old_resolve_path(const String& path, InodeIdentifier base, int& error, int options = 0, InodeIdentifier* parent_id = nullptr);
     KResultOr<InodeIdentifier> resolve_path(const String& path, InodeIdentifier base, int options = 0, InodeIdentifier* parent_id = nullptr);
-    RetainPtr<Inode> resolve_path_to_inode(const String& path, Inode& base, int& error, RetainPtr<Inode>* parent_id = nullptr);
     KResultOr<Retained<Inode>> resolve_path_to_inode(const String& path, Inode& base, RetainPtr<Inode>* parent_id = nullptr, int options = 0);
     KResultOr<InodeIdentifier> resolve_symbolic_link(InodeIdentifier base, Inode& symlink_inode);
 

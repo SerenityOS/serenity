@@ -355,25 +355,6 @@ KResultOr<Retained<Inode>> VFS::resolve_path_to_inode(const String& path, Inode&
     return Retained<Inode>(*get_inode(result.value()));
 }
 
-RetainPtr<Inode> VFS::resolve_path_to_inode(const String& path, Inode& base, int& error, RetainPtr<Inode>* parent_inode)
-{
-    // FIXME: This won't work nicely across mount boundaries.
-    FileSystemPath p(path);
-    if (!p.is_valid()) {
-        error = -EINVAL;
-        return nullptr;
-    }
-    InodeIdentifier parent_id;
-    auto inode_id = old_resolve_path(path, base.identifier(), error, 0, &parent_id);
-    if (parent_inode && parent_id.is_valid())
-        *parent_inode = get_inode(parent_id);
-    if (!inode_id.is_valid()) {
-        error = -ENOENT;
-        return nullptr;
-    }
-    return get_inode(inode_id);
-}
-
 KResult VFS::link(const String& old_path, const String& new_path, Inode& base)
 {
     auto old_inode_or_error = resolve_path_to_inode(old_path, base);
@@ -497,17 +478,16 @@ RetainPtr<Inode> VFS::get_inode(InodeIdentifier inode_id)
     return inode_id.fs()->get_inode(inode_id);
 }
 
-String VFS::absolute_path(InodeIdentifier inode_id)
+KResultOr<String> VFS::absolute_path(InodeIdentifier inode_id)
 {
     auto inode = get_inode(inode_id);
     if (!inode)
-        return { };
+        return KResult(-EIO);
     return absolute_path(*inode);
 }
 
-String VFS::absolute_path(Inode& core_inode)
+KResultOr<String> VFS::absolute_path(Inode& core_inode)
 {
-    int error;
     Vector<InodeIdentifier> lineage;
     RetainPtr<Inode> inode = &core_inode;
     while (inode->identifier() != root_inode_id()) {
@@ -518,11 +498,15 @@ String VFS::absolute_path(Inode& core_inode)
 
         InodeIdentifier parent_id;
         if (inode->is_directory()) {
-            parent_id = old_resolve_path("..", inode->identifier(), error);
+            auto result = resolve_path("..", inode->identifier());
+            if (result.is_error())
+                return result.error();
+            parent_id = result.value();
         } else {
             parent_id = inode->parent()->identifier();
         }
-        ASSERT(parent_id.is_valid());
+        if (!parent_id.is_valid())
+            return KResult(-EIO);
         inode = get_inode(parent_id);
     }
     if (lineage.is_empty())

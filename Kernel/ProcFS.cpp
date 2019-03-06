@@ -188,7 +188,10 @@ ByteBuffer procfs$pid_fds(InodeIdentifier identifier)
         auto* descriptor = process.file_descriptor(i);
         if (!descriptor)
             continue;
-        builder.appendf("% 3u %s\n", i, descriptor->absolute_path().characters());
+        auto result = descriptor->absolute_path();
+        if (result.is_error())
+            continue;
+        builder.appendf("% 3u %s\n", i, result.value().characters());
     }
     return builder.to_byte_buffer();
 }
@@ -203,7 +206,10 @@ ByteBuffer procfs$pid_fd_entry(InodeIdentifier identifier)
     auto* descriptor = process.file_descriptor(fd);
     if (!descriptor)
         return { };
-    return descriptor->absolute_path().to_byte_buffer();
+    auto result = descriptor->absolute_path();
+    if (result.is_error())
+        return { };
+    return result.value().to_byte_buffer();
 }
 
 ByteBuffer procfs$pid_vm(InodeIdentifier identifier)
@@ -331,7 +337,10 @@ ByteBuffer procfs$pid_exe(InodeIdentifier identifier)
     auto& process = handle->process();
     auto inode = process.executable_inode();
     ASSERT(inode);
-    return VFS::the().absolute_path(*inode).to_byte_buffer();
+    auto result = VFS::the().absolute_path(*inode);
+    if (result.is_error())
+        return { };
+    return result.value().to_byte_buffer();
 }
 
 ByteBuffer procfs$pid_cwd(InodeIdentifier identifier)
@@ -339,7 +348,10 @@ ByteBuffer procfs$pid_cwd(InodeIdentifier identifier)
     auto handle = ProcessInspectionHandle::from_pid(to_pid(identifier));
     if (!handle)
         return { };
-    return VFS::the().absolute_path(handle->process().cwd_inode()).to_byte_buffer();
+    auto result = VFS::the().absolute_path(handle->process().cwd_inode());
+    if (result.is_error())
+        return { };
+    return result.value().to_byte_buffer();
 }
 
 ByteBuffer procfs$self(InodeIdentifier)
@@ -388,9 +400,12 @@ ByteBuffer procfs$mounts(InodeIdentifier)
             builder.appendf("/");
         else {
             builder.appendf("%u:%u", mount.host().fsid(), mount.host().index());
-            auto path = VFS::the().absolute_path(mount.host());
             builder.append(' ');
-            builder.append(path);
+            auto result = VFS::the().absolute_path(mount.host());
+            if (result.is_error())
+                builder.append("[error]");
+            else
+                builder.append(result.value());
         }
         builder.append('\n');
     });
@@ -411,7 +426,11 @@ ByteBuffer procfs$df(InodeIdentifier)
         if (!mount.host().is_valid())
             builder.append("/");
         else {
-            builder.append(VFS::the().absolute_path(mount.host()));
+            auto result = VFS::the().absolute_path(mount.host());
+            if (result.is_error())
+                builder.append("[Error]");
+            else
+                builder.append(result.value());
         }
         builder.append('\n');
     });
@@ -553,11 +572,13 @@ ByteBuffer procfs$all(InodeIdentifier)
 ByteBuffer procfs$inodes(InodeIdentifier)
 {
     extern HashTable<Inode*>& all_inodes();
-    auto& vfs = VFS::the();
     StringBuilder builder;
     for (auto it : all_inodes()) {
         RetainPtr<Inode> inode = *it;
-        String path = vfs.absolute_path(*inode);
+        auto result = VFS::the().absolute_path(*inode);
+        if (result.is_error())
+            continue;
+        auto path = result.value();
         builder.appendf("Inode{K%x} %02u:%08u (%u) %s\n", inode.ptr(), inode->fsid(), inode->index(), inode->retain_count(), path.characters());
     }
     return builder.to_byte_buffer();
@@ -880,13 +901,13 @@ bool ProcFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry&)
         }
         for (auto pid_child : Process::all_pids()) {
             char name[16];
-            size_t name_length = ksprintf(name, "%u", pid_child);
+            int name_length = ksprintf(name, "%u", pid_child);
             callback({ name, name_length, to_identifier(fsid(), PDI_Root, pid_child, FI_PID), 0 });
         }
         break;
 
     case FI_Root_sys:
-        for (size_t i = 0; i < fs().m_sys_entries.size(); ++i) {
+        for (int i = 0; i < fs().m_sys_entries.size(); ++i) {
             auto& entry = fs().m_sys_entries[i];
             callback({ entry.name, strlen(entry.name), sys_var_to_identifier(fsid(), i), 0 });
         }
@@ -913,7 +934,7 @@ bool ProcFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry&)
         if (!handle)
             return false;
         auto& process = handle->process();
-        for (size_t i = 0; i < process.max_open_file_descriptors(); ++i) {
+        for (int i = 0; i < process.max_open_file_descriptors(); ++i) {
             auto* descriptor = process.file_descriptor(i);
             if (!descriptor)
                 continue;
@@ -965,7 +986,7 @@ InodeIdentifier ProcFSInode::lookup(const String& name)
     }
 
     if (proc_file_type == FI_Root_sys) {
-        for (size_t i = 0; i < fs().m_sys_entries.size(); ++i) {
+        for (int i = 0; i < fs().m_sys_entries.size(); ++i) {
             auto& entry = fs().m_sys_entries[i];
             if (!strcmp(entry.name, name.characters()))
                 return sys_var_to_identifier(fsid(), i);
