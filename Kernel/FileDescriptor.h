@@ -86,7 +86,7 @@ public:
 
     ByteBuffer& generator_cache() { return m_generator_cache; }
 
-    void set_original_inode(Badge<VFS>, RetainPtr<Inode>&& inode) { m_inode = move(inode); }
+    void set_original_inode(Badge<VFS>, Retained<Inode>&& inode) { m_inode = move(inode); }
 
     void set_socket_role(SocketRole);
 

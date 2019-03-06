@@ -34,6 +34,19 @@ public:
         new (&m_storage) T(move(value));
     }
 
+    template<typename U>
+    KResultOr(U&& value)
+    {
+        new (&m_storage) T(move(value));
+    }
+
+    KResultOr(KResultOr&& other)
+    {
+        new (&m_storage) T(move(other.value()));
+        other.m_is_error = true;
+        other.m_error = KSuccess;
+    }
+
     ~KResultOr()
     {
         if (!m_is_error)

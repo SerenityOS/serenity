@@ -123,26 +123,25 @@ void VFS::traverse_directory_inode(Inode& dir_inode, Function<bool(const FS::Dir
     });
 }
 
-RetainPtr<FileDescriptor> VFS::open(RetainPtr<Device>&& device, int& error, int options)
+KResultOr<Retained<FileDescriptor>> VFS::open(RetainPtr<Device>&& device, int options)
 {
     // FIXME: Respect options.
-    (void) options;
-    (void) error;
+    (void)options;
     return FileDescriptor::create(move(device));
 }
 
 KResult VFS::utime(const String& path, Inode& base, time_t atime, time_t mtime)
 {
-    int error;
-    auto descriptor = VFS::the().open(move(path), error, 0, 0, base);
-    if (!descriptor)
-        return KResult(error);
-    auto& inode = *descriptor->inode();
+    auto descriptor_or_error = VFS::the().open(move(path), 0, 0, base);
+    if (descriptor_or_error.is_error())
+        return descriptor_or_error.error();
+    auto& inode = *descriptor_or_error.value()->inode();
     if (inode.fs().is_readonly())
         return KResult(-EROFS);
     if (inode.metadata().uid != current->euid())
         return KResult(-EACCES);
-    error = inode.set_atime(atime);
+
+    int error = inode.set_atime(atime);
     if (error)
         return KResult(error);
     error = inode.set_mtime(mtime);
@@ -159,60 +158,50 @@ KResult VFS::stat(const String& path, int options, Inode& base, struct stat& sta
     return FileDescriptor::create(inode_or_error.value().ptr())->fstat(statbuf);
 }
 
-RetainPtr<FileDescriptor> VFS::open(const String& path, int& error, int options, mode_t mode, Inode& base)
+KResultOr<Retained<FileDescriptor>> VFS::open(const String& path, int options, mode_t mode, Inode& base)
 {
-    auto inode_id = old_resolve_path(path, base.identifier(), error, options);
-    auto inode = get_inode(inode_id);
+    auto inode_or_error = resolve_path_to_inode(path, base, nullptr, options);
     if (options & O_CREAT) {
-        if (!inode)
-            return create(path, error, options, mode, base);
-        else if (options & O_EXCL) {
-            error = -EEXIST;
-            return nullptr;
-        }
+        if (inode_or_error.is_error())
+            return create(path, options, mode, base);
+        if (options & O_EXCL)
+            return KResult(-EEXIST);
     }
-    if (!inode)
-        return nullptr;
+    if (inode_or_error.is_error())
+        return inode_or_error.error();
 
-    auto metadata = inode->metadata();
+    auto metadata = inode_or_error.value()->metadata();
 
     // NOTE: Read permission is a bit weird, since O_RDONLY == 0,
     //       so we check if (NOT write_only OR read_and_write)
     if (!(options & O_WRONLY) || (options & O_RDWR)) {
-        if (!metadata.may_read(*current)) {
-            error = -EACCES;
-            return nullptr;
-        }
+        if (!metadata.may_read(*current))
+            return KResult(-EACCES);
     }
     if ((options & O_WRONLY) || (options & O_RDWR)) {
-        if (!metadata.may_write(*current)) {
-            error = -EACCES;
-            return nullptr;
-        }
-        if (metadata.is_directory()) {
-            error = -EISDIR;
-            return nullptr;
-        }
+        if (!metadata.may_write(*current))
+            return KResult(-EACCES);
+        if (metadata.is_directory())
+            return KResult(-EISDIR);
     }
 
     if (metadata.is_device()) {
         auto it = m_devices.find(encoded_device(metadata.major_device, metadata.minor_device));
         if (it == m_devices.end()) {
             kprintf("VFS::open: no such device %u,%u\n", metadata.major_device, metadata.minor_device);
-            error = -ENODEV;
-            return nullptr;
+            return KResult(-ENODEV);
         }
-        auto descriptor = (*it).value->open(error, options);
-        descriptor->set_original_inode(Badge<VFS>(), move(inode));
+        auto descriptor = (*it).value->open(options);
+        ASSERT(!descriptor.is_error());
+        descriptor.value()->set_original_inode(Badge<VFS>(), *inode_or_error.value());
         return descriptor;
     }
-    return FileDescriptor::create(move(inode));
+    return FileDescriptor::create(*inode_or_error.value());
 }
 
-RetainPtr<FileDescriptor> VFS::create(const String& path, int& error, int options, mode_t mode, Inode& base)
+KResultOr<Retained<FileDescriptor>> VFS::create(const String& path, int options, mode_t mode, Inode& base)
 {
-    (void) options;
-    error = -EWHYTHO;
+    (void)options;
 
     if (!is_socket(mode) && !is_fifo(mode) && !is_block_device(mode) && !is_character_device(mode)) {
         // Turn it into a regular file. (This feels rather hackish.)
@@ -220,30 +209,23 @@ RetainPtr<FileDescriptor> VFS::create(const String& path, int& error, int option
     }
 
     RetainPtr<Inode> parent_inode;
-    auto existing_file = resolve_path_to_inode(path, base, error, &parent_inode);
-    if (existing_file) {
-        error = -EEXIST;
-        return nullptr;
-    }
-    if (!parent_inode) {
-        error = -ENOENT;
-        return nullptr;
-    }
-    if (error != -ENOENT) {
-        return nullptr;
-    }
-    if (!parent_inode->metadata().may_write(*current)) {
-        error = -EACCES;
-        return nullptr;
-    }
+    auto existing_file_or_error = resolve_path_to_inode(path, base, &parent_inode);
+    if (!existing_file_or_error.is_error())
+        return KResult(-EEXIST);
+    if (!parent_inode)
+        return KResult(-ENOENT);
+    if (existing_file_or_error.error() != -ENOENT)
+        return existing_file_or_error.error();
+    if (!parent_inode->metadata().may_write(*current))
+        return KResult(-EACCES);
 
     FileSystemPath p(path);
     dbgprintf("VFS::create_file: '%s' in %u:%u\n", p.basename().characters(), parent_inode->fsid(), parent_inode->index());
+    int error;
     auto new_file = parent_inode->fs().create_inode(parent_inode->identifier(), p.basename(), mode, 0, error);
     if (!new_file)
-        return nullptr;
+        return KResult(error);
 
-    error = 0;
     return FileDescriptor::create(move(new_file));
 }
 

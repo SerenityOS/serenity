@@ -26,17 +26,15 @@ PTYMultiplexer::~PTYMultiplexer()
 {
 }
 
-RetainPtr<FileDescriptor> PTYMultiplexer::open(int& error, int options)
+KResultOr<Retained<FileDescriptor>> PTYMultiplexer::open(int options)
 {
     LOCKER(m_lock);
-    if (m_freelist.is_empty()) {
-        error = -EBUSY;
-        return nullptr;
-    }
+    if (m_freelist.is_empty())
+        return KResult(-EBUSY);
     auto master_index = m_freelist.take_last();
     auto master = adopt(*new MasterPTY(master_index));
     dbgprintf("PTYMultiplexer::open: Vending master %u\n", master->index());
-    return VFS::the().open(move(master), error, options);
+    return VFS::the().open(move(master), options);
 }
 
 void PTYMultiplexer::notify_master_destroyed(Badge<MasterPTY>, unsigned index)

@@ -10,8 +10,8 @@ public:
     static Retained<LocalSocket> create(int type);
     virtual ~LocalSocket() override;
 
-    virtual bool bind(const sockaddr*, socklen_t, int& error) override;
-    virtual bool connect(const sockaddr*, socklen_t, int& error) override;
+    virtual KResult bind(const sockaddr*, socklen_t) override;
+    virtual KResult connect(const sockaddr*, socklen_t) override;
     virtual bool get_address(sockaddr*, socklen_t*) override;
     virtual void attach_fd(SocketRole) override;
     virtual void detach_fd(SocketRole) override;

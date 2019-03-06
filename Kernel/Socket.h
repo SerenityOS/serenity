@@ -6,12 +6,13 @@
 #include <AK/HashTable.h>
 #include <AK/Vector.h>
 #include <Kernel/UnixTypes.h>
+#include <Kernel/KResult.h>
 
 enum class SocketRole { None, Listener, Accepted, Connected };
 
 class Socket : public Retainable<Socket> {
 public:
-    static RetainPtr<Socket> create(int domain, int type, int protocol, int& error);
+    static KResultOr<Retained<Socket>> create(int domain, int type, int protocol);
     virtual ~Socket();
 
     int domain() const { return m_domain; }
@@ -21,10 +22,10 @@ public:
     bool can_accept() const { return !m_pending.is_empty(); }
     RetainPtr<Socket> accept();
     bool is_connected() const { return m_connected; }
-    bool listen(int backlog, int& error);
+    KResult listen(int backlog);
 
-    virtual bool bind(const sockaddr*, socklen_t, int& error) = 0;
-    virtual bool connect(const sockaddr*, socklen_t, int& error) = 0;
+    virtual KResult bind(const sockaddr*, socklen_t) = 0;
+    virtual KResult connect(const sockaddr*, socklen_t) = 0;
     virtual bool get_address(sockaddr*, socklen_t*) = 0;
     virtual bool is_local() const { return false; }
     virtual void attach_fd(SocketRole) = 0;
@@ -39,7 +40,7 @@ public:
 protected:
     Socket(int domain, int type, int protocol);
 
-    bool queue_connection_from(Socket&, int& error);
+    KResult queue_connection_from(Socket&);
 
 private:
     Lock m_lock;

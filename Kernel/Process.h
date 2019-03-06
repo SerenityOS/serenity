@@ -236,7 +236,7 @@ public:
     void* sys$get_shared_buffer(int shared_buffer_id);
     int sys$release_shared_buffer(int shared_buffer_id);
 
-    bool wait_for_connect(Socket&, int& error);
+    KResult wait_for_connect(Socket&);
 
     static void initialize();
 
@@ -349,7 +349,7 @@ private:
     struct FileDescriptorAndFlags {
         operator bool() const { return !!descriptor; }
         void clear() { descriptor = nullptr; flags = 0; }
-        void set(RetainPtr<FileDescriptor>&& d, dword f = 0) { descriptor = move(d); flags = f; }
+        void set(Retained<FileDescriptor>&& d, dword f = 0) { descriptor = move(d); flags = f; }
         RetainPtr<FileDescriptor> descriptor;
         dword flags { 0 };
     };

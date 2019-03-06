@@ -293,12 +293,10 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
     if (parts.is_empty())
         return -ENOENT;
 
-    int error;
-    auto descriptor = VFS::the().open(path, error, 0, 0, cwd_inode());
-    if (!descriptor) {
-        ASSERT(error != 0);
-        return error;
-    }
+    auto result = VFS::the().open(path, 0, 0, cwd_inode());
+    if (result.is_error())
+        return result.error();
+    auto descriptor = result.value();
 
     if (!descriptor->metadata().may_execute(m_euid, m_gids))
         return -EACCES;
@@ -644,10 +642,9 @@ Process::Process(String&& name, uid_t uid, gid_t gid, pid_t ppid, RingLevel ring
     } else {
         m_fds.resize(m_max_open_file_descriptors);
         auto& device_to_use_as_tty = tty ? (CharacterDevice&)*tty : NullDevice::the();
-        int error;
-        m_fds[0].set(device_to_use_as_tty.open(error, O_RDONLY));
-        m_fds[1].set(device_to_use_as_tty.open(error, O_WRONLY));
-        m_fds[2].set(device_to_use_as_tty.open(error, O_WRONLY));
+        m_fds[0].set(*device_to_use_as_tty.open(O_RDONLY).value());
+        m_fds[1].set(*device_to_use_as_tty.open(O_WRONLY).value());
+        m_fds[2].set(*device_to_use_as_tty.open(O_WRONLY).value());
     }
 
     if (fork_parent)
@@ -1306,7 +1303,7 @@ int Process::sys$fcntl(int fd, int cmd, dword arg)
         }
         if (new_fd == -1)
             return -EMFILE;
-        m_fds[new_fd].set(descriptor);
+        m_fds[new_fd].set(*descriptor);
         break;
     }
     case F_GETFD:
@@ -1359,10 +1356,10 @@ int Process::sys$readlink(const char* path, char* buffer, ssize_t size)
     if (!validate_write(buffer, size))
         return -EFAULT;
 
-    int error;
-    auto descriptor = VFS::the().open(path, error, O_RDONLY | O_NOFOLLOW_NOERROR, 0, cwd_inode());
-    if (!descriptor)
-        return error;
+    auto result = VFS::the().open(path, O_RDONLY | O_NOFOLLOW_NOERROR, 0, cwd_inode());
+    if (result.is_error())
+        return result.error();
+    auto descriptor = result.value();
 
     if (!descriptor->metadata().is_symlink())
         return -EINVAL;
@@ -1422,10 +1419,11 @@ int Process::sys$open(const char* path, int options, mode_t mode)
         return -EFAULT;
     if (number_of_open_file_descriptors() >= m_max_open_file_descriptors)
         return -EMFILE;
-    int error = -EWHYTHO;
-    auto descriptor = VFS::the().open(path, error, options, mode & ~umask(), cwd_inode());
-    if (!descriptor)
-        return error;
+
+    auto result = VFS::the().open(path, options, mode & ~umask(), cwd_inode());
+    if (result.is_error())
+        return result.error();
+    auto descriptor = result.value();
     if (options & O_DIRECTORY && !descriptor->is_directory())
         return -ENOTDIR; // FIXME: This should be handled by VFS::open.
     if (options & O_NONBLOCK)
@@ -1952,7 +1950,7 @@ int Process::sys$dup(int old_fd)
         if (!m_fds[new_fd])
             break;
     }
-    m_fds[new_fd].set(descriptor);
+    m_fds[new_fd].set(*descriptor);
     return new_fd;
 }
 
@@ -1963,7 +1961,7 @@ int Process::sys$dup2(int old_fd, int new_fd)
         return -EBADF;
     if (number_of_open_file_descriptors() == m_max_open_file_descriptors)
         return -EMFILE;
-    m_fds[new_fd].set(descriptor);
+    m_fds[new_fd].set(*descriptor);
     return new_fd;
 }
 
@@ -2400,11 +2398,10 @@ int Process::sys$socket(int domain, int type, int protocol)
         if (!m_fds[fd])
             break;
     }
-    int error;
-    auto socket = Socket::create(domain, type, protocol, error);
-    if (!socket)
-        return error;
-    auto descriptor = FileDescriptor::create(move(socket));
+    auto result = Socket::create(domain, type, protocol);
+    if (result.is_error())
+        return result.error();
+    auto descriptor = FileDescriptor::create(*result.value());
     unsigned flags = 0;
     if (type & SOCK_CLOEXEC)
         flags |= FD_CLOEXEC;
@@ -2424,10 +2421,7 @@ int Process::sys$bind(int sockfd, const sockaddr* address, socklen_t address_len
     if (!descriptor->is_socket())
         return -ENOTSOCK;
     auto& socket = *descriptor->socket();
-    int error;
-    if (!socket.bind(address, address_length, error))
-        return error;
-    return 0;
+    return socket.bind(address, address_length);
 }
 
 int Process::sys$listen(int sockfd, int backlog)
@@ -2438,9 +2432,9 @@ int Process::sys$listen(int sockfd, int backlog)
     if (!descriptor->is_socket())
         return -ENOTSOCK;
     auto& socket = *descriptor->socket();
-    int error;
-    if (!socket.listen(backlog, error))
-        return error;
+    auto result = socket.listen(backlog);
+    if (result.is_error())
+        return result;
     descriptor->set_socket_role(SocketRole::Listener);
     return 0;
 }
@@ -2497,26 +2491,24 @@ int Process::sys$connect(int sockfd, const sockaddr* address, socklen_t address_
     if (!descriptor->is_socket())
         return -ENOTSOCK;
     auto& socket = *descriptor->socket();
-    int error;
-    if (!socket.connect(address, address_size, error))
-        return error;
+    auto result = socket.connect(address, address_size);
+    if (result.is_error())
+        return result;
     descriptor->set_socket_role(SocketRole::Connected);
     return 0;
 }
 
-bool Process::wait_for_connect(Socket& socket, int& error)
+KResult Process::wait_for_connect(Socket& socket)
 {
     if (socket.is_connected())
-        return true;
+        return KSuccess;
     m_blocked_connecting_socket = socket;
     block(BlockedConnect);
     Scheduler::yield();
     m_blocked_connecting_socket = nullptr;
-    if (!socket.is_connected()) {
-        error = -ECONNREFUSED;
-        return false;
-    }
-    return true;
+    if (!socket.is_connected())
+        return KResult(-ECONNREFUSED);
+    return KSuccess;
 }
 
 struct SharedBuffer {
