@@ -483,6 +483,8 @@ void __assertion_failed(const char* msg, const char* file, unsigned line, const 
 {
     asm volatile("cli");
     kprintf("ASSERTION FAILED: %s\n%s:%u in %s\n", msg, file, line, func);
+    extern void dump_backtrace(bool);
+    dump_backtrace(true);
     asm volatile("hlt");
     for (;;);
 }
