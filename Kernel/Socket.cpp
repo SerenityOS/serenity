@@ -4,15 +4,14 @@
 #include <Kernel/Process.h>
 #include <LibC/errno_numbers.h>
 
-RetainPtr<Socket> Socket::create(int domain, int type, int protocol, int& error)
+KResultOr<Retained<Socket>> Socket::create(int domain, int type, int protocol)
 {
     (void)protocol;
     switch (domain) {
     case AF_LOCAL:
         return LocalSocket::create(type & SOCK_TYPE_MASK);
     default:
-        error = EAFNOSUPPORT;
-        return nullptr;
+        return KResult(-EAFNOSUPPORT);
     }
 }
 
@@ -28,16 +27,14 @@ Socket::~Socket()
 {
 }
 
-bool Socket::listen(int backlog, int& error)
+KResult Socket::listen(int backlog)
 {
     LOCKER(m_lock);
-    if (m_type != SOCK_STREAM) {
-        error = -EOPNOTSUPP;
-        return false;
-    }
+    if (m_type != SOCK_STREAM)
+        return KResult(-EOPNOTSUPP);
     m_backlog = backlog;
     kprintf("Socket{%p} listening with backlog=%d\n", this, m_backlog);
-    return true;
+    return KSuccess;
 }
 
 RetainPtr<Socket> Socket::accept()
@@ -52,13 +49,11 @@ RetainPtr<Socket> Socket::accept()
     return client;
 }
 
-bool Socket::queue_connection_from(Socket& peer, int& error)
+KResult Socket::queue_connection_from(Socket& peer)
 {
     LOCKER(m_lock);
-    if (m_pending.size() >= m_backlog) {
-        error = -ECONNREFUSED;
-        return false;
-    }
+    if (m_pending.size() >= m_backlog)
+        return KResult(-ECONNREFUSED);
     m_pending.append(peer);
-    return true;
+    return KSuccess;
 }

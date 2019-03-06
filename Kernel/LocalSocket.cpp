@@ -33,17 +33,13 @@ bool LocalSocket::get_address(sockaddr* address, socklen_t* address_size)
     return true;
 }
 
-bool LocalSocket::bind(const sockaddr* address, socklen_t address_size, int& error)
+KResult LocalSocket::bind(const sockaddr* address, socklen_t address_size)
 {
     ASSERT(!is_connected());
-    if (address_size != sizeof(sockaddr_un)) {
-        error = -EINVAL;
-        return false;
-    }
-    if (address->sa_family != AF_LOCAL) {
-        error = -EINVAL;
-        return false;
-    }
+    if (address_size != sizeof(sockaddr_un))
+        return KResult(-EINVAL);
+    if (address->sa_family != AF_LOCAL)
+        return KResult(-EINVAL);
 
     const sockaddr_un& local_address = *reinterpret_cast<const sockaddr_un*>(address);
     char safe_address[sizeof(local_address.sun_path) + 1];
@@ -53,32 +49,29 @@ bool LocalSocket::bind(const sockaddr* address, socklen_t address_size, int& err
     kprintf("%s(%u) LocalSocket{%p} bind(%s)\n", current->name().characters(), current->pid(), this, safe_address);
 #endif
 
-    m_file = VFS::the().open(safe_address, error, O_CREAT | O_EXCL, S_IFSOCK | 0666, current->cwd_inode());
-    if (!m_file) {
-        if (error == -EEXIST)
-            error = -EADDRINUSE;
-        return false;
+    auto result = VFS::the().open(safe_address, O_CREAT | O_EXCL, S_IFSOCK | 0666, current->cwd_inode());
+    if (result.is_error()) {
+        if (result.error() == -EEXIST)
+            return KResult(-EADDRINUSE);
+        return result.error();
     }
+    m_file = move(result.value());
 
     ASSERT(m_file->inode());
     m_file->inode()->bind_socket(*this);
 
     m_address = local_address;
     m_bound = true;
-    return true;
+    return KSuccess;
 }
 
-bool LocalSocket::connect(const sockaddr* address, socklen_t address_size, int& error)
+KResult LocalSocket::connect(const sockaddr* address, socklen_t address_size)
 {
     ASSERT(!m_bound);
-    if (address_size != sizeof(sockaddr_un)) {
-        error = -EINVAL;
-        return false;
-    }
-    if (address->sa_family != AF_LOCAL) {
-        error = -EINVAL;
-        return false;
-    }
+    if (address_size != sizeof(sockaddr_un))
+        return KResult(-EINVAL);
+    if (address->sa_family != AF_LOCAL)
+        return KResult(-EINVAL);
 
     const sockaddr_un& local_address = *reinterpret_cast<const sockaddr_un*>(address);
     char safe_address[sizeof(local_address.sun_path) + 1];
@@ -88,36 +81,23 @@ bool LocalSocket::connect(const sockaddr* address, socklen_t address_size, int& 
     kprintf("%s(%u) LocalSocket{%p} connect(%s)\n", current->name().characters(), current->pid(), this, safe_address);
 #endif
 
-    m_file = VFS::the().open(safe_address, error, 0, 0, current->cwd_inode());
-    if (!m_file) {
-        error = -ECONNREFUSED;
-        return false;
-    }
+    auto descriptor_or_error = VFS::the().open(safe_address, 0, 0, current->cwd_inode());
+    if (descriptor_or_error.is_error())
+        return KResult(-ECONNREFUSED);
+    m_file = move(descriptor_or_error.value());
+
     ASSERT(m_file->inode());
-    if (!m_file->inode()->socket()) {
-        error = -ECONNREFUSED;
-        return false;
-    }
+    if (!m_file->inode()->socket())
+        return KResult(-ECONNREFUSED);
 
     m_address = local_address;
 
     auto peer = m_file->inode()->socket();
-#ifdef DEBUG_LOCAL_SOCKET
-    kprintf("Queueing up connection\n");
-#endif
-    if (!peer->queue_connection_from(*this, error))
-        return false;
+    auto result = peer->queue_connection_from(*this);
+    if (result.is_error())
+        return result;
 
-#ifdef DEBUG_LOCAL_SOCKET
-    kprintf("Waiting for connect...\n");
-#endif
-    if (!current->wait_for_connect(*this, error))
-        return false;
-
-#ifdef DEBUG_LOCAL_SOCKET
-    kprintf("CONNECTED!\n");
-#endif
-    return true;
+    return current->wait_for_connect(*this);
 }
 
 void LocalSocket::attach_fd(SocketRole role)

@@ -13,9 +13,9 @@ Device::~Device()
     VFS::the().unregister_device(*this);
 }
 
-RetainPtr<FileDescriptor> Device::open(int& error, int options)
+KResultOr<Retained<FileDescriptor>> Device::open(int options)
 {
-    return VFS::the().open(*this, error, options);
+    return VFS::the().open(*this, options);
 }
 
 void Device::close()

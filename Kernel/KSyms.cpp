@@ -126,14 +126,10 @@ void init_ksyms()
 
 void load_ksyms()
 {
-    int error;
-    auto descriptor = VFS::the().open("/kernel.map", error, 0, 0, *VFS::the().root_inode());
-    if (!descriptor) {
-        kprintf("Failed to open /kernel.map\n");
-    } else {
-        auto buffer = descriptor->read_entire_file(*current);
-        ASSERT(buffer);
-        load_ksyms_from_data(buffer);
-    }
+    auto result = VFS::the().open("/kernel.map", 0, 0, *VFS::the().root_inode());
+    ASSERT(!result.is_error());
+    auto descriptor = result.value();
+    auto buffer = descriptor->read_entire_file(*current);
+    ASSERT(buffer);
+    load_ksyms_from_data(buffer);
 }
-
