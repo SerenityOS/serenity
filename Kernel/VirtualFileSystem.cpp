@@ -189,12 +189,17 @@ RetainPtr<FileDescriptor> VFS::open(const String& path, int& error, int options,
             error = -EACCES;
             return nullptr;
         }
+        if (metadata.is_directory()) {
+            error = -EISDIR;
+            return nullptr;
+        }
     }
 
     if (metadata.is_device()) {
         auto it = m_devices.find(encoded_device(metadata.major_device, metadata.minor_device));
         if (it == m_devices.end()) {
             kprintf("VFS::open: no such device %u,%u\n", metadata.major_device, metadata.minor_device);
+            error = -ENODEV;
             return nullptr;
         }
         auto descriptor = (*it).value->open(error, options);
