@@ -78,6 +78,9 @@ public:
     Size base_size() const { return m_base_size; }
     void set_base_size(const Size& size) { m_base_size = size; }
 
+    const GraphicsBitmap& icon() const { return *m_icon; }
+    void set_icon(Retained<GraphicsBitmap>&& icon) { m_icon = move(icon); }
+
     // For InlineLinkedList.
     // FIXME: Maybe make a ListHashSet and then WSWindowManager can just use that.
     WSWindow* m_next { nullptr };
@@ -99,4 +102,5 @@ private:
     Rect m_last_lazy_resize_rect;
     Size m_size_increment;
     Size m_base_size;
+    Retained<GraphicsBitmap> m_icon;
 };
