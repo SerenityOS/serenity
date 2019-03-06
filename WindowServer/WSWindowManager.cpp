@@ -406,7 +406,7 @@ void WSWindowManager::paint_window_frame(WSWindow& window)
     auto close_button_rect = close_button_rect_for_window(window.rect());
 
     auto titlebar_title_rect = titlebar_inner_rect;
-    titlebar_title_rect.set_width(font().width(window.title()));
+    titlebar_title_rect.set_width(Font::default_bold_font().width(window.title()));
 
     Rect inner_border_rect {
         window.x() - 1,
