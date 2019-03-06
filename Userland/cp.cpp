@@ -36,18 +36,10 @@ int main(int argc, char** argv)
 
     int dst_fd = open(dst_path.characters(), O_WRONLY | O_CREAT);
     if (dst_fd < 0) {
-        perror("open dst");
-        return 1;
-    }
-
-    struct stat dst_stat;
-    rc = fstat(dst_fd, &dst_stat);
-    if (rc < 0) {
-        perror("stat dst");
-        return 1;
-    }
-
-    if (S_ISDIR(dst_stat.st_mode)) {
+        if (errno != EISDIR) {
+            perror("open dst");
+            return 1;
+        }
         StringBuilder builder;
         builder.append(dst_path);
         builder.append('/');
