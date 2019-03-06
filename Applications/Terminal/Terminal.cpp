@@ -19,9 +19,9 @@
 
 Terminal::Terminal(int ptm_fd)
     : m_ptm_fd(ptm_fd)
-    , m_font(Font::default_font())
     , m_notifier(ptm_fd, GNotifier::Read)
 {
+    set_font(Font::default_fixed_width_font());
     m_notifier.on_ready_to_read = [this] (GNotifier& notifier) {
         byte buffer[BUFSIZ];
         ssize_t nread = read(notifier.fd(), buffer, sizeof(buffer));
@@ -798,7 +798,7 @@ void Terminal::force_repaint()
 
 void Terminal::resize_event(GResizeEvent& event)
 {
-    int new_columns = event.size().width() / m_font->glyph_width('x');
+    int new_columns = event.size().width() / font().glyph_width('x');
     int new_rows = event.size().height() / m_line_height;
     set_size(new_columns, new_rows);
 }

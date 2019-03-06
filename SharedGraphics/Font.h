@@ -43,6 +43,8 @@ public:
     static Font& default_font();
     static Font& default_bold_font();
 
+    static Font& default_fixed_width_font();
+
     RetainPtr<Font> clone() const;
 
     static RetainPtr<Font> load_from_memory(const byte*);
