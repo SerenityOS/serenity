@@ -27,7 +27,8 @@
 #define SPAWN_LAUNCHER
 //#define SPAWN_GUITEST2
 //#define SPAWN_FILE_MANAGER
-#define SPAWN_PROCESS_MANAGER
+//#define SPAWN_PROCESS_MANAGER
+#define SPAWN_TEXT_EDITOR
 //#define SPAWN_FONTEDITOR
 //#define SPAWN_MULTIPLE_SHELLS
 //#define STRESS_TEST_SPAWNING
@@ -101,6 +102,9 @@ VFS* vfs;
 #endif
 #ifdef SPAWN_PROCESS_MANAGER
     Process::create_user_process("/bin/ProcessManager", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, { }, tty0);
+#endif
+#ifdef SPAWN_TEXT_EDITOR
+    Process::create_user_process("/bin/TextEditor", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, { }, tty0);
 #endif
 #ifdef SPAWN_FONTEDITOR
     Process::create_user_process("/bin/FontEditor", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, move(environment), tty0);

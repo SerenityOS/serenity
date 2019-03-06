@@ -35,6 +35,7 @@ cp -vR ../Base/* mnt/
 cp -vR ../Root/* mnt/
 mkdir mnt/home/anon
 mkdir mnt/home/nona
+cp ../ReadMe.md mnt/home/anon/
 chown -vR 100:100 mnt/home/anon
 chown -vR 200:200 mnt/home/nona
 cp -v ../Userland/sh mnt/bin/sh
@@ -80,6 +81,7 @@ cp -v ../Applications/Launcher/Launcher mnt/bin/Launcher
 cp -v ../Applications/FileManager/FileManager mnt/bin/FileManager
 cp -v ../Applications/ProcessManager/ProcessManager mnt/bin/ProcessManager
 cp -v ../Applications/About/About mnt/bin/About
+cp -v ../Applications/TextEditor/TextEditor mnt/bin/TextEditor
 cp -v ../WindowServer/WindowServer mnt/bin/WindowServer
 cp -v kernel.map mnt/
 sh sync-local.sh
