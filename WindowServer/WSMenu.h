@@ -4,7 +4,8 @@
 #include <AK/Vector.h>
 #include <AK/WeakPtr.h>
 #include <SharedGraphics/Rect.h>
-#include "WSMenuItem.h"
+#include <WindowServer/WSMenuItem.h>
+#include <WindowServer/WSMessageReceiver.h>
 
 class WSClientConnection;
 class WSMenuBar;
@@ -12,10 +13,10 @@ class WSMessage;
 class WSWindow;
 class Font;
 
-class WSMenu : public Weakable<WSMenu> {
+class WSMenu final : public WSMessageReceiver {
 public:
     WSMenu(WSClientConnection*, int menu_id, String&& name);
-    ~WSMenu();
+    virtual ~WSMenu() override;
 
     WSClientConnection* client() { return m_client; }
     const WSClientConnection* client() const { return m_client; }
@@ -58,7 +59,6 @@ public:
     int left_padding() const { return 14; }
     int right_padding() const { return 14; }
 
-    void on_window_message(WSMessage&);
     void draw();
     const Font& font() const;
 
@@ -73,6 +73,8 @@ public:
     void close();
 
 private:
+    virtual void on_message(WSMessage&) override;
+
     int padding_between_text_and_shortcut() const { return 50; }
     void did_activate(WSMenuItem&);
     WSClientConnection* m_client { nullptr };

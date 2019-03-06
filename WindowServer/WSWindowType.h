@@ -3,5 +3,6 @@
 enum class WSWindowType {
     Invalid = 0,
     Normal,
-    Menu
+    Menu,
+    WindowSwitcher,
 };

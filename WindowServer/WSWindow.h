@@ -13,7 +13,7 @@ class WSMenu;
 class WSWindow final : public WSMessageReceiver, public InlineLinkedListNode<WSWindow> {
 public:
     WSWindow(WSClientConnection&, int window_id);
-    explicit WSWindow(WSMenu&);
+    WSWindow(WSMessageReceiver&, WSWindowType);
     virtual ~WSWindow() override;
 
     WSClientConnection* client() { return m_client; }
@@ -85,6 +85,7 @@ public:
 
 private:
     WSClientConnection* m_client { nullptr };
+    WSMessageReceiver* m_internal_owner { nullptr };
     String m_title;
     Rect m_rect;
     WSWindowType m_type { WSWindowType::Normal };
@@ -92,7 +93,6 @@ private:
     bool m_visible { true };
     bool m_has_alpha_channel { false };
     bool m_has_painted_since_last_resize { false };
-    WSMenu* m_menu { nullptr };
     RetainPtr<GraphicsBitmap> m_backing_store;
     int m_window_id { -1 };
     float m_opacity { 1 };
