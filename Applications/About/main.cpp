@@ -24,6 +24,7 @@ int main(int argc, char** argv)
         32, 32);
 
     auto* label = new GLabel(widget);
+    label->set_font(Font::default_bold_font());
     label->set_text("Serenity Operating System");
     label->set_relative_rect(0, 50, widget->width(), 20);
 
