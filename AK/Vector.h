@@ -252,12 +252,22 @@ public:
 
     void resize(ssize_t new_size)
     {
-        ASSERT(new_size >= size());
-        if (!new_size)
+        if (new_size == size())
             return;
-        ensure_capacity(new_size);
-        for (ssize_t i = size(); i < new_size; ++i)
-            new (m_impl->slot(i)) T;
+
+        if (!new_size) {
+            clear();
+            return;
+        }
+
+        if (new_size > size()) {
+            ensure_capacity(new_size);
+            for (ssize_t i = size(); i < new_size; ++i)
+                new (m_impl->slot(i)) T;
+        } else {
+            for (int i = new_size; i < size(); ++i)
+                m_impl->at(i).~T();
+        }
         m_impl->m_size = new_size;
     }
 

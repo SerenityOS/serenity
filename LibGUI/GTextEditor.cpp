@@ -240,10 +240,17 @@ void GTextEditor::insert_at_cursor(char ch)
         if (at_tail || at_head) {
             m_lines.insert(m_cursor.line() + (at_tail ? 1 : 0), make<Line>());
             update_scrollbar_ranges();
-            set_cursor(m_cursor.line() + 1, 0);
             update();
+            set_cursor(m_cursor.line() + 1, 0);
             return;
         }
+        auto new_line = make<Line>();
+        new_line->append(current_line().characters() + m_cursor.column(), current_line().length() - m_cursor.column());
+        current_line().truncate(m_cursor.column());
+        m_lines.insert(m_cursor.line() + 1, move(new_line));
+        update_scrollbar_ranges();
+        update();
+        set_cursor(m_cursor.line() + 1, 0);
         return;
     }
     current_line().insert(m_cursor.column(), ch);
@@ -413,4 +420,10 @@ void GTextEditor::Line::remove(int index)
     } else {
         m_text.remove(index);
     }
+}
+
+void GTextEditor::Line::truncate(int length)
+{
+    m_text.resize(length + 1);
+    m_text.last() = 0;
 }

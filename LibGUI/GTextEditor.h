@@ -73,6 +73,7 @@ private:
         void insert(int index, char);
         void remove(int index);
         void append(const char*, int);
+        void truncate(int length);
 
     private:
         // NOTE: This vector is null terminated.
