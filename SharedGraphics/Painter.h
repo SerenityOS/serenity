@@ -52,6 +52,8 @@ public:
     void translate(int dx, int dy) { m_translation.move_by(dx, dy); }
     void translate(const Point& delta) { m_translation.move_by(delta); }
 
+    Point translation() const { return m_translation; }
+
     GraphicsBitmap* target() { return m_target.ptr(); }
 
 private:

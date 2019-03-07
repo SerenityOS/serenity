@@ -74,6 +74,7 @@ void GTextEditor::update_scrollbar_ranges()
 
 int GTextEditor::content_width() const
 {
+    // FIXME: Cache this somewhere.
     int max_width = 0;
     for (auto& line : m_lines)
         max_width = max(line.width(font()), max_width);
@@ -103,8 +104,10 @@ void GTextEditor::paint_event(GPaintEvent& event)
         painter.draw_text(line_rect, line.text(), TextAlignment::CenterLeft, Color::Black);
     }
 
-    if (is_focused() && m_cursor_state)
+    if (is_focused() && m_cursor_state) {
+        dbgprintf("draw cursor @ %s (xlated %s, clip %s)\n", cursor_content_rect().to_string().characters(), cursor_content_rect().translated(painter.translation()).to_string().characters(), painter.clip_rect().to_string().characters());
         painter.fill_rect(cursor_content_rect(), Color::Red);
+    }
 
     painter.translate(-padding(), -padding());
     painter.translate(m_horizontal_scrollbar->value(), m_vertical_scrollbar->value());
@@ -174,50 +177,46 @@ Rect GTextEditor::cursor_content_rect() const
     return { x, m_cursor.line() * line_height(), 1, line_height() };
 }
 
-Rect GTextEditor::cursor_widget_rect() const
-{
-    ASSERT(m_horizontal_scrollbar);
-    ASSERT(m_vertical_scrollbar);
-    auto rect = cursor_content_rect();
-    return rect.translated(-(m_horizontal_scrollbar->value() - padding()), -(m_vertical_scrollbar->value() - padding()));
-}
-
 Rect GTextEditor::line_widget_rect(int line_index) const
 {
     ASSERT(m_horizontal_scrollbar);
     ASSERT(m_vertical_scrollbar);
     auto rect = line_content_rect(line_index);
-    return rect.translated(-(m_horizontal_scrollbar->value() - padding()), -(m_vertical_scrollbar->value() - padding()));
+    rect.move_by(-(m_horizontal_scrollbar->value() - padding()), -(m_vertical_scrollbar->value() - padding()));
+    rect.intersect(this->rect());
+    return rect;
 }
 
-void GTextEditor::scroll_into_view(const GTextPosition& position, Orientation orientation)
+void GTextEditor::scroll_cursor_into_view()
 {
     auto visible_content_rect = this->visible_content_rect();
-    auto rect = line_content_rect(position.line());
+    auto rect = cursor_content_rect();
+
+    if (visible_content_rect.is_empty())
+        return;
 
     if (visible_content_rect.contains(rect))
         return;
 
-    if (orientation == Orientation::Vertical) {
-        if (rect.top() < visible_content_rect.top())
-            m_vertical_scrollbar->set_value(rect.top());
-        else if (rect.bottom() > visible_content_rect.bottom())
-            m_vertical_scrollbar->set_value(rect.bottom() - visible_content_rect.height());
-    } else {
-        if (rect.left() < visible_content_rect.left())
-            m_horizontal_scrollbar->set_value(rect.left());
-        else if (rect.right() > visible_content_rect.right())
-            m_horizontal_scrollbar->set_value(rect.right() - visible_content_rect.width());
-    }
+    if (rect.top() < visible_content_rect.top())
+        m_vertical_scrollbar->set_value(rect.top());
+    else if (rect.bottom() > visible_content_rect.bottom())
+        m_vertical_scrollbar->set_value(rect.bottom() - visible_content_rect.height());
+
+    if (rect.left() < visible_content_rect.left())
+        m_horizontal_scrollbar->set_value(rect.left());
+    else if (rect.right() > visible_content_rect.right())
+        m_horizontal_scrollbar->set_value(rect.right() - visible_content_rect.width());
+
+    update();
 }
 
 Rect GTextEditor::line_content_rect(int line_index) const
 {
-    auto& line = m_lines[line_index];
     return {
         0,
         line_index * line_height(),
-        line.width(font()),
+        content_width(),
         line_height()
     };
 }
@@ -225,7 +224,9 @@ Rect GTextEditor::line_content_rect(int line_index) const
 void GTextEditor::update_cursor()
 {
     auto rect = line_widget_rect(m_cursor.line());
+    dbgprintf("update_cursor: line_widget_rect: %s", rect.to_string().characters());
     rect.set_width(width());
+    dbgprintf(", adjusted: %s\n", rect.to_string().characters());
     update(rect);
 }
 
@@ -237,6 +238,7 @@ void GTextEditor::set_cursor(int line, int column)
     m_cursor = GTextPosition(line, column);
     m_cursor_state = true;
     update_cursor();
+    scroll_cursor_into_view();
     if (on_cursor_change)
         on_cursor_change(*this);
 }
