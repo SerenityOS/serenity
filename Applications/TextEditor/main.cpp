@@ -27,7 +27,12 @@ int main(int argc, char** argv)
     auto* statusbar = new GStatusBar(widget);
 
     text_editor->on_cursor_change = [statusbar] (GTextEditor& editor) {
-        statusbar->set_text(String::format("Line: %d, Column: %d", editor.cursor().line(), editor.cursor().column()));
+        StringBuilder builder;
+        builder.appendf("Line: %d, Column: %d", editor.cursor().line(), editor.cursor().column());
+        if (editor.selection_start().is_valid()) {
+            builder.appendf("      Selection: [%d,%d]-[%d,%d]", editor.selection_start().line(), editor.selection_start().column(), editor.cursor().line(), editor.cursor().column());
+        }
+        statusbar->set_text(builder.to_string());
     };
 
     String path = "/tmp/TextEditor.save.txt";
