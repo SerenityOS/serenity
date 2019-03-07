@@ -186,6 +186,14 @@ void GTextEditor::keydown_event(GKeyEvent& event)
         return;
     }
 
+    if (!event.modifiers() && event.key() == KeyCode::Key_Backspace) {
+        if (m_cursor.column() > 0) {
+            current_line().remove(m_cursor.column() - 1);
+            set_cursor(m_cursor.line(), m_cursor.column() - 1);
+        }
+        return;
+    }
+
     if (!event.text().is_empty())
         insert_at_cursor(event.text()[0]);
 
@@ -204,7 +212,11 @@ void GTextEditor::insert_at_cursor(char ch)
             update();
             return;
         }
+        return;
     }
+    current_line().insert(m_cursor.column(), ch);
+    set_cursor(m_cursor.line(), m_cursor.column() + 1);
+    update_cursor();
 }
 
 Rect GTextEditor::visible_content_rect() const
@@ -329,4 +341,34 @@ void GTextEditor::Line::set_text(const String& text)
 int GTextEditor::Line::width(const Font& font) const
 {
     return font.glyph_width('x') * length();
+}
+
+void GTextEditor::Line::append(char ch)
+{
+    insert(length(), ch);
+}
+
+void GTextEditor::Line::prepend(char ch)
+{
+    insert(0, ch);
+}
+
+void GTextEditor::Line::insert(int index, char ch)
+{
+    if (index == length()) {
+        m_text.last() = ch;
+        m_text.append(0);
+    } else {
+        m_text.insert(index, move(ch));
+    }
+}
+
+void GTextEditor::Line::remove(int index)
+{
+    if (index == length()) {
+        m_text.take_last();
+        m_text.last() = 0;
+    } else {
+        m_text.remove(index);
+    }
 }
