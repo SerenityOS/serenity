@@ -60,6 +60,7 @@ private:
     virtual bool accepts_focus() const override { return true; }
 
     class Line {
+        friend class GTextEditor;
     public:
         Line();
 
@@ -67,6 +68,10 @@ private:
         int length() const { return m_text.size() - 1; }
         int width(const Font&) const;
         void set_text(const String&);
+        void append(char);
+        void prepend(char);
+        void insert(int index, char);
+        void remove(int index);
 
     private:
         // NOTE: This vector is null terminated.
