@@ -23,6 +23,8 @@ public:
     void set_line(int line) { m_line = line; }
     void set_column(int column) { m_column = column; }
 
+    bool operator==(const GTextPosition& other) const { return m_line == other.m_line && m_column == other.m_column; }
+
 private:
     int m_line { -1 };
     int m_column { -1 };
@@ -57,8 +59,6 @@ private:
     virtual void timer_event(GTimerEvent&) override;
     virtual bool accepts_focus() const override { return true; }
 
-    void insert_at_cursor(char);
-
     class Line {
     public:
         Line();
@@ -79,8 +79,11 @@ private:
     Rect cursor_content_rect() const;
     void update_cursor();
     void set_cursor(int line, int column);
+    void set_cursor(const GTextPosition&);
     Line& current_line() { return m_lines[m_cursor.line()]; }
     const Line& current_line() const { return m_lines[m_cursor.line()]; }
+    GTextPosition text_position_at(const Point&) const;
+    void insert_at_cursor(char);
 
     GScrollBar* m_vertical_scrollbar { nullptr };
     GScrollBar* m_horizontal_scrollbar { nullptr };

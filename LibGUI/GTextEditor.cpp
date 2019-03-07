@@ -86,15 +86,21 @@ int GTextEditor::content_width() const
     return max_width;
 }
 
-void GTextEditor::mousedown_event(GMouseEvent& event)
+GTextPosition GTextEditor::text_position_at(const Point& a_position) const
 {
-    auto position = event.position();
+    auto position = a_position;
     position.move_by(m_horizontal_scrollbar->value(), m_vertical_scrollbar->value());
     position.move_by(-padding(), -padding());
     int line_index = position.y() / line_height();
     int column_index = position.x() / glyph_width();
+    line_index = min(line_index, line_count() - 1);
     column_index = min(column_index, m_lines[line_index].length());
-    set_cursor(line_index, column_index);
+    return { line_index, column_index };
+}
+
+void GTextEditor::mousedown_event(GMouseEvent& event)
+{
+    set_cursor(text_position_at(event.position()));
 }
 
 void GTextEditor::paint_event(GPaintEvent& event)
@@ -106,7 +112,10 @@ void GTextEditor::paint_event(GPaintEvent& event)
     painter.translate(padding(), padding());
     int exposed_width = max(content_width(), width());
 
-    for (int i = 0; i < line_count(); ++i) {
+    int first_visible_line = text_position_at(event.rect().top_left()).line();
+    int last_visible_line = text_position_at(event.rect().bottom_right()).line();
+
+    for (int i = first_visible_line; i <= last_visible_line; ++i) {
         auto& line = m_lines[i];
         auto line_rect = line_content_rect(i);
         line_rect.set_width(exposed_width);
@@ -258,10 +267,15 @@ void GTextEditor::update_cursor()
 
 void GTextEditor::set_cursor(int line, int column)
 {
-    if (m_cursor.line() == line && m_cursor.column() == column)
+    set_cursor({ line, column });
+}
+
+void GTextEditor::set_cursor(const GTextPosition& position)
+{
+    if (m_cursor == position)
         return;
     auto old_cursor_line_rect = line_widget_rect(m_cursor.line());
-    m_cursor = GTextPosition(line, column);
+    m_cursor = position;
     m_cursor_state = true;
     scroll_cursor_into_view();
     update(old_cursor_line_rect);
