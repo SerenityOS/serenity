@@ -188,8 +188,18 @@ void GTextEditor::keydown_event(GKeyEvent& event)
 
     if (!event.modifiers() && event.key() == KeyCode::Key_Backspace) {
         if (m_cursor.column() > 0) {
+            // Backspace within line
             current_line().remove(m_cursor.column() - 1);
             set_cursor(m_cursor.line(), m_cursor.column() - 1);
+        }
+        if (m_cursor.column() == 0 && m_cursor.line() != 0) {
+            // Erase at column 0; merge with previous line
+            auto& previous_line = *m_lines[m_cursor.line() - 1];
+            int previous_length = previous_line.length();
+            previous_line.append(current_line().characters(), current_line().length());
+            m_lines.remove(m_cursor.line());
+            update();
+            set_cursor(m_cursor.line() - 1, previous_length);
         }
         return;
     }
@@ -341,6 +351,14 @@ void GTextEditor::Line::set_text(const String& text)
 int GTextEditor::Line::width(const Font& font) const
 {
     return font.glyph_width('x') * length();
+}
+
+void GTextEditor::Line::append(const char* characters, int length)
+{
+    int old_length = m_text.size() - 1;
+    m_text.resize(m_text.size() + length);
+    memcpy(m_text.data() + old_length, characters, length);
+    m_text.last() = 0;
 }
 
 void GTextEditor::Line::append(char ch)

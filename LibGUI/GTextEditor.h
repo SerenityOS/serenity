@@ -72,6 +72,7 @@ private:
         void prepend(char);
         void insert(int index, char);
         void remove(int index);
+        void append(const char*, int);
 
     private:
         // NOTE: This vector is null terminated.
