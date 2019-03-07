@@ -72,6 +72,18 @@ int main(int argc, char** argv)
         text_editor->write_to_file(path);
     });
 
+    auto cut_action = GAction::create("Cut", { Mod_Ctrl, Key_X }, GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/cut16.rgb", { 16, 16 }), [&] (const GAction&) {
+        dbgprintf("FIXME: Implement Edit/Cut");
+    });
+
+    auto copy_action = GAction::create("Copy", { Mod_Ctrl, Key_C }, GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/copyfile16.rgb", { 16, 16 }), [&] (const GAction&) {
+        dbgprintf("FIXME: Implement Edit/Copy");
+    });
+
+    auto paste_action = GAction::create("Paste", { Mod_Ctrl, Key_V }, GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/paste16.rgb", { 16, 16 }), [&] (const GAction&) {
+        dbgprintf("FIXME: Implement Edit/Paste");
+    });
+
     auto menubar = make<GMenuBar>();
     auto app_menu = make<GMenu>("TextEditor");
     app_menu->add_action(GAction::create("Quit", { Mod_Alt, Key_F4 }, [] (const GAction&) {
@@ -87,6 +99,9 @@ int main(int argc, char** argv)
     menubar->add_menu(move(file_menu));
 
     auto edit_menu = make<GMenu>("Edit");
+    edit_menu->add_action(cut_action.copy_ref());
+    edit_menu->add_action(copy_action.copy_ref());
+    edit_menu->add_action(paste_action.copy_ref());
     menubar->add_menu(move(edit_menu));
 
     auto help_menu = make<GMenu>("Help");
@@ -100,6 +115,12 @@ int main(int argc, char** argv)
     toolbar->add_action(move(new_action));
     toolbar->add_action(move(open_action));
     toolbar->add_action(move(save_action));
+
+    toolbar->add_separator();
+
+    toolbar->add_action(move(cut_action));
+    toolbar->add_action(move(copy_action));
+    toolbar->add_action(move(paste_action));
 
     auto* window = new GWindow;
     window->set_title(String::format("TextEditor: %s", path.characters()));
