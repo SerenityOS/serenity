@@ -213,6 +213,7 @@ void GTextEditor::keydown_event(GKeyEvent& event)
             current_line().remove(m_cursor.column() - 1);
             update_scrollbar_ranges();
             set_cursor(m_cursor.line(), m_cursor.column() - 1);
+            return;
         }
         if (m_cursor.column() == 0 && m_cursor.line() != 0) {
             // Backspace at column 0; merge with previous line
@@ -223,6 +224,7 @@ void GTextEditor::keydown_event(GKeyEvent& event)
             update_scrollbar_ranges();
             update();
             set_cursor(m_cursor.line() - 1, previous_length);
+            return;
         }
         return;
     }
@@ -233,6 +235,7 @@ void GTextEditor::keydown_event(GKeyEvent& event)
             current_line().remove(m_cursor.column());
             update_scrollbar_ranges();
             update_cursor();
+            return;
         }
         if (m_cursor.column() == (current_line().length() + 1) && m_cursor.line() != line_count() - 1) {
             // Delete at end of line; merge with next line
@@ -243,6 +246,7 @@ void GTextEditor::keydown_event(GKeyEvent& event)
             update_scrollbar_ranges();
             update();
             set_cursor(m_cursor.line(), previous_length);
+            return;
         }
         return;
     }
