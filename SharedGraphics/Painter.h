@@ -40,7 +40,7 @@ public:
     void draw_glyph(const Point&, char, Color);
 
     const Font& font() const { return *m_font; }
-    void set_font(Font& font) { m_font = &font; }
+    void set_font(const Font& font) { m_font = &font; }
 
     enum class DrawOp { Copy, Xor };
     void set_draw_op(DrawOp op) { m_draw_op = op; }

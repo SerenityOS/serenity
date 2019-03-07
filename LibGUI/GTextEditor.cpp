@@ -70,7 +70,7 @@ void GTextEditor::update_scrollbar_ranges()
     int excess_height = max(0, (content_height() + padding() * 2) - available_height);
     m_vertical_scrollbar->set_range(0, excess_height);
 
-    int available_width = width() - m_vertical_scrollbar->width();
+    int available_width = width() - m_vertical_scrollbar->width() - ruler_width();
     int excess_width = max(0, (content_width() + padding() * 2) - available_width);
     m_horizontal_scrollbar->set_range(0, excess_width);
 
@@ -95,7 +95,7 @@ GTextPosition GTextEditor::text_position_at(const Point& a_position) const
 {
     auto position = a_position;
     position.move_by(m_horizontal_scrollbar->value(), m_vertical_scrollbar->value());
-    position.move_by(-padding(), -padding());
+    position.move_by(-(padding() + ruler_width()), -padding());
     int line_index = position.y() / line_height();
     int column_index = position.x() / glyph_width();
     line_index = min(line_index, line_count() - 1);
@@ -108,23 +108,62 @@ void GTextEditor::mousedown_event(GMouseEvent& event)
     set_cursor(text_position_at(event.position()));
 }
 
+int GTextEditor::ruler_width() const
+{
+    // FIXME: Resize based on needed space.
+    return 5 * font().glyph_width('x') + 4;
+}
+
+Rect GTextEditor::ruler_content_rect(int line_index) const
+{
+    return {
+        0 - ruler_width() - padding() + m_horizontal_scrollbar->value(),
+        line_index * line_height(),
+        ruler_width(),
+        line_height()
+    };
+}
+
 void GTextEditor::paint_event(GPaintEvent& event)
 {
     Painter painter(*this);
     painter.set_clip_rect(event.rect());
     painter.fill_rect(event.rect(), Color::White);
+
+    Rect ruler_rect { 0, 0, ruler_width(), height() - m_horizontal_scrollbar->height()};
+    painter.fill_rect(ruler_rect, Color::LightGray);
+    painter.draw_line(ruler_rect.top_right(), ruler_rect.bottom_right(), Color::DarkGray);
+
     painter.translate(-m_horizontal_scrollbar->value(), -m_vertical_scrollbar->value());
-    painter.translate(padding(), padding());
+    painter.translate(padding() + ruler_width(), padding());
     int exposed_width = max(content_width(), width());
 
     int first_visible_line = text_position_at(event.rect().top_left()).line();
     int last_visible_line = text_position_at(event.rect().bottom_right()).line();
 
+    painter.set_font(Font::default_font());
+    for (int i = first_visible_line; i <= last_visible_line; ++i) {
+        bool is_current_line = i == m_cursor.line();
+        auto ruler_line_rect = ruler_content_rect(i);
+        //painter.fill_rect(ruler_line_rect, Color::LightGray);
+        Color text_color = Color::MidGray;
+        if (is_current_line) {
+            painter.set_font(Font::default_bold_font());
+            text_color = Color::DarkGray;
+        }
+        painter.draw_text(ruler_line_rect.shrunken(2, 0), String::format("%u", i), TextAlignment::CenterRight, text_color);
+        if (is_current_line)
+            painter.set_font(Font::default_font());
+    }
+    painter.set_font(font());
+
+    painter.set_clip_rect({ ruler_rect.right() + 1, 0, width() - m_vertical_scrollbar->width() - ruler_width(), height() - m_horizontal_scrollbar->height() });
+
     for (int i = first_visible_line; i <= last_visible_line; ++i) {
         auto& line = *m_lines[i];
         auto line_rect = line_content_rect(i);
         line_rect.set_width(exposed_width);
-        if (i == m_cursor.line() && is_focused())
+        if (i == m_cursor.line())
             painter.fill_rect(line_rect, Color(230, 230, 230));
         painter.draw_text(line_rect, line.characters(), line.length(), TextAlignment::CenterLeft, Color::Black);
     }
@@ -132,7 +171,10 @@ void GTextEditor::paint_event(GPaintEvent& event)
     if (is_focused() && m_cursor_state)
         painter.fill_rect(cursor_content_rect(), Color::Red);
 
-    painter.translate(-padding(), -padding());
+    painter.clear_clip_rect();
+    painter.set_clip_rect(event.rect());
+
+    painter.translate(0 - padding() - ruler_width(), -padding());
     painter.translate(m_horizontal_scrollbar->value(), m_vertical_scrollbar->value());
     painter.fill_rect({ m_horizontal_scrollbar->relative_rect().top_right().translated(1, 0), { m_vertical_scrollbar->preferred_size().width(), m_horizontal_scrollbar->preferred_size().height() } }, Color::LightGray);
 
@@ -279,6 +321,7 @@ void GTextEditor::insert_at_cursor(char ch)
         return;
     }
     current_line().insert(m_cursor.column(), ch);
+    update_scrollbar_ranges();
     set_cursor(m_cursor.line(), m_cursor.column() + 1);
     update_cursor();
 }
@@ -288,7 +331,7 @@ Rect GTextEditor::visible_content_rect() const
     return {
         m_horizontal_scrollbar->value(),
         m_vertical_scrollbar->value(),
-        width() - m_vertical_scrollbar->width() - padding() * 2,
+        width() - m_vertical_scrollbar->width() - padding() * 2 - ruler_width(),
         height() - m_horizontal_scrollbar->height() - padding() * 2
     };
 }

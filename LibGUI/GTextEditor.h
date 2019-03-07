@@ -93,6 +93,8 @@ private:
     const Line& current_line() const { return *m_lines[m_cursor.line()]; }
     GTextPosition text_position_at(const Point&) const;
     void insert_at_cursor(char);
+    int ruler_width() const;
+    Rect ruler_content_rect(int line) const;
 
     GScrollBar* m_vertical_scrollbar { nullptr };
     GScrollBar* m_horizontal_scrollbar { nullptr };
