@@ -40,6 +40,8 @@ public:
     Rect visible_content_rect() const;
     void scroll_into_view(const GTextPosition&, Orientation);
     int line_count() const { return m_lines.size(); }
+    int line_spacing() const { return m_line_spacing; }
+    int line_height() const { return font().glyph_height() + m_line_spacing; }
     int padding() const { return 2; }
     GTextPosition cursor() const { return m_cursor; }
 
@@ -48,11 +50,15 @@ private:
     virtual void resize_event(GResizeEvent&) override;
     virtual void mousedown_event(GMouseEvent&) override;
     virtual void keydown_event(GKeyEvent&) override;
+    virtual void focusin_event(GEvent&) override;
+    virtual void focusout_event(GEvent&) override;
+    virtual void timer_event(GTimerEvent&) override;
     virtual bool accepts_focus() const override { return true; }
 
     void update_scrollbar_ranges();
     Rect line_content_rect(int item_index) const;
     Rect cursor_content_rect() const;
+    Rect cursor_widget_rect() const;
     void update_cursor();
     void set_cursor(int line, int column);
 
@@ -74,4 +80,6 @@ private:
     };
     Vector<Line> m_lines;
     GTextPosition m_cursor;
+    bool m_cursor_state { true };
+    int m_line_spacing { 2 };
 };
