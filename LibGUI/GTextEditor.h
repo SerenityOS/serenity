@@ -57,18 +57,20 @@ private:
     virtual void timer_event(GTimerEvent&) override;
     virtual bool accepts_focus() const override { return true; }
 
+    void insert_at_cursor(char);
+
     class Line {
     public:
-        Line() { }
+        Line();
 
-        String text() const { return m_text; }
-        int length() const { return m_text.length(); }
+        const char* characters() const { return m_text.data(); }
+        int length() const { return m_text.size() - 1; }
         int width(const Font&) const;
         void set_text(const String&);
 
     private:
-        String m_text;
-        mutable int m_cached_width { -1 };
+        // NOTE: This vector is null terminated.
+        Vector<char> m_text;
     };
 
     void update_scrollbar_ranges();

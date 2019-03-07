@@ -323,10 +323,10 @@ void Painter::blit(const Point& position, const GraphicsBitmap& source, const Re
     draw_bitmap(point, font().glyph_bitmap(ch), color);
 }
 
-void Painter::draw_text(const Rect& rect, const String& text, TextAlignment alignment, Color color)
+void Painter::draw_text(const Rect& rect, const char* text, int length, TextAlignment alignment, Color color)
 {
     Point point;
-    
+
     if (alignment == TextAlignment::TopLeft) {
         point = rect.location();
     } else if (alignment == TextAlignment::CenterLeft) {
@@ -343,8 +343,8 @@ void Painter::draw_text(const Rect& rect, const String& text, TextAlignment alig
     }
 
     int space_width = font().glyph_width(' ') + font().glyph_spacing();
-    for (ssize_t i = 0; i < text.length(); ++i) {
-        byte ch = text[i];
+    for (ssize_t i = 0; i < length; ++i) {
+        char ch = text[i];
         if (ch == ' ') {
             point.move_by(space_width, 0);
             continue;
@@ -352,6 +352,11 @@ void Painter::draw_text(const Rect& rect, const String& text, TextAlignment alig
         draw_glyph(point, ch, color);
         point.move_by(font().glyph_width(ch) + font().glyph_spacing(), 0);
     }
+}
+
+void Painter::draw_text(const Rect& rect, const String& text, TextAlignment alignment, Color color)
+{
+    draw_text(rect, text.characters(), text.length(), alignment, color);
 }
 
 void Painter::set_pixel(const Point& p, Color color)
