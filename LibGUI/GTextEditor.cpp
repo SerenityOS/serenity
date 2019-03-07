@@ -190,16 +190,38 @@ void GTextEditor::keydown_event(GKeyEvent& event)
         if (m_cursor.column() > 0) {
             // Backspace within line
             current_line().remove(m_cursor.column() - 1);
+            update_scrollbar_ranges();
             set_cursor(m_cursor.line(), m_cursor.column() - 1);
         }
         if (m_cursor.column() == 0 && m_cursor.line() != 0) {
-            // Erase at column 0; merge with previous line
+            // Backspace at column 0; merge with previous line
             auto& previous_line = *m_lines[m_cursor.line() - 1];
             int previous_length = previous_line.length();
             previous_line.append(current_line().characters(), current_line().length());
             m_lines.remove(m_cursor.line());
+            update_scrollbar_ranges();
             update();
             set_cursor(m_cursor.line() - 1, previous_length);
+        }
+        return;
+    }
+
+    if (!event.modifiers() && event.key() == KeyCode::Key_Delete) {
+        if (m_cursor.column() < current_line().length()) {
+            // Delete within line
+            current_line().remove(m_cursor.column());
+            update_scrollbar_ranges();
+            update_cursor();
+        }
+        if (m_cursor.column() == (current_line().length() + 1) && m_cursor.line() != line_count() - 1) {
+            // Delete at end of line; merge with next line
+            auto& next_line = *m_lines[m_cursor.line() + 1];
+            int previous_length = current_line().length();
+            current_line().append(next_line.characters(), next_line.length());
+            m_lines.remove(m_cursor.line() + 1);
+            update_scrollbar_ranges();
+            update();
+            set_cursor(m_cursor.line(), previous_length);
         }
         return;
     }
@@ -256,6 +278,8 @@ Rect GTextEditor::line_widget_rect(int line_index) const
     rect.move_by(-(m_horizontal_scrollbar->value() - padding()), -(m_vertical_scrollbar->value() - padding()));
     rect.set_width(rect.width() + 1); // Add 1 pixel for when the cursor is on the end.
     rect.intersect(this->rect());
+    // This feels rather hackish, but extend the rect to the edge of the content view:
+    rect.set_right(m_vertical_scrollbar->relative_rect().left() - 1);
     return rect;
 }
 
