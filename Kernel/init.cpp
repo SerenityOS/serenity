@@ -104,7 +104,10 @@ VFS* vfs;
     Process::create_user_process("/bin/ProcessManager", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, { }, tty0);
 #endif
 #ifdef SPAWN_TEXT_EDITOR
-    Process::create_user_process("/bin/TextEditor", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, { }, tty0);
+    Vector<String> text_editor_arguments;
+    text_editor_arguments.append("/bin/TextEditor");
+    text_editor_arguments.append("/home/anon/ReadMe.md");
+    Process::create_user_process("/bin/TextEditor", (uid_t)100, (gid_t)100, (pid_t)0, error, move(text_editor_arguments), { }, tty0);
 #endif
 #ifdef SPAWN_FONTEDITOR
     Process::create_user_process("/bin/FontEditor", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, move(environment), tty0);
