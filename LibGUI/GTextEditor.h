@@ -38,7 +38,7 @@ public:
     void set_text(const String&);
     int content_width() const;
     Rect visible_content_rect() const;
-    void scroll_into_view(const GTextPosition&, Orientation);
+    void scroll_cursor_into_view();
     int line_count() const { return m_lines.size(); }
     int line_spacing() const { return m_line_spacing; }
     int line_height() const { return font().glyph_height() + m_line_spacing; }
@@ -59,7 +59,6 @@ private:
     Rect line_content_rect(int item_index) const;
     Rect line_widget_rect(int line_index) const;
     Rect cursor_content_rect() const;
-    Rect cursor_widget_rect() const;
     void update_cursor();
     void set_cursor(int line, int column);
 
