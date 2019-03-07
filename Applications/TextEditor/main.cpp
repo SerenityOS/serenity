@@ -29,9 +29,10 @@ int main(int argc, char** argv)
         statusbar->set_text(String::format("Line: %d, Column: %d", editor.cursor().line(), editor.cursor().column()));
     };
 
+    String path = "/home/anon/ReadMe.md";
     {
         StringBuilder builder;
-        int fd = open("/home/anon/ReadMe.md", O_RDONLY);
+        int fd = open(path.characters(), O_RDONLY);
         if (fd < 0) {
             perror("open");
             return 1;
@@ -80,7 +81,7 @@ int main(int argc, char** argv)
     app.set_menubar(move(menubar));
 
     auto* window = new GWindow;
-    window->set_title("TextEditor");
+    window->set_title(String::format("TextEditor: %s", path.characters()));
     window->set_rect(20, 200, 640, 400);
     window->set_main_widget(widget);
     window->set_should_exit_app_on_close(true);
