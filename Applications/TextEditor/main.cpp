@@ -29,7 +29,7 @@ int main(int argc, char** argv)
         statusbar->set_text(String::format("Line: %d, Column: %d", editor.cursor().line(), editor.cursor().column()));
     };
 
-    String path = "/home/anon/ReadMe.md";
+    String path = argc < 2 ? "/home/anon/ReadMe.md" : argv[1];
     {
         StringBuilder builder;
         int fd = open(path.characters(), O_RDONLY);

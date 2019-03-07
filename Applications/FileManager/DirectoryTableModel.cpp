@@ -219,4 +219,12 @@ void DirectoryTableModel::activate(const GModelIndex& index)
         }
         return;
     }
+
+    if (fork() == 0) {
+        int rc = execl("/bin/TextEditor", "/bin/TextEditor", path.string().characters(), nullptr);
+        if (rc < 0)
+            perror("exec");
+        ASSERT_NOT_REACHED();
+    }
+    return;
 }
