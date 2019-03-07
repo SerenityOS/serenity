@@ -57,6 +57,7 @@ private:
 
     void update_scrollbar_ranges();
     Rect line_content_rect(int item_index) const;
+    Rect line_widget_rect(int line_index) const;
     Rect cursor_content_rect() const;
     Rect cursor_widget_rect() const;
     void update_cursor();

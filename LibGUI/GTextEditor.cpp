@@ -97,6 +97,9 @@ void GTextEditor::paint_event(GPaintEvent& event)
     for (int i = 0; i < line_count(); ++i) {
         auto& line = m_lines[i];
         auto line_rect = line_content_rect(i);
+        line_rect.set_width(exposed_width);
+        if (i == m_cursor.line())
+            painter.fill_rect(line_rect, Color(230, 230, 230));
         painter.draw_text(line_rect, line.text(), TextAlignment::CenterLeft, Color::Black);
     }
 
@@ -179,6 +182,14 @@ Rect GTextEditor::cursor_widget_rect() const
     return rect.translated(-(m_horizontal_scrollbar->value() - padding()), -(m_vertical_scrollbar->value() - padding()));
 }
 
+Rect GTextEditor::line_widget_rect(int line_index) const
+{
+    ASSERT(m_horizontal_scrollbar);
+    ASSERT(m_vertical_scrollbar);
+    auto rect = line_content_rect(line_index);
+    return rect.translated(-(m_horizontal_scrollbar->value() - padding()), -(m_vertical_scrollbar->value() - padding()));
+}
+
 void GTextEditor::scroll_into_view(const GTextPosition& position, Orientation orientation)
 {
     auto visible_content_rect = this->visible_content_rect();
@@ -213,7 +224,9 @@ Rect GTextEditor::line_content_rect(int line_index) const
 
 void GTextEditor::update_cursor()
 {
-    update(cursor_widget_rect());
+    auto rect = line_widget_rect(m_cursor.line());
+    rect.set_width(width());
+    update(rect);
 }
 
 void GTextEditor::set_cursor(int line, int column)
