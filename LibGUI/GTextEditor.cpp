@@ -36,9 +36,9 @@ void GTextEditor::set_text(const String& text)
 
     auto add_line = [&] (int current_position) {
         int line_length = current_position - start_of_current_line;
-        Line line;
+        auto line = make<Line>();
         if (line_length)
-            line.set_text(text.substring(start_of_current_line, current_position - start_of_current_line));
+            line->set_text(text.substring(start_of_current_line, current_position - start_of_current_line));
         m_lines.append(move(line));
         start_of_current_line = current_position + 1;
     };
@@ -82,7 +82,7 @@ int GTextEditor::content_width() const
     // FIXME: Cache this somewhere.
     int max_width = 0;
     for (auto& line : m_lines)
-        max_width = max(line.width(font()), max_width);
+        max_width = max(line->width(font()), max_width);
     return max_width;
 }
 
@@ -94,7 +94,7 @@ GTextPosition GTextEditor::text_position_at(const Point& a_position) const
     int line_index = position.y() / line_height();
     int column_index = position.x() / glyph_width();
     line_index = min(line_index, line_count() - 1);
-    column_index = min(column_index, m_lines[line_index].length());
+    column_index = min(column_index, m_lines[line_index]->length());
     return { line_index, column_index };
 }
 
@@ -116,7 +116,7 @@ void GTextEditor::paint_event(GPaintEvent& event)
     int last_visible_line = text_position_at(event.rect().bottom_right()).line();
 
     for (int i = first_visible_line; i <= last_visible_line; ++i) {
-        auto& line = m_lines[i];
+        auto& line = *m_lines[i];
         auto line_rect = line_content_rect(i);
         line_rect.set_width(exposed_width);
         if (i == m_cursor.line() && is_focused())
@@ -142,7 +142,7 @@ void GTextEditor::keydown_event(GKeyEvent& event)
     if (!event.modifiers() && event.key() == KeyCode::Key_Up) {
         if (m_cursor.line() > 0) {
             int new_line = m_cursor.line() - 1;
-            int new_column = min(m_cursor.column(), m_lines[new_line].length());
+            int new_column = min(m_cursor.column(), m_lines[new_line]->length());
             set_cursor(new_line, new_column);
         }
         return;
@@ -150,7 +150,7 @@ void GTextEditor::keydown_event(GKeyEvent& event)
     if (!event.modifiers() && event.key() == KeyCode::Key_Down) {
         if (m_cursor.line() < (m_lines.size() - 1)) {
             int new_line = m_cursor.line() + 1;
-            int new_column = min(m_cursor.column(), m_lines[new_line].length());
+            int new_column = min(m_cursor.column(), m_lines[new_line]->length());
             set_cursor(new_line, new_column);
         }
         return;
@@ -182,7 +182,7 @@ void GTextEditor::keydown_event(GKeyEvent& event)
         return;
     }
     if (event.ctrl() && event.key() == KeyCode::Key_End) {
-        set_cursor(line_count() - 1, m_lines[line_count() - 1].length());
+        set_cursor(line_count() - 1, m_lines[line_count() - 1]->length());
         return;
     }
 
@@ -194,6 +194,17 @@ void GTextEditor::keydown_event(GKeyEvent& event)
 
 void GTextEditor::insert_at_cursor(char ch)
 {
+    bool at_head = m_cursor.column() == 0;
+    bool at_tail = m_cursor.column() == current_line().length();
+    if (ch == '\n') {
+        if (at_tail || at_head) {
+            m_lines.insert(m_cursor.line() + (at_tail ? 1 : 0), make<Line>());
+            update_scrollbar_ranges();
+            set_cursor(m_cursor.line() + 1, 0);
+            update();
+            return;
+        }
+    }
 }
 
 Rect GTextEditor::visible_content_rect() const

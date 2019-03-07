@@ -159,6 +159,20 @@ public:
         m_impl->remove(index);
     }
 
+    void insert(int index, T&& value)
+    {
+        ASSERT(index <= size());
+        if (index == size())
+            return append(move(value));
+        ensure_capacity(size() + 1);
+        ++m_impl->m_size;
+        for (int i = size() - 1; i > index; --i) {
+            new (m_impl->slot(i)) T(move(m_impl->at(i - 1)));
+            m_impl->at(i - 1).~T();
+        }
+        new (m_impl->slot(index)) T(move(value));
+    }
+
     Vector& operator=(const Vector<T>& other)
     {
         if (this != &other) {

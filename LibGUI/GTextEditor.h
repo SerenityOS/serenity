@@ -80,15 +80,15 @@ private:
     void update_cursor();
     void set_cursor(int line, int column);
     void set_cursor(const GTextPosition&);
-    Line& current_line() { return m_lines[m_cursor.line()]; }
-    const Line& current_line() const { return m_lines[m_cursor.line()]; }
+    Line& current_line() { return *m_lines[m_cursor.line()]; }
+    const Line& current_line() const { return *m_lines[m_cursor.line()]; }
     GTextPosition text_position_at(const Point&) const;
     void insert_at_cursor(char);
 
     GScrollBar* m_vertical_scrollbar { nullptr };
     GScrollBar* m_horizontal_scrollbar { nullptr };
 
-    Vector<Line> m_lines;
+    Vector<OwnPtr<Line>> m_lines;
     GTextPosition m_cursor;
     bool m_cursor_state { true };
     int m_line_spacing { 2 };
