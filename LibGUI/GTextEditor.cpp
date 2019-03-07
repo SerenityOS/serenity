@@ -98,7 +98,7 @@ void GTextEditor::paint_event(GPaintEvent& event)
         auto& line = m_lines[i];
         auto line_rect = line_content_rect(i);
         line_rect.set_width(exposed_width);
-        if (i == m_cursor.line())
+        if (i == m_cursor.line() && is_focused())
             painter.fill_rect(line_rect, Color(230, 230, 230));
         painter.draw_text(line_rect, line.text(), TextAlignment::CenterLeft, Color::Black);
     }
