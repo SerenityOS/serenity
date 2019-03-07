@@ -34,7 +34,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    int dst_fd = open(dst_path.characters(), O_WRONLY | O_CREAT);
+    int dst_fd = open(dst_path.characters(), O_WRONLY | O_CREAT, 0666);
     if (dst_fd < 0) {
         if (errno != EISDIR) {
             perror("open dst");
@@ -45,7 +45,7 @@ int main(int argc, char** argv)
         builder.append('/');
         builder.append(FileSystemPath(src_path).basename());
         dst_path = builder.to_string();
-        dst_fd = open(dst_path.characters(), O_WRONLY | O_CREAT);
+        dst_fd = open(dst_path.characters(), O_WRONLY | O_CREAT, 0666);
         if (dst_fd < 0) {
             perror("open dst");
             return 1;
@@ -75,7 +75,9 @@ int main(int argc, char** argv)
         }
     }
 
-    rc = fchmod(dst_fd, src_stat.st_mode);
+    auto my_umask = umask(0);
+    umask(my_umask);
+    rc = fchmod(dst_fd, src_stat.st_mode & ~my_umask);
     if (rc < 0) {
         perror("fchmod dst");
         return 1;
