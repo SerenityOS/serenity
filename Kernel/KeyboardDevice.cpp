@@ -54,7 +54,7 @@ static KeyCode unshifted_key_map[0x80] =
     Key_F1, Key_F2, Key_F3, Key_F4, Key_F5, Key_F6, Key_F7, Key_F8, Key_F9, Key_F10,
     Key_Invalid,
     Key_Invalid, // 70
-    Key_Invalid,
+    Key_Home,
     Key_Up,
     Key_PageUp,
     Key_Invalid,
@@ -62,7 +62,7 @@ static KeyCode unshifted_key_map[0x80] =
     Key_Invalid,
     Key_Right, // 77
     Key_Invalid,
-    Key_Invalid,
+    Key_End,
     Key_Down, // 80
     Key_PageDown,
     Key_Invalid,
@@ -96,7 +96,7 @@ static KeyCode shifted_key_map[0x100] =
     Key_F1, Key_F2, Key_F3, Key_F4, Key_F5, Key_F6, Key_F7, Key_F8, Key_F9, Key_F10,
     Key_Invalid,
     Key_Invalid, // 70
-    Key_Invalid,
+    Key_Home,
     Key_Up,
     Key_PageUp,
     Key_Invalid,
@@ -104,7 +104,7 @@ static KeyCode shifted_key_map[0x100] =
     Key_Invalid,
     Key_Right, // 77
     Key_Invalid,
-    Key_Invalid,
+    Key_End,
     Key_Down, // 80
     Key_PageDown,
     Key_Invalid,
