@@ -104,10 +104,8 @@ void GTextEditor::paint_event(GPaintEvent& event)
         painter.draw_text(line_rect, line.text(), TextAlignment::CenterLeft, Color::Black);
     }
 
-    if (is_focused() && m_cursor_state) {
-        dbgprintf("draw cursor @ %s (xlated %s, clip %s)\n", cursor_content_rect().to_string().characters(), cursor_content_rect().translated(painter.translation()).to_string().characters(), painter.clip_rect().to_string().characters());
+    if (is_focused() && m_cursor_state)
         painter.fill_rect(cursor_content_rect(), Color::Red);
-    }
 
     painter.translate(-padding(), -padding());
     painter.translate(m_horizontal_scrollbar->value(), m_vertical_scrollbar->value());
