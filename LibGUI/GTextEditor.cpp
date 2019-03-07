@@ -88,7 +88,13 @@ int GTextEditor::content_width() const
 
 void GTextEditor::mousedown_event(GMouseEvent& event)
 {
-    (void)event;
+    auto position = event.position();
+    position.move_by(m_horizontal_scrollbar->value(), m_vertical_scrollbar->value());
+    position.move_by(-padding(), -padding());
+    int line_index = position.y() / line_height();
+    int column_index = position.x() / glyph_width();
+    column_index = min(column_index, m_lines[line_index].length());
+    set_cursor(line_index, column_index);
 }
 
 void GTextEditor::paint_event(GPaintEvent& event)
@@ -189,10 +195,7 @@ Rect GTextEditor::cursor_content_rect() const
         return { };
     ASSERT(!m_lines.is_empty());
     ASSERT(m_cursor.column() <= (current_line().text().length() + 1));
-    int x = 0;
-    for (int i = 0; i < m_cursor.column(); ++i)
-        x += font().glyph_width(current_line().text()[i]);
-    return { x, m_cursor.line() * line_height(), 1, line_height() };
+    return { m_cursor.column() * glyph_width(), m_cursor.line() * line_height(), 1, line_height() };
 }
 
 Rect GTextEditor::line_widget_rect(int line_index) const
