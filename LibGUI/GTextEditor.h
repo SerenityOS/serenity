@@ -45,6 +45,7 @@ public:
     int line_height() const { return font().glyph_height() + m_line_spacing; }
     int padding() const { return 3; }
     GTextPosition cursor() const { return m_cursor; }
+    int glyph_width() const { return font().glyph_width('x'); }
 
 private:
     virtual void paint_event(GPaintEvent&) override;
