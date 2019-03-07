@@ -246,8 +246,8 @@ void GTextEditor::set_cursor(int line, int column)
     update_cursor();
     m_cursor = GTextPosition(line, column);
     m_cursor_state = true;
-    update_cursor();
     scroll_cursor_into_view();
+    update_cursor();
     if (on_cursor_change)
         on_cursor_change(*this);
 }
