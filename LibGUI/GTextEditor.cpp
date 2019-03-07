@@ -121,7 +121,7 @@ void GTextEditor::paint_event(GPaintEvent& event)
 
 void GTextEditor::keydown_event(GKeyEvent& event)
 {
-    if (event.key() == KeyCode::Key_Up) {
+    if (!event.modifiers() && event.key() == KeyCode::Key_Up) {
         if (m_cursor.line() > 0) {
             int new_line = m_cursor.line() - 1;
             int new_column = min(m_cursor.column(), m_lines[new_line].length());
@@ -129,7 +129,7 @@ void GTextEditor::keydown_event(GKeyEvent& event)
         }
         return;
     }
-    if (event.key() == KeyCode::Key_Down) {
+    if (!event.modifiers() && event.key() == KeyCode::Key_Down) {
         if (m_cursor.line() < (m_lines.size() - 1)) {
             int new_line = m_cursor.line() + 1;
             int new_column = min(m_cursor.column(), m_lines[new_line].length());
@@ -137,18 +137,34 @@ void GTextEditor::keydown_event(GKeyEvent& event)
         }
         return;
     }
-    if (event.key() == KeyCode::Key_Left) {
+    if (!event.modifiers() && event.key() == KeyCode::Key_Left) {
         if (m_cursor.column() > 0) {
             int new_column = m_cursor.column() - 1;
             set_cursor(m_cursor.line(), new_column);
         }
         return;
     }
-    if (event.key() == KeyCode::Key_Right) {
-        if (m_cursor.column() < (m_lines[m_cursor.line()].length())) {
+    if (!event.modifiers() && event.key() == KeyCode::Key_Right) {
+        if (m_cursor.column() < current_line().length()) {
             int new_column = m_cursor.column() + 1;
             set_cursor(m_cursor.line(), new_column);
         }
+        return;
+    }
+    if (!event.modifiers() && event.key() == KeyCode::Key_Home) {
+        set_cursor(m_cursor.line(), 0);
+        return;
+    }
+    if (!event.modifiers() && event.key() == KeyCode::Key_End) {
+        set_cursor(m_cursor.line(), current_line().length());
+        return;
+    }
+    if (event.ctrl() && event.key() == KeyCode::Key_Home) {
+        set_cursor(0, 0);
+        return;
+    }
+    if (event.ctrl() && event.key() == KeyCode::Key_End) {
+        set_cursor(line_count() - 1, m_lines[line_count() - 1].length());
         return;
     }
     return GWidget::keydown_event(event);
@@ -169,11 +185,10 @@ Rect GTextEditor::cursor_content_rect() const
     if (!m_cursor.is_valid())
         return { };
     ASSERT(!m_lines.is_empty());
-    auto& line = m_lines[m_cursor.line()];
-    ASSERT(m_cursor.column() <= (line.text().length() + 1));
+    ASSERT(m_cursor.column() <= (current_line().text().length() + 1));
     int x = 0;
     for (int i = 0; i < m_cursor.column(); ++i)
-        x += font().glyph_width(line.text()[i]);
+        x += font().glyph_width(current_line().text()[i]);
     return { x, m_cursor.line() * line_height(), 1, line_height() };
 }
 

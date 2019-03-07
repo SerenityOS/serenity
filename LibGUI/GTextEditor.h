@@ -55,16 +55,6 @@ private:
     virtual void timer_event(GTimerEvent&) override;
     virtual bool accepts_focus() const override { return true; }
 
-    void update_scrollbar_ranges();
-    Rect line_content_rect(int item_index) const;
-    Rect line_widget_rect(int line_index) const;
-    Rect cursor_content_rect() const;
-    void update_cursor();
-    void set_cursor(int line, int column);
-
-    GScrollBar* m_vertical_scrollbar { nullptr };
-    GScrollBar* m_horizontal_scrollbar { nullptr };
-
     class Line {
     public:
         Line() { }
@@ -78,6 +68,19 @@ private:
         String m_text;
         mutable int m_cached_width { -1 };
     };
+
+    void update_scrollbar_ranges();
+    Rect line_content_rect(int item_index) const;
+    Rect line_widget_rect(int line_index) const;
+    Rect cursor_content_rect() const;
+    void update_cursor();
+    void set_cursor(int line, int column);
+    Line& current_line() { return m_lines[m_cursor.line()]; }
+    const Line& current_line() const { return m_lines[m_cursor.line()]; }
+
+    GScrollBar* m_vertical_scrollbar { nullptr };
+    GScrollBar* m_horizontal_scrollbar { nullptr };
+
     Vector<Line> m_lines;
     GTextPosition m_cursor;
     bool m_cursor_state { true };
