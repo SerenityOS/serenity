@@ -62,7 +62,7 @@ void GTextEditor::resize_event(GResizeEvent& event)
 void GTextEditor::update_scrollbar_ranges()
 {
     int available_height = height() - m_horizontal_scrollbar->height();
-    int excess_height = max(0, (line_count() * font().glyph_height()) - available_height);
+    int excess_height = max(0, (line_count() * line_height()) - available_height);
     m_vertical_scrollbar->set_range(0, excess_height);
 
     int available_width = width() - m_vertical_scrollbar->width();
@@ -97,10 +97,11 @@ void GTextEditor::paint_event(GPaintEvent& event)
     for (int i = 0; i < line_count(); ++i) {
         auto& line = m_lines[i];
         auto line_rect = line_content_rect(i);
-        painter.draw_text(line_rect, line.text(), TextAlignment::TopLeft, Color::Black);
+        painter.draw_text(line_rect, line.text(), TextAlignment::CenterLeft, Color::Black);
     }
 
-    painter.fill_rect(cursor_content_rect(), Color::Red);
+    if (is_focused() && m_cursor_state)
+        painter.fill_rect(cursor_content_rect(), Color::Red);
 
     painter.translate(-padding(), -padding());
     painter.translate(m_horizontal_scrollbar->value(), m_vertical_scrollbar->value());
@@ -159,14 +160,23 @@ Rect GTextEditor::visible_content_rect() const
 
 Rect GTextEditor::cursor_content_rect() const
 {
-    ASSERT(m_cursor.is_valid());
+    if (!m_cursor.is_valid())
+        return { };
     ASSERT(!m_lines.is_empty());
     auto& line = m_lines[m_cursor.line()];
     ASSERT(m_cursor.column() <= (line.text().length() + 1));
     int x = 0;
     for (int i = 0; i < m_cursor.column(); ++i)
         x += font().glyph_width(line.text()[i]);
-    return { x, m_cursor.line() * font().glyph_height(), 1, font().glyph_height() };
+    return { x, m_cursor.line() * line_height(), 1, line_height() };
+}
+
+Rect GTextEditor::cursor_widget_rect() const
+{
+    ASSERT(m_horizontal_scrollbar);
+    ASSERT(m_vertical_scrollbar);
+    auto rect = cursor_content_rect();
+    return rect.translated(-(m_horizontal_scrollbar->value() - padding()), -(m_vertical_scrollbar->value() - padding()));
 }
 
 void GTextEditor::scroll_into_view(const GTextPosition& position, Orientation orientation)
@@ -195,15 +205,15 @@ Rect GTextEditor::line_content_rect(int line_index) const
     auto& line = m_lines[line_index];
     return {
         0,
-        line_index * font().glyph_height(),
+        line_index * line_height(),
         line.width(font()),
-        font().glyph_height()
+        line_height()
     };
 }
 
 void GTextEditor::update_cursor()
 {
-    update();
+    update(cursor_widget_rect());
 }
 
 void GTextEditor::set_cursor(int line, int column)
@@ -212,9 +222,28 @@ void GTextEditor::set_cursor(int line, int column)
         return;
     update_cursor();
     m_cursor = GTextPosition(line, column);
+    m_cursor_state = true;
     update_cursor();
     if (on_cursor_change)
         on_cursor_change(*this);
+}
+
+void GTextEditor::focusin_event(GEvent&)
+{
+    update_cursor();
+    start_timer(500);
+}
+
+void GTextEditor::focusout_event(GEvent&)
+{
+    stop_timer();
+}
+
+void GTextEditor::timer_event(GTimerEvent&)
+{
+    m_cursor_state = !m_cursor_state;
+    if (is_focused())
+        update_cursor();
 }
 
 void GTextEditor::Line::set_text(const String& text)
