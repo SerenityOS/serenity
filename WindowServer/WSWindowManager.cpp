@@ -202,7 +202,7 @@ WSWindowManager::WSWindowManager()
     m_cursor_bitmap_outer = CharacterBitmap::create_from_ascii(cursor_bitmap_outer_ascii, 12, 17);
 
 #ifdef USE_WALLPAPER
-    m_wallpaper_path = "/res/wallpapers/cool.rgb";
+    m_wallpaper_path = "/res/wallpapers/retro.rgb";
     m_wallpaper = GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, m_wallpaper_path, { 1024, 768 });
 #endif
 
