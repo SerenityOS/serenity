@@ -24,6 +24,7 @@ public:
     void set_column(int column) { m_column = column; }
 
     bool operator==(const GTextPosition& other) const { return m_line == other.m_line && m_column == other.m_column; }
+    bool operator<(const GTextPosition& other) const { return m_line < other.m_line || (m_line == other.m_line && m_column < other.m_column); }
 
 private:
     int m_line { -1 };
@@ -47,6 +48,7 @@ public:
     int line_height() const { return font().glyph_height() + m_line_spacing; }
     int padding() const { return 3; }
     GTextPosition cursor() const { return m_cursor; }
+    GTextPosition selection_start() const { return m_selection_start; }
     int glyph_width() const { return font().glyph_width('x'); }
 
     bool write_to_file(const String& path);
@@ -95,6 +97,7 @@ private:
     void insert_at_cursor(char);
     int ruler_width() const;
     Rect ruler_content_rect(int line) const;
+    void toggle_selection_if_needed_for_event(const GKeyEvent&);
 
     GScrollBar* m_vertical_scrollbar { nullptr };
     GScrollBar* m_horizontal_scrollbar { nullptr };
@@ -103,4 +106,5 @@ private:
     GTextPosition m_cursor;
     bool m_cursor_state { true };
     int m_line_spacing { 2 };
+    GTextPosition m_selection_start;
 };

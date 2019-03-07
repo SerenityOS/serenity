@@ -106,6 +106,11 @@ GTextPosition GTextEditor::text_position_at(const Point& a_position) const
 void GTextEditor::mousedown_event(GMouseEvent& event)
 {
     set_cursor(text_position_at(event.position()));
+    // FIXME: Allow mouse selection!
+    if (m_selection_start.is_valid()) {
+        m_selection_start = { };
+        update();
+    }
 }
 
 int GTextEditor::ruler_width() const
@@ -141,11 +146,16 @@ void GTextEditor::paint_event(GPaintEvent& event)
     int first_visible_line = text_position_at(event.rect().top_left()).line();
     int last_visible_line = text_position_at(event.rect().bottom_right()).line();
 
+    auto normalized_selection_start = m_selection_start;
+    auto normalized_selection_end = m_cursor;
+    if (m_cursor < m_selection_start)
+        swap(normalized_selection_start, normalized_selection_end);
+    bool has_selection = m_selection_start.is_valid();
+
     painter.set_font(Font::default_font());
     for (int i = first_visible_line; i <= last_visible_line; ++i) {
         bool is_current_line = i == m_cursor.line();
         auto ruler_line_rect = ruler_content_rect(i);
-        //painter.fill_rect(ruler_line_rect, Color::LightGray);
         Color text_color = Color::MidGray;
         if (is_current_line) {
             painter.set_font(Font::default_bold_font());
@@ -166,6 +176,16 @@ void GTextEditor::paint_event(GPaintEvent& event)
         if (i == m_cursor.line())
             painter.fill_rect(line_rect, Color(230, 230, 230));
         painter.draw_text(line_rect, line.characters(), line.length(), TextAlignment::CenterLeft, Color::Black);
+        bool line_has_selection = has_selection && i >= normalized_selection_start.line() && i <= normalized_selection_end.line();
+        if (line_has_selection) {
+            int selection_start_column_on_line = normalized_selection_start.line() == i ? normalized_selection_start.column() : 0;
+            int selection_end_column_on_line = normalized_selection_end.line() == i ? normalized_selection_end.column() : line.length();
+            int selection_left = selection_start_column_on_line * font().glyph_width('x');
+            int selection_right = line_rect.left() + selection_end_column_on_line * font().glyph_width('x');
+            Rect selection_rect { selection_left, line_rect.y(), selection_right - selection_left, line_rect.height() };
+            painter.fill_rect(selection_rect, Color::from_rgb(0x955233));
+            painter.draw_text(selection_rect, line.characters() + selection_start_column_on_line, line.length() - selection_start_column_on_line - (line.length() - selection_end_column_on_line), TextAlignment::CenterLeft, Color::White);
+        }
     }
 
     if (is_focused() && m_cursor_state)
@@ -184,67 +204,91 @@ void GTextEditor::paint_event(GPaintEvent& event)
     };
 }
 
+void GTextEditor::toggle_selection_if_needed_for_event(const GKeyEvent& event)
+{
+    if (event.shift() && !m_selection_start.is_valid()) {
+        m_selection_start = m_cursor;
+        update();
+        return;
+    }
+    if (!event.shift() && m_selection_start.is_valid()) {
+        m_selection_start = { };
+        update();
+        return;
+    }
+}
+
 void GTextEditor::keydown_event(GKeyEvent& event)
 {
-    if (!event.modifiers() && event.key() == KeyCode::Key_Up) {
+    if (event.key() == KeyCode::Key_Up) {
         if (m_cursor.line() > 0) {
             int new_line = m_cursor.line() - 1;
             int new_column = min(m_cursor.column(), m_lines[new_line]->length());
+            toggle_selection_if_needed_for_event(event);
             set_cursor(new_line, new_column);
         }
         return;
     }
-    if (!event.modifiers() && event.key() == KeyCode::Key_Down) {
+    if (event.key() == KeyCode::Key_Down) {
         if (m_cursor.line() < (m_lines.size() - 1)) {
             int new_line = m_cursor.line() + 1;
             int new_column = min(m_cursor.column(), m_lines[new_line]->length());
+            toggle_selection_if_needed_for_event(event);
             set_cursor(new_line, new_column);
         }
         return;
     }
-    if (!event.modifiers() && event.key() == KeyCode::Key_PageUp) {
+    if (event.key() == KeyCode::Key_PageUp) {
         if (m_cursor.line() > 0) {
             int new_line = max(0, m_cursor.line() - visible_content_rect().height() / line_height());
             int new_column = min(m_cursor.column(), m_lines[new_line]->length());
+            toggle_selection_if_needed_for_event(event);
             set_cursor(new_line, new_column);
         }
         return;
     }
-    if (!event.modifiers() && event.key() == KeyCode::Key_PageDown) {
+    if (event.key() == KeyCode::Key_PageDown) {
         if (m_cursor.line() < (m_lines.size() - 1)) {
             int new_line = min(line_count() - 1, m_cursor.line() + visible_content_rect().height() / line_height());
             int new_column = min(m_cursor.column(), m_lines[new_line]->length());
+            toggle_selection_if_needed_for_event(event);
             set_cursor(new_line, new_column);
         }
         return;
     }
-    if (!event.modifiers() && event.key() == KeyCode::Key_Left) {
+    if (event.key() == KeyCode::Key_Left) {
         if (m_cursor.column() > 0) {
             int new_column = m_cursor.column() - 1;
+            toggle_selection_if_needed_for_event(event);
             set_cursor(m_cursor.line(), new_column);
         }
         return;
     }
-    if (!event.modifiers() && event.key() == KeyCode::Key_Right) {
+    if (event.key() == KeyCode::Key_Right) {
         if (m_cursor.column() < current_line().length()) {
             int new_column = m_cursor.column() + 1;
+            toggle_selection_if_needed_for_event(event);
             set_cursor(m_cursor.line(), new_column);
         }
         return;
     }
-    if (!event.modifiers() && event.key() == KeyCode::Key_Home) {
+    if (event.key() == KeyCode::Key_Home) {
+        toggle_selection_if_needed_for_event(event);
         set_cursor(m_cursor.line(), 0);
         return;
     }
-    if (!event.modifiers() && event.key() == KeyCode::Key_End) {
+    if (event.key() == KeyCode::Key_End) {
+        toggle_selection_if_needed_for_event(event);
         set_cursor(m_cursor.line(), current_line().length());
         return;
     }
-    if (event.ctrl() && event.key() == KeyCode::Key_Home) {
+    if (event.key() == KeyCode::Key_Home) {
+        toggle_selection_if_needed_for_event(event);
         set_cursor(0, 0);
         return;
     }
-    if (event.ctrl() && event.key() == KeyCode::Key_End) {
+    if (event.key() == KeyCode::Key_End) {
+        toggle_selection_if_needed_for_event(event);
         set_cursor(line_count() - 1, m_lines[line_count() - 1]->length());
         return;
     }
