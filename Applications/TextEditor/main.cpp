@@ -66,8 +66,9 @@ int main(int argc, char** argv)
         dbgprintf("FIXME: Implement File/Open");
     });
 
-    auto save_action = GAction::create("Save document", { Mod_Ctrl, Key_S }, GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/save16.rgb", { 16, 16 }), [] (const GAction&) {
-        dbgprintf("FIXME: Implement File/Save");
+    auto save_action = GAction::create("Save document", { Mod_Ctrl, Key_S }, GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/save16.rgb", { 16, 16 }), [&] (const GAction&) {
+        dbgprintf("Writing document to '%s'\n", path.characters());
+        text_editor->write_to_file(path);
     });
 
     auto menubar = make<GMenuBar>();

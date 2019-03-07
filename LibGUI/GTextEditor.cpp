@@ -3,6 +3,9 @@
 #include <LibGUI/GFontDatabase.h>
 #include <SharedGraphics/Painter.h>
 #include <Kernel/KeyCode.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <stdio.h>
 
 GTextEditor::GTextEditor(GWidget* parent)
     : GWidget(parent)
@@ -428,4 +431,36 @@ void GTextEditor::Line::truncate(int length)
 {
     m_text.resize(length + 1);
     m_text.last() = 0;
+}
+
+bool GTextEditor::write_to_file(const String& path)
+{
+    int fd = open(path.characters(), O_WRONLY | O_CREAT, 0666);
+    if (fd < 0) {
+        perror("open");
+        return false;
+    }
+    for (int i = 0; i < m_lines.size(); ++i) {
+        auto& line = *m_lines[i];
+        if (line.length()) {
+            ssize_t nwritten = write(fd, line.characters(), line.length());
+            if (nwritten < 0) {
+                perror("write");
+                close(fd);
+                return false;
+            }
+        }
+        if (i != m_lines.size() - 1) {
+            char ch = '\n';
+            ssize_t nwritten = write(fd, &ch, 1);
+            if (nwritten != 1) {
+                perror("write");
+                close(fd);
+                return false;
+            }
+        }
+    }
+
+    close(fd);
+    return true;
 }

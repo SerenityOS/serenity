@@ -49,6 +49,8 @@ public:
     GTextPosition cursor() const { return m_cursor; }
     int glyph_width() const { return font().glyph_width('x'); }
 
+    bool write_to_file(const String& path);
+
 private:
     virtual void paint_event(GPaintEvent&) override;
     virtual void resize_event(GResizeEvent&) override;
