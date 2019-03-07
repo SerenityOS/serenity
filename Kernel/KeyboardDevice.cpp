@@ -66,7 +66,7 @@ static KeyCode unshifted_key_map[0x80] =
     Key_Down, // 80
     Key_PageDown,
     Key_Invalid,
-    Key_Invalid,
+    Key_Delete, // 83
     Key_Invalid,
     Key_Invalid,
     Key_Invalid,
@@ -108,7 +108,7 @@ static KeyCode shifted_key_map[0x100] =
     Key_Down, // 80
     Key_PageDown,
     Key_Invalid,
-    Key_Invalid,
+    Key_Delete, // 83
     Key_Invalid,
     Key_Invalid,
     Key_Invalid,
