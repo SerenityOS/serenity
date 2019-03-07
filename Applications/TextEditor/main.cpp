@@ -7,6 +7,7 @@
 #include <LibGUI/GMenuBar.h>
 #include <LibGUI/GTextEditor.h>
 #include <LibGUI/GAction.h>
+#include <LibGUI/GFontDatabase.h>
 #include <AK/StringBuilder.h>
 #include <unistd.h>
 #include <stdio.h>
@@ -103,6 +104,15 @@ int main(int argc, char** argv)
     edit_menu->add_action(copy_action.copy_ref());
     edit_menu->add_action(paste_action.copy_ref());
     menubar->add_menu(move(edit_menu));
+
+    auto font_menu = make<GMenu>("Font");
+    GFontDatabase::the().for_each_fixed_width_font([&] (const String& font_name) {
+        font_menu->add_action(GAction::create(font_name, [text_editor] (const GAction& action) {
+            text_editor->set_font(GFontDatabase::the().get_by_name(action.text()));
+            text_editor->update();
+        }));
+    });
+    menubar->add_menu(move(font_menu));
 
     auto help_menu = make<GMenu>("Help");
     help_menu->add_action(GAction::create("About", [] (const GAction&) {
