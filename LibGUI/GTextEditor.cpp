@@ -23,6 +23,8 @@ GTextEditor::GTextEditor(GWidget* parent)
     m_horizontal_scrollbar->on_change = [this] (int) {
         update();
     };
+
+    m_lines.append(make<Line>());
 }
 
 GTextEditor::~GTextEditor()
