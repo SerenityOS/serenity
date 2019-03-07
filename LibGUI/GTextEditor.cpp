@@ -112,7 +112,7 @@ void GTextEditor::paint_event(GPaintEvent& event)
         line_rect.set_width(exposed_width);
         if (i == m_cursor.line() && is_focused())
             painter.fill_rect(line_rect, Color(230, 230, 230));
-        painter.draw_text(line_rect, line.text(), TextAlignment::CenterLeft, Color::Black);
+        painter.draw_text(line_rect, line.characters(), line.length(), TextAlignment::CenterLeft, Color::Black);
     }
 
     if (is_focused() && m_cursor_state)
@@ -176,7 +176,15 @@ void GTextEditor::keydown_event(GKeyEvent& event)
         set_cursor(line_count() - 1, m_lines[line_count() - 1].length());
         return;
     }
+
+    if (!event.text().is_empty())
+        insert_at_cursor(event.text()[0]);
+
     return GWidget::keydown_event(event);
+}
+
+void GTextEditor::insert_at_cursor(char ch)
+{
 }
 
 Rect GTextEditor::visible_content_rect() const
@@ -194,7 +202,7 @@ Rect GTextEditor::cursor_content_rect() const
     if (!m_cursor.is_valid())
         return { };
     ASSERT(!m_lines.is_empty());
-    ASSERT(m_cursor.column() <= (current_line().text().length() + 1));
+    ASSERT(m_cursor.column() <= (current_line().length() + 1));
     return { m_cursor.column() * glyph_width(), m_cursor.line() * line_height(), 1, line_height() };
 }
 
@@ -280,17 +288,20 @@ void GTextEditor::timer_event(GTimerEvent&)
         update_cursor();
 }
 
+GTextEditor::Line::Line()
+{
+    m_text.append(0);
+}
+
 void GTextEditor::Line::set_text(const String& text)
 {
-    if (text == m_text)
+    if (text.length() == length() && !memcmp(text.characters(), characters(), length()))
         return;
-    m_text = text;
-    m_cached_width = -1;
+    m_text.resize(text.length() + 1);
+    memcpy(m_text.data(), text.characters(), text.length() + 1);
 }
 
 int GTextEditor::Line::width(const Font& font) const
 {
-    if (m_cached_width < 0)
-        m_cached_width = font.width(m_text);
-    return m_cached_width;
+    return font.glyph_width('x') * length();
 }
