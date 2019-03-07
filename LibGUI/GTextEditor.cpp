@@ -160,6 +160,22 @@ void GTextEditor::keydown_event(GKeyEvent& event)
         }
         return;
     }
+    if (!event.modifiers() && event.key() == KeyCode::Key_PageUp) {
+        if (m_cursor.line() > 0) {
+            int new_line = max(0, m_cursor.line() - visible_content_rect().height() / line_height());
+            int new_column = min(m_cursor.column(), m_lines[new_line]->length());
+            set_cursor(new_line, new_column);
+        }
+        return;
+    }
+    if (!event.modifiers() && event.key() == KeyCode::Key_PageDown) {
+        if (m_cursor.line() < (m_lines.size() - 1)) {
+            int new_line = min(line_count() - 1, m_cursor.line() + visible_content_rect().height() / line_height());
+            int new_column = min(m_cursor.column(), m_lines[new_line]->length());
+            set_cursor(new_line, new_column);
+        }
+        return;
+    }
     if (!event.modifiers() && event.key() == KeyCode::Key_Left) {
         if (m_cursor.column() > 0) {
             int new_column = m_cursor.column() - 1;
