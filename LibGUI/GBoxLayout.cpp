@@ -80,7 +80,12 @@ void GBoxLayout::run(GWidget& widget)
         if (entry.widget->size_policy(Orientation::Vertical) == SizePolicy::Fixed)
             rect.set_height(entry.widget->preferred_size().height());
         if (entry.widget->size_policy(Orientation::Horizontal) == SizePolicy::Fixed)
-            rect.set_width(entry.widget->preferred_size().height());
+            rect.set_width(entry.widget->preferred_size().width());
+
+        if (orientation() == Orientation::Horizontal)
+            rect.center_vertically_within(widget.rect());
+        else
+            rect.center_horizontally_within(widget.rect());
 
 #ifdef GBOXLAYOUT_DEBUG
         dbgprintf("GBoxLayout: apply, %s{%p} <- %s\n", entry.widget->class_name(), entry.widget.ptr(), rect.to_string().characters());
