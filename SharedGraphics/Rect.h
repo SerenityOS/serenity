@@ -198,7 +198,17 @@ public:
 
     void center_within(const Rect& other)
     {
+        center_horizontally_within(other);
+        center_vertically_within(other);
+    }
+
+    void center_horizontally_within(const Rect& other)
+    {
         set_x(other.center().x() - width() / 2);
+    }
+
+    void center_vertically_within(const Rect& other)
+    {
         set_y(other.center().y() - height() / 2);
     }
 

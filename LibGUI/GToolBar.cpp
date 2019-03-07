@@ -41,10 +41,33 @@ void GToolBar::add_action(Retained<GAction>&& action)
     m_items.append(move(item));
 }
 
+class SeparatorWidget final : public GWidget {
+public:
+    SeparatorWidget(GWidget* parent)
+        : GWidget(parent)
+    {
+        set_fill_with_background_color(false);
+        set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
+        set_background_color(Color::White);
+        set_preferred_size({ 8, 20 });
+    }
+    virtual ~SeparatorWidget() override { }
+
+    virtual void paint_event(GPaintEvent& event) override
+    {
+        Painter painter(*this);
+        painter.set_clip_rect(event.rect());
+        painter.translate(rect().center().x() - 1, 0);
+        painter.draw_line({ 0, 0 }, { 0, rect().bottom() }, Color::DarkGray);
+        painter.draw_line({ 1, 0 }, { 1, rect().bottom() }, Color::White);
+    }
+};
+
 void GToolBar::add_separator()
 {
     auto item = make<Item>();
     item->type = Item::Separator;
+    new SeparatorWidget(this);
     m_items.append(move(item));
 }
 
