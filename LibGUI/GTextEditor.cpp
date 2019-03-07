@@ -279,7 +279,7 @@ void GTextEditor::keydown_event(GKeyEvent& event)
             update_cursor();
             return;
         }
-        if (m_cursor.column() == (current_line().length() + 1) && m_cursor.line() != line_count() - 1) {
+        if (m_cursor.column() == current_line().length() && m_cursor.line() != line_count() - 1) {
             // Delete at end of line; merge with next line
             auto& next_line = *m_lines[m_cursor.line() + 1];
             int previous_length = current_line().length();
