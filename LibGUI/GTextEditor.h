@@ -37,12 +37,13 @@ public:
 
     void set_text(const String&);
     int content_width() const;
+    int content_height() const;
     Rect visible_content_rect() const;
     void scroll_cursor_into_view();
     int line_count() const { return m_lines.size(); }
     int line_spacing() const { return m_line_spacing; }
     int line_height() const { return font().glyph_height() + m_line_spacing; }
-    int padding() const { return 2; }
+    int padding() const { return 3; }
     GTextPosition cursor() const { return m_cursor; }
 
 private:

@@ -62,14 +62,19 @@ void GTextEditor::resize_event(GResizeEvent& event)
 void GTextEditor::update_scrollbar_ranges()
 {
     int available_height = height() - m_horizontal_scrollbar->height();
-    int excess_height = max(0, (line_count() * line_height()) - available_height);
+    int excess_height = max(0, (content_height() + padding() * 2) - available_height);
     m_vertical_scrollbar->set_range(0, excess_height);
 
     int available_width = width() - m_vertical_scrollbar->width();
-    int excess_width = max(0, content_width() - available_width);
+    int excess_width = max(0, (content_width() + padding() * 2) - available_width);
     m_horizontal_scrollbar->set_range(0, excess_width);
 
     m_vertical_scrollbar->set_big_step(visible_content_rect().height());
+}
+
+int GTextEditor::content_height() const
+{
+    return line_count() * line_height();
 }
 
 int GTextEditor::content_width() const
@@ -196,6 +201,7 @@ Rect GTextEditor::line_widget_rect(int line_index) const
     ASSERT(m_vertical_scrollbar);
     auto rect = line_content_rect(line_index);
     rect.move_by(-(m_horizontal_scrollbar->value() - padding()), -(m_vertical_scrollbar->value() - padding()));
+    rect.set_width(rect.width() + 1); // Add 1 pixel for when the cursor is on the end.
     rect.intersect(this->rect());
     return rect;
 }
@@ -243,10 +249,11 @@ void GTextEditor::set_cursor(int line, int column)
 {
     if (m_cursor.line() == line && m_cursor.column() == column)
         return;
-    update_cursor();
+    auto old_cursor_line_rect = line_widget_rect(m_cursor.line());
     m_cursor = GTextPosition(line, column);
     m_cursor_state = true;
     scroll_cursor_into_view();
+    update(old_cursor_line_rect);
     update_cursor();
     if (on_cursor_change)
         on_cursor_change(*this);
