@@ -58,6 +58,18 @@ int main(int argc, char** argv)
         text_editor->set_text(builder.to_string());
     }
 
+    auto new_action = GAction::create("New document", { Mod_Ctrl, Key_N }, GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/newdocument16.rgb", { 16, 16 }), [] (const GAction&) {
+        dbgprintf("FIXME: Implement File/New");
+    });
+
+    auto open_action = GAction::create("Open document", { Mod_Ctrl, Key_O }, GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/open16.rgb", { 16, 16 }), [] (const GAction&) {
+        dbgprintf("FIXME: Implement File/Open");
+    });
+
+    auto save_action = GAction::create("Save document", { Mod_Ctrl, Key_S }, GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/save16.rgb", { 16, 16 }), [] (const GAction&) {
+        dbgprintf("FIXME: Implement File/Save");
+    });
+
     auto menubar = make<GMenuBar>();
     auto app_menu = make<GMenu>("TextEditor");
     app_menu->add_action(GAction::create("Quit", { Mod_Alt, Key_F4 }, [] (const GAction&) {
@@ -67,6 +79,9 @@ int main(int argc, char** argv)
     menubar->add_menu(move(app_menu));
 
     auto file_menu = make<GMenu>("File");
+    file_menu->add_action(new_action.copy_ref());
+    file_menu->add_action(open_action.copy_ref());
+    file_menu->add_action(save_action.copy_ref());
     menubar->add_menu(move(file_menu));
 
     auto edit_menu = make<GMenu>("Edit");
@@ -79,6 +94,10 @@ int main(int argc, char** argv)
     menubar->add_menu(move(help_menu));
 
     app.set_menubar(move(menubar));
+
+    toolbar->add_action(move(new_action));
+    toolbar->add_action(move(open_action));
+    toolbar->add_action(move(save_action));
 
     auto* window = new GWindow;
     window->set_title(String::format("TextEditor: %s", path.characters()));
