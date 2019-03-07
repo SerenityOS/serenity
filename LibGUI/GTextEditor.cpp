@@ -238,11 +238,7 @@ Rect GTextEditor::line_content_rect(int line_index) const
 
 void GTextEditor::update_cursor()
 {
-    auto rect = line_widget_rect(m_cursor.line());
-    dbgprintf("update_cursor: line_widget_rect: %s", rect.to_string().characters());
-    rect.set_width(width());
-    dbgprintf(", adjusted: %s\n", rect.to_string().characters());
-    update(rect);
+    update(line_widget_rect(m_cursor.line()));
 }
 
 void GTextEditor::set_cursor(int line, int column)
