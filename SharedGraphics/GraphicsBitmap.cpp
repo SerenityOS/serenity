@@ -58,23 +58,17 @@ GraphicsBitmap::GraphicsBitmap(Format format, const Size& size, RGBA32* data)
 {
 }
 
-RetainPtr<GraphicsBitmap> GraphicsBitmap::create_with_shared_buffer(Format format, int shared_buffer_id, const Size& size, RGBA32* data)
+RetainPtr<GraphicsBitmap> GraphicsBitmap::create_with_shared_buffer(Format format, Retained<SharedBuffer>&& shared_buffer, const Size& size)
 {
-    if (!data) {
-        void* shared_buffer = get_shared_buffer(shared_buffer_id);
-        if (!shared_buffer || shared_buffer == (void*)-1)
-            return nullptr;
-        data = (RGBA32*)shared_buffer;
-    }
-    return adopt(*new GraphicsBitmap(format, shared_buffer_id, size, data));
+    return adopt(*new GraphicsBitmap(format, move(shared_buffer), size));
 }
 
-GraphicsBitmap::GraphicsBitmap(Format format, int shared_buffer_id, const Size& size, RGBA32* data)
+GraphicsBitmap::GraphicsBitmap(Format format, Retained<SharedBuffer>&& shared_buffer, const Size& size)
     : m_size(size)
-    , m_data(data)
+    , m_data((RGBA32*)shared_buffer->data())
     , m_pitch(size.width() * sizeof(RGBA32))
     , m_format(format)
-    , m_shared_buffer_id(shared_buffer_id)
+    , m_shared_buffer(move(shared_buffer))
 {
 }
 
@@ -82,10 +76,6 @@ GraphicsBitmap::~GraphicsBitmap()
 {
     if (m_mmaped) {
         int rc = munmap(m_data, m_size.area() * 4);
-        ASSERT(rc == 0);
-    }
-    if (m_shared_buffer_id != -1) {
-        int rc = release_shared_buffer(m_shared_buffer_id);
         ASSERT(rc == 0);
     }
     m_data = nullptr;

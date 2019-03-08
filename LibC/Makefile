@@ -7,6 +7,7 @@ AK_OBJS = \
     ../AK/kmalloc.o
 
 LIBC_OBJS = \
+       SharedBuffer.o \
        stdio.o \
        unistd.o \
        string.o \

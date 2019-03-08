@@ -232,9 +232,11 @@ public:
     int sys$connect(int sockfd, const sockaddr*, socklen_t);
     int sys$restore_signal_mask(dword mask);
 
-    int sys$create_shared_buffer(pid_t peer_pid, size_t, void** buffer);
+    int sys$create_shared_buffer(pid_t peer_pid, int, void** buffer);
     void* sys$get_shared_buffer(int shared_buffer_id);
     int sys$release_shared_buffer(int shared_buffer_id);
+    int sys$seal_shared_buffer(int shared_buffer_id);
+    int sys$get_shared_buffer_size(int shared_buffer_id);
 
     KResult wait_for_connect(Socket&);
 

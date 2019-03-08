@@ -172,15 +172,12 @@ void GWindow::event(GEvent& event)
             ASSERT(!paint_event.window_size().is_empty());
             Size new_backing_store_size = paint_event.window_size();
             size_t size_in_bytes = new_backing_store_size.area() * sizeof(RGBA32);
-            void* buffer;
-            int shared_buffer_id = create_shared_buffer(GEventLoop::main().server_pid(), size_in_bytes, (void**)&buffer);
-            ASSERT(shared_buffer_id >= 0);
-            ASSERT(buffer);
-            ASSERT(buffer != (void*)-1);
+            auto shared_buffer = SharedBuffer::create(GEventLoop::main().server_pid(), size_in_bytes);
+            ASSERT(shared_buffer);
             m_backing = GraphicsBitmap::create_with_shared_buffer(
                         m_has_alpha_channel ? GraphicsBitmap::Format::RGBA32 : GraphicsBitmap::Format::RGB32,
-                        shared_buffer_id,
-                        new_backing_store_size, (RGBA32*)buffer);
+                        *shared_buffer,
+                        new_backing_store_size);
         }
         if (rect.is_empty() || created_new_backing_store)
             rect = m_main_widget->rect();

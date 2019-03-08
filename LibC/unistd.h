@@ -14,9 +14,11 @@ __BEGIN_DECLS
 
 extern char** environ;
 
-int create_shared_buffer(pid_t peer_pid, size_t, void** buffer);
+int create_shared_buffer(pid_t peer_pid, int, void** buffer);
 void* get_shared_buffer(int shared_buffer_id);
 int release_shared_buffer(int shared_buffer_id);
+int seal_shared_buffer(int shared_buffer_id);
+int get_shared_buffer_size(int shared_buffer_id);
 int read_tsc(unsigned* lsw, unsigned* msw);
 inline int getpagesize() { return 4096; }
 pid_t fork();

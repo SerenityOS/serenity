@@ -203,6 +203,8 @@ public:
 
     const Bitmap& cow_map() const { return m_cow_map; }
 
+    void set_writable(bool b) { m_writable = b; }
+
 private:
     RetainPtr<PageDirectory> m_page_directory;
     LinearAddress m_laddr;
