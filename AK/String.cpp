@@ -38,6 +38,8 @@ String String::isolated_copy() const
 
 String String::substring(ssize_t start, ssize_t length) const
 {
+    if (!length)
+        return empty();
     ASSERT(m_impl);
     ASSERT(start + length <= m_impl->length());
     // FIXME: This needs some input bounds checking.

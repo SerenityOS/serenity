@@ -1,6 +1,7 @@
 #include <LibGUI/GTextEditor.h>
 #include <LibGUI/GScrollBar.h>
 #include <LibGUI/GFontDatabase.h>
+#include <LibGUI/GClipboard.h>
 #include <SharedGraphics/Painter.h>
 #include <Kernel/KeyCode.h>
 #include <AK/StringBuilder.h>
@@ -344,6 +345,14 @@ void GTextEditor::keydown_event(GKeyEvent& event)
     return GWidget::keydown_event(event);
 }
 
+void GTextEditor::insert_at_cursor(const String& text)
+{
+    // FIXME: This should obviously not be implemented this way.
+    for (int i = 0; i < text.length(); ++i) {
+        insert_at_cursor(text[i]);
+    }
+}
+
 void GTextEditor::insert_at_cursor(char ch)
 {
     bool at_head = m_cursor.column() == 0;
@@ -449,6 +458,7 @@ void GTextEditor::set_cursor(int line, int column)
 
 void GTextEditor::set_cursor(const GTextPosition& position)
 {
+    ASSERT(!m_lines.is_empty());
     if (m_cursor == position)
         return;
     auto old_cursor_line_rect = line_widget_rect(m_cursor.line());
@@ -595,4 +605,70 @@ String GTextEditor::selected_text() const
     }
 
     return builder.to_string();
+}
+
+void GTextEditor::delete_selection()
+{
+    if (!has_selection())
+        return;
+
+    auto normalized_selection_start = m_selection_start;
+    auto normalized_selection_end = m_cursor;
+    if (m_cursor < m_selection_start)
+        swap(normalized_selection_start, normalized_selection_end);
+
+    for (int i = normalized_selection_start.line(); i <= normalized_selection_end.line();) {
+        auto& line = *m_lines[i];
+        int selection_start_column_on_line = normalized_selection_start.line() == i ? normalized_selection_start.column() : 0;
+        int selection_end_column_on_line = normalized_selection_end.line() == i ? normalized_selection_end.column() : line.length();
+        bool whole_line_is_selected = selection_start_column_on_line == 0 && selection_end_column_on_line == line.length();
+        if (whole_line_is_selected) {
+            m_lines.remove(i);
+            normalized_selection_end.set_line(normalized_selection_end.line() - 1);
+            continue;
+        }
+        auto before_selection = String(line.characters(), line.length()).substring(0, selection_start_column_on_line);
+        auto after_selection = String(line.characters(), line.length()).substring(selection_end_column_on_line, line.length() - selection_end_column_on_line);
+        StringBuilder builder(before_selection.length() + after_selection.length());
+        builder.append(before_selection);
+        builder.append(after_selection);
+        line.set_text(builder.to_string());
+        ++i;
+    }
+
+    if (m_lines.is_empty())
+        m_lines.append(make<Line>());
+
+    m_selection_start = { };
+    set_cursor(normalized_selection_start);
+    update();
+}
+
+void GTextEditor::insert_at_cursor_or_replace_selection(const String& text)
+{
+    if (has_selection())
+        delete_selection();
+    insert_at_cursor(text);
+}
+
+void GTextEditor::cut()
+{
+    auto selected_text = this->selected_text();
+    printf("Cut: \"%s\"\n", selected_text.characters());
+    GClipboard::the().set_data(selected_text);
+    delete_selection();
+}
+
+void GTextEditor::copy()
+{
+    auto selected_text = this->selected_text();
+    printf("Copy: \"%s\"\n", selected_text.characters());
+    GClipboard::the().set_data(selected_text);
+}
+
+void GTextEditor::paste()
+{
+    auto paste_text = GClipboard::the().data();
+    printf("Paste: \"%s\"\n", paste_text.characters());
+    insert_at_cursor_or_replace_selection(paste_text);
 }
