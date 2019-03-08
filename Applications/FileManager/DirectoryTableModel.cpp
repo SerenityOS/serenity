@@ -204,6 +204,8 @@ void DirectoryTableModel::open(const String& a_path)
 
 void DirectoryTableModel::activate(const GModelIndex& index)
 {
+    if (!index.is_valid())
+        return;
     auto& entry = this->entry(index.row());
     FileSystemPath path(String::format("%s/%s", m_path.characters(), entry.name.characters()));
     if (entry.is_directory()) {
