@@ -473,6 +473,8 @@ void GTextEditor::set_cursor(int line, int column)
 void GTextEditor::set_cursor(const GTextPosition& position)
 {
     ASSERT(!m_lines.is_empty());
+    ASSERT(position.line() < m_lines.size());
+    ASSERT(position.column() <= m_lines[position.line()]->length());
     if (m_cursor == position)
         return;
     auto old_cursor_line_rect = line_widget_rect(m_cursor.line());
@@ -505,6 +507,12 @@ void GTextEditor::timer_event(GTimerEvent&)
 
 GTextEditor::Line::Line()
 {
+    clear();
+}
+
+void GTextEditor::Line::clear()
+{
+    m_text.clear();
     m_text.append(0);
 }
 
@@ -512,6 +520,10 @@ void GTextEditor::Line::set_text(const String& text)
 {
     if (text.length() == length() && !memcmp(text.characters(), characters(), length()))
         return;
+    if (text.is_empty()) {
+        clear();
+        return;
+    }
     m_text.resize(text.length() + 1);
     memcpy(m_text.data(), text.characters(), text.length() + 1);
 }
@@ -631,23 +643,38 @@ void GTextEditor::delete_selection()
     if (m_cursor < m_selection_start)
         swap(normalized_selection_start, normalized_selection_end);
 
-    for (int i = normalized_selection_start.line(); i <= normalized_selection_end.line();) {
-        auto& line = *m_lines[i];
-        int selection_start_column_on_line = normalized_selection_start.line() == i ? normalized_selection_start.column() : 0;
-        int selection_end_column_on_line = normalized_selection_end.line() == i ? normalized_selection_end.column() : line.length();
-        bool whole_line_is_selected = selection_start_column_on_line == 0 && selection_end_column_on_line == line.length();
+    // First delete all the lines in between the first and last one.
+    for (int i = normalized_selection_start.line() + 1; i < normalized_selection_end.line();) {
+        m_lines.remove(i);
+        normalized_selection_end.set_line(normalized_selection_end.line() - 1);
+    }
+
+    if (normalized_selection_start.line() == normalized_selection_end.line()) {
+        // Delete within same line.
+        auto& line = *m_lines[normalized_selection_start.line()];
+        bool whole_line_is_selected = normalized_selection_start.column() == 0 && normalized_selection_end.column() == line.length();
         if (whole_line_is_selected) {
-            m_lines.remove(i);
-            normalized_selection_end.set_line(normalized_selection_end.line() - 1);
-            continue;
+            line.clear();
+        } else {
+            auto before_selection = String(line.characters(), line.length()).substring(0, normalized_selection_start.column());
+            auto after_selection = String(line.characters(), line.length()).substring(normalized_selection_end.column(), line.length() - normalized_selection_end.column());
+            StringBuilder builder(before_selection.length() + after_selection.length());
+            builder.append(before_selection);
+            builder.append(after_selection);
+            line.set_text(builder.to_string());
         }
-        auto before_selection = String(line.characters(), line.length()).substring(0, selection_start_column_on_line);
-        auto after_selection = String(line.characters(), line.length()).substring(selection_end_column_on_line, line.length() - selection_end_column_on_line);
+    } else {
+        // Delete across a newline, merging lines.
+        ASSERT(normalized_selection_start.line() == normalized_selection_end.line() - 1);
+        auto& first_line = *m_lines[normalized_selection_start.line()];
+        auto& second_line = *m_lines[normalized_selection_end.line()];
+        auto before_selection = String(first_line.characters(), first_line.length()).substring(0, normalized_selection_start.column());
+        auto after_selection = String(second_line.characters(), second_line.length()).substring(normalized_selection_end.column(), second_line.length() - normalized_selection_end.column());
         StringBuilder builder(before_selection.length() + after_selection.length());
         builder.append(before_selection);
         builder.append(after_selection);
-        line.set_text(builder.to_string());
-        ++i;
+        first_line.set_text(builder.to_string());
+        m_lines.remove(normalized_selection_end.line());
     }
 
     if (m_lines.is_empty())
