@@ -83,7 +83,7 @@ int main(int argc, char** argv)
     });
 
     auto copy_action = GAction::create("Copy", { Mod_Ctrl, Key_C }, GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/copyfile16.rgb", { 16, 16 }), [&] (const GAction&) {
-        dbgprintf("FIXME: Implement Edit/Copy");
+        printf("Copy: \"%s\"\n", text_editor->selected_text().characters());
     });
 
     auto paste_action = GAction::create("Paste", { Mod_Ctrl, Key_V }, GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/paste16.rgb", { 16, 16 }), [&] (const GAction&) {
