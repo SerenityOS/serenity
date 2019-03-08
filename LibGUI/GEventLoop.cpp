@@ -158,9 +158,11 @@ void GEventLoop::handle_key_event(const WSAPI_ServerMessage& event, GWindow& win
     if (event.key.character != '\0')
         key_event->m_text = String(&event.key.character, 1);
 
-    if (auto* action = GApplication::the().action_for_key_event(*key_event)) {
-        action->activate();
-        return;
+    if (event.type == WSAPI_ServerMessage::Type::KeyDown) {
+        if (auto* action = GApplication::the().action_for_key_event(*key_event)) {
+            action->activate();
+            return;
+        }
     }
     post_event(window, move(key_event));
 }
