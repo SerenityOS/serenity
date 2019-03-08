@@ -294,6 +294,12 @@ void GTextEditor::keydown_event(GKeyEvent& event)
         set_cursor(line_count() - 1, m_lines[line_count() - 1]->length());
         return;
     }
+    if (event.modifiers() == Mod_Ctrl && event.key() == KeyCode::Key_A) {
+        m_selection_start = { 0, 0 };
+        set_cursor(line_count() - 1, m_lines[line_count() - 1]->length());
+        update();
+        return;
+    }
 
     if (!event.modifiers() && event.key() == KeyCode::Key_Backspace) {
         if (has_selection()) {
