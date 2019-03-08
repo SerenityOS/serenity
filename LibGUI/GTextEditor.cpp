@@ -107,11 +107,47 @@ GTextPosition GTextEditor::text_position_at(const Point& a_position) const
 
 void GTextEditor::mousedown_event(GMouseEvent& event)
 {
-    set_cursor(text_position_at(event.position()));
-    // FIXME: Allow mouse selection!
-    if (m_selection_start.is_valid()) {
-        m_selection_start = { };
+    if (event.button() == GMouseButton::Left) {
+        if (event.modifiers() & Mod_Shift) {
+            if (!has_selection())
+                m_selection_start = m_cursor;
+        } else {
+            m_selection_start = { };
+        }
+
+        m_in_drag_select = true;
+        set_global_cursor_tracking(true);
+
+        set_cursor(text_position_at(event.position()));
+
+        if (!(event.modifiers() & Mod_Shift)) {
+            if (!has_selection())
+                m_selection_start = m_cursor;
+        }
+
+        // FIXME: Only update the relevant rects.
         update();
+        return;
+    }
+}
+
+void GTextEditor::mouseup_event(GMouseEvent& event)
+{
+    if (event.button() == GMouseButton::Left) {
+        if (m_in_drag_select) {
+            m_in_drag_select = false;
+            set_global_cursor_tracking(false);
+        }
+        return;
+    }
+}
+
+void GTextEditor::mousemove_event(GMouseEvent& event)
+{
+    if (m_in_drag_select) {
+        set_cursor(text_position_at(event.position()));
+        update();
+        return;
     }
 }
 
@@ -475,14 +511,14 @@ void GTextEditor::set_cursor(const GTextPosition& position)
     ASSERT(!m_lines.is_empty());
     ASSERT(position.line() < m_lines.size());
     ASSERT(position.column() <= m_lines[position.line()]->length());
-    if (m_cursor == position)
-        return;
-    auto old_cursor_line_rect = line_widget_rect(m_cursor.line());
-    m_cursor = position;
-    m_cursor_state = true;
-    scroll_cursor_into_view();
-    update(old_cursor_line_rect);
-    update_cursor();
+    if (m_cursor != position) {
+        auto old_cursor_line_rect = line_widget_rect(m_cursor.line());
+        m_cursor = position;
+        m_cursor_state = true;
+        scroll_cursor_into_view();
+        update(old_cursor_line_rect);
+        update_cursor();
+    }
     if (on_cursor_change)
         on_cursor_change(*this);
 }

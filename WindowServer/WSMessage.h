@@ -513,11 +513,12 @@ private:
 
 class WSMouseEvent final : public WSMessage {
 public:
-    WSMouseEvent(Type type, const Point& position, unsigned buttons, MouseButton button = MouseButton::None)
+    WSMouseEvent(Type type, const Point& position, unsigned buttons, MouseButton button, unsigned modifiers)
         : WSMessage(type)
         , m_position(position)
         , m_buttons(buttons)
         , m_button(button)
+        , m_modifiers(modifiers)
     {
     }
 
@@ -526,11 +527,13 @@ public:
     int y() const { return m_position.y(); }
     MouseButton button() const { return m_button; }
     unsigned buttons() const { return m_buttons; }
+    unsigned modifiers() const { return m_modifiers; }
 
 private:
     Point m_position;
     unsigned m_buttons { 0 };
     MouseButton m_button { MouseButton::None };
+    unsigned m_modifiers { 0 };
 };
 
 class WSResizeEvent final : public WSMessage {

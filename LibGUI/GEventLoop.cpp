@@ -187,7 +187,7 @@ void GEventLoop::handle_mouse_event(const WSAPI_ServerMessage& event, GWindow& w
     case WSAPI_MouseButton::Middle: button = GMouseButton::Middle; break;
     default: ASSERT_NOT_REACHED(); break;
     }
-    post_event(window, make<GMouseEvent>(type, event.mouse.position, event.mouse.buttons, button));
+    post_event(window, make<GMouseEvent>(type, event.mouse.position, event.mouse.buttons, button, event.mouse.modifiers));
 }
 
 void GEventLoop::handle_menu_event(const WSAPI_ServerMessage& event)
