@@ -110,9 +110,9 @@ void GTextEditor::mousedown_event(GMouseEvent& event)
     if (event.button() == GMouseButton::Left) {
         if (event.modifiers() & Mod_Shift) {
             if (!has_selection())
-                m_selection_start = m_cursor;
+                m_selection.set(m_cursor, { });
         } else {
-            m_selection_start = { };
+            m_selection.clear();
         }
 
         m_in_drag_select = true;
@@ -122,8 +122,11 @@ void GTextEditor::mousedown_event(GMouseEvent& event)
 
         if (!(event.modifiers() & Mod_Shift)) {
             if (!has_selection())
-                m_selection_start = m_cursor;
+                m_selection.set(m_cursor, { });
         }
+
+        if (m_selection.start().is_valid())
+            m_selection.set_end(m_cursor);
 
         // FIXME: Only update the relevant rects.
         update();
@@ -146,6 +149,7 @@ void GTextEditor::mousemove_event(GMouseEvent& event)
 {
     if (m_in_drag_select) {
         set_cursor(text_position_at(event.position()));
+        m_selection.set_end(m_cursor);
         update();
         return;
     }
@@ -184,11 +188,8 @@ void GTextEditor::paint_event(GPaintEvent& event)
     int first_visible_line = text_position_at(event.rect().top_left()).line();
     int last_visible_line = text_position_at(event.rect().bottom_right()).line();
 
-    auto normalized_selection_start = m_selection_start;
-    auto normalized_selection_end = m_cursor;
-    if (m_cursor < m_selection_start)
-        swap(normalized_selection_start, normalized_selection_end);
-    bool has_selection = m_selection_start.is_valid();
+    auto selection = normalized_selection();
+    bool has_selection = selection.is_valid();
 
     painter.set_font(Font::default_font());
     for (int i = first_visible_line; i <= last_visible_line; ++i) {
@@ -214,10 +215,10 @@ void GTextEditor::paint_event(GPaintEvent& event)
         if (i == m_cursor.line())
             painter.fill_rect(line_rect, Color(230, 230, 230));
         painter.draw_text(line_rect, line.characters(), line.length(), TextAlignment::CenterLeft, Color::Black);
-        bool line_has_selection = has_selection && i >= normalized_selection_start.line() && i <= normalized_selection_end.line();
+        bool line_has_selection = has_selection && i >= selection.start().line() && i <= selection.end().line();
         if (line_has_selection) {
-            int selection_start_column_on_line = normalized_selection_start.line() == i ? normalized_selection_start.column() : 0;
-            int selection_end_column_on_line = normalized_selection_end.line() == i ? normalized_selection_end.column() : line.length();
+            int selection_start_column_on_line = selection.start().line() == i ? selection.start().column() : 0;
+            int selection_end_column_on_line = selection.end().line() == i ? selection.end().column() : line.length();
             int selection_left = selection_start_column_on_line * font().glyph_width('x');
             int selection_right = line_rect.left() + selection_end_column_on_line * font().glyph_width('x');
             Rect selection_rect { selection_left, line_rect.y(), selection_right - selection_left, line_rect.height() };
@@ -244,13 +245,13 @@ void GTextEditor::paint_event(GPaintEvent& event)
 
 void GTextEditor::toggle_selection_if_needed_for_event(const GKeyEvent& event)
 {
-    if (event.shift() && !m_selection_start.is_valid()) {
-        m_selection_start = m_cursor;
+    if (event.shift() && !m_selection.is_valid()) {
+        m_selection.set(m_cursor, { });
         update();
         return;
     }
-    if (!event.shift() && m_selection_start.is_valid()) {
-        m_selection_start = { };
+    if (!event.shift() && m_selection.is_valid()) {
+        m_selection.clear();
         update();
         return;
     }
@@ -264,6 +265,8 @@ void GTextEditor::keydown_event(GKeyEvent& event)
             int new_column = min(m_cursor.column(), m_lines[new_line]->length());
             toggle_selection_if_needed_for_event(event);
             set_cursor(new_line, new_column);
+            if (m_selection.start().is_valid())
+                m_selection.set_end(m_cursor);
         }
         return;
     }
@@ -273,6 +276,8 @@ void GTextEditor::keydown_event(GKeyEvent& event)
             int new_column = min(m_cursor.column(), m_lines[new_line]->length());
             toggle_selection_if_needed_for_event(event);
             set_cursor(new_line, new_column);
+            if (m_selection.start().is_valid())
+                m_selection.set_end(m_cursor);
         }
         return;
     }
@@ -282,6 +287,8 @@ void GTextEditor::keydown_event(GKeyEvent& event)
             int new_column = min(m_cursor.column(), m_lines[new_line]->length());
             toggle_selection_if_needed_for_event(event);
             set_cursor(new_line, new_column);
+            if (m_selection.start().is_valid())
+                m_selection.set_end(m_cursor);
         }
         return;
     }
@@ -291,6 +298,8 @@ void GTextEditor::keydown_event(GKeyEvent& event)
             int new_column = min(m_cursor.column(), m_lines[new_line]->length());
             toggle_selection_if_needed_for_event(event);
             set_cursor(new_line, new_column);
+            if (m_selection.start().is_valid())
+                m_selection.set_end(m_cursor);
         }
         return;
     }
@@ -299,6 +308,8 @@ void GTextEditor::keydown_event(GKeyEvent& event)
             int new_column = m_cursor.column() - 1;
             toggle_selection_if_needed_for_event(event);
             set_cursor(m_cursor.line(), new_column);
+            if (m_selection.start().is_valid())
+                m_selection.set_end(m_cursor);
         }
         return;
     }
@@ -307,32 +318,44 @@ void GTextEditor::keydown_event(GKeyEvent& event)
             int new_column = m_cursor.column() + 1;
             toggle_selection_if_needed_for_event(event);
             set_cursor(m_cursor.line(), new_column);
+            if (m_selection.start().is_valid())
+                m_selection.set_end(m_cursor);
         }
         return;
     }
     if (!event.ctrl() && event.key() == KeyCode::Key_Home) {
         toggle_selection_if_needed_for_event(event);
         set_cursor(m_cursor.line(), 0);
+        if (m_selection.start().is_valid())
+            m_selection.set_end(m_cursor);
         return;
     }
     if (!event.ctrl() && event.key() == KeyCode::Key_End) {
         toggle_selection_if_needed_for_event(event);
         set_cursor(m_cursor.line(), current_line().length());
+        if (m_selection.start().is_valid())
+            m_selection.set_end(m_cursor);
         return;
     }
     if (event.ctrl() && event.key() == KeyCode::Key_Home) {
         toggle_selection_if_needed_for_event(event);
         set_cursor(0, 0);
+        if (m_selection.start().is_valid())
+            m_selection.set_end(m_cursor);
         return;
     }
     if (event.ctrl() && event.key() == KeyCode::Key_End) {
         toggle_selection_if_needed_for_event(event);
         set_cursor(line_count() - 1, m_lines[line_count() - 1]->length());
+        if (m_selection.start().is_valid())
+            m_selection.set_end(m_cursor);
         return;
     }
     if (event.modifiers() == Mod_Ctrl && event.key() == KeyCode::Key_A) {
-        m_selection_start = { 0, 0 };
-        set_cursor(line_count() - 1, m_lines[line_count() - 1]->length());
+        GTextPosition start_of_document { 0, 0 };
+        GTextPosition end_of_document { line_count() - 1, m_lines[line_count() - 1]->length() };
+        m_selection.set(start_of_document, end_of_document);
+        set_cursor(end_of_document);
         update();
         return;
     }
@@ -650,19 +673,14 @@ String GTextEditor::selected_text() const
     if (!has_selection())
         return { };
 
-    auto normalized_selection_start = m_selection_start;
-    auto normalized_selection_end = m_cursor;
-    if (m_cursor < m_selection_start)
-        swap(normalized_selection_start, normalized_selection_end);
-
+    auto selection = normalized_selection();
     StringBuilder builder;
-
-    for (int i = normalized_selection_start.line(); i <= normalized_selection_end.line(); ++i) {
+    for (int i = selection.start().line(); i <= selection.end().line(); ++i) {
         auto& line = *m_lines[i];
-        int selection_start_column_on_line = normalized_selection_start.line() == i ? normalized_selection_start.column() : 0;
-        int selection_end_column_on_line = normalized_selection_end.line() == i ? normalized_selection_end.column() : line.length();
+        int selection_start_column_on_line = selection.start().line() == i ? selection.start().column() : 0;
+        int selection_end_column_on_line = selection.end().line() == i ? selection.end().column() : line.length();
         builder.append(line.characters() + selection_start_column_on_line, selection_end_column_on_line - selection_start_column_on_line);
-        if (i != normalized_selection_end.line())
+        if (i != selection.end().line())
             builder.append('\n');
     }
 
@@ -674,26 +692,23 @@ void GTextEditor::delete_selection()
     if (!has_selection())
         return;
 
-    auto normalized_selection_start = m_selection_start;
-    auto normalized_selection_end = m_cursor;
-    if (m_cursor < m_selection_start)
-        swap(normalized_selection_start, normalized_selection_end);
+    auto selection = normalized_selection();
 
     // First delete all the lines in between the first and last one.
-    for (int i = normalized_selection_start.line() + 1; i < normalized_selection_end.line();) {
+    for (int i = selection.start().line() + 1; i < selection.end().line();) {
         m_lines.remove(i);
-        normalized_selection_end.set_line(normalized_selection_end.line() - 1);
+        selection.end().set_line(selection.end().line() - 1);
     }
 
-    if (normalized_selection_start.line() == normalized_selection_end.line()) {
+    if (selection.start().line() == selection.end().line()) {
         // Delete within same line.
-        auto& line = *m_lines[normalized_selection_start.line()];
-        bool whole_line_is_selected = normalized_selection_start.column() == 0 && normalized_selection_end.column() == line.length();
+        auto& line = *m_lines[selection.start().line()];
+        bool whole_line_is_selected = selection.start().column() == 0 && selection.end().column() == line.length();
         if (whole_line_is_selected) {
             line.clear();
         } else {
-            auto before_selection = String(line.characters(), line.length()).substring(0, normalized_selection_start.column());
-            auto after_selection = String(line.characters(), line.length()).substring(normalized_selection_end.column(), line.length() - normalized_selection_end.column());
+            auto before_selection = String(line.characters(), line.length()).substring(0, selection.start().column());
+            auto after_selection = String(line.characters(), line.length()).substring(selection.end().column(), line.length() - selection.end().column());
             StringBuilder builder(before_selection.length() + after_selection.length());
             builder.append(before_selection);
             builder.append(after_selection);
@@ -701,23 +716,23 @@ void GTextEditor::delete_selection()
         }
     } else {
         // Delete across a newline, merging lines.
-        ASSERT(normalized_selection_start.line() == normalized_selection_end.line() - 1);
-        auto& first_line = *m_lines[normalized_selection_start.line()];
-        auto& second_line = *m_lines[normalized_selection_end.line()];
-        auto before_selection = String(first_line.characters(), first_line.length()).substring(0, normalized_selection_start.column());
-        auto after_selection = String(second_line.characters(), second_line.length()).substring(normalized_selection_end.column(), second_line.length() - normalized_selection_end.column());
+        ASSERT(selection.start().line() == selection.end().line() - 1);
+        auto& first_line = *m_lines[selection.start().line()];
+        auto& second_line = *m_lines[selection.end().line()];
+        auto before_selection = String(first_line.characters(), first_line.length()).substring(0, selection.start().column());
+        auto after_selection = String(second_line.characters(), second_line.length()).substring(selection.end().column(), second_line.length() - selection.end().column());
         StringBuilder builder(before_selection.length() + after_selection.length());
         builder.append(before_selection);
         builder.append(after_selection);
         first_line.set_text(builder.to_string());
-        m_lines.remove(normalized_selection_end.line());
+        m_lines.remove(selection.end().line());
     }
 
     if (m_lines.is_empty())
         m_lines.append(make<Line>());
 
-    m_selection_start = { };
-    set_cursor(normalized_selection_start);
+    m_selection.clear();
+    set_cursor(selection.start());
     update();
 }
 
