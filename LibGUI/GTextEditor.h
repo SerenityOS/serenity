@@ -32,6 +32,34 @@ private:
     int m_column { -1 };
 };
 
+class GTextRange {
+public:
+    GTextRange() { }
+    GTextRange(const GTextPosition& start, const GTextPosition& end) : m_start(start) , m_end(end) { }
+
+    bool is_valid() const { return m_start.is_valid() && m_end.is_valid(); }
+    void clear() { m_start = { }; m_end = { }; }
+
+    GTextPosition& start() { return m_start; }
+    GTextPosition& end() { return m_end; }
+    const GTextPosition& start() const { return m_start; }
+    const GTextPosition& end() const { return m_end; }
+
+    GTextRange normalized() const { return GTextRange(normalized_start(), normalized_end()); }
+
+    void set_start(const GTextPosition& position) { m_start = position; }
+    void set_end(const GTextPosition& position) { m_end = position; }
+
+    void set(const GTextPosition& start, const GTextPosition& end) { m_start = start; m_end = end; }
+
+private:
+    GTextPosition normalized_start() const { return m_start < m_end ? m_start : m_end; }
+    GTextPosition normalized_end() const { return m_start < m_end ? m_end : m_start; }
+
+    GTextPosition m_start;
+    GTextPosition m_end;
+};
+
 class GTextEditor : public GWidget {
 public:
     explicit GTextEditor(GWidget* parent);
@@ -49,12 +77,12 @@ public:
     int line_height() const { return font().glyph_height() + m_line_spacing; }
     int padding() const { return 3; }
     GTextPosition cursor() const { return m_cursor; }
-    GTextPosition selection_start() const { return m_selection_start; }
+    GTextRange normalized_selection() const { return m_selection.normalized(); }
     int glyph_width() const { return font().glyph_width('x'); }
 
     bool write_to_file(const String& path);
 
-    bool has_selection() const { return m_selection_start.is_valid(); }
+    bool has_selection() const { return m_selection.is_valid(); }
     String selected_text() const;
 
     void cut();
@@ -121,5 +149,5 @@ private:
     bool m_cursor_state { true };
     bool m_in_drag_select { false };
     int m_line_spacing { 2 };
-    GTextPosition m_selection_start;
+    GTextRange m_selection;
 };
