@@ -3,6 +3,7 @@
 #include <LibGUI/GFontDatabase.h>
 #include <SharedGraphics/Painter.h>
 #include <Kernel/KeyCode.h>
+#include <AK/StringBuilder.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -272,22 +273,22 @@ void GTextEditor::keydown_event(GKeyEvent& event)
         }
         return;
     }
-    if (event.key() == KeyCode::Key_Home) {
+    if (!event.ctrl() && event.key() == KeyCode::Key_Home) {
         toggle_selection_if_needed_for_event(event);
         set_cursor(m_cursor.line(), 0);
         return;
     }
-    if (event.key() == KeyCode::Key_End) {
+    if (!event.ctrl() && event.key() == KeyCode::Key_End) {
         toggle_selection_if_needed_for_event(event);
         set_cursor(m_cursor.line(), current_line().length());
         return;
     }
-    if (event.key() == KeyCode::Key_Home) {
+    if (event.ctrl() && event.key() == KeyCode::Key_Home) {
         toggle_selection_if_needed_for_event(event);
         set_cursor(0, 0);
         return;
     }
-    if (event.key() == KeyCode::Key_End) {
+    if (event.ctrl() && event.key() == KeyCode::Key_End) {
         toggle_selection_if_needed_for_event(event);
         set_cursor(line_count() - 1, m_lines[line_count() - 1]->length());
         return;
@@ -570,4 +571,28 @@ bool GTextEditor::write_to_file(const String& path)
 
     close(fd);
     return true;
+}
+
+String GTextEditor::selected_text() const
+{
+    if (!has_selection())
+        return { };
+
+    auto normalized_selection_start = m_selection_start;
+    auto normalized_selection_end = m_cursor;
+    if (m_cursor < m_selection_start)
+        swap(normalized_selection_start, normalized_selection_end);
+
+    StringBuilder builder;
+
+    for (int i = normalized_selection_start.line(); i <= normalized_selection_end.line(); ++i) {
+        auto& line = *m_lines[i];
+        int selection_start_column_on_line = normalized_selection_start.line() == i ? normalized_selection_start.column() : 0;
+        int selection_end_column_on_line = normalized_selection_end.line() == i ? normalized_selection_end.column() : line.length();
+        builder.append(line.characters() + selection_start_column_on_line, selection_end_column_on_line - selection_start_column_on_line);
+        if (i != normalized_selection_end.line())
+            builder.append('\n');
+    }
+
+    return builder.to_string();
 }

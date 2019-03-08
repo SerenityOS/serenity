@@ -53,6 +53,9 @@ public:
 
     bool write_to_file(const String& path);
 
+    bool has_selection() const { return m_selection_start.is_valid(); }
+    String selected_text() const;
+
 private:
     virtual void paint_event(GPaintEvent&) override;
     virtual void resize_event(GResizeEvent&) override;
