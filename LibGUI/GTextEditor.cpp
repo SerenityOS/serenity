@@ -29,6 +29,8 @@ GTextEditor::GTextEditor(GWidget* parent)
         update();
     };
 
+    m_corner_widget = new GWidget(this);
+
     m_lines.append(make<Line>());
 }
 
@@ -64,6 +66,7 @@ void GTextEditor::resize_event(GResizeEvent& event)
     update_scrollbar_ranges();
     m_vertical_scrollbar->set_relative_rect(event.size().width() - m_vertical_scrollbar->preferred_size().width(), 0, m_vertical_scrollbar->preferred_size().width(), event.size().height() - m_horizontal_scrollbar->preferred_size().height());
     m_horizontal_scrollbar->set_relative_rect(0, event.size().height() - m_horizontal_scrollbar->preferred_size().height(), event.size().width() - m_vertical_scrollbar->preferred_size().width(), m_horizontal_scrollbar->preferred_size().height());
+    m_corner_widget->set_relative_rect(m_horizontal_scrollbar->rect().right() + 1, m_vertical_scrollbar->rect().bottom() + 1, m_horizontal_scrollbar->height(), m_vertical_scrollbar->width());
 }
 
 void GTextEditor::update_scrollbar_ranges()
@@ -174,6 +177,8 @@ Rect GTextEditor::ruler_content_rect(int line_index) const
 void GTextEditor::paint_event(GPaintEvent& event)
 {
     Painter painter(*this);
+    Rect item_area_rect { 0, 0, width() - m_vertical_scrollbar->width(), height() - m_horizontal_scrollbar->height() };
+    painter.set_clip_rect(item_area_rect);
     painter.set_clip_rect(event.rect());
     painter.fill_rect(event.rect(), Color::White);
 
@@ -231,16 +236,14 @@ void GTextEditor::paint_event(GPaintEvent& event)
         painter.fill_rect(cursor_content_rect(), Color::Red);
 
     painter.clear_clip_rect();
+    painter.set_clip_rect(item_area_rect);
     painter.set_clip_rect(event.rect());
 
     painter.translate(0 - padding() - ruler_width(), -padding());
     painter.translate(m_horizontal_scrollbar->value(), m_vertical_scrollbar->value());
-    painter.fill_rect({ m_horizontal_scrollbar->relative_rect().top_right().translated(1, 0), { m_vertical_scrollbar->preferred_size().width(), m_horizontal_scrollbar->preferred_size().height() } }, Color::LightGray);
 
-    if (is_focused()) {
-        Rect item_area_rect { 0, 0, width() - m_vertical_scrollbar->width(), height() - m_horizontal_scrollbar->height() };
+    if (is_focused())
         painter.draw_rect(item_area_rect, Color::from_rgb(0x84351a));
-    };
 }
 
 void GTextEditor::toggle_selection_if_needed_for_event(const GKeyEvent& event)

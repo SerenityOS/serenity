@@ -143,6 +143,7 @@ private:
 
     GScrollBar* m_vertical_scrollbar { nullptr };
     GScrollBar* m_horizontal_scrollbar { nullptr };
+    GWidget* m_corner_widget { nullptr };
 
     Vector<OwnPtr<Line>> m_lines;
     GTextPosition m_cursor;
