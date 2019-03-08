@@ -85,6 +85,7 @@ private:
         void remove(int index);
         void append(const char*, int);
         void truncate(int length);
+        void clear();
 
     private:
         // NOTE: This vector is null terminated.
