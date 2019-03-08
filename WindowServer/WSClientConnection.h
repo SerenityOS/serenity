@@ -46,6 +46,8 @@ private:
     void handle_request(WSAPIGetWindowTitleRequest&);
     void handle_request(WSAPISetWindowRectRequest&);
     void handle_request(WSAPIGetWindowRectRequest&);
+    void handle_request(WSAPISetClipboardContentsRequest&);
+    void handle_request(WSAPIGetClipboardContentsRequest&);
     void handle_request(WSAPICreateWindowRequest&);
     void handle_request(WSAPIDestroyWindowRequest&);
     void handle_request(WSAPIInvalidateRectRequest&);
@@ -69,4 +71,6 @@ private:
     int m_next_menubar_id { 10000 };
     int m_next_menu_id { 20000 };
     int m_next_window_id { 1982 };
+
+    RetainPtr<SharedBuffer> m_last_sent_clipboard_content;
 };

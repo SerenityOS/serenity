@@ -6,6 +6,7 @@
 #include <WindowServer/WSWindow.h>
 #include <WindowServer/WSWindowManager.h>
 #include <WindowServer/WSAPITypes.h>
+#include <WindowServer/WSClipboard.h>
 #include <SharedBuffer.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
@@ -308,6 +309,43 @@ void WSClientConnection::handle_request(WSAPIGetWindowRectRequest& request)
     post_message(response);
 }
 
+void WSClientConnection::handle_request(WSAPISetClipboardContentsRequest& request)
+{
+    auto shared_buffer = SharedBuffer::create_from_shared_buffer_id(request.shared_buffer_id());
+    if (!shared_buffer) {
+        post_error("Bad shared buffer ID");
+        return;
+    }
+    WSClipboard::the().set_data(*shared_buffer, request.size());
+    WSAPI_ServerMessage response;
+    response.type = WSAPI_ServerMessage::Type::DidSetClipboardContents;
+    response.clipboard.shared_buffer_id = shared_buffer->shared_buffer_id();
+    post_message(response);
+}
+
+void WSClientConnection::handle_request(WSAPIGetClipboardContentsRequest&)
+{
+    WSAPI_ServerMessage response;
+    response.type = WSAPI_ServerMessage::Type::DidGetClipboardContents;
+    response.clipboard.shared_buffer_id = -1;
+    response.clipboard.contents_size = 0;
+    if (WSClipboard::the().size()) {
+        // FIXME: Optimize case where an app is copy/pasting within itself.
+        //        We can just reuse the SharedBuffer then, since it will have the same peer PID.
+        //        It would be even nicer if a SharedBuffer could have an arbitrary number of clients..
+        RetainPtr<SharedBuffer> shared_buffer = SharedBuffer::create(m_pid, WSClipboard::the().size());
+        ASSERT(shared_buffer);
+        memcpy(shared_buffer->data(), WSClipboard::the().data(), WSClipboard::the().size());
+        response.clipboard.shared_buffer_id = shared_buffer->shared_buffer_id();
+        response.clipboard.contents_size = WSClipboard::the().size();
+
+        // FIXME: This is a workaround for the fact that SharedBuffers will go away if neither side is retaining them.
+        //        After we respond to GetClipboardContents, we have to wait for the client to retain the buffer on his side.
+        m_last_sent_clipboard_content = move(shared_buffer);
+    }
+    post_message(response);
+}
+
 void WSClientConnection::handle_request(WSAPICreateWindowRequest& request)
 {
     int window_id = m_next_window_id++;
@@ -457,6 +495,10 @@ void WSClientConnection::on_request(WSAPIClientRequest& request)
         return handle_request(static_cast<WSAPISetWindowRectRequest&>(request));
     case WSMessage::APIGetWindowRectRequest:
         return handle_request(static_cast<WSAPIGetWindowRectRequest&>(request));
+    case WSMessage::APISetClipboardContentsRequest:
+        return handle_request(static_cast<WSAPISetClipboardContentsRequest&>(request));
+    case WSMessage::APIGetClipboardContentsRequest:
+        return handle_request(static_cast<WSAPIGetClipboardContentsRequest&>(request));
     case WSMessage::APICreateWindowRequest:
         return handle_request(static_cast<WSAPICreateWindowRequest&>(request));
     case WSMessage::APIDestroyWindowRequest:
