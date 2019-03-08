@@ -8,6 +8,7 @@
 #include <LibGUI/GTextEditor.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GFontDatabase.h>
+#include <LibGUI/GClipboard.h>
 #include <AK/StringBuilder.h>
 #include <unistd.h>
 #include <stdio.h>
@@ -83,11 +84,14 @@ int main(int argc, char** argv)
     });
 
     auto copy_action = GAction::create("Copy", { Mod_Ctrl, Key_C }, GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/copyfile16.rgb", { 16, 16 }), [&] (const GAction&) {
-        printf("Copy: \"%s\"\n", text_editor->selected_text().characters());
+        auto selected_text = text_editor->selected_text();
+        printf("Copy: \"%s\"\n", selected_text.characters());
+        GClipboard::the().set_data(selected_text);
     });
 
     auto paste_action = GAction::create("Paste", { Mod_Ctrl, Key_V }, GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/paste16.rgb", { 16, 16 }), [&] (const GAction&) {
-        dbgprintf("FIXME: Implement Edit/Paste");
+        auto paste_text = GClipboard::the().data();
+        printf("Paste: \"%s\"\n", paste_text.characters());
     });
 
     auto menubar = make<GMenuBar>();

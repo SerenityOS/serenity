@@ -45,6 +45,8 @@ public:
         APISetGlobalCursorTrackingRequest,
         APISetWindowOpacityRequest,
         APISetWindowBackingStoreRequest,
+        APISetClipboardContentsRequest,
+        APIGetClipboardContentsRequest,
         __End_API_Client_Requests,
     };
 
@@ -260,6 +262,40 @@ public:
 private:
     int m_client_id { 0 };
     int m_window_id { 0 };
+};
+
+class WSAPISetClipboardContentsRequest final : public WSAPIClientRequest {
+public:
+    explicit WSAPISetClipboardContentsRequest(int client_id, int shared_buffer_id, int size)
+        : WSAPIClientRequest(WSMessage::APISetClipboardContentsRequest, client_id)
+        , m_client_id(client_id)
+        , m_shared_buffer_id(shared_buffer_id)
+        , m_size(size)
+    {
+    }
+
+    int client_id() const { return m_client_id; }
+    int shared_buffer_id() const { return m_shared_buffer_id; }
+    int size() const { return m_size; }
+
+private:
+    int m_client_id { 0 };
+    int m_shared_buffer_id { 0 };
+    int m_size { 0 };
+};
+
+class WSAPIGetClipboardContentsRequest final : public WSAPIClientRequest {
+public:
+    explicit WSAPIGetClipboardContentsRequest(int client_id)
+        : WSAPIClientRequest(WSMessage::APIGetClipboardContentsRequest, client_id)
+        , m_client_id(client_id)
+    {
+    }
+
+    int client_id() const { return m_client_id; }
+
+private:
+    int m_client_id { 0 };
 };
 
 class WSAPISetWindowOpacityRequest final : public WSAPIClientRequest {

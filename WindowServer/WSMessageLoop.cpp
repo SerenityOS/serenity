@@ -300,6 +300,12 @@ void WSMessageLoop::on_receive_from_client(int client_id, const WSAPI_ClientMess
     case WSAPI_ClientMessage::Type::GetWindowRect:
         post_message(client, make<WSAPIGetWindowRectRequest>(client_id, message.window_id));
         break;
+    case WSAPI_ClientMessage::Type::SetClipboardContents:
+        post_message(client, make<WSAPISetClipboardContentsRequest>(client_id, message.clipboard.shared_buffer_id, message.clipboard.contents_size));
+        break;
+    case WSAPI_ClientMessage::Type::GetClipboardContents:
+        post_message(client, make<WSAPIGetClipboardContentsRequest>(client_id));
+        break;
     case WSAPI_ClientMessage::Type::InvalidateRect:
         post_message(client, make<WSAPIInvalidateRectRequest>(client_id, message.window_id, message.window.rect));
         break;

@@ -85,6 +85,8 @@ struct WSAPI_ServerMessage {
         DidGetWindowRect,
         DidGetWindowBackingStore,
         Greeting,
+        DidGetClipboardContents,
+        DidSetClipboardContents,
     };
     Type type { Invalid };
     int window_id { -1 };
@@ -128,6 +130,10 @@ struct WSAPI_ServerMessage {
             int shared_buffer_id;
             bool has_alpha_channel;
         } backing;
+        struct {
+            int shared_buffer_id;
+            int contents_size;
+        } clipboard;
     };
 };
 
@@ -154,6 +160,8 @@ struct WSAPI_ClientMessage {
         SetGlobalCursorTracking,
         SetWindowOpacity,
         SetWindowBackingStore,
+        GetClipboardContents,
+        SetClipboardContents,
     };
     Type type { Invalid };
     int window_id { -1 };
@@ -183,6 +191,10 @@ struct WSAPI_ClientMessage {
             int shared_buffer_id;
             bool has_alpha_channel;
         } backing;
+        struct {
+            int shared_buffer_id;
+            int contents_size;
+        } clipboard;
     };
 };
 
