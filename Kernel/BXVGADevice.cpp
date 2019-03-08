@@ -71,13 +71,14 @@ void BXVGADevice::set_y_offset(int offset)
 
 dword BXVGADevice::find_framebuffer_address()
 {
+    // NOTE: The QEMU card has the same PCI ID as the Bochs one.
     static const PCI::ID bochs_vga_id = { 0x1234, 0x1111 };
     static const PCI::ID virtualbox_vga_id = { 0x80ee, 0xbeef };
     dword framebuffer_address = 0;
     PCI::enumerate_all([&framebuffer_address] (const PCI::Address& address, PCI::ID id) {
         if (id == bochs_vga_id || id == virtualbox_vga_id) {
             framebuffer_address = PCI::get_BAR0(address) & 0xfffffff0;
-            kprintf("BochsVGA: framebuffer @ P%x\n", framebuffer_address);
+            kprintf("BXVGA: framebuffer @ P%x\n", framebuffer_address);
         }
     });
     return framebuffer_address;
@@ -93,9 +94,9 @@ Region* BXVGADevice::mmap(Process& process, LinearAddress preferred_laddr, size_
         framebuffer_size_in_bytes(),
         move(vmo),
         0,
-        "BochsVGA Framebuffer",
+        "BXVGA Framebuffer",
         true, true);
-    kprintf("BochsVGA: %s(%u) created Region{%p} with size %u for framebuffer P%x with laddr L%x\n",
+    kprintf("BXVGA: %s(%u) created Region{%p} with size %u for framebuffer P%x with laddr L%x\n",
             process.name().characters(), process.pid(),
             region, region->size(), framebuffer_address().as_ptr(), region->laddr().get());
     ASSERT(region);
