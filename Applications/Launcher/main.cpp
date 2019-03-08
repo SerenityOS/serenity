@@ -3,6 +3,7 @@
 #include <LibGUI/GWidget.h>
 #include <LibGUI/GButton.h>
 #include <LibGUI/GApplication.h>
+#include <LibGUI/GBoxLayout.h>
 #include <sys/wait.h>
 #include <signal.h>
 #include <unistd.h>
@@ -40,7 +41,8 @@ public:
     {
         set_button_style(GButtonStyle::CoolBar);
         set_icon(GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, icon_path, { 32, 32 }));
-        resize(50, 50);
+        set_preferred_size({ 50, 50 });
+        set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
         on_click = [this] (GButton&) {
             pid_t child_pid = fork();
             if (!child_pid) {
@@ -63,16 +65,14 @@ GWindow* make_launcher_window()
     window->set_rect(50, 50, 300, 60);
 
     auto* widget = new GWidget;
+    widget->set_layout(make<GBoxLayout>(Orientation::Horizontal));
+    widget->layout()->set_margins({ 5, 5, 5, 5 });
     window->set_main_widget(widget);
 
-    auto* terminal_button = new LauncherButton("/res/icons/Terminal.rgb", "/bin/Terminal", widget);
-    terminal_button->move_to(5, 5);
-
-    auto* font_editor_button = new LauncherButton("/res/icons/FontEditor.rgb", "/bin/FontEditor", widget);
-    font_editor_button->move_to(60, 5);
-
-    auto* file_manager_button = new LauncherButton("/res/icons/FileManager.rgb", "/bin/FileManager", widget);
-    file_manager_button->move_to(115, 5);
+    new LauncherButton("/res/icons/Terminal.rgb", "/bin/Terminal", widget);
+    new LauncherButton("/res/icons/FontEditor.rgb", "/bin/FontEditor", widget);
+    new LauncherButton("/res/icons/FileManager.rgb", "/bin/FileManager", widget);
+    new LauncherButton("/res/icons/TextEditor.rgb", "/bin/TextEditor", widget);
 
     return window;
 }
