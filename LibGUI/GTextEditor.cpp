@@ -100,8 +100,8 @@ GTextPosition GTextEditor::text_position_at(const Point& a_position) const
     position.move_by(-(padding() + ruler_width()), -padding());
     int line_index = position.y() / line_height();
     int column_index = position.x() / glyph_width();
-    line_index = min(line_index, line_count() - 1);
-    column_index = min(column_index, m_lines[line_index]->length());
+    line_index = max(0, min(line_index, line_count() - 1));
+    column_index = max(0, min(column_index, m_lines[line_index]->length()));
     return { line_index, column_index };
 }
 
