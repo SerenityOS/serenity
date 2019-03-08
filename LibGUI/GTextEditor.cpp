@@ -296,6 +296,10 @@ void GTextEditor::keydown_event(GKeyEvent& event)
     }
 
     if (!event.modifiers() && event.key() == KeyCode::Key_Backspace) {
+        if (has_selection()) {
+            delete_selection();
+            return;
+        }
         if (m_cursor.column() > 0) {
             // Backspace within line
             current_line().remove(m_cursor.column() - 1);
@@ -318,6 +322,10 @@ void GTextEditor::keydown_event(GKeyEvent& event)
     }
 
     if (!event.modifiers() && event.key() == KeyCode::Key_Delete) {
+        if (has_selection()) {
+            delete_selection();
+            return;
+        }
         if (m_cursor.column() < current_line().length()) {
             // Delete within line
             current_line().remove(m_cursor.column());
@@ -339,8 +347,8 @@ void GTextEditor::keydown_event(GKeyEvent& event)
         return;
     }
 
-    if (!event.text().is_empty())
-        insert_at_cursor(event.text()[0]);
+    if (!event.ctrl() && !event.alt() && !event.text().is_empty())
+        insert_at_cursor_or_replace_selection(event.text());
 
     return GWidget::keydown_event(event);
 }
