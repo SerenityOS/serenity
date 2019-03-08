@@ -56,6 +56,10 @@ public:
     bool has_selection() const { return m_selection_start.is_valid(); }
     String selected_text() const;
 
+    void cut();
+    void copy();
+    void paste();
+
 private:
     virtual void paint_event(GPaintEvent&) override;
     virtual void resize_event(GResizeEvent&) override;
@@ -98,9 +102,12 @@ private:
     const Line& current_line() const { return *m_lines[m_cursor.line()]; }
     GTextPosition text_position_at(const Point&) const;
     void insert_at_cursor(char);
+    void insert_at_cursor(const String&);
     int ruler_width() const;
     Rect ruler_content_rect(int line) const;
     void toggle_selection_if_needed_for_event(const GKeyEvent&);
+    void insert_at_cursor_or_replace_selection(const String&);
+    void delete_selection();
 
     GScrollBar* m_vertical_scrollbar { nullptr };
     GScrollBar* m_horizontal_scrollbar { nullptr };

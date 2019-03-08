@@ -8,7 +8,6 @@
 #include <LibGUI/GTextEditor.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GFontDatabase.h>
-#include <LibGUI/GClipboard.h>
 #include <AK/StringBuilder.h>
 #include <unistd.h>
 #include <stdio.h>
@@ -80,18 +79,15 @@ int main(int argc, char** argv)
     });
 
     auto cut_action = GAction::create("Cut", { Mod_Ctrl, Key_X }, GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/cut16.rgb", { 16, 16 }), [&] (const GAction&) {
-        dbgprintf("FIXME: Implement Edit/Cut");
+        text_editor->cut();
     });
 
     auto copy_action = GAction::create("Copy", { Mod_Ctrl, Key_C }, GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/copyfile16.rgb", { 16, 16 }), [&] (const GAction&) {
-        auto selected_text = text_editor->selected_text();
-        printf("Copy: \"%s\"\n", selected_text.characters());
-        GClipboard::the().set_data(selected_text);
+        text_editor->copy();
     });
 
     auto paste_action = GAction::create("Paste", { Mod_Ctrl, Key_V }, GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/paste16.rgb", { 16, 16 }), [&] (const GAction&) {
-        auto paste_text = GClipboard::the().data();
-        printf("Paste: \"%s\"\n", paste_text.characters());
+        text_editor->paste();
     });
 
     auto menubar = make<GMenuBar>();
