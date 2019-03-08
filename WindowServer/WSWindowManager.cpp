@@ -762,7 +762,7 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event, WSWindow*& event_
             continue;
         ASSERT(window->is_visible()); // Maybe this should be supported? Idk. Let's catch it and think about it later.
         Point position { event.x() - window->rect().x(), event.y() - window->rect().y() };
-        auto local_event = make<WSMouseEvent>(event.type(), position, event.buttons(), event.button());
+        auto local_event = make<WSMouseEvent>(event.type(), position, event.buttons(), event.button(), event.modifiers());
         window->on_message(*local_event);
     }
 
@@ -815,7 +815,7 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event, WSWindow*& event_
             if (!window.global_cursor_tracking()) {
                 // FIXME: Should we just alter the coordinates of the existing MouseEvent and pass it through?
                 Point position { event.x() - window.rect().x(), event.y() - window.rect().y() };
-                auto local_event = make<WSMouseEvent>(event.type(), position, event.buttons(), event.button());
+                auto local_event = make<WSMouseEvent>(event.type(), position, event.buttons(), event.button(), event.modifiers());
                 window.on_message(*local_event);
             }
             return IterationDecision::Abort;

@@ -109,6 +109,7 @@ struct WSAPI_ServerMessage {
             WSAPI_Point position;
             WSAPI_MouseButton button;
             unsigned buttons;
+            byte modifiers;
         } mouse;
         struct {
             char character;

@@ -24,6 +24,7 @@ public:
     void set_column(int column) { m_column = column; }
 
     bool operator==(const GTextPosition& other) const { return m_line == other.m_line && m_column == other.m_column; }
+    bool operator!=(const GTextPosition& other) const { return m_line != other.m_line || m_column != other.m_column; }
     bool operator<(const GTextPosition& other) const { return m_line < other.m_line || (m_line == other.m_line && m_column < other.m_column); }
 
 private:
@@ -64,6 +65,8 @@ private:
     virtual void paint_event(GPaintEvent&) override;
     virtual void resize_event(GResizeEvent&) override;
     virtual void mousedown_event(GMouseEvent&) override;
+    virtual void mouseup_event(GMouseEvent&) override;
+    virtual void mousemove_event(GMouseEvent&) override;
     virtual void keydown_event(GKeyEvent&) override;
     virtual void focusin_event(GEvent&) override;
     virtual void focusout_event(GEvent&) override;
@@ -116,6 +119,7 @@ private:
     Vector<OwnPtr<Line>> m_lines;
     GTextPosition m_cursor;
     bool m_cursor_state { true };
+    bool m_in_drag_select { false };
     int m_line_spacing { 2 };
     GTextPosition m_selection_start;
 };

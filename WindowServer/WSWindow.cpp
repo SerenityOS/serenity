@@ -82,18 +82,21 @@ void WSWindow::on_message(WSMessage& message)
         server_message.mouse.position = static_cast<WSMouseEvent&>(message).position();
         server_message.mouse.button = WSAPI_MouseButton::NoButton;
         server_message.mouse.buttons = static_cast<WSMouseEvent&>(message).buttons();
+        server_message.mouse.modifiers = static_cast<WSMouseEvent&>(message).modifiers();
         break;
     case WSMessage::MouseDown:
         server_message.type = WSAPI_ServerMessage::Type::MouseDown;
         server_message.mouse.position = static_cast<WSMouseEvent&>(message).position();
         server_message.mouse.button = to_api(static_cast<WSMouseEvent&>(message).button());
         server_message.mouse.buttons = static_cast<WSMouseEvent&>(message).buttons();
+        server_message.mouse.modifiers = static_cast<WSMouseEvent&>(message).modifiers();
         break;
     case WSMessage::MouseUp:
         server_message.type = WSAPI_ServerMessage::Type::MouseUp;
         server_message.mouse.position = static_cast<WSMouseEvent&>(message).position();
         server_message.mouse.button = to_api(static_cast<WSMouseEvent&>(message).button());
         server_message.mouse.buttons = static_cast<WSMouseEvent&>(message).buttons();
+        server_message.mouse.modifiers = static_cast<WSMouseEvent&>(message).modifiers();
         break;
     case WSMessage::WindowEntered:
         server_message.type = WSAPI_ServerMessage::Type::WindowEntered;

@@ -143,7 +143,7 @@ void GWindow::event(GEvent& event)
             auto& mouse_event = static_cast<GMouseEvent&>(event);
             auto window_relative_rect = m_global_cursor_tracking_widget->window_relative_rect();
             Point local_point { mouse_event.x() - window_relative_rect.x(), mouse_event.y() - window_relative_rect.y() };
-            auto local_event = make<GMouseEvent>(event.type(), local_point, mouse_event.buttons(), mouse_event.button());
+            auto local_event = make<GMouseEvent>(event.type(), local_point, mouse_event.buttons(), mouse_event.button(), mouse_event.modifiers());
             m_global_cursor_tracking_widget->event(*local_event);
         }
         if (!m_main_widget)
@@ -151,7 +151,7 @@ void GWindow::event(GEvent& event)
         auto& mouse_event = static_cast<GMouseEvent&>(event);
         if (m_main_widget) {
             auto result = m_main_widget->hit_test(mouse_event.x(), mouse_event.y());
-            auto local_event = make<GMouseEvent>(event.type(), Point { result.localX, result.localY }, mouse_event.buttons(), mouse_event.button());
+            auto local_event = make<GMouseEvent>(event.type(), Point { result.localX, result.localY }, mouse_event.buttons(), mouse_event.button(), mouse_event.modifiers());
             ASSERT(result.widget);
             set_hovered_widget(result.widget);
             if (result.widget != m_global_cursor_tracking_widget.ptr())

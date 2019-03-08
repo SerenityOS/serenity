@@ -69,14 +69,14 @@ void WSScreen::on_receive_mouse_data(int dx, int dy, unsigned buttons)
     auto post_mousedown_or_mouseup_if_needed = [&] (MouseButton button) {
         if (!(changed_buttons & (unsigned)button))
             return;
-        auto message = make<WSMouseEvent>(buttons & (unsigned)button ? WSMessage::MouseDown : WSMessage::MouseUp, m_cursor_location, buttons, button);
+        auto message = make<WSMouseEvent>(buttons & (unsigned)button ? WSMessage::MouseDown : WSMessage::MouseUp, m_cursor_location, buttons, button, m_modifiers);
         WSMessageLoop::the().post_message(WSWindowManager::the(), move(message));
     };
     post_mousedown_or_mouseup_if_needed(MouseButton::Left);
     post_mousedown_or_mouseup_if_needed(MouseButton::Right);
     post_mousedown_or_mouseup_if_needed(MouseButton::Middle);
     if (m_cursor_location != prev_location) {
-        auto message = make<WSMouseEvent>(WSMessage::MouseMove, m_cursor_location, buttons);
+        auto message = make<WSMouseEvent>(WSMessage::MouseMove, m_cursor_location, buttons, MouseButton::None, m_modifiers);
         WSMessageLoop::the().post_message(WSWindowManager::the(), move(message));
     }
     // NOTE: Invalidate the cursor if it moved, or if the left button changed state (for the cursor color inversion.)
@@ -86,6 +86,7 @@ void WSScreen::on_receive_mouse_data(int dx, int dy, unsigned buttons)
 
 void WSScreen::on_receive_keyboard_data(KeyEvent kernel_event)
 {
+    m_modifiers = kernel_event.modifiers();
     auto message = make<WSKeyEvent>(kernel_event.is_press() ? WSMessage::KeyDown : WSMessage::KeyUp, kernel_event.key, kernel_event.character, kernel_event.modifiers());
     WSMessageLoop::the().post_message(WSWindowManager::the(), move(message));
 }

@@ -137,11 +137,12 @@ private:
 
 class GMouseEvent final : public GEvent {
 public:
-    GMouseEvent(Type type, const Point& position, unsigned buttons, GMouseButton button = GMouseButton::None)
+    GMouseEvent(Type type, const Point& position, unsigned buttons, GMouseButton button, unsigned modifiers)
         : GEvent(type)
         , m_position(position)
         , m_buttons(buttons)
         , m_button(button)
+        , m_modifiers(modifiers)
     {
     }
 
@@ -150,11 +151,13 @@ public:
     int y() const { return m_position.y(); }
     GMouseButton button() const { return m_button; }
     unsigned buttons() const { return m_buttons; }
+    unsigned modifiers() const { return m_modifiers; }
 
 private:
     Point m_position;
     unsigned m_buttons { 0 };
     GMouseButton m_button { GMouseButton::None };
+    unsigned m_modifiers { 0 };
 };
 
 class GTimerEvent final : public GEvent {
