@@ -360,7 +360,7 @@ void GTextEditor::keydown_event(GKeyEvent& event)
         return;
     }
 
-    if (!event.modifiers() && event.key() == KeyCode::Key_Backspace) {
+    if (event.key() == KeyCode::Key_Backspace) {
         if (has_selection()) {
             delete_selection();
             return;
@@ -386,7 +386,7 @@ void GTextEditor::keydown_event(GKeyEvent& event)
         return;
     }
 
-    if (!event.modifiers() && event.key() == KeyCode::Key_Delete) {
+    if (event.key() == KeyCode::Key_Delete) {
         if (has_selection()) {
             delete_selection();
             return;
