@@ -86,6 +86,8 @@
     __ENUMERATE_SYSCALL(fchmod) \
     __ENUMERATE_SYSCALL(symlink) \
     __ENUMERATE_SYSCALL(restore_signal_mask) \
+    __ENUMERATE_SYSCALL(get_shared_buffer_size) \
+    __ENUMERATE_SYSCALL(seal_shared_buffer) \
 
 
 namespace Syscall {

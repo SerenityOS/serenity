@@ -6,6 +6,7 @@
 #include <WindowServer/WSWindow.h>
 #include <WindowServer/WSWindowManager.h>
 #include <WindowServer/WSAPITypes.h>
+#include <SharedBuffer.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
 #include <errno.h>
@@ -86,12 +87,9 @@ void WSClientConnection::post_message(const WSAPI_ServerMessage& message)
 
 RetainPtr<GraphicsBitmap> WSClientConnection::create_shared_bitmap(GraphicsBitmap::Format format, const Size& size)
 {
-    RGBA32* buffer;
-    int shared_buffer_id = create_shared_buffer(m_pid, size.area() * sizeof(RGBA32), (void**)&buffer);
-    ASSERT(shared_buffer_id >= 0);
-    ASSERT(buffer);
-    ASSERT(buffer != (void*)-1);
-    return GraphicsBitmap::create_with_shared_buffer(format, shared_buffer_id, size, buffer);
+    auto shared_buffer = SharedBuffer::create(m_pid, size.area() * sizeof(RGBA32));
+    ASSERT(shared_buffer);
+    return GraphicsBitmap::create_with_shared_buffer(format, *shared_buffer, size);
 }
 
 void WSClientConnection::on_message(WSMessage& message)
@@ -407,9 +405,12 @@ void WSClientConnection::handle_request(WSAPISetWindowBackingStoreRequest& reque
         return;
     }
     auto& window = *(*it).value;
+    auto shared_buffer = SharedBuffer::create_from_shared_buffer_id(request.shared_buffer_id());
+    if (!shared_buffer)
+        return;
     auto backing_store = GraphicsBitmap::create_with_shared_buffer(
         request.has_alpha_channel() ? GraphicsBitmap::Format::RGBA32 : GraphicsBitmap::Format::RGB32,
-        request.shared_buffer_id(),
+        *shared_buffer,
         request.size());
     if (!backing_store)
         return;
