@@ -44,6 +44,7 @@ void GClipboard::set_data(const String& data)
         return;
     }
     memcpy(shared_buffer->data(), data.characters(), data.length() + 1);
+    shared_buffer->seal();
     request.clipboard.shared_buffer_id = shared_buffer->shared_buffer_id();
     request.clipboard.contents_size = data.length();
     auto response = GEventLoop::main().sync_request(request, WSAPI_ServerMessage::Type::DidSetClipboardContents);

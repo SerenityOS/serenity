@@ -336,6 +336,7 @@ void WSClientConnection::handle_request(WSAPIGetClipboardContentsRequest&)
         RetainPtr<SharedBuffer> shared_buffer = SharedBuffer::create(m_pid, WSClipboard::the().size());
         ASSERT(shared_buffer);
         memcpy(shared_buffer->data(), WSClipboard::the().data(), WSClipboard::the().size());
+        shared_buffer->seal();
         response.clipboard.shared_buffer_id = shared_buffer->shared_buffer_id();
         response.clipboard.contents_size = WSClipboard::the().size();
 
