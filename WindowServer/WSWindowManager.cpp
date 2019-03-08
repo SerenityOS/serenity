@@ -955,7 +955,7 @@ void WSWindowManager::draw_menubar()
 
     time_t now = time(nullptr);
     auto* tm = localtime(&now);
-    auto time_text = String::format("%4u-%02u-%02u %02u:%02u:%02u\n",
+    auto time_text = String::format("%4u-%02u-%02u %02u:%02u:%02u",
         tm->tm_year + 1900,
         tm->tm_mon + 1,
         tm->tm_mday,
