@@ -871,6 +871,20 @@ void WSWindowManager::compose()
         return false;
     };
 
+    auto any_opaque_window_above_this_one_contains_rect = [this] (const WSWindow& a_window, const Rect& r) {
+        for (auto* window = a_window.next(); window; window = window->next()) {
+            if (!window->is_visible())
+                continue;
+            if (window->opacity() < 1.0f)
+                continue;
+            if (window->has_alpha_channel())
+                continue;
+            if (outer_window_rect(*window).contains(r))
+                return true;
+        }
+        return false;
+    };
+
     auto any_dirty_rect_intersects_window = [&dirty_rects] (const WSWindow& window) {
         auto window_rect = outer_window_rect(window);
         for (auto& dirty_rect : dirty_rects.rects()) {
@@ -898,6 +912,8 @@ void WSWindowManager::compose()
         PainterStateSaver saver(*m_back_painter);
         m_back_painter->set_clip_rect(outer_window_rect(window));
         for (auto& dirty_rect : dirty_rects.rects()) {
+            if (any_opaque_window_above_this_one_contains_rect(window, dirty_rect))
+                continue;
             PainterStateSaver saver(*m_back_painter);
             m_back_painter->set_clip_rect(dirty_rect);
             paint_window_frame(window);
