@@ -307,6 +307,13 @@ void GTextEditor::keydown_event(GKeyEvent& event)
             set_cursor(m_cursor.line(), new_column);
             if (m_selection.start().is_valid())
                 m_selection.set_end(m_cursor);
+        } else if (m_cursor.line() > 0) {
+            int new_line = m_cursor.line() - 1;
+            int new_column = m_lines[new_line]->length();
+            toggle_selection_if_needed_for_event(event);
+            set_cursor(new_line, new_column);
+            if (m_selection.start().is_valid())
+                m_selection.set_end(m_cursor);
         }
         return;
     }
@@ -315,6 +322,13 @@ void GTextEditor::keydown_event(GKeyEvent& event)
             int new_column = m_cursor.column() + 1;
             toggle_selection_if_needed_for_event(event);
             set_cursor(m_cursor.line(), new_column);
+            if (m_selection.start().is_valid())
+                m_selection.set_end(m_cursor);
+        } else if (m_cursor.line() != line_count() - 1) {
+            int new_line = m_cursor.line() + 1;
+            int new_column = 0;
+            toggle_selection_if_needed_for_event(event);
+            set_cursor(new_line, new_column);
             if (m_selection.start().is_valid())
                 m_selection.set_end(m_cursor);
         }
