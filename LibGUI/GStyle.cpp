@@ -23,6 +23,7 @@ void GStyle::paint_button(Painter& painter, const Rect& rect, GButtonStyle butto
     if (button_style == GButtonStyle::Normal)
         painter.draw_rect(rect, Color::Black, true);
 
+    PainterStateSaver saver(painter);
     painter.translate(rect.location());
 
     if (pressed) {
@@ -48,8 +49,6 @@ void GStyle::paint_button(Painter& painter, const Rect& rect, GButtonStyle butto
         painter.draw_line({ rect.width() - 2, 1 }, { rect.width() - 2, rect.height() - 3 }, shadow_color);
         painter.draw_line({ 1, rect.height() - 2 }, { rect.width() - 2, rect.height() - 2 }, shadow_color);
     }
-
-    painter.translate(-rect.location().x(), -rect.location().y());
 }
 
 void GStyle::paint_surface(Painter& painter, const Rect& rect)
