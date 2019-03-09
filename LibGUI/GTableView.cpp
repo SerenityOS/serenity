@@ -197,8 +197,7 @@ void GTableView::paint_event(GPaintEvent& event)
         if (is_key_column) {
             painter.fill_rect(cell_rect.shrunken(2, 2), Color::from_rgb(0xdddddd));
         }
-        painter.set_font(Font::default_bold_font());
-        painter.draw_text(cell_rect.translated(horizontal_padding(), 0), m_model->column_name(column_index), TextAlignment::CenterLeft, Color::Black);
+        painter.draw_text(cell_rect.translated(horizontal_padding(), 0), m_model->column_name(column_index), Font::default_bold_font(), TextAlignment::CenterLeft, Color::Black);
         x_offset += column_width + horizontal_padding() * 2;
         // Draw column separator.
         painter.draw_line(cell_rect.top_left().translated(0, 1), cell_rect.bottom_left().translated(0, -1), Color::White);
