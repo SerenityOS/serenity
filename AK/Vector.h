@@ -274,7 +274,11 @@ public:
     class Iterator {
     public:
         bool operator!=(const Iterator& other) { return m_index != other.m_index; }
+        bool operator==(const Iterator& other) { return m_index == other.m_index; }
+        bool operator<(const Iterator& other) { return m_index < other.m_index; }
         Iterator& operator++() { ++m_index; return *this; }
+        Iterator operator-(int value) { return { m_vector, m_index - value }; }
+        Iterator operator+(int value) { return { m_vector, m_index + value }; }
         T& operator*() { return m_vector[m_index]; }
     private:
         friend class Vector;
@@ -289,7 +293,11 @@ public:
     class ConstIterator {
     public:
         bool operator!=(const ConstIterator& other) { return m_index != other.m_index; }
+        bool operator==(const ConstIterator& other) { return m_index == other.m_index; }
+        bool operator<(const ConstIterator& other) { return m_index < other.m_index; }
         ConstIterator& operator++() { ++m_index; return *this; }
+        ConstIterator operator-(int value) { return { m_vector, m_index - value }; }
+        ConstIterator operator+(int value) { return { m_vector, m_index + value }; }
         const T& operator*() const { return m_vector[m_index]; }
     private:
         friend class Vector;
