@@ -784,10 +784,14 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event, WSWindow*& event_
     for_each_visible_window_from_front_to_back([&] (WSWindow& window) {
         if (window.type() == WSWindowType::Normal && outer_window_rect(window).contains(event.position())) {
             if (m_keyboard_modifiers == Mod_Logo && event.type() == WSMessage::MouseDown && event.button() == MouseButton::Left) {
+                move_to_front(window);
+                set_active_window(&window);
                 start_window_drag(window, event);
                 return IterationDecision::Abort;
             }
             if (m_keyboard_modifiers == Mod_Logo && event.type() == WSMessage::MouseDown && event.button() == MouseButton::Right) {
+                move_to_front(window);
+                set_active_window(&window);
                 start_window_resize(window, event);
                 return IterationDecision::Abort;
             }
