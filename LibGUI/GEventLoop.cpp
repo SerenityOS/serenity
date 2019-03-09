@@ -20,18 +20,14 @@
 //#define GEVENTLOOP_DEBUG
 
 static HashMap<GShortcut, GAction*>* g_actions;
-static GEventLoop* s_mainGEventLoop;
+static GEventLoop* s_main_event_loop;
+int GEventLoop::s_event_fd = -1;
+pid_t GEventLoop::s_server_pid = -1;
 
-GEventLoop::GEventLoop()
+void GEventLoop::connect_to_server()
 {
-    if (!s_mainGEventLoop)
-        s_mainGEventLoop = this;
-
-    if (!g_actions)
-        g_actions = new HashMap<GShortcut, GAction*>;
-
-    m_event_fd = socket(AF_LOCAL, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0);
-    if (m_event_fd < 0) {
+    s_event_fd = socket(AF_LOCAL, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0);
+    if (s_event_fd < 0) {
         perror("socket");
         ASSERT_NOT_REACHED();
     }
@@ -43,7 +39,7 @@ GEventLoop::GEventLoop()
     int retries = 1000;
     int rc = 0;
     while (retries) {
-        rc = connect(m_event_fd, (const sockaddr*)&address, sizeof(address));
+        rc = connect(s_event_fd, (const sockaddr*)&address, sizeof(address));
         if (rc == 0)
             break;
 #ifdef GEVENTLOOP_DEBUG
@@ -55,6 +51,18 @@ GEventLoop::GEventLoop()
     if (rc < 0) {
         ASSERT_NOT_REACHED();
     }
+}
+
+GEventLoop::GEventLoop()
+{
+    if (!s_main_event_loop) {
+        s_main_event_loop = this;
+        connect_to_server();
+    }
+
+    if (!g_actions)
+        g_actions = new HashMap<GShortcut, GAction*>;
+
 #ifdef GEVENTLOOP_DEBUG
     dbgprintf("(%u) GEventLoop constructed :)\n", getpid());
 #endif
@@ -66,8 +74,8 @@ GEventLoop::~GEventLoop()
 
 GEventLoop& GEventLoop::main()
 {
-    ASSERT(s_mainGEventLoop);
-    return *s_mainGEventLoop;
+    ASSERT(s_main_event_loop);
+    return *s_main_event_loop;
 }
 
 void GEventLoop::quit(int code)
@@ -219,7 +227,7 @@ void GEventLoop::wait_for_event()
             max_fd = fd;
     };
 
-    add_fd_to_set(m_event_fd, rfds);
+    add_fd_to_set(s_event_fd, rfds);
     for (auto& notifier : m_notifiers) {
         if (notifier->event_mask() & GNotifier::Read)
             add_fd_to_set(notifier->fd(), rfds);
@@ -265,7 +273,7 @@ void GEventLoop::wait_for_event()
         }
     }
 
-    if (!FD_ISSET(m_event_fd, &rfds))
+    if (!FD_ISSET(s_event_fd, &rfds))
         return;
 
     bool success = drain_messages_from_server();
@@ -277,7 +285,7 @@ void GEventLoop::process_unprocessed_messages()
     auto unprocessed_events = move(m_unprocessed_messages);
     for (auto& event : unprocessed_events) {
         if (event.type == WSAPI_ServerMessage::Type::Greeting) {
-            m_server_pid = event.greeting.server_pid;
+            s_server_pid = event.greeting.server_pid;
             continue;
         }
 
@@ -341,7 +349,7 @@ bool GEventLoop::drain_messages_from_server()
 {
     for (;;) {
         WSAPI_ServerMessage message;
-        ssize_t nread = read(m_event_fd, &message, sizeof(WSAPI_ServerMessage));
+        ssize_t nread = read(s_event_fd, &message, sizeof(WSAPI_ServerMessage));
         if (nread < 0) {
             perror("read");
             quit(1);
@@ -416,7 +424,7 @@ void GEventLoop::unregister_notifier(Badge<GNotifier>, GNotifier& notifier)
 
 bool GEventLoop::post_message_to_server(const WSAPI_ClientMessage& message)
 {
-    int nwritten = write(m_event_fd, &message, sizeof(WSAPI_ClientMessage));
+    int nwritten = write(s_event_fd, &message, sizeof(WSAPI_ClientMessage));
     return nwritten == sizeof(WSAPI_ClientMessage);
 }
 
@@ -425,10 +433,10 @@ bool GEventLoop::wait_for_specific_event(WSAPI_ServerMessage::Type type, WSAPI_S
     for (;;) {
         fd_set rfds;
         FD_ZERO(&rfds);
-        FD_SET(m_event_fd, &rfds);
-        int rc = select(m_event_fd + 1, &rfds, nullptr, nullptr, nullptr);
+        FD_SET(s_event_fd, &rfds);
+        int rc = select(s_event_fd + 1, &rfds, nullptr, nullptr, nullptr);
         ASSERT(rc > 0);
-        ASSERT(FD_ISSET(m_event_fd, &rfds));
+        ASSERT(FD_ISSET(s_event_fd, &rfds));
         bool success = drain_messages_from_server();
         if (!success)
             return false;

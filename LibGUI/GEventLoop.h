@@ -39,7 +39,7 @@ public:
 
     WSAPI_ServerMessage sync_request(const WSAPI_ClientMessage& request, WSAPI_ServerMessage::Type response_type);
 
-    pid_t server_pid() const { return m_server_pid; }
+    pid_t server_pid() const { return s_server_pid; }
 
 private:
     void wait_for_event();
@@ -54,6 +54,7 @@ private:
     void handle_menu_event(const WSAPI_ServerMessage&);
     void handle_window_entered_or_left_event(const WSAPI_ServerMessage&, GWindow&);
     void get_next_timer_expiration(timeval&);
+    void connect_to_server();
 
     struct QueuedEvent {
         WeakPtr<GObject> receiver;
@@ -63,12 +64,13 @@ private:
 
     Vector<WSAPI_ServerMessage> m_unprocessed_messages;
 
-    int m_event_fd { -1 };
     bool m_running { false };
     bool m_exit_requested { false };
     int m_exit_code { 0 };
     int m_next_timer_id { 1 };
-    pid_t m_server_pid { 0 };
+
+    static pid_t s_server_pid;
+    static pid_t s_event_fd;
 
     struct EventLoopTimer {
         int timer_id { 0 };
