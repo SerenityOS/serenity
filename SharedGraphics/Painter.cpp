@@ -323,43 +323,58 @@ void Painter::blit(const Point& position, const GraphicsBitmap& source, const Re
 
 [[gnu::flatten]] void Painter::draw_glyph(const Point& point, char ch, Color color)
 {
-    draw_bitmap(point, font().glyph_bitmap(ch), color);
+    draw_glyph(point, ch, font(), color);
 }
 
-void Painter::draw_text(const Rect& rect, const char* text, int length, TextAlignment alignment, Color color)
+[[gnu::flatten]] void Painter::draw_glyph(const Point& point, char ch, const Font& font, Color color)
+{
+    draw_bitmap(point, font.glyph_bitmap(ch), color);
+}
+
+void Painter::draw_text(const Rect& rect, const char* text, int length, const Font& font, TextAlignment alignment, Color color)
 {
     Point point;
 
     if (alignment == TextAlignment::TopLeft) {
         point = rect.location();
     } else if (alignment == TextAlignment::CenterLeft) {
-        point = { rect.x(), rect.center().y() - (font().glyph_height() / 2) };
+        point = { rect.x(), rect.center().y() - (font.glyph_height() / 2) };
     } else if (alignment == TextAlignment::CenterRight) {
-        int text_width = font().width(text);
-        point = { rect.right() - text_width, rect.center().y() - (font().glyph_height() / 2) };
+        int text_width = font.width(text);
+        point = { rect.right() - text_width, rect.center().y() - (font.glyph_height() / 2) };
     } else if (alignment == TextAlignment::Center) {
-        int text_width = font().width(text);
+        int text_width = font.width(text);
         point = rect.center();
-        point.move_by(-(text_width / 2), -(font().glyph_height() / 2));
+        point.move_by(-(text_width / 2), -(font.glyph_height() / 2));
     } else {
         ASSERT_NOT_REACHED();
     }
 
-    int space_width = font().glyph_width(' ') + font().glyph_spacing();
+    int space_width = font.glyph_width(' ') + font.glyph_spacing();
     for (ssize_t i = 0; i < length; ++i) {
         char ch = text[i];
         if (ch == ' ') {
             point.move_by(space_width, 0);
             continue;
         }
-        draw_glyph(point, ch, color);
-        point.move_by(font().glyph_width(ch) + font().glyph_spacing(), 0);
+        draw_glyph(point, ch, font, color);
+        point.move_by(font.glyph_width(ch) + font.glyph_spacing(), 0);
     }
 }
 
 void Painter::draw_text(const Rect& rect, const String& text, TextAlignment alignment, Color color)
 {
     draw_text(rect, text.characters(), text.length(), alignment, color);
+}
+
+void Painter::draw_text(const Rect& rect, const String& text, const Font& font, TextAlignment alignment, Color color)
+{
+    draw_text(rect, text.characters(), text.length(), font, alignment, color);
+}
+
+void Painter::draw_text(const Rect& rect, const char* text, int length, TextAlignment alignment, Color color)
+{
+    draw_text(rect, text, length, font(), alignment, color);
 }
 
 void Painter::set_pixel(const Point& p, Color color)

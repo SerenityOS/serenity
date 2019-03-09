@@ -81,9 +81,7 @@ void WSWindowSwitcher::draw()
             rect_text_color = Color::DarkGray;
         }
         painter.blit(item_rect.location().translated(0, (item_rect.height() - window.icon().height()) / 2), window.icon(), window.icon().rect());
-        painter.set_font(Font::default_bold_font());
-        painter.draw_text(item_rect.translated(window.icon().width() + 4, 0), window.title(), TextAlignment::CenterLeft, text_color);
-        painter.set_font(WSWindowManager::the().font());
+        painter.draw_text(item_rect.translated(window.icon().width() + 4, 0), window.title(), WSWindowManager::the().window_title_font(), TextAlignment::CenterLeft, text_color);
         painter.draw_text(item_rect, window.rect().to_string(), TextAlignment::CenterRight, rect_text_color);
     }
 }

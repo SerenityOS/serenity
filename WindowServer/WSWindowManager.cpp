@@ -179,8 +179,6 @@ WSWindowManager::WSWindowManager()
     m_front_painter = make<Painter>(*m_front_bitmap);
     m_back_painter = make<Painter>(*m_back_bitmap);
 
-    m_font = Font::default_font();
-
     m_front_painter->set_font(font());
     m_back_painter->set_font(font());
 
@@ -280,6 +278,26 @@ WSWindowManager::WSWindowManager()
 
 WSWindowManager::~WSWindowManager()
 {
+}
+
+const Font& WSWindowManager::font() const
+{
+    return Font::default_font();
+}
+
+const Font& WSWindowManager::window_title_font() const
+{
+    return Font::default_bold_font();
+}
+
+const Font& WSWindowManager::menu_font() const
+{
+    return Font::default_font();
+}
+
+const Font& WSWindowManager::app_menu_font() const
+{
+    return Font::default_bold_font();
 }
 
 static void get_cpu_usage(unsigned& busy, unsigned& idle)
@@ -463,9 +481,7 @@ void WSWindowManager::paint_window_frame(WSWindow& window)
     m_back_painter->draw_rect(outer_rect, border_color);
     m_back_painter->draw_rect(inner_border_rect, border_color);
 
-    m_back_painter->set_font(Font::default_bold_font());
-    m_back_painter->draw_text(titlebar_title_rect, window.title(), TextAlignment::CenterLeft, title_color);
-    m_back_painter->set_font(font());
+    m_back_painter->draw_text(titlebar_title_rect, window.title(), window_title_font(), TextAlignment::CenterLeft, title_color);
 
     if (!s_close_button_bitmap)
         s_close_button_bitmap = &CharacterBitmap::create_from_ascii(s_close_button_bitmap_data, s_close_button_bitmap_width, s_close_button_bitmap_height).leak_ref();
@@ -946,11 +962,13 @@ void WSWindowManager::draw_menubar()
             m_back_painter->fill_rect(menu.rect_in_menubar(), menu_selection_color());
             text_color = Color::White;
         }
-        if (index == 1)
-            m_back_painter->set_font(Font::default_bold_font());
-        m_back_painter->draw_text(menu.text_rect_in_menubar(), menu.name(), TextAlignment::CenterLeft, text_color);
-        if (index == 1)
-            m_back_painter->set_font(font());
+        m_back_painter->draw_text(
+            menu.text_rect_in_menubar(),
+            menu.name(),
+            index == 1 ? app_menu_font() : menu_font(),
+            TextAlignment::CenterLeft,
+            text_color
+        );
          ++index;
         return true;
     });

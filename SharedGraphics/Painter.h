@@ -35,9 +35,12 @@ public:
     void blit(const Point&, const GraphicsBitmap&, const Rect& src_rect);
     void blit_with_opacity(const Point&, const GraphicsBitmap&, const Rect& src_rect, float opacity);
 
-    void draw_text(const Rect&, const char* text, int length, TextAlignment = TextAlignment::TopLeft, Color = Color());
-    void draw_text(const Rect&, const String&, TextAlignment = TextAlignment::TopLeft, Color = Color());
+    void draw_text(const Rect&, const char* text, int length, const Font&, TextAlignment = TextAlignment::TopLeft, Color = Color::Black);
+    void draw_text(const Rect&, const char* text, int length, TextAlignment = TextAlignment::TopLeft, Color = Color::Black);
+    void draw_text(const Rect&, const String&, const Font&, TextAlignment = TextAlignment::TopLeft, Color = Color::Black);
+    void draw_text(const Rect&, const String&, TextAlignment = TextAlignment::TopLeft, Color = Color::Black);
     void draw_glyph(const Point&, char, Color);
+    void draw_glyph(const Point&, char, const Font&, Color);
 
     const Font& font() const { return *state().font; }
     void set_font(const Font& font) { state().font = &font; }
