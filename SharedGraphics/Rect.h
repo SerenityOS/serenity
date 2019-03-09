@@ -62,6 +62,12 @@ public:
         m_size = size;
     }
 
+    void set_size(int width, int height)
+    {
+        m_size.set_width(width);
+        m_size.set_height(height);
+    }
+
     void inflate(int w, int h)
     {
         set_x(x() - w / 2);

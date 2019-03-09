@@ -2,6 +2,7 @@
 #include <LibGUI/GWindow.h>
 #include <LibGUI/GLabel.h>
 #include <LibGUI/GButton.h>
+#include <LibGUI/GBoxLayout.h>
 #include <sys/utsname.h>
 
 int main(int argc, char** argv)
@@ -10,23 +11,27 @@ int main(int argc, char** argv)
 
     auto* window = new GWindow;
     window->set_title("About Serenity");
-    window->set_rect(362, 284, 240, 130);
+    Rect window_rect { 0, 0, 240, 120 };
+    window_rect.center_within({ 0, 0, 1024, 768 });
+    window->set_rect(window_rect);
     window->set_should_exit_app_on_close(true);
 
     auto* widget = new GWidget;
     window->set_main_widget(widget);
+    widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
+    widget->layout()->set_margins({ 0, 8, 0, 8 });
+    widget->layout()->set_spacing(8);
 
     auto* icon_label = new GLabel(widget);
     icon_label->set_icon(GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/Serenity.rgb", { 32, 32 }));
-    icon_label->set_relative_rect(
-        widget->rect().center().x() - 16,
-        10,
-        32, 32);
+    icon_label->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
+    icon_label->set_preferred_size({ 32, 32 });
 
     auto* label = new GLabel(widget);
     label->set_font(Font::default_bold_font());
     label->set_text("Serenity Operating System");
-    label->set_relative_rect(0, 50, widget->width(), 20);
+    label->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+    label->set_preferred_size({ 0, 11 });
 
     utsname uts;
     int rc = uname(&uts);
@@ -34,11 +39,13 @@ int main(int argc, char** argv)
 
     auto* version_label = new GLabel(widget);
     version_label->set_text(String::format("Version %s", uts.release));
-    version_label->set_relative_rect(0, 70, widget->width(), 20);
+    version_label->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+    version_label->set_preferred_size({ 0, 11 });
 
     auto* quit_button = new GButton(widget);
     quit_button->set_caption("Okay");
-    quit_button->set_relative_rect(80, 100, widget->width() - 160, 20);
+    quit_button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
+    quit_button->set_preferred_size({ 100, 20 });
     quit_button->on_click = [] (GButton&) {
         GApplication::the().quit(0);
     };
