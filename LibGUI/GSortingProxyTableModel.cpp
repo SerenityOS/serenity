@@ -86,10 +86,8 @@ void GSortingProxyTableModel::resort()
     m_row_mappings.resize(row_count);
     for (int i = 0; i < row_count; ++i)
         m_row_mappings[i] = i;
-
     if (m_key_column == -1)
         return;
-
     struct Context {
         GTableModel* target;
         int key_column;
@@ -97,11 +95,9 @@ void GSortingProxyTableModel::resort()
     };
     Context context { m_target.ptr(), m_key_column, m_sort_order };
     qsort_r(m_row_mappings.data(), m_row_mappings.size(), sizeof(int), [] (const void* a, const void* b, void* ctx) -> int {
-        int row1 = *(const int*)(a);
-        int row2 = *(const int*)(b);
         auto& context = *(Context*)(ctx);
-        GModelIndex index1 { row1, context.key_column };
-        GModelIndex index2 { row2, context.key_column };
+        GModelIndex index1 { *(const int*)(a), context.key_column };
+        GModelIndex index2 { *(const int*)(b), context.key_column };
         auto data1 = context.target->data(index1, GTableModel::Role::Sort);
         auto data2 = context.target->data(index2, GTableModel::Role::Sort);
         if (data1 == data2)

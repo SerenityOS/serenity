@@ -103,14 +103,15 @@ Rect GTableView::header_rect(int column_index) const
 void GTableView::mousedown_event(GMouseEvent& event)
 {
     if (event.y() < header_height()) {
-        // FIXME: Do something when clicking on a header.
         auto adjusted_position = event.position().translated(m_horizontal_scrollbar->value(), 0);
         for (int i = 0; i < m_model->column_count(); ++i) {
             auto header_rect = this->header_rect(i);
             if (header_rect.contains(adjusted_position)) {
                 auto new_sort_order = GSortOrder::Ascending;
                 if (m_model->key_column() == i)
-                    new_sort_order = m_model->sort_order() == GSortOrder::Ascending ? GSortOrder::Descending : GSortOrder::Ascending;
+                    new_sort_order = m_model->sort_order() == GSortOrder::Ascending
+                        ? GSortOrder::Descending
+                        : GSortOrder::Ascending;
                 m_model->set_key_column_and_sort_order(i, new_sort_order);
                 return;
             }
