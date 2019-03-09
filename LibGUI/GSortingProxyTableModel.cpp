@@ -1,4 +1,5 @@
 #include <LibGUI/GSortingProxyTableModel.h>
+#include <AK/QuickSort.h>
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -84,25 +85,14 @@ void GSortingProxyTableModel::resort()
         m_row_mappings[i] = i;
     if (m_key_column == -1)
         return;
-    struct Context {
-        GTableModel* target;
-        int key_column;
-        GSortOrder sort_order;
-    };
-    Context context { m_target.ptr(), m_key_column, m_sort_order };
-    qsort_r(m_row_mappings.data(), m_row_mappings.size(), sizeof(int), [] (const void* a, const void* b, void* ctx) -> int {
-        auto& context = *(Context*)(ctx);
-        GModelIndex index1 { *(const int*)(a), context.key_column };
-        GModelIndex index2 { *(const int*)(b), context.key_column };
-        auto data1 = context.target->data(index1, GTableModel::Role::Sort);
-        auto data2 = context.target->data(index2, GTableModel::Role::Sort);
+    quick_sort(m_row_mappings.begin(), m_row_mappings.end(), [&] (auto row1, auto row2) -> bool {
+        auto data1 = target().data({ row1, m_key_column }, GTableModel::Role::Sort);
+        auto data2 = target().data({ row2, m_key_column }, GTableModel::Role::Sort);
         if (data1 == data2)
             return 0;
         bool is_less_than = data1 < data2;
-        if (context.sort_order == GSortOrder::Ascending)
-            return is_less_than ? -1 : 1;
-        return is_less_than ? 1 : -1;
-    }, &context);
+        return m_sort_order == GSortOrder::Ascending ? is_less_than : !is_less_than;
+    });
 
     did_update();
 }
