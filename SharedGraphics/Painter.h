@@ -80,3 +80,20 @@ private:
     Retained<GraphicsBitmap> m_target;
     Vector<State> m_state_stack;
 };
+
+class PainterStateSaver {
+public:
+    PainterStateSaver(Painter& painter)
+        : m_painter(painter)
+    {
+        m_painter.save();
+    }
+
+    ~PainterStateSaver()
+    {
+        m_painter.restore();
+    }
+
+private:
+    Painter& m_painter;
+};
