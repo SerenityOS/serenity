@@ -39,34 +39,44 @@ public:
     void draw_text(const Rect&, const String&, TextAlignment = TextAlignment::TopLeft, Color = Color());
     void draw_glyph(const Point&, char, Color);
 
-    const Font& font() const { return *m_font; }
-    void set_font(const Font& font) { m_font = &font; }
+    const Font& font() const { return *state().font; }
+    void set_font(const Font& font) { state().font = &font; }
 
     enum class DrawOp { Copy, Xor };
-    void set_draw_op(DrawOp op) { m_draw_op = op; }
-    DrawOp draw_op() const { return m_draw_op; }
+    void set_draw_op(DrawOp op) { state().draw_op = op; }
+    DrawOp draw_op() const { return state().draw_op; }
 
     void set_clip_rect(const Rect& rect);
     void clear_clip_rect();
-    Rect clip_rect() const { return m_clip_rect; }
+    Rect clip_rect() const { return state().clip_rect; }
 
-    void translate(int dx, int dy) { m_translation.move_by(dx, dy); }
-    void translate(const Point& delta) { m_translation.move_by(delta); }
+    void translate(int dx, int dy) { state().translation.move_by(dx, dy); }
+    void translate(const Point& delta) { state().translation.move_by(delta); }
 
-    Point translation() const { return m_translation; }
+    Point translation() const { return state().translation; }
 
     GraphicsBitmap* target() { return m_target.ptr(); }
+
+    void save() { m_state_stack.append(m_state_stack.last()); }
+    void restore() { ASSERT(m_state_stack.size() > 1); m_state_stack.take_last(); }
 
 private:
     void set_pixel_with_draw_op(dword& pixel, const Color&);
     void fill_rect_with_draw_op(const Rect&, Color);
     void blit_with_alpha(const Point&, const GraphicsBitmap&, const Rect& src_rect);
 
-    const Font* m_font;
-    Point m_translation;
-    Rect m_clip_rect;
+    struct State {
+        const Font* font;
+        Point translation;
+        Rect clip_rect;
+        DrawOp draw_op;
+    };
+
+    State& state() { return m_state_stack.last(); }
+    const State& state() const { return m_state_stack.last(); }
+
     Rect m_clip_origin;
     GWindow* m_window { nullptr };
     Retained<GraphicsBitmap> m_target;
-    DrawOp m_draw_op { DrawOp::Copy };
+    Vector<State> m_state_stack;
 };
