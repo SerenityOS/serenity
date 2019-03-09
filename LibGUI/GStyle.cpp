@@ -39,7 +39,7 @@ void GStyle::paint_button(Painter& painter, const Rect& rect, GButtonStyle butto
         painter.draw_line({ 1, rect.height() - 2 }, { rect.width() - 2, rect.height() - 2 }, highlight_color);
     } else if (button_style == GButtonStyle::Normal || (button_style == GButtonStyle::CoolBar && hovered)) {
         // Base
-        painter.fill_rect({ 3, 3, rect.width() - 5, rect.height() - 5 }, button_color);
+        painter.fill_rect({ 1, 1, rect.width() - 2, rect.height() - 2 }, button_color);
 
         // White highlight
         painter.draw_line({ 1, 1 }, { rect.width() - 2, 1 }, highlight_color);
