@@ -10,6 +10,8 @@
 
 class GTableView;
 
+enum class GSortOrder { None, Ascending, Descending };
+
 class GModelNotification {
 public:
     enum Type {
@@ -57,8 +59,14 @@ public:
     void set_selected_index(const GModelIndex& index) { m_selected_index = index; }
     GModelIndex selected_index() const { return m_selected_index; }
 
+    virtual int key_column() const { return -1; }
+    virtual GSortOrder sort_order() const { return GSortOrder::None; }
+    virtual void set_key_column_and_sort_order(int, GSortOrder) { }
+
     void register_view(Badge<GTableView>, GTableView&);
     void unregister_view(Badge<GTableView>, GTableView&);
+
+    Function<void(GTableModel&)> on_model_update;
 
 protected:
     GTableModel();

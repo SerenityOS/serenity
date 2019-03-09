@@ -3,19 +3,6 @@
 #include <stdio.h>
 #include <pwd.h>
 
-enum Column {
-    Icon = 0,
-    Name,
-    CPU,
-    State,
-    Priority,
-    User,
-    PID,
-    Linear,
-    Physical,
-    __Count
-};
-
 ProcessTableModel::ProcessTableModel()
 {
     setpwent();

@@ -8,6 +8,19 @@
 
 class ProcessTableModel final : public GTableModel {
 public:
+    enum Column {
+        Icon = 0,
+        Name,
+        CPU,
+        State,
+        Priority,
+        User,
+        PID,
+        Linear,
+        Physical,
+        __Count
+    };
+
     ProcessTableModel();
     virtual ~ProcessTableModel() override;
 

@@ -19,6 +19,17 @@ bool String::operator==(const String& other) const
     return !memcmp(characters(), other.characters(), length());
 }
 
+bool String::operator<(const String& other) const
+{
+    if (!m_impl)
+        return other.m_impl;
+
+    if (!other.m_impl)
+        return false;
+
+    return strcmp(characters(), other.characters());
+}
+
 String String::empty()
 {
     return StringImpl::the_empty_stringimpl();

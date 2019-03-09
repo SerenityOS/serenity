@@ -62,6 +62,9 @@ public:
 
     String to_string() const;
 
+    bool operator==(const GVariant&) const;
+    bool operator<(const GVariant&) const;
+
 private:
     union {
         StringImpl* as_string;

@@ -27,6 +27,8 @@ void GTableModel::for_each_view(Function<void(GTableView&)> callback)
 
 void GTableModel::did_update()
 {
+    if (on_model_update)
+        on_model_update(*this);
     for_each_view([] (GTableView& view) {
         view.did_update_model();
     });

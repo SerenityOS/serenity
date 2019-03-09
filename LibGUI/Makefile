@@ -34,6 +34,7 @@ LIBGUI_OBJS = \
     GShortcut.o \
     GTextEditor.o \
     GClipboard.o \
+    GSortingProxyTableModel.o \
     GWindow.o
 
 OBJS = $(SHAREDGRAPHICS_OBJS) $(LIBGUI_OBJS)
