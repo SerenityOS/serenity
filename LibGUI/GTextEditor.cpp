@@ -198,20 +198,17 @@ void GTextEditor::paint_event(GPaintEvent& event)
     auto selection = normalized_selection();
     bool has_selection = selection.is_valid();
 
-    painter.set_font(Font::default_font());
     for (int i = first_visible_line; i <= last_visible_line; ++i) {
         bool is_current_line = i == m_cursor.line();
         auto ruler_line_rect = ruler_content_rect(i);
-        Color text_color = Color::MidGray;
-        if (is_current_line) {
-            painter.set_font(Font::default_bold_font());
-            text_color = Color::DarkGray;
-        }
-        painter.draw_text(ruler_line_rect.shrunken(2, 0), String::format("%u", i), TextAlignment::CenterRight, text_color);
-        if (is_current_line)
-            painter.set_font(Font::default_font());
+        painter.draw_text(
+            ruler_line_rect.shrunken(2, 0),
+            String::format("%u", i),
+            is_current_line ? Font::default_bold_font() : font(),
+            TextAlignment::CenterRight,
+            is_current_line ? Color::DarkGray : Color::MidGray
+        );
     }
-    painter.set_font(font());
 
     painter.set_clip_rect({ ruler_rect.right() + 1, 0, width() - m_vertical_scrollbar->width() - ruler_width(), height() - m_horizontal_scrollbar->height() });
 
