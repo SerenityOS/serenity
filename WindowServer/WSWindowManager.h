@@ -70,8 +70,10 @@ public:
     void recompose_immediately();
     void flush(const Rect&);
 
-    Font& font() { return *m_font; }
-    const Font& font() const { return *m_font; }
+    const Font& font() const;
+    const Font& window_title_font() const;
+    const Font& menu_font() const;
+    const Font& app_menu_font() const;
 
     void close_menu(WSMenu&);
     void close_menubar(WSMenuBar&);
@@ -153,8 +155,6 @@ private:
 
     OwnPtr<Painter> m_back_painter;
     OwnPtr<Painter> m_front_painter;
-
-    RetainPtr<Font> m_font;
 
     String m_wallpaper_path;
     RetainPtr<GraphicsBitmap> m_wallpaper;
