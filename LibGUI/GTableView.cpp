@@ -108,7 +108,7 @@ void GTableView::mousedown_event(GMouseEvent& event)
         for (int i = 0; i < m_model->column_count(); ++i) {
             auto header_rect = this->header_rect(i);
             if (header_rect.contains(adjusted_position)) {
-                auto new_sort_order = GSortOrder::Descending;
+                auto new_sort_order = GSortOrder::Ascending;
                 if (m_model->key_column() == i)
                     new_sort_order = m_model->sort_order() == GSortOrder::Ascending ? GSortOrder::Descending : GSortOrder::Ascending;
                 m_model->set_key_column_and_sort_order(i, new_sort_order);

@@ -40,6 +40,8 @@ public:
         TextAlignment text_alignment { TextAlignment::CenterLeft };
     };
 
+    enum class Role { Display, Sort, Custom };
+
     virtual ~GTableModel();
 
     virtual int row_count() const = 0;
@@ -47,7 +49,7 @@ public:
     virtual String row_name(int) const { return { }; }
     virtual String column_name(int) const { return { }; }
     virtual ColumnMetadata column_metadata(int) const { return { }; }
-    virtual GVariant data(const GModelIndex&) const = 0;
+    virtual GVariant data(const GModelIndex&, Role = Role::Display) const = 0;
     virtual void update() = 0;
     virtual void activate(const GModelIndex&) { }
 

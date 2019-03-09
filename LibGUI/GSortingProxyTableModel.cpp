@@ -54,9 +54,9 @@ GTableModel::ColumnMetadata GSortingProxyTableModel::column_metadata(int index) 
     return target().column_metadata(index);
 }
 
-GVariant GSortingProxyTableModel::data(const GModelIndex& index) const
+GVariant GSortingProxyTableModel::data(const GModelIndex& index, Role role) const
 {
-    return target().data(map_to_target(index));
+    return target().data(map_to_target(index), role);
 }
 
 void GSortingProxyTableModel::activate(const GModelIndex& index)
@@ -102,8 +102,8 @@ void GSortingProxyTableModel::resort()
         auto& context = *(Context*)(ctx);
         GModelIndex index1 { row1, context.key_column };
         GModelIndex index2 { row2, context.key_column };
-        auto data1 = context.target->data(index1);
-        auto data2 = context.target->data(index2);
+        auto data1 = context.target->data(index1, GTableModel::Role::Sort);
+        auto data2 = context.target->data(index2, GTableModel::Role::Sort);
         if (data1 == data2)
             return 0;
         bool is_less_than = data1 < data2;

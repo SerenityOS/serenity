@@ -51,8 +51,7 @@ public:
                     perror("execl");
             }
         };
-    }
-    virtual ~LauncherButton() { }
+    } virtual ~LauncherButton() { }
 
 private:
     String m_executable_path;

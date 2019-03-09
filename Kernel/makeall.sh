@@ -2,7 +2,7 @@
 
 sudo id
 
-make_cmd="make -j2"
+make_cmd="make -j3"
 
 $make_cmd -C ../LibC clean && \
 $make_cmd -C ../LibC && \

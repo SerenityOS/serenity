@@ -28,7 +28,7 @@ public:
     virtual int column_count() const override;
     virtual String column_name(int column) const override;
     virtual ColumnMetadata column_metadata(int column) const override;
-    virtual GVariant data(const GModelIndex&) const override;
+    virtual GVariant data(const GModelIndex&, Role = Role::Display) const override;
     virtual void update() override;
 
     pid_t selected_pid() const;
