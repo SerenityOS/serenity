@@ -29,10 +29,6 @@ int main(int argc, char** argv)
     text_editor->on_cursor_change = [statusbar] (GTextEditor& editor) {
         StringBuilder builder;
         builder.appendf("Line: %d, Column: %d", editor.cursor().line(), editor.cursor().column());
-        auto selection = editor.normalized_selection();
-        if (selection.is_valid()) {
-            builder.appendf("      Selection: [%d,%d]-[%d,%d]", selection.start().line(), selection.start().column(), selection.end().line(), selection.end().column());
-        }
         statusbar->set_text(builder.to_string());
     };
 
