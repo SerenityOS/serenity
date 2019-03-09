@@ -875,6 +875,8 @@ void WSWindowManager::compose()
             return;
         if (!any_dirty_rect_intersects_window(window))
             return;
+        PainterStateSaver saver(*m_back_painter);
+        m_back_painter->set_clip_rect(outer_window_rect(window));
         for (auto& dirty_rect : dirty_rects.rects()) {
             PainterStateSaver saver(*m_back_painter);
             m_back_painter->set_clip_rect(dirty_rect);
