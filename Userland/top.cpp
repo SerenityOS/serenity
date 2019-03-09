@@ -6,6 +6,7 @@
 #include <AK/HashMap.h>
 #include <AK/AKString.h>
 #include <AK/Vector.h>
+#include <AK/QuickSort.h>
 
 static HashMap<unsigned, String>* s_usernames;
 
@@ -112,10 +113,9 @@ int main(int, char**)
             processes.append(&it.value);
         }
 
-        qsort(processes.data(), processes.size(), sizeof(Process*), [] (const void* a, const void* b) -> int {
-            auto* p1 = *(const Process* const*)(a);
-            auto* p2 = *(const Process* const*)(b);
-            return p2->nsched_since_prev - p1->nsched_since_prev;
+
+        quick_sort(processes.begin(), processes.end(), [] (auto* p1, auto* p2) {
+            return p2->nsched_since_prev < p1->nsched_since_prev;
         });
 
         for (auto* process : processes) {
