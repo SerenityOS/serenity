@@ -40,6 +40,8 @@ private:
     void update_scrollbar_ranges();
     int item_count() const;
     Rect row_rect(int item_index) const;
+    Rect header_rect(int) const;
+    int column_width(int) const;
 
     GScrollBar* m_vertical_scrollbar { nullptr };
     GScrollBar* m_horizontal_scrollbar { nullptr };
