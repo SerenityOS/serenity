@@ -85,10 +85,36 @@ Rect GTableView::row_rect(int item_index) const
     return { 0, header_height() + (item_index * item_height()), max(content_width(), width()), item_height() };
 }
 
+int GTableView::column_width(int column_index) const
+{
+    return m_model->column_metadata(column_index).preferred_width;
+}
+
+Rect GTableView::header_rect(int column_index) const
+{
+    int x_offset = 0;
+    for (int i = 0; i < column_index; ++i)
+        x_offset += column_width(i) + horizontal_padding() * 2;
+    auto column_metadata = m_model->column_metadata(column_index);
+    int column_width = column_metadata.preferred_width;
+    return { x_offset, 0, column_width + horizontal_padding() * 2, header_height() };
+}
+
 void GTableView::mousedown_event(GMouseEvent& event)
 {
     if (event.y() < header_height()) {
         // FIXME: Do something when clicking on a header.
+        auto adjusted_position = event.position().translated(m_horizontal_scrollbar->value(), 0);
+        for (int i = 0; i < m_model->column_count(); ++i) {
+            auto header_rect = this->header_rect(i);
+            if (header_rect.contains(adjusted_position)) {
+                auto new_sort_order = GSortOrder::Descending;
+                if (m_model->key_column() == i)
+                    new_sort_order = m_model->sort_order() == GSortOrder::Ascending ? GSortOrder::Descending : GSortOrder::Ascending;
+                m_model->set_key_column_and_sort_order(i, new_sort_order);
+                return;
+            }
+        }
         return;
     }
 
@@ -120,12 +146,15 @@ void GTableView::paint_event(GPaintEvent& event)
         int y = y_offset + painted_item_index * item_height();
 
         Color background_color;
+        Color key_column_background_color;
         Color text_color;
         if (row_index == m_model->selected_index().row()) {
             background_color = is_focused() ? Color::from_rgb(0x84351a) : Color::from_rgb(0x606060);
+            key_column_background_color = is_focused() ? Color::from_rgb(0x84351a) : Color::from_rgb(0x606060);
             text_color = Color::White;
         } else {
             background_color = painted_item_index % 2 ? Color(210, 210, 210) : Color::White;
+            key_column_background_color = painted_item_index % 2 ? Color(190, 190, 190) : Color(235, 235, 235);
             text_color = Color::Black;
         }
 
@@ -134,7 +163,12 @@ void GTableView::paint_event(GPaintEvent& event)
         for (int column_index = 0; column_index < m_model->column_count(); ++column_index) {
             auto column_metadata = m_model->column_metadata(column_index);
             int column_width = column_metadata.preferred_width;
+            bool is_key_column = m_model->key_column() == column_index;
             Rect cell_rect(horizontal_padding() + x_offset, y, column_width, item_height());
+            if (is_key_column) {
+                auto cell_rect_for_fill = cell_rect.inflated(horizontal_padding() * 2, 0);
+                painter.fill_rect(cell_rect_for_fill, key_column_background_color);
+            }
             auto data = m_model->data({ row_index, column_index });
             if (data.is_bitmap())
                 painter.blit(cell_rect.location(), data.as_bitmap(), data.as_bitmap().rect());
@@ -157,7 +191,11 @@ void GTableView::paint_event(GPaintEvent& event)
     for (int column_index = 0; column_index < m_model->column_count(); ++column_index) {
         auto column_metadata = m_model->column_metadata(column_index);
         int column_width = column_metadata.preferred_width;
+        bool is_key_column = m_model->key_column() == column_index;
         Rect cell_rect(x_offset, 0, column_width + horizontal_padding() * 2, header_height());
+        if (is_key_column) {
+            painter.fill_rect(cell_rect.shrunken(2, 2), Color::from_rgb(0xdddddd));
+        }
         painter.set_font(Font::default_bold_font());
         painter.draw_text(cell_rect.translated(horizontal_padding(), 0), m_model->column_name(column_index), TextAlignment::CenterLeft, Color::Black);
         x_offset += column_width + horizontal_padding() * 2;
