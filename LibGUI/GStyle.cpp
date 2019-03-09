@@ -21,7 +21,7 @@ void GStyle::paint_button(Painter& painter, const Rect& rect, GButtonStyle butto
     Color shadow_color = Color(96, 96, 96);
 
     if (button_style == GButtonStyle::Normal)
-        painter.draw_rect(rect, Color::Black, true);
+        painter.draw_rect(rect, Color::Black);
 
     PainterStateSaver saver(painter);
     painter.translate(rect.location());
