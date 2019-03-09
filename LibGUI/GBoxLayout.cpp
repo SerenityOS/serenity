@@ -3,6 +3,10 @@
 
 //#define GBOXLAYOUT_DEBUG
 
+#ifdef GBOXLAYOUT_DEBUG
+#include <stdio.h>
+#endif
+
 GBoxLayout::GBoxLayout(Orientation orientation)
     : m_orientation(orientation)
 {
@@ -47,7 +51,7 @@ void GBoxLayout::run(GWidget& widget)
     int number_of_entries_with_automatic_size = m_entries.size() - number_of_entries_with_fixed_size;
 
 #ifdef GBOXLAYOUT_DEBUG
-    dbgprintf("GBoxLayout: available_size=%d, fixed=%d, fill=%d\n", available_size.height(), number_of_entries_with_fixed_size, number_of_entries_with_automatic_size);
+    printf("GBoxLayout: available_size=%s, fixed=%d, fill=%d\n", available_size.to_string().characters(), number_of_entries_with_fixed_size, number_of_entries_with_automatic_size);
 #endif
 
     Size automatic_size;
@@ -63,7 +67,7 @@ void GBoxLayout::run(GWidget& widget)
     }
 
 #ifdef GBOXLAYOUT_DEBUG
-    dbgprintf("GBoxLayout: automatic_size=%s\n", automatic_size.to_string().characters());
+    printf("GBoxLayout: automatic_size=%s\n", automatic_size.to_string().characters());
 #endif
 
     int current_x = margins().left();
@@ -76,19 +80,26 @@ void GBoxLayout::run(GWidget& widget)
             ASSERT_NOT_REACHED();
         }
         ASSERT(entry.widget);
-        rect.set_size({ automatic_size.width() - margins().left() - margins().right(), automatic_size.height() - margins().top() - margins().bottom() });
+        rect.set_size(automatic_size.width() - margins().left() - margins().right(), automatic_size.height() - margins().top() - margins().bottom());
+
         if (entry.widget->size_policy(Orientation::Vertical) == SizePolicy::Fixed)
             rect.set_height(entry.widget->preferred_size().height());
+
         if (entry.widget->size_policy(Orientation::Horizontal) == SizePolicy::Fixed)
             rect.set_width(entry.widget->preferred_size().width());
 
-        if (orientation() == Orientation::Horizontal)
+        if (orientation() == Orientation::Horizontal) {
+            if (entry.widget->size_policy(Orientation::Vertical) == SizePolicy::Fill)
+                rect.set_height(widget.height() - margins().top() - margins().bottom());
             rect.center_vertically_within(widget.rect());
-        else
+        } else {
+            if (entry.widget->size_policy(Orientation::Horizontal) == SizePolicy::Fill)
+                rect.set_width(widget.width() - margins().left() - margins().right());
             rect.center_horizontally_within(widget.rect());
+        }
 
 #ifdef GBOXLAYOUT_DEBUG
-        dbgprintf("GBoxLayout: apply, %s{%p} <- %s\n", entry.widget->class_name(), entry.widget.ptr(), rect.to_string().characters());
+        printf("GBoxLayout: apply, %s{%p} <- %s\n", entry.widget->class_name(), entry.widget.ptr(), rect.to_string().characters());
 #endif
         entry.widget->set_relative_rect(rect);
 
