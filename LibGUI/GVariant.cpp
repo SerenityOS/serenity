@@ -48,6 +48,49 @@ GVariant::GVariant(const GraphicsBitmap& value)
     AK::retain_if_not_null(m_value.as_bitmap);
 }
 
+bool GVariant::operator==(const GVariant& other) const
+{
+    if (m_type != other.m_type)
+        return to_string() == other.to_string();
+    switch (m_type) {
+    case Type::Bool:
+        return as_bool() == other.as_bool();
+    case Type::Int:
+        return as_int() == other.as_int();
+    case Type::Float:
+        return as_float() == other.as_float();
+    case Type::String:
+        return as_string() == other.as_string();
+    case Type::Bitmap:
+        return m_value.as_bitmap == other.m_value.as_bitmap;
+    case Type::Invalid:
+        break;
+    }
+    ASSERT_NOT_REACHED();
+}
+
+bool GVariant::operator<(const GVariant& other) const
+{
+    if (m_type != other.m_type)
+        return to_string() < other.to_string();
+    switch (m_type) {
+    case Type::Bool:
+        return as_bool() < other.as_bool();
+    case Type::Int:
+        return as_int() < other.as_int();
+    case Type::Float:
+        return as_float() < other.as_float();
+    case Type::String:
+        return as_string() < other.as_string();
+    case Type::Bitmap:
+        // FIXME: Maybe compare bitmaps somehow differently?
+        return m_value.as_bitmap < other.m_value.as_bitmap;
+    case Type::Invalid:
+        break;
+    }
+    ASSERT_NOT_REACHED();
+}
+
 String GVariant::to_string() const
 {
     switch (m_type) {

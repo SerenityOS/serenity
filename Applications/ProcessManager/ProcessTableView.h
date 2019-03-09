@@ -21,7 +21,9 @@ protected:
 private:
     virtual void timer_event(GTimerEvent&) override;
 
-    ProcessTableModel& model();
-    const ProcessTableModel& model() const;
+    ProcessTableModel& model() { return *m_model; }
+    const ProcessTableModel& model() const { return *m_model; }
+
+    ProcessTableModel* m_model { nullptr };
 };
 

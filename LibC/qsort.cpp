@@ -38,7 +38,8 @@ static char sccsid[] = "@(#)qsort.c	5.9 (Berkeley) 2/23/91";
 #include <sys/types.h>
 #include <stdlib.h>
 
-static void insertion_sort(void* bot, size_t nmemb, size_t size, int (*compar)(const void *, const void *));
+static void insertion_sort(void* bot, size_t nmemb, size_t size, int (*compar)(const void*, const void*));
+static void insertion_sort_r(void* bot, size_t nmemb, size_t size, int (*compar)(const void*, const void*, void*), void* arg);
 
 void qsort(void* bot, size_t nmemb, size_t size, int (*compar)(const void *, const void *))
 {
@@ -48,23 +49,23 @@ void qsort(void* bot, size_t nmemb, size_t size, int (*compar)(const void *, con
     insertion_sort(bot, nmemb, size, compar);
 }
 
-void insertion_sort(void* bot, size_t nmemb, size_t size, int (*compar)(const void *, const void *))
+void qsort_r(void* bot, size_t nmemb, size_t size, int (*compar)(const void*, const void*, void*), void* arg)
+{
+    if (nmemb <= 1)
+        return;
+
+    insertion_sort_r(bot, nmemb, size, compar, arg);
+}
+
+void insertion_sort(void* bot, size_t nmemb, size_t size, int (*compar)(const void*, const void*))
 {
     int cnt;
     unsigned char ch;
     char *s1, *s2, *t1, *t2, *top;
-
-	/*
-	 * A simple insertion sort (see Knuth, Vol. 3, page 81, Algorithm
-	 * S).  Insertion sort has the same worst case as most simple sorts
-	 * (O N^2).  It gets used here because it is (O N) in the case of
-	 * sorted data.
-	 */
     top = (char*)bot + nmemb * size;
     for (t1 = (char*)bot + size; t1 < top;) {
 		for (t2 = t1; (t2 -= size) >= bot && compar(t1, t2) < 0;);
 		if (t1 != (t2 += size)) {
-			/* Bubble bytes up through each element. */
 			for (cnt = size; cnt--; ++t1) {
 				ch = *t1;
 				for (s1 = s2 = t1; (s2 -= size) >= t2; s1 = s2)
@@ -74,4 +75,24 @@ void insertion_sort(void* bot, size_t nmemb, size_t size, int (*compar)(const vo
 		} else
 			t1 += size;
 	}
+}
+
+void insertion_sort_r(void* bot, size_t nmemb, size_t size, int (*compar)(const void*, const void*, void*), void* arg)
+{
+    int cnt;
+    unsigned char ch;
+    char *s1, *s2, *t1, *t2, *top;
+    top = (char*)bot + nmemb * size;
+    for (t1 = (char*)bot + size; t1 < top;) {
+        for (t2 = t1; (t2 -= size) >= bot && compar(t1, t2, arg) < 0;);
+        if (t1 != (t2 += size)) {
+            for (cnt = size; cnt--; ++t1) {
+                ch = *t1;
+                for (s1 = s2 = t1; (s2 -= size) >= t2; s1 = s2)
+                    *s1 = *s2;
+                *s1 = ch;
+            }
+        } else
+            t1 += size;
+    }
 }

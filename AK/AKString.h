@@ -76,6 +76,7 @@ public:
 
     bool operator==(const String&) const;
     bool operator!=(const String& other) const { return !(*this == other); }
+    bool operator<(const String&) const;
 
     String isolated_copy() const;
 
