@@ -153,9 +153,6 @@ void ProcessTableModel::update()
         state.physical = parts[13].to_uint(ok);
         ASSERT(ok);
         sum_nsched += nsched;
-        if (pid == 0)
-            continue;
-
         {
             auto it = m_processes.find(pid);
             if (it == m_processes.end())
