@@ -67,11 +67,37 @@ static String pretty_byte_size(size_t size)
     return String::format("%uK", size / 1024);
 }
 
-GVariant ProcessTableModel::data(const GModelIndex& index) const
+GVariant ProcessTableModel::data(const GModelIndex& index, Role role) const
 {
     ASSERT(is_valid(index));
+
     auto it = m_processes.find(m_pids[index.row()]);
     auto& process = *(*it).value;
+
+    if (role == Role::Sort) {
+        switch (index.column()) {
+        case Column::Icon: return 0;
+        case Column::PID: return process.current_state.pid;
+        case Column::State: return process.current_state.state;
+        case Column::User: return process.current_state.user;
+        case Column::Priority:
+            if (process.current_state.priority == "Low")
+                return 0;
+            if (process.current_state.priority == "Normal")
+                return 1;
+            if (process.current_state.priority == "High")
+                return 2;
+            ASSERT_NOT_REACHED();
+            return 3;
+        case Column::Linear: return (int)process.current_state.linear;
+        case Column::Physical: return (int)process.current_state.physical;
+        case Column::CPU: return process.current_state.cpu_percent;
+        case Column::Name: return process.current_state.name;
+        }
+        ASSERT_NOT_REACHED();
+        return { };
+    }
+
     switch (index.column()) {
     case Column::Icon: return *m_generic_process_icon;
     case Column::PID: return process.current_state.pid;

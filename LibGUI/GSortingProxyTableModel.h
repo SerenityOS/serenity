@@ -12,7 +12,7 @@ public:
     virtual String row_name(int) const override;
     virtual String column_name(int) const override;
     virtual ColumnMetadata column_metadata(int) const override;
-    virtual GVariant data(const GModelIndex&) const override;
+    virtual GVariant data(const GModelIndex&, Role = Role::Display) const override;
     virtual void update() override;
     virtual void activate(const GModelIndex&) override;
 

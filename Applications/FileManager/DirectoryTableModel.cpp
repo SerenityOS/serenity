@@ -135,8 +135,9 @@ String DirectoryTableModel::name_for_gid(uid_t gid) const
     return (*it).value;
 }
 
-GVariant DirectoryTableModel::data(const GModelIndex& index) const
+GVariant DirectoryTableModel::data(const GModelIndex& index, Role role) const
 {
+    ASSERT(role == Role::Display);
     auto& entry = this->entry(index.row());
     switch (index.column()) {
     case Column::Icon: return icon_for(entry);

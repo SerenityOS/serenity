@@ -27,7 +27,7 @@ bool String::operator<(const String& other) const
     if (!other.m_impl)
         return false;
 
-    return strcmp(characters(), other.characters());
+    return strcmp(characters(), other.characters()) < 0;
 }
 
 String String::empty()
