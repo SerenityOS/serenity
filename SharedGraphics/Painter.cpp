@@ -19,22 +19,25 @@
 Painter::Painter(GraphicsBitmap& bitmap)
     : m_target(bitmap)
 {
-    m_font = &Font::default_font();
-    m_clip_rect = { { 0, 0 }, bitmap.size() };
-    m_clip_origin = m_clip_rect;
+    m_state_stack.append(State());
+    state().font = &Font::default_font();
+    state().clip_rect = { { 0, 0 }, bitmap.size() };
+    m_clip_origin = state().clip_rect;
 }
 
 #ifdef LIBGUI
 Painter::Painter(GWidget& widget)
-    : m_font(&widget.font())
-    , m_window(widget.window())
+    : m_window(widget.window())
     , m_target(*m_window->backing())
 {
+    m_state_stack.append(State());
+    state().font = &widget.font();
+
     auto origin_rect = widget.window_relative_rect();
-    m_translation.move_by(origin_rect.location());
-    m_clip_rect = origin_rect;
+    state().translation = origin_rect.location();
+    state().clip_rect = origin_rect;
     m_clip_origin = origin_rect;
-    m_clip_rect.intersect(m_target->rect());
+    state().clip_rect.intersect(m_target->rect());
 }
 #endif
 
@@ -45,8 +48,8 @@ Painter::~Painter()
 void Painter::fill_rect_with_draw_op(const Rect& a_rect, Color color)
 {
     auto rect = a_rect;
-    rect.move_by(m_translation);
-    rect.intersect(m_clip_rect);
+    rect.move_by(state().translation);
+    rect.intersect(clip_rect());
 
     if (rect.is_empty())
         return;
@@ -63,14 +66,14 @@ void Painter::fill_rect_with_draw_op(const Rect& a_rect, Color color)
 
 void Painter::fill_rect(const Rect& a_rect, Color color)
 {
-    if (m_draw_op != DrawOp::Copy) {
+    if (draw_op() != DrawOp::Copy) {
         fill_rect_with_draw_op(a_rect, color);
         return;
     }
 
     auto rect = a_rect;
-    rect.move_by(m_translation);
-    rect.intersect(m_clip_rect);
+    rect.move_by(state().translation);
+    rect.intersect(clip_rect());
 
     if (rect.is_empty())
         return;
@@ -92,8 +95,8 @@ void Painter::fill_rect_with_gradient(const Rect& a_rect, Color gradient_start, 
     return fill_rect(a_rect, gradient_start);
 #endif
     auto rect = a_rect;
-    rect.move_by(m_translation);
-    auto clipped_rect = Rect::intersection(rect, m_clip_rect);
+    rect.move_by(state().translation);
+    auto clipped_rect = Rect::intersection(rect, clip_rect());
     if (clipped_rect.is_empty())
         return;
 
@@ -128,9 +131,9 @@ void Painter::fill_rect_with_gradient(const Rect& a_rect, Color gradient_start, 
 void Painter::draw_rect(const Rect& a_rect, Color color, bool rough)
 {
     Rect rect = a_rect;
-    rect.move_by(m_translation);
+    rect.move_by(state().translation);
 
-    auto clipped_rect = Rect::intersection(rect, m_clip_rect);
+    auto clipped_rect = Rect::intersection(rect, clip_rect());
     if (clipped_rect.is_empty())
         return;
 
@@ -174,8 +177,8 @@ void Painter::draw_rect(const Rect& a_rect, Color color, bool rough)
 void Painter::draw_bitmap(const Point& p, const CharacterBitmap& bitmap, Color color)
 {
     Rect rect { p, bitmap.size() };
-    rect.move_by(m_translation);
-    auto clipped_rect = Rect::intersection(rect, m_clip_rect);
+    rect.move_by(state().translation);
+    auto clipped_rect = Rect::intersection(rect, clip_rect());
     if (clipped_rect.is_empty())
         return;
     const int first_row = clipped_rect.top() - rect.top();
@@ -201,8 +204,8 @@ void Painter::draw_bitmap(const Point& p, const CharacterBitmap& bitmap, Color c
 void Painter::draw_bitmap(const Point& p, const GlyphBitmap& bitmap, Color color)
 {
     Rect dst_rect { p, bitmap.size() };
-    dst_rect.move_by(m_translation);
-    auto clipped_rect = Rect::intersection(dst_rect, m_clip_rect);
+    dst_rect.move_by(state().translation);
+    auto clipped_rect = Rect::intersection(dst_rect, clip_rect());
     if (clipped_rect.is_empty())
         return;
     const int first_row = clipped_rect.top() - dst_rect.top();
@@ -234,8 +237,8 @@ void Painter::blit_with_opacity(const Point& position, const GraphicsBitmap& sou
 
     Rect safe_src_rect = Rect::intersection(src_rect, source.rect());
     Rect dst_rect(position, safe_src_rect.size());
-    dst_rect.move_by(m_translation);
-    auto clipped_rect = Rect::intersection(dst_rect, m_clip_rect);
+    dst_rect.move_by(state().translation);
+    auto clipped_rect = Rect::intersection(dst_rect, clip_rect());
     if (clipped_rect.is_empty())
         return;
     const int first_row = clipped_rect.top() - dst_rect.top();
@@ -264,8 +267,8 @@ void Painter::blit_with_alpha(const Point& position, const GraphicsBitmap& sourc
     ASSERT(source.has_alpha_channel());
     Rect safe_src_rect = Rect::intersection(src_rect, source.rect());
     Rect dst_rect(position, safe_src_rect.size());
-    dst_rect.move_by(m_translation);
-    auto clipped_rect = Rect::intersection(dst_rect, m_clip_rect);
+    dst_rect.move_by(state().translation);
+    auto clipped_rect = Rect::intersection(dst_rect, clip_rect());
     if (clipped_rect.is_empty())
         return;
     const int first_row = clipped_rect.top() - dst_rect.top();
@@ -299,8 +302,8 @@ void Painter::blit(const Point& position, const GraphicsBitmap& source, const Re
     auto safe_src_rect = Rect::intersection(src_rect, source.rect());
     ASSERT(source.rect().contains(safe_src_rect));
     Rect dst_rect(position, safe_src_rect.size());
-    dst_rect.move_by(m_translation);
-    auto clipped_rect = Rect::intersection(dst_rect, m_clip_rect);
+    dst_rect.move_by(state().translation);
+    auto clipped_rect = Rect::intersection(dst_rect, clip_rect());
     if (clipped_rect.is_empty())
         return;
     const int first_row = clipped_rect.top() - dst_rect.top();
@@ -362,41 +365,41 @@ void Painter::draw_text(const Rect& rect, const String& text, TextAlignment alig
 void Painter::set_pixel(const Point& p, Color color)
 {
     auto point = p;
-    point.move_by(m_translation);
-    if (!m_clip_rect.contains(point))
+    point.move_by(state().translation);
+    if (!clip_rect().contains(point))
         return;
     m_target->scanline(point.y())[point.x()] = color.value();
 }
 
 [[gnu::always_inline]] inline void Painter::set_pixel_with_draw_op(dword& pixel, const Color& color)
 {
-    if (m_draw_op == DrawOp::Copy)
+    if (draw_op() == DrawOp::Copy)
         pixel = color.value();
-    else if (m_draw_op == DrawOp::Xor)
+    else if (draw_op() == DrawOp::Xor)
         pixel ^= color.value();
 }
 
 void Painter::draw_line(const Point& p1, const Point& p2, Color color)
 {
     auto point1 = p1;
-    point1.move_by(m_translation);
+    point1.move_by(state().translation);
 
     auto point2 = p2;
-    point2.move_by(m_translation);
+    point2.move_by(state().translation);
 
     // Special case: vertical line.
     if (point1.x() == point2.x()) {
         const int x = point1.x();
-        if (x < m_clip_rect.left() || x > m_clip_rect.right())
+        if (x < clip_rect().left() || x > clip_rect().right())
             return;
         if (point1.y() > point2.y())
             swap(point1, point2);
-        if (point1.y() > m_clip_rect.bottom())
+        if (point1.y() > clip_rect().bottom())
             return;
-        if (point2.y() < m_clip_rect.top())
+        if (point2.y() < clip_rect().top())
             return;
-        int min_y = max(point1.y(), m_clip_rect.top());
-        int max_y = min(point2.y(), m_clip_rect.bottom());
+        int min_y = max(point1.y(), clip_rect().top());
+        int max_y = min(point2.y(), clip_rect().bottom());
         for (int y = min_y; y <= max_y; ++y)
             set_pixel_with_draw_op(m_target->scanline(y)[x], color);
         return;
@@ -408,18 +411,18 @@ void Painter::draw_line(const Point& p1, const Point& p2, Color color)
     // Special case: horizontal line.
     if (point1.y() == point2.y()) {
         const int y = point1.y();
-        if (y < m_clip_rect.top() || y > m_clip_rect.bottom())
+        if (y < clip_rect().top() || y > clip_rect().bottom())
             return;
         if (point1.x() > point2.x())
             swap(point1, point2);
-        if (point1.x() > m_clip_rect.right())
+        if (point1.x() > clip_rect().right())
             return;
-        if (point2.x() < m_clip_rect.left())
+        if (point2.x() < clip_rect().left())
             return;
-        int min_x = max(point1.x(), m_clip_rect.left());
-        int max_x = min(point2.x(), m_clip_rect.right());
+        int min_x = max(point1.x(), clip_rect().left());
+        int max_x = min(point2.x(), clip_rect().right());
         auto* pixels = m_target->scanline(point1.y());
-        if (m_draw_op == DrawOp::Copy) {
+        if (draw_op() == DrawOp::Copy) {
             fast_dword_fill(pixels + min_x, color.value(), max_x - min_x + 1);
         } else {
             for (int x = min_x; x <= max_x; ++x)
@@ -461,11 +464,11 @@ void Painter::draw_focus_rect(const Rect& rect)
 
 void Painter::set_clip_rect(const Rect& rect)
 {
-    m_clip_rect.intersect(rect.translated(m_clip_origin.location()));
-    m_clip_rect.intersect(m_target->rect());
+    state().clip_rect.intersect(rect.translated(m_clip_origin.location()));
+    state().clip_rect.intersect(m_target->rect());
 }
 
 void Painter::clear_clip_rect()
 {
-    m_clip_rect = m_clip_origin;
+    state().clip_rect = m_clip_origin;
 }
