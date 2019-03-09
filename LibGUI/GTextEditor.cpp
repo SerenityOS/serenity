@@ -186,6 +186,8 @@ void GTextEditor::paint_event(GPaintEvent& event)
     painter.fill_rect(ruler_rect, Color::LightGray);
     painter.draw_line(ruler_rect.top_right(), ruler_rect.bottom_right(), Color::DarkGray);
 
+    painter.save();
+
     painter.translate(-m_horizontal_scrollbar->value(), -m_vertical_scrollbar->value());
     painter.translate(padding() + ruler_width(), padding());
     int exposed_width = max(content_width(), width());
@@ -235,12 +237,7 @@ void GTextEditor::paint_event(GPaintEvent& event)
     if (is_focused() && m_cursor_state)
         painter.fill_rect(cursor_content_rect(), Color::Red);
 
-    painter.clear_clip_rect();
-    painter.set_clip_rect(item_area_rect);
-    painter.set_clip_rect(event.rect());
-
-    painter.translate(0 - padding() - ruler_width(), -padding());
-    painter.translate(m_horizontal_scrollbar->value(), m_vertical_scrollbar->value());
+    painter.restore();
 
     if (is_focused())
         painter.draw_rect(item_area_rect, Color::from_rgb(0x84351a));
