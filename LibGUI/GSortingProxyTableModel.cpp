@@ -28,14 +28,10 @@ int GSortingProxyTableModel::column_count() const
 GModelIndex GSortingProxyTableModel::map_to_target(const GModelIndex& index) const
 {
     ASSERT(!m_row_mappings.is_empty());
-    if (!index.is_valid()) {
-        ASSERT_NOT_REACHED();
+    if (!index.is_valid())
         return { };
-    }
-    if (index.row() >= row_count() || index.column() >= column_count()) {
-        ASSERT_NOT_REACHED();
+    if (index.row() >= row_count() || index.column() >= column_count())
         return { };
-    }
     return { m_row_mappings[index.row()], index.column() };
 }
 

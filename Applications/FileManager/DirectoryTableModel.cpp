@@ -137,8 +137,21 @@ String DirectoryTableModel::name_for_gid(uid_t gid) const
 
 GVariant DirectoryTableModel::data(const GModelIndex& index, Role role) const
 {
-    ASSERT(role == Role::Display);
+    ASSERT(is_valid(index));
     auto& entry = this->entry(index.row());
+    if (role == Role::Sort) {
+        switch (index.column()) {
+        case Column::Icon: return entry.is_directory() ? 0 : 1;
+        case Column::Name: return entry.name;
+        case Column::Size: return (int)entry.size;
+        case Column::Owner: return name_for_uid(entry.uid);
+        case Column::Group: return name_for_gid(entry.gid);
+        case Column::Permissions: return permission_string(entry.mode);
+        case Column::Inode: return (int)entry.inode;
+        }
+        ASSERT_NOT_REACHED();
+    }
+    ASSERT(role == Role::Display);
     switch (index.column()) {
     case Column::Icon: return icon_for(entry);
     case Column::Name: return entry.name;

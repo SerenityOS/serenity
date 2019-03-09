@@ -19,8 +19,10 @@ public:
 private:
     virtual void model_notification(const GModelNotification&) override;
 
-    DirectoryTableModel& model() { return static_cast<DirectoryTableModel&>(*GTableView::model()); }
-    const DirectoryTableModel& model() const { return static_cast<const DirectoryTableModel&>(*GTableView::model()); }
+    DirectoryTableModel& model() { return *m_model; }
+    const DirectoryTableModel& model() const { return *m_model; }
 
     void set_status_message(const String&);
+
+    DirectoryTableModel* m_model { nullptr };
 };
