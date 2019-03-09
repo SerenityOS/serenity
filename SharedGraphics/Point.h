@@ -48,6 +48,8 @@ public:
         return !(*this == other);
     }
 
+    Point operator-() const { return { -m_x, -m_y }; }
+
     operator WSAPI_Point() const;
     String to_string() const { return String::format("[%d,%d]", x(), y()); }
 

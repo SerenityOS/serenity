@@ -876,24 +876,20 @@ void WSWindowManager::compose()
         if (!any_dirty_rect_intersects_window(window))
             return;
         for (auto& dirty_rect : dirty_rects.rects()) {
+            PainterStateSaver saver(*m_back_painter);
             m_back_painter->set_clip_rect(dirty_rect);
             paint_window_frame(window);
             Rect dirty_rect_in_window_coordinates = Rect::intersection(dirty_rect, window.rect());
-            if (dirty_rect_in_window_coordinates.is_empty()) {
-                m_back_painter->clear_clip_rect();
+            if (dirty_rect_in_window_coordinates.is_empty())
                 continue;
-            }
-            dirty_rect_in_window_coordinates.set_x(dirty_rect_in_window_coordinates.x() - window.x());
-            dirty_rect_in_window_coordinates.set_y(dirty_rect_in_window_coordinates.y() - window.y());
+            dirty_rect_in_window_coordinates.move_by(-window.position());
             auto dst = window.position();
             dst.move_by(dirty_rect_in_window_coordinates.location());
             if (window.opacity() == 1.0f)
                 m_back_painter->blit(dst, *backing_store, dirty_rect_in_window_coordinates);
             else
                 m_back_painter->blit_with_opacity(dst, *backing_store, dirty_rect_in_window_coordinates, window.opacity());
-            m_back_painter->clear_clip_rect();
         }
-        m_back_painter->clear_clip_rect();
     };
 
     for_each_visible_window_from_back_to_front([&] (WSWindow& window) {
