@@ -458,6 +458,17 @@ void GTextEditor::insert_at_cursor(char ch)
         set_cursor(m_cursor.line() + 1, 0);
         return;
     }
+    if (ch == '\t') {
+        int next_soft_tab_stop = ((m_cursor.column() + m_soft_tab_width) / m_soft_tab_width) * m_soft_tab_width;
+        int spaces_to_insert = next_soft_tab_stop - m_cursor.column();
+        for (int i = 0; i < spaces_to_insert; ++i) {
+            current_line().insert(m_cursor.column(), ' ');
+        }
+        update_scrollbar_ranges();
+        set_cursor(m_cursor.line(), next_soft_tab_stop);
+        update_cursor();
+        return;
+    }
     current_line().insert(m_cursor.column(), ch);
     update_scrollbar_ranges();
     set_cursor(m_cursor.line(), m_cursor.column() + 1);
