@@ -31,6 +31,7 @@ enum ProcFileType {
     FI_Root_df,
     FI_Root_kmalloc,
     FI_Root_all,
+    FI_Root_memstat,
     FI_Root_summary,
     FI_Root_cpuinfo,
     FI_Root_inodes,
@@ -534,6 +535,22 @@ ByteBuffer procfs$summary(InodeIdentifier)
             process->tty() ? strrchr(process->tty()->tty_name().characters(), '/') + 1 : "n/a",
             process->name().characters());
     }
+    return builder.to_byte_buffer();
+}
+
+ByteBuffer procfs$memstat(InodeIdentifier)
+{
+    InterruptDisabler disabler;
+    StringBuilder builder;
+    builder.appendf("%u,%u,%u,%u,%u,%u,%u\n",
+        kmalloc_sum_eternal,
+        sum_alloc,
+        sum_free,
+        MM.user_physical_pages_in_existence() - MM.m_free_physical_pages.size(),
+        MM.m_free_physical_pages.size(),
+        MM.super_physical_pages_in_existence() - MM.m_free_supervisor_physical_pages.size(),
+        MM.m_free_supervisor_physical_pages.size()
+    );
     return builder.to_byte_buffer();
 }
 
@@ -1112,6 +1129,7 @@ ProcFS::ProcFS()
     m_entries[FI_Root_df] = { "df", FI_Root_df, procfs$df };
     m_entries[FI_Root_kmalloc] = { "kmalloc", FI_Root_kmalloc, procfs$kmalloc };
     m_entries[FI_Root_all] = { "all", FI_Root_all, procfs$all };
+    m_entries[FI_Root_memstat] = { "memstat", FI_Root_memstat, procfs$memstat };
     m_entries[FI_Root_summary] = { "summary", FI_Root_summary, procfs$summary };
     m_entries[FI_Root_cpuinfo] = { "cpuinfo", FI_Root_cpuinfo, procfs$cpuinfo};
     m_entries[FI_Root_inodes] = { "inodes", FI_Root_inodes, procfs$inodes };

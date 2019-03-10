@@ -12,6 +12,8 @@
 //#define PAGE_FAULT_DEBUG
 
 static MemoryManager* s_the;
+unsigned MemoryManager::s_user_physical_pages_in_existence;
+unsigned MemoryManager::s_super_physical_pages_in_existence;
 
 MemoryManager& MM
 {
@@ -686,6 +688,10 @@ PhysicalPage::PhysicalPage(PhysicalAddress paddr, bool supervisor, bool may_retu
     , m_supervisor(supervisor)
     , m_paddr(paddr)
 {
+    if (supervisor)
+        ++MemoryManager::s_super_physical_pages_in_existence;
+    else
+        ++MemoryManager::s_user_physical_pages_in_existence;
 }
 
 void PhysicalPage::return_to_freelist()

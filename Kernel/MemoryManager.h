@@ -228,6 +228,7 @@ class MemoryManager {
     friend class Region;
     friend class VMObject;
     friend ByteBuffer procfs$mm(InodeIdentifier);
+    friend ByteBuffer procfs$memstat(InodeIdentifier);
 public:
     [[gnu::pure]] static MemoryManager& the();
 
@@ -253,6 +254,9 @@ public:
     void remap_region(PageDirectory&, Region&);
 
     size_t ram_size() const { return m_ram_size; }
+
+    int user_physical_pages_in_existence() const { return s_user_physical_pages_in_existence; }
+    int super_physical_pages_in_existence() const { return s_super_physical_pages_in_existence; }
 
 private:
     MemoryManager();
@@ -382,6 +386,9 @@ private:
 
         dword* m_pte;
     };
+
+    static unsigned s_user_physical_pages_in_existence;
+    static unsigned s_super_physical_pages_in_existence;
 
     PageTableEntry ensure_pte(PageDirectory&, LinearAddress);
 

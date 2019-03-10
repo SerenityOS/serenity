@@ -24,8 +24,7 @@ void ProcessTableView::timer_event(GTimerEvent&)
 void ProcessTableView::model_notification(const GModelNotification& notification)
 {
     if (notification.type() == GModelNotification::ModelUpdated) {
-        if (on_status_message)
-            on_status_message(String::format("%d processes", model()->row_count()));
+        // Do something?
         return;
     }
 }
