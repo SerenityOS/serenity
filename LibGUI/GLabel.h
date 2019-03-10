@@ -12,7 +12,7 @@ public:
     virtual ~GLabel() override;
 
     String text() const { return m_text; }
-    void set_text(String&&);
+    void set_text(const String&);
 
     void set_icon(RetainPtr<GraphicsBitmap>&&);
     const GraphicsBitmap* icon() const { return m_icon.ptr(); }

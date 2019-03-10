@@ -16,7 +16,7 @@ void GLabel::set_icon(RetainPtr<GraphicsBitmap>&& icon)
     m_icon = move(icon);
 }
 
-void GLabel::set_text(String&& text)
+void GLabel::set_text(const String& text)
 {
     if (text == m_text)
         return;
