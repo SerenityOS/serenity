@@ -1,6 +1,7 @@
 OBJS = \
     ProcessTableModel.o \
     ProcessTableView.o \
+    MemoryStatsWidget.o \
     main.o
 
 APP = ProcessManager

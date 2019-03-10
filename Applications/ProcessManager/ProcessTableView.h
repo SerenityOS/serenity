@@ -13,8 +13,6 @@ public:
 
     pid_t selected_pid() const;
 
-    Function<void(String)> on_status_message;
-
 protected:
     virtual void model_notification(const GModelNotification&) override;
 
