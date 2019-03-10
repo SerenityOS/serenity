@@ -871,18 +871,29 @@ void WSWindowManager::compose()
         return false;
     };
 
-    auto any_opaque_window_above_this_one_contains_rect = [this] (const WSWindow& a_window, const Rect& r) {
-        for (auto* window = a_window.next(); window; window = window->next()) {
-            if (!window->is_visible())
-                continue;
-            if (window->opacity() < 1.0f)
-                continue;
-            if (window->has_alpha_channel())
-                continue;
-            if (outer_window_rect(*window).contains(r))
-                return true;
-        }
-        return false;
+    auto any_opaque_window_above_this_one_contains_rect = [this] (const WSWindow& a_window, const Rect& rect) -> bool {
+        bool found = false;
+        bool checking = false;
+        for_each_visible_window_from_back_to_front([&] (WSWindow& window) {
+            if (&window == &a_window) {
+                checking = true;
+                return IterationDecision::Continue;
+            }
+            if (!checking)
+                return IterationDecision::Continue;
+            if (!window.is_visible())
+                return IterationDecision::Continue;;
+            if (window.opacity() < 1.0f)
+                return IterationDecision::Continue;;
+            if (window.has_alpha_channel())
+                return IterationDecision::Continue;;
+            if (outer_window_rect(window).contains(rect)) {
+                found = true;
+                return IterationDecision::Abort;
+            }
+            return IterationDecision::Continue;
+        });
+        return found;
     };
 
     auto any_dirty_rect_intersects_window = [&dirty_rects] (const WSWindow& window) {
