@@ -1,18 +1,19 @@
 #pragma once
 
 #include <AK/Types.h>
+#include <Kernel/MACAddress.h>
 
 class NetworkAdapter {
 public:
     virtual ~NetworkAdapter();
 
     virtual const char* class_name() const = 0;
-    const byte* mac_address() { return m_mac_address; }
+    MACAddress mac_address() { return m_mac_address; }
 
 protected:
     NetworkAdapter();
-    void set_mac_address(const byte*);
+    void set_mac_address(const MACAddress& mac_address) { m_mac_address = mac_address; }
 
 private:
-    byte m_mac_address[6];
+    MACAddress m_mac_address;
 };

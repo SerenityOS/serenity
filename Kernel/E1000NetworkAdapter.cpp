@@ -57,7 +57,7 @@ E1000NetworkAdapter::E1000NetworkAdapter(PCI::Address pci_address, byte irq)
     detect_eeprom();
     kprintf("E1000: Has EEPROM? %u\n", m_has_eeprom);
     read_mac_address();
-    auto* mac = mac_address();
+    const auto& mac = mac_address();
     kprintf("E1000: MAC address: %b:%b:%b:%b:%b:%b\n", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
     enable_irq();
 }
