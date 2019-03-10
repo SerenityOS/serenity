@@ -10,7 +10,3 @@ NetworkAdapter::~NetworkAdapter()
 {
 }
 
-void NetworkAdapter::set_mac_address(const byte* mac_address)
-{
-    memcpy(m_mac_address, mac_address, 6);
-}
