@@ -914,12 +914,12 @@ void WSWindowManager::compose()
             m_back_painter->blit(dirty_rect.location(), *m_wallpaper, dirty_rect);
     }
 
-    auto compose_window = [&] (WSWindow& window) {
+    for_each_visible_window_from_back_to_front([&] (WSWindow& window) {
         RetainPtr<GraphicsBitmap> backing_store = window.backing_store();
         if (!backing_store)
-            return;
+            return IterationDecision::Continue;
         if (!any_dirty_rect_intersects_window(window))
-            return;
+            return IterationDecision::Continue;
         PainterStateSaver saver(*m_back_painter);
         m_back_painter->set_clip_rect(outer_window_rect(window));
         for (auto& dirty_rect : dirty_rects.rects()) {
@@ -939,21 +939,9 @@ void WSWindowManager::compose()
             else
                 m_back_painter->blit_with_opacity(dst, *backing_store, dirty_rect_in_window_coordinates, window.opacity());
         }
-    };
-
-    for_each_visible_window_from_back_to_front([&] (WSWindow& window) {
-        if (&window != m_highlight_window.ptr())
-            compose_window(window);
-        return IterationDecision::Continue;
     });
 
-    if (m_highlight_window)
-        compose_window(*m_highlight_window);
-
     draw_menubar();
-    if (m_switcher.is_visible())
-        compose_window(*m_switcher.switcher_window());
-
     draw_cursor();
 
     if (m_flash_flush) {

@@ -177,12 +177,21 @@ private:
 template<typename Callback>
 IterationDecision WSWindowManager::for_each_visible_window_of_type_from_back_to_front(WSWindowType type, Callback callback)
 {
+    bool do_highlight_window_at_end = false;
     for (auto* window = m_windows_in_order.head(); window; window = window->next()) {
         if (!window->is_visible())
             continue;
         if (window->type() != type)
             continue;
+        if (m_highlight_window.ptr() == window) {
+            do_highlight_window_at_end = true;
+            continue;
+        }
         if (callback(*window) == IterationDecision::Abort)
+            return IterationDecision::Abort;
+    }
+    if (do_highlight_window_at_end) {
+        if (callback(*m_highlight_window) == IterationDecision::Abort)
             return IterationDecision::Abort;
     }
     return IterationDecision::Continue;
@@ -199,10 +208,17 @@ IterationDecision WSWindowManager::for_each_visible_window_from_back_to_front(Ca
 template<typename Callback>
 IterationDecision WSWindowManager::for_each_visible_window_of_type_from_front_to_back(WSWindowType type, Callback callback)
 {
+    if (m_highlight_window && m_highlight_window->type() == type && m_highlight_window->is_visible()) {
+        if (callback(*m_highlight_window) == IterationDecision::Abort)
+            return IterationDecision::Abort;
+    }
+
     for (auto* window = m_windows_in_order.tail(); window; window = window->prev()) {
         if (!window->is_visible())
             continue;
         if (window->type() != type)
+            continue;
+        if (window == m_highlight_window.ptr())
             continue;
         if (callback(*window) == IterationDecision::Abort)
             return IterationDecision::Abort;
