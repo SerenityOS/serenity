@@ -13,7 +13,6 @@ GStatusBar::GStatusBar(GWidget* parent)
     layout()->set_margins({ 4, 2, 4, 2 });
     m_label = new GLabel(this);
     m_label->set_text_alignment(TextAlignment::CenterLeft);
-    m_label->set_fill_with_background_color(false);
 }
 
 GStatusBar::~GStatusBar()

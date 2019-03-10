@@ -14,8 +14,6 @@ GTextEditor::GTextEditor(GWidget* parent)
 {
     set_font(GFontDatabase::the().get_by_name("Csilla Thin"));
 
-    set_fill_with_background_color(false);
-
     m_vertical_scrollbar = new GScrollBar(Orientation::Vertical, this);
     m_vertical_scrollbar->set_step(4);
     m_vertical_scrollbar->on_change = [this] (int) {

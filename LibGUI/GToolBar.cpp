@@ -46,7 +46,6 @@ public:
     SeparatorWidget(GWidget* parent)
         : GWidget(parent)
     {
-        set_fill_with_background_color(false);
         set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
         set_background_color(Color::White);
         set_preferred_size({ 8, 20 });

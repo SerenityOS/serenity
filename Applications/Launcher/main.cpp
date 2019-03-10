@@ -64,6 +64,7 @@ GWindow* make_launcher_window()
     window->set_rect(50, 50, 300, 60);
 
     auto* widget = new GWidget;
+    widget->set_fill_with_background_color(true);
     widget->set_layout(make<GBoxLayout>(Orientation::Horizontal));
     widget->layout()->set_margins({ 5, 5, 5, 5 });
     window->set_main_widget(widget);

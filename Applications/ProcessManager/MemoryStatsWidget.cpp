@@ -18,17 +18,14 @@ MemoryStatsWidget::MemoryStatsWidget(GWidget* parent)
 
     auto build_widgets_for_label = [this] (const String& description) -> GLabel* {
         auto* container = new GWidget(this);
-        container->set_fill_with_background_color(false);
         container->set_layout(make<GBoxLayout>(Orientation::Horizontal));
         container->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
         container->set_preferred_size({ 250, 12 });
-        auto* description_label = new GLabel(container);
+        auto* description_label = new GLabel(description, container);
         description_label->set_font(Font::default_bold_font());
         description_label->set_text_alignment(TextAlignment::CenterLeft);
-        description_label->set_text(description);
         auto* label = new GLabel(container);
         label->set_text_alignment(TextAlignment::CenterRight);
-        label->set_fill_with_background_color(false);
         return label;
     };
 

@@ -9,6 +9,7 @@ class GraphicsBitmap;
 class GLabel final : public GWidget {
 public:
     explicit GLabel(GWidget* parent);
+    GLabel(const String& text, GWidget* parent);
     virtual ~GLabel() override;
 
     String text() const { return m_text; }
