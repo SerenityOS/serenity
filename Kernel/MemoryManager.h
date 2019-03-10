@@ -258,6 +258,8 @@ public:
     int user_physical_pages_in_existence() const { return s_user_physical_pages_in_existence; }
     int super_physical_pages_in_existence() const { return s_super_physical_pages_in_existence; }
 
+    void map_for_kernel(LinearAddress, PhysicalAddress);
+
 private:
     MemoryManager();
     ~MemoryManager();

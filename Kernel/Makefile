@@ -33,7 +33,9 @@ KERNEL_OBJS = \
        PCI.o \
        PS2MouseDevice.o \
        Socket.o \
-       LocalSocket.o
+       LocalSocket.o \
+       NetworkAdapter.o \
+       E1000NetworkAdapter.o
 
 VFS_OBJS = \
     DiskDevice.o \

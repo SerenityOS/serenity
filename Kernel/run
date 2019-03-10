@@ -1,7 +1,7 @@
 #!/bin/sh
 
 if [ "$1" = "q" ]; then
-    qemu-system-i386 -s -m 32 -drive format=raw,file=.floppy-image,if=floppy -drive format=raw,file=_fs_contents #$@
+    qemu-system-i386 -s -m 32 -device e1000 -drive format=raw,file=.floppy-image,if=floppy -drive format=raw,file=_fs_contents #$@
 else
     bochs -q -f .bochsrc
 fi

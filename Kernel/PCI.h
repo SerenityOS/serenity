@@ -9,6 +9,8 @@ struct ID {
     word vendor_id { 0 };
     word device_id { 0 };
 
+    bool is_null() const { return !vendor_id && !device_id; }
+
     bool operator==(const ID& other) const
     {
         return vendor_id == other.vendor_id && device_id == other.device_id;
@@ -38,6 +40,7 @@ private:
 };
 
 void enumerate_all(Function<void(Address, ID)>);
+byte get_interrupt_line(Address);
 dword get_BAR0(Address);
 dword get_BAR1(Address);
 dword get_BAR2(Address);

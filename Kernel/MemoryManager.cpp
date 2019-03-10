@@ -150,7 +150,7 @@ auto MemoryManager::ensure_pte(PageDirectory& page_directory, LinearAddress ladd
             pde.set_present(true);
             pde.set_writable(true);
         } else {
-            ASSERT(&page_directory != m_kernel_page_directory.ptr());
+            //ASSERT(&page_directory != m_kernel_page_directory.ptr());
             auto page_table = allocate_page_table(page_directory, page_directory_index);
 #ifdef MM_DEBUG
             dbgprintf("MM: PD K%x (%s) at P%x allocated page table #%u (for L%x) at P%x\n",
@@ -454,6 +454,16 @@ void MemoryManager::flush_entire_tlb()
 void MemoryManager::flush_tlb(LinearAddress laddr)
 {
     asm volatile("invlpg %0": :"m" (*(char*)laddr.get()) : "memory");
+}
+
+void MemoryManager::map_for_kernel(LinearAddress laddr, PhysicalAddress paddr)
+{
+    auto pte = ensure_pte(kernel_page_directory(), laddr);
+    pte.set_physical_page_base(paddr.get());
+    pte.set_present(true);
+    pte.set_writable(true);
+    pte.set_user_allowed(false);
+    flush_tlb(laddr);
 }
 
 byte* MemoryManager::quickmap_page(PhysicalPage& physical_page)

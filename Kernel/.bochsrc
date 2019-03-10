@@ -52,3 +52,4 @@ com1: enabled=true, mode=null
 com2: enabled=false
 com3: enabled=false
 com4: enabled=false
+plugin_ctrl: e1000=1

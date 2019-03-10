@@ -95,6 +95,7 @@ void enumerate_bus(int type, byte bus, Function<void(Address, ID)>& callback)
         enumerate_slot(type, bus, slot, callback);
 }
 
+byte get_interrupt_line(Address address) { return read_field<byte>(address, PCI_INTERRUPT_LINE); }
 dword get_BAR0(Address address) { return read_field<dword>(address, PCI_BAR0); }
 dword get_BAR1(Address address) { return read_field<dword>(address, PCI_BAR1); }
 dword get_BAR2(Address address) { return read_field<dword>(address, PCI_BAR2); }
