@@ -44,6 +44,7 @@ void WSWindowSwitcher::on_key_event(const WSKeyEvent& event)
         return;
     }
     if (event.key() != Key_Tab) {
+        WSWindowManager::the().set_highlight_window(nullptr);
         hide();
         return;
     }
