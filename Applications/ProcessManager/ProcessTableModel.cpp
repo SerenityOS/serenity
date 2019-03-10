@@ -199,10 +199,3 @@ void ProcessTableModel::update()
 
     did_update();
 }
-
-pid_t ProcessTableModel::selected_pid() const
-{
-    if (!selected_index().is_valid())
-        return -1;
-    return m_pids[selected_index().row()];
-}
