@@ -1019,7 +1019,7 @@ void WSWindowManager::draw_menubar()
         m_back_painter->draw_line(
             { cpu_rect.x() + i, cpu_rect.bottom() },
             { cpu_rect.x() + i, (int)(cpu_rect.y() + (cpu_rect.height() - (cpu_usage * (float)cpu_rect.height()))) },
-            Color(0, 200, 0)
+            Color::from_rgb(0xaa6d4b)
         );
         ++i;
     }
