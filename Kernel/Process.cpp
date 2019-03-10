@@ -1922,6 +1922,16 @@ int Process::sys$setpgid(pid_t specified_pid, pid_t specified_pgid)
 
 int Process::sys$ioctl(int fd, unsigned request, unsigned arg)
 {
+    if (auto* e1000 = E1000NetworkAdapter::the()) {
+        ARPPacket arp;
+        arp.hardware_type = 1; // Ethernet
+        arp.hardware_address_length = 6; // MAC length
+        arp.protocol_type = 0x0800; // IPv4
+        arp.protocol_address_length = 4; // IP length
+        arp.operation = 1; // 1 (request)
+        e1000->send(MACAddress(), arp);
+    }
+
     auto* descriptor = file_descriptor(fd);
     if (!descriptor)
         return -EBADF;

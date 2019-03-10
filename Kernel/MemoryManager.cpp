@@ -99,6 +99,7 @@ void MemoryManager::initialize_paging()
     dbgprintf("MM: Quickmap will use P%x\n", m_quickmap_addr.get());
     dbgprintf("MM: Installing page directory\n");
 #endif
+
     asm volatile("movl %%eax, %%cr3"::"a"(kernel_page_directory().cr3()));
     asm volatile(
         "movl %%cr0, %%eax\n"
@@ -440,6 +441,12 @@ void MemoryManager::enter_process_paging_scope(Process& process)
     InterruptDisabler disabler;
     current->m_tss.cr3 = process.page_directory().cr3();
     asm volatile("movl %%eax, %%cr3"::"a"(process.page_directory().cr3()):"memory");
+}
+
+void MemoryManager::enter_kernel_paging_scope()
+{
+    InterruptDisabler disabler;
+    asm volatile("movl %%eax, %%cr3"::"a"(kernel_page_directory().cr3()):"memory");
 }
 
 void MemoryManager::flush_entire_tlb()
