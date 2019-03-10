@@ -172,6 +172,8 @@ private:
     WSWindowSwitcher m_switcher;
 
     CircularQueue<float, 30> m_cpu_history;
+
+    String m_username;
 };
 
 template<typename Callback>

@@ -212,6 +212,8 @@ WSWindowManager::WSWindowManager()
     });
 #endif
 
+    m_username = getlogin();
+
     m_menu_selection_color = Color::from_rgb(0x84351a);
 
     {
@@ -939,6 +941,7 @@ void WSWindowManager::compose()
             else
                 m_back_painter->blit_with_opacity(dst, *backing_store, dirty_rect_in_window_coordinates, window.opacity());
         }
+        return IterationDecision::Continue;
     });
 
     draw_menubar();
@@ -968,8 +971,10 @@ Rect WSWindowManager::menubar_rect() const
 
 void WSWindowManager::draw_menubar()
 {
-    m_back_painter->fill_rect(menubar_rect(), Color::LightGray);
-    m_back_painter->draw_line({ 0, menubar_rect().bottom() }, { menubar_rect().right(), menubar_rect().bottom() }, Color::White);
+    auto menubar_rect = this->menubar_rect();
+
+    m_back_painter->fill_rect(menubar_rect, Color::LightGray);
+    m_back_painter->draw_line({ 0, menubar_rect.bottom() }, { menubar_rect.right(), menubar_rect.bottom() }, Color::White);
     int index = 0;
     for_each_active_menubar_menu([&] (WSMenu& menu) {
         Color text_color = Color::Black;
@@ -984,9 +989,18 @@ void WSWindowManager::draw_menubar()
             TextAlignment::CenterLeft,
             text_color
         );
-         ++index;
+        ++index;
         return true;
     });
+
+    int username_width = Font::default_bold_font().width(m_username);
+    Rect username_rect {
+        menubar_rect.right() - menubar_menu_margin() / 2 - Font::default_bold_font().width(m_username),
+        menubar_rect.y(),
+        username_width,
+        menubar_rect.height()
+    };
+    m_back_painter->draw_text(username_rect, m_username, Font::default_bold_font(), TextAlignment::CenterRight, Color::Black);
 
     time_t now = time(nullptr);
     auto* tm = localtime(&now);
@@ -997,8 +1011,15 @@ void WSWindowManager::draw_menubar()
         tm->tm_hour,
         tm->tm_min,
         tm->tm_sec);
-    auto time_rect = menubar_rect().translated(-(menubar_menu_margin() / 2), 0);
-    m_back_painter->draw_text(time_rect, time_text, TextAlignment::CenterRight, Color::Black);
+    int time_width = font().width(time_text);
+    Rect time_rect {
+        username_rect.left() - menubar_menu_margin() / 2 - time_width,
+        menubar_rect.y(),
+        time_width,
+        menubar_rect.height()
+    };
+
+    m_back_painter->draw_text(time_rect, time_text, font(), TextAlignment::CenterRight, Color::Black);
 
     Rect cpu_rect { time_rect.right() - font().width(time_text) - (int)m_cpu_history.capacity() - 10, time_rect.y() + 1, (int)m_cpu_history.capacity(), time_rect.height() - 2 };
     m_back_painter->fill_rect(cpu_rect, Color::Black);
