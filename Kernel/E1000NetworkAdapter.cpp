@@ -24,6 +24,61 @@
 #define REG_RADV        0x282C // RX Int. Absolute Delay Timer
 #define REG_RSRPD       0x2C00 // RX Small Packet Detect Interrupt
 #define REG_TIPG        0x0410 // Transmit Inter Packet Gap
+#define ECTRL_SLU        0x40        //set link up
+#define RCTL_EN                         (1 << 1)    // Receiver Enable
+#define RCTL_SBP                        (1 << 2)    // Store Bad Packets
+#define RCTL_UPE                        (1 << 3)    // Unicast Promiscuous Enabled
+#define RCTL_MPE                        (1 << 4)    // Multicast Promiscuous Enabled
+#define RCTL_LPE                        (1 << 5)    // Long Packet Reception Enable
+#define RCTL_LBM_NONE                   (0 << 6)    // No Loopback
+#define RCTL_LBM_PHY                    (3 << 6)    // PHY or external SerDesc loopback
+#define RTCL_RDMTS_HALF                 (0 << 8)    // Free Buffer Threshold is 1/2 of RDLEN
+#define RTCL_RDMTS_QUARTER              (1 << 8)    // Free Buffer Threshold is 1/4 of RDLEN
+#define RTCL_RDMTS_EIGHTH               (2 << 8)    // Free Buffer Threshold is 1/8 of RDLEN
+#define RCTL_MO_36                      (0 << 12)   // Multicast Offset - bits 47:36
+#define RCTL_MO_35                      (1 << 12)   // Multicast Offset - bits 46:35
+#define RCTL_MO_34                      (2 << 12)   // Multicast Offset - bits 45:34
+#define RCTL_MO_32                      (3 << 12)   // Multicast Offset - bits 43:32
+#define RCTL_BAM                        (1 << 15)   // Broadcast Accept Mode
+#define RCTL_VFE                        (1 << 18)   // VLAN Filter Enable
+#define RCTL_CFIEN                      (1 << 19)   // Canonical Form Indicator Enable
+#define RCTL_CFI                        (1 << 20)   // Canonical Form Indicator Bit Value
+#define RCTL_DPF                        (1 << 22)   // Discard Pause Frames
+#define RCTL_PMCF                       (1 << 23)   // Pass MAC Control Frames
+#define RCTL_SECRC                      (1 << 26)   // Strip Ethernet CRC
+
+// Buffer Sizes
+#define RCTL_BSIZE_256                  (3 << 16)
+#define RCTL_BSIZE_512                  (2 << 16)
+#define RCTL_BSIZE_1024                 (1 << 16)
+#define RCTL_BSIZE_2048                 (0 << 16)
+#define RCTL_BSIZE_4096                 ((3 << 16) | (1 << 25))
+#define RCTL_BSIZE_8192                 ((2 << 16) | (1 << 25))
+#define RCTL_BSIZE_16384                ((1 << 16) | (1 << 25))
+
+// Transmit Command
+
+#define CMD_EOP                         (1 << 0)    // End of Packet
+#define CMD_IFCS                        (1 << 1)    // Insert FCS
+#define CMD_IC                          (1 << 2)    // Insert Checksum
+#define CMD_RS                          (1 << 3)    // Report Status
+#define CMD_RPS                         (1 << 4)    // Report Packet Sent
+#define CMD_VLE                         (1 << 6)    // VLAN Packet Enable
+#define CMD_IDE                         (1 << 7)    // Interrupt Delay Enable
+
+// TCTL Register
+
+#define TCTL_EN                         (1 << 1)    // Transmit Enable
+#define TCTL_PSP                        (1 << 3)    // Pad Short Packets
+#define TCTL_CT_SHIFT                   4           // Collision Threshold
+#define TCTL_COLD_SHIFT                 12          // Collision Distance
+#define TCTL_SWXOFF                     (1 << 22)   // Software XOFF Transmission
+#define TCTL_RTLC                       (1 << 24)   // Re-transmit on Late Collision
+
+#define TSTA_DD                         (1 << 0)    // Descriptor Done
+#define TSTA_EC                         (1 << 1)    // Excess Collisions
+#define TSTA_LC                         (1 << 2)    // Late Collision
+#define LSTA_TU                         (1 << 3)    // Transmit Underrun
 
 OwnPtr<E1000NetworkAdapter> E1000NetworkAdapter::autodetect()
 {
@@ -41,13 +96,24 @@ OwnPtr<E1000NetworkAdapter> E1000NetworkAdapter::autodetect()
     return make<E1000NetworkAdapter>(found_address, irq);
 }
 
+static E1000NetworkAdapter* s_the;
+E1000NetworkAdapter* E1000NetworkAdapter::the()
+{
+    return s_the;
+}
+
 E1000NetworkAdapter::E1000NetworkAdapter(PCI::Address pci_address, byte irq)
     : IRQHandler(irq)
     , m_pci_address(pci_address)
 {
+    s_the = this;
     kprintf("E1000: Found at PCI address %b:%b:%b\n", pci_address.bus(), pci_address.slot(), pci_address.function());
     m_mmio_base = PhysicalAddress(PCI::get_BAR0(m_pci_address));
     MM.map_for_kernel(LinearAddress(m_mmio_base.get()), m_mmio_base);
+    MM.map_for_kernel(LinearAddress(m_mmio_base.offset(4096).get()), m_mmio_base.offset(4096));
+    MM.map_for_kernel(LinearAddress(m_mmio_base.offset(8192).get()), m_mmio_base.offset(8192));
+    MM.map_for_kernel(LinearAddress(m_mmio_base.offset(12288).get()), m_mmio_base.offset(12288));
+    MM.map_for_kernel(LinearAddress(m_mmio_base.offset(16384).get()), m_mmio_base.offset(16384));
     m_use_mmio = true;
     m_io_base = PCI::get_BAR1(m_pci_address) & ~1;
     m_interrupt_line = PCI::get_interrupt_line(m_pci_address);
@@ -59,6 +125,17 @@ E1000NetworkAdapter::E1000NetworkAdapter(PCI::Address pci_address, byte irq)
     read_mac_address();
     const auto& mac = mac_address();
     kprintf("E1000: MAC address: %b:%b:%b:%b:%b:%b\n", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+
+    dword flags = in32(REG_CTRL);
+    out32(REG_CTRL, flags | ECTRL_SLU);
+
+    initialize_rx_descriptors();
+    initialize_tx_descriptors();
+
+    out32(REG_IMASK, 0x1f6dc);
+    out32(REG_IMASK, 0xff & ~4);
+    in32(0xc0);
+
     enable_irq();
 }
 
@@ -69,6 +146,20 @@ E1000NetworkAdapter::~E1000NetworkAdapter()
 void E1000NetworkAdapter::handle_irq()
 {
     kprintf("E1000: IRQ!\n");
+    out32(REG_IMASK, 0x1);
+
+    dword status = in32(0xc0);
+    if (status & 4) {
+        dword flags = in32(REG_CTRL);
+        out32(REG_CTRL, flags | ECTRL_SLU);
+    }
+    if (status & 0x10) {
+        kprintf("E1000: threshold\n");
+    }
+    if (status & 0x80) {
+        //receive();
+    }
+    ASSERT_NOT_REACHED();
 }
 
 void E1000NetworkAdapter::detect_eeprom()
@@ -120,6 +211,53 @@ void E1000NetworkAdapter::read_mac_address()
     }
 }
 
+void E1000NetworkAdapter::initialize_rx_descriptors()
+{
+    auto ptr = (dword)kmalloc_eternal(sizeof(e1000_rx_desc) * number_of_rx_descriptors + 16);
+    // Make sure it's 16-byte aligned.
+    if (ptr % 16)
+        ptr = (ptr + 16) - (ptr % 16);
+    m_rx_descriptors = (e1000_rx_desc*)ptr;
+    for (int i = 0; i < number_of_rx_descriptors; ++i) {
+        auto& descriptor = m_rx_descriptors[i];
+        descriptor.addr = (qword)kmalloc_eternal(8192 + 16);
+        descriptor.status = 0;
+    }
+
+    out32(REG_RXDESCLO, ptr);
+    out32(REG_RXDESCHI, 0);
+    out32(REG_RXDESCLEN, number_of_rx_descriptors * sizeof(e1000_rx_desc));
+    out32(REG_RXDESCHEAD, 0);
+    out32(REG_RXDESCTAIL, number_of_rx_descriptors - 1);
+    m_rx_current = 0;
+
+    out32(REG_RCTRL, RCTL_EN| RCTL_SBP| RCTL_UPE | RCTL_MPE | RCTL_LBM_NONE | RTCL_RDMTS_HALF | RCTL_BAM | RCTL_SECRC  | RCTL_BSIZE_8192);
+}
+
+void E1000NetworkAdapter::initialize_tx_descriptors()
+{
+    auto ptr = (dword)kmalloc_eternal(sizeof(e1000_tx_desc) * number_of_tx_descriptors + 16);
+    // Make sure it's 16-byte aligned.
+    if (ptr % 16)
+        ptr = (ptr + 16) - (ptr % 16);
+    m_tx_descriptors = (e1000_tx_desc*)ptr;
+    for (int i = 0; i < number_of_tx_descriptors; ++i) {
+        auto& descriptor = m_tx_descriptors[i];
+        descriptor.addr = 0;
+        descriptor.cmd = 0;
+    }
+
+    out32(REG_TXDESCLO, ptr);
+    out32(REG_TXDESCHI, 0);
+    out32(REG_TXDESCLEN, number_of_tx_descriptors * sizeof(e1000_tx_desc));
+    out32(REG_TXDESCHEAD, 0);
+    out32(REG_TXDESCTAIL, number_of_tx_descriptors - 1);
+    m_tx_current = 0;
+
+    out32(REG_TCTRL, 0b0110000000000111111000011111010);
+    out32(REG_TIPG, 0x0060200A);
+}
+
 void E1000NetworkAdapter::out8(word address, byte data)
 {
     if (m_use_mmio) {
@@ -144,6 +282,7 @@ void E1000NetworkAdapter::out32(word address, dword data)
 {
     if (m_use_mmio) {
         auto* ptr = (volatile dword*)(m_mmio_base.get() + address);
+        kprintf("ptr <-- %p\n", ptr);
         *ptr = data;
         return;
     }
@@ -169,4 +308,18 @@ dword E1000NetworkAdapter::in32(word address)
     if (m_use_mmio)
         return *(volatile dword*)(m_mmio_base.get() + address);
     return IO::in32(m_io_base + address);
+}
+
+void E1000NetworkAdapter::send(const byte* data, int length)
+{
+    kprintf("E1000: Sending packet (%d bytes)\n", length);
+    auto& descriptor = m_tx_descriptors[m_tx_current];
+    descriptor.addr = (uint64_t)data;
+    descriptor.length = length;
+    descriptor.cmd = (1 << 3) | 3;
+    m_tx_current = m_tx_current + 1 % number_of_tx_descriptors;
+    out32(REG_TXDESCTAIL, m_tx_current);
+    while (!(descriptor.status & 0xff))
+        ;
+    kprintf("E1000: Sent packet!\n");
 }
