@@ -9,6 +9,8 @@ FontEditorWidget::FontEditorWidget(const String& path, RetainPtr<Font>&& edited_
     : GWidget(parent)
     , m_edited_font(move(edited_font))
 {
+    set_fill_with_background_color(true);
+
     if (path.is_empty())
         m_path = "/tmp/saved.font";
     else

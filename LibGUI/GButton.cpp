@@ -7,7 +7,6 @@
 GButton::GButton(GWidget* parent)
     : GWidget(parent)
 {
-    set_fill_with_background_color(false);
 }
 
 GButton::~GButton()

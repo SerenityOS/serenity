@@ -41,8 +41,6 @@ Terminal::Terminal(int ptm_fd)
         flush_dirty_lines();
     };
 
-    set_fill_with_background_color(false);
-
     m_line_height = font().glyph_height() + m_line_spacing;
 
     set_size(80, 25);

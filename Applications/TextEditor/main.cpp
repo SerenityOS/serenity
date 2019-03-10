@@ -19,7 +19,6 @@ int main(int argc, char** argv)
     GApplication app(argc, argv);
 
     auto* widget = new GWidget;
-    widget->set_fill_with_background_color(false);
     widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
 
     auto* toolbar = new GToolBar(widget);

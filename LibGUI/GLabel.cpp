@@ -7,6 +7,12 @@ GLabel::GLabel(GWidget* parent)
 {
 }
 
+GLabel::GLabel(const String& text, GWidget* parent)
+    : GWidget(parent)
+    , m_text(text)
+{
+}
+
 GLabel::~GLabel()
 {
 }

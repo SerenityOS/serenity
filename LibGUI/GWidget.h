@@ -140,5 +140,5 @@ private:
     SizePolicy m_vertical_size_policy { SizePolicy::Fill };
     Size m_preferred_size;
 
-    bool m_fill_with_background_color { true };
+    bool m_fill_with_background_color { false };
 };
