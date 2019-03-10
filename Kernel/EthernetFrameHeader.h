@@ -16,13 +16,14 @@ public:
     word ether_type() const { return (m_ether_type & 0xff) << 16 | ((m_ether_type >> 16) & 0xff); }
     void set_ether_type(word ether_type) { m_ether_type = (ether_type & 0xff) << 16 | ((ether_type >> 16) & 0xff); }
 
-    const void* raw() const { return this; }
-    void* raw() { return this; }
+    const void* payload() const { return &m_payload[0]; }
+    void* payload() { return &m_payload[0]; }
 
 private:
     MACAddress m_destination;
     MACAddress m_source;
     word m_ether_type { 0 };
+    dword m_payload[0];
 };
 
 static_assert(sizeof(EthernetFrameHeader) == 14);

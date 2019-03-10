@@ -15,7 +15,7 @@ public:
     E1000NetworkAdapter(PCI::Address, byte irq);
     virtual ~E1000NetworkAdapter() override;
 
-    virtual void send(const byte*, int) override;
+    virtual void send_raw(const byte*, int) override;
 
 private:
     virtual void handle_irq() override;
@@ -56,6 +56,8 @@ private:
     byte in8(word address);
     word in16(word address);
     dword in32(word address);
+
+    void receive();
 
     PCI::Address m_pci_address;
     word m_io_base { 0 };

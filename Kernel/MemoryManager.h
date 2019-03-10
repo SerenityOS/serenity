@@ -242,6 +242,7 @@ public:
     void populate_page_directory(PageDirectory&);
 
     void enter_process_paging_scope(Process&);
+    void enter_kernel_paging_scope();
 
     bool validate_user_read(const Process&, LinearAddress) const;
     bool validate_user_write(const Process&, LinearAddress) const;
@@ -412,4 +413,9 @@ private:
 struct ProcessPagingScope {
     ProcessPagingScope(Process& process) { MM.enter_process_paging_scope(process); }
     ~ProcessPagingScope() { MM.enter_process_paging_scope(*current); }
+};
+
+struct KernelPagingScope {
+    KernelPagingScope() { MM.enter_kernel_paging_scope(); }
+    ~KernelPagingScope() { MM.enter_process_paging_scope(*current); }
 };

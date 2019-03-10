@@ -157,9 +157,9 @@ void E1000NetworkAdapter::handle_irq()
         kprintf("E1000: threshold\n");
     }
     if (status & 0x80) {
-        //receive();
+        kprintf("E1000: receive...\n");
+        receive();
     }
-    ASSERT_NOT_REACHED();
 }
 
 void E1000NetworkAdapter::detect_eeprom()
@@ -282,7 +282,6 @@ void E1000NetworkAdapter::out32(word address, dword data)
 {
     if (m_use_mmio) {
         auto* ptr = (volatile dword*)(m_mmio_base.get() + address);
-        kprintf("ptr <-- %p\n", ptr);
         *ptr = data;
         return;
     }
@@ -310,7 +309,7 @@ dword E1000NetworkAdapter::in32(word address)
     return IO::in32(m_io_base + address);
 }
 
-void E1000NetworkAdapter::send(const byte* data, int length)
+void E1000NetworkAdapter::send_raw(const byte* data, int length)
 {
     kprintf("E1000: Sending packet (%d bytes)\n", length);
     auto& descriptor = m_tx_descriptors[m_tx_current];
@@ -322,4 +321,19 @@ void E1000NetworkAdapter::send(const byte* data, int length)
     while (!(descriptor.status & 0xff))
         ;
     kprintf("E1000: Sent packet!\n");
+}
+
+void E1000NetworkAdapter::receive()
+{
+    while (m_rx_descriptors[m_rx_current].status & 1) {
+        auto* buffer = (byte*)m_rx_descriptors[m_rx_current].addr;
+        word length = m_rx_descriptors[m_rx_current].length;
+
+        kprintf("E1000: Received 1 packet @ %p (%u) bytes!\n", buffer, length);
+
+        m_rx_descriptors[m_rx_current].status = 0;
+        auto old_current = m_rx_current;
+        m_rx_current = (m_rx_current + 1) % number_of_rx_descriptors;
+        out32(REG_RXDESCTAIL, old_current);
+    }
 }
