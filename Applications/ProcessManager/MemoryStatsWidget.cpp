@@ -16,18 +16,25 @@ MemoryStatsWidget::MemoryStatsWidget(GWidget* parent)
     layout()->set_margins({ 0, 8, 0, 0 });
     layout()->set_spacing(3);
 
-    m_user_physical_pages_label = new GLabel(this);
-    m_user_physical_pages_label->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-    m_user_physical_pages_label->set_preferred_size({ 0, 12 });
-    m_user_physical_pages_label->set_fill_with_background_color(false);
-    m_supervisor_physical_pages_label = new GLabel(this);
-    m_supervisor_physical_pages_label->set_fill_with_background_color(false);
-    m_supervisor_physical_pages_label->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-    m_supervisor_physical_pages_label->set_preferred_size({ 0, 12 });
-    m_kmalloc_label = new GLabel(this);
-    m_kmalloc_label->set_fill_with_background_color(false);
-    m_kmalloc_label->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-    m_kmalloc_label->set_preferred_size({ 0, 12 });
+    auto build_widgets_for_label = [this] (const String& description) -> GLabel* {
+        auto* container = new GWidget(this);
+        container->set_fill_with_background_color(false);
+        container->set_layout(make<GBoxLayout>(Orientation::Horizontal));
+        container->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
+        container->set_preferred_size({ 250, 12 });
+        auto* description_label = new GLabel(container);
+        description_label->set_font(Font::default_bold_font());
+        description_label->set_text_alignment(TextAlignment::CenterLeft);
+        description_label->set_text(description);
+        auto* label = new GLabel(container);
+        label->set_text_alignment(TextAlignment::CenterRight);
+        label->set_fill_with_background_color(false);
+        return label;
+    };
+
+    m_user_physical_pages_label = build_widgets_for_label("Userspace physical:");
+    m_supervisor_physical_pages_label = build_widgets_for_label("Supervisor physical:");
+    m_kmalloc_label = build_widgets_for_label("Kernel heap:");
 
     start_timer(1000);
     refresh();
@@ -66,6 +73,7 @@ void MemoryStatsWidget::refresh()
         bool ok;
         unsigned kmalloc_sum_eternal = parts[0].to_uint(ok);
         ASSERT(ok);
+        (void)kmalloc_sum_eternal;
         unsigned kmalloc_sum_alloc = parts[1].to_uint(ok);
         ASSERT(ok);
         unsigned kmalloc_sum_free = parts[2].to_uint(ok);
@@ -79,9 +87,13 @@ void MemoryStatsWidget::refresh()
         unsigned supervisor_pages_free = parts[6].to_uint(ok);
         ASSERT(ok);
 
-        m_kmalloc_label->set_text(String::format("Kernel heap: %uK allocated, %uK free\n", bytes_to_kb(kmalloc_sum_alloc), bytes_to_kb(kmalloc_sum_free)));
-        m_user_physical_pages_label->set_text(String::format("Userspace physical: %uK allocated, %uK free\n", page_count_to_kb(user_pages_alloc), page_count_to_kb(user_pages_free)));
-        m_supervisor_physical_pages_label->set_text(String::format("Supervisor physical: %uK allocated, %uK free\n", page_count_to_kb(supervisor_pages_alloc), page_count_to_kb(supervisor_pages_free)));
+        size_t kmalloc_sum_available = kmalloc_sum_alloc + kmalloc_sum_free;
+        size_t user_pages_available = user_pages_alloc + user_pages_free;
+        size_t supervisor_pages_available = supervisor_pages_alloc + supervisor_pages_free;
+
+        m_kmalloc_label->set_text(String::format("%uK/%uK\n", bytes_to_kb(kmalloc_sum_alloc), bytes_to_kb(kmalloc_sum_available)));
+        m_user_physical_pages_label->set_text(String::format("%uK/%uK\n", page_count_to_kb(user_pages_alloc), page_count_to_kb(user_pages_available)));
+        m_supervisor_physical_pages_label->set_text(String::format("%uK/%uK\n", page_count_to_kb(supervisor_pages_alloc), page_count_to_kb(supervisor_pages_available)));
         break;
     }
 
