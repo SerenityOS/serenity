@@ -23,6 +23,7 @@
 #include "PTYMultiplexer.h"
 #include "DevPtsFS.h"
 #include "BXVGADevice.h"
+#include "E1000NetworkAdapter.h"
 
 #define SPAWN_LAUNCHER
 //#define SPAWN_GUITEST2
@@ -159,6 +160,8 @@ VFS* vfs;
     PIT::initialize();
 
     new BXVGADevice;
+
+    auto e1000 = E1000NetworkAdapter::autodetect();
 
     Retained<ProcFS> new_procfs = ProcFS::create();
     new_procfs->initialize();
