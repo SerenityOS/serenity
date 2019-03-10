@@ -31,8 +31,6 @@ public:
     virtual GVariant data(const GModelIndex&, Role = Role::Display) const override;
     virtual void update() override;
 
-    pid_t selected_pid() const;
-
 private:
     struct ProcessState {
         pid_t pid;
