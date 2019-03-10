@@ -150,5 +150,6 @@ private:
     bool m_cursor_state { true };
     bool m_in_drag_select { false };
     int m_line_spacing { 2 };
+    int m_soft_tab_width { 4 };
     GTextRange m_selection;
 };
