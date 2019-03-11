@@ -35,7 +35,8 @@ KERNEL_OBJS = \
        Socket.o \
        LocalSocket.o \
        NetworkAdapter.o \
-       E1000NetworkAdapter.o
+       E1000NetworkAdapter.o \
+       NetworkTask.o
 
 VFS_OBJS = \
     DiskDevice.o \

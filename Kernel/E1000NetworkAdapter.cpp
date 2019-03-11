@@ -148,7 +148,6 @@ E1000NetworkAdapter::~E1000NetworkAdapter()
 
 void E1000NetworkAdapter::handle_irq()
 {
-    kprintf("E1000: IRQ!\n");
     out32(REG_IMASK, 0x1);
 
     dword status = in32(0xc0);
@@ -157,10 +156,9 @@ void E1000NetworkAdapter::handle_irq()
         out32(REG_CTRL, flags | ECTRL_SLU);
     }
     if (status & 0x10) {
-        kprintf("E1000: threshold\n");
+        // Threshold OK?
     }
     if (status & 0x80) {
-        kprintf("E1000: receive...\n");
         receive();
     }
 }
@@ -318,8 +316,8 @@ void E1000NetworkAdapter::send_raw(const byte* data, int length)
     auto& descriptor = m_tx_descriptors[m_tx_current];
     descriptor.addr = (uint64_t)data;
     descriptor.length = length;
-    descriptor.cmd = (1 << 3) | 3;
-    m_tx_current = m_tx_current + 1 % number_of_tx_descriptors;
+    descriptor.cmd = CMD_EOP | CMD_IFCS | CMD_RS;
+    m_tx_current = (m_tx_current + 1) % number_of_tx_descriptors;
     out32(REG_TXDESCTAIL, m_tx_current);
     while (!(descriptor.status & 0xff))
         ;
@@ -333,7 +331,7 @@ void E1000NetworkAdapter::receive()
         word length = m_rx_descriptors[m_rx_current].length;
 
         kprintf("E1000: Received 1 packet @ %p (%u) bytes!\n", buffer, length);
-
+        did_receive(buffer, length);
         m_rx_descriptors[m_rx_current].status = 0;
         auto old_current = m_rx_current;
         m_rx_current = (m_rx_current + 1) % number_of_rx_descriptors;

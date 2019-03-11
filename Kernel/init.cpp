@@ -24,6 +24,7 @@
 #include "DevPtsFS.h"
 #include "BXVGADevice.h"
 #include "E1000NetworkAdapter.h"
+#include <Kernel/NetworkTask.h>
 
 #define SPAWN_LAUNCHER
 //#define SPAWN_GUITEST2
@@ -186,6 +187,7 @@ VFS* vfs;
             Scheduler::yield();
         }
     });
+    Process::create_kernel_process("NetworkTask", NetworkTask_main);
 
     Scheduler::pick_next();
 
