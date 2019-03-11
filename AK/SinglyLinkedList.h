@@ -1,6 +1,6 @@
 #pragma once
 
-#include <utility>
+#include "StdLibExtras.h"
 
 namespace AK {
 
@@ -35,9 +35,19 @@ public:
     T& last() { ASSERT(head()); return tail()->value; }
     const T& last() const { ASSERT(head()); return tail()->value; }
 
+    T take_first()
+    {
+        ASSERT(head());
+        T value = first();
+        if (m_tail == m_head)
+            m_tail = nullptr;
+        m_head = m_head->next;
+        return value;
+    }
+
     void append(T&& value)
     {
-        auto* node = new Node(std::move(value));
+        auto* node = new Node(move(value));
         if (!m_head) {
             m_head = node;
             m_tail = node;
