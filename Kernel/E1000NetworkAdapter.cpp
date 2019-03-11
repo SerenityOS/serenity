@@ -230,7 +230,6 @@ void E1000NetworkAdapter::initialize_rx_descriptors()
     out32(REG_RXDESCLEN, number_of_rx_descriptors * sizeof(e1000_rx_desc));
     out32(REG_RXDESCHEAD, 0);
     out32(REG_RXDESCTAIL, number_of_rx_descriptors - 1);
-    m_rx_current = 0;
 
     out32(REG_RCTRL, RCTL_EN| RCTL_SBP| RCTL_UPE | RCTL_MPE | RCTL_LBM_NONE | RTCL_RDMTS_HALF | RCTL_BAM | RCTL_SECRC  | RCTL_BSIZE_8192);
 }
@@ -244,7 +243,7 @@ void E1000NetworkAdapter::initialize_tx_descriptors()
     m_tx_descriptors = (e1000_tx_desc*)ptr;
     for (int i = 0; i < number_of_tx_descriptors; ++i) {
         auto& descriptor = m_tx_descriptors[i];
-        descriptor.addr = 0;
+        descriptor.addr = (qword)kmalloc_eternal(8192 + 16);
         descriptor.cmd = 0;
     }
 
@@ -252,10 +251,9 @@ void E1000NetworkAdapter::initialize_tx_descriptors()
     out32(REG_TXDESCHI, 0);
     out32(REG_TXDESCLEN, number_of_tx_descriptors * sizeof(e1000_tx_desc));
     out32(REG_TXDESCHEAD, 0);
-    out32(REG_TXDESCTAIL, number_of_tx_descriptors - 1);
-    m_tx_current = 0;
+    out32(REG_TXDESCTAIL, 0);
 
-    out32(REG_TCTRL, 0b0110000000000111111000011111010);
+    out32(REG_TCTRL, in32(REG_TCTRL) | TCTL_EN | TCTL_PSP);
     out32(REG_TIPG, 0x0060200A);
 }
 
@@ -312,29 +310,45 @@ dword E1000NetworkAdapter::in32(word address)
 
 void E1000NetworkAdapter::send_raw(const byte* data, int length)
 {
+    dword tx_current = in32(REG_TXDESCTAIL);
+#ifdef E1000_DEBUG
     kprintf("E1000: Sending packet (%d bytes)\n", length);
-    auto& descriptor = m_tx_descriptors[m_tx_current];
-    descriptor.addr = (uint64_t)data;
+#endif
+    auto& descriptor = m_tx_descriptors[tx_current];
+    ASSERT(length <= 8192);
+    memcpy((void*)descriptor.addr, data, length);
     descriptor.length = length;
+    descriptor.status = 0;
     descriptor.cmd = CMD_EOP | CMD_IFCS | CMD_RS;
-    m_tx_current = (m_tx_current + 1) % number_of_tx_descriptors;
-    out32(REG_TXDESCTAIL, m_tx_current);
-    while (!(descriptor.status & 0xff))
+#ifdef E1000_DEBUG
+    kprintf("E1000: Using tx descriptor %d (head is at %d)\n", tx_current, in32(REG_TXDESCHEAD));
+#endif
+    tx_current = (tx_current + 1) % number_of_tx_descriptors;
+    out32(REG_TXDESCTAIL, tx_current);
+    while (!descriptor.status)
         ;
-    kprintf("E1000: Sent packet!\n");
+#ifdef E1000_DEBUG
+    kprintf("E1000: Sent packet, status is now %b!\n", descriptor.status);
+#endif
 }
 
 void E1000NetworkAdapter::receive()
 {
-    while (m_rx_descriptors[m_rx_current].status & 1) {
-        auto* buffer = (byte*)m_rx_descriptors[m_rx_current].addr;
-        word length = m_rx_descriptors[m_rx_current].length;
-
+    dword rx_current;
+    for (;;) {
+        rx_current = in32(REG_RXDESCTAIL);
+        if (rx_current == in32(REG_RXDESCHEAD))
+            return;
+        rx_current = (rx_current + 1) % number_of_rx_descriptors;
+        if (!(m_rx_descriptors[rx_current].status & 1))
+            break;
+        auto* buffer = (byte*)m_rx_descriptors[rx_current].addr;
+        word length = m_rx_descriptors[rx_current].length;
+#ifdef E1000_DEBUG
         kprintf("E1000: Received 1 packet @ %p (%u) bytes!\n", buffer, length);
+#endif
         did_receive(buffer, length);
-        m_rx_descriptors[m_rx_current].status = 0;
-        auto old_current = m_rx_current;
-        m_rx_current = (m_rx_current + 1) % number_of_rx_descriptors;
-        out32(REG_RXDESCTAIL, old_current);
+        m_rx_descriptors[rx_current].status = 0;
+        out32(REG_RXDESCTAIL, rx_current);
     }
 }

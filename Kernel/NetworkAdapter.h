@@ -4,6 +4,7 @@
 #include <AK/SinglyLinkedList.h>
 #include <AK/Types.h>
 #include <Kernel/MACAddress.h>
+#include <Kernel/IPv4Address.h>
 #include <Kernel/ARPPacket.h>
 
 class NetworkAdapter {
@@ -12,6 +13,9 @@ public:
 
     virtual const char* class_name() const = 0;
     MACAddress mac_address() { return m_mac_address; }
+    IPv4Address ipv4_address() const { return m_ipv4_address; }
+
+    void set_ipv4_address(const IPv4Address&);
 
     void send(const MACAddress&, const ARPPacket&);
 
@@ -25,5 +29,6 @@ protected:
 
 private:
     MACAddress m_mac_address;
+    IPv4Address m_ipv4_address;
     SinglyLinkedList<ByteBuffer> m_packet_queue;
 };

@@ -2,6 +2,7 @@
 #include <Kernel/StdLib.h>
 #include <Kernel/EthernetFrameHeader.h>
 #include <Kernel/kmalloc.h>
+#include <Kernel/EtherType.h>
 
 NetworkAdapter::NetworkAdapter()
 {
@@ -17,6 +18,7 @@ void NetworkAdapter::send(const MACAddress& destination, const ARPPacket& packet
     auto* eth = (EthernetFrameHeader*)kmalloc(size_in_bytes);
     eth->set_source(mac_address());
     eth->set_destination(destination);
+    eth->set_ether_type(EtherType::ARP);
     memcpy(eth->payload(), &packet, sizeof(ARPPacket));
     send_raw((byte*)eth, size_in_bytes);
     kfree(eth);
@@ -34,4 +36,9 @@ ByteBuffer NetworkAdapter::dequeue_packet()
     if (m_packet_queue.is_empty())
         return { };
     return m_packet_queue.take_first();
+}
+
+void NetworkAdapter::set_ipv4_address(const IPv4Address& address)
+{
+    m_ipv4_address = address;
 }
