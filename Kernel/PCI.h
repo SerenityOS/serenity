@@ -47,5 +47,6 @@ dword get_BAR2(Address);
 dword get_BAR3(Address);
 dword get_BAR4(Address);
 dword get_BAR5(Address);
+void enable_bus_mastering(Address);
 
 }
