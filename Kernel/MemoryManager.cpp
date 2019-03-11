@@ -56,6 +56,9 @@ void MemoryManager::populate_page_directory(PageDirectory& page_directory)
 {
     page_directory.m_directory_page = allocate_supervisor_physical_page();
     page_directory.entries()[0] = kernel_page_directory().entries()[0];
+    // Defer to the kernel page tables for 0xC0000000-0xFFFFFFFF
+    for (int i = 768; i < 1024; ++i)
+        page_directory.entries()[i] = kernel_page_directory().entries()[i];
 }
 
 void MemoryManager::initialize_paging()

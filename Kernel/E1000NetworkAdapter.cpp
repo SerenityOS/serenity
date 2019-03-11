@@ -108,6 +108,9 @@ E1000NetworkAdapter::E1000NetworkAdapter(PCI::Address pci_address, byte irq)
 {
     s_the = this;
     kprintf("E1000: Found at PCI address %b:%b:%b\n", pci_address.bus(), pci_address.slot(), pci_address.function());
+
+    enable_bus_mastering(m_pci_address);
+
     m_mmio_base = PhysicalAddress(PCI::get_BAR0(m_pci_address));
     MM.map_for_kernel(LinearAddress(m_mmio_base.get()), m_mmio_base);
     MM.map_for_kernel(LinearAddress(m_mmio_base.offset(4096).get()), m_mmio_base.offset(4096));

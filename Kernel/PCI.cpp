@@ -103,6 +103,14 @@ dword get_BAR3(Address address) { return read_field<dword>(address, PCI_BAR3); }
 dword get_BAR4(Address address) { return read_field<dword>(address, PCI_BAR4); }
 dword get_BAR5(Address address) { return read_field<dword>(address, PCI_BAR5); }
 
+void enable_bus_mastering(Address address)
+{
+    auto value = read_field<word>(address, PCI_COMMAND);
+    value |= (1 << 2);
+    value |= (1 << 0);
+    write_field<word>(address, PCI_COMMAND, value);
+}
+
 void enumerate_all(Function<void(Address, ID)> callback)
 {
     // Single PCI host controller.
