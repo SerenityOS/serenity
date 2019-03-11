@@ -3,9 +3,18 @@
 #include <Kernel/ARPPacket.h>
 #include <Kernel/Process.h>
 #include <Kernel/EtherType.h>
+#include <AK/Lock.h>
 
 static void handle_arp(const EthernetFrameHeader&, int frame_size);
 static void handle_ipv4(const EthernetFrameHeader&, int frame_size);
+
+Lockable<HashMap<IPv4Address, MACAddress>>& arp_table()
+{
+    static Lockable<HashMap<IPv4Address, MACAddress>>* the;
+    if (!the)
+        the = new Lockable<HashMap<IPv4Address, MACAddress>>;
+    return *the;
+}
 
 void NetworkTask_main()
 {
@@ -59,7 +68,7 @@ void handle_arp(const EthernetFrameHeader& eth, int frame_size)
         kprintf("handle_arp: Frame too small (%d, need %d)\n", frame_size, minimum_arp_frame_size);
         return;
     }
-    const ARPPacket& packet = *static_cast<const ARPPacket*>(eth.payload());
+    auto& packet = *static_cast<const ARPPacket*>(eth.payload());
     if (packet.hardware_type() != 1 || packet.hardware_address_length() != sizeof(MACAddress)) {
         kprintf("handle_arp: Hardware type not ethernet (%w, len=%u)\n",
             packet.hardware_type(),
@@ -103,6 +112,20 @@ void handle_arp(const EthernetFrameHeader& eth, int frame_size)
             response.set_sender_protocol_address(e1000.ipv4_address());
 
             e1000.send(packet.sender_hardware_address(), response);
+        }
+        return;
+    }
+
+    if (packet.operation() == 2) {
+        // Someone has this IPv4 address. I guess we can try to remember that.
+        // FIXME: Protect against ARP spamming.
+        // FIXME: Support static ARP table entries.
+        LOCKER(arp_table().lock());
+        arp_table().resource().set(packet.sender_protocol_address(), packet.sender_hardware_address());
+
+        kprintf("ARP table (%d entries):\n", arp_table().resource().size());
+        for (auto& it : arp_table().resource()) {
+            kprintf("%s :: %s\n", it.value.to_string().characters(), it.key.to_string().characters());
         }
     }
 }

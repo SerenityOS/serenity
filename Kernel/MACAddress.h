@@ -20,6 +20,11 @@ public:
         return m_data[i];
     }
 
+    bool operator==(const MACAddress& other) const
+    {
+        return !memcmp(m_data, other.m_data, sizeof(m_data));
+    }
+
     String to_string() const
     {
         return String::format("%b:%b:%b:%b:%b:%b", m_data[0], m_data[1], m_data[2], m_data[3], m_data[4], m_data[5]);
@@ -30,3 +35,13 @@ private:
 };
 
 static_assert(sizeof(MACAddress) == 6);
+
+namespace AK {
+
+template<>
+struct Traits<MACAddress> {
+    static unsigned hash(const MACAddress& address) { return string_hash((const char*)&address, sizeof(address)); }
+    static void dump(const MACAddress& address) { kprintf("%s", address.to_string().characters()); }
+};
+
+}

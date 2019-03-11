@@ -47,7 +47,22 @@ private:
     char m_inline_buffer[0];
 };
 
+inline dword string_hash(const char* characters, int length)
+{
+    dword hash = 0;
+    for (int i = 0; i < length; ++i) {
+        hash += (dword)characters[i];
+        hash += (hash << 10);
+        hash ^= (hash >> 6);
+    }
+    hash += hash << 3;
+    hash ^= hash >> 11;
+    hash += hash << 15;
+    return hash;
+}
+
 }
 
 using AK::StringImpl;
 using AK::Chomp;
+using AK::string_hash;
