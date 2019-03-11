@@ -59,43 +59,50 @@ void handle_arp(const EthernetFrameHeader& eth, int frame_size)
         kprintf("handle_arp: Frame too small (%d, need %d)\n", frame_size, minimum_arp_frame_size);
         return;
     }
-    const ARPPacket& incoming_packet = *static_cast<const ARPPacket*>(eth.payload());
-    if (incoming_packet.hardware_type() != 1 || incoming_packet.hardware_address_length() != sizeof(MACAddress)) {
-        kprintf("handle_arp: Hardware type not ethernet (%w, len=%u)\n", incoming_packet.hardware_type(), incoming_packet.hardware_address_length());
+    const ARPPacket& packet = *static_cast<const ARPPacket*>(eth.payload());
+    if (packet.hardware_type() != 1 || packet.hardware_address_length() != sizeof(MACAddress)) {
+        kprintf("handle_arp: Hardware type not ethernet (%w, len=%u)\n",
+            packet.hardware_type(),
+            packet.hardware_address_length()
+        );
         return;
     }
-    if (incoming_packet.protocol_type() != EtherType::IPv4 || incoming_packet.protocol_address_length() != sizeof(IPv4Address)) {
-        kprintf("handle_arp: Protocol type not IPv4 (%w, len=%u)\n", incoming_packet.hardware_type(), incoming_packet.protocol_address_length());
+    if (packet.protocol_type() != EtherType::IPv4 || packet.protocol_address_length() != sizeof(IPv4Address)) {
+        kprintf("handle_arp: Protocol type not IPv4 (%w, len=%u)\n",
+            packet.hardware_type(),
+            packet.protocol_address_length()
+        );
         return;
     }
 
 #ifdef ARP_DEBUG
     kprintf("handle_arp: operation=%w, sender=%s/%s, target=%s/%s\n",
-        incoming_packet.operation(),
-        incoming_packet.sender_hardware_address().to_string().characters(),
-        incoming_packet.sender_protocol_address().to_string().characters(),
-        incoming_packet.target_hardware_address().to_string().characters(),
-        incoming_packet.target_protocol_address().to_string().characters()
+        packet.operation(),
+        packet.sender_hardware_address().to_string().characters(),
+        packet.sender_protocol_address().to_string().characters(),
+        packet.target_hardware_address().to_string().characters(),
+        packet.target_protocol_address().to_string().characters()
     );
 #endif
 
     // FIXME: Get the adapter through some kind of lookup by IPv4 address.
     auto& e1000 = *E1000NetworkAdapter::the();
 
-    if (incoming_packet.operation() == 1) {
+    if (packet.operation() == 1) {
         // Who has this IP address?
-        if (e1000.ipv4_address() == incoming_packet.target_protocol_address()) {
+        if (e1000.ipv4_address() == packet.target_protocol_address()) {
             // We do!
-            kprintf("handle_arp: Responding to ARP request for my IPv4 address (%s)\n", e1000.ipv4_address().to_string().characters());
+            kprintf("handle_arp: Responding to ARP request for my IPv4 address (%s)\n",
+                    e1000.ipv4_address().to_string().characters());
             ARPPacket response;
             response.set_operation(2); // Response
 
-            response.set_target_hardware_address(incoming_packet.sender_hardware_address());
-            response.set_target_protocol_address(incoming_packet.sender_protocol_address());
+            response.set_target_hardware_address(packet.sender_hardware_address());
+            response.set_target_protocol_address(packet.sender_protocol_address());
             response.set_sender_hardware_address(e1000.mac_address());
             response.set_sender_protocol_address(e1000.ipv4_address());
 
-            e1000.send(incoming_packet.sender_hardware_address(), response);
+            e1000.send(packet.sender_hardware_address(), response);
         }
     }
 }
