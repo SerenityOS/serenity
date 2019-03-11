@@ -155,20 +155,10 @@ slow_path:
 
 void StringImpl::compute_hash() const
 {
-    if (!length()) {
+    if (!length())
         m_hash = 0;
-    } else {
-        unsigned hash = 0;
-        for (ssize_t i = 0; i < m_length; ++i) {
-            hash += m_characters[i];
-            hash += (hash << 10);
-            hash ^= (hash >> 6);
-        }
-        hash += hash << 3;
-        hash ^= hash >> 11;
-        hash += hash << 15;
-        m_hash = hash;
-    }
+    else
+        m_hash = string_hash(m_characters, m_length);
     m_hasHash = true;
 }
 
