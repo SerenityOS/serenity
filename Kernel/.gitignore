@@ -6,3 +6,4 @@ kernel
 kernel.map
 _fs_contents
 sync-local.sh
+*.pcap

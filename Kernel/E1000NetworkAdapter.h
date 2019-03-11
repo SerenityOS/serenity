@@ -71,6 +71,4 @@ private:
 
     e1000_rx_desc* m_rx_descriptors;
     e1000_tx_desc* m_tx_descriptors;
-    word m_rx_current { 0 };
-    word m_tx_current { 0 };
 };

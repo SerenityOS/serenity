@@ -9,6 +9,6 @@ elif [ "$1" = "qn" ]; then
 else
     echo run with net
     # ./run: qemu with network
-    sudo qemu-system-i386 -s -m 32 -netdev tap,id=br0 -device e1000,netdev=br0 -drive format=raw,file=.floppy-image,if=floppy -drive format=raw,file=_fs_contents #$
+    sudo qemu-system-i386 -s -m 32 -object filter-dump,id=hue,netdev=br0,file=e1000.pcap -netdev tap,ifname=tap0,id=br0 -device e1000,netdev=br0 -drive format=raw,file=.floppy-image,if=floppy -drive format=raw,file=_fs_contents 
 fi
 
