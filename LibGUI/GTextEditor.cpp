@@ -28,6 +28,7 @@ GTextEditor::GTextEditor(GWidget* parent)
     };
 
     m_corner_widget = new GWidget(this);
+    m_corner_widget->set_fill_with_background_color(true);
 
     m_lines.append(make<Line>());
 }
