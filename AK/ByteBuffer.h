@@ -31,6 +31,7 @@ public:
     }
 
     static ByteBuffer create_uninitialized(ssize_t size) { return ByteBuffer(Buffer<byte>::create_uninitialized(size)); }
+    static ByteBuffer create_zeroed(ssize_t size) { return ByteBuffer(Buffer<byte>::create_zeroed(size)); }
     static ByteBuffer copy(const byte* data, ssize_t size) { return ByteBuffer(Buffer<byte>::copy(data, size)); }
     static ByteBuffer wrap(byte* data, ssize_t size) { return ByteBuffer(Buffer<byte>::wrap(data, size)); }
     static ByteBuffer adopt(byte* data, ssize_t size) { return ByteBuffer(Buffer<byte>::adopt(data, size)); }

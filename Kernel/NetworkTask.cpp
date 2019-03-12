@@ -145,7 +145,7 @@ void handle_ipv4(const EthernetFrameHeader& eth, int frame_size)
     );
 #endif
 
-    switch (packet.protocol()) {
+    switch ((IPv4Protocol)packet.protocol()) {
     case IPv4Protocol::ICMP:
         return handle_icmp(eth, frame_size);
     default:
@@ -167,42 +167,29 @@ void handle_icmp(const EthernetFrameHeader& eth, int frame_size)
         icmp_header.code()
     );
 #endif
-    auto& e1000 = *E1000NetworkAdapter::the();
-    if (ipv4_packet.destination() == e1000.ipv4_address()) {
-        if (icmp_header.type() == ICMPType::EchoRequest) {
-            auto& request = reinterpret_cast<const ICMPEchoPacket&>(icmp_header);
-            kprintf("handle_icmp: EchoRequest from %s: id=%u, seq=%u\n",
+
+    // FIXME: Get adapater via lookup.
+    auto& adapter = *E1000NetworkAdapter::the();
+    if (ipv4_packet.destination() != adapter.ipv4_address())
+        return;
+
+    if (icmp_header.type() == ICMPType::EchoRequest) {
+        auto& request = reinterpret_cast<const ICMPEchoPacket&>(icmp_header);
+        kprintf("handle_icmp: EchoRequest from %s: id=%u, seq=%u\n",
                 ipv4_packet.source().to_string().characters(),
                 (word)request.identifier,
                 (word)request.sequence_number
-            );
-            byte* response_buffer = (byte*)kmalloc(ipv4_packet.length());
-            memset(response_buffer, 0, ipv4_packet.length());
-            struct [[gnu::packed]] EchoResponse {
-                IPv4Packet ipv4;
-                ICMPEchoPacket icmp_echo;
-            };
-            auto& response = *(EchoResponse*)response_buffer;
-            response.ipv4.set_version(4);
-            response.ipv4.set_internet_header_length(5);
-            response.ipv4.set_source(e1000.ipv4_address());
-            response.ipv4.set_destination(ipv4_packet.source());
-            response.ipv4.set_protocol(IPv4Protocol::ICMP);
-            response.ipv4.set_length(ipv4_packet.length());
-            response.ipv4.set_ident(1);
-            response.ipv4.set_ttl(64);
-            response.ipv4.set_checksum(response.ipv4.compute_checksum());
-            response.icmp_echo.header.set_type(ICMPType::EchoReply);
-            response.icmp_echo.header.set_code(0);
-            response.icmp_echo.identifier = request.identifier;
-            response.icmp_echo.sequence_number = request.sequence_number;
-            size_t icmp_packet_length = ipv4_packet.length() - sizeof(IPv4Packet);
-            size_t icmp_payload_length = ipv4_packet.length() - sizeof(EchoResponse);
-            memcpy(response.icmp_echo.payload(), request.payload(), icmp_payload_length);
-
-            response.icmp_echo.header.set_checksum(internet_checksum(&response.icmp_echo, icmp_packet_length));
-            e1000.send_ipv4(eth.source(), response_buffer, ipv4_packet.length());
-            kfree(response_buffer);
-        }
+        );
+        size_t icmp_packet_size = ipv4_packet.payload_size();
+        auto buffer = ByteBuffer::create_zeroed(icmp_packet_size);
+        auto& response = *(ICMPEchoPacket*)buffer.pointer();
+        response.header.set_type(ICMPType::EchoReply);
+        response.header.set_code(0);
+        response.identifier = request.identifier;
+        response.sequence_number = request.sequence_number;
+        if (size_t icmp_payload_size = icmp_packet_size - sizeof(ICMPEchoPacket))
+            memcpy(response.payload(), request.payload(), icmp_payload_size);
+        response.header.set_checksum(internet_checksum(&response, icmp_packet_size));
+        adapter.send_ipv4(eth.source(), ipv4_packet.source(), IPv4Protocol::ICMP, move(buffer));
     }
 }

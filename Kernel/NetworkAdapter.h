@@ -20,7 +20,7 @@ public:
     void set_ipv4_address(const IPv4Address&);
 
     void send(const MACAddress&, const ARPPacket&);
-    void send_ipv4(const MACAddress&, const void*, size_t);
+    void send_ipv4(const MACAddress&, const IPv4Address&, IPv4Protocol, ByteBuffer&& payload);
 
     ByteBuffer dequeue_packet();
 
