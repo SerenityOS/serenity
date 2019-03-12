@@ -74,6 +74,7 @@ cp -v ../Userland/df mnt/bin/df
 cp -v ../Userland/su mnt/bin/su
 cp -v ../Userland/env mnt/bin/env
 cp -v ../Userland/stat mnt/bin/stat
+cp -v ../Userland/ping mnt/bin/ping
 chmod 4755 mnt/bin/su
 cp -v ../Applications/Terminal/Terminal mnt/bin/Terminal
 cp -v ../Applications/FontEditor/FontEditor mnt/bin/FontEditor

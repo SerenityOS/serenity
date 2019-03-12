@@ -33,6 +33,7 @@ OBJS = \
        su.o \
        env.o \
        stat.o \
+       ping.o \
        rm.o
 
 APPS = \
@@ -71,6 +72,7 @@ APPS = \
        su \
        env \
        stat \
+       ping \
        rm
 
 ARCH_FLAGS =
@@ -196,6 +198,9 @@ env: env.o
 	$(LD) -o $@ $(LDFLAGS) $< -lc
 
 stat: stat.o
+	$(LD) -o $@ $(LDFLAGS) $< -lc
+
+ping: ping.o
 	$(LD) -o $@ $(LDFLAGS) $< -lc
 
 .cpp.o:

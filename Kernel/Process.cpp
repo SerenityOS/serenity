@@ -2515,6 +2515,32 @@ KResult Process::wait_for_connect(Socket& socket)
     return KSuccess;
 }
 
+ssize_t Process::sys$sendto(const Syscall::SC_sendto_params* params)
+{
+    if (!validate_read_typed(params))
+        return -EFAULT;
+
+    int sockfd = params->sockfd;
+    const void* data = params->data;
+    size_t data_length = params->data_length;
+    int flags = params->flags;
+    auto* addr = (const sockaddr*)params->addr;
+    auto addr_length = (socklen_t)params->addr_length;
+
+    if (!validate_read(data, data_length))
+        return -EFAULT;
+    if (!validate_read(addr, addr_length))
+        return -EFAULT;
+    auto* descriptor = file_descriptor(sockfd);
+    if (!descriptor)
+        return -EBADF;
+    if (!descriptor->is_socket())
+        return -ENOTSOCK;
+    auto& socket = *descriptor->socket();
+    kprintf("sendto %p (%u), flags=%u, addr: %p (%u)\n", data, data_length, flags, addr, addr_length);
+    return socket.sendto(data, data_length, flags, addr, addr_length);
+}
+
 struct SharedBuffer {
     SharedBuffer(pid_t pid1, pid_t pid2, int size)
         : m_pid1(pid1)

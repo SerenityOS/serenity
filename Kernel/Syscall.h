@@ -88,6 +88,7 @@
     __ENUMERATE_SYSCALL(restore_signal_mask) \
     __ENUMERATE_SYSCALL(get_shared_buffer_size) \
     __ENUMERATE_SYSCALL(seal_shared_buffer) \
+    __ENUMERATE_SYSCALL(sendto) \
 
 
 namespace Syscall {
@@ -126,6 +127,15 @@ struct SC_select_params {
     fd_set* writefds;
     fd_set* exceptfds;
     struct timeval* timeout;
+};
+
+struct SC_sendto_params {
+    int sockfd;
+    const void* data;
+    size_t data_length;
+    int flags;
+    const void* addr; // const sockaddr*
+    size_t addr_length; // socklen_t
 };
 
 void initialize();

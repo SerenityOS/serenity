@@ -2,13 +2,12 @@
 
 #include <Kernel/Socket.h>
 #include <Kernel/DoubleBuffer.h>
+#include <Kernel/IPv4.h>
 
-class FileDescriptor;
-
-class LocalSocket final : public Socket {
+class IPv4Socket final : public Socket {
 public:
-    static Retained<LocalSocket> create(int type);
-    virtual ~LocalSocket() override;
+    static Retained<IPv4Socket> create(int type, int protocol);
+    virtual ~IPv4Socket() override;
 
     virtual KResult bind(const sockaddr*, socklen_t) override;
     virtual KResult connect(const sockaddr*, socklen_t) override;
@@ -22,16 +21,12 @@ public:
     virtual ssize_t sendto(const void*, size_t, int, const sockaddr*, socklen_t) override;
 
 private:
-    explicit LocalSocket(int type);
-    virtual bool is_local() const override { return true; }
-
-    RetainPtr<FileDescriptor> m_file;
-    RetainPtr<LocalSocket> m_peer;
+    IPv4Socket(int type, int protocol);
+    virtual bool is_ipv4() const override { return true; }
 
     bool m_bound { false };
-    int m_accepted_fds_open { 0 };
-    int m_connected_fds_open { 0 };
-    sockaddr_un m_address;
+    int m_attached_fds { 0 };
+    IPv4Address m_peer_address;
 
     DoubleBuffer m_for_client;
     DoubleBuffer m_for_server;

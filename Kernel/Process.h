@@ -230,6 +230,7 @@ public:
     int sys$listen(int sockfd, int backlog);
     int sys$accept(int sockfd, sockaddr*, socklen_t*);
     int sys$connect(int sockfd, const sockaddr*, socklen_t);
+    ssize_t sys$sendto(const Syscall::SC_sendto_params*);
     int sys$restore_signal_mask(dword mask);
 
     int sys$create_shared_buffer(pid_t peer_pid, int, void** buffer);
