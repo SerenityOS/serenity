@@ -39,6 +39,7 @@ LIBC_OBJS = \
        sys/wait.o \
        poll.o \
        locale.o \
+       arpa/inet.o \
        crt0.o
 
 ASM_OBJS = setjmp.no

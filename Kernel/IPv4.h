@@ -28,7 +28,6 @@ public:
         m_data[2] = c;
         m_data[3] = d;
     }
-    ~IPv4Address() { }
 
     byte operator[](int i) const
     {

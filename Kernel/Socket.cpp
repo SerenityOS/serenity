@@ -1,5 +1,6 @@
 #include <Kernel/Socket.h>
 #include <Kernel/LocalSocket.h>
+#include <Kernel/IPv4Socket.h>
 #include <Kernel/UnixTypes.h>
 #include <Kernel/Process.h>
 #include <LibC/errno_numbers.h>
@@ -10,6 +11,8 @@ KResultOr<Retained<Socket>> Socket::create(int domain, int type, int protocol)
     switch (domain) {
     case AF_LOCAL:
         return LocalSocket::create(type & SOCK_TYPE_MASK);
+    case AF_INET:
+        return IPv4Socket::create(type & SOCK_TYPE_MASK, protocol);
     default:
         return KResult(-EAFNOSUPPORT);
     }

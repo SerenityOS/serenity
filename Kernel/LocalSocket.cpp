@@ -163,3 +163,8 @@ bool LocalSocket::can_write(SocketRole role) const
         return !m_accepted_fds_open || m_for_server.bytes_in_write_buffer() < 4096;
     ASSERT_NOT_REACHED();
 }
+
+ssize_t LocalSocket::sendto(const void*, size_t, int, const sockaddr*, socklen_t)
+{
+    ASSERT_NOT_REACHED();
+}

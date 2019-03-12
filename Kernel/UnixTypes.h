@@ -315,11 +315,19 @@ struct pollfd {
 #define AF_MASK 0xff
 #define AF_UNSPEC 0
 #define AF_LOCAL 1
+#define AF_INET 2
+#define PF_LOCAL AF_LOCAL
+#define PF_INET AF_INET
 
 #define SOCK_TYPE_MASK 0xff
 #define SOCK_STREAM 1
+#define SOCK_RAW 3
 #define SOCK_NONBLOCK 04000
 #define SOCK_CLOEXEC 02000000
+
+#define IPPROTO_ICMP 1
+#define IPPROTO_TCP 6
+#define IPPROTO_UDP 17
 
 struct sockaddr {
     word sa_family;
@@ -332,4 +340,15 @@ struct sockaddr {
 struct sockaddr_un {
     word sun_family;
     char sun_path[UNIX_PATH_MAX];
+};
+
+struct in_addr {
+    uint32_t s_addr;
+};
+
+struct sockaddr_in {
+    int16_t sin_family;
+    uint16_t sin_port;
+    struct in_addr sin_addr;
+    char sin_zero[8];
 };

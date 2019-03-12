@@ -28,12 +28,14 @@ public:
     virtual KResult connect(const sockaddr*, socklen_t) = 0;
     virtual bool get_address(sockaddr*, socklen_t*) = 0;
     virtual bool is_local() const { return false; }
+    virtual bool is_ipv4() const { return false; }
     virtual void attach_fd(SocketRole) = 0;
     virtual void detach_fd(SocketRole) = 0;
     virtual bool can_read(SocketRole) const = 0;
     virtual ssize_t read(SocketRole, byte*, ssize_t) = 0;
     virtual ssize_t write(SocketRole, const byte*, ssize_t) = 0;
     virtual bool can_write(SocketRole) const = 0;
+    virtual ssize_t sendto(const void*, size_t, int flags, const sockaddr*, socklen_t) = 0;
 
     pid_t origin_pid() const { return m_origin_pid; }
 

@@ -34,6 +34,7 @@ KERNEL_OBJS = \
        PS2MouseDevice.o \
        Socket.o \
        LocalSocket.o \
+       IPv4Socket.o \
        NetworkAdapter.o \
        E1000NetworkAdapter.o \
        NetworkTask.o
