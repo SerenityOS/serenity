@@ -33,7 +33,7 @@ void NetworkTask_main()
     for (;;) {
         auto packet = e1000.dequeue_packet();
         if (packet.is_null()) {
-            sleep(1);
+            sleep(100);
             continue;
         }
         if (packet.size() < (int)(sizeof(EthernetFrameHeader))) {
@@ -94,23 +94,20 @@ void handle_arp(const EthernetFrameHeader& eth, int frame_size)
     );
 #endif
 
-    // FIXME: Get the adapter through some kind of lookup by IPv4 address.
-    auto& e1000 = *E1000NetworkAdapter::the();
-
     if (packet.operation() == ARPOperation::Request) {
         // Who has this IP address?
-        if (e1000.ipv4_address() == packet.target_protocol_address()) {
+        if (auto* adapter = NetworkAdapter::from_ipv4_address(packet.target_protocol_address())) {
             // We do!
             kprintf("handle_arp: Responding to ARP request for my IPv4 address (%s)\n",
-                    e1000.ipv4_address().to_string().characters());
+                    adapter->ipv4_address().to_string().characters());
             ARPPacket response;
             response.set_operation(ARPOperation::Response);
             response.set_target_hardware_address(packet.sender_hardware_address());
             response.set_target_protocol_address(packet.sender_protocol_address());
-            response.set_sender_hardware_address(e1000.mac_address());
-            response.set_sender_protocol_address(e1000.ipv4_address());
+            response.set_sender_hardware_address(adapter->mac_address());
+            response.set_sender_protocol_address(adapter->ipv4_address());
 
-            e1000.send(packet.sender_hardware_address(), response);
+            adapter->send(packet.sender_hardware_address(), response);
         }
         return;
     }
@@ -168,9 +165,8 @@ void handle_icmp(const EthernetFrameHeader& eth, int frame_size)
     );
 #endif
 
-    // FIXME: Get adapater via lookup.
-    auto& adapter = *E1000NetworkAdapter::the();
-    if (ipv4_packet.destination() != adapter.ipv4_address())
+    auto* adapter = NetworkAdapter::from_ipv4_address(ipv4_packet.destination());
+    if (!adapter)
         return;
 
     if (icmp_header.type() == ICMPType::EchoRequest) {
@@ -190,6 +186,6 @@ void handle_icmp(const EthernetFrameHeader& eth, int frame_size)
         if (size_t icmp_payload_size = icmp_packet_size - sizeof(ICMPEchoPacket))
             memcpy(response.payload(), request.payload(), icmp_payload_size);
         response.header.set_checksum(internet_checksum(&response, icmp_packet_size));
-        adapter.send_ipv4(eth.source(), ipv4_packet.source(), IPv4Protocol::ICMP, move(buffer));
+        adapter->send_ipv4(eth.source(), ipv4_packet.source(), IPv4Protocol::ICMP, move(buffer));
     }
 }
