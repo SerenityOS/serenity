@@ -38,8 +38,8 @@ public:
     const IPv4Address& destination() const { return m_destination; }
     void set_destination(const IPv4Address& address) { m_destination = address; }
 
-    void* payload() { return m_payload; }
-    const void* payload() const { return m_payload; }
+    void* payload() { return this + 1; }
+    const void* payload() const { return this + 1; }
 
 private:
     byte m_version_and_ihl;
@@ -52,7 +52,6 @@ private:
     word m_checksum;
     IPv4Address m_source;
     IPv4Address m_destination;
-    byte m_payload[0];
 };
 
 static_assert(sizeof(IPv4Packet) == 20);
