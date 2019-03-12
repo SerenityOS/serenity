@@ -24,7 +24,7 @@
 #include <AK/StringBuilder.h>
 #include <Kernel/E1000NetworkAdapter.h>
 #include <Kernel/EthernetFrameHeader.h>
-#include <Kernel/ARPPacket.h>
+#include <Kernel/ARP.h>
 
 //#define DEBUG_IO
 //#define TASK_DEBUG

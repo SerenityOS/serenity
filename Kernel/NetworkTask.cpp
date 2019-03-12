@@ -1,8 +1,8 @@
 #include <Kernel/E1000NetworkAdapter.h>
 #include <Kernel/EthernetFrameHeader.h>
-#include <Kernel/ARPPacket.h>
+#include <Kernel/ARP.h>
 #include <Kernel/ICMP.h>
-#include <Kernel/IPv4Packet.h>
+#include <Kernel/IPv4.h>
 #include <Kernel/Process.h>
 #include <Kernel/EtherType.h>
 #include <AK/Lock.h>
@@ -33,7 +33,7 @@ void NetworkTask_main()
     for (;;) {
         auto packet = e1000.dequeue_packet();
         if (packet.is_null()) {
-            sleep(100);
+            sleep(1);
             continue;
         }
         if (packet.size() < (int)(sizeof(EthernetFrameHeader))) {

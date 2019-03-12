@@ -1,8 +1,7 @@
 #pragma once
 
 #include <Kernel/MACAddress.h>
-#include <Kernel/IPv4Packet.h>
-#include <Kernel/NetworkOrdered.h>
+#include <Kernel/IPv4.h>
 
 struct ICMPType {
 enum {

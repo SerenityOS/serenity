@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Kernel/MACAddress.h>
-#include <Kernel/IPv4Address.h>
+#include <Kernel/IPv4.h>
 #include <Kernel/EtherType.h>
 
 struct ARPOperation {
