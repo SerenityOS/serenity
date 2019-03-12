@@ -22,7 +22,7 @@ public:
     byte code() const { return m_code; }
     void set_code(byte b) { m_code = b; }
 
-    word checksum() const { return ntohs(m_checksum); }
+    word checksum() const { return m_checksum; }
     void set_checksum(word w) { m_checksum = w; }
 
     const void* payload() const { return this + 1; }

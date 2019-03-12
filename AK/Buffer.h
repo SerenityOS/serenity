@@ -12,6 +12,7 @@ template<typename T>
 class Buffer : public Retainable<Buffer<T>> {
 public:
     static Retained<Buffer> create_uninitialized(ssize_t count);
+    static Retained<Buffer> create_zeroed(ssize_t count);
     static Retained<Buffer> copy(const T*, ssize_t count);
     static Retained<Buffer> wrap(T*, ssize_t count);
     static Retained<Buffer> adopt(T*, ssize_t count);
@@ -108,6 +109,14 @@ template<typename T>
 inline Retained<Buffer<T>> Buffer<T>::create_uninitialized(ssize_t size)
 {
     return ::adopt(*new Buffer<T>(size));
+}
+
+template<typename T>
+inline Retained<Buffer<T>> Buffer<T>::create_zeroed(ssize_t size)
+{
+    auto buffer = ::adopt(*new Buffer<T>(size));
+    memset(buffer->pointer(), 0, size);
+    return buffer;
 }
 
 template<typename T>

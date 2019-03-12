@@ -33,6 +33,7 @@ public:
     }
 
     bool operator==(const IPv4Address& other) const { return m_data_as_dword == other.m_data_as_dword; }
+    bool operator!=(const IPv4Address& other) const { return m_data_as_dword != other.m_data_as_dword; }
 
 private:
     union {

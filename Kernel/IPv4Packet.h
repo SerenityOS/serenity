@@ -4,10 +4,10 @@
 #include <Kernel/IPv4Address.h>
 #include <Kernel/NetworkOrdered.h>
 
-struct IPv4Protocol {
-enum {
+enum class IPv4Protocol : word {
     ICMP = 1,
-};
+    TCP = 6,
+    UDP = 17,
 };
 
 NetworkOrdered<word> internet_checksum(const void*, size_t);
@@ -43,6 +43,8 @@ public:
 
     void* payload() { return this + 1; }
     const void* payload() const { return this + 1; }
+
+    word payload_size() const { return m_length - sizeof(IPv4Packet); }
 
     NetworkOrdered<word> compute_checksum() const
     {
