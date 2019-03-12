@@ -24,6 +24,19 @@ void NetworkAdapter::send(const MACAddress& destination, const ARPPacket& packet
     kfree(eth);
 }
 
+void NetworkAdapter::send_ipv4(const MACAddress& destination, const void* packet, size_t packet_size)
+{
+    size_t size_in_bytes = sizeof(EthernetFrameHeader) + packet_size + sizeof(EthernetFrameCheckSequence);
+    auto* eth = (EthernetFrameHeader*)kmalloc(size_in_bytes);
+    eth->set_source(mac_address());
+    eth->set_destination(destination);
+    eth->set_ether_type(EtherType::IPv4);
+    memcpy(eth->payload(), packet, packet_size);
+    send_raw((byte*)eth, size_in_bytes);
+    kfree(eth);
+}
+
+
 void NetworkAdapter::did_receive(const byte* data, int length)
 {
     InterruptDisabler disabler;

@@ -6,6 +6,8 @@
 #include <Kernel/MACAddress.h>
 #include <Kernel/IPv4Address.h>
 #include <Kernel/ARPPacket.h>
+#include <Kernel/IPv4Packet.h>
+#include <Kernel/ICMP.h>
 
 class NetworkAdapter {
 public:
@@ -18,6 +20,7 @@ public:
     void set_ipv4_address(const IPv4Address&);
 
     void send(const MACAddress&, const ARPPacket&);
+    void send_ipv4(const MACAddress&, const void*, size_t);
 
     ByteBuffer dequeue_packet();
 
