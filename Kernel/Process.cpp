@@ -2541,6 +2541,32 @@ ssize_t Process::sys$sendto(const Syscall::SC_sendto_params* params)
     return socket.sendto(data, data_length, flags, addr, addr_length);
 }
 
+ssize_t Process::sys$recvfrom(const Syscall::SC_recvfrom_params* params)
+{
+    if (!validate_read_typed(params))
+        return -EFAULT;
+
+    int sockfd = params->sockfd;
+    void* buffer = params->buffer;
+    size_t buffer_length = params->buffer_length;
+    int flags = params->flags;
+    auto* addr = (const sockaddr*)params->addr;
+    auto addr_length = (socklen_t)params->addr_length;
+
+    if (!validate_write(buffer, buffer_length))
+        return -EFAULT;
+    if (!validate_read(addr, addr_length))
+        return -EFAULT;
+    auto* descriptor = file_descriptor(sockfd);
+    if (!descriptor)
+        return -EBADF;
+    if (!descriptor->is_socket())
+        return -ENOTSOCK;
+    auto& socket = *descriptor->socket();
+    kprintf("recvfrom %p (%u), flags=%u, addr: %p (%u)\n", buffer, buffer_length, flags, addr, addr_length);
+    return socket.recvfrom(buffer, buffer_length, flags, addr, addr_length);
+}
+
 struct SharedBuffer {
     SharedBuffer(pid_t pid1, pid_t pid2, int size)
         : m_pid1(pid1)
@@ -2780,6 +2806,7 @@ const char* to_string(Process::State state)
     case Process::BlockedSelect: return "Select";
     case Process::BlockedLurking: return "Lurking";
     case Process::BlockedConnect: return "Connect";
+    case Process::BlockedReceive: return "Receive";
     case Process::BeingInspected: return "Inspect";
     }
     kprintf("to_string(Process::State): Invalid state: %u\n", state);

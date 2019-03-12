@@ -168,3 +168,8 @@ ssize_t LocalSocket::sendto(const void*, size_t, int, const sockaddr*, socklen_t
 {
     ASSERT_NOT_REACHED();
 }
+
+ssize_t LocalSocket::recvfrom(void*, size_t, int flags, const sockaddr*, socklen_t)
+{
+    ASSERT_NOT_REACHED();
+}

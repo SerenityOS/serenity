@@ -229,6 +229,8 @@ static dword handle(RegisterDump& regs, dword function, dword arg1, dword arg2, 
         return current->sys$get_shared_buffer_size((int)arg1);
     case Syscall::SC_sendto:
         return current->sys$sendto((const SC_sendto_params*)arg1);
+    case Syscall::SC_recvfrom:
+        return current->sys$recvfrom((const SC_recvfrom_params*)arg1);
     default:
         kprintf("<%u> int0x82: Unknown function %u requested {%x, %x, %x}\n", current->pid(), function, arg1, arg2, arg3);
         break;
