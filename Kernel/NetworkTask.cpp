@@ -1,12 +1,18 @@
 #include <Kernel/E1000NetworkAdapter.h>
 #include <Kernel/EthernetFrameHeader.h>
 #include <Kernel/ARPPacket.h>
+#include <Kernel/ICMP.h>
+#include <Kernel/IPv4Packet.h>
 #include <Kernel/Process.h>
 #include <Kernel/EtherType.h>
 #include <AK/Lock.h>
 
+//#define ETHERNET_DEBUG
+//#define IPV4_DEBUG
+
 static void handle_arp(const EthernetFrameHeader&, int frame_size);
 static void handle_ipv4(const EthernetFrameHeader&, int frame_size);
+static void handle_icmp(const EthernetFrameHeader&, int frame_size);
 
 Lockable<HashMap<IPv4Address, MACAddress>>& arp_table()
 {
@@ -35,12 +41,14 @@ void NetworkTask_main()
             continue;
         }
         auto& eth = *(const EthernetFrameHeader*)packet.pointer();
+#ifdef ETHERNET_DEBUG
         kprintf("NetworkTask: From %s to %s, ether_type=%w, packet_length=%u\n",
             eth.source().to_string().characters(),
             eth.destination().to_string().characters(),
             eth.ether_type(),
             packet.size()
         );
+#endif
 
         switch (eth.ether_type()) {
         case EtherType::ARP:
@@ -123,5 +131,61 @@ void handle_arp(const EthernetFrameHeader& eth, int frame_size)
 
 void handle_ipv4(const EthernetFrameHeader& eth, int frame_size)
 {
+    constexpr int minimum_ipv4_frame_size = sizeof(EthernetFrameHeader) + sizeof(IPv4Packet) + sizeof(EthernetFrameCheckSequence);
+    if (frame_size < minimum_ipv4_frame_size) {
+        kprintf("handle_ipv4: Frame too small (%d, need %d)\n", frame_size, minimum_ipv4_frame_size);
+        return;
+    }
+    auto& packet = *static_cast<const IPv4Packet*>(eth.payload());
 
+#ifdef IPV4_DEBUG
+    kprintf("handle_ipv4: source=%s, target=%s\n",
+        packet.source().to_string().characters(),
+        packet.destination().to_string().characters()
+    );
+#endif
+
+    switch (packet.protocol()) {
+    case IPv4Protocol::ICMP:
+        return handle_icmp(eth, frame_size);
+    default:
+        kprintf("handle_ipv4: Unhandled protocol %u\n", packet.protocol());
+        break;
+    }
+}
+
+void handle_icmp(const EthernetFrameHeader& eth, int frame_size)
+{
+    auto& ipv4_packet = *static_cast<const IPv4Packet*>(eth.payload());
+    auto& icmp_header = *static_cast<const ICMPHeader*>(ipv4_packet.payload());
+    kprintf("handle_icmp: type=%b, code=%b\n", icmp_header.type(), icmp_header.code());
+
+    auto& e1000 = *E1000NetworkAdapter::the();
+    if (ipv4_packet.destination() == e1000.ipv4_address()) {
+        // It's for me!
+        if (icmp_header.type() == ICMPType::EchoRequest) {
+            auto& request = reinterpret_cast<const ICMPEchoPacket&>(icmp_header);
+            kprintf("ICMP echo request: id=%u, seq=%u\n", (int)request.identifier, (int)request.sequence_number);
+            byte* response_buffer = (byte*)kmalloc(ipv4_packet.length());
+            memset(response_buffer, 0, ipv4_packet.length());
+            struct [[gnu::packed]] EchoResponse {
+                IPv4Packet ipv4;
+                ICMPEchoPacket icmp_echo;
+            };
+            auto& response = *(EchoResponse*)response_buffer;
+            response.ipv4.set_version(4);
+            response.ipv4.set_internet_header_length(5);
+            response.ipv4.set_source(e1000.ipv4_address());
+            response.ipv4.set_destination(ipv4_packet.source());
+            response.ipv4.set_protocol(IPv4Protocol::ICMP);
+            response.ipv4.set_length(sizeof(IPv4ICMPPacket));
+            response.icmp_echo.header.set_type(ICMPType::EchoReply);
+            response.icmp_echo.header.set_code(0);
+            response.icmp_echo.identifier = request.identifier;
+            response.icmp_echo.sequence_number = request.sequence_number;
+            memcpy(response.icmp_echo.payload, request.payload, ipv4_packet.length() - sizeof(ICMPEchoPacket));
+            e1000.send_ipv4(eth.source(), &response, ipv4_packet.length());
+            kfree(response_buffer);
+        }
+    }
 }
