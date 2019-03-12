@@ -10,6 +10,7 @@
 
 class NetworkAdapter {
 public:
+    static NetworkAdapter* from_ipv4_address(const IPv4Address&);
     virtual ~NetworkAdapter();
 
     virtual const char* class_name() const = 0;

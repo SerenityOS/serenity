@@ -3,13 +3,39 @@
 #include <Kernel/EthernetFrameHeader.h>
 #include <Kernel/kmalloc.h>
 #include <Kernel/EtherType.h>
+#include <AK/HashTable.h>
+#include <AK/Lock.h>
+
+static Lockable<HashTable<NetworkAdapter*>>& all_adapters()
+{
+    static Lockable<HashTable<NetworkAdapter*>>* table;
+    if (!table)
+        table = new Lockable<HashTable<NetworkAdapter*>>;
+    return *table;
+}
+
+NetworkAdapter* NetworkAdapter::from_ipv4_address(const IPv4Address& address)
+{
+    LOCKER(all_adapters().lock());
+    for (auto* adapter : all_adapters().resource()) {
+        if (adapter->ipv4_address() == address)
+            return adapter;
+    }
+    return nullptr;
+}
 
 NetworkAdapter::NetworkAdapter()
 {
+    // FIXME: I wanna lock :(
+    ASSERT_INTERRUPTS_DISABLED();
+    all_adapters().resource().set(this);
 }
 
 NetworkAdapter::~NetworkAdapter()
 {
+    // FIXME: I wanna lock :(
+    ASSERT_INTERRUPTS_DISABLED();
+    all_adapters().resource().remove(this);
 }
 
 void NetworkAdapter::send(const MACAddress& destination, const ARPPacket& packet)
