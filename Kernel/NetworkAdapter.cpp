@@ -14,7 +14,7 @@ NetworkAdapter::~NetworkAdapter()
 
 void NetworkAdapter::send(const MACAddress& destination, const ARPPacket& packet)
 {
-    int size_in_bytes = sizeof(EthernetFrameHeader) + sizeof(ARPPacket) + 4;
+    int size_in_bytes = sizeof(EthernetFrameHeader) + sizeof(ARPPacket) + sizeof(EthernetFrameCheckSequence);
     auto* eth = (EthernetFrameHeader*)kmalloc(size_in_bytes);
     eth->set_source(mac_address());
     eth->set_destination(destination);

@@ -26,5 +26,7 @@ private:
     dword m_payload[0];
 };
 
+typedef dword EthernetFrameCheckSequence;
+
 static_assert(sizeof(EthernetFrameHeader) == 14);
 

@@ -4,6 +4,19 @@
 #include <Kernel/IPv4Address.h>
 #include <Kernel/EtherType.h>
 
+struct ARPOperation {
+enum : word {
+    Request = 1,
+    Response = 2,
+};
+};
+
+struct ARPHardwareType {
+enum : word {
+    Ethernet = 1,
+};
+};
+
 class [[gnu::packed]] ARPPacket {
 public:
     word hardware_type() const { return ntohs(m_hardware_type); }
