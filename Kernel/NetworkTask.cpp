@@ -3,6 +3,7 @@
 #include <Kernel/ARP.h>
 #include <Kernel/ICMP.h>
 #include <Kernel/IPv4.h>
+#include <Kernel/IPv4Socket.h>
 #include <Kernel/Process.h>
 #include <Kernel/EtherType.h>
 #include <AK/Lock.h>
@@ -164,6 +165,16 @@ void handle_icmp(const EthernetFrameHeader& eth, int frame_size)
         icmp_header.code()
     );
 #endif
+
+    {
+        LOCKER(IPv4Socket::all_sockets().lock());
+        for (RetainPtr<IPv4Socket> socket : IPv4Socket::all_sockets().resource()) {
+            LOCKER(socket->lock());
+            if (socket->protocol() != (unsigned)IPv4Protocol::ICMP)
+                continue;
+            socket->did_receive(ByteBuffer::copy((const byte*)&ipv4_packet, sizeof(IPv4Packet) + ipv4_packet.payload_size()));
+        }
+    }
 
     auto* adapter = NetworkAdapter::from_ipv4_address(ipv4_packet.destination());
     if (!adapter)

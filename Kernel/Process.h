@@ -75,6 +75,7 @@ public:
         BlockedSignal,
         BlockedSelect,
         BlockedConnect,
+        BlockedReceive,
     };
 
     enum Priority {
@@ -231,6 +232,7 @@ public:
     int sys$accept(int sockfd, sockaddr*, socklen_t*);
     int sys$connect(int sockfd, const sockaddr*, socklen_t);
     ssize_t sys$sendto(const Syscall::SC_sendto_params*);
+    ssize_t sys$recvfrom(const Syscall::SC_recvfrom_params*);
     int sys$restore_signal_mask(dword mask);
 
     int sys$create_shared_buffer(pid_t peer_pid, int, void** buffer);
@@ -307,6 +309,8 @@ public:
     Region* allocate_region(LinearAddress, size_t, String&& name, bool is_readable = true, bool is_writable = true, bool commit = true);
     bool deallocate_region(Region& region);
 
+    void set_blocked_socket(Socket* socket) { m_blocked_socket = socket; }
+
 private:
     friend class MemoryManager;
     friend class Scheduler;
@@ -364,6 +368,7 @@ private:
     dword m_times_scheduled { 0 };
     pid_t m_waitee_pid { -1 };
     int m_blocked_fd { -1 };
+    Socket* m_blocked_socket { nullptr };
     Vector<int> m_select_read_fds;
     Vector<int> m_select_write_fds;
     Vector<int> m_select_exceptional_fds;

@@ -2,7 +2,18 @@
 #include <Kernel/UnixTypes.h>
 #include <Kernel/Process.h>
 #include <Kernel/NetworkAdapter.h>
+#include <Kernel/IPv4.h>
+#include <Kernel/ICMP.h>
+#include <Kernel/ARP.h>
 #include <LibC/errno_numbers.h>
+
+Lockable<HashTable<IPv4Socket*>>& IPv4Socket::all_sockets()
+{
+    static Lockable<HashTable<IPv4Socket*>>* s_table;
+    if (!s_table)
+        s_table = new Lockable<HashTable<IPv4Socket*>>;
+    return *s_table;
+}
 
 Retained<IPv4Socket> IPv4Socket::create(int type, int protocol)
 {
@@ -11,12 +22,17 @@ Retained<IPv4Socket> IPv4Socket::create(int type, int protocol)
 
 IPv4Socket::IPv4Socket(int type, int protocol)
     : Socket(AF_INET, type, protocol)
+    , m_lock("IPv4Socket")
 {
     kprintf("%s(%u) IPv4Socket{%p} created with type=%u\n", current->name().characters(), current->pid(), this, type);
+    LOCKER(all_sockets().lock());
+    all_sockets().resource().set(this);
 }
 
 IPv4Socket::~IPv4Socket()
 {
+    LOCKER(all_sockets().lock());
+    all_sockets().resource().remove(this);
 }
 
 bool IPv4Socket::get_address(sockaddr* address, socklen_t* address_size)
@@ -63,7 +79,7 @@ void IPv4Socket::detach_fd(SocketRole)
 
 bool IPv4Socket::can_read(SocketRole) const
 {
-    ASSERT_NOT_REACHED();
+    return m_can_read;
 }
 
 ssize_t IPv4Socket::read(SocketRole role, byte* buffer, ssize_t size)
@@ -84,7 +100,6 @@ bool IPv4Socket::can_write(SocketRole role) const
 ssize_t IPv4Socket::sendto(const void* data, size_t data_length, int flags, const sockaddr* addr, socklen_t addr_length)
 {
     (void)flags;
-    ASSERT(data_length);
     if (addr_length != sizeof(sockaddr_in))
         return -EINVAL;
     // FIXME: Find the adapter some better way!
@@ -108,4 +123,59 @@ ssize_t IPv4Socket::sendto(const void* data, size_t data_length, int flags, cons
     MACAddress mac_address;
     adapter->send_ipv4(mac_address, peer_address, (IPv4Protocol)protocol(), ByteBuffer::copy((const byte*)data, data_length));
     return data_length;
+}
+
+ssize_t IPv4Socket::recvfrom(void* buffer, size_t buffer_length, int flags, const sockaddr* addr, socklen_t addr_length)
+{
+    (void)flags;
+    if (addr_length != sizeof(sockaddr_in))
+        return -EINVAL;
+    // FIXME: Find the adapter some better way!
+    auto* adapter = NetworkAdapter::from_ipv4_address(IPv4Address(192, 168, 5, 2));
+    if (!adapter) {
+        // FIXME: Figure out which error code to return.
+        ASSERT_NOT_REACHED();
+    }
+
+    if (addr->sa_family != AF_INET) {
+        kprintf("recvfrom: Bad address family: %u is not AF_INET!\n", addr->sa_family);
+        return -EAFNOSUPPORT;
+    }
+
+    auto peer_address = IPv4Address((const byte*)&((const sockaddr_in*)addr)->sin_addr.s_addr);
+    kprintf("recvfrom: peer_address=%s\n", peer_address.to_string().characters());
+
+    ByteBuffer packet_buffer;
+
+    {
+        LOCKER(m_lock);
+        if (!m_receive_queue.is_empty()) {
+            packet_buffer = m_receive_queue.take_first();
+            m_can_read = m_receive_queue.is_empty();
+        }
+    }
+    if (packet_buffer.is_null()) {
+        current->set_blocked_socket(this);
+        block(Process::BlockedReceive);
+        Scheduler::yield();
+
+        LOCKER(m_lock);
+        ASSERT(m_can_read);
+        ASSERT(!m_receive_queue.is_empty());
+        packet_buffer = m_receive_queue.take_first();
+        m_can_read = m_receive_queue.is_empty();
+    }
+    ASSERT(!packet_buffer.is_null());
+    auto& ipv4_packet = *(const IPv4Packet*)(packet_buffer.pointer());
+    ASSERT(buffer_length >= ipv4_packet.payload_size());
+    memcpy(buffer, ipv4_packet.payload(), ipv4_packet.payload_size());
+    return ipv4_packet.payload_size();
+}
+
+void IPv4Socket::did_receive(ByteBuffer&& packet)
+{
+    LOCKER(m_lock);
+    kprintf("IPv4Socket(%p): did_receive %d bytes\n", packet.size());
+    m_receive_queue.append(move(packet));
+    m_can_read = true;
 }

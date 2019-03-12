@@ -98,6 +98,16 @@ bool Scheduler::pick_next()
             return true;
         }
 
+        if (process.state() == Process::BlockedReceive) {
+            ASSERT(process.m_blocked_socket);
+            // FIXME: Block until the amount of data wanted is available.
+            if (process.m_blocked_socket->can_read(SocketRole::None)) {
+                process.unblock();
+                process.m_blocked_socket = nullptr;
+            }
+            return true;
+        }
+
         if (process.state() == Process::BlockedSelect) {
             if (process.m_select_has_timeout) {
                 auto now_sec = RTC::now();

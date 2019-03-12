@@ -3,6 +3,7 @@
 #include <netinet/ip_icmp.h>
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 #include <Kernel/NetworkOrdered.h>
 
 NetworkOrdered<word> internet_checksum(const void* ptr, size_t count)
@@ -41,9 +42,13 @@ int main(int argc, char** argv)
     };
 
     PingPacket ping_packet;
+    PingPacket pong_packet;
     memset(&ping_packet, 0, sizeof(PingPacket));
 
     ping_packet.header.type = 8; // Echo request
+    ping_packet.header.code = 0;
+    ping_packet.header.un.echo.id = htons(getpid());
+    ping_packet.header.un.echo.sequence = htons(1);
     strcpy(ping_packet.msg, "Hello there!\n");
 
     ping_packet.header.checksum = htons(internet_checksum(&ping_packet, sizeof(PingPacket)));
@@ -53,6 +58,14 @@ int main(int argc, char** argv)
         perror("sendto");
         return 1;
     }
+
+    rc = recvfrom(fd, &pong_packet, sizeof(PingPacket), 0, (const struct sockaddr*)&peer_address, sizeof(sockaddr_in));
+    if (rc < 0) {
+        perror("recvfrom");
+        return 1;
+    }
+
+    printf("received %p (%d)\n", &pong_packet, rc);
 
     return 0;
 }
