@@ -4,9 +4,8 @@
 #include <AK/SinglyLinkedList.h>
 #include <AK/Types.h>
 #include <Kernel/MACAddress.h>
-#include <Kernel/IPv4Address.h>
-#include <Kernel/ARPPacket.h>
-#include <Kernel/IPv4Packet.h>
+#include <Kernel/IPv4.h>
+#include <Kernel/ARP.h>
 #include <Kernel/ICMP.h>
 
 class NetworkAdapter {
