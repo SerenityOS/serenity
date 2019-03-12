@@ -36,7 +36,7 @@ void NetworkTask_main()
             sleep(100);
             continue;
         }
-        if (packet.size() < (int)(sizeof(EthernetFrameHeader) + sizeof(EthernetFrameCheckSequence))) {
+        if (packet.size() < (int)(sizeof(EthernetFrameHeader))) {
             kprintf("NetworkTask: Packet is too small to be an Ethernet packet! (%d)\n", packet.size());
             continue;
         }
@@ -63,7 +63,7 @@ void NetworkTask_main()
 
 void handle_arp(const EthernetFrameHeader& eth, int frame_size)
 {
-    constexpr int minimum_arp_frame_size = sizeof(EthernetFrameHeader) + sizeof(ARPPacket) + sizeof(EthernetFrameCheckSequence);
+    constexpr int minimum_arp_frame_size = sizeof(EthernetFrameHeader) + sizeof(ARPPacket);
     if (frame_size < minimum_arp_frame_size) {
         kprintf("handle_arp: Frame too small (%d, need %d)\n", frame_size, minimum_arp_frame_size);
         return;
@@ -131,7 +131,7 @@ void handle_arp(const EthernetFrameHeader& eth, int frame_size)
 
 void handle_ipv4(const EthernetFrameHeader& eth, int frame_size)
 {
-    constexpr int minimum_ipv4_frame_size = sizeof(EthernetFrameHeader) + sizeof(IPv4Packet) + sizeof(EthernetFrameCheckSequence);
+    constexpr int minimum_ipv4_frame_size = sizeof(EthernetFrameHeader) + sizeof(IPv4Packet);
     if (frame_size < minimum_ipv4_frame_size) {
         kprintf("handle_ipv4: Frame too small (%d, need %d)\n", frame_size, minimum_ipv4_frame_size);
         return;
@@ -159,14 +159,23 @@ void handle_icmp(const EthernetFrameHeader& eth, int frame_size)
     (void)frame_size;
     auto& ipv4_packet = *static_cast<const IPv4Packet*>(eth.payload());
     auto& icmp_header = *static_cast<const ICMPHeader*>(ipv4_packet.payload());
-    kprintf("handle_icmp: type=%b, code=%b\n", icmp_header.type(), icmp_header.code());
-
+#ifdef ICMP_DEBUG
+    kprintf("handle_icmp: source=%s, destination=%d type=%b, code=%b\n",
+        ipv4_packet.source().to_string().characters(),
+        ipv4_packet.destination().to_string().characters(),
+        icmp_header.type(),
+        icmp_header.code()
+    );
+#endif
     auto& e1000 = *E1000NetworkAdapter::the();
     if (ipv4_packet.destination() == e1000.ipv4_address()) {
-        // It's for me!
         if (icmp_header.type() == ICMPType::EchoRequest) {
             auto& request = reinterpret_cast<const ICMPEchoPacket&>(icmp_header);
-            kprintf("ICMP echo request: id=%u, seq=%u, len=%u\n", (int)request.identifier, (int)request.sequence_number, ipv4_packet.length() - sizeof(ICMPEchoPacket));
+            kprintf("handle_icmp: EchoRequest from %s: id=%u, seq=%u\n",
+                ipv4_packet.source().to_string().characters(),
+                (word)request.identifier,
+                (word)request.sequence_number
+            );
             byte* response_buffer = (byte*)kmalloc(ipv4_packet.length());
             memset(response_buffer, 0, ipv4_packet.length());
             struct [[gnu::packed]] EchoResponse {
@@ -180,11 +189,18 @@ void handle_icmp(const EthernetFrameHeader& eth, int frame_size)
             response.ipv4.set_destination(ipv4_packet.source());
             response.ipv4.set_protocol(IPv4Protocol::ICMP);
             response.ipv4.set_length(ipv4_packet.length());
+            response.ipv4.set_ident(1);
+            response.ipv4.set_ttl(64);
+            response.ipv4.set_checksum(response.ipv4.compute_checksum());
             response.icmp_echo.header.set_type(ICMPType::EchoReply);
             response.icmp_echo.header.set_code(0);
             response.icmp_echo.identifier = request.identifier;
             response.icmp_echo.sequence_number = request.sequence_number;
-            memcpy(response.icmp_echo.payload(), request.payload(), ipv4_packet.length() - sizeof(EchoResponse));
+            size_t icmp_packet_length = ipv4_packet.length() - sizeof(IPv4Packet);
+            size_t icmp_payload_length = ipv4_packet.length() - sizeof(EchoResponse);
+            memcpy(response.icmp_echo.payload(), request.payload(), icmp_payload_length);
+
+            response.icmp_echo.header.set_checksum(internet_checksum(&response.icmp_echo, icmp_packet_length));
             e1000.send_ipv4(eth.source(), response_buffer, ipv4_packet.length());
             kfree(response_buffer);
         }
