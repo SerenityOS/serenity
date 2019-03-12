@@ -21,15 +21,7 @@ void NetworkTask_main()
     auto* e1000_ptr = E1000NetworkAdapter::the();
     ASSERT(e1000_ptr);
     auto& e1000 = *e1000_ptr;
-
     e1000.set_ipv4_address(IPv4Address(192, 168, 5, 2));
-    ARPPacket arp;
-    arp.set_hardware_type(1); // Ethernet
-    arp.set_hardware_address_length(sizeof(MACAddress));
-    arp.set_protocol_type(EtherType::IPv4);
-    arp.set_protocol_address_length(sizeof(IPv4Address));
-    arp.set_operation(1); // Request
-    e1000.send(MACAddress(), arp);
 
     kprintf("NetworkTask: Enter main loop.\n");
     for (;;) {
@@ -38,7 +30,7 @@ void NetworkTask_main()
             sleep(100);
             continue;
         }
-        if (packet.size() < sizeof(EthernetFrameHeader) + 4) {
+        if (packet.size() < (int)(sizeof(EthernetFrameHeader) + sizeof(EthernetFrameCheckSequence))) {
             kprintf("NetworkTask: Packet is too small to be an Ethernet packet! (%d)\n", packet.size());
             continue;
         }
@@ -63,7 +55,7 @@ void NetworkTask_main()
 
 void handle_arp(const EthernetFrameHeader& eth, int frame_size)
 {
-    constexpr int minimum_arp_frame_size = sizeof(EthernetFrameHeader) + sizeof(ARPPacket) + 4;
+    constexpr int minimum_arp_frame_size = sizeof(EthernetFrameHeader) + sizeof(ARPPacket) + sizeof(EthernetFrameCheckSequence);
     if (frame_size < minimum_arp_frame_size) {
         kprintf("handle_arp: Frame too small (%d, need %d)\n", frame_size, minimum_arp_frame_size);
         return;
@@ -97,15 +89,14 @@ void handle_arp(const EthernetFrameHeader& eth, int frame_size)
     // FIXME: Get the adapter through some kind of lookup by IPv4 address.
     auto& e1000 = *E1000NetworkAdapter::the();
 
-    if (packet.operation() == 1) {
+    if (packet.operation() == ARPOperation::Request) {
         // Who has this IP address?
         if (e1000.ipv4_address() == packet.target_protocol_address()) {
             // We do!
             kprintf("handle_arp: Responding to ARP request for my IPv4 address (%s)\n",
                     e1000.ipv4_address().to_string().characters());
             ARPPacket response;
-            response.set_operation(2); // Response
-
+            response.set_operation(ARPOperation::Response);
             response.set_target_hardware_address(packet.sender_hardware_address());
             response.set_target_protocol_address(packet.sender_protocol_address());
             response.set_sender_hardware_address(e1000.mac_address());
@@ -116,7 +107,7 @@ void handle_arp(const EthernetFrameHeader& eth, int frame_size)
         return;
     }
 
-    if (packet.operation() == 2) {
+    if (packet.operation() == ARPOperation::Response) {
         // Someone has this IPv4 address. I guess we can try to remember that.
         // FIXME: Protect against ARP spamming.
         // FIXME: Support static ARP table entries.
