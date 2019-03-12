@@ -23,7 +23,7 @@ public:
     void set_code(byte b) { m_code = b; }
 
     word checksum() const { return ntohs(m_checksum); }
-    void set_checksum(word w) { m_checksum = htons(w); }
+    void set_checksum(word w) { m_checksum = w; }
 
     const void* payload() const { return this + 1; }
     void* payload() { return this + 1; }
@@ -31,7 +31,7 @@ public:
 private:
     byte m_type { 0 };
     byte m_code { 0 };
-    word m_checksum { 0 };
+    NetworkOrdered<word> m_checksum { 0 };
     // NOTE: The rest of the header is 4 bytes
 };
 
