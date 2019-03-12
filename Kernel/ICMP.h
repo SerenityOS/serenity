@@ -25,27 +25,22 @@ public:
     word checksum() const { return ntohs(m_checksum); }
     void set_checksum(word w) { m_checksum = htons(w); }
 
-    const void* payload() const { return &m_payload[0]; }
-    void* payload() { return &m_payload[0]; }
+    const void* payload() const { return this + 1; }
+    void* payload() { return this + 1; }
 
 private:
     byte m_type { 0 };
     byte m_code { 0 };
     word m_checksum { 0 };
-    dword m_rest_of_header { 0 };
-    byte m_payload[0];
+    // NOTE: The rest of the header is 4 bytes
 };
 
-static_assert(sizeof(ICMPHeader) == 8);
-
-struct [[gnu::packed]] IPv4ICMPPacket {
-    IPv4Packet ipv4_packet;
-    ICMPHeader icmp_header;
-};
+static_assert(sizeof(ICMPHeader) == 4);
 
 struct [[gnu::packed]] ICMPEchoPacket {
     ICMPHeader header;
     NetworkOrdered<word> identifier;
     NetworkOrdered<word> sequence_number;
-    byte payload[];
+    void* payload() { return this + 1; }
+    const void* payload() const { return this + 1; }
 };
