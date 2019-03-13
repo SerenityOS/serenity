@@ -133,18 +133,12 @@ ssize_t IPv4Socket::sendto(const void* data, size_t data_length, int flags, cons
 ssize_t IPv4Socket::recvfrom(void* buffer, size_t buffer_length, int flags, sockaddr* addr, socklen_t* addr_length)
 {
     (void)flags;
-    if (addr->sa_family != AF_INET) {
-        kprintf("recvfrom: Bad address family: %u is not AF_INET!\n", addr->sa_family);
-        return -EAFNOSUPPORT;
-    }
-
     if (*addr_length < sizeof(sockaddr_in))
         return -EINVAL;
-    *addr_length = sizeof(sockaddr_in);
 
     auto peer_address = IPv4Address((const byte*)&((const sockaddr_in*)addr)->sin_addr.s_addr);
 #ifdef IPV4_SOCKET_DEBUG
-    kprintf("recvfrom: peer_address=%s\n", peer_address.to_string().characters());
+    kprintf("recvfrom: type=%d, source_port=%u\n", type(), source_port());
 #endif
 
     ByteBuffer packet_buffer;
@@ -176,6 +170,8 @@ ssize_t IPv4Socket::recvfrom(void* buffer, size_t buffer_length, int flags, sock
 
     auto& ia = *(sockaddr_in*)addr;
     memcpy(&ia.sin_addr, &m_destination_address, sizeof(IPv4Address));
+    ia.sin_family = AF_INET;
+    *addr_length = sizeof(sockaddr_in);
 
     if (type() == SOCK_RAW) {
         ASSERT(buffer_length >= ipv4_packet.payload_size());
