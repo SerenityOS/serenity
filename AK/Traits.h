@@ -22,6 +22,12 @@ struct Traits<unsigned> {
     static void dump(unsigned u) { kprintf("%u", u); }
 };
 
+template<>
+struct Traits<word> {
+    static unsigned hash(unsigned u) { return int_hash(u); }
+    static void dump(unsigned u) { kprintf("%u", u); }
+};
+
 template<typename T>
 struct Traits<T*> {
     static unsigned hash(const T* p)

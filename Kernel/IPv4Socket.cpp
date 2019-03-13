@@ -10,6 +10,22 @@
 
 #define IPV4_SOCKET_DEBUG
 
+Lockable<HashMap<word, IPv4Socket*>>& IPv4Socket::sockets_by_udp_port()
+{
+    static Lockable<HashMap<word, IPv4Socket*>>* s_map;
+    if (!s_map)
+        s_map = new Lockable<HashMap<word, IPv4Socket*>>;
+    return *s_map;
+}
+
+Lockable<HashMap<word, IPv4Socket*>>& IPv4Socket::sockets_by_tcp_port()
+{
+    static Lockable<HashMap<word, IPv4Socket*>>* s_map;
+    if (!s_map)
+        s_map = new Lockable<HashMap<word, IPv4Socket*>>;
+    return *s_map;
+}
+
 Lockable<HashTable<IPv4Socket*>>& IPv4Socket::all_sockets()
 {
     static Lockable<HashTable<IPv4Socket*>>* s_table;
@@ -100,6 +116,25 @@ bool IPv4Socket::can_write(SocketRole role) const
     ASSERT_NOT_REACHED();
 }
 
+void IPv4Socket::allocate_source_port_if_needed()
+{
+    if (m_source_port)
+        return;
+    if (type() == SOCK_DGRAM) {
+        // This is not a very efficient allocation algorithm.
+        // FIXME: Replace it with a bitmap or some other fast-paced looker-upper.
+        LOCKER(sockets_by_udp_port().lock());
+        for (word port = 2000; port < 60000; ++port) {
+            auto it = sockets_by_udp_port().resource().find(port);
+            if (it == sockets_by_udp_port().resource().end()) {
+                m_source_port = port;
+                return;
+            }
+        }
+        ASSERT_NOT_REACHED();
+    }
+}
+
 ssize_t IPv4Socket::sendto(const void* data, size_t data_length, int flags, const sockaddr* addr, socklen_t addr_length)
 {
     (void)flags;
@@ -121,7 +156,7 @@ ssize_t IPv4Socket::sendto(const void* data, size_t data_length, int flags, cons
     m_destination_address = IPv4Address((const byte*)&ia.sin_addr.s_addr);
     m_destination_port = ntohs(ia.sin_port);
 
-    m_source_port = 2413;
+    allocate_source_port_if_needed();
 
     kprintf("sendto: destination=%s:%u\n", m_destination_address.to_string().characters(), m_destination_port);
 
