@@ -29,6 +29,9 @@ public:
 
     Lock& lock() { return m_lock; }
 
+    word source_port() const { return m_source_port; }
+    word destination_port() const { return m_destination_port; }
+
 private:
     IPv4Socket(int type, int protocol);
     virtual bool is_ipv4() const override { return true; }
@@ -41,6 +44,9 @@ private:
     DoubleBuffer m_for_server;
 
     SinglyLinkedList<ByteBuffer> m_receive_queue;
+
+    word m_source_port { 0 };
+    word m_destination_port { 0 };
 
     Lock m_lock;
     bool m_can_read { false };
