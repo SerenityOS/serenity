@@ -89,7 +89,8 @@ int main(int argc, char** argv)
         }
 
         for (;;) {
-            rc = recvfrom(fd, &pong_packet, sizeof(PingPacket), 0, (const struct sockaddr*)&peer_address, sizeof(sockaddr_in));
+            socklen_t peer_address_size = sizeof(peer_address);
+            rc = recvfrom(fd, &pong_packet, sizeof(PingPacket), 0, (struct sockaddr*)&peer_address, &peer_address_size);
             if (rc < 0) {
                 if (errno == EAGAIN) {
                     printf("Request (seq=%u) timed out.\n", ntohs(ping_packet.header.un.echo.sequence));

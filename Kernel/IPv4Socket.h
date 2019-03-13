@@ -23,7 +23,7 @@ public:
     virtual ssize_t write(SocketRole, const byte*, ssize_t) override;
     virtual bool can_write(SocketRole) const override;
     virtual ssize_t sendto(const void*, size_t, int, const sockaddr*, socklen_t) override;
-    virtual ssize_t recvfrom(void*, size_t, int flags, const sockaddr*, socklen_t) override;
+    virtual ssize_t recvfrom(void*, size_t, int flags, sockaddr*, socklen_t*) override;
 
     void did_receive(ByteBuffer&&);
 
@@ -38,7 +38,7 @@ private:
 
     bool m_bound { false };
     int m_attached_fds { 0 };
-    IPv4Address m_peer_address;
+    IPv4Address m_destination_address;
 
     DoubleBuffer m_for_client;
     DoubleBuffer m_for_server;

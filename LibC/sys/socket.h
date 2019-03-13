@@ -57,7 +57,7 @@ int listen(int sockfd, int backlog);
 int accept(int sockfd, sockaddr*, socklen_t*);
 int connect(int sockfd, const sockaddr*, socklen_t);
 ssize_t sendto(int sockfd, const void*, size_t, int flags, const struct sockaddr*, socklen_t);
-ssize_t recvfrom(int sockfd, void*, size_t, int flags, const struct sockaddr*, socklen_t);
+ssize_t recvfrom(int sockfd, void*, size_t, int flags, struct sockaddr*, socklen_t*);
 int getsockopt(int sockfd, int level, int option, void*, socklen_t*);
 int setsockopt(int sockfd, int level, int option, const void*, socklen_t);
 
