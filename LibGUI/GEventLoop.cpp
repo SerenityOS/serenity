@@ -373,7 +373,7 @@ void GEventLoop::EventLoopTimer::reload()
 {
     gettimeofday(&fire_time, nullptr);
     fire_time.tv_sec += interval / 1000;
-    fire_time.tv_usec += interval % 1000;
+    fire_time.tv_usec += (interval % 1000) * 1000;
 }
 
 void GEventLoop::get_next_timer_expiration(timeval& soonest)

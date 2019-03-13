@@ -1595,7 +1595,7 @@ int Process::sys$gettimeofday(timeval* tv)
         return -EFAULT;
     auto now = RTC::now();
     tv->tv_sec = now;
-    tv->tv_usec = PIT::ticks_since_boot() % 1000;
+    tv->tv_usec = (PIT::ticks_since_boot() % 1000) * 1000;
     return 0;
 }
 

@@ -86,7 +86,7 @@ void WSMessageLoop::Timer::reload()
     gettimeofday(&now, nullptr);
     next_fire_time = {
         now.tv_sec + (interval / 1000),
-        now.tv_usec + (interval % 1000)
+        now.tv_usec + (interval % 1000) * 1000
     };
 }
 
