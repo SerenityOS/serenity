@@ -46,7 +46,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    const char* addr_str = "192.168.5.1";
+    const char* addr_str = "127.0.0.1";
     if (argc > 1)
         addr_str = argv[1];
 

@@ -232,7 +232,7 @@ void handle_udp(const EthernetFrameHeader& eth, int frame_size)
     LOCKER(IPv4Socket::all_sockets().lock());
     for (RetainPtr<IPv4Socket> socket : IPv4Socket::all_sockets().resource()) {
         LOCKER(socket->lock());
-        if (socket->protocol() != (unsigned)IPv4Protocol::UDP)
+        if (socket->type() != SOCK_DGRAM)
             continue;
         if (socket->source_port() != udp_packet.destination_port())
             continue;
