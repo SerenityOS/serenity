@@ -44,5 +44,5 @@ public:
     operator T() const { return convert_between_host_and_network(m_network_value); }
 
 private:
-    T m_network_value;
+    T m_network_value { 0 };
 };

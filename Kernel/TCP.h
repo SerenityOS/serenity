@@ -2,6 +2,17 @@
 
 #include <Kernel/IPv4.h>
 
+struct TCPFlags {
+enum : word {
+    FIN  = 0x01,
+    SYN  = 0x02,
+    RST  = 0x04,
+    PUSH = 0x08,
+    ACK  = 0x10,
+    URG  = 0x20
+};
+};
+
 class [[gnu::packed]] TCPPacket {
 public:
     TCPPacket() { }
@@ -19,8 +30,14 @@ public:
     dword ack_number() const { return m_ack_number; }
     void set_ack_number(dword number) { m_ack_number = number; }
 
-    word flags() const { return m_flags; }
-    void set_flags(word flags) { m_flags = flags; }
+    word flags() const { return m_flags_and_data_offset & 0x1ff; }
+    void set_flags(word flags) { m_flags_and_data_offset = (m_flags_and_data_offset & ~0x1ff) | (flags & 0x1ff); }
+
+    bool has_syn() const { return flags() & TCPFlags::SYN; }
+    bool has_ack() const { return flags() & TCPFlags::ACK; }
+
+    byte data_offset() const { return (m_flags_and_data_offset & 0xf000) >> 12; }
+    void set_data_offset(word data_offset) { m_flags_and_data_offset = (m_flags_and_data_offset & ~0xf000) | data_offset << 12; }
 
     word window_size() const { return m_window_size; }
     void set_window_size(word window_size) { m_window_size = window_size; }
@@ -40,10 +57,10 @@ private:
     NetworkOrdered<dword> m_sequence_number;
     NetworkOrdered<dword> m_ack_number;
 
-    NetworkOrdered<word> m_flags;
+    NetworkOrdered<word> m_flags_and_data_offset;
     NetworkOrdered<word> m_window_size;
     NetworkOrdered<word> m_checksum;
     NetworkOrdered<word> m_urgent;
 };
 
-static_assert(sizeof(UDPPacket) == 8);
+static_assert(sizeof(TCPPacket) == 20);
