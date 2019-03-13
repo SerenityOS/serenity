@@ -281,8 +281,10 @@ void handle_tcp(const EthernetFrameHeader& eth, int frame_size)
     {
         LOCKER(IPv4Socket::sockets_by_tcp_port().lock());
         auto it = IPv4Socket::sockets_by_tcp_port().resource().find(tcp_packet.destination_port());
-        if (it == IPv4Socket::sockets_by_tcp_port().resource().end())
+        if (it == IPv4Socket::sockets_by_tcp_port().resource().end()) {
+            kprintf("handle_tcp: No TCP socket for port %u\n", tcp_packet.destination_port());
             return;
+        }
         ASSERT((*it).value);
         socket = *(*it).value;
     }
@@ -291,15 +293,18 @@ void handle_tcp(const EthernetFrameHeader& eth, int frame_size)
     ASSERT(socket->type() == SOCK_STREAM);
     ASSERT(socket->source_port() == tcp_packet.destination_port());
 
-    size_t payload_size = ipv4_packet.payload_size() - sizeof(TCPPacket);
+    size_t payload_size = ipv4_packet.payload_size() - tcp_packet.header_size();
 
     if (tcp_packet.has_syn() && tcp_packet.has_ack()) {
         socket->set_tcp_ack_number(socket->tcp_sequence_number() + payload_size + 1);
         socket->send_tcp_packet(*adapter, TCPFlags::ACK);
+        socket->set_connected(true);
         kprintf("Connected!\n");
         socket->set_tcp_state(Connected);
         return;
     }
+
+    socket->send_tcp_packet(*adapter, TCPFlags::ACK);
 
     socket->did_receive(ByteBuffer::copy((const byte*)&ipv4_packet, sizeof(IPv4Packet) + ipv4_packet.payload_size()));
 }

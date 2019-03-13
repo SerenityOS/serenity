@@ -46,6 +46,10 @@ public:
     timeval receive_deadline() const { return m_receive_deadline; }
     timeval send_deadline() const { return m_send_deadline; }
 
+    void set_connected(bool connected) { m_connected = connected; }
+
+    Lock& lock() { return m_lock; }
+
 protected:
     Socket(int domain, int type, int protocol);
 

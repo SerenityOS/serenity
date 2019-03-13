@@ -18,6 +18,8 @@ public:
     TCPPacket() { }
     ~TCPPacket() { }
 
+    size_t header_size() const { return data_offset() * sizeof(dword); }
+
     word source_port() const { return m_source_port; }
     void set_source_port(word port) { m_source_port = port; }
 
@@ -48,8 +50,8 @@ public:
     word urgent() const { return m_urgent; }
     void set_urgent(word urgent) { m_urgent = urgent; }
 
-    const void* payload() const { return this + 1; }
-    void* payload() { return this + 1; }
+    const void* payload() const { return ((const byte*)this) + header_size(); }
+    void* payload() { return ((byte*)this) + header_size(); }
 
 private:
     NetworkOrdered<word> m_source_port;

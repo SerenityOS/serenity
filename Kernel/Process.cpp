@@ -2329,6 +2329,7 @@ void Process::finalize()
             }
         }
     }
+    m_blocked_socket = nullptr;
 
     set_state(Dead);
 }
@@ -2511,10 +2512,10 @@ KResult Process::wait_for_connect(Socket& socket)
 {
     if (socket.is_connected())
         return KSuccess;
-    m_blocked_connecting_socket = socket;
+    m_blocked_socket = socket;
     block(BlockedConnect);
     Scheduler::yield();
-    m_blocked_connecting_socket = nullptr;
+    m_blocked_socket = nullptr;
     if (!socket.is_connected())
         return KResult(-ECONNREFUSED);
     return KSuccess;
