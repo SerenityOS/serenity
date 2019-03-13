@@ -143,15 +143,16 @@ ssize_t IPv4Socket::recvfrom(void* buffer, size_t buffer_length, int flags, cons
     }
 
     auto peer_address = IPv4Address((const byte*)&((const sockaddr_in*)addr)->sin_addr.s_addr);
+#ifdef IPV4_SOCKET_DEBUG
     kprintf("recvfrom: peer_address=%s\n", peer_address.to_string().characters());
+#endif
 
     ByteBuffer packet_buffer;
-
     {
         LOCKER(m_lock);
         if (!m_receive_queue.is_empty()) {
             packet_buffer = m_receive_queue.take_first();
-            m_can_read = m_receive_queue.is_empty();
+            m_can_read = !m_receive_queue.is_empty();
         }
     }
     if (packet_buffer.is_null()) {
@@ -163,7 +164,7 @@ ssize_t IPv4Socket::recvfrom(void* buffer, size_t buffer_length, int flags, cons
         ASSERT(m_can_read);
         ASSERT(!m_receive_queue.is_empty());
         packet_buffer = m_receive_queue.take_first();
-        m_can_read = m_receive_queue.is_empty();
+        m_can_read = !m_receive_queue.is_empty();
     }
     ASSERT(!packet_buffer.is_null());
     auto& ipv4_packet = *(const IPv4Packet*)(packet_buffer.pointer());
@@ -174,8 +175,10 @@ ssize_t IPv4Socket::recvfrom(void* buffer, size_t buffer_length, int flags, cons
 
 void IPv4Socket::did_receive(ByteBuffer&& packet)
 {
+#ifdef IPV4_SOCKET_DEBUG
+    kprintf("IPv4Socket(%p): did_receive %d bytes\n", this, packet.size());
+#endif
     LOCKER(m_lock);
-    kprintf("IPv4Socket(%p): did_receive %d bytes\n", packet.size());
     m_receive_queue.append(move(packet));
     m_can_read = true;
 }

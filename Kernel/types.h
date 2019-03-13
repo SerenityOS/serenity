@@ -13,7 +13,7 @@ typedef dword gid_t;
 typedef signed_word pid_t;
 typedef dword time_t;
 typedef dword useconds_t;
-typedef dword suseconds_t;
+typedef signed_dword suseconds_t;
 
 struct timeval {
     time_t tv_sec;
