@@ -58,6 +58,10 @@ IPv4Socket::~IPv4Socket()
         LOCKER(sockets_by_udp_port().lock());
         sockets_by_udp_port().resource().remove(m_source_port);
     }
+    if (type() == SOCK_STREAM) {
+        LOCKER(sockets_by_tcp_port().lock());
+        sockets_by_tcp_port().resource().remove(m_source_port);
+    }
 }
 
 bool IPv4Socket::get_address(sockaddr* address, socklen_t* address_size)
@@ -107,17 +111,17 @@ bool IPv4Socket::can_read(SocketRole) const
     return m_can_read;
 }
 
-ssize_t IPv4Socket::read(SocketRole role, byte* buffer, ssize_t size)
+ssize_t IPv4Socket::read(SocketRole, byte*, ssize_t)
 {
     ASSERT_NOT_REACHED();
 }
 
-ssize_t IPv4Socket::write(SocketRole role, const byte* data, ssize_t size)
+ssize_t IPv4Socket::write(SocketRole, const byte*, ssize_t)
 {
     ASSERT_NOT_REACHED();
 }
 
-bool IPv4Socket::can_write(SocketRole role) const
+bool IPv4Socket::can_write(SocketRole) const
 {
     ASSERT_NOT_REACHED();
 }
@@ -135,6 +139,20 @@ void IPv4Socket::allocate_source_port_if_needed()
             if (it == sockets_by_udp_port().resource().end()) {
                 m_source_port = port;
                 sockets_by_udp_port().resource().set(port, this);
+                return;
+            }
+        }
+        ASSERT_NOT_REACHED();
+    }
+    if (type() == SOCK_STREAM) {
+        // This is not a very efficient allocation algorithm.
+        // FIXME: Replace it with a bitmap or some other fast-paced looker-upper.
+        LOCKER(sockets_by_tcp_port().lock());
+        for (word port = 2000; port < 60000; ++port) {
+            auto it = sockets_by_tcp_port().resource().find(port);
+            if (it == sockets_by_tcp_port().resource().end()) {
+                m_source_port = port;
+                sockets_by_tcp_port().resource().set(port, this);
                 return;
             }
         }
@@ -201,7 +219,6 @@ ssize_t IPv4Socket::recvfrom(void* buffer, size_t buffer_length, int flags, sock
     if (*addr_length < sizeof(sockaddr_in))
         return -EINVAL;
 
-    auto peer_address = IPv4Address((const byte*)&((const sockaddr_in*)addr)->sin_addr.s_addr);
 #ifdef IPV4_SOCKET_DEBUG
     kprintf("recvfrom: type=%d, source_port=%u\n", type(), source_port());
 #endif
