@@ -93,7 +93,11 @@ KResult IPv4Socket::connect(const sockaddr* address, socklen_t address_size)
     if (address->sa_family != AF_INET)
         return KResult(-EINVAL);
 
-    ASSERT_NOT_REACHED();
+    auto& ia = *(const sockaddr_in*)address;
+    m_destination_address = IPv4Address((const byte*)&ia.sin_addr.s_addr);
+    m_destination_port = ntohs(ia.sin_port);
+
+    return KSuccess;
 }
 
 void IPv4Socket::attach_fd(SocketRole)
@@ -177,9 +181,11 @@ ssize_t IPv4Socket::sendto(const void* data, size_t data_length, int flags, cons
         return -EAFNOSUPPORT;
     }
 
-    auto& ia = *(const sockaddr_in*)addr;
-    m_destination_address = IPv4Address((const byte*)&ia.sin_addr.s_addr);
-    m_destination_port = ntohs(ia.sin_port);
+    if (addr) {
+        auto& ia = *(const sockaddr_in*)addr;
+        m_destination_address = IPv4Address((const byte*)&ia.sin_addr.s_addr);
+        m_destination_port = ntohs(ia.sin_port);
+    }
 
     allocate_source_port_if_needed();
 
