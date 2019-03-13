@@ -50,8 +50,14 @@ IPv4Socket::IPv4Socket(int type, int protocol)
 
 IPv4Socket::~IPv4Socket()
 {
-    LOCKER(all_sockets().lock());
-    all_sockets().resource().remove(this);
+    {
+        LOCKER(all_sockets().lock());
+        all_sockets().resource().remove(this);
+    }
+    if (type() == SOCK_DGRAM) {
+        LOCKER(sockets_by_udp_port().lock());
+        sockets_by_udp_port().resource().remove(m_source_port);
+    }
 }
 
 bool IPv4Socket::get_address(sockaddr* address, socklen_t* address_size)
@@ -128,6 +134,7 @@ void IPv4Socket::allocate_source_port_if_needed()
             auto it = sockets_by_udp_port().resource().find(port);
             if (it == sockets_by_udp_port().resource().end()) {
                 m_source_port = port;
+                sockets_by_udp_port().resource().set(port, this);
                 return;
             }
         }

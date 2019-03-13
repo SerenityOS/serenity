@@ -229,14 +229,18 @@ void handle_udp(const EthernetFrameHeader& eth, int frame_size)
     );
 #endif
 
-    LOCKER(IPv4Socket::all_sockets().lock());
-    for (RetainPtr<IPv4Socket> socket : IPv4Socket::all_sockets().resource()) {
-        LOCKER(socket->lock());
-        if (socket->type() != SOCK_DGRAM)
-            continue;
-        if (socket->source_port() != udp_packet.destination_port())
-            continue;
-        socket->did_receive(ByteBuffer::copy((const byte*)&ipv4_packet, sizeof(IPv4Packet) + ipv4_packet.payload_size()));
-        return;
+    RetainPtr<IPv4Socket> socket;
+    {
+        LOCKER(IPv4Socket::sockets_by_udp_port().lock());
+        auto it = IPv4Socket::sockets_by_udp_port().resource().find(udp_packet.destination_port());
+        if (it == IPv4Socket::sockets_by_udp_port().resource().end())
+            return;
+        ASSERT((*it).value);
+        socket = *(*it).value;
     }
+
+    LOCKER(socket->lock());
+    ASSERT(socket->type() == SOCK_DGRAM);
+    ASSERT(socket->source_port() == udp_packet.destination_port());
+    socket->did_receive(ByteBuffer::copy((const byte*)&ipv4_packet, sizeof(IPv4Packet) + ipv4_packet.payload_size()));
 }
