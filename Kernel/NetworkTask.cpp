@@ -2,6 +2,7 @@
 #include <Kernel/EthernetFrameHeader.h>
 #include <Kernel/ARP.h>
 #include <Kernel/ICMP.h>
+#include <Kernel/UDP.h>
 #include <Kernel/IPv4.h>
 #include <Kernel/IPv4Socket.h>
 #include <Kernel/Process.h>
@@ -10,10 +11,13 @@
 
 //#define ETHERNET_DEBUG
 //#define IPV4_DEBUG
+//#define ICMP_DEBUG
+#define UDP_DEBUG
 
 static void handle_arp(const EthernetFrameHeader&, int frame_size);
 static void handle_ipv4(const EthernetFrameHeader&, int frame_size);
 static void handle_icmp(const EthernetFrameHeader&, int frame_size);
+static void handle_udp(const EthernetFrameHeader&, int frame_size);
 
 Lockable<HashMap<IPv4Address, MACAddress>>& arp_table()
 {
@@ -146,6 +150,8 @@ void handle_ipv4(const EthernetFrameHeader& eth, int frame_size)
     switch ((IPv4Protocol)packet.protocol()) {
     case IPv4Protocol::ICMP:
         return handle_icmp(eth, frame_size);
+    case IPv4Protocol::UDP:
+        return handle_udp(eth, frame_size);
     default:
         kprintf("handle_ipv4: Unhandled protocol %u\n", packet.protocol());
         break;
@@ -158,7 +164,7 @@ void handle_icmp(const EthernetFrameHeader& eth, int frame_size)
     auto& ipv4_packet = *static_cast<const IPv4Packet*>(eth.payload());
     auto& icmp_header = *static_cast<const ICMPHeader*>(ipv4_packet.payload());
 #ifdef ICMP_DEBUG
-    kprintf("handle_icmp: source=%s, destination=%d type=%b, code=%b\n",
+    kprintf("handle_icmp: source=%s, destination=%s, type=%b, code=%b\n",
         ipv4_packet.source().to_string().characters(),
         ipv4_packet.destination().to_string().characters(),
         icmp_header.type(),
@@ -198,5 +204,39 @@ void handle_icmp(const EthernetFrameHeader& eth, int frame_size)
             memcpy(response.payload(), request.payload(), icmp_payload_size);
         response.header.set_checksum(internet_checksum(&response, icmp_packet_size));
         adapter->send_ipv4(eth.source(), ipv4_packet.source(), IPv4Protocol::ICMP, move(buffer));
+    }
+}
+
+void handle_udp(const EthernetFrameHeader& eth, int frame_size)
+{
+    (void)frame_size;
+    auto& ipv4_packet = *static_cast<const IPv4Packet*>(eth.payload());
+
+    auto* adapter = NetworkAdapter::from_ipv4_address(ipv4_packet.destination());
+    if (!adapter) {
+        kprintf("handle_udp: this packet is not for me, it's for %s\n", ipv4_packet.destination().to_string().characters());
+        return;
+    }
+
+    auto& udp_packet = *static_cast<const UDPPacket*>(ipv4_packet.payload());
+#ifdef UDP_DEBUG
+    kprintf("handle_udp: source=%s:%u, destination=%s:%u length=%u\n",
+        ipv4_packet.source().to_string().characters(),
+        udp_packet.source_port(),
+        ipv4_packet.destination().to_string().characters(),
+        udp_packet.destination_port(),
+        udp_packet.length()
+    );
+#endif
+
+    LOCKER(IPv4Socket::all_sockets().lock());
+    for (RetainPtr<IPv4Socket> socket : IPv4Socket::all_sockets().resource()) {
+        LOCKER(socket->lock());
+        if (socket->protocol() != (unsigned)IPv4Protocol::UDP)
+            continue;
+        if (socket->source_port() != udp_packet.destination_port())
+            continue;
+        socket->did_receive(ByteBuffer::copy((const byte*)&ipv4_packet, sizeof(IPv4Packet) + ipv4_packet.payload_size()));
+        return;
     }
 }

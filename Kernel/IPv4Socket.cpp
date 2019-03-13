@@ -4,8 +4,11 @@
 #include <Kernel/NetworkAdapter.h>
 #include <Kernel/IPv4.h>
 #include <Kernel/ICMP.h>
+#include <Kernel/UDP.h>
 #include <Kernel/ARP.h>
 #include <LibC/errno_numbers.h>
+
+#define IPV4_SOCKET_DEBUG
 
 Lockable<HashTable<IPv4Socket*>>& IPv4Socket::all_sockets()
 {
@@ -173,9 +176,22 @@ ssize_t IPv4Socket::recvfrom(void* buffer, size_t buffer_length, int flags, cons
     }
     ASSERT(!packet_buffer.is_null());
     auto& ipv4_packet = *(const IPv4Packet*)(packet_buffer.pointer());
-    ASSERT(buffer_length >= ipv4_packet.payload_size());
-    memcpy(buffer, ipv4_packet.payload(), ipv4_packet.payload_size());
-    return ipv4_packet.payload_size();
+
+    if (type() == SOCK_RAW) {
+        ASSERT(buffer_length >= ipv4_packet.payload_size());
+        memcpy(buffer, ipv4_packet.payload(), ipv4_packet.payload_size());
+        return ipv4_packet.payload_size();
+    }
+
+    if (type() == SOCK_DGRAM) {
+        auto& udp_packet = *static_cast<const UDPPacket*>(ipv4_packet.payload());
+        ASSERT(udp_packet.length() >= sizeof(UDPPacket)); // FIXME: This should be rejected earlier.
+        ASSERT(buffer_length >= (udp_packet.length() - sizeof(UDPPacket)));
+        memcpy(buffer, udp_packet.payload(), udp_packet.length() - sizeof(UDPPacket));
+        return udp_packet.length() - sizeof(UDPPacket);
+    }
+
+    ASSERT_NOT_REACHED();
 }
 
 void IPv4Socket::did_receive(ByteBuffer&& packet)
