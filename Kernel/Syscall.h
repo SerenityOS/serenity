@@ -90,6 +90,8 @@
     __ENUMERATE_SYSCALL(seal_shared_buffer) \
     __ENUMERATE_SYSCALL(sendto) \
     __ENUMERATE_SYSCALL(recvfrom) \
+    __ENUMERATE_SYSCALL(getsockopt) \
+    __ENUMERATE_SYSCALL(setsockopt) \
 
 
 namespace Syscall {
@@ -146,6 +148,22 @@ struct SC_recvfrom_params {
     int flags;
     const void* addr; // const sockaddr*
     size_t addr_length; // socklen_t
+};
+
+struct SC_getsockopt_params {
+    int sockfd;
+    int level;
+    int option;
+    void* value;
+    void* value_size; // socklen_t*
+};
+
+struct SC_setsockopt_params {
+    int sockfd;
+    int level;
+    int option;
+    const void* value;
+    size_t value_size; // socklen_t
 };
 
 void initialize();

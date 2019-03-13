@@ -46,6 +46,8 @@ struct DisplayInfo {
     unsigned pitch;
 };
 
+void kgettimeofday(timeval&);
+
 class Process : public InlineLinkedListNode<Process>, public Weakable<Process> {
     friend class InlineLinkedListNode<Process>;
 public:
@@ -233,6 +235,8 @@ public:
     int sys$connect(int sockfd, const sockaddr*, socklen_t);
     ssize_t sys$sendto(const Syscall::SC_sendto_params*);
     ssize_t sys$recvfrom(const Syscall::SC_recvfrom_params*);
+    int sys$getsockopt(const Syscall::SC_getsockopt_params*);
+    int sys$setsockopt(const Syscall::SC_setsockopt_params*);
     int sys$restore_signal_mask(dword mask);
 
     int sys$create_shared_buffer(pid_t peer_pid, int, void** buffer);

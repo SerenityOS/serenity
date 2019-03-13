@@ -39,6 +39,13 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    struct timeval timeout { 1, 0 };
+    int rc = setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
+    if (rc < 0) {
+        perror("setsockopt");
+        return 1;
+    }
+
     const char* addr_str = "192.168.5.1";
     if (argc > 1)
         addr_str = argv[1];
@@ -50,7 +57,7 @@ int main(int argc, char** argv)
     peer_address.sin_family = AF_INET;
     peer_address.sin_port = 0;
 
-    int rc = inet_pton(AF_INET, addr_str, &peer_address.sin_addr);
+    rc = inet_pton(AF_INET, addr_str, &peer_address.sin_addr);
 
     struct PingPacket {
         struct icmphdr header;
@@ -84,6 +91,10 @@ int main(int argc, char** argv)
         for (;;) {
             rc = recvfrom(fd, &pong_packet, sizeof(PingPacket), 0, (const struct sockaddr*)&peer_address, sizeof(sockaddr_in));
             if (rc < 0) {
+                if (errno == EAGAIN) {
+                    printf("Request (seq=%u) timed out.\n", ntohs(ping_packet.header.un.echo.sequence));
+                    break;
+                }
                 perror("recvfrom");
                 return 1;
             }
@@ -104,12 +115,17 @@ int main(int argc, char** argv)
             int ms = tv_diff.tv_sec * 1000 + tv_diff.tv_usec / 1000;
 
             char addr_buf[64];
-            printf("Pong from %s: id=%u, seq=%u, time=%dms\n",
+            printf("Pong from %s: id=%u, seq=%u%s, time=%dms\n",
                 inet_ntop(AF_INET, &peer_address.sin_addr, addr_buf, sizeof(addr_buf)),
                 ntohs(pong_packet.header.un.echo.id),
                 ntohs(pong_packet.header.un.echo.sequence),
+                pong_packet.header.un.echo.sequence != ping_packet.header.un.echo.sequence ? "(!)" : "",
                 ms
             );
+
+            // If this was a response to an earlier packet, we still need to wait for the current one.
+            if (pong_packet.header.un.echo.sequence != ping_packet.header.un.echo.sequence)
+                continue;
             break;
         }
 

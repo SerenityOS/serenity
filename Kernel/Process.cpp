@@ -1589,13 +1589,17 @@ int Process::sys$sleep(unsigned seconds)
     return 0;
 }
 
+void kgettimeofday(timeval& tv)
+{
+    tv.tv_sec = RTC::now();
+    tv.tv_usec = (PIT::ticks_since_boot() % 1000) * 1000;
+}
+
 int Process::sys$gettimeofday(timeval* tv)
 {
     if (!validate_write_typed(tv))
         return -EFAULT;
-    auto now = RTC::now();
-    tv->tv_sec = now;
-    tv->tv_usec = (PIT::ticks_since_boot() % 1000) * 1000;
+    kgettimeofday(*tv);
     return 0;
 }
 
@@ -2565,6 +2569,50 @@ ssize_t Process::sys$recvfrom(const Syscall::SC_recvfrom_params* params)
     auto& socket = *descriptor->socket();
     kprintf("recvfrom %p (%u), flags=%u, addr: %p (%u)\n", buffer, buffer_length, flags, addr, addr_length);
     return socket.recvfrom(buffer, buffer_length, flags, addr, addr_length);
+}
+
+int Process::sys$getsockopt(const Syscall::SC_getsockopt_params* params)
+{
+    if (!validate_read_typed(params))
+        return -EFAULT;
+    int sockfd = params->sockfd;
+    int level = params->level;
+    int option = params->option;
+    auto* value = params->value;
+    auto* value_size = (socklen_t*)params->value_size;
+
+    if (!validate_write_typed(value_size))
+        return -EFAULT;
+    if (!validate_write(value, *value_size))
+        return -EFAULT;
+    auto* descriptor = file_descriptor(sockfd);
+    if (!descriptor)
+        return -EBADF;
+    if (!descriptor->is_socket())
+        return -ENOTSOCK;
+    auto& socket = *descriptor->socket();
+    return socket.getsockopt(level, option, value, value_size);
+}
+
+int Process::sys$setsockopt(const Syscall::SC_setsockopt_params* params)
+{
+    if (!validate_read_typed(params))
+        return -EFAULT;
+    int sockfd = params->sockfd;
+    int level = params->level;
+    int option = params->option;
+    auto* value = params->value;
+    auto value_size = (socklen_t)params->value_size;
+
+    if (!validate_read(value, value_size))
+        return -EFAULT;
+    auto* descriptor = file_descriptor(sockfd);
+    if (!descriptor)
+        return -EBADF;
+    if (!descriptor->is_socket())
+        return -ENOTSOCK;
+    auto& socket = *descriptor->socket();
+    return socket.setsockopt(level, option, value, value_size);
 }
 
 struct SharedBuffer {

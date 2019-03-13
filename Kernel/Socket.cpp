@@ -60,3 +60,63 @@ KResult Socket::queue_connection_from(Socket& peer)
     m_pending.append(peer);
     return KSuccess;
 }
+
+KResult Socket::setsockopt(int level, int option, const void* value, socklen_t value_size)
+{
+    ASSERT(level == SOL_SOCKET);
+    switch (option) {
+    case SO_SNDTIMEO:
+        if (value_size != sizeof(timeval))
+            return KResult(-EINVAL);
+        m_send_timeout = *(timeval*)value;
+        return KSuccess;
+    case SO_RCVTIMEO:
+        if (value_size != sizeof(timeval))
+            return KResult(-EINVAL);
+        m_receive_timeout = *(timeval*)value;
+        return KSuccess;
+    default:
+        kprintf("%s(%u): setsockopt() at SOL_SOCKET with unimplemented option %d\n", option);
+        return KResult(-ENOPROTOOPT);
+    }
+}
+
+KResult Socket::getsockopt(int level, int option, void* value, socklen_t* value_size)
+{
+    ASSERT(level == SOL_SOCKET);
+    switch (option) {
+    case SO_SNDTIMEO:
+        if (*value_size < sizeof(timeval))
+            return KResult(-EINVAL);
+        *(timeval*)value = m_send_timeout;
+        *value_size = sizeof(timeval);
+        return KSuccess;
+    case SO_RCVTIMEO:
+        if (*value_size < sizeof(timeval))
+            return KResult(-EINVAL);
+        *(timeval*)value = m_receive_timeout;
+        *value_size = sizeof(timeval);
+        return KSuccess;
+    default:
+        kprintf("%s(%u): getsockopt() at SOL_SOCKET with unimplemented option %d\n", option);
+        return KResult(-ENOPROTOOPT);
+    }
+}
+
+void Socket::load_receive_deadline()
+{
+    kgettimeofday(m_receive_deadline);
+    m_receive_deadline.tv_sec += m_receive_timeout.tv_sec;
+    m_receive_deadline.tv_usec += m_receive_timeout.tv_usec;
+    m_receive_deadline.tv_sec += (m_send_timeout.tv_usec / 1000000) * 1;
+    m_receive_deadline.tv_usec %= 1000000;
+}
+
+void Socket::load_send_deadline()
+{
+    kgettimeofday(m_send_deadline);
+    m_send_deadline.tv_sec += m_send_timeout.tv_sec;
+    m_send_deadline.tv_usec += m_send_timeout.tv_usec;
+    m_send_deadline.tv_sec += (m_send_timeout.tv_usec / 1000000) * 1;
+    m_send_deadline.tv_usec %= 1000000;
+}

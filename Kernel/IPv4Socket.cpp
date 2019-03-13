@@ -157,10 +157,15 @@ ssize_t IPv4Socket::recvfrom(void* buffer, size_t buffer_length, int flags, cons
     }
     if (packet_buffer.is_null()) {
         current->set_blocked_socket(this);
+        load_receive_deadline();
         block(Process::BlockedReceive);
         Scheduler::yield();
 
         LOCKER(m_lock);
+        if (!m_can_read) {
+            // Unblocked due to timeout.
+            return -EAGAIN;
+        }
         ASSERT(m_can_read);
         ASSERT(!m_receive_queue.is_empty());
         packet_buffer = m_receive_queue.take_first();
@@ -175,10 +180,10 @@ ssize_t IPv4Socket::recvfrom(void* buffer, size_t buffer_length, int flags, cons
 
 void IPv4Socket::did_receive(ByteBuffer&& packet)
 {
-#ifdef IPV4_SOCKET_DEBUG
-    kprintf("IPv4Socket(%p): did_receive %d bytes\n", this, packet.size());
-#endif
     LOCKER(m_lock);
     m_receive_queue.append(move(packet));
     m_can_read = true;
+#ifdef IPV4_SOCKET_DEBUG
+    kprintf("IPv4Socket(%p): did_receive %d bytes, packets in queue: %d\n", this, packet.size(), m_receive_queue.size_slow());
+#endif
 }

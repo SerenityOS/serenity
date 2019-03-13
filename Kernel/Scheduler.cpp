@@ -54,8 +54,11 @@ bool Scheduler::pick_next()
         return context_switch(*s_colonel_process);
     }
 
+    auto now_sec = RTC::now();
+    auto now_usec = (suseconds_t)((PIT::ticks_since_boot() % 1000) * 1000);
+
     // Check and unblock processes whose wait conditions have been met.
-    Process::for_each([] (Process& process) {
+    Process::for_each([&] (Process& process) {
         if (process.state() == Process::BlockedSleep) {
             if (process.wakeup_time() <= system.uptime)
                 process.unblock();
@@ -100,18 +103,19 @@ bool Scheduler::pick_next()
 
         if (process.state() == Process::BlockedReceive) {
             ASSERT(process.m_blocked_socket);
+            auto& socket = *process.m_blocked_socket;
             // FIXME: Block until the amount of data wanted is available.
-            if (process.m_blocked_socket->can_read(SocketRole::None)) {
+            bool timed_out = now_sec > socket.receive_deadline().tv_sec || (now_sec == socket.receive_deadline().tv_sec && now_usec >= socket.receive_deadline().tv_usec);
+            if (timed_out || socket.can_read(SocketRole::None)) {
                 process.unblock();
                 process.m_blocked_socket = nullptr;
+                return true;
             }
             return true;
         }
 
         if (process.state() == Process::BlockedSelect) {
             if (process.m_select_has_timeout) {
-                auto now_sec = RTC::now();
-                auto now_usec = PIT::ticks_since_boot() % 1000;
                 if (now_sec > process.m_select_timeout.tv_sec || (now_sec == process.m_select_timeout.tv_sec && now_usec >= process.m_select_timeout.tv_usec)) {
                     process.unblock();
                     return true;

@@ -38,12 +38,21 @@ public:
     virtual ssize_t sendto(const void*, size_t, int flags, const sockaddr*, socklen_t) = 0;
     virtual ssize_t recvfrom(void*, size_t, int flags, const sockaddr*, socklen_t) = 0;
 
+    KResult setsockopt(int level, int option, const void*, socklen_t);
+    KResult getsockopt(int level, int option, void*, socklen_t*);
+
     pid_t origin_pid() const { return m_origin_pid; }
+
+    timeval receive_deadline() const { return m_receive_deadline; }
+    timeval send_deadline() const { return m_send_deadline; }
 
 protected:
     Socket(int domain, int type, int protocol);
 
     KResult queue_connection_from(Socket&);
+
+    void load_receive_deadline();
+    void load_send_deadline();
 
 private:
     Lock m_lock;
@@ -53,6 +62,12 @@ private:
     int m_protocol { 0 };
     int m_backlog { 0 };
     bool m_connected { false };
+
+    timeval m_receive_timeout { 0, 0 };
+    timeval m_send_timeout { 0, 0 };
+
+    timeval m_receive_deadline { 0, 0 };
+    timeval m_send_deadline { 0, 0 };
 
     Vector<RetainPtr<Socket>> m_pending;
     Vector<RetainPtr<Socket>> m_clients;
