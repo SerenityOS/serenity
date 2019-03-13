@@ -19,6 +19,14 @@ public:
 
     bool is_empty() const { return !head(); }
 
+    inline int size_slow() const
+    {
+        int size = 0;
+        for (auto* node = m_head; node; node = node->next)
+            ++size;
+        return size;
+    }
+
     void clear()
     {
         for (auto* node = m_head; node; ) {
@@ -37,11 +45,13 @@ public:
 
     T take_first()
     {
-        ASSERT(head());
+        ASSERT(m_head);
+        auto* prev_head = m_head;
         T value = first();
         if (m_tail == m_head)
             m_tail = nullptr;
         m_head = m_head->next;
+        delete prev_head;
         return value;
     }
 
