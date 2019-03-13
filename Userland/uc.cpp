@@ -9,8 +9,9 @@
 
 int main(int argc, char** argv)
 {
-    (void)argc;
-    (void)argv;
+    const char* addr_str = "127.0.0.1";
+    if (argc > 1)
+        addr_str = argv[1];
 
     int fd = socket(AF_INET, SOCK_DGRAM, 0);
     if (fd < 0) {
@@ -30,7 +31,7 @@ int main(int argc, char** argv)
 
     dst_addr.sin_family = AF_INET;
     dst_addr.sin_port = htons(8080);
-    dst_addr.sin_addr.s_addr = INADDR_ANY;
+    rc = inet_pton(AF_INET, addr_str, &dst_addr.sin_addr);
 
     char buffer[BUFSIZ];
     const char* msg = "Test message";
