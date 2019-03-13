@@ -3,6 +3,7 @@
 #include <Kernel/ARP.h>
 #include <Kernel/ICMP.h>
 #include <Kernel/UDP.h>
+#include <Kernel/TCP.h>
 #include <Kernel/IPv4.h>
 #include <Kernel/IPv4Socket.h>
 #include <Kernel/Process.h>
@@ -10,14 +11,16 @@
 #include <AK/Lock.h>
 
 //#define ETHERNET_DEBUG
-//#define IPV4_DEBUG
+#define IPV4_DEBUG
 //#define ICMP_DEBUG
 #define UDP_DEBUG
+#define TCP_DEBUG
 
 static void handle_arp(const EthernetFrameHeader&, int frame_size);
 static void handle_ipv4(const EthernetFrameHeader&, int frame_size);
 static void handle_icmp(const EthernetFrameHeader&, int frame_size);
 static void handle_udp(const EthernetFrameHeader&, int frame_size);
+static void handle_tcp(const EthernetFrameHeader&, int frame_size);
 
 Lockable<HashMap<IPv4Address, MACAddress>>& arp_table()
 {
@@ -152,6 +155,8 @@ void handle_ipv4(const EthernetFrameHeader& eth, int frame_size)
         return handle_icmp(eth, frame_size);
     case IPv4Protocol::UDP:
         return handle_udp(eth, frame_size);
+    case IPv4Protocol::TCP:
+        return handle_tcp(eth, frame_size);
     default:
         kprintf("handle_ipv4: Unhandled protocol %u\n", packet.protocol());
         break;
@@ -242,5 +247,46 @@ void handle_udp(const EthernetFrameHeader& eth, int frame_size)
     LOCKER(socket->lock());
     ASSERT(socket->type() == SOCK_DGRAM);
     ASSERT(socket->source_port() == udp_packet.destination_port());
+    socket->did_receive(ByteBuffer::copy((const byte*)&ipv4_packet, sizeof(IPv4Packet) + ipv4_packet.payload_size()));
+}
+
+void handle_tcp(const EthernetFrameHeader& eth, int frame_size)
+{
+    (void)frame_size;
+    auto& ipv4_packet = *static_cast<const IPv4Packet*>(eth.payload());
+
+    auto* adapter = NetworkAdapter::from_ipv4_address(ipv4_packet.destination());
+    if (!adapter) {
+        kprintf("handle_tcp: this packet is not for me, it's for %s\n", ipv4_packet.destination().to_string().characters());
+        return;
+    }
+
+    auto& tcp_packet = *static_cast<const TCPPacket*>(ipv4_packet.payload());
+#ifdef TCP_DEBUG
+    kprintf("handle_tcp: source=%s:%u, destination=%s:%u seq=%u, ack=%u, flags=%w, window_size=%u\n",
+        ipv4_packet.source().to_string().characters(),
+        tcp_packet.source_port(),
+        ipv4_packet.destination().to_string().characters(),
+        tcp_packet.destination_port(),
+        tcp_packet.sequence_number(),
+        tcp_packet.ack_number(),
+        tcp_packet.flags(),
+        tcp_packet.window_size()
+    );
+#endif
+
+    RetainPtr<IPv4Socket> socket;
+    {
+        LOCKER(IPv4Socket::sockets_by_tcp_port().lock());
+        auto it = IPv4Socket::sockets_by_tcp_port().resource().find(tcp_packet.destination_port());
+        if (it == IPv4Socket::sockets_by_tcp_port().resource().end())
+            return;
+        ASSERT((*it).value);
+        socket = *(*it).value;
+    }
+
+    LOCKER(socket->lock());
+    ASSERT(socket->type() == SOCK_STREAM);
+    ASSERT(socket->source_port() == tcp_packet.destination_port());
     socket->did_receive(ByteBuffer::copy((const byte*)&ipv4_packet, sizeof(IPv4Packet) + ipv4_packet.payload_size()));
 }
