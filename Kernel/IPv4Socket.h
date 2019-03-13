@@ -3,6 +3,7 @@
 #include <Kernel/Socket.h>
 #include <Kernel/DoubleBuffer.h>
 #include <Kernel/IPv4.h>
+#include <AK/HashMap.h>
 #include <AK/Lock.h>
 #include <AK/SinglyLinkedList.h>
 
@@ -12,6 +13,8 @@ public:
     virtual ~IPv4Socket() override;
 
     static Lockable<HashTable<IPv4Socket*>>& all_sockets();
+    static Lockable<HashMap<word, IPv4Socket*>>& sockets_by_udp_port();
+    static Lockable<HashMap<word, IPv4Socket*>>& sockets_by_tcp_port();
 
     virtual KResult bind(const sockaddr*, socklen_t) override;
     virtual KResult connect(const sockaddr*, socklen_t) override;
@@ -35,6 +38,8 @@ public:
 private:
     IPv4Socket(int type, int protocol);
     virtual bool is_ipv4() const override { return true; }
+
+    void allocate_source_port_if_needed();
 
     bool m_bound { false };
     int m_attached_fds { 0 };
