@@ -35,6 +35,7 @@ OBJS = \
        stat.o \
        ping.o \
        uc.o \
+       tc.o \
        rm.o
 
 APPS = \
@@ -75,6 +76,7 @@ APPS = \
        stat \
        ping \
        uc \
+       tc \
        rm
 
 ARCH_FLAGS =
@@ -208,6 +210,8 @@ ping: ping.o
 uc: uc.o
 	$(LD) -o $@ $(LDFLAGS) $< -lc
 
+tc: tc.o
+	$(LD) -o $@ $(LDFLAGS) $< -lc
 
 .cpp.o:
 	@echo "CXX $<"; $(CXX) $(CXXFLAGS) -o $@ -c $<
