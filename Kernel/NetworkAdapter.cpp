@@ -41,13 +41,13 @@ NetworkAdapter::~NetworkAdapter()
 void NetworkAdapter::send(const MACAddress& destination, const ARPPacket& packet)
 {
     int size_in_bytes = sizeof(EthernetFrameHeader) + sizeof(ARPPacket);
-    auto* eth = (EthernetFrameHeader*)kmalloc(size_in_bytes);
+    auto buffer = ByteBuffer::create_zeroed(size_in_bytes);
+    auto* eth = (EthernetFrameHeader*)buffer.pointer();
     eth->set_source(mac_address());
     eth->set_destination(destination);
     eth->set_ether_type(EtherType::ARP);
     memcpy(eth->payload(), &packet, sizeof(ARPPacket));
     send_raw((byte*)eth, size_in_bytes);
-    kfree(eth);
 }
 
 void NetworkAdapter::send_ipv4(const MACAddress& destination_mac, const IPv4Address& destination_ipv4, IPv4Protocol protocol, ByteBuffer&& payload)
