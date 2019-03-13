@@ -146,8 +146,8 @@ struct SC_recvfrom_params {
     void* buffer;
     size_t buffer_length;
     int flags;
-    const void* addr; // const sockaddr*
-    size_t addr_length; // socklen_t
+    void* addr; // sockaddr*
+    void* addr_length; // socklen_t*
 };
 
 struct SC_getsockopt_params {

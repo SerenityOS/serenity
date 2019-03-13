@@ -20,7 +20,7 @@ public:
     virtual ssize_t write(SocketRole, const byte*, ssize_t) override;
     virtual bool can_write(SocketRole) const override;
     virtual ssize_t sendto(const void*, size_t, int, const sockaddr*, socklen_t) override;
-    virtual ssize_t recvfrom(void*, size_t, int flags, const sockaddr*, socklen_t) override;
+    virtual ssize_t recvfrom(void*, size_t, int flags, sockaddr*, socklen_t*) override;
 
 private:
     explicit LocalSocket(int type);

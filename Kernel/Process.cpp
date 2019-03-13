@@ -2554,12 +2554,14 @@ ssize_t Process::sys$recvfrom(const Syscall::SC_recvfrom_params* params)
     void* buffer = params->buffer;
     size_t buffer_length = params->buffer_length;
     int flags = params->flags;
-    auto* addr = (const sockaddr*)params->addr;
-    auto addr_length = (socklen_t)params->addr_length;
+    auto* addr = (sockaddr*)params->addr;
+    auto* addr_length = (socklen_t*)params->addr_length;
 
     if (!validate_write(buffer, buffer_length))
         return -EFAULT;
-    if (!validate_read(addr, addr_length))
+    if (!validate_read_typed(addr_length))
+        return -EFAULT;
+    if (!validate_read(addr, *addr_length))
         return -EFAULT;
     auto* descriptor = file_descriptor(sockfd);
     if (!descriptor)
@@ -2567,7 +2569,7 @@ ssize_t Process::sys$recvfrom(const Syscall::SC_recvfrom_params* params)
     if (!descriptor->is_socket())
         return -ENOTSOCK;
     auto& socket = *descriptor->socket();
-    kprintf("recvfrom %p (%u), flags=%u, addr: %p (%u)\n", buffer, buffer_length, flags, addr, addr_length);
+    kprintf("recvfrom %p (%u), flags=%u, addr: %p (%u)\n", buffer, buffer_length, flags, addr, *addr_length);
     return socket.recvfrom(buffer, buffer_length, flags, addr, addr_length);
 }
 

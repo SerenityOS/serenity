@@ -36,7 +36,7 @@ public:
     virtual ssize_t write(SocketRole, const byte*, ssize_t) = 0;
     virtual bool can_write(SocketRole) const = 0;
     virtual ssize_t sendto(const void*, size_t, int flags, const sockaddr*, socklen_t) = 0;
-    virtual ssize_t recvfrom(void*, size_t, int flags, const sockaddr*, socklen_t) = 0;
+    virtual ssize_t recvfrom(void*, size_t, int flags, sockaddr*, socklen_t*) = 0;
 
     KResult setsockopt(int level, int option, const void*, socklen_t);
     KResult getsockopt(int level, int option, void*, socklen_t*);
