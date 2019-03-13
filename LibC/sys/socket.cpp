@@ -48,4 +48,18 @@ ssize_t recvfrom(int sockfd, void* buffer, size_t buffer_length, int flags, cons
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
+int getsockopt(int sockfd, int level, int option, void* value, socklen_t* value_size)
+{
+    Syscall::SC_getsockopt_params params { sockfd, level, option, value, value_size };
+    int rc = syscall(SC_getsockopt, &params);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
+int setsockopt(int sockfd, int level, int option, const void* value, socklen_t value_size)
+{
+    Syscall::SC_setsockopt_params params { sockfd, level, option, value, value_size };
+    int rc = syscall(SC_setsockopt, &params);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
 }

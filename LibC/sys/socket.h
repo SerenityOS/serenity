@@ -45,6 +45,11 @@ struct sockaddr_in {
     char sin_zero[8];
 };
 
+#define SOL_SOCKET 1
+
+#define SO_RCVTIMEO 1
+#define SO_SNDTIMEO 2
+
 int socket(int domain, int type, int protocol);
 int bind(int sockfd, const sockaddr* addr, socklen_t);
 int listen(int sockfd, int backlog);
@@ -52,6 +57,8 @@ int accept(int sockfd, sockaddr*, socklen_t*);
 int connect(int sockfd, const sockaddr*, socklen_t);
 ssize_t sendto(int sockfd, const void*, size_t, int flags, const struct sockaddr*, socklen_t);
 ssize_t recvfrom(int sockfd, void*, size_t, int flags, const struct sockaddr*, socklen_t);
+int getsockopt(int sockfd, int level, int option, void*, socklen_t*);
+int setsockopt(int sockfd, int level, int option, const void*, socklen_t);
 
 __END_DECLS
 

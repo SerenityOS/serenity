@@ -325,6 +325,11 @@ struct pollfd {
 #define SOCK_NONBLOCK 04000
 #define SOCK_CLOEXEC 02000000
 
+#define SOL_SOCKET 1
+
+#define SO_RCVTIMEO 1
+#define SO_SNDTIMEO 2
+
 #define IPPROTO_ICMP 1
 #define IPPROTO_TCP 6
 #define IPPROTO_UDP 17
