@@ -263,7 +263,7 @@ void handle_tcp(const EthernetFrameHeader& eth, int frame_size)
 
     auto& tcp_packet = *static_cast<const TCPPacket*>(ipv4_packet.payload());
 #ifdef TCP_DEBUG
-    kprintf("handle_tcp: source=%s:%u, destination=%s:%u seq=%u, ack=%u, flags=%w, window_size=%u\n",
+    kprintf("handle_tcp: source=%s:%u, destination=%s:%u seq_no=%u, ack_no=%u, flags=%w (%s %s), window_size=%u\n",
         ipv4_packet.source().to_string().characters(),
         tcp_packet.source_port(),
         ipv4_packet.destination().to_string().characters(),
@@ -271,6 +271,8 @@ void handle_tcp(const EthernetFrameHeader& eth, int frame_size)
         tcp_packet.sequence_number(),
         tcp_packet.ack_number(),
         tcp_packet.flags(),
+        tcp_packet.has_syn() ? "SYN" : "",
+        tcp_packet.has_ack() ? "ACK" : "",
         tcp_packet.window_size()
     );
 #endif
@@ -288,5 +290,16 @@ void handle_tcp(const EthernetFrameHeader& eth, int frame_size)
     LOCKER(socket->lock());
     ASSERT(socket->type() == SOCK_STREAM);
     ASSERT(socket->source_port() == tcp_packet.destination_port());
+
+    size_t payload_size = ipv4_packet.payload_size() - sizeof(TCPPacket);
+
+    if (tcp_packet.has_syn() && tcp_packet.has_ack()) {
+        socket->set_tcp_ack_number(socket->tcp_sequence_number() + payload_size + 1);
+        socket->send_tcp_packet(*adapter, TCPFlags::ACK);
+        kprintf("Connected!\n");
+        socket->set_tcp_state(Connected);
+        return;
+    }
+
     socket->did_receive(ByteBuffer::copy((const byte*)&ipv4_packet, sizeof(IPv4Packet) + ipv4_packet.payload_size()));
 }

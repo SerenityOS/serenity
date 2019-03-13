@@ -7,6 +7,18 @@
 #include <AK/Lock.h>
 #include <AK/SinglyLinkedList.h>
 
+class NetworkAdapter;
+class TCPPacket;
+
+enum TCPState {
+    Disconnected,
+    Connecting1,
+    Connecting2,
+    Connected,
+    Disconnecting1,
+    Disconnecting2,
+};
+
 class IPv4Socket final : public Socket {
 public:
     static Retained<IPv4Socket> create(int type, int protocol);
@@ -35,11 +47,20 @@ public:
     word source_port() const { return m_source_port; }
     word destination_port() const { return m_destination_port; }
 
+    void send_tcp_packet(NetworkAdapter&, word flags, const void* payload = nullptr, size_t = 0);
+    void set_tcp_state(TCPState state) { m_tcp_state = state; }
+    TCPState tcp_state() const { return m_tcp_state; }
+    void set_tcp_ack_number(dword n) { m_tcp_ack_number = n; }
+    void set_tcp_sequence_number(dword n) { m_tcp_sequence_number = n; }
+    dword tcp_ack_number() const { return m_tcp_ack_number; }
+    dword tcp_sequence_number() const { return m_tcp_sequence_number; }
+
 private:
     IPv4Socket(int type, int protocol);
     virtual bool is_ipv4() const override { return true; }
 
     void allocate_source_port_if_needed();
+    NetworkOrdered<word> compute_tcp_checksum(const IPv4Address& source, const IPv4Address& destination, const TCPPacket&, word payload_size);
 
     bool m_bound { false };
     int m_attached_fds { 0 };
@@ -52,6 +73,10 @@ private:
 
     word m_source_port { 0 };
     word m_destination_port { 0 };
+
+    dword m_tcp_sequence_number { 0 };
+    dword m_tcp_ack_number { 0 };
+    TCPState m_tcp_state { Disconnected };
 
     Lock m_lock;
     bool m_can_read { false };

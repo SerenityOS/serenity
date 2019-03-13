@@ -51,11 +51,13 @@ int main(int argc, char** argv)
     char buffer[BUFSIZ];
     const char* msg = "Test message";
 
-    send(fd, (const char*)msg, strlen(msg), 0);
+    rc = send(fd, (const char*)msg, strlen(msg), 0);
+    if (rc < 0) {
+        perror("send");
+        return 1;
+    }
     printf("Message sent.\n");
 
-    struct sockaddr_in src_addr;
-    socklen_t src_addr_len = sizeof(src_addr);
     ssize_t nrecv = recv(fd, buffer, sizeof(buffer), 0);
     if (nrecv < 0) {
         perror("recvfrom");
