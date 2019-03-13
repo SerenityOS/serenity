@@ -42,7 +42,6 @@ Retained<IPv4Socket> IPv4Socket::create(int type, int protocol)
 
 IPv4Socket::IPv4Socket(int type, int protocol)
     : Socket(AF_INET, type, protocol)
-    , m_lock("IPv4Socket")
 {
     kprintf("%s(%u) IPv4Socket{%p} created with type=%u, protocol=%d\n", current->name().characters(), current->pid(), this, type, protocol);
     LOCKER(all_sockets().lock());
@@ -103,8 +102,17 @@ KResult IPv4Socket::connect(const sockaddr* address, socklen_t address_size)
         auto* adapter = NetworkAdapter::from_ipv4_address(IPv4Address(192, 168, 5, 2));
         if (!adapter)
             ASSERT_NOT_REACHED();
+
+        allocate_source_port_if_needed();
+
         send_tcp_packet(*adapter, TCPFlags::SYN);
         m_tcp_state = TCPState::Connecting1;
+
+        current->set_blocked_socket(this);
+        block(Process::BlockedConnect);
+        Scheduler::yield();
+
+        ASSERT(is_connected());
         return KSuccess;
     }
 
@@ -216,11 +224,12 @@ void IPv4Socket::send_tcp_packet(NetworkAdapter& adapter, word flags, const void
 {
     auto buffer = ByteBuffer::create_zeroed(sizeof(TCPPacket) + payload_size);
     auto& tcp_packet = *(TCPPacket*)(buffer.pointer());
+    ASSERT(m_source_port);
     tcp_packet.set_source_port(m_source_port);
     tcp_packet.set_destination_port(m_destination_port);
     tcp_packet.set_window_size(1024);
     tcp_packet.set_sequence_number(m_tcp_sequence_number);
-    tcp_packet.set_data_offset(5);
+    tcp_packet.set_data_offset(sizeof(TCPPacket) / sizeof(dword));
     tcp_packet.set_flags(flags);
 
     if (flags & TCPFlags::ACK)
@@ -310,7 +319,7 @@ ssize_t IPv4Socket::recvfrom(void* buffer, size_t buffer_length, int flags, sock
 
     ByteBuffer packet_buffer;
     {
-        LOCKER(m_lock);
+        LOCKER(lock());
         if (!m_receive_queue.is_empty()) {
             packet_buffer = m_receive_queue.take_first();
             m_can_read = !m_receive_queue.is_empty();
@@ -322,7 +331,7 @@ ssize_t IPv4Socket::recvfrom(void* buffer, size_t buffer_length, int flags, sock
         block(Process::BlockedReceive);
         Scheduler::yield();
 
-        LOCKER(m_lock);
+        LOCKER(lock());
         if (!m_can_read) {
             // Unblocked due to timeout.
             return -EAGAIN;
@@ -378,7 +387,7 @@ ssize_t IPv4Socket::recvfrom(void* buffer, size_t buffer_length, int flags, sock
 
 void IPv4Socket::did_receive(ByteBuffer&& packet)
 {
-    LOCKER(m_lock);
+    LOCKER(lock());
     m_receive_queue.append(move(packet));
     m_can_read = true;
 #ifdef IPV4_SOCKET_DEBUG

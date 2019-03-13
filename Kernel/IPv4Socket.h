@@ -42,8 +42,6 @@ public:
 
     void did_receive(ByteBuffer&&);
 
-    Lock& lock() { return m_lock; }
-
     word source_port() const { return m_source_port; }
     word destination_port() const { return m_destination_port; }
 
@@ -78,7 +76,6 @@ private:
     dword m_tcp_ack_number { 0 };
     TCPState m_tcp_state { Disconnected };
 
-    Lock m_lock;
     bool m_can_read { false };
 };
 

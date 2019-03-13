@@ -22,6 +22,7 @@ Socket::Socket(int domain, int type, int protocol)
     : m_domain(domain)
     , m_type(type)
     , m_protocol(protocol)
+    , m_lock("Socket")
 {
     m_origin_pid = current->pid();
 }

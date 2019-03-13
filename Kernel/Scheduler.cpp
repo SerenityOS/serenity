@@ -95,8 +95,8 @@ bool Scheduler::pick_next()
         }
 
         if (process.state() == Process::BlockedConnect) {
-            ASSERT(process.m_blocked_connecting_socket);
-            if (process.m_blocked_connecting_socket->is_connected())
+            ASSERT(process.m_blocked_socket);
+            if (process.m_blocked_socket->is_connected())
                 process.unblock();
             return true;
         }

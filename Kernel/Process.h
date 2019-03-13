@@ -372,7 +372,6 @@ private:
     dword m_times_scheduled { 0 };
     pid_t m_waitee_pid { -1 };
     int m_blocked_fd { -1 };
-    Socket* m_blocked_socket { nullptr };
     Vector<int> m_select_read_fds;
     Vector<int> m_select_write_fds;
     Vector<int> m_select_exceptional_fds;
@@ -382,7 +381,7 @@ private:
     SignalActionData m_signal_action_data[32];
     dword m_pending_signals { 0 };
     dword m_signal_mask { 0 };
-    RetainPtr<Socket> m_blocked_connecting_socket;
+    RetainPtr<Socket> m_blocked_socket;
 
     byte m_termination_status { 0 };
     byte m_termination_signal { 0 };
