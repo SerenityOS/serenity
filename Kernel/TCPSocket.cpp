@@ -3,6 +3,29 @@
 #include <Kernel/NetworkAdapter.h>
 #include <Kernel/Process.h>
 
+Lockable<HashMap<word, TCPSocket*>>& TCPSocket::sockets_by_port()
+{
+    static Lockable<HashMap<word, TCPSocket*>>* s_map;
+    if (!s_map)
+        s_map = new Lockable<HashMap<word, TCPSocket*>>;
+    return *s_map;
+}
+
+TCPSocketHandle TCPSocket::from_port(word port)
+{
+    RetainPtr<TCPSocket> socket;
+    {
+        LOCKER(sockets_by_port().lock());
+        auto it = sockets_by_port().resource().find(port);
+        if (it == sockets_by_port().resource().end())
+            return { };
+        socket = (*it).value;
+        ASSERT(socket);
+    }
+    return { move(socket) };
+}
+
+
 TCPSocket::TCPSocket(int protocol)
     : IPv4Socket(SOCK_STREAM, protocol)
 {
@@ -10,6 +33,8 @@ TCPSocket::TCPSocket(int protocol)
 
 TCPSocket::~TCPSocket()
 {
+    LOCKER(sockets_by_port().lock());
+    sockets_by_port().resource().remove(source_port());
 }
 
 Retained<TCPSocket> TCPSocket::create(int protocol)
@@ -145,4 +170,19 @@ KResult TCPSocket::protocol_connect()
 
     ASSERT(is_connected());
     return KSuccess;
+}
+
+void TCPSocket::protocol_allocate_source_port()
+{
+    // This is not a very efficient allocation algorithm.
+    // FIXME: Replace it with a bitmap or some other fast-paced looker-upper.
+    LOCKER(sockets_by_port().lock());
+    for (word port = 2000; port < 60000; ++port) {
+        auto it = sockets_by_port().resource().find(port);
+        if (it == sockets_by_port().resource().end()) {
+            set_source_port(port);
+            sockets_by_port().resource().set(port, this);
+            return;
+        }
+    }
 }

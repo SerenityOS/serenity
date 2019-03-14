@@ -19,10 +19,8 @@ public:
     virtual ~IPv4Socket() override;
 
     static Lockable<HashTable<IPv4Socket*>>& all_sockets();
-    static Lockable<HashMap<word, IPv4Socket*>>& sockets_by_udp_port();
-    static Lockable<HashMap<word, TCPSocket*>>& sockets_by_tcp_port();
 
-    static TCPSocketHandle from_tcp_port(word);
+    static Lockable<HashMap<word, IPv4Socket*>>& sockets_by_udp_port();
     static IPv4SocketHandle from_udp_port(word);
 
     virtual KResult bind(const sockaddr*, socklen_t) override;
@@ -41,17 +39,21 @@ public:
 
     const IPv4Address& source_address() const;
     word source_port() const { return m_source_port; }
+    void set_source_port(word port) { m_source_port = port; }
 
     const IPv4Address& destination_address() const { return m_destination_address; }
     word destination_port() const { return m_destination_port; }
+    void set_destination_port(word port) { m_destination_port = port; }
 
 protected:
     IPv4Socket(int type, int protocol);
+
     void allocate_source_port_if_needed();
 
     virtual int protocol_receive(const ByteBuffer&, void*, size_t, int, sockaddr*, socklen_t*) { return -ENOTIMPL; }
     virtual int protocol_send(const void*, int) { return -ENOTIMPL; }
     virtual KResult protocol_connect() { return KSuccess; }
+    virtual void protocol_allocate_source_port() { }
 
 private:
     virtual bool is_ipv4() const override { return true; }
