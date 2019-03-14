@@ -6,6 +6,7 @@
 #include <alloca.h>
 #include <assert.h>
 #include <errno.h>
+#include <ctype.h>
 #include <AK/Assertions.h>
 #include <AK/Types.h>
 #include <Kernel/Syscall.h>
@@ -404,11 +405,61 @@ int atexit(void (*function)())
     assert(false);
 }
 
-long strtol(const char*, char** endptr, int base)
+long strtol(const char* str, char** endptr, int base)
 {
-    (void)endptr;
-    (void)base;
-    assert(false);
+    const char* s = str;
+    unsigned long acc;
+    int c;
+    unsigned long cutoff;
+    int neg = 0;
+    int any;
+    int cutlim;
+
+    do {
+        c = *s++;
+    } while (isspace(c));
+    if (c == '-') {
+        neg = 1;
+        c = *s++;
+    } else if (c == '+')
+        c = *s++;
+    if ((base == 0 || base == 16) &&
+        c == '0' && (*s == 'x' || *s == 'X')) {
+        c = s[1];
+        s += 2;
+        base = 16;
+    }
+    if (base == 0)
+        base = c == '0' ? 8 : 10;
+
+    cutoff = neg ? -(unsigned long)LONG_MIN : LONG_MAX;
+    cutlim = cutoff % (unsigned long)base;
+    cutoff /= (unsigned long)base;
+    for (acc = 0, any = 0;; c = *s++) {
+        if (isdigit(c))
+            c -= '0';
+        else if (isalpha(c))
+            c -= isupper(c) ? 'A' - 10 : 'a' - 10;
+        else
+            break;
+        if (c >= base)
+            break;
+        if (any < 0 || acc > cutoff || (acc == cutoff && c > cutlim))
+            any = -1;
+        else {
+            any = 1;
+            acc *= base;
+            acc += c;
+        }
+    }
+    if (any < 0) {
+        acc = neg ? LONG_MIN : LONG_MAX;
+        errno = ERANGE;
+    } else if (neg)
+        acc = -acc;
+    if (endptr)
+        *endptr = (char*)(any ? s - 1 : str);
+    return acc;
 }
 
 unsigned long strtoul(const char*, char** endptr, int base)

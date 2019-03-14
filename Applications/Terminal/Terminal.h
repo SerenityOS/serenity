@@ -145,6 +145,8 @@ private:
 
     int m_ptm_fd { -1 };
 
+    bool m_swallow_current { false };
+
     bool m_in_active_window { false };
     bool m_need_full_flush { false };
 
