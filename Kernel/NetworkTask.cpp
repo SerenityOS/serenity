@@ -262,8 +262,10 @@ void handle_tcp(const EthernetFrameHeader& eth, int frame_size)
     }
 
     auto& tcp_packet = *static_cast<const TCPPacket*>(ipv4_packet.payload());
+    size_t payload_size = ipv4_packet.payload_size() - tcp_packet.header_size();
+
 #ifdef TCP_DEBUG
-    kprintf("handle_tcp: source=%s:%u, destination=%s:%u seq_no=%u, ack_no=%u, flags=%w (%s %s), window_size=%u\n",
+    kprintf("handle_tcp: source=%s:%u, destination=%s:%u seq_no=%u, ack_no=%u, flags=%w (%s %s), window_size=%u, payload_size=%u\n",
         ipv4_packet.source().to_string().characters(),
         tcp_packet.source_port(),
         ipv4_packet.destination().to_string().characters(),
@@ -273,7 +275,8 @@ void handle_tcp(const EthernetFrameHeader& eth, int frame_size)
         tcp_packet.flags(),
         tcp_packet.has_syn() ? "SYN" : "",
         tcp_packet.has_ack() ? "ACK" : "",
-        tcp_packet.window_size()
+        tcp_packet.window_size(),
+        payload_size
     );
 #endif
 
@@ -293,10 +296,8 @@ void handle_tcp(const EthernetFrameHeader& eth, int frame_size)
     ASSERT(socket->type() == SOCK_STREAM);
     ASSERT(socket->source_port() == tcp_packet.destination_port());
 
-    size_t payload_size = ipv4_packet.payload_size() - tcp_packet.header_size();
-
     if (tcp_packet.ack_number() != socket->tcp_sequence_number()) {
-        kprintf("handle_tcp: ack/seq mismatch: got %u, wanted %u\n", tcp_packet.ack_number(), socket->tcp_sequence_number());
+        kprintf("handle_tcp: ack/seq mismatch: got %u, wanted %u\n",tcp_packet.ack_number(), socket->tcp_sequence_number());
         return;
     }
 
@@ -310,8 +311,8 @@ void handle_tcp(const EthernetFrameHeader& eth, int frame_size)
     }
 
     socket->set_tcp_ack_number(socket->tcp_sequence_number() + payload_size);
-
     socket->send_tcp_packet(*adapter, TCPFlags::ACK);
 
-    socket->did_receive(ByteBuffer::copy((const byte*)&ipv4_packet, sizeof(IPv4Packet) + ipv4_packet.payload_size()));
+    if (payload_size != 0)
+        socket->did_receive(ByteBuffer::copy((const byte*)&ipv4_packet, sizeof(IPv4Packet) + ipv4_packet.payload_size()));
 }
