@@ -68,6 +68,8 @@ private:
     word m_source_port { 0 };
     word m_destination_port { 0 };
 
+    dword m_bytes_received { 0 };
+
     bool m_can_read { false };
 };
 

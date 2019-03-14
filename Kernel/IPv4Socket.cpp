@@ -222,9 +222,11 @@ ssize_t IPv4Socket::recvfrom(void* buffer, size_t buffer_length, int flags, sock
 void IPv4Socket::did_receive(ByteBuffer&& packet)
 {
     LOCKER(lock());
+    auto packet_size = packet.size();
     m_receive_queue.append(move(packet));
     m_can_read = true;
+    m_bytes_received += packet_size;
 #ifdef IPV4_SOCKET_DEBUG
-    kprintf("IPv4Socket(%p): did_receive %d bytes, packets in queue: %d\n", this, packet.size(), m_receive_queue.size_slow());
+    kprintf("IPv4Socket(%p): did_receive %d bytes, total_received=%u, packets in queue: %d\n", this, packet_size, m_bytes_received, m_receive_queue.size_slow());
 #endif
 }

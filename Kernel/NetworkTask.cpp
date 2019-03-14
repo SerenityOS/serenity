@@ -302,6 +302,10 @@ void handle_tcp(const EthernetFrameHeader& eth, int frame_size)
 
     if (tcp_packet.has_fin()) {
         kprintf("handle_tcp: Got FIN, payload_size=%u\n", payload_size);
+
+        if (payload_size != 0)
+            socket->did_receive(ByteBuffer::copy((const byte*)&ipv4_packet, sizeof(IPv4Packet) + ipv4_packet.payload_size()));
+
         socket->set_ack_number(tcp_packet.sequence_number() + payload_size + 1);
         socket->send_tcp_packet(TCPFlags::FIN | TCPFlags::ACK);
         socket->set_state(TCPSocket::State::Disconnecting);
