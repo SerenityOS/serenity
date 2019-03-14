@@ -251,7 +251,5 @@ void syscall_trap_entry(RegisterDump& regs)
     dword arg2 = regs.ecx;
     dword arg3 = regs.ebx;
     regs.eax = Syscall::handle(regs, function, arg1, arg2, arg3);
-    if (function == Syscall::SC_mkdir)
-        dbgprintf("->%d\n", regs.eax);
 }
 
