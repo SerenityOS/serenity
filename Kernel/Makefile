@@ -35,6 +35,7 @@ KERNEL_OBJS = \
        Socket.o \
        LocalSocket.o \
        IPv4Socket.o \
+       TCPSocket.o \
        NetworkAdapter.o \
        E1000NetworkAdapter.o \
        NetworkTask.o
