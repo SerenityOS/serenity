@@ -32,7 +32,10 @@ typedef uint32_t time_t;
 typedef uint32_t useconds_t;
 typedef int32_t suseconds_t;
 typedef uint32_t clock_t;
-typedef uint32_t socklen_t;
+
+#define __socklen_t_defined
+#define __socklen_t uint32_t
+typedef __socklen_t socklen_t;
 
 struct timeval {
     time_t tv_sec;

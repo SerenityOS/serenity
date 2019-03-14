@@ -52,10 +52,10 @@ struct sockaddr_in {
 #define SO_SNDTIMEO 2
 
 int socket(int domain, int type, int protocol);
-int bind(int sockfd, const sockaddr* addr, socklen_t);
+int bind(int sockfd, const struct sockaddr* addr, socklen_t);
 int listen(int sockfd, int backlog);
-int accept(int sockfd, sockaddr*, socklen_t*);
-int connect(int sockfd, const sockaddr*, socklen_t);
+int accept(int sockfd, struct sockaddr*, socklen_t*);
+int connect(int sockfd, const struct sockaddr*, socklen_t);
 ssize_t send(int sockfd, const void*, size_t, int flags);
 ssize_t sendto(int sockfd, const void*, size_t, int flags, const struct sockaddr*, socklen_t);
 ssize_t recv(int sockfd, void*, size_t, int flags);
