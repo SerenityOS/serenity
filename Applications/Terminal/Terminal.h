@@ -53,6 +53,7 @@ private:
     void escape$s(const Vector<unsigned>&);
     void escape$u(const Vector<unsigned>&);
     void escape$t(const Vector<unsigned>&);
+    void escape$r(const Vector<unsigned>&);
 
     void clear();
 
