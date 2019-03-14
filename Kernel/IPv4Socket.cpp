@@ -20,28 +20,6 @@ Lockable<HashMap<word, IPv4Socket*>>& IPv4Socket::sockets_by_udp_port()
     return *s_map;
 }
 
-Lockable<HashMap<word, TCPSocket*>>& IPv4Socket::sockets_by_tcp_port()
-{
-    static Lockable<HashMap<word, TCPSocket*>>* s_map;
-    if (!s_map)
-        s_map = new Lockable<HashMap<word, TCPSocket*>>;
-    return *s_map;
-}
-
-TCPSocketHandle IPv4Socket::from_tcp_port(word port)
-{
-    RetainPtr<TCPSocket> socket;
-    {
-        LOCKER(sockets_by_tcp_port().lock());
-        auto it = sockets_by_tcp_port().resource().find(port);
-        if (it == sockets_by_tcp_port().resource().end())
-            return { };
-        socket = (*it).value;
-        ASSERT(socket);
-    }
-    return { move(socket) };
-}
-
 IPv4SocketHandle IPv4Socket::from_udp_port(word port)
 {
     RetainPtr<IPv4Socket> socket;
@@ -88,10 +66,6 @@ IPv4Socket::~IPv4Socket()
     if (type() == SOCK_DGRAM) {
         LOCKER(sockets_by_udp_port().lock());
         sockets_by_udp_port().resource().remove(m_source_port);
-    }
-    if (type() == SOCK_STREAM) {
-        LOCKER(sockets_by_tcp_port().lock());
-        sockets_by_tcp_port().resource().remove(m_source_port);
     }
 }
 
@@ -180,19 +154,11 @@ void IPv4Socket::allocate_source_port_if_needed()
         ASSERT_NOT_REACHED();
     }
     if (type() == SOCK_STREAM) {
-        // This is not a very efficient allocation algorithm.
-        // FIXME: Replace it with a bitmap or some other fast-paced looker-upper.
-        LOCKER(sockets_by_tcp_port().lock());
-        for (word port = 2000; port < 60000; ++port) {
-            auto it = sockets_by_tcp_port().resource().find(port);
-            if (it == sockets_by_tcp_port().resource().end()) {
-                m_source_port = port;
-                sockets_by_tcp_port().resource().set(port, static_cast<TCPSocket*>(this));
-                return;
-            }
-        }
-        ASSERT_NOT_REACHED();
+        protocol_allocate_source_port();
+        return;
     }
+
+    ASSERT_NOT_REACHED();
 }
 
 ssize_t IPv4Socket::sendto(const void* data, size_t data_length, int flags, const sockaddr* addr, socklen_t addr_length)

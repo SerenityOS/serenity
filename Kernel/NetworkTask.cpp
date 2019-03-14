@@ -276,7 +276,7 @@ void handle_tcp(const EthernetFrameHeader& eth, int frame_size)
     );
 #endif
 
-    auto socket = IPv4Socket::from_tcp_port(tcp_packet.destination_port());
+    auto socket = TCPSocket::from_port(tcp_packet.destination_port());
     if (!socket) {
         kprintf("handle_tcp: No TCP socket for port %u\n", tcp_packet.destination_port());
         return;

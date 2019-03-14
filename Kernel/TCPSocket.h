@@ -24,6 +24,9 @@ public:
 
     void send_tcp_packet(word flags, const void* = nullptr, int = 0);
 
+    static Lockable<HashMap<word, TCPSocket*>>& sockets_by_port();
+    static TCPSocketHandle from_port(word);
+
 private:
     explicit TCPSocket(int protocol);
 
@@ -32,6 +35,7 @@ private:
     virtual int protocol_receive(const ByteBuffer&, void* buffer, size_t buffer_size, int flags, sockaddr* addr, socklen_t* addr_length) override;
     virtual int protocol_send(const void*, int) override;
     virtual KResult protocol_connect() override;
+    virtual void protocol_allocate_source_port() override;
 
     dword m_sequence_number { 0 };
     dword m_ack_number { 0 };
