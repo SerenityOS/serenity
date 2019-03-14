@@ -35,7 +35,7 @@ int main(int argc, char** argv)
     memset(&dst_addr, 0, sizeof(dst_addr));
 
     dst_addr.sin_family = AF_INET;
-    dst_addr.sin_port = htons(8080);
+    dst_addr.sin_port = htons(80);
     rc = inet_pton(AF_INET, addr_str, &dst_addr.sin_addr);
     if (rc < 0) {
         perror("inet_pton");
@@ -52,7 +52,7 @@ int main(int argc, char** argv)
     printf("ok!\n");
 
     char buffer[BUFSIZ];
-    const char* msg = "I am a TCP client.";
+    const char* msg = "GET / HTTP/1.0\r\n\r\n";
 
     printf("Sending a greeting...");
     rc = send(fd, (const char*)msg, strlen(msg), 0);
@@ -63,16 +63,21 @@ int main(int argc, char** argv)
     printf("ok!\n");
 
     printf("Waiting for response...");
-    ssize_t nrecv = recv(fd, buffer, sizeof(buffer), 0);
-    if (nrecv < 0) {
-        perror("recvfrom");
-        return 1;
+    size_t total_recv = 0;
+    for (;;) {
+        ssize_t nrecv = recv(fd, buffer, sizeof(buffer), 0);
+        if (nrecv < 0) {
+            perror("recvfrom");
+            return 1;
+        }
+        if (nrecv == 0)
+            break;
+        total_recv += nrecv;
+        buffer[nrecv] = '\0';
+        printf("\033[36;1m%s\033[0m", buffer);
     }
-    buffer[nrecv] = '\0';
-    printf("ok! Got response:\n");
-    printf("\033[36;1m%s\033[0m", buffer);
 
-    printf("(%d bytes received)\n", nrecv);
+    printf("(%u bytes received)\n", total_recv);
     rc = close(fd);
     if (rc < 0) {
         perror("close");
