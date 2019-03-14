@@ -7,6 +7,7 @@
 #include <Kernel/IPv4.h>
 #include <Kernel/IPv4Socket.h>
 #include <Kernel/TCPSocket.h>
+#include <Kernel/UDPSocket.h>
 #include <Kernel/Process.h>
 #include <Kernel/EtherType.h>
 #include <AK/Lock.h>
@@ -235,7 +236,7 @@ void handle_udp(const EthernetFrameHeader& eth, int frame_size)
     );
 #endif
 
-    auto socket = IPv4Socket::from_udp_port(udp_packet.destination_port());
+    auto socket = UDPSocket::from_port(udp_packet.destination_port());
     if (!socket) {
         kprintf("handle_udp: No UDP socket for port %u\n", udp_packet.destination_port());
         return;

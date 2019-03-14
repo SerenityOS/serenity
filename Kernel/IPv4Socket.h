@@ -20,9 +20,6 @@ public:
 
     static Lockable<HashTable<IPv4Socket*>>& all_sockets();
 
-    static Lockable<HashMap<word, IPv4Socket*>>& sockets_by_udp_port();
-    static IPv4SocketHandle from_udp_port(word);
-
     virtual KResult bind(const sockaddr*, socklen_t) override;
     virtual KResult connect(const sockaddr*, socklen_t) override;
     virtual bool get_address(sockaddr*, socklen_t*) override;
