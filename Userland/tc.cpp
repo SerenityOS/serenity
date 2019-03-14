@@ -42,30 +42,37 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    printf("Connecting to %s...", addr_str);
+    fflush(stdout);
     rc = connect(fd, (struct sockaddr*)&dst_addr, sizeof(dst_addr));
     if (rc < 0) {
         perror("connect");
         return 1;
     }
+    printf("ok!\n");
 
     char buffer[BUFSIZ];
-    const char* msg = "Test message!\n";
+    const char* msg = "I am a TCP client.";
 
+    printf("Sending a greeting...");
     rc = send(fd, (const char*)msg, strlen(msg), 0);
     if (rc < 0) {
         perror("send");
         return 1;
     }
-    printf("Message sent.\n");
+    printf("ok!\n");
 
+    printf("Waiting for response...");
     ssize_t nrecv = recv(fd, buffer, sizeof(buffer), 0);
     if (nrecv < 0) {
         perror("recvfrom");
         return 1;
     }
     buffer[nrecv] = '\0';
-    printf("Server: %s\n", buffer);
+    printf("ok! Got response:\n");
+    printf("\033[36;1m%s\033[0m", buffer);
 
+    printf("(%d bytes received)\n", nrecv);
     rc = close(fd);
     if (rc < 0) {
         perror("close");

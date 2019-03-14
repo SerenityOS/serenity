@@ -245,11 +245,16 @@ void IPv4Socket::send_tcp_packet(NetworkAdapter& adapter, word flags, const void
 
     memcpy(tcp_packet.payload(), payload, payload_size);
     tcp_packet.set_checksum(compute_tcp_checksum(adapter.ipv4_address(), m_destination_address, tcp_packet, payload_size));
-    kprintf("sending tcp packet from %s:%u to %s:%u!\n",
+    kprintf("sending tcp packet from %s:%u to %s:%u with (%s %s) seq_no=%u, ack_no=%u\n",
         adapter.ipv4_address().to_string().characters(),
         source_port(),
         m_destination_address.to_string().characters(),
-        m_destination_port);
+        m_destination_port,
+        tcp_packet.has_syn() ? "SYN" : "",
+        tcp_packet.has_ack() ? "ACK" : "",
+        tcp_packet.sequence_number(),
+        tcp_packet.ack_number()
+    );
     adapter.send_ipv4(MACAddress(), m_destination_address, IPv4Protocol::TCP, move(buffer));
 }
 
@@ -302,7 +307,7 @@ ssize_t IPv4Socket::sendto(const void* data, size_t data_length, int flags, cons
     }
 
     if (type() == SOCK_STREAM) {
-        send_tcp_packet(*adapter, 0, data, data_length);
+        send_tcp_packet(*adapter, TCPFlags::PUSH | TCPFlags::ACK, data, data_length);
         return data_length;
     }
 
@@ -374,7 +379,7 @@ ssize_t IPv4Socket::recvfrom(void* buffer, size_t buffer_length, int flags, sock
 
     if (type() == SOCK_STREAM) {
         auto& tcp_packet = *static_cast<const TCPPacket*>(ipv4_packet.payload());
-        size_t payload_size = packet_buffer.size() - tcp_packet.header_size();
+        size_t payload_size = packet_buffer.size() - sizeof(IPv4Packet) - tcp_packet.header_size();
         ASSERT(buffer_length >= payload_size);
         if (addr) {
             auto& ia = *(sockaddr_in*)addr;
@@ -395,5 +400,4 @@ void IPv4Socket::did_receive(ByteBuffer&& packet)
 #ifdef IPV4_SOCKET_DEBUG
     kprintf("IPv4Socket(%p): did_receive %d bytes, packets in queue: %d\n", this, packet.size(), m_receive_queue.size_slow());
 #endif
-
 }
