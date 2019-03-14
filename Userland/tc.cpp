@@ -49,7 +49,7 @@ int main(int argc, char** argv)
     }
 
     char buffer[BUFSIZ];
-    const char* msg = "Test message";
+    const char* msg = "Test message!\n";
 
     rc = send(fd, (const char*)msg, strlen(msg), 0);
     if (rc < 0) {
