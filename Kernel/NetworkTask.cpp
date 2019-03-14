@@ -234,17 +234,12 @@ void handle_udp(const EthernetFrameHeader& eth, int frame_size)
     );
 #endif
 
-    RetainPtr<IPv4Socket> socket;
-    {
-        LOCKER(IPv4Socket::sockets_by_udp_port().lock());
-        auto it = IPv4Socket::sockets_by_udp_port().resource().find(udp_packet.destination_port());
-        if (it == IPv4Socket::sockets_by_udp_port().resource().end())
-            return;
-        ASSERT((*it).value);
-        socket = *(*it).value;
+    auto socket = IPv4Socket::from_udp_port(udp_packet.destination_port());
+    if (!socket) {
+        kprintf("handle_udp: No UDP socket for port %u\n", udp_packet.destination_port());
+        return;
     }
 
-    LOCKER(socket->lock());
     ASSERT(socket->type() == SOCK_DGRAM);
     ASSERT(socket->source_port() == udp_packet.destination_port());
     socket->did_receive(ByteBuffer::copy((const byte*)&ipv4_packet, sizeof(IPv4Packet) + ipv4_packet.payload_size()));
@@ -280,19 +275,12 @@ void handle_tcp(const EthernetFrameHeader& eth, int frame_size)
     );
 #endif
 
-    RetainPtr<IPv4Socket> socket;
-    {
-        LOCKER(IPv4Socket::sockets_by_tcp_port().lock());
-        auto it = IPv4Socket::sockets_by_tcp_port().resource().find(tcp_packet.destination_port());
-        if (it == IPv4Socket::sockets_by_tcp_port().resource().end()) {
-            kprintf("handle_tcp: No TCP socket for port %u\n", tcp_packet.destination_port());
-            return;
-        }
-        ASSERT((*it).value);
-        socket = *(*it).value;
+    auto socket = IPv4Socket::from_tcp_port(tcp_packet.destination_port());
+    if (!socket) {
+        kprintf("handle_tcp: No TCP socket for port %u\n", tcp_packet.destination_port());
+        return;
     }
 
-    LOCKER(socket->lock());
     ASSERT(socket->type() == SOCK_STREAM);
     ASSERT(socket->source_port() == tcp_packet.destination_port());
 
