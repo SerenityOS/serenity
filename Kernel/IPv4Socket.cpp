@@ -1,4 +1,5 @@
 #include <Kernel/IPv4Socket.h>
+#include <Kernel/TCPSocket.h>
 #include <Kernel/UnixTypes.h>
 #include <Kernel/Process.h>
 #include <Kernel/NetworkAdapter.h>
@@ -19,17 +20,17 @@ Lockable<HashMap<word, IPv4Socket*>>& IPv4Socket::sockets_by_udp_port()
     return *s_map;
 }
 
-Lockable<HashMap<word, IPv4Socket*>>& IPv4Socket::sockets_by_tcp_port()
+Lockable<HashMap<word, TCPSocket*>>& IPv4Socket::sockets_by_tcp_port()
 {
-    static Lockable<HashMap<word, IPv4Socket*>>* s_map;
+    static Lockable<HashMap<word, TCPSocket*>>* s_map;
     if (!s_map)
-        s_map = new Lockable<HashMap<word, IPv4Socket*>>;
+        s_map = new Lockable<HashMap<word, TCPSocket*>>;
     return *s_map;
 }
 
-IPv4SocketHandle IPv4Socket::from_tcp_port(word port)
+TCPSocketHandle IPv4Socket::from_tcp_port(word port)
 {
-    RetainPtr<IPv4Socket> socket;
+    RetainPtr<TCPSocket> socket;
     {
         LOCKER(sockets_by_tcp_port().lock());
         auto it = sockets_by_tcp_port().resource().find(port);
@@ -65,6 +66,8 @@ Lockable<HashTable<IPv4Socket*>>& IPv4Socket::all_sockets()
 
 Retained<IPv4Socket> IPv4Socket::create(int type, int protocol)
 {
+    if (type == SOCK_STREAM)
+        return TCPSocket::create(protocol);
     return adopt(*new IPv4Socket(type, protocol));
 }
 
@@ -125,28 +128,7 @@ KResult IPv4Socket::connect(const sockaddr* address, socklen_t address_size)
     m_destination_address = IPv4Address((const byte*)&ia.sin_addr.s_addr);
     m_destination_port = ntohs(ia.sin_port);
 
-    if (type() != SOCK_STREAM)
-        return KSuccess;
-
-    // FIXME: Figure out the adapter somehow differently.
-    auto* adapter = NetworkAdapter::from_ipv4_address(IPv4Address(192, 168, 5, 2));
-    if (!adapter)
-        ASSERT_NOT_REACHED();
-
-    allocate_source_port_if_needed();
-
-    m_tcp_sequence_number = 0;
-    m_tcp_ack_number = 0;
-
-    send_tcp_packet(*adapter, TCPFlags::SYN);
-    m_tcp_state = TCPState::Connecting1;
-
-    current->set_blocked_socket(this);
-    block(Process::BlockedConnect);
-    Scheduler::yield();
-
-    ASSERT(is_connected());
-    return KSuccess;
+    return protocol_connect();
 }
 
 void IPv4Socket::attach_fd(SocketRole)
@@ -205,89 +187,12 @@ void IPv4Socket::allocate_source_port_if_needed()
             auto it = sockets_by_tcp_port().resource().find(port);
             if (it == sockets_by_tcp_port().resource().end()) {
                 m_source_port = port;
-                sockets_by_tcp_port().resource().set(port, this);
+                sockets_by_tcp_port().resource().set(port, static_cast<TCPSocket*>(this));
                 return;
             }
         }
         ASSERT_NOT_REACHED();
     }
-}
-
-struct [[gnu::packed]] TCPPseudoHeader {
-    IPv4Address source;
-    IPv4Address destination;
-    byte zero;
-    byte protocol;
-    NetworkOrdered<word> payload_size;
-};
-
-NetworkOrdered<word> IPv4Socket::compute_tcp_checksum(const IPv4Address& source, const IPv4Address& destination, const TCPPacket& packet, word payload_size)
-{
-    TCPPseudoHeader pseudo_header { source, destination, 0, (byte)IPv4Protocol::TCP, sizeof(TCPPacket) + payload_size };
-
-    dword checksum = 0;
-    auto* w = (const NetworkOrdered<word>*)&pseudo_header;
-    for (size_t i = 0; i < sizeof(pseudo_header) / sizeof(word); ++i) {
-        checksum += w[i];
-        if (checksum > 0xffff)
-            checksum = (checksum >> 16) + (checksum & 0xffff);
-    }
-    w = (const NetworkOrdered<word>*)&packet;
-    for (size_t i = 0; i < sizeof(packet) / sizeof(word); ++i) {
-        checksum += w[i];
-        if (checksum > 0xffff)
-            checksum = (checksum >> 16) + (checksum & 0xffff);
-    }
-    ASSERT(packet.data_offset() * 4 == sizeof(TCPPacket));
-    w = (const NetworkOrdered<word>*)packet.payload();
-    for (size_t i = 0; i < payload_size / sizeof(word); ++i) {
-        checksum += w[i];
-        if (checksum > 0xffff)
-            checksum = (checksum >> 16) + (checksum & 0xffff);
-    }
-    if (payload_size & 1) {
-        word expanded_byte = ((const byte*)packet.payload())[payload_size - 1];
-        checksum += expanded_byte;
-        if (checksum > 0xffff)
-            checksum = (checksum >> 16) + (checksum & 0xffff);
-    }
-    return ~(checksum & 0xffff);
-}
-
-void IPv4Socket::send_tcp_packet(NetworkAdapter& adapter, word flags, const void* payload, size_t payload_size)
-{
-    auto buffer = ByteBuffer::create_zeroed(sizeof(TCPPacket) + payload_size);
-    auto& tcp_packet = *(TCPPacket*)(buffer.pointer());
-    ASSERT(m_source_port);
-    tcp_packet.set_source_port(m_source_port);
-    tcp_packet.set_destination_port(m_destination_port);
-    tcp_packet.set_window_size(1024);
-    tcp_packet.set_sequence_number(m_tcp_sequence_number);
-    tcp_packet.set_data_offset(sizeof(TCPPacket) / sizeof(dword));
-    tcp_packet.set_flags(flags);
-
-    if (flags & TCPFlags::ACK)
-        tcp_packet.set_ack_number(m_tcp_ack_number);
-
-    if (flags == TCPFlags::SYN) {
-        ++m_tcp_sequence_number;
-    } else {
-        m_tcp_sequence_number += payload_size;
-    }
-
-    memcpy(tcp_packet.payload(), payload, payload_size);
-    tcp_packet.set_checksum(compute_tcp_checksum(adapter.ipv4_address(), m_destination_address, tcp_packet, payload_size));
-    kprintf("sending tcp packet from %s:%u to %s:%u with (%s %s) seq_no=%u, ack_no=%u\n",
-        adapter.ipv4_address().to_string().characters(),
-        source_port(),
-        m_destination_address.to_string().characters(),
-        m_destination_port,
-        tcp_packet.has_syn() ? "SYN" : "",
-        tcp_packet.has_ack() ? "ACK" : "",
-        tcp_packet.sequence_number(),
-        tcp_packet.ack_number()
-    );
-    adapter.send_ipv4(MACAddress(), m_destination_address, IPv4Protocol::TCP, move(buffer));
 }
 
 ssize_t IPv4Socket::sendto(const void* data, size_t data_length, int flags, const sockaddr* addr, socklen_t addr_length)
@@ -338,10 +243,8 @@ ssize_t IPv4Socket::sendto(const void* data, size_t data_length, int flags, cons
         return data_length;
     }
 
-    if (type() == SOCK_STREAM) {
-        send_tcp_packet(*adapter, TCPFlags::PUSH | TCPFlags::ACK, data, data_length);
-        return data_length;
-    }
+    if (type() == SOCK_STREAM)
+        return protocol_send(data, data_length);
 
     ASSERT_NOT_REACHED();
 }
@@ -409,17 +312,8 @@ ssize_t IPv4Socket::recvfrom(void* buffer, size_t buffer_length, int flags, sock
         return udp_packet.length() - sizeof(UDPPacket);
     }
 
-    if (type() == SOCK_STREAM) {
-        auto& tcp_packet = *static_cast<const TCPPacket*>(ipv4_packet.payload());
-        size_t payload_size = packet_buffer.size() - sizeof(IPv4Packet) - tcp_packet.header_size();
-        ASSERT(buffer_length >= payload_size);
-        if (addr) {
-            auto& ia = *(sockaddr_in*)addr;
-            ia.sin_port = htons(tcp_packet.destination_port());
-        }
-        memcpy(buffer, tcp_packet.payload(), payload_size);
-        return payload_size;
-    }
+    if (type() == SOCK_STREAM)
+        return protocol_receive(packet_buffer, buffer, buffer_length, flags, addr, addr_length);
 
     ASSERT_NOT_REACHED();
 }

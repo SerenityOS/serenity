@@ -19,10 +19,10 @@ KResultOr<Retained<Socket>> Socket::create(int domain, int type, int protocol)
 }
 
 Socket::Socket(int domain, int type, int protocol)
-    : m_domain(domain)
+    : m_lock("Socket")
+    , m_domain(domain)
     , m_type(type)
     , m_protocol(protocol)
-    , m_lock("Socket")
 {
     m_origin_pid = current->pid();
 }
@@ -69,12 +69,12 @@ KResult Socket::setsockopt(int level, int option, const void* value, socklen_t v
     case SO_SNDTIMEO:
         if (value_size != sizeof(timeval))
             return KResult(-EINVAL);
-        m_send_timeout = *(timeval*)value;
+        m_send_timeout = *(const timeval*)value;
         return KSuccess;
     case SO_RCVTIMEO:
         if (value_size != sizeof(timeval))
             return KResult(-EINVAL);
-        m_receive_timeout = *(timeval*)value;
+        m_receive_timeout = *(const timeval*)value;
         return KSuccess;
     default:
         kprintf("%s(%u): setsockopt() at SOL_SOCKET with unimplemented option %d\n", option);

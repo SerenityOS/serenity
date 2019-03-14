@@ -8,28 +8,21 @@
 #include <AK/SinglyLinkedList.h>
 
 class IPv4SocketHandle;
+class TCPSocketHandle;
 class NetworkAdapter;
 class TCPPacket;
+class TCPSocket;
 
-enum TCPState {
-    Disconnected,
-    Connecting1,
-    Connecting2,
-    Connected,
-    Disconnecting1,
-    Disconnecting2,
-};
-
-class IPv4Socket final : public Socket {
+class IPv4Socket : public Socket {
 public:
     static Retained<IPv4Socket> create(int type, int protocol);
     virtual ~IPv4Socket() override;
 
     static Lockable<HashTable<IPv4Socket*>>& all_sockets();
     static Lockable<HashMap<word, IPv4Socket*>>& sockets_by_udp_port();
-    static Lockable<HashMap<word, IPv4Socket*>>& sockets_by_tcp_port();
+    static Lockable<HashMap<word, TCPSocket*>>& sockets_by_tcp_port();
 
-    static IPv4SocketHandle from_tcp_port(word);
+    static TCPSocketHandle from_tcp_port(word);
     static IPv4SocketHandle from_udp_port(word);
 
     virtual KResult bind(const sockaddr*, socklen_t) override;
@@ -46,23 +39,22 @@ public:
 
     void did_receive(ByteBuffer&&);
 
+    const IPv4Address& source_address() const;
     word source_port() const { return m_source_port; }
+
+    const IPv4Address& destination_address() const { return m_destination_address; }
     word destination_port() const { return m_destination_port; }
 
-    void send_tcp_packet(NetworkAdapter&, word flags, const void* payload = nullptr, size_t = 0);
-    void set_tcp_state(TCPState state) { m_tcp_state = state; }
-    TCPState tcp_state() const { return m_tcp_state; }
-    void set_tcp_ack_number(dword n) { m_tcp_ack_number = n; }
-    void set_tcp_sequence_number(dword n) { m_tcp_sequence_number = n; }
-    dword tcp_ack_number() const { return m_tcp_ack_number; }
-    dword tcp_sequence_number() const { return m_tcp_sequence_number; }
+protected:
+    IPv4Socket(int type, int protocol);
+    void allocate_source_port_if_needed();
+
+    virtual int protocol_receive(const ByteBuffer&, void*, size_t, int, sockaddr*, socklen_t*) { return -ENOTIMPL; }
+    virtual int protocol_send(const void*, int) { return -ENOTIMPL; }
+    virtual KResult protocol_connect() { return KSuccess; }
 
 private:
-    IPv4Socket(int type, int protocol);
     virtual bool is_ipv4() const override { return true; }
-
-    void allocate_source_port_if_needed();
-    NetworkOrdered<word> compute_tcp_checksum(const IPv4Address& source, const IPv4Address& destination, const TCPPacket&, word payload_size);
 
     bool m_bound { false };
     int m_attached_fds { 0 };
@@ -75,10 +67,6 @@ private:
 
     word m_source_port { 0 };
     word m_destination_port { 0 };
-
-    dword m_tcp_sequence_number { 0 };
-    dword m_tcp_ack_number { 0 };
-    TCPState m_tcp_state { Disconnected };
 
     bool m_can_read { false };
 };

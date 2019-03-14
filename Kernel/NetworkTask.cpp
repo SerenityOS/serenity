@@ -6,6 +6,7 @@
 #include <Kernel/TCP.h>
 #include <Kernel/IPv4.h>
 #include <Kernel/IPv4Socket.h>
+#include <Kernel/TCPSocket.h>
 #include <Kernel/Process.h>
 #include <Kernel/EtherType.h>
 #include <AK/Lock.h>
@@ -284,29 +285,29 @@ void handle_tcp(const EthernetFrameHeader& eth, int frame_size)
     ASSERT(socket->type() == SOCK_STREAM);
     ASSERT(socket->source_port() == tcp_packet.destination_port());
 
-    if (tcp_packet.ack_number() != socket->tcp_sequence_number()) {
-        kprintf("handle_tcp: ack/seq mismatch: got %u, wanted %u\n",tcp_packet.ack_number(), socket->tcp_sequence_number());
+    if (tcp_packet.ack_number() != socket->sequence_number()) {
+        kprintf("handle_tcp: ack/seq mismatch: got %u, wanted %u\n",tcp_packet.ack_number(), socket->sequence_number());
         return;
     }
 
     if (tcp_packet.has_syn() && tcp_packet.has_ack()) {
-        socket->set_tcp_ack_number(tcp_packet.sequence_number() + payload_size + 1);
-        socket->send_tcp_packet(*adapter, TCPFlags::ACK);
+        socket->set_ack_number(tcp_packet.sequence_number() + payload_size + 1);
+        socket->send_tcp_packet(TCPFlags::ACK);
         socket->set_connected(true);
         kprintf("handle_tcp: Connection established!\n");
-        socket->set_tcp_state(Connected);
+        socket->set_state(TCPSocket::State::Connected);
         return;
     }
 
-    socket->set_tcp_ack_number(tcp_packet.sequence_number() + payload_size);
+    socket->set_ack_number(tcp_packet.sequence_number() + payload_size);
     kprintf("Got packet with ack_no=%u, seq_no=%u, payload_size=%u, acking it with new ack_no=%u, seq_no=%u\n",
             tcp_packet.ack_number(),
             tcp_packet.sequence_number(),
             payload_size,
-            socket->tcp_ack_number(),
-            socket->tcp_sequence_number()
+            socket->ack_number(),
+            socket->sequence_number()
             );
-    socket->send_tcp_packet(*adapter, TCPFlags::ACK);
+    socket->send_tcp_packet(TCPFlags::ACK);
 
     if (payload_size != 0)
         socket->did_receive(ByteBuffer::copy((const byte*)&ipv4_packet, sizeof(IPv4Packet) + ipv4_packet.payload_size()));
