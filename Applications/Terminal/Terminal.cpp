@@ -316,8 +316,10 @@ void Terminal::escape$K(const Vector<unsigned>& params)
         }
         break;
     case 1:
-        // FIXME: Clear from cursor to beginning of screen.
-        unimplemented_escape();
+        // Clear from cursor to beginning of line.
+        for (int i = 0; i < m_cursor_column; ++i) {
+            put_character_at(m_cursor_row, i, ' ');
+        }
         break;
     case 2:
         unimplemented_escape();
@@ -504,7 +506,10 @@ void Terminal::on_char(byte ch)
     case ExpectBracket:
         if (ch == '[')
             m_escape_state = ExpectParameter;
-        else if (ch == ']')
+        else if (ch == '(') {
+            m_swallow_current = true;
+            m_escape_state = ExpectParameter;
+        } else if (ch == ']')
             m_escape_state = ExpectXtermParameter1;
         else
             m_escape_state = Normal;
@@ -545,10 +550,13 @@ void Terminal::on_char(byte ch)
     case ExpectFinal:
         if (is_valid_final_character(ch)) {
             m_escape_state = Normal;
-            execute_escape_sequence(ch);
+            if (!m_swallow_current)
+                execute_escape_sequence(ch);
+            m_swallow_current = false;
             return;
         }
         m_escape_state = Normal;
+        m_swallow_current = false;
         return;
     case Normal:
         break;
@@ -559,6 +567,7 @@ void Terminal::on_char(byte ch)
         return;
     case '\033':
         m_escape_state = ExpectBracket;
+        m_swallow_current = false;
         return;
     case 8: // Backspace
         if (m_cursor_column) {
