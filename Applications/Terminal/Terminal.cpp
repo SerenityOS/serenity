@@ -192,7 +192,18 @@ void Terminal::escape$t(const Vector<unsigned>& params)
 {
     if (params.size() < 1)
         return;
-    dbgprintf("escape$t: Ps: %u\n", params[0]);
+    dbgprintf("FIXME: escape$t: Ps: %u\n", params[0]);
+}
+
+void Terminal::escape$r(const Vector<unsigned>& params)
+{
+    unsigned top = 1;
+    unsigned bottom = m_rows;
+    if (params.size() >= 1)
+        top = params[0];
+    if (params.size() >= 2)
+        bottom = params[1];
+    dbgprintf("FIXME: escape$r: Set scrolling region: %u-%u\n", top, bottom);
 }
 
 void Terminal::escape$H(const Vector<unsigned>& params)
@@ -386,6 +397,7 @@ void Terminal::execute_escape_sequence(byte final)
     case 's': escape$s(params); break;
     case 'u': escape$u(params); break;
     case 't': escape$t(params); break;
+    case 'r': escape$r(params); break;
     default:
         dbgprintf("Terminal::execute_escape_sequence: Unhandled final '%c'\n", final);
         break;
