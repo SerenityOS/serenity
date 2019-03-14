@@ -298,7 +298,14 @@ void handle_tcp(const EthernetFrameHeader& eth, int frame_size)
         return;
     }
 
-    socket->set_tcp_ack_number(socket->tcp_sequence_number() + payload_size);
+    socket->set_tcp_ack_number(tcp_packet.sequence_number() + payload_size);
+    kprintf("Got packet with ack_no=%u, seq_no=%u, payload_size=%u, acking it with new ack_no=%u, seq_no=%u\n",
+            tcp_packet.ack_number(),
+            tcp_packet.sequence_number(),
+            payload_size,
+            socket->tcp_ack_number(),
+            socket->tcp_sequence_number()
+            );
     socket->send_tcp_packet(*adapter, TCPFlags::ACK);
 
     if (payload_size != 0)
