@@ -59,7 +59,7 @@ struct group* getgrgid(gid_t gid)
     return nullptr;
 }
 
-struct group* getgrname(const char* name)
+struct group* getgrnam(const char* name)
 {
     setgrent();
     while (auto* gr = getgrent()) {
