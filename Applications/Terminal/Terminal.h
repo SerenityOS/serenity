@@ -49,6 +49,9 @@ private:
     void escape$J(const Vector<unsigned>&);
     void escape$K(const Vector<unsigned>&);
     void escape$M(const Vector<unsigned>&);
+    void escape$G(const Vector<unsigned>&);
+    void escape$X(const Vector<unsigned>&);
+    void escape$d(const Vector<unsigned>&);
     void escape$m(const Vector<unsigned>&);
     void escape$s(const Vector<unsigned>&);
     void escape$u(const Vector<unsigned>&);

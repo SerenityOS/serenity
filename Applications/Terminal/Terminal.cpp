@@ -269,6 +269,40 @@ void Terminal::escape$D(const Vector<unsigned>& params)
     set_cursor(m_cursor_row, new_column);
 }
 
+void Terminal::escape$G(const Vector<unsigned>& params)
+{
+    int new_column = 1;
+    if (params.size() >= 1)
+        new_column = params[0] - 1;
+    if (new_column < 0)
+        new_column = 0;
+    set_cursor(m_cursor_row, new_column);
+}
+
+void Terminal::escape$d(const Vector<unsigned>& params)
+{
+    int new_row = 1;
+    if (params.size() >= 1)
+        new_row = params[0] - 1;
+    if (new_row < 0)
+        new_row = 0;
+    set_cursor(new_row, m_cursor_column);
+}
+
+void Terminal::escape$X(const Vector<unsigned>& params)
+{
+    // Erase characters (without moving cursor)
+    int num = 1;
+    if (params.size() >= 1)
+        num = params[0];
+    if (num == 0)
+        num = 1;
+    // Clear from cursor to end of line.
+    for (int i = m_cursor_column; i < num; ++i) {
+        put_character_at(m_cursor_row, i, ' ');
+    }
+}
+
 void Terminal::escape$K(const Vector<unsigned>& params)
 {
     int mode = 0;
@@ -393,6 +427,9 @@ void Terminal::execute_escape_sequence(byte final)
     case 'J': escape$J(params); break;
     case 'K': escape$K(params); break;
     case 'M': escape$M(params); break;
+    case 'G': escape$G(params); break;
+    case 'X': escape$X(params); break;
+    case 'd': escape$d(params); break;
     case 'm': escape$m(params); break;
     case 's': escape$s(params); break;
     case 'u': escape$u(params); break;
