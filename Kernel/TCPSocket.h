@@ -36,6 +36,7 @@ private:
     virtual int protocol_send(const void*, int) override;
     virtual KResult protocol_connect() override;
     virtual void protocol_allocate_source_port() override;
+    virtual bool protocol_is_disconnected() const override;
 
     dword m_sequence_number { 0 };
     dword m_ack_number { 0 };

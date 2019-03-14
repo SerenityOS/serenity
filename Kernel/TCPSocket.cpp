@@ -186,3 +186,8 @@ void TCPSocket::protocol_allocate_source_port()
         }
     }
 }
+
+bool TCPSocket::protocol_is_disconnected() const
+{
+    return m_state == State::Disconnecting || m_state == State::Disconnected;
+}

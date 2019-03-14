@@ -51,6 +51,7 @@ protected:
     virtual int protocol_send(const void*, int) { return -ENOTIMPL; }
     virtual KResult protocol_connect() { return KSuccess; }
     virtual void protocol_allocate_source_port() { }
+    virtual bool protocol_is_disconnected() const { return false; }
 
 private:
     virtual bool is_ipv4() const override { return true; }

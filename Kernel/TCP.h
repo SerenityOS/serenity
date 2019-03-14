@@ -37,6 +37,7 @@ public:
 
     bool has_syn() const { return flags() & TCPFlags::SYN; }
     bool has_ack() const { return flags() & TCPFlags::ACK; }
+    bool has_fin() const { return flags() & TCPFlags::FIN; }
 
     byte data_offset() const { return (m_flags_and_data_offset & 0xf000) >> 12; }
     void set_data_offset(word data_offset) { m_flags_and_data_offset = (m_flags_and_data_offset & ~0xf000) | data_offset << 12; }
