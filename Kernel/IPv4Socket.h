@@ -7,6 +7,7 @@
 #include <AK/Lock.h>
 #include <AK/SinglyLinkedList.h>
 
+class IPv4SocketHandle;
 class NetworkAdapter;
 class TCPPacket;
 
@@ -27,6 +28,9 @@ public:
     static Lockable<HashTable<IPv4Socket*>>& all_sockets();
     static Lockable<HashMap<word, IPv4Socket*>>& sockets_by_udp_port();
     static Lockable<HashMap<word, IPv4Socket*>>& sockets_by_tcp_port();
+
+    static IPv4SocketHandle from_tcp_port(word);
+    static IPv4SocketHandle from_udp_port(word);
 
     virtual KResult bind(const sockaddr*, socklen_t) override;
     virtual KResult connect(const sockaddr*, socklen_t) override;
@@ -79,3 +83,26 @@ private:
     bool m_can_read { false };
 };
 
+class IPv4SocketHandle : public SocketHandle {
+public:
+    IPv4SocketHandle() { }
+
+    IPv4SocketHandle(RetainPtr<IPv4Socket>&& socket)
+        : SocketHandle(move(socket))
+    {
+    }
+
+    IPv4SocketHandle(IPv4SocketHandle&& other)
+        : SocketHandle(move(other))
+    {
+    }
+
+    IPv4SocketHandle(const IPv4SocketHandle&) = delete;
+    IPv4SocketHandle& operator=(const IPv4SocketHandle&) = delete;
+
+    IPv4Socket* operator->() { return &socket(); }
+    const IPv4Socket* operator->() const { return &socket(); }
+
+    IPv4Socket& socket() { return static_cast<IPv4Socket&>(SocketHandle::socket()); }
+    const IPv4Socket& socket() const { return static_cast<const IPv4Socket&>(SocketHandle::socket()); }
+};

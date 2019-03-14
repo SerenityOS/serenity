@@ -76,3 +76,40 @@ private:
     Vector<RetainPtr<Socket>> m_pending;
     Vector<RetainPtr<Socket>> m_clients;
 };
+
+class SocketHandle {
+public:
+    SocketHandle() { }
+
+    SocketHandle(RetainPtr<Socket>&& socket)
+        : m_socket(move(socket))
+    {
+        if (m_socket)
+            m_socket->lock().lock();
+    }
+
+    SocketHandle(SocketHandle&& other)
+        : m_socket(move(other.m_socket))
+    {
+    }
+
+    ~SocketHandle()
+    {
+        if (m_socket)
+            m_socket->lock().unlock();
+    }
+
+    SocketHandle(const SocketHandle&) = delete;
+    SocketHandle& operator=(const SocketHandle&) = delete;
+
+    operator bool() const { return m_socket; }
+
+    Socket* operator->() { return &socket(); }
+    const Socket* operator->() const { return &socket(); }
+
+    Socket& socket() { return *m_socket; }
+    const Socket& socket() const { return *m_socket; }
+
+private:
+    RetainPtr<Socket> m_socket;
+};

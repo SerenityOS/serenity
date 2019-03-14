@@ -27,6 +27,34 @@ Lockable<HashMap<word, IPv4Socket*>>& IPv4Socket::sockets_by_tcp_port()
     return *s_map;
 }
 
+IPv4SocketHandle IPv4Socket::from_tcp_port(word port)
+{
+    RetainPtr<IPv4Socket> socket;
+    {
+        LOCKER(sockets_by_tcp_port().lock());
+        auto it = sockets_by_tcp_port().resource().find(port);
+        if (it == sockets_by_tcp_port().resource().end())
+            return { };
+        socket = (*it).value;
+        ASSERT(socket);
+    }
+    return { move(socket) };
+}
+
+IPv4SocketHandle IPv4Socket::from_udp_port(word port)
+{
+    RetainPtr<IPv4Socket> socket;
+    {
+        LOCKER(sockets_by_udp_port().lock());
+        auto it = sockets_by_udp_port().resource().find(port);
+        if (it == sockets_by_udp_port().resource().end())
+            return { };
+        socket = (*it).value;
+        ASSERT(socket);
+    }
+    return { move(socket) };
+}
+
 Lockable<HashTable<IPv4Socket*>>& IPv4Socket::all_sockets()
 {
     static Lockable<HashTable<IPv4Socket*>>* s_table;
@@ -217,8 +245,12 @@ NetworkOrdered<word> IPv4Socket::compute_tcp_checksum(const IPv4Address& source,
         if (checksum > 0xffff)
             checksum = (checksum >> 16) + (checksum & 0xffff);
     }
-    if (payload_size & 1)
-        ASSERT_NOT_REACHED();
+    if (payload_size & 1) {
+        word expanded_byte = ((const byte*)packet.payload())[payload_size - 1];
+        checksum += expanded_byte;
+        if (checksum > 0xffff)
+            checksum = (checksum >> 16) + (checksum & 0xffff);
+    }
     return ~(checksum & 0xffff);
 }
 
