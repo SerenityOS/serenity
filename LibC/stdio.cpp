@@ -351,8 +351,20 @@ void perror(const char* s)
 
 FILE* fopen(const char* pathname, const char* mode)
 {
-    assert(!strcmp(mode, "r") || !strcmp(mode, "rb"));
-    int fd = open(pathname, O_RDONLY);
+    int flags = 0;
+    if (!strcmp(mode, "r") || !strcmp(mode, "rb"))
+        flags = O_RDONLY;
+    else if (!strcmp(mode, "r+") || !strcmp(mode, "rb+"))
+        flags = O_RDWR;
+    else if (!strcmp(mode, "w") || !strcmp(mode, "wb"))
+        flags = O_WRONLY | O_CREAT | O_TRUNC;
+    else if (!strcmp(mode, "w+") || !strcmp(mode, "wb+"))
+        flags = O_RDWR | O_CREAT | O_TRUNC;
+    else {
+        fprintf(stderr, "FIXME(LibC): fopen('%s', '%s')\n", pathname, mode);
+        ASSERT_NOT_REACHED();
+    }
+    int fd = open(pathname, flags, 0666);
     if (fd < 0)
         return nullptr;
     return make_FILE(fd);
@@ -368,7 +380,7 @@ FILE* freopen(const char* pathname, const char* mode, FILE* stream)
 
 FILE* fdopen(int fd, const char* mode)
 {
-    assert(!strcmp(mode, "r") || !strcmp(mode, "rb"));
+    // FIXME: Verify that the mode matches how fd is already open.
     if (fd < 0)
         return nullptr;
     return make_FILE(fd);
@@ -402,6 +414,14 @@ FILE* popen(const char* command, const char* type)
 int pclose(FILE*)
 {
     assert(false);
+}
+
+int remove(const char* pathname)
+{
+    int rc = unlink(pathname);
+    if (rc < 0 && errno != EISDIR)
+        return -1;
+    return rmdir(pathname);
 }
 
 }

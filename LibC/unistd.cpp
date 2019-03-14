@@ -26,6 +26,11 @@ pid_t fork()
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
+int execv(const char* path, char* const argv[])
+{
+    return execve(path, argv, nullptr);
+}
+
 int execve(const char* filename, char* const argv[], char* const envp[])
 {
     int rc = syscall(SC_execve, filename, argv, envp);
