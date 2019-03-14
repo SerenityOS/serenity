@@ -1,5 +1,6 @@
 #include <Kernel/IPv4Socket.h>
 #include <Kernel/TCPSocket.h>
+#include <Kernel/UDPSocket.h>
 #include <Kernel/UnixTypes.h>
 #include <Kernel/Process.h>
 #include <Kernel/NetworkAdapter.h>
@@ -11,28 +12,6 @@
 #include <LibC/errno_numbers.h>
 
 #define IPV4_SOCKET_DEBUG
-
-Lockable<HashMap<word, IPv4Socket*>>& IPv4Socket::sockets_by_udp_port()
-{
-    static Lockable<HashMap<word, IPv4Socket*>>* s_map;
-    if (!s_map)
-        s_map = new Lockable<HashMap<word, IPv4Socket*>>;
-    return *s_map;
-}
-
-IPv4SocketHandle IPv4Socket::from_udp_port(word port)
-{
-    RetainPtr<IPv4Socket> socket;
-    {
-        LOCKER(sockets_by_udp_port().lock());
-        auto it = sockets_by_udp_port().resource().find(port);
-        if (it == sockets_by_udp_port().resource().end())
-            return { };
-        socket = (*it).value;
-        ASSERT(socket);
-    }
-    return { move(socket) };
-}
 
 Lockable<HashTable<IPv4Socket*>>& IPv4Socket::all_sockets()
 {
@@ -46,6 +25,8 @@ Retained<IPv4Socket> IPv4Socket::create(int type, int protocol)
 {
     if (type == SOCK_STREAM)
         return TCPSocket::create(protocol);
+    if (type == SOCK_DGRAM)
+        return UDPSocket::create(protocol);
     return adopt(*new IPv4Socket(type, protocol));
 }
 
@@ -59,14 +40,8 @@ IPv4Socket::IPv4Socket(int type, int protocol)
 
 IPv4Socket::~IPv4Socket()
 {
-    {
-        LOCKER(all_sockets().lock());
-        all_sockets().resource().remove(this);
-    }
-    if (type() == SOCK_DGRAM) {
-        LOCKER(sockets_by_udp_port().lock());
-        sockets_by_udp_port().resource().remove(m_source_port);
-    }
+    LOCKER(all_sockets().lock());
+    all_sockets().resource().remove(this);
 }
 
 bool IPv4Socket::get_address(sockaddr* address, socklen_t* address_size)
@@ -139,26 +114,7 @@ void IPv4Socket::allocate_source_port_if_needed()
 {
     if (m_source_port)
         return;
-    if (type() == SOCK_DGRAM) {
-        // This is not a very efficient allocation algorithm.
-        // FIXME: Replace it with a bitmap or some other fast-paced looker-upper.
-        LOCKER(sockets_by_udp_port().lock());
-        for (word port = 2000; port < 60000; ++port) {
-            auto it = sockets_by_udp_port().resource().find(port);
-            if (it == sockets_by_udp_port().resource().end()) {
-                m_source_port = port;
-                sockets_by_udp_port().resource().set(port, this);
-                return;
-            }
-        }
-        ASSERT_NOT_REACHED();
-    }
-    if (type() == SOCK_STREAM) {
-        protocol_allocate_source_port();
-        return;
-    }
-
-    ASSERT_NOT_REACHED();
+    protocol_allocate_source_port();
 }
 
 ssize_t IPv4Socket::sendto(const void* data, size_t data_length, int flags, const sockaddr* addr, socklen_t addr_length)
@@ -193,26 +149,7 @@ ssize_t IPv4Socket::sendto(const void* data, size_t data_length, int flags, cons
         return data_length;
     }
 
-    if (type() == SOCK_DGRAM) {
-        auto buffer = ByteBuffer::create_zeroed(sizeof(UDPPacket) + data_length);
-        auto& udp_packet = *(UDPPacket*)(buffer.pointer());
-        udp_packet.set_source_port(m_source_port);
-        udp_packet.set_destination_port(m_destination_port);
-        udp_packet.set_length(sizeof(UDPPacket) + data_length);
-        memcpy(udp_packet.payload(), data, data_length);
-        kprintf("sending as udp packet from %s:%u to %s:%u!\n",
-            adapter->ipv4_address().to_string().characters(),
-            source_port(),
-            m_destination_address.to_string().characters(),
-            m_destination_port);
-        adapter->send_ipv4(MACAddress(), m_destination_address, IPv4Protocol::UDP, move(buffer));
-        return data_length;
-    }
-
-    if (type() == SOCK_STREAM)
-        return protocol_send(data, data_length);
-
-    ASSERT_NOT_REACHED();
+    return protocol_send(data, data_length);
 }
 
 ssize_t IPv4Socket::recvfrom(void* buffer, size_t buffer_length, int flags, sockaddr* addr, socklen_t* addr_length)
@@ -266,22 +203,7 @@ ssize_t IPv4Socket::recvfrom(void* buffer, size_t buffer_length, int flags, sock
         return ipv4_packet.payload_size();
     }
 
-    if (type() == SOCK_DGRAM) {
-        auto& udp_packet = *static_cast<const UDPPacket*>(ipv4_packet.payload());
-        ASSERT(udp_packet.length() >= sizeof(UDPPacket)); // FIXME: This should be rejected earlier.
-        ASSERT(buffer_length >= (udp_packet.length() - sizeof(UDPPacket)));
-        if (addr) {
-            auto& ia = *(sockaddr_in*)addr;
-            ia.sin_port = htons(udp_packet.destination_port());
-        }
-        memcpy(buffer, udp_packet.payload(), udp_packet.length() - sizeof(UDPPacket));
-        return udp_packet.length() - sizeof(UDPPacket);
-    }
-
-    if (type() == SOCK_STREAM)
-        return protocol_receive(packet_buffer, buffer, buffer_length, flags, addr, addr_length);
-
-    ASSERT_NOT_REACHED();
+    return protocol_receive(packet_buffer, buffer, buffer_length, flags, addr, addr_length);
 }
 
 void IPv4Socket::did_receive(ByteBuffer&& packet)
