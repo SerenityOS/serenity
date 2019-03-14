@@ -287,7 +287,7 @@ void handle_tcp(const EthernetFrameHeader& eth, int frame_size)
     ASSERT(socket->source_port() == tcp_packet.destination_port());
 
     if (tcp_packet.ack_number() != socket->sequence_number()) {
-        kprintf("handle_tcp: ack/seq mismatch: got %u, wanted %u\n",tcp_packet.ack_number(), socket->sequence_number());
+        kprintf("handle_tcp: ack/seq mismatch: got %u, wanted %u\n", tcp_packet.ack_number(), socket->sequence_number());
         return;
     }
 
@@ -297,6 +297,14 @@ void handle_tcp(const EthernetFrameHeader& eth, int frame_size)
         socket->set_connected(true);
         kprintf("handle_tcp: Connection established!\n");
         socket->set_state(TCPSocket::State::Connected);
+        return;
+    }
+
+    if (tcp_packet.has_fin()) {
+        kprintf("handle_tcp: Got FIN, payload_size=%u\n", payload_size);
+        socket->set_ack_number(tcp_packet.sequence_number() + payload_size + 1);
+        socket->send_tcp_packet(TCPFlags::FIN | TCPFlags::ACK);
+        socket->set_state(TCPSocket::State::Disconnecting);
         return;
     }
 

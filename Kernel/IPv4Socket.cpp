@@ -92,22 +92,24 @@ void IPv4Socket::detach_fd(SocketRole)
 
 bool IPv4Socket::can_read(SocketRole) const
 {
+    if (protocol_is_disconnected())
+        return true;
     return m_can_read;
 }
 
-ssize_t IPv4Socket::read(SocketRole, byte*, ssize_t)
+ssize_t IPv4Socket::read(SocketRole, byte* buffer, ssize_t size)
 {
-    ASSERT_NOT_REACHED();
+    return recvfrom(buffer, size, 0, nullptr, 0);
 }
 
-ssize_t IPv4Socket::write(SocketRole, const byte*, ssize_t)
+ssize_t IPv4Socket::write(SocketRole, const byte* data, ssize_t size)
 {
-    ASSERT_NOT_REACHED();
+    return sendto(data, size, 0, nullptr, 0);
 }
 
 bool IPv4Socket::can_write(SocketRole) const
 {
-    ASSERT_NOT_REACHED();
+    return true;
 }
 
 void IPv4Socket::allocate_source_port_if_needed()
@@ -168,9 +170,17 @@ ssize_t IPv4Socket::recvfrom(void* buffer, size_t buffer_length, int flags, sock
         if (!m_receive_queue.is_empty()) {
             packet_buffer = m_receive_queue.take_first();
             m_can_read = !m_receive_queue.is_empty();
+#ifdef IPV4_SOCKET_DEBUG
+            kprintf("IPv4Socket(%p): recvfrom without blocking %d bytes, packets in queue: %d\n", this, packet_buffer.size(), m_receive_queue.size_slow());
+#endif
         }
     }
     if (packet_buffer.is_null()) {
+        if (protocol_is_disconnected()) {
+            kprintf("IPv4Socket{%p} is protocol-disconnected, returning 0 in recvfrom!\n", this);
+            return 0;
+        }
+
         current->set_blocked_socket(this);
         load_receive_deadline();
         block(Process::BlockedReceive);
@@ -185,6 +195,9 @@ ssize_t IPv4Socket::recvfrom(void* buffer, size_t buffer_length, int flags, sock
         ASSERT(!m_receive_queue.is_empty());
         packet_buffer = m_receive_queue.take_first();
         m_can_read = !m_receive_queue.is_empty();
+#ifdef IPV4_SOCKET_DEBUG
+        kprintf("IPv4Socket(%p): recvfrom with blocking %d bytes, packets in queue: %d\n", this, packet_buffer.size(), m_receive_queue.size_slow());
+#endif
     }
     ASSERT(!packet_buffer.is_null());
     auto& ipv4_packet = *(const IPv4Packet*)(packet_buffer.pointer());
