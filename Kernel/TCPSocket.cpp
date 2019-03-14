@@ -50,6 +50,7 @@ int TCPSocket::protocol_receive(const ByteBuffer& packet_buffer, void* buffer, s
     auto& ipv4_packet = *(const IPv4Packet*)(packet_buffer.pointer());
     auto& tcp_packet = *static_cast<const TCPPacket*>(ipv4_packet.payload());
     size_t payload_size = packet_buffer.size() - sizeof(IPv4Packet) - tcp_packet.header_size();
+    kprintf("payload_size %u, will it fit in %u?\n", payload_size, buffer_size);
     ASSERT(buffer_size >= payload_size);
     if (addr) {
         auto& ia = *(sockaddr_in*)addr;
@@ -141,7 +142,7 @@ NetworkOrdered<word> TCPSocket::compute_tcp_checksum(const IPv4Address& source, 
             checksum = (checksum >> 16) + (checksum & 0xffff);
     }
     if (payload_size & 1) {
-        word expanded_byte = ((const byte*)packet.payload())[payload_size - 1];
+        word expanded_byte = ((const byte*)packet.payload())[payload_size - 1] << 8;
         checksum += expanded_byte;
         if (checksum > 0xffff)
             checksum = (checksum >> 16) + (checksum & 0xffff);
