@@ -97,25 +97,27 @@ KResult IPv4Socket::connect(const sockaddr* address, socklen_t address_size)
     m_destination_address = IPv4Address((const byte*)&ia.sin_addr.s_addr);
     m_destination_port = ntohs(ia.sin_port);
 
-    if (type() == SOCK_STREAM) {
-        // FIXME: Figure out the adapter somehow differently.
-        auto* adapter = NetworkAdapter::from_ipv4_address(IPv4Address(192, 168, 5, 2));
-        if (!adapter)
-            ASSERT_NOT_REACHED();
-
-        allocate_source_port_if_needed();
-
-        send_tcp_packet(*adapter, TCPFlags::SYN);
-        m_tcp_state = TCPState::Connecting1;
-
-        current->set_blocked_socket(this);
-        block(Process::BlockedConnect);
-        Scheduler::yield();
-
-        ASSERT(is_connected());
+    if (type() != SOCK_STREAM)
         return KSuccess;
-    }
 
+    // FIXME: Figure out the adapter somehow differently.
+    auto* adapter = NetworkAdapter::from_ipv4_address(IPv4Address(192, 168, 5, 2));
+    if (!adapter)
+        ASSERT_NOT_REACHED();
+
+    allocate_source_port_if_needed();
+
+    m_tcp_sequence_number = 0;
+    m_tcp_ack_number = 0;
+
+    send_tcp_packet(*adapter, TCPFlags::SYN);
+    m_tcp_state = TCPState::Connecting1;
+
+    current->set_blocked_socket(this);
+    block(Process::BlockedConnect);
+    Scheduler::yield();
+
+    ASSERT(is_connected());
     return KSuccess;
 }
 
@@ -372,7 +374,7 @@ ssize_t IPv4Socket::recvfrom(void* buffer, size_t buffer_length, int flags, sock
 
     if (type() == SOCK_STREAM) {
         auto& tcp_packet = *static_cast<const TCPPacket*>(ipv4_packet.payload());
-        size_t payload_size = packet_buffer.size() - sizeof(TCPPacket);
+        size_t payload_size = packet_buffer.size() - tcp_packet.header_size();
         ASSERT(buffer_length >= payload_size);
         if (addr) {
             auto& ia = *(sockaddr_in*)addr;

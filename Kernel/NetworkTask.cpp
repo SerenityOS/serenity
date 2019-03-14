@@ -295,14 +295,21 @@ void handle_tcp(const EthernetFrameHeader& eth, int frame_size)
 
     size_t payload_size = ipv4_packet.payload_size() - tcp_packet.header_size();
 
+    if (tcp_packet.ack_number() != socket->tcp_sequence_number()) {
+        kprintf("handle_tcp: ack/seq mismatch: got %u, wanted %u\n", tcp_packet.ack_number(), socket->tcp_sequence_number());
+        return;
+    }
+
     if (tcp_packet.has_syn() && tcp_packet.has_ack()) {
-        socket->set_tcp_ack_number(socket->tcp_sequence_number() + payload_size + 1);
+        socket->set_tcp_ack_number(tcp_packet.sequence_number() + payload_size + 1);
         socket->send_tcp_packet(*adapter, TCPFlags::ACK);
         socket->set_connected(true);
-        kprintf("Connected!\n");
+        kprintf("handle_tcp: Connection established!\n");
         socket->set_tcp_state(Connected);
         return;
     }
+
+    socket->set_tcp_ack_number(socket->tcp_sequence_number() + payload_size);
 
     socket->send_tcp_packet(*adapter, TCPFlags::ACK);
 
