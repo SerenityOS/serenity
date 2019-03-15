@@ -85,6 +85,8 @@ cp -v ../Applications/FileManager/FileManager mnt/bin/FileManager
 cp -v ../Applications/ProcessManager/ProcessManager mnt/bin/ProcessManager
 cp -v ../Applications/About/About mnt/bin/About
 cp -v ../Applications/TextEditor/TextEditor mnt/bin/TextEditor
+cp -v ../Applications/IRCClient/IRCClient mnt/bin/IRCClient
+ln -s IRCClient mnt/bin/irc
 cp -v ../WindowServer/WindowServer mnt/bin/WindowServer
 cp -v kernel.map mnt/
 sh sync-local.sh

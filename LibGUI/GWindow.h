@@ -8,7 +8,7 @@
 
 class GWidget;
 
-class GWindow final : public GObject {
+class GWindow : public GObject {
 public:
     GWindow(GObject* parent = nullptr);
     virtual ~GWindow() override;
