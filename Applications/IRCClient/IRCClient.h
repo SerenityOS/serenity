@@ -14,6 +14,7 @@ class GNotifier;
 
 class IRCClient {
     friend class IRCChannel;
+    friend class IRCQuery;
 public:
     IRCClient(const String& address, int port = 6667);
     ~IRCClient();

@@ -30,3 +30,9 @@ void IRCQuery::add_message(char prefix, const String& name, const String& text)
     log().add_message(prefix, name, text);
     dump();
 }
+
+void IRCQuery::say(const String& text)
+{
+    m_client.send_privmsg(m_name, text);
+    add_message(' ', m_client.nickname(), text);
+}

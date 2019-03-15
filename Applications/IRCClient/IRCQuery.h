@@ -22,6 +22,8 @@ public:
     const IRCLogBuffer& log() const { return *m_log; }
     IRCLogBuffer& log() { return *m_log; }
 
+    void say(const String&);
+
 private:
     IRCQuery(IRCClient&, const String& name);
 
