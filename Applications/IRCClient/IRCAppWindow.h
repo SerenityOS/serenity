@@ -14,10 +14,10 @@ private:
     void setup_client();
     void setup_widgets();
 
-    void create_subwindow(IRCClientWindow::Type, const String& name);
+    IRCClientWindow& create_subwindow(IRCClientWindow::Type, const String& name);
+    IRCClientWindow& ensure_window(IRCClientWindow::Type, const String& name);
 
     IRCClient m_client;
 
     GWidget* m_subwindow_container { nullptr };
-    Vector<IRCClientWindow*> m_subwindows;
 };

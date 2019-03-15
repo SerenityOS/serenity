@@ -1,6 +1,7 @@
 #include "IRCAppWindow.h"
 #include "IRCClientWindow.h"
-#include <LibGUI/GListBox.h>
+#include "IRCClientWindowListModel.h"
+#include <LibGUI/GTableView.h>
 #include <LibGUI/GBoxLayout.h>
 
 IRCAppWindow::IRCAppWindow()
@@ -23,6 +24,10 @@ void IRCAppWindow::setup_client()
         m_client.join_channel("#test");
     };
 
+    m_client.on_join = [this] (const String& channel_name) {
+        ensure_window(IRCClientWindow::Channel, channel_name);
+    };
+
     m_client.on_query_message = [this] (const String& name) {
         // FIXME: Update query view.
     };
@@ -41,11 +46,10 @@ void IRCAppWindow::setup_widgets()
     set_main_widget(widget);
     widget->set_layout(make<GBoxLayout>(Orientation::Horizontal));
 
-    auto* subwindow_list = new GListBox(widget);
+    auto* subwindow_list = new GTableView(widget);
+    subwindow_list->set_model(OwnPtr<IRCClientWindowListModel>(m_client.client_window_list_model()));
     subwindow_list->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
     subwindow_list->set_preferred_size({ 120, 0 });
-    subwindow_list->add_item("Server");
-    subwindow_list->add_item("#test");
 
     m_subwindow_container = new GWidget(widget);
     m_subwindow_container->set_layout(make<GBoxLayout>(Orientation::Vertical));
@@ -54,8 +58,17 @@ void IRCAppWindow::setup_widgets()
     create_subwindow(IRCClientWindow::Server, "Server");
 }
 
-void IRCAppWindow::create_subwindow(IRCClientWindow::Type type, const String& name)
+IRCClientWindow& IRCAppWindow::create_subwindow(IRCClientWindow::Type type, const String& name)
 {
-    auto* subwindow = new IRCClientWindow(m_client, type, name, m_subwindow_container);
-    m_subwindows.append(subwindow);
+    return *new IRCClientWindow(m_client, type, name, m_subwindow_container);
+}
+
+IRCClientWindow& IRCAppWindow::ensure_window(IRCClientWindow::Type type, const String& name)
+{
+    for (int i = 0; i < m_client.window_count(); ++i) {
+        auto& window = m_client.window_at(i);
+        if (window.name() == name)
+            return window;
+    }
+    return create_subwindow(type, name);
 }
