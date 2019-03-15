@@ -7,6 +7,7 @@
 IRCClientWindowListModel::IRCClientWindowListModel(IRCClient& client)
     : m_client(client)
 {
+    set_activates_on_selection(true);
 }
 
 IRCClientWindowListModel::~IRCClientWindowListModel()
