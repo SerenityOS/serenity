@@ -52,6 +52,8 @@ void IRCClientWindowListModel::update()
     did_update();
 }
 
-void IRCClientWindowListModel::activate(const GModelIndex&)
+void IRCClientWindowListModel::activate(const GModelIndex& index)
 {
+    if (on_activation)
+        on_activation(m_client.window_at(index.row()));
 }

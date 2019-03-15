@@ -1,8 +1,10 @@
 #pragma once
 
 #include <LibGUI/GTableModel.h>
+#include <AK/Function.h>
 
 class IRCClient;
+class IRCClientWindow;
 
 class IRCClientWindowListModel final : public GTableModel {
 public:
@@ -20,6 +22,8 @@ public:
     virtual GVariant data(const GModelIndex&, Role = Role::Display) const override;
     virtual void update() override;
     virtual void activate(const GModelIndex&) override;
+
+    Function<void(IRCClientWindow&)> on_activation;
 
 private:
     IRCClient& m_client;
