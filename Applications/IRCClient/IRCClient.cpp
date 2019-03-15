@@ -235,7 +235,8 @@ void IRCClient::handle(const Message& msg, const String& verbatim)
     if (msg.command == "PRIVMSG")
         return handle_privmsg(msg);
 
-    m_log->add_message(0, "Server", verbatim);
+    if (msg.arguments.size() >= 2)
+        m_log->add_message(0, "Server", String::format("[%s] %s", msg.command.characters(), msg.arguments[1].characters()));
 }
 
 bool IRCClient::is_nick_prefix(char ch) const

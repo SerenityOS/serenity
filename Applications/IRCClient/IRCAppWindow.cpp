@@ -49,8 +49,6 @@ void IRCAppWindow::setup_widgets()
 
     m_subwindow_container = new GWidget(widget);
     m_subwindow_container->set_layout(make<GBoxLayout>(Orientation::Vertical));
-    m_subwindow_container->set_fill_with_background_color(true);
-    m_subwindow_container->set_background_color(Color::Yellow);
     m_subwindow_container->set_size_policy(SizePolicy::Fill, SizePolicy::Fill);
 
     create_subwindow(IRCSubWindow::Server, "Server");
@@ -59,7 +57,5 @@ void IRCAppWindow::setup_widgets()
 void IRCAppWindow::create_subwindow(IRCSubWindow::Type type, const String& name)
 {
     auto* subwindow = new IRCSubWindow(m_client, type, name, m_subwindow_container);
-    subwindow->set_fill_with_background_color(true);
-    subwindow->set_background_color(Color::Magenta);
     m_subwindows.append(subwindow);
 }
