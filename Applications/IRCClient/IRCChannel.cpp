@@ -1,5 +1,6 @@
 #include "IRCChannel.h"
 #include "IRCClient.h"
+#include "IRCChannelMemberListModel.h"
 #include <stdio.h>
 #include <time.h>
 
@@ -8,6 +9,7 @@ IRCChannel::IRCChannel(IRCClient& client, const String& name)
     , m_name(name)
     , m_log(IRCLogBuffer::create())
 {
+    m_member_model = new IRCChannelMemberListModel(*this);
 }
 
 IRCChannel::~IRCChannel()

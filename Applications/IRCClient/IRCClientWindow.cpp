@@ -1,5 +1,7 @@
 #include "IRCClientWindow.h"
 #include "IRCClient.h"
+#include "IRCChannel.h"
+#include "IRCChannelMemberListModel.h"
 #include "IRCLogBufferModel.h"
 #include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GTableView.h>
@@ -13,9 +15,22 @@ IRCClientWindow::IRCClientWindow(IRCClient& client, Type type, const String& nam
     , m_name(name)
 {
     set_layout(make<GBoxLayout>(Orientation::Vertical));
-    m_table_view = new GTableView(this);
+
+    // Make a container for the log buffer view + optional member list.
+    GWidget* container = new GWidget(this);
+    container->set_layout(make<GBoxLayout>(Orientation::Horizontal));
+
+    m_table_view = new GTableView(container);
     m_table_view->set_headers_visible(false);
     m_table_view->set_font(Font::default_fixed_width_font());
+
+    if (m_type == Channel) {
+        auto* member_view = new GTableView(container);
+        member_view->set_headers_visible(false);
+        member_view->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
+        member_view->set_preferred_size({ 100, 0 });
+        member_view->set_model(OwnPtr<IRCChannelMemberListModel>(m_client.ensure_channel(m_name).member_model()));
+    }
 
     m_text_editor = new GTextEditor(GTextEditor::SingleLine, this);
     m_text_editor->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
