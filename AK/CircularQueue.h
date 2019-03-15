@@ -46,6 +46,8 @@ public:
         return value;
     }
 
+    const T& at(int index) const { return m_elements[(m_head + index) % Capacity]; }
+
     class ConstIterator {
     public:
         bool operator!=(const ConstIterator& other) { return m_index != other.m_index; }
