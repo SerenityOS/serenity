@@ -47,6 +47,7 @@ void IRCAppWindow::setup_widgets()
     widget->set_layout(make<GBoxLayout>(Orientation::Horizontal));
 
     auto* subwindow_list = new GTableView(widget);
+    subwindow_list->set_headers_visible(false);
     subwindow_list->set_model(OwnPtr<IRCClientWindowListModel>(m_client.client_window_list_model()));
     subwindow_list->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
     subwindow_list->set_preferred_size({ 120, 0 });

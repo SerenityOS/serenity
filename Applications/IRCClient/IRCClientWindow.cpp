@@ -13,6 +13,7 @@ IRCClientWindow::IRCClientWindow(IRCClient& client, Type type, const String& nam
 {
     set_layout(make<GBoxLayout>(Orientation::Vertical));
     m_table_view = new GTableView(this);
+    m_table_view->set_headers_visible(false);
     m_table_view->set_font(Font::default_fixed_width_font());
 
     m_client.register_subwindow(*this);
