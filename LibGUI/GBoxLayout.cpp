@@ -1,11 +1,8 @@
 #include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GWidget.h>
+#include <stdio.h>
 
 //#define GBOXLAYOUT_DEBUG
-
-#ifdef GBOXLAYOUT_DEBUG
-#include <stdio.h>
-#endif
 
 GBoxLayout::GBoxLayout(Orientation orientation)
     : m_orientation(orientation)
@@ -35,6 +32,12 @@ static Size compute_preferred_size(GLayout::Entry& entry)
 
 void GBoxLayout::run(GWidget& widget)
 {
+    bool should_log = false;
+#ifdef GBOXLAYOUT_DEBUG
+    should_log = true;
+#endif
+    if (should_log)
+        printf("GBoxLayout: running layout on %s{%p}\n", widget.class_name(), &widget);
     if (m_entries.is_empty())
         return;
 
@@ -43,20 +46,34 @@ void GBoxLayout::run(GWidget& widget)
 
     int number_of_visible_entries = 0;
 
+    if (should_log)
+        printf("GBoxLayout:  Starting with available size: %s\n", available_size.to_string().characters());
+
     for (auto& entry : m_entries) {
         if (!entry.widget->is_visible())
             continue;
         ++number_of_visible_entries;
         if (entry.widget && entry.widget->size_policy(orientation()) == SizePolicy::Fixed) {
+            if (should_log) {
+                printf("GBoxLayout:   Subtracting for fixed %s{%p}, size: %s\n", entry.widget->class_name(), entry.widget.ptr(), entry.widget->preferred_size().to_string().characters());
+                printf("GBoxLayout:     Available size before: %s\n", available_size.to_string().characters());
+            }
+
             available_size -= entry.widget->preferred_size();
+            if (should_log)
+                printf("GBoxLayout:     Available size  after: %s\n", available_size.to_string().characters());
             ++number_of_entries_with_fixed_size;
         }
     }
 
+    if (should_log)
+        printf("GBoxLayout:  Number of visible: %d/%d\n", number_of_visible_entries, m_entries.size());
+
     int number_of_entries_with_automatic_size = number_of_visible_entries - number_of_entries_with_fixed_size;
 
 #ifdef GBOXLAYOUT_DEBUG
-    printf("GBoxLayout: available_size=%s, fixed=%d, fill=%d\n", available_size.to_string().characters(), number_of_entries_with_fixed_size, number_of_entries_with_automatic_size);
+    if (should_log)
+        printf("GBoxLayout:   available_size=%s, fixed=%d, fill=%d\n", available_size.to_string().characters(), number_of_entries_with_fixed_size, number_of_entries_with_automatic_size);
 #endif
 
     Size automatic_size;
@@ -72,7 +89,8 @@ void GBoxLayout::run(GWidget& widget)
     }
 
 #ifdef GBOXLAYOUT_DEBUG
-    printf("GBoxLayout: automatic_size=%s\n", automatic_size.to_string().characters());
+    if (should_log)
+        printf("GBoxLayout:   automatic_size=%s\n", automatic_size.to_string().characters());
 #endif
 
     int current_x = margins().left();
@@ -106,7 +124,8 @@ void GBoxLayout::run(GWidget& widget)
         }
 
 #ifdef GBOXLAYOUT_DEBUG
-        printf("GBoxLayout: apply, %s{%p} <- %s\n", entry.widget->class_name(), entry.widget.ptr(), rect.to_string().characters());
+        if (should_log)
+            printf("GBoxLayout: apply, %s{%p} <- %s\n", entry.widget->class_name(), entry.widget.ptr(), rect.to_string().characters());
 #endif
         entry.widget->set_relative_rect(rect);
 

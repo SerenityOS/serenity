@@ -11,6 +11,8 @@
 #include <unistd.h>
 #include <stdio.h>
 
+//#define IRC_DEBUG
+
 enum IRCNumeric {
     RPL_NAMREPLY = 353,
     RPL_ENDOFNAMES = 366,
@@ -201,6 +203,7 @@ void IRCClient::join_channel(const String& channel_name)
 
 void IRCClient::handle(const Message& msg, const String&)
 {
+#ifdef IRC_DEBUG
     printf("IRCClient::execute: prefix='%s', command='%s', arguments=%d\n",
         msg.prefix.characters(),
         msg.command.characters(),
@@ -212,6 +215,7 @@ void IRCClient::handle(const Message& msg, const String&)
         printf("    [%d]: %s\n", i, arg.characters());
         ++i;
     }
+#endif
 
     bool is_numeric;
     int numeric = msg.command.to_uint(is_numeric);
@@ -285,7 +289,9 @@ void IRCClient::handle_privmsg(const Message& msg)
     auto sender_nick = parts[0];
     auto target = msg.arguments[0];
 
+#ifdef IRC_DEBUG
     printf("handle_privmsg: sender_nick='%s', target='%s'\n", sender_nick.characters(), target.characters());
+#endif
 
     if (sender_nick.is_empty())
         return;
@@ -353,7 +359,6 @@ void IRCClient::handle_join(const Message& msg)
 
 void IRCClient::handle_namreply(const Message& msg)
 {
-    printf("NAMREPLY:\n");
     if (msg.arguments.size() < 4)
         return;
 

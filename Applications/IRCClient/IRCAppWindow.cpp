@@ -4,6 +4,9 @@
 #include <LibGUI/GStackWidget.h>
 #include <LibGUI/GTableView.h>
 #include <LibGUI/GBoxLayout.h>
+#include <LibGUI/GToolBar.h>
+#include <LibGUI/GAction.h>
+#include <stdio.h>
 
 IRCAppWindow::IRCAppWindow()
     : GWindow()
@@ -43,11 +46,28 @@ void IRCAppWindow::setup_client()
 void IRCAppWindow::setup_widgets()
 {
     auto* widget = new GWidget(nullptr);
-    widget->set_fill_with_background_color(true);
     set_main_widget(widget);
-    widget->set_layout(make<GBoxLayout>(Orientation::Horizontal));
+    widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
 
-    auto* window_list = new GTableView(widget);
+    printf("main_widget: %s{%p}\n", widget->class_name(), widget);
+
+    auto join_action = GAction::create("Join channel", GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/16x16/irc-join.rgb", { 16, 16 }), [] (auto&) {
+        printf("FIXME: Implement join action\n");
+    });
+
+    auto part_action = GAction::create("Part from channel", GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/16x16/irc-part.rgb", { 16, 16 }), [] (auto&) {
+        printf("FIXME: Implement part action\n");
+    });
+
+    auto* toolbar = new GToolBar(widget);
+    toolbar->add_action(join_action.copy_ref());
+    toolbar->add_action(part_action.copy_ref());
+
+    auto* horizontal_container = new GWidget(widget);
+    printf("horizontal_widget: %s{%p}\n", horizontal_container->class_name(), horizontal_container);
+    horizontal_container->set_layout(make<GBoxLayout>(Orientation::Horizontal));
+
+    auto* window_list = new GTableView(horizontal_container);
     window_list->set_headers_visible(false);
     window_list->set_alternating_row_colors(false);
     window_list->set_model(OwnPtr<IRCClientWindowListModel>(m_client.client_window_list_model()));
@@ -57,7 +77,8 @@ void IRCAppWindow::setup_widgets()
         m_container->set_active_widget(&window);
     };
 
-    m_container = new GStackWidget(widget);
+    m_container = new GStackWidget(horizontal_container);
+    printf("m_container: %s{%p}\n", ((GWidget*)m_container)->class_name(), m_container);
 
     create_subwindow(IRCClientWindow::Server, "Server");
 }

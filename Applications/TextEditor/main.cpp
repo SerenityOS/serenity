@@ -22,7 +22,7 @@ int main(int argc, char** argv)
     widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
 
     auto* toolbar = new GToolBar(widget);
-    auto* text_editor = new GTextEditor(widget);
+    auto* text_editor = new GTextEditor(GTextEditor::MultiLine, widget);
     auto* statusbar = new GStatusBar(widget);
 
     text_editor->on_cursor_change = [statusbar] (GTextEditor& editor) {
