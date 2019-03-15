@@ -58,8 +58,11 @@ public:
         return index.row() >= 0 && index.row() < row_count() && index.column() >= 0 && index.column() < column_count();
     }
 
-    void set_selected_index(const GModelIndex& index) { m_selected_index = index; }
+    void set_selected_index(const GModelIndex&);
     GModelIndex selected_index() const { return m_selected_index; }
+
+    bool activates_on_selection() const { return m_activates_on_selection; }
+    void set_activates_on_selection(bool b) { m_activates_on_selection = b; }
 
     virtual int key_column() const { return -1; }
     virtual GSortOrder sort_order() const { return GSortOrder::None; }
@@ -69,6 +72,7 @@ public:
     void unregister_view(Badge<GTableView>, GTableView&);
 
     Function<void(GTableModel&)> on_model_update;
+    Function<void(const GModelIndex&)> on_selection_changed;
 
 protected:
     GTableModel();
@@ -79,4 +83,5 @@ protected:
 private:
     HashTable<GTableView*> m_views;
     GModelIndex m_selected_index;
+    bool m_activates_on_selection { false };
 };

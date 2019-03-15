@@ -33,3 +33,14 @@ void GTableModel::did_update()
         view.did_update_model();
     });
 }
+
+void GTableModel::set_selected_index(const GModelIndex& index)
+{
+    if (m_selected_index == index)
+        return;
+    m_selected_index = index;
+    if (on_selection_changed)
+        on_selection_changed(index);
+    if (m_activates_on_selection && is_valid(index))
+        activate(index);
+}

@@ -13,6 +13,8 @@ public:
     int row() const { return m_row; }
     int column() const { return m_column; }
 
+    bool operator==(const GModelIndex& other) const { return m_row == other.m_row && m_column == other.m_column; }
+
 private:
     int m_row { -1 };
     int m_column { -1 };
