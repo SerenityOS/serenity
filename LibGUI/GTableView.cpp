@@ -157,8 +157,13 @@ void GTableView::paint_event(GPaintEvent& event)
             key_column_background_color = is_focused() ? Color::from_rgb(0x84351a) : Color::from_rgb(0x606060);
             text_color = Color::White;
         } else {
-            background_color = painted_item_index % 2 ? Color(210, 210, 210) : Color::White;
-            key_column_background_color = painted_item_index % 2 ? Color(190, 190, 190) : Color(235, 235, 235);
+            if (alternating_row_colors() && (painted_item_index % 2)) {
+                background_color = Color(210, 210, 210);
+                key_column_background_color = Color(190, 190, 190);
+            } else {
+                background_color = Color::White;
+                key_column_background_color = Color(235, 235, 235);
+            }
             text_color = Color::Black;
         }
 

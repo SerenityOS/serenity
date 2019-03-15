@@ -23,6 +23,9 @@ public:
     bool headers_visible() const { return m_headers_visible; }
     void set_headers_visible(bool headers_visible) { m_headers_visible = headers_visible; }
 
+    bool alternating_row_colors() const { return m_alternating_row_colors; }
+    void set_alternating_row_colors(bool b) { m_alternating_row_colors = b; }
+
     void did_update_model();
 
     int content_width() const;
@@ -54,4 +57,5 @@ private:
     OwnPtr<GTableModel> m_model;
     int m_horizontal_padding { 5 };
     bool m_headers_visible { true };
+    bool m_alternating_row_colors { true };
 };

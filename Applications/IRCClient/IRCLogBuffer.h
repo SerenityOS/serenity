@@ -21,9 +21,7 @@ public:
 
     int count() const { return m_messages.size(); }
     const Message& at(int index) const { return m_messages.at(index); }
-
     void add_message(char prefix, const String& name, const String& text);
-
     void dump() const;
 
     const IRCLogBufferModel* model() const { return m_model; }
@@ -31,8 +29,6 @@ public:
 
 private:
     IRCLogBuffer();
-
     IRCLogBufferModel* m_model { nullptr };
-
     CircularQueue<Message, 1000> m_messages;
 };
