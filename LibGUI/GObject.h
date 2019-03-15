@@ -4,6 +4,7 @@
 #include <AK/Weakable.h>
 
 class GEvent;
+class GChildEvent;
 class GTimerEvent;
 
 class GObject : public Weakable<GObject> {
@@ -29,12 +30,14 @@ public:
 
     void delete_later();
 
-private:
+    virtual bool is_widget() const { return false; }
+
+protected:
     virtual void timer_event(GTimerEvent&);
+    virtual void child_event(GChildEvent&);
 
+private:
     GObject* m_parent { nullptr };
-
     int m_timer_id { 0 };
-
     Vector<GObject*> m_children;
 };

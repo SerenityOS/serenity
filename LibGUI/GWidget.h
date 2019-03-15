@@ -122,7 +122,12 @@ public:
 
     void notify_layout_changed(Badge<GLayout>);
 
+    bool is_visible() const { return m_visible; }
+    void set_visible(bool);
+
 private:
+    virtual bool is_widget() const final { return true; }
+
     void handle_paint_event(GPaintEvent&);
     void handle_resize_event(GResizeEvent&);
     void do_layout();
@@ -141,4 +146,5 @@ private:
     Size m_preferred_size;
 
     bool m_fill_with_background_color { false };
+    bool m_visible { true };
 };

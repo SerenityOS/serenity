@@ -1,7 +1,7 @@
 #include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GWidget.h>
 
-//#define GBOXLAYOUT_DEBUG
+#define GBOXLAYOUT_DEBUG
 
 #ifdef GBOXLAYOUT_DEBUG
 #include <stdio.h>
@@ -41,14 +41,19 @@ void GBoxLayout::run(GWidget& widget)
     Size available_size = widget.size();
     int number_of_entries_with_fixed_size = 0;
 
+    int number_of_visible_entries = 0;
+
     for (auto& entry : m_entries) {
+        if (!entry.widget->is_visible())
+            continue;
+        ++number_of_visible_entries;
         if (entry.widget && entry.widget->size_policy(orientation()) == SizePolicy::Fixed) {
             available_size -= entry.widget->preferred_size();
             ++number_of_entries_with_fixed_size;
         }
     }
 
-    int number_of_entries_with_automatic_size = m_entries.size() - number_of_entries_with_fixed_size;
+    int number_of_entries_with_automatic_size = number_of_visible_entries - number_of_entries_with_fixed_size;
 
 #ifdef GBOXLAYOUT_DEBUG
     printf("GBoxLayout: available_size=%s, fixed=%d, fill=%d\n", available_size.to_string().characters(), number_of_entries_with_fixed_size, number_of_entries_with_automatic_size);
@@ -74,6 +79,8 @@ void GBoxLayout::run(GWidget& widget)
     int current_y = margins().top();
 
     for (auto& entry : m_entries) {
+        if (!entry.widget->is_visible())
+            continue;
         Rect rect(current_x, current_y, 0, 0);
         if (entry.layout) {
             // FIXME: Implement recursive layout.

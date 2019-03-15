@@ -91,6 +91,8 @@ void GWidget::handle_paint_event(GPaintEvent& event)
     paint_event(event);
     for (auto* ch : children()) {
         auto* child = (GWidget*)ch;
+        if (!child->is_visible())
+            continue;
         if (child->relative_rect().intersects(event.rect())) {
             auto local_rect = event.rect();
             local_rect.intersect(child->relative_rect());
@@ -302,4 +304,15 @@ void GWidget::invalidate_layout()
     if (!w->main_widget())
         return;
     w->main_widget()->do_layout();
+}
+
+void GWidget::set_visible(bool visible)
+{
+    if (visible == m_visible)
+        return;
+    m_visible = visible;
+    if (auto* parent = parent_widget())
+        parent->invalidate_layout();
+    if (m_visible)
+        update();
 }

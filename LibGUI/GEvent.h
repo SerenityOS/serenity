@@ -4,7 +4,10 @@
 #include <SharedGraphics/Rect.h>
 #include <AK/AKString.h>
 #include <AK/Types.h>
+#include <AK/WeakPtr.h>
 #include <Kernel/KeyCode.h>
+
+class GObject;
 
 class GEvent {
 public:
@@ -31,6 +34,8 @@ public:
         FocusIn,
         FocusOut,
         WindowCloseRequest,
+        ChildAdded,
+        ChildRemoved,
     };
 
     GEvent() { }
@@ -169,4 +174,16 @@ public:
 
 private:
     int m_timer_id;
+};
+
+class GChildEvent final : public GEvent {
+public:
+    GChildEvent(Type, GObject& child);
+    ~GChildEvent();
+
+    GObject* child() { return m_child.ptr(); }
+    const GObject* child() const { return m_child.ptr(); }
+
+private:
+    WeakPtr<GObject> m_child;
 };
