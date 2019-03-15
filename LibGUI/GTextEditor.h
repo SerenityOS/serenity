@@ -62,8 +62,13 @@ private:
 
 class GTextEditor : public GWidget {
 public:
-    explicit GTextEditor(GWidget* parent);
+    enum Type { MultiLine, SingleLine };
+    GTextEditor(Type, GWidget* parent);
     virtual ~GTextEditor() override;
+
+    Type type() const { return m_type; }
+    bool is_single_line() const { return m_type == SingleLine; }
+    bool is_multi_line() const { return m_type == MultiLine; }
 
     Function<void(GTextEditor&)> on_cursor_change;
 
@@ -84,10 +89,15 @@ public:
 
     bool has_selection() const { return m_selection.is_valid(); }
     String selected_text() const;
+    String text() const;
+
+    void clear();
 
     void cut();
     void copy();
     void paste();
+
+    Function<void(GTextEditor&)> on_return_pressed;
 
 private:
     virtual void paint_event(GPaintEvent&) override;
@@ -140,6 +150,8 @@ private:
     void toggle_selection_if_needed_for_event(const GKeyEvent&);
     void insert_at_cursor_or_replace_selection(const String&);
     void delete_selection();
+
+    Type m_type { MultiLine };
 
     GScrollBar* m_vertical_scrollbar { nullptr };
     GScrollBar* m_horizontal_scrollbar { nullptr };

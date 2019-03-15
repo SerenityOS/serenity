@@ -237,6 +237,30 @@ void IRCClient::handle(const Message& msg, const String&)
         m_log->add_message(0, "Server", String::format("[%s] %s", msg.command.characters(), msg.arguments[1].characters()));
 }
 
+void IRCClient::send_privmsg(const String& target, const String& text)
+{
+    send(String::format("PRIVMSG %s :%s\r\n", target.characters(), text.characters()));
+}
+
+void IRCClient::handle_user_input_in_channel(const String& channel_name, const String& input)
+{
+    if (input.is_empty())
+        return;
+    ensure_channel(channel_name).say(input);
+}
+
+void IRCClient::handle_user_input_in_query(const String& query_name, const String& input)
+{
+    if (input.is_empty())
+        return;
+}
+
+void IRCClient::handle_user_input_in_server(const String& input)
+{
+    if (input.is_empty())
+        return;
+}
+
 bool IRCClient::is_nick_prefix(char ch) const
 {
     switch (ch) {
@@ -297,6 +321,17 @@ IRCQuery& IRCClient::ensure_query(const String& name)
     return query_reference;
 }
 
+IRCChannel& IRCClient::ensure_channel(const String& name)
+{
+    auto it = m_channels.find(name);
+    if (it != m_channels.end())
+        return *(*it).value;
+    auto channel = IRCChannel::create(*this, name);
+    auto& channel_reference = *channel;
+    m_channels.set(name, channel.copy_ref());
+    return channel_reference;
+}
+
 void IRCClient::handle_ping(const Message& msg)
 {
     if (msg.arguments.size() < 0)
@@ -310,10 +345,7 @@ void IRCClient::handle_join(const Message& msg)
     if (msg.arguments.size() != 1)
         return;
     auto& channel_name = msg.arguments[0];
-    auto it = m_channels.find(channel_name);
-    ASSERT(it == m_channels.end());
-    auto channel = IRCChannel::create(*this, channel_name);
-    m_channels.set(channel_name, move(channel));
+    ensure_channel(channel_name);
     if (on_join)
         on_join(channel_name);
 }

@@ -8,6 +8,7 @@
 #include <LibGUI/GVariant.h>
 #include <SharedGraphics/TextAlignment.h>
 
+class Font;
 class GTableView;
 
 enum class GSortOrder { None, Ascending, Descending };
@@ -38,6 +39,7 @@ public:
     struct ColumnMetadata {
         int preferred_width { 0 };
         TextAlignment text_alignment { TextAlignment::CenterLeft };
+        const Font* font { nullptr };
     };
 
     enum class Role { Display, Sort, Custom };

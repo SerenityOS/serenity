@@ -26,6 +26,8 @@ public:
 
     void dump() const;
 
+    void say(const String&);
+
     const IRCLogBuffer& log() const { return *m_log; }
     IRCLogBuffer& log() { return *m_log; }
 

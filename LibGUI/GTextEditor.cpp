@@ -9,13 +9,15 @@
 #include <fcntl.h>
 #include <stdio.h>
 
-GTextEditor::GTextEditor(GWidget* parent)
+GTextEditor::GTextEditor(Type type, GWidget* parent)
     : GWidget(parent)
+    , m_type(type)
 {
     set_font(GFontDatabase::the().get_by_name("Csilla Thin"));
 
     m_vertical_scrollbar = new GScrollBar(Orientation::Vertical, this);
     m_vertical_scrollbar->set_step(4);
+    m_vertical_scrollbar->set_visible(is_multi_line());
     m_vertical_scrollbar->on_change = [this] (int) {
         update();
     };
@@ -23,12 +25,14 @@ GTextEditor::GTextEditor(GWidget* parent)
     m_horizontal_scrollbar = new GScrollBar(Orientation::Horizontal, this);
     m_horizontal_scrollbar->set_step(4);
     m_horizontal_scrollbar->set_big_step(30);
+    m_horizontal_scrollbar->set_visible(is_multi_line());
     m_horizontal_scrollbar->on_change = [this] (int) {
         update();
     };
 
     m_corner_widget = new GWidget(this);
     m_corner_widget->set_fill_with_background_color(true);
+    m_corner_widget->set_visible(is_multi_line());
 
     m_lines.append(make<Line>());
 }
@@ -63,9 +67,11 @@ void GTextEditor::set_text(const String& text)
 void GTextEditor::resize_event(GResizeEvent& event)
 {
     update_scrollbar_ranges();
-    m_vertical_scrollbar->set_relative_rect(event.size().width() - m_vertical_scrollbar->preferred_size().width(), 0, m_vertical_scrollbar->preferred_size().width(), event.size().height() - m_horizontal_scrollbar->preferred_size().height());
-    m_horizontal_scrollbar->set_relative_rect(0, event.size().height() - m_horizontal_scrollbar->preferred_size().height(), event.size().width() - m_vertical_scrollbar->preferred_size().width(), m_horizontal_scrollbar->preferred_size().height());
-    m_corner_widget->set_relative_rect(m_horizontal_scrollbar->rect().right() + 1, m_vertical_scrollbar->rect().bottom() + 1, m_horizontal_scrollbar->height(), m_vertical_scrollbar->width());
+    if (is_multi_line()) {
+        m_vertical_scrollbar->set_relative_rect(event.size().width() - m_vertical_scrollbar->preferred_size().width(), 0, m_vertical_scrollbar->preferred_size().width(), event.size().height() - m_horizontal_scrollbar->preferred_size().height());
+        m_horizontal_scrollbar->set_relative_rect(0, event.size().height() - m_horizontal_scrollbar->preferred_size().height(), event.size().width() - m_vertical_scrollbar->preferred_size().width(), m_horizontal_scrollbar->preferred_size().height());
+        m_corner_widget->set_relative_rect(m_horizontal_scrollbar->rect().right() + 1, m_vertical_scrollbar->rect().bottom() + 1, m_horizontal_scrollbar->height(), m_vertical_scrollbar->width());
+    }
 }
 
 void GTextEditor::update_scrollbar_ranges()
@@ -441,6 +447,11 @@ void GTextEditor::insert_at_cursor(char ch)
     bool at_head = m_cursor.column() == 0;
     bool at_tail = m_cursor.column() == current_line().length();
     if (ch == '\n') {
+        if (is_single_line()) {
+            if (on_return_pressed)
+                on_return_pressed(*this);
+            return;
+        }
         if (at_tail || at_head) {
             m_lines.insert(m_cursor.line() + (at_tail ? 1 : 0), make<Line>());
             update_scrollbar_ranges();
@@ -687,6 +698,27 @@ bool GTextEditor::write_to_file(const String& path)
 
     close(fd);
     return true;
+}
+
+String GTextEditor::text() const
+{
+    StringBuilder builder;
+    for (int i = 0; i < line_count(); ++i) {
+        auto& line = *m_lines[i];
+        builder.append(line.characters(), line.length());
+        if (i != line_count() - 1)
+            builder.append('\n');
+    }
+    return builder.to_string();
+}
+
+void GTextEditor::clear()
+{
+    m_lines.clear();
+    m_lines.append(make<Line>());
+    m_selection.clear();
+    set_cursor(0, 0);
+    update();
 }
 
 String GTextEditor::selected_text() const

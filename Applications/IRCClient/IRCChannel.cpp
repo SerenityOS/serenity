@@ -40,8 +40,13 @@ void IRCChannel::add_message(char prefix, const String& name, const String& text
 void IRCChannel::dump() const
 {
     printf("IRCChannel{%p}: %s\n", this, m_name.characters());
-    for (auto& member : m_members) {
+    for (auto& member : m_members)
         printf("   (%c)%s\n", member.prefix ? member.prefix : ' ', member.name.characters());
-    }
     log().dump();
+}
+
+void IRCChannel::say(const String& text)
+{
+    m_client.send_privmsg(m_name, text);
+    add_message(' ', m_client.nickname(), text);
 }
