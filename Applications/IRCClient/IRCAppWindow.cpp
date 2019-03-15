@@ -44,11 +44,22 @@ void IRCAppWindow::setup_widgets()
     auto* subwindow_list = new GListBox(widget);
     subwindow_list->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
     subwindow_list->set_preferred_size({ 120, 0 });
-    subwindow_list->add_item("test1");
-    subwindow_list->add_item("test2");
-    subwindow_list->add_item("test3");
+    subwindow_list->add_item("Server");
+    subwindow_list->add_item("#test");
 
-    auto* container = new GWidget(widget);
+    m_subwindow_container = new GWidget(widget);
+    m_subwindow_container->set_layout(make<GBoxLayout>(Orientation::Vertical));
+    m_subwindow_container->set_fill_with_background_color(true);
+    m_subwindow_container->set_background_color(Color::Yellow);
+    m_subwindow_container->set_size_policy(SizePolicy::Fill, SizePolicy::Fill);
 
-    auto* subwindow = new IRCSubWindow("Server", container);
+    create_subwindow(IRCSubWindow::Server, "Server");
+}
+
+void IRCAppWindow::create_subwindow(IRCSubWindow::Type type, const String& name)
+{
+    auto* subwindow = new IRCSubWindow(m_client, type, name, m_subwindow_container);
+    subwindow->set_fill_with_background_color(true);
+    subwindow->set_background_color(Color::Magenta);
+    m_subwindows.append(subwindow);
 }

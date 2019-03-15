@@ -1,6 +1,8 @@
 #include "IRCClient.h"
 #include "IRCChannel.h"
 #include "IRCQuery.h"
+#include "IRCLogBuffer.h"
+#include "IRCSubWindow.h"
 #include <LibGUI/GNotifier.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -17,6 +19,7 @@ IRCClient::IRCClient(const String& address, int port)
     : m_hostname(address)
     , m_port(port)
     , m_nickname("anon")
+    , m_log(IRCLogBuffer::create())
 {
 }
 
@@ -165,7 +168,7 @@ void IRCClient::process_line()
         msg.arguments.append(String(current_parameter.data(), current_parameter.size()));
     msg.prefix = String(prefix.data(), prefix.size());
     msg.command = String(command.data(), command.size());
-    handle(msg);
+    handle(msg, String(m_line_buffer.data(), m_line_buffer.size()));
 }
 
 void IRCClient::send(const String& text)
@@ -198,7 +201,7 @@ void IRCClient::join_channel(const String& channel_name)
     send(String::format("JOIN %s\r\n", channel_name.characters()));
 }
 
-void IRCClient::handle(const Message& msg)
+void IRCClient::handle(const Message& msg, const String& verbatim)
 {
     printf("IRCClient::execute: prefix='%s', command='%s', arguments=%d\n",
         msg.prefix.characters(),
@@ -231,6 +234,8 @@ void IRCClient::handle(const Message& msg)
 
     if (msg.command == "PRIVMSG")
         return handle_privmsg(msg);
+
+    m_log->add_message(0, "Server", verbatim);
 }
 
 bool IRCClient::is_nick_prefix(char ch) const
@@ -297,7 +302,7 @@ void IRCClient::handle_ping(const Message& msg)
 {
     if (msg.arguments.size() < 0)
         return;
-    m_server_messages.enqueue(String::format("Ping? Pong! %s\n", msg.arguments[0].characters()));
+    m_log->add_message(0, "", String::format("Ping? Pong! %s\n", msg.arguments[0].characters()));
     send_pong(msg.arguments[0]);
 }
 
@@ -338,4 +343,31 @@ void IRCClient::handle_namreply(const Message& msg)
     }
 
     channel.dump();
+}
+
+void IRCClient::register_subwindow(IRCSubWindow& subwindow)
+{
+    if (subwindow.type() == IRCSubWindow::Server) {
+        m_server_subwindow = &subwindow;
+        subwindow.set_log_buffer(*m_log);
+        return;
+    }
+    if (subwindow.type() == IRCSubWindow::Channel) {
+        auto it = m_channels.find(subwindow.name());
+        ASSERT(it != m_channels.end());
+        auto& channel = *(*it).value;
+        subwindow.set_log_buffer(channel.log());
+        return;
+    }
+    if (subwindow.type() == IRCSubWindow::Query) {
+        subwindow.set_log_buffer(ensure_query(subwindow.name()).log());
+    }
+}
+
+void IRCClient::unregister_subwindow(IRCSubWindow& subwindow)
+{
+    if (subwindow.type() == IRCSubWindow::Server) {
+        m_server_subwindow = &subwindow;
+        return;
+    }
 }

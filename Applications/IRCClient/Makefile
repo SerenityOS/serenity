@@ -3,6 +3,7 @@ OBJS = \
     IRCChannel.o \
     IRCQuery.o \
     IRCLogBuffer.o \
+    IRCLogBufferModel.o \
     IRCAppWindow.o \
     IRCSubWindow.o \
     main.o

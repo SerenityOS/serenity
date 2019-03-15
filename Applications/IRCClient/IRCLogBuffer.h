@@ -5,6 +5,8 @@
 #include <AK/Retainable.h>
 #include <AK/RetainPtr.h>
 
+class IRCLogBufferModel;
+
 class IRCLogBuffer : public Retainable<IRCLogBuffer> {
 public:
     static Retained<IRCLogBuffer> create();
@@ -24,8 +26,13 @@ public:
 
     void dump() const;
 
+    const IRCLogBufferModel* model() const { return m_model; }
+    IRCLogBufferModel* model() { return m_model; }
+
 private:
     IRCLogBuffer();
+
+    IRCLogBufferModel* m_model { nullptr };
 
     CircularQueue<Message, 1000> m_messages;
 };

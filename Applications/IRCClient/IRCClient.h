@@ -4,9 +4,11 @@
 #include <AK/HashMap.h>
 #include <AK/CircularQueue.h>
 #include <AK/Function.h>
+#include "IRCLogBuffer.h"
 
 class IRCChannel;
 class IRCQuery;
+class IRCSubWindow;
 class GNotifier;
 
 class IRCClient {
@@ -31,6 +33,9 @@ public:
     Function<void(const String& name)> on_query_message;
     Function<void()> on_server_message;
 
+    void register_subwindow(IRCSubWindow&);
+    void unregister_subwindow(IRCSubWindow&);
+
 private:
     struct Message {
         String prefix;
@@ -48,7 +53,7 @@ private:
     void handle_ping(const Message&);
     void handle_namreply(const Message&);
     void handle_privmsg(const Message&);
-    void handle(const Message&);
+    void handle(const Message&, const String& verbatim);
     IRCQuery& ensure_query(const String& name);
 
     String m_hostname;
@@ -61,5 +66,7 @@ private:
     HashMap<String, RetainPtr<IRCChannel>> m_channels;
     HashMap<String, RetainPtr<IRCQuery>> m_queries;
 
-    CircularQueue<String, 1024> m_server_messages;
+    IRCSubWindow* m_server_subwindow { nullptr };
+
+    Retained<IRCLogBuffer> m_log;
 };
