@@ -216,10 +216,13 @@ GWidget::HitTestResult GWidget::hit_test(int x, int y)
 {
     // FIXME: Care about z-order.
     for (auto* ch : children()) {
-        auto* child = (GWidget*)ch;
-        if (child->relative_rect().contains(x, y)) {
-            return child->hit_test(x - child->relative_rect().x(), y - child->relative_rect().y());
-        }
+        if (!ch->is_widget())
+            continue;
+        auto& child = *(GWidget*)ch;
+        if (!child.is_visible())
+            continue;
+        if (child.relative_rect().contains(x, y))
+            return child.hit_test(x - child.relative_rect().x(), y - child.relative_rect().y());
     }
     return { this, x, y };
 }
