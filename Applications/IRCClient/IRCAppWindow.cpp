@@ -59,9 +59,26 @@ void IRCAppWindow::setup_widgets()
         printf("FIXME: Implement part action\n");
     });
 
+    auto whois_action = GAction::create("Whois user", GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/16x16/irc-whois.rgb", { 16, 16 }), [] (auto&) {
+        printf("FIXME: Implement whois action\n");
+    });
+
+    auto open_query_action = GAction::create("Open query", GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/16x16/irc-open-query.rgb", { 16, 16 }), [] (auto&) {
+        printf("FIXME: Implement open-query action\n");
+    });
+
+    auto close_query_action = GAction::create("Close query", GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/16x16/irc-close-query.rgb", { 16, 16 }), [] (auto&) {
+        printf("FIXME: Implement close-query action\n");
+    });
+
     auto* toolbar = new GToolBar(widget);
     toolbar->add_action(join_action.copy_ref());
     toolbar->add_action(part_action.copy_ref());
+    toolbar->add_separator();
+    toolbar->add_action(whois_action.copy_ref());
+    toolbar->add_action(open_query_action.copy_ref());
+    toolbar->add_action(close_query_action.copy_ref());
+
 
     auto* horizontal_container = new GWidget(widget);
     printf("horizontal_widget: %s{%p}\n", horizontal_container->class_name(), horizontal_container);
