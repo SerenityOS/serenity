@@ -36,6 +36,8 @@ void GToolBar::add_action(Retained<GAction>&& action)
 
     button->set_button_style(GButtonStyle::CoolBar);
     button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
+    ASSERT(button->size_policy(Orientation::Horizontal) == SizePolicy::Fixed);
+    ASSERT(button->size_policy(Orientation::Vertical) == SizePolicy::Fixed);
     button->set_preferred_size({ 24, 24 });
 
     m_items.append(move(item));
@@ -60,6 +62,9 @@ public:
         painter.draw_line({ 0, 0 }, { 0, rect().bottom() }, Color::DarkGray);
         painter.draw_line({ 1, 0 }, { 1, rect().bottom() }, Color::White);
     }
+
+private:
+    virtual const char* class_name() const override { return "SeparatorWidget"; }
 };
 
 void GToolBar::add_separator()

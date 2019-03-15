@@ -34,7 +34,7 @@ void GStackWidget::resize_event(GResizeEvent& event)
 void GStackWidget::child_event(GChildEvent& event)
 {
     if (!event.child() || !event.child()->is_widget())
-        return;
+        return GWidget::child_event(event);
     auto& child = static_cast<GWidget&>(*event.child());
     if (event.type() == GEvent::ChildAdded) {
         if (!m_active_widget)
@@ -53,4 +53,5 @@ void GStackWidget::child_event(GChildEvent& event)
             set_active_widget(new_active_widget);
         }
     }
+    GWidget::child_event(event);
 }

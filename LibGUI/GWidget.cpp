@@ -15,13 +15,19 @@ GWidget::GWidget(GWidget* parent)
     set_font(nullptr);
     m_background_color = Color::LightGray;
     m_foreground_color = Color::Black;
-
-    if (parent && parent->layout())
-        parent->layout()->add_widget(*this);
 }
 
 GWidget::~GWidget()
 {
+}
+
+void GWidget::child_event(GChildEvent& event)
+{
+    if (event.type() == GEvent::ChildAdded) {
+        if (event.child() && event.child()->is_widget() && layout())
+            layout()->add_widget(static_cast<GWidget&>(*event.child()));
+    }
+    return GObject::child_event(event);
 }
 
 void GWidget::set_relative_rect(const Rect& rect)

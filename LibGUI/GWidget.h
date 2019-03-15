@@ -47,6 +47,7 @@ public:
     virtual void focusout_event(GEvent&);
     virtual void enter_event(GEvent&);
     virtual void leave_event(GEvent&);
+    virtual void child_event(GChildEvent&) override;
 
     Rect relative_rect() const { return m_relative_rect; }
     Point relative_position() const { return m_relative_rect.location(); }
