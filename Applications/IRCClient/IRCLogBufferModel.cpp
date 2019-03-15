@@ -1,6 +1,7 @@
 #include "IRCLogBufferModel.h"
 #include "IRCLogBuffer.h"
 #include <stdio.h>
+#include <time.h>
 
 IRCLogBufferModel::IRCLogBufferModel(Retained<IRCLogBuffer>&& log_buffer)
     : m_log_buffer(move(log_buffer))
@@ -35,20 +36,27 @@ String IRCLogBufferModel::column_name(int column) const
 GTableModel::ColumnMetadata IRCLogBufferModel::column_metadata(int column) const
 {
     switch (column) {
-    case Column::Timestamp: return { 90, TextAlignment::CenterLeft };
+    case Column::Timestamp: return { 60, TextAlignment::CenterLeft };
     case Column::Prefix: return { 10, TextAlignment::CenterLeft };
     case Column::Name: return { 70, TextAlignment::CenterRight };
-    case Column::Text: return { 400, TextAlignment::CenterLeft };
+    case Column::Text: return { 800, TextAlignment::CenterLeft };
     }
     ASSERT_NOT_REACHED();
 }
 
-GVariant IRCLogBufferModel::data(const GModelIndex& index, Role role) const
+GVariant IRCLogBufferModel::data(const GModelIndex& index, Role) const
 {
     auto& entry = m_log_buffer->at(index.row());
     switch (index.column()) {
-    case Column::Timestamp: return String::format("%u", entry.timestamp);
-    case Column::Prefix: return entry.prefix;
+    case Column::Timestamp: {
+        auto* tm = localtime(&entry.timestamp);
+        return String::format("%02u:%02u:%02u", tm->tm_hour, tm->tm_min, tm->tm_sec);
+    }
+    case Column::Prefix: {
+        if (!entry.prefix)
+            return String("");
+        return String(&entry.prefix, 1);
+    }
     case Column::Name: return entry.sender;
     case Column::Text: return entry.text;
     }
