@@ -9,7 +9,7 @@ IRCAppWindow::IRCAppWindow()
     : GWindow()
     , m_client("127.0.0.1", 6667)
 {
-    set_title(String::format("IRC Client: %s:%d", m_client.hostname().characters(), m_client.port()));
+    set_title(String::format("IRC Client: %s@%s:%d", m_client.nickname().characters(), m_client.hostname().characters(), m_client.port()));
     set_rect(200, 200, 600, 400);
     setup_client();
     setup_widgets();
@@ -25,8 +25,16 @@ void IRCAppWindow::setup_client()
         m_client.join_channel("#test");
     };
 
+    m_client.on_channel_message = [this] (const String& channel_name) {
+        ensure_window(IRCClientWindow::Channel, channel_name);
+    };
+
     m_client.on_join = [this] (const String& channel_name) {
         ensure_window(IRCClientWindow::Channel, channel_name);
+    };
+
+    m_client.on_query_message = [this] (const String& name) {
+        ensure_window(IRCClientWindow::Query, name);
     };
 
     m_client.connect();

@@ -253,6 +253,7 @@ void IRCClient::handle_user_input_in_query(const String& query_name, const Strin
 {
     if (input.is_empty())
         return;
+    ensure_query(query_name).say(input);
 }
 
 void IRCClient::handle_user_input_in_server(const String& input)
@@ -307,7 +308,7 @@ void IRCClient::handle_privmsg(const Message& msg)
     auto& query = ensure_query(sender_nick);
     query.add_message(sender_prefix, sender_nick, msg.arguments[1]);
     if (on_query_message)
-        on_query_message(target);
+        on_query_message(sender_nick);
 }
 
 IRCQuery& IRCClient::ensure_query(const String& name)
@@ -336,7 +337,7 @@ void IRCClient::handle_ping(const Message& msg)
 {
     if (msg.arguments.size() < 0)
         return;
-    m_log->add_message(0, "", String::format("Ping? Pong! %s\n", msg.arguments[0].characters()));
+    m_log->add_message(0, "Server", "Ping? Pong!");
     send_pong(msg.arguments[0]);
 }
 
