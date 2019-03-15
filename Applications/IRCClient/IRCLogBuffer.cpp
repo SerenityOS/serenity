@@ -1,4 +1,5 @@
 #include "IRCLogBuffer.h"
+#include "IRCLogBufferModel.h"
 #include <stdio.h>
 #include <time.h>
 
@@ -9,6 +10,7 @@ Retained<IRCLogBuffer> IRCLogBuffer::create()
 
 IRCLogBuffer::IRCLogBuffer()
 {
+    m_model = new IRCLogBufferModel(*this);
 }
 
 IRCLogBuffer::~IRCLogBuffer()
@@ -18,6 +20,7 @@ IRCLogBuffer::~IRCLogBuffer()
 void IRCLogBuffer::add_message(char prefix, const String& name, const String& text)
 {
     m_messages.enqueue({ time(nullptr), prefix, name, text });
+    m_model->update();
 }
 
 void IRCLogBuffer::dump() const
