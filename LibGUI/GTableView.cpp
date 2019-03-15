@@ -19,6 +19,9 @@ GTableView::GTableView(GWidget* parent)
     m_horizontal_scrollbar->on_change = [this] (int) {
         update();
     };
+
+    m_corner_widget = new GWidget(this);
+    m_corner_widget->set_fill_with_background_color(true);
 }
 
 GTableView::~GTableView()
@@ -41,6 +44,7 @@ void GTableView::resize_event(GResizeEvent& event)
     update_scrollbar_ranges();
     m_vertical_scrollbar->set_relative_rect(event.size().width() - m_vertical_scrollbar->preferred_size().width(), 0, m_vertical_scrollbar->preferred_size().width(), event.size().height() - m_horizontal_scrollbar->preferred_size().height());
     m_horizontal_scrollbar->set_relative_rect(0, event.size().height() - m_horizontal_scrollbar->preferred_size().height(), event.size().width() - m_vertical_scrollbar->preferred_size().width(), m_horizontal_scrollbar->preferred_size().height());
+    m_corner_widget->set_relative_rect(m_horizontal_scrollbar->rect().right() + 1, m_vertical_scrollbar->rect().bottom() + 1, m_horizontal_scrollbar->height(), m_vertical_scrollbar->width());
 }
 
 void GTableView::update_scrollbar_ranges()
@@ -135,6 +139,7 @@ void GTableView::paint_event(GPaintEvent& event)
 {
     Painter painter(*this);
     painter.set_clip_rect(event.rect());
+    painter.save();
     painter.translate(-m_horizontal_scrollbar->value(), -m_vertical_scrollbar->value());
 
     int exposed_width = max(content_width(), width());
@@ -181,8 +186,27 @@ void GTableView::paint_event(GPaintEvent& event)
     Rect unpainted_rect(0, header_height() + painted_item_index * item_height(), exposed_width, height());
     painter.fill_rect(unpainted_rect, Color::White);
 
-    // Untranslate the painter and paint the column headers.
+    // Untranslate the painter vertically and do the column headers.
     painter.translate(0, m_vertical_scrollbar->value());
+    if (headers_visible())
+        paint_headers(painter);
+
+    painter.restore();
+
+    if (is_focused()) {
+        Rect item_area_rect {
+            0,
+            header_height(),
+            width() - m_vertical_scrollbar->width(),
+            height() - header_height() - m_horizontal_scrollbar->height()
+        };
+        painter.draw_rect(item_area_rect, Color::from_rgb(0x84351a));
+    };
+}
+
+void GTableView::paint_headers(Painter& painter)
+{
+    int exposed_width = max(content_width(), width());
     painter.fill_rect({ 0, 0, exposed_width, header_height() }, Color::LightGray);
     painter.draw_line({ 0, 0 }, { exposed_width - 1, 0 }, Color::White);
     painter.draw_line({ 0, header_height() - 1 }, { exposed_width - 1, header_height() - 1 }, Color::DarkGray);
@@ -203,20 +227,6 @@ void GTableView::paint_event(GPaintEvent& event)
     }
     // Draw the "start" of a new column to make the last separator look right.
     painter.draw_line({ x_offset, 1 }, { x_offset, header_height() - 2 }, Color::White);
-
-    // Then untranslate and fill in the scroll corner. This is pretty messy, tbh.
-    painter.translate(m_horizontal_scrollbar->value(), 0);
-    painter.fill_rect({ m_horizontal_scrollbar->relative_rect().top_right().translated(1, 0), { m_vertical_scrollbar->preferred_size().width(), m_horizontal_scrollbar->preferred_size().height() } }, Color::LightGray);
-
-    if (is_focused()) {
-        Rect item_area_rect {
-            0,
-            header_height(),
-            width() - m_vertical_scrollbar->width(),
-            height() - header_height() - m_horizontal_scrollbar->height()
-        };
-        painter.draw_rect(item_area_rect, Color::from_rgb(0x84351a));
-    };
 }
 
 int GTableView::item_count() const

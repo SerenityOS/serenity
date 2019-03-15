@@ -6,18 +6,22 @@
 #include <AK/HashMap.h>
 
 class GScrollBar;
+class Painter;
 
 class GTableView : public GWidget {
 public:
     explicit GTableView(GWidget* parent);
     virtual ~GTableView() override;
 
-    virtual int header_height() const { return 16; }
-    virtual int item_height() const { return 16; }
+    int header_height() const { return m_headers_visible ? 16 : 0; }
+    int item_height() const { return 16; }
 
     void set_model(OwnPtr<GTableModel>&&);
     GTableModel* model() { return m_model.ptr(); }
     const GTableModel* model() const { return m_model.ptr(); }
+
+    bool headers_visible() const { return m_headers_visible; }
+    void set_headers_visible(bool headers_visible) { m_headers_visible = headers_visible; }
 
     void did_update_model();
 
@@ -37,6 +41,7 @@ private:
     virtual void mousedown_event(GMouseEvent&) override;
     virtual void keydown_event(GKeyEvent&) override;
 
+    void paint_headers(Painter&);
     void update_scrollbar_ranges();
     int item_count() const;
     Rect row_rect(int item_index) const;
@@ -45,6 +50,8 @@ private:
 
     GScrollBar* m_vertical_scrollbar { nullptr };
     GScrollBar* m_horizontal_scrollbar { nullptr };
+    GWidget* m_corner_widget { nullptr };
     OwnPtr<GTableModel> m_model;
     int m_horizontal_padding { 5 };
+    bool m_headers_visible { true };
 };
