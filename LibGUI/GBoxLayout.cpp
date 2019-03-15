@@ -1,7 +1,7 @@
 #include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GWidget.h>
 
-#define GBOXLAYOUT_DEBUG
+//#define GBOXLAYOUT_DEBUG
 
 #ifdef GBOXLAYOUT_DEBUG
 #include <stdio.h>
