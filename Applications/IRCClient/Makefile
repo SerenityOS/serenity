@@ -7,6 +7,7 @@ OBJS = \
     IRCAppWindow.o \
     IRCClientWindow.o \
     IRCClientWindowListModel.o \
+    IRCChannelMemberListModel.o \
     main.o
 
 APP = IRCClient

@@ -51,6 +51,9 @@ public:
     void handle_user_input_in_query(const String& query_name, const String&);
     void handle_user_input_in_server(const String&);
 
+    IRCQuery& ensure_query(const String& name);
+    IRCChannel& ensure_channel(const String& name);
+
 private:
     struct Message {
         String prefix;
@@ -70,8 +73,6 @@ private:
     void handle_namreply(const Message&);
     void handle_privmsg(const Message&);
     void handle(const Message&, const String& verbatim);
-    IRCQuery& ensure_query(const String& name);
-    IRCChannel& ensure_channel(const String& name);
 
     String m_hostname;
     int m_port { 0 };
