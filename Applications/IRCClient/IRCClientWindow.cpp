@@ -1,11 +1,11 @@
-#include "IRCSubWindow.h"
+#include "IRCClientWindow.h"
 #include "IRCClient.h"
 #include "IRCLogBufferModel.h"
 #include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GTableView.h>
 #include <LibGUI/GTextBox.h>
 
-IRCSubWindow::IRCSubWindow(IRCClient& client, Type type, const String& name, GWidget* parent)
+IRCClientWindow::IRCClientWindow(IRCClient& client, Type type, const String& name, GWidget* parent)
     : GWidget(parent)
     , m_client(client)
     , m_type(type)
@@ -18,12 +18,12 @@ IRCSubWindow::IRCSubWindow(IRCClient& client, Type type, const String& name, GWi
     m_client.register_subwindow(*this);
 }
 
-IRCSubWindow::~IRCSubWindow()
+IRCClientWindow::~IRCClientWindow()
 {
     m_client.unregister_subwindow(*this);
 }
 
-void IRCSubWindow::set_log_buffer(const IRCLogBuffer& log_buffer)
+void IRCClientWindow::set_log_buffer(const IRCLogBuffer& log_buffer)
 {
     m_log_buffer = &log_buffer;
     m_table_view->set_model(OwnPtr<IRCLogBufferModel>((IRCLogBufferModel*)log_buffer.model()));

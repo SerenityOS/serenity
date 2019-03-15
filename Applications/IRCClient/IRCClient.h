@@ -8,7 +8,7 @@
 
 class IRCChannel;
 class IRCQuery;
-class IRCSubWindow;
+class IRCClientWindow;
 class GNotifier;
 
 class IRCClient {
@@ -33,8 +33,8 @@ public:
     Function<void(const String& name)> on_query_message;
     Function<void()> on_server_message;
 
-    void register_subwindow(IRCSubWindow&);
-    void unregister_subwindow(IRCSubWindow&);
+    void register_subwindow(IRCClientWindow&);
+    void unregister_subwindow(IRCClientWindow&);
 
 private:
     struct Message {
@@ -66,7 +66,7 @@ private:
     HashMap<String, RetainPtr<IRCChannel>> m_channels;
     HashMap<String, RetainPtr<IRCQuery>> m_queries;
 
-    IRCSubWindow* m_server_subwindow { nullptr };
+    IRCClientWindow* m_server_subwindow { nullptr };
 
     Retained<IRCLogBuffer> m_log;
 };
