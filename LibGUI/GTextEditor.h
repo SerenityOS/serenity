@@ -5,6 +5,7 @@
 #include <AK/HashMap.h>
 
 class GScrollBar;
+class Painter;
 
 class GTextPosition {
 public:
@@ -110,6 +111,7 @@ private:
     virtual void focusout_event(GEvent&) override;
     virtual void timer_event(GTimerEvent&) override;
     virtual bool accepts_focus() const override { return true; }
+    void paint_ruler(Painter&);
 
     class Line {
         friend class GTextEditor;
@@ -161,6 +163,7 @@ private:
     GTextPosition m_cursor;
     bool m_cursor_state { true };
     bool m_in_drag_select { false };
+    bool m_ruler_visible { true };
     int m_line_spacing { 2 };
     int m_soft_tab_width { 4 };
     GTextRange m_selection;

@@ -13,6 +13,8 @@ GTextEditor::GTextEditor(Type type, GWidget* parent)
     : GWidget(parent)
     , m_type(type)
 {
+    m_ruler_visible = m_type == MultiLine;
+
     set_font(GFontDatabase::the().get_by_name("Csilla Thin"));
 
     m_vertical_scrollbar = new GScrollBar(Orientation::Vertical, this);
@@ -165,12 +167,16 @@ void GTextEditor::mousemove_event(GMouseEvent& event)
 
 int GTextEditor::ruler_width() const
 {
+    if (!m_ruler_visible)
+        return 0;
     // FIXME: Resize based on needed space.
     return 5 * font().glyph_width('x') + 4;
 }
 
 Rect GTextEditor::ruler_content_rect(int line_index) const
 {
+    if (!m_ruler_visible)
+        return { };
     return {
         0 - ruler_width() - padding() + m_horizontal_scrollbar->value(),
         line_index * line_height(),
@@ -188,8 +194,11 @@ void GTextEditor::paint_event(GPaintEvent& event)
     painter.fill_rect(event.rect(), Color::White);
 
     Rect ruler_rect { 0, 0, ruler_width(), height() - m_horizontal_scrollbar->height()};
-    painter.fill_rect(ruler_rect, Color::LightGray);
-    painter.draw_line(ruler_rect.top_right(), ruler_rect.bottom_right(), Color::DarkGray);
+
+    if (m_ruler_visible) {
+        painter.fill_rect(ruler_rect, Color::LightGray);
+        painter.draw_line(ruler_rect.top_right(), ruler_rect.bottom_right(), Color::DarkGray);
+    }
 
     painter.save();
 
@@ -203,16 +212,18 @@ void GTextEditor::paint_event(GPaintEvent& event)
     auto selection = normalized_selection();
     bool has_selection = selection.is_valid();
 
-    for (int i = first_visible_line; i <= last_visible_line; ++i) {
-        bool is_current_line = i == m_cursor.line();
-        auto ruler_line_rect = ruler_content_rect(i);
-        painter.draw_text(
-            ruler_line_rect.shrunken(2, 0),
-            String::format("%u", i),
-            is_current_line ? Font::default_bold_font() : font(),
-            TextAlignment::CenterRight,
-            is_current_line ? Color::DarkGray : Color::MidGray
-        );
+    if (m_ruler_visible) {
+        for (int i = first_visible_line; i <= last_visible_line; ++i) {
+            bool is_current_line = i == m_cursor.line();
+            auto ruler_line_rect = ruler_content_rect(i);
+            painter.draw_text(
+                ruler_line_rect.shrunken(2, 0),
+                String::format("%u", i),
+                is_current_line ? Font::default_bold_font() : font(),
+                TextAlignment::CenterRight,
+                is_current_line ? Color::DarkGray : Color::MidGray
+            );
+        }
     }
 
     painter.set_clip_rect({ ruler_rect.right() + 1, 0, width() - m_vertical_scrollbar->width() - ruler_width(), height() - m_horizontal_scrollbar->height() });
@@ -221,7 +232,7 @@ void GTextEditor::paint_event(GPaintEvent& event)
         auto& line = *m_lines[i];
         auto line_rect = line_content_rect(i);
         line_rect.set_width(exposed_width);
-        if (i == m_cursor.line())
+        if (is_multi_line() && i == m_cursor.line())
             painter.fill_rect(line_rect, Color(230, 230, 230));
         painter.draw_text(line_rect, line.characters(), line.length(), TextAlignment::CenterLeft, Color::Black);
         bool line_has_selection = has_selection && i >= selection.start().line() && i <= selection.end().line();
