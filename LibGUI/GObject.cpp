@@ -28,6 +28,9 @@ void GObject::event(GEvent& event)
     case GEvent::DeferredDestroy:
         delete this;
         break;
+    case GEvent::ChildAdded:
+    case GEvent::ChildRemoved:
+        return child_event(static_cast<GChildEvent&>(event));
     case GEvent::Invalid:
         ASSERT_NOT_REACHED();
         break;
@@ -39,6 +42,7 @@ void GObject::event(GEvent& event)
 void GObject::add_child(GObject& object)
 {
     m_children.append(&object);
+    GEventLoop::main().post_event(*this, make<GChildEvent>(GEvent::ChildAdded, object));
 }
 
 void GObject::remove_child(GObject& object)
@@ -46,12 +50,17 @@ void GObject::remove_child(GObject& object)
     for (ssize_t i = 0; i < m_children.size(); ++i) {
         if (m_children[i] == &object) {
             m_children.remove(i);
+            GEventLoop::main().post_event(*this, make<GChildEvent>(GEvent::ChildRemoved, object));
             return;
         }
     }
 }
 
 void GObject::timer_event(GTimerEvent&)
+{
+}
+
+void GObject::child_event(GChildEvent&)
 {
 }
 
