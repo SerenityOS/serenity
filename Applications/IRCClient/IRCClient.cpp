@@ -3,6 +3,7 @@
 #include "IRCQuery.h"
 #include "IRCLogBuffer.h"
 #include "IRCClientWindow.h"
+#include "IRCClientWindowListModel.h"
 #include <LibGUI/GNotifier.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -21,6 +22,7 @@ IRCClient::IRCClient(const String& address, int port)
     , m_nickname("anon")
     , m_log(IRCLogBuffer::create())
 {
+    m_client_window_list_model = new IRCClientWindowListModel(*this);
 }
 
 IRCClient::~IRCClient()
@@ -62,11 +64,11 @@ bool IRCClient::connect()
     m_notifier = make<GNotifier>(m_socket_fd, GNotifier::Read);
     m_notifier->on_ready_to_read = [this] (GNotifier&) { receive_from_server(); };
 
-    if (on_connect)
-        on_connect();
-
     send_user();
     send_nick();
+
+    if (on_connect)
+        on_connect();
     return true;
 }
 
@@ -102,9 +104,6 @@ void IRCClient::receive_from_server()
 
 void IRCClient::process_line()
 {
-#if 0
-    printf("Process line: '%s'\n", line.characters());
-#endif
     Message msg;
     Vector<char> prefix;
     Vector<char> command;
@@ -118,8 +117,7 @@ void IRCClient::process_line()
         InTrailingParameter,
     } state = Start;
 
-    for (int i = 0; i < m_line_buffer.size(); ++i) {
-        char ch = m_line_buffer[i];
+    for (char ch : m_line_buffer) {
         switch (state) {
         case Start:
             if (ch == ':') {
@@ -316,6 +314,8 @@ void IRCClient::handle_join(const Message& msg)
     ASSERT(it == m_channels.end());
     auto channel = IRCChannel::create(*this, channel_name);
     m_channels.set(channel_name, move(channel));
+    if (on_join)
+        on_join(channel_name);
 }
 
 void IRCClient::handle_namreply(const Message& msg)
@@ -351,24 +351,28 @@ void IRCClient::register_subwindow(IRCClientWindow& subwindow)
     if (subwindow.type() == IRCClientWindow::Server) {
         m_server_subwindow = &subwindow;
         subwindow.set_log_buffer(*m_log);
-        return;
-    }
-    if (subwindow.type() == IRCClientWindow::Channel) {
+    } else if (subwindow.type() == IRCClientWindow::Channel) {
         auto it = m_channels.find(subwindow.name());
         ASSERT(it != m_channels.end());
         auto& channel = *(*it).value;
         subwindow.set_log_buffer(channel.log());
-        return;
-    }
-    if (subwindow.type() == IRCClientWindow::Query) {
+    } else if (subwindow.type() == IRCClientWindow::Query) {
         subwindow.set_log_buffer(ensure_query(subwindow.name()).log());
     }
+    m_windows.append(&subwindow);
+    m_client_window_list_model->update();
 }
 
 void IRCClient::unregister_subwindow(IRCClientWindow& subwindow)
 {
     if (subwindow.type() == IRCClientWindow::Server) {
         m_server_subwindow = &subwindow;
-        return;
     }
+    for (int i = 0; i < m_windows.size(); ++i) {
+        if (m_windows.at(i) == &subwindow) {
+            m_windows.remove(i);
+            break;
+        }
+    }
+    m_client_window_list_model->update();
 }

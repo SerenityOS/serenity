@@ -6,6 +6,7 @@ OBJS = \
     IRCLogBufferModel.o \
     IRCAppWindow.o \
     IRCClientWindow.o \
+    IRCClientWindowListModel.o \
     main.o
 
 APP = IRCClient
