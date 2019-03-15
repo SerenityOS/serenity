@@ -5,6 +5,7 @@
 class IRCClient;
 class IRCLogBuffer;
 class GTableView;
+class GTextEditor;
 
 class IRCClientWindow : public GWidget {
 public:
@@ -29,5 +30,6 @@ private:
     Type m_type;
     String m_name;
     GTableView* m_table_view { nullptr };
+    GTextEditor* m_text_editor { nullptr };
     RetainPtr<IRCLogBuffer> m_log_buffer;
 };

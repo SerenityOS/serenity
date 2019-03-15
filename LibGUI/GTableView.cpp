@@ -167,6 +167,7 @@ void GTableView::paint_event(GPaintEvent& event)
         for (int column_index = 0; column_index < m_model->column_count(); ++column_index) {
             auto column_metadata = m_model->column_metadata(column_index);
             int column_width = column_metadata.preferred_width;
+            const Font& font = column_metadata.font ? *column_metadata.font : this->font();
             bool is_key_column = m_model->key_column() == column_index;
             Rect cell_rect(horizontal_padding() + x_offset, y, column_width, item_height());
             if (is_key_column) {
@@ -177,7 +178,7 @@ void GTableView::paint_event(GPaintEvent& event)
             if (data.is_bitmap())
                 painter.blit(cell_rect.location(), data.as_bitmap(), data.as_bitmap().rect());
             else
-                painter.draw_text(cell_rect, data.to_string(), column_metadata.text_alignment, text_color);
+                painter.draw_text(cell_rect, data.to_string(), font, column_metadata.text_alignment, text_color);
             x_offset += column_width + horizontal_padding() * 2;
         }
         ++painted_item_index;

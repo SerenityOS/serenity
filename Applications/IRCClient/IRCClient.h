@@ -13,6 +13,7 @@ class IRCClientWindowListModel;
 class GNotifier;
 
 class IRCClient {
+    friend class IRCChannel;
 public:
     IRCClient(const String& address, int port = 6667);
     ~IRCClient();
@@ -45,6 +46,10 @@ public:
     const IRCClientWindow& window_at(int index) const { return *m_windows.at(index); }
     IRCClientWindow& window_at(int index) { return *m_windows.at(index); }
 
+    void handle_user_input_in_channel(const String& channel_name, const String&);
+    void handle_user_input_in_query(const String& query_name, const String&);
+    void handle_user_input_in_server(const String&);
+
 private:
     struct Message {
         String prefix;
@@ -57,6 +62,7 @@ private:
     void send_user();
     void send_nick();
     void send_pong(const String& server);
+    void send_privmsg(const String& target, const String&);
     void process_line();
     void handle_join(const Message&);
     void handle_ping(const Message&);
@@ -64,6 +70,7 @@ private:
     void handle_privmsg(const Message&);
     void handle(const Message&, const String& verbatim);
     IRCQuery& ensure_query(const String& name);
+    IRCChannel& ensure_channel(const String& name);
 
     String m_hostname;
     int m_port { 0 };

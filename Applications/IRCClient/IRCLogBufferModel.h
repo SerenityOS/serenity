@@ -8,9 +8,9 @@ class IRCLogBufferModel final : public GTableModel {
 public:
     enum Column {
         Timestamp = 0,
-        Prefix,
         Name,
         Text,
+        __Count,
     };
 
     explicit IRCLogBufferModel(Retained<IRCLogBuffer>&&);
