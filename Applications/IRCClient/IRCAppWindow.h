@@ -3,7 +3,7 @@
 #include <LibGUI/GWindow.h>
 #include <LibGUI/GWidget.h>
 #include "IRCClient.h"
-#include "IRCSubWindow.h"
+#include "IRCClientWindow.h"
 
 class IRCAppWindow : public GWindow {
 public:
@@ -14,10 +14,10 @@ private:
     void setup_client();
     void setup_widgets();
 
-    void create_subwindow(IRCSubWindow::Type, const String& name);
+    void create_subwindow(IRCClientWindow::Type, const String& name);
 
     IRCClient m_client;
 
     GWidget* m_subwindow_container { nullptr };
-    Vector<IRCSubWindow*> m_subwindows;
+    Vector<IRCClientWindow*> m_subwindows;
 };

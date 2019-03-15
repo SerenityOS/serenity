@@ -2,7 +2,7 @@
 #include "IRCChannel.h"
 #include "IRCQuery.h"
 #include "IRCLogBuffer.h"
-#include "IRCSubWindow.h"
+#include "IRCClientWindow.h"
 #include <LibGUI/GNotifier.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -346,28 +346,28 @@ void IRCClient::handle_namreply(const Message& msg)
     channel.dump();
 }
 
-void IRCClient::register_subwindow(IRCSubWindow& subwindow)
+void IRCClient::register_subwindow(IRCClientWindow& subwindow)
 {
-    if (subwindow.type() == IRCSubWindow::Server) {
+    if (subwindow.type() == IRCClientWindow::Server) {
         m_server_subwindow = &subwindow;
         subwindow.set_log_buffer(*m_log);
         return;
     }
-    if (subwindow.type() == IRCSubWindow::Channel) {
+    if (subwindow.type() == IRCClientWindow::Channel) {
         auto it = m_channels.find(subwindow.name());
         ASSERT(it != m_channels.end());
         auto& channel = *(*it).value;
         subwindow.set_log_buffer(channel.log());
         return;
     }
-    if (subwindow.type() == IRCSubWindow::Query) {
+    if (subwindow.type() == IRCClientWindow::Query) {
         subwindow.set_log_buffer(ensure_query(subwindow.name()).log());
     }
 }
 
-void IRCClient::unregister_subwindow(IRCSubWindow& subwindow)
+void IRCClient::unregister_subwindow(IRCClientWindow& subwindow)
 {
-    if (subwindow.type() == IRCSubWindow::Server) {
+    if (subwindow.type() == IRCClientWindow::Server) {
         m_server_subwindow = &subwindow;
         return;
     }

@@ -1,5 +1,5 @@
 #include "IRCAppWindow.h"
-#include "IRCSubWindow.h"
+#include "IRCClientWindow.h"
 #include <LibGUI/GListBox.h>
 #include <LibGUI/GBoxLayout.h>
 
@@ -51,11 +51,11 @@ void IRCAppWindow::setup_widgets()
     m_subwindow_container->set_layout(make<GBoxLayout>(Orientation::Vertical));
     m_subwindow_container->set_size_policy(SizePolicy::Fill, SizePolicy::Fill);
 
-    create_subwindow(IRCSubWindow::Server, "Server");
+    create_subwindow(IRCClientWindow::Server, "Server");
 }
 
-void IRCAppWindow::create_subwindow(IRCSubWindow::Type type, const String& name)
+void IRCAppWindow::create_subwindow(IRCClientWindow::Type type, const String& name)
 {
-    auto* subwindow = new IRCSubWindow(m_client, type, name, m_subwindow_container);
+    auto* subwindow = new IRCClientWindow(m_client, type, name, m_subwindow_container);
     m_subwindows.append(subwindow);
 }

@@ -5,7 +5,7 @@ OBJS = \
     IRCLogBuffer.o \
     IRCLogBufferModel.o \
     IRCAppWindow.o \
-    IRCSubWindow.o \
+    IRCClientWindow.o \
     main.o
 
 APP = IRCClient
