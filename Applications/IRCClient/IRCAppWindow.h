@@ -5,6 +5,8 @@
 #include "IRCClient.h"
 #include "IRCClientWindow.h"
 
+class GStackWidget;
+
 class IRCAppWindow : public GWindow {
 public:
     IRCAppWindow();
@@ -19,5 +21,5 @@ private:
 
     IRCClient m_client;
 
-    GWidget* m_subwindow_container { nullptr };
+    GStackWidget* m_container { nullptr };
 };

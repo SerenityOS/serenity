@@ -1,6 +1,7 @@
 #include "IRCAppWindow.h"
 #include "IRCClientWindow.h"
 #include "IRCClientWindowListModel.h"
+#include <LibGUI/GStackWidget.h>
 #include <LibGUI/GTableView.h>
 #include <LibGUI/GBoxLayout.h>
 
@@ -28,14 +29,6 @@ void IRCAppWindow::setup_client()
         ensure_window(IRCClientWindow::Channel, channel_name);
     };
 
-    m_client.on_query_message = [this] (const String& name) {
-        // FIXME: Update query view.
-    };
-
-    m_client.on_channel_message = [this] (const String& channel_name) {
-        // FIXME: Update channel view.
-    };
-
     m_client.connect();
 }
 
@@ -46,22 +39,23 @@ void IRCAppWindow::setup_widgets()
     set_main_widget(widget);
     widget->set_layout(make<GBoxLayout>(Orientation::Horizontal));
 
-    auto* subwindow_list = new GTableView(widget);
-    subwindow_list->set_headers_visible(false);
-    subwindow_list->set_model(OwnPtr<IRCClientWindowListModel>(m_client.client_window_list_model()));
-    subwindow_list->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
-    subwindow_list->set_preferred_size({ 120, 0 });
+    auto* window_list = new GTableView(widget);
+    window_list->set_headers_visible(false);
+    window_list->set_model(OwnPtr<IRCClientWindowListModel>(m_client.client_window_list_model()));
+    window_list->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
+    window_list->set_preferred_size({ 120, 0 });
+    m_client.client_window_list_model()->on_activation = [this] (IRCClientWindow& window) {
+        m_container->set_active_widget(&window);
+    };
 
-    m_subwindow_container = new GWidget(widget);
-    m_subwindow_container->set_layout(make<GBoxLayout>(Orientation::Vertical));
-    m_subwindow_container->set_size_policy(SizePolicy::Fill, SizePolicy::Fill);
+    m_container = new GStackWidget(widget);
 
     create_subwindow(IRCClientWindow::Server, "Server");
 }
 
 IRCClientWindow& IRCAppWindow::create_subwindow(IRCClientWindow::Type type, const String& name)
 {
-    return *new IRCClientWindow(m_client, type, name, m_subwindow_container);
+    return *new IRCClientWindow(m_client, type, name, m_container);
 }
 
 IRCClientWindow& IRCAppWindow::ensure_window(IRCClientWindow::Type type, const String& name)

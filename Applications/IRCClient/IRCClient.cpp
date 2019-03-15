@@ -199,7 +199,7 @@ void IRCClient::join_channel(const String& channel_name)
     send(String::format("JOIN %s\r\n", channel_name.characters()));
 }
 
-void IRCClient::handle(const Message& msg, const String& verbatim)
+void IRCClient::handle(const Message& msg, const String&)
 {
     printf("IRCClient::execute: prefix='%s', command='%s', arguments=%d\n",
         msg.prefix.characters(),
