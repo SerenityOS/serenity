@@ -37,6 +37,7 @@ LIBGUI_OBJS = \
     GSortingProxyTableModel.o \
     GStackWidget.o \
     GEvent.o \
+    GScrollableWidget.o \
     GWindow.o
 
 OBJS = $(SHAREDGRAPHICS_OBJS) $(LIBGUI_OBJS)

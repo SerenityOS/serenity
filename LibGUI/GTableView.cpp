@@ -5,23 +5,8 @@
 #include <Kernel/KeyCode.h>
 
 GTableView::GTableView(GWidget* parent)
-    : GWidget(parent)
+    : GScrollableWidget(parent)
 {
-    m_vertical_scrollbar = new GScrollBar(Orientation::Vertical, this);
-    m_vertical_scrollbar->set_step(4);
-    m_vertical_scrollbar->on_change = [this] (int) {
-        update();
-    };
-
-    m_horizontal_scrollbar = new GScrollBar(Orientation::Horizontal, this);
-    m_horizontal_scrollbar->set_step(4);
-    m_horizontal_scrollbar->set_big_step(30);
-    m_horizontal_scrollbar->on_change = [this] (int) {
-        update();
-    };
-
-    m_corner_widget = new GWidget(this);
-    m_corner_widget->set_fill_with_background_color(true);
 }
 
 GTableView::~GTableView()
@@ -37,54 +22,38 @@ void GTableView::set_model(OwnPtr<GTableModel>&& model)
     m_model = move(model);
     if (m_model)
         m_model->register_view(Badge<GTableView>(), *this);
-}
-
-void GTableView::resize_event(GResizeEvent& event)
-{
-    update_scrollbar_ranges();
-    m_vertical_scrollbar->set_relative_rect(event.size().width() - m_vertical_scrollbar->preferred_size().width(), 0, m_vertical_scrollbar->preferred_size().width(), event.size().height() - m_horizontal_scrollbar->preferred_size().height());
-    m_horizontal_scrollbar->set_relative_rect(0, event.size().height() - m_horizontal_scrollbar->preferred_size().height(), event.size().width() - m_vertical_scrollbar->preferred_size().width(), m_horizontal_scrollbar->preferred_size().height());
-    m_corner_widget->set_relative_rect(m_horizontal_scrollbar->rect().right() + 1, m_vertical_scrollbar->rect().bottom() + 1, m_horizontal_scrollbar->height(), m_vertical_scrollbar->width());
-}
-
-void GTableView::update_scrollbar_ranges()
-{
-    int available_height = height() - header_height() - m_horizontal_scrollbar->height();
-    int excess_height = max(0, (item_count() * item_height()) - available_height);
-    m_vertical_scrollbar->set_range(0, excess_height);
-
-    int available_width = width() - m_vertical_scrollbar->width();
-    int excess_width = max(0, content_width() - available_width);
-    m_horizontal_scrollbar->set_range(0, excess_width);
-
-    m_vertical_scrollbar->set_big_step(visible_content_rect().height() - item_height());
-}
-
-int GTableView::content_width() const
-{
-    if (!m_model)
-        return 0;
-    int width = 0;
-    int column_count = m_model->column_count();
-    for (int i = 0; i < column_count; ++i)
-        width += m_model->column_metadata(i).preferred_width + horizontal_padding() * 2;
-    return width;
+    update_content_size();
 }
 
 void GTableView::model_notification(const GModelNotification&)
 {
 }
 
+void GTableView::update_content_size()
+{
+    if (!m_model)
+        return set_content_size({ });
+
+    int content_width = 0;
+    int column_count = m_model->column_count();
+    for (int i = 0; i < column_count; ++i)
+        content_width += m_model->column_metadata(i).preferred_width + horizontal_padding() * 2;
+    int content_height = item_count() * item_height();
+
+    set_content_size({ content_width, content_height });
+    set_size_occupied_by_fixed_elements({ 0, header_height() });
+}
+
 void GTableView::did_update_model()
 {
-    update_scrollbar_ranges();
+    update_content_size();
     update();
     model_notification(GModelNotification(GModelNotification::ModelUpdated));
 }
 
 Rect GTableView::row_rect(int item_index) const
 {
-    return { 0, header_height() + (item_index * item_height()), max(content_width(), width()), item_height() };
+    return { 0, header_height() + (item_index * item_height()), max(content_size().width(), width()), item_height() };
 }
 
 int GTableView::column_width(int column_index) const
@@ -105,7 +74,7 @@ Rect GTableView::header_rect(int column_index) const
 void GTableView::mousedown_event(GMouseEvent& event)
 {
     if (event.y() < header_height()) {
-        auto adjusted_position = event.position().translated(m_horizontal_scrollbar->value(), 0);
+        auto adjusted_position = event.position().translated(horizontal_scrollbar().value(), 0);
         for (int i = 0; i < m_model->column_count(); ++i) {
             auto header_rect = this->header_rect(i);
             if (header_rect.contains(adjusted_position)) {
@@ -122,7 +91,7 @@ void GTableView::mousedown_event(GMouseEvent& event)
     }
 
     if (event.button() == GMouseButton::Left) {
-        auto adjusted_position = event.position().translated(0, m_vertical_scrollbar->value());
+        auto adjusted_position = event.position().translated(0, vertical_scrollbar().value());
         for (int i = 0; i < item_count(); ++i) {
             if (row_rect(i).contains(adjusted_position)) {
                 m_model->set_selected_index({ i, 0 });
@@ -140,9 +109,9 @@ void GTableView::paint_event(GPaintEvent& event)
     Painter painter(*this);
     painter.set_clip_rect(event.rect());
     painter.save();
-    painter.translate(-m_horizontal_scrollbar->value(), -m_vertical_scrollbar->value());
+    painter.translate(-horizontal_scrollbar().value(), -vertical_scrollbar().value());
 
-    int exposed_width = max(content_width(), width());
+    int exposed_width = max(content_size().width(), width());
     int painted_item_index = 0;
     int y_offset = header_height();
 
@@ -193,7 +162,7 @@ void GTableView::paint_event(GPaintEvent& event)
     painter.fill_rect(unpainted_rect, Color::White);
 
     // Untranslate the painter vertically and do the column headers.
-    painter.translate(0, m_vertical_scrollbar->value());
+    painter.translate(0, vertical_scrollbar().value());
     if (headers_visible())
         paint_headers(painter);
 
@@ -203,8 +172,8 @@ void GTableView::paint_event(GPaintEvent& event)
         Rect item_area_rect {
             0,
             header_height(),
-            width() - m_vertical_scrollbar->width(),
-            height() - header_height() - m_horizontal_scrollbar->height()
+            width() - vertical_scrollbar().width(),
+            height() - header_height() - horizontal_scrollbar().height()
         };
         painter.draw_rect(item_area_rect, Color::from_rgb(0x84351a));
     };
@@ -212,7 +181,7 @@ void GTableView::paint_event(GPaintEvent& event)
 
 void GTableView::paint_headers(Painter& painter)
 {
-    int exposed_width = max(content_width(), width());
+    int exposed_width = max(content_size().width(), width());
     painter.fill_rect({ 0, 0, exposed_width, header_height() }, Color::LightGray);
     painter.draw_line({ 0, 0 }, { exposed_width - 1, 0 }, Color::White);
     painter.draw_line({ 0, header_height() - 1 }, { exposed_width - 1, header_height() - 1 }, Color::DarkGray);
@@ -298,34 +267,8 @@ void GTableView::keydown_event(GKeyEvent& event)
     return GWidget::keydown_event(event);
 }
 
-Rect GTableView::visible_content_rect() const
-{
-    return {
-        m_horizontal_scrollbar->value(),
-        m_vertical_scrollbar->value(),
-        width() - m_vertical_scrollbar->width(),
-        height() - header_height() - m_horizontal_scrollbar->height()
-    };
-}
-
 void GTableView::scroll_into_view(const GModelIndex& index, Orientation orientation)
 {
-    auto visible_content_rect = this->visible_content_rect();
     auto rect = row_rect(index.row()).translated(0, -header_height());
-
-    if (visible_content_rect.contains(rect))
-        return;
-
-    if (orientation == Orientation::Vertical) {
-        if (rect.top() < visible_content_rect.top())
-            m_vertical_scrollbar->set_value(rect.top());
-        else if (rect.bottom() > visible_content_rect.bottom())
-            m_vertical_scrollbar->set_value(rect.bottom() - visible_content_rect.height());
-    } else {
-        if (rect.left() < visible_content_rect.left())
-            m_horizontal_scrollbar->set_value(rect.left());
-        else if (rect.right() > visible_content_rect.right())
-            m_horizontal_scrollbar->set_value(rect.right() - visible_content_rect.width());
-    }
+    GScrollableWidget::scroll_into_view(rect, orientation);
 }
-
