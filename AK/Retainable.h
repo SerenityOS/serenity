@@ -49,6 +49,12 @@ protected:
         ASSERT(!m_retain_count);
     }
 
+    void release_base()
+    {
+        ASSERT(m_retain_count);
+        --m_retain_count;
+    }
+
     int m_retain_count { 1 };
 };
 
@@ -57,8 +63,7 @@ class Retainable : public RetainableBase {
 public:
     void release()
     {
-        ASSERT(m_retain_count);
-        --m_retain_count;
+        release_base();
         if (m_retain_count == 0) {
             call_will_be_destroyed_if_present(static_cast<T*>(this));
             delete static_cast<T*>(this);
