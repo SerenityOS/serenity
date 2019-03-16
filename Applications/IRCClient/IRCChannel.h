@@ -9,6 +9,7 @@
 
 class IRCClient;
 class IRCChannelMemberListModel;
+class IRCWindow;
 
 class IRCChannel : public Retainable<IRCChannel> {
 public:
@@ -38,6 +39,9 @@ public:
     int member_count() const { return m_members.size(); }
     String member_at(int i) { return m_members[i].name; }
 
+    IRCWindow& window() { return *m_window; }
+    const IRCWindow& window() const { return *m_window; }
+
 private:
     IRCChannel(IRCClient&, const String&);
 
@@ -52,4 +56,5 @@ private:
 
     Retained<IRCLogBuffer> m_log;
     IRCChannelMemberListModel* m_member_model { nullptr };
+    IRCWindow* m_window { nullptr };
 };

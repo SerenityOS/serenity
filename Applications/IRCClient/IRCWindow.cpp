@@ -8,9 +8,10 @@
 #include <LibGUI/GTextEditor.h>
 #include <LibGUI/GTextBox.h>
 
-IRCWindow::IRCWindow(IRCClient& client, Type type, const String& name, GWidget* parent)
+IRCWindow::IRCWindow(IRCClient& client, void* owner, Type type, const String& name, GWidget* parent)
     : GWidget(parent)
     , m_client(client)
+    , m_owner(owner)
     , m_type(type)
     , m_name(name)
 {
@@ -31,7 +32,7 @@ IRCWindow::IRCWindow(IRCClient& client, Type type, const String& name, GWidget* 
         member_view->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
         member_view->set_preferred_size({ 100, 0 });
         member_view->set_alternating_row_colors(false);
-        member_view->set_model(OwnPtr<IRCChannelMemberListModel>(m_client.ensure_channel(m_name).member_model()));
+        member_view->set_model(OwnPtr<IRCChannelMemberListModel>(channel().member_model()));
     }
 
     m_text_editor = new GTextEditor(GTextEditor::SingleLine, this);
