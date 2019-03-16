@@ -11,9 +11,11 @@
 #include <unistd.h>
 #include <stdio.h>
 
-//#define IRC_DEBUG
+#define IRC_DEBUG
 
 enum IRCNumeric {
+    RPL_TOPIC = 332,
+    RPL_TOPICWHOTIME = 333,
     RPL_NAMREPLY = 353,
     RPL_ENDOFNAMES = 366,
 };
@@ -201,6 +203,11 @@ void IRCClient::join_channel(const String& channel_name)
     send(String::format("JOIN %s\r\n", channel_name.characters()));
 }
 
+void IRCClient::part_channel(const String& channel_name)
+{
+    send(String::format("PART %s\r\n", channel_name.characters()));
+}
+
 void IRCClient::handle(const Message& msg, const String&)
 {
 #ifdef IRC_DEBUG
@@ -225,6 +232,9 @@ void IRCClient::handle(const Message& msg, const String&)
         case RPL_NAMREPLY:
             handle_namreply(msg);
             return;
+        case RPL_TOPIC:
+            handle_rpl_topic(msg);
+            return;
         }
     }
 
@@ -233,6 +243,12 @@ void IRCClient::handle(const Message& msg, const String&)
 
     if (msg.command == "JOIN")
         return handle_join(msg);
+
+    if (msg.command == "PART")
+        return handle_part(msg);
+
+    if (msg.command == "TOPIC")
+        return handle_topic(msg);
 
     if (msg.command == "PRIVMSG")
         return handle_privmsg(msg);
@@ -252,6 +268,8 @@ void IRCClient::handle_user_input_in_channel(const String& channel_name, const S
 {
     if (input.is_empty())
         return;
+    if (input[0] == '/')
+        return handle_user_command(input);
     ensure_channel(channel_name).say(input);
 }
 
@@ -259,6 +277,8 @@ void IRCClient::handle_user_input_in_query(const String& query_name, const Strin
 {
     if (input.is_empty())
         return;
+    if (input[0] == '/')
+        return handle_user_command(input);
     ensure_query(query_name).say(input);
 }
 
@@ -266,6 +286,8 @@ void IRCClient::handle_user_input_in_server(const String& input)
 {
     if (input.is_empty())
         return;
+    if (input[0] == '/')
+        return handle_user_command(input);
 }
 
 bool IRCClient::is_nick_prefix(char ch) const
@@ -349,8 +371,47 @@ void IRCClient::handle_join(const Message& msg)
 {
     if (msg.arguments.size() != 1)
         return;
+    auto prefix_parts = msg.prefix.split('!');
+    if (prefix_parts.size() < 1)
+        return;
+    auto nick = prefix_parts[0];
     auto& channel_name = msg.arguments[0];
-    ensure_channel(channel_name);
+    ensure_channel(channel_name).handle_join(nick, msg.prefix);
+}
+
+void IRCClient::handle_part(const Message& msg)
+{
+    if (msg.arguments.size() != 1)
+        return;
+    auto prefix_parts = msg.prefix.split('!');
+    if (prefix_parts.size() < 1)
+        return;
+    auto nick = prefix_parts[0];
+    auto& channel_name = msg.arguments[0];
+    ensure_channel(channel_name).handle_part(nick, msg.prefix);
+}
+
+void IRCClient::handle_topic(const Message& msg)
+{
+    if (msg.arguments.size() != 2)
+        return;
+    auto prefix_parts = msg.prefix.split('!');
+    if (prefix_parts.size() < 1)
+        return;
+    auto nick = prefix_parts[0];
+    auto& channel_name = msg.arguments[0];
+    ensure_channel(channel_name).handle_topic(nick, msg.arguments[1]);
+}
+
+void IRCClient::handle_rpl_topic(const Message& msg)
+{
+    if (msg.arguments.size() != 3)
+        return;
+    auto& nick = msg.arguments[0];
+    auto& channel_name = msg.arguments[1];
+    auto& topic = msg.arguments[2];
+    ensure_channel(channel_name).handle_topic(nick, topic);
+    // FIXME: Handle RPL_TOPICWHOTIME so we can know who set it and when.
 }
 
 void IRCClient::handle_namreply(const Message& msg)
@@ -402,4 +463,27 @@ void IRCClient::unregister_subwindow(IRCWindow& subwindow)
         }
     }
     m_client_window_list_model->update();
+}
+
+void IRCClient::handle_user_command(const String& input)
+{
+    auto parts = input.split(' ');
+    if (parts.is_empty())
+        return;
+    auto command = parts[0].to_uppercase();
+    if (command == "/JOIN") {
+        if (parts.size() >= 2)
+            join_channel(parts[1]);
+        return;
+    }
+    if (command == "/PART") {
+        if (parts.size() >= 2)
+            part_channel(parts[1]);
+        return;
+    }
+    if (command == "/QUERY") {
+        if (parts.size() >= 2)
+            ensure_query(parts[1]);
+        return;
+    }
 }

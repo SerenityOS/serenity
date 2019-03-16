@@ -51,7 +51,10 @@ GVariant IRCLogBufferModel::data(const GModelIndex& index, Role) const
         auto* tm = localtime(&entry.timestamp);
         return String::format("%02u:%02u:%02u", tm->tm_hour, tm->tm_min, tm->tm_sec);
     }
-    case Column::Name: return String::format("<%c%s>", entry.prefix ? entry.prefix : ' ', entry.sender.characters());
+    case Column::Name:
+        if (entry.sender.is_empty())
+            return String::empty();
+        return String::format("<%c%s>", entry.prefix ? entry.prefix : ' ', entry.sender.characters());
     case Column::Text: return entry.text;
     }
     ASSERT_NOT_REACHED();

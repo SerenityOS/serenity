@@ -27,6 +27,7 @@ public:
     String nickname() const { return m_nickname; }
 
     void join_channel(const String&);
+    void part_channel(const String&);
 
     bool is_nick_prefix(char) const;
 
@@ -73,10 +74,14 @@ private:
     void send_privmsg(const String& target, const String&);
     void process_line();
     void handle_join(const Message&);
+    void handle_part(const Message&);
     void handle_ping(const Message&);
+    void handle_topic(const Message&);
+    void handle_rpl_topic(const Message&);
     void handle_namreply(const Message&);
     void handle_privmsg(const Message&);
     void handle(const Message&, const String& verbatim);
+    void handle_user_command(const String&);
 
     String m_hostname;
     int m_port { 0 };
