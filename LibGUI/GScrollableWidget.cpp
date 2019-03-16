@@ -42,11 +42,11 @@ void GScrollableWidget::resize_event(GResizeEvent& event)
 void GScrollableWidget::update_scrollbar_ranges()
 {
     int available_height = height() - m_size_occupied_by_fixed_elements.height() - height_occupied_by_horizontal_scrollbar();
-    int excess_height = max(0, (m_content_size.height() + m_padding.height() * 2) - available_height);
+    int excess_height = max(0, m_content_size.height() - available_height);
     m_vertical_scrollbar->set_range(0, excess_height);
 
     int available_width = width() - m_size_occupied_by_fixed_elements.width() - width_occupied_by_vertical_scrollbar();
-    int excess_width = max(0, (m_content_size.width() + m_padding.height() * 2) - available_width);
+    int excess_width = max(0, m_content_size.width() - available_width);
     m_horizontal_scrollbar->set_range(0, excess_width);
 
     m_vertical_scrollbar->set_big_step(visible_content_rect().height() - m_vertical_scrollbar->step());
@@ -68,14 +68,6 @@ void GScrollableWidget::set_size_occupied_by_fixed_elements(const Size& size)
     update_scrollbar_ranges();
 }
 
-void GScrollableWidget::set_padding(const Size& size)
-{
-    if (m_padding == size)
-        return;
-    m_padding = size;
-    update_scrollbar_ranges();
-}
-
 int GScrollableWidget::height_occupied_by_horizontal_scrollbar() const
 {
     return m_horizontal_scrollbar->is_visible() ? m_horizontal_scrollbar->height() : 0;
@@ -91,8 +83,8 @@ Rect GScrollableWidget::visible_content_rect() const
     return {
         m_horizontal_scrollbar->value(),
         m_vertical_scrollbar->value(),
-        width() - width_occupied_by_vertical_scrollbar() - padding().width() * 2 - m_size_occupied_by_fixed_elements.width(),
-        height() - height_occupied_by_horizontal_scrollbar() - padding().height() * 2 - m_size_occupied_by_fixed_elements.height()
+        width() - width_occupied_by_vertical_scrollbar() - m_size_occupied_by_fixed_elements.width(),
+        height() - height_occupied_by_horizontal_scrollbar() - m_size_occupied_by_fixed_elements.height()
     };
 }
 
