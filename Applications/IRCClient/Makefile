@@ -5,8 +5,8 @@ OBJS = \
     IRCLogBuffer.o \
     IRCLogBufferModel.o \
     IRCAppWindow.o \
-    IRCClientWindow.o \
-    IRCClientWindowListModel.o \
+    IRCWindow.o \
+    IRCWindowListModel.o \
     IRCChannelMemberListModel.o \
     main.o
 

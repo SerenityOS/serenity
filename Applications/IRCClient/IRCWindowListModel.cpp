@@ -1,30 +1,30 @@
-#include "IRCClientWindowListModel.h"
-#include "IRCClientWindow.h"
+#include "IRCWindowListModel.h"
+#include "IRCWindow.h"
 #include "IRCClient.h"
 #include <stdio.h>
 #include <time.h>
 
-IRCClientWindowListModel::IRCClientWindowListModel(IRCClient& client)
+IRCWindowListModel::IRCWindowListModel(IRCClient& client)
     : m_client(client)
 {
     set_activates_on_selection(true);
 }
 
-IRCClientWindowListModel::~IRCClientWindowListModel()
+IRCWindowListModel::~IRCWindowListModel()
 {
 }
 
-int IRCClientWindowListModel::row_count() const
+int IRCWindowListModel::row_count() const
 {
     return m_client.window_count();
 }
 
-int IRCClientWindowListModel::column_count() const
+int IRCWindowListModel::column_count() const
 {
     return 1;
 }
 
-String IRCClientWindowListModel::column_name(int column) const
+String IRCWindowListModel::column_name(int column) const
 {
     switch (column) {
     case Column::Name: return "Name";
@@ -32,7 +32,7 @@ String IRCClientWindowListModel::column_name(int column) const
     ASSERT_NOT_REACHED();
 }
 
-GTableModel::ColumnMetadata IRCClientWindowListModel::column_metadata(int column) const
+GTableModel::ColumnMetadata IRCWindowListModel::column_metadata(int column) const
 {
     switch (column) {
     case Column::Name: return { 70, TextAlignment::CenterLeft };
@@ -40,7 +40,7 @@ GTableModel::ColumnMetadata IRCClientWindowListModel::column_metadata(int column
     ASSERT_NOT_REACHED();
 }
 
-GVariant IRCClientWindowListModel::data(const GModelIndex& index, Role) const
+GVariant IRCWindowListModel::data(const GModelIndex& index, Role) const
 {
     switch (index.column()) {
     case Column::Name: return m_client.window_at(index.row()).name();
@@ -48,12 +48,12 @@ GVariant IRCClientWindowListModel::data(const GModelIndex& index, Role) const
     ASSERT_NOT_REACHED();
 }
 
-void IRCClientWindowListModel::update()
+void IRCWindowListModel::update()
 {
     did_update();
 }
 
-void IRCClientWindowListModel::activate(const GModelIndex& index)
+void IRCWindowListModel::activate(const GModelIndex& index)
 {
     if (on_activation)
         on_activation(m_client.window_at(index.row()));

@@ -1,6 +1,6 @@
 #include "IRCAppWindow.h"
-#include "IRCClientWindow.h"
-#include "IRCClientWindowListModel.h"
+#include "IRCWindow.h"
+#include "IRCWindowListModel.h"
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GStackWidget.h>
 #include <LibGUI/GTableView.h>
@@ -34,15 +34,15 @@ void IRCAppWindow::setup_client()
     };
 
     m_client.on_channel_message = [this] (const String& channel_name) {
-        ensure_window(IRCClientWindow::Channel, channel_name);
+        ensure_window(IRCWindow::Channel, channel_name);
     };
 
     m_client.on_join = [this] (const String& channel_name) {
-        ensure_window(IRCClientWindow::Channel, channel_name);
+        ensure_window(IRCWindow::Channel, channel_name);
     };
 
     m_client.on_query_message = [this] (const String& name) {
-        ensure_window(IRCClientWindow::Query, name);
+        ensure_window(IRCWindow::Query, name);
     };
 
     m_client.connect();
@@ -120,24 +120,24 @@ void IRCAppWindow::setup_widgets()
     auto* window_list = new GTableView(horizontal_container);
     window_list->set_headers_visible(false);
     window_list->set_alternating_row_colors(false);
-    window_list->set_model(OwnPtr<IRCClientWindowListModel>(m_client.client_window_list_model()));
+    window_list->set_model(OwnPtr<IRCWindowListModel>(m_client.client_window_list_model()));
     window_list->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
     window_list->set_preferred_size({ 120, 0 });
-    m_client.client_window_list_model()->on_activation = [this] (IRCClientWindow& window) {
+    m_client.client_window_list_model()->on_activation = [this] (IRCWindow& window) {
         m_container->set_active_widget(&window);
     };
 
     m_container = new GStackWidget(horizontal_container);
 
-    create_subwindow(IRCClientWindow::Server, "Server");
+    create_subwindow(IRCWindow::Server, "Server");
 }
 
-IRCClientWindow& IRCAppWindow::create_subwindow(IRCClientWindow::Type type, const String& name)
+IRCWindow& IRCAppWindow::create_subwindow(IRCWindow::Type type, const String& name)
 {
-    return *new IRCClientWindow(m_client, type, name, m_container);
+    return *new IRCWindow(m_client, type, name, m_container);
 }
 
-IRCClientWindow& IRCAppWindow::ensure_window(IRCClientWindow::Type type, const String& name)
+IRCWindow& IRCAppWindow::ensure_window(IRCWindow::Type type, const String& name)
 {
     for (int i = 0; i < m_client.window_count(); ++i) {
         auto& window = m_client.window_at(i);

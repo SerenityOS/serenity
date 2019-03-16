@@ -1,4 +1,4 @@
-#include "IRCClientWindow.h"
+#include "IRCWindow.h"
 #include "IRCClient.h"
 #include "IRCChannel.h"
 #include "IRCChannelMemberListModel.h"
@@ -8,7 +8,7 @@
 #include <LibGUI/GTextEditor.h>
 #include <LibGUI/GTextBox.h>
 
-IRCClientWindow::IRCClientWindow(IRCClient& client, Type type, const String& name, GWidget* parent)
+IRCWindow::IRCWindow(IRCClient& client, Type type, const String& name, GWidget* parent)
     : GWidget(parent)
     , m_client(client)
     , m_type(type)
@@ -50,12 +50,12 @@ IRCClientWindow::IRCClientWindow(IRCClient& client, Type type, const String& nam
     m_client.register_subwindow(*this);
 }
 
-IRCClientWindow::~IRCClientWindow()
+IRCWindow::~IRCWindow()
 {
     m_client.unregister_subwindow(*this);
 }
 
-void IRCClientWindow::set_log_buffer(const IRCLogBuffer& log_buffer)
+void IRCWindow::set_log_buffer(const IRCLogBuffer& log_buffer)
 {
     m_log_buffer = &log_buffer;
     m_table_view->set_model(OwnPtr<IRCLogBufferModel>((IRCLogBufferModel*)log_buffer.model()));

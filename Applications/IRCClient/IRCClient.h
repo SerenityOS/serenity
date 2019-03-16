@@ -8,8 +8,8 @@
 
 class IRCChannel;
 class IRCQuery;
-class IRCClientWindow;
-class IRCClientWindowListModel;
+class IRCWindow;
+class IRCWindowListModel;
 class GNotifier;
 
 class IRCClient {
@@ -37,15 +37,15 @@ public:
     Function<void(const String& channel)> on_join;
     Function<void()> on_server_message;
 
-    void register_subwindow(IRCClientWindow&);
-    void unregister_subwindow(IRCClientWindow&);
+    void register_subwindow(IRCWindow&);
+    void unregister_subwindow(IRCWindow&);
 
-    IRCClientWindowListModel* client_window_list_model() { return m_client_window_list_model; }
-    const IRCClientWindowListModel* client_window_list_model() const { return m_client_window_list_model; }
+    IRCWindowListModel* client_window_list_model() { return m_client_window_list_model; }
+    const IRCWindowListModel* client_window_list_model() const { return m_client_window_list_model; }
 
     int window_count() const { return m_windows.size(); }
-    const IRCClientWindow& window_at(int index) const { return *m_windows.at(index); }
-    IRCClientWindow& window_at(int index) { return *m_windows.at(index); }
+    const IRCWindow& window_at(int index) const { return *m_windows.at(index); }
+    IRCWindow& window_at(int index) { return *m_windows.at(index); }
 
     void handle_user_input_in_channel(const String& channel_name, const String&);
     void handle_user_input_in_query(const String& query_name, const String&);
@@ -84,11 +84,11 @@ private:
     HashMap<String, RetainPtr<IRCChannel>> m_channels;
     HashMap<String, RetainPtr<IRCQuery>> m_queries;
 
-    Vector<IRCClientWindow*> m_windows;
+    Vector<IRCWindow*> m_windows;
 
-    IRCClientWindow* m_server_subwindow { nullptr };
+    IRCWindow* m_server_subwindow { nullptr };
 
-    IRCClientWindowListModel* m_client_window_list_model { nullptr };
+    IRCWindowListModel* m_client_window_list_model { nullptr };
 
     Retained<IRCLogBuffer> m_log;
 };
