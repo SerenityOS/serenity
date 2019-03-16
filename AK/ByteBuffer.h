@@ -1,10 +1,65 @@
 #pragma once
 
-#include "Buffer.h"
 #include "Types.h"
 #include "StdLibExtras.h"
+#include <AK/Retainable.h>
+#include <AK/RetainPtr.h>
+#include <AK/kmalloc.h>
 
 namespace AK {
+
+class ByteBufferImpl : public Retainable<ByteBufferImpl> {
+public:
+    static Retained<ByteBufferImpl> create_uninitialized(int size);
+    static Retained<ByteBufferImpl> create_zeroed(int);
+    static Retained<ByteBufferImpl> copy(const void*, int);
+    static Retained<ByteBufferImpl> wrap(void*, int);
+    static Retained<ByteBufferImpl> adopt(void*, int);
+
+    ~ByteBufferImpl() { clear(); }
+
+    void clear()
+    {
+        if (!m_data)
+            return;
+        if (m_owned)
+            kfree(m_data);
+        m_data = nullptr;
+    }
+
+    byte& operator[](int i) { ASSERT(i < m_size); return m_data[i]; }
+    const byte& operator[](int i) const { ASSERT(i < m_size); return m_data[i]; }
+    bool is_empty() const { return !m_size; }
+    int size() const { return m_size; }
+
+    byte* pointer() { return m_data; }
+    const byte* pointer() const { return m_data; }
+
+    byte* offset_pointer(int offset) { return m_data + offset; }
+    const byte* offset_pointer(int offset) const { return m_data + offset; }
+
+    const void* end_pointer() const { return m_data + m_size; }
+
+    // NOTE: trim() does not reallocate.
+    void trim(int size)
+    {
+        ASSERT(size <= m_size);
+        m_size = size;
+    }
+
+    void grow(int size);
+
+private:
+    enum ConstructionMode { Uninitialized, Copy, Wrap, Adopt };
+    explicit ByteBufferImpl(int); // For ConstructionMode=Uninitialized
+    ByteBufferImpl(const void*, int, ConstructionMode); // For ConstructionMode=Copy
+    ByteBufferImpl(void*, int, ConstructionMode); // For ConstructionMode=Wrap/Adopt
+    ByteBufferImpl() { }
+
+    byte* m_data { nullptr };
+    int m_size { 0 };
+    bool m_owned { false };
+};
 
 class ByteBuffer {
 public:
@@ -30,11 +85,11 @@ public:
         return *this;
     }
 
-    static ByteBuffer create_uninitialized(ssize_t size) { return ByteBuffer(Buffer<byte>::create_uninitialized(size)); }
-    static ByteBuffer create_zeroed(ssize_t size) { return ByteBuffer(Buffer<byte>::create_zeroed(size)); }
-    static ByteBuffer copy(const byte* data, ssize_t size) { return ByteBuffer(Buffer<byte>::copy(data, size)); }
-    static ByteBuffer wrap(byte* data, ssize_t size) { return ByteBuffer(Buffer<byte>::wrap(data, size)); }
-    static ByteBuffer adopt(byte* data, ssize_t size) { return ByteBuffer(Buffer<byte>::adopt(data, size)); }
+    static ByteBuffer create_uninitialized(ssize_t size) { return ByteBuffer(ByteBufferImpl::create_uninitialized(size)); }
+    static ByteBuffer create_zeroed(ssize_t size) { return ByteBuffer(ByteBufferImpl::create_zeroed(size)); }
+    static ByteBuffer copy(const byte* data, ssize_t size) { return ByteBuffer(ByteBufferImpl::copy(data, size)); }
+    static ByteBuffer wrap(byte* data, ssize_t size) { return ByteBuffer(ByteBufferImpl::wrap(data, size)); }
+    static ByteBuffer adopt(byte* data, ssize_t size) { return ByteBuffer(ByteBufferImpl::adopt(data, size)); }
 
     ~ByteBuffer() { clear(); }
     void clear() { m_impl = nullptr; }
@@ -77,19 +132,85 @@ public:
     void grow(ssize_t size)
     {
         if (!m_impl)
-            m_impl = Buffer<byte>::create_uninitialized(size);
+            m_impl = ByteBufferImpl::create_uninitialized(size);
         else
             m_impl->grow(size);
     }
 
 private:
-    explicit ByteBuffer(RetainPtr<Buffer<byte>>&& impl)
+    explicit ByteBuffer(RetainPtr<ByteBufferImpl>&& impl)
         : m_impl(move(impl))
     {
     }
 
-    RetainPtr<Buffer<byte>> m_impl;
+    RetainPtr<ByteBufferImpl> m_impl;
 };
+
+inline ByteBufferImpl::ByteBufferImpl(int size)
+    : m_size(size)
+{
+    m_data = static_cast<byte*>(kmalloc(size));
+    m_owned = true;
+}
+
+inline ByteBufferImpl::ByteBufferImpl(const void* data, int size, ConstructionMode mode)
+    : m_size(size)
+{
+    ASSERT(mode == Copy);
+    m_data = static_cast<byte*>(kmalloc(size));
+    memcpy(m_data, data, size);
+    m_owned = true;
+}
+
+inline ByteBufferImpl::ByteBufferImpl(void* data, ssize_t size, ConstructionMode mode)
+    : m_data(static_cast<byte*>(data))
+    , m_size(size)
+{
+    if (mode == Adopt) {
+        m_owned = true;
+    } else if (mode == Wrap) {
+        m_owned = false;
+    }
+}
+
+inline void ByteBufferImpl::grow(ssize_t size)
+{
+    ASSERT(size > m_size);
+    ASSERT(m_owned);
+    byte* new_data = static_cast<byte*>(kmalloc(size));
+    memcpy(new_data, m_data, m_size);
+    byte* old_data = m_data;
+    m_data = new_data;
+    m_size = size;
+    kfree(old_data);
+}
+
+inline Retained<ByteBufferImpl> ByteBufferImpl::create_uninitialized(int size)
+{
+    return ::adopt(*new ByteBufferImpl(size));
+}
+
+inline Retained<ByteBufferImpl> ByteBufferImpl::create_zeroed(int size)
+{
+    auto buffer = ::adopt(*new ByteBufferImpl(size));
+    memset(buffer->pointer(), 0, size);
+    return buffer;
+}
+
+inline Retained<ByteBufferImpl> ByteBufferImpl::copy(const void* data, int size)
+{
+    return ::adopt(*new ByteBufferImpl(data, size, Copy));
+}
+
+inline Retained<ByteBufferImpl> ByteBufferImpl::wrap(void* data, int size)
+{
+    return ::adopt(*new ByteBufferImpl(data, size, Wrap));
+}
+
+inline Retained<ByteBufferImpl> ByteBufferImpl::adopt(void* data, int size)
+{
+    return ::adopt(*new ByteBufferImpl(data, size, Adopt));
+}
 
 }
 
