@@ -29,8 +29,7 @@ constexpr auto call_one_retain_left_if_present(...) -> FalseType
     return { };
 }
 
-template<typename T>
-class Retainable {
+class RetainableBase {
 public:
     void retain()
     {
@@ -38,6 +37,24 @@ public:
         ++m_retain_count;
     }
 
+    int retain_count() const
+    {
+        return m_retain_count;
+    }
+
+protected:
+    RetainableBase() { }
+    ~RetainableBase()
+    {
+        ASSERT(!m_retain_count);
+    }
+
+    int m_retain_count { 1 };
+};
+
+template<typename T>
+class Retainable : public RetainableBase {
+public:
     void release()
     {
         ASSERT(m_retain_count);
@@ -49,21 +66,6 @@ public:
             call_one_retain_left_if_present(static_cast<T*>(this));
         }
     }
-
-    int retain_count() const
-    {
-        return m_retain_count;
-    }
-
-protected:
-    Retainable() { }
-    ~Retainable()
-    {
-        ASSERT(!m_retain_count);
-    }
-
-private:
-    int m_retain_count { 1 };
 };
 
 }
