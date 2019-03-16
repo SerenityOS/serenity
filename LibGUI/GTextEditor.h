@@ -1,6 +1,6 @@
 #pragma once
 
-#include <LibGUI/GWidget.h>
+#include <LibGUI/GScrollableWidget.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>
 
@@ -61,7 +61,7 @@ private:
     GTextPosition m_end;
 };
 
-class GTextEditor : public GWidget {
+class GTextEditor : public GScrollableWidget {
 public:
     enum Type { MultiLine, SingleLine };
     GTextEditor(Type, GWidget* parent);
@@ -74,14 +74,10 @@ public:
     Function<void(GTextEditor&)> on_cursor_change;
 
     void set_text(const String&);
-    int content_width() const;
-    int content_height() const;
-    Rect visible_content_rect() const;
     void scroll_cursor_into_view();
     int line_count() const { return m_lines.size(); }
     int line_spacing() const { return m_line_spacing; }
     int line_height() const { return font().glyph_height() + m_line_spacing; }
-    int padding() const { return 3; }
     GTextPosition cursor() const { return m_cursor; }
     GTextRange normalized_selection() const { return m_selection.normalized(); }
     int glyph_width() const { return font().glyph_width('x'); }
@@ -104,7 +100,6 @@ public:
 
 private:
     virtual void paint_event(GPaintEvent&) override;
-    virtual void resize_event(GResizeEvent&) override;
     virtual void mousedown_event(GMouseEvent&) override;
     virtual void mouseup_event(GMouseEvent&) override;
     virtual void mousemove_event(GMouseEvent&) override;
@@ -114,6 +109,7 @@ private:
     virtual void timer_event(GTimerEvent&) override;
     virtual bool accepts_focus() const override { return true; }
     void paint_ruler(Painter&);
+    void update_content_size();
 
     class Line {
         friend class GTextEditor;
@@ -137,7 +133,6 @@ private:
         Vector<char> m_text;
     };
 
-    void update_scrollbar_ranges();
     Rect line_content_rect(int item_index) const;
     Rect line_widget_rect(int line_index) const;
     Rect cursor_content_rect() const;
@@ -156,10 +151,6 @@ private:
     void delete_selection();
 
     Type m_type { MultiLine };
-
-    GScrollBar* m_vertical_scrollbar { nullptr };
-    GScrollBar* m_horizontal_scrollbar { nullptr };
-    GWidget* m_corner_widget { nullptr };
 
     Vector<OwnPtr<Line>> m_lines;
     GTextPosition m_cursor;

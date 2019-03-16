@@ -10,32 +10,13 @@
 #include <stdio.h>
 
 GTextEditor::GTextEditor(Type type, GWidget* parent)
-    : GWidget(parent)
+    : GScrollableWidget(parent)
     , m_type(type)
 {
-    m_ruler_visible = m_type == MultiLine;
-
+    set_padding({ 3, 3 });
+    set_scrollbars_enabled(is_multi_line());
+    m_ruler_visible = is_multi_line();
     set_font(GFontDatabase::the().get_by_name("Csilla Thin"));
-
-    m_vertical_scrollbar = new GScrollBar(Orientation::Vertical, this);
-    m_vertical_scrollbar->set_step(4);
-    m_vertical_scrollbar->set_visible(is_multi_line());
-    m_vertical_scrollbar->on_change = [this] (int) {
-        update();
-    };
-
-    m_horizontal_scrollbar = new GScrollBar(Orientation::Horizontal, this);
-    m_horizontal_scrollbar->set_step(4);
-    m_horizontal_scrollbar->set_big_step(30);
-    m_horizontal_scrollbar->set_visible(is_multi_line());
-    m_horizontal_scrollbar->on_change = [this] (int) {
-        update();
-    };
-
-    m_corner_widget = new GWidget(this);
-    m_corner_widget->set_fill_with_background_color(true);
-    m_corner_widget->set_visible(is_multi_line());
-
     m_lines.append(make<Line>());
 }
 
@@ -62,52 +43,26 @@ void GTextEditor::set_text(const String& text)
             add_line(i);
     }
     add_line(i);
+    update_content_size();
     set_cursor(0, 0);
     update();
 }
 
-void GTextEditor::resize_event(GResizeEvent& event)
+void GTextEditor::update_content_size()
 {
-    update_scrollbar_ranges();
-    if (is_multi_line()) {
-        m_vertical_scrollbar->set_relative_rect(event.size().width() - m_vertical_scrollbar->preferred_size().width(), 0, m_vertical_scrollbar->preferred_size().width(), event.size().height() - m_horizontal_scrollbar->preferred_size().height());
-        m_horizontal_scrollbar->set_relative_rect(0, event.size().height() - m_horizontal_scrollbar->preferred_size().height(), event.size().width() - m_vertical_scrollbar->preferred_size().width(), m_horizontal_scrollbar->preferred_size().height());
-        m_corner_widget->set_relative_rect(m_horizontal_scrollbar->rect().right() + 1, m_vertical_scrollbar->rect().bottom() + 1, m_horizontal_scrollbar->height(), m_vertical_scrollbar->width());
-    }
-}
-
-void GTextEditor::update_scrollbar_ranges()
-{
-    int available_height = height() - m_horizontal_scrollbar->height();
-    int excess_height = max(0, (content_height() + padding() * 2) - available_height);
-    m_vertical_scrollbar->set_range(0, excess_height);
-
-    int available_width = width() - m_vertical_scrollbar->width() - ruler_width();
-    int excess_width = max(0, (content_width() + padding() * 2) - available_width);
-    m_horizontal_scrollbar->set_range(0, excess_width);
-
-    m_vertical_scrollbar->set_big_step(visible_content_rect().height());
-}
-
-int GTextEditor::content_height() const
-{
-    return line_count() * line_height();
-}
-
-int GTextEditor::content_width() const
-{
-    // FIXME: Cache this somewhere.
-    int max_width = 0;
+    int content_width = 0;
     for (auto& line : m_lines)
-        max_width = max(line->width(font()), max_width);
-    return max_width;
+        content_width = max(line->width(font()), content_width);
+    int content_height = line_count() * line_height();
+    set_content_size({ content_width, content_height });
+    set_size_occupied_by_fixed_elements({ ruler_width(), 0 });
 }
 
 GTextPosition GTextEditor::text_position_at(const Point& a_position) const
 {
     auto position = a_position;
-    position.move_by(m_horizontal_scrollbar->value(), m_vertical_scrollbar->value());
-    position.move_by(-(padding() + ruler_width()), -padding());
+    position.move_by(horizontal_scrollbar().value(), vertical_scrollbar().value());
+    position.move_by(-(padding().width() + ruler_width()), -padding().height());
     int line_index = position.y() / line_height();
     int column_index = position.x() / glyph_width();
     line_index = max(0, min(line_index, line_count() - 1));
@@ -178,7 +133,7 @@ Rect GTextEditor::ruler_content_rect(int line_index) const
     if (!m_ruler_visible)
         return { };
     return {
-        0 - ruler_width() - padding() + m_horizontal_scrollbar->value(),
+        0 - ruler_width() - padding().width() + horizontal_scrollbar().value(),
         line_index * line_height(),
         ruler_width(),
         line_height()
@@ -188,12 +143,12 @@ Rect GTextEditor::ruler_content_rect(int line_index) const
 void GTextEditor::paint_event(GPaintEvent& event)
 {
     Painter painter(*this);
-    Rect item_area_rect { 0, 0, width() - m_vertical_scrollbar->width(), height() - m_horizontal_scrollbar->height() };
+    Rect item_area_rect { 0, 0, width() - width_occupied_by_vertical_scrollbar(), height() - height_occupied_by_horizontal_scrollbar() };
     painter.set_clip_rect(item_area_rect);
     painter.set_clip_rect(event.rect());
     painter.fill_rect(event.rect(), Color::White);
 
-    Rect ruler_rect { 0, 0, ruler_width(), height() - m_horizontal_scrollbar->height()};
+    Rect ruler_rect { 0, 0, ruler_width(), height() - height_occupied_by_horizontal_scrollbar()};
 
     if (m_ruler_visible) {
         painter.fill_rect(ruler_rect, Color::LightGray);
@@ -202,8 +157,8 @@ void GTextEditor::paint_event(GPaintEvent& event)
 
     painter.save();
 
-    painter.translate(-m_horizontal_scrollbar->value(), -m_vertical_scrollbar->value());
-    painter.translate(padding() + ruler_width(), padding());
+    painter.translate(-horizontal_scrollbar().value(), -vertical_scrollbar().value());
+    painter.translate(padding().width() + ruler_width(), padding().height());
     int exposed_width = max(content_width(), width());
 
     int first_visible_line = text_position_at(event.rect().top_left()).line();
@@ -226,7 +181,7 @@ void GTextEditor::paint_event(GPaintEvent& event)
         }
     }
 
-    painter.set_clip_rect({ ruler_rect.right() + 1, 0, width() - m_vertical_scrollbar->width() - ruler_width(), height() - m_horizontal_scrollbar->height() });
+    painter.set_clip_rect({ ruler_rect.right() + 1, 0, width() - width_occupied_by_vertical_scrollbar() - ruler_width(), height() - height_occupied_by_horizontal_scrollbar() });
 
     for (int i = first_visible_line; i <= last_visible_line; ++i) {
         auto& line = *m_lines[i];
@@ -395,7 +350,7 @@ void GTextEditor::keydown_event(GKeyEvent& event)
         if (m_cursor.column() > 0) {
             // Backspace within line
             current_line().remove(m_cursor.column() - 1);
-            update_scrollbar_ranges();
+            update_content_size();
             set_cursor(m_cursor.line(), m_cursor.column() - 1);
             return;
         }
@@ -405,7 +360,7 @@ void GTextEditor::keydown_event(GKeyEvent& event)
             int previous_length = previous_line.length();
             previous_line.append(current_line().characters(), current_line().length());
             m_lines.remove(m_cursor.line());
-            update_scrollbar_ranges();
+            update_content_size();
             update();
             set_cursor(m_cursor.line() - 1, previous_length);
             return;
@@ -421,7 +376,7 @@ void GTextEditor::keydown_event(GKeyEvent& event)
         if (m_cursor.column() < current_line().length()) {
             // Delete within line
             current_line().remove(m_cursor.column());
-            update_scrollbar_ranges();
+            update_content_size();
             update_cursor();
             return;
         }
@@ -431,7 +386,7 @@ void GTextEditor::keydown_event(GKeyEvent& event)
             int previous_length = current_line().length();
             current_line().append(next_line.characters(), next_line.length());
             m_lines.remove(m_cursor.line() + 1);
-            update_scrollbar_ranges();
+            update_content_size();
             update();
             set_cursor(m_cursor.line(), previous_length);
             return;
@@ -465,7 +420,7 @@ void GTextEditor::insert_at_cursor(char ch)
         }
         if (at_tail || at_head) {
             m_lines.insert(m_cursor.line() + (at_tail ? 1 : 0), make<Line>());
-            update_scrollbar_ranges();
+            update_content_size();
             update();
             set_cursor(m_cursor.line() + 1, 0);
             return;
@@ -474,7 +429,7 @@ void GTextEditor::insert_at_cursor(char ch)
         new_line->append(current_line().characters() + m_cursor.column(), current_line().length() - m_cursor.column());
         current_line().truncate(m_cursor.column());
         m_lines.insert(m_cursor.line() + 1, move(new_line));
-        update_scrollbar_ranges();
+        update_content_size();
         update();
         set_cursor(m_cursor.line() + 1, 0);
         return;
@@ -485,25 +440,15 @@ void GTextEditor::insert_at_cursor(char ch)
         for (int i = 0; i < spaces_to_insert; ++i) {
             current_line().insert(m_cursor.column(), ' ');
         }
-        update_scrollbar_ranges();
+        update_content_size();
         set_cursor(m_cursor.line(), next_soft_tab_stop);
         update_cursor();
         return;
     }
     current_line().insert(m_cursor.column(), ch);
-    update_scrollbar_ranges();
+    update_content_size();
     set_cursor(m_cursor.line(), m_cursor.column() + 1);
     update_cursor();
-}
-
-Rect GTextEditor::visible_content_rect() const
-{
-    return {
-        m_horizontal_scrollbar->value(),
-        m_vertical_scrollbar->value(),
-        width() - m_vertical_scrollbar->width() - padding() * 2 - ruler_width(),
-        height() - m_horizontal_scrollbar->height() - padding() * 2
-    };
 }
 
 Rect GTextEditor::cursor_content_rect() const
@@ -517,39 +462,18 @@ Rect GTextEditor::cursor_content_rect() const
 
 Rect GTextEditor::line_widget_rect(int line_index) const
 {
-    ASSERT(m_horizontal_scrollbar);
-    ASSERT(m_vertical_scrollbar);
     auto rect = line_content_rect(line_index);
-    rect.move_by(-(m_horizontal_scrollbar->value() - padding()), -(m_vertical_scrollbar->value() - padding()));
+    rect.move_by(-(horizontal_scrollbar().value() - padding().width()), -(vertical_scrollbar().value() - padding().height()));
     rect.set_width(rect.width() + 1); // Add 1 pixel for when the cursor is on the end.
     rect.intersect(this->rect());
     // This feels rather hackish, but extend the rect to the edge of the content view:
-    rect.set_right(m_vertical_scrollbar->relative_rect().left() - 1);
+    rect.set_right(vertical_scrollbar().relative_rect().left() - 1);
     return rect;
 }
 
 void GTextEditor::scroll_cursor_into_view()
 {
-    auto visible_content_rect = this->visible_content_rect();
-    auto rect = cursor_content_rect();
-
-    if (visible_content_rect.is_empty())
-        return;
-
-    if (visible_content_rect.contains(rect))
-        return;
-
-    if (rect.top() < visible_content_rect.top())
-        m_vertical_scrollbar->set_value(rect.top());
-    else if (rect.bottom() > visible_content_rect.bottom())
-        m_vertical_scrollbar->set_value(rect.bottom() - visible_content_rect.height());
-
-    if (rect.left() < visible_content_rect.left())
-        m_horizontal_scrollbar->set_value(rect.left());
-    else if (rect.right() > visible_content_rect.right())
-        m_horizontal_scrollbar->set_value(rect.right() - visible_content_rect.width());
-
-    update();
+    scroll_into_view(cursor_content_rect(), true, true);
 }
 
 Rect GTextEditor::line_content_rect(int line_index) const
