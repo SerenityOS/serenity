@@ -37,6 +37,7 @@ void IRCChannel::add_member(const String& name, char prefix)
 
 void IRCChannel::add_message(char prefix, const String& name, const String& text)
 {
+    window().did_add_message();
     log().add_message(prefix, name, text);
     dump();
 }

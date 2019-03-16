@@ -29,6 +29,7 @@ void IRCQuery::dump() const
 
 void IRCQuery::add_message(char prefix, const String& name, const String& text)
 {
+    window().did_add_message();
     log().add_message(prefix, name, text);
     dump();
 }
