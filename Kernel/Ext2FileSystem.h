@@ -2,7 +2,6 @@
 
 #include "DiskBackedFileSystem.h"
 #include "UnixTypes.h"
-#include <AK/Buffer.h>
 #include <AK/OwnPtr.h>
 #include "ext2_fs.h"
 
