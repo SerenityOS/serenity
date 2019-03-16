@@ -10,7 +10,7 @@
 #include <Kernel/UDPSocket.h>
 #include <Kernel/Process.h>
 #include <Kernel/EtherType.h>
-#include <AK/Lock.h>
+#include <Kernel/Lock.h>
 
 //#define ETHERNET_DEBUG
 #define IPV4_DEBUG

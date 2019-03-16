@@ -13,7 +13,7 @@
 #include <AK/AKString.h>
 #include <AK/Function.h>
 #include <AK/kstdio.h>
-#include <AK/Lock.h>
+#include <Kernel/Lock.h>
 #include <AK/WeakPtr.h>
 #include <Kernel/KResult.h>
 

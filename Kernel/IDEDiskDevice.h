@@ -1,6 +1,6 @@
 #pragma once
 
-#include <AK/Lock.h>
+#include <Kernel/Lock.h>
 #include <AK/RetainPtr.h>
 #include <Kernel/DiskDevice.h>
 #include "IRQHandler.h"
