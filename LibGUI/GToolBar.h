@@ -12,8 +12,9 @@ public:
     void add_action(Retained<GAction>&&);
     void add_separator();
 
-private:
     virtual const char* class_name() const override { return "GToolBar"; }
+
+private:
     virtual void paint_event(GPaintEvent&) override;
 
     struct Item {

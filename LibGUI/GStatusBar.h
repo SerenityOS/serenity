@@ -12,8 +12,9 @@ public:
     String text() const;
     void set_text(String&&);
 
-private:
     virtual const char* class_name() const override { return "GStatusBar"; }
+
+private:
     virtual void paint_event(GPaintEvent&) override;
 
     GLabel* m_label { nullptr };

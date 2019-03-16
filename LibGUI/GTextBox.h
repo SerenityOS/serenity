@@ -14,8 +14,9 @@ public:
     Function<void(GTextBox&)> on_return_pressed;
     Function<void(GTextBox&)> on_change;
 
-private:
     virtual const char* class_name() const override { return "GTextBox"; }
+
+private:
     virtual void paint_event(GPaintEvent&) override;
     virtual void mousedown_event(GMouseEvent&) override;
     virtual void keydown_event(GKeyEvent&) override;

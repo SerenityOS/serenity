@@ -100,6 +100,8 @@ public:
 
     Function<void(GTextEditor&)> on_return_pressed;
 
+    virtual const char* class_name() const override { return "GTextEditor"; }
+
 private:
     virtual void paint_event(GPaintEvent&) override;
     virtual void resize_event(GResizeEvent&) override;
