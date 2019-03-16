@@ -9,7 +9,7 @@ public:
     enum Type { Invalid, Action, Separator };
 
     explicit GMenuItem(Type);
-    explicit GMenuItem(RetainPtr<GAction>&&);
+    explicit GMenuItem(Retained<GAction>&&);
     ~GMenuItem();
 
     Type type() const { return m_type; }

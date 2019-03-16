@@ -15,7 +15,7 @@ public:
 
     GAction* action_at(int);
 
-    void add_action(RetainPtr<GAction>&&);
+    void add_action(Retained<GAction>&&);
     void add_separator();
 
     Function<void(unsigned)> on_item_activation;
