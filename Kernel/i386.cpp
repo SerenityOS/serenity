@@ -22,7 +22,7 @@ static Descriptor* s_gdt;
 
 static IRQHandler** s_irq_handler;
 
-static Vector<word, KmallocEternalAllocator>* s_gdt_freelist;
+static Vector<word>* s_gdt_freelist;
 
 static word s_gdtLength;
 
@@ -345,7 +345,7 @@ void gdt_init()
     s_gdt = static_cast<Descriptor*>(kmalloc_eternal(sizeof(Descriptor) * 256));
     s_gdtLength = 5;
 
-    s_gdt_freelist = new Vector<word, KmallocEternalAllocator>();
+    s_gdt_freelist = new Vector<word>();
     s_gdt_freelist->ensure_capacity(256);
     for (size_t i = s_gdtLength; i < 256; ++i)
         s_gdt_freelist->append(i * 8);
