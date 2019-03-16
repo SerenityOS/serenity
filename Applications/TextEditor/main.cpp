@@ -61,15 +61,15 @@ int main(int argc, char** argv)
         text_editor->set_text(builder.to_string());
     }
 
-    auto new_action = GAction::create("New document", { Mod_Ctrl, Key_N }, GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/newdocument16.rgb", { 16, 16 }), [] (const GAction&) {
-        dbgprintf("FIXME: Implement File/New");
+    auto new_action = GAction::create("New document", { Mod_Ctrl, Key_N }, GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/16x16/new.rgb", { 16, 16 }), [] (const GAction&) {
+        dbgprintf("FIXME: Implement File/New\n");
     });
 
-    auto open_action = GAction::create("Open document", { Mod_Ctrl, Key_O }, GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/open16.rgb", { 16, 16 }), [] (const GAction&) {
-        dbgprintf("FIXME: Implement File/Open");
+    auto open_action = GAction::create("Open document", { Mod_Ctrl, Key_O }, GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/16x16/open.rgb", { 16, 16 }), [] (const GAction&) {
+        dbgprintf("FIXME: Implement File/Open\n");
     });
 
-    auto save_action = GAction::create("Save document", { Mod_Ctrl, Key_S }, GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/save16.rgb", { 16, 16 }), [&] (const GAction&) {
+    auto save_action = GAction::create("Save document", { Mod_Ctrl, Key_S }, GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/16x16/save.rgb", { 16, 16 }), [&] (const GAction&) {
         dbgprintf("Writing document to '%s'\n", path.characters());
         text_editor->write_to_file(path);
     });
