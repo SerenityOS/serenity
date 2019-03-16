@@ -23,6 +23,8 @@ public:
     void set_button_style(GButtonStyle style) { m_button_style = style; }
     GButtonStyle button_style() const { return m_button_style; }
 
+    virtual const char* class_name() const override { return "GButton"; }
+
 private:
     virtual void paint_event(GPaintEvent&) override;
     virtual void mousedown_event(GMouseEvent&) override;
@@ -30,8 +32,6 @@ private:
     virtual void mousemove_event(GMouseEvent&) override;
     virtual void enter_event(GEvent&) override;
     virtual void leave_event(GEvent&) override;
-
-    virtual const char* class_name() const override { return "GButton"; }
 
     String m_caption;
     RetainPtr<GraphicsBitmap> m_icon;

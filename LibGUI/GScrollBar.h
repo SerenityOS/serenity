@@ -24,12 +24,13 @@ public:
 
     Function<void(int)> on_change;
 
+    virtual const char* class_name() const override { return "GScrollBar"; }
+
 private:
     virtual void paint_event(GPaintEvent&) override;
     virtual void mousedown_event(GMouseEvent&) override;
     virtual void mouseup_event(GMouseEvent&) override;
     virtual void mousemove_event(GMouseEvent&) override;
-    virtual const char* class_name() const override { return "GScrollBar"; }
 
     int button_size() const { return orientation() == Orientation::Vertical ? width() : height(); }
     Rect up_button_rect() const;

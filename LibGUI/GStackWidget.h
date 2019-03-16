@@ -10,12 +10,12 @@ public:
     GWidget* active_widget() const { return m_active_widget; }
     void set_active_widget(GWidget*);
 
+    virtual const char* class_name() const override { return "GStackWidget"; }
+
 protected:
     virtual void child_event(GChildEvent&) override;
     virtual void resize_event(GResizeEvent&) override;
 
 private:
-    virtual const char* class_name() const override { return "GStackWidget"; }
-
     GWidget* m_active_widget { nullptr };
 };

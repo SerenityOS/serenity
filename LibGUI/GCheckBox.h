@@ -17,13 +17,14 @@ public:
 
     Function<void(GCheckBox&, bool)> on_change;
 
+    virtual const char* class_name() const override { return "GCheckBox"; }
+
 private:
     virtual void paint_event(GPaintEvent&) override;
     virtual void mousedown_event(GMouseEvent&) override;
     virtual void mouseup_event(GMouseEvent&) override;
     virtual void mousemove_event(GMouseEvent&) override;
     virtual void keydown_event(GKeyEvent&) override;
-    virtual const char* class_name() const override { return "GCheckBox"; }
     virtual bool accepts_focus() const override { return true; }
 
     String m_caption;
