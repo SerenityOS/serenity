@@ -61,3 +61,29 @@ void IRCWindow::set_log_buffer(const IRCLogBuffer& log_buffer)
     m_log_buffer = &log_buffer;
     m_table_view->set_model(OwnPtr<IRCLogBufferModel>((IRCLogBufferModel*)log_buffer.model()));
 }
+
+bool IRCWindow::is_active() const
+{
+    return m_client.current_window() == this;
+}
+
+void IRCWindow::did_add_message()
+{
+    if (!is_active()) {
+        ++m_unread_count;
+        m_client.aid_update_window_list();
+    }
+}
+
+void IRCWindow::clear_unread_count()
+{
+    if (!m_unread_count)
+        return;
+    m_unread_count = 0;
+    m_client.aid_update_window_list();
+}
+
+int IRCWindow::unread_count() const
+{
+    return m_unread_count;
+}

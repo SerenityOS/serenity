@@ -27,6 +27,13 @@ public:
 
     void set_log_buffer(const IRCLogBuffer&);
 
+    bool is_active() const;
+
+    int unread_count() const;
+    void clear_unread_count();
+
+    void did_add_message();
+
     IRCChannel& channel() { return *(IRCChannel*)m_owner; }
     const IRCChannel& channel() const { return *(const IRCChannel*)m_owner; }
 
@@ -34,6 +41,8 @@ public:
     const IRCQuery& query() const { return *(const IRCQuery*)m_owner; }
 
 private:
+    const char* class_name() const override { return "IRCWindow"; }
+
     IRCClient& m_client;
     void* m_owner { nullptr };
     Type m_type;
@@ -41,4 +50,5 @@ private:
     GTableView* m_table_view { nullptr };
     GTextEditor* m_text_editor { nullptr };
     RetainPtr<IRCLogBuffer> m_log_buffer;
+    int m_unread_count { 0 };
 };

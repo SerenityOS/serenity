@@ -237,8 +237,10 @@ void IRCClient::handle(const Message& msg, const String&)
     if (msg.command == "PRIVMSG")
         return handle_privmsg(msg);
 
-    if (msg.arguments.size() >= 2)
+    if (msg.arguments.size() >= 2) {
         m_log->add_message(0, "Server", String::format("[%s] %s", msg.command.characters(), msg.arguments[1].characters()));
+        m_server_subwindow->did_add_message();
+    }
 }
 
 void IRCClient::send_privmsg(const String& target, const String& text)

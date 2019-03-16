@@ -30,11 +30,16 @@ public:
 
     bool is_nick_prefix(char) const;
 
+    IRCWindow* current_window() { return aid_get_active_window(); }
+    const IRCWindow* current_window() const { return aid_get_active_window(); }
+
     Function<void()> on_connect;
     Function<void()> on_disconnect;
     Function<void()> on_server_message;
 
     Function<IRCWindow*(void*, IRCWindow::Type, const String&)> aid_create_window;
+    Function<IRCWindow*()> aid_get_active_window;
+    Function<void()> aid_update_window_list;
 
     void register_subwindow(IRCWindow&);
     void unregister_subwindow(IRCWindow&);

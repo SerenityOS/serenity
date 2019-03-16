@@ -12,8 +12,7 @@
 #include <stdio.h>
 
 IRCAppWindow::IRCAppWindow()
-    : GWindow()
-    , m_client("127.0.0.1", 6667)
+    : m_client("127.0.0.1", 6667)
 {
     set_title(String::format("IRC Client: %s@%s:%d", m_client.nickname().characters(), m_client.hostname().characters(), m_client.port()));
     set_rect(200, 200, 600, 400);
@@ -30,8 +29,14 @@ IRCAppWindow::~IRCAppWindow()
 
 void IRCAppWindow::setup_client()
 {
-    m_client.aid_create_window = [this] (void* owner, IRCWindow::Type type, const String& name) -> IRCWindow* {
+    m_client.aid_create_window = [this] (void* owner, IRCWindow::Type type, const String& name) {
         return &create_window(owner, type, name);
+    };
+    m_client.aid_get_active_window = [this] {
+        return static_cast<IRCWindow*>(m_container->active_widget());
+    };
+    m_client.aid_update_window_list = [this] {
+        m_window_list->model()->update();
     };
 
     m_client.on_connect = [this] {
@@ -110,14 +115,15 @@ void IRCAppWindow::setup_widgets()
     auto* horizontal_container = new GWidget(widget);
     horizontal_container->set_layout(make<GBoxLayout>(Orientation::Horizontal));
 
-    auto* window_list = new GTableView(horizontal_container);
-    window_list->set_headers_visible(false);
-    window_list->set_alternating_row_colors(false);
-    window_list->set_model(OwnPtr<IRCWindowListModel>(m_client.client_window_list_model()));
-    window_list->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
-    window_list->set_preferred_size({ 120, 0 });
+    m_window_list = new GTableView(horizontal_container);
+    m_window_list->set_headers_visible(false);
+    m_window_list->set_alternating_row_colors(false);
+    m_window_list->set_model(OwnPtr<IRCWindowListModel>(m_client.client_window_list_model()));
+    m_window_list->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
+    m_window_list->set_preferred_size({ 120, 0 });
     m_client.client_window_list_model()->on_activation = [this] (IRCWindow& window) {
         m_container->set_active_widget(&window);
+        window.clear_unread_count();
     };
 
     m_container = new GStackWidget(horizontal_container);

@@ -43,7 +43,12 @@ GTableModel::ColumnMetadata IRCWindowListModel::column_metadata(int column) cons
 GVariant IRCWindowListModel::data(const GModelIndex& index, Role) const
 {
     switch (index.column()) {
-    case Column::Name: return m_client.window_at(index.row()).name();
+    case Column::Name: {
+        auto& window = m_client.window_at(index.row());
+        if (!window.unread_count())
+            return window.name();
+        return String::format("%s (%d)\n", window.name().characters(), window.unread_count());
+    }
     }
     ASSERT_NOT_REACHED();
 }
