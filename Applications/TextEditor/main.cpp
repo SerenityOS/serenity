@@ -74,6 +74,14 @@ int main(int argc, char** argv)
         text_editor->write_to_file(path);
     });
 
+    auto undo_action = GAction::create("Undo", { Mod_Ctrl, Key_Z }, GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/16x16/undo.rgb", { 16, 16 }), [&] (const GAction&) {
+        // FIXME: Undo
+    });
+
+    auto redo_action = GAction::create("Redo", { Mod_Ctrl, Key_Y }, GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/16x16/redo.rgb", { 16, 16 }), [&] (const GAction&) {
+        // FIXME: Redo
+    });
+
     auto cut_action = GAction::create("Cut", { Mod_Ctrl, Key_X }, GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/cut16.rgb", { 16, 16 }), [&] (const GAction&) {
         text_editor->cut();
     });
@@ -101,6 +109,9 @@ int main(int argc, char** argv)
     menubar->add_menu(move(file_menu));
 
     auto edit_menu = make<GMenu>("Edit");
+    edit_menu->add_action(undo_action.copy_ref());
+    edit_menu->add_action(redo_action.copy_ref());
+    edit_menu->add_separator();
     edit_menu->add_action(cut_action.copy_ref());
     edit_menu->add_action(copy_action.copy_ref());
     edit_menu->add_action(paste_action.copy_ref());
@@ -132,6 +143,11 @@ int main(int argc, char** argv)
     toolbar->add_action(move(cut_action));
     toolbar->add_action(move(copy_action));
     toolbar->add_action(move(paste_action));
+
+    toolbar->add_separator();
+
+    toolbar->add_action(move(undo_action));
+    toolbar->add_action(move(redo_action));
 
     auto* window = new GWindow;
     window->set_title(String::format("TextEditor: %s", path.characters()));
