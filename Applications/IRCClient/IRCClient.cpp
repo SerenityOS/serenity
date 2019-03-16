@@ -306,15 +306,11 @@ void IRCClient::handle_privmsg(const Message& msg)
         auto it = m_channels.find(target);
         if (it != m_channels.end()) {
             (*it).value->add_message(sender_prefix, sender_nick, msg.arguments[1]);
-            if (on_channel_message)
-                on_channel_message(target);
             return;
         }
     }
     auto& query = ensure_query(sender_nick);
     query.add_message(sender_prefix, sender_nick, msg.arguments[1]);
-    if (on_query_message)
-        on_query_message(sender_nick);
 }
 
 IRCQuery& IRCClient::ensure_query(const String& name)
@@ -353,8 +349,6 @@ void IRCClient::handle_join(const Message& msg)
         return;
     auto& channel_name = msg.arguments[0];
     ensure_channel(channel_name);
-    if (on_join)
-        on_join(channel_name);
 }
 
 void IRCClient::handle_namreply(const Message& msg)
@@ -389,13 +383,6 @@ void IRCClient::register_subwindow(IRCWindow& subwindow)
     if (subwindow.type() == IRCWindow::Server) {
         m_server_subwindow = &subwindow;
         subwindow.set_log_buffer(*m_log);
-    } else if (subwindow.type() == IRCWindow::Channel) {
-        auto it = m_channels.find(subwindow.name());
-        ASSERT(it != m_channels.end());
-        auto& channel = *(*it).value;
-        subwindow.set_log_buffer(channel.log());
-    } else if (subwindow.type() == IRCWindow::Query) {
-        subwindow.set_log_buffer(ensure_query(subwindow.name()).log());
     }
     m_windows.append(&subwindow);
     m_client_window_list_model->update();

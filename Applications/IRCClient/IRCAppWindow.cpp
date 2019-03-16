@@ -17,10 +17,11 @@ IRCAppWindow::IRCAppWindow()
 {
     set_title(String::format("IRC Client: %s@%s:%d", m_client.nickname().characters(), m_client.hostname().characters(), m_client.port()));
     set_rect(200, 200, 600, 400);
-    setup_client();
     setup_actions();
     setup_menus();
     setup_widgets();
+
+    setup_client();
 }
 
 IRCAppWindow::~IRCAppWindow()
@@ -29,20 +30,12 @@ IRCAppWindow::~IRCAppWindow()
 
 void IRCAppWindow::setup_client()
 {
+    m_client.aid_create_window = [this] (void* owner, IRCWindow::Type type, const String& name) -> IRCWindow* {
+        return &create_window(owner, type, name);
+    };
+
     m_client.on_connect = [this] {
         m_client.join_channel("#test");
-    };
-
-    m_client.on_channel_message = [this] (const String& channel_name) {
-        ensure_window(IRCWindow::Channel, channel_name);
-    };
-
-    m_client.on_join = [this] (const String& channel_name) {
-        ensure_window(IRCWindow::Channel, channel_name);
-    };
-
-    m_client.on_query_message = [this] (const String& name) {
-        ensure_window(IRCWindow::Query, name);
     };
 
     m_client.connect();
@@ -129,20 +122,10 @@ void IRCAppWindow::setup_widgets()
 
     m_container = new GStackWidget(horizontal_container);
 
-    create_subwindow(IRCWindow::Server, "Server");
+    create_window(&m_client, IRCWindow::Server, "Server");
 }
 
-IRCWindow& IRCAppWindow::create_subwindow(IRCWindow::Type type, const String& name)
+IRCWindow& IRCAppWindow::create_window(void* owner, IRCWindow::Type type, const String& name)
 {
-    return *new IRCWindow(m_client, type, name, m_container);
-}
-
-IRCWindow& IRCAppWindow::ensure_window(IRCWindow::Type type, const String& name)
-{
-    for (int i = 0; i < m_client.window_count(); ++i) {
-        auto& window = m_client.window_at(i);
-        if (window.name() == name)
-            return window;
-    }
-    return create_subwindow(type, name);
+    return *new IRCWindow(m_client, owner, type, name, m_container);
 }

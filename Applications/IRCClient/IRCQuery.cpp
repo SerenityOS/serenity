@@ -8,6 +8,8 @@ IRCQuery::IRCQuery(IRCClient& client, const String& name)
     , m_name(name)
     , m_log(IRCLogBuffer::create())
 {
+    m_window = m_client.aid_create_window(this, IRCWindow::Query, m_name);
+    m_window->set_log_buffer(*m_log);
 }
 
 IRCQuery::~IRCQuery()

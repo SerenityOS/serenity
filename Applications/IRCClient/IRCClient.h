@@ -5,10 +5,10 @@
 #include <AK/CircularQueue.h>
 #include <AK/Function.h>
 #include "IRCLogBuffer.h"
+#include "IRCWindow.h"
 
 class IRCChannel;
 class IRCQuery;
-class IRCWindow;
 class IRCWindowListModel;
 class GNotifier;
 
@@ -32,10 +32,9 @@ public:
 
     Function<void()> on_connect;
     Function<void()> on_disconnect;
-    Function<void(const String& channel)> on_channel_message;
-    Function<void(const String& name)> on_query_message;
-    Function<void(const String& channel)> on_join;
     Function<void()> on_server_message;
+
+    Function<IRCWindow*(void*, IRCWindow::Type, const String&)> aid_create_window;
 
     void register_subwindow(IRCWindow&);
     void unregister_subwindow(IRCWindow&);

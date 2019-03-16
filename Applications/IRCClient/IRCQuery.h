@@ -8,6 +8,7 @@
 #include "IRCLogBuffer.h"
 
 class IRCClient;
+class IRCWindow;
 
 class IRCQuery : public Retainable<IRCQuery> {
 public:
@@ -24,11 +25,15 @@ public:
 
     void say(const String&);
 
+    IRCWindow& window() { return *m_window; }
+    const IRCWindow& window() const { return *m_window; }
+
 private:
     IRCQuery(IRCClient&, const String& name);
 
     IRCClient& m_client;
     String m_name;
+    IRCWindow* m_window { nullptr };
 
     Retained<IRCLogBuffer> m_log;
 };

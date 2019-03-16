@@ -2,7 +2,9 @@
 
 #include <LibGUI/GWidget.h>
 
+class IRCChannel;
 class IRCClient;
+class IRCQuery;
 class IRCLogBuffer;
 class GTableView;
 class GTextEditor;
@@ -15,7 +17,7 @@ public:
         Query,
     };
 
-    explicit IRCWindow(IRCClient&, Type, const String& name, GWidget* parent);
+    IRCWindow(IRCClient&, void* owner, Type, const String& name, GWidget* parent);
     virtual ~IRCWindow() override;
 
     String name() const { return m_name; }
@@ -25,8 +27,15 @@ public:
 
     void set_log_buffer(const IRCLogBuffer&);
 
+    IRCChannel& channel() { return *(IRCChannel*)m_owner; }
+    const IRCChannel& channel() const { return *(const IRCChannel*)m_owner; }
+
+    IRCQuery& query() { return *(IRCQuery*)m_owner; }
+    const IRCQuery& query() const { return *(const IRCQuery*)m_owner; }
+
 private:
     IRCClient& m_client;
+    void* m_owner { nullptr };
     Type m_type;
     String m_name;
     GTableView* m_table_view { nullptr };
