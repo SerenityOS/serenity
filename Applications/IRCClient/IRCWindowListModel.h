@@ -4,16 +4,16 @@
 #include <AK/Function.h>
 
 class IRCClient;
-class IRCClientWindow;
+class IRCWindow;
 
-class IRCClientWindowListModel final : public GTableModel {
+class IRCWindowListModel final : public GTableModel {
 public:
     enum Column {
         Name,
     };
 
-    explicit IRCClientWindowListModel(IRCClient&);
-    virtual ~IRCClientWindowListModel() override;
+    explicit IRCWindowListModel(IRCClient&);
+    virtual ~IRCWindowListModel() override;
 
     virtual int row_count() const override;
     virtual int column_count() const override;
@@ -23,7 +23,7 @@ public:
     virtual void update() override;
     virtual void activate(const GModelIndex&) override;
 
-    Function<void(IRCClientWindow&)> on_activation;
+    Function<void(IRCWindow&)> on_activation;
 
 private:
     IRCClient& m_client;

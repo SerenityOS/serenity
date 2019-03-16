@@ -2,8 +2,8 @@
 #include "IRCChannel.h"
 #include "IRCQuery.h"
 #include "IRCLogBuffer.h"
-#include "IRCClientWindow.h"
-#include "IRCClientWindowListModel.h"
+#include "IRCWindow.h"
+#include "IRCWindowListModel.h"
 #include <LibGUI/GNotifier.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -24,7 +24,7 @@ IRCClient::IRCClient(const String& address, int port)
     , m_nickname("anon")
     , m_log(IRCLogBuffer::create())
 {
-    m_client_window_list_model = new IRCClientWindowListModel(*this);
+    m_client_window_list_model = new IRCWindowListModel(*this);
 }
 
 IRCClient::~IRCClient()
@@ -384,26 +384,26 @@ void IRCClient::handle_namreply(const Message& msg)
     channel.dump();
 }
 
-void IRCClient::register_subwindow(IRCClientWindow& subwindow)
+void IRCClient::register_subwindow(IRCWindow& subwindow)
 {
-    if (subwindow.type() == IRCClientWindow::Server) {
+    if (subwindow.type() == IRCWindow::Server) {
         m_server_subwindow = &subwindow;
         subwindow.set_log_buffer(*m_log);
-    } else if (subwindow.type() == IRCClientWindow::Channel) {
+    } else if (subwindow.type() == IRCWindow::Channel) {
         auto it = m_channels.find(subwindow.name());
         ASSERT(it != m_channels.end());
         auto& channel = *(*it).value;
         subwindow.set_log_buffer(channel.log());
-    } else if (subwindow.type() == IRCClientWindow::Query) {
+    } else if (subwindow.type() == IRCWindow::Query) {
         subwindow.set_log_buffer(ensure_query(subwindow.name()).log());
     }
     m_windows.append(&subwindow);
     m_client_window_list_model->update();
 }
 
-void IRCClient::unregister_subwindow(IRCClientWindow& subwindow)
+void IRCClient::unregister_subwindow(IRCWindow& subwindow)
 {
-    if (subwindow.type() == IRCClientWindow::Server) {
+    if (subwindow.type() == IRCWindow::Server) {
         m_server_subwindow = &subwindow;
     }
     for (int i = 0; i < m_windows.size(); ++i) {

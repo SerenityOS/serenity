@@ -7,7 +7,7 @@ class IRCLogBuffer;
 class GTableView;
 class GTextEditor;
 
-class IRCClientWindow : public GWidget {
+class IRCWindow : public GWidget {
 public:
     enum Type {
         Server,
@@ -15,8 +15,8 @@ public:
         Query,
     };
 
-    explicit IRCClientWindow(IRCClient&, Type, const String& name, GWidget* parent);
-    virtual ~IRCClientWindow() override;
+    explicit IRCWindow(IRCClient&, Type, const String& name, GWidget* parent);
+    virtual ~IRCWindow() override;
 
     String name() const { return m_name; }
     void set_name(const String& name) { m_name = name; }

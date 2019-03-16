@@ -3,7 +3,7 @@
 #include <LibGUI/GWindow.h>
 #include <LibGUI/GWidget.h>
 #include "IRCClient.h"
-#include "IRCClientWindow.h"
+#include "IRCWindow.h"
 
 class GAction;
 class GStackWidget;
@@ -19,8 +19,8 @@ private:
     void setup_menus();
     void setup_widgets();
 
-    IRCClientWindow& create_subwindow(IRCClientWindow::Type, const String& name);
-    IRCClientWindow& ensure_window(IRCClientWindow::Type, const String& name);
+    IRCWindow& create_subwindow(IRCWindow::Type, const String& name);
+    IRCWindow& ensure_window(IRCWindow::Type, const String& name);
 
     IRCClient m_client;
 
