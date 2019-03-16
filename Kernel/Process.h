@@ -12,7 +12,7 @@
 #include <AK/Vector.h>
 #include <AK/WeakPtr.h>
 #include <AK/Weakable.h>
-#include <AK/Lock.h>
+#include <Kernel/Lock.h>
 
 class FileDescriptor;
 class PageDirectory;

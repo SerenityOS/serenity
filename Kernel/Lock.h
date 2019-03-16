@@ -1,18 +1,12 @@
 #pragma once
 
-#include "Assertions.h"
-#include "Types.h"
-#include "i386.h"
+#include <AK/Assertions.h>
+#include <AK/Types.h>
+#include <Kernel/i386.h>
 #include <Kernel/Scheduler.h>
 
 class Process;
 extern Process* current;
-
-#ifndef KERNEL
-#error This thing is kernel-only right now.
-#endif
-
-namespace AK {
 
 static inline dword CAS(volatile dword* mem, dword newval, dword oldval)
 {
@@ -117,8 +111,3 @@ private:
     Lock m_lock;
 };
 
-}
-
-using AK::Lock;
-using AK::Locker;
-using AK::Lockable;

@@ -4,7 +4,7 @@
 #include <Kernel/DoubleBuffer.h>
 #include <Kernel/IPv4.h>
 #include <AK/HashMap.h>
-#include <AK/Lock.h>
+#include <Kernel/Lock.h>
 #include <AK/SinglyLinkedList.h>
 
 class IPv4SocketHandle;

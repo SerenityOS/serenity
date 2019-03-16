@@ -2,7 +2,7 @@
 
 #include <AK/Types.h>
 #include <AK/Vector.h>
-#include <AK/Lock.h>
+#include <Kernel/Lock.h>
 
 class DoubleBuffer {
 public:

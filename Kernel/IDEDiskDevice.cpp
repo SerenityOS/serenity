@@ -5,7 +5,7 @@
 #include "IO.h"
 #include "Scheduler.h"
 #include "PIC.h"
-#include <AK/Lock.h>
+#include <Kernel/Lock.h>
 
 //#define DISK_DEBUG
 

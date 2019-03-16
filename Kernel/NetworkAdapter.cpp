@@ -4,7 +4,7 @@
 #include <Kernel/kmalloc.h>
 #include <Kernel/EtherType.h>
 #include <AK/HashTable.h>
-#include <AK/Lock.h>
+#include <Kernel/Lock.h>
 
 static Lockable<HashTable<NetworkAdapter*>>& all_adapters()
 {

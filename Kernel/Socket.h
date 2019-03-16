@@ -1,6 +1,6 @@
 #pragma once
 
-#include <AK/Lock.h>
+#include <Kernel/Lock.h>
 #include <AK/Retainable.h>
 #include <AK/RetainPtr.h>
 #include <AK/HashTable.h>

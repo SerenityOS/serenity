@@ -1,6 +1,6 @@
 #pragma once
 
-#include <AK/Lock.h>
+#include <Kernel/Lock.h>
 #include <AK/Types.h>
 #include <Kernel/FileSystem.h>
 

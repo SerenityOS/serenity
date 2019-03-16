@@ -2,7 +2,7 @@
 
 #include <Kernel/CharacterDevice.h>
 #include <AK/Badge.h>
-#include <AK/Lock.h>
+#include <Kernel/Lock.h>
 
 class MasterPTY;
 
