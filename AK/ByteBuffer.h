@@ -87,9 +87,9 @@ public:
 
     static ByteBuffer create_uninitialized(ssize_t size) { return ByteBuffer(ByteBufferImpl::create_uninitialized(size)); }
     static ByteBuffer create_zeroed(ssize_t size) { return ByteBuffer(ByteBufferImpl::create_zeroed(size)); }
-    static ByteBuffer copy(const byte* data, ssize_t size) { return ByteBuffer(ByteBufferImpl::copy(data, size)); }
-    static ByteBuffer wrap(byte* data, ssize_t size) { return ByteBuffer(ByteBufferImpl::wrap(data, size)); }
-    static ByteBuffer adopt(byte* data, ssize_t size) { return ByteBuffer(ByteBufferImpl::adopt(data, size)); }
+    static ByteBuffer copy(const void* data, ssize_t size) { return ByteBuffer(ByteBufferImpl::copy(data, size)); }
+    static ByteBuffer wrap(void* data, ssize_t size) { return ByteBuffer(ByteBufferImpl::wrap(data, size)); }
+    static ByteBuffer adopt(void* data, ssize_t size) { return ByteBuffer(ByteBufferImpl::adopt(data, size)); }
 
     ~ByteBuffer() { clear(); }
     void clear() { m_impl = nullptr; }

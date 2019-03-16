@@ -163,9 +163,9 @@ bool Font::write_to_file(const String& path)
     auto buffer = ByteBuffer::create_uninitialized(sizeof(FontFileHeader) + (256 * bytes_per_glyph) + 256);
     BufferStream stream(buffer);
 
-    stream << ByteBuffer::wrap((byte*)&header, sizeof(FontFileHeader));
-    stream << ByteBuffer::wrap((byte*)m_rows, (256 * bytes_per_glyph));
-    stream << ByteBuffer::wrap((byte*)m_glyph_widths, 256);
+    stream << ByteBuffer::wrap(&header, sizeof(FontFileHeader));
+    stream << ByteBuffer::wrap(m_rows, (256 * bytes_per_glyph));
+    stream << ByteBuffer::wrap(m_glyph_widths, 256);
 
     ASSERT(stream.at_end());
     ssize_t nwritten = write(fd, buffer.pointer(), buffer.size());

@@ -147,7 +147,7 @@ ssize_t IPv4Socket::sendto(const void* data, size_t data_length, int flags, cons
     kprintf("sendto: destination=%s:%u\n", m_destination_address.to_string().characters(), m_destination_port);
 
     if (type() == SOCK_RAW) {
-        adapter->send_ipv4(MACAddress(), m_destination_address, (IPv4Protocol)protocol(), ByteBuffer::copy((const byte*)data, data_length));
+        adapter->send_ipv4(MACAddress(), m_destination_address, (IPv4Protocol)protocol(), ByteBuffer::copy(data, data_length));
         return data_length;
     }
 
