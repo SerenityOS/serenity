@@ -157,7 +157,8 @@ private:
     bool m_cursor_state { true };
     bool m_in_drag_select { false };
     bool m_ruler_visible { true };
-    int m_line_spacing { 2 };
+    int m_line_spacing { 4 };
     int m_soft_tab_width { 4 };
+    int m_horizontal_content_padding { 2 };
     GTextRange m_selection;
 };

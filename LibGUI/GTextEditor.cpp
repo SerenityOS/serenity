@@ -13,7 +13,6 @@ GTextEditor::GTextEditor(Type type, GWidget* parent)
     : GScrollableWidget(parent)
     , m_type(type)
 {
-    set_padding({ 3, 3 });
     set_scrollbars_enabled(is_multi_line());
     m_ruler_visible = is_multi_line();
     set_font(GFontDatabase::the().get_by_name("Csilla Thin"));
@@ -53,6 +52,7 @@ void GTextEditor::update_content_size()
     int content_width = 0;
     for (auto& line : m_lines)
         content_width = max(line->width(font()), content_width);
+    content_width += m_horizontal_content_padding * 2;
     int content_height = line_count() * line_height();
     set_content_size({ content_width, content_height });
     set_size_occupied_by_fixed_elements({ ruler_width(), 0 });
@@ -62,7 +62,7 @@ GTextPosition GTextEditor::text_position_at(const Point& a_position) const
 {
     auto position = a_position;
     position.move_by(horizontal_scrollbar().value(), vertical_scrollbar().value());
-    position.move_by(-(padding().width() + ruler_width()), -padding().height());
+    position.move_by(-(m_horizontal_content_padding + ruler_width()), 0);
     int line_index = position.y() / line_height();
     int column_index = position.x() / glyph_width();
     line_index = max(0, min(line_index, line_count() - 1));
@@ -133,7 +133,7 @@ Rect GTextEditor::ruler_content_rect(int line_index) const
     if (!m_ruler_visible)
         return { };
     return {
-        0 - ruler_width() - padding().width() + horizontal_scrollbar().value(),
+        0 - ruler_width() + horizontal_scrollbar().value(),
         line_index * line_height(),
         ruler_width(),
         line_height()
@@ -158,7 +158,7 @@ void GTextEditor::paint_event(GPaintEvent& event)
     painter.save();
 
     painter.translate(-horizontal_scrollbar().value(), -vertical_scrollbar().value());
-    painter.translate(padding().width() + ruler_width(), padding().height());
+    painter.translate(ruler_width(), 0);
     int exposed_width = max(content_width(), width());
 
     int first_visible_line = text_position_at(event.rect().top_left()).line();
@@ -194,7 +194,7 @@ void GTextEditor::paint_event(GPaintEvent& event)
         if (line_has_selection) {
             int selection_start_column_on_line = selection.start().line() == i ? selection.start().column() : 0;
             int selection_end_column_on_line = selection.end().line() == i ? selection.end().column() : line.length();
-            int selection_left = selection_start_column_on_line * font().glyph_width('x');
+            int selection_left = m_horizontal_content_padding + selection_start_column_on_line * font().glyph_width('x');
             int selection_right = line_rect.left() + selection_end_column_on_line * font().glyph_width('x');
             Rect selection_rect { selection_left, line_rect.y(), selection_right - selection_left, line_rect.height() };
             painter.fill_rect(selection_rect, Color::from_rgb(0x955233));
@@ -457,13 +457,13 @@ Rect GTextEditor::cursor_content_rect() const
         return { };
     ASSERT(!m_lines.is_empty());
     ASSERT(m_cursor.column() <= (current_line().length() + 1));
-    return { m_cursor.column() * glyph_width(), m_cursor.line() * line_height(), 1, line_height() };
+    return { m_horizontal_content_padding + m_cursor.column() * glyph_width(), m_cursor.line() * line_height(), 1, line_height() };
 }
 
 Rect GTextEditor::line_widget_rect(int line_index) const
 {
     auto rect = line_content_rect(line_index);
-    rect.move_by(-(horizontal_scrollbar().value() - padding().width()), -(vertical_scrollbar().value() - padding().height()));
+    rect.move_by(-(horizontal_scrollbar().value() - m_horizontal_content_padding), -(vertical_scrollbar().value()));
     rect.set_width(rect.width() + 1); // Add 1 pixel for when the cursor is on the end.
     rect.intersect(this->rect());
     // This feels rather hackish, but extend the rect to the edge of the content view:
@@ -473,13 +473,18 @@ Rect GTextEditor::line_widget_rect(int line_index) const
 
 void GTextEditor::scroll_cursor_into_view()
 {
-    scroll_into_view(cursor_content_rect(), true, true);
+    auto rect = cursor_content_rect();
+    if (m_cursor.column() == 0)
+        rect.set_x(0);
+    else if (m_cursor.column() >= m_lines[m_cursor.line()]->length())
+        rect.set_x(m_lines[m_cursor.line()]->width(font()) + m_horizontal_content_padding * 2);
+    scroll_into_view(rect, true, true);
 }
 
 Rect GTextEditor::line_content_rect(int line_index) const
 {
     return {
-        0,
+        m_horizontal_content_padding,
         line_index * line_height(),
         content_width(),
         line_height()
