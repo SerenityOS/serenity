@@ -39,14 +39,21 @@ public:
     int member_count() const { return m_members.size(); }
     String member_at(int i) { return m_members[i].name; }
 
+    void handle_join(const String& nick, const String& hostmask);
+    void handle_part(const String& nick, const String& hostmask);
+    void handle_topic(const String& nick, const String& topic);
+
     IRCWindow& window() { return *m_window; }
     const IRCWindow& window() const { return *m_window; }
+
+    String topic() const { return m_topic; }
 
 private:
     IRCChannel(IRCClient&, const String&);
 
     IRCClient& m_client;
     String m_name;
+    String m_topic;
     struct Member {
         String name;
         char prefix { 0 };

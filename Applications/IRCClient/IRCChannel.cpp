@@ -55,3 +55,24 @@ void IRCChannel::say(const String& text)
     m_client.send_privmsg(m_name, text);
     add_message(' ', m_client.nickname(), text);
 }
+
+void IRCChannel::handle_join(const String& nick, const String& hostmask)
+{
+    if (nick == m_client.nickname())
+        m_open = true;
+    add_message(' ', "", String::format("*** %s [%s] has joined %s", nick.characters(), hostmask.characters(), m_name.characters()));
+}
+
+void IRCChannel::handle_part(const String& nick, const String& hostmask)
+{
+    if (nick == m_client.nickname())
+        m_open = false;
+    add_message(' ', "", String::format("*** %s [%s] has parted from %s", nick.characters(), hostmask.characters(), m_name.characters()));
+}
+
+void IRCChannel::handle_topic(const String& nick, const String& topic)
+{
+    if (nick == m_client.nickname())
+        m_open = false;
+    add_message(' ', "", String::format("*** %s set topic to \"%s\"", nick.characters(), topic.characters()));
+}
