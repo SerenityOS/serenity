@@ -357,6 +357,7 @@ void WSClientConnection::handle_request(WSAPICreateWindowRequest& request)
     window->set_opacity(request.opacity());
     window->set_size_increment(request.size_increment());
     window->set_base_size(request.base_size());
+    window->invalidate();
     m_windows.set(window_id, move(window));
     WSAPI_ServerMessage response;
     response.type = WSAPI_ServerMessage::Type::DidCreateWindow;
@@ -451,10 +452,16 @@ void WSClientConnection::handle_request(WSAPISetWindowBackingStoreRequest& reque
         request.has_alpha_channel() ? GraphicsBitmap::Format::RGBA32 : GraphicsBitmap::Format::RGB32,
         *shared_buffer,
         request.size());
-    if (!backing_store)
-        return;
     window.set_backing_store(move(backing_store));
-    window.invalidate();
+
+    if (request.flush_immediately())
+        window.invalidate();
+
+    WSAPI_ServerMessage response;
+    response.type = WSAPI_ServerMessage::Type::DidSetWindowBackingStore;
+    response.window_id = window_id;
+    response.backing.shared_buffer_id = request.shared_buffer_id();
+    post_message(response);
 }
 
 void WSClientConnection::handle_request(WSAPISetGlobalCursorTrackingRequest& request)

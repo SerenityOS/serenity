@@ -15,7 +15,7 @@ public:
     static Retained<GraphicsBitmap> create(Format, const Size&);
     static Retained<GraphicsBitmap> create_wrapper(Format, const Size&, RGBA32*);
     static RetainPtr<GraphicsBitmap> load_from_file(Format, const String& path, const Size&);
-    static RetainPtr<GraphicsBitmap> create_with_shared_buffer(Format, Retained<SharedBuffer>&&, const Size&);
+    static Retained<GraphicsBitmap> create_with_shared_buffer(Format, Retained<SharedBuffer>&&, const Size&);
     ~GraphicsBitmap();
 
     RGBA32* scanline(int y);

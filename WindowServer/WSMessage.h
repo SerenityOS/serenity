@@ -320,7 +320,7 @@ private:
 
 class WSAPISetWindowBackingStoreRequest final : public WSAPIClientRequest {
 public:
-    explicit WSAPISetWindowBackingStoreRequest(int client_id, int window_id, int shared_buffer_id, const Size& size, size_t bpp, size_t pitch, bool has_alpha_channel)
+    explicit WSAPISetWindowBackingStoreRequest(int client_id, int window_id, int shared_buffer_id, const Size& size, size_t bpp, size_t pitch, bool has_alpha_channel, bool flush_immediately)
         : WSAPIClientRequest(WSMessage::APISetWindowBackingStoreRequest, client_id)
         , m_client_id(client_id)
         , m_window_id(window_id)
@@ -329,6 +329,7 @@ public:
         , m_bpp(bpp)
         , m_pitch(pitch)
         , m_has_alpha_channel(has_alpha_channel)
+        , m_flush_immediately(flush_immediately)
     {
     }
 
@@ -339,6 +340,7 @@ public:
     size_t bpp() const { return m_bpp; }
     size_t pitch() const { return m_pitch; }
     bool has_alpha_channel() const { return m_has_alpha_channel; }
+    bool flush_immediately() const { return m_flush_immediately; }
 
 private:
     int m_client_id { 0 };
@@ -348,6 +350,7 @@ private:
     size_t m_bpp;
     size_t m_pitch;
     bool m_has_alpha_channel;
+    bool m_flush_immediately;
 };
 
 class WSAPISetWindowRectRequest final : public WSAPIClientRequest {

@@ -15,6 +15,7 @@ public:
 
     static GWindow* from_window_id(int);
 
+    void set_double_buffering_enabled(bool);
     void set_has_alpha_channel(bool);
     void set_opacity(float);
 
@@ -68,7 +69,8 @@ public:
     const GWidget* hovered_widget() const { return m_hovered_widget.ptr(); }
     void set_hovered_widget(GWidget*);
 
-    GraphicsBitmap* backing() { return m_backing.ptr(); }
+    GraphicsBitmap* front_bitmap() { return m_front_bitmap.ptr(); }
+    GraphicsBitmap* back_bitmap() { return m_back_bitmap.ptr(); }
 
     Size size_increment() const { return m_size_increment; }
     void set_size_increment(const Size& increment) { m_size_increment = increment; }
@@ -78,7 +80,12 @@ public:
 private:
     virtual const char* class_name() const override { return "GWindow"; }
 
-    RetainPtr<GraphicsBitmap> m_backing;
+    Retained<GraphicsBitmap> create_backing_bitmap(const Size&);
+    void set_current_backing_bitmap(GraphicsBitmap&, bool flush_immediately = false);
+    void flip(const Rect& dirty_rect);
+
+    RetainPtr<GraphicsBitmap> m_front_bitmap;
+    RetainPtr<GraphicsBitmap> m_back_bitmap;
     int m_window_id { 0 };
     float m_opacity_when_windowless { 1.0f };
     GWidget* m_main_widget { nullptr };
@@ -93,5 +100,6 @@ private:
     bool m_is_active { false };
     bool m_should_exit_app_on_close { false };
     bool m_has_alpha_channel { false };
+    bool m_double_buffering_enabled { true };
 };
 
