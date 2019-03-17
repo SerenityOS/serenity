@@ -11,13 +11,17 @@ template<typename T> class Vector;
 template<typename T>
 class VectorImpl {
 public:
-    ~VectorImpl() { }
-    static VectorImpl* create(int capacity)
+    ~VectorImpl()
+    {
+        for (int i = 0; i < m_size; ++i)
+            at(i).~T();
+    }
+    static OwnPtr<VectorImpl> create(int capacity)
     {
         int size = sizeof(VectorImpl) + sizeof(T) * capacity;
         void* slot = kmalloc(size);
         new (slot) VectorImpl(capacity);
-        return (VectorImpl*)slot;
+        return OwnPtr<VectorImpl>((VectorImpl*)slot);
     }
 
     int size() const { return m_size; }
@@ -60,9 +64,8 @@ public:
     ~Vector() { clear(); }
 
     Vector(Vector&& other)
-        : m_impl(other.m_impl)
+        : m_impl(move(other.m_impl))
     {
-        other.m_impl = nullptr;
     }
 
     Vector(const Vector& other)
@@ -74,19 +77,13 @@ public:
 
     Vector& operator=(Vector&& other)
     {
-        if (this != &other) {
-            m_impl = other.m_impl;
-            other.m_impl = nullptr;
-        }
+        if (this != &other)
+            m_impl = move(other.m_impl);
         return *this;
     }
 
     void clear()
     {
-        for (int i = 0; i < size(); ++i) {
-            at(i).~T();
-        }
-        kfree(m_impl);
         m_impl = nullptr;
     }
 
@@ -177,8 +174,7 @@ public:
     void append(Vector<T>&& other)
     {
         if (!m_impl) {
-            m_impl = other.m_impl;
-            other.m_impl = nullptr;
+            m_impl = move(other.m_impl);
             return;
         }
         Vector<T> tmp = move(other);
@@ -217,6 +213,8 @@ public:
 
     void append(const T* values, int count)
     {
+        if (!count)
+            return;
         ensure_capacity(size() + count);
         for (int i = 0; i < count; ++i)
             new (m_impl->slot(m_impl->m_size + i)) T(values[i]);
@@ -235,9 +233,8 @@ public:
                 new (new_impl->slot(i)) T(move(m_impl->at(i)));
                 m_impl->at(i).~T();
             }
-            kfree(m_impl);
         }
-        m_impl = new_impl;
+        m_impl = move(new_impl);
     }
 
     void resize(int new_size)
@@ -305,7 +302,7 @@ private:
         return max(int(4), capacity + (capacity / 4) + 4);
     }
 
-    VectorImpl<T>* m_impl { nullptr };
+    OwnPtr<VectorImpl<T>> m_impl;
 };
 
 }
