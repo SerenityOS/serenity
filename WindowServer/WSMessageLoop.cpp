@@ -131,20 +131,22 @@ void WSMessageLoop::wait_for_message()
     });
 
     struct timeval timeout = { 0, 0 };
-    bool had_any_timer = false;
 
-    for (auto& it : m_timers) {
-        auto& timer = *it.value;
-        if (!had_any_timer) {
-            timeout = timer.next_fire_time;
-            had_any_timer = true;
-            continue;
+    if (m_queued_messages.is_empty()) {
+        bool had_any_timer = false;
+        for (auto& it : m_timers) {
+            auto& timer = *it.value;
+            if (!had_any_timer) {
+                timeout = timer.next_fire_time;
+                had_any_timer = true;
+                continue;
+            }
+            if (timer.next_fire_time.tv_sec > timeout.tv_sec || (timer.next_fire_time.tv_sec == timeout.tv_sec && timer.next_fire_time.tv_usec > timeout.tv_usec))
+                timeout = timer.next_fire_time;
         }
-        if (timer.next_fire_time.tv_sec > timeout.tv_sec || (timer.next_fire_time.tv_sec == timeout.tv_sec && timer.next_fire_time.tv_usec > timeout.tv_usec))
-            timeout = timer.next_fire_time;
     }
 
-    int rc = select(max_fd + 1, &rfds, nullptr, nullptr, m_timers.is_empty() && m_queued_messages.is_empty() ? nullptr : &timeout);
+    int rc = select(max_fd + 1, &rfds, nullptr, nullptr, m_queued_messages.is_empty() ? nullptr : &timeout);
     if (rc < 0) {
         ASSERT_NOT_REACHED();
     }
