@@ -238,7 +238,7 @@ void GEventLoop::wait_for_event()
     }
 
     struct timeval timeout = { 0, 0 };
-    if (!m_timers.is_empty())
+    if (!m_timers.is_empty() && m_queued_events.is_empty())
         get_next_timer_expiration(timeout);
     ASSERT(m_unprocessed_messages.is_empty());
     int rc = select(max_fd + 1, &rfds, &wfds, nullptr, (m_queued_events.is_empty() && m_timers.is_empty()) ? nullptr : &timeout);
