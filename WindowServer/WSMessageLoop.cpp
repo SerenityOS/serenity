@@ -146,7 +146,7 @@ void WSMessageLoop::wait_for_message()
         }
     }
 
-    int rc = select(max_fd + 1, &rfds, nullptr, nullptr, m_queued_messages.is_empty() ? nullptr : &timeout);
+    int rc = select(max_fd + 1, &rfds, nullptr, nullptr, m_queued_messages.is_empty() && m_timers.is_empty() ? nullptr : &timeout);
     if (rc < 0) {
         ASSERT_NOT_REACHED();
     }
