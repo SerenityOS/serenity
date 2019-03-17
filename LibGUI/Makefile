@@ -7,6 +7,8 @@ SHAREDGRAPHICS_OBJS = \
     ../SharedGraphics/Color.o
 
 LIBGUI_OBJS = \
+    GIODevice.o \
+    GFile.o \
     GButton.o \
     GCheckBox.o \
     GEventLoop.o \

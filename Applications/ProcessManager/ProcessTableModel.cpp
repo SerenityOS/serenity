@@ -1,4 +1,5 @@
 #include "ProcessTableModel.h"
+#include <LibGUI/GFile.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <pwd.h>
@@ -121,10 +122,11 @@ GVariant ProcessTableModel::data(const GModelIndex& index, Role role) const
 
 void ProcessTableModel::update()
 {
-    FILE* fp = fopen("/proc/all", "r");
-    if (!fp) {
-        perror("failed to open /proc/all");
+    GFile file("/proc/all");
+    if (!file.open(GIODevice::ReadOnly)) {
+        fprintf(stderr, "ProcessManager: Failed to open /proc/all: %s\n", file.error_string());
         exit(1);
+        return;
     }
 
     unsigned last_sum_nsched = 0;
@@ -134,11 +136,10 @@ void ProcessTableModel::update()
     HashTable<pid_t> live_pids;
     unsigned sum_nsched = 0;
     for (;;) {
-        char buf[BUFSIZ];
-        char* ptr = fgets(buf, sizeof(buf), fp);
-        if (!ptr)
+        auto line = file.read_line(1024);
+        if (line.is_empty())
             break;
-        auto parts = String(buf, Chomp).split(',');
+        auto parts = String((const char*)line.pointer(), line.size() - 1, Chomp).split(',');
         if (parts.size() < 17)
             break;
         bool ok;
@@ -178,8 +179,6 @@ void ProcessTableModel::update()
 
         live_pids.set(pid);
     }
-    int rc = fclose(fp);
-    ASSERT(rc == 0);
 
     m_pids.clear();
     Vector<pid_t> pids_to_remove;
