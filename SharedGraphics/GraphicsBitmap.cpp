@@ -58,7 +58,7 @@ GraphicsBitmap::GraphicsBitmap(Format format, const Size& size, RGBA32* data)
 {
 }
 
-RetainPtr<GraphicsBitmap> GraphicsBitmap::create_with_shared_buffer(Format format, Retained<SharedBuffer>&& shared_buffer, const Size& size)
+Retained<GraphicsBitmap> GraphicsBitmap::create_with_shared_buffer(Format format, Retained<SharedBuffer>&& shared_buffer, const Size& size)
 {
     return adopt(*new GraphicsBitmap(format, move(shared_buffer), size));
 }

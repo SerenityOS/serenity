@@ -28,7 +28,7 @@ Painter::Painter(GraphicsBitmap& bitmap)
 #ifdef LIBGUI
 Painter::Painter(GWidget& widget)
     : m_window(widget.window())
-    , m_target(*m_window->backing())
+    , m_target(*m_window->back_bitmap())
 {
     m_state_stack.append(State());
     state().font = &widget.font();

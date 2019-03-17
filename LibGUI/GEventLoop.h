@@ -39,7 +39,7 @@ public:
 
     WSAPI_ServerMessage sync_request(const WSAPI_ClientMessage& request, WSAPI_ServerMessage::Type response_type);
 
-    pid_t server_pid() const { return s_server_pid; }
+    static pid_t server_pid() { return s_server_pid; }
 
 private:
     void wait_for_event();

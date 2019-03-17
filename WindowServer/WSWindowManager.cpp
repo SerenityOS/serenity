@@ -916,8 +916,6 @@ void WSWindowManager::compose()
 
     for_each_visible_window_from_back_to_front([&] (WSWindow& window) {
         RetainPtr<GraphicsBitmap> backing_store = window.backing_store();
-        if (!backing_store)
-            return IterationDecision::Continue;
         if (!any_dirty_rect_intersects_window(window))
             return IterationDecision::Continue;
         PainterStateSaver saver(*m_back_painter);
@@ -928,6 +926,8 @@ void WSWindowManager::compose()
             PainterStateSaver saver(*m_back_painter);
             m_back_painter->set_clip_rect(dirty_rect);
             paint_window_frame(window);
+            if (!backing_store)
+                continue;
             Rect dirty_rect_in_window_coordinates = Rect::intersection(dirty_rect, window.rect());
             if (dirty_rect_in_window_coordinates.is_empty())
                 continue;

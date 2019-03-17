@@ -3,6 +3,7 @@
 #include "GEventLoop.h"
 #include "GWidget.h"
 #include <SharedGraphics/GraphicsBitmap.h>
+#include <SharedGraphics/Painter.h>
 #include <LibC/stdio.h>
 #include <LibC/stdlib.h>
 #include <LibC/unistd.h>
@@ -166,33 +167,19 @@ void GWindow::event(GEvent& event)
             return;
         auto& paint_event = static_cast<GPaintEvent&>(event);
         auto rect = paint_event.rect();
-        bool created_new_backing_store = !m_backing;
-        if (!m_backing) {
-            ASSERT(GEventLoop::main().server_pid());
-            ASSERT(!paint_event.window_size().is_empty());
-            Size new_backing_store_size = paint_event.window_size();
-            size_t size_in_bytes = new_backing_store_size.area() * sizeof(RGBA32);
-            auto shared_buffer = SharedBuffer::create(GEventLoop::main().server_pid(), size_in_bytes);
-            ASSERT(shared_buffer);
-            m_backing = GraphicsBitmap::create_with_shared_buffer(
-                        m_has_alpha_channel ? GraphicsBitmap::Format::RGBA32 : GraphicsBitmap::Format::RGB32,
-                        *shared_buffer,
-                        new_backing_store_size);
-        }
+        bool created_new_backing_store = !m_back_bitmap;
+        if (!m_back_bitmap)
+            m_back_bitmap = create_backing_bitmap(paint_event.window_size());
         if (rect.is_empty() || created_new_backing_store)
             rect = m_main_widget->rect();
+
         m_main_widget->event(*make<GPaintEvent>(rect));
-        if (created_new_backing_store) {
-            WSAPI_ClientMessage message;
-            message.type = WSAPI_ClientMessage::Type::SetWindowBackingStore;
-            message.window_id = m_window_id;
-            message.backing.bpp = 32;
-            message.backing.pitch = m_backing->pitch();
-            message.backing.shared_buffer_id = m_backing->shared_buffer_id();
-            message.backing.has_alpha_channel = m_backing->has_alpha_channel();
-            message.backing.size = m_backing->size();
-            GEventLoop::main().post_message_to_server(message);
-        }
+
+        if (m_double_buffering_enabled)
+            flip(rect);
+        else if (created_new_backing_store)
+            set_current_backing_bitmap(*m_back_bitmap, true);
+
         if (m_window_id) {
             WSAPI_ClientMessage message;
             message.type = WSAPI_ClientMessage::Type::DidFinishPainting;
@@ -232,8 +219,8 @@ void GWindow::event(GEvent& event)
 
     if (event.type() == GEvent::Resize) {
         auto new_size = static_cast<GResizeEvent&>(event).size();
-        if (m_backing && m_backing->size() != new_size)
-            m_backing = nullptr;
+        if (m_back_bitmap && m_back_bitmap->size() != new_size)
+            m_back_bitmap = nullptr;
         m_pending_paint_event_rects.clear();
         m_rect_when_windowless = { { }, new_size };
         m_main_widget->set_relative_rect({ { }, new_size });
@@ -328,6 +315,12 @@ void GWindow::set_has_alpha_channel(bool value)
     m_has_alpha_channel = value;
 }
 
+void GWindow::set_double_buffering_enabled(bool value)
+{
+    ASSERT(!m_window_id);
+    m_double_buffering_enabled = value;
+}
+
 void GWindow::set_opacity(float opacity)
 {
     m_opacity_when_windowless = opacity;
@@ -353,4 +346,46 @@ void GWindow::set_hovered_widget(GWidget* widget)
 
     if (m_hovered_widget)
         GEventLoop::main().post_event(*m_hovered_widget, make<GEvent>(GEvent::Enter));
+}
+
+void GWindow::set_current_backing_bitmap(GraphicsBitmap& bitmap, bool flush_immediately)
+{
+    WSAPI_ClientMessage message;
+    message.type = WSAPI_ClientMessage::Type::SetWindowBackingStore;
+    message.window_id = m_window_id;
+    message.backing.bpp = 32;
+    message.backing.pitch = bitmap.pitch();
+    message.backing.shared_buffer_id = bitmap.shared_buffer_id();
+    message.backing.has_alpha_channel = bitmap.has_alpha_channel();
+    message.backing.size = bitmap.size();
+    message.backing.flush_immediately = flush_immediately;
+    GEventLoop::main().sync_request(message, WSAPI_ServerMessage::Type::DidSetWindowBackingStore);
+}
+
+void GWindow::flip(const Rect& dirty_rect)
+{
+    swap(m_front_bitmap, m_back_bitmap);
+
+    set_current_backing_bitmap(*m_front_bitmap);
+
+    if (!m_back_bitmap || m_back_bitmap->size() != m_front_bitmap->size()) {
+        m_back_bitmap = create_backing_bitmap(m_front_bitmap->size());
+        memcpy(m_back_bitmap->scanline(0), m_front_bitmap->scanline(0), m_front_bitmap->size().area() * sizeof(RGBA32));
+        return;
+    }
+
+    // Copy whatever was painted from the front to the back.
+    Painter painter(*m_back_bitmap);
+    painter.blit(dirty_rect.location(), *m_front_bitmap, dirty_rect);
+}
+
+Retained<GraphicsBitmap> GWindow::create_backing_bitmap(const Size& size)
+{
+    ASSERT(GEventLoop::server_pid());
+    ASSERT(!size.is_empty());
+    size_t size_in_bytes = size.area() * sizeof(RGBA32);
+    auto shared_buffer = SharedBuffer::create(GEventLoop::server_pid(), size_in_bytes);
+    ASSERT(shared_buffer);
+    auto format = m_has_alpha_channel ? GraphicsBitmap::Format::RGBA32 : GraphicsBitmap::Format::RGB32;
+    return GraphicsBitmap::create_with_shared_buffer(format, *shared_buffer, size);
 }

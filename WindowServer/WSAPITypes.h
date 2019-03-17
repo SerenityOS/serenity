@@ -87,6 +87,7 @@ struct WSAPI_ServerMessage {
         Greeting,
         DidGetClipboardContents,
         DidSetClipboardContents,
+        DidSetWindowBackingStore,
     };
     Type type { Invalid };
     int window_id { -1 };
@@ -191,6 +192,7 @@ struct WSAPI_ClientMessage {
             size_t pitch;
             int shared_buffer_id;
             bool has_alpha_channel;
+            bool flush_immediately;
         } backing;
         struct {
             int shared_buffer_id;

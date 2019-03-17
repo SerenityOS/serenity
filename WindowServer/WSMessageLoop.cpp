@@ -321,7 +321,7 @@ void WSMessageLoop::on_receive_from_client(int client_id, const WSAPI_ClientMess
         post_message(client, make<WSAPIGetWindowBackingStoreRequest>(client_id, message.window_id));
         break;
     case WSAPI_ClientMessage::Type::SetWindowBackingStore:
-        post_message(client, make<WSAPISetWindowBackingStoreRequest>(client_id, message.window_id, message.backing.shared_buffer_id, message.backing.size, message.backing.bpp, message.backing.pitch, message.backing.has_alpha_channel));
+        post_message(client, make<WSAPISetWindowBackingStoreRequest>(client_id, message.window_id, message.backing.shared_buffer_id, message.backing.size, message.backing.bpp, message.backing.pitch, message.backing.has_alpha_channel, message.backing.flush_immediately));
         break;
     case WSAPI_ClientMessage::Type::SetGlobalCursorTracking:
         post_message(client, make<WSAPISetGlobalCursorTrackingRequest>(client_id, message.window_id, message.value));
