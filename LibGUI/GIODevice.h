@@ -29,8 +29,13 @@ public:
     ByteBuffer read(int max_size);
     ByteBuffer read_line(int max_size);
 
+    // FIXME: I would like this to be const but currently it needs to call populate_read_buffer().
+    bool can_read_line();
+
+    bool can_read() const;
+
     virtual bool open(GIODevice::OpenMode) = 0;
-    virtual bool close() = 0;
+    virtual bool close();
 
     virtual const char* class_name() const override { return "GIODevice"; }
 

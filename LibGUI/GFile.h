@@ -13,7 +13,6 @@ public:
     void set_filename(const String& filename) { m_filename = filename; }
 
     virtual bool open(GIODevice::OpenMode) override;
-    virtual bool close() override;
 
     virtual const char* class_name() const override { return "GFile"; }
 

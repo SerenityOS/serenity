@@ -1,5 +1,7 @@
 #include <LibGUI/GIODevice.h>
 #include <unistd.h>
+#include <sys/select.h>
+#include <stdio.h>
 
 GIODevice::GIODevice(GObject* parent)
     : GObject(parent)
@@ -44,26 +46,63 @@ ByteBuffer GIODevice::read(int max_size)
     return buffer;
 }
 
+bool GIODevice::can_read() const
+{
+    // FIXME: Can we somehow remove this once GSocket is implemented using non-blocking sockets?
+    fd_set rfds;
+    FD_ZERO(&rfds);
+    FD_SET(m_fd, &rfds);
+    struct timeval timeout { 0, 0 };
+    int rc = select(m_fd + 1, &rfds, nullptr, nullptr, &timeout);
+    if (rc < 0) {
+        // NOTE: We don't set m_error here.
+        perror("GIODevice::can_read: select");
+        return false;
+    }
+    return FD_ISSET(m_fd, &rfds);
+}
+
+bool GIODevice::can_read_line()
+{
+    if (m_eof && !m_buffered_data.is_empty())
+        return true;
+    if (m_buffered_data.contains_slow('\n'))
+        return true;
+    if (!can_read())
+        return false;
+    populate_read_buffer();
+    return m_buffered_data.contains_slow('\n');
+}
+
 ByteBuffer GIODevice::read_line(int max_size)
 {
     if (m_fd < 0)
         return { };
     if (!max_size)
         return { };
-    auto line = ByteBuffer::create_uninitialized(max_size);
-    int line_index = 0;
-    while (line_index < line.size()) {
-        if (line_index >= m_buffered_data.size()) {
-            if (!populate_read_buffer())
-                return { };
+    if (!can_read_line())
+        return { };
+    if (m_eof) {
+        if (m_buffered_data.size() > max_size) {
+            dbgprintf("GIODevice::read_line: At EOF but there's more than max_size(%d) buffered\n", max_size);
+            return { };
         }
+        auto buffer = ByteBuffer::copy(m_buffered_data.data(), m_buffered_data.size());
+        m_buffered_data.clear();
+        return buffer;
+    }
+    auto line = ByteBuffer::create_uninitialized(max_size + 1);
+    int line_index = 0;
+    while (line_index < max_size) {
         byte ch = m_buffered_data[line_index];
         line[line_index++] = ch;
         if (ch == '\n') {
             Vector<byte> new_buffered_data;
             new_buffered_data.append(m_buffered_data.data() + line_index, m_buffered_data.size() - line_index);
             m_buffered_data = move(new_buffered_data);
-            line.trim(line_index);
+            line[line_index] = '\0';
+            line.trim(line_index + 1);
+            dbgprintf("GIODevice::read_line: '%s'\n", line.pointer());
             return line;
         }
     }
@@ -84,6 +123,21 @@ bool GIODevice::populate_read_buffer()
         set_eof(true);
         return false;
     }
+    buffer.trim(nread);
     m_buffered_data.append(buffer.pointer(), buffer.size());
+    return true;
+}
+
+bool GIODevice::close()
+{
+    if (fd() < 0 || mode() == NotOpen)
+        return false;
+    int rc = ::close(fd());
+    if (rc < 0) {
+        set_error(rc);
+        return false;
+    }
+    set_fd(-1);
+    set_mode(GIODevice::NotOpen);
     return true;
 }
