@@ -41,9 +41,6 @@ void IRCAppWindow::setup_client()
     };
 
     m_client.on_connect = [this] {
-        GMessageBox box("We are connected!", "Message");
-        int code = box.exec();
-        dbgprintf("GMessageBox::exec() returned %d\n", code);
         m_client.join_channel("#test");
     };
 
@@ -62,6 +59,9 @@ void IRCAppWindow::setup_actions()
 
     m_whois_action = GAction::create("Whois user", GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/16x16/irc-whois.rgb", { 16, 16 }), [] (auto&) {
         printf("FIXME: Implement whois action\n");
+        GMessageBox box("Who would you like to WHOIS?", "Whois user");
+        int code = box.exec();
+        dbgprintf("GMessageBox::exec() returned %d\n", code);
     });
 
     m_open_query_action = GAction::create("Open query", GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/16x16/irc-open-query.rgb", { 16, 16 }), [] (auto&) {

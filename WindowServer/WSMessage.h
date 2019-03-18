@@ -392,12 +392,14 @@ private:
 
 class WSAPICreateWindowRequest : public WSAPIClientRequest {
 public:
-    WSAPICreateWindowRequest(int client_id, const Rect& rect, const String& title, bool has_alpha_channel, float opacity, const Size& base_size, const Size& size_increment)
+    WSAPICreateWindowRequest(int client_id, const Rect& rect, const String& title, bool has_alpha_channel, bool modal, bool resizable, float opacity, const Size& base_size, const Size& size_increment)
         : WSAPIClientRequest(WSMessage::APICreateWindowRequest, client_id)
         , m_rect(rect)
         , m_title(title)
         , m_opacity(opacity)
         , m_has_alpha_channel(has_alpha_channel)
+        , m_modal(modal)
+        , m_resizable(resizable)
         , m_size_increment(size_increment)
         , m_base_size(base_size)
     {
@@ -406,6 +408,8 @@ public:
     Rect rect() const { return m_rect; }
     String title() const { return m_title; }
     bool has_alpha_channel() const { return m_has_alpha_channel; }
+    bool is_modal() const { return m_modal; }
+    bool is_resizable() const { return m_resizable; }
     float opacity() const { return m_opacity; }
     Size size_increment() const { return m_size_increment; }
     Size base_size() const { return m_base_size; }
@@ -415,6 +419,8 @@ private:
     String m_title;
     float m_opacity { 0 };
     bool m_has_alpha_channel { false };
+    bool m_modal { false };
+    bool m_resizable { false };
     Size m_size_increment;
     Size m_base_size;
 };

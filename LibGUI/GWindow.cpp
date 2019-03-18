@@ -59,6 +59,8 @@ void GWindow::show()
     request.window_id = m_window_id;
     request.window.rect = m_rect_when_windowless;
     request.window.has_alpha_channel = m_has_alpha_channel;
+    request.window.modal = m_modal;
+    request.window.resizable = m_resizable;
     request.window.opacity = m_opacity_when_windowless;
     request.window.size_increment = m_size_increment;
     request.window.base_size = m_base_size;

@@ -105,5 +105,6 @@ private:
     bool m_has_alpha_channel { false };
     bool m_double_buffering_enabled { true };
     bool m_modal { false };
+    bool m_resizable { true };
 };
 

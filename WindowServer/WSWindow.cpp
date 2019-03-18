@@ -21,9 +21,10 @@ WSWindow::WSWindow(WSMessageReceiver& internal_owner, WSWindowType type)
     WSWindowManager::the().add_window(*this);
 }
 
-WSWindow::WSWindow(WSClientConnection& client, int window_id)
+WSWindow::WSWindow(WSClientConnection& client, int window_id, bool modal)
     : m_client(&client)
     , m_type(WSWindowType::Normal)
+    , m_modal(modal)
     , m_window_id(window_id)
     , m_icon(default_window_icon())
 {
@@ -72,6 +73,9 @@ void WSWindow::on_message(WSMessage& message)
 {
     if (m_internal_owner)
         return m_internal_owner->on_message(message);
+
+    if (is_blocked_by_modal_window())
+        return;
 
     WSAPI_ServerMessage server_message;
     server_message.window_id = window_id();
@@ -137,7 +141,6 @@ void WSWindow::on_message(WSMessage& message)
     if (server_message.type == WSAPI_ServerMessage::Type::Invalid)
         return;
 
-    ASSERT(m_client);
     m_client->post_message(server_message);
 }
 
@@ -154,6 +157,13 @@ void WSWindow::set_visible(bool b)
     invalidate();
 }
 
+void WSWindow::set_resizable(bool resizable)
+{
+    if (m_resizable == resizable)
+        return;
+    m_resizable = resizable;
+}
+
 void WSWindow::invalidate()
 {
     WSWindowManager::the().invalidate(*this);
@@ -162,4 +172,9 @@ void WSWindow::invalidate()
 bool WSWindow::is_active() const
 {
     return WSWindowManager::the().active_window() == this;
+}
+
+bool WSWindow::is_blocked_by_modal_window() const
+{
+    return !is_modal() && client() && client()->is_showing_modal_window();
 }

@@ -350,8 +350,9 @@ void WSClientConnection::handle_request(WSAPIGetClipboardContentsRequest&)
 void WSClientConnection::handle_request(WSAPICreateWindowRequest& request)
 {
     int window_id = m_next_window_id++;
-    auto window = make<WSWindow>(*this, window_id);
+    auto window = make<WSWindow>(*this, window_id, request.is_modal());
     window->set_has_alpha_channel(request.has_alpha_channel());
+    window->set_resizable(request.is_resizable());
     window->set_title(request.title());
     window->set_rect(request.rect());
     window->set_opacity(request.opacity());
@@ -530,4 +531,14 @@ void WSClientConnection::on_request(WSAPIClientRequest& request)
     default:
         break;
     }
+}
+
+bool WSClientConnection::is_showing_modal_window() const
+{
+    for (auto& it : m_windows) {
+        auto& window = *it.value;
+        if (window.is_visible() && window.is_modal())
+            return true;
+    }
+    return false;
 }
