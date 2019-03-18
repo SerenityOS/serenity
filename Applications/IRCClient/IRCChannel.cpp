@@ -32,14 +32,24 @@ void IRCChannel::add_member(const String& name, char prefix)
         }
     }
     m_members.append({ name, prefix });
-    dump();
+    m_member_model->update();
 }
 
-void IRCChannel::add_message(char prefix, const String& name, const String& text)
+void IRCChannel::remove_member(const String& name)
 {
+    m_members.remove_first_matching([&] (auto& member) { return name == member.name; });
+}
+
+void IRCChannel::add_message(char prefix, const String& name, const String& text, Color color)
+{
+    log().add_message(prefix, name, text, color);
     window().did_add_message();
-    log().add_message(prefix, name, text);
-    dump();
+}
+
+void IRCChannel::add_message(const String& text, Color color)
+{
+    log().add_message(text, color);
+    window().did_add_message();
 }
 
 void IRCChannel::dump() const
@@ -60,19 +70,25 @@ void IRCChannel::handle_join(const String& nick, const String& hostmask)
 {
     if (nick == m_client.nickname())
         m_open = true;
-    add_message(' ', "", String::format("*** %s [%s] has joined %s", nick.characters(), hostmask.characters(), m_name.characters()));
+    add_message(String::format("*** %s [%s] has joined %s", nick.characters(), hostmask.characters(), m_name.characters()), Color::DarkGreen);
 }
 
 void IRCChannel::handle_part(const String& nick, const String& hostmask)
 {
-    if (nick == m_client.nickname())
+    if (nick == m_client.nickname()) {
         m_open = false;
-    add_message(' ', "", String::format("*** %s [%s] has parted from %s", nick.characters(), hostmask.characters(), m_name.characters()));
+        m_members.clear();
+    } else {
+        remove_member(nick);
+    }
+    m_member_model->update();
+    add_message(String::format("*** %s [%s] has parted from %s", nick.characters(), hostmask.characters(), m_name.characters()), Color::DarkGreen);
 }
 
 void IRCChannel::handle_topic(const String& nick, const String& topic)
 {
-    if (nick == m_client.nickname())
-        m_open = false;
-    add_message(' ', "", String::format("*** %s set topic to \"%s\"", nick.characters(), topic.characters()));
+    if (nick.is_null())
+        add_message(String::format("*** Topic is \"%s\"", topic.characters()), Color::DarkBlue);
+    else
+        add_message(String::format("*** %s set topic to \"%s\"", nick.characters(), topic.characters()), Color::DarkBlue);
 }

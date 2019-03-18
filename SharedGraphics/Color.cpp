@@ -20,6 +20,9 @@ Color::Color(NamedColor named)
     case DarkGray: rgb = { 64, 64, 64 }; break;
     case MidGray: rgb = { 127, 127, 127 }; break;
     case LightGray: rgb = { 192, 192, 192 }; break;
+    case DarkGreen: rgb = { 0, 128, 0 }; break;
+    case DarkBlue: rgb = { 0, 0, 128 }; break;
+    case DarkRed: rgb = { 128, 0, 0 }; break;
     default: ASSERT_NOT_REACHED(); break;
     }
 

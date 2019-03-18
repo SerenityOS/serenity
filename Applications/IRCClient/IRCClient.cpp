@@ -369,7 +369,7 @@ void IRCClient::handle_join(const Message& msg)
 
 void IRCClient::handle_part(const Message& msg)
 {
-    if (msg.arguments.size() != 1)
+    if (msg.arguments.size() < 1)
         return;
     auto prefix_parts = msg.prefix.split('!');
     if (prefix_parts.size() < 1)
@@ -393,12 +393,11 @@ void IRCClient::handle_topic(const Message& msg)
 
 void IRCClient::handle_rpl_topic(const Message& msg)
 {
-    if (msg.arguments.size() != 3)
+    if (msg.arguments.size() < 3)
         return;
-    auto& nick = msg.arguments[0];
     auto& channel_name = msg.arguments[1];
     auto& topic = msg.arguments[2];
-    ensure_channel(channel_name).handle_topic(nick, topic);
+    ensure_channel(channel_name).handle_topic({ }, topic);
     // FIXME: Handle RPL_TOPICWHOTIME so we can know who set it and when.
 }
 
@@ -501,7 +500,7 @@ void IRCClient::handle_rpl_topicwhotime(const Message& msg)
             tm->tm_sec
         );
     }
-    ensure_channel(channel_name).add_message(0, "", String::format("Topic set by %s at %s", nick.characters(), setat.characters()));
+    ensure_channel(channel_name).add_message(String::format("*** (set by %s at %s)", nick.characters(), setat.characters()), Color::DarkBlue);
 }
 
 void IRCClient::register_subwindow(IRCWindow& subwindow)

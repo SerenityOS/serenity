@@ -1,6 +1,7 @@
 #include "IRCWindowListModel.h"
 #include "IRCWindow.h"
 #include "IRCClient.h"
+#include "IRCChannel.h"
 #include <stdio.h>
 #include <time.h>
 
@@ -58,6 +59,8 @@ GVariant IRCWindowListModel::data(const GModelIndex& index, Role role) const
             auto& window = m_client.window_at(index.row());
             if (window.unread_count())
                 return Color(Color::Red);
+            if (!window.channel().is_open())
+                return Color(Color::LightGray);
             return Color(Color::Black);
         }
         }
