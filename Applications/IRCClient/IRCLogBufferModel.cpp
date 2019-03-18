@@ -43,21 +43,23 @@ GTableModel::ColumnMetadata IRCLogBufferModel::column_metadata(int column) const
     ASSERT_NOT_REACHED();
 }
 
-GVariant IRCLogBufferModel::data(const GModelIndex& index, Role) const
+GVariant IRCLogBufferModel::data(const GModelIndex& index, Role role) const
 {
-    auto& entry = m_log_buffer->at(index.row());
-    switch (index.column()) {
-    case Column::Timestamp: {
-        auto* tm = localtime(&entry.timestamp);
-        return String::format("%02u:%02u:%02u", tm->tm_hour, tm->tm_min, tm->tm_sec);
+    if (role == Role::Display) {
+        auto& entry = m_log_buffer->at(index.row());
+        switch (index.column()) {
+        case Column::Timestamp: {
+            auto* tm = localtime(&entry.timestamp);
+            return String::format("%02u:%02u:%02u", tm->tm_hour, tm->tm_min, tm->tm_sec);
+        }
+        case Column::Name:
+            if (entry.sender.is_empty())
+                return String::empty();
+            return String::format("<%c%s>", entry.prefix ? entry.prefix : ' ', entry.sender.characters());
+        case Column::Text: return entry.text;
+        }
     }
-    case Column::Name:
-        if (entry.sender.is_empty())
-            return String::empty();
-        return String::format("<%c%s>", entry.prefix ? entry.prefix : ' ', entry.sender.characters());
-    case Column::Text: return entry.text;
-    }
-    ASSERT_NOT_REACHED();
+    return { };
 }
 
 void IRCLogBufferModel::update()

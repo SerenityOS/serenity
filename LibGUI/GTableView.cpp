@@ -116,15 +116,14 @@ void GTableView::paint_event(GPaintEvent& event)
     int y_offset = header_height();
 
     for (int row_index = 0; row_index < m_model->row_count(); ++row_index) {
+        bool is_selected_row = row_index == m_model->selected_index().row();
         int y = y_offset + painted_item_index * item_height();
 
         Color background_color;
         Color key_column_background_color;
-        Color text_color;
-        if (row_index == m_model->selected_index().row()) {
+        if (is_selected_row) {
             background_color = is_focused() ? Color::from_rgb(0x84351a) : Color::from_rgb(0x606060);
             key_column_background_color = is_focused() ? Color::from_rgb(0x84351a) : Color::from_rgb(0x606060);
-            text_color = Color::White;
         } else {
             if (alternating_row_colors() && (painted_item_index % 2)) {
                 background_color = Color(210, 210, 210);
@@ -133,10 +132,9 @@ void GTableView::paint_event(GPaintEvent& event)
                 background_color = Color::White;
                 key_column_background_color = Color(235, 235, 235);
             }
-            text_color = Color::Black;
         }
-
         painter.fill_rect(row_rect(painted_item_index), background_color);
+
         int x_offset = 0;
         for (int column_index = 0; column_index < m_model->column_count(); ++column_index) {
             auto column_metadata = m_model->column_metadata(column_index);
@@ -148,11 +146,18 @@ void GTableView::paint_event(GPaintEvent& event)
                 auto cell_rect_for_fill = cell_rect.inflated(horizontal_padding() * 2, 0);
                 painter.fill_rect(cell_rect_for_fill, key_column_background_color);
             }
-            auto data = m_model->data({ row_index, column_index });
-            if (data.is_bitmap())
+            GModelIndex cell_index(row_index, column_index);
+            auto data = m_model->data(cell_index);
+            if (data.is_bitmap()) {
                 painter.blit(cell_rect.location(), data.as_bitmap(), data.as_bitmap().rect());
-            else
+            } else {
+                Color text_color;
+                if (is_selected_row)
+                    text_color = Color::White;
+                else
+                    text_color = m_model->data(cell_index, GTableModel::Role::ForegroundColor).to_color(Color::Black);
                 painter.draw_text(cell_rect, data.to_string(), font, column_metadata.text_alignment, text_color);
+            }
             x_offset += column_width + horizontal_padding() * 2;
         }
         ++painted_item_index;

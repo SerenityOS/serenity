@@ -151,18 +151,18 @@ GVariant DirectoryTableModel::data(const GModelIndex& index, Role role) const
         }
         ASSERT_NOT_REACHED();
     }
-    ASSERT(role == Role::Display);
-    switch (index.column()) {
-    case Column::Icon: return icon_for(entry);
-    case Column::Name: return entry.name;
-    case Column::Size: return (int)entry.size;
-    case Column::Owner: return name_for_uid(entry.uid);
-    case Column::Group: return name_for_gid(entry.gid);
-    case Column::Permissions: return permission_string(entry.mode);
-    case Column::Inode: return (int)entry.inode;
+    if (role == Role::Display) {
+        switch (index.column()) {
+        case Column::Icon: return icon_for(entry);
+        case Column::Name: return entry.name;
+        case Column::Size: return (int)entry.size;
+        case Column::Owner: return name_for_uid(entry.uid);
+        case Column::Group: return name_for_gid(entry.gid);
+        case Column::Permissions: return permission_string(entry.mode);
+        case Column::Inode: return (int)entry.inode;
+        }
     }
-    ASSERT_NOT_REACHED();
-
+    return { };
 }
 
 void DirectoryTableModel::update()

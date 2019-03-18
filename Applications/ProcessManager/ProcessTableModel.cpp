@@ -99,25 +99,28 @@ GVariant ProcessTableModel::data(const GModelIndex& index, Role role) const
         return { };
     }
 
-    switch (index.column()) {
-    case Column::Icon: return *m_generic_process_icon;
-    case Column::PID: return process.current_state.pid;
-    case Column::State: return process.current_state.state;
-    case Column::User: return process.current_state.user;
-    case Column::Priority:
-        if (process.current_state.priority == "High")
-            return *m_high_priority_icon;
-        if (process.current_state.priority == "Low")
-            return *m_low_priority_icon;
-        if (process.current_state.priority == "Normal")
-            return *m_normal_priority_icon;
-        return process.current_state.priority;
-    case Column::Linear: return pretty_byte_size(process.current_state.linear);
-    case Column::Physical: return pretty_byte_size(process.current_state.physical);
-    case Column::CPU: return process.current_state.cpu_percent;
-    case Column::Name: return process.current_state.name;
+    if (role == Role::Display) {
+        switch (index.column()) {
+        case Column::Icon: return *m_generic_process_icon;
+        case Column::PID: return process.current_state.pid;
+        case Column::State: return process.current_state.state;
+        case Column::User: return process.current_state.user;
+        case Column::Priority:
+            if (process.current_state.priority == "High")
+                return *m_high_priority_icon;
+            if (process.current_state.priority == "Low")
+                return *m_low_priority_icon;
+            if (process.current_state.priority == "Normal")
+                return *m_normal_priority_icon;
+            return process.current_state.priority;
+        case Column::Linear: return pretty_byte_size(process.current_state.linear);
+        case Column::Physical: return pretty_byte_size(process.current_state.physical);
+        case Column::CPU: return process.current_state.cpu_percent;
+        case Column::Name: return process.current_state.name;
+        }
     }
-    ASSERT_NOT_REACHED();
+
+    return { };
 }
 
 void ProcessTableModel::update()
