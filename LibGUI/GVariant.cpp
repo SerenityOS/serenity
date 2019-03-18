@@ -1,5 +1,9 @@
 #include <LibGUI/GVariant.h>
 
+GVariant::GVariant()
+{
+}
+
 GVariant::~GVariant()
 {
     switch (m_type) {
@@ -48,6 +52,12 @@ GVariant::GVariant(const GraphicsBitmap& value)
     AK::retain_if_not_null(m_value.as_bitmap);
 }
 
+GVariant::GVariant(Color color)
+    : m_type(Type::Color)
+{
+    m_value.as_color = color.value();
+}
+
 bool GVariant::operator==(const GVariant& other) const
 {
     if (m_type != other.m_type)
@@ -63,6 +73,8 @@ bool GVariant::operator==(const GVariant& other) const
         return as_string() == other.as_string();
     case Type::Bitmap:
         return m_value.as_bitmap == other.m_value.as_bitmap;
+    case Type::Color:
+        return m_value.as_color == other.m_value.as_color;
     case Type::Invalid:
         break;
     }
@@ -85,6 +97,8 @@ bool GVariant::operator<(const GVariant& other) const
     case Type::Bitmap:
         // FIXME: Maybe compare bitmaps somehow differently?
         return m_value.as_bitmap < other.m_value.as_bitmap;
+    case Type::Color:
+        return m_value.as_color < other.m_value.as_color;
     case Type::Invalid:
         break;
     }
@@ -104,6 +118,8 @@ String GVariant::to_string() const
         return as_string();
     case Type::Bitmap:
         return "[GraphicsBitmap]";
+    case Type::Color:
+        return as_color().to_string();
     case Type::Invalid:
         break;
     }

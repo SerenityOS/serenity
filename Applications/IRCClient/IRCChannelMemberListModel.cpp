@@ -39,12 +39,14 @@ GTableModel::ColumnMetadata IRCChannelMemberListModel::column_metadata(int colum
     ASSERT_NOT_REACHED();
 }
 
-GVariant IRCChannelMemberListModel::data(const GModelIndex& index, Role) const
+GVariant IRCChannelMemberListModel::data(const GModelIndex& index, Role role) const
 {
-    switch (index.column()) {
-    case Column::Name: return m_channel.member_at(index.row());
+    if (role == Role::Display) {
+        switch (index.column()) {
+        case Column::Name: return m_channel.member_at(index.row());
+        }
     }
-    ASSERT_NOT_REACHED();
+    return { };
 }
 
 void IRCChannelMemberListModel::update()

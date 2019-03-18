@@ -40,17 +40,29 @@ GTableModel::ColumnMetadata IRCWindowListModel::column_metadata(int column) cons
     ASSERT_NOT_REACHED();
 }
 
-GVariant IRCWindowListModel::data(const GModelIndex& index, Role) const
+GVariant IRCWindowListModel::data(const GModelIndex& index, Role role) const
 {
-    switch (index.column()) {
-    case Column::Name: {
-        auto& window = m_client.window_at(index.row());
-        if (!window.unread_count())
+    if (role == Role::Display) {
+        switch (index.column()) {
+        case Column::Name: {
+            auto& window = m_client.window_at(index.row());
+            if (window.unread_count())
+                return String::format("%s (%d)", window.name().characters(), window.unread_count());
             return window.name();
-        return String::format("%s (%d)\n", window.name().characters(), window.unread_count());
+        }
+        }
     }
+    if (role == Role::ForegroundColor) {
+        switch (index.column()) {
+        case Column::Name: {
+            auto& window = m_client.window_at(index.row());
+            if (window.unread_count())
+                return Color(Color::Red);
+            return Color(Color::Black);
+        }
+        }
     }
-    ASSERT_NOT_REACHED();
+    return { };
 }
 
 void IRCWindowListModel::update()
