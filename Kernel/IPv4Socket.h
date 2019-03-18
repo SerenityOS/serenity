@@ -45,12 +45,12 @@ public:
 protected:
     IPv4Socket(int type, int protocol);
 
-    void allocate_source_port_if_needed();
+    int allocate_source_port_if_needed();
 
     virtual int protocol_receive(const ByteBuffer&, void*, size_t, int, sockaddr*, socklen_t*) { return -ENOTIMPL; }
     virtual int protocol_send(const void*, int) { return -ENOTIMPL; }
     virtual KResult protocol_connect() { return KSuccess; }
-    virtual void protocol_allocate_source_port() { }
+    virtual int protocol_allocate_source_port() { return 0; }
     virtual bool protocol_is_disconnected() const { return false; }
 
 private:

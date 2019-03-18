@@ -2,6 +2,7 @@
 #include <Kernel/TCP.h>
 #include <Kernel/NetworkAdapter.h>
 #include <Kernel/Process.h>
+#include <Kernel/RandomDevice.h>
 
 Lockable<HashMap<word, TCPSocket*>>& TCPSocket::sockets_by_port()
 {
@@ -173,19 +174,28 @@ KResult TCPSocket::protocol_connect()
     return KSuccess;
 }
 
-void TCPSocket::protocol_allocate_source_port()
+int TCPSocket::protocol_allocate_source_port()
 {
-    // This is not a very efficient allocation algorithm.
-    // FIXME: Replace it with a bitmap or some other fast-paced looker-upper.
+    static const word first_ephemeral_port = 32768;
+    static const word last_ephemeral_port = 60999;
+    static const word ephemeral_port_range_size = last_ephemeral_port - first_ephemeral_port;
+    word first_scan_port = first_ephemeral_port + (word)(RandomDevice::random_percentage() * ephemeral_port_range_size);
+
     LOCKER(sockets_by_port().lock());
-    for (word port = 2000; port < 60000; ++port) {
+    for (word port = first_scan_port;;) {
         auto it = sockets_by_port().resource().find(port);
         if (it == sockets_by_port().resource().end()) {
             set_source_port(port);
             sockets_by_port().resource().set(port, this);
-            return;
+            return port;
         }
+        ++port;
+        if (port > last_ephemeral_port)
+            port = first_ephemeral_port;
+        if (port == first_scan_port)
+            break;
     }
+    return -EADDRINUSE;
 }
 
 bool TCPSocket::protocol_is_disconnected() const

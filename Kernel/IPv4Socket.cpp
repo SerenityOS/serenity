@@ -112,11 +112,15 @@ bool IPv4Socket::can_write(SocketRole) const
     return true;
 }
 
-void IPv4Socket::allocate_source_port_if_needed()
+int IPv4Socket::allocate_source_port_if_needed()
 {
     if (m_source_port)
-        return;
-    protocol_allocate_source_port();
+        return m_source_port;
+    int port = protocol_allocate_source_port();
+    if (port < 0)
+        return port;
+    m_source_port = (word)port;
+    return port;
 }
 
 ssize_t IPv4Socket::sendto(const void* data, size_t data_length, int flags, const sockaddr* addr, socklen_t addr_length)
@@ -142,7 +146,9 @@ ssize_t IPv4Socket::sendto(const void* data, size_t data_length, int flags, cons
         m_destination_port = ntohs(ia.sin_port);
     }
 
-    allocate_source_port_if_needed();
+    int rc = allocate_source_port_if_needed();
+    if (rc < 0)
+        return rc;
 
     kprintf("sendto: destination=%s:%u\n", m_destination_address.to_string().characters(), m_destination_port);
 
