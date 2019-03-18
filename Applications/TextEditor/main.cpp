@@ -8,6 +8,7 @@
 #include <LibGUI/GTextEditor.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GFontDatabase.h>
+#include <LibGUI/GFile.h>
 #include <AK/StringBuilder.h>
 #include <unistd.h>
 #include <stdio.h>
@@ -34,31 +35,13 @@ int main(int argc, char** argv)
     String path = "/tmp/TextEditor.save.txt";
     if (argc >= 2) {
         path = argv[1];
-        StringBuilder builder;
-        int fd = open(path.characters(), O_RDONLY);
-        if (fd < 0) {
-            perror("open");
+        GFile file(path);
+
+        if (!file.open(GIODevice::ReadOnly)) {
+            fprintf(stderr, "Opening %s: %s\n", path.characters(), file.error_string());
             return 1;
         }
-        for (;;) {
-            char buffer[BUFSIZ];
-            ssize_t nread = read(fd, buffer, sizeof(buffer));
-            if (nread < 0) {
-                perror("read");
-                return 1;
-            }
-            if (nread == 0)
-                break;
-            builder.append(buffer, nread);
-        }
-
-        int rc = close(fd);
-        if (rc < 0) {
-            perror("close");
-            return 1;
-        }
-
-        text_editor->set_text(builder.to_string());
+        text_editor->set_text(String::from_byte_buffer(file.read_all()));
     }
 
     auto new_action = GAction::create("New document", { Mod_Ctrl, Key_N }, GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/16x16/new.rgb", { 16, 16 }), [] (const GAction&) {

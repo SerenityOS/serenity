@@ -46,7 +46,7 @@ ByteBuffer GIODevice::read(int max_size)
     return buffer;
 }
 
-bool GIODevice::can_read() const
+bool GIODevice::can_read_from_fd() const
 {
     // FIXME: Can we somehow remove this once GSocket is implemented using non-blocking sockets?
     fd_set rfds;
@@ -68,10 +68,39 @@ bool GIODevice::can_read_line()
         return true;
     if (m_buffered_data.contains_slow('\n'))
         return true;
-    if (!can_read())
+    if (!can_read_from_fd())
         return false;
     populate_read_buffer();
     return m_buffered_data.contains_slow('\n');
+}
+
+bool GIODevice::can_read() const
+{
+    return !m_buffered_data.is_empty() || can_read_from_fd();
+}
+
+ByteBuffer GIODevice::read_all()
+{
+    ByteBuffer buffer;
+    if (!m_buffered_data.is_empty()) {
+        buffer = ByteBuffer::copy(m_buffered_data.data(), m_buffered_data.size());
+        m_buffered_data.clear();
+    }
+
+    while (can_read_from_fd()) {
+        char read_buffer[4096];
+        int nread = ::read(m_fd, read_buffer, sizeof(read_buffer));
+        if (nread < 0) {
+            set_error(nread);
+            return buffer;
+        }
+        if (nread == 0) {
+            set_eof(true);
+            break;
+        }
+        buffer.append(read_buffer, nread);
+    }
+    return buffer;
 }
 
 ByteBuffer GIODevice::read_line(int max_size)
