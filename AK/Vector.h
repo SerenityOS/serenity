@@ -184,6 +184,17 @@ public:
         }
     }
 
+    template<typename Callback>
+    void remove_first_matching(Callback callback)
+    {
+        for (int i = 0; i < size(); ++i) {
+            if (callback(at(i))) {
+                remove(i);
+                return;
+            }
+        }
+    }
+
     void unchecked_append(T&& value)
     {
         ASSERT((size() + 1) <= capacity());
