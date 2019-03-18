@@ -131,7 +131,6 @@ ByteBuffer GIODevice::read_line(int max_size)
             m_buffered_data = move(new_buffered_data);
             line[line_index] = '\0';
             line.trim(line_index + 1);
-            dbgprintf("GIODevice::read_line: '%s'\n", line.pointer());
             return line;
         }
     }
