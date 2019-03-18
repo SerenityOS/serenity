@@ -58,7 +58,17 @@ public:
     virtual void on_message(WSMessage&) override;
 
     GraphicsBitmap* backing_store() { return m_backing_store.ptr(); }
-    void set_backing_store(RetainPtr<GraphicsBitmap>&& backing_store) { m_backing_store = move(backing_store); }
+    void set_backing_store(RetainPtr<GraphicsBitmap>&& backing_store)
+    {
+        m_last_backing_store = move(m_backing_store);
+        m_backing_store = move(backing_store);
+    }
+    void swap_backing_stores()
+    {
+        swap(m_backing_store, m_last_backing_store);
+    }
+
+    GraphicsBitmap* last_backing_store() { return m_last_backing_store.ptr(); }
 
     void set_global_cursor_tracking_enabled(bool);
     bool global_cursor_tracking() const { return m_global_cursor_tracking_enabled; }
@@ -97,6 +107,7 @@ private:
     bool m_has_alpha_channel { false };
     bool m_has_painted_since_last_resize { false };
     RetainPtr<GraphicsBitmap> m_backing_store;
+    RetainPtr<GraphicsBitmap> m_last_backing_store;
     int m_window_id { -1 };
     float m_opacity { 1 };
     Rect m_last_lazy_resize_rect;
