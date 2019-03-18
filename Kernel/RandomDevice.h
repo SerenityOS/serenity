@@ -8,6 +8,9 @@ public:
     RandomDevice();
     virtual ~RandomDevice() override;
 
+    static int random_value();
+    static float random_percentage();
+
 private:
     // ^CharacterDevice
     virtual ssize_t read(Process&, byte*, ssize_t) override;

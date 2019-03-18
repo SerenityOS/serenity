@@ -16,10 +16,15 @@ RandomDevice::~RandomDevice()
 static unsigned long next = 1;
 
 #define MY_RAND_MAX 32767
-static int myrand()
+int RandomDevice::random_value()
 {
     next = next * 1103515245 + 12345;
     return((unsigned)(next/((MY_RAND_MAX + 1) * 2)) % (MY_RAND_MAX + 1));
+}
+
+float RandomDevice::random_percentage()
+{
+    return (float)random_value() / (float)MY_RAND_MAX;
 }
 
 #if 0
@@ -39,7 +44,7 @@ ssize_t RandomDevice::read(Process&, byte* buffer, ssize_t size)
     const int range = 'z' - 'a';
     ssize_t nread = min(size, GoodBufferSize);
     for (ssize_t i = 0; i < nread; ++i) {
-        dword r = myrand() % range;
+        dword r = random_value() % range;
         buffer[i] = (byte)('a' + r);
     }
     return nread;
