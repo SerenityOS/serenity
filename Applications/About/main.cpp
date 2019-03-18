@@ -14,7 +14,7 @@ int main(int argc, char** argv)
     Rect window_rect { 0, 0, 240, 120 };
     window_rect.center_within({ 0, 0, 1024, 768 });
     window->set_rect(window_rect);
-    window->set_should_exit_app_on_close(true);
+    window->set_should_exit_event_loop_on_close(true);
 
     auto* widget = new GWidget;
     window->set_main_widget(widget);

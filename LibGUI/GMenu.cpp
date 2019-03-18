@@ -46,7 +46,7 @@ int GMenu::realize_menu()
     ASSERT(m_name.length() < (ssize_t)sizeof(request.text));
     strcpy(request.text, m_name.characters());
     request.text_length = m_name.length();
-    auto response = GEventLoop::main().sync_request(request, WSAPI_ServerMessage::Type::DidCreateMenu);
+    auto response = GEventLoop::current().sync_request(request, WSAPI_ServerMessage::Type::DidCreateMenu);
     m_menu_id = response.menu.menu_id;
 
     ASSERT(m_menu_id > 0);
@@ -56,7 +56,7 @@ int GMenu::realize_menu()
             WSAPI_ClientMessage request;
             request.type = WSAPI_ClientMessage::Type::AddMenuSeparator;
             request.menu.menu_id = m_menu_id;
-            GEventLoop::main().sync_request(request, WSAPI_ServerMessage::Type::DidAddMenuSeparator);
+            GEventLoop::current().sync_request(request, WSAPI_ServerMessage::Type::DidAddMenuSeparator);
             continue;
         }
         if (item.type() == GMenuItem::Action) {
@@ -78,7 +78,7 @@ int GMenu::realize_menu()
                 request.menu.shortcut_text_length = 0;
             }
 
-            GEventLoop::main().sync_request(request, WSAPI_ServerMessage::Type::DidAddMenuItem);
+            GEventLoop::current().sync_request(request, WSAPI_ServerMessage::Type::DidAddMenuItem);
         }
     }
     all_menus().set(m_menu_id, this);
@@ -93,7 +93,7 @@ void GMenu::unrealize_menu()
     WSAPI_ClientMessage request;
     request.type = WSAPI_ClientMessage::Type::DestroyMenu;
     request.menu.menu_id = m_menu_id;
-    GEventLoop::main().sync_request(request, WSAPI_ServerMessage::Type::DidDestroyMenu);
+    GEventLoop::current().sync_request(request, WSAPI_ServerMessage::Type::DidDestroyMenu);
     m_menu_id = 0;
 }
 

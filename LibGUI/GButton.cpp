@@ -13,11 +13,11 @@ GButton::~GButton()
 {
 }
 
-void GButton::set_caption(String&& caption)
+void GButton::set_caption(const String& caption)
 {
     if (caption == m_caption)
         return;
-    m_caption = move(caption);
+    m_caption = caption;
     update();
 }
 

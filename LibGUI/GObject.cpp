@@ -2,6 +2,7 @@
 #include "GEvent.h"
 #include "GEventLoop.h"
 #include <AK/Assertions.h>
+#include <stdio.h>
 
 GObject::GObject(GObject* parent)
     : m_parent(parent)
@@ -42,7 +43,7 @@ void GObject::event(GEvent& event)
 void GObject::add_child(GObject& object)
 {
     m_children.append(&object);
-    GEventLoop::main().post_event(*this, make<GChildEvent>(GEvent::ChildAdded, object));
+    GEventLoop::current().post_event(*this, make<GChildEvent>(GEvent::ChildAdded, object));
 }
 
 void GObject::remove_child(GObject& object)
@@ -50,7 +51,7 @@ void GObject::remove_child(GObject& object)
     for (ssize_t i = 0; i < m_children.size(); ++i) {
         if (m_children[i] == &object) {
             m_children.remove(i);
-            GEventLoop::main().post_event(*this, make<GChildEvent>(GEvent::ChildRemoved, object));
+            GEventLoop::current().post_event(*this, make<GChildEvent>(GEvent::ChildRemoved, object));
             return;
         }
     }
@@ -71,20 +72,32 @@ void GObject::start_timer(int ms)
         ASSERT_NOT_REACHED();
     }
 
-    m_timer_id = GEventLoop::main().register_timer(*this, ms, true);
+    m_timer_id = GEventLoop::register_timer(*this, ms, true);
 }
 
 void GObject::stop_timer()
 {
     if (!m_timer_id)
         return;
-    bool success = GEventLoop::main().unregister_timer(m_timer_id);
+    bool success = GEventLoop::unregister_timer(m_timer_id);
     ASSERT(success);
     m_timer_id = 0;
 }
 
 void GObject::delete_later()
 {
-    GEventLoop::main().post_event(*this, make<GEvent>(GEvent::DeferredDestroy));
+    GEventLoop::current().post_event(*this, make<GEvent>(GEvent::DeferredDestroy));
 }
 
+void GObject::dump_tree(int indent)
+{
+    for (int i = 0; i < indent; ++i) {
+        printf(" ");
+    }
+    printf("%s{%p}\n", class_name(), this);
+
+    for (auto* child : children()) {
+        child->dump_tree(indent + 2);
+    }
+
+}

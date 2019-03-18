@@ -42,6 +42,8 @@ LIBGUI_OBJS = \
     GScrollableWidget.o \
     GSocket.o \
     GTCPSocket.o \
+    GMessageBox.o \
+    GDialog.o \
     GWindow.o
 
 OBJS = $(SHAREDGRAPHICS_OBJS) $(LIBGUI_OBJS)

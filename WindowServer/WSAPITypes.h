@@ -164,6 +164,7 @@ struct WSAPI_ClientMessage {
         SetWindowBackingStore,
         GetClipboardContents,
         SetClipboardContents,
+        Greeting,
     };
     Type type { Invalid };
     int window_id { -1 };
@@ -172,6 +173,9 @@ struct WSAPI_ClientMessage {
     int value { 0 };
 
     union {
+        struct {
+            int client_pid;
+        } greeting;
         struct {
             int menubar_id;
             int menu_id;
