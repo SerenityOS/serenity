@@ -4,6 +4,7 @@
 #include <AK/CircularQueue.h>
 #include <AK/Retainable.h>
 #include <AK/RetainPtr.h>
+#include <SharedGraphics/Color.h>
 
 class IRCLogBufferModel;
 
@@ -17,11 +18,13 @@ public:
         char prefix { 0 };
         String sender;
         String text;
+        Color color { Color::Black };
     };
 
     int count() const { return m_messages.size(); }
     const Message& at(int index) const { return m_messages.at(index); }
-    void add_message(char prefix, const String& name, const String& text);
+    void add_message(char prefix, const String& name, const String& text, Color = Color::Black);
+    void add_message(const String& text, Color = Color::Black);
     void dump() const;
 
     const IRCLogBufferModel* model() const { return m_model; }

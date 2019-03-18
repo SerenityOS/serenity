@@ -27,11 +27,10 @@ void IRCQuery::dump() const
     log().dump();
 }
 
-void IRCQuery::add_message(char prefix, const String& name, const String& text)
+void IRCQuery::add_message(char prefix, const String& name, const String& text, Color color)
 {
+    log().add_message(prefix, name, text, color);
     window().did_add_message();
-    log().add_message(prefix, name, text);
-    dump();
 }
 
 void IRCQuery::say(const String& text)

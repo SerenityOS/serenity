@@ -16,7 +16,7 @@ public:
     ~IRCQuery();
 
     String name() const { return m_name; }
-    void add_message(char prefix, const String& name, const String& text);
+    void add_message(char prefix, const String& name, const String& text, Color = Color::Black);
 
     void dump() const;
 

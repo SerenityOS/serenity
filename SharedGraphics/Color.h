@@ -23,6 +23,9 @@ public:
         DarkGray,
         MidGray,
         LightGray,
+        DarkGreen,
+        DarkBlue,
+        DarkRed,
     };
 
     Color() { }

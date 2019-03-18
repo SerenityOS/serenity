@@ -59,6 +59,10 @@ GVariant IRCLogBufferModel::data(const GModelIndex& index, Role role) const
         case Column::Text: return entry.text;
         }
     }
+    if (role == Role::ForegroundColor) {
+        if (index.column() == Column::Text)
+            return m_log_buffer->at(index.row()).color;
+    }
     return { };
 }
 
