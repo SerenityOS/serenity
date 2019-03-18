@@ -10,10 +10,17 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <time.h>
 
 #define IRC_DEBUG
 
 enum IRCNumeric {
+    RPL_WHOISUSER = 311,
+    RPL_WHOISSERVER = 312,
+    RPL_WHOISOPERATOR = 313,
+    RPL_WHOISIDLE = 317,
+    RPL_ENDOFWHOIS = 318,
+    RPL_WHOISCHANNELS = 319,
     RPL_TOPIC = 332,
     RPL_TOPICWHOTIME = 333,
     RPL_NAMREPLY = 353,
@@ -176,6 +183,11 @@ void IRCClient::part_channel(const String& channel_name)
     send(String::format("PART %s\r\n", channel_name.characters()));
 }
 
+void IRCClient::send_whois(const String& nick)
+{
+    send(String::format("WHOIS %s\r\n", nick.characters()));
+}
+
 void IRCClient::handle(const Message& msg, const String&)
 {
 #ifdef IRC_DEBUG
@@ -197,12 +209,16 @@ void IRCClient::handle(const Message& msg, const String&)
 
     if (is_numeric) {
         switch (numeric) {
-        case RPL_NAMREPLY:
-            handle_namreply(msg);
-            return;
-        case RPL_TOPIC:
-            handle_rpl_topic(msg);
-            return;
+        case RPL_WHOISCHANNELS: return handle_rpl_whoischannels(msg);
+        case RPL_ENDOFWHOIS: return handle_rpl_endofwhois(msg);
+        case RPL_WHOISOPERATOR: return handle_rpl_whoisoperator(msg);
+        case RPL_WHOISSERVER: return handle_rpl_whoisserver(msg);
+        case RPL_WHOISUSER: return handle_rpl_whoisuser(msg);
+        case RPL_WHOISIDLE: return handle_rpl_whoisidle(msg);
+        case RPL_TOPICWHOTIME: return handle_rpl_topicwhotime(msg);
+        case RPL_TOPIC: return handle_rpl_topic(msg);
+        case RPL_NAMREPLY: return handle_rpl_namreply(msg);
+        case RPL_ENDOFNAMES: return handle_rpl_endofnames(msg);
         }
     }
 
@@ -221,10 +237,14 @@ void IRCClient::handle(const Message& msg, const String&)
     if (msg.command == "PRIVMSG")
         return handle_privmsg(msg);
 
-    if (msg.arguments.size() >= 2) {
-        m_log->add_message(0, "Server", String::format("[%s] %s", msg.command.characters(), msg.arguments[1].characters()));
-        m_server_subwindow->did_add_message();
-    }
+    if (msg.arguments.size() >= 2)
+        add_server_message(String::format("[%s] %s", msg.command.characters(), msg.arguments[1].characters()));
+}
+
+void IRCClient::add_server_message(const String& text)
+{
+    m_log->add_message(0, "Server", text);
+    m_server_subwindow->did_add_message();
 }
 
 void IRCClient::send_privmsg(const String& target, const String& text)
@@ -382,20 +402,12 @@ void IRCClient::handle_rpl_topic(const Message& msg)
     // FIXME: Handle RPL_TOPICWHOTIME so we can know who set it and when.
 }
 
-void IRCClient::handle_namreply(const Message& msg)
+void IRCClient::handle_rpl_namreply(const Message& msg)
 {
     if (msg.arguments.size() < 4)
         return;
-
     auto& channel_name = msg.arguments[2];
-
-    auto it = m_channels.find(channel_name);
-    if (it == m_channels.end()) {
-        fprintf(stderr, "Warning: Got RPL_NAMREPLY for untracked channel %s\n", channel_name.characters());
-        return;
-    }
-    auto& channel = *(*it).value;
-
+    auto& channel = ensure_channel(channel_name);
     auto members = msg.arguments[3].split(' ');
     for (auto& member : members) {
         if (member.is_empty())
@@ -405,8 +417,91 @@ void IRCClient::handle_namreply(const Message& msg)
             prefix = member[0];
         channel.add_member(member, prefix);
     }
+}
 
-    channel.dump();
+void IRCClient::handle_rpl_endofnames(const Message&)
+{
+}
+
+void IRCClient::handle_rpl_endofwhois(const Message&)
+{
+    add_server_message("// End of WHOIS");
+}
+
+void IRCClient::handle_rpl_whoisoperator(const Message& msg)
+{
+    if (msg.arguments.size() < 2)
+        return;
+    auto& nick = msg.arguments[1];
+    add_server_message(String::format("* %s is an IRC operator", nick.characters()));
+}
+
+void IRCClient::handle_rpl_whoisserver(const Message& msg)
+{
+    if (msg.arguments.size() < 3)
+        return;
+    auto& nick = msg.arguments[1];
+    auto& server = msg.arguments[2];
+    add_server_message(String::format("* %s is using server %s", nick.characters(), server.characters()));
+}
+
+void IRCClient::handle_rpl_whoisuser(const Message& msg)
+{
+    if (msg.arguments.size() < 6)
+        return;
+    auto& nick = msg.arguments[1];
+    auto& username = msg.arguments[2];
+    auto& host = msg.arguments[3];
+    auto& asterisk = msg.arguments[4];
+    auto& realname = msg.arguments[5];
+    (void)asterisk;
+    add_server_message(String::format("* %s is %s@%s, real name: %s",
+        nick.characters(),
+        username.characters(),
+        host.characters(),
+        realname.characters()
+    ));
+}
+
+void IRCClient::handle_rpl_whoisidle(const Message& msg)
+{
+    if (msg.arguments.size() < 3)
+        return;
+    auto& nick = msg.arguments[1];
+    auto& secs = msg.arguments[2];
+    add_server_message(String::format("* %s is %d seconds idle", nick.characters(), secs.characters()));
+}
+
+void IRCClient::handle_rpl_whoischannels(const Message& msg)
+{
+    if (msg.arguments.size() < 3)
+        return;
+    auto& nick = msg.arguments[1];
+    auto& channel_list = msg.arguments[2];
+    add_server_message(String::format("* %s is in channels %s", nick.characters(), channel_list.characters()));
+}
+
+void IRCClient::handle_rpl_topicwhotime(const Message& msg)
+{
+    if (msg.arguments.size() < 4)
+        return;
+    auto& channel_name = msg.arguments[1];
+    auto& nick = msg.arguments[2];
+    auto setat = msg.arguments[3];
+    bool ok;
+    time_t setat_time = setat.to_uint(ok);
+    if (ok) {
+        auto* tm = localtime(&setat_time);
+        setat = String::format("%4u-%02u-%02u %02u:%02u:%02u",
+            tm->tm_year + 1900,
+            tm->tm_mon + 1,
+            tm->tm_mday,
+            tm->tm_hour,
+            tm->tm_min,
+            tm->tm_sec
+        );
+    }
+    ensure_channel(channel_name).add_message(0, "", String::format("Topic set by %s at %s", nick.characters(), setat.characters()));
 }
 
 void IRCClient::register_subwindow(IRCWindow& subwindow)
@@ -452,6 +547,11 @@ void IRCClient::handle_user_command(const String& input)
     if (command == "/QUERY") {
         if (parts.size() >= 2)
             ensure_query(parts[1]);
+        return;
+    }
+    if (command == "/WHOIS") {
+        if (parts.size() >= 2)
+            send_whois(parts[1]);
         return;
     }
 }
