@@ -23,14 +23,15 @@ public:
     void post_event(GObject& receiver, OwnPtr<GEvent>&&);
 
     static GEventLoop& main();
+    static GEventLoop& current();
 
     bool running() const { return m_running; }
 
-    int register_timer(GObject&, int milliseconds, bool should_reload);
-    bool unregister_timer(int timer_id);
+    static int register_timer(GObject&, int milliseconds, bool should_reload);
+    static bool unregister_timer(int timer_id);
 
-    void register_notifier(Badge<GNotifier>, GNotifier&);
-    void unregister_notifier(Badge<GNotifier>, GNotifier&);
+    static void register_notifier(Badge<GNotifier>, GNotifier&);
+    static void unregister_notifier(Badge<GNotifier>, GNotifier&);
 
     void quit(int);
 
@@ -40,6 +41,12 @@ public:
     WSAPI_ServerMessage sync_request(const WSAPI_ClientMessage& request, WSAPI_ServerMessage::Type response_type);
 
     static pid_t server_pid() { return s_server_pid; }
+
+    void take_pending_events_from(GEventLoop& other)
+    {
+        m_queued_events.append(move(other.m_queued_events));
+        m_unprocessed_messages.append(move(other.m_unprocessed_messages));
+    }
 
 private:
     void wait_for_event();
@@ -67,7 +74,6 @@ private:
     bool m_running { false };
     bool m_exit_requested { false };
     int m_exit_code { 0 };
-    int m_next_timer_id { 1 };
 
     static pid_t s_server_pid;
     static pid_t s_event_fd;
@@ -83,6 +89,8 @@ private:
         bool has_expired() const;
     };
 
-    HashMap<int, OwnPtr<EventLoopTimer>> m_timers;
-    HashTable<GNotifier*> m_notifiers;
+    static HashMap<int, OwnPtr<EventLoopTimer>>* s_timers;
+    static int s_next_timer_id;
+
+    static HashTable<GNotifier*>* s_notifiers;
 };

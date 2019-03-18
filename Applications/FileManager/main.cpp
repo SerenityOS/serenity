@@ -29,7 +29,7 @@ int main(int argc, char** argv)
     auto* window = new GWindow;
     window->set_title("FileManager");
     window->set_rect(20, 200, 640, 480);
-    window->set_should_exit_app_on_close(true);
+    window->set_should_exit_event_loop_on_close(true);
 
     auto* widget = new GWidget;
     widget->set_layout(make<GBoxLayout>(Orientation::Vertical));

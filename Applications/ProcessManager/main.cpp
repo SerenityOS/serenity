@@ -71,7 +71,7 @@ int main(int argc, char** argv)
     window->set_title("ProcessManager");
     window->set_rect(20, 200, 640, 400);
     window->set_main_widget(widget);
-    window->set_should_exit_app_on_close(true);
+    window->set_should_exit_event_loop_on_close(true);
     window->show();
 
     return app.exec();

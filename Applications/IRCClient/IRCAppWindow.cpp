@@ -9,6 +9,7 @@
 #include <LibGUI/GAction.h>
 #include <LibGUI/GMenu.h>
 #include <LibGUI/GMenuBar.h>
+#include <LibGUI/GMessageBox.h>
 #include <stdio.h>
 
 IRCAppWindow::IRCAppWindow()
@@ -40,6 +41,9 @@ void IRCAppWindow::setup_client()
     };
 
     m_client.on_connect = [this] {
+        GMessageBox box("We are connected!", "Message");
+        int code = box.exec();
+        dbgprintf("GMessageBox::exec() returned %d\n", code);
         m_client.join_channel("#test");
     };
 

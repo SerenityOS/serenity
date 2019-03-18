@@ -21,11 +21,16 @@
 
 static HashMap<GShortcut, GAction*>* g_actions;
 static GEventLoop* s_main_event_loop;
+static Vector<GEventLoop*>* s_event_loop_stack;
 int GEventLoop::s_event_fd = -1;
 pid_t GEventLoop::s_server_pid = -1;
+HashMap<int, OwnPtr<GEventLoop::EventLoopTimer>>* GEventLoop::s_timers;
+HashTable<GNotifier*>* GEventLoop::s_notifiers;
+int GEventLoop::s_next_timer_id = 1;
 
 void GEventLoop::connect_to_server()
 {
+    ASSERT(s_event_fd == -1);
     s_event_fd = socket(AF_LOCAL, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0);
     if (s_event_fd < 0) {
         perror("socket");
@@ -51,12 +56,25 @@ void GEventLoop::connect_to_server()
     if (rc < 0) {
         ASSERT_NOT_REACHED();
     }
+
+    WSAPI_ClientMessage request;
+    request.type = WSAPI_ClientMessage::Type::Greeting;
+    request.greeting.client_pid = getpid();
+    auto response = sync_request(request, WSAPI_ServerMessage::Type::Greeting);
+    s_server_pid = response.greeting.server_pid;
 }
 
 GEventLoop::GEventLoop()
 {
+    if (!s_event_loop_stack) {
+        s_event_loop_stack = new Vector<GEventLoop*>;
+        s_timers = new HashMap<int, OwnPtr<GEventLoop::EventLoopTimer>>;
+        s_notifiers = new HashTable<GNotifier*>;
+    }
+
     if (!s_main_event_loop) {
         s_main_event_loop = this;
+        s_event_loop_stack->append(this);
         connect_to_server();
     }
 
@@ -78,14 +96,41 @@ GEventLoop& GEventLoop::main()
     return *s_main_event_loop;
 }
 
+GEventLoop& GEventLoop::current()
+{
+    return *s_event_loop_stack->last();
+}
+
 void GEventLoop::quit(int code)
 {
     m_exit_requested = true;
     m_exit_code = code;
 }
 
+struct GEventLoopPusher {
+public:
+    GEventLoopPusher(GEventLoop& event_loop) : m_event_loop(event_loop)
+    {
+        if (&m_event_loop != s_main_event_loop) {
+            m_event_loop.take_pending_events_from(GEventLoop::current());
+            s_event_loop_stack->append(&event_loop);
+        }
+    }
+    ~GEventLoopPusher()
+    {
+        if (&m_event_loop != s_main_event_loop) {
+            s_event_loop_stack->take_last();
+            GEventLoop::current().take_pending_events_from(m_event_loop);
+        }
+    }
+private:
+    GEventLoop& m_event_loop;
+};
+
 int GEventLoop::exec()
 {
+    GEventLoopPusher pusher(*this);
+
     m_running = true;
     for (;;) {
         if (m_exit_requested)
@@ -228,7 +273,7 @@ void GEventLoop::wait_for_event()
     };
 
     add_fd_to_set(s_event_fd, rfds);
-    for (auto& notifier : m_notifiers) {
+    for (auto& notifier : *s_notifiers) {
         if (notifier->event_mask() & GNotifier::Read)
             add_fd_to_set(notifier->fd(), rfds);
         if (notifier->event_mask() & GNotifier::Write)
@@ -238,15 +283,15 @@ void GEventLoop::wait_for_event()
     }
 
     struct timeval timeout = { 0, 0 };
-    if (!m_timers.is_empty() && m_queued_events.is_empty())
+    if (!s_timers->is_empty() && m_queued_events.is_empty())
         get_next_timer_expiration(timeout);
     ASSERT(m_unprocessed_messages.is_empty());
-    int rc = select(max_fd + 1, &rfds, &wfds, nullptr, (m_queued_events.is_empty() && m_timers.is_empty()) ? nullptr : &timeout);
+    int rc = select(max_fd + 1, &rfds, &wfds, nullptr, (m_queued_events.is_empty() && s_timers->is_empty()) ? nullptr : &timeout);
     if (rc < 0) {
         ASSERT_NOT_REACHED();
     }
 
-    for (auto& it : m_timers) {
+    for (auto& it : *s_timers) {
         auto& timer = *it.value;
         if (!timer.has_expired())
             continue;
@@ -262,7 +307,7 @@ void GEventLoop::wait_for_event()
         }
     }
 
-    for (auto& notifier : m_notifiers) {
+    for (auto& notifier : *s_notifiers) {
         if (FD_ISSET(notifier->fd(), &rfds)) {
             if (notifier->on_ready_to_read)
                 notifier->on_ready_to_read(*notifier);
@@ -378,9 +423,9 @@ void GEventLoop::EventLoopTimer::reload()
 
 void GEventLoop::get_next_timer_expiration(timeval& soonest)
 {
-    ASSERT(!m_timers.is_empty());
+    ASSERT(!s_timers->is_empty());
     bool has_checked_any = false;
-    for (auto& it : m_timers) {
+    for (auto& it : *s_timers) {
         auto& fire_time = it.value->fire_time;
         if (!has_checked_any || fire_time.tv_sec < soonest.tv_sec || (fire_time.tv_sec == soonest.tv_sec && fire_time.tv_usec < soonest.tv_usec))
             soonest = fire_time;
@@ -396,30 +441,30 @@ int GEventLoop::register_timer(GObject& object, int milliseconds, bool should_re
     timer->interval = milliseconds;
     timer->reload();
     timer->should_reload = should_reload;
-    int timer_id = ++m_next_timer_id;  // FIXME: This will eventually wrap around.
+    int timer_id = ++s_next_timer_id;  // FIXME: This will eventually wrap around.
     ASSERT(timer_id); // FIXME: Aforementioned wraparound.
     timer->timer_id = timer_id;
-    m_timers.set(timer->timer_id, move(timer));
+    s_timers->set(timer->timer_id, move(timer));
     return timer_id;
 }
 
 bool GEventLoop::unregister_timer(int timer_id)
 {
-    auto it = m_timers.find(timer_id);
-    if (it == m_timers.end())
+    auto it = s_timers->find(timer_id);
+    if (it == s_timers->end())
         return false;
-    m_timers.remove(it);
+    s_timers->remove(it);
     return true;
 }
 
 void GEventLoop::register_notifier(Badge<GNotifier>, GNotifier& notifier)
 {
-    m_notifiers.set(&notifier);
+    s_notifiers->set(&notifier);
 }
 
 void GEventLoop::unregister_notifier(Badge<GNotifier>, GNotifier& notifier)
 {
-    m_notifiers.remove(&notifier);
+    s_notifiers->remove(&notifier);
 }
 
 bool GEventLoop::post_message_to_server(const WSAPI_ClientMessage& message)
@@ -456,7 +501,7 @@ WSAPI_ServerMessage GEventLoop::sync_request(const WSAPI_ClientMessage& request,
     ASSERT(success);
 
     WSAPI_ServerMessage response;
-    success = GEventLoop::main().wait_for_specific_event(response_type, response);
+    success = wait_for_specific_event(response_type, response);
     ASSERT(success);
     return response;
 }

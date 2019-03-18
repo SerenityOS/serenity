@@ -44,10 +44,8 @@ GWindow::~GWindow()
 
 void GWindow::close()
 {
-    // FIXME: If we exit the event loop, we're never gonna deal with the delete_later request!
-    //        This will become relevant once we support nested event loops.
-    if (should_exit_app_on_close())
-        GEventLoop::main().quit(0);
+    if (should_exit_event_loop_on_close())
+        GEventLoop::current().quit(0);
     delete_later();
 }
 
@@ -67,7 +65,7 @@ void GWindow::show()
     ASSERT(m_title_when_windowless.length() < (ssize_t)sizeof(request.text));
     strcpy(request.text, m_title_when_windowless.characters());
     request.text_length = m_title_when_windowless.length();
-    auto response = GEventLoop::main().sync_request(request, WSAPI_ServerMessage::Type::DidCreateWindow);
+    auto response = GEventLoop::current().sync_request(request, WSAPI_ServerMessage::Type::DidCreateWindow);
     m_window_id = response.window_id;
 
     windows().set(m_window_id, this);
@@ -82,12 +80,12 @@ void GWindow::hide()
     WSAPI_ClientMessage request;
     request.type = WSAPI_ClientMessage::Type::DestroyWindow;
     request.window_id = m_window_id;
-    GEventLoop::main().post_message_to_server(request);
+    GEventLoop::current().post_message_to_server(request);
 }
 
-void GWindow::set_title(String&& title)
+void GWindow::set_title(const String& title)
 {
-    m_title_when_windowless = move(title);
+    m_title_when_windowless = title;
     if (!m_window_id)
         return;
 
@@ -97,7 +95,7 @@ void GWindow::set_title(String&& title)
     ASSERT(m_title_when_windowless.length() < (ssize_t)sizeof(request.text));
     strcpy(request.text, m_title_when_windowless.characters());
     request.text_length = m_title_when_windowless.length();
-    GEventLoop::main().post_message_to_server(request);
+    GEventLoop::current().post_message_to_server(request);
 }
 
 String GWindow::title() const
@@ -108,7 +106,7 @@ String GWindow::title() const
     WSAPI_ClientMessage request;
     request.type = WSAPI_ClientMessage::Type::GetWindowTitle;
     request.window_id = m_window_id;
-    auto response = GEventLoop::main().sync_request(request, WSAPI_ServerMessage::Type::DidGetWindowTitle);
+    auto response = GEventLoop::current().sync_request(request, WSAPI_ServerMessage::Type::DidGetWindowTitle);
     return String(response.text, response.text_length);
 }
 
@@ -120,7 +118,7 @@ Rect GWindow::rect() const
     WSAPI_ClientMessage request;
     request.type = WSAPI_ClientMessage::Type::GetWindowRect;
     request.window_id = m_window_id;
-    auto response = GEventLoop::main().sync_request(request, WSAPI_ServerMessage::Type::DidGetWindowRect);
+    auto response = GEventLoop::current().sync_request(request, WSAPI_ServerMessage::Type::DidGetWindowRect);
     ASSERT(response.window_id == m_window_id);
     return response.window.rect;
 }
@@ -128,13 +126,16 @@ Rect GWindow::rect() const
 void GWindow::set_rect(const Rect& a_rect)
 {
     m_rect_when_windowless = a_rect;
-    if (!m_window_id)
+    if (!m_window_id) {
+        if (m_main_widget)
+            m_main_widget->resize(m_rect_when_windowless.size());
         return;
+    }
     WSAPI_ClientMessage request;
     request.type = WSAPI_ClientMessage::Type::SetWindowRect;
     request.window_id = m_window_id;
     request.window.rect = a_rect;
-    GEventLoop::main().post_message_to_server(request);
+    GEventLoop::current().post_message_to_server(request);
 }
 
 void GWindow::event(GEvent& event)
@@ -185,7 +186,7 @@ void GWindow::event(GEvent& event)
             message.type = WSAPI_ClientMessage::Type::DidFinishPainting;
             message.window_id = m_window_id;
             message.window.rect = rect;
-            GEventLoop::main().post_message_to_server(message);
+            GEventLoop::current().post_message_to_server(message);
         }
         return;
     }
@@ -255,7 +256,7 @@ void GWindow::update(const Rect& a_rect)
     request.type = WSAPI_ClientMessage::Type::InvalidateRect;
     request.window_id = m_window_id;
     request.window.rect = a_rect;
-    GEventLoop::main().post_message_to_server(request);
+    GEventLoop::current().post_message_to_server(request);
 }
 
 void GWindow::set_main_widget(GWidget* widget)
@@ -283,12 +284,12 @@ void GWindow::set_focused_widget(GWidget* widget)
     if (m_focused_widget == widget)
         return;
     if (m_focused_widget) {
-        GEventLoop::main().post_event(*m_focused_widget, make<GEvent>(GEvent::FocusOut));
+        GEventLoop::current().post_event(*m_focused_widget, make<GEvent>(GEvent::FocusOut));
         m_focused_widget->update();
     }
     m_focused_widget = widget;
     if (m_focused_widget) {
-        GEventLoop::main().post_event(*m_focused_widget, make<GEvent>(GEvent::FocusIn));
+        GEventLoop::current().post_event(*m_focused_widget, make<GEvent>(GEvent::FocusIn));
         m_focused_widget->update();
     }
 }
@@ -306,7 +307,7 @@ void GWindow::set_global_cursor_tracking_widget(GWidget* widget)
     request.value = widget != nullptr;
     // FIXME: What if the cursor moves out of our interest range before the server can handle this?
     //        Maybe there could be a response that includes the current cursor location as of enabling.
-    GEventLoop::main().post_message_to_server(request);
+    GEventLoop::current().post_message_to_server(request);
 }
 
 void GWindow::set_has_alpha_channel(bool value)
@@ -331,7 +332,7 @@ void GWindow::set_opacity(float opacity)
     request.window_id = m_window_id;
     request.window.opacity = opacity;
     m_opacity_when_windowless = opacity;
-    GEventLoop::main().post_message_to_server(request);
+    GEventLoop::current().post_message_to_server(request);
 }
 
 void GWindow::set_hovered_widget(GWidget* widget)
@@ -340,12 +341,12 @@ void GWindow::set_hovered_widget(GWidget* widget)
         return;
 
     if (m_hovered_widget)
-        GEventLoop::main().post_event(*m_hovered_widget, make<GEvent>(GEvent::Leave));
+        GEventLoop::current().post_event(*m_hovered_widget, make<GEvent>(GEvent::Leave));
 
     m_hovered_widget = widget ? widget->make_weak_ptr() : nullptr;
 
     if (m_hovered_widget)
-        GEventLoop::main().post_event(*m_hovered_widget, make<GEvent>(GEvent::Enter));
+        GEventLoop::current().post_event(*m_hovered_widget, make<GEvent>(GEvent::Enter));
 }
 
 void GWindow::set_current_backing_bitmap(GraphicsBitmap& bitmap, bool flush_immediately)
@@ -359,7 +360,7 @@ void GWindow::set_current_backing_bitmap(GraphicsBitmap& bitmap, bool flush_imme
     message.backing.has_alpha_channel = bitmap.has_alpha_channel();
     message.backing.size = bitmap.size();
     message.backing.flush_immediately = flush_immediately;
-    GEventLoop::main().sync_request(message, WSAPI_ServerMessage::Type::DidSetWindowBackingStore);
+    GEventLoop::current().sync_request(message, WSAPI_ServerMessage::Type::DidSetWindowBackingStore);
 }
 
 void GWindow::flip(const Rect& dirty_rect)
@@ -388,4 +389,10 @@ Retained<GraphicsBitmap> GWindow::create_backing_bitmap(const Size& size)
     ASSERT(shared_buffer);
     auto format = m_has_alpha_channel ? GraphicsBitmap::Format::RGBA32 : GraphicsBitmap::Format::RGB32;
     return GraphicsBitmap::create_with_shared_buffer(format, *shared_buffer, size);
+}
+
+void GWindow::set_modal(bool modal)
+{
+    ASSERT(!m_window_id);
+    m_modal = modal;
 }

@@ -37,7 +37,8 @@ void GBoxLayout::run(GWidget& widget)
     should_log = true;
 #endif
     if (should_log)
-        printf("GBoxLayout: running layout on %s{%p}\n", widget.class_name(), &widget);
+        printf("GBoxLayout: running layout on %s{%p}, entry count: %d\n", widget.class_name(), &widget, m_entries.size());
+
     if (m_entries.is_empty())
         return;
 

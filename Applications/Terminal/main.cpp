@@ -89,7 +89,7 @@ int main(int argc, char** argv)
 
     auto* window = new GWindow;
     window->set_double_buffering_enabled(false);
-    window->set_should_exit_app_on_close(true);
+    window->set_should_exit_event_loop_on_close(true);
 
     Terminal terminal(ptm_fd);
     window->set_has_alpha_channel(true);

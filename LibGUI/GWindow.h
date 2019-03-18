@@ -15,6 +15,9 @@ public:
 
     static GWindow* from_window_id(int);
 
+    bool is_modal() const { return m_modal; }
+    void set_modal(bool);
+
     void set_double_buffering_enabled(bool);
     void set_has_alpha_channel(bool);
     void set_opacity(float);
@@ -22,7 +25,7 @@ public:
     int window_id() const { return m_window_id; }
 
     String title() const;
-    void set_title(String&&);
+    void set_title(const String&);
 
     int x() const { return rect().x(); }
     int y() const { return rect().y(); }
@@ -62,8 +65,8 @@ public:
     GWidget* global_cursor_tracking_widget() { return m_global_cursor_tracking_widget.ptr(); }
     const GWidget* global_cursor_tracking_widget() const { return m_global_cursor_tracking_widget.ptr(); }
 
-    bool should_exit_app_on_close() const { return m_should_exit_app_on_close; }
-    void set_should_exit_app_on_close(bool b) { m_should_exit_app_on_close = b; }
+    bool should_exit_event_loop_on_close() const { return m_should_exit_app_on_close; }
+    void set_should_exit_event_loop_on_close(bool b) { m_should_exit_app_on_close = b; }
 
     GWidget* hovered_widget() { return m_hovered_widget.ptr(); }
     const GWidget* hovered_widget() const { return m_hovered_widget.ptr(); }
@@ -101,5 +104,6 @@ private:
     bool m_should_exit_app_on_close { false };
     bool m_has_alpha_channel { false };
     bool m_double_buffering_enabled { true };
+    bool m_modal { false };
 };
 

@@ -12,7 +12,7 @@ public:
     virtual ~GButton() override;
 
     String caption() const { return m_caption; }
-    void set_caption(String&&);
+    void set_caption(const String&);
 
     void set_icon(RetainPtr<GraphicsBitmap>&& icon) { m_icon = move(icon); }
     const GraphicsBitmap* icon() const { return m_icon.ptr(); }

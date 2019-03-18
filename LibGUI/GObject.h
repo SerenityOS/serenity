@@ -30,6 +30,8 @@ public:
 
     void delete_later();
 
+    void dump_tree(int indent = 0);
+
     virtual bool is_widget() const { return false; }
 
 protected:
