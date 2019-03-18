@@ -48,6 +48,8 @@ constexpr unsigned KB = 1024;
 constexpr unsigned MB = KB * KB;
 constexpr unsigned GB = KB * KB * KB;
 
+enum class IterationDecision { Continue, Abort };
+
 namespace std {
 typedef decltype(nullptr) nullptr_t;
 }

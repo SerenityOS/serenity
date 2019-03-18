@@ -26,7 +26,6 @@ class WSWindowSwitcher;
 class CharacterBitmap;
 class GraphicsBitmap;
 
-enum class IterationDecision { Continue, Abort };
 enum class ResizeDirection { None, Left, UpLeft, Up, UpRight, Right, DownRight, Down, DownLeft };
 
 class WSWindowManager : public WSMessageReceiver {

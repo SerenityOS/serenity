@@ -12,9 +12,11 @@ class WSMenu;
 
 class WSWindow final : public WSMessageReceiver, public InlineLinkedListNode<WSWindow> {
 public:
-    WSWindow(WSClientConnection&, int window_id);
+    WSWindow(WSClientConnection&, int window_id, bool modal);
     WSWindow(WSMessageReceiver&, WSWindowType);
     virtual ~WSWindow() override;
+
+    bool is_blocked_by_modal_window() const;
 
     WSClientConnection* client() { return m_client; }
     const WSClientConnection* client() const { return m_client; }
@@ -37,6 +39,11 @@ public:
 
     bool is_visible() const { return m_visible; }
     void set_visible(bool);
+
+    bool is_modal() const { return m_modal; }
+
+    bool is_resizable() const { return m_resizable; }
+    void set_resizable(bool);
 
     Rect rect() const { return m_rect; }
     void set_rect(const Rect&);
@@ -106,6 +113,8 @@ private:
     bool m_visible { true };
     bool m_has_alpha_channel { false };
     bool m_has_painted_since_last_resize { false };
+    bool m_modal { false };
+    bool m_resizable { false };
     RetainPtr<GraphicsBitmap> m_backing_store;
     RetainPtr<GraphicsBitmap> m_last_backing_store;
     int m_window_id { -1 };

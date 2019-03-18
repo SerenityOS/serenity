@@ -3,12 +3,6 @@
 #include <SharedGraphics/Color.h>
 #include <SharedGraphics/Rect.h>
 
-// GUI system call API types.
-
-struct WSAPI_WindowFlags { enum {
-    Visible = 1 << 0,
-}; };
-
 typedef unsigned WSAPI_Color;
 
 struct WSAPI_Point {
@@ -186,6 +180,8 @@ struct WSAPI_ClientMessage {
         struct {
             WSAPI_Rect rect;
             bool has_alpha_channel;
+            bool modal;
+            bool resizable;
             float opacity;
             WSAPI_Size base_size;
             WSAPI_Size size_increment;

@@ -512,7 +512,7 @@ void WSWindowManager::add_window(WSWindow& window)
 {
     m_windows.set(&window);
     m_windows_in_order.append(&window);
-    if (!active_window())
+    if (!active_window() || active_window()->client() == window.client())
         set_active_window(&window);
     if (m_switcher.is_visible() && window.type() != WSWindowType::WindowSwitcher)
         m_switcher.refresh();
@@ -520,6 +520,9 @@ void WSWindowManager::add_window(WSWindow& window)
 
 void WSWindowManager::move_to_front(WSWindow& window)
 {
+    if (window.is_blocked_by_modal_window())
+        return;
+
     if (m_windows_in_order.tail() != &window)
         invalidate(window);
     m_windows_in_order.remove(&window);
@@ -1095,6 +1098,9 @@ void WSWindowManager::set_highlight_window(WSWindow* window)
 
 void WSWindowManager::set_active_window(WSWindow* window)
 {
+    if (window && window->is_blocked_by_modal_window())
+        return;
+
     if (window->type() != WSWindowType::Normal) {
         dbgprintf("WSWindowManager: Attempted to make a non-normal window active.\n");
         return;
