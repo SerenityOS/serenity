@@ -445,14 +445,18 @@ void WSClientConnection::handle_request(WSAPISetWindowBackingStoreRequest& reque
         return;
     }
     auto& window = *(*it).value;
-    auto shared_buffer = SharedBuffer::create_from_shared_buffer_id(request.shared_buffer_id());
-    if (!shared_buffer)
-        return;
-    auto backing_store = GraphicsBitmap::create_with_shared_buffer(
-        request.has_alpha_channel() ? GraphicsBitmap::Format::RGBA32 : GraphicsBitmap::Format::RGB32,
-        *shared_buffer,
-        request.size());
-    window.set_backing_store(move(backing_store));
+    if (window.last_backing_store() && window.last_backing_store()->shared_buffer_id() == request.shared_buffer_id()) {
+        window.swap_backing_stores();
+    } else {
+        auto shared_buffer = SharedBuffer::create_from_shared_buffer_id(request.shared_buffer_id());
+        if (!shared_buffer)
+            return;
+        auto backing_store = GraphicsBitmap::create_with_shared_buffer(
+            request.has_alpha_channel() ? GraphicsBitmap::Format::RGBA32 : GraphicsBitmap::Format::RGB32,
+            *shared_buffer,
+            request.size());
+        window.set_backing_store(move(backing_store));
+    }
 
     if (request.flush_immediately())
         window.invalidate();
