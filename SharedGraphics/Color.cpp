@@ -25,3 +25,8 @@ Color::Color(NamedColor named)
 
     m_value = 0xff000000 | (rgb.r << 16) | (rgb.g << 8) | rgb.b;
 }
+
+String Color::to_string() const
+{
+    return String::format("rgba(%d, %d, %d, %d)", red(), green(), blue(), alpha());
+}

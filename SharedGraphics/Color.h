@@ -1,5 +1,6 @@
 #pragma once
 
+#include <AK/AKString.h>
 #include <AK/Types.h>
 
 typedef dword RGBA32;
@@ -65,6 +66,8 @@ public:
     }
 
     RGBA32 value() const { return m_value; }
+
+    String to_string() const;
 
 private:
     explicit Color(RGBA32 rgba) : m_value(rgba) { }
