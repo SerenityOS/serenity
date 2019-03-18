@@ -4,7 +4,6 @@
 #include <AK/Assertions.h>
 #include <AK/Types.h>
 #include <Kernel/NetworkOrdered.h>
-#include <Kernel/StdLib.h>
 
 enum class IPv4Protocol : word {
     ICMP = 1,
@@ -19,7 +18,10 @@ public:
     IPv4Address() { }
     IPv4Address(const byte data[4])
     {
-        memcpy(m_data, data, 4);
+        m_data[0] = data[0];
+        m_data[1] = data[1];
+        m_data[2] = data[2];
+        m_data[3] = data[3];
     }
     IPv4Address(byte a, byte b, byte c, byte d)
     {

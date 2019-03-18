@@ -26,6 +26,7 @@ IRCClient::IRCClient(const String& address, int port)
     , m_nickname("anon")
     , m_log(IRCLogBuffer::create())
 {
+    m_socket = new GTCPSocket(this);
     m_client_window_list_model = new IRCWindowListModel(*this);
 }
 
@@ -35,37 +36,15 @@ IRCClient::~IRCClient()
 
 bool IRCClient::connect()
 {
-    if (m_socket_fd != -1) {
+    if (m_socket->is_connected())
         ASSERT_NOT_REACHED();
-    }
 
-    m_socket_fd = socket(AF_INET, SOCK_STREAM, 0);
-    if (m_socket_fd < 0) {
-        perror("socket");
-        exit(1);
-    }
+    IPv4Address ipv4_address(127, 0, 0, 1);
+    bool success = m_socket->connect(GSocketAddress(ipv4_address), m_port);
+    if (!success)
+        return false;
 
-    struct sockaddr_in addr;
-    memset(&addr, 0, sizeof(addr));
-
-    addr.sin_family = AF_INET;
-    addr.sin_port = htons(m_port);
-    int rc = inet_pton(AF_INET, m_hostname.characters(), &addr.sin_addr);
-    if (rc < 0) {
-        perror("inet_pton");
-        exit(1);
-    }
-
-    printf("Connecting to %s...", m_hostname.characters());
-    fflush(stdout);
-    rc = ::connect(m_socket_fd, (struct sockaddr*)&addr, sizeof(addr));
-    if (rc < 0) {
-        perror("connect");
-        exit(1);
-    }
-    printf("ok!\n");
-
-    m_notifier = make<GNotifier>(m_socket_fd, GNotifier::Read);
+    m_notifier = make<GNotifier>(m_socket->fd(), GNotifier::Read);
     m_notifier->on_ready_to_read = [this] (GNotifier&) { receive_from_server(); };
 
     send_user();
@@ -78,35 +57,20 @@ bool IRCClient::connect()
 
 void IRCClient::receive_from_server()
 {
-    char buffer[4096];
-    int nread = recv(m_socket_fd, buffer, sizeof(buffer) - 1, 0);
-    if (nread < 0) {
-        perror("recv");
-        exit(1);
-    }
-    if (nread == 0) {
-        printf("IRCClient: Connection closed!\n");
-        exit(1);
-    }
-    buffer[nread] = '\0';
-#if 0
-    printf("Received: '%s'\n", buffer);
-#endif
-
-    for (int i = 0; i < nread; ++i) {
-        char ch = buffer[i];
-        if (ch == '\r')
-            continue;
-        if (ch == '\n') {
-            process_line();
-            m_line_buffer.clear_with_capacity();
-            continue;
+    while (m_socket->can_read_line()) {
+        auto line = m_socket->read_line(4096);
+        if (line.is_null()) {
+            if (!m_socket->is_connected()) {
+                printf("IRCClient: Connection closed!\n");
+                exit(1);
+            }
+            ASSERT_NOT_REACHED();
         }
-        m_line_buffer.append(ch);
+        process_line(move(line));
     }
 }
 
-void IRCClient::process_line()
+void IRCClient::process_line(ByteBuffer&& line)
 {
     Message msg;
     Vector<char> prefix;
@@ -121,7 +85,12 @@ void IRCClient::process_line()
         InTrailingParameter,
     } state = Start;
 
-    for (char ch : m_line_buffer) {
+    for (int i = 0; i < line.size(); ++i) {
+        char ch = line[i];
+        if (ch == '\r')
+            continue;
+        if (ch == '\n')
+            break;
         switch (state) {
         case Start:
             if (ch == ':') {
@@ -175,8 +144,7 @@ void IRCClient::process_line()
 
 void IRCClient::send(const String& text)
 {
-    int rc = ::send(m_socket_fd, text.characters(), text.length(), 0);
-    if (rc < 0) {
+    if (!m_socket->send(ByteBuffer::wrap((void*)text.characters(), text.length()))) {
         perror("send");
         exit(1);
     }

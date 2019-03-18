@@ -4,6 +4,7 @@
 #include <AK/HashMap.h>
 #include <AK/CircularQueue.h>
 #include <AK/Function.h>
+#include <LibGUI/GTCPSocket.h>
 #include "IRCLogBuffer.h"
 #include "IRCWindow.h"
 
@@ -12,12 +13,12 @@ class IRCQuery;
 class IRCWindowListModel;
 class GNotifier;
 
-class IRCClient {
+class IRCClient final : public GObject {
     friend class IRCChannel;
     friend class IRCQuery;
 public:
     IRCClient(const String& address, int port = 6667);
-    ~IRCClient();
+    virtual ~IRCClient() override;
 
     bool connect();
 
@@ -59,6 +60,8 @@ public:
     IRCQuery& ensure_query(const String& name);
     IRCChannel& ensure_channel(const String& name);
 
+    const char* class_name() const override { return "IRCClient"; }
+
 private:
     struct Message {
         String prefix;
@@ -72,7 +75,7 @@ private:
     void send_nick();
     void send_pong(const String& server);
     void send_privmsg(const String& target, const String&);
-    void process_line();
+    void process_line(ByteBuffer&&);
     void handle_join(const Message&);
     void handle_part(const Message&);
     void handle_ping(const Message&);
@@ -84,8 +87,9 @@ private:
     void handle_user_command(const String&);
 
     String m_hostname;
-    int m_port { 0 };
-    int m_socket_fd { -1 };
+    int m_port { 6667 };
+
+    GTCPSocket* m_socket { nullptr };
 
     String m_nickname;
     Vector<char> m_line_buffer;

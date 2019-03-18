@@ -40,17 +40,3 @@ bool GFile::open(GIODevice::OpenMode mode)
     set_mode(mode);
     return true;
 }
-
-bool GFile::close()
-{
-    if (fd() < 0 || mode() == NotOpen)
-        return false;
-    int rc = ::close(fd());
-    if (rc < 0) {
-        set_error(rc);
-        return false;
-    }
-    set_fd(-1);
-    set_mode(GIODevice::NotOpen);
-    return true;
-}
