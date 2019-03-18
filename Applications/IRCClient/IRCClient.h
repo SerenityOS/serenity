@@ -60,6 +60,8 @@ public:
     IRCQuery& ensure_query(const String& name);
     IRCChannel& ensure_channel(const String& name);
 
+    void add_server_message(const String&);
+
     const char* class_name() const override { return "IRCClient"; }
 
 private:
@@ -75,13 +77,22 @@ private:
     void send_nick();
     void send_pong(const String& server);
     void send_privmsg(const String& target, const String&);
+    void send_whois(const String&);
     void process_line(ByteBuffer&&);
     void handle_join(const Message&);
     void handle_part(const Message&);
     void handle_ping(const Message&);
     void handle_topic(const Message&);
     void handle_rpl_topic(const Message&);
-    void handle_namreply(const Message&);
+    void handle_rpl_whoisuser(const Message&);
+    void handle_rpl_whoisserver(const Message&);
+    void handle_rpl_whoisoperator(const Message&);
+    void handle_rpl_whoisidle(const Message&);
+    void handle_rpl_endofwhois(const Message&);
+    void handle_rpl_whoischannels(const Message&);
+    void handle_rpl_topicwhotime(const Message&);
+    void handle_rpl_endofnames(const Message&);
+    void handle_rpl_namreply(const Message&);
     void handle_privmsg(const Message&);
     void handle(const Message&, const String& verbatim);
     void handle_user_command(const String&);
