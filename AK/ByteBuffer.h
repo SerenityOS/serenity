@@ -38,6 +38,7 @@ public:
     byte* offset_pointer(int offset) { return m_data + offset; }
     const byte* offset_pointer(int offset) const { return m_data + offset; }
 
+    void* end_pointer() { return m_data + m_size; }
     const void* end_pointer() const { return m_data + m_size; }
 
     // NOTE: trim() does not reallocate.
@@ -109,6 +110,7 @@ public:
     byte* offset_pointer(ssize_t offset) { return m_impl ? m_impl->offset_pointer(offset) : nullptr; }
     const byte* offset_pointer(ssize_t offset) const { return m_impl ? m_impl->offset_pointer(offset) : nullptr; }
 
+    void* end_pointer() { return m_impl ? m_impl->end_pointer() : nullptr; }
     const void* end_pointer() const { return m_impl ? m_impl->end_pointer() : nullptr; }
 
     // NOTE: trim() does not reallocate.
@@ -135,6 +137,13 @@ public:
             m_impl = ByteBufferImpl::create_uninitialized(size);
         else
             m_impl->grow(size);
+    }
+
+    void append(const void* data, int data_size)
+    {
+        int old_size = size();
+        grow(size() + data_size);
+        memcpy(pointer() + old_size, data, data_size);
     }
 
 private:

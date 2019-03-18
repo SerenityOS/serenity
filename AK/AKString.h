@@ -100,6 +100,7 @@ public:
     }
 
     ByteBuffer to_byte_buffer() const;
+    static String from_byte_buffer(const ByteBuffer&);
 
     static String format(const char*, ...);
 

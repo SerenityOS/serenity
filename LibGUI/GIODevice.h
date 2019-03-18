@@ -28,6 +28,7 @@ public:
 
     ByteBuffer read(int max_size);
     ByteBuffer read_line(int max_size);
+    ByteBuffer read_all();
 
     // FIXME: I would like this to be const but currently it needs to call populate_read_buffer().
     bool can_read_line();
@@ -49,6 +50,7 @@ protected:
 
 private:
     bool populate_read_buffer();
+    bool can_read_from_fd() const;
 
     int m_fd { -1 };
     int m_error { 0 };
