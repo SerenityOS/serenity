@@ -33,6 +33,7 @@ public:
     void dump_tree(int indent = 0);
 
     virtual bool is_widget() const { return false; }
+    virtual bool is_window() const { return false; }
 
 protected:
     virtual void timer_event(GTimerEvent&);

@@ -14,13 +14,25 @@ GDialog::~GDialog()
 
 int GDialog::exec()
 {
-    GEventLoop loop;
+    ASSERT(!m_event_loop);
+    m_event_loop = make<GEventLoop>();
+    if (parent() && parent()->is_window()) {
+        auto& parent_window = *static_cast<GWindow*>(parent());
+        auto new_rect = rect();
+        new_rect.center_within(parent_window.rect());
+        set_rect(new_rect);
+    }
     show();
-    return loop.exec();
+    auto result = m_event_loop->exec();
+    m_event_loop = nullptr;
+    dbgprintf("event loop returned with result %d\n", result);
+    return result;
 }
 
 void GDialog::done(int result)
 {
+    ASSERT(m_event_loop);
     m_result = result;
-    GEventLoop::current().quit(result);
+    dbgprintf("quit event loop with result %d\n", result);
+    m_event_loop->quit(result);
 }

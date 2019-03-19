@@ -109,8 +109,18 @@ public:
 
     void set_window(GWindow*);
 
-    GWidget* parent_widget() { return static_cast<GWidget*>(parent()); }
-    const GWidget* parent_widget() const { return static_cast<const GWidget*>(parent()); }
+    GWidget* parent_widget()
+    {
+        if (parent() && parent()->is_widget())
+            return static_cast<GWidget*>(parent());
+        return nullptr;
+    }
+    const GWidget* parent_widget() const
+    {
+        if (parent() && parent()->is_widget())
+            return static_cast<const GWidget*>(parent());
+        return nullptr;
+    }
 
     void set_fill_with_background_color(bool b) { m_fill_with_background_color = b; }
     bool fill_with_background_color() const { return m_fill_with_background_color; }
