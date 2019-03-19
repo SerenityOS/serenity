@@ -37,7 +37,7 @@ IRCWindow::IRCWindow(IRCClient& client, void* owner, Type type, const String& na
 
     m_text_editor = new GTextEditor(GTextEditor::SingleLine, this);
     m_text_editor->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-    m_text_editor->set_preferred_size({ 0, 18 });
+    m_text_editor->set_preferred_size({ 0, 15 });
     m_text_editor->on_return_pressed = [this] (GTextEditor& editor) {
         if (m_type == Channel)
             m_client.handle_user_input_in_channel(m_name, editor.text());
