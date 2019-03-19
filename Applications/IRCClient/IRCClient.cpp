@@ -468,7 +468,7 @@ void IRCClient::handle_rpl_whoisidle(const Message& msg)
         return;
     auto& nick = msg.arguments[1];
     auto& secs = msg.arguments[2];
-    add_server_message(String::format("* %s is %d seconds idle", nick.characters(), secs.characters()));
+    add_server_message(String::format("* %s is %s seconds idle", nick.characters(), secs.characters()));
 }
 
 void IRCClient::handle_rpl_whoischannels(const Message& msg)
