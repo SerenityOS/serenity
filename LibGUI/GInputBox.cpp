@@ -24,7 +24,7 @@ void GInputBox::build()
 
     int text_width = widget->font().width(m_prompt);
 
-    set_rect(x(), y(), text_width + 80, 120);
+    set_rect(x(), y(), text_width + 80, 80);
 
     widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
     widget->set_fill_with_background_color(true);
@@ -41,6 +41,8 @@ void GInputBox::build()
     m_text_editor->set_preferred_size({ 0, 16 });
 
     auto* button_container_outer = new GWidget(widget);
+    button_container_outer->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+    button_container_outer->set_preferred_size({ 0, 16 });
     button_container_outer->set_layout(make<GBoxLayout>(Orientation::Vertical));
 
     auto* button_container_inner = new GWidget(button_container_outer);

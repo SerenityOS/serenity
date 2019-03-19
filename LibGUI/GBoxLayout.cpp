@@ -13,23 +13,6 @@ GBoxLayout::~GBoxLayout()
 {
 }
 
-#if 0
-Size GLayout::compute_preferred_size() const
-{
-
-}
-
-
-static Size compute_preferred_size(GLayout::Entry& entry)
-{
-    if (entry.layout)
-        return entry.layout->compute_preferred_size();
-    else {
-        return entry.widget->preferred_size();
-    }
-}
-#endif
-
 void GBoxLayout::run(GWidget& widget)
 {
     bool should_log = false;
@@ -59,13 +42,17 @@ void GBoxLayout::run(GWidget& widget)
                 printf("GBoxLayout:   Subtracting for fixed %s{%p}, size: %s\n", entry.widget->class_name(), entry.widget.ptr(), entry.widget->preferred_size().to_string().characters());
                 printf("GBoxLayout:     Available size before: %s\n", available_size.to_string().characters());
             }
-
             available_size -= entry.widget->preferred_size();
             if (should_log)
                 printf("GBoxLayout:     Available size  after: %s\n", available_size.to_string().characters());
             ++number_of_entries_with_fixed_size;
         }
+        available_size -= { spacing(), spacing() };
     }
+
+    available_size += { spacing(), spacing() };
+
+    available_size -= { margins().left() + margins().right(), margins().top() + margins().bottom() };
 
     if (should_log)
         printf("GBoxLayout:  Number of visible: %d/%d\n", number_of_visible_entries, m_entries.size());
