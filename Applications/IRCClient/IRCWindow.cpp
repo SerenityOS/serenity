@@ -72,7 +72,9 @@ void IRCWindow::did_add_message()
     if (!is_active()) {
         ++m_unread_count;
         m_client.aid_update_window_list();
+        return;
     }
+    m_table_view->scroll_to_bottom();
 }
 
 void IRCWindow::clear_unread_count()
