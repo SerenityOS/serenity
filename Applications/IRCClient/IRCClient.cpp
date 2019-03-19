@@ -554,3 +554,29 @@ void IRCClient::handle_user_command(const String& input)
         return;
     }
 }
+
+void IRCClient::handle_whois_action(const String& nick)
+{
+    send_whois(nick);
+}
+
+void IRCClient::handle_open_query_action(const String& nick)
+{
+    ensure_query(nick);
+}
+
+void IRCClient::handle_close_query_action(const String& nick)
+{
+    m_queries.remove(nick);
+    m_client_window_list_model->update();
+}
+
+void IRCClient::handle_join_action(const String& channel)
+{
+    join_channel(channel);
+}
+
+void IRCClient::handle_part_action(const String& channel)
+{
+    part_channel(channel);
+}

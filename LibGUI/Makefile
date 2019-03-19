@@ -43,6 +43,7 @@ LIBGUI_OBJS = \
     GSocket.o \
     GTCPSocket.o \
     GMessageBox.o \
+    GInputBox.o \
     GDialog.o \
     GWindow.o
 

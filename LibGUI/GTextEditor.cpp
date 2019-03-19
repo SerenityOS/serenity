@@ -17,6 +17,7 @@ GTextEditor::GTextEditor(Type type, GWidget* parent)
     m_ruler_visible = is_multi_line();
     set_font(GFontDatabase::the().get_by_name("Csilla Thin"));
     m_lines.append(make<Line>());
+    m_cursor = { 0, 0 };
 }
 
 GTextEditor::~GTextEditor()
@@ -227,6 +228,11 @@ void GTextEditor::toggle_selection_if_needed_for_event(const GKeyEvent& event)
 
 void GTextEditor::keydown_event(GKeyEvent& event)
 {
+    if (event.key() == KeyCode::Key_Escape) {
+        if (on_escape_pressed)
+            on_escape_pressed(*this);
+        return;
+    }
     if (event.key() == KeyCode::Key_Up) {
         if (m_cursor.line() > 0) {
             int new_line = m_cursor.line() - 1;

@@ -23,6 +23,8 @@ public:
     void set_button_style(GButtonStyle style) { m_button_style = style; }
     GButtonStyle button_style() const { return m_button_style; }
 
+    void click();
+
     virtual const char* class_name() const override { return "GButton"; }
 
 private:
