@@ -159,7 +159,8 @@ void GTextEditor::paint_event(GPaintEvent& event)
     painter.save();
 
     painter.translate(-horizontal_scrollbar().value(), -vertical_scrollbar().value());
-    painter.translate(ruler_width(), 0);
+    if (m_ruler_visible)
+        painter.translate(ruler_width(), 0);
     int exposed_width = max(content_width(), width());
 
     int first_visible_line = text_position_at(event.rect().top_left()).line();
@@ -182,7 +183,7 @@ void GTextEditor::paint_event(GPaintEvent& event)
         }
     }
 
-    painter.set_clip_rect({ ruler_rect.right() + 1, 0, width() - width_occupied_by_vertical_scrollbar() - ruler_width(), height() - height_occupied_by_horizontal_scrollbar() });
+    painter.set_clip_rect({ m_ruler_visible ? (ruler_rect.right() + 1) : 0, 0, width() - width_occupied_by_vertical_scrollbar() - ruler_width(), height() - height_occupied_by_horizontal_scrollbar() });
 
     for (int i = first_visible_line; i <= last_visible_line; ++i) {
         auto& line = *m_lines[i];
@@ -469,7 +470,7 @@ Rect GTextEditor::cursor_content_rect() const
 Rect GTextEditor::line_widget_rect(int line_index) const
 {
     auto rect = line_content_rect(line_index);
-    rect.move_by(-(horizontal_scrollbar().value() - m_horizontal_content_padding), -(vertical_scrollbar().value()));
+    rect.move_by(-(horizontal_scrollbar().value() + m_horizontal_content_padding), -(vertical_scrollbar().value()));
     rect.set_width(rect.width() + 1); // Add 1 pixel for when the cursor is on the end.
     rect.intersect(this->rect());
     // This feels rather hackish, but extend the rect to the edge of the content view:
