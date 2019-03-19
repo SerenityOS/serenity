@@ -1,9 +1,12 @@
 #pragma once
 
 #include <LibGUI/GWindow.h>
+#include <LibGUI/GEventLoop.h>
 
 class GDialog : public GWindow {
 public:
+    enum ExecResult { ExecOK = 0, ExecCancel = 1, ExecAborted = 2 };
+
     virtual ~GDialog() override;
 
     int exec();
@@ -15,5 +18,6 @@ protected:
     explicit GDialog(GObject* parent);
 
 private:
-    int m_result { 0 };
+    OwnPtr<GEventLoop> m_event_loop;
+    int m_result { ExecAborted };
 };

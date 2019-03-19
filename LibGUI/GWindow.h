@@ -82,6 +82,7 @@ public:
 
 private:
     virtual const char* class_name() const override { return "GWindow"; }
+    virtual bool is_window() const override final { return true; }
 
     Retained<GraphicsBitmap> create_backing_bitmap(const Size&);
     void set_current_backing_bitmap(GraphicsBitmap&, bool flush_immediately = false);

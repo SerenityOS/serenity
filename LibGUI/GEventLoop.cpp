@@ -158,6 +158,13 @@ int GEventLoop::exec()
             } else {
                 receiver->event(event);
             }
+
+            if (m_exit_requested) {
+                auto rejigged_event_queue = move(events);
+                rejigged_event_queue.append(move(m_queued_events));
+                m_queued_events = move(rejigged_event_queue);
+                return m_exit_code;
+            }
         }
     }
     ASSERT_NOT_REACHED();
