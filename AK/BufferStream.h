@@ -68,6 +68,11 @@ public:
 
     ssize_t offset() const { return m_offset; }
 
+    void snip()
+    {
+        m_buffer.trim(m_offset);
+    }
+
 private:
     ByteBuffer& m_buffer;
     ssize_t m_offset { 0 };
