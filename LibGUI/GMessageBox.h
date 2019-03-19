@@ -7,10 +7,8 @@ public:
     explicit GMessageBox(const String& text, const String& title, GObject* parent = nullptr);
     virtual ~GMessageBox() override;
 
-    String text() const { return m_text; }
-
+private:
     void build();
 
-private:
     String m_text;
 };

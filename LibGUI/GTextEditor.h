@@ -95,6 +95,7 @@ public:
     void paste();
 
     Function<void(GTextEditor&)> on_return_pressed;
+    Function<void(GTextEditor&)> on_escape_pressed;
 
     virtual const char* class_name() const override { return "GTextEditor"; }
 

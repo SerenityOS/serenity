@@ -9,7 +9,7 @@
 #include <LibGUI/GAction.h>
 #include <LibGUI/GMenu.h>
 #include <LibGUI/GMenuBar.h>
-#include <LibGUI/GMessageBox.h>
+#include <LibGUI/GInputBox.h>
 #include <stdio.h>
 
 IRCAppWindow::IRCAppWindow()
@@ -49,23 +49,26 @@ void IRCAppWindow::setup_client()
 
 void IRCAppWindow::setup_actions()
 {
-    m_join_action = GAction::create("Join channel", GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/16x16/irc-join.rgb", { 16, 16 }), [] (auto&) {
-        printf("FIXME: Implement join action\n");
+    m_join_action = GAction::create("Join channel", GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/16x16/irc-join.rgb", { 16, 16 }), [&] (auto&) {
+        GInputBox input_box("Enter nickname:", "Join channel");
+        if (input_box.exec() == GInputBox::ExecOK)
+            m_client.handle_join_action(input_box.text_value());
     });
 
     m_part_action = GAction::create("Part from channel", GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/16x16/irc-part.rgb", { 16, 16 }), [] (auto&) {
         printf("FIXME: Implement part action\n");
     });
 
-    m_whois_action = GAction::create("Whois user", GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/16x16/irc-whois.rgb", { 16, 16 }), [] (auto&) {
-        printf("FIXME: Implement whois action\n");
-        GMessageBox box("Who would you like to WHOIS?", "Whois user");
-        int code = box.exec();
-        dbgprintf("GMessageBox::exec() returned %d\n", code);
+    m_whois_action = GAction::create("Whois user", GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/16x16/irc-whois.rgb", { 16, 16 }), [&] (auto&) {
+        GInputBox input_box("Enter nickname:", "IRC WHOIS lookup");
+        if (input_box.exec() == GInputBox::ExecOK)
+            m_client.handle_whois_action(input_box.text_value());
     });
 
-    m_open_query_action = GAction::create("Open query", GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/16x16/irc-open-query.rgb", { 16, 16 }), [] (auto&) {
-        printf("FIXME: Implement open-query action\n");
+    m_open_query_action = GAction::create("Open query", GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/16x16/irc-open-query.rgb", { 16, 16 }), [&] (auto&) {
+        GInputBox input_box("Enter nickname:", "Open IRC query with...");
+        if (input_box.exec() == GInputBox::ExecOK)
+            m_client.handle_open_query_action(input_box.text_value());
     });
 
     m_close_query_action = GAction::create("Close query", GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/16x16/irc-close-query.rgb", { 16, 16 }), [] (auto&) {

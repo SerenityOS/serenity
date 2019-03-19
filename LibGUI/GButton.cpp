@@ -70,6 +70,12 @@ void GButton::mousedown_event(GMouseEvent& event)
     GWidget::mousedown_event(event);
 }
 
+void GButton::click()
+{
+    if (on_click)
+        on_click(*this);
+}
+
 void GButton::mouseup_event(GMouseEvent& event)
 {
 #ifdef GBUTTON_DEBUG
@@ -81,10 +87,8 @@ void GButton::mouseup_event(GMouseEvent& event)
         m_tracking_cursor = false;
         set_global_cursor_tracking(false);
         update();
-        if (was_being_pressed) {
-            if (on_click)
-                on_click(*this);
-        }
+        if (was_being_pressed)
+            click();
     }
     GWidget::mouseup_event(event);
 }

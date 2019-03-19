@@ -57,6 +57,12 @@ public:
     void handle_user_input_in_query(const String& query_name, const String&);
     void handle_user_input_in_server(const String&);
 
+    void handle_whois_action(const String&);
+    void handle_open_query_action(const String&);
+    void handle_close_query_action(const String&);
+    void handle_join_action(const String&);
+    void handle_part_action(const String&);
+
     IRCQuery& ensure_query(const String& name);
     IRCChannel& ensure_channel(const String& name);
 
