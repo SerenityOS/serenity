@@ -27,6 +27,9 @@ public:
     GWidget& corner_widget() { return *m_corner_widget; }
     const GWidget& corner_widget() const { return *m_corner_widget; }
 
+    void scroll_to_top();
+    void scroll_to_bottom();
+
     virtual const char* class_name() const override { return "GScrollableWidget"; }
 
 protected:

@@ -124,3 +124,13 @@ void GScrollableWidget::set_scrollbars_enabled(bool scrollbars_enabled)
     m_horizontal_scrollbar->set_visible(m_scrollbars_enabled);
     m_corner_widget->set_visible(m_scrollbars_enabled);
 }
+
+void GScrollableWidget::scroll_to_top()
+{
+    scroll_into_view({ 0, 0, 1, 1 }, Orientation::Vertical);
+}
+
+void GScrollableWidget::scroll_to_bottom()
+{
+    scroll_into_view({ 0, content_height(), 1, 1 }, Orientation::Vertical);
+}
