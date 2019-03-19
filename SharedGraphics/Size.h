@@ -39,6 +39,13 @@ public:
         return *this;
     }
 
+    Size& operator+=(const Size& other)
+    {
+        m_width += other.m_width;
+        m_height += other.m_height;
+        return *this;
+    }
+
     operator WSAPI_Size() const;
 
     String to_string() const { return String::format("[%d,%d]", m_width, m_height); }
