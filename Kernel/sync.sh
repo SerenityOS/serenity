@@ -87,6 +87,8 @@ cp -v ../Applications/About/About mnt/bin/About
 cp -v ../Applications/TextEditor/TextEditor mnt/bin/TextEditor
 cp -v ../Applications/IRCClient/IRCClient mnt/bin/IRCClient
 ln -s IRCClient mnt/bin/irc
+cp -v ../Servers/DNSLookupServer/DNSLookupServer mnt/bin/DNSLookupServer
+ln -s DNSLookupServer mnt/bin/dns
 cp -v ../WindowServer/WindowServer mnt/bin/WindowServer
 cp -v kernel.map mnt/
 sh sync-local.sh
