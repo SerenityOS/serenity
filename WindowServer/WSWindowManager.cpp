@@ -808,7 +808,7 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event, WSWindow*& event_
                 start_window_drag(window, event);
                 return IterationDecision::Abort;
             }
-            if (m_keyboard_modifiers == Mod_Logo && event.type() == WSMessage::MouseDown && event.button() == MouseButton::Right) {
+            if (m_keyboard_modifiers == Mod_Logo && event.type() == WSMessage::MouseDown && event.button() == MouseButton::Right && !window.is_blocked_by_modal_window()) {
                 move_to_front(window);
                 set_active_window(&window);
                 start_window_resize(window, event);
