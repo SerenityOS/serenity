@@ -89,7 +89,7 @@ cp -v ../Applications/TextEditor/TextEditor mnt/bin/TextEditor
 cp -v ../Applications/IRCClient/IRCClient mnt/bin/IRCClient
 ln -s IRCClient mnt/bin/irc
 cp -v ../Servers/LookupServer/LookupServer mnt/bin/LookupServer
-cp -v ../WindowServer/WindowServer mnt/bin/WindowServer
+cp -v ../Servers/WindowServer/WindowServer mnt/bin/WindowServer
 cp -v kernel.map mnt/
 sh sync-local.sh
 umount mnt
