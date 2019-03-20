@@ -80,8 +80,9 @@ public:
     Size base_size() const { return m_base_size; }
     void set_base_size(const Size& size) { m_base_size = size; }
 
-private:
     virtual const char* class_name() const override { return "GWindow"; }
+
+private:
     virtual bool is_window() const override final { return true; }
 
     Retained<GraphicsBitmap> create_backing_bitmap(const Size&);

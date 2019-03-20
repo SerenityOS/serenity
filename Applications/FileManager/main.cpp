@@ -8,6 +8,8 @@
 #include <LibGUI/GMenuBar.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GLabel.h>
+#include <LibGUI/GInputBox.h>
+#include <LibGUI/GMessageBox.h>
 #include <unistd.h>
 #include <signal.h>
 #include <stdio.h>
@@ -56,8 +58,21 @@ int main(int argc, char** argv)
         directory_table_view->open_parent_directory();
     });
 
-    auto mkdir_action = GAction::create("New directory...", GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/16x16/mkdir.rgb", { 16, 16 }), [] (const GAction&) {
-        dbgprintf("'New directory' action activated!\n");
+    auto mkdir_action = GAction::create("New directory...", GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/16x16/mkdir.rgb", { 16, 16 }), [&] (const GAction&) {
+        GInputBox input_box("Enter name:", "New directory", window);
+        if (input_box.exec() == GInputBox::ExecOK && !input_box.text_value().is_empty()) {
+            auto new_dir_path = String::format("%s/%s",
+                directory_table_view->path().characters(),
+                input_box.text_value().characters()
+            );
+            int rc = mkdir(new_dir_path.characters(), 0777);
+            if (rc < 0) {
+                GMessageBox message_box(String::format("mkdir() failed: %s", strerror(errno)), "Error", window);
+                message_box.exec();
+            } else {
+                directory_table_view->refresh();
+            }
+        }
     });
 
     auto copy_action = GAction::create("Copy", GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/copyfile16.rgb", { 16, 16 }), [] (const GAction&) {

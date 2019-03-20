@@ -42,3 +42,8 @@ void DirectoryTableView::open_parent_directory()
 {
     model().open(String::format("%s/..", model().path().characters()));
 }
+
+void DirectoryTableView::refresh()
+{
+    model().update();
+}

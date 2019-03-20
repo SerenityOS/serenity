@@ -39,7 +39,7 @@ void GMessageBox::build()
     button->set_preferred_size({ 100, 16 });
     button->set_caption("OK");
     button->on_click = [this] (auto&) {
-        dbgprintf("OK button clicked\n");
+        dbgprintf("GMessageBox: OK button clicked\n");
         done(0);
     };
 }
