@@ -399,6 +399,7 @@ void GEventLoop::process_unprocessed_messages()
 
 bool GEventLoop::drain_messages_from_server()
 {
+    bool is_first_pass = true;
     for (;;) {
         WSAPI_ServerMessage message;
         ssize_t nread = read(s_event_fd, &message, sizeof(WSAPI_ServerMessage));
@@ -407,10 +408,17 @@ bool GEventLoop::drain_messages_from_server()
             quit(1);
             return false;
         }
-        if (nread == 0)
+        if (nread == 0) {
+            if (is_first_pass) {
+                fprintf(stderr, "EOF on WindowServer fd\n");
+                quit(1);
+                return false;
+            }
             return true;
+        }
         assert(nread == sizeof(message));
         m_unprocessed_messages.append(move(message));
+        is_first_pass = false;
     }
 }
 
@@ -482,6 +490,7 @@ bool GEventLoop::post_message_to_server(const WSAPI_ClientMessage& message)
 
 bool GEventLoop::wait_for_specific_event(WSAPI_ServerMessage::Type type, WSAPI_ServerMessage& event)
 {
+
     for (;;) {
         fd_set rfds;
         FD_ZERO(&rfds);
