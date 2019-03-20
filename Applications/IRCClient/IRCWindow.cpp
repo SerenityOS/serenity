@@ -26,6 +26,10 @@ IRCWindow::IRCWindow(IRCClient& client, void* owner, Type type, const String& na
     m_table_view->set_font(Font::default_fixed_width_font());
     m_table_view->set_alternating_row_colors(false);
 
+    if (m_type == Server) {
+        m_table_view->set_column_hidden(IRCLogBufferModel::Column::Name, true);
+    }
+
     if (m_type == Channel) {
         auto* member_view = new GTableView(container);
         member_view->set_headers_visible(false);

@@ -246,7 +246,7 @@ void IRCClient::handle(const Message& msg, const String&)
 
 void IRCClient::add_server_message(const String& text)
 {
-    m_log->add_message(0, "Server", text);
+    m_log->add_message(0, "", text);
     m_server_subwindow->did_add_message();
 }
 
@@ -354,7 +354,7 @@ void IRCClient::handle_ping(const Message& msg)
 {
     if (msg.arguments.size() < 0)
         return;
-    m_log->add_message(0, "Server", "Ping? Pong!");
+    m_log->add_message(0, "", "Ping? Pong!");
     send_pong(msg.arguments[0]);
 }
 
