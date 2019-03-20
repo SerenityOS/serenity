@@ -34,7 +34,7 @@ private:
     GModelIndex m_index;
 };
 
-class GTableModel {
+class GTableModel : public Retainable<GTableModel> {
 public:
     struct ColumnMetadata {
         int preferred_width { 0 };

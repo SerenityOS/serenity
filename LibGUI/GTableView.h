@@ -16,7 +16,7 @@ public:
     int header_height() const { return m_headers_visible ? 16 : 0; }
     int item_height() const { return 16; }
 
-    void set_model(OwnPtr<GTableModel>&&);
+    void set_model(RetainPtr<GTableModel>&&);
     GTableModel* model() { return m_model.ptr(); }
     const GTableModel* model() const { return m_model.ptr(); }
 
@@ -49,7 +49,7 @@ private:
     int column_width(int) const;
     void update_content_size();
 
-    OwnPtr<GTableModel> m_model;
+    RetainPtr<GTableModel> m_model;
     int m_horizontal_padding { 5 };
     bool m_headers_visible { true };
     bool m_alternating_row_colors { true };

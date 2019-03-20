@@ -21,7 +21,7 @@ public:
         __Count
     };
 
-    ProcessTableModel();
+    static Retained<ProcessTableModel> create() { return adopt(*new ProcessTableModel); }
     virtual ~ProcessTableModel() override;
 
     virtual int row_count() const override;
@@ -32,6 +32,8 @@ public:
     virtual void update() override;
 
 private:
+    ProcessTableModel();
+
     struct ProcessState {
         pid_t pid;
         unsigned nsched;

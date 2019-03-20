@@ -8,8 +8,8 @@ IRCChannel::IRCChannel(IRCClient& client, const String& name)
     : m_client(client)
     , m_name(name)
     , m_log(IRCLogBuffer::create())
+    , m_member_model(IRCChannelMemberListModel::create(*this))
 {
-    m_member_model = new IRCChannelMemberListModel(*this);
     m_window = m_client.aid_create_window(this, IRCWindow::Channel, m_name);
     m_window->set_log_buffer(*m_log);
 }

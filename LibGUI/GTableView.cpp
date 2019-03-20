@@ -13,7 +13,7 @@ GTableView::~GTableView()
 {
 }
 
-void GTableView::set_model(OwnPtr<GTableModel>&& model)
+void GTableView::set_model(RetainPtr<GTableModel>&& model)
 {
     if (model.ptr() == m_model.ptr())
         return;

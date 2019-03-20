@@ -4,7 +4,7 @@
 
 class GSortingProxyTableModel final : public GTableModel {
 public:
-    explicit GSortingProxyTableModel(OwnPtr<GTableModel>&&);
+    static Retained<GSortingProxyTableModel> create(Retained<GTableModel>&& model) { return adopt(*new GSortingProxyTableModel(move(model))); }
     virtual ~GSortingProxyTableModel() override;
 
     virtual int row_count() const override;
@@ -23,12 +23,14 @@ public:
     GModelIndex map_to_target(const GModelIndex&) const;
 
 private:
+    explicit GSortingProxyTableModel(Retained<GTableModel>&&);
+
     GTableModel& target() { return *m_target; }
     const GTableModel& target() const { return *m_target; }
 
     void resort();
 
-    OwnPtr<GTableModel> m_target;
+    Retained<GTableModel> m_target;
     Vector<int> m_row_mappings;
     int m_key_column { -1 };
     GSortOrder m_sort_order { GSortOrder::Ascending };

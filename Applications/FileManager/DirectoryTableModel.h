@@ -6,7 +6,7 @@
 
 class DirectoryTableModel final : public GTableModel {
 public:
-    DirectoryTableModel();
+    static Retained<DirectoryTableModel> create() { return adopt(*new DirectoryTableModel); }
     virtual ~DirectoryTableModel() override;
 
     enum Column {
@@ -33,6 +33,8 @@ public:
     size_t bytes_in_files() const { return m_bytes_in_files; }
 
 private:
+    DirectoryTableModel();
+
     String name_for_uid(uid_t) const;
     String name_for_gid(gid_t) const;
 

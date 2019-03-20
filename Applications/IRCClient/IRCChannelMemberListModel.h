@@ -8,7 +8,7 @@ class IRCChannel;
 class IRCChannelMemberListModel final : public GTableModel {
 public:
     enum Column { Name };
-    explicit IRCChannelMemberListModel(IRCChannel&);
+    static Retained<IRCChannelMemberListModel> create(IRCChannel& channel) { return adopt(*new IRCChannelMemberListModel(channel)); }
     virtual ~IRCChannelMemberListModel() override;
 
     virtual int row_count() const override;
@@ -22,5 +22,7 @@ public:
     Function<void(const String&)> on_activation;
 
 private:
+    explicit IRCChannelMemberListModel(IRCChannel&);
+
     IRCChannel& m_channel;
 };

@@ -9,8 +9,8 @@ Retained<IRCLogBuffer> IRCLogBuffer::create()
 }
 
 IRCLogBuffer::IRCLogBuffer()
+    : m_model(IRCLogBufferModel::create(*this))
 {
-    m_model = new IRCLogBufferModel(*this);
 }
 
 IRCLogBuffer::~IRCLogBuffer()

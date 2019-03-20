@@ -27,11 +27,11 @@ public:
     void add_message(const String& text, Color = Color::Black);
     void dump() const;
 
-    const IRCLogBufferModel* model() const { return m_model; }
-    IRCLogBufferModel* model() { return m_model; }
+    const IRCLogBufferModel* model() const { return m_model.ptr(); }
+    IRCLogBufferModel* model() { return m_model.ptr(); }
 
 private:
     IRCLogBuffer();
-    IRCLogBufferModel* m_model { nullptr };
+    Retained<IRCLogBufferModel> m_model;
     CircularQueue<Message, 1000> m_messages;
 };
