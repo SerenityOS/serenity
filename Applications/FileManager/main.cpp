@@ -3,7 +3,7 @@
 #include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GStatusBar.h>
-#include <LibGUI/GTextBox.h>
+#include <LibGUI/GTextEditor.h>
 #include <LibGUI/GToolBar.h>
 #include <LibGUI/GMenuBar.h>
 #include <LibGUI/GAction.h>
@@ -36,20 +36,21 @@ int main(int argc, char** argv)
 
     auto* main_toolbar = new GToolBar(widget);
     auto* location_toolbar = new GToolBar(widget);
-    auto* location_textbox = new GTextBox(location_toolbar);
+    location_toolbar->set_preferred_size({ 0, 21 });
+    auto* location_textbox = new GTextEditor(GTextEditor::SingleLine, location_toolbar);
 
     auto* directory_table_view = new DirectoryTableView(widget);
     auto* statusbar = new GStatusBar(widget);
 
-    location_textbox->on_return_pressed = [directory_table_view] (GTextBox& textbox) {
-        directory_table_view->open(textbox.text());
+    location_textbox->on_return_pressed = [directory_table_view] (auto& editor) {
+        directory_table_view->open(editor.text());
     };
 
     auto open_parent_directory_action = GAction::create("Open parent directory", { Mod_Alt, Key_Up }, GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/parentdirectory16.rgb", { 16, 16 }), [directory_table_view] (const GAction&) {
         directory_table_view->open_parent_directory();
     });
 
-    auto mkdir_action = GAction::create("New directory...", GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/mkdir16.rgb", { 16, 16 }), [] (const GAction&) {
+    auto mkdir_action = GAction::create("New directory...", GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/16x16/mkdir.rgb", { 16, 16 }), [] (const GAction&) {
         dbgprintf("'New directory' action activated!\n");
     });
 
@@ -57,7 +58,7 @@ int main(int argc, char** argv)
         dbgprintf("'Copy' action activated!\n");
     });
 
-    auto delete_action = GAction::create("Delete", GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/trash16.rgb", { 16, 16 }), [] (const GAction&) {
+    auto delete_action = GAction::create("Delete", GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/16x16/delete.rgb", { 16, 16 }), [] (const GAction&) {
         dbgprintf("'Delete' action activated!\n");
     });
 
