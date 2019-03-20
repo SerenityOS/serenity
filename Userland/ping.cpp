@@ -1,9 +1,11 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netinet/ip_icmp.h>
+#include <netinet/in.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <netdb.h>
 #include <time.h>
 
 uint16_t internet_checksum(const void* ptr, size_t count)
@@ -33,6 +35,11 @@ inline void timersub(struct timeval* a, struct timeval* b, struct timeval* resul
 
 int main(int argc, char** argv)
 {
+    if (argc != 2) {
+        printf("usage: ping <host>\n");
+        return 0;
+    }
+
     int fd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
     if (fd < 0) {
         perror("socket");
@@ -46,9 +53,11 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    const char* addr_str = "127.0.0.1";
-    if (argc > 1)
-        addr_str = argv[1];
+    auto* hostent = gethostbyname(argv[1]);
+    if (!hostent) {
+        printf("Lookup failed for '%s'\n", argv[1]);
+        return 1;
+    }
 
     pid_t pid = getpid();
 
@@ -57,7 +66,7 @@ int main(int argc, char** argv)
     peer_address.sin_family = AF_INET;
     peer_address.sin_port = 0;
 
-    rc = inet_pton(AF_INET, addr_str, &peer_address.sin_addr);
+    peer_address.sin_addr.s_addr = *(const in_addr_t*)hostent->h_addr_list[0];
 
     struct PingPacket {
         struct icmphdr header;
