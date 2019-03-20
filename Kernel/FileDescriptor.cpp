@@ -278,8 +278,9 @@ ssize_t FileDescriptor::get_dir_entries(byte* buffer, ssize_t size)
     if (!metadata.is_directory())
         return -ENOTDIR;
 
-    // FIXME: Compute the actual size needed.
-    auto temp_buffer = ByteBuffer::create_uninitialized(2048);
+    int size_to_allocate = max(PAGE_SIZE, metadata.size);
+
+    auto temp_buffer = ByteBuffer::create_uninitialized(size_to_allocate);
     BufferStream stream(temp_buffer);
     VFS::the().traverse_directory_inode(*m_inode, [&stream] (auto& entry) {
         stream << (dword)entry.inode.index();
@@ -288,11 +289,12 @@ ssize_t FileDescriptor::get_dir_entries(byte* buffer, ssize_t size)
         stream << entry.name;
         return true;
     });
+    stream.snip();
 
-    if (size < stream.offset())
+    if (size < temp_buffer.size())
         return -1;
 
-    memcpy(buffer, temp_buffer.pointer(), stream.offset());
+    memcpy(buffer, temp_buffer.pointer(), temp_buffer.size());
     return stream.offset();
 }
 

@@ -5,6 +5,9 @@
 #include <string.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <AK/StdLibExtras.h>
 #include <Kernel/Syscall.h>
 
 extern "C" {
@@ -54,9 +57,13 @@ dirent* readdir(DIR* dirp)
         return nullptr;
 
     if (!dirp->buffer) {
-        // FIXME: Figure out how much to actually allocate.
-        dirp->buffer = (char*)malloc(4096);
-        ssize_t nread = syscall(SC_get_dir_entries, dirp->fd, dirp->buffer, 4096);
+        struct stat st;
+        int rc = fstat(dirp->fd, &st);
+        if (rc < 0)
+            return nullptr;
+        size_t size_to_allocate = max(st.st_size, 4096);
+        dirp->buffer = (char*)malloc(size_to_allocate);
+        ssize_t nread = syscall(SC_get_dir_entries, dirp->fd, dirp->buffer, size_to_allocate);
         dirp->buffer_size = nread;
         dirp->nextptr = dirp->buffer;
     }
