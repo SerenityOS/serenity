@@ -36,6 +36,7 @@ OBJS = \
        ping.o \
        uc.o \
        tc.o \
+       host.o \
        rm.o
 
 APPS = \
@@ -77,6 +78,7 @@ APPS = \
        ping \
        uc \
        tc \
+       host \
        rm
 
 ARCH_FLAGS =
@@ -211,6 +213,9 @@ uc: uc.o
 	$(LD) -o $@ $(LDFLAGS) $< -lc
 
 tc: tc.o
+	$(LD) -o $@ $(LDFLAGS) $< -lc
+
+host: host.o
 	$(LD) -o $@ $(LDFLAGS) $< -lc
 
 .cpp.o:

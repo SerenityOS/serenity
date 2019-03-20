@@ -85,9 +85,15 @@ VFS* vfs;
 
     int error;
 
+    auto* dns_lookup_server_process = Process::create_user_process("/bin/DNSLookupServer", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, { }, tty0);
+    if (error != 0) {
+        dbgprintf("error spawning DNSLookupServer: %d\n", error);
+        hang();
+    }
+
     auto* window_server_process = Process::create_user_process("/bin/WindowServer", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, { }, tty0);
     if (error != 0) {
-        dbgprintf("error: %d\n", error);
+        dbgprintf("error spawning WindowServer: %d\n", error);
         hang();
     }
     window_server_process->set_priority(Process::HighPriority);
