@@ -31,7 +31,7 @@ int main(int argc, char**argv)
     (void)argc;
     (void)argv;
 
-    unlink("/tmp/.DNSLookupServer-socket");
+    unlink("/tmp/.LookupServer-socket");
 
     HashMap<String, IPv4Address> dns_cache;
 
@@ -43,7 +43,7 @@ int main(int argc, char**argv)
 
     sockaddr_un address;
     address.sun_family = AF_LOCAL;
-    strcpy(address.sun_path, "/tmp/.DNSLookupServer-socket");
+    strcpy(address.sun_path, "/tmp/.LookupServer-socket");
 
     int rc = bind(server_fd, (const sockaddr*)&address, sizeof(address));
     if (rc < 0) {
@@ -93,7 +93,7 @@ int main(int argc, char**argv)
         client_buffer[nrecv] = '\0';
 
         auto hostname = String(client_buffer, nrecv, Chomp);
-        dbgprintf("DNSLookupServer: Got request for '%s'\n", hostname.characters());
+        dbgprintf("LookupServer: Got request for '%s'\n", hostname.characters());
 
         Vector<IPv4Address> addresses;
 
@@ -107,7 +107,7 @@ int main(int argc, char**argv)
                     break;
             } while (--retries);
             if (did_timeout) {
-                fprintf(stderr, "DNSLookupServer: Out of retries :(\n");
+                fprintf(stderr, "LookupServer: Out of retries :(\n");
                 close(client_fd);
                 continue;
             }
@@ -213,7 +213,7 @@ Vector<IPv4Address> lookup(const String& hostname, bool& did_timeout)
     response_buffer[nrecv] = '\0';
 
     if (nrecv < (int)sizeof(DNSPacket)) {
-        dbgprintf("DNSLookupServer: Response not big enough (%d) to be a DNS packet :(\n", nrecv);
+        dbgprintf("LookupServer: Response not big enough (%d) to be a DNS packet :(\n", nrecv);
         return { };
     }
 
@@ -225,15 +225,15 @@ Vector<IPv4Address> lookup(const String& hostname, bool& did_timeout)
     //printf("Additional count: %u\n", response_header.additional_count());
 
     if (response_header.id() != request_header.id()) {
-        dbgprintf("DNSLookupServer: ID mismatch (%u vs %u) :(\n", response_header.id(), request_header.id());
+        dbgprintf("LookupServer: ID mismatch (%u vs %u) :(\n", response_header.id(), request_header.id());
         return { };
     }
     if (response_header.question_count() != 1) {
-        dbgprintf("DNSLookupServer: Question count (%u vs %u) :(\n", response_header.question_count(), request_header.question_count());
+        dbgprintf("LookupServer: Question count (%u vs %u) :(\n", response_header.question_count(), request_header.question_count());
         return { };
     }
     if (response_header.answer_count() < 1) {
-        dbgprintf("DNSLookupServer: Not enough answers (%u) :(\n", response_header.answer_count());
+        dbgprintf("LookupServer: Not enough answers (%u) :(\n", response_header.answer_count());
         return { };
     }
 
@@ -246,7 +246,7 @@ Vector<IPv4Address> lookup(const String& hostname, bool& did_timeout)
     for (word i = 0; i < response_header.answer_count(); ++i) {
         auto& record = *(const DNSRecord*)(&((const byte*)response_header.payload())[offset]);
         auto ipv4_address = IPv4Address((const byte*)record.data());
-        dbgprintf("DNSLookupServer:     Answer #%u: (question: %s), ttl=%u, length=%u, data=%s\n",
+        dbgprintf("LookupServer:     Answer #%u: (question: %s), ttl=%u, length=%u, data=%s\n",
             i,
             question.characters(),
             record.ttl(),

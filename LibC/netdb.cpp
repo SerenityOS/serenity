@@ -44,7 +44,7 @@ hostent* gethostbyname(const char* name)
 
     sockaddr_un address;
     address.sun_family = AF_LOCAL;
-    strcpy(address.sun_path, "/tmp/.DNSLookupServer-socket");
+    strcpy(address.sun_path, "/tmp/.LookupServer-socket");
 
     int retries = 3;
     int rc = 0;
