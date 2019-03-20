@@ -1,11 +1,11 @@
 SHAREDGRAPHICS_OBJS = \
-    ../SharedGraphics/Painter.o \
-    ../SharedGraphics/Font.o \
-    ../SharedGraphics/Rect.o \
-    ../SharedGraphics/GraphicsBitmap.o \
-    ../SharedGraphics/CharacterBitmap.o \
-    ../SharedGraphics/DisjointRectSet.o \
-    ../SharedGraphics/Color.o
+    ../../SharedGraphics/Painter.o \
+    ../../SharedGraphics/Font.o \
+    ../../SharedGraphics/Rect.o \
+    ../../SharedGraphics/GraphicsBitmap.o \
+    ../../SharedGraphics/CharacterBitmap.o \
+    ../../SharedGraphics/DisjointRectSet.o \
+    ../../SharedGraphics/Color.o
 
 WINDOWSERVER_OBJS = \
     WSMessageReceiver.o \
@@ -28,8 +28,8 @@ STANDARD_FLAGS = -std=c++17
 WARNING_FLAGS = -Wextra -Wall -Wundef -Wcast-qual -Wwrite-strings -Wimplicit-fallthrough
 FLAVOR_FLAGS = -fno-exceptions -fno-rtti
 OPTIMIZATION_FLAGS = -Os
-INCLUDE_FLAGS = -I.. -I. -I../LibC
-LDFLAGS = -L../LibC
+INCLUDE_FLAGS = -I.. -I../.. -I. -I../../LibC
+LDFLAGS = -L../../LibC
 
 DEFINES = -DSERENITY -DSANITIZE_PTRS -DUSERLAND
 

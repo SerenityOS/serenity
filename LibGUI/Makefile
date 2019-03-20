@@ -56,7 +56,7 @@ STANDARD_FLAGS = -std=c++17
 WARNING_FLAGS = -Wextra -Wall -Wundef -Wcast-qual -Wwrite-strings -Wimplicit-fallthrough
 FLAVOR_FLAGS = -fno-exceptions -fno-rtti
 OPTIMIZATION_FLAGS = -Os
-INCLUDE_FLAGS = -I../LibC -I.. -I.
+INCLUDE_FLAGS = -I../LibC -I../Servers -I.. -I.
 
 DEFINES = -DSERENITY -DUSERLAND -DSANITIZE_PTRS -DLIBGUI
 

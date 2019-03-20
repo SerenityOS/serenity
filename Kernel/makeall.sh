@@ -14,8 +14,8 @@ $make_cmd -C ../LibM clean && \
 $make_cmd -C ../LibM clean && \
 $make_cmd -C ../Servers/LookupServer clean && \
 $make_cmd -C ../Servers/LookupServer && \
-$make_cmd -C ../WindowServer clean && \
-$make_cmd -C ../WindowServer && \
+$make_cmd -C ../Servers/WindowServer clean && \
+$make_cmd -C ../Servers/WindowServer && \
 $make_cmd -C ../LibGUI clean && \
 $make_cmd -C ../LibGUI && \
 $make_cmd -C ../Userland clean && \
