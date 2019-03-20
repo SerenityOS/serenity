@@ -26,6 +26,9 @@ GTextEditor::~GTextEditor()
 
 void GTextEditor::set_text(const String& text)
 {
+    if (is_single_line() && text.length() == m_lines[0]->length() && !memcmp(text.characters(), m_lines[0]->characters(), text.length()))
+        return;
+
     m_lines.clear();
     int start_of_current_line = 0;
 
@@ -44,7 +47,10 @@ void GTextEditor::set_text(const String& text)
     }
     add_line(i);
     update_content_size();
-    set_cursor(0, 0);
+    if (is_single_line())
+        set_cursor(0, m_lines[0]->length());
+    else
+        set_cursor(0, 0);
     update();
 }
 
