@@ -424,5 +424,41 @@ int remove(const char* pathname)
     return rmdir(pathname);
 }
 
+int scanf(const char* fmt, ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
+    int count = vfscanf(stdin, fmt, ap);
+    va_end(ap);
+    return count;
+}
+
+int fscanf(FILE* stream, const char* fmt, ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
+    int count = vfscanf(stream, fmt, ap);
+    va_end(ap);
+    return count;
+}
+
+int sscanf(const char* buffer, const char* fmt, ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
+    int count = vsscanf(buffer, fmt, ap);
+    va_end(ap);
+    return count;
+}
+
+int vfscanf(FILE* stream, const char* fmt, va_list ap)
+{
+    char buffer[BUFSIZ];
+    if (!fgets(buffer, sizeof(buffer) - 1, stream))
+        return -1;
+    return vsscanf(buffer, fmt, ap);
+}
+
+
 }
 

@@ -33,8 +33,6 @@
 #include <string.h>
 #include <ctype.h>
 
-#define MAXLN 512
-
 static const char* determine_base(const char* p, int& base)
 {
     if (p[0] == '0') {
@@ -119,54 +117,13 @@ int atob(unsigned int* vp, const char* p, int base)
     return 0;
 }
 
-static int vfscanf(FILE*, const char*, va_list);
-static int vsscanf(const char*, const char*, va_list);
-
 #define ISSPACE " \t\n\r\f\v"
 
-int scanf(const char* fmt, ...)
-{
-    int count;
-    va_list ap;
-    
-    va_start(ap, fmt);
-    count = vfscanf(stdin, fmt, ap);
-    va_end(ap);
-    return count;
-}
-
-int fscanf(FILE *fp, const char* fmt, ...)
-{
-    va_list ap;
-    va_start(ap, fmt);
-    int count = vfscanf(fp, fmt, ap);
-    va_end(ap);
-    return count;
-}
-
-int sscanf(const char *buf, const char* fmt, ...)
-{
-    va_list ap;
-    va_start(ap, fmt);
-    int count = vsscanf(buf, fmt, ap);
-    va_end(ap);
-    return count;
-}
-
-static int vfscanf(FILE *fp, const char* fmt, va_list ap)
-{
-    char buf[MAXLN + 1];
-    if (!fgets(buf, MAXLN, fp))
-        return -1;
-    int count = vsscanf(buf, fmt, ap);
-    return count;
-}
-
-static int vsscanf(const char *buf, const char *s, va_list ap)
+int vsscanf(const char *buf, const char *s, va_list ap)
 {
     int base = 10;
     char *t;
-    char tmp[MAXLN];
+    char tmp[BUFSIZ];
     bool noassign = false;
     int count = 0;
     int width = 0;
@@ -220,16 +177,25 @@ static int vsscanf(const char *buf, const char *s, va_list ap)
                 else if (*s == 'b')
                     base = 2;
                 if (!width) {
-                    if (isspace(*(s + 1)) || *(s + 1) == 0)
+                    if (isspace(*(s + 1)) || *(s + 1) == 0) {
                         width = strcspn(buf, ISSPACE);
-                    else
-                        width = strchr(buf, *(s + 1)) - buf;
+                    } else {
+                        auto* p = strchr(buf, *(s+1));
+                        if (p)
+                            width = p - buf;
+                        else {
+                            noassign = true;
+                            width = 0;
+                        }
+                    }
                 }
                 strncpy(tmp, buf, width);
                 tmp[width] = '\0';
                 buf += width;
-                if (!noassign)
-                    atob(va_arg(ap, uint32_t*), tmp, base);
+                if (!noassign) {
+                    if (!atob(va_arg(ap, uint32_t*), tmp, base))
+                        noassign = true;
+                }
             }
             if (!noassign)
                 ++count;
