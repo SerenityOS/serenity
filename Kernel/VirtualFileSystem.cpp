@@ -191,10 +191,11 @@ KResultOr<Retained<FileDescriptor>> VFS::open(const String& path, int options, m
             kprintf("VFS::open: no such device %u,%u\n", metadata.major_device, metadata.minor_device);
             return KResult(-ENODEV);
         }
-        auto descriptor = (*it).value->open(options);
-        ASSERT(!descriptor.is_error());
-        descriptor.value()->set_original_inode(Badge<VFS>(), *inode_or_error.value());
-        return descriptor;
+        auto descriptor_or_error = (*it).value->open(options);
+        if (descriptor_or_error.is_error())
+            return descriptor_or_error.error();
+        descriptor_or_error.value()->set_original_inode(Badge<VFS>(), *inode_or_error.value());
+        return descriptor_or_error;
     }
     return FileDescriptor::create(*inode_or_error.value());
 }
