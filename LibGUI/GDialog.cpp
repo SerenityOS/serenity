@@ -25,14 +25,15 @@ int GDialog::exec()
     show();
     auto result = m_event_loop->exec();
     m_event_loop = nullptr;
-    dbgprintf("event loop returned with result %d\n", result);
+    dbgprintf("%s: event loop returned with result %d\n", class_name(), result);
     return result;
 }
 
 void GDialog::done(int result)
 {
-    ASSERT(m_event_loop);
+    if (!m_event_loop)
+        return;
     m_result = result;
-    dbgprintf("quit event loop with result %d\n", result);
+    dbgprintf("%s: quit event loop with result %d\n", class_name(), result);
     m_event_loop->quit(result);
 }

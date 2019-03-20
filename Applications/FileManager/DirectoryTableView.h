@@ -13,6 +13,8 @@ public:
     String path() const { return model().path(); }
     void open_parent_directory();
 
+    void refresh();
+
     Function<void(const String&)> on_path_change;
     Function<void(String)> on_status_message;
 
