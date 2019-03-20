@@ -74,7 +74,6 @@ private:
     timeval m_send_deadline { 0, 0 };
 
     Vector<RetainPtr<Socket>> m_pending;
-    Vector<RetainPtr<Socket>> m_clients;
 };
 
 class SocketHandle {

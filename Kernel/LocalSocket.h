@@ -27,7 +27,6 @@ private:
     virtual bool is_local() const override { return true; }
 
     RetainPtr<FileDescriptor> m_file;
-    RetainPtr<LocalSocket> m_peer;
 
     bool m_bound { false };
     int m_accepted_fds_open { 0 };
