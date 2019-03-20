@@ -22,6 +22,8 @@ public:
     TextAlignment text_alignment() const { return m_text_alignment; }
     void set_text_alignment(TextAlignment text_alignment) { m_text_alignment = text_alignment; }
 
+    void size_to_fit();
+
     virtual const char* class_name() const override { return "GLabel"; }
 
 private:

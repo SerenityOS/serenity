@@ -43,3 +43,9 @@ void GLabel::paint_event(GPaintEvent& event)
     if (!text().is_empty())
         painter.draw_text({ 0, 0, width(), height() }, text(), m_text_alignment, foreground_color());
 }
+
+void GLabel::size_to_fit()
+{
+    set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
+    set_preferred_size({ font().width(m_text), 0 });
+}
