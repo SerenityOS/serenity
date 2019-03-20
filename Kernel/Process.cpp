@@ -2502,11 +2502,15 @@ int Process::sys$connect(int sockfd, const sockaddr* address, socklen_t address_
         return -EBADF;
     if (!descriptor->is_socket())
         return -ENOTSOCK;
+    if (descriptor->socket_role() == SocketRole::Connected)
+        return -EISCONN;
     auto& socket = *descriptor->socket();
     descriptor->set_socket_role(SocketRole::Connecting);
     auto result = socket.connect(address, address_size);
-    if (result.is_error())
+    if (result.is_error()) {
+        descriptor->set_socket_role(SocketRole::None);
         return result;
+    }
     descriptor->set_socket_role(SocketRole::Connected);
     return 0;
 }
