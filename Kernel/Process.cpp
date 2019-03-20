@@ -2503,6 +2503,7 @@ int Process::sys$connect(int sockfd, const sockaddr* address, socklen_t address_
     if (!descriptor->is_socket())
         return -ENOTSOCK;
     auto& socket = *descriptor->socket();
+    descriptor->set_socket_role(SocketRole::Connecting);
     auto result = socket.connect(address, address_size);
     if (result.is_error())
         return result;
