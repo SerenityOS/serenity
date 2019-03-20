@@ -1939,13 +1939,6 @@ int Process::sys$ioctl(int fd, unsigned request, unsigned arg)
     auto* descriptor = file_descriptor(fd);
     if (!descriptor)
         return -EBADF;
-    if (descriptor->is_socket() && request == 413) {
-        auto* pid = (pid_t*)arg;
-        if (!validate_write_typed(pid))
-            return -EFAULT;
-        *pid = descriptor->socket()->origin_pid();
-        return 0;
-    }
     if (!descriptor->is_device())
         return -ENOTTY;
     return descriptor->device()->ioctl(*this, request, arg);
