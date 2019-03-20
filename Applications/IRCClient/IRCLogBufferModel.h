@@ -13,7 +13,7 @@ public:
         __Count,
     };
 
-    explicit IRCLogBufferModel(Retained<IRCLogBuffer>&&);
+    static Retained<IRCLogBufferModel> create(Retained<IRCLogBuffer>&& log_buffer) { return adopt(*new IRCLogBufferModel(move(log_buffer))); }
     virtual ~IRCLogBufferModel() override;
 
     virtual int row_count() const override;
@@ -25,5 +25,7 @@ public:
     virtual void activate(const GModelIndex&) override;
 
 private:
+    explicit IRCLogBufferModel(Retained<IRCLogBuffer>&&);
+
     Retained<IRCLogBuffer> m_log_buffer;
 };

@@ -32,7 +32,7 @@ IRCWindow::IRCWindow(IRCClient& client, void* owner, Type type, const String& na
         member_view->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
         member_view->set_preferred_size({ 100, 0 });
         member_view->set_alternating_row_colors(false);
-        member_view->set_model(OwnPtr<IRCChannelMemberListModel>(channel().member_model()));
+        member_view->set_model(channel().member_model());
     }
 
     m_text_editor = new GTextEditor(GTextEditor::SingleLine, this);
@@ -59,7 +59,7 @@ IRCWindow::~IRCWindow()
 void IRCWindow::set_log_buffer(const IRCLogBuffer& log_buffer)
 {
     m_log_buffer = &log_buffer;
-    m_table_view->set_model(OwnPtr<IRCLogBufferModel>((IRCLogBufferModel*)log_buffer.model()));
+    m_table_view->set_model(log_buffer.model());
 }
 
 bool IRCWindow::is_active() const

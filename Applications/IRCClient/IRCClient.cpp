@@ -31,10 +31,10 @@ IRCClient::IRCClient(const String& address, int port)
     : m_hostname(address)
     , m_port(port)
     , m_nickname("anon")
+    , m_client_window_list_model(IRCWindowListModel::create(*this))
     , m_log(IRCLogBuffer::create())
 {
     m_socket = new GTCPSocket(this);
-    m_client_window_list_model = new IRCWindowListModel(*this);
 }
 
 IRCClient::~IRCClient()

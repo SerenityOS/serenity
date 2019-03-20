@@ -24,5 +24,5 @@ private:
 
     void set_status_message(const String&);
 
-    DirectoryTableModel* m_model { nullptr };
+    Retained<DirectoryTableModel> m_model;
 };

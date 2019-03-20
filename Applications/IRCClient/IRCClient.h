@@ -46,8 +46,8 @@ public:
     void register_subwindow(IRCWindow&);
     void unregister_subwindow(IRCWindow&);
 
-    IRCWindowListModel* client_window_list_model() { return m_client_window_list_model; }
-    const IRCWindowListModel* client_window_list_model() const { return m_client_window_list_model; }
+    IRCWindowListModel* client_window_list_model() { return m_client_window_list_model.ptr(); }
+    const IRCWindowListModel* client_window_list_model() const { return m_client_window_list_model.ptr(); }
 
     int window_count() const { return m_windows.size(); }
     const IRCWindow& window_at(int index) const { return *m_windows.at(index); }
@@ -118,7 +118,6 @@ private:
 
     IRCWindow* m_server_subwindow { nullptr };
 
-    IRCWindowListModel* m_client_window_list_model { nullptr };
-
+    Retained<IRCWindowListModel> m_client_window_list_model;
     Retained<IRCLogBuffer> m_log;
 };

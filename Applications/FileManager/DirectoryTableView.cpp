@@ -3,10 +3,9 @@
 
 DirectoryTableView::DirectoryTableView(GWidget* parent)
     : GTableView(parent)
+    , m_model(DirectoryTableModel::create())
 {
-    auto directory_model = make<DirectoryTableModel>();
-    m_model = directory_model.ptr();
-    set_model(make<GSortingProxyTableModel>(move(directory_model)));
+    set_model(GSortingProxyTableModel::create(m_model.copy_ref()));
     GTableView::model()->set_key_column_and_sort_order(DirectoryTableModel::Column::Name, GSortOrder::Ascending);
 }
 

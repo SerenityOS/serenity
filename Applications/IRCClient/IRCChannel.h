@@ -34,8 +34,8 @@ public:
     const IRCLogBuffer& log() const { return *m_log; }
     IRCLogBuffer& log() { return *m_log; }
 
-    IRCChannelMemberListModel* member_model() { return m_member_model; }
-    const IRCChannelMemberListModel* member_model() const { return m_member_model; }
+    IRCChannelMemberListModel* member_model() { return m_member_model.ptr(); }
+    const IRCChannelMemberListModel* member_model() const { return m_member_model.ptr(); }
 
     int member_count() const { return m_members.size(); }
     String member_at(int i) { return m_members[i].name; }
@@ -63,6 +63,6 @@ private:
     bool m_open { false };
 
     Retained<IRCLogBuffer> m_log;
-    IRCChannelMemberListModel* m_member_model { nullptr };
+    Retained<IRCChannelMemberListModel> m_member_model;
     IRCWindow* m_window { nullptr };
 };

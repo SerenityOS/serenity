@@ -125,7 +125,7 @@ void IRCAppWindow::setup_widgets()
     m_window_list = new GTableView(horizontal_container);
     m_window_list->set_headers_visible(false);
     m_window_list->set_alternating_row_colors(false);
-    m_window_list->set_model(OwnPtr<IRCWindowListModel>(m_client.client_window_list_model()));
+    m_window_list->set_model(m_client.client_window_list_model());
     m_window_list->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
     m_window_list->set_preferred_size({ 100, 0 });
     m_client.client_window_list_model()->on_activation = [this] (IRCWindow& window) {

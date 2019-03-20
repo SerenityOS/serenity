@@ -6,7 +6,7 @@
 ProcessTableView::ProcessTableView(GWidget* parent)
     : GTableView(parent)
 {
-    set_model(make<GSortingProxyTableModel>(make<ProcessTableModel>()));
+    set_model(GSortingProxyTableModel::create(ProcessTableModel::create()));
     model()->set_key_column_and_sort_order(ProcessTableModel::Column::CPU, GSortOrder::Descending);
     start_timer(1000);
     model()->update();

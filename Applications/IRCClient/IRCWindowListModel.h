@@ -12,7 +12,7 @@ public:
         Name,
     };
 
-    explicit IRCWindowListModel(IRCClient&);
+    static Retained<IRCWindowListModel> create(IRCClient& client) { return adopt(*new IRCWindowListModel(client)); }
     virtual ~IRCWindowListModel() override;
 
     virtual int row_count() const override;
@@ -26,5 +26,7 @@ public:
     Function<void(IRCWindow&)> on_activation;
 
 private:
+    explicit IRCWindowListModel(IRCClient&);
+
     IRCClient& m_client;
 };
