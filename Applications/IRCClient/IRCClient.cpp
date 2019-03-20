@@ -237,6 +237,9 @@ void IRCClient::handle(const Message& msg, const String&)
     if (msg.command == "PRIVMSG")
         return handle_privmsg(msg);
 
+    if (msg.command == "NICK")
+        return handle_nick(msg);
+
     if (msg.arguments.size() >= 2)
         add_server_message(String::format("[%s] %s", msg.command.characters(), msg.arguments[1].characters()));
 }
@@ -379,6 +382,25 @@ void IRCClient::handle_part(const Message& msg)
     ensure_channel(channel_name).handle_part(nick, msg.prefix);
 }
 
+void IRCClient::handle_nick(const Message& msg)
+{
+    auto prefix_parts = msg.prefix.split('!');
+    if (prefix_parts.size() < 1)
+        return;
+    auto old_nick = prefix_parts[0];
+    if (msg.arguments.size() != 1)
+        return;
+    auto& new_nick = msg.arguments[0];
+    if (old_nick == m_nickname)
+        m_nickname = new_nick;
+    add_server_message(String::format("~ %s changed nickname to %s", old_nick.characters(), new_nick.characters()));
+    if (on_nickname_changed)
+        on_nickname_changed(new_nick);
+    for (auto& it : m_channels) {
+        it.value->notify_nick_changed(old_nick, new_nick);
+    }
+}
+
 void IRCClient::handle_topic(const Message& msg)
 {
     if (msg.arguments.size() != 2)
@@ -500,7 +522,7 @@ void IRCClient::handle_rpl_topicwhotime(const Message& msg)
             tm->tm_sec
         );
     }
-    ensure_channel(channel_name).add_message(String::format("*** (set by %s at %s)", nick.characters(), setat.characters()), Color::DarkBlue);
+    ensure_channel(channel_name).add_message(String::format("*** (set by %s at %s)", nick.characters(), setat.characters()), Color::Blue);
 }
 
 void IRCClient::register_subwindow(IRCWindow& subwindow)
@@ -533,6 +555,11 @@ void IRCClient::handle_user_command(const String& input)
     if (parts.is_empty())
         return;
     auto command = parts[0].to_uppercase();
+    if (command == "/NICK") {
+        if (parts.size() >= 2)
+            change_nick(parts[1]);
+        return;
+    }
     if (command == "/JOIN") {
         if (parts.size() >= 2)
             join_channel(parts[1]);
@@ -555,6 +582,11 @@ void IRCClient::handle_user_command(const String& input)
     }
 }
 
+void IRCClient::change_nick(const String& nick)
+{
+    send(String::format("NICK %s\r\n", nick.characters()));
+}
+
 void IRCClient::handle_whois_action(const String& nick)
 {
     send_whois(nick);
@@ -563,6 +595,11 @@ void IRCClient::handle_whois_action(const String& nick)
 void IRCClient::handle_open_query_action(const String& nick)
 {
     ensure_query(nick);
+}
+
+void IRCClient::handle_change_nick_action(const String& nick)
+{
+    change_nick(nick);
 }
 
 void IRCClient::handle_close_query_action(const String& nick)

@@ -49,6 +49,8 @@ public:
 
     String topic() const { return m_topic; }
 
+    void notify_nick_changed(const String& old_nick, const String& new_nick);
+
 private:
     IRCChannel(IRCClient&, const String&);
 

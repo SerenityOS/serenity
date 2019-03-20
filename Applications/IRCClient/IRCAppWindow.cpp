@@ -15,7 +15,7 @@
 IRCAppWindow::IRCAppWindow()
     : m_client("127.0.0.1", 6667)
 {
-    set_title(String::format("IRC Client: %s@%s:%d", m_client.nickname().characters(), m_client.hostname().characters(), m_client.port()));
+    update_title();
     set_rect(200, 200, 600, 400);
     setup_actions();
     setup_menus();
@@ -26,6 +26,11 @@ IRCAppWindow::IRCAppWindow()
 
 IRCAppWindow::~IRCAppWindow()
 {
+}
+
+void IRCAppWindow::update_title()
+{
+    set_title(String::format("IRC Client: %s@%s:%d", m_client.nickname().characters(), m_client.hostname().characters(), m_client.port()));
 }
 
 void IRCAppWindow::setup_client()
@@ -39,7 +44,9 @@ void IRCAppWindow::setup_client()
     m_client.aid_update_window_list = [this] {
         m_window_list->model()->update();
     };
-
+    m_client.on_nickname_changed = [this] (const String&) {
+        update_title();
+    };
     m_client.on_connect = [this] {
         m_client.join_channel("#test");
     };
@@ -74,6 +81,12 @@ void IRCAppWindow::setup_actions()
     m_close_query_action = GAction::create("Close query", GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/16x16/irc-close-query.rgb", { 16, 16 }), [] (auto&) {
         printf("FIXME: Implement close-query action\n");
     });
+
+    m_change_nick_action = GAction::create("Change nickname", GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/16x16/irc-nick.rgb", { 16, 16 }), [this] (auto&) {
+        GInputBox input_box("Enter nickname:", "Change nickname", this);
+        if (input_box.exec() == GInputBox::ExecOK && !input_box.text_value().is_empty())
+            m_client.handle_change_nick_action(input_box.text_value());
+    });
 }
 
 void IRCAppWindow::setup_menus()
@@ -88,6 +101,8 @@ void IRCAppWindow::setup_menus()
     menubar->add_menu(move(app_menu));
 
     auto server_menu = make<GMenu>("Server");
+    server_menu->add_action(*m_change_nick_action);
+    server_menu->add_separator();
     server_menu->add_action(*m_join_action);
     server_menu->add_action(*m_part_action);
     server_menu->add_separator();
@@ -112,6 +127,8 @@ void IRCAppWindow::setup_widgets()
     widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
 
     auto* toolbar = new GToolBar(widget);
+    toolbar->add_action(*m_change_nick_action);
+    toolbar->add_separator();
     toolbar->add_action(*m_join_action);
     toolbar->add_action(*m_part_action.copy_ref());
     toolbar->add_separator();

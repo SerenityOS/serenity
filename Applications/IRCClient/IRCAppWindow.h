@@ -18,6 +18,7 @@ private:
     void setup_actions();
     void setup_menus();
     void setup_widgets();
+    void update_title();
 
     IRCWindow& create_window(void* owner, IRCWindow::Type, const String& name);
     IRCClient m_client;
@@ -28,4 +29,5 @@ private:
     RetainPtr<GAction> m_whois_action;
     RetainPtr<GAction> m_open_query_action;
     RetainPtr<GAction> m_close_query_action;
+    RetainPtr<GAction> m_change_nick_action;
 };

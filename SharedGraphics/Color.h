@@ -26,6 +26,10 @@ public:
         DarkGreen,
         DarkBlue,
         DarkRed,
+        MidGreen,
+        MidRed,
+        MidBlue,
+        MidMagenta,
     };
 
     Color() { }
