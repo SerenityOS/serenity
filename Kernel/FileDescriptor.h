@@ -88,6 +88,7 @@ public:
 
     void set_original_inode(Badge<VFS>, Retained<Inode>&& inode) { m_inode = move(inode); }
 
+    SocketRole socket_role() const { return m_socket_role; }
     void set_socket_role(SocketRole);
 
 private:
