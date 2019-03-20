@@ -25,6 +25,7 @@ NetworkAdapter* NetworkAdapter::from_ipv4_address(const IPv4Address& address)
 }
 
 NetworkAdapter::NetworkAdapter()
+    : m_packet_queue_alarm(*this)
 {
     // FIXME: I wanna lock :(
     ASSERT_INTERRUPTS_DISABLED();
@@ -89,4 +90,9 @@ ByteBuffer NetworkAdapter::dequeue_packet()
 void NetworkAdapter::set_ipv4_address(const IPv4Address& address)
 {
     m_ipv4_address = address;
+}
+
+bool PacketQueueAlarm::is_ringing() const
+{
+    return m_adapter.has_queued_packets();
 }

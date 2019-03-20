@@ -34,16 +34,16 @@ Lockable<HashMap<IPv4Address, MACAddress>>& arp_table()
 
 void NetworkTask_main()
 {
-    auto* e1000_ptr = E1000NetworkAdapter::the();
-    ASSERT(e1000_ptr);
-    auto& e1000 = *e1000_ptr;
-    e1000.set_ipv4_address(IPv4Address(192, 168, 5, 2));
+    auto* adapter_ptr = E1000NetworkAdapter::the();
+    ASSERT(adapter_ptr);
+    auto& adapter = *adapter_ptr;
+    adapter.set_ipv4_address(IPv4Address(192, 168, 5, 2));
 
     kprintf("NetworkTask: Enter main loop.\n");
     for (;;) {
-        auto packet = e1000.dequeue_packet();
+        auto packet = adapter.dequeue_packet();
         if (packet.is_null()) {
-            sleep(100);
+            current->snooze_until(adapter.packet_queue_alarm());
             continue;
         }
         if (packet.size() < (int)(sizeof(EthernetFrameHeader))) {

@@ -14,6 +14,7 @@
 #include <AK/Weakable.h>
 #include <Kernel/Lock.h>
 
+class Alarm;
 class FileDescriptor;
 class PageDirectory;
 class Region;
@@ -78,6 +79,7 @@ public:
         BlockedSelect,
         BlockedConnect,
         BlockedReceive,
+        BlockedSnoozing,
     };
 
     enum Priority {
@@ -138,6 +140,8 @@ public:
 
     void set_wakeup_time(dword t) { m_wakeup_time = t; }
     dword wakeup_time() const { return m_wakeup_time; }
+
+    void snooze_until(Alarm&);
 
     template<typename Callback> static void for_each(Callback);
     template<typename Callback> static void for_each_in_pgrp(pid_t, Callback);
@@ -382,6 +386,7 @@ private:
     dword m_pending_signals { 0 };
     dword m_signal_mask { 0 };
     RetainPtr<Socket> m_blocked_socket;
+    Alarm* m_snoozing_alarm { nullptr };
 
     byte m_termination_status { 0 };
     byte m_termination_signal { 0 };

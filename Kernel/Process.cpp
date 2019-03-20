@@ -1735,6 +1735,13 @@ void Process::unblock()
     m_state = Process::Runnable;
 }
 
+void Process::snooze_until(Alarm& alarm)
+{
+    m_snoozing_alarm = &alarm;
+    block(Process::BlockedSnoozing);
+    Scheduler::yield();
+}
+
 void Process::block(Process::State new_state)
 {
     if (state() != Process::Running) {
@@ -2871,6 +2878,7 @@ const char* to_string(Process::State state)
     case Process::BlockedConnect: return "Connect";
     case Process::BlockedReceive: return "Receive";
     case Process::BeingInspected: return "Inspect";
+    case Process::BlockedSnoozing: return "Snoozing";
     }
     kprintf("to_string(Process::State): Invalid state: %u\n", state);
     ASSERT_NOT_REACHED();
