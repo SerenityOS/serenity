@@ -17,6 +17,25 @@ static in_addr_t* __gethostbyname_address_list_buffer[2];
 
 hostent* gethostbyname(const char* name)
 {
+    unsigned a;
+    unsigned b;
+    unsigned c;
+    unsigned d;
+    int count = sscanf(name, "%u.%u.%u.%u", &a, &b, &c, &d);
+    if (count == 4 && a < 256 && b < 256 && c < 256 && d < 256) {
+        sprintf(__gethostbyname_name_buffer, "%u.%u.%u.%u", a, b, c, d);
+        __gethostbyname_buffer.h_name = __gethostbyname_name_buffer;
+        __gethostbyname_buffer.h_aliases = nullptr;
+        __gethostbyname_buffer.h_addrtype = AF_INET;
+        new (&__gethostbyname_address) IPv4Address(a, b, c, d);
+        __gethostbyname_address_list_buffer[0] = &__gethostbyname_address;
+        __gethostbyname_address_list_buffer[1] = nullptr;
+        __gethostbyname_buffer.h_addr_list = (char**)__gethostbyname_address_list_buffer;
+        __gethostbyname_buffer.h_length = 4;
+
+        return &__gethostbyname_buffer;
+    }
+
     int fd = socket(AF_LOCAL, SOCK_STREAM | SOCK_CLOEXEC, 0);
     if (fd < 0) {
         perror("socket");
