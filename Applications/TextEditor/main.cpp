@@ -78,7 +78,7 @@ int main(int argc, char** argv)
     });
 
     auto delete_action = GAction::create("Delete", { 0, Key_Delete }, GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/16x16/delete.rgb", { 16, 16 }), [&] (const GAction&) {
-        text_editor->delete_selection();
+        text_editor->do_delete();
     });
 
     auto menubar = make<GMenuBar>();

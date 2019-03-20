@@ -93,7 +93,7 @@ public:
     void cut();
     void copy();
     void paste();
-    void delete_selection();
+    void do_delete();
 
     Function<void(GTextEditor&)> on_return_pressed;
     Function<void(GTextEditor&)> on_escape_pressed;
@@ -150,6 +150,7 @@ private:
     Rect ruler_content_rect(int line) const;
     void toggle_selection_if_needed_for_event(const GKeyEvent&);
     void insert_at_cursor_or_replace_selection(const String&);
+    void delete_selection();
 
     Type m_type { MultiLine };
 
