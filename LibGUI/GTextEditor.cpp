@@ -382,28 +382,7 @@ void GTextEditor::keydown_event(GKeyEvent& event)
     }
 
     if (event.key() == KeyCode::Key_Delete) {
-        if (has_selection()) {
-            delete_selection();
-            return;
-        }
-        if (m_cursor.column() < current_line().length()) {
-            // Delete within line
-            current_line().remove(m_cursor.column());
-            update_content_size();
-            update_cursor();
-            return;
-        }
-        if (m_cursor.column() == current_line().length() && m_cursor.line() != line_count() - 1) {
-            // Delete at end of line; merge with next line
-            auto& next_line = *m_lines[m_cursor.line() + 1];
-            int previous_length = current_line().length();
-            current_line().append(next_line.characters(), next_line.length());
-            m_lines.remove(m_cursor.line() + 1);
-            update_content_size();
-            update();
-            set_cursor(m_cursor.line(), previous_length);
-            return;
-        }
+        do_delete();
         return;
     }
 
@@ -411,6 +390,32 @@ void GTextEditor::keydown_event(GKeyEvent& event)
         insert_at_cursor_or_replace_selection(event.text());
 
     return GWidget::keydown_event(event);
+}
+
+void GTextEditor::do_delete()
+{
+    if (has_selection()) {
+        delete_selection();
+        return;
+    }
+    if (m_cursor.column() < current_line().length()) {
+        // Delete within line
+        current_line().remove(m_cursor.column());
+        update_content_size();
+        update_cursor();
+        return;
+    }
+    if (m_cursor.column() == current_line().length() && m_cursor.line() != line_count() - 1) {
+        // Delete at end of line; merge with next line
+        auto& next_line = *m_lines[m_cursor.line() + 1];
+        int previous_length = current_line().length();
+        current_line().append(next_line.characters(), next_line.length());
+        m_lines.remove(m_cursor.line() + 1);
+        update_content_size();
+        update();
+        set_cursor(m_cursor.line(), previous_length);
+        return;
+    }
 }
 
 void GTextEditor::insert_at_cursor(const String& text)
