@@ -77,6 +77,10 @@ int main(int argc, char** argv)
         text_editor->paste();
     });
 
+    auto delete_action = GAction::create("Delete", { 0, Key_Delete }, GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/16x16/delete.rgb", { 16, 16 }), [&] (const GAction&) {
+        text_editor->delete_selection();
+    });
+
     auto menubar = make<GMenuBar>();
     auto app_menu = make<GMenu>("TextEditor");
     app_menu->add_action(GAction::create("Quit", { Mod_Alt, Key_F4 }, [] (const GAction&) {
@@ -98,6 +102,7 @@ int main(int argc, char** argv)
     edit_menu->add_action(cut_action.copy_ref());
     edit_menu->add_action(copy_action.copy_ref());
     edit_menu->add_action(paste_action.copy_ref());
+    edit_menu->add_action(delete_action.copy_ref());
     menubar->add_menu(move(edit_menu));
 
     auto font_menu = make<GMenu>("Font");
@@ -126,6 +131,7 @@ int main(int argc, char** argv)
     toolbar->add_action(move(cut_action));
     toolbar->add_action(move(copy_action));
     toolbar->add_action(move(paste_action));
+    toolbar->add_action(move(delete_action));
 
     toolbar->add_separator();
 
