@@ -7,6 +7,7 @@
 #include <LibGUI/GToolBar.h>
 #include <LibGUI/GMenuBar.h>
 #include <LibGUI/GAction.h>
+#include <LibGUI/GLabel.h>
 #include <unistd.h>
 #include <signal.h>
 #include <stdio.h>
@@ -36,7 +37,12 @@ int main(int argc, char** argv)
 
     auto* main_toolbar = new GToolBar(widget);
     auto* location_toolbar = new GToolBar(widget);
+    location_toolbar->layout()->set_margins({ 8, 3, 8, 3 });
     location_toolbar->set_preferred_size({ 0, 21 });
+
+    auto* location_label = new GLabel("Location: ", location_toolbar);
+    location_label->size_to_fit();
+
     auto* location_textbox = new GTextEditor(GTextEditor::SingleLine, location_toolbar);
 
     auto* directory_table_view = new DirectoryTableView(widget);
