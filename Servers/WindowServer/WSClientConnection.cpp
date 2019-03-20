@@ -40,9 +40,6 @@ WSClientConnection::WSClientConnection(int fd)
     static int s_next_client_id = 0;
     m_client_id = ++s_next_client_id;
 
-    int rc = ioctl(m_fd, 413, (int)&m_pid);
-    ASSERT(rc == 0);
-
     if (!s_connections)
         s_connections = new HashMap<int, WSClientConnection*>;
     s_connections->set(m_client_id, this);
@@ -84,13 +81,6 @@ void WSClientConnection::post_message(const WSAPI_ServerMessage& message)
     }
 
     ASSERT(nwritten == sizeof(message));
-}
-
-RetainPtr<GraphicsBitmap> WSClientConnection::create_shared_bitmap(GraphicsBitmap::Format format, const Size& size)
-{
-    auto shared_buffer = SharedBuffer::create(m_pid, size.area() * sizeof(RGBA32));
-    ASSERT(shared_buffer);
-    return GraphicsBitmap::create_with_shared_buffer(format, *shared_buffer, size);
 }
 
 void WSClientConnection::on_message(WSMessage& message)

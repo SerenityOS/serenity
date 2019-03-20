@@ -257,6 +257,9 @@ void WSMessageLoop::on_receive_from_client(int client_id, const WSAPI_ClientMess
 
     WSClientConnection& client = *WSClientConnection::from_client_id(client_id);
     switch (message.type) {
+    case WSAPI_ClientMessage::Type::Greeting:
+        client.set_client_pid(message.greeting.client_pid);
+        break;
     case WSAPI_ClientMessage::Type::CreateMenubar:
         post_message(client, make<WSAPICreateMenubarRequest>(client_id));
         break;

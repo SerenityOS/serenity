@@ -22,7 +22,6 @@ public:
     static void for_each_client(Function<void(WSClientConnection&)>);
 
     void post_message(const WSAPI_ServerMessage&);
-    RetainPtr<GraphicsBitmap> create_shared_bitmap(GraphicsBitmap::Format, const Size&);
 
     int client_id() const { return m_client_id; }
     WSMenuBar* app_menubar() { return m_app_menubar.ptr(); }
@@ -31,6 +30,8 @@ public:
     pid_t pid() const { return m_pid; }
 
     bool is_showing_modal_window() const;
+
+    void set_client_pid(pid_t pid) { m_pid = pid; }
 
     template<typename Matching, typename Callback> void for_each_window_matching(Matching, Callback);
     template<typename Callback> void for_each_window(Callback);
@@ -66,7 +67,7 @@ private:
 
     int m_client_id { 0 };
     int m_fd { -1 };
-    pid_t m_pid { 0 };
+    pid_t m_pid { -1 };
 
     HashMap<int, OwnPtr<WSWindow>> m_windows;
     HashMap<int, OwnPtr<WSMenuBar>> m_menubars;
