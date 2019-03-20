@@ -75,7 +75,7 @@ int WSMessageLoop::exec()
 void WSMessageLoop::post_message(WSMessageReceiver& receiver, OwnPtr<WSMessage>&& message)
 {
 #ifdef WSMESSAGELOOP_DEBUG
-    dbgprintf("WSMessageLoop::post_message: {%u} << receiver=%p, message=%p (type=%u)\n", m_queued_messages.size(), receiver, message.ptr(), message->type());
+    dbgprintf("WSMessageLoop::post_message: {%u} << receiver=%p, message=%p (type=%u)\n", m_queued_messages.size(), &receiver, message.ptr(), message->type());
 #endif
     m_queued_messages.append({ receiver.make_weak_ptr(), move(message) });
 }
@@ -169,11 +169,11 @@ void WSMessageLoop::wait_for_message()
         sockaddr_un address;
         socklen_t address_size = sizeof(address);
         int client_fd = accept(m_server_fd, (sockaddr*)&address, &address_size);
-#ifdef WSMESSAGELOOP_DEBUG
-        dbgprintf("accept() returned fd=%d, address=%s\n", client_fd, address.sun_path);
-#endif
-        ASSERT(client_fd >= 0);
-        new WSClientConnection(client_fd);
+        if (client_fd < 0) {
+            dbgprintf("WindowServer: accept() failed: %s\n", strerror(errno));
+        } else {
+            new WSClientConnection(client_fd);
+        }
     }
     WSClientConnection::for_each_client([&] (WSClientConnection& client) {
         if (!FD_ISSET(client.fd(), &rfds))
