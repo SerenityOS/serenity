@@ -1,8 +1,8 @@
-DNSLOOKUPSERVER_OBJS = \
+LOOKUPSERVER_OBJS = \
     main.o
 
-APP = DNSLookupServer
-OBJS = $(DNSLOOKUPSERVER_OBJS)
+APP = LookupServer
+OBJS = $(LOOKUPSERVER_OBJS)
 
 STANDARD_FLAGS = -std=c++17
 WARNING_FLAGS = -Wextra -Wall -Wundef -Wcast-qual -Wwrite-strings -Wimplicit-fallthrough

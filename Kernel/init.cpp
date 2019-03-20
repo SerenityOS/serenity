@@ -85,9 +85,9 @@ VFS* vfs;
 
     int error;
 
-    auto* dns_lookup_server_process = Process::create_user_process("/bin/DNSLookupServer", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, { }, tty0);
+    auto* dns_lookup_server_process = Process::create_user_process("/bin/LookupServer", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, { }, tty0);
     if (error != 0) {
-        dbgprintf("error spawning DNSLookupServer: %d\n", error);
+        dbgprintf("error spawning LookupServer: %d\n", error);
         hang();
     }
 

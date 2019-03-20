@@ -12,8 +12,8 @@ $make_cmd -C ../LibM && \
 (cd ../LibM && ./install.sh) && \
 $make_cmd -C ../LibM clean && \
 $make_cmd -C ../LibM clean && \
-$make_cmd -C ../Servers/DNSLookupServer clean && \
-$make_cmd -C ../Servers/DNSLookupServer && \
+$make_cmd -C ../Servers/LookupServer clean && \
+$make_cmd -C ../Servers/LookupServer && \
 $make_cmd -C ../WindowServer clean && \
 $make_cmd -C ../WindowServer && \
 $make_cmd -C ../LibGUI clean && \
