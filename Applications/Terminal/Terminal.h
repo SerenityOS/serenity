@@ -152,7 +152,7 @@ private:
 
     GNotifier m_notifier;
 
-    float m_opacity { 0.8f };
+    float m_opacity { 1 };
     bool m_needs_background_fill { true };
 
     int m_glyph_width { 0 };
