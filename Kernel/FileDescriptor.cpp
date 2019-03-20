@@ -76,8 +76,11 @@ void FileDescriptor::set_socket_role(SocketRole role)
         return;
 
     ASSERT(m_socket);
+    auto old_socket_role = m_socket_role;
     m_socket_role = role;
     m_socket->attach_fd(role);
+    if (old_socket_role != SocketRole::None)
+        m_socket->detach_fd(old_socket_role);
 }
 
 Retained<FileDescriptor> FileDescriptor::clone()

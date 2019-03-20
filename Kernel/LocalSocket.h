@@ -32,6 +32,7 @@ private:
     bool m_bound { false };
     int m_accepted_fds_open { 0 };
     int m_connected_fds_open { 0 };
+    int m_connecting_fds_open { 0 };
     sockaddr_un m_address;
 
     DoubleBuffer m_for_client;

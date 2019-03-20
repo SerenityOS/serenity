@@ -8,7 +8,7 @@
 #include <Kernel/UnixTypes.h>
 #include <Kernel/KResult.h>
 
-enum class SocketRole { None, Listener, Accepted, Connected };
+enum class SocketRole { None, Listener, Accepted, Connected, Connecting };
 
 class Socket : public Retainable<Socket> {
 public:
