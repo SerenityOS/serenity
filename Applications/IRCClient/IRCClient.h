@@ -29,6 +29,7 @@ public:
 
     void join_channel(const String&);
     void part_channel(const String&);
+    void change_nick(const String&);
 
     bool is_nick_prefix(char) const;
 
@@ -38,6 +39,7 @@ public:
     Function<void()> on_connect;
     Function<void()> on_disconnect;
     Function<void()> on_server_message;
+    Function<void(const String&)> on_nickname_changed;
 
     Function<IRCWindow*(void*, IRCWindow::Type, const String&)> aid_create_window;
     Function<IRCWindow*()> aid_get_active_window;
@@ -62,6 +64,7 @@ public:
     void handle_close_query_action(const String&);
     void handle_join_action(const String&);
     void handle_part_action(const String&);
+    void handle_change_nick_action(const String&);
 
     IRCQuery& ensure_query(const String& name);
     IRCChannel& ensure_channel(const String& name);
@@ -100,6 +103,7 @@ private:
     void handle_rpl_endofnames(const Message&);
     void handle_rpl_namreply(const Message&);
     void handle_privmsg(const Message&);
+    void handle_nick(const Message&);
     void handle(const Message&, const String& verbatim);
     void handle_user_command(const String&);
 

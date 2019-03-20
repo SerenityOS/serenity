@@ -70,7 +70,7 @@ void IRCChannel::handle_join(const String& nick, const String& hostmask)
 {
     if (nick == m_client.nickname())
         m_open = true;
-    add_message(String::format("*** %s [%s] has joined %s", nick.characters(), hostmask.characters(), m_name.characters()), Color::DarkGreen);
+    add_message(String::format("*** %s [%s] has joined %s", nick.characters(), hostmask.characters(), m_name.characters()), Color::MidGreen);
 }
 
 void IRCChannel::handle_part(const String& nick, const String& hostmask)
@@ -82,13 +82,25 @@ void IRCChannel::handle_part(const String& nick, const String& hostmask)
         remove_member(nick);
     }
     m_member_model->update();
-    add_message(String::format("*** %s [%s] has parted from %s", nick.characters(), hostmask.characters(), m_name.characters()), Color::DarkGreen);
+    add_message(String::format("*** %s [%s] has parted from %s", nick.characters(), hostmask.characters(), m_name.characters()), Color::MidGreen);
 }
 
 void IRCChannel::handle_topic(const String& nick, const String& topic)
 {
     if (nick.is_null())
-        add_message(String::format("*** Topic is \"%s\"", topic.characters()), Color::DarkBlue);
+        add_message(String::format("*** Topic is \"%s\"", topic.characters()), Color::MidBlue);
     else
-        add_message(String::format("*** %s set topic to \"%s\"", nick.characters(), topic.characters()), Color::DarkBlue);
+        add_message(String::format("*** %s set topic to \"%s\"", nick.characters(), topic.characters()), Color::MidBlue);
+}
+
+void IRCChannel::notify_nick_changed(const String& old_nick, const String& new_nick)
+{
+    for (auto& member : m_members) {
+        if (member.name == old_nick) {
+            member.name = new_nick;
+            add_message(String::format("~ %s changed nickname to %s", old_nick.characters(), new_nick.characters()), Color::MidMagenta);
+            m_member_model->update();
+            return;
+        }
+    }
 }
