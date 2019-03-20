@@ -49,7 +49,6 @@ RetainPtr<Socket> Socket::accept()
     auto client = m_pending.take_first();
     ASSERT(!client->is_connected());
     client->m_connected = true;
-    m_clients.append(client.copy_ref());
     return client;
 }
 
