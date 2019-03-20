@@ -78,6 +78,8 @@ void perror(const char*);
 int scanf(const char* fmt, ...);
 int sscanf (const char* str, const char* fmt, ...);
 int fscanf(FILE*, const char* fmt, ...);
+int vfscanf(FILE*, const char*, va_list);
+int vsscanf(const char*, const char*, va_list);
 int setvbuf(FILE*, char* buf, int mode, size_t);
 void setbuf(FILE*, char* buf);
 void setlinebuf(FILE*);
