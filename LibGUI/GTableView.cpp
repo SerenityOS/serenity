@@ -63,9 +63,14 @@ int GTableView::column_width(int column_index) const
 
 Rect GTableView::header_rect(int column_index) const
 {
+    if (is_column_hidden(column_index))
+        return { };
     int x_offset = 0;
-    for (int i = 0; i < column_index; ++i)
+    for (int i = 0; i < column_index; ++i) {
+        if (is_column_hidden(i))
+            continue;
         x_offset += column_width(i) + horizontal_padding() * 2;
+    }
     auto column_metadata = m_model->column_metadata(column_index);
     int column_width = column_metadata.preferred_width;
     return { x_offset, 0, column_width + horizontal_padding() * 2, header_height() };
@@ -137,6 +142,8 @@ void GTableView::paint_event(GPaintEvent& event)
 
         int x_offset = 0;
         for (int column_index = 0; column_index < m_model->column_count(); ++column_index) {
+            if (is_column_hidden(column_index))
+                continue;
             auto column_metadata = m_model->column_metadata(column_index);
             int column_width = column_metadata.preferred_width;
             const Font& font = column_metadata.font ? *column_metadata.font : this->font();
@@ -192,6 +199,8 @@ void GTableView::paint_headers(Painter& painter)
     painter.draw_line({ 0, header_height() - 1 }, { exposed_width - 1, header_height() - 1 }, Color::DarkGray);
     int x_offset = 0;
     for (int column_index = 0; column_index < m_model->column_count(); ++column_index) {
+        if (is_column_hidden(column_index))
+            continue;
         auto column_metadata = m_model->column_metadata(column_index);
         int column_width = column_metadata.preferred_width;
         bool is_key_column = m_model->key_column() == column_index;
@@ -276,4 +285,23 @@ void GTableView::scroll_into_view(const GModelIndex& index, Orientation orientat
 {
     auto rect = row_rect(index.row()).translated(0, -header_height());
     GScrollableWidget::scroll_into_view(rect, orientation);
+}
+
+bool GTableView::is_column_hidden(int column) const
+{
+    if (column >= 0 && column < m_column_visibility.size())
+        return !m_column_visibility[column];
+    return false;
+}
+
+void GTableView::set_column_hidden(int column, bool hidden)
+{
+    ASSERT(column >= 0);
+    if (m_column_visibility.size() <= column) {
+        int previous_column_count = m_column_visibility.size();
+        m_column_visibility.resize(column + 1);
+        for (int i = previous_column_count; i < m_column_visibility.size(); ++i)
+            m_column_visibility[i] = true;
+    }
+    m_column_visibility[column] = !hidden;
 }

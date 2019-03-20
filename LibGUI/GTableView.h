@@ -35,6 +35,9 @@ public:
 
     void scroll_into_view(const GModelIndex&, Orientation);
 
+    bool is_column_hidden(int) const;
+    void set_column_hidden(int, bool);
+
 private:
     virtual void model_notification(const GModelNotification&);
 
@@ -49,6 +52,7 @@ private:
     int column_width(int) const;
     void update_content_size();
 
+    Vector<bool> m_column_visibility;
     RetainPtr<GTableModel> m_model;
     int m_horizontal_padding { 5 };
     bool m_headers_visible { true };
