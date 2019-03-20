@@ -4,6 +4,7 @@
 #include "RTC.h"
 #include "i8253.h"
 #include <AK/TemporaryChange.h>
+#include <Kernel/Alarm.h>
 
 //#define LOG_EVERY_CONTEXT_SWITCH
 //#define SCHEDULER_DEBUG
@@ -132,6 +133,14 @@ bool Scheduler::pick_next()
                     process.unblock();
                     return true;
                 }
+            }
+            return true;
+        }
+
+        if (process.state() == Process::BlockedSnoozing) {
+            if (process.m_snoozing_alarm->is_ringing()) {
+                process.m_snoozing_alarm = nullptr;
+                process.unblock();
             }
             return true;
         }

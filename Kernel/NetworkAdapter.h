@@ -7,6 +7,18 @@
 #include <Kernel/IPv4.h>
 #include <Kernel/ARP.h>
 #include <Kernel/ICMP.h>
+#include <Kernel/Alarm.h>
+
+class NetworkAdapter;
+
+class PacketQueueAlarm final : public Alarm {
+public:
+    PacketQueueAlarm(NetworkAdapter& adapter) : m_adapter(adapter) { }
+    virtual ~PacketQueueAlarm() override { }
+    virtual bool is_ringing() const override;
+private:
+    NetworkAdapter& m_adapter;
+};
 
 class NetworkAdapter {
 public:
@@ -24,6 +36,10 @@ public:
 
     ByteBuffer dequeue_packet();
 
+    Alarm& packet_queue_alarm() { return m_packet_queue_alarm; }
+
+    bool has_queued_packets() const { return !m_packet_queue.is_empty(); }
+
 protected:
     NetworkAdapter();
     void set_mac_address(const MACAddress& mac_address) { m_mac_address = mac_address; }
@@ -33,5 +49,6 @@ protected:
 private:
     MACAddress m_mac_address;
     IPv4Address m_ipv4_address;
+    PacketQueueAlarm m_packet_queue_alarm;
     SinglyLinkedList<ByteBuffer> m_packet_queue;
 };
