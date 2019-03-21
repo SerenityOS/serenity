@@ -21,7 +21,8 @@ extern "C" {
 
 struct MallocHeader {
     uint16_t first_chunk_index;
-    uint16_t chunk_count;
+    uint16_t chunk_count : 15;
+    bool is_mmap : 1;
     size_t size;
 
     uint32_t compute_xorcheck() const
@@ -51,6 +52,23 @@ void* malloc(size_t size)
 
     // We need space for the MallocHeader structure at the head of the block.
     size_t real_size = size + sizeof(MallocHeader) + sizeof(MallocFooter);
+
+    if (real_size >= PAGE_SIZE) {
+        auto* memory = mmap(nullptr, real_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0);
+        if (memory == MAP_FAILED) {
+            fprintf(stderr, "malloc() failed to mmap() for a %u-byte allocation: %s", size, strerror(errno));
+            volatile char* crashme = (char*)0xf007d00d;
+            *crashme = 0;
+            return nullptr;
+        }
+        auto* header = (MallocHeader*)(memory);
+        byte* ptr = ((byte*)header) + sizeof(MallocHeader);
+        header->chunk_count = 0;
+        header->first_chunk_index = 0;
+        header->size = real_size;
+        header->is_mmap = true;
+        return ptr;
+    }
 
     if (s_malloc_sum_free < real_size) {
         fprintf(stderr, "malloc(): Out of memory\ns_malloc_sum_free=%u, real_size=%u\n", s_malloc_sum_free, real_size);
@@ -90,6 +108,7 @@ void* malloc(size_t size)
                 byte* ptr = ((byte*)header) + sizeof(MallocHeader);
                 header->chunk_count = chunks_needed;
                 header->first_chunk_index = first_chunk;
+                header->is_mmap = false;
                 header->size = size;
 
                 auto* footer = (MallocFooter*)((byte*)header + (header->chunk_count * CHUNK_SIZE) - sizeof(MallocFooter));
@@ -133,8 +152,15 @@ void free(void* ptr)
     if (!ptr)
         return;
 
-    validate_mallocation(ptr, "free()");
     auto* header = (MallocHeader*)((((byte*)ptr) - sizeof(MallocHeader)));
+    if (header->is_mmap) {
+        int rc = munmap(header, header->size);
+        if (rc < 0)
+            fprintf(stderr, "free(): munmap(%p) for allocation %p with size %u failed: %s\n", header, ptr, header->size, strerror(errno));
+        return;
+    }
+
+    validate_mallocation(ptr, "free()");
     for (unsigned i = header->first_chunk_index; i < (header->first_chunk_index + header->chunk_count); ++i)
         s_malloc_map[i / 8] &= ~(1 << (i % 8));
 
