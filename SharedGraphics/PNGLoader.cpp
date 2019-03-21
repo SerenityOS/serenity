@@ -99,7 +99,6 @@ static bool process_chunk(Streamer&, PNGLoadingContext& context);
 
 RetainPtr<GraphicsBitmap> load_png(const String& path)
 {
-    Stopwatch sw("load_png");
     int fd = open(path.characters(), O_RDONLY);
     if (fd < 0) {
         perror("open");
@@ -153,7 +152,7 @@ static byte paeth_predictor(int a, int b, int c)
 
 static RetainPtr<GraphicsBitmap> load_png_impl(const byte* data, int data_size)
 {
-    Stopwatch sw("load_png_impl");
+    Stopwatch sw("load_png_impl: total");
     const byte* data_ptr = data;
     int data_remaining = data_size;
 
@@ -164,6 +163,8 @@ static RetainPtr<GraphicsBitmap> load_png_impl(const byte* data, int data_size)
     }
 
     PNGLoadingContext context;
+
+    context.compressed_data.ensure_capacity(data_size);
 
     data_ptr += sizeof(png_header);
     data_remaining -= sizeof(png_header);
@@ -205,7 +206,7 @@ static RetainPtr<GraphicsBitmap> load_png_impl(const byte* data, int data_size)
     }
 
     {
-        Stopwatch sw("create bitmap");
+        Stopwatch sw("load_png_impl: create bitmap");
         context.bitmap = GraphicsBitmap::create(GraphicsBitmap::Format::RGBA32, { context.width, context.height });
     }
 
