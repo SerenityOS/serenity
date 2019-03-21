@@ -241,6 +241,26 @@ void WSClientConnection::handle_request(WSAPISetWindowOpacityRequest& request)
     window.set_opacity(request.opacity());
 }
 
+void WSClientConnection::handle_request(WSAPISetWallpaperRequest& request)
+{
+    bool success = WSWindowManager::the().set_wallpaper(request.wallpaper());
+    WSAPI_ServerMessage response;
+    response.type = WSAPI_ServerMessage::Type::DidSetWallpaper;
+    response.value = success;
+    post_message(response);
+}
+
+void WSClientConnection::handle_request(WSAPIGetWallpaperRequest& request)
+{
+    auto path = WSWindowManager::the().wallpaper_path();
+    WSAPI_ServerMessage response;
+    response.type = WSAPI_ServerMessage::Type::DidGetWallpaper;
+    ASSERT(path.length() < (int)sizeof(response.text));
+    strncpy(response.text, path.characters(), path.length());
+    response.text_length = path.length();
+    post_message(response);
+}
+
 void WSClientConnection::handle_request(WSAPISetWindowTitleRequest& request)
 {
     int window_id = request.window_id();
@@ -518,6 +538,10 @@ void WSClientConnection::on_request(WSAPIClientRequest& request)
         return handle_request(static_cast<WSAPISetWindowOpacityRequest&>(request));
     case WSMessage::APISetWindowBackingStoreRequest:
         return handle_request(static_cast<WSAPISetWindowBackingStoreRequest&>(request));
+    case WSMessage::APISetWallpaperRequest:
+        return handle_request(static_cast<WSAPISetWallpaperRequest&>(request));
+    case WSMessage::APIGetWallpaperRequest:
+        return handle_request(static_cast<WSAPIGetWallpaperRequest&>(request));
     default:
         break;
     }

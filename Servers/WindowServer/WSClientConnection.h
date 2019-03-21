@@ -62,6 +62,8 @@ private:
     void handle_request(WSAPISetWindowBackingStoreRequest&);
     void handle_request(WSAPISetGlobalCursorTrackingRequest&);
     void handle_request(WSAPISetWindowOpacityRequest&);
+    void handle_request(WSAPISetWallpaperRequest&);
+    void handle_request(WSAPIGetWallpaperRequest&);
 
     void post_error(const String&);
 

@@ -47,6 +47,8 @@ public:
         APISetWindowBackingStoreRequest,
         APISetClipboardContentsRequest,
         APIGetClipboardContentsRequest,
+        APISetWallpaperRequest,
+        APIGetWallpaperRequest,
         __End_API_Client_Requests,
     };
 
@@ -225,6 +227,37 @@ public:
 
 private:
     int m_menu_id { 0 };
+};
+
+class WSAPISetWallpaperRequest final : public WSAPIClientRequest {
+public:
+    explicit WSAPISetWallpaperRequest(int client_id, String&& wallpaper)
+        : WSAPIClientRequest(WSMessage::APISetWallpaperRequest, client_id)
+        , m_client_id(client_id)
+        , m_wallpaper(move(wallpaper))
+    {
+    }
+
+    int client_id() const { return m_client_id; }
+    String wallpaper() const { return m_wallpaper; }
+
+private:
+    int m_client_id { 0 };
+    String m_wallpaper;
+};
+
+class WSAPIGetWallpaperRequest final : public WSAPIClientRequest {
+public:
+    explicit WSAPIGetWallpaperRequest(int client_id)
+        : WSAPIClientRequest(WSMessage::APIGetWallpaperRequest, client_id)
+        , m_client_id(client_id)
+    {
+    }
+
+    int client_id() const { return m_client_id; }
+
+private:
+    int m_client_id { 0 };
 };
 
 class WSAPISetWindowTitleRequest final : public WSAPIClientRequest {
