@@ -81,6 +81,9 @@ public:
 
     void set_resolution(int width, int height);
 
+    bool set_wallpaper(const String& path);
+    String wallpaper_path() const { return m_wallpaper_path; }
+
 private:
     void process_mouse_event(WSMouseEvent&, WSWindow*& event_window);
     void handle_menu_mouse_event(WSMenu&, WSMouseEvent&);

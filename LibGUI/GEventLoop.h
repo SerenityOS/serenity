@@ -35,7 +35,7 @@ public:
 
     void quit(int);
 
-    bool post_message_to_server(const WSAPI_ClientMessage&);
+    static bool post_message_to_server(const WSAPI_ClientMessage&);
     bool wait_for_specific_event(WSAPI_ServerMessage::Type, WSAPI_ServerMessage&);
 
     WSAPI_ServerMessage sync_request(const WSAPI_ClientMessage& request, WSAPI_ServerMessage::Type response_type);

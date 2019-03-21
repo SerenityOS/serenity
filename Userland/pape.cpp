@@ -10,6 +10,8 @@
 #include <AK/StringBuilder.h>
 #include <AK/Vector.h>
 #include <AK/FileSystemPath.h>
+#include <LibGUI/GDesktop.h>
+#include <LibGUI/GApplication.h>
 
 static bool flag_show_all = false;
 static int show_all();
@@ -23,6 +25,8 @@ static void usage()
 
 int main(int argc, char** argv)
 {
+    GApplication app(argc, argv);
+
     int opt;
     while ((opt = getopt(argc, argv, "a")) != -1) {
         switch (opt) {
@@ -67,50 +71,9 @@ int show_all()
     return 0;
 }
 
-static String read_var(const String& name)
-{
-    StringBuilder builder;
-    builder.append("/proc/sys/");
-    builder.append(name);
-    auto path = builder.to_string();
-    int fd = open(path.characters(), O_RDONLY);
-    if (fd < 0) {
-        perror("open");
-        exit(1);
-    }
-    char buffer[BUFSIZ];
-    int nread = read(fd, buffer, sizeof(buffer));
-    close(fd);
-    if (nread < 0) {
-        perror("read");
-        exit(1);
-    }
-    return String(buffer, nread, Chomp);
-}
-
-static void write_var(const String& name, const String& value)
-{
-    StringBuilder builder;
-    builder.append("/proc/sys/");
-    builder.append(name);
-    auto path = builder.to_string();
-    int fd = open(path.characters(), O_WRONLY);
-    if (fd < 0) {
-        perror("open");
-        exit(1);
-    }
-    int nwritten = write(fd, value.characters(), value.length());
-    if (nwritten < 0) {
-        perror("read");
-        exit(1);
-    }
-    close(fd);
-}
-
 int show_current()
 {
-    FileSystemPath path(read_var("wm_wallpaper"));
-    printf("%s\n", path.basename().characters());
+    printf("%s\n", GDesktop::the().wallpaper().characters());
     return 0;
 }
 
@@ -119,7 +82,10 @@ int set_pape(const char* name)
     StringBuilder builder;
     builder.append("/res/wallpapers/");
     builder.append(name);
-
-    write_var("wm_wallpaper", builder.to_string());
+    String path = builder.to_string();
+    if (!GDesktop::the().set_wallpaper(path)) {
+        fprintf(stderr, "pape: Failed to set wallpaper %s\n", path.characters());
+        return 1;
+    }
     return 0;
 }

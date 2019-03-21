@@ -82,11 +82,14 @@ struct WSAPI_ServerMessage {
         DidGetClipboardContents,
         DidSetClipboardContents,
         DidSetWindowBackingStore,
+        DidSetWallpaper,
+        DidGetWallpaper,
     };
     Type type { Invalid };
     int window_id { -1 };
     int text_length { 0 };
     char text[256];
+    int value { 0 };
 
     union {
         struct {
@@ -159,6 +162,8 @@ struct WSAPI_ClientMessage {
         GetClipboardContents,
         SetClipboardContents,
         Greeting,
+        SetWallpaper,
+        GetWallpaper,
     };
     Type type { Invalid };
     int window_id { -1 };

@@ -329,6 +329,12 @@ void WSMessageLoop::on_receive_from_client(int client_id, const WSAPI_ClientMess
     case WSAPI_ClientMessage::Type::SetGlobalCursorTracking:
         post_message(client, make<WSAPISetGlobalCursorTrackingRequest>(client_id, message.window_id, message.value));
         break;
+    case WSAPI_ClientMessage::Type::SetWallpaper:
+        ASSERT(message.text_length < (ssize_t)sizeof(message.text));
+        post_message(client, make<WSAPISetWallpaperRequest>(client_id, String(message.text, message.text_length)));
+        break;
+    case WSAPI_ClientMessage::Type::GetWallpaper:
+        post_message(client, make<WSAPIGetWallpaperRequest>(client_id));
     default:
         break;
     }

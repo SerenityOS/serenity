@@ -173,7 +173,7 @@ sysctl: sysctl.o
 	$(LD) -o $@ $(LDFLAGS) $< -lc
 
 pape: pape.o
-	$(LD) -o $@ $(LDFLAGS) $< -lc
+	$(LD) -o $@ $(LDFLAGS) -L../LibGUI $< -lgui -lc
 
 cp: cp.o
 	$(LD) -o $@ $(LDFLAGS) $< -lc

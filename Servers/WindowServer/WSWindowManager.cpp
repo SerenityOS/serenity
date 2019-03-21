@@ -14,6 +14,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <time.h>
+#include <SharedGraphics/PNGLoader.h>
 
 #ifdef KERNEL
 #include <Kernel/ProcFS.h>
@@ -22,7 +23,6 @@
 //#define DEBUG_COUNTERS
 //#define DEBUG_WID_IN_TITLE_BAR
 //#define RESIZE_DEBUG
-#define USE_WALLPAPER
 
 static const int window_titlebar_height = 18;
 
@@ -199,18 +199,8 @@ WSWindowManager::WSWindowManager()
     m_cursor_bitmap_inner = CharacterBitmap::create_from_ascii(cursor_bitmap_inner_ascii, 12, 17);
     m_cursor_bitmap_outer = CharacterBitmap::create_from_ascii(cursor_bitmap_outer_ascii, 12, 17);
 
-#ifdef USE_WALLPAPER
     m_wallpaper_path = "/res/wallpapers/retro.rgb";
     m_wallpaper = GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, m_wallpaper_path, { 1024, 768 });
-#endif
-
-#ifdef KERNEL
-    ProcFS::the().add_sys_bool("wm_flash_flush", m_flash_flush);
-    ProcFS::the().add_sys_string("wm_wallpaper", m_wallpaper_path, [this] {
-        m_wallpaper = GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, m_wallpaper_path, m_screen_rect.size());
-        invalidate(m_screen_rect);
-    });
-#endif
 
     m_username = getlogin();
 
@@ -349,6 +339,18 @@ void WSWindowManager::tick_clock()
     float cpu = (float)busy_diff / (float)(busy_diff + idle_diff);
     m_cpu_history.enqueue(cpu);
     invalidate(menubar_rect());
+}
+
+bool WSWindowManager::set_wallpaper(const String& path)
+{
+    auto bitmap = load_png(path);
+    if (!bitmap)
+        return false;
+
+    m_wallpaper_path = path;
+    m_wallpaper = move(bitmap);
+    invalidate();
+    return true;
 }
 
 void WSWindowManager::set_resolution(int width, int height)
