@@ -2,6 +2,8 @@
 
 #include <stdint.h>
 
+#define PAGE_SIZE 4096
+
 #define PATH_MAX 4096
 #define BUFSIZ 1024
 
