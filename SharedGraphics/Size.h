@@ -48,7 +48,7 @@ public:
 
     operator WSAPI_Size() const;
 
-    String to_string() const { return String::format("[%d,%d]", m_width, m_height); }
+    String to_string() const { return String::format("[%dx%d]", m_width, m_height); }
 
 private:
     int m_width { 0 };
