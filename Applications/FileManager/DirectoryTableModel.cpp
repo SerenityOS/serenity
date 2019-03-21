@@ -9,11 +9,11 @@
 
 DirectoryTableModel::DirectoryTableModel()
 {
-    m_directory_icon = GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/folder16.rgb", { 16, 16 });
-    m_file_icon = GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/file16.rgb", { 16, 16 });
-    m_symlink_icon = GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/link16.rgb", { 16, 16 });
-    m_socket_icon = GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/socket16.rgb", { 16, 16 });
-    m_executable_icon = GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/executable16.rgb", { 16, 16 });
+    m_directory_icon = GraphicsBitmap::load_from_file("/res/icons/folder16.png");
+    m_file_icon = GraphicsBitmap::load_from_file("/res/icons/file16.png");
+    m_symlink_icon = GraphicsBitmap::load_from_file("/res/icons/link16.png");
+    m_socket_icon = GraphicsBitmap::load_from_file("/res/icons/socket16.png");
+    m_executable_icon = GraphicsBitmap::load_from_file("/res/icons/executable16.png");
 
     setpwent();
     while (auto* passwd = getpwent())

@@ -23,19 +23,19 @@ int main(int argc, char** argv)
 
     new MemoryStatsWidget(widget);
 
-    auto kill_action = GAction::create("Kill process", GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/kill16.rgb", { 16, 16 }), [process_table_view] (const GAction&) {
+    auto kill_action = GAction::create("Kill process", GraphicsBitmap::load_from_file("/res/icons/kill16.png"), [process_table_view] (const GAction&) {
         pid_t pid = process_table_view->selected_pid();
         if (pid != -1)
             kill(pid, SIGKILL);
     });
 
-    auto stop_action = GAction::create("Stop process", GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/stop16.rgb", { 16, 16 }), [process_table_view] (const GAction&) {
+    auto stop_action = GAction::create("Stop process", GraphicsBitmap::load_from_file("/res/icons/stop16.png"), [process_table_view] (const GAction&) {
         pid_t pid = process_table_view->selected_pid();
         if (pid != -1)
             kill(pid, SIGSTOP);
     });
 
-    auto continue_action = GAction::create("Continue process", GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/continue16.rgb", { 16, 16 }), [process_table_view] (const GAction&) {
+    auto continue_action = GAction::create("Continue process", GraphicsBitmap::load_from_file("/res/icons/continue16.png"), [process_table_view] (const GAction&) {
         pid_t pid = process_table_view->selected_pid();
         if (pid != -1)
             kill(pid, SIGCONT);

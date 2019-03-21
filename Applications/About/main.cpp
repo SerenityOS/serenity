@@ -11,7 +11,7 @@ int main(int argc, char** argv)
 
     auto* window = new GWindow;
     window->set_title("About Serenity");
-    Rect window_rect { 0, 0, 240, 120 };
+    Rect window_rect { 0, 0, 240, 150 };
     window_rect.center_within({ 0, 0, 1024, 768 });
     window->set_rect(window_rect);
     window->set_should_exit_event_loop_on_close(true);
@@ -24,9 +24,9 @@ int main(int argc, char** argv)
     widget->layout()->set_spacing(8);
 
     auto* icon_label = new GLabel(widget);
-    icon_label->set_icon(GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/Serenity.rgb", { 32, 32 }));
+    icon_label->set_icon(GraphicsBitmap::load_from_file("/res/icons/serenity.png"));
     icon_label->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
-    icon_label->set_preferred_size({ 32, 32 });
+    icon_label->set_preferred_size(icon_label->icon()->size());
 
     auto* label = new GLabel(widget);
     label->set_font(Font::default_bold_font());

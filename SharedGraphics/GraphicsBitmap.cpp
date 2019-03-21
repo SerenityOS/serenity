@@ -1,4 +1,5 @@
-#include "GraphicsBitmap.h"
+#include <SharedGraphics/GraphicsBitmap.h>
+#include <SharedGraphics/PNGLoader.h>
 #include <sys/mman.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -25,6 +26,11 @@ GraphicsBitmap::GraphicsBitmap(Format format, const Size& size)
 Retained<GraphicsBitmap> GraphicsBitmap::create_wrapper(Format format, const Size& size, RGBA32* data)
 {
     return adopt(*new GraphicsBitmap(format, size, data));
+}
+
+RetainPtr<GraphicsBitmap> GraphicsBitmap::load_from_file(const String& path)
+{
+    return load_png(path);
 }
 
 RetainPtr<GraphicsBitmap> GraphicsBitmap::load_from_file(Format format, const String& path, const Size& size)

@@ -40,7 +40,7 @@ public:
         , m_executable_path(exec_path)
     {
         set_button_style(GButtonStyle::CoolBar);
-        set_icon(GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, icon_path, { 32, 32 }));
+        set_icon(GraphicsBitmap::load_from_file(icon_path));
         set_preferred_size({ 50, 50 });
         set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
         on_click = [this] (GButton&) {
@@ -69,10 +69,10 @@ GWindow* make_launcher_window()
     widget->layout()->set_margins({ 5, 5, 5, 5 });
     window->set_main_widget(widget);
 
-    new LauncherButton("/res/icons/Terminal.rgb", "/bin/Terminal", widget);
-    new LauncherButton("/res/icons/FontEditor.rgb", "/bin/FontEditor", widget);
-    new LauncherButton("/res/icons/folder32.rgb", "/bin/FileManager", widget);
-    new LauncherButton("/res/icons/TextEditor.rgb", "/bin/TextEditor", widget);
+    new LauncherButton("/res/icons/Terminal.png", "/bin/Terminal", widget);
+    new LauncherButton("/res/icons/FontEditor.png", "/bin/FontEditor", widget);
+    new LauncherButton("/res/icons/folder32.png", "/bin/FileManager", widget);
+    new LauncherButton("/res/icons/TextEditor.png", "/bin/TextEditor", widget);
 
     return window;
 }

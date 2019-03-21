@@ -9,7 +9,7 @@ static GraphicsBitmap& default_window_icon()
 {
     static GraphicsBitmap* s_icon;
     if (!s_icon)
-        s_icon = GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/window16.rgb", { 16, 16 }).leak_ref();
+        s_icon = GraphicsBitmap::load_from_file("/res/icons/16x16/window.png").leak_ref();
     return *s_icon;
 }
 

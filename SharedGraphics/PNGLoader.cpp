@@ -152,6 +152,7 @@ RetainPtr<GraphicsBitmap> load_png(const String& path)
 
 union [[gnu::packed]] Pixel {
     RGBA32 rgba { 0 };
+    byte v[4];
     struct {
         byte r;
         byte g;
@@ -162,21 +163,29 @@ union [[gnu::packed]] Pixel {
 static_assert(sizeof(Pixel) == 4);
 
 template<bool has_alpha, byte filter_type>
-[[gnu::always_inline]] static inline void unfilter_impl(const GraphicsBitmap& bitmap, int y, const void* dummy_scanline_data)
+[[gnu::always_inline]] static inline void unfilter_impl(GraphicsBitmap& bitmap, int y, const void* dummy_scanline_data)
 {
     auto* dummy_scanline = (const Pixel*)dummy_scanline_data;
-    if constexpr (filter_type == 1) {
+    if constexpr (filter_type == 0) {
         auto* pixels = (Pixel*)bitmap.scanline(y);
         for (int i = 0; i < bitmap.width(); ++i) {
             auto& x = pixels[i];
             swap(x.r, x.b);
-            Pixel a;
-            if (i != 0) a.rgba = bitmap.scanline(y)[i - 1];
-            x.r += a.r;
-            x.g += a.g;
-            x.b += a.b;
+        }
+    }
+
+    if constexpr (filter_type == 1) {
+        auto* pixels = (Pixel*)bitmap.scanline(y);
+        swap(pixels[0].r, pixels[0].b);
+        for (int i = 1; i < bitmap.width(); ++i) {
+            auto& x = pixels[i];
+            swap(x.r, x.b);
+            auto& a = (const Pixel&)pixels[i - 1];
+            x.v[0] += a.v[0];
+            x.v[1] += a.v[1];
+            x.v[2] += a.v[2];
             if constexpr (has_alpha)
-                x.a += a.a;
+                x.v[3] += a.v[3];
         }
         return;
     }
@@ -186,17 +195,15 @@ template<bool has_alpha, byte filter_type>
         for (int i = 0; i < bitmap.width(); ++i) {
             auto& x = pixels[i];
             swap(x.r, x.b);
-            Pixel b;
-            b.rgba = pixels_y_minus_1[i].rgba;
-            x.r += b.r;
-            x.g += b.g;
-            x.b += b.b;
+            const Pixel& b = pixels_y_minus_1[i];
+            x.v[0] += b.v[0];
+            x.v[1] += b.v[1];
+            x.v[2] += b.v[2];
             if constexpr (has_alpha)
-                x.a += b.a;
+                x.v[3] += b.v[3];
         }
         return;
     }
-
     if constexpr (filter_type == 3) {
         auto* pixels = (Pixel*)bitmap.scanline(y);
         auto* pixels_y_minus_1 = y == 0 ? dummy_scanline : (Pixel*)bitmap.scanline(y - 1);
@@ -204,18 +211,16 @@ template<bool has_alpha, byte filter_type>
             auto& x = pixels[i];
             swap(x.r, x.b);
             Pixel a;
-            Pixel b;
-            if (i != 0) a.rgba = bitmap.scanline(y)[i - 1];
-            b.rgba = pixels_y_minus_1[i].rgba;
-            x.r = x.r + ((a.r + b.r) / 2);
-            x.g = x.g + ((a.g + b.g) / 2);
-            x.b = x.b + ((a.b + b.b) / 2);
+            if (i != 0) a = pixels[i - 1];
+            const Pixel& b = pixels_y_minus_1[i];
+            x.v[0] = x.v[0] + ((a.v[0] + b.v[0]) / 2);
+            x.v[1] = x.v[1] + ((a.v[1] + b.v[1]) / 2);
+            x.v[2] = x.v[2] + ((a.v[2] + b.v[2]) / 2);
             if constexpr (has_alpha)
-                x.a = x.a + ((a.a + b.a) / 2);
+                x.v[3] = x.v[3] + ((a.v[3] + b.v[3]) / 2);
         }
         return;
     }
-
     if constexpr (filter_type == 4) {
         auto* pixels = (Pixel*)bitmap.scanline(y);
         auto* pixels_y_minus_1 = y == 0 ? dummy_scanline : (Pixel*)bitmap.scanline(y - 1);
@@ -223,18 +228,17 @@ template<bool has_alpha, byte filter_type>
             auto& x = pixels[i];
             swap(x.r, x.b);
             Pixel a;
-            Pixel b;
+            const Pixel& b = pixels_y_minus_1[i];
             Pixel c;
             if (i != 0) {
-                a.rgba = bitmap.scanline(y)[i - 1];
-                c.rgba = pixels_y_minus_1[i - 1].rgba;
+                a = pixels[i - 1];
+                c = pixels_y_minus_1[i - 1];
             }
-            b.rgba = pixels_y_minus_1[i].rgba;
-            x.r += paeth_predictor(a.r, b.r, c.r);
-            x.g += paeth_predictor(a.g, b.g, c.g);
-            x.b += paeth_predictor(a.b, b.b, c.b);
+            x.v[0] += paeth_predictor(a.v[0], b.v[0], c.v[0]);
+            x.v[1] += paeth_predictor(a.v[1], b.v[1], c.v[1]);
+            x.v[2] += paeth_predictor(a.v[2], b.v[2], c.v[2]);
             if constexpr (has_alpha)
-                x.a += paeth_predictor(a.a, b.a, c.a);
+                x.v[3] += paeth_predictor(a.v[3], b.v[3], c.v[3]);
         }
     }
 }
@@ -274,8 +278,13 @@ template<bool has_alpha, byte filter_type>
     Stopwatch sw("load_png_impl: unfilter: process");
     for (int y = 0; y < context.height; ++y) {
         auto filter = context.scanlines[y].filter;
-        if (filter == 0)
+        if (filter == 0) {
+            if (context.has_alpha())
+                unfilter_impl<true, 0>(*context.bitmap, y, dummy_scanline.pointer());
+            else
+                unfilter_impl<false, 0>(*context.bitmap, y, dummy_scanline.pointer());
             continue;
+        }
         if (filter == 1) {
             if (context.has_alpha())
                 unfilter_impl<true, 1>(*context.bitmap, y, dummy_scanline.pointer());
@@ -364,7 +373,7 @@ static RetainPtr<GraphicsBitmap> load_png_impl(const byte* data, int data_size)
 
     {
         Stopwatch sw("load_png_impl: create bitmap");
-        context.bitmap = GraphicsBitmap::create(GraphicsBitmap::Format::RGBA32, { context.width, context.height });
+        context.bitmap = GraphicsBitmap::create(context.has_alpha() ? GraphicsBitmap::Format::RGBA32 : GraphicsBitmap::Format::RGB32, { context.width, context.height });
     }
 
     unfilter(context);
