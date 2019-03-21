@@ -99,7 +99,7 @@ static int32_t signed_modulo64(int64_t n, int64_t d)
 
 int64_t __divdi3(int64_t n, int64_t d)
 {
-    return signed_divide64 (n, d);
+    return signed_divide64(n, d);
 }
 
 int64_t __moddi3(int64_t n, int64_t d)
@@ -119,8 +119,30 @@ uint64_t __umoddi3(uint64_t n, uint64_t d)
 
 uint64_t __udivmoddi4(uint64_t n, uint64_t d, uint64_t* r)
 {
-    *r = unsigned_modulo64(n, d);
-    return unsigned_divide64(n, d);
+    uint64_t q = 0;
+    uint64_t qbit = 1;
+
+    if (!d)
+        return 1 / ((unsigned)d);
+
+    while ((int64_t)d >= 0) {
+        d <<= 1;
+        qbit <<= 1;
+    }
+
+    while (qbit) {
+        if (d <= n) {
+            n -= d;
+            q += qbit;
+        }
+        d >>= 1;
+        qbit >>= 1;
+    }
+
+    if (r)
+        *r = n;
+
+    return q;
 }
 
 }
