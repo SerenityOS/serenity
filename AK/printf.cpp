@@ -1,6 +1,7 @@
 typedef unsigned char byte;
 typedef unsigned short word;
 typedef unsigned int dword;
+typedef long long unsigned int qword;
 
 [[gnu::always_inline]] inline size_t strlen(const char* str)
 {
@@ -12,8 +13,8 @@ typedef unsigned int dword;
 
 static constexpr const char* h = "0123456789abcdef";
 
-template<typename PutChFunc>
-[[gnu::always_inline]] inline int print_hex(PutChFunc putch, char*& bufptr, dword number, byte fields)
+template<typename PutChFunc, typename T>
+[[gnu::always_inline]] inline int print_hex(PutChFunc putch, char*& bufptr, T number, byte fields)
 {
     int ret = 0;
     byte shr_count = fields * 4;
@@ -29,6 +30,47 @@ template<typename PutChFunc>
 [[gnu::always_inline]] inline int print_number(PutChFunc putch, char*& bufptr, dword number, bool leftPad, bool zeroPad, dword fieldWidth)
 {
     dword divisor = 1000000000;
+    char ch;
+    char padding = 1;
+    char buf[16];
+    char* p = buf;
+
+    for (;;) {
+        ch = '0' + (number / divisor);
+        number %= divisor;
+        if (ch != '0')
+            padding = 0;
+        if (!padding || divisor == 1)
+            *(p++) = ch;
+        if (divisor == 1)
+            break;
+        divisor /= 10;
+    }
+
+    size_t numlen = p - buf;
+    if (!fieldWidth || fieldWidth < numlen)
+        fieldWidth = numlen;
+    if (!leftPad) {
+        for (unsigned i = 0; i < fieldWidth - numlen; ++i) {
+            putch(bufptr, zeroPad ? '0' : ' ');
+        }
+    }
+    for (unsigned i = 0; i < numlen; ++i) {
+        putch(bufptr, buf[i]);
+    }
+    if (leftPad) {
+        for (unsigned i = 0; i < fieldWidth - numlen; ++i) {
+            putch(bufptr, ' ');
+        }
+    }
+
+    return fieldWidth;
+}
+
+template<typename PutChFunc>
+[[gnu::always_inline]] inline int print_qword(PutChFunc putch, char*& bufptr, qword number, bool leftPad, bool zeroPad, dword fieldWidth)
+{
+    qword divisor = 10000000000000000000LLU;
     char ch;
     char padding = 1;
     char buf[16];
@@ -189,6 +231,14 @@ one_more:
 
                 case 'u':
                     ret += print_number(putch, bufptr, va_arg(ap, dword), leftPad, zeroPad, fieldWidth);
+                    break;
+
+                case 'Q':
+                    ret += print_qword(putch, bufptr, va_arg(ap, qword), leftPad, zeroPad, fieldWidth);
+                    break;
+
+                case 'q':
+                    ret += print_hex(putch, bufptr, va_arg(ap, qword), 16);
                     break;
 
                 case 'f':

@@ -9,7 +9,7 @@
 
 #include <AK/Types.h>
 
-void* mmx_memcpy(void* to, const void* from, size_t);
+extern "C" void* mmx_memcpy(void* to, const void* from, size_t);
 
 [[gnu::always_inline]] inline void fast_dword_copy(dword* dest, const dword* src, size_t count)
 {
