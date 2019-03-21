@@ -4,7 +4,8 @@ SHAREDGRAPHICS_OBJS = \
     ../SharedGraphics/Rect.o \
     ../SharedGraphics/GraphicsBitmap.o \
     ../SharedGraphics/CharacterBitmap.o \
-    ../SharedGraphics/Color.o
+    ../SharedGraphics/Color.o \
+    ../SharedGraphics/PNGLoader.o
 
 LIBGUI_OBJS = \
     GIODevice.o \

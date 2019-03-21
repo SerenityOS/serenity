@@ -37,6 +37,7 @@ OBJS = \
        uc.o \
        tc.o \
        host.o \
+       qs.o \
        rm.o
 
 APPS = \
@@ -79,6 +80,7 @@ APPS = \
        uc \
        tc \
        host \
+       qs \
        rm
 
 ARCH_FLAGS =
@@ -217,6 +219,9 @@ tc: tc.o
 
 host: host.o
 	$(LD) -o $@ $(LDFLAGS) $< -lc
+
+qs: qs.o
+	$(LD) -o $@ $(LDFLAGS) -L../LibGUI $< -lgui -lc
 
 .cpp.o:
 	@echo "CXX $<"; $(CXX) $(CXXFLAGS) -o $@ -c $<
