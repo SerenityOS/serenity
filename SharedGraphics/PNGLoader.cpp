@@ -150,6 +150,92 @@ static byte paeth_predictor(int a, int b, int c)
     return c;
 }
 
+union [[gnu::packed]] Pixel {
+    RGBA32 rgba { 0 };
+    struct {
+        byte r;
+        byte g;
+        byte b;
+        byte a;
+    };
+};
+static_assert(sizeof(Pixel) == 4);
+
+[[gnu::noinline]] static void unfilter(PNGLoadingContext& context)
+{
+    {
+    Stopwatch sw("load_png_impl: unfilter: unpack");
+    // First unpack the scanlines to RGBA:
+    switch (context.color_type) {
+    case 2:
+        for (int y = 0; y < context.height; ++y) {
+            struct [[gnu::packed]] Triplet { byte r; byte g; byte b; };
+            auto* triplets = (Triplet*)context.scanlines[y].data.pointer();
+            for (int i = 0; i < context.width; ++i) {
+                auto& pixel = (Pixel&)context.bitmap->scanline(y)[i];
+                pixel.r = triplets[i].r;
+                pixel.g = triplets[i].g;
+                pixel.b = triplets[i].b;
+                pixel.a = 0xff;
+            }
+        }
+        break;
+    case 6:
+        for (int y = 0; y < context.height; ++y) {
+            memcpy(context.bitmap->scanline(y), context.scanlines[y].data.pointer(), context.scanlines[y].data.size());
+        }
+        break;
+    default:
+        ASSERT_NOT_REACHED();
+        break;
+    }
+    }
+
+    Stopwatch sw("load_png_impl: unfilter: process");
+    for (int y = 0; y < context.height; ++y) {
+        auto filter = context.scanlines[y].filter;
+        if (filter == 0)
+            continue;
+        for (int i = 0; i < context.width; ++i) {
+            auto& x = (Pixel&)context.bitmap->scanline(y)[i];
+            swap(x.r, x.b);
+            Pixel a;
+            Pixel b;
+
+            if (i != 0) a.rgba = context.bitmap->scanline(y)[i - 1];
+            if (y != 0) b.rgba = context.bitmap->scanline(y - 1)[i];
+
+            if (filter == 1) {
+                x.r += a.r;
+                x.g += a.g;
+                x.b += a.b;
+                if (context.has_alpha())
+                    x.a += a.a;
+            } else if (filter == 2) {
+                x.r += b.r;
+                x.g += b.g;
+                x.b += b.b;
+                if (context.has_alpha())
+                    x.a += b.a;
+            } if (filter == 3) {
+                x.r = x.r + ((a.r + b.r) / 2);
+                x.g = x.g + ((a.g + b.g) / 2);
+                x.b = x.b + ((a.b + b.b) / 2);
+                if (context.has_alpha())
+                    x.a = x.a + ((a.a + b.a) / 2);
+            } if (filter == 4) {
+                Pixel c;
+                if (y != 0 && i != 0) c.rgba = context.bitmap->scanline(y - 1)[i - 1];
+                x.r += paeth_predictor(a.r, b.r, c.r);
+                x.g += paeth_predictor(a.g, b.g, c.g);
+                x.b += paeth_predictor(a.b, b.b, c.b);
+                if (context.has_alpha())
+                    x.a += paeth_predictor(a.a, b.a, c.a);
+            }
+        }
+    }
+}
+
 static RetainPtr<GraphicsBitmap> load_png_impl(const byte* data, int data_size)
 {
     Stopwatch sw("load_png_impl: total");
@@ -210,81 +296,7 @@ static RetainPtr<GraphicsBitmap> load_png_impl(const byte* data, int data_size)
         context.bitmap = GraphicsBitmap::create(GraphicsBitmap::Format::RGBA32, { context.width, context.height });
     }
 
-    union [[gnu::packed]] Pixel {
-        RGBA32 rgba { 0 };
-        struct {
-            byte r;
-            byte g;
-            byte b;
-            byte a;
-        };
-    };
-    static_assert(sizeof(Pixel) == 4);
-
-    {
-    Stopwatch sw("load_png_impl: unfilter");
-    for (int y = 0; y < context.height; ++y) {
-        auto filter = context.scanlines[y].filter;
-        switch (context.color_type) {
-        case 2: {
-            struct [[gnu::packed]] Triplet { byte r; byte g; byte b; };
-            auto* triplets = (Triplet*)context.scanlines[y].data.pointer();
-            for (int i = 0; i < context.width; ++i) {
-                auto& pixel = (Pixel&)context.bitmap->scanline(y)[i];
-                pixel.r = triplets[i].r;
-                pixel.g = triplets[i].g;
-                pixel.b = triplets[i].b;
-                pixel.a = 0xff;
-            }
-            break;
-        }
-        case 6:
-            memcpy(context.bitmap->scanline(y), context.scanlines[y].data.pointer(), context.scanlines[y].data.size());
-            break;
-        default:
-            ASSERT_NOT_REACHED();
-            break;
-        }
-        if (filter == 0)
-            continue;
-        for (int i = 0; i < context.width; ++i) {
-            auto& x = (Pixel&)context.bitmap->scanline(y)[i];
-            swap(x.r, x.b);
-            Pixel a;
-            Pixel b;
-            Pixel c;
-            if (i != 0) a.rgba = context.bitmap->scanline(y)[i - 1];
-            if (y != 0) b.rgba = context.bitmap->scanline(y - 1)[i];
-            if (y != 0 && i != 0) c.rgba = context.bitmap->scanline(y - 1)[i - 1];
-
-            if (filter == 1) {
-                x.r += a.r;
-                x.g += a.g;
-                x.b += a.b;
-                if (context.has_alpha())
-                    x.a += a.a;
-            } else if (filter == 2) {
-                x.r += b.r;
-                x.g += b.g;
-                x.b += b.b;
-                if (context.has_alpha())
-                    x.a += b.a;
-            } if (filter == 3) {
-                x.r = x.r + ((a.r + b.r) / 2);
-                x.g = x.g + ((a.g + b.g) / 2);
-                x.b = x.b + ((a.b + b.b) / 2);
-                if (context.has_alpha())
-                    x.a = x.a + ((a.a + b.a) / 2);
-            } if (filter == 4) {
-                x.r += paeth_predictor(a.r, b.r, c.r);
-                x.g += paeth_predictor(a.g, b.g, c.g);
-                x.b += paeth_predictor(a.b, b.b, c.b);
-                if (context.has_alpha())
-                    x.a += paeth_predictor(a.a, b.a, c.a);
-            }
-        }
-    }
-    }
+    unfilter(context);
 
     munmap(context.decompression_buffer, context.decompression_buffer_size);
     context.decompression_buffer = nullptr;
