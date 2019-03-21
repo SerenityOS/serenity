@@ -7,6 +7,7 @@
 #include <fcntl.h>
 #include <string.h>
 #include <SharedGraphics/puff.c>
+#include <serenity.h>
 
 struct PNG_IHDR {
     NetworkOrdered<dword> width;
@@ -74,6 +75,16 @@ public:
         return true;
     }
 
+    bool wrap_bytes(ByteBuffer& buffer, int count)
+    {
+        if (m_size_remaining < count)
+            return false;
+        buffer = ByteBuffer::wrap((void*)m_data_ptr, count);
+        m_data_ptr += count;
+        m_size_remaining -= count;
+        return true;
+    }
+
     bool at_end() const { return !m_size_remaining; }
 
 private:
@@ -88,6 +99,7 @@ static bool process_chunk(Streamer&, PNGLoadingContext& context);
 
 RetainPtr<GraphicsBitmap> load_png(const String& path)
 {
+    Stopwatch sw("load_png");
     int fd = open(path.characters(), O_RDONLY);
     if (fd < 0) {
         perror("open");
@@ -141,6 +153,7 @@ static byte paeth_predictor(int a, int b, int c)
 
 static RetainPtr<GraphicsBitmap> load_png_impl(const byte* data, int data_size)
 {
+    Stopwatch sw("load_png_impl");
     const byte* data_ptr = data;
     int data_remaining = data_size;
 
@@ -150,45 +163,51 @@ static RetainPtr<GraphicsBitmap> load_png_impl(const byte* data, int data_size)
         return nullptr;
     }
 
-    dbgprintf("Okay, PNG loaded\n");
-
     PNGLoadingContext context;
 
     data_ptr += sizeof(png_header);
     data_remaining -= sizeof(png_header);
 
-    Streamer streamer(data_ptr, data_remaining);
-    while (!streamer.at_end()) {
-        if (!process_chunk(streamer, context)) {
-            return nullptr;
+    {
+        Stopwatch sw("load_png_impl: read chunks");
+        Streamer streamer(data_ptr, data_remaining);
+        while (!streamer.at_end()) {
+            if (!process_chunk(streamer, context)) {
+                return nullptr;
+            }
         }
     }
 
-    unsigned long srclen = context.compressed_data.size() - 6;
-    unsigned long destlen = context.decompression_buffer_size;
-    int ret = puff(context.decompression_buffer, &destlen, context.compressed_data.data() + 2, &srclen);
-    if (ret < 0)
-        return nullptr;
-    context.compressed_data.clear();
+    {
+        Stopwatch sw("load_png_impl: uncompress");
+        unsigned long srclen = context.compressed_data.size() - 6;
+        unsigned long destlen = context.decompression_buffer_size;
+        int ret = puff(context.decompression_buffer, &destlen, context.compressed_data.data() + 2, &srclen);
+        if (ret < 0)
+            return nullptr;
+        context.compressed_data.clear();
+    }
 
     {
-    Streamer streamer(context.decompression_buffer, context.decompression_buffer_size);
-    for (int y = 0; y < context.height; ++y) {
-        byte filter;
-        if (!streamer.read(filter))
-            return nullptr;
+        Stopwatch sw("load_png_impl: extract scanlines");
+        context.scanlines.ensure_capacity(context.height);
+        Streamer streamer(context.decompression_buffer, context.decompression_buffer_size);
+        for (int y = 0; y < context.height; ++y) {
+            byte filter;
+            if (!streamer.read(filter))
+                return nullptr;
 
-        context.scanlines.append({ filter, ByteBuffer::create_uninitialized(context.width * context.bytes_per_pixel) });
-        auto& scanline_buffer = context.scanlines.last().data;
-        if (!streamer.read_bytes(scanline_buffer.pointer(), scanline_buffer.size()))
-            return nullptr;
-    }
-    munmap(context.decompression_buffer, context.decompression_buffer_size);
-    context.decompression_buffer = nullptr;
-    context.decompression_buffer_size = 0;
+            context.scanlines.append({ filter });
+            auto& scanline_buffer = context.scanlines.last().data;
+            if (!streamer.wrap_bytes(scanline_buffer, context.width * context.bytes_per_pixel))
+                return nullptr;
+        }
     }
 
-    context.bitmap = GraphicsBitmap::create(GraphicsBitmap::Format::RGBA32, { context.width, context.height });
+    {
+        Stopwatch sw("create bitmap");
+        context.bitmap = GraphicsBitmap::create(GraphicsBitmap::Format::RGBA32, { context.width, context.height });
+    }
 
     union [[gnu::packed]] Pixel {
         RGBA32 rgba { 0 };
@@ -201,6 +220,8 @@ static RetainPtr<GraphicsBitmap> load_png_impl(const byte* data, int data_size)
     };
     static_assert(sizeof(Pixel) == 4);
 
+    {
+    Stopwatch sw("load_png_impl: unfilter");
     for (int y = 0; y < context.height; ++y) {
         auto filter = context.scanlines[y].filter;
         switch (context.color_type) {
@@ -262,6 +283,11 @@ static RetainPtr<GraphicsBitmap> load_png_impl(const byte* data, int data_size)
             }
         }
     }
+    }
+
+    munmap(context.decompression_buffer, context.decompression_buffer_size);
+    context.decompression_buffer = nullptr;
+    context.decompression_buffer_size = 0;
 
     return context.bitmap;
 }
@@ -318,8 +344,8 @@ static bool process_chunk(Streamer& streamer, PNGLoadingContext& context)
         printf("Bail at chunk_type\n");
         return false;
     }
-    auto chunk_data = ByteBuffer::create_uninitialized(chunk_size);
-    if (!streamer.read_bytes(chunk_data.pointer(), chunk_size)) {
+    ByteBuffer chunk_data;
+    if (!streamer.wrap_bytes(chunk_data, chunk_size)) {
         printf("Bail at chunk_data\n");
         return false;
     }
