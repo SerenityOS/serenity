@@ -137,7 +137,7 @@ RetainPtr<GraphicsBitmap> load_png(const String& path)
     return bitmap;
 }
 
-static byte paeth_predictor(int a, int b, int c)
+[[gnu::always_inline]] static inline byte paeth_predictor(int a, int b, int c)
 {
     int p = a + b - c;
     int pa = abs(p - a);
@@ -160,6 +160,81 @@ union [[gnu::packed]] Pixel {
     };
 };
 static_assert(sizeof(Pixel) == 4);
+
+template<bool has_alpha, byte filter_type>
+[[gnu::always_inline]] static inline void unfilter_impl(const GraphicsBitmap& bitmap, int y)
+{
+    if constexpr (filter_type == 1) {
+        auto* pixels = (Pixel*)bitmap.scanline(y);
+        for (int i = 0; i < bitmap.width(); ++i) {
+            auto& x = pixels[i];
+            swap(x.r, x.b);
+            Pixel a;
+            if (i != 0) a.rgba = bitmap.scanline(y)[i - 1];
+            x.r += a.r;
+            x.g += a.g;
+            x.b += a.b;
+            if constexpr (has_alpha)
+                x.a += a.a;
+        }
+        return;
+    }
+    if constexpr (filter_type == 2) {
+        auto* pixels = (Pixel*)bitmap.scanline(y);
+        for (int i = 0; i < bitmap.width(); ++i) {
+            auto& x = pixels[i];
+            swap(x.r, x.b);
+            Pixel b;
+            if (y != 0) b.rgba = bitmap.scanline(y - 1)[i];
+            x.r += b.r;
+            x.g += b.g;
+            x.b += b.b;
+            if constexpr (has_alpha)
+                x.a += b.a;
+        }
+        return;
+    }
+
+    if constexpr (filter_type == 3) {
+        auto* pixels = (Pixel*)bitmap.scanline(y);
+        for (int i = 0; i < bitmap.width(); ++i) {
+            auto& x = pixels[i];
+            swap(x.r, x.b);
+            Pixel a;
+            Pixel b;
+            if (i != 0) a.rgba = bitmap.scanline(y)[i - 1];
+            if (y != 0) b.rgba = bitmap.scanline(y - 1)[i];
+            x.r = x.r + ((a.r + b.r) / 2);
+            x.g = x.g + ((a.g + b.g) / 2);
+            x.b = x.b + ((a.b + b.b) / 2);
+            if constexpr (has_alpha)
+                x.a = x.a + ((a.a + b.a) / 2);
+        }
+        return;
+    }
+
+    if constexpr (filter_type == 4) {
+        auto* pixels = (Pixel*)bitmap.scanline(y);
+        for (int i = 0; i < bitmap.width(); ++i) {
+            auto& x = pixels[i];
+            swap(x.r, x.b);
+            Pixel a;
+            Pixel b;
+            Pixel c;
+            if (i != 0) a.rgba = bitmap.scanline(y)[i - 1];
+            if (y != 0) b.rgba = bitmap.scanline(y - 1)[i];
+            if (y != 0 && i != 0) c.rgba = bitmap.scanline(y - 1)[i - 1];
+            x.r += paeth_predictor(a.r, b.r, c.r);
+            x.g += paeth_predictor(a.g, b.g, c.g);
+            x.b += paeth_predictor(a.b, b.b, c.b);
+            if constexpr (has_alpha)
+                x.a += paeth_predictor(a.a, b.a, c.a);
+        }
+    }
+}
+
+
+
 
 [[gnu::noinline]] static void unfilter(PNGLoadingContext& context)
 {
@@ -196,42 +271,33 @@ static_assert(sizeof(Pixel) == 4);
         auto filter = context.scanlines[y].filter;
         if (filter == 0)
             continue;
-        for (int i = 0; i < context.width; ++i) {
-            auto& x = (Pixel&)context.bitmap->scanline(y)[i];
-            swap(x.r, x.b);
-            Pixel a;
-            Pixel b;
-
-            if (i != 0) a.rgba = context.bitmap->scanline(y)[i - 1];
-            if (y != 0) b.rgba = context.bitmap->scanline(y - 1)[i];
-
-            if (filter == 1) {
-                x.r += a.r;
-                x.g += a.g;
-                x.b += a.b;
-                if (context.has_alpha())
-                    x.a += a.a;
-            } else if (filter == 2) {
-                x.r += b.r;
-                x.g += b.g;
-                x.b += b.b;
-                if (context.has_alpha())
-                    x.a += b.a;
-            } if (filter == 3) {
-                x.r = x.r + ((a.r + b.r) / 2);
-                x.g = x.g + ((a.g + b.g) / 2);
-                x.b = x.b + ((a.b + b.b) / 2);
-                if (context.has_alpha())
-                    x.a = x.a + ((a.a + b.a) / 2);
-            } if (filter == 4) {
-                Pixel c;
-                if (y != 0 && i != 0) c.rgba = context.bitmap->scanline(y - 1)[i - 1];
-                x.r += paeth_predictor(a.r, b.r, c.r);
-                x.g += paeth_predictor(a.g, b.g, c.g);
-                x.b += paeth_predictor(a.b, b.b, c.b);
-                if (context.has_alpha())
-                    x.a += paeth_predictor(a.a, b.a, c.a);
-            }
+        if (filter == 1) {
+            if (context.has_alpha())
+                unfilter_impl<true, 1>(*context.bitmap, y);
+            else
+                unfilter_impl<false, 1>(*context.bitmap, y);
+            continue;
+        }
+        if (filter == 2) {
+            if (context.has_alpha())
+                unfilter_impl<true, 2>(*context.bitmap, y);
+            else
+                unfilter_impl<false, 2>(*context.bitmap, y);
+            continue;
+        }
+        if (filter == 3) {
+            if (context.has_alpha())
+                unfilter_impl<true, 3>(*context.bitmap, y);
+            else
+                unfilter_impl<false, 3>(*context.bitmap, y);
+            continue;
+        }
+        if (filter == 4) {
+            if (context.has_alpha())
+                unfilter_impl<true, 4>(*context.bitmap, y);
+            else
+                unfilter_impl<false, 4>(*context.bitmap, y);
+            continue;
         }
     }
 }
