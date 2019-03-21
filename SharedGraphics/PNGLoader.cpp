@@ -33,8 +33,14 @@ struct PNGLoadingContext {
     byte compression_method { 0 };
     byte filter_method { 0 };
     byte interlace_method { 0 };
+    byte bytes_per_pixel { 0 };
+    bool has_seen_zlib_header { false };
+    bool has_alpha() const { return color_type & 4; }
     Vector<Scanline> scanlines;
     RetainPtr<GraphicsBitmap> bitmap;
+    byte* decompression_buffer { nullptr };
+    int decompression_buffer_size { 0 };
+    Vector<byte> compressed_data;
 };
 
 class Streamer {
@@ -158,6 +164,30 @@ static RetainPtr<GraphicsBitmap> load_png_impl(const byte* data, int data_size)
         }
     }
 
+    unsigned long srclen = context.compressed_data.size() - 6;
+    unsigned long destlen = context.decompression_buffer_size;
+    int ret = puff(context.decompression_buffer, &destlen, context.compressed_data.data() + 2, &srclen);
+    if (ret < 0)
+        return nullptr;
+    context.compressed_data.clear();
+
+    {
+    Streamer streamer(context.decompression_buffer, context.decompression_buffer_size);
+    for (int y = 0; y < context.height; ++y) {
+        byte filter;
+        if (!streamer.read(filter))
+            return nullptr;
+
+        context.scanlines.append({ filter, ByteBuffer::create_uninitialized(context.width * context.bytes_per_pixel) });
+        auto& scanline_buffer = context.scanlines.last().data;
+        if (!streamer.read_bytes(scanline_buffer.pointer(), scanline_buffer.size()))
+            return nullptr;
+    }
+    munmap(context.decompression_buffer, context.decompression_buffer_size);
+    context.decompression_buffer = nullptr;
+    context.decompression_buffer_size = 0;
+    }
+
     context.bitmap = GraphicsBitmap::create(GraphicsBitmap::Format::RGBA32, { context.width, context.height });
 
     union [[gnu::packed]] Pixel {
@@ -171,11 +201,28 @@ static RetainPtr<GraphicsBitmap> load_png_impl(const byte* data, int data_size)
     };
     static_assert(sizeof(Pixel) == 4);
 
-    printf("unfiltering %d scanlines\n", context.height);
     for (int y = 0; y < context.height; ++y) {
         auto filter = context.scanlines[y].filter;
-        printf("[%d] filter=%u\n", y, context.scanlines[y].filter);
-        memcpy(context.bitmap->scanline(y), context.scanlines[y].data.pointer(), context.scanlines[y].data.size());
+        switch (context.color_type) {
+        case 2: {
+            struct [[gnu::packed]] Triplet { byte r; byte g; byte b; };
+            auto* triplets = (Triplet*)context.scanlines[y].data.pointer();
+            for (int i = 0; i < context.width; ++i) {
+                auto& pixel = (Pixel&)context.bitmap->scanline(y)[i];
+                pixel.r = triplets[i].r;
+                pixel.g = triplets[i].g;
+                pixel.b = triplets[i].b;
+                pixel.a = 0xff;
+            }
+            break;
+        }
+        case 6:
+            memcpy(context.bitmap->scanline(y), context.scanlines[y].data.pointer(), context.scanlines[y].data.size());
+            break;
+        default:
+            ASSERT_NOT_REACHED();
+            break;
+        }
         if (filter == 0)
             continue;
         for (int i = 0; i < context.width; ++i) {
@@ -192,28 +239,26 @@ static RetainPtr<GraphicsBitmap> load_png_impl(const byte* data, int data_size)
                 x.r += a.r;
                 x.g += a.g;
                 x.b += a.b;
-                x.a += a.a;
-            }
-
-            if (filter == 2) {
+                if (context.has_alpha())
+                    x.a += a.a;
+            } else if (filter == 2) {
                 x.r += b.r;
                 x.g += b.g;
                 x.b += b.b;
-                x.a += b.a;
-            }
-
-            if (filter == 3) {
+                if (context.has_alpha())
+                    x.a += b.a;
+            } if (filter == 3) {
                 x.r = x.r + ((a.r + b.r) / 2);
                 x.g = x.g + ((a.g + b.g) / 2);
                 x.b = x.b + ((a.b + b.b) / 2);
-                x.a = x.a + ((a.a + b.a) / 2);
-            }
-
-            if (filter == 4) {
+                if (context.has_alpha())
+                    x.a = x.a + ((a.a + b.a) / 2);
+            } if (filter == 4) {
                 x.r += paeth_predictor(a.r, b.r, c.r);
                 x.g += paeth_predictor(a.g, b.g, c.g);
                 x.b += paeth_predictor(a.b, b.b, c.b);
-                x.a += paeth_predictor(a.a, b.a, c.a);
+                if (context.has_alpha())
+                    x.a += paeth_predictor(a.a, b.a, c.a);
             }
         }
     }
@@ -233,46 +278,30 @@ static bool process_IHDR(const ByteBuffer& data, PNGLoadingContext& context)
     context.compression_method = ihdr.compression_method;
     context.filter_method = ihdr.filter_method;
     context.interlace_method = ihdr.interlace_method;
+
+    switch (context.color_type) {
+    case 2:
+        context.bytes_per_pixel = 3;
+        break;
+    case 6:
+        context.bytes_per_pixel = 4;
+        break;
+    default:
+        ASSERT_NOT_REACHED();
+    }
+
+    printf("PNG: %dx%d (%d bpp)\n", context.width, context.height, context.bit_depth);
+    printf("     Color type: %b\n", context.color_type);
+    printf(" Interlace type: %b\n", context.interlace_method);
+
+    context.decompression_buffer_size = (context.width * context.height * context.bytes_per_pixel + context.height);
+    context.decompression_buffer = (byte*)mmap(nullptr, context.decompression_buffer_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0);
     return true;
 }
 
 static bool process_IDAT(const ByteBuffer& data, PNGLoadingContext& context)
 {
-    for (int i = 0; i < data.size(); ++i) {
-        printf("%c", data[i]);
-    }
-    printf("\n");
-
-    printf("first byte into puff: %c (%b)\n", data[0], data[0]);
-
-    struct [[gnu::packed]] ZlibHeader {
-        byte compression_method : 4;
-        byte compression_info : 4;
-        byte flags;
-    };
-    static_assert(sizeof(ZlibHeader) == 2);
-
-    auto& zhdr = *(ZlibHeader*)data.pointer();
-    printf("compression_method: %u\n", zhdr.compression_method);
-    printf("compression_info: %u\n", zhdr.compression_info);
-    printf("flags: %b\n", zhdr.flags);
-
-    unsigned long destlen = (context.width * context.height * sizeof(RGBA32)) + context.height;
-    unsigned long srclen = data.size() - 2;
-    auto decompression_buffer = ByteBuffer::create_uninitialized(destlen + context.height);
-    int ret = puff(decompression_buffer.pointer(), &destlen, data.pointer() + 2, &srclen);
-    if (ret != 0)
-        return false;
-    Streamer streamer(decompression_buffer.pointer(), decompression_buffer.size());
-    for (int y = 0; y < context.height; ++y) {
-        byte filter;
-        if (!streamer.read(filter))
-            return false;
-        context.scanlines.append({ filter, ByteBuffer::create_uninitialized(context.width * sizeof(RGBA32)) });
-        auto& scanline_buffer = context.scanlines.last().data;
-        if (!streamer.read_bytes(scanline_buffer.pointer(), scanline_buffer.size()))
-            return false;
-    }
+    context.compressed_data.append(data.pointer(), data.size());
     return true;
 }
 

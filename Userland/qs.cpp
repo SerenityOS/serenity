@@ -15,7 +15,7 @@ int main(int argc, char** argv)
     }
 #endif
 
-    const char* path = "/res/icons/folder32.png";
+    const char* path = "/res/wallpapers/sunset-retro.png";
     if (argc > 1)
         path = argv[1];
 
@@ -26,7 +26,7 @@ int main(int argc, char** argv)
     }
 
     auto* window = new GWindow;
-    window->set_title(String::format("qs: %s", path));
+    window->set_title(String::format("QuickShow: %s %s", path, bitmap->size().to_string().characters()));
     window->set_rect(200, 200, bitmap->width(), bitmap->height());
 
     auto* widget = new GWidget;
