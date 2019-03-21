@@ -44,40 +44,40 @@ int main(int argc, char** argv)
         text_editor->set_text(String::from_byte_buffer(file.read_all()));
     }
 
-    auto new_action = GAction::create("New document", { Mod_Ctrl, Key_N }, GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/16x16/new.rgb", { 16, 16 }), [] (const GAction&) {
+    auto new_action = GAction::create("New document", { Mod_Ctrl, Key_N }, GraphicsBitmap::load_from_file("/res/icons/16x16/new.png"), [] (const GAction&) {
         dbgprintf("FIXME: Implement File/New\n");
     });
 
-    auto open_action = GAction::create("Open document", { Mod_Ctrl, Key_O }, GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/16x16/open.rgb", { 16, 16 }), [] (const GAction&) {
+    auto open_action = GAction::create("Open document", { Mod_Ctrl, Key_O }, GraphicsBitmap::load_from_file("/res/icons/16x16/open.png"), [] (const GAction&) {
         dbgprintf("FIXME: Implement File/Open\n");
     });
 
-    auto save_action = GAction::create("Save document", { Mod_Ctrl, Key_S }, GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/16x16/save.rgb", { 16, 16 }), [&] (const GAction&) {
+    auto save_action = GAction::create("Save document", { Mod_Ctrl, Key_S }, GraphicsBitmap::load_from_file("/res/icons/16x16/save.png"), [&] (const GAction&) {
         dbgprintf("Writing document to '%s'\n", path.characters());
         text_editor->write_to_file(path);
     });
 
-    auto undo_action = GAction::create("Undo", { Mod_Ctrl, Key_Z }, GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/16x16/undo.rgb", { 16, 16 }), [&] (const GAction&) {
+    auto undo_action = GAction::create("Undo", { Mod_Ctrl, Key_Z }, GraphicsBitmap::load_from_file("/res/icons/16x16/undo.png"), [&] (const GAction&) {
         // FIXME: Undo
     });
 
-    auto redo_action = GAction::create("Redo", { Mod_Ctrl, Key_Y }, GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/16x16/redo.rgb", { 16, 16 }), [&] (const GAction&) {
+    auto redo_action = GAction::create("Redo", { Mod_Ctrl, Key_Y }, GraphicsBitmap::load_from_file("/res/icons/16x16/redo.png"), [&] (const GAction&) {
         // FIXME: Redo
     });
 
-    auto cut_action = GAction::create("Cut", { Mod_Ctrl, Key_X }, GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/cut16.rgb", { 16, 16 }), [&] (const GAction&) {
+    auto cut_action = GAction::create("Cut", { Mod_Ctrl, Key_X }, GraphicsBitmap::load_from_file("/res/icons/cut16.png"), [&] (const GAction&) {
         text_editor->cut();
     });
 
-    auto copy_action = GAction::create("Copy", { Mod_Ctrl, Key_C }, GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/copyfile16.rgb", { 16, 16 }), [&] (const GAction&) {
+    auto copy_action = GAction::create("Copy", { Mod_Ctrl, Key_C }, GraphicsBitmap::load_from_file("/res/icons/copyfile16.png"), [&] (const GAction&) {
         text_editor->copy();
     });
 
-    auto paste_action = GAction::create("Paste", { Mod_Ctrl, Key_V }, GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/paste16.rgb", { 16, 16 }), [&] (const GAction&) {
+    auto paste_action = GAction::create("Paste", { Mod_Ctrl, Key_V }, GraphicsBitmap::load_from_file("/res/icons/paste16.png"), [&] (const GAction&) {
         text_editor->paste();
     });
 
-    auto delete_action = GAction::create("Delete", { 0, Key_Delete }, GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/16x16/delete.rgb", { 16, 16 }), [&] (const GAction&) {
+    auto delete_action = GAction::create("Delete", { 0, Key_Delete }, GraphicsBitmap::load_from_file("/res/icons/16x16/delete.png"), [&] (const GAction&) {
         text_editor->do_delete();
     });
 

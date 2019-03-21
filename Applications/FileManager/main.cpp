@@ -54,11 +54,11 @@ int main(int argc, char** argv)
         directory_table_view->open(editor.text());
     };
 
-    auto open_parent_directory_action = GAction::create("Open parent directory", { Mod_Alt, Key_Up }, GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/parentdirectory16.rgb", { 16, 16 }), [directory_table_view] (const GAction&) {
+    auto open_parent_directory_action = GAction::create("Open parent directory", { Mod_Alt, Key_Up }, GraphicsBitmap::load_from_file("/res/icons/parentdirectory16.png"), [directory_table_view] (const GAction&) {
         directory_table_view->open_parent_directory();
     });
 
-    auto mkdir_action = GAction::create("New directory...", GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/16x16/mkdir.rgb", { 16, 16 }), [&] (const GAction&) {
+    auto mkdir_action = GAction::create("New directory...", GraphicsBitmap::load_from_file("/res/icons/16x16/mkdir.png"), [&] (const GAction&) {
         GInputBox input_box("Enter name:", "New directory", window);
         if (input_box.exec() == GInputBox::ExecOK && !input_box.text_value().is_empty()) {
             auto new_dir_path = String::format("%s/%s",
@@ -75,11 +75,11 @@ int main(int argc, char** argv)
         }
     });
 
-    auto copy_action = GAction::create("Copy", GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/copyfile16.rgb", { 16, 16 }), [] (const GAction&) {
+    auto copy_action = GAction::create("Copy", GraphicsBitmap::load_from_file("/res/icons/copyfile16.png"), [] (const GAction&) {
         dbgprintf("'Copy' action activated!\n");
     });
 
-    auto delete_action = GAction::create("Delete", GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/16x16/delete.rgb", { 16, 16 }), [] (const GAction&) {
+    auto delete_action = GAction::create("Delete", GraphicsBitmap::load_from_file("/res/icons/16x16/delete.png"), [] (const GAction&) {
         dbgprintf("'Delete' action activated!\n");
     });
 

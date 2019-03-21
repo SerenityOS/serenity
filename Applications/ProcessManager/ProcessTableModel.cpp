@@ -11,10 +11,10 @@ ProcessTableModel::ProcessTableModel()
         m_usernames.set(passwd->pw_uid, passwd->pw_name);
     endpwent();
 
-    m_generic_process_icon = GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/gear16.rgb", { 16, 16 });
-    m_high_priority_icon = GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/highpriority16.rgb", { 16, 16 });
-    m_low_priority_icon = GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/lowpriority16.rgb", { 16, 16 });
-    m_normal_priority_icon = GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/normalpriority16.rgb", { 16, 16 });
+    m_generic_process_icon = GraphicsBitmap::load_from_file("/res/icons/gear16.png");
+    m_high_priority_icon = GraphicsBitmap::load_from_file("/res/icons/highpriority16.png");
+    m_low_priority_icon = GraphicsBitmap::load_from_file("/res/icons/lowpriority16.png");
+    m_normal_priority_icon = GraphicsBitmap::load_from_file("/res/icons/normalpriority16.png");
 }
 
 ProcessTableModel::~ProcessTableModel()

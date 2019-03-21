@@ -56,33 +56,33 @@ void IRCAppWindow::setup_client()
 
 void IRCAppWindow::setup_actions()
 {
-    m_join_action = GAction::create("Join channel", GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/16x16/irc-join.rgb", { 16, 16 }), [&] (auto&) {
+    m_join_action = GAction::create("Join channel", GraphicsBitmap::load_from_file("/res/icons/16x16/irc-join.png"), [&] (auto&) {
         GInputBox input_box("Enter nickname:", "Join channel", this);
         if (input_box.exec() == GInputBox::ExecOK && !input_box.text_value().is_empty())
             m_client.handle_join_action(input_box.text_value());
     });
 
-    m_part_action = GAction::create("Part from channel", GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/16x16/irc-part.rgb", { 16, 16 }), [] (auto&) {
+    m_part_action = GAction::create("Part from channel", GraphicsBitmap::load_from_file("/res/icons/16x16/irc-part.png"), [] (auto&) {
         printf("FIXME: Implement part action\n");
     });
 
-    m_whois_action = GAction::create("Whois user", GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/16x16/irc-whois.rgb", { 16, 16 }), [&] (auto&) {
+    m_whois_action = GAction::create("Whois user", GraphicsBitmap::load_from_file("/res/icons/16x16/irc-whois.png"), [&] (auto&) {
         GInputBox input_box("Enter nickname:", "IRC WHOIS lookup", this);
         if (input_box.exec() == GInputBox::ExecOK && !input_box.text_value().is_empty())
             m_client.handle_whois_action(input_box.text_value());
     });
 
-    m_open_query_action = GAction::create("Open query", GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/16x16/irc-open-query.rgb", { 16, 16 }), [&] (auto&) {
+    m_open_query_action = GAction::create("Open query", GraphicsBitmap::load_from_file("/res/icons/16x16/irc-open-query.png"), [&] (auto&) {
         GInputBox input_box("Enter nickname:", "Open IRC query with...", this);
         if (input_box.exec() == GInputBox::ExecOK && !input_box.text_value().is_empty())
             m_client.handle_open_query_action(input_box.text_value());
     });
 
-    m_close_query_action = GAction::create("Close query", GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/16x16/irc-close-query.rgb", { 16, 16 }), [] (auto&) {
+    m_close_query_action = GAction::create("Close query", GraphicsBitmap::load_from_file("/res/icons/16x16/irc-close-query.png"), [] (auto&) {
         printf("FIXME: Implement close-query action\n");
     });
 
-    m_change_nick_action = GAction::create("Change nickname", GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, "/res/icons/16x16/irc-nick.rgb", { 16, 16 }), [this] (auto&) {
+    m_change_nick_action = GAction::create("Change nickname", GraphicsBitmap::load_from_file("/res/icons/16x16/irc-nick.png"), [this] (auto&) {
         GInputBox input_box("Enter nickname:", "Change nickname", this);
         if (input_box.exec() == GInputBox::ExecOK && !input_box.text_value().is_empty())
             m_client.handle_change_nick_action(input_box.text_value());
