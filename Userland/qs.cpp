@@ -26,6 +26,8 @@ int main(int argc, char** argv)
     }
 
     auto* window = new GWindow;
+
+    window->set_double_buffering_enabled(false);
     window->set_title(String::format("QuickShow: %s %s", path, bitmap->size().to_string().characters()));
     window->set_rect(200, 200, bitmap->width(), bitmap->height());
 
