@@ -249,12 +249,6 @@ void WSMessageLoop::notify_client_disconnected(int client_id)
 
 void WSMessageLoop::on_receive_from_client(int client_id, const WSAPI_ClientMessage& message)
 {
-#if 0
-    // FIXME: This should not be necessary.. why is this necessary?
-    while (!running())
-        sched_yield();
-#endif
-
     WSClientConnection& client = *WSClientConnection::from_client_id(client_id);
     switch (message.type) {
     case WSAPI_ClientMessage::Type::Greeting:
