@@ -162,8 +162,9 @@ union [[gnu::packed]] Pixel {
 static_assert(sizeof(Pixel) == 4);
 
 template<bool has_alpha, byte filter_type>
-[[gnu::always_inline]] static inline void unfilter_impl(const GraphicsBitmap& bitmap, int y)
+[[gnu::always_inline]] static inline void unfilter_impl(const GraphicsBitmap& bitmap, int y, const void* dummy_scanline_data)
 {
+    auto* dummy_scanline = (const Pixel*)dummy_scanline_data;
     if constexpr (filter_type == 1) {
         auto* pixels = (Pixel*)bitmap.scanline(y);
         for (int i = 0; i < bitmap.width(); ++i) {
@@ -181,11 +182,12 @@ template<bool has_alpha, byte filter_type>
     }
     if constexpr (filter_type == 2) {
         auto* pixels = (Pixel*)bitmap.scanline(y);
+        auto* pixels_y_minus_1 = y == 0 ? dummy_scanline : (Pixel*)bitmap.scanline(y - 1);
         for (int i = 0; i < bitmap.width(); ++i) {
             auto& x = pixels[i];
             swap(x.r, x.b);
             Pixel b;
-            if (y != 0) b.rgba = bitmap.scanline(y - 1)[i];
+            b.rgba = pixels_y_minus_1[i].rgba;
             x.r += b.r;
             x.g += b.g;
             x.b += b.b;
@@ -197,13 +199,14 @@ template<bool has_alpha, byte filter_type>
 
     if constexpr (filter_type == 3) {
         auto* pixels = (Pixel*)bitmap.scanline(y);
+        auto* pixels_y_minus_1 = y == 0 ? dummy_scanline : (Pixel*)bitmap.scanline(y - 1);
         for (int i = 0; i < bitmap.width(); ++i) {
             auto& x = pixels[i];
             swap(x.r, x.b);
             Pixel a;
             Pixel b;
             if (i != 0) a.rgba = bitmap.scanline(y)[i - 1];
-            if (y != 0) b.rgba = bitmap.scanline(y - 1)[i];
+            b.rgba = pixels_y_minus_1[i].rgba;
             x.r = x.r + ((a.r + b.r) / 2);
             x.g = x.g + ((a.g + b.g) / 2);
             x.b = x.b + ((a.b + b.b) / 2);
@@ -215,15 +218,18 @@ template<bool has_alpha, byte filter_type>
 
     if constexpr (filter_type == 4) {
         auto* pixels = (Pixel*)bitmap.scanline(y);
+        auto* pixels_y_minus_1 = y == 0 ? dummy_scanline : (Pixel*)bitmap.scanline(y - 1);
         for (int i = 0; i < bitmap.width(); ++i) {
             auto& x = pixels[i];
             swap(x.r, x.b);
             Pixel a;
             Pixel b;
             Pixel c;
-            if (i != 0) a.rgba = bitmap.scanline(y)[i - 1];
-            if (y != 0) b.rgba = bitmap.scanline(y - 1)[i];
-            if (y != 0 && i != 0) c.rgba = bitmap.scanline(y - 1)[i - 1];
+            if (i != 0) {
+                a.rgba = bitmap.scanline(y)[i - 1];
+                c.rgba = pixels_y_minus_1[i - 1].rgba;
+            }
+            b.rgba = pixels_y_minus_1[i].rgba;
             x.r += paeth_predictor(a.r, b.r, c.r);
             x.g += paeth_predictor(a.g, b.g, c.g);
             x.b += paeth_predictor(a.b, b.b, c.b);
@@ -232,9 +238,6 @@ template<bool has_alpha, byte filter_type>
         }
     }
 }
-
-
-
 
 [[gnu::noinline]] static void unfilter(PNGLoadingContext& context)
 {
@@ -266,6 +269,8 @@ template<bool has_alpha, byte filter_type>
     }
     }
 
+    auto dummy_scanline = ByteBuffer::create_zeroed(context.width * sizeof(RGBA32));
+
     Stopwatch sw("load_png_impl: unfilter: process");
     for (int y = 0; y < context.height; ++y) {
         auto filter = context.scanlines[y].filter;
@@ -273,30 +278,30 @@ template<bool has_alpha, byte filter_type>
             continue;
         if (filter == 1) {
             if (context.has_alpha())
-                unfilter_impl<true, 1>(*context.bitmap, y);
+                unfilter_impl<true, 1>(*context.bitmap, y, dummy_scanline.pointer());
             else
-                unfilter_impl<false, 1>(*context.bitmap, y);
+                unfilter_impl<false, 1>(*context.bitmap, y, dummy_scanline.pointer());
             continue;
         }
         if (filter == 2) {
             if (context.has_alpha())
-                unfilter_impl<true, 2>(*context.bitmap, y);
+                unfilter_impl<true, 2>(*context.bitmap, y, dummy_scanline.pointer());
             else
-                unfilter_impl<false, 2>(*context.bitmap, y);
+                unfilter_impl<false, 2>(*context.bitmap, y, dummy_scanline.pointer());
             continue;
         }
         if (filter == 3) {
             if (context.has_alpha())
-                unfilter_impl<true, 3>(*context.bitmap, y);
+                unfilter_impl<true, 3>(*context.bitmap, y, dummy_scanline.pointer());
             else
-                unfilter_impl<false, 3>(*context.bitmap, y);
+                unfilter_impl<false, 3>(*context.bitmap, y, dummy_scanline.pointer());
             continue;
         }
         if (filter == 4) {
             if (context.has_alpha())
-                unfilter_impl<true, 4>(*context.bitmap, y);
+                unfilter_impl<true, 4>(*context.bitmap, y, dummy_scanline.pointer());
             else
-                unfilter_impl<false, 4>(*context.bitmap, y);
+                unfilter_impl<false, 4>(*context.bitmap, y, dummy_scanline.pointer());
             continue;
         }
     }
