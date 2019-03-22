@@ -14,11 +14,14 @@
 #include <LibGUI/GLabel.h>
 #include <LibGUI/GButton.h>
 #include <LibGUI/GTextBox.h>
+#include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GCheckBox.h>
+#include <LibGUI/GProgressBar.h>
 #include <LibGUI/GApplication.h>
 #include <signal.h>
 
 static GWindow* make_launcher_window();
+static GWindow* make_progress_window();
 
 void handle_sigchld(int)
 {
@@ -38,18 +41,21 @@ int main(int argc, char** argv)
     launcher_window->set_should_exit_event_loop_on_close(true);
     launcher_window->show();
 
+    auto* progress_window = make_progress_window();
+    progress_window->show();
+
     return app.exec();
 }
 
 GWindow* make_launcher_window()
 {
     auto* window = new GWindow;
-    window->set_title("guitest2");
+    window->set_title("GUI Test II");
     window->set_rect({ 100, 400, 100, 230 });
 
     auto* widget = new GWidget;
+    widget->set_fill_with_background_color(true);
     window->set_main_widget(widget);
-    widget->set_relative_rect({ 0, 0, 100, 230 });
 
     auto* label = new GLabel(widget);
     label->set_relative_rect({ 0, 0, 100, 20 });
@@ -113,6 +119,33 @@ GWindow* make_launcher_window()
     close_button->on_click = [window] (GButton&) {
         window->close();
     };
+
+    return window;
+}
+
+static GWindow* make_progress_window()
+{
+    auto* window = new GWindow;
+    window->set_title("Progress bar test");
+    window->set_rect({ 100, 400, 240, 80 });
+
+    auto* widget = new GWidget;
+    widget->set_fill_with_background_color(true);
+    window->set_main_widget(widget);
+
+    widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
+
+    widget->layout()->set_margins({ 8, 8, 8, 8 });
+
+    auto* label = new GLabel("Hi /dpt/", widget);
+    label->set_size_policy(SizePolicy::Fill, SizePolicy::Fill);
+
+    auto* progress_bar = new GProgressBar(widget);
+    progress_bar->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
+    progress_bar->set_preferred_size({ 200, 20 });
+
+    progress_bar->set_range(0, 100);
+    progress_bar->set_value(25);
 
     return window;
 }

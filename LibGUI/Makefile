@@ -47,6 +47,7 @@ LIBGUI_OBJS = \
     GInputBox.o \
     GDialog.o \
     GDesktop.o \
+    GProgressBar.o \
     GWindow.o
 
 OBJS = $(SHAREDGRAPHICS_OBJS) $(LIBGUI_OBJS)
