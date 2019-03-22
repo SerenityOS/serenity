@@ -267,6 +267,11 @@ one_more:
                     ++ret;
                     break;
 
+                case '%':
+                    putch(bufptr, '%');
+                    ++ret;
+                    break;
+
                 case 'p':
                     putch(bufptr, '0');
                     putch(bufptr, 'x');
