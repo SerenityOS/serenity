@@ -32,6 +32,7 @@ public:
     void set_pixel(const Point&, Color);
     void draw_line(const Point&, const Point&, Color);
     void draw_focus_rect(const Rect&);
+    void draw_scaled_bitmap(const Rect& dst_rect, const GraphicsBitmap&, const Rect& src_rect);
     void blit(const Point&, const GraphicsBitmap&, const Rect& src_rect);
     void blit_with_opacity(const Point&, const GraphicsBitmap&, const Rect& src_rect, float opacity);
 

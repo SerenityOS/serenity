@@ -321,6 +321,44 @@ void Painter::blit(const Point& position, const GraphicsBitmap& source, const Re
     }
 }
 
+void Painter::draw_scaled_bitmap(const Rect& a_dst_rect, const GraphicsBitmap& source, const Rect& src_rect)
+{
+    auto dst_rect = a_dst_rect;
+    if (dst_rect.size() == src_rect.size())
+        return blit(dst_rect.location(), source, src_rect);
+
+    auto safe_src_rect = Rect::intersection(src_rect, source.rect());
+    ASSERT(source.rect().contains(safe_src_rect));
+    dst_rect.move_by(state().translation);
+    auto clipped_rect = Rect::intersection(dst_rect, clip_rect());
+    if (clipped_rect.is_empty())
+        return;
+
+    float hscale = (float)src_rect.width() / (float)dst_rect.width();
+    float vscale = (float)src_rect.height() / (float)dst_rect.height();
+
+    for (int y = dst_rect.top(); y <= dst_rect.bottom(); ++y) {
+        if (y < clipped_rect.top() || y > clipped_rect.bottom())
+            continue;
+        auto* scanline = (Color*)m_target->scanline(y);
+        for (int x = dst_rect.left(); x <= dst_rect.right(); ++x) {
+            if (x < clipped_rect.left() || x >= clipped_rect.right())
+                continue;
+
+            auto scaled_x = (float)(x - dst_rect.x()) * hscale;
+            auto scaled_y = (float)(y - dst_rect.y()) * vscale;
+            auto src_pixel = Color::from_rgba(source.scanline((int)scaled_y)[(int)scaled_x]);
+
+            if (!src_pixel.alpha())
+                continue;
+            if (src_pixel.alpha() == 0xff)
+                scanline[x] = src_pixel;
+            else
+                scanline[x] = scanline[x].blend(scanline[x]);
+        }
+    }
+}
+
 [[gnu::flatten]] void Painter::draw_glyph(const Point& point, char ch, Color color)
 {
     draw_glyph(point, ch, font(), color);
