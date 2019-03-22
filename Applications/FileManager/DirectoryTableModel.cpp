@@ -14,6 +14,7 @@ DirectoryTableModel::DirectoryTableModel()
     m_symlink_icon = GraphicsBitmap::load_from_file("/res/icons/link16.png");
     m_socket_icon = GraphicsBitmap::load_from_file("/res/icons/socket16.png");
     m_executable_icon = GraphicsBitmap::load_from_file("/res/icons/executable16.png");
+    m_filetype_image_icon = GraphicsBitmap::load_from_file("/res/icons/16x16/filetype-image.png");
 
     setpwent();
     while (auto* passwd = getpwent())
@@ -78,6 +79,8 @@ const GraphicsBitmap& DirectoryTableModel::icon_for(const Entry& entry) const
         return *m_socket_icon;
     if (entry.mode & S_IXUSR)
         return *m_executable_icon;
+    if (entry.name.ends_with(".png"))
+        return *m_filetype_image_icon;
     return *m_file_icon;
 }
 

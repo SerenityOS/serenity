@@ -67,6 +67,7 @@ private:
     RetainPtr<GraphicsBitmap> m_symlink_icon;
     RetainPtr<GraphicsBitmap> m_socket_icon;
     RetainPtr<GraphicsBitmap> m_executable_icon;
+    RetainPtr<GraphicsBitmap> m_filetype_image_icon;
 
     HashMap<uid_t, String> m_user_names;
     HashMap<gid_t, String> m_group_names;
