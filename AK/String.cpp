@@ -126,4 +126,15 @@ String String::format(const char* fmt, ...)
     return builder.to_string();
 }
 
+bool String::ends_with(const String& str) const
+{
+    if (str.is_empty())
+        return true;
+    if (is_empty())
+        return false;
+    if (str.length() > length())
+        return false;
+    return !memcmp(characters() + (length() - str.length()), str.characters(), str.length());
+}
+
 }

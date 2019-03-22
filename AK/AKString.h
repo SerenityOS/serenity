@@ -74,6 +74,8 @@ public:
     const char* characters() const { return m_impl ? m_impl->characters() : nullptr; }
     char operator[](ssize_t i) const { ASSERT(m_impl); return (*m_impl)[i]; }
 
+    bool ends_with(const String&) const;
+
     bool operator==(const String&) const;
     bool operator!=(const String& other) const { return !(*this == other); }
     bool operator<(const String&) const;
