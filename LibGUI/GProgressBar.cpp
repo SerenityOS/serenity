@@ -4,7 +4,6 @@
 GProgressBar::GProgressBar(GWidget* parent)
     : GWidget(parent)
 {
-    start_timer(10);
 }
 
 GProgressBar::~GProgressBar()
