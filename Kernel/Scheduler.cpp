@@ -294,11 +294,6 @@ void Scheduler::switch_now()
 bool Scheduler::context_switch(Thread& thread)
 {
     thread.set_ticks_left(time_slice_for(thread.process().priority()));
-
-    // FIXME(Thread): This is such a hack.
-    if (&thread == &s_colonel_process->main_thread())
-        thread.set_ticks_left(1);
-
     thread.did_schedule();
 
     if (current == &thread)
@@ -386,6 +381,8 @@ void Scheduler::initialize()
     s_redirection.selector = gdt_alloc_entry();
     initialize_redirection();
     s_colonel_process = Process::create_kernel_process("colonel", nullptr);
+    // Make sure the colonel uses a smallish time slice.
+    s_colonel_process->set_priority(Process::LowPriority);
     load_task_register(s_redirection.selector);
 }
 
