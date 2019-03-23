@@ -92,6 +92,7 @@
     __ENUMERATE_SYSCALL(recvfrom) \
     __ENUMERATE_SYSCALL(getsockopt) \
     __ENUMERATE_SYSCALL(setsockopt) \
+    __ENUMERATE_SYSCALL(create_thread) \
 
 
 namespace Syscall {

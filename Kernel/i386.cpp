@@ -273,9 +273,10 @@ void exception_14_handler(RegisterDumpWithExceptionCode& regs)
     auto response = MM.handle_page_fault(PageFault(regs.exception_code, LinearAddress(faultAddress)));
 
     if (response == PageFaultResponse::ShouldCrash) {
-        kprintf("%s(%u) unrecoverable page fault, %s laddr=%p\n",
+        kprintf("%s(%u:%u) unrecoverable page fault, %s laddr=%p\n",
             current->process().name().characters(),
             current->pid(),
+            current->tid(),
             regs.exception_code & 2 ? "write" : "read",
             faultAddress);
         dump(regs);

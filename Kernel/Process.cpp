@@ -406,7 +406,7 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
     main_thread().m_tss.gs = 0x23;
     main_thread().m_tss.ss = 0x23;
     main_thread().m_tss.cr3 = page_directory().cr3();
-    main_thread().make_userspace_stack(move(arguments), move(environment));
+    main_thread().make_userspace_stack_for_main_thread(move(arguments), move(environment));
     main_thread().m_tss.ss0 = 0x10;
     main_thread().m_tss.esp0 = old_esp0;
     main_thread().m_tss.ss2 = m_pid;
@@ -2451,4 +2451,19 @@ int Process::thread_count() const
         return IterationDecision::Continue;
     });
     return count;
+}
+
+int Process::sys$create_thread(int(*entry)(void*), void* argument)
+{
+    if (!validate_read((const void*)entry, sizeof(void*)))
+        return -EFAULT;
+    auto* thread = new Thread(*this);
+    auto& tss = thread->tss();
+    tss.eip = (dword)entry;
+    tss.eflags = 0x0202;
+    tss.cr3 = page_directory().cr3();
+    thread->make_userspace_stack_for_secondary_thread(argument);
+
+    thread->set_state(Thread::State::Runnable);
+    return 0;
 }

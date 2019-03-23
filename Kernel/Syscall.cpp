@@ -235,6 +235,8 @@ static dword handle(RegisterDump& regs, dword function, dword arg1, dword arg2, 
         return current->process().sys$getsockopt((const SC_getsockopt_params*)arg1);
     case Syscall::SC_setsockopt:
         return current->process().sys$setsockopt((const SC_setsockopt_params*)arg1);
+    case Syscall::SC_create_thread:
+        return current->process().sys$create_thread((int(*)(void*))arg1, (void*)arg2);
     default:
         kprintf("<%u> int0x82: Unknown function %u requested {%x, %x, %x}\n", current->process().pid(), function, arg1, arg2, arg3);
         break;
