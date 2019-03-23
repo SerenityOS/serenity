@@ -16,7 +16,7 @@ DirectoryView::DirectoryView(GWidget* parent)
 
     m_item_view->set_model_column(DirectoryModel::Column::Name);
 
-    m_table_view->on_model_notification = [this] (const GModelNotification& notification) {
+    m_item_view->on_model_notification = [this] (const GModelNotification& notification) {
         if (notification.type() == GModelNotification::Type::ModelUpdated) {
             set_status_message(String::format("%d item%s (%u byte%s)",
                                               model().row_count(),
