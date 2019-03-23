@@ -59,8 +59,10 @@ Thread::Thread(Process& process)
     m_tss.ss2 = m_process.pid();
     m_far_ptr.offset = 0x98765432;
 
-    InterruptDisabler disabler;
-    g_threads->prepend(this);
+    if (m_process.pid() != 0) {
+        InterruptDisabler disabler;
+        g_threads->prepend(this);
+    }
 }
 
 Thread::~Thread()
