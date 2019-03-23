@@ -42,7 +42,7 @@ public:
         const Font* font { nullptr };
     };
 
-    enum class Role { Display, Sort, Custom, ForegroundColor, BackgroundColor };
+    enum class Role { Display, Sort, Custom, ForegroundColor, BackgroundColor, Icon };
 
     virtual ~GModel();
 

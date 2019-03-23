@@ -20,6 +20,8 @@ public:
     void set_scrollbars_enabled(bool);
     bool is_scrollbars_enabled() const { return m_scrollbars_enabled; }
 
+    Size available_size() const;
+
     GScrollBar& vertical_scrollbar() { return *m_vertical_scrollbar; }
     const GScrollBar& vertical_scrollbar() const { return *m_vertical_scrollbar; }
     GScrollBar& horizontal_scrollbar() { return *m_horizontal_scrollbar; }

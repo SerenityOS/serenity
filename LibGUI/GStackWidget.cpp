@@ -39,7 +39,7 @@ void GStackWidget::child_event(GChildEvent& event)
     if (event.type() == GEvent::ChildAdded) {
         if (!m_active_widget)
             set_active_widget(&child);
-        else
+        else if (m_active_widget != &child)
             child.set_visible(false);
     } else if (event.type() == GEvent::ChildRemoved) {
         if (m_active_widget == &child) {

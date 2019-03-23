@@ -165,11 +165,15 @@ GVariant DirectoryModel::data(const GModelIndex& index, Role role) const
         case Column::Inode: return (int)entry.inode;
         }
     }
+    if (role == Role::Icon) {
+        return icon_for(entry);
+    }
     return { };
 }
 
 void DirectoryModel::update()
 {
+    dbgprintf("DirectoryModel::update\n");
     DIR* dirp = opendir(m_path.characters());
     if (!dirp) {
         perror("opendir");
