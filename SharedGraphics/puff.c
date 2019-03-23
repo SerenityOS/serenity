@@ -28,7 +28,6 @@
  *    http://www.zlib.org/rfc-deflate.html
  */
 
-#define SLOW
 /*
  * Change history:
  *
