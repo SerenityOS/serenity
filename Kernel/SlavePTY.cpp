@@ -8,8 +8,8 @@ SlavePTY::SlavePTY(MasterPTY& master, unsigned index)
     , m_master(master)
     , m_index(index)
 {
-    set_uid(current->uid());
-    set_gid(current->gid());
+    set_uid(current->process().uid());
+    set_gid(current->process().gid());
     DevPtsFS::the().register_slave_pty(*this);
     set_size(80, 25);
 }

@@ -15,6 +15,7 @@ void* memset(void*, int, size_t);
 char *strdup(const char*);
 int memcmp(const void*, const void*, size_t);
 char* strrchr(const char* str, int ch);
+void* memmove(void* dest, const void* src, size_t n);
 
 inline word ntohs(word w) { return (w & 0xff) << 8 | ((w >> 8) & 0xff); }
 inline word htons(word w) { return (w & 0xff) << 8 | ((w >> 8) & 0xff); }

@@ -167,7 +167,7 @@ KResult TCPSocket::protocol_connect()
     m_state = State::Connecting;
 
     current->set_blocked_socket(this);
-    block(Process::BlockedConnect);
+    block(Thread::BlockedConnect);
     Scheduler::yield();
 
     ASSERT(is_connected());

@@ -26,9 +26,9 @@
 #include "E1000NetworkAdapter.h"
 #include <Kernel/NetworkTask.h>
 
-#define SPAWN_LAUNCHER
+//#define SPAWN_LAUNCHER
 //#define SPAWN_GUITEST2
-//#define SPAWN_FILE_MANAGER
+#define SPAWN_FILE_MANAGER
 //#define SPAWN_PROCESS_MANAGER
 //#define SPAWN_TEXT_EDITOR
 //#define SPAWN_FONTEDITOR
@@ -78,7 +78,9 @@ VFS* vfs;
 
     vfs->mount_root(e2fs.copy_ref());
 
+    dbgprintf("Load ksyms\n");
     load_ksyms();
+    dbgprintf("Loaded ksyms\n");
 
     vfs->mount(ProcFS::the(), "/proc");
     vfs->mount(DevPtsFS::the(), "/dev/pts");
@@ -130,7 +132,7 @@ VFS* vfs;
     Process::create_kernel_process("spawn_stress", spawn_stress);
 #endif
 
-    current->sys$exit(0);
+    current->process().sys$exit(0);
     ASSERT_NOT_REACHED();
 }
 
@@ -177,6 +179,7 @@ VFS* vfs;
     devptsfs->initialize();
 
     Process::initialize();
+    Thread::initialize();
     Process::create_kernel_process("init_stage2", init_stage2);
     Process::create_kernel_process("syncd", [] {
         for (;;) {
@@ -186,10 +189,10 @@ VFS* vfs;
     });
     Process::create_kernel_process("Finalizer", [] {
         g_finalizer = current;
-        current->set_priority(Process::LowPriority);
+        current->process().set_priority(Process::LowPriority);
         for (;;) {
-            Process::finalize_dying_processes();
-            current->block(Process::BlockedLurking);
+            Thread::finalize_dying_threads();
+            current->block(Thread::BlockedLurking);
             Scheduler::yield();
         }
     });

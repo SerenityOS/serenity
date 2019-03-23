@@ -5,8 +5,8 @@
 #include <Kernel/i386.h>
 #include <Kernel/Scheduler.h>
 
-class Process;
-extern Process* current;
+class Thread;
+extern Thread* current;
 
 static inline dword CAS(volatile dword* mem, dword newval, dword oldval)
 {
@@ -32,7 +32,7 @@ public:
 private:
     volatile dword m_lock { 0 };
     dword m_level { 0 };
-    Process* m_holder { nullptr };
+    Thread* m_holder { nullptr };
     const char* m_name { nullptr };
 };
 

@@ -8,7 +8,11 @@
 
 static void console_putch(char*&, char ch)
 {
-    Console::the().write(*current, (byte*)&ch, 1);
+    if (!current) {
+        IO::out8(0xe9, ch);
+        return;
+    }
+    Console::the().write(current->process(), (byte*)&ch, 1);
 }
 
 int kprintf(const char* fmt, ...)

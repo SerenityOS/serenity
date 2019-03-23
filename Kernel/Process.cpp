@@ -27,14 +27,11 @@
 #include <Kernel/ARP.h>
 
 //#define DEBUG_IO
-//#define TASK_DEBUG
-//#define FORK_DEBUG
-//#define SIGNAL_DEBUG
+#define TASK_DEBUG
+#define FORK_DEBUG
+#define SIGNAL_DEBUG
 #define MAX_PROCESS_GIDS 32
 //#define SHARED_BUFFER_DEBUG
-
-static const dword default_kernel_stack_size = 16384;
-static const dword default_userspace_stack_size = 65536;
 
 static pid_t next_pid;
 InlineLinkedList<Process>* g_processes;
@@ -52,7 +49,6 @@ void Process::initialize()
     g_processes = new InlineLinkedList<Process>;
     s_hostname = new String("courage");
     s_hostname_lock = new Lock;
-    Scheduler::initialize();
 }
 
 Vector<pid_t> Process::all_pids()
@@ -226,8 +222,6 @@ Process* Process::fork(RegisterDump& regs)
     if (!child)
         return nullptr;
 
-    memcpy(child->m_signal_action_data, m_signal_action_data, sizeof(m_signal_action_data));
-    child->m_signal_mask = m_signal_mask;
 #ifdef FORK_DEBUG
     dbgprintf("fork: child=%p\n", child);
 #endif
@@ -239,35 +233,31 @@ Process* Process::fork(RegisterDump& regs)
         auto cloned_region = region->clone();
         child->m_regions.append(move(cloned_region));
         MM.map_region(*child, *child->m_regions.last());
-        if (region.ptr() == m_display_framebuffer_region.ptr())
-            child->m_display_framebuffer_region = child->m_regions.last().copy_ref();
     }
 
     for (auto gid : m_gids)
         child->m_gids.set(gid);
 
-    child->m_tss.eax = 0; // fork() returns 0 in the child :^)
-    child->m_tss.ebx = regs.ebx;
-    child->m_tss.ecx = regs.ecx;
-    child->m_tss.edx = regs.edx;
-    child->m_tss.ebp = regs.ebp;
-    child->m_tss.esp = regs.esp_if_crossRing;
-    child->m_tss.esi = regs.esi;
-    child->m_tss.edi = regs.edi;
-    child->m_tss.eflags = regs.eflags;
-    child->m_tss.eip = regs.eip;
-    child->m_tss.cs = regs.cs;
-    child->m_tss.ds = regs.ds;
-    child->m_tss.es = regs.es;
-    child->m_tss.fs = regs.fs;
-    child->m_tss.gs = regs.gs;
-    child->m_tss.ss = regs.ss_if_crossRing;
-
-    child->m_fpu_state = m_fpu_state;
-    child->m_has_used_fpu = m_has_used_fpu;
+    auto& child_tss = child->main_thread().m_tss;
+    child_tss.eax = 0; // fork() returns 0 in the child :^)
+    child_tss.ebx = regs.ebx;
+    child_tss.ecx = regs.ecx;
+    child_tss.edx = regs.edx;
+    child_tss.ebp = regs.ebp;
+    child_tss.esp = regs.esp_if_crossRing;
+    child_tss.esi = regs.esi;
+    child_tss.edi = regs.edi;
+    child_tss.eflags = regs.eflags;
+    child_tss.eip = regs.eip;
+    child_tss.cs = regs.cs;
+    child_tss.ds = regs.ds;
+    child_tss.es = regs.es;
+    child_tss.fs = regs.fs;
+    child_tss.gs = regs.gs;
+    child_tss.ss = regs.ss_if_crossRing;
 
 #ifdef FORK_DEBUG
-    dbgprintf("fork: child will begin executing at %w:%x with stack %w:%x\n", child->m_tss.cs, child->m_tss.eip, child->m_tss.ss, child->m_tss.esp);
+    dbgprintf("fork: child will begin executing at %w:%x with stack %w:%x, kstack %w:%x\n", child_tss.cs, child_tss.eip, child_tss.ss, child_tss.esp, child_tss.ss0, child_tss.esp0);
 #endif
 
     {
@@ -276,8 +266,11 @@ Process* Process::fork(RegisterDump& regs)
         system.nprocess++;
     }
 #ifdef TASK_DEBUG
-    kprintf("Process %u (%s) forked from %u @ %p\n", child->pid(), child->name().characters(), m_pid, child->m_tss.eip);
+    kprintf("Process %u (%s) forked from %u @ %p\n", child->pid(), child->name().characters(), m_pid, child_tss.eip);
 #endif
+
+    child->main_thread().set_state(Thread::State::Skip1SchedulerPass);
+
     return child;
 }
 
@@ -292,6 +285,9 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
 {
     ASSERT(is_ring3());
 
+    // FIXME(Thread): Kill any threads the moment we commit to the exec().
+    ASSERT(thread_count() == 1);
+
     auto parts = path.split('/');
     if (parts.is_empty())
         return -ENOENT;
@@ -305,7 +301,6 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
         return -EACCES;
 
     if (!descriptor->metadata().size) {
-        kprintf("exec() of 0-length binaries not supported\n");
         return -ENOTIMPL;
     }
 
@@ -355,7 +350,7 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
         if (!success) {
             m_page_directory = move(old_page_directory);
             // FIXME: RAII this somehow instead.
-            ASSERT(current == this);
+            ASSERT(&current->process() == this);
             MM.enter_process_paging_scope(*this);
             m_regions = move(old_regions);
             kprintf("sys$execve: Failure loading %s\n", path.characters());
@@ -366,20 +361,19 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
         if (!entry_eip) {
             m_page_directory = move(old_page_directory);
             // FIXME: RAII this somehow instead.
-            ASSERT(current == this);
+            ASSERT(&current->process() == this);
             MM.enter_process_paging_scope(*this);
             m_regions = move(old_regions);
             return -ENOEXEC;
         }
     }
 
-    kfree(m_kernel_stack_for_signal_handler);
-    m_kernel_stack_for_signal_handler = nullptr;
-    m_signal_stack_user_region = nullptr;
-    m_display_framebuffer_region = nullptr;
-    set_default_signal_dispositions();
-    m_signal_mask = 0;
-    m_pending_signals = 0;
+    kfree(current->m_kernel_stack_for_signal_handler);
+    current->m_kernel_stack_for_signal_handler = nullptr;
+    current->m_signal_stack_user_region = nullptr;
+    current->set_default_signal_dispositions();
+    current->m_signal_mask = 0;
+    current->m_pending_signals = 0;
 
     for (int i = 0; i < m_fds.size(); ++i) {
         auto& daf = m_fds[i];
@@ -392,29 +386,30 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
     // We cli() manually here because we don't want to get interrupted between do_exec() and Schedule::yield().
     // The reason is that the task redirection we've set up above will be clobbered by the timer IRQ.
     // If we used an InterruptDisabler that sti()'d on exit, we might timer tick'd too soon in exec().
-    if (current == this)
+    if (&current->process() == this)
         cli();
 
-    Scheduler::prepare_to_modify_tss(*this);
+    Scheduler::prepare_to_modify_tss(main_thread());
 
     m_name = parts.take_last();
 
-    dword old_esp0 = m_tss.esp0;
+    // ss0 sp!!!!!!!!!
+    dword old_esp0 = main_thread().m_tss.esp0;
 
-    memset(&m_tss, 0, sizeof(m_tss));
-    m_tss.eflags = 0x0202;
-    m_tss.eip = entry_eip;
-    m_tss.cs = 0x1b;
-    m_tss.ds = 0x23;
-    m_tss.es = 0x23;
-    m_tss.fs = 0x23;
-    m_tss.gs = 0x23;
-    m_tss.ss = 0x23;
-    m_tss.cr3 = page_directory().cr3();
-    make_userspace_stack(move(arguments), move(environment));
-    m_tss.ss0 = 0x10;
-    m_tss.esp0 = old_esp0;
-    m_tss.ss2 = m_pid;
+    memset(&main_thread().m_tss, 0, sizeof(main_thread().m_tss));
+    main_thread().m_tss.eflags = 0x0202;
+    main_thread().m_tss.eip = entry_eip;
+    main_thread().m_tss.cs = 0x1b;
+    main_thread().m_tss.ds = 0x23;
+    main_thread().m_tss.es = 0x23;
+    main_thread().m_tss.fs = 0x23;
+    main_thread().m_tss.gs = 0x23;
+    main_thread().m_tss.ss = 0x23;
+    main_thread().m_tss.cr3 = page_directory().cr3();
+    main_thread().make_userspace_stack(move(arguments), move(environment));
+    main_thread().m_tss.ss0 = 0x10;
+    main_thread().m_tss.esp0 = old_esp0;
+    main_thread().m_tss.ss2 = m_pid;
 
     m_executable = descriptor->inode();
 
@@ -424,58 +419,11 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
         m_egid = descriptor->metadata().gid;
 
 #ifdef TASK_DEBUG
-    kprintf("Process %u (%s) exec'd %s @ %p\n", pid(), name().characters(), path.characters(), m_tss.eip);
+    kprintf("Process %u (%s) exec'd %s @ %p\n", pid(), name().characters(), path.characters(), main_thread().tss().eip);
 #endif
 
-    set_state(Skip1SchedulerPass);
+    main_thread().set_state(Thread::State::Skip1SchedulerPass);
     return 0;
-}
-
-void Process::make_userspace_stack(Vector<String> arguments, Vector<String> environment)
-{
-    auto* region = allocate_region(LinearAddress(), default_userspace_stack_size, "stack");
-    ASSERT(region);
-    m_stack_top3 = region->laddr().offset(default_userspace_stack_size).get();
-    m_tss.esp = m_stack_top3;
-
-    char* stack_base = (char*)region->laddr().get();
-    int argc = arguments.size();
-    char** argv = (char**)stack_base;
-    char** env = argv + arguments.size() + 1;
-    char* bufptr = stack_base + (sizeof(char*) * (arguments.size() + 1)) + (sizeof(char*) * (environment.size() + 1));
-
-    size_t total_blob_size = 0;
-    for (auto& a : arguments)
-        total_blob_size += a.length() + 1;
-    for (auto& e : environment)
-        total_blob_size += e.length() + 1;
-
-    size_t total_meta_size = sizeof(char*) * (arguments.size() + 1) + sizeof(char*) * (environment.size() + 1);
-
-    // FIXME: It would be better if this didn't make us panic.
-    ASSERT((total_blob_size + total_meta_size) < default_userspace_stack_size);
-
-    for (int i = 0; i < arguments.size(); ++i) {
-        argv[i] = bufptr;
-        memcpy(bufptr, arguments[i].characters(), arguments[i].length());
-        bufptr += arguments[i].length();
-        *(bufptr++) = '\0';
-    }
-    argv[arguments.size()] = nullptr;
-
-    for (int i = 0; i < environment.size(); ++i) {
-        env[i] = bufptr;
-        memcpy(bufptr, environment[i].characters(), environment[i].length());
-        bufptr += environment[i].length();
-        *(bufptr++) = '\0';
-    }
-    env[environment.size()] = nullptr;
-
-    // NOTE: The stack needs to be 16-byte aligned.
-    push_value_on_stack((dword)env);
-    push_value_on_stack((dword)argv);
-    push_value_on_stack((dword)argc);
-    push_value_on_stack(0);
 }
 
 int Process::exec(String path, Vector<String> arguments, Vector<String> environment)
@@ -486,7 +434,7 @@ int Process::exec(String path, Vector<String> arguments, Vector<String> environm
     if (rc < 0)
         return rc;
 
-    if (current == this) {
+    if (&current->process() == this) {
         Scheduler::yield();
         ASSERT_NOT_REACHED();
     }
@@ -571,7 +519,7 @@ Process* Process::create_user_process(const String& path, uid_t uid, gid_t gid, 
         system.nprocess++;
     }
 #ifdef TASK_DEBUG
-    kprintf("Process %u (%s) spawned @ %p\n", process->pid(), process->name().characters(), process->m_tss.eip);
+    kprintf("Process %u (%s) spawned @ %p\n", process->pid(), process->name().characters(), process->main_thread().tss().eip);
 #endif
     error = 0;
     return process;
@@ -580,19 +528,18 @@ Process* Process::create_user_process(const String& path, uid_t uid, gid_t gid, 
 Process* Process::create_kernel_process(String&& name, void (*e)())
 {
     auto* process = new Process(move(name), (uid_t)0, (gid_t)0, (pid_t)0, Ring0);
-    process->m_tss.eip = (dword)e;
+    process->main_thread().tss().eip = (dword)e;
 
     if (process->pid() != 0) {
-        {
-            InterruptDisabler disabler;
-            g_processes->prepend(process);
-            system.nprocess++;
-        }
+        InterruptDisabler disabler;
+        g_processes->prepend(process);
+        system.nprocess++;
 #ifdef TASK_DEBUG
-        kprintf("Kernel process %u (%s) spawned @ %p\n", process->pid(), process->name().characters(), process->m_tss.eip);
+        kprintf("Kernel process %u (%s) spawned @ %p\n", process->pid(), process->name().characters(), process->main_thread().tss().eip);
 #endif
     }
 
+    process->main_thread().set_state(Thread::State::Runnable);
     return process;
 }
 
@@ -603,16 +550,24 @@ Process::Process(String&& name, uid_t uid, gid_t gid, pid_t ppid, RingLevel ring
     , m_gid(gid)
     , m_euid(uid)
     , m_egid(gid)
-    , m_state(Runnable)
     , m_ring(ring)
     , m_cwd(move(cwd))
     , m_executable(move(executable))
     , m_tty(tty)
     , m_ppid(ppid)
 {
-    set_default_signal_dispositions();
+    dbgprintf("Process: New process PID=%u with name=%s\n", m_pid, m_name.characters());
 
-    memset(&m_fpu_state, 0, sizeof(FPUState));
+    m_page_directory = PageDirectory::create();
+#ifdef MM_DEBUG
+    dbgprintf("Process %u ctor: PD=%x created\n", pid(), m_page_directory.ptr());
+#endif
+
+    // NOTE: fork() doesn't clone all threads; the thread that called fork() becomes the main thread in the new process.
+    if (fork_parent)
+        m_main_thread = current->clone(*this);
+    else
+        m_main_thread = new Thread(*this);
 
     m_gids.set(m_gid);
 
@@ -627,11 +582,6 @@ Process::Process(String&& name, uid_t uid, gid_t gid, pid_t ppid, RingLevel ring
             m_pgid = parent->m_pgid;
         }
     }
-
-    m_page_directory = PageDirectory::create();
-#ifdef MM_DEBUG
-    dbgprintf("Process %u ctor: PD=%x created\n", pid(), m_page_directory.ptr());
-#endif
 
     if (fork_parent) {
         m_fds.resize(fork_parent->m_fds.size());
@@ -657,82 +607,22 @@ Process::Process(String&& name, uid_t uid, gid_t gid, pid_t ppid, RingLevel ring
     else
         m_next_region = LinearAddress(0x10000000);
 
-    if (fork_parent) {
-        memcpy(&m_tss, &fork_parent->m_tss, sizeof(m_tss));
-    } else {
-        memset(&m_tss, 0, sizeof(m_tss));
-
-        // Only IF is set when a process boots.
-        m_tss.eflags = 0x0202;
-        word cs, ds, ss;
-
-        if (is_ring0()) {
-            cs = 0x08;
-            ds = 0x10;
-            ss = 0x10;
-        } else {
-            cs = 0x1b;
-            ds = 0x23;
-            ss = 0x23;
-        }
-
-        m_tss.ds = ds;
-        m_tss.es = ds;
-        m_tss.fs = ds;
-        m_tss.gs = ds;
-        m_tss.ss = ss;
-        m_tss.cs = cs;
-    }
-
-    m_tss.cr3 = page_directory().cr3();
-
-    if (is_ring0()) {
-        // FIXME: This memory is leaked.
-        // But uh, there's also no kernel process termination, so I guess it's not technically leaked...
-        dword stack_bottom = (dword)kmalloc_eternal(default_kernel_stack_size);
-        m_stack_top0 = (stack_bottom + default_kernel_stack_size) & 0xffffff8;
-        m_tss.esp = m_stack_top0;
-    } else {
-        // Ring3 processes need a separate stack for Ring0.
-        m_kernel_stack = kmalloc(default_kernel_stack_size);
-        m_stack_top0 = ((dword)m_kernel_stack + default_kernel_stack_size) & 0xffffff8;
-        m_tss.ss0 = 0x10;
-        m_tss.esp0 = m_stack_top0;
-    }
 
     if (fork_parent) {
         m_sid = fork_parent->m_sid;
         m_pgid = fork_parent->m_pgid;
         m_umask = fork_parent->m_umask;
     }
-
-    // HACK: Ring2 SS in the TSS is the current PID.
-    m_tss.ss2 = m_pid;
-    m_far_ptr.offset = 0x98765432;
 }
 
 Process::~Process()
 {
-    {
-        InterruptDisabler disabler;
-        system.nprocess--;
-    }
+    dbgprintf("~Process{%p} name=%s pid=%d\n", this, m_name.characters(), pid());
+    InterruptDisabler disabler;
+    system.nprocess--;
 
-    if (g_last_fpu_process == this)
-        g_last_fpu_process = nullptr;
-
-    if (selector())
-        gdt_free_entry(selector());
-
-    if (m_kernel_stack) {
-        kfree(m_kernel_stack);
-        m_kernel_stack = nullptr;
-    }
-
-    if (m_kernel_stack_for_signal_handler) {
-        kfree(m_kernel_stack_for_signal_handler);
-        m_kernel_stack_for_signal_handler = nullptr;
-    }
+    delete m_main_thread;
+    m_main_thread = nullptr;
 }
 
 void Process::dump_regions()
@@ -759,242 +649,6 @@ void Process::sys$exit(int status)
     m_termination_signal = 0;
     die();
     ASSERT_NOT_REACHED();
-}
-
-void Process::terminate_due_to_signal(byte signal)
-{
-    ASSERT_INTERRUPTS_DISABLED();
-    ASSERT(signal < 32);
-    dbgprintf("terminate_due_to_signal %s(%u) <- %u\n", name().characters(), pid(), signal);
-    m_termination_status = 0;
-    m_termination_signal = signal;
-    die();
-}
-
-void Process::send_signal(byte signal, Process* sender)
-{
-    ASSERT(signal < 32);
-
-    if (sender)
-        dbgprintf("signal: %s(%u) sent %d to %s(%u)\n", sender->name().characters(), sender->pid(), signal, name().characters(), pid());
-    else
-        dbgprintf("signal: kernel sent %d to %s(%u)\n", signal, name().characters(), pid());
-
-    InterruptDisabler disabler;
-    m_pending_signals |= 1 << signal;
-}
-
-bool Process::has_unmasked_pending_signals() const
-{
-    return m_pending_signals & ~m_signal_mask;
-}
-
-ShouldUnblockProcess Process::dispatch_one_pending_signal()
-{
-    ASSERT_INTERRUPTS_DISABLED();
-    dword signal_candidates = m_pending_signals & ~m_signal_mask;
-    ASSERT(signal_candidates);
-
-    byte signal = 0;
-    for (; signal < 32; ++signal) {
-        if (signal_candidates & (1 << signal)) {
-            break;
-        }
-    }
-    return dispatch_signal(signal);
-}
-
-enum class DefaultSignalAction {
-    Terminate,
-    Ignore,
-    DumpCore,
-    Stop,
-    Continue,
-};
-
-DefaultSignalAction default_signal_action(byte signal)
-{
-    ASSERT(signal && signal < NSIG);
-
-    switch (signal) {
-    case SIGHUP:
-    case SIGINT:
-    case SIGKILL:
-    case SIGPIPE:
-    case SIGALRM:
-    case SIGUSR1:
-    case SIGUSR2:
-    case SIGVTALRM:
-    case SIGSTKFLT:
-    case SIGIO:
-    case SIGPROF:
-    case SIGTERM:
-    case SIGPWR:
-        return DefaultSignalAction::Terminate;
-    case SIGCHLD:
-    case SIGURG:
-    case SIGWINCH:
-        return DefaultSignalAction::Ignore;
-    case SIGQUIT:
-    case SIGILL:
-    case SIGTRAP:
-    case SIGABRT:
-    case SIGBUS:
-    case SIGFPE:
-    case SIGSEGV:
-    case SIGXCPU:
-    case SIGXFSZ:
-    case SIGSYS:
-        return DefaultSignalAction::DumpCore;
-    case SIGCONT:
-        return DefaultSignalAction::Continue;
-    case SIGSTOP:
-    case SIGTSTP:
-    case SIGTTIN:
-    case SIGTTOU:
-        return DefaultSignalAction::Stop;
-    }
-    ASSERT_NOT_REACHED();
-}
-
-ShouldUnblockProcess Process::dispatch_signal(byte signal)
-{
-    ASSERT_INTERRUPTS_DISABLED();
-    ASSERT(signal < 32);
-
-#ifdef SIGNAL_DEBUG
-    kprintf("dispatch_signal %s(%u) <- %u\n", name().characters(), pid(), signal);
-#endif
-
-    auto& action = m_signal_action_data[signal];
-    // FIXME: Implement SA_SIGINFO signal handlers.
-    ASSERT(!(action.flags & SA_SIGINFO));
-
-    // Mark this signal as handled.
-    m_pending_signals &= ~(1 << signal);
-
-    if (signal == SIGSTOP) {
-        set_state(Stopped);
-        return ShouldUnblockProcess::No;
-    }
-
-    if (signal == SIGCONT && state() == Stopped)
-        set_state(Runnable);
-
-    auto handler_laddr = action.handler_or_sigaction;
-    if (handler_laddr.is_null()) {
-        switch (default_signal_action(signal)) {
-        case DefaultSignalAction::Stop:
-            set_state(Stopped);
-            return ShouldUnblockProcess::No;
-        case DefaultSignalAction::DumpCore:
-        case DefaultSignalAction::Terminate:
-            terminate_due_to_signal(signal);
-            return ShouldUnblockProcess::No;
-        case DefaultSignalAction::Ignore:
-            return ShouldUnblockProcess::No;
-        case DefaultSignalAction::Continue:
-            return ShouldUnblockProcess::Yes;
-        }
-        ASSERT_NOT_REACHED();
-    }
-
-    if (handler_laddr.as_ptr() == SIG_IGN) {
-#ifdef SIGNAL_DEBUG
-        kprintf("%s(%u) ignored signal %u\n", name().characters(), pid(), signal);
-#endif
-        return ShouldUnblockProcess::Yes;
-    }
-
-    dword old_signal_mask = m_signal_mask;
-    dword new_signal_mask = action.mask;
-    if (action.flags & SA_NODEFER)
-        new_signal_mask &= ~(1 << signal);
-    else
-        new_signal_mask |= 1 << signal;
-
-    m_signal_mask |= new_signal_mask;
-
-    Scheduler::prepare_to_modify_tss(*this);
-
-    word ret_cs = m_tss.cs;
-    dword ret_eip = m_tss.eip;
-    dword ret_eflags = m_tss.eflags;
-    bool interrupting_in_kernel = (ret_cs & 3) == 0;
-
-    ProcessPagingScope paging_scope(*this);
-    create_signal_trampolines_if_needed();
-
-    if (interrupting_in_kernel) {
-#ifdef SIGNAL_DEBUG
-        kprintf("dispatch_signal to %s(%u) in state=%s with return to %w:%x\n", name().characters(), pid(), to_string(state()), ret_cs, ret_eip);
-#endif
-        ASSERT(is_blocked());
-        m_tss_to_resume_kernel = m_tss;
-#ifdef SIGNAL_DEBUG
-        kprintf("resume tss pc: %w:%x stack: %w:%x flags: %x cr3: %x\n", m_tss_to_resume_kernel.cs, m_tss_to_resume_kernel.eip, m_tss_to_resume_kernel.ss, m_tss_to_resume_kernel.esp, m_tss_to_resume_kernel.eflags, m_tss_to_resume_kernel.cr3);
-#endif
-
-        if (!m_signal_stack_user_region) {
-            m_signal_stack_user_region = allocate_region(LinearAddress(), default_userspace_stack_size, "Signal stack (user)");
-            ASSERT(m_signal_stack_user_region);
-        }
-        if (!m_kernel_stack_for_signal_handler) {
-            m_kernel_stack_for_signal_handler = kmalloc(default_kernel_stack_size);
-            ASSERT(m_kernel_stack_for_signal_handler);
-        }
-        m_tss.ss = 0x23;
-        m_tss.esp = m_signal_stack_user_region->laddr().offset(default_userspace_stack_size).get();
-        m_tss.ss0 = 0x10;
-        m_tss.esp0 = (dword)m_kernel_stack_for_signal_handler + default_kernel_stack_size;
-
-        push_value_on_stack(0);
-    } else {
-        push_value_on_stack(ret_eip);
-        push_value_on_stack(ret_eflags);
-
-        // PUSHA
-        dword old_esp = m_tss.esp;
-        push_value_on_stack(m_tss.eax);
-        push_value_on_stack(m_tss.ecx);
-        push_value_on_stack(m_tss.edx);
-        push_value_on_stack(m_tss.ebx);
-        push_value_on_stack(old_esp);
-        push_value_on_stack(m_tss.ebp);
-        push_value_on_stack(m_tss.esi);
-        push_value_on_stack(m_tss.edi);
-
-        // Align the stack.
-        m_tss.esp -= 12;
-    }
-
-    // PUSH old_signal_mask
-    push_value_on_stack(old_signal_mask);
-
-    m_tss.cs = 0x1b;
-    m_tss.ds = 0x23;
-    m_tss.es = 0x23;
-    m_tss.fs = 0x23;
-    m_tss.gs = 0x23;
-    m_tss.eip = handler_laddr.get();
-
-    // FIXME: Should we worry about the stack being 16 byte aligned when entering a signal handler?
-    push_value_on_stack(signal);
-
-    if (interrupting_in_kernel)
-        push_value_on_stack(m_return_to_ring0_from_signal_trampoline.get());
-    else
-        push_value_on_stack(m_return_to_ring3_from_signal_trampoline.get());
-
-    ASSERT((m_tss.esp % 16) == 0);
-
-    // FIXME: This state is such a hack. It avoids trouble if 'current' is the process receiving a signal.
-    set_state(Skip1SchedulerPass);
-
-#ifdef SIGNAL_DEBUG
-    kprintf("signal: Okay, %s(%u) {%s} has been primed with signal handler %w:%x\n", name().characters(), pid(), to_string(state()), m_tss.cs, m_tss.eip);
-#endif
-    return ShouldUnblockProcess::Yes;
 }
 
 void Process::create_signal_trampolines_if_needed()
@@ -1045,36 +699,30 @@ void Process::create_signal_trampolines_if_needed()
 
 int Process::sys$restore_signal_mask(dword mask)
 {
-    m_signal_mask = mask;
+    current->m_signal_mask = mask;
     return 0;
 }
 
 void Process::sys$sigreturn()
 {
     InterruptDisabler disabler;
-    Scheduler::prepare_to_modify_tss(*this);
-    m_tss = m_tss_to_resume_kernel;
+    Scheduler::prepare_to_modify_tss(*current);
+    current->m_tss = current->m_tss_to_resume_kernel;
 #ifdef SIGNAL_DEBUG
     kprintf("sys$sigreturn in %s(%u)\n", name().characters(), pid());
-    kprintf(" -> resuming execution at %w:%x stack %w:%x flags %x cr3 %x\n", m_tss.cs, m_tss.eip, m_tss.ss, m_tss.esp, m_tss.eflags, m_tss.cr3);
+    auto& tss = current->tss();
+    kprintf(" -> resuming execution at %w:%x stack %w:%x flags %x cr3 %x\n", tss.cs, tss.eip, tss.ss, tss.esp, tss.eflags, tss.cr3);
 #endif
-    set_state(Skip1SchedulerPass);
+    current->set_state(Thread::State::Skip1SchedulerPass);
     Scheduler::yield();
     kprintf("sys$sigreturn failed in %s(%u)\n", name().characters(), pid());
     ASSERT_NOT_REACHED();
 }
 
-void Process::push_value_on_stack(dword value)
-{
-    m_tss.esp -= 4;
-    dword* stack_ptr = (dword*)m_tss.esp;
-    *stack_ptr = value;
-}
-
 void Process::crash()
 {
     ASSERT_INTERRUPTS_DISABLED();
-    ASSERT(state() != Dead);
+    ASSERT(!is_dead());
 
     m_termination_signal = SIGSEGV;
     dump_regions();
@@ -1190,8 +838,8 @@ ssize_t Process::sys$write(int fd, const byte* data, ssize_t size)
 #ifdef IO_DEBUG
                 dbgprintf("block write on %d\n", fd);
 #endif
-                m_blocked_fd = fd;
-                block(BlockedWrite);
+                current->m_blocked_fd = fd;
+                current->block(Thread::State::BlockedWrite);
                 Scheduler::yield();
             }
             ssize_t rc = descriptor->write(*this, (const byte*)data + nwritten, size - nwritten);
@@ -1205,8 +853,8 @@ ssize_t Process::sys$write(int fd, const byte* data, ssize_t size)
             }
             if (rc == 0)
                 break;
-            if (has_unmasked_pending_signals()) {
-                block(BlockedSignal);
+            if (current->has_unmasked_pending_signals()) {
+                current->block(Thread::State::BlockedSignal);
                 Scheduler::yield();
                 if (nwritten == 0)
                     return -EINTR;
@@ -1216,8 +864,8 @@ ssize_t Process::sys$write(int fd, const byte* data, ssize_t size)
     } else {
         nwritten = descriptor->write(*this, (const byte*)data, size);
     }
-    if (has_unmasked_pending_signals()) {
-        block(BlockedSignal);
+    if (current->has_unmasked_pending_signals()) {
+        current->block(Thread::State::BlockedSignal);
         Scheduler::yield();
         if (nwritten == 0)
             return -EINTR;
@@ -1239,10 +887,10 @@ ssize_t Process::sys$read(int fd, byte* buffer, ssize_t size)
         return -EBADF;
     if (descriptor->is_blocking()) {
         if (!descriptor->can_read(*this)) {
-            m_blocked_fd = fd;
-            block(BlockedRead);
+            current->m_blocked_fd = fd;
+            current->block(Thread::State::BlockedRead);
             Scheduler::yield();
-            if (m_was_interrupted_while_blocked)
+            if (current->m_was_interrupted_while_blocked)
                 return -EINTR;
         }
     }
@@ -1545,7 +1193,7 @@ int Process::sys$kill(pid_t pid, int signal)
         ASSERT(pid != -1);
     }
     if (pid == m_pid) {
-        send_signal(signal, this);
+        current->send_signal(signal, this);
         Scheduler::yield();
         return 0;
     }
@@ -1571,9 +1219,9 @@ int Process::sys$usleep(useconds_t usec)
         return 0;
 
     sleep(usec / 1000);
-    if (m_wakeup_time > system.uptime) {
-        ASSERT(m_was_interrupted_while_blocked);
-        dword ticks_left_until_original_wakeup_time = m_wakeup_time - system.uptime;
+    if (current->m_wakeup_time > system.uptime) {
+        ASSERT(current->m_was_interrupted_while_blocked);
+        dword ticks_left_until_original_wakeup_time = current->m_wakeup_time - system.uptime;
         return ticks_left_until_original_wakeup_time / TICKS_PER_SECOND;
     }
     return 0;
@@ -1584,9 +1232,9 @@ int Process::sys$sleep(unsigned seconds)
     if (!seconds)
         return 0;
     sleep(seconds * TICKS_PER_SECOND);
-    if (m_wakeup_time > system.uptime) {
-        ASSERT(m_was_interrupted_while_blocked);
-        dword ticks_left_until_original_wakeup_time = m_wakeup_time - system.uptime;
+    if (current->m_wakeup_time > system.uptime) {
+        ASSERT(current->m_was_interrupted_while_blocked);
+        dword ticks_left_until_original_wakeup_time = current->m_wakeup_time - system.uptime;
         return ticks_left_until_original_wakeup_time / TICKS_PER_SECOND;
     }
     return 0;
@@ -1657,7 +1305,7 @@ int Process::reap(Process& process)
     }
 
     dbgprintf("reap: %s(%u) {%s}\n", process.name().characters(), process.pid(), to_string(process.state()));
-    ASSERT(process.state() == Dead);
+    ASSERT(process.is_dead());
     g_processes->remove(&process);
     delete &process;
     return exit_status;
@@ -1686,7 +1334,7 @@ pid_t Process::sys$waitpid(pid_t waitee, int* wstatus, int options)
             pid_t reaped_pid = 0;
             InterruptDisabler disabler;
             for_each_child([&reaped_pid, &exit_status] (Process& process) {
-                if (process.state() == Dead) {
+                if (process.is_dead()) {
                     reaped_pid = process.pid();
                     exit_status = reap(process);
                 }
@@ -1699,7 +1347,7 @@ pid_t Process::sys$waitpid(pid_t waitee, int* wstatus, int options)
             auto* waitee_process = Process::from_pid(waitee);
             if (!waitee_process)
                 return -ECHILD;
-            if (waitee_process->state() == Dead) {
+            if (waitee_process->is_dead()) {
                 exit_status = reap(*waitee_process);
                 return waitee;
             }
@@ -1707,65 +1355,22 @@ pid_t Process::sys$waitpid(pid_t waitee, int* wstatus, int options)
         }
     }
 
-    m_waitee_pid = waitee;
-    block(BlockedWait);
+    current->m_waitee_pid = waitee;
+    current->block(Thread::State::BlockedWait);
     Scheduler::yield();
-    if (m_was_interrupted_while_blocked)
+    if (current->m_was_interrupted_while_blocked)
         return -EINTR;
     Process* waitee_process;
     {
         InterruptDisabler disabler;
         // NOTE: If waitee was -1, m_waitee will have been filled in by the scheduler.
-        waitee_process = Process::from_pid(m_waitee_pid);
+        waitee_process = Process::from_pid(current->m_waitee_pid);
     }
     ASSERT(waitee_process);
     exit_status = reap(*waitee_process);
-    return m_waitee_pid;
+    return current->m_waitee_pid;
 }
 
-void Process::unblock()
-{
-    if (current == this) {
-        system.nblocked--;
-        m_state = Process::Running;
-        return;
-    }
-    ASSERT(m_state != Process::Runnable && m_state != Process::Running);
-    system.nblocked--;
-    m_state = Process::Runnable;
-}
-
-void Process::snooze_until(Alarm& alarm)
-{
-    m_snoozing_alarm = &alarm;
-    block(Process::BlockedSnoozing);
-    Scheduler::yield();
-}
-
-void Process::block(Process::State new_state)
-{
-    if (state() != Process::Running) {
-        kprintf("Process::block: %s(%u) block(%u/%s) with state=%u/%s\n", name().characters(), pid(), new_state, to_string(new_state), state(), to_string(state()));
-    }
-    ASSERT(state() == Process::Running);
-    system.nblocked++;
-    m_was_interrupted_while_blocked = false;
-    set_state(new_state);
-}
-
-void block(Process::State state)
-{
-    current->block(state);
-    Scheduler::yield();
-}
-
-void sleep(dword ticks)
-{
-    ASSERT(current->state() == Process::Running);
-    current->set_wakeup_time(system.uptime + ticks);
-    current->block(Process::BlockedSleep);
-    Scheduler::yield();
-}
 
 enum class KernelMemoryCheckResult {
     NotInsideKernelMemory,
@@ -1981,20 +1586,20 @@ int Process::sys$sigprocmask(int how, const sigset_t* set, sigset_t* old_set)
     if (old_set) {
         if (!validate_write_typed(old_set))
             return -EFAULT;
-        *old_set = m_signal_mask;
+        *old_set = current->m_signal_mask;
     }
     if (set) {
         if (!validate_read_typed(set))
             return -EFAULT;
         switch (how) {
         case SIG_BLOCK:
-            m_signal_mask &= ~(*set);
+            current->m_signal_mask &= ~(*set);
             break;
         case SIG_UNBLOCK:
-            m_signal_mask |= *set;
+            current->m_signal_mask |= *set;
             break;
         case SIG_SETMASK:
-            m_signal_mask = *set;
+            current->m_signal_mask = *set;
             break;
         default:
             return -EINVAL;
@@ -2007,16 +1612,8 @@ int Process::sys$sigpending(sigset_t* set)
 {
     if (!validate_write_typed(set))
         return -EFAULT;
-    *set = m_pending_signals;
+    *set = current->m_pending_signals;
     return 0;
-}
-
-void Process::set_default_signal_dispositions()
-{
-    // FIXME: Set up all the right default actions. See signal(7).
-    memset(&m_signal_action_data, 0, sizeof(m_signal_action_data));
-    m_signal_action_data[SIGCHLD].handler_or_sigaction = LinearAddress((dword)SIG_IGN);
-    m_signal_action_data[SIGWINCH].handler_or_sigaction = LinearAddress((dword)SIG_IGN);
 }
 
 int Process::sys$sigaction(int signum, const sigaction* act, sigaction* old_act)
@@ -2026,7 +1623,7 @@ int Process::sys$sigaction(int signum, const sigaction* act, sigaction* old_act)
     if (!validate_read_typed(act))
         return -EFAULT;
     InterruptDisabler disabler; // FIXME: This should use a narrower lock. Maybe a way to ignore signals temporarily?
-    auto& action = m_signal_action_data[signum];
+    auto& action = current->m_signal_action_data[signum];
     if (old_act) {
         if (!validate_write_typed(old_act))
             return -EFAULT;
@@ -2119,10 +1716,10 @@ int Process::sys$select(const Syscall::SC_select_params* params)
     (void)exceptfds;
 
     if (timeout) {
-        m_select_timeout = *timeout;
-        m_select_has_timeout = true;
+        current->m_select_timeout = *timeout;
+        current->m_select_has_timeout = true;
     } else {
-        m_select_has_timeout = false;
+        current->m_select_has_timeout = false;
     }
 
     if (nfds < 0)
@@ -2147,22 +1744,22 @@ int Process::sys$select(const Syscall::SC_select_params* params)
     };
 
     int error = 0;
-    error = transfer_fds(writefds, m_select_write_fds);
+    error = transfer_fds(writefds, current->m_select_write_fds);
     if (error)
         return error;
-    error = transfer_fds(readfds, m_select_read_fds);
+    error = transfer_fds(readfds, current->m_select_read_fds);
     if (error)
         return error;
-    error = transfer_fds(readfds, m_select_exceptional_fds);
+    error = transfer_fds(readfds, current->m_select_exceptional_fds);
     if (error)
         return error;
 
 #ifdef DEBUG_IO
-    dbgprintf("%s<%u> selecting on (read:%u, write:%u), timeout=%p\n", name().characters(), pid(), m_select_read_fds.size(), m_select_write_fds.size(), timeout);
+    dbgprintf("%s<%u> selecting on (read:%u, write:%u), timeout=%p\n", name().characters(), pid(), current->m_select_read_fds.size(), current->m_select_write_fds.size(), timeout);
 #endif
 
     if (!timeout || (timeout->tv_sec || timeout->tv_usec)) {
-        block(BlockedSelect);
+        current->block(Thread::State::BlockedSelect);
         Scheduler::yield();
     }
 
@@ -2171,7 +1768,7 @@ int Process::sys$select(const Syscall::SC_select_params* params)
     if (readfds) {
         memset(readfds, 0, sizeof(fd_set));
         auto bitmap = Bitmap::wrap((byte*)readfds, FD_SETSIZE);
-        for (int fd : m_select_read_fds) {
+        for (int fd : current->m_select_read_fds) {
             auto* descriptor = file_descriptor(fd);
             if (!descriptor)
                 continue;
@@ -2185,7 +1782,7 @@ int Process::sys$select(const Syscall::SC_select_params* params)
     if (writefds) {
         memset(writefds, 0, sizeof(fd_set));
         auto bitmap = Bitmap::wrap((byte*)writefds, FD_SETSIZE);
-        for (int fd : m_select_write_fds) {
+        for (int fd : current->m_select_write_fds) {
             auto* descriptor = file_descriptor(fd);
             if (!descriptor)
                 continue;
@@ -2206,17 +1803,17 @@ int Process::sys$poll(pollfd* fds, int nfds, int timeout)
     if (!validate_read_typed(fds))
         return -EFAULT;
 
-    m_select_write_fds.clear_with_capacity();
-    m_select_read_fds.clear_with_capacity();
+    current->m_select_write_fds.clear_with_capacity();
+    current->m_select_read_fds.clear_with_capacity();
     for (int i = 0; i < nfds; ++i) {
         if (fds[i].events & POLLIN)
-            m_select_read_fds.append(fds[i].fd);
+            current->m_select_read_fds.append(fds[i].fd);
         if (fds[i].events & POLLOUT)
-            m_select_write_fds.append(fds[i].fd);
+            current->m_select_write_fds.append(fds[i].fd);
     }
 
     if (timeout < 0) {
-        block(BlockedSelect);
+        current->block(Thread::State::BlockedSelect);
         Scheduler::yield();
     }
 
@@ -2316,6 +1913,7 @@ int Process::sys$chown(const char* pathname, uid_t uid, gid_t gid)
 void Process::finalize()
 {
     ASSERT(current == g_finalizer);
+    dbgprintf("Finalizing Process %s(%u)\n", m_name.characters(), m_pid);
 
     m_fds.clear();
     m_tty = nullptr;
@@ -2323,7 +1921,8 @@ void Process::finalize()
     {
         InterruptDisabler disabler;
         if (auto* parent_process = Process::from_pid(m_ppid)) {
-            if (parent_process->m_signal_action_data[SIGCHLD].flags & SA_NOCLDWAIT) {
+            // FIXME(Thread): What should we do here? Should we look at all threads' signal actions?
+            if (parent_process->main_thread().m_signal_action_data[SIGCHLD].flags & SA_NOCLDWAIT) {
                 // NOTE: If the parent doesn't care about this process, let it go.
                 m_ppid = 0;
             } else {
@@ -2331,14 +1930,18 @@ void Process::finalize()
             }
         }
     }
-    m_blocked_socket = nullptr;
-
-    set_state(Dead);
 }
 
 void Process::die()
 {
-    set_state(Dying);
+    {
+        InterruptDisabler disabler;
+        for_each_thread([] (Thread& thread) {
+            if (thread.state() != Thread::State::Dead)
+                thread.set_state(Thread::State::Dying);
+            return IterationDecision::Continue;
+        });
+    }
 
     if (!Scheduler::is_active())
         Scheduler::pick_next_and_switch_now();
@@ -2374,31 +1977,6 @@ size_t Process::amount_shared() const
         amount += region->amount_shared();
     }
     return amount;
-}
-
-void Process::finalize_dying_processes()
-{
-    Vector<Process*> dying_processes;
-    {
-        InterruptDisabler disabler;
-        dying_processes.ensure_capacity(system.nprocess);
-        for (auto* process = g_processes->head(); process; process = process->next()) {
-            if (process->state() == Process::Dying)
-                dying_processes.append(process);
-        }
-    }
-    for (auto* process : dying_processes)
-        process->finalize();
-}
-
-bool Process::tick()
-{
-    ++m_ticks;
-    if (tss().cs & 3)
-        ++m_ticks_in_user;
-    else
-        ++m_ticks_in_kernel;
-    return --m_ticks_left;
 }
 
 int Process::sys$socket(int domain, int type, int protocol)
@@ -2513,19 +2091,6 @@ int Process::sys$connect(int sockfd, const sockaddr* address, socklen_t address_
     }
     descriptor->set_socket_role(SocketRole::Connected);
     return 0;
-}
-
-KResult Process::wait_for_connect(Socket& socket)
-{
-    if (socket.is_connected())
-        return KSuccess;
-    m_blocked_socket = socket;
-    block(BlockedConnect);
-    Scheduler::yield();
-    m_blocked_socket = nullptr;
-    if (!socket.is_connected())
-        return KResult(-ECONNREFUSED);
-    return KSuccess;
 }
 
 ssize_t Process::sys$sendto(const Syscall::SC_sendto_params* params)
@@ -2850,34 +2415,6 @@ int Process::sys$get_shared_buffer_size(int shared_buffer_id)
     return shared_buffer.size();
 }
 
-const char* to_string(Process::State state)
-{
-    switch (state) {
-    case Process::Invalid: return "Invalid";
-    case Process::Runnable: return "Runnable";
-    case Process::Running: return "Running";
-    case Process::Dying: return "Dying";
-    case Process::Dead: return "Dead";
-    case Process::Stopped: return "Stopped";
-    case Process::Skip1SchedulerPass: return "Skip1";
-    case Process::Skip0SchedulerPasses: return "Skip0";
-    case Process::BlockedSleep: return "Sleep";
-    case Process::BlockedWait: return "Wait";
-    case Process::BlockedRead: return "Read";
-    case Process::BlockedWrite: return "Write";
-    case Process::BlockedSignal: return "Signal";
-    case Process::BlockedSelect: return "Select";
-    case Process::BlockedLurking: return "Lurking";
-    case Process::BlockedConnect: return "Connect";
-    case Process::BlockedReceive: return "Receive";
-    case Process::BeingInspected: return "Inspect";
-    case Process::BlockedSnoozing: return "Snoozing";
-    }
-    kprintf("to_string(Process::State): Invalid state: %u\n", state);
-    ASSERT_NOT_REACHED();
-    return nullptr;
-}
-
 const char* to_string(Process::Priority priority)
 {
     switch (priority) {
@@ -2888,4 +2425,30 @@ const char* to_string(Process::Priority priority)
     kprintf("to_string(Process::Priority): Invalid priority: %u\n", priority);
     ASSERT_NOT_REACHED();
     return nullptr;
+}
+
+void Process::terminate_due_to_signal(byte signal)
+{
+    ASSERT_INTERRUPTS_DISABLED();
+    ASSERT(signal < 32);
+    dbgprintf("terminate_due_to_signal %s(%u) <- %u\n", name().characters(), pid(), signal);
+    m_termination_status = 0;
+    m_termination_signal = signal;
+    die();
+}
+
+void Process::send_signal(byte signal, Process* sender)
+{
+    // FIXME(Thread): Find the appropriate thread to deliver the signal to.
+    main_thread().send_signal(signal, sender);
+}
+
+int Process::thread_count() const
+{
+    int count = 0;
+    for_each_thread([&count] (auto&) {
+        ++count;
+        return IterationDecision::Continue;
+    });
+    return count;
 }

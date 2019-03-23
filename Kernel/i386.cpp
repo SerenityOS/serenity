@@ -126,7 +126,7 @@ static void dump(const DumpType& regs)
 {
     word ss;
     dword esp;
-    if (current->is_ring0()) {
+    if (!current || current->process().is_ring0()) {
         ss = regs.ds;
         esp = regs.esp;
     } else {
@@ -144,7 +144,7 @@ static void dump(const DumpType& regs)
     kprintf("eax=%x ebx=%x ecx=%x edx=%x\n", regs.eax, regs.ebx, regs.ecx, regs.edx);
     kprintf("ebp=%x esp=%x esi=%x edi=%x\n", regs.ebp, esp, regs.esi, regs.edi);
 
-    if (current->validate_read((void*)regs.eip, 8)) {
+    if (current && current->process().validate_read((void*)regs.eip, 8)) {
         byte* codeptr = (byte*)regs.eip;
         kprintf("code: %b %b %b %b %b %b %b %b\n",
             codeptr[0],
@@ -163,17 +163,21 @@ static void dump(const DumpType& regs)
 EH_ENTRY_NO_CODE(6);
 void exception_6_handler(RegisterDump& regs)
 {
-    kprintf("%s invalid opcode: %u(%s)\n", current->is_ring0() ? "Kernel" : "Process", current->pid(), current->name().characters());
+    if (!current) {
+        kprintf("#UD with !current\n");
+        hang();
+    }
+    kprintf("%s invalid opcode: %u(%s)\n", current->process().is_ring0() ? "Kernel" : "Process", current->pid(), current->process().name().characters());
 
     dump(regs);
 
-    if (current->is_ring0()) {
+    if (current->process().is_ring0()) {
         kprintf("Oh shit, we've crashed in ring 0 :(\n");
         hang();
     }
     hang();
 
-    current->crash();
+    current->process().crash();
 }
 
 // 7: FPU not available exception
@@ -183,14 +187,14 @@ void exception_7_handler(RegisterDump& regs)
     (void)regs;
 
     asm volatile("clts");
-    if (g_last_fpu_process == current)
+    if (g_last_fpu_thread == current)
         return;
-    if (g_last_fpu_process) {
-        asm volatile("fnsave %0":"=m"(g_last_fpu_process->fpu_state()));
+    if (g_last_fpu_thread) {
+        asm volatile("fnsave %0":"=m"(g_last_fpu_thread->fpu_state()));
     } else {
         asm volatile("fnclex");
     }
-    g_last_fpu_process = current;
+    g_last_fpu_thread = current;
 
     if (current->has_used_fpu()) {
         asm volatile("frstor %0"::"m"(current->fpu_state()));
@@ -200,7 +204,7 @@ void exception_7_handler(RegisterDump& regs)
     }
 
 #ifdef FPU_EXCEPTION_DEBUG
-    kprintf("%s FPU not available exception: %u(%s)\n", current->is_ring0() ? "Kernel" : "Process", current->pid(), current->name().characters());
+    kprintf("%s FPU not available exception: %u(%s)\n", current->process().is_ring0() ? "Kernel" : "Process", current->pid(), current->process().name().characters());
     dump(regs);
 #endif
 }
@@ -210,16 +214,16 @@ void exception_7_handler(RegisterDump& regs)
 EH_ENTRY_NO_CODE(0);
 void exception_0_handler(RegisterDump& regs)
 {
-    kprintf("%s DIVIDE ERROR: %u(%s)\n", current->is_ring0() ? "Kernel" : "User", current->pid(), current->name().characters());
+    kprintf("%s DIVIDE ERROR: %u(%s)\n", current->process().is_ring0() ? "Kernel" : "User", current->pid(), current->process().name().characters());
 
     dump(regs);
 
-    if (current->is_ring0()) {
+    if (current->process().is_ring0()) {
         kprintf("Oh shit, we've crashed in ring 0 :(\n");
         hang();
     }
 
-    current->crash();
+    current->process().crash();
 }
 
 
@@ -227,16 +231,16 @@ void exception_0_handler(RegisterDump& regs)
 EH_ENTRY(13);
 void exception_13_handler(RegisterDumpWithExceptionCode& regs)
 {
-    kprintf("%s GPF: %u(%s)\n", current->is_ring0() ? "Kernel" : "User", current->pid(), current->name().characters());
+    kprintf("%s GPF: %u(%s)\n", current->process().is_ring0() ? "Kernel" : "User", current->pid(), current->process().name().characters());
 
     dump(regs);
 
-    if (current->is_ring0()) {
+    if (current->process().is_ring0()) {
         kprintf("Oh shit, we've crashed in ring 0 :(\n");
         hang();
     }
 
-    current->crash();
+    current->process().crash();
 }
 
 // 14: Page Fault
@@ -253,7 +257,7 @@ void exception_14_handler(RegisterDumpWithExceptionCode& regs)
 
 #ifdef PAGE_FAULT_DEBUG
     dbgprintf("%s(%u): ring%u %s page fault in PD=%x, %s L%x\n",
-        current->name().characters(),
+        current->process().name().characters(),
         current->pid(),
         regs.cs & 3,
         regs.exception_code & 1 ? "PV" : "NP",
@@ -270,12 +274,13 @@ void exception_14_handler(RegisterDumpWithExceptionCode& regs)
 
     if (response == PageFaultResponse::ShouldCrash) {
         kprintf("%s(%u) unrecoverable page fault, %s laddr=%p\n",
-            current->name().characters(),
+            current->process().name().characters(),
             current->pid(),
             regs.exception_code & 2 ? "write" : "read",
             faultAddress);
         dump(regs);
-        current->crash();
+        hang();
+        current->process().crash();
     } else if (response == PageFaultResponse::Continue) {
 #ifdef PAGE_FAULT_DEBUG
         dbgprintf("Continuing after resolved page fault\n");

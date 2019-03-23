@@ -33,7 +33,7 @@ Retained<IPv4Socket> IPv4Socket::create(int type, int protocol)
 IPv4Socket::IPv4Socket(int type, int protocol)
     : Socket(AF_INET, type, protocol)
 {
-    kprintf("%s(%u) IPv4Socket{%p} created with type=%u, protocol=%d\n", current->name().characters(), current->pid(), this, type, protocol);
+    kprintf("%s(%u) IPv4Socket{%p} created with type=%u, protocol=%d\n", current->process().name().characters(), current->pid(), this, type, protocol);
     LOCKER(all_sockets().lock());
     all_sockets().resource().set(this);
 }
@@ -189,7 +189,7 @@ ssize_t IPv4Socket::recvfrom(void* buffer, size_t buffer_length, int flags, sock
 
         current->set_blocked_socket(this);
         load_receive_deadline();
-        block(Process::BlockedReceive);
+        block(Thread::BlockedReceive);
         Scheduler::yield();
 
         LOCKER(lock());
