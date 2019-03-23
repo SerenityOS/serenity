@@ -5,7 +5,7 @@
 #include <Kernel/KeyCode.h>
 
 GTableView::GTableView(GWidget* parent)
-    : GScrollableWidget(parent)
+    : GAbstractView(parent)
 {
 }
 
@@ -13,31 +13,15 @@ GTableView::~GTableView()
 {
 }
 
-void GTableView::set_model(RetainPtr<GModel>&& model)
-{
-    if (model.ptr() == m_model.ptr())
-        return;
-    if (m_model)
-        m_model->unregister_view(Badge<GTableView>(), *this);
-    m_model = move(model);
-    if (m_model)
-        m_model->register_view(Badge<GTableView>(), *this);
-    update_content_size();
-}
-
-void GTableView::model_notification(const GModelNotification&)
-{
-}
-
 void GTableView::update_content_size()
 {
-    if (!m_model)
+    if (!model())
         return set_content_size({ });
 
     int content_width = 0;
-    int column_count = m_model->column_count();
+    int column_count = model()->column_count();
     for (int i = 0; i < column_count; ++i)
-        content_width += m_model->column_metadata(i).preferred_width + horizontal_padding() * 2;
+        content_width += model()->column_metadata(i).preferred_width + horizontal_padding() * 2;
     int content_height = item_count() * item_height();
 
     set_content_size({ content_width, content_height });
@@ -48,7 +32,7 @@ void GTableView::did_update_model()
 {
     update_content_size();
     update();
-    model_notification(GModelNotification(GModelNotification::ModelUpdated));
+    GAbstractView::did_update_model();
 }
 
 Rect GTableView::row_rect(int item_index) const
@@ -58,7 +42,7 @@ Rect GTableView::row_rect(int item_index) const
 
 int GTableView::column_width(int column_index) const
 {
-    return m_model->column_metadata(column_index).preferred_width;
+    return model()->column_metadata(column_index).preferred_width;
 }
 
 Rect GTableView::header_rect(int column_index) const
@@ -71,7 +55,7 @@ Rect GTableView::header_rect(int column_index) const
             continue;
         x_offset += column_width(i) + horizontal_padding() * 2;
     }
-    auto column_metadata = m_model->column_metadata(column_index);
+    auto column_metadata = model()->column_metadata(column_index);
     int column_width = column_metadata.preferred_width;
     return { x_offset, 0, column_width + horizontal_padding() * 2, header_height() };
 }
@@ -80,15 +64,15 @@ void GTableView::mousedown_event(GMouseEvent& event)
 {
     if (event.y() < header_height()) {
         auto adjusted_position = event.position().translated(horizontal_scrollbar().value(), 0);
-        for (int i = 0; i < m_model->column_count(); ++i) {
+        for (int i = 0; i < model()->column_count(); ++i) {
             auto header_rect = this->header_rect(i);
             if (header_rect.contains(adjusted_position)) {
                 auto new_sort_order = GSortOrder::Ascending;
-                if (m_model->key_column() == i)
-                    new_sort_order = m_model->sort_order() == GSortOrder::Ascending
+                if (model()->key_column() == i)
+                    new_sort_order = model()->sort_order() == GSortOrder::Ascending
                         ? GSortOrder::Descending
                         : GSortOrder::Ascending;
-                m_model->set_key_column_and_sort_order(i, new_sort_order);
+                model()->set_key_column_and_sort_order(i, new_sort_order);
                 return;
             }
         }
@@ -99,12 +83,12 @@ void GTableView::mousedown_event(GMouseEvent& event)
         auto adjusted_position = event.position().translated(0, vertical_scrollbar().value());
         for (int i = 0; i < item_count(); ++i) {
             if (row_rect(i).contains(adjusted_position)) {
-                m_model->set_selected_index({ i, 0 });
+                model()->set_selected_index({ i, 0 });
                 update();
                 return;
             }
         }
-        m_model->set_selected_index({ });
+        model()->set_selected_index({ });
         update();
     }
 }
@@ -120,8 +104,8 @@ void GTableView::paint_event(GPaintEvent& event)
     int painted_item_index = 0;
     int y_offset = header_height();
 
-    for (int row_index = 0; row_index < m_model->row_count(); ++row_index) {
-        bool is_selected_row = row_index == m_model->selected_index().row();
+    for (int row_index = 0; row_index < model()->row_count(); ++row_index) {
+        bool is_selected_row = row_index == model()->selected_index().row();
         int y = y_offset + painted_item_index * item_height();
 
         Color background_color;
@@ -141,20 +125,20 @@ void GTableView::paint_event(GPaintEvent& event)
         painter.fill_rect(row_rect(painted_item_index), background_color);
 
         int x_offset = 0;
-        for (int column_index = 0; column_index < m_model->column_count(); ++column_index) {
+        for (int column_index = 0; column_index < model()->column_count(); ++column_index) {
             if (is_column_hidden(column_index))
                 continue;
-            auto column_metadata = m_model->column_metadata(column_index);
+            auto column_metadata = model()->column_metadata(column_index);
             int column_width = column_metadata.preferred_width;
             const Font& font = column_metadata.font ? *column_metadata.font : this->font();
-            bool is_key_column = m_model->key_column() == column_index;
+            bool is_key_column = model()->key_column() == column_index;
             Rect cell_rect(horizontal_padding() + x_offset, y, column_width, item_height());
             if (is_key_column) {
                 auto cell_rect_for_fill = cell_rect.inflated(horizontal_padding() * 2, 0);
                 painter.fill_rect(cell_rect_for_fill, key_column_background_color);
             }
             GModelIndex cell_index(row_index, column_index);
-            auto data = m_model->data(cell_index);
+            auto data = model()->data(cell_index);
             if (data.is_bitmap()) {
                 painter.blit(cell_rect.location(), data.as_bitmap(), data.as_bitmap().rect());
             } else {
@@ -162,7 +146,7 @@ void GTableView::paint_event(GPaintEvent& event)
                 if (is_selected_row)
                     text_color = Color::White;
                 else
-                    text_color = m_model->data(cell_index, GModel::Role::ForegroundColor).to_color(Color::Black);
+                    text_color = model()->data(cell_index, GModel::Role::ForegroundColor).to_color(Color::Black);
                 painter.draw_text(cell_rect, data.to_string(), font, column_metadata.text_alignment, text_color);
             }
             x_offset += column_width + horizontal_padding() * 2;
@@ -198,17 +182,17 @@ void GTableView::paint_headers(Painter& painter)
     painter.draw_line({ 0, 0 }, { exposed_width - 1, 0 }, Color::White);
     painter.draw_line({ 0, header_height() - 1 }, { exposed_width - 1, header_height() - 1 }, Color::DarkGray);
     int x_offset = 0;
-    for (int column_index = 0; column_index < m_model->column_count(); ++column_index) {
+    for (int column_index = 0; column_index < model()->column_count(); ++column_index) {
         if (is_column_hidden(column_index))
             continue;
-        auto column_metadata = m_model->column_metadata(column_index);
+        auto column_metadata = model()->column_metadata(column_index);
         int column_width = column_metadata.preferred_width;
-        bool is_key_column = m_model->key_column() == column_index;
+        bool is_key_column = model()->key_column() == column_index;
         Rect cell_rect(x_offset, 0, column_width + horizontal_padding() * 2, header_height());
         if (is_key_column) {
             painter.fill_rect(cell_rect.shrunken(2, 2), Color::from_rgb(0xdddddd));
         }
-        painter.draw_text(cell_rect.translated(horizontal_padding(), 0), m_model->column_name(column_index), Font::default_bold_font(), TextAlignment::CenterLeft, Color::Black);
+        painter.draw_text(cell_rect.translated(horizontal_padding(), 0), model()->column_name(column_index), Font::default_bold_font(), TextAlignment::CenterLeft, Color::Black);
         x_offset += column_width + horizontal_padding() * 2;
         // Draw column separator.
         painter.draw_line(cell_rect.top_left().translated(0, 1), cell_rect.bottom_left().translated(0, -1), Color::White);
@@ -220,7 +204,7 @@ void GTableView::paint_headers(Painter& painter)
 
 int GTableView::item_count() const
 {
-    return m_model->row_count();
+    return model()->row_count();
 }
 
 void GTableView::keydown_event(GKeyEvent& event)
