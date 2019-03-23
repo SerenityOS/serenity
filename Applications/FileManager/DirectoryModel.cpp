@@ -6,6 +6,8 @@
 #include <pwd.h>
 #include <AK/FileSystemPath.h>
 #include <AK/StringBuilder.h>
+#include <SharedGraphics/GraphicsBitmap.h>
+#include <SharedGraphics/Painter.h>
 
 DirectoryModel::DirectoryModel()
 {
@@ -79,8 +81,18 @@ const GraphicsBitmap& DirectoryModel::icon_for(const Entry& entry) const
         return *m_socket_icon;
     if (entry.mode & S_IXUSR)
         return *m_executable_icon;
-    if (entry.name.ends_with(".png"))
-        return *m_filetype_image_icon;
+    if (entry.name.ends_with(".png")) {
+        if (!entry.thumbnail) {
+            if (auto png_bitmap = GraphicsBitmap::load_from_file(entry.full_path(*this))) {
+                entry.thumbnail = GraphicsBitmap::create(png_bitmap->format(), { 32, 32 });
+                Painter painter(*entry.thumbnail);
+                painter.draw_scaled_bitmap(entry.thumbnail->rect(), *png_bitmap, png_bitmap->rect());
+            }
+        }
+        if (!entry.thumbnail)
+            return *m_filetype_image_icon;
+        return *entry.thumbnail;
+    }
     return *m_file_icon;
 }
 
