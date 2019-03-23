@@ -36,6 +36,8 @@ MemoryManager::MemoryManager()
     m_page_table_zero = (dword*)0x6000;
 
     initialize_paging();
+
+    kprintf("MM initialized.\n");
 }
 
 MemoryManager::~MemoryManager()
@@ -109,6 +111,10 @@ void MemoryManager::initialize_paging()
         "orl $0x80000001, %%eax\n"
         "movl %%eax, %%cr0\n"
         :::"%eax", "memory");
+
+#ifdef MM_DEBUG
+    dbgprintf("MM: Paging initialized.\n");
+#endif
 }
 
 RetainPtr<PhysicalPage> MemoryManager::allocate_page_table(PageDirectory& page_directory, unsigned index)
@@ -362,11 +368,12 @@ bool MemoryManager::page_in_from_inode(Region& region, unsigned page_index_in_re
 PageFaultResponse MemoryManager::handle_page_fault(const PageFault& fault)
 {
     ASSERT_INTERRUPTS_DISABLED();
+    ASSERT(current);
 #ifdef PAGE_FAULT_DEBUG
     dbgprintf("MM: handle_page_fault(%w) at L%x\n", fault.code(), fault.laddr().get());
 #endif
     ASSERT(fault.laddr() != m_quickmap_addr);
-    auto* region = region_from_laddr(*current, fault.laddr());
+    auto* region = region_from_laddr(current->process(), fault.laddr());
     if (!region) {
         kprintf("NP(error) fault at invalid address L%x\n", fault.laddr().get());
         return PageFaultResponse::ShouldCrash;
@@ -441,8 +448,9 @@ RetainPtr<PhysicalPage> MemoryManager::allocate_supervisor_physical_page()
 
 void MemoryManager::enter_process_paging_scope(Process& process)
 {
+    ASSERT(current);
     InterruptDisabler disabler;
-    current->m_tss.cr3 = process.page_directory().cr3();
+    current->tss().cr3 = process.page_directory().cr3();
     asm volatile("movl %%eax, %%cr3"::"a"(process.page_directory().cr3()):"memory");
 }
 
@@ -620,9 +628,10 @@ bool MemoryManager::validate_user_write(const Process& process, LinearAddress la
 
 Retained<Region> Region::clone()
 {
+    ASSERT(current);
     if (m_shared || (m_readable && !m_writable)) {
         dbgprintf("%s<%u> Region::clone(): sharing %s (L%x)\n",
-                  current->name().characters(),
+                  current->process().name().characters(),
                   current->pid(),
                   m_name.characters(),
                   laddr().get());
@@ -631,14 +640,14 @@ Retained<Region> Region::clone()
     }
 
     dbgprintf("%s<%u> Region::clone(): cowing %s (L%x)\n",
-              current->name().characters(),
+              current->process().name().characters(),
               current->pid(),
               m_name.characters(),
               laddr().get());
     // Set up a COW region. The parent (this) region becomes COW as well!
     for (size_t i = 0; i < page_count(); ++i)
         m_cow_map.set(i, true);
-    MM.remap_region(current->page_directory(), *this);
+    MM.remap_region(current->process().page_directory(), *this);
     return adopt(*new Region(laddr(), size(), m_vmo->clone(), m_offset_in_vmo, String(m_name), m_readable, m_writable, true));
 }
 
@@ -966,6 +975,33 @@ PageDirectory::~PageDirectory()
 
 void PageDirectory::flush(LinearAddress laddr)
 {
-    if (&current->page_directory() == this)
+#ifdef MM_DEBUG
+    dbgprintf("MM: Flush page L%x\n", laddr.get());
+#endif
+    if (!current)
+        return;
+    if (&current->process().page_directory() == this)
         MM.flush_tlb(laddr);
+}
+
+ProcessPagingScope::ProcessPagingScope(Process& process)
+{
+    ASSERT(current);
+    MM.enter_process_paging_scope(process);
+}
+
+ProcessPagingScope::~ProcessPagingScope()
+{
+    MM.enter_process_paging_scope(current->process());
+}
+
+KernelPagingScope::KernelPagingScope()
+{
+    ASSERT(current);
+    MM.enter_kernel_paging_scope();
+}
+
+KernelPagingScope::~KernelPagingScope()
+{
+    MM.enter_process_paging_scope(current->process());
 }

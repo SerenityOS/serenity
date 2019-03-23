@@ -292,19 +292,24 @@ ByteBuffer procfs$pid_stack(InodeIdentifier identifier)
         dword address;
         const KSym* ksym;
     };
-    Vector<RecognizedSymbol> recognized_symbols;
-    if (auto* eip_ksym = ksymbolicate(process.tss().eip))
-        recognized_symbols.append({ process.tss().eip, eip_ksym });
-    for (dword* stack_ptr = (dword*)process.frame_ptr(); process.validate_read_from_kernel(LinearAddress((dword)stack_ptr)); stack_ptr = (dword*)*stack_ptr) {
-        dword retaddr = stack_ptr[1];
-        if (auto* ksym = ksymbolicate(retaddr))
-            recognized_symbols.append({ retaddr, ksym });
-    }
     StringBuilder builder;
-    for (auto& symbol : recognized_symbols) {
-        unsigned offset = symbol.address - symbol.ksym->address;
-        builder.appendf("%p  %s +%u\n", symbol.address, symbol.ksym->name, offset);
-    }
+    process.for_each_thread([&] (Thread& thread) {
+        builder.appendf("Thread %d:\n", thread.tid());
+        Vector<RecognizedSymbol> recognized_symbols;
+        if (auto* eip_ksym = ksymbolicate(thread.tss().eip))
+            recognized_symbols.append({ thread.tss().eip, eip_ksym });
+        for (dword* stack_ptr = (dword*)thread.frame_ptr(); process.validate_read_from_kernel(LinearAddress((dword)stack_ptr)); stack_ptr = (dword*)*stack_ptr) {
+            dword retaddr = stack_ptr[1];
+            if (auto* ksym = ksymbolicate(retaddr))
+                recognized_symbols.append({ retaddr, ksym });
+        }
+
+        for (auto& symbol : recognized_symbols) {
+            unsigned offset = symbol.address - symbol.ksym->address;
+            builder.appendf("%p  %s +%u\n", symbol.address, symbol.ksym->name, offset);
+        }
+        return IterationDecision::Continue;
+    });
     return builder.to_byte_buffer();
 }
 
@@ -314,19 +319,23 @@ ByteBuffer procfs$pid_regs(InodeIdentifier identifier)
     if (!handle)
         return { };
     auto& process = handle->process();
-    auto& tss = process.tss();
     StringBuilder builder;
-    builder.appendf("eax: %x\n", tss.eax);
-    builder.appendf("ebx: %x\n", tss.ebx);
-    builder.appendf("ecx: %x\n", tss.ecx);
-    builder.appendf("edx: %x\n", tss.edx);
-    builder.appendf("esi: %x\n", tss.esi);
-    builder.appendf("edi: %x\n", tss.edi);
-    builder.appendf("ebp: %x\n", tss.ebp);
-    builder.appendf("cr3: %x\n", tss.cr3);
-    builder.appendf("flg: %x\n", tss.eflags);
-    builder.appendf("sp:  %w:%x\n", tss.ss, tss.esp);
-    builder.appendf("pc:  %w:%x\n", tss.cs, tss.eip);
+    process.for_each_thread([&] (Thread& thread) {
+        builder.appendf("Thread %d:\n", thread.tid());
+        auto& tss = thread.tss();
+        builder.appendf("eax: %x\n", tss.eax);
+        builder.appendf("ebx: %x\n", tss.ebx);
+        builder.appendf("ecx: %x\n", tss.ecx);
+        builder.appendf("edx: %x\n", tss.edx);
+        builder.appendf("esi: %x\n", tss.esi);
+        builder.appendf("edi: %x\n", tss.edi);
+        builder.appendf("ebp: %x\n", tss.ebp);
+        builder.appendf("cr3: %x\n", tss.cr3);
+        builder.appendf("flg: %x\n", tss.eflags);
+        builder.appendf("sp:  %w:%x\n", tss.ss, tss.esp);
+        builder.appendf("pc:  %w:%x\n", tss.cs, tss.eip);
+        return IterationDecision::Continue;
+    });
     return builder.to_byte_buffer();
 }
 
@@ -530,7 +539,7 @@ ByteBuffer procfs$summary(InodeIdentifier)
             process->uid(),
             to_string(process->state()),
             process->ppid(),
-            process->times_scheduled(),
+            process->main_thread().times_scheduled(), // FIXME(Thread): Bill all scheds to the process
             process->number_of_open_file_descriptors(),
             process->tty() ? strrchr(process->tty()->tty_name().characters(), '/') + 1 : "n/a",
             process->name().characters());
@@ -562,7 +571,7 @@ ByteBuffer procfs$all(InodeIdentifier)
     auto build_process_line = [&builder] (Process* process) {
         builder.appendf("%u,%u,%u,%u,%u,%u,%u,%s,%u,%u,%s,%s,%u,%u,%u,%u,%s\n",
             process->pid(),
-            process->times_scheduled(),
+            process->main_thread().times_scheduled(), // FIXME(Thread): Bill all scheds to the process
             process->tty() ? process->tty()->pgid() : 0,
             process->pgid(),
             process->sid(),
@@ -576,7 +585,7 @@ ByteBuffer procfs$all(InodeIdentifier)
             process->amount_virtual(),
             process->amount_resident(),
             process->amount_shared(),
-            process->ticks(),
+            process->main_thread().ticks(), // FIXME(Thread): Bill all ticks to the process
             to_string(process->priority())
         );
     };

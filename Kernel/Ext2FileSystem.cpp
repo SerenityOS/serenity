@@ -1182,8 +1182,8 @@ RetainPtr<Inode> Ext2FS::create_inode(InodeIdentifier parent_id, const String& n
     ext2_inode e2inode;
     memset(&e2inode, 0, sizeof(ext2_inode));
     e2inode.i_mode = mode;
-    e2inode.i_uid = current->euid();
-    e2inode.i_gid = current->egid();
+    e2inode.i_uid = current->process().euid();
+    e2inode.i_gid = current->process().egid();
     e2inode.i_size = size;
     e2inode.i_atime = timestamp;
     e2inode.i_ctime = timestamp;

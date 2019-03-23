@@ -74,7 +74,7 @@ static void load_ksyms_from_data(const ByteBuffer& buffer)
 [[gnu::noinline]] void dump_backtrace_impl(dword ebp, bool use_ksyms)
 {
     if (!current) {
-        hang();
+        //hang();
         return;
     }
     if (use_ksyms && !ksyms_ready) {
@@ -87,13 +87,13 @@ static void load_ksyms_from_data(const ByteBuffer& buffer)
     };
     Vector<RecognizedSymbol> recognized_symbols;
     if (use_ksyms) {
-        for (dword* stack_ptr = (dword*)ebp; current->validate_read_from_kernel(LinearAddress((dword)stack_ptr)); stack_ptr = (dword*)*stack_ptr) {
+        for (dword* stack_ptr = (dword*)ebp; current->process().validate_read_from_kernel(LinearAddress((dword)stack_ptr)); stack_ptr = (dword*)*stack_ptr) {
             dword retaddr = stack_ptr[1];
             if (auto* ksym = ksymbolicate(retaddr))
                 recognized_symbols.append({ retaddr, ksym });
         }
     } else{
-        for (dword* stack_ptr = (dword*)ebp; current->validate_read_from_kernel(LinearAddress((dword)stack_ptr)); stack_ptr = (dword*)*stack_ptr) {
+        for (dword* stack_ptr = (dword*)ebp; current->process().validate_read_from_kernel(LinearAddress((dword)stack_ptr)); stack_ptr = (dword*)*stack_ptr) {
             dword retaddr = stack_ptr[1];
             kprintf("%x (next: %x)\n", retaddr, stack_ptr ? (dword*)*stack_ptr : 0);
         }
@@ -129,7 +129,7 @@ void load_ksyms()
     auto result = VFS::the().open("/kernel.map", 0, 0, *VFS::the().root_inode());
     ASSERT(!result.is_error());
     auto descriptor = result.value();
-    auto buffer = descriptor->read_entire_file(*current);
+    auto buffer = descriptor->read_entire_file(current->process());
     ASSERT(buffer);
     load_ksyms_from_data(buffer);
 }

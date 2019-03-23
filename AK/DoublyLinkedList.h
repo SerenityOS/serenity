@@ -1,6 +1,7 @@
 #pragma once
 
 #include "StdLibExtras.h"
+#include <AK/Assertions.h>
 
 namespace AK {
 

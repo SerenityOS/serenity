@@ -10,7 +10,6 @@ DiskDevice::~DiskDevice()
 
 bool DiskDevice::read(DiskOffset offset, unsigned length, byte* out) const
 {
-    //kprintf("DD::read %u x%u\n", offset, length);
     ASSERT((offset % block_size()) == 0);
     ASSERT((length % block_size()) == 0);
     dword first_block = offset / block_size();

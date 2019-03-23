@@ -15,7 +15,7 @@ LocalSocket::LocalSocket(int type)
     : Socket(AF_LOCAL, type, 0)
 {
 #ifdef DEBUG_LOCAL_SOCKET
-    kprintf("%s(%u) LocalSocket{%p} created with type=%u\n", current->name().characters(), current->pid(), this, type);
+    kprintf("%s(%u) LocalSocket{%p} created with type=%u\n", current->process().name().characters(), current->pid(), this, type);
 #endif
 }
 
@@ -46,10 +46,10 @@ KResult LocalSocket::bind(const sockaddr* address, socklen_t address_size)
     memcpy(safe_address, local_address.sun_path, sizeof(local_address.sun_path));
 
 #ifdef DEBUG_LOCAL_SOCKET
-    kprintf("%s(%u) LocalSocket{%p} bind(%s)\n", current->name().characters(), current->pid(), this, safe_address);
+    kprintf("%s(%u) LocalSocket{%p} bind(%s)\n", current->process().name().characters(), current->pid(), this, safe_address);
 #endif
 
-    auto result = VFS::the().open(safe_address, O_CREAT | O_EXCL, S_IFSOCK | 0666, current->cwd_inode());
+    auto result = VFS::the().open(safe_address, O_CREAT | O_EXCL, S_IFSOCK | 0666, current->process().cwd_inode());
     if (result.is_error()) {
         if (result.error() == -EEXIST)
             return KResult(-EADDRINUSE);
@@ -78,10 +78,10 @@ KResult LocalSocket::connect(const sockaddr* address, socklen_t address_size)
     memcpy(safe_address, local_address.sun_path, sizeof(local_address.sun_path));
 
 #ifdef DEBUG_LOCAL_SOCKET
-    kprintf("%s(%u) LocalSocket{%p} connect(%s)\n", current->name().characters(), current->pid(), this, safe_address);
+    kprintf("%s(%u) LocalSocket{%p} connect(%s)\n", current->process().name().characters(), current->pid(), this, safe_address);
 #endif
 
-    auto descriptor_or_error = VFS::the().open(safe_address, 0, 0, current->cwd_inode());
+    auto descriptor_or_error = VFS::the().open(safe_address, 0, 0, current->process().cwd_inode());
     if (descriptor_or_error.is_error())
         return KResult(-ECONNREFUSED);
     m_file = move(descriptor_or_error.value());

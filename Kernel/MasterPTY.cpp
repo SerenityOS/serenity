@@ -11,8 +11,8 @@ MasterPTY::MasterPTY(unsigned index)
     , m_slave(adopt(*new SlavePTY(*this, index)))
     , m_index(index)
 {
-    set_uid(current->uid());
-    set_gid(current->gid());
+    set_uid(current->process().uid());
+    set_gid(current->process().gid());
 }
 
 MasterPTY::~MasterPTY()

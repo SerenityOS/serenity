@@ -178,8 +178,8 @@ bool IDEDiskDevice::read_sectors(dword start_sector, word count, byte* outbuf)
 {
     LOCKER(m_lock);
 #ifdef DISK_DEBUG
-    kprintf("%s: Disk::read_sectors request (%u sector(s) @ %u)\n",
-            current->name().characters(),
+    dbgprintf("%s: Disk::read_sectors request (%u sector(s) @ %u)\n",
+            current->process().name().characters(),
             count,
             start_sector);
 #endif
@@ -231,7 +231,7 @@ bool IDEDiskDevice::write_sectors(dword start_sector, word count, const byte* da
     LOCKER(m_lock);
 #ifdef DISK_DEBUG
     dbgprintf("%s(%u): IDEDiskDevice::write_sectors request (%u sector(s) @ %u)\n",
-            current->name().characters(),
+            current->process().name().characters(),
             current->pid(),
             count,
             start_sector);

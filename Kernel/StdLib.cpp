@@ -35,6 +35,18 @@ void* memcpy(void* dest_ptr, const void* src_ptr, size_t n)
     return dest_ptr;
 }
 
+void* memmove(void* dest, const void* src, size_t n)
+{
+    if (dest < src)
+        return memcpy(dest, src, n);
+
+    byte *pd = (byte*)dest;
+    const byte *ps = (const byte*)src;
+    for (pd += n, ps += n; n--;)
+        *--pd = *--ps;
+    return dest;
+}
+
 char* strcpy(char* dest, const char *src)
 {
     auto* dest_ptr = dest;

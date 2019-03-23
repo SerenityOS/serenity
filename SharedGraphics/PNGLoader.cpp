@@ -9,6 +9,8 @@
 #include <SharedGraphics/puff.c>
 #include <serenity.h>
 
+//#define PNG_STOPWATCH_DEBUG
+
 struct PNG_IHDR {
     NetworkOrdered<dword> width;
     NetworkOrdered<dword> height;
@@ -246,7 +248,9 @@ template<bool has_alpha, byte filter_type>
 [[gnu::noinline]] static void unfilter(PNGLoadingContext& context)
 {
     {
+#ifdef PNG_STOPWATCH_DEBUG
     Stopwatch sw("load_png_impl: unfilter: unpack");
+#endif
     // First unpack the scanlines to RGBA:
     switch (context.color_type) {
     case 2:
@@ -275,7 +279,9 @@ template<bool has_alpha, byte filter_type>
 
     auto dummy_scanline = ByteBuffer::create_zeroed(context.width * sizeof(RGBA32));
 
+#ifdef PNG_STOPWATCH_DEBUG
     Stopwatch sw("load_png_impl: unfilter: process");
+#endif
     for (int y = 0; y < context.height; ++y) {
         auto filter = context.scanlines[y].filter;
         if (filter == 0) {
@@ -318,7 +324,9 @@ template<bool has_alpha, byte filter_type>
 
 static RetainPtr<GraphicsBitmap> load_png_impl(const byte* data, int data_size)
 {
+#ifdef PNG_STOPWATCH_DEBUG
     Stopwatch sw("load_png_impl: total");
+#endif
     const byte* data_ptr = data;
     int data_remaining = data_size;
 
@@ -336,7 +344,9 @@ static RetainPtr<GraphicsBitmap> load_png_impl(const byte* data, int data_size)
     data_remaining -= sizeof(png_header);
 
     {
+#ifdef PNG_STOPWATCH_DEBUG
         Stopwatch sw("load_png_impl: read chunks");
+#endif
         Streamer streamer(data_ptr, data_remaining);
         while (!streamer.at_end()) {
             if (!process_chunk(streamer, context)) {
@@ -346,7 +356,9 @@ static RetainPtr<GraphicsBitmap> load_png_impl(const byte* data, int data_size)
     }
 
     {
+#ifdef PNG_STOPWATCH_DEBUG
         Stopwatch sw("load_png_impl: uncompress");
+#endif
         unsigned long srclen = context.compressed_data.size() - 6;
         unsigned long destlen = context.decompression_buffer_size;
         int ret = puff(context.decompression_buffer, &destlen, context.compressed_data.data() + 2, &srclen);
@@ -356,7 +368,9 @@ static RetainPtr<GraphicsBitmap> load_png_impl(const byte* data, int data_size)
     }
 
     {
+#ifdef PNG_STOPWATCH_DEBUG
         Stopwatch sw("load_png_impl: extract scanlines");
+#endif
         context.scanlines.ensure_capacity(context.height);
         Streamer streamer(context.decompression_buffer, context.decompression_buffer_size);
         for (int y = 0; y < context.height; ++y) {
@@ -372,7 +386,9 @@ static RetainPtr<GraphicsBitmap> load_png_impl(const byte* data, int data_size)
     }
 
     {
+#ifdef PNG_STOPWATCH_DEBUG
         Stopwatch sw("load_png_impl: create bitmap");
+#endif
         context.bitmap = GraphicsBitmap::create(context.has_alpha() ? GraphicsBitmap::Format::RGBA32 : GraphicsBitmap::Format::RGB32, { context.width, context.height });
     }
 

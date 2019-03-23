@@ -15,8 +15,6 @@
 
 #define PAGE_ROUND_UP(x) ((((dword)(x)) + PAGE_SIZE-1) & (~(PAGE_SIZE-1)))
 
-class Process;
-extern Process* current;
 class SynthFSInode;
 
 enum class PageFaultResponse {
@@ -411,11 +409,11 @@ private:
 };
 
 struct ProcessPagingScope {
-    ProcessPagingScope(Process& process) { MM.enter_process_paging_scope(process); }
-    ~ProcessPagingScope() { MM.enter_process_paging_scope(*current); }
+    ProcessPagingScope(Process&);
+    ~ProcessPagingScope();
 };
 
 struct KernelPagingScope {
-    KernelPagingScope() { MM.enter_kernel_paging_scope(); }
-    ~KernelPagingScope() { MM.enter_process_paging_scope(*current); }
+    KernelPagingScope();
+    ~KernelPagingScope();
 };

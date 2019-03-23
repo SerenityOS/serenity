@@ -1,6 +1,7 @@
 #include "DiskBackedFileSystem.h"
 #include "i386.h"
 #include <AK/InlineLRUCache.h>
+#include <Kernel/Process.h>
 
 //#define DBFS_DEBUG
 

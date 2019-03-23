@@ -138,7 +138,7 @@ KResult VFS::utime(const String& path, Inode& base, time_t atime, time_t mtime)
     auto& inode = *descriptor_or_error.value()->inode();
     if (inode.fs().is_readonly())
         return KResult(-EROFS);
-    if (inode.metadata().uid != current->euid())
+    if (inode.metadata().uid != current->process().euid())
         return KResult(-EACCES);
 
     int error = inode.set_atime(atime);
@@ -175,11 +175,11 @@ KResultOr<Retained<FileDescriptor>> VFS::open(const String& path, int options, m
     // NOTE: Read permission is a bit weird, since O_RDONLY == 0,
     //       so we check if (NOT write_only OR read_and_write)
     if (!(options & O_WRONLY) || (options & O_RDWR)) {
-        if (!metadata.may_read(*current))
+        if (!metadata.may_read(current->process()))
             return KResult(-EACCES);
     }
     if ((options & O_WRONLY) || (options & O_RDWR)) {
-        if (!metadata.may_write(*current))
+        if (!metadata.may_write(current->process()))
             return KResult(-EACCES);
         if (metadata.is_directory())
             return KResult(-EISDIR);
@@ -188,7 +188,6 @@ KResultOr<Retained<FileDescriptor>> VFS::open(const String& path, int options, m
     if (metadata.is_device()) {
         auto it = m_devices.find(encoded_device(metadata.major_device, metadata.minor_device));
         if (it == m_devices.end()) {
-            kprintf("VFS::open: no such device %u,%u\n", metadata.major_device, metadata.minor_device);
             return KResult(-ENODEV);
         }
         auto descriptor_or_error = (*it).value->open(options);
@@ -217,7 +216,7 @@ KResultOr<Retained<FileDescriptor>> VFS::create(const String& path, int options,
         return KResult(-ENOENT);
     if (existing_file_or_error.error() != -ENOENT)
         return existing_file_or_error.error();
-    if (!parent_inode->metadata().may_write(*current))
+    if (!parent_inode->metadata().may_write(current->process()))
         return KResult(-EACCES);
 
     FileSystemPath p(path);
@@ -241,7 +240,7 @@ KResult VFS::mkdir(const String& path, mode_t mode, Inode& base)
     if (result.error() != -ENOENT)
         return result.error();
 
-    if (!parent_inode->metadata().may_write(*current))
+    if (!parent_inode->metadata().may_write(current->process()))
         return KResult(-EACCES);
 
     FileSystemPath p(path);
@@ -261,15 +260,15 @@ KResult VFS::access(const String& path, int mode, Inode& base)
     auto inode = inode_or_error.value();
     auto metadata = inode->metadata();
     if (mode & R_OK) {
-        if (!metadata.may_read(*current))
+        if (!metadata.may_read(current->process()))
             return KResult(-EACCES);
     }
     if (mode & W_OK) {
-        if (!metadata.may_write(*current))
+        if (!metadata.may_write(current->process()))
             return KResult(-EACCES);
     }
     if (mode & X_OK) {
-        if (!metadata.may_execute(*current))
+        if (!metadata.may_execute(current->process()))
             return KResult(-EACCES);
     }
     return KSuccess;
@@ -283,7 +282,7 @@ KResultOr<Retained<Inode>> VFS::open_directory(const String& path, Inode& base)
     auto inode = inode_or_error.value();
     if (!inode->is_directory())
         return KResult(-ENOTDIR);
-    if (!inode->metadata().may_execute(*current))
+    if (!inode->metadata().may_execute(current->process()))
         return KResult(-EACCES);
     return Retained<Inode>(*inode);
 }
@@ -293,7 +292,7 @@ KResult VFS::chmod(Inode& inode, mode_t mode)
     if (inode.fs().is_readonly())
         return KResult(-EROFS);
 
-    if (current->euid() != inode.metadata().uid && !current->is_superuser())
+    if (current->process().euid() != inode.metadata().uid && !current->process().is_superuser())
         return KResult(-EPERM);
 
     // Only change the permission bits.
@@ -320,19 +319,19 @@ KResult VFS::chown(const String& path, uid_t a_uid, gid_t a_gid, Inode& base)
     if (inode->fs().is_readonly())
         return KResult(-EROFS);
 
-    if (current->euid() != inode->metadata().uid && !current->is_superuser())
+    if (current->process().euid() != inode->metadata().uid && !current->process().is_superuser())
         return KResult(-EPERM);
 
     uid_t new_uid = inode->metadata().uid;
     gid_t new_gid = inode->metadata().gid;
 
     if (a_uid != (uid_t)-1) {
-        if (current->euid() != a_uid && !current->is_superuser())
+        if (current->process().euid() != a_uid && !current->process().is_superuser())
             return KResult(-EPERM);
         new_uid = a_uid;
     }
     if (a_gid != (gid_t)-1) {
-        if (!current->in_group(a_gid) && !current->is_superuser())
+        if (!current->process().in_group(a_gid) && !current->process().is_superuser())
             return KResult(-EPERM);
         new_gid = a_gid;
     }
@@ -377,7 +376,7 @@ KResult VFS::link(const String& old_path, const String& new_path, Inode& base)
     if (parent_inode->fs().is_readonly())
         return KResult(-EROFS);
 
-    if (!parent_inode->metadata().may_write(*current))
+    if (!parent_inode->metadata().may_write(current->process()))
         return KResult(-EACCES);
 
     return parent_inode->add_child(old_inode->identifier(), FileSystemPath(new_path).basename(), 0);
@@ -394,7 +393,7 @@ KResult VFS::unlink(const String& path, Inode& base)
     if (inode->is_directory())
         return KResult(-EISDIR);
 
-    if (!parent_inode->metadata().may_write(*current))
+    if (!parent_inode->metadata().may_write(current->process()))
         return KResult(-EACCES);
 
     return parent_inode->remove_child(FileSystemPath(path).basename());
@@ -410,7 +409,7 @@ KResult VFS::symlink(const String& target, const String& linkpath, Inode& base)
         return KResult(-ENOENT);
     if (existing_file_or_error.error() != -ENOENT)
         return existing_file_or_error.error();
-    if (!parent_inode->metadata().may_write(*current))
+    if (!parent_inode->metadata().may_write(current->process()))
         return KResult(-EACCES);
 
     FileSystemPath p(linkpath);
@@ -442,7 +441,7 @@ KResult VFS::rmdir(const String& path, Inode& base)
     if (!inode->is_directory())
         return KResult(-ENOTDIR);
 
-    if (!parent_inode->metadata().may_write(*current))
+    if (!parent_inode->metadata().may_write(current->process()))
         return KResult(-EACCES);
 
     if (inode->directory_entry_count() != 2)
@@ -561,7 +560,7 @@ KResultOr<InodeIdentifier> VFS::resolve_path(const String& path, InodeIdentifier
 #endif
             return KResult(-ENOTDIR);
         }
-        if (!metadata.may_execute(*current))
+        if (!metadata.may_execute(current->process()))
             return KResult(-EACCES);
         auto parent = crumb_id;
         crumb_id = crumb_inode->lookup(part);
@@ -612,7 +611,6 @@ KResultOr<InodeIdentifier> VFS::resolve_path(const String& path, InodeIdentifier
             ASSERT(crumb_id.is_valid());
         }
     }
-
     return crumb_id;
 }
 
