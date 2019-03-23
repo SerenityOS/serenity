@@ -32,6 +32,8 @@ public:
     static void initialize();
     static void finalize_dying_threads();
 
+    static Vector<Thread*> all_threads();
+
     int tid() const { return m_tid; }
     int pid() const;
 
