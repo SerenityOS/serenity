@@ -1,10 +1,10 @@
 #pragma once
 
-#include <LibGUI/GTableModel.h>
+#include <LibGUI/GModel.h>
 
 class IRCLogBuffer;
 
-class IRCLogBufferModel final : public GTableModel {
+class IRCLogBufferModel final : public GModel {
 public:
     enum Column {
         Timestamp = 0,

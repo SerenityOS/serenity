@@ -1,4 +1,4 @@
-#include "DirectoryTableModel.h"
+#include "DirectoryModel.h"
 #include <dirent.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -7,7 +7,7 @@
 #include <AK/FileSystemPath.h>
 #include <AK/StringBuilder.h>
 
-DirectoryTableModel::DirectoryTableModel()
+DirectoryModel::DirectoryModel()
 {
     m_directory_icon = GraphicsBitmap::load_from_file("/res/icons/folder16.png");
     m_file_icon = GraphicsBitmap::load_from_file("/res/icons/file16.png");
@@ -27,21 +27,21 @@ DirectoryTableModel::DirectoryTableModel()
     endgrent();
 }
 
-DirectoryTableModel::~DirectoryTableModel()
+DirectoryModel::~DirectoryModel()
 {
 }
 
-int DirectoryTableModel::row_count() const
+int DirectoryModel::row_count() const
 {
     return m_directories.size() + m_files.size();
 }
 
-int DirectoryTableModel::column_count() const
+int DirectoryModel::column_count() const
 {
     return Column::__Count;
 }
 
-String DirectoryTableModel::column_name(int column) const
+String DirectoryModel::column_name(int column) const
 {
     switch (column) {
     case Column::Icon: return "";
@@ -55,7 +55,7 @@ String DirectoryTableModel::column_name(int column) const
     ASSERT_NOT_REACHED();
 }
 
-GTableModel::ColumnMetadata DirectoryTableModel::column_metadata(int column) const
+GModel::ColumnMetadata DirectoryModel::column_metadata(int column) const
 {
     switch (column) {
     case Column::Icon: return { 16, TextAlignment::Center };
@@ -69,7 +69,7 @@ GTableModel::ColumnMetadata DirectoryTableModel::column_metadata(int column) con
     ASSERT_NOT_REACHED();
 }
 
-const GraphicsBitmap& DirectoryTableModel::icon_for(const Entry& entry) const
+const GraphicsBitmap& DirectoryModel::icon_for(const Entry& entry) const
 {
     if (S_ISDIR(entry.mode))
         return *m_directory_icon;
@@ -122,7 +122,7 @@ static String permission_string(mode_t mode)
     return builder.to_string();
 }
 
-String DirectoryTableModel::name_for_uid(uid_t uid) const
+String DirectoryModel::name_for_uid(uid_t uid) const
 {
     auto it = m_user_names.find(uid);
     if (it == m_user_names.end())
@@ -130,7 +130,7 @@ String DirectoryTableModel::name_for_uid(uid_t uid) const
     return (*it).value;
 }
 
-String DirectoryTableModel::name_for_gid(uid_t gid) const
+String DirectoryModel::name_for_gid(uid_t gid) const
 {
     auto it = m_user_names.find(gid);
     if (it == m_user_names.end())
@@ -138,7 +138,7 @@ String DirectoryTableModel::name_for_gid(uid_t gid) const
     return (*it).value;
 }
 
-GVariant DirectoryTableModel::data(const GModelIndex& index, Role role) const
+GVariant DirectoryModel::data(const GModelIndex& index, Role role) const
 {
     ASSERT(is_valid(index));
     auto& entry = this->entry(index.row());
@@ -168,7 +168,7 @@ GVariant DirectoryTableModel::data(const GModelIndex& index, Role role) const
     return { };
 }
 
-void DirectoryTableModel::update()
+void DirectoryModel::update()
 {
     DIR* dirp = opendir(m_path.characters());
     if (!dirp) {
@@ -204,7 +204,7 @@ void DirectoryTableModel::update()
     did_update();
 }
 
-void DirectoryTableModel::open(const String& a_path)
+void DirectoryModel::open(const String& a_path)
 {
     FileSystemPath canonical_path(a_path);
     auto path = canonical_path.string();
@@ -219,7 +219,7 @@ void DirectoryTableModel::open(const String& a_path)
     set_selected_index({ 0, 0 });
 }
 
-void DirectoryTableModel::activate(const GModelIndex& index)
+void DirectoryModel::activate(const GModelIndex& index)
 {
     if (!index.is_valid())
         return;

@@ -34,7 +34,7 @@ private:
     GModelIndex m_index;
 };
 
-class GTableModel : public Retainable<GTableModel> {
+class GModel : public Retainable<GModel> {
 public:
     struct ColumnMetadata {
         int preferred_width { 0 };
@@ -44,7 +44,7 @@ public:
 
     enum class Role { Display, Sort, Custom, ForegroundColor, BackgroundColor };
 
-    virtual ~GTableModel();
+    virtual ~GModel();
 
     virtual int row_count() const = 0;
     virtual int column_count() const = 0;
@@ -73,11 +73,11 @@ public:
     void register_view(Badge<GTableView>, GTableView&);
     void unregister_view(Badge<GTableView>, GTableView&);
 
-    Function<void(GTableModel&)> on_model_update;
+    Function<void(GModel&)> on_model_update;
     Function<void(const GModelIndex&)> on_selection_changed;
 
 protected:
-    GTableModel();
+    GModel();
 
     void for_each_view(Function<void(GTableView&)>);
     void did_update();

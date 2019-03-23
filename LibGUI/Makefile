@@ -32,12 +32,12 @@ LIBGUI_OBJS = \
     GFontDatabase.o \
     GToolBar.o \
     GTableView.o \
-    GTableModel.o \
+    GModel.o \
     GVariant.o \
     GShortcut.o \
     GTextEditor.o \
     GClipboard.o \
-    GSortingProxyTableModel.o \
+    GSortingProxyModel.o \
     GStackWidget.o \
     GEvent.o \
     GScrollableWidget.o \

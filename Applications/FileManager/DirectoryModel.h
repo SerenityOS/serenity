@@ -1,13 +1,13 @@
 #pragma once
 
-#include <LibGUI/GTableModel.h>
+#include <LibGUI/GModel.h>
 #include <AK/HashMap.h>
 #include <sys/stat.h>
 
-class DirectoryTableModel final : public GTableModel {
+class DirectoryModel final : public GModel {
 public:
-    static Retained<DirectoryTableModel> create() { return adopt(*new DirectoryTableModel); }
-    virtual ~DirectoryTableModel() override;
+    static Retained<DirectoryModel> create() { return adopt(*new DirectoryModel); }
+    virtual ~DirectoryModel() override;
 
     enum Column {
         Icon = 0,
@@ -33,7 +33,7 @@ public:
     size_t bytes_in_files() const { return m_bytes_in_files; }
 
 private:
-    DirectoryTableModel();
+    DirectoryModel();
 
     String name_for_uid(uid_t) const;
     String name_for_gid(gid_t) const;

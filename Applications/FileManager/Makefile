@@ -1,5 +1,5 @@
 OBJS = \
-    DirectoryTableModel.o \
+    DirectoryModel.o \
     DirectoryTableView.o \
     main.o
 

@@ -33,7 +33,7 @@ String IRCWindowListModel::column_name(int column) const
     ASSERT_NOT_REACHED();
 }
 
-GTableModel::ColumnMetadata IRCWindowListModel::column_metadata(int column) const
+GModel::ColumnMetadata IRCWindowListModel::column_metadata(int column) const
 {
     switch (column) {
     case Column::Name: return { 70, TextAlignment::CenterLeft };

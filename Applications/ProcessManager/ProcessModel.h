@@ -3,10 +3,10 @@
 #include <AK/AKString.h>
 #include <AK/HashMap.h>
 #include <AK/Vector.h>
-#include <LibGUI/GTableModel.h>
+#include <LibGUI/GModel.h>
 #include <unistd.h>
 
-class ProcessTableModel final : public GTableModel {
+class ProcessModel final : public GModel {
 public:
     enum Column {
         Icon = 0,
@@ -21,8 +21,8 @@ public:
         __Count
     };
 
-    static Retained<ProcessTableModel> create() { return adopt(*new ProcessTableModel); }
-    virtual ~ProcessTableModel() override;
+    static Retained<ProcessModel> create() { return adopt(*new ProcessModel); }
+    virtual ~ProcessModel() override;
 
     virtual int row_count() const override;
     virtual int column_count() const override;
@@ -32,7 +32,7 @@ public:
     virtual void update() override;
 
 private:
-    ProcessTableModel();
+    ProcessModel();
 
     struct ProcessState {
         pid_t pid;

@@ -1,12 +1,12 @@
 #include "DirectoryTableView.h"
-#include <LibGUI/GSortingProxyTableModel.h>
+#include <LibGUI/GSortingProxyModel.h>
 
 DirectoryTableView::DirectoryTableView(GWidget* parent)
     : GTableView(parent)
-    , m_model(DirectoryTableModel::create())
+    , m_model(DirectoryModel::create())
 {
-    set_model(GSortingProxyTableModel::create(m_model.copy_ref()));
-    GTableView::model()->set_key_column_and_sort_order(DirectoryTableModel::Column::Name, GSortOrder::Ascending);
+    set_model(GSortingProxyModel::create(m_model.copy_ref()));
+    GTableView::model()->set_key_column_and_sort_order(DirectoryModel::Column::Name, GSortOrder::Ascending);
 }
 
 DirectoryTableView::~DirectoryTableView()

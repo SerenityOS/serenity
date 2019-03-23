@@ -1,5 +1,5 @@
 #include <LibGUI/GTableView.h>
-#include <LibGUI/GTableModel.h>
+#include <LibGUI/GModel.h>
 #include <LibGUI/GScrollBar.h>
 #include <SharedGraphics/Painter.h>
 #include <Kernel/KeyCode.h>
@@ -13,7 +13,7 @@ GTableView::~GTableView()
 {
 }
 
-void GTableView::set_model(RetainPtr<GTableModel>&& model)
+void GTableView::set_model(RetainPtr<GModel>&& model)
 {
     if (model.ptr() == m_model.ptr())
         return;
@@ -162,7 +162,7 @@ void GTableView::paint_event(GPaintEvent& event)
                 if (is_selected_row)
                     text_color = Color::White;
                 else
-                    text_color = m_model->data(cell_index, GTableModel::Role::ForegroundColor).to_color(Color::Black);
+                    text_color = m_model->data(cell_index, GModel::Role::ForegroundColor).to_color(Color::Black);
                 painter.draw_text(cell_rect, data.to_string(), font, column_metadata.text_alignment, text_color);
             }
             x_offset += column_width + horizontal_padding() * 2;

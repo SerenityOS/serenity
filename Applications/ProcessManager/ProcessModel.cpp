@@ -1,10 +1,10 @@
-#include "ProcessTableModel.h"
+#include "ProcessModel.h"
 #include <LibGUI/GFile.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <pwd.h>
 
-ProcessTableModel::ProcessTableModel()
+ProcessModel::ProcessModel()
 {
     setpwent();
     while (auto* passwd = getpwent())
@@ -17,21 +17,21 @@ ProcessTableModel::ProcessTableModel()
     m_normal_priority_icon = GraphicsBitmap::load_from_file("/res/icons/normalpriority16.png");
 }
 
-ProcessTableModel::~ProcessTableModel()
+ProcessModel::~ProcessModel()
 {
 }
 
-int ProcessTableModel::row_count() const
+int ProcessModel::row_count() const
 {
     return m_processes.size();
 }
 
-int ProcessTableModel::column_count() const
+int ProcessModel::column_count() const
 {
     return Column::__Count;
 }
 
-String ProcessTableModel::column_name(int column) const
+String ProcessModel::column_name(int column) const
 {
     switch (column) {
     case Column::Icon: return "";
@@ -47,7 +47,7 @@ String ProcessTableModel::column_name(int column) const
     }
 }
 
-GTableModel::ColumnMetadata ProcessTableModel::column_metadata(int column) const
+GModel::ColumnMetadata ProcessModel::column_metadata(int column) const
 {
     switch (column) {
     case Column::Icon: return { 16, TextAlignment::CenterLeft };
@@ -68,7 +68,7 @@ static String pretty_byte_size(size_t size)
     return String::format("%uK", size / 1024);
 }
 
-GVariant ProcessTableModel::data(const GModelIndex& index, Role role) const
+GVariant ProcessModel::data(const GModelIndex& index, Role role) const
 {
     ASSERT(is_valid(index));
 
@@ -123,7 +123,7 @@ GVariant ProcessTableModel::data(const GModelIndex& index, Role role) const
     return { };
 }
 
-void ProcessTableModel::update()
+void ProcessModel::update()
 {
     GFile file("/proc/all");
     if (!file.open(GIODevice::ReadOnly)) {
