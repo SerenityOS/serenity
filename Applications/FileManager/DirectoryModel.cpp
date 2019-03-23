@@ -173,7 +173,6 @@ GVariant DirectoryModel::data(const GModelIndex& index, Role role) const
 
 void DirectoryModel::update()
 {
-    dbgprintf("DirectoryModel::update\n");
     DIR* dirp = opendir(m_path.characters());
     if (!dirp) {
         perror("opendir");
