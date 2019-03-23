@@ -89,6 +89,7 @@ cp -v ../Applications/About/About mnt/bin/About
 cp -v ../Applications/TextEditor/TextEditor mnt/bin/TextEditor
 cp -v ../Applications/IRCClient/IRCClient mnt/bin/IRCClient
 ln -s IRCClient mnt/bin/irc
+ln -s FileManager mnt/bin/fm
 cp -v ../Servers/LookupServer/LookupServer mnt/bin/LookupServer
 cp -v ../Servers/WindowServer/WindowServer mnt/bin/WindowServer
 cp -v kernel.map mnt/

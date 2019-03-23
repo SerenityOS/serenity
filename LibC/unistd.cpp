@@ -410,4 +410,10 @@ char* getlogin()
     return nullptr;
 }
 
+int create_thread(int(*entry)(void*), void* argument)
+{
+    int rc = syscall(SC_create_thread, entry, argument);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
 }

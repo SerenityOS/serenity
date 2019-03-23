@@ -435,7 +435,7 @@ void Thread::push_value_on_stack(dword value)
     *stack_ptr = value;
 }
 
-void Thread::make_userspace_stack(Vector<String> arguments, Vector<String> environment)
+void Thread::make_userspace_stack_for_main_thread(Vector<String> arguments, Vector<String> environment)
 {
     auto* region = m_process.allocate_region(LinearAddress(), default_userspace_stack_size, "stack");
     ASSERT(region);
@@ -482,12 +482,23 @@ void Thread::make_userspace_stack(Vector<String> arguments, Vector<String> envir
     push_value_on_stack(0);
 }
 
+void Thread::make_userspace_stack_for_secondary_thread(void *argument)
+{
+    auto* region = m_process.allocate_region(LinearAddress(), default_userspace_stack_size, String::format("Thread %u Stack", tid()));
+    ASSERT(region);
+    m_stack_top3 = region->laddr().offset(default_userspace_stack_size).get();
+    m_tss.esp = m_stack_top3;
+
+    // NOTE: The stack needs to be 16-byte aligned.
+    push_value_on_stack((dword)argument);
+    push_value_on_stack(0);
+}
+
 Thread* Thread::clone(Process& process)
 {
     auto* clone = new Thread(process);
     memcpy(clone->m_signal_action_data, m_signal_action_data, sizeof(m_signal_action_data));
     clone->m_signal_mask = m_signal_mask;
-    //clone->m_tss = m_tss;
     clone->m_fpu_state = m_fpu_state;
     clone->m_has_used_fpu = m_has_used_fpu;
     return clone;
