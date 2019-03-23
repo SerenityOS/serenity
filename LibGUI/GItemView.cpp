@@ -144,12 +144,41 @@ void GItemView::keydown_event(GKeyEvent& event)
 {
     if (!model())
         return;
+    if (!m_visual_row_count || !m_visual_column_count)
+        return;
+
     auto& model = *this->model();
     if (event.key() == KeyCode::Key_Return) {
         model.activate(model.selected_index());
         return;
     }
     if (event.key() == KeyCode::Key_Up) {
+        GModelIndex new_index;
+        if (model.selected_index().is_valid())
+            new_index = { model.selected_index().row() - m_visual_column_count, model.selected_index().column() };
+        else
+            new_index = { 0, 0 };
+        if (model.is_valid(new_index)) {
+            model.set_selected_index(new_index);
+            scroll_into_view(new_index, Orientation::Vertical);
+            update();
+        }
+        return;
+    }
+    if (event.key() == KeyCode::Key_Down) {
+        GModelIndex new_index;
+        if (model.selected_index().is_valid())
+            new_index = { model.selected_index().row() + m_visual_column_count, model.selected_index().column() };
+        else
+            new_index = { 0, 0 };
+        if (model.is_valid(new_index)) {
+            model.set_selected_index(new_index);
+            scroll_into_view(new_index, Orientation::Vertical);
+            update();
+        }
+        return;
+    }
+    if (event.key() == KeyCode::Key_Left) {
         GModelIndex new_index;
         if (model.selected_index().is_valid())
             new_index = { model.selected_index().row() - 1, model.selected_index().column() };
@@ -162,7 +191,7 @@ void GItemView::keydown_event(GKeyEvent& event)
         }
         return;
     }
-    if (event.key() == KeyCode::Key_Down) {
+    if (event.key() == KeyCode::Key_Right) {
         GModelIndex new_index;
         if (model.selected_index().is_valid())
             new_index = { model.selected_index().row() + 1, model.selected_index().column() };
