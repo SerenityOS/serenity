@@ -2,6 +2,7 @@
 
 #include <LibGUI/GModel.h>
 #include <LibGUI/GScrollableWidget.h>
+#include <AK/Function.h>
 
 class GAbstractView : public GScrollableWidget {
     friend class GModel;
@@ -17,6 +18,10 @@ public:
 
     virtual bool accepts_focus() const override { return true; }
     virtual void did_update_model();
+
+    Function<void(const GModelNotification&)> on_model_notification;
+
+    virtual const char* class_name() const override { return "GAbstractView"; }
 
 protected:
     virtual void model_notification(const GModelNotification&);

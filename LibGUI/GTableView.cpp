@@ -30,9 +30,9 @@ void GTableView::update_content_size()
 
 void GTableView::did_update_model()
 {
+    GAbstractView::did_update_model();
     update_content_size();
     update();
-    GAbstractView::did_update_model();
 }
 
 Rect GTableView::row_rect(int item_index) const

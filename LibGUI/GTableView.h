@@ -30,6 +30,8 @@ public:
     bool is_column_hidden(int) const;
     void set_column_hidden(int, bool);
 
+    virtual const char* class_name() const override { return "GTableView"; }
+
 private:
     virtual void did_update_model() override;
     virtual void paint_event(GPaintEvent&) override;

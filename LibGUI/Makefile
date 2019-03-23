@@ -49,6 +49,7 @@ LIBGUI_OBJS = \
     GDesktop.o \
     GProgressBar.o \
     GAbstractView.o \
+    GItemView.o \
     GWindow.o
 
 OBJS = $(SHAREDGRAPHICS_OBJS) $(LIBGUI_OBJS)

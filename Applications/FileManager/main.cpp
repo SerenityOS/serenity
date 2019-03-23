@@ -47,22 +47,22 @@ int main(int argc, char** argv)
 
     auto* location_textbox = new GTextEditor(GTextEditor::SingleLine, location_toolbar);
 
-    auto* directory_table_view = new DirectoryTableView(widget);
+    auto* directory_view = new DirectoryView(widget);
     auto* statusbar = new GStatusBar(widget);
 
-    location_textbox->on_return_pressed = [directory_table_view] (auto& editor) {
-        directory_table_view->open(editor.text());
+    location_textbox->on_return_pressed = [directory_view] (auto& editor) {
+        directory_view->open(editor.text());
     };
 
-    auto open_parent_directory_action = GAction::create("Open parent directory", { Mod_Alt, Key_Up }, GraphicsBitmap::load_from_file("/res/icons/parentdirectory16.png"), [directory_table_view] (const GAction&) {
-        directory_table_view->open_parent_directory();
+    auto open_parent_directory_action = GAction::create("Open parent directory", { Mod_Alt, Key_Up }, GraphicsBitmap::load_from_file("/res/icons/parentdirectory16.png"), [directory_view] (const GAction&) {
+        directory_view->open_parent_directory();
     });
 
     auto mkdir_action = GAction::create("New directory...", GraphicsBitmap::load_from_file("/res/icons/16x16/mkdir.png"), [&] (const GAction&) {
         GInputBox input_box("Enter name:", "New directory", window);
         if (input_box.exec() == GInputBox::ExecOK && !input_box.text_value().is_empty()) {
             auto new_dir_path = String::format("%s/%s",
-                directory_table_view->path().characters(),
+                directory_view->path().characters(),
                 input_box.text_value().characters()
             );
             int rc = mkdir(new_dir_path.characters(), 0777);
@@ -70,9 +70,17 @@ int main(int argc, char** argv)
                 GMessageBox message_box(String::format("mkdir() failed: %s", strerror(errno)), "Error", window);
                 message_box.exec();
             } else {
-                directory_table_view->refresh();
+                directory_view->refresh();
             }
         }
+    });
+
+    auto view_as_list_action = GAction::create("List view", { Mod_Ctrl, KeyCode::Key_L }, [&] (const GAction&) {
+        directory_view->set_view_mode(DirectoryView::ViewMode::List);
+    });
+
+    auto view_as_icons_action = GAction::create("Icon view", { Mod_Ctrl, KeyCode::Key_I }, [&] (const GAction&) {
+        directory_view->set_view_mode(DirectoryView::ViewMode::Icon);
     });
 
     auto copy_action = GAction::create("Copy", GraphicsBitmap::load_from_file("/res/icons/copyfile16.png"), [] (const GAction&) {
@@ -99,6 +107,11 @@ int main(int argc, char** argv)
     file_menu->add_action(delete_action.copy_ref());
     menubar->add_menu(move(file_menu));
 
+    auto view_menu = make<GMenu>("View");
+    view_menu->add_action(view_as_list_action.copy_ref());
+    view_menu->add_action(view_as_icons_action.copy_ref());
+    menubar->add_menu(move(view_menu));
+
     auto help_menu = make<GMenu>("Help");
     help_menu->add_action(GAction::create("About", [] (const GAction&) {
         dbgprintf("FIXME: Implement Help/About\n");
@@ -112,17 +125,17 @@ int main(int argc, char** argv)
     main_toolbar->add_action(copy_action.copy_ref());
     main_toolbar->add_action(delete_action.copy_ref());
 
-    directory_table_view->on_path_change = [window, location_textbox] (const String& new_path) {
+    directory_view->on_path_change = [window, location_textbox] (const String& new_path) {
         window->set_title(String::format("FileManager: %s", new_path.characters()));
         location_textbox->set_text(new_path);
     };
 
-    directory_table_view->on_status_message = [statusbar] (String message) {
+    directory_view->on_status_message = [statusbar] (String message) {
         statusbar->set_text(move(message));
     };
 
-    directory_table_view->open("/");
-    directory_table_view->set_focus(true);
+    directory_view->open("/");
+    directory_view->set_focus(true);
 
     window->set_main_widget(widget);
     window->show();

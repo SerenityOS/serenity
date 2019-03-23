@@ -39,14 +39,21 @@ void GScrollableWidget::resize_event(GResizeEvent& event)
     }
 }
 
+Size GScrollableWidget::available_size() const
+{
+    int available_width = width() - m_size_occupied_by_fixed_elements.width() - width_occupied_by_vertical_scrollbar();
+    int available_height = height() - m_size_occupied_by_fixed_elements.height() - height_occupied_by_horizontal_scrollbar();
+    return { available_width, available_height };
+}
+
 void GScrollableWidget::update_scrollbar_ranges()
 {
-    int available_height = height() - m_size_occupied_by_fixed_elements.height() - height_occupied_by_horizontal_scrollbar();
-    int excess_height = max(0, m_content_size.height() - available_height);
+    auto available_size = this->available_size();
+
+    int excess_height = max(0, m_content_size.height() - available_size.height());
     m_vertical_scrollbar->set_range(0, excess_height);
 
-    int available_width = width() - m_size_occupied_by_fixed_elements.width() - width_occupied_by_vertical_scrollbar();
-    int excess_width = max(0, m_content_size.width() - available_width);
+    int excess_width = max(0, m_content_size.width() - available_size.width());
     m_horizontal_scrollbar->set_range(0, excess_width);
 
     m_vertical_scrollbar->set_big_step(visible_content_rect().height() - m_vertical_scrollbar->step());

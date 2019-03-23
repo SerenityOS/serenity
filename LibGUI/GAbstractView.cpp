@@ -25,8 +25,10 @@ void GAbstractView::set_model(RetainPtr<GModel>&& model)
     did_update_model();
 }
 
-void GAbstractView::model_notification(const GModelNotification&)
+void GAbstractView::model_notification(const GModelNotification& notification)
 {
+    if (on_model_notification)
+        on_model_notification(notification);
 }
 
 void GAbstractView::did_update_model()
