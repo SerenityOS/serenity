@@ -4,7 +4,7 @@
 #include <AK/Function.h>
 #include <unistd.h>
 
-class ProcessTableModel;
+class ProcessModel;
 
 class ProcessTableView final : public GTableView {
 public:

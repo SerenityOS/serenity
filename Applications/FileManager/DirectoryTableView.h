@@ -2,7 +2,7 @@
 
 #include <LibGUI/GTableView.h>
 #include <sys/stat.h>
-#include "DirectoryTableModel.h"
+#include "DirectoryModel.h"
 
 class DirectoryTableView final : public GTableView {
 public:
@@ -21,10 +21,10 @@ public:
 private:
     virtual void model_notification(const GModelNotification&) override;
 
-    DirectoryTableModel& model() { return *m_model; }
-    const DirectoryTableModel& model() const { return *m_model; }
+    DirectoryModel& model() { return *m_model; }
+    const DirectoryModel& model() const { return *m_model; }
 
     void set_status_message(const String&);
 
-    Retained<DirectoryTableModel> m_model;
+    Retained<DirectoryModel> m_model;
 };

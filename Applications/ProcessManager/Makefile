@@ -1,5 +1,5 @@
 OBJS = \
-    ProcessTableModel.o \
+    ProcessModel.o \
     ProcessTableView.o \
     MemoryStatsWidget.o \
     main.o

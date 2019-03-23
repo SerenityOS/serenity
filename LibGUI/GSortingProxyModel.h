@@ -1,11 +1,11 @@
 #pragma once
 
-#include <LibGUI/GTableModel.h>
+#include <LibGUI/GModel.h>
 
-class GSortingProxyTableModel final : public GTableModel {
+class GSortingProxyModel final : public GModel {
 public:
-    static Retained<GSortingProxyTableModel> create(Retained<GTableModel>&& model) { return adopt(*new GSortingProxyTableModel(move(model))); }
-    virtual ~GSortingProxyTableModel() override;
+    static Retained<GSortingProxyModel> create(Retained<GModel>&& model) { return adopt(*new GSortingProxyModel(move(model))); }
+    virtual ~GSortingProxyModel() override;
 
     virtual int row_count() const override;
     virtual int column_count() const override;
@@ -23,14 +23,14 @@ public:
     GModelIndex map_to_target(const GModelIndex&) const;
 
 private:
-    explicit GSortingProxyTableModel(Retained<GTableModel>&&);
+    explicit GSortingProxyModel(Retained<GModel>&&);
 
-    GTableModel& target() { return *m_target; }
-    const GTableModel& target() const { return *m_target; }
+    GModel& target() { return *m_target; }
+    const GModel& target() const { return *m_target; }
 
     void resort();
 
-    Retained<GTableModel> m_target;
+    Retained<GModel> m_target;
     Vector<int> m_row_mappings;
     int m_key_column { -1 };
     GSortOrder m_sort_order { GSortOrder::Ascending };

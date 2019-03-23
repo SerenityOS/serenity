@@ -1,31 +1,31 @@
-#include <LibGUI/GTableModel.h>
+#include <LibGUI/GModel.h>
 #include <LibGUI/GTableView.h>
 
-GTableModel::GTableModel()
+GModel::GModel()
 {
 }
 
-GTableModel::~GTableModel()
+GModel::~GModel()
 {
 }
 
-void GTableModel::register_view(Badge<GTableView>, GTableView& view)
+void GModel::register_view(Badge<GTableView>, GTableView& view)
 {
     m_views.set(&view);
 }
 
-void GTableModel::unregister_view(Badge<GTableView>, GTableView& view)
+void GModel::unregister_view(Badge<GTableView>, GTableView& view)
 {
     m_views.remove(&view);
 }
 
-void GTableModel::for_each_view(Function<void(GTableView&)> callback)
+void GModel::for_each_view(Function<void(GTableView&)> callback)
 {
     for (auto* view : m_views)
         callback(*view);
 }
 
-void GTableModel::did_update()
+void GModel::did_update()
 {
     if (on_model_update)
         on_model_update(*this);
@@ -34,7 +34,7 @@ void GTableModel::did_update()
     });
 }
 
-void GTableModel::set_selected_index(const GModelIndex& index)
+void GModel::set_selected_index(const GModelIndex& index)
 {
     if (m_selected_index == index)
         return;

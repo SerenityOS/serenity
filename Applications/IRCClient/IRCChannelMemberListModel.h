@@ -1,11 +1,11 @@
 #pragma once
 
-#include <LibGUI/GTableModel.h>
+#include <LibGUI/GModel.h>
 #include <AK/Function.h>
 
 class IRCChannel;
 
-class IRCChannelMemberListModel final : public GTableModel {
+class IRCChannelMemberListModel final : public GModel {
 public:
     enum Column { Name };
     static Retained<IRCChannelMemberListModel> create(IRCChannel& channel) { return adopt(*new IRCChannelMemberListModel(channel)); }

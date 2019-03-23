@@ -33,7 +33,7 @@ String IRCLogBufferModel::column_name(int column) const
     ASSERT_NOT_REACHED();
 }
 
-GTableModel::ColumnMetadata IRCLogBufferModel::column_metadata(int column) const
+GModel::ColumnMetadata IRCLogBufferModel::column_metadata(int column) const
 {
     switch (column) {
     case Column::Timestamp: return { 60, TextAlignment::CenterLeft };
