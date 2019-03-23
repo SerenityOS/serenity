@@ -522,3 +522,12 @@ void Thread::initialize()
     g_threads = new InlineLinkedList<Thread>;
     Scheduler::initialize();
 }
+
+Vector<Thread*> Thread::all_threads()
+{
+    Vector<Thread*> threads;
+    InterruptDisabler disabler;
+    for (auto* thread = g_threads->head(); thread; thread = thread->next())
+        threads.append(thread);
+    return threads;
+}
