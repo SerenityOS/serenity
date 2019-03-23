@@ -416,4 +416,9 @@ int create_thread(int(*entry)(void*), void* argument)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
+int ftruncate(int fd, off_t length)
+{
+    ASSERT_NOT_REACHED();
+}
+
 }
