@@ -1,5 +1,5 @@
 #include <LibGUI/GModel.h>
-#include <LibGUI/GTableView.h>
+#include <LibGUI/GAbstractView.h>
 
 GModel::GModel()
 {
@@ -9,17 +9,17 @@ GModel::~GModel()
 {
 }
 
-void GModel::register_view(Badge<GTableView>, GTableView& view)
+void GModel::register_view(Badge<GAbstractView>, GAbstractView& view)
 {
     m_views.set(&view);
 }
 
-void GModel::unregister_view(Badge<GTableView>, GTableView& view)
+void GModel::unregister_view(Badge<GAbstractView>, GAbstractView& view)
 {
     m_views.remove(&view);
 }
 
-void GModel::for_each_view(Function<void(GTableView&)> callback)
+void GModel::for_each_view(Function<void(GAbstractView&)> callback)
 {
     for (auto* view : m_views)
         callback(*view);
@@ -29,7 +29,7 @@ void GModel::did_update()
 {
     if (on_model_update)
         on_model_update(*this);
-    for_each_view([] (GTableView& view) {
+    for_each_view([] (auto& view) {
         view.did_update_model();
     });
 }

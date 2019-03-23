@@ -9,7 +9,7 @@
 #include <SharedGraphics/TextAlignment.h>
 
 class Font;
-class GTableView;
+class GAbstractView;
 
 enum class GSortOrder { None, Ascending, Descending };
 
@@ -70,8 +70,8 @@ public:
     virtual GSortOrder sort_order() const { return GSortOrder::None; }
     virtual void set_key_column_and_sort_order(int, GSortOrder) { }
 
-    void register_view(Badge<GTableView>, GTableView&);
-    void unregister_view(Badge<GTableView>, GTableView&);
+    void register_view(Badge<GAbstractView>, GAbstractView&);
+    void unregister_view(Badge<GAbstractView>, GAbstractView&);
 
     Function<void(GModel&)> on_model_update;
     Function<void(const GModelIndex&)> on_selection_changed;
@@ -79,11 +79,11 @@ public:
 protected:
     GModel();
 
-    void for_each_view(Function<void(GTableView&)>);
+    void for_each_view(Function<void(GAbstractView&)>);
     void did_update();
 
 private:
-    HashTable<GTableView*> m_views;
+    HashTable<GAbstractView*> m_views;
     GModelIndex m_selected_index;
     bool m_activates_on_selection { false };
 };
