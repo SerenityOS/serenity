@@ -58,6 +58,11 @@ int main(int argc, char** argv)
     auto* widget = new GWidget;
     window->set_main_widget(widget);
 
+    if (bitmap->has_alpha_channel()) {
+        widget->set_background_color(Color::White);
+        widget->set_fill_with_background_color(true);
+    }
+
     widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
 
     auto* label = new GLabel(widget);
