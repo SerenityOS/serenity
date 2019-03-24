@@ -227,6 +227,8 @@ void DirectoryModel::update()
     while (auto* de = readdir(dirp)) {
         Entry entry;
         entry.name = de->d_name;
+        if (entry.name == "." || entry.name == "..")
+            continue;
         struct stat st;
         int rc = lstat(String::format("%s/%s", m_path.characters(), de->d_name).characters(), &st);
         if (rc < 0) {
