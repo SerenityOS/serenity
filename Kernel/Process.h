@@ -53,8 +53,7 @@ public:
         Ring3 = 3,
     };
 
-    // FIXME(Thread): Is this really how this should work?
-    bool is_dead() const { return main_thread().state() == Thread::State::Dead; }
+    bool is_dead() const { return m_dead; }
 
     Thread::State state() const { return main_thread().state(); }
 
@@ -311,6 +310,7 @@ private:
     HashTable<gid_t> m_gids;
 
     bool m_being_inspected { false };
+    bool m_dead { false };
 
     int m_next_tid { 0 };
 };
