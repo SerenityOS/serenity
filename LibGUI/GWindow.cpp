@@ -143,21 +143,34 @@ void GWindow::set_rect(const Rect& a_rect)
 void GWindow::event(GEvent& event)
 {
     if (event.is_mouse_event()) {
+        auto& mouse_event = static_cast<GMouseEvent&>(event);
         if (m_global_cursor_tracking_widget) {
-            auto& mouse_event = static_cast<GMouseEvent&>(event);
             auto window_relative_rect = m_global_cursor_tracking_widget->window_relative_rect();
             Point local_point { mouse_event.x() - window_relative_rect.x(), mouse_event.y() - window_relative_rect.y() };
             auto local_event = make<GMouseEvent>(event.type(), local_point, mouse_event.buttons(), mouse_event.button(), mouse_event.modifiers());
             m_global_cursor_tracking_widget->event(*local_event);
+            return;
+        }
+        if (m_automatic_cursor_tracking_widget) {
+            auto window_relative_rect = m_automatic_cursor_tracking_widget->window_relative_rect();
+            Point local_point { mouse_event.x() - window_relative_rect.x(), mouse_event.y() - window_relative_rect.y() };
+            auto local_event = make<GMouseEvent>(event.type(), local_point, mouse_event.buttons(), mouse_event.button(), mouse_event.modifiers());
+            m_automatic_cursor_tracking_widget->event(*local_event);
+            if (mouse_event.buttons() == 0) {
+                m_automatic_cursor_tracking_widget = nullptr;
+                return;
+            }
+            return;
         }
         if (!m_main_widget)
             return;
-        auto& mouse_event = static_cast<GMouseEvent&>(event);
         if (m_main_widget) {
             auto result = m_main_widget->hit_test(mouse_event.x(), mouse_event.y());
             auto local_event = make<GMouseEvent>(event.type(), Point { result.localX, result.localY }, mouse_event.buttons(), mouse_event.button(), mouse_event.modifiers());
             ASSERT(result.widget);
             set_hovered_widget(result.widget);
+            if (mouse_event.buttons() != 0 && !m_automatic_cursor_tracking_widget)
+                m_automatic_cursor_tracking_widget = result.widget->make_weak_ptr();
             if (result.widget != m_global_cursor_tracking_widget.ptr())
                 return result.widget->event(*local_event);
         }
@@ -298,18 +311,16 @@ void GWindow::set_focused_widget(GWidget* widget)
 
 void GWindow::set_global_cursor_tracking_widget(GWidget* widget)
 {
-    ASSERT(m_window_id);
     if (widget == m_global_cursor_tracking_widget.ptr())
         return;
     m_global_cursor_tracking_widget = widget ? widget->make_weak_ptr() : nullptr;
+}
 
-    WSAPI_ClientMessage request;
-    request.type = WSAPI_ClientMessage::Type::SetGlobalCursorTracking;
-    request.window_id = m_window_id;
-    request.value = widget != nullptr;
-    // FIXME: What if the cursor moves out of our interest range before the server can handle this?
-    //        Maybe there could be a response that includes the current cursor location as of enabling.
-    GEventLoop::current().post_message_to_server(request);
+void GWindow::set_automatic_cursor_tracking_widget(GWidget* widget)
+{
+    if (widget == m_automatic_cursor_tracking_widget.ptr())
+        return;
+    m_automatic_cursor_tracking_widget = widget ? widget->make_weak_ptr() : nullptr;
 }
 
 void GWindow::set_has_alpha_channel(bool value)

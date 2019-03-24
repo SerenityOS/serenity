@@ -222,7 +222,6 @@ void GScrollBar::mousedown_event(GMouseEvent& event)
         m_scrubbing = true;
         m_scrub_start_value = value();
         m_scrub_origin = event.position();
-        set_global_cursor_tracking(true);
         update();
         return;
     }
@@ -235,7 +234,6 @@ void GScrollBar::mouseup_event(GMouseEvent& event)
     if (!m_scrubbing)
         return;
     m_scrubbing = false;
-    set_global_cursor_tracking(false);
     update();
 }
 

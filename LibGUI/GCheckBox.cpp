@@ -90,10 +90,10 @@ void GCheckBox::paint_event(GPaintEvent& event)
 
 void GCheckBox::mousemove_event(GMouseEvent& event)
 {
-    if (m_tracking_cursor) {
-        bool being_pressed = rect().contains(event.position());
-        if (being_pressed != m_being_modified) {
-            m_being_modified = being_pressed;
+    if (event.buttons() == GMouseButton::Left) {
+        bool being_modified = rect().contains(event.position());
+        if (being_modified != m_being_modified) {
+            m_being_modified = being_modified;
             update();
         }
     }
@@ -107,8 +107,6 @@ void GCheckBox::mousedown_event(GMouseEvent& event)
 #endif
     if (event.button() == GMouseButton::Left) {
         m_being_modified = true;
-        m_tracking_cursor = true;
-        set_global_cursor_tracking(true);
         update();
     }
     GWidget::mousedown_event(event);
@@ -122,11 +120,8 @@ void GCheckBox::mouseup_event(GMouseEvent& event)
     if (event.button() == GMouseButton::Left) {
         bool was_being_pressed = m_being_modified;
         m_being_modified = false;
-        m_tracking_cursor = false;
-        set_global_cursor_tracking(false);
-        if (was_being_pressed) {
+        if (was_being_pressed)
             set_checked(!is_checked());
-        }
         update();
     }
     GWidget::mouseup_event(event);
@@ -134,7 +129,7 @@ void GCheckBox::mouseup_event(GMouseEvent& event)
 
 void GCheckBox::keydown_event(GKeyEvent& event)
 {
-    if (!m_tracking_cursor && event.key() == KeyCode::Key_Space) {
+    if (event.key() == KeyCode::Key_Space) {
         set_checked(!is_checked());
         update();
     }

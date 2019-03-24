@@ -46,7 +46,7 @@ void GButton::paint_event(GPaintEvent& event)
 
 void GButton::mousemove_event(GMouseEvent& event)
 {
-    if (m_tracking_cursor) {
+    if (event.buttons() == GMouseButton::Left) {
         bool being_pressed = rect().contains(event.position());
         if (being_pressed != m_being_pressed) {
             m_being_pressed = being_pressed;
@@ -63,8 +63,6 @@ void GButton::mousedown_event(GMouseEvent& event)
 #endif
     if (event.button() == GMouseButton::Left) {
         m_being_pressed = true;
-        m_tracking_cursor = true;
-        set_global_cursor_tracking(true);
         update();
     }
     GWidget::mousedown_event(event);
@@ -84,8 +82,6 @@ void GButton::mouseup_event(GMouseEvent& event)
     if (event.button() == GMouseButton::Left) {
         bool was_being_pressed = m_being_pressed;
         m_being_pressed = false;
-        m_tracking_cursor = false;
-        set_global_cursor_tracking(false);
         update();
         if (was_being_pressed)
             click();
