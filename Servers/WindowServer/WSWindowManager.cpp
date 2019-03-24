@@ -520,7 +520,7 @@ void WSWindowManager::add_window(WSWindow& window)
         m_switcher.refresh();
 }
 
-void WSWindowManager::move_to_front(WSWindow& window)
+void WSWindowManager::move_to_front_and_make_active(WSWindow& window)
 {
     if (window.is_blocked_by_modal_window())
         return;
@@ -529,6 +529,8 @@ void WSWindowManager::move_to_front(WSWindow& window)
         invalidate(window);
     m_windows_in_order.remove(&window);
     m_windows_in_order.append(&window);
+
+    set_active_window(&window);
 }
 
 void WSWindowManager::remove_window(WSWindow& window)
@@ -620,6 +622,7 @@ void WSWindowManager::start_window_drag(WSWindow& window, WSMouseEvent& event)
 #ifdef DRAG_DEBUG
     printf("[WM] Begin dragging WSWindow{%p}\n", &window);
 #endif
+    move_to_front_and_make_active(window);
     m_drag_window = window.make_weak_ptr();;
     m_drag_origin = event.position();
     m_drag_window_origin = window.position();
@@ -628,6 +631,7 @@ void WSWindowManager::start_window_drag(WSWindow& window, WSMouseEvent& event)
 
 void WSWindowManager::start_window_resize(WSWindow& window, WSMouseEvent& event)
 {
+    move_to_front_and_make_active(window);
     constexpr ResizeDirection direction_for_hot_area[3][3] = {
         { ResizeDirection::UpLeft, ResizeDirection::Up, ResizeDirection::UpRight },
         { ResizeDirection::Left, ResizeDirection::None, ResizeDirection::Right },
@@ -821,23 +825,17 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event, WSWindow*& event_
     for_each_visible_window_from_front_to_back([&] (WSWindow& window) {
         if (window.type() == WSWindowType::Normal && outer_window_rect(window).contains(event.position())) {
             if (m_keyboard_modifiers == Mod_Logo && event.type() == WSMessage::MouseDown && event.button() == MouseButton::Left) {
-                move_to_front(window);
-                set_active_window(&window);
                 start_window_drag(window, event);
                 return IterationDecision::Abort;
             }
             if (m_keyboard_modifiers == Mod_Logo && event.type() == WSMessage::MouseDown && event.button() == MouseButton::Right && !window.is_blocked_by_modal_window()) {
-                move_to_front(window);
-                set_active_window(&window);
                 start_window_resize(window, event);
                 return IterationDecision::Abort;
             }
         }
         if (window.type() == WSWindowType::Normal && title_bar_rect(window.rect()).contains(event.position())) {
-            if (event.type() == WSMessage::MouseDown) {
-                move_to_front(window);
-                set_active_window(&window);
-            }
+            if (event.type() == WSMessage::MouseDown)
+                move_to_front_and_make_active(window);
             if (close_button_rect_for_window(window.rect()).contains(event.position())) {
                 handle_close_button_mouse_event(window, event);
                 return IterationDecision::Abort;
@@ -848,10 +846,8 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event, WSWindow*& event_
         }
 
         if (window.rect().contains(event.position())) {
-            if (window.type() == WSWindowType::Normal && event.type() == WSMessage::MouseDown) {
-                move_to_front(window);
-                set_active_window(&window);
-            }
+            if (window.type() == WSWindowType::Normal && event.type() == WSMessage::MouseDown)
+                move_to_front_and_make_active(window);
             event_window = &window;
             if (!window.global_cursor_tracking()) {
                 // FIXME: Should we just alter the coordinates of the existing MouseEvent and pass it through?

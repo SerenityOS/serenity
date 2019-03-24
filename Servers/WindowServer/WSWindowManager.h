@@ -49,7 +49,7 @@ public:
     WSWindow* highlight_window() { return m_highlight_window.ptr(); }
     void set_highlight_window(WSWindow*);
 
-    void move_to_front(WSWindow&);
+    void move_to_front_and_make_active(WSWindow&);
 
     void invalidate_cursor();
     void draw_cursor();
