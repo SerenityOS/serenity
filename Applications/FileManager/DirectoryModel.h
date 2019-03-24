@@ -5,6 +5,7 @@
 #include <sys/stat.h>
 
 class DirectoryModel final : public GModel {
+    friend int thumbnail_thread(void*);
 public:
     static Retained<DirectoryModel> create() { return adopt(*new DirectoryModel); }
     virtual ~DirectoryModel() override;
