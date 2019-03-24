@@ -72,7 +72,7 @@ bool Scheduler::pick_next()
 
         if (thread.state() == Thread::BlockedWait) {
             process.for_each_child([&] (Process& child) {
-                if (child.state() != Thread::Dead)
+                if (!child.is_dead())
                     return true;
                 if (thread.waitee_pid() == -1 || thread.waitee_pid() == child.pid()) {
                     thread.m_waitee_pid = child.pid();
