@@ -39,12 +39,12 @@ DirectoryModel::DirectoryModel()
 {
     create_thread(thumbnail_thread, this);
 
-    m_directory_icon = GraphicsBitmap::load_from_file("/res/icons/folder16.png");
-    m_file_icon = GraphicsBitmap::load_from_file("/res/icons/file16.png");
-    m_symlink_icon = GraphicsBitmap::load_from_file("/res/icons/link16.png");
-    m_socket_icon = GraphicsBitmap::load_from_file("/res/icons/socket16.png");
-    m_executable_icon = GraphicsBitmap::load_from_file("/res/icons/executable16.png");
-    m_filetype_image_icon = GraphicsBitmap::load_from_file("/res/icons/16x16/filetype-image.png");
+    m_directory_icon = GIcon(GraphicsBitmap::load_from_file("/res/icons/folder16.png"), GraphicsBitmap::load_from_file("/res/icons/32x32/folder.png"));
+    m_file_icon = GIcon(GraphicsBitmap::load_from_file("/res/icons/file16.png"), GraphicsBitmap::load_from_file("/res/icons/32x32/file.png"));
+    m_symlink_icon = GIcon(GraphicsBitmap::load_from_file("/res/icons/link16.png"));
+    m_socket_icon = GIcon(GraphicsBitmap::load_from_file("/res/icons/socket16.png"));
+    m_executable_icon = GIcon(GraphicsBitmap::load_from_file("/res/icons/executable16.png"), GraphicsBitmap::load_from_file("/res/icons/32x32/filetype-executable.png"));
+    m_filetype_image_icon = GIcon(GraphicsBitmap::load_from_file("/res/icons/16x16/filetype-image.png"), GraphicsBitmap::load_from_file("/res/icons/32x32/filetype-image.png"));
 
     setpwent();
     while (auto* passwd = getpwent())
@@ -99,16 +99,16 @@ GModel::ColumnMetadata DirectoryModel::column_metadata(int column) const
     ASSERT_NOT_REACHED();
 }
 
-const GraphicsBitmap& DirectoryModel::icon_for(const Entry& entry) const
+GIcon DirectoryModel::icon_for(const Entry& entry) const
 {
     if (S_ISDIR(entry.mode))
-        return *m_directory_icon;
+        return m_directory_icon;
     if (S_ISLNK(entry.mode))
-        return *m_symlink_icon;
+        return m_symlink_icon;
     if (S_ISSOCK(entry.mode))
-        return *m_socket_icon;
+        return m_socket_icon;
     if (entry.mode & S_IXUSR)
-        return *m_executable_icon;
+        return m_executable_icon;
     if (entry.name.ends_with(".png")) {
         if (!entry.thumbnail) {
             auto path = entry.full_path(*this);
@@ -120,10 +120,10 @@ const GraphicsBitmap& DirectoryModel::icon_for(const Entry& entry) const
             }
         }
         if (!entry.thumbnail)
-            return *m_filetype_image_icon;
-        return *entry.thumbnail;
+            return m_filetype_image_icon;
+        return GIcon(*entry.thumbnail);
     }
-    return *m_file_icon;
+    return m_file_icon;
 }
 
 static String permission_string(mode_t mode)

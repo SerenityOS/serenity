@@ -15,6 +15,10 @@ GVariant::~GVariant()
         if (m_value.as_bitmap)
             m_value.as_bitmap->release();
         break;
+    case Type::Icon:
+        if (m_value.as_icon)
+            m_value.as_icon->release();
+        break;
     default:
         break;
     }
@@ -52,6 +56,13 @@ GVariant::GVariant(const GraphicsBitmap& value)
     AK::retain_if_not_null(m_value.as_bitmap);
 }
 
+GVariant::GVariant(const GIcon& value)
+    : m_type(Type::Icon)
+{
+    m_value.as_icon = &const_cast<GIconImpl&>(value.impl());
+    AK::retain_if_not_null(m_value.as_icon);
+}
+
 GVariant::GVariant(Color color)
     : m_type(Type::Color)
 {
@@ -73,6 +84,8 @@ bool GVariant::operator==(const GVariant& other) const
         return as_string() == other.as_string();
     case Type::Bitmap:
         return m_value.as_bitmap == other.m_value.as_bitmap;
+    case Type::Icon:
+        return m_value.as_icon == other.m_value.as_icon;
     case Type::Color:
         return m_value.as_color == other.m_value.as_color;
     case Type::Invalid:
@@ -97,6 +110,9 @@ bool GVariant::operator<(const GVariant& other) const
     case Type::Bitmap:
         // FIXME: Maybe compare bitmaps somehow differently?
         return m_value.as_bitmap < other.m_value.as_bitmap;
+    case Type::Icon:
+        // FIXME: Maybe compare icons somehow differently?
+        return m_value.as_icon < other.m_value.as_icon;
     case Type::Color:
         return m_value.as_color < other.m_value.as_color;
     case Type::Invalid:
@@ -118,6 +134,8 @@ String GVariant::to_string() const
         return as_string();
     case Type::Bitmap:
         return "[GraphicsBitmap]";
+    case Type::Icon:
+        return "[GIcon]";
     case Type::Color:
         return as_color().to_string();
     case Type::Invalid:

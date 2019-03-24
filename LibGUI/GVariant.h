@@ -1,6 +1,7 @@
 #pragma once
 
 #include <AK/AKString.h>
+#include <LibGUI/GIcon.h>
 #include <SharedGraphics/GraphicsBitmap.h>
 
 class GVariant {
@@ -11,6 +12,7 @@ public:
     GVariant(int);
     GVariant(const String&);
     GVariant(const GraphicsBitmap&);
+    GVariant(const GIcon&);
     GVariant(Color);
     ~GVariant();
 
@@ -22,6 +24,7 @@ public:
         String,
         Bitmap,
         Color,
+        Icon,
     };
 
     bool is_valid() const { return m_type != Type::Invalid; }
@@ -31,6 +34,7 @@ public:
     bool is_string() const { return m_type == Type::String; }
     bool is_bitmap() const { return m_type == Type::Bitmap; }
     bool is_color() const { return m_type == Type::Color; }
+    bool is_icon() const { return m_type == Type::Icon; }
     Type type() const { return m_type; }
 
     bool as_bool() const
@@ -63,6 +67,12 @@ public:
         return *m_value.as_bitmap;
     }
 
+    GIcon as_icon() const
+    {
+        ASSERT(type() == Type::Icon);
+        return GIcon(*m_value.as_icon);
+    }
+
     Color as_color() const
     {
         ASSERT(type() == Type::Color);
@@ -85,6 +95,7 @@ private:
     union {
         StringImpl* as_string;
         GraphicsBitmap* as_bitmap;
+        GIconImpl* as_icon;
         bool as_bool;
         int as_int;
         float as_float;

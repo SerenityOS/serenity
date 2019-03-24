@@ -110,8 +110,9 @@ void GItemView::paint_event(GPaintEvent& event)
         icon_rect.center_within(item_rect);
         icon_rect.move_by(0, -font.glyph_height() - 6);
 
-        if (icon.is_bitmap()) {
-            painter.draw_scaled_bitmap(icon_rect, icon.as_bitmap(), icon.as_bitmap().rect());
+        if (icon.is_icon()) {
+            if (auto bitmap = icon.as_icon().bitmap_for_size(icon_rect.width()))
+                painter.draw_scaled_bitmap(icon_rect, *bitmap, bitmap->rect());
         }
 
         Rect text_rect { 0, icon_rect.bottom() + 6 + 1, font.width(item_text.to_string()), font.glyph_height() };
