@@ -656,129 +656,143 @@ void WSWindowManager::start_window_resize(WSWindow& window, WSMouseEvent& event)
     invalidate(window);
 }
 
+bool WSWindowManager::process_ongoing_window_drag(WSMouseEvent& event, WSWindow*& event_window)
+{
+    if (!m_drag_window)
+        return false;
+    if (event.type() == WSMessage::MouseUp && event.button() == MouseButton::Left) {
+#ifdef DRAG_DEBUG
+        printf("[WM] Finish dragging WSWindow{%p}\n", m_drag_window.ptr());
+#endif
+        invalidate(*m_drag_window);
+        m_drag_window = nullptr;
+        return true;
+    }
+    if (event.type() == WSMessage::MouseMove) {
+        auto old_window_rect = m_drag_window->rect();
+        Point pos = m_drag_window_origin;
+#ifdef DRAG_DEBUG
+        dbgprintf("[WM] Dragging [origin: %d,%d] now: %d,%d\n", m_drag_origin.x(), m_drag_origin.y(), event.x(), event.y());
+#endif
+        pos.move_by(event.x() - m_drag_origin.x(), event.y() - m_drag_origin.y());
+        m_drag_window->set_position_without_repaint(pos);
+        invalidate(outer_window_rect(old_window_rect));
+        invalidate(outer_window_rect(m_drag_window->rect()));
+        return true;
+    }
+    return false;
+}
+
+bool WSWindowManager::process_ongoing_window_resize(WSMouseEvent& event, WSWindow*& event_window)
+{
+    if (!m_resize_window)
+        return false;
+
+    if (event.type() == WSMessage::MouseUp && event.button() == MouseButton::Right) {
+#ifdef RESIZE_DEBUG
+        printf("[WM] Finish resizing WSWindow{%p}\n", m_resize_window.ptr());
+#endif
+        WSMessageLoop::the().post_message(*m_resize_window, make<WSResizeEvent>(m_resize_window->rect(), m_resize_window->rect()));
+        invalidate(*m_resize_window);
+        m_resize_window = nullptr;
+        return true;
+    }
+
+    if (event.type() != WSMessage::MouseMove)
+        return false;
+
+    auto old_rect = m_resize_window->rect();
+
+    int diff_x = event.x() - m_resize_origin.x();
+    int diff_y = event.y() - m_resize_origin.y();
+
+    int change_x = 0;
+    int change_y = 0;
+    int change_w = 0;
+    int change_h = 0;
+
+    switch (m_resize_direction) {
+    case ResizeDirection::DownRight:
+        change_w = diff_x;
+        change_h = diff_y;
+        break;
+    case ResizeDirection::Right:
+        change_w = diff_x;
+        break;
+    case ResizeDirection::UpRight:
+        change_w = diff_x;
+        change_y = diff_y;
+        change_h = -diff_y;
+        break;
+    case ResizeDirection::Up:
+        change_y = diff_y;
+        change_h = -diff_y;
+        break;
+    case ResizeDirection::UpLeft:
+        change_x = diff_x;
+        change_w = -diff_x;
+        change_y = diff_y;
+        change_h = -diff_y;
+        break;
+    case ResizeDirection::Left:
+        change_x = diff_x;
+        change_w = -diff_x;
+        break;
+    case ResizeDirection::DownLeft:
+        change_x = diff_x;
+        change_w = -diff_x;
+        change_h = diff_y;
+        break;
+    case ResizeDirection::Down:
+        change_h = diff_y;
+        break;
+    default:
+        ASSERT_NOT_REACHED();
+    }
+
+    auto new_rect = m_resize_window_original_rect;
+    Size minimum_size { 50, 50 };
+
+    new_rect.set_x(new_rect.x() + change_x);
+    new_rect.set_y(new_rect.y() + change_y);
+    new_rect.set_width(max(minimum_size.width(), new_rect.width() + change_w));
+    new_rect.set_height(max(minimum_size.height(), new_rect.height() + change_h));
+
+    if (!m_resize_window->size_increment().is_null()) {
+        int horizontal_incs = (new_rect.width() - m_resize_window->base_size().width()) / m_resize_window->size_increment().width();
+        new_rect.set_width(m_resize_window->base_size().width() + horizontal_incs * m_resize_window->size_increment().width());
+        int vertical_incs = (new_rect.height() - m_resize_window->base_size().height()) / m_resize_window->size_increment().height();
+        new_rect.set_height(m_resize_window->base_size().height() + vertical_incs * m_resize_window->size_increment().height());
+    }
+
+    if (m_resize_window->rect() == new_rect)
+        return true;
+#ifdef RESIZE_DEBUG
+    dbgprintf("[WM] Resizing [original: %s] now: %s\n",
+              m_resize_window_original_rect.to_string().characters(),
+              new_rect.to_string().characters());
+#endif
+    m_resize_window->set_rect(new_rect);
+    if (m_resize_window->has_painted_since_last_resize()) {
+        m_resize_window->set_has_painted_since_last_resize(false);
+#ifdef RESIZE_DEBUG
+        dbgprintf("[WM] I'm gonna wait for %s\n", new_rect.to_string().characters());
+#endif
+        m_resize_window->set_last_lazy_resize_rect(new_rect);
+        WSMessageLoop::the().post_message(*m_resize_window, make<WSResizeEvent>(old_rect, new_rect));
+    }
+    return true;
+}
+
 void WSWindowManager::process_mouse_event(WSMouseEvent& event, WSWindow*& event_window)
 {
     event_window = nullptr;
 
-    if (m_drag_window) {
-        if (event.type() == WSMessage::MouseUp && event.button() == MouseButton::Left) {
-#ifdef DRAG_DEBUG
-            printf("[WM] Finish dragging WSWindow{%p}\n", m_drag_window.ptr());
-#endif
-            invalidate(*m_drag_window);
-            m_drag_window = nullptr;
-            return;
-        }
+    if (process_ongoing_window_drag(event, event_window))
+        return;
 
-        if (event.type() == WSMessage::MouseMove) {
-            auto old_window_rect = m_drag_window->rect();
-            Point pos = m_drag_window_origin;
-#ifdef DRAG_DEBUG
-            dbgprintf("[WM] Dragging [origin: %d,%d] now: %d,%d\n", m_drag_origin.x(), m_drag_origin.y(), event.x(), event.y());
-#endif
-            pos.move_by(event.x() - m_drag_origin.x(), event.y() - m_drag_origin.y());
-            m_drag_window->set_position_without_repaint(pos);
-            invalidate(outer_window_rect(old_window_rect));
-            invalidate(outer_window_rect(m_drag_window->rect()));
-            return;
-        }
-    }
-
-    if (m_resize_window) {
-        if (event.type() == WSMessage::MouseUp && event.button() == MouseButton::Right) {
-#ifdef RESIZE_DEBUG
-            printf("[WM] Finish resizing WSWindow{%p}\n", m_resize_window.ptr());
-#endif
-            WSMessageLoop::the().post_message(*m_resize_window, make<WSResizeEvent>(m_resize_window->rect(), m_resize_window->rect()));
-            invalidate(*m_resize_window);
-            m_resize_window = nullptr;
-            return;
-        }
-
-        if (event.type() == WSMessage::MouseMove) {
-            auto old_rect = m_resize_window->rect();
-
-            int diff_x = event.x() - m_resize_origin.x();
-            int diff_y = event.y() - m_resize_origin.y();
-
-            int change_x = 0;
-            int change_y = 0;
-            int change_w = 0;
-            int change_h = 0;
-
-            switch (m_resize_direction) {
-            case ResizeDirection::DownRight:
-                change_w = diff_x;
-                change_h = diff_y;
-                break;
-            case ResizeDirection::Right:
-                change_w = diff_x;
-                break;
-            case ResizeDirection::UpRight:
-                change_w = diff_x;
-                change_y = diff_y;
-                change_h = -diff_y;
-                break;
-            case ResizeDirection::Up:
-                change_y = diff_y;
-                change_h = -diff_y;
-                break;
-            case ResizeDirection::UpLeft:
-                change_x = diff_x;
-                change_w = -diff_x;
-                change_y = diff_y;
-                change_h = -diff_y;
-                break;
-            case ResizeDirection::Left:
-                change_x = diff_x;
-                change_w = -diff_x;
-                break;
-            case ResizeDirection::DownLeft:
-                change_x = diff_x;
-                change_w = -diff_x;
-                change_h = diff_y;
-                break;
-            case ResizeDirection::Down:
-                change_h = diff_y;
-                break;
-            default:
-                ASSERT_NOT_REACHED();
-            }
-
-            auto new_rect = m_resize_window_original_rect;
-            Size minimum_size { 50, 50 };
-
-            new_rect.set_x(new_rect.x() + change_x);
-            new_rect.set_y(new_rect.y() + change_y);
-            new_rect.set_width(max(minimum_size.width(), new_rect.width() + change_w));
-            new_rect.set_height(max(minimum_size.height(), new_rect.height() + change_h));
-
-            if (!m_resize_window->size_increment().is_null()) {
-                int horizontal_incs = (new_rect.width() - m_resize_window->base_size().width()) / m_resize_window->size_increment().width();
-                new_rect.set_width(m_resize_window->base_size().width() + horizontal_incs * m_resize_window->size_increment().width());
-                int vertical_incs = (new_rect.height() - m_resize_window->base_size().height()) / m_resize_window->size_increment().height();
-                new_rect.set_height(m_resize_window->base_size().height() + vertical_incs * m_resize_window->size_increment().height());
-            }
-
-            if (m_resize_window->rect() == new_rect)
-                return;
-#ifdef RESIZE_DEBUG
-            dbgprintf("[WM] Resizing [original: %s] now: %s\n",
-                m_resize_window_original_rect.to_string().characters(),
-                new_rect.to_string().characters());
-#endif
-            m_resize_window->set_rect(new_rect);
-            if (m_resize_window->has_painted_since_last_resize()) {
-                m_resize_window->set_has_painted_since_last_resize(false);
-#ifdef RESIZE_DEBUG
-                dbgprintf("[WM] I'm gonna wait for %s\n", new_rect.to_string().characters());
-#endif
-                m_resize_window->set_last_lazy_resize_rect(new_rect);
-                WSMessageLoop::the().post_message(*m_resize_window, make<WSResizeEvent>(old_rect, new_rect));
-            }
-            return;
-        }
-    }
+    if (process_ongoing_window_resize(event, event_window))
+        return;
 
     for (auto* window = m_windows_in_order.tail(); window; window = window->prev()) {
         if (!window->global_cursor_tracking())
