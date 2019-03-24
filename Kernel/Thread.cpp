@@ -118,20 +118,14 @@ void Thread::block(Thread::State new_state)
     system.nblocked++;
     m_was_interrupted_while_blocked = false;
     set_state(new_state);
-}
-
-void block(Thread::State state)
-{
-    current->block(state);
     Scheduler::yield();
 }
 
-void sleep(dword ticks)
+void Thread::sleep(dword ticks)
 {
-    ASSERT(current->state() == Thread::Running);
+    ASSERT(state() == Thread::Running);
     current->set_wakeup_time(system.uptime + ticks);
     current->block(Thread::BlockedSleep);
-    Scheduler::yield();
 }
 
 const char* to_string(Thread::State state)
