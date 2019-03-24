@@ -189,8 +189,7 @@ ssize_t IPv4Socket::recvfrom(void* buffer, size_t buffer_length, int flags, sock
 
         current->set_blocked_socket(this);
         load_receive_deadline();
-        block(Thread::BlockedReceive);
-        Scheduler::yield();
+        current->block(Thread::BlockedReceive);
 
         LOCKER(lock());
         if (!m_can_read) {

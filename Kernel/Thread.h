@@ -83,6 +83,7 @@ public:
     dword ticks() const { return m_ticks; }
     pid_t waitee_pid() const { return m_waitee_pid; }
 
+    void sleep(dword ticks);
     void block(Thread::State);
     void unblock();
 
@@ -167,8 +168,6 @@ private:
 extern InlineLinkedList<Thread>* g_threads;
 
 const char* to_string(Thread::State);
-void block(Thread::State);
-void sleep(dword ticks);
 
 template<typename Callback>
 inline void Thread::for_each_in_state(State state, Callback callback)

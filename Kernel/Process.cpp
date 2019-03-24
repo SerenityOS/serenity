@@ -840,7 +840,6 @@ ssize_t Process::sys$write(int fd, const byte* data, ssize_t size)
 #endif
                 current->m_blocked_fd = fd;
                 current->block(Thread::State::BlockedWrite);
-                Scheduler::yield();
             }
             ssize_t rc = descriptor->write(*this, (const byte*)data + nwritten, size - nwritten);
 #ifdef IO_DEBUG
@@ -855,7 +854,6 @@ ssize_t Process::sys$write(int fd, const byte* data, ssize_t size)
                 break;
             if (current->has_unmasked_pending_signals()) {
                 current->block(Thread::State::BlockedSignal);
-                Scheduler::yield();
                 if (nwritten == 0)
                     return -EINTR;
             }
@@ -866,7 +864,6 @@ ssize_t Process::sys$write(int fd, const byte* data, ssize_t size)
     }
     if (current->has_unmasked_pending_signals()) {
         current->block(Thread::State::BlockedSignal);
-        Scheduler::yield();
         if (nwritten == 0)
             return -EINTR;
     }
@@ -889,7 +886,6 @@ ssize_t Process::sys$read(int fd, byte* buffer, ssize_t size)
         if (!descriptor->can_read(*this)) {
             current->m_blocked_fd = fd;
             current->block(Thread::State::BlockedRead);
-            Scheduler::yield();
             if (current->m_was_interrupted_while_blocked)
                 return -EINTR;
         }
@@ -1218,7 +1214,7 @@ int Process::sys$usleep(useconds_t usec)
     if (!usec)
         return 0;
 
-    sleep(usec / 1000);
+    current->sleep(usec / 1000);
     if (current->m_wakeup_time > system.uptime) {
         ASSERT(current->m_was_interrupted_while_blocked);
         dword ticks_left_until_original_wakeup_time = current->m_wakeup_time - system.uptime;
@@ -1231,7 +1227,7 @@ int Process::sys$sleep(unsigned seconds)
 {
     if (!seconds)
         return 0;
-    sleep(seconds * TICKS_PER_SECOND);
+    current->sleep(seconds * TICKS_PER_SECOND);
     if (current->m_wakeup_time > system.uptime) {
         ASSERT(current->m_was_interrupted_while_blocked);
         dword ticks_left_until_original_wakeup_time = current->m_wakeup_time - system.uptime;
@@ -1357,7 +1353,6 @@ pid_t Process::sys$waitpid(pid_t waitee, int* wstatus, int options)
 
     current->m_waitee_pid = waitee;
     current->block(Thread::State::BlockedWait);
-    Scheduler::yield();
     if (current->m_was_interrupted_while_blocked)
         return -EINTR;
     Process* waitee_process;
@@ -1758,10 +1753,8 @@ int Process::sys$select(const Syscall::SC_select_params* params)
     dbgprintf("%s<%u> selecting on (read:%u, write:%u), timeout=%p\n", name().characters(), pid(), current->m_select_read_fds.size(), current->m_select_write_fds.size(), timeout);
 #endif
 
-    if (!timeout || (timeout->tv_sec || timeout->tv_usec)) {
+    if (!timeout || (timeout->tv_sec || timeout->tv_usec))
         current->block(Thread::State::BlockedSelect);
-        Scheduler::yield();
-    }
 
     int markedfds = 0;
 
@@ -1812,10 +1805,8 @@ int Process::sys$poll(pollfd* fds, int nfds, int timeout)
             current->m_select_write_fds.append(fds[i].fd);
     }
 
-    if (timeout < 0) {
+    if (timeout < 0)
         current->block(Thread::State::BlockedSelect);
-        Scheduler::yield();
-    }
 
     int fds_with_revents = 0;
 
