@@ -34,10 +34,8 @@ void WSWindowSwitcher::on_key_event(const WSKeyEvent& event)
 {
     if (event.type() == WSMessage::KeyUp) {
         if (event.key() == Key_Logo) {
-            if (auto* window = selected_window()) {
-                WSWindowManager::the().set_active_window(window);
-                WSWindowManager::the().move_to_front(*window);
-            }
+            if (auto* window = selected_window())
+                WSWindowManager::the().move_to_front_and_make_active(*window);
             WSWindowManager::the().set_highlight_window(nullptr);
             hide();
         }
