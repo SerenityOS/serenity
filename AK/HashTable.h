@@ -75,6 +75,7 @@ public:
 #endif
             return *m_bucket_iterator;
         }
+        T* operator->() { return m_bucket_iterator.operator->(); }
         Iterator& operator++()
         {
             skip_to_next();
@@ -151,6 +152,7 @@ public:
 #endif
             return *m_bucket_iterator;
         }
+        const T* operator->() const { return m_bucket_iterator.operator->(); }
         ConstIterator& operator++()
         {
             skip_to_next();

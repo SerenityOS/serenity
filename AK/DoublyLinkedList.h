@@ -64,6 +64,7 @@ public:
         bool operator==(const Iterator& other) const { return m_node == other.m_node; }
         Iterator& operator++() { m_node = m_node->next; return *this; }
         T& operator*() { return m_node->value; }
+        T* operator->() { return &m_node->value; }
         bool is_end() const { return !m_node; }
         static Iterator universal_end() { return Iterator(nullptr); }
     private:
@@ -81,6 +82,7 @@ public:
         bool operator==(const ConstIterator& other) const { return m_node == other.m_node; }
         ConstIterator& operator++() { m_node = m_node->next; return *this; }
         const T& operator*() const { return m_node->value; }
+        const T* operator->() const { return &m_node->value; }
         bool is_end() const { return !m_node; }
         static ConstIterator universal_end() { return ConstIterator(nullptr); }
     private:

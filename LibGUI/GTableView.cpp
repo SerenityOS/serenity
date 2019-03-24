@@ -141,6 +141,9 @@ void GTableView::paint_event(GPaintEvent& event)
             auto data = model()->data(cell_index);
             if (data.is_bitmap()) {
                 painter.blit(cell_rect.location(), data.as_bitmap(), data.as_bitmap().rect());
+            } else if (data.is_icon()) {
+                if (auto bitmap = data.as_icon().bitmap_for_size(16))
+                    painter.blit(cell_rect.location(), *bitmap, bitmap->rect());
             } else {
                 Color text_color;
                 if (is_selected_row)

@@ -58,19 +58,19 @@ private:
             return m_directories[index];
         return m_files[index - m_directories.size()];
     }
-    const GraphicsBitmap& icon_for(const Entry& entry) const;
+    GIcon icon_for(const Entry& entry) const;
 
     String m_path;
     Vector<Entry> m_files;
     Vector<Entry> m_directories;
     size_t m_bytes_in_files;
 
-    RetainPtr<GraphicsBitmap> m_directory_icon;
-    RetainPtr<GraphicsBitmap> m_file_icon;
-    RetainPtr<GraphicsBitmap> m_symlink_icon;
-    RetainPtr<GraphicsBitmap> m_socket_icon;
-    RetainPtr<GraphicsBitmap> m_executable_icon;
-    RetainPtr<GraphicsBitmap> m_filetype_image_icon;
+    GIcon m_directory_icon;
+    GIcon m_file_icon;
+    GIcon m_symlink_icon;
+    GIcon m_socket_icon;
+    GIcon m_executable_icon;
+    GIcon m_filetype_image_icon;
 
     HashMap<uid_t, String> m_user_names;
     HashMap<gid_t, String> m_group_names;
