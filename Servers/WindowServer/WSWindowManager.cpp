@@ -555,7 +555,9 @@ void WSWindowManager::notify_title_changed(WSWindow& window)
 
 void WSWindowManager::notify_rect_changed(WSWindow& window, const Rect& old_rect, const Rect& new_rect)
 {
+#ifdef RESIZE_DEBUG
     dbgprintf("[WM] WSWindow %p rect changed (%d,%d %dx%d) -> (%d,%d %dx%d)\n", &window, old_rect.x(), old_rect.y(), old_rect.width(), old_rect.height(), new_rect.x(), new_rect.y(), new_rect.width(), new_rect.height());
+#endif
     invalidate(outer_window_rect(old_rect));
     invalidate(outer_window_rect(new_rect));
     if (m_switcher.is_visible() && window.type() != WSWindowType::WindowSwitcher)
