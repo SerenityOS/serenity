@@ -9,8 +9,36 @@
 #include <SharedGraphics/GraphicsBitmap.h>
 #include <SharedGraphics/Painter.h>
 
+static HashMap<String, RetainPtr<GraphicsBitmap>>& thumbnail_cache()
+{
+    static HashMap<String, RetainPtr<GraphicsBitmap>>* s_map;
+    if (!s_map)
+        s_map = new HashMap<String, RetainPtr<GraphicsBitmap>>();
+    return *s_map;
+}
+
+int thumbnail_thread(void* model)
+{
+    for (;;) {
+        sleep(1);
+        for (auto& it : thumbnail_cache()) {
+            if (it.value)
+                continue;
+            if (auto png_bitmap = GraphicsBitmap::load_from_file(it.key)) {
+                auto thumbnail = GraphicsBitmap::create(png_bitmap->format(), { 32, 32 });
+                Painter painter(*thumbnail);
+                painter.draw_scaled_bitmap(thumbnail->rect(), *png_bitmap, png_bitmap->rect());
+                it.value = move(thumbnail);
+                ((DirectoryModel*)model)->did_update();
+            }
+        }
+    }
+}
+
 DirectoryModel::DirectoryModel()
 {
+    create_thread(thumbnail_thread, this);
+
     m_directory_icon = GraphicsBitmap::load_from_file("/res/icons/folder16.png");
     m_file_icon = GraphicsBitmap::load_from_file("/res/icons/file16.png");
     m_symlink_icon = GraphicsBitmap::load_from_file("/res/icons/link16.png");
@@ -83,10 +111,12 @@ const GraphicsBitmap& DirectoryModel::icon_for(const Entry& entry) const
         return *m_executable_icon;
     if (entry.name.ends_with(".png")) {
         if (!entry.thumbnail) {
-            if (auto png_bitmap = GraphicsBitmap::load_from_file(entry.full_path(*this))) {
-                entry.thumbnail = GraphicsBitmap::create(png_bitmap->format(), { 32, 32 });
-                Painter painter(*entry.thumbnail);
-                painter.draw_scaled_bitmap(entry.thumbnail->rect(), *png_bitmap, png_bitmap->rect());
+            auto path = entry.full_path(*this);
+            auto it = thumbnail_cache().find(path);
+            if (it != thumbnail_cache().end()) {
+                entry.thumbnail = (*it).value.copy_ref();
+            } else {
+                thumbnail_cache().set(path, nullptr);
             }
         }
         if (!entry.thumbnail)
