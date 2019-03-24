@@ -52,8 +52,6 @@ void* mmx_memcpy(void* dest, const void* src, size_t len)
     return dest;
 }
 
-#ifdef KERNEL
-
 static inline uint32_t divq(uint64_t n, uint32_t d)
 {
     uint32_t n1 = n >> 32;
@@ -146,7 +144,5 @@ uint64_t __udivmoddi4(uint64_t n, uint64_t d, uint64_t* r)
 
     return q;
 }
-
-#endif
 
 }
