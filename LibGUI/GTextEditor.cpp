@@ -88,7 +88,6 @@ void GTextEditor::mousedown_event(GMouseEvent& event)
         }
 
         m_in_drag_select = true;
-        set_global_cursor_tracking(true);
 
         set_cursor(text_position_at(event.position()));
 
@@ -111,7 +110,6 @@ void GTextEditor::mouseup_event(GMouseEvent& event)
     if (event.button() == GMouseButton::Left) {
         if (m_in_drag_select) {
             m_in_drag_select = false;
-            set_global_cursor_tracking(false);
         }
         return;
     }

@@ -660,7 +660,7 @@ void WSWindowManager::start_window_resize(WSWindow& window, WSMouseEvent& event)
     invalidate(window);
 }
 
-bool WSWindowManager::process_ongoing_window_drag(WSMouseEvent& event, WSWindow*& event_window)
+bool WSWindowManager::process_ongoing_window_drag(WSMouseEvent& event, WSWindow*&)
 {
     if (!m_drag_window)
         return false;
@@ -687,7 +687,7 @@ bool WSWindowManager::process_ongoing_window_drag(WSMouseEvent& event, WSWindow*
     return false;
 }
 
-bool WSWindowManager::process_ongoing_window_resize(WSMouseEvent& event, WSWindow*& event_window)
+bool WSWindowManager::process_ongoing_window_resize(WSMouseEvent& event, WSWindow*&)
 {
     if (!m_resize_window)
         return false;

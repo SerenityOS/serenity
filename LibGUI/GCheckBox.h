@@ -30,6 +30,5 @@ private:
     String m_caption;
     bool m_checked { false };
     bool m_being_modified { false };
-    bool m_tracking_cursor { false };
 };
 

@@ -39,7 +39,6 @@ private:
     RetainPtr<GraphicsBitmap> m_icon;
     GButtonStyle m_button_style { GButtonStyle::Normal };
     bool m_being_pressed { false };
-    bool m_tracking_cursor { false };
     bool m_hovered { false };
 };
 

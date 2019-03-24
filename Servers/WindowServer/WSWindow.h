@@ -9,6 +9,7 @@
 
 class WSClientConnection;
 class WSMenu;
+class WSMouseEvent;
 
 class WSWindow final : public WSMessageReceiver, public InlineLinkedListNode<WSWindow> {
 public:
@@ -78,7 +79,8 @@ public:
     GraphicsBitmap* last_backing_store() { return m_last_backing_store.ptr(); }
 
     void set_global_cursor_tracking_enabled(bool);
-    bool global_cursor_tracking() const { return m_global_cursor_tracking_enabled; }
+    void set_automatic_cursor_tracking_enabled(bool enabled) { m_automatic_cursor_tracking_enabled = enabled; }
+    bool global_cursor_tracking() const { return m_global_cursor_tracking_enabled || m_automatic_cursor_tracking_enabled; }
 
     bool has_alpha_channel() const { return m_has_alpha_channel; }
     void set_has_alpha_channel(bool value) { m_has_alpha_channel = value; }
@@ -104,12 +106,15 @@ public:
     WSWindow* m_prev { nullptr };
 
 private:
+    void handle_mouse_event(const WSMouseEvent&);
+
     WSClientConnection* m_client { nullptr };
     WSMessageReceiver* m_internal_owner { nullptr };
     String m_title;
     Rect m_rect;
     WSWindowType m_type { WSWindowType::Normal };
     bool m_global_cursor_tracking_enabled { false };
+    bool m_automatic_cursor_tracking_enabled { false };
     bool m_visible { true };
     bool m_has_alpha_channel { false };
     bool m_has_painted_since_last_resize { false };

@@ -69,6 +69,28 @@ static WSAPI_MouseButton to_api(MouseButton button)
     ASSERT_NOT_REACHED();
 }
 
+void WSWindow::handle_mouse_event(const WSMouseEvent& event)
+{
+    set_automatic_cursor_tracking_enabled(event.buttons() != 0);
+
+    WSAPI_ServerMessage server_message;
+    server_message.window_id = window_id();
+
+    switch (event.type()) {
+    case WSMessage::MouseMove: server_message.type = WSAPI_ServerMessage::Type::MouseMove; break;
+    case WSMessage::MouseDown: server_message.type = WSAPI_ServerMessage::Type::MouseDown; break;
+    case WSMessage::MouseUp: server_message.type = WSAPI_ServerMessage::Type::MouseUp; break;
+    default: ASSERT_NOT_REACHED();
+    }
+
+    server_message.mouse.position = event.position();
+    server_message.mouse.button = to_api(event.button());
+    server_message.mouse.buttons = event.buttons();
+    server_message.mouse.modifiers = event.modifiers();
+
+    m_client->post_message(server_message);
+}
+
 void WSWindow::on_message(WSMessage& message)
 {
     if (m_internal_owner)
@@ -80,28 +102,10 @@ void WSWindow::on_message(WSMessage& message)
     WSAPI_ServerMessage server_message;
     server_message.window_id = window_id();
 
+    if (message.is_mouse_event())
+        return handle_mouse_event(static_cast<const WSMouseEvent&>(message));
+
     switch (message.type()) {
-    case WSMessage::MouseMove:
-        server_message.type = WSAPI_ServerMessage::Type::MouseMove;
-        server_message.mouse.position = static_cast<WSMouseEvent&>(message).position();
-        server_message.mouse.button = WSAPI_MouseButton::NoButton;
-        server_message.mouse.buttons = static_cast<WSMouseEvent&>(message).buttons();
-        server_message.mouse.modifiers = static_cast<WSMouseEvent&>(message).modifiers();
-        break;
-    case WSMessage::MouseDown:
-        server_message.type = WSAPI_ServerMessage::Type::MouseDown;
-        server_message.mouse.position = static_cast<WSMouseEvent&>(message).position();
-        server_message.mouse.button = to_api(static_cast<WSMouseEvent&>(message).button());
-        server_message.mouse.buttons = static_cast<WSMouseEvent&>(message).buttons();
-        server_message.mouse.modifiers = static_cast<WSMouseEvent&>(message).modifiers();
-        break;
-    case WSMessage::MouseUp:
-        server_message.type = WSAPI_ServerMessage::Type::MouseUp;
-        server_message.mouse.position = static_cast<WSMouseEvent&>(message).position();
-        server_message.mouse.button = to_api(static_cast<WSMouseEvent&>(message).button());
-        server_message.mouse.buttons = static_cast<WSMouseEvent&>(message).buttons();
-        server_message.mouse.modifiers = static_cast<WSMouseEvent&>(message).modifiers();
-        break;
     case WSMessage::WindowEntered:
         server_message.type = WSAPI_ServerMessage::Type::WindowEntered;
         break;
