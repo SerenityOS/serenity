@@ -215,6 +215,8 @@ void GTextEditor::paint_event(GPaintEvent& event)
 
     if (is_focused())
         painter.draw_rect(item_area_rect, Color::from_rgb(0x84351a));
+    else if (is_single_line())
+        painter.draw_rect(item_area_rect, Color::DarkGray);
 }
 
 void GTextEditor::toggle_selection_if_needed_for_event(const GKeyEvent& event)
