@@ -75,11 +75,11 @@ int main(int argc, char** argv)
         }
     });
 
-    auto view_as_list_action = GAction::create("List view", { Mod_Ctrl, KeyCode::Key_L }, [&] (const GAction&) {
+    auto view_as_table_action = GAction::create("Table view", { Mod_Ctrl, KeyCode::Key_L }, GraphicsBitmap::load_from_file("/res/icons/16x16/table-view.png"), [&] (const GAction&) {
         directory_view->set_view_mode(DirectoryView::ViewMode::List);
     });
 
-    auto view_as_icons_action = GAction::create("Icon view", { Mod_Ctrl, KeyCode::Key_I }, [&] (const GAction&) {
+    auto view_as_icons_action = GAction::create("Icon view", { Mod_Ctrl, KeyCode::Key_I }, GraphicsBitmap::load_from_file("/res/icons/16x16/icon-view.png"), [&] (const GAction&) {
         directory_view->set_view_mode(DirectoryView::ViewMode::Icon);
     });
 
@@ -108,7 +108,7 @@ int main(int argc, char** argv)
     menubar->add_menu(move(file_menu));
 
     auto view_menu = make<GMenu>("View");
-    view_menu->add_action(view_as_list_action.copy_ref());
+    view_menu->add_action(view_as_table_action.copy_ref());
     view_menu->add_action(view_as_icons_action.copy_ref());
     menubar->add_menu(move(view_menu));
 
@@ -124,6 +124,10 @@ int main(int argc, char** argv)
     main_toolbar->add_action(mkdir_action.copy_ref());
     main_toolbar->add_action(copy_action.copy_ref());
     main_toolbar->add_action(delete_action.copy_ref());
+
+    main_toolbar->add_separator();
+    main_toolbar->add_action(view_as_icons_action.copy_ref());
+    main_toolbar->add_action(view_as_table_action.copy_ref());
 
     directory_view->on_path_change = [window, location_textbox] (const String& new_path) {
         window->set_title(String::format("FileManager: %s", new_path.characters()));
