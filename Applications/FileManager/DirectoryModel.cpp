@@ -17,20 +17,29 @@ static HashMap<String, RetainPtr<GraphicsBitmap>>& thumbnail_cache()
     return *s_map;
 }
 
-int thumbnail_thread(void* model)
+int thumbnail_thread(void* model_ptr)
 {
+    auto& model = *(DirectoryModel*)model_ptr;
     for (;;) {
         sleep(1);
+        Vector<String> to_generate;
         for (auto& it : thumbnail_cache()) {
             if (it.value)
                 continue;
-            if (auto png_bitmap = GraphicsBitmap::load_from_file(it.key)) {
-                auto thumbnail = GraphicsBitmap::create(png_bitmap->format(), { 32, 32 });
-                Painter painter(*thumbnail);
-                painter.draw_scaled_bitmap(thumbnail->rect(), *png_bitmap, png_bitmap->rect());
-                it.value = move(thumbnail);
-                ((DirectoryModel*)model)->did_update();
-            }
+            to_generate.append(it.key);
+        }
+        for (int i = 0; i < to_generate.size(); ++i) {
+            auto& path = to_generate[i];
+            auto png_bitmap = GraphicsBitmap::load_from_file(path);
+            if (!png_bitmap)
+                continue;
+            auto thumbnail = GraphicsBitmap::create(png_bitmap->format(), { 32, 32 });
+            Painter painter(*thumbnail);
+            painter.draw_scaled_bitmap(thumbnail->rect(), *png_bitmap, png_bitmap->rect());
+            thumbnail_cache().set(path, move(thumbnail));
+            if (model.on_thumbnail_progress)
+                model.on_thumbnail_progress(i + 1, to_generate.size());
+            model.did_update();
         }
     }
 }
@@ -109,7 +118,7 @@ GIcon DirectoryModel::icon_for(const Entry& entry) const
         return m_socket_icon;
     if (entry.mode & S_IXUSR)
         return m_executable_icon;
-    if (entry.name.ends_with(".png")) {
+    if (entry.name.to_lowercase().ends_with(".png")) {
         if (!entry.thumbnail) {
             auto path = entry.full_path(*this);
             auto it = thumbnail_cache().find(path);
@@ -286,7 +295,7 @@ void DirectoryModel::activate(const GModelIndex& index)
         return;
     }
 
-    if (path.string().ends_with(".png")) {
+    if (path.string().to_lowercase().ends_with(".png")) {
         if (fork() == 0) {
             int rc = execl("/bin/qs", "/bin/qs", path.string().characters(), nullptr);
             if (rc < 0)

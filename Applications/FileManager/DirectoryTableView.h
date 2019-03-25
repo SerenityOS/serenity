@@ -19,6 +19,7 @@ public:
 
     Function<void(const String&)> on_path_change;
     Function<void(String)> on_status_message;
+    Function<void(int done, int total)> on_thumbnail_progress;
 
     enum ViewMode { Invalid, List, Icon };
     void set_view_mode(ViewMode);

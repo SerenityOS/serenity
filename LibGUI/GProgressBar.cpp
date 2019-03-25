@@ -1,5 +1,6 @@
 #include <LibGUI/GProgressBar.h>
 #include <SharedGraphics/Painter.h>
+#include <AK/StringBuilder.h>
 
 GProgressBar::GProgressBar(GWidget* parent)
     : GWidget(parent)
@@ -45,7 +46,15 @@ void GProgressBar::paint_event(GPaintEvent& event)
 
     // Then we draw the progress text over the gradient.
     // We draw it twice, once offset (1, 1) for a drop shadow look.
-    auto progress_text = String::format("%d%%", (int)(progress * 100));
+    StringBuilder builder;
+    builder.append(m_caption);
+    if (m_format == Format::Percentage)
+        builder.appendf("%d%%", (int)(progress * 100));
+    else if (m_format == Format::ValueSlashMax)
+        builder.appendf("%d/%d", m_value, m_max);
+
+    auto progress_text = builder.to_string();
+
     painter.draw_text(rect().translated(1, 1), progress_text, TextAlignment::Center, Color::Black);
     painter.draw_text(rect(), progress_text, TextAlignment::Center, Color::White);
 

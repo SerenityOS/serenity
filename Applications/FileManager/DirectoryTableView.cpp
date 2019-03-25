@@ -29,6 +29,11 @@ DirectoryView::DirectoryView(GWidget* parent)
         }
     };
 
+    m_model->on_thumbnail_progress = [this] (int done, int total) {
+        if (on_thumbnail_progress)
+            on_thumbnail_progress(done, total);
+    };
+
     set_view_mode(ViewMode::Icon);
 }
 

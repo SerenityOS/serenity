@@ -10,6 +10,7 @@
 #include <LibGUI/GLabel.h>
 #include <LibGUI/GInputBox.h>
 #include <LibGUI/GMessageBox.h>
+#include <LibGUI/GProgressBar.h>
 #include <unistd.h>
 #include <signal.h>
 #include <stdio.h>
@@ -49,6 +50,11 @@ int main(int argc, char** argv)
 
     auto* directory_view = new DirectoryView(widget);
     auto* statusbar = new GStatusBar(widget);
+
+    auto* progressbar = new GProgressBar(statusbar);
+    progressbar->set_caption("Generating thumbnails: ");
+    progressbar->set_format(GProgressBar::Format::ValueSlashMax);
+    progressbar->set_visible(false);
 
     location_textbox->on_return_pressed = [directory_view] (auto& editor) {
         directory_view->open(editor.text());
@@ -136,6 +142,16 @@ int main(int argc, char** argv)
 
     directory_view->on_status_message = [statusbar] (String message) {
         statusbar->set_text(move(message));
+    };
+
+    directory_view->on_thumbnail_progress = [&] (int done, int total) {
+        if (done == total) {
+            progressbar->set_visible(false);
+            return;
+        }
+        progressbar->set_range(0, total);
+        progressbar->set_value(done);
+        progressbar->set_visible(true);
     };
 
     directory_view->open("/");

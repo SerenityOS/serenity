@@ -336,6 +336,7 @@ void GWidget::invalidate_layout()
         return;
     if (!w->main_widget())
         return;
+    do_layout();
     w->main_widget()->do_layout();
 }
 

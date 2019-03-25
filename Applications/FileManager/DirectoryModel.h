@@ -33,6 +33,8 @@ public:
     void open(const String& path);
     size_t bytes_in_files() const { return m_bytes_in_files; }
 
+    Function<void(int done, int total)> on_thumbnail_progress;
+
 private:
     DirectoryModel();
 
