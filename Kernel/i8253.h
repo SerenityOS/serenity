@@ -7,6 +7,7 @@
 namespace PIT {
 
 void initialize();
-dword ticks_since_boot();
+dword ticks_this_second();
+dword seconds_since_boot();
 
 }

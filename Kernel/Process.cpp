@@ -915,9 +915,10 @@ int Process::sys$utime(const char* pathname, const utimbuf* buf)
         atime = buf->actime;
         mtime = buf->modtime;
     } else {
-        auto now = RTC::now();
-        mtime = now;
-        atime = now;
+        struct timeval now;
+        kgettimeofday(now);
+        mtime = now.tv_sec;
+        atime = now.tv_sec;
     }
     return VFS::the().utime(String(pathname), cwd_inode(), atime, mtime);
 }
@@ -1238,8 +1239,8 @@ int Process::sys$sleep(unsigned seconds)
 
 void kgettimeofday(timeval& tv)
 {
-    tv.tv_sec = RTC::now();
-    tv.tv_usec = (PIT::ticks_since_boot() % 1000) * 1000;
+    tv.tv_sec = RTC::boot_time() + PIT::seconds_since_boot();
+    tv.tv_usec = PIT::ticks_this_second() * 1000;
 }
 
 int Process::sys$gettimeofday(timeval* tv)
