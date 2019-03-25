@@ -7,6 +7,7 @@
 GItemView::GItemView(GWidget* parent)
     : GAbstractView(parent)
 {
+    horizontal_scrollbar().set_visible(false);
 }
 
 GItemView::~GItemView()
