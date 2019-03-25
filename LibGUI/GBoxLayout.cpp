@@ -20,7 +20,7 @@ void GBoxLayout::run(GWidget& widget)
     should_log = true;
 #endif
     if (should_log)
-        printf("GBoxLayout: running layout on %s{%p}, entry count: %d\n", widget.class_name(), &widget, m_entries.size());
+        dbgprintf("GBoxLayout: running layout on %s{%p}, entry count: %d\n", widget.class_name(), &widget, m_entries.size());
 
     if (m_entries.is_empty())
         return;
@@ -31,7 +31,7 @@ void GBoxLayout::run(GWidget& widget)
     int number_of_visible_entries = 0;
 
     if (should_log)
-        printf("GBoxLayout:  Starting with available size: %s\n", available_size.to_string().characters());
+        dbgprintf("GBoxLayout:  Starting with available size: %s\n", available_size.to_string().characters());
 
     for (auto& entry : m_entries) {
         if (!entry.widget->is_visible())
@@ -39,12 +39,12 @@ void GBoxLayout::run(GWidget& widget)
         ++number_of_visible_entries;
         if (entry.widget && entry.widget->size_policy(orientation()) == SizePolicy::Fixed) {
             if (should_log) {
-                printf("GBoxLayout:   Subtracting for fixed %s{%p}, size: %s\n", entry.widget->class_name(), entry.widget.ptr(), entry.widget->preferred_size().to_string().characters());
-                printf("GBoxLayout:     Available size before: %s\n", available_size.to_string().characters());
+                dbgprintf("GBoxLayout:   Subtracting for fixed %s{%p}, size: %s\n", entry.widget->class_name(), entry.widget.ptr(), entry.widget->preferred_size().to_string().characters());
+                dbgprintf("GBoxLayout:     Available size before: %s\n", available_size.to_string().characters());
             }
             available_size -= entry.widget->preferred_size();
             if (should_log)
-                printf("GBoxLayout:     Available size  after: %s\n", available_size.to_string().characters());
+                dbgprintf("GBoxLayout:     Available size  after: %s\n", available_size.to_string().characters());
             ++number_of_entries_with_fixed_size;
         }
         available_size -= { spacing(), spacing() };
@@ -55,14 +55,12 @@ void GBoxLayout::run(GWidget& widget)
     available_size -= { margins().left() + margins().right(), margins().top() + margins().bottom() };
 
     if (should_log)
-        printf("GBoxLayout:  Number of visible: %d/%d\n", number_of_visible_entries, m_entries.size());
+        dbgprintf("GBoxLayout:  Number of visible: %d/%d\n", number_of_visible_entries, m_entries.size());
 
     int number_of_entries_with_automatic_size = number_of_visible_entries - number_of_entries_with_fixed_size;
 
-#ifdef GBOXLAYOUT_DEBUG
     if (should_log)
-        printf("GBoxLayout:   available_size=%s, fixed=%d, fill=%d\n", available_size.to_string().characters(), number_of_entries_with_fixed_size, number_of_entries_with_automatic_size);
-#endif
+        dbgprintf("GBoxLayout:   available_size=%s, fixed=%d, fill=%d\n", available_size.to_string().characters(), number_of_entries_with_fixed_size, number_of_entries_with_automatic_size);
 
     Size automatic_size;
 
@@ -76,10 +74,8 @@ void GBoxLayout::run(GWidget& widget)
         }
     }
 
-#ifdef GBOXLAYOUT_DEBUG
     if (should_log)
-        printf("GBoxLayout:   automatic_size=%s\n", automatic_size.to_string().characters());
-#endif
+        dbgprintf("GBoxLayout:   automatic_size=%s\n", automatic_size.to_string().characters());
 
     int current_x = margins().left();
     int current_y = margins().top();
@@ -93,7 +89,7 @@ void GBoxLayout::run(GWidget& widget)
             ASSERT_NOT_REACHED();
         }
         ASSERT(entry.widget);
-        rect.set_size(automatic_size.width() - margins().left() - margins().right(), automatic_size.height() - margins().top() - margins().bottom());
+        rect.set_size(automatic_size);
 
         if (entry.widget->size_policy(Orientation::Vertical) == SizePolicy::Fixed)
             rect.set_height(entry.widget->preferred_size().height());
@@ -111,10 +107,8 @@ void GBoxLayout::run(GWidget& widget)
             rect.center_horizontally_within(widget.rect());
         }
 
-#ifdef GBOXLAYOUT_DEBUG
         if (should_log)
-            printf("GBoxLayout: apply, %s{%p} <- %s\n", entry.widget->class_name(), entry.widget.ptr(), rect.to_string().characters());
-#endif
+            dbgprintf("GBoxLayout: apply, %s{%p} <- %s\n", entry.widget->class_name(), entry.widget.ptr(), rect.to_string().characters());
         entry.widget->set_relative_rect(rect);
 
         if (orientation() == Orientation::Horizontal)
