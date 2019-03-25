@@ -55,10 +55,7 @@ private:
             }
             m_lock = 0;
         }
-        dbgprintf("donate to %d\n", m_holder);
-        int rc = donate(m_holder);
-        if (rc < 0)
-            dbgprintf("donate: %s\n", strerror(errno));
+        donate(m_holder);
     }
 }
 
