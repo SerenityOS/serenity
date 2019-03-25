@@ -292,3 +292,13 @@ void GTableView::set_column_hidden(int column, bool hidden)
     }
     m_column_visibility[column] = !hidden;
 }
+
+void GTableView::doubleclick_event(GMouseEvent& event)
+{
+    if (!model())
+        return;
+    if (event.button() == GMouseButton::Left) {
+        mousedown_event(event);
+        model()->activate(model()->selected_index());
+    }
+}

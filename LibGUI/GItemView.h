@@ -30,6 +30,7 @@ private:
     virtual void resize_event(GResizeEvent&) override;
     virtual void mousedown_event(GMouseEvent&) override;
     virtual void keydown_event(GKeyEvent&) override;
+    virtual void doubleclick_event(GMouseEvent&) override;
 
     int item_count() const;
     Rect item_rect(int item_index) const;

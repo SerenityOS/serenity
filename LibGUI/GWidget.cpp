@@ -71,7 +71,7 @@ void GWidget::event(GEvent& event)
             set_focus(true);
         return mousedown_event(static_cast<GMouseEvent&>(event));
     case GEvent::MouseUp:
-        return mouseup_event(static_cast<GMouseEvent&>(event));
+        return handle_mouseup_event(static_cast<GMouseEvent&>(event));
     case GEvent::Enter:
         return enter_event(event);
     case GEvent::Leave:
@@ -142,6 +142,30 @@ void GWidget::handle_resize_event(GResizeEvent& event)
     if (layout())
         do_layout();
     return resize_event(event);
+}
+
+void GWidget::handle_mouseup_event(GMouseEvent& event)
+{
+    mouseup_event(event);
+
+    if (!rect().contains(event.position()))
+        return;
+    // It's a click.. but is it a doubleclick?
+    // FIXME: This needs improvement.
+    int elapsed_since_last_click = m_click_clock.elapsed();
+    if (elapsed_since_last_click < 250) {
+        doubleclick_event(event);
+    } else {
+        m_click_clock.start();
+    }
+}
+
+void GWidget::click_event(GMouseEvent&)
+{
+}
+
+void GWidget::doubleclick_event(GMouseEvent&)
+{
 }
 
 void GWidget::resize_event(GResizeEvent&)
