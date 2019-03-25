@@ -57,6 +57,10 @@ static dword handle(RegisterDump& regs, dword function, dword arg1, dword arg2, 
     case Syscall::SC_yield:
         Scheduler::yield();
         break;
+    case Syscall::SC_donate:
+        return current->process().sys$donate((int)arg1);
+    case Syscall::SC_gettid:
+        return current->process().sys$gettid();
     case Syscall::SC_putch:
         Console::the().put_char(arg1 & 0xff);
         break;

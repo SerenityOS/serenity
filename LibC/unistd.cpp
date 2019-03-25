@@ -421,4 +421,16 @@ int ftruncate(int fd, off_t length)
     ASSERT_NOT_REACHED();
 }
 
+int gettid()
+{
+    int rc = syscall(SC_gettid);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
+int donate(int tid)
+{
+    int rc = syscall(SC_donate, tid);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
 }

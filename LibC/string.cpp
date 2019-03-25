@@ -312,6 +312,7 @@ const char* sys_errlist[] = {
     "Timed out",
     "Wrong protocol type",
     "Operation in progress",
+    "No such thread",
     "The highest errno +1 :^)",
 };
 

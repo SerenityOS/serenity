@@ -70,4 +70,5 @@
 #define ETIMEDOUT       67
 #define EPROTOTYPE      68
 #define EINPROGRESS     69
-#define EMAXERRNO       70
+#define ENOTHREAD       70
+#define EMAXERRNO       71

@@ -93,6 +93,8 @@
     __ENUMERATE_SYSCALL(getsockopt) \
     __ENUMERATE_SYSCALL(setsockopt) \
     __ENUMERATE_SYSCALL(create_thread) \
+    __ENUMERATE_SYSCALL(gettid) \
+    __ENUMERATE_SYSCALL(donate) \
 
 
 namespace Syscall {

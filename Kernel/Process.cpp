@@ -2461,3 +2461,27 @@ int Process::sys$create_thread(int(*entry)(void*), void* argument)
     thread->set_state(Thread::State::Runnable);
     return 0;
 }
+
+int Process::sys$gettid()
+{
+    return current->tid();
+}
+
+int Process::sys$donate(int tid)
+{
+    if (tid < 0)
+        return -EINVAL;
+    InterruptDisabler disabler;
+    Thread* beneficiary = nullptr;
+    for_each_thread([&] (Thread& thread) {
+        if (thread.tid() == tid) {
+            beneficiary = &thread;
+            return IterationDecision::Abort;
+        }
+        return IterationDecision::Continue;
+    });
+    if (!beneficiary)
+        return -ENOTHREAD;
+    Scheduler::donate_to(beneficiary, "sys$donate");
+    return 0;
+}

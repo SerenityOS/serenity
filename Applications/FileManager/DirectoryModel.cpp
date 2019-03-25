@@ -8,12 +8,13 @@
 #include <AK/StringBuilder.h>
 #include <SharedGraphics/GraphicsBitmap.h>
 #include <SharedGraphics/Painter.h>
+#include <LibGUI/GLock.h>
 
-static HashMap<String, RetainPtr<GraphicsBitmap>>& thumbnail_cache()
+static GLockable<HashMap<String, RetainPtr<GraphicsBitmap>>>& thumbnail_cache()
 {
-    static HashMap<String, RetainPtr<GraphicsBitmap>>* s_map;
+    static GLockable<HashMap<String, RetainPtr<GraphicsBitmap>>>* s_map;
     if (!s_map)
-        s_map = new HashMap<String, RetainPtr<GraphicsBitmap>>();
+        s_map = new GLockable<HashMap<String, RetainPtr<GraphicsBitmap>>>();
     return *s_map;
 }
 
@@ -23,11 +24,16 @@ int thumbnail_thread(void* model_ptr)
     for (;;) {
         sleep(1);
         Vector<String> to_generate;
-        for (auto& it : thumbnail_cache()) {
-            if (it.value)
-                continue;
-            to_generate.append(it.key);
+        {
+            LOCKER(thumbnail_cache().lock());
+            for (auto& it : thumbnail_cache().resource()) {
+                if (it.value)
+                    continue;
+                to_generate.append(it.key);
+            }
         }
+        if (to_generate.is_empty())
+            continue;
         for (int i = 0; i < to_generate.size(); ++i) {
             auto& path = to_generate[i];
             auto png_bitmap = GraphicsBitmap::load_from_file(path);
@@ -36,7 +42,10 @@ int thumbnail_thread(void* model_ptr)
             auto thumbnail = GraphicsBitmap::create(png_bitmap->format(), { 32, 32 });
             Painter painter(*thumbnail);
             painter.draw_scaled_bitmap(thumbnail->rect(), *png_bitmap, png_bitmap->rect());
-            thumbnail_cache().set(path, move(thumbnail));
+            {
+                LOCKER(thumbnail_cache().lock());
+                thumbnail_cache().resource().set(path, move(thumbnail));
+            }
             if (model.on_thumbnail_progress)
                 model.on_thumbnail_progress(i + 1, to_generate.size());
             model.did_update();
@@ -121,11 +130,12 @@ GIcon DirectoryModel::icon_for(const Entry& entry) const
     if (entry.name.to_lowercase().ends_with(".png")) {
         if (!entry.thumbnail) {
             auto path = entry.full_path(*this);
-            auto it = thumbnail_cache().find(path);
-            if (it != thumbnail_cache().end()) {
+            LOCKER(thumbnail_cache().lock());
+            auto it = thumbnail_cache().resource().find(path);
+            if (it != thumbnail_cache().resource().end()) {
                 entry.thumbnail = (*it).value.copy_ref();
             } else {
-                thumbnail_cache().set(path, nullptr);
+                thumbnail_cache().resource().set(path, nullptr);
             }
         }
         if (!entry.thumbnail)

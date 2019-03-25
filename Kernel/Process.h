@@ -97,6 +97,8 @@ public:
     void die();
     void finalize();
 
+    int sys$gettid();
+    int sys$donate(int tid);
     pid_t sys$setsid();
     pid_t sys$getsid(pid_t);
     int sys$setpgid(pid_t pid, pid_t pgid);
