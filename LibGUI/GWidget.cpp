@@ -83,6 +83,7 @@ void GWidget::event(GEvent& event)
 
 void GWidget::handle_paint_event(GPaintEvent& event)
 {
+    ASSERT(is_visible());
     if (fill_with_background_color()) {
         Painter painter(*this);
         painter.fill_rect(event.rect(), background_color());
@@ -227,6 +228,8 @@ void GWidget::update()
 
 void GWidget::update(const Rect& rect)
 {
+    if (!is_visible())
+        return;
     auto* w = window();
     if (!w)
         return;
