@@ -1,7 +1,8 @@
 #pragma once
 
-#include "GEvent.h"
-#include "GObject.h"
+#include <LibGUI/GElapsedTimer.h>
+#include <LibGUI/GEvent.h>
+#include <LibGUI/GObject.h>
 #include <SharedGraphics/Rect.h>
 #include <SharedGraphics/Color.h>
 #include <SharedGraphics/Font.h>
@@ -43,6 +44,8 @@ public:
     virtual void mousemove_event(GMouseEvent&);
     virtual void mousedown_event(GMouseEvent&);
     virtual void mouseup_event(GMouseEvent&);
+    virtual void click_event(GMouseEvent&);
+    virtual void doubleclick_event(GMouseEvent&);
     virtual void focusin_event(GEvent&);
     virtual void focusout_event(GEvent&);
     virtual void enter_event(GEvent&);
@@ -141,6 +144,7 @@ private:
 
     void handle_paint_event(GPaintEvent&);
     void handle_resize_event(GResizeEvent&);
+    void handle_mouseup_event(GMouseEvent&);
     void do_layout();
     void invalidate_layout();
 
@@ -158,4 +162,6 @@ private:
 
     bool m_fill_with_background_color { false };
     bool m_visible { true };
+
+    GElapsedTimer m_click_clock;
 };

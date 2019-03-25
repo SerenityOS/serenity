@@ -51,6 +51,7 @@ LIBGUI_OBJS = \
     GAbstractView.o \
     GItemView.o \
     GIcon.o \
+    GElapsedTimer.o \
     GWindow.o
 
 OBJS = $(SHAREDGRAPHICS_OBJS) $(LIBGUI_OBJS)

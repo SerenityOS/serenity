@@ -156,10 +156,8 @@ void GWindow::event(GEvent& event)
             Point local_point { mouse_event.x() - window_relative_rect.x(), mouse_event.y() - window_relative_rect.y() };
             auto local_event = make<GMouseEvent>(event.type(), local_point, mouse_event.buttons(), mouse_event.button(), mouse_event.modifiers());
             m_automatic_cursor_tracking_widget->event(*local_event);
-            if (mouse_event.buttons() == 0) {
+            if (mouse_event.buttons() == 0)
                 m_automatic_cursor_tracking_widget = nullptr;
-                return;
-            }
             return;
         }
         if (!m_main_widget)

@@ -80,6 +80,16 @@ void GItemView::mousedown_event(GMouseEvent& event)
     }
 }
 
+void GItemView::doubleclick_event(GMouseEvent& event)
+{
+    if (!model())
+        return;
+    if (event.button() == GMouseButton::Left) {
+        mousedown_event(event);
+        model()->activate(model()->selected_index());
+    }
+}
+
 void GItemView::paint_event(GPaintEvent& event)
 {
     Painter painter(*this);
