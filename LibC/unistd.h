@@ -14,6 +14,8 @@ __BEGIN_DECLS
 
 extern char** environ;
 
+int gettid();
+int donate(int tid);
 int create_thread(int(*)(void*), void*);
 int create_shared_buffer(pid_t peer_pid, int, void** buffer);
 void* get_shared_buffer(int shared_buffer_id);
