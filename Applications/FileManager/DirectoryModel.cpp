@@ -121,7 +121,7 @@ GIcon DirectoryModel::icon_for(const Entry& entry) const
         }
         if (!entry.thumbnail)
             return m_filetype_image_icon;
-        return GIcon(*entry.thumbnail);
+        return GIcon(m_filetype_image_icon.bitmap_for_size(16), *entry.thumbnail);
     }
     return m_file_icon;
 }
