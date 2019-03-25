@@ -208,7 +208,7 @@ size_t fread(void* ptr, size_t size, size_t nmemb, FILE* stream)
         return 0;
     if (nread == 0)
         stream->eof = true;
-    return nread;
+    return nread / size;
 }
 
 size_t fwrite(const void* ptr, size_t size, size_t nmemb, FILE* stream)
