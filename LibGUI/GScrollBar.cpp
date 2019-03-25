@@ -4,6 +4,8 @@
 #include <SharedGraphics/GraphicsBitmap.h>
 #include <SharedGraphics/Painter.h>
 
+//#define GUTTER_DOES_PAGEUP_PAGEDOWN
+
 static const char* s_up_arrow_bitmap_data = {
     "         "
     "    #    "
@@ -210,6 +212,7 @@ void GScrollBar::mousedown_event(GMouseEvent& event)
         set_value(value() + m_step);
         return;
     }
+#ifdef GUTTER_DOES_PAGEUP_PAGEDOWN
     if (has_scrubber() && upper_gutter_rect().contains(event.position())) {
         set_value(value() - m_big_step);
         return;
@@ -218,6 +221,7 @@ void GScrollBar::mousedown_event(GMouseEvent& event)
         set_value(value() + m_big_step);
         return;
     }
+#endif
     if (has_scrubber() && scrubber_rect().contains(event.position())) {
         m_scrubbing = true;
         m_scrub_start_value = value();
@@ -225,6 +229,27 @@ void GScrollBar::mousedown_event(GMouseEvent& event)
         update();
         return;
     }
+#ifndef GUTTER_DOES_PAGEUP_PAGEDOWN
+    if (has_scrubber()) {
+        float range_size = m_max - m_min;
+        float available = scrubbable_range_in_pixels();
+
+        float x = ::max(0, event.position().x() - button_size() - button_size() / 2);
+        float y = ::max(0, event.position().y() - button_size() - button_size() / 2);
+
+        float rel_x = x / available;
+        float rel_y = y / available;
+
+        if (orientation() == Orientation::Vertical)
+            set_value(m_min + rel_y * range_size);
+        else
+            set_value(m_min + rel_x * range_size);
+
+        m_scrubbing = true;
+        m_scrub_start_value = value();
+        m_scrub_origin = event.position();
+    }
+#endif
 }
 
 void GScrollBar::mouseup_event(GMouseEvent& event)
