@@ -244,8 +244,10 @@ void HashTable<T, TraitsForT>::set(T&& value)
         rehash(1);
     auto& bucket = lookup(value);
     for (auto& e : bucket.chain) {
-        if (e == value)
+        if (e == value) {
+            e = move(value);
             return;
+        }
     }
     if (size() >= capacity()) {
         rehash(size() + 1);
@@ -263,8 +265,10 @@ void HashTable<T, TraitsForT>::set(const T& value)
         rehash(1);
     auto& bucket = lookup(value);
     for (auto& e : bucket.chain) {
-        if (e == value)
+        if (e == value) {
+            e = move(value);
             return;
+        }
     }
     if (size() >= capacity()) {
         rehash(size() + 1);
