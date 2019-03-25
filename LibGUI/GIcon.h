@@ -25,6 +25,8 @@ public:
     GIcon(const GIcon&);
     ~GIcon() { }
 
+    static GIcon default_icon(const String&);
+
     GIcon& operator=(const GIcon& other)
     {
         m_impl = other.m_impl.copy_ref();

@@ -71,7 +71,7 @@ GWindow* make_launcher_window()
 
     new LauncherButton("/res/icons/Terminal.png", "/bin/Terminal", widget);
     new LauncherButton("/res/icons/FontEditor.png", "/bin/FontEditor", widget);
-    new LauncherButton("/res/icons/folder32.png", "/bin/FileManager", widget);
+    new LauncherButton("/res/icons/32x32/filetype-folder.png", "/bin/FileManager", widget);
     new LauncherButton("/res/icons/TextEditor.png", "/bin/TextEditor", widget);
 
     return window;
