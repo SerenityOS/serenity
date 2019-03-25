@@ -57,12 +57,12 @@ DirectoryModel::DirectoryModel()
 {
     create_thread(thumbnail_thread, this);
 
-    m_directory_icon = GIcon(GraphicsBitmap::load_from_file("/res/icons/folder16.png"), GraphicsBitmap::load_from_file("/res/icons/32x32/folder.png"));
-    m_file_icon = GIcon(GraphicsBitmap::load_from_file("/res/icons/file16.png"), GraphicsBitmap::load_from_file("/res/icons/32x32/file.png"));
-    m_symlink_icon = GIcon(GraphicsBitmap::load_from_file("/res/icons/link16.png"));
-    m_socket_icon = GIcon(GraphicsBitmap::load_from_file("/res/icons/socket16.png"));
-    m_executable_icon = GIcon(GraphicsBitmap::load_from_file("/res/icons/executable16.png"), GraphicsBitmap::load_from_file("/res/icons/32x32/filetype-executable.png"));
-    m_filetype_image_icon = GIcon(GraphicsBitmap::load_from_file("/res/icons/16x16/filetype-image.png"), GraphicsBitmap::load_from_file("/res/icons/32x32/filetype-image.png"));
+    m_directory_icon = GIcon::default_icon("filetype-folder");
+    m_file_icon = GIcon::default_icon("filetype-unknown");
+    m_symlink_icon = GIcon::default_icon("filetype-symlink");
+    m_socket_icon = GIcon::default_icon("filetype-socket");
+    m_executable_icon = GIcon::default_icon("filetype-executable");
+    m_filetype_image_icon = GIcon::default_icon("filetype-image");
 
     setpwent();
     while (auto* passwd = getpwent())
