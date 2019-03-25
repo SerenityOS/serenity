@@ -177,11 +177,15 @@ bool Font::write_to_file(const String& path)
 
 int Font::width(const String& string) const
 {
+    if (string.is_empty())
+        return 0;
+
     if (m_fixed_width)
         return string.length() * m_glyph_width;
 
     int width = 0;
     for (int i = 0; i < string.length(); ++i)
         width += glyph_width(string[i]) + 1;
-    return width;
+
+    return width - 1;
 }
