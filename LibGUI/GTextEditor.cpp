@@ -379,6 +379,11 @@ void GTextEditor::keydown_event(GKeyEvent& event)
         return;
     }
 
+    if (event.modifiers() == Mod_Shift && event.key() == KeyCode::Key_Delete) {
+        delete_current_line();
+        return;
+    }
+
     if (event.key() == KeyCode::Key_Delete) {
         do_delete();
         return;
@@ -390,12 +395,24 @@ void GTextEditor::keydown_event(GKeyEvent& event)
     return GWidget::keydown_event(event);
 }
 
+void GTextEditor::delete_current_line()
+{
+    if (has_selection())
+        return delete_selection();
+
+    m_lines.remove(m_cursor.line());
+    if (m_lines.is_empty())
+        m_lines.append(make<Line>());
+
+    update_content_size();
+    update();
+}
+
 void GTextEditor::do_delete()
 {
-    if (has_selection()) {
-        delete_selection();
-        return;
-    }
+    if (has_selection())
+        return delete_selection();
+
     if (m_cursor.column() < current_line().length()) {
         // Delete within line
         current_line().remove(m_cursor.column());

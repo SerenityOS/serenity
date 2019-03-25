@@ -94,6 +94,7 @@ public:
     void copy();
     void paste();
     void do_delete();
+    void delete_current_line();
 
     Function<void(GTextEditor&)> on_return_pressed;
     Function<void(GTextEditor&)> on_escape_pressed;
