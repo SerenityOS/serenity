@@ -55,14 +55,14 @@ bool Scheduler::pick_next()
         return context_switch(s_colonel_process->main_thread());
     }
 
-    auto now_sec = RTC::now();
-    auto now_usec = (suseconds_t)((PIT::ticks_since_boot() % 1000) * 1000);
+    struct timeval now;
+    kgettimeofday(now);
+    auto now_sec = now.tv_sec;
+    auto now_usec = now.tv_usec;
 
     // Check and unblock threads whose wait conditions have been met.
     Thread::for_each([&] (Thread& thread) {
         auto& process = thread.process();
-
-//        dbgprintf("pick_next, checking on %s(%u:%u) in state %s\n", process.name().impl()->characters(), process.pid(), thread.tid(), to_string(thread.state()));
 
         if (thread.state() == Thread::BlockedSleep) {
             if (thread.wakeup_time() <= system.uptime)

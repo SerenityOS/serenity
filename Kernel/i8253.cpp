@@ -57,26 +57,34 @@ asm(
 
 #define BASE_FREQUENCY     1193182
 
-static dword s_ticks_since_boot;
+static dword s_ticks_this_second;
+static dword s_seconds_since_boot;
 
 void timer_interrupt_handler(RegisterDump& regs)
 {
     IRQHandlerScope scope(IRQ_TIMER);
-    ++s_ticks_since_boot;
+    if (++s_ticks_this_second >= TICKS_PER_SECOND) {
+        // FIXME: Synchronize with the RTC somehow to prevent drifting apart.
+        ++s_seconds_since_boot;
+        s_ticks_this_second = 0;
+    }
     Scheduler::timer_tick(regs);
 }
 
 namespace PIT {
 
-dword ticks_since_boot()
+dword ticks_this_second()
 {
-    return s_ticks_since_boot;
+    return s_ticks_this_second;
+}
+
+dword seconds_since_boot()
+{
+    return s_seconds_since_boot;
 }
 
 void initialize()
 {
-    s_ticks_since_boot = 0;
-
     word timer_reload;
 
     IO::out8(PIT_CTL, TIMER0_SELECT | WRITE_WORD | MODE_SQUARE_WAVE);

@@ -317,7 +317,9 @@ void Ext2FS::free_inode(Ext2FSInode& inode)
     ASSERT(inode.m_raw_inode.i_links_count == 0);
     dbgprintf("Ext2FS: inode %u has no more links, time to delete!\n", inode.index());
 
-    inode.m_raw_inode.i_dtime = RTC::now();
+    struct timeval now;
+    kgettimeofday(now);
+    inode.m_raw_inode.i_dtime = now.tv_sec;
     write_ext2_inode(inode.index(), inode.m_raw_inode);
 
     auto block_list = block_list_for_inode(inode.m_raw_inode, true);
@@ -1178,16 +1180,17 @@ RetainPtr<Inode> Ext2FS::create_inode(InodeIdentifier parent_id, const String& n
     else
         initial_links_count = 1;
 
-    auto timestamp = RTC::now();
+    struct timeval now;
+    kgettimeofday(now);
     ext2_inode e2inode;
     memset(&e2inode, 0, sizeof(ext2_inode));
     e2inode.i_mode = mode;
     e2inode.i_uid = current->process().euid();
     e2inode.i_gid = current->process().egid();
     e2inode.i_size = size;
-    e2inode.i_atime = timestamp;
-    e2inode.i_ctime = timestamp;
-    e2inode.i_mtime = timestamp;
+    e2inode.i_atime = now.tv_sec;
+    e2inode.i_ctime = now.tv_sec;
+    e2inode.i_mtime = now.tv_sec;
     e2inode.i_dtime = 0;
     e2inode.i_links_count = initial_links_count;
 
