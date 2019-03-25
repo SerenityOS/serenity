@@ -164,6 +164,24 @@ void GItemView::keydown_event(GKeyEvent& event)
         model.activate(model.selected_index());
         return;
     }
+    if (event.key() == KeyCode::Key_Home) {
+        GModelIndex new_index { 0, 0 };
+        if (model.is_valid(new_index)) {
+            model.set_selected_index(new_index);
+            scroll_into_view(new_index, Orientation::Vertical);
+            update();
+        }
+        return;
+    }
+    if (event.key() == KeyCode::Key_End) {
+        GModelIndex new_index { model.row_count() - 1, 0 };
+        if (model.is_valid(new_index)) {
+            model.set_selected_index(new_index);
+            scroll_into_view(new_index, Orientation::Vertical);
+            update();
+        }
+        return;
+    }
     if (event.key() == KeyCode::Key_Up) {
         GModelIndex new_index;
         if (model.selected_index().is_valid())
@@ -217,7 +235,7 @@ void GItemView::keydown_event(GKeyEvent& event)
         return;
     }
     if (event.key() == KeyCode::Key_PageUp) {
-        int items_per_page = visible_content_rect().height() / effective_item_size().height();
+        int items_per_page = (visible_content_rect().height() / effective_item_size().height()) * m_visual_column_count;
         GModelIndex new_index(max(0, model.selected_index().row() - items_per_page), model.selected_index().column());
         if (model.is_valid(new_index)) {
             model.set_selected_index(new_index);
@@ -227,7 +245,7 @@ void GItemView::keydown_event(GKeyEvent& event)
         return;
     }
     if (event.key() == KeyCode::Key_PageDown) {
-        int items_per_page = visible_content_rect().height() / effective_item_size().height();
+        int items_per_page = (visible_content_rect().height() / effective_item_size().height()) * m_visual_column_count;
         GModelIndex new_index(min(model.row_count() - 1, model.selected_index().row() + items_per_page), model.selected_index().column());
         if (model.is_valid(new_index)) {
             model.set_selected_index(new_index);
