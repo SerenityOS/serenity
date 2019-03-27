@@ -24,6 +24,8 @@
 //#define DEBUG_WID_IN_TITLE_BAR
 //#define RESIZE_DEBUG
 
+static void get_cpu_usage(unsigned& busy, unsigned& idle);
+
 static const int window_titlebar_height = 18;
 
 static inline Rect menu_window_rect(const Rect& rect)
@@ -255,12 +257,34 @@ WSWindowManager::WSWindowManager()
     // NOTE: This ensures that the system menu has the correct dimensions.
     set_current_menubar(nullptr);
 
+    create_thread([] (void* context) -> int {
+        auto& wm = *(WSWindowManager*)context;
+        for (;;) {
+            static unsigned last_busy;
+            static unsigned last_idle;
+            unsigned busy;
+            unsigned idle;
+            get_cpu_usage(busy, idle);
+            unsigned busy_diff = busy - last_busy;
+            unsigned idle_diff = idle - last_idle;
+            last_busy = busy;
+            last_idle = idle;
+            float cpu = (float)busy_diff / (float)(busy_diff + idle_diff);
+            wm.m_cpu_history.enqueue(cpu);
+            sleep(1);
+        }
+    }, this);
+
     WSMessageLoop::the().start_timer(300, [this] {
         static time_t last_update_time;
+        static int last_cpu_history_size = 0;
+        static int last_cpu_history_head_index = 0;
         time_t now = time(nullptr);
-        if (now != last_update_time) {
+        if (now != last_update_time || m_cpu_history.size() != last_cpu_history_size || m_cpu_history.head_index() != last_cpu_history_head_index) {
             tick_clock();
             last_update_time = now;
+            last_cpu_history_head_index = m_cpu_history.head_index();
+            last_cpu_history_size = m_cpu_history.size();
         }
     });
 
@@ -292,7 +316,7 @@ const Font& WSWindowManager::app_menu_font() const
     return Font::default_bold_font();
 }
 
-static void get_cpu_usage(unsigned& busy, unsigned& idle)
+void get_cpu_usage(unsigned& busy, unsigned& idle)
 {
     busy = 0;
     idle = 0;
@@ -327,17 +351,6 @@ static void get_cpu_usage(unsigned& busy, unsigned& idle)
 
 void WSWindowManager::tick_clock()
 {
-    static unsigned last_busy;
-    static unsigned last_idle;
-    unsigned busy;
-    unsigned idle;
-    get_cpu_usage(busy, idle);
-    unsigned busy_diff = busy - last_busy;
-    unsigned idle_diff = idle - last_idle;
-    last_busy = busy;
-    last_idle = idle;
-    float cpu = (float)busy_diff / (float)(busy_diff + idle_diff);
-    m_cpu_history.enqueue(cpu);
     invalidate(menubar_rect());
 }
 
