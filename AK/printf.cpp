@@ -193,6 +193,7 @@ template<typename PutChFunc>
         bool zeroPad = false;
         unsigned fieldWidth = 0;
         unsigned long_qualifiers = 0;
+        bool alternate_form = 0;
         if (*p == '%' && *(p + 1)) {
 one_more:
             ++p;
@@ -214,7 +215,13 @@ one_more:
             }
             if (*p == 'l') {
                 ++long_qualifiers;
-                goto one_more;
+                if (*(p + 1))
+                    goto one_more;
+            }
+            if (*p == '#') {
+                alternate_form = true;
+                if (*(p + 1))
+                    goto one_more;
             }
             switch( *p )
             {
@@ -247,10 +254,19 @@ one_more:
                     break;
 
                 case 'o':
+                    if (alternate_form) {
+                        putch(bufptr, '0');
+                        ++ret;
+                    }
                     ret += print_octal_number(putch, bufptr, va_arg(ap, dword), leftPad, zeroPad, fieldWidth);
                     break;
 
                 case 'x':
+                    if (alternate_form) {
+                        putch(bufptr, '0');
+                        putch(bufptr, 'x');
+                        ret += 2;
+                    }
                     ret += print_hex(putch, bufptr, va_arg(ap, dword), 8);
                     break;
 
