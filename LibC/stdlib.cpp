@@ -201,11 +201,27 @@ void* realloc(void *ptr, size_t size)
     return new_ptr;
 }
 
+typedef void(*__atexit_handler)();
+static int __atexit_handler_count = 0;
+static __atexit_handler __atexit_handlers[32];
+
 void exit(int status)
 {
+    for (int i = 0; i < __atexit_handler_count; ++i)
+        __atexit_handlers[i]();
+    extern void _fini();
+    _fini();
     _exit(status);
     assert(false);
 }
+
+int atexit(void (*handler)())
+{
+    ASSERT(__atexit_handler_count < 32);
+    __atexit_handlers[__atexit_handler_count++] = handler;
+    return 0;
+}
+
 
 void abort()
 {
@@ -425,12 +441,6 @@ size_t mbstowcs(wchar_t*, const char*, size_t)
     assert(false);
 }
 
-int atexit(void (*function)())
-{
-    (void)function;
-    assert(false);
-}
-
 long strtol(const char* str, char** endptr, int base)
 {
     const char* s = str;
@@ -488,11 +498,11 @@ long strtol(const char* str, char** endptr, int base)
     return acc;
 }
 
-unsigned long strtoul(const char*, char** endptr, int base)
+unsigned long strtoul(const char* str, char** endptr, int base)
 {
-    (void)endptr;
-    (void)base;
-    assert(false);
+    auto value = strtol(str, endptr, base);
+    ASSERT(value >= 0);
+    return value;
 }
 
 }
