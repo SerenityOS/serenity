@@ -48,6 +48,7 @@ int setuid(uid_t);
 int setgid(gid_t);
 pid_t tcgetpgrp(int fd);
 int tcsetpgrp(int fd, pid_t pgid);
+int creat(const char* path, mode_t);
 int open(const char* path, int options, ...);
 ssize_t read(int fd, void* buf, size_t count);
 ssize_t write(int fd, const void* buf, size_t count);
