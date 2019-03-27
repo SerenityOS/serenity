@@ -507,7 +507,7 @@ void WSWindowManager::paint_window_frame(WSWindow& window)
 
     m_back_painter->blit(titlebar_icon_rect.location(), window.icon(), window.icon().rect());
 
-    m_back_painter->draw_rect(close_button_rect, Color::DarkGray);
+    m_back_painter->draw_rect(close_button_rect, Color::MidGray);
     auto x_location = close_button_rect.center();
     x_location.move_by(-(s_close_button_bitmap_width / 2), -(s_close_button_bitmap_height / 2));
     m_back_painter->draw_bitmap(x_location, *s_close_button_bitmap, Color::Black);

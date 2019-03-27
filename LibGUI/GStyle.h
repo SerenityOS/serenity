@@ -3,7 +3,7 @@
 class Painter;
 class Rect;
 
-enum class GButtonStyle { Normal, CoolBar };
+enum class GButtonStyle { Normal, CoolBar, OldNormal };
 
 class GStyle {
 public:

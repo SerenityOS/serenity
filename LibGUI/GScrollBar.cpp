@@ -167,7 +167,7 @@ Rect GScrollBar::scrubber_rect() const
         return { };
     float x_or_y;
     if (m_value == m_min)
-        x_or_y = button_size() - 1;
+        x_or_y = button_size();
     else if (m_value == m_max)
         x_or_y = ((orientation() == Orientation::Vertical ? height() : width()) - (button_size() * 2)) + 1;
     else {
