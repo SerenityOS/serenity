@@ -20,4 +20,10 @@ double pow(double x, double y)
     assert(false);
 }
 
+double ldexp(double, int exp)
+{
+    (void)exp;
+    assert(false);
+}
+
 }
