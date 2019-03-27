@@ -191,9 +191,10 @@ bool Ext2FS::write_block_list_for_inode(InodeIndex inode_index, ext2_inode& e2in
 {
     LOCKER(m_lock);
 
-    dbgprintf("Ext2FS: writing %u block(s) to i_block array\n", min(EXT2_NDIR_BLOCKS, blocks.size()));
+    // NOTE: There is a mismatch between i_blocks and blocks.size() since i_blocks includes meta blocks and blocks.size() does not.
+    auto old_block_count = ceil_div(e2inode.i_size, block_size());
 
-    auto old_shape = compute_block_list_shape(e2inode.i_blocks / (2 << super_block().s_log_block_size));
+    auto old_shape = compute_block_list_shape(old_block_count);
     auto new_shape = compute_block_list_shape(blocks.size());
 
     Vector<BlockIndex> new_meta_blocks;
@@ -205,24 +206,42 @@ bool Ext2FS::write_block_list_for_inode(InodeIndex inode_index, ext2_inode& e2in
 
     e2inode.i_blocks = (blocks.size() + new_shape.meta_blocks) * (block_size() / 512);
 
+    bool inode_dirty = false;
+
     unsigned output_block_index = 0;
     unsigned remaining_blocks = blocks.size();
     for (unsigned i = 0; i < new_shape.direct_blocks; ++i) {
-        e2inode.i_block[i] = blocks[output_block_index++];
+        if (e2inode.i_block[i] != blocks[output_block_index])
+            inode_dirty = true;
+        e2inode.i_block[i] = blocks[output_block_index];
+        ++output_block_index;
         --remaining_blocks;
     }
-    write_ext2_inode(inode_index, e2inode);
+    if (inode_dirty) {
+        dbgprintf("Ext2FS: Writing %u direct block(s) to i_block array of inode %u\n", min(EXT2_NDIR_BLOCKS, blocks.size()), inode_index);
+        write_ext2_inode(inode_index, e2inode);
+        inode_dirty = false;
+    }
 
     if (!remaining_blocks)
         return true;
 
     if (!e2inode.i_block[EXT2_IND_BLOCK]) {
-        e2inode.i_block[EXT2_IND_BLOCK] = new_meta_blocks.take_last();
-        write_ext2_inode(inode_index, e2inode);
+        BlockIndex new_indirect_block = new_meta_blocks.take_last();
+        if (e2inode.i_block[EXT2_IND_BLOCK] != new_indirect_block)
+            inode_dirty = true;
+        e2inode.i_block[EXT2_IND_BLOCK] = new_indirect_block;
+        if (inode_dirty) {
+            dbgprintf("Ext2FS: Adding the indirect block to i_block array of inode %u\n", inode_index);
+            write_ext2_inode(inode_index, e2inode);
+            inode_dirty = false;
+        }
     }
 
-    {
-        dbgprintf("Ext2FS: Writing out indirect blockptr block for inode %u\n", inode_index);
+    if (old_shape.indirect_blocks == new_shape.indirect_blocks) {
+        // No need to update the singly indirect block array.
+        remaining_blocks -= new_shape.indirect_blocks;
+    } else {
         auto block_contents = ByteBuffer::create_uninitialized(block_size());
         BufferStream stream(block_contents);
         ASSERT(new_shape.indirect_blocks <= EXT2_ADDR_PER_BLOCK(&super_block()));
