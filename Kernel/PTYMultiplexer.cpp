@@ -3,6 +3,8 @@
 #include <Kernel/Process.h>
 #include <LibC/errno_numbers.h>
 
+//#define PTMX_DEBUG
+
 static const unsigned s_max_pty_pairs = 8;
 static PTYMultiplexer* s_the;
 
@@ -33,7 +35,9 @@ KResultOr<Retained<FileDescriptor>> PTYMultiplexer::open(int options)
         return KResult(-EBUSY);
     auto master_index = m_freelist.take_last();
     auto master = adopt(*new MasterPTY(master_index));
+#ifdef PTMX_DEBUG
     dbgprintf("PTYMultiplexer::open: Vending master %u\n", master->index());
+#endif
     return VFS::the().open(move(master), options);
 }
 
@@ -41,5 +45,7 @@ void PTYMultiplexer::notify_master_destroyed(Badge<MasterPTY>, unsigned index)
 {
     LOCKER(m_lock);
     m_freelist.append(index);
+#ifdef PTMX_DEBUG
     dbgprintf("PTYMultiplexer: %u added to freelist\n", index);
+#endif
 }
