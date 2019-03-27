@@ -190,14 +190,14 @@ void exception_7_handler(RegisterDump& regs)
     if (g_last_fpu_thread == current)
         return;
     if (g_last_fpu_thread) {
-        asm volatile("fnsave %0":"=m"(g_last_fpu_thread->fpu_state()));
+        asm volatile("fxsave %0":"=m"(g_last_fpu_thread->fpu_state()));
     } else {
         asm volatile("fnclex");
     }
     g_last_fpu_thread = current;
 
     if (current->has_used_fpu()) {
-        asm volatile("frstor %0"::"m"(current->fpu_state()));
+        asm volatile("fxrstor %0"::"m"(current->fpu_state()));
     } else {
         asm volatile("fninit");
         current->set_has_used_fpu(true);
