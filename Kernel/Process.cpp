@@ -322,13 +322,15 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
 #endif
     RetainPtr<Region> region = allocate_region_with_vmo(LinearAddress(), descriptor->metadata().size, vmo.copy_ref(), 0, "executable", true, false);
 
-    // FIXME: Should we consider doing on-demand paging here? Is it actually useful?
-    bool success = region->page_in();
-
-    ASSERT(success);
+    if (this != &current->process()) {
+        // FIXME: Don't force-load the entire executable at once, let the on-demand pager take care of it.
+        bool success = region->page_in();
+        ASSERT(success);
+    }
     {
         // Okay, here comes the sleight of hand, pay close attention..
         auto old_regions = move(m_regions);
+        m_regions.append(*region);
         ELFLoader loader(region->laddr().as_ptr());
         loader.map_section_hook = [&] (LinearAddress laddr, size_t size, size_t alignment, size_t offset_in_image, bool is_readable, bool is_writable, const String& name) {
             ASSERT(size);
@@ -347,25 +349,17 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
             return laddr.as_ptr();
         };
         bool success = loader.load();
-        if (!success) {
+        if (!success || !loader.entry().get()) {
             m_page_directory = move(old_page_directory);
             // FIXME: RAII this somehow instead.
             ASSERT(&current->process() == this);
             MM.enter_process_paging_scope(*this);
             m_regions = move(old_regions);
-            kprintf("sys$execve: Failure loading %s\n", path.characters());
+            kprintf("do_exec: Failure loading %s\n", path.characters());
             return -ENOEXEC;
         }
 
         entry_eip = loader.entry().get();
-        if (!entry_eip) {
-            m_page_directory = move(old_page_directory);
-            // FIXME: RAII this somehow instead.
-            ASSERT(&current->process() == this);
-            MM.enter_process_paging_scope(*this);
-            m_regions = move(old_regions);
-            return -ENOEXEC;
-        }
     }
 
     kfree(current->m_kernel_stack_for_signal_handler);
