@@ -111,7 +111,7 @@ public:
     bool has_unmasked_pending_signals() const;
     void terminate_due_to_signal(byte signal);
 
-    FPUState& fpu_state() { return m_fpu_state; }
+    FPUState& fpu_state() { return *m_fpu_state; }
     bool has_used_fpu() const { return m_has_used_fpu; }
     void set_has_used_fpu(bool b) { m_has_used_fpu = b; }
 
@@ -159,7 +159,7 @@ private:
     Vector<int> m_select_write_fds;
     Vector<int> m_select_exceptional_fds;
     State m_state { Invalid };
-    FPUState m_fpu_state;
+    FPUState* m_fpu_state { nullptr };
     bool m_select_has_timeout { false };
     bool m_has_used_fpu { false };
     bool m_was_interrupted_while_blocked { false };

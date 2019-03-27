@@ -15,7 +15,7 @@ Thread::Thread(Process& process)
 {
     dbgprintf("Thread: New thread TID=%u in %s(%u)\n", m_tid, process.name().characters(), process.pid());
     set_default_signal_dispositions();
-    memset(&m_fpu_state, 0, sizeof(FPUState));
+    m_fpu_state = (FPUState*)kmalloc_aligned(sizeof(FPUState), 16);
     memset(&m_tss, 0, sizeof(m_tss));
 
     // Only IF is set when a process boots.
@@ -68,6 +68,7 @@ Thread::Thread(Process& process)
 Thread::~Thread()
 {
     dbgprintf("~Thread{%p}\n", this);
+    kfree_aligned(m_fpu_state);
     {
         InterruptDisabler disabler;
         g_threads->remove(this);
@@ -493,7 +494,8 @@ Thread* Thread::clone(Process& process)
     auto* clone = new Thread(process);
     memcpy(clone->m_signal_action_data, m_signal_action_data, sizeof(m_signal_action_data));
     clone->m_signal_mask = m_signal_mask;
-    clone->m_fpu_state = m_fpu_state;
+    clone->m_fpu_state = (FPUState*)kmalloc_aligned(sizeof(FPUState), 16);
+    memcpy(clone->m_fpu_state, m_fpu_state, sizeof(FPUState));
     clone->m_has_used_fpu = m_has_used_fpu;
     return clone;
 }

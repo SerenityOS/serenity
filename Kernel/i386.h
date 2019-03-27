@@ -234,15 +234,8 @@ struct [[gnu::packed]] RegisterDumpWithExceptionCode {
     word ss_if_crossRing;
 };
 
-struct FPUState {
-    dword cwd;
-    dword swd;
-    dword twd;
-    dword fip;
-    dword fcs;
-    dword foo;
-    dword fos;
-    dword st[20];
+struct [[gnu::aligned(16)]] FPUState {
+    byte buffer[512];
 };
 
 inline constexpr dword page_base_of(dword address)
