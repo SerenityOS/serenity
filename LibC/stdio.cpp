@@ -141,9 +141,12 @@ int getchar()
     return getc(stdin);
 }
 
-int ungetc(int, FILE*)
+int ungetc(int c, FILE* stream)
 {
-    ASSERT_NOT_REACHED();
+    ASSERT(stream);
+    stream->have_ungotten = true;
+    stream->ungotten = c;
+    return c;
 }
 
 int fputc(int ch, FILE* stream)
@@ -203,6 +206,18 @@ int ferror(FILE* stream)
 size_t fread(void* ptr, size_t size, size_t nmemb, FILE* stream)
 {
     assert(stream);
+    if (!size)
+        return 0;
+
+    if (stream->have_ungotten) {
+        // FIXME: Support ungotten character even if size != 1.
+        ASSERT(size == 1);
+        ((char*)ptr)[0] = stream->ungotten;
+        stream->have_ungotten = false;
+        --nmemb;
+        ptr = &((char*)ptr)[1];
+    }
+
     ssize_t nread = read(stream->fd, ptr, nmemb * size);
     if (nread < 0)
         return 0;
@@ -388,6 +403,7 @@ FILE* fdopen(int fd, const char* mode)
 
 int fclose(FILE* stream)
 {
+    fflush(stream);
     int rc = close(stream->fd);
     free(stream);
     return rc;

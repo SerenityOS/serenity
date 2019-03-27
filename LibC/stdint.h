@@ -24,6 +24,16 @@ typedef __INT_FAST16_TYPE__ int_fast16_t;
 typedef __INT_FAST32_TYPE__ int_fast32_t;
 typedef __INT_FAST64_TYPE__ int_fast64_t;
 
+typedef __UINT_LEAST8_TYPE__ uint_least8_t;
+typedef __UINT_LEAST16_TYPE__ uint_least16_t;
+typedef __UINT_LEAST32_TYPE__ uint_least32_t;
+typedef __UINT_LEAST64_TYPE__ uint_least64_t;
+
+typedef __INT_LEAST8_TYPE__ int_least8_t;
+typedef __INT_LEAST16_TYPE__ int_least16_t;
+typedef __INT_LEAST32_TYPE__ int_least32_t;
+typedef __INT_LEAST64_TYPE__ int_least64_t;
+
 #define __int8_t_defined 1
 #define __uint8_t_defined 1
 #define __int16_t_defined 1
