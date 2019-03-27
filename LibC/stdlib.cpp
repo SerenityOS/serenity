@@ -24,15 +24,6 @@ struct MallocHeader {
     uint16_t chunk_count : 15;
     bool is_mmap : 1;
     size_t size;
-
-    uint32_t compute_xorcheck() const
-    {
-        return 0x19820413 ^ ((first_chunk_index << 16) | chunk_count) ^ size;
-    }
-};
-
-struct MallocFooter {
-    uint32_t xorcheck;
 };
 
 #define CHUNK_SIZE  32
@@ -51,7 +42,7 @@ void* malloc(size_t size)
         return nullptr;
 
     // We need space for the MallocHeader structure at the head of the block.
-    size_t real_size = size + sizeof(MallocHeader) + sizeof(MallocFooter);
+    size_t real_size = size + sizeof(MallocHeader);
 
     if (real_size >= PAGE_SIZE) {
         auto* memory = mmap(nullptr, real_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0);
@@ -111,16 +102,13 @@ void* malloc(size_t size)
                 header->is_mmap = false;
                 header->size = size;
 
-                auto* footer = (MallocFooter*)((byte*)header + (header->chunk_count * CHUNK_SIZE) - sizeof(MallocFooter));
-                footer->xorcheck = header->compute_xorcheck();
-
                 for (size_t k = first_chunk; k < (first_chunk + chunks_needed); ++k)
                     s_malloc_map[k / 8] |= 1 << (k % 8);
 
                 s_malloc_sum_alloc += header->chunk_count * CHUNK_SIZE;
                 s_malloc_sum_free  -= header->chunk_count * CHUNK_SIZE;
 
-                memset(ptr, MALLOC_SCRUB_BYTE, (header->chunk_count * CHUNK_SIZE) - (sizeof(MallocHeader) + sizeof(MallocFooter)));
+                memset(ptr, MALLOC_SCRUB_BYTE, (header->chunk_count * CHUNK_SIZE) - sizeof(MallocHeader));
                 return ptr;
             }
         }
@@ -130,21 +118,6 @@ void* malloc(size_t size)
     volatile char* crashme = (char*)0xc007d00d;
     *crashme = 0;
     return nullptr;
-}
-
-static void validate_mallocation(void* ptr, const char* func)
-{
-    auto* header = (MallocHeader*)((((byte*)ptr) - sizeof(MallocHeader)));
-    if (header->size == 0) {
-        fprintf(stderr, "%s called on bad pointer %p, size=0\n", func, ptr);
-        assert(false);
-    }
-    auto* footer = (MallocFooter*)((byte*)header + (header->chunk_count * CHUNK_SIZE) - sizeof(MallocFooter));
-    uint32_t expected_xorcheck = header->compute_xorcheck();
-    if (footer->xorcheck != expected_xorcheck) {
-        fprintf(stderr, "%s called on bad pointer %p, xorcheck=%w (expected %w)\n", func, ptr, footer->xorcheck, expected_xorcheck);
-        assert(false);
-    }
 }
 
 void free(void* ptr)
@@ -160,7 +133,6 @@ void free(void* ptr)
         return;
     }
 
-    validate_mallocation(ptr, "free()");
     for (unsigned i = header->first_chunk_index; i < (header->first_chunk_index + header->chunk_count); ++i)
         s_malloc_map[i / 8] &= ~(1 << (i % 8));
 
@@ -190,7 +162,6 @@ void* realloc(void *ptr, size_t size)
 {
     if (!ptr)
         return malloc(size);
-    validate_mallocation(ptr, "realloc()");
     auto* header = (MallocHeader*)((((byte*)ptr) - sizeof(MallocHeader)));
     size_t old_size = header->size;
     if (size == old_size)
