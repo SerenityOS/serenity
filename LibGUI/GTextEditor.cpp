@@ -645,7 +645,7 @@ void GTextEditor::Line::truncate(int length)
 
 bool GTextEditor::write_to_file(const String& path)
 {
-    int fd = open(path.characters(), O_WRONLY | O_CREAT, 0666);
+    int fd = open(path.characters(), O_WRONLY | O_CREAT | O_TRUNC, 0666);
     if (fd < 0) {
         perror("open");
         return false;
