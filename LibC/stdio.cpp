@@ -146,6 +146,7 @@ int ungetc(int c, FILE* stream)
     ASSERT(stream);
     stream->have_ungotten = true;
     stream->ungotten = c;
+    stream->eof = false;
     return c;
 }
 
@@ -209,20 +210,26 @@ size_t fread(void* ptr, size_t size, size_t nmemb, FILE* stream)
     if (!size)
         return 0;
 
+    ssize_t nread = 0;
+
     if (stream->have_ungotten) {
         // FIXME: Support ungotten character even if size != 1.
         ASSERT(size == 1);
         ((char*)ptr)[0] = stream->ungotten;
         stream->have_ungotten = false;
         --nmemb;
+        if (!nmemb)
+            return 1;
         ptr = &((char*)ptr)[1];
+        ++nread;
     }
 
-    ssize_t nread = read(stream->fd, ptr, nmemb * size);
-    if (nread < 0)
+    ssize_t rc = read(stream->fd, ptr, nmemb * size);
+    if (rc < 0)
         return 0;
-    if (nread == 0)
+    if (rc == 0)
         stream->eof = true;
+    nread += rc;
     return nread / size;
 }
 
