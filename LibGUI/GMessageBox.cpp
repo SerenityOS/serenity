@@ -36,7 +36,7 @@ void GMessageBox::build()
 
     auto* button = new GButton(widget);
     button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
-    button->set_preferred_size({ 100, 16 });
+    button->set_preferred_size({ 100, 20 });
     button->set_caption("OK");
     button->on_click = [this] (auto&) {
         dbgprintf("GMessageBox: OK button clicked\n");
