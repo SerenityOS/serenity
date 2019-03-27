@@ -70,6 +70,8 @@ public:
     ConstIterator begin() const { return ConstIterator(*this, m_head); }
     ConstIterator end() const { return ConstIterator(*this, size()); }
 
+    int head_index() const { return m_head; }
+
 private:
     friend class ConstIterator;
     T m_elements[Capacity];
