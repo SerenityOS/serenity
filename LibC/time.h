@@ -27,7 +27,9 @@ extern long altzone;
 extern char* tzname[2];
 extern int daylight;
 
-int gettimeofday(struct timeval*, struct timezone* tz);
+typedef uint32_t clock_t;
+typedef uint32_t time_t;
+
 struct tm* localtime(const time_t*);
 struct tm *gmtime(const time_t*);
 time_t mktime(struct tm*);

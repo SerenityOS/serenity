@@ -1,4 +1,5 @@
 #include <LibGUI/GElapsedTimer.h>
+#include <sys/time.h>
 
 void GElapsedTimer::start()
 {

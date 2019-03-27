@@ -13,6 +13,7 @@
 #include <LibC/time.h>
 #include <LibC/sys/select.h>
 #include <LibC/sys/socket.h>
+#include <LibC/sys/time.h>
 #include <LibC/errno.h>
 #include <LibC/string.h>
 #include <LibC/stdlib.h>
