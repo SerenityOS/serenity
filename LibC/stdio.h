@@ -30,7 +30,7 @@ struct __STDIO_FILE {
     char* buffer;
     size_t buffer_size;
     size_t buffer_index;
-    bool have_ungotten;
+    int have_ungotten;
     char ungotten;
     char default_buffer[BUFSIZ];
 };
