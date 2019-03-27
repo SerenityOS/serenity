@@ -91,8 +91,10 @@ unsigned ELFImage::program_header_count() const
 bool ELFImage::parse()
 {
     // We only support i386.
-    if (header().e_machine != 3)
+    if (header().e_machine != 3) {
+        kprintf("ELFImage::parse(): e_machine=%u not supported!\n");
         return false;
+    }
 
     // First locate the string tables.
     for (unsigned i = 0; i < section_count(); ++i) {
