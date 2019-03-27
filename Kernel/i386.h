@@ -61,6 +61,7 @@ class IRQHandler;
 
 void gdt_init();
 void idt_init();
+void sse_init();
 void register_interrupt_handler(byte number, void (*f)());
 void register_user_callable_interrupt_handler(byte number, void (*f)());
 void register_irq_handler(byte number, IRQHandler&);
