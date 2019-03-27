@@ -183,7 +183,7 @@ void GTableView::paint_headers(Painter& painter)
     int exposed_width = max(content_size().width(), width());
     painter.fill_rect({ 0, 0, exposed_width, header_height() }, Color::LightGray);
     painter.draw_line({ 0, 0 }, { exposed_width - 1, 0 }, Color::White);
-    painter.draw_line({ 0, header_height() - 1 }, { exposed_width - 1, header_height() - 1 }, Color::DarkGray);
+    painter.draw_line({ 0, header_height() - 1 }, { exposed_width - 1, header_height() - 1 }, Color::MidGray);
     int x_offset = 0;
     for (int column_index = 0; column_index < model()->column_count(); ++column_index) {
         if (is_column_hidden(column_index))
@@ -199,7 +199,7 @@ void GTableView::paint_headers(Painter& painter)
         x_offset += column_width + horizontal_padding() * 2;
         // Draw column separator.
         painter.draw_line(cell_rect.top_left().translated(0, 1), cell_rect.bottom_left().translated(0, -1), Color::White);
-        painter.draw_line(cell_rect.top_right(), cell_rect.bottom_right().translated(0, -1), Color::DarkGray);
+        painter.draw_line(cell_rect.top_right(), cell_rect.bottom_right().translated(0, -1), Color::MidGray);
     }
     // Draw the "start" of a new column to make the last separator look right.
     painter.draw_line({ x_offset, 1 }, { x_offset, header_height() - 2 }, Color::White);

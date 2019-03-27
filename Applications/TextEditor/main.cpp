@@ -69,7 +69,7 @@ int main(int argc, char** argv)
         text_editor->cut();
     });
 
-    auto copy_action = GAction::create("Copy", { Mod_Ctrl, Key_C }, GraphicsBitmap::load_from_file("/res/icons/copyfile16.png"), [&] (const GAction&) {
+    auto copy_action = GAction::create("Copy", { Mod_Ctrl, Key_C }, GraphicsBitmap::load_from_file("/res/icons/16x16/edit-copy.png"), [&] (const GAction&) {
         text_editor->copy();
     });
 

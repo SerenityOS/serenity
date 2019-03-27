@@ -40,8 +40,8 @@ int main(int argc, char** argv)
 
     auto* main_toolbar = new GToolBar(widget);
     auto* location_toolbar = new GToolBar(widget);
-    location_toolbar->layout()->set_margins({ 8, 3, 8, 3 });
-    location_toolbar->set_preferred_size({ 0, 21 });
+    location_toolbar->layout()->set_margins({ 6, 3, 6, 3 });
+    location_toolbar->set_preferred_size({ 0, 23 });
 
     auto* location_label = new GLabel("Location: ", location_toolbar);
     location_label->size_to_fit();
@@ -60,7 +60,7 @@ int main(int argc, char** argv)
         directory_view->open(editor.text());
     };
 
-    auto open_parent_directory_action = GAction::create("Open parent directory", { Mod_Alt, Key_Up }, GraphicsBitmap::load_from_file("/res/icons/parentdirectory16.png"), [directory_view] (const GAction&) {
+    auto open_parent_directory_action = GAction::create("Open parent directory", { Mod_Alt, Key_Up }, GraphicsBitmap::load_from_file("/res/icons/16x16/open-parent-directory.png"), [directory_view] (const GAction&) {
         directory_view->open_parent_directory();
     });
 
@@ -89,7 +89,7 @@ int main(int argc, char** argv)
         directory_view->set_view_mode(DirectoryView::ViewMode::Icon);
     });
 
-    auto copy_action = GAction::create("Copy", GraphicsBitmap::load_from_file("/res/icons/copyfile16.png"), [] (const GAction&) {
+    auto copy_action = GAction::create("Copy", GraphicsBitmap::load_from_file("/res/icons/16x16/edit-copy.png"), [] (const GAction&) {
         dbgprintf("'Copy' action activated!\n");
     });
 

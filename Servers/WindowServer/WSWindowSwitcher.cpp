@@ -77,7 +77,7 @@ void WSWindowSwitcher::draw()
             rect_text_color = Color::LightGray;
         } else {
             text_color = Color::Black;
-            rect_text_color = Color::DarkGray;
+            rect_text_color = Color::MidGray;
         }
         painter.blit(item_rect.location().translated(0, (item_rect.height() - window.icon().height()) / 2), window.icon(), window.icon().rect());
         painter.draw_text(item_rect.translated(window.icon().width() + 4, 0), window.title(), WSWindowManager::the().window_title_font(), TextAlignment::CenterLeft, text_color);
