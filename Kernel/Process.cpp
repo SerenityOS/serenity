@@ -612,8 +612,10 @@ Process::Process(String&& name, uid_t uid, gid_t gid, pid_t ppid, RingLevel ring
 Process::~Process()
 {
     dbgprintf("~Process{%p} name=%s pid=%d, m_fds=%d\n", this, m_name.characters(), pid(), m_fds.size());
-    InterruptDisabler disabler;
-    system.nprocess--;
+    {
+        InterruptDisabler disabler;
+        system.nprocess--;
+    }
 
     delete m_main_thread;
     m_main_thread = nullptr;
