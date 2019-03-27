@@ -40,17 +40,16 @@ LIBC_OBJS = \
        poll.o \
        locale.o \
        arpa/inet.o \
-       netdb.o \
-       crt0.o
+       netdb.o
 
-ASM_OBJS = setjmp.no
+ASM_OBJS = setjmp.no crti.ao crtn.ao
 
 CPP_OBJS = $(AK_OBJS) $(WIDGETS_OBJS) $(LIBC_OBJS)
 
 LIBRARY = libc.a
 STANDARD_FLAGS = -std=c++17
 WARNING_FLAGS = -Wextra -Wall -Wundef -Wcast-qual -Wwrite-strings -Wimplicit-fallthrough
-FLAVOR_FLAGS = -fno-exceptions -fno-rtti
+FLAVOR_FLAGS = -fno-exceptions -fno-rtti -fno-sized-deallocation
 OPTIMIZATION_FLAGS = -Os
 INCLUDE_FLAGS = -I.. -I.
 
@@ -60,8 +59,14 @@ CXXFLAGS = -MMD -MP $(WARNING_FLAGS) $(OPTIMIZATION_FLAGS) $(FLAVOR_FLAGS) $(STA
 CXX = i686-pc-serenity-g++
 LD = i686-pc-serenity-ld
 AR = i686-pc-serenity-ar
+AS = i686-pc-serenity-as
 
-all: $(LIBRARY)
+all: $(LIBRARY) startfiles
+
+startfiles:
+	@echo "CXX $<"; $(CXX) $(CXXFLAGS) -o crt0.o -c crt0.cpp
+	cp crti.ao crti.o
+	cp crtn.ao crtn.o
 
 $(LIBRARY): $(CPP_OBJS) $(ASM_OBJS)
 	@echo "LIB $@"; $(AR) rcs $@ $(CPP_OBJS) $(ASM_OBJS)
@@ -71,6 +76,9 @@ $(LIBRARY): $(CPP_OBJS) $(ASM_OBJS)
 
 %.no: %.asm
 	@echo "NASM $@"; nasm -f elf -o $@ $<
+
+%.ao: %.S
+	@echo "AS $@"; $(AS) -o $@ $<
 
 -include $(OBJS:%.o=%.d)
 

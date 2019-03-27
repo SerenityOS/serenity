@@ -14,8 +14,7 @@ DEFINES = -DSERENITY -DSANITIZE_PTRS -DUSERLAND
 
 CXXFLAGS = -MMD -MP $(WARNING_FLAGS) $(OPTIMIZATION_FLAGS) $(FLAVOR_FLAGS) $(STANDARD_FLAGS) $(INCLUDE_FLAGS) $(DEFINES)
 CXX = i686-pc-serenity-g++
-LD = i686-pc-serenity-ld
-AR = i686-pc-serenity-ar
+LD = i686-pc-serenity-g++
 LDFLAGS = -L../../LibC -L../../LibGUI
 
 all: $(APP)
