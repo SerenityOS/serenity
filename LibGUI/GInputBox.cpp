@@ -42,7 +42,7 @@ void GInputBox::build()
 
     auto* button_container_outer = new GWidget(widget);
     button_container_outer->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-    button_container_outer->set_preferred_size({ 0, 16 });
+    button_container_outer->set_preferred_size({ 0, 20 });
     button_container_outer->set_layout(make<GBoxLayout>(Orientation::Vertical));
 
     auto* button_container_inner = new GWidget(button_container_outer);
@@ -51,7 +51,7 @@ void GInputBox::build()
 
     m_cancel_button = new GButton(button_container_inner);
     m_cancel_button->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-    m_cancel_button->set_preferred_size({ 0, 16 });
+    m_cancel_button->set_preferred_size({ 0, 20 });
     m_cancel_button->set_caption("Cancel");
     m_cancel_button->on_click = [this] (auto&) {
         dbgprintf("GInputBox: Cancel button clicked\n");
@@ -60,7 +60,7 @@ void GInputBox::build()
 
     m_ok_button = new GButton(button_container_inner);
     m_ok_button->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-    m_ok_button->set_preferred_size({ 0, 16 });
+    m_ok_button->set_preferred_size({ 0, 20 });
     m_ok_button->set_caption("OK");
     m_ok_button->on_click = [this] (auto&) {
         dbgprintf("GInputBox: OK button clicked\n");
