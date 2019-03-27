@@ -1,6 +1,7 @@
 #include <LibC/SharedBuffer.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <AK/kmalloc.h>
 
 RetainPtr<SharedBuffer> SharedBuffer::create(pid_t peer, int size)
 {

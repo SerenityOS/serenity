@@ -10,3 +10,5 @@ cp arpa/*.h ../Root/usr/include/arpa/
 cp netinet/*.h ../Root/usr/include/netinet/
 cp libc.a ../Root/usr/lib/
 cp crt0.o ../Root/usr/lib/
+cp crti.ao ../Root/usr/lib/crti.o
+cp crtn.ao ../Root/usr/lib/crtn.o
