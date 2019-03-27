@@ -9,8 +9,10 @@
 #include <stdlib.h>
 #include <sys/ioctl.h>
 #include <sys/types.h>
+#include <fcntl.h>
 #include <Kernel/Syscall.h>
 #include <AK/Vector.h>
+#include <AK/AKString.h>
 
 extern "C" {
 
@@ -28,7 +30,7 @@ pid_t fork()
 
 int execv(const char* path, char* const argv[])
 {
-    return execve(path, argv, nullptr);
+    return execve(path, argv, environ);
 }
 
 int execve(const char* filename, char* const argv[], char* const envp[])
@@ -39,8 +41,25 @@ int execve(const char* filename, char* const argv[], char* const envp[])
 
 int execvp(const char* filename, char* const argv[])
 {
-    // FIXME: This should do some sort of shell-like path resolution!
-    return execve(filename, argv, nullptr);
+    int rc = execve(filename, argv, nullptr);
+    if (rc < 0 && errno != ENOENT) {
+        printf("execvp failed on first with %s\n", strerror(errno));
+        return rc;
+    }
+    String path = getenv("PATH");
+    if (path.is_empty())
+        path = "/bin:/usr/bin";
+    auto parts = path.split(':');
+    for (auto& part : parts) {
+        auto candidate = String::format("%s/%s", part.characters(), filename);
+        rc = execve(candidate.characters(), argv, environ);
+        if (rc < 0 && errno != ENOENT) {
+            printf("execvp failed on attempt (%s) with %s\n", candidate.characters(), strerror(errno));
+            return rc;
+        }
+    }
+    errno = ENOENT;
+    return -1;
 }
 
 int execl(const char* filename, const char* arg0, ...)
@@ -58,7 +77,7 @@ int execl(const char* filename, const char* arg0, ...)
     }
     va_end(ap);
     args.append(nullptr);
-    return execve(filename, (char* const *)args.data(), nullptr);
+    return execve(filename, (char* const *)args.data(), environ);
 }
 
 uid_t getuid()
@@ -123,6 +142,11 @@ pid_t getpgrp()
 {
     int rc = syscall(SC_getpgrp);
     __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
+int creat(const char* path, mode_t mode)
+{
+    return open(path, O_CREAT, mode);
 }
 
 int open(const char* path, int options, ...)
