@@ -1286,20 +1286,23 @@ mode_t Process::sys$umask(mode_t mask)
 
 int Process::reap(Process& process)
 {
-    InterruptDisabler disabler;
-    int exit_status = (process.m_termination_status << 8) | process.m_termination_signal;
+    int exit_status;
+    {
+        InterruptDisabler disabler;
+        exit_status = (process.m_termination_status << 8) | process.m_termination_signal;
 
-    if (process.ppid()) {
-        auto* parent = Process::from_pid(process.ppid());
-        if (parent) {
-            parent->m_ticks_in_user_for_dead_children += process.m_ticks_in_user + process.m_ticks_in_user_for_dead_children;
-            parent->m_ticks_in_kernel_for_dead_children += process.m_ticks_in_kernel + process.m_ticks_in_kernel_for_dead_children;
+        if (process.ppid()) {
+            auto* parent = Process::from_pid(process.ppid());
+            if (parent) {
+                parent->m_ticks_in_user_for_dead_children += process.m_ticks_in_user + process.m_ticks_in_user_for_dead_children;
+                parent->m_ticks_in_kernel_for_dead_children += process.m_ticks_in_kernel + process.m_ticks_in_kernel_for_dead_children;
+            }
         }
-    }
 
-    dbgprintf("reap: %s(%u) {%s}\n", process.name().characters(), process.pid(), to_string(process.state()));
-    ASSERT(process.is_dead());
-    g_processes->remove(&process);
+        dbgprintf("reap: %s(%u) {%s}\n", process.name().characters(), process.pid(), to_string(process.state()));
+        ASSERT(process.is_dead());
+        g_processes->remove(&process);
+    }
     delete &process;
     return exit_status;
 }
