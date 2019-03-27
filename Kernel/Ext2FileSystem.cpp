@@ -1391,6 +1391,16 @@ KResult Ext2FSInode::chown(uid_t uid, gid_t gid)
     return KSuccess;
 }
 
+KResult Ext2FSInode::truncate(int size)
+{
+    LOCKER(m_lock);
+    if (m_raw_inode.i_size == size)
+        return KSuccess;
+    m_raw_inode.i_size = size;
+    set_metadata_dirty(true);
+    return KSuccess;
+}
+
 unsigned Ext2FS::total_block_count() const
 {
     LOCKER(m_lock);

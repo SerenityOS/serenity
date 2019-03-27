@@ -42,6 +42,7 @@ private:
     virtual size_t directory_entry_count() const override;
     virtual KResult chmod(mode_t) override;
     virtual KResult chown(uid_t, gid_t) override;
+    virtual KResult truncate(int) override;
 
     void populate_lookup_cache() const;
 

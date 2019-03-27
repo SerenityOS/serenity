@@ -146,7 +146,7 @@ pid_t getpgrp()
 
 int creat(const char* path, mode_t mode)
 {
-    return open(path, O_CREAT, mode);
+    return open(path, O_CREAT | O_WRONLY | O_TRUNC, mode);
 }
 
 int open(const char* path, int options, ...)

@@ -170,7 +170,10 @@ KResultOr<Retained<FileDescriptor>> VFS::open(const String& path, int options, m
     if (inode_or_error.is_error())
         return inode_or_error.error();
 
-    auto metadata = inode_or_error.value()->metadata();
+    auto inode = inode_or_error.value();
+    auto metadata = inode->metadata();
+
+    bool should_truncate_file = false;
 
     // NOTE: Read permission is a bit weird, since O_RDONLY == 0,
     //       so we check if (NOT write_only OR read_and_write)
@@ -183,6 +186,7 @@ KResultOr<Retained<FileDescriptor>> VFS::open(const String& path, int options, m
             return KResult(-EACCES);
         if (metadata.is_directory())
             return KResult(-EISDIR);
+        should_truncate_file = options & O_TRUNC;
     }
 
     if (metadata.is_device()) {
@@ -193,10 +197,12 @@ KResultOr<Retained<FileDescriptor>> VFS::open(const String& path, int options, m
         auto descriptor_or_error = (*it).value->open(options);
         if (descriptor_or_error.is_error())
             return descriptor_or_error.error();
-        descriptor_or_error.value()->set_original_inode(Badge<VFS>(), *inode_or_error.value());
+        descriptor_or_error.value()->set_original_inode(Badge<VFS>(), *inode);
         return descriptor_or_error;
     }
-    return FileDescriptor::create(*inode_or_error.value());
+    if (should_truncate_file)
+        inode->truncate(0);
+    return FileDescriptor::create(*inode);
 }
 
 KResultOr<Retained<FileDescriptor>> VFS::create(const String& path, int options, mode_t mode, Inode& base)

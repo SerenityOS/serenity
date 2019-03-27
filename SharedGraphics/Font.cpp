@@ -143,7 +143,7 @@ RetainPtr<Font> Font::load_from_file(const String& path)
 
 bool Font::write_to_file(const String& path)
 {
-    int fd = open(path.characters(), O_WRONLY | O_CREAT, 0644);
+    int fd = creat(path.characters(), 0644);
     if (fd < 0) {
         perror("open");
         return false;
