@@ -140,6 +140,8 @@ VFS* vfs;
 {
     cli();
 
+    sse_init();
+
     kmalloc_init();
     init_ksyms();
 

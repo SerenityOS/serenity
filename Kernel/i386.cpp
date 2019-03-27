@@ -493,3 +493,16 @@ void __assertion_failed(const char* msg, const char* file, unsigned line, const 
     asm volatile("hlt");
     for (;;);
 }
+
+void sse_init()
+{
+    asm volatile(
+        "mov %cr0, %eax\n"
+        "andl $0xfffffffb, %eax\n"
+        "orl $0x2, %eax\n"
+        "mov %eax, %cr0\n"
+        "mov %cr4, %eax\n"
+        "orl $0x600, %eax\n"
+        "mov %eax, %cr4\n"
+    );
+}
