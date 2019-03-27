@@ -10,6 +10,7 @@ enum {
     LC_CTYPE,
     LC_COLLATE,
     LC_TIME,
+    LC_MONETARY,
 };
 
 struct lconv {

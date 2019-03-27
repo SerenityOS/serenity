@@ -47,6 +47,8 @@ __BEGIN_DECLS
 #define S_IWOTH 0002
 #define S_IXOTH 0001
 
+#define S_IRWXU (S_IRUSR | S_IWUSR | S_IXUSR)
+
 #define S_IRWXG (S_IRWXU >> 3)
 #define S_IRWXO (S_IRWXG >> 3)
 
