@@ -3,6 +3,8 @@
 #include "DevPtsFS.h"
 #include <Kernel/Process.h>
 
+//#define SLAVEPTY_DEBUG
+
 SlavePTY::SlavePTY(MasterPTY& master, unsigned index)
     : TTY(11, index)
     , m_master(master)
@@ -16,7 +18,9 @@ SlavePTY::SlavePTY(MasterPTY& master, unsigned index)
 
 SlavePTY::~SlavePTY()
 {
+#ifdef SLAVEPTY_DEBUG
     dbgprintf("~SlavePTY(%u)\n", m_index);
+#endif
     DevPtsFS::the().unregister_slave_pty(*this);
 }
 

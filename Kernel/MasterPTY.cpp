@@ -6,6 +6,8 @@
 #include <LibC/signal_numbers.h>
 #include <LibC/sys/ioctl_numbers.h>
 
+//#define MASTERPTY_DEBUG
+
 MasterPTY::MasterPTY(unsigned index)
     : CharacterDevice(10, index)
     , m_slave(adopt(*new SlavePTY(*this, index)))
@@ -17,7 +19,9 @@ MasterPTY::MasterPTY(unsigned index)
 
 MasterPTY::~MasterPTY()
 {
+#ifdef MASTERPTY_DEBUG
     dbgprintf("~MasterPTY(%u)\n", m_index);
+#endif
     PTYMultiplexer::the().notify_master_destroyed(Badge<MasterPTY>(), m_index);
 }
 
@@ -55,7 +59,9 @@ bool MasterPTY::can_write(Process&) const
 
 void MasterPTY::notify_slave_closed(Badge<SlavePTY>)
 {
+#ifdef MASTERPTY_DEBUG
     dbgprintf("MasterPTY(%u): slave closed, my retains: %u, slave retains: %u\n", m_index, retain_count(), m_slave->retain_count());
+#endif
     // +1 retain for my MasterPTY::m_slave
     // +1 retain for FileDescriptor::m_device
     if (m_slave->retain_count() == 2)

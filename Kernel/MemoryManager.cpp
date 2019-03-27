@@ -630,20 +630,24 @@ Retained<Region> Region::clone()
 {
     ASSERT(current);
     if (m_shared || (m_readable && !m_writable)) {
+#ifdef MM_DEBUG
         dbgprintf("%s<%u> Region::clone(): sharing %s (L%x)\n",
                   current->process().name().characters(),
                   current->pid(),
                   m_name.characters(),
                   laddr().get());
+#endif
         // Create a new region backed by the same VMObject.
         return adopt(*new Region(laddr(), size(), m_vmo.copy_ref(), m_offset_in_vmo, String(m_name), m_readable, m_writable));
     }
 
+#ifdef MM_DEBUG
     dbgprintf("%s<%u> Region::clone(): cowing %s (L%x)\n",
               current->process().name().characters(),
               current->pid(),
               m_name.characters(),
               laddr().get());
+#endif
     // Set up a COW region. The parent (this) region becomes COW as well!
     for (size_t i = 0; i < page_count(); ++i)
         m_cow_map.set(i, true);

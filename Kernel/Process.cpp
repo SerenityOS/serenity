@@ -27,8 +27,8 @@
 #include <Kernel/ARP.h>
 
 //#define DEBUG_IO
-#define TASK_DEBUG
-#define FORK_DEBUG
+//#define TASK_DEBUG
+//#define FORK_DEBUG
 #define SIGNAL_DEBUG
 #define MAX_PROCESS_GIDS 32
 //#define SHARED_BUFFER_DEBUG
