@@ -7,6 +7,9 @@
 GItemView::GItemView(GWidget* parent)
     : GAbstractView(parent)
 {
+    set_frame_shape(GFrame::Shape::Container);
+    set_frame_shadow(GFrame::Shadow::Sunken);
+    set_frame_thickness(1);
     horizontal_scrollbar().set_visible(false);
 }
 
@@ -93,10 +96,12 @@ void GItemView::doubleclick_event(GMouseEvent& event)
 
 void GItemView::paint_event(GPaintEvent& event)
 {
+    GFrame::paint_event(event);
+
     Painter painter(*this);
+    painter.set_clip_rect(widget_inner_rect());
     painter.set_clip_rect(event.rect());    
     painter.fill_rect(event.rect(), Color::White);
-    painter.save();
     painter.translate(-horizontal_scrollbar().value(), -vertical_scrollbar().value());
 
     auto column_metadata = model()->column_metadata(m_model_column);
@@ -138,11 +143,6 @@ void GItemView::paint_event(GPaintEvent& event)
         painter.fill_rect(text_rect, background_color);
         painter.draw_text(text_rect, item_text.to_string(), font, TextAlignment::Center, text_color);
     };
-
-    painter.restore();
-
-    if (is_focused())
-        painter.draw_rect({ { }, available_size() }, Color::from_rgb(0x84351a));
 }
 
 int GItemView::item_count() const

@@ -7,6 +7,9 @@
 GTableView::GTableView(GWidget* parent)
     : GAbstractView(parent)
 {
+    set_frame_shape(GFrame::Shape::Container);
+    set_frame_shadow(GFrame::Shadow::Sunken);
+    set_frame_thickness(1);
 }
 
 GTableView::~GTableView()
@@ -95,7 +98,10 @@ void GTableView::mousedown_event(GMouseEvent& event)
 
 void GTableView::paint_event(GPaintEvent& event)
 {
+    GFrame::paint_event(event);
+
     Painter painter(*this);
+    painter.set_clip_rect(frame_inner_rect());
     painter.set_clip_rect(event.rect());
     painter.save();
     painter.translate(-horizontal_scrollbar().value(), -vertical_scrollbar().value());

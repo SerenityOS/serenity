@@ -24,15 +24,22 @@ void GFrame::paint_event(GPaintEvent& event)
     Color top_left_color;
     Color bottom_right_color;
 
+    Color dark_shade = Color::from_rgb(0x808080);
+    Color light_shade = Color::from_rgb(0xffffff);
+
+    if (m_shape == Shape::Container) {
+        dark_shade = Color::from_rgb(0x404040);
+    }
+
     if (m_shadow == Shadow::Raised) {
-        top_left_color = Color::White;
-        bottom_right_color = Color::MidGray;
+        top_left_color = light_shade;
+        bottom_right_color = dark_shade;
     } else if (m_shadow == Shadow::Sunken) {
-        top_left_color = Color::MidGray;
-        bottom_right_color = Color::White;
+        top_left_color = dark_shade;
+        bottom_right_color = light_shade;
     } else if (m_shadow == Shadow::Plain) {
-        top_left_color = Color::MidGray;
-        bottom_right_color = Color::MidGray;
+        top_left_color = dark_shade;
+        bottom_right_color = dark_shade;
     }
 
     painter.draw_line(rect.top_left(), rect.top_right(), top_left_color);
