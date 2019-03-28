@@ -1,5 +1,5 @@
 #include "GLabel.h"
-#include <SharedGraphics/Painter.h>
+#include <LibGUI/GPainter.h>
 #include <SharedGraphics/GraphicsBitmap.h>
 
 GLabel::GLabel(GWidget* parent)
@@ -34,7 +34,7 @@ void GLabel::paint_event(GPaintEvent& event)
 {
     GFrame::paint_event(event);
 
-    Painter painter(*this);
+    GPainter painter(*this);
     painter.set_clip_rect(event.rect());
 
     if (m_icon) {

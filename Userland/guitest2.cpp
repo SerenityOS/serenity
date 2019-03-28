@@ -8,7 +8,7 @@
 #include <time.h>
 #include <Kernel/Syscall.h>
 #include <SharedGraphics/GraphicsBitmap.h>
-#include <SharedGraphics/Painter.h>
+#include <LibGUI/GPainter.h>
 #include <LibGUI/GWindow.h>
 #include <LibGUI/GWidget.h>
 #include <LibGUI/GLabel.h>

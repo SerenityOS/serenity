@@ -8,6 +8,7 @@ SHAREDGRAPHICS_OBJS = \
     ../SharedGraphics/PNGLoader.o
 
 LIBGUI_OBJS = \
+    GPainter.o \
     GIODevice.o \
     GFile.o \
     GButton.o \

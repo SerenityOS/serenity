@@ -3,7 +3,7 @@
 #include "GEventLoop.h"
 #include "GWidget.h"
 #include <SharedGraphics/GraphicsBitmap.h>
-#include <SharedGraphics/Painter.h>
+#include <LibGUI/GPainter.h>
 #include <LibC/stdio.h>
 #include <LibC/stdlib.h>
 #include <LibC/unistd.h>

@@ -1,5 +1,5 @@
 #include <LibGUI/GStyle.h>
-#include <SharedGraphics/Painter.h>
+#include <LibGUI/GPainter.h>
 
 static GStyle* s_the;
 

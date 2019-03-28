@@ -1,5 +1,5 @@
 #include "GButton.h"
-#include <SharedGraphics/Painter.h>
+#include <LibGUI/GPainter.h>
 #include <LibGUI/GStyle.h>
 
 //#define GBUTTON_DEBUG
@@ -23,7 +23,7 @@ void GButton::set_caption(const String& caption)
 
 void GButton::paint_event(GPaintEvent& event)
 {
-    Painter painter(*this);
+    GPainter painter(*this);
     painter.set_clip_rect(event.rect());
 
     GStyle::the().paint_button(painter, rect(), m_button_style, m_being_pressed, m_hovered);

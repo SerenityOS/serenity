@@ -8,7 +8,7 @@
 #include <AK/AKString.h>
 #include <AK/StringBuilder.h>
 #include <SharedGraphics/Font.h>
-#include <SharedGraphics/Painter.h>
+#include <LibGUI/GPainter.h>
 #include <AK/StdLibExtras.h>
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GWindow.h>
@@ -761,7 +761,7 @@ void Terminal::keydown_event(GKeyEvent& event)
 
 void Terminal::paint_event(GPaintEvent&)
 {   
-    Painter painter(*this);
+    GPainter painter(*this);
 
     if (m_needs_background_fill) {
         m_needs_background_fill = false;

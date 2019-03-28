@@ -1,7 +1,7 @@
 #include <LibGUI/GTableView.h>
 #include <LibGUI/GModel.h>
 #include <LibGUI/GScrollBar.h>
-#include <SharedGraphics/Painter.h>
+#include <LibGUI/GPainter.h>
 #include <Kernel/KeyCode.h>
 
 GTableView::GTableView(GWidget* parent)
@@ -100,7 +100,7 @@ void GTableView::paint_event(GPaintEvent& event)
 {
     GFrame::paint_event(event);
 
-    Painter painter(*this);
+    GPainter painter(*this);
     painter.set_clip_rect(frame_inner_rect());
     painter.set_clip_rect(event.rect());
     painter.save();

@@ -1,5 +1,5 @@
 #include "MemoryStatsWidget.h"
-#include <SharedGraphics/Painter.h>
+#include <LibGUI/GPainter.h>
 #include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GLabel.h>
 #include <LibGUI/GStyle.h>
@@ -104,7 +104,7 @@ void MemoryStatsWidget::timer_event(GTimerEvent&)
 
 void MemoryStatsWidget::paint_event(GPaintEvent& event)
 {
-    Painter painter(*this);
+    GPainter painter(*this);
     painter.set_clip_rect(event.rect());
     GStyle::the().paint_surface(painter, rect());
 }

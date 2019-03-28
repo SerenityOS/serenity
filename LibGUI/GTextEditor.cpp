@@ -2,7 +2,7 @@
 #include <LibGUI/GScrollBar.h>
 #include <LibGUI/GFontDatabase.h>
 #include <LibGUI/GClipboard.h>
-#include <SharedGraphics/Painter.h>
+#include <LibGUI/GPainter.h>
 #include <Kernel/KeyCode.h>
 #include <AK/StringBuilder.h>
 #include <unistd.h>
@@ -152,7 +152,7 @@ void GTextEditor::paint_event(GPaintEvent& event)
 {
     GFrame::paint_event(event);
 
-    Painter painter(*this);
+    GPainter painter(*this);
     painter.set_clip_rect(widget_inner_rect());
     painter.set_clip_rect(event.rect());
     painter.fill_rect(event.rect(), Color::White);
