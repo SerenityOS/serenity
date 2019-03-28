@@ -52,6 +52,7 @@ LIBGUI_OBJS = \
     GItemView.o \
     GIcon.o \
     GElapsedTimer.o \
+    GFrame.o \
     GWindow.o
 
 OBJS = $(SHAREDGRAPHICS_OBJS) $(LIBGUI_OBJS)
