@@ -17,7 +17,6 @@ StylePainter::StylePainter()
 static void paint_button_new(Painter& painter, const Rect& rect, bool pressed)
 {
     Color button_color = Color::from_rgb(0xc0c0c0);
-    Color highlight_color1 = Color::from_rgb(0xffffff);
     Color highlight_color2 = Color::from_rgb(0xdfdfdf);
     Color shadow_color1 = Color::from_rgb(0x808080);
     Color shadow_color2 = Color::from_rgb(0x404040);
@@ -42,9 +41,12 @@ static void paint_button_new(Painter& painter, const Rect& rect, bool pressed)
         painter.draw_line({ 0, 0 }, { rect.width() - 2, 0 }, highlight_color2);
         painter.draw_line({ 0, 1 }, { 0, rect.height() - 2 }, highlight_color2);
 
-        // Inner highlight
+#if 0
+        // Inner highlight (this looks "too thick" to me right now..)
+        Color highlight_color1 = Color::from_rgb(0xffffff);
         painter.draw_line({ 1, 1 }, { rect.width() - 3, 1 }, highlight_color1);
         painter.draw_line({ 1, 2 }, { 1, rect.height() - 3 }, highlight_color1);
+#endif
 
         // Outer shadow
         painter.draw_line({ 0, rect.height() - 1 }, { rect.width() - 1, rect.height() - 1 }, shadow_color2);
