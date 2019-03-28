@@ -1,10 +1,10 @@
 #pragma once
 
-#include <LibGUI/GWidget.h>
+#include <LibGUI/GFrame.h>
 
 class GScrollBar;
 
-class GScrollableWidget : public GWidget {
+class GScrollableWidget : public GFrame {
 public:
     virtual ~GScrollableWidget() override;
 
@@ -13,6 +13,8 @@ public:
     int content_height() const { return m_content_size.height(); }
 
     Rect visible_content_rect() const;
+
+    Rect widget_inner_rect() const;
 
     void scroll_into_view(const Rect&, Orientation);
     void scroll_into_view(const Rect&, bool scroll_horizontally, bool scroll_vertically);

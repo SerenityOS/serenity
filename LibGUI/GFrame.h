@@ -19,7 +19,8 @@ public:
     Shape frame_shape() const { return m_shape; }
     void set_frame_shape(Shape shape) { m_shape = shape; }
 
-    Rect frame_inner_rect() const { return rect().shrunken(m_thickness * 2, m_thickness * 2); }
+    Rect frame_inner_rect_for_size(const Size& size) const { return { m_thickness, m_thickness, size.width() - m_thickness * 2, size.height() - m_thickness * 2 }; }
+    Rect frame_inner_rect() const { return frame_inner_rect_for_size(size()); }
 
     virtual const char* class_name() const override { return "GFrame"; }
 
