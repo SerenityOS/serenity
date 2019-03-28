@@ -1,5 +1,5 @@
 #include <LibGUI/GScrollBar.h>
-#include <LibGUI/GStyle.h>
+#include <SharedGraphics/StylePainter.h>
 #include <SharedGraphics/CharacterBitmap.h>
 #include <SharedGraphics/GraphicsBitmap.h>
 #include <LibGUI/GPainter.h>
@@ -190,14 +190,14 @@ void GScrollBar::paint_event(GPaintEvent& event)
 
     painter.fill_rect(rect(), Color::from_rgb(0xd6d2ce));
 
-    GStyle::the().paint_button(painter, up_button_rect(), GButtonStyle::Normal, false);
+    StylePainter::the().paint_button(painter, up_button_rect(), ButtonStyle::Normal, false);
     painter.draw_bitmap(up_button_rect().location().translated(3, 3), orientation() == Orientation::Vertical ? *s_up_arrow_bitmap : *s_left_arrow_bitmap, has_scrubber() ? Color::Black : Color::MidGray);
 
-    GStyle::the().paint_button(painter, down_button_rect(), GButtonStyle::Normal, false);
+    StylePainter::the().paint_button(painter, down_button_rect(), ButtonStyle::Normal, false);
     painter.draw_bitmap(down_button_rect().location().translated(3, 3), orientation() == Orientation::Vertical ? *s_down_arrow_bitmap : *s_right_arrow_bitmap, has_scrubber() ? Color::Black : Color::MidGray);
 
     if (has_scrubber())
-        GStyle::the().paint_button(painter, scrubber_rect(), GButtonStyle::Normal, false);
+        StylePainter::the().paint_button(painter, scrubber_rect(), ButtonStyle::Normal, false);
 }
 
 void GScrollBar::mousedown_event(GMouseEvent& event)

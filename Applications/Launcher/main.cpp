@@ -39,7 +39,7 @@ public:
         : GButton(parent)
         , m_executable_path(exec_path)
     {
-        set_button_style(GButtonStyle::CoolBar);
+        set_button_style(ButtonStyle::CoolBar);
         set_icon(GraphicsBitmap::load_from_file(icon_path));
         set_preferred_size({ 50, 50 });
         set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);

@@ -1,16 +1,16 @@
-#include <LibGUI/GStyle.h>
+#include <SharedGraphics/StylePainter.h>
 #include <LibGUI/GPainter.h>
 
-static GStyle* s_the;
+static StylePainter* s_the;
 
-GStyle& GStyle::the()
+StylePainter& StylePainter::the()
 {
     if (!s_the)
-        s_the = new GStyle;
+        s_the = new StylePainter;
     return *s_the;
 }
 
-GStyle::GStyle()
+StylePainter::StylePainter()
 {
 }
 
@@ -56,16 +56,16 @@ static void paint_button_new(Painter& painter, const Rect& rect, bool pressed)
     }
 }
 
-void GStyle::paint_button(Painter& painter, const Rect& rect, GButtonStyle button_style, bool pressed, bool hovered)
+void StylePainter::paint_button(Painter& painter, const Rect& rect, ButtonStyle button_style, bool pressed, bool hovered)
 {
-    if (button_style == GButtonStyle::Normal)
+    if (button_style == ButtonStyle::Normal)
         return paint_button_new(painter, rect, pressed);
 
     Color button_color = Color::LightGray;
     Color highlight_color = Color::White;
     Color shadow_color = Color(96, 96, 96);
 
-    if (button_style == GButtonStyle::OldNormal)
+    if (button_style == ButtonStyle::OldNormal)
         painter.draw_rect(rect, Color::Black);
 
     PainterStateSaver saver(painter);
@@ -82,7 +82,7 @@ void GStyle::paint_button(Painter& painter, const Rect& rect, GButtonStyle butto
         // Bottom highlight
         painter.draw_line({ rect.width() - 2, 1 }, { rect.width() - 2, rect.height() - 3 }, highlight_color);
         painter.draw_line({ 1, rect.height() - 2 }, { rect.width() - 2, rect.height() - 2 }, highlight_color);
-    } else if (button_style == GButtonStyle::OldNormal || (button_style == GButtonStyle::CoolBar && hovered)) {
+    } else if (button_style == ButtonStyle::OldNormal || (button_style == ButtonStyle::CoolBar && hovered)) {
         // Base
         painter.fill_rect({ 1, 1, rect.width() - 2, rect.height() - 2 }, button_color);
 
@@ -96,7 +96,7 @@ void GStyle::paint_button(Painter& painter, const Rect& rect, GButtonStyle butto
     }
 }
 
-void GStyle::paint_surface(Painter& painter, const Rect& rect)
+void StylePainter::paint_surface(Painter& painter, const Rect& rect)
 {
     painter.fill_rect({ rect.x(), rect.y() + 1, rect.width(), rect.height() - 2 }, Color::LightGray);
     painter.draw_line(rect.top_left(), rect.top_right(), Color::White);

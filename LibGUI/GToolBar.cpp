@@ -34,7 +34,7 @@ void GToolBar::add_action(Retained<GAction>&& action)
         raw_action_ptr->activate();
     };
 
-    button->set_button_style(GButtonStyle::CoolBar);
+    button->set_button_style(ButtonStyle::CoolBar);
     button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
     ASSERT(button->size_policy(Orientation::Horizontal) == SizePolicy::Fixed);
     ASSERT(button->size_policy(Orientation::Vertical) == SizePolicy::Fixed);
@@ -79,5 +79,5 @@ void GToolBar::paint_event(GPaintEvent& event)
 {
     GPainter painter(*this);
     painter.set_clip_rect(event.rect());
-    GStyle::the().paint_surface(painter, rect());
+    StylePainter::the().paint_surface(painter, rect());
 }

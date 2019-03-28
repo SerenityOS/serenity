@@ -1,7 +1,7 @@
 #pragma once
 
 #include <LibGUI/GWidget.h>
-#include <LibGUI/GStyle.h>
+#include <SharedGraphics/StylePainter.h>
 #include <AK/AKString.h>
 #include <AK/Function.h>
 #include <SharedGraphics/GraphicsBitmap.h>
@@ -20,8 +20,8 @@ public:
 
     Function<void(GButton&)> on_click;
 
-    void set_button_style(GButtonStyle style) { m_button_style = style; }
-    GButtonStyle button_style() const { return m_button_style; }
+    void set_button_style(ButtonStyle style) { m_button_style = style; }
+    ButtonStyle button_style() const { return m_button_style; }
 
     void click();
 
@@ -37,7 +37,7 @@ private:
 
     String m_caption;
     RetainPtr<GraphicsBitmap> m_icon;
-    GButtonStyle m_button_style { GButtonStyle::Normal };
+    ButtonStyle m_button_style { ButtonStyle::Normal };
     bool m_being_pressed { false };
     bool m_hovered { false };
 };
