@@ -1,4 +1,4 @@
-#include <LibGUI/GTextEditor.h>
+ #include <LibGUI/GTextEditor.h>
 #include <LibGUI/GScrollBar.h>
 #include <LibGUI/GFontDatabase.h>
 #include <LibGUI/GClipboard.h>
@@ -13,6 +13,9 @@ GTextEditor::GTextEditor(Type type, GWidget* parent)
     : GScrollableWidget(parent)
     , m_type(type)
 {
+    set_frame_shape(GFrame::Shape::Panel);
+    set_frame_shadow(GFrame::Shadow::Sunken);
+    set_frame_thickness(1);
     set_scrollbars_enabled(is_multi_line());
     m_ruler_visible = is_multi_line();
     set_font(GFontDatabase::the().get_by_name("Csilla Thin"));
@@ -147,9 +150,10 @@ Rect GTextEditor::ruler_content_rect(int line_index) const
 
 void GTextEditor::paint_event(GPaintEvent& event)
 {
+    GFrame::paint_event(event);
+
     Painter painter(*this);
-    Rect item_area_rect { 0, 0, width() - width_occupied_by_vertical_scrollbar(), height() - height_occupied_by_horizontal_scrollbar() };
-    painter.set_clip_rect(item_area_rect);
+    painter.set_clip_rect(widget_inner_rect());
     painter.set_clip_rect(event.rect());
     painter.fill_rect(event.rect(), Color::White);
 
@@ -159,8 +163,6 @@ void GTextEditor::paint_event(GPaintEvent& event)
         painter.fill_rect(ruler_rect, Color::LightGray);
         painter.draw_line(ruler_rect.top_right(), ruler_rect.bottom_right(), Color::DarkGray);
     }
-
-    painter.save();
 
     painter.translate(-horizontal_scrollbar().value(), -vertical_scrollbar().value());
     if (m_ruler_visible)
@@ -210,13 +212,6 @@ void GTextEditor::paint_event(GPaintEvent& event)
 
     if (is_focused() && m_cursor_state)
         painter.fill_rect(cursor_content_rect(), Color::Red);
-
-    painter.restore();
-
-    if (is_focused())
-        painter.draw_rect(item_area_rect, Color::from_rgb(0x84351a));
-    else if (is_single_line())
-        painter.draw_rect(item_area_rect, Color::MidGray);
 }
 
 void GTextEditor::toggle_selection_if_needed_for_event(const GKeyEvent& event)
