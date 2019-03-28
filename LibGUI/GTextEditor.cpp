@@ -492,6 +492,11 @@ Rect GTextEditor::cursor_content_rect() const
         return { };
     ASSERT(!m_lines.is_empty());
     ASSERT(m_cursor.column() <= (current_line().length() + 1));
+    if (is_single_line()) {
+        Rect cursor_rect = { m_horizontal_content_padding + m_cursor.column() * glyph_width(), 0, 1, line_height() };
+        cursor_rect.center_vertically_within(rect());
+        return cursor_rect;
+    }
     return { m_horizontal_content_padding + m_cursor.column() * glyph_width(), m_cursor.line() * line_height(), 1, line_height() };
 }
 
@@ -518,6 +523,13 @@ void GTextEditor::scroll_cursor_into_view()
 
 Rect GTextEditor::line_content_rect(int line_index) const
 {
+    if (is_single_line()) {
+        Rect line_rect = { m_horizontal_content_padding, 0, content_width(), font().glyph_height() };
+        line_rect.center_vertically_within(rect());
+        // FIXME: This would not be necessary if we knew more about the font and could center it based on baseline and x-height.
+        line_rect.move_by(0, 1);
+        return line_rect;
+    }
     return {
         m_horizontal_content_padding,
         line_index * line_height(),
