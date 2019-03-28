@@ -1,7 +1,7 @@
 #include <LibGUI/GItemView.h>
 #include <LibGUI/GModel.h>
 #include <LibGUI/GScrollBar.h>
-#include <SharedGraphics/Painter.h>
+#include <LibGUI/GPainter.h>
 #include <Kernel/KeyCode.h>
 
 GItemView::GItemView(GWidget* parent)
@@ -98,7 +98,7 @@ void GItemView::paint_event(GPaintEvent& event)
 {
     GFrame::paint_event(event);
 
-    Painter painter(*this);
+    GPainter painter(*this);
     painter.set_clip_rect(widget_inner_rect());
     painter.set_clip_rect(event.rect());    
     painter.fill_rect(event.rect(), Color::White);

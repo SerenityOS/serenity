@@ -1,6 +1,6 @@
 #include "GListBox.h"
 #include <SharedGraphics/Font.h>
-#include <SharedGraphics/Painter.h>
+#include <LibGUI/GPainter.h>
 
 GListBox::GListBox(GWidget* parent)
     : GWidget(parent)
@@ -19,7 +19,7 @@ Rect GListBox::item_rect(int index) const
 
 void GListBox::paint_event(GPaintEvent& event)
 {
-    Painter painter(*this);
+    GPainter painter(*this);
     painter.set_clip_rect(event.rect());
 
     painter.fill_rect({ rect().x() + 1, rect().y() + 1, rect().width() - 2, rect().height() - 2 }, background_color());

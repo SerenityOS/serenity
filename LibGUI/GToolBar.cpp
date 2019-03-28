@@ -2,7 +2,7 @@
 #include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GButton.h>
 #include <LibGUI/GAction.h>
-#include <SharedGraphics/Painter.h>
+#include <LibGUI/GPainter.h>
 
 GToolBar::GToolBar(GWidget* parent)
     : GWidget(parent)
@@ -56,7 +56,7 @@ public:
 
     virtual void paint_event(GPaintEvent& event) override
     {
-        Painter painter(*this);
+        GPainter painter(*this);
         painter.set_clip_rect(event.rect());
         painter.translate(rect().center().x() - 1, 0);
         painter.draw_line({ 0, 0 }, { 0, rect().bottom() }, Color::MidGray);
@@ -77,7 +77,7 @@ void GToolBar::add_separator()
 
 void GToolBar::paint_event(GPaintEvent& event)
 {
-    Painter painter(*this);
+    GPainter painter(*this);
     painter.set_clip_rect(event.rect());
     GStyle::the().paint_surface(painter, rect());
 }

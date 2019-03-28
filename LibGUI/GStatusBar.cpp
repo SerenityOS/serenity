@@ -2,7 +2,7 @@
 #include <LibGUI/GLabel.h>
 #include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GStyle.h>
-#include <SharedGraphics/Painter.h>
+#include <LibGUI/GPainter.h>
 
 GStatusBar::GStatusBar(GWidget* parent)
     : GWidget(parent)
@@ -34,7 +34,7 @@ String GStatusBar::text() const
 
 void GStatusBar::paint_event(GPaintEvent& event)
 {
-    Painter painter(*this);
+    GPainter painter(*this);
     painter.set_clip_rect(event.rect());
     GStyle::the().paint_surface(painter, rect());
 }

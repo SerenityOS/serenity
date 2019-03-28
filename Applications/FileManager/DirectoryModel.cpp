@@ -7,7 +7,7 @@
 #include <AK/FileSystemPath.h>
 #include <AK/StringBuilder.h>
 #include <SharedGraphics/GraphicsBitmap.h>
-#include <SharedGraphics/Painter.h>
+#include <LibGUI/GPainter.h>
 #include <LibGUI/GLock.h>
 
 static GLockable<HashMap<String, RetainPtr<GraphicsBitmap>>>& thumbnail_cache()

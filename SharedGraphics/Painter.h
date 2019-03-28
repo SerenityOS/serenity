@@ -12,16 +12,8 @@ class GlyphBitmap;
 class GraphicsBitmap;
 class Font;
 
-#ifdef USERLAND
-class GWidget;
-class GWindow;
-#endif
-
 class Painter {
 public:
-#ifdef USERLAND
-    explicit Painter(GWidget&);
-#endif
     explicit Painter(GraphicsBitmap&);
     ~Painter();
     void fill_rect(const Rect&, Color);
@@ -64,7 +56,7 @@ public:
     void save() { m_state_stack.append(m_state_stack.last()); }
     void restore() { ASSERT(m_state_stack.size() > 1); m_state_stack.take_last(); }
 
-private:
+protected:
     void set_pixel_with_draw_op(dword& pixel, const Color&);
     void fill_rect_with_draw_op(const Rect&, Color);
     void blit_with_alpha(const Point&, const GraphicsBitmap&, const Rect& src_rect);
@@ -80,7 +72,6 @@ private:
     const State& state() const { return m_state_stack.last(); }
 
     Rect m_clip_origin;
-    GWindow* m_window { nullptr };
     Retained<GraphicsBitmap> m_target;
     Vector<State> m_state_stack;
 };

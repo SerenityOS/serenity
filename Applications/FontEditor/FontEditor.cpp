@@ -1,5 +1,5 @@
 #include "FontEditor.h"
-#include <SharedGraphics/Painter.h>
+#include <LibGUI/GPainter.h>
 #include <LibGUI/GButton.h>
 #include <LibGUI/GLabel.h>
 #include <LibGUI/GTextBox.h>
@@ -158,7 +158,7 @@ Rect GlyphMapWidget::get_outer_rect(byte glyph) const
 
 void GlyphMapWidget::paint_event(GPaintEvent&)
 {
-    Painter painter(*this);
+    GPainter painter(*this);
     painter.set_font(font());
     painter.fill_rect(rect(), Color::White);
     painter.draw_rect(rect(), Color::Black);
@@ -219,7 +219,7 @@ void GlyphEditorWidget::set_glyph(byte glyph)
 
 void GlyphEditorWidget::paint_event(GPaintEvent&)
 {
-    Painter painter(*this);
+    GPainter painter(*this);
     painter.fill_rect(rect(), Color::White);
     painter.draw_rect(rect(), Color::Black);
 

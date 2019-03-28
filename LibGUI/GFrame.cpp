@@ -1,6 +1,6 @@
 #include <LibGUI/GFrame.h>
 #include <LibGUI/GStyle.h>
-#include <SharedGraphics/Painter.h>
+#include <LibGUI/GPainter.h>
 
 GFrame::GFrame(GWidget* parent)
     : GWidget(parent)
@@ -16,7 +16,7 @@ void GFrame::paint_event(GPaintEvent& event)
     if (m_shape == Shape::NoFrame)
         return;
 
-    Painter painter(*this);
+    GPainter painter(*this);
     painter.set_clip_rect(event.rect());
 
     auto rect = this->rect();

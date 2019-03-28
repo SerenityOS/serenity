@@ -2,7 +2,7 @@
 #include <AK/StdLibExtras.h>
 #include <SharedGraphics/CharacterBitmap.h>
 #include <SharedGraphics/Font.h>
-#include <SharedGraphics/Painter.h>
+#include <LibGUI/GPainter.h>
 #include <Kernel/KeyCode.h>
 
 GTextBox::GTextBox(GWidget* parent)
@@ -73,7 +73,7 @@ Point GTextBox::cursor_content_position() const
 
 void GTextBox::paint_event(GPaintEvent& event)
 {
-    Painter painter(*this);
+    GPainter painter(*this);
     painter.set_clip_rect(event.rect());
 
     painter.fill_rect(rect().shrunken(2, 2), background_color());

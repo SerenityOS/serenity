@@ -1,7 +1,7 @@
 #include <LibGUI/GAbstractView.h>
 #include <LibGUI/GModel.h>
 #include <LibGUI/GScrollBar.h>
-#include <SharedGraphics/Painter.h>
+#include <LibGUI/GPainter.h>
 #include <Kernel/KeyCode.h>
 
 GAbstractView::GAbstractView(GWidget* parent)

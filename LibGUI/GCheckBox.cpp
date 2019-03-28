@@ -1,5 +1,5 @@
 #include "GCheckBox.h"
-#include <SharedGraphics/Painter.h>
+#include <LibGUI/GPainter.h>
 #include <SharedGraphics/CharacterBitmap.h>
 #include <Kernel/KeyCode.h>
 
@@ -54,7 +54,7 @@ void GCheckBox::set_checked(bool b)
 
 void GCheckBox::paint_event(GPaintEvent& event)
 {
-    Painter painter(*this);
+    GPainter painter(*this);
     painter.set_clip_rect(event.rect());
 
     auto text_rect = rect();

@@ -2,7 +2,7 @@
 #include <LibGUI/GStyle.h>
 #include <SharedGraphics/CharacterBitmap.h>
 #include <SharedGraphics/GraphicsBitmap.h>
-#include <SharedGraphics/Painter.h>
+#include <LibGUI/GPainter.h>
 
 //#define GUTTER_DOES_PAGEUP_PAGEDOWN
 
@@ -185,7 +185,7 @@ Rect GScrollBar::scrubber_rect() const
 
 void GScrollBar::paint_event(GPaintEvent& event)
 {
-    Painter painter(*this);
+    GPainter painter(*this);
     painter.set_clip_rect(event.rect());
 
     painter.fill_rect(rect(), Color(164, 164, 164));

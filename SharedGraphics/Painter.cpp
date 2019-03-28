@@ -4,16 +4,6 @@
 #include <SharedGraphics/CharacterBitmap.h>
 #include <AK/Assertions.h>
 #include <AK/StdLibExtras.h>
-
-#ifdef LIBGUI
-#include <LibGUI/GWidget.h>
-#include <LibGUI/GWindow.h>
-#include <LibGUI/GEventLoop.h>
-#include <LibC/stdio.h>
-#include <LibC/errno.h>
-#include <LibC/string.h>
-#endif
-
 #include <unistd.h>
 
 Painter::Painter(GraphicsBitmap& bitmap)
@@ -24,22 +14,6 @@ Painter::Painter(GraphicsBitmap& bitmap)
     state().clip_rect = { { 0, 0 }, bitmap.size() };
     m_clip_origin = state().clip_rect;
 }
-
-#ifdef LIBGUI
-Painter::Painter(GWidget& widget)
-    : m_window(widget.window())
-    , m_target(*m_window->back_bitmap())
-{
-    m_state_stack.append(State());
-    state().font = &widget.font();
-
-    auto origin_rect = widget.window_relative_rect();
-    state().translation = origin_rect.location();
-    state().clip_rect = origin_rect;
-    m_clip_origin = origin_rect;
-    state().clip_rect.intersect(m_target->rect());
-}
-#endif
 
 Painter::~Painter()
 {

@@ -1,5 +1,5 @@
 #include <LibGUI/GProgressBar.h>
-#include <SharedGraphics/Painter.h>
+#include <LibGUI/GPainter.h>
 #include <AK/StringBuilder.h>
 
 GProgressBar::GProgressBar(GWidget* parent)
@@ -32,7 +32,7 @@ void GProgressBar::set_range(int min, int max)
 
 void GProgressBar::paint_event(GPaintEvent& event)
 {
-    Painter painter(*this);
+    GPainter painter(*this);
     painter.set_clip_rect(event.rect());
 
     // First we fill the entire widget with the gradient. This incurs a bit of
