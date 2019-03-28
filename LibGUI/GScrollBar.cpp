@@ -188,7 +188,7 @@ void GScrollBar::paint_event(GPaintEvent& event)
     GPainter painter(*this);
     painter.set_clip_rect(event.rect());
 
-    painter.fill_rect(rect(), Color(164, 164, 164));
+    painter.fill_rect(rect(), Color::from_rgb(0xd6d2ce));
 
     GStyle::the().paint_button(painter, up_button_rect(), GButtonStyle::Normal, false);
     painter.draw_bitmap(up_button_rect().location().translated(3, 3), orientation() == Orientation::Vertical ? *s_up_arrow_bitmap : *s_left_arrow_bitmap, has_scrubber() ? Color::Black : Color::MidGray);
