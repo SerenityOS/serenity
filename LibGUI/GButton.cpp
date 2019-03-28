@@ -1,6 +1,6 @@
 #include "GButton.h"
 #include <LibGUI/GPainter.h>
-#include <LibGUI/GStyle.h>
+#include <SharedGraphics/StylePainter.h>
 
 //#define GBUTTON_DEBUG
 
@@ -26,7 +26,7 @@ void GButton::paint_event(GPaintEvent& event)
     GPainter painter(*this);
     painter.set_clip_rect(event.rect());
 
-    GStyle::the().paint_button(painter, rect(), m_button_style, m_being_pressed, m_hovered);
+    StylePainter::the().paint_button(painter, rect(), m_button_style, m_being_pressed, m_hovered);
 
     if (!caption().is_empty() || m_icon) {
         auto content_rect = rect();

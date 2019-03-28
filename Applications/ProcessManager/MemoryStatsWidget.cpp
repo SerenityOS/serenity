@@ -2,7 +2,7 @@
 #include <LibGUI/GPainter.h>
 #include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GLabel.h>
-#include <LibGUI/GStyle.h>
+#include <SharedGraphics/StylePainter.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -106,5 +106,5 @@ void MemoryStatsWidget::paint_event(GPaintEvent& event)
 {
     GPainter painter(*this);
     painter.set_clip_rect(event.rect());
-    GStyle::the().paint_surface(painter, rect());
+    StylePainter::the().paint_surface(painter, rect());
 }

@@ -1,5 +1,6 @@
 SHAREDGRAPHICS_OBJS = \
     ../SharedGraphics/Painter.o \
+    ../SharedGraphics/StylePainter.o \
     ../SharedGraphics/Font.o \
     ../SharedGraphics/Rect.o \
     ../SharedGraphics/GraphicsBitmap.o \
@@ -22,7 +23,6 @@ LIBGUI_OBJS = \
     GScrollBar.o \
     GStatusBar.o \
     GWidget.o \
-    GStyle.o \
     GLayout.o \
     GBoxLayout.o \
     GMenuBar.o \
