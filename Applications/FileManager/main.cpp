@@ -97,6 +97,14 @@ int main(int argc, char** argv)
         dbgprintf("'Delete' action activated!\n");
     });
 
+    auto go_back_action = GAction::create("Go Back", GraphicsBitmap::load_from_file("/res/icons/16x16/go-back.png"), [] (const GAction&) {
+        dbgprintf("'Go Back' action activated!\n");
+    });
+
+    auto go_forward_action = GAction::create("Go Forward", GraphicsBitmap::load_from_file("/res/icons/16x16/go-forward.png"), [] (const GAction&) {
+        dbgprintf("'Go Forward' action activated!\n");
+    });
+
     auto menubar = make<GMenuBar>();
 
     auto app_menu = make<GMenu>("FileManager");
@@ -107,7 +115,6 @@ int main(int argc, char** argv)
     menubar->add_menu(move(app_menu));
 
     auto file_menu = make<GMenu>("File");
-    file_menu->add_action(open_parent_directory_action.copy_ref());
     file_menu->add_action(mkdir_action.copy_ref());
     file_menu->add_action(copy_action.copy_ref());
     file_menu->add_action(delete_action.copy_ref());
@@ -118,6 +125,11 @@ int main(int argc, char** argv)
     view_menu->add_action(view_as_icons_action.copy_ref());
     menubar->add_menu(move(view_menu));
 
+    auto go_menu = make<GMenu>("Go");
+    go_menu->add_action(go_back_action.copy_ref());
+    go_menu->add_action(go_forward_action.copy_ref());
+    go_menu->add_action(open_parent_directory_action.copy_ref());
+
     auto help_menu = make<GMenu>("Help");
     help_menu->add_action(GAction::create("About", [] (const GAction&) {
         dbgprintf("FIXME: Implement Help/About\n");
@@ -126,7 +138,11 @@ int main(int argc, char** argv)
 
     app.set_menubar(move(menubar));
 
+    main_toolbar->add_action(go_back_action.copy_ref());
+    main_toolbar->add_action(go_forward_action.copy_ref());
     main_toolbar->add_action(open_parent_directory_action.copy_ref());
+
+    main_toolbar->add_separator();
     main_toolbar->add_action(mkdir_action.copy_ref());
     main_toolbar->add_action(copy_action.copy_ref());
     main_toolbar->add_action(delete_action.copy_ref());
