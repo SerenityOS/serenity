@@ -8,7 +8,7 @@ public:
     virtual ~GFrame() override;
 
     enum Shadow { Plain, Raised, Sunken };
-    enum Shape { NoFrame, Box, Panel, VerticalLine, HorizontalLine };
+    enum Shape { NoFrame, Container, Panel, VerticalLine, HorizontalLine };
 
     int frame_thickness() const { return m_thickness; }
     void set_frame_thickness(int thickness) { m_thickness = thickness; }

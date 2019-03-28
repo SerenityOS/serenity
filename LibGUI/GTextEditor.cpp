@@ -13,7 +13,7 @@ GTextEditor::GTextEditor(Type type, GWidget* parent)
     : GScrollableWidget(parent)
     , m_type(type)
 {
-    set_frame_shape(GFrame::Shape::Panel);
+    set_frame_shape(GFrame::Shape::Container);
     set_frame_shadow(GFrame::Shadow::Sunken);
     set_frame_thickness(1);
     set_scrollbars_enabled(is_multi_line());
