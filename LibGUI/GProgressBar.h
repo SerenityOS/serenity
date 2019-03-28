@@ -1,8 +1,8 @@
 #pragma once
 
-#include <LibGUI/GWidget.h>
+#include <LibGUI/GFrame.h>
 
-class GProgressBar : public GWidget {
+class GProgressBar : public GFrame {
 public:
     explicit GProgressBar(GWidget* parent);
     virtual ~GProgressBar() override;
