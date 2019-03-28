@@ -477,12 +477,12 @@ void WSWindowManager::paint_window_frame(WSWindow& window)
         border_color = m_dragging_window_border_color;
         border_color2 = m_dragging_window_border_color2;
         title_color = m_dragging_window_title_color;
-        middle_border_color = Color::White;
+        middle_border_color = Color::from_rgb(0xf9b36a);
     } else if (&window == m_active_window.ptr()) {
         border_color = m_active_window_border_color;
         border_color2 = m_active_window_border_color2;
         title_color = m_active_window_title_color;
-        middle_border_color = Color::MidGray;
+        middle_border_color = Color::from_rgb(0x8f673d);
     } else {
         border_color = m_inactive_window_border_color;
         border_color2 = m_inactive_window_border_color2;
