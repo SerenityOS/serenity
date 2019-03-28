@@ -172,9 +172,11 @@ static GWindow* make_frames_window()
     auto add_label = [widget] (const String& text, GFrame::Shape shape, GFrame::Shadow shadow) {
         auto* label = new GLabel(text, widget);
         label->set_size_policy(SizePolicy::Fill, SizePolicy::Fill);
+        label->set_frame_thickness(1);
         label->set_frame_shape(shape);
         label->set_frame_shadow(shadow);
         if (shape == GFrame::Shape::Container) {
+            label->set_frame_thickness(2);
             label->set_fill_with_background_color(true);
             label->set_background_color(Color::White);
         }
@@ -182,8 +184,10 @@ static GWindow* make_frames_window()
 
     add_label("Panel + Raised", GFrame::Shape::Panel, GFrame::Shadow::Raised);
     add_label("Panel + Sunken", GFrame::Shape::Panel, GFrame::Shadow::Sunken);
+    add_label("Panel + Plain", GFrame::Shape::Panel, GFrame::Shadow::Plain);
     add_label("Container + Raised", GFrame::Shape::Container, GFrame::Shadow::Raised);
     add_label("Container + Sunken", GFrame::Shape::Container, GFrame::Shadow::Sunken);
+    add_label("Container + Plain", GFrame::Shape::Container, GFrame::Shadow::Plain);
 
     return window;
 }

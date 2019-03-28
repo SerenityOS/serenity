@@ -15,7 +15,7 @@ GTextEditor::GTextEditor(Type type, GWidget* parent)
 {
     set_frame_shape(GFrame::Shape::Container);
     set_frame_shadow(GFrame::Shadow::Sunken);
-    set_frame_thickness(1);
+    set_frame_thickness(2);
     set_scrollbars_enabled(is_multi_line());
     m_ruler_visible = is_multi_line();
     set_font(GFontDatabase::the().get_by_name("Csilla Thin"));
