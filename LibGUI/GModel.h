@@ -76,11 +76,15 @@ public:
     Function<void(GModel&)> on_model_update;
     Function<void(const GModelIndex&)> on_selection_changed;
 
+    virtual GModelIndex index(int row, int column) const { return create_index(row, column); }
+
 protected:
     GModel();
 
     void for_each_view(Function<void(GAbstractView&)>);
     void did_update();
+
+    GModelIndex create_index(int row, int column, void* data = nullptr) const;
 
 private:
     HashTable<GAbstractView*> m_views;

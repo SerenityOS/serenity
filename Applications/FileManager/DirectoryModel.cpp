@@ -282,7 +282,7 @@ void DirectoryModel::open(const String& a_path)
     closedir(dirp);
     m_path = path;
     update();
-    set_selected_index({ 0, 0 });
+    set_selected_index(index(0, 0));
 }
 
 void DirectoryModel::activate(const GModelIndex& index)

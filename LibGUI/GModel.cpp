@@ -44,3 +44,8 @@ void GModel::set_selected_index(const GModelIndex& index)
     if (m_activates_on_selection && is_valid(index))
         activate(index);
 }
+
+GModelIndex GModel::create_index(int row, int column, void* data) const
+{
+    return GModelIndex(*this, row, column, data);
+}

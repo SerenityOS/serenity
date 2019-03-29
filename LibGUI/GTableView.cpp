@@ -86,7 +86,7 @@ void GTableView::mousedown_event(GMouseEvent& event)
         auto adjusted_position = event.position().translated(0, vertical_scrollbar().value());
         for (int i = 0; i < item_count(); ++i) {
             if (row_rect(i).contains(adjusted_position)) {
-                model()->set_selected_index({ i, 0 });
+                model()->set_selected_index(model()->index(i, 0));
                 update();
                 return;
             }
@@ -143,7 +143,7 @@ void GTableView::paint_event(GPaintEvent& event)
                 auto cell_rect_for_fill = cell_rect.inflated(horizontal_padding() * 2, 0);
                 painter.fill_rect(cell_rect_for_fill, key_column_background_color);
             }
-            GModelIndex cell_index(row_index, column_index);
+            auto cell_index = model()->index(row_index, column_index);
             auto data = model()->data(cell_index);
             if (data.is_bitmap()) {
                 painter.blit(cell_rect.location(), data.as_bitmap(), data.as_bitmap().rect());
@@ -228,9 +228,9 @@ void GTableView::keydown_event(GKeyEvent& event)
     if (event.key() == KeyCode::Key_Up) {
         GModelIndex new_index;
         if (model.selected_index().is_valid())
-            new_index = { model.selected_index().row() - 1, model.selected_index().column() };
+            new_index = model.index(model.selected_index().row() - 1, model.selected_index().column());
         else
-            new_index = { 0, 0 };
+            new_index = model.index(0, 0);
         if (model.is_valid(new_index)) {
             model.set_selected_index(new_index);
             scroll_into_view(new_index, Orientation::Vertical);
@@ -241,9 +241,9 @@ void GTableView::keydown_event(GKeyEvent& event)
     if (event.key() == KeyCode::Key_Down) {
         GModelIndex new_index;
         if (model.selected_index().is_valid())
-            new_index = { model.selected_index().row() + 1, model.selected_index().column() };
+            new_index = model.index(model.selected_index().row() + 1, model.selected_index().column());
         else
-            new_index = { 0, 0 };
+            new_index = model.index(0, 0);
         if (model.is_valid(new_index)) {
             model.set_selected_index(new_index);
             scroll_into_view(new_index, Orientation::Vertical);
@@ -253,7 +253,7 @@ void GTableView::keydown_event(GKeyEvent& event)
     }
     if (event.key() == KeyCode::Key_PageUp) {
         int items_per_page = visible_content_rect().height() / item_height();
-        GModelIndex new_index(max(0, model.selected_index().row() - items_per_page), model.selected_index().column());
+        auto new_index = model.index(max(0, model.selected_index().row() - items_per_page), model.selected_index().column());
         if (model.is_valid(new_index)) {
             model.set_selected_index(new_index);
             scroll_into_view(new_index, Orientation::Vertical);
@@ -263,7 +263,7 @@ void GTableView::keydown_event(GKeyEvent& event)
     }
     if (event.key() == KeyCode::Key_PageDown) {
         int items_per_page = visible_content_rect().height() / item_height();
-        GModelIndex new_index(min(model.row_count() - 1, model.selected_index().row() + items_per_page), model.selected_index().column());
+        auto new_index = model.index(min(model.row_count() - 1, model.selected_index().row() + items_per_page), model.selected_index().column());
         if (model.is_valid(new_index)) {
             model.set_selected_index(new_index);
             scroll_into_view(new_index, Orientation::Vertical);

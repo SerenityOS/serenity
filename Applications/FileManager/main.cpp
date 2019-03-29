@@ -11,6 +11,7 @@
 #include <LibGUI/GInputBox.h>
 #include <LibGUI/GMessageBox.h>
 #include <LibGUI/GProgressBar.h>
+#include <LibGUI/GTreeView.h>
 #include <unistd.h>
 #include <signal.h>
 #include <stdio.h>
@@ -48,7 +49,12 @@ int main(int argc, char** argv)
 
     auto* location_textbox = new GTextEditor(GTextEditor::SingleLine, location_toolbar);
 
-    auto* directory_view = new DirectoryView(widget);
+    // FIXME: Implement an actual GSplitter widget.
+    auto* splitter = new GWidget(widget);
+    splitter->set_layout(make<GBoxLayout>(Orientation::Horizontal));
+    auto* tree_view = new GTreeView(splitter);
+    auto* directory_view = new DirectoryView(splitter);
+
     auto* statusbar = new GStatusBar(widget);
 
     auto* progressbar = new GProgressBar(statusbar);

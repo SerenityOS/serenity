@@ -33,5 +33,5 @@ pid_t ProcessTableView::selected_pid() const
 {
     if (!model()->selected_index().is_valid())
         return -1;
-    return model()->data({ model()->selected_index().row(), ProcessModel::Column::PID }, GModel::Role::Sort).as_int();
+    return model()->data(model()->index(model()->selected_index().row(), ProcessModel::Column::PID), GModel::Role::Sort).as_int();
 }
