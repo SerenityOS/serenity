@@ -38,6 +38,7 @@ private:
     Rect upper_gutter_rect() const;
     Rect lower_gutter_rect() const;
     Rect scrubber_rect() const;
+    int scrubber_size() const;
     int scrubbable_range_in_pixels() const;
 
     int m_min { 0 };
