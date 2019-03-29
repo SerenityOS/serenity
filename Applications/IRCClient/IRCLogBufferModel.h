@@ -16,8 +16,8 @@ public:
     static Retained<IRCLogBufferModel> create(Retained<IRCLogBuffer>&& log_buffer) { return adopt(*new IRCLogBufferModel(move(log_buffer))); }
     virtual ~IRCLogBufferModel() override;
 
-    virtual int row_count() const override;
-    virtual int column_count() const override;
+    virtual int row_count(const GModelIndex&) const override;
+    virtual int column_count(const GModelIndex&) const override;
     virtual String column_name(int column) const override;
     virtual ColumnMetadata column_metadata(int column) const override;
     virtual GVariant data(const GModelIndex&, Role = Role::Display) const override;

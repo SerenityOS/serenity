@@ -15,12 +15,12 @@ IRCWindowListModel::~IRCWindowListModel()
 {
 }
 
-int IRCWindowListModel::row_count() const
+int IRCWindowListModel::row_count(const GModelIndex&) const
 {
     return m_client.window_count();
 }
 
-int IRCWindowListModel::column_count() const
+int IRCWindowListModel::column_count(const GModelIndex&) const
 {
     return 1;
 }

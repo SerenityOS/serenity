@@ -79,12 +79,12 @@ DirectoryModel::~DirectoryModel()
 {
 }
 
-int DirectoryModel::row_count() const
+int DirectoryModel::row_count(const GModelIndex&) const
 {
     return m_directories.size() + m_files.size();
 }
 
-int DirectoryModel::column_count() const
+int DirectoryModel::column_count(const GModelIndex&) const
 {
     return Column::__Count;
 }

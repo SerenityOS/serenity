@@ -46,8 +46,8 @@ public:
 
     virtual ~GModel();
 
-    virtual int row_count() const = 0;
-    virtual int column_count() const = 0;
+    virtual int row_count(const GModelIndex& = GModelIndex()) const = 0;
+    virtual int column_count(const GModelIndex& = GModelIndex()) const = 0;
     virtual String row_name(int) const { return { }; }
     virtual String column_name(int) const { return { }; }
     virtual ColumnMetadata column_metadata(int) const { return { }; }
