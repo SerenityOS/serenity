@@ -18,10 +18,10 @@ struct GFileSystemModel::Node {
     GModelIndex index(const GFileSystemModel& model) const
     {
         if (!parent)
-            return { };
+            return model.create_index(0, 0, (void*)this);
         for (int row = 0; row < parent->children.size(); ++row) {
             if (parent->children[row] == this)
-                return model.create_index(row, 0, parent);
+                return model.create_index(row, 0, (void*)this);
         }
         ASSERT_NOT_REACHED();
     }
@@ -138,8 +138,10 @@ GModelIndex GFileSystemModel::parent_index(const GModelIndex& index) const
     if (!index.is_valid())
         return { };
     auto& node = *(const Node*)index.internal_data();
-    if (!node.parent)
+    if (!node.parent) {
+        ASSERT(&node == m_root);
         return { };
+    }
     return node.parent->index(*this);
 }
 
