@@ -20,7 +20,7 @@ public:
     virtual GVariant data(const GModelIndex&, Role = Role::Display) const override;
     virtual void update() override;
     virtual GModelIndex parent_index(const GModelIndex&) const override;
-    virtual GModelIndex index(int row, int column = 0, const GModelIndex& = GModelIndex()) const override;
+    virtual GModelIndex index(int row, int column = 0, const GModelIndex& parent = GModelIndex()) const override;
     virtual void activate(const GModelIndex&) override;
 
 private:

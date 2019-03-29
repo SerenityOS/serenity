@@ -15,7 +15,15 @@ public:
 
     GModelIndex parent() const;
 
-    bool operator==(const GModelIndex& other) const { return m_row == other.m_row && m_column == other.m_column; }
+    bool operator==(const GModelIndex& other) const
+    {
+        return m_model == other.m_model && m_row == other.m_row && m_column == other.m_column && m_internal_data == other.m_internal_data;
+    }
+
+    bool operator!=(const GModelIndex& other) const
+    {
+        return !(*this == other);
+    }
 
 private:
     GModelIndex(const GModel& model, int row, int column, void* internal_data)

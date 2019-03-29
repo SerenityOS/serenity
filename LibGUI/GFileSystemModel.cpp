@@ -26,23 +26,6 @@ struct GFileSystemModel::Node {
         ASSERT_NOT_REACHED();
     }
 
-    String full_path(const GFileSystemModel& model) const
-    {
-        Vector<String> lineage;
-        for (auto* ancestor = parent; ancestor; ancestor = ancestor->parent) {
-            lineage.append(ancestor->name);
-        }
-        StringBuilder builder;
-        builder.append(model.root_path());
-        for (int i = lineage.size() - 1; i >= 0; --i) {
-            builder.append('/');
-            builder.append(lineage[i]);
-        }
-        builder.append('/');
-        builder.append(name);
-        return FileSystemPath(builder.to_string()).string();
-    }
-
     void traverse_if_needed(const GFileSystemModel& model)
     {
         if (type != Node::Directory || has_traversed)
@@ -89,6 +72,23 @@ struct GFileSystemModel::Node {
             return;
         }
         type = S_ISDIR(st.st_mode) ? Node::Type::Directory : Node::Type::File;
+    }
+
+    String full_path(const GFileSystemModel& model) const
+    {
+        Vector<String> lineage;
+        for (auto* ancestor = parent; ancestor; ancestor = ancestor->parent) {
+            lineage.append(ancestor->name);
+        }
+        StringBuilder builder;
+        builder.append(model.root_path());
+        for (int i = lineage.size() - 1; i >= 0; --i) {
+            builder.append('/');
+            builder.append(lineage[i]);
+        }
+        builder.append('/');
+        builder.append(name);
+        return FileSystemPath(builder.to_string()).string();
     }
 };
 
