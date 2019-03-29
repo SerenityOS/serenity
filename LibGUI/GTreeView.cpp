@@ -87,7 +87,7 @@ GVariant TestModel::data(const GModelIndex& index, Role role) const
 }
 
 struct GTreeView::MetadataForIndex {
-    bool open { true };
+    bool open { false };
 };
 
 
