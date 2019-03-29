@@ -365,6 +365,5 @@ bool GWidget::spans_entire_window_horizontally() const
     if (main_widget == this)
         return true;
     auto wrr = window_relative_rect();
-    dbgprintf("Checking %s{%p} wrr=%s, mwr=%s\n", class_name(), this, wrr.to_string().characters(), main_widget->rect().to_string().characters());
     return wrr.left() == main_widget->rect().left() && wrr.right() == main_widget->rect().right();
 }
