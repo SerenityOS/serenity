@@ -144,16 +144,17 @@ void GTreeView::mousedown_event(GMouseEvent& event)
     auto& model = *this->model();
     auto adjusted_position = event.position().translated(horizontal_scrollbar().value() - frame_thickness(), vertical_scrollbar().value() - frame_thickness());
     auto index = index_at_content_position(adjusted_position);
-    if (!index.is_valid()) {
-        dbgprintf("GTV::mousedown: No valid index at %s (adjusted to: %s)\n", event.position().to_string().characters(), adjusted_position.to_string().characters());
+    if (!index.is_valid())
         return;
+
+    if (model.selected_index() != index) {
+        model.set_selected_index(index);
+        update();
     }
-    dbgprintf("GTV::mousedown: Index %d,%d {%p}] at %s (adjusted to: %s)\n", index.row(), index.column(), index.internal_data(), event.position().to_string().characters(), adjusted_position.to_string().characters());
-    auto& metadata = ensure_metadata_for_index(index);
 
     if (model.row_count(index)) {
+        auto& metadata = ensure_metadata_for_index(index);
         metadata.open = !metadata.open;
-        dbgprintf("GTV::mousedown: toggle index %d,%d {%p} open: %d -> %d\n", index.row(), index.column(), index.internal_data(), !metadata.open, metadata.open);
         update();
     }
 }
@@ -174,7 +175,7 @@ void GTreeView::traverse_in_paint_order(Callback callback) const
             auto node_text = model.data(index, GModel::Role::Display).to_string();
             Rect rect = {
                 x_offset, y_offset,
-                toggle_size() + icon_spacing() + icon_size() + icon_spacing() + font().width(node_text), item_height()
+                icon_size() + icon_spacing() + font().width(node_text) + icon_spacing(), item_height()
             };
             if (rect.intersects(visible_content_rect)) {
                 if (callback(index, rect, indent_level) == IterationDecision::Abort)
@@ -215,6 +216,15 @@ void GTreeView::paint_event(GPaintEvent& event)
 #ifdef DEBUG_ITEM_RECTS
         painter.fill_rect(rect, Color::LightGray);
 #endif
+
+        Color background_color = Color::from_rgb(0xffffff);
+        Color text_color = Color::from_rgb(0x000000);
+        if (index == model.selected_index()) {
+            background_color = is_focused() ? Color::from_rgb(0x84351a) : Color::from_rgb(0x606060);
+            text_color = Color::from_rgb(0xffffff);
+            painter.fill_rect(rect, background_color);
+        }
+
         Rect icon_rect = { rect.x(), rect.y(), icon_size(), icon_size() };
         auto icon = model.data(index, GModel::Role::Icon);
         if (icon.is_icon()) {
@@ -226,7 +236,7 @@ void GTreeView::paint_event(GPaintEvent& event)
             rect.width() - icon_size() - icon_spacing(), rect.height()
         };
         auto node_text = model.data(index, GModel::Role::Display).to_string();
-        painter.draw_text(text_rect, node_text, TextAlignment::CenterLeft, Color::Black);
+        painter.draw_text(text_rect, node_text, TextAlignment::CenterLeft, text_color);
         auto index_at_indent = index;
         for (int i = indent_level; i >= 0; --i) {
             auto parent_of_index_at_indent = index_at_indent.parent();
