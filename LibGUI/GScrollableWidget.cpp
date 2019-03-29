@@ -38,7 +38,7 @@ void GScrollableWidget::resize_event(GResizeEvent& event)
 
     m_corner_widget->set_visible(m_vertical_scrollbar->is_visible() && m_horizontal_scrollbar->is_visible());
     if (m_corner_widget->is_visible()) {
-        Rect corner_rect { m_horizontal_scrollbar->rect().right() + 2, m_vertical_scrollbar->rect().bottom() + 2, width_occupied_by_vertical_scrollbar(), height_occupied_by_horizontal_scrollbar() };
+        Rect corner_rect { m_horizontal_scrollbar->relative_rect().right() + 1, m_vertical_scrollbar->relative_rect().bottom() + 1, width_occupied_by_vertical_scrollbar(), height_occupied_by_horizontal_scrollbar() };
         m_corner_widget->set_relative_rect(corner_rect);
     }
 }
