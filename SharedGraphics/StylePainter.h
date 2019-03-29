@@ -10,7 +10,7 @@ public:
     static StylePainter& the();
 
     void paint_button(Painter&, const Rect&, ButtonStyle, bool pressed, bool hovered = false);
-    void paint_surface(Painter&, const Rect&);
+    void paint_surface(Painter&, const Rect&, bool paint_vertical_lines = true);
 
 private:
     StylePainter();

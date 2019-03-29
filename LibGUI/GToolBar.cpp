@@ -79,5 +79,5 @@ void GToolBar::paint_event(GPaintEvent& event)
 {
     GPainter painter(*this);
     painter.set_clip_rect(event.rect());
-    StylePainter::the().paint_surface(painter, rect());
+    StylePainter::the().paint_surface(painter, rect(), !spans_entire_window_horizontally());
 }

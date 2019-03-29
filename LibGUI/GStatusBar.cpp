@@ -10,7 +10,7 @@ GStatusBar::GStatusBar(GWidget* parent)
     set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     set_preferred_size({ 0, 20 });
     set_layout(make<GBoxLayout>(Orientation::Horizontal));
-    layout()->set_margins({ 4, 2, 4, 2 });
+    layout()->set_margins({ 2, 2, 2, 2 });
     m_label = new GLabel(this);
     m_label->set_frame_shadow(GFrame::Shadow::Sunken);
     m_label->set_frame_shape(GFrame::Shape::Panel);
@@ -36,5 +36,5 @@ void GStatusBar::paint_event(GPaintEvent& event)
 {
     GPainter painter(*this);
     painter.set_clip_rect(event.rect());
-    StylePainter::the().paint_surface(painter, rect());
+    StylePainter::the().paint_surface(painter, rect(), !spans_entire_window_horizontally());
 }
