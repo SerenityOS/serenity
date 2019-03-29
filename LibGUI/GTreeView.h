@@ -18,7 +18,7 @@ protected:
 private:
     int item_height() const { return 16; }
     int max_item_width() const { return frame_inner_rect().width(); }
-    int indent_width_in_pixels() const { return 12; }
+    int indent_width_in_pixels() const { return 16; }
     int icon_size() const { return 16; }
     int icon_spacing() const { return 4; }
 
@@ -30,4 +30,7 @@ private:
     MetadataForIndex& ensure_metadata_for_index(const GModelIndex&) const;
 
     mutable HashMap<void*, OwnPtr<MetadataForIndex>> m_view_metadata;
+
+    RetainPtr<GraphicsBitmap> m_expand_bitmap;
+    RetainPtr<GraphicsBitmap> m_collapse_bitmap;
 };
