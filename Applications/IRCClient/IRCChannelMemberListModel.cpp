@@ -13,12 +13,12 @@ IRCChannelMemberListModel::~IRCChannelMemberListModel()
 {
 }
 
-int IRCChannelMemberListModel::row_count() const
+int IRCChannelMemberListModel::row_count(const GModelIndex&) const
 {
     return m_channel.member_count();
 }
 
-int IRCChannelMemberListModel::column_count() const
+int IRCChannelMemberListModel::column_count(const GModelIndex&) const
 {
     return 1;
 }

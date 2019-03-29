@@ -21,12 +21,12 @@ ProcessModel::~ProcessModel()
 {
 }
 
-int ProcessModel::row_count() const
+int ProcessModel::row_count(const GModelIndex&) const
 {
     return m_processes.size();
 }
 
-int ProcessModel::column_count() const
+int ProcessModel::column_count(const GModelIndex&) const
 {
     return Column::__Count;
 }

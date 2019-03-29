@@ -21,8 +21,8 @@ public:
         __Count,
     };
 
-    virtual int row_count() const override;
-    virtual int column_count() const override;
+    virtual int row_count(const GModelIndex& = GModelIndex()) const override;
+    virtual int column_count(const GModelIndex& = GModelIndex()) const override;
     virtual String column_name(int column) const override;
     virtual ColumnMetadata column_metadata(int column) const override;
     virtual GVariant data(const GModelIndex&, Role = Role::Display) const override;

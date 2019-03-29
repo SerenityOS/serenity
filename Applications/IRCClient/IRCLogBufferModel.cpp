@@ -13,12 +13,12 @@ IRCLogBufferModel::~IRCLogBufferModel()
 {
 }
 
-int IRCLogBufferModel::row_count() const
+int IRCLogBufferModel::row_count(const GModelIndex&) const
 {
     return m_log_buffer->count();
 }
 
-int IRCLogBufferModel::column_count() const
+int IRCLogBufferModel::column_count(const GModelIndex&) const
 {
     return Column::__Count;
 }

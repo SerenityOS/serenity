@@ -16,14 +16,14 @@ GSortingProxyModel::~GSortingProxyModel()
 {
 }
 
-int GSortingProxyModel::row_count() const
+int GSortingProxyModel::row_count(const GModelIndex& index) const
 {
-    return target().row_count();
+    return target().row_count(index);
 }
 
-int GSortingProxyModel::column_count() const
+int GSortingProxyModel::column_count(const GModelIndex& index) const
 {
-    return target().column_count();
+    return target().column_count(index);
 }
 
 GModelIndex GSortingProxyModel::map_to_target(const GModelIndex& index) const
