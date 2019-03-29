@@ -13,6 +13,8 @@ public:
 
     void* internal_data() const { return m_internal_data; }
 
+    GModelIndex parent() const;
+
     bool operator==(const GModelIndex& other) const { return m_row == other.m_row && m_column == other.m_column; }
 
 private:

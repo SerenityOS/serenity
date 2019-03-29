@@ -76,7 +76,8 @@ public:
     Function<void(GModel&)> on_model_update;
     Function<void(const GModelIndex&)> on_selection_changed;
 
-    virtual GModelIndex index(int row, int column) const { return create_index(row, column); }
+    virtual GModelIndex parent_index(const GModelIndex&) const { return { }; }
+    virtual GModelIndex index(int row, int column = 0, const GModelIndex& = GModelIndex()) const { return create_index(row, column); }
 
 protected:
     GModel();
@@ -91,3 +92,8 @@ private:
     GModelIndex m_selected_index;
     bool m_activates_on_selection { false };
 };
+
+inline GModelIndex GModelIndex::parent() const
+{
+    return m_model ? m_model->parent_index(*this) : GModelIndex();
+}
