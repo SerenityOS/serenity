@@ -74,7 +74,7 @@ Point GTextBox::cursor_content_position() const
 void GTextBox::paint_event(GPaintEvent& event)
 {
     GPainter painter(*this);
-    painter.set_clip_rect(event.rect());
+    painter.add_clip_rect(event.rect());
 
     painter.fill_rect(rect().shrunken(2, 2), background_color());
     painter.draw_rect(rect(), foreground_color());
@@ -85,7 +85,7 @@ void GTextBox::paint_event(GPaintEvent& event)
     Rect inner_rect = rect();
     inner_rect.shrink(6, 6);
 
-    painter.set_clip_rect(inner_rect);
+    painter.add_clip_rect(inner_rect);
     painter.translate(-m_scroll_offset, 0);
 
     int space_width = font().glyph_width(' ') + font().glyph_spacing();

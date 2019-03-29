@@ -57,7 +57,7 @@ public:
     virtual void paint_event(GPaintEvent& event) override
     {
         GPainter painter(*this);
-        painter.set_clip_rect(event.rect());
+        painter.add_clip_rect(event.rect());
         painter.translate(rect().center().x() - 1, 0);
         painter.draw_line({ 0, 0 }, { 0, rect().bottom() }, Color::MidGray);
         painter.draw_line({ 1, 0 }, { 1, rect().bottom() }, Color::White);
@@ -78,6 +78,6 @@ void GToolBar::add_separator()
 void GToolBar::paint_event(GPaintEvent& event)
 {
     GPainter painter(*this);
-    painter.set_clip_rect(event.rect());
+    painter.add_clip_rect(event.rect());
     StylePainter::the().paint_surface(painter, rect(), !spans_entire_window_horizontally());
 }

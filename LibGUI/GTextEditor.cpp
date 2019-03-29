@@ -153,8 +153,8 @@ void GTextEditor::paint_event(GPaintEvent& event)
     GFrame::paint_event(event);
 
     GPainter painter(*this);
-    painter.set_clip_rect(widget_inner_rect());
-    painter.set_clip_rect(event.rect());
+    painter.add_clip_rect(widget_inner_rect());
+    painter.add_clip_rect(event.rect());
     painter.fill_rect(event.rect(), Color::White);
 
     Rect ruler_rect { 0, 0, ruler_width(), height() - height_occupied_by_horizontal_scrollbar()};
@@ -189,7 +189,7 @@ void GTextEditor::paint_event(GPaintEvent& event)
         }
     }
 
-    painter.set_clip_rect({ m_ruler_visible ? (ruler_rect.right() + 1) : 0, 0, width() - width_occupied_by_vertical_scrollbar() - ruler_width(), height() - height_occupied_by_horizontal_scrollbar() });
+    painter.add_clip_rect({ m_ruler_visible ? (ruler_rect.right() + 1) : 0, 0, width() - width_occupied_by_vertical_scrollbar() - ruler_width(), height() - height_occupied_by_horizontal_scrollbar() });
 
     for (int i = first_visible_line; i <= last_visible_line; ++i) {
         auto& line = *m_lines[i];

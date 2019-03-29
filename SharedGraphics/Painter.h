@@ -42,7 +42,7 @@ public:
     void set_draw_op(DrawOp op) { state().draw_op = op; }
     DrawOp draw_op() const { return state().draw_op; }
 
-    void set_clip_rect(const Rect& rect);
+    void add_clip_rect(const Rect& rect);
     void clear_clip_rect();
     Rect clip_rect() const { return state().clip_rect; }
 

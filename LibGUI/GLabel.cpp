@@ -35,7 +35,7 @@ void GLabel::paint_event(GPaintEvent& event)
     GFrame::paint_event(event);
 
     GPainter painter(*this);
-    painter.set_clip_rect(event.rect());
+    painter.add_clip_rect(event.rect());
 
     if (m_icon) {
         if (m_should_stretch_icon) {

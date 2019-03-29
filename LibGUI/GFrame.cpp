@@ -17,7 +17,7 @@ void GFrame::paint_event(GPaintEvent& event)
         return;
 
     GPainter painter(*this);
-    painter.set_clip_rect(event.rect());
+    painter.add_clip_rect(event.rect());
 
     Color top_left_color;
     Color bottom_right_color;
