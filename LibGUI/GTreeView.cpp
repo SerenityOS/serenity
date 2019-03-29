@@ -2,6 +2,8 @@
 #include <LibGUI/GPainter.h>
 #include <LibGUI/GScrollBar.h>
 
+//#define DEBUG_ITEM_RECTS
+
 struct Node {
     String text;
     Node* parent { nullptr };
@@ -111,6 +113,9 @@ GTreeView::GTreeView(GWidget* parent)
     set_frame_thickness(2);
 
     set_model(TestModel::create());
+
+    m_expand_bitmap = GraphicsBitmap::load_from_file("/res/icons/treeview-expand.png");
+    m_collapse_bitmap = GraphicsBitmap::load_from_file("/res/icons/treeview-collapse.png");
 }
 
 GTreeView::~GTreeView()
@@ -122,7 +127,7 @@ GModelIndex GTreeView::index_at_content_position(const Point& position) const
     if (!model())
         return { };
     GModelIndex result;
-    traverse_in_paint_order([&] (const GModelIndex& index, const Rect& rect) {
+    traverse_in_paint_order([&] (const GModelIndex& index, const Rect& rect, int, bool) {
         if (rect.contains(position)) {
             result = index;
             return IterationDecision::Abort;
@@ -162,7 +167,7 @@ void GTreeView::traverse_in_paint_order(Callback callback) const
     int y_offset = 0;
     auto visible_content_rect = this->visible_content_rect();
 
-    Function<IterationDecision(const GModelIndex&)> traverse_index = [&] (const GModelIndex& index) {
+    Function<IterationDecision(const GModelIndex&, bool)> traverse_index = [&] (const GModelIndex& index, bool is_last_in_parent) {
         if (index.is_valid()) {
             auto& metadata = ensure_metadata_for_index(index);
             int x_offset = indent_level * indent_width_in_pixels();
@@ -172,7 +177,7 @@ void GTreeView::traverse_in_paint_order(Callback callback) const
                 icon_size() + icon_spacing() + font().width(node_text), item_height()
             };
             if (rect.intersects(visible_content_rect)) {
-                if (callback(index, rect) == IterationDecision::Abort)
+                if (callback(index, rect, indent_level, is_last_in_parent) == IterationDecision::Abort)
                     return IterationDecision::Abort;
             }
             y_offset += item_height();
@@ -182,14 +187,15 @@ void GTreeView::traverse_in_paint_order(Callback callback) const
         }
 
         ++indent_level;
-        for (int i = 0; i < model.row_count(index); ++i) {
-            if (traverse_index(model.index(i, 0, index)) == IterationDecision::Abort)
+        int row_count = model.row_count(index);
+        for (int i = 0; i < row_count; ++i) {
+            if (traverse_index(model.index(i, 0, index), i == row_count - 1) == IterationDecision::Abort)
                 return IterationDecision::Abort;
         }
         --indent_level;
         return IterationDecision::Continue;
     };
-    traverse_index(model.index(0, 0, GModelIndex()));
+    traverse_index(model.index(0, 0, GModelIndex()), true);
 }
 
 void GTreeView::paint_event(GPaintEvent& event)
@@ -205,8 +211,10 @@ void GTreeView::paint_event(GPaintEvent& event)
         return;
     auto& model = *this->model();
 
-    traverse_in_paint_order([&] (const GModelIndex& index, const Rect& rect) {
+    traverse_in_paint_order([&] (const GModelIndex& index, const Rect& rect, int indent_level, bool is_last_in_parent) {
+#ifdef DEBUG_ITEM_RECTS
         painter.fill_rect(rect, Color::LightGray);
+#endif
         Rect icon_rect = { rect.x(), rect.y(), icon_size(), icon_size() };
         auto icon = model.data(index, GModel::Role::Icon);
         if (icon.is_icon()) {
@@ -219,6 +227,19 @@ void GTreeView::paint_event(GPaintEvent& event)
         };
         auto node_text = model.data(index, GModel::Role::Display).to_string();
         painter.draw_text(text_rect, node_text, TextAlignment::CenterLeft, Color::Black);
+        for (int i = 0; i <= indent_level; ++i) {
+            Point a { indent_width_in_pixels() * i - icon_size() / 2, rect.y() };
+            Point b { a.x(), a.y() + item_height() - 1 };
+            if (i == indent_level && is_last_in_parent)
+                b.set_y(rect.center().y());
+            painter.draw_line(a, b, Color::MidGray);
+
+            if (i == indent_level) {
+                Point c { a.x(), rect.center().y() };
+                Point d { c.x() + icon_size() / 2, c.y() };
+                painter.draw_line(c, d, Color::MidGray);
+            }
+        }
         return IterationDecision::Continue;
     });
 }
