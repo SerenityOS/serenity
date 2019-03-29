@@ -74,7 +74,7 @@ void GItemView::mousedown_event(GMouseEvent& event)
         auto adjusted_position = event.position().translated(0, vertical_scrollbar().value());
         for (int i = 0; i < item_count(); ++i) {
             if (item_rect(i).contains(adjusted_position)) {
-                model()->set_selected_index({ i, 0 });
+                model()->set_selected_index(model()->index(i, 0));
                 update();
                 return;
             }
@@ -117,7 +117,7 @@ void GItemView::paint_event(GPaintEvent& event)
         }
 
         Rect item_rect = this->item_rect(item_index);
-        GModelIndex model_index(item_index, m_model_column);
+        auto model_index = model()->index(item_index, m_model_column);
 
         auto icon = model()->data(model_index, GModel::Role::Icon);
         auto item_text = model()->data(model_index, GModel::Role::Display);
@@ -165,7 +165,7 @@ void GItemView::keydown_event(GKeyEvent& event)
         return;
     }
     if (event.key() == KeyCode::Key_Home) {
-        GModelIndex new_index { 0, 0 };
+        auto new_index = model.index(0, 0);
         if (model.is_valid(new_index)) {
             model.set_selected_index(new_index);
             scroll_into_view(new_index, Orientation::Vertical);
@@ -174,7 +174,7 @@ void GItemView::keydown_event(GKeyEvent& event)
         return;
     }
     if (event.key() == KeyCode::Key_End) {
-        GModelIndex new_index { model.row_count() - 1, 0 };
+        auto new_index = model.index(model.row_count() - 1, 0);
         if (model.is_valid(new_index)) {
             model.set_selected_index(new_index);
             scroll_into_view(new_index, Orientation::Vertical);
@@ -185,9 +185,9 @@ void GItemView::keydown_event(GKeyEvent& event)
     if (event.key() == KeyCode::Key_Up) {
         GModelIndex new_index;
         if (model.selected_index().is_valid())
-            new_index = { model.selected_index().row() - m_visual_column_count, model.selected_index().column() };
+            new_index = model.index(model.selected_index().row() - m_visual_column_count, model.selected_index().column());
         else
-            new_index = { 0, 0 };
+            new_index = model.index(0, 0);
         if (model.is_valid(new_index)) {
             model.set_selected_index(new_index);
             scroll_into_view(new_index, Orientation::Vertical);
@@ -198,9 +198,9 @@ void GItemView::keydown_event(GKeyEvent& event)
     if (event.key() == KeyCode::Key_Down) {
         GModelIndex new_index;
         if (model.selected_index().is_valid())
-            new_index = { model.selected_index().row() + m_visual_column_count, model.selected_index().column() };
+            new_index = model.index(model.selected_index().row() + m_visual_column_count, model.selected_index().column());
         else
-            new_index = { 0, 0 };
+            new_index = model.index(0, 0);
         if (model.is_valid(new_index)) {
             model.set_selected_index(new_index);
             scroll_into_view(new_index, Orientation::Vertical);
@@ -211,9 +211,9 @@ void GItemView::keydown_event(GKeyEvent& event)
     if (event.key() == KeyCode::Key_Left) {
         GModelIndex new_index;
         if (model.selected_index().is_valid())
-            new_index = { model.selected_index().row() - 1, model.selected_index().column() };
+            new_index = model.index(model.selected_index().row() - 1, model.selected_index().column());
         else
-            new_index = { 0, 0 };
+            new_index = model.index(0, 0);
         if (model.is_valid(new_index)) {
             model.set_selected_index(new_index);
             scroll_into_view(new_index, Orientation::Vertical);
@@ -224,9 +224,9 @@ void GItemView::keydown_event(GKeyEvent& event)
     if (event.key() == KeyCode::Key_Right) {
         GModelIndex new_index;
         if (model.selected_index().is_valid())
-            new_index = { model.selected_index().row() + 1, model.selected_index().column() };
+            new_index = model.index(model.selected_index().row() + 1, model.selected_index().column());
         else
-            new_index = { 0, 0 };
+            new_index = model.index(0, 0);
         if (model.is_valid(new_index)) {
             model.set_selected_index(new_index);
             scroll_into_view(new_index, Orientation::Vertical);
@@ -236,7 +236,7 @@ void GItemView::keydown_event(GKeyEvent& event)
     }
     if (event.key() == KeyCode::Key_PageUp) {
         int items_per_page = (visible_content_rect().height() / effective_item_size().height()) * m_visual_column_count;
-        GModelIndex new_index(max(0, model.selected_index().row() - items_per_page), model.selected_index().column());
+        auto new_index = model.index(max(0, model.selected_index().row() - items_per_page), model.selected_index().column());
         if (model.is_valid(new_index)) {
             model.set_selected_index(new_index);
             scroll_into_view(new_index, Orientation::Vertical);
@@ -246,7 +246,7 @@ void GItemView::keydown_event(GKeyEvent& event)
     }
     if (event.key() == KeyCode::Key_PageDown) {
         int items_per_page = (visible_content_rect().height() / effective_item_size().height()) * m_visual_column_count;
-        GModelIndex new_index(min(model.row_count() - 1, model.selected_index().row() + items_per_page), model.selected_index().column());
+        auto new_index = model.index(min(model.row_count() - 1, model.selected_index().row() + items_per_page), model.selected_index().column());
         if (model.is_valid(new_index)) {
             model.set_selected_index(new_index);
             scroll_into_view(new_index, Orientation::Vertical);
