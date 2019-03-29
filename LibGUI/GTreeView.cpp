@@ -121,41 +121,14 @@ GModelIndex GTreeView::index_at_content_position(const Point& position) const
 {
     if (!model())
         return { };
-    auto& model = *this->model();
-    int indent_level = 0;
-    int y_offset = 0;
     GModelIndex result;
-    Function<bool(const GModelIndex&, GModelIndex&)> hit_test_index = [&] (const GModelIndex& index, GModelIndex& result) {
-        if (index.is_valid()) {
-            auto& metadata = ensure_metadata_for_index(index);
-            auto& node = *(const Node*)index.internal_data();
-            int x_offset = indent_level * indent_width_in_pixels();
-            auto data = model.data(index, GModel::Role::Display);
-            Rect rect = { x_offset, y_offset, icon_size() + icon_spacing() + font().width(data.to_string()), item_height() };
-            dbgprintf("%s %s (%s)\n", data.to_string().characters(), rect.to_string().characters(), metadata.open ? "open" : "closed");
-            y_offset += item_height();
-
-            if (rect.contains(position)) {
-                result = index;
-                return true;
-            }
-
-            // NOTE: Skip traversing children if this index is closed!
-            if (!metadata.open)
-                return false;
+    traverse_in_paint_order([&] (const GModelIndex& index, const Rect& rect) {
+        if (rect.contains(position)) {
+            result = index;
+            return IterationDecision::Abort;
         }
-
-        ++indent_level;
-        for (int i = 0; i < model.row_count(index); ++i) {
-            auto child_index = model.index(i, 0, index);
-            if (hit_test_index(child_index, result))
-                return true;
-        }
-        --indent_level;
-        return false;
-    };
-
-    hit_test_index(model.index(0, 0, GModelIndex()), result);
+        return IterationDecision::Continue;
+    });
     return result;
 }
 
@@ -180,6 +153,45 @@ void GTreeView::mousedown_event(GMouseEvent& event)
     }
 }
 
+template<typename Callback>
+void GTreeView::traverse_in_paint_order(Callback callback) const
+{
+    ASSERT(model());
+    auto& model = *this->model();
+    int indent_level = 0;
+    int y_offset = 0;
+    auto visible_content_rect = this->visible_content_rect();
+
+    Function<IterationDecision(const GModelIndex&)> traverse_index = [&] (const GModelIndex& index) {
+        if (index.is_valid()) {
+            auto& metadata = ensure_metadata_for_index(index);
+            int x_offset = indent_level * indent_width_in_pixels();
+            auto node_text = model.data(index, GModel::Role::Display).to_string();
+            Rect rect = {
+                x_offset, y_offset,
+                icon_size() + icon_spacing() + font().width(node_text), item_height()
+            };
+            if (rect.intersects(visible_content_rect)) {
+                if (callback(index, rect) == IterationDecision::Abort)
+                    return IterationDecision::Abort;
+            }
+            y_offset += item_height();
+            // NOTE: Skip traversing children if this index is closed!
+            if (!metadata.open)
+                return IterationDecision::Continue;
+        }
+
+        ++indent_level;
+        for (int i = 0; i < model.row_count(index); ++i) {
+            if (traverse_index(model.index(i, 0, index)) == IterationDecision::Abort)
+                return IterationDecision::Abort;
+        }
+        --indent_level;
+        return IterationDecision::Continue;
+    };
+    traverse_index(model.index(0, 0, GModelIndex()));
+}
+
 void GTreeView::paint_event(GPaintEvent& event)
 {
     GFrame::paint_event(event);
@@ -193,46 +205,20 @@ void GTreeView::paint_event(GPaintEvent& event)
         return;
     auto& model = *this->model();
 
-    int indent_level = 0;
-    int y_offset = 0;
-
-    Function<void(const GModelIndex&)> render_index = [&] (const GModelIndex& index) {
-        if (index.is_valid()) {
-            auto& metadata = ensure_metadata_for_index(index);
-            int x_offset = indent_level * indent_width_in_pixels();
-            auto node_text = model.data(index, GModel::Role::Display).to_string();
-            Rect rect = {
-                x_offset, y_offset,
-                icon_size() + icon_spacing() + font().width(node_text), item_height()
-            };
-            painter.fill_rect(rect, Color::LightGray);
-
-            Rect icon_rect = { rect.x(), rect.y(), icon_size(), icon_size() };
-            auto icon = model.data(index, GModel::Role::Icon);
-            if (icon.is_icon()) {
-                if (auto* bitmap = icon.as_icon().bitmap_for_size(icon_size()))
-                    painter.blit(rect.location(), *bitmap, bitmap->rect());
-            }
-
-            Rect text_rect = {
-                icon_rect.right() + 1 + icon_spacing(), rect.y(),
-                rect.width() - icon_size() - icon_spacing(), rect.height()
-            };
-            painter.draw_text(text_rect, node_text, TextAlignment::CenterLeft, Color::Black);
-            y_offset += item_height();
-
-            // NOTE: Skip traversing children if this index is closed!
-            if (!metadata.open)
-                return;
+    traverse_in_paint_order([&] (const GModelIndex& index, const Rect& rect) {
+        painter.fill_rect(rect, Color::LightGray);
+        Rect icon_rect = { rect.x(), rect.y(), icon_size(), icon_size() };
+        auto icon = model.data(index, GModel::Role::Icon);
+        if (icon.is_icon()) {
+            if (auto* bitmap = icon.as_icon().bitmap_for_size(icon_size()))
+                painter.blit(rect.location(), *bitmap, bitmap->rect());
         }
-
-        ++indent_level;
-        for (int i = 0; i < model.row_count(index); ++i) {
-            auto child_index = model.index(i, 0, index);
-            render_index(child_index);
-        }
-        --indent_level;
-    };
-
-    render_index(model.index(0, 0, GModelIndex()));
+        Rect text_rect = {
+            icon_rect.right() + 1 + icon_spacing(), rect.y(),
+            rect.width() - icon_size() - icon_spacing(), rect.height()
+        };
+        auto node_text = model.data(index, GModel::Role::Display).to_string();
+        painter.draw_text(text_rect, node_text, TextAlignment::CenterLeft, Color::Black);
+        return IterationDecision::Continue;
+    });
 }

@@ -22,6 +22,9 @@ private:
     int icon_size() const { return 16; }
     int icon_spacing() const { return 4; }
 
+    template<typename Callback>
+    void traverse_in_paint_order(Callback) const;
+
     struct MetadataForIndex;
 
     MetadataForIndex& ensure_metadata_for_index(const GModelIndex&) const;
