@@ -174,7 +174,7 @@ void GTreeView::traverse_in_paint_order(Callback callback) const
             auto node_text = model.data(index, GModel::Role::Display).to_string();
             Rect rect = {
                 x_offset, y_offset,
-                icon_size() + icon_spacing() + font().width(node_text), item_height()
+                toggle_size() + icon_spacing() + icon_size() + icon_spacing() + font().width(node_text), item_height()
             };
             if (rect.intersects(visible_content_rect)) {
                 if (callback(index, rect, indent_level) == IterationDecision::Abort)
@@ -219,7 +219,7 @@ void GTreeView::paint_event(GPaintEvent& event)
         auto icon = model.data(index, GModel::Role::Icon);
         if (icon.is_icon()) {
             if (auto* bitmap = icon.as_icon().bitmap_for_size(icon_size()))
-                painter.blit(rect.location(), *bitmap, bitmap->rect());
+                painter.blit(icon_rect.location(), *bitmap, bitmap->rect());
         }
         Rect text_rect = {
             icon_rect.right() + 1 + icon_spacing(), rect.y(),
@@ -245,6 +245,18 @@ void GTreeView::paint_event(GPaintEvent& event)
             }
             index_at_indent = parent_of_index_at_indent;
         }
+
+        if (model.row_count(index) > 0) {
+            int toggle_x = indent_width_in_pixels() * indent_level - icon_size() / 2 - 3;
+            Rect toggle_rect = { toggle_x, rect.y(), toggle_size(), toggle_size() };
+            toggle_rect.center_vertically_within(rect);
+            auto& metadata = ensure_metadata_for_index(index);
+            if (metadata.open)
+                painter.blit(toggle_rect.location(), *m_collapse_bitmap, m_collapse_bitmap->rect());
+            else
+                painter.blit(toggle_rect.location(), *m_expand_bitmap, m_expand_bitmap->rect());
+        }
+
         return IterationDecision::Continue;
     });
 }

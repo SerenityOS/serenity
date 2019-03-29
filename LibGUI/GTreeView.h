@@ -21,6 +21,7 @@ private:
     int indent_width_in_pixels() const { return 16; }
     int icon_size() const { return 16; }
     int icon_spacing() const { return 4; }
+    int toggle_size() const { return 9; }
 
     template<typename Callback>
     void traverse_in_paint_order(Callback) const;
