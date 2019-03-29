@@ -56,6 +56,7 @@ public:
     virtual GModelIndex parent_index(const GModelIndex&) const { return { }; }
     virtual GModelIndex index(int row, int column = 0, const GModelIndex& = GModelIndex()) const { return create_index(row, column); }
     virtual void activate(const GModelIndex&) { }
+    virtual GModelIndex sibling(int row, int column, const GModelIndex& parent) const;
 
     bool is_valid(const GModelIndex& index) const
     {

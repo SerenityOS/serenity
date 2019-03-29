@@ -49,3 +49,13 @@ GModelIndex GModel::create_index(int row, int column, void* data) const
 {
     return GModelIndex(*this, row, column, data);
 }
+
+GModelIndex GModel::sibling(int row, int column, const GModelIndex& parent) const
+{
+    if (!parent.is_valid())
+        return { };
+    int row_count = this->row_count(parent);
+    if (row < 0 || row > row_count)
+        return { };
+    return index(row, column, parent);
+}

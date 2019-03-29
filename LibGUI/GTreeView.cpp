@@ -127,7 +127,7 @@ GModelIndex GTreeView::index_at_content_position(const Point& position) const
     if (!model())
         return { };
     GModelIndex result;
-    traverse_in_paint_order([&] (const GModelIndex& index, const Rect& rect, int, bool) {
+    traverse_in_paint_order([&] (const GModelIndex& index, const Rect& rect, int) {
         if (rect.contains(position)) {
             result = index;
             return IterationDecision::Abort;
@@ -167,7 +167,7 @@ void GTreeView::traverse_in_paint_order(Callback callback) const
     int y_offset = 0;
     auto visible_content_rect = this->visible_content_rect();
 
-    Function<IterationDecision(const GModelIndex&, bool)> traverse_index = [&] (const GModelIndex& index, bool is_last_in_parent) {
+    Function<IterationDecision(const GModelIndex&)> traverse_index = [&] (const GModelIndex& index) {
         if (index.is_valid()) {
             auto& metadata = ensure_metadata_for_index(index);
             int x_offset = indent_level * indent_width_in_pixels();
@@ -177,7 +177,7 @@ void GTreeView::traverse_in_paint_order(Callback callback) const
                 icon_size() + icon_spacing() + font().width(node_text), item_height()
             };
             if (rect.intersects(visible_content_rect)) {
-                if (callback(index, rect, indent_level, is_last_in_parent) == IterationDecision::Abort)
+                if (callback(index, rect, indent_level) == IterationDecision::Abort)
                     return IterationDecision::Abort;
             }
             y_offset += item_height();
@@ -189,13 +189,13 @@ void GTreeView::traverse_in_paint_order(Callback callback) const
         ++indent_level;
         int row_count = model.row_count(index);
         for (int i = 0; i < row_count; ++i) {
-            if (traverse_index(model.index(i, 0, index), i == row_count - 1) == IterationDecision::Abort)
+            if (traverse_index(model.index(i, 0, index)) == IterationDecision::Abort)
                 return IterationDecision::Abort;
         }
         --indent_level;
         return IterationDecision::Continue;
     };
-    traverse_index(model.index(0, 0, GModelIndex()), true);
+    traverse_index(model.index(0, 0, GModelIndex()));
 }
 
 void GTreeView::paint_event(GPaintEvent& event)
@@ -211,7 +211,7 @@ void GTreeView::paint_event(GPaintEvent& event)
         return;
     auto& model = *this->model();
 
-    traverse_in_paint_order([&] (const GModelIndex& index, const Rect& rect, int indent_level, bool is_last_in_parent) {
+    traverse_in_paint_order([&] (const GModelIndex& index, const Rect& rect, int indent_level) {
 #ifdef DEBUG_ITEM_RECTS
         painter.fill_rect(rect, Color::LightGray);
 #endif
@@ -227,18 +227,23 @@ void GTreeView::paint_event(GPaintEvent& event)
         };
         auto node_text = model.data(index, GModel::Role::Display).to_string();
         painter.draw_text(text_rect, node_text, TextAlignment::CenterLeft, Color::Black);
-        for (int i = 0; i <= indent_level; ++i) {
+        auto index_at_indent = index;
+        for (int i = indent_level; i >= 0; --i) {
+            auto parent_of_index_at_indent = index_at_indent.parent();
+            bool index_at_indent_is_last_in_parent = index_at_indent.row() == model.row_count(parent_of_index_at_indent) - 1;
             Point a { indent_width_in_pixels() * i - icon_size() / 2, rect.y() };
             Point b { a.x(), a.y() + item_height() - 1 };
-            if (i == indent_level && is_last_in_parent)
+            if (index_at_indent_is_last_in_parent)
                 b.set_y(rect.center().y());
-            painter.draw_line(a, b, Color::MidGray);
+            if (!(i != indent_level && index_at_indent_is_last_in_parent))
+                painter.draw_line(a, b, Color::MidGray);
 
             if (i == indent_level) {
                 Point c { a.x(), rect.center().y() };
                 Point d { c.x() + icon_size() / 2, c.y() };
                 painter.draw_line(c, d, Color::MidGray);
             }
+            index_at_indent = parent_of_index_at_indent;
         }
         return IterationDecision::Continue;
     });
