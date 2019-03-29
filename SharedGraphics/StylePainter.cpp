@@ -35,7 +35,7 @@ static void paint_button_new(Painter& painter, const Rect& rect, bool pressed)
         painter.draw_line({ 1, 2 }, {1, rect.height() - 2 }, shadow_color1);
     } else {
         // Base
-        painter.fill_rect({ 2, 2, rect.width() - 4, rect.height() - 4 }, button_color);
+        painter.fill_rect({ 1, 1, rect.width() - 3, rect.height() - 3 }, button_color);
 
         // Outer highlight
         painter.draw_line({ 0, 0 }, { rect.width() - 2, 0 }, highlight_color2);
