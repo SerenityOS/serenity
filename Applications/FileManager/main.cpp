@@ -12,6 +12,7 @@
 #include <LibGUI/GMessageBox.h>
 #include <LibGUI/GProgressBar.h>
 #include <LibGUI/GTreeView.h>
+#include <LibGUI/GFileSystemModel.h>
 #include <unistd.h>
 #include <signal.h>
 #include <stdio.h>
@@ -53,6 +54,7 @@ int main(int argc, char** argv)
     auto* splitter = new GWidget(widget);
     splitter->set_layout(make<GBoxLayout>(Orientation::Horizontal));
     auto* tree_view = new GTreeView(splitter);
+    tree_view->set_model(GFileSystemModel::create("/"));
     tree_view->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
     tree_view->set_preferred_size({ 200, 0 });
     auto* directory_view = new DirectoryView(splitter);

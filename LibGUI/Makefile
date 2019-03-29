@@ -55,6 +55,7 @@ LIBGUI_OBJS = \
     GElapsedTimer.o \
     GFrame.o \
     GTreeView.o \
+    GFileSystemModel.o \
     GWindow.o
 
 OBJS = $(SHAREDGRAPHICS_OBJS) $(LIBGUI_OBJS)
@@ -62,7 +63,7 @@ OBJS = $(SHAREDGRAPHICS_OBJS) $(LIBGUI_OBJS)
 LIBS = -lc
 
 LIBRARY = libgui.a
-STANDARD_FLAGS = -std=c++17
+STANDARD_FLAGS = -std=c++17 -Wno-sized-deallocation
 WARNING_FLAGS = -Wextra -Wall -Wundef -Wcast-qual -Wwrite-strings -Wimplicit-fallthrough
 FLAVOR_FLAGS = -fno-exceptions -fno-rtti
 OPTIMIZATION_FLAGS = -Os

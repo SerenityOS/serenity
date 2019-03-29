@@ -53,6 +53,8 @@ public:
     virtual ColumnMetadata column_metadata(int) const { return { }; }
     virtual GVariant data(const GModelIndex&, Role = Role::Display) const = 0;
     virtual void update() = 0;
+    virtual GModelIndex parent_index(const GModelIndex&) const { return { }; }
+    virtual GModelIndex index(int row, int column = 0, const GModelIndex& = GModelIndex()) const { return create_index(row, column); }
     virtual void activate(const GModelIndex&) { }
 
     bool is_valid(const GModelIndex& index) const
@@ -75,9 +77,6 @@ public:
 
     Function<void(GModel&)> on_model_update;
     Function<void(const GModelIndex&)> on_selection_changed;
-
-    virtual GModelIndex parent_index(const GModelIndex&) const { return { }; }
-    virtual GModelIndex index(int row, int column = 0, const GModelIndex& = GModelIndex()) const { return create_index(row, column); }
 
 protected:
     GModel();
