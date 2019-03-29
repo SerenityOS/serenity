@@ -489,7 +489,7 @@ void Painter::draw_focus_rect(const Rect& rect)
     draw_rect(focus_rect, Color::from_rgb(0x84351a));
 }
 
-void Painter::set_clip_rect(const Rect& rect)
+void Painter::add_clip_rect(const Rect& rect)
 {
     state().clip_rect.intersect(rect.translated(m_clip_origin.location()));
     state().clip_rect.intersect(m_target->rect());

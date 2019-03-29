@@ -39,8 +39,8 @@ void GProgressBar::paint_event(GPaintEvent& event)
 
     GPainter painter(*this);
     auto rect = frame_inner_rect();
-    painter.set_clip_rect(rect);
-    painter.set_clip_rect(event.rect());
+    painter.add_clip_rect(rect);
+    painter.add_clip_rect(event.rect());
 
     // First we fill the entire widget with the gradient. This incurs a bit of
     // overdraw but ensures a consistent look throughout the progression.
@@ -69,7 +69,7 @@ void GProgressBar::paint_event(GPaintEvent& event)
     // We draw the text a third time, clipped and inverse, for sharp contrast.
     float progress_width = progress * width();
     Rect hole_rect { (int)progress_width, 0, (int)(width() - progress_width), height() };
-    painter.set_clip_rect(hole_rect);
+    painter.add_clip_rect(hole_rect);
     painter.fill_rect(hole_rect, Color::White);
     painter.draw_text(rect.translated(0, 0), progress_text, TextAlignment::Center, Color::Black);
 }

@@ -55,7 +55,7 @@ void GCheckBox::set_checked(bool b)
 void GCheckBox::paint_event(GPaintEvent& event)
 {
     GPainter painter(*this);
-    painter.set_clip_rect(event.rect());
+    painter.add_clip_rect(event.rect());
 
     auto text_rect = rect();
     text_rect.set_left(s_box_width + 4);

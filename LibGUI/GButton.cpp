@@ -24,7 +24,7 @@ void GButton::set_caption(const String& caption)
 void GButton::paint_event(GPaintEvent& event)
 {
     GPainter painter(*this);
-    painter.set_clip_rect(event.rect());
+    painter.add_clip_rect(event.rect());
 
     StylePainter::the().paint_button(painter, rect(), m_button_style, m_being_pressed, m_hovered);
 
