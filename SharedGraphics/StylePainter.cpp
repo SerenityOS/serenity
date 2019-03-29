@@ -98,11 +98,13 @@ void StylePainter::paint_button(Painter& painter, const Rect& rect, ButtonStyle 
     }
 }
 
-void StylePainter::paint_surface(Painter& painter, const Rect& rect)
+void StylePainter::paint_surface(Painter& painter, const Rect& rect, bool paint_vertical_lines)
 {
     painter.fill_rect({ rect.x(), rect.y() + 1, rect.width(), rect.height() - 2 }, Color::LightGray);
     painter.draw_line(rect.top_left(), rect.top_right(), Color::White);
     painter.draw_line(rect.bottom_left(), rect.bottom_right(), Color::MidGray);
-    painter.draw_line(rect.top_left().translated(0, 1), rect.bottom_left().translated(0, -1), Color::White);
-    painter.draw_line(rect.top_right(), rect.bottom_right().translated(0, -1), Color::MidGray);
+    if (paint_vertical_lines) {
+        painter.draw_line(rect.top_left().translated(0, 1), rect.bottom_left().translated(0, -1), Color::White);
+        painter.draw_line(rect.top_right(), rect.bottom_right().translated(0, -1), Color::MidGray);
+    }
 }

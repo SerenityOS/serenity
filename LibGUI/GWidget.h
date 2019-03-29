@@ -139,6 +139,8 @@ public:
     bool is_visible() const { return m_visible; }
     void set_visible(bool);
 
+    bool spans_entire_window_horizontally() const;
+
 private:
     virtual bool is_widget() const final { return true; }
 

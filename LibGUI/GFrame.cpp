@@ -38,8 +38,11 @@ void GFrame::paint_event(GPaintEvent& event)
     if (m_thickness >= 1) {
         painter.draw_line(rect().top_left(), rect().top_right(), top_left_color);
         painter.draw_line(rect().bottom_left(), rect().bottom_right(), bottom_right_color);
-        painter.draw_line(rect().top_left().translated(0, 1), rect().bottom_left().translated(0, -1), top_left_color);
-        painter.draw_line(rect().top_right(), rect().bottom_right().translated(0, -1), bottom_right_color);
+
+        if (m_shape != Shape::Panel || !spans_entire_window_horizontally()) {
+            painter.draw_line(rect().top_left().translated(0, 1), rect().bottom_left().translated(0, -1), top_left_color);
+            painter.draw_line(rect().top_right(), rect().bottom_right().translated(0, -1), bottom_right_color);
+        }
     }
 
     if (m_shape == Shape::Container && m_thickness >= 2) {
