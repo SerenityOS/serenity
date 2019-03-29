@@ -488,8 +488,10 @@ Rect GTextEditor::cursor_content_rect() const
     ASSERT(!m_lines.is_empty());
     ASSERT(m_cursor.column() <= (current_line().length() + 1));
     if (is_single_line()) {
-        Rect cursor_rect = { m_horizontal_content_padding + m_cursor.column() * glyph_width(), 0, 1, line_height() };
+        Rect cursor_rect = { m_horizontal_content_padding + m_cursor.column() * glyph_width(), 0, 1, font().glyph_height() + 2 };
         cursor_rect.center_vertically_within(rect());
+        // FIXME: This would not be necessary if we knew more about the font and could center it based on baseline and x-height.
+        cursor_rect.move_by(0, 1);
         return cursor_rect;
     }
     return { m_horizontal_content_padding + m_cursor.column() * glyph_width(), m_cursor.line() * line_height(), 1, line_height() };
@@ -498,11 +500,11 @@ Rect GTextEditor::cursor_content_rect() const
 Rect GTextEditor::line_widget_rect(int line_index) const
 {
     auto rect = line_content_rect(line_index);
-    rect.move_by(-(horizontal_scrollbar().value() + m_horizontal_content_padding), -(vertical_scrollbar().value()));
+    rect.move_by(-(horizontal_scrollbar().value() + ruler_width() + m_horizontal_content_padding), -(vertical_scrollbar().value()));
     rect.set_width(rect.width() + 1); // Add 1 pixel for when the cursor is on the end.
     rect.intersect(this->rect());
     // This feels rather hackish, but extend the rect to the edge of the content view:
-    rect.set_right(vertical_scrollbar().relative_rect().left() - 1);
+    rect.set_right(frame_inner_rect().right());
     return rect;
 }
 
@@ -519,7 +521,7 @@ void GTextEditor::scroll_cursor_into_view()
 Rect GTextEditor::line_content_rect(int line_index) const
 {
     if (is_single_line()) {
-        Rect line_rect = { m_horizontal_content_padding, 0, content_width(), font().glyph_height() };
+        Rect line_rect = { m_horizontal_content_padding, 0, content_width(), font().glyph_height() + 2 };
         line_rect.center_vertically_within(rect());
         // FIXME: This would not be necessary if we knew more about the font and could center it based on baseline and x-height.
         line_rect.move_by(0, 1);
