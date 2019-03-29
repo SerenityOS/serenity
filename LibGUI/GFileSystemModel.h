@@ -5,9 +5,11 @@
 class GFileSystemModel : public GModel {
     friend class Node;
 public:
-    static Retained<GFileSystemModel> create(const String& root_path = "/")
+    enum Mode { Invalid, DirectoriesOnly, FilesAndDirectories };
+
+    static Retained<GFileSystemModel> create(const String& root_path = "/", Mode mode = Mode::FilesAndDirectories)
     {
-        return adopt(*new GFileSystemModel(root_path));
+        return adopt(*new GFileSystemModel(root_path, mode));
     }
     virtual ~GFileSystemModel() override;
 
@@ -22,9 +24,10 @@ public:
     virtual void activate(const GModelIndex&) override;
 
 private:
-    explicit GFileSystemModel(const String& root_path);
+    GFileSystemModel(const String& root_path, Mode);
 
     String m_root_path;
+    Mode m_mode { Invalid };
 
     struct Node;
     Node* m_root { nullptr };

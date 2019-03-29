@@ -51,7 +51,6 @@ struct GFileSystemModel::Node {
 
         auto full_path = this->full_path(model);
         DIR* dirp = opendir(full_path.characters());
-        dbgprintf("traverse if needed: %s (%p)\n", full_path.characters(), dirp);
         if (!dirp)
             return;
 
@@ -64,6 +63,8 @@ struct GFileSystemModel::Node {
                 perror("lstat");
                 continue;
             }
+            if (model.m_mode == DirectoriesOnly && !S_ISDIR(st.st_mode))
+                continue;
             auto* child = new Node;
             child->name = de->d_name;
             child->type = S_ISDIR(st.st_mode) ? Node::Type::Directory : Node::Type::File;
@@ -91,8 +92,9 @@ struct GFileSystemModel::Node {
     }
 };
 
-GFileSystemModel::GFileSystemModel(const String& root_path)
+GFileSystemModel::GFileSystemModel(const String& root_path, Mode mode)
     : m_root_path(FileSystemPath(root_path).string())
+    , m_mode(mode)
 {
     update();
 }
