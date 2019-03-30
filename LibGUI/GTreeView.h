@@ -14,6 +14,7 @@ protected:
     virtual void paint_event(GPaintEvent&) override;
     virtual void mousedown_event(GMouseEvent&) override;
     virtual void did_update_selection() override;
+    virtual void did_update_model() override;
 
 private:
     GModelIndex index_at_content_position(const Point&, bool& is_toggle) const;
@@ -24,6 +25,7 @@ private:
     int icon_spacing() const { return 2; }
     int toggle_size() const { return 9; }
     int text_padding() const { return 2; }
+    void update_content_size();
 
     template<typename Callback>
     void traverse_in_paint_order(Callback) const;

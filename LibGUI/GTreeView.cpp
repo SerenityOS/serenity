@@ -75,6 +75,7 @@ void GTreeView::mousedown_event(GMouseEvent& event)
     if (is_toggle && model.row_count(index)) {
         auto& metadata = ensure_metadata_for_index(index);
         metadata.open = !metadata.open;
+        update_content_size();
         update();
     }
 }
@@ -86,7 +87,6 @@ void GTreeView::traverse_in_paint_order(Callback callback) const
     auto& model = *this->model();
     int indent_level = 0;
     int y_offset = 0;
-    auto visible_content_rect = this->visible_content_rect();
 
     Function<IterationDecision(const GModelIndex&)> traverse_index = [&] (const GModelIndex& index) {
         int row_count_at_index = model.row_count(index);
@@ -104,10 +104,8 @@ void GTreeView::traverse_in_paint_order(Callback callback) const
                 toggle_rect = { toggle_x, rect.y(), toggle_size(), toggle_size() };
                 toggle_rect.center_vertically_within(rect);
             }
-            if (rect.intersects(visible_content_rect)) {
-                if (callback(index, rect, toggle_rect, indent_level) == IterationDecision::Abort)
-                    return IterationDecision::Abort;
-            }
+            if (callback(index, rect, toggle_rect, indent_level) == IterationDecision::Abort)
+                return IterationDecision::Abort;
             y_offset += item_height();
             // NOTE: Skip traversing children if this index is closed!
             if (!metadata.open)
@@ -134,12 +132,16 @@ void GTreeView::paint_event(GPaintEvent& event)
     painter.add_clip_rect(event.rect());
     painter.fill_rect(event.rect(), Color::White);
     painter.translate(frame_inner_rect().location());
+    painter.translate(-horizontal_scrollbar().value(), -vertical_scrollbar().value());
 
     if (!model())
         return;
     auto& model = *this->model();
+    auto visible_content_rect = this->visible_content_rect();
 
     traverse_in_paint_order([&] (const GModelIndex& index, const Rect& rect, const Rect& toggle_rect, int indent_level) {
+        if (!rect.intersects(visible_content_rect))
+            return IterationDecision::Continue;
 #ifdef DEBUG_ITEM_RECTS
         painter.fill_rect(rect, Color::LightGray);
 #endif
@@ -210,6 +212,12 @@ void GTreeView::scroll_into_view(const GModelIndex& a_index, Orientation orienta
     GScrollableWidget::scroll_into_view(found_rect, orientation);
 }
 
+void GTreeView::did_update_model()
+{
+    GAbstractView::did_update_model();
+    update_content_size();
+}
+
 void GTreeView::did_update_selection()
 {
     ASSERT(model());
@@ -217,10 +225,33 @@ void GTreeView::did_update_selection()
     auto index = model.selected_index();
     if (!index.is_valid())
         return;
-    ensure_metadata_for_index(index).open = true;
-    auto parent = index.parent();
-    while (parent.is_valid()) {
-        ensure_metadata_for_index(parent).open = true;
-        parent = parent.parent();
+    bool opened_any = false;
+    auto& metadata_for_index = ensure_metadata_for_index(index);
+    if (!metadata_for_index.open) {
+        opened_any = true;
+        metadata_for_index.open = true;
     }
+    auto ancestor = index.parent();
+    while (ancestor.is_valid()) {
+        auto& metadata_for_ancestor = ensure_metadata_for_index(ancestor);
+        if (!metadata_for_ancestor.open) {
+            metadata_for_ancestor.open = true;
+            opened_any = true;
+        }
+        ancestor = ancestor.parent();
+    }
+    if (opened_any)
+        update_content_size();
+}
+
+void GTreeView::update_content_size()
+{
+    int height = 0;
+    int width = 0;
+    traverse_in_paint_order([&] (const GModelIndex&, const Rect& rect, const Rect&, int) {
+        width = max(width, rect.right());
+        height += rect.height();
+        return IterationDecision::Continue;
+    });
+    set_content_size({ width, height });
 }
