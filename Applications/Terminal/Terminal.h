@@ -7,6 +7,7 @@
 #include <SharedGraphics/Rect.h>
 #include <LibGUI/GWidget.h>
 #include <LibGUI/GNotifier.h>
+#include <LibGUI/GTimer.h>
 
 class Font;
 
@@ -65,6 +66,7 @@ private:
     word rows() const { return m_rows; }
     Rect glyph_rect(word row, word column);
     Rect row_rect(word row);
+    void update_cursor();
 
     struct Attribute {
         Attribute() { reset(); }
@@ -154,6 +156,9 @@ private:
 
     float m_opacity { 1 };
     bool m_needs_background_fill { true };
+    bool m_cursor_blink_state { true };
 
     int m_glyph_width { 0 };
+
+    GTimer m_cursor_blink_timer;
 };

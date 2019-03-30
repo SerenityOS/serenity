@@ -57,6 +57,7 @@ LIBGUI_OBJS = \
     GTreeView.o \
     GFileSystemModel.o \
     GSplitter.o \
+    GTimer.o \
     GWindow.o
 
 OBJS = $(SHAREDGRAPHICS_OBJS) $(LIBGUI_OBJS)
