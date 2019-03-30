@@ -10,6 +10,7 @@
 #include <LibGUI/GMenu.h>
 #include <LibGUI/GMenuBar.h>
 #include <LibGUI/GInputBox.h>
+#include <LibGUI/GSplitter.h>
 #include <stdio.h>
 
 IRCAppWindow::IRCAppWindow()
@@ -136,8 +137,7 @@ void IRCAppWindow::setup_widgets()
     toolbar->add_action(*m_open_query_action);
     toolbar->add_action(*m_close_query_action);
 
-    auto* horizontal_container = new GWidget(widget);
-    horizontal_container->set_layout(make<GBoxLayout>(Orientation::Horizontal));
+    auto* horizontal_container = new GSplitter(Orientation::Horizontal, widget);
 
     m_window_list = new GTableView(horizontal_container);
     m_window_list->set_headers_visible(false);
