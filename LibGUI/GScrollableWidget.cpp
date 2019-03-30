@@ -30,8 +30,8 @@ void GScrollableWidget::resize_event(GResizeEvent& event)
     auto inner_rect = frame_inner_rect_for_size(event.size());
     update_scrollbar_ranges();
 
-    int height_wanted_by_horizontal_scrollbar = m_horizontal_scrollbar->is_visible() ? m_horizontal_scrollbar->height() : 0;
-    int width_wanted_by_vertical_scrollbar = m_vertical_scrollbar->is_visible() ? m_vertical_scrollbar->width() : 0;
+    int height_wanted_by_horizontal_scrollbar = m_horizontal_scrollbar->is_visible() ? m_horizontal_scrollbar->preferred_size().height() : 0;
+    int width_wanted_by_vertical_scrollbar = m_vertical_scrollbar->is_visible() ? m_vertical_scrollbar->preferred_size().width() : 0;
 
     m_vertical_scrollbar->set_relative_rect(inner_rect.right() + 1 - m_vertical_scrollbar->preferred_size().width(), inner_rect.top(), m_vertical_scrollbar->preferred_size().width(), inner_rect.height() - height_wanted_by_horizontal_scrollbar);
     m_horizontal_scrollbar->set_relative_rect(inner_rect.left(), inner_rect.bottom() + 1 - m_horizontal_scrollbar->preferred_size().height(), inner_rect.width() - m_vertical_scrollbar->preferred_size().width(), width_wanted_by_vertical_scrollbar);
