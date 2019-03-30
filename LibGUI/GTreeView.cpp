@@ -293,6 +293,7 @@ void GTreeView::did_update_selection()
     auto index = model.selected_index();
     if (!index.is_valid())
         return;
+    ensure_metadata_for_index(index).open = true;
     auto parent = index.parent();
     while (parent.is_valid()) {
         ensure_metadata_for_index(parent).open = true;
