@@ -54,7 +54,8 @@ int main(int argc, char** argv)
     auto* splitter = new GWidget(widget);
     splitter->set_layout(make<GBoxLayout>(Orientation::Horizontal));
     auto* tree_view = new GTreeView(splitter);
-    tree_view->set_model(GFileSystemModel::create("/", GFileSystemModel::Mode::DirectoriesOnly));
+    auto file_system_model = GFileSystemModel::create("/", GFileSystemModel::Mode::DirectoriesOnly);
+    tree_view->set_model(file_system_model.copy_ref());
     tree_view->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
     tree_view->set_preferred_size({ 200, 0 });
     auto* directory_view = new DirectoryView(splitter);
@@ -68,6 +69,10 @@ int main(int argc, char** argv)
 
     location_textbox->on_return_pressed = [directory_view] (auto& editor) {
         directory_view->open(editor.text());
+    };
+
+    file_system_model->on_selection_changed = [&] (auto& index) {
+        directory_view->open(file_system_model->path(index));
     };
 
     auto open_parent_directory_action = GAction::create("Open parent directory", { Mod_Alt, Key_Up }, GraphicsBitmap::load_from_file("/res/icons/16x16/open-parent-directory.png"), [directory_view] (const GAction&) {

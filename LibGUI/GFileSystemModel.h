@@ -14,6 +14,7 @@ public:
     virtual ~GFileSystemModel() override;
 
     String root_path() const { return m_root_path; }
+    String path(const GModelIndex&) const;
 
     virtual int row_count(const GModelIndex& = GModelIndex()) const override;
     virtual int column_count(const GModelIndex& = GModelIndex()) const override;
