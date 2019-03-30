@@ -13,6 +13,7 @@
 #include <LibGUI/GProgressBar.h>
 #include <LibGUI/GTreeView.h>
 #include <LibGUI/GFileSystemModel.h>
+#include <LibGUI/GSplitter.h>
 #include <unistd.h>
 #include <signal.h>
 #include <stdio.h>
@@ -50,9 +51,7 @@ int main(int argc, char** argv)
 
     auto* location_textbox = new GTextEditor(GTextEditor::SingleLine, location_toolbar);
 
-    // FIXME: Implement an actual GSplitter widget.
-    auto* splitter = new GWidget(widget);
-    splitter->set_layout(make<GBoxLayout>(Orientation::Horizontal));
+    auto* splitter = new GSplitter(Orientation::Horizontal, widget);
     auto* tree_view = new GTreeView(splitter);
     auto file_system_model = GFileSystemModel::create("/", GFileSystemModel::Mode::DirectoriesOnly);
     tree_view->set_model(file_system_model.copy_ref());

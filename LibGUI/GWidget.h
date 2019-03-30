@@ -135,6 +135,7 @@ public:
     bool global_cursor_tracking() const;
 
     void notify_layout_changed(Badge<GLayout>);
+    void invalidate_layout();
 
     bool is_visible() const { return m_visible; }
     void set_visible(bool);
@@ -148,7 +149,6 @@ private:
     void handle_resize_event(GResizeEvent&);
     void handle_mouseup_event(GMouseEvent&);
     void do_layout();
-    void invalidate_layout();
 
     GWindow* m_window { nullptr };
     OwnPtr<GLayout> m_layout;
