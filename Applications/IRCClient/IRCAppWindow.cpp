@@ -58,7 +58,7 @@ void IRCAppWindow::setup_client()
 void IRCAppWindow::setup_actions()
 {
     m_join_action = GAction::create("Join channel", GraphicsBitmap::load_from_file("/res/icons/16x16/irc-join.png"), [&] (auto&) {
-        GInputBox input_box("Enter nickname:", "Join channel", this);
+        GInputBox input_box("Enter channel name:", "Join channel", this);
         if (input_box.exec() == GInputBox::ExecOK && !input_box.text_value().is_empty())
             m_client.handle_join_action(input_box.text_value());
     });
