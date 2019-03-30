@@ -166,9 +166,12 @@ int main(int argc, char** argv)
     main_toolbar->add_action(view_as_icons_action.copy_ref());
     main_toolbar->add_action(view_as_table_action.copy_ref());
 
-    directory_view->on_path_change = [window, location_textbox] (const String& new_path) {
+    directory_view->on_path_change = [window, location_textbox, &file_system_model, tree_view] (const String& new_path) {
         window->set_title(String::format("FileManager: %s", new_path.characters()));
         location_textbox->set_text(new_path);
+        file_system_model->set_selected_index(file_system_model->index(new_path));
+        tree_view->scroll_into_view(file_system_model->selected_index(), Orientation::Vertical);
+        tree_view->update();
     };
 
     directory_view->on_status_message = [statusbar] (String message) {

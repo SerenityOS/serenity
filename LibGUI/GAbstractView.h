@@ -14,10 +14,9 @@ public:
     GModel* model() { return m_model.ptr(); }
     const GModel* model() const { return m_model.ptr(); }
 
-    void scroll_into_view(const GModelIndex&, Orientation);
-
     virtual bool accepts_focus() const override { return true; }
     virtual void did_update_model();
+    virtual void did_update_selection();
 
     Function<void(const GModelNotification&)> on_model_notification;
 

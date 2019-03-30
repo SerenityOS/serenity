@@ -270,3 +270,32 @@ void GTreeView::paint_event(GPaintEvent& event)
         return IterationDecision::Continue;
     });
 }
+
+void GTreeView::scroll_into_view(const GModelIndex& a_index, Orientation orientation)
+{
+    if (!a_index.is_valid())
+        return;
+    Rect found_rect;
+    traverse_in_paint_order([&] (const GModelIndex& index, const Rect& rect, int) {
+        if (index == a_index) {
+            found_rect = rect;
+            return IterationDecision::Abort;
+        }
+        return IterationDecision::Continue;
+    });
+    GScrollableWidget::scroll_into_view(found_rect, orientation);
+}
+
+void GTreeView::did_update_selection()
+{
+    ASSERT(model());
+    auto& model = *this->model();
+    auto index = model.selected_index();
+    if (!index.is_valid())
+        return;
+    auto parent = index.parent();
+    while (parent.is_valid()) {
+        ensure_metadata_for_index(parent).open = true;
+        parent = parent.parent();
+    }
+}

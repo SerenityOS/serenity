@@ -35,3 +35,7 @@ void GAbstractView::did_update_model()
 {
     model_notification(GModelNotification(GModelNotification::ModelUpdated));
 }
+
+void GAbstractView::did_update_selection()
+{
+}

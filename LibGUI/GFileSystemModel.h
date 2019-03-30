@@ -15,6 +15,7 @@ public:
 
     String root_path() const { return m_root_path; }
     String path(const GModelIndex&) const;
+    GModelIndex index(const String& path) const;
 
     virtual int row_count(const GModelIndex& = GModelIndex()) const override;
     virtual int column_count(const GModelIndex& = GModelIndex()) const override;
