@@ -175,7 +175,7 @@ void GTreeView::traverse_in_paint_order(Callback callback) const
             auto node_text = model.data(index, GModel::Role::Display).to_string();
             Rect rect = {
                 x_offset, y_offset,
-                icon_size() + icon_spacing() + font().width(node_text) + icon_spacing(), item_height()
+                icon_size() + icon_spacing() + text_padding() + font().width(node_text) + text_padding(), item_height()
             };
             if (rect.intersects(visible_content_rect)) {
                 if (callback(index, rect, indent_level) == IterationDecision::Abort)
@@ -219,11 +219,6 @@ void GTreeView::paint_event(GPaintEvent& event)
 
         Color background_color = Color::from_rgb(0xffffff);
         Color text_color = Color::from_rgb(0x000000);
-        if (index == model.selected_index()) {
-            background_color = is_focused() ? Color::from_rgb(0x84351a) : Color::from_rgb(0x606060);
-            text_color = Color::from_rgb(0xffffff);
-            painter.fill_rect(rect, background_color);
-        }
 
         Rect icon_rect = { rect.x(), rect.y(), icon_size(), icon_size() };
         auto icon = model.data(index, GModel::Role::Icon);
@@ -235,13 +230,18 @@ void GTreeView::paint_event(GPaintEvent& event)
             icon_rect.right() + 1 + icon_spacing(), rect.y(),
             rect.width() - icon_size() - icon_spacing(), rect.height()
         };
+        if (index == model.selected_index()) {
+            background_color = is_focused() ? Color::from_rgb(0x84351a) : Color::from_rgb(0x606060);
+            text_color = Color::from_rgb(0xffffff);
+            painter.fill_rect(text_rect, background_color);
+        }
         auto node_text = model.data(index, GModel::Role::Display).to_string();
-        painter.draw_text(text_rect, node_text, TextAlignment::CenterLeft, text_color);
+        painter.draw_text(text_rect, node_text, TextAlignment::Center, text_color);
         auto index_at_indent = index;
         for (int i = indent_level; i >= 0; --i) {
             auto parent_of_index_at_indent = index_at_indent.parent();
             bool index_at_indent_is_last_in_parent = index_at_indent.row() == model.row_count(parent_of_index_at_indent) - 1;
-            Point a { indent_width_in_pixels() * i - icon_size() / 2, rect.y() };
+            Point a { indent_width_in_pixels() * i - icon_size() / 2, rect.y() - 2 };
             Point b { a.x(), a.y() + item_height() - 1 };
             if (index_at_indent_is_last_in_parent)
                 b.set_y(rect.center().y());
@@ -257,7 +257,7 @@ void GTreeView::paint_event(GPaintEvent& event)
         }
 
         if (model.row_count(index) > 0) {
-            int toggle_x = indent_width_in_pixels() * indent_level - icon_size() / 2 - 3;
+            int toggle_x = indent_width_in_pixels() * indent_level - icon_size() / 2 - 4;
             Rect toggle_rect = { toggle_x, rect.y(), toggle_size(), toggle_size() };
             toggle_rect.center_vertically_within(rect);
             auto& metadata = ensure_metadata_for_index(index);

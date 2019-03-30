@@ -20,8 +20,9 @@ private:
     int max_item_width() const { return frame_inner_rect().width(); }
     int indent_width_in_pixels() const { return 16; }
     int icon_size() const { return 16; }
-    int icon_spacing() const { return 4; }
+    int icon_spacing() const { return 2; }
     int toggle_size() const { return 9; }
+    int text_padding() const { return 2; }
 
     template<typename Callback>
     void traverse_in_paint_order(Callback) const;
