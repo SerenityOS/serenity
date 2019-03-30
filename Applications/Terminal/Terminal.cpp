@@ -21,6 +21,12 @@ Terminal::Terminal(int ptm_fd)
     : m_ptm_fd(ptm_fd)
     , m_notifier(ptm_fd, GNotifier::Read)
 {
+    m_cursor_blink_timer.set_interval(500);
+    m_cursor_blink_timer.on_timeout = [this] {
+        m_cursor_blink_state = !m_cursor_blink_state;
+        update_cursor();
+    };
+
     set_font(Font::default_fixed_width_font());
     m_notifier.on_ready_to_read = [this] (GNotifier& notifier) {
         byte buffer[BUFSIZ];
@@ -724,6 +730,12 @@ void Terminal::event(GEvent& event)
 {
     if (event.type() == GEvent::WindowBecameActive || event.type() == GEvent::WindowBecameInactive) {
         m_in_active_window = event.type() == GEvent::WindowBecameActive;
+        if (!m_in_active_window) {
+            m_cursor_blink_timer.stop();
+        } else {
+            m_cursor_blink_state = true;
+            m_cursor_blink_timer.start();
+        }
         invalidate_cursor();
         update();
     }
@@ -794,7 +806,7 @@ void Terminal::paint_event(GPaintEvent&)
             painter.fill_rect(row_rect(row), lookup_color(line.attributes[0].background_color).with_alpha(255 * m_opacity));
         }
         for (word column = 0; column < m_columns; ++column) {
-            bool should_reverse_fill_for_cursor = m_in_active_window && row == m_cursor_row && column == m_cursor_column;
+            bool should_reverse_fill_for_cursor = m_cursor_blink_state && m_in_active_window && row == m_cursor_row && column == m_cursor_column;
             auto& attribute = line.attributes[column];
             char ch = line.characters[column];
             auto character_rect = glyph_rect(row, column);
@@ -863,4 +875,10 @@ void Terminal::apply_size_increments_to_window(GWindow& window)
 {
     window.set_size_increment({ font().glyph_width('x'), m_line_height });
     window.set_base_size({ m_inset * 2, m_inset * 2});
+}
+
+void Terminal::update_cursor()
+{
+    invalidate_cursor();
+    flush_dirty_lines();
 }
