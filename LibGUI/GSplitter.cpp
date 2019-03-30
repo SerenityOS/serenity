@@ -15,6 +15,18 @@ GSplitter::~GSplitter()
 {
 }
 
+void GSplitter::enter_event(GEvent&)
+{
+    set_background_color(Color::from_rgb(0xd6d2ce));
+    update();
+}
+
+void GSplitter::leave_event(GEvent&)
+{
+    set_background_color(Color::LightGray);
+    update();
+}
+
 void GSplitter::mousedown_event(GMouseEvent& event)
 {
     if (event.button() != GMouseButton::Left)
