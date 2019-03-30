@@ -92,6 +92,15 @@ struct GFileSystemModel::Node {
     }
 };
 
+String GFileSystemModel::path(const GModelIndex& index) const
+{
+    if (!index.is_valid())
+        return { };
+    auto& node = *(Node*)index.internal_data();
+    node.reify_if_needed(*this);
+    return node.full_path(*this);
+}
+
 GFileSystemModel::GFileSystemModel(const String& root_path, Mode mode)
     : m_root_path(FileSystemPath(root_path).string())
     , m_mode(mode)
