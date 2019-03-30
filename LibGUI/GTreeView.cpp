@@ -122,14 +122,20 @@ GTreeView::~GTreeView()
 {
 }
 
-GModelIndex GTreeView::index_at_content_position(const Point& position) const
+GModelIndex GTreeView::index_at_content_position(const Point& position, bool& is_toggle) const
 {
+    is_toggle = false;
     if (!model())
         return { };
     GModelIndex result;
-    traverse_in_paint_order([&] (const GModelIndex& index, const Rect& rect, int) {
+    traverse_in_paint_order([&] (const GModelIndex& index, const Rect& rect, const Rect& toggle_rect, int) {
         if (rect.contains(position)) {
             result = index;
+            return IterationDecision::Abort;
+        }
+        if (toggle_rect.contains(position)) {
+            result = index;
+            is_toggle = true;
             return IterationDecision::Abort;
         }
         return IterationDecision::Continue;
@@ -143,7 +149,8 @@ void GTreeView::mousedown_event(GMouseEvent& event)
         return;
     auto& model = *this->model();
     auto adjusted_position = event.position().translated(horizontal_scrollbar().value() - frame_thickness(), vertical_scrollbar().value() - frame_thickness());
-    auto index = index_at_content_position(adjusted_position);
+    bool is_toggle;
+    auto index = index_at_content_position(adjusted_position, is_toggle);
     if (!index.is_valid())
         return;
 
@@ -152,7 +159,7 @@ void GTreeView::mousedown_event(GMouseEvent& event)
         update();
     }
 
-    if (model.row_count(index)) {
+    if (is_toggle && model.row_count(index)) {
         auto& metadata = ensure_metadata_for_index(index);
         metadata.open = !metadata.open;
         update();
@@ -169,6 +176,7 @@ void GTreeView::traverse_in_paint_order(Callback callback) const
     auto visible_content_rect = this->visible_content_rect();
 
     Function<IterationDecision(const GModelIndex&)> traverse_index = [&] (const GModelIndex& index) {
+        int row_count_at_index = model.row_count(index);
         if (index.is_valid()) {
             auto& metadata = ensure_metadata_for_index(index);
             int x_offset = indent_level * indent_width_in_pixels();
@@ -177,8 +185,14 @@ void GTreeView::traverse_in_paint_order(Callback callback) const
                 x_offset, y_offset,
                 icon_size() + icon_spacing() + text_padding() + font().width(node_text) + text_padding(), item_height()
             };
+            Rect toggle_rect;
+            if (row_count_at_index > 0) {
+                int toggle_x = indent_width_in_pixels() * indent_level - icon_size() / 2 - 4;
+                toggle_rect = { toggle_x, rect.y(), toggle_size(), toggle_size() };
+                toggle_rect.center_vertically_within(rect);
+            }
             if (rect.intersects(visible_content_rect)) {
-                if (callback(index, rect, indent_level) == IterationDecision::Abort)
+                if (callback(index, rect, toggle_rect, indent_level) == IterationDecision::Abort)
                     return IterationDecision::Abort;
             }
             y_offset += item_height();
@@ -212,7 +226,7 @@ void GTreeView::paint_event(GPaintEvent& event)
         return;
     auto& model = *this->model();
 
-    traverse_in_paint_order([&] (const GModelIndex& index, const Rect& rect, int indent_level) {
+    traverse_in_paint_order([&] (const GModelIndex& index, const Rect& rect, const Rect& toggle_rect, int indent_level) {
 #ifdef DEBUG_ITEM_RECTS
         painter.fill_rect(rect, Color::LightGray);
 #endif
@@ -256,10 +270,7 @@ void GTreeView::paint_event(GPaintEvent& event)
             index_at_indent = parent_of_index_at_indent;
         }
 
-        if (model.row_count(index) > 0) {
-            int toggle_x = indent_width_in_pixels() * indent_level - icon_size() / 2 - 4;
-            Rect toggle_rect = { toggle_x, rect.y(), toggle_size(), toggle_size() };
-            toggle_rect.center_vertically_within(rect);
+        if (!toggle_rect.is_empty()) {
             auto& metadata = ensure_metadata_for_index(index);
             if (metadata.open)
                 painter.blit(toggle_rect.location(), *m_collapse_bitmap, m_collapse_bitmap->rect());
@@ -276,7 +287,7 @@ void GTreeView::scroll_into_view(const GModelIndex& a_index, Orientation orienta
     if (!a_index.is_valid())
         return;
     Rect found_rect;
-    traverse_in_paint_order([&] (const GModelIndex& index, const Rect& rect, int) {
+    traverse_in_paint_order([&] (const GModelIndex& index, const Rect& rect, const Rect&, int) {
         if (index == a_index) {
             found_rect = rect;
             return IterationDecision::Abort;

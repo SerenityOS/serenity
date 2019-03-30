@@ -10,14 +10,13 @@ public:
     virtual void scroll_into_view(const GModelIndex&, Orientation);
     virtual const char* class_name() const override { return "GTreeView"; }
 
-    GModelIndex index_at_content_position(const Point&) const;
-
 protected:
     virtual void paint_event(GPaintEvent&) override;
     virtual void mousedown_event(GMouseEvent&) override;
     virtual void did_update_selection() override;
 
 private:
+    GModelIndex index_at_content_position(const Point&, bool& is_toggle) const;
     int item_height() const { return 16; }
     int max_item_width() const { return frame_inner_rect().width(); }
     int indent_width_in_pixels() const { return 16; }
