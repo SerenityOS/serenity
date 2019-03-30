@@ -153,8 +153,11 @@ GVariant GFileSystemModel::data(const GModelIndex& index, Role role) const
     if (role == GModel::Role::Display)
         return node.name;
     if (role == GModel::Role::Icon) {
-        if (node.type == Node::Directory)
+        if (node.type == Node::Directory) {
+            if (selected_index() == index)
+                return GIcon::default_icon("filetype-folder-open");
             return GIcon::default_icon("filetype-folder");
+        }
         return GIcon::default_icon("filetype-unknown");
     }
     return { };
