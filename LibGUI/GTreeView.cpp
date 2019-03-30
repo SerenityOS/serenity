@@ -4,94 +4,9 @@
 
 //#define DEBUG_ITEM_RECTS
 
-struct Node {
-    String text;
-    Node* parent { nullptr };
-    Vector<Node*> children;
-};
-
-class TestModel : public GModel {
-public:
-    static Retained<TestModel> create() { return adopt(*new TestModel); }
-
-    TestModel();
-
-    virtual int row_count(const GModelIndex& = GModelIndex()) const override;
-    virtual int column_count(const GModelIndex& = GModelIndex()) const override;
-    virtual GVariant data(const GModelIndex&, Role = Role::Display) const override;
-    virtual void update() override;
-    virtual GModelIndex index(int row, int column = 0, const GModelIndex& parent = GModelIndex()) const override;
-    virtual ColumnMetadata column_metadata(int) const override{ return { 100 }; }
-
-    Node* m_root { nullptr };
-};
-
-Node* make_little_tree(int depth, Node* parent)
-{
-    static int next_id = 0;
-    Node* node = new Node;
-    node->text = String::format("Node #%d", next_id++);
-    node->parent = parent;
-    if (depth)
-        node->children.append(make_little_tree(depth - 1, node));
-    return node;
-}
-
-GModelIndex TestModel::index(int row, int column, const GModelIndex& parent) const
-{
-    if (!parent.is_valid())
-        return create_index(row, column, m_root);
-    auto& node = *(Node*)parent.internal_data();
-    return create_index(row, column, node.children[row]);
-}
-
-TestModel::TestModel()
-{
-    m_root = new Node;
-    m_root->text = "Root";
-
-    m_root->children.append(make_little_tree(3, m_root));
-    m_root->children.append(make_little_tree(2, m_root));
-    m_root->children.append(make_little_tree(1, m_root));
-}
-
-int TestModel::row_count(const GModelIndex& index) const
-{
-    if (!index.is_valid())
-        return 1;
-    auto& node = *(const Node*)index.internal_data();
-    return node.children.size();
-}
-
-int TestModel::column_count(const GModelIndex&) const
-{
-    return 1;
-}
-
-void TestModel::update()
-{
-}
-
-GVariant TestModel::data(const GModelIndex& index, Role role) const
-{
-    if (!index.is_valid())
-        return { };
-    auto& node = *(const Node*)index.internal_data();
-    if (role == GModel::Role::Display) {
-        return node.text;
-    }
-    if (role == GModel::Role::Icon) {
-        if (node.children.is_empty())
-            return GIcon::default_icon("filetype-unknown");
-        return GIcon::default_icon("filetype-folder");
-    }
-    return { };
-}
-
 struct GTreeView::MetadataForIndex {
     bool open { false };
 };
-
 
 GTreeView::MetadataForIndex& GTreeView::ensure_metadata_for_index(const GModelIndex& index) const
 {
@@ -111,8 +26,6 @@ GTreeView::GTreeView(GWidget* parent)
     set_frame_shape(GFrame::Shape::Container);
     set_frame_shadow(GFrame::Shadow::Sunken);
     set_frame_thickness(2);
-
-    set_model(TestModel::create());
 
     m_expand_bitmap = GraphicsBitmap::load_from_file("/res/icons/treeview-expand.png");
     m_collapse_bitmap = GraphicsBitmap::load_from_file("/res/icons/treeview-collapse.png");
