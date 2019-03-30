@@ -129,6 +129,9 @@ GFileSystemModel::GFileSystemModel(const String& root_path, Mode mode)
     : m_root_path(FileSystemPath(root_path).string())
     , m_mode(mode)
 {
+    m_open_folder_icon = GIcon::default_icon("filetype-folder-open");
+    m_closed_folder_icon = GIcon::default_icon("filetype-folder");
+    m_file_icon = GIcon::default_icon("filetype-unknown");
     update();
 }
 
@@ -188,10 +191,10 @@ GVariant GFileSystemModel::data(const GModelIndex& index, Role role) const
     if (role == GModel::Role::Icon) {
         if (node.type == Node::Directory) {
             if (selected_index() == index)
-                return GIcon::default_icon("filetype-folder-open");
-            return GIcon::default_icon("filetype-folder");
+                return m_open_folder_icon;
+            return m_closed_folder_icon;
         }
-        return GIcon::default_icon("filetype-unknown");
+        return m_file_icon;
     }
     return { };
 }
