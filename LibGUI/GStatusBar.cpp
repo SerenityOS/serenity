@@ -11,6 +11,7 @@ GStatusBar::GStatusBar(GWidget* parent)
     set_preferred_size({ 0, 20 });
     set_layout(make<GBoxLayout>(Orientation::Horizontal));
     layout()->set_margins({ 2, 2, 2, 2 });
+    layout()->set_spacing(2);
     m_label = new GLabel(this);
     m_label->set_frame_shadow(GFrame::Shadow::Sunken);
     m_label->set_frame_shape(GFrame::Shape::Panel);
