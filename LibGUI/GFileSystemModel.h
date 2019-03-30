@@ -33,4 +33,8 @@ private:
 
     struct Node;
     Node* m_root { nullptr };
+
+    GIcon m_open_folder_icon;
+    GIcon m_closed_folder_icon;
+    GIcon m_file_icon;
 };
