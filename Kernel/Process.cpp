@@ -285,6 +285,7 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
 {
     ASSERT(is_ring3());
 
+    dbgprintf("%s(%d) do_exec: thread_count() = %d\n", m_name.characters(), m_pid, thread_count());
     // FIXME(Thread): Kill any threads the moment we commit to the exec().
     ASSERT(thread_count() == 1);
 
