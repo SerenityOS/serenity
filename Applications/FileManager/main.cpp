@@ -66,6 +66,9 @@ int main(int argc, char** argv)
     progressbar->set_caption("Generating thumbnails: ");
     progressbar->set_format(GProgressBar::Format::ValueSlashMax);
     progressbar->set_visible(false);
+    progressbar->set_frame_shape(GFrame::Shape::Panel);
+    progressbar->set_frame_shadow(GFrame::Shadow::Sunken);
+    progressbar->set_frame_thickness(1);
 
     location_textbox->on_return_pressed = [directory_view] (auto& editor) {
         directory_view->open(editor.text());
