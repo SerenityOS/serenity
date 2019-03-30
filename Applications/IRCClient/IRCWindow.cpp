@@ -7,6 +7,7 @@
 #include <LibGUI/GTableView.h>
 #include <LibGUI/GTextEditor.h>
 #include <LibGUI/GTextBox.h>
+#include <LibGUI/GSplitter.h>
 
 IRCWindow::IRCWindow(IRCClient& client, void* owner, Type type, const String& name, GWidget* parent)
     : GWidget(parent)
@@ -18,8 +19,7 @@ IRCWindow::IRCWindow(IRCClient& client, void* owner, Type type, const String& na
     set_layout(make<GBoxLayout>(Orientation::Vertical));
 
     // Make a container for the log buffer view + (optional) member list.
-    GWidget* container = new GWidget(this);
-    container->set_layout(make<GBoxLayout>(Orientation::Horizontal));
+    auto* container = new GSplitter(Orientation::Horizontal, this);
 
     m_table_view = new GTableView(container);
     m_table_view->set_headers_visible(false);
