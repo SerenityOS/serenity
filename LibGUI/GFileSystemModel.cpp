@@ -92,6 +92,30 @@ struct GFileSystemModel::Node {
     }
 };
 
+GModelIndex GFileSystemModel::index(const String& path) const
+{
+    FileSystemPath canonical_path(path);
+    const Node* node = m_root;
+    if (canonical_path.string() == "/")
+        return m_root->index(*this);
+    for (int i = 0; i < canonical_path.parts().size(); ++i) {
+        auto& part = canonical_path.parts()[i];
+        bool found = false;
+        for (auto& child : node->children) {
+            if (child->name == part) {
+                node = child;
+                found = true;
+                if (i == canonical_path.parts().size() - 1)
+                    return node->index(*this);
+                break;
+            }
+        }
+        if (!found)
+            return { };
+    }
+    return { };
+}
+
 String GFileSystemModel::path(const GModelIndex& index) const
 {
     if (!index.is_valid())

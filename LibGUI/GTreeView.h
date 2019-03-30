@@ -7,6 +7,7 @@ public:
     explicit GTreeView(GWidget*);
     virtual ~GTreeView() override;
 
+    virtual void scroll_into_view(const GModelIndex&, Orientation);
     virtual const char* class_name() const override { return "GTreeView"; }
 
     GModelIndex index_at_content_position(const Point&) const;
@@ -14,6 +15,7 @@ public:
 protected:
     virtual void paint_event(GPaintEvent&) override;
     virtual void mousedown_event(GMouseEvent&) override;
+    virtual void did_update_selection() override;
 
 private:
     int item_height() const { return 16; }
