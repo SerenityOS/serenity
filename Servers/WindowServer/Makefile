@@ -21,12 +21,13 @@ WINDOWSERVER_OBJS = \
     WSClientConnection.o \
     WSWindowSwitcher.o \
     WSClipboard.o \
+    WSCursor.o \
     main.o
 
 APP = WindowServer
 OBJS = $(SHAREDGRAPHICS_OBJS) $(WINDOWSERVER_OBJS)
 
-STANDARD_FLAGS = -std=c++17
+STANDARD_FLAGS = -std=c++17 -Wno-sized-deallocation
 WARNING_FLAGS = -Wextra -Wall -Wundef -Wcast-qual -Wwrite-strings -Wimplicit-fallthrough
 FLAVOR_FLAGS = -fno-exceptions -fno-rtti
 OPTIMIZATION_FLAGS = -Os
