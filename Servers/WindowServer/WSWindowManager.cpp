@@ -116,46 +116,6 @@ WSWindowManager& WSWindowManager::the()
     return *s_the;
 }
 
-static const char* cursor_bitmap_inner_ascii = {
-    " #          "
-    " ##         "
-    " ###        "
-    " ####       "
-    " #####      "
-    " ######     "
-    " #######    "
-    " ########   "
-    " #########  "
-    " ########## "
-    " ######     "
-    " ##  ##     "
-    " #    ##    "
-    "      ##    "
-    "       ##   "
-    "       ##   "
-    "            "
-};
-
-static const char* cursor_bitmap_outer_ascii = {
-    "##          "
-    "# #         "
-    "#  #        "
-    "#   #       "
-    "#    #      "
-    "#     #     "
-    "#      #    "
-    "#       #   "
-    "#        #  "
-    "#         # "
-    "#      #### "
-    "#  ##  #    "
-    "# #  #  #   "
-    "##   #  #   "
-    "      #  #  "
-    "      #  #  "
-    "       ##   "
-};
-
 void WSWindowManager::flip_buffers()
 {
     swap(m_front_bitmap, m_back_bitmap);
