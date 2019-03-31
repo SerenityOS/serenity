@@ -140,6 +140,17 @@ void GWindow::set_rect(const Rect& a_rect)
     GEventLoop::current().post_message_to_server(request);
 }
 
+void GWindow::set_override_cursor(GStandardCursor cursor)
+{
+    if (!m_window_id)
+        return;
+    WSAPI_ClientMessage request;
+    request.type = WSAPI_ClientMessage::Type::SetWindowOverrideCursor;
+    request.window_id = m_window_id;
+    request.cursor.cursor = (WSAPI_StandardCursor)cursor;
+    GEventLoop::current().post_message_to_server(request);
+}
+
 void GWindow::event(GEvent& event)
 {
     if (event.is_mouse_event()) {

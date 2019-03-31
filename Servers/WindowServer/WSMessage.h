@@ -5,6 +5,7 @@
 #include <AK/AKString.h>
 #include <AK/Types.h>
 #include <Kernel/KeyCode.h>
+#include <WindowServer/WSCursor.h>
 
 class WSMessage {
 public:
@@ -49,6 +50,7 @@ public:
         APIGetClipboardContentsRequest,
         APISetWallpaperRequest,
         APIGetWallpaperRequest,
+        APISetWindowOverrideCursorRequest,
         __End_API_Client_Requests,
     };
 
@@ -227,6 +229,23 @@ public:
 
 private:
     int m_menu_id { 0 };
+};
+
+class WSAPISetWindowOverrideCursorRequest final : public WSAPIClientRequest {
+public:
+    explicit WSAPISetWindowOverrideCursorRequest(int client_id, int window_id, WSStandardCursor cursor)
+        : WSAPIClientRequest(WSMessage::APISetWindowOverrideCursorRequest, client_id)
+        , m_window_id(window_id)
+        , m_cursor(cursor)
+    {
+    }
+
+    int window_id() const { return m_window_id; }
+    WSStandardCursor cursor() const { return m_cursor; }
+
+private:
+    int m_window_id { 0 };
+    WSStandardCursor m_cursor { WSStandardCursor::None };
 };
 
 class WSAPISetWallpaperRequest final : public WSAPIClientRequest {

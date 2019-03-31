@@ -8,6 +8,7 @@
 #include <WindowServer/WSWindowType.h>
 
 class WSClientConnection;
+class WSCursor;
 class WSMenu;
 class WSMouseEvent;
 
@@ -100,6 +101,9 @@ public:
     const GraphicsBitmap& icon() const { return *m_icon; }
     void set_icon(Retained<GraphicsBitmap>&& icon) { m_icon = move(icon); }
 
+    const WSCursor* override_cursor() const { return m_override_cursor.ptr(); }
+    void set_override_cursor(RetainPtr<WSCursor>&& cursor) { m_override_cursor = move(cursor); }
+
     // For InlineLinkedList.
     // FIXME: Maybe make a ListHashSet and then WSWindowManager can just use that.
     WSWindow* m_next { nullptr };
@@ -128,4 +132,5 @@ private:
     Size m_size_increment;
     Size m_base_size;
     Retained<GraphicsBitmap> m_icon;
+    RetainPtr<WSCursor> m_override_cursor;
 };

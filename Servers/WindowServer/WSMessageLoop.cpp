@@ -5,6 +5,7 @@
 #include <WindowServer/WSScreen.h>
 #include <WindowServer/WSClientConnection.h>
 #include <WindowServer/WSAPITypes.h>
+#include <WindowServer/WSCursor.h>
 #include <Kernel/KeyCode.h>
 #include <Kernel/MousePacket.h>
 #include <LibC/sys/socket.h>
@@ -330,6 +331,9 @@ void WSMessageLoop::on_receive_from_client(int client_id, const WSAPI_ClientMess
         break;
     case WSAPI_ClientMessage::Type::GetWallpaper:
         post_message(client, make<WSAPIGetWallpaperRequest>(client_id));
+        break;
+    case WSAPI_ClientMessage::Type::SetWindowOverrideCursor:
+        post_message(client, make<WSAPISetWindowOverrideCursorRequest>(client_id, message.window_id, (WSStandardCursor)message.cursor.cursor));
     default:
         break;
     }

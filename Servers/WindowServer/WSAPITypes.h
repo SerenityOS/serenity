@@ -47,6 +47,11 @@ struct WSAPI_KeyModifiers { enum {
     Ctrl  = 1 << 2,
 }; };
 
+enum class WSAPI_StandardCursor : unsigned char {
+    None = 0,
+    Arrow,
+    IBeam,
+};
 
 struct WSAPI_ServerMessage {
     enum Type : unsigned {
@@ -164,6 +169,7 @@ struct WSAPI_ClientMessage {
         Greeting,
         SetWallpaper,
         GetWallpaper,
+        SetWindowOverrideCursor,
     };
     Type type { Invalid };
     int window_id { -1 };
@@ -203,6 +209,9 @@ struct WSAPI_ClientMessage {
             int shared_buffer_id;
             int contents_size;
         } clipboard;
+        struct {
+            WSAPI_StandardCursor cursor;
+        } cursor;
     };
 };
 
