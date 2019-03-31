@@ -1275,3 +1275,27 @@ void WSWindowManager::notify_client_changed_app_menubar(WSClientConnection& clie
         set_current_menubar(client.app_menubar());
     invalidate(menubar_rect());
 }
+
+const WSCursor& WSWindowManager::active_cursor() const
+{
+    if (m_resize_window) {
+        switch (m_resize_direction) {
+        case ResizeDirection::Up:
+        case ResizeDirection::Down:
+            return *m_resize_vertically_cursor;
+        case ResizeDirection::Left:
+        case ResizeDirection::Right:
+            return *m_resize_horizontally_cursor;
+        case ResizeDirection::UpLeft:
+        case ResizeDirection::DownRight:
+            return *m_resize_diagonally_tlbr_cursor;
+        case ResizeDirection::UpRight:
+        case ResizeDirection::DownLeft:
+            return *m_resize_diagonally_bltr_cursor;
+        case ResizeDirection::None:
+            ASSERT_NOT_REACHED();
+        }
+    }
+
+    return *m_arrow_cursor;
+}
