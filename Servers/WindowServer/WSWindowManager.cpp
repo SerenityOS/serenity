@@ -167,6 +167,7 @@ WSWindowManager::WSWindowManager()
     m_resize_diagonally_bltr_cursor = WSCursor::create(*GraphicsBitmap::load_from_file("/res/cursors/resize-diagonal-bltr.png"));
     m_i_beam_cursor = WSCursor::create(*GraphicsBitmap::load_from_file("/res/cursors/i-beam.png"));
     m_disallowed_cursor = WSCursor::create(*GraphicsBitmap::load_from_file("/res/cursors/disallowed.png"));
+    m_move_cursor = WSCursor::create(*GraphicsBitmap::load_from_file("/res/cursors/move.png"));
 
     m_wallpaper_path = "/res/wallpapers/retro.rgb";
     m_wallpaper = GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, m_wallpaper_path, { 1024, 768 });
@@ -1238,6 +1239,9 @@ void WSWindowManager::notify_client_changed_app_menubar(WSClientConnection& clie
 
 const WSCursor& WSWindowManager::active_cursor() const
 {
+    if (m_drag_window)
+        return *m_move_cursor;
+
     if (m_resize_window) {
         switch (m_resize_direction) {
         case ResizeDirection::Up:
