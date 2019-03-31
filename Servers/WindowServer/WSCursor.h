@@ -2,10 +2,17 @@
 
 #include <SharedGraphics/GraphicsBitmap.h>
 
+enum class WSStandardCursor {
+    None = 0,
+    Arrow,
+    IBeam,
+};
+
 class WSCursor : public Retainable<WSCursor> {
 public:
     static Retained<WSCursor> create(Retained<GraphicsBitmap>&&, const Point& hotspot);
     static Retained<WSCursor> create(Retained<GraphicsBitmap>&&);
+    static RetainPtr<WSCursor> create(WSStandardCursor);
     ~WSCursor();
 
     Point hotspot() const { return m_hotspot; }

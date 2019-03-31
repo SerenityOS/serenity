@@ -64,6 +64,7 @@ private:
     void handle_request(WSAPISetWindowOpacityRequest&);
     void handle_request(WSAPISetWallpaperRequest&);
     void handle_request(WSAPIGetWallpaperRequest&);
+    void handle_request(WSAPISetWindowOverrideCursorRequest&);
 
     void post_error(const String&);
 

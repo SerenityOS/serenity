@@ -8,6 +8,12 @@
 
 class GWidget;
 
+enum class GStandardCursor {
+    None = 0,
+    Arrow,
+    IBeam,
+};
+
 class GWindow : public GObject {
 public:
     GWindow(GObject* parent = nullptr);
@@ -83,6 +89,8 @@ public:
     void set_size_increment(const Size& increment) { m_size_increment = increment; }
     Size base_size() const { return m_base_size; }
     void set_base_size(const Size& size) { m_base_size = size; }
+
+    void set_override_cursor(GStandardCursor);
 
     virtual const char* class_name() const override { return "GWindow"; }
 

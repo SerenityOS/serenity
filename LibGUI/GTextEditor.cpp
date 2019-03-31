@@ -3,6 +3,7 @@
 #include <LibGUI/GFontDatabase.h>
 #include <LibGUI/GClipboard.h>
 #include <LibGUI/GPainter.h>
+#include <LibGUI/GWindow.h>
 #include <Kernel/KeyCode.h>
 #include <AK/StringBuilder.h>
 #include <unistd.h>
@@ -800,4 +801,16 @@ void GTextEditor::paste()
     auto paste_text = GClipboard::the().data();
     printf("Paste: \"%s\"\n", paste_text.characters());
     insert_at_cursor_or_replace_selection(paste_text);
+}
+
+void GTextEditor::enter_event(GEvent&)
+{
+    ASSERT(window());
+    window()->set_override_cursor(GStandardCursor::IBeam);
+}
+
+void GTextEditor::leave_event(GEvent&)
+{
+    ASSERT(window());
+    window()->set_override_cursor(GStandardCursor::None);
 }

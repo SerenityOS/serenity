@@ -491,6 +491,18 @@ void WSClientConnection::handle_request(WSAPISetGlobalCursorTrackingRequest& req
     window.set_global_cursor_tracking_enabled(request.value());
 }
 
+void WSClientConnection::handle_request(WSAPISetWindowOverrideCursorRequest& request)
+{
+    int window_id = request.window_id();
+    auto it = m_windows.find(window_id);
+    if (it == m_windows.end()) {
+        post_error("Bad window ID");
+        return;
+    }
+    auto& window = *(*it).value;
+    window.set_override_cursor(WSCursor::create(request.cursor()));
+}
+
 void WSClientConnection::on_request(WSAPIClientRequest& request)
 {
     switch (request.type()) {
@@ -542,6 +554,8 @@ void WSClientConnection::on_request(WSAPIClientRequest& request)
         return handle_request(static_cast<WSAPISetWallpaperRequest&>(request));
     case WSMessage::APIGetWallpaperRequest:
         return handle_request(static_cast<WSAPIGetWallpaperRequest&>(request));
+    case WSMessage::APISetWindowOverrideCursorRequest:
+        return handle_request(static_cast<WSAPISetWindowOverrideCursorRequest&>(request));
     default:
         break;
     }

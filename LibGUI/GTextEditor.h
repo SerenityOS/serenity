@@ -111,6 +111,9 @@ private:
     virtual void focusout_event(GEvent&) override;
     virtual void timer_event(GTimerEvent&) override;
     virtual bool accepts_focus() const override { return true; }
+    virtual void enter_event(GEvent&) override;
+    virtual void leave_event(GEvent&) override;
+
     void paint_ruler(Painter&);
     void update_content_size();
 
