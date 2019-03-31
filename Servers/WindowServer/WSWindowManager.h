@@ -164,6 +164,7 @@ private:
     RetainPtr<WSCursor> m_resize_diagonally_bltr_cursor;
     RetainPtr<WSCursor> m_i_beam_cursor;
     RetainPtr<WSCursor> m_disallowed_cursor;
+    RetainPtr<WSCursor> m_move_cursor;
 
     OwnPtr<Painter> m_back_painter;
     OwnPtr<Painter> m_front_painter;
