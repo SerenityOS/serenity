@@ -84,7 +84,7 @@ public:
     bool set_wallpaper(const String& path);
     String wallpaper_path() const { return m_wallpaper_path; }
 
-    const WSCursor& active_cursor() const { return *m_arrow_cursor; }
+    const WSCursor& active_cursor() const;
     Rect current_cursor_rect() const;
 
 private:
