@@ -16,6 +16,7 @@
 #include <time.h>
 #include <SharedGraphics/StylePainter.h>
 #include <SharedGraphics/PNGLoader.h>
+#include "WSCursor.h"
 
 #ifdef KERNEL
 #include <Kernel/ProcFS.h>
@@ -199,8 +200,13 @@ WSWindowManager::WSWindowManager()
     m_highlight_window_border_color2 = Color::from_rgb(0xfabbbb);
     m_highlight_window_title_color = Color::White;
 
-    m_cursor_bitmap_inner = CharacterBitmap::create_from_ascii(cursor_bitmap_inner_ascii, 12, 17);
-    m_cursor_bitmap_outer = CharacterBitmap::create_from_ascii(cursor_bitmap_outer_ascii, 12, 17);
+    m_arrow_cursor = WSCursor::create(*GraphicsBitmap::load_from_file("/res/cursors/arrow.png"), { 2, 2 });
+    m_resize_horizontally_cursor = WSCursor::create(*GraphicsBitmap::load_from_file("/res/cursors/resize-horizontal.png"));
+    m_resize_vertically_cursor = WSCursor::create(*GraphicsBitmap::load_from_file("/res/cursors/resize-vertical.png"));
+    m_resize_diagonally_tlbr_cursor = WSCursor::create(*GraphicsBitmap::load_from_file("/res/cursors/resize-diagonal-tlbr.png"));
+    m_resize_diagonally_bltr_cursor = WSCursor::create(*GraphicsBitmap::load_from_file("/res/cursors/resize-diagonal-bltr.png"));
+    m_i_beam_cursor = WSCursor::create(*GraphicsBitmap::load_from_file("/res/cursors/i-beam.png"));
+    m_disallowed_cursor = WSCursor::create(*GraphicsBitmap::load_from_file("/res/cursors/disallowed.png"));
 
     m_wallpaper_path = "/res/wallpapers/retro.rgb";
     m_wallpaper = GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, m_wallpaper_path, { 1024, 768 });
@@ -880,9 +886,8 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event, WSWindow*& event_
 void WSWindowManager::compose()
 {
     auto dirty_rects = move(m_dirty_rects);
-    auto cursor_location = m_screen.cursor_location();
     dirty_rects.add(m_last_cursor_rect);
-    dirty_rects.add({ cursor_location.x(), cursor_location.y(), (int)m_cursor_bitmap_inner->width(), (int)m_cursor_bitmap_inner->height() });
+    dirty_rects.add(current_cursor_rect());
 #ifdef DEBUG_COUNTERS
     dbgprintf("[WM] compose #%u (%u rects)\n", ++m_compose_count, dirty_rects.rects().size());
 #endif
@@ -988,11 +993,14 @@ void WSWindowManager::compose()
         flush(r);
 }
 
+Rect WSWindowManager::current_cursor_rect() const
+{
+    return { m_screen.cursor_location().translated(-active_cursor().hotspot()), active_cursor().size() };
+}
+
 void WSWindowManager::invalidate_cursor()
 {
-    auto cursor_location = m_screen.cursor_location();
-    Rect cursor_rect { cursor_location.x(), cursor_location.y(), (int)m_cursor_bitmap_inner->width(), (int)m_cursor_bitmap_inner->height() };
-    invalidate(cursor_rect);
+    invalidate(current_cursor_rect());
 }
 
 Rect WSWindowManager::menubar_rect() const
@@ -1073,14 +1081,12 @@ void WSWindowManager::draw_window_switcher()
 
 void WSWindowManager::draw_cursor()
 {
-    auto cursor_location = m_screen.cursor_location();
-    Rect cursor_rect { cursor_location.x(), cursor_location.y(), (int)m_cursor_bitmap_inner->width(), (int)m_cursor_bitmap_inner->height() };
+    Rect cursor_rect = current_cursor_rect();
     Color inner_color = Color::White;
     Color outer_color = Color::Black;
     if (m_screen.mouse_button_state() & (unsigned)MouseButton::Left)
         swap(inner_color, outer_color);
-    m_back_painter->draw_bitmap(cursor_location, *m_cursor_bitmap_inner, inner_color);
-    m_back_painter->draw_bitmap(cursor_location, *m_cursor_bitmap_outer, outer_color);
+    m_back_painter->blit(cursor_rect.location(), active_cursor().bitmap(), active_cursor().rect());
     m_last_cursor_rect = cursor_rect;
 }
 

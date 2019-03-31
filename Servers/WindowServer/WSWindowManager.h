@@ -13,6 +13,7 @@
 #include <WindowServer/WSWindowSwitcher.h>
 #include <WindowServer/WSWindowType.h>
 #include <WindowServer/WSWindow.h>
+#include <WindowServer/WSCursor.h>
 #include <AK/CircularQueue.h>
 
 class WSAPIClientRequest;
@@ -23,7 +24,6 @@ class WSClientWantsToPaintMessage;
 class WSWindow;
 class WSClientConnection;
 class WSWindowSwitcher;
-class CharacterBitmap;
 class GraphicsBitmap;
 
 enum class ResizeDirection { None, Left, UpLeft, Up, UpRight, Right, DownRight, Down, DownLeft };
@@ -83,6 +83,9 @@ public:
 
     bool set_wallpaper(const String& path);
     String wallpaper_path() const { return m_wallpaper_path; }
+
+    const WSCursor& active_cursor() const { return *m_arrow_cursor; }
+    Rect current_cursor_rect() const;
 
 private:
     void process_mouse_event(WSMouseEvent&, WSWindow*& event_window);
@@ -154,8 +157,13 @@ private:
 
     bool m_pending_compose_event { false };
 
-    RetainPtr<CharacterBitmap> m_cursor_bitmap_inner;
-    RetainPtr<CharacterBitmap> m_cursor_bitmap_outer;
+    RetainPtr<WSCursor> m_arrow_cursor;
+    RetainPtr<WSCursor> m_resize_horizontally_cursor;
+    RetainPtr<WSCursor> m_resize_vertically_cursor;
+    RetainPtr<WSCursor> m_resize_diagonally_tlbr_cursor;
+    RetainPtr<WSCursor> m_resize_diagonally_bltr_cursor;
+    RetainPtr<WSCursor> m_i_beam_cursor;
+    RetainPtr<WSCursor> m_disallowed_cursor;
 
     OwnPtr<Painter> m_back_painter;
     OwnPtr<Painter> m_front_painter;

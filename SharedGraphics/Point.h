@@ -28,6 +28,13 @@ public:
         move_by(delta.x(), delta.y());
     }
 
+    Point translated(const Point& delta) const
+    {
+        Point point = *this;
+        point.move_by(delta);
+        return point;
+    }
+
     Point translated(int dx, int dy) const
     {
         Point point = *this;
