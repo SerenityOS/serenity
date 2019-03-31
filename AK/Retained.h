@@ -4,7 +4,7 @@
 
 #ifdef __clang__
 #define CONSUMABLE(initial_state) __attribute__((consumable(initial_state)))
-#define CALLABLE_WHEN(state) __attribute__((callable_when(state)))
+#define CALLABLE_WHEN(...) __attribute__((callable_when(__VA_ARGS__)))
 #define SET_TYPESTATE(state) __attribute__((set_typestate(state)))
 #define RETURN_TYPESTATE(state) __attribute__((return_typestate(state)))
 #else
