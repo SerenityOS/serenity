@@ -26,9 +26,9 @@
 #include "E1000NetworkAdapter.h"
 #include <Kernel/NetworkTask.h>
 
-//#define SPAWN_LAUNCHER
+#define SPAWN_LAUNCHER
 //#define SPAWN_GUITEST2
-#define SPAWN_FILE_MANAGER
+//#define SPAWN_FILE_MANAGER
 //#define SPAWN_PROCESS_MANAGER
 //#define SPAWN_TEXT_EDITOR
 //#define SPAWN_FONTEDITOR
