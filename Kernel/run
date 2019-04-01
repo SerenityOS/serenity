@@ -7,17 +7,17 @@ if [ "$1" = "b" ]; then
     bochs -q -f .bochsrc
 elif [ "$1" = "qn" ]; then
     # ./run qn: qemu without network
-    qemu-system-i386 -s -m $ram_size -device e1000 -drive format=raw,file=.floppy-image,if=floppy -drive format=raw,file=_fs_contents #$@
+    qemu-system-i386 -s -m $ram_size -device e1000 -kernel kernel -hda _fs_contents
 elif [ "$1" = "qtap" ]; then
     # ./run qtap: qemu with tap
-    sudo qemu-system-i386 -s -m $ram_size -object filter-dump,id=hue,netdev=br0,file=e1000.pcap -netdev tap,ifname=tap0,id=br0 -device e1000,netdev=br0 -drive format=raw,file=.floppy-image,if=floppy -drive format=raw,file=_fs_contents 
+    sudo qemu-system-i386 -s -m $ram_size -object filter-dump,id=hue,netdev=br0,file=e1000.pcap -netdev tap,ifname=tap0,id=br0 -device e1000,netdev=br0 -kernel kernel -hda _fs_contents
 else
     # ./run: qemu with user networking
     qemu-system-i386 -s -m $ram_size \
         -object filter-dump,id=hue,netdev=breh,file=e1000.pcap \
         -netdev user,id=breh,hostfwd=tcp:127.0.0.1:8888-192.168.5.2:8888 \
         -device e1000,netdev=breh \
-        -drive format=raw,file=.floppy-image,if=floppy \
-        -drive format=raw,file=_fs_contents
+        -kernel kernel \
+        -hda _fs_contents
 fi
 

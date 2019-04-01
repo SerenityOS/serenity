@@ -1,7 +1,6 @@
 *.o
 *.d
-.floppy-image
-Boot/boot.bin
+Boot/boot.ao
 kernel
 kernel.map
 _fs_contents

@@ -1,5 +1,4 @@
 KERNEL_OBJS = \
-       _start.o \
        init.o \
        kmalloc.o \
        StdLib.o \
@@ -65,12 +64,10 @@ AK_OBJS = \
     ../AK/FileSystemPath.o \
     ../AK/StdLibExtras.o
 
-OBJS = $(KERNEL_OBJS) $(VFS_OBJS) $(AK_OBJS)
+CXX_OBJS = $(KERNEL_OBJS) $(VFS_OBJS) $(AK_OBJS)
+OBJS = $(CXX_OBJS) Boot/boot.ao
 
-NASM = nasm
 KERNEL = kernel
-BOOTLOADER = Boot/boot.bin
-IMAGE = .floppy-image
 ARCH_FLAGS =
 STANDARD_FLAGS = -std=c++17 -nostdinc++ -nostdlib -nostdinc
 KERNEL_FLAGS =
@@ -87,9 +84,10 @@ CXXFLAGS = -MMD -MP $(WARNING_FLAGS) $(OPTIMIZATION_FLAGS) $(KERNEL_FLAGS) $(FLA
 #CXX = clang $(CLANG_FLAGS)
 CXX = i686-elf-g++
 LD = i686-elf-ld
+AS = i686-elf-as
 LDFLAGS = -T linker.ld
 
-all: $(KERNEL) $(IMAGE) kernel.map
+all: $(KERNEL) kernel.map
 
 kernel.map: kernel
 	@echo "MKMAP $@"; sh mkmap.sh
@@ -97,20 +95,14 @@ kernel.map: kernel
 $(KERNEL): $(OBJS)
 	@echo "LD $@"; $(LD) $(LDFLAGS) -o $@ -Ttext 0x10000 $(OBJS)
 
-$(IMAGE): $(KERNEL) $(BOOTLOADER)
-	@echo "CREATE $@"; cat $(BOOTLOADER) $(KERNEL) > .tmp-floppy-image
-	@dd if=/dev/zero bs=2M count=1 >> .tmp-floppy-image 2> /dev/null
-	@dd if=.tmp-floppy-image of=.floppy-image bs=1440k count=1 2>/dev/null
-	@rm -f .tmp-floppy-image
-
-$(BOOTLOADER): Boot/boot.asm
-	@echo "NASM $<"; $(NASM) -f bin -o $@ $<
-
 .cpp.o:
 	@echo "CXX $<"; $(CXX) $(CXXFLAGS) -o $@ -c $<
 
--include $(OBJS:%.o=%.d)
+%.ao: %.S
+	@echo "AS $@"; $(AS) -o $@  $<
+
+-include $(CXX_OBJS:%.o=%.d)
 
 clean:
-	@echo "CLEAN"; rm -f $(KERNEL) $(OBJS) $(BOOTLOADER) $(IMAGE) *.d
+	@echo "CLEAN"; rm -f $(KERNEL) $(OBJS) *.d
 
