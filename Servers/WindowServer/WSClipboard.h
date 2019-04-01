@@ -22,7 +22,7 @@ public:
 
 private:
     WSClipboard();
-    virtual void on_message(WSMessage&) override;
+    virtual void on_message(const WSMessage&) override;
 
     RetainPtr<SharedBuffer> m_shared_buffer;
     int m_contents_size { 0 };

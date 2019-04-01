@@ -88,15 +88,15 @@ public:
     Rect current_cursor_rect() const;
 
 private:
-    void process_mouse_event(WSMouseEvent&, WSWindow*& event_window);
-    bool process_ongoing_window_resize(WSMouseEvent&, WSWindow*& event_window);
-    bool process_ongoing_window_drag(WSMouseEvent&, WSWindow*& event_window);
-    void handle_menu_mouse_event(WSMenu&, WSMouseEvent&);
-    void handle_menubar_mouse_event(WSMouseEvent&);
-    void handle_close_button_mouse_event(WSWindow&, WSMouseEvent&);
-    void start_window_resize(WSWindow&, WSMouseEvent&);
-    void start_window_drag(WSWindow&, WSMouseEvent&);
-    void handle_client_request(WSAPIClientRequest&);
+    void process_mouse_event(const WSMouseEvent&, WSWindow*& event_window);
+    bool process_ongoing_window_resize(const WSMouseEvent&, WSWindow*& event_window);
+    bool process_ongoing_window_drag(const WSMouseEvent&, WSWindow*& event_window);
+    void handle_menu_mouse_event(WSMenu&, const WSMouseEvent&);
+    void handle_menubar_mouse_event(const WSMouseEvent&);
+    void handle_close_button_mouse_event(WSWindow&, const WSMouseEvent&);
+    void start_window_resize(WSWindow&, const WSMouseEvent&);
+    void start_window_drag(WSWindow&, const WSMouseEvent&);
+    void handle_client_request(const WSAPIClientRequest&);
     void set_active_window(WSWindow*);
     void set_hovered_window(WSWindow*);
     template<typename Callback> IterationDecision for_each_visible_window_of_type_from_back_to_front(WSWindowType, Callback);
@@ -105,9 +105,9 @@ private:
     template<typename Callback> IterationDecision for_each_visible_window_from_back_to_front(Callback);
     template<typename Callback> void for_each_active_menubar_menu(Callback);
     void close_current_menu();
-    virtual void on_message(WSMessage&) override;
+    virtual void on_message(const WSMessage&) override;
     void compose();
-    void paint_window_frame(WSWindow&);
+    void paint_window_frame(const WSWindow&);
     void flip_buffers();
     void tick_clock();
 

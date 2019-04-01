@@ -33,7 +33,7 @@ public:
     WSWindow* switcher_window() { return m_switcher_window.ptr(); }
 
 private:
-    virtual void on_message(WSMessage&) override;
+    virtual void on_message(const WSMessage&) override;
 
     OwnPtr<WSWindow> m_switcher_window;
     Rect m_rect;

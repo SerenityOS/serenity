@@ -83,22 +83,22 @@ void WSClientConnection::post_message(const WSAPI_ServerMessage& message)
     ASSERT(nwritten == sizeof(message));
 }
 
-void WSClientConnection::on_message(WSMessage& message)
+void WSClientConnection::on_message(const WSMessage& message)
 {
     if (message.is_client_request()) {
-        on_request(static_cast<WSAPIClientRequest&>(message));
+        on_request(static_cast<const WSAPIClientRequest&>(message));
         return;
     }
 
     if (message.type() == WSMessage::WM_ClientDisconnected) {
-        int client_id = static_cast<WSClientDisconnectedNotification&>(message).client_id();
+        int client_id = static_cast<const WSClientDisconnectedNotification&>(message).client_id();
         dbgprintf("WSClientConnection: Client disconnected: %d\n", client_id);
         delete this;
         return;
     }
 }
 
-void WSClientConnection::handle_request(WSAPICreateMenubarRequest&)
+void WSClientConnection::handle_request(const WSAPICreateMenubarRequest&)
 {
     int menubar_id = m_next_menubar_id++;
     auto menubar = make<WSMenuBar>(*this, menubar_id);
@@ -109,7 +109,7 @@ void WSClientConnection::handle_request(WSAPICreateMenubarRequest&)
     post_message(response);
 }
 
-void WSClientConnection::handle_request(WSAPIDestroyMenubarRequest& request)
+void WSClientConnection::handle_request(const WSAPIDestroyMenubarRequest& request)
 {
     int menubar_id = request.menubar_id();
     auto it = m_menubars.find(menubar_id);
@@ -126,7 +126,7 @@ void WSClientConnection::handle_request(WSAPIDestroyMenubarRequest& request)
     post_message(response);
 }
 
-void WSClientConnection::handle_request(WSAPICreateMenuRequest& request)
+void WSClientConnection::handle_request(const WSAPICreateMenuRequest& request)
 {
     int menu_id = m_next_menu_id++;
     auto menu = make<WSMenu>(this, menu_id, request.text());
@@ -137,9 +137,9 @@ void WSClientConnection::handle_request(WSAPICreateMenuRequest& request)
     post_message(response);
 }
 
-void WSClientConnection::handle_request(WSAPIDestroyMenuRequest& request)
+void WSClientConnection::handle_request(const WSAPIDestroyMenuRequest& request)
 {
-    int menu_id = static_cast<WSAPIDestroyMenuRequest&>(request).menu_id();
+    int menu_id = static_cast<const WSAPIDestroyMenuRequest&>(request).menu_id();
     auto it = m_menus.find(menu_id);
     if (it == m_menus.end()) {
         post_error("Bad menu ID");
@@ -154,7 +154,7 @@ void WSClientConnection::handle_request(WSAPIDestroyMenuRequest& request)
     post_message(response);
 }
 
-void WSClientConnection::handle_request(WSAPISetApplicationMenubarRequest& request)
+void WSClientConnection::handle_request(const WSAPISetApplicationMenubarRequest& request)
 {
     int menubar_id = request.menubar_id();
     auto it = m_menubars.find(menubar_id);
@@ -171,7 +171,7 @@ void WSClientConnection::handle_request(WSAPISetApplicationMenubarRequest& reque
     post_message(response);
 }
 
-void WSClientConnection::handle_request(WSAPIAddMenuToMenubarRequest& request)
+void WSClientConnection::handle_request(const WSAPIAddMenuToMenubarRequest& request)
 {
     int menubar_id = request.menubar_id();
     int menu_id = request.menu_id();
@@ -195,7 +195,7 @@ void WSClientConnection::handle_request(WSAPIAddMenuToMenubarRequest& request)
     post_message(response);
 }
 
-void WSClientConnection::handle_request(WSAPIAddMenuItemRequest& request)
+void WSClientConnection::handle_request(const WSAPIAddMenuItemRequest& request)
 {
     int menu_id = request.menu_id();
     unsigned identifier = request.identifier();
@@ -213,7 +213,7 @@ void WSClientConnection::handle_request(WSAPIAddMenuItemRequest& request)
     post_message(response);
 }
 
-void WSClientConnection::handle_request(WSAPIAddMenuSeparatorRequest& request)
+void WSClientConnection::handle_request(const WSAPIAddMenuSeparatorRequest& request)
 {
     int menu_id = request.menu_id();
     auto it = m_menus.find(menu_id);
@@ -229,7 +229,7 @@ void WSClientConnection::handle_request(WSAPIAddMenuSeparatorRequest& request)
     post_message(response);
 }
 
-void WSClientConnection::handle_request(WSAPISetWindowOpacityRequest& request)
+void WSClientConnection::handle_request(const WSAPISetWindowOpacityRequest& request)
 {
     int window_id = request.window_id();
     auto it = m_windows.find(window_id);
@@ -241,7 +241,7 @@ void WSClientConnection::handle_request(WSAPISetWindowOpacityRequest& request)
     window.set_opacity(request.opacity());
 }
 
-void WSClientConnection::handle_request(WSAPISetWallpaperRequest& request)
+void WSClientConnection::handle_request(const WSAPISetWallpaperRequest& request)
 {
     bool success = WSWindowManager::the().set_wallpaper(request.wallpaper());
     WSAPI_ServerMessage response;
@@ -250,7 +250,7 @@ void WSClientConnection::handle_request(WSAPISetWallpaperRequest& request)
     post_message(response);
 }
 
-void WSClientConnection::handle_request(WSAPIGetWallpaperRequest& request)
+void WSClientConnection::handle_request(const WSAPIGetWallpaperRequest&)
 {
     auto path = WSWindowManager::the().wallpaper_path();
     WSAPI_ServerMessage response;
@@ -261,7 +261,7 @@ void WSClientConnection::handle_request(WSAPIGetWallpaperRequest& request)
     post_message(response);
 }
 
-void WSClientConnection::handle_request(WSAPISetWindowTitleRequest& request)
+void WSClientConnection::handle_request(const WSAPISetWindowTitleRequest& request)
 {
     int window_id = request.window_id();
     auto it = m_windows.find(window_id);
@@ -273,7 +273,7 @@ void WSClientConnection::handle_request(WSAPISetWindowTitleRequest& request)
     window.set_title(request.title());
 }
 
-void WSClientConnection::handle_request(WSAPIGetWindowTitleRequest& request)
+void WSClientConnection::handle_request(const WSAPIGetWindowTitleRequest& request)
 {
     int window_id = request.window_id();
     auto it = m_windows.find(window_id);
@@ -291,7 +291,7 @@ void WSClientConnection::handle_request(WSAPIGetWindowTitleRequest& request)
     post_message(response);
 }
 
-void WSClientConnection::handle_request(WSAPISetWindowRectRequest& request)
+void WSClientConnection::handle_request(const WSAPISetWindowRectRequest& request)
 {
     int window_id = request.window_id();
     auto it = m_windows.find(window_id);
@@ -303,7 +303,7 @@ void WSClientConnection::handle_request(WSAPISetWindowRectRequest& request)
     window.set_rect(request.rect());
 }
 
-void WSClientConnection::handle_request(WSAPIGetWindowRectRequest& request)
+void WSClientConnection::handle_request(const WSAPIGetWindowRectRequest& request)
 {
     int window_id = request.window_id();
     auto it = m_windows.find(window_id);
@@ -319,7 +319,7 @@ void WSClientConnection::handle_request(WSAPIGetWindowRectRequest& request)
     post_message(response);
 }
 
-void WSClientConnection::handle_request(WSAPISetClipboardContentsRequest& request)
+void WSClientConnection::handle_request(const WSAPISetClipboardContentsRequest& request)
 {
     auto shared_buffer = SharedBuffer::create_from_shared_buffer_id(request.shared_buffer_id());
     if (!shared_buffer) {
@@ -333,7 +333,7 @@ void WSClientConnection::handle_request(WSAPISetClipboardContentsRequest& reques
     post_message(response);
 }
 
-void WSClientConnection::handle_request(WSAPIGetClipboardContentsRequest&)
+void WSClientConnection::handle_request(const WSAPIGetClipboardContentsRequest&)
 {
     WSAPI_ServerMessage response;
     response.type = WSAPI_ServerMessage::Type::DidGetClipboardContents;
@@ -357,7 +357,7 @@ void WSClientConnection::handle_request(WSAPIGetClipboardContentsRequest&)
     post_message(response);
 }
 
-void WSClientConnection::handle_request(WSAPICreateWindowRequest& request)
+void WSClientConnection::handle_request(const WSAPICreateWindowRequest& request)
 {
     int window_id = m_next_window_id++;
     auto window = make<WSWindow>(*this, window_id, request.is_modal());
@@ -376,7 +376,7 @@ void WSClientConnection::handle_request(WSAPICreateWindowRequest& request)
     post_message(response);
 }
 
-void WSClientConnection::handle_request(WSAPIDestroyWindowRequest& request)
+void WSClientConnection::handle_request(const WSAPIDestroyWindowRequest& request)
 {
     int window_id = request.window_id();
     auto it = m_windows.find(window_id);
@@ -389,7 +389,7 @@ void WSClientConnection::handle_request(WSAPIDestroyWindowRequest& request)
     m_windows.remove(it);
 }
 
-void WSClientConnection::handle_request(WSAPIInvalidateRectRequest& request)
+void WSClientConnection::handle_request(const WSAPIInvalidateRectRequest& request)
 {
     int window_id = request.window_id();
     auto it = m_windows.find(window_id);
@@ -406,7 +406,7 @@ void WSClientConnection::handle_request(WSAPIInvalidateRectRequest& request)
     post_message(response);
 }
 
-void WSClientConnection::handle_request(WSAPIDidFinishPaintingNotification& request)
+void WSClientConnection::handle_request(const WSAPIDidFinishPaintingNotification& request)
 {
     int window_id = request.window_id();
     auto it = m_windows.find(window_id);
@@ -425,7 +425,7 @@ void WSClientConnection::handle_request(WSAPIDidFinishPaintingNotification& requ
     WSWindowManager::the().invalidate(window, request.rect());
 }
 
-void WSClientConnection::handle_request(WSAPIGetWindowBackingStoreRequest& request)
+void WSClientConnection::handle_request(const WSAPIGetWindowBackingStoreRequest& request)
 {
     int window_id = request.window_id();
     auto it = m_windows.find(window_id);
@@ -447,7 +447,7 @@ void WSClientConnection::handle_request(WSAPIGetWindowBackingStoreRequest& reque
     post_message(response);
 }
 
-void WSClientConnection::handle_request(WSAPISetWindowBackingStoreRequest& request)
+void WSClientConnection::handle_request(const WSAPISetWindowBackingStoreRequest& request)
 {
     int window_id = request.window_id();
     auto it = m_windows.find(window_id);
@@ -479,7 +479,7 @@ void WSClientConnection::handle_request(WSAPISetWindowBackingStoreRequest& reque
     post_message(response);
 }
 
-void WSClientConnection::handle_request(WSAPISetGlobalCursorTrackingRequest& request)
+void WSClientConnection::handle_request(const WSAPISetGlobalCursorTrackingRequest& request)
 {
     int window_id = request.window_id();
     auto it = m_windows.find(window_id);
@@ -491,7 +491,7 @@ void WSClientConnection::handle_request(WSAPISetGlobalCursorTrackingRequest& req
     window.set_global_cursor_tracking_enabled(request.value());
 }
 
-void WSClientConnection::handle_request(WSAPISetWindowOverrideCursorRequest& request)
+void WSClientConnection::handle_request(const WSAPISetWindowOverrideCursorRequest& request)
 {
     int window_id = request.window_id();
     auto it = m_windows.find(window_id);
@@ -503,59 +503,59 @@ void WSClientConnection::handle_request(WSAPISetWindowOverrideCursorRequest& req
     window.set_override_cursor(WSCursor::create(request.cursor()));
 }
 
-void WSClientConnection::on_request(WSAPIClientRequest& request)
+void WSClientConnection::on_request(const WSAPIClientRequest& request)
 {
     switch (request.type()) {
     case WSMessage::APICreateMenubarRequest:
-        return handle_request(static_cast<WSAPICreateMenubarRequest&>(request));
+        return handle_request(static_cast<const WSAPICreateMenubarRequest&>(request));
     case WSMessage::APIDestroyMenubarRequest:
-        return handle_request(static_cast<WSAPIDestroyMenubarRequest&>(request));
+        return handle_request(static_cast<const WSAPIDestroyMenubarRequest&>(request));
     case WSMessage::APICreateMenuRequest:
-        return handle_request(static_cast<WSAPICreateMenuRequest&>(request));
+        return handle_request(static_cast<const WSAPICreateMenuRequest&>(request));
     case WSMessage::APIDestroyMenuRequest:
-        return handle_request(static_cast<WSAPIDestroyMenuRequest&>(request));
+        return handle_request(static_cast<const WSAPIDestroyMenuRequest&>(request));
     case WSMessage::APISetApplicationMenubarRequest:
-        return handle_request(static_cast<WSAPISetApplicationMenubarRequest&>(request));
+        return handle_request(static_cast<const WSAPISetApplicationMenubarRequest&>(request));
     case WSMessage::APIAddMenuToMenubarRequest:
-        return handle_request(static_cast<WSAPIAddMenuToMenubarRequest&>(request));
+        return handle_request(static_cast<const WSAPIAddMenuToMenubarRequest&>(request));
     case WSMessage::APIAddMenuItemRequest:
-        return handle_request(static_cast<WSAPIAddMenuItemRequest&>(request));
+        return handle_request(static_cast<const WSAPIAddMenuItemRequest&>(request));
     case WSMessage::APIAddMenuSeparatorRequest:
-        return handle_request(static_cast<WSAPIAddMenuSeparatorRequest&>(request));
+        return handle_request(static_cast<const WSAPIAddMenuSeparatorRequest&>(request));
     case WSMessage::APISetWindowTitleRequest:
-        return handle_request(static_cast<WSAPISetWindowTitleRequest&>(request));
+        return handle_request(static_cast<const WSAPISetWindowTitleRequest&>(request));
     case WSMessage::APIGetWindowTitleRequest:
-        return handle_request(static_cast<WSAPIGetWindowTitleRequest&>(request));
+        return handle_request(static_cast<const WSAPIGetWindowTitleRequest&>(request));
     case WSMessage::APISetWindowRectRequest:
-        return handle_request(static_cast<WSAPISetWindowRectRequest&>(request));
+        return handle_request(static_cast<const WSAPISetWindowRectRequest&>(request));
     case WSMessage::APIGetWindowRectRequest:
-        return handle_request(static_cast<WSAPIGetWindowRectRequest&>(request));
+        return handle_request(static_cast<const WSAPIGetWindowRectRequest&>(request));
     case WSMessage::APISetClipboardContentsRequest:
-        return handle_request(static_cast<WSAPISetClipboardContentsRequest&>(request));
+        return handle_request(static_cast<const WSAPISetClipboardContentsRequest&>(request));
     case WSMessage::APIGetClipboardContentsRequest:
-        return handle_request(static_cast<WSAPIGetClipboardContentsRequest&>(request));
+        return handle_request(static_cast<const WSAPIGetClipboardContentsRequest&>(request));
     case WSMessage::APICreateWindowRequest:
-        return handle_request(static_cast<WSAPICreateWindowRequest&>(request));
+        return handle_request(static_cast<const WSAPICreateWindowRequest&>(request));
     case WSMessage::APIDestroyWindowRequest:
-        return handle_request(static_cast<WSAPIDestroyWindowRequest&>(request));
+        return handle_request(static_cast<const WSAPIDestroyWindowRequest&>(request));
     case WSMessage::APIInvalidateRectRequest:
-        return handle_request(static_cast<WSAPIInvalidateRectRequest&>(request));
+        return handle_request(static_cast<const WSAPIInvalidateRectRequest&>(request));
     case WSMessage::APIDidFinishPaintingNotification:
-        return handle_request(static_cast<WSAPIDidFinishPaintingNotification&>(request));
+        return handle_request(static_cast<const WSAPIDidFinishPaintingNotification&>(request));
     case WSMessage::APIGetWindowBackingStoreRequest:
-        return handle_request(static_cast<WSAPIGetWindowBackingStoreRequest&>(request));
+        return handle_request(static_cast<const WSAPIGetWindowBackingStoreRequest&>(request));
     case WSMessage::APISetGlobalCursorTrackingRequest:
-        return handle_request(static_cast<WSAPISetGlobalCursorTrackingRequest&>(request));
+        return handle_request(static_cast<const WSAPISetGlobalCursorTrackingRequest&>(request));
     case WSMessage::APISetWindowOpacityRequest:
-        return handle_request(static_cast<WSAPISetWindowOpacityRequest&>(request));
+        return handle_request(static_cast<const WSAPISetWindowOpacityRequest&>(request));
     case WSMessage::APISetWindowBackingStoreRequest:
-        return handle_request(static_cast<WSAPISetWindowBackingStoreRequest&>(request));
+        return handle_request(static_cast<const WSAPISetWindowBackingStoreRequest&>(request));
     case WSMessage::APISetWallpaperRequest:
-        return handle_request(static_cast<WSAPISetWallpaperRequest&>(request));
+        return handle_request(static_cast<const WSAPISetWallpaperRequest&>(request));
     case WSMessage::APIGetWallpaperRequest:
-        return handle_request(static_cast<WSAPIGetWallpaperRequest&>(request));
+        return handle_request(static_cast<const WSAPIGetWallpaperRequest&>(request));
     case WSMessage::APISetWindowOverrideCursorRequest:
-        return handle_request(static_cast<WSAPISetWindowOverrideCursorRequest&>(request));
+        return handle_request(static_cast<const WSAPISetWindowOverrideCursorRequest&>(request));
     default:
         break;
     }

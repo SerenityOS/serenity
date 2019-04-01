@@ -64,7 +64,7 @@ public:
 
     void invalidate();
 
-    virtual void on_message(WSMessage&) override;
+    virtual void on_message(const WSMessage&) override;
 
     GraphicsBitmap* backing_store() { return m_backing_store.ptr(); }
     void set_backing_store(RetainPtr<GraphicsBitmap>&& backing_store)

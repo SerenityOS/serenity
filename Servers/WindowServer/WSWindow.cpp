@@ -91,7 +91,7 @@ void WSWindow::handle_mouse_event(const WSMouseEvent& event)
     m_client->post_message(server_message);
 }
 
-void WSWindow::on_message(WSMessage& message)
+void WSWindow::on_message(const WSMessage& message)
 {
     if (m_internal_owner)
         return m_internal_owner->on_message(message);
@@ -114,15 +114,15 @@ void WSWindow::on_message(WSMessage& message)
         break;
     case WSMessage::KeyDown:
         server_message.type = WSAPI_ServerMessage::Type::KeyDown;
-        server_message.key.character = static_cast<WSKeyEvent&>(message).character();
-        server_message.key.key = static_cast<WSKeyEvent&>(message).key();
-        server_message.key.modifiers = static_cast<WSKeyEvent&>(message).modifiers();
+        server_message.key.character = static_cast<const WSKeyEvent&>(message).character();
+        server_message.key.key = static_cast<const WSKeyEvent&>(message).key();
+        server_message.key.modifiers = static_cast<const WSKeyEvent&>(message).modifiers();
         break;
     case WSMessage::KeyUp:
         server_message.type = WSAPI_ServerMessage::Type::KeyUp;
-        server_message.key.character = static_cast<WSKeyEvent&>(message).character();
-        server_message.key.key = static_cast<WSKeyEvent&>(message).key();
-        server_message.key.modifiers = static_cast<WSKeyEvent&>(message).modifiers();
+        server_message.key.character = static_cast<const WSKeyEvent&>(message).character();
+        server_message.key.key = static_cast<const WSKeyEvent&>(message).key();
+        server_message.key.modifiers = static_cast<const WSKeyEvent&>(message).modifiers();
         break;
     case WSMessage::WindowActivated:
         server_message.type = WSAPI_ServerMessage::Type::WindowActivated;
@@ -135,8 +135,8 @@ void WSWindow::on_message(WSMessage& message)
         break;
     case WSMessage::WindowResized:
         server_message.type = WSAPI_ServerMessage::Type::WindowResized;
-        server_message.window.old_rect = static_cast<WSResizeEvent&>(message).old_rect();
-        server_message.window.rect = static_cast<WSResizeEvent&>(message).rect();
+        server_message.window.old_rect = static_cast<const WSResizeEvent&>(message).old_rect();
+        server_message.window.rect = static_cast<const WSResizeEvent&>(message).rect();
         break;
     default:
         break;

@@ -16,7 +16,7 @@ WSClipboard::~WSClipboard()
 {
 }
 
-void WSClipboard::on_message(WSMessage&)
+void WSClipboard::on_message(const WSMessage&)
 {
 }
 

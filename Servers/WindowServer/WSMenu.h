@@ -73,7 +73,7 @@ public:
     void close();
 
 private:
-    virtual void on_message(WSMessage&) override;
+    virtual void on_message(const WSMessage&) override;
 
     int padding_between_text_and_shortcut() const { return 50; }
     void did_activate(WSMenuItem&);

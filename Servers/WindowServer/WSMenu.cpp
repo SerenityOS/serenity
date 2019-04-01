@@ -107,11 +107,11 @@ void WSMenu::draw()
     }
 }
 
-void WSMenu::on_message(WSMessage& message)
+void WSMenu::on_message(const WSMessage& message)
 {
     ASSERT(menu_window());
     if (message.type() == WSMessage::MouseMove) {
-        auto* item = item_at(static_cast<WSMouseEvent&>(message).position());
+        auto* item = item_at(static_cast<const WSMouseEvent&>(message).position());
         if (!item || m_hovered_item == item)
             return;
         m_hovered_item = item;
