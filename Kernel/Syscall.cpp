@@ -252,10 +252,12 @@ static dword handle(RegisterDump& regs, dword function, dword arg1, dword arg2, 
 
 void syscall_trap_entry(RegisterDump& regs)
 {
+    current->process().big_lock().lock();
     dword function = regs.eax;
     dword arg1 = regs.edx;
     dword arg2 = regs.ecx;
     dword arg3 = regs.ebx;
     regs.eax = Syscall::handle(regs, function, arg1, arg2, arg3);
+    current->process().big_lock().unlock();
 }
 

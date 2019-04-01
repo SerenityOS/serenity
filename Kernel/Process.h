@@ -241,6 +241,8 @@ public:
 
     int thread_count() const;
 
+    Lock& big_lock() { return m_big_lock; }
+
 private:
     friend class MemoryManager;
     friend class Scheduler;
@@ -315,6 +317,8 @@ private:
     bool m_dead { false };
 
     int m_next_tid { 0 };
+
+    Lock m_big_lock;
 };
 
 class ProcessInspectionHandle {
