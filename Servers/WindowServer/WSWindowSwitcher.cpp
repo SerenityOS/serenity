@@ -116,6 +116,6 @@ void WSWindowSwitcher::refresh()
     draw();
 }
 
-void WSWindowSwitcher::on_message(WSMessage&)
+void WSWindowSwitcher::on_message(const WSMessage&)
 {
 }

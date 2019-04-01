@@ -402,7 +402,7 @@ static CharacterBitmap* s_close_button_bitmap;
 static const int s_close_button_bitmap_width = 8;
 static const int s_close_button_bitmap_height = 9;
 
-void WSWindowManager::paint_window_frame(WSWindow& window)
+void WSWindowManager::paint_window_frame(const WSWindow& window)
 {
     //printf("[WM] paint_window_frame {%p}, rect: %d,%d %dx%d\n", &window, window.rect().x(), window.rect().y(), window.rect().width(), window.rect().height());
 
@@ -546,7 +546,7 @@ void WSWindowManager::notify_rect_changed(WSWindow& window, const Rect& old_rect
         m_switcher.refresh();
 }
 
-void WSWindowManager::handle_menu_mouse_event(WSMenu& menu, WSMouseEvent& event)
+void WSWindowManager::handle_menu_mouse_event(WSMenu& menu, const WSMouseEvent& event)
 {
     bool is_hover_with_any_menu_open = event.type() == WSMouseEvent::MouseMove && m_current_menu;
     bool is_mousedown_with_left_button = event.type() == WSMouseEvent::MouseDown && event.button() == MouseButton::Left;
@@ -577,7 +577,7 @@ void WSWindowManager::close_current_menu()
     m_current_menu = nullptr;
 }
 
-void WSWindowManager::handle_menubar_mouse_event(WSMouseEvent& event)
+void WSWindowManager::handle_menubar_mouse_event(const WSMouseEvent& event)
 {
     for_each_active_menubar_menu([&] (WSMenu& menu) {
         if (menu.rect_in_menubar().contains(event.position())) {
@@ -588,7 +588,7 @@ void WSWindowManager::handle_menubar_mouse_event(WSMouseEvent& event)
     });
 }
 
-void WSWindowManager::handle_close_button_mouse_event(WSWindow& window, WSMouseEvent& event)
+void WSWindowManager::handle_close_button_mouse_event(WSWindow& window, const WSMouseEvent& event)
 {
     if (event.type() == WSMessage::MouseDown && event.button() == MouseButton::Left) {
         WSMessage message(WSMessage::WindowCloseRequest);
@@ -597,7 +597,7 @@ void WSWindowManager::handle_close_button_mouse_event(WSWindow& window, WSMouseE
     }
 }
 
-void WSWindowManager::start_window_drag(WSWindow& window, WSMouseEvent& event)
+void WSWindowManager::start_window_drag(WSWindow& window, const WSMouseEvent& event)
 {
 #ifdef DRAG_DEBUG
     printf("[WM] Begin dragging WSWindow{%p}\n", &window);
@@ -609,7 +609,7 @@ void WSWindowManager::start_window_drag(WSWindow& window, WSMouseEvent& event)
     invalidate(window);
 }
 
-void WSWindowManager::start_window_resize(WSWindow& window, WSMouseEvent& event)
+void WSWindowManager::start_window_resize(WSWindow& window, const WSMouseEvent& event)
 {
     move_to_front_and_make_active(window);
     constexpr ResizeDirection direction_for_hot_area[3][3] = {
@@ -640,7 +640,7 @@ void WSWindowManager::start_window_resize(WSWindow& window, WSMouseEvent& event)
     invalidate(window);
 }
 
-bool WSWindowManager::process_ongoing_window_drag(WSMouseEvent& event, WSWindow*&)
+bool WSWindowManager::process_ongoing_window_drag(const WSMouseEvent& event, WSWindow*&)
 {
     if (!m_drag_window)
         return false;
@@ -667,7 +667,7 @@ bool WSWindowManager::process_ongoing_window_drag(WSMouseEvent& event, WSWindow*
     return false;
 }
 
-bool WSWindowManager::process_ongoing_window_resize(WSMouseEvent& event, WSWindow*&)
+bool WSWindowManager::process_ongoing_window_resize(const WSMouseEvent& event, WSWindow*&)
 {
     if (!m_resize_window)
         return false;
@@ -768,7 +768,7 @@ bool WSWindowManager::process_ongoing_window_resize(WSMouseEvent& event, WSWindo
     return true;
 }
 
-void WSWindowManager::process_mouse_event(WSMouseEvent& event, WSWindow*& event_window)
+void WSWindowManager::process_mouse_event(const WSMouseEvent& event, WSWindow*& event_window)
 {
     event_window = nullptr;
 
@@ -1051,17 +1051,17 @@ void WSWindowManager::draw_cursor()
     m_last_cursor_rect = cursor_rect;
 }
 
-void WSWindowManager::on_message(WSMessage& message)
+void WSWindowManager::on_message(const WSMessage& message)
 {
     if (message.is_mouse_event()) {
         WSWindow* event_window = nullptr;
-        process_mouse_event(static_cast<WSMouseEvent&>(message), event_window);
+        process_mouse_event(static_cast<const WSMouseEvent&>(message), event_window);
         set_hovered_window(event_window);
         return;
     }
 
     if (message.is_key_event()) {
-        auto& key_event = static_cast<WSKeyEvent&>(message);
+        auto& key_event = static_cast<const WSKeyEvent&>(message);
         m_keyboard_modifiers = key_event.modifiers();
 
         if (key_event.type() == WSMessage::KeyDown && key_event.modifiers() == Mod_Logo && key_event.key() == Key_Tab)

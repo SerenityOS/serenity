@@ -37,34 +37,34 @@ public:
     template<typename Callback> void for_each_window(Callback);
 
 private:
-    virtual void on_message(WSMessage&) override;
+    virtual void on_message(const WSMessage&) override;
 
-    void on_request(WSAPIClientRequest&);
-    void handle_request(WSAPICreateMenubarRequest&);
-    void handle_request(WSAPIDestroyMenubarRequest&);
-    void handle_request(WSAPICreateMenuRequest&);
-    void handle_request(WSAPIDestroyMenuRequest&);
-    void handle_request(WSAPISetApplicationMenubarRequest&);
-    void handle_request(WSAPIAddMenuToMenubarRequest&);
-    void handle_request(WSAPIAddMenuItemRequest&);
-    void handle_request(WSAPIAddMenuSeparatorRequest&);
-    void handle_request(WSAPISetWindowTitleRequest&);
-    void handle_request(WSAPIGetWindowTitleRequest&);
-    void handle_request(WSAPISetWindowRectRequest&);
-    void handle_request(WSAPIGetWindowRectRequest&);
-    void handle_request(WSAPISetClipboardContentsRequest&);
-    void handle_request(WSAPIGetClipboardContentsRequest&);
-    void handle_request(WSAPICreateWindowRequest&);
-    void handle_request(WSAPIDestroyWindowRequest&);
-    void handle_request(WSAPIInvalidateRectRequest&);
-    void handle_request(WSAPIDidFinishPaintingNotification&);
-    void handle_request(WSAPIGetWindowBackingStoreRequest&);
-    void handle_request(WSAPISetWindowBackingStoreRequest&);
-    void handle_request(WSAPISetGlobalCursorTrackingRequest&);
-    void handle_request(WSAPISetWindowOpacityRequest&);
-    void handle_request(WSAPISetWallpaperRequest&);
-    void handle_request(WSAPIGetWallpaperRequest&);
-    void handle_request(WSAPISetWindowOverrideCursorRequest&);
+    void on_request(const WSAPIClientRequest&);
+    void handle_request(const WSAPICreateMenubarRequest&);
+    void handle_request(const WSAPIDestroyMenubarRequest&);
+    void handle_request(const WSAPICreateMenuRequest&);
+    void handle_request(const WSAPIDestroyMenuRequest&);
+    void handle_request(const WSAPISetApplicationMenubarRequest&);
+    void handle_request(const WSAPIAddMenuToMenubarRequest&);
+    void handle_request(const WSAPIAddMenuItemRequest&);
+    void handle_request(const WSAPIAddMenuSeparatorRequest&);
+    void handle_request(const WSAPISetWindowTitleRequest&);
+    void handle_request(const WSAPIGetWindowTitleRequest&);
+    void handle_request(const WSAPISetWindowRectRequest&);
+    void handle_request(const WSAPIGetWindowRectRequest&);
+    void handle_request(const WSAPISetClipboardContentsRequest&);
+    void handle_request(const WSAPIGetClipboardContentsRequest&);
+    void handle_request(const WSAPICreateWindowRequest&);
+    void handle_request(const WSAPIDestroyWindowRequest&);
+    void handle_request(const WSAPIInvalidateRectRequest&);
+    void handle_request(const WSAPIDidFinishPaintingNotification&);
+    void handle_request(const WSAPIGetWindowBackingStoreRequest&);
+    void handle_request(const WSAPISetWindowBackingStoreRequest&);
+    void handle_request(const WSAPISetGlobalCursorTrackingRequest&);
+    void handle_request(const WSAPISetWindowOpacityRequest&);
+    void handle_request(const WSAPISetWallpaperRequest&);
+    void handle_request(const WSAPIGetWallpaperRequest&);
+    void handle_request(const WSAPISetWindowOverrideCursorRequest&);
 
     void post_error(const String&);
 
