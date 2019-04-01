@@ -147,6 +147,7 @@ private:
 
     void handle_paint_event(GPaintEvent&);
     void handle_resize_event(GResizeEvent&);
+    void handle_mousedown_event(GMouseEvent&);
     void handle_mouseup_event(GMouseEvent&);
     void do_layout();
 
