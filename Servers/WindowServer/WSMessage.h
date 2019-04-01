@@ -252,16 +252,13 @@ class WSAPISetWallpaperRequest final : public WSAPIClientRequest {
 public:
     explicit WSAPISetWallpaperRequest(int client_id, String&& wallpaper)
         : WSAPIClientRequest(WSMessage::APISetWallpaperRequest, client_id)
-        , m_client_id(client_id)
         , m_wallpaper(move(wallpaper))
     {
     }
 
-    int client_id() const { return m_client_id; }
     String wallpaper() const { return m_wallpaper; }
 
 private:
-    int m_client_id { 0 };
     String m_wallpaper;
 };
 
@@ -269,32 +266,23 @@ class WSAPIGetWallpaperRequest final : public WSAPIClientRequest {
 public:
     explicit WSAPIGetWallpaperRequest(int client_id)
         : WSAPIClientRequest(WSMessage::APIGetWallpaperRequest, client_id)
-        , m_client_id(client_id)
     {
     }
-
-    int client_id() const { return m_client_id; }
-
-private:
-    int m_client_id { 0 };
 };
 
 class WSAPISetWindowTitleRequest final : public WSAPIClientRequest {
 public:
     explicit WSAPISetWindowTitleRequest(int client_id, int window_id, String&& title)
         : WSAPIClientRequest(WSMessage::APISetWindowTitleRequest, client_id)
-        , m_client_id(client_id)
         , m_window_id(window_id)
         , m_title(move(title))
     {
     }
 
-    int client_id() const { return m_client_id; }
     int window_id() const { return m_window_id; }
     String title() const { return m_title; }
 
 private:
-    int m_client_id { 0 };
     int m_window_id { 0 };
     String m_title;
 };
@@ -303,16 +291,13 @@ class WSAPIGetWindowTitleRequest final : public WSAPIClientRequest {
 public:
     explicit WSAPIGetWindowTitleRequest(int client_id, int window_id)
         : WSAPIClientRequest(WSMessage::APIGetWindowTitleRequest, client_id)
-        , m_client_id(client_id)
         , m_window_id(window_id)
     {
     }
 
-    int client_id() const { return m_client_id; }
     int window_id() const { return m_window_id; }
 
 private:
-    int m_client_id { 0 };
     int m_window_id { 0 };
 };
 
@@ -320,18 +305,15 @@ class WSAPISetClipboardContentsRequest final : public WSAPIClientRequest {
 public:
     explicit WSAPISetClipboardContentsRequest(int client_id, int shared_buffer_id, int size)
         : WSAPIClientRequest(WSMessage::APISetClipboardContentsRequest, client_id)
-        , m_client_id(client_id)
         , m_shared_buffer_id(shared_buffer_id)
         , m_size(size)
     {
     }
 
-    int client_id() const { return m_client_id; }
     int shared_buffer_id() const { return m_shared_buffer_id; }
     int size() const { return m_size; }
 
 private:
-    int m_client_id { 0 };
     int m_shared_buffer_id { 0 };
     int m_size { 0 };
 };
@@ -340,32 +322,23 @@ class WSAPIGetClipboardContentsRequest final : public WSAPIClientRequest {
 public:
     explicit WSAPIGetClipboardContentsRequest(int client_id)
         : WSAPIClientRequest(WSMessage::APIGetClipboardContentsRequest, client_id)
-        , m_client_id(client_id)
     {
     }
-
-    int client_id() const { return m_client_id; }
-
-private:
-    int m_client_id { 0 };
 };
 
 class WSAPISetWindowOpacityRequest final : public WSAPIClientRequest {
 public:
     explicit WSAPISetWindowOpacityRequest(int client_id, int window_id, float opacity)
         : WSAPIClientRequest(WSMessage::APISetWindowOpacityRequest, client_id)
-        , m_client_id(client_id)
         , m_window_id(window_id)
         , m_opacity(opacity)
     {
     }
 
-    int client_id() const { return m_client_id; }
     int window_id() const { return m_window_id; }
     float opacity() const { return m_opacity; }
 
 private:
-    int m_client_id { 0 };
     int m_window_id { 0 };
     float m_opacity { 0 };
 };
@@ -374,7 +347,6 @@ class WSAPISetWindowBackingStoreRequest final : public WSAPIClientRequest {
 public:
     explicit WSAPISetWindowBackingStoreRequest(int client_id, int window_id, int shared_buffer_id, const Size& size, size_t bpp, size_t pitch, bool has_alpha_channel, bool flush_immediately)
         : WSAPIClientRequest(WSMessage::APISetWindowBackingStoreRequest, client_id)
-        , m_client_id(client_id)
         , m_window_id(window_id)
         , m_shared_buffer_id(shared_buffer_id)
         , m_size(size)
@@ -385,7 +357,6 @@ public:
     {
     }
 
-    int client_id() const { return m_client_id; }
     int window_id() const { return m_window_id; }
     int shared_buffer_id() const { return m_shared_buffer_id; }
     Size size() const { return m_size; }
@@ -395,7 +366,6 @@ public:
     bool flush_immediately() const { return m_flush_immediately; }
 
 private:
-    int m_client_id { 0 };
     int m_window_id { 0 };
     int m_shared_buffer_id { 0 };
     Size m_size;
@@ -409,18 +379,15 @@ class WSAPISetWindowRectRequest final : public WSAPIClientRequest {
 public:
     explicit WSAPISetWindowRectRequest(int client_id, int window_id, const Rect& rect)
         : WSAPIClientRequest(WSMessage::APISetWindowRectRequest, client_id)
-        , m_client_id(client_id)
         , m_window_id(window_id)
         , m_rect(rect)
     {
     }
 
-    int client_id() const { return m_client_id; }
     int window_id() const { return m_window_id; }
     Rect rect() const { return m_rect; }
 
 private:
-    int m_client_id { 0 };
     int m_window_id { 0 };
     Rect m_rect;
 };
@@ -429,16 +396,13 @@ class WSAPIGetWindowRectRequest final : public WSAPIClientRequest {
 public:
     explicit WSAPIGetWindowRectRequest(int client_id, int window_id)
         : WSAPIClientRequest(WSMessage::APIGetWindowRectRequest, client_id)
-        , m_client_id(client_id)
         , m_window_id(window_id)
     {
     }
 
-    int client_id() const { return m_client_id; }
     int window_id() const { return m_window_id; }
 
 private:
-    int m_client_id { 0 };
     int m_window_id { 0 };
 };
 
