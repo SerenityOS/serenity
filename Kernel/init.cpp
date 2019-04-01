@@ -136,7 +136,7 @@ VFS* vfs;
     ASSERT_NOT_REACHED();
 }
 
-[[noreturn]] void init()
+extern "C" [[noreturn]] void init()
 {
     cli();
 

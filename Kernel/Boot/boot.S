@@ -1,0 +1,64 @@
+.set MULTIBOOT_MAGIC,         0x1badb002
+.set MULTIBOOT_PAGE_ALIGN,    0x1
+.set MULTIBOOT_MEMORY_INFO,   0x2
+.set MULTIBOOT_VIDEO_MODE,    0x4
+.set multiboot_flags,         MULTIBOOT_PAGE_ALIGN | MULTIBOOT_MEMORY_INFO | MULTIBOOT_VIDEO_MODE
+.set multiboot_checksum,      -(MULTIBOOT_MAGIC + multiboot_flags)
+
+.section .multiboot
+.align 4
+
+.long MULTIBOOT_MAGIC
+.long multiboot_flags
+.long multiboot_checksum
+
+
+/* for MULTIBOOT_MEMORY_INFO */
+.long 0x00000000    /* header_addr */
+.long 0x00000000    /* load_addr */
+.long 0x00000000    /* load_end_addr */
+.long 0x00000000    /* bss_end_addr */
+.long 0x00000000    /* entry_addr */
+
+/* for MULTIBOOT_VIDEO_MODE */
+.long 0x00000000    /* mode_type */
+.long 0             /* width */
+.long 0             /* height */
+.long 32            /* depth */
+
+.section .stack, "aw", @nobits
+stack_bottom:
+.skip 32768
+stack_top:
+
+.section .text
+
+.global start
+.type start, @function
+
+.extern init 
+.type init, @function
+
+start:
+    mov $stack_top, %esp
+
+    and $-16, %esp
+
+    pushl %esp
+    pushl %eax /* Multiboot header magic */
+    pushl %ebx /* Multiboot header pointer */
+
+    cli
+    call init
+
+    pushl $exit_message
+    call kprintf
+
+    cli
+
+loop:
+    hlt
+    jmp loop
+
+exit_message:
+    .asciz "Kernel exited."
