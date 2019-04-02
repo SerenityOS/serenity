@@ -35,6 +35,7 @@ class CONSUMABLE(unconsumed) Retained {
 public:
     enum AdoptTag { Adopt };
 
+    RETURN_TYPESTATE(unconsumed) Retained(const T& object) : m_ptr(&object) { m_ptr->retain(); }
     RETURN_TYPESTATE(unconsumed) Retained(T& object) : m_ptr(&object) { m_ptr->retain(); }
     template<typename U> RETURN_TYPESTATE(unconsumed) Retained(U& object) : m_ptr(&static_cast<T&>(object)) { m_ptr->retain(); }
     RETURN_TYPESTATE(unconsumed) Retained(AdoptTag, T& object) : m_ptr(&object) { }

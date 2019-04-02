@@ -12,6 +12,8 @@ enum class GStandardCursor {
     None = 0,
     Arrow,
     IBeam,
+    ResizeHorizontal,
+    ResizeVertical,
 };
 
 class GWindow : public GObject {

@@ -1,4 +1,5 @@
 #include <WindowServer/WSCursor.h>
+#include <WindowServer/WSWindowManager.h>
 
 WSCursor::WSCursor(Retained<GraphicsBitmap>&& bitmap, const Point& hotspot)
     : m_bitmap(move(bitmap))
@@ -26,9 +27,13 @@ RetainPtr<WSCursor> WSCursor::create(WSStandardCursor standard_cursor)
     case WSStandardCursor::None:
         return nullptr;
     case WSStandardCursor::Arrow:
-        return create(*GraphicsBitmap::load_from_file("/res/cursors/arrow.png"));
+        return WSWindowManager::the().arrow_cursor();
     case WSStandardCursor::IBeam:
-        return create(*GraphicsBitmap::load_from_file("/res/cursors/i-beam.png"));
+        return WSWindowManager::the().i_beam_cursor();
+    case WSStandardCursor::ResizeHorizontal:
+        return WSWindowManager::the().resize_horizontally_cursor();
+    case WSStandardCursor::ResizeVertical:
+        return WSWindowManager::the().resize_vertically_cursor();
     }
     ASSERT_NOT_REACHED();
 }
