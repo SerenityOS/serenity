@@ -2,7 +2,7 @@
 
 #include <LibGUI/GIODevice.h>
 #include <AK/AKString.h>
-#include <Kernel/IPv4.h>
+#include <Kernel/Net/IPv4.h>
 
 class GSocketAddress {
 public:

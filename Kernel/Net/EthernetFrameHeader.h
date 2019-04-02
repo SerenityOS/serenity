@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Kernel/Net/MACAddress.h>
-#include <Kernel/NetworkOrdered.h>
+#include <AK/NetworkOrdered.h>
 
 class [[gnu::packed]] EthernetFrameHeader {
 public:

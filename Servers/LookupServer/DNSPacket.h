@@ -1,7 +1,7 @@
 #pragma once
 
+#include <AK/NetworkOrdered.h>
 #include <AK/Types.h>
-#include <Kernel/NetworkOrdered.h>
 
 class [[gnu::packed]] DNSPacket {
 public:

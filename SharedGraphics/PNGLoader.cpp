@@ -1,5 +1,5 @@
 #include <SharedGraphics/PNGLoader.h>
-#include <Kernel/NetworkOrdered.h>
+#include <AK/NetworkOrdered.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <unistd.h>
