@@ -9,6 +9,7 @@
 #include <Kernel/TCP.h>
 #include <Kernel/UDP.h>
 #include <Kernel/ARP.h>
+#include <Kernel/Net/Routing.h>
 #include <LibC/errno_numbers.h>
 
 #define IPV4_SOCKET_DEBUG
@@ -128,12 +129,6 @@ ssize_t IPv4Socket::sendto(const void* data, size_t data_length, int flags, cons
     (void)flags;
     if (addr && addr_length != sizeof(sockaddr_in))
         return -EINVAL;
-    // FIXME: Find the adapter some better way!
-    auto* adapter = NetworkAdapter::from_ipv4_address(IPv4Address(192, 168, 5, 2));
-    if (!adapter) {
-        // FIXME: Figure out which error code to return.
-        ASSERT_NOT_REACHED();
-    }
 
     if (addr) {
         if (addr->sa_family != AF_INET) {
@@ -145,6 +140,10 @@ ssize_t IPv4Socket::sendto(const void* data, size_t data_length, int flags, cons
         m_destination_address = IPv4Address((const byte*)&ia.sin_addr.s_addr);
         m_destination_port = ntohs(ia.sin_port);
     }
+
+    auto* adapter = adapter_for_route_to(m_destination_address);
+    if (!adapter)
+        return -EHOSTUNREACH;
 
     int rc = allocate_source_port_if_needed();
     if (rc < 0)
