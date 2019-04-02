@@ -242,6 +242,7 @@ void GTreeView::did_update_selection()
     }
     if (opened_any)
         update_content_size();
+    update();
 }
 
 void GTreeView::update_content_size()
@@ -254,4 +255,43 @@ void GTreeView::update_content_size()
         return IterationDecision::Continue;
     });
     set_content_size({ width, height });
+}
+
+void GTreeView::keydown_event(GKeyEvent& event)
+{
+    if (!model())
+        return;
+    auto cursor_index = model()->selected_index();
+    if (event.key() == KeyCode::Key_Up) {
+        GModelIndex previous_index;
+        GModelIndex found_index;
+        traverse_in_paint_order([&] (const GModelIndex& index, const Rect&, const Rect&, int) {
+            if (index == cursor_index) {
+                found_index = previous_index;
+                return IterationDecision::Abort;
+            }
+            previous_index = index;
+            return IterationDecision::Continue;
+        });
+        if (found_index.is_valid()) {
+            model()->set_selected_index(found_index);
+            update();
+        }
+        return;
+    }
+    if (event.key() == KeyCode::Key_Down) {
+        GModelIndex previous_index;
+        GModelIndex found_index;
+        traverse_in_paint_order([&] (const GModelIndex& index, const Rect&, const Rect&, int) {
+            if (previous_index == cursor_index) {
+                found_index = index;
+                return IterationDecision::Abort;
+            }
+            previous_index = index;
+            return IterationDecision::Continue;
+        });
+        if (found_index.is_valid())
+            model()->set_selected_index(found_index);
+        return;
+    }
 }
