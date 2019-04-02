@@ -59,7 +59,8 @@ void IRCAppWindow::setup_client()
 
     m_client.set_server(input_box.text_value(), 6667);
     update_title();
-    m_client.connect();
+    bool success = m_client.connect();
+    ASSERT(success);
 }
 
 void IRCAppWindow::setup_actions()
