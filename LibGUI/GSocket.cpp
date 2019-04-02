@@ -3,6 +3,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <stdio.h>
+#include <netdb.h>
 
 GSocket::GSocket(Type type, GObject* parent)
     : GIODevice(parent)
@@ -12,6 +13,19 @@ GSocket::GSocket(Type type, GObject* parent)
 
 GSocket::~GSocket()
 {
+}
+
+bool GSocket::connect(const String& hostname, int port)
+{
+    auto* hostent = gethostbyname(hostname.characters());
+    if (!hostent) {
+        dbgprintf("GSocket::connect: Unable to resolve '%s'\n", hostname.characters());
+        return false;
+    }
+
+    IPv4Address host_address((const byte*)hostent->h_addr_list[0]);
+    dbgprintf("GSocket::connect: Resolved '%s' to %s\n", hostname.characters(), host_address.to_string().characters());
+    return connect(host_address, port);
 }
 
 bool GSocket::connect(const GSocketAddress& address, int port)
