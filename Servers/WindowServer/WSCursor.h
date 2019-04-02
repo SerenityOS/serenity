@@ -6,6 +6,8 @@ enum class WSStandardCursor {
     None = 0,
     Arrow,
     IBeam,
+    ResizeHorizontal,
+    ResizeVertical,
 };
 
 class WSCursor : public Retainable<WSCursor> {

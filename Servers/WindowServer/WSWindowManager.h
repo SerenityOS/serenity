@@ -87,6 +87,15 @@ public:
     const WSCursor& active_cursor() const;
     Rect current_cursor_rect() const;
 
+    const WSCursor& arrow_cursor() const { return *m_arrow_cursor; }
+    const WSCursor& resize_horizontally_cursor() const { return *m_resize_horizontally_cursor; }
+    const WSCursor& resize_vertically_cursor() const { return *m_resize_vertically_cursor; }
+    const WSCursor& resize_diagonally_tlbr_cursor() const { return *m_resize_diagonally_tlbr_cursor; }
+    const WSCursor& resize_diagonally_bltr_cursor() const { return *m_resize_diagonally_bltr_cursor; }
+    const WSCursor& i_beam_cursor() const { return *m_i_beam_cursor; }
+    const WSCursor& disallowed_cursor() const { return *m_disallowed_cursor; }
+    const WSCursor& move_cursor() const { return *m_move_cursor; }
+
 private:
     void process_mouse_event(const WSMouseEvent&, WSWindow*& event_window);
     bool process_ongoing_window_resize(const WSMouseEvent&, WSWindow*& event_window);

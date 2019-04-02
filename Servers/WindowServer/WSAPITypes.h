@@ -51,6 +51,8 @@ enum class WSAPI_StandardCursor : unsigned char {
     None = 0,
     Arrow,
     IBeam,
+    ResizeHorizontal,
+    ResizeVertical,
 };
 
 struct WSAPI_ServerMessage {

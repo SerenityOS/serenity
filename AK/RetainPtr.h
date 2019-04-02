@@ -14,6 +14,7 @@ public:
     RetainPtr(const T* ptr) : m_ptr(const_cast<T*>(ptr)) { retain_if_not_null(m_ptr); }
     RetainPtr(T* ptr) : m_ptr(ptr) { retain_if_not_null(m_ptr); }
     RetainPtr(T& object) : m_ptr(&object) { m_ptr->retain(); }
+    RetainPtr(const T& object) : m_ptr(const_cast<T*>(&object)) { m_ptr->retain(); }
     RetainPtr(AdoptTag, T& object) : m_ptr(&object) { }
     RetainPtr(RetainPtr& other) : m_ptr(other.copy_ref().leak_ref()) { }
     RetainPtr(RetainPtr&& other) : m_ptr(other.leak_ref()) { }

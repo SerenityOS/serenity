@@ -1,5 +1,6 @@
 #include <LibGUI/GSplitter.h>
 #include <LibGUI/GBoxLayout.h>
+#include <LibGUI/GWindow.h>
 
 GSplitter::GSplitter(Orientation orientation, GWidget* parent)
     : GFrame(parent)
@@ -18,12 +19,15 @@ GSplitter::~GSplitter()
 void GSplitter::enter_event(GEvent&)
 {
     set_background_color(Color::from_rgb(0xd6d2ce));
+    window()->set_override_cursor(m_orientation == Orientation::Horizontal ? GStandardCursor::ResizeHorizontal : GStandardCursor::ResizeVertical);
     update();
 }
 
 void GSplitter::leave_event(GEvent&)
 {
     set_background_color(Color::LightGray);
+    if (!m_resizing)
+        window()->set_override_cursor(GStandardCursor::None);
     update();
 }
 
@@ -108,4 +112,7 @@ void GSplitter::mouseup_event(GMouseEvent& event)
     if (event.button() != GMouseButton::Left)
         return;
     m_resizing = false;
+    if (!rect().contains(event.position()))
+        window()->set_override_cursor(GStandardCursor::None);
+
 }
