@@ -186,7 +186,7 @@ Vector<IPv4Address> lookup(const String& hostname, bool& did_timeout)
 
     dst_addr.sin_family = AF_INET;
     dst_addr.sin_port = htons(53);
-    rc = inet_pton(AF_INET, "172.20.10.1", &dst_addr.sin_addr);
+    rc = inet_pton(AF_INET, "127.0.0.53", &dst_addr.sin_addr);
 
     int nsent = sendto(fd, buffer.pointer(), buffer.size(), 0,(const struct sockaddr *)&dst_addr, sizeof(dst_addr));
     if (nsent < 0) {
@@ -218,11 +218,11 @@ Vector<IPv4Address> lookup(const String& hostname, bool& did_timeout)
     }
 
     auto& response_header = *(DNSPacket*)(response_buffer);
-    printf("Got response (ID: %u)\n", response_header.id());
-    //printf("  Question count: %u\n", response_header.question_count());
-    printf("  Answer count: %u\n", response_header.answer_count());
-    //printf(" Authority count: %u\n", response_header.authority_count());
-    //printf("Additional count: %u\n", response_header.additional_count());
+    dbgprintf("Got response (ID: %u)\n", response_header.id());
+    dbgprintf("  Question count: %u\n", response_header.question_count());
+    dbgprintf("  Answer count: %u\n", response_header.answer_count());
+    dbgprintf(" Authority count: %u\n", response_header.authority_count());
+    dbgprintf("Additional count: %u\n", response_header.additional_count());
 
     if (response_header.id() != request_header.id()) {
         dbgprintf("LookupServer: ID mismatch (%u vs %u) :(\n", response_header.id(), request_header.id());
@@ -246,15 +246,18 @@ Vector<IPv4Address> lookup(const String& hostname, bool& did_timeout)
     for (word i = 0; i < response_header.answer_count(); ++i) {
         auto& record = *(const DNSRecord*)(&((const byte*)response_header.payload())[offset]);
         auto ipv4_address = IPv4Address((const byte*)record.data());
-        dbgprintf("LookupServer:     Answer #%u: (question: %s), ttl=%u, length=%u, data=%s\n",
+        dbgprintf("LookupServer:     Answer #%u: (question: %s), type=%u, ttl=%u, length=%u, data=%s\n",
             i,
             question.characters(),
+            record.type(),
             record.ttl(),
             record.data_length(),
             ipv4_address.to_string().characters());
 
         offset += sizeof(DNSRecord) + record.data_length();
-        addresses.append(ipv4_address);
+        if (record.type() == T_A)
+            addresses.append(ipv4_address);
+        // FIXME: Parse some other record types perhaps?
     }
 
     return addresses;
@@ -270,6 +273,7 @@ static String parse_dns_name(const byte* data, int& offset, int max_offset)
             break;
         }
         if ((ch & 0xc0) == 0xc0) {
+            ASSERT_NOT_REACHED();
             // FIXME: Parse referential names.
             offset += 2;
         }
