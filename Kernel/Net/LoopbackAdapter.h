@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Kernel/NetworkAdapter.h>
+#include <Kernel/Net/NetworkAdapter.h>
 
 class LoopbackAdapter final : public NetworkAdapter {
 public:

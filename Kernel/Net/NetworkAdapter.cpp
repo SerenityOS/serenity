@@ -1,8 +1,8 @@
-#include <Kernel/NetworkAdapter.h>
+#include <Kernel/Net/NetworkAdapter.h>
+#include <Kernel/Net/EthernetFrameHeader.h>
+#include <Kernel/Net/EtherType.h>
 #include <Kernel/StdLib.h>
-#include <Kernel/EthernetFrameHeader.h>
 #include <Kernel/kmalloc.h>
-#include <Kernel/EtherType.h>
 #include <AK/HashTable.h>
 #include <Kernel/Lock.h>
 

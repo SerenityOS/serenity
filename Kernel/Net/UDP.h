@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Kernel/IPv4.h>
+#include <Kernel/Net/IPv4.h>
 
 class [[gnu::packed]] UDPPacket {
 public:

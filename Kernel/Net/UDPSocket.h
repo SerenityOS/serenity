@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Kernel/IPv4Socket.h>
+#include <Kernel/Net/IPv4Socket.h>
 
 class UDPSocketHandle;
 

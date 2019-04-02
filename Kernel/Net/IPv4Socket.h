@@ -2,7 +2,7 @@
 
 #include <Kernel/Socket.h>
 #include <Kernel/DoubleBuffer.h>
-#include <Kernel/IPv4.h>
+#include <Kernel/Net/IPv4.h>
 #include <AK/HashMap.h>
 #include <Kernel/Lock.h>
 #include <AK/SinglyLinkedList.h>

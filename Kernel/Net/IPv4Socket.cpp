@@ -1,14 +1,14 @@
-#include <Kernel/IPv4Socket.h>
-#include <Kernel/TCPSocket.h>
-#include <Kernel/UDPSocket.h>
+#include <Kernel/Net/IPv4Socket.h>
+#include <Kernel/Net/TCPSocket.h>
+#include <Kernel/Net/UDPSocket.h>
 #include <Kernel/UnixTypes.h>
 #include <Kernel/Process.h>
-#include <Kernel/NetworkAdapter.h>
-#include <Kernel/IPv4.h>
-#include <Kernel/ICMP.h>
-#include <Kernel/TCP.h>
-#include <Kernel/UDP.h>
-#include <Kernel/ARP.h>
+#include <Kernel/Net/NetworkAdapter.h>
+#include <Kernel/Net/IPv4.h>
+#include <Kernel/Net/ICMP.h>
+#include <Kernel/Net/TCP.h>
+#include <Kernel/Net/UDP.h>
+#include <Kernel/Net/ARP.h>
 #include <Kernel/Net/Routing.h>
 #include <LibC/errno_numbers.h>
 

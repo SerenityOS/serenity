@@ -1,4 +1,4 @@
-#include <Kernel/E1000NetworkAdapter.h>
+#include <Kernel/Net/E1000NetworkAdapter.h>
 #include <Kernel/PCI.h>
 #include <Kernel/IO.h>
 

@@ -1,6 +1,6 @@
-#include <Kernel/UDPSocket.h>
-#include <Kernel/UDP.h>
-#include <Kernel/NetworkAdapter.h>
+#include <Kernel/Net/UDPSocket.h>
+#include <Kernel/Net/UDP.h>
+#include <Kernel/Net/NetworkAdapter.h>
 #include <Kernel/Process.h>
 #include <Kernel/RandomDevice.h>
 #include <Kernel/Net/Routing.h>

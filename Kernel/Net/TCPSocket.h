@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Kernel/IPv4Socket.h>
+#include <Kernel/Net/IPv4Socket.h>
 
 class TCPSocket final : public IPv4Socket {
 public:

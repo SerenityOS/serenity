@@ -34,14 +34,14 @@ KERNEL_OBJS = \
        PS2MouseDevice.o \
        Socket.o \
        LocalSocket.o \
-       IPv4Socket.o \
-       TCPSocket.o \
-       UDPSocket.o \
-       NetworkAdapter.o \
-       E1000NetworkAdapter.o \
+       Net/IPv4Socket.o \
+       Net/TCPSocket.o \
+       Net/UDPSocket.o \
+       Net/NetworkAdapter.o \
+       Net/E1000NetworkAdapter.o \
        Net/LoopbackAdapter.o \
        Net/Routing.o \
-       NetworkTask.o
+       Net/NetworkTask.o
 
 VFS_OBJS = \
     DiskDevice.o \
