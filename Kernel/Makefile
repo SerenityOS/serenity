@@ -39,6 +39,8 @@ KERNEL_OBJS = \
        UDPSocket.o \
        NetworkAdapter.o \
        E1000NetworkAdapter.o \
+       Net/LoopbackAdapter.o \
+       Net/Routing.o \
        NetworkTask.o
 
 VFS_OBJS = \

@@ -11,6 +11,7 @@
 #include <Kernel/Process.h>
 #include <Kernel/EtherType.h>
 #include <Kernel/Lock.h>
+#include <Kernel/Net/LoopbackAdapter.h>
 
 //#define ETHERNET_DEBUG
 #define IPV4_DEBUG
@@ -34,16 +35,27 @@ Lockable<HashMap<IPv4Address, MACAddress>>& arp_table()
 
 void NetworkTask_main()
 {
+    LoopbackAdapter::the();
+
     auto* adapter_ptr = E1000NetworkAdapter::the();
     ASSERT(adapter_ptr);
     auto& adapter = *adapter_ptr;
     adapter.set_ipv4_address(IPv4Address(192, 168, 5, 2));
 
+    auto dequeue_packet = [&] () -> ByteBuffer {
+        if (LoopbackAdapter::the().has_queued_packets())
+            return LoopbackAdapter::the().dequeue_packet();
+        if (adapter.has_queued_packets())
+            return adapter.dequeue_packet();
+        return { };
+    };
+
     kprintf("NetworkTask: Enter main loop.\n");
     for (;;) {
-        auto packet = adapter.dequeue_packet();
+        auto packet = dequeue_packet();
         if (packet.is_null()) {
-            current->snooze_until(adapter.packet_queue_alarm());
+            // FIXME: Wake up when one of the adapters has packets.
+            current->sleep(1);
             continue;
         }
         if (packet.size() < (int)(sizeof(EthernetFrameHeader))) {

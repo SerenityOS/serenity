@@ -2,6 +2,7 @@
 #include <Kernel/TCP.h>
 #include <Kernel/NetworkAdapter.h>
 #include <Kernel/Process.h>
+#include <Kernel/Net/Routing.h>
 #include <Kernel/RandomDevice.h>
 
 Lockable<HashMap<word, TCPSocket*>>& TCPSocket::sockets_by_port()
@@ -63,18 +64,18 @@ int TCPSocket::protocol_receive(const ByteBuffer& packet_buffer, void* buffer, s
 
 int TCPSocket::protocol_send(const void* data, int data_length)
 {
-    // FIXME: Figure out the adapter somehow differently.
-    auto* adapter = NetworkAdapter::from_ipv4_address(IPv4Address(192, 168, 5, 2));
+    auto* adapter = adapter_for_route_to(destination_address());
     if (!adapter)
-        ASSERT_NOT_REACHED();
+        return -EHOSTUNREACH;
     send_tcp_packet(TCPFlags::PUSH | TCPFlags::ACK, data, data_length);
     return data_length;
 }
 
 void TCPSocket::send_tcp_packet(word flags, const void* payload, int payload_size)
 {
-    // FIXME: Figure out the adapter somehow differently.
-    auto& adapter = *NetworkAdapter::from_ipv4_address(IPv4Address(192, 168, 5, 2));
+    // FIXME: Maybe the socket should be bound to an adapter instead of looking it up every time?
+    auto* adapter = adapter_for_route_to(destination_address());
+    ASSERT(adapter);
 
     auto buffer = ByteBuffer::create_zeroed(sizeof(TCPPacket) + payload_size);
     auto& tcp_packet = *(TCPPacket*)(buffer.pointer());
@@ -96,9 +97,9 @@ void TCPSocket::send_tcp_packet(word flags, const void* payload, int payload_siz
     }
 
     memcpy(tcp_packet.payload(), payload, payload_size);
-    tcp_packet.set_checksum(compute_tcp_checksum(adapter.ipv4_address(), destination_address(), tcp_packet, payload_size));
+    tcp_packet.set_checksum(compute_tcp_checksum(adapter->ipv4_address(), destination_address(), tcp_packet, payload_size));
     kprintf("sending tcp packet from %s:%u to %s:%u with (%s %s) seq_no=%u, ack_no=%u\n",
-        adapter.ipv4_address().to_string().characters(),
+        adapter->ipv4_address().to_string().characters(),
         source_port(),
         destination_address().to_string().characters(),
         destination_port(),
@@ -107,7 +108,7 @@ void TCPSocket::send_tcp_packet(word flags, const void* payload, int payload_siz
         tcp_packet.sequence_number(),
         tcp_packet.ack_number()
     );
-    adapter.send_ipv4(MACAddress(), destination_address(), IPv4Protocol::TCP, move(buffer));
+    adapter->send_ipv4(MACAddress(), destination_address(), IPv4Protocol::TCP, move(buffer));
 }
 
 NetworkOrdered<word> TCPSocket::compute_tcp_checksum(const IPv4Address& source, const IPv4Address& destination, const TCPPacket& packet, word payload_size)
@@ -153,10 +154,9 @@ NetworkOrdered<word> TCPSocket::compute_tcp_checksum(const IPv4Address& source, 
 
 KResult TCPSocket::protocol_connect()
 {
-    // FIXME: Figure out the adapter somehow differently.
-    auto* adapter = NetworkAdapter::from_ipv4_address(IPv4Address(192, 168, 5, 2));
+    auto* adapter = adapter_for_route_to(destination_address());
     if (!adapter)
-        ASSERT_NOT_REACHED();
+        return KResult(-EHOSTUNREACH);
 
     allocate_source_port_if_needed();
 

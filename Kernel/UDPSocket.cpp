@@ -3,6 +3,7 @@
 #include <Kernel/NetworkAdapter.h>
 #include <Kernel/Process.h>
 #include <Kernel/RandomDevice.h>
+#include <Kernel/Net/Routing.h>
 
 Lockable<HashMap<word, UDPSocket*>>& UDPSocket::sockets_by_port()
 {
@@ -62,8 +63,9 @@ int UDPSocket::protocol_receive(const ByteBuffer& packet_buffer, void* buffer, s
 
 int UDPSocket::protocol_send(const void* data, int data_length)
 {
-    // FIXME: Figure out the adapter somehow differently.
-    auto& adapter = *NetworkAdapter::from_ipv4_address(IPv4Address(192, 168, 5, 2));
+    auto* adapter = adapter_for_route_to(destination_address());
+    if (!adapter)
+        return -EHOSTUNREACH;
     auto buffer = ByteBuffer::create_zeroed(sizeof(UDPPacket) + data_length);
     auto& udp_packet = *(UDPPacket*)(buffer.pointer());
     udp_packet.set_source_port(source_port());
@@ -71,11 +73,11 @@ int UDPSocket::protocol_send(const void* data, int data_length)
     udp_packet.set_length(sizeof(UDPPacket) + data_length);
     memcpy(udp_packet.payload(), data, data_length);
     kprintf("sending as udp packet from %s:%u to %s:%u!\n",
-        adapter.ipv4_address().to_string().characters(),
+        adapter->ipv4_address().to_string().characters(),
         source_port(),
         destination_address().to_string().characters(),
         destination_port());
-    adapter.send_ipv4(MACAddress(), destination_address(), IPv4Protocol::UDP, move(buffer));
+    adapter->send_ipv4(MACAddress(), destination_address(), IPv4Protocol::UDP, move(buffer));
     return data_length;
 }
 

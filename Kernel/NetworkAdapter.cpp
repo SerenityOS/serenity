@@ -28,14 +28,12 @@ NetworkAdapter::NetworkAdapter()
     : m_packet_queue_alarm(*this)
 {
     // FIXME: I wanna lock :(
-    ASSERT_INTERRUPTS_DISABLED();
     all_adapters().resource().set(this);
 }
 
 NetworkAdapter::~NetworkAdapter()
 {
     // FIXME: I wanna lock :(
-    ASSERT_INTERRUPTS_DISABLED();
     all_adapters().resource().remove(this);
 }
 
