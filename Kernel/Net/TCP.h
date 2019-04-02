@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Kernel/IPv4.h>
+#include <Kernel/Net/IPv4.h>
 
 struct TCPFlags {
 enum : word {

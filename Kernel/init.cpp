@@ -23,8 +23,8 @@
 #include "PTYMultiplexer.h"
 #include "DevPtsFS.h"
 #include "BXVGADevice.h"
-#include "E1000NetworkAdapter.h"
-#include <Kernel/NetworkTask.h>
+#include <Kernel/Net/E1000NetworkAdapter.h>
+#include <Kernel/Net/NetworkTask.h>
 
 #define SPAWN_LAUNCHER
 //#define SPAWN_GUITEST2

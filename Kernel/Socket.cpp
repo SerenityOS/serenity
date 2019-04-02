@@ -1,6 +1,6 @@
 #include <Kernel/Socket.h>
 #include <Kernel/LocalSocket.h>
-#include <Kernel/IPv4Socket.h>
+#include <Kernel/Net/IPv4Socket.h>
 #include <Kernel/UnixTypes.h>
 #include <Kernel/Process.h>
 #include <LibC/errno_numbers.h>

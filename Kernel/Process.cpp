@@ -22,9 +22,6 @@
 #include "MasterPTY.h"
 #include "elf.h"
 #include <AK/StringBuilder.h>
-#include <Kernel/E1000NetworkAdapter.h>
-#include <Kernel/EthernetFrameHeader.h>
-#include <Kernel/ARP.h>
 
 //#define DEBUG_IO
 //#define TASK_DEBUG

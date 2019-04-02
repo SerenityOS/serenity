@@ -1,8 +1,8 @@
-#include <Kernel/TCPSocket.h>
-#include <Kernel/TCP.h>
-#include <Kernel/NetworkAdapter.h>
-#include <Kernel/Process.h>
+#include <Kernel/Net/TCPSocket.h>
+#include <Kernel/Net/TCP.h>
+#include <Kernel/Net/NetworkAdapter.h>
 #include <Kernel/Net/Routing.h>
+#include <Kernel/Process.h>
 #include <Kernel/RandomDevice.h>
 
 Lockable<HashMap<word, TCPSocket*>>& TCPSocket::sockets_by_port()

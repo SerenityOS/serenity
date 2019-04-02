@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Kernel/NetworkAdapter.h>
+#include <Kernel/Net/NetworkAdapter.h>
 #include <Kernel/PCI.h>
 #include <Kernel/MemoryManager.h>
 #include <Kernel/IRQHandler.h>

@@ -3,10 +3,10 @@
 #include <AK/ByteBuffer.h>
 #include <AK/SinglyLinkedList.h>
 #include <AK/Types.h>
-#include <Kernel/MACAddress.h>
-#include <Kernel/IPv4.h>
-#include <Kernel/ARP.h>
-#include <Kernel/ICMP.h>
+#include <Kernel/Net/MACAddress.h>
+#include <Kernel/Net/IPv4.h>
+#include <Kernel/Net/ARP.h>
+#include <Kernel/Net/ICMP.h>
 #include <Kernel/Alarm.h>
 
 class NetworkAdapter;

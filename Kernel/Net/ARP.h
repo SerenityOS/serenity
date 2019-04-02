@@ -1,8 +1,8 @@
 #pragma once
 
-#include <Kernel/MACAddress.h>
-#include <Kernel/IPv4.h>
-#include <Kernel/EtherType.h>
+#include <Kernel/Net/MACAddress.h>
+#include <Kernel/Net/IPv4.h>
+#include <Kernel/Net/EtherType.h>
 
 struct ARPOperation {
 enum : word {
