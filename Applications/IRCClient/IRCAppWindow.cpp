@@ -12,9 +12,9 @@
 #include <LibGUI/GInputBox.h>
 #include <LibGUI/GSplitter.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 IRCAppWindow::IRCAppWindow()
-    : m_client("127.0.0.1", 6667)
 {
     update_title();
     set_rect(200, 200, 600, 400);
@@ -52,6 +52,13 @@ void IRCAppWindow::setup_client()
         m_client.join_channel("#test");
     };
 
+    GInputBox input_box("Enter server:", "Connect to server", this);
+    auto result = input_box.exec();
+    if (result == GInputBox::ExecCancel)
+        ::exit(0);
+
+    m_client.set_server(input_box.text_value(), 6667);
+    update_title();
     m_client.connect();
 }
 

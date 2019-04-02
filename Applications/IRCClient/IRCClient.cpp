@@ -27,10 +27,8 @@ enum IRCNumeric {
     RPL_ENDOFNAMES = 366,
 };
 
-IRCClient::IRCClient(const String& address, int port)
-    : m_hostname(address)
-    , m_port(port)
-    , m_nickname("anon")
+IRCClient::IRCClient()
+    : m_nickname("seren1ty")
     , m_client_window_list_model(IRCWindowListModel::create(*this))
     , m_log(IRCLogBuffer::create())
 {
@@ -41,13 +39,18 @@ IRCClient::~IRCClient()
 {
 }
 
+void IRCClient::set_server(const String &hostname, int port)
+{
+    m_hostname = hostname;
+    m_port = port;
+}
+
 bool IRCClient::connect()
 {
     if (m_socket->is_connected())
         ASSERT_NOT_REACHED();
 
-    IPv4Address ipv4_address(127, 0, 0, 1);
-    bool success = m_socket->connect(GSocketAddress(ipv4_address), m_port);
+    bool success = m_socket->connect(m_hostname, m_port);
     if (!success)
         return false;
 

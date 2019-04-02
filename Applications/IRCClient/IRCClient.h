@@ -17,8 +17,10 @@ class IRCClient final : public GObject {
     friend class IRCChannel;
     friend class IRCQuery;
 public:
-    IRCClient(const String& address, int port = 6667);
+    IRCClient();
     virtual ~IRCClient() override;
+
+    void set_server(const String& hostname, int port = 6667);
 
     bool connect();
 
