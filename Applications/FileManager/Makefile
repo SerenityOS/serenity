@@ -1,6 +1,6 @@
 OBJS = \
     DirectoryModel.o \
-    DirectoryTableView.o \
+    DirectoryView.o \
     main.o
 
 APP = FileManager
