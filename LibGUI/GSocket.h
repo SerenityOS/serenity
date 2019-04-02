@@ -37,6 +37,7 @@ public:
     enum class Type { Invalid, TCP, UDP };
     virtual ~GSocket() override;
 
+    bool connect(const String& hostname, int port);
     bool connect(const GSocketAddress&, int port);
 
     ByteBuffer receive(int max_size);
