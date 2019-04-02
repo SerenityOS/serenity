@@ -17,7 +17,7 @@
 #include <unistd.h>
 #include <signal.h>
 #include <stdio.h>
-#include "DirectoryTableView.h"
+#include "DirectoryView.h"
 
 int main(int argc, char** argv)
 {

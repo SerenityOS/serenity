@@ -1,4 +1,4 @@
-#include "DirectoryTableView.h"
+#include "DirectoryView.h"
 #include <LibGUI/GSortingProxyModel.h>
 
 DirectoryView::DirectoryView(GWidget* parent)
