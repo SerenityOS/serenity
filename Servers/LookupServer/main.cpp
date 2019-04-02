@@ -6,7 +6,7 @@
 #include <netinet/in.h>
 #include <unistd.h>
 #include <unistd.h>
-#include <Kernel/IPv4.h>
+#include <Kernel/Net/IPv4.h>
 #include <AK/AKString.h>
 #include <AK/HashMap.h>
 #include <AK/ByteBuffer.h>

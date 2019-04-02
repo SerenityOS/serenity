@@ -6,7 +6,7 @@
 #include <unistd.h>
 #include <AK/Assertions.h>
 #include <AK/AKString.h>
-#include <Kernel/IPv4.h>
+#include <Kernel/Net/IPv4.h>
 
 extern "C" {
 

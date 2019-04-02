@@ -2,8 +2,8 @@
 
 #include <AK/AKString.h>
 #include <AK/Assertions.h>
+#include <AK/NetworkOrdered.h>
 #include <AK/Types.h>
-#include <Kernel/NetworkOrdered.h>
 
 enum class IPv4Protocol : word {
     ICMP = 1,
