@@ -38,7 +38,7 @@ void GInputBox::build()
 
     m_text_editor = new GTextEditor(GTextEditor::SingleLine, widget);
     m_text_editor->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-    m_text_editor->set_preferred_size({ 0, 16 });
+    m_text_editor->set_preferred_size({ 0, 19 });
 
     auto* button_container_outer = new GWidget(widget);
     button_container_outer->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
