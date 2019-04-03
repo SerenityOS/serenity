@@ -17,10 +17,10 @@
 #include "MemoryManager.h"
 #include <Kernel/FileSystem/ProcFS.h>
 #include "RTC.h"
-#include "VirtualConsole.h"
+#include <Kernel/TTY/VirtualConsole.h>
 #include "Scheduler.h"
 #include "PS2MouseDevice.h"
-#include "PTYMultiplexer.h"
+#include <Kernel/TTY/PTYMultiplexer.h>
 #include <Kernel/FileSystem/DevPtsFS.h>
 #include "BXVGADevice.h"
 #include <Kernel/Net/E1000NetworkAdapter.h>

@@ -3,7 +3,7 @@
 #include "IO.h"
 #include "PIC.h"
 #include "KeyboardDevice.h"
-#include "VirtualConsole.h"
+#include <Kernel/TTY/VirtualConsole.h>
 #include <AK/Assertions.h>
 
 //#define KEYBOARD_DEBUG

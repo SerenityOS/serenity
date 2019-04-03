@@ -1,4 +1,4 @@
-#include "TTY.h"
+#include <Kernel/TTY/TTY.h>
 #include "Process.h"
 #include <LibC/errno_numbers.h>
 #include <LibC/signal_numbers.h>
