@@ -1,5 +1,6 @@
 #include <SharedGraphics/PNGLoader.h>
 #include <AK/NetworkOrdered.h>
+#include <AK/MappedFile.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -101,42 +102,10 @@ static bool process_chunk(Streamer&, PNGLoadingContext& context);
 
 RetainPtr<GraphicsBitmap> load_png(const String& path)
 {
-    int fd = open(path.characters(), O_RDONLY);
-    if (fd < 0) {
-        perror("open");
+    MappedFile mapped_file(path);
+    if (!mapped_file.is_valid())
         return nullptr;
-    }
-
-    struct stat st;
-    if (fstat(fd, &st) < 0) {
-        perror("fstat");
-        if (close(fd) < 0)
-            perror("close");
-        return nullptr;
-    }
-
-    if (st.st_size < 8) {
-        if (close(fd) < 0)
-            perror("close");
-        return nullptr;
-    }
-
-    auto* mapped_file = (byte*)mmap(nullptr, st.st_size, PROT_READ, MAP_SHARED, fd, 0);
-    if (mapped_file == MAP_FAILED) {
-        if (close(fd) < 0)
-            perror("close");
-        return nullptr;
-    }
-
-    auto bitmap = load_png_impl(mapped_file, st.st_size);
-
-    if (munmap(mapped_file, st.st_size) < 0)
-        perror("munmap");
-
-    if (close(fd) < 0)
-        perror("close");
-
-    return bitmap;
+    return load_png_impl((const byte*)mapped_file.pointer(), mapped_file.size());
 }
 
 [[gnu::always_inline]] static inline byte paeth_predictor(int a, int b, int c)
