@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Kernel/CharacterDevice.h>
+#include <Kernel/Devices/CharacterDevice.h>
 #include <Kernel/MousePacket.h>
 #include <Kernel/IRQHandler.h>
 

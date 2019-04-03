@@ -1,7 +1,7 @@
 #pragma once
 
 #include <AK/Badge.h>
-#include <Kernel/CharacterDevice.h>
+#include <Kernel/Devices/CharacterDevice.h>
 #include <Kernel/DoubleBuffer.h>
 
 class SlavePTY;

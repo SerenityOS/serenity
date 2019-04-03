@@ -1,6 +1,6 @@
 #pragma once
 
-#include "DiskDevice.h"
+#include <Kernel/Devices/DiskDevice.h>
 #include "InodeIdentifier.h"
 #include "InodeMetadata.h"
 #include "Limits.h"

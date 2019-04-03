@@ -3,7 +3,7 @@
 #include "FileSystem.h"
 #include <AK/FileSystemPath.h>
 #include <AK/StringBuilder.h>
-#include "CharacterDevice.h"
+#include <Kernel/Devices/CharacterDevice.h>
 #include <LibC/errno_numbers.h>
 #include <Kernel/Process.h>
 

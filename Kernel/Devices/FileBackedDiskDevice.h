@@ -1,6 +1,6 @@
 #pragma once
 
-#include "DiskDevice.h"
+#include <Kernel/Devices/DiskDevice.h>
 #include <AK/RetainPtr.h>
 #include <AK/AKString.h>
 #include <AK/Types.h>

@@ -6,11 +6,11 @@ KERNEL_OBJS = \
        Process.o \
        Thread.o \
        i8253.o \
-       KeyboardDevice.o \
+       Devices/KeyboardDevice.o \
        CMOS.o \
        PIC.o \
        Syscall.o \
-       IDEDiskDevice.o \
+       Devices/IDEDiskDevice.o \
        MemoryManager.o \
        Console.o \
        IRQHandler.o \
@@ -28,9 +28,9 @@ KERNEL_OBJS = \
        ELF/ELFLoader.o \
        KSyms.o \
        FileSystem/DevPtsFS.o \
-       BXVGADevice.o \
+       Devices/BXVGADevice.o \
        PCI.o \
-       PS2MouseDevice.o \
+       Devices/PS2MouseDevice.o \
        Socket.o \
        LocalSocket.o \
        Net/IPv4Socket.o \
@@ -44,14 +44,14 @@ KERNEL_OBJS = \
 
 VFS_OBJS = \
     FileSystem/ProcFS.o \
-    DiskDevice.o \
-    Device.o \
-    CharacterDevice.o \
-    BlockDevice.o \
-    NullDevice.o \
-    FullDevice.o \
-    ZeroDevice.o \
-    RandomDevice.o \
+    Devices/DiskDevice.o \
+    Devices/Device.o \
+    Devices/CharacterDevice.o \
+    Devices/BlockDevice.o \
+    Devices/NullDevice.o \
+    Devices/FullDevice.o \
+    Devices/ZeroDevice.o \
+    Devices/RandomDevice.o \
     FileSystem/FileSystem.o \
     FileSystem/DiskBackedFileSystem.o \
     FileSystem/Ext2FileSystem.o \

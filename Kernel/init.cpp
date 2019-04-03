@@ -2,16 +2,16 @@
 #include "kmalloc.h"
 #include "i386.h"
 #include "i8253.h"
-#include "KeyboardDevice.h"
+#include <Kernel/Devices/KeyboardDevice.h>
 #include "Process.h"
 #include "system.h"
 #include "PIC.h"
-#include "IDEDiskDevice.h"
+#include <Kernel/Devices/IDEDiskDevice.h>
 #include "KSyms.h"
-#include <Kernel/NullDevice.h>
-#include <Kernel/ZeroDevice.h>
-#include <Kernel/FullDevice.h>
-#include <Kernel/RandomDevice.h>
+#include <Kernel/Devices/NullDevice.h>
+#include <Kernel/Devices/ZeroDevice.h>
+#include <Kernel/Devices/FullDevice.h>
+#include <Kernel/Devices/RandomDevice.h>
 #include <Kernel/FileSystem/Ext2FileSystem.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include "MemoryManager.h"
@@ -19,10 +19,10 @@
 #include "RTC.h"
 #include <Kernel/TTY/VirtualConsole.h>
 #include "Scheduler.h"
-#include "PS2MouseDevice.h"
+#include <Kernel/Devices/PS2MouseDevice.h>
 #include <Kernel/TTY/PTYMultiplexer.h>
 #include <Kernel/FileSystem/DevPtsFS.h>
-#include "BXVGADevice.h"
+#include <Kernel/Devices/BXVGADevice.h>
 #include <Kernel/Net/E1000NetworkAdapter.h>
 #include <Kernel/Net/NetworkTask.h>
 

@@ -2,7 +2,7 @@
 
 #include <AK/CircularQueue.h>
 #include <AK/Vector.h>
-#include <Kernel/CharacterDevice.h>
+#include <Kernel/Devices/CharacterDevice.h>
 
 class ConsoleImplementation {
 public:

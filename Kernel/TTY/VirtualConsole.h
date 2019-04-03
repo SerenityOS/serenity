@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Kernel/TTY/TTY.h>
-#include "KeyboardDevice.h"
+#include <Kernel/Devices/KeyboardDevice.h>
 #include "Console.h"
 
 class VirtualConsole final : public TTY, public KeyboardClient, public ConsoleImplementation {

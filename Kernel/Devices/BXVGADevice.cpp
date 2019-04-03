@@ -1,4 +1,4 @@
-#include <Kernel/BXVGADevice.h>
+#include <Kernel/Devices/BXVGADevice.h>
 #include <Kernel/IO.h>
 #include <Kernel/PCI.h>
 #include <Kernel/MemoryManager.h>

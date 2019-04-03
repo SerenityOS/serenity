@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Kernel/CharacterDevice.h>
+#include <Kernel/Devices/CharacterDevice.h>
 #include <AK/Badge.h>
 #include <Kernel/Lock.h>
 

@@ -2,7 +2,7 @@
 #include "i386.h"
 #include "IO.h"
 #include "PIC.h"
-#include "KeyboardDevice.h"
+#include <Kernel/Devices/KeyboardDevice.h>
 #include <Kernel/TTY/VirtualConsole.h>
 #include <AK/Assertions.h>
 

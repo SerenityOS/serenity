@@ -3,7 +3,6 @@
 #include "i386.h"
 #include "IO.h"
 #include "StdLib.h"
-#include "KeyboardDevice.h"
 #include <AK/AKString.h>
 
 static byte* s_vga_buffer;
