@@ -3,13 +3,12 @@
  * just to get going. Don't ever let anyone see this shit. :^)
  */
 
-#include "types.h"
-#include "kmalloc.h"
-#include "StdLib.h"
-#include "i386.h"
-#include "system.h"
-#include "Process.h"
-#include "Scheduler.h"
+#include <Kernel/types.h>
+#include <Kernel/kmalloc.h>
+#include <Kernel/StdLib.h>
+#include <Kernel/i386.h>
+#include <Kernel/Process.h>
+#include <Kernel/Scheduler.h>
 #include <AK/Assertions.h>
 
 #define SANITIZE_KMALLOC
@@ -19,8 +18,8 @@ struct [[gnu::packed]] allocation_t {
     size_t nchunk;
 };
 
-#define CHUNK_SIZE  32
-#define POOL_SIZE   (1024 * 1024)
+#define CHUNK_SIZE 32
+#define POOL_SIZE (1024 * 1024)
 
 #define ETERNAL_BASE_PHYSICAL 0x100000
 #define ETERNAL_RANGE_SIZE 0x100000
@@ -71,7 +70,6 @@ void* kmalloc_aligned(size_t size, size_t alignment)
     void* ptr = kmalloc(size + alignment + sizeof(void*));
     size_t max_addr = (size_t)ptr + alignment;
     void* aligned_ptr = (void*)(max_addr - (max_addr % alignment));
-
     ((void**)aligned_ptr)[-1] = ptr;
     return aligned_ptr;
 }
@@ -93,92 +91,80 @@ void* kmalloc_impl(size_t size)
 {
     InterruptDisabler disabler;
 
-    size_t chunks_needed, chunks_here, first_chunk;
-    size_t real_size;
-    size_t i, j, k;
-
-    /* We need space for the allocation_t structure at the head of the block. */
-    real_size = size + sizeof(allocation_t);
+    // We need space for the allocation_t structure at the head of the block.
+    size_t real_size = size + sizeof(allocation_t);
 
     if (sum_free < real_size) {
-        kprintf("%s<%u> kmalloc(): PANIC! Out of memory (sucks, dude)\nsum_free=%u, real_size=%u\n", current->process().name().characters(), current->pid(), sum_free, real_size);
+        kprintf("%s(%u) kmalloc(): PANIC! Out of memory (sucks, dude)\nsum_free=%u, real_size=%u\n", current->process().name().characters(), current->pid(), sum_free, real_size);
         hang();
     }
 
-    chunks_needed = real_size / CHUNK_SIZE;
-    if( real_size % CHUNK_SIZE )
-        chunks_needed++;
+    size_t chunks_needed = real_size / CHUNK_SIZE;
+    if (real_size % CHUNK_SIZE)
+        ++chunks_needed;
 
-    chunks_here = 0;
-    first_chunk = 0;
+    size_t chunks_here = 0;
+    size_t first_chunk = 0;
 
-    for( i = 0; i < (POOL_SIZE / CHUNK_SIZE / 8); ++i )
-    {
+    for (size_t i = 0; i < (POOL_SIZE / CHUNK_SIZE / 8); ++i) {
         if (alloc_map[i] == 0xff) {
             // Skip over completely full bucket.
             chunks_here = 0;
             continue;
         }
         // FIXME: This scan can be optimized further with LZCNT.
-        for( j = 0; j < 8; ++j )
-        {
-            if( !(alloc_map[i] & (1<<j)) )
-            {
-                if( chunks_here == 0 )
-                {
-                    /* Mark where potential allocation starts. */
+        for (size_t j = 0; j < 8; ++j) {
+            if (!(alloc_map[i] & (1<<j))) {
+                if (chunks_here == 0) {
+                    // Mark where potential allocation starts.
                     first_chunk = i * 8 + j;
                 }
 
-                chunks_here++;
+                ++chunks_here;
 
-                if( chunks_here == chunks_needed )
-                {
+                if (chunks_here == chunks_needed) {
                     auto* a = (allocation_t *)(BASE_PHYSICAL + (first_chunk * CHUNK_SIZE));
                     byte *ptr = (byte *)a;
                     ptr += sizeof(allocation_t);
                     a->nchunk = chunks_needed;
                     a->start = first_chunk;
 
-                    for( k = first_chunk; k < (first_chunk + chunks_needed); ++k )
-                    {
+                    for (size_t k = first_chunk; k < (first_chunk + chunks_needed); ++k) {
                         alloc_map[k / 8] |= 1 << (k % 8);
                     }
 
                     sum_alloc += a->nchunk * CHUNK_SIZE;
-                    sum_free  -= a->nchunk * CHUNK_SIZE;
+                    sum_free -= a->nchunk * CHUNK_SIZE;
 #ifdef SANITIZE_KMALLOC
                     memset(ptr, 0xbb, (a->nchunk * CHUNK_SIZE) - sizeof(allocation_t));
 #endif
                     return ptr;
                 }
-            }
-            else
-            {
-                /* This is in use, so restart chunks_here counter. */
+            } else {
+                // This is in use, so restart chunks_here counter.
                 chunks_here = 0;
             }
         }
     }
 
-    kprintf("%s<%u> kmalloc(): PANIC! Out of memory (no suitable block for size %u)\n", current->process().name().characters(), current->pid(), size);
+    kprintf("%s(%u) kmalloc(): PANIC! Out of memory (no suitable block for size %u)\n", current->process().name().characters(), current->pid(), size);
     hang();
 }
 
 void kfree(void *ptr)
 {
-    if( !ptr )
+    if (!ptr)
         return;
 
     InterruptDisabler disabler;
 
-    allocation_t *a = (allocation_t *)((((byte *)ptr) - sizeof(allocation_t)));
+    auto* a = (allocation_t*)((((byte*)ptr) - sizeof(allocation_t)));
 
     for (size_t k = a->start; k < (a->start + a->nchunk); ++k)
         alloc_map[k / 8] &= ~(1 << (k % 8));
 
     sum_alloc -= a->nchunk * CHUNK_SIZE;
-    sum_free  += a->nchunk * CHUNK_SIZE;
+    sum_free += a->nchunk * CHUNK_SIZE;
 
 #ifdef SANITIZE_KMALLOC
     memset(a, 0xaa, a->nchunk * CHUNK_SIZE);
