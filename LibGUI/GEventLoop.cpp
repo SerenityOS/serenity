@@ -6,6 +6,7 @@
 #include <LibGUI/GAction.h>
 #include <LibGUI/GNotifier.h>
 #include <LibGUI/GMenu.h>
+#include <LibGUI/GDesktop.h>
 #include <LibC/unistd.h>
 #include <LibC/stdio.h>
 #include <LibC/fcntl.h>
@@ -339,6 +340,12 @@ void GEventLoop::process_unprocessed_messages()
     for (auto& event : unprocessed_events) {
         if (event.type == WSAPI_ServerMessage::Type::Greeting) {
             s_server_pid = event.greeting.server_pid;
+            GDesktop::the().did_receive_screen_rect(Badge<GEventLoop>(), event.greeting.screen_rect);
+            continue;
+        }
+
+        if (event.type == WSAPI_ServerMessage::Type::ScreenRectChanged) {
+            GDesktop::the().did_receive_screen_rect(Badge<GEventLoop>(), event.screen.rect);
             continue;
         }
 

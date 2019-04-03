@@ -36,6 +36,8 @@ public:
     template<typename Matching, typename Callback> void for_each_window_matching(Matching, Callback);
     template<typename Callback> void for_each_window(Callback);
 
+    void notify_about_new_screen_rect(const Rect&);
+
 private:
     virtual void on_message(const WSMessage&) override;
 

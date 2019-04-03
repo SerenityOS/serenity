@@ -91,6 +91,7 @@ struct WSAPI_ServerMessage {
         DidSetWindowBackingStore,
         DidSetWallpaper,
         DidGetWallpaper,
+        ScreenRectChanged,
     };
     Type type { Invalid };
     int window_id { -1 };
@@ -101,7 +102,11 @@ struct WSAPI_ServerMessage {
     union {
         struct {
             int server_pid;
+            WSAPI_Rect screen_rect;
         } greeting;
+        struct {
+            WSAPI_Rect rect;
+        } screen;
         struct {
             WSAPI_Rect rect;
             WSAPI_Rect old_rect;
