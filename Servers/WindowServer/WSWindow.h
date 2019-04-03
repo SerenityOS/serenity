@@ -14,7 +14,7 @@ class WSMouseEvent;
 
 class WSWindow final : public WSMessageReceiver, public InlineLinkedListNode<WSWindow> {
 public:
-    WSWindow(WSClientConnection&, int window_id, bool modal);
+    WSWindow(WSClientConnection&, WSWindowType, int window_id, bool modal);
     WSWindow(WSMessageReceiver&, WSWindowType);
     virtual ~WSWindow() override;
 

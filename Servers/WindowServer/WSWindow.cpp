@@ -21,9 +21,9 @@ WSWindow::WSWindow(WSMessageReceiver& internal_owner, WSWindowType type)
     WSWindowManager::the().add_window(*this);
 }
 
-WSWindow::WSWindow(WSClientConnection& client, int window_id, bool modal)
+WSWindow::WSWindow(WSClientConnection& client, WSWindowType window_type, int window_id, bool modal)
     : m_client(&client)
-    , m_type(WSWindowType::Normal)
+    , m_type(window_type)
     , m_modal(modal)
     , m_window_id(window_id)
     , m_icon(default_window_icon())

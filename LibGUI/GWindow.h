@@ -16,6 +16,12 @@ enum class GStandardCursor {
     ResizeVertical,
 };
 
+enum class GWindowType {
+    Invalid = 0,
+    Normal,
+    Taskbar,
+};
+
 class GWindow : public GObject {
 public:
     GWindow(GObject* parent = nullptr);
@@ -29,6 +35,7 @@ public:
     void set_double_buffering_enabled(bool);
     void set_has_alpha_channel(bool);
     void set_opacity(float);
+    void set_window_type(GWindowType);
 
     int window_id() const { return m_window_id; }
 
@@ -117,6 +124,7 @@ private:
     Vector<Rect> m_pending_paint_event_rects;
     Size m_size_increment;
     Size m_base_size;
+    GWindowType m_window_type { GWindowType::Normal };
     bool m_is_active { false };
     bool m_should_exit_app_on_close { false };
     bool m_has_alpha_channel { false };
@@ -124,4 +132,3 @@ private:
     bool m_modal { false };
     bool m_resizable { true };
 };
-

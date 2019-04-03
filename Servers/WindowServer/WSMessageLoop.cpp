@@ -249,6 +249,18 @@ void WSMessageLoop::notify_client_disconnected(int client_id)
     post_message(*client, make<WSClientDisconnectedNotification>(client_id));
 }
 
+static WSWindowType from_api(WSAPI_WindowType api_type)
+{
+    switch (api_type) {
+    case WSAPI_WindowType::Normal:
+        return WSWindowType::Normal;
+    case WSAPI_WindowType::Taskbar:
+        return WSWindowType::Taskbar;
+    default:
+        ASSERT_NOT_REACHED();
+    }
+}
+
 void WSMessageLoop::on_receive_from_client(int client_id, const WSAPI_ClientMessage& message)
 {
     WSClientConnection& client = *WSClientConnection::from_client_id(client_id);
@@ -285,7 +297,7 @@ void WSMessageLoop::on_receive_from_client(int client_id, const WSAPI_ClientMess
         break;
     case WSAPI_ClientMessage::Type::CreateWindow:
         ASSERT(message.text_length < (ssize_t)sizeof(message.text));
-        post_message(client, make<WSAPICreateWindowRequest>(client_id, message.window.rect, String(message.text, message.text_length), message.window.has_alpha_channel, message.window.modal, message.window.resizable, message.window.opacity, message.window.base_size, message.window.size_increment));
+        post_message(client, make<WSAPICreateWindowRequest>(client_id, message.window.rect, String(message.text, message.text_length), message.window.has_alpha_channel, message.window.modal, message.window.resizable, message.window.opacity, message.window.base_size, message.window.size_increment, from_api(message.window.type)));
         break;
     case WSAPI_ClientMessage::Type::DestroyWindow:
         post_message(client, make<WSAPIDestroyWindowRequest>(client_id, message.window_id));

@@ -104,6 +104,8 @@ static inline Rect outer_window_rect(const WSWindow& window)
         return menu_window_rect(window.rect());
     if (window.type() == WSWindowType::WindowSwitcher)
         return window.rect();
+    if (window.type() == WSWindowType::Taskbar)
+        return window.rect();
     ASSERT(window.type() == WSWindowType::Normal);
     return outer_window_rect(window.rect());
 }
@@ -416,6 +418,9 @@ void WSWindowManager::paint_window_frame(const WSWindow& window)
     }
 
     if (window.type() == WSWindowType::WindowSwitcher)
+        return;
+
+    if (window.type() == WSWindowType::Taskbar)
         return;
 
     auto titlebar_rect = title_bar_rect(window.rect());
@@ -1176,6 +1181,10 @@ void WSWindowManager::invalidate(const WSWindow& window)
         return;
     }
     if (window.type() == WSWindowType::WindowSwitcher) {
+        invalidate(window.rect());
+        return;
+    }
+    if (window.type() == WSWindowType::Taskbar) {
         invalidate(window.rect());
         return;
     }

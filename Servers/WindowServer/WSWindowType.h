@@ -5,4 +5,5 @@ enum class WSWindowType {
     Normal,
     Menu,
     WindowSwitcher,
+    Taskbar,
 };

@@ -6,6 +6,7 @@
 #include <AK/Types.h>
 #include <Kernel/KeyCode.h>
 #include <WindowServer/WSCursor.h>
+#include <WindowServer/WSWindowType.h>
 
 class WSMessage {
 public:
@@ -408,7 +409,7 @@ private:
 
 class WSAPICreateWindowRequest : public WSAPIClientRequest {
 public:
-    WSAPICreateWindowRequest(int client_id, const Rect& rect, const String& title, bool has_alpha_channel, bool modal, bool resizable, float opacity, const Size& base_size, const Size& size_increment)
+    WSAPICreateWindowRequest(int client_id, const Rect& rect, const String& title, bool has_alpha_channel, bool modal, bool resizable, float opacity, const Size& base_size, const Size& size_increment, WSWindowType window_type)
         : WSAPIClientRequest(WSMessage::APICreateWindowRequest, client_id)
         , m_rect(rect)
         , m_title(title)
@@ -418,6 +419,7 @@ public:
         , m_resizable(resizable)
         , m_size_increment(size_increment)
         , m_base_size(base_size)
+        , m_window_type(window_type)
     {
     }
 
@@ -429,6 +431,7 @@ public:
     float opacity() const { return m_opacity; }
     Size size_increment() const { return m_size_increment; }
     Size base_size() const { return m_base_size; }
+    WSWindowType window_type() const { return m_window_type; }
 
 private:
     Rect m_rect;
@@ -439,6 +442,7 @@ private:
     bool m_resizable { false };
     Size m_size_increment;
     Size m_base_size;
+    WSWindowType m_window_type;
 };
 
 class WSAPIDestroyWindowRequest : public WSAPIClientRequest {

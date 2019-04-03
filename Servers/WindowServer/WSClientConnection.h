@@ -37,6 +37,7 @@ public:
     template<typename Callback> void for_each_window(Callback);
 
     void notify_about_new_screen_rect(const Rect&);
+    void post_paint_request(const WSWindow&, const Rect&);
 
 private:
     virtual void on_message(const WSMessage&) override;

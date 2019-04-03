@@ -92,6 +92,8 @@ ln -s IRCClient mnt/bin/irc
 ln -s FileManager mnt/bin/fm
 cp -v ../Servers/LookupServer/LookupServer mnt/bin/LookupServer
 cp -v ../Servers/WindowServer/WindowServer mnt/bin/WindowServer
+cp -v ../Applications/Taskbar/Taskbar mnt/bin/Taskbar
+ln -s Taskbar mnt/bin/tb
 cp -v kernel.map mnt/
 sh sync-local.sh
 sync

@@ -311,6 +311,7 @@ void WSClientConnection::handle_request(const WSAPISetWindowRectRequest& request
     }
     auto& window = *(*it).value;
     window.set_rect(request.rect());
+    post_paint_request(window, request.rect());
 }
 
 void WSClientConnection::handle_request(const WSAPIGetWindowRectRequest& request)
@@ -370,7 +371,7 @@ void WSClientConnection::handle_request(const WSAPIGetClipboardContentsRequest&)
 void WSClientConnection::handle_request(const WSAPICreateWindowRequest& request)
 {
     int window_id = m_next_window_id++;
-    auto window = make<WSWindow>(*this, window_id, request.is_modal());
+    auto window = make<WSWindow>(*this, request.window_type(), window_id, request.is_modal());
     window->set_has_alpha_channel(request.has_alpha_channel());
     window->set_resizable(request.is_resizable());
     window->set_title(request.title());
@@ -399,6 +400,16 @@ void WSClientConnection::handle_request(const WSAPIDestroyWindowRequest& request
     m_windows.remove(it);
 }
 
+void WSClientConnection::post_paint_request(const WSWindow& window, const Rect& rect)
+{
+    WSAPI_ServerMessage response;
+    response.type = WSAPI_ServerMessage::Type::Paint;
+    response.window_id = window.window_id();
+    response.paint.rect = rect;
+    response.paint.window_size = window.size();
+    post_message(response);
+}
+
 void WSClientConnection::handle_request(const WSAPIInvalidateRectRequest& request)
 {
     int window_id = request.window_id();
@@ -408,12 +419,7 @@ void WSClientConnection::handle_request(const WSAPIInvalidateRectRequest& reques
         return;
     }
     auto& window = *(*it).value;
-    WSAPI_ServerMessage response;
-    response.type = WSAPI_ServerMessage::Type::Paint;
-    response.window_id = window_id;
-    response.paint.rect = request.rect();
-    response.paint.window_size = window.size();
-    post_message(response);
+    post_paint_request(window, request.rect());
 }
 
 void WSClientConnection::handle_request(const WSAPIDidFinishPaintingNotification& request)
