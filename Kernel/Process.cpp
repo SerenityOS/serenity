@@ -20,7 +20,7 @@
 #include "KSyms.h"
 #include <Kernel/Socket.h>
 #include "MasterPTY.h"
-#include "elf.h"
+#include <Kernel/exec_elf.h>
 #include <AK/StringBuilder.h>
 
 //#define DEBUG_IO
