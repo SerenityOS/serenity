@@ -64,6 +64,7 @@ void GWindow::show()
     request.window.opacity = m_opacity_when_windowless;
     request.window.size_increment = m_size_increment;
     request.window.base_size = m_base_size;
+    request.window.type = (WSAPI_WindowType)m_window_type;
     ASSERT(m_title_when_windowless.length() < (ssize_t)sizeof(request.text));
     strcpy(request.text, m_title_when_windowless.characters());
     request.text_length = m_title_when_windowless.length();
@@ -138,6 +139,11 @@ void GWindow::set_rect(const Rect& a_rect)
     request.window_id = m_window_id;
     request.window.rect = a_rect;
     GEventLoop::current().post_message_to_server(request);
+}
+
+void GWindow::set_window_type(GWindowType window_type)
+{
+    m_window_type = window_type;
 }
 
 void GWindow::set_override_cursor(GStandardCursor cursor)

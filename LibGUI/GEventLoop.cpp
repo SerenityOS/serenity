@@ -64,6 +64,7 @@ void GEventLoop::connect_to_server()
     request.greeting.client_pid = getpid();
     auto response = sync_request(request, WSAPI_ServerMessage::Type::Greeting);
     s_server_pid = response.greeting.server_pid;
+    GDesktop::the().did_receive_screen_rect(Badge<GEventLoop>(), response.greeting.screen_rect);
 }
 
 GEventLoop::GEventLoop()

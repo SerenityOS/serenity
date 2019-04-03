@@ -20,11 +20,10 @@ struct WSAPI_Rect {
     WSAPI_Size size;
 };
 
-struct WSAPI_WindowParameters {
-    WSAPI_Rect rect;
-    Color background_color;
-    unsigned flags { 0 };
-    char title[128];
+enum WSAPI_WindowType {
+    Invalid = 0,
+    Normal,
+    Taskbar,
 };
 
 struct WSAPI_WindowBackingStoreInfo {
@@ -200,6 +199,7 @@ struct WSAPI_ClientMessage {
             bool has_alpha_channel;
             bool modal;
             bool resizable;
+            WSAPI_WindowType type;
             float opacity;
             WSAPI_Size base_size;
             WSAPI_Size size_increment;

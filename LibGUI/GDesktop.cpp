@@ -16,7 +16,11 @@ GDesktop::GDesktop()
 
 void GDesktop::did_receive_screen_rect(Badge<GEventLoop>, const Rect& rect)
 {
+    if (m_rect == rect)
+        return;
     m_rect = rect;
+    if (on_rect_change)
+        on_rect_change(rect);
 }
 
 bool GDesktop::set_wallpaper(const String& path)

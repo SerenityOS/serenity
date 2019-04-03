@@ -228,6 +228,8 @@ IterationDecision WSWindowManager::for_each_visible_window_from_back_to_front(Ca
         return IterationDecision::Abort;
     if (for_each_visible_window_of_type_from_back_to_front(WSWindowType::Menu, callback) == IterationDecision::Abort)
         return IterationDecision::Abort;
+    if (for_each_visible_window_of_type_from_back_to_front(WSWindowType::Taskbar, callback) == IterationDecision::Abort)
+        return IterationDecision::Abort;
     return for_each_visible_window_of_type_from_back_to_front(WSWindowType::WindowSwitcher, callback);
 }
 
@@ -255,6 +257,8 @@ IterationDecision WSWindowManager::for_each_visible_window_of_type_from_front_to
 template<typename Callback>
 IterationDecision WSWindowManager::for_each_visible_window_from_front_to_back(Callback callback)
 {
+    if (for_each_visible_window_of_type_from_front_to_back(WSWindowType::Taskbar, callback) == IterationDecision::Abort)
+        return IterationDecision::Abort;
     if (for_each_visible_window_of_type_from_front_to_back(WSWindowType::Menu, callback) == IterationDecision::Abort)
         return IterationDecision::Abort;
     if (for_each_visible_window_of_type_from_front_to_back(WSWindowType::Normal, callback) == IterationDecision::Abort)
