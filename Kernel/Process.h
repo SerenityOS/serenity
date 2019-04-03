@@ -3,7 +3,7 @@
 #include "types.h"
 #include "TTY.h"
 #include "Syscall.h"
-#include <Kernel/VirtualFileSystem.h>
+#include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/UnixTypes.h>
 #include <AK/InlineLinkedList.h>
 #include <AK/AKString.h>

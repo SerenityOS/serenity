@@ -1,6 +1,6 @@
 #include "SlavePTY.h"
 #include "MasterPTY.h"
-#include "DevPtsFS.h"
+#include <Kernel/FileSystem/DevPtsFS.h>
 #include <Kernel/Process.h>
 
 //#define SLAVEPTY_DEBUG

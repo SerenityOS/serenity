@@ -2,7 +2,7 @@
 
 #include <Kernel/Lock.h>
 #include <AK/Types.h>
-#include <Kernel/FileSystem.h>
+#include <Kernel/FileSystem/FileSystem.h>
 
 class Process;
 

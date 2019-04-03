@@ -1,7 +1,7 @@
 #pragma once
 
 #include <AK/Types.h>
-#include <Kernel/SyntheticFileSystem.h>
+#include <Kernel/FileSystem/SyntheticFileSystem.h>
 
 class Process;
 class SlavePTY;

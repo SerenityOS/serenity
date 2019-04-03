@@ -1,5 +1,5 @@
 #include "FileDescriptor.h"
-#include "FileSystem.h"
+#include <Kernel/FileSystem/FileSystem.h>
 #include "CharacterDevice.h"
 #include <LibC/errno_numbers.h>
 #include "UnixTypes.h"

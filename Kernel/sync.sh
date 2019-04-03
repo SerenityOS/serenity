@@ -94,5 +94,6 @@ cp -v ../Servers/LookupServer/LookupServer mnt/bin/LookupServer
 cp -v ../Servers/WindowServer/WindowServer mnt/bin/WindowServer
 cp -v kernel.map mnt/
 sh sync-local.sh
+sync
 umount mnt
 sync

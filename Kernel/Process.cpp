@@ -5,7 +5,7 @@
 #include "i386.h"
 #include "system.h"
 #include <Kernel/FileDescriptor.h>
-#include <Kernel/VirtualFileSystem.h>
+#include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/NullDevice.h>
 #include "ELFLoader.h"
 #include "MemoryManager.h"
