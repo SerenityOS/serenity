@@ -22,11 +22,3 @@ TaskbarWidget::TaskbarWidget(WindowList& window_list, GWidget* parent)
 TaskbarWidget::~TaskbarWidget()
 {
 }
-
-void TaskbarWidget::paint_event(GPaintEvent& event)
-{
-    GFrame::paint_event(event);
-
-    GPainter painter(*this);
-    painter.add_clip_rect(event.rect());
-}
