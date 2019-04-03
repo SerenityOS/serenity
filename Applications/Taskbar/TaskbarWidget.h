@@ -10,7 +10,5 @@ public:
     virtual const char* class_name() const override { return "TaskbarWidget"; }
 
 private:
-    virtual void paint_event(GPaintEvent&) override;
-
     WindowList& m_window_list;
 };
