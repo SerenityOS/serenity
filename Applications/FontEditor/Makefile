@@ -1,10 +1,12 @@
 OBJS = \
     FontEditor.o \
+    GlyphMapWidget.o \
+    GlyphEditorWidget.o \
     main.o
 
 APP = FontEditor
 
-STANDARD_FLAGS = -std=c++17
+STANDARD_FLAGS = -std=c++17 -Wno-sized-deallocation
 WARNING_FLAGS = -Wextra -Wall -Wundef -Wcast-qual -Wwrite-strings -Wimplicit-fallthrough
 FLAVOR_FLAGS = -fno-exceptions -fno-rtti
 OPTIMIZATION_FLAGS = -Os
