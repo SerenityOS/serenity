@@ -286,7 +286,7 @@ private:
     Vector<FileDescriptorAndFlags> m_fds;
     RingLevel m_ring { Ring0 };
 
-    int m_max_open_file_descriptors { 16 };
+    int m_max_open_file_descriptors { 128 };
 
     byte m_termination_status { 0 };
     byte m_termination_signal { 0 };
