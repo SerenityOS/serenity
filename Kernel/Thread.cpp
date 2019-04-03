@@ -94,12 +94,10 @@ Thread::~Thread()
 void Thread::unblock()
 {
     if (current == this) {
-        system.nblocked--;
         m_state = Thread::Running;
         return;
     }
     ASSERT(m_state != Thread::Runnable && m_state != Thread::Running);
-    system.nblocked--;
     m_state = Thread::Runnable;
 }
 
@@ -117,7 +115,6 @@ void Thread::block(Thread::State new_state)
         kprintf("Thread::block: %s(%u) block(%u/%s) with state=%u/%s\n", process().name().characters(), process().pid(), new_state, to_string(new_state), state(), to_string(state()));
     }
     ASSERT(state() == Thread::Running);
-    system.nblocked++;
     m_was_interrupted_while_blocked = false;
     set_state(new_state);
     Scheduler::yield();
