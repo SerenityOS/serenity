@@ -19,7 +19,7 @@
 #include "FIFO.h"
 #include "KSyms.h"
 #include <Kernel/Socket.h>
-#include "MasterPTY.h"
+#include <Kernel/TTY/MasterPTY.h>
 #include <Kernel/exec_elf.h>
 #include <AK/StringBuilder.h>
 

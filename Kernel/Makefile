@@ -16,11 +16,11 @@ KERNEL_OBJS = \
        IRQHandler.o \
        kprintf.o \
        RTC.o \
-       TTY.o \
-       PTYMultiplexer.o \
-       MasterPTY.o \
-       SlavePTY.o \
-       VirtualConsole.o \
+       TTY/TTY.o \
+       TTY/PTYMultiplexer.o \
+       TTY/MasterPTY.o \
+       TTY/SlavePTY.o \
+       TTY/VirtualConsole.o \
        FIFO.o \
        Scheduler.o \
        DoubleBuffer.o \

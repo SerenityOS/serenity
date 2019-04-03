@@ -5,8 +5,8 @@
 #include "UnixTypes.h"
 #include <AK/BufferStream.h>
 #include "FIFO.h"
-#include "TTY.h"
-#include "MasterPTY.h"
+#include <Kernel/TTY/TTY.h>
+#include <Kernel/TTY/MasterPTY.h>
 #include <Kernel/Socket.h>
 #include <Kernel/Process.h>
 #include <Kernel/BlockDevice.h>

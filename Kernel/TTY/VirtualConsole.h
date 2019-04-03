@@ -1,6 +1,6 @@
 #pragma once
 
-#include "TTY.h"
+#include <Kernel/TTY/TTY.h>
 #include "KeyboardDevice.h"
 #include "Console.h"
 

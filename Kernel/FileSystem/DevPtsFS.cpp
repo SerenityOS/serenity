@@ -1,5 +1,5 @@
 #include <Kernel/FileSystem/DevPtsFS.h>
-#include <Kernel/SlavePTY.h>
+#include <Kernel/TTY/SlavePTY.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <AK/StringBuilder.h>
 
