@@ -349,6 +349,10 @@ void WSWindowManager::set_resolution(int width, int height)
     m_buffers_are_flipped = false;
     invalidate();
     compose();
+
+    WSClientConnection::for_each_client([&] (WSClientConnection& client) {
+        client.notify_about_new_screen_rect(m_screen_rect);
+    });
 }
 
 template<typename Callback>

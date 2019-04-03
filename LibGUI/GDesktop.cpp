@@ -2,6 +2,7 @@
 #include <LibGUI/GEventLoop.h>
 #include <AK/Eternal.h>
 #include <string.h>
+#include <unistd.h>
 
 GDesktop& GDesktop::the()
 {
@@ -11,6 +12,11 @@ GDesktop& GDesktop::the()
 
 GDesktop::GDesktop()
 {
+}
+
+void GDesktop::did_receive_screen_rect(Badge<GEventLoop>, const Rect& rect)
+{
+    m_rect = rect;
 }
 
 bool GDesktop::set_wallpaper(const String& path)

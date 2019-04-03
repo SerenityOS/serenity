@@ -7,6 +7,7 @@
 #include <WindowServer/WSWindowManager.h>
 #include <WindowServer/WSAPITypes.h>
 #include <WindowServer/WSClipboard.h>
+#include <WindowServer/WSScreen.h>
 #include <SharedBuffer.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
@@ -47,6 +48,7 @@ WSClientConnection::WSClientConnection(int fd)
     WSAPI_ServerMessage message;
     message.type = WSAPI_ServerMessage::Type::Greeting;
     message.greeting.server_pid = getpid();
+    message.greeting.screen_rect = WSScreen::the().rect();
     post_message(message);
 }
 
@@ -81,6 +83,14 @@ void WSClientConnection::post_message(const WSAPI_ServerMessage& message)
     }
 
     ASSERT(nwritten == sizeof(message));
+}
+
+void WSClientConnection::notify_about_new_screen_rect(const Rect& rect)
+{
+    WSAPI_ServerMessage message;
+    message.type = WSAPI_ServerMessage::Type::ScreenRectChanged;
+    message.screen.rect = rect;
+    post_message(message);
 }
 
 void WSClientConnection::on_message(const WSMessage& message)
