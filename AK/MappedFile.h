@@ -7,11 +7,14 @@ namespace AK {
 class MappedFile {
 public:
     MappedFile() { }
-    explicit MappedFile(String&& file_name);
+    explicit MappedFile(const String& file_name);
     MappedFile(MappedFile&&);
     ~MappedFile();
 
+    MappedFile& operator=(MappedFile&&);
+
     bool is_valid() const { return m_map != (void*)-1; }
+    void unmap();
 
     void* pointer() { return m_map; }
     const void* pointer() const { return m_map; }
