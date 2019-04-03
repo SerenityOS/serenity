@@ -3,8 +3,6 @@
 #include "FileSystem.h"
 #include <AK/FileSystemPath.h>
 #include <AK/StringBuilder.h>
-#include <AK/kstdio.h>
-#include <AK/ktime.h>
 #include "CharacterDevice.h"
 #include <LibC/errno_numbers.h>
 #include <Kernel/Process.h>

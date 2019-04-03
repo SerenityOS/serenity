@@ -4,8 +4,6 @@
 #include "RTC.h"
 #include <AK/Bitmap.h>
 #include <AK/StdLibExtras.h>
-#include <AK/ktime.h>
-#include <AK/kstdio.h>
 #include <AK/BufferStream.h>
 #include <LibC/errno_numbers.h>
 #include <Kernel/Process.h>
