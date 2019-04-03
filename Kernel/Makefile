@@ -24,8 +24,8 @@ KERNEL_OBJS = \
        FIFO.o \
        Scheduler.o \
        DoubleBuffer.o \
-       ELFImage.o \
-       ELFLoader.o \
+       ELF/ELFImage.o \
+       ELF/ELFLoader.o \
        KSyms.o \
        FileSystem/DevPtsFS.o \
        BXVGADevice.o \
