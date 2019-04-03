@@ -4,6 +4,7 @@ AK_OBJS = \
     ../AK/StringBuilder.o \
     ../AK/FileSystemPath.o \
     ../AK/StdLibExtras.o \
+    ../AK/MappedFile.o \
     ../AK/kmalloc.o
 
 LIBC_OBJS = \

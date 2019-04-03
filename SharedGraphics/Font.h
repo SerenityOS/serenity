@@ -4,6 +4,7 @@
 #include <AK/Retainable.h>
 #include <AK/RetainPtr.h>
 #include <AK/AKString.h>
+#include <AK/MappedFile.h>
 #include <AK/Types.h>
 
 // FIXME: Make a MutableGlyphBitmap buddy class for FontEditor instead?
@@ -47,8 +48,6 @@ public:
 
     RetainPtr<Font> clone() const;
 
-    static RetainPtr<Font> load_from_memory(const byte*);
-
     static RetainPtr<Font> load_from_file(const String& path);
     bool write_to_file(const String& path);
 
@@ -78,11 +77,13 @@ public:
 private:
     Font(const String& name, unsigned* rows, byte* widths, bool is_fixed_width, byte glyph_width, byte glyph_height);
 
+    static RetainPtr<Font> load_from_memory(const byte*);
+
     String m_name;
 
     unsigned* m_rows { nullptr };
     byte* m_glyph_widths { nullptr };
-    void* m_mmap_ptr { nullptr };
+    MappedFile m_mapped_file;
 
     byte m_glyph_width { 0 };
     byte m_glyph_height { 0 };
