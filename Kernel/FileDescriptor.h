@@ -1,7 +1,7 @@
 #pragma once
 
-#include "VirtualFileSystem.h"
-#include "InodeMetadata.h"
+#include <Kernel/FileSystem/VirtualFileSystem.h>
+#include <Kernel/FileSystem/InodeMetadata.h>
 #include "FIFO.h"
 #include <AK/ByteBuffer.h>
 #include <AK/CircularQueue.h>

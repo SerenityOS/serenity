@@ -11,7 +11,7 @@
 #include <AK/AKString.h>
 #include <AK/Badge.h>
 #include <AK/Weakable.h>
-#include <Kernel/VirtualFileSystem.h>
+#include <Kernel/FileSystem/VirtualFileSystem.h>
 
 #define PAGE_ROUND_UP(x) ((((dword)(x)) + PAGE_SIZE-1) & (~(PAGE_SIZE-1)))
 

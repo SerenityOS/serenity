@@ -15,7 +15,6 @@ KERNEL_OBJS = \
        Console.o \
        IRQHandler.o \
        kprintf.o \
-       ProcFS.o \
        RTC.o \
        TTY.o \
        PTYMultiplexer.o \
@@ -28,7 +27,7 @@ KERNEL_OBJS = \
        ELFImage.o \
        ELFLoader.o \
        KSyms.o \
-       DevPtsFS.o \
+       FileSystem/DevPtsFS.o \
        BXVGADevice.o \
        PCI.o \
        PS2MouseDevice.o \
@@ -44,6 +43,7 @@ KERNEL_OBJS = \
        Net/NetworkTask.o
 
 VFS_OBJS = \
+    FileSystem/ProcFS.o \
     DiskDevice.o \
     Device.o \
     CharacterDevice.o \
@@ -52,12 +52,12 @@ VFS_OBJS = \
     FullDevice.o \
     ZeroDevice.o \
     RandomDevice.o \
-    FileSystem.o \
-    DiskBackedFileSystem.o \
-    Ext2FileSystem.o \
-    VirtualFileSystem.o \
+    FileSystem/FileSystem.o \
+    FileSystem/DiskBackedFileSystem.o \
+    FileSystem/Ext2FileSystem.o \
+    FileSystem/VirtualFileSystem.o \
     FileDescriptor.o \
-    SyntheticFileSystem.o
+    FileSystem/SyntheticFileSystem.o
 
 AK_OBJS = \
     ../AK/String.o \

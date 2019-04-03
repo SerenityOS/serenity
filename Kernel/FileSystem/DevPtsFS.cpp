@@ -1,6 +1,6 @@
-#include <Kernel/DevPtsFS.h>
+#include <Kernel/FileSystem/DevPtsFS.h>
 #include <Kernel/SlavePTY.h>
-#include <Kernel/VirtualFileSystem.h>
+#include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <AK/StringBuilder.h>
 
 static DevPtsFS* s_the;
