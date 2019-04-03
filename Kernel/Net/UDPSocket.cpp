@@ -2,7 +2,7 @@
 #include <Kernel/Net/UDP.h>
 #include <Kernel/Net/NetworkAdapter.h>
 #include <Kernel/Process.h>
-#include <Kernel/RandomDevice.h>
+#include <Kernel/Devices/RandomDevice.h>
 #include <Kernel/Net/Routing.h>
 
 Lockable<HashMap<word, UDPSocket*>>& UDPSocket::sockets_by_port()

@@ -1,6 +1,6 @@
 #include "FileDescriptor.h"
 #include <Kernel/FileSystem/FileSystem.h>
-#include "CharacterDevice.h"
+#include <Kernel/Devices/CharacterDevice.h>
 #include <LibC/errno_numbers.h>
 #include "UnixTypes.h"
 #include <AK/BufferStream.h>
@@ -9,7 +9,7 @@
 #include <Kernel/TTY/MasterPTY.h>
 #include <Kernel/Socket.h>
 #include <Kernel/Process.h>
-#include <Kernel/BlockDevice.h>
+#include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/MemoryManager.h>
 
 Retained<FileDescriptor> FileDescriptor::create(RetainPtr<Inode>&& inode)

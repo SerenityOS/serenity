@@ -3,7 +3,7 @@
 #include <Kernel/Net/NetworkAdapter.h>
 #include <Kernel/Net/Routing.h>
 #include <Kernel/Process.h>
-#include <Kernel/RandomDevice.h>
+#include <Kernel/Devices/RandomDevice.h>
 
 Lockable<HashMap<word, TCPSocket*>>& TCPSocket::sockets_by_port()
 {

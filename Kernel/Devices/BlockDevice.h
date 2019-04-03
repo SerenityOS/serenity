@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Kernel/Device.h>
+#include <Kernel/Devices/Device.h>
 
 class BlockDevice : public Device {
 public:

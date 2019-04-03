@@ -2,7 +2,7 @@
 
 #include <Kernel/Lock.h>
 #include <AK/RetainPtr.h>
-#include <Kernel/DiskDevice.h>
+#include <Kernel/Devices/DiskDevice.h>
 #include "IRQHandler.h"
 
 class IDEDiskDevice final : public IRQHandler, public DiskDevice {

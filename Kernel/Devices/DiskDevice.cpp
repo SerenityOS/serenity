@@ -1,4 +1,4 @@
-#include "DiskDevice.h"
+#include <Kernel/Devices/DiskDevice.h>
 
 DiskDevice::DiskDevice()
 {

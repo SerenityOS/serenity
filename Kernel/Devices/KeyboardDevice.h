@@ -3,7 +3,7 @@
 #include <AK/Types.h>
 #include <AK/DoublyLinkedList.h>
 #include <AK/CircularQueue.h>
-#include <Kernel/CharacterDevice.h>
+#include <Kernel/Devices/CharacterDevice.h>
 #include "IRQHandler.h"
 #include "KeyCode.h"
 

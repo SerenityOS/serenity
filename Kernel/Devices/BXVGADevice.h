@@ -4,7 +4,7 @@
 #include <AK/AKString.h>
 #include <SharedGraphics/Size.h>
 #include <Kernel/types.h>
-#include <Kernel/BlockDevice.h>
+#include <Kernel/Devices/BlockDevice.h>
 
 class BXVGADevice final : public BlockDevice {
     AK_MAKE_ETERNAL

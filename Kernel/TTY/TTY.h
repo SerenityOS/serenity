@@ -1,7 +1,7 @@
 #pragma once
 
 #include "DoubleBuffer.h"
-#include <Kernel/CharacterDevice.h>
+#include <Kernel/Devices/CharacterDevice.h>
 #include <Kernel/UnixTypes.h>
 
 class Process;

@@ -6,7 +6,7 @@
 #include "system.h"
 #include <Kernel/FileDescriptor.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
-#include <Kernel/NullDevice.h>
+#include <Kernel/Devices/NullDevice.h>
 #include <Kernel/ELF/ELFLoader.h>
 #include "MemoryManager.h"
 #include "i8253.h"
