@@ -27,11 +27,6 @@ void kfree(void* ptr);
 
 }
 
-#ifdef KERNEL
-inline void* operator new(size_t, void* p) { return p; }
-inline void* operator new[](size_t, void* p) { return p; }
-#else
-
 inline void* operator new(size_t size)
 {
     return kmalloc(size);
@@ -51,7 +46,5 @@ inline void operator delete[](void* ptr)
 {
     return kfree(ptr);
 }
-
-#endif
 
 #endif
