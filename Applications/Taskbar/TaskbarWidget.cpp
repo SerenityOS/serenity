@@ -11,7 +11,7 @@ TaskbarWidget::TaskbarWidget(WindowList& window_list, GWidget* parent)
 {
     set_fill_with_background_color(true);
     set_layout(make<GBoxLayout>(Orientation::Horizontal));
-    layout()->set_margins({ 0, 3, 0, 3 });
+    layout()->set_margins({ 3, 2, 3, 2 });
     layout()->set_spacing(3);
 
     set_frame_thickness(1);
