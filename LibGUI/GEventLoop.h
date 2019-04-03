@@ -60,6 +60,7 @@ private:
     void handle_window_close_request_event(const WSAPI_ServerMessage&, GWindow&);
     void handle_menu_event(const WSAPI_ServerMessage&);
     void handle_window_entered_or_left_event(const WSAPI_ServerMessage&, GWindow&);
+    void handle_wm_event(const WSAPI_ServerMessage&, GWindow&);
     void get_next_timer_expiration(timeval&);
     void connect_to_server();
 

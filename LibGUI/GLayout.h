@@ -16,6 +16,8 @@ public:
     void add_widget(GWidget&);
     void add_layout(OwnPtr<GLayout>&&);
 
+    void remove_widget(GWidget&);
+
     virtual void run(GWidget&) = 0;
 
     void notify_adopted(Badge<GWidget>, GWidget&);

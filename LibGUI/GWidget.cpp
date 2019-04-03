@@ -27,6 +27,10 @@ void GWidget::child_event(GChildEvent& event)
         if (event.child() && event.child()->is_widget() && layout())
             layout()->add_widget(static_cast<GWidget&>(*event.child()));
     }
+    if (event.type() == GEvent::ChildRemoved) {
+        if (event.child() && event.child()->is_widget() && layout())
+            layout()->remove_widget(static_cast<GWidget&>(*event.child()));
+    }
     return GObject::child_event(event);
 }
 

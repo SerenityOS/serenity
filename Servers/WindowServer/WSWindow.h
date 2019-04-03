@@ -20,6 +20,8 @@ public:
 
     bool is_blocked_by_modal_window() const;
 
+    bool listens_to_wm_events() const { return m_listens_to_wm_events; }
+
     WSClientConnection* client() { return m_client; }
     const WSClientConnection* client() const { return m_client; }
 
@@ -124,6 +126,7 @@ private:
     bool m_has_painted_since_last_resize { false };
     bool m_modal { false };
     bool m_resizable { false };
+    bool m_listens_to_wm_events { false };
     RetainPtr<GraphicsBitmap> m_backing_store;
     RetainPtr<GraphicsBitmap> m_last_backing_store;
     int m_window_id { -1 };

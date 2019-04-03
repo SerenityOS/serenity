@@ -91,6 +91,9 @@ struct WSAPI_ServerMessage {
         DidSetWallpaper,
         DidGetWallpaper,
         ScreenRectChanged,
+        WM_WindowAdded,
+        WM_WindowRemoved,
+        WM_WindowStateChanged,
     };
     Type type { Invalid };
     int window_id { -1 };
@@ -103,6 +106,11 @@ struct WSAPI_ServerMessage {
             int server_pid;
             WSAPI_Rect screen_rect;
         } greeting;
+        struct {
+            int client_id;
+            int window_id;
+            WSAPI_Rect rect;
+        } wm;
         struct {
             WSAPI_Rect rect;
         } screen;

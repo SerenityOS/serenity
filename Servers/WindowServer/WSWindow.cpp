@@ -28,6 +28,9 @@ WSWindow::WSWindow(WSClientConnection& client, WSWindowType window_type, int win
     , m_window_id(window_id)
     , m_icon(default_window_icon())
 {
+    // FIXME: This should not be hard-coded here.
+    if (m_type == WSWindowType::Taskbar)
+        m_listens_to_wm_events = true;
     WSWindowManager::the().add_window(*this);
 }
 
@@ -138,6 +141,36 @@ void WSWindow::on_message(const WSMessage& message)
         server_message.window.old_rect = static_cast<const WSResizeEvent&>(message).old_rect();
         server_message.window.rect = static_cast<const WSResizeEvent&>(message).rect();
         break;
+    case WSMessage::WM_WindowAdded: {
+        auto& added_event = static_cast<const WSWMWindowAddedEvent&>(message);
+        server_message.type = WSAPI_ServerMessage::Type::WM_WindowAdded;
+        server_message.wm.client_id = added_event.client_id();
+        server_message.wm.window_id = added_event.window_id();
+        ASSERT(added_event.title().length() < sizeof(server_message.text));
+        memcpy(server_message.text, added_event.title().characters(), added_event.title().length());
+        server_message.text_length = added_event.title().length();
+        server_message.wm.rect = added_event.rect();
+        break;
+    }
+    case WSMessage::WM_WindowRemoved: {
+        auto& removed_event = static_cast<const WSWMWindowRemovedEvent&>(message);
+        server_message.type = WSAPI_ServerMessage::Type::WM_WindowRemoved;
+        server_message.wm.client_id = removed_event.client_id();
+        server_message.wm.window_id = removed_event.window_id();
+        break;
+    }
+    case WSMessage::WM_WindowStateChanged: {
+        auto& changed_event = static_cast<const WSWMWindowStateChangedEvent&>(message);
+        server_message.type = WSAPI_ServerMessage::Type::WM_WindowStateChanged;
+        server_message.wm.client_id = changed_event.client_id();
+        server_message.wm.window_id = changed_event.window_id();
+        ASSERT(changed_event.title().length() < sizeof(server_message.text));
+        memcpy(server_message.text, changed_event.title().characters(), changed_event.title().length());
+        server_message.text_length = changed_event.title().length();
+        server_message.wm.rect = changed_event.rect();
+        break;
+    }
+
     default:
         break;
     }
