@@ -1,5 +1,6 @@
 #include <SharedGraphics/GraphicsBitmap.h>
 #include <SharedGraphics/PNGLoader.h>
+#include <AK/MappedFile.h>
 #include <sys/mman.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -20,7 +21,6 @@ GraphicsBitmap::GraphicsBitmap(Format format, const Size& size)
     m_data = (RGBA32*)mmap(nullptr, size_in_bytes, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0);
     ASSERT(m_data && m_data != (void*)-1);
     set_mmap_name(m_data, size_in_bytes, String::format("GraphicsBitmap [%dx%d]", width(), height()).characters());
-    m_mmaped = true;
 }
 
 Retained<GraphicsBitmap> GraphicsBitmap::create_wrapper(Format format, const Size& size, RGBA32* data)
@@ -35,25 +35,10 @@ RetainPtr<GraphicsBitmap> GraphicsBitmap::load_from_file(const String& path)
 
 RetainPtr<GraphicsBitmap> GraphicsBitmap::load_from_file(Format format, const String& path, const Size& size)
 {
-    int fd = open(path.characters(), O_RDONLY, 0644);
-    if (fd < 0) {
-        dbgprintf("open(%s) got fd=%d, failed: %s\n", path.characters(), fd, strerror(errno));
-        perror("open");
+    MappedFile mapped_file(path);
+    if (!mapped_file.is_valid())
         return nullptr;
-    }
-
-    auto* mapped_data = (RGBA32*)mmap(nullptr, size.area() * 4, PROT_READ, MAP_SHARED, fd, 0);
-    if (mapped_data == MAP_FAILED) {
-        int rc = close(fd);
-        ASSERT(rc == 0);
-        return nullptr;
-    }
-
-    int rc = close(fd);
-    ASSERT(rc == 0);
-    auto bitmap = create_wrapper(format, size, mapped_data);
-    bitmap->m_mmaped = true;
-    return bitmap;
+    return adopt(*new GraphicsBitmap(format, size, move(mapped_file)));
 }
 
 GraphicsBitmap::GraphicsBitmap(Format format, const Size& size, RGBA32* data)
@@ -61,6 +46,15 @@ GraphicsBitmap::GraphicsBitmap(Format format, const Size& size, RGBA32* data)
     , m_data(data)
     , m_pitch(size.width() * sizeof(RGBA32))
     , m_format(format)
+{
+}
+
+GraphicsBitmap::GraphicsBitmap(Format format, const Size& size, MappedFile&& mapped_file)
+    : m_size(size)
+    , m_data((RGBA32*)mapped_file.pointer())
+    , m_pitch(size.width() * sizeof(RGBA32))
+    , m_format(format)
+    , m_mapped_file(move(mapped_file))
 {
 }
 
@@ -80,10 +74,6 @@ GraphicsBitmap::GraphicsBitmap(Format format, Retained<SharedBuffer>&& shared_bu
 
 GraphicsBitmap::~GraphicsBitmap()
 {
-    if (m_mmaped) {
-        int rc = munmap(m_data, m_size.area() * 4);
-        ASSERT(rc == 0);
-    }
     m_data = nullptr;
 }
 

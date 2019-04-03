@@ -6,6 +6,7 @@
 #include <AK/Retainable.h>
 #include <AK/RetainPtr.h>
 #include <AK/AKString.h>
+#include <AK/MappedFile.h>
 #include <SharedBuffer.h>
 
 class GraphicsBitmap : public Retainable<GraphicsBitmap> {
@@ -35,13 +36,14 @@ public:
 private:
     GraphicsBitmap(Format, const Size&);
     GraphicsBitmap(Format, const Size&, RGBA32*);
+    GraphicsBitmap(Format, const Size&, MappedFile&&);
     GraphicsBitmap(Format, Retained<SharedBuffer>&&, const Size&);
 
     Size m_size;
     RGBA32* m_data { nullptr };
     size_t m_pitch { 0 };
     Format m_format { Format::Invalid };
-    bool m_mmaped { false };
+    MappedFile m_mapped_file;
     RetainPtr<SharedBuffer> m_shared_buffer;
 };
 
