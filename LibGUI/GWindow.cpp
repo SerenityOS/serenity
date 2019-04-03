@@ -258,6 +258,9 @@ void GWindow::event(GEvent& event)
         return;
     }
 
+    if (event.type() == GEvent::WM_WindowAdded || event.type() == GEvent::WM_WindowRemoved || event.type() == GEvent::WM_WindowStateChanged)
+        return wm_event(static_cast<GWMEvent&>(event));
+
     GObject::event(event);
 }
 
@@ -421,4 +424,8 @@ void GWindow::set_modal(bool modal)
 {
     ASSERT(!m_window_id);
     m_modal = modal;
+}
+
+void GWindow::wm_event(GWMEvent&)
+{
 }

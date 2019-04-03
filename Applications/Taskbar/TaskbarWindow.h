@@ -13,4 +13,5 @@ public:
 private:
     void on_screen_rect_change(const Rect&);
 
+    virtual void wm_event(GWMEvent&) override;
 };

@@ -7,6 +7,7 @@
 #include <AK/WeakPtr.h>
 
 class GWidget;
+class GWMEvent;
 
 enum class GStandardCursor {
     None = 0,
@@ -102,6 +103,9 @@ public:
     void set_override_cursor(GStandardCursor);
 
     virtual const char* class_name() const override { return "GWindow"; }
+
+protected:
+    virtual void wm_event(GWMEvent&);
 
 private:
     virtual bool is_window() const override final { return true; }
