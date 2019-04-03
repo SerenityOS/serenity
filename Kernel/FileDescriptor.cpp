@@ -112,7 +112,7 @@ bool addition_would_overflow(off_t a, off_t b)
 {
     ASSERT(a > 0);
     uint64_t ua = a;
-    return (ua + b) > maxFileOffset;
+    return (ua + b) > OFF_T_MAX;
 }
 
 KResult FileDescriptor::fstat(stat& buffer)

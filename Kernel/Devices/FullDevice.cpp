@@ -1,5 +1,4 @@
 #include "FullDevice.h"
-#include "Limits.h"
 #include <LibC/errno_numbers.h>
 #include <AK/StdLibExtras.h>
 #include <AK/kstdio.h>
@@ -20,7 +19,7 @@ bool FullDevice::can_read(Process&) const
 
 ssize_t FullDevice::read(Process&, byte* buffer, ssize_t size)
 {
-    ssize_t count = min(GoodBufferSize, size);
+    ssize_t count = min(PAGE_SIZE, size);
     memset(buffer, 0, (size_t)count);
     return count;
 }

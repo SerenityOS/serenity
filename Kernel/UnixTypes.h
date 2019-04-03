@@ -255,7 +255,8 @@ struct sigaction {
 #define SIG_UNBLOCK 1
 #define SIG_SETMASK 2
 
-// FIXME: Support 64-bit offsets!
+#define OFF_T_MAX 2147483647
+
 typedef signed_dword off_t;
 typedef dword time_t;
 
