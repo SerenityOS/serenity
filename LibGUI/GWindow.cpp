@@ -262,8 +262,6 @@ bool GWindow::is_visible() const
 
 void GWindow::update(const Rect& a_rect)
 {
-    if (a_rect.is_empty())
-        return;
     if (!m_window_id)
         return;
     for (auto& pending_rect : m_pending_paint_event_rects) {
