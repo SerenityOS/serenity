@@ -51,6 +51,6 @@ void SharedBuffer::seal()
     int rc = seal_shared_buffer(m_shared_buffer_id);
     if (rc < 0) {
         perror("seal_shared_buffer");
-        exit(1);
+        ASSERT_NOT_REACHED();
     }
 }

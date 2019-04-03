@@ -26,6 +26,10 @@ public:
         WindowCloseRequest,
         WindowResized,
 
+        WM_WindowAdded,
+        WM_WindowRemoved,
+        WM_WindowStateChanged,
+
         __Begin_API_Client_Requests,
         APICreateMenubarRequest,
         APIDestroyMenubarRequest,
@@ -579,5 +583,64 @@ public:
 
 private:
     Rect m_old_rect;
+    Rect m_rect;
+};
+
+class WSWMEvent : public WSMessage {
+public:
+    WSWMEvent(Type type, int client_id, int window_id)
+        : WSMessage(type)
+        , m_client_id(client_id)
+        , m_window_id(window_id)
+    {
+    }
+
+    int client_id() const { return m_client_id; }
+    int window_id() const { return m_window_id; }
+
+private:
+    int m_client_id;
+    int m_window_id;
+};
+
+class WSWMWindowAddedEvent : public WSWMEvent {
+public:
+    WSWMWindowAddedEvent(int client_id, int window_id, const String& title, const Rect& rect)
+        : WSWMEvent(WSMessage::WM_WindowAdded, client_id, window_id)
+        , m_title(title)
+        , m_rect(rect)
+    {
+    }
+
+    String title() const { return m_title; }
+    Rect rect() const { return m_rect; }
+
+private:
+    String m_title;
+    Rect m_rect;
+};
+
+class WSWMWindowRemovedEvent : public WSWMEvent {
+public:
+    WSWMWindowRemovedEvent(int client_id, int window_id)
+        : WSWMEvent(WSMessage::WM_WindowRemoved, client_id, window_id)
+    {
+    }
+};
+
+class WSWMWindowStateChangedEvent : public WSWMEvent {
+public:
+    WSWMWindowStateChangedEvent(int client_id, int window_id, const String& title, const Rect& rect)
+        : WSWMEvent(WSMessage::WM_WindowStateChanged, client_id, window_id)
+        , m_title(title)
+        , m_rect(rect)
+    {
+    }
+
+    String title() const { return m_title; }
+    Rect rect() const { return m_rect; }
+
+private:
+    String m_title;
     Rect m_rect;
 };

@@ -1,6 +1,7 @@
 OBJS = \
     TaskbarWindow.o \
     TaskbarWidget.o \
+    WindowList.o \
     main.o
 
 APP = Taskbar

@@ -40,6 +40,15 @@ void GLayout::add_widget(GWidget& widget)
         m_owner->notify_layout_changed(Badge<GLayout>());
 }
 
+void GLayout::remove_widget(GWidget& widget)
+{
+    m_entries.remove_first_matching([&] (auto& entry) {
+        return entry.widget.ptr() == &widget;
+    });
+    if (m_owner)
+        m_owner->notify_layout_changed(Badge<GLayout>());
+}
+
 void GLayout::set_spacing(int spacing)
 {
     if (m_spacing == spacing)

@@ -34,6 +34,9 @@ void GBoxLayout::run(GWidget& widget)
         dbgprintf("GBoxLayout:  Starting with available size: %s\n", available_size.to_string().characters());
 
     for (auto& entry : m_entries) {
+        if (!entry.widget)
+            continue;
+
         if (!entry.widget->is_visible())
             continue;
         ++number_of_visible_entries;
@@ -81,6 +84,8 @@ void GBoxLayout::run(GWidget& widget)
     int current_y = margins().top();
 
     for (auto& entry : m_entries) {
+        if (!entry.widget)
+            continue;
         if (!entry.widget->is_visible())
             continue;
         Rect rect(current_x, current_y, 0, 0);

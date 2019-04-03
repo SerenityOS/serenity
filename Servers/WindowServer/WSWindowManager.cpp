@@ -294,7 +294,7 @@ void get_cpu_usage(unsigned& busy, unsigned& idle)
     FILE* fp = fopen("/proc/all", "r");
     if (!fp) {
         perror("failed to open /proc/all");
-        exit(1);
+        ASSERT_NOT_REACHED();
     }
     for (;;) {
         char buf[BUFSIZ];
@@ -507,6 +507,12 @@ void WSWindowManager::add_window(WSWindow& window)
         set_active_window(&window);
     if (m_switcher.is_visible() && window.type() != WSWindowType::WindowSwitcher)
         m_switcher.refresh();
+
+    for_each_window_listening_to_wm_events([&window] (WSWindow& listener) {
+        if (window.client())
+            WSMessageLoop::the().post_message(listener, make<WSWMWindowAddedEvent>(window.client()->client_id(), window.window_id(), window.title(), window.rect()));
+        return IterationDecision::Continue;
+    });
 }
 
 void WSWindowManager::move_to_front_and_make_active(WSWindow& window)
@@ -534,6 +540,12 @@ void WSWindowManager::remove_window(WSWindow& window)
         set_active_window(*m_windows.begin());
     if (m_switcher.is_visible() && window.type() != WSWindowType::WindowSwitcher)
         m_switcher.refresh();
+
+    for_each_window_listening_to_wm_events([&window] (WSWindow& listener) {
+        if (window.client())
+            WSMessageLoop::the().post_message(listener, make<WSWMWindowRemovedEvent>(window.client()->client_id(), window.window_id()));
+        return IterationDecision::Continue;
+    });
 }
 
 void WSWindowManager::notify_title_changed(WSWindow& window)
@@ -542,6 +554,12 @@ void WSWindowManager::notify_title_changed(WSWindow& window)
     invalidate(outer_window_rect(window));
     if (m_switcher.is_visible())
         m_switcher.refresh();
+
+    for_each_window_listening_to_wm_events([&window] (WSWindow& listener) {
+        if (window.client())
+            WSMessageLoop::the().post_message(listener, make<WSWMWindowStateChangedEvent>(window.client()->client_id(), window.window_id(), window.title(), window.rect()));
+        return IterationDecision::Continue;
+    });
 }
 
 void WSWindowManager::notify_rect_changed(WSWindow& window, const Rect& old_rect, const Rect& new_rect)
@@ -553,6 +571,12 @@ void WSWindowManager::notify_rect_changed(WSWindow& window, const Rect& old_rect
     invalidate(outer_window_rect(new_rect));
     if (m_switcher.is_visible() && window.type() != WSWindowType::WindowSwitcher)
         m_switcher.refresh();
+
+    for_each_window_listening_to_wm_events([&window] (WSWindow& listener) {
+        if (window.client())
+            WSMessageLoop::the().post_message(listener, make<WSWMWindowStateChangedEvent>(window.client()->client_id(), window.window_id(), window.title(), window.rect()));
+        return IterationDecision::Continue;
+    });
 }
 
 void WSWindowManager::handle_menu_mouse_event(WSMenu& menu, const WSMouseEvent& event)
