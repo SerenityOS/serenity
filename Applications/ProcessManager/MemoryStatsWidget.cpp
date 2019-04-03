@@ -106,5 +106,5 @@ void MemoryStatsWidget::paint_event(GPaintEvent& event)
 {
     GPainter painter(*this);
     painter.add_clip_rect(event.rect());
-    StylePainter::the().paint_surface(painter, rect());
+    StylePainter::paint_surface(painter, rect());
 }

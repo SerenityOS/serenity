@@ -1,19 +1,6 @@
 #include <SharedGraphics/StylePainter.h>
 #include <LibGUI/GPainter.h>
 
-static StylePainter* s_the;
-
-StylePainter& StylePainter::the()
-{
-    if (!s_the)
-        s_the = new StylePainter;
-    return *s_the;
-}
-
-StylePainter::StylePainter()
-{
-}
-
 static void paint_button_new(Painter& painter, const Rect& rect, bool pressed)
 {
     Color button_color = Color::from_rgb(0xc0c0c0);

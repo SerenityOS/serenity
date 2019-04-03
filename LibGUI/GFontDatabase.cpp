@@ -1,16 +1,14 @@
 #include <LibGUI/GFontDatabase.h>
 #include <SharedGraphics/Font.h>
+#include <AK/Eternal.h>
 #include <dirent.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-static GFontDatabase* s_the;
-
 GFontDatabase& GFontDatabase::the()
 {
-    if (!s_the)
-        s_the = new GFontDatabase;
-    return *s_the;
+    static Eternal<GFontDatabase> the;
+    return the;
 }
 
 GFontDatabase::GFontDatabase()

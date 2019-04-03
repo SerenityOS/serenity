@@ -6,12 +6,11 @@
 class GDesktop {
 public:
     static GDesktop& the();
+    GDesktop();
 
     String wallpaper() const;
     bool set_wallpaper(const String& path);
 
 private:
-    GDesktop();
-
     Rect m_rect;
 };

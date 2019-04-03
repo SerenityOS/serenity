@@ -26,7 +26,7 @@ void GButton::paint_event(GPaintEvent& event)
     GPainter painter(*this);
     painter.add_clip_rect(event.rect());
 
-    StylePainter::the().paint_button(painter, rect(), m_button_style, m_being_pressed, m_hovered);
+    StylePainter::paint_button(painter, rect(), m_button_style, m_being_pressed, m_hovered);
 
     if (!caption().is_empty() || m_icon) {
         auto content_rect = rect();

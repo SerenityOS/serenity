@@ -4,11 +4,6 @@
 
 class GClipboard {
 public:
-    static GClipboard& the();
-
-    String data() const;
-    void set_data(const String&);
-
-private:
-    GClipboard();
+    static String data();
+    static void set_data(const String&);
 };

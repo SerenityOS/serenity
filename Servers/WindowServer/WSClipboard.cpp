@@ -1,11 +1,10 @@
 #include <WindowServer/WSClipboard.h>
+#include <AK/Eternal.h>
 
 WSClipboard& WSClipboard::the()
 {
-    static WSClipboard* s_the;
-    if (!s_the)
-        s_the = new WSClipboard;
-    return *s_the;
+    static Eternal<WSClipboard> the;
+    return the;
 }
 
 WSClipboard::WSClipboard()
