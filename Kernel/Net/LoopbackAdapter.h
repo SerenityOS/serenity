@@ -3,6 +3,7 @@
 #include <Kernel/Net/NetworkAdapter.h>
 
 class LoopbackAdapter final : public NetworkAdapter {
+    AK_MAKE_ETERNAL
 public:
     static LoopbackAdapter& the();
 
