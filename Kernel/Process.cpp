@@ -51,7 +51,6 @@ void Process::initialize()
 Vector<pid_t> Process::all_pids()
 {
     Vector<pid_t> pids;
-    pids.ensure_capacity(system.nprocess);
     InterruptDisabler disabler;
     for (auto* process = g_processes->head(); process; process = process->next())
         pids.append(process->pid());
@@ -61,7 +60,6 @@ Vector<pid_t> Process::all_pids()
 Vector<Process*> Process::all_processes()
 {
     Vector<Process*> processes;
-    processes.ensure_capacity(system.nprocess);
     InterruptDisabler disabler;
     for (auto* process = g_processes->head(); process; process = process->next())
         processes.append(process);
@@ -260,7 +258,6 @@ Process* Process::fork(RegisterDump& regs)
     {
         InterruptDisabler disabler;
         g_processes->prepend(child);
-        system.nprocess++;
     }
 #ifdef TASK_DEBUG
     kprintf("Process %u (%s) forked from %u @ %p\n", child->pid(), child->name().characters(), m_pid, child_tss.eip);
@@ -508,7 +505,6 @@ Process* Process::create_user_process(const String& path, uid_t uid, gid_t gid, 
     {
         InterruptDisabler disabler;
         g_processes->prepend(process);
-        system.nprocess++;
     }
 #ifdef TASK_DEBUG
     kprintf("Process %u (%s) spawned @ %p\n", process->pid(), process->name().characters(), process->main_thread().tss().eip);
@@ -525,7 +521,6 @@ Process* Process::create_kernel_process(String&& name, void (*e)())
     if (process->pid() != 0) {
         InterruptDisabler disabler;
         g_processes->prepend(process);
-        system.nprocess++;
 #ifdef TASK_DEBUG
         kprintf("Kernel process %u (%s) spawned @ %p\n", process->pid(), process->name().characters(), process->main_thread().tss().eip);
 #endif
@@ -611,11 +606,6 @@ Process::Process(String&& name, uid_t uid, gid_t gid, pid_t ppid, RingLevel ring
 Process::~Process()
 {
     dbgprintf("~Process{%p} name=%s pid=%d, m_fds=%d\n", this, m_name.characters(), pid(), m_fds.size());
-    {
-        InterruptDisabler disabler;
-        system.nprocess--;
-    }
-
     delete m_main_thread;
     m_main_thread = nullptr;
 }
