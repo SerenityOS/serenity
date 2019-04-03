@@ -3,7 +3,7 @@
 #include <AK/StringBuilder.h>
 #include <LibC/errno_numbers.h>
 #include "FileSystem.h"
-#include "MemoryManager.h"
+#include <Kernel/VM/MemoryManager.h>
 #include <Kernel/LocalSocket.h>
 
 static dword s_lastFileSystemID;

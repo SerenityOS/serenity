@@ -3,7 +3,7 @@
 #include "i386.h"
 #include "Assertions.h"
 #include "Process.h"
-#include "MemoryManager.h"
+#include <Kernel/VM/MemoryManager.h>
 #include "IRQHandler.h"
 #include "PIC.h"
 #include "Scheduler.h"

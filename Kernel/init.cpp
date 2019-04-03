@@ -14,7 +14,7 @@
 #include <Kernel/Devices/RandomDevice.h>
 #include <Kernel/FileSystem/Ext2FileSystem.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
-#include "MemoryManager.h"
+#include <Kernel/VM/MemoryManager.h>
 #include <Kernel/FileSystem/ProcFS.h>
 #include "RTC.h"
 #include <Kernel/TTY/VirtualConsole.h>

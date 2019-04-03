@@ -8,7 +8,7 @@
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Devices/NullDevice.h>
 #include <Kernel/ELF/ELFLoader.h>
-#include "MemoryManager.h"
+#include <Kernel/VM/MemoryManager.h>
 #include "i8253.h"
 #include "RTC.h"
 #include <AK/StdLibExtras.h>

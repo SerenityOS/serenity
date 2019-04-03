@@ -2,7 +2,7 @@
 #include "Process.h"
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include "system.h"
-#include "MemoryManager.h"
+#include <Kernel/VM/MemoryManager.h>
 #include "StdLib.h"
 #include "i386.h"
 #include "KSyms.h"

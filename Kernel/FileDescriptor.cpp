@@ -10,7 +10,7 @@
 #include <Kernel/Socket.h>
 #include <Kernel/Process.h>
 #include <Kernel/Devices/BlockDevice.h>
-#include <Kernel/MemoryManager.h>
+#include <Kernel/VM/MemoryManager.h>
 
 Retained<FileDescriptor> FileDescriptor::create(RetainPtr<Inode>&& inode)
 {

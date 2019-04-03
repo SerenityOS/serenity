@@ -11,7 +11,11 @@ KERNEL_OBJS = \
        PIC.o \
        Syscall.o \
        Devices/IDEDiskDevice.o \
-       MemoryManager.o \
+       VM/MemoryManager.o \
+       VM/Region.o \
+       VM/VMObject.o \
+       VM/PageDirectory.o \
+       VM/PhysicalPage.o \
        Console.o \
        IRQHandler.o \
        kprintf.o \
