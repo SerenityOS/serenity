@@ -1,7 +1,7 @@
 #include <Kernel/Devices/BXVGADevice.h>
 #include <Kernel/IO.h>
 #include <Kernel/PCI.h>
-#include <Kernel/MemoryManager.h>
+#include <Kernel/VM/MemoryManager.h>
 #include <Kernel/Process.h>
 #include <LibC/errno_numbers.h>
 

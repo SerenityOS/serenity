@@ -2,7 +2,7 @@
 
 #include <Kernel/Net/NetworkAdapter.h>
 #include <Kernel/PCI.h>
-#include <Kernel/MemoryManager.h>
+#include <Kernel/VM/MemoryManager.h>
 #include <Kernel/IRQHandler.h>
 #include <AK/OwnPtr.h>
 

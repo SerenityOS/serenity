@@ -2,7 +2,7 @@
 #include <Kernel/Scheduler.h>
 #include <Kernel/system.h>
 #include <Kernel/Process.h>
-#include <Kernel/MemoryManager.h>
+#include <Kernel/VM/MemoryManager.h>
 #include <LibC/signal_numbers.h>
 
 InlineLinkedList<Thread>* g_threads;
