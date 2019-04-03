@@ -1,7 +1,6 @@
 #include "MemoryManager.h"
 #include <AK/Assertions.h>
 #include <AK/kstdio.h>
-#include <AK/kmalloc.h>
 #include "i386.h"
 #include "StdLib.h"
 #include "Process.h"

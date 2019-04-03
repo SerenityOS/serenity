@@ -3,7 +3,6 @@
 #include "FileSystem.h"
 #include <AK/FileSystemPath.h>
 #include <AK/StringBuilder.h>
-#include <AK/kmalloc.h>
 #include <AK/kstdio.h>
 #include <AK/ktime.h>
 #include "CharacterDevice.h"
