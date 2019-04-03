@@ -14,7 +14,9 @@ TaskbarWindow.o: TaskbarWindow.cpp TaskbarWindow.h ../../LibGUI/GWindow.h \
  ../../LibGUI/GWidget.h ../../LibGUI/GElapsedTimer.h ../../LibC/time.h \
  ../../LibGUI/GEvent.h ../../Kernel/KeyCode.h ../../SharedGraphics/Font.h \
  ../../AK/Badge.h TaskbarWidget.h ../../LibGUI/GFrame.h \
- ../../LibGUI/GDesktop.h ../../AK/Function.h ../../LibC/stdio.h \
+ ../../LibGUI/GDesktop.h ../../AK/Function.h ../../LibGUI/GEventLoop.h \
+ ../../AK/HashMap.h ../../AK/HashTable.h ../../AK/DoublyLinkedList.h \
+ ../../Servers/WindowServer/WSAPITypes.h ../../LibC/stdio.h \
  ../../LibC/stdarg.h ../../LibC/limits.h
 
 TaskbarWindow.h:
@@ -110,6 +112,16 @@ TaskbarWidget.h:
 ../../LibGUI/GDesktop.h:
 
 ../../AK/Function.h:
+
+../../LibGUI/GEventLoop.h:
+
+../../AK/HashMap.h:
+
+../../AK/HashTable.h:
+
+../../AK/DoublyLinkedList.h:
+
+../../Servers/WindowServer/WSAPITypes.h:
 
 ../../LibC/stdio.h:
 

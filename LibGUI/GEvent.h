@@ -36,6 +36,9 @@ public:
         WindowCloseRequest,
         ChildAdded,
         ChildRemoved,
+        WM_WindowAdded,
+        WM_WindowRemoved,
+        WM_WindowStateChanged,
     };
 
     GEvent() { }
@@ -50,6 +53,65 @@ public:
 
 private:
     Type m_type { Invalid };
+};
+
+class GWMEvent : public GEvent {
+public:
+    GWMEvent(Type type, int client_id, int window_id)
+        : GEvent(type)
+        , m_client_id(client_id)
+        , m_window_id(window_id)
+    {
+    }
+
+    int client_id() const { return m_client_id; }
+    int window_id() const { return m_window_id; }
+
+private:
+    int m_client_id { -1 };
+    int m_window_id { -1 };
+};
+
+class GWMWindowAddedEvent : public GWMEvent {
+public:
+    GWMWindowAddedEvent(int client_id, int window_id, const String& title, const Rect& rect)
+        : GWMEvent(GEvent::Type::WM_WindowAdded, client_id, window_id)
+        , m_title(title)
+        , m_rect(rect)
+    {
+    }
+
+    String title() const { return m_title; }
+    Rect rect() const { return m_rect; }
+
+private:
+    String m_title;
+    Rect m_rect;
+};
+
+class GWMWindowRemovedEvent : public GWMEvent {
+public:
+    GWMWindowRemovedEvent(int client_id, int window_id)
+        : GWMEvent(GEvent::Type::WM_WindowRemoved, client_id, window_id)
+    {
+    }
+};
+
+class GWMWindowStateChangedEvent : public GWMEvent {
+public:
+    GWMWindowStateChangedEvent(int client_id, int window_id, const String& title, const Rect& rect)
+        : GWMEvent(GEvent::Type::WM_WindowStateChanged, client_id, window_id)
+        , m_title(title)
+        , m_rect(rect)
+    {
+    }
+
+    String title() const { return m_title; }
+    Rect rect() const { return m_rect; }
+
+private:
+    String m_title;
+    Rect m_rect;
 };
 
 class QuitEvent final : public GEvent {

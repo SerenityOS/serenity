@@ -9,7 +9,7 @@ TaskbarWidget::TaskbarWidget(GWidget* parent)
     : GFrame(parent)
 {
     set_fill_with_background_color(true);
-    set_layout(make<GBoxLayout>(Orientation::Vertical));
+    set_layout(make<GBoxLayout>(Orientation::Horizontal));
     layout()->set_margins({ 0, 8, 0, 8 });
     layout()->set_spacing(8);
 

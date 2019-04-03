@@ -2,6 +2,8 @@
 #include "TaskbarWidget.h"
 #include <LibGUI/GWindow.h>
 #include <LibGUI/GDesktop.h>
+#include <LibGUI/GEventLoop.h>
+#include <WindowServer/WSAPITypes.h>
 #include <stdio.h>
 
 TaskbarWindow::TaskbarWindow()
@@ -26,4 +28,14 @@ void TaskbarWindow::on_screen_rect_change(const Rect& rect)
 {
     Rect new_rect { rect.x(), rect.bottom() - taskbar_height() + 1, rect.width(), taskbar_height() };
     set_rect(new_rect);
+}
+
+void TaskbarWindow::wm_event(GWMEvent& event)
+{
+#if 0
+    switch (event.type()) {
+    case GEvent::WM_WindowAdded:
+        m_window_list.append({})
+    }
+#endif
 }
