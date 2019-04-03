@@ -2,7 +2,6 @@
 
 #include <AK/Retainable.h>
 #include <AK/Types.h>
-#include "Limits.h"
 #include "FileDescriptor.h"
 
 class Process;

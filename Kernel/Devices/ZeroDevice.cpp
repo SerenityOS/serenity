@@ -1,5 +1,4 @@
 #include "ZeroDevice.h"
-#include "Limits.h"
 #include <AK/StdLibExtras.h>
 #include <AK/kstdio.h>
 
@@ -19,13 +18,13 @@ bool ZeroDevice::can_read(Process&) const
 
 ssize_t ZeroDevice::read(Process&, byte* buffer, ssize_t size)
 {
-    ssize_t count = min(GoodBufferSize, size);
+    ssize_t count = min(PAGE_SIZE, size);
     memset(buffer, 0, (size_t)count);
     return count;
 }
 
 ssize_t ZeroDevice::write(Process&, const byte*, ssize_t size)
 {
-    return min(GoodBufferSize, size);
+    return min(PAGE_SIZE, size);
 }
 
