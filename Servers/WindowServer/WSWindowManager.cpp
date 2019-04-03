@@ -473,7 +473,7 @@ void WSWindowManager::paint_window_frame(const WSWindow& window)
     if (!s_close_button_bitmap)
         s_close_button_bitmap = &CharacterBitmap::create_from_ascii(s_close_button_bitmap_data, s_close_button_bitmap_width, s_close_button_bitmap_height).leak_ref();
 
-    StylePainter::the().paint_button(*m_back_painter, close_button_rect, ButtonStyle::Normal, false, false);
+    StylePainter::paint_button(*m_back_painter, close_button_rect, ButtonStyle::Normal, false, false);
 
     auto x_location = close_button_rect.center();
     x_location.move_by(-(s_close_button_bitmap_width / 2), -(s_close_button_bitmap_height / 2));

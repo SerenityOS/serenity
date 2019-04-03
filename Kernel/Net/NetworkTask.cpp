@@ -12,7 +12,7 @@
 #include <Kernel/Process.h>
 #include <Kernel/Net/EtherType.h>
 #include <Kernel/Lock.h>
-
+#include <AK/Eternal.h>
 
 //#define ETHERNET_DEBUG
 #define IPV4_DEBUG
@@ -28,10 +28,8 @@ static void handle_tcp(const EthernetFrameHeader&, int frame_size);
 
 Lockable<HashMap<IPv4Address, MACAddress>>& arp_table()
 {
-    static Lockable<HashMap<IPv4Address, MACAddress>>* the;
-    if (!the)
-        the = new Lockable<HashMap<IPv4Address, MACAddress>>;
-    return *the;
+    static Eternal<Lockable<HashMap<IPv4Address, MACAddress>>> the;
+    return the;
 }
 
 void NetworkTask_main()
