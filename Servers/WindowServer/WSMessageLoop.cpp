@@ -346,6 +346,10 @@ void WSMessageLoop::on_receive_from_client(int client_id, const WSAPI_ClientMess
         break;
     case WSAPI_ClientMessage::Type::SetWindowOverrideCursor:
         post_message(client, make<WSAPISetWindowOverrideCursorRequest>(client_id, message.window_id, (WSStandardCursor)message.cursor.cursor));
+        break;
+    case WSAPI_ClientMessage::Type::WM_SetActiveWindow:
+        post_message(client, make<WSWMAPISetActiveWindowRequest>(client_id, message.wm.client_id, message.wm.window_id));
+        break;
     default:
         break;
     }

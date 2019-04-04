@@ -519,6 +519,22 @@ void WSClientConnection::handle_request(const WSAPISetWindowOverrideCursorReques
     window.set_override_cursor(WSCursor::create(request.cursor()));
 }
 
+void WSClientConnection::handle_request(const WSWMAPISetActiveWindowRequest& request)
+{
+    auto* client = WSClientConnection::from_client_id(request.target_client_id());
+    if (!client) {
+        post_error("Bad client ID");
+        return;
+    }
+    auto it = client->m_windows.find(request.target_window_id());
+    if (it == client->m_windows.end()) {
+        post_error("Bad window ID");
+        return;
+    }
+    auto& window = *(*it).value;
+    WSWindowManager::the().set_active_window(&window);
+}
+
 void WSClientConnection::on_request(const WSAPIClientRequest& request)
 {
     switch (request.type()) {
@@ -572,6 +588,8 @@ void WSClientConnection::on_request(const WSAPIClientRequest& request)
         return handle_request(static_cast<const WSAPIGetWallpaperRequest&>(request));
     case WSMessage::APISetWindowOverrideCursorRequest:
         return handle_request(static_cast<const WSAPISetWindowOverrideCursorRequest&>(request));
+    case WSMessage::WMAPISetActiveWindowRequest:
+        return handle_request(static_cast<const WSWMAPISetActiveWindowRequest&>(request));
     default:
         break;
     }
