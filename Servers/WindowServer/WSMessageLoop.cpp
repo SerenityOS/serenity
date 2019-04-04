@@ -254,6 +254,10 @@ static WSWindowType from_api(WSAPI_WindowType api_type)
     switch (api_type) {
     case WSAPI_WindowType::Normal:
         return WSWindowType::Normal;
+    case WSAPI_WindowType::Menu:
+        return WSWindowType::Menu;
+    case WSAPI_WindowType::WindowSwitcher:
+        return WSWindowType::WindowSwitcher;
     case WSAPI_WindowType::Taskbar:
         return WSWindowType::Taskbar;
     default:

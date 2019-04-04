@@ -23,6 +23,8 @@ struct WSAPI_Rect {
 enum WSAPI_WindowType {
     Invalid = 0,
     Normal,
+    Menu,
+    WindowSwitcher,
     Taskbar,
 };
 
@@ -111,6 +113,7 @@ struct WSAPI_ServerMessage {
             int window_id;
             WSAPI_Rect rect;
             bool is_active;
+            WSAPI_WindowType window_type;
         } wm;
         struct {
             WSAPI_Rect rect;

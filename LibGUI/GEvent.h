@@ -6,6 +6,7 @@
 #include <AK/Types.h>
 #include <AK/WeakPtr.h>
 #include <Kernel/KeyCode.h>
+#include <LibGUI/GWindowType.h>
 
 class GObject;
 
@@ -74,22 +75,25 @@ private:
 
 class GWMWindowAddedEvent : public GWMEvent {
 public:
-    GWMWindowAddedEvent(int client_id, int window_id, const String& title, const Rect& rect, bool is_active)
+    GWMWindowAddedEvent(int client_id, int window_id, const String& title, const Rect& rect, bool is_active, GWindowType window_type)
         : GWMEvent(GEvent::Type::WM_WindowAdded, client_id, window_id)
         , m_title(title)
         , m_rect(rect)
         , m_active(is_active)
+        , m_window_type(window_type)
     {
     }
 
     String title() const { return m_title; }
     Rect rect() const { return m_rect; }
     bool is_active() const { return m_active; }
+    GWindowType window_type() const { return m_window_type; }
 
 private:
     String m_title;
     Rect m_rect;
     bool m_active;
+    GWindowType m_window_type;
 };
 
 class GWMWindowRemovedEvent : public GWMEvent {
@@ -102,22 +106,25 @@ public:
 
 class GWMWindowStateChangedEvent : public GWMEvent {
 public:
-    GWMWindowStateChangedEvent(int client_id, int window_id, const String& title, const Rect& rect, bool is_active)
+    GWMWindowStateChangedEvent(int client_id, int window_id, const String& title, const Rect& rect, bool is_active, GWindowType window_type)
         : GWMEvent(GEvent::Type::WM_WindowStateChanged, client_id, window_id)
         , m_title(title)
         , m_rect(rect)
         , m_active(is_active)
+        , m_window_type(window_type)
     {
     }
 
     String title() const { return m_title; }
     Rect rect() const { return m_rect; }
     bool is_active() const { return m_active; }
+    GWindowType window_type() const { return m_window_type; }
 
 private:
     String m_title;
     Rect m_rect;
     bool m_active;
+    GWindowType m_window_type;
 };
 
 class QuitEvent final : public GEvent {
