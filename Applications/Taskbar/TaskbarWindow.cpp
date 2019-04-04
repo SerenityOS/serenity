@@ -39,7 +39,7 @@ GButton* TaskbarWindow::create_button()
 {
     auto* button = new GButton(main_widget());
     button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
-    button->set_preferred_size({ 100, 22 });
+    button->set_preferred_size({ 140, 22 });
     button->set_checkable(true);
     button->set_text_alignment(TextAlignment::CenterLeft);
     return button;
