@@ -45,6 +45,11 @@ GButton* TaskbarWindow::create_button()
     return button;
 }
 
+static bool should_include_window(GWindowType window_type)
+{
+    return window_type == GWindowType::Normal;
+}
+
 void TaskbarWindow::wm_event(GWMEvent& event)
 {
     WindowIdentifier identifier { event.client_id(), event.window_id() };
@@ -58,6 +63,8 @@ void TaskbarWindow::wm_event(GWMEvent& event)
             added_event.rect().to_string().characters(),
             added_event.is_active()
         );
+        if (!should_include_window(added_event.window_type()))
+            break;
         auto& window = m_window_list.ensure_window(identifier);
         window.set_title(added_event.title());
         window.set_rect(added_event.rect());
@@ -86,6 +93,8 @@ void TaskbarWindow::wm_event(GWMEvent& event)
             changed_event.rect().to_string().characters(),
             changed_event.is_active()
         );
+        if (!should_include_window(changed_event.window_type()))
+            break;
         auto& window = m_window_list.ensure_window(identifier);
         window.set_title(changed_event.title());
         window.set_rect(changed_event.rect());

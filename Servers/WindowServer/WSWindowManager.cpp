@@ -496,14 +496,14 @@ void WSWindowManager::add_window(WSWindow& window)
     if (window.listens_to_wm_events()) {
         for_each_window([&window] (WSWindow& other_window) {
             if (&window != &other_window && other_window.client())
-                WSMessageLoop::the().post_message(window, make<WSWMWindowAddedEvent>(other_window.client()->client_id(), other_window.window_id(), other_window.title(), other_window.rect(), other_window.is_active()));
+                WSMessageLoop::the().post_message(window, make<WSWMWindowAddedEvent>(other_window.client()->client_id(), other_window.window_id(), other_window.title(), other_window.rect(), other_window.is_active(), other_window.type()));
             return IterationDecision::Continue;
         });
     }
 
     for_each_window_listening_to_wm_events([&window] (WSWindow& listener) {
         if (window.client())
-            WSMessageLoop::the().post_message(listener, make<WSWMWindowAddedEvent>(window.client()->client_id(), window.window_id(), window.title(), window.rect(), window.is_active()));
+            WSMessageLoop::the().post_message(listener, make<WSWMWindowAddedEvent>(window.client()->client_id(), window.window_id(), window.title(), window.rect(), window.is_active(), window.type()));
         return IterationDecision::Continue;
     });
 }
@@ -545,7 +545,7 @@ void WSWindowManager::tell_wm_listeners_window_state_changed(WSWindow& window)
 {
     for_each_window_listening_to_wm_events([&window] (WSWindow& listener) {
         if (window.client())
-            WSMessageLoop::the().post_message(listener, make<WSWMWindowStateChangedEvent>(window.client()->client_id(), window.window_id(), window.title(), window.rect(), window.is_active()));
+            WSMessageLoop::the().post_message(listener, make<WSWMWindowStateChangedEvent>(window.client()->client_id(), window.window_id(), window.title(), window.rect(), window.is_active(), window.type()));
         return IterationDecision::Continue;
     });
 }

@@ -1,6 +1,7 @@
 #pragma once
 
-#include "GObject.h"
+#include <LibGUI/GObject.h>
+#include <LibGUI/GWindowType.h>
 #include <SharedGraphics/Rect.h>
 #include <SharedGraphics/GraphicsBitmap.h>
 #include <AK/AKString.h>
@@ -15,12 +16,6 @@ enum class GStandardCursor {
     IBeam,
     ResizeHorizontal,
     ResizeVertical,
-};
-
-enum class GWindowType {
-    Invalid = 0,
-    Normal,
-    Taskbar,
 };
 
 class GWindow : public GObject {
