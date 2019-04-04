@@ -146,6 +146,7 @@ void WSWindow::on_message(const WSMessage& message)
         server_message.type = WSAPI_ServerMessage::Type::WM_WindowAdded;
         server_message.wm.client_id = added_event.client_id();
         server_message.wm.window_id = added_event.window_id();
+        server_message.wm.is_active = added_event.is_active();
         ASSERT(added_event.title().length() < sizeof(server_message.text));
         memcpy(server_message.text, added_event.title().characters(), added_event.title().length());
         server_message.text_length = added_event.title().length();
@@ -164,6 +165,7 @@ void WSWindow::on_message(const WSMessage& message)
         server_message.type = WSAPI_ServerMessage::Type::WM_WindowStateChanged;
         server_message.wm.client_id = changed_event.client_id();
         server_message.wm.window_id = changed_event.window_id();
+        server_message.wm.is_active = changed_event.is_active();
         ASSERT(changed_event.title().length() < sizeof(server_message.text));
         memcpy(server_message.text, changed_event.title().characters(), changed_event.title().length());
         server_message.text_length = changed_event.title().length();

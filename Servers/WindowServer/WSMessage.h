@@ -605,19 +605,22 @@ private:
 
 class WSWMWindowAddedEvent : public WSWMEvent {
 public:
-    WSWMWindowAddedEvent(int client_id, int window_id, const String& title, const Rect& rect)
+    WSWMWindowAddedEvent(int client_id, int window_id, const String& title, const Rect& rect, bool is_active)
         : WSWMEvent(WSMessage::WM_WindowAdded, client_id, window_id)
         , m_title(title)
         , m_rect(rect)
+        , m_active(is_active)
     {
     }
 
     String title() const { return m_title; }
     Rect rect() const { return m_rect; }
+    bool is_active() const { return m_active; }
 
 private:
     String m_title;
     Rect m_rect;
+    bool m_active;
 };
 
 class WSWMWindowRemovedEvent : public WSWMEvent {
@@ -630,17 +633,20 @@ public:
 
 class WSWMWindowStateChangedEvent : public WSWMEvent {
 public:
-    WSWMWindowStateChangedEvent(int client_id, int window_id, const String& title, const Rect& rect)
+    WSWMWindowStateChangedEvent(int client_id, int window_id, const String& title, const Rect& rect, bool is_active)
         : WSWMEvent(WSMessage::WM_WindowStateChanged, client_id, window_id)
         , m_title(title)
         , m_rect(rect)
+        , m_active(is_active)
     {
     }
 
     String title() const { return m_title; }
     Rect rect() const { return m_rect; }
+    bool is_active() const { return m_active; }
 
 private:
     String m_title;
     Rect m_rect;
+    bool m_active;
 };

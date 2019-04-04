@@ -19,6 +19,10 @@ TaskbarWindow::TaskbarWindow()
 
     auto* widget = new TaskbarWidget(m_window_list);
     set_main_widget(widget);
+
+    m_window_list.aid_create_button = [this] {
+        return create_button();
+    };
 }
 
 TaskbarWindow::~TaskbarWindow()
@@ -31,25 +35,34 @@ void TaskbarWindow::on_screen_rect_change(const Rect& rect)
     set_rect(new_rect);
 }
 
+GButton* TaskbarWindow::create_button()
+{
+    auto* button = new GButton(main_widget());
+    button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
+    button->set_preferred_size({ 100, 22 });
+    button->set_checkable(true);
+    return button;
+}
+
 void TaskbarWindow::wm_event(GWMEvent& event)
 {
     WindowIdentifier identifier { event.client_id(), event.window_id() };
     switch (event.type()) {
     case GEvent::WM_WindowAdded: {
         auto& added_event = static_cast<GWMWindowAddedEvent&>(event);
-        printf("WM_WindowAdded: client_id=%d, window_id=%d, title=%s, rect=%s\n",
+        printf("WM_WindowAdded: client_id=%d, window_id=%d, title=%s, rect=%s, is_active=%u\n",
             added_event.client_id(),
             added_event.window_id(),
             added_event.title().characters(),
-            added_event.rect().to_string().characters()
+            added_event.rect().to_string().characters(),
+            added_event.is_active()
         );
         auto& window = m_window_list.ensure_window(identifier);
         window.set_title(added_event.title());
         window.set_rect(added_event.rect());
-        window.set_button(new GButton(main_widget()));
-        window.button()->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
-        window.button()->set_preferred_size({ 100, 22 });
+        window.set_active(added_event.is_active());
         window.button()->set_caption(window.title());
+        window.button()->set_checked(window.is_active());
         update();
         break;
     }
@@ -65,16 +78,19 @@ void TaskbarWindow::wm_event(GWMEvent& event)
     }
     case GEvent::WM_WindowStateChanged: {
         auto& changed_event = static_cast<GWMWindowStateChangedEvent&>(event);
-        printf("WM_WindowStateChanged: client_id=%d, window_id=%d, title=%s, rect=%s\n",
+        printf("WM_WindowStateChanged: client_id=%d, window_id=%d, title=%s, rect=%s, is_active=%u\n",
             changed_event.client_id(),
             changed_event.window_id(),
             changed_event.title().characters(),
-            changed_event.rect().to_string().characters()
+            changed_event.rect().to_string().characters(),
+            changed_event.is_active()
         );
         auto& window = m_window_list.ensure_window(identifier);
         window.set_title(changed_event.title());
         window.set_rect(changed_event.rect());
+        window.set_active(changed_event.is_active());
         window.button()->set_caption(changed_event.title());
+        window.button()->set_checked(changed_event.is_active());
         break;
     }
     default:

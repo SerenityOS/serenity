@@ -74,19 +74,22 @@ private:
 
 class GWMWindowAddedEvent : public GWMEvent {
 public:
-    GWMWindowAddedEvent(int client_id, int window_id, const String& title, const Rect& rect)
+    GWMWindowAddedEvent(int client_id, int window_id, const String& title, const Rect& rect, bool is_active)
         : GWMEvent(GEvent::Type::WM_WindowAdded, client_id, window_id)
         , m_title(title)
         , m_rect(rect)
+        , m_active(is_active)
     {
     }
 
     String title() const { return m_title; }
     Rect rect() const { return m_rect; }
+    bool is_active() const { return m_active; }
 
 private:
     String m_title;
     Rect m_rect;
+    bool m_active;
 };
 
 class GWMWindowRemovedEvent : public GWMEvent {
@@ -99,19 +102,22 @@ public:
 
 class GWMWindowStateChangedEvent : public GWMEvent {
 public:
-    GWMWindowStateChangedEvent(int client_id, int window_id, const String& title, const Rect& rect)
+    GWMWindowStateChangedEvent(int client_id, int window_id, const String& title, const Rect& rect, bool is_active)
         : GWMEvent(GEvent::Type::WM_WindowStateChanged, client_id, window_id)
         , m_title(title)
         , m_rect(rect)
+        , m_active(is_active)
     {
     }
 
     String title() const { return m_title; }
     Rect rect() const { return m_rect; }
+    bool is_active() const { return m_active; }
 
 private:
     String m_title;
     Rect m_rect;
+    bool m_active;
 };
 
 class QuitEvent final : public GEvent {

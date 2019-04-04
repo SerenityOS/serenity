@@ -18,10 +18,6 @@
 #include <SharedGraphics/PNGLoader.h>
 #include "WSCursor.h"
 
-#ifdef KERNEL
-#include <Kernel/ProcFS.h>
-#endif
-
 //#define DEBUG_COUNTERS
 //#define DEBUG_WID_IN_TITLE_BAR
 //#define RESIZE_DEBUG
@@ -510,7 +506,7 @@ void WSWindowManager::add_window(WSWindow& window)
 
     for_each_window_listening_to_wm_events([&window] (WSWindow& listener) {
         if (window.client())
-            WSMessageLoop::the().post_message(listener, make<WSWMWindowAddedEvent>(window.client()->client_id(), window.window_id(), window.title(), window.rect()));
+            WSMessageLoop::the().post_message(listener, make<WSWMWindowAddedEvent>(window.client()->client_id(), window.window_id(), window.title(), window.rect(), window.is_active()));
         return IterationDecision::Continue;
     });
 }
@@ -548,6 +544,15 @@ void WSWindowManager::remove_window(WSWindow& window)
     });
 }
 
+void WSWindowManager::tell_wm_listeners_window_state_changed(WSWindow& window)
+{
+    for_each_window_listening_to_wm_events([&window] (WSWindow& listener) {
+        if (window.client())
+            WSMessageLoop::the().post_message(listener, make<WSWMWindowStateChangedEvent>(window.client()->client_id(), window.window_id(), window.title(), window.rect(), window.is_active()));
+        return IterationDecision::Continue;
+    });
+}
+
 void WSWindowManager::notify_title_changed(WSWindow& window)
 {
     dbgprintf("[WM] WSWindow{%p} title set to '%s'\n", &window, window.title().characters());
@@ -555,11 +560,7 @@ void WSWindowManager::notify_title_changed(WSWindow& window)
     if (m_switcher.is_visible())
         m_switcher.refresh();
 
-    for_each_window_listening_to_wm_events([&window] (WSWindow& listener) {
-        if (window.client())
-            WSMessageLoop::the().post_message(listener, make<WSWMWindowStateChangedEvent>(window.client()->client_id(), window.window_id(), window.title(), window.rect()));
-        return IterationDecision::Continue;
-    });
+    tell_wm_listeners_window_state_changed(window);
 }
 
 void WSWindowManager::notify_rect_changed(WSWindow& window, const Rect& old_rect, const Rect& new_rect)
@@ -572,11 +573,7 @@ void WSWindowManager::notify_rect_changed(WSWindow& window, const Rect& old_rect
     if (m_switcher.is_visible() && window.type() != WSWindowType::WindowSwitcher)
         m_switcher.refresh();
 
-    for_each_window_listening_to_wm_events([&window] (WSWindow& listener) {
-        if (window.client())
-            WSMessageLoop::the().post_message(listener, make<WSWMWindowStateChangedEvent>(window.client()->client_id(), window.window_id(), window.title(), window.rect()));
-        return IterationDecision::Continue;
-    });
+    tell_wm_listeners_window_state_changed(window);
 }
 
 void WSWindowManager::handle_menu_mouse_event(WSMenu& menu, const WSMouseEvent& event)
@@ -1139,7 +1136,8 @@ void WSWindowManager::set_active_window(WSWindow* window)
     if (window == m_active_window.ptr())
         return;
 
-    if (auto* previously_active_window = m_active_window.ptr()) {
+    auto* previously_active_window = m_active_window.ptr();
+    if (previously_active_window) {
         WSMessageLoop::the().post_message(*previously_active_window, make<WSMessage>(WSMessage::WindowDeactivated));
         invalidate(*previously_active_window);
     }
@@ -1151,6 +1149,9 @@ void WSWindowManager::set_active_window(WSWindow* window)
         auto* client = window->client();
         ASSERT(client);
         set_current_menubar(client->app_menubar());
+        if (previously_active_window)
+            tell_wm_listeners_window_state_changed(*previously_active_window);
+        tell_wm_listeners_window_state_changed(*m_active_window);
     }
 }
 
