@@ -493,6 +493,14 @@ void WSWindowManager::add_window(WSWindow& window)
     if (m_switcher.is_visible() && window.type() != WSWindowType::WindowSwitcher)
         m_switcher.refresh();
 
+    if (window.listens_to_wm_events()) {
+        for_each_window([&window] (WSWindow& other_window) {
+            if (&window != &other_window && other_window.client())
+                WSMessageLoop::the().post_message(window, make<WSWMWindowAddedEvent>(other_window.client()->client_id(), other_window.window_id(), other_window.title(), other_window.rect(), other_window.is_active()));
+            return IterationDecision::Continue;
+        });
+    }
+
     for_each_window_listening_to_wm_events([&window] (WSWindow& listener) {
         if (window.client())
             WSMessageLoop::the().post_message(listener, make<WSWMWindowAddedEvent>(window.client()->client_id(), window.window_id(), window.title(), window.rect(), window.is_active()));

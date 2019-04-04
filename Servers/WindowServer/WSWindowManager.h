@@ -113,6 +113,7 @@ private:
     template<typename Callback> IterationDecision for_each_visible_window_from_front_to_back(Callback);
     template<typename Callback> IterationDecision for_each_visible_window_from_back_to_front(Callback);
     template<typename Callback> void for_each_window_listening_to_wm_events(Callback);
+    template<typename Callback> void for_each_window(Callback);
     template<typename Callback> void for_each_active_menubar_menu(Callback);
     void close_current_menu();
     virtual void on_message(const WSMessage&) override;
@@ -274,6 +275,15 @@ void WSWindowManager::for_each_window_listening_to_wm_events(Callback callback)
     for (auto* window = m_windows_in_order.tail(); window; window = window->prev()) {
         if (!window->listens_to_wm_events())
             continue;
+        if (callback(*window) == IterationDecision::Abort)
+            return;
+    }
+}
+
+template<typename Callback>
+void WSWindowManager::for_each_window(Callback callback)
+{
+    for (auto* window = m_windows_in_order.tail(); window; window = window->prev()) {
         if (callback(*window) == IterationDecision::Abort)
             return;
     }
