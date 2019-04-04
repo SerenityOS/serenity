@@ -21,12 +21,20 @@ void GButton::set_caption(const String& caption)
     update();
 }
 
+void GButton::set_checked(bool checked)
+{
+    if (m_checked == checked)
+        return;
+    m_checked = checked;
+    update();
+}
+
 void GButton::paint_event(GPaintEvent& event)
 {
     GPainter painter(*this);
     painter.add_clip_rect(event.rect());
 
-    StylePainter::paint_button(painter, rect(), m_button_style, m_being_pressed, m_hovered);
+    StylePainter::paint_button(painter, rect(), m_button_style, m_being_pressed, m_hovered, m_checkable && m_checked);
 
     if (!caption().is_empty() || m_icon) {
         auto content_rect = rect();
@@ -35,12 +43,10 @@ void GButton::paint_event(GPaintEvent& event)
             content_rect.move_by(1, 1);
             icon_location.move_by(1, 1);
         }
-        if (m_icon) {
+        if (m_icon)
             painter.blit(icon_location, *m_icon, m_icon->rect());
-            painter.draw_text(content_rect, caption(), TextAlignment::Center, Color::Black);
-        } else {
-            painter.draw_text(content_rect, caption(), TextAlignment::Center, Color::Black);
-        }
+        auto& font = (m_checkable && m_checked) ? Font::default_bold_font() : this->font();
+        painter.draw_text(content_rect, caption(), font, TextAlignment::Center, Color::Black);
     }
 }
 

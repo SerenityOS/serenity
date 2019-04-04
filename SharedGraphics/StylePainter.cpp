@@ -1,17 +1,20 @@
 #include <SharedGraphics/StylePainter.h>
 #include <LibGUI/GPainter.h>
 
-static void paint_button_new(Painter& painter, const Rect& rect, bool pressed)
+static void paint_button_new(Painter& painter, const Rect& rect, bool pressed, bool checked)
 {
     Color button_color = Color::from_rgb(0xc0c0c0);
     Color highlight_color2 = Color::from_rgb(0xdfdfdf);
     Color shadow_color1 = Color::from_rgb(0x808080);
     Color shadow_color2 = Color::from_rgb(0x404040);
 
+    if (checked)
+        button_color = Color::from_rgb(0xd6d2ce);
+
     PainterStateSaver saver(painter);
     painter.translate(rect.location());
 
-    if (pressed) {
+    if (pressed || checked) {
         // Base
         painter.fill_rect({ 1, 1, rect.width() - 2, rect.height() - 2 }, button_color);
 
@@ -45,10 +48,10 @@ static void paint_button_new(Painter& painter, const Rect& rect, bool pressed)
     }
 }
 
-void StylePainter::paint_button(Painter& painter, const Rect& rect, ButtonStyle button_style, bool pressed, bool hovered)
+void StylePainter::paint_button(Painter& painter, const Rect& rect, ButtonStyle button_style, bool pressed, bool hovered, bool checked)
 {
     if (button_style == ButtonStyle::Normal)
-        return paint_button_new(painter, rect, pressed);
+        return paint_button_new(painter, rect, pressed, checked);
 
     Color button_color = Color::LightGray;
     Color highlight_color = Color::White;
