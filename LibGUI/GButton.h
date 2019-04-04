@@ -5,6 +5,7 @@
 #include <AK/AKString.h>
 #include <AK/Function.h>
 #include <SharedGraphics/GraphicsBitmap.h>
+#include <SharedGraphics/TextAlignment.h>
 
 class GButton : public GWidget {
 public:
@@ -23,6 +24,9 @@ public:
 
     bool is_checked() const { return m_checked; }
     void set_checked(bool);
+
+    void set_text_alignment(TextAlignment text_alignment) { m_text_alignment = text_alignment; }
+    TextAlignment text_alignment() const { return m_text_alignment; }
 
     Function<void(GButton&)> on_click;
 
@@ -44,6 +48,7 @@ private:
     String m_caption;
     RetainPtr<GraphicsBitmap> m_icon;
     ButtonStyle m_button_style { ButtonStyle::Normal };
+    TextAlignment m_text_alignment { TextAlignment::Center };
     bool m_being_pressed { false };
     bool m_hovered { false };
     bool m_checkable { false };
