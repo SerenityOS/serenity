@@ -61,6 +61,7 @@ public:
     byte max_glyph_width() const { return m_max_glyph_width; }
     byte glyph_spacing() const { return m_fixed_width ? 0 : 1; }
     int width(const String& string) const;
+    int width(const char*, int) const;
 
     String name() const { return m_name; }
     void set_name(const String& name) { m_name = name; }
