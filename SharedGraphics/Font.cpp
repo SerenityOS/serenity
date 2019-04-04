@@ -160,15 +160,20 @@ bool Font::write_to_file(const String& path)
 
 int Font::width(const String& string) const
 {
-    if (string.is_empty())
+    return width(string.characters(), string.length());
+}
+
+int Font::width(const char* characters, int length) const
+{
+    if (!length)
         return 0;
 
     if (m_fixed_width)
-        return string.length() * m_glyph_width;
+        return length * m_glyph_width;
 
     int width = 0;
-    for (int i = 0; i < string.length(); ++i)
-        width += glyph_width(string[i]) + 1;
+    for (int i = 0; i < length; ++i)
+        width += glyph_width(characters[i]) + 1;
 
     return width - 1;
 }
