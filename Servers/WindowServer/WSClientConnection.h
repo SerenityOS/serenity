@@ -68,6 +68,7 @@ private:
     void handle_request(const WSAPISetWallpaperRequest&);
     void handle_request(const WSAPIGetWallpaperRequest&);
     void handle_request(const WSAPISetWindowOverrideCursorRequest&);
+    void handle_request(const WSWMAPISetActiveWindowRequest&);
 
     void post_error(const String&);
 

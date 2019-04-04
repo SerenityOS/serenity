@@ -185,6 +185,7 @@ struct WSAPI_ClientMessage {
         SetWallpaper,
         GetWallpaper,
         SetWindowOverrideCursor,
+        WM_SetActiveWindow,
     };
     Type type { Invalid };
     int window_id { -1 };
@@ -196,6 +197,10 @@ struct WSAPI_ClientMessage {
         struct {
             int client_pid;
         } greeting;
+        struct {
+            int client_id;
+            int window_id;
+        } wm;
         struct {
             int menubar_id;
             int menu_id;

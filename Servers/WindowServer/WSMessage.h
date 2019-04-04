@@ -56,6 +56,7 @@ public:
         APISetWallpaperRequest,
         APIGetWallpaperRequest,
         APISetWindowOverrideCursorRequest,
+        WMAPISetActiveWindowRequest,
         __End_API_Client_Requests,
     };
 
@@ -99,6 +100,23 @@ public:
 
 private:
     int m_client_id { 0 };
+};
+
+class WSWMAPISetActiveWindowRequest : public WSAPIClientRequest {
+public:
+    WSWMAPISetActiveWindowRequest(int client_id, int target_client_id, int target_window_id)
+        : WSAPIClientRequest(WSMessage::WMAPISetActiveWindowRequest, client_id)
+        , m_target_client_id(target_client_id)
+        , m_target_window_id(target_window_id)
+    {
+    }
+
+    int target_client_id() const { return m_target_client_id; }
+    int target_window_id() const { return m_target_window_id; }
+
+private:
+    int m_target_client_id;
+    int m_target_window_id;
 };
 
 class WSAPISetGlobalCursorTrackingRequest : public WSAPIClientRequest {

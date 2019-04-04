@@ -96,6 +96,8 @@ public:
     const WSCursor& disallowed_cursor() const { return *m_disallowed_cursor; }
     const WSCursor& move_cursor() const { return *m_move_cursor; }
 
+    void set_active_window(WSWindow*);
+
 private:
     void process_mouse_event(const WSMouseEvent&, WSWindow*& event_window);
     bool process_ongoing_window_resize(const WSMouseEvent&, WSWindow*& event_window);
@@ -106,7 +108,6 @@ private:
     void start_window_resize(WSWindow&, const WSMouseEvent&);
     void start_window_drag(WSWindow&, const WSMouseEvent&);
     void handle_client_request(const WSAPIClientRequest&);
-    void set_active_window(WSWindow*);
     void set_hovered_window(WSWindow*);
     template<typename Callback> IterationDecision for_each_visible_window_of_type_from_back_to_front(WSWindowType, Callback);
     template<typename Callback> IterationDecision for_each_visible_window_of_type_from_front_to_back(WSWindowType, Callback);
