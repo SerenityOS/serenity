@@ -57,11 +57,15 @@ public:
     GButton* button() { return m_button; }
     void set_button(GButton* button) { m_button = button; }
 
+    void set_active(bool active) { m_active = active; }
+    bool is_active() const { return m_active; }
+
 private:
     WindowIdentifier m_identifier;
     String m_title;
     Rect m_rect;
     GButton* m_button { nullptr };
+    bool m_active { false };
 };
 
 class WindowList {
@@ -74,6 +78,8 @@ public:
 
     Window& ensure_window(const WindowIdentifier&);
     void remove_window(const WindowIdentifier&);
+
+    Function<GButton*()> aid_create_button;
 
 private:
     HashMap<WindowIdentifier, OwnPtr<Window>> m_windows;

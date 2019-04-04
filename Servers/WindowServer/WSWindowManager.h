@@ -120,6 +120,7 @@ private:
     void paint_window_frame(const WSWindow&);
     void flip_buffers();
     void tick_clock();
+    void tell_wm_listeners_window_state_changed(WSWindow&);
 
     WSScreen& m_screen;
     Rect m_screen_rect;

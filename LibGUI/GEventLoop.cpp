@@ -271,9 +271,9 @@ void GEventLoop::handle_menu_event(const WSAPI_ServerMessage& event)
 void GEventLoop::handle_wm_event(const WSAPI_ServerMessage& event, GWindow& window)
 {
     if (event.type == WSAPI_ServerMessage::WM_WindowAdded)
-        return post_event(window, make<GWMWindowAddedEvent>(event.wm.client_id, event.wm.window_id, String(event.text, event.text_length), event.wm.rect));
+        return post_event(window, make<GWMWindowAddedEvent>(event.wm.client_id, event.wm.window_id, String(event.text, event.text_length), event.wm.rect, event.wm.is_active));
     if (event.type == WSAPI_ServerMessage::WM_WindowStateChanged)
-        return post_event(window, make<GWMWindowStateChangedEvent>(event.wm.client_id, event.wm.window_id, String(event.text, event.text_length), event.wm.rect));
+        return post_event(window, make<GWMWindowStateChangedEvent>(event.wm.client_id, event.wm.window_id, String(event.text, event.text_length), event.wm.rect, event.wm.is_active));
     if (event.type == WSAPI_ServerMessage::WM_WindowRemoved)
         return post_event(window, make<GWMWindowRemovedEvent>(event.wm.client_id, event.wm.window_id));
     ASSERT_NOT_REACHED();

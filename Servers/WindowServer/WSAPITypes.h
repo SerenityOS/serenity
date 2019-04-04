@@ -110,6 +110,7 @@ struct WSAPI_ServerMessage {
             int client_id;
             int window_id;
             WSAPI_Rect rect;
+            bool is_active;
         } wm;
         struct {
             WSAPI_Rect rect;

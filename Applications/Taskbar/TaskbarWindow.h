@@ -13,6 +13,7 @@ public:
 
 private:
     void on_screen_rect_change(const Rect&);
+    GButton* create_button();
 
     virtual void wm_event(GWMEvent&) override;
 
