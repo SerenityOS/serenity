@@ -874,8 +874,8 @@ void WSWindowManager::process_mouse_event(const WSMouseEvent& event, WSWindow*& 
 void WSWindowManager::compose()
 {
     auto dirty_rects = move(m_dirty_rects);
-    dirty_rects.add(m_last_cursor_rect);
-    dirty_rects.add(current_cursor_rect());
+    dirty_rects.add(Rect::intersection(m_last_cursor_rect, m_screen_rect));
+    dirty_rects.add(Rect::intersection(current_cursor_rect(), m_screen_rect));
 #ifdef DEBUG_COUNTERS
     dbgprintf("[WM] compose #%u (%u rects)\n", ++m_compose_count, dirty_rects.rects().size());
 #endif
