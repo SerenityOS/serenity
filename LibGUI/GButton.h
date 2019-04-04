@@ -18,6 +18,12 @@ public:
     const GraphicsBitmap* icon() const { return m_icon.ptr(); }
     GraphicsBitmap* icon() { return m_icon.ptr(); }
 
+    bool is_checkable() const { return m_checkable; }
+    void set_checkable(bool checkable) { m_checkable = checkable; }
+
+    bool is_checked() const { return m_checked; }
+    void set_checked(bool);
+
     Function<void(GButton&)> on_click;
 
     void set_button_style(ButtonStyle style) { m_button_style = style; }
@@ -40,5 +46,7 @@ private:
     ButtonStyle m_button_style { ButtonStyle::Normal };
     bool m_being_pressed { false };
     bool m_hovered { false };
+    bool m_checkable { false };
+    bool m_checked { false };
 };
 
