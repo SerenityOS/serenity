@@ -532,7 +532,7 @@ void WSClientConnection::handle_request(const WSWMAPISetActiveWindowRequest& req
         return;
     }
     auto& window = *(*it).value;
-    WSWindowManager::the().set_active_window(&window);
+    WSWindowManager::the().move_to_front_and_make_active(window);
 }
 
 void WSClientConnection::on_request(const WSAPIClientRequest& request)
