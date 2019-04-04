@@ -41,6 +41,7 @@ GButton* TaskbarWindow::create_button()
     button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
     button->set_preferred_size({ 100, 22 });
     button->set_checkable(true);
+    button->set_text_alignment(TextAlignment::CenterLeft);
     return button;
 }
 
