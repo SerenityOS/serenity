@@ -19,7 +19,6 @@
 #include "WSCursor.h"
 
 //#define DEBUG_COUNTERS
-//#define DEBUG_WID_IN_TITLE_BAR
 //#define RESIZE_DEBUG
 
 static void get_cpu_usage(unsigned& busy, unsigned& idle);
@@ -483,16 +482,6 @@ void WSWindowManager::paint_window_frame(const WSWindow& window)
     auto x_location = close_button_rect.center();
     x_location.move_by(-(s_close_button_bitmap_width / 2), -(s_close_button_bitmap_height / 2));
     m_back_painter->draw_bitmap(x_location, *s_close_button_bitmap, Color::Black);
-
-#ifdef DEBUG_WID_IN_TITLE_BAR
-    Color metadata_color(96, 96, 96);
-    m_back_painter->draw_text(
-        titlebar_inner_rect,
-        String::format("%d:%d", window.pid(), window.window_id()),
-        TextAlignment::CenterRight,
-        metadata_color
-    );
-#endif
 }
 
 void WSWindowManager::add_window(WSWindow& window)
