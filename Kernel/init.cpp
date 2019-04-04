@@ -99,6 +99,7 @@ VFS* vfs;
         hang();
     }
     window_server_process->set_priority(Process::HighPriority);
+    Process::create_user_process("/bin/Taskbar", (uid_t)100, (gid_t)100, (pid_t)0, error);
     //Process::create_user_process("/bin/sh", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, move(environment), tty0);
     Process::create_user_process("/bin/Terminal", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, { }, tty0);
 #ifdef SPAWN_GUITEST2
