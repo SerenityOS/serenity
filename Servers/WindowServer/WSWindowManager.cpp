@@ -362,7 +362,7 @@ void WSWindowManager::remove_window(WSWindow& window)
 void WSWindowManager::tell_wm_listener_about_window(WSWindow& listener, WSWindow& window)
 {
     if (window.client())
-        WSMessageLoop::the().post_message(listener, make<WSWMWindowStateChangedEvent>(window.client()->client_id(), window.window_id(), window.title(), window.rect(), window.is_active(), window.type()));
+        WSMessageLoop::the().post_message(listener, make<WSWMWindowStateChangedEvent>(window.client()->client_id(), window.window_id(), window.title(), window.rect(), window.is_active(), window.type(), window.is_minimized()));
 }
 
 void WSWindowManager::tell_wm_listeners_window_state_changed(WSWindow& window)
@@ -392,6 +392,11 @@ void WSWindowManager::notify_rect_changed(WSWindow& window, const Rect& old_rect
 #endif
     if (m_switcher.is_visible() && window.type() != WSWindowType::WindowSwitcher)
         m_switcher.refresh();
+    tell_wm_listeners_window_state_changed(window);
+}
+
+void WSWindowManager::notify_minimization_state_changed(WSWindow& window)
+{
     tell_wm_listeners_window_state_changed(window);
 }
 

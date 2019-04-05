@@ -43,6 +43,7 @@ public:
 
     void notify_title_changed(WSWindow&);
     void notify_rect_changed(WSWindow&, const Rect& oldRect, const Rect& newRect);
+    void notify_minimization_state_changed(WSWindow&);
     void notify_client_changed_app_menubar(WSClientConnection&);
 
     WSWindow* active_window() { return m_active_window.ptr(); }

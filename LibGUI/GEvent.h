@@ -82,12 +82,13 @@ public:
 
 class GWMWindowStateChangedEvent : public GWMEvent {
 public:
-    GWMWindowStateChangedEvent(int client_id, int window_id, const String& title, const Rect& rect, bool is_active, GWindowType window_type)
+    GWMWindowStateChangedEvent(int client_id, int window_id, const String& title, const Rect& rect, bool is_active, GWindowType window_type, bool is_minimized)
         : GWMEvent(GEvent::Type::WM_WindowStateChanged, client_id, window_id)
         , m_title(title)
         , m_rect(rect)
         , m_active(is_active)
         , m_window_type(window_type)
+        , m_minimized(is_minimized)
     {
     }
 
@@ -95,12 +96,14 @@ public:
     Rect rect() const { return m_rect; }
     bool is_active() const { return m_active; }
     GWindowType window_type() const { return m_window_type; }
+    bool is_minimized() const { return m_minimized; }
 
 private:
     String m_title;
     Rect m_rect;
     bool m_active;
     GWindowType m_window_type;
+    bool m_minimized;
 };
 
 class QuitEvent final : public GEvent {

@@ -118,6 +118,7 @@ void WSWindow::set_minimized(bool minimized)
         return;
     m_minimized = minimized;
     invalidate();
+    WSWindowManager::the().notify_minimization_state_changed(*this);
 }
 
 void WSWindow::on_message(const WSMessage& message)
@@ -180,6 +181,7 @@ void WSWindow::on_message(const WSMessage& message)
         server_message.wm.client_id = changed_event.client_id();
         server_message.wm.window_id = changed_event.window_id();
         server_message.wm.is_active = changed_event.is_active();
+        server_message.wm.is_minimized = changed_event.is_minimized();
         server_message.wm.window_type = to_api(changed_event.window_type());
         ASSERT(changed_event.title().length() < sizeof(server_message.text));
         memcpy(server_message.text, changed_event.title().characters(), changed_event.title().length());
