@@ -7,7 +7,7 @@
 class WSClipboard final : public WSMessageReceiver {
 public:
     static WSClipboard& the();
-    WSClipboard();
+    virtual ~WSClipboard() override;
 
     bool has_data() const
     {
@@ -21,7 +21,7 @@ public:
     void set_data(Retained<SharedBuffer>&&, int contents_size);
 
 private:
-    virtual ~WSClipboard() override;
+    WSClipboard();
     virtual void on_message(const WSMessage&) override;
 
     RetainPtr<SharedBuffer> m_shared_buffer;

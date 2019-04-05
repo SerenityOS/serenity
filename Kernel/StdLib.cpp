@@ -145,14 +145,4 @@ int memcmp(const void* v1, const void* v2, size_t n)
     ASSERT_NOT_REACHED();
 }
 
-void __cxa_guard_acquire(void*)
-{
-    // FIXME: Lock somehow?
-}
-
-void __cxa_guard_release(void*)
-{
-    // FIXME: Unlock somehow?
-}
-
 }

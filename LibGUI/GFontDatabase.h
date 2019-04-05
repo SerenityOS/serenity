@@ -9,13 +9,13 @@ class Font;
 class GFontDatabase {
 public:
     static GFontDatabase& the();
-    GFontDatabase();
 
     RetainPtr<Font> get_by_name(const String&);
     void for_each_font(Function<void(const String&)>);
     void for_each_fixed_width_font(Function<void(const String&)>);
 
 private:
+    GFontDatabase();
     ~GFontDatabase();
 
     struct Metadata {

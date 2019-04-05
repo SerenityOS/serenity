@@ -1,13 +1,14 @@
 #include <LibGUI/GDesktop.h>
 #include <LibGUI/GEventLoop.h>
-#include <AK/Eternal.h>
 #include <string.h>
 #include <unistd.h>
 
 GDesktop& GDesktop::the()
 {
-    static Eternal<GDesktop> the;
-    return the;
+    static GDesktop* the;
+    if (!the)
+        the = new GDesktop;
+    return *the;
 }
 
 GDesktop::GDesktop()

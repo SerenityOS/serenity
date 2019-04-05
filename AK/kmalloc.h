@@ -4,7 +4,6 @@
 #define AK_MAKE_ETERNAL \
 public: \
     void* operator new(size_t size) { return kmalloc_eternal(size); } \
-    void* operator new(size_t, void* ptr) { return ptr; } \
 private:
 #else
 #define AK_MAKE_ETERNAL
