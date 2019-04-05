@@ -1,9 +1,5 @@
 #pragma once
 
-#ifndef KERNEL
-#include <new>
-#endif
-
 #if defined(SERENITY) && defined(KERNEL)
 #define AK_MAKE_ETERNAL \
 public: \
@@ -46,6 +42,11 @@ inline void* operator new[](size_t size)
 inline void operator delete[](void* ptr)
 {
     return kfree(ptr);
+}
+
+inline void* operator new(size_t, void* ptr)
+{
+    return ptr;
 }
 
 #endif

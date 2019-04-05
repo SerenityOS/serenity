@@ -65,7 +65,7 @@ AS = i686-pc-serenity-as
 all: $(LIBRARY) startfiles
 
 startfiles:
-	@echo "CXX $<"; $(CXX) $(CXXFLAGS) -o crt0.o -c crt0.cpp
+	@echo "CXX crt0.o"; $(CXX) $(CXXFLAGS) -o crt0.o -c crt0.cpp
 	cp crti.ao crti.o
 	cp crtn.ao crtn.o
 
