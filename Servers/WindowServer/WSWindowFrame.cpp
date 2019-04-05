@@ -26,14 +26,38 @@ static CharacterBitmap* s_close_button_bitmap;
 static const int s_close_button_bitmap_width = 8;
 static const int s_close_button_bitmap_height = 9;
 
+static const char* s_minimize_button_bitmap_data = {
+    "        "
+    "        "
+    "##    ##"
+    "###  ###"
+    " ###### "
+    "  ####  "
+    "   ##   "
+    "        "
+    "        "
+};
+
+static CharacterBitmap* s_minimize_button_bitmap;
+static const int s_minimize_button_bitmap_width = 8;
+static const int s_minimize_button_bitmap_height = 9;
+
+
 WSWindowFrame::WSWindowFrame(WSWindow& window)
     : m_window(window)
 {
     if (!s_close_button_bitmap)
         s_close_button_bitmap = &CharacterBitmap::create_from_ascii(s_close_button_bitmap_data, s_close_button_bitmap_width, s_close_button_bitmap_height).leak_ref();
 
+    if (!s_minimize_button_bitmap)
+        s_minimize_button_bitmap = &CharacterBitmap::create_from_ascii(s_minimize_button_bitmap_data, s_minimize_button_bitmap_width, s_minimize_button_bitmap_height).leak_ref();
+
     m_buttons.append(make<WSButton>(*this, *s_close_button_bitmap, [this] {
         m_window.on_message(WSMessage(WSMessage::WindowCloseRequest));
+    }));
+
+    m_buttons.append(make<WSButton>(*this, *s_minimize_button_bitmap, [this] {
+        m_window.set_minimized(true);
     }));
 }
 

@@ -19,6 +19,9 @@ public:
     WSWindow(WSMessageReceiver&, WSWindowType);
     virtual ~WSWindow() override;
 
+    bool is_minimized() const { return m_minimized; }
+    void set_minimized(bool);
+
     WSWindowFrame& frame() { return m_frame; }
     const WSWindowFrame& frame() const { return m_frame; }
 
@@ -139,6 +142,7 @@ private:
     bool m_modal { false };
     bool m_resizable { false };
     bool m_listens_to_wm_events { false };
+    bool m_minimized { false };
     RetainPtr<GraphicsBitmap> m_backing_store;
     RetainPtr<GraphicsBitmap> m_last_backing_store;
     int m_window_id { -1 };

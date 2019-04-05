@@ -112,6 +112,14 @@ static WSAPI_WindowType to_api(WSWindowType ws_type)
     }
 }
 
+void WSWindow::set_minimized(bool minimized)
+{
+    if (m_minimized == minimized)
+        return;
+    m_minimized = minimized;
+    invalidate();
+}
+
 void WSWindow::on_message(const WSMessage& message)
 {
     if (m_internal_owner)
