@@ -34,6 +34,22 @@ Lockable<HashMap<IPv4Address, MACAddress>>& arp_table()
     return *the;
 }
 
+class CombinedPacketQueueAlarm : public Alarm {
+public:
+    CombinedPacketQueueAlarm() { }
+
+    virtual bool is_ringing() const override
+    {
+        if (LoopbackAdapter::the().has_queued_packets())
+            return true;
+        if (auto* e1000 = E1000NetworkAdapter::the()) {
+            if (e1000->has_queued_packets())
+                return true;
+        }
+        return false;
+    }
+};
+
 void NetworkTask_main()
 {
     LoopbackAdapter::the();
@@ -44,19 +60,23 @@ void NetworkTask_main()
     adapter.set_ipv4_address(IPv4Address(192, 168, 5, 2));
 
     auto dequeue_packet = [&] () -> ByteBuffer {
-        if (LoopbackAdapter::the().has_queued_packets())
-            return LoopbackAdapter::the().dequeue_packet();
+        auto packet = LoopbackAdapter::the().dequeue_packet();
+        if (!packet.is_null()) {
+            dbgprintf("Receive loopback packet (%d bytes)\n", packet.size());
+            return packet;
+        }
         if (adapter.has_queued_packets())
             return adapter.dequeue_packet();
         return { };
     };
 
+    CombinedPacketQueueAlarm queue_alarm;
+
     kprintf("NetworkTask: Enter main loop.\n");
     for (;;) {
         auto packet = dequeue_packet();
         if (packet.is_null()) {
-            // FIXME: Wake up when one of the adapters has packets.
-            current->sleep(1);
+            current->snooze_until(queue_alarm);
             continue;
         }
         if (packet.size() < (int)(sizeof(EthernetFrameHeader))) {
