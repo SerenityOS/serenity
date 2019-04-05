@@ -2,14 +2,37 @@
 #include <WindowServer/WSWindowManager.h>
 #include <WindowServer/WSWindow.h>
 #include <WindowServer/WSMessage.h>
+#include <WindowServer/WSButton.h>
 #include <SharedGraphics/CharacterBitmap.h>
 #include <SharedGraphics/Painter.h>
 #include <SharedGraphics/Font.h>
 #include <SharedGraphics/StylePainter.h>
 
+static const char* s_close_button_bitmap_data = {
+    "##    ##"
+    "###  ###"
+    " ###### "
+    "  ####  "
+    "   ##   "
+    "  ####  "
+    " ###### "
+    "###  ###"
+    "##    ##"
+};
+
+static CharacterBitmap* s_close_button_bitmap;
+static const int s_close_button_bitmap_width = 8;
+static const int s_close_button_bitmap_height = 9;
+
 WSWindowFrame::WSWindowFrame(WSWindow& window)
     : m_window(window)
 {
+    if (!s_close_button_bitmap)
+        s_close_button_bitmap = &CharacterBitmap::create_from_ascii(s_close_button_bitmap_data, s_close_button_bitmap_width, s_close_button_bitmap_height).leak_ref();
+
+    m_buttons.append(make<WSButton>(*s_close_button_bitmap, [this] {
+        m_window.on_message(WSMessage(WSMessage::WindowCloseRequest));
+    }));
 }
 
 WSWindowFrame::~WSWindowFrame()
@@ -56,19 +79,6 @@ static inline Rect title_bar_text_rect(const Rect& window)
     };
 }
 
-static inline Rect close_button_rect_for_window(const Rect& window_rect)
-{
-    auto titlebar_inner_rect = title_bar_text_rect(window_rect);
-    int close_button_margin = 1;
-    int close_button_size = titlebar_inner_rect.height() - close_button_margin * 2;
-    return Rect {
-        titlebar_inner_rect.right() - close_button_size + 1,
-        titlebar_inner_rect.top() + close_button_margin,
-        close_button_size,
-        close_button_size - 1
-    };
-}
-
 static inline Rect border_window_rect(const Rect& window)
 {
     auto titlebar_rect = title_bar_rect(window);
@@ -98,22 +108,6 @@ static inline Rect outer_window_rect(const WSWindow& window)
     return outer_window_rect(window.rect());
 }
 
-static const char* s_close_button_bitmap_data = {
-    "##    ##"
-    "###  ###"
-    " ###### "
-    "  ####  "
-    "   ##   "
-    "  ####  "
-    " ###### "
-    "###  ###"
-    "##    ##"
-};
-
-static CharacterBitmap* s_close_button_bitmap;
-static const int s_close_button_bitmap_width = 8;
-static const int s_close_button_bitmap_height = 9;
-
 void WSWindowFrame::paint(Painter& painter)
 {
     //printf("[WM] paint_window_frame {%p}, rect: %d,%d %dx%d\n", &window, window.rect().x(), window.rect().y(), window.rect().width(), window.rect().height());
@@ -136,7 +130,6 @@ void WSWindowFrame::paint(Painter& painter)
     auto titlebar_inner_rect = title_bar_text_rect(window.rect());
     auto outer_rect = outer_window_rect(window);
     auto border_rect = border_window_rect(window.rect());
-    auto close_button_rect = close_button_rect_for_window(window.rect());
 
     auto titlebar_title_rect = titlebar_inner_rect;
     titlebar_title_rect.set_width(Font::default_bold_font().width(window.title()));
@@ -177,9 +170,11 @@ void WSWindowFrame::paint(Painter& painter)
         middle_border_color = Color::MidGray;
     }
 
+    auto leftmost_button_rect = m_buttons.is_empty() ? Rect() : m_buttons.last()->rect();
+
     painter.fill_rect_with_gradient(titlebar_rect, border_color, border_color2);
     for (int i = 2; i <= titlebar_inner_rect.height() - 4; i += 2) {
-        painter.draw_line({ titlebar_title_rect.right() + 4, titlebar_inner_rect.y() + i }, { close_button_rect.left() - 3, titlebar_inner_rect.y() + i }, border_color);
+        painter.draw_line({ titlebar_title_rect.right() + 4, titlebar_inner_rect.y() + i }, { leftmost_button_rect.left() - 3, titlebar_inner_rect.y() + i }, border_color);
     }
     painter.draw_rect(border_rect, middle_border_color);
     painter.draw_rect(outer_rect, border_color);
@@ -189,14 +184,9 @@ void WSWindowFrame::paint(Painter& painter)
 
     painter.blit(titlebar_icon_rect.location(), window.icon(), window.icon().rect());
 
-    if (!s_close_button_bitmap)
-        s_close_button_bitmap = &CharacterBitmap::create_from_ascii(s_close_button_bitmap_data, s_close_button_bitmap_width, s_close_button_bitmap_height).leak_ref();
-
-    StylePainter::paint_button(painter, close_button_rect, ButtonStyle::Normal, false, false);
-
-    auto x_location = close_button_rect.center();
-    x_location.move_by(-(s_close_button_bitmap_width / 2), -(s_close_button_bitmap_height / 2));
-    painter.draw_bitmap(x_location, *s_close_button_bitmap, Color::Black);
+    for (auto& button : m_buttons) {
+        button->paint(painter);
+    }
 }
 
 Rect WSWindowFrame::rect() const
@@ -214,6 +204,17 @@ Rect WSWindowFrame::rect() const
 
 void WSWindowFrame::notify_window_rect_changed(const Rect& old_rect, const Rect& new_rect)
 {
+    int window_button_width = 15;
+    int window_button_height = 15;
+    int x = title_bar_text_rect(new_rect).right() + 1;;
+    for (auto& button : m_buttons) {
+        x -= window_button_width;
+        Rect rect { x, 0, window_button_width, window_button_height };
+        rect.center_vertically_within(title_bar_rect(new_rect));
+        rect.set_y(rect.y() - 1);
+        button->set_rect(rect);
+    }
+
     auto& wm = WSWindowManager::the();
     wm.invalidate(outer_window_rect(old_rect));
     wm.invalidate(outer_window_rect(new_rect));
@@ -228,19 +229,12 @@ void WSWindowFrame::on_mouse_event(const WSMouseEvent& event)
     if (title_bar_rect(m_window.rect()).contains(event.position())) {
         if (event.type() == WSMessage::MouseDown)
             wm.move_to_front_and_make_active(m_window);
-        if (close_button_rect_for_window(m_window.rect()).contains(event.position())) {
-            handle_close_button_mouse_event(event);
-            return;
+
+        for (auto& button : m_buttons) {
+            if (button->rect().contains(event.position()))
+                return button->on_mouse_event(event);
         }
         if (event.type() == WSMessage::MouseDown && event.button() == MouseButton::Left)
             wm.start_window_drag(m_window, event);
-    }
-}
-
-void WSWindowFrame::handle_close_button_mouse_event(const WSMouseEvent& event)
-{
-    if (event.type() == WSMessage::MouseDown && event.button() == MouseButton::Left) {
-        m_window.on_message(WSMessage(WSMessage::WindowCloseRequest));
-        return;
     }
 }
