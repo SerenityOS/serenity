@@ -25,6 +25,7 @@ class WSWindow;
 class WSClientConnection;
 class WSWindowSwitcher;
 class GraphicsBitmap;
+class WSButton;
 
 enum class ResizeDirection { None, Left, UpLeft, Up, UpRight, Right, DownRight, Down, DownLeft };
 
@@ -98,6 +99,7 @@ public:
     const WSCursor& move_cursor() const { return *m_move_cursor; }
 
     void set_active_window(WSWindow*);
+    void set_cursor_tracking_button(WSButton* button) { m_cursor_tracking_button = button; }
 
 private:
     void process_mouse_event(const WSMouseEvent&, WSWindow*& event_window);
@@ -202,6 +204,7 @@ private:
     CircularQueue<float, 30> m_cpu_history;
 
     String m_username;
+    WSButton* m_cursor_tracking_button { nullptr };
 };
 
 template<typename Callback>

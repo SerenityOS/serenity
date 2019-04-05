@@ -32,7 +32,7 @@ WSWindowFrame::WSWindowFrame(WSWindow& window)
     if (!s_close_button_bitmap)
         s_close_button_bitmap = &CharacterBitmap::create_from_ascii(s_close_button_bitmap_data, s_close_button_bitmap_width, s_close_button_bitmap_height).leak_ref();
 
-    m_buttons.append(make<WSButton>(*s_close_button_bitmap, [this] {
+    m_buttons.append(make<WSButton>(*this, *s_close_button_bitmap, [this] {
         m_window.on_message(WSMessage(WSMessage::WindowCloseRequest));
     }));
 }
@@ -179,6 +179,11 @@ static Rect frame_rect_for_window_type(WSWindowType type, const Rect& rect)
 Rect WSWindowFrame::rect() const
 {
     return frame_rect_for_window_type(m_window.type(), m_window.rect());
+}
+
+void WSWindowFrame::invalidate_title_bar()
+{
+    WSWindowManager::the().invalidate(title_bar_rect().translated(rect().location()));
 }
 
 void WSWindowFrame::notify_window_rect_changed(const Rect& old_rect, const Rect& new_rect)
