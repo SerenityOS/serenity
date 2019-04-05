@@ -1,6 +1,8 @@
 # Building the Serenity operating system
 
-Here's a quick guide to building the i686-pc-serenity toolchain. I keep my toolchain in /opt/cross (so /opt/cross/bin needs to be in $PATH) and my Serenity sources are in /home/andreas/src/serenity
+Let's start with a quick guide to building the i686-pc-serenity toolchain.
+
+I keep my toolchain in /opt/cross (so /opt/cross/bin needs to be in $PATH) and my Serenity sources are in /home/andreas/src/serenity
 
 You need to adjust these so they fit your system.
 
