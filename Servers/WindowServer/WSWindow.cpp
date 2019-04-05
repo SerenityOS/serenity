@@ -157,19 +157,6 @@ void WSWindow::on_message(const WSMessage& message)
         server_message.window.old_rect = static_cast<const WSResizeEvent&>(message).old_rect();
         server_message.window.rect = static_cast<const WSResizeEvent&>(message).rect();
         break;
-    case WSMessage::WM_WindowAdded: {
-        auto& added_event = static_cast<const WSWMWindowAddedEvent&>(message);
-        server_message.type = WSAPI_ServerMessage::Type::WM_WindowAdded;
-        server_message.wm.client_id = added_event.client_id();
-        server_message.wm.window_id = added_event.window_id();
-        server_message.wm.is_active = added_event.is_active();
-        server_message.wm.window_type = to_api(added_event.window_type());
-        ASSERT(added_event.title().length() < sizeof(server_message.text));
-        memcpy(server_message.text, added_event.title().characters(), added_event.title().length());
-        server_message.text_length = added_event.title().length();
-        server_message.wm.rect = added_event.rect();
-        break;
-    }
     case WSMessage::WM_WindowRemoved: {
         auto& removed_event = static_cast<const WSWMWindowRemovedEvent&>(message);
         server_message.type = WSAPI_ServerMessage::Type::WM_WindowRemoved;

@@ -37,7 +37,6 @@ public:
         WindowCloseRequest,
         ChildAdded,
         ChildRemoved,
-        WM_WindowAdded,
         WM_WindowRemoved,
         WM_WindowStateChanged,
     };
@@ -71,29 +70,6 @@ public:
 private:
     int m_client_id { -1 };
     int m_window_id { -1 };
-};
-
-class GWMWindowAddedEvent : public GWMEvent {
-public:
-    GWMWindowAddedEvent(int client_id, int window_id, const String& title, const Rect& rect, bool is_active, GWindowType window_type)
-        : GWMEvent(GEvent::Type::WM_WindowAdded, client_id, window_id)
-        , m_title(title)
-        , m_rect(rect)
-        , m_active(is_active)
-        , m_window_type(window_type)
-    {
-    }
-
-    String title() const { return m_title; }
-    Rect rect() const { return m_rect; }
-    bool is_active() const { return m_active; }
-    GWindowType window_type() const { return m_window_type; }
-
-private:
-    String m_title;
-    Rect m_rect;
-    bool m_active;
-    GWindowType m_window_type;
 };
 
 class GWMWindowRemovedEvent : public GWMEvent {
