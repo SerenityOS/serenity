@@ -579,6 +579,8 @@ public:
     unsigned buttons() const { return m_buttons; }
     unsigned modifiers() const { return m_modifiers; }
 
+    WSMouseEvent translated(const Point& delta) const { return WSMouseEvent(type(), m_position.translated(delta), m_buttons, m_button, m_modifiers); }
+
 private:
     Point m_position;
     unsigned m_buttons { 0 };

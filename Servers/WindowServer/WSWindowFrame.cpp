@@ -8,6 +8,8 @@
 #include <SharedGraphics/Font.h>
 #include <SharedGraphics/StylePainter.h>
 
+static const int window_titlebar_height = 17;
+
 static const char* s_close_button_bitmap_data = {
     "##    ##"
     "###  ###"
@@ -39,26 +41,19 @@ WSWindowFrame::~WSWindowFrame()
 {
 }
 
-static const int window_titlebar_height = 18;
-
 static inline Rect menu_window_rect(const Rect& rect)
 {
     return rect.inflated(2, 2);
 }
 
-static inline Rect title_bar_rect(const Rect& window)
+Rect WSWindowFrame::title_bar_rect() const
 {
-    return {
-        window.x() - 1,
-        window.y() - window_titlebar_height,
-        window.width() + 2,
-        window_titlebar_height
-    };
+    return { 2, 2, m_window.width() + 2, window_titlebar_height };
 }
 
-static inline Rect title_bar_icon_rect(const Rect& window)
+Rect WSWindowFrame::title_bar_icon_rect() const
 {
-    auto titlebar_rect = title_bar_rect(window);
+    auto titlebar_rect = title_bar_rect();
     return {
         titlebar_rect.x() + 2,
         titlebar_rect.y(),
@@ -67,10 +62,10 @@ static inline Rect title_bar_icon_rect(const Rect& window)
     };
 }
 
-static inline Rect title_bar_text_rect(const Rect& window)
+Rect WSWindowFrame::title_bar_text_rect() const
 {
-    auto titlebar_rect = title_bar_rect(window);
-    auto titlebar_icon_rect = title_bar_icon_rect(window);
+    auto titlebar_rect = title_bar_rect();
+    auto titlebar_icon_rect = title_bar_icon_rect();
     return {
         titlebar_rect.x() + 2 + titlebar_icon_rect.width() + 2,
         titlebar_rect.y(),
@@ -79,38 +74,15 @@ static inline Rect title_bar_text_rect(const Rect& window)
     };
 }
 
-static inline Rect border_window_rect(const Rect& window)
+Rect WSWindowFrame::middle_border_rect() const
 {
-    auto titlebar_rect = title_bar_rect(window);
-    return { titlebar_rect.x() - 1,
-        titlebar_rect.y() - 1,
-        titlebar_rect.width() + 2,
-        window_titlebar_height + window.height() + 3
-    };
-}
-
-static inline Rect outer_window_rect(const Rect& window)
-{
-    auto rect = border_window_rect(window);
-    rect.inflate(2, 2);
-    return rect;
-}
-
-static inline Rect outer_window_rect(const WSWindow& window)
-{
-    if (window.type() == WSWindowType::Menu)
-        return menu_window_rect(window.rect());
-    if (window.type() == WSWindowType::WindowSwitcher)
-        return window.rect();
-    if (window.type() == WSWindowType::Taskbar)
-        return window.rect();
-    ASSERT(window.type() == WSWindowType::Normal);
-    return outer_window_rect(window.rect());
+    return { 1, 1, m_window.width() + 4, m_window.height() + 4 + window_titlebar_height };
 }
 
 void WSWindowFrame::paint(Painter& painter)
 {
-    //printf("[WM] paint_window_frame {%p}, rect: %d,%d %dx%d\n", &window, window.rect().x(), window.rect().y(), window.rect().width(), window.rect().height());
+    PainterStateSaver saver(painter);
+    painter.translate(rect().location());
 
     if (m_window.type() == WSWindowType::Menu) {
         painter.draw_rect(menu_window_rect(m_window.rect()), Color::LightGray);
@@ -125,18 +97,17 @@ void WSWindowFrame::paint(Painter& painter)
 
     auto& window = m_window;
 
-    auto titlebar_rect = title_bar_rect(window.rect());
-    auto titlebar_icon_rect = title_bar_icon_rect(window.rect());
-    auto titlebar_inner_rect = title_bar_text_rect(window.rect());
-    auto outer_rect = outer_window_rect(window);
-    auto border_rect = border_window_rect(window.rect());
+    auto titlebar_rect = title_bar_rect();
+    auto titlebar_icon_rect = title_bar_icon_rect();
+    auto titlebar_inner_rect = title_bar_text_rect();
+    Rect outer_rect = { { }, rect().size() };
 
     auto titlebar_title_rect = titlebar_inner_rect;
     titlebar_title_rect.set_width(Font::default_bold_font().width(window.title()));
 
     Rect inner_border_rect {
-        window.x() - 1,
-        window.y() - 1,
+        2,
+        2 + window_titlebar_height,
         window.width() + 2,
         window.height() + 2
     };
@@ -170,13 +141,13 @@ void WSWindowFrame::paint(Painter& painter)
         middle_border_color = Color::MidGray;
     }
 
-    auto leftmost_button_rect = m_buttons.is_empty() ? Rect() : m_buttons.last()->rect();
+    auto leftmost_button_rect = m_buttons.is_empty() ? Rect() : m_buttons.last()->relative_rect();
 
     painter.fill_rect_with_gradient(titlebar_rect, border_color, border_color2);
-    for (int i = 2; i <= titlebar_inner_rect.height() - 4; i += 2) {
+    for (int i = 2; i <= titlebar_inner_rect.height() - 2; i += 2) {
         painter.draw_line({ titlebar_title_rect.right() + 4, titlebar_inner_rect.y() + i }, { leftmost_button_rect.left() - 3, titlebar_inner_rect.y() + i }, border_color);
     }
-    painter.draw_rect(border_rect, middle_border_color);
+    painter.draw_rect(middle_border_rect(), middle_border_color);
     painter.draw_rect(outer_rect, border_color);
     painter.draw_rect(inner_border_rect, border_color);
 
@@ -189,35 +160,42 @@ void WSWindowFrame::paint(Painter& painter)
     }
 }
 
+static Rect frame_rect_for_window_type(WSWindowType type, const Rect& rect)
+{
+    switch (type) {
+    case WSWindowType::Menu:
+        return menu_window_rect(rect);
+    case WSWindowType::Normal:
+        return { rect.x() - 3, rect.y() - window_titlebar_height - 3, rect.width() + 6, rect.height() + 6 + window_titlebar_height };
+    case WSWindowType::WindowSwitcher:
+        return rect;
+    case WSWindowType::Taskbar:
+        return rect;
+    default:
+        ASSERT_NOT_REACHED();
+    }
+}
+
 Rect WSWindowFrame::rect() const
 {
-    if (m_window.type() == WSWindowType::Menu)
-        return menu_window_rect(m_window.rect());
-    if (m_window.type() == WSWindowType::Normal)
-        return outer_window_rect(m_window);
-    if (m_window.type() == WSWindowType::WindowSwitcher)
-        return m_window.rect();
-    if (m_window.type() == WSWindowType::Taskbar)
-        return m_window.rect();
-    ASSERT_NOT_REACHED();
+    return frame_rect_for_window_type(m_window.type(), m_window.rect());
 }
 
 void WSWindowFrame::notify_window_rect_changed(const Rect& old_rect, const Rect& new_rect)
 {
     int window_button_width = 15;
     int window_button_height = 15;
-    int x = title_bar_text_rect(new_rect).right() + 1;;
+    int x = title_bar_text_rect().right() + 1;;
     for (auto& button : m_buttons) {
         x -= window_button_width;
         Rect rect { x, 0, window_button_width, window_button_height };
-        rect.center_vertically_within(title_bar_rect(new_rect));
-        rect.set_y(rect.y() - 1);
-        button->set_rect(rect);
+        rect.center_vertically_within(title_bar_text_rect());
+        button->set_relative_rect(rect);
     }
 
     auto& wm = WSWindowManager::the();
-    wm.invalidate(outer_window_rect(old_rect));
-    wm.invalidate(outer_window_rect(new_rect));
+    wm.invalidate(frame_rect_for_window_type(m_window.type(), old_rect));
+    wm.invalidate(frame_rect_for_window_type(m_window.type(), new_rect));
     wm.notify_rect_changed(m_window, old_rect, new_rect);
 }
 
@@ -226,15 +204,15 @@ void WSWindowFrame::on_mouse_event(const WSMouseEvent& event)
     auto& wm = WSWindowManager::the();
     if (m_window.type() != WSWindowType::Normal)
         return;
-    if (title_bar_rect(m_window.rect()).contains(event.position())) {
+    if (title_bar_rect().contains(event.position())) {
         if (event.type() == WSMessage::MouseDown)
             wm.move_to_front_and_make_active(m_window);
 
         for (auto& button : m_buttons) {
-            if (button->rect().contains(event.position()))
+            if (button->relative_rect().contains(event.position()))
                 return button->on_mouse_event(event);
         }
         if (event.type() == WSMessage::MouseDown && event.button() == MouseButton::Left)
-            wm.start_window_drag(m_window, event);
+            wm.start_window_drag(m_window, event.translated(rect().location()));
     }
 }
