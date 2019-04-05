@@ -29,6 +29,7 @@ class GraphicsBitmap;
 enum class ResizeDirection { None, Left, UpLeft, Up, UpRight, Right, DownRight, Down, DownLeft };
 
 class WSWindowManager : public WSMessageReceiver {
+    friend class WSWindowFrame;
     friend class WSWindowSwitcher;
 public:
     static WSWindowManager& the();
