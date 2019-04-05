@@ -12,11 +12,12 @@ Roughly speaking, the goal here is a marriage between the aesthetic of late-1990
 
 ## Screenshot
 
-![Screenshot as of cdb82f6](https://raw.githubusercontent.com/awesomekling/serenity/master/Meta/screenshot-cdb82f6.png)
+![Screenshot as of ef9fbef](https://raw.githubusercontent.com/awesomekling/serenity/master/Meta/screenshot-ef9fbef.png)
 
 ## Current features
 
 * Pre-emptive multitasking
+* Multithreading
 * Compositing window server
 * IPv4 networking with ARP, TCP, UDP and ICMP
 * ext2 filesystem
@@ -26,6 +27,7 @@ Roughly speaking, the goal here is a marriage between the aesthetic of late-1990
 * Local sockets
 * Pseudoterminals
 * Event-driven GUI library
+* PNG format support
 * Text editor
 * IRC client
 * DNS lookup
@@ -33,19 +35,7 @@ Roughly speaking, the goal here is a marriage between the aesthetic of late-1990
 
 ## How do I build and run this?
 
-You need a freestanding cross-compiler for the i686-elf target (for the kernel) and another
-cross-compiler for the i686-pc-serenity target (for all the userspace stuff.) It's probably possible to coerce it into building with vanilla gcc/clang if you pass all the right compiler flags, but I haven't been doing that for a while.
-
-There's [a helpful guide on building a GCC cross-compiler](https://wiki.osdev.org/GCC_Cross-Compiler) on the OSDev wiki.
-
-I've only tested this on an Ubuntu 18.10 host with GCC 8.2.0, so I'm not sure it works anywhere else.
-
-If you'd like to run it, here's how you'd get it to boot:
-
-    cd Kernel
-    ./makeall.sh
-    ./run            # Runs in QEMU
-    ./run b          # Runs in bochs (limited networking support)
+See the [step-by-step guide to building Serenity](https://github.com/awesomekling/serenity/blob/master/Meta/BuildInstructions.md)
 
 ## Author
 
@@ -53,4 +43,4 @@ If you'd like to run it, here's how you'd get it to boot:
 
 ## License
 
-Undecided. Probably something close to 2-clause BSD.
+Undecided. I will probably go with something BSD-ish.
