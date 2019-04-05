@@ -60,12 +60,16 @@ public:
     void set_active(bool active) { m_active = active; }
     bool is_active() const { return m_active; }
 
+    void set_minimized(bool minimized) { m_minimized = minimized; }
+    bool is_minimized() const { return m_minimized; }
+
 private:
     WindowIdentifier m_identifier;
     String m_title;
     Rect m_rect;
     GButton* m_button { nullptr };
     bool m_active { false };
+    bool m_minimized { false };
 };
 
 class WindowList {

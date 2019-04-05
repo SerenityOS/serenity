@@ -112,6 +112,7 @@ struct WSAPI_ServerMessage {
             int window_id;
             WSAPI_Rect rect;
             bool is_active;
+            bool is_minimized;
             WSAPI_WindowType window_type;
         } wm;
         struct {
