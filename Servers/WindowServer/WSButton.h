@@ -13,8 +13,10 @@ public:
     WSButton(Retained<CharacterBitmap>&&, Function<void()>&& on_click_handler);
     ~WSButton();
 
-    Rect rect() const { return m_rect; }
-    void set_rect(const Rect& rect) { m_rect = rect; }
+    Rect relative_rect() const { return m_relative_rect; }
+    void set_relative_rect(const Rect& rect) { m_relative_rect = rect; }
+
+    Rect rect() const { return { { }, m_relative_rect.size() }; }
 
     void paint(Painter&);
 
@@ -25,7 +27,7 @@ public:
     bool is_visible() const { return m_visible; }
 
 private:
-    Rect m_rect;
+    Rect m_relative_rect;
     Retained<CharacterBitmap> m_bitmap;
     bool m_pressed { false };
     bool m_visible { true };

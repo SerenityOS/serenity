@@ -16,8 +16,10 @@ WSButton::~WSButton()
 
 void WSButton::paint(Painter& painter)
 {
-    StylePainter::paint_button(painter, m_rect, ButtonStyle::Normal, m_pressed);
-    auto x_location = m_rect.center();
+    PainterStateSaver saver(painter);
+    painter.translate(relative_rect().location());
+    StylePainter::paint_button(painter, rect(), ButtonStyle::Normal, m_pressed);
+    auto x_location = rect().center();
     x_location.move_by(-(m_bitmap->width() / 2), -(m_bitmap->height() / 2));
     painter.draw_bitmap(x_location, *m_bitmap, Color::Black);
 }

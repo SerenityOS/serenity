@@ -621,7 +621,7 @@ void WSWindowManager::process_mouse_event(const WSMouseEvent& event, WSWindow*& 
             continue;
         ASSERT(window->is_visible()); // Maybe this should be supported? Idk. Let's catch it and think about it later.
         windows_who_received_mouse_event_due_to_cursor_tracking.set(window);
-        window->on_message(WSMouseEvent(event.type(), event.position().translated(-window->position()), event.buttons(), event.button(), event.modifiers()));
+        window->on_message(event.translated(-window->position()));
     }
 
     if (menubar_rect().contains(event.position())) {
@@ -640,7 +640,8 @@ void WSWindowManager::process_mouse_event(const WSMouseEvent& event, WSWindow*& 
     }
 
     for_each_visible_window_from_front_to_back([&] (WSWindow& window) {
-        if (!window.frame().rect().contains(event.position()))
+        auto window_frame_rect = window.frame().rect();
+        if (!window_frame_rect.contains(event.position()))
             return IterationDecision::Continue;
         // First check if we should initiate a drag or resize (Logo+LMB or Logo+RMB).
         // In those cases, the event is swallowed by the window manager.
@@ -660,12 +661,12 @@ void WSWindowManager::process_mouse_event(const WSMouseEvent& event, WSWindow*& 
                 move_to_front_and_make_active(window);
             event_window = &window;
             if (!window.global_cursor_tracking() && !windows_who_received_mouse_event_due_to_cursor_tracking.contains(&window))
-                window.on_message(WSMouseEvent(event.type(), event.position().translated(-window.position()), event.buttons(), event.button(), event.modifiers()));
+                window.on_message(event.translated(-window.position()));
             return IterationDecision::Abort;
         }
 
         // We are hitting the frame, pass the event along to WSWindowFrame.
-        window.frame().on_mouse_event(event);
+        window.frame().on_mouse_event(event.translated(-window_frame_rect.location()));
         return IterationDecision::Abort;
     });
 }
