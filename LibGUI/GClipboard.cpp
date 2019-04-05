@@ -3,7 +3,19 @@
 #include <WindowServer/WSAPITypes.h>
 #include <LibC/SharedBuffer.h>
 
-String GClipboard::data()
+GClipboard& GClipboard::the()
+{
+    static GClipboard* s_the;
+    if (!s_the)
+        s_the = new GClipboard;
+    return *s_the;
+}
+
+GClipboard::GClipboard()
+{
+}
+
+String GClipboard::data() const
 {
     WSAPI_ClientMessage request;
     request.type = WSAPI_ClientMessage::Type::GetClipboardContents;

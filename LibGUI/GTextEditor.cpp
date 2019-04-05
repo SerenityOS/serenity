@@ -785,7 +785,7 @@ void GTextEditor::cut()
 {
     auto selected_text = this->selected_text();
     printf("Cut: \"%s\"\n", selected_text.characters());
-    GClipboard::set_data(selected_text);
+    GClipboard::the().set_data(selected_text);
     delete_selection();
 }
 
@@ -793,12 +793,12 @@ void GTextEditor::copy()
 {
     auto selected_text = this->selected_text();
     printf("Copy: \"%s\"\n", selected_text.characters());
-    GClipboard::set_data(selected_text);
+    GClipboard::the().set_data(selected_text);
 }
 
 void GTextEditor::paste()
 {
-    auto paste_text = GClipboard::data();
+    auto paste_text = GClipboard::the().data();
     printf("Paste: \"%s\"\n", paste_text.characters());
     insert_at_cursor_or_replace_selection(paste_text);
 }

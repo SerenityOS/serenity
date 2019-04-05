@@ -1,10 +1,11 @@
 #include <Kernel/Net/LoopbackAdapter.h>
-#include <AK/Eternal.h>
 
 LoopbackAdapter& LoopbackAdapter::the()
 {
-    static Eternal<LoopbackAdapter> the;
-    return the;
+    static LoopbackAdapter* the;
+    if (!the)
+        the = new LoopbackAdapter;
+    return *the;
 }
 
 LoopbackAdapter::LoopbackAdapter()
