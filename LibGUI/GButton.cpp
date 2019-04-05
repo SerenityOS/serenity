@@ -49,7 +49,7 @@ void GButton::paint_event(GPaintEvent& event)
     if (m_icon)
         painter.blit(icon_location, *m_icon, m_icon->rect());
     auto& font = (m_checkable && m_checked) ? Font::default_bold_font() : this->font();
-    painter.draw_text(content_rect, m_caption, font, text_alignment(), Color::Black, TextElision::Right);
+    painter.draw_text(content_rect, m_caption, font, text_alignment(), foreground_color(), TextElision::Right);
 }
 
 void GButton::mousemove_event(GMouseEvent& event)
