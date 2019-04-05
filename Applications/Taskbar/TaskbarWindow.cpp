@@ -54,26 +54,6 @@ void TaskbarWindow::wm_event(GWMEvent& event)
 {
     WindowIdentifier identifier { event.client_id(), event.window_id() };
     switch (event.type()) {
-    case GEvent::WM_WindowAdded: {
-        auto& added_event = static_cast<GWMWindowAddedEvent&>(event);
-        printf("WM_WindowAdded: client_id=%d, window_id=%d, title=%s, rect=%s, is_active=%u\n",
-            added_event.client_id(),
-            added_event.window_id(),
-            added_event.title().characters(),
-            added_event.rect().to_string().characters(),
-            added_event.is_active()
-        );
-        if (!should_include_window(added_event.window_type()))
-            break;
-        auto& window = m_window_list.ensure_window(identifier);
-        window.set_title(added_event.title());
-        window.set_rect(added_event.rect());
-        window.set_active(added_event.is_active());
-        window.button()->set_caption(window.title());
-        window.button()->set_checked(window.is_active());
-        update();
-        break;
-    }
     case GEvent::WM_WindowRemoved: {
         auto& removed_event = static_cast<GWMWindowRemovedEvent&>(event);
         printf("WM_WindowRemoved: client_id=%d, window_id=%d\n",

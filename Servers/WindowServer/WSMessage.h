@@ -26,7 +26,6 @@ public:
         WindowCloseRequest,
         WindowResized,
 
-        WM_WindowAdded,
         WM_WindowRemoved,
         WM_WindowStateChanged,
 
@@ -619,29 +618,6 @@ public:
 private:
     int m_client_id;
     int m_window_id;
-};
-
-class WSWMWindowAddedEvent : public WSWMEvent {
-public:
-    WSWMWindowAddedEvent(int client_id, int window_id, const String& title, const Rect& rect, bool is_active, WSWindowType window_type)
-        : WSWMEvent(WSMessage::WM_WindowAdded, client_id, window_id)
-        , m_title(title)
-        , m_rect(rect)
-        , m_active(is_active)
-        , m_window_type(window_type)
-    {
-    }
-
-    String title() const { return m_title; }
-    Rect rect() const { return m_rect; }
-    bool is_active() const { return m_active; }
-    WSWindowType window_type() const { return m_window_type; }
-
-private:
-    String m_title;
-    Rect m_rect;
-    bool m_active;
-    WSWindowType m_window_type;
 };
 
 class WSWMWindowRemovedEvent : public WSWMEvent {

@@ -258,7 +258,7 @@ void GWindow::event(GEvent& event)
         return;
     }
 
-    if (event.type() == GEvent::WM_WindowAdded || event.type() == GEvent::WM_WindowRemoved || event.type() == GEvent::WM_WindowStateChanged)
+    if (event.type() == GEvent::WM_WindowRemoved || event.type() == GEvent::WM_WindowStateChanged)
         return wm_event(static_cast<GWMEvent&>(event));
 
     GObject::event(event);

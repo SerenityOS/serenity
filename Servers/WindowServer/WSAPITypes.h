@@ -93,7 +93,6 @@ struct WSAPI_ServerMessage {
         DidSetWallpaper,
         DidGetWallpaper,
         ScreenRectChanged,
-        WM_WindowAdded,
         WM_WindowRemoved,
         WM_WindowStateChanged,
     };

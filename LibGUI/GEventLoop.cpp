@@ -273,8 +273,6 @@ void GEventLoop::handle_wm_event(const WSAPI_ServerMessage& event, GWindow& wind
 #ifdef GEVENTLOOP_DEBUG
     dbgprintf("GEventLoop: handle_wm_event: %d\n", (int)event.type);
 #endif
-    if (event.type == WSAPI_ServerMessage::WM_WindowAdded)
-        return post_event(window, make<GWMWindowAddedEvent>(event.wm.client_id, event.wm.window_id, String(event.text, event.text_length), event.wm.rect, event.wm.is_active, (GWindowType)event.wm.window_type));
     if (event.type == WSAPI_ServerMessage::WM_WindowStateChanged)
         return post_event(window, make<GWMWindowStateChangedEvent>(event.wm.client_id, event.wm.window_id, String(event.text, event.text_length), event.wm.rect, event.wm.is_active, (GWindowType)event.wm.window_type));
     if (event.type == WSAPI_ServerMessage::WM_WindowRemoved)
@@ -411,7 +409,6 @@ void GEventLoop::process_unprocessed_messages()
         case WSAPI_ServerMessage::Type::WindowResized:
             handle_resize_event(event, *window);
             break;
-        case WSAPI_ServerMessage::Type::WM_WindowAdded:
         case WSAPI_ServerMessage::Type::WM_WindowRemoved:
         case WSAPI_ServerMessage::Type::WM_WindowStateChanged:
             handle_wm_event(event, *window);
