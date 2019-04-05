@@ -14,7 +14,6 @@ For Serenity, we will need nasm, e2fsprogs and QEMU:
 
     sudo apt install nasm e2fsprogs qemu-system-i386
 
-
 ## Binutils:
 
 Download GNU binutils-2.32 and apply the patch serenity/Meta/binutils-2.32-serenity.patch
@@ -35,13 +34,17 @@ Then build and install:
     make
     sudo make install
 
-## Serenity LibC (part 1):
+## Serenity LibC and LibM headers:
 
 Before we can build GCC, we need to put the Serenity LibC headers where GCC can find them. So go into serenity/LibC/ and install them:
 
     ./install.sh
 
-Don't worry about any error messages from the above command. We only care about copying the headers to the right place at this time.
+Then do the same in serenity/LibM/:
+
+    ./install.sh
+
+Don't worry about any error messages from the above commands. We only care about copying the headers to the right place at this time.
 
 ## GCC (part 1):
 
@@ -64,7 +67,7 @@ Then build and install:
     make all-gcc all-target-libgcc
     sudo make install-gcc install-target-libgcc
 
-## Serenity LibC (part 2):
+## Serenity LibC for GCC:
 
 Now let's go into serenity/LibC/ and build the C library. This is required in order to complete the GCC build.
 
@@ -80,7 +83,7 @@ Go back to the GCC build directory and finish building libstdc++:
     make all-target-libstdc++-v3
     sudo make install-target-libstdc++-v3
 
-## Serenity
+## Serenity (Full build)
 
 If everything worked out, you now have the i686-pc-serenity toolchain ready and we can build Serenity.
 
