@@ -16,7 +16,8 @@
 #include <time.h>
 #include <SharedGraphics/StylePainter.h>
 #include <SharedGraphics/PNGLoader.h>
-#include "WSCursor.h"
+#include <WindowServer/WSCursor.h>
+#include <WindowServer/WSButton.h>
 
 //#define DEBUG_COUNTERS
 //#define RESIZE_DEBUG
@@ -613,6 +614,9 @@ void WSWindowManager::process_mouse_event(const WSMouseEvent& event, WSWindow*& 
 
     if (process_ongoing_window_resize(event, event_window))
         return;
+
+    if (m_cursor_tracking_button)
+        return m_cursor_tracking_button->on_mouse_event(event.translated(-m_cursor_tracking_button->screen_rect().location()));
 
     HashTable<WSWindow*> windows_who_received_mouse_event_due_to_cursor_tracking;
 

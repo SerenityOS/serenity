@@ -17,6 +17,7 @@ public:
     void paint(Painter&);
     void on_mouse_event(const WSMouseEvent&);
     void notify_window_rect_changed(const Rect& old_rect, const Rect& new_rect);
+    void invalidate_title_bar();
 
 private:
     Rect title_bar_rect() const;
