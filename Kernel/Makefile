@@ -76,7 +76,7 @@ OBJS = $(CXX_OBJS) Boot/boot.ao
 KERNEL = kernel
 ARCH_FLAGS =
 STANDARD_FLAGS = -std=c++17 -nostdinc++ -nostdlib -nostdinc
-KERNEL_FLAGS =
+KERNEL_FLAGS = -ffreestanding
 WARNING_FLAGS = -Wextra -Wall -Wundef -Wcast-qual -Wwrite-strings -Wimplicit-fallthrough
 FLAVOR_FLAGS = -mregparm=3 -fno-exceptions -fno-rtti
 OPTIMIZATION_FLAGS = -Os
@@ -88,9 +88,9 @@ DEFINES = -DSERENITY -DKERNEL -DSANITIZE_PTRS
 
 CXXFLAGS = -MMD -MP $(WARNING_FLAGS) $(OPTIMIZATION_FLAGS) $(KERNEL_FLAGS) $(FLAVOR_FLAGS) $(ARCH_FLAGS) $(STANDARD_FLAGS) $(SUGGEST_FLAGS) $(INCLUDE_FLAGS) $(DEFINES)
 #CXX = clang $(CLANG_FLAGS)
-CXX = i686-elf-g++
-LD = i686-elf-ld
-AS = i686-elf-as
+CXX = i686-pc-serenity-g++
+LD = i686-pc-serenity-ld
+AS = i686-pc-serenity-as
 LDFLAGS = -T linker.ld
 
 all: $(KERNEL) kernel.map
