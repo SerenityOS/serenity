@@ -22,6 +22,7 @@ WINDOWSERVER_OBJS = \
     WSWindowSwitcher.o \
     WSClipboard.o \
     WSCursor.o \
+    WSWindowFrame.o \
     main.o
 
 APP = WindowServer

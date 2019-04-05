@@ -6,6 +6,7 @@
 #include <AK/InlineLinkedList.h>
 #include "WSMessageReceiver.h"
 #include <WindowServer/WSWindowType.h>
+#include <WindowServer/WSWindowFrame.h>
 
 class WSClientConnection;
 class WSCursor;
@@ -17,6 +18,9 @@ public:
     WSWindow(WSClientConnection&, WSWindowType, int window_id, bool modal);
     WSWindow(WSMessageReceiver&, WSWindowType);
     virtual ~WSWindow() override;
+
+    WSWindowFrame& frame() { return m_frame; }
+    const WSWindowFrame& frame() const { return m_frame; }
 
     bool is_blocked_by_modal_window() const;
 
@@ -52,7 +56,15 @@ public:
     Rect rect() const { return m_rect; }
     void set_rect(const Rect&);
     void set_rect(int x, int y, int width, int height) { set_rect({ x, y, width, height }); }
-    void set_rect_without_repaint(const Rect& rect) { m_rect = rect; }
+    void set_rect_without_repaint(const Rect& rect)
+    {
+        if (m_rect == rect)
+            return;
+        auto old_rect = m_rect;
+        m_rect = rect;
+        m_frame.notify_window_rect_changed(old_rect, rect);
+    }
+
     void set_rect_from_window_manager_resize(const Rect&);
 
     void move_to(const Point& position) { set_rect({ position, size() }); }
@@ -136,4 +148,5 @@ private:
     Size m_base_size;
     Retained<GraphicsBitmap> m_icon;
     RetainPtr<WSCursor> m_override_cursor;
+    WSWindowFrame m_frame;
 };

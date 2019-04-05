@@ -7,6 +7,8 @@
 #include <LibC/string.h>
 #endif
 
+#define UNUSED_PARAM(x) (void)x
+
 #include <AK/Types.h>
 
 extern "C" void* mmx_memcpy(void* to, const void* from, size_t);

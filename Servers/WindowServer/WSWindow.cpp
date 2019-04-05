@@ -17,6 +17,7 @@ WSWindow::WSWindow(WSMessageReceiver& internal_owner, WSWindowType type)
     : m_internal_owner(&internal_owner)
     , m_type(type)
     , m_icon(default_window_icon())
+    , m_frame(*this)
 {
     WSWindowManager::the().add_window(*this);
 }
@@ -27,6 +28,7 @@ WSWindow::WSWindow(WSClientConnection& client, WSWindowType window_type, int win
     , m_modal(modal)
     , m_window_id(window_id)
     , m_icon(default_window_icon())
+    , m_frame(*this)
 {
     // FIXME: This should not be hard-coded here.
     if (m_type == WSWindowType::Taskbar)
@@ -57,7 +59,7 @@ void WSWindow::set_rect(const Rect& rect)
     if (!m_client && (!m_backing_store || old_rect.size() != rect.size())) {
         m_backing_store = GraphicsBitmap::create(GraphicsBitmap::Format::RGB32, m_rect.size());
     }
-    WSWindowManager::the().notify_rect_changed(*this, old_rect, rect);
+    m_frame.notify_window_rect_changed(old_rect, rect);
 }
 
 // FIXME: Just use the same types.
