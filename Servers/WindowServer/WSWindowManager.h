@@ -214,6 +214,8 @@ IterationDecision WSWindowManager::for_each_visible_window_of_type_from_back_to_
     for (auto* window = m_windows_in_order.head(); window; window = window->next()) {
         if (!window->is_visible())
             continue;
+        if (window->is_minimized())
+            continue;
         if (window->type() != type)
             continue;
         if (m_highlight_window.ptr() == window) {
@@ -252,6 +254,8 @@ IterationDecision WSWindowManager::for_each_visible_window_of_type_from_front_to
 
     for (auto* window = m_windows_in_order.tail(); window; window = window->prev()) {
         if (!window->is_visible())
+            continue;
+        if (window->is_minimized())
             continue;
         if (window->type() != type)
             continue;

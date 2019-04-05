@@ -624,6 +624,7 @@ void WSWindowManager::process_mouse_event(const WSMouseEvent& event, WSWindow*& 
         if (!window->global_cursor_tracking())
             continue;
         ASSERT(window->is_visible()); // Maybe this should be supported? Idk. Let's catch it and think about it later.
+        ASSERT(!window->is_minimized()); // Maybe this should also be supported? Idk.
         windows_who_received_mouse_event_due_to_cursor_tracking.set(window);
         window->on_message(event.translated(-window->position()));
     }
@@ -688,6 +689,8 @@ void WSWindowManager::compose()
         for (auto* window = m_windows_in_order.head(); window; window = window->next()) {
             if (!window->is_visible())
                 continue;
+            if (window->is_minimized())
+                continue;
             if (window->opacity() < 1.0f)
                 continue;
             if (window->has_alpha_channel()) {
@@ -712,11 +715,13 @@ void WSWindowManager::compose()
             if (!checking)
                 return IterationDecision::Continue;
             if (!window.is_visible())
-                return IterationDecision::Continue;;
+                return IterationDecision::Continue;
+            if (window.is_minimized())
+                return IterationDecision::Continue;
             if (window.opacity() < 1.0f)
-                return IterationDecision::Continue;;
+                return IterationDecision::Continue;
             if (window.has_alpha_channel())
-                return IterationDecision::Continue;;
+                return IterationDecision::Continue;
             if (window.frame().rect().contains(rect)) {
                 found = true;
                 return IterationDecision::Abort;
