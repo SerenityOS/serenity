@@ -96,6 +96,4 @@ cp -v ../Applications/Taskbar/Taskbar mnt/bin/Taskbar
 ln -s Taskbar mnt/bin/tb
 cp -v kernel.map mnt/
 sh sync-local.sh
-sync
-umount mnt
-sync
+umount mnt || ( sleep 0.5 && sync && umount mnt )
