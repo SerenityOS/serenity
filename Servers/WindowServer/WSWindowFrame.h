@@ -1,7 +1,10 @@
 #pragma once
 
+#include <AK/Vector.h>
+
 class Painter;
 class Rect;
+class WSButton;
 class WSMouseEvent;
 class WSWindow;
 
@@ -19,4 +22,5 @@ private:
     void handle_close_button_mouse_event(const WSMouseEvent&);
 
     WSWindow& m_window;
+    Vector<OwnPtr<WSButton>> m_buttons;
 };
