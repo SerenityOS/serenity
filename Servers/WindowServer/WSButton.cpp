@@ -58,7 +58,6 @@ void WSButton::on_mouse_event(const WSMouseEvent& event)
         wm.set_hovered_button(m_hovered ? this : nullptr);
         if (old_hovered != m_hovered)
             wm.invalidate(screen_rect());
-        dbgprintf("move, hov=%d, rect=%s, evpos=%s\n", m_hovered, rect().to_string().characters(), event.position().to_string().characters());
     }
 
     if (event.type() == WSMessage::MouseMove && event.buttons() & (unsigned)MouseButton::Left) {
