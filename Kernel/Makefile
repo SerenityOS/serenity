@@ -60,7 +60,7 @@ VFS_OBJS = \
     FileSystem/DiskBackedFileSystem.o \
     FileSystem/Ext2FileSystem.o \
     FileSystem/VirtualFileSystem.o \
-    FileDescriptor.o \
+    FileSystem/FileDescriptor.o \
     FileSystem/SyntheticFileSystem.o
 
 AK_OBJS = \
