@@ -101,6 +101,7 @@ public:
 
     void set_active_window(WSWindow*);
     void set_cursor_tracking_button(WSButton* button) { m_cursor_tracking_button = button; }
+    void set_hovered_button(WSButton*);
 
 private:
     void process_mouse_event(const WSMouseEvent&, WSWindow*& event_window);
@@ -206,6 +207,7 @@ private:
 
     String m_username;
     WSButton* m_cursor_tracking_button { nullptr };
+    WSButton* m_hovered_button { nullptr };
 };
 
 template<typename Callback>

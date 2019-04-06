@@ -34,4 +34,5 @@ private:
     Retained<CharacterBitmap> m_bitmap;
     bool m_pressed { false };
     bool m_visible { true };
+    bool m_hovered { false };
 };

@@ -623,6 +623,10 @@ void WSWindowManager::process_mouse_event(const WSMouseEvent& event, WSWindow*& 
     if (m_cursor_tracking_button)
         return m_cursor_tracking_button->on_mouse_event(event.translated(-m_cursor_tracking_button->screen_rect().location()));
 
+    // This is quite hackish, but it's how the WSButton hover effect is implemented.
+    if (m_hovered_button && event.type() == WSMessage::MouseMove)
+        m_hovered_button->on_mouse_event(event.translated(-m_hovered_button->screen_rect().location()));
+
     HashTable<WSWindow*> windows_who_received_mouse_event_due_to_cursor_tracking;
 
     for (auto* window = m_windows_in_order.tail(); window; window = window->prev()) {
@@ -1098,4 +1102,9 @@ const WSCursor& WSWindowManager::active_cursor() const
         return *m_hovered_window->override_cursor();
 
     return *m_arrow_cursor;
+}
+
+void WSWindowManager::set_hovered_button(WSButton* button)
+{
+    m_hovered_button = button;
 }
