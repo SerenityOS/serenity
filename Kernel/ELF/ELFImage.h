@@ -4,7 +4,6 @@
 #include <AK/HashMap.h>
 #include <AK/AKString.h>
 #include <Kernel/ELF/exec_elf.h>
-#include <Kernel/types.h>
 
 class ELFImage {
 public:

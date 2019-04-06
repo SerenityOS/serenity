@@ -1,6 +1,6 @@
 #pragma once
 
-#include "types.h"
+#include <AK/Types.h>
 
 struct system_t
 {

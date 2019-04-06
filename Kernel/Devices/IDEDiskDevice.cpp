@@ -1,5 +1,5 @@
 #include "IDEDiskDevice.h"
-#include "types.h"
+#include <AK/Types.h>
 #include "Process.h"
 #include "StdLib.h"
 #include "IO.h"

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "types.h"
+#include <AK/Types.h>
 #include "i386.h"
 #include <AK/Bitmap.h>
 #include <AK/ByteBuffer.h>
@@ -11,6 +11,7 @@
 #include <AK/AKString.h>
 #include <AK/Badge.h>
 #include <AK/Weakable.h>
+#include <Kernel/LinearAddress.h>
 #include <Kernel/VM/PhysicalPage.h>
 #include <Kernel/VM/Region.h>
 #include <Kernel/VM/VMObject.h>

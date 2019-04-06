@@ -7,6 +7,8 @@
 #include <AK/Vector.h>
 #include <AK/AKString.h>
 #include <Kernel/Lock.h>
+#include <Kernel/PhysicalAddress.h>
+#include <Kernel/UnixTypes.h>
 
 class Inode;
 class PhysicalPage;
