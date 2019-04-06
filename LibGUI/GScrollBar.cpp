@@ -197,14 +197,14 @@ void GScrollBar::paint_event(GPaintEvent& event)
 
     painter.fill_rect(rect(), Color::from_rgb(0xd6d2ce));
 
-    StylePainter::paint_button(painter, up_button_rect(), ButtonStyle::Normal, false);
+    StylePainter::paint_button(painter, up_button_rect(), ButtonStyle::Normal, false, m_hovered_component == Component::DecrementButton);
     painter.draw_bitmap(up_button_rect().location().translated(3, 3), orientation() == Orientation::Vertical ? *s_up_arrow_bitmap : *s_left_arrow_bitmap, has_scrubber() ? Color::Black : Color::MidGray);
 
-    StylePainter::paint_button(painter, down_button_rect(), ButtonStyle::Normal, false);
+    StylePainter::paint_button(painter, down_button_rect(), ButtonStyle::Normal, false, m_hovered_component == Component::IncrementButton);
     painter.draw_bitmap(down_button_rect().location().translated(3, 3), orientation() == Orientation::Vertical ? *s_down_arrow_bitmap : *s_right_arrow_bitmap, has_scrubber() ? Color::Black : Color::MidGray);
 
     if (has_scrubber())
-        StylePainter::paint_button(painter, scrubber_rect(), ButtonStyle::Normal, false);
+        StylePainter::paint_button(painter, scrubber_rect(), ButtonStyle::Normal, false, m_hovered_component == Component::Scrubber);
 }
 
 void GScrollBar::mousedown_event(GMouseEvent& event)
@@ -271,6 +271,19 @@ void GScrollBar::mouseup_event(GMouseEvent& event)
 
 void GScrollBar::mousemove_event(GMouseEvent& event)
 {
+    auto old_hovered_component = m_hovered_component;
+    if (scrubber_rect().contains(event.position()))
+        m_hovered_component = Component::Scrubber;
+    else if (up_button_rect().contains(event.position()))
+        m_hovered_component = Component::DecrementButton;
+    else if (down_button_rect().contains(event.position()))
+        m_hovered_component = Component::IncrementButton;
+    else if (rect().contains(event.position()))
+        m_hovered_component = Component::Gutter;
+    else
+        m_hovered_component = Component::Invalid;
+    if (old_hovered_component != m_hovered_component)
+        update();
     if (!m_scrubbing)
         return;
     float delta = orientation() == Orientation::Vertical ? (event.y() - m_scrub_origin.y()) : (event.x() - m_scrub_origin.x());
@@ -278,4 +291,9 @@ void GScrollBar::mousemove_event(GMouseEvent& event)
     float value_steps_per_scrubbed_pixel = (m_max - m_min) / scrubbable_range;
     float new_value = m_scrub_start_value + (value_steps_per_scrubbed_pixel * delta);
     set_value(new_value);
+}
+
+void GScrollBar::leave_event(GEvent&)
+{
+    m_hovered_component = Component::Invalid;
 }
