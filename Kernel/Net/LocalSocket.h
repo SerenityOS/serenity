@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Kernel/Socket.h>
+#include <Kernel/Net/Socket.h>
 #include <Kernel/DoubleBuffer.h>
 
 class FileDescriptor;

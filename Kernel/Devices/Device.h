@@ -2,7 +2,7 @@
 
 #include <AK/Retainable.h>
 #include <AK/Types.h>
-#include "FileDescriptor.h"
+#include <Kernel/FileSystem/FileDescriptor.h>
 
 class Process;
 

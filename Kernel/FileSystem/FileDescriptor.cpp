@@ -4,10 +4,10 @@
 #include <LibC/errno_numbers.h>
 #include "UnixTypes.h"
 #include <AK/BufferStream.h>
-#include "FIFO.h"
+#include <Kernel/FileSystem/FIFO.h>
 #include <Kernel/TTY/TTY.h>
 #include <Kernel/TTY/MasterPTY.h>
-#include <Kernel/Socket.h>
+#include <Kernel/Net/Socket.h>
 #include <Kernel/Process.h>
 #include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/VM/MemoryManager.h>

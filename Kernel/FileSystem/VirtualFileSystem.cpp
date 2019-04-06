@@ -1,5 +1,5 @@
 #include "VirtualFileSystem.h"
-#include "FileDescriptor.h"
+#include <Kernel/FileSystem/FileDescriptor.h>
 #include "FileSystem.h"
 #include <AK/FileSystemPath.h>
 #include <AK/StringBuilder.h>

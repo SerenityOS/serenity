@@ -25,7 +25,7 @@ KERNEL_OBJS = \
        TTY/MasterPTY.o \
        TTY/SlavePTY.o \
        TTY/VirtualConsole.o \
-       FIFO.o \
+       FileSystem/FIFO.o \
        Scheduler.o \
        DoubleBuffer.o \
        ELF/ELFImage.o \
@@ -35,8 +35,8 @@ KERNEL_OBJS = \
        Devices/BXVGADevice.o \
        PCI.o \
        Devices/PS2MouseDevice.o \
-       Socket.o \
-       LocalSocket.o \
+       Net/Socket.o \
+       Net/LocalSocket.o \
        Net/IPv4Socket.o \
        Net/TCPSocket.o \
        Net/UDPSocket.o \

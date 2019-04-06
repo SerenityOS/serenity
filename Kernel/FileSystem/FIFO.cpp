@@ -1,4 +1,4 @@
-#include "FIFO.h"
+#include <Kernel/FileSystem/FIFO.h>
 #include <AK/StdLibExtras.h>
 
 //#define FIFO_DEBUG

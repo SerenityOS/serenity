@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Kernel/Socket.h>
+#include <Kernel/Net/Socket.h>
 #include <Kernel/DoubleBuffer.h>
 #include <Kernel/Net/IPv4.h>
 #include <AK/HashMap.h>

@@ -1,4 +1,4 @@
-#include <Kernel/LocalSocket.h>
+#include <Kernel/Net/LocalSocket.h>
 #include <Kernel/UnixTypes.h>
 #include <Kernel/Process.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
