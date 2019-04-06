@@ -129,6 +129,7 @@ private:
     void tick_clock();
     void tell_wm_listeners_window_state_changed(WSWindow&);
     void tell_wm_listener_about_window(WSWindow& listener, WSWindow&);
+    void pick_new_active_window();
 
     WSScreen& m_screen;
     Rect m_screen_rect;

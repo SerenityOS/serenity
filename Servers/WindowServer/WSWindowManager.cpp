@@ -347,8 +347,8 @@ void WSWindowManager::remove_window(WSWindow& window)
     invalidate(window);
     m_windows.remove(&window);
     m_windows_in_order.remove(&window);
-    if (!active_window() && !m_windows.is_empty())
-        set_active_window(*m_windows.begin());
+    if (window.is_active())
+        pick_new_active_window();
     if (m_switcher.is_visible() && window.type() != WSWindowType::WindowSwitcher)
         m_switcher.refresh();
 
@@ -398,6 +398,17 @@ void WSWindowManager::notify_rect_changed(WSWindow& window, const Rect& old_rect
 void WSWindowManager::notify_minimization_state_changed(WSWindow& window)
 {
     tell_wm_listeners_window_state_changed(window);
+
+    if (window.is_active() && window.is_minimized())
+        pick_new_active_window();
+}
+
+void WSWindowManager::pick_new_active_window()
+{
+    for_each_visible_window_of_type_from_front_to_back(WSWindowType::Normal, [&] (WSWindow& candidate) {
+        set_active_window(&candidate);
+        return IterationDecision::Abort;
+    });
 }
 
 void WSWindowManager::handle_menu_mouse_event(WSMenu& menu, const WSMouseEvent& event)
