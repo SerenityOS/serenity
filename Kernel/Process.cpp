@@ -4,7 +4,7 @@
 #include "StdLib.h"
 #include "i386.h"
 #include "system.h"
-#include <Kernel/FileDescriptor.h>
+#include <Kernel/FileSystem/FileDescriptor.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Devices/NullDevice.h>
 #include <Kernel/ELF/ELFLoader.h>
@@ -16,9 +16,9 @@
 #include <LibC/errno_numbers.h>
 #include "Syscall.h"
 #include "Scheduler.h"
-#include "FIFO.h"
+#include <Kernel/FileSystem/FIFO.h>
 #include "KSyms.h"
-#include <Kernel/Socket.h>
+#include <Kernel/Net/Socket.h>
 #include <Kernel/TTY/MasterPTY.h>
 #include <Kernel/ELF/exec_elf.h>
 #include <AK/StringBuilder.h>

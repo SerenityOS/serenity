@@ -2,13 +2,13 @@
 
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/FileSystem/InodeMetadata.h>
+#include <Kernel/FileSystem/FIFO.h>
 #include <Kernel/LinearAddress.h>
-#include <Kernel/FIFO.h>
 #include <AK/ByteBuffer.h>
 #include <AK/CircularQueue.h>
 #include <AK/Retainable.h>
 #include <AK/Badge.h>
-#include <Kernel/Socket.h>
+#include <Kernel/Net/Socket.h>
 
 class TTY;
 class MasterPTY;

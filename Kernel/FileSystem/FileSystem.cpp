@@ -4,7 +4,7 @@
 #include <LibC/errno_numbers.h>
 #include "FileSystem.h"
 #include <Kernel/VM/MemoryManager.h>
-#include <Kernel/LocalSocket.h>
+#include <Kernel/Net/LocalSocket.h>
 
 static dword s_lastFileSystemID;
 static HashMap<dword, FS*>* s_fs_map;

@@ -1,5 +1,5 @@
 #include <Kernel/FileSystem/SyntheticFileSystem.h>
-#include <Kernel/FileDescriptor.h>
+#include <Kernel/FileSystem/FileDescriptor.h>
 #include <LibC/errno_numbers.h>
 #include <AK/StdLibExtras.h>
 
