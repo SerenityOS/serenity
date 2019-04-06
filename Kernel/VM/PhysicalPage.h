@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Kernel/Assertions.h>
-#include <Kernel/types.h>
+#include <Kernel/PhysicalAddress.h>
 #include <AK/Retained.h>
 
 class PhysicalPage {

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "types.h"
+#include <AK/Types.h>
 #include <Kernel/TTY/TTY.h>
 #include "Syscall.h"
 #include <Kernel/FileSystem/VirtualFileSystem.h>

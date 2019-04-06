@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Kernel/types.h>
+#include <AK/Types.h>
 
 extern "C" {
 
