@@ -44,9 +44,16 @@ Rect GlyphMapWidget::get_outer_rect(byte glyph) const
     };
 }
 
-void GlyphMapWidget::paint_event(GPaintEvent&)
+void GlyphMapWidget::update_glyph(byte glyph)
+{
+    update(get_outer_rect(glyph));
+}
+
+void GlyphMapWidget::paint_event(GPaintEvent& event)
 {
     GPainter painter(*this);
+    painter.add_clip_rect(event.rect());
+
     painter.set_font(font());
     painter.fill_rect(rect(), Color::White);
     painter.draw_rect(rect(), Color::Black);
@@ -63,16 +70,13 @@ void GlyphMapWidget::paint_event(GPaintEvent&)
                 font().glyph_height()
             );
             if (glyph == m_selected_glyph) {
-                painter.fill_rect(outer_rect, Color::Red);
+                painter.fill_rect(outer_rect, Color::from_rgb(0x84351a));
                 painter.draw_glyph(inner_rect.location(), glyph, Color::White);
             } else {
                 painter.draw_glyph(inner_rect.location(), glyph, Color::Black);
             }
         }
     }
-
-    if (is_focused())
-        painter.draw_focus_rect(rect());
 }
 
 void GlyphMapWidget::mousedown_event(GMouseEvent& event)

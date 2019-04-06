@@ -80,8 +80,8 @@ FontEditorWidget::FontEditorWidget(const String& path, RetainPtr<Font>&& edited_
         demo_label_2->update();
     };
 
-    m_glyph_editor_widget->on_glyph_altered = [this, update_demo] {
-        m_glyph_map_widget->update();
+    m_glyph_editor_widget->on_glyph_altered = [this, update_demo] (byte glyph) {
+        m_glyph_map_widget->update_glyph(glyph);
         update_demo();
     };
 
