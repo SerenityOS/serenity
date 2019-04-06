@@ -26,11 +26,20 @@ public:
 
     virtual const char* class_name() const override { return "GScrollBar"; }
 
+    enum Component {
+        Invalid,
+        DecrementButton,
+        IncrementButton,
+        Gutter,
+        Scrubber,
+    };
+
 private:
     virtual void paint_event(GPaintEvent&) override;
     virtual void mousedown_event(GMouseEvent&) override;
     virtual void mouseup_event(GMouseEvent&) override;
     virtual void mousemove_event(GMouseEvent&) override;
+    virtual void leave_event(GEvent&) override;
 
     int button_size() const { return orientation() == Orientation::Vertical ? width() : height(); }
     Rect up_button_rect() const;
@@ -52,4 +61,5 @@ private:
     Point m_scrub_origin;
 
     Orientation m_orientation { Orientation::Vertical };
+    Component m_hovered_component { Component::Invalid };
 };
