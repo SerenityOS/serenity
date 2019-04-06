@@ -621,6 +621,11 @@ bool WSWindowManager::process_ongoing_window_resize(const WSMouseEvent& event, W
     return true;
 }
 
+void WSWindowManager::set_cursor_tracking_button(WSButton* button)
+{
+    m_cursor_tracking_button = button ? button->make_weak_ptr() : nullptr;
+}
+
 void WSWindowManager::process_mouse_event(const WSMouseEvent& event, WSWindow*& event_window)
 {
     event_window = nullptr;
@@ -1117,5 +1122,5 @@ const WSCursor& WSWindowManager::active_cursor() const
 
 void WSWindowManager::set_hovered_button(WSButton* button)
 {
-    m_hovered_button = button;
+    m_hovered_button = button ? button->make_weak_ptr() : nullptr;
 }

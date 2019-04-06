@@ -3,13 +3,14 @@
 #include <SharedGraphics/Rect.h>
 #include <AK/Function.h>
 #include <AK/Retained.h>
+#include <AK/Weakable.h>
 
 class CharacterBitmap;
 class Painter;
 class WSMouseEvent;
 class WSWindowFrame;
 
-class WSButton final {
+class WSButton : public Weakable<WSButton> {
 public:
     WSButton(WSWindowFrame&, Retained<CharacterBitmap>&&, Function<void()>&& on_click_handler);
     ~WSButton();
