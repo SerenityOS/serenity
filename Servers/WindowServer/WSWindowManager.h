@@ -100,7 +100,7 @@ public:
     const WSCursor& move_cursor() const { return *m_move_cursor; }
 
     void set_active_window(WSWindow*);
-    void set_cursor_tracking_button(WSButton* button) { m_cursor_tracking_button = button; }
+    void set_cursor_tracking_button(WSButton*);
     void set_hovered_button(WSButton*);
 
 private:
@@ -207,8 +207,8 @@ private:
     CircularQueue<float, 30> m_cpu_history;
 
     String m_username;
-    WSButton* m_cursor_tracking_button { nullptr };
-    WSButton* m_hovered_button { nullptr };
+    WeakPtr<WSButton> m_cursor_tracking_button;
+    WeakPtr<WSButton> m_hovered_button;
 };
 
 template<typename Callback>
