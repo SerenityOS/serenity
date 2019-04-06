@@ -14,6 +14,7 @@
 #include <WindowServer/WSWindowType.h>
 #include <WindowServer/WSWindow.h>
 #include <WindowServer/WSCursor.h>
+#include <WindowServer/WSMessage.h>
 #include <AK/CircularQueue.h>
 
 class WSAPIClientRequest;
@@ -103,6 +104,9 @@ public:
     void set_cursor_tracking_button(WSButton*);
     void set_hovered_button(WSButton*);
 
+    void set_resize_candidate(WSWindow&, ResizeDirection);
+    void clear_resize_candidate();
+
 private:
     void process_mouse_event(const WSMouseEvent&, WSWindow*& event_window);
     bool process_ongoing_window_resize(const WSMouseEvent&, WSWindow*& event_window);
@@ -161,6 +165,8 @@ private:
     Point m_drag_window_origin;
 
     WeakPtr<WSWindow> m_resize_window;
+    WeakPtr<WSWindow> m_resize_candidate;
+    MouseButton m_resizing_mouse_button { MouseButton::None };
     Rect m_resize_window_original_rect;
     Point m_resize_origin;
     ResizeDirection m_resize_direction { ResizeDirection::None };

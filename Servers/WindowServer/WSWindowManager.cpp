@@ -488,6 +488,7 @@ void WSWindowManager::start_window_resize(WSWindow& window, const WSMouseEvent& 
 #ifdef RESIZE_DEBUG
     printf("[WM] Begin resizing WSWindow{%p}\n", &window);
 #endif
+    m_resizing_mouse_button = event.button();
     m_resize_window = window.make_weak_ptr();;
     m_resize_origin = event.position();
     m_resize_window_original_rect = window.rect();
@@ -525,13 +526,14 @@ bool WSWindowManager::process_ongoing_window_resize(const WSMouseEvent& event, W
     if (!m_resize_window)
         return false;
 
-    if (event.type() == WSMessage::MouseUp && event.button() == MouseButton::Right) {
+    if (event.type() == WSMessage::MouseUp && event.button() == m_resizing_mouse_button) {
 #ifdef RESIZE_DEBUG
         printf("[WM] Finish resizing WSWindow{%p}\n", m_resize_window.ptr());
 #endif
         WSMessageLoop::the().post_message(*m_resize_window, make<WSResizeEvent>(m_resize_window->rect(), m_resize_window->rect()));
         invalidate(*m_resize_window);
         m_resize_window = nullptr;
+        m_resizing_mouse_button = MouseButton::None;
         return true;
     }
 
@@ -669,10 +671,16 @@ void WSWindowManager::process_mouse_event(const WSMouseEvent& event, WSWindow*& 
         }
     }
 
+    WSWindow* event_window_with_frame = nullptr;
+
     for_each_visible_window_from_front_to_back([&] (WSWindow& window) {
         auto window_frame_rect = window.frame().rect();
         if (!window_frame_rect.contains(event.position()))
             return IterationDecision::Continue;
+
+        if (&window != m_resize_candidate.ptr())
+            clear_resize_candidate();
+
         // First check if we should initiate a drag or resize (Logo+LMB or Logo+RMB).
         // In those cases, the event is swallowed by the window manager.
         if (window.type() == WSWindowType::Normal) {
@@ -697,8 +705,19 @@ void WSWindowManager::process_mouse_event(const WSMouseEvent& event, WSWindow*& 
 
         // We are hitting the frame, pass the event along to WSWindowFrame.
         window.frame().on_mouse_event(event.translated(-window_frame_rect.location()));
+        event_window_with_frame = &window;
         return IterationDecision::Abort;
     });
+
+    if (event_window_with_frame != m_resize_candidate.ptr())
+        clear_resize_candidate();
+}
+
+void WSWindowManager::clear_resize_candidate()
+{
+    if (m_resize_candidate)
+        invalidate_cursor();
+    m_resize_candidate = nullptr;
 }
 
 void WSWindowManager::compose()
@@ -1095,7 +1114,7 @@ const WSCursor& WSWindowManager::active_cursor() const
     if (m_drag_window)
         return *m_move_cursor;
 
-    if (m_resize_window) {
+    if (m_resize_window || m_resize_candidate) {
         switch (m_resize_direction) {
         case ResizeDirection::Up:
         case ResizeDirection::Down:
@@ -1110,7 +1129,7 @@ const WSCursor& WSWindowManager::active_cursor() const
         case ResizeDirection::DownLeft:
             return *m_resize_diagonally_bltr_cursor;
         case ResizeDirection::None:
-            ASSERT_NOT_REACHED();
+            break;
         }
     }
 
@@ -1123,4 +1142,10 @@ const WSCursor& WSWindowManager::active_cursor() const
 void WSWindowManager::set_hovered_button(WSButton* button)
 {
     m_hovered_button = button ? button->make_weak_ptr() : nullptr;
+}
+
+void WSWindowManager::set_resize_candidate(WSWindow& window, ResizeDirection direction)
+{
+    m_resize_candidate = window.make_weak_ptr();
+    m_resize_direction = direction;
 }

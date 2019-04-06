@@ -234,6 +234,8 @@ void WSWindowFrame::on_mouse_event(const WSMouseEvent& event)
     if (m_window.type() != WSWindowType::Normal)
         return;
     if (title_bar_rect().contains(event.position())) {
+        wm.clear_resize_candidate();
+
         if (event.type() == WSMessage::MouseDown)
             wm.move_to_front_and_make_active(m_window);
 
@@ -243,5 +245,26 @@ void WSWindowFrame::on_mouse_event(const WSMouseEvent& event)
         }
         if (event.type() == WSMessage::MouseDown && event.button() == MouseButton::Left)
             wm.start_window_drag(m_window, event.translated(rect().location()));
+        return;
     }
+
+    if (event.type() == WSMessage::MouseMove && event.buttons() == 0) {
+        constexpr ResizeDirection direction_for_hot_area[3][3] = {
+            { ResizeDirection::UpLeft, ResizeDirection::Up, ResizeDirection::UpRight },
+            { ResizeDirection::Left, ResizeDirection::None, ResizeDirection::Right },
+            { ResizeDirection::DownLeft, ResizeDirection::Down, ResizeDirection::DownRight },
+        };
+        Rect outer_rect = { { }, rect().size() };
+        ASSERT(outer_rect.contains(event.position()));
+        int window_relative_x = event.x() - outer_rect.x();
+        int window_relative_y = event.y() - outer_rect.y();
+        int hot_area_row = min(2, window_relative_y / (outer_rect.height() / 3));
+        int hot_area_column = min(2, window_relative_x / (outer_rect.width() / 3));
+        wm.set_resize_candidate(m_window, direction_for_hot_area[hot_area_row][hot_area_column]);
+        wm.invalidate_cursor();
+        return;
+    }
+
+    if (event.button() == MouseButton::Left)
+        wm.start_window_resize(m_window, event.translated(rect().location()));
 }
