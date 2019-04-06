@@ -239,7 +239,7 @@ void WSWindowFrame::on_mouse_event(const WSMouseEvent& event)
 
         for (auto& button : m_buttons) {
             if (button->relative_rect().contains(event.position()))
-                return button->on_mouse_event(event);
+                return button->on_mouse_event(event.translated(-button->relative_rect().location()));
         }
         if (event.type() == WSMessage::MouseDown && event.button() == MouseButton::Left)
             wm.start_window_drag(m_window, event.translated(rect().location()));

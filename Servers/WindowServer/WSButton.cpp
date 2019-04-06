@@ -20,7 +20,7 @@ void WSButton::paint(Painter& painter)
 {
     PainterStateSaver saver(painter);
     painter.translate(relative_rect().location());
-    StylePainter::paint_button(painter, rect(), ButtonStyle::Normal, m_pressed);
+    StylePainter::paint_button(painter, rect(), ButtonStyle::Normal, m_pressed, m_hovered);
     auto x_location = rect().center();
     x_location.move_by(-(m_bitmap->width() / 2), -(m_bitmap->height() / 2));
     if (m_pressed)
@@ -39,13 +39,6 @@ void WSButton::on_mouse_event(const WSMouseEvent& event)
         return;
     }
 
-    if (event.type() == WSMessage::MouseMove) {
-        bool old_pressed = m_pressed;
-        m_pressed = rect().contains(event.position());
-        if (old_pressed != m_pressed)
-            wm.invalidate(screen_rect());
-    }
-
     if (event.type() == WSMessage::MouseUp && event.button() == MouseButton::Left) {
         WSWindowManager::the().set_cursor_tracking_button(nullptr);
         bool old_pressed = m_pressed;
@@ -54,6 +47,23 @@ void WSButton::on_mouse_event(const WSMouseEvent& event)
             if (on_click)
                 on_click();
         }
+        if (old_pressed != m_pressed)
+            wm.invalidate(screen_rect());
+        return;
+    }
+
+    if (event.type() == WSMessage::MouseMove) {
+        bool old_hovered = m_hovered;
+        m_hovered = rect().contains(event.position());
+        wm.set_hovered_button(m_hovered ? this : nullptr);
+        if (old_hovered != m_hovered)
+            wm.invalidate(screen_rect());
+        dbgprintf("move, hov=%d, rect=%s, evpos=%s\n", m_hovered, rect().to_string().characters(), event.position().to_string().characters());
+    }
+
+    if (event.type() == WSMessage::MouseMove && event.buttons() & (unsigned)MouseButton::Left) {
+        bool old_pressed = m_pressed;
+        m_pressed = m_hovered;
         if (old_pressed != m_pressed)
             wm.invalidate(screen_rect());
     }
