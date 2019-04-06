@@ -47,11 +47,6 @@ void GlyphEditorWidget::paint_event(GPaintEvent&)
             }
         }
     }
-
-    if (is_focused()) {
-        painter.translate(-1, -1);
-        painter.draw_focus_rect(rect());
-    }
 }
 
 void GlyphEditorWidget::mousedown_event(GMouseEvent& event)
@@ -82,7 +77,7 @@ void GlyphEditorWidget::draw_at_mouse(const GMouseEvent& event)
         return;
     bitmap.set_bit_at(x, y, set);
     if (on_glyph_altered)
-        on_glyph_altered();
+        on_glyph_altered(m_glyph);
     update();
 }
 

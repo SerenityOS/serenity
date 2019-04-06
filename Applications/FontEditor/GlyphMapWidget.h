@@ -20,6 +20,8 @@ public:
     Font& font() { return *m_font; }
     const Font& font() const { return *m_font; }
 
+    void update_glyph(byte);
+
     Function<void(byte)> on_glyph_selected;
 
 private:
