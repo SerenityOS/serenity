@@ -252,7 +252,7 @@ private:
 
     int do_exec(String path, Vector<String> arguments, Vector<String> environment);
 
-    int alloc_fd();
+    int alloc_fd(int first_candidate_fd = 0);
     void disown_all_shared_buffers();
 
     void create_signal_trampolines_if_needed();

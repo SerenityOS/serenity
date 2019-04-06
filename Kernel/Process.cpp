@@ -930,15 +930,9 @@ int Process::sys$fcntl(int fd, int cmd, dword arg)
         int arg_fd = (int)arg;
         if (arg_fd < 0)
             return -EINVAL;
-        int new_fd = -1;
-        for (int i = arg_fd; i < (int)m_max_open_file_descriptors; ++i) {
-            if (!m_fds[i]) {
-                new_fd = i;
-                break;
-            }
-        }
-        if (new_fd == -1)
-            return -EMFILE;
+        int new_fd = alloc_fd(arg_fd);
+        if (new_fd < 0)
+            return new_fd;
         m_fds[new_fd].set(*descriptor);
         break;
     }
@@ -1054,9 +1048,9 @@ int Process::sys$open(const char* path, int options, mode_t mode)
 #endif
     if (!validate_read_str(path))
         return -EFAULT;
-    if (number_of_open_file_descriptors() >= m_max_open_file_descriptors)
-        return -EMFILE;
-
+    int fd = alloc_fd();
+    if (fd < 0)
+        return fd;
     auto result = VFS::the().open(path, options, mode & ~umask(), cwd_inode());
     if (result.is_error())
         return result.error();
@@ -1065,21 +1059,15 @@ int Process::sys$open(const char* path, int options, mode_t mode)
         return -ENOTDIR; // FIXME: This should be handled by VFS::open.
     if (options & O_NONBLOCK)
         descriptor->set_blocking(false);
-
-    int fd = 0;
-    for (; fd < (int)m_max_open_file_descriptors; ++fd) {
-        if (!m_fds[fd])
-            break;
-    }
     dword flags = (options & O_CLOEXEC) ? FD_CLOEXEC : 0;
     m_fds[fd].set(move(descriptor), flags);
     return fd;
 }
 
-int Process::alloc_fd()
+int Process::alloc_fd(int first_candidate_fd)
 {
-    int fd = -1;
-    for (int i = 0; i < (int)m_max_open_file_descriptors; ++i) {
+    int fd = -EMFILE;
+    for (int i = first_candidate_fd; i < (int)m_max_open_file_descriptors; ++i) {
         if (!m_fds[i]) {
             fd = i;
             break;
@@ -1543,13 +1531,9 @@ int Process::sys$dup(int old_fd)
     auto* descriptor = file_descriptor(old_fd);
     if (!descriptor)
         return -EBADF;
-    if (number_of_open_file_descriptors() == m_max_open_file_descriptors)
-        return -EMFILE;
-    int new_fd = 0;
-    for (; new_fd < (int)m_max_open_file_descriptors; ++new_fd) {
-        if (!m_fds[new_fd])
-            break;
-    }
+    int new_fd = alloc_fd(0);
+    if (new_fd < 0)
+        return new_fd;
     m_fds[new_fd].set(*descriptor);
     return new_fd;
 }
@@ -1559,8 +1543,8 @@ int Process::sys$dup2(int old_fd, int new_fd)
     auto* descriptor = file_descriptor(old_fd);
     if (!descriptor)
         return -EBADF;
-    if (number_of_open_file_descriptors() == m_max_open_file_descriptors)
-        return -EMFILE;
+    if (new_fd < 0 || new_fd >= m_max_open_file_descriptors)
+        return -EINVAL;
     m_fds[new_fd].set(*descriptor);
     return new_fd;
 }
@@ -1963,13 +1947,9 @@ size_t Process::amount_shared() const
 
 int Process::sys$socket(int domain, int type, int protocol)
 {
-    if (number_of_open_file_descriptors() >= m_max_open_file_descriptors)
-        return -EMFILE;
-    int fd = 0;
-    for (; fd < (int)m_max_open_file_descriptors; ++fd) {
-        if (!m_fds[fd])
-            break;
-    }
+    int fd = alloc_fd();
+    if (fd < 0)
+        return fd;
     auto result = Socket::create(domain, type, protocol);
     if (result.is_error())
         return result.error();
@@ -2017,13 +1997,9 @@ int Process::sys$accept(int accepting_socket_fd, sockaddr* address, socklen_t* a
         return -EFAULT;
     if (!validate_write(address, *address_size))
         return -EFAULT;
-    if (number_of_open_file_descriptors() >= m_max_open_file_descriptors)
-        return -EMFILE;
-    int accepted_socket_fd = 0;
-    for (; accepted_socket_fd < (int)m_max_open_file_descriptors; ++accepted_socket_fd) {
-        if (!m_fds[accepted_socket_fd])
-            break;
-    }
+    int accepted_socket_fd = alloc_fd();
+    if (accepted_socket_fd < 0)
+        return accepted_socket_fd;
     auto* accepting_socket_descriptor = file_descriptor(accepting_socket_fd);
     if (!accepting_socket_descriptor)
         return -EBADF;
@@ -2050,13 +2026,9 @@ int Process::sys$connect(int sockfd, const sockaddr* address, socklen_t address_
 {
     if (!validate_read(address, address_size))
         return -EFAULT;
-    if (number_of_open_file_descriptors() >= m_max_open_file_descriptors)
-        return -EMFILE;
-    int fd = 0;
-    for (; fd < (int)m_max_open_file_descriptors; ++fd) {
-        if (!m_fds[fd])
-            break;
-    }
+    int fd = alloc_fd();
+    if (fd < 0)
+        return fd;
     auto* descriptor = file_descriptor(sockfd);
     if (!descriptor)
         return -EBADF;
