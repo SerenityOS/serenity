@@ -11,6 +11,7 @@ public:
         None,
         ConnectionFailed,
         TransmissionFailed,
+        ProtocolFailed,
     };
     virtual ~GNetworkJob() override;
 
