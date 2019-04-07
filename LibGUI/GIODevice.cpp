@@ -42,6 +42,10 @@ ByteBuffer GIODevice::read(int max_size)
         set_error(errno);
         return { };
     }
+    if (nread == 0) {
+        set_eof(true);
+        return { };
+    }
     buffer.trim(nread);
     return buffer;
 }

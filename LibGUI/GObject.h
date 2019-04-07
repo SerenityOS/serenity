@@ -1,5 +1,6 @@
 #pragma once
 
+#include <AK/Function.h>
 #include <AK/Vector.h>
 #include <AK/Weakable.h>
 
@@ -31,6 +32,8 @@ public:
     void delete_later();
 
     void dump_tree(int indent = 0);
+
+    void deferred_invoke(Function<void(GObject&)>);
 
     virtual bool is_widget() const { return false; }
     virtual bool is_window() const { return false; }

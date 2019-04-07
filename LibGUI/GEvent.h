@@ -5,6 +5,7 @@
 #include <AK/AKString.h>
 #include <AK/Types.h>
 #include <AK/WeakPtr.h>
+#include <AK/Function.h>
 #include <Kernel/KeyCode.h>
 #include <LibGUI/GWindowType.h>
 
@@ -28,6 +29,7 @@ public:
         KeyUp,
         Timer,
         DeferredDestroy,
+        DeferredInvoke,
         WindowEntered,
         WindowLeft,
         WindowBecameInactive,
@@ -53,6 +55,19 @@ public:
 
 private:
     Type m_type { Invalid };
+};
+
+class GDeferredInvocationEvent : public GEvent {
+    friend class GEventLoop;
+public:
+    GDeferredInvocationEvent(Function<void(GObject&)> invokee)
+        : GEvent(GEvent::Type::DeferredInvoke)
+        , m_invokee(move(invokee))
+    {
+    }
+
+private:
+    Function<void(GObject&)> m_invokee;
 };
 
 class GWMEvent : public GEvent {

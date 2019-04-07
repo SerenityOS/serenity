@@ -58,6 +58,11 @@ LIBGUI_OBJS = \
     GFileSystemModel.o \
     GSplitter.o \
     GTimer.o \
+    GNetworkJob.o \
+    GNetworkResponse.o \
+    GHttpRequest.o \
+    GHttpResponse.o \
+    GHttpNetworkJob.o \
     GWindow.o
 
 OBJS = $(SHAREDGRAPHICS_OBJS) $(LIBGUI_OBJS)
