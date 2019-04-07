@@ -66,7 +66,7 @@ Retained<StringImpl> StringImpl::create_uninitialized(ssize_t length, char*& buf
     return new_stringimpl;
 }
 
-RetainPtr<StringImpl> StringImpl::create(const char* cstring, ssize_t length, ShouldChomp shouldChomp)
+RetainPtr<StringImpl> StringImpl::create(const char* cstring, ssize_t length, ShouldChomp should_chomp)
 {
     if (!cstring)
         return nullptr;
@@ -74,17 +74,22 @@ RetainPtr<StringImpl> StringImpl::create(const char* cstring, ssize_t length, Sh
     if (!*cstring)
         return the_empty_stringimpl();
 
+    if (should_chomp) {
+        while (length) {
+            char last_ch = cstring[length - 1];
+            if (!last_ch || last_ch == '\n' || last_ch == '\r')
+                --length;
+            else
+                break;
+        }
+    }
+
     if (!length)
         return the_empty_stringimpl();
 
     char* buffer;
     auto new_stringimpl = create_uninitialized(length, buffer);
     memcpy(buffer, cstring, length * sizeof(char));
-
-    if (shouldChomp && buffer[length - 1] == '\n') {
-        buffer[length - 1] = '\0';
-        --new_stringimpl->m_length;
-    }
 
     return new_stringimpl;
 }
