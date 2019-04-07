@@ -95,6 +95,7 @@
     __ENUMERATE_SYSCALL(create_thread) \
     __ENUMERATE_SYSCALL(gettid) \
     __ENUMERATE_SYSCALL(donate) \
+    __ENUMERATE_SYSCALL(rename) \
 
 
 namespace Syscall {

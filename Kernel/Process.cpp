@@ -2445,3 +2445,12 @@ int Process::sys$donate(int tid)
     Scheduler::donate_to(beneficiary, "sys$donate");
     return 0;
 }
+
+int Process::sys$rename(const char* oldpath, const char* newpath)
+{
+    if (!validate_read_str(oldpath))
+        return -EFAULT;
+    if (!validate_read_str(newpath))
+        return -EFAULT;
+    return VFS::the().rename(String(oldpath), String(newpath), cwd_inode());
+}
