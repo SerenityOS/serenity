@@ -38,6 +38,7 @@ OBJS = \
        tc.o \
        host.o \
        qs.o \
+       mv.o \
        rm.o
 
 APPS = \
@@ -81,6 +82,7 @@ APPS = \
        tc \
        host \
        qs \
+       mv \
        rm
 
 ARCH_FLAGS =
@@ -221,6 +223,9 @@ host: host.o
 	$(LD) -o $@ $(LDFLAGS) $< -lc
 
 qs: qs.o
+	$(LD) -o $@ $(LDFLAGS) -L../LibGUI $< -lgui -lc
+
+mv: mv.o
 	$(LD) -o $@ $(LDFLAGS) -L../LibGUI $< -lgui -lc
 
 .cpp.o:

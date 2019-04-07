@@ -312,6 +312,50 @@ KResult VFS::chmod(const String& path, mode_t mode, Inode& base)
     return chmod(*inode, mode);
 }
 
+KResult VFS::rename(const String& old_path, const String& new_path, Inode& base)
+{
+    RetainPtr<Inode> old_parent_inode;
+    auto old_inode_or_error = resolve_path_to_inode(old_path, base, &old_parent_inode);
+    if (old_inode_or_error.is_error())
+        return old_inode_or_error.error();
+    auto old_inode = old_inode_or_error.value();
+
+    RetainPtr<Inode> new_parent_inode;
+    auto new_inode_or_error = resolve_path_to_inode(new_path, base, &new_parent_inode);
+    if (new_inode_or_error.is_error()) {
+        if (new_inode_or_error.error() != -ENOENT)
+            return new_inode_or_error.error();
+    }
+
+    if (!new_parent_inode->metadata().may_write(current->process()))
+        return KResult(-EACCES);
+
+    if (!old_parent_inode->metadata().may_write(current->process()))
+        return KResult(-EACCES);
+
+    if (!new_inode_or_error.is_error()) {
+        auto new_inode = new_inode_or_error.value();
+        // FIXME: Is this really correct? Check what other systems do.
+        if (new_inode.ptr() == old_inode.ptr())
+            return KSuccess;
+        if (new_inode->is_directory() && !old_inode->is_directory())
+            return KResult(-EISDIR);
+        auto result = new_parent_inode->remove_child(new_parent_inode->reverse_lookup(new_inode->identifier()));
+        if (result.is_error())
+            return result;
+    }
+
+    auto result = new_parent_inode->add_child(old_inode->identifier(), FileSystemPath(new_path).basename(), 0 /* FIXME: file type? */);
+    if (result.is_error())
+        return result;
+
+    result = old_parent_inode->remove_child(old_parent_inode->reverse_lookup(old_inode->identifier()));
+    if (result.is_error())
+        return result;
+
+    return KSuccess;
+}
+
 KResult VFS::chown(const String& path, uid_t a_uid, gid_t a_gid, Inode& base)
 {
     auto inode_or_error = resolve_path_to_inode(path, base);

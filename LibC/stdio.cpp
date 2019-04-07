@@ -418,8 +418,8 @@ int fclose(FILE* stream)
 
 int rename(const char* oldpath, const char* newpath)
 {
-    dbgprintf("FIXME(LibC): rename(%s, %s)\n", oldpath, newpath);
-    ASSERT_NOT_REACHED();
+    int rc = syscall(SC_rename, oldpath, newpath);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
 char* tmpnam(char*)

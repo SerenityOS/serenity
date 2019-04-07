@@ -75,6 +75,7 @@ public:
     KResult access(const String& path, int mode, Inode& base);
     KResult stat(const String& path, int options, Inode& base, struct stat&);
     KResult utime(const String& path, Inode& base, time_t atime, time_t mtime);
+    KResult rename(const String& oldpath, const String& newpath, Inode& base);
     KResultOr<Retained<Inode>> open_directory(const String& path, Inode& base);
 
     void register_device(Device&);

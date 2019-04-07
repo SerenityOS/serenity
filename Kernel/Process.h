@@ -180,6 +180,7 @@ public:
     int sys$setsockopt(const Syscall::SC_setsockopt_params*);
     int sys$restore_signal_mask(dword mask);
     int sys$create_thread(int(*)(void*), void*);
+    int sys$rename(const char* oldpath, const char* newpath);
 
     int sys$create_shared_buffer(pid_t peer_pid, int, void** buffer);
     void* sys$get_shared_buffer(int shared_buffer_id);

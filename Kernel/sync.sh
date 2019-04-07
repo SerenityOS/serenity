@@ -79,6 +79,7 @@ cp -v ../Userland/uc mnt/bin/uc
 cp -v ../Userland/tc mnt/bin/tc
 cp -v ../Userland/host mnt/bin/host
 cp -v ../Userland/qs mnt/bin/qs
+cp -v ../Userland/mv mnt/bin/mv
 chmod 4755 mnt/bin/su
 cp -v ../Applications/Terminal/Terminal mnt/bin/Terminal
 cp -v ../Applications/FontEditor/FontEditor mnt/bin/FontEditor
