@@ -74,10 +74,10 @@ void GHttpNetworkJob::start()
             }
             auto name = parts[0];
             if (chomped_line.length() < name.length() + 2) {
-                printf("Malformed HTTP header\n");
+                printf("Malformed HTTP header: '%s' (%d)\n", chomped_line.characters(), chomped_line.length());
                 return deferred_invoke([this](auto&){ did_fail(GNetworkJob::Error::ProtocolFailed); });
             }
-            auto value = chomped_line.substring(name.length() + 2, line.size() - name.length() - 2);
+            auto value = chomped_line.substring(name.length() + 2, chomped_line.length() - name.length() - 2);
             m_headers.set(name, value);
             printf("[%s] = '%s'\n", name.characters(), value.characters());
             continue;
