@@ -99,5 +99,9 @@ void GObject::dump_tree(int indent)
     for (auto* child : children()) {
         child->dump_tree(indent + 2);
     }
+}
 
+void GObject::deferred_invoke(Function<void(GObject&)> invokee)
+{
+    GEventLoop::current().post_event(*this, make<GDeferredInvocationEvent>(move(invokee)));
 }

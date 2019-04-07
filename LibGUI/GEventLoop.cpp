@@ -158,6 +158,9 @@ int GEventLoop::exec()
                 default:
                     dbgprintf("Event type %u with no receiver :(\n", event.type());
                 }
+            } else if (event.type() == GEvent::Type::DeferredInvoke) {
+                printf("DeferredInvoke: receiver=%s{%p}\n", receiver->class_name(), receiver);
+                static_cast<GDeferredInvocationEvent&>(event).m_invokee(*receiver);
             } else {
                 receiver->event(event);
             }

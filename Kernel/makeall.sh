@@ -36,6 +36,8 @@ $make_cmd -C ../Applications/IRCClient clean && \
 $make_cmd -C ../Applications/IRCClient && \
 $make_cmd -C ../Applications/Taskbar clean && \
 $make_cmd -C ../Applications/Taskbar && \
+$make_cmd -C ../Applications/Downloader clean && \
+$make_cmd -C ../Applications/Downloader && \
 $make_cmd clean &&\
 $make_cmd && \
 sudo ./sync.sh
