@@ -92,13 +92,13 @@ ByteBuffer String::to_byte_buffer() const
     return ByteBuffer::copy(reinterpret_cast<const byte*>(characters()), length());
 }
 
-String String::from_byte_buffer(const ByteBuffer& buffer)
+String String::from_byte_buffer(const ByteBuffer& buffer, ShouldChomp should_chomp)
 {
     if (buffer.is_null())
         return nullptr;
     if (buffer.is_empty())
         return empty();
-    return String((const char*)buffer.pointer(), buffer.size());
+    return String((const char*)buffer.pointer(), buffer.size(), should_chomp);
 }
 
 unsigned String::to_uint(bool& ok) const

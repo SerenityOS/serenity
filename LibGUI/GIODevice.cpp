@@ -109,15 +109,21 @@ ByteBuffer GIODevice::read_all()
 
 ByteBuffer GIODevice::read_line(int max_size)
 {
-    if (m_fd < 0)
+    if (m_fd < 0) {
+        printf("nofd\n");
         return { };
-    if (!max_size)
+    }
+    if (!max_size) {
+        printf("noms\n");
         return { };
-    if (!can_read_line())
+    }
+    if (!can_read_line()) {
+        printf("norl\n");
         return { };
+    }
     if (m_eof) {
         if (m_buffered_data.size() > max_size) {
-            dbgprintf("GIODevice::read_line: At EOF but there's more than max_size(%d) buffered\n", max_size);
+            printf("GIODevice::read_line: At EOF but there's more than max_size(%d) buffered\n", max_size);
             return { };
         }
         auto buffer = ByteBuffer::copy(m_buffered_data.data(), m_buffered_data.size());
@@ -128,6 +134,7 @@ ByteBuffer GIODevice::read_line(int max_size)
     int line_index = 0;
     while (line_index < max_size) {
         byte ch = m_buffered_data[line_index];
+        printf("%c", ch);
         line[line_index++] = ch;
         if (ch == '\n') {
             Vector<byte> new_buffered_data;
@@ -135,9 +142,11 @@ ByteBuffer GIODevice::read_line(int max_size)
             m_buffered_data = move(new_buffered_data);
             line[line_index] = '\0';
             line.trim(line_index + 1);
+            printf("\n");
             return line;
         }
     }
+    printf("\nnowork\n");
     return { };
 }
 

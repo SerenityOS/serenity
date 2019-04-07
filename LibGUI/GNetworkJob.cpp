@@ -21,7 +21,7 @@ void GNetworkJob::did_finish(Retained<GNetworkResponse>&& response)
 void GNetworkJob::did_fail(Error error)
 {
     m_error = error;
-    dbgprintf("%s{%} job did_fail! error=%u\n", class_name(), this, (unsigned)error);
+    dbgprintf("%s{%p} job did_fail! error=%u\n", class_name(), this, (unsigned)error);
     ASSERT(on_finish);
     on_finish(false);
 }
