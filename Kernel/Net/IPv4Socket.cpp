@@ -66,7 +66,7 @@ KResult IPv4Socket::bind(const sockaddr* address, socklen_t address_size)
     ASSERT_NOT_REACHED();
 }
 
-KResult IPv4Socket::connect(const sockaddr* address, socklen_t address_size)
+KResult IPv4Socket::connect(const sockaddr* address, socklen_t address_size, ShouldBlock should_block)
 {
     ASSERT(!m_bound);
     if (address_size != sizeof(sockaddr_in))
@@ -78,7 +78,7 @@ KResult IPv4Socket::connect(const sockaddr* address, socklen_t address_size)
     m_destination_address = IPv4Address((const byte*)&ia.sin_addr.s_addr);
     m_destination_port = ntohs(ia.sin_port);
 
-    return protocol_connect();
+    return protocol_connect(should_block);
 }
 
 void IPv4Socket::attach_fd(SocketRole)
@@ -110,7 +110,7 @@ ssize_t IPv4Socket::write(SocketRole, const byte* data, ssize_t size)
 
 bool IPv4Socket::can_write(SocketRole) const
 {
-    return true;
+    return is_connected();
 }
 
 int IPv4Socket::allocate_source_port_if_needed()

@@ -342,6 +342,7 @@ void handle_tcp(const EthernetFrameHeader& eth, int frame_size)
         socket->set_ack_number(tcp_packet.sequence_number() + payload_size + 1);
         socket->send_tcp_packet(TCPFlags::FIN | TCPFlags::ACK);
         socket->set_state(TCPSocket::State::Disconnecting);
+        socket->set_connected(false);
         return;
     }
 

@@ -11,7 +11,7 @@ public:
     virtual ~LocalSocket() override;
 
     virtual KResult bind(const sockaddr*, socklen_t) override;
-    virtual KResult connect(const sockaddr*, socklen_t) override;
+    virtual KResult connect(const sockaddr*, socklen_t, ShouldBlock = ShouldBlock::Yes) override;
     virtual bool get_address(sockaddr*, socklen_t*) override;
     virtual void attach_fd(SocketRole) override;
     virtual void detach_fd(SocketRole) override;
