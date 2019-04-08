@@ -15,6 +15,7 @@ class MasterPTY;
 class Process;
 class Region;
 class CharacterDevice;
+class SharedMemory;
 
 class FileDescriptor : public Retainable<FileDescriptor> {
 public:
@@ -85,12 +86,19 @@ public:
     bool is_fifo() const { return m_fifo; }
     FIFO::Direction fifo_direction() { return m_fifo_direction; }
 
+    bool is_file() const;
+    bool is_shared_memory() const { return m_shared_memory; }
+    SharedMemory* shared_memory() { return m_shared_memory.ptr(); }
+    const SharedMemory* shared_memory() const { return m_shared_memory.ptr(); }
+
     ByteBuffer& generator_cache() { return m_generator_cache; }
 
     void set_original_inode(Badge<VFS>, Retained<Inode>&& inode) { m_inode = move(inode); }
 
     SocketRole socket_role() const { return m_socket_role; }
     void set_socket_role(SocketRole);
+
+    KResult truncate(off_t);
 
 private:
     friend class VFS;
@@ -114,6 +122,8 @@ private:
 
     RetainPtr<FIFO> m_fifo;
     FIFO::Direction m_fifo_direction { FIFO::Neither };
+
+    RetainPtr<SharedMemory> m_shared_memory;
 
     bool m_closed { false };
 };

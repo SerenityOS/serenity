@@ -11,6 +11,7 @@
 #include <Kernel/Process.h>
 #include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/VM/MemoryManager.h>
+#include <Kernel/SharedMemory.h>
 
 Retained<FileDescriptor> FileDescriptor::create(RetainPtr<Inode>&& inode)
 {
@@ -357,6 +358,11 @@ const char* to_string(SocketRole role)
     }
 }
 
+bool FileDescriptor::is_file() const
+{
+    return !is_tty() && !is_fifo() && !is_device() && !is_socket() && !is_shared_memory();
+}
+
 KResultOr<String> FileDescriptor::absolute_path()
 {
     Stopwatch sw("absolute_path");
@@ -438,4 +444,13 @@ CharacterDevice* FileDescriptor::character_device()
 const CharacterDevice* FileDescriptor::character_device() const
 {
     return is_character_device() ? static_cast<const CharacterDevice*>(device()) : nullptr;
+}
+
+KResult FileDescriptor::truncate(off_t length)
+{
+    if (is_file()) {
+        return m_inode->truncate(length);
+    }
+    ASSERT(is_shared_memory());
+    return shared_memory()->truncate(length);
 }

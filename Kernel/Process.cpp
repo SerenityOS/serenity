@@ -2468,3 +2468,14 @@ int Process::sys$shm_unlink(const char* name)
         return -EFAULT;
     return -ENOTIMPL;
 }
+
+int Process::sys$ftruncate(int fd, off_t length)
+{
+    auto* descriptor = file_descriptor(fd);
+    if (!descriptor)
+        return -EBADF;
+    // FIXME: Check that fd is writable, otherwise EINVAL.
+    if (!descriptor->is_file() && !descriptor->is_shared_memory())
+        return -EINVAL;
+    return descriptor->truncate(length);
+}
