@@ -13,19 +13,14 @@ GHttpJob::~GHttpJob()
 {
 }
 
-void GHttpJob::start()
+void GHttpJob::on_socket_connected()
 {
-    ASSERT(!m_socket);
-    m_socket = new GTCPSocket(this);
-    int success = m_socket->connect(m_request.hostname(), m_request.port());
-    if (!success)
-        return did_fail(GNetworkJob::Error::ConnectionFailed);
-
     auto raw_request = m_request.to_raw_request();
+#if 0
+    printf("raw_request:\n%s\n", String::from_byte_buffer(raw_request).characters());
+#endif
 
-    printf("raw_request:\n%s\n", raw_request.pointer());
-
-    success = m_socket->send(raw_request);
+    bool success = m_socket->send(raw_request);
     if (!success)
         return deferred_invoke([this](auto&){ did_fail(GNetworkJob::Error::TransmissionFailed); });
 
@@ -98,4 +93,17 @@ void GHttpJob::start()
     deferred_invoke([this, response] (auto&) {
         did_finish(move(response));
     });
+}
+
+void GHttpJob::start()
+{
+    ASSERT(!m_socket);
+    m_socket = new GTCPSocket(this);
+    m_socket->on_connected = [this] {
+        printf("Socket on_connected callback\n");
+        on_socket_connected();
+    };
+    bool success = m_socket->connect(m_request.hostname(), m_request.port());
+    if (!success)
+        return did_fail(GNetworkJob::Error::ConnectionFailed);
 }

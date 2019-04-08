@@ -109,6 +109,8 @@ private:
     void handle(const Message&, const String& verbatim);
     void handle_user_command(const String&);
 
+    void on_socket_connected();
+
     String m_hostname;
     int m_port { 6667 };
 

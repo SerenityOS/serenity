@@ -16,6 +16,8 @@ public:
     virtual const char* class_name() const override { return "GHttpJob"; }
 
 private:
+    void on_socket_connected();
+
     enum class State {
         InStatus,
         InHeaders,

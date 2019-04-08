@@ -1,9 +1,12 @@
 #include <LibGUI/GSocket.h>
+#include <LibGUI/GNotifier.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <stdlib.h>
 #include <stdio.h>
 #include <netdb.h>
+#include <errno.h>
 
 GSocket::GSocket(Type type, GObject* parent)
     : GIODevice(parent)
@@ -41,17 +44,29 @@ bool GSocket::connect(const GSocketAddress& address, int port)
     addr.sin_family = AF_INET;
     addr.sin_port = htons(port);
 
+    m_destination_address = address;
+    m_destination_port = port;
+
     printf("Connecting to %s...", address.to_string().characters());
     fflush(stdout);
     int rc = ::connect(fd(), (struct sockaddr*)&addr, sizeof(addr));
     if (rc < 0) {
+        if (errno == EINPROGRESS) {
+            printf("in progress.\n");
+            m_notifier = make<GNotifier>(fd(), GNotifier::Event::Write);
+            m_notifier->on_ready_to_write = [this] (GNotifier&) {
+                printf("%s{%p} connected!\n", class_name(), this);
+                m_connected = true;
+                m_notifier->set_event_mask(GNotifier::Event::None);
+                if (on_connected)
+                    on_connected();
+            };
+            return true;
+        }
         perror("connect");
         exit(1);
     }
     printf("ok!\n");
-
-    m_destination_address = address;
-    m_destination_port = port;
     m_connected = true;
     return true;
 }
