@@ -2454,3 +2454,17 @@ int Process::sys$rename(const char* oldpath, const char* newpath)
         return -EFAULT;
     return VFS::the().rename(String(oldpath), String(newpath), cwd_inode());
 }
+
+int Process::sys$shm_open(const char* name, int flags, mode_t mode)
+{
+    if (!validate_read_str(name))
+        return -EFAULT;
+    return -ENOTIMPL;
+}
+
+int Process::sys$shm_unlink(const char* name)
+{
+    if (!validate_read_str(name))
+        return -EFAULT;
+    return -ENOTIMPL;
+}
