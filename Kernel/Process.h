@@ -99,6 +99,8 @@ public:
 
     int sys$gettid();
     int sys$donate(int tid);
+    int sys$shm_open(const char* name, int flags, mode_t);
+    int sys$shm_unlink(const char* name);
     pid_t sys$setsid();
     pid_t sys$getsid(pid_t);
     int sys$setpgid(pid_t pid, pid_t pgid);

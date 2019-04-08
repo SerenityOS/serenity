@@ -21,6 +21,8 @@ __BEGIN_DECLS
 void* mmap(void* addr, size_t, int prot, int flags, int fd, off_t);
 int munmap(void*, size_t);
 int set_mmap_name(void*, size_t, const char*);
+int shm_open(const char* name, int flags, mode_t);
+int shm_unlink(const char* name);
 
 __END_DECLS
 

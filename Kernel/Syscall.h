@@ -96,6 +96,8 @@
     __ENUMERATE_SYSCALL(gettid) \
     __ENUMERATE_SYSCALL(donate) \
     __ENUMERATE_SYSCALL(rename) \
+    __ENUMERATE_SYSCALL(shm_open) \
+    __ENUMERATE_SYSCALL(shm_close) \
 
 
 namespace Syscall {
