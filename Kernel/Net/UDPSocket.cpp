@@ -81,7 +81,7 @@ int UDPSocket::protocol_send(const void* data, int data_length)
     return data_length;
 }
 
-KResult UDPSocket::protocol_connect()
+KResult UDPSocket::protocol_connect(ShouldBlock)
 {
     return KSuccess;
 }

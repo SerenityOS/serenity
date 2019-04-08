@@ -21,7 +21,7 @@ public:
     static Lockable<HashTable<IPv4Socket*>>& all_sockets();
 
     virtual KResult bind(const sockaddr*, socklen_t) override;
-    virtual KResult connect(const sockaddr*, socklen_t) override;
+    virtual KResult connect(const sockaddr*, socklen_t, ShouldBlock = ShouldBlock::Yes) override;
     virtual bool get_address(sockaddr*, socklen_t*) override;
     virtual void attach_fd(SocketRole) override;
     virtual void detach_fd(SocketRole) override;
@@ -49,7 +49,7 @@ protected:
 
     virtual int protocol_receive(const ByteBuffer&, void*, size_t, int, sockaddr*, socklen_t*) { return -ENOTIMPL; }
     virtual int protocol_send(const void*, int) { return -ENOTIMPL; }
-    virtual KResult protocol_connect() { return KSuccess; }
+    virtual KResult protocol_connect(ShouldBlock) { return KSuccess; }
     virtual int protocol_allocate_source_port() { return 0; }
     virtual bool protocol_is_disconnected() const { return false; }
 

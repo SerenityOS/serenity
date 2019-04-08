@@ -65,7 +65,7 @@ KResult LocalSocket::bind(const sockaddr* address, socklen_t address_size)
     return KSuccess;
 }
 
-KResult LocalSocket::connect(const sockaddr* address, socklen_t address_size)
+KResult LocalSocket::connect(const sockaddr* address, socklen_t address_size, ShouldBlock)
 {
     ASSERT(!m_bound);
     if (address_size != sizeof(sockaddr_un))

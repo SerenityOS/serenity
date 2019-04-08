@@ -9,6 +9,7 @@
 #include <Kernel/KResult.h>
 
 enum class SocketRole { None, Listener, Accepted, Connected, Connecting };
+enum class ShouldBlock { No = 0, Yes = 1 };
 
 class Socket : public Retainable<Socket> {
 public:
@@ -25,7 +26,7 @@ public:
     KResult listen(int backlog);
 
     virtual KResult bind(const sockaddr*, socklen_t) = 0;
-    virtual KResult connect(const sockaddr*, socklen_t) = 0;
+    virtual KResult connect(const sockaddr*, socklen_t, ShouldBlock) = 0;
     virtual bool get_address(sockaddr*, socklen_t*) = 0;
     virtual bool is_local() const { return false; }
     virtual bool is_ipv4() const { return false; }

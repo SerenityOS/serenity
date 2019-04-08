@@ -2038,7 +2038,7 @@ int Process::sys$connect(int sockfd, const sockaddr* address, socklen_t address_
         return -EISCONN;
     auto& socket = *descriptor->socket();
     descriptor->set_socket_role(SocketRole::Connecting);
-    auto result = socket.connect(address, address_size);
+    auto result = socket.connect(address, address_size, descriptor->is_blocking() ? ShouldBlock::Yes : ShouldBlock::No);
     if (result.is_error()) {
         descriptor->set_socket_role(SocketRole::None);
         return result;
