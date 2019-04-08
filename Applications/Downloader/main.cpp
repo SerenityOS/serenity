@@ -19,9 +19,9 @@ int main(int argc, char** argv)
             return;
         }
         auto& response = static_cast<const GHttpResponse&>(*job->response());
-        printf("on_receive: code=%d\n", response.code());
-        printf("payload:\n");
-        printf("%s", response.payload().pointer());
+        printf("%s{%p}: on_receive: code=%d\n", job->class_name(), job, response.code());
+        //printf("payload:\n");
+        //printf("%s", response.payload().pointer());
         printf("payload was %d bytes\n", response.payload().size());
     };
 

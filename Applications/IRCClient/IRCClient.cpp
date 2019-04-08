@@ -45,15 +45,8 @@ void IRCClient::set_server(const String &hostname, int port)
     m_port = port;
 }
 
-bool IRCClient::connect()
+void IRCClient::on_socket_connected()
 {
-    if (m_socket->is_connected())
-        ASSERT_NOT_REACHED();
-
-    bool success = m_socket->connect(m_hostname, m_port);
-    if (!success)
-        return false;
-
     m_notifier = make<GNotifier>(m_socket->fd(), GNotifier::Read);
     m_notifier->on_ready_to_read = [this] (GNotifier&) { receive_from_server(); };
 
@@ -62,13 +55,24 @@ bool IRCClient::connect()
 
     if (on_connect)
         on_connect();
+}
+
+bool IRCClient::connect()
+{
+    if (m_socket->is_connected())
+        ASSERT_NOT_REACHED();
+
+    m_socket->on_connected = [this] { on_socket_connected(); };
+    bool success = m_socket->connect(m_hostname, m_port);
+    if (!success)
+        return false;
     return true;
 }
 
 void IRCClient::receive_from_server()
 {
     while (m_socket->can_read_line()) {
-        auto line = m_socket->read_line(4096);
+        auto line = m_socket->read_line(PAGE_SIZE);
         if (line.is_null()) {
             if (!m_socket->is_connected()) {
                 printf("IRCClient: Connection closed!\n");

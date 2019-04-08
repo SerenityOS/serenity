@@ -4,7 +4,7 @@
 GTCPSocket::GTCPSocket(GObject* parent)
     : GSocket(GSocket::Type::TCP, parent)
 {
-    int fd = socket(AF_INET, SOCK_STREAM, 0);
+    int fd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0);
     if (fd < 0) {
         set_error(fd);
     } else {

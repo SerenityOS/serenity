@@ -32,6 +32,8 @@ private:
     IPv4Address m_ipv4_address;
 };
 
+class GNotifier;
+
 class GSocket : public GIODevice {
 public:
     enum class Type { Invalid, TCP, UDP };
@@ -51,6 +53,8 @@ public:
     GSocketAddress destination_address() const { return m_source_address; }
     int destination_port() const { return m_destination_port; }
 
+    Function<void()> on_connected;
+
     virtual const char* class_name() const override { return "GSocket"; }
 
 protected:
@@ -65,5 +69,5 @@ protected:
 private:
     virtual bool open(GIODevice::OpenMode) override { ASSERT_NOT_REACHED(); }
     Type m_type { Type::Invalid };
-
+    OwnPtr<GNotifier> m_notifier;
 };

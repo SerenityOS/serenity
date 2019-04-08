@@ -145,7 +145,7 @@ bool GIODevice::populate_read_buffer()
 {
     if (m_fd < 0)
         return false;
-    auto buffer = ByteBuffer::create_uninitialized(1024);
+    auto buffer = ByteBuffer::create_uninitialized(PAGE_SIZE);
     int nread = ::read(m_fd, buffer.pointer(), buffer.size());
     if (nread < 0) {
         set_error(errno);
