@@ -62,7 +62,7 @@ LIBGUI_OBJS = \
     GNetworkResponse.o \
     GHttpRequest.o \
     GHttpResponse.o \
-    GHttpNetworkJob.o \
+    GHttpJob.o \
     GWindow.o
 
 OBJS = $(SHAREDGRAPHICS_OBJS) $(LIBGUI_OBJS)

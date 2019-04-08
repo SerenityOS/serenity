@@ -1,19 +1,19 @@
-#include <LibGUI/GHttpNetworkJob.h>
+#include <LibGUI/GHttpJob.h>
 #include <LibGUI/GHttpResponse.h>
 #include <LibGUI/GTCPSocket.h>
 #include <stdio.h>
 #include <unistd.h>
 
-GHttpNetworkJob::GHttpNetworkJob(const GHttpRequest& request)
+GHttpJob::GHttpJob(const GHttpRequest& request)
     : m_request(request)
 {
 }
 
-GHttpNetworkJob::~GHttpNetworkJob()
+GHttpJob::~GHttpJob()
 {
 }
 
-void GHttpNetworkJob::start()
+void GHttpJob::start()
 {
     ASSERT(!m_socket);
     m_socket = new GTCPSocket(this);
@@ -35,7 +35,7 @@ void GHttpNetworkJob::start()
             while (!m_socket->can_read_line())
                 usleep(1);
             ASSERT(m_socket->can_read_line());
-            auto line = m_socket->read_line(1024);
+            auto line = m_socket->read_line(PAGE_SIZE);
             if (line.is_null()) {
                 printf("Expected HTTP status\n");
                 return deferred_invoke([this](auto&){ did_fail(GNetworkJob::Error::TransmissionFailed); });
@@ -57,7 +57,7 @@ void GHttpNetworkJob::start()
         if (m_state == State::InHeaders) {
             while (!m_socket->can_read_line())
                 usleep(1);
-            auto line = m_socket->read_line(1024);
+            auto line = m_socket->read_line(PAGE_SIZE);
             if (line.is_null()) {
                 printf("Expected HTTP header\n");
                 return did_fail(GNetworkJob::Error::ProtocolFailed);
@@ -83,7 +83,7 @@ void GHttpNetworkJob::start()
             continue;
         }
         ASSERT(m_state == State::InBody);
-        auto payload = m_socket->receive(100000);
+        auto payload = m_socket->receive(PAGE_SIZE);
         if (!payload) {
             if (m_socket->eof()) {
                 m_state = State::Finished;
@@ -95,8 +95,7 @@ void GHttpNetworkJob::start()
     }
 
     auto response = GHttpResponse::create(m_code, move(m_headers), ByteBuffer::copy(buffer.data(), buffer.size()));
-    deferred_invoke([this, response] (GObject&) {
-        printf("in the deferred invoke lambda\n");
+    deferred_invoke([this, response] (auto&) {
         did_finish(move(response));
     });
 }
