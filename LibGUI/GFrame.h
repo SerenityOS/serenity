@@ -4,7 +4,7 @@
 
 class GFrame : public GWidget {
 public:
-    explicit GFrame(GWidget* parent);
+    explicit GFrame(GWidget* parent = nullptr);
     virtual ~GFrame() override;
 
     enum Shadow { Plain, Raised, Sunken };
