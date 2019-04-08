@@ -31,6 +31,7 @@ KERNEL_OBJS = \
        ELF/ELFImage.o \
        ELF/ELFLoader.o \
        KSyms.o \
+       SharedMemory.o \
        FileSystem/DevPtsFS.o \
        Devices/BXVGADevice.o \
        PCI.o \

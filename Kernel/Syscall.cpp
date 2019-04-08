@@ -247,6 +247,8 @@ static dword handle(RegisterDump& regs, dword function, dword arg1, dword arg2, 
         return current->process().sys$shm_open((const char*)arg1, (int)arg2, (mode_t)arg3);
     case Syscall::SC_shm_close:
         return current->process().sys$shm_unlink((const char*)arg1);
+    case Syscall::SC_ftruncate:
+        return current->process().sys$ftruncate((int)arg1, (off_t)arg2);
     default:
         kprintf("<%u> int0x82: Unknown function %u requested {%x, %x, %x}\n", current->process().pid(), function, arg1, arg2, arg3);
         break;
