@@ -6,4 +6,5 @@ enum class GWindowType {
     Menu,
     WindowSwitcher,
     Taskbar,
+    Tooltip,
 };

@@ -83,7 +83,11 @@ void GWindow::hide()
     WSAPI_ClientMessage request;
     request.type = WSAPI_ClientMessage::Type::DestroyWindow;
     request.window_id = m_window_id;
-    GEventLoop::current().post_message_to_server(request);
+    GEventLoop::current().sync_request(request, WSAPI_ServerMessage::Type::DidDestroyWindow);
+    m_window_id = 0;
+    m_pending_paint_event_rects.clear();
+    m_back_bitmap = nullptr;
+    m_front_bitmap = nullptr;
 }
 
 void GWindow::set_title(const String& title)
@@ -139,6 +143,8 @@ void GWindow::set_rect(const Rect& a_rect)
     request.window_id = m_window_id;
     request.window.rect = a_rect;
     GEventLoop::current().post_message_to_server(request);
+    if (m_main_widget)
+        m_main_widget->resize(a_rect.size());
 }
 
 void GWindow::set_window_type(GWindowType window_type)
@@ -193,6 +199,8 @@ void GWindow::event(GEvent& event)
     }
 
     if (event.is_paint_event()) {
+        if (!m_window_id)
+            return;
         m_pending_paint_event_rects.clear();
         if (!m_main_widget)
             return;

@@ -34,6 +34,10 @@ public:
     Size preferred_size() const { return m_preferred_size; }
     void set_preferred_size(const Size&);
 
+    bool has_tooltip() const { return !m_tooltip.is_empty(); }
+    String tooltip() const { return m_tooltip; }
+    void set_tooltip(const String& tooltip) { m_tooltip = tooltip; }
+
     virtual void event(GEvent&) override;
     virtual void paint_event(GPaintEvent&);
     virtual void resize_event(GResizeEvent&);
@@ -56,6 +60,7 @@ public:
     Point relative_position() const { return m_relative_rect.location(); }
 
     Rect window_relative_rect() const;
+    Rect screen_relative_rect() const;
 
     int x() const { return m_relative_rect.x(); }
     int y() const { return m_relative_rect.y(); }
@@ -149,6 +154,8 @@ private:
     void handle_resize_event(GResizeEvent&);
     void handle_mousedown_event(GMouseEvent&);
     void handle_mouseup_event(GMouseEvent&);
+    void handle_enter_event(GEvent&);
+    void handle_leave_event(GEvent&);
     void do_layout();
 
     GWindow* m_window { nullptr };
@@ -158,6 +165,7 @@ private:
     Color m_background_color;
     Color m_foreground_color;
     RetainPtr<Font> m_font;
+    String m_tooltip;
 
     SizePolicy m_horizontal_size_policy { SizePolicy::Fill };
     SizePolicy m_vertical_size_policy { SizePolicy::Fill };

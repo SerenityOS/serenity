@@ -2,6 +2,10 @@
 #include <LibGUI/GEventLoop.h>
 #include <LibGUI/GMenuBar.h>
 #include <LibGUI/GAction.h>
+#include <LibGUI/GWindow.h>
+#include <LibGUI/GLabel.h>
+#include <LibGUI/GPainter.h>
+#include <WindowServer/WSAPITypes.h>
 
 static GApplication* s_the;
 
@@ -64,4 +68,47 @@ GAction* GApplication::action_for_key_event(const GKeyEvent& event)
     if (it == m_shortcut_actions.end())
         return nullptr;
     return (*it).value;
+}
+
+class GApplication::TooltipWindow final : public GWindow {
+public:
+    TooltipWindow()
+    {
+        set_title("Tooltip");
+        set_window_type(GWindowType::Tooltip);
+        m_label = new GLabel;
+        m_label->set_background_color(Color::from_rgb(0xdac7b5));
+        m_label->set_fill_with_background_color(true);
+        m_label->set_frame_thickness(1);
+        m_label->set_frame_shape(GFrame::Shape::Container);
+        m_label->set_frame_shadow(GFrame::Shadow::Plain);
+        set_main_widget(m_label);
+    }
+
+    void set_tooltip(const String& tooltip)
+    {
+        // FIXME: Add some kind of GLabel auto-sizing feature.
+        int text_width = m_label->font().width(tooltip);
+        set_rect(100, 100, text_width + 10, m_label->font().glyph_height() + 8);
+        m_label->set_text(tooltip);
+    }
+
+    GLabel* m_label { nullptr };
+};
+
+void GApplication::show_tooltip(const String& tooltip, const Point& screen_location)
+{
+    if (!m_tooltip_window) {
+        m_tooltip_window = new TooltipWindow;
+        m_tooltip_window->set_double_buffering_enabled(false);
+    }
+    m_tooltip_window->set_tooltip(tooltip);
+    m_tooltip_window->move_to(screen_location);
+    m_tooltip_window->show();
+}
+
+void GApplication::hide_tooltip()
+{
+    if (m_tooltip_window)
+        m_tooltip_window->hide();
 }
