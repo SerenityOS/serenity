@@ -1,5 +1,5 @@
 #include <LibGUI/GHttpRequest.h>
-#include <LibGUI/GHttpNetworkJob.h>
+#include <LibGUI/GHttpJob.h>
 #include <LibGUI/GEventLoop.h>
 #include <AK/StringBuilder.h>
 
@@ -13,7 +13,7 @@ GHttpRequest::~GHttpRequest()
 
 GNetworkJob* GHttpRequest::schedule()
 {
-    auto* job = new GHttpNetworkJob(*this);
+    auto* job = new GHttpJob(*this);
     job->start();
     return job;
 }

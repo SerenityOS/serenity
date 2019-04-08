@@ -6,14 +6,14 @@
 
 class GTCPSocket;
 
-class GHttpNetworkJob final : public GNetworkJob {
+class GHttpJob final : public GNetworkJob {
 public:
-    explicit GHttpNetworkJob(const GHttpRequest&);
-    virtual ~GHttpNetworkJob() override;
+    explicit GHttpJob(const GHttpRequest&);
+    virtual ~GHttpJob() override;
 
     virtual void start() override;
 
-    virtual const char* class_name() const override { return "GHttpNetworkJob"; }
+    virtual const char* class_name() const override { return "GHttpJob"; }
 
 private:
     enum class State {
