@@ -119,6 +119,9 @@ void WSWindowFrame::paint(Painter& painter)
     if (m_window.type() == WSWindowType::Taskbar)
         return;
 
+    if (m_window.type() == WSWindowType::Tooltip)
+        return;
+
     auto& window = m_window;
 
     auto titlebar_rect = title_bar_rect();
@@ -194,6 +197,8 @@ static Rect frame_rect_for_window_type(WSWindowType type, const Rect& rect)
     case WSWindowType::WindowSwitcher:
         return rect;
     case WSWindowType::Taskbar:
+        return rect;
+    case WSWindowType::Tooltip:
         return rect;
     default:
         ASSERT_NOT_REACHED();

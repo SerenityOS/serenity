@@ -9,6 +9,7 @@ class GAction;
 class GKeyEvent;
 class GEventLoop;
 class GMenuBar;
+class Point;
 
 class GApplication {
 public:
@@ -25,8 +26,13 @@ public:
     void register_shortcut_action(Badge<GAction>, GAction&);
     void unregister_shortcut_action(Badge<GAction>, GAction&);
 
+    void show_tooltip(const String&, const Point& screen_location);
+    void hide_tooltip();
+
 private:
     OwnPtr<GEventLoop> m_event_loop;
     OwnPtr<GMenuBar> m_menubar;
     HashMap<GShortcut, GAction*> m_shortcut_actions;
+    class TooltipWindow;
+    TooltipWindow* m_tooltip_window { nullptr };
 };

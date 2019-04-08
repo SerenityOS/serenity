@@ -6,6 +6,7 @@
 #include <AK/Assertions.h>
 #include <SharedGraphics/GraphicsBitmap.h>
 #include <LibGUI/GPainter.h>
+#include <LibGUI/GApplication.h>
 
 #include <unistd.h>
 
@@ -79,9 +80,9 @@ void GWidget::event(GEvent& event)
     case GEvent::MouseUp:
         return handle_mouseup_event(static_cast<GMouseEvent&>(event));
     case GEvent::Enter:
-        return enter_event(event);
+        return handle_enter_event(event);
     case GEvent::Leave:
-        return leave_event(event);
+        return handle_leave_event(event);
     default:
         return GObject::event(event);
     }
@@ -177,6 +178,19 @@ void GWidget::handle_mousedown_event(GMouseEvent& event)
     mousedown_event(event);
 }
 
+void GWidget::handle_enter_event(GEvent& event)
+{
+    if (has_tooltip())
+        GApplication::the().show_tooltip(m_tooltip, screen_relative_rect().center().translated(0, height() / 2));
+    enter_event(event);
+}
+
+void GWidget::handle_leave_event(GEvent& event)
+{
+    GApplication::the().hide_tooltip();
+    leave_event(event);
+}
+
 void GWidget::click_event(GMouseEvent&)
 {
 }
@@ -259,6 +273,11 @@ Rect GWidget::window_relative_rect() const
         rect.move_by(parent->relative_position());
     }
     return rect;
+}
+
+Rect GWidget::screen_relative_rect() const
+{
+    return window_relative_rect().translated(window()->position());
 }
 
 GWidget::HitTestResult GWidget::hit_test(int x, int y)

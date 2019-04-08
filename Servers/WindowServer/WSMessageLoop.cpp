@@ -260,6 +260,8 @@ static WSWindowType from_api(WSAPI_WindowType api_type)
         return WSWindowType::WindowSwitcher;
     case WSAPI_WindowType::Taskbar:
         return WSWindowType::Taskbar;
+    case WSAPI_WindowType::Tooltip:
+        return WSWindowType::Tooltip;
     default:
         ASSERT_NOT_REACHED();
     }

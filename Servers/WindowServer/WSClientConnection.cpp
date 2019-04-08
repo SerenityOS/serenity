@@ -124,7 +124,7 @@ void WSClientConnection::handle_request(const WSAPIDestroyMenubarRequest& reques
     int menubar_id = request.menubar_id();
     auto it = m_menubars.find(menubar_id);
     if (it == m_menubars.end()) {
-        post_error("Bad menubar ID");
+        post_error("WSAPIDestroyMenubarRequest: Bad menubar ID");
         return;
     }
     auto& menubar = *(*it).value;
@@ -152,7 +152,7 @@ void WSClientConnection::handle_request(const WSAPIDestroyMenuRequest& request)
     int menu_id = static_cast<const WSAPIDestroyMenuRequest&>(request).menu_id();
     auto it = m_menus.find(menu_id);
     if (it == m_menus.end()) {
-        post_error("Bad menu ID");
+        post_error("WSAPIDestroyMenuRequest: Bad menu ID");
         return;
     }
     auto& menu = *(*it).value;
@@ -169,7 +169,7 @@ void WSClientConnection::handle_request(const WSAPISetApplicationMenubarRequest&
     int menubar_id = request.menubar_id();
     auto it = m_menubars.find(menubar_id);
     if (it == m_menubars.end()) {
-        post_error("Bad menubar ID");
+        post_error("WSAPISetApplicationMenubarRequest: Bad menubar ID");
         return;
     }
     auto& menubar = *(*it).value;
@@ -188,11 +188,11 @@ void WSClientConnection::handle_request(const WSAPIAddMenuToMenubarRequest& requ
     auto it = m_menubars.find(menubar_id);
     auto jt = m_menus.find(menu_id);
     if (it == m_menubars.end()) {
-        post_error("Bad menubar ID");
+        post_error("WSAPIAddMenuToMenubarRequest: Bad menubar ID");
         return;
     }
     if (jt == m_menus.end()) {
-        post_error("Bad menu ID");
+        post_error("WSAPIAddMenuToMenubarRequest: Bad menu ID");
         return;
     }
     auto& menubar = *(*it).value;
@@ -211,7 +211,7 @@ void WSClientConnection::handle_request(const WSAPIAddMenuItemRequest& request)
     unsigned identifier = request.identifier();
     auto it = m_menus.find(menu_id);
     if (it == m_menus.end()) {
-        post_error("Bad menu ID");
+        post_error("WSAPIAddMenuItemRequest: Bad menu ID");
         return;
     }
     auto& menu = *(*it).value;
@@ -228,7 +228,7 @@ void WSClientConnection::handle_request(const WSAPIAddMenuSeparatorRequest& requ
     int menu_id = request.menu_id();
     auto it = m_menus.find(menu_id);
     if (it == m_menus.end()) {
-        post_error("Bad menu ID");
+        post_error("WSAPIAddMenuSeparatorRequest: Bad menu ID");
         return;
     }
     auto& menu = *(*it).value;
@@ -244,7 +244,7 @@ void WSClientConnection::handle_request(const WSAPISetWindowOpacityRequest& requ
     int window_id = request.window_id();
     auto it = m_windows.find(window_id);
     if (it == m_windows.end()) {
-        post_error("Bad window ID");
+        post_error("WSAPISetWindowOpacityRequest: Bad window ID");
         return;
     }
     auto& window = *(*it).value;
@@ -276,7 +276,7 @@ void WSClientConnection::handle_request(const WSAPISetWindowTitleRequest& reques
     int window_id = request.window_id();
     auto it = m_windows.find(window_id);
     if (it == m_windows.end()) {
-        post_error("Bad window ID");
+        post_error("WSAPISetWindowTitleRequest: Bad window ID");
         return;
     }
     auto& window = *(*it).value;
@@ -288,7 +288,7 @@ void WSClientConnection::handle_request(const WSAPIGetWindowTitleRequest& reques
     int window_id = request.window_id();
     auto it = m_windows.find(window_id);
     if (it == m_windows.end()) {
-        post_error("Bad window ID");
+        post_error("WSAPIGetWindowTitleRequest: Bad window ID");
         return;
     }
     auto& window = *(*it).value;
@@ -306,7 +306,7 @@ void WSClientConnection::handle_request(const WSAPISetWindowRectRequest& request
     int window_id = request.window_id();
     auto it = m_windows.find(window_id);
     if (it == m_windows.end()) {
-        post_error("Bad window ID");
+        post_error("WSAPISetWindowRectRequest: Bad window ID");
         return;
     }
     auto& window = *(*it).value;
@@ -319,7 +319,7 @@ void WSClientConnection::handle_request(const WSAPIGetWindowRectRequest& request
     int window_id = request.window_id();
     auto it = m_windows.find(window_id);
     if (it == m_windows.end()) {
-        post_error("Bad window ID");
+        post_error("WSAPIGetWindowRectRequest: Bad window ID");
         return;
     }
     auto& window = *(*it).value;
@@ -334,7 +334,7 @@ void WSClientConnection::handle_request(const WSAPISetClipboardContentsRequest& 
 {
     auto shared_buffer = SharedBuffer::create_from_shared_buffer_id(request.shared_buffer_id());
     if (!shared_buffer) {
-        post_error("Bad shared buffer ID");
+        post_error("WSAPISetClipboardContentsRequest: Bad shared buffer ID");
         return;
     }
     WSClipboard::the().set_data(*shared_buffer, request.size());
@@ -392,12 +392,16 @@ void WSClientConnection::handle_request(const WSAPIDestroyWindowRequest& request
     int window_id = request.window_id();
     auto it = m_windows.find(window_id);
     if (it == m_windows.end()) {
-        post_error("Bad window ID");
+        post_error("WSAPIDestroyWindowRequest: Bad window ID");
         return;
     }
     auto& window = *(*it).value;
     WSWindowManager::the().invalidate(window);
     m_windows.remove(it);
+    WSAPI_ServerMessage response;
+    response.type = WSAPI_ServerMessage::Type::DidDestroyWindow;
+    response.window_id = window.window_id();
+    post_message(response);
 }
 
 void WSClientConnection::post_paint_request(const WSWindow& window, const Rect& rect)
@@ -415,7 +419,7 @@ void WSClientConnection::handle_request(const WSAPIInvalidateRectRequest& reques
     int window_id = request.window_id();
     auto it = m_windows.find(window_id);
     if (it == m_windows.end()) {
-        post_error("Bad window ID");
+        post_error("WSAPIInvalidateRectRequest: Bad window ID");
         return;
     }
     auto& window = *(*it).value;
@@ -427,7 +431,7 @@ void WSClientConnection::handle_request(const WSAPIDidFinishPaintingNotification
     int window_id = request.window_id();
     auto it = m_windows.find(window_id);
     if (it == m_windows.end()) {
-        post_error("Bad window ID");
+        post_error("WSAPIDidFinishPaintingNotification: Bad window ID");
         return;
     }
     auto& window = *(*it).value;
@@ -446,7 +450,7 @@ void WSClientConnection::handle_request(const WSAPIGetWindowBackingStoreRequest&
     int window_id = request.window_id();
     auto it = m_windows.find(window_id);
     if (it == m_windows.end()) {
-        post_error("Bad window ID");
+        post_error("WSAPIGetWindowBackingStoreRequest: Bad window ID");
         return;
     }
     auto& window = *(*it).value;
@@ -468,7 +472,7 @@ void WSClientConnection::handle_request(const WSAPISetWindowBackingStoreRequest&
     int window_id = request.window_id();
     auto it = m_windows.find(window_id);
     if (it == m_windows.end()) {
-        post_error("Bad window ID");
+        post_error("WSAPISetWindowBackingStoreRequest: Bad window ID");
         return;
     }
     auto& window = *(*it).value;
@@ -500,7 +504,7 @@ void WSClientConnection::handle_request(const WSAPISetGlobalCursorTrackingReques
     int window_id = request.window_id();
     auto it = m_windows.find(window_id);
     if (it == m_windows.end()) {
-        post_error("Bad window ID");
+        post_error("WSAPISetGlobalCursorTrackingRequest: Bad window ID");
         return;
     }
     auto& window = *(*it).value;
@@ -512,7 +516,7 @@ void WSClientConnection::handle_request(const WSAPISetWindowOverrideCursorReques
     int window_id = request.window_id();
     auto it = m_windows.find(window_id);
     if (it == m_windows.end()) {
-        post_error("Bad window ID");
+        post_error("WSAPISetWindowOverrideCursorRequest: Bad window ID");
         return;
     }
     auto& window = *(*it).value;
@@ -523,12 +527,12 @@ void WSClientConnection::handle_request(const WSWMAPISetActiveWindowRequest& req
 {
     auto* client = WSClientConnection::from_client_id(request.target_client_id());
     if (!client) {
-        post_error("Bad client ID");
+        post_error("WSWMAPISetActiveWindowRequest: Bad client ID");
         return;
     }
     auto it = client->m_windows.find(request.target_window_id());
     if (it == client->m_windows.end()) {
-        post_error("Bad window ID");
+        post_error("WSWMAPISetActiveWindowRequest: Bad window ID");
         return;
     }
     auto& window = *(*it).value;
