@@ -1,9 +1,10 @@
 #include "TaskbarWindow.h"
-#include "TaskbarWidget.h"
 #include <LibGUI/GWindow.h>
 #include <LibGUI/GDesktop.h>
 #include <LibGUI/GEventLoop.h>
+#include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GButton.h>
+#include <LibGUI/GFrame.h>
 #include <WindowServer/WSAPITypes.h>
 #include <stdio.h>
 
@@ -17,7 +18,14 @@ TaskbarWindow::TaskbarWindow()
 
     GDesktop::the().on_rect_change = [this] (const Rect& rect) { on_screen_rect_change(rect); };
 
-    auto* widget = new TaskbarWidget(m_window_list);
+    auto* widget = new GFrame;
+    widget->set_fill_with_background_color(true);
+    widget->set_layout(make<GBoxLayout>(Orientation::Horizontal));
+    widget->layout()->set_margins({ 3, 2, 3, 2 });
+    widget->layout()->set_spacing(3);
+    widget->set_frame_thickness(1);
+    widget->set_frame_shape(GFrame::Shape::Panel);
+    widget->set_frame_shadow(GFrame::Shadow::Raised);
     set_main_widget(widget);
 
     m_window_list.aid_create_button = [this] {
