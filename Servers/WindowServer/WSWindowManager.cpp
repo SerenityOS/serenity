@@ -88,7 +88,7 @@ WSWindowManager::WSWindowManager()
     m_wallpaper_path = "/res/wallpapers/retro.rgb";
     m_wallpaper = GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, m_wallpaper_path, { 1024, 768 });
 
-    m_username = getlogin();
+    m_username = getlogin_r();
 
     m_menu_selection_color = Color::from_rgb(0x84351a);
 
@@ -900,7 +900,7 @@ void WSWindowManager::draw_menubar()
     m_back_painter->draw_text(username_rect, m_username, Font::default_bold_font(), TextAlignment::CenterRight, Color::Black);
 
     time_t now = time(nullptr);
-    auto* tm = localtime(&now);
+    auto* tm = localtime_r(&now);
     auto time_text = String::format("%4u-%02u-%02u %02u:%02u:%02u",
         tm->tm_year + 1900,
         tm->tm_mon + 1,
