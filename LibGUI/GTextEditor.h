@@ -96,6 +96,7 @@ public:
     void do_delete();
     void delete_current_line();
 
+    Function<void()> on_change;
     Function<void(GTextEditor&)> on_return_pressed;
     Function<void(GTextEditor&)> on_escape_pressed;
 
@@ -116,6 +117,7 @@ private:
 
     void paint_ruler(Painter&);
     void update_content_size();
+    void did_change();
 
     class Line {
         friend class GTextEditor;
@@ -163,6 +165,7 @@ private:
     bool m_cursor_state { true };
     bool m_in_drag_select { false };
     bool m_ruler_visible { true };
+    bool m_have_pending_change_notification { false };
     int m_line_spacing { 4 };
     int m_soft_tab_width { 4 };
     int m_horizontal_content_padding { 2 };

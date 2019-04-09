@@ -33,6 +33,7 @@ void GTextEditor::set_text(const String& text)
     if (is_single_line() && text.length() == m_lines[0]->length() && !memcmp(text.characters(), m_lines[0]->characters(), text.length()))
         return;
 
+    m_selection.clear();
     m_lines.clear();
     int start_of_current_line = 0;
 
@@ -414,8 +415,8 @@ void GTextEditor::do_delete()
     if (m_cursor.column() < current_line().length()) {
         // Delete within line
         current_line().remove(m_cursor.column());
-        update_content_size();
         update_cursor();
+        did_change();
         return;
     }
     if (m_cursor.column() == current_line().length() && m_cursor.line() != line_count() - 1) {
@@ -424,9 +425,9 @@ void GTextEditor::do_delete()
         int previous_length = current_line().length();
         current_line().append(next_line.characters(), next_line.length());
         m_lines.remove(m_cursor.line() + 1);
-        update_content_size();
         update();
         set_cursor(m_cursor.line(), previous_length);
+        did_change();
         return;
     }
 }
@@ -451,18 +452,18 @@ void GTextEditor::insert_at_cursor(char ch)
         }
         if (at_tail || at_head) {
             m_lines.insert(m_cursor.line() + (at_tail ? 1 : 0), make<Line>());
-            update_content_size();
             update();
             set_cursor(m_cursor.line() + 1, 0);
+            did_change();
             return;
         }
         auto new_line = make<Line>();
         new_line->append(current_line().characters() + m_cursor.column(), current_line().length() - m_cursor.column());
         current_line().truncate(m_cursor.column());
         m_lines.insert(m_cursor.line() + 1, move(new_line));
-        update_content_size();
         update();
         set_cursor(m_cursor.line() + 1, 0);
+        did_change();
         return;
     }
     if (ch == '\t') {
@@ -471,15 +472,15 @@ void GTextEditor::insert_at_cursor(char ch)
         for (int i = 0; i < spaces_to_insert; ++i) {
             current_line().insert(m_cursor.column(), ' ');
         }
-        update_content_size();
         set_cursor(m_cursor.line(), next_soft_tab_stop);
         update_cursor();
+        did_change();
         return;
     }
     current_line().insert(m_cursor.column(), ch);
-    update_content_size();
     set_cursor(m_cursor.line(), m_cursor.column() + 1);
     update_cursor();
+    did_change();
 }
 
 Rect GTextEditor::cursor_content_rect() const
@@ -772,6 +773,7 @@ void GTextEditor::delete_selection()
     m_selection.clear();
     set_cursor(selection.start());
     update();
+    did_change();
 }
 
 void GTextEditor::insert_at_cursor_or_replace_selection(const String& text)
@@ -813,4 +815,17 @@ void GTextEditor::leave_event(GEvent&)
 {
     ASSERT(window());
     window()->set_override_cursor(GStandardCursor::None);
+}
+
+void GTextEditor::did_change()
+{
+    update_content_size();
+    if (!m_have_pending_change_notification) {
+        m_have_pending_change_notification = true;
+        deferred_invoke([this] (auto&) {
+            if (on_change)
+                on_change();
+            m_have_pending_change_notification = false;
+        });
+    }
 }
