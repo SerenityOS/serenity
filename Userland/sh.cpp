@@ -245,7 +245,7 @@ int main(int argc, char** argv)
         perror("ttyname_r");
 
     {
-        auto* pw = getpwuid(getuid());
+        auto* pw = getpwuid_r(getuid());
         if (pw)
             g->username = pw->pw_name;
         endpwent();
