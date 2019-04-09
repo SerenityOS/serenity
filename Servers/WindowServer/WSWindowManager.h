@@ -172,6 +172,7 @@ private:
     ResizeDirection m_resize_direction { ResizeDirection::None };
 
     Rect m_last_cursor_rect;
+    Rect m_last_geometry_label_rect;
 
     unsigned m_compose_count { 0 };
     unsigned m_flush_count { 0 };

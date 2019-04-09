@@ -722,6 +722,7 @@ void WSWindowManager::clear_resize_candidate()
 void WSWindowManager::compose()
 {
     auto dirty_rects = move(m_dirty_rects);
+    dirty_rects.add(Rect::intersection(m_last_geometry_label_rect, m_screen_rect));
     dirty_rects.add(Rect::intersection(m_last_cursor_rect, m_screen_rect));
     dirty_rects.add(Rect::intersection(current_cursor_rect(), m_screen_rect));
 #ifdef DEBUG_COUNTERS
@@ -819,6 +820,18 @@ void WSWindowManager::compose()
         }
         return IterationDecision::Continue;
     });
+
+    if (auto* window_being_moved_or_resized = m_drag_window ? m_drag_window.ptr() : (m_resize_window ? m_resize_window.ptr() : nullptr)) {
+        auto geometry_string = window_being_moved_or_resized->rect().to_string();
+        auto geometry_label_rect = Rect { 0, 0, font().width(geometry_string) + 16, font().glyph_height() + 10 };
+        geometry_label_rect.center_within(window_being_moved_or_resized->rect());
+        m_back_painter->fill_rect(geometry_label_rect, Color::LightGray);
+        m_back_painter->draw_rect(geometry_label_rect, Color::DarkGray);
+        m_back_painter->draw_text(geometry_label_rect, geometry_string, TextAlignment::Center);
+        m_last_geometry_label_rect = geometry_label_rect;
+    } else {
+        m_last_geometry_label_rect = { };
+    }
 
     draw_menubar();
     draw_cursor();
