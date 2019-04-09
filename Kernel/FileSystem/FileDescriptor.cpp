@@ -23,6 +23,11 @@ Retained<FileDescriptor> FileDescriptor::create(RetainPtr<Device>&& device)
     return adopt(*new FileDescriptor(move(device)));
 }
 
+Retained<FileDescriptor> FileDescriptor::create(RetainPtr<SharedMemory>&& shared_memory)
+{
+    return adopt(*new FileDescriptor(move(shared_memory)));
+}
+
 Retained<FileDescriptor> FileDescriptor::create(RetainPtr<Socket>&& socket, SocketRole role)
 {
     return adopt(*new FileDescriptor(move(socket), role));
@@ -45,6 +50,11 @@ FileDescriptor::FileDescriptor(RetainPtr<Inode>&& inode)
 
 FileDescriptor::FileDescriptor(RetainPtr<Device>&& device)
     : m_device(move(device))
+{
+}
+
+FileDescriptor::FileDescriptor(RetainPtr<SharedMemory>&& shared_memory)
+    : m_shared_memory(move(shared_memory))
 {
 }
 
@@ -397,6 +407,8 @@ bool FileDescriptor::supports_mmap() const
 {
     if (m_inode)
         return true;
+    if (m_shared_memory)
+        return true;
     if (m_device)
         return m_device->is_block_device();
     return false;
@@ -408,6 +420,12 @@ Region* FileDescriptor::mmap(Process& process, LinearAddress laddr, size_t offse
 
     if (is_block_device())
         return static_cast<BlockDevice&>(*m_device).mmap(process, laddr, offset, size);
+
+    if (is_shared_memory()) {
+        if (!shared_memory()->vmo())
+            return nullptr;
+        return process.allocate_region_with_vmo(laddr, size, *shared_memory()->vmo(), offset, shared_memory()->name(), true, true);
+    }
 
     ASSERT(m_inode);
     // FIXME: If PROT_EXEC, check that the underlying file system isn't mounted noexec.
