@@ -310,8 +310,7 @@ void WSWindowManager::add_window(WSWindow& window)
 {
     m_windows.set(&window);
     m_windows_in_order.append(&window);
-    if (!active_window() || active_window()->client() == window.client())
-        set_active_window(&window);
+    set_active_window(&window);
     if (m_switcher.is_visible() && window.type() != WSWindowType::WindowSwitcher)
         m_switcher.refresh();
 
