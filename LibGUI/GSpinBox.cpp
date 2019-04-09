@@ -15,10 +15,10 @@ GSpinBox::GSpinBox(GWidget* parent)
             m_editor->set_text(String::format("%d", m_value));
     };
     m_increment_button = new GButton(this);
-    m_increment_button->set_caption("+");
+    m_increment_button->set_caption("\xf6");
     m_increment_button->on_click = [this] (GButton&) { set_value(m_value + 1); };
     m_decrement_button = new GButton(this);
-    m_decrement_button->set_caption("-");
+    m_decrement_button->set_caption("\xf7");
     m_decrement_button->on_click = [this] (GButton&) { set_value(m_value - 1); };
 }
 
@@ -64,7 +64,7 @@ void GSpinBox::set_range(int min, int max)
 void GSpinBox::resize_event(GResizeEvent& event)
 {
     int button_height = event.size().height() / 2;
-    int button_width = 16;
+    int button_width = 15;
     m_increment_button->set_relative_rect(width() - button_width, 0, button_width, button_height);
     m_decrement_button->set_relative_rect(width() - button_width, button_height, button_width, button_height);
     m_editor->set_relative_rect(0, 0, width() - button_width, height());

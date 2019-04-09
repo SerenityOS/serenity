@@ -6,6 +6,7 @@
 #include <AK/StdLibExtras.h>
 #include <AK/StringBuilder.h>
 #include <unistd.h>
+#include <stdio.h>
 
 Painter::Painter(GraphicsBitmap& bitmap)
     : m_target(bitmap)
@@ -348,27 +349,30 @@ void Painter::draw_text(const Rect& rect, const char* text, int length, const Fo
 {
     String elided_text;
     if (elision == TextElision::Right) {
+        int text_width = font.width(text, length);
         if (font.width(text, length) > rect.width()) {
             int glyph_spacing = font.glyph_spacing();
             int new_length = 0;
             int new_width = font.width("...");
-            for (int i = 0; i < length; ++i) {
-                int glyph_width = font.glyph_width(text[i]);
-                // NOTE: Glyph spacing should not be added after the last glyph on the line,
-                //       but since we are here because the last glyph does not actually fit on the line,
-                //       we don't have to worry about spacing.
-                int width_with_this_glyph_included = new_width + glyph_width + glyph_spacing;
-                if (width_with_this_glyph_included > rect.width())
-                    break;
-                ++new_length;
-                new_width += glyph_width + glyph_spacing;
+            if (new_width < text_width) {
+                for (int i = 0; i < length; ++i) {
+                    int glyph_width = font.glyph_width(text[i]);
+                    // NOTE: Glyph spacing should not be added after the last glyph on the line,
+                    //       but since we are here because the last glyph does not actually fit on the line,
+                    //       we don't have to worry about spacing.
+                    int width_with_this_glyph_included = new_width + glyph_width + glyph_spacing;
+                    if (width_with_this_glyph_included > rect.width())
+                        break;
+                    ++new_length;
+                    new_width += glyph_width + glyph_spacing;
+                }
+                StringBuilder builder;
+                builder.append(text, new_length);
+                builder.append("...");
+                elided_text = builder.to_string();
+                text = elided_text.characters();
+                length = elided_text.length();
             }
-            StringBuilder builder;
-            builder.append(text, new_length);
-            builder.append("...");
-            elided_text = builder.to_string();
-            text = elided_text.characters();
-            length = elided_text.length();
         }
     }
 
