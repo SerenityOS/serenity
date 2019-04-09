@@ -168,7 +168,7 @@ int do_dir(const char* path)
         else
             printf(" %10u ", st.st_size);
 
-        auto* tm = localtime(&st.st_mtime);
+        auto* tm = localtime_r(&st.st_mtime);
         printf("  %4u-%02u-%02u %02u:%02u:%02u  ",
             tm->tm_year + 1900,
             tm->tm_mon + 1,
