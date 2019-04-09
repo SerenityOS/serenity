@@ -519,7 +519,7 @@ void IRCClient::handle_rpl_topicwhotime(const Message& msg)
     bool ok;
     time_t setat_time = setat.to_uint(ok);
     if (ok) {
-        auto* tm = localtime(&setat_time);
+        auto* tm = localtime_r(&setat_time);
         setat = String::format("%4u-%02u-%02u %02u:%02u:%02u",
             tm->tm_year + 1900,
             tm->tm_mon + 1,
