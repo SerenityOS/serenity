@@ -823,6 +823,11 @@ void WSWindowManager::compose()
 
     if (auto* window_being_moved_or_resized = m_drag_window ? m_drag_window.ptr() : (m_resize_window ? m_resize_window.ptr() : nullptr)) {
         auto geometry_string = window_being_moved_or_resized->rect().to_string();
+        if (!window_being_moved_or_resized->size_increment().is_null()) {
+            int width_steps = (window_being_moved_or_resized->width() - window_being_moved_or_resized->base_size().width()) / window_being_moved_or_resized->size_increment().width();
+            int height_steps = (window_being_moved_or_resized->height() - window_being_moved_or_resized->base_size().height()) / window_being_moved_or_resized->size_increment().height();
+            geometry_string = String::format("%s (%dx%d)", geometry_string.characters(), width_steps, height_steps);
+        }
         auto geometry_label_rect = Rect { 0, 0, font().width(geometry_string) + 16, font().glyph_height() + 10 };
         geometry_label_rect.center_within(window_being_moved_or_resized->rect());
         m_back_painter->fill_rect(geometry_label_rect, Color::LightGray);
