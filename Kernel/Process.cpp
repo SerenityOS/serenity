@@ -22,6 +22,7 @@
 #include <Kernel/TTY/MasterPTY.h>
 #include <Kernel/ELF/exec_elf.h>
 #include <AK/StringBuilder.h>
+#include <Kernel/SharedMemory.h>
 
 //#define DEBUG_IO
 //#define TASK_DEBUG
@@ -2459,14 +2460,22 @@ int Process::sys$shm_open(const char* name, int flags, mode_t mode)
 {
     if (!validate_read_str(name))
         return -EFAULT;
-    return -ENOTIMPL;
+    int fd = alloc_fd();
+    if (fd < 0)
+        return fd;
+    auto shm_or_error = SharedMemory::open(String(name), flags, mode);
+    if (shm_or_error.is_error())
+        return shm_or_error.error();
+    auto descriptor = FileDescriptor::create(shm_or_error.value().ptr());
+    m_fds[fd].set(move(descriptor), FD_CLOEXEC);
+    return fd;
 }
 
 int Process::sys$shm_unlink(const char* name)
 {
     if (!validate_read_str(name))
         return -EFAULT;
-    return -ENOTIMPL;
+    return SharedMemory::unlink(String(name));
 }
 
 int Process::sys$ftruncate(int fd, off_t length)

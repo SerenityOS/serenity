@@ -58,6 +58,14 @@ public:
     T& value() { ASSERT(!m_is_error); return *reinterpret_cast<T*>(&m_storage); }
     const T& value() const { ASSERT(!m_is_error); return *reinterpret_cast<T*>(&m_storage); }
 
+    T release_value()
+    {
+        ASSERT(!m_is_error);
+        T released_value = *reinterpret_cast<T*>(&m_storage);
+        value().~T();
+        return released_value;
+    }
+
 private:
     char m_storage[sizeof(T)] __attribute__((aligned(sizeof(T))));
     KResult m_error;

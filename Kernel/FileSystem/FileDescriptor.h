@@ -9,13 +9,13 @@
 #include <AK/Retainable.h>
 #include <AK/Badge.h>
 #include <Kernel/Net/Socket.h>
+#include <Kernel/SharedMemory.h>
 
 class TTY;
 class MasterPTY;
 class Process;
 class Region;
 class CharacterDevice;
-class SharedMemory;
 
 class FileDescriptor : public Retainable<FileDescriptor> {
 public:
@@ -23,6 +23,7 @@ public:
     static Retained<FileDescriptor> create(RetainPtr<Socket>&&, SocketRole = SocketRole::None);
     static Retained<FileDescriptor> create(RetainPtr<Inode>&&);
     static Retained<FileDescriptor> create(RetainPtr<Device>&&);
+    static Retained<FileDescriptor> create(RetainPtr<SharedMemory>&&);
     static Retained<FileDescriptor> create_pipe_writer(FIFO&);
     static Retained<FileDescriptor> create_pipe_reader(FIFO&);
     ~FileDescriptor();
@@ -105,6 +106,7 @@ private:
     FileDescriptor(RetainPtr<Socket>&&, SocketRole);
     explicit FileDescriptor(RetainPtr<Inode>&&);
     explicit FileDescriptor(RetainPtr<Device>&&);
+    explicit FileDescriptor(RetainPtr<SharedMemory>&&);
     FileDescriptor(FIFO&, FIFO::Direction);
 
     RetainPtr<Inode> m_inode;
