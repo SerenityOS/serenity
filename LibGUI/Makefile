@@ -63,6 +63,7 @@ LIBGUI_OBJS = \
     GHttpRequest.o \
     GHttpResponse.o \
     GHttpJob.o \
+    GSpinBox.o \
     GWindow.o
 
 OBJS = $(SHAREDGRAPHICS_OBJS) $(LIBGUI_OBJS)

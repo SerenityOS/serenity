@@ -6,6 +6,7 @@
 #include <LibGUI/GLabel.h>
 #include <LibGUI/GTextBox.h>
 #include <LibGUI/GCheckBox.h>
+#include <LibGUI/GSpinBox.h>
 
 FontEditorWidget::FontEditorWidget(const String& path, RetainPtr<Font>&& edited_font, GWidget* parent)
     : GWidget(parent)
@@ -62,8 +63,9 @@ FontEditorWidget::FontEditorWidget(const String& path, RetainPtr<Font>&& edited_
     info_label->set_text_alignment(TextAlignment::CenterLeft);
     info_label->set_relative_rect({ 5, 110, 100, 20 });
 
-    auto* width_textbox = new GTextBox(this);
-    width_textbox->set_relative_rect({ 5, 135, 100, 20 });
+    auto* width_spinbox = new GSpinBox(this);
+    width_spinbox->set_range(0, 32);
+    width_spinbox->set_relative_rect({ 5, 135, 100, 20 });
 
     auto* demo_label_1 = new GLabel(this);
     demo_label_1->set_font(m_edited_font.copy_ref());
@@ -85,27 +87,23 @@ FontEditorWidget::FontEditorWidget(const String& path, RetainPtr<Font>&& edited_
         update_demo();
     };
 
-    m_glyph_map_widget->on_glyph_selected = [this, info_label, width_textbox] (byte glyph) {
+    m_glyph_map_widget->on_glyph_selected = [this, info_label, width_spinbox] (byte glyph) {
         m_glyph_editor_widget->set_glyph(glyph);
-        width_textbox->set_text(String::format("%u", m_edited_font->glyph_width(m_glyph_map_widget->selected_glyph())));
+        width_spinbox->set_value(m_edited_font->glyph_width(m_glyph_map_widget->selected_glyph()));
         info_label->set_text(String::format("0x%b (%c)", glyph, glyph));
     };
 
-    fixed_width_checkbox->on_change = [this, width_textbox, update_demo] (GCheckBox&, bool is_checked) {
+    fixed_width_checkbox->on_change = [this, width_spinbox, update_demo] (GCheckBox&, bool is_checked) {
         m_edited_font->set_fixed_width(is_checked);
-        width_textbox->set_text(String::format("%u", m_edited_font->glyph_width(m_glyph_map_widget->selected_glyph())));
+        width_spinbox->set_value(m_edited_font->glyph_width(m_glyph_map_widget->selected_glyph()));
         m_glyph_editor_widget->update();
         update_demo();
     };
 
-    width_textbox->on_change = [this, update_demo] (GTextBox& textbox) {
-        bool ok;
-        unsigned width = textbox.text().to_uint(ok);
-        if (ok) {
-            m_edited_font->set_glyph_width(m_glyph_map_widget->selected_glyph(), width);
-            m_glyph_editor_widget->update();
-            update_demo();
-        }
+    width_spinbox->on_change = [this, update_demo] (int value) {
+        m_edited_font->set_glyph_width(m_glyph_map_widget->selected_glyph(), value);
+        m_glyph_editor_widget->update();
+        update_demo();
     };
 
     m_glyph_map_widget->set_selected_glyph('A');
