@@ -177,7 +177,7 @@ int ttyname_r(int fd, char* buffer, size_t size)
 }
 
 static char ttyname_buf[32];
-char* ttyname(int fd)
+char* ttyname_r(int fd)
 {
     if (ttyname_r(fd, ttyname_buf, sizeof(ttyname_buf)) < 0)
         return nullptr;
@@ -424,10 +424,10 @@ int seal_shared_buffer(int shared_buffer_id)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-char* getlogin()
+char* getlogin_r()
 {
     static char __getlogin_buffer[256];
-    if (auto* passwd = getpwuid(getuid())) {
+    if (auto* passwd = getpwuid_r(getuid())) {
         strncpy(__getlogin_buffer, passwd->pw_name, sizeof(__getlogin_buffer));
         return __getlogin_buffer;
     }
