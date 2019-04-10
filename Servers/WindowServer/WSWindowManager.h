@@ -59,6 +59,7 @@ public:
     void draw_cursor();
     void draw_menubar();
     void draw_window_switcher();
+    void draw_geometry_label();
 
     Rect menubar_rect() const;
     WSMenuBar* current_menubar() { return m_current_menubar.ptr(); }
@@ -106,6 +107,9 @@ public:
 
     void set_resize_candidate(WSWindow&, ResizeDirection);
     void clear_resize_candidate();
+
+    bool any_opaque_window_contains_rect(const Rect&);
+    bool any_opaque_window_above_this_one_contains_rect(const WSWindow&, const Rect&);
 
 private:
     void process_mouse_event(const WSMouseEvent&, WSWindow*& event_window);

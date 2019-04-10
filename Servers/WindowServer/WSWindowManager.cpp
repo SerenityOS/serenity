@@ -719,6 +719,58 @@ void WSWindowManager::clear_resize_candidate()
     m_resize_candidate = nullptr;
 }
 
+bool WSWindowManager::any_opaque_window_contains_rect(const Rect& rect)
+{
+    bool found_containing_window = false;
+    for_each_window([&] (WSWindow& window) {
+        if (!window.is_visible())
+            return IterationDecision::Continue;
+        if (window.is_minimized())
+            return IterationDecision::Continue;
+        if (window.opacity() < 1.0f)
+            return IterationDecision::Continue;
+        if (window.has_alpha_channel()) {
+            // FIXME: Just because the window has an alpha channel doesn't mean it's not opaque.
+            //        Maybe there's some way we could know this?
+            return IterationDecision::Continue;
+        }
+        if (window.frame().rect().contains(rect)) {
+            found_containing_window = true;
+            return IterationDecision::Abort;
+        }
+        return IterationDecision::Continue;
+    });
+    return found_containing_window;
+};
+
+bool WSWindowManager::any_opaque_window_above_this_one_contains_rect(const WSWindow& a_window, const Rect& rect)
+{
+    bool found_containing_window = false;
+    bool checking = false;
+    for_each_visible_window_from_back_to_front([&] (WSWindow& window) {
+        if (&window == &a_window) {
+            checking = true;
+            return IterationDecision::Continue;
+        }
+        if (!checking)
+            return IterationDecision::Continue;
+        if (!window.is_visible())
+            return IterationDecision::Continue;
+        if (window.is_minimized())
+            return IterationDecision::Continue;
+        if (window.opacity() < 1.0f)
+            return IterationDecision::Continue;
+        if (window.has_alpha_channel())
+            return IterationDecision::Continue;
+        if (window.frame().rect().contains(rect)) {
+            found_containing_window = true;
+            return IterationDecision::Abort;
+        }
+        return IterationDecision::Continue;
+    });
+    return found_containing_window;
+};
+
 void WSWindowManager::compose()
 {
     auto dirty_rects = move(m_dirty_rects);
@@ -728,52 +780,6 @@ void WSWindowManager::compose()
 #ifdef DEBUG_COUNTERS
     dbgprintf("[WM] compose #%u (%u rects)\n", ++m_compose_count, dirty_rects.rects().size());
 #endif
-
-    auto any_opaque_window_contains_rect = [this] (const Rect& r) {
-        for (auto* window = m_windows_in_order.head(); window; window = window->next()) {
-            if (!window->is_visible())
-                continue;
-            if (window->is_minimized())
-                continue;
-            if (window->opacity() < 1.0f)
-                continue;
-            if (window->has_alpha_channel()) {
-                // FIXME: Just because the window has an alpha channel doesn't mean it's not opaque.
-                //        Maybe there's some way we could know this?
-                continue;
-            }
-            if (window->frame().rect().contains(r))
-                return true;
-        }
-        return false;
-    };
-
-    auto any_opaque_window_above_this_one_contains_rect = [this] (const WSWindow& a_window, const Rect& rect) -> bool {
-        bool found = false;
-        bool checking = false;
-        for_each_visible_window_from_back_to_front([&] (WSWindow& window) {
-            if (&window == &a_window) {
-                checking = true;
-                return IterationDecision::Continue;
-            }
-            if (!checking)
-                return IterationDecision::Continue;
-            if (!window.is_visible())
-                return IterationDecision::Continue;
-            if (window.is_minimized())
-                return IterationDecision::Continue;
-            if (window.opacity() < 1.0f)
-                return IterationDecision::Continue;
-            if (window.has_alpha_channel())
-                return IterationDecision::Continue;
-            if (window.frame().rect().contains(rect)) {
-                found = true;
-                return IterationDecision::Abort;
-            }
-            return IterationDecision::Continue;
-        });
-        return found;
-    };
 
     auto any_dirty_rect_intersects_window = [&dirty_rects] (const WSWindow& window) {
         auto window_frame_rect = window.frame().rect();
@@ -794,11 +800,11 @@ void WSWindowManager::compose()
     }
 
     for_each_visible_window_from_back_to_front([&] (WSWindow& window) {
-        RetainPtr<GraphicsBitmap> backing_store = window.backing_store();
         if (!any_dirty_rect_intersects_window(window))
             return IterationDecision::Continue;
         PainterStateSaver saver(*m_back_painter);
         m_back_painter->add_clip_rect(window.frame().rect());
+        RetainPtr<GraphicsBitmap> backing_store = window.backing_store();
         for (auto& dirty_rect : dirty_rects.rects()) {
             if (any_opaque_window_above_this_one_contains_rect(window, dirty_rect))
                 continue;
@@ -813,31 +819,12 @@ void WSWindowManager::compose()
             dirty_rect_in_window_coordinates.move_by(-window.position());
             auto dst = window.position();
             dst.move_by(dirty_rect_in_window_coordinates.location());
-            if (window.opacity() == 1.0f)
-                m_back_painter->blit(dst, *backing_store, dirty_rect_in_window_coordinates);
-            else
-                m_back_painter->blit_with_opacity(dst, *backing_store, dirty_rect_in_window_coordinates, window.opacity());
+            m_back_painter->blit(dst, *backing_store, dirty_rect_in_window_coordinates, window.opacity());
         }
         return IterationDecision::Continue;
     });
 
-    if (auto* window_being_moved_or_resized = m_drag_window ? m_drag_window.ptr() : (m_resize_window ? m_resize_window.ptr() : nullptr)) {
-        auto geometry_string = window_being_moved_or_resized->rect().to_string();
-        if (!window_being_moved_or_resized->size_increment().is_null()) {
-            int width_steps = (window_being_moved_or_resized->width() - window_being_moved_or_resized->base_size().width()) / window_being_moved_or_resized->size_increment().width();
-            int height_steps = (window_being_moved_or_resized->height() - window_being_moved_or_resized->base_size().height()) / window_being_moved_or_resized->size_increment().height();
-            geometry_string = String::format("%s (%dx%d)", geometry_string.characters(), width_steps, height_steps);
-        }
-        auto geometry_label_rect = Rect { 0, 0, font().width(geometry_string) + 16, font().glyph_height() + 10 };
-        geometry_label_rect.center_within(window_being_moved_or_resized->rect());
-        m_back_painter->fill_rect(geometry_label_rect, Color::LightGray);
-        m_back_painter->draw_rect(geometry_label_rect, Color::DarkGray);
-        m_back_painter->draw_text(geometry_label_rect, geometry_string, TextAlignment::Center);
-        m_last_geometry_label_rect = geometry_label_rect;
-    } else {
-        m_last_geometry_label_rect = { };
-    }
-
+    draw_geometry_label();
     draw_menubar();
     draw_cursor();
 
@@ -935,6 +922,27 @@ void WSWindowManager::draw_window_switcher()
 {
     if (m_switcher.is_visible())
         m_switcher.draw();
+}
+
+void WSWindowManager::draw_geometry_label()
+{
+    auto* window_being_moved_or_resized = m_drag_window ? m_drag_window.ptr() : (m_resize_window ? m_resize_window.ptr() : nullptr);
+    if (!window_being_moved_or_resized) {
+        m_last_geometry_label_rect = { };
+        return;
+    }
+    auto geometry_string = window_being_moved_or_resized->rect().to_string();
+    if (!window_being_moved_or_resized->size_increment().is_null()) {
+        int width_steps = (window_being_moved_or_resized->width() - window_being_moved_or_resized->base_size().width()) / window_being_moved_or_resized->size_increment().width();
+        int height_steps = (window_being_moved_or_resized->height() - window_being_moved_or_resized->base_size().height()) / window_being_moved_or_resized->size_increment().height();
+        geometry_string = String::format("%s (%dx%d)", geometry_string.characters(), width_steps, height_steps);
+    }
+    auto geometry_label_rect = Rect { 0, 0, font().width(geometry_string) + 16, font().glyph_height() + 10 };
+    geometry_label_rect.center_within(window_being_moved_or_resized->rect());
+    m_back_painter->fill_rect(geometry_label_rect, Color::LightGray);
+    m_back_painter->draw_rect(geometry_label_rect, Color::DarkGray);
+    m_back_painter->draw_text(geometry_label_rect, geometry_string, TextAlignment::Center);
+    m_last_geometry_label_rect = geometry_label_rect;
 }
 
 void WSWindowManager::draw_cursor()

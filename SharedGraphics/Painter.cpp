@@ -271,8 +271,10 @@ void Painter::blit_with_alpha(const Point& position, const GraphicsBitmap& sourc
     }
 }
 
-void Painter::blit(const Point& position, const GraphicsBitmap& source, const Rect& src_rect)
+void Painter::blit(const Point& position, const GraphicsBitmap& source, const Rect& src_rect, float opacity)
 {
+    if (opacity < 1.0f)
+        return blit_with_opacity(position, source, src_rect, opacity);
     if (source.has_alpha_channel())
         return blit_with_alpha(position, source, src_rect);
     auto safe_src_rect = Rect::intersection(src_rect, source.rect());
