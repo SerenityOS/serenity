@@ -1,34 +1,34 @@
-#include <LibGUI/GFile.h>
+#include <LibCore/CFile.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <stdio.h>
 
-GFile::GFile(const String& filename)
+CFile::CFile(const String& filename)
     : m_filename(filename)
 {
 }
 
-GFile::~GFile()
+CFile::~CFile()
 {
     if (mode() != NotOpen)
         close();
 }
 
-bool GFile::open(GIODevice::OpenMode mode)
+bool CFile::open(CIODevice::OpenMode mode)
 {
     int flags = 0;
-    if ((mode & GIODevice::ReadWrite) == GIODevice::ReadWrite) {
+    if ((mode & CIODevice::ReadWrite) == CIODevice::ReadWrite) {
         flags |= O_RDWR | O_CREAT;
-    } else if (mode & GIODevice::ReadOnly) {
+    } else if (mode & CIODevice::ReadOnly) {
         flags |= O_RDONLY;
-    } else if (mode & GIODevice::WriteOnly) {
+    } else if (mode & CIODevice::WriteOnly) {
         flags |= O_WRONLY | O_CREAT;
     }
-    if (mode & GIODevice::Append)
+    if (mode & CIODevice::Append)
         flags |= O_APPEND;
-    if (mode & GIODevice::Truncate)
+    if (mode & CIODevice::Truncate)
         flags |= O_TRUNC;
-    if (mode & GIODevice::MustBeNew)
+    if (mode & CIODevice::MustBeNew)
         flags |= O_EXCL;
     int fd = ::open(m_filename.characters(), flags, 0666);
     if (fd < 0) {

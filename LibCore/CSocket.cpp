@@ -1,4 +1,4 @@
-#include <LibGUI/GSocket.h>
+#include <LibCore/CSocket.h>
 #include <LibCore/CNotifier.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -8,33 +8,33 @@
 #include <netdb.h>
 #include <errno.h>
 
-GSocket::GSocket(Type type, CObject* parent)
-    : GIODevice(parent)
+CSocket::CSocket(Type type, CObject* parent)
+    : CIODevice(parent)
     , m_type(type)
 {
 }
 
-GSocket::~GSocket()
+CSocket::~CSocket()
 {
 }
 
-bool GSocket::connect(const String& hostname, int port)
+bool CSocket::connect(const String& hostname, int port)
 {
     auto* hostent = gethostbyname(hostname.characters());
     if (!hostent) {
-        dbgprintf("GSocket::connect: Unable to resolve '%s'\n", hostname.characters());
+        dbgprintf("CSocket::connect: Unable to resolve '%s'\n", hostname.characters());
         return false;
     }
 
     IPv4Address host_address((const byte*)hostent->h_addr_list[0]);
-    dbgprintf("GSocket::connect: Resolved '%s' to %s\n", hostname.characters(), host_address.to_string().characters());
+    dbgprintf("CSocket::connect: Resolved '%s' to %s\n", hostname.characters(), host_address.to_string().characters());
     return connect(host_address, port);
 }
 
-bool GSocket::connect(const GSocketAddress& address, int port)
+bool CSocket::connect(const CSocketAddress& address, int port)
 {
     ASSERT(!is_connected());
-    ASSERT(address.type() == GSocketAddress::Type::IPv4);
+    ASSERT(address.type() == CSocketAddress::Type::IPv4);
     ASSERT(port > 0 && port <= 65535);
 
     struct sockaddr_in addr;
@@ -71,17 +71,17 @@ bool GSocket::connect(const GSocketAddress& address, int port)
     return true;
 }
 
-ByteBuffer GSocket::receive(int max_size)
+ByteBuffer CSocket::receive(int max_size)
 {
     auto buffer = read(max_size);
     if (eof()) {
-        dbgprintf("GSocket{%p}: Connection appears to have closed in receive().\n", this);
+        dbgprintf("CSocket{%p}: Connection appears to have closed in receive().\n", this);
         m_connected = false;
     }
     return buffer;
 }
 
-bool GSocket::send(const ByteBuffer& data)
+bool CSocket::send(const ByteBuffer& data)
 {
     int nsent = ::send(fd(), data.pointer(), data.size(), 0);
     if (nsent < 0) {

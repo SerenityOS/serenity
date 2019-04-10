@@ -1,23 +1,23 @@
-#include <LibGUI/GIODevice.h>
+#include <LibCore/CIODevice.h>
 #include <unistd.h>
 #include <sys/select.h>
 #include <stdio.h>
 
-GIODevice::GIODevice(CObject* parent)
+CIODevice::CIODevice(CObject* parent)
     : CObject(parent)
 {
 }
 
-GIODevice::~GIODevice()
+CIODevice::~CIODevice()
 {
 }
 
-const char* GIODevice::error_string() const
+const char* CIODevice::error_string() const
 {
     return strerror(m_error);
 }
 
-ByteBuffer GIODevice::read(int max_size)
+ByteBuffer CIODevice::read(int max_size)
 {
     if (m_fd < 0)
         return { };
@@ -50,9 +50,9 @@ ByteBuffer GIODevice::read(int max_size)
     return buffer;
 }
 
-bool GIODevice::can_read_from_fd() const
+bool CIODevice::can_read_from_fd() const
 {
-    // FIXME: Can we somehow remove this once GSocket is implemented using non-blocking sockets?
+    // FIXME: Can we somehow remove this once CSocket is implemented using non-blocking sockets?
     fd_set rfds;
     FD_ZERO(&rfds);
     FD_SET(m_fd, &rfds);
@@ -60,13 +60,13 @@ bool GIODevice::can_read_from_fd() const
     int rc = select(m_fd + 1, &rfds, nullptr, nullptr, &timeout);
     if (rc < 0) {
         // NOTE: We don't set m_error here.
-        perror("GIODevice::can_read: select");
+        perror("CIODevice::can_read: select");
         return false;
     }
     return FD_ISSET(m_fd, &rfds);
 }
 
-bool GIODevice::can_read_line()
+bool CIODevice::can_read_line()
 {
     if (m_eof && !m_buffered_data.is_empty())
         return true;
@@ -78,12 +78,12 @@ bool GIODevice::can_read_line()
     return m_buffered_data.contains_slow('\n');
 }
 
-bool GIODevice::can_read() const
+bool CIODevice::can_read() const
 {
     return !m_buffered_data.is_empty() || can_read_from_fd();
 }
 
-ByteBuffer GIODevice::read_all()
+ByteBuffer CIODevice::read_all()
 {
     ByteBuffer buffer;
     if (!m_buffered_data.is_empty()) {
@@ -107,7 +107,7 @@ ByteBuffer GIODevice::read_all()
     return buffer;
 }
 
-ByteBuffer GIODevice::read_line(int max_size)
+ByteBuffer CIODevice::read_line(int max_size)
 {
     if (m_fd < 0)
         return { };
@@ -117,7 +117,7 @@ ByteBuffer GIODevice::read_line(int max_size)
         return { };
     if (m_eof) {
         if (m_buffered_data.size() > max_size) {
-            printf("GIODevice::read_line: At EOF but there's more than max_size(%d) buffered\n", max_size);
+            printf("CIODevice::read_line: At EOF but there's more than max_size(%d) buffered\n", max_size);
             return { };
         }
         auto buffer = ByteBuffer::copy(m_buffered_data.data(), m_buffered_data.size());
@@ -141,7 +141,7 @@ ByteBuffer GIODevice::read_line(int max_size)
     return { };
 }
 
-bool GIODevice::populate_read_buffer()
+bool CIODevice::populate_read_buffer()
 {
     if (m_fd < 0)
         return false;
@@ -160,7 +160,7 @@ bool GIODevice::populate_read_buffer()
     return true;
 }
 
-bool GIODevice::close()
+bool CIODevice::close()
 {
     if (fd() < 0 || mode() == NotOpen)
         return false;
@@ -170,6 +170,6 @@ bool GIODevice::close()
         return false;
     }
     set_fd(-1);
-    set_mode(GIODevice::NotOpen);
+    set_mode(CIODevice::NotOpen);
     return true;
 }

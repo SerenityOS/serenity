@@ -1,19 +1,19 @@
-#include <LibGUI/GTCPSocket.h>
+#include <LibCore/CTCPSocket.h>
 #include <sys/socket.h>
 
-GTCPSocket::GTCPSocket(CObject* parent)
-    : GSocket(GSocket::Type::TCP, parent)
+CTCPSocket::CTCPSocket(CObject* parent)
+    : CSocket(CSocket::Type::TCP, parent)
 {
     int fd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0);
     if (fd < 0) {
         set_error(fd);
     } else {
         set_fd(fd);
-        set_mode(GIODevice::ReadWrite);
+        set_mode(CIODevice::ReadWrite);
         set_error(0);
     }
 }
 
-GTCPSocket::~GTCPSocket()
+CTCPSocket::~CTCPSocket()
 {
 }

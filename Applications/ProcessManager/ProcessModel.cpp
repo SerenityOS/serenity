@@ -1,5 +1,5 @@
 #include "ProcessModel.h"
-#include <LibGUI/GFile.h>
+#include <LibCore/CFile.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <pwd.h>
@@ -125,8 +125,8 @@ GVariant ProcessModel::data(const GModelIndex& index, Role role) const
 
 void ProcessModel::update()
 {
-    GFile file("/proc/all");
-    if (!file.open(GIODevice::ReadOnly)) {
+    CFile file("/proc/all");
+    if (!file.open(CIODevice::ReadOnly)) {
         fprintf(stderr, "ProcessManager: Failed to open /proc/all: %s\n", file.error_string());
         exit(1);
         return;

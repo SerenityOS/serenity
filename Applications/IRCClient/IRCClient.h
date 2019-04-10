@@ -4,7 +4,7 @@
 #include <AK/HashMap.h>
 #include <AK/CircularQueue.h>
 #include <AK/Function.h>
-#include <LibGUI/GTCPSocket.h>
+#include <LibCore/CTCPSocket.h>
 #include "IRCLogBuffer.h"
 #include "IRCWindow.h"
 
@@ -114,7 +114,7 @@ private:
     String m_hostname;
     int m_port { 6667 };
 
-    GTCPSocket* m_socket { nullptr };
+    CTCPSocket* m_socket { nullptr };
 
     String m_nickname;
     Vector<char> m_line_buffer;
