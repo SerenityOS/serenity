@@ -430,7 +430,7 @@ private:
 
 class WSAPICreateWindowRequest : public WSAPIClientRequest {
 public:
-    WSAPICreateWindowRequest(int client_id, const Rect& rect, const String& title, bool has_alpha_channel, bool modal, bool resizable, float opacity, const Size& base_size, const Size& size_increment, WSWindowType window_type)
+    WSAPICreateWindowRequest(int client_id, const Rect& rect, const String& title, bool has_alpha_channel, bool modal, bool resizable, float opacity, const Size& base_size, const Size& size_increment, WSWindowType window_type, Color background_color)
         : WSAPIClientRequest(WSMessage::APICreateWindowRequest, client_id)
         , m_rect(rect)
         , m_title(title)
@@ -441,6 +441,7 @@ public:
         , m_size_increment(size_increment)
         , m_base_size(base_size)
         , m_window_type(window_type)
+        , m_background_color(background_color)
     {
     }
 
@@ -453,6 +454,7 @@ public:
     Size size_increment() const { return m_size_increment; }
     Size base_size() const { return m_base_size; }
     WSWindowType window_type() const { return m_window_type; }
+    Color background_color() const { return m_background_color; }
 
 private:
     Rect m_rect;
@@ -464,6 +466,7 @@ private:
     Size m_size_increment;
     Size m_base_size;
     WSWindowType m_window_type;
+    Color m_background_color;
 };
 
 class WSAPIDestroyWindowRequest : public WSAPIClientRequest {

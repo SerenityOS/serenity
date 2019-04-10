@@ -38,6 +38,9 @@ public:
     String title() const;
     void set_title(const String&);
 
+    Color background_color() const { return m_background_color; }
+    void set_background_color(Color color) { m_background_color = color; }
+
     int x() const { return rect().x(); }
     int y() const { return rect().y(); }
     int width() const { return rect().width(); }
@@ -123,6 +126,7 @@ private:
     Vector<Rect> m_pending_paint_event_rects;
     Size m_size_increment;
     Size m_base_size;
+    Color m_background_color { Color::LightGray };
     GWindowType m_window_type { GWindowType::Normal };
     bool m_is_active { false };
     bool m_should_exit_app_on_close { false };

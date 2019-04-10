@@ -19,6 +19,9 @@ public:
     WSWindow(WSMessageReceiver&, WSWindowType);
     virtual ~WSWindow() override;
 
+    Color background_color() const { return m_background_color; }
+    void set_background_color(Color color) { m_background_color = color; }
+
     bool is_minimized() const { return m_minimized; }
     void set_minimized(bool);
 
@@ -153,4 +156,5 @@ private:
     Retained<GraphicsBitmap> m_icon;
     RetainPtr<WSCursor> m_override_cursor;
     WSWindowFrame m_frame;
+    Color m_background_color { Color::LightGray };
 };

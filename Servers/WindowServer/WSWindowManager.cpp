@@ -819,7 +819,20 @@ void WSWindowManager::compose()
             dirty_rect_in_window_coordinates.move_by(-window.position());
             auto dst = window.position();
             dst.move_by(dirty_rect_in_window_coordinates.location());
+
+            m_back_painter->fill_rect(window.rect(), window.background_color());
+
             m_back_painter->blit(dst, *backing_store, dirty_rect_in_window_coordinates, window.opacity());
+
+            if (backing_store->width() < window.width()) {
+                Rect right_fill_rect { window.x() + backing_store->width(), window.y(), window.width() - backing_store->width(), window.height() };
+                m_back_painter->fill_rect(right_fill_rect, window.background_color());
+            }
+
+            if (backing_store->height() < window.height()) {
+                Rect bottom_fill_rect { window.x(), window.y() + backing_store->height(), window.width(), window.height() - backing_store->height() };
+                m_back_painter->fill_rect(bottom_fill_rect, window.background_color());
+            }
         }
         return IterationDecision::Continue;
     });
