@@ -39,12 +39,12 @@ Rect GlyphMapWidget::get_outer_rect(byte glyph) const
 {
     int row = glyph / columns();
     int column = glyph % columns();
-    return {
+    return Rect {
         column * (font().max_glyph_width() + m_horizontal_spacing) + 1,
         row * (font().glyph_height() + m_vertical_spacing) + 1,
         font().max_glyph_width() + m_horizontal_spacing,
         font().glyph_height() + m_horizontal_spacing
-    };
+    }.translated(frame_thickness(), frame_thickness());
 }
 
 void GlyphMapWidget::update_glyph(byte glyph)
@@ -61,8 +61,6 @@ void GlyphMapWidget::paint_event(GPaintEvent& event)
 
     painter.set_font(font());
     painter.fill_rect(frame_inner_rect(), Color::White);
-
-    painter.translate(frame_thickness(), frame_thickness());
 
     byte glyph = 0;
 

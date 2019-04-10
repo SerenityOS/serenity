@@ -108,6 +108,7 @@ FontEditorWidget::FontEditorWidget(const String& path, RetainPtr<Font>&& edited_
     width_spinbox->on_change = [this, update_demo] (int value) {
         m_edited_font->set_glyph_width(m_glyph_map_widget->selected_glyph(), value);
         m_glyph_editor_widget->update();
+        m_glyph_map_widget->update_glyph(m_glyph_map_widget->selected_glyph());
         update_demo();
     };
 
