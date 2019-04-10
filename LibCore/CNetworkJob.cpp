@@ -1,16 +1,16 @@
-#include <LibGUI/GNetworkJob.h>
-#include <LibGUI/GNetworkResponse.h>
+#include <LibCore/CNetworkJob.h>
+#include <LibCore/CNetworkResponse.h>
 #include <stdio.h>
 
-GNetworkJob::GNetworkJob()
+CNetworkJob::CNetworkJob()
 {
 }
 
-GNetworkJob::~GNetworkJob()
+CNetworkJob::~CNetworkJob()
 {
 }
 
-void GNetworkJob::did_finish(Retained<GNetworkResponse>&& response)
+void CNetworkJob::did_finish(Retained<CNetworkResponse>&& response)
 {
     m_response = move(response);
     printf("%s{%p} job did_finish!\n", class_name(), this);
@@ -18,7 +18,7 @@ void GNetworkJob::did_finish(Retained<GNetworkResponse>&& response)
     on_finish(true);
 }
 
-void GNetworkJob::did_fail(Error error)
+void CNetworkJob::did_fail(Error error)
 {
     m_error = error;
     dbgprintf("%s{%p} job did_fail! error=%u\n", class_name(), this, (unsigned)error);

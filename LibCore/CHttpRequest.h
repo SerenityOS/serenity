@@ -2,14 +2,14 @@
 
 #include <AK/AKString.h>
 
-class GNetworkJob;
+class CNetworkJob;
 
-class GHttpRequest {
+class CHttpRequest {
 public:
     enum Method { Invalid, HEAD, GET, POST };
 
-    GHttpRequest();
-    ~GHttpRequest();
+    CHttpRequest();
+    ~CHttpRequest();
 
     String hostname() const { return m_hostname; }
     int port() const { return m_port; }
@@ -24,7 +24,7 @@ public:
     String method_name() const;
     ByteBuffer to_raw_request() const;
 
-    GNetworkJob* schedule();
+    CNetworkJob* schedule();
 
 private:
     String m_hostname;

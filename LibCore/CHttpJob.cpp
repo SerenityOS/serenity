@@ -1,19 +1,19 @@
-#include <LibGUI/GHttpJob.h>
-#include <LibGUI/GHttpResponse.h>
+#include <LibCore/CHttpJob.h>
+#include <LibCore/CHttpResponse.h>
 #include <LibCore/CTCPSocket.h>
 #include <stdio.h>
 #include <unistd.h>
 
-GHttpJob::GHttpJob(const GHttpRequest& request)
+CHttpJob::CHttpJob(const CHttpRequest& request)
     : m_request(request)
 {
 }
 
-GHttpJob::~GHttpJob()
+CHttpJob::~CHttpJob()
 {
 }
 
-void GHttpJob::on_socket_connected()
+void CHttpJob::on_socket_connected()
 {
     auto raw_request = m_request.to_raw_request();
 #if 0
@@ -22,7 +22,7 @@ void GHttpJob::on_socket_connected()
 
     bool success = m_socket->send(raw_request);
     if (!success)
-        return deferred_invoke([this](auto&){ did_fail(GNetworkJob::Error::TransmissionFailed); });
+        return deferred_invoke([this](auto&){ did_fail(CNetworkJob::Error::TransmissionFailed); });
 
     Vector<byte> buffer;
     while (m_socket->is_connected()) {
@@ -33,18 +33,18 @@ void GHttpJob::on_socket_connected()
             auto line = m_socket->read_line(PAGE_SIZE);
             if (line.is_null()) {
                 printf("Expected HTTP status\n");
-                return deferred_invoke([this](auto&){ did_fail(GNetworkJob::Error::TransmissionFailed); });
+                return deferred_invoke([this](auto&){ did_fail(CNetworkJob::Error::TransmissionFailed); });
             }
             auto parts = String::from_byte_buffer(line, Chomp).split(' ');
             if (parts.size() < 3) {
                 printf("Expected 3-part HTTP status, got '%s'\n", line.pointer());
-                return deferred_invoke([this](auto&){ did_fail(GNetworkJob::Error::ProtocolFailed); });
+                return deferred_invoke([this](auto&){ did_fail(CNetworkJob::Error::ProtocolFailed); });
             }
             bool ok;
             m_code = parts[1].to_uint(ok);
             if (!ok) {
                 printf("Expected numeric HTTP status\n");
-                return deferred_invoke([this](auto&){ did_fail(GNetworkJob::Error::ProtocolFailed); });
+                return deferred_invoke([this](auto&){ did_fail(CNetworkJob::Error::ProtocolFailed); });
             }
             m_state = State::InHeaders;
             continue;
@@ -55,7 +55,7 @@ void GHttpJob::on_socket_connected()
             auto line = m_socket->read_line(PAGE_SIZE);
             if (line.is_null()) {
                 printf("Expected HTTP header\n");
-                return did_fail(GNetworkJob::Error::ProtocolFailed);
+                return did_fail(CNetworkJob::Error::ProtocolFailed);
             }
             auto chomped_line = String::from_byte_buffer(line, Chomp);
             if (chomped_line.is_empty()) {
@@ -65,12 +65,12 @@ void GHttpJob::on_socket_connected()
             auto parts = chomped_line.split(':');
             if (parts.is_empty()) {
                 printf("Expected HTTP header with key/value\n");
-                return deferred_invoke([this](auto&){ did_fail(GNetworkJob::Error::ProtocolFailed); });
+                return deferred_invoke([this](auto&){ did_fail(CNetworkJob::Error::ProtocolFailed); });
             }
             auto name = parts[0];
             if (chomped_line.length() < name.length() + 2) {
                 printf("Malformed HTTP header: '%s' (%d)\n", chomped_line.characters(), chomped_line.length());
-                return deferred_invoke([this](auto&){ did_fail(GNetworkJob::Error::ProtocolFailed); });
+                return deferred_invoke([this](auto&){ did_fail(CNetworkJob::Error::ProtocolFailed); });
             }
             auto value = chomped_line.substring(name.length() + 2, chomped_line.length() - name.length() - 2);
             m_headers.set(name, value);
@@ -84,18 +84,18 @@ void GHttpJob::on_socket_connected()
                 m_state = State::Finished;
                 break;
             }
-            return deferred_invoke([this](auto&){ did_fail(GNetworkJob::Error::ProtocolFailed); });
+            return deferred_invoke([this](auto&){ did_fail(CNetworkJob::Error::ProtocolFailed); });
         }
         buffer.append(payload.pointer(), payload.size());
     }
 
-    auto response = GHttpResponse::create(m_code, move(m_headers), ByteBuffer::copy(buffer.data(), buffer.size()));
+    auto response = CHttpResponse::create(m_code, move(m_headers), ByteBuffer::copy(buffer.data(), buffer.size()));
     deferred_invoke([this, response] (auto&) {
         did_finish(move(response));
     });
 }
 
-void GHttpJob::start()
+void CHttpJob::start()
 {
     ASSERT(!m_socket);
     m_socket = new CTCPSocket(this);
@@ -105,5 +105,5 @@ void GHttpJob::start()
     };
     bool success = m_socket->connect(m_request.hostname(), m_request.port());
     if (!success)
-        return did_fail(GNetworkJob::Error::ConnectionFailed);
+        return did_fail(CNetworkJob::Error::ConnectionFailed);
 }

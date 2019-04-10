@@ -1,24 +1,23 @@
-#include <LibGUI/GHttpRequest.h>
-#include <LibGUI/GHttpJob.h>
-#include <LibGUI/GEventLoop.h>
+#include <LibCore/CHttpRequest.h>
+#include <LibCore/CHttpJob.h>
 #include <AK/StringBuilder.h>
 
-GHttpRequest::GHttpRequest()
+CHttpRequest::CHttpRequest()
 {
 }
 
-GHttpRequest::~GHttpRequest()
+CHttpRequest::~CHttpRequest()
 {
 }
 
-GNetworkJob* GHttpRequest::schedule()
+CNetworkJob* CHttpRequest::schedule()
 {
-    auto* job = new GHttpJob(*this);
+    auto* job = new CHttpJob(*this);
     job->start();
     return job;
 }
 
-String GHttpRequest::method_name() const
+String CHttpRequest::method_name() const
 {
     switch (m_method) {
     case Method::GET:
@@ -32,7 +31,7 @@ String GHttpRequest::method_name() const
     }
 }
 
-ByteBuffer GHttpRequest::to_raw_request() const
+ByteBuffer CHttpRequest::to_raw_request() const
 {
     StringBuilder builder;
     builder.append(method_name());

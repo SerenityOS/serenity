@@ -50,11 +50,6 @@ LIBGUI_OBJS = \
     GFileSystemModel.o \
     GSplitter.o \
     GTimer.o \
-    GNetworkJob.o \
-    GNetworkResponse.o \
-    GHttpRequest.o \
-    GHttpResponse.o \
-    GHttpJob.o \
     GSpinBox.o \
     GGroupBox.o \
     GWindow.o
