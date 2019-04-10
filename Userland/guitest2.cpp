@@ -103,8 +103,8 @@ GWindow* make_launcher_window()
 
     auto* textbox = new GTextBox(widget);
     textbox->set_relative_rect({ 5, 110, 90, 20 });
-    textbox->on_return_pressed = [window] (GTextBox& textbox) {
-        window->set_title(textbox.text());
+    textbox->on_return_pressed = [window, textbox] {
+        window->set_title(textbox->text());
     };
 
     auto* other_textbox = new GTextBox(widget);

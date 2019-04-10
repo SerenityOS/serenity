@@ -68,10 +68,10 @@ void GInputBox::build()
         done(ExecOK);
     };
 
-    m_text_editor->on_return_pressed = [this] (auto&) {
+    m_text_editor->on_return_pressed = [this] {
         m_ok_button->click();
     };
-    m_text_editor->on_escape_pressed = [this] (auto&) {
+    m_text_editor->on_escape_pressed = [this] {
         m_cancel_button->click();
     };
     m_text_editor->set_focus(true);

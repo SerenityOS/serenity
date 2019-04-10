@@ -69,8 +69,8 @@ int main(int argc, char** argv)
     progressbar->set_frame_shadow(GFrame::Shadow::Sunken);
     progressbar->set_frame_thickness(1);
 
-    location_textbox->on_return_pressed = [directory_view] (auto& editor) {
-        directory_view->open(editor.text());
+    location_textbox->on_return_pressed = [directory_view, location_textbox] {
+        directory_view->open(location_textbox->text());
     };
 
     file_system_model->on_selection_changed = [&] (auto& index) {

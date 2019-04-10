@@ -33,14 +33,14 @@ FontEditorWidget::FontEditorWidget(const String& path, RetainPtr<Font>&& edited_
     m_name_textbox = new GTextBox(this);
     m_name_textbox->set_relative_rect({ 5, 220, 300, 20 });
     m_name_textbox->set_text(m_edited_font->name());
-    m_name_textbox->on_change = [this] (GTextBox&) {
+    m_name_textbox->on_change = [this] {
         m_edited_font->set_name(m_name_textbox->text());
     };
 
     m_path_textbox = new GTextBox(this);
     m_path_textbox->set_relative_rect({ 5, 245, 300, 20 });
     m_path_textbox->set_text(m_path);
-    m_path_textbox->on_change = [this] (GTextBox&) {
+    m_path_textbox->on_change = [this] {
         m_path = m_path_textbox->text();
     };
 

@@ -71,7 +71,7 @@ public:
     bool is_single_line() const { return m_type == SingleLine; }
     bool is_multi_line() const { return m_type == MultiLine; }
 
-    Function<void(GTextEditor&)> on_cursor_change;
+    Function<void()> on_cursor_change;
 
     void set_text(const String&);
     void scroll_cursor_into_view();
@@ -97,8 +97,8 @@ public:
     void delete_current_line();
 
     Function<void()> on_change;
-    Function<void(GTextEditor&)> on_return_pressed;
-    Function<void(GTextEditor&)> on_escape_pressed;
+    Function<void()> on_return_pressed;
+    Function<void()> on_escape_pressed;
 
     virtual const char* class_name() const override { return "GTextEditor"; }
 
