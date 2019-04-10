@@ -97,6 +97,8 @@ cp -v ../Applications/Taskbar/Taskbar mnt/bin/Taskbar
 ln -s Taskbar mnt/bin/tb
 cp -v ../Applications/Downloader/Downloader mnt/bin/Downloader
 ln -s Downloader mnt/bin/dl
+cp -v ../Applications/VisualBuilder/VisualBuilder mnt/bin/VisualBuilder
+ln -s VisualBuilder mnt/bin/vb
 cp -v kernel.map mnt/
 sh sync-local.sh
 umount mnt || ( sleep 0.5 && sync && umount mnt )
