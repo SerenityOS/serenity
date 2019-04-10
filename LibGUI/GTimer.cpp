@@ -30,7 +30,7 @@ void GTimer::stop()
     m_active = false;
 }
 
-void GTimer::timer_event(GTimerEvent&)
+void GTimer::timer_event(CTimerEvent&)
 {
     if (m_single_shot)
         stop();

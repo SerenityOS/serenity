@@ -22,7 +22,7 @@ GWidget::~GWidget()
 {
 }
 
-void GWidget::child_event(GChildEvent& event)
+void GWidget::child_event(CChildEvent& event)
 {
     if (event.type() == GEvent::ChildAdded) {
         if (event.child() && event.child()->is_widget() && layout())
@@ -54,7 +54,7 @@ void GWidget::set_relative_rect(const Rect& rect)
     update();
 }
 
-void GWidget::event(GEvent& event)
+void GWidget::event(CEvent& event)
 {
     switch (event.type()) {
     case GEvent::Paint:
@@ -178,14 +178,14 @@ void GWidget::handle_mousedown_event(GMouseEvent& event)
     mousedown_event(event);
 }
 
-void GWidget::handle_enter_event(GEvent& event)
+void GWidget::handle_enter_event(CEvent& event)
 {
     if (has_tooltip())
         GApplication::the().show_tooltip(m_tooltip, screen_relative_rect().center().translated(0, height() / 2));
     enter_event(event);
 }
 
-void GWidget::handle_leave_event(GEvent& event)
+void GWidget::handle_leave_event(CEvent& event)
 {
     GApplication::the().hide_tooltip();
     leave_event(event);
@@ -235,19 +235,19 @@ void GWidget::mousemove_event(GMouseEvent&)
 {
 }
 
-void GWidget::focusin_event(GEvent&)
+void GWidget::focusin_event(CEvent&)
 {
 }
 
-void GWidget::focusout_event(GEvent&)
+void GWidget::focusout_event(CEvent&)
 {
 }
 
-void GWidget::enter_event(GEvent&)
+void GWidget::enter_event(CEvent&)
 {
 }
 
-void GWidget::leave_event(GEvent&)
+void GWidget::leave_event(CEvent&)
 {
 }
 

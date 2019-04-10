@@ -13,7 +13,7 @@ public:
     virtual const char* class_name() const override { return "GStackWidget"; }
 
 protected:
-    virtual void child_event(GChildEvent&) override;
+    virtual void child_event(CChildEvent&) override;
     virtual void resize_event(GResizeEvent&) override;
 
 private:

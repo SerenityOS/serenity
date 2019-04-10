@@ -21,17 +21,17 @@ GObject::~GObject()
         delete child;
 }
 
-void GObject::event(GEvent& event)
+void GObject::event(CEvent& event)
 {
     switch (event.type()) {
     case GEvent::Timer:
-        return timer_event(static_cast<GTimerEvent&>(event));
+        return timer_event(static_cast<CTimerEvent&>(event));
     case GEvent::DeferredDestroy:
         delete this;
         break;
     case GEvent::ChildAdded:
     case GEvent::ChildRemoved:
-        return child_event(static_cast<GChildEvent&>(event));
+        return child_event(static_cast<CChildEvent&>(event));
     case GEvent::Invalid:
         ASSERT_NOT_REACHED();
         break;
@@ -43,7 +43,7 @@ void GObject::event(GEvent& event)
 void GObject::add_child(GObject& object)
 {
     m_children.append(&object);
-    GEventLoop::current().post_event(*this, make<GChildEvent>(GEvent::ChildAdded, object));
+    GEventLoop::current().post_event(*this, make<CChildEvent>(GEvent::ChildAdded, object));
 }
 
 void GObject::remove_child(GObject& object)
@@ -51,17 +51,17 @@ void GObject::remove_child(GObject& object)
     for (ssize_t i = 0; i < m_children.size(); ++i) {
         if (m_children[i] == &object) {
             m_children.remove(i);
-            GEventLoop::current().post_event(*this, make<GChildEvent>(GEvent::ChildRemoved, object));
+            GEventLoop::current().post_event(*this, make<CChildEvent>(GEvent::ChildRemoved, object));
             return;
         }
     }
 }
 
-void GObject::timer_event(GTimerEvent&)
+void GObject::timer_event(CTimerEvent&)
 {
 }
 
-void GObject::child_event(GChildEvent&)
+void GObject::child_event(CChildEvent&)
 {
 }
 
@@ -86,7 +86,7 @@ void GObject::stop_timer()
 
 void GObject::delete_later()
 {
-    GEventLoop::current().post_event(*this, make<GEvent>(GEvent::DeferredDestroy));
+    GEventLoop::current().post_event(*this, make<CEvent>(CEvent::DeferredDestroy));
 }
 
 void GObject::dump_tree(int indent)
@@ -103,5 +103,5 @@ void GObject::dump_tree(int indent)
 
 void GObject::deferred_invoke(Function<void(GObject&)> invokee)
 {
-    GEventLoop::current().post_event(*this, make<GDeferredInvocationEvent>(move(invokee)));
+    GEventLoop::current().post_event(*this, make<CDeferredInvocationEvent>(move(invokee)));
 }

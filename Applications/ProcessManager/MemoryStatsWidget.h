@@ -12,7 +12,7 @@ public:
     void refresh();
 
 private:
-    virtual void timer_event(GTimerEvent&) override;
+    virtual void timer_event(CTimerEvent&) override;
     virtual void paint_event(GPaintEvent&) override;
 
     GLabel* m_user_physical_pages_label { nullptr };

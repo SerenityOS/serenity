@@ -56,7 +56,7 @@ public:
     void move_to(int x, int y) { move_to({ x, y }); }
     void move_to(const Point& point) { set_rect({ point, size() }); }
 
-    virtual void event(GEvent&) override;
+    virtual void event(CEvent&) override;
 
     bool is_visible() const;
     bool is_active() const { return m_is_active; }

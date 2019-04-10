@@ -16,7 +16,7 @@ ProcessTableView::~ProcessTableView()
 {
 }
 
-void ProcessTableView::timer_event(GTimerEvent&)
+void ProcessTableView::timer_event(CTimerEvent&)
 {
     model()->update();
 }

@@ -293,7 +293,7 @@ void GScrollBar::mousemove_event(GMouseEvent& event)
     set_value(new_value);
 }
 
-void GScrollBar::leave_event(GEvent&)
+void GScrollBar::leave_event(CEvent&)
 {
     if (m_hovered_component != Component::Invalid) {
         m_hovered_component = Component::Invalid;

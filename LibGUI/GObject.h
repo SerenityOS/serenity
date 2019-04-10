@@ -4,9 +4,9 @@
 #include <AK/Vector.h>
 #include <AK/Weakable.h>
 
-class GEvent;
-class GChildEvent;
-class GTimerEvent;
+class CEvent;
+class CChildEvent;
+class CTimerEvent;
 
 class GObject : public Weakable<GObject> {
 public:
@@ -15,7 +15,7 @@ public:
 
     virtual const char* class_name() const { return "GObject"; }
 
-    virtual void event(GEvent&);
+    virtual void event(CEvent&);
 
     Vector<GObject*>& children() { return m_children; }
 
@@ -39,8 +39,8 @@ public:
     virtual bool is_window() const { return false; }
 
 protected:
-    virtual void timer_event(GTimerEvent&);
-    virtual void child_event(GChildEvent&);
+    virtual void timer_event(CTimerEvent&);
+    virtual void child_event(CChildEvent&);
 
 private:
     GObject* m_parent { nullptr };

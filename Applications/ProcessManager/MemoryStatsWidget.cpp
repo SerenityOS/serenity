@@ -97,7 +97,7 @@ void MemoryStatsWidget::refresh()
     fclose(fp);
 }
 
-void MemoryStatsWidget::timer_event(GTimerEvent&)
+void MemoryStatsWidget::timer_event(CTimerEvent&)
 {
     refresh();
 }

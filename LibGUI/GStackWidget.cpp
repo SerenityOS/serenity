@@ -31,7 +31,7 @@ void GStackWidget::resize_event(GResizeEvent& event)
     m_active_widget->set_relative_rect({ { }, event.size() });
 }
 
-void GStackWidget::child_event(GChildEvent& event)
+void GStackWidget::child_event(CChildEvent& event)
 {
     if (!event.child() || !event.child()->is_widget())
         return GWidget::child_event(event);

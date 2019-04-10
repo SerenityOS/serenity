@@ -1,22 +1,17 @@
 #pragma once
 
+#include <LibCore/CEvent.h>
 #include <SharedGraphics/Point.h>
 #include <SharedGraphics/Rect.h>
-#include <AK/AKString.h>
-#include <AK/Types.h>
-#include <AK/WeakPtr.h>
-#include <AK/Function.h>
 #include <Kernel/KeyCode.h>
 #include <LibGUI/GWindowType.h>
 
 class GObject;
 
-class GEvent {
+class GEvent : public CEvent{
 public:
     enum Type {
-        Invalid = 0,
-        Quit,
-        Show,
+        Show = 1000,
         Hide,
         Paint,
         Resize,
@@ -27,9 +22,6 @@ public:
         Leave,
         KeyDown,
         KeyUp,
-        Timer,
-        DeferredDestroy,
-        DeferredInvoke,
         WindowEntered,
         WindowLeft,
         WindowBecameInactive,
@@ -37,37 +29,17 @@ public:
         FocusIn,
         FocusOut,
         WindowCloseRequest,
-        ChildAdded,
-        ChildRemoved,
         WM_WindowRemoved,
         WM_WindowStateChanged,
     };
 
     GEvent() { }
-    explicit GEvent(Type type) : m_type(type) { }
+    explicit GEvent(Type type) : CEvent(type) { }
     virtual ~GEvent() { }
 
-    Type type() const { return m_type; }
-
-    bool is_mouse_event() const { return m_type == MouseMove || m_type == MouseDown || m_type == MouseUp; }
-    bool is_key_event() const { return m_type == KeyUp || m_type == KeyDown; }
-    bool is_paint_event() const { return m_type == Paint; }
-
-private:
-    Type m_type { Invalid };
-};
-
-class GDeferredInvocationEvent : public GEvent {
-    friend class GEventLoop;
-public:
-    GDeferredInvocationEvent(Function<void(GObject&)> invokee)
-        : GEvent(GEvent::Type::DeferredInvoke)
-        , m_invokee(move(invokee))
-    {
-    }
-
-private:
-    Function<void(GObject&)> m_invokee;
+    bool is_mouse_event() const { return type() == MouseMove || type() == MouseDown || type() == MouseUp; }
+    bool is_key_event() const { return type() == KeyUp || type() == KeyDown; }
+    bool is_paint_event() const { return type() == Paint; }
 };
 
 class GWMEvent : public GEvent {
@@ -119,14 +91,6 @@ private:
     bool m_active;
     GWindowType m_window_type;
     bool m_minimized;
-};
-
-class QuitEvent final : public GEvent {
-public:
-    QuitEvent()
-        : GEvent(GEvent::Quit)
-    {
-    }
 };
 
 class GPaintEvent final : public GEvent {
@@ -232,27 +196,4 @@ private:
     unsigned m_buttons { 0 };
     GMouseButton m_button { GMouseButton::None };
     unsigned m_modifiers { 0 };
-};
-
-class GTimerEvent final : public GEvent {
-public:
-    explicit GTimerEvent(int timer_id) : GEvent(GEvent::Timer), m_timer_id(timer_id) { }
-    ~GTimerEvent() { }
-
-    int timer_id() const { return m_timer_id; }
-
-private:
-    int m_timer_id;
-};
-
-class GChildEvent final : public GEvent {
-public:
-    GChildEvent(Type, GObject& child);
-    ~GChildEvent();
-
-    GObject* child() { return m_child.ptr(); }
-    const GObject* child() const { return m_child.ptr(); }
-
-private:
-    WeakPtr<GObject> m_child;
 };

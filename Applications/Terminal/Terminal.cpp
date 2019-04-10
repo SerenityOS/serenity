@@ -726,7 +726,7 @@ bool Terminal::Line::has_only_one_background_color() const
     return true;
 }
 
-void Terminal::event(GEvent& event)
+void Terminal::event(CEvent& event)
 {
     if (event.type() == GEvent::WindowBecameActive || event.type() == GEvent::WindowBecameInactive) {
         m_in_active_window = event.type() == GEvent::WindowBecameActive;

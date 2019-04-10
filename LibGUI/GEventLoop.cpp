@@ -153,15 +153,15 @@ int GEventLoop::exec()
 #endif
             if (!receiver) {
                 switch (event.type()) {
-                case GEvent::Quit:
+                case CEvent::Quit:
                     ASSERT_NOT_REACHED();
                     return 0;
                 default:
                     dbgprintf("Event type %u with no receiver :(\n", event.type());
                 }
-            } else if (event.type() == GEvent::Type::DeferredInvoke) {
+            } else if (event.type() == CEvent::Type::DeferredInvoke) {
                 printf("DeferredInvoke: receiver=%s{%p}\n", receiver->class_name(), receiver);
-                static_cast<GDeferredInvocationEvent&>(event).m_invokee(*receiver);
+                static_cast<CDeferredInvocationEvent&>(event).m_invokee(*receiver);
             } else {
                 receiver->event(event);
             }
@@ -177,7 +177,7 @@ int GEventLoop::exec()
     ASSERT_NOT_REACHED();
 }
 
-void GEventLoop::post_event(GObject& receiver, OwnPtr<GEvent>&& event)
+void GEventLoop::post_event(GObject& receiver, OwnPtr<CEvent>&& event)
 {
 #ifdef GEVENTLOOP_DEBUG
     dbgprintf("GEventLoop::post_event: {%u} << receiver=%p, event=%p\n", m_queued_events.size(), &receiver, event.ptr());
@@ -322,9 +322,9 @@ void GEventLoop::wait_for_event()
         if (!timer.has_expired())
             continue;
 #ifdef GEVENTLOOP_DEBUG
-        dbgprintf("GEventLoop: Timer %d has expired, sending GTimerEvent to %p\n", timer.timer_id, timer.owner);
+        dbgprintf("GEventLoop: Timer %d has expired, sending CTimerEvent to %p\n", timer.timer_id, timer.owner);
 #endif
-        post_event(*timer.owner, make<GTimerEvent>(timer.timer_id));
+        post_event(*timer.owner, make<CTimerEvent>(timer.timer_id));
         if (timer.should_reload) {
             timer.reload();
         } else {

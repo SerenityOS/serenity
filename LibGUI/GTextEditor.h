@@ -108,12 +108,12 @@ private:
     virtual void mouseup_event(GMouseEvent&) override;
     virtual void mousemove_event(GMouseEvent&) override;
     virtual void keydown_event(GKeyEvent&) override;
-    virtual void focusin_event(GEvent&) override;
-    virtual void focusout_event(GEvent&) override;
-    virtual void timer_event(GTimerEvent&) override;
+    virtual void focusin_event(CEvent&) override;
+    virtual void focusout_event(CEvent&) override;
+    virtual void timer_event(CTimerEvent&) override;
     virtual bool accepts_focus() const override { return true; }
-    virtual void enter_event(GEvent&) override;
-    virtual void leave_event(GEvent&) override;
+    virtual void enter_event(CEvent&) override;
+    virtual void leave_event(CEvent&) override;
 
     void paint_ruler(Painter&);
     void update_content_size();

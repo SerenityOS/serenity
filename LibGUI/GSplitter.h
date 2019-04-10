@@ -11,8 +11,8 @@ protected:
     virtual void mousedown_event(GMouseEvent&) override;
     virtual void mousemove_event(GMouseEvent&) override;
     virtual void mouseup_event(GMouseEvent&) override;
-    virtual void enter_event(GEvent&) override;
-    virtual void leave_event(GEvent&) override;
+    virtual void enter_event(CEvent&) override;
+    virtual void leave_event(CEvent&) override;
 
 private:
     Orientation m_orientation;
