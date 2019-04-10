@@ -26,8 +26,7 @@ public:
     void draw_line(const Point&, const Point&, Color);
     void draw_focus_rect(const Rect&);
     void draw_scaled_bitmap(const Rect& dst_rect, const GraphicsBitmap&, const Rect& src_rect);
-    void blit(const Point&, const GraphicsBitmap&, const Rect& src_rect);
-    void blit_with_opacity(const Point&, const GraphicsBitmap&, const Rect& src_rect, float opacity);
+    void blit(const Point&, const GraphicsBitmap&, const Rect& src_rect, float opacity = 1.0f);
 
     void draw_text(const Rect&, const char* text, int length, const Font&, TextAlignment = TextAlignment::TopLeft, Color = Color::Black, TextElision = TextElision::None);
     void draw_text(const Rect&, const char* text, int length, TextAlignment = TextAlignment::TopLeft, Color = Color::Black, TextElision = TextElision::None);
@@ -61,6 +60,7 @@ protected:
     void set_pixel_with_draw_op(dword& pixel, const Color&);
     void fill_rect_with_draw_op(const Rect&, Color);
     void blit_with_alpha(const Point&, const GraphicsBitmap&, const Rect& src_rect);
+    void blit_with_opacity(const Point&, const GraphicsBitmap&, const Rect& src_rect, float opacity);
 
     struct State {
         const Font* font;
