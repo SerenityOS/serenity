@@ -14,12 +14,12 @@ DEFINES = -DSERENITY -DSANITIZE_PTRS -DUSERLAND
 CXXFLAGS = -MMD -MP $(WARNING_FLAGS) $(OPTIMIZATION_FLAGS) $(FLAVOR_FLAGS) $(STANDARD_FLAGS) $(INCLUDE_FLAGS) $(DEFINES)
 CXX = i686-pc-serenity-g++
 LD = i686-pc-serenity-g++
-LDFLAGS = -L../../LibC -L../../LibGUI
+LDFLAGS = -L../../LibC -L../../LibCore -L../../LibGUI
 
 all: $(APP)
 
 $(APP): $(OBJS)
-	$(LD) -o $(APP) $(LDFLAGS) $(OBJS) -lgui -lc
+	$(LD) -o $(APP) $(LDFLAGS) $(OBJS) -lgui -lcore -lc
 
 .cpp.o:
 	@echo "CXX $<"; $(CXX) $(CXXFLAGS) -o $@ -c $<

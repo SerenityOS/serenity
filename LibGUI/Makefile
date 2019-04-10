@@ -52,7 +52,6 @@ LIBGUI_OBJS = \
     GAbstractView.o \
     GItemView.o \
     GIcon.o \
-    GElapsedTimer.o \
     GFrame.o \
     GTreeView.o \
     GFileSystemModel.o \
@@ -68,8 +67,6 @@ LIBGUI_OBJS = \
     GWindow.o
 
 OBJS = $(SHAREDGRAPHICS_OBJS) $(LIBGUI_OBJS)
-
-LIBS = -lc
 
 LIBRARY = libgui.a
 STANDARD_FLAGS = -std=c++17 -Wno-sized-deallocation
@@ -88,7 +85,7 @@ AR = i686-pc-serenity-ar
 all: $(LIBRARY)
 
 $(LIBRARY): $(OBJS)
-	@echo "LIB $@"; $(AR) rcs $@ $(OBJS) $(LIBS)
+	@echo "LIB $@"; $(AR) rcs $@ $(OBJS)
 
 .cpp.o:
 	@echo "CXX $<"; $(CXX) $(CXXFLAGS) -o $@ -c $<

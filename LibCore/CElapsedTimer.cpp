@@ -1,8 +1,8 @@
-#include <LibGUI/GElapsedTimer.h>
+#include <LibCore/CElapsedTimer.h>
 #include <AK/Assertions.h>
 #include <sys/time.h>
 
-void GElapsedTimer::start()
+void CElapsedTimer::start()
 {
     m_valid = true;
     gettimeofday(&m_start_time, nullptr);
@@ -18,7 +18,7 @@ inline void timersub(const struct timeval* a, const struct timeval* b, struct ti
     }
 }
 
-int GElapsedTimer::elapsed() const
+int CElapsedTimer::elapsed() const
 {
     ASSERT(is_valid());
     struct timeval now;
