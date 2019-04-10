@@ -1,11 +1,11 @@
 #pragma once
 
-#include <LibGUI/GObject.h>
+#include <LibCore/CObject.h>
 #include <AK/Function.h>
 
 class GNetworkResponse;
 
-class GNetworkJob : public GObject {
+class GNetworkJob : public CObject {
 public:
     enum class Error {
         None,

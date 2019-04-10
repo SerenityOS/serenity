@@ -8,7 +8,7 @@
 #include <netdb.h>
 #include <errno.h>
 
-GSocket::GSocket(Type type, GObject* parent)
+GSocket::GSocket(Type type, CObject* parent)
     : GIODevice(parent)
     , m_type(type)
 {

@@ -6,7 +6,7 @@
 #include <Kernel/KeyCode.h>
 #include <LibGUI/GWindowType.h>
 
-class GObject;
+class CObject;
 
 class GEvent : public CEvent{
 public:

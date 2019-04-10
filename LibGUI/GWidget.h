@@ -2,7 +2,7 @@
 
 #include <LibCore/CElapsedTimer.h>
 #include <LibGUI/GEvent.h>
-#include <LibGUI/GObject.h>
+#include <LibCore/CObject.h>
 #include <SharedGraphics/Rect.h>
 #include <SharedGraphics/Color.h>
 #include <SharedGraphics/Font.h>
@@ -18,7 +18,7 @@ enum class Orientation { Horizontal, Vertical };
 enum class HorizontalDirection { Left, Right };
 enum class VerticalDirection { Up, Down };
 
-class GWidget : public GObject {
+class GWidget : public CObject {
 public:
     explicit GWidget(GWidget* parent = nullptr);
     virtual ~GWidget() override;

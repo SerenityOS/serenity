@@ -15,7 +15,7 @@ public:
     void done(int result);
 
 protected:
-    explicit GDialog(GObject* parent);
+    explicit GDialog(CObject* parent);
 
 private:
     OwnPtr<GEventLoop> m_event_loop;

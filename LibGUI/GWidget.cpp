@@ -11,7 +11,7 @@
 #include <unistd.h>
 
 GWidget::GWidget(GWidget* parent)
-    : GObject(parent)
+    : CObject(parent)
 {
     set_font(nullptr);
     m_background_color = Color::LightGray;
@@ -36,7 +36,7 @@ void GWidget::child_event(CChildEvent& event)
                 invalidate_layout();
         }
     }
-    return GObject::child_event(event);
+    return CObject::child_event(event);
 }
 
 void GWidget::set_relative_rect(const Rect& rect)
@@ -84,7 +84,7 @@ void GWidget::event(CEvent& event)
     case GEvent::Leave:
         return handle_leave_event(event);
     default:
-        return GObject::event(event);
+        return CObject::event(event);
     }
 }
 

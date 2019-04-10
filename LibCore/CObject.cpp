@@ -1,17 +1,17 @@
-#include "GObject.h"
-#include "GEvent.h"
-#include "GEventLoop.h"
+#include <LibCore/CObject.h>
+#include <LibCore/CEvent.h>
+#include <LibGUI/GEventLoop.h>
 #include <AK/Assertions.h>
 #include <stdio.h>
 
-GObject::GObject(GObject* parent)
+CObject::CObject(CObject* parent)
     : m_parent(parent)
 {
     if (m_parent)
         m_parent->add_child(*this);
 }
 
-GObject::~GObject()
+CObject::~CObject()
 {
     stop_timer();
     if (m_parent)
@@ -21,7 +21,7 @@ GObject::~GObject()
         delete child;
 }
 
-void GObject::event(CEvent& event)
+void CObject::event(CEvent& event)
 {
     switch (event.type()) {
     case GEvent::Timer:
@@ -40,13 +40,13 @@ void GObject::event(CEvent& event)
     }
 }
 
-void GObject::add_child(GObject& object)
+void CObject::add_child(CObject& object)
 {
     m_children.append(&object);
     GEventLoop::current().post_event(*this, make<CChildEvent>(GEvent::ChildAdded, object));
 }
 
-void GObject::remove_child(GObject& object)
+void CObject::remove_child(CObject& object)
 {
     for (ssize_t i = 0; i < m_children.size(); ++i) {
         if (m_children[i] == &object) {
@@ -57,25 +57,25 @@ void GObject::remove_child(GObject& object)
     }
 }
 
-void GObject::timer_event(CTimerEvent&)
+void CObject::timer_event(CTimerEvent&)
 {
 }
 
-void GObject::child_event(CChildEvent&)
+void CObject::child_event(CChildEvent&)
 {
 }
 
-void GObject::start_timer(int ms)
+void CObject::start_timer(int ms)
 {
     if (m_timer_id) {
-        dbgprintf("GObject{%p} already has a timer!\n", this);
+        dbgprintf("CObject{%p} already has a timer!\n", this);
         ASSERT_NOT_REACHED();
     }
 
     m_timer_id = GEventLoop::register_timer(*this, ms, true);
 }
 
-void GObject::stop_timer()
+void CObject::stop_timer()
 {
     if (!m_timer_id)
         return;
@@ -84,12 +84,12 @@ void GObject::stop_timer()
     m_timer_id = 0;
 }
 
-void GObject::delete_later()
+void CObject::delete_later()
 {
     GEventLoop::current().post_event(*this, make<CEvent>(CEvent::DeferredDestroy));
 }
 
-void GObject::dump_tree(int indent)
+void CObject::dump_tree(int indent)
 {
     for (int i = 0; i < indent; ++i) {
         printf(" ");
@@ -101,7 +101,7 @@ void GObject::dump_tree(int indent)
     }
 }
 
-void GObject::deferred_invoke(Function<void(GObject&)> invokee)
+void CObject::deferred_invoke(Function<void(CObject&)> invokee)
 {
     GEventLoop::current().post_event(*this, make<CDeferredInvocationEvent>(move(invokee)));
 }

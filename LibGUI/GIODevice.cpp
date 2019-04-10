@@ -3,8 +3,8 @@
 #include <sys/select.h>
 #include <stdio.h>
 
-GIODevice::GIODevice(GObject* parent)
-    : GObject(parent)
+GIODevice::GIODevice(CObject* parent)
+    : CObject(parent)
 {
 }
 

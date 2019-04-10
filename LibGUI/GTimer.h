@@ -1,11 +1,11 @@
 #pragma once
 
-#include <LibGUI/GObject.h>
+#include <LibCore/CObject.h>
 #include <AK/Function.h>
 
-class GTimer final : public GObject {
+class GTimer final : public CObject {
 public:
-    explicit GTimer(GObject* parent = nullptr);
+    explicit GTimer(CObject* parent = nullptr);
     virtual ~GTimer() override;
 
     void start();
