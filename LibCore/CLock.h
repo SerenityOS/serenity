@@ -17,10 +17,10 @@ static inline dword CAS(volatile dword* mem, dword newval, dword oldval)
     return ret;
 }
 
-class GLock {
+class CLock {
 public:
-    GLock() { }
-    ~GLock() { }
+    CLock() { }
+    ~CLock() { }
 
     void lock();
     void unlock();
@@ -31,18 +31,18 @@ private:
     int m_holder { -1 };
 };
 
-class GLocker {
+class CLocker {
 public:
-    [[gnu::always_inline]] inline explicit GLocker(GLock& l) : m_lock(l) { lock(); }
-    [[gnu::always_inline]] inline ~GLocker() { unlock(); }
+    [[gnu::always_inline]] inline explicit CLocker(CLock& l) : m_lock(l) { lock(); }
+    [[gnu::always_inline]] inline ~CLocker() { unlock(); }
     [[gnu::always_inline]] inline void unlock() { m_lock.unlock(); }
     [[gnu::always_inline]] inline void lock() { m_lock.lock(); }
 
 private:
-    GLock& m_lock;
+    CLock& m_lock;
 };
 
-[[gnu::always_inline]] inline void GLock::lock()
+[[gnu::always_inline]] inline void CLock::lock()
 {
     for (;;) {
         if (CAS(&m_lock, 1, 0) == 0) {
@@ -59,7 +59,7 @@ private:
     }
 }
 
-inline void GLock::unlock()
+inline void CLock::unlock()
 {
     for (;;) {
         if (CAS(&m_lock, 1, 0) == 0) {
@@ -80,14 +80,14 @@ inline void GLock::unlock()
     }
 }
 
-#define LOCKER(lock) GLocker locker(lock)
+#define LOCKER(lock) CLocker locker(lock)
 
 template<typename T>
-class GLockable {
+class CLockable {
 public:
-    GLockable() { }
-    GLockable(T&& resource) : m_resource(move(resource)) { }
-    GLock& lock() { return m_lock; }
+    CLockable() { }
+    CLockable(T&& resource) : m_resource(move(resource)) { }
+    CLock& lock() { return m_lock; }
     T& resource() { return m_resource; }
 
     T lock_and_copy()
@@ -98,6 +98,6 @@ public:
 
 private:
     T m_resource;
-    GLock m_lock;
+    CLock m_lock;
 };
 
