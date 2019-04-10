@@ -23,13 +23,8 @@
 //#define COALESCING_DEBUG
 
 static HashMap<GShortcut, GAction*>* g_actions;
-static GEventLoop* s_main_event_loop;
-static Vector<GEventLoop*>* s_event_loop_stack;
 int GEventLoop::s_event_fd = -1;
 pid_t GEventLoop::s_server_pid = -1;
-HashMap<int, OwnPtr<GEventLoop::EventLoopTimer>>* GEventLoop::s_timers;
-HashTable<GNotifier*>* GEventLoop::s_notifiers;
-int GEventLoop::s_next_timer_id = 1;
 
 void GEventLoop::connect_to_server()
 {
@@ -70,16 +65,10 @@ void GEventLoop::connect_to_server()
 
 GEventLoop::GEventLoop()
 {
-    if (!s_event_loop_stack) {
-        s_event_loop_stack = new Vector<GEventLoop*>;
-        s_timers = new HashMap<int, OwnPtr<GEventLoop::EventLoopTimer>>;
-        s_notifiers = new HashTable<GNotifier*>;
-    }
-
-    if (!s_main_event_loop) {
-        s_main_event_loop = this;
-        s_event_loop_stack->append(this);
+    static bool connected = false;
+    if (!connected) {
         connect_to_server();
+        connected = true;
     }
 
     if (!g_actions)
@@ -92,97 +81,6 @@ GEventLoop::GEventLoop()
 
 GEventLoop::~GEventLoop()
 {
-}
-
-GEventLoop& GEventLoop::main()
-{
-    ASSERT(s_main_event_loop);
-    return *s_main_event_loop;
-}
-
-GEventLoop& GEventLoop::current()
-{
-    return *s_event_loop_stack->last();
-}
-
-void GEventLoop::quit(int code)
-{
-    m_exit_requested = true;
-    m_exit_code = code;
-}
-
-struct GEventLoopPusher {
-public:
-    GEventLoopPusher(GEventLoop& event_loop) : m_event_loop(event_loop)
-    {
-        if (&m_event_loop != s_main_event_loop) {
-            m_event_loop.take_pending_events_from(GEventLoop::current());
-            s_event_loop_stack->append(&event_loop);
-        }
-    }
-    ~GEventLoopPusher()
-    {
-        if (&m_event_loop != s_main_event_loop) {
-            s_event_loop_stack->take_last();
-            GEventLoop::current().take_pending_events_from(m_event_loop);
-        }
-    }
-private:
-    GEventLoop& m_event_loop;
-};
-
-int GEventLoop::exec()
-{
-    GEventLoopPusher pusher(*this);
-
-    m_running = true;
-    for (;;) {
-        if (m_exit_requested)
-            return m_exit_code;
-        process_unprocessed_messages();
-        if (m_queued_events.is_empty()) {
-            wait_for_event();
-            process_unprocessed_messages();
-        }
-        Vector<QueuedEvent> events = move(m_queued_events);
-        for (auto& queued_event : events) {
-            auto* receiver = queued_event.receiver.ptr();
-            auto& event = *queued_event.event;
-#ifdef GEVENTLOOP_DEBUG
-            dbgprintf("GEventLoop: %s{%p} event %u\n", receiver->class_name(), receiver, (unsigned)event.type());
-#endif
-            if (!receiver) {
-                switch (event.type()) {
-                case CEvent::Quit:
-                    ASSERT_NOT_REACHED();
-                    return 0;
-                default:
-                    dbgprintf("Event type %u with no receiver :(\n", event.type());
-                }
-            } else if (event.type() == CEvent::Type::DeferredInvoke) {
-                printf("DeferredInvoke: receiver=%s{%p}\n", receiver->class_name(), receiver);
-                static_cast<CDeferredInvocationEvent&>(event).m_invokee(*receiver);
-            } else {
-                receiver->event(event);
-            }
-
-            if (m_exit_requested) {
-                auto rejigged_event_queue = move(events);
-                rejigged_event_queue.append(move(m_queued_events));
-                m_queued_events = move(rejigged_event_queue);
-                return m_exit_code;
-            }
-        }
-    }
-    ASSERT_NOT_REACHED();
-}
-
-void GEventLoop::post_event(CObject& receiver, OwnPtr<CEvent>&& event)
-{
-#ifdef GEVENTLOOP_DEBUG
-    dbgprintf("GEventLoop::post_event: {%u} << receiver=%p, event=%p\n", m_queued_events.size(), &receiver, event.ptr());
-#endif
-    m_queued_events.append({ receiver.make_weak_ptr(), move(event) });
 }
 
 void GEventLoop::handle_paint_event(const WSAPI_ServerMessage& event, GWindow& window)
@@ -282,73 +180,6 @@ void GEventLoop::handle_wm_event(const WSAPI_ServerMessage& event, GWindow& wind
     if (event.type == WSAPI_ServerMessage::WM_WindowRemoved)
         return post_event(window, make<GWMWindowRemovedEvent>(event.wm.client_id, event.wm.window_id));
     ASSERT_NOT_REACHED();
-}
-
-void GEventLoop::wait_for_event()
-{
-    fd_set rfds;
-    fd_set wfds;
-    FD_ZERO(&rfds);
-    FD_ZERO(&wfds);
-
-    int max_fd = 0;
-    auto add_fd_to_set = [&max_fd] (int fd, fd_set& set){
-        FD_SET(fd, &set);
-        if (fd > max_fd)
-            max_fd = fd;
-    };
-
-    add_fd_to_set(s_event_fd, rfds);
-    for (auto& notifier : *s_notifiers) {
-        if (notifier->event_mask() & GNotifier::Read)
-            add_fd_to_set(notifier->fd(), rfds);
-        if (notifier->event_mask() & GNotifier::Write)
-            add_fd_to_set(notifier->fd(), wfds);
-        if (notifier->event_mask() & GNotifier::Exceptional)
-            ASSERT_NOT_REACHED();
-    }
-
-    struct timeval timeout = { 0, 0 };
-    if (!s_timers->is_empty() && m_queued_events.is_empty())
-        get_next_timer_expiration(timeout);
-    ASSERT(m_unprocessed_messages.is_empty());
-    int rc = select(max_fd + 1, &rfds, &wfds, nullptr, (m_queued_events.is_empty() && s_timers->is_empty()) ? nullptr : &timeout);
-    if (rc < 0) {
-        ASSERT_NOT_REACHED();
-    }
-
-    for (auto& it : *s_timers) {
-        auto& timer = *it.value;
-        if (!timer.has_expired())
-            continue;
-#ifdef GEVENTLOOP_DEBUG
-        dbgprintf("GEventLoop: Timer %d has expired, sending CTimerEvent to %p\n", timer.timer_id, timer.owner);
-#endif
-        post_event(*timer.owner, make<CTimerEvent>(timer.timer_id));
-        if (timer.should_reload) {
-            timer.reload();
-        } else {
-            // FIXME: Support removing expired timers that don't want to reload.
-            ASSERT_NOT_REACHED();
-        }
-    }
-
-    for (auto& notifier : *s_notifiers) {
-        if (FD_ISSET(notifier->fd(), &rfds)) {
-            if (notifier->on_ready_to_read)
-                notifier->on_ready_to_read(*notifier);
-        }
-        if (FD_ISSET(notifier->fd(), &wfds)) {
-            if (notifier->on_ready_to_write)
-                notifier->on_ready_to_write(*notifier);
-        }
-    }
-
-    if (!FD_ISSET(s_event_fd, &rfds))
-        return;
-
-    bool success = drain_messages_from_server();
-    ASSERT(success);
 }
 
 void GEventLoop::process_unprocessed_messages()
@@ -491,66 +322,6 @@ bool GEventLoop::drain_messages_from_server()
     }
 }
 
-bool GEventLoop::EventLoopTimer::has_expired() const
-{
-    timeval now;
-    gettimeofday(&now, nullptr);
-    return now.tv_sec > fire_time.tv_sec || (now.tv_sec == fire_time.tv_sec && now.tv_usec >= fire_time.tv_usec);
-}
-
-void GEventLoop::EventLoopTimer::reload()
-{
-    gettimeofday(&fire_time, nullptr);
-    fire_time.tv_sec += interval / 1000;
-    fire_time.tv_usec += (interval % 1000) * 1000;
-}
-
-void GEventLoop::get_next_timer_expiration(timeval& soonest)
-{
-    ASSERT(!s_timers->is_empty());
-    bool has_checked_any = false;
-    for (auto& it : *s_timers) {
-        auto& fire_time = it.value->fire_time;
-        if (!has_checked_any || fire_time.tv_sec < soonest.tv_sec || (fire_time.tv_sec == soonest.tv_sec && fire_time.tv_usec < soonest.tv_usec))
-            soonest = fire_time;
-        has_checked_any = true;
-    }
-}
-
-int GEventLoop::register_timer(CObject& object, int milliseconds, bool should_reload)
-{
-    ASSERT(milliseconds >= 0);
-    auto timer = make<EventLoopTimer>();
-    timer->owner = object.make_weak_ptr();
-    timer->interval = milliseconds;
-    timer->reload();
-    timer->should_reload = should_reload;
-    int timer_id = ++s_next_timer_id;  // FIXME: This will eventually wrap around.
-    ASSERT(timer_id); // FIXME: Aforementioned wraparound.
-    timer->timer_id = timer_id;
-    s_timers->set(timer->timer_id, move(timer));
-    return timer_id;
-}
-
-bool GEventLoop::unregister_timer(int timer_id)
-{
-    auto it = s_timers->find(timer_id);
-    if (it == s_timers->end())
-        return false;
-    s_timers->remove(it);
-    return true;
-}
-
-void GEventLoop::register_notifier(Badge<GNotifier>, GNotifier& notifier)
-{
-    s_notifiers->set(&notifier);
-}
-
-void GEventLoop::unregister_notifier(Badge<GNotifier>, GNotifier& notifier)
-{
-    s_notifiers->remove(&notifier);
-}
-
 bool GEventLoop::post_message_to_server(const WSAPI_ClientMessage& message)
 {
     int nwritten = write(s_event_fd, &message, sizeof(WSAPI_ClientMessage));
@@ -559,7 +330,6 @@ bool GEventLoop::post_message_to_server(const WSAPI_ClientMessage& message)
 
 bool GEventLoop::wait_for_specific_event(WSAPI_ServerMessage::Type type, WSAPI_ServerMessage& event)
 {
-
     for (;;) {
         fd_set rfds;
         FD_ZERO(&rfds);

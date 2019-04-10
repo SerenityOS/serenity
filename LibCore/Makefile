@@ -1,6 +1,7 @@
 OBJS = \
     CElapsedTimer.o \
     CObject.o \
+    CEventLoop.o \
     CEvent.o
 
 LIBRARY = libcore.a
