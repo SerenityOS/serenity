@@ -282,11 +282,10 @@ Rect GWidget::screen_relative_rect() const
 
 GWidget::HitTestResult GWidget::hit_test(int x, int y)
 {
-    // FIXME: Care about z-order.
-    for (auto* ch : children()) {
-        if (!ch->is_widget())
+    for (int i = children().size() - 1; i >= 0; --i) {
+        if (!children()[i]->is_widget())
             continue;
-        auto& child = *(GWidget*)ch;
+        auto& child = *(GWidget*)children()[i];
         if (!child.is_visible())
             continue;
         if (child.relative_rect().contains(x, y))
