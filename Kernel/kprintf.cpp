@@ -1,8 +1,8 @@
-#include "kprintf.h"
-#include "Console.h"
-#include "IO.h"
+#include <Kernel/kstdio.h>
+#include <Kernel/Console.h>
+#include <Kernel/IO.h>
 #include <LibC/stdarg.h>
-#include "Process.h"
+#include <Kernel/Process.h>
 #include <AK/Types.h>
 #include <AK/printf.cpp>
 

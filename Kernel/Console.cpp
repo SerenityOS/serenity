@@ -1,6 +1,6 @@
-#include "Console.h"
-#include "IO.h"
-#include "kprintf.h"
+#include <Kernel/Console.h>
+#include <Kernel/IO.h>
+#include <Kernel/kstdio.h>
 
 // Bytes output to 0xE9 end up on the Bochs console. It's very handy.
 #define CONSOLE_OUT_TO_E9

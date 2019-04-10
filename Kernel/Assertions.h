@@ -1,7 +1,7 @@
 #pragma once
 
-#include "kprintf.h"
-#include "i386.h"
+#include <Kernel/kstdio.h>
+#include <Kernel/i386.h>
 
 [[noreturn]] void __assertion_failed(const char* msg, const char* file, unsigned line, const char* func);
 
