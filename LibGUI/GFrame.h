@@ -1,23 +1,21 @@
 #pragma once
 
 #include <LibGUI/GWidget.h>
+#include <SharedGraphics/StylePainter.h>
 
 class GFrame : public GWidget {
 public:
     explicit GFrame(GWidget* parent = nullptr);
     virtual ~GFrame() override;
 
-    enum Shadow { Plain, Raised, Sunken };
-    enum Shape { NoFrame, Container, Panel, VerticalLine, HorizontalLine };
-
     int frame_thickness() const { return m_thickness; }
     void set_frame_thickness(int thickness) { m_thickness = thickness; }
 
-    Shadow frame_shadow() const { return m_shadow; }
-    void set_frame_shadow(Shadow shadow) { m_shadow = shadow; }
+    FrameShadow frame_shadow() const { return m_shadow; }
+    void set_frame_shadow(FrameShadow shadow) { m_shadow = shadow; }
 
-    Shape frame_shape() const { return m_shape; }
-    void set_frame_shape(Shape shape) { m_shape = shape; }
+    FrameShape frame_shape() const { return m_shape; }
+    void set_frame_shape(FrameShape shape) { m_shape = shape; }
 
     Rect frame_inner_rect_for_size(const Size& size) const { return { m_thickness, m_thickness, size.width() - m_thickness * 2, size.height() - m_thickness * 2 }; }
     Rect frame_inner_rect() const { return frame_inner_rect_for_size(size()); }
@@ -29,6 +27,6 @@ protected:
 
 private:
     int m_thickness { 0 };
-    Shadow m_shadow { Plain };
-    Shape m_shape { NoFrame };
+    FrameShadow m_shadow { FrameShadow::Plain };
+    FrameShape m_shape { FrameShape::NoFrame };
 };

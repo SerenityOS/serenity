@@ -169,25 +169,25 @@ static GWindow* make_frames_window()
     widget->layout()->set_margins({ 8, 8, 8, 8 });
     widget->layout()->set_spacing(8);
 
-    auto add_label = [widget] (const String& text, GFrame::Shape shape, GFrame::Shadow shadow) {
+    auto add_label = [widget] (const String& text, FrameShape shape, FrameShadow shadow) {
         auto* label = new GLabel(text, widget);
         label->set_size_policy(SizePolicy::Fill, SizePolicy::Fill);
         label->set_frame_thickness(1);
         label->set_frame_shape(shape);
         label->set_frame_shadow(shadow);
-        if (shape == GFrame::Shape::Container) {
+        if (shape == FrameShape::Container) {
             label->set_frame_thickness(2);
             label->set_fill_with_background_color(true);
             label->set_background_color(Color::White);
         }
     };
 
-    add_label("Panel + Raised", GFrame::Shape::Panel, GFrame::Shadow::Raised);
-    add_label("Panel + Sunken", GFrame::Shape::Panel, GFrame::Shadow::Sunken);
-    add_label("Panel + Plain", GFrame::Shape::Panel, GFrame::Shadow::Plain);
-    add_label("Container + Raised", GFrame::Shape::Container, GFrame::Shadow::Raised);
-    add_label("Container + Sunken", GFrame::Shape::Container, GFrame::Shadow::Sunken);
-    add_label("Container + Plain", GFrame::Shape::Container, GFrame::Shadow::Plain);
+    add_label("Panel + Raised", FrameShape::Panel, FrameShadow::Raised);
+    add_label("Panel + Sunken", FrameShape::Panel, FrameShadow::Sunken);
+    add_label("Panel + Plain", FrameShape::Panel, FrameShadow::Plain);
+    add_label("Container + Raised", FrameShape::Container, FrameShadow::Raised);
+    add_label("Container + Sunken", FrameShape::Container, FrameShadow::Sunken);
+    add_label("Container + Plain", FrameShape::Container, FrameShadow::Plain);
 
     return window;
 }

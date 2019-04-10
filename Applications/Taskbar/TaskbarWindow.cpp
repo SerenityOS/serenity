@@ -24,8 +24,8 @@ TaskbarWindow::TaskbarWindow()
     widget->layout()->set_margins({ 3, 2, 3, 2 });
     widget->layout()->set_spacing(3);
     widget->set_frame_thickness(1);
-    widget->set_frame_shape(GFrame::Shape::Panel);
-    widget->set_frame_shadow(GFrame::Shadow::Raised);
+    widget->set_frame_shape(FrameShape::Panel);
+    widget->set_frame_shadow(FrameShadow::Raised);
     set_main_widget(widget);
 
     m_window_list.aid_create_button = [this] {
