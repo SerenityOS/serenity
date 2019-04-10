@@ -97,7 +97,6 @@ void TaskbarWindow::wm_event(GWMEvent& event)
             window.button()->set_caption(changed_event.title());
         }
         window.button()->set_checked(changed_event.is_active());
-        window.button()->update();
         break;
     }
     default:
