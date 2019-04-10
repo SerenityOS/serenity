@@ -8,13 +8,13 @@
 #include <AK/StringBuilder.h>
 #include <SharedGraphics/GraphicsBitmap.h>
 #include <LibGUI/GPainter.h>
-#include <LibGUI/GLock.h>
+#include <LibCore/CLock.h>
 
-static GLockable<HashMap<String, RetainPtr<GraphicsBitmap>>>& thumbnail_cache()
+static CLockable<HashMap<String, RetainPtr<GraphicsBitmap>>>& thumbnail_cache()
 {
-    static GLockable<HashMap<String, RetainPtr<GraphicsBitmap>>>* s_map;
+    static CLockable<HashMap<String, RetainPtr<GraphicsBitmap>>>* s_map;
     if (!s_map)
-        s_map = new GLockable<HashMap<String, RetainPtr<GraphicsBitmap>>>();
+        s_map = new CLockable<HashMap<String, RetainPtr<GraphicsBitmap>>>();
     return *s_map;
 }
 
