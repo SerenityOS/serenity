@@ -7,6 +7,7 @@
 #include <LibGUI/GTextBox.h>
 #include <LibGUI/GCheckBox.h>
 #include <LibGUI/GSpinBox.h>
+#include <stdlib.h>
 
 FontEditorWidget::FontEditorWidget(const String& path, RetainPtr<Font>&& edited_font, GWidget* parent)
     : GWidget(parent)
@@ -63,9 +64,13 @@ FontEditorWidget::FontEditorWidget(const String& path, RetainPtr<Font>&& edited_
     info_label->set_text_alignment(TextAlignment::CenterLeft);
     info_label->set_relative_rect({ 5, 110, 100, 20 });
 
+    auto* width_label = new GLabel("Glyph width:", this);
+    width_label->set_text_alignment(TextAlignment::CenterLeft);
+    width_label->set_relative_rect({ 5, 135, 100, 20 });
+
     auto* width_spinbox = new GSpinBox(this);
     width_spinbox->set_range(0, 32);
-    width_spinbox->set_relative_rect({ 5, 135, 100, 20 });
+    width_spinbox->set_relative_rect({ 5, 155, m_glyph_editor_widget->preferred_width(), 20 });
 
     auto* demo_label_1 = new GLabel(this);
     demo_label_1->set_font(m_edited_font.copy_ref());
