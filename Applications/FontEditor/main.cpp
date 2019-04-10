@@ -26,7 +26,7 @@ int main(int argc, char** argv)
 
     auto* window = new GWindow;
     window->set_title("FontEditor");
-    window->set_rect({ 50, 50, 390, 295 });
+    window->set_rect({ 50, 50, 390, 325 });
     auto* font_editor = new FontEditorWidget(path, move(edited_font));
     window->set_main_widget(font_editor);
     window->set_should_exit_event_loop_on_close(true);
