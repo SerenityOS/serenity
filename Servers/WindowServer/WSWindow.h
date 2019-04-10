@@ -106,9 +106,6 @@ public:
     bool has_alpha_channel() const { return m_has_alpha_channel; }
     void set_has_alpha_channel(bool value) { m_has_alpha_channel = value; }
 
-    void set_last_lazy_resize_rect(const Rect& rect) { m_last_lazy_resize_rect = rect; }
-    Rect last_lazy_resize_rect() const { return m_last_lazy_resize_rect; }
-
     bool has_painted_since_last_resize() const { return m_has_painted_since_last_resize; }
     void set_has_painted_since_last_resize(bool b) { m_has_painted_since_last_resize = b; }
 
@@ -150,7 +147,6 @@ private:
     RetainPtr<GraphicsBitmap> m_last_backing_store;
     int m_window_id { -1 };
     float m_opacity { 1 };
-    Rect m_last_lazy_resize_rect;
     Size m_size_increment;
     Size m_base_size;
     Retained<GraphicsBitmap> m_icon;

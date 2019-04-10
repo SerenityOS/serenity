@@ -20,6 +20,7 @@
 #include <LibC/stdlib.h>
 
 //#define GEVENTLOOP_DEBUG
+//#define COALESCING_DEBUG
 
 static HashMap<GShortcut, GAction*>* g_actions;
 static GEventLoop* s_main_event_loop;
@@ -352,7 +353,32 @@ void GEventLoop::wait_for_event()
 
 void GEventLoop::process_unprocessed_messages()
 {
+    int coalesced_paints = 0;
+    int coalesced_resizes = 0;
     auto unprocessed_events = move(m_unprocessed_messages);
+
+    HashMap<int, Size> latest_size_for_window_id;
+    for (auto& event : unprocessed_events) {
+        if (event.type == WSAPI_ServerMessage::Type::WindowResized) {
+            latest_size_for_window_id.set(event.window_id, event.window.rect.size);
+        }
+    }
+
+    int paint_count = 0;
+    HashMap<int, Size> latest_paint_size_for_window_id;
+    for (auto& event : unprocessed_events) {
+        if (event.type == WSAPI_ServerMessage::Type::Paint) {
+            ++paint_count;
+#ifdef COALESCING_DEBUG
+            dbgprintf("    %s (window: %s)\n", Rect(event.paint.rect).to_string().characters(), Size(event.paint.window_size).to_string().characters());
+#endif
+            latest_paint_size_for_window_id.set(event.window_id, event.paint.window_size);
+        }
+    }
+#ifdef COALESCING_DEBUG
+    dbgprintf("paint_count: %d\n", paint_count);
+#endif
+
     for (auto& event : unprocessed_events) {
         if (event.type == WSAPI_ServerMessage::Type::Greeting) {
             s_server_pid = event.greeting.server_pid;
@@ -387,6 +413,10 @@ void GEventLoop::process_unprocessed_messages()
         }
         switch (event.type) {
         case WSAPI_ServerMessage::Type::Paint:
+            if (Size(event.paint.window_size) != latest_paint_size_for_window_id.get(event.window_id)) {
+                ++coalesced_paints;
+                break;
+            }
             handle_paint_event(event, *window);
             break;
         case WSAPI_ServerMessage::Type::MouseDown:
@@ -410,6 +440,10 @@ void GEventLoop::process_unprocessed_messages()
             handle_window_entered_or_left_event(event, *window);
             break;
         case WSAPI_ServerMessage::Type::WindowResized:
+            if (Size(event.window.rect.size) != latest_size_for_window_id.get(event.window_id)) {
+                ++coalesced_resizes;
+                break;
+            }
             handle_resize_event(event, *window);
             break;
         case WSAPI_ServerMessage::Type::WM_WindowRemoved:
@@ -420,6 +454,13 @@ void GEventLoop::process_unprocessed_messages()
             break;
         }
     }
+
+#ifdef COALESCING_DEBUG
+    if (coalesced_paints)
+        dbgprintf("Coalesced %d paints\n", coalesced_paints);
+    if (coalesced_resizes)
+        dbgprintf("Coalesced %d resizes\n", coalesced_resizes);
+#endif
 
     if (!m_unprocessed_messages.is_empty())
         process_unprocessed_messages();
