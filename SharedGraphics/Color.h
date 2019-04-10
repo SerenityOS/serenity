@@ -72,6 +72,17 @@ public:
         return Color(r, g, b, a);
     }
 
+    Color to_grayscale() const
+    {
+        int gray = (red() + green() + blue()) / 3;
+        return Color(gray, gray, gray, alpha());
+    }
+
+    Color darkened() const
+    {
+        return Color(red() * 0.8, green() * 0.8, blue() * 0.8, alpha());
+    }
+
     RGBA32 value() const { return m_value; }
 
     String to_string() const;
