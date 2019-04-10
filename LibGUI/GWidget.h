@@ -1,6 +1,6 @@
 #pragma once
 
-#include <LibGUI/GElapsedTimer.h>
+#include <LibCore/CElapsedTimer.h>
 #include <LibGUI/GEvent.h>
 #include <LibGUI/GObject.h>
 #include <SharedGraphics/Rect.h>
@@ -174,5 +174,5 @@ private:
     bool m_fill_with_background_color { false };
     bool m_visible { true };
 
-    GElapsedTimer m_click_clock;
+    CElapsedTimer m_click_clock;
 };

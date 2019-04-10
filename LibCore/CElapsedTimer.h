@@ -2,9 +2,9 @@
 
 #include <time.h>
 
-class GElapsedTimer {
+class CElapsedTimer {
 public:
-    GElapsedTimer() { }
+    CElapsedTimer() { }
 
     bool is_valid() const { return m_valid; }
     void start();

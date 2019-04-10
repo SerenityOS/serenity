@@ -98,7 +98,7 @@ CXXFLAGS = -MMD -MP $(WARNING_FLAGS) $(OPTIMIZATION_FLAGS) $(FLAVOR_FLAGS) $(ARC
 CXX = i686-pc-serenity-g++
 LD = i686-pc-serenity-g++
 AR = i686-pc-serenity-r
-LDFLAGS = -L ../LibC
+LDFLAGS = -L../LibC -L../LibCore -L../LibGUI
 
 all: $(OBJS) $(APPS)
 
@@ -169,13 +169,13 @@ more: more.o
 	$(LD) -o $@ $(LDFLAGS) $< -lc
 
 guitest2: guitest2.o
-	$(LD) -o $@ $(LDFLAGS) -L../LibGUI $< -lgui -lc
+	$(LD) -o $@ $(LDFLAGS) $< -lgui -lcore -lc
 
 sysctl: sysctl.o
 	$(LD) -o $@ $(LDFLAGS) $< -lc
 
 pape: pape.o
-	$(LD) -o $@ $(LDFLAGS) -L../LibGUI $< -lgui -lc
+	$(LD) -o $@ $(LDFLAGS) $< -lgui -lcore -lc
 
 cp: cp.o
 	$(LD) -o $@ $(LDFLAGS) $< -lc
@@ -223,10 +223,10 @@ host: host.o
 	$(LD) -o $@ $(LDFLAGS) $< -lc
 
 qs: qs.o
-	$(LD) -o $@ $(LDFLAGS) -L../LibGUI $< -lgui -lc
+	$(LD) -o $@ $(LDFLAGS) $< -lgui -lcore -lc
 
 mv: mv.o
-	$(LD) -o $@ $(LDFLAGS) -L../LibGUI $< -lgui -lc
+	$(LD) -o $@ $(LDFLAGS) $< -lc
 
 .cpp.o:
 	@echo "CXX $<"; $(CXX) $(CXXFLAGS) -o $@ -c $<

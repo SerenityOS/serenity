@@ -10,6 +10,8 @@ $make_cmd -C ../LibC && \
 $make_cmd -C ../LibM clean && \
 $make_cmd -C ../LibM && \
 (cd ../LibM && ./install.sh) && \
+$make_cmd -C ../LibCore clean && \
+$make_cmd -C ../LibCore && \
 $make_cmd -C ../Servers/LookupServer clean && \
 $make_cmd -C ../Servers/LookupServer && \
 $make_cmd -C ../Servers/WindowServer clean && \

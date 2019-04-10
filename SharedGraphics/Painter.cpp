@@ -238,6 +238,33 @@ void Painter::blit_with_opacity(const Point& position, const GraphicsBitmap& sou
     }
 }
 
+void Painter::blit_dimmed(const Point& position, const GraphicsBitmap& source, const Rect& src_rect)
+{
+    Rect safe_src_rect = Rect::intersection(src_rect, source.rect());
+    Rect dst_rect(position, safe_src_rect.size());
+    dst_rect.move_by(state().translation);
+    auto clipped_rect = Rect::intersection(dst_rect, clip_rect());
+    if (clipped_rect.is_empty())
+        return;
+    const int first_row = clipped_rect.top() - dst_rect.top();
+    const int last_row = clipped_rect.bottom() - dst_rect.top();
+    const int first_column = clipped_rect.left() - dst_rect.left();
+    const int last_column = clipped_rect.right() - dst_rect.left();
+    RGBA32* dst = m_target->scanline(clipped_rect.y()) + clipped_rect.x();
+    const RGBA32* src = source.scanline(src_rect.top() + first_row) + src_rect.left() + first_column;
+    const size_t dst_skip = m_target->width();
+    const unsigned src_skip = source.width();
+
+    for (int row = first_row; row <= last_row; ++row) {
+        for (int x = 0; x <= (last_column - first_column); ++x) {
+            dst[x] = Color::from_rgba(src[x]).to_grayscale().darkened().value();
+        }
+        dst += dst_skip;
+        src += src_skip;
+    }
+}
+
+
 void Painter::blit_with_alpha(const Point& position, const GraphicsBitmap& source, const Rect& src_rect)
 {
     ASSERT(source.has_alpha_channel());

@@ -813,7 +813,6 @@ void WSWindowManager::compose()
             dst.move_by(dirty_rect_in_window_coordinates.location());
 
             m_back_painter->fill_rect(window.rect(), window.background_color());
-
             m_back_painter->blit(dst, *backing_store, dirty_rect_in_window_coordinates, window.opacity());
 
             if (backing_store->width() < window.width()) {
