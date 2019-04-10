@@ -30,7 +30,7 @@ private:
 };
 
 class CDeferredInvocationEvent : public CEvent {
-    friend class GEventLoop;
+    friend class CEventLoop;
 public:
     CDeferredInvocationEvent(Function<void(CObject&)> invokee)
         : CEvent(CEvent::Type::DeferredInvoke)
