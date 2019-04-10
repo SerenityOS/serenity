@@ -28,8 +28,8 @@ GWindow* GWindow::from_window_id(int window_id)
     return nullptr;
 }
 
-GWindow::GWindow(GObject* parent)
-    : GObject(parent)
+GWindow::GWindow(CObject* parent)
+    : CObject(parent)
 {
     m_rect_when_windowless = { 100, 400, 140, 140 };
     m_title_when_windowless = "GWindow";
@@ -280,7 +280,7 @@ void GWindow::event(CEvent& event)
     if (event.type() == GEvent::WM_WindowRemoved || event.type() == GEvent::WM_WindowStateChanged)
         return wm_event(static_cast<GWMEvent&>(event));
 
-    GObject::event(event);
+    CObject::event(event);
 }
 
 bool GWindow::is_visible() const

@@ -9,7 +9,7 @@
 #include <LibGUI/GEvent.h>
 
 class GAction;
-class GObject;
+class CObject;
 class GNotifier;
 class GWindow;
 
@@ -20,14 +20,14 @@ public:
 
     int exec();
 
-    void post_event(GObject& receiver, OwnPtr<CEvent>&&);
+    void post_event(CObject& receiver, OwnPtr<CEvent>&&);
 
     static GEventLoop& main();
     static GEventLoop& current();
 
     bool running() const { return m_running; }
 
-    static int register_timer(GObject&, int milliseconds, bool should_reload);
+    static int register_timer(CObject&, int milliseconds, bool should_reload);
     static bool unregister_timer(int timer_id);
 
     static void register_notifier(Badge<GNotifier>, GNotifier&);
@@ -65,7 +65,7 @@ private:
     void connect_to_server();
 
     struct QueuedEvent {
-        WeakPtr<GObject> receiver;
+        WeakPtr<CObject> receiver;
         OwnPtr<CEvent> event;
     };
     Vector<QueuedEvent> m_queued_events;
@@ -84,7 +84,7 @@ private:
         int interval { 0 };
         timeval fire_time;
         bool should_reload { false };
-        WeakPtr<GObject> owner;
+        WeakPtr<CObject> owner;
 
         void reload();
         bool has_expired() const;

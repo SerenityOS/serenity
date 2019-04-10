@@ -1,9 +1,9 @@
 #pragma once
 
-#include <LibGUI/GObject.h>
+#include <LibCore/CObject.h>
 #include <AK/ByteBuffer.h>
 
-class GIODevice : public GObject {
+class GIODevice : public CObject {
 public:
     enum OpenMode {
         NotOpen      = 0,
@@ -41,7 +41,7 @@ public:
     virtual const char* class_name() const override { return "GIODevice"; }
 
 protected:
-    explicit GIODevice(GObject* parent = nullptr);
+    explicit GIODevice(CObject* parent = nullptr);
 
     void set_fd(int fd) { m_fd = fd; }
     void set_mode(OpenMode mode) { m_mode = mode; }

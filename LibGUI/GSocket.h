@@ -29,7 +29,7 @@ public:
     virtual const char* class_name() const override { return "GSocket"; }
 
 protected:
-    GSocket(Type, GObject* parent);
+    GSocket(Type, CObject* parent);
 
     GSocketAddress m_source_address;
     GSocketAddress m_destination_address;

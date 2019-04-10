@@ -1,6 +1,6 @@
+#include <LibCore/CObject.h>
 #include "GEventLoop.h"
 #include "GEvent.h"
-#include "GObject.h"
 #include "GWindow.h"
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GAction.h>
@@ -177,7 +177,7 @@ int GEventLoop::exec()
     ASSERT_NOT_REACHED();
 }
 
-void GEventLoop::post_event(GObject& receiver, OwnPtr<CEvent>&& event)
+void GEventLoop::post_event(CObject& receiver, OwnPtr<CEvent>&& event)
 {
 #ifdef GEVENTLOOP_DEBUG
     dbgprintf("GEventLoop::post_event: {%u} << receiver=%p, event=%p\n", m_queued_events.size(), &receiver, event.ptr());
@@ -517,7 +517,7 @@ void GEventLoop::get_next_timer_expiration(timeval& soonest)
     }
 }
 
-int GEventLoop::register_timer(GObject& object, int milliseconds, bool should_reload)
+int GEventLoop::register_timer(CObject& object, int milliseconds, bool should_reload)
 {
     ASSERT(milliseconds >= 0);
     auto timer = make<EventLoopTimer>();

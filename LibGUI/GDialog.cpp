@@ -1,7 +1,7 @@
 #include <LibGUI/GDialog.h>
 #include <LibGUI/GEventLoop.h>
 
-GDialog::GDialog(GObject* parent)
+GDialog::GDialog(CObject* parent)
     : GWindow(parent)
 {
     set_modal(true);

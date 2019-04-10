@@ -13,7 +13,7 @@ class IRCQuery;
 class IRCWindowListModel;
 class GNotifier;
 
-class IRCClient final : public GObject {
+class IRCClient final : public CObject {
     friend class IRCChannel;
     friend class IRCQuery;
 public:

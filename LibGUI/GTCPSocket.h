@@ -2,7 +2,7 @@
 
 class GTCPSocket final : public GSocket {
 public:
-    explicit GTCPSocket(GObject* parent);
+    explicit GTCPSocket(CObject* parent);
     virtual ~GTCPSocket() override;
 
 private:

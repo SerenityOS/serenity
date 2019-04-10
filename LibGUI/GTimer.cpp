@@ -1,7 +1,7 @@
 #include <LibGUI/GTimer.h>
 
-GTimer::GTimer(GObject* parent)
-    : GObject(parent)
+GTimer::GTimer(CObject* parent)
+    : CObject(parent)
 {
 }
 

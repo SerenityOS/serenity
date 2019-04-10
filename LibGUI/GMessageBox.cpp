@@ -3,7 +3,7 @@
 #include <LibGUI/GLabel.h>
 #include <LibGUI/GButton.h>
 
-GMessageBox::GMessageBox(const String& text, const String& title, GObject* parent)
+GMessageBox::GMessageBox(const String& text, const String& title, CObject* parent)
     : GDialog(parent)
     , m_text(text)
 {

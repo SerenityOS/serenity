@@ -4,7 +4,7 @@
 
 class GMessageBox : public GDialog {
 public:
-    explicit GMessageBox(const String& text, const String& title, GObject* parent = nullptr);
+    explicit GMessageBox(const String& text, const String& title, CObject* parent = nullptr);
     virtual ~GMessageBox() override;
 
 private:

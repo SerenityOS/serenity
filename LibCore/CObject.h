@@ -8,32 +8,32 @@ class CEvent;
 class CChildEvent;
 class CTimerEvent;
 
-class GObject : public Weakable<GObject> {
+class CObject : public Weakable<CObject> {
 public:
-    GObject(GObject* parent = nullptr);
-    virtual ~GObject();
+    CObject(CObject* parent = nullptr);
+    virtual ~CObject();
 
-    virtual const char* class_name() const { return "GObject"; }
+    virtual const char* class_name() const { return "CObject"; }
 
     virtual void event(CEvent&);
 
-    Vector<GObject*>& children() { return m_children; }
+    Vector<CObject*>& children() { return m_children; }
 
-    GObject* parent() { return m_parent; }
-    const GObject* parent() const { return m_parent; }
+    CObject* parent() { return m_parent; }
+    const CObject* parent() const { return m_parent; }
 
     void start_timer(int ms);
     void stop_timer();
     bool has_timer() const { return m_timer_id; }
 
-    void add_child(GObject&);
-    void remove_child(GObject&);
+    void add_child(CObject&);
+    void remove_child(CObject&);
 
     void delete_later();
 
     void dump_tree(int indent = 0);
 
-    void deferred_invoke(Function<void(GObject&)>);
+    void deferred_invoke(Function<void(CObject&)>);
 
     virtual bool is_widget() const { return false; }
     virtual bool is_window() const { return false; }
@@ -43,7 +43,7 @@ protected:
     virtual void child_event(CChildEvent&);
 
 private:
-    GObject* m_parent { nullptr };
+    CObject* m_parent { nullptr };
     int m_timer_id { 0 };
-    Vector<GObject*> m_children;
+    Vector<CObject*> m_children;
 };

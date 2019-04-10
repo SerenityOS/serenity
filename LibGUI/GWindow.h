@@ -1,6 +1,6 @@
 #pragma once
 
-#include <LibGUI/GObject.h>
+#include <LibCore/CObject.h>
 #include <LibGUI/GWindowType.h>
 #include <SharedGraphics/Rect.h>
 #include <SharedGraphics/GraphicsBitmap.h>
@@ -18,9 +18,9 @@ enum class GStandardCursor {
     ResizeVertical,
 };
 
-class GWindow : public GObject {
+class GWindow : public CObject {
 public:
-    GWindow(GObject* parent = nullptr);
+    GWindow(CObject* parent = nullptr);
     virtual ~GWindow() override;
 
     static GWindow* from_window_id(int);
