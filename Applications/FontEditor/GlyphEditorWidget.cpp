@@ -2,9 +2,12 @@
 #include <LibGUI/GPainter.h>
 
 GlyphEditorWidget::GlyphEditorWidget(Font& mutable_font, GWidget* parent)
-    : GWidget(parent)
+    : GFrame(parent)
     , m_font(mutable_font)
 {
+    set_frame_thickness(2);
+    set_frame_shadow(GFrame::Shadow::Sunken);
+    set_frame_shape(GFrame::Shape::Container);
     set_relative_rect({ 0, 0, preferred_width(), preferred_height() });
 }
 
@@ -20,19 +23,22 @@ void GlyphEditorWidget::set_glyph(byte glyph)
     update();
 }
 
-void GlyphEditorWidget::paint_event(GPaintEvent&)
+void GlyphEditorWidget::paint_event(GPaintEvent& event)
 {
-    GPainter painter(*this);
-    painter.fill_rect(rect(), Color::White);
-    painter.draw_rect(rect(), Color::Black);
+    GFrame::paint_event(event);
 
-    for (int y = 0; y < font().glyph_height(); ++y)
+    GPainter painter(*this);
+    painter.add_clip_rect(frame_inner_rect());
+    painter.add_clip_rect(event.rect());
+    painter.fill_rect(frame_inner_rect(), Color::White);
+    painter.translate(frame_thickness(), frame_thickness());
+
+    painter.translate(-1, -1);
+    for (int y = 1; y < font().glyph_height(); ++y)
         painter.draw_line({ 0, y * m_scale }, { font().max_glyph_width() * m_scale, y * m_scale }, Color::Black);
 
-    for (int x = 0; x < font().max_glyph_width(); ++x)
+    for (int x = 1; x < font().max_glyph_width(); ++x)
         painter.draw_line({ x * m_scale, 0 }, { x * m_scale, font().glyph_height() * m_scale }, Color::Black);
-
-    painter.translate(1, 1);
 
     auto bitmap = font().glyph_bitmap(m_glyph);
 
@@ -83,10 +89,10 @@ void GlyphEditorWidget::draw_at_mouse(const GMouseEvent& event)
 
 int GlyphEditorWidget::preferred_width() const
 {
-    return font().max_glyph_width() * m_scale + 1;
+    return frame_thickness() * 2 + font().max_glyph_width() * m_scale - 1;
 }
 
 int GlyphEditorWidget::preferred_height() const
 {
-    return font().glyph_height() * m_scale + 1;
+    return frame_thickness() * 2 + font().glyph_height() * m_scale - 1;
 }
