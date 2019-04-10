@@ -101,7 +101,8 @@ WSWindowManager::WSWindowManager()
         m_system_menu->add_item(make<WSMenuItem>(100, "640x480"));
         m_system_menu->add_item(make<WSMenuItem>(101, "800x600"));
         m_system_menu->add_item(make<WSMenuItem>(102, "1024x768"));
-        m_system_menu->add_item(make<WSMenuItem>(103, "1920x1080"));
+        m_system_menu->add_item(make<WSMenuItem>(103, "1440x900"));
+        m_system_menu->add_item(make<WSMenuItem>(104, "1920x1080"));
         m_system_menu->add_item(make<WSMenuItem>(WSMenuItem::Separator));
         m_system_menu->add_item(make<WSMenuItem>(200, "About..."));
         m_system_menu->on_item_activation = [this] (WSMenuItem& item) {
@@ -123,7 +124,8 @@ WSWindowManager::WSWindowManager()
             case 100: set_resolution(640, 480); break;
             case 101: set_resolution(800, 600); break;
             case 102: set_resolution(1024, 768); break;
-            case 103: set_resolution(1920, 1080); break;
+            case 103: set_resolution(1440, 900); break;
+            case 104: set_resolution(1920, 1080); break;
             }
             if (item.identifier() == 200) {
                 if (fork() == 0) {
