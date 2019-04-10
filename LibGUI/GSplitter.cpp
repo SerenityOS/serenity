@@ -16,14 +16,14 @@ GSplitter::~GSplitter()
 {
 }
 
-void GSplitter::enter_event(GEvent&)
+void GSplitter::enter_event(CEvent&)
 {
     set_background_color(Color::from_rgb(0xd6d2ce));
     window()->set_override_cursor(m_orientation == Orientation::Horizontal ? GStandardCursor::ResizeHorizontal : GStandardCursor::ResizeVertical);
     update();
 }
 
-void GSplitter::leave_event(GEvent&)
+void GSplitter::leave_event(CEvent&)
 {
     set_background_color(Color::LightGray);
     if (!m_resizing)

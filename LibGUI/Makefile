@@ -40,7 +40,6 @@ LIBGUI_OBJS = \
     GClipboard.o \
     GSortingProxyModel.o \
     GStackWidget.o \
-    GEvent.o \
     GScrollableWidget.o \
     GSocket.o \
     GTCPSocket.o \

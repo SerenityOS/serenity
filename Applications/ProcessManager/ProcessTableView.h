@@ -17,6 +17,6 @@ protected:
     virtual void model_notification(const GModelNotification&) override;
 
 private:
-    virtual void timer_event(GTimerEvent&) override;
+    virtual void timer_event(CTimerEvent&) override;
 };
 

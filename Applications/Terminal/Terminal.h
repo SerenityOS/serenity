@@ -25,7 +25,7 @@ public:
     void apply_size_increments_to_window(GWindow&);
 
 private:
-    virtual void event(GEvent&) override;
+    virtual void event(CEvent&) override;
     virtual void paint_event(GPaintEvent&) override;
     virtual void resize_event(GResizeEvent&) override;
     virtual void keydown_event(GKeyEvent&) override;

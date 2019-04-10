@@ -20,7 +20,7 @@ public:
 
     int exec();
 
-    void post_event(GObject& receiver, OwnPtr<GEvent>&&);
+    void post_event(GObject& receiver, OwnPtr<CEvent>&&);
 
     static GEventLoop& main();
     static GEventLoop& current();
@@ -66,7 +66,7 @@ private:
 
     struct QueuedEvent {
         WeakPtr<GObject> receiver;
-        OwnPtr<GEvent> event;
+        OwnPtr<CEvent> event;
     };
     Vector<QueuedEvent> m_queued_events;
 

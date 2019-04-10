@@ -24,7 +24,7 @@ public:
     virtual const char* class_name() const override { return "GTimer"; }
 
 private:
-    virtual void timer_event(GTimerEvent&) override;
+    virtual void timer_event(CTimerEvent&) override;
 
     bool m_active { false };
     bool m_single_shot { false };

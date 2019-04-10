@@ -564,18 +564,18 @@ void GTextEditor::set_cursor(const GTextPosition& position)
         on_cursor_change();
 }
 
-void GTextEditor::focusin_event(GEvent&)
+void GTextEditor::focusin_event(CEvent&)
 {
     update_cursor();
     start_timer(500);
 }
 
-void GTextEditor::focusout_event(GEvent&)
+void GTextEditor::focusout_event(CEvent&)
 {
     stop_timer();
 }
 
-void GTextEditor::timer_event(GTimerEvent&)
+void GTextEditor::timer_event(CTimerEvent&)
 {
     m_cursor_state = !m_cursor_state;
     if (is_focused())
@@ -805,13 +805,13 @@ void GTextEditor::paste()
     insert_at_cursor_or_replace_selection(paste_text);
 }
 
-void GTextEditor::enter_event(GEvent&)
+void GTextEditor::enter_event(CEvent&)
 {
     ASSERT(window());
     window()->set_override_cursor(GStandardCursor::IBeam);
 }
 
-void GTextEditor::leave_event(GEvent&)
+void GTextEditor::leave_event(CEvent&)
 {
     ASSERT(window());
     window()->set_override_cursor(GStandardCursor::None);

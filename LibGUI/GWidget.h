@@ -38,7 +38,7 @@ public:
     String tooltip() const { return m_tooltip; }
     void set_tooltip(const String& tooltip) { m_tooltip = tooltip; }
 
-    virtual void event(GEvent&) override;
+    virtual void event(CEvent&) override;
     virtual void paint_event(GPaintEvent&);
     virtual void resize_event(GResizeEvent&);
     virtual void show_event(GShowEvent&);
@@ -50,11 +50,11 @@ public:
     virtual void mouseup_event(GMouseEvent&);
     virtual void click_event(GMouseEvent&);
     virtual void doubleclick_event(GMouseEvent&);
-    virtual void focusin_event(GEvent&);
-    virtual void focusout_event(GEvent&);
-    virtual void enter_event(GEvent&);
-    virtual void leave_event(GEvent&);
-    virtual void child_event(GChildEvent&) override;
+    virtual void focusin_event(CEvent&);
+    virtual void focusout_event(CEvent&);
+    virtual void enter_event(CEvent&);
+    virtual void leave_event(CEvent&);
+    virtual void child_event(CChildEvent&) override;
 
     Rect relative_rect() const { return m_relative_rect; }
     Point relative_position() const { return m_relative_rect.location(); }
@@ -154,8 +154,8 @@ private:
     void handle_resize_event(GResizeEvent&);
     void handle_mousedown_event(GMouseEvent&);
     void handle_mouseup_event(GMouseEvent&);
-    void handle_enter_event(GEvent&);
-    void handle_leave_event(GEvent&);
+    void handle_enter_event(CEvent&);
+    void handle_leave_event(CEvent&);
     void do_layout();
 
     GWindow* m_window { nullptr };

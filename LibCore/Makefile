@@ -1,7 +1,6 @@
 OBJS = \
-    CElapsedTimer.o
-
-LIBS =
+    CElapsedTimer.o \
+    CEvent.o
 
 LIBRARY = libcore.a
 STANDARD_FLAGS = -std=c++17 -Wno-sized-deallocation
