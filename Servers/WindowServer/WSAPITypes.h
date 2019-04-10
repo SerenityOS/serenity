@@ -221,6 +221,7 @@ struct WSAPI_ClientMessage {
             float opacity;
             WSAPI_Size base_size;
             WSAPI_Size size_increment;
+            WSAPI_Color background_color;
         } window;
         struct {
             WSAPI_Size size;
