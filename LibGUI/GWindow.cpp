@@ -211,11 +211,17 @@ void GWindow::event(GEvent& event)
             return;
         auto& paint_event = static_cast<GPaintEvent&>(event);
         auto rect = paint_event.rect();
+        if (m_back_bitmap && m_back_bitmap->size() != paint_event.window_size()) {
+            // Eagerly discard the backing store if we learn from this paint event that it needs to be bigger.
+            // Otherwise we would have to wait for a resize event to tell us. This way we don't waste the
+            // effort on painting into an undersized bitmap that will be thrown away anyway.
+            m_back_bitmap = nullptr;
+        }
         bool created_new_backing_store = !m_back_bitmap;
         if (!m_back_bitmap)
             m_back_bitmap = create_backing_bitmap(paint_event.window_size());
         if (rect.is_empty() || created_new_backing_store)
-            rect = m_main_widget->rect();
+            rect = { { }, paint_event.window_size() };
 
         m_main_widget->event(*make<GPaintEvent>(rect));
 
