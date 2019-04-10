@@ -26,9 +26,9 @@ int main(int argc, char** argv)
     auto* text_editor = new GTextEditor(GTextEditor::MultiLine, widget);
     auto* statusbar = new GStatusBar(widget);
 
-    text_editor->on_cursor_change = [statusbar] (GTextEditor& editor) {
+    text_editor->on_cursor_change = [statusbar, text_editor] {
         StringBuilder builder;
-        builder.appendf("Line: %d, Column: %d", editor.cursor().line(), editor.cursor().column());
+        builder.appendf("Line: %d, Column: %d", text_editor->cursor().line(), text_editor->cursor().column());
         statusbar->set_text(builder.to_string());
     };
 

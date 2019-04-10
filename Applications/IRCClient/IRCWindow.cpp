@@ -42,13 +42,13 @@ IRCWindow::IRCWindow(IRCClient& client, void* owner, Type type, const String& na
     m_text_editor = new GTextEditor(GTextEditor::SingleLine, this);
     m_text_editor->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     m_text_editor->set_preferred_size({ 0, 19 });
-    m_text_editor->on_return_pressed = [this] (GTextEditor& editor) {
+    m_text_editor->on_return_pressed = [this] {
         if (m_type == Channel)
-            m_client.handle_user_input_in_channel(m_name, editor.text());
+            m_client.handle_user_input_in_channel(m_name, m_text_editor->text());
         else if (m_type == Query)
-            m_client.handle_user_input_in_query(m_name, editor.text());
+            m_client.handle_user_input_in_query(m_name, m_text_editor->text());
         else if (m_type == Server)
-            m_client.handle_user_input_in_server(editor.text());
+            m_client.handle_user_input_in_server(m_text_editor->text());
         m_text_editor->clear();
     };
 

@@ -234,7 +234,7 @@ void GTextEditor::keydown_event(GKeyEvent& event)
 {
     if (event.key() == KeyCode::Key_Escape) {
         if (on_escape_pressed)
-            on_escape_pressed(*this);
+            on_escape_pressed();
         return;
     }
     if (event.key() == KeyCode::Key_Up) {
@@ -447,7 +447,7 @@ void GTextEditor::insert_at_cursor(char ch)
     if (ch == '\n') {
         if (is_single_line()) {
             if (on_return_pressed)
-                on_return_pressed(*this);
+                on_return_pressed();
             return;
         }
         if (at_tail || at_head) {
@@ -561,7 +561,7 @@ void GTextEditor::set_cursor(const GTextPosition& position)
         update_cursor();
     }
     if (on_cursor_change)
-        on_cursor_change(*this);
+        on_cursor_change();
 }
 
 void GTextEditor::focusin_event(GEvent&)
