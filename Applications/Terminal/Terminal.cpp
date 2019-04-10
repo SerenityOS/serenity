@@ -19,7 +19,7 @@
 
 Terminal::Terminal(int ptm_fd)
     : m_ptm_fd(ptm_fd)
-    , m_notifier(ptm_fd, GNotifier::Read)
+    , m_notifier(ptm_fd, CNotifier::Read)
 {
     m_cursor_blink_timer.set_interval(500);
     m_cursor_blink_timer.on_timeout = [this] {
@@ -28,9 +28,9 @@ Terminal::Terminal(int ptm_fd)
     };
 
     set_font(Font::default_fixed_width_font());
-    m_notifier.on_ready_to_read = [this] (GNotifier& notifier) {
+    m_notifier.on_ready_to_read = [this]{
         byte buffer[BUFSIZ];
-        ssize_t nread = read(notifier.fd(), buffer, sizeof(buffer));
+        ssize_t nread = read(m_ptm_fd, buffer, sizeof(buffer));
         if (nread < 0) {
             dbgprintf("Terminal read error: %s\n", strerror(errno));
             perror("read(ptm)");

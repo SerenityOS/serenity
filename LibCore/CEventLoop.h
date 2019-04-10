@@ -10,7 +10,7 @@
 
 class CEvent;
 class CObject;
-class GNotifier;
+class CNotifier;
 
 class CEventLoop {
 public:
@@ -29,8 +29,8 @@ public:
     static int register_timer(CObject&, int milliseconds, bool should_reload);
     static bool unregister_timer(int timer_id);
 
-    static void register_notifier(Badge<GNotifier>, GNotifier&);
-    static void unregister_notifier(Badge<GNotifier>, GNotifier&);
+    static void register_notifier(Badge<CNotifier>, CNotifier&);
+    static void unregister_notifier(Badge<CNotifier>, CNotifier&);
 
     void quit(int);
 
@@ -72,5 +72,5 @@ private:
     static HashMap<int, OwnPtr<EventLoopTimer>>* s_timers;
     static int s_next_timer_id;
 
-    static HashTable<GNotifier*>* s_notifiers;
+    static HashTable<CNotifier*>* s_notifiers;
 };

@@ -3,7 +3,7 @@
 #include <LibGUI/GIODevice.h>
 #include <LibGUI/GSocketAddress.h>
 
-class GNotifier;
+class CNotifier;
 
 class GSocket : public GIODevice {
 public:
@@ -40,5 +40,5 @@ protected:
 private:
     virtual bool open(GIODevice::OpenMode) override { ASSERT_NOT_REACHED(); }
     Type m_type { Type::Invalid };
-    OwnPtr<GNotifier> m_notifier;
+    OwnPtr<CNotifier> m_notifier;
 };

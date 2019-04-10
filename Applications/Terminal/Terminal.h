@@ -6,7 +6,7 @@
 #include <SharedGraphics/GraphicsBitmap.h>
 #include <SharedGraphics/Rect.h>
 #include <LibGUI/GWidget.h>
-#include <LibGUI/GNotifier.h>
+#include <LibCore/CNotifier.h>
 #include <LibGUI/GTimer.h>
 
 class Font;
@@ -152,7 +152,7 @@ private:
     bool m_in_active_window { false };
     bool m_need_full_flush { false };
 
-    GNotifier m_notifier;
+    CNotifier m_notifier;
 
     float m_opacity { 1 };
     bool m_needs_background_fill { true };

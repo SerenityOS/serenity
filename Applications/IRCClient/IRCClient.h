@@ -11,7 +11,7 @@
 class IRCChannel;
 class IRCQuery;
 class IRCWindowListModel;
-class GNotifier;
+class CNotifier;
 
 class IRCClient final : public CObject {
     friend class IRCChannel;
@@ -118,7 +118,7 @@ private:
 
     String m_nickname;
     Vector<char> m_line_buffer;
-    OwnPtr<GNotifier> m_notifier;
+    OwnPtr<CNotifier> m_notifier;
     HashMap<String, RetainPtr<IRCChannel>> m_channels;
     HashMap<String, RetainPtr<IRCQuery>> m_queries;
 
