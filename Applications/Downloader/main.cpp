@@ -1,14 +1,14 @@
 #include <LibGUI/GApplication.h>
-#include <LibGUI/GHttpRequest.h>
-#include <LibGUI/GHttpResponse.h>
-#include <LibGUI/GNetworkJob.h>
+#include <LibCore/CHttpRequest.h>
+#include <LibCore/CHttpResponse.h>
+#include <LibCore/CNetworkJob.h>
 #include <stdio.h>
 
 int main(int argc, char** argv)
 {
     GApplication app(argc, argv);
 
-    GHttpRequest request;
+    CHttpRequest request;
     request.set_hostname("www.google.com");
     request.set_path("/");
 
@@ -18,7 +18,7 @@ int main(int argc, char** argv)
             dbgprintf("on_finish: request failed :(\n");
             return;
         }
-        auto& response = static_cast<const GHttpResponse&>(*job->response());
+        auto& response = static_cast<const CHttpResponse&>(*job->response());
         printf("%s{%p}: on_receive: code=%d\n", job->class_name(), job, response.code());
         //printf("payload:\n");
         //printf("%s", response.payload().pointer());

@@ -1,19 +1,19 @@
 #pragma once
 
-#include <LibGUI/GNetworkJob.h>
-#include <LibGUI/GHttpRequest.h>
+#include <LibCore/CNetworkJob.h>
+#include <LibCore/CHttpRequest.h>
 #include <AK/HashMap.h>
 
 class CTCPSocket;
 
-class GHttpJob final : public GNetworkJob {
+class CHttpJob final : public CNetworkJob {
 public:
-    explicit GHttpJob(const GHttpRequest&);
-    virtual ~GHttpJob() override;
+    explicit CHttpJob(const CHttpRequest&);
+    virtual ~CHttpJob() override;
 
     virtual void start() override;
 
-    virtual const char* class_name() const override { return "GHttpJob"; }
+    virtual const char* class_name() const override { return "CHttpJob"; }
 
 private:
     void on_socket_connected();
@@ -25,7 +25,7 @@ private:
         Finished,
     };
 
-    GHttpRequest m_request;
+    CHttpRequest m_request;
     CTCPSocket* m_socket { nullptr };
     State m_state { State::InStatus };
     int m_code { -1 };

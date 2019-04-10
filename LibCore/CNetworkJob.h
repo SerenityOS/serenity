@@ -3,9 +3,9 @@
 #include <LibCore/CObject.h>
 #include <AK/Function.h>
 
-class GNetworkResponse;
+class CNetworkResponse;
 
-class GNetworkJob : public CObject {
+class CNetworkJob : public CObject {
 public:
     enum class Error {
         None,
@@ -13,25 +13,25 @@ public:
         TransmissionFailed,
         ProtocolFailed,
     };
-    virtual ~GNetworkJob() override;
+    virtual ~CNetworkJob() override;
 
     Function<void(bool success)> on_finish;
 
     bool has_error() const { return m_error != Error::None; }
     Error error() const { return m_error; }
-    GNetworkResponse* response() { return m_response.ptr(); }
-    const GNetworkResponse* response() const { return m_response.ptr(); }
+    CNetworkResponse* response() { return m_response.ptr(); }
+    const CNetworkResponse* response() const { return m_response.ptr(); }
 
     virtual void start() = 0;
 
-    virtual const char* class_name() const override { return "GNetworkJob"; }
+    virtual const char* class_name() const override { return "CNetworkJob"; }
 
 protected:
-    GNetworkJob();
-    void did_finish(Retained<GNetworkResponse>&&);
+    CNetworkJob();
+    void did_finish(Retained<CNetworkResponse>&&);
     void did_fail(Error);
 
 private:
-    RetainPtr<GNetworkResponse> m_response;
+    RetainPtr<CNetworkResponse> m_response;
     Error m_error { Error::None };
 };

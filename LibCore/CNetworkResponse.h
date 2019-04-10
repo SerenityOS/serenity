@@ -3,15 +3,15 @@
 #include <AK/Retainable.h>
 #include <AK/ByteBuffer.h>
 
-class GNetworkResponse : public Retainable<GNetworkResponse> {
+class CNetworkResponse : public Retainable<CNetworkResponse> {
 public:
-    virtual ~GNetworkResponse();
+    virtual ~CNetworkResponse();
 
     bool is_error() const { return m_error; }
     const ByteBuffer& payload() const { return m_payload; }
 
 protected:
-    explicit GNetworkResponse(ByteBuffer&&);
+    explicit CNetworkResponse(ByteBuffer&&);
 
     bool m_error { false };
     ByteBuffer m_payload;

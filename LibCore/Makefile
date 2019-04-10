@@ -5,6 +5,11 @@ OBJS = \
     CTCPSocket.o \
     CElapsedTimer.o \
     CNotifier.o \
+    CHttpRequest.o \
+    CHttpResponse.o \
+    CHttpJob.o \
+    CNetworkJob.o \
+    CNetworkResponse.o \
     CObject.o \
     CEventLoop.o \
     CEvent.o
