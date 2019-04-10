@@ -64,6 +64,7 @@ LIBGUI_OBJS = \
     GHttpResponse.o \
     GHttpJob.o \
     GSpinBox.o \
+    GGroupBox.o \
     GWindow.o
 
 OBJS = $(SHAREDGRAPHICS_OBJS) $(LIBGUI_OBJS)

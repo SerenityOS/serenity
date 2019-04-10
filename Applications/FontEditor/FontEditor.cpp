@@ -7,6 +7,7 @@
 #include <LibGUI/GTextBox.h>
 #include <LibGUI/GCheckBox.h>
 #include <LibGUI/GSpinBox.h>
+#include <LibGUI/GGroupBox.h>
 #include <stdlib.h>
 
 FontEditorWidget::FontEditorWidget(const String& path, RetainPtr<Font>&& edited_font, GWidget* parent)
@@ -26,20 +27,23 @@ FontEditorWidget::FontEditorWidget(const String& path, RetainPtr<Font>&& edited_
     m_glyph_editor_widget = new GlyphEditorWidget(*m_edited_font, this);
     m_glyph_editor_widget->move_to({ 5, 5 });
 
-    auto* fixed_width_checkbox = new GCheckBox(this);
-    fixed_width_checkbox->set_caption("Fixed width");
-    fixed_width_checkbox->set_checked(m_edited_font->is_fixed_width());
-    fixed_width_checkbox->set_relative_rect({ 5, 195, 100, 20 });
+    auto* font_group_box = new GGroupBox("Font metadata", this);
+    font_group_box->set_relative_rect(5, 195, 210, 70);
 
-    m_name_textbox = new GTextBox(this);
-    m_name_textbox->set_relative_rect({ 5, 220, 300, 20 });
+    m_name_textbox = new GTextBox(font_group_box);
+    m_name_textbox->set_relative_rect(10, 20, 180, 20);
     m_name_textbox->set_text(m_edited_font->name());
     m_name_textbox->on_change = [this] {
         m_edited_font->set_name(m_name_textbox->text());
     };
 
+    auto* fixed_width_checkbox = new GCheckBox(font_group_box);
+    fixed_width_checkbox->set_relative_rect(10, 45, 190, 20);
+    fixed_width_checkbox->set_caption("Fixed width");
+    fixed_width_checkbox->set_checked(m_edited_font->is_fixed_width());
+
     m_path_textbox = new GTextBox(this);
-    m_path_textbox->set_relative_rect({ 5, 245, 300, 20 });
+    m_path_textbox->set_relative_rect(5, 270, 210, 20);
     m_path_textbox->set_text(m_path);
     m_path_textbox->on_change = [this] {
         m_path = m_path_textbox->text();
@@ -47,7 +51,7 @@ FontEditorWidget::FontEditorWidget(const String& path, RetainPtr<Font>&& edited_
 
     auto* save_button = new GButton(this);
     save_button->set_caption("Save");
-    save_button->set_relative_rect({ 5, 270, 100, 20 });
+    save_button->set_relative_rect({ 5, 300, 105, 20 });
     save_button->on_click = [this] (GButton&) {
         dbgprintf("write to file: '%s'\n", m_path.characters());
         m_edited_font->write_to_file(m_path);
@@ -55,7 +59,7 @@ FontEditorWidget::FontEditorWidget(const String& path, RetainPtr<Font>&& edited_
 
     auto* quit_button = new GButton(this);
     quit_button->set_caption("Quit");
-    quit_button->set_relative_rect({ 110, 270, 100, 20 });
+    quit_button->set_relative_rect({ 110, 300, 105, 20 });
     quit_button->on_click = [] (GButton&) {
         exit(0);
     };
