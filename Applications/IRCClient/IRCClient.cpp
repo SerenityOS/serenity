@@ -4,7 +4,7 @@
 #include "IRCLogBuffer.h"
 #include "IRCWindow.h"
 #include "IRCWindowListModel.h"
-#include <LibGUI/GNotifier.h>
+#include <LibCore/CNotifier.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -47,8 +47,8 @@ void IRCClient::set_server(const String &hostname, int port)
 
 void IRCClient::on_socket_connected()
 {
-    m_notifier = make<GNotifier>(m_socket->fd(), GNotifier::Read);
-    m_notifier->on_ready_to_read = [this] (GNotifier&) { receive_from_server(); };
+    m_notifier = make<CNotifier>(m_socket->fd(), CNotifier::Read);
+    m_notifier->on_ready_to_read = [this] { receive_from_server(); };
 
     send_user();
     send_nick();

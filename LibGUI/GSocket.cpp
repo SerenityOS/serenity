@@ -1,5 +1,5 @@
 #include <LibGUI/GSocket.h>
-#include <LibGUI/GNotifier.h>
+#include <LibCore/CNotifier.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -53,11 +53,11 @@ bool GSocket::connect(const GSocketAddress& address, int port)
     if (rc < 0) {
         if (errno == EINPROGRESS) {
             printf("in progress.\n");
-            m_notifier = make<GNotifier>(fd(), GNotifier::Event::Write);
-            m_notifier->on_ready_to_write = [this] (GNotifier&) {
+            m_notifier = make<CNotifier>(fd(), CNotifier::Event::Write);
+            m_notifier->on_ready_to_write = [this] {
                 printf("%s{%p} connected!\n", class_name(), this);
                 m_connected = true;
-                m_notifier->set_event_mask(GNotifier::Event::None);
+                m_notifier->set_event_mask(CNotifier::Event::None);
                 if (on_connected)
                     on_connected();
             };

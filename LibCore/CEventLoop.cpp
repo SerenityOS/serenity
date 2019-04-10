@@ -1,7 +1,7 @@
 #include <LibCore/CObject.h>
 #include <LibCore/CEventLoop.h>
 #include <LibCore/CEvent.h>
-#include <LibGUI/GNotifier.h>
+#include <LibCore/CNotifier.h>
 #include <LibC/unistd.h>
 #include <LibC/stdio.h>
 #include <LibC/fcntl.h>
@@ -19,7 +19,7 @@
 static CEventLoop* s_main_event_loop;
 static Vector<CEventLoop*>* s_event_loop_stack;
 HashMap<int, OwnPtr<CEventLoop::EventLoopTimer>>* CEventLoop::s_timers;
-HashTable<GNotifier*>* CEventLoop::s_notifiers;
+HashTable<CNotifier*>* CEventLoop::s_notifiers;
 int CEventLoop::s_next_timer_id = 1;
 
 CEventLoop::CEventLoop()
@@ -27,7 +27,7 @@ CEventLoop::CEventLoop()
     if (!s_event_loop_stack) {
         s_event_loop_stack = new Vector<CEventLoop*>;
         s_timers = new HashMap<int, OwnPtr<CEventLoop::EventLoopTimer>>;
-        s_notifiers = new HashTable<GNotifier*>;
+        s_notifiers = new HashTable<CNotifier*>;
     }
 
     if (!s_main_event_loop) {
@@ -153,11 +153,11 @@ void CEventLoop::wait_for_event()
     add_file_descriptors_for_select(rfds, max_fd_added);
     max_fd = max(max_fd, max_fd_added);
     for (auto& notifier : *s_notifiers) {
-        if (notifier->event_mask() & GNotifier::Read)
+        if (notifier->event_mask() & CNotifier::Read)
             add_fd_to_set(notifier->fd(), rfds);
-        if (notifier->event_mask() & GNotifier::Write)
+        if (notifier->event_mask() & CNotifier::Write)
             add_fd_to_set(notifier->fd(), wfds);
-        if (notifier->event_mask() & GNotifier::Exceptional)
+        if (notifier->event_mask() & CNotifier::Exceptional)
             ASSERT_NOT_REACHED();
     }
 
@@ -189,11 +189,11 @@ void CEventLoop::wait_for_event()
     for (auto& notifier : *s_notifiers) {
         if (FD_ISSET(notifier->fd(), &rfds)) {
             if (notifier->on_ready_to_read)
-                notifier->on_ready_to_read(*notifier);
+                notifier->on_ready_to_read();
         }
         if (FD_ISSET(notifier->fd(), &wfds)) {
             if (notifier->on_ready_to_write)
-                notifier->on_ready_to_write(*notifier);
+                notifier->on_ready_to_write();
         }
     }
 
@@ -250,12 +250,12 @@ bool CEventLoop::unregister_timer(int timer_id)
     return true;
 }
 
-void CEventLoop::register_notifier(Badge<GNotifier>, GNotifier& notifier)
+void CEventLoop::register_notifier(Badge<CNotifier>, CNotifier& notifier)
 {
     s_notifiers->set(&notifier);
 }
 
-void CEventLoop::unregister_notifier(Badge<GNotifier>, GNotifier& notifier)
+void CEventLoop::unregister_notifier(Badge<CNotifier>, CNotifier& notifier)
 {
     s_notifiers->remove(&notifier);
 }

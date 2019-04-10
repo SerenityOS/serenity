@@ -4,7 +4,7 @@
 #include "GWindow.h"
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GAction.h>
-#include <LibGUI/GNotifier.h>
+#include <LibCore/CNotifier.h>
 #include <LibGUI/GMenu.h>
 #include <LibGUI/GDesktop.h>
 #include <LibC/unistd.h>

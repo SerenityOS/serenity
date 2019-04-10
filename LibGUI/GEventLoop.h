@@ -6,7 +6,7 @@
 
 class GAction;
 class CObject;
-class GNotifier;
+class CNotifier;
 class GWindow;
 
 class GEventLoop final : public CEventLoop {

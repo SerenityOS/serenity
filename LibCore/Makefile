@@ -1,5 +1,6 @@
 OBJS = \
     CElapsedTimer.o \
+    CNotifier.o \
     CObject.o \
     CEventLoop.o \
     CEvent.o
