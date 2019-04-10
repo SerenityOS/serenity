@@ -1,6 +1,6 @@
 #pragma once
 
-#include "kprintf.h"
+#include <Kernel/kstdio.h>
 #include <Kernel/LinearAddress.h>
 
 #define PAGE_SIZE 4096
