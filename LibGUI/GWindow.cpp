@@ -144,6 +144,10 @@ void GWindow::set_rect(const Rect& a_rect)
     request.window_id = m_window_id;
     request.window.rect = a_rect;
     GEventLoop::current().post_message_to_server(request);
+    if (m_back_bitmap->size() != a_rect.size())
+        m_back_bitmap = nullptr;
+    if (m_front_bitmap->size() != a_rect.size())
+        m_front_bitmap = nullptr;
     if (m_main_widget)
         m_main_widget->resize(a_rect.size());
 }
