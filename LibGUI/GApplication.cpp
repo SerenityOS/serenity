@@ -80,8 +80,8 @@ public:
         m_label->set_background_color(Color::from_rgb(0xdac7b5));
         m_label->set_fill_with_background_color(true);
         m_label->set_frame_thickness(1);
-        m_label->set_frame_shape(GFrame::Shape::Container);
-        m_label->set_frame_shadow(GFrame::Shadow::Plain);
+        m_label->set_frame_shape(FrameShape::Container);
+        m_label->set_frame_shadow(FrameShadow::Plain);
         set_main_widget(m_label);
     }
 

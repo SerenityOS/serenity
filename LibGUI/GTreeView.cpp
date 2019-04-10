@@ -23,8 +23,8 @@ GTreeView::MetadataForIndex& GTreeView::ensure_metadata_for_index(const GModelIn
 GTreeView::GTreeView(GWidget* parent)
     : GAbstractView(parent)
 {
-    set_frame_shape(GFrame::Shape::Container);
-    set_frame_shadow(GFrame::Shadow::Sunken);
+    set_frame_shape(FrameShape::Container);
+    set_frame_shadow(FrameShadow::Sunken);
     set_frame_thickness(2);
 
     m_expand_bitmap = GraphicsBitmap::load_from_file("/res/icons/treeview-expand.png");

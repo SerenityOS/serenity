@@ -6,8 +6,8 @@ GlyphMapWidget::GlyphMapWidget(Font& mutable_font, GWidget* parent)
     , m_font(mutable_font)
 {
     set_frame_thickness(2);
-    set_frame_shape(GFrame::Shape::Container);
-    set_frame_shadow(GFrame::Shadow::Sunken);
+    set_frame_shape(FrameShape::Container);
+    set_frame_shadow(FrameShadow::Sunken);
     set_relative_rect({ 0, 0, preferred_width(), preferred_height() });
 }
 
