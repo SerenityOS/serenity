@@ -491,7 +491,6 @@ void WSWindowManager::start_window_resize(WSWindow& window, const WSMouseEvent& 
     m_resize_window = window.make_weak_ptr();;
     m_resize_origin = event.position();
     m_resize_window_original_rect = window.rect();
-    m_resize_window->set_has_painted_since_last_resize(true);
 
     invalidate(window);
 }
@@ -611,10 +610,7 @@ bool WSWindowManager::process_ongoing_window_resize(const WSMouseEvent& event, W
               new_rect.to_string().characters());
 #endif
     m_resize_window->set_rect(new_rect);
-    if (m_resize_window->has_painted_since_last_resize()) {
-        m_resize_window->set_has_painted_since_last_resize(false);
-        WSMessageLoop::the().post_message(*m_resize_window, make<WSResizeEvent>(old_rect, new_rect));
-    }
+    WSMessageLoop::the().post_message(*m_resize_window, make<WSResizeEvent>(old_rect, new_rect));
     return true;
 }
 

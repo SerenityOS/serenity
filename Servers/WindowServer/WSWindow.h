@@ -106,9 +106,6 @@ public:
     bool has_alpha_channel() const { return m_has_alpha_channel; }
     void set_has_alpha_channel(bool value) { m_has_alpha_channel = value; }
 
-    bool has_painted_since_last_resize() const { return m_has_painted_since_last_resize; }
-    void set_has_painted_since_last_resize(bool b) { m_has_painted_since_last_resize = b; }
-
     Size size_increment() const { return m_size_increment; }
     void set_size_increment(const Size& increment) { m_size_increment = increment; }
 
@@ -138,7 +135,6 @@ private:
     bool m_automatic_cursor_tracking_enabled { false };
     bool m_visible { true };
     bool m_has_alpha_channel { false };
-    bool m_has_painted_since_last_resize { false };
     bool m_modal { false };
     bool m_resizable { false };
     bool m_listens_to_wm_events { false };

@@ -436,11 +436,6 @@ void WSClientConnection::handle_request(const WSAPIDidFinishPaintingNotification
         return;
     }
     auto& window = *(*it).value;
-
-    if (!window.has_painted_since_last_resize()) {
-        window.set_has_painted_since_last_resize(true);
-        WSMessageLoop::the().post_message(window, make<WSResizeEvent>(window.rect(), window.rect()));
-    }
     WSWindowManager::the().invalidate(window, request.rect());
 }
 
