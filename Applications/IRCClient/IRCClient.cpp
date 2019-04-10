@@ -32,7 +32,7 @@ IRCClient::IRCClient()
     , m_client_window_list_model(IRCWindowListModel::create(*this))
     , m_log(IRCLogBuffer::create())
 {
-    m_socket = new GTCPSocket(this);
+    m_socket = new CTCPSocket(this);
 }
 
 IRCClient::~IRCClient()

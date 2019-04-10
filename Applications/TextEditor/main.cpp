@@ -8,7 +8,7 @@
 #include <LibGUI/GTextEditor.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GFontDatabase.h>
-#include <LibGUI/GFile.h>
+#include <LibCore/CFile.h>
 #include <AK/StringBuilder.h>
 #include <unistd.h>
 #include <stdio.h>
@@ -35,9 +35,9 @@ int main(int argc, char** argv)
     String path = "/tmp/TextEditor.save.txt";
     if (argc >= 2) {
         path = argv[1];
-        GFile file(path);
+        CFile file(path);
 
-        if (!file.open(GIODevice::ReadOnly)) {
+        if (!file.open(CIODevice::ReadOnly)) {
             fprintf(stderr, "Opening %s: %s\n", path.characters(), file.error_string());
             return 1;
         }

@@ -1,6 +1,6 @@
 #include <LibGUI/GHttpJob.h>
 #include <LibGUI/GHttpResponse.h>
-#include <LibGUI/GTCPSocket.h>
+#include <LibCore/CTCPSocket.h>
 #include <stdio.h>
 #include <unistd.h>
 
@@ -98,7 +98,7 @@ void GHttpJob::on_socket_connected()
 void GHttpJob::start()
 {
     ASSERT(!m_socket);
-    m_socket = new GTCPSocket(this);
+    m_socket = new CTCPSocket(this);
     m_socket->on_connected = [this] {
         printf("Socket on_connected callback\n");
         on_socket_connected();

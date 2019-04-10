@@ -10,8 +10,6 @@ SHAREDGRAPHICS_OBJS = \
 
 LIBGUI_OBJS = \
     GPainter.o \
-    GIODevice.o \
-    GFile.o \
     GButton.o \
     GCheckBox.o \
     GEventLoop.o \
@@ -39,8 +37,6 @@ LIBGUI_OBJS = \
     GSortingProxyModel.o \
     GStackWidget.o \
     GScrollableWidget.o \
-    GSocket.o \
-    GTCPSocket.o \
     GMessageBox.o \
     GInputBox.o \
     GDialog.o \

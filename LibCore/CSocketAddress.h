@@ -2,12 +2,12 @@
 
 #include <Kernel/Net/IPv4.h>
 
-class GSocketAddress {
+class CSocketAddress {
 public:
     enum class Type { Invalid, IPv4, Local };
 
-    GSocketAddress() { }
-    GSocketAddress(const IPv4Address& address)
+    CSocketAddress() { }
+    CSocketAddress(const IPv4Address& address)
         : m_type(Type::IPv4)
         , m_ipv4_address(address)
     {
@@ -21,7 +21,7 @@ public:
     {
         switch (m_type) {
         case Type::IPv4: return m_ipv4_address.to_string();
-        default: return "[GSocketAddress]";
+        default: return "[CSocketAddress]";
         }
     }
 

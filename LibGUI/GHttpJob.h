@@ -4,7 +4,7 @@
 #include <LibGUI/GHttpRequest.h>
 #include <AK/HashMap.h>
 
-class GTCPSocket;
+class CTCPSocket;
 
 class GHttpJob final : public GNetworkJob {
 public:
@@ -26,7 +26,7 @@ private:
     };
 
     GHttpRequest m_request;
-    GTCPSocket* m_socket { nullptr };
+    CTCPSocket* m_socket { nullptr };
     State m_state { State::InStatus };
     int m_code { -1 };
     HashMap<String, String> m_headers;

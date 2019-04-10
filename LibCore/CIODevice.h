@@ -3,7 +3,7 @@
 #include <LibCore/CObject.h>
 #include <AK/ByteBuffer.h>
 
-class GIODevice : public CObject {
+class CIODevice : public CObject {
 public:
     enum OpenMode {
         NotOpen      = 0,
@@ -15,7 +15,7 @@ public:
         MustBeNew    = 16,
     };
 
-    virtual ~GIODevice() override;
+    virtual ~CIODevice() override;
 
     int fd() const { return m_fd; }
     unsigned mode() const { return m_mode; }
@@ -35,13 +35,13 @@ public:
 
     bool can_read() const;
 
-    virtual bool open(GIODevice::OpenMode) = 0;
+    virtual bool open(CIODevice::OpenMode) = 0;
     virtual bool close();
 
-    virtual const char* class_name() const override { return "GIODevice"; }
+    virtual const char* class_name() const override { return "CIODevice"; }
 
 protected:
-    explicit GIODevice(CObject* parent = nullptr);
+    explicit CIODevice(CObject* parent = nullptr);
 
     void set_fd(int fd) { m_fd = fd; }
     void set_mode(OpenMode mode) { m_mode = mode; }

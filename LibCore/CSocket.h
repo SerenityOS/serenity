@@ -1,44 +1,44 @@
 #pragma once
 
-#include <LibGUI/GIODevice.h>
-#include <LibGUI/GSocketAddress.h>
+#include <LibCore/CIODevice.h>
+#include <LibCore/CSocketAddress.h>
 
 class CNotifier;
 
-class GSocket : public GIODevice {
+class CSocket : public CIODevice {
 public:
     enum class Type { Invalid, TCP, UDP };
-    virtual ~GSocket() override;
+    virtual ~CSocket() override;
 
     bool connect(const String& hostname, int port);
-    bool connect(const GSocketAddress&, int port);
+    bool connect(const CSocketAddress&, int port);
 
     ByteBuffer receive(int max_size);
     bool send(const ByteBuffer&);
 
     bool is_connected() const { return m_connected; }
 
-    GSocketAddress source_address() const { return m_source_address; }
+    CSocketAddress source_address() const { return m_source_address; }
     int source_port() const { return m_source_port; }
 
-    GSocketAddress destination_address() const { return m_source_address; }
+    CSocketAddress destination_address() const { return m_source_address; }
     int destination_port() const { return m_destination_port; }
 
     Function<void()> on_connected;
 
-    virtual const char* class_name() const override { return "GSocket"; }
+    virtual const char* class_name() const override { return "CSocket"; }
 
 protected:
-    GSocket(Type, CObject* parent);
+    CSocket(Type, CObject* parent);
 
-    GSocketAddress m_source_address;
-    GSocketAddress m_destination_address;
+    CSocketAddress m_source_address;
+    CSocketAddress m_destination_address;
     int m_source_port { -1 };
     int m_destination_port { -1 };
     bool m_connected { false };
 
 private:
-    virtual bool open(GIODevice::OpenMode) override { ASSERT_NOT_REACHED(); }
+    virtual bool open(CIODevice::OpenMode) override { ASSERT_NOT_REACHED(); }
     Type m_type { Type::Invalid };
     OwnPtr<CNotifier> m_notifier;
 };
