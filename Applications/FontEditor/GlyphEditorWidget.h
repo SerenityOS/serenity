@@ -1,7 +1,7 @@
-#include <LibGUI/GWidget.h>
+#include <LibGUI/GFrame.h>
 #include <AK/Function.h>
 
-class GlyphEditorWidget final : public GWidget {
+class GlyphEditorWidget final : public GFrame {
 public:
     GlyphEditorWidget(Font&, GWidget* parent);
     virtual ~GlyphEditorWidget() override;

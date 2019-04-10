@@ -2,9 +2,12 @@
 #include <LibGUI/GPainter.h>
 
 GlyphMapWidget::GlyphMapWidget(Font& mutable_font, GWidget* parent)
-    : GWidget(parent)
+    : GFrame(parent)
     , m_font(mutable_font)
 {
+    set_frame_thickness(2);
+    set_frame_shape(GFrame::Shape::Container);
+    set_frame_shadow(GFrame::Shadow::Sunken);
     set_relative_rect({ 0, 0, preferred_width(), preferred_height() });
 }
 
@@ -14,12 +17,12 @@ GlyphMapWidget::~GlyphMapWidget()
 
 int GlyphMapWidget::preferred_width() const
 {
-    return columns() * (font().max_glyph_width() + m_horizontal_spacing) + 2;
+    return columns() * (font().max_glyph_width() + m_horizontal_spacing) + 2 + frame_thickness() * 2;
 }
 
 int GlyphMapWidget::preferred_height() const
 {
-    return rows() * (font().glyph_height() + m_vertical_spacing) + 2;
+    return rows() * (font().glyph_height() + m_vertical_spacing) + 2 + frame_thickness() * 2;
 }
 
 void GlyphMapWidget::set_selected_glyph(byte glyph)
@@ -51,12 +54,15 @@ void GlyphMapWidget::update_glyph(byte glyph)
 
 void GlyphMapWidget::paint_event(GPaintEvent& event)
 {
+    GFrame::paint_event(event);
+
     GPainter painter(*this);
     painter.add_clip_rect(event.rect());
 
     painter.set_font(font());
-    painter.fill_rect(rect(), Color::White);
-    painter.draw_rect(rect(), Color::Black);
+    painter.fill_rect(frame_inner_rect(), Color::White);
+
+    painter.translate(frame_thickness(), frame_thickness());
 
     byte glyph = 0;
 

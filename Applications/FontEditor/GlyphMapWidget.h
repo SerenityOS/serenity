@@ -1,9 +1,9 @@
 #pragma once
 
-#include <LibGUI/GWidget.h>
+#include <LibGUI/GFrame.h>
 #include <AK/Function.h>
 
-class GlyphMapWidget final : public GWidget {
+class GlyphMapWidget final : public GFrame {
 public:
     GlyphMapWidget(Font&, GWidget* parent);
     virtual ~GlyphMapWidget() override;
