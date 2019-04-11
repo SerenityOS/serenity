@@ -17,8 +17,11 @@ static GWidget* build_gwidget(WidgetType type, GWidget* parent)
         return new GButton(parent);
     case WidgetType::GSpinBox:
         return new GSpinBox(parent);
-    case WidgetType::GTextEditor:
-        return new GTextEditor(GTextEditor::Type::MultiLine, parent);
+    case WidgetType::GTextEditor: {
+        auto* editor = new GTextEditor(GTextEditor::Type::MultiLine, parent);
+        editor->set_ruler_visible(false);
+        return editor;
+    }
     default:
         ASSERT_NOT_REACHED();
         return nullptr;

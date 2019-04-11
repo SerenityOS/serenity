@@ -17,6 +17,8 @@
 #include <signal.h>
 #include <fcntl.h>
 
+static GWindow* make_toolbox_window();
+
 int main(int argc, char** argv)
 {
     GApplication app(argc, argv);
@@ -47,10 +49,25 @@ int main(int argc, char** argv)
 
     auto* window = new GWindow;
     window->set_title(form1->name());
-    window->set_rect(20, 200, 640, 400);
+    window->set_rect(120, 200, 640, 400);
     window->set_main_widget(form1);
     window->set_should_exit_event_loop_on_close(true);
     window->show();
 
+    auto* toolbox = make_toolbox_window();
+    toolbox->show();
+
     return app.exec();
+}
+
+GWindow* make_toolbox_window()
+{
+    auto* window = new GWindow;
+    window->set_title("Widgets");
+    window->set_rect(20, 200, 80, 300);
+
+    auto* widget = new GWidget;
+    widget->set_fill_with_background_color(true);
+    window->set_main_widget(widget);
+    return window;
 }
