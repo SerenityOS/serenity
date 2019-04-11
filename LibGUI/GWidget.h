@@ -56,6 +56,9 @@ public:
     virtual void leave_event(CEvent&);
     virtual void child_event(CChildEvent&) override;
 
+    // This is called after children have been painted.
+    virtual void second_paint_event(GPaintEvent&);
+
     Rect relative_rect() const { return m_relative_rect; }
     Point relative_position() const { return m_relative_rect.location(); }
 
@@ -147,6 +150,9 @@ public:
 
     bool spans_entire_window_horizontally() const;
 
+    bool is_greedy_for_hits() const { return m_greedy_for_hits; }
+    void set_greedy_for_hits(bool b) { m_greedy_for_hits = b; }
+
 private:
     virtual bool is_widget() const final { return true; }
 
@@ -173,6 +179,7 @@ private:
 
     bool m_fill_with_background_color { false };
     bool m_visible { true };
+    bool m_greedy_for_hits { false };
 
     CElapsedTimer m_click_clock;
 };

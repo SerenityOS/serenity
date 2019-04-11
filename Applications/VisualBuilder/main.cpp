@@ -46,7 +46,7 @@ int main(int argc, char** argv)
     app.set_menubar(move(menubar));
 
     auto* window = new GWindow;
-    window->set_title("Form1");
+    window->set_title(form1->name());
     window->set_rect(20, 200, 640, 400);
     window->set_main_widget(form1);
     window->set_should_exit_event_loop_on_close(true);
