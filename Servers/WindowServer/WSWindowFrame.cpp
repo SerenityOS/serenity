@@ -178,7 +178,8 @@ void WSWindowFrame::paint(Painter& painter)
     painter.draw_rect(outer_rect, border_color);
     painter.draw_rect(inner_border_rect, border_color);
 
-    painter.draw_text(titlebar_title_rect, window.title(), wm.window_title_font(), TextAlignment::CenterLeft, title_color);
+    // FIXME: The translated(0, 1) wouldn't be necessary if we could center text based on its baseline.
+    painter.draw_text(titlebar_title_rect.translated(0, 1), window.title(), wm.window_title_font(), TextAlignment::CenterLeft, title_color);
 
     painter.blit(titlebar_icon_rect.location(), window.icon(), window.icon().rect());
 
