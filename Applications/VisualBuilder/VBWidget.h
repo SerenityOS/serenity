@@ -30,6 +30,7 @@ enum class WidgetType {
     GLabel,
     GSpinBox,
     GTextEditor,
+    GProgressBar,
 };
 
 class VBWidget : public Retainable<VBWidget>, public Weakable<VBWidget> {

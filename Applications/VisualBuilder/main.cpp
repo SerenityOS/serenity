@@ -67,22 +67,32 @@ GWindow* make_toolbox_window()
     window->set_main_widget(widget);
 
     auto* button_button = new GButton(widget);
-    button_button->set_caption("Button");
+    button_button->set_tooltip("GButton");
+    button_button->set_icon(GraphicsBitmap::load_from_file("/res/icons/vbwidgets/button.png"));
     button_button->on_click = [] (GButton&) {
         if (auto* form = VBForm::current())
             form->insert_widget(WidgetType::GButton);
     };
     auto* spinbox_button = new GButton(widget);
-    spinbox_button->set_caption("SpinBox");
+    spinbox_button->set_tooltip("GSpinBox");
+    spinbox_button->set_icon(GraphicsBitmap::load_from_file("/res/icons/vbwidgets/spinbox.png"));
     spinbox_button->on_click = [] (GButton&) {
         if (auto* form = VBForm::current())
             form->insert_widget(WidgetType::GSpinBox);
     };
     auto* editor_button = new GButton(widget);
-    editor_button->set_caption("TextEditor");
+    editor_button->set_tooltip("GTextEditor");
+    editor_button->set_icon(GraphicsBitmap::load_from_file("/res/icons/vbwidgets/textbox.png"));
     editor_button->on_click = [] (GButton&) {
         if (auto* form = VBForm::current())
             form->insert_widget(WidgetType::GTextEditor);
+    };
+    auto* progress_bar_button = new GButton(widget);
+    progress_bar_button->set_tooltip("GProgressBar");
+    progress_bar_button->set_icon(GraphicsBitmap::load_from_file("/res/icons/vbwidgets/progressbar.png"));
+    progress_bar_button->on_click = [] (GButton&) {
+        if (auto* form = VBForm::current())
+            form->insert_widget(WidgetType::GProgressBar);
     };
     return window;
 }
