@@ -5,7 +5,7 @@ class Rect;
 
 enum class ButtonStyle { Normal, CoolBar, OldNormal };
 enum class FrameShadow { Plain, Raised, Sunken };
-enum class FrameShape { NoFrame, Container, Panel, VerticalLine, HorizontalLine };
+enum class FrameShape { NoFrame, Box, Container, Panel, VerticalLine, HorizontalLine };
 
 class StylePainter {
 public:
