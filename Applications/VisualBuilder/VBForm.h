@@ -9,6 +9,9 @@ public:
     explicit VBForm(const String& name, GWidget* parent = nullptr);
     virtual ~VBForm() override;
 
+    String name() const { return m_name; }
+    void set_name(const String& name) { m_name = name; }
+
     bool is_selected(const VBWidget&) const;
     VBWidget* widget_at(const Point&);
 
@@ -17,6 +20,7 @@ public:
 
 protected:
     virtual void paint_event(GPaintEvent&) override;
+    virtual void second_paint_event(GPaintEvent&) override;
     virtual void mousedown_event(GMouseEvent&) override;
     virtual void mousemove_event(GMouseEvent&) override;
     virtual void mouseup_event(GMouseEvent&) override;

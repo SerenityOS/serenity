@@ -1,14 +1,49 @@
 #include "VBWidget.h"
 #include "VBForm.h"
 #include <LibGUI/GPainter.h>
+#include <LibGUI/GLabel.h>
+#include <LibGUI/GButton.h>
+#include <LibGUI/GSpinBox.h>
+#include <LibGUI/GTextEditor.h>
 
-VBWidget::VBWidget(VBForm& form)
-    : m_form(form)
+static GWidget* build_gwidget(WidgetType type, GWidget* parent)
 {
+    switch (type) {
+    case WidgetType::GWidget:
+        return new GWidget(parent);
+    case WidgetType::GLabel:
+        return new GLabel(parent);
+    case WidgetType::GButton:
+        return new GButton(parent);
+    case WidgetType::GSpinBox:
+        return new GSpinBox(parent);
+    case WidgetType::GTextEditor:
+        return new GTextEditor(GTextEditor::Type::MultiLine, parent);
+    default:
+        ASSERT_NOT_REACHED();
+        return nullptr;
+    }
+}
+
+VBWidget::VBWidget(WidgetType type, VBForm& form)
+    : m_type(type)
+    , m_form(form)
+{
+    m_gwidget = build_gwidget(type, &form);
 }
 
 VBWidget::~VBWidget()
 {
+}
+
+Rect VBWidget::rect() const
+{
+    return m_gwidget->relative_rect();
+}
+
+void VBWidget::set_rect(const Rect& rect)
+{
+    m_gwidget->set_relative_rect(rect);
 }
 
 bool VBWidget::is_selected() const
@@ -22,21 +57,21 @@ Rect VBWidget::grabber_rect(Direction direction) const
     int half_grabber_size = grabber_size / 2;
     switch (direction) {
     case Direction::Left:
-        return { m_rect.x() - half_grabber_size, m_rect.center().y() - half_grabber_size, grabber_size, grabber_size };
+        return { rect().x() - half_grabber_size, rect().center().y() - half_grabber_size, grabber_size, grabber_size };
     case Direction::UpLeft:
-        return { m_rect.x() - half_grabber_size, m_rect.y() - half_grabber_size, grabber_size, grabber_size };
+        return { rect().x() - half_grabber_size, rect().y() - half_grabber_size, grabber_size, grabber_size };
     case Direction::Up:
-        return { m_rect.center().x() - half_grabber_size, m_rect.y() - half_grabber_size, grabber_size, grabber_size };
+        return { rect().center().x() - half_grabber_size, rect().y() - half_grabber_size, grabber_size, grabber_size };
     case Direction::UpRight:
-        return { m_rect.right() - half_grabber_size, m_rect.y() - half_grabber_size, grabber_size, grabber_size };
+        return { rect().right() - half_grabber_size, rect().y() - half_grabber_size, grabber_size, grabber_size };
     case Direction::Right:
-        return { m_rect.right() - half_grabber_size, m_rect.center().y() - half_grabber_size, grabber_size, grabber_size };
+        return { rect().right() - half_grabber_size, rect().center().y() - half_grabber_size, grabber_size, grabber_size };
     case Direction::DownLeft:
-        return { m_rect.x() - half_grabber_size, m_rect.bottom() - half_grabber_size, grabber_size, grabber_size };
+        return { rect().x() - half_grabber_size, rect().bottom() - half_grabber_size, grabber_size, grabber_size };
     case Direction::Down:
-        return { m_rect.center().x() - half_grabber_size, m_rect.bottom() - half_grabber_size, grabber_size, grabber_size };
+        return { rect().center().x() - half_grabber_size, rect().bottom() - half_grabber_size, grabber_size, grabber_size };
     case Direction::DownRight:
-        return { m_rect.right() - half_grabber_size, m_rect.bottom() - half_grabber_size, grabber_size, grabber_size };
+        return { rect().right() - half_grabber_size, rect().bottom() - half_grabber_size, grabber_size, grabber_size };
     default:
         ASSERT_NOT_REACHED();
     }
@@ -50,10 +85,4 @@ Direction VBWidget::grabber_at(const Point& position) const
             found_grabber = direction;
     });
     return found_grabber;
-}
-
-void VBWidget::paint(GPainter& painter)
-{
-    painter.fill_rect(m_rect, Color::White);
-    painter.draw_rect(m_rect, Color::Black);
 }

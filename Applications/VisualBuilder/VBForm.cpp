@@ -1,23 +1,24 @@
 #include "VBForm.h"
 #include "VBWidget.h"
-#include "VBWidgetFactory.h"
 #include <LibGUI/GPainter.h>
 
 VBForm::VBForm(const String& name, GWidget* parent)
     : GWidget(parent)
+    , m_name(name)
 {
     set_fill_with_background_color(true);
     set_background_color(Color::LightGray);
+    set_greedy_for_hits(true);
 
-    auto box1 = VBWidget::create(*this);
-    box1->set_rect({ 10, 10, 61, 41 });
+    auto box1 = VBWidget::create(WidgetType::GSpinBox, *this);
+    box1->set_rect({ 10, 10, 61, 21 });
     m_widgets.append(move(box1));
 
-    auto box2 = VBWidget::create(*this);
+    auto box2 = VBWidget::create(WidgetType::GTextEditor, *this);
     box2->set_rect({ 100, 100, 161, 141 });
     m_widgets.append(move(box2));
 
-    auto button1 = VBWidgetFactory::create("GButton", *this);
+    auto button1 = VBWidget::create(WidgetType::GButton, *this);
     button1->set_rect({ 200, 50, 101, 21 });
     m_widgets.append(move(button1));
 }
@@ -36,9 +37,14 @@ void VBForm::paint_event(GPaintEvent& event)
             painter.set_pixel({ x, y }, Color::Black);
         }
     }
+}
+
+void VBForm::second_paint_event(GPaintEvent& event)
+{
+    GPainter painter(*this);
+    painter.add_clip_rect(event.rect());
 
     for (auto& widget : m_widgets) {
-        widget->paint(painter);
         if (widget->is_selected()) {
             for_each_direction([&] (Direction direction) {
                 painter.fill_rect(widget->grabber_rect(direction), Color::Black);

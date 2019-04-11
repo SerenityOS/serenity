@@ -6,6 +6,7 @@
 #include <AK/Weakable.h>
 
 class GPainter;
+class GWidget;
 class VBForm;
 
 enum class Direction { None, Left, UpLeft, Up, UpRight, Right, DownRight, Down, DownLeft };
@@ -22,27 +23,35 @@ inline void for_each_direction(Callback callback)
     callback(Direction::DownLeft);
 }
 
+enum class WidgetType {
+    None,
+    GWidget,
+    GButton,
+    GLabel,
+    GSpinBox,
+    GTextEditor,
+};
+
 class VBWidget : public Retainable<VBWidget>, public Weakable<VBWidget> {
 public:
-    static Retained<VBWidget> create(VBForm& form) { return adopt(*new VBWidget(form)); }
-    virtual ~VBWidget();
+    static Retained<VBWidget> create(WidgetType type, VBForm& form) { return adopt(*new VBWidget(type, form)); }
+    ~VBWidget();
 
     bool is_selected() const;
 
-    Rect rect() const { return m_rect; }
-    void set_rect(const Rect& rect) { m_rect = rect; }
+    Rect rect() const;
+    void set_rect(const Rect&);
 
     Rect grabber_rect(Direction) const;
     Direction grabber_at(const Point&) const;
 
-    virtual void paint(GPainter&);
-
-    virtual const char* gwidget_name() const { return "GWidget"; }
+    GWidget* gwidget() { return m_gwidget; }
 
 protected:
-    explicit VBWidget(VBForm&);
+    VBWidget(WidgetType, VBForm&);
 
 private:
+    WidgetType m_type { WidgetType::None };
     VBForm& m_form;
-    Rect m_rect;
+    GWidget* m_gwidget { nullptr };
 };

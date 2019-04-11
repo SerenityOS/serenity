@@ -115,6 +115,7 @@ void GWidget::handle_paint_event(GPaintEvent& event)
             child->event(local_event);
         }
     }
+    second_paint_event(event);
 }
 
 void GWidget::set_layout(OwnPtr<GLayout>&& layout)
@@ -207,6 +208,10 @@ void GWidget::paint_event(GPaintEvent&)
 {
 }
 
+void GWidget::second_paint_event(GPaintEvent&)
+{
+}
+
 void GWidget::show_event(GShowEvent&)
 {
 }
@@ -282,6 +287,8 @@ Rect GWidget::screen_relative_rect() const
 
 GWidget::HitTestResult GWidget::hit_test(int x, int y)
 {
+    if (is_greedy_for_hits())
+        return { this, x, y };
     for (int i = children().size() - 1; i >= 0; --i) {
         if (!children()[i]->is_widget())
             continue;
