@@ -71,6 +71,9 @@ public:
     bool is_single_line() const { return m_type == SingleLine; }
     bool is_multi_line() const { return m_type == MultiLine; }
 
+    bool is_ruler_visible() const { return m_ruler_visible; }
+    void set_ruler_visible(bool b) { m_ruler_visible = b; }
+
     Function<void()> on_cursor_change;
 
     void set_text(const String&);

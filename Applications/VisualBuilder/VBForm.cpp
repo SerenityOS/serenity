@@ -11,15 +11,15 @@ VBForm::VBForm(const String& name, GWidget* parent)
     set_greedy_for_hits(true);
 
     auto box1 = VBWidget::create(WidgetType::GSpinBox, *this);
-    box1->set_rect({ 10, 10, 61, 21 });
+    box1->set_rect({ 10, 10, 81, 25 });
     m_widgets.append(move(box1));
 
     auto box2 = VBWidget::create(WidgetType::GTextEditor, *this);
-    box2->set_rect({ 100, 100, 161, 141 });
+    box2->set_rect({ 100, 100, 161, 161 });
     m_widgets.append(move(box2));
 
     auto button1 = VBWidget::create(WidgetType::GButton, *this);
-    button1->set_rect({ 200, 50, 101, 21 });
+    button1->set_rect({ 200, 50, 81, 25 });
     m_widgets.append(move(button1));
 }
 
