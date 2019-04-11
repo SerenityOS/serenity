@@ -13,6 +13,7 @@
 #include <fcntl.h>
 
 static GWindow* make_toolbox_window();
+static GWindow* make_properties_window();
 
 int main(int argc, char** argv)
 {
@@ -51,6 +52,9 @@ int main(int argc, char** argv)
 
     auto* toolbox = make_toolbox_window();
     toolbox->show();
+
+    auto* propbox = make_properties_window();
+    propbox->show();
 
     return app.exec();
 }
@@ -123,5 +127,19 @@ GWindow* make_toolbox_window()
         if (auto* form = VBForm::current())
             form->insert_widget(WidgetType::GGroupBox);
     };
+    return window;
+}
+
+GWindow* make_properties_window()
+{
+    auto* window = new GWindow;
+    window->set_title("Properties");
+    window->set_rect(780, 200, 200, 280);
+
+    auto* widget = new GWidget;
+    widget->set_fill_with_background_color(true);
+    widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
+    window->set_main_widget(widget);
+
     return window;
 }
