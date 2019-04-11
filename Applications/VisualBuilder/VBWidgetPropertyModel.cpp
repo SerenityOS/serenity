@@ -36,11 +36,19 @@ GVariant VBWidgetPropertyModel::data(const GModelIndex& index, Role role) const
 {
     if (role == Role::Display) {
         auto& property = *m_widget.m_properties[index.row()];
-        auto value = property.value();
         switch (index.column()) {
         case Column::Name: return property.name();
         case Column::Value: return property.value();
         }
+        ASSERT_NOT_REACHED();
+    }
+    if (role == Role::ForegroundColor) {
+        auto& property = *m_widget.m_properties[index.row()];
+        switch (index.column()) {
+        case Column::Name: return Color::Black;
+        case Column::Value: return property.is_readonly() ? Color(Color::MidGray) : Color(Color::Black);
+        }
+        ASSERT_NOT_REACHED();
     }
     return { };
 }
