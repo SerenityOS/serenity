@@ -7,12 +7,15 @@
 #include <LibGUI/GTextEditor.h>
 #include <LibGUI/GProgressBar.h>
 #include <LibGUI/GCheckBox.h>
+#include <LibGUI/GScrollBar.h>
 
 static GWidget* build_gwidget(WidgetType type, GWidget* parent)
 {
     switch (type) {
     case WidgetType::GWidget:
         return new GWidget(parent);
+    case WidgetType::GScrollBar:
+        return new GScrollBar(Orientation::Vertical, parent);
     case WidgetType::GLabel: {
         auto* label = new GLabel(parent);
         label->set_text("label_1");
