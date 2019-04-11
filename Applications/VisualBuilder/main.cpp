@@ -116,5 +116,12 @@ GWindow* make_toolbox_window()
         if (auto* form = VBForm::current())
             form->insert_widget(WidgetType::GScrollBar);
     };
+    auto* groupbox_button = new GButton(widget);
+    groupbox_button->set_tooltip("GGroupBox");
+    groupbox_button->set_icon(GraphicsBitmap::load_from_file("/res/icons/vbwidgets/groupbox.png"));
+    groupbox_button->on_click = [] (GButton&) {
+        if (auto* form = VBForm::current())
+            form->insert_widget(WidgetType::GGroupBox);
+    };
     return window;
 }

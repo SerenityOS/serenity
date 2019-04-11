@@ -8,6 +8,7 @@
 #include <LibGUI/GProgressBar.h>
 #include <LibGUI/GCheckBox.h>
 #include <LibGUI/GScrollBar.h>
+#include <LibGUI/GGroupBox.h>
 
 static GWidget* build_gwidget(WidgetType type, GWidget* parent)
 {
@@ -16,6 +17,8 @@ static GWidget* build_gwidget(WidgetType type, GWidget* parent)
         return new GWidget(parent);
     case WidgetType::GScrollBar:
         return new GScrollBar(Orientation::Vertical, parent);
+    case WidgetType::GGroupBox:
+        return new GGroupBox("groupbox_1", parent);
     case WidgetType::GLabel: {
         auto* label = new GLabel(parent);
         label->set_text("label_1");
