@@ -20,7 +20,7 @@ public:
     void set_should_snap_to_grip(bool snap) { m_should_snap_to_grid = snap; }
     bool should_snap_to_grid() const { return m_should_snap_to_grid; }
 
-    void insert_widget(WidgetType);
+    void insert_widget(VBWidgetType);
 
 protected:
     virtual void paint_event(GPaintEvent&) override;

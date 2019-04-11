@@ -75,7 +75,7 @@ GWindow* make_toolbox_window()
     label_button->set_icon(GraphicsBitmap::load_from_file("/res/icons/vbwidgets/label.png"));
     label_button->on_click = [] (GButton&) {
         if (auto* form = VBForm::current())
-            form->insert_widget(WidgetType::GLabel);
+            form->insert_widget(VBWidgetType::GLabel);
     };
 
     auto* button_button = new GButton(widget);
@@ -83,49 +83,49 @@ GWindow* make_toolbox_window()
     button_button->set_icon(GraphicsBitmap::load_from_file("/res/icons/vbwidgets/button.png"));
     button_button->on_click = [] (GButton&) {
         if (auto* form = VBForm::current())
-            form->insert_widget(WidgetType::GButton);
+            form->insert_widget(VBWidgetType::GButton);
     };
     auto* spinbox_button = new GButton(widget);
     spinbox_button->set_tooltip("GSpinBox");
     spinbox_button->set_icon(GraphicsBitmap::load_from_file("/res/icons/vbwidgets/spinbox.png"));
     spinbox_button->on_click = [] (GButton&) {
         if (auto* form = VBForm::current())
-            form->insert_widget(WidgetType::GSpinBox);
+            form->insert_widget(VBWidgetType::GSpinBox);
     };
     auto* editor_button = new GButton(widget);
     editor_button->set_tooltip("GTextEditor");
     editor_button->set_icon(GraphicsBitmap::load_from_file("/res/icons/vbwidgets/textbox.png"));
     editor_button->on_click = [] (GButton&) {
         if (auto* form = VBForm::current())
-            form->insert_widget(WidgetType::GTextEditor);
+            form->insert_widget(VBWidgetType::GTextEditor);
     };
     auto* progress_bar_button = new GButton(widget);
     progress_bar_button->set_tooltip("GProgressBar");
     progress_bar_button->set_icon(GraphicsBitmap::load_from_file("/res/icons/vbwidgets/progressbar.png"));
     progress_bar_button->on_click = [] (GButton&) {
         if (auto* form = VBForm::current())
-            form->insert_widget(WidgetType::GProgressBar);
+            form->insert_widget(VBWidgetType::GProgressBar);
     };
     auto* checkbox_button = new GButton(widget);
     checkbox_button->set_tooltip("GCheckBox");
     checkbox_button->set_icon(GraphicsBitmap::load_from_file("/res/icons/vbwidgets/checkbox.png"));
     checkbox_button->on_click = [] (GButton&) {
         if (auto* form = VBForm::current())
-            form->insert_widget(WidgetType::GCheckBox);
+            form->insert_widget(VBWidgetType::GCheckBox);
     };
     auto* scrollbar_button = new GButton(widget);
     scrollbar_button->set_tooltip("GScrollBar");
     scrollbar_button->set_icon(GraphicsBitmap::load_from_file("/res/icons/vbwidgets/scrollbar.png"));
     scrollbar_button->on_click = [] (GButton&) {
         if (auto* form = VBForm::current())
-            form->insert_widget(WidgetType::GScrollBar);
+            form->insert_widget(VBWidgetType::GScrollBar);
     };
     auto* groupbox_button = new GButton(widget);
     groupbox_button->set_tooltip("GGroupBox");
     groupbox_button->set_icon(GraphicsBitmap::load_from_file("/res/icons/vbwidgets/groupbox.png"));
     groupbox_button->on_click = [] (GButton&) {
         if (auto* form = VBForm::current())
-            form->insert_widget(WidgetType::GGroupBox);
+            form->insert_widget(VBWidgetType::GGroupBox);
     };
     return window;
 }

@@ -1,68 +1,14 @@
 #include "VBWidget.h"
 #include "VBForm.h"
+#include "VBProperty.h"
+#include "VBWidgetRegistry.h"
 #include <LibGUI/GPainter.h>
-#include <LibGUI/GLabel.h>
-#include <LibGUI/GButton.h>
-#include <LibGUI/GSpinBox.h>
-#include <LibGUI/GTextEditor.h>
-#include <LibGUI/GProgressBar.h>
-#include <LibGUI/GCheckBox.h>
-#include <LibGUI/GScrollBar.h>
-#include <LibGUI/GGroupBox.h>
 
-static GWidget* build_gwidget(WidgetType type, GWidget* parent)
-{
-    switch (type) {
-    case WidgetType::GWidget:
-        return new GWidget(parent);
-    case WidgetType::GScrollBar:
-        return new GScrollBar(Orientation::Vertical, parent);
-    case WidgetType::GGroupBox:
-        return new GGroupBox("groupbox_1", parent);
-    case WidgetType::GLabel: {
-        auto* label = new GLabel(parent);
-        label->set_text("label_1");
-        return label;
-    }
-    case WidgetType::GButton: {
-        auto* button = new GButton(parent);
-        button->set_caption("button_1");
-        return button;
-    }
-    case WidgetType::GSpinBox: {
-        auto* box = new GSpinBox(parent);
-        box->set_range(0, 100);
-        box->set_value(0);
-        return box;
-    }
-    case WidgetType::GTextEditor: {
-        auto* editor = new GTextEditor(GTextEditor::Type::MultiLine, parent);
-        editor->set_ruler_visible(false);
-        return editor;
-    }
-    case WidgetType::GProgressBar: {
-        auto* bar = new GProgressBar(parent);
-        bar->set_format(GProgressBar::Format::NoText);
-        bar->set_range(0, 100);
-        bar->set_value(50);
-        return bar;
-    }
-    case WidgetType::GCheckBox: {
-        auto* box = new GCheckBox(parent);
-        box->set_caption("checkbox_1");
-        return box;
-    }
-    default:
-        ASSERT_NOT_REACHED();
-        return nullptr;
-    }
-}
-
-VBWidget::VBWidget(WidgetType type, VBForm& form)
+VBWidget::VBWidget(VBWidgetType type, VBForm& form)
     : m_type(type)
     , m_form(form)
 {
-    m_gwidget = build_gwidget(type, &form);
+    m_gwidget = VBWidgetRegistry::build_gwidget(type, &form, m_properties);
 }
 
 VBWidget::~VBWidget()
@@ -118,4 +64,11 @@ Direction VBWidget::grabber_at(const Point& position) const
             found_grabber = direction;
     });
     return found_grabber;
+}
+
+void VBWidget::for_each_property(Function<void(VBProperty&)> callback)
+{
+    for (auto& it : m_properties) {
+        callback(*it.value);
+    }
 }
