@@ -11,6 +11,7 @@ OBJS = \
     CNetworkJob.o \
     CNetworkResponse.o \
     CObject.o \
+    CTimer.o \
     CEventLoop.o \
     CEvent.o
 

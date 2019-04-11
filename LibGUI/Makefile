@@ -49,7 +49,6 @@ LIBGUI_OBJS = \
     GTreeView.o \
     GFileSystemModel.o \
     GSplitter.o \
-    GTimer.o \
     GSpinBox.o \
     GGroupBox.o \
     GWindow.o
