@@ -14,6 +14,8 @@ public:
     GVariant(const GraphicsBitmap&);
     GVariant(const GIcon&);
     GVariant(Color);
+
+    GVariant(const GVariant&);
     ~GVariant();
 
     enum class Type {
