@@ -120,40 +120,40 @@ void GScrollBar::set_value(int value)
 
 Rect GScrollBar::up_button_rect() const
 {
-    return { 0, 0, button_size(), button_size() };
+    return { 0, 0, button_width(), button_height() };
 }
 
 Rect GScrollBar::down_button_rect() const
 {
     if (orientation() == Orientation::Vertical)
-        return { 0, height() - button_size(), button_size(), button_size() };
+        return { 0, height() - button_height(), button_width(), button_height() };
     else
-        return { width() - button_size(), 0, button_size(), button_size() };
+        return { width() - button_width(), 0, button_width(), button_height() };
 }
 
 Rect GScrollBar::upper_gutter_rect() const
 {
     if (orientation() == Orientation::Vertical)
-        return { 0, button_size(), button_size(), scrubber_rect().top() - button_size() };
+        return { 0, button_height(), button_width(), scrubber_rect().top() - button_height() };
     else
-        return { button_size(), 0, scrubber_rect().x() - button_size(), button_size() };
+        return { button_width(), 0, scrubber_rect().x() - button_width(), button_height() };
 }
 
 Rect GScrollBar::lower_gutter_rect() const
 {
     auto scrubber_rect = this->scrubber_rect();
     if (orientation() == Orientation::Vertical)
-        return { 0, scrubber_rect.bottom() + 1, button_size(), height() - button_size() - scrubber_rect.bottom() - 1};
+        return { 0, scrubber_rect.bottom() + 1, button_width(), height() - button_height() - scrubber_rect.bottom() - 1};
     else
-        return { scrubber_rect.right() + 1, 0, width() - button_size() - scrubber_rect.right() - 1, button_size() };
+        return { scrubber_rect.right() + 1, 0, width() - button_width() - scrubber_rect.right() - 1, button_width() };
 }
 
 int GScrollBar::scrubbable_range_in_pixels() const
 {
     if (orientation() == Orientation::Vertical)
-        return height() - button_size() * 2 - scrubber_size();
+        return height() - button_height() * 2 - scrubber_size();
     else
-        return width() - button_size() * 2 - scrubber_size();
+        return width() - button_width() * 2 - scrubber_size();
 }
 
 bool GScrollBar::has_scrubber() const
@@ -185,9 +185,9 @@ Rect GScrollBar::scrubber_rect() const
     }
 
     if (orientation() == Orientation::Vertical)
-        return { 0, (int)x_or_y, button_size(), scrubber_size() };
+        return { 0, (int)x_or_y, button_width(), scrubber_size() };
     else
-        return { (int)x_or_y, 0, scrubber_size(), button_size() };
+        return { (int)x_or_y, 0, scrubber_size(), button_height() };
 }
 
 void GScrollBar::paint_event(GPaintEvent& event)
@@ -241,8 +241,8 @@ void GScrollBar::mousedown_event(GMouseEvent& event)
         float range_size = m_max - m_min;
         float available = scrubbable_range_in_pixels();
 
-        float x = ::max(0, event.position().x() - button_size() - button_size() / 2);
-        float y = ::max(0, event.position().y() - button_size() - button_size() / 2);
+        float x = ::max(0, event.position().x() - button_width() - button_width() / 2);
+        float y = ::max(0, event.position().y() - button_height() - button_height() / 2);
 
         float rel_x = x / available;
         float rel_y = y / available;
