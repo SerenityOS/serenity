@@ -5,6 +5,7 @@
 #include <LibGUI/GButton.h>
 #include <LibGUI/GSpinBox.h>
 #include <LibGUI/GTextEditor.h>
+#include <LibGUI/GProgressBar.h>
 
 static GWidget* build_gwidget(WidgetType type, GWidget* parent)
 {
@@ -21,6 +22,13 @@ static GWidget* build_gwidget(WidgetType type, GWidget* parent)
         auto* editor = new GTextEditor(GTextEditor::Type::MultiLine, parent);
         editor->set_ruler_visible(false);
         return editor;
+    }
+    case WidgetType::GProgressBar: {
+        auto* bar = new GProgressBar(parent);
+        bar->set_format(GProgressBar::Format::NoText);
+        bar->set_range(0, 100);
+        bar->set_value(50);
+        return bar;
     }
     default:
         ASSERT_NOT_REACHED();

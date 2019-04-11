@@ -51,19 +51,22 @@ void GProgressBar::paint_event(GPaintEvent& event)
     float range_size = m_max - m_min;
     float progress = (m_value - m_min) / range_size;
 
-    // Then we draw the progress text over the gradient.
-    // We draw it twice, once offset (1, 1) for a drop shadow look.
-    StringBuilder builder;
-    builder.append(m_caption);
-    if (m_format == Format::Percentage)
-        builder.appendf("%d%%", (int)(progress * 100));
-    else if (m_format == Format::ValueSlashMax)
-        builder.appendf("%d/%d", m_value, m_max);
+    String progress_text;
+    if (m_format != Format::NoText) {
+        // Then we draw the progress text over the gradient.
+        // We draw it twice, once offset (1, 1) for a drop shadow look.
+        StringBuilder builder;
+        builder.append(m_caption);
+        if (m_format == Format::Percentage)
+            builder.appendf("%d%%", (int)(progress * 100));
+        else if (m_format == Format::ValueSlashMax)
+            builder.appendf("%d/%d", m_value, m_max);
 
-    auto progress_text = builder.to_string();
+        progress_text = builder.to_string();
 
-    painter.draw_text(rect.translated(1, 1), progress_text, TextAlignment::Center, Color::Black);
-    painter.draw_text(rect, progress_text, TextAlignment::Center, Color::White);
+        painter.draw_text(rect.translated(1, 1), progress_text, TextAlignment::Center, Color::Black);
+        painter.draw_text(rect, progress_text, TextAlignment::Center, Color::White);
+    }
 
     // Then we carve out a hole in the remaining part of the widget.
     // We draw the text a third time, clipped and inverse, for sharp contrast.
@@ -71,5 +74,7 @@ void GProgressBar::paint_event(GPaintEvent& event)
     Rect hole_rect { (int)progress_width, 0, (int)(width() - progress_width), height() };
     painter.add_clip_rect(hole_rect);
     painter.fill_rect(hole_rect, Color::White);
-    painter.draw_text(rect.translated(0, 0), progress_text, TextAlignment::Center, Color::Black);
+
+    if (m_format != Format::NoText)
+        painter.draw_text(rect.translated(0, 0), progress_text, TextAlignment::Center, Color::Black);
 }

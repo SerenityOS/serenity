@@ -15,7 +15,7 @@ public:
     String caption() const { return m_caption; }
     void set_caption(const String& caption) { m_caption = caption; }
 
-    enum Format { Percentage, ValueSlashMax };
+    enum Format { NoText, Percentage, ValueSlashMax };
     Format format() const { return m_format; }
     void set_format(Format format) { m_format = format; }
 
