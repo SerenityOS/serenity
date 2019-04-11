@@ -82,6 +82,6 @@ GWidget* VBWidgetRegistry::build_gwidget(VBWidgetType type, GWidget* parent, Vec
         property->set_readonly(is_readonly);
         properties.append(move(property));
     };
-    add_property("ClassName", to_class_name(type), true);
+    add_property("class", to_class_name(type), true);
     return gwidget;
 }
