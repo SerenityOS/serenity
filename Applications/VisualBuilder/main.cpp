@@ -66,6 +66,14 @@ GWindow* make_toolbox_window()
     widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
     window->set_main_widget(widget);
 
+    auto* label_button = new GButton(widget);
+    label_button->set_tooltip("GLabel");
+    label_button->set_icon(GraphicsBitmap::load_from_file("/res/icons/vbwidgets/label.png"));
+    label_button->on_click = [] (GButton&) {
+        if (auto* form = VBForm::current())
+            form->insert_widget(WidgetType::GLabel);
+    };
+
     auto* button_button = new GButton(widget);
     button_button->set_tooltip("GButton");
     button_button->set_icon(GraphicsBitmap::load_from_file("/res/icons/vbwidgets/button.png"));
@@ -93,6 +101,13 @@ GWindow* make_toolbox_window()
     progress_bar_button->on_click = [] (GButton&) {
         if (auto* form = VBForm::current())
             form->insert_widget(WidgetType::GProgressBar);
+    };
+    auto* checkbox_button = new GButton(widget);
+    checkbox_button->set_tooltip("GCheckBox");
+    checkbox_button->set_icon(GraphicsBitmap::load_from_file("/res/icons/vbwidgets/checkbox.png"));
+    checkbox_button->on_click = [] (GButton&) {
+        if (auto* form = VBForm::current())
+            form->insert_widget(WidgetType::GCheckBox);
     };
     return window;
 }
