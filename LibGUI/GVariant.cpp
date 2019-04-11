@@ -2,6 +2,7 @@
 
 GVariant::GVariant()
 {
+    m_value.as_string = nullptr;
 }
 
 GVariant::~GVariant()
