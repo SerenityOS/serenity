@@ -105,6 +105,8 @@ void VBForm::mousedown_event(GMouseEvent& event)
     if (!widget) {
         if (m_selected_widget) {
             m_selected_widget = nullptr;
+            if (on_widget_selected)
+                on_widget_selected(nullptr);
             update();
         }
         return;
@@ -113,6 +115,8 @@ void VBForm::mousedown_event(GMouseEvent& event)
         m_selected_widget = widget->make_weak_ptr();
         m_transform_event_origin = event.position();
         m_transform_widget_origin_rect = widget->rect();
+        if (on_widget_selected)
+            on_widget_selected(widget);
         update();
     }
 }

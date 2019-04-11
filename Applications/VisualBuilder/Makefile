@@ -2,6 +2,7 @@ OBJS = \
     VBForm.o \
     VBWidget.o \
     VBWidgetRegistry.o \
+    VBWidgetPropertyModel.o \
     VBProperty.o \
     main.o
 

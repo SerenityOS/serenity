@@ -22,6 +22,8 @@ public:
 
     void insert_widget(VBWidgetType);
 
+    Function<void(VBWidget*)> on_widget_selected;
+
 protected:
     virtual void paint_event(GPaintEvent&) override;
     virtual void second_paint_event(GPaintEvent&) override;

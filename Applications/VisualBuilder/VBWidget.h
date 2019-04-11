@@ -12,6 +12,7 @@ class GPainter;
 class GWidget;
 class VBForm;
 class VBProperty;
+class VBWidgetPropertyModel;
 
 enum class Direction { None, Left, UpLeft, Up, UpRight, Right, DownRight, Down, DownLeft };
 template<typename Callback>
@@ -28,6 +29,7 @@ inline void for_each_direction(Callback callback)
 }
 
 class VBWidget : public Retainable<VBWidget>, public Weakable<VBWidget> {
+    friend class VBWidgetPropertyModel;
 public:
     static Retained<VBWidget> create(VBWidgetType type, VBForm& form) { return adopt(*new VBWidget(type, form)); }
     ~VBWidget();
@@ -47,6 +49,8 @@ public:
 
     void for_each_property(Function<void(VBProperty&)>);
 
+    VBWidgetPropertyModel& property_model() { return *m_property_model; }
+
 protected:
     VBWidget(VBWidgetType, VBForm&);
 
@@ -54,5 +58,6 @@ private:
     VBWidgetType m_type { VBWidgetType::None };
     VBForm& m_form;
     GWidget* m_gwidget { nullptr };
-    HashMap<String, OwnPtr<VBProperty>> m_properties;
+    Vector<OwnPtr<VBProperty>> m_properties;
+    Retained<VBWidgetPropertyModel> m_property_model;
 };
