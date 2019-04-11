@@ -9,25 +9,23 @@
 #include "VBForm.h"
 #include "VBWidget.h"
 #include "VBWidgetPropertyModel.h"
+#include "VBPropertiesWindow.h"
 #include <unistd.h>
 #include <stdio.h>
 #include <signal.h>
 #include <fcntl.h>
 
 static GWindow* make_toolbox_window();
-static GWindow* make_properties_window();
-
-GTableView* g_property_table_view;
 
 int main(int argc, char** argv)
 {
     GApplication app(argc, argv);
 
-    auto* propbox = make_properties_window();
+    auto* propbox = new VBPropertiesWindow;
 
     auto* form1 = new VBForm("Form1");
-    form1->on_widget_selected = [] (VBWidget* widget) {
-        g_property_table_view->set_model(widget ? &widget->property_model() : nullptr);
+    form1->on_widget_selected = [propbox] (VBWidget* widget) {
+        propbox->table_view().set_model(widget ? &widget->property_model() : nullptr);
     };
 
     auto menubar = make<GMenuBar>();
@@ -135,21 +133,5 @@ GWindow* make_toolbox_window()
         if (auto* form = VBForm::current())
             form->insert_widget(VBWidgetType::GGroupBox);
     };
-    return window;
-}
-
-GWindow* make_properties_window()
-{
-    auto* window = new GWindow;
-    window->set_title("Properties");
-    window->set_rect(780, 200, 200, 280);
-
-    auto* widget = new GWidget;
-    widget->set_fill_with_background_color(true);
-    widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
-    window->set_main_widget(widget);
-
-    g_property_table_view = new GTableView(widget);
-
     return window;
 }

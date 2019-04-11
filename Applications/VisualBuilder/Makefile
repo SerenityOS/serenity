@@ -4,6 +4,7 @@ OBJS = \
     VBWidgetRegistry.o \
     VBWidgetPropertyModel.o \
     VBProperty.o \
+    VBPropertiesWindow.o \
     main.o
 
 APP = VisualBuilder 
