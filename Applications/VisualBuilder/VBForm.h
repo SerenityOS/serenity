@@ -9,6 +9,8 @@ public:
     explicit VBForm(const String& name, GWidget* parent = nullptr);
     virtual ~VBForm() override;
 
+    static VBForm* current();
+
     String name() const { return m_name; }
     void set_name(const String& name) { m_name = name; }
 
@@ -17,6 +19,8 @@ public:
 
     void set_should_snap_to_grip(bool snap) { m_should_snap_to_grid = snap; }
     bool should_snap_to_grid() const { return m_should_snap_to_grid; }
+
+    void insert_widget(WidgetType);
 
 protected:
     virtual void paint_event(GPaintEvent&) override;
@@ -35,5 +39,6 @@ private:
     WeakPtr<VBWidget> m_selected_widget;
     Point m_transform_event_origin;
     Rect m_transform_widget_origin_rect;
+    Point m_next_insertion_position;
     Direction m_resize_direction { Direction::None };
 };
