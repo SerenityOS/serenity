@@ -51,10 +51,11 @@ public:
 
     VBWidgetPropertyModel& property_model() { return *m_property_model; }
 
-protected:
-    VBWidget(VBWidgetType, VBForm&);
+    void synchronize_properties();
 
 private:
+    VBWidget(VBWidgetType, VBForm&);
+
     VBWidgetType m_type { VBWidgetType::None };
     VBForm& m_form;
     GWidget* m_gwidget { nullptr };
