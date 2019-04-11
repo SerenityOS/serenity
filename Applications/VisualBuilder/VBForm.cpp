@@ -2,10 +2,17 @@
 #include "VBWidget.h"
 #include <LibGUI/GPainter.h>
 
+static VBForm* s_current;
+VBForm* VBForm::current()
+{
+    return s_current;
+}
+
 VBForm::VBForm(const String& name, GWidget* parent)
     : GWidget(parent)
     , m_name(name)
 {
+    s_current = this;
     set_fill_with_background_color(true);
     set_background_color(Color::LightGray);
     set_greedy_for_hits(true);
@@ -21,6 +28,14 @@ VBForm::VBForm(const String& name, GWidget* parent)
     auto button1 = VBWidget::create(WidgetType::GButton, *this);
     button1->set_rect({ 200, 50, 81, 25 });
     m_widgets.append(move(button1));
+}
+
+void VBForm::insert_widget(WidgetType type)
+{
+    auto widget = VBWidget::create(type, *this);
+    widget->set_rect({ m_next_insertion_position, { m_grid_size * 10 + 1, m_grid_size * 5 + 1 } });
+    m_next_insertion_position.move_by(m_grid_size, m_grid_size);
+    m_widgets.append(move(widget));
 }
 
 VBForm::~VBForm()

@@ -2,14 +2,9 @@
 #include <LibGUI/GWidget.h>
 #include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GApplication.h>
-#include <LibGUI/GStatusBar.h>
-#include <LibGUI/GToolBar.h>
 #include <LibGUI/GMenuBar.h>
-#include <LibGUI/GTextEditor.h>
 #include <LibGUI/GAction.h>
-#include <LibGUI/GFontDatabase.h>
-#include <LibCore/CFile.h>
-#include <AK/StringBuilder.h>
+#include <LibGUI/GButton.h>
 #include "VBForm.h"
 #include "VBWidget.h"
 #include <unistd.h>
@@ -68,6 +63,26 @@ GWindow* make_toolbox_window()
 
     auto* widget = new GWidget;
     widget->set_fill_with_background_color(true);
+    widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
     window->set_main_widget(widget);
+
+    auto* button_button = new GButton(widget);
+    button_button->set_caption("Button");
+    button_button->on_click = [] (GButton&) {
+        if (auto* form = VBForm::current())
+            form->insert_widget(WidgetType::GButton);
+    };
+    auto* spinbox_button = new GButton(widget);
+    spinbox_button->set_caption("SpinBox");
+    spinbox_button->on_click = [] (GButton&) {
+        if (auto* form = VBForm::current())
+            form->insert_widget(WidgetType::GSpinBox);
+    };
+    auto* editor_button = new GButton(widget);
+    editor_button->set_caption("TextEditor");
+    editor_button->on_click = [] (GButton&) {
+        if (auto* form = VBForm::current())
+            form->insert_widget(WidgetType::GTextEditor);
+    };
     return window;
 }
