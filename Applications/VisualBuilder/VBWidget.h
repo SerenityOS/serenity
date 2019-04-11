@@ -35,11 +35,14 @@ public:
     Rect grabber_rect(Direction) const;
     Direction grabber_at(const Point&) const;
 
-    void paint(GPainter&);
+    virtual void paint(GPainter&);
+
+    virtual const char* gwidget_name() const { return "GWidget"; }
+
+protected:
+    explicit VBWidget(VBForm&);
 
 private:
-    VBWidget(VBForm&);
-
     VBForm& m_form;
     Rect m_rect;
 };

@@ -56,10 +56,4 @@ void VBWidget::paint(GPainter& painter)
 {
     painter.fill_rect(m_rect, Color::White);
     painter.draw_rect(m_rect, Color::Black);
-
-    if (is_selected()) {
-        for_each_direction([&] (Direction direction) {
-            painter.fill_rect(grabber_rect(direction), Color::Black);
-        });
-    }
 }
