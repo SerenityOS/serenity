@@ -1,6 +1,8 @@
 OBJS = \
     VBForm.o \
     VBWidget.o \
+    VBWidgetRegistry.o \
+    VBProperty.o \
     main.o
 
 APP = VisualBuilder 

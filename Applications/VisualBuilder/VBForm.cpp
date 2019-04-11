@@ -17,24 +17,24 @@ VBForm::VBForm(const String& name, GWidget* parent)
     set_background_color(Color::LightGray);
     set_greedy_for_hits(true);
 
-    auto box1 = VBWidget::create(WidgetType::GSpinBox, *this);
+    auto box1 = VBWidget::create(VBWidgetType::GSpinBox, *this);
     box1->set_rect({ 10, 10, 81, 21 });
     m_widgets.append(move(box1));
 
-    auto box2 = VBWidget::create(WidgetType::GTextEditor, *this);
+    auto box2 = VBWidget::create(VBWidgetType::GTextEditor, *this);
     box2->set_rect({ 100, 100, 161, 161 });
     m_widgets.append(move(box2));
 
-    auto button1 = VBWidget::create(WidgetType::GButton, *this);
+    auto button1 = VBWidget::create(VBWidgetType::GButton, *this);
     button1->set_rect({ 200, 50, 81, 21 });
     m_widgets.append(move(button1));
 
-    auto groupbox1 = VBWidget::create(WidgetType::GGroupBox, *this);
+    auto groupbox1 = VBWidget::create(VBWidgetType::GGroupBox, *this);
     groupbox1->set_rect({ 300, 150, 161, 51 });
     m_widgets.append(move(groupbox1));
 }
 
-void VBForm::insert_widget(WidgetType type)
+void VBForm::insert_widget(VBWidgetType type)
 {
     auto widget = VBWidget::create(type, *this);
     widget->set_rect({ m_next_insertion_position, { m_grid_size * 10 + 1, m_grid_size * 5 + 1 } });

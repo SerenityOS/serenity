@@ -4,10 +4,14 @@
 #include <AK/Retainable.h>
 #include <AK/Retained.h>
 #include <AK/Weakable.h>
+#include <AK/HashMap.h>
+#include <AK/Function.h>
+#include "VBWidgetType.h"
 
 class GPainter;
 class GWidget;
 class VBForm;
+class VBProperty;
 
 enum class Direction { None, Left, UpLeft, Up, UpRight, Right, DownRight, Down, DownLeft };
 template<typename Callback>
@@ -23,22 +27,9 @@ inline void for_each_direction(Callback callback)
     callback(Direction::DownLeft);
 }
 
-enum class WidgetType {
-    None,
-    GWidget,
-    GButton,
-    GLabel,
-    GSpinBox,
-    GTextEditor,
-    GProgressBar,
-    GCheckBox,
-    GScrollBar,
-    GGroupBox,
-};
-
 class VBWidget : public Retainable<VBWidget>, public Weakable<VBWidget> {
 public:
-    static Retained<VBWidget> create(WidgetType type, VBForm& form) { return adopt(*new VBWidget(type, form)); }
+    static Retained<VBWidget> create(VBWidgetType type, VBForm& form) { return adopt(*new VBWidget(type, form)); }
     ~VBWidget();
 
     bool is_selected() const;
@@ -51,11 +42,17 @@ public:
 
     GWidget* gwidget() { return m_gwidget; }
 
+    const VBProperty* property_by_name(const String&) const;
+    VBProperty* property_by_name(const String&);
+
+    void for_each_property(Function<void(VBProperty&)>);
+
 protected:
-    VBWidget(WidgetType, VBForm&);
+    VBWidget(VBWidgetType, VBForm&);
 
 private:
-    WidgetType m_type { WidgetType::None };
+    VBWidgetType m_type { VBWidgetType::None };
     VBForm& m_form;
     GWidget* m_gwidget { nullptr };
+    HashMap<String, OwnPtr<VBProperty>> m_properties;
 };
