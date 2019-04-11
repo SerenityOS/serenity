@@ -109,5 +109,12 @@ GWindow* make_toolbox_window()
         if (auto* form = VBForm::current())
             form->insert_widget(WidgetType::GCheckBox);
     };
+    auto* scrollbar_button = new GButton(widget);
+    scrollbar_button->set_tooltip("GScrollBar");
+    scrollbar_button->set_icon(GraphicsBitmap::load_from_file("/res/icons/vbwidgets/scrollbar.png"));
+    scrollbar_button->on_click = [] (GButton&) {
+        if (auto* form = VBForm::current())
+            form->insert_widget(WidgetType::GScrollBar);
+    };
     return window;
 }
