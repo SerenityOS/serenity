@@ -10,6 +10,7 @@ public:
 
     String name() const { return m_name; }
     const GVariant& value() const { return m_value; }
+    void set_value(const GVariant& value) { m_value = value; }
 
     bool is_readonly() const { return m_readonly; }
     void set_readonly(bool b) { m_readonly = b; }

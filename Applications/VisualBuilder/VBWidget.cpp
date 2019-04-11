@@ -24,7 +24,10 @@ Rect VBWidget::rect() const
 
 void VBWidget::set_rect(const Rect& rect)
 {
+    if (rect == m_gwidget->relative_rect())
+        return;
     m_gwidget->set_relative_rect(rect);
+    synchronize_properties();
 }
 
 bool VBWidget::is_selected() const
@@ -73,4 +76,23 @@ void VBWidget::for_each_property(Function<void(VBProperty&)> callback)
     for (auto& it : m_properties) {
         callback(*it);
     }
+}
+
+void VBWidget::synchronize_properties()
+{
+    property_by_name("width")->set_value(m_gwidget->width());
+    property_by_name("height")->set_value(m_gwidget->height());
+    property_by_name("x")->set_value(m_gwidget->x());
+    property_by_name("y")->set_value(m_gwidget->y());
+
+    m_property_model->update();
+}
+
+VBProperty* VBWidget::property_by_name(const String& name)
+{
+    for (auto& property : m_properties) {
+        if (property->name() == name)
+            return property.ptr();
+    }
+    return nullptr;
 }

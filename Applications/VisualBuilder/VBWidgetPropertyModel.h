@@ -21,7 +21,7 @@ public:
     virtual String column_name(int column) const override;
     virtual ColumnMetadata column_metadata(int column) const override;
     virtual GVariant data(const GModelIndex&, Role = Role::Display) const override;
-    virtual void update() override { }
+    virtual void update() override { did_update(); }
 
 private:
     explicit VBWidgetPropertyModel(VBWidget&);
