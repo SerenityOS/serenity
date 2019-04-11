@@ -65,6 +65,9 @@ Rect GTableView::header_rect(int column_index) const
 
 void GTableView::mousedown_event(GMouseEvent& event)
 {
+    if (!model())
+        return;
+
     if (event.y() < header_height()) {
         auto adjusted_position = event.position().translated(horizontal_scrollbar().value(), 0);
         for (int i = 0; i < model()->column_count(); ++i) {
@@ -99,6 +102,9 @@ void GTableView::mousedown_event(GMouseEvent& event)
 void GTableView::paint_event(GPaintEvent& event)
 {
     GFrame::paint_event(event);
+
+    if (!model())
+        return;
 
     GPainter painter(*this);
     painter.add_clip_rect(frame_inner_rect());
@@ -213,6 +219,8 @@ void GTableView::paint_headers(Painter& painter)
 
 int GTableView::item_count() const
 {
+    if (!model())
+        return 0;
     return model()->row_count();
 }
 
