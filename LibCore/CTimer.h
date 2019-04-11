@@ -3,10 +3,10 @@
 #include <LibCore/CObject.h>
 #include <AK/Function.h>
 
-class GTimer final : public CObject {
+class CTimer final : public CObject {
 public:
-    explicit GTimer(CObject* parent = nullptr);
-    virtual ~GTimer() override;
+    explicit CTimer(CObject* parent = nullptr);
+    virtual ~CTimer() override;
 
     void start();
     void start(int interval);
@@ -21,7 +21,7 @@ public:
 
     Function<void()> on_timeout;
 
-    virtual const char* class_name() const override { return "GTimer"; }
+    virtual const char* class_name() const override { return "CTimer"; }
 
 private:
     virtual void timer_event(CTimerEvent&) override;

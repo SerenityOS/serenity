@@ -1,20 +1,20 @@
-#include <LibGUI/GTimer.h>
+#include <LibCore/CTimer.h>
 
-GTimer::GTimer(CObject* parent)
+CTimer::CTimer(CObject* parent)
     : CObject(parent)
 {
 }
 
-GTimer::~GTimer()
+CTimer::~CTimer()
 {
 }
 
-void GTimer::start()
+void CTimer::start()
 {
     start(m_interval);
 }
 
-void GTimer::start(int interval)
+void CTimer::start(int interval)
 {
     if (m_active)
         return;
@@ -22,7 +22,7 @@ void GTimer::start(int interval)
     m_active = true;
 }
 
-void GTimer::stop()
+void CTimer::stop()
 {
     if (!m_active)
         return;
@@ -30,7 +30,7 @@ void GTimer::stop()
     m_active = false;
 }
 
-void GTimer::timer_event(CTimerEvent&)
+void CTimer::timer_event(CTimerEvent&)
 {
     if (m_single_shot)
         stop();

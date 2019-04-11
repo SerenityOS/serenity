@@ -7,7 +7,7 @@
 #include <SharedGraphics/Rect.h>
 #include <LibGUI/GWidget.h>
 #include <LibCore/CNotifier.h>
-#include <LibGUI/GTimer.h>
+#include <LibCore/CTimer.h>
 
 class Font;
 
@@ -160,5 +160,5 @@ private:
 
     int m_glyph_width { 0 };
 
-    GTimer m_cursor_blink_timer;
+    CTimer m_cursor_blink_timer;
 };
