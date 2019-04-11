@@ -18,7 +18,7 @@ VBForm::VBForm(const String& name, GWidget* parent)
     set_greedy_for_hits(true);
 
     auto box1 = VBWidget::create(WidgetType::GSpinBox, *this);
-    box1->set_rect({ 10, 10, 81, 25 });
+    box1->set_rect({ 10, 10, 81, 21 });
     m_widgets.append(move(box1));
 
     auto box2 = VBWidget::create(WidgetType::GTextEditor, *this);
@@ -26,8 +26,12 @@ VBForm::VBForm(const String& name, GWidget* parent)
     m_widgets.append(move(box2));
 
     auto button1 = VBWidget::create(WidgetType::GButton, *this);
-    button1->set_rect({ 200, 50, 81, 25 });
+    button1->set_rect({ 200, 50, 81, 21 });
     m_widgets.append(move(button1));
+
+    auto groupbox1 = VBWidget::create(WidgetType::GGroupBox, *this);
+    groupbox1->set_rect({ 300, 150, 161, 51 });
+    m_widgets.append(move(groupbox1));
 }
 
 void VBForm::insert_widget(WidgetType type)

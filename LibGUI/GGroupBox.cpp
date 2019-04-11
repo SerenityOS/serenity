@@ -23,7 +23,7 @@ void GGroupBox::paint_event(GPaintEvent& event)
         0, font().glyph_height() / 2,
         width(), height() - font().glyph_height() / 2
     };
-    StylePainter::paint_frame(painter, frame_rect, FrameShape::Panel, FrameShadow::Sunken, 1);
+    StylePainter::paint_frame(painter, frame_rect, FrameShape::Box, FrameShadow::Sunken, 2);
 
     Rect text_rect { 4, 0, font().width(m_name) + 6, font().glyph_height() };
     painter.fill_rect(text_rect, background_color());

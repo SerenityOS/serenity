@@ -153,4 +153,13 @@ void StylePainter::paint_frame(Painter& painter, const Rect& rect, FrameShape sh
         painter.draw_line(inner_container_frame_rect.top_left().translated(0, 1), inner_container_frame_rect.bottom_left().translated(0, -1), top_left_color);
         painter.draw_line(inner_container_frame_rect.top_right(), inner_container_frame_rect.bottom_right().translated(0, -1), bottom_right_color);
     }
+
+    if (shape == FrameShape::Box && thickness >= 2) {
+        swap(top_left_color, bottom_right_color);
+        Rect inner_rect = rect.shrunken(2, 2);
+        painter.draw_line(inner_rect.top_left(), inner_rect.top_right(), top_left_color);
+        painter.draw_line(inner_rect.bottom_left(), inner_rect.bottom_right(), bottom_right_color);
+        painter.draw_line(inner_rect.top_left().translated(0, 1), inner_rect.bottom_left().translated(0, -1), top_left_color);
+        painter.draw_line(inner_rect.top_right(), inner_rect.bottom_right().translated(0, -1), bottom_right_color);
+    }
 }

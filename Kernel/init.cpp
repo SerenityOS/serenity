@@ -26,12 +26,14 @@
 #include <Kernel/Net/E1000NetworkAdapter.h>
 #include <Kernel/Net/NetworkTask.h>
 
-#define SPAWN_LAUNCHER
+//#define SPAWN_TERMINAL
+//#define SPAWN_LAUNCHER
 //#define SPAWN_GUITEST2
 //#define SPAWN_FILE_MANAGER
 //#define SPAWN_PROCESS_MANAGER
 //#define SPAWN_TEXT_EDITOR
 //#define SPAWN_FONTEDITOR
+#define SPAWN_VISUAL_BUILDER
 //#define SPAWN_MULTIPLE_SHELLS
 //#define STRESS_TEST_SPAWNING
 
@@ -101,12 +103,17 @@ VFS* vfs;
     window_server_process->set_priority(Process::HighPriority);
     Process::create_user_process("/bin/Taskbar", (uid_t)100, (gid_t)100, (pid_t)0, error);
     //Process::create_user_process("/bin/sh", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, move(environment), tty0);
+#ifdef SPAWN_TERMINAL
     Process::create_user_process("/bin/Terminal", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, { }, tty0);
+#endif
 #ifdef SPAWN_GUITEST2
     Process::create_user_process("/bin/guitest2", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, { }, tty0);
 #endif
 #ifdef SPAWN_LAUNCHER
     Process::create_user_process("/bin/Launcher", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, { }, tty0);
+#endif
+#ifdef SPAWN_VISUAL_BUILDER
+    Process::create_user_process("/bin/VisualBuilder", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, { }, tty0);
 #endif
 #ifdef SPAWN_FILE_MANAGER
     Process::create_user_process("/bin/FileManager", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, { }, tty0);
