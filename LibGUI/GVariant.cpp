@@ -67,6 +67,24 @@ GVariant::GVariant(Color color)
     m_value.as_color = color.value();
 }
 
+GVariant::GVariant(const Point& point)
+    : m_type(Type::Point)
+{
+    m_value.as_point = { point.x(), point.y() };
+}
+
+GVariant::GVariant(const Size& size)
+    : m_type(Type::Size)
+{
+    m_value.as_size = { size.width(), size.height() };
+}
+
+GVariant::GVariant(const Rect& rect)
+    : m_type(Type::Rect)
+{
+    m_value.as_rect = (const RawRect&)rect;
+}
+
 GVariant::GVariant(const GVariant& other)
     : m_type(other.m_type)
 {
@@ -95,6 +113,15 @@ GVariant::GVariant(const GVariant& other)
     case Type::Color:
         m_value.as_color = other.m_value.as_color;
         break;
+    case Type::Point:
+        m_value.as_point = other.m_value.as_point;
+        break;
+    case Type::Size:
+        m_value.as_size = other.m_value.as_size;
+        break;
+    case Type::Rect:
+        m_value.as_rect = other.m_value.as_rect;
+        break;
     case Type::Invalid:
         break;
     }
@@ -119,6 +146,12 @@ bool GVariant::operator==(const GVariant& other) const
         return m_value.as_icon == other.m_value.as_icon;
     case Type::Color:
         return m_value.as_color == other.m_value.as_color;
+    case Type::Point:
+        return as_point() == other.as_point();
+    case Type::Size:
+        return as_size() == other.as_size();
+    case Type::Rect:
+        return as_rect() == other.as_rect();
     case Type::Invalid:
         break;
     }
@@ -146,6 +179,11 @@ bool GVariant::operator<(const GVariant& other) const
         return m_value.as_icon < other.m_value.as_icon;
     case Type::Color:
         return m_value.as_color < other.m_value.as_color;
+    case Type::Point:
+    case Type::Size:
+    case Type::Rect:
+        // FIXME: Figure out how to compare these.
+        ASSERT_NOT_REACHED();
     case Type::Invalid:
         break;
     }
@@ -169,6 +207,12 @@ String GVariant::to_string() const
         return "[GIcon]";
     case Type::Color:
         return as_color().to_string();
+    case Type::Point:
+        return as_point().to_string();
+    case Type::Size:
+        return as_size().to_string();
+    case Type::Rect:
+        return as_rect().to_string();
     case Type::Invalid:
         break;
     }

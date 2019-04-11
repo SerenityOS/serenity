@@ -13,6 +13,9 @@ public:
     GVariant(const String&);
     GVariant(const GraphicsBitmap&);
     GVariant(const GIcon&);
+    GVariant(const Point&);
+    GVariant(const Size&);
+    GVariant(const Rect&);
     GVariant(Color);
 
     GVariant(const GVariant&);
@@ -27,6 +30,9 @@ public:
         Bitmap,
         Color,
         Icon,
+        Point,
+        Size,
+        Rect,
     };
 
     bool is_valid() const { return m_type != Type::Invalid; }
@@ -37,6 +43,9 @@ public:
     bool is_bitmap() const { return m_type == Type::Bitmap; }
     bool is_color() const { return m_type == Type::Color; }
     bool is_icon() const { return m_type == Type::Icon; }
+    bool is_point() const { return m_type == Type::Point; }
+    bool is_size() const { return m_type == Type::Size; }
+    bool is_rect() const { return m_type == Type::Rect; }
     Type type() const { return m_type; }
 
     bool as_bool() const
@@ -55,6 +64,21 @@ public:
     {
         ASSERT(type() == Type::Float);
         return m_value.as_float;
+    }
+
+    Point as_point() const
+    {
+        return { m_value.as_point.x, m_value.as_point.y };
+    }
+
+    Size as_size() const
+    {
+        return { m_value.as_size.width, m_value.as_size.height };
+    }
+
+    Rect as_rect() const
+    {
+        return { as_point(), as_size() };
     }
 
     String as_string() const
@@ -94,6 +118,21 @@ public:
     bool operator<(const GVariant&) const;
 
 private:
+    struct RawPoint {
+        int x;
+        int y;
+    };
+
+    struct RawSize {
+        int width;
+        int height;
+    };
+
+    struct RawRect {
+        RawPoint location;
+        RawSize size;
+    };
+
     union {
         StringImpl* as_string;
         GraphicsBitmap* as_bitmap;
@@ -102,6 +141,9 @@ private:
         int as_int;
         float as_float;
         RGBA32 as_color;
+        RawPoint as_point;
+        RawSize as_size;
+        RawRect as_rect;
     } m_value; 
 
     Type m_type { Type::Invalid };
