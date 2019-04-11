@@ -29,7 +29,7 @@ String VBWidgetPropertyModel::column_name(int column) const
 GModel::ColumnMetadata VBWidgetPropertyModel::column_metadata(int column) const
 {
     UNUSED_PARAM(column);
-    return { 100, TextAlignment::CenterLeft };
+    return { 80, TextAlignment::CenterLeft };
 }
 
 GVariant VBWidgetPropertyModel::data(const GModelIndex& index, Role role) const
