@@ -42,6 +42,16 @@ Rect VBWidget::grabber_rect(Direction direction) const
     }
 }
 
+Direction VBWidget::grabber_at(const Point& position) const
+{
+    Direction found_grabber = Direction::None;
+    for_each_direction([&] (Direction direction) {
+        if (grabber_rect(direction).contains(position))
+            found_grabber = direction;
+    });
+    return found_grabber;
+}
+
 void VBWidget::paint(GPainter& painter)
 {
     painter.fill_rect(m_rect, Color::White);
