@@ -6,18 +6,29 @@
 #include <LibGUI/GSpinBox.h>
 #include <LibGUI/GTextEditor.h>
 #include <LibGUI/GProgressBar.h>
+#include <LibGUI/GCheckBox.h>
 
 static GWidget* build_gwidget(WidgetType type, GWidget* parent)
 {
     switch (type) {
     case WidgetType::GWidget:
         return new GWidget(parent);
-    case WidgetType::GLabel:
-        return new GLabel(parent);
-    case WidgetType::GButton:
-        return new GButton(parent);
-    case WidgetType::GSpinBox:
-        return new GSpinBox(parent);
+    case WidgetType::GLabel: {
+        auto* label = new GLabel(parent);
+        label->set_text("label_1");
+        return label;
+    }
+    case WidgetType::GButton: {
+        auto* button = new GButton(parent);
+        button->set_caption("button_1");
+        return button;
+    }
+    case WidgetType::GSpinBox: {
+        auto* box = new GSpinBox(parent);
+        box->set_range(0, 100);
+        box->set_value(0);
+        return box;
+    }
     case WidgetType::GTextEditor: {
         auto* editor = new GTextEditor(GTextEditor::Type::MultiLine, parent);
         editor->set_ruler_visible(false);
@@ -29,6 +40,11 @@ static GWidget* build_gwidget(WidgetType type, GWidget* parent)
         bar->set_range(0, 100);
         bar->set_value(50);
         return bar;
+    }
+    case WidgetType::GCheckBox: {
+        auto* box = new GCheckBox(parent);
+        box->set_caption("checkbox_1");
+        return box;
     }
     default:
         ASSERT_NOT_REACHED();

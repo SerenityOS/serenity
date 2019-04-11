@@ -31,6 +31,7 @@ enum class WidgetType {
     GSpinBox,
     GTextEditor,
     GProgressBar,
+    GCheckBox,
 };
 
 class VBWidget : public Retainable<VBWidget>, public Weakable<VBWidget> {
