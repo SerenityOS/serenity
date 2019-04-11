@@ -1,6 +1,6 @@
 #include <LibCore/CObject.h>
 #include <LibCore/CEvent.h>
-#include <LibGUI/GEventLoop.h>
+#include <LibCore/CEventLoop.h>
 #include <AK/Assertions.h>
 #include <stdio.h>
 
@@ -24,15 +24,15 @@ CObject::~CObject()
 void CObject::event(CEvent& event)
 {
     switch (event.type()) {
-    case GEvent::Timer:
+    case CEvent::Timer:
         return timer_event(static_cast<CTimerEvent&>(event));
-    case GEvent::DeferredDestroy:
+    case CEvent::DeferredDestroy:
         delete this;
         break;
-    case GEvent::ChildAdded:
-    case GEvent::ChildRemoved:
+    case CEvent::ChildAdded:
+    case CEvent::ChildRemoved:
         return child_event(static_cast<CChildEvent&>(event));
-    case GEvent::Invalid:
+    case CEvent::Invalid:
         ASSERT_NOT_REACHED();
         break;
     default:
@@ -43,7 +43,7 @@ void CObject::event(CEvent& event)
 void CObject::add_child(CObject& object)
 {
     m_children.append(&object);
-    GEventLoop::current().post_event(*this, make<CChildEvent>(GEvent::ChildAdded, object));
+    CEventLoop::current().post_event(*this, make<CChildEvent>(CEvent::ChildAdded, object));
 }
 
 void CObject::remove_child(CObject& object)
@@ -51,7 +51,7 @@ void CObject::remove_child(CObject& object)
     for (ssize_t i = 0; i < m_children.size(); ++i) {
         if (m_children[i] == &object) {
             m_children.remove(i);
-            GEventLoop::current().post_event(*this, make<CChildEvent>(GEvent::ChildRemoved, object));
+            CEventLoop::current().post_event(*this, make<CChildEvent>(CEvent::ChildRemoved, object));
             return;
         }
     }
@@ -72,21 +72,21 @@ void CObject::start_timer(int ms)
         ASSERT_NOT_REACHED();
     }
 
-    m_timer_id = GEventLoop::register_timer(*this, ms, true);
+    m_timer_id = CEventLoop::register_timer(*this, ms, true);
 }
 
 void CObject::stop_timer()
 {
     if (!m_timer_id)
         return;
-    bool success = GEventLoop::unregister_timer(m_timer_id);
+    bool success = CEventLoop::unregister_timer(m_timer_id);
     ASSERT(success);
     m_timer_id = 0;
 }
 
 void CObject::delete_later()
 {
-    GEventLoop::current().post_event(*this, make<CEvent>(CEvent::DeferredDestroy));
+    CEventLoop::current().post_event(*this, make<CEvent>(CEvent::DeferredDestroy));
 }
 
 void CObject::dump_tree(int indent)
@@ -103,5 +103,5 @@ void CObject::dump_tree(int indent)
 
 void CObject::deferred_invoke(Function<void(CObject&)> invokee)
 {
-    GEventLoop::current().post_event(*this, make<CDeferredInvocationEvent>(move(invokee)));
+    CEventLoop::current().post_event(*this, make<CDeferredInvocationEvent>(move(invokee)));
 }
