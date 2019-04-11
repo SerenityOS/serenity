@@ -16,5 +16,5 @@ public:
             callback((VBWidgetType)i);
     }
 
-    static GWidget* build_gwidget(VBWidgetType, GWidget* parent, HashMap<String, OwnPtr<VBProperty>>&);
+    static GWidget* build_gwidget(VBWidgetType, GWidget* parent, Vector<OwnPtr<VBProperty>>&);
 };

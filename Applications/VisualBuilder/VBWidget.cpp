@@ -2,11 +2,13 @@
 #include "VBForm.h"
 #include "VBProperty.h"
 #include "VBWidgetRegistry.h"
+#include "VBWidgetPropertyModel.h"
 #include <LibGUI/GPainter.h>
 
 VBWidget::VBWidget(VBWidgetType type, VBForm& form)
     : m_type(type)
     , m_form(form)
+    , m_property_model(VBWidgetPropertyModel::create(*this))
 {
     m_gwidget = VBWidgetRegistry::build_gwidget(type, &form, m_properties);
 }
@@ -69,6 +71,6 @@ Direction VBWidget::grabber_at(const Point& position) const
 void VBWidget::for_each_property(Function<void(VBProperty&)> callback)
 {
     for (auto& it : m_properties) {
-        callback(*it.value);
+        callback(*it);
     }
 }

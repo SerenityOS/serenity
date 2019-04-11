@@ -9,6 +9,7 @@ public:
     ~VBProperty();
 
     String name() const { return m_name; }
+    const GVariant& value() const { return m_value; }
 
     bool is_readonly() const { return m_readonly; }
     void set_readonly(bool b) { m_readonly = b; }

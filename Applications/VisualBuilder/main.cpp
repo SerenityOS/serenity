@@ -5,8 +5,10 @@
 #include <LibGUI/GMenuBar.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GButton.h>
+#include <LibGUI/GTableView.h>
 #include "VBForm.h"
 #include "VBWidget.h"
+#include "VBWidgetPropertyModel.h"
 #include <unistd.h>
 #include <stdio.h>
 #include <signal.h>
@@ -15,11 +17,18 @@
 static GWindow* make_toolbox_window();
 static GWindow* make_properties_window();
 
+GTableView* g_property_table_view;
+
 int main(int argc, char** argv)
 {
     GApplication app(argc, argv);
 
+    auto* propbox = make_properties_window();
+
     auto* form1 = new VBForm("Form1");
+    form1->on_widget_selected = [] (VBWidget* widget) {
+        g_property_table_view->set_model(widget ? &widget->property_model() : nullptr);
+    };
 
     auto menubar = make<GMenuBar>();
     auto app_menu = make<GMenu>("Visual Builder");
@@ -53,7 +62,6 @@ int main(int argc, char** argv)
     auto* toolbox = make_toolbox_window();
     toolbox->show();
 
-    auto* propbox = make_properties_window();
     propbox->show();
 
     return app.exec();
@@ -140,6 +148,8 @@ GWindow* make_properties_window()
     widget->set_fill_with_background_color(true);
     widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
     window->set_main_widget(widget);
+
+    g_property_table_view = new GTableView(widget);
 
     return window;
 }
