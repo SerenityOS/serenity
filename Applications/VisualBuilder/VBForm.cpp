@@ -1,5 +1,6 @@
 #include "VBForm.h"
 #include "VBWidget.h"
+#include "VBWidgetFactory.h"
 #include <LibGUI/GPainter.h>
 
 VBForm::VBForm(const String& name, GWidget* parent)
@@ -15,6 +16,10 @@ VBForm::VBForm(const String& name, GWidget* parent)
     auto box2 = VBWidget::create(*this);
     box2->set_rect({ 100, 100, 161, 141 });
     m_widgets.append(move(box2));
+
+    auto button1 = VBWidgetFactory::create("GButton", *this);
+    button1->set_rect({ 200, 50, 101, 21 });
+    m_widgets.append(move(button1));
 }
 
 VBForm::~VBForm()
@@ -34,6 +39,11 @@ void VBForm::paint_event(GPaintEvent& event)
 
     for (auto& widget : m_widgets) {
         widget->paint(painter);
+        if (widget->is_selected()) {
+            for_each_direction([&] (Direction direction) {
+                painter.fill_rect(widget->grabber_rect(direction), Color::Black);
+            });
+        }
     }
 }
 
@@ -151,8 +161,8 @@ void VBForm::mousemove_event(GMouseEvent& event)
 
         new_rect.set_x(new_rect.x() - (new_rect.x() % m_grid_size));
         new_rect.set_y(new_rect.y() - (new_rect.y() % m_grid_size));
-        new_rect.set_width(new_rect.width() - (new_rect.width() % m_grid_size));
-        new_rect.set_height(new_rect.height() - (new_rect.height() % m_grid_size));
+        new_rect.set_width(new_rect.width() - (new_rect.width() % m_grid_size) + 1);
+        new_rect.set_height(new_rect.height() - (new_rect.height() % m_grid_size) + 1);
 
         m_selected_widget->set_rect(new_rect);
         update();
