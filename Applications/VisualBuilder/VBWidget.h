@@ -33,6 +33,7 @@ public:
     void set_rect(const Rect& rect) { m_rect = rect; }
 
     Rect grabber_rect(Direction) const;
+    Direction grabber_at(const Point&) const;
 
     void paint(GPainter&);
 

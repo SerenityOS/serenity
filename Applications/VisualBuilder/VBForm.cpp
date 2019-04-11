@@ -52,8 +52,20 @@ VBWidget* VBForm::widget_at(const Point& position)
     return nullptr;
 }
 
+void VBForm::grabber_mousedown_event(GMouseEvent& event, VBWidget& widget, Direction grabber)
+{
+    m_transform_event_origin = event.position();
+    m_transform_widget_origin_rect = widget.rect();
+    m_resize_direction = grabber;
+}
+
 void VBForm::mousedown_event(GMouseEvent& event)
 {
+    if (m_selected_widget && m_resize_direction == Direction::None) {
+        auto grabber = m_selected_widget->grabber_at(event.position());
+        if (grabber != Direction::None)
+            return grabber_mousedown_event(event, *m_selected_widget, grabber);
+    }
     auto* widget = widget_at(event.position());
     if (!widget) {
         if (m_selected_widget) {
@@ -73,10 +85,75 @@ void VBForm::mousedown_event(GMouseEvent& event)
 void VBForm::mousemove_event(GMouseEvent& event)
 {
     if (event.buttons() & GMouseButton::Left && m_selected_widget) {
-        auto delta = event.position() - m_transform_event_origin;
-        auto new_rect = m_transform_widget_origin_rect.translated(delta);
+        if (m_resize_direction == Direction::None) {
+            auto delta = event.position() - m_transform_event_origin;
+            auto new_rect = m_transform_widget_origin_rect.translated(delta);
+            new_rect.set_x(new_rect.x() - (new_rect.x() % m_grid_size));
+            new_rect.set_y(new_rect.y() - (new_rect.y() % m_grid_size));
+            m_selected_widget->set_rect(new_rect);
+            update();
+            return;
+        }
+        int diff_x = event.x() - m_transform_event_origin.x();
+        int diff_y = event.y() - m_transform_event_origin.y();
+
+        int change_x = 0;
+        int change_y = 0;
+        int change_w = 0;
+        int change_h = 0;
+
+        switch (m_resize_direction) {
+        case Direction::DownRight:
+            change_w = diff_x;
+            change_h = diff_y;
+            break;
+        case Direction::Right:
+            change_w = diff_x;
+            break;
+        case Direction::UpRight:
+            change_w = diff_x;
+            change_y = diff_y;
+            change_h = -diff_y;
+            break;
+        case Direction::Up:
+            change_y = diff_y;
+            change_h = -diff_y;
+            break;
+        case Direction::UpLeft:
+            change_x = diff_x;
+            change_w = -diff_x;
+            change_y = diff_y;
+            change_h = -diff_y;
+            break;
+        case Direction::Left:
+            change_x = diff_x;
+            change_w = -diff_x;
+            break;
+        case Direction::DownLeft:
+            change_x = diff_x;
+            change_w = -diff_x;
+            change_h = diff_y;
+            break;
+        case Direction::Down:
+            change_h = diff_y;
+            break;
+        default:
+            ASSERT_NOT_REACHED();
+        }
+
+        auto new_rect = m_transform_widget_origin_rect;
+        Size minimum_size { 5, 5 };
+
+        new_rect.set_x(new_rect.x() + change_x);
+        new_rect.set_y(new_rect.y() + change_y);
+        new_rect.set_width(max(minimum_size.width(), new_rect.width() + change_w));
+        new_rect.set_height(max(minimum_size.height(), new_rect.height() + change_h));
+
         new_rect.set_x(new_rect.x() - (new_rect.x() % m_grid_size));
         new_rect.set_y(new_rect.y() - (new_rect.y() % m_grid_size));
+        new_rect.set_width(new_rect.width() - (new_rect.width() % m_grid_size));
+        new_rect.set_height(new_rect.height() - (new_rect.height() % m_grid_size));
+
         m_selected_widget->set_rect(new_rect);
         update();
     }
@@ -87,5 +164,6 @@ void VBForm::mouseup_event(GMouseEvent& event)
     if (event.button() == GMouseButton::Left) {
         m_transform_event_origin = { };
         m_transform_widget_origin_rect = { };
+        m_resize_direction = Direction::None;
     }
 }

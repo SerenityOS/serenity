@@ -22,6 +22,8 @@ protected:
     virtual void mouseup_event(GMouseEvent&) override;
 
 private:
+    void grabber_mousedown_event(GMouseEvent&, VBWidget&, Direction grabber);
+
     String m_name;
     int m_grid_size { 5 };
     bool m_should_snap_to_grid { true };
@@ -29,4 +31,5 @@ private:
     WeakPtr<VBWidget> m_selected_widget;
     Point m_transform_event_origin;
     Rect m_transform_widget_origin_rect;
+    Direction m_resize_direction { Direction::None };
 };
