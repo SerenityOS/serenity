@@ -33,7 +33,7 @@ private:
     void grabber_mousedown_event(GMouseEvent&, VBWidget&, Direction grabber);
 
     String m_name;
-    int m_grid_size { 8 };
+    int m_grid_size { 5 };
     bool m_should_snap_to_grid { true };
     Vector<Retained<VBWidget>> m_widgets;
     WeakPtr<VBWidget> m_selected_widget;
