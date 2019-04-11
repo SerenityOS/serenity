@@ -9,16 +9,13 @@ GVariant::~GVariant()
 {
     switch (m_type) {
     case Type::String:
-        if (m_value.as_string)
-            m_value.as_string->release();
+        AK::release_if_not_null(m_value.as_string);
         break;
     case Type::Bitmap:
-        if (m_value.as_bitmap)
-            m_value.as_bitmap->release();
+        AK::release_if_not_null(m_value.as_bitmap);
         break;
     case Type::Icon:
-        if (m_value.as_icon)
-            m_value.as_icon->release();
+        AK::release_if_not_null(m_value.as_icon);
         break;
     default:
         break;
@@ -68,6 +65,39 @@ GVariant::GVariant(Color color)
     : m_type(Type::Color)
 {
     m_value.as_color = color.value();
+}
+
+GVariant::GVariant(const GVariant& other)
+    : m_type(other.m_type)
+{
+    switch (m_type) {
+    case Type::Bool:
+        m_value.as_bool = other.m_value.as_bool;
+        break;
+    case Type::Int:
+        m_value.as_int = other.m_value.as_int;
+        break;
+    case Type::Float:
+        m_value.as_float = other.m_value.as_float;
+        break;
+    case Type::String:
+        m_value.as_string = other.m_value.as_string;
+        AK::retain_if_not_null(m_value.as_bitmap);
+        break;
+    case Type::Bitmap:
+        m_value.as_bitmap = other.m_value.as_bitmap;
+        AK::retain_if_not_null(m_value.as_bitmap);
+        break;
+    case Type::Icon:
+        m_value.as_icon = other.m_value.as_icon;
+        AK::retain_if_not_null(m_value.as_icon);
+        break;
+    case Type::Color:
+        m_value.as_color = other.m_value.as_color;
+        break;
+    case Type::Invalid:
+        break;
+    }
 }
 
 bool GVariant::operator==(const GVariant& other) const
