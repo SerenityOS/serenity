@@ -7,7 +7,7 @@
 #include <SharedGraphics/GraphicsBitmap.h>
 #include <LibGUI/GPainter.h>
 #include <LibGUI/GApplication.h>
-
+#include <LibGUI/GMenu.h>
 #include <unistd.h>
 
 GWidget::GWidget(GWidget* parent)
@@ -161,12 +161,14 @@ void GWidget::handle_mouseup_event(GMouseEvent& event)
         return;
     // It's a click.. but is it a doubleclick?
     // FIXME: This needs improvement.
-    int elapsed_since_last_click = m_click_clock.elapsed();
-    dbgprintf("Click clock elapsed: %d\n", m_click_clock.elapsed());
-    if (elapsed_since_last_click < 250) {
-        doubleclick_event(event);
-    } else {
-        m_click_clock.start();
+    if (m_click_clock.is_valid()) {
+        int elapsed_since_last_click = m_click_clock.elapsed();
+        dbgprintf("Click clock elapsed: %d\n", m_click_clock.elapsed());
+        if (elapsed_since_last_click < 250) {
+            doubleclick_event(event);
+        } else {
+            m_click_clock.start();
+        }
     }
 }
 
@@ -174,6 +176,13 @@ void GWidget::handle_mousedown_event(GMouseEvent& event)
 {
     if (accepts_focus())
         set_focus(true);
+    if (event.button() == GMouseButton::Right) {
+        if (m_context_menu) {
+            m_context_menu->popup(screen_relative_rect().location().translated(event.position()));
+            return;
+        }
+    }
+    // FIXME: Maybe the click clock should be per-button.
     if (!m_click_clock.is_valid())
         m_click_clock.start();
     mousedown_event(event);
@@ -415,4 +424,11 @@ void GWidget::set_enabled(bool enabled)
         return;
     m_enabled = enabled;
     update();
+}
+
+void GWidget::set_context_menu(OwnPtr<GMenu>&& context_menu)
+{
+    // FIXME: Support switching context menus.
+    ASSERT(!m_context_menu);
+    m_context_menu = move(context_menu);
 }

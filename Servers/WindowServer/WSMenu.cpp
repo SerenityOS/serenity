@@ -178,4 +178,14 @@ WSMenuItem* WSMenu::item_at(const Point& position)
 void WSMenu::close()
 {
     WSWindowManager::the().close_menu(*this);
-};
+    if (menu_window())
+        menu_window()->set_visible(false);
+}
+
+void WSMenu::popup(const Point& position)
+{
+    ASSERT(!is_empty());
+    auto& window = ensure_menu_window();
+    window.move_to(position);
+    window.set_visible(true);
+}

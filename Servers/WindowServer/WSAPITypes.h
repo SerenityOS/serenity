@@ -192,6 +192,7 @@ struct WSAPI_ClientMessage {
         GetWallpaper,
         SetWindowOverrideCursor,
         WM_SetActiveWindow,
+        PopupMenu,
     };
     Type type { Invalid };
     int window_id { -1 };
@@ -214,6 +215,7 @@ struct WSAPI_ClientMessage {
             char shortcut_text[32];
             int shortcut_text_length;
             bool enabled;
+            WSAPI_Point position;
         } menu;
         struct {
             WSAPI_Rect rect;

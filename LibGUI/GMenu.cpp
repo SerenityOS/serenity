@@ -39,6 +39,17 @@ void GMenu::add_separator()
     m_items.append(make<GMenuItem>(m_menu_id, GMenuItem::Separator));
 }
 
+void GMenu::popup(const Point& screen_position)
+{
+    if (!m_menu_id)
+        realize_menu();
+    WSAPI_ClientMessage request;
+    request.type = WSAPI_ClientMessage::Type::PopupMenu;
+    request.menu.menu_id = m_menu_id;
+    request.menu.position = screen_position;
+    GEventLoop::post_message_to_server(request);
+}
+
 int GMenu::realize_menu()
 {
     WSAPI_ClientMessage request;

@@ -57,6 +57,7 @@ public:
         APIGetWallpaperRequest,
         APISetWindowOverrideCursorRequest,
         WMAPISetActiveWindowRequest,
+        APIPopupMenuRequest,
         __End_API_Client_Requests,
     };
 
@@ -188,6 +189,24 @@ private:
     int m_menubar_id { 0 };
     int m_menu_id { 0 };
 };
+
+class WSAPIPopupMenuRequest : public WSAPIClientRequest {
+public:
+    WSAPIPopupMenuRequest(int client_id, int menu_id, const Point& position)
+        : WSAPIClientRequest(WSMessage::APIPopupMenuRequest, client_id)
+        , m_menu_id(menu_id)
+        , m_position(position)
+    {
+    }
+
+    int menu_id() const { return m_menu_id; }
+    Point position() const { return m_position; }
+
+private:
+    int m_menu_id;
+    Point m_position;
+};
+
 
 class WSAPICreateMenuRequest : public WSAPIClientRequest {
 public:

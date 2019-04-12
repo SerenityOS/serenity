@@ -5,6 +5,7 @@
 #include <AK/Vector.h>
 
 class GAction;
+class Point;
 
 class GMenu {
 public:
@@ -17,6 +18,8 @@ public:
 
     void add_action(Retained<GAction>&&);
     void add_separator();
+
+    void popup(const Point& screen_position);
 
     Function<void(unsigned)> on_item_activation;
 
