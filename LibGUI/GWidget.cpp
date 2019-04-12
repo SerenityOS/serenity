@@ -408,3 +408,11 @@ bool GWidget::spans_entire_window_horizontally() const
     auto wrr = window_relative_rect();
     return wrr.left() == main_widget->rect().left() && wrr.right() == main_widget->rect().right();
 }
+
+void GWidget::set_enabled(bool enabled)
+{
+    if (m_enabled == enabled)
+        return;
+    m_enabled = enabled;
+    update();
+}
