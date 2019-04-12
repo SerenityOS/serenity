@@ -75,6 +75,7 @@ public:
     void set_ruler_visible(bool b) { m_ruler_visible = b; }
 
     Function<void()> on_cursor_change;
+    Function<void()> on_selection_change;
 
     void set_text(const String&);
     void scroll_cursor_into_view();
@@ -160,6 +161,7 @@ private:
     void toggle_selection_if_needed_for_event(const GKeyEvent&);
     void insert_at_cursor_or_replace_selection(const String&);
     void delete_selection();
+    void did_update_selection();
 
     Type m_type { MultiLine };
 

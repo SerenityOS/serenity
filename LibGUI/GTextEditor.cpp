@@ -56,6 +56,7 @@ void GTextEditor::set_text(const String& text)
         set_cursor(0, m_lines[0]->length());
     else
         set_cursor(0, 0);
+    did_update_selection();
     update();
 }
 
@@ -101,11 +102,12 @@ void GTextEditor::mousedown_event(GMouseEvent& event)
                 m_selection.set(m_cursor, { });
         }
 
-        if (m_selection.start().is_valid())
+        if (m_selection.start().is_valid() && m_selection.start() != m_cursor)
             m_selection.set_end(m_cursor);
 
         // FIXME: Only update the relevant rects.
         update();
+        did_update_selection();
         return;
     }
 }
@@ -125,6 +127,7 @@ void GTextEditor::mousemove_event(GMouseEvent& event)
     if (m_in_drag_select) {
         set_cursor(text_position_at(event.position()));
         m_selection.set_end(m_cursor);
+        did_update_selection();
         update();
         return;
     }
@@ -220,11 +223,13 @@ void GTextEditor::toggle_selection_if_needed_for_event(const GKeyEvent& event)
 {
     if (event.shift() && !m_selection.is_valid()) {
         m_selection.set(m_cursor, { });
+        did_update_selection();
         update();
         return;
     }
     if (!event.shift() && m_selection.is_valid()) {
         m_selection.clear();
+        did_update_selection();
         update();
         return;
     }
@@ -243,8 +248,10 @@ void GTextEditor::keydown_event(GKeyEvent& event)
             int new_column = min(m_cursor.column(), m_lines[new_line]->length());
             toggle_selection_if_needed_for_event(event);
             set_cursor(new_line, new_column);
-            if (m_selection.start().is_valid())
+            if (m_selection.start().is_valid()) {
                 m_selection.set_end(m_cursor);
+                did_update_selection();
+            }
         }
         return;
     }
@@ -254,8 +261,10 @@ void GTextEditor::keydown_event(GKeyEvent& event)
             int new_column = min(m_cursor.column(), m_lines[new_line]->length());
             toggle_selection_if_needed_for_event(event);
             set_cursor(new_line, new_column);
-            if (m_selection.start().is_valid())
+            if (m_selection.start().is_valid()) {
                 m_selection.set_end(m_cursor);
+                did_update_selection();
+            }
         }
         return;
     }
@@ -265,8 +274,10 @@ void GTextEditor::keydown_event(GKeyEvent& event)
             int new_column = min(m_cursor.column(), m_lines[new_line]->length());
             toggle_selection_if_needed_for_event(event);
             set_cursor(new_line, new_column);
-            if (m_selection.start().is_valid())
+            if (m_selection.start().is_valid()) {
                 m_selection.set_end(m_cursor);
+                did_update_selection();
+            }
         }
         return;
     }
@@ -276,8 +287,10 @@ void GTextEditor::keydown_event(GKeyEvent& event)
             int new_column = min(m_cursor.column(), m_lines[new_line]->length());
             toggle_selection_if_needed_for_event(event);
             set_cursor(new_line, new_column);
-            if (m_selection.start().is_valid())
+            if (m_selection.start().is_valid()) {
                 m_selection.set_end(m_cursor);
+                did_update_selection();
+            }
         }
         return;
     }
@@ -286,15 +299,19 @@ void GTextEditor::keydown_event(GKeyEvent& event)
             int new_column = m_cursor.column() - 1;
             toggle_selection_if_needed_for_event(event);
             set_cursor(m_cursor.line(), new_column);
-            if (m_selection.start().is_valid())
+            if (m_selection.start().is_valid()) {
                 m_selection.set_end(m_cursor);
+                did_update_selection();
+            }
         } else if (m_cursor.line() > 0) {
             int new_line = m_cursor.line() - 1;
             int new_column = m_lines[new_line]->length();
             toggle_selection_if_needed_for_event(event);
             set_cursor(new_line, new_column);
-            if (m_selection.start().is_valid())
+            if (m_selection.start().is_valid()) {
                 m_selection.set_end(m_cursor);
+                did_update_selection();
+            }
         }
         return;
     }
@@ -303,50 +320,63 @@ void GTextEditor::keydown_event(GKeyEvent& event)
             int new_column = m_cursor.column() + 1;
             toggle_selection_if_needed_for_event(event);
             set_cursor(m_cursor.line(), new_column);
-            if (m_selection.start().is_valid())
+            if (m_selection.start().is_valid()) {
                 m_selection.set_end(m_cursor);
+                did_update_selection();
+            }
         } else if (m_cursor.line() != line_count() - 1) {
             int new_line = m_cursor.line() + 1;
             int new_column = 0;
             toggle_selection_if_needed_for_event(event);
             set_cursor(new_line, new_column);
-            if (m_selection.start().is_valid())
+            if (m_selection.start().is_valid()) {
                 m_selection.set_end(m_cursor);
+                did_update_selection();
+            }
         }
         return;
     }
     if (!event.ctrl() && event.key() == KeyCode::Key_Home) {
         toggle_selection_if_needed_for_event(event);
         set_cursor(m_cursor.line(), 0);
-        if (m_selection.start().is_valid())
+        if (m_selection.start().is_valid()) {
             m_selection.set_end(m_cursor);
+            did_update_selection();
+        }
         return;
     }
     if (!event.ctrl() && event.key() == KeyCode::Key_End) {
         toggle_selection_if_needed_for_event(event);
         set_cursor(m_cursor.line(), current_line().length());
-        if (m_selection.start().is_valid())
+        if (m_selection.start().is_valid()) {
             m_selection.set_end(m_cursor);
+            did_update_selection();
+        }
         return;
     }
     if (event.ctrl() && event.key() == KeyCode::Key_Home) {
         toggle_selection_if_needed_for_event(event);
         set_cursor(0, 0);
-        if (m_selection.start().is_valid())
+        if (m_selection.start().is_valid()) {
             m_selection.set_end(m_cursor);
+            did_update_selection();
+        }
         return;
     }
     if (event.ctrl() && event.key() == KeyCode::Key_End) {
         toggle_selection_if_needed_for_event(event);
         set_cursor(line_count() - 1, m_lines[line_count() - 1]->length());
-        if (m_selection.start().is_valid())
+        if (m_selection.start().is_valid()) {
             m_selection.set_end(m_cursor);
+            did_update_selection();
+        }
         return;
     }
     if (event.modifiers() == Mod_Ctrl && event.key() == KeyCode::Key_A) {
         GTextPosition start_of_document { 0, 0 };
         GTextPosition end_of_document { line_count() - 1, m_lines[line_count() - 1]->length() };
         m_selection.set(start_of_document, end_of_document);
+        did_update_selection();
         set_cursor(end_of_document);
         update();
         return;
@@ -355,6 +385,7 @@ void GTextEditor::keydown_event(GKeyEvent& event)
     if (event.key() == KeyCode::Key_Backspace) {
         if (has_selection()) {
             delete_selection();
+            did_update_selection();
             return;
         }
         if (m_cursor.column() > 0) {
@@ -703,6 +734,7 @@ void GTextEditor::clear()
     m_lines.clear();
     m_lines.append(make<Line>());
     m_selection.clear();
+    did_update_selection();
     set_cursor(0, 0);
     update();
 }
@@ -771,6 +803,7 @@ void GTextEditor::delete_selection()
         m_lines.append(make<Line>());
 
     m_selection.clear();
+    did_update_selection();
     set_cursor(selection.start());
     update();
     did_change();
@@ -828,4 +861,10 @@ void GTextEditor::did_change()
             m_have_pending_change_notification = false;
         });
     }
+}
+
+void GTextEditor::did_update_selection()
+{
+    if (on_selection_change)
+        on_selection_change();
 }
