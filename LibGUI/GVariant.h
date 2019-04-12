@@ -19,6 +19,12 @@ public:
     GVariant(Color);
 
     GVariant(const GVariant&);
+    GVariant& operator=(const GVariant&);
+
+    GVariant(GVariant&&) = delete;
+    GVariant& operator=(GVariant&&) = delete;
+
+    void clear();
     ~GVariant();
 
     enum class Type {
@@ -84,7 +90,7 @@ public:
     String as_string() const
     {
         ASSERT(type() == Type::String);
-        return *m_value.as_string;
+        return m_value.as_string;
     }
 
     const GraphicsBitmap& as_bitmap() const
@@ -118,6 +124,8 @@ public:
     bool operator<(const GVariant&) const;
 
 private:
+    void copy_from(const GVariant&);
+
     struct RawPoint {
         int x;
         int y;
