@@ -38,6 +38,9 @@ public:
     String tooltip() const { return m_tooltip; }
     void set_tooltip(const String& tooltip) { m_tooltip = tooltip; }
 
+    bool is_enabled() const { return m_enabled; }
+    void set_enabled(bool);
+
     virtual void event(CEvent&) override;
     virtual void paint_event(GPaintEvent&);
     virtual void resize_event(GResizeEvent&);
@@ -180,6 +183,7 @@ private:
     bool m_fill_with_background_color { false };
     bool m_visible { true };
     bool m_greedy_for_hits { false };
+    bool m_enabled { true };
 
     CElapsedTimer m_click_clock;
 };
