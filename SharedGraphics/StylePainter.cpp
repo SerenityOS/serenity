@@ -53,7 +53,7 @@ static void paint_button_new(Painter& painter, const Rect& rect, bool pressed, b
     }
 }
 
-void StylePainter::paint_button(Painter& painter, const Rect& rect, ButtonStyle button_style, bool pressed, bool hovered, bool checked)
+void StylePainter::paint_button(Painter& painter, const Rect& rect, ButtonStyle button_style, bool pressed, bool hovered, bool checked, bool enabled)
 {
     if (button_style == ButtonStyle::Normal)
         return paint_button_new(painter, rect, pressed, checked, hovered);
@@ -64,6 +64,9 @@ void StylePainter::paint_button(Painter& painter, const Rect& rect, ButtonStyle 
 
     if (button_style == ButtonStyle::OldNormal)
         painter.draw_rect(rect, Color::Black);
+
+    if (button_style == ButtonStyle::CoolBar && !enabled)
+        return;
 
     PainterStateSaver saver(painter);
     painter.translate(rect.location());
