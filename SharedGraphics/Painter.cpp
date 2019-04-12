@@ -257,7 +257,13 @@ void Painter::blit_dimmed(const Point& position, const GraphicsBitmap& source, c
 
     for (int row = first_row; row <= last_row; ++row) {
         for (int x = 0; x <= (last_column - first_column); ++x) {
-            dst[x] = Color::from_rgba(src[x]).to_grayscale().darkened().value();
+            byte alpha = Color::from_rgba(src[x]).alpha();
+            if (alpha == 0xff)
+                dst[x] = Color::from_rgba(src[x]).to_grayscale().lightened().value();
+            else if (!alpha)
+                continue;
+            else
+                dst[x] = Color::from_rgba(dst[x]).blend(Color::from_rgba(src[x]).to_grayscale().lightened()).value();
         }
         dst += dst_skip;
         src += src_skip;
