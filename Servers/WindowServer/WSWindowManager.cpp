@@ -95,16 +95,16 @@ WSWindowManager::WSWindowManager()
     {
         byte system_menu_name[] = { 0xf8, 0 };
         m_system_menu = make<WSMenu>(nullptr, -1, String((const char*)system_menu_name));
-        m_system_menu->add_item(make<WSMenuItem>(0, "Open Terminal..."));
-        m_system_menu->add_item(make<WSMenuItem>(1, "Open ProcessManager..."));
-        m_system_menu->add_item(make<WSMenuItem>(WSMenuItem::Separator));
-        m_system_menu->add_item(make<WSMenuItem>(100, "640x480"));
-        m_system_menu->add_item(make<WSMenuItem>(101, "800x600"));
-        m_system_menu->add_item(make<WSMenuItem>(102, "1024x768"));
-        m_system_menu->add_item(make<WSMenuItem>(103, "1440x900"));
-        m_system_menu->add_item(make<WSMenuItem>(104, "1920x1080"));
-        m_system_menu->add_item(make<WSMenuItem>(WSMenuItem::Separator));
-        m_system_menu->add_item(make<WSMenuItem>(200, "About..."));
+        m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, 0, "Open Terminal..."));
+        m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, 1, "Open ProcessManager..."));
+        m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, WSMenuItem::Separator));
+        m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, 100, "640x480"));
+        m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, 101, "800x600"));
+        m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, 102, "1024x768"));
+        m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, 103, "1440x900"));
+        m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, 104, "1920x1080"));
+        m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, WSMenuItem::Separator));
+        m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, 200, "About..."));
         m_system_menu->on_item_activation = [this] (WSMenuItem& item) {
             if (item.identifier() == 0) {
                 if (fork() == 0) {

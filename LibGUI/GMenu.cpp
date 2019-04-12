@@ -31,12 +31,12 @@ GMenu::~GMenu()
 
 void GMenu::add_action(Retained<GAction>&& action)
 {
-    m_items.append(make<GMenuItem>(move(action)));
+    m_items.append(make<GMenuItem>(m_menu_id, move(action)));
 }
 
 void GMenu::add_separator()
 {
-    m_items.append(make<GMenuItem>(GMenuItem::Separator));
+    m_items.append(make<GMenuItem>(m_menu_id, GMenuItem::Separator));
 }
 
 int GMenu::realize_menu()
@@ -52,6 +52,8 @@ int GMenu::realize_menu()
     ASSERT(m_menu_id > 0);
     for (int i = 0; i < m_items.size(); ++i) {
         auto& item = *m_items[i];
+        item.set_menu_id({ }, m_menu_id);
+        item.set_identifier({ }, i);
         if (item.type() == GMenuItem::Separator) {
             WSAPI_ClientMessage request;
             request.type = WSAPI_ClientMessage::Type::AddMenuSeparator;
@@ -65,6 +67,7 @@ int GMenu::realize_menu()
             request.type = WSAPI_ClientMessage::Type::AddMenuItem;
             request.menu.menu_id = m_menu_id;
             request.menu.identifier = i;
+            request.menu.enabled = action.is_enabled();
             ASSERT(action.text().length() < (ssize_t)sizeof(request.text));
             strcpy(request.text, action.text().characters());
             request.text_length = action.text().length();

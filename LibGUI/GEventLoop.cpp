@@ -22,7 +22,6 @@
 //#define GEVENTLOOP_DEBUG
 //#define COALESCING_DEBUG
 
-static HashMap<GShortcut, GAction*>* g_actions;
 int GEventLoop::s_event_fd = -1;
 pid_t GEventLoop::s_server_pid = -1;
 
@@ -70,9 +69,6 @@ GEventLoop::GEventLoop()
         connect_to_server();
         connected = true;
     }
-
-    if (!g_actions)
-        g_actions = new HashMap<GShortcut, GAction*>;
 
 #ifdef GEVENTLOOP_DEBUG
     dbgprintf("(%u) GEventLoop constructed :)\n", getpid());
@@ -125,8 +121,10 @@ void GEventLoop::handle_key_event(const WSAPI_ServerMessage& event, GWindow& win
 
     if (event.type == WSAPI_ServerMessage::Type::KeyDown) {
         if (auto* action = GApplication::the().action_for_key_event(*key_event)) {
-            action->activate();
-            return;
+            if (action->is_enabled()) {
+                action->activate();
+                return;
+            }
         }
     }
     post_event(window, move(key_event));

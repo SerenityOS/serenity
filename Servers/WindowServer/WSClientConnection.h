@@ -50,6 +50,7 @@ private:
     void handle_request(const WSAPISetApplicationMenubarRequest&);
     void handle_request(const WSAPIAddMenuToMenubarRequest&);
     void handle_request(const WSAPIAddMenuItemRequest&);
+    void handle_request(const WSAPIUpdateMenuItemRequest&);
     void handle_request(const WSAPIAddMenuSeparatorRequest&);
     void handle_request(const WSAPISetWindowTitleRequest&);
     void handle_request(const WSAPIGetWindowTitleRequest&);

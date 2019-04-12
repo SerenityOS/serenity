@@ -62,6 +62,7 @@ public:
     void draw();
     const Font& font() const;
 
+    WSMenuItem* item_with_identifier(unsigned);
     WSMenuItem* item_at(const Point&);
     void redraw();
 

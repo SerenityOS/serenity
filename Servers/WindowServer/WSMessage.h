@@ -38,6 +38,7 @@ public:
         APIDestroyMenuRequest,
         APIAddMenuItemRequest,
         APIAddMenuSeparatorRequest,
+        APIUpdateMenuItemRequest,
         APICreateWindowRequest,
         APIDestroyWindowRequest,
         APISetWindowTitleRequest,
@@ -218,12 +219,13 @@ private:
 
 class WSAPIAddMenuItemRequest : public WSAPIClientRequest {
 public:
-    WSAPIAddMenuItemRequest(int client_id, int menu_id, unsigned identifier, const String& text, const String& shortcut_text)
+    WSAPIAddMenuItemRequest(int client_id, int menu_id, unsigned identifier, const String& text, const String& shortcut_text, bool enabled)
         : WSAPIClientRequest(WSMessage::APIAddMenuItemRequest, client_id)
         , m_menu_id(menu_id)
         , m_identifier(identifier)
         , m_text(text)
         , m_shortcut_text(shortcut_text)
+        , m_enabled(enabled)
     {
     }
 
@@ -231,12 +233,40 @@ public:
     unsigned identifier() const { return m_identifier; }
     String text() const { return m_text; }
     String shortcut_text() const { return m_shortcut_text; }
+    bool is_enabled() const { return m_enabled; }
 
 private:
     int m_menu_id { 0 };
     unsigned m_identifier { 0 };
     String m_text;
     String m_shortcut_text;
+    bool m_enabled { true };
+};
+
+class WSAPIUpdateMenuItemRequest : public WSAPIClientRequest {
+public:
+    WSAPIUpdateMenuItemRequest(int client_id, int menu_id, unsigned identifier, const String& text, const String& shortcut_text, bool enabled)
+        : WSAPIClientRequest(WSMessage::APIUpdateMenuItemRequest, client_id)
+        , m_menu_id(menu_id)
+        , m_identifier(identifier)
+        , m_text(text)
+        , m_shortcut_text(shortcut_text)
+        , m_enabled(enabled)
+    {
+    }
+
+    int menu_id() const { return m_menu_id; }
+    unsigned identifier() const { return m_identifier; }
+    String text() const { return m_text; }
+    String shortcut_text() const { return m_shortcut_text; }
+    bool is_enabled() const { return m_enabled; }
+
+private:
+    int m_menu_id { 0 };
+    unsigned m_identifier { 0 };
+    String m_text;
+    String m_shortcut_text;
+    bool m_enabled { true };
 };
 
 class WSAPIAddMenuSeparatorRequest : public WSAPIClientRequest {
