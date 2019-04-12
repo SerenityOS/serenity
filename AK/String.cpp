@@ -95,7 +95,7 @@ ByteBuffer String::to_byte_buffer() const
 String String::from_byte_buffer(const ByteBuffer& buffer, ShouldChomp should_chomp)
 {
     if (buffer.is_null())
-        return nullptr;
+        return { };
     if (buffer.is_empty())
         return empty();
     return String((const char*)buffer.pointer(), buffer.size(), should_chomp);
