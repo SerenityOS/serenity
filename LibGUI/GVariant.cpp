@@ -216,7 +216,7 @@ String GVariant::to_string() const
 {
     switch (m_type) {
     case Type::Bool:
-        return as_bool() ? "True" : "False";
+        return as_bool() ? "true" : "false";
     case Type::Int:
         return String::format("%d", as_int());
     case Type::Float:
@@ -236,7 +236,7 @@ String GVariant::to_string() const
     case Type::Rect:
         return as_rect().to_string();
     case Type::Invalid:
-        return "[Null]";
+        return "[null]";
         break;
     }
     ASSERT_NOT_REACHED();

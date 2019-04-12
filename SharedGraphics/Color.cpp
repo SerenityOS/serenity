@@ -35,5 +35,5 @@ Color::Color(NamedColor named)
 
 String Color::to_string() const
 {
-    return String::format("rgba(%d, %d, %d, %d)", red(), green(), blue(), alpha());
+    return String::format("#%b%b%b%b", red(), green(), blue(), alpha());
 }
