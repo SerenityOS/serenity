@@ -39,6 +39,11 @@ public:
     {
     }
 
+    String(const StringImpl* impl)
+        : m_impl(const_cast<StringImpl*>(impl))
+    {
+    }
+
     String(RetainPtr<StringImpl>&& impl)
         : m_impl(move(impl))
     {

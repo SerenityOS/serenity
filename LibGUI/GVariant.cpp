@@ -7,6 +7,11 @@ GVariant::GVariant()
 
 GVariant::~GVariant()
 {
+    clear();
+}
+
+void GVariant::clear()
+{
     switch (m_type) {
     case Type::String:
         AK::release_if_not_null(m_value.as_string);
@@ -20,6 +25,8 @@ GVariant::~GVariant()
     default:
         break;
     }
+    m_type = Type::Invalid;
+    m_value.as_string = nullptr;
 }
 
 GVariant::GVariant(int value)
@@ -85,9 +92,24 @@ GVariant::GVariant(const Rect& rect)
     m_value.as_rect = (const RawRect&)rect;
 }
 
-GVariant::GVariant(const GVariant& other)
-    : m_type(other.m_type)
+GVariant& GVariant::operator=(const GVariant& other)
 {
+    if (&other == this)
+        return *this;
+    clear();
+    copy_from(other);
+    return *this;
+}
+
+GVariant::GVariant(const GVariant& other)
+{
+    copy_from(other);
+}
+
+void GVariant::copy_from(const GVariant& other)
+{
+    ASSERT(!is_valid());
+    m_type = other.m_type;
     switch (m_type) {
     case Type::Bool:
         m_value.as_bool = other.m_value.as_bool;
@@ -214,6 +236,7 @@ String GVariant::to_string() const
     case Type::Rect:
         return as_rect().to_string();
     case Type::Invalid:
+        return "[Null]";
         break;
     }
     ASSERT_NOT_REACHED();
