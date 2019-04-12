@@ -86,5 +86,10 @@ GWidget* VBWidgetRegistry::build_gwidget(VBWidgetType type, GWidget* parent, Vec
     add_property("height");
     add_property("x");
     add_property("y");
+    add_property("visible");
+    add_property("enabled");
+    add_property("tooltip");
+    add_property("background_color");
+    add_property("foreground_color");
     return gwidget;
 }

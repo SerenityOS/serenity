@@ -84,7 +84,11 @@ void VBWidget::synchronize_properties()
     property_by_name("height")->set_value(m_gwidget->height());
     property_by_name("x")->set_value(m_gwidget->x());
     property_by_name("y")->set_value(m_gwidget->y());
-
+    property_by_name("visible")->set_value(m_gwidget->is_visible());
+    property_by_name("enabled")->set_value(m_gwidget->is_enabled());
+    property_by_name("tooltip")->set_value(m_gwidget->tooltip());
+    property_by_name("background_color")->set_value(m_gwidget->background_color());
+    property_by_name("foreground_color")->set_value(m_gwidget->foreground_color());
     m_property_model->update();
 }
 
