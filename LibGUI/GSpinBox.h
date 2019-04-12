@@ -13,6 +13,8 @@ public:
     int value() const { return m_value; }
     void set_value(int);
 
+    int min() const { return m_min; }
+    int max() const { return m_max; }
     void set_range(int min, int max);
 
     Function<void(int value)> on_change;

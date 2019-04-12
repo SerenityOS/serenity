@@ -4,6 +4,13 @@
 #include "VBWidgetRegistry.h"
 #include "VBWidgetPropertyModel.h"
 #include <LibGUI/GPainter.h>
+#include <LibGUI/GLabel.h>
+#include <LibGUI/GButton.h>
+#include <LibGUI/GScrollBar.h>
+#include <LibGUI/GSpinBox.h>
+#include <LibGUI/GTextEditor.h>
+#include <LibGUI/GGroupBox.h>
+#include <LibGUI/GProgressBar.h>
 
 VBWidget::VBWidget(VBWidgetType type, VBForm& form)
     : m_type(type)
@@ -80,23 +87,63 @@ void VBWidget::for_each_property(Function<void(VBProperty&)> callback)
 
 void VBWidget::synchronize_properties()
 {
-    property_by_name("width")->set_value(m_gwidget->width());
-    property_by_name("height")->set_value(m_gwidget->height());
-    property_by_name("x")->set_value(m_gwidget->x());
-    property_by_name("y")->set_value(m_gwidget->y());
-    property_by_name("visible")->set_value(m_gwidget->is_visible());
-    property_by_name("enabled")->set_value(m_gwidget->is_enabled());
-    property_by_name("tooltip")->set_value(m_gwidget->tooltip());
-    property_by_name("background_color")->set_value(m_gwidget->background_color());
-    property_by_name("foreground_color")->set_value(m_gwidget->foreground_color());
+    property("width").set_value(m_gwidget->width());
+    property("height").set_value(m_gwidget->height());
+    property("x").set_value(m_gwidget->x());
+    property("y").set_value(m_gwidget->y());
+    property("visible").set_value(m_gwidget->is_visible());
+    property("enabled").set_value(m_gwidget->is_enabled());
+    property("tooltip").set_value(m_gwidget->tooltip());
+    property("background_color").set_value(m_gwidget->background_color());
+    property("foreground_color").set_value(m_gwidget->foreground_color());
+
+    if (m_type == VBWidgetType::GLabel) {
+        auto& widget = *static_cast<GLabel*>(m_gwidget);
+        property("text").set_value(widget.text());
+    }
+
+    if (m_type == VBWidgetType::GButton) {
+        auto& widget = *static_cast<GButton*>(m_gwidget);
+        property("caption").set_value(widget.caption());
+    }
+
+    if (m_type == VBWidgetType::GScrollBar) {
+        auto& widget = *static_cast<GScrollBar*>(m_gwidget);
+        property("min").set_value(widget.min());
+        property("max").set_value(widget.max());
+        property("value").set_value(widget.value());
+        property("step").set_value(widget.step());
+    }
+
+    if (m_type == VBWidgetType::GSpinBox) {
+        auto& widget = *static_cast<GSpinBox*>(m_gwidget);
+        property("min").set_value(widget.min());
+        property("max").set_value(widget.max());
+        property("value").set_value(widget.value());
+    }
+
+    if (m_type == VBWidgetType::GProgressBar) {
+        auto& widget = *static_cast<GProgressBar*>(m_gwidget);
+        property("min").set_value(widget.min());
+        property("max").set_value(widget.max());
+        property("value").set_value(widget.value());
+    }
+
+    if (m_type == VBWidgetType::GTextEditor) {
+        auto& widget = *static_cast<GTextEditor*>(m_gwidget);
+        property("text").set_value(widget.text());
+        property("ruler_visible").set_value(widget.is_ruler_visible());
+    }
+
     m_property_model->update();
 }
 
-VBProperty* VBWidget::property_by_name(const String& name)
+VBProperty& VBWidget::property(const String& name)
 {
-    for (auto& property : m_properties) {
-        if (property->name() == name)
-            return property.ptr();
+    for (auto& prop : m_properties) {
+        if (prop->name() == name)
+            return *prop;
     }
-    return nullptr;
+    m_properties.append(make<VBProperty>(name, GVariant()));
+    return *m_properties.last();
 }

@@ -44,8 +44,7 @@ public:
 
     GWidget* gwidget() { return m_gwidget; }
 
-    const VBProperty* property_by_name(const String&) const;
-    VBProperty* property_by_name(const String&);
+    VBProperty& property(const String&);
 
     void for_each_property(Function<void(VBProperty&)>);
 
