@@ -11,6 +11,8 @@ public:
     void set_value(int);
 
     int value() const { return m_value; }
+    int min() const { return m_min; }
+    int max() const { return m_max; }
 
     String caption() const { return m_caption; }
     void set_caption(const String& caption) { m_caption = caption; }
