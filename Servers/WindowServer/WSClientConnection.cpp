@@ -215,9 +215,34 @@ void WSClientConnection::handle_request(const WSAPIAddMenuItemRequest& request)
         return;
     }
     auto& menu = *(*it).value;
-    menu.add_item(make<WSMenuItem>(identifier, request.text(), request.shortcut_text()));
+    menu.add_item(make<WSMenuItem>(menu, identifier, request.text(), request.shortcut_text(), request.is_enabled()));
     WSAPI_ServerMessage response;
     response.type = WSAPI_ServerMessage::Type::DidAddMenuItem;
+    response.menu.menu_id = menu_id;
+    response.menu.identifier = identifier;
+    post_message(response);
+}
+
+void WSClientConnection::handle_request(const WSAPIUpdateMenuItemRequest& request)
+{
+    int menu_id = request.menu_id();
+    unsigned identifier = request.identifier();
+    auto it = m_menus.find(menu_id);
+    if (it == m_menus.end()) {
+        post_error("WSAPIUpdateMenuItemRequest: Bad menu ID");
+        return;
+    }
+    auto& menu = *(*it).value;
+    auto* menu_item = menu.item_with_identifier(request.identifier());
+    if (!menu_item) {
+        post_error("WSAPIUpdateMenuItemRequest: Bad menu item identifier");
+        return;
+    }
+    menu_item->set_text(request.text());
+    menu_item->set_shortcut_text(request.shortcut_text());
+    menu_item->set_enabled(request.is_enabled());
+    WSAPI_ServerMessage response;
+    response.type = WSAPI_ServerMessage::Type::DidUpdateMenuItem;
     response.menu.menu_id = menu_id;
     response.menu.identifier = identifier;
     post_message(response);
@@ -232,7 +257,7 @@ void WSClientConnection::handle_request(const WSAPIAddMenuSeparatorRequest& requ
         return;
     }
     auto& menu = *(*it).value;
-    menu.add_item(make<WSMenuItem>(WSMenuItem::Separator));
+    menu.add_item(make<WSMenuItem>(menu, WSMenuItem::Separator));
     WSAPI_ServerMessage response;
     response.type = WSAPI_ServerMessage::Type::DidAddMenuSeparator;
     response.menu.menu_id = menu_id;
@@ -553,6 +578,8 @@ void WSClientConnection::on_request(const WSAPIClientRequest& request)
         return handle_request(static_cast<const WSAPIAddMenuItemRequest&>(request));
     case WSMessage::APIAddMenuSeparatorRequest:
         return handle_request(static_cast<const WSAPIAddMenuSeparatorRequest&>(request));
+    case WSMessage::APIUpdateMenuItemRequest:
+        return handle_request(static_cast<const WSAPIUpdateMenuItemRequest&>(request));
     case WSMessage::APISetWindowTitleRequest:
         return handle_request(static_cast<const WSAPISetWindowTitleRequest&>(request));
     case WSMessage::APIGetWindowTitleRequest:

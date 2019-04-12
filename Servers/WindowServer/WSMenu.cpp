@@ -50,7 +50,8 @@ int WSMenu::height() const
 
 void WSMenu::redraw()
 {
-    ASSERT(menu_window());
+    if (!menu_window())
+        return;
     draw();
     menu_window()->invalidate();
 }
@@ -95,6 +96,8 @@ void WSMenu::draw()
                 painter.fill_rect(item->rect(), WSWindowManager::the().menu_selection_color());
                 text_color = Color::White;
             }
+            if (!item->is_enabled())
+                text_color = Color::MidGray;
             painter.draw_text(item->rect().translated(left_padding(), 0), item->text(), TextAlignment::CenterLeft, text_color);
             if (!item->shortcut_text().is_empty()) {
                 painter.draw_text(item->rect().translated(-right_padding(), 0), item->shortcut_text(), TextAlignment::CenterRight, text_color);
@@ -122,7 +125,8 @@ void WSMenu::on_message(const WSMessage& message)
     if (message.type() == WSMessage::MouseUp) {
         if (!m_hovered_item)
             return;
-        did_activate(*m_hovered_item);
+        if (m_hovered_item->is_enabled())
+            did_activate(*m_hovered_item);
         clear_hovered_item();
         return;
     }
@@ -150,6 +154,15 @@ void WSMenu::did_activate(WSMenuItem& item)
 
     if (m_client)
         m_client->post_message(message);
+}
+
+WSMenuItem* WSMenu::item_with_identifier(unsigned identifer)
+{
+    for (auto& item : m_items) {
+        if (item->identifier() == identifer)
+            return item.ptr();
+    }
+    return nullptr;
 }
 
 WSMenuItem* WSMenu::item_at(const Point& position)

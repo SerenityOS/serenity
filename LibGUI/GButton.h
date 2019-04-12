@@ -7,6 +7,8 @@
 #include <SharedGraphics/GraphicsBitmap.h>
 #include <SharedGraphics/TextAlignment.h>
 
+class GAction;
+
 class GButton : public GWidget {
 public:
     explicit GButton(GWidget* parent);
@@ -35,6 +37,8 @@ public:
 
     void click();
 
+    void set_action(GAction&);
+
     virtual const char* class_name() const override { return "GButton"; }
 
 private:
@@ -49,6 +53,7 @@ private:
     RetainPtr<GraphicsBitmap> m_icon;
     ButtonStyle m_button_style { ButtonStyle::Normal };
     TextAlignment m_text_alignment { TextAlignment::Center };
+    WeakPtr<GAction> m_action;
     bool m_being_pressed { false };
     bool m_hovered { false };
     bool m_checkable { false };

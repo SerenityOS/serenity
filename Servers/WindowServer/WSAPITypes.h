@@ -82,6 +82,7 @@ struct WSAPI_ServerMessage {
         DidSetApplicationMenubar,
         DidAddMenuItem,
         DidAddMenuSeparator,
+        DidUpdateMenuItem,
         DidCreateWindow,
         DidDestroyWindow,
         DidGetWindowTitle,
@@ -171,6 +172,7 @@ struct WSAPI_ClientMessage {
         SetApplicationMenubar,
         AddMenuItem,
         AddMenuSeparator,
+        UpdateMenuItem,
         CreateWindow,
         DestroyWindow,
         SetWindowTitle,
@@ -211,6 +213,7 @@ struct WSAPI_ClientMessage {
             unsigned identifier;
             char shortcut_text[32];
             int shortcut_text_length;
+            bool enabled;
         } menu;
         struct {
             WSAPI_Rect rect;

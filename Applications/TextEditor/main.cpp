@@ -128,15 +128,20 @@ int main(int argc, char** argv)
 
     toolbar->add_separator();
 
-    toolbar->add_action(move(cut_action));
-    toolbar->add_action(move(copy_action));
+    toolbar->add_action(cut_action.copy_ref());
+    toolbar->add_action(copy_action.copy_ref());
     toolbar->add_action(move(paste_action));
-    toolbar->add_action(move(delete_action));
+    toolbar->add_action(delete_action.copy_ref());
 
     toolbar->add_separator();
 
     toolbar->add_action(move(undo_action));
     toolbar->add_action(move(redo_action));
+
+    text_editor->on_selection_change = [&] {
+        cut_action->set_enabled(text_editor->has_selection());
+        copy_action->set_enabled(text_editor->has_selection());
+    };
 
     auto* window = new GWindow;
     window->set_title(String::format("TextEditor: %s", path.characters()));

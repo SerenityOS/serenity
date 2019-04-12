@@ -26,6 +26,7 @@ void GToolBar::add_action(Retained<GAction>&& action)
     item->action = move(action);
 
     auto* button = new GButton(this);
+    button->set_action(*item->action);
     button->set_tooltip(item->action->text());
     if (item->action->icon())
         button->set_icon(item->action->icon());
