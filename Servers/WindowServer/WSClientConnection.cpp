@@ -223,6 +223,19 @@ void WSClientConnection::handle_request(const WSAPIAddMenuItemRequest& request)
     post_message(response);
 }
 
+void WSClientConnection::handle_request(const WSAPIPopupMenuRequest& request)
+{
+    int menu_id = request.menu_id();
+    auto position = request.position();
+    auto it = m_menus.find(menu_id);
+    if (it == m_menus.end()) {
+        post_error("WSAPIPopupMenuRequest: Bad menu ID");
+        return;
+    }
+    auto& menu = *(*it).value;
+    menu.popup(position);
+}
+
 void WSClientConnection::handle_request(const WSAPIUpdateMenuItemRequest& request)
 {
     int menu_id = request.menu_id();
@@ -616,6 +629,8 @@ void WSClientConnection::on_request(const WSAPIClientRequest& request)
         return handle_request(static_cast<const WSAPISetWindowOverrideCursorRequest&>(request));
     case WSMessage::WMAPISetActiveWindowRequest:
         return handle_request(static_cast<const WSWMAPISetActiveWindowRequest&>(request));
+    case WSMessage::APIPopupMenuRequest:
+        return handle_request(static_cast<const WSAPIPopupMenuRequest&>(request));
     default:
         break;
     }

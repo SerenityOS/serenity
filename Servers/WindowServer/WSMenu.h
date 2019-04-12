@@ -73,6 +73,8 @@ public:
 
     void close();
 
+    void popup(const Point&);
+
 private:
     virtual void on_message(const WSMessage&) override;
 

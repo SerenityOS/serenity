@@ -11,6 +11,7 @@
 
 class GraphicsBitmap;
 class GLayout;
+class GMenu;
 class GWindow;
 
 enum class SizePolicy { Fixed, Fill };
@@ -40,6 +41,9 @@ public:
 
     bool is_enabled() const { return m_enabled; }
     void set_enabled(bool);
+
+    const GMenu* context_menu() const { return m_context_menu.ptr(); }
+    void set_context_menu(OwnPtr<GMenu>&&);
 
     virtual void event(CEvent&) override;
     virtual void paint_event(GPaintEvent&);
@@ -186,4 +190,5 @@ private:
     bool m_enabled { true };
 
     CElapsedTimer m_click_clock;
+    OwnPtr<GMenu> m_context_menu;
 };

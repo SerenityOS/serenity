@@ -1,6 +1,8 @@
 #include "VBForm.h"
 #include "VBWidget.h"
 #include <LibGUI/GPainter.h>
+#include <LibGUI/GMenu.h>
+#include <LibGUI/GAction.h>
 
 static VBForm* s_current;
 VBForm* VBForm::current()
@@ -32,6 +34,11 @@ VBForm::VBForm(const String& name, GWidget* parent)
     auto groupbox1 = VBWidget::create(VBWidgetType::GGroupBox, *this);
     groupbox1->set_rect({ 300, 150, 161, 51 });
     m_widgets.append(move(groupbox1));
+
+    auto context_menu = make<GMenu>("Context menu");
+    context_menu->add_action(GAction::create("Item 1", [] (auto&) { dbgprintf("Item 1 activated!\n"); }));
+    context_menu->add_action(GAction::create("Item 2", [] (auto&) { dbgprintf("Item 2 activated!\n"); }));
+    set_context_menu(move(context_menu));
 }
 
 void VBForm::insert_widget(VBWidgetType type)
