@@ -7,7 +7,7 @@
 VBPropertiesWindow::VBPropertiesWindow()
 {
     set_title("Properties");
-    set_rect(780, 200, 200, 280);
+    set_rect(780, 200, 220, 280);
 
     auto* widget = new GWidget;
     widget->set_fill_with_background_color(true);
