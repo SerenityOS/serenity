@@ -40,14 +40,11 @@ private:
 
     template<typename Callback> void for_each_neighbor_of(const Square&, Callback);
 
-    int m_rows { 10 };
-    int m_columns { 10 };
+    int m_rows { 9 };
+    int m_columns { 9 };
     int m_mine_count { 10 };
     Vector<Square> m_squares;
     RetainPtr<GraphicsBitmap> m_mine_bitmap;
     RetainPtr<GraphicsBitmap> m_flag_bitmap;
-    RetainPtr<GraphicsBitmap> m_one_bitmap;
-    RetainPtr<GraphicsBitmap> m_two_bitmap;
-    RetainPtr<GraphicsBitmap> m_three_bitmap;
-    RetainPtr<GraphicsBitmap> m_four_bitmap;
+    RetainPtr<GraphicsBitmap> m_number_bitmap[8];
 };

@@ -29,10 +29,8 @@ Field::Field(GWidget* parent)
 {
     m_mine_bitmap = GraphicsBitmap::load_from_file("/res/icons/minesweeper/mine.png");
     m_flag_bitmap = GraphicsBitmap::load_from_file("/res/icons/minesweeper/flag.png");
-    m_one_bitmap = GraphicsBitmap::load_from_file("/res/icons/minesweeper/1.png");
-    m_two_bitmap = GraphicsBitmap::load_from_file("/res/icons/minesweeper/2.png");
-    m_three_bitmap = GraphicsBitmap::load_from_file("/res/icons/minesweeper/3.png");
-    m_four_bitmap = GraphicsBitmap::load_from_file("/res/icons/minesweeper/4.png");
+    for (int i = 0; i < 8; ++i)
+        m_number_bitmap[i] = GraphicsBitmap::load_from_file(String::format("/res/icons/minesweeper/%u.png", i + 1));
 
     set_fill_with_background_color(true);
     set_background_color(Color::LightGray);
@@ -56,6 +54,14 @@ void Field::for_each_neighbor_of(const Square& square, Callback callback)
         callback(this->square(r + 1, c));
     if (c < (m_columns - 2)) // Right
         callback(this->square(r, c + 1));
+    if (r > 0 && c > 0) // UpLeft
+        callback(this->square(r - 1, c - 1));
+    if (r > 0 && c < (m_columns - 2)) // UpRight
+        callback(this->square(r - 1, c + 1));
+    if (r < (m_rows - 2) && c > 0) // DownLeft
+        callback(this->square(r + 1, c - 1));
+    if (r < (m_rows - 2) && c < (m_columns - 2)) // DownRight
+        callback(this->square(r + 1, c + 1));
 }
 
 void Field::reset()
@@ -84,8 +90,10 @@ void Field::reset()
             square.label->set_visible(false);
             square.label->set_icon(square.has_mine ? m_mine_bitmap : nullptr);
             square.label->set_background_color(Color::from_rgb(0xff4040));
+            square.label->set_fill_with_background_color(false);
             if (!square.button)
                 square.button = new SquareButton(this);
+            square.button->set_icon(nullptr);
             square.button->set_relative_rect(rect);
             square.button->set_visible(true);
             square.button->on_click = [this, &square] (GButton&) {
@@ -107,22 +115,12 @@ void Field::reset()
             square.number = number;
             if (square.has_mine)
                 continue;
-            switch (number) {
-            case 1:
-                square.label->set_icon(m_one_bitmap.copy_ref());
-                break;
-            case 2:
-                square.label->set_icon(m_two_bitmap.copy_ref());
-                break;
-            case 3:
-                square.label->set_icon(m_three_bitmap.copy_ref());
-                break;
-            case 4:
-                square.label->set_icon(m_four_bitmap.copy_ref());
-                break;
-            }
+            if (square.number)
+                square.label->set_icon(m_number_bitmap[square.number - 1].copy_ref());
         }
     }
+
+    update();
 }
 
 void Field::flood_fill(Square& square)
