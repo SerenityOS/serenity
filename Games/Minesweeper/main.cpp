@@ -22,8 +22,6 @@ int main(int argc, char** argv)
     container->set_preferred_size({ 0, 36 });
     container->set_layout(make<GBoxLayout>(Orientation::Horizontal));
     auto* face_button = new GButton(container);
-    face_button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
-    face_button->set_preferred_size({ 32, 32 });
     face_button->set_icon(GraphicsBitmap::load_from_file("/res/icons/minesweeper/face-default.png"));
 
     auto* field = new Field(widget);

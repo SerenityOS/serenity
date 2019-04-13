@@ -50,17 +50,17 @@ void Field::for_each_neighbor_of(const Square& square, Callback callback)
         callback(this->square(r - 1, c));
     if (c > 0) // Left
         callback(this->square(r, c - 1));
-    if (r < (m_rows - 2)) // Down
+    if (r < (m_rows - 1)) // Down
         callback(this->square(r + 1, c));
-    if (c < (m_columns - 2)) // Right
+    if (c < (m_columns - 1)) // Right
         callback(this->square(r, c + 1));
     if (r > 0 && c > 0) // UpLeft
         callback(this->square(r - 1, c - 1));
-    if (r > 0 && c < (m_columns - 2)) // UpRight
+    if (r > 0 && c < (m_columns - 1)) // UpRight
         callback(this->square(r - 1, c + 1));
-    if (r < (m_rows - 2) && c > 0) // DownLeft
+    if (r < (m_rows - 1) && c > 0) // DownLeft
         callback(this->square(r + 1, c - 1));
-    if (r < (m_rows - 2) && c < (m_columns - 2)) // DownRight
+    if (r < (m_rows - 1) && c < (m_columns - 1)) // DownRight
         callback(this->square(r + 1, c + 1));
 }
 
