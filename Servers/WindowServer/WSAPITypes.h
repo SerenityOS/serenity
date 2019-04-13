@@ -195,6 +195,7 @@ struct WSAPI_ClientMessage {
         SetWindowOverrideCursor,
         WM_SetActiveWindow,
         PopupMenu,
+        DismissMenu,
         SetWindowIcon,
     };
     Type type { Invalid };

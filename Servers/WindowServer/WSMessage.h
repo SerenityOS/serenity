@@ -59,6 +59,7 @@ public:
         APISetWindowOverrideCursorRequest,
         WMAPISetActiveWindowRequest,
         APIPopupMenuRequest,
+        APIDismissMenuRequest,
         __End_API_Client_Requests,
     };
 
@@ -208,6 +209,19 @@ private:
     Point m_position;
 };
 
+class WSAPIDismissMenuRequest : public WSAPIClientRequest {
+public:
+    WSAPIDismissMenuRequest(int client_id, int menu_id)
+        : WSAPIClientRequest(WSMessage::APIDismissMenuRequest, client_id)
+        , m_menu_id(menu_id)
+    {
+    }
+
+    int menu_id() const { return m_menu_id; }
+
+private:
+    int m_menu_id;
+};
 
 class WSAPICreateMenuRequest : public WSAPIClientRequest {
 public:

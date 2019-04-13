@@ -72,6 +72,7 @@ private:
     void handle_request(const WSAPISetWindowOverrideCursorRequest&);
     void handle_request(const WSWMAPISetActiveWindowRequest&);
     void handle_request(const WSAPIPopupMenuRequest&);
+    void handle_request(const WSAPIDismissMenuRequest&);
 
     void post_error(const String&);
 
