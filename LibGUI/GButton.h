@@ -41,7 +41,7 @@ public:
 
     virtual const char* class_name() const override { return "GButton"; }
 
-private:
+protected:
     virtual void paint_event(GPaintEvent&) override;
     virtual void mousedown_event(GMouseEvent&) override;
     virtual void mouseup_event(GMouseEvent&) override;
@@ -49,6 +49,7 @@ private:
     virtual void enter_event(CEvent&) override;
     virtual void leave_event(CEvent&) override;
 
+private:
     String m_caption;
     RetainPtr<GraphicsBitmap> m_icon;
     ButtonStyle m_button_style { ButtonStyle::Normal };
