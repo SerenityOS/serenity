@@ -363,7 +363,7 @@ void WSWindowManager::remove_window(WSWindow& window)
 void WSWindowManager::tell_wm_listener_about_window(WSWindow& listener, WSWindow& window)
 {
     if (window.client())
-        WSMessageLoop::the().post_message(listener, make<WSWMWindowStateChangedEvent>(window.client()->client_id(), window.window_id(), window.title(), window.rect(), window.is_active(), window.type(), window.is_minimized()));
+        WSMessageLoop::the().post_message(listener, make<WSWMWindowStateChangedEvent>(window.client()->client_id(), window.window_id(), window.title(), window.rect(), window.is_active(), window.type(), window.is_minimized(), window.icon_path()));
 }
 
 void WSWindowManager::tell_wm_listeners_window_state_changed(WSWindow& window)

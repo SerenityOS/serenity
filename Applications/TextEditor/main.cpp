@@ -151,5 +151,7 @@ int main(int argc, char** argv)
     text_editor->set_focus(true);
     window->show();
 
+    window->set_icon_path("/res/icons/TextEditor16.png");
+
     return app.exec();
 }

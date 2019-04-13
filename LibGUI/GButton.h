@@ -17,7 +17,7 @@ public:
     String caption() const { return m_caption; }
     void set_caption(const String&);
 
-    void set_icon(RetainPtr<GraphicsBitmap>&& icon) { m_icon = move(icon); }
+    void set_icon(RetainPtr<GraphicsBitmap>&&);
     const GraphicsBitmap* icon() const { return m_icon.ptr(); }
     GraphicsBitmap* icon() { return m_icon.ptr(); }
 

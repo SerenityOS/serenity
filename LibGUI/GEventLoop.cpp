@@ -174,7 +174,7 @@ void GEventLoop::handle_wm_event(const WSAPI_ServerMessage& event, GWindow& wind
     dbgprintf("GEventLoop: handle_wm_event: %d\n", (int)event.type);
 #endif
     if (event.type == WSAPI_ServerMessage::WM_WindowStateChanged)
-        return post_event(window, make<GWMWindowStateChangedEvent>(event.wm.client_id, event.wm.window_id, String(event.text, event.text_length), event.wm.rect, event.wm.is_active, (GWindowType)event.wm.window_type, event.wm.is_minimized));
+        return post_event(window, make<GWMWindowStateChangedEvent>(event.wm.client_id, event.wm.window_id, String(event.text, event.text_length), event.wm.rect, event.wm.is_active, (GWindowType)event.wm.window_type, event.wm.is_minimized, String(event.wm.icon_path, event.wm.icon_path_length)));
     if (event.type == WSAPI_ServerMessage::WM_WindowRemoved)
         return post_event(window, make<GWMWindowRemovedEvent>(event.wm.client_id, event.wm.window_id));
     ASSERT_NOT_REACHED();

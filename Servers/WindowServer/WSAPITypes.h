@@ -116,6 +116,8 @@ struct WSAPI_ServerMessage {
             bool is_active;
             bool is_minimized;
             WSAPI_WindowType window_type;
+            int icon_path_length;
+            char icon_path[256];
         } wm;
         struct {
             WSAPI_Rect rect;
@@ -193,6 +195,7 @@ struct WSAPI_ClientMessage {
         SetWindowOverrideCursor,
         WM_SetActiveWindow,
         PopupMenu,
+        SetWindowIcon,
     };
     Type type { Invalid };
     int window_id { -1 };

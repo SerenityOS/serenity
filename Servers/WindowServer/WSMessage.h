@@ -45,6 +45,7 @@ public:
         APIGetWindowTitleRequest,
         APISetWindowRectRequest,
         APIGetWindowRectRequest,
+        APISetWindowIconRequest,
         APIInvalidateRectRequest,
         APIDidFinishPaintingNotification,
         APIGetWindowBackingStoreRequest,
@@ -463,6 +464,23 @@ private:
     Rect m_rect;
 };
 
+class WSAPISetWindowIconRequest final : public WSAPIClientRequest {
+public:
+    explicit WSAPISetWindowIconRequest(int client_id, int window_id, const String& icon_path)
+        : WSAPIClientRequest(WSMessage::APISetWindowIconRequest, client_id)
+        , m_window_id(window_id)
+        , m_icon_path(icon_path)
+    {
+    }
+
+    int window_id() const { return m_window_id; }
+    String icon_path() const { return m_icon_path; }
+
+private:
+    int m_window_id { 0 };
+    String m_icon_path;
+};
+
 class WSAPIGetWindowRectRequest final : public WSAPIClientRequest {
 public:
     explicit WSAPIGetWindowRectRequest(int client_id, int window_id)
@@ -684,9 +702,10 @@ public:
 
 class WSWMWindowStateChangedEvent : public WSWMEvent {
 public:
-    WSWMWindowStateChangedEvent(int client_id, int window_id, const String& title, const Rect& rect, bool is_active, WSWindowType window_type, bool is_minimized)
+    WSWMWindowStateChangedEvent(int client_id, int window_id, const String& title, const Rect& rect, bool is_active, WSWindowType window_type, bool is_minimized, const String& icon_path)
         : WSWMEvent(WSMessage::WM_WindowStateChanged, client_id, window_id)
         , m_title(title)
+        , m_icon_path(icon_path)
         , m_rect(rect)
         , m_active(is_active)
         , m_window_type(window_type)
@@ -695,6 +714,7 @@ public:
     }
 
     String title() const { return m_title; }
+    String icon_path() const { return m_icon_path; }
     Rect rect() const { return m_rect; }
     bool is_active() const { return m_active; }
     WSWindowType window_type() const { return m_window_type; }
@@ -702,6 +722,7 @@ public:
 
 private:
     String m_title;
+    String m_icon_path;
     Rect m_rect;
     bool m_active;
     WSWindowType m_window_type;
