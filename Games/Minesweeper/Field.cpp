@@ -24,8 +24,9 @@ public:
     }
 };
 
-Field::Field(GWidget* parent)
+Field::Field(GButton& face_button, GWidget* parent)
     : GFrame(parent)
+    , m_face_button(face_button)
 {
     set_frame_thickness(2);
     set_frame_shape(FrameShape::Container);
@@ -38,10 +39,28 @@ Field::Field(GWidget* parent)
     set_fill_with_background_color(true);
     set_background_color(Color::LightGray);
     reset();
+
+    m_face_button.on_click = [this] (auto&) { reset(); };
+    set_face(Face::Default);
 }
 
 Field::~Field()
 {
+}
+
+void Field::set_face(Face face)
+{
+    switch (face) {
+    case Face::Default:
+        m_face_button.set_icon(GraphicsBitmap::load_from_file("/res/icons/minesweeper/face-default.png"));
+        break;
+    case Face::Good:
+        m_face_button.set_icon(GraphicsBitmap::load_from_file("/res/icons/minesweeper/face-good.png"));
+        break;
+    case Face::Bad:
+        m_face_button.set_icon(GraphicsBitmap::load_from_file("/res/icons/minesweeper/face-bad.png"));
+        break;
+    }
 }
 
 template<typename Callback>
@@ -70,12 +89,16 @@ void Field::for_each_neighbor_of(const Square& square, Callback callback)
 void Field::reset()
 {
     set_greedy_for_hits(false);
+    set_face(Face::Default);
     srand(time(nullptr));
     m_squares.resize(rows() * columns());
 
     HashTable<int> mines;
-    for (int i = 0; i < m_mine_count; ++i)
-        mines.set(rand() % (rows() * columns()));
+    while (mines.size() != m_mine_count) {
+        int location = rand() % (rows() * columns());
+        if (!mines.contains(location))
+            mines.set(location);
+    }
 
     int i = 0;
     for (int r = 0; r < rows(); ++r) {
@@ -123,6 +146,8 @@ void Field::reset()
         }
     }
 
+    m_unswept_empties = rows() * columns() - m_mine_count;
+
     update();
 }
 
@@ -141,15 +166,21 @@ void Field::on_square_clicked(Square& square)
         return;
     if (square.has_flag)
         return;
+    update();
     square.is_swept = true;
     square.button->set_visible(false);
     square.label->set_visible(true);
     if (square.has_mine) {
         square.label->set_fill_with_background_color(true);
         game_over();
-    } else if (square.number == 0) {
-        flood_fill(square);
+    } else {
+        --m_unswept_empties;
+        if (square.number == 0)
+            flood_fill(square);
     }
+
+    if (!m_unswept_empties)
+        win();
 }
 
 void Field::on_square_right_clicked(Square& square)
@@ -161,9 +192,22 @@ void Field::on_square_right_clicked(Square& square)
     square.button->update();
 }
 
+void Field::win()
+{
+    set_greedy_for_hits(true);
+    set_face(Face::Good);
+    reveal_mines();
+}
+
 void Field::game_over()
 {
     set_greedy_for_hits(true);
+    set_face(Face::Bad);
+    reveal_mines();
+}
+
+void Field::reveal_mines()
+{
     for (int r = 0; r < rows(); ++r) {
         for (int c = 0; c < columns(); ++c) {
             auto& square = this->square(r, c);
