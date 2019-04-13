@@ -3,7 +3,6 @@
 #include "kmalloc.h"
 #include "StdLib.h"
 #include "i386.h"
-#include "system.h"
 #include <Kernel/FileSystem/FileDescriptor.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Devices/NullDevice.h>
@@ -1190,9 +1189,9 @@ int Process::sys$usleep(useconds_t usec)
         return 0;
 
     current->sleep(usec / 1000);
-    if (current->m_wakeup_time > system.uptime) {
+    if (current->m_wakeup_time > g_uptime) {
         ASSERT(current->m_was_interrupted_while_blocked);
-        dword ticks_left_until_original_wakeup_time = current->m_wakeup_time - system.uptime;
+        dword ticks_left_until_original_wakeup_time = current->m_wakeup_time - g_uptime;
         return ticks_left_until_original_wakeup_time / TICKS_PER_SECOND;
     }
     return 0;
@@ -1203,9 +1202,9 @@ int Process::sys$sleep(unsigned seconds)
     if (!seconds)
         return 0;
     current->sleep(seconds * TICKS_PER_SECOND);
-    if (current->m_wakeup_time > system.uptime) {
+    if (current->m_wakeup_time > g_uptime) {
         ASSERT(current->m_was_interrupted_while_blocked);
-        dword ticks_left_until_original_wakeup_time = current->m_wakeup_time - system.uptime;
+        dword ticks_left_until_original_wakeup_time = current->m_wakeup_time - g_uptime;
         return ticks_left_until_original_wakeup_time / TICKS_PER_SECOND;
     }
     return 0;
