@@ -1,6 +1,5 @@
 #include <Kernel/Thread.h>
 #include <Kernel/Scheduler.h>
-#include <Kernel/system.h>
 #include <Kernel/Process.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <LibC/signal_numbers.h>
@@ -125,7 +124,7 @@ void Thread::block(Thread::State new_state)
 void Thread::sleep(dword ticks)
 {
     ASSERT(state() == Thread::Running);
-    current->set_wakeup_time(system.uptime + ticks);
+    current->set_wakeup_time(g_uptime + ticks);
     current->block(Thread::BlockedSleep);
 }
 

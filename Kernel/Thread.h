@@ -89,8 +89,8 @@ public:
     void block(Thread::State);
     void unblock();
 
-    void set_wakeup_time(dword t) { m_wakeup_time = t; }
-    dword wakeup_time() const { return m_wakeup_time; }
+    void set_wakeup_time(qword t) { m_wakeup_time = t; }
+    qword wakeup_time() const { return m_wakeup_time; }
     void snooze_until(Alarm&);
     KResult wait_for_connect(Socket&);
 
@@ -144,7 +144,7 @@ private:
     dword m_ticks_left { 0 };
     dword m_stack_top0 { 0 };
     dword m_stack_top3 { 0 };
-    dword m_wakeup_time { 0 };
+    qword m_wakeup_time { 0 };
     dword m_times_scheduled { 0 };
     dword m_pending_signals { 0 };
     dword m_signal_mask { 0 };

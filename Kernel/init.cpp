@@ -4,7 +4,6 @@
 #include "i8253.h"
 #include <Kernel/Devices/KeyboardDevice.h>
 #include "Process.h"
-#include "system.h"
 #include "PIC.h"
 #include <Kernel/Devices/IDEDiskDevice.h>
 #include "KSyms.h"
@@ -36,8 +35,6 @@
 #define SPAWN_VISUAL_BUILDER
 //#define SPAWN_MULTIPLE_SHELLS
 //#define STRESS_TEST_SPAWNING
-
-system_t system;
 
 VirtualConsole* tty0;
 VirtualConsole* tty1;

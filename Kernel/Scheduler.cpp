@@ -1,6 +1,5 @@
 #include "Scheduler.h"
 #include "Process.h"
-#include "system.h"
 #include "RTC.h"
 #include "i8253.h"
 #include <AK/TemporaryChange.h>
@@ -27,6 +26,7 @@ Thread* current;
 Thread* g_last_fpu_thread;
 Thread* g_finalizer;
 static Process* s_colonel_process;
+qword g_uptime;
 
 struct TaskRedirectionData {
     word selector;
@@ -65,7 +65,7 @@ bool Scheduler::pick_next()
         auto& process = thread.process();
 
         if (thread.state() == Thread::BlockedSleep) {
-            if (thread.wakeup_time() <= system.uptime)
+            if (thread.wakeup_time() <= g_uptime)
                 thread.unblock();
             return IterationDecision::Continue;
         }
@@ -391,7 +391,7 @@ void Scheduler::timer_tick(RegisterDump& regs)
     if (!current)
         return;
 
-    system.uptime++;
+    ++g_uptime;
 
     if (current->tick())
         return;
