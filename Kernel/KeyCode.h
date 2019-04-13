@@ -111,6 +111,7 @@ enum KeyCode : byte {
 };
 
 enum KeyModifier {
+    Mod_None = 0x00,
     Mod_Alt = 0x01,
     Mod_Ctrl = 0x02,
     Mod_Shift = 0x04,
