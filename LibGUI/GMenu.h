@@ -20,6 +20,7 @@ public:
     void add_separator();
 
     void popup(const Point& screen_position);
+    void dismiss();
 
     Function<void(unsigned)> on_item_activation;
 

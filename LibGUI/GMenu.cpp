@@ -50,6 +50,16 @@ void GMenu::popup(const Point& screen_position)
     GEventLoop::post_message_to_server(request);
 }
 
+void GMenu::dismiss()
+{
+    if (!m_menu_id)
+        return;
+    WSAPI_ClientMessage request;
+    request.type = WSAPI_ClientMessage::Type::DismissMenu;
+    request.menu.menu_id = m_menu_id;
+    GEventLoop::post_message_to_server(request);
+}
+
 int GMenu::realize_menu()
 {
     WSAPI_ClientMessage request;
