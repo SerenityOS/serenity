@@ -60,10 +60,38 @@ public:
         return m_value.as_bool;
     }
 
+    bool to_bool() const
+    {
+        if (type() == Type::Bool)
+            return as_bool();
+        if (type() == Type::String)
+            return !!m_value.as_string;
+        if (type() == Type::Int)
+            return m_value.as_int != 0;
+        if (type() == Type::Rect)
+            return !as_rect().is_null();
+        if (type() == Type::Size)
+            return !as_size().is_null();
+        if (type() == Type::Point)
+            return !as_point().is_null();
+        return is_valid();
+    }
+
     int as_int() const
     {
         ASSERT(type() == Type::Int);
         return m_value.as_int;
+    }
+
+    int to_int() const
+    {
+        if (is_int())
+            return as_int();
+        if (is_bool())
+            return as_bool() ? 1 : 0;
+        if (is_float())
+            return (int)as_float();
+        return 0;
     }
 
     float as_float() const
@@ -109,6 +137,13 @@ public:
     {
         ASSERT(type() == Type::Color);
         return Color::from_rgba(m_value.as_color);
+    }
+
+    Color to_color() const
+    {
+        if (is_color())
+            return as_color();
+        return Color();
     }
 
     Color to_color(Color default_value) const
