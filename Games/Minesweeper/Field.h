@@ -3,6 +3,7 @@
 #include <LibGUI/GFrame.h>
 
 class SquareButton;
+class GButton;
 class GLabel;
 
 struct Square {
@@ -18,7 +19,7 @@ struct Square {
 
 class Field final : public GFrame {
 public:
-    explicit Field(GWidget* parent);
+    Field(GButton& face_button, GWidget* parent);
     virtual ~Field() override;
 
     int rows() const { return m_rows; }
@@ -32,6 +33,8 @@ private:
     void on_square_clicked(Square&);
     void on_square_right_clicked(Square&);
     void game_over();
+    void win();
+    void reveal_mines();
 
     Square& square(int row, int column) { return m_squares[row * columns() + column]; }
     const Square& square(int row, int column) const { return m_squares[row * columns() + column]; }
@@ -40,11 +43,17 @@ private:
 
     template<typename Callback> void for_each_neighbor_of(const Square&, Callback);
 
+    enum class Face { Default, Good, Bad };
+    void set_face(Face);
+
     int m_rows { 9 };
     int m_columns { 9 };
     int m_mine_count { 10 };
+    int m_unswept_empties { 0 };
     Vector<Square> m_squares;
     RetainPtr<GraphicsBitmap> m_mine_bitmap;
     RetainPtr<GraphicsBitmap> m_flag_bitmap;
     RetainPtr<GraphicsBitmap> m_number_bitmap[8];
+    GButton& m_face_button;
+    Face m_face { Face::Default };
 };
