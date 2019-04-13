@@ -163,7 +163,9 @@ void GWidget::handle_mouseup_event(GMouseEvent& event)
     // FIXME: This needs improvement.
     if (m_click_clock.is_valid()) {
         int elapsed_since_last_click = m_click_clock.elapsed();
+#if 0
         dbgprintf("Click clock elapsed: %d\n", m_click_clock.elapsed());
+#endif
         if (elapsed_since_last_click < 250) {
             doubleclick_event(event);
         } else {
