@@ -61,6 +61,8 @@ public:
     operator WSAPI_Point() const;
     String to_string() const { return String::format("[%d,%d]", x(), y()); }
 
+    bool is_null() const { return !m_x && !m_y; }
+
 private:
     int m_x { 0 };
     int m_y { 0 };
