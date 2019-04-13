@@ -45,10 +45,10 @@ void GButton::paint_event(GPaintEvent& event)
 
     auto content_rect = rect().shrunken(10, 2);
     auto icon_location = m_icon ? content_rect.center().translated(-(m_icon->width() / 2), -(m_icon->height() / 2)) : Point();
-    if (m_being_pressed) {
-        content_rect.move_by(1, 1);
-        icon_location.move_by(1, 1);
-    }
+    if (m_icon && !m_caption.is_empty())
+        icon_location.set_x(content_rect.x());
+    if (m_being_pressed)
+        painter.translate(1, 1);
     if (m_icon) {
         if (is_enabled())
             painter.blit(icon_location, *m_icon, m_icon->rect());
@@ -56,6 +56,10 @@ void GButton::paint_event(GPaintEvent& event)
             painter.blit_dimmed(icon_location, *m_icon, m_icon->rect());
     }
     auto& font = (m_checkable && m_checked) ? Font::default_bold_font() : this->font();
+    if (m_icon && !m_caption.is_empty()) {
+        content_rect.move_by(m_icon->width() + 4, 0);
+        content_rect.set_width(content_rect.width() - m_icon->width() - 4);
+    }
     painter.draw_text(content_rect, m_caption, font, text_alignment(), foreground_color(), TextElision::Right);
 }
 
@@ -129,4 +133,12 @@ void GButton::set_action(GAction& action)
     m_action = action.make_weak_ptr();
     action.register_button({ }, *this);
     set_enabled(action.is_enabled());
+}
+
+void GButton::set_icon(RetainPtr<GraphicsBitmap>&& icon)
+{
+    if (m_icon.ptr() == icon.ptr())
+        return;
+    m_icon = move(icon);
+    update();
 }

@@ -293,6 +293,10 @@ void WSMessageLoop::on_receive_from_client(int client_id, const WSAPI_ClientMess
     case WSAPI_ClientMessage::Type::PopupMenu:
         post_message(client, make<WSAPIPopupMenuRequest>(client_id, message.menu.menu_id, message.menu.position));
         break;
+    case WSAPI_ClientMessage::Type::SetWindowIcon:
+        ASSERT(message.text_length < (ssize_t)sizeof(message.text));
+        post_message(client, make<WSAPISetWindowIconRequest>(client_id, message.window_id, String(message.text, message.text_length)));
+        break;
     case WSAPI_ClientMessage::Type::DestroyMenu:
         post_message(client, make<WSAPIDestroyMenuRequest>(client_id, message.menu.menu_id));
         break;

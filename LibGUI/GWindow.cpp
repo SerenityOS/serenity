@@ -448,3 +448,19 @@ void GWindow::set_modal(bool modal)
 void GWindow::wm_event(GWMEvent&)
 {
 }
+
+void GWindow::set_icon_path(const String& path)
+{
+    if (m_icon_path == path)
+        return;
+    m_icon_path = path;
+    if (!m_window_id)
+        return;
+    WSAPI_ClientMessage message;
+    message.type = WSAPI_ClientMessage::Type::SetWindowIcon;
+    message.window_id = m_window_id;
+    ASSERT(path.length() < sizeof(message.text));
+    strcpy(message.text, path.characters());
+    message.text_length = path.length();
+    GEventLoop::post_message_to_server(message);
+}

@@ -111,6 +111,8 @@ public:
     bool any_opaque_window_contains_rect(const Rect&);
     bool any_opaque_window_above_this_one_contains_rect(const WSWindow&, const Rect&);
 
+    void tell_wm_listeners_window_state_changed(WSWindow&);
+
 private:
     void process_mouse_event(const WSMouseEvent&, WSWindow*& event_window);
     bool process_ongoing_window_resize(const WSMouseEvent&, WSWindow*& event_window);
@@ -135,7 +137,6 @@ private:
     void paint_window_frame(const WSWindow&);
     void flip_buffers();
     void tick_clock();
-    void tell_wm_listeners_window_state_changed(WSWindow&);
     void tell_wm_listener_about_window(WSWindow& listener, WSWindow&);
     void pick_new_active_window();
 

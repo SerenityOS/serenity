@@ -113,7 +113,13 @@ public:
     void set_base_size(const Size& size) { m_base_size = size; }
 
     const GraphicsBitmap& icon() const { return *m_icon; }
-    void set_icon(Retained<GraphicsBitmap>&& icon) { m_icon = move(icon); }
+    String icon_path() const { return m_icon_path; }
+    void set_icon(const String& path, Retained<GraphicsBitmap>&& icon)
+    {
+        m_icon_path = path;
+        m_icon = move(icon);
+    }
+    void set_default_icon();
 
     const WSCursor* override_cursor() const { return m_override_cursor.ptr(); }
     void set_override_cursor(RetainPtr<WSCursor>&& cursor) { m_override_cursor = move(cursor); }
@@ -146,6 +152,7 @@ private:
     Size m_size_increment;
     Size m_base_size;
     Retained<GraphicsBitmap> m_icon;
+    String m_icon_path;
     RetainPtr<WSCursor> m_override_cursor;
     WSWindowFrame m_frame;
     Color m_background_color { Color::LightGray };

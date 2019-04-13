@@ -52,5 +52,7 @@ int main(int argc, char** argv)
 
     window->show();
 
+    window->set_icon_path("/res/icons/minesweeper/mine.png");
+
     return app.exec();
 }

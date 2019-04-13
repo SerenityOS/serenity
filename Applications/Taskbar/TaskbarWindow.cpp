@@ -74,13 +74,14 @@ void TaskbarWindow::wm_event(GWMEvent& event)
     }
     case GEvent::WM_WindowStateChanged: {
         auto& changed_event = static_cast<GWMWindowStateChangedEvent&>(event);
-        printf("WM_WindowStateChanged: client_id=%d, window_id=%d, title=%s, rect=%s, is_active=%u, is_minimized=%u\n",
+        printf("WM_WindowStateChanged: client_id=%d, window_id=%d, title=%s, rect=%s, is_active=%u, is_minimized=%u, icon_path=%s\n",
             changed_event.client_id(),
             changed_event.window_id(),
             changed_event.title().characters(),
             changed_event.rect().to_string().characters(),
             changed_event.is_active(),
-            changed_event.is_minimized()
+            changed_event.is_minimized(),
+            changed_event.icon_path().characters()
         );
         if (!should_include_window(changed_event.window_type()))
             break;
@@ -89,6 +90,7 @@ void TaskbarWindow::wm_event(GWMEvent& event)
         window.set_rect(changed_event.rect());
         window.set_active(changed_event.is_active());
         window.set_minimized(changed_event.is_minimized());
+        window.set_icon_path(changed_event.icon_path());
         if (window.is_minimized()) {
             window.button()->set_foreground_color(Color::DarkGray);
             window.button()->set_caption(String::format("[%s]", changed_event.title().characters()));
@@ -96,6 +98,7 @@ void TaskbarWindow::wm_event(GWMEvent& event)
             window.button()->set_foreground_color(Color::Black);
             window.button()->set_caption(changed_event.title());
         }
+        window.button()->set_icon(window.icon());
         window.button()->set_checked(changed_event.is_active());
         break;
     }

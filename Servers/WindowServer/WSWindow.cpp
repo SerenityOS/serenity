@@ -5,11 +5,16 @@
 #include <WindowServer/WSAPITypes.h>
 #include <WindowServer/WSClientConnection.h>
 
+static String default_window_icon_path()
+{
+    return "/res/icons/16x16/window.png";
+}
+
 static GraphicsBitmap& default_window_icon()
 {
     static GraphicsBitmap* s_icon;
     if (!s_icon)
-        s_icon = GraphicsBitmap::load_from_file("/res/icons/16x16/window.png").leak_ref();
+        s_icon = GraphicsBitmap::load_from_file(default_window_icon_path()).leak_ref();
     return *s_icon;
 }
 
@@ -17,6 +22,7 @@ WSWindow::WSWindow(WSMessageReceiver& internal_owner, WSWindowType type)
     : m_internal_owner(&internal_owner)
     , m_type(type)
     , m_icon(default_window_icon())
+    , m_icon_path(default_window_icon_path())
     , m_frame(*this)
 {
     WSWindowManager::the().add_window(*this);
@@ -28,6 +34,7 @@ WSWindow::WSWindow(WSClientConnection& client, WSWindowType window_type, int win
     , m_modal(modal)
     , m_window_id(window_id)
     , m_icon(default_window_icon())
+    , m_icon_path(default_window_icon_path())
     , m_frame(*this)
 {
     // FIXME: This should not be hard-coded here.
@@ -189,6 +196,9 @@ void WSWindow::on_message(const WSMessage& message)
         memcpy(server_message.text, changed_event.title().characters(), changed_event.title().length());
         server_message.text_length = changed_event.title().length();
         server_message.wm.rect = changed_event.rect();
+        ASSERT(changed_event.icon_path().length() < sizeof(server_message.wm.icon_path));
+        memcpy(server_message.wm.icon_path, changed_event.icon_path().characters(), changed_event.icon_path().length());
+        server_message.wm.icon_path_length = changed_event.icon_path().length();
         break;
     }
 
@@ -235,4 +245,10 @@ bool WSWindow::is_active() const
 bool WSWindow::is_blocked_by_modal_window() const
 {
     return !is_modal() && client() && client()->is_showing_modal_window();
+}
+
+void WSWindow::set_default_icon()
+{
+    m_icon = default_window_icon();
+    m_icon_path = default_window_icon_path();
 }

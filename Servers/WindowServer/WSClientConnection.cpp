@@ -339,6 +339,28 @@ void WSClientConnection::handle_request(const WSAPIGetWindowTitleRequest& reques
     post_message(response);
 }
 
+void WSClientConnection::handle_request(const WSAPISetWindowIconRequest& request)
+{
+    int window_id = request.window_id();
+    auto it = m_windows.find(window_id);
+    if (it == m_windows.end()) {
+        post_error("WSAPISetWindowIconRequest: Bad window ID");
+        return;
+    }
+    auto& window = *(*it).value;
+    if (request.icon_path().is_empty()) {
+        window.set_default_icon();
+    } else {
+        auto icon = GraphicsBitmap::load_from_file(request.icon_path());
+        if (!icon)
+            return;
+        window.set_icon(request.icon_path(), *icon);
+    }
+
+    window.frame().invalidate_title_bar();
+    WSWindowManager::the().tell_wm_listeners_window_state_changed(window);
+}
+
 void WSClientConnection::handle_request(const WSAPISetWindowRectRequest& request)
 {
     int window_id = request.window_id();
@@ -601,6 +623,8 @@ void WSClientConnection::on_request(const WSAPIClientRequest& request)
         return handle_request(static_cast<const WSAPISetWindowRectRequest&>(request));
     case WSMessage::APIGetWindowRectRequest:
         return handle_request(static_cast<const WSAPIGetWindowRectRequest&>(request));
+    case WSMessage::APISetWindowIconRequest:
+        return handle_request(static_cast<const WSAPISetWindowIconRequest&>(request));
     case WSMessage::APISetClipboardContentsRequest:
         return handle_request(static_cast<const WSAPISetClipboardContentsRequest&>(request));
     case WSMessage::APIGetClipboardContentsRequest:
