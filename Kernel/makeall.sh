@@ -42,8 +42,8 @@ $make_cmd -C ../Applications/Downloader clean && \
 $make_cmd -C ../Applications/Downloader && \
 $make_cmd -C ../Applications/VisualBuilder clean && \
 $make_cmd -C ../Applications/VisualBuilder && \
-$make_cmd -C ../Applications/Games/Minesweeper clean && \
-$make_cmd -C ../Applications/Games/Minesweeper && \
+$make_cmd -C ../Games/Minesweeper clean && \
+$make_cmd -C ../Games/Minesweeper && \
 $make_cmd clean &&\
 $make_cmd && \
 sudo ./sync.sh
