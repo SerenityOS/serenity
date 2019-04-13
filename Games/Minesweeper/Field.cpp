@@ -25,8 +25,11 @@ public:
 };
 
 Field::Field(GWidget* parent)
-    : GWidget(parent)
+    : GFrame(parent)
 {
+    set_frame_thickness(2);
+    set_frame_shape(FrameShape::Container);
+    set_frame_shadow(FrameShadow::Sunken);
     m_mine_bitmap = GraphicsBitmap::load_from_file("/res/icons/minesweeper/mine.png");
     m_flag_bitmap = GraphicsBitmap::load_from_file("/res/icons/minesweeper/flag.png");
     for (int i = 0; i < 8; ++i)
@@ -77,7 +80,7 @@ void Field::reset()
     int i = 0;
     for (int r = 0; r < rows(); ++r) {
         for (int c = 0; c < columns(); ++c) {
-            Rect rect = { c * square_size(), r * square_size(), square_size(), square_size() };
+            Rect rect = { frame_thickness() + c * square_size(), frame_thickness() + r * square_size(), square_size(), square_size() };
             auto& square = this->square(r, c);
             square.row = r;
             square.column = c;
