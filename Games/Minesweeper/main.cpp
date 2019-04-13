@@ -10,7 +10,7 @@ int main(int argc, char** argv)
 
     auto* window = new GWindow;
     window->set_title("Minesweeper");
-    window->set_rect(100, 100, 135, 171);
+    window->set_rect(100, 100, 139, 175);
 
     auto* widget = new GWidget;
     window->set_main_widget(widget);

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <LibGUI/GWidget.h>
+#include <LibGUI/GFrame.h>
 
 class SquareButton;
 class GLabel;
@@ -16,7 +16,7 @@ struct Square {
     GLabel* label { nullptr };
 };
 
-class Field final : public GWidget {
+class Field final : public GFrame {
 public:
     explicit Field(GWidget* parent);
     virtual ~Field() override;
