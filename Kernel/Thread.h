@@ -1,7 +1,6 @@
 #pragma once
 
 #include <Kernel/i386.h>
-#include <Kernel/TSS.h>
 #include <Kernel/KResult.h>
 #include <Kernel/LinearAddress.h>
 #include <Kernel/UnixTypes.h>
