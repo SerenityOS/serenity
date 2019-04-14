@@ -120,8 +120,6 @@ void GWidget::handle_paint_event(GPaintEvent& event)
 
 void GWidget::set_layout(OwnPtr<GLayout>&& layout)
 {
-    if (m_layout.ptr() == layout.ptr())
-        return;
     if (m_layout)
         m_layout->notify_disowned(Badge<GWidget>(), *this);
     m_layout = move(layout);

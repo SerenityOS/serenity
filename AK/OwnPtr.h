@@ -66,9 +66,6 @@ public:
 
     bool operator!() const { return !m_ptr; }
 
-    typedef T* OwnPtr::*UnspecifiedBoolType;
-    operator UnspecifiedBoolType() const { return m_ptr ? &OwnPtr::m_ptr : nullptr; }
-
     T* leak_ptr()
     {
         T* leakedPtr = m_ptr;
@@ -84,6 +81,9 @@ public:
 
     T& operator*() { return *m_ptr; }
     const T& operator*() const { return *m_ptr; }
+
+    operator const T*() const { return m_ptr; }
+    operator T*() { return m_ptr; }
 
     operator bool() { return !!m_ptr; }
 

@@ -1010,7 +1010,7 @@ void WSWindowManager::on_message(const WSMessage& message)
 
 void WSWindowManager::set_highlight_window(WSWindow* window)
 {
-    if (window == m_highlight_window.ptr())
+    if (window == m_highlight_window)
         return;
     if (auto* previous_highlight_window = m_highlight_window.ptr())
         invalidate(*previous_highlight_window);
@@ -1029,7 +1029,7 @@ void WSWindowManager::set_active_window(WSWindow* window)
         return;
     }
 
-    if (window == m_active_window.ptr())
+    if (window == m_active_window)
         return;
 
     auto* previously_active_window = m_active_window.ptr();
@@ -1053,7 +1053,7 @@ void WSWindowManager::set_active_window(WSWindow* window)
 
 void WSWindowManager::set_hovered_window(WSWindow* window)
 {
-    if (m_hovered_window.ptr() == window)
+    if (m_hovered_window == window)
         return;
 
     if (m_hovered_window)

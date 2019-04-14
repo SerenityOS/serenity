@@ -53,6 +53,14 @@ public:
         return *this;
     }
 
+    template<typename U>
+    RetainPtr& operator=(Retained<U>&& other)
+    {
+        release_if_not_null(m_ptr);
+        m_ptr = &other.leak_ref();
+        return *this;
+    }
+
     RetainPtr& operator=(T* ptr)
     {
         if (m_ptr != ptr)
@@ -90,9 +98,6 @@ public:
 
     bool operator!() const { return !m_ptr; }
 
-    typedef T* RetainPtr::*UnspecifiedBoolType;
-    operator UnspecifiedBoolType() const { return m_ptr ? &RetainPtr::m_ptr : nullptr; }
-
     T* leak_ref()
     {
         T* leakedPtr = m_ptr;
@@ -109,7 +114,19 @@ public:
     T& operator*() { return *m_ptr; }
     const T& operator*() const { return *m_ptr; }
 
+    operator const T*() const { return m_ptr; }
+    operator T*() { return m_ptr; }
+
     operator bool() { return !!m_ptr; }
+
+    bool operator==(std::nullptr_t) const { return !m_ptr; }
+    bool operator!=(std::nullptr_t) const { return m_ptr; }
+
+    bool operator==(const RetainPtr& other) const { return m_ptr == other.m_ptr; }
+    bool operator!=(const RetainPtr& other) const { return m_ptr != other.m_ptr; }
+
+    bool operator==(const T* other) const { return m_ptr == other; }
+    bool operator!=(const T* other) const { return m_ptr != other; }
 
     bool is_null() const { return !m_ptr; }
 

@@ -81,7 +81,7 @@ void VBForm::second_paint_event(GPaintEvent& event)
 
 bool VBForm::is_selected(const VBWidget& widget) const
 {
-    return &widget == m_selected_widget.ptr();
+    return &widget == m_selected_widget;
 }
 
 VBWidget* VBForm::widget_at(const Point& position)

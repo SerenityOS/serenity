@@ -68,7 +68,7 @@ public:
 
     void set_page_directory(PageDirectory& page_directory)
     {
-        ASSERT(!m_page_directory || m_page_directory.ptr() == &page_directory);
+        ASSERT(!m_page_directory || m_page_directory == &page_directory);
         m_page_directory = page_directory;
     }
 
