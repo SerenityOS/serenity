@@ -8,7 +8,6 @@
 #include <AK/InlineLinkedList.h>
 #include <AK/WeakPtr.h>
 #include <AK/HashMap.h>
-#include "WSMessageReceiver.h"
 #include "WSMenuBar.h"
 #include <WindowServer/WSWindowSwitcher.h>
 #include <WindowServer/WSWindowType.h>
@@ -30,7 +29,7 @@ class WSButton;
 
 enum class ResizeDirection { None, Left, UpLeft, Up, UpRight, Right, DownRight, Down, DownLeft };
 
-class WSWindowManager : public WSMessageReceiver {
+class WSWindowManager : public CObject {
     friend class WSWindowFrame;
     friend class WSWindowSwitcher;
 public:
@@ -132,7 +131,7 @@ private:
     template<typename Callback> void for_each_window(Callback);
     template<typename Callback> void for_each_active_menubar_menu(Callback);
     void close_current_menu();
-    virtual void on_message(const WSMessage&) override;
+    virtual void event(CEvent&) override;
     void compose();
     void paint_window_frame(const WSWindow&);
     void flip_buffers();

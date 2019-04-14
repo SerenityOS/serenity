@@ -115,7 +115,3 @@ void WSWindowSwitcher::refresh()
     m_switcher_window->set_rect(m_rect);
     draw();
 }
-
-void WSWindowSwitcher::on_message(const WSMessage&)
-{
-}

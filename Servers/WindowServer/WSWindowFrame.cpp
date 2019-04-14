@@ -53,7 +53,8 @@ WSWindowFrame::WSWindowFrame(WSWindow& window)
         s_minimize_button_bitmap = &CharacterBitmap::create_from_ascii(s_minimize_button_bitmap_data, s_minimize_button_bitmap_width, s_minimize_button_bitmap_height).leak_ref();
 
     m_buttons.append(make<WSButton>(*this, *s_close_button_bitmap, [this] {
-        m_window.on_message(WSMessage(WSMessage::WindowCloseRequest));
+        WSMessage close_request(WSMessage::WindowCloseRequest);
+        m_window.event(close_request);
     }));
 
     m_buttons.append(make<WSButton>(*this, *s_minimize_button_bitmap, [this] {

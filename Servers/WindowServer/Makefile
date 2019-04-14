@@ -10,7 +10,6 @@ SHAREDGRAPHICS_OBJS = \
     ../../SharedGraphics/PNGLoader.o
 
 WINDOWSERVER_OBJS = \
-    WSMessageReceiver.o \
     WSMessageLoop.o \
     WSWindow.o \
     WSWindowManager.o \
@@ -35,7 +34,7 @@ WARNING_FLAGS = -Wextra -Wall -Wundef -Wcast-qual -Wwrite-strings -Wimplicit-fal
 FLAVOR_FLAGS = -fno-exceptions -fno-rtti
 OPTIMIZATION_FLAGS = -Os
 INCLUDE_FLAGS = -I.. -I../.. -I. -I../../LibC
-LDFLAGS = -L../../LibC
+LDFLAGS = -L../../LibC -L../../LibCore
 
 DEFINES = -DSERENITY -DSANITIZE_PTRS -DUSERLAND
 
@@ -47,7 +46,7 @@ AR = i686-pc-serenity-ar
 all: $(APP)
 
 $(APP): $(OBJS)
-	$(LD) -o $(APP) $(LDFLAGS) $(OBJS) -lc
+	$(LD) -o $(APP) $(LDFLAGS) $(OBJS) -lc -lcore
 
 .cpp.o:
 	@echo "CXX $<"; $(CXX) $(CXXFLAGS) -o $@ -c $<

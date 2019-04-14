@@ -18,7 +18,7 @@ static GraphicsBitmap& default_window_icon()
     return *s_icon;
 }
 
-WSWindow::WSWindow(WSMessageReceiver& internal_owner, WSWindowType type)
+WSWindow::WSWindow(CObject& internal_owner, WSWindowType type)
     : m_internal_owner(&internal_owner)
     , m_type(type)
     , m_icon(default_window_icon())
@@ -130,10 +130,10 @@ void WSWindow::set_minimized(bool minimized)
     WSWindowManager::the().notify_minimization_state_changed(*this);
 }
 
-void WSWindow::on_message(const WSMessage& message)
+void WSWindow::event(CEvent& message)
 {
     if (m_internal_owner)
-        return m_internal_owner->on_message(message);
+        return m_internal_owner->event(message);
 
     if (is_blocked_by_modal_window())
         return;
@@ -141,7 +141,7 @@ void WSWindow::on_message(const WSMessage& message)
     WSAPI_ServerMessage server_message;
     server_message.window_id = window_id();
 
-    if (message.is_mouse_event())
+    if (static_cast<WSMessage&>(message).is_mouse_event())
         return handle_mouse_event(static_cast<const WSMouseEvent&>(message));
 
     switch (message.type()) {

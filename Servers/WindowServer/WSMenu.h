@@ -5,7 +5,7 @@
 #include <AK/WeakPtr.h>
 #include <SharedGraphics/Rect.h>
 #include <WindowServer/WSMenuItem.h>
-#include <WindowServer/WSMessageReceiver.h>
+#include <LibCore/CObject.h>
 
 class WSClientConnection;
 class WSMenuBar;
@@ -13,7 +13,7 @@ class WSMessage;
 class WSWindow;
 class Font;
 
-class WSMenu final : public WSMessageReceiver {
+class WSMenu final : public CObject {
 public:
     WSMenu(WSClientConnection*, int menu_id, String&& name);
     virtual ~WSMenu() override;
@@ -77,7 +77,7 @@ public:
     void popup(const Point&);
 
 private:
-    virtual void on_message(const WSMessage&) override;
+    virtual void event(CEvent&) override;
 
     int padding_between_text_and_shortcut() const { return 50; }
     void did_activate(WSMenuItem&);

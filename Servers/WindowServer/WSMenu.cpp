@@ -110,7 +110,7 @@ void WSMenu::draw()
     }
 }
 
-void WSMenu::on_message(const WSMessage& message)
+void WSMenu::event(CEvent& message)
 {
     ASSERT(menu_window());
     if (message.type() == WSMessage::MouseMove) {

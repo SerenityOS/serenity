@@ -4,7 +4,7 @@
 #include <SharedGraphics/GraphicsBitmap.h>
 #include <AK/AKString.h>
 #include <AK/InlineLinkedList.h>
-#include "WSMessageReceiver.h"
+#include <LibCore/CObject.h>
 #include <WindowServer/WSWindowType.h>
 #include <WindowServer/WSWindowFrame.h>
 
@@ -13,10 +13,10 @@ class WSCursor;
 class WSMenu;
 class WSMouseEvent;
 
-class WSWindow final : public WSMessageReceiver, public InlineLinkedListNode<WSWindow> {
+class WSWindow final : public CObject, public InlineLinkedListNode<WSWindow> {
 public:
     WSWindow(WSClientConnection&, WSWindowType, int window_id, bool modal);
-    WSWindow(WSMessageReceiver&, WSWindowType);
+    WSWindow(CObject&, WSWindowType);
     virtual ~WSWindow() override;
 
     Color background_color() const { return m_background_color; }
@@ -84,7 +84,7 @@ public:
 
     void invalidate();
 
-    virtual void on_message(const WSMessage&) override;
+    virtual void event(CEvent&) override;
 
     GraphicsBitmap* backing_store() { return m_backing_store.ptr(); }
     void set_backing_store(RetainPtr<GraphicsBitmap>&& backing_store)
@@ -133,7 +133,7 @@ private:
     void handle_mouse_event(const WSMouseEvent&);
 
     WSClientConnection* m_client { nullptr };
-    WSMessageReceiver* m_internal_owner { nullptr };
+    CObject* m_internal_owner { nullptr };
     String m_title;
     Rect m_rect;
     WSWindowType m_type { WSWindowType::Normal };

@@ -93,9 +93,9 @@ void WSClientConnection::notify_about_new_screen_rect(const Rect& rect)
     post_message(message);
 }
 
-void WSClientConnection::on_message(const WSMessage& message)
+void WSClientConnection::event(CEvent& message)
 {
-    if (message.is_client_request()) {
+    if (static_cast<WSMessage&>(message).is_client_request()) {
         on_request(static_cast<const WSAPIClientRequest&>(message));
         return;
     }

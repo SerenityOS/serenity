@@ -16,10 +16,6 @@ WSClipboard::~WSClipboard()
 {
 }
 
-void WSClipboard::on_message(const WSMessage&)
-{
-}
-
 const byte* WSClipboard::data() const
 {
     if (!m_shared_buffer)

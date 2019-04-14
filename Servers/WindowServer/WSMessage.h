@@ -7,11 +7,12 @@
 #include <Kernel/KeyCode.h>
 #include <WindowServer/WSCursor.h>
 #include <WindowServer/WSWindowType.h>
+#include <LibCore/CEvent.h>
 
-class WSMessage {
+class WSMessage : public CEvent {
 public:
     enum Type {
-        Invalid = 0,
+        Invalid = 2000,
         WM_DeferredCompose,
         WM_ClientDisconnected,
         MouseMove,
@@ -64,17 +65,12 @@ public:
     };
 
     WSMessage() { }
-    explicit WSMessage(Type type) : m_type(type) { }
+    explicit WSMessage(Type type) : CEvent(type) { }
     virtual ~WSMessage() { }
 
-    Type type() const { return m_type; }
-
-    bool is_client_request() const { return m_type > __Begin_API_Client_Requests && m_type < __End_API_Client_Requests; }
-    bool is_mouse_event() const { return m_type == MouseMove || m_type == MouseDown || m_type == MouseUp; }
-    bool is_key_event() const { return m_type == KeyUp || m_type == KeyDown; }
-
-private:
-    Type m_type { Invalid };
+    bool is_client_request() const { return type() > __Begin_API_Client_Requests && type() < __End_API_Client_Requests; }
+    bool is_mouse_event() const { return type() == MouseMove || type() == MouseDown || type() == MouseUp; }
+    bool is_key_event() const { return type() == KeyUp || type() == KeyDown; }
 };
 
 class WSClientDisconnectedNotification : public WSMessage {
@@ -663,7 +659,7 @@ public:
     unsigned buttons() const { return m_buttons; }
     unsigned modifiers() const { return m_modifiers; }
 
-    WSMouseEvent translated(const Point& delta) const { return WSMouseEvent(type(), m_position.translated(delta), m_buttons, m_button, m_modifiers); }
+    WSMouseEvent translated(const Point& delta) const { return WSMouseEvent((Type)type(), m_position.translated(delta), m_buttons, m_button, m_modifiers); }
 
 private:
     Point m_position;

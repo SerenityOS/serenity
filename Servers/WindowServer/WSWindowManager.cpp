@@ -18,6 +18,7 @@
 #include <SharedGraphics/PNGLoader.h>
 #include <WindowServer/WSCursor.h>
 #include <WindowServer/WSButton.h>
+#include <LibCore/CTimer.h>
 
 //#define DEBUG_COUNTERS
 //#define RESIZE_DEBUG
@@ -141,7 +142,8 @@ WSWindowManager::WSWindowManager()
     // NOTE: This ensures that the system menu has the correct dimensions.
     set_current_menubar(nullptr);
 
-    WSMessageLoop::the().start_timer(300, [this] {
+    auto* timer = new CTimer;
+    timer->on_timeout = [this] {
         static time_t last_update_time;
         time_t now = time(nullptr);
         if (now != last_update_time || m_cpu_monitor.is_dirty()) {
@@ -149,7 +151,8 @@ WSWindowManager::WSWindowManager()
             last_update_time = now;
             m_cpu_monitor.set_dirty(false);
         }
-    });
+    };
+    timer->start(300);
 
     invalidate();
     compose();
@@ -309,7 +312,7 @@ void WSWindowManager::remove_window(WSWindow& window)
 
     for_each_window_listening_to_wm_events([&window] (WSWindow& listener) {
         if (window.client())
-            WSMessageLoop::the().post_message(listener, make<WSWMWindowRemovedEvent>(window.client()->client_id(), window.window_id()));
+            WSMessageLoop::the().post_event(listener, make<WSWMWindowRemovedEvent>(window.client()->client_id(), window.window_id()));
         return IterationDecision::Continue;
     });
 }
@@ -317,7 +320,7 @@ void WSWindowManager::remove_window(WSWindow& window)
 void WSWindowManager::tell_wm_listener_about_window(WSWindow& listener, WSWindow& window)
 {
     if (window.client())
-        WSMessageLoop::the().post_message(listener, make<WSWMWindowStateChangedEvent>(window.client()->client_id(), window.window_id(), window.title(), window.rect(), window.is_active(), window.type(), window.is_minimized(), window.icon_path()));
+        WSMessageLoop::the().post_event(listener, make<WSWMWindowStateChangedEvent>(window.client()->client_id(), window.window_id(), window.title(), window.rect(), window.is_active(), window.type(), window.is_minimized(), window.icon_path()));
 }
 
 void WSWindowManager::tell_wm_listeners_window_state_changed(WSWindow& window)
@@ -484,7 +487,7 @@ bool WSWindowManager::process_ongoing_window_resize(const WSMouseEvent& event, W
 #ifdef RESIZE_DEBUG
         printf("[WM] Finish resizing WSWindow{%p}\n", m_resize_window.ptr());
 #endif
-        WSMessageLoop::the().post_message(*m_resize_window, make<WSResizeEvent>(m_resize_window->rect(), m_resize_window->rect()));
+        WSMessageLoop::the().post_event(*m_resize_window, make<WSResizeEvent>(m_resize_window->rect(), m_resize_window->rect()));
         invalidate(*m_resize_window);
         m_resize_window = nullptr;
         m_resizing_mouse_button = MouseButton::None;
@@ -566,7 +569,7 @@ bool WSWindowManager::process_ongoing_window_resize(const WSMouseEvent& event, W
               new_rect.to_string().characters());
 #endif
     m_resize_window->set_rect(new_rect);
-    WSMessageLoop::the().post_message(*m_resize_window, make<WSResizeEvent>(old_rect, new_rect));
+    WSMessageLoop::the().post_event(*m_resize_window, make<WSResizeEvent>(old_rect, new_rect));
     return true;
 }
 
@@ -600,7 +603,8 @@ void WSWindowManager::process_mouse_event(const WSMouseEvent& event, WSWindow*& 
         ASSERT(window->is_visible()); // Maybe this should be supported? Idk. Let's catch it and think about it later.
         ASSERT(!window->is_minimized()); // Maybe this should also be supported? Idk.
         windows_who_received_mouse_event_due_to_cursor_tracking.set(window);
-        window->on_message(event.translated(-window->position()));
+        auto translated_event = event.translated(-window->position());
+        window->event(translated_event);
     }
 
     if (menubar_rect().contains(event.position())) {
@@ -618,7 +622,8 @@ void WSWindowManager::process_mouse_event(const WSMouseEvent& event, WSWindow*& 
                 close_current_menu();
         } else {
             event_window = &window;
-            window.on_message(event.translated(-window.position()));
+            auto translated_event = event.translated(-window.position());
+            window.event(translated_event);
         }
         return;
     }
@@ -650,8 +655,10 @@ void WSWindowManager::process_mouse_event(const WSMouseEvent& event, WSWindow*& 
             if (window.type() == WSWindowType::Normal && event.type() == WSMessage::MouseDown)
                 move_to_front_and_make_active(window);
             event_window = &window;
-            if (!window.global_cursor_tracking() && !windows_who_received_mouse_event_due_to_cursor_tracking.contains(&window))
-                window.on_message(event.translated(-window.position()));
+            if (!window.global_cursor_tracking() && !windows_who_received_mouse_event_due_to_cursor_tracking.contains(&window)) {
+                auto translated_event = event.translated(-window.position());
+                window.event(translated_event);
+            }
             return IterationDecision::Abort;
         }
 
@@ -912,16 +919,16 @@ void WSWindowManager::draw_cursor()
     m_last_cursor_rect = cursor_rect;
 }
 
-void WSWindowManager::on_message(const WSMessage& message)
+void WSWindowManager::event(CEvent& message)
 {
-    if (message.is_mouse_event()) {
+    if (static_cast<WSMessage&>(message).is_mouse_event()) {
         WSWindow* event_window = nullptr;
         process_mouse_event(static_cast<const WSMouseEvent&>(message), event_window);
         set_hovered_window(event_window);
         return;
     }
 
-    if (message.is_key_event()) {
+    if (static_cast<WSMessage&>(message).is_key_event()) {
         auto& key_event = static_cast<const WSKeyEvent&>(message);
         m_keyboard_modifiers = key_event.modifiers();
 
@@ -932,7 +939,7 @@ void WSWindowManager::on_message(const WSMessage& message)
             return;
         }
         if (m_active_window)
-            return m_active_window->on_message(message);
+            return m_active_window->event(message);
         return;
     }
 
@@ -969,12 +976,12 @@ void WSWindowManager::set_active_window(WSWindow* window)
 
     auto* previously_active_window = m_active_window.ptr();
     if (previously_active_window) {
-        WSMessageLoop::the().post_message(*previously_active_window, make<WSMessage>(WSMessage::WindowDeactivated));
+        WSMessageLoop::the().post_event(*previously_active_window, make<WSMessage>(WSMessage::WindowDeactivated));
         invalidate(*previously_active_window);
     }
     m_active_window = window->make_weak_ptr();
     if (m_active_window) {
-        WSMessageLoop::the().post_message(*m_active_window, make<WSMessage>(WSMessage::WindowActivated));
+        WSMessageLoop::the().post_event(*m_active_window, make<WSMessage>(WSMessage::WindowActivated));
         invalidate(*m_active_window);
 
         auto* client = window->client();
@@ -992,12 +999,12 @@ void WSWindowManager::set_hovered_window(WSWindow* window)
         return;
 
     if (m_hovered_window)
-        WSMessageLoop::the().post_message(*m_hovered_window, make<WSMessage>(WSMessage::WindowLeft));
+        WSMessageLoop::the().post_event(*m_hovered_window, make<WSMessage>(WSMessage::WindowLeft));
 
     m_hovered_window = window ? window->make_weak_ptr() : nullptr;
 
     if (m_hovered_window)
-        WSMessageLoop::the().post_message(*m_hovered_window, make<WSMessage>(WSMessage::WindowEntered));
+        WSMessageLoop::the().post_event(*m_hovered_window, make<WSMessage>(WSMessage::WindowEntered));
 }
 
 void WSWindowManager::invalidate()
@@ -1021,7 +1028,7 @@ void WSWindowManager::invalidate(const Rect& a_rect, bool should_schedule_compos
     m_dirty_rects.add(rect);
 
     if (should_schedule_compose_event && !m_pending_compose_event) {
-        WSMessageLoop::the().post_message(*this, make<WSMessage>(WSMessage::WM_DeferredCompose));
+        WSMessageLoop::the().post_event(*this, make<WSMessage>(WSMessage::WM_DeferredCompose));
         m_pending_compose_event = true;
     }
 }
