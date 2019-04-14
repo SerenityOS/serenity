@@ -1,4 +1,4 @@
-SRCS = $(shell find ./ -name '*.cpp' -printf '%f\n')
+SRCS = $(wildcard *.cpp)
 OBJS = ${SRCS:.cpp=.o}
 APPS = ${SRCS:.cpp=}
 
@@ -12,10 +12,12 @@ INCLUDE_FLAGS = -I.. -I. -I../LibC
 DEFINES = -DSERENITY -DSANITIZE_PTRS -DUSERLAND
 
 CXXFLAGS = -MMD -MP $(WARNING_FLAGS) $(OPTIMIZATION_FLAGS) $(FLAVOR_FLAGS) $(ARCH_FLAGS) $(STANDARD_FLAGS) $(INCLUDE_FLAGS) $(DEFINES)
-CXX = i686-pc-serenity-g++
+CXX = i686-pca-serenity-g++
 LD = i686-pc-serenity-g++
 AR = i686-pc-serenity-r
 LDFLAGS = -L../LibC -L../LibCore -L../LibGUI
+
+.PHONY: all list clean
 
 all: $(OBJS) $(APPS)
 
@@ -23,14 +25,15 @@ list:
 	@echo $(APPS)
 
 clean:
-	@echo "CLEAN"; rm -f $(APPS) $(OBJS) *.d
+	@echo "CLEAN"
+	@rm -f $(APPS) $(OBJS) *.d
 
 $(APPS) : % : %.o $(OBJS)
-	@echo "LD $<"; 
+	@echo "LD $<"
 	@$(LD) -o $@ $(LDFLAGS) $< -lc
 
 %.o: %.cpp
-	@echo "CXX $<"; 
+	@echo "CXX $<"
 	@$(CXX) $(CXXFLAGS) -o $@ -c $<
 
 -include $(OBJS:%.o=%.d)
