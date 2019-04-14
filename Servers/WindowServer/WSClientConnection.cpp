@@ -197,7 +197,7 @@ void WSClientConnection::handle_request(const WSAPIAddMenuToMenubarRequest& requ
     }
     auto& menubar = *(*it).value;
     auto& menu = *(*jt).value;
-    menubar.add_menu(&menu);
+    menubar.add_menu(menu);
     WSAPI_ServerMessage response;
     response.type = WSAPI_ServerMessage::Type::DidAddMenuToMenubar;
     response.menu.menubar_id = menubar_id;

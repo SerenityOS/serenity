@@ -22,8 +22,9 @@ public:
     const WSClientConnection* client() const { return m_client; }
     int menu_id() const { return m_menu_id; }
 
-    WSMenuBar* menu_bar() { return m_menubar; }
-    const WSMenuBar* menu_bar() const { return m_menubar; }
+    WSMenuBar* menubar() { return m_menubar; }
+    const WSMenuBar* menubar() const { return m_menubar; }
+    void set_menubar(WSMenuBar* menubar) { m_menubar = menubar; }
 
     bool is_empty() const { return m_items.is_empty(); }
     int item_count() const { return m_items.size(); }

@@ -188,4 +188,5 @@ void WSMenu::popup(const Point& position)
     auto& window = ensure_menu_window();
     window.move_to(position);
     window.set_visible(true);
+    WSWindowManager::the().set_current_menu(this);
 }
