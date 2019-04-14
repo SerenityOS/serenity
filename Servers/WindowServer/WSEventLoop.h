@@ -1,6 +1,6 @@
 #pragma once
 
-#include "WSMessage.h"
+#include "WSEvent.h"
 #include <AK/HashMap.h>
 #include <AK/OwnPtr.h>
 #include <AK/Vector.h>
@@ -12,12 +12,12 @@ class CObject;
 struct WSAPI_ClientMessage;
 struct WSAPI_ServerMessage;
 
-class WSMessageLoop : public CEventLoop {
+class WSEventLoop : public CEventLoop {
 public:
-    WSMessageLoop();
-    virtual ~WSMessageLoop() override;
+    WSEventLoop();
+    virtual ~WSEventLoop() override;
 
-    static WSMessageLoop& the();
+    static WSEventLoop& the();
 
     void on_receive_from_client(int client_id, const WSAPI_ClientMessage&);
     void notify_client_disconnected(int client_id);

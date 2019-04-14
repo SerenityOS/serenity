@@ -1,8 +1,8 @@
 #include "WSMenu.h"
 #include "WSMenuItem.h"
 #include "WSWindow.h"
-#include "WSMessage.h"
-#include "WSMessageLoop.h"
+#include "WSEvent.h"
+#include "WSEventLoop.h"
 #include "WSWindowManager.h"
 #include <WindowServer/WSAPITypes.h>
 #include <WindowServer/WSClientConnection.h>
@@ -110,11 +110,11 @@ void WSMenu::draw()
     }
 }
 
-void WSMenu::event(CEvent& message)
+void WSMenu::event(CEvent& event)
 {
     ASSERT(menu_window());
-    if (message.type() == WSMessage::MouseMove) {
-        auto* item = item_at(static_cast<const WSMouseEvent&>(message).position());
+    if (event.type() == WSEvent::MouseMove) {
+        auto* item = item_at(static_cast<const WSMouseEvent&>(event).position());
         if (!item || m_hovered_item == item)
             return;
         m_hovered_item = item;
@@ -122,7 +122,7 @@ void WSMenu::event(CEvent& message)
         return;
     }
 
-    if (message.type() == WSMessage::MouseUp) {
+    if (event.type() == WSEvent::MouseUp) {
         if (!m_hovered_item)
             return;
         if (m_hovered_item->is_enabled())

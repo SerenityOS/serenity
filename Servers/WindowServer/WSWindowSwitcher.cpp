@@ -1,6 +1,6 @@
 #include <WindowServer/WSWindowSwitcher.h>
 #include <WindowServer/WSWindowManager.h>
-#include <WindowServer/WSMessage.h>
+#include <WindowServer/WSEvent.h>
 #include <SharedGraphics/Font.h>
 
 WSWindowSwitcher::WSWindowSwitcher()
@@ -32,7 +32,7 @@ WSWindow* WSWindowSwitcher::selected_window()
 
 void WSWindowSwitcher::on_key_event(const WSKeyEvent& event)
 {
-    if (event.type() == WSMessage::KeyUp) {
+    if (event.type() == WSEvent::KeyUp) {
         if (event.key() == Key_Logo) {
             if (auto* window = selected_window())
                 WSWindowManager::the().move_to_front_and_make_active(*window);

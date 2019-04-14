@@ -1,7 +1,7 @@
 #include "WSWindow.h"
 #include "WSWindowManager.h"
-#include "WSMessage.h"
-#include "WSMessageLoop.h"
+#include "WSEvent.h"
+#include "WSEventLoop.h"
 #include <WindowServer/WSAPITypes.h>
 #include <WindowServer/WSClientConnection.h>
 
@@ -89,9 +89,9 @@ void WSWindow::handle_mouse_event(const WSMouseEvent& event)
     server_message.window_id = window_id();
 
     switch (event.type()) {
-    case WSMessage::MouseMove: server_message.type = WSAPI_ServerMessage::Type::MouseMove; break;
-    case WSMessage::MouseDown: server_message.type = WSAPI_ServerMessage::Type::MouseDown; break;
-    case WSMessage::MouseUp: server_message.type = WSAPI_ServerMessage::Type::MouseUp; break;
+    case WSEvent::MouseMove: server_message.type = WSAPI_ServerMessage::Type::MouseMove; break;
+    case WSEvent::MouseDown: server_message.type = WSAPI_ServerMessage::Type::MouseDown; break;
+    case WSEvent::MouseUp: server_message.type = WSAPI_ServerMessage::Type::MouseUp; break;
     default: ASSERT_NOT_REACHED();
     }
 
@@ -130,10 +130,10 @@ void WSWindow::set_minimized(bool minimized)
     WSWindowManager::the().notify_minimization_state_changed(*this);
 }
 
-void WSWindow::event(CEvent& message)
+void WSWindow::event(CEvent& event)
 {
     if (m_internal_owner)
-        return m_internal_owner->event(message);
+        return m_internal_owner->event(event);
 
     if (is_blocked_by_modal_window())
         return;
@@ -141,51 +141,51 @@ void WSWindow::event(CEvent& message)
     WSAPI_ServerMessage server_message;
     server_message.window_id = window_id();
 
-    if (static_cast<WSMessage&>(message).is_mouse_event())
-        return handle_mouse_event(static_cast<const WSMouseEvent&>(message));
+    if (static_cast<WSEvent&>(event).is_mouse_event())
+        return handle_mouse_event(static_cast<const WSMouseEvent&>(event));
 
-    switch (message.type()) {
-    case WSMessage::WindowEntered:
+    switch (event.type()) {
+    case WSEvent::WindowEntered:
         server_message.type = WSAPI_ServerMessage::Type::WindowEntered;
         break;
-    case WSMessage::WindowLeft:
+    case WSEvent::WindowLeft:
         server_message.type = WSAPI_ServerMessage::Type::WindowLeft;
         break;
-    case WSMessage::KeyDown:
+    case WSEvent::KeyDown:
         server_message.type = WSAPI_ServerMessage::Type::KeyDown;
-        server_message.key.character = static_cast<const WSKeyEvent&>(message).character();
-        server_message.key.key = static_cast<const WSKeyEvent&>(message).key();
-        server_message.key.modifiers = static_cast<const WSKeyEvent&>(message).modifiers();
+        server_message.key.character = static_cast<const WSKeyEvent&>(event).character();
+        server_message.key.key = static_cast<const WSKeyEvent&>(event).key();
+        server_message.key.modifiers = static_cast<const WSKeyEvent&>(event).modifiers();
         break;
-    case WSMessage::KeyUp:
+    case WSEvent::KeyUp:
         server_message.type = WSAPI_ServerMessage::Type::KeyUp;
-        server_message.key.character = static_cast<const WSKeyEvent&>(message).character();
-        server_message.key.key = static_cast<const WSKeyEvent&>(message).key();
-        server_message.key.modifiers = static_cast<const WSKeyEvent&>(message).modifiers();
+        server_message.key.character = static_cast<const WSKeyEvent&>(event).character();
+        server_message.key.key = static_cast<const WSKeyEvent&>(event).key();
+        server_message.key.modifiers = static_cast<const WSKeyEvent&>(event).modifiers();
         break;
-    case WSMessage::WindowActivated:
+    case WSEvent::WindowActivated:
         server_message.type = WSAPI_ServerMessage::Type::WindowActivated;
         break;
-    case WSMessage::WindowDeactivated:
+    case WSEvent::WindowDeactivated:
         server_message.type = WSAPI_ServerMessage::Type::WindowDeactivated;
         break;
-    case WSMessage::WindowCloseRequest:
+    case WSEvent::WindowCloseRequest:
         server_message.type = WSAPI_ServerMessage::Type::WindowCloseRequest;
         break;
-    case WSMessage::WindowResized:
+    case WSEvent::WindowResized:
         server_message.type = WSAPI_ServerMessage::Type::WindowResized;
-        server_message.window.old_rect = static_cast<const WSResizeEvent&>(message).old_rect();
-        server_message.window.rect = static_cast<const WSResizeEvent&>(message).rect();
+        server_message.window.old_rect = static_cast<const WSResizeEvent&>(event).old_rect();
+        server_message.window.rect = static_cast<const WSResizeEvent&>(event).rect();
         break;
-    case WSMessage::WM_WindowRemoved: {
-        auto& removed_event = static_cast<const WSWMWindowRemovedEvent&>(message);
+    case WSEvent::WM_WindowRemoved: {
+        auto& removed_event = static_cast<const WSWMWindowRemovedEvent&>(event);
         server_message.type = WSAPI_ServerMessage::Type::WM_WindowRemoved;
         server_message.wm.client_id = removed_event.client_id();
         server_message.wm.window_id = removed_event.window_id();
         break;
     }
-    case WSMessage::WM_WindowStateChanged: {
-        auto& changed_event = static_cast<const WSWMWindowStateChangedEvent&>(message);
+    case WSEvent::WM_WindowStateChanged: {
+        auto& changed_event = static_cast<const WSWMWindowStateChangedEvent&>(event);
         server_message.type = WSAPI_ServerMessage::Type::WM_WindowStateChanged;
         server_message.wm.client_id = changed_event.client_id();
         server_message.wm.window_id = changed_event.window_id();

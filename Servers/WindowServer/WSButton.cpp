@@ -1,5 +1,5 @@
 #include <WindowServer/WSButton.h>
-#include <WindowServer/WSMessage.h>
+#include <WindowServer/WSEvent.h>
 #include <WindowServer/WSWindowManager.h>
 #include <SharedGraphics/Painter.h>
 #include <SharedGraphics/StylePainter.h>
@@ -32,14 +32,14 @@ void WSButton::on_mouse_event(const WSMouseEvent& event)
 {
     auto& wm = WSWindowManager::the();
 
-    if (event.type() == WSMessage::MouseDown && event.button() == MouseButton::Left) {
+    if (event.type() == WSEvent::MouseDown && event.button() == MouseButton::Left) {
         m_pressed = true;
         wm.set_cursor_tracking_button(this);
         wm.invalidate(screen_rect());
         return;
     }
 
-    if (event.type() == WSMessage::MouseUp && event.button() == MouseButton::Left) {
+    if (event.type() == WSEvent::MouseUp && event.button() == MouseButton::Left) {
         WSWindowManager::the().set_cursor_tracking_button(nullptr);
         bool old_pressed = m_pressed;
         m_pressed = false;
@@ -52,7 +52,7 @@ void WSButton::on_mouse_event(const WSMouseEvent& event)
         return;
     }
 
-    if (event.type() == WSMessage::MouseMove) {
+    if (event.type() == WSEvent::MouseMove) {
         bool old_hovered = m_hovered;
         m_hovered = rect().contains(event.position());
         wm.set_hovered_button(m_hovered ? this : nullptr);
@@ -60,7 +60,7 @@ void WSButton::on_mouse_event(const WSMouseEvent& event)
             wm.invalidate(screen_rect());
     }
 
-    if (event.type() == WSMessage::MouseMove && event.buttons() & (unsigned)MouseButton::Left) {
+    if (event.type() == WSEvent::MouseMove && event.buttons() & (unsigned)MouseButton::Left) {
         bool old_pressed = m_pressed;
         m_pressed = m_hovered;
         if (old_pressed != m_pressed)

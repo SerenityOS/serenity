@@ -13,7 +13,7 @@
 #include <WindowServer/WSWindowType.h>
 #include <WindowServer/WSWindow.h>
 #include <WindowServer/WSCursor.h>
-#include <WindowServer/WSMessage.h>
+#include <WindowServer/WSEvent.h>
 #include <WindowServer/WSCPUMonitor.h>
 
 class WSAPIClientRequest;

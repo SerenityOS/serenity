@@ -1,5 +1,5 @@
 #include <WindowServer/WSClientConnection.h>
-#include <WindowServer/WSMessageLoop.h>
+#include <WindowServer/WSEventLoop.h>
 #include <WindowServer/WSMenuBar.h>
 #include <WindowServer/WSMenu.h>
 #include <WindowServer/WSMenuItem.h>
@@ -95,12 +95,12 @@ void WSClientConnection::notify_about_new_screen_rect(const Rect& rect)
 
 void WSClientConnection::event(CEvent& message)
 {
-    if (static_cast<WSMessage&>(message).is_client_request()) {
+    if (static_cast<WSEvent&>(message).is_client_request()) {
         on_request(static_cast<const WSAPIClientRequest&>(message));
         return;
     }
 
-    if (message.type() == WSMessage::WM_ClientDisconnected) {
+    if (message.type() == WSEvent::WM_ClientDisconnected) {
         int client_id = static_cast<const WSClientDisconnectedNotification&>(message).client_id();
         dbgprintf("WSClientConnection: Client disconnected: %d\n", client_id);
         delete this;
@@ -609,65 +609,65 @@ void WSClientConnection::handle_request(const WSWMAPISetActiveWindowRequest& req
 void WSClientConnection::on_request(const WSAPIClientRequest& request)
 {
     switch (request.type()) {
-    case WSMessage::APICreateMenubarRequest:
+    case WSEvent::APICreateMenubarRequest:
         return handle_request(static_cast<const WSAPICreateMenubarRequest&>(request));
-    case WSMessage::APIDestroyMenubarRequest:
+    case WSEvent::APIDestroyMenubarRequest:
         return handle_request(static_cast<const WSAPIDestroyMenubarRequest&>(request));
-    case WSMessage::APICreateMenuRequest:
+    case WSEvent::APICreateMenuRequest:
         return handle_request(static_cast<const WSAPICreateMenuRequest&>(request));
-    case WSMessage::APIDestroyMenuRequest:
+    case WSEvent::APIDestroyMenuRequest:
         return handle_request(static_cast<const WSAPIDestroyMenuRequest&>(request));
-    case WSMessage::APISetApplicationMenubarRequest:
+    case WSEvent::APISetApplicationMenubarRequest:
         return handle_request(static_cast<const WSAPISetApplicationMenubarRequest&>(request));
-    case WSMessage::APIAddMenuToMenubarRequest:
+    case WSEvent::APIAddMenuToMenubarRequest:
         return handle_request(static_cast<const WSAPIAddMenuToMenubarRequest&>(request));
-    case WSMessage::APIAddMenuItemRequest:
+    case WSEvent::APIAddMenuItemRequest:
         return handle_request(static_cast<const WSAPIAddMenuItemRequest&>(request));
-    case WSMessage::APIAddMenuSeparatorRequest:
+    case WSEvent::APIAddMenuSeparatorRequest:
         return handle_request(static_cast<const WSAPIAddMenuSeparatorRequest&>(request));
-    case WSMessage::APIUpdateMenuItemRequest:
+    case WSEvent::APIUpdateMenuItemRequest:
         return handle_request(static_cast<const WSAPIUpdateMenuItemRequest&>(request));
-    case WSMessage::APISetWindowTitleRequest:
+    case WSEvent::APISetWindowTitleRequest:
         return handle_request(static_cast<const WSAPISetWindowTitleRequest&>(request));
-    case WSMessage::APIGetWindowTitleRequest:
+    case WSEvent::APIGetWindowTitleRequest:
         return handle_request(static_cast<const WSAPIGetWindowTitleRequest&>(request));
-    case WSMessage::APISetWindowRectRequest:
+    case WSEvent::APISetWindowRectRequest:
         return handle_request(static_cast<const WSAPISetWindowRectRequest&>(request));
-    case WSMessage::APIGetWindowRectRequest:
+    case WSEvent::APIGetWindowRectRequest:
         return handle_request(static_cast<const WSAPIGetWindowRectRequest&>(request));
-    case WSMessage::APISetWindowIconRequest:
+    case WSEvent::APISetWindowIconRequest:
         return handle_request(static_cast<const WSAPISetWindowIconRequest&>(request));
-    case WSMessage::APISetClipboardContentsRequest:
+    case WSEvent::APISetClipboardContentsRequest:
         return handle_request(static_cast<const WSAPISetClipboardContentsRequest&>(request));
-    case WSMessage::APIGetClipboardContentsRequest:
+    case WSEvent::APIGetClipboardContentsRequest:
         return handle_request(static_cast<const WSAPIGetClipboardContentsRequest&>(request));
-    case WSMessage::APICreateWindowRequest:
+    case WSEvent::APICreateWindowRequest:
         return handle_request(static_cast<const WSAPICreateWindowRequest&>(request));
-    case WSMessage::APIDestroyWindowRequest:
+    case WSEvent::APIDestroyWindowRequest:
         return handle_request(static_cast<const WSAPIDestroyWindowRequest&>(request));
-    case WSMessage::APIInvalidateRectRequest:
+    case WSEvent::APIInvalidateRectRequest:
         return handle_request(static_cast<const WSAPIInvalidateRectRequest&>(request));
-    case WSMessage::APIDidFinishPaintingNotification:
+    case WSEvent::APIDidFinishPaintingNotification:
         return handle_request(static_cast<const WSAPIDidFinishPaintingNotification&>(request));
-    case WSMessage::APIGetWindowBackingStoreRequest:
+    case WSEvent::APIGetWindowBackingStoreRequest:
         return handle_request(static_cast<const WSAPIGetWindowBackingStoreRequest&>(request));
-    case WSMessage::APISetGlobalCursorTrackingRequest:
+    case WSEvent::APISetGlobalCursorTrackingRequest:
         return handle_request(static_cast<const WSAPISetGlobalCursorTrackingRequest&>(request));
-    case WSMessage::APISetWindowOpacityRequest:
+    case WSEvent::APISetWindowOpacityRequest:
         return handle_request(static_cast<const WSAPISetWindowOpacityRequest&>(request));
-    case WSMessage::APISetWindowBackingStoreRequest:
+    case WSEvent::APISetWindowBackingStoreRequest:
         return handle_request(static_cast<const WSAPISetWindowBackingStoreRequest&>(request));
-    case WSMessage::APISetWallpaperRequest:
+    case WSEvent::APISetWallpaperRequest:
         return handle_request(static_cast<const WSAPISetWallpaperRequest&>(request));
-    case WSMessage::APIGetWallpaperRequest:
+    case WSEvent::APIGetWallpaperRequest:
         return handle_request(static_cast<const WSAPIGetWallpaperRequest&>(request));
-    case WSMessage::APISetWindowOverrideCursorRequest:
+    case WSEvent::APISetWindowOverrideCursorRequest:
         return handle_request(static_cast<const WSAPISetWindowOverrideCursorRequest&>(request));
-    case WSMessage::WMAPISetActiveWindowRequest:
+    case WSEvent::WMAPISetActiveWindowRequest:
         return handle_request(static_cast<const WSWMAPISetActiveWindowRequest&>(request));
-    case WSMessage::APIPopupMenuRequest:
+    case WSEvent::APIPopupMenuRequest:
         return handle_request(static_cast<const WSAPIPopupMenuRequest&>(request));
-    case WSMessage::APIDismissMenuRequest:
+    case WSEvent::APIDismissMenuRequest:
         return handle_request(static_cast<const WSAPIDismissMenuRequest&>(request));
     default:
         break;

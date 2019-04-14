@@ -1,6 +1,6 @@
 #include "WSScreen.h"
-#include "WSMessageLoop.h"
-#include "WSMessage.h"
+#include "WSEventLoop.h"
+#include "WSEvent.h"
 #include "WSWindowManager.h"
 #include <unistd.h>
 #include <fcntl.h>
@@ -69,15 +69,15 @@ void WSScreen::on_receive_mouse_data(int dx, int dy, unsigned buttons)
     auto post_mousedown_or_mouseup_if_needed = [&] (MouseButton button) {
         if (!(changed_buttons & (unsigned)button))
             return;
-        auto message = make<WSMouseEvent>(buttons & (unsigned)button ? WSMessage::MouseDown : WSMessage::MouseUp, m_cursor_location, buttons, button, m_modifiers);
-        WSMessageLoop::the().post_event(WSWindowManager::the(), move(message));
+        auto message = make<WSMouseEvent>(buttons & (unsigned)button ? WSEvent::MouseDown : WSEvent::MouseUp, m_cursor_location, buttons, button, m_modifiers);
+        WSEventLoop::the().post_event(WSWindowManager::the(), move(message));
     };
     post_mousedown_or_mouseup_if_needed(MouseButton::Left);
     post_mousedown_or_mouseup_if_needed(MouseButton::Right);
     post_mousedown_or_mouseup_if_needed(MouseButton::Middle);
     if (m_cursor_location != prev_location) {
-        auto message = make<WSMouseEvent>(WSMessage::MouseMove, m_cursor_location, buttons, MouseButton::None, m_modifiers);
-        WSMessageLoop::the().post_event(WSWindowManager::the(), move(message));
+        auto message = make<WSMouseEvent>(WSEvent::MouseMove, m_cursor_location, buttons, MouseButton::None, m_modifiers);
+        WSEventLoop::the().post_event(WSWindowManager::the(), move(message));
     }
     // NOTE: Invalidate the cursor if it moved, or if the left button changed state (for the cursor color inversion.)
     if (m_cursor_location != prev_location || changed_buttons & (unsigned)MouseButton::Left)
@@ -87,8 +87,8 @@ void WSScreen::on_receive_mouse_data(int dx, int dy, unsigned buttons)
 void WSScreen::on_receive_keyboard_data(KeyEvent kernel_event)
 {
     m_modifiers = kernel_event.modifiers();
-    auto message = make<WSKeyEvent>(kernel_event.is_press() ? WSMessage::KeyDown : WSMessage::KeyUp, kernel_event.key, kernel_event.character, kernel_event.modifiers());
-    WSMessageLoop::the().post_event(WSWindowManager::the(), move(message));
+    auto message = make<WSKeyEvent>(kernel_event.is_press() ? WSEvent::KeyDown : WSEvent::KeyUp, kernel_event.key, kernel_event.character, kernel_event.modifiers());
+    WSEventLoop::the().post_event(WSWindowManager::the(), move(message));
 }
 
 void WSScreen::set_y_offset(int offset)

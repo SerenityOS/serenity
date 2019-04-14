@@ -1,7 +1,7 @@
 #include "WSWindowManager.h"
 #include "WSWindow.h"
 #include "WSScreen.h"
-#include "WSMessageLoop.h"
+#include "WSEventLoop.h"
 #include <SharedGraphics/Font.h>
 #include <SharedGraphics/Painter.h>
 #include <SharedGraphics/CharacterBitmap.h>
@@ -312,7 +312,7 @@ void WSWindowManager::remove_window(WSWindow& window)
 
     for_each_window_listening_to_wm_events([&window] (WSWindow& listener) {
         if (window.client())
-            WSMessageLoop::the().post_event(listener, make<WSWMWindowRemovedEvent>(window.client()->client_id(), window.window_id()));
+            WSEventLoop::the().post_event(listener, make<WSWMWindowRemovedEvent>(window.client()->client_id(), window.window_id()));
         return IterationDecision::Continue;
     });
 }
@@ -320,7 +320,7 @@ void WSWindowManager::remove_window(WSWindow& window)
 void WSWindowManager::tell_wm_listener_about_window(WSWindow& listener, WSWindow& window)
 {
     if (window.client())
-        WSMessageLoop::the().post_event(listener, make<WSWMWindowStateChangedEvent>(window.client()->client_id(), window.window_id(), window.title(), window.rect(), window.is_active(), window.type(), window.is_minimized(), window.icon_path()));
+        WSEventLoop::the().post_event(listener, make<WSWMWindowStateChangedEvent>(window.client()->client_id(), window.window_id(), window.title(), window.rect(), window.is_active(), window.type(), window.is_minimized(), window.icon_path()));
 }
 
 void WSWindowManager::tell_wm_listeners_window_state_changed(WSWindow& window)
@@ -458,7 +458,7 @@ bool WSWindowManager::process_ongoing_window_drag(const WSMouseEvent& event, WSW
 {
     if (!m_drag_window)
         return false;
-    if (event.type() == WSMessage::MouseUp && event.button() == MouseButton::Left) {
+    if (event.type() == WSEvent::MouseUp && event.button() == MouseButton::Left) {
 #ifdef DRAG_DEBUG
         printf("[WM] Finish dragging WSWindow{%p}\n", m_drag_window.ptr());
 #endif
@@ -466,7 +466,7 @@ bool WSWindowManager::process_ongoing_window_drag(const WSMouseEvent& event, WSW
         m_drag_window = nullptr;
         return true;
     }
-    if (event.type() == WSMessage::MouseMove) {
+    if (event.type() == WSEvent::MouseMove) {
         Point pos = m_drag_window_origin;
 #ifdef DRAG_DEBUG
         dbgprintf("[WM] Dragging [origin: %d,%d] now: %d,%d\n", m_drag_origin.x(), m_drag_origin.y(), event.x(), event.y());
@@ -483,18 +483,18 @@ bool WSWindowManager::process_ongoing_window_resize(const WSMouseEvent& event, W
     if (!m_resize_window)
         return false;
 
-    if (event.type() == WSMessage::MouseUp && event.button() == m_resizing_mouse_button) {
+    if (event.type() == WSEvent::MouseUp && event.button() == m_resizing_mouse_button) {
 #ifdef RESIZE_DEBUG
         printf("[WM] Finish resizing WSWindow{%p}\n", m_resize_window.ptr());
 #endif
-        WSMessageLoop::the().post_event(*m_resize_window, make<WSResizeEvent>(m_resize_window->rect(), m_resize_window->rect()));
+        WSEventLoop::the().post_event(*m_resize_window, make<WSResizeEvent>(m_resize_window->rect(), m_resize_window->rect()));
         invalidate(*m_resize_window);
         m_resize_window = nullptr;
         m_resizing_mouse_button = MouseButton::None;
         return true;
     }
 
-    if (event.type() != WSMessage::MouseMove)
+    if (event.type() != WSEvent::MouseMove)
         return false;
 
     auto old_rect = m_resize_window->rect();
@@ -569,7 +569,7 @@ bool WSWindowManager::process_ongoing_window_resize(const WSMouseEvent& event, W
               new_rect.to_string().characters());
 #endif
     m_resize_window->set_rect(new_rect);
-    WSMessageLoop::the().post_event(*m_resize_window, make<WSResizeEvent>(old_rect, new_rect));
+    WSEventLoop::the().post_event(*m_resize_window, make<WSResizeEvent>(old_rect, new_rect));
     return true;
 }
 
@@ -592,7 +592,7 @@ void WSWindowManager::process_mouse_event(const WSMouseEvent& event, WSWindow*& 
         return m_cursor_tracking_button->on_mouse_event(event.translated(-m_cursor_tracking_button->screen_rect().location()));
 
     // This is quite hackish, but it's how the WSButton hover effect is implemented.
-    if (m_hovered_button && event.type() == WSMessage::MouseMove)
+    if (m_hovered_button && event.type() == WSEvent::MouseMove)
         m_hovered_button->on_mouse_event(event.translated(-m_hovered_button->screen_rect().location()));
 
     HashTable<WSWindow*> windows_who_received_mouse_event_due_to_cursor_tracking;
@@ -618,7 +618,7 @@ void WSWindowManager::process_mouse_event(const WSMouseEvent& event, WSWindow*& 
         if (!event_is_inside_current_menu) {
             if (m_current_menu->hovered_item())
                 m_current_menu->clear_hovered_item();
-            if (event.type() == WSMessage::MouseDown || event.type() == WSMessage::MouseUp)
+            if (event.type() == WSEvent::MouseDown || event.type() == WSEvent::MouseUp)
                 close_current_menu();
         } else {
             event_window = &window;
@@ -641,18 +641,18 @@ void WSWindowManager::process_mouse_event(const WSMouseEvent& event, WSWindow*& 
         // First check if we should initiate a drag or resize (Logo+LMB or Logo+RMB).
         // In those cases, the event is swallowed by the window manager.
         if (window.type() == WSWindowType::Normal) {
-            if (m_keyboard_modifiers == Mod_Logo && event.type() == WSMessage::MouseDown && event.button() == MouseButton::Left) {
+            if (m_keyboard_modifiers == Mod_Logo && event.type() == WSEvent::MouseDown && event.button() == MouseButton::Left) {
                 start_window_drag(window, event);
                 return IterationDecision::Abort;
             }
-            if (m_keyboard_modifiers == Mod_Logo && event.type() == WSMessage::MouseDown && event.button() == MouseButton::Right && !window.is_blocked_by_modal_window()) {
+            if (m_keyboard_modifiers == Mod_Logo && event.type() == WSEvent::MouseDown && event.button() == MouseButton::Right && !window.is_blocked_by_modal_window()) {
                 start_window_resize(window, event);
                 return IterationDecision::Abort;
             }
         }
         // Well okay, let's see if we're hitting the frame or the window inside the frame.
         if (window.rect().contains(event.position())) {
-            if (window.type() == WSWindowType::Normal && event.type() == WSMessage::MouseDown)
+            if (window.type() == WSWindowType::Normal && event.type() == WSEvent::MouseDown)
                 move_to_front_and_make_active(window);
             event_window = &window;
             if (!window.global_cursor_tracking() && !windows_who_received_mouse_event_due_to_cursor_tracking.contains(&window)) {
@@ -919,31 +919,31 @@ void WSWindowManager::draw_cursor()
     m_last_cursor_rect = cursor_rect;
 }
 
-void WSWindowManager::event(CEvent& message)
+void WSWindowManager::event(CEvent& event)
 {
-    if (static_cast<WSMessage&>(message).is_mouse_event()) {
+    if (static_cast<WSEvent&>(event).is_mouse_event()) {
         WSWindow* event_window = nullptr;
-        process_mouse_event(static_cast<const WSMouseEvent&>(message), event_window);
+        process_mouse_event(static_cast<const WSMouseEvent&>(event), event_window);
         set_hovered_window(event_window);
         return;
     }
 
-    if (static_cast<WSMessage&>(message).is_key_event()) {
-        auto& key_event = static_cast<const WSKeyEvent&>(message);
+    if (static_cast<WSEvent&>(event).is_key_event()) {
+        auto& key_event = static_cast<const WSKeyEvent&>(event);
         m_keyboard_modifiers = key_event.modifiers();
 
-        if (key_event.type() == WSMessage::KeyDown && key_event.modifiers() == Mod_Logo && key_event.key() == Key_Tab)
+        if (key_event.type() == WSEvent::KeyDown && key_event.modifiers() == Mod_Logo && key_event.key() == Key_Tab)
             m_switcher.show();
         if (m_switcher.is_visible()) {
             m_switcher.on_key_event(key_event);
             return;
         }
         if (m_active_window)
-            return m_active_window->event(message);
+            return m_active_window->event(event);
         return;
     }
 
-    if (message.type() == WSMessage::WM_DeferredCompose) {
+    if (event.type() == WSEvent::WM_DeferredCompose) {
         m_pending_compose_event = false;
         compose();
         return;
@@ -976,12 +976,12 @@ void WSWindowManager::set_active_window(WSWindow* window)
 
     auto* previously_active_window = m_active_window.ptr();
     if (previously_active_window) {
-        WSMessageLoop::the().post_event(*previously_active_window, make<WSMessage>(WSMessage::WindowDeactivated));
+        WSEventLoop::the().post_event(*previously_active_window, make<WSEvent>(WSEvent::WindowDeactivated));
         invalidate(*previously_active_window);
     }
     m_active_window = window->make_weak_ptr();
     if (m_active_window) {
-        WSMessageLoop::the().post_event(*m_active_window, make<WSMessage>(WSMessage::WindowActivated));
+        WSEventLoop::the().post_event(*m_active_window, make<WSEvent>(WSEvent::WindowActivated));
         invalidate(*m_active_window);
 
         auto* client = window->client();
@@ -999,12 +999,12 @@ void WSWindowManager::set_hovered_window(WSWindow* window)
         return;
 
     if (m_hovered_window)
-        WSMessageLoop::the().post_event(*m_hovered_window, make<WSMessage>(WSMessage::WindowLeft));
+        WSEventLoop::the().post_event(*m_hovered_window, make<WSEvent>(WSEvent::WindowLeft));
 
     m_hovered_window = window ? window->make_weak_ptr() : nullptr;
 
     if (m_hovered_window)
-        WSMessageLoop::the().post_event(*m_hovered_window, make<WSMessage>(WSMessage::WindowEntered));
+        WSEventLoop::the().post_event(*m_hovered_window, make<WSEvent>(WSEvent::WindowEntered));
 }
 
 void WSWindowManager::invalidate()
@@ -1028,7 +1028,7 @@ void WSWindowManager::invalidate(const Rect& a_rect, bool should_schedule_compos
     m_dirty_rects.add(rect);
 
     if (should_schedule_compose_event && !m_pending_compose_event) {
-        WSMessageLoop::the().post_event(*this, make<WSMessage>(WSMessage::WM_DeferredCompose));
+        WSEventLoop::the().post_event(*this, make<WSEvent>(WSEvent::WM_DeferredCompose));
         m_pending_compose_event = true;
     }
 }
