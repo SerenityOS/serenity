@@ -6,6 +6,7 @@
 #include <LibGUI/GMenu.h>
 #include <LibGUI/GMenuBar.h>
 #include <LibGUI/GAction.h>
+#include <LibGUI/GLabel.h>
 
 int main(int argc, char** argv)
 {
@@ -24,8 +25,10 @@ int main(int argc, char** argv)
     container->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     container->set_preferred_size({ 0, 36 });
     container->set_layout(make<GBoxLayout>(Orientation::Horizontal));
+    auto* flag_label = new GLabel(container);
     auto* face_button = new GButton(container);
-    auto* field = new Field(*face_button, widget);
+    auto* time_label = new GLabel(container);
+    auto* field = new Field(*flag_label, *time_label, *face_button, widget);
 
     auto menubar = make<GMenuBar>();
 
