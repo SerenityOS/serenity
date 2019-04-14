@@ -157,6 +157,8 @@ void Field::flood_fill(Square& square)
     for_each_neighbor_of(square, [this] (auto& neighbor) {
         if (!neighbor.is_swept && !neighbor.has_mine && neighbor.number == 0)
             flood_fill(neighbor);
+        if (!neighbor.has_mine && neighbor.number)
+            on_square_clicked(neighbor);
     });
 }
 
