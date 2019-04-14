@@ -12,7 +12,7 @@ INCLUDE_FLAGS = -I.. -I. -I../LibC
 DEFINES = -DSERENITY -DSANITIZE_PTRS -DUSERLAND
 
 CXXFLAGS = -MMD -MP $(WARNING_FLAGS) $(OPTIMIZATION_FLAGS) $(FLAVOR_FLAGS) $(ARCH_FLAGS) $(STANDARD_FLAGS) $(INCLUDE_FLAGS) $(DEFINES)
-CXX = i686-pca-serenity-g++
+CXX = i686-pc-serenity-g++
 LD = i686-pc-serenity-g++
 AR = i686-pc-serenity-r
 LDFLAGS = -L../LibC -L../LibCore -L../LibGUI
@@ -30,7 +30,7 @@ clean:
 
 $(APPS) : % : %.o $(OBJS)
 	@echo "LD $<"
-	@$(LD) -o $@ $(LDFLAGS) $< -lc
+	@$(LD) -o $@ $(LDFLAGS) $< -lc -lgui -lcore
 
 %.o: %.cpp
 	@echo "CXX $<"
