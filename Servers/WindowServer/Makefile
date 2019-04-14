@@ -10,7 +10,7 @@ SHAREDGRAPHICS_OBJS = \
     ../../SharedGraphics/PNGLoader.o
 
 WINDOWSERVER_OBJS = \
-    WSMessageLoop.o \
+    WSEventLoop.o \
     WSWindow.o \
     WSWindowManager.o \
     WSScreen.o \

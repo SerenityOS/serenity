@@ -6,7 +6,7 @@
 #include <AK/Function.h>
 #include <SharedGraphics/GraphicsBitmap.h>
 #include <LibCore/CObject.h>
-#include <WindowServer/WSMessage.h>
+#include <WindowServer/WSEvent.h>
 
 class WSWindow;
 class WSMenu;

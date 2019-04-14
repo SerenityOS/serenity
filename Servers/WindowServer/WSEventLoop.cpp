@@ -1,5 +1,5 @@
-#include <WindowServer/WSMessageLoop.h>
-#include <WindowServer/WSMessage.h>
+#include <WindowServer/WSEventLoop.h>
+#include <WindowServer/WSEvent.h>
 #include <LibCore/CObject.h>
 #include <WindowServer/WSWindowManager.h>
 #include <WindowServer/WSScreen.h>
@@ -19,7 +19,7 @@
 
 //#define WSMESSAGELOOP_DEBUG
 
-WSMessageLoop::WSMessageLoop()
+WSEventLoop::WSEventLoop()
 {
     m_keyboard_fd = open("/dev/keyboard", O_RDONLY | O_NONBLOCK | O_CLOEXEC);
     m_mouse_fd = open("/dev/psaux", O_RDONLY | O_NONBLOCK | O_CLOEXEC);
@@ -40,16 +40,16 @@ WSMessageLoop::WSMessageLoop()
     ASSERT(m_mouse_fd >= 0);
 }
 
-WSMessageLoop::~WSMessageLoop()
+WSEventLoop::~WSEventLoop()
 {
 }
 
-WSMessageLoop& WSMessageLoop::the()
+WSEventLoop& WSEventLoop::the()
 {
-    return static_cast<WSMessageLoop&>(CEventLoop::current());
+    return static_cast<WSEventLoop&>(CEventLoop::current());
 }
 
-void WSMessageLoop::drain_server()
+void WSEventLoop::drain_server()
 {
     sockaddr_un address;
     socklen_t address_size = sizeof(address);
@@ -61,7 +61,7 @@ void WSMessageLoop::drain_server()
     }
 }
 
-void WSMessageLoop::drain_mouse()
+void WSEventLoop::drain_mouse()
 {
     auto& screen = WSScreen::the();
     unsigned prev_buttons = screen.mouse_button_state();
@@ -89,7 +89,7 @@ void WSMessageLoop::drain_mouse()
         screen.on_receive_mouse_data(dx, dy, buttons);
 }
 
-void WSMessageLoop::drain_keyboard()
+void WSEventLoop::drain_keyboard()
 {
     auto& screen = WSScreen::the();
     for (;;) {
@@ -102,7 +102,7 @@ void WSMessageLoop::drain_keyboard()
     }
 }
 
-void WSMessageLoop::notify_client_disconnected(int client_id)
+void WSEventLoop::notify_client_disconnected(int client_id)
 {
     auto* client = WSClientConnection::from_client_id(client_id);
     if (!client)
@@ -128,7 +128,7 @@ static WSWindowType from_api(WSAPI_WindowType api_type)
     }
 }
 
-void WSMessageLoop::on_receive_from_client(int client_id, const WSAPI_ClientMessage& message)
+void WSEventLoop::on_receive_from_client(int client_id, const WSAPI_ClientMessage& message)
 {
     WSClientConnection& client = *WSClientConnection::from_client_id(client_id);
     switch (message.type) {
@@ -237,7 +237,7 @@ void WSMessageLoop::on_receive_from_client(int client_id, const WSAPI_ClientMess
     }
 }
 
-void WSMessageLoop::add_file_descriptors_for_select(fd_set& fds, int& max_fd_added)
+void WSEventLoop::add_file_descriptors_for_select(fd_set& fds, int& max_fd_added)
 {
     auto add_fd_to_set = [&max_fd_added] (int fd, auto& set) {
         FD_SET(fd, &set);
@@ -252,7 +252,7 @@ void WSMessageLoop::add_file_descriptors_for_select(fd_set& fds, int& max_fd_add
     });
 }
 
-void WSMessageLoop::process_file_descriptors_after_select(const fd_set& fds)
+void WSEventLoop::process_file_descriptors_after_select(const fd_set& fds)
 {
     if (FD_ISSET(m_server_fd, &fds))
         drain_server();

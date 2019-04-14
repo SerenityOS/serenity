@@ -9,7 +9,7 @@
 
 class WSClientConnection;
 class WSMenuBar;
-class WSMessage;
+class WSEvent;
 class WSWindow;
 class Font;
 

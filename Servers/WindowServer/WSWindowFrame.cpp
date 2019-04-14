@@ -1,7 +1,7 @@
 #include <WindowServer/WSWindowFrame.h>
 #include <WindowServer/WSWindowManager.h>
 #include <WindowServer/WSWindow.h>
-#include <WindowServer/WSMessage.h>
+#include <WindowServer/WSEvent.h>
 #include <WindowServer/WSButton.h>
 #include <SharedGraphics/CharacterBitmap.h>
 #include <SharedGraphics/Painter.h>
@@ -53,7 +53,7 @@ WSWindowFrame::WSWindowFrame(WSWindow& window)
         s_minimize_button_bitmap = &CharacterBitmap::create_from_ascii(s_minimize_button_bitmap_data, s_minimize_button_bitmap_width, s_minimize_button_bitmap_height).leak_ref();
 
     m_buttons.append(make<WSButton>(*this, *s_close_button_bitmap, [this] {
-        WSMessage close_request(WSMessage::WindowCloseRequest);
+        WSEvent close_request(WSEvent::WindowCloseRequest);
         m_window.event(close_request);
     }));
 
@@ -243,19 +243,19 @@ void WSWindowFrame::on_mouse_event(const WSMouseEvent& event)
     if (title_bar_rect().contains(event.position())) {
         wm.clear_resize_candidate();
 
-        if (event.type() == WSMessage::MouseDown)
+        if (event.type() == WSEvent::MouseDown)
             wm.move_to_front_and_make_active(m_window);
 
         for (auto& button : m_buttons) {
             if (button->relative_rect().contains(event.position()))
                 return button->on_mouse_event(event.translated(-button->relative_rect().location()));
         }
-        if (event.type() == WSMessage::MouseDown && event.button() == MouseButton::Left)
+        if (event.type() == WSEvent::MouseDown && event.button() == MouseButton::Left)
             wm.start_window_drag(m_window, event.translated(rect().location()));
         return;
     }
 
-    if (event.type() == WSMessage::MouseMove && event.buttons() == 0) {
+    if (event.type() == WSEvent::MouseMove && event.buttons() == 0) {
         constexpr ResizeDirection direction_for_hot_area[3][3] = {
             { ResizeDirection::UpLeft, ResizeDirection::Up, ResizeDirection::UpRight },
             { ResizeDirection::Left, ResizeDirection::None, ResizeDirection::Right },

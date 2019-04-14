@@ -1,5 +1,5 @@
 #include <WindowServer/WSCPUMonitor.h>
-#include <WindowServer/WSMessageLoop.h>
+#include <WindowServer/WSEventLoop.h>
 #include <WindowServer/WSWindowManager.h>
 #include <unistd.h>
 #include <stdio.h>

@@ -9,7 +9,7 @@
 #include <WindowServer/WSWindowType.h>
 #include <LibCore/CEvent.h>
 
-class WSMessage : public CEvent {
+class WSEvent : public CEvent {
 public:
     enum Type {
         Invalid = 2000,
@@ -64,19 +64,19 @@ public:
         __End_API_Client_Requests,
     };
 
-    WSMessage() { }
-    explicit WSMessage(Type type) : CEvent(type) { }
-    virtual ~WSMessage() { }
+    WSEvent() { }
+    explicit WSEvent(Type type) : CEvent(type) { }
+    virtual ~WSEvent() { }
 
     bool is_client_request() const { return type() > __Begin_API_Client_Requests && type() < __End_API_Client_Requests; }
     bool is_mouse_event() const { return type() == MouseMove || type() == MouseDown || type() == MouseUp; }
     bool is_key_event() const { return type() == KeyUp || type() == KeyDown; }
 };
 
-class WSClientDisconnectedNotification : public WSMessage {
+class WSClientDisconnectedNotification : public WSEvent {
 public:
     explicit WSClientDisconnectedNotification(int client_id)
-        : WSMessage(WM_ClientDisconnected)
+        : WSEvent(WM_ClientDisconnected)
         , m_client_id(client_id)
     {
     }
@@ -87,10 +87,10 @@ private:
     int m_client_id { 0 };
 };
 
-class WSAPIClientRequest : public WSMessage {
+class WSAPIClientRequest : public WSEvent {
 public:
     WSAPIClientRequest(Type type, int client_id)
-        : WSMessage(type)
+        : WSEvent(type)
         , m_client_id(client_id)
     {
     }
@@ -104,7 +104,7 @@ private:
 class WSWMAPISetActiveWindowRequest : public WSAPIClientRequest {
 public:
     WSWMAPISetActiveWindowRequest(int client_id, int target_client_id, int target_window_id)
-        : WSAPIClientRequest(WSMessage::WMAPISetActiveWindowRequest, client_id)
+        : WSAPIClientRequest(WSEvent::WMAPISetActiveWindowRequest, client_id)
         , m_target_client_id(target_client_id)
         , m_target_window_id(target_window_id)
     {
@@ -121,7 +121,7 @@ private:
 class WSAPISetGlobalCursorTrackingRequest : public WSAPIClientRequest {
 public:
     WSAPISetGlobalCursorTrackingRequest(int client_id, int window_id, bool value)
-        : WSAPIClientRequest(WSMessage::APISetGlobalCursorTrackingRequest, client_id)
+        : WSAPIClientRequest(WSEvent::APISetGlobalCursorTrackingRequest, client_id)
         , m_window_id(window_id)
         , m_value(value)
     {
@@ -138,7 +138,7 @@ private:
 class WSAPICreateMenubarRequest : public WSAPIClientRequest {
 public:
     WSAPICreateMenubarRequest(int client_id)
-        : WSAPIClientRequest(WSMessage::APICreateMenubarRequest, client_id)
+        : WSAPIClientRequest(WSEvent::APICreateMenubarRequest, client_id)
     {
     }
 };
@@ -146,7 +146,7 @@ public:
 class WSAPIDestroyMenubarRequest : public WSAPIClientRequest {
 public:
     WSAPIDestroyMenubarRequest(int client_id, int menubar_id)
-        : WSAPIClientRequest(WSMessage::APIDestroyMenubarRequest, client_id)
+        : WSAPIClientRequest(WSEvent::APIDestroyMenubarRequest, client_id)
         , m_menubar_id(menubar_id)
     {
     }
@@ -160,7 +160,7 @@ private:
 class WSAPISetApplicationMenubarRequest : public WSAPIClientRequest {
 public:
     WSAPISetApplicationMenubarRequest(int client_id, int menubar_id)
-        : WSAPIClientRequest(WSMessage::APISetApplicationMenubarRequest, client_id)
+        : WSAPIClientRequest(WSEvent::APISetApplicationMenubarRequest, client_id)
         , m_menubar_id(menubar_id)
     {
     }
@@ -174,7 +174,7 @@ private:
 class WSAPIAddMenuToMenubarRequest : public WSAPIClientRequest {
 public:
     WSAPIAddMenuToMenubarRequest(int client_id, int menubar_id, int menu_id)
-        : WSAPIClientRequest(WSMessage::APIAddMenuToMenubarRequest, client_id)
+        : WSAPIClientRequest(WSEvent::APIAddMenuToMenubarRequest, client_id)
         , m_menubar_id(menubar_id)
         , m_menu_id(menu_id)
     {
@@ -191,7 +191,7 @@ private:
 class WSAPIPopupMenuRequest : public WSAPIClientRequest {
 public:
     WSAPIPopupMenuRequest(int client_id, int menu_id, const Point& position)
-        : WSAPIClientRequest(WSMessage::APIPopupMenuRequest, client_id)
+        : WSAPIClientRequest(WSEvent::APIPopupMenuRequest, client_id)
         , m_menu_id(menu_id)
         , m_position(position)
     {
@@ -208,7 +208,7 @@ private:
 class WSAPIDismissMenuRequest : public WSAPIClientRequest {
 public:
     WSAPIDismissMenuRequest(int client_id, int menu_id)
-        : WSAPIClientRequest(WSMessage::APIDismissMenuRequest, client_id)
+        : WSAPIClientRequest(WSEvent::APIDismissMenuRequest, client_id)
         , m_menu_id(menu_id)
     {
     }
@@ -222,7 +222,7 @@ private:
 class WSAPICreateMenuRequest : public WSAPIClientRequest {
 public:
     WSAPICreateMenuRequest(int client_id, const String& text)
-        : WSAPIClientRequest(WSMessage::APICreateMenuRequest, client_id)
+        : WSAPIClientRequest(WSEvent::APICreateMenuRequest, client_id)
         , m_text(text)
     {
     }
@@ -236,7 +236,7 @@ private:
 class WSAPIDestroyMenuRequest : public WSAPIClientRequest {
 public:
     WSAPIDestroyMenuRequest(int client_id, int menu_id)
-        : WSAPIClientRequest(WSMessage::APIDestroyMenuRequest, client_id)
+        : WSAPIClientRequest(WSEvent::APIDestroyMenuRequest, client_id)
         , m_menu_id(menu_id)
     {
     }
@@ -250,7 +250,7 @@ private:
 class WSAPIAddMenuItemRequest : public WSAPIClientRequest {
 public:
     WSAPIAddMenuItemRequest(int client_id, int menu_id, unsigned identifier, const String& text, const String& shortcut_text, bool enabled)
-        : WSAPIClientRequest(WSMessage::APIAddMenuItemRequest, client_id)
+        : WSAPIClientRequest(WSEvent::APIAddMenuItemRequest, client_id)
         , m_menu_id(menu_id)
         , m_identifier(identifier)
         , m_text(text)
@@ -276,7 +276,7 @@ private:
 class WSAPIUpdateMenuItemRequest : public WSAPIClientRequest {
 public:
     WSAPIUpdateMenuItemRequest(int client_id, int menu_id, unsigned identifier, const String& text, const String& shortcut_text, bool enabled)
-        : WSAPIClientRequest(WSMessage::APIUpdateMenuItemRequest, client_id)
+        : WSAPIClientRequest(WSEvent::APIUpdateMenuItemRequest, client_id)
         , m_menu_id(menu_id)
         , m_identifier(identifier)
         , m_text(text)
@@ -302,7 +302,7 @@ private:
 class WSAPIAddMenuSeparatorRequest : public WSAPIClientRequest {
 public:
     WSAPIAddMenuSeparatorRequest(int client_id, int menu_id)
-        : WSAPIClientRequest(WSMessage::APIAddMenuSeparatorRequest, client_id)
+        : WSAPIClientRequest(WSEvent::APIAddMenuSeparatorRequest, client_id)
         , m_menu_id(menu_id)
     {
     }
@@ -316,7 +316,7 @@ private:
 class WSAPISetWindowOverrideCursorRequest final : public WSAPIClientRequest {
 public:
     explicit WSAPISetWindowOverrideCursorRequest(int client_id, int window_id, WSStandardCursor cursor)
-        : WSAPIClientRequest(WSMessage::APISetWindowOverrideCursorRequest, client_id)
+        : WSAPIClientRequest(WSEvent::APISetWindowOverrideCursorRequest, client_id)
         , m_window_id(window_id)
         , m_cursor(cursor)
     {
@@ -333,7 +333,7 @@ private:
 class WSAPISetWallpaperRequest final : public WSAPIClientRequest {
 public:
     explicit WSAPISetWallpaperRequest(int client_id, String&& wallpaper)
-        : WSAPIClientRequest(WSMessage::APISetWallpaperRequest, client_id)
+        : WSAPIClientRequest(WSEvent::APISetWallpaperRequest, client_id)
         , m_wallpaper(move(wallpaper))
     {
     }
@@ -347,7 +347,7 @@ private:
 class WSAPIGetWallpaperRequest final : public WSAPIClientRequest {
 public:
     explicit WSAPIGetWallpaperRequest(int client_id)
-        : WSAPIClientRequest(WSMessage::APIGetWallpaperRequest, client_id)
+        : WSAPIClientRequest(WSEvent::APIGetWallpaperRequest, client_id)
     {
     }
 };
@@ -355,7 +355,7 @@ public:
 class WSAPISetWindowTitleRequest final : public WSAPIClientRequest {
 public:
     explicit WSAPISetWindowTitleRequest(int client_id, int window_id, String&& title)
-        : WSAPIClientRequest(WSMessage::APISetWindowTitleRequest, client_id)
+        : WSAPIClientRequest(WSEvent::APISetWindowTitleRequest, client_id)
         , m_window_id(window_id)
         , m_title(move(title))
     {
@@ -372,7 +372,7 @@ private:
 class WSAPIGetWindowTitleRequest final : public WSAPIClientRequest {
 public:
     explicit WSAPIGetWindowTitleRequest(int client_id, int window_id)
-        : WSAPIClientRequest(WSMessage::APIGetWindowTitleRequest, client_id)
+        : WSAPIClientRequest(WSEvent::APIGetWindowTitleRequest, client_id)
         , m_window_id(window_id)
     {
     }
@@ -386,7 +386,7 @@ private:
 class WSAPISetClipboardContentsRequest final : public WSAPIClientRequest {
 public:
     explicit WSAPISetClipboardContentsRequest(int client_id, int shared_buffer_id, int size)
-        : WSAPIClientRequest(WSMessage::APISetClipboardContentsRequest, client_id)
+        : WSAPIClientRequest(WSEvent::APISetClipboardContentsRequest, client_id)
         , m_shared_buffer_id(shared_buffer_id)
         , m_size(size)
     {
@@ -403,7 +403,7 @@ private:
 class WSAPIGetClipboardContentsRequest final : public WSAPIClientRequest {
 public:
     explicit WSAPIGetClipboardContentsRequest(int client_id)
-        : WSAPIClientRequest(WSMessage::APIGetClipboardContentsRequest, client_id)
+        : WSAPIClientRequest(WSEvent::APIGetClipboardContentsRequest, client_id)
     {
     }
 };
@@ -411,7 +411,7 @@ public:
 class WSAPISetWindowOpacityRequest final : public WSAPIClientRequest {
 public:
     explicit WSAPISetWindowOpacityRequest(int client_id, int window_id, float opacity)
-        : WSAPIClientRequest(WSMessage::APISetWindowOpacityRequest, client_id)
+        : WSAPIClientRequest(WSEvent::APISetWindowOpacityRequest, client_id)
         , m_window_id(window_id)
         , m_opacity(opacity)
     {
@@ -428,7 +428,7 @@ private:
 class WSAPISetWindowBackingStoreRequest final : public WSAPIClientRequest {
 public:
     explicit WSAPISetWindowBackingStoreRequest(int client_id, int window_id, int shared_buffer_id, const Size& size, size_t bpp, size_t pitch, bool has_alpha_channel, bool flush_immediately)
-        : WSAPIClientRequest(WSMessage::APISetWindowBackingStoreRequest, client_id)
+        : WSAPIClientRequest(WSEvent::APISetWindowBackingStoreRequest, client_id)
         , m_window_id(window_id)
         , m_shared_buffer_id(shared_buffer_id)
         , m_size(size)
@@ -460,7 +460,7 @@ private:
 class WSAPISetWindowRectRequest final : public WSAPIClientRequest {
 public:
     explicit WSAPISetWindowRectRequest(int client_id, int window_id, const Rect& rect)
-        : WSAPIClientRequest(WSMessage::APISetWindowRectRequest, client_id)
+        : WSAPIClientRequest(WSEvent::APISetWindowRectRequest, client_id)
         , m_window_id(window_id)
         , m_rect(rect)
     {
@@ -477,7 +477,7 @@ private:
 class WSAPISetWindowIconRequest final : public WSAPIClientRequest {
 public:
     explicit WSAPISetWindowIconRequest(int client_id, int window_id, const String& icon_path)
-        : WSAPIClientRequest(WSMessage::APISetWindowIconRequest, client_id)
+        : WSAPIClientRequest(WSEvent::APISetWindowIconRequest, client_id)
         , m_window_id(window_id)
         , m_icon_path(icon_path)
     {
@@ -494,7 +494,7 @@ private:
 class WSAPIGetWindowRectRequest final : public WSAPIClientRequest {
 public:
     explicit WSAPIGetWindowRectRequest(int client_id, int window_id)
-        : WSAPIClientRequest(WSMessage::APIGetWindowRectRequest, client_id)
+        : WSAPIClientRequest(WSEvent::APIGetWindowRectRequest, client_id)
         , m_window_id(window_id)
     {
     }
@@ -508,7 +508,7 @@ private:
 class WSAPICreateWindowRequest : public WSAPIClientRequest {
 public:
     WSAPICreateWindowRequest(int client_id, const Rect& rect, const String& title, bool has_alpha_channel, bool modal, bool resizable, float opacity, const Size& base_size, const Size& size_increment, WSWindowType window_type, Color background_color)
-        : WSAPIClientRequest(WSMessage::APICreateWindowRequest, client_id)
+        : WSAPIClientRequest(WSEvent::APICreateWindowRequest, client_id)
         , m_rect(rect)
         , m_title(title)
         , m_opacity(opacity)
@@ -549,7 +549,7 @@ private:
 class WSAPIDestroyWindowRequest : public WSAPIClientRequest {
 public:
     WSAPIDestroyWindowRequest(int client_id, int window_id)
-        : WSAPIClientRequest(WSMessage::APIDestroyWindowRequest, client_id)
+        : WSAPIClientRequest(WSEvent::APIDestroyWindowRequest, client_id)
         , m_window_id(window_id)
     {
     }
@@ -563,7 +563,7 @@ private:
 class WSAPIInvalidateRectRequest final : public WSAPIClientRequest {
 public:
     explicit WSAPIInvalidateRectRequest(int client_id, int window_id, const Rect& rect)
-        : WSAPIClientRequest(WSMessage::APIInvalidateRectRequest, client_id)
+        : WSAPIClientRequest(WSEvent::APIInvalidateRectRequest, client_id)
         , m_window_id(window_id)
         , m_rect(rect)
     {
@@ -580,7 +580,7 @@ private:
 class WSAPIGetWindowBackingStoreRequest final : public WSAPIClientRequest {
 public:
     explicit WSAPIGetWindowBackingStoreRequest(int client_id, int window_id)
-        : WSAPIClientRequest(WSMessage::APIGetWindowBackingStoreRequest, client_id)
+        : WSAPIClientRequest(WSEvent::APIGetWindowBackingStoreRequest, client_id)
         , m_window_id(window_id)
     {
     }
@@ -594,7 +594,7 @@ private:
 class WSAPIDidFinishPaintingNotification final : public WSAPIClientRequest {
 public:
     explicit WSAPIDidFinishPaintingNotification(int client_id, int window_id, const Rect& rect)
-        : WSAPIClientRequest(WSMessage::APIDidFinishPaintingNotification, client_id)
+        : WSAPIClientRequest(WSEvent::APIDidFinishPaintingNotification, client_id)
         , m_window_id(window_id)
         , m_rect(rect)
     {
@@ -615,10 +615,10 @@ enum class MouseButton : byte {
     Middle = 4,
 };
 
-class WSKeyEvent final : public WSMessage {
+class WSKeyEvent final : public WSEvent {
 public:
     WSKeyEvent(Type type, int key, char character, byte modifiers)
-        : WSMessage(type)
+        : WSEvent(type)
         , m_key(key)
         , m_character(character)
         , m_modifiers(modifiers)
@@ -634,17 +634,17 @@ public:
     char character() const { return m_character; }
 
 private:
-    friend class WSMessageLoop;
+    friend class WSEventLoop;
     friend class WSScreen;
     int m_key { 0 };
     char m_character { 0 };
     byte m_modifiers { 0 };
 };
 
-class WSMouseEvent final : public WSMessage {
+class WSMouseEvent final : public WSEvent {
 public:
     WSMouseEvent(Type type, const Point& position, unsigned buttons, MouseButton button, unsigned modifiers)
-        : WSMessage(type)
+        : WSEvent(type)
         , m_position(position)
         , m_buttons(buttons)
         , m_button(button)
@@ -668,10 +668,10 @@ private:
     unsigned m_modifiers { 0 };
 };
 
-class WSResizeEvent final : public WSMessage {
+class WSResizeEvent final : public WSEvent {
 public:
     WSResizeEvent(const Rect& old_rect, const Rect& rect)
-        : WSMessage(WSMessage::WindowResized)
+        : WSEvent(WSEvent::WindowResized)
         , m_old_rect(old_rect)
         , m_rect(rect)
     {
@@ -685,10 +685,10 @@ private:
     Rect m_rect;
 };
 
-class WSWMEvent : public WSMessage {
+class WSWMEvent : public WSEvent {
 public:
     WSWMEvent(Type type, int client_id, int window_id)
-        : WSMessage(type)
+        : WSEvent(type)
         , m_client_id(client_id)
         , m_window_id(window_id)
     {
@@ -705,7 +705,7 @@ private:
 class WSWMWindowRemovedEvent : public WSWMEvent {
 public:
     WSWMWindowRemovedEvent(int client_id, int window_id)
-        : WSWMEvent(WSMessage::WM_WindowRemoved, client_id, window_id)
+        : WSWMEvent(WSEvent::WM_WindowRemoved, client_id, window_id)
     {
     }
 };
@@ -713,7 +713,7 @@ public:
 class WSWMWindowStateChangedEvent : public WSWMEvent {
 public:
     WSWMWindowStateChangedEvent(int client_id, int window_id, const String& title, const Rect& rect, bool is_active, WSWindowType window_type, bool is_minimized, const String& icon_path)
-        : WSWMEvent(WSMessage::WM_WindowStateChanged, client_id, window_id)
+        : WSWMEvent(WSEvent::WM_WindowStateChanged, client_id, window_id)
         , m_title(title)
         , m_icon_path(icon_path)
         , m_rect(rect)
