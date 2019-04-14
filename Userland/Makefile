@@ -39,6 +39,7 @@ OBJS = \
        host.o \
        qs.o \
        mv.o \
+       uptime.o \
        rm.o
 
 APPS = \
@@ -83,6 +84,7 @@ APPS = \
        host \
        qs \
        mv \
+       uptime \
        rm
 
 ARCH_FLAGS =
@@ -226,6 +228,9 @@ qs: qs.o
 	$(LD) -o $@ $(LDFLAGS) $< -lgui -lcore -lc
 
 mv: mv.o
+	$(LD) -o $@ $(LDFLAGS) $< -lc
+
+uptime: uptime.o
 	$(LD) -o $@ $(LDFLAGS) $< -lc
 
 .cpp.o:
