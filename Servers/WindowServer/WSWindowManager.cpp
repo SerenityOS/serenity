@@ -142,8 +142,7 @@ WSWindowManager::WSWindowManager()
     // NOTE: This ensures that the system menu has the correct dimensions.
     set_current_menubar(nullptr);
 
-    auto* timer = new CTimer;
-    timer->on_timeout = [this] {
+    new CTimer(300, [this] {
         static time_t last_update_time;
         time_t now = time(nullptr);
         if (now != last_update_time || m_cpu_monitor.is_dirty()) {
@@ -151,8 +150,7 @@ WSWindowManager::WSWindowManager()
             last_update_time = now;
             m_cpu_monitor.set_dirty(false);
         }
-    };
-    timer->start(300);
+    });
 
     invalidate();
     compose();
