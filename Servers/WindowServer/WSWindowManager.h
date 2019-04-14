@@ -15,7 +15,7 @@
 #include <WindowServer/WSWindow.h>
 #include <WindowServer/WSCursor.h>
 #include <WindowServer/WSMessage.h>
-#include <AK/CircularQueue.h>
+#include <WindowServer/WSCPUMonitor.h>
 
 class WSAPIClientRequest;
 class WSScreen;
@@ -216,11 +216,11 @@ private:
 
     WSWindowSwitcher m_switcher;
 
-    CircularQueue<float, 30> m_cpu_history;
-
     String m_username;
     WeakPtr<WSButton> m_cursor_tracking_button;
     WeakPtr<WSButton> m_hovered_button;
+
+    WSCPUMonitor m_cpu_monitor;
 };
 
 template<typename Callback>
