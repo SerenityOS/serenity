@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Assertions.h"
-#include "Types.h"
+#include <AK/Assertions.h>
+#include <AK/Types.h>
 
 namespace AK {
 
@@ -18,15 +18,6 @@ public:
     int size() const { return m_size; }
 
     int capacity() const { return Capacity; }
-
-    void dump() const
-    {
-        kprintf("CircularQueue<%zu>:\n", Capacity);
-        kprintf(" size: %zu\n", m_size);
-        for (int i = 0; i < Capacity; ++i) {
-            kprintf(" [%zu] %d %c\n", i, m_elements[i], i == m_head ? '*' : ' ');
-        }
-    }
 
     void enqueue(const T& t)
     {

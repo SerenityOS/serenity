@@ -22,8 +22,6 @@
 //#define DEBUG_COUNTERS
 //#define RESIZE_DEBUG
 
-static void get_cpu_usage(unsigned& busy, unsigned& idle);
-
 static WSWindowManager* s_the;
 
 WSWindowManager& WSWindowManager::the()
@@ -143,34 +141,13 @@ WSWindowManager::WSWindowManager()
     // NOTE: This ensures that the system menu has the correct dimensions.
     set_current_menubar(nullptr);
 
-    create_thread([] (void* context) -> int {
-        auto& wm = *(WSWindowManager*)context;
-        for (;;) {
-            static unsigned last_busy;
-            static unsigned last_idle;
-            unsigned busy;
-            unsigned idle;
-            get_cpu_usage(busy, idle);
-            unsigned busy_diff = busy - last_busy;
-            unsigned idle_diff = idle - last_idle;
-            last_busy = busy;
-            last_idle = idle;
-            float cpu = (float)busy_diff / (float)(busy_diff + idle_diff);
-            wm.m_cpu_history.enqueue(cpu);
-            sleep(1);
-        }
-    }, this);
-
     WSMessageLoop::the().start_timer(300, [this] {
         static time_t last_update_time;
-        static int last_cpu_history_size = 0;
-        static int last_cpu_history_head_index = 0;
         time_t now = time(nullptr);
-        if (now != last_update_time || m_cpu_history.size() != last_cpu_history_size || m_cpu_history.head_index() != last_cpu_history_head_index) {
+        if (now != last_update_time || m_cpu_monitor.is_dirty()) {
             tick_clock();
             last_update_time = now;
-            last_cpu_history_head_index = m_cpu_history.head_index();
-            last_cpu_history_size = m_cpu_history.size();
+            m_cpu_monitor.set_dirty(false);
         }
     });
 
@@ -200,39 +177,6 @@ const Font& WSWindowManager::menu_font() const
 const Font& WSWindowManager::app_menu_font() const
 {
     return Font::default_bold_font();
-}
-
-void get_cpu_usage(unsigned& busy, unsigned& idle)
-{
-    busy = 0;
-    idle = 0;
-
-    FILE* fp = fopen("/proc/all", "r");
-    if (!fp) {
-        perror("failed to open /proc/all");
-        ASSERT_NOT_REACHED();
-    }
-    for (;;) {
-        char buf[BUFSIZ];
-        char* ptr = fgets(buf, sizeof(buf), fp);
-        if (!ptr)
-            break;
-        auto parts = String(buf, Chomp).split(',');
-        if (parts.size() < 17)
-            break;
-        bool ok;
-        pid_t pid = parts[0].to_uint(ok);
-        ASSERT(ok);
-        unsigned nsched = parts[1].to_uint(ok);
-        ASSERT(ok);
-
-        if (pid == 0)
-            idle += nsched;
-        else
-            busy += nsched;
-    }
-    int rc = fclose(fp);
-    ASSERT(rc == 0);
 }
 
 void WSWindowManager::tick_clock()
@@ -926,17 +870,8 @@ void WSWindowManager::draw_menubar()
 
     m_back_painter->draw_text(time_rect, time_text, font(), TextAlignment::CenterRight, Color::Black);
 
-    Rect cpu_rect { time_rect.right() - font().width(time_text) - (int)m_cpu_history.capacity() - 10, time_rect.y() + 1, (int)m_cpu_history.capacity(), time_rect.height() - 2 };
-    m_back_painter->fill_rect(cpu_rect, Color::Black);
-    int i = m_cpu_history.capacity() - m_cpu_history.size();
-    for (auto cpu_usage : m_cpu_history) {
-        m_back_painter->draw_line(
-            { cpu_rect.x() + i, cpu_rect.bottom() },
-            { cpu_rect.x() + i, (int)(cpu_rect.y() + (cpu_rect.height() - (cpu_usage * (float)cpu_rect.height()))) },
-            Color::from_rgb(0xaa6d4b)
-        );
-        ++i;
-    }
+    Rect cpu_rect { time_rect.right() - font().width(time_text) - m_cpu_monitor.capacity() - 10, time_rect.y() + 1, m_cpu_monitor.capacity(), time_rect.height() - 2 };
+    m_cpu_monitor.paint(*m_back_painter, cpu_rect);
 }
 
 void WSWindowManager::draw_window_switcher()
