@@ -36,6 +36,7 @@ enum ProcFileType {
     FI_Root_inodes,
     FI_Root_dmesg,
     FI_Root_pci,
+    FI_Root_uptime,
     FI_Root_self, // symlink
     FI_Root_sys, // directory
     __FI_Root_End,
@@ -245,6 +246,13 @@ ByteBuffer procfs$pci(InodeIdentifier)
     PCI::enumerate_all([&builder] (PCI::Address address, PCI::ID id) {
         builder.appendf("%b:%b.%b %w:%w\n", address.bus(), address.slot(), address.function(), id.vendor_id, id.device_id);
     });
+    return builder.to_byte_buffer();
+}
+
+ByteBuffer procfs$uptime(InodeIdentifier)
+{
+    StringBuilder builder;
+    builder.appendf("%u\n", (dword)(g_uptime / 1000));
     return builder.to_byte_buffer();
 }
 
@@ -1144,6 +1152,7 @@ ProcFS::ProcFS()
     m_entries[FI_Root_dmesg] = { "dmesg", FI_Root_dmesg, procfs$dmesg };
     m_entries[FI_Root_self] = { "self", FI_Root_self, procfs$self };
     m_entries[FI_Root_pci] = { "pci", FI_Root_pci, procfs$pci };
+    m_entries[FI_Root_uptime] = { "uptime", FI_Root_uptime, procfs$uptime };
     m_entries[FI_Root_sys] = { "sys", FI_Root_sys };
 
     m_entries[FI_PID_vm] = { "vm", FI_PID_vm, procfs$pid_vm };
