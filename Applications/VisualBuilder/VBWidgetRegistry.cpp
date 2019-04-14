@@ -76,11 +76,15 @@ static GWidget* build_gwidget(VBWidgetType type, GWidget* parent)
 GWidget* VBWidgetRegistry::build_gwidget(VBWidgetType type, GWidget* parent, Vector<OwnPtr<VBProperty>>& properties)
 {
     auto* gwidget = ::build_gwidget(type, parent);
-    auto add_property = [&properties] (const String& name, const GVariant& value = { }, bool is_readonly = false) {
+    auto add_readonly_property = [&properties] (const String& name, const GVariant& value) {
         auto property = make<VBProperty>(name, value);
-        property->set_readonly(is_readonly);
+        property->set_readonly(true);
         properties.append(move(property));
     };
-    add_property("class", to_class_name(type), true);
+    auto add_property = [&properties] (const String& name, Function<GVariant(const GWidget&)>&& getter, Function<void(GWidget&, const GVariant&)>&& setter) {
+        auto property = make<VBProperty>(name, move(getter), move(setter));
+        properties.append(move(property));
+    };
+    add_readonly_property("class", to_class_name(type));
     return gwidget;
 }
