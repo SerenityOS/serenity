@@ -15,7 +15,7 @@ GAbstractView::~GAbstractView()
 
 void GAbstractView::set_model(RetainPtr<GModel>&& model)
 {
-    if (model.ptr() == m_model.ptr())
+    if (model == m_model)
         return;
     if (m_model)
         m_model->unregister_view(Badge<GAbstractView>(), *this);

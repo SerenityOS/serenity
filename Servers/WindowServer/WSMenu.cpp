@@ -92,7 +92,7 @@ void WSMenu::draw()
     for (auto& item : m_items) {
         if (item->type() == WSMenuItem::Text) {
             Color text_color = Color::Black;
-            if (item.ptr() == m_hovered_item) {
+            if (item == m_hovered_item) {
                 painter.fill_rect(item->rect(), WSWindowManager::the().menu_selection_color());
                 text_color = Color::White;
             }

@@ -146,17 +146,17 @@ void WSWindowFrame::paint(Painter& painter)
 
     auto& wm = WSWindowManager::the();
 
-    if (&window == wm.m_highlight_window.ptr()) {
+    if (&window == wm.m_highlight_window) {
         border_color = wm.m_highlight_window_border_color;
         border_color2 = wm.m_highlight_window_border_color2;
         title_color = wm.m_highlight_window_title_color;
         middle_border_color = Color::White;
-    } else if (&window == wm.m_drag_window.ptr()) {
+    } else if (&window == wm.m_drag_window) {
         border_color = wm.m_dragging_window_border_color;
         border_color2 = wm.m_dragging_window_border_color2;
         title_color = wm.m_dragging_window_title_color;
         middle_border_color = Color::from_rgb(0xf9b36a);
-    } else if (&window == wm.m_active_window.ptr()) {
+    } else if (&window == wm.m_active_window) {
         border_color = wm.m_active_window_border_color;
         border_color2 = wm.m_active_window_border_color2;
         title_color = wm.m_active_window_title_color;

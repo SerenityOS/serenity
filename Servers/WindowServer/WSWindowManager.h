@@ -234,7 +234,7 @@ IterationDecision WSWindowManager::for_each_visible_window_of_type_from_back_to_
             continue;
         if (window->type() != type)
             continue;
-        if (m_highlight_window.ptr() == window) {
+        if (m_highlight_window == window) {
             do_highlight_window_at_end = true;
             continue;
         }
@@ -277,7 +277,7 @@ IterationDecision WSWindowManager::for_each_visible_window_of_type_from_front_to
             continue;
         if (window->type() != type)
             continue;
-        if (window == m_highlight_window.ptr())
+        if (window == m_highlight_window)
             continue;
         if (callback(*window) == IterationDecision::Abort)
             return IterationDecision::Abort;

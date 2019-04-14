@@ -107,6 +107,9 @@ public:
     CALLABLE_WHEN(unconsumed) T& operator*() { ASSERT(m_ptr); return *m_ptr; }
     CALLABLE_WHEN(unconsumed) const T& operator*() const { ASSERT(m_ptr); return *m_ptr; }
 
+    CALLABLE_WHEN(unconsumed) operator T*() { ASSERT(m_ptr); return m_ptr; }
+    CALLABLE_WHEN(unconsumed) operator const T*() const { ASSERT(m_ptr); return m_ptr; }
+
 private:
     Retained() { }
 

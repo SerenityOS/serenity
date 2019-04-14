@@ -11,14 +11,14 @@ GLayout::~GLayout()
 
 void GLayout::notify_adopted(Badge<GWidget>, GWidget& widget)
 {
-    if (m_owner.ptr() == &widget)
+    if (m_owner == &widget)
         return;
     m_owner = widget.make_weak_ptr();
 }
 
 void GLayout::notify_disowned(Badge<GWidget>, GWidget& widget)
 {
-    ASSERT(m_owner.ptr() == &widget);
+    ASSERT(m_owner == &widget);
     m_owner.clear();
 }
 
@@ -43,7 +43,7 @@ void GLayout::add_widget(GWidget& widget)
 void GLayout::remove_widget(GWidget& widget)
 {
     m_entries.remove_first_matching([&] (auto& entry) {
-        return entry.widget.ptr() == &widget;
+        return entry.widget == &widget;
     });
     if (m_owner)
         m_owner->notify_layout_changed(Badge<GLayout>());

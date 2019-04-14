@@ -142,7 +142,7 @@ auto MemoryManager::ensure_pte(PageDirectory& page_directory, LinearAddress ladd
         dbgprintf("MM: PDE %u not present (requested for L%x), allocating\n", page_directory_index, laddr.get());
 #endif
         if (page_directory_index == 0) {
-            ASSERT(&page_directory == m_kernel_page_directory.ptr());
+            ASSERT(&page_directory == m_kernel_page_directory);
             pde.set_page_table_base((dword)m_page_table_zero);
             pde.set_user_allowed(false);
             pde.set_present(true);
@@ -153,7 +153,7 @@ auto MemoryManager::ensure_pte(PageDirectory& page_directory, LinearAddress ladd
 #ifdef MM_DEBUG
             dbgprintf("MM: PD K%x (%s) at P%x allocated page table #%u (for L%x) at P%x\n",
                 &page_directory,
-                &page_directory == m_kernel_page_directory.ptr() ? "Kernel" : "User",
+                &page_directory == m_kernel_page_directory ? "Kernel" : "User",
                 page_directory.cr3(),
                 page_directory_index,
                 laddr.get(),

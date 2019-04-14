@@ -346,14 +346,14 @@ void GWindow::set_focused_widget(GWidget* widget)
 
 void GWindow::set_global_cursor_tracking_widget(GWidget* widget)
 {
-    if (widget == m_global_cursor_tracking_widget.ptr())
+    if (widget == m_global_cursor_tracking_widget)
         return;
     m_global_cursor_tracking_widget = widget ? widget->make_weak_ptr() : nullptr;
 }
 
 void GWindow::set_automatic_cursor_tracking_widget(GWidget* widget)
 {
-    if (widget == m_automatic_cursor_tracking_widget.ptr())
+    if (widget == m_automatic_cursor_tracking_widget)
         return;
     m_automatic_cursor_tracking_widget = widget ? widget->make_weak_ptr() : nullptr;
 }
@@ -385,7 +385,7 @@ void GWindow::set_opacity(float opacity)
 
 void GWindow::set_hovered_widget(GWidget* widget)
 {
-    if (widget == m_hovered_widget.ptr())
+    if (widget == m_hovered_widget)
         return;
 
     if (m_hovered_widget)

@@ -336,7 +336,7 @@ KResult VFS::rename(const String& old_path, const String& new_path, Inode& base)
     if (!new_inode_or_error.is_error()) {
         auto new_inode = new_inode_or_error.value();
         // FIXME: Is this really correct? Check what other systems do.
-        if (new_inode.ptr() == old_inode.ptr())
+        if (new_inode == old_inode)
             return KSuccess;
         if (new_inode->is_directory() && !old_inode->is_directory())
             return KResult(-EISDIR);

@@ -137,7 +137,7 @@ void GButton::set_action(GAction& action)
 
 void GButton::set_icon(RetainPtr<GraphicsBitmap>&& icon)
 {
-    if (m_icon.ptr() == icon.ptr())
+    if (m_icon == icon)
         return;
     m_icon = move(icon);
     update();
