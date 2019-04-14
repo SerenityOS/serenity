@@ -24,10 +24,16 @@ public:
     }
 };
 
-Field::Field(GButton& face_button, GWidget* parent)
+Field::Field(GLabel& flag_label, GLabel& time_label, GButton& face_button, GWidget* parent)
     : GFrame(parent)
     , m_face_button(face_button)
+    , m_flag_label(flag_label)
+    , m_time_label(time_label)
 {
+    m_timer.on_timeout = [this] {
+        m_time_label.set_text(String::format("%u", ++m_seconds_elapsed));
+    };
+    m_timer.set_interval(1000);
     set_frame_thickness(2);
     set_frame_shape(FrameShape::Container);
     set_frame_shadow(FrameShadow::Sunken);
@@ -88,6 +94,11 @@ void Field::for_each_neighbor_of(const Square& square, Callback callback)
 
 void Field::reset()
 {
+    m_seconds_elapsed = 0;
+    m_time_label.set_text("0");
+    m_flags_left = m_mine_count;
+    m_flag_label.set_text(String::format("%u", m_flags_left));
+    m_timer.start();
     set_greedy_for_hits(false);
     set_face(Face::Default);
     srand(time(nullptr));
@@ -189,13 +200,25 @@ void Field::on_square_right_clicked(Square& square)
 {
     if (square.is_swept)
         return;
-    square.has_flag = !square.has_flag;
+    if (!square.has_flag && !m_flags_left)
+        return;
+
+    if (!square.has_flag) {
+        --m_flags_left;
+        square.has_flag = true;
+    } else {
+        ++m_flags_left;
+        square.has_flag = false;
+    }
+
+    m_flag_label.set_text(String::format("%u", m_flags_left));
     square.button->set_icon(square.has_flag ? m_flag_bitmap : nullptr);
     square.button->update();
 }
 
 void Field::win()
 {
+    m_timer.stop();
     set_greedy_for_hits(true);
     set_face(Face::Good);
     reveal_mines();
@@ -203,6 +226,7 @@ void Field::win()
 
 void Field::game_over()
 {
+    m_timer.stop();
     set_greedy_for_hits(true);
     set_face(Face::Bad);
     reveal_mines();
