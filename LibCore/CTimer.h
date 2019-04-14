@@ -6,6 +6,7 @@
 class CTimer final : public CObject {
 public:
     explicit CTimer(CObject* parent = nullptr);
+    CTimer(int interval, Function<void()>&& timeout_handler, CObject* parent = nullptr);
     virtual ~CTimer() override;
 
     void start();

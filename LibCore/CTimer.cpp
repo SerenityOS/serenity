@@ -5,6 +5,13 @@ CTimer::CTimer(CObject* parent)
 {
 }
 
+CTimer::CTimer(int interval, Function<void()>&& timeout_handler, CObject* parent)
+    : CObject(parent)
+    , on_timeout(move(timeout_handler))
+{
+    start(interval);
+}
+
 CTimer::~CTimer()
 {
 }
@@ -18,6 +25,7 @@ void CTimer::start(int interval)
 {
     if (m_active)
         return;
+    m_interval = interval;
     start_timer(interval);
     m_active = true;
 }
