@@ -286,6 +286,16 @@ int WSWindowManager::menubar_menu_margin() const
     return 16;
 }
 
+void WSWindowManager::set_current_menu(WSMenu* menu)
+{
+    if (m_current_menu == menu)
+        return;
+    if (m_current_menu)
+        m_current_menu->close();
+    if (menu)
+        m_current_menu = menu->make_weak_ptr();
+}
+
 void WSWindowManager::set_current_menubar(WSMenuBar* menubar)
 {
     if (menubar)
@@ -414,7 +424,7 @@ void WSWindowManager::pick_new_active_window()
 
 void WSWindowManager::handle_menu_mouse_event(WSMenu& menu, const WSMouseEvent& event)
 {
-    bool is_hover_with_any_menu_open = event.type() == WSMouseEvent::MouseMove && m_current_menu;
+    bool is_hover_with_any_menu_open = event.type() == WSMouseEvent::MouseMove && m_current_menu && m_current_menu->menubar();
     bool is_mousedown_with_left_button = event.type() == WSMouseEvent::MouseDown && event.button() == MouseButton::Left;
     bool should_open_menu = &menu != current_menu() && (is_hover_with_any_menu_open || is_mousedown_with_left_button);
 
@@ -655,13 +665,18 @@ void WSWindowManager::process_mouse_event(const WSMouseEvent& event, WSWindow*& 
     }
 
     if (m_current_menu && m_current_menu->menu_window()) {
-        bool event_is_inside_current_menu = m_current_menu->menu_window()->rect().contains(event.position());
+        auto& window = *m_current_menu->menu_window();
+        bool event_is_inside_current_menu = window.rect().contains(event.position());
         if (!event_is_inside_current_menu) {
             if (m_current_menu->hovered_item())
                 m_current_menu->clear_hovered_item();
             if (event.type() == WSMessage::MouseDown || event.type() == WSMessage::MouseUp)
                 close_current_menu();
+        } else {
+            event_window = &window;
+            window.on_message(event.translated(-window.position()));
         }
+        return;
     }
 
     WSWindow* event_window_with_frame = nullptr;

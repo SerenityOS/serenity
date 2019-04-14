@@ -13,7 +13,11 @@ public:
     WSClientConnection& client() { return m_client; }
     const WSClientConnection& client() const { return m_client; }
     int menubar_id() const { return m_menubar_id; }
-    void add_menu(WSMenu* menu) { m_menus.append(menu); }
+    void add_menu(WSMenu& menu)
+    {
+        menu.set_menubar(this);
+        m_menus.append(&menu);
+    }
 
     template<typename Callback>
     void for_each_menu(Callback callback)
