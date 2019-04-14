@@ -44,11 +44,6 @@ WSEventLoop::~WSEventLoop()
 {
 }
 
-WSEventLoop& WSEventLoop::the()
-{
-    return static_cast<WSEventLoop&>(CEventLoop::current());
-}
-
 void WSEventLoop::drain_server()
 {
     sockaddr_un address;
@@ -100,14 +95,6 @@ void WSEventLoop::drain_keyboard()
         ASSERT(nread == sizeof(KeyEvent));
         screen.on_receive_keyboard_data(event);
     }
-}
-
-void WSEventLoop::notify_client_disconnected(int client_id)
-{
-    auto* client = WSClientConnection::from_client_id(client_id);
-    if (!client)
-        return;
-    post_event(*client, make<WSClientDisconnectedNotification>(client_id));
 }
 
 static WSWindowType from_api(WSAPI_WindowType api_type)
@@ -261,24 +248,28 @@ void WSEventLoop::process_file_descriptors_after_select(const fd_set& fds)
     if (FD_ISSET(m_mouse_fd, &fds))
         drain_mouse();
     WSClientConnection::for_each_client([&] (WSClientConnection& client) {
-        if (!FD_ISSET(client.fd(), &fds))
-            return;
-        unsigned messages_received = 0;
-        for (;;) {
-            WSAPI_ClientMessage message;
-            // FIXME: Don't go one message at a time, that's so much context switching, oof.
-            ssize_t nread = read(client.fd(), &message, sizeof(WSAPI_ClientMessage));
-            if (nread == 0) {
-                if (!messages_received)
-                    notify_client_disconnected(client.client_id());
-                break;
-            }
-            if (nread < 0) {
-                perror("read");
-                ASSERT_NOT_REACHED();
-            }
-            on_receive_from_client(client.client_id(), message);
-            ++messages_received;
-        }
+        if (FD_ISSET(client.fd(), &fds))
+            drain_client(client);
     });
+}
+
+void WSEventLoop::drain_client(WSClientConnection& client)
+{
+    unsigned messages_received = 0;
+    for (;;) {
+        WSAPI_ClientMessage message;
+        // FIXME: Don't go one message at a time, that's so much context switching, oof.
+        ssize_t nread = read(client.fd(), &message, sizeof(WSAPI_ClientMessage));
+        if (nread == 0) {
+            if (!messages_received)
+                post_event(client, make<WSClientDisconnectedNotification>(client.client_id()));
+            break;
+        }
+        if (nread < 0) {
+            perror("read");
+            ASSERT_NOT_REACHED();
+        }
+        on_receive_from_client(client.client_id(), message);
+        ++messages_received;
+    }
 }
