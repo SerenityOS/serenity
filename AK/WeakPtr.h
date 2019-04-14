@@ -35,6 +35,9 @@ public:
     T& operator*() { return *ptr(); }
     const T& operator*() const { return *ptr(); }
 
+    operator const T*() const { return ptr(); }
+    operator T*() { return ptr(); }
+
     bool is_null() const { return !m_link || !m_link->ptr(); }
     void clear() { m_link = nullptr; }
 
