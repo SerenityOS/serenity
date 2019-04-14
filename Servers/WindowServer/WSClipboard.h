@@ -1,13 +1,12 @@
 #pragma once
 
 #include <AK/AKString.h>
-#include <WindowServer/WSMessageReceiver.h>
 #include <SharedBuffer.h>
 
-class WSClipboard final : public WSMessageReceiver {
+class WSClipboard {
 public:
     static WSClipboard& the();
-    virtual ~WSClipboard() override;
+    ~WSClipboard();
 
     bool has_data() const
     {
@@ -22,7 +21,6 @@ public:
 
 private:
     WSClipboard();
-    virtual void on_message(const WSMessage&) override;
 
     RetainPtr<SharedBuffer> m_shared_buffer;
     int m_contents_size { 0 };

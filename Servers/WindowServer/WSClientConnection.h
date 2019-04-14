@@ -5,7 +5,7 @@
 #include <AK/WeakPtr.h>
 #include <AK/Function.h>
 #include <SharedGraphics/GraphicsBitmap.h>
-#include <WindowServer/WSMessageReceiver.h>
+#include <LibCore/CObject.h>
 #include <WindowServer/WSMessage.h>
 
 class WSWindow;
@@ -13,7 +13,7 @@ class WSMenu;
 class WSMenuBar;
 struct WSAPI_ServerMessage;
 
-class WSClientConnection final : public WSMessageReceiver {
+class WSClientConnection final : public CObject {
 public:
     explicit WSClientConnection(int fd);
     virtual ~WSClientConnection() override;
@@ -40,7 +40,7 @@ public:
     void post_paint_request(const WSWindow&, const Rect&);
 
 private:
-    virtual void on_message(const WSMessage&) override;
+    virtual void event(CEvent&) override;
 
     void on_request(const WSAPIClientRequest&);
     void handle_request(const WSAPICreateMenubarRequest&);
