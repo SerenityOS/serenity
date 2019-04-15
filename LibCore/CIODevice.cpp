@@ -173,3 +173,14 @@ bool CIODevice::close()
     set_mode(CIODevice::NotOpen);
     return true;
 }
+
+bool CIODevice::seek(signed_qword offset)
+{
+    int rc = lseek(m_fd, offset, SEEK_SET);
+    if (rc < 0) {
+        perror("CIODevice::seek: lseek");
+        return false;
+    }
+    m_buffered_data.clear();
+    return true;
+}

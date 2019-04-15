@@ -35,6 +35,8 @@ public:
 
     bool can_read() const;
 
+    bool seek(signed_qword);
+
     virtual bool open(CIODevice::OpenMode) = 0;
     virtual bool close();
 
