@@ -31,14 +31,15 @@ void WSCPUMonitor::get_cpu_usage(unsigned& busy, unsigned& idle)
     busy = 0;
     idle = 0;
 
-    FILE* fp = fopen("/proc/all", "r");
-    if (!fp) {
+    if (!m_fp)
+        m_fp = fopen("/proc/all", "r");
+    if (!m_fp) {
         perror("failed to open /proc/all");
         ASSERT_NOT_REACHED();
     }
     for (;;) {
         char buf[BUFSIZ];
-        char* ptr = fgets(buf, sizeof(buf), fp);
+        char* ptr = fgets(buf, sizeof(buf), m_fp);
         if (!ptr)
             break;
         auto parts = String(buf, Chomp).split(',');
@@ -55,7 +56,7 @@ void WSCPUMonitor::get_cpu_usage(unsigned& busy, unsigned& idle)
         else
             busy += nsched;
     }
-    int rc = fclose(fp);
+    int rc = fseek(m_fp, 0, SEEK_SET);
     ASSERT(rc == 0);
 }
 
