@@ -59,6 +59,7 @@ private:
     mutable Lock m_inodes_lock;
     mutable HashMap<unsigned, ProcFSInode*> m_inodes;
     RetainPtr<ProcFSInode> m_root_inode;
+    Lockable<bool> m_kmalloc_stack_helper;
 };
 
 struct ProcFSInodeCustomData {
