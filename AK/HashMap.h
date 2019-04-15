@@ -1,8 +1,9 @@
 #pragma once
 
-#include "HashTable.h"
-#include "StdLibExtras.h"
-#include "kstdio.h"
+#include <AK/HashTable.h>
+#include <AK/StdLibExtras.h>
+#include <AK/Vector.h>
+#include <AK/kstdio.h>
 
 namespace AK {
 
@@ -86,6 +87,23 @@ public:
     void remove(IteratorType it)
     {
         m_table.remove(it);
+    }
+
+    V& ensure(const K& key)
+    {
+        auto it = find(key);
+        if (it == end())
+            set(key, V());
+        return find(key)->value;
+    }
+
+    Vector<K> keys() const
+    {
+        Vector<K> list;
+        list.ensure_capacity(size());
+        for (auto& it : *this)
+            list.unchecked_append(it.key);
+        return list;
     }
 
 private:
