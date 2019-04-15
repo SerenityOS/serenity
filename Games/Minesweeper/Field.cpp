@@ -2,6 +2,7 @@
 #include <LibGUI/GButton.h>
 #include <LibGUI/GLabel.h>
 #include <AK/HashTable.h>
+#include <LibCore/CConfigFile.h>
 #include <unistd.h>
 #include <time.h>
 
@@ -30,6 +31,12 @@ Field::Field(GLabel& flag_label, GLabel& time_label, GButton& face_button, GWidg
     , m_flag_label(flag_label)
     , m_time_label(time_label)
 {
+    auto config = CConfigFile::get_for_app("Minesweeper");
+
+    m_mine_count = config->read_num_entry("Game", "MineCount", 10);
+    m_rows = config->read_num_entry("Game", "Rows", 9);
+    m_columns = config->read_num_entry("Game", "Columns", 9);
+
     m_timer.on_timeout = [this] {
         m_time_label.set_text(String::format("%u", ++m_seconds_elapsed));
     };
