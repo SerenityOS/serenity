@@ -188,6 +188,7 @@ void Field::paint_event(GPaintEvent& event)
     painter.add_clip_rect(event.rect());
 
     auto inner_rect = frame_inner_rect();
+    painter.add_clip_rect(inner_rect);
 
     for (int y = inner_rect.top() - 1; y <= inner_rect.bottom(); y += square_size()) {
         Point a { inner_rect.left(), y };
