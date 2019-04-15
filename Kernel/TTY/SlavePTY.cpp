@@ -10,6 +10,7 @@ SlavePTY::SlavePTY(MasterPTY& master, unsigned index)
     , m_master(master)
     , m_index(index)
 {
+    m_tty_name = String::format("/dev/pts/%u", m_index);
     set_uid(current->process().uid());
     set_gid(current->process().gid());
     DevPtsFS::the().register_slave_pty(*this);
@@ -26,7 +27,7 @@ SlavePTY::~SlavePTY()
 
 String SlavePTY::tty_name() const
 {
-    return String::format("/dev/pts/%u", m_index);
+    return m_tty_name;
 }
 
 void SlavePTY::on_master_write(const byte* buffer, ssize_t size)
