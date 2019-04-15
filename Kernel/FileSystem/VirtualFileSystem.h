@@ -59,24 +59,24 @@ public:
     ~VFS();
 
     bool mount_root(RetainPtr<FS>&&);
-    bool mount(RetainPtr<FS>&&, const String& path);
+    bool mount(RetainPtr<FS>&&, StringView path);
 
     KResultOr<Retained<FileDescriptor>> open(RetainPtr<Device>&&, int options);
-    KResultOr<Retained<FileDescriptor>> open(const String& path, int options, mode_t mode, Inode& base);
-    KResultOr<Retained<FileDescriptor>> create(const String& path, int options, mode_t mode, Inode& base);
-    KResult mkdir(const String& path, mode_t mode, Inode& base);
-    KResult link(const String& old_path, const String& new_path, Inode& base);
-    KResult unlink(const String& path, Inode& base);
-    KResult symlink(const String& target, const String& linkpath, Inode& base);
-    KResult rmdir(const String& path, Inode& base);
-    KResult chmod(const String& path, mode_t, Inode& base);
+    KResultOr<Retained<FileDescriptor>> open(StringView path, int options, mode_t mode, Inode& base);
+    KResultOr<Retained<FileDescriptor>> create(StringView path, int options, mode_t mode, Inode& base);
+    KResult mkdir(StringView path, mode_t mode, Inode& base);
+    KResult link(StringView old_path, StringView new_path, Inode& base);
+    KResult unlink(StringView path, Inode& base);
+    KResult symlink(StringView target, StringView linkpath, Inode& base);
+    KResult rmdir(StringView path, Inode& base);
+    KResult chmod(StringView path, mode_t, Inode& base);
     KResult chmod(Inode&, mode_t);
-    KResult chown(const String& path, uid_t, gid_t, Inode& base);
-    KResult access(const String& path, int mode, Inode& base);
-    KResult stat(const String& path, int options, Inode& base, struct stat&);
-    KResult utime(const String& path, Inode& base, time_t atime, time_t mtime);
-    KResult rename(const String& oldpath, const String& newpath, Inode& base);
-    KResultOr<Retained<Inode>> open_directory(const String& path, Inode& base);
+    KResult chown(StringView path, uid_t, gid_t, Inode& base);
+    KResult access(StringView path, int mode, Inode& base);
+    KResult stat(StringView path, int options, Inode& base, struct stat&);
+    KResult utime(StringView path, Inode& base, time_t atime, time_t mtime);
+    KResult rename(StringView oldpath, StringView newpath, Inode& base);
+    KResultOr<Retained<Inode>> open_directory(StringView path, Inode& base);
 
     void register_device(Device&);
     void unregister_device(Device&);
@@ -103,9 +103,9 @@ private:
     bool is_vfs_root(InodeIdentifier) const;
 
     void traverse_directory_inode(Inode&, Function<bool(const FS::DirectoryEntry&)>);
-    InodeIdentifier old_resolve_path(const String& path, InodeIdentifier base, int& error, int options = 0, InodeIdentifier* parent_id = nullptr);
-    KResultOr<InodeIdentifier> resolve_path(const String& path, InodeIdentifier base, int options = 0, InodeIdentifier* parent_id = nullptr);
-    KResultOr<Retained<Inode>> resolve_path_to_inode(const String& path, Inode& base, RetainPtr<Inode>* parent_id = nullptr, int options = 0);
+    InodeIdentifier old_resolve_path(StringView path, InodeIdentifier base, int& error, int options = 0, InodeIdentifier* parent_id = nullptr);
+    KResultOr<InodeIdentifier> resolve_path(StringView path, InodeIdentifier base, int options = 0, InodeIdentifier* parent_id = nullptr);
+    KResultOr<Retained<Inode>> resolve_path_to_inode(StringView path, Inode& base, RetainPtr<Inode>* parent_id = nullptr, int options = 0);
     KResultOr<InodeIdentifier> resolve_symbolic_link(InodeIdentifier base, Inode& symlink_inode);
 
     Mount* find_mount_for_host(InodeIdentifier);
