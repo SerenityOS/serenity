@@ -1,11 +1,12 @@
 #pragma once
 
-#include "ByteBuffer.h"
-#include "RetainPtr.h"
-#include "StringImpl.h"
-#include "Traits.h"
-#include "Vector.h"
-#include "kstdio.h"
+#include <AK/ByteBuffer.h>
+#include <AK/RetainPtr.h>
+#include <AK/StringImpl.h>
+#include <AK/Traits.h>
+#include <AK/Vector.h>
+#include <AK/StringView.h>
+#include <AK/kstdio.h>
 
 namespace AK {
 
@@ -14,6 +15,12 @@ public:
     ~String() { }
 
     String() { }
+
+    String(StringView view)
+        : m_impl(StringImpl::create(view.characters(), view.length()))
+    {
+    }
+
     String(const String& other)
         : m_impl(const_cast<String&>(other).m_impl.copy_ref())
     {
@@ -110,6 +117,8 @@ public:
     static String from_byte_buffer(const ByteBuffer&, ShouldChomp = NoChomp);
 
     static String format(const char*, ...);
+
+    StringView view() const { return { characters(), length() }; }
 
 private:
     RetainPtr<StringImpl> m_impl;
