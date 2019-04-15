@@ -12,7 +12,7 @@ Roughly speaking, the goal here is a marriage between the aesthetic of late-1990
 
 I regularly post raw development videos on [my YouTube channel](https://www.youtube.com/channel/UC3ts8coMP645hZw9JSD3pqQ).
 
-There's also a [Patreon](https://www.youtube.com/channel/UC3ts8coMP645hZw9JSD3pqQ) if you would like to show some support that way.
+There's also a [Patreon](https://www.patreon.com/serenityos) if you would like to show some support that way.
 
 ## Screenshot
 
