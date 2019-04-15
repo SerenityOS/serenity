@@ -32,5 +32,6 @@ private:
     RetainPtr<MasterPTY> m_master;
     unsigned m_index;
     InodeIdentifier m_devpts_inode_id;
+    String m_tty_name;
 };
 
