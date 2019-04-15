@@ -394,9 +394,11 @@ static bool process_IHDR(const ByteBuffer& data, PNGLoadingContext& context)
         ASSERT_NOT_REACHED();
     }
 
+#ifdef PNG_DEBUG
     printf("PNG: %dx%d (%d bpp)\n", context.width, context.height, context.bit_depth);
     printf("     Color type: %b\n", context.color_type);
     printf(" Interlace type: %b\n", context.interlace_method);
+#endif
 
     context.decompression_buffer_size = (context.width * context.height * context.bytes_per_pixel + context.height);
     context.decompression_buffer = (byte*)mmap(nullptr, context.decompression_buffer_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0);
@@ -432,7 +434,9 @@ static bool process_chunk(Streamer& streamer, PNGLoadingContext& context)
         printf("Bail at chunk_crc\n");
         return false;
     }
+#ifdef PNG_DEBUG
     printf("Chunk type: '%s', size: %u, crc: %x\n", chunk_type, chunk_size, chunk_crc);
+#endif
 
     if (!strcmp((const char*)chunk_type, "IHDR"))
         return process_IHDR(chunk_data, context);
