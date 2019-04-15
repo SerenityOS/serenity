@@ -85,27 +85,32 @@ static void load_ksyms_from_data(const ByteBuffer& buffer)
         dword address;
         const KSym* ksym;
     };
-    Vector<RecognizedSymbol> recognized_symbols;
+    int max_recognized_symbol_count = 256;
+    RecognizedSymbol recognized_symbols[max_recognized_symbol_count];
+    int recognized_symbol_count = 0;
     if (use_ksyms) {
         for (dword* stack_ptr = (dword*)ebp; current->process().validate_read_from_kernel(LinearAddress((dword)stack_ptr)); stack_ptr = (dword*)*stack_ptr) {
             dword retaddr = stack_ptr[1];
             if (auto* ksym = ksymbolicate(retaddr))
-                recognized_symbols.append({ retaddr, ksym });
+                recognized_symbols[recognized_symbol_count++] = { retaddr, ksym };
         }
-    } else{
+    } else {
         for (dword* stack_ptr = (dword*)ebp; current->process().validate_read_from_kernel(LinearAddress((dword)stack_ptr)); stack_ptr = (dword*)*stack_ptr) {
             dword retaddr = stack_ptr[1];
-            kprintf("%x (next: %x)\n", retaddr, stack_ptr ? (dword*)*stack_ptr : 0);
+            dbgprintf("%x (next: %x)\n", retaddr, stack_ptr ? (dword*)*stack_ptr : 0);
         }
         return;
     }
+    ASSERT(recognized_symbol_count < max_recognized_symbol_count);
     size_t bytes_needed = 0;
-    for (auto& symbol : recognized_symbols) {
+    for (int i = 0; i < recognized_symbol_count; ++i) {
+        auto& symbol = recognized_symbols[i];
         bytes_needed += strlen(symbol.ksym->name) + 8 + 16;
     }
-    for (auto& symbol : recognized_symbols) {
+    for (int i = 0; i < recognized_symbol_count; ++i) {
+        auto& symbol = recognized_symbols[i];
         unsigned offset = symbol.address - symbol.ksym->address;
-        kprintf("%p  %s +%u\n", symbol.address, symbol.ksym->name, offset);
+        dbgprintf("%p  %s +%u\n", symbol.address, symbol.ksym->name, offset);
     }
 }
 
