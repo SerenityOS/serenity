@@ -1,8 +1,9 @@
 #include "Field.h"
 #include <LibGUI/GButton.h>
 #include <LibGUI/GLabel.h>
-#include <AK/HashTable.h>
+#include <LibGUI/GPainter.h>
 #include <LibCore/CConfigFile.h>
+#include <AK/HashTable.h>
 #include <unistd.h>
 #include <time.h>
 
@@ -178,6 +179,26 @@ void Field::flood_fill(Square& square)
         if (!neighbor.has_mine && neighbor.number)
             on_square_clicked(neighbor);
     });
+}
+
+void Field::paint_event(GPaintEvent& event)
+{
+    GFrame::paint_event(event);
+    GPainter painter(*this);
+    painter.add_clip_rect(event.rect());
+
+    auto inner_rect = frame_inner_rect();
+
+    for (int y = inner_rect.top() - 1; y <= inner_rect.bottom(); y += square_size()) {
+        Point a { inner_rect.left(), y };
+        Point b { inner_rect.right(), y };
+        painter.draw_line(a, b, Color::MidGray);
+    }
+    for (int x = frame_inner_rect().left() - 1; x <= frame_inner_rect().right(); x += square_size()) {
+        Point a { x, inner_rect.top() };
+        Point b { x, inner_rect.bottom() };
+        painter.draw_line(a, b, Color::MidGray);
+    }
 }
 
 void Field::on_square_clicked(Square& square)
