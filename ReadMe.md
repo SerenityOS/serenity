@@ -1,6 +1,6 @@
 # Serenity
 
-x86 Unix-like operating system for IBM PC-compatibles.
+Graphical Unix-like operating system for x86 computers.
 
 ## About
 
@@ -9,6 +9,10 @@ I always wondered what it would be like to write my own operating system, but I 
 I've grown tired of cutesy and condescending software that doesn't take itself or the user seriously. This is my effort to bring back the feeling of computing I once knew.
 
 Roughly speaking, the goal here is a marriage between the aesthetic of late-1990s productivity software and the power-user accessibility of late-2000s \*nix. This is a system by me, for me, based on the things I like.
+
+I regularly post raw development videos on [my YouTube channel](https://www.youtube.com/channel/UC3ts8coMP645hZw9JSD3pqQ).
+
+There's also a [Patreon](https://www.youtube.com/channel/UC3ts8coMP645hZw9JSD3pqQ) if you would like to show some support that way.
 
 ## Screenshot
 
@@ -26,11 +30,13 @@ Roughly speaking, the goal here is a marriage between the aesthetic of late-1990
 * /proc filesystem
 * Local sockets
 * Pseudoterminals
-* Event-driven GUI library
+* Event loop library (LibCore)
+* High-level GUI library (LibGUI)
 * PNG format support
 * Text editor
 * IRC client
 * DNS lookup
+* Minesweeper
 * Other stuff I can't think of right now...
 
 ## How do I build and run this?
@@ -43,4 +49,4 @@ See the [step-by-step guide to building Serenity](https://github.com/awesomeklin
 
 ## License
 
-Undecided. I will probably go with something BSD-ish.
+Serenity is licensed under a 2-clause BSD license.
