@@ -9,6 +9,7 @@
 #include <Kernel/i386.h>
 #include <Kernel/Process.h>
 #include <Kernel/Scheduler.h>
+#include <Kernel/KSyms.h>
 #include <AK/Assertions.h>
 
 #define SANITIZE_KMALLOC
@@ -35,6 +36,7 @@ volatile size_t kmalloc_sum_eternal = 0;
 
 dword g_kmalloc_call_count;
 dword g_kfree_call_count;
+bool g_dump_kmalloc_stacks;
 
 static byte* s_next_eternal_ptr;
 static byte* s_end_of_eternal_range;
@@ -94,6 +96,11 @@ void* kmalloc_impl(size_t size)
 {
     InterruptDisabler disabler;
     ++g_kmalloc_call_count;
+
+    if (g_dump_kmalloc_stacks && ksyms_ready) {
+        dbgprintf("kmalloc(%u)\n", size);
+        dump_backtrace(true);
+    }
 
     // We need space for the allocation_t structure at the head of the block.
     size_t real_size = size + sizeof(allocation_t);

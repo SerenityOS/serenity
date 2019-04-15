@@ -1166,6 +1166,11 @@ ProcFS::ProcFS()
     m_entries[FI_PID_exe] = { "exe", FI_PID_exe, procfs$pid_exe };
     m_entries[FI_PID_cwd] = { "cwd", FI_PID_cwd, procfs$pid_cwd };
     m_entries[FI_PID_fd] = { "fd", FI_PID_fd };
+
+    m_kmalloc_stack_helper.resource() = g_dump_kmalloc_stacks;
+    add_sys_bool("kmalloc_stacks", m_kmalloc_stack_helper, [this] {
+        g_dump_kmalloc_stacks = m_kmalloc_stack_helper.resource();
+    });
 }
 
 ProcFS::ProcFSDirectoryEntry* ProcFS::get_directory_entry(InodeIdentifier identifier) const
