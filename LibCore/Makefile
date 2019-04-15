@@ -13,6 +13,7 @@ OBJS = \
     CObject.o \
     CTimer.o \
     CEventLoop.o \
+    CConfigFile.o \
     CEvent.o
 
 LIBRARY = libcore.a
