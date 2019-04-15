@@ -558,7 +558,7 @@ ByteBuffer procfs$summary(InodeIdentifier)
 ByteBuffer procfs$memstat(InodeIdentifier)
 {
     InterruptDisabler disabler;
-    StringBuilder builder;
+    StringBuilder builder(128);
     builder.appendf("%u,%u,%u,%u,%u,%u,%u,%u,%u\n",
         kmalloc_sum_eternal,
         sum_alloc,
@@ -577,7 +577,7 @@ ByteBuffer procfs$all(InodeIdentifier)
 {
     InterruptDisabler disabler;
     auto processes = Process::all_processes();
-    StringBuilder builder;
+    StringBuilder builder(processes.size() * 80);
     auto build_process_line = [&builder] (Process* process) {
         builder.appendf("%u,%u,%u,%u,%u,%u,%u,%s,%u,%u,%s,%s,%u,%u,%u,%u,%s\n",
             process->pid(),
