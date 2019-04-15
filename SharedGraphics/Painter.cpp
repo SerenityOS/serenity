@@ -565,3 +565,14 @@ void Painter::clear_clip_rect()
 {
     state().clip_rect = m_clip_origin;
 }
+
+PainterStateSaver::PainterStateSaver(Painter& painter)
+    : m_painter(painter)
+{
+    m_painter.save();
+}
+
+PainterStateSaver::~PainterStateSaver()
+{
+    m_painter.restore();
+}
