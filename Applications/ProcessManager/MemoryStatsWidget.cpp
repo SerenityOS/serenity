@@ -10,7 +10,7 @@ MemoryStatsWidget::MemoryStatsWidget(GWidget* parent)
     : GWidget(parent)
 {
     set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-    set_preferred_size({ 0, 60 });
+    set_preferred_size({ 0, 72 });
 
     set_layout(make<GBoxLayout>(Orientation::Vertical));
     layout()->set_margins({ 0, 8, 0, 0 });
@@ -20,7 +20,7 @@ MemoryStatsWidget::MemoryStatsWidget(GWidget* parent)
         auto* container = new GWidget(this);
         container->set_layout(make<GBoxLayout>(Orientation::Horizontal));
         container->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
-        container->set_preferred_size({ 250, 12 });
+        container->set_preferred_size({ 255, 12 });
         auto* description_label = new GLabel(description, container);
         description_label->set_font(Font::default_bold_font());
         description_label->set_text_alignment(TextAlignment::CenterLeft);
@@ -32,6 +32,7 @@ MemoryStatsWidget::MemoryStatsWidget(GWidget* parent)
     m_user_physical_pages_label = build_widgets_for_label("Userspace physical:");
     m_supervisor_physical_pages_label = build_widgets_for_label("Supervisor physical:");
     m_kmalloc_label = build_widgets_for_label("Kernel heap:");
+    m_kmalloc_count_label = build_widgets_for_label("Calls kmalloc/kfree:");
 
     start_timer(1000);
     refresh();
@@ -65,7 +66,7 @@ void MemoryStatsWidget::refresh()
         if (!ptr)
             break;
         auto parts = String(buf, Chomp).split(',');
-        if (parts.size() < 7)
+        if (parts.size() < 9)
             break;
         bool ok;
         unsigned kmalloc_sum_eternal = parts[0].to_uint(ok);
@@ -83,14 +84,19 @@ void MemoryStatsWidget::refresh()
         ASSERT(ok);
         unsigned supervisor_pages_free = parts[6].to_uint(ok);
         ASSERT(ok);
+        unsigned kmalloc_call_count = parts[7].to_uint(ok);
+        ASSERT(ok);
+        unsigned kfree_call_count = parts[8].to_uint(ok);
+        ASSERT(ok);
 
         size_t kmalloc_sum_available = kmalloc_sum_alloc + kmalloc_sum_free;
         size_t user_pages_available = user_pages_alloc + user_pages_free;
         size_t supervisor_pages_available = supervisor_pages_alloc + supervisor_pages_free;
 
-        m_kmalloc_label->set_text(String::format("%uK/%uK\n", bytes_to_kb(kmalloc_sum_alloc), bytes_to_kb(kmalloc_sum_available)));
-        m_user_physical_pages_label->set_text(String::format("%uK/%uK\n", page_count_to_kb(user_pages_alloc), page_count_to_kb(user_pages_available)));
-        m_supervisor_physical_pages_label->set_text(String::format("%uK/%uK\n", page_count_to_kb(supervisor_pages_alloc), page_count_to_kb(supervisor_pages_available)));
+        m_kmalloc_label->set_text(String::format("%uK/%uK", bytes_to_kb(kmalloc_sum_alloc), bytes_to_kb(kmalloc_sum_available)));
+        m_user_physical_pages_label->set_text(String::format("%uK/%uK", page_count_to_kb(user_pages_alloc), page_count_to_kb(user_pages_available)));
+        m_supervisor_physical_pages_label->set_text(String::format("%uK/%uK", page_count_to_kb(supervisor_pages_alloc), page_count_to_kb(supervisor_pages_available)));
+        m_kmalloc_count_label->set_text(String::format("%u/%u (+%u)", kmalloc_call_count, kfree_call_count, kmalloc_call_count - kfree_call_count));
         break;
     }
 

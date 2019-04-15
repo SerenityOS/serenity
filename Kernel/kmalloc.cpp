@@ -33,6 +33,9 @@ volatile size_t sum_alloc = 0;
 volatile size_t sum_free = POOL_SIZE;
 volatile size_t kmalloc_sum_eternal = 0;
 
+dword g_kmalloc_call_count;
+dword g_kfree_call_count;
+
 static byte* s_next_eternal_ptr;
 static byte* s_end_of_eternal_range;
 
@@ -90,6 +93,7 @@ void* kmalloc_page_aligned(size_t size)
 void* kmalloc_impl(size_t size)
 {
     InterruptDisabler disabler;
+    ++g_kmalloc_call_count;
 
     // We need space for the allocation_t structure at the head of the block.
     size_t real_size = size + sizeof(allocation_t);
@@ -153,6 +157,7 @@ void* kmalloc_impl(size_t size)
 
 void kfree(void *ptr)
 {
+    ++g_kfree_call_count;
     if (!ptr)
         return;
 
