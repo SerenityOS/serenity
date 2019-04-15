@@ -7,5 +7,6 @@
 *.includes
 *.cflags
 *.cxxflags
-Patches
 Root
+Toolchain/Tarballs
+Toolchain/Build
