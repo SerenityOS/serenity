@@ -10,4 +10,5 @@
 Root
 Toolchain/Tarballs
 Toolchain/Build
+Toolchain/Local
 .vscode
