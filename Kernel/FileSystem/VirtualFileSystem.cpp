@@ -35,7 +35,7 @@ InodeIdentifier VFS::root_inode_id() const
     return m_root_inode->identifier();
 }
 
-bool VFS::mount(RetainPtr<FS>&& file_system, const String& path)
+bool VFS::mount(RetainPtr<FS>&& file_system, StringView path)
 {
     ASSERT(file_system);
     int error;
@@ -127,7 +127,7 @@ KResultOr<Retained<FileDescriptor>> VFS::open(RetainPtr<Device>&& device, int op
     return FileDescriptor::create(move(device));
 }
 
-KResult VFS::utime(const String& path, Inode& base, time_t atime, time_t mtime)
+KResult VFS::utime(StringView path, Inode& base, time_t atime, time_t mtime)
 {
     auto descriptor_or_error = VFS::the().open(move(path), 0, 0, base);
     if (descriptor_or_error.is_error())
@@ -147,7 +147,7 @@ KResult VFS::utime(const String& path, Inode& base, time_t atime, time_t mtime)
     return KSuccess;
 }
 
-KResult VFS::stat(const String& path, int options, Inode& base, struct stat& statbuf)
+KResult VFS::stat(StringView path, int options, Inode& base, struct stat& statbuf)
 {
     auto inode_or_error = resolve_path_to_inode(path, base, nullptr, options);
     if (inode_or_error.is_error())
@@ -155,7 +155,7 @@ KResult VFS::stat(const String& path, int options, Inode& base, struct stat& sta
     return FileDescriptor::create(inode_or_error.value().ptr())->fstat(statbuf);
 }
 
-KResultOr<Retained<FileDescriptor>> VFS::open(const String& path, int options, mode_t mode, Inode& base)
+KResultOr<Retained<FileDescriptor>> VFS::open(StringView path, int options, mode_t mode, Inode& base)
 {
     auto inode_or_error = resolve_path_to_inode(path, base, nullptr, options);
     if (options & O_CREAT) {
@@ -202,7 +202,7 @@ KResultOr<Retained<FileDescriptor>> VFS::open(const String& path, int options, m
     return FileDescriptor::create(*inode);
 }
 
-KResultOr<Retained<FileDescriptor>> VFS::create(const String& path, int options, mode_t mode, Inode& base)
+KResultOr<Retained<FileDescriptor>> VFS::create(StringView path, int options, mode_t mode, Inode& base)
 {
     (void)options;
 
@@ -232,7 +232,7 @@ KResultOr<Retained<FileDescriptor>> VFS::create(const String& path, int options,
     return FileDescriptor::create(move(new_file));
 }
 
-KResult VFS::mkdir(const String& path, mode_t mode, Inode& base)
+KResult VFS::mkdir(StringView path, mode_t mode, Inode& base)
 {
     RetainPtr<Inode> parent_inode;
     auto result = resolve_path_to_inode(path, base, &parent_inode);
@@ -255,7 +255,7 @@ KResult VFS::mkdir(const String& path, mode_t mode, Inode& base)
     return KResult(error);
 }
 
-KResult VFS::access(const String& path, int mode, Inode& base)
+KResult VFS::access(StringView path, int mode, Inode& base)
 {
     auto inode_or_error = resolve_path_to_inode(path, base);
     if (inode_or_error.is_error())
@@ -277,7 +277,7 @@ KResult VFS::access(const String& path, int mode, Inode& base)
     return KSuccess;
 }
 
-KResultOr<Retained<Inode>> VFS::open_directory(const String& path, Inode& base)
+KResultOr<Retained<Inode>> VFS::open_directory(StringView path, Inode& base)
 {
     auto inode_or_error = resolve_path_to_inode(path, base);
     if (inode_or_error.is_error())
@@ -303,7 +303,7 @@ KResult VFS::chmod(Inode& inode, mode_t mode)
     return inode.chmod(mode);
 }
 
-KResult VFS::chmod(const String& path, mode_t mode, Inode& base)
+KResult VFS::chmod(StringView path, mode_t mode, Inode& base)
 {
     auto inode_or_error = resolve_path_to_inode(path, base);
     if (inode_or_error.is_error())
@@ -312,7 +312,7 @@ KResult VFS::chmod(const String& path, mode_t mode, Inode& base)
     return chmod(*inode, mode);
 }
 
-KResult VFS::rename(const String& old_path, const String& new_path, Inode& base)
+KResult VFS::rename(StringView old_path, StringView new_path, Inode& base)
 {
     RetainPtr<Inode> old_parent_inode;
     auto old_inode_or_error = resolve_path_to_inode(old_path, base, &old_parent_inode);
@@ -356,7 +356,7 @@ KResult VFS::rename(const String& old_path, const String& new_path, Inode& base)
     return KSuccess;
 }
 
-KResult VFS::chown(const String& path, uid_t a_uid, gid_t a_gid, Inode& base)
+KResult VFS::chown(StringView path, uid_t a_uid, gid_t a_gid, Inode& base)
 {
     auto inode_or_error = resolve_path_to_inode(path, base);
     if (inode_or_error.is_error())
@@ -387,7 +387,7 @@ KResult VFS::chown(const String& path, uid_t a_uid, gid_t a_gid, Inode& base)
     return inode->chown(new_uid, new_gid);
 }
 
-KResultOr<Retained<Inode>> VFS::resolve_path_to_inode(const String& path, Inode& base, RetainPtr<Inode>* parent_inode, int options)
+KResultOr<Retained<Inode>> VFS::resolve_path_to_inode(StringView path, Inode& base, RetainPtr<Inode>* parent_inode, int options)
 {
     // FIXME: This won't work nicely across mount boundaries.
     FileSystemPath p(path);
@@ -402,7 +402,7 @@ KResultOr<Retained<Inode>> VFS::resolve_path_to_inode(const String& path, Inode&
     return Retained<Inode>(*get_inode(result.value()));
 }
 
-KResult VFS::link(const String& old_path, const String& new_path, Inode& base)
+KResult VFS::link(StringView old_path, StringView new_path, Inode& base)
 {
     auto old_inode_or_error = resolve_path_to_inode(old_path, base);
     if (old_inode_or_error.is_error())
@@ -429,7 +429,7 @@ KResult VFS::link(const String& old_path, const String& new_path, Inode& base)
     return parent_inode->add_child(old_inode->identifier(), FileSystemPath(new_path).basename(), 0);
 }
 
-KResult VFS::unlink(const String& path, Inode& base)
+KResult VFS::unlink(StringView path, Inode& base)
 {
     RetainPtr<Inode> parent_inode;
     auto inode_or_error = resolve_path_to_inode(path, base, &parent_inode);
@@ -446,7 +446,7 @@ KResult VFS::unlink(const String& path, Inode& base)
     return parent_inode->remove_child(FileSystemPath(path).basename());
 }
 
-KResult VFS::symlink(const String& target, const String& linkpath, Inode& base)
+KResult VFS::symlink(StringView target, StringView linkpath, Inode& base)
 {
     RetainPtr<Inode> parent_inode;
     auto existing_file_or_error = resolve_path_to_inode(linkpath, base, &parent_inode);
@@ -471,7 +471,7 @@ KResult VFS::symlink(const String& target, const String& linkpath, Inode& base)
     return KSuccess;
 }
 
-KResult VFS::rmdir(const String& path, Inode& base)
+KResult VFS::rmdir(StringView path, Inode& base)
 {
     RetainPtr<Inode> parent_inode;
     auto inode_or_error = resolve_path_to_inode(path, base, &parent_inode);
@@ -511,7 +511,7 @@ KResultOr<InodeIdentifier> VFS::resolve_symbolic_link(InodeIdentifier base, Inod
     auto symlink_contents = symlink_inode.read_entire();
     if (!symlink_contents)
         return KResult(-ENOENT);
-    auto linkee = String((const char*)symlink_contents.pointer(), symlink_contents.size());
+    auto linkee = StringView(symlink_contents.pointer(), symlink_contents.size());
 #ifdef VFS_DEBUG
     kprintf("linkee (%s)(%u) from %u:%u\n", linkee.characters(), linkee.length(), base.fsid(), base.index());
 #endif
@@ -572,12 +572,13 @@ KResultOr<String> VFS::absolute_path(Inode& core_inode)
     return builder.to_string();
 }
 
-KResultOr<InodeIdentifier> VFS::resolve_path(const String& path, InodeIdentifier base, int options, InodeIdentifier* parent_id)
+KResultOr<InodeIdentifier> VFS::resolve_path(StringView path, InodeIdentifier base, int options, InodeIdentifier* parent_id)
 {
     if (path.is_empty())
         return KResult(-EINVAL);
 
-    auto parts = path.split('/');
+    // FIXME: Use StringView::split() once it exists.
+    auto parts = String(path).split('/');
     InodeIdentifier crumb_id;
 
     if (path[0] == '/')
@@ -661,7 +662,7 @@ KResultOr<InodeIdentifier> VFS::resolve_path(const String& path, InodeIdentifier
     return crumb_id;
 }
 
-InodeIdentifier VFS::old_resolve_path(const String& path, InodeIdentifier base, int& error, int options, InodeIdentifier* parent_id)
+InodeIdentifier VFS::old_resolve_path(StringView path, InodeIdentifier base, int& error, int options, InodeIdentifier* parent_id)
 {
     auto result = resolve_path(path, base, options, parent_id);
     if (result.is_error()) {
