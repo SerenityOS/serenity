@@ -52,6 +52,7 @@ void StringBuilder::appendf(const char* fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
+    will_append(strlen(fmt));
     appendvf(fmt, ap);
     va_end(ap);
 }
