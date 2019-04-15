@@ -80,16 +80,8 @@ protected:
 
 class PainterStateSaver {
 public:
-    PainterStateSaver(Painter& painter)
-        : m_painter(painter)
-    {
-        m_painter.save();
-    }
-
-    ~PainterStateSaver()
-    {
-        m_painter.restore();
-    }
+    explicit PainterStateSaver(Painter&);
+    ~PainterStateSaver();
 
 private:
     Painter& m_painter;
