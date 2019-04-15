@@ -18,4 +18,5 @@ private:
     GLabel* m_user_physical_pages_label { nullptr };
     GLabel* m_supervisor_physical_pages_label { nullptr };
     GLabel* m_kmalloc_label { nullptr };
+    GLabel* m_kmalloc_count_label { nullptr };
 };

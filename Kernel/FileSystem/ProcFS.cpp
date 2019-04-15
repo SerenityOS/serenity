@@ -8,6 +8,7 @@
 #include "Console.h"
 #include "Scheduler.h"
 #include <Kernel/PCI.h>
+#include <Kernel/kmalloc.h>
 #include <AK/StringBuilder.h>
 #include <LibC/errno_numbers.h>
 
@@ -558,14 +559,16 @@ ByteBuffer procfs$memstat(InodeIdentifier)
 {
     InterruptDisabler disabler;
     StringBuilder builder;
-    builder.appendf("%u,%u,%u,%u,%u,%u,%u\n",
+    builder.appendf("%u,%u,%u,%u,%u,%u,%u,%u,%u\n",
         kmalloc_sum_eternal,
         sum_alloc,
         sum_free,
         MM.user_physical_pages_in_existence() - MM.m_free_physical_pages.size(),
         MM.m_free_physical_pages.size(),
         MM.super_physical_pages_in_existence() - MM.m_free_supervisor_physical_pages.size(),
-        MM.m_free_supervisor_physical_pages.size()
+        MM.m_free_supervisor_physical_pages.size(),
+        g_kmalloc_call_count,
+        g_kfree_call_count
     );
     return builder.to_byte_buffer();
 }
