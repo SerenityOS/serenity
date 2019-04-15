@@ -78,4 +78,5 @@ private:
     Vector<byte> m_parameters;
     Vector<byte> m_intermediates;
     byte* m_horizontal_tabs { nullptr };
+    String m_tty_name;
 };

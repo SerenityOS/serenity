@@ -13,6 +13,7 @@ MasterPTY::MasterPTY(unsigned index)
     , m_slave(adopt(*new SlavePTY(*this, index)))
     , m_index(index)
 {
+    m_pts_name = String::format("/dev/pts/%u", m_index);
     set_uid(current->process().uid());
     set_gid(current->process().gid());
 }
@@ -27,7 +28,7 @@ MasterPTY::~MasterPTY()
 
 String MasterPTY::pts_name() const
 {
-    return String::format("/dev/pts/%u", m_index);
+    return m_pts_name;
 }
 
 ssize_t MasterPTY::read(Process&, byte* buffer, ssize_t size)

@@ -33,4 +33,5 @@ private:
     unsigned m_index;
     bool m_closed { false };
     DoubleBuffer m_buffer;
+    String m_pts_name;
 };
