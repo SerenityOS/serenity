@@ -31,6 +31,8 @@ public:
     void reset();
 
 private:
+    virtual void paint_event(GPaintEvent&) override;
+
     void on_square_clicked(Square&);
     void on_square_right_clicked(Square&);
     void game_over();
