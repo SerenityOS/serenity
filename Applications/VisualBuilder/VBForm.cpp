@@ -109,7 +109,7 @@ void VBForm::keydown_event(GKeyEvent& event)
 {
     if (event.key() == KeyCode::Key_Tab) {
         if (!m_selected_widget && !m_widgets.is_empty()) {
-            m_selected_widget = m_widgets.first()->make_weak_ptr();
+            set_selected_widget(m_widgets.first());
             update();
             return;
         } else {
@@ -121,7 +121,7 @@ void VBForm::keydown_event(GKeyEvent& event)
             ++selected_widget_index;
             if (selected_widget_index == m_widgets.size())
                 selected_widget_index = 0;
-            m_selected_widget = m_widgets[selected_widget_index]->make_weak_ptr();
+            set_selected_widget(m_widgets[selected_widget_index]);
             update();
             return;
         }
@@ -149,14 +149,8 @@ void VBForm::keydown_event(GKeyEvent& event)
     }
 }
 
-void VBForm::mousedown_event(GMouseEvent& event)
+void VBForm::set_selected_widget(VBWidget* widget)
 {
-    if (m_selected_widget && m_resize_direction == Direction::None) {
-        auto grabber = m_selected_widget->grabber_at(event.position());
-        if (grabber != Direction::None)
-            return grabber_mousedown_event(event, *m_selected_widget, grabber);
-    }
-    auto* widget = widget_at(event.position());
     if (!widget) {
         if (m_selected_widget) {
             m_selected_widget = nullptr;
@@ -166,13 +160,28 @@ void VBForm::mousedown_event(GMouseEvent& event)
         }
         return;
     }
+    m_selected_widget = widget->make_weak_ptr();
+    if (on_widget_selected)
+        on_widget_selected(widget);
+    update();
+}
+
+void VBForm::mousedown_event(GMouseEvent& event)
+{
+    if (m_selected_widget && m_resize_direction == Direction::None) {
+        auto grabber = m_selected_widget->grabber_at(event.position());
+        if (grabber != Direction::None)
+            return grabber_mousedown_event(event, *m_selected_widget, grabber);
+    }
+    auto* widget = widget_at(event.position());
+    if (!widget) {
+        set_selected_widget(nullptr);
+        return;
+    }
     if (event.button() == GMouseButton::Left || event.button() == GMouseButton::Right) {
-        m_selected_widget = widget->make_weak_ptr();
         m_transform_event_origin = event.position();
         m_transform_widget_origin_rect = widget->rect();
-        if (on_widget_selected)
-            on_widget_selected(widget);
-        update();
+        set_selected_widget(widget);
     }
 }
 
