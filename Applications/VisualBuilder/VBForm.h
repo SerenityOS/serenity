@@ -5,6 +5,7 @@
 #include "VBWidget.h"
 
 class VBForm : public GWidget {
+    friend class VBWidget;
 public:
     explicit VBForm(const String& name, GWidget* parent = nullptr);
     virtual ~VBForm() override;
@@ -38,6 +39,7 @@ private:
     int m_grid_size { 5 };
     bool m_should_snap_to_grid { true };
     Vector<Retained<VBWidget>> m_widgets;
+    HashMap<GWidget*, VBWidget*> m_gwidget_map;
     WeakPtr<VBWidget> m_selected_widget;
     Point m_transform_event_origin;
     Rect m_transform_widget_origin_rect;
