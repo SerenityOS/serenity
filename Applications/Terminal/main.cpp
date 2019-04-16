@@ -98,6 +98,7 @@ int main(int argc, char** argv)
     window->move_to(300, 300);
     terminal.apply_size_increments_to_window(*window);
     window->show();
+    window->set_icon_path("/res/icons/16x16/app-terminal.png");
 
     auto menubar = make<GMenuBar>();
 
