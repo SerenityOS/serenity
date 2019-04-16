@@ -74,5 +74,7 @@ int main(int argc, char** argv)
     window->set_should_exit_event_loop_on_close(true);
     window->show();
 
+    window->set_icon_path("/res/icons/16x16/app-process-manager.png");
+
     return app.exec();
 }
