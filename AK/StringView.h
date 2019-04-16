@@ -1,5 +1,11 @@
 #pragma once
 
+#include <AK/Vector.h>
+
+namespace AK {
+
+class String;
+
 class StringView {
 public:
     StringView() { }
@@ -19,7 +25,20 @@ public:
     int length() const { return m_length; }
     char operator[](int index) const { return m_characters[index]; }
 
+    StringView substring_view(int start, int length) const;
+    Vector<StringView> split_view(char) const;
+    unsigned to_uint(bool& ok) const;
+
+    bool operator==(const char* cstring) const { return !strcmp(m_characters, cstring); }
+    bool operator!=(const char* cstring) const { return strcmp(m_characters, cstring); }
+
+    bool operator==(const String&) const;
+
 private:
     const char* m_characters { nullptr };
     int m_length { 0 };
 };
+
+}
+
+using AK::StringView;
