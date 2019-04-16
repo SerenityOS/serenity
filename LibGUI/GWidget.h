@@ -92,12 +92,10 @@ public:
 
     struct HitTestResult {
         GWidget* widget { nullptr };
-        int localX { 0 };
-        int localY { 0 };
+        Point local_position;
     };
-    HitTestResult hit_test(int x, int y);
-
-    GWidget* child_at(const Point&);
+    HitTestResult hit_test(const Point&);
+    GWidget* child_at(const Point&) const;
 
     virtual const char* class_name() const override { return "GWidget"; }
 
