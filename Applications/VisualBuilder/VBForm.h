@@ -31,6 +31,7 @@ protected:
     virtual void mousedown_event(GMouseEvent&) override;
     virtual void mousemove_event(GMouseEvent&) override;
     virtual void mouseup_event(GMouseEvent&) override;
+    virtual void keydown_event(GKeyEvent&) override;
 
 private:
     void grabber_mousedown_event(GMouseEvent&, VBWidget&, Direction grabber);
