@@ -465,11 +465,10 @@ bool WSWindowManager::process_ongoing_window_drag(const WSMouseEvent& event, WSW
         return true;
     }
     if (event.type() == WSEvent::MouseMove) {
-        Point pos = m_drag_window_origin;
 #ifdef DRAG_DEBUG
         dbgprintf("[WM] Dragging [origin: %d,%d] now: %d,%d\n", m_drag_origin.x(), m_drag_origin.y(), event.x(), event.y());
 #endif
-        pos.move_by(event.x() - m_drag_origin.x(), event.y() - m_drag_origin.y());
+        Point pos = m_drag_window_origin.translated(event.position() - m_drag_origin);
         m_drag_window->set_position_without_repaint(pos);
         return true;
     }

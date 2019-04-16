@@ -23,10 +23,7 @@ Painter::~Painter()
 
 void Painter::fill_rect_with_draw_op(const Rect& a_rect, Color color)
 {
-    auto rect = a_rect;
-    rect.move_by(state().translation);
-    rect.intersect(clip_rect());
-
+    auto rect = a_rect.translated(translation()).intersected(clip_rect());
     if (rect.is_empty())
         return;
 
@@ -47,10 +44,7 @@ void Painter::fill_rect(const Rect& a_rect, Color color)
         return;
     }
 
-    auto rect = a_rect;
-    rect.move_by(state().translation);
-    rect.intersect(clip_rect());
-
+    auto rect = a_rect.translated(translation()).intersected(clip_rect());
     if (rect.is_empty())
         return;
 
@@ -70,8 +64,7 @@ void Painter::fill_rect_with_gradient(const Rect& a_rect, Color gradient_start, 
 #ifdef NO_FPU
     return fill_rect(a_rect, gradient_start);
 #endif
-    auto rect = a_rect;
-    rect.move_by(state().translation);
+    auto rect = a_rect.translated(translation());
     auto clipped_rect = Rect::intersection(rect, clip_rect());
     if (clipped_rect.is_empty())
         return;
@@ -106,10 +99,8 @@ void Painter::fill_rect_with_gradient(const Rect& a_rect, Color gradient_start, 
 
 void Painter::draw_rect(const Rect& a_rect, Color color, bool rough)
 {
-    Rect rect = a_rect;
-    rect.move_by(state().translation);
-
-    auto clipped_rect = Rect::intersection(rect, clip_rect());
+    Rect rect = a_rect.translated(translation());
+    auto clipped_rect = rect.intersected(clip_rect());
     if (clipped_rect.is_empty())
         return;
 
@@ -152,9 +143,8 @@ void Painter::draw_rect(const Rect& a_rect, Color color, bool rough)
 
 void Painter::draw_bitmap(const Point& p, const CharacterBitmap& bitmap, Color color)
 {
-    Rect rect { p, bitmap.size() };
-    rect.move_by(state().translation);
-    auto clipped_rect = Rect::intersection(rect, clip_rect());
+    auto rect = Rect(p, bitmap.size()).translated(translation());
+    auto clipped_rect = rect.intersected(clip_rect());
     if (clipped_rect.is_empty())
         return;
     const int first_row = clipped_rect.top() - rect.top();
@@ -179,9 +169,8 @@ void Painter::draw_bitmap(const Point& p, const CharacterBitmap& bitmap, Color c
 
 void Painter::draw_bitmap(const Point& p, const GlyphBitmap& bitmap, Color color)
 {
-    Rect dst_rect { p, bitmap.size() };
-    dst_rect.move_by(state().translation);
-    auto clipped_rect = Rect::intersection(dst_rect, clip_rect());
+    auto dst_rect = Rect(p, bitmap.size()).translated(translation());
+    auto clipped_rect = dst_rect.intersected(clip_rect());
     if (clipped_rect.is_empty())
         return;
     const int first_row = clipped_rect.top() - dst_rect.top();
@@ -240,10 +229,9 @@ void Painter::blit_with_opacity(const Point& position, const GraphicsBitmap& sou
 
 void Painter::blit_dimmed(const Point& position, const GraphicsBitmap& source, const Rect& src_rect)
 {
-    Rect safe_src_rect = Rect::intersection(src_rect, source.rect());
-    Rect dst_rect(position, safe_src_rect.size());
-    dst_rect.move_by(state().translation);
-    auto clipped_rect = Rect::intersection(dst_rect, clip_rect());
+    Rect safe_src_rect = src_rect.intersected(source.rect());
+    auto dst_rect = Rect(position, safe_src_rect.size()).translated(translation());
+    auto clipped_rect = dst_rect.intersected(clip_rect());
     if (clipped_rect.is_empty())
         return;
     const int first_row = clipped_rect.top() - dst_rect.top();
@@ -274,10 +262,9 @@ void Painter::blit_dimmed(const Point& position, const GraphicsBitmap& source, c
 void Painter::blit_with_alpha(const Point& position, const GraphicsBitmap& source, const Rect& src_rect)
 {
     ASSERT(source.has_alpha_channel());
-    Rect safe_src_rect = Rect::intersection(src_rect, source.rect());
-    Rect dst_rect(position, safe_src_rect.size());
-    dst_rect.move_by(state().translation);
-    auto clipped_rect = Rect::intersection(dst_rect, clip_rect());
+    Rect safe_src_rect = src_rect.intersected(source.rect());
+    auto dst_rect = Rect(position, safe_src_rect.size()).translated(translation());
+    auto clipped_rect = dst_rect.intersected(clip_rect());
     if (clipped_rect.is_empty())
         return;
     const int first_row = clipped_rect.top() - dst_rect.top();
@@ -310,11 +297,10 @@ void Painter::blit(const Point& position, const GraphicsBitmap& source, const Re
         return blit_with_opacity(position, source, src_rect, opacity);
     if (source.has_alpha_channel())
         return blit_with_alpha(position, source, src_rect);
-    auto safe_src_rect = Rect::intersection(src_rect, source.rect());
+    auto safe_src_rect = src_rect.intersected(source.rect());
     ASSERT(source.rect().contains(safe_src_rect));
-    Rect dst_rect(position, safe_src_rect.size());
-    dst_rect.move_by(state().translation);
-    auto clipped_rect = Rect::intersection(dst_rect, clip_rect());
+    auto dst_rect = Rect(position, safe_src_rect.size()).translated(translation());
+    auto clipped_rect = dst_rect.intersected(clip_rect());
     if (clipped_rect.is_empty())
         return;
     const int first_row = clipped_rect.top() - dst_rect.top();
@@ -338,10 +324,10 @@ void Painter::draw_scaled_bitmap(const Rect& a_dst_rect, const GraphicsBitmap& s
     if (dst_rect.size() == src_rect.size())
         return blit(dst_rect.location(), source, src_rect);
 
-    auto safe_src_rect = Rect::intersection(src_rect, source.rect());
+    auto safe_src_rect = src_rect.intersected(source.rect());
     ASSERT(source.rect().contains(safe_src_rect));
     dst_rect.move_by(state().translation);
-    auto clipped_rect = Rect::intersection(dst_rect, clip_rect());
+    auto clipped_rect = dst_rect.intersected(clip_rect());
     if (clipped_rect.is_empty())
         return;
 
