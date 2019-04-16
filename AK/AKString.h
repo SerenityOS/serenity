@@ -78,7 +78,10 @@ public:
     }
 
     Vector<String> split(char separator) const;
-    String substring(ssize_t start, ssize_t length) const;
+    String substring(int start, int length) const;
+
+    Vector<StringView> split_view(char separator) const;
+    StringView substring_view(int start, int length) const;
 
     bool is_null() const { return !m_impl; }
     bool is_empty() const { return length() == 0; }
@@ -123,6 +126,19 @@ public:
 private:
     RetainPtr<StringImpl> m_impl;
 };
+
+inline bool StringView::operator==(const String& string) const
+{
+    if (string.is_null())
+        return !m_characters;
+    if (!m_characters)
+        return false;
+    if (m_length != string.length())
+        return false;
+    if (m_characters == string.characters())
+        return true;
+    return !memcmp(m_characters, string.characters(), m_length);
+}
 
 template<>
 struct Traits<String> {
