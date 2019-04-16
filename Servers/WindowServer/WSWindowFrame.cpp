@@ -75,8 +75,8 @@ Rect WSWindowFrame::title_bar_icon_rect() const
 {
     auto titlebar_rect = title_bar_rect();
     return {
-        titlebar_rect.x() + 2,
-        titlebar_rect.y(),
+        titlebar_rect.x() + 1,
+        titlebar_rect.y() + 1,
         16,
         titlebar_rect.height(),
     };
