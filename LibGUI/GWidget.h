@@ -42,8 +42,10 @@ public:
     bool is_enabled() const { return m_enabled; }
     void set_enabled(bool);
 
+    enum class ContextMenuMode { SwallowMouseEvent, PassthroughMouseEvent };
+
     const GMenu* context_menu() const { return m_context_menu.ptr(); }
-    void set_context_menu(OwnPtr<GMenu>&&);
+    void set_context_menu(OwnPtr<GMenu>&&, ContextMenuMode = ContextMenuMode::SwallowMouseEvent);
 
     virtual void event(CEvent&) override;
     virtual void paint_event(GPaintEvent&);
@@ -94,6 +96,8 @@ public:
         int localY { 0 };
     };
     HitTestResult hit_test(int x, int y);
+
+    GWidget* child_at(const Point&);
 
     virtual const char* class_name() const override { return "GWidget"; }
 
@@ -165,6 +169,12 @@ public:
     bool is_greedy_for_hits() const { return m_greedy_for_hits; }
     void set_greedy_for_hits(bool b) { m_greedy_for_hits = b; }
 
+    void move_to_front();
+    void move_to_back();
+
+    bool is_frontmost() const;
+    bool is_backmost() const;
+
 private:
     virtual bool is_widget() const final { return true; }
 
@@ -196,4 +206,5 @@ private:
 
     CElapsedTimer m_click_clock;
     OwnPtr<GMenu> m_context_menu;
+    ContextMenuMode m_context_menu_mode { ContextMenuMode::SwallowMouseEvent };
 };
