@@ -108,10 +108,7 @@ void GWidget::handle_paint_event(GPaintEvent& event)
         if (!child->is_visible())
             continue;
         if (child->relative_rect().intersects(event.rect())) {
-            auto local_rect = event.rect();
-            local_rect.intersect(child->relative_rect());
-            local_rect.move_by(-child->relative_rect().x(), -child->relative_rect().y());
-            GPaintEvent local_event(local_rect);
+            GPaintEvent local_event(event.rect().intersected(child->relative_rect()).translated(-child->relative_position()));
             child->event(local_event);
         }
     }

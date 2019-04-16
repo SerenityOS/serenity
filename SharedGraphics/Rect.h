@@ -195,6 +195,11 @@ public:
         return r;
     }
 
+    Rect intersected(const Rect& other) const
+    {
+        return intersection(*this, other);
+    }
+
     Rect united(const Rect&) const;
 
     Point top_left() const { return { left(), top() }; }
