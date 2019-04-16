@@ -112,6 +112,9 @@ public:
     void resize(const Size& size) { set_relative_rect({ relative_rect().location(), size }); }
     void resize(int width, int height) { resize({ width, height }); }
 
+    void move_by(int x, int y) { move_by({ x, y }); }
+    void move_by(const Point& delta) { set_relative_rect({ relative_position().translated(delta), size() }); }
+
     Color background_color() const { return m_background_color; }
     Color foreground_color() const { return m_foreground_color; }
 

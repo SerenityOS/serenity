@@ -43,6 +43,9 @@ void GWidget::set_relative_rect(const Rect& rect)
 {
     if (rect == m_relative_rect)
         return;
+
+    auto old_rect = m_relative_rect;
+
     bool size_changed = m_relative_rect.size() != rect.size();
     m_relative_rect = rect;
 
@@ -51,6 +54,8 @@ void GWidget::set_relative_rect(const Rect& rect)
         event(resize_event);
     }
 
+    if (auto* parent = parent_widget())
+        parent->update(old_rect);
     update();
 }
 
