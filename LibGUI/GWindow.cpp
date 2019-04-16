@@ -191,8 +191,8 @@ void GWindow::event(CEvent& event)
         if (!m_main_widget)
             return;
         if (m_main_widget) {
-            auto result = m_main_widget->hit_test(mouse_event.x(), mouse_event.y());
-            auto local_event = make<GMouseEvent>((GEvent::Type)event.type(), Point { result.localX, result.localY }, mouse_event.buttons(), mouse_event.button(), mouse_event.modifiers());
+            auto result = m_main_widget->hit_test(mouse_event.position());
+            auto local_event = make<GMouseEvent>((GEvent::Type)event.type(), result.local_position, mouse_event.buttons(), mouse_event.button(), mouse_event.modifiers());
             ASSERT(result.widget);
             set_hovered_widget(result.widget);
             if (mouse_event.buttons() != 0 && !m_automatic_cursor_tracking_widget)
