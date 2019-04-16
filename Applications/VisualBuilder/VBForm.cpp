@@ -105,6 +105,50 @@ void VBForm::grabber_mousedown_event(GMouseEvent& event, VBWidget& widget, Direc
     m_resize_direction = grabber;
 }
 
+void VBForm::keydown_event(GKeyEvent& event)
+{
+    if (event.key() == KeyCode::Key_Tab) {
+        if (!m_selected_widget && !m_widgets.is_empty()) {
+            m_selected_widget = m_widgets.first()->make_weak_ptr();
+            update();
+            return;
+        } else {
+            int selected_widget_index = 0;
+            for (; selected_widget_index < m_widgets.size(); ++selected_widget_index) {
+                if (m_widgets[selected_widget_index] == m_selected_widget)
+                    break;
+            }
+            ++selected_widget_index;
+            if (selected_widget_index == m_widgets.size())
+                selected_widget_index = 0;
+            m_selected_widget = m_widgets[selected_widget_index]->make_weak_ptr();
+            update();
+            return;
+        }
+    }
+    if (m_selected_widget) {
+        switch (event.key()) {
+        case KeyCode::Key_Up:
+            update();
+            m_selected_widget->gwidget()->move_by(0, -m_grid_size);
+            break;
+        case KeyCode::Key_Down:
+            update();
+            m_selected_widget->gwidget()->move_by(0, m_grid_size);
+            break;
+        case KeyCode::Key_Left:
+            update();
+            m_selected_widget->gwidget()->move_by(-m_grid_size, 0);
+            break;
+        case KeyCode::Key_Right:
+            update();
+            m_selected_widget->gwidget()->move_by(m_grid_size, 0);
+            break;
+        }
+        return;
+    }
+}
+
 void VBForm::mousedown_event(GMouseEvent& event)
 {
     if (m_selected_widget && m_resize_direction == Direction::None) {
