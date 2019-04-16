@@ -18,10 +18,12 @@ VBWidget::VBWidget(VBWidgetType type, VBForm& form)
     , m_property_model(VBWidgetPropertyModel::create(*this))
 {
     m_gwidget = VBWidgetRegistry::build_gwidget(type, &form, m_properties);
+    m_form.m_gwidget_map.set(m_gwidget, this);
 }
 
 VBWidget::~VBWidget()
 {
+    m_form.m_gwidget_map.remove(m_gwidget);
 }
 
 Rect VBWidget::rect() const

@@ -36,9 +36,15 @@ VBForm::VBForm(const String& name, GWidget* parent)
     m_widgets.append(move(groupbox1));
 
     auto context_menu = make<GMenu>("Context menu");
-    context_menu->add_action(GAction::create("Item 1", [] (auto&) { dbgprintf("Item 1 activated!\n"); }));
-    context_menu->add_action(GAction::create("Item 2", [] (auto&) { dbgprintf("Item 2 activated!\n"); }));
-    set_context_menu(move(context_menu));
+    context_menu->add_action(GAction::create("Move to front", [this] (auto&) {
+        if (m_selected_widget)
+            m_selected_widget->gwidget()->move_to_front();
+    }));
+    context_menu->add_action(GAction::create("Move to back", [this] (auto&) {
+        if (m_selected_widget)
+            m_selected_widget->gwidget()->move_to_back();
+    }));
+    set_context_menu(move(context_menu), GWidget::ContextMenuMode::PassthroughMouseEvent);
 }
 
 void VBForm::insert_widget(VBWidgetType type)
@@ -86,12 +92,10 @@ bool VBForm::is_selected(const VBWidget& widget) const
 
 VBWidget* VBForm::widget_at(const Point& position)
 {
-    for (int i = m_widgets.size() - 1; i >= 0; --i) {
-        auto& widget = *m_widgets[i];
-        if (widget.rect().contains(position))
-            return &widget;
-    }
-    return nullptr;
+    auto* gwidget = child_at(position);
+    if (!gwidget)
+        return nullptr;
+    return m_gwidget_map.get(gwidget);
 }
 
 void VBForm::grabber_mousedown_event(GMouseEvent& event, VBWidget& widget, Direction grabber)
@@ -118,7 +122,7 @@ void VBForm::mousedown_event(GMouseEvent& event)
         }
         return;
     }
-    if (event.button() == GMouseButton::Left) {
+    if (event.button() == GMouseButton::Left || event.button() == GMouseButton::Right) {
         m_selected_widget = widget->make_weak_ptr();
         m_transform_event_origin = event.position();
         m_transform_widget_origin_rect = widget->rect();
