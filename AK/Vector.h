@@ -222,6 +222,17 @@ public:
         ++m_impl->m_size;
     }
 
+    void prepend(const T& value)
+    {
+        ensure_capacity(size() + 1);
+        for (int i = size(); i > 0; --i) {
+            new (m_impl->slot(i)) T(move(at(i - 1)));
+            at(i - 1).~T();
+        }
+        new (m_impl->slot(0)) T(value);
+        ++m_impl->m_size;
+    }
+
     void append(const T* values, int count)
     {
         if (!count)
