@@ -109,7 +109,6 @@ void GTableView::paint_event(GPaintEvent& event)
     GPainter painter(*this);
     painter.add_clip_rect(frame_inner_rect());
     painter.add_clip_rect(event.rect());
-    painter.save();
     painter.translate(-horizontal_scrollbar().value(), -vertical_scrollbar().value());
 
     int exposed_width = max(content_size().width(), width());
@@ -176,18 +175,6 @@ void GTableView::paint_event(GPaintEvent& event)
     painter.translate(0, vertical_scrollbar().value());
     if (headers_visible())
         paint_headers(painter);
-
-    painter.restore();
-
-    if (is_focused()) {
-        Rect item_area_rect {
-            0,
-            header_height(),
-            width() - vertical_scrollbar().width(),
-            height() - header_height() - horizontal_scrollbar().height()
-        };
-        painter.draw_rect(item_area_rect, Color::from_rgb(0x84351a));
-    };
 }
 
 void GTableView::paint_headers(Painter& painter)
