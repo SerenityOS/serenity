@@ -178,6 +178,8 @@ void GWidget::handle_mousedown_event(GMouseEvent& event)
         set_focus(true);
     if (event.button() == GMouseButton::Right) {
         if (m_context_menu) {
+            if (m_context_menu_mode == ContextMenuMode::PassthroughMouseEvent)
+                mousedown_event(event);
             m_context_menu->popup(screen_relative_rect().location().translated(event.position()));
             return;
         }
@@ -294,19 +296,26 @@ Rect GWidget::screen_relative_rect() const
     return window_relative_rect().translated(window()->position());
 }
 
-GWidget::HitTestResult GWidget::hit_test(int x, int y)
+GWidget* GWidget::child_at(const Point& point)
 {
-    if (is_greedy_for_hits())
-        return { this, x, y };
     for (int i = children().size() - 1; i >= 0; --i) {
         if (!children()[i]->is_widget())
             continue;
         auto& child = *(GWidget*)children()[i];
         if (!child.is_visible())
             continue;
-        if (child.relative_rect().contains(x, y))
-            return child.hit_test(x - child.relative_rect().x(), y - child.relative_rect().y());
+        if (child.relative_rect().contains(point))
+            return &child;
     }
+    return nullptr;
+}
+
+GWidget::HitTestResult GWidget::hit_test(int x, int y)
+{
+    if (is_greedy_for_hits())
+        return { this, x, y };
+    if (auto* child = child_at({ x, y }))
+        return child->hit_test(x - child->x(), y - child->y());
     return { this, x, y };
 }
 
@@ -426,9 +435,50 @@ void GWidget::set_enabled(bool enabled)
     update();
 }
 
-void GWidget::set_context_menu(OwnPtr<GMenu>&& context_menu)
+void GWidget::set_context_menu(OwnPtr<GMenu>&& context_menu, ContextMenuMode mode)
 {
     // FIXME: Support switching context menus.
     ASSERT(!m_context_menu);
     m_context_menu = move(context_menu);
+    m_context_menu_mode = mode;
+}
+
+void GWidget::move_to_front()
+{
+    auto* parent = parent_widget();
+    if (!parent)
+        return;
+    if (parent->children().size() == 1)
+        return;
+    parent->children().remove_first_matching([this] (auto& entry) { return entry == this; });
+    parent->children().append(this);
+    parent_widget()->update();
+}
+
+void GWidget::move_to_back()
+{
+    auto* parent = parent_widget();
+    if (!parent)
+        return;
+    if (parent->children().size() == 1)
+        return;
+    parent->children().remove_first_matching([this] (auto& entry) { return entry == this; });
+    parent->children().prepend(this);
+    parent_widget()->update();
+}
+
+bool GWidget::is_frontmost() const
+{
+    auto* parent = parent_widget();
+    if (!parent)
+        return true;
+    return parent->children().last() == this;
+}
+
+bool GWidget::is_backmost() const
+{
+    auto* parent = parent_widget();
+    if (!parent)
+        return true;
+    return parent->children().first() == this;
 }

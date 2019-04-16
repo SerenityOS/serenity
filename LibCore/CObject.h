@@ -18,6 +18,7 @@ public:
     virtual void event(CEvent&);
 
     Vector<CObject*>& children() { return m_children; }
+    const Vector<CObject*>& children() const { return m_children; }
 
     CObject* parent() { return m_parent; }
     const CObject* parent() const { return m_parent; }
