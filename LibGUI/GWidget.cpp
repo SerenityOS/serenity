@@ -450,9 +450,11 @@ void GWidget::move_to_front()
         return;
     if (parent->children().size() == 1)
         return;
-    parent->children().remove_first_matching([this] (auto& entry) { return entry == this; });
+    parent->children().remove_first_matching([this] (auto& entry) {
+        return entry == this;
+    });
     parent->children().append(this);
-    parent_widget()->update();
+    parent->update();
 }
 
 void GWidget::move_to_back()
@@ -462,9 +464,11 @@ void GWidget::move_to_back()
         return;
     if (parent->children().size() == 1)
         return;
-    parent->children().remove_first_matching([this] (auto& entry) { return entry == this; });
+    parent->children().remove_first_matching([this] (auto& entry) {
+        return entry == this;
+    });
     parent->children().prepend(this);
-    parent_widget()->update();
+    parent->update();
 }
 
 bool GWidget::is_frontmost() const
