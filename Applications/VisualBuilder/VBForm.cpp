@@ -108,25 +108,23 @@ void VBForm::grabber_mousedown_event(GMouseEvent& event, VBWidget& widget, Direc
 void VBForm::keydown_event(GKeyEvent& event)
 {
     if (event.key() == KeyCode::Key_Tab) {
-        if (!m_selected_widget) {
-            if (!m_widgets.is_empty()) {
-                set_selected_widget(m_widgets.first());
-                update();
-            }
+        if (m_widgets.is_empty())
             return;
-        } else {
-            int selected_widget_index = 0;
-            for (; selected_widget_index < m_widgets.size(); ++selected_widget_index) {
-                if (m_widgets[selected_widget_index] == m_selected_widget)
-                    break;
-            }
-            ++selected_widget_index;
-            if (selected_widget_index == m_widgets.size())
-                selected_widget_index = 0;
-            set_selected_widget(m_widgets[selected_widget_index]);
+        if (!m_selected_widget) {
+            set_selected_widget(m_widgets.first());
             update();
             return;
         }
+        int selected_widget_index = 0;
+        for (; selected_widget_index < m_widgets.size(); ++selected_widget_index) {
+            if (m_widgets[selected_widget_index] == m_selected_widget)
+                break;
+        }
+        ++selected_widget_index;
+        if (selected_widget_index == m_widgets.size())
+            selected_widget_index = 0;
+        set_selected_widget(m_widgets[selected_widget_index]);
+        update();
     }
     if (m_selected_widget) {
         switch (event.key()) {
