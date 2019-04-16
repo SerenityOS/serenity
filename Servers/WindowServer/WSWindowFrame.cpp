@@ -66,11 +66,6 @@ WSWindowFrame::~WSWindowFrame()
 {
 }
 
-static inline Rect menu_window_rect(const Rect& rect)
-{
-    return rect.inflated(2, 2);
-}
-
 Rect WSWindowFrame::title_bar_rect() const
 {
     return { 2, 2, m_window.width() + 2, window_titlebar_height };
@@ -109,10 +104,8 @@ void WSWindowFrame::paint(Painter& painter)
     PainterStateSaver saver(painter);
     painter.translate(rect().location());
 
-    if (m_window.type() == WSWindowType::Menu) {
-        painter.draw_rect(menu_window_rect(m_window.rect()), Color::LightGray);
+    if (m_window.type() == WSWindowType::Menu)
         return;
-    }
 
     if (m_window.type() == WSWindowType::WindowSwitcher)
         return;
@@ -193,7 +186,7 @@ static Rect frame_rect_for_window_type(WSWindowType type, const Rect& rect)
 {
     switch (type) {
     case WSWindowType::Menu:
-        return menu_window_rect(rect);
+        return rect;
     case WSWindowType::Normal:
         return { rect.x() - 3, rect.y() - window_titlebar_height - 3, rect.width() + 6, rect.height() + 6 + window_titlebar_height };
     case WSWindowType::WindowSwitcher:

@@ -166,3 +166,22 @@ void StylePainter::paint_frame(Painter& painter, const Rect& rect, FrameShape sh
         painter.draw_line(inner_rect.top_right(), inner_rect.bottom_right().translated(0, -1), bottom_right_color);
     }
 }
+
+void StylePainter::paint_menu_frame(Painter& painter, const Rect& rect)
+{
+    Color top_left_color;
+    Color bottom_right_color;
+    Color base_color = Color::from_rgb(0xc0c0c0);
+    Color dark_shade = Color::from_rgb(0x404040);
+    Color mid_shade = Color::from_rgb(0x808080);
+    Color light_shade = Color::from_rgb(0xffffff);
+
+    painter.draw_line(rect.top_left(), rect.top_right(), base_color);
+    painter.draw_line(rect.top_left().translated(0, 1), rect.bottom_left(), base_color);
+    painter.draw_line(rect.top_left().translated(1, 1), rect.top_right().translated(-1, 1), light_shade);
+    painter.draw_line(rect.top_left().translated(1, 1), rect.bottom_left().translated(1, -1), light_shade);
+    painter.draw_line(rect.top_right(), rect.bottom_right(), dark_shade);
+    painter.draw_line(rect.bottom_left(), rect.bottom_right(), dark_shade);
+    painter.draw_line(rect.top_right().translated(-1, 1), rect.bottom_right().translated(-1, -1), mid_shade);
+    painter.draw_line(rect.bottom_left().translated(1, -1), rect.bottom_right().translated(-1, -1), mid_shade);
+}

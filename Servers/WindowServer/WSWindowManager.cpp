@@ -379,7 +379,7 @@ void WSWindowManager::handle_menu_mouse_event(WSMenu& menu, const WSMouseEvent& 
         close_current_menu();
         if (!menu.is_empty()) {
             auto& menu_window = menu.ensure_menu_window();
-            menu_window.move_to({ menu.rect_in_menubar().x(), menu.rect_in_menubar().bottom() });
+            menu_window.move_to({ menu.rect_in_menubar().x(), menu.rect_in_menubar().bottom() + 2 });
             menu_window.set_visible(true);
         }
         m_current_menu = menu.make_weak_ptr();
@@ -826,7 +826,7 @@ void WSWindowManager::draw_menubar()
     auto menubar_rect = this->menubar_rect();
 
     m_back_painter->fill_rect(menubar_rect, Color::LightGray);
-    m_back_painter->draw_line({ 0, menubar_rect.bottom() }, { menubar_rect.right(), menubar_rect.bottom() }, Color::White);
+    m_back_painter->draw_line({ 0, menubar_rect.bottom() }, { menubar_rect.right(), menubar_rect.bottom() }, Color::MidGray);
     int index = 0;
     for_each_active_menubar_menu([&] (WSMenu& menu) {
         Color text_color = Color::Black;

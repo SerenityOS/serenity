@@ -7,6 +7,7 @@
 #include <WindowServer/WSAPITypes.h>
 #include <WindowServer/WSClientConnection.h>
 #include <SharedGraphics/Painter.h>
+#include <SharedGraphics/StylePainter.h>
 #include <SharedGraphics/Font.h>
 
 WSMenu::WSMenu(WSClientConnection* client, int menu_id, String&& name)
@@ -38,14 +39,14 @@ int WSMenu::width() const
         }
     }
 
-    return max(longest, rect_in_menubar().width()) + horizontal_padding();
+    return max(longest, rect_in_menubar().width()) + horizontal_padding() + frame_thickness() * 2;
 }
 
 int WSMenu::height() const
 {
     if (m_items.is_empty())
         return 0;
-    return (m_items.last()->rect().bottom() - 1) + vertical_padding();
+    return (m_items.last()->rect().bottom() - 1) + frame_thickness() * 2;
 }
 
 void WSMenu::redraw()
@@ -59,14 +60,14 @@ void WSMenu::redraw()
 WSWindow& WSMenu::ensure_menu_window()
 {
     if (!m_menu_window) {
-        Point next_item_location(1, vertical_padding() / 2);
+        Point next_item_location(frame_thickness(), frame_thickness());
         for (auto& item : m_items) {
             int height = 0;
             if (item->type() == WSMenuItem::Text)
                 height = item_height();
             else if (item->type() == WSMenuItem::Separator)
                 height = 7;
-            item->set_rect({ next_item_location, { width() - 2, height } });
+            item->set_rect({ next_item_location, { width() - frame_thickness() * 2, height } });
             next_item_location.move_by(0, height);
         }
 
@@ -86,8 +87,8 @@ void WSMenu::draw()
     Painter painter(*menu_window()->backing_store());
 
     Rect rect { { }, menu_window()->size() };
-    painter.draw_rect(rect, Color::White);
-    painter.fill_rect(rect.shrunken(2, 2), Color::LightGray);
+    painter.fill_rect(rect.shrunken(4, 4), Color::LightGray);
+    StylePainter::paint_menu_frame(painter, rect);
 
     for (auto& item : m_items) {
         if (item->type() == WSMenuItem::Text) {
