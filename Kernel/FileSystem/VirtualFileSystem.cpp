@@ -577,8 +577,7 @@ KResultOr<InodeIdentifier> VFS::resolve_path(StringView path, InodeIdentifier ba
     if (path.is_empty())
         return KResult(-EINVAL);
 
-    // FIXME: Use StringView::split() once it exists.
-    auto parts = String(path).split('/');
+    auto parts = path.split_view('/');
     InodeIdentifier crumb_id;
 
     if (path[0] == '/')

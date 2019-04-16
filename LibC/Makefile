@@ -1,6 +1,7 @@
 AK_OBJS = \
     ../AK/StringImpl.o \
     ../AK/String.o \
+    ../AK/StringView.o \
     ../AK/StringBuilder.o \
     ../AK/FileSystemPath.o \
     ../AK/StdLibExtras.o \

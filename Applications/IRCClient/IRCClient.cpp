@@ -561,7 +561,7 @@ void IRCClient::handle_user_command(const String& input)
     auto parts = input.split(' ');
     if (parts.is_empty())
         return;
-    auto command = parts[0].to_uppercase();
+    auto command = String(parts[0]).to_uppercase();
     if (command == "/NICK") {
         if (parts.size() >= 2)
             change_nick(parts[1]);
