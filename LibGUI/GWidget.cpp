@@ -296,7 +296,7 @@ Rect GWidget::screen_relative_rect() const
     return window_relative_rect().translated(window()->position());
 }
 
-GWidget* GWidget::child_at(const Point& point)
+GWidget* GWidget::child_at(const Point& point) const
 {
     for (int i = children().size() - 1; i >= 0; --i) {
         if (!children()[i]->is_widget())
@@ -310,13 +310,13 @@ GWidget* GWidget::child_at(const Point& point)
     return nullptr;
 }
 
-GWidget::HitTestResult GWidget::hit_test(int x, int y)
+GWidget::HitTestResult GWidget::hit_test(const Point& position)
 {
     if (is_greedy_for_hits())
-        return { this, x, y };
-    if (auto* child = child_at({ x, y }))
-        return child->hit_test(x - child->x(), y - child->y());
-    return { this, x, y };
+        return { this, position };
+    if (auto* child = child_at(position))
+        return child->hit_test(position - child->relative_position());
+    return { this, position };
 }
 
 void GWidget::set_window(GWindow* window)
