@@ -35,6 +35,7 @@ protected:
 
 private:
     void grabber_mousedown_event(GMouseEvent&, VBWidget&, Direction grabber);
+    void set_selected_widget(VBWidget*);
 
     String m_name;
     int m_grid_size { 5 };
