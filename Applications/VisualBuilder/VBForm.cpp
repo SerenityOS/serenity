@@ -108,9 +108,11 @@ void VBForm::grabber_mousedown_event(GMouseEvent& event, VBWidget& widget, Direc
 void VBForm::keydown_event(GKeyEvent& event)
 {
     if (event.key() == KeyCode::Key_Tab) {
-        if (!m_selected_widget && !m_widgets.is_empty()) {
-            set_selected_widget(m_widgets.first());
-            update();
+        if (!m_selected_widget) {
+            if (!m_widgets.is_empty()) {
+                set_selected_widget(m_widgets.first());
+                update();
+            }
             return;
         } else {
             int selected_widget_index = 0;
