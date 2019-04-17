@@ -247,6 +247,9 @@ public:
 
     Lock& big_lock() { return m_big_lock; }
 
+    unsigned syscall_count() const { return m_syscall_count; }
+    void did_syscall() { ++m_syscall_count; }
+
 private:
     friend class MemoryManager;
     friend class Scheduler;
@@ -321,6 +324,8 @@ private:
     bool m_dead { false };
 
     int m_next_tid { 0 };
+
+    unsigned m_syscall_count { 0 };
 
     Lock m_big_lock;
 };

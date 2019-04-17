@@ -52,6 +52,8 @@ int sync()
 
 static dword handle(RegisterDump& regs, dword function, dword arg1, dword arg2, dword arg3)
 {
+    current->process().did_syscall();
+
     ASSERT_INTERRUPTS_ENABLED();
     switch (function) {
     case Syscall::SC_yield:
