@@ -369,7 +369,7 @@ void WSWindowManager::pick_new_active_window()
 
 void WSWindowManager::handle_menu_mouse_event(WSMenu& menu, const WSMouseEvent& event)
 {
-    bool is_hover_with_any_menu_open = event.type() == WSMouseEvent::MouseMove && m_current_menu && m_current_menu->menubar();
+    bool is_hover_with_any_menu_open = event.type() == WSMouseEvent::MouseMove && m_current_menu && (m_current_menu->menubar() || m_current_menu == m_system_menu);
     bool is_mousedown_with_left_button = event.type() == WSMouseEvent::MouseDown && event.button() == MouseButton::Left;
     bool should_open_menu = &menu != current_menu() && (is_hover_with_any_menu_open || is_mousedown_with_left_button);
 
