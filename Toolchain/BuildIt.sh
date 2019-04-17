@@ -5,7 +5,7 @@ echo $DIR
 
 TARGET=i686-pc-serenity
 PREFIX="$DIR/Local"
-SYSROOT="$DIR/../Root"
+SYSROOT="$DIR/../Base"
 
 mkdir -p "$DIR/Tarballs"
 
@@ -70,5 +70,10 @@ pushd "$DIR/Build/"
 
         make -j $(nproc) all-gcc all-target-libgcc
         make install-gcc install-target-libgcc
+
+        make -c ../LibC/ install
+
+        make all-target-libstdc++-v3
+        make install-target-libstdc++-v3
     popd
 popd
