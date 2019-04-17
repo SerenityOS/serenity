@@ -2,6 +2,14 @@
 #include <WindowServer/WSAPITypes.h>
 #include <LibGUI/GEventLoop.h>
 
+Window* WindowList::window(const WindowIdentifier& identifier)
+{
+    auto it = m_windows.find(identifier);
+    if (it != m_windows.end())
+        return it->value;
+    return nullptr;
+}
+
 Window& WindowList::ensure_window(const WindowIdentifier& identifier)
 {
     auto it = m_windows.find(identifier);

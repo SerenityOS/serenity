@@ -277,7 +277,7 @@ void GWindow::event(CEvent& event)
         return;
     }
 
-    if (event.type() == GEvent::WM_WindowRemoved || event.type() == GEvent::WM_WindowStateChanged)
+    if (event.type() == GEvent::WM_WindowRemoved || event.type() == GEvent::WM_WindowStateChanged || event.type() == GEvent::WM_WindowIconChanged)
         return wm_event(static_cast<GWMEvent&>(event));
 
     CObject::event(event);

@@ -370,7 +370,7 @@ void WSClientConnection::handle_request(const WSAPISetWindowIconRequest& request
     }
 
     window.frame().invalidate_title_bar();
-    WSWindowManager::the().tell_wm_listeners_window_state_changed(window);
+    WSWindowManager::the().tell_wm_listeners_window_icon_changed(window);
 }
 
 void WSClientConnection::handle_request(const WSAPISetWindowRectRequest& request)
