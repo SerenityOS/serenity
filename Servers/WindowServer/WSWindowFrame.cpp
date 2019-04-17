@@ -8,7 +8,7 @@
 #include <SharedGraphics/Font.h>
 #include <SharedGraphics/StylePainter.h>
 
-static const int window_titlebar_height = 17;
+static const int window_titlebar_height = 19;
 
 static const char* s_close_button_bitmap_data = {
     "##    ##"
@@ -41,7 +41,6 @@ static const char* s_minimize_button_bitmap_data = {
 static CharacterBitmap* s_minimize_button_bitmap;
 static const int s_minimize_button_bitmap_width = 8;
 static const int s_minimize_button_bitmap_height = 9;
-
 
 WSWindowFrame::WSWindowFrame(WSWindow& window)
     : m_window(window)
@@ -185,18 +184,10 @@ void WSWindowFrame::paint(Painter& painter)
 static Rect frame_rect_for_window_type(WSWindowType type, const Rect& rect)
 {
     switch (type) {
-    case WSWindowType::Menu:
-        return rect;
     case WSWindowType::Normal:
         return { rect.x() - 3, rect.y() - window_titlebar_height - 3, rect.width() + 6, rect.height() + 6 + window_titlebar_height };
-    case WSWindowType::WindowSwitcher:
-        return rect;
-    case WSWindowType::Taskbar:
-        return rect;
-    case WSWindowType::Tooltip:
-        return rect;
     default:
-        ASSERT_NOT_REACHED();
+        return rect;
     }
 }
 
