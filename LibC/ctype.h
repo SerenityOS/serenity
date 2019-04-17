@@ -5,102 +5,45 @@
 
 __BEGIN_DECLS
 
-ALWAYS_INLINE int __isascii(int ch)
-{
-    return (ch & ~0x7f) == 0;
-}
+/* Do what newlib does to appease GCC's --with-newlib option. */
+#define _U 01
+#define _L 02
+#define _N 04
+#define _S 010
+#define _P 020
+#define _C 040
+#define _X 0100
+#define _B 0200
 
-ALWAYS_INLINE int __isspace(int ch)
-{
-    return ch == ' ' || ch == '\f' || ch == '\n' || ch == '\r' || ch == '\t' || ch == '\v';
-}
+extern const char _ctype_[256];
 
-ALWAYS_INLINE int __islower(int c)
-{
-    return c >= 'a' && c <= 'z';
-}
+int tolower(int);
+int toupper(int);
+int isalnum(int);
+int isalpha(int);
+int iscntrl(int);
+int isdigit(int);
+int isxdigit(int);
+int isspace(int);
+int ispunct(int);
+int isprint(int);
+int isgraph(int);
+int islower(int);
+int isupper(int);
 
-ALWAYS_INLINE int __isupper(int c)
-{
-    return c >= 'A' && c <= 'Z';
-}
+#define isalnum(c) (_ctype_[(int)(c)] & (_U | _L | _N))
+#define isalpha(c) (_ctype_[(int)(c)] & (_U | _L))
+#define iscntrl(c) (_ctype_[(int)(c)] & (_C))
+#define isdigit(c) (_ctype_[(int)(c)] & (_N))
+#define isxdigit(c) (_ctype_[(int)(c)] & (_N | _X))
+#define isspace(c) (_ctype_[(int)(c)] & (_S))
+#define ispunct(c) (_ctype_[(int)(c)] & (_P))
+#define isprint(c) (_ctype_[(int)(c)] & (_P|_U|_L|_N|_B))
+#define isgraph(c) (_ctype_[(int)(c)] & (_P|_U|_L|_N))
+#define islower(c) ((_ctype_[(int)(c)] & (_U | _L)) == _L)
+#define isupper(c) ((_ctype_[(int)(c)] & (_U | _L)) == _U)
 
-int __tolower(int);
-int __toupper(int);
-
-ALWAYS_INLINE int __isdigit(int c)
-{
-    return c >= '0' && c <= '9';
-}
-
-ALWAYS_INLINE int __ispunct(int c)
-{
-    const char* punctuation_characters = "!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~";
-    return !!strchr(punctuation_characters, c);
-}
-
-ALWAYS_INLINE int __isprint(int c)
-{
-    return c >= 0x20 && c != 0x7f;
-}
-
-ALWAYS_INLINE int __isalpha(int c)
-{
-    return __isupper(c) || __islower(c);
-}
-
-ALWAYS_INLINE int __isalnum(int c)
-{
-    return __isalpha(c) || __isdigit(c);
-}
-
-ALWAYS_INLINE int __iscntrl(int c)
-{
-    return (c >= 0 && c <= 0x1f) || c == 0x7f;
-}
-
-ALWAYS_INLINE int __isxdigit(int c)
-{
-    return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
-}
-
-ALWAYS_INLINE int __isgraph(int c)
-{
-    return __isalnum(c) || __ispunct(c);
-}
-
-#ifdef __cplusplus
-#define __CTYPE_FUNC(name) static inline int name(int c) { return __ ## name(c); }
-
-__CTYPE_FUNC(isascii)
-__CTYPE_FUNC(isspace)
-__CTYPE_FUNC(islower)
-__CTYPE_FUNC(isupper)
-__CTYPE_FUNC(tolower)
-__CTYPE_FUNC(toupper)
-__CTYPE_FUNC(isdigit)
-__CTYPE_FUNC(ispunct)
-__CTYPE_FUNC(isprint)
-__CTYPE_FUNC(isalpha)
-__CTYPE_FUNC(isalnum)
-__CTYPE_FUNC(iscntrl)
-__CTYPE_FUNC(isxdigit)
-__CTYPE_FUNC(isgraph)
-#else
-#define isascii(c) __isascii(c)
-#define isspace(c) __isspace(c)
-#define islower(c) __islower(c)
-#define isupper(c) __isupper(c)
-#define tolower(c) __tolower(c)
-#define toupper(c) __toupper(c)
-#define isdigit(c) __isdigit(c)
-#define ispunct(c) __ispunct(c)
-#define isprint(c) __isprint(c)
-#define isalpha(c) __isalpha(c)
-#define isalnum(c) __isalnum(c)
-#define iscntrl(c) __iscntrl(c)
-#define isxdigit(c) __isxdigit(c)
-#define isgraph(c) __isgraph(c)
-#endif
+#define isascii(c) ((unsigned)c <= 127)
+#define toascii(c) ((c) & 127)
 
 __END_DECLS

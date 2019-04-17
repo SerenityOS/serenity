@@ -274,6 +274,14 @@ double strtod(const char* str, char** endptr)
     assert(false);
 }
 
+float strtof(const char* str, char** endptr)
+{
+    (void)str;
+    (void)endptr;
+    dbgprintf("LibC: strtof: '%s'\n", str);
+    assert(false);
+}
+
 double atof(const char* str)
 {
     dbgprintf("LibC: atof: '%s'\n", str);
