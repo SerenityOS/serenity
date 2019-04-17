@@ -69,7 +69,7 @@ int main(int argc, char** argv)
 
     auto* window = new GWindow;
     window->set_title("ProcessManager");
-    window->set_rect(20, 200, 640, 400);
+    window->set_rect(20, 200, 680, 400);
     window->set_main_widget(widget);
     window->set_should_exit_event_loop_on_close(true);
     window->show();

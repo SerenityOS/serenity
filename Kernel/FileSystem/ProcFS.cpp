@@ -579,7 +579,7 @@ ByteBuffer procfs$all(InodeIdentifier)
     auto processes = Process::all_processes();
     StringBuilder builder(processes.size() * 80);
     auto build_process_line = [&builder] (Process* process) {
-        builder.appendf("%u,%u,%u,%u,%u,%u,%u,%s,%u,%u,%s,%s,%u,%u,%u,%u,%s\n",
+        builder.appendf("%u,%u,%u,%u,%u,%u,%u,%s,%u,%u,%s,%s,%u,%u,%u,%u,%s,%u\n",
             process->pid(),
             process->main_thread().times_scheduled(), // FIXME(Thread): Bill all scheds to the process
             process->tty() ? process->tty()->pgid() : 0,
@@ -596,7 +596,8 @@ ByteBuffer procfs$all(InodeIdentifier)
             process->amount_resident(),
             process->amount_shared(),
             process->main_thread().ticks(), // FIXME(Thread): Bill all ticks to the process
-            to_string(process->priority())
+            to_string(process->priority()),
+            process->syscall_count()
         );
     };
     build_process_line(Scheduler::colonel());
