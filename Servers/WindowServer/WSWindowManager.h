@@ -111,6 +111,7 @@ public:
     bool any_opaque_window_above_this_one_contains_rect(const WSWindow&, const Rect&);
 
     void tell_wm_listeners_window_state_changed(WSWindow&);
+    void tell_wm_listeners_window_icon_changed(WSWindow&);
 
 private:
     void process_mouse_event(const WSMouseEvent&, WSWindow*& event_window);

@@ -96,6 +96,7 @@ public:
             callback(*it.value);
     }
 
+    Window* window(const WindowIdentifier&);
     Window& ensure_window(const WindowIdentifier&);
     void remove_window(const WindowIdentifier&);
 

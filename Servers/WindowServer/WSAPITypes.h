@@ -97,6 +97,7 @@ struct WSAPI_ServerMessage {
         ScreenRectChanged,
         WM_WindowRemoved,
         WM_WindowStateChanged,
+        WM_WindowIconChanged,
     };
     Type type { Invalid };
     int window_id { -1 };
@@ -116,8 +117,6 @@ struct WSAPI_ServerMessage {
             bool is_active;
             bool is_minimized;
             WSAPI_WindowType window_type;
-            int icon_path_length;
-            char icon_path[256];
         } wm;
         struct {
             WSAPI_Rect rect;

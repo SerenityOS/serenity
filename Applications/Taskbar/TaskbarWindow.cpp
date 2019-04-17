@@ -8,6 +8,8 @@
 #include <WindowServer/WSAPITypes.h>
 #include <stdio.h>
 
+//#define EVENT_DEBUG
+
 TaskbarWindow::TaskbarWindow()
 {
     set_window_type(GWindowType::Taskbar);
@@ -63,26 +65,45 @@ void TaskbarWindow::wm_event(GWMEvent& event)
     WindowIdentifier identifier { event.client_id(), event.window_id() };
     switch (event.type()) {
     case GEvent::WM_WindowRemoved: {
+#ifdef EVENT_DEBUG
         auto& removed_event = static_cast<GWMWindowRemovedEvent&>(event);
-        printf("WM_WindowRemoved: client_id=%d, window_id=%d\n",
+        dbgprintf("WM_WindowRemoved: client_id=%d, window_id=%d\n",
             removed_event.client_id(),
             removed_event.window_id()
         );
+#endif
         m_window_list.remove_window(identifier);
         update();
         break;
     }
+    case GEvent::WM_WindowIconChanged: {
+        auto& changed_event = static_cast<GWMWindowIconChangedEvent&>(event);
+#ifdef EVENT_DEBUG
+        dbgprintf("WM_WindowIconChanged: client_id=%d, window_id=%d, icon_path=%s\n",
+            changed_event.client_id(),
+            changed_event.window_id(),
+            changed_event.icon_path().characters()
+        );
+#endif
+        if (auto* window = m_window_list.window(identifier)) {
+            window->set_icon_path(changed_event.icon_path());
+            window->button()->set_icon(window->icon());
+        }
+        break;
+    }
+
     case GEvent::WM_WindowStateChanged: {
         auto& changed_event = static_cast<GWMWindowStateChangedEvent&>(event);
-        printf("WM_WindowStateChanged: client_id=%d, window_id=%d, title=%s, rect=%s, is_active=%u, is_minimized=%u, icon_path=%s\n",
+#ifdef EVENT_DEBUG
+        dbgprintf("WM_WindowStateChanged: client_id=%d, window_id=%d, title=%s, rect=%s, is_active=%u, is_minimized=%u\n",
             changed_event.client_id(),
             changed_event.window_id(),
             changed_event.title().characters(),
             changed_event.rect().to_string().characters(),
             changed_event.is_active(),
-            changed_event.is_minimized(),
-            changed_event.icon_path().characters()
+            changed_event.is_minimized()
         );
+#endif
         if (!should_include_window(changed_event.window_type()))
             break;
         auto& window = m_window_list.ensure_window(identifier);
@@ -90,7 +111,6 @@ void TaskbarWindow::wm_event(GWMEvent& event)
         window.set_rect(changed_event.rect());
         window.set_active(changed_event.is_active());
         window.set_minimized(changed_event.is_minimized());
-        window.set_icon_path(changed_event.icon_path());
         if (window.is_minimized()) {
             window.button()->set_foreground_color(Color::DarkGray);
             window.button()->set_caption(String::format("[%s]", changed_event.title().characters()));
@@ -98,7 +118,6 @@ void TaskbarWindow::wm_event(GWMEvent& event)
             window.button()->set_foreground_color(Color::Black);
             window.button()->set_caption(changed_event.title());
         }
-        window.button()->set_icon(window.icon());
         window.button()->set_checked(changed_event.is_active());
         break;
     }

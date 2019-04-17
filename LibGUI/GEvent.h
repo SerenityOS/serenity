@@ -31,6 +31,7 @@ public:
         WindowCloseRequest,
         WM_WindowRemoved,
         WM_WindowStateChanged,
+        WM_WindowIconChanged,
     };
 
     GEvent() { }
@@ -69,10 +70,9 @@ public:
 
 class GWMWindowStateChangedEvent : public GWMEvent {
 public:
-    GWMWindowStateChangedEvent(int client_id, int window_id, const String& title, const Rect& rect, bool is_active, GWindowType window_type, bool is_minimized, const String& icon_path)
+    GWMWindowStateChangedEvent(int client_id, int window_id, const String& title, const Rect& rect, bool is_active, GWindowType window_type, bool is_minimized)
         : GWMEvent(GEvent::Type::WM_WindowStateChanged, client_id, window_id)
         , m_title(title)
-        , m_icon_path(icon_path)
         , m_rect(rect)
         , m_window_type(window_type)
         , m_active(is_active)
@@ -85,15 +85,27 @@ public:
     bool is_active() const { return m_active; }
     GWindowType window_type() const { return m_window_type; }
     bool is_minimized() const { return m_minimized; }
-    String icon_path() const { return m_icon_path; }
 
 private:
     String m_title;
-    String m_icon_path;
     Rect m_rect;
     GWindowType m_window_type;
     bool m_active;
     bool m_minimized;
+};
+
+class GWMWindowIconChangedEvent : public GWMEvent {
+public:
+    GWMWindowIconChangedEvent(int client_id, int window_id, const String& icon_path)
+        : GWMEvent(GEvent::Type::WM_WindowIconChanged, client_id, window_id)
+        , m_icon_path(icon_path)
+    {
+    }
+
+    String icon_path() const { return m_icon_path; }
+
+private:
+    String m_icon_path;
 };
 
 class GPaintEvent final : public GEvent {
