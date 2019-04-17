@@ -5,7 +5,11 @@
 #include <stdio.h>
 
 WSCPUMonitor::WSCPUMonitor()
+    : m_proc_all("/proc/all")
 {
+    if (!m_proc_all.open(CIODevice::OpenMode::ReadOnly))
+        ASSERT_NOT_REACHED();
+
     create_thread([] (void* context) -> int {
         auto& monitor = *(WSCPUMonitor*)context;
         for (;;) {
@@ -31,18 +35,12 @@ void WSCPUMonitor::get_cpu_usage(unsigned& busy, unsigned& idle)
     busy = 0;
     idle = 0;
 
-    if (!m_fp)
-        m_fp = fopen("/proc/all", "r");
-    if (!m_fp) {
-        perror("failed to open /proc/all");
-        ASSERT_NOT_REACHED();
-    }
+    m_proc_all.seek(0);
     for (;;) {
-        char buf[BUFSIZ];
-        char* ptr = fgets(buf, sizeof(buf), m_fp);
-        if (!ptr)
+        auto line = m_proc_all.read_line(BUFSIZ);
+        if (line.is_null())
             break;
-        auto parts = String(buf, Chomp).split(',');
+        auto parts = String::from_byte_buffer(line).split(',');
         if (parts.size() < 17)
             break;
         bool ok;
@@ -56,8 +54,6 @@ void WSCPUMonitor::get_cpu_usage(unsigned& busy, unsigned& idle)
         else
             busy += nsched;
     }
-    int rc = fseek(m_fp, 0, SEEK_SET);
-    ASSERT(rc == 0);
 }
 
 void WSCPUMonitor::paint(Painter& painter, const Rect& rect)
