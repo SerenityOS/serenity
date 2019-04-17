@@ -20,6 +20,7 @@ int atoi(const char*);
 long atol(const char*);
 long long atoll(const char*);
 double strtod(const char*, char** endptr);
+float strtof(const char*, char** endptr);
 long strtol(const char*, char** endptr, int base);
 unsigned long strtoul(const char*, char** endptr, int base);
 void qsort(void* base, size_t nmemb, size_t size, int (*compar)(const void*, const void*));
