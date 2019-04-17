@@ -34,6 +34,7 @@ public:
     static void finalize_dying_threads();
 
     static Vector<Thread*> all_threads();
+    static bool is_thread(void*);
 
     int tid() const { return m_tid; }
     int pid() const;
