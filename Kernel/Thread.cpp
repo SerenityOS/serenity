@@ -526,3 +526,13 @@ Vector<Thread*> Thread::all_threads()
         threads.append(thread);
     return threads;
 }
+
+bool Thread::is_thread(void* ptr)
+{
+    ASSERT_INTERRUPTS_DISABLED();
+    for (auto* thread = g_threads->head(); thread; thread = thread->next()) {
+        if (thread == ptr)
+            return true;
+    }
+    return false;
+}

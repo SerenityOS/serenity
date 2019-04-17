@@ -243,11 +243,14 @@ bool Scheduler::pick_next()
 
 bool Scheduler::donate_to(Thread* beneficiary, const char* reason)
 {
+    InterruptDisabler disabler;
+    if (!Thread::is_thread(beneficiary))
+        return false;
+
     (void)reason;
     unsigned ticks_left = current->ticks_left();
-    if (!beneficiary || beneficiary->state() != Thread::Runnable || ticks_left <= 1) {
+    if (!beneficiary || beneficiary->state() != Thread::Runnable || ticks_left <= 1)
         return yield();
-    }
 
     unsigned ticks_to_donate = min(ticks_left - 1, time_slice_for(beneficiary->process().priority()));
 #ifdef SCHEDULER_DEBUG
@@ -256,7 +259,7 @@ bool Scheduler::donate_to(Thread* beneficiary, const char* reason)
     context_switch(*beneficiary);
     beneficiary->set_ticks_left(ticks_to_donate);
     switch_now();
-    return 0;
+    return false;
 }
 
 bool Scheduler::yield()
@@ -266,11 +269,11 @@ bool Scheduler::yield()
 //    dbgprintf("%s(%u:%u) yield()\n", current->process().name().characters(), current->pid(), current->tid());
 
     if (!pick_next())
-        return 1;
+        return false;
 
 //    dbgprintf("yield() jumping to new process: sel=%x, %s(%u:%u)\n", current->far_ptr().selector, current->process().name().characters(), current->pid(), current->tid());
     switch_now();
-    return 0;
+    return true;
 }
 
 void Scheduler::pick_next_and_switch_now()
