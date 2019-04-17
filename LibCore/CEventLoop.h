@@ -65,8 +65,8 @@ private:
         bool should_reload { false };
         WeakPtr<CObject> owner;
 
-        void reload();
-        bool has_expired() const;
+        void reload(const timeval& now);
+        bool has_expired(const timeval& now) const;
     };
 
     static HashMap<int, OwnPtr<EventLoopTimer>>* s_timers;

@@ -170,16 +170,19 @@ void CEventLoop::wait_for_event()
         ASSERT_NOT_REACHED();
     }
 
+    timeval now;
+    gettimeofday(&now, nullptr);
+
     for (auto& it : *s_timers) {
         auto& timer = *it.value;
-        if (!timer.has_expired())
+        if (!timer.has_expired(now))
             continue;
 #ifdef CEVENTLOOP_DEBUG
         dbgprintf("CEventLoop: Timer %d has expired, sending CTimerEvent to %p\n", timer.timer_id, timer.owner);
 #endif
         post_event(*timer.owner, make<CTimerEvent>(timer.timer_id));
         if (timer.should_reload) {
-            timer.reload();
+            timer.reload(now);
         } else {
             // FIXME: Support removing expired timers that don't want to reload.
             ASSERT_NOT_REACHED();
@@ -200,16 +203,14 @@ void CEventLoop::wait_for_event()
     process_file_descriptors_after_select(rfds);
 }
 
-bool CEventLoop::EventLoopTimer::has_expired() const
+bool CEventLoop::EventLoopTimer::has_expired(const timeval& now) const
 {
-    timeval now;
-    gettimeofday(&now, nullptr);
     return now.tv_sec > fire_time.tv_sec || (now.tv_sec == fire_time.tv_sec && now.tv_usec >= fire_time.tv_usec);
 }
 
-void CEventLoop::EventLoopTimer::reload()
+void CEventLoop::EventLoopTimer::reload(const timeval& now)
 {
-    gettimeofday(&fire_time, nullptr);
+    fire_time = now;
     fire_time.tv_sec += interval / 1000;
     fire_time.tv_usec += (interval % 1000) * 1000;
 }
@@ -232,7 +233,9 @@ int CEventLoop::register_timer(CObject& object, int milliseconds, bool should_re
     auto timer = make<EventLoopTimer>();
     timer->owner = object.make_weak_ptr();
     timer->interval = milliseconds;
-    timer->reload();
+    timeval now;
+    gettimeofday(&now, nullptr);
+    timer->reload(now);
     timer->should_reload = should_reload;
     int timer_id = ++s_next_timer_id;  // FIXME: This will eventually wrap around.
     ASSERT(timer_id); // FIXME: Aforementioned wraparound.
