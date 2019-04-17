@@ -43,6 +43,7 @@ String ProcessModel::column_name(int column) const
     case Column::Physical: return "Physical";
     case Column::CPU: return "CPU";
     case Column::Name: return "Name";
+    case Column::Syscalls: return "Syscalls";
     default: ASSERT_NOT_REACHED();
     }
 }
@@ -59,6 +60,7 @@ GModel::ColumnMetadata ProcessModel::column_metadata(int column) const
     case Column::Physical: return { 65, TextAlignment::CenterRight };
     case Column::CPU: return { 25, TextAlignment::CenterRight };
     case Column::Name: return { 140, TextAlignment::CenterLeft };
+    case Column::Syscalls: return { 60, TextAlignment::CenterRight };
     default: ASSERT_NOT_REACHED();
     }
 }
@@ -94,6 +96,8 @@ GVariant ProcessModel::data(const GModelIndex& index, Role role) const
         case Column::Physical: return (int)process.current_state.physical;
         case Column::CPU: return process.current_state.cpu_percent;
         case Column::Name: return process.current_state.name;
+        // FIXME: GVariant with unsigned?
+        case Column::Syscalls: return (int)process.current_state.syscalls;
         }
         ASSERT_NOT_REACHED();
         return { };
@@ -117,6 +121,8 @@ GVariant ProcessModel::data(const GModelIndex& index, Role role) const
         case Column::Physical: return pretty_byte_size(process.current_state.physical);
         case Column::CPU: return process.current_state.cpu_percent;
         case Column::Name: return process.current_state.name;
+        // FIXME: It's weird that GVariant doesn't support unsigned ints. Should it?
+        case Column::Syscalls: return (int)process.current_state.syscalls;
         }
     }
 
@@ -143,7 +149,7 @@ void ProcessModel::update()
         if (line.is_empty())
             break;
         auto parts = String((const char*)line.pointer(), line.size() - 1, Chomp).split(',');
-        if (parts.size() < 17)
+        if (parts.size() < 18)
             break;
         bool ok;
         pid_t pid = parts[0].to_uint(ok);
@@ -163,6 +169,8 @@ void ProcessModel::update()
                 state.user = String::format("%u", uid);
         }
         state.priority = parts[16];
+        state.syscalls = parts[17].to_uint(ok);
+        ASSERT(ok);
         state.state = parts[7];
         state.name = parts[11];
         state.linear = parts[12].to_uint(ok);

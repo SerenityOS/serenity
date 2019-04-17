@@ -18,6 +18,7 @@ public:
         PID,
         Linear,
         Physical,
+        Syscalls,
         __Count
     };
 
@@ -43,6 +44,7 @@ private:
         String priority;
         size_t linear;
         size_t physical;
+        unsigned syscalls;
         float cpu_percent;
     };
 
