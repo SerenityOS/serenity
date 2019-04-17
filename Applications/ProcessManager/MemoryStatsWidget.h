@@ -1,6 +1,7 @@
 #pragma once
 
 #include <LibGUI/GWidget.h>
+#include <LibCore/CFile.h>
 
 class GLabel;
 
@@ -19,4 +20,5 @@ private:
     GLabel* m_supervisor_physical_pages_label { nullptr };
     GLabel* m_kmalloc_label { nullptr };
     GLabel* m_kmalloc_count_label { nullptr };
+    CFile m_proc_memstat;
 };
