@@ -174,7 +174,9 @@ void GEventLoop::handle_wm_event(const WSAPI_ServerMessage& event, GWindow& wind
     dbgprintf("GEventLoop: handle_wm_event: %d\n", (int)event.type);
 #endif
     if (event.type == WSAPI_ServerMessage::WM_WindowStateChanged)
-        return post_event(window, make<GWMWindowStateChangedEvent>(event.wm.client_id, event.wm.window_id, String(event.text, event.text_length), event.wm.rect, event.wm.is_active, (GWindowType)event.wm.window_type, event.wm.is_minimized, String(event.wm.icon_path, event.wm.icon_path_length)));
+        return post_event(window, make<GWMWindowStateChangedEvent>(event.wm.client_id, event.wm.window_id, String(event.text, event.text_length), event.wm.rect, event.wm.is_active, (GWindowType)event.wm.window_type, event.wm.is_minimized));
+    if (event.type == WSAPI_ServerMessage::WM_WindowIconChanged)
+        return post_event(window, make<GWMWindowIconChangedEvent>(event.wm.client_id, event.wm.window_id, String(event.text, event.text_length)));
     if (event.type == WSAPI_ServerMessage::WM_WindowRemoved)
         return post_event(window, make<GWMWindowRemovedEvent>(event.wm.client_id, event.wm.window_id));
     ASSERT_NOT_REACHED();
@@ -277,6 +279,7 @@ void GEventLoop::process_unprocessed_messages()
             break;
         case WSAPI_ServerMessage::Type::WM_WindowRemoved:
         case WSAPI_ServerMessage::Type::WM_WindowStateChanged:
+        case WSAPI_ServerMessage::Type::WM_WindowIconChanged:
             handle_wm_event(event, *window);
             break;
         default:

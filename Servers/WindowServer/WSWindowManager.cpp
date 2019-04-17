@@ -318,13 +318,22 @@ void WSWindowManager::remove_window(WSWindow& window)
 void WSWindowManager::tell_wm_listener_about_window(WSWindow& listener, WSWindow& window)
 {
     if (window.client())
-        WSEventLoop::the().post_event(listener, make<WSWMWindowStateChangedEvent>(window.client()->client_id(), window.window_id(), window.title(), window.rect(), window.is_active(), window.type(), window.is_minimized(), window.icon_path()));
+        WSEventLoop::the().post_event(listener, make<WSWMWindowStateChangedEvent>(window.client()->client_id(), window.window_id(), window.title(), window.rect(), window.is_active(), window.type(), window.is_minimized()));
 }
 
 void WSWindowManager::tell_wm_listeners_window_state_changed(WSWindow& window)
 {
     for_each_window_listening_to_wm_events([&] (WSWindow& listener) {
         tell_wm_listener_about_window(listener, window);
+        return IterationDecision::Continue;
+    });
+}
+
+void WSWindowManager::tell_wm_listeners_window_icon_changed(WSWindow& window)
+{
+    for_each_window_listening_to_wm_events([&] (WSWindow& listener) {
+        if (window.client())
+            WSEventLoop::the().post_event(listener, make<WSWMWindowIconChangedEvent>(window.client()->client_id(), window.window_id(), window.icon_path()));
         return IterationDecision::Continue;
     });
 }

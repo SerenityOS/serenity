@@ -29,6 +29,7 @@ public:
 
         WM_WindowRemoved,
         WM_WindowStateChanged,
+        WM_WindowIconChanged,
 
         __Begin_API_Client_Requests,
         APICreateMenubarRequest,
@@ -712,10 +713,9 @@ public:
 
 class WSWMWindowStateChangedEvent : public WSWMEvent {
 public:
-    WSWMWindowStateChangedEvent(int client_id, int window_id, const String& title, const Rect& rect, bool is_active, WSWindowType window_type, bool is_minimized, const String& icon_path)
+    WSWMWindowStateChangedEvent(int client_id, int window_id, const String& title, const Rect& rect, bool is_active, WSWindowType window_type, bool is_minimized)
         : WSWMEvent(WSEvent::WM_WindowStateChanged, client_id, window_id)
         , m_title(title)
-        , m_icon_path(icon_path)
         , m_rect(rect)
         , m_active(is_active)
         , m_window_type(window_type)
@@ -724,7 +724,6 @@ public:
     }
 
     String title() const { return m_title; }
-    String icon_path() const { return m_icon_path; }
     Rect rect() const { return m_rect; }
     bool is_active() const { return m_active; }
     WSWindowType window_type() const { return m_window_type; }
@@ -732,9 +731,22 @@ public:
 
 private:
     String m_title;
-    String m_icon_path;
     Rect m_rect;
     bool m_active;
     WSWindowType m_window_type;
     bool m_minimized;
+};
+
+class WSWMWindowIconChangedEvent : public WSWMEvent {
+public:
+    WSWMWindowIconChangedEvent(int client_id, int window_id, const String& icon_path)
+        : WSWMEvent(WSEvent::WM_WindowIconChanged, client_id, window_id)
+        , m_icon_path(icon_path)
+    {
+    }
+
+    String icon_path() const { return m_icon_path; }
+
+private:
+    String m_icon_path;
 };

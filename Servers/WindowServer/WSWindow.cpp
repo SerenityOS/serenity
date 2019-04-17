@@ -196,9 +196,17 @@ void WSWindow::event(CEvent& event)
         memcpy(server_message.text, changed_event.title().characters(), changed_event.title().length());
         server_message.text_length = changed_event.title().length();
         server_message.wm.rect = changed_event.rect();
-        ASSERT(changed_event.icon_path().length() < sizeof(server_message.wm.icon_path));
-        memcpy(server_message.wm.icon_path, changed_event.icon_path().characters(), changed_event.icon_path().length());
-        server_message.wm.icon_path_length = changed_event.icon_path().length();
+        break;
+    }
+
+    case WSEvent::WM_WindowIconChanged: {
+        auto& changed_event = static_cast<const WSWMWindowIconChangedEvent&>(event);
+        server_message.type = WSAPI_ServerMessage::Type::WM_WindowIconChanged;
+        server_message.wm.client_id = changed_event.client_id();
+        server_message.wm.window_id = changed_event.window_id();
+        ASSERT(changed_event.icon_path().length() < sizeof(server_message.text));
+        memcpy(server_message.text, changed_event.icon_path().characters(), changed_event.icon_path().length());
+        server_message.text_length = changed_event.icon_path().length();
         break;
     }
 
