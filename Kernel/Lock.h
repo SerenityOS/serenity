@@ -113,7 +113,6 @@ inline bool Lock::unlock_if_locked()
             m_lock = 0;
             return true;
         }
-        Scheduler::donate_to(m_holder, m_name);
     }
 }
 
