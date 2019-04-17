@@ -8,7 +8,10 @@
 
 MemoryStatsWidget::MemoryStatsWidget(GWidget* parent)
     : GWidget(parent)
+    , m_proc_memstat("/proc/memstat")
 {
+    if (!m_proc_memstat.open(CIODevice::OpenMode::ReadOnly))
+        ASSERT_NOT_REACHED();
     set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     set_preferred_size({ 0, 72 });
 
@@ -54,18 +57,13 @@ static inline size_t bytes_to_kb(size_t bytes)
 
 void MemoryStatsWidget::refresh()
 {
-    FILE* fp = fopen("/proc/memstat", "r");
-    if (!fp) {
-        perror("failed to open /proc/memstat");
-        exit(1);
-    }
+    m_proc_memstat.seek(0);
 
     for (;;) {
-        char buf[BUFSIZ];
-        char* ptr = fgets(buf, sizeof(buf), fp);
-        if (!ptr)
+        auto line = m_proc_memstat.read_line(BUFSIZ);
+        if (line.is_null())
             break;
-        auto parts = String(buf, Chomp).split(',');
+        auto parts = String::from_byte_buffer(line, Chomp).split(',');
         if (parts.size() < 9)
             break;
         bool ok;
@@ -99,8 +97,6 @@ void MemoryStatsWidget::refresh()
         m_kmalloc_count_label->set_text(String::format("%u/%u (+%u)", kmalloc_call_count, kfree_call_count, kmalloc_call_count - kfree_call_count));
         break;
     }
-
-    fclose(fp);
 }
 
 void MemoryStatsWidget::timer_event(CTimerEvent&)
