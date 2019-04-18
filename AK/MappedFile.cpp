@@ -13,7 +13,7 @@ MappedFile::MappedFile(const String& file_name)
     : m_file_name(file_name)
 {
     m_size = PAGE_SIZE;
-    m_fd = open(m_file_name.characters(), O_RDONLY);
+    m_fd = open(m_file_name.characters(), O_RDONLY | O_CLOEXEC);
     
     if (m_fd != -1) {
         struct stat st;
