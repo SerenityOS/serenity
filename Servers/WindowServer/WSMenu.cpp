@@ -59,6 +59,7 @@ void WSMenu::redraw()
 
 WSWindow& WSMenu::ensure_menu_window()
 {
+    int width = this->width();
     if (!m_menu_window) {
         Point next_item_location(frame_thickness(), frame_thickness());
         for (auto& item : m_items) {
@@ -66,14 +67,14 @@ WSWindow& WSMenu::ensure_menu_window()
             if (item->type() == WSMenuItem::Text)
                 height = item_height();
             else if (item->type() == WSMenuItem::Separator)
-                height = 7;
-            item->set_rect({ next_item_location, { width() - frame_thickness() * 2, height } });
+                height = 8;
+            item->set_rect({ next_item_location, { width - frame_thickness() * 2, height } });
             next_item_location.move_by(0, height);
         }
 
         auto window = make<WSWindow>(*this, WSWindowType::Menu);
         window->set_opacity(0.95f);
-        window->set_rect(0, 0, width(), height());
+        window->set_rect(0, 0, width, height());
         m_menu_window = move(window);
         draw();
     }
@@ -89,6 +90,7 @@ void WSMenu::draw()
     Rect rect { { }, menu_window()->size() };
     painter.fill_rect(rect.shrunken(4, 4), Color::LightGray);
     StylePainter::paint_menu_frame(painter, rect);
+    int width = this->width();
 
     for (auto& item : m_items) {
         if (item->type() == WSMenuItem::Text) {
@@ -104,9 +106,10 @@ void WSMenu::draw()
                 painter.draw_text(item->rect().translated(-right_padding(), 0), item->shortcut_text(), TextAlignment::CenterRight, text_color);
             }
         } else if (item->type() == WSMenuItem::Separator) {
-            Point p1(1, item->rect().center().y());
-            Point p2(width() - 2, item->rect().center().y());
+            Point p1(4, item->rect().center().y());
+            Point p2(width - 5, item->rect().center().y());
             painter.draw_line(p1, p2, Color::MidGray);
+            painter.draw_line(p1.translated(0, 1), p2.translated(0, 1), Color::White);
         }
     }
 }
