@@ -13,10 +13,9 @@ public:
 
     pid_t selected_pid() const;
 
-protected:
-    virtual void model_notification(const GModelNotification&) override;
+    void refresh();
 
 private:
-    virtual void timer_event(CTimerEvent&) override;
+    virtual void model_notification(const GModelNotification&) override;
 };
 
