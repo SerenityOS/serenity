@@ -62,7 +62,8 @@ void MemoryStatsWidget::refresh()
         auto line = m_proc_memstat.read_line(BUFSIZ);
         if (line.is_null())
             break;
-        auto parts = String::from_byte_buffer(line, Chomp).split(',');
+        auto chomped = String((const char*)line.pointer(), line.size() - 1, Chomp);
+        auto parts = chomped.split_view(',');
         if (parts.size() < 9)
             break;
         bool ok;
@@ -94,7 +95,6 @@ void MemoryStatsWidget::refresh()
         m_user_physical_pages_label->set_text(String::format("%uK/%uK", page_count_to_kb(user_pages_alloc), page_count_to_kb(user_pages_available)));
         m_supervisor_physical_pages_label->set_text(String::format("%uK/%uK", page_count_to_kb(supervisor_pages_alloc), page_count_to_kb(supervisor_pages_available)));
         m_kmalloc_count_label->set_text(String::format("%u/%u (+%u)", kmalloc_call_count, kfree_call_count, kmalloc_call_count - kfree_call_count));
-        break;
     }
 }
 
