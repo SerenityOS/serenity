@@ -16,6 +16,8 @@ public:
     int step() const { return m_step; }
     int big_step() const { return m_big_step; }
 
+    void set_min(int min) { set_range(min, max()); }
+    void set_max(int max) { set_range(min(), max); }
     void set_range(int min, int max);
     void set_value(int value);
     void set_step(int step) { m_step = step; }

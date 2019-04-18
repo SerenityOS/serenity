@@ -7,6 +7,7 @@
 
 class GWidget;
 class VBProperty;
+class VBWidget;
 
 class VBWidgetRegistry {
 public:
@@ -16,5 +17,5 @@ public:
             callback((VBWidgetType)i);
     }
 
-    static GWidget* build_gwidget(VBWidgetType, GWidget* parent, Vector<OwnPtr<VBProperty>>&);
+    static GWidget* build_gwidget(VBWidget&, VBWidgetType, GWidget* parent, Vector<OwnPtr<VBProperty>>&);
 };

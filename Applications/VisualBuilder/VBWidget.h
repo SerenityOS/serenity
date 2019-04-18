@@ -9,6 +9,7 @@
 #include "VBWidgetType.h"
 
 class GPainter;
+class GVariant;
 class GWidget;
 class VBForm;
 class VBProperty;
@@ -50,10 +51,15 @@ public:
 
     VBWidgetPropertyModel& property_model() { return *m_property_model; }
 
+    void setup_properties();
     void synchronize_properties();
+
+    void property_did_change();
 
 private:
     VBWidget(VBWidgetType, VBForm&);
+
+    void add_property(const String& name, Function<GVariant(const GWidget&)>&& getter, Function<void(GWidget&, const GVariant&)>&& setter);
 
     VBWidgetType m_type { VBWidgetType::None };
     VBForm& m_form;

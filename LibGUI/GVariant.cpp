@@ -101,6 +101,17 @@ GVariant& GVariant::operator=(const GVariant& other)
     return *this;
 }
 
+GVariant& GVariant::operator=(GVariant&& other)
+{
+    if (&other == this)
+        return *this;
+    // FIXME: Move, not copy!
+    clear();
+    copy_from(other);
+    other.clear();
+    return *this;
+}
+
 GVariant::GVariant(const GVariant& other)
 {
     copy_from(other);

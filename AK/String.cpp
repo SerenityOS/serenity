@@ -131,6 +131,14 @@ String String::from_byte_buffer(const ByteBuffer& buffer, ShouldChomp should_cho
     return String((const char*)buffer.pointer(), buffer.size(), should_chomp);
 }
 
+// FIXME: Duh.
+int String::to_int(bool& ok) const
+{
+    unsigned value = to_uint(ok);
+    ASSERT(ok);
+    return (int)value;
+}
+
 unsigned String::to_uint(bool& ok) const
 {
     unsigned value = 0;
