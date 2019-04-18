@@ -4,8 +4,9 @@
 #include <AK/Assertions.h>
 #include <stdio.h>
 
-CObject::CObject(CObject* parent)
+CObject::CObject(CObject* parent, bool is_widget)
     : m_parent(parent)
+    , m_widget(is_widget)
 {
     if (m_parent)
         m_parent->add_child(*this);
@@ -43,7 +44,7 @@ void CObject::event(CEvent& event)
 void CObject::add_child(CObject& object)
 {
     m_children.append(&object);
-    CEventLoop::current().post_event(*this, make<CChildEvent>(CEvent::ChildAdded, object));
+    event(*make<CChildEvent>(CEvent::ChildAdded, object));
 }
 
 void CObject::remove_child(CObject& object)
@@ -51,7 +52,7 @@ void CObject::remove_child(CObject& object)
     for (ssize_t i = 0; i < m_children.size(); ++i) {
         if (m_children[i] == &object) {
             m_children.remove(i);
-            CEventLoop::current().post_event(*this, make<CChildEvent>(CEvent::ChildRemoved, object));
+            event(*make<CChildEvent>(CEvent::ChildRemoved, object));
             return;
         }
     }

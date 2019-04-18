@@ -10,7 +10,7 @@ class CTimerEvent;
 
 class CObject : public Weakable<CObject> {
 public:
-    CObject(CObject* parent = nullptr);
+    CObject(CObject* parent = nullptr, bool is_widget = false);
     virtual ~CObject();
 
     virtual const char* class_name() const { return "CObject"; }
@@ -36,7 +36,7 @@ public:
 
     void deferred_invoke(Function<void(CObject&)>);
 
-    virtual bool is_widget() const { return false; }
+    bool is_widget() const { return m_widget; }
     virtual bool is_window() const { return false; }
 
 protected:
@@ -46,5 +46,6 @@ protected:
 private:
     CObject* m_parent { nullptr };
     int m_timer_id { 0 };
+    bool m_widget { false };
     Vector<CObject*> m_children;
 };

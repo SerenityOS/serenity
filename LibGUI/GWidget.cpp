@@ -11,7 +11,7 @@
 #include <unistd.h>
 
 GWidget::GWidget(GWidget* parent)
-    : CObject(parent)
+    : CObject(parent, true)
 {
     set_font(nullptr);
     m_background_color = Color::LightGray;
@@ -143,7 +143,7 @@ void GWidget::do_layout()
 
 void GWidget::notify_layout_changed(Badge<GLayout>)
 {
-    do_layout();
+    invalidate_layout();
 }
 
 void GWidget::handle_resize_event(GResizeEvent& event)
@@ -395,13 +395,19 @@ void GWidget::set_size_policy(SizePolicy horizontal_policy, SizePolicy vertical_
 
 void GWidget::invalidate_layout()
 {
-    auto* w = window();
-    if (!w)
+    if (m_layout_dirty)
         return;
-    if (!w->main_widget())
-        return;
-    do_layout();
-    w->main_widget()->do_layout();
+    m_layout_dirty = true;
+    deferred_invoke([this] (auto&) {
+        m_layout_dirty = false;
+        auto* w = window();
+        if (!w)
+            return;
+        if (!w->main_widget())
+            return;
+        do_layout();
+        w->main_widget()->do_layout();
+    });
 }
 
 void GWidget::set_visible(bool visible)
