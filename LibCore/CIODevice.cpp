@@ -182,5 +182,6 @@ bool CIODevice::seek(signed_qword offset)
         return false;
     }
     m_buffered_data.clear();
+    m_eof = false;
     return true;
 }
