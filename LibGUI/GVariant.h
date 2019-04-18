@@ -22,7 +22,7 @@ public:
     GVariant& operator=(const GVariant&);
 
     GVariant(GVariant&&) = delete;
-    GVariant& operator=(GVariant&&) = delete;
+    GVariant& operator=(GVariant&&);
 
     void clear();
     ~GVariant();
@@ -91,6 +91,13 @@ public:
             return as_bool() ? 1 : 0;
         if (is_float())
             return (int)as_float();
+        if (is_string()) {
+            bool ok;
+            int value = as_string().to_int(ok);
+            if (!ok)
+                return 0;
+            return value;
+        }
         return 0;
     }
 
