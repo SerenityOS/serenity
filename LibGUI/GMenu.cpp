@@ -29,7 +29,7 @@ GMenu::~GMenu()
     unrealize_menu();
 }
 
-void GMenu::add_action(Retained<GAction>&& action)
+void GMenu::add_action(Retained<GAction> action)
 {
     m_items.append(make<GMenuItem>(m_menu_id, move(action)));
 }

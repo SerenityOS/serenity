@@ -1,9 +1,11 @@
- #include <LibGUI/GTextEditor.h>
+#include <LibGUI/GTextEditor.h>
 #include <LibGUI/GScrollBar.h>
 #include <LibGUI/GFontDatabase.h>
 #include <LibGUI/GClipboard.h>
 #include <LibGUI/GPainter.h>
 #include <LibGUI/GWindow.h>
+#include <LibGUI/GMenu.h>
+#include <LibGUI/GAction.h>
 #include <Kernel/KeyCode.h>
 #include <AK/StringBuilder.h>
 #include <unistd.h>
@@ -22,10 +24,38 @@ GTextEditor::GTextEditor(Type type, GWidget* parent)
     set_font(GFontDatabase::the().get_by_name("Csilla Thin"));
     m_lines.append(make<Line>());
     m_cursor = { 0, 0 };
+    create_actions();
 }
 
 GTextEditor::~GTextEditor()
 {
+}
+
+void GTextEditor::create_actions()
+{
+    m_undo_action = GAction::create("Undo", { Mod_Ctrl, Key_Z }, GraphicsBitmap::load_from_file("/res/icons/16x16/undo.png"), [&] (const GAction&) {
+        // FIXME: Undo
+    });
+
+    m_redo_action = GAction::create("Redo", { Mod_Ctrl, Key_Y }, GraphicsBitmap::load_from_file("/res/icons/16x16/redo.png"), [&] (const GAction&) {
+        // FIXME: Redo
+    });
+
+    m_cut_action = GAction::create("Cut", { Mod_Ctrl, Key_X }, GraphicsBitmap::load_from_file("/res/icons/cut16.png"), [&] (const GAction&) {
+        cut();
+    });
+
+    m_copy_action = GAction::create("Copy", { Mod_Ctrl, Key_C }, GraphicsBitmap::load_from_file("/res/icons/16x16/edit-copy.png"), [&] (const GAction&) {
+        copy();
+    });
+
+    m_paste_action = GAction::create("Paste", { Mod_Ctrl, Key_V }, GraphicsBitmap::load_from_file("/res/icons/paste16.png"), [&] (const GAction&) {
+        paste();
+    });
+
+    m_delete_action = GAction::create("Delete", { 0, Key_Delete }, GraphicsBitmap::load_from_file("/res/icons/16x16/delete.png"), [&] (const GAction&) {
+        do_delete();
+    });
 }
 
 void GTextEditor::set_text(const String& text)
@@ -865,6 +895,23 @@ void GTextEditor::did_change()
 
 void GTextEditor::did_update_selection()
 {
+    m_cut_action->set_enabled(has_selection());
+    m_copy_action->set_enabled(has_selection());
     if (on_selection_change)
         on_selection_change();
+}
+
+void GTextEditor::context_menu_event(GContextMenuEvent& event)
+{
+    if (!m_context_menu) {
+        m_context_menu = make<GMenu>("GTextEditor context menu");
+        m_context_menu->add_action(undo_action());
+        m_context_menu->add_action(redo_action());
+        m_context_menu->add_separator();
+        m_context_menu->add_action(cut_action());
+        m_context_menu->add_action(copy_action());
+        m_context_menu->add_action(paste_action());
+        m_context_menu->add_action(delete_action());
+    }
+    m_context_menu->popup(event.screen_position());
 }
