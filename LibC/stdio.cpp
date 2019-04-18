@@ -44,7 +44,7 @@ void __stdio_init()
     init_FILE(*stdin, 0, isatty(0) ? _IOLBF : _IOFBF);
     init_FILE(*stdout, 1, isatty(1) ? _IOLBF : _IOFBF);
     init_FILE(*stderr, 2, _IONBF);
-    int fd = open("/dev/debuglog", O_WRONLY);
+    int fd = open("/dev/debuglog", O_WRONLY | O_CLOEXEC);
     if (fd < 0) {
         perror("open /dev/debuglog");
         ASSERT_NOT_REACHED();
