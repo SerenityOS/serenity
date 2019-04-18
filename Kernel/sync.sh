@@ -25,6 +25,7 @@ mknod mnt/dev/random c 1 8
 mknod mnt/dev/null c 1 3
 mknod mnt/dev/zero c 1 5
 mknod mnt/dev/full c 1 7
+mknod -m 666 mnt/dev/debuglog c 1 18
 mknod mnt/dev/keyboard c 85 1
 mknod mnt/dev/psaux c 10 1
 mknod -m 666 mnt/dev/ptmx c 5 2

@@ -24,6 +24,7 @@
 #include <Kernel/Devices/BXVGADevice.h>
 #include <Kernel/Net/E1000NetworkAdapter.h>
 #include <Kernel/Net/NetworkTask.h>
+#include <Kernel/Devices/DebugLogDevice.h>
 
 #define SPAWN_TERMINAL
 //#define SPAWN_LAUNCHER
@@ -42,6 +43,7 @@ VirtualConsole* tty2;
 VirtualConsole* tty3;
 KeyboardDevice* keyboard;
 PS2MouseDevice* ps2mouse;
+DebugLogDevice* dev_debuglog;
 NullDevice* dev_null;
 VFS* vfs;
 
@@ -151,6 +153,7 @@ extern "C" [[noreturn]] void init()
     init_ksyms();
 
     vfs = new VFS;
+    dev_debuglog = new DebugLogDevice;
 
     auto console = make<Console>();
 
