@@ -13,10 +13,11 @@
 
 extern "C" {
 
-static FILE __default_streams[3];
+static FILE __default_streams[4];
 FILE* stdin;
 FILE* stdout;
 FILE* stderr;
+FILE* stddbg;
 
 void init_FILE(FILE& fp, int fd, int mode)
 {
@@ -39,9 +40,16 @@ void __stdio_init()
     stdin = &__default_streams[0];
     stdout = &__default_streams[1];
     stderr = &__default_streams[2];
+    stddbg = &__default_streams[3];
     init_FILE(*stdin, 0, isatty(0) ? _IOLBF : _IOFBF);
     init_FILE(*stdout, 1, isatty(1) ? _IOLBF : _IOFBF);
     init_FILE(*stderr, 2, _IONBF);
+    int fd = open("/dev/debuglog", O_WRONLY);
+    if (fd < 0) {
+        perror("open /dev/debuglog");
+        ASSERT_NOT_REACHED();
+    }
+    init_FILE(*stddbg, fd, _IOLBF);
 }
 
 int setvbuf(FILE* stream, char* buf, int mode, size_t size)
@@ -263,16 +271,11 @@ void rewind(FILE* stream)
     fseek(stream, 0, SEEK_SET);
 }
 
-static void sys_putch(char*&, char ch)
-{
-    syscall(SC_putch, ch);
-}
-
 int dbgprintf(const char* fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
-    int ret = printf_internal(sys_putch, nullptr, fmt, ap);
+    int ret = vfprintf(stddbg, fmt, ap);
     va_end(ap);
     return ret;
 }

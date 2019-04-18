@@ -40,6 +40,7 @@ typedef struct __STDIO_FILE FILE;
 extern FILE* stdin;
 extern FILE* stdout;
 extern FILE* stderr;
+extern FILE* stddbg;
 
 typedef size_t fpos_t;
 
