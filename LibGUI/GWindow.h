@@ -120,7 +120,7 @@ private:
     int m_window_id { 0 };
     float m_opacity_when_windowless { 1.0f };
     GWidget* m_main_widget { nullptr };
-    GWidget* m_focused_widget { nullptr };
+    WeakPtr<GWidget> m_focused_widget;
     WeakPtr<GWidget> m_global_cursor_tracking_widget;
     WeakPtr<GWidget> m_automatic_cursor_tracking_widget;
     WeakPtr<GWidget> m_hovered_widget;

@@ -337,7 +337,7 @@ void GWindow::set_focused_widget(GWidget* widget)
         GEventLoop::current().post_event(*m_focused_widget, make<GEvent>(GEvent::FocusOut));
         m_focused_widget->update();
     }
-    m_focused_widget = widget;
+    m_focused_widget = widget ? widget->make_weak_ptr() : nullptr;
     if (m_focused_widget) {
         GEventLoop::current().post_event(*m_focused_widget, make<GEvent>(GEvent::FocusIn));
         m_focused_widget->update();
