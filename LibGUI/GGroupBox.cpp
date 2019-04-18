@@ -29,3 +29,11 @@ void GGroupBox::paint_event(GPaintEvent& event)
     painter.fill_rect(text_rect, background_color());
     painter.draw_text(text_rect, m_name, TextAlignment::Center, foreground_color());
 }
+
+void GGroupBox::set_name(const String& name)
+{
+    if (m_name == name)
+        return;
+    m_name = name;
+    update();
+}
