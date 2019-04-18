@@ -37,7 +37,6 @@ MemoryStatsWidget::MemoryStatsWidget(GWidget* parent)
     m_kmalloc_label = build_widgets_for_label("Kernel heap:");
     m_kmalloc_count_label = build_widgets_for_label("Calls kmalloc/kfree:");
 
-    start_timer(1000);
     refresh();
 }
 

@@ -1,3 +1,4 @@
+#include <LibCore/CTimer.h>
 #include <LibGUI/GWindow.h>
 #include <LibGUI/GWidget.h>
 #include <LibGUI/GBoxLayout.h>
@@ -20,8 +21,12 @@ int main(int argc, char** argv)
 
     auto* toolbar = new GToolBar(widget);
     auto* process_table_view = new ProcessTableView(widget);
+    auto* memory_stats_widget = new MemoryStatsWidget(widget);
 
-    new MemoryStatsWidget(widget);
+    auto* refresh_timer = new CTimer(1000, [&] {
+        process_table_view->refresh();
+        memory_stats_widget->refresh();
+    });
 
     auto kill_action = GAction::create("Kill process", GraphicsBitmap::load_from_file("/res/icons/kill16.png"), [process_table_view] (const GAction&) {
         pid_t pid = process_table_view->selected_pid();
@@ -58,6 +63,21 @@ int main(int argc, char** argv)
     process_menu->add_action(stop_action.copy_ref());
     process_menu->add_action(continue_action.copy_ref());
     menubar->add_menu(move(process_menu));
+
+    auto frequency_menu = make<GMenu>("Frequency");
+    frequency_menu->add_action(GAction::create("0.5 sec", [refresh_timer] (auto&) {
+        refresh_timer->restart(500);
+    }));
+    frequency_menu->add_action(GAction::create("1 sec", [refresh_timer] (auto&) {
+        refresh_timer->restart(1000);
+    }));
+    frequency_menu->add_action(GAction::create("3 sec", [refresh_timer] (auto&) {
+        refresh_timer->restart(3000);
+    }));
+    frequency_menu->add_action(GAction::create("5 sec", [refresh_timer] (auto&) {
+        refresh_timer->restart(5000);
+    }));
+    menubar->add_menu(move(frequency_menu));
 
     auto help_menu = make<GMenu>("Help");
     help_menu->add_action(GAction::create("About", [] (const GAction&) {
