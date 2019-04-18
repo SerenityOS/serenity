@@ -29,10 +29,13 @@ public:
 
 protected:
     virtual void model_notification(const GModelNotification&);
+    virtual void did_scroll() override;
+    void update_edit_widget_position();
 
     bool m_editable { false };
     GModelIndex m_edit_index;
     GTextBox* m_edit_widget { nullptr };
+    Rect m_edit_widget_content_rect;
 
 private:
     RetainPtr<GModel> m_model;

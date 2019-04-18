@@ -39,6 +39,7 @@ public:
 protected:
     explicit GScrollableWidget(GWidget* parent);
     virtual void resize_event(GResizeEvent&) override;
+    virtual void did_scroll() { }
     void set_content_size(const Size&);
     void set_size_occupied_by_fixed_elements(const Size&);
 
