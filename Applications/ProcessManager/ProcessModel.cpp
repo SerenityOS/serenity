@@ -148,7 +148,8 @@ void ProcessModel::update()
         auto line = file.read_line(1024);
         if (line.is_empty())
             break;
-        auto parts = String((const char*)line.pointer(), line.size() - 1, Chomp).split(',');
+        auto chomped = String((const char*)line.pointer(), line.size() - 1, Chomp);
+        auto parts = chomped.split_view(',');
         if (parts.size() < 18)
             break;
         bool ok;
