@@ -200,6 +200,7 @@ private:
     bool m_visible { true };
     bool m_greedy_for_hits { false };
     bool m_enabled { true };
+    bool m_layout_dirty { false };
 
     CElapsedTimer m_click_clock;
 };
