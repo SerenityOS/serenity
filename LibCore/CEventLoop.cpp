@@ -171,7 +171,8 @@ void CEventLoop::wait_for_event()
     }
 
     timeval now;
-    gettimeofday(&now, nullptr);
+    if (!s_timers->is_empty())
+        gettimeofday(&now, nullptr);
 
     for (auto& it : *s_timers) {
         auto& timer = *it.value;
