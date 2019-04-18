@@ -138,6 +138,7 @@ private:
     void flip_buffers();
     void tick_clock();
     void tell_wm_listener_about_window(WSWindow& listener, WSWindow&);
+    void tell_wm_listener_about_window_icon(WSWindow& listener, WSWindow&);
     void pick_new_active_window();
 
     WSScreen& m_screen;

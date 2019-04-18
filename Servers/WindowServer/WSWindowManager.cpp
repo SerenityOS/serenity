@@ -273,8 +273,10 @@ void WSWindowManager::add_window(WSWindow& window)
 
     if (window.listens_to_wm_events()) {
         for_each_window([&] (WSWindow& other_window) {
-            if (&window != &other_window)
+            if (&window != &other_window) {
                 tell_wm_listener_about_window(window, other_window);
+                tell_wm_listener_about_window_icon(window, other_window);
+            }
             return IterationDecision::Continue;
         });
     }
@@ -321,6 +323,12 @@ void WSWindowManager::tell_wm_listener_about_window(WSWindow& listener, WSWindow
         WSEventLoop::the().post_event(listener, make<WSWMWindowStateChangedEvent>(window.client()->client_id(), window.window_id(), window.title(), window.rect(), window.is_active(), window.type(), window.is_minimized()));
 }
 
+void WSWindowManager::tell_wm_listener_about_window_icon(WSWindow& listener, WSWindow& window)
+{
+    if (window.client())
+        WSEventLoop::the().post_event(listener, make<WSWMWindowIconChangedEvent>(window.client()->client_id(), window.window_id(), window.icon_path()));
+}
+
 void WSWindowManager::tell_wm_listeners_window_state_changed(WSWindow& window)
 {
     for_each_window_listening_to_wm_events([&] (WSWindow& listener) {
@@ -332,8 +340,7 @@ void WSWindowManager::tell_wm_listeners_window_state_changed(WSWindow& window)
 void WSWindowManager::tell_wm_listeners_window_icon_changed(WSWindow& window)
 {
     for_each_window_listening_to_wm_events([&] (WSWindow& listener) {
-        if (window.client())
-            WSEventLoop::the().post_event(listener, make<WSWMWindowIconChangedEvent>(window.client()->client_id(), window.window_id(), window.icon_path()));
+        tell_wm_listener_about_window_icon(listener, window);
         return IterationDecision::Continue;
     });
 }
