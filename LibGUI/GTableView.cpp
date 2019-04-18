@@ -39,7 +39,7 @@ void GTableView::did_update_model()
     update();
 }
 
-Rect GTableView::cell_content_rect(int row, int column) const
+Rect GTableView::content_rect(int row, int column) const
 {
     auto row_rect = this->row_rect(row);
     int x = 0;
@@ -49,9 +49,9 @@ Rect GTableView::cell_content_rect(int row, int column) const
     return { horizontal_padding() + row_rect.x() + x, row_rect.y(), column_width(column), item_height() };
 }
 
-Rect GTableView::cell_content_rect(const GModelIndex& index) const
+Rect GTableView::content_rect(const GModelIndex& index) const
 {
-    return cell_content_rect(index.row(), index.column());
+    return content_rect(index.row(), index.column());
 }
 
 Rect GTableView::row_rect(int item_index) const
@@ -107,7 +107,7 @@ void GTableView::mousedown_event(GMouseEvent& event)
             if (!row_rect(row).contains(adjusted_position))
                 continue;
             for (int column = 0, column_count = model()->column_count(); column < column_count; ++column) {
-                if (!cell_content_rect(row, column).contains(adjusted_position))
+                if (!content_rect(row, column).contains(adjusted_position))
                     continue;
                 model()->set_selected_index(model()->index(row, column));
                 update();
@@ -325,35 +325,4 @@ void GTableView::doubleclick_event(GMouseEvent& event)
         else
             model()->activate(model()->selected_index());
     }
-}
-
-void GTableView::begin_editing(const GModelIndex& index)
-{
-    ASSERT(is_editable());
-    ASSERT(model());
-    if (m_edit_index == index)
-        return;
-    if (!model()->is_editable(index))
-        return;
-    if (m_edit_widget)
-        delete m_edit_widget;
-    m_edit_index = index;
-    m_edit_widget = new GTextBox(this);
-    m_edit_widget->move_to_back();
-    m_edit_widget->set_text(model()->data(index, GModel::Role::Display).to_string());
-    m_edit_widget_content_rect = cell_content_rect(index);
-    update_edit_widget_position();
-    m_edit_widget->set_focus(true);
-    m_edit_widget->on_return_pressed = [this] {
-        ASSERT(model());
-        model()->set_data(m_edit_index, m_edit_widget->text());
-        stop_editing();
-    };
-}
-
-void GTableView::stop_editing()
-{
-    m_edit_index = { };
-    m_edit_widget->delete_later();
-    m_edit_widget = nullptr;
 }

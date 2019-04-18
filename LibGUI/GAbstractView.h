@@ -23,6 +23,10 @@ public:
     virtual void did_update_model();
     virtual void did_update_selection();
 
+    virtual Rect content_rect(const GModelIndex&) const { return { }; }
+    void begin_editing(const GModelIndex&);
+    void stop_editing();
+
     Function<void(const GModelNotification&)> on_model_notification;
 
     virtual const char* class_name() const override { return "GAbstractView"; }
