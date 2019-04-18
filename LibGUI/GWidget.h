@@ -42,11 +42,6 @@ public:
     bool is_enabled() const { return m_enabled; }
     void set_enabled(bool);
 
-    enum class ContextMenuMode { SwallowMouseEvent, PassthroughMouseEvent };
-
-    const GMenu* context_menu() const { return m_context_menu.ptr(); }
-    void set_context_menu(OwnPtr<GMenu>&&, ContextMenuMode = ContextMenuMode::SwallowMouseEvent);
-
     virtual void event(CEvent&) override;
     virtual void paint_event(GPaintEvent&);
     virtual void resize_event(GResizeEvent&);
@@ -59,6 +54,7 @@ public:
     virtual void mouseup_event(GMouseEvent&);
     virtual void click_event(GMouseEvent&);
     virtual void doubleclick_event(GMouseEvent&);
+    virtual void context_menu_event(GContextMenuEvent&);
     virtual void focusin_event(CEvent&);
     virtual void focusout_event(CEvent&);
     virtual void enter_event(CEvent&);
@@ -206,6 +202,4 @@ private:
     bool m_enabled { true };
 
     CElapsedTimer m_click_clock;
-    OwnPtr<GMenu> m_context_menu;
-    ContextMenuMode m_context_menu_mode { ContextMenuMode::SwallowMouseEvent };
 };

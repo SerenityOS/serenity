@@ -35,16 +35,20 @@ VBForm::VBForm(const String& name, GWidget* parent)
     groupbox1->set_rect({ 300, 150, 161, 51 });
     m_widgets.append(move(groupbox1));
 
-    auto context_menu = make<GMenu>("Context menu");
-    context_menu->add_action(GAction::create("Move to front", [this] (auto&) {
+    m_context_menu = make<GMenu>("Context menu");
+    m_context_menu->add_action(GAction::create("Move to front", [this] (auto&) {
         if (m_selected_widget)
             m_selected_widget->gwidget()->move_to_front();
     }));
-    context_menu->add_action(GAction::create("Move to back", [this] (auto&) {
+    m_context_menu->add_action(GAction::create("Move to back", [this] (auto&) {
         if (m_selected_widget)
             m_selected_widget->gwidget()->move_to_back();
     }));
-    set_context_menu(move(context_menu), GWidget::ContextMenuMode::PassthroughMouseEvent);
+}
+
+void VBForm::context_menu_event(GContextMenuEvent& event)
+{
+    m_context_menu->popup(event.screen_position());
 }
 
 void VBForm::insert_widget(VBWidgetType type)

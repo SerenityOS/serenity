@@ -178,18 +178,14 @@ void GWidget::handle_mousedown_event(GMouseEvent& event)
 {
     if (accepts_focus())
         set_focus(true);
-    if (event.button() == GMouseButton::Right) {
-        if (m_context_menu) {
-            if (m_context_menu_mode == ContextMenuMode::PassthroughMouseEvent)
-                mousedown_event(event);
-            m_context_menu->popup(screen_relative_rect().location().translated(event.position()));
-            return;
-        }
-    }
     // FIXME: Maybe the click clock should be per-button.
     if (!m_click_clock.is_valid())
         m_click_clock.start();
     mousedown_event(event);
+    if (event.button() == GMouseButton::Right) {
+        GContextMenuEvent c_event(event.position(), screen_relative_rect().location().translated(event.position()));
+        context_menu_event(c_event);
+    }
 }
 
 void GWidget::handle_enter_event(CEvent& event)
@@ -250,6 +246,10 @@ void GWidget::mouseup_event(GMouseEvent&)
 }
 
 void GWidget::mousemove_event(GMouseEvent&)
+{
+}
+
+void GWidget::context_menu_event(GContextMenuEvent&)
 {
 }
 
@@ -435,14 +435,6 @@ void GWidget::set_enabled(bool enabled)
         return;
     m_enabled = enabled;
     update();
-}
-
-void GWidget::set_context_menu(OwnPtr<GMenu>&& context_menu, ContextMenuMode mode)
-{
-    // FIXME: Support switching context menus.
-    ASSERT(!m_context_menu);
-    m_context_menu = move(context_menu);
-    m_context_menu_mode = mode;
 }
 
 void GWidget::move_to_front()
