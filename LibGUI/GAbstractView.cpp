@@ -2,6 +2,7 @@
 #include <LibGUI/GModel.h>
 #include <LibGUI/GScrollBar.h>
 #include <LibGUI/GPainter.h>
+#include <LibGUI/GTextBox.h>
 #include <Kernel/KeyCode.h>
 
 GAbstractView::GAbstractView(GWidget* parent)
@@ -11,6 +12,7 @@ GAbstractView::GAbstractView(GWidget* parent)
 
 GAbstractView::~GAbstractView()
 {
+    delete m_edit_widget;
 }
 
 void GAbstractView::set_model(RetainPtr<GModel>&& model)

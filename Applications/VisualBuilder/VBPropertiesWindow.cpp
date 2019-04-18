@@ -19,6 +19,7 @@ VBPropertiesWindow::VBPropertiesWindow()
     m_text_box->set_preferred_size({ 0, 21 });
 
     m_table_view = new GTableView(widget);
+    m_table_view->set_editable(true);
 }
 
 VBPropertiesWindow::~VBPropertiesWindow()

@@ -22,6 +22,8 @@ public:
     virtual ColumnMetadata column_metadata(int column) const override;
     virtual GVariant data(const GModelIndex&, Role = Role::Display) const override;
     virtual void update() override { did_update(); }
+    virtual bool is_editable(const GModelIndex&) const override;
+    virtual void set_data(const GModelIndex&, const GVariant&) override;
 
 private:
     explicit VBWidgetPropertyModel(VBWidget&);

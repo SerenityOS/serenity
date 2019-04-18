@@ -2,6 +2,7 @@
 #include <LibGUI/GModel.h>
 #include <LibGUI/GScrollBar.h>
 #include <LibGUI/GPainter.h>
+#include <LibGUI/GTextBox.h>
 #include <Kernel/KeyCode.h>
 
 GTableView::GTableView(GWidget* parent)
@@ -36,6 +37,21 @@ void GTableView::did_update_model()
     GAbstractView::did_update_model();
     update_content_size();
     update();
+}
+
+Rect GTableView::cell_content_rect(int row, int column) const
+{
+    auto row_rect = this->row_rect(row);
+    int x = 0;
+    for (int i = 0; i < column; ++i)
+        x += column_width(i) + horizontal_padding() * 2;
+
+    return { horizontal_padding() + row_rect.x() + x, row_rect.y(), column_width(column), item_height() };
+}
+
+Rect GTableView::cell_content_rect(const GModelIndex& index) const
+{
+    return cell_content_rect(index.row(), index.column());
 }
 
 Rect GTableView::row_rect(int item_index) const
@@ -87,9 +103,13 @@ void GTableView::mousedown_event(GMouseEvent& event)
 
     if (event.button() == GMouseButton::Left) {
         auto adjusted_position = event.position().translated(0, vertical_scrollbar().value());
-        for (int i = 0; i < item_count(); ++i) {
-            if (row_rect(i).contains(adjusted_position)) {
-                model()->set_selected_index(model()->index(i, 0));
+        for (int row = 0, row_count = model()->row_count(); row < row_count; ++row) {
+            if (!row_rect(row).contains(adjusted_position))
+                continue;
+            for (int column = 0, column_count = model()->column_count(); column < column_count; ++column) {
+                if (!cell_content_rect(row, column).contains(adjusted_position))
+                    continue;
+                model()->set_selected_index(model()->index(row, column));
                 update();
                 return;
             }
@@ -300,6 +320,38 @@ void GTableView::doubleclick_event(GMouseEvent& event)
         return;
     if (event.button() == GMouseButton::Left) {
         mousedown_event(event);
-        model()->activate(model()->selected_index());
+        if (is_editable())
+            begin_editing(model()->selected_index());
+        else
+            model()->activate(model()->selected_index());
     }
+}
+
+void GTableView::begin_editing(const GModelIndex& index)
+{
+    ASSERT(is_editable());
+    ASSERT(model());
+    if (m_edit_index == index)
+        return;
+    if (!model()->is_editable(index))
+        return;
+    if (m_edit_widget)
+        delete m_edit_widget;
+    m_edit_index = index;
+    m_edit_widget = new GTextBox(this);
+    m_edit_widget->set_text(model()->data(index, GModel::Role::Display).to_string());
+    m_edit_widget->set_relative_rect(cell_content_rect(index));
+    m_edit_widget->set_focus(true);
+    m_edit_widget->on_return_pressed = [this] {
+        ASSERT(model());
+        model()->set_data(m_edit_index, m_edit_widget->text());
+        stop_editing();
+    };
+}
+
+void GTableView::stop_editing()
+{
+    m_edit_index = { };
+    m_edit_widget->delete_later();
+    m_edit_widget = nullptr;
 }

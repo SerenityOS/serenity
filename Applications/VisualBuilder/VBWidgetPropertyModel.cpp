@@ -52,3 +52,19 @@ GVariant VBWidgetPropertyModel::data(const GModelIndex& index, Role role) const
     }
     return { };
 }
+
+void VBWidgetPropertyModel::set_data(const GModelIndex& index, const GVariant& value)
+{
+    ASSERT(index.column() == Column::Value);
+    auto& property = *m_widget.m_properties[index.row()];
+    ASSERT(!property.is_readonly());
+    property.set_value(value);
+}
+
+bool VBWidgetPropertyModel::is_editable(const GModelIndex& index) const
+{
+    if (index.column() != Column::Value)
+        return false;
+    auto& property = *m_widget.m_properties[index.row()];
+    return !property.is_readonly();
+}
