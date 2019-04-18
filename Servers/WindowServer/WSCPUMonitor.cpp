@@ -40,8 +40,9 @@ void WSCPUMonitor::get_cpu_usage(unsigned& busy, unsigned& idle)
         auto line = m_proc_all.read_line(BUFSIZ);
         if (line.is_null())
             break;
-        auto parts = String::from_byte_buffer(line).split(',');
-        if (parts.size() < 17)
+        auto chomped = String((const char*)line.pointer(), line.size() - 1, Chomp);
+        auto parts = chomped.split_view(',');
+        if (parts.size() < 18)
             break;
         bool ok;
         pid_t pid = parts[0].to_uint(ok);
