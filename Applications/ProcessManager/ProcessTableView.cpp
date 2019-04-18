@@ -8,15 +8,14 @@ ProcessTableView::ProcessTableView(GWidget* parent)
 {
     set_model(GSortingProxyModel::create(ProcessModel::create()));
     model()->set_key_column_and_sort_order(ProcessModel::Column::CPU, GSortOrder::Descending);
-    start_timer(1000);
-    model()->update();
+    refresh();
 }
 
 ProcessTableView::~ProcessTableView()
 {
 }
 
-void ProcessTableView::timer_event(CTimerEvent&)
+void ProcessTableView::refresh()
 {
     model()->update();
 }
