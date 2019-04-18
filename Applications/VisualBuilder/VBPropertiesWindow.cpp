@@ -7,18 +7,15 @@
 VBPropertiesWindow::VBPropertiesWindow()
 {
     set_title("Properties");
-    set_rect(780, 200, 220, 280);
+    set_rect(780, 200, 240, 280);
 
     auto* widget = new GWidget;
     widget->set_fill_with_background_color(true);
     widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
     set_main_widget(widget);
 
-    m_text_box = new GTextBox(widget);
-    m_text_box->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-    m_text_box->set_preferred_size({ 0, 21 });
-
     m_table_view = new GTableView(widget);
+    m_table_view->set_headers_visible(false);
     m_table_view->set_editable(true);
 }
 

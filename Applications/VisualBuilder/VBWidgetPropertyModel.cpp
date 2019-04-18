@@ -1,6 +1,7 @@
 #include "VBWidgetPropertyModel.h"
 #include "VBWidget.h"
 #include "VBProperty.h"
+#include <SharedGraphics/Font.h>
 
 VBWidgetPropertyModel::VBWidgetPropertyModel(VBWidget& widget)
     : m_widget(widget)
@@ -29,6 +30,8 @@ String VBWidgetPropertyModel::column_name(int column) const
 GModel::ColumnMetadata VBWidgetPropertyModel::column_metadata(int column) const
 {
     UNUSED_PARAM(column);
+    if (column == Column::Name)
+        return { 110, TextAlignment::CenterLeft, &Font::default_bold_font() };
     return { 90, TextAlignment::CenterLeft };
 }
 
