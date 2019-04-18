@@ -41,3 +41,15 @@ void GAbstractView::did_update_model()
 void GAbstractView::did_update_selection()
 {
 }
+
+void GAbstractView::did_scroll()
+{
+    update_edit_widget_position();
+}
+
+void GAbstractView::update_edit_widget_position()
+{
+    if (!m_edit_widget)
+        return;
+    m_edit_widget->set_relative_rect(m_edit_widget_content_rect.translated(-horizontal_scrollbar().value(), -vertical_scrollbar().value()));
+}

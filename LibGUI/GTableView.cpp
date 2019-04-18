@@ -339,8 +339,10 @@ void GTableView::begin_editing(const GModelIndex& index)
         delete m_edit_widget;
     m_edit_index = index;
     m_edit_widget = new GTextBox(this);
+    m_edit_widget->move_to_back();
     m_edit_widget->set_text(model()->data(index, GModel::Role::Display).to_string());
-    m_edit_widget->set_relative_rect(cell_content_rect(index));
+    m_edit_widget_content_rect = cell_content_rect(index);
+    update_edit_widget_position();
     m_edit_widget->set_focus(true);
     m_edit_widget->on_return_pressed = [this] {
         ASSERT(model());
