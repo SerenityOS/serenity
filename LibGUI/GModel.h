@@ -57,6 +57,8 @@ public:
     virtual GModelIndex index(int row, int column = 0, const GModelIndex& = GModelIndex()) const { return create_index(row, column); }
     virtual void activate(const GModelIndex&) { }
     virtual GModelIndex sibling(int row, int column, const GModelIndex& parent) const;
+    virtual bool is_editable(const GModelIndex&) const { return false; }
+    virtual void set_data(const GModelIndex&, const GVariant&) { }
 
     bool is_valid(const GModelIndex& index) const
     {
