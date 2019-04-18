@@ -31,6 +31,7 @@ protected:
     virtual void mousedown_event(GMouseEvent&) override;
     virtual void mousemove_event(GMouseEvent&) override;
     virtual void mouseup_event(GMouseEvent&) override;
+    virtual void context_menu_event(GContextMenuEvent&) override;
     virtual void keydown_event(GKeyEvent&) override;
 
 private:
@@ -47,4 +48,5 @@ private:
     Rect m_transform_widget_origin_rect;
     Point m_next_insertion_position;
     Direction m_resize_direction { Direction::None };
+    OwnPtr<GMenu> m_context_menu;
 };

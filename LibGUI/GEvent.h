@@ -29,6 +29,7 @@ public:
         FocusIn,
         FocusOut,
         WindowCloseRequest,
+        ContextMenu,
         WM_WindowRemoved,
         WM_WindowStateChanged,
         WM_WindowIconChanged,
@@ -139,6 +140,23 @@ public:
 private:
     Size m_old_size;
     Size m_size;
+};
+
+class GContextMenuEvent final : public GEvent {
+public:
+    explicit GContextMenuEvent(const Point& position, const Point& screen_position)
+        : GEvent(GEvent::ContextMenu)
+        , m_position(position)
+        , m_screen_position(screen_position)
+    {
+    }
+
+    const Point& position() const { return m_position; }
+    const Point& screen_position() const { return m_screen_position; }
+
+private:
+    Point m_position;
+    Point m_screen_position;
 };
 
 class GShowEvent final : public GEvent {
