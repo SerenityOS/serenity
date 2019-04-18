@@ -4,6 +4,8 @@
 #include <AK/Function.h>
 #include <AK/HashMap.h>
 
+class GAction;
+class GMenu;
 class GScrollBar;
 class Painter;
 
@@ -106,6 +108,13 @@ public:
 
     virtual const char* class_name() const override { return "GTextEditor"; }
 
+    GAction& undo_action() { return *m_undo_action; }
+    GAction& redo_action() { return *m_redo_action; }
+    GAction& cut_action() { return *m_cut_action; }
+    GAction& copy_action() { return *m_copy_action; }
+    GAction& paste_action() { return *m_paste_action; }
+    GAction& delete_action() { return *m_delete_action; }
+
 private:
     virtual void paint_event(GPaintEvent&) override;
     virtual void mousedown_event(GMouseEvent&) override;
@@ -118,7 +127,9 @@ private:
     virtual bool accepts_focus() const override { return true; }
     virtual void enter_event(CEvent&) override;
     virtual void leave_event(CEvent&) override;
+    virtual void context_menu_event(GContextMenuEvent&) override;
 
+    void create_actions();
     void paint_ruler(Painter&);
     void update_content_size();
     void did_change();
@@ -175,4 +186,11 @@ private:
     int m_soft_tab_width { 4 };
     int m_horizontal_content_padding { 2 };
     GTextRange m_selection;
+    OwnPtr<GMenu> m_context_menu;
+    RetainPtr<GAction> m_undo_action;
+    RetainPtr<GAction> m_redo_action;
+    RetainPtr<GAction> m_cut_action;
+    RetainPtr<GAction> m_copy_action;
+    RetainPtr<GAction> m_paste_action;
+    RetainPtr<GAction> m_delete_action;
 };

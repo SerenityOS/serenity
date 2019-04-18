@@ -2,7 +2,6 @@
 
 #include <LibGUI/GMenu.h>
 #include <AK/Badge.h>
-#include <AK/OwnPtr.h>
 #include <AK/Vector.h>
 
 class GApplication;

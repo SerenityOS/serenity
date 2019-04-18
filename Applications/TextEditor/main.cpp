@@ -57,30 +57,6 @@ int main(int argc, char** argv)
         text_editor->write_to_file(path);
     });
 
-    auto undo_action = GAction::create("Undo", { Mod_Ctrl, Key_Z }, GraphicsBitmap::load_from_file("/res/icons/16x16/undo.png"), [&] (const GAction&) {
-        // FIXME: Undo
-    });
-
-    auto redo_action = GAction::create("Redo", { Mod_Ctrl, Key_Y }, GraphicsBitmap::load_from_file("/res/icons/16x16/redo.png"), [&] (const GAction&) {
-        // FIXME: Redo
-    });
-
-    auto cut_action = GAction::create("Cut", { Mod_Ctrl, Key_X }, GraphicsBitmap::load_from_file("/res/icons/cut16.png"), [&] (const GAction&) {
-        text_editor->cut();
-    });
-
-    auto copy_action = GAction::create("Copy", { Mod_Ctrl, Key_C }, GraphicsBitmap::load_from_file("/res/icons/16x16/edit-copy.png"), [&] (const GAction&) {
-        text_editor->copy();
-    });
-
-    auto paste_action = GAction::create("Paste", { Mod_Ctrl, Key_V }, GraphicsBitmap::load_from_file("/res/icons/paste16.png"), [&] (const GAction&) {
-        text_editor->paste();
-    });
-
-    auto delete_action = GAction::create("Delete", { 0, Key_Delete }, GraphicsBitmap::load_from_file("/res/icons/16x16/delete.png"), [&] (const GAction&) {
-        text_editor->do_delete();
-    });
-
     auto menubar = make<GMenuBar>();
     auto app_menu = make<GMenu>("TextEditor");
     app_menu->add_action(GAction::create("Quit", { Mod_Alt, Key_F4 }, [] (const GAction&) {
@@ -96,13 +72,13 @@ int main(int argc, char** argv)
     menubar->add_menu(move(file_menu));
 
     auto edit_menu = make<GMenu>("Edit");
-    edit_menu->add_action(undo_action.copy_ref());
-    edit_menu->add_action(redo_action.copy_ref());
+    edit_menu->add_action(text_editor->undo_action());
+    edit_menu->add_action(text_editor->redo_action());
     edit_menu->add_separator();
-    edit_menu->add_action(cut_action.copy_ref());
-    edit_menu->add_action(copy_action.copy_ref());
-    edit_menu->add_action(paste_action.copy_ref());
-    edit_menu->add_action(delete_action.copy_ref());
+    edit_menu->add_action(text_editor->cut_action());
+    edit_menu->add_action(text_editor->copy_action());
+    edit_menu->add_action(text_editor->paste_action());
+    edit_menu->add_action(text_editor->delete_action());
     menubar->add_menu(move(edit_menu));
 
     auto font_menu = make<GMenu>("Font");
@@ -128,20 +104,15 @@ int main(int argc, char** argv)
 
     toolbar->add_separator();
 
-    toolbar->add_action(cut_action.copy_ref());
-    toolbar->add_action(copy_action.copy_ref());
-    toolbar->add_action(move(paste_action));
-    toolbar->add_action(delete_action.copy_ref());
+    toolbar->add_action(text_editor->cut_action());
+    toolbar->add_action(text_editor->copy_action());
+    toolbar->add_action(text_editor->paste_action());
+    toolbar->add_action(text_editor->delete_action());
 
     toolbar->add_separator();
 
-    toolbar->add_action(move(undo_action));
-    toolbar->add_action(move(redo_action));
-
-    text_editor->on_selection_change = [&] {
-        cut_action->set_enabled(text_editor->has_selection());
-        copy_action->set_enabled(text_editor->has_selection());
-    };
+    toolbar->add_action(text_editor->undo_action());
+    toolbar->add_action(text_editor->redo_action());
 
     auto* window = new GWindow;
     window->set_title(String::format("TextEditor: %s", path.characters()));
