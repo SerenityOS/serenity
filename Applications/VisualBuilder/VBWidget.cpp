@@ -17,8 +17,9 @@ VBWidget::VBWidget(VBWidgetType type, VBForm& form)
     , m_form(form)
     , m_property_model(VBWidgetPropertyModel::create(*this))
 {
-    m_gwidget = VBWidgetRegistry::build_gwidget(type, &form, m_properties);
+    m_gwidget = VBWidgetRegistry::build_gwidget(*this, type, &form, m_properties);
     m_form.m_gwidget_map.set(m_gwidget, this);
+    setup_properties();
 }
 
 VBWidget::~VBWidget()
@@ -87,54 +88,69 @@ void VBWidget::for_each_property(Function<void(VBProperty&)> callback)
     }
 }
 
-void VBWidget::synchronize_properties()
+void VBWidget::add_property(const String& name, Function<GVariant(const GWidget&)>&& getter, Function<void(GWidget&, const GVariant&)>&& setter)
 {
-    property("width").set_value(m_gwidget->width());
-    property("height").set_value(m_gwidget->height());
-    property("x").set_value(m_gwidget->x());
-    property("y").set_value(m_gwidget->y());
-    property("visible").set_value(m_gwidget->is_visible());
-    property("enabled").set_value(m_gwidget->is_enabled());
-    property("tooltip").set_value(m_gwidget->tooltip());
-    property("background_color").set_value(m_gwidget->background_color());
-    property("foreground_color").set_value(m_gwidget->foreground_color());
+    auto& prop = property(name);
+    prop.m_getter = move(getter);
+    prop.m_setter = move(setter);
+}
+
+#define VB_ADD_PROPERTY(gclass, name, getter, setter, variant_type) \
+    add_property(name, \
+        [] (auto& widget) -> GVariant { return ((const gclass&)widget).getter(); }, \
+        [] (auto& widget, auto& value) { ((gclass&)widget).setter(value.to_ ## variant_type()); } \
+    )
+
+void VBWidget::setup_properties()
+{
+    VB_ADD_PROPERTY(GWidget, "width", width, set_width, int);
+    VB_ADD_PROPERTY(GWidget, "height", height, set_height, int);
+    VB_ADD_PROPERTY(GWidget, "x", x, set_x, int);
+    VB_ADD_PROPERTY(GWidget, "y", y, set_y, int);
+    VB_ADD_PROPERTY(GWidget, "visible", is_visible, set_visible, bool);
+    VB_ADD_PROPERTY(GWidget, "enabled", is_enabled, set_enabled, bool);
+    VB_ADD_PROPERTY(GWidget, "tooltip", tooltip, set_tooltip, string);
+    VB_ADD_PROPERTY(GWidget, "background_color", background_color, set_background_color, color);
+    VB_ADD_PROPERTY(GWidget, "foreground_color", foreground_color, set_foreground_color, color);
 
     if (m_type == VBWidgetType::GLabel) {
-        auto& widget = *static_cast<GLabel*>(m_gwidget);
-        property("text").set_value(widget.text());
+        VB_ADD_PROPERTY(GLabel, "text", text, set_text, string);
     }
 
     if (m_type == VBWidgetType::GButton) {
-        auto& widget = *static_cast<GButton*>(m_gwidget);
-        property("caption").set_value(widget.caption());
+        VB_ADD_PROPERTY(GButton, "caption", caption, set_caption, string);
     }
 
     if (m_type == VBWidgetType::GScrollBar) {
-        auto& widget = *static_cast<GScrollBar*>(m_gwidget);
-        property("min").set_value(widget.min());
-        property("max").set_value(widget.max());
-        property("value").set_value(widget.value());
-        property("step").set_value(widget.step());
+        VB_ADD_PROPERTY(GScrollBar, "min", min, set_min, int);
+        VB_ADD_PROPERTY(GScrollBar, "max", max, set_max, int);
+        VB_ADD_PROPERTY(GScrollBar, "value", value, set_value, int);
+        VB_ADD_PROPERTY(GScrollBar, "step", step, set_step, int);
     }
 
     if (m_type == VBWidgetType::GSpinBox) {
-        auto& widget = *static_cast<GSpinBox*>(m_gwidget);
-        property("min").set_value(widget.min());
-        property("max").set_value(widget.max());
-        property("value").set_value(widget.value());
+        VB_ADD_PROPERTY(GSpinBox, "min", min, set_min, int);
+        VB_ADD_PROPERTY(GSpinBox, "max", max, set_max, int);
+        VB_ADD_PROPERTY(GSpinBox, "value", value, set_value, int);
     }
 
     if (m_type == VBWidgetType::GProgressBar) {
-        auto& widget = *static_cast<GProgressBar*>(m_gwidget);
-        property("min").set_value(widget.min());
-        property("max").set_value(widget.max());
-        property("value").set_value(widget.value());
+        VB_ADD_PROPERTY(GProgressBar, "min", min, set_min, int);
+        VB_ADD_PROPERTY(GProgressBar, "max", max, set_max, int);
+        VB_ADD_PROPERTY(GProgressBar, "value", value, set_value, int);
     }
 
     if (m_type == VBWidgetType::GTextEditor) {
-        auto& widget = *static_cast<GTextEditor*>(m_gwidget);
-        property("text").set_value(widget.text());
-        property("ruler_visible").set_value(widget.is_ruler_visible());
+        VB_ADD_PROPERTY(GTextEditor, "text", text, set_text, string);
+        VB_ADD_PROPERTY(GTextEditor, "ruler_visible", is_ruler_visible, set_ruler_visible, bool);
+    }
+}
+
+void VBWidget::synchronize_properties()
+{
+    for (auto& prop : m_properties) {
+        if (prop->m_getter)
+            prop->m_value = prop->m_getter(*gwidget());
     }
 
     m_property_model->update();
@@ -146,6 +162,11 @@ VBProperty& VBWidget::property(const String& name)
         if (prop->name() == name)
             return *prop;
     }
-    m_properties.append(make<VBProperty>(name, GVariant()));
+    m_properties.append(make<VBProperty>(*this, name, GVariant()));
     return *m_properties.last();
+}
+
+void VBWidget::property_did_change()
+{
+    m_form.update();
 }

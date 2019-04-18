@@ -15,6 +15,8 @@ public:
 
     int min() const { return m_min; }
     int max() const { return m_max; }
+    void set_min(int min) { set_range(min, max()); }
+    void set_max(int max) { set_range(min(), max); }
     void set_range(int min, int max);
 
     Function<void(int value)> on_change;
