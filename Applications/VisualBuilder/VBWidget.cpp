@@ -121,6 +121,10 @@ void VBWidget::setup_properties()
         VB_ADD_PROPERTY(GButton, "caption", caption, set_caption, string);
     }
 
+    if (m_type == VBWidgetType::GGroupBox) {
+        VB_ADD_PROPERTY(GGroupBox, "name", name, set_name, string);
+    }
+
     if (m_type == VBWidgetType::GScrollBar) {
         VB_ADD_PROPERTY(GScrollBar, "min", min, set_min, int);
         VB_ADD_PROPERTY(GScrollBar, "max", max, set_max, int);
