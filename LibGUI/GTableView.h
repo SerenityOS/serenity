@@ -30,6 +30,9 @@ public:
     bool is_column_hidden(int) const;
     void set_column_hidden(int, bool);
 
+    void begin_editing(const GModelIndex&);
+    void stop_editing();
+
     virtual const char* class_name() const override { return "GTableView"; }
 
 private:
@@ -45,6 +48,8 @@ private:
     Rect header_rect(int) const;
     int column_width(int) const;
     void update_content_size();
+    Rect cell_content_rect(const GModelIndex&) const;
+    Rect cell_content_rect(int row, int column) const;
 
     Vector<bool> m_column_visibility;
     int m_horizontal_padding { 5 };
