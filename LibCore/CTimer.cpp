@@ -30,6 +30,13 @@ void CTimer::start(int interval)
     m_active = true;
 }
 
+void CTimer::restart(int interval)
+{
+    if (m_active)
+        stop();
+    start(interval);
+}
+
 void CTimer::stop()
 {
     if (!m_active)
@@ -42,6 +49,13 @@ void CTimer::timer_event(CTimerEvent&)
 {
     if (m_single_shot)
         stop();
+    else {
+        if (m_interval_dirty) {
+            stop();
+            start(m_interval);
+        }
+    }
+
     if (on_timeout)
         on_timeout();
 }
