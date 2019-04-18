@@ -35,6 +35,7 @@ void GWidget::child_event(CChildEvent& event)
             else
                 invalidate_layout();
         }
+        update();
     }
     return CObject::child_event(event);
 }
