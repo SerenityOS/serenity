@@ -309,9 +309,13 @@ void VBForm::mouseup_event(GMouseEvent& event)
 
 void VBForm::delete_selected_widgets()
 {
-    for_each_selected_widget([this] (auto& widget) {
-        m_widgets.remove_first_matching([&widget] (auto& entry) { return entry == &widget; } );
+    Vector<VBWidget*> to_delete;
+    for_each_selected_widget([&] (auto& widget) {
+        to_delete.append(&widget);
     });
+    for (auto& widget : to_delete)
+        m_widgets.remove_first_matching([&widget] (auto& entry) { return entry == widget; } );
+    on_widget_selected(single_selected_widget());
 }
 
 template<typename Callback>
