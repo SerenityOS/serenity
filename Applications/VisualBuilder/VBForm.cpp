@@ -106,7 +106,7 @@ VBWidget* VBForm::widget_at(const Point& position)
     return m_gwidget_map.get(gwidget);
 }
 
-void VBForm::grabber_mousedown_event(GMouseEvent& event, VBWidget& widget, Direction grabber)
+void VBForm::grabber_mousedown_event(GMouseEvent& event, Direction grabber)
 {
     m_transform_event_origin = event.position();
     for_each_selected_widget([] (auto& widget) { widget.capture_transform_origin_rect(); });
@@ -198,7 +198,7 @@ void VBForm::mousedown_event(GMouseEvent& event)
             auto grabber = widget.grabber_at(event.position());
             if (grabber != Direction::None) {
                 hit_grabber = true;
-                return grabber_mousedown_event(event, widget, grabber);
+                return grabber_mousedown_event(event, grabber);
             }
         });
         if (hit_grabber)
@@ -218,6 +218,7 @@ void VBForm::mousedown_event(GMouseEvent& event)
         else if (!m_selected_widgets.contains(widget))
             set_single_selected_widget(widget);
         for_each_selected_widget([] (auto& widget) { widget.capture_transform_origin_rect(); });
+        on_widget_selected(single_selected_widget());
     }
 }
 

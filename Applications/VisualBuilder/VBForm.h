@@ -35,7 +35,7 @@ protected:
     virtual void keydown_event(GKeyEvent&) override;
 
 private:
-    void grabber_mousedown_event(GMouseEvent&, VBWidget&, Direction grabber);
+    void grabber_mousedown_event(GMouseEvent&, Direction grabber);
     void set_single_selected_widget(VBWidget*);
     void add_to_selection(VBWidget&);
     void remove_from_selection(VBWidget&);
