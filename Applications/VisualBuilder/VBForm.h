@@ -36,16 +36,21 @@ protected:
 
 private:
     void grabber_mousedown_event(GMouseEvent&, VBWidget&, Direction grabber);
-    void set_selected_widget(VBWidget*);
+    void set_single_selected_widget(VBWidget*);
+    void add_to_selection(VBWidget&);
+    void remove_from_selection(VBWidget&);
+    void delete_selected_widgets();
+    template<typename Callback> void for_each_selected_widget(Callback);
+
+    VBWidget* single_selected_widget();
 
     String m_name;
     int m_grid_size { 5 };
     bool m_should_snap_to_grid { true };
     Vector<Retained<VBWidget>> m_widgets;
     HashMap<GWidget*, VBWidget*> m_gwidget_map;
-    WeakPtr<VBWidget> m_selected_widget;
+    HashTable<VBWidget*> m_selected_widgets;
     Point m_transform_event_origin;
-    Rect m_transform_widget_origin_rect;
     Point m_next_insertion_position;
     Direction m_resize_direction { Direction::None };
     OwnPtr<GMenu> m_context_menu;
