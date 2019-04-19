@@ -14,7 +14,6 @@ LIBGUI_OBJS = \
     GCheckBox.o \
     GEventLoop.o \
     GLabel.o \
-    GListBox.o \
     GTextBox.o \
     GScrollBar.o \
     GStatusBar.o \
