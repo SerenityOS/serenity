@@ -25,6 +25,8 @@ VBWidget::VBWidget(VBWidgetType type, VBForm& form)
 VBWidget::~VBWidget()
 {
     m_form.m_gwidget_map.remove(m_gwidget);
+    m_form.m_selected_widgets.remove(this);
+    delete m_gwidget;
 }
 
 Rect VBWidget::rect() const
@@ -173,4 +175,9 @@ VBProperty& VBWidget::property(const String& name)
 void VBWidget::property_did_change()
 {
     m_form.update();
+}
+
+void VBWidget::capture_transform_origin_rect()
+{
+    m_transform_origin_rect = rect();
 }

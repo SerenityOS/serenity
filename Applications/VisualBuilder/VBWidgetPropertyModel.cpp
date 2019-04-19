@@ -10,7 +10,6 @@ VBWidgetPropertyModel::VBWidgetPropertyModel(VBWidget& widget)
 
 VBWidgetPropertyModel::~VBWidgetPropertyModel()
 {
-    ASSERT_NOT_REACHED();
 }
 
 int VBWidgetPropertyModel::row_count(const GModelIndex&) const

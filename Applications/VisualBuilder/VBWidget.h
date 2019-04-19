@@ -56,6 +56,9 @@ public:
 
     void property_did_change();
 
+    Rect transform_origin_rect() const { return m_transform_origin_rect; }
+    void capture_transform_origin_rect();
+
 private:
     VBWidget(VBWidgetType, VBForm&);
 
@@ -66,4 +69,5 @@ private:
     GWidget* m_gwidget { nullptr };
     Vector<OwnPtr<VBProperty>> m_properties;
     Retained<VBWidgetPropertyModel> m_property_model;
+    Rect m_transform_origin_rect;
 };
