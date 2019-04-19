@@ -128,6 +128,9 @@ public:
     bool operator==(const T* other) const { return m_ptr == other; }
     bool operator!=(const T* other) const { return m_ptr != other; }
 
+    bool operator==(T* other) { return m_ptr == other; }
+    bool operator!=(T* other) { return m_ptr != other; }
+
     bool is_null() const { return !m_ptr; }
 
 private:
