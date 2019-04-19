@@ -10,6 +10,7 @@
 #include <LibGUI/GSpinBox.h>
 #include <LibGUI/GTextEditor.h>
 #include <LibGUI/GGroupBox.h>
+#include <LibGUI/GCheckBox.h>
 #include <LibGUI/GProgressBar.h>
 
 VBWidget::VBWidget(VBWidgetType type, VBForm& form)
@@ -112,8 +113,9 @@ void VBWidget::setup_properties()
     VB_ADD_PROPERTY(GWidget, "visible", is_visible, set_visible, bool);
     VB_ADD_PROPERTY(GWidget, "enabled", is_enabled, set_enabled, bool);
     VB_ADD_PROPERTY(GWidget, "tooltip", tooltip, set_tooltip, string);
-    VB_ADD_PROPERTY(GWidget, "background_color", background_color, set_background_color, color);
-    VB_ADD_PROPERTY(GWidget, "foreground_color", foreground_color, set_foreground_color, color);
+    VB_ADD_PROPERTY(GWidget, "backcolor", background_color, set_background_color, color);
+    VB_ADD_PROPERTY(GWidget, "forecolor", foreground_color, set_foreground_color, color);
+    VB_ADD_PROPERTY(GWidget, "autofill", fill_with_background_color, set_fill_with_background_color, bool);
 
     if (m_type == VBWidgetType::GLabel) {
         VB_ADD_PROPERTY(GLabel, "text", text, set_text, string);
@@ -149,6 +151,11 @@ void VBWidget::setup_properties()
     if (m_type == VBWidgetType::GTextEditor) {
         VB_ADD_PROPERTY(GTextEditor, "text", text, set_text, string);
         VB_ADD_PROPERTY(GTextEditor, "ruler_visible", is_ruler_visible, set_ruler_visible, bool);
+    }
+
+    if (m_type == VBWidgetType::GCheckBox) {
+        VB_ADD_PROPERTY(GCheckBox, "caption", caption, set_caption, string);
+        VB_ADD_PROPERTY(GCheckBox, "checked", is_checked, set_checked, bool);
     }
 }
 
