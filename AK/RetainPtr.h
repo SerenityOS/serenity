@@ -125,6 +125,9 @@ public:
     bool operator==(const RetainPtr& other) const { return m_ptr == other.m_ptr; }
     bool operator!=(const RetainPtr& other) const { return m_ptr != other.m_ptr; }
 
+    bool operator==(RetainPtr& other) { return m_ptr == other.m_ptr; }
+    bool operator!=(RetainPtr& other) { return m_ptr != other.m_ptr; }
+
     bool operator==(const T* other) const { return m_ptr == other; }
     bool operator!=(const T* other) const { return m_ptr != other; }
 
