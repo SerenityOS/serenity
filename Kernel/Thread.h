@@ -21,7 +21,6 @@ struct SignalActionData {
     LinearAddress handler_or_sigaction;
     dword mask { 0 };
     int flags { 0 };
-    LinearAddress restorer;
 };
 
 class Thread : public InlineLinkedListNode<Thread> {

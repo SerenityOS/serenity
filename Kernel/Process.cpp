@@ -1601,10 +1601,8 @@ int Process::sys$sigaction(int signum, const sigaction* act, sigaction* old_act)
         if (!validate_write_typed(old_act))
             return -EFAULT;
         old_act->sa_flags = action.flags;
-        old_act->sa_restorer = (decltype(old_act->sa_restorer))action.restorer.get();
         old_act->sa_sigaction = (decltype(old_act->sa_sigaction))action.handler_or_sigaction.get();
     }
-    action.restorer = LinearAddress((dword)act->sa_restorer);
     action.flags = act->sa_flags;
     action.handler_or_sigaction = LinearAddress((dword)act->sa_sigaction);
     return 0;
