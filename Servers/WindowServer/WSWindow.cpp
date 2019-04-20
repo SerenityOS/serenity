@@ -271,3 +271,13 @@ void WSWindow::set_default_icon()
     m_icon = default_window_icon();
     m_icon_path = default_window_icon_path();
 }
+
+void WSWindow::request_update(const Rect& rect)
+{
+    if (m_pending_paint_rects.is_empty()) {
+        deferred_invoke([this] (auto&) {
+            client()->post_paint_message(*this);
+        });
+    }
+    m_pending_paint_rects.add(rect);
+}
