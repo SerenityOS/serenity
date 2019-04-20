@@ -3,8 +3,8 @@
 #ifdef KERNEL
 #include <Kernel/StdLib.h>
 #else
-#include <LibC/stdlib.h>
-#include <LibC/string.h>
+#include <stdlib.h>
+#include <string.h>
 #endif
 
 #define UNUSED_PARAM(x) (void)x

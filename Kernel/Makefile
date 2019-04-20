@@ -87,7 +87,7 @@ INCLUDE_FLAGS = -I.. -I.
 CLANG_FLAGS = -Wconsumed -m32 -ffreestanding -march=i686
 #SUGGEST_FLAGS = -Wsuggest-final-types -Wsuggest-final-methods -Wsuggest-override #-Wsuggest-attribute=noreturn 
 
-DEFINES = -DSERENITY -DKERNEL -DSANITIZE_PTRS
+DEFINES = -DKERNEL -DSANITIZE_PTRS
 
 CXXFLAGS = -MMD -MP $(WARNING_FLAGS) $(OPTIMIZATION_FLAGS) $(KERNEL_FLAGS) $(FLAVOR_FLAGS) $(ARCH_FLAGS) $(STANDARD_FLAGS) $(SUGGEST_FLAGS) $(INCLUDE_FLAGS) $(DEFINES)
 #CXX = clang $(CLANG_FLAGS)
