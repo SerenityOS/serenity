@@ -203,13 +203,14 @@ void GWindow::event(CEvent& event)
         return;
     }
 
-    if (event.type() == GEvent::Paint) {
+    if (event.type() == GEvent::MultiPaint) {
         if (!m_window_id)
             return;
         if (!m_main_widget)
             return;
-        auto& paint_event = static_cast<GPaintEvent&>(event);
-        auto rect = paint_event.rect();
+        auto& paint_event = static_cast<GMultiPaintEvent&>(event);
+        auto rects = paint_event.rects();
+        ASSERT(!rects.is_empty());
         if (m_back_bitmap && m_back_bitmap->size() != paint_event.window_size()) {
             // Eagerly discard the backing store if we learn from this paint event that it needs to be bigger.
             // Otherwise we would have to wait for a resize event to tell us. This way we don't waste the
@@ -219,21 +220,29 @@ void GWindow::event(CEvent& event)
         bool created_new_backing_store = !m_back_bitmap;
         if (!m_back_bitmap)
             m_back_bitmap = create_backing_bitmap(paint_event.window_size());
-        if (rect.is_empty() || created_new_backing_store)
-            rect = { { }, paint_event.window_size() };
 
-        m_main_widget->event(*make<GPaintEvent>(rect));
+        auto rect = rects.first();
+        if (rect.is_empty() || created_new_backing_store) {
+            rects.clear();
+            rects.append({ { }, paint_event.window_size() });
+        }
 
-        if (m_double_buffering_enabled)
-            flip(rect);
-        else if (created_new_backing_store)
+        for (auto& rect : rects) {
+            m_main_widget->event(*make<GPaintEvent>(rect));
+            if (m_double_buffering_enabled)
+                flip(rect);
+        }
+
+        if (!m_double_buffering_enabled && created_new_backing_store)
             set_current_backing_bitmap(*m_back_bitmap, true);
 
         if (m_window_id) {
             WSAPI_ClientMessage message;
             message.type = WSAPI_ClientMessage::Type::DidFinishPainting;
             message.window_id = m_window_id;
-            message.window.rect = rect;
+            message.rect_count = paint_event.rects().size();
+            for (int i = 0; i < paint_event.rects().size(); ++i)
+                message.rects[i] = paint_event.rects()[i];
             GEventLoop::current().post_message_to_server(message);
         }
         return;

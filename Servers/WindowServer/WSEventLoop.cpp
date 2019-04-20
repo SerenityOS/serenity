@@ -199,9 +199,14 @@ void WSEventLoop::on_receive_from_client(int client_id, const WSAPI_ClientMessag
         post_event(client, make<WSAPIInvalidateRectRequest>(client_id, message.window_id, rects));
         break;
     }
-    case WSAPI_ClientMessage::Type::DidFinishPainting:
-        post_event(client, make<WSAPIDidFinishPaintingNotification>(client_id, message.window_id, message.window.rect));
+    case WSAPI_ClientMessage::Type::DidFinishPainting: {
+        Vector<Rect, 32> rects;
+        ASSERT(message.rect_count <= 32);
+        for (int i = 0; i < message.rect_count; ++i)
+            rects.append(message.rects[i]);
+        post_event(client, make<WSAPIDidFinishPaintingNotification>(client_id, message.window_id, rects));
         break;
+    }
     case WSAPI_ClientMessage::Type::GetWindowBackingStore:
         post_event(client, make<WSAPIGetWindowBackingStoreRequest>(client_id, message.window_id));
         break;

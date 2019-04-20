@@ -515,7 +515,8 @@ void WSClientConnection::handle_request(const WSAPIDidFinishPaintingNotification
         return;
     }
     auto& window = *(*it).value;
-    WSWindowManager::the().invalidate(window, request.rect());
+    for (auto& rect : request.rects())
+        WSWindowManager::the().invalidate(window, rect);
 }
 
 void WSClientConnection::handle_request(const WSAPIGetWindowBackingStoreRequest& request)
