@@ -14,6 +14,12 @@ public:
             m_elements[i] = T();
     }
 
+    void clear()
+    {
+        m_head = 0;
+        m_size = 0;
+    }
+
     bool is_empty() const { return !m_size; }
     int size() const { return m_size; }
 
