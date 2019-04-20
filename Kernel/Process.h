@@ -43,6 +43,7 @@ public:
     static Vector<Process*> all_processes();
 
     enum Priority {
+        IdlePriority,
         LowPriority,
         NormalPriority,
         HighPriority,
