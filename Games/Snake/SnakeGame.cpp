@@ -26,7 +26,7 @@ void SnakeGame::reset()
     m_score_text = "Score: 0";
     m_velocity_queue.clear();
     stop_timer();
-    start_timer(120);
+    start_timer(100);
     spawn_fruit();
     update();
 }
