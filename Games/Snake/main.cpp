@@ -13,13 +13,10 @@ int main(int argc, char** argv)
 
     auto* window = new GWindow;
     window->set_title("Snake");
-    window->set_rect(100, 100, 139, 175);
+    window->set_rect(100, 100, 300, 300);
 
-    auto* widget = new GWidget;
-    window->set_main_widget(widget);
-    widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
-
-    auto* game = new SnakeGame(widget);
+    auto* game = new SnakeGame;
+    window->set_main_widget(game);
 
     auto menubar = make<GMenuBar>();
 

@@ -26,14 +26,14 @@
 #include <Kernel/Net/NetworkTask.h>
 #include <Kernel/Devices/DebugLogDevice.h>
 
-//#define SPAWN_TERMINAL
+#define SPAWN_TERMINAL
 //#define SPAWN_LAUNCHER
 //#define SPAWN_GUITEST2
 //#define SPAWN_FILE_MANAGER
 //#define SPAWN_PROCESS_MANAGER
 //#define SPAWN_TEXT_EDITOR
 //#define SPAWN_FONTEDITOR
-#define SPAWN_VISUAL_BUILDER
+//#define SPAWN_VISUAL_BUILDER
 //#define SPAWN_MULTIPLE_SHELLS
 //#define STRESS_TEST_SPAWNING
 
