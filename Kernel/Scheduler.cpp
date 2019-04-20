@@ -18,6 +18,8 @@ static dword time_slice_for(Process::Priority priority)
         return 15;
     case Process::LowPriority:
         return 5;
+    case Process::IdlePriority:
+        return 1;
     }
     ASSERT_NOT_REACHED();
 }
@@ -385,7 +387,7 @@ void Scheduler::initialize()
     initialize_redirection();
     s_colonel_process = Process::create_kernel_process("colonel", nullptr);
     // Make sure the colonel uses a smallish time slice.
-    s_colonel_process->set_priority(Process::LowPriority);
+    s_colonel_process->set_priority(Process::IdlePriority);
     load_task_register(s_redirection.selector);
 }
 

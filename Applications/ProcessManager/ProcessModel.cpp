@@ -84,12 +84,14 @@ GVariant ProcessModel::data(const GModelIndex& index, Role role) const
         case Column::State: return process.current_state.state;
         case Column::User: return process.current_state.user;
         case Column::Priority:
-            if (process.current_state.priority == "Low")
+            if (process.current_state.priority == "Idle")
                 return 0;
-            if (process.current_state.priority == "Normal")
+            if (process.current_state.priority == "Low")
                 return 1;
-            if (process.current_state.priority == "High")
+            if (process.current_state.priority == "Normal")
                 return 2;
+            if (process.current_state.priority == "High")
+                return 3;
             ASSERT_NOT_REACHED();
             return 3;
         case Column::Linear: return (int)process.current_state.linear;
@@ -110,6 +112,8 @@ GVariant ProcessModel::data(const GModelIndex& index, Role role) const
         case Column::State: return process.current_state.state;
         case Column::User: return process.current_state.user;
         case Column::Priority:
+            if (process.current_state.priority == "Idle")
+                return String::empty();
             if (process.current_state.priority == "High")
                 return *m_high_priority_icon;
             if (process.current_state.priority == "Low")
