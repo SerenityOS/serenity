@@ -45,7 +45,7 @@ public:
 
     void finalize();
 
-    enum State {
+    enum State : byte {
         Invalid = 0,
         Runnable,
         Running,
@@ -78,7 +78,6 @@ public:
 
     dword frame_ptr() const { return m_tss.ebp; }
     dword stack_ptr() const { return m_tss.esp; }
-    dword stack_top() const { return m_tss.ss == 0x10 ? m_stack_top0 : m_stack_top3; }
 
     word selector() const { return m_far_ptr.selector; }
     TSS32& tss() { return m_tss; }
@@ -143,8 +142,6 @@ private:
     FarPtr m_far_ptr;
     dword m_ticks { 0 };
     dword m_ticks_left { 0 };
-    dword m_stack_top0 { 0 };
-    dword m_stack_top3 { 0 };
     qword m_wakeup_time { 0 };
     dword m_times_scheduled { 0 };
     dword m_pending_signals { 0 };
@@ -161,8 +158,8 @@ private:
     Vector<int> m_select_read_fds;
     Vector<int> m_select_write_fds;
     Vector<int> m_select_exceptional_fds;
-    State m_state { Invalid };
     FPUState* m_fpu_state { nullptr };
+    State m_state { Invalid };
     bool m_select_has_timeout { false };
     bool m_has_used_fpu { false };
     bool m_was_interrupted_while_blocked { false };
