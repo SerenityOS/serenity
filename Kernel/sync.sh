@@ -61,6 +61,8 @@ cp -v ../Applications/VisualBuilder/VisualBuilder mnt/bin/VisualBuilder
 ln -s VisualBuilder mnt/bin/vb
 cp -v ../Games/Minesweeper/Minesweeper mnt/bin/Minesweeper
 ln -s Minesweeper mnt/bin/ms
+cp -v ../Games/Snake/Snake mnt/bin/Snake
+ln -s Snake mnt/bin/sn
 cp -v kernel.map mnt/
 sh sync-local.sh
 umount mnt || ( sleep 0.5 && sync && umount mnt )
