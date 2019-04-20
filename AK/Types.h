@@ -1,6 +1,6 @@
 #pragma once
 
-#if defined(SERENITY)
+#ifdef __serenity__
 typedef unsigned char byte;
 typedef unsigned short word;
 typedef unsigned int dword;

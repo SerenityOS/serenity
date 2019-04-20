@@ -121,7 +121,7 @@ inline constexpr const char* to_string(Function function)
     return "Unknown";
 }
 
-#ifdef SERENITY
+#ifdef __serenity__
 struct SC_mmap_params {
     uint32_t addr;
     uint32_t size;
