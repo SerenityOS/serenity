@@ -150,10 +150,10 @@ void IRCClient::process_line(ByteBuffer&& line)
         }
     }
     if (!current_parameter.is_empty())
-        msg.arguments.append(String(current_parameter.data(), current_parameter.size()));
-    msg.prefix = String(prefix.data(), prefix.size());
-    msg.command = String(command.data(), command.size());
-    handle(msg, String(m_line_buffer.data(), m_line_buffer.size()));
+        msg.arguments.append(String::copy(current_parameter));
+    msg.prefix = String::copy(prefix);
+    msg.command = String::copy(command);
+    handle(msg);
 }
 
 void IRCClient::send(const String& text)
@@ -195,7 +195,7 @@ void IRCClient::send_whois(const String& nick)
     send(String::format("WHOIS %s\r\n", nick.characters()));
 }
 
-void IRCClient::handle(const Message& msg, const String&)
+void IRCClient::handle(const Message& msg)
 {
 #ifdef IRC_DEBUG
     printf("IRCClient::execute: prefix='%s', command='%s', arguments=%d\n",

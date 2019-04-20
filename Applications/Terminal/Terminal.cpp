@@ -393,13 +393,13 @@ void Terminal::execute_xterm_command()
 {
     m_final = '@';
     bool ok;
-    unsigned value = parse_uint(String((const char*)m_xterm_param1.data(), m_xterm_param1.size()), ok);
+    unsigned value = parse_uint(String::copy(m_xterm_param1), ok);
     if (ok) {
         switch (value) {
         case 0:
         case 1:
         case 2:
-            set_window_title(String((const char*)m_xterm_param2.data(), m_xterm_param2.size()));
+            set_window_title(String::copy(m_xterm_param2));
             break;
         default:
             unimplemented_xterm_escape();
@@ -413,7 +413,7 @@ void Terminal::execute_xterm_command()
 void Terminal::execute_escape_sequence(byte final)
 {
     m_final = final;
-    auto paramparts = String((const char*)m_parameters.data(), m_parameters.size()).split(';');
+    auto paramparts = String::copy(m_parameters).split(';');
     ParamVector params;
     for (auto& parampart : paramparts) {
         bool ok;

@@ -265,7 +265,7 @@ Vector<IPv4Address> lookup(const String& hostname, bool& did_timeout)
 
 static String parse_dns_name(const byte* data, int& offset, int max_offset)
 {
-    Vector<char> buf;
+    Vector<char, 128> buf;
     while (offset < max_offset) {
         byte ch = data[offset];
         if (ch == '\0') {
@@ -283,5 +283,5 @@ static String parse_dns_name(const byte* data, int& offset, int max_offset)
         buf.append('.');
         offset += ch + 1;
     }
-    return String(buf.data(), buf.size());
+    return String::copy(buf);
 }
