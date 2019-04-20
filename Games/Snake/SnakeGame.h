@@ -50,10 +50,11 @@ private:
     Vector<Coordinate> m_tail;
 
     Coordinate m_fruit;
+    int m_fruit_type { 0 };
 
     int m_length { 0 };
     unsigned m_score { 0 };
     String m_score_text;
 
-    RetainPtr<GraphicsBitmap> m_fruit_bitmap;
+    Vector<Retained<GraphicsBitmap>> m_fruit_bitmaps;
 };

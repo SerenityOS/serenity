@@ -8,7 +8,10 @@ SnakeGame::SnakeGame(GWidget* parent)
     : GWidget(parent)
 {
     set_font(Font::default_bold_font());
-    m_fruit_bitmap = GraphicsBitmap::load_from_file("/res/icons/snake/paprika.png");
+    m_fruit_bitmaps.append(*GraphicsBitmap::load_from_file("/res/icons/snake/paprika.png"));
+    m_fruit_bitmaps.append(*GraphicsBitmap::load_from_file("/res/icons/snake/eggplant.png"));
+    m_fruit_bitmaps.append(*GraphicsBitmap::load_from_file("/res/icons/snake/cauliflower.png"));
+    m_fruit_bitmaps.append(*GraphicsBitmap::load_from_file("/res/icons/snake/tomato.png"));
     srand(time(nullptr));
     reset();
 }
@@ -54,6 +57,7 @@ void SnakeGame::spawn_fruit()
             break;
     }
     m_fruit = coord;
+    m_fruit_type = rand() % m_fruit_bitmaps.size();
 }
 
 Rect SnakeGame::score_rect() const
@@ -167,10 +171,22 @@ void SnakeGame::paint_event(GPaintEvent& event)
     painter.fill_rect(event.rect(), Color::Black);
 
     painter.fill_rect(cell_rect(m_head), Color::Yellow);
-    for (auto& coord : m_tail)
-        painter.fill_rect(cell_rect(coord), Color::from_rgb(0xaaaa00));
+    for (auto& part : m_tail) {
+        auto rect = cell_rect(part);
+        painter.fill_rect(rect, Color::from_rgb(0xaaaa00));
 
-    painter.draw_scaled_bitmap(cell_rect(m_fruit), *m_fruit_bitmap, m_fruit_bitmap->rect());
+        Rect left_side(rect.x(), rect.y(), 2, rect.height());
+        Rect top_side(rect.x(), rect.y(), rect.width(), 2);
+        Rect right_side(rect.right() - 1, rect.y(), 2, rect.height());
+        Rect bottom_side(rect.x(), rect.bottom() - 1, rect.width(), 2);
+        painter.fill_rect(left_side, Color::from_rgb(0xcccc00));
+        painter.fill_rect(right_side, Color::from_rgb(0x888800));
+        painter.fill_rect(top_side, Color::from_rgb(0xcccc00));
+        painter.fill_rect(bottom_side, Color::from_rgb(0x888800));
+
+    }
+
+    painter.draw_scaled_bitmap(cell_rect(m_fruit), *m_fruit_bitmaps[m_fruit_type], m_fruit_bitmaps[m_fruit_type]->rect());
 
     painter.draw_text(score_rect(), m_score_text, TextAlignment::TopLeft, Color::White);
 }
