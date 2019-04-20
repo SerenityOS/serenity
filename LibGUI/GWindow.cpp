@@ -206,7 +206,6 @@ void GWindow::event(CEvent& event)
     if (event.type() == GEvent::Paint) {
         if (!m_window_id)
             return;
-        m_pending_paint_event_rects.clear();
         if (!m_main_widget)
             return;
         auto& paint_event = static_cast<GPaintEvent&>(event);
@@ -300,13 +299,20 @@ void GWindow::update(const Rect& a_rect)
             return;
         }
     }
-    m_pending_paint_event_rects.append(a_rect);
 
-    WSAPI_ClientMessage request;
-    request.type = WSAPI_ClientMessage::Type::InvalidateRect;
-    request.window_id = m_window_id;
-    request.window.rect = a_rect;
-    GEventLoop::current().post_message_to_server(request);
+    if (m_pending_paint_event_rects.is_empty()) {
+        deferred_invoke([this] (auto&) {
+            for (auto& rect : m_pending_paint_event_rects) {
+                WSAPI_ClientMessage request;
+                request.type = WSAPI_ClientMessage::Type::InvalidateRect;
+                request.window_id = m_window_id;
+                request.window.rect = rect;
+                GEventLoop::current().post_message_to_server(request);
+            }
+            m_pending_paint_event_rects.clear_with_capacity();
+        });
+    }
+    m_pending_paint_event_rects.append(a_rect);
 }
 
 void GWindow::set_main_widget(GWidget* widget)
