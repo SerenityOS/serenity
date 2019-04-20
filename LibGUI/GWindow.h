@@ -28,6 +28,9 @@ public:
     bool is_modal() const { return m_modal; }
     void set_modal(bool);
 
+    bool is_resizable() const { return m_resizable; }
+    void set_resizable(bool resizable) { m_resizable = resizable; }
+
     void set_double_buffering_enabled(bool);
     void set_has_alpha_channel(bool);
     void set_opacity(float);
