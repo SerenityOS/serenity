@@ -5,6 +5,7 @@
 #include <LibGUI/GLayout.h>
 #include <AK/Assertions.h>
 #include <SharedGraphics/GraphicsBitmap.h>
+#include <LibGUI/GAction.h>
 #include <LibGUI/GPainter.h>
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GMenu.h>
@@ -486,4 +487,22 @@ bool GWidget::is_backmost() const
     if (!parent)
         return true;
     return parent->children().first() == this;
+}
+
+GAction* GWidget::action_for_key_event(const GKeyEvent& event)
+{
+    auto it = m_local_shortcut_actions.find(GShortcut(event.modifiers(), (KeyCode)event.key()));
+    if (it == m_local_shortcut_actions.end())
+        return nullptr;
+    return (*it).value;
+}
+
+void GWidget::register_local_shortcut_action(Badge<GAction>, GAction& action)
+{
+    m_local_shortcut_actions.set(action.shortcut(), &action);
+}
+
+void GWidget::unregister_local_shortcut_action(Badge<GAction>, GAction& action)
+{
+    m_local_shortcut_actions.remove(action.shortcut());
 }
