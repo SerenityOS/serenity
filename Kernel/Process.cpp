@@ -2376,6 +2376,7 @@ int Process::sys$get_shared_buffer_size(int shared_buffer_id)
 const char* to_string(Process::Priority priority)
 {
     switch (priority) {
+    case Process::IdlePriority: return "Idle";
     case Process::LowPriority: return "Low";
     case Process::NormalPriority: return "Normal";
     case Process::HighPriority: return "High";
