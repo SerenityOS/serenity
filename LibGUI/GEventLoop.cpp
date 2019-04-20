@@ -7,6 +7,7 @@
 #include <LibCore/CNotifier.h>
 #include <LibGUI/GMenu.h>
 #include <LibGUI/GDesktop.h>
+#include <LibGUI/GWidget.h>
 #include <LibC/unistd.h>
 #include <LibC/stdio.h>
 #include <LibC/fcntl.h>
@@ -124,6 +125,15 @@ void GEventLoop::handle_key_event(const WSAPI_ServerMessage& event, GWindow& win
         key_event->m_text = String(&event.key.character, 1);
 
     if (event.type == WSAPI_ServerMessage::Type::KeyDown) {
+        if (auto* focused_widget = window.focused_widget()) {
+            if (auto* action = focused_widget->action_for_key_event(*key_event)) {
+                if (action->is_enabled()) {
+                    action->activate();
+                    return;
+                }
+            }
+        }
+
         if (auto* action = GApplication::the().action_for_key_event(*key_event)) {
             if (action->is_enabled()) {
                 action->activate();

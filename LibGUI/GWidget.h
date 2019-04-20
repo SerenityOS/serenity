@@ -2,14 +2,17 @@
 
 #include <LibCore/CElapsedTimer.h>
 #include <LibGUI/GEvent.h>
+#include <LibGUI/GShortcut.h>
 #include <LibCore/CObject.h>
 #include <SharedGraphics/Rect.h>
 #include <SharedGraphics/Color.h>
 #include <SharedGraphics/Font.h>
 #include <AK/Badge.h>
 #include <AK/AKString.h>
+#include <AK/HashMap.h>
 
 class GraphicsBitmap;
+class GAction;
 class GLayout;
 class GMenu;
 class GWindow;
@@ -172,6 +175,11 @@ public:
     bool is_frontmost() const;
     bool is_backmost() const;
 
+    GAction* action_for_key_event(const GKeyEvent&);
+
+    void register_local_shortcut_action(Badge<GAction>, GAction&);
+    void unregister_local_shortcut_action(Badge<GAction>, GAction&);
+
 private:
     virtual bool is_widget() const final { return true; }
 
@@ -203,4 +211,6 @@ private:
     bool m_layout_dirty { false };
 
     CElapsedTimer m_click_clock;
+
+    HashMap<GShortcut, GAction*> m_local_shortcut_actions;
 };
