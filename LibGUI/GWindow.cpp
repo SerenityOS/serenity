@@ -302,13 +302,15 @@ void GWindow::update(const Rect& a_rect)
 
     if (m_pending_paint_event_rects.is_empty()) {
         deferred_invoke([this] (auto&) {
-            for (auto& rect : m_pending_paint_event_rects) {
-                WSAPI_ClientMessage request;
-                request.type = WSAPI_ClientMessage::Type::InvalidateRect;
-                request.window_id = m_window_id;
-                request.window.rect = rect;
-                GEventLoop::current().post_message_to_server(request);
-            }
+            // FIXME: Break it into multiple batches if needed.
+            ASSERT(m_pending_paint_event_rects.size() <= 32);
+            WSAPI_ClientMessage request;
+            request.type = WSAPI_ClientMessage::Type::InvalidateRect;
+            request.window_id = m_window_id;
+            for (int i = 0; i < m_pending_paint_event_rects.size(); ++i)
+                request.rects[i] = m_pending_paint_event_rects[i];
+            request.rect_count = m_pending_paint_event_rects.size();
+            GEventLoop::current().post_message_to_server(request);
             m_pending_paint_event_rects.clear_with_capacity();
         });
     }

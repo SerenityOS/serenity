@@ -383,7 +383,7 @@ void WSClientConnection::handle_request(const WSAPISetWindowRectRequest& request
     }
     auto& window = *(*it).value;
     window.set_rect(request.rect());
-    post_paint_request(window, request.rect());
+    window.request_update(request.rect());
 }
 
 void WSClientConnection::handle_request(const WSAPIGetWindowRectRequest& request)
@@ -477,14 +477,20 @@ void WSClientConnection::handle_request(const WSAPIDestroyWindowRequest& request
     post_message(response);
 }
 
-void WSClientConnection::post_paint_request(const WSWindow& window, const Rect& rect)
+void WSClientConnection::post_paint_message(WSWindow& window)
 {
-    WSAPI_ServerMessage response;
-    response.type = WSAPI_ServerMessage::Type::Paint;
-    response.window_id = window.window_id();
-    response.paint.rect = rect;
-    response.paint.window_size = window.size();
-    post_message(response);
+    WSAPI_ServerMessage message;
+    message.type = WSAPI_ServerMessage::Type::Paint;
+    message.window_id = window.window_id();
+    auto rect_set = window.take_pending_paint_rects();
+    auto& rects = rect_set.rects();
+    // FIXME: Break it into multiple batches if needed.
+    ASSERT(rects.size() <= 32);
+    message.rect_count = rects.size();
+    for (int i = 0; i < rects.size(); ++i)
+        message.rects[i] = rects[i];
+    message.paint.window_size = window.size();
+    post_message(message);
 }
 
 void WSClientConnection::handle_request(const WSAPIInvalidateRectRequest& request)
@@ -496,7 +502,8 @@ void WSClientConnection::handle_request(const WSAPIInvalidateRectRequest& reques
         return;
     }
     auto& window = *(*it).value;
-    post_paint_request(window, request.rect());
+    for (int i = 0; i < request.rects().size(); ++i)
+        window.request_update(request.rects()[i]);
 }
 
 void WSClientConnection::handle_request(const WSAPIDidFinishPaintingNotification& request)
