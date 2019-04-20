@@ -564,19 +564,19 @@ private:
 
 class WSAPIInvalidateRectRequest final : public WSAPIClientRequest {
 public:
-    explicit WSAPIInvalidateRectRequest(int client_id, int window_id, const Rect& rect)
+    explicit WSAPIInvalidateRectRequest(int client_id, int window_id, const Vector<Rect, 32>& rects)
         : WSAPIClientRequest(WSEvent::APIInvalidateRectRequest, client_id)
         , m_window_id(window_id)
-        , m_rect(rect)
+        , m_rects(rects)
     {
     }
 
     int window_id() const { return m_window_id; }
-    Rect rect() const { return m_rect; }
+    const Vector<Rect, 32>& rects() const { return m_rects; }
 
 private:
     int m_window_id { 0 };
-    Rect m_rect;
+    Vector<Rect, 32> m_rects;
 };
 
 class WSAPIGetWindowBackingStoreRequest final : public WSAPIClientRequest {

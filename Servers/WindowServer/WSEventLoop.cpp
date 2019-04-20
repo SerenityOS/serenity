@@ -191,9 +191,14 @@ void WSEventLoop::on_receive_from_client(int client_id, const WSAPI_ClientMessag
     case WSAPI_ClientMessage::Type::GetClipboardContents:
         post_event(client, make<WSAPIGetClipboardContentsRequest>(client_id));
         break;
-    case WSAPI_ClientMessage::Type::InvalidateRect:
-        post_event(client, make<WSAPIInvalidateRectRequest>(client_id, message.window_id, message.window.rect));
+    case WSAPI_ClientMessage::Type::InvalidateRect: {
+        Vector<Rect, 32> rects;
+        ASSERT(message.rect_count <= 32);
+        for (int i = 0; i < message.rect_count; ++i)
+            rects.append(message.rects[i]);
+        post_event(client, make<WSAPIInvalidateRectRequest>(client_id, message.window_id, rects));
         break;
+    }
     case WSAPI_ClientMessage::Type::DidFinishPainting:
         post_event(client, make<WSAPIDidFinishPaintingNotification>(client_id, message.window_id, message.window.rect));
         break;

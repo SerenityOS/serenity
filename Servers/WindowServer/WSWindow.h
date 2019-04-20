@@ -7,6 +7,7 @@
 #include <LibCore/CObject.h>
 #include <WindowServer/WSWindowType.h>
 #include <WindowServer/WSWindowFrame.h>
+#include <SharedGraphics/DisjointRectSet.h>
 
 class WSClientConnection;
 class WSCursor;
@@ -127,6 +128,9 @@ public:
     const WSCursor* override_cursor() const { return m_override_cursor.ptr(); }
     void set_override_cursor(RetainPtr<WSCursor>&& cursor) { m_override_cursor = move(cursor); }
 
+    void request_update(const Rect&);
+    DisjointRectSet take_pending_paint_rects() { return move(m_pending_paint_rects); }
+
     // For InlineLinkedList.
     // FIXME: Maybe make a ListHashSet and then WSWindowManager can just use that.
     WSWindow* m_next { nullptr };
@@ -160,4 +164,5 @@ private:
     WSWindowFrame m_frame;
     Color m_background_color { Color::LightGray };
     unsigned m_wm_event_mask { 0 };
+    DisjointRectSet m_pending_paint_rects;
 };

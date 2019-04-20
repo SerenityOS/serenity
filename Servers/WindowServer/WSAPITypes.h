@@ -109,8 +109,16 @@ struct WSAPI_ServerMessage {
     };
     Type type { Invalid };
     int window_id { -1 };
-    int text_length { 0 };
-    char text[256];
+
+    union {
+        int text_length { 0 };
+        int rect_count;
+    };
+
+    union {
+        char text[512];
+        WSAPI_Rect rects[32];
+    };
     int value { 0 };
 
     union {
@@ -134,7 +142,6 @@ struct WSAPI_ServerMessage {
             WSAPI_Rect old_rect;
         } window;
         struct {
-            WSAPI_Rect rect;
             WSAPI_Size window_size;
         } paint;
         struct {
@@ -207,8 +214,14 @@ struct WSAPI_ClientMessage {
     };
     Type type { Invalid };
     int window_id { -1 };
-    int text_length { 0 };
-    char text[256];
+    union {
+        int text_length { 0 };
+        int rect_count;
+    };
+    union {
+        char text[512];
+        WSAPI_Rect rects[32];
+    };
     int value { 0 };
 
     union {
