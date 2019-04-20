@@ -232,7 +232,6 @@ int main(int argc, char** argv)
         sa.sa_handler = handle_sigint;
         sa.sa_flags = 0;
         sa.sa_mask = 0;
-        sa.sa_restorer = nullptr;
         int rc = sigaction(SIGINT, &sa, nullptr);
         assert(rc == 0);
     }
