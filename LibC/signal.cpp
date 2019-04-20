@@ -33,7 +33,6 @@ sighandler_t signal(int signum, sighandler_t handler)
     new_act.sa_handler = handler;
     new_act.sa_flags = 0;
     new_act.sa_mask = 0;
-    new_act.sa_restorer = nullptr;
     int rc = sigaction(signum, &new_act, &old_act);
     if (rc < 0)
         return SIG_ERR;
