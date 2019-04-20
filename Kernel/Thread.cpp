@@ -44,14 +44,12 @@ Thread::Thread(Process& process)
         // FIXME: This memory is leaked.
         // But uh, there's also no kernel process termination, so I guess it's not technically leaked...
         dword stack_bottom = (dword)kmalloc_eternal(default_kernel_stack_size);
-        m_stack_top0 = (stack_bottom + default_kernel_stack_size) & 0xffffff8;
-        m_tss.esp = m_stack_top0;
+        m_tss.esp = (stack_bottom + default_kernel_stack_size) & 0xffffff8;
     } else {
         // Ring3 processes need a separate stack for Ring0.
         m_kernel_stack = kmalloc(default_kernel_stack_size);
-        m_stack_top0 = ((dword)m_kernel_stack + default_kernel_stack_size) & 0xffffff8;
         m_tss.ss0 = 0x10;
-        m_tss.esp0 = m_stack_top0;
+        m_tss.esp0 = ((dword)m_kernel_stack + default_kernel_stack_size) & 0xffffff8;
     }
 
     // HACK: Ring2 SS in the TSS is the current PID.
@@ -433,8 +431,7 @@ void Thread::make_userspace_stack_for_main_thread(Vector<String> arguments, Vect
 {
     auto* region = m_process.allocate_region(LinearAddress(), default_userspace_stack_size, "stack");
     ASSERT(region);
-    m_stack_top3 = region->laddr().offset(default_userspace_stack_size).get();
-    m_tss.esp = m_stack_top3;
+    m_tss.esp = region->laddr().offset(default_userspace_stack_size).get();
 
     char* stack_base = (char*)region->laddr().get();
     int argc = arguments.size();
@@ -480,8 +477,7 @@ void Thread::make_userspace_stack_for_secondary_thread(void *argument)
 {
     auto* region = m_process.allocate_region(LinearAddress(), default_userspace_stack_size, String::format("Thread %u Stack", tid()));
     ASSERT(region);
-    m_stack_top3 = region->laddr().offset(default_userspace_stack_size).get();
-    m_tss.esp = m_stack_top3;
+    m_tss.esp = region->laddr().offset(default_userspace_stack_size).get();
 
     // NOTE: The stack needs to be 16-byte aligned.
     push_value_on_stack((dword)argument);
