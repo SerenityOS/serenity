@@ -13,7 +13,7 @@ int main(int argc, char** argv)
 
     auto* window = new GWindow;
     window->set_title("Snake");
-    window->set_rect(100, 100, 300, 300);
+    window->set_rect(100, 100, 320, 320);
 
     auto* game = new SnakeGame;
     window->set_main_widget(game);
