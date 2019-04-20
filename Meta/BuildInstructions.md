@@ -2,7 +2,7 @@
 
 Let's start with a quick guide to building the i686-pc-serenity toolchain.
 
-I keep my toolchain in /opt/cross (so /opt/cross/bin needs to be in $PATH) and my Serenity sources are in /home/andreas/src/serenity
+I keep my toolchain in /opt/cross (so /opt/cross/bin needs to be in $PATH) and my Serenity sources are in $HOME/src/serenity
 
 You need to adjust these so they fit your system.
 
@@ -27,7 +27,7 @@ In the build directory, run configure:
     ../binutils-2.32/configure \
         --prefix=/opt/cross \
         --target=i686-pc-serenity \
-        --with-sysroot=/home/andreas/src/serenity/Root \
+        --with-sysroot=$HOME/src/serenity/Root \
         --disable-nls
  
 
@@ -61,7 +61,8 @@ In the build directory, run configure:
     ../gcc-8.3.0/configure \
         --prefix=/opt/cross \
         --target=i686-pc-serenity \
-        --with-sysroot=/home/andreas/src/serenity/Root \
+        --with-sysroot=$HOME/src/serenity/Root \
+        --with-newlib \
         --enable-languages=c,c++
 
 Then build and install:
