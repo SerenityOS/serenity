@@ -19,6 +19,7 @@ void SnakeGame::reset()
     m_head = { m_rows / 2, m_columns / 2 };
     m_tail.clear_with_capacity();
     m_length = 2;
+    m_velocity_queue.clear();
     stop_timer();
     start_timer(120);
     spawn_fruit();
