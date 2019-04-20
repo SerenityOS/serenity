@@ -1,11 +1,13 @@
 #include "SnakeGame.h"
 #include <LibGUI/GPainter.h>
+#include <SharedGraphics/GraphicsBitmap.h>
 #include <stdlib.h>
 #include <time.h>
 
 SnakeGame::SnakeGame(GWidget* parent)
     : GWidget(parent)
 {
+    m_fruit_bitmap = GraphicsBitmap::load_from_file("/res/icons/snake/paprika.png");
     srand(time(nullptr));
     reset();
 }
@@ -19,6 +21,7 @@ void SnakeGame::reset()
     m_head = { m_rows / 2, m_columns / 2 };
     m_tail.clear_with_capacity();
     m_length = 2;
+    m_score = 0;
     m_velocity_queue.clear();
     stop_timer();
     start_timer(120);
@@ -83,6 +86,7 @@ void SnakeGame::timer_event(CTimerEvent&)
 
     if (m_head == m_fruit) {
         ++m_length;
+        ++m_score;
         spawn_fruit();
     }
     update();
@@ -141,7 +145,9 @@ void SnakeGame::paint_event(GPaintEvent& event)
     for (auto& coord : m_tail)
         painter.fill_rect(cell_rect(coord), Color::from_rgb(0xaaaa00));
 
-    painter.fill_rect(cell_rect(m_fruit), Color::Red);
+    painter.draw_scaled_bitmap(cell_rect(m_fruit), *m_fruit_bitmap, m_fruit_bitmap->rect());
+
+    painter.draw_text(rect(), String::format("Score: %u", m_score), TextAlignment::TopLeft, Color::White);
 }
 
 void SnakeGame::game_over()
