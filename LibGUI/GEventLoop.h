@@ -60,7 +60,7 @@ private:
     void handle_wm_event(const WSAPI_ServerMessage&, GWindow&);
     void connect_to_server();
 
-    Vector<WSAPI_ServerMessage> m_unprocessed_messages;
+    Vector<WSAPI_ServerMessage, 64> m_unprocessed_messages;
     static pid_t s_server_pid;
     static pid_t s_event_fd;
 };

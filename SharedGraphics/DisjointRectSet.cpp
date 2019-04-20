@@ -14,7 +14,7 @@ void DisjointRectSet::add(const Rect& new_rect)
 
 void DisjointRectSet::shatter()
 {
-    Vector<Rect> output;
+    Vector<Rect, 32> output;
     output.ensure_capacity(m_rects.size());
     bool pass_had_intersections = false;
     do {

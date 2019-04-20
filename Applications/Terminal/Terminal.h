@@ -25,6 +25,8 @@ public:
     void apply_size_increments_to_window(GWindow&);
 
 private:
+    typedef Vector<unsigned, 4> ParamVector;
+
     virtual void event(CEvent&) override;
     virtual void paint_event(GPaintEvent&) override;
     virtual void resize_event(GResizeEvent&) override;
@@ -42,22 +44,22 @@ private:
     void unimplemented_escape();
     void unimplemented_xterm_escape();
 
-    void escape$A(const Vector<unsigned>&);
-    void escape$B(const Vector<unsigned>&);
-    void escape$C(const Vector<unsigned>&);
-    void escape$D(const Vector<unsigned>&);
-    void escape$H(const Vector<unsigned>&);
-    void escape$J(const Vector<unsigned>&);
-    void escape$K(const Vector<unsigned>&);
-    void escape$M(const Vector<unsigned>&);
-    void escape$G(const Vector<unsigned>&);
-    void escape$X(const Vector<unsigned>&);
-    void escape$d(const Vector<unsigned>&);
-    void escape$m(const Vector<unsigned>&);
-    void escape$s(const Vector<unsigned>&);
-    void escape$u(const Vector<unsigned>&);
-    void escape$t(const Vector<unsigned>&);
-    void escape$r(const Vector<unsigned>&);
+    void escape$A(const ParamVector&);
+    void escape$B(const ParamVector&);
+    void escape$C(const ParamVector&);
+    void escape$D(const ParamVector&);
+    void escape$H(const ParamVector&);
+    void escape$J(const ParamVector&);
+    void escape$K(const ParamVector&);
+    void escape$M(const ParamVector&);
+    void escape$G(const ParamVector&);
+    void escape$X(const ParamVector&);
+    void escape$d(const ParamVector&);
+    void escape$m(const ParamVector&);
+    void escape$s(const ParamVector&);
+    void escape$u(const ParamVector&);
+    void escape$t(const ParamVector&);
+    void escape$r(const ParamVector&);
 
     void clear();
 

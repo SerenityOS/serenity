@@ -76,7 +76,7 @@ struct GFileSystemModel::Node {
 
     String full_path(const GFileSystemModel& model) const
     {
-        Vector<String> lineage;
+        Vector<String, 32> lineage;
         for (auto* ancestor = parent; ancestor; ancestor = ancestor->parent) {
             lineage.append(ancestor->name);
         }

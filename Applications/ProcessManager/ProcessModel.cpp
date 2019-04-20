@@ -193,7 +193,7 @@ void ProcessModel::update()
     }
 
     m_pids.clear();
-    Vector<pid_t> pids_to_remove;
+    Vector<pid_t, 16> pids_to_remove;
     for (auto& it : m_processes) {
         if (!live_pids.contains(it.key)) {
             pids_to_remove.append(it.key);
