@@ -75,7 +75,7 @@ protected:
 
     Rect m_clip_origin;
     Retained<GraphicsBitmap> m_target;
-    Vector<State> m_state_stack;
+    Vector<State, 4> m_state_stack;
 };
 
 class PainterStateSaver {

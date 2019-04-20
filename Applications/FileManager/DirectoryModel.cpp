@@ -26,6 +26,7 @@ int thumbnail_thread(void* model_ptr)
         Vector<String> to_generate;
         {
             LOCKER(thumbnail_cache().lock());
+            to_generate.ensure_capacity(thumbnail_cache().resource().size());
             for (auto& it : thumbnail_cache().resource()) {
                 if (it.value)
                     continue;

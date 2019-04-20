@@ -64,7 +64,7 @@ int execvp(const char* filename, char* const argv[])
 
 int execl(const char* filename, const char* arg0, ...)
 {
-    Vector<const char*> args;
+    Vector<const char*, 16> args;
     args.append(arg0);
 
     va_list ap;

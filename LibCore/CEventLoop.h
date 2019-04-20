@@ -52,7 +52,7 @@ private:
         WeakPtr<CObject> receiver;
         OwnPtr<CEvent> event;
     };
-    Vector<QueuedEvent> m_queued_events;
+    Vector<QueuedEvent, 64> m_queued_events;
 
     bool m_running { false };
     bool m_exit_requested { false };

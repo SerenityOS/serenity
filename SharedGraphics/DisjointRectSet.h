@@ -13,11 +13,11 @@ public:
 
     void clear() { m_rects.clear(); }
     void clear_with_capacity() { m_rects.clear_with_capacity(); }
-    const Vector<Rect>& rects() const { return m_rects; }
+    const Vector<Rect, 32>& rects() const { return m_rects; }
 
 private:
     void shatter();
 
-    Vector<Rect> m_rects;
+    Vector<Rect, 32> m_rects;
 };
 
