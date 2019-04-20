@@ -118,7 +118,16 @@ public:
     }
 
     ByteBuffer to_byte_buffer() const;
-    static String from_byte_buffer(const ByteBuffer&, ShouldChomp = NoChomp);
+
+    template<typename BufferType>
+    static String copy(const BufferType& buffer, ShouldChomp should_chomp = NoChomp)
+    {
+        if (buffer.is_null())
+            return { };
+        if (buffer.is_empty())
+            return empty();
+        return String((const char*)buffer.data(), buffer.size(), should_chomp);
+    }
 
     static String format(const char*, ...);
 

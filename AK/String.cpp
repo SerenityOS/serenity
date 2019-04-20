@@ -122,15 +122,6 @@ ByteBuffer String::to_byte_buffer() const
     return ByteBuffer::copy(reinterpret_cast<const byte*>(characters()), length());
 }
 
-String String::from_byte_buffer(const ByteBuffer& buffer, ShouldChomp should_chomp)
-{
-    if (buffer.is_null())
-        return { };
-    if (buffer.is_empty())
-        return empty();
-    return String((const char*)buffer.pointer(), buffer.size(), should_chomp);
-}
-
 // FIXME: Duh.
 int String::to_int(bool& ok) const
 {
