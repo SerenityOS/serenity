@@ -39,6 +39,9 @@ public:
 
     const T& at(int index) const { return m_elements[(m_head + index) % Capacity]; }
 
+    const T& first() const { return at(0); }
+    const T& last() const { return at(size() - 1); }
+
     class ConstIterator {
     public:
         bool operator!=(const ConstIterator& other) { return m_index != other.m_index; }
