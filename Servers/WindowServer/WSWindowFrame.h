@@ -1,5 +1,6 @@
 #pragma once
 
+#include <AK/OwnPtr.h>
 #include <AK/Vector.h>
 
 class Painter;
