@@ -694,7 +694,8 @@ void Process::sys$sigreturn()
 {
     InterruptDisabler disabler;
     Scheduler::prepare_to_modify_tss(*current);
-    current->m_tss = current->m_tss_to_resume_kernel;
+    current->m_tss = *current->m_tss_to_resume_kernel;
+    current->m_tss_to_resume_kernel.clear();
 #ifdef SIGNAL_DEBUG
     kprintf("sys$sigreturn in %s(%u)\n", name().characters(), pid());
     auto& tss = current->tss();

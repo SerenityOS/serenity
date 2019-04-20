@@ -347,9 +347,9 @@ ShouldUnblockThread Thread::dispatch_signal(byte signal)
         kprintf("dispatch_signal to %s(%u) in state=%s with return to %w:%x\n", name().characters(), pid(), to_string(state()), ret_cs, ret_eip);
 #endif
         ASSERT(is_blocked());
-        m_tss_to_resume_kernel = m_tss;
+        m_tss_to_resume_kernel = make<TSS32>(m_tss);
 #ifdef SIGNAL_DEBUG
-        kprintf("resume tss pc: %w:%x stack: %w:%x flags: %x cr3: %x\n", m_tss_to_resume_kernel.cs, m_tss_to_resume_kernel.eip, m_tss_to_resume_kernel.ss, m_tss_to_resume_kernel.esp, m_tss_to_resume_kernel.eflags, m_tss_to_resume_kernel.cr3);
+        kprintf("resume tss pc: %w:%x stack: %w:%x flags: %x cr3: %x\n", m_tss_to_resume_kernel.cs, m_tss_to_resume_kernel->eip, m_tss_to_resume_kernel->ss, m_tss_to_resume_kernel->esp, m_tss_to_resume_kernel->eflags, m_tss_to_resume_kernel->cr3);
 #endif
 
         if (!m_signal_stack_user_region) {
