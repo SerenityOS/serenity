@@ -35,6 +35,8 @@ private:
     bool is_available(const Coordinate&);
     void queue_velocity(int v, int h);
     const Velocity& last_velocity() const;
+    Rect cell_rect(const Coordinate&) const;
+    Rect score_rect() const;
 
     int m_rows { 20 };
     int m_columns { 20 };
@@ -51,6 +53,7 @@ private:
 
     int m_length { 0 };
     unsigned m_score { 0 };
+    String m_score_text;
 
     RetainPtr<GraphicsBitmap> m_fruit_bitmap;
 };
