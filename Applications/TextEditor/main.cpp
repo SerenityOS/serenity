@@ -41,7 +41,7 @@ int main(int argc, char** argv)
             fprintf(stderr, "Opening %s: %s\n", path.characters(), file.error_string());
             return 1;
         }
-        text_editor->set_text(String::from_byte_buffer(file.read_all()));
+        text_editor->set_text(String::copy(file.read_all()));
     }
 
     auto new_action = GAction::create("New document", { Mod_Ctrl, Key_N }, GraphicsBitmap::load_from_file("/res/icons/16x16/new.png"), [] (const GAction&) {

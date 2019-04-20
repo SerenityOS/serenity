@@ -104,6 +104,9 @@ public:
     bool is_empty() const { return !m_impl || m_impl->is_empty(); }
     ssize_t size() const { return m_impl ? m_impl->size() : 0; }
 
+    byte* data() { return pointer(); }
+    const byte* data() const { return pointer(); }
+
     byte* pointer() { return m_impl ? m_impl->pointer() : nullptr; }
     const byte* pointer() const { return m_impl ? m_impl->pointer() : nullptr; }
 

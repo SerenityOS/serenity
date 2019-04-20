@@ -17,7 +17,7 @@ void CHttpJob::on_socket_connected()
 {
     auto raw_request = m_request.to_raw_request();
 #if 0
-    printf("raw_request:\n%s\n", String::from_byte_buffer(raw_request).characters());
+    printf("raw_request:\n%s\n", String::copy(raw_request).characters());
 #endif
 
     bool success = m_socket->send(raw_request);
@@ -35,7 +35,7 @@ void CHttpJob::on_socket_connected()
                 printf("Expected HTTP status\n");
                 return deferred_invoke([this](auto&){ did_fail(CNetworkJob::Error::TransmissionFailed); });
             }
-            auto parts = String::from_byte_buffer(line, Chomp).split(' ');
+            auto parts = String::copy(line, Chomp).split(' ');
             if (parts.size() < 3) {
                 printf("Expected 3-part HTTP status, got '%s'\n", line.pointer());
                 return deferred_invoke([this](auto&){ did_fail(CNetworkJob::Error::ProtocolFailed); });
@@ -57,7 +57,7 @@ void CHttpJob::on_socket_connected()
                 printf("Expected HTTP header\n");
                 return did_fail(CNetworkJob::Error::ProtocolFailed);
             }
-            auto chomped_line = String::from_byte_buffer(line, Chomp);
+            auto chomped_line = String::copy(line, Chomp);
             if (chomped_line.is_empty()) {
                 m_state = State::InBody;
                 continue;

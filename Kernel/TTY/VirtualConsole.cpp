@@ -320,7 +320,7 @@ void VirtualConsole::escape$J(const Vector<unsigned>& params)
 
 void VirtualConsole::execute_escape_sequence(byte final)
 {
-    auto paramparts = String((const char*)m_parameters.data(), m_parameters.size()).split(';');
+    auto paramparts = String::copy(m_parameters).split(';');
     Vector<unsigned> params;
     for (auto& parampart : paramparts) {
         bool ok;

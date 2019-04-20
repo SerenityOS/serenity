@@ -106,7 +106,7 @@ private:
     void handle_rpl_namreply(const Message&);
     void handle_privmsg(const Message&);
     void handle_nick(const Message&);
-    void handle(const Message&, const String& verbatim);
+    void handle(const Message&);
     void handle_user_command(const String&);
 
     void on_socket_connected();
@@ -117,7 +117,6 @@ private:
     CTCPSocket* m_socket { nullptr };
 
     String m_nickname;
-    Vector<char> m_line_buffer;
     OwnPtr<CNotifier> m_notifier;
     HashMap<String, RetainPtr<IRCChannel>> m_channels;
     HashMap<String, RetainPtr<IRCQuery>> m_queries;
