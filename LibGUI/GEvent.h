@@ -14,6 +14,7 @@ public:
         Show = 1000,
         Hide,
         Paint,
+        MultiPaint,
         Resize,
         MouseMove,
         MouseDown,
@@ -125,6 +126,23 @@ public:
 
 private:
     String m_icon_path;
+};
+
+class GMultiPaintEvent final : public GEvent {
+public:
+    explicit GMultiPaintEvent(const Vector<Rect, 32>& rects, const Size& window_size)
+        : GEvent(GEvent::MultiPaint)
+        , m_rects(rects)
+        , m_window_size(window_size)
+    {
+    }
+
+    const Vector<Rect, 32>& rects() const { return m_rects; }
+    Size window_size() const { return m_window_size; }
+
+private:
+    Vector<Rect, 32> m_rects;
+    Size m_window_size;
 };
 
 class GPaintEvent final : public GEvent {
