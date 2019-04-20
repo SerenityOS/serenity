@@ -50,4 +50,7 @@ private:
     Coordinate m_fruit;
 
     int m_length { 0 };
+    unsigned m_score { 0 };
+
+    RetainPtr<GraphicsBitmap> m_fruit_bitmap;
 };
