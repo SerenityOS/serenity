@@ -6,6 +6,7 @@
 #include <Kernel/UnixTypes.h>
 #include <AK/AKString.h>
 #include <AK/InlineLinkedList.h>
+#include <AK/OwnPtr.h>
 #include <AK/RetainPtr.h>
 #include <AK/Vector.h>
 
@@ -138,7 +139,7 @@ private:
     Process& m_process;
     int m_tid { -1 };
     TSS32 m_tss;
-    TSS32 m_tss_to_resume_kernel;
+    OwnPtr<TSS32> m_tss_to_resume_kernel;
     FarPtr m_far_ptr;
     dword m_ticks { 0 };
     dword m_ticks_left { 0 };
