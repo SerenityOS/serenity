@@ -38,8 +38,10 @@ WSWindow::WSWindow(WSClientConnection& client, WSWindowType window_type, int win
     , m_frame(*this)
 {
     // FIXME: This should not be hard-coded here.
-    if (m_type == WSWindowType::Taskbar)
+    if (m_type == WSWindowType::Taskbar) {
+        m_wm_event_mask = WSAPI_WMEventMask::WindowStateChanges | WSAPI_WMEventMask::WindowRemovals | WSAPI_WMEventMask::WindowIconChanges;
         m_listens_to_wm_events = true;
+    }
     WSWindowManager::the().add_window(*this);
 }
 
@@ -207,6 +209,15 @@ void WSWindow::event(CEvent& event)
         ASSERT(changed_event.icon_path().length() < sizeof(server_message.text));
         memcpy(server_message.text, changed_event.icon_path().characters(), changed_event.icon_path().length());
         server_message.text_length = changed_event.icon_path().length();
+        break;
+    }
+
+    case WSEvent::WM_WindowRectChanged: {
+        auto& changed_event = static_cast<const WSWMWindowRectChangedEvent&>(event);
+        server_message.type = WSAPI_ServerMessage::Type::WM_WindowRectChanged;
+        server_message.wm.client_id = changed_event.client_id();
+        server_message.wm.window_id = changed_event.window_id();
+        server_message.wm.rect = changed_event.rect();
         break;
     }
 

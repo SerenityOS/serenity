@@ -76,6 +76,17 @@ void TaskbarWindow::wm_event(GWMEvent& event)
         update();
         break;
     }
+    case GEvent::WM_WindowRectChanged: {
+#ifdef EVENT_DEBUG
+        auto& changed_event = static_cast<GWMWindowRectChangedEvent&>(event);
+        dbgprintf("WM_WindowRectChanged: client_id=%d, window_id=%d, rect=%s\n",
+            changed_event.client_id(),
+            changed_event.window_id(),
+            changed_event.rect().to_string().characters()
+        );
+#endif
+        break;
+    }
     case GEvent::WM_WindowIconChanged: {
         auto& changed_event = static_cast<GWMWindowIconChangedEvent&>(event);
 #ifdef EVENT_DEBUG

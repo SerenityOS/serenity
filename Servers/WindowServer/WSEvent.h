@@ -29,6 +29,7 @@ public:
 
         WM_WindowRemoved,
         WM_WindowStateChanged,
+        WM_WindowRectChanged,
         WM_WindowIconChanged,
 
         __Begin_API_Client_Requests,
@@ -749,4 +750,18 @@ public:
 
 private:
     String m_icon_path;
+};
+
+class WSWMWindowRectChangedEvent : public WSWMEvent {
+public:
+    WSWMWindowRectChangedEvent(int client_id, int window_id, const Rect& rect)
+        : WSWMEvent(WSEvent::WM_WindowRectChanged, client_id, window_id)
+        , m_rect(rect)
+    {
+    }
+
+    Rect rect() const { return m_rect; }
+
+private:
+    Rect m_rect;
 };

@@ -112,6 +112,7 @@ public:
 
     void tell_wm_listeners_window_state_changed(WSWindow&);
     void tell_wm_listeners_window_icon_changed(WSWindow&);
+    void tell_wm_listeners_window_rect_changed(WSWindow&);
 
 private:
     void process_mouse_event(const WSMouseEvent&, WSWindow*& event_window);
@@ -139,6 +140,7 @@ private:
     void tick_clock();
     void tell_wm_listener_about_window(WSWindow& listener, WSWindow&);
     void tell_wm_listener_about_window_icon(WSWindow& listener, WSWindow&);
+    void tell_wm_listener_about_window_rect(WSWindow& listener, WSWindow&);
     void pick_new_active_window();
 
     WSScreen& m_screen;
