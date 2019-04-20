@@ -56,11 +56,13 @@ void SnakeGame::timer_event(CTimerEvent&)
     if (m_tail.size() > m_length)
         m_tail.take_last();
 
-    m_head.row += m_vertical_velocity;
-    m_head.column += m_horizontal_velocity;
+    if (!m_velocity_queue.is_empty())
+        m_velocity = m_velocity_queue.dequeue();
 
-    m_last_vertical_velocity = m_vertical_velocity;
-    m_last_horizontal_velocity = m_horizontal_velocity;
+    m_head.row += m_velocity.vertical;
+    m_head.column += m_velocity.horizontal;
+
+    m_last_velocity = m_velocity;
 
     if (m_head.row >= m_rows)
         m_head.row = 0;
@@ -90,31 +92,27 @@ void SnakeGame::keydown_event(GKeyEvent& event)
     switch (event.key()) {
     case KeyCode::Key_A:
     case KeyCode::Key_Left:
-        if (m_last_horizontal_velocity == 1)
+        if (last_velocity().horizontal == 1)
             break;
-        m_vertical_velocity = 0;
-        m_horizontal_velocity = -1;
+        queue_velocity(0, -1);
         break;
     case KeyCode::Key_D:
     case KeyCode::Key_Right:
-        if (m_last_horizontal_velocity == -1)
+        if (last_velocity().horizontal == -1)
             break;
-        m_vertical_velocity = 0;
-        m_horizontal_velocity = 1;
+        queue_velocity(0, 1);
         break;
     case KeyCode::Key_W:
     case KeyCode::Key_Up:
-        if (m_last_vertical_velocity == 1)
+        if (last_velocity().vertical == 1)
             break;
-        m_vertical_velocity = -1;
-        m_horizontal_velocity = 0;
+        queue_velocity(-1, 0);
         break;
     case KeyCode::Key_S:
     case KeyCode::Key_Down:
-        if (m_last_vertical_velocity == -1)
+        if (last_velocity().vertical == -1)
             break;
-        m_vertical_velocity = 1;
-        m_horizontal_velocity = 0;
+        queue_velocity(1, 0);
         break;
     default:
         break;
@@ -148,4 +146,19 @@ void SnakeGame::paint_event(GPaintEvent& event)
 void SnakeGame::game_over()
 {
     reset();
+}
+
+void SnakeGame::queue_velocity(int v, int h)
+{
+    if (last_velocity().vertical == v && last_velocity().horizontal == h)
+        return;
+    m_velocity_queue.enqueue({ v, h });
+}
+
+const SnakeGame::Velocity& SnakeGame::last_velocity() const
+{
+    if (!m_velocity_queue.is_empty())
+        return m_velocity_queue.last();
+
+    return m_last_velocity;
 }

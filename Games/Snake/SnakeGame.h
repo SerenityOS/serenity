@@ -1,6 +1,7 @@
 #pragma once
 
 #include <LibGUI/GWidget.h>
+#include <AK/CircularQueue.h>
 
 class SnakeGame : public GWidget {
 public:
@@ -24,18 +25,24 @@ private:
         }
     };
 
+    struct Velocity {
+        int vertical { 0 };
+        int horizontal { 0 };
+    };
+
     void game_over();
     void spawn_fruit();
     bool is_available(const Coordinate&);
+    void queue_velocity(int v, int h);
+    const Velocity& last_velocity() const;
 
     int m_rows { 20 };
     int m_columns { 20 };
 
-    int m_horizontal_velocity { 1 };
-    int m_vertical_velocity { 0 };
+    Velocity m_velocity { 0, 1 };
+    Velocity m_last_velocity { 0, 1 };
 
-    int m_last_horizontal_velocity { 1 };
-    int m_last_vertical_velocity { 0 };
+    CircularQueue<Velocity, 10> m_velocity_queue;
 
     Coordinate m_head;
     Vector<Coordinate> m_tail;
