@@ -1,6 +1,6 @@
 #pragma once
 
-#if defined(SERENITY) && defined(KERNEL)
+#ifdef KERNEL
 #define AK_MAKE_ETERNAL \
 public: \
     void* operator new(size_t size) { return kmalloc_eternal(size); } \
@@ -12,17 +12,14 @@ private:
 #ifdef KERNEL
 #include <Kernel/kmalloc.h>
 #else
-#include <LibC/stdlib.h>
+#include <stdlib.h>
 
-extern "C" {
+#define kcalloc calloc
+#define kmalloc malloc
+#define kfree free
+#define krealloc realloc
 
-[[gnu::malloc, gnu::returns_nonnull]] void* kmalloc(size_t size);
-[[gnu::malloc, gnu::returns_nonnull]] void* kmalloc_eternal(size_t);
-[[gnu::returns_nonnull]] void* krealloc(void* ptr, size_t size);
-void kfree(void* ptr);
-
-}
-
+#ifdef __serenity__
 inline void* operator new(size_t size)
 {
     return kmalloc(size);
@@ -47,5 +44,6 @@ inline void* operator new(size_t, void* ptr)
 {
     return ptr;
 }
+#endif
 
 #endif
