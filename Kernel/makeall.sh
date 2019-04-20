@@ -44,6 +44,8 @@ $make_cmd -C ../Applications/VisualBuilder clean && \
 $make_cmd -C ../Applications/VisualBuilder && \
 $make_cmd -C ../Games/Minesweeper clean && \
 $make_cmd -C ../Games/Minesweeper && \
+$make_cmd -C ../Games/Snake clean && \
+$make_cmd -C ../Games/Snake && \
 $make_cmd clean &&\
 $make_cmd && \
 sudo ./sync.sh
