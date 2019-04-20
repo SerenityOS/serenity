@@ -84,8 +84,11 @@ void GEventLoop::handle_paint_event(const WSAPI_ServerMessage& event, GWindow& w
 #ifdef GEVENTLOOP_DEBUG
     dbgprintf("WID=%x Paint [%d,%d %dx%d]\n", event.window_id, event.paint.rect.location.x, event.paint.rect.location.y, event.paint.rect.size.width, event.paint.rect.size.height);
 #endif
+    Vector<Rect, 32> rects;
+    ASSERT(event.rect_count <= 32);
     for (int i = 0; i < event.rect_count; ++i)
-        post_event(window, make<GPaintEvent>(event.rects[i], event.paint.window_size));
+        rects.append(event.rects[i]);
+    post_event(window, make<GMultiPaintEvent>(rects, event.paint.window_size));
 }
 
 void GEventLoop::handle_resize_event(const WSAPI_ServerMessage& event, GWindow& window)
