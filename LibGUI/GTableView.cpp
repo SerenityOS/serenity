@@ -147,10 +147,10 @@ void GTableView::paint_event(GPaintEvent& event)
         } else {
             if (alternating_row_colors() && (painted_item_index % 2)) {
                 background_color = Color(210, 210, 210);
-                key_column_background_color = Color(190, 190, 190);
+                key_column_background_color = Color(180, 180, 180);
             } else {
                 background_color = Color::White;
-                key_column_background_color = Color(235, 235, 235);
+                key_column_background_color = Color(210, 210, 210);
             }
         }
         painter.fill_rect(row_rect(painted_item_index), background_color);
