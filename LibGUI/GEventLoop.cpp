@@ -175,6 +175,8 @@ void GEventLoop::handle_wm_event(const WSAPI_ServerMessage& event, GWindow& wind
 #endif
     if (event.type == WSAPI_ServerMessage::WM_WindowStateChanged)
         return post_event(window, make<GWMWindowStateChangedEvent>(event.wm.client_id, event.wm.window_id, String(event.text, event.text_length), event.wm.rect, event.wm.is_active, (GWindowType)event.wm.window_type, event.wm.is_minimized));
+    if (event.type == WSAPI_ServerMessage::WM_WindowRectChanged)
+        return post_event(window, make<GWMWindowRectChangedEvent>(event.wm.client_id, event.wm.window_id, event.wm.rect));
     if (event.type == WSAPI_ServerMessage::WM_WindowIconChanged)
         return post_event(window, make<GWMWindowIconChangedEvent>(event.wm.client_id, event.wm.window_id, String(event.text, event.text_length)));
     if (event.type == WSAPI_ServerMessage::WM_WindowRemoved)

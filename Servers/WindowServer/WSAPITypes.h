@@ -57,6 +57,13 @@ enum class WSAPI_StandardCursor : unsigned char {
     ResizeVertical,
 };
 
+enum WSAPI_WMEventMask : unsigned {
+    WindowRectChanges = 1 << 0,
+    WindowStateChanges = 1 << 1,
+    WindowIconChanges = 1 << 2,
+    WindowRemovals = 1 << 3,
+};
+
 struct WSAPI_ServerMessage {
     enum Type : unsigned {
         Invalid,
@@ -97,6 +104,7 @@ struct WSAPI_ServerMessage {
         ScreenRectChanged,
         WM_WindowRemoved,
         WM_WindowStateChanged,
+        WM_WindowRectChanged,
         WM_WindowIconChanged,
     };
     Type type { Invalid };
