@@ -44,7 +44,7 @@ int main(int argc, char** argv)
 
     window->show();
 
-    window->set_icon_path("/res/icons/minesweeper/mine.png");
+    window->set_icon_path("/res/icons/16x16/app-snake.png");
 
     return app.exec();
 }
