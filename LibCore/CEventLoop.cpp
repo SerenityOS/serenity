@@ -15,6 +15,7 @@
 #include <LibC/stdlib.h>
 
 //#define CEVENTLOOP_DEBUG
+//#define DEFERRED_INVOKE_DEBUG
 
 static CEventLoop* s_main_event_loop;
 static Vector<CEventLoop*>* s_event_loop_stack;
@@ -110,7 +111,9 @@ int CEventLoop::exec()
                     dbgprintf("Event type %u with no receiver :(\n", event.type());
                 }
             } else if (event.type() == CEvent::Type::DeferredInvoke) {
+#ifdef DEFERRED_INVOKE_DEBUG
                 printf("DeferredInvoke: receiver=%s{%p}\n", receiver->class_name(), receiver);
+#endif
                 static_cast<CDeferredInvocationEvent&>(event).m_invokee(*receiver);
             } else {
                 receiver->event(event);
