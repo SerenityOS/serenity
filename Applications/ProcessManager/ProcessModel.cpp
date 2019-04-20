@@ -23,7 +23,7 @@ ProcessModel::~ProcessModel()
 
 int ProcessModel::row_count(const GModelIndex&) const
 {
-    return m_processes.size();
+    return m_pids.size();
 }
 
 int ProcessModel::column_count(const GModelIndex&) const
@@ -203,11 +203,11 @@ void ProcessModel::update()
             pids_to_remove.append(it.key);
             continue;
         }
-
         auto& process = *it.value;
         dword nsched_diff = process.current_state.nsched - process.previous_state.nsched;
         process.current_state.cpu_percent = ((float)nsched_diff * 100) / (float)(sum_nsched - last_sum_nsched);
-        m_pids.append(it.key);
+        if (it.key != 0)
+            m_pids.append(it.key);
     }
     for (auto pid : pids_to_remove)
         m_processes.remove(pid);
