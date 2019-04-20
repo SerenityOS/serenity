@@ -1,5 +1,6 @@
 #include "SnakeGame.h"
 #include <LibGUI/GPainter.h>
+#include <LibGUI/GFontDatabase.h>
 #include <SharedGraphics/GraphicsBitmap.h>
 #include <stdlib.h>
 #include <time.h>
@@ -7,13 +8,16 @@
 SnakeGame::SnakeGame(GWidget* parent)
     : GWidget(parent)
 {
-    set_font(Font::default_bold_font());
+    set_font(GFontDatabase::the().get_by_name("Liza Regular"));
     m_fruit_bitmaps.append(*GraphicsBitmap::load_from_file("/res/icons/snake/paprika.png"));
     m_fruit_bitmaps.append(*GraphicsBitmap::load_from_file("/res/icons/snake/eggplant.png"));
     m_fruit_bitmaps.append(*GraphicsBitmap::load_from_file("/res/icons/snake/cauliflower.png"));
     m_fruit_bitmaps.append(*GraphicsBitmap::load_from_file("/res/icons/snake/tomato.png"));
     srand(time(nullptr));
     reset();
+
+    m_high_score = 0;
+    m_high_score_text = "Best: 0";
 }
 
 SnakeGame::~SnakeGame()
@@ -66,6 +70,12 @@ Rect SnakeGame::score_rect() const
     return { width() - score_width - 2, height() - font().glyph_height() - 2, score_width, font().glyph_height() };
 }
 
+Rect SnakeGame::high_score_rect() const
+{
+    int high_score_width = font().width(m_high_score_text);
+    return { 2, height() - font().glyph_height() - 2, high_score_width, font().glyph_height() };
+}
+
 void SnakeGame::timer_event(CTimerEvent&)
 {
     Vector<Coordinate> dirty_cells;
@@ -109,6 +119,11 @@ void SnakeGame::timer_event(CTimerEvent&)
         ++m_length;
         ++m_score;
         m_score_text = String::format("Score: %u", m_score);
+        if (m_score > m_high_score) {
+            m_high_score = m_score;
+            m_high_score_text = String::format("Best: %u", m_high_score);
+            update(high_score_rect());
+        }
         update(score_rect());
         dirty_cells.append(m_fruit);
         spawn_fruit();
@@ -188,6 +203,7 @@ void SnakeGame::paint_event(GPaintEvent& event)
 
     painter.draw_scaled_bitmap(cell_rect(m_fruit), *m_fruit_bitmaps[m_fruit_type], m_fruit_bitmaps[m_fruit_type]->rect());
 
+    painter.draw_text(high_score_rect(), m_high_score_text, TextAlignment::TopLeft, Color::from_rgb(0xfafae0));
     painter.draw_text(score_rect(), m_score_text, TextAlignment::TopLeft, Color::White);
 }
 
