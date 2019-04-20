@@ -19,6 +19,7 @@
 #include <WindowServer/WSCursor.h>
 #include <WindowServer/WSButton.h>
 #include <LibCore/CTimer.h>
+#include <WindowServer/WSAPITypes.h>
 
 //#define DEBUG_COUNTERS
 //#define RESIZE_DEBUG
@@ -311,6 +312,8 @@ void WSWindowManager::remove_window(WSWindow& window)
         m_switcher.refresh();
 
     for_each_window_listening_to_wm_events([&window] (WSWindow& listener) {
+        if (!(listener.wm_event_mask() & WSAPI_WMEventMask::WindowRemovals))
+            return IterationDecision::Continue;
         if (window.client())
             WSEventLoop::the().post_event(listener, make<WSWMWindowRemovedEvent>(window.client()->client_id(), window.window_id()));
         return IterationDecision::Continue;
@@ -319,12 +322,24 @@ void WSWindowManager::remove_window(WSWindow& window)
 
 void WSWindowManager::tell_wm_listener_about_window(WSWindow& listener, WSWindow& window)
 {
+    if (!(listener.wm_event_mask() & WSAPI_WMEventMask::WindowStateChanges))
+        return;
     if (window.client())
         WSEventLoop::the().post_event(listener, make<WSWMWindowStateChangedEvent>(window.client()->client_id(), window.window_id(), window.title(), window.rect(), window.is_active(), window.type(), window.is_minimized()));
 }
 
+void WSWindowManager::tell_wm_listener_about_window_rect(WSWindow& listener, WSWindow& window)
+{
+    if (!(listener.wm_event_mask() & WSAPI_WMEventMask::WindowRectChanges))
+        return;
+    if (window.client())
+        WSEventLoop::the().post_event(listener, make<WSWMWindowRectChangedEvent>(window.client()->client_id(), window.window_id(), window.rect()));
+}
+
 void WSWindowManager::tell_wm_listener_about_window_icon(WSWindow& listener, WSWindow& window)
 {
+    if (!(listener.wm_event_mask() & WSAPI_WMEventMask::WindowIconChanges))
+        return;
     if (window.client())
         WSEventLoop::the().post_event(listener, make<WSWMWindowIconChangedEvent>(window.client()->client_id(), window.window_id(), window.icon_path()));
 }
@@ -341,6 +356,14 @@ void WSWindowManager::tell_wm_listeners_window_icon_changed(WSWindow& window)
 {
     for_each_window_listening_to_wm_events([&] (WSWindow& listener) {
         tell_wm_listener_about_window_icon(listener, window);
+        return IterationDecision::Continue;
+    });
+}
+
+void WSWindowManager::tell_wm_listeners_window_rect_changed(WSWindow& window)
+{
+    for_each_window_listening_to_wm_events([&] (WSWindow& listener) {
+        tell_wm_listener_about_window_rect(listener, window);
         return IterationDecision::Continue;
     });
 }
@@ -364,7 +387,7 @@ void WSWindowManager::notify_rect_changed(WSWindow& window, const Rect& old_rect
 #endif
     if (m_switcher.is_visible() && window.type() != WSWindowType::WindowSwitcher)
         m_switcher.refresh();
-    tell_wm_listeners_window_state_changed(window);
+    tell_wm_listeners_window_rect_changed(window);
 }
 
 void WSWindowManager::notify_minimization_state_changed(WSWindow& window)

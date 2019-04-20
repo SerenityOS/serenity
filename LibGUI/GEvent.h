@@ -30,9 +30,13 @@ public:
         FocusOut,
         WindowCloseRequest,
         ContextMenu,
+
+        __Begin_WM_Events,
         WM_WindowRemoved,
         WM_WindowStateChanged,
+        WM_WindowRectChanged,
         WM_WindowIconChanged,
+        __End_WM_Events,
     };
 
     GEvent() { }
@@ -93,6 +97,20 @@ private:
     GWindowType m_window_type;
     bool m_active;
     bool m_minimized;
+};
+
+class GWMWindowRectChangedEvent : public GWMEvent {
+public:
+    GWMWindowRectChangedEvent(int client_id, int window_id, const Rect& rect)
+        : GWMEvent(GEvent::Type::WM_WindowRectChanged, client_id, window_id)
+        , m_rect(rect)
+    {
+    }
+
+    Rect rect() const { return m_rect; }
+
+private:
+    Rect m_rect;
 };
 
 class GWMWindowIconChangedEvent : public GWMEvent {
