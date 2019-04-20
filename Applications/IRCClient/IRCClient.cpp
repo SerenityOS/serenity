@@ -87,9 +87,9 @@ void IRCClient::receive_from_server()
 void IRCClient::process_line(ByteBuffer&& line)
 {
     Message msg;
-    Vector<char> prefix;
-    Vector<char> command;
-    Vector<char> current_parameter;
+    Vector<char, 32> prefix;
+    Vector<char, 32> command;
+    Vector<char, 256> current_parameter;
     enum {
         Start,
         InPrefix,

@@ -95,7 +95,7 @@ int CEventLoop::exec()
             wait_for_event();
             do_processing();
         }
-        Vector<QueuedEvent> events = move(m_queued_events);
+        auto events = move(m_queued_events);
         for (auto& queued_event : events) {
             auto* receiver = queued_event.receiver.ptr();
             auto& event = *queued_event.event;

@@ -2276,7 +2276,7 @@ void SharedBuffer::destroy_if_unused()
 void Process::disown_all_shared_buffers()
 {
     LOCKER(shared_buffers().lock());
-    Vector<SharedBuffer*> buffers_to_disown;
+    Vector<SharedBuffer*, 32> buffers_to_disown;
     for (auto& it : shared_buffers().resource())
         buffers_to_disown.append(it.value.ptr());
     for (auto* shared_buffer : buffers_to_disown)

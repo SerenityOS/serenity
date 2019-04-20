@@ -136,7 +136,7 @@ static inline Color lookup_color(unsigned color)
     return Color::from_rgb(xterm_colors[color]);
 }
 
-void Terminal::escape$m(const Vector<unsigned>& params)
+void Terminal::escape$m(const ParamVector& params)
 {
     if (params.size() == 3 && params[1] == 5) {
         if (params[0] == 38) {
@@ -183,25 +183,25 @@ void Terminal::escape$m(const Vector<unsigned>& params)
     }
 }
 
-void Terminal::escape$s(const Vector<unsigned>&)
+void Terminal::escape$s(const ParamVector&)
 {
     m_saved_cursor_row = m_cursor_row;
     m_saved_cursor_column = m_cursor_column;
 }
 
-void Terminal::escape$u(const Vector<unsigned>&)
+void Terminal::escape$u(const ParamVector&)
 {
     set_cursor(m_saved_cursor_row, m_saved_cursor_column);
 }
 
-void Terminal::escape$t(const Vector<unsigned>& params)
+void Terminal::escape$t(const ParamVector& params)
 {
     if (params.size() < 1)
         return;
     dbgprintf("FIXME: escape$t: Ps: %u\n", params[0]);
 }
 
-void Terminal::escape$r(const Vector<unsigned>& params)
+void Terminal::escape$r(const ParamVector& params)
 {
     unsigned top = 1;
     unsigned bottom = m_rows;
@@ -212,7 +212,7 @@ void Terminal::escape$r(const Vector<unsigned>& params)
     dbgprintf("FIXME: escape$r: Set scrolling region: %u-%u\n", top, bottom);
 }
 
-void Terminal::escape$H(const Vector<unsigned>& params)
+void Terminal::escape$H(const ParamVector& params)
 {
     unsigned row = 1;
     unsigned col = 1;
@@ -223,7 +223,7 @@ void Terminal::escape$H(const Vector<unsigned>& params)
     set_cursor(row - 1, col - 1);
 }
 
-void Terminal::escape$A(const Vector<unsigned>& params)
+void Terminal::escape$A(const ParamVector& params)
 {
     int num = 1;
     if (params.size() >= 1)
@@ -236,7 +236,7 @@ void Terminal::escape$A(const Vector<unsigned>& params)
     set_cursor(new_row, m_cursor_column);
 }
 
-void Terminal::escape$B(const Vector<unsigned>& params)
+void Terminal::escape$B(const ParamVector& params)
 {
     int num = 1;
     if (params.size() >= 1)
@@ -249,7 +249,7 @@ void Terminal::escape$B(const Vector<unsigned>& params)
     set_cursor(new_row, m_cursor_column);
 }
 
-void Terminal::escape$C(const Vector<unsigned>& params)
+void Terminal::escape$C(const ParamVector& params)
 {
     int num = 1;
     if (params.size() >= 1)
@@ -262,7 +262,7 @@ void Terminal::escape$C(const Vector<unsigned>& params)
     set_cursor(m_cursor_row, new_column);
 }
 
-void Terminal::escape$D(const Vector<unsigned>& params)
+void Terminal::escape$D(const ParamVector& params)
 {
     int num = 1;
     if (params.size() >= 1)
@@ -275,7 +275,7 @@ void Terminal::escape$D(const Vector<unsigned>& params)
     set_cursor(m_cursor_row, new_column);
 }
 
-void Terminal::escape$G(const Vector<unsigned>& params)
+void Terminal::escape$G(const ParamVector& params)
 {
     int new_column = 1;
     if (params.size() >= 1)
@@ -285,7 +285,7 @@ void Terminal::escape$G(const Vector<unsigned>& params)
     set_cursor(m_cursor_row, new_column);
 }
 
-void Terminal::escape$d(const Vector<unsigned>& params)
+void Terminal::escape$d(const ParamVector& params)
 {
     int new_row = 1;
     if (params.size() >= 1)
@@ -295,7 +295,7 @@ void Terminal::escape$d(const Vector<unsigned>& params)
     set_cursor(new_row, m_cursor_column);
 }
 
-void Terminal::escape$X(const Vector<unsigned>& params)
+void Terminal::escape$X(const ParamVector& params)
 {
     // Erase characters (without moving cursor)
     int num = 1;
@@ -309,7 +309,7 @@ void Terminal::escape$X(const Vector<unsigned>& params)
     }
 }
 
-void Terminal::escape$K(const Vector<unsigned>& params)
+void Terminal::escape$K(const ParamVector& params)
 {
     int mode = 0;
     if (params.size() >= 1)
@@ -336,7 +336,7 @@ void Terminal::escape$K(const Vector<unsigned>& params)
     }
 }
 
-void Terminal::escape$J(const Vector<unsigned>& params)
+void Terminal::escape$J(const ParamVector& params)
 {
     int mode = 0;
     if (params.size() >= 1)
@@ -370,7 +370,7 @@ void Terminal::escape$J(const Vector<unsigned>& params)
     }
 }
 
-void Terminal::escape$M(const Vector<unsigned>& params)
+void Terminal::escape$M(const ParamVector& params)
 {
     int count = 1;
     if (params.size() >= 1)
@@ -414,7 +414,7 @@ void Terminal::execute_escape_sequence(byte final)
 {
     m_final = final;
     auto paramparts = String((const char*)m_parameters.data(), m_parameters.size()).split(';');
-    Vector<unsigned> params;
+    ParamVector params;
     for (auto& parampart : paramparts) {
         bool ok;
         unsigned value = parse_uint(parampart, ok);

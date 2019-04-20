@@ -167,7 +167,7 @@ void Thread::finalize()
 
 void Thread::finalize_dying_threads()
 {
-    Vector<Thread*> dying_threads;
+    Vector<Thread*, 32> dying_threads;
     {
         InterruptDisabler disabler;
         for_each_in_state(Thread::State::Dying, [&] (Thread& thread) {

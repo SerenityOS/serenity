@@ -116,7 +116,7 @@ static String to_string(KeyCode key)
 
 String GShortcut::to_string() const
 {
-    Vector<String> parts;
+    Vector<String, 8> parts;
 
     if (m_modifiers & Mod_Ctrl)
         parts.append("Ctrl");

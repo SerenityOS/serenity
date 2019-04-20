@@ -197,7 +197,7 @@ int do_dir_short(const char* path)
         return 1;
     }
 
-    Vector<String> names;
+    Vector<String, 1024> names;
     int longest_name = 0;
     while (auto* de = readdir(dirp)) {
         if (de->d_name[0] == '.' && !flag_show_dotfiles)
