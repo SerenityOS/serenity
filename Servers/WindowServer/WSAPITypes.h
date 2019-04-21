@@ -109,12 +109,14 @@ struct WSAPI_ServerMessage {
     };
     Type type { Invalid };
     int window_id { -1 };
+    unsigned extra_size { 0 };
 
     union {
         int text_length { 0 };
         int rect_count;
     };
 
+    static const int max_inline_rect_count = 1;
     union {
         char text[512];
         WSAPI_Rect rects[32];
@@ -214,13 +216,16 @@ struct WSAPI_ClientMessage {
     };
     Type type { Invalid };
     int window_id { -1 };
+    unsigned extra_size { 0 };
     union {
         int text_length { 0 };
         int rect_count;
     };
+
+    static const int max_inline_rect_count = 1;
     union {
         char text[512];
-        WSAPI_Rect rects[32];
+        WSAPI_Rect rects[max_inline_rect_count];
     };
     int value { 0 };
 

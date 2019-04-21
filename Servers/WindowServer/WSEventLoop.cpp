@@ -115,7 +115,23 @@ static WSWindowType from_api(WSAPI_WindowType api_type)
     }
 }
 
-void WSEventLoop::on_receive_from_client(int client_id, const WSAPI_ClientMessage& message)
+static Vector<Rect, 32> get_rects(const WSAPI_ClientMessage& message, const ByteBuffer& extra_data)
+{
+    Vector<Rect, 32> rects;
+    if (message.rect_count > (WSAPI_ClientMessage::max_inline_rect_count + extra_data.size() / sizeof(WSAPI_Rect))) {
+        return { };
+    }
+    for (int i = 0; i < min(WSAPI_ClientMessage::max_inline_rect_count, message.rect_count); ++i)
+        rects.append(message.rects[i]);
+    if (!extra_data.is_empty()) {
+        auto* extra_rects = reinterpret_cast<const WSAPI_Rect*>(extra_data.data());
+        for (int i = 0; i < (extra_data.size() / sizeof(WSAPI_Rect)); ++i)
+            rects.append(extra_rects[i]);
+    }
+    return rects;
+}
+
+bool WSEventLoop::on_receive_from_client(int client_id, const WSAPI_ClientMessage& message, ByteBuffer&& extra_data)
 {
     WSClientConnection& client = *WSClientConnection::from_client_id(client_id);
     switch (message.type) {
@@ -192,18 +208,20 @@ void WSEventLoop::on_receive_from_client(int client_id, const WSAPI_ClientMessag
         post_event(client, make<WSAPIGetClipboardContentsRequest>(client_id));
         break;
     case WSAPI_ClientMessage::Type::InvalidateRect: {
-        Vector<Rect, 32> rects;
-        ASSERT(message.rect_count <= 32);
-        for (int i = 0; i < message.rect_count; ++i)
-            rects.append(message.rects[i]);
+        auto rects = get_rects(message, extra_data);
+        if (rects.is_empty()) {
+            client.did_misbehave();
+            return false;
+        }
         post_event(client, make<WSAPIInvalidateRectRequest>(client_id, message.window_id, rects));
         break;
     }
     case WSAPI_ClientMessage::Type::DidFinishPainting: {
-        Vector<Rect, 32> rects;
-        ASSERT(message.rect_count <= 32);
-        for (int i = 0; i < message.rect_count; ++i)
-            rects.append(message.rects[i]);
+        auto rects = get_rects(message, extra_data);
+        if (rects.is_empty()) {
+            client.did_misbehave();
+            return false;
+        }
         post_event(client, make<WSAPIDidFinishPaintingNotification>(client_id, message.window_id, rects));
         break;
     }
@@ -232,6 +250,7 @@ void WSEventLoop::on_receive_from_client(int client_id, const WSAPI_ClientMessag
     default:
         break;
     }
+    return true;
 }
 
 void WSEventLoop::add_file_descriptors_for_select(fd_set& fds, int& max_fd_added)
@@ -279,7 +298,22 @@ void WSEventLoop::drain_client(WSClientConnection& client)
             perror("read");
             ASSERT_NOT_REACHED();
         }
-        on_receive_from_client(client.client_id(), message);
+        ByteBuffer extra_data;
+        if (message.extra_size) {
+            if (message.extra_size >= 32768) {
+                dbgprintf("message.extra_size is way too large\n");
+                return client.did_misbehave();
+            }
+
+            extra_data = ByteBuffer::create_uninitialized(message.extra_size);
+            int extra_nread = read(client.fd(), extra_data.data(), extra_data.size());
+            if (extra_nread != message.extra_size) {
+                dbgprintf("extra_nread(%d) != extra_size(%d)\n", extra_nread, extra_data.size());
+                return client.did_misbehave();
+            }
+        }
+        if (!on_receive_from_client(client.client_id(), message, move(extra_data)))
+            return;
         ++messages_received;
     }
 }

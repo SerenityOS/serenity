@@ -21,7 +21,7 @@ public:
     static WSClientConnection* from_client_id(int client_id);
     static void for_each_client(Function<void(WSClientConnection&)>);
 
-    void post_message(const WSAPI_ServerMessage&);
+    void post_message(const WSAPI_ServerMessage&, const ByteBuffer& = { });
 
     int client_id() const { return m_client_id; }
     WSMenuBar* app_menubar() { return m_app_menubar.ptr(); }
@@ -38,6 +38,8 @@ public:
 
     void notify_about_new_screen_rect(const Rect&);
     void post_paint_message(WSWindow&);
+
+    void did_misbehave();
 
 private:
     virtual void event(CEvent&) override;

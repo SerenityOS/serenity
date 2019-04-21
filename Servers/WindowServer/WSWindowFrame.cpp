@@ -239,7 +239,7 @@ void WSWindowFrame::on_mouse_event(const WSMouseEvent& event)
         return;
     }
 
-    if (event.type() == WSEvent::MouseMove && event.buttons() == 0) {
+    if (m_window.is_resizable() && event.type() == WSEvent::MouseMove && event.buttons() == 0) {
         constexpr ResizeDirection direction_for_hot_area[3][3] = {
             { ResizeDirection::UpLeft, ResizeDirection::Up, ResizeDirection::UpRight },
             { ResizeDirection::Left, ResizeDirection::None, ResizeDirection::Right },
@@ -256,6 +256,6 @@ void WSWindowFrame::on_mouse_event(const WSMouseEvent& event)
         return;
     }
 
-    if (event.button() == MouseButton::Left)
+    if (m_window.is_resizable() && event.button() == MouseButton::Left)
         wm.start_window_resize(m_window, event.translated(rect().location()));
 }
