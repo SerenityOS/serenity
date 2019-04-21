@@ -43,7 +43,8 @@ LIBC_OBJS = \
        poll.o \
        locale.o \
        arpa/inet.o \
-       netdb.o
+       netdb.o \
+       sched.o
 
 ASM_OBJS = setjmp.no crti.ao crtn.ao
 
