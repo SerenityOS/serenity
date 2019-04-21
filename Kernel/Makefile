@@ -1,3 +1,5 @@
+include ../Makefile.common
+
 KERNEL_OBJS = \
        init.o \
        kmalloc.o \
@@ -77,24 +79,10 @@ CXX_OBJS = $(KERNEL_OBJS) $(VFS_OBJS) $(AK_OBJS)
 OBJS = $(CXX_OBJS) Boot/boot.ao
 
 KERNEL = kernel
-ARCH_FLAGS =
-STANDARD_FLAGS = -std=c++17 -nostdinc++ -nostdlib -nostdinc
-KERNEL_FLAGS = -ffreestanding
-WARNING_FLAGS = -Wextra -Wall -Wundef -Wcast-qual -Wwrite-strings -Wimplicit-fallthrough
-FLAVOR_FLAGS = -mregparm=3 -fno-exceptions -fno-rtti
-OPTIMIZATION_FLAGS = -Os
-INCLUDE_FLAGS = -I.. -I.
-CLANG_FLAGS = -Wconsumed -m32 -ffreestanding -march=i686
-#SUGGEST_FLAGS = -Wsuggest-final-types -Wsuggest-final-methods -Wsuggest-override #-Wsuggest-attribute=noreturn 
-
-DEFINES = -DKERNEL -DSANITIZE_PTRS
-
-CXXFLAGS = -MMD -MP $(WARNING_FLAGS) $(OPTIMIZATION_FLAGS) $(KERNEL_FLAGS) $(FLAVOR_FLAGS) $(ARCH_FLAGS) $(STANDARD_FLAGS) $(SUGGEST_FLAGS) $(INCLUDE_FLAGS) $(DEFINES)
-#CXX = clang $(CLANG_FLAGS)
-CXX = i686-pc-serenity-g++
+CXXFLAGS += -ffreestanding -mregparm=3
+DEFINES += -DKERNEL
 LD = i686-pc-serenity-ld
-AS = i686-pc-serenity-as
-LDFLAGS = -T linker.ld
+LDFLAGS += -T linker.ld
 
 all: $(KERNEL) kernel.map
 
