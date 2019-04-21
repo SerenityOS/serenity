@@ -1,3 +1,5 @@
+include ../Makefile.common
+
 AK_OBJS = \
     ../AK/StringImpl.o \
     ../AK/String.o \
@@ -48,19 +50,7 @@ ASM_OBJS = setjmp.no crti.ao crtn.ao
 CPP_OBJS = $(AK_OBJS) $(WIDGETS_OBJS) $(LIBC_OBJS)
 
 LIBRARY = libc.a
-STANDARD_FLAGS = -std=c++17
-WARNING_FLAGS = -Wextra -Wall -Wundef -Wcast-qual -Wwrite-strings -Wimplicit-fallthrough
-FLAVOR_FLAGS = -fno-exceptions -fno-rtti -fno-sized-deallocation
-OPTIMIZATION_FLAGS = -Os
-INCLUDE_FLAGS = -I.. -I.
-
-DEFINES = -DUSERLAND -DSANITIZE_PTRS
-
-CXXFLAGS = -MMD -MP $(WARNING_FLAGS) $(OPTIMIZATION_FLAGS) $(FLAVOR_FLAGS) $(STANDARD_FLAGS) $(INCLUDE_FLAGS) $(DEFINES)
-CXX = i686-pc-serenity-g++
-LD = i686-pc-serenity-ld
-AR = i686-pc-serenity-ar
-AS = i686-pc-serenity-as
+DEFINES += -DUSERLAND
 
 all: $(LIBRARY) startfiles
 
