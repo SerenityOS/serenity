@@ -1,15 +1,16 @@
 #pragma once
 
 #include <AK/Types.h>
-#include <Kernel/TTY/TTY.h>
-#include "Syscall.h"
-#include <Kernel/FileSystem/VirtualFileSystem.h>
-#include <Kernel/UnixTypes.h>
 #include <AK/InlineLinkedList.h>
 #include <AK/AKString.h>
 #include <AK/Vector.h>
 #include <AK/WeakPtr.h>
 #include <AK/Weakable.h>
+#include <Kernel/FileSystem/VirtualFileSystem.h>
+#include <Kernel/TTY/TTY.h>
+#include <Kernel/Syscall.h>
+#include <Kernel/UnixTypes.h>
+
 #include <Kernel/Thread.h>
 #include <Kernel/Lock.h>
 
@@ -17,17 +18,6 @@ class FileDescriptor;
 class PageDirectory;
 class Region;
 class VMObject;
-class Zone;
-class WSWindow;
-class GraphicsBitmap;
-
-#define COOL_GLOBALS
-#ifdef COOL_GLOBALS
-struct CoolGlobals {
-    pid_t current_pid;
-};
-extern CoolGlobals* g_cool_globals;
-#endif
 
 void kgettimeofday(timeval&);
 
