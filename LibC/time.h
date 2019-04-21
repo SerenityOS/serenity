@@ -5,11 +5,6 @@
 
 __BEGIN_DECLS
 
-struct timezone {
-    int tz_minuteswest;
-    int tz_dsttime;
-};
-
 struct tm {
     int tm_sec;    /* Seconds (0-60) */
     int tm_min;    /* Minutes (0-59) */
