@@ -27,7 +27,6 @@
 //#define TASK_DEBUG
 //#define FORK_DEBUG
 #define SIGNAL_DEBUG
-#define MAX_PROCESS_GIDS 32
 //#define SHARED_BUFFER_DEBUG
 
 static pid_t next_pid;
@@ -35,13 +34,8 @@ InlineLinkedList<Process>* g_processes;
 static String* s_hostname;
 static Lock* s_hostname_lock;
 
-CoolGlobals* g_cool_globals;
-
 void Process::initialize()
 {
-#ifdef COOL_GLOBALS
-    g_cool_globals = reinterpret_cast<CoolGlobals*>(0x1000);
-#endif
     next_pid = 0;
     g_processes = new InlineLinkedList<Process>;
     s_hostname = new String("courage");
@@ -1612,7 +1606,6 @@ int Process::sys$getgroups(ssize_t count, gid_t* gids)
 {
     if (count < 0)
         return -EINVAL;
-    ASSERT(m_gids.size() < MAX_PROCESS_GIDS);
     if (!count)
         return m_gids.size();
     if (count != (int)m_gids.size())
@@ -1631,8 +1624,6 @@ int Process::sys$setgroups(ssize_t count, const gid_t* gids)
         return -EINVAL;
     if (!is_superuser())
         return -EPERM;
-    if (count >= MAX_PROCESS_GIDS)
-        return -EINVAL;
     if (!validate_read(gids, count))
         return -EFAULT;
     m_gids.clear();
