@@ -16,7 +16,7 @@ public:
 
     static GEventLoop& current() { return static_cast<GEventLoop&>(CEventLoop::current()); }
 
-    static bool post_message_to_server(const WSAPI_ClientMessage&);
+    static bool post_message_to_server(const WSAPI_ClientMessage&, const ByteBuffer& extra_data = { });
     bool wait_for_specific_event(WSAPI_ServerMessage::Type, WSAPI_ServerMessage&);
     WSAPI_ServerMessage sync_request(const WSAPI_ClientMessage& request, WSAPI_ServerMessage::Type response_type);
 
@@ -25,7 +25,7 @@ public:
     virtual void take_pending_events_from(CEventLoop& other) override
     {
         CEventLoop::take_pending_events_from(other);
-        m_unprocessed_messages.append(move(static_cast<GEventLoop&>(other).m_unprocessed_messages));
+        m_unprocessed_bundles.append(move(static_cast<GEventLoop&>(other).m_unprocessed_bundles));
     }
 
 private:
@@ -43,13 +43,13 @@ private:
 
     virtual void do_processing() override
     {
-        process_unprocessed_messages();
+        process_unprocessed_bundles();
     }
 
     void wait_for_event();
     bool drain_messages_from_server();
-    void process_unprocessed_messages();
-    void handle_paint_event(const WSAPI_ServerMessage&, GWindow&);
+    void process_unprocessed_bundles();
+    void handle_paint_event(const WSAPI_ServerMessage&, GWindow&, const ByteBuffer& extra_data);
     void handle_resize_event(const WSAPI_ServerMessage&, GWindow&);
     void handle_mouse_event(const WSAPI_ServerMessage&, GWindow&);
     void handle_key_event(const WSAPI_ServerMessage&, GWindow&);
@@ -60,7 +60,12 @@ private:
     void handle_wm_event(const WSAPI_ServerMessage&, GWindow&);
     void connect_to_server();
 
-    Vector<WSAPI_ServerMessage, 64> m_unprocessed_messages;
+    struct IncomingWSMessageBundle {
+        WSAPI_ServerMessage message;
+        ByteBuffer extra_data;
+    };
+
+    Vector<IncomingWSMessageBundle, 64> m_unprocessed_bundles;
     static pid_t s_server_pid;
     static pid_t s_event_fd;
 };

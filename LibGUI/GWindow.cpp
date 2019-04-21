@@ -240,10 +240,13 @@ void GWindow::event(CEvent& event)
             WSAPI_ClientMessage message;
             message.type = WSAPI_ClientMessage::Type::DidFinishPainting;
             message.window_id = m_window_id;
-            message.rect_count = paint_event.rects().size();
-            for (int i = 0; i < paint_event.rects().size(); ++i)
-                message.rects[i] = paint_event.rects()[i];
-            GEventLoop::current().post_message_to_server(message);
+            message.rect_count = rects.size();
+            for (int i = 0; i < min(WSAPI_ClientMessage::max_inline_rect_count, rects.size()); ++i)
+                message.rects[i] = rects[i];
+            ByteBuffer extra_data;
+            if (rects.size() > WSAPI_ClientMessage::max_inline_rect_count)
+                extra_data = ByteBuffer::wrap((void*)&rects[WSAPI_ClientMessage::max_inline_rect_count], (rects.size() - WSAPI_ClientMessage::max_inline_rect_count) * sizeof(WSAPI_Rect));
+            GEventLoop::current().post_message_to_server(message, extra_data);
         }
         return;
     }
@@ -279,7 +282,10 @@ void GWindow::event(CEvent& event)
         auto new_size = static_cast<GResizeEvent&>(event).size();
         if (m_back_bitmap && m_back_bitmap->size() != new_size)
             m_back_bitmap = nullptr;
-        m_pending_paint_event_rects.clear();
+        if (!m_pending_paint_event_rects.is_empty()) {
+            m_pending_paint_event_rects.clear_with_capacity();
+            m_pending_paint_event_rects.append({ { }, new_size });
+        }
         m_rect_when_windowless = { { }, new_size };
         m_main_widget->set_relative_rect({ { }, new_size });
         return;
@@ -311,15 +317,16 @@ void GWindow::update(const Rect& a_rect)
 
     if (m_pending_paint_event_rects.is_empty()) {
         deferred_invoke([this] (auto&) {
-            // FIXME: Break it into multiple batches if needed.
-            ASSERT(m_pending_paint_event_rects.size() <= 32);
             WSAPI_ClientMessage request;
             request.type = WSAPI_ClientMessage::Type::InvalidateRect;
             request.window_id = m_window_id;
-            for (int i = 0; i < m_pending_paint_event_rects.size(); ++i)
+            for (int i = 0; i < min(WSAPI_ClientMessage::max_inline_rect_count, m_pending_paint_event_rects.size()); ++i)
                 request.rects[i] = m_pending_paint_event_rects[i];
+            ByteBuffer extra_data;
+            if (m_pending_paint_event_rects.size() > WSAPI_ClientMessage::max_inline_rect_count)
+                extra_data = ByteBuffer::wrap((void*)&m_pending_paint_event_rects[WSAPI_ClientMessage::max_inline_rect_count], (m_pending_paint_event_rects.size() - WSAPI_ClientMessage::max_inline_rect_count) * sizeof(WSAPI_Rect));
             request.rect_count = m_pending_paint_event_rects.size();
-            GEventLoop::current().post_message_to_server(request);
+            GEventLoop::current().post_message_to_server(request, extra_data);
             m_pending_paint_event_rects.clear_with_capacity();
         });
     }

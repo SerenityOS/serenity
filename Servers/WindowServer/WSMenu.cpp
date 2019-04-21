@@ -134,6 +134,8 @@ void WSMenu::event(CEvent& event)
         clear_hovered_item();
         return;
     }
+
+    CObject::event(event);
 }
 
 void WSMenu::clear_hovered_item()

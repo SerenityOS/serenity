@@ -681,7 +681,7 @@ void WSWindowManager::process_mouse_event(const WSMouseEvent& event, WSWindow*& 
                 start_window_drag(window, event);
                 return IterationDecision::Abort;
             }
-            if (m_keyboard_modifiers == Mod_Logo && event.type() == WSEvent::MouseDown && event.button() == MouseButton::Right && !window.is_blocked_by_modal_window()) {
+            if (window.is_resizable() && m_keyboard_modifiers == Mod_Logo && event.type() == WSEvent::MouseDown && event.button() == MouseButton::Right && !window.is_blocked_by_modal_window()) {
                 start_window_resize(window, event);
                 return IterationDecision::Abort;
             }
@@ -983,6 +983,8 @@ void WSWindowManager::event(CEvent& event)
         compose();
         return;
     }
+
+    CObject::event(event);
 }
 
 void WSWindowManager::set_highlight_window(WSWindow* window)
