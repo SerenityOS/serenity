@@ -321,10 +321,6 @@ bool Scheduler::context_switch(Thread& thread)
     current = &thread;
     thread.set_state(Thread::Running);
 
-#ifdef COOL_GLOBALS
-    g_cool_globals->current_pid = thread.process().pid();
-#endif
-
     if (!thread.selector()) {
         thread.set_selector(gdt_alloc_entry());
         auto& descriptor = get_gdt_entry(thread.selector());
