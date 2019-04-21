@@ -70,8 +70,11 @@ void WSClientConnection::post_error(const String& error_message)
     post_message(message);
 }
 
-void WSClientConnection::post_message(const WSAPI_ServerMessage& message)
+void WSClientConnection::post_message(const WSAPI_ServerMessage& message, const ByteBuffer& extra_data)
 {
+    if (!extra_data.is_empty())
+        const_cast<WSAPI_ServerMessage&>(message).extra_size = extra_data.size();
+
     int nwritten = write(m_fd, &message, sizeof(message));
     if (nwritten < 0) {
         if (errno == EPIPE) {
@@ -83,6 +86,20 @@ void WSClientConnection::post_message(const WSAPI_ServerMessage& message)
     }
 
     ASSERT(nwritten == sizeof(message));
+
+    if (!extra_data.is_empty()) {
+        nwritten = write(m_fd, extra_data.data(), extra_data.size());
+        if (nwritten < 0) {
+            if (errno == EPIPE) {
+                dbgprintf("WSClientConnection::post_message: Disconnected from peer during extra_data write.\n");
+                return;
+            }
+            perror("WSClientConnection::post_message write (extra_data)");
+            ASSERT_NOT_REACHED();
+        }
+
+        ASSERT(nwritten == extra_data.size());
+    }
 }
 
 void WSClientConnection::notify_about_new_screen_rect(const Rect& rect)
@@ -93,19 +110,28 @@ void WSClientConnection::notify_about_new_screen_rect(const Rect& rect)
     post_message(message);
 }
 
-void WSClientConnection::event(CEvent& message)
+void WSClientConnection::event(CEvent& event)
 {
-    if (static_cast<WSEvent&>(message).is_client_request()) {
-        on_request(static_cast<const WSAPIClientRequest&>(message));
+    if (static_cast<WSEvent&>(event).is_client_request()) {
+        on_request(static_cast<const WSAPIClientRequest&>(event));
         return;
     }
 
-    if (message.type() == WSEvent::WM_ClientDisconnected) {
-        int client_id = static_cast<const WSClientDisconnectedNotification&>(message).client_id();
+    if (event.type() == WSEvent::WM_ClientDisconnected) {
+        int client_id = static_cast<const WSClientDisconnectedNotification&>(event).client_id();
         dbgprintf("WSClientConnection: Client disconnected: %d\n", client_id);
         delete this;
         return;
     }
+
+    CObject::event(event);
+}
+
+void WSClientConnection::did_misbehave()
+{
+    dbgprintf("WSClientConnection{%p} (id=%d, pid=%d) misbehaved, disconnecting.\n", this, m_client_id, m_pid);
+    // FIXME: We should make sure we avoid processing any further messages from this client.
+    delete_later();
 }
 
 void WSClientConnection::handle_request(const WSAPICreateMenubarRequest&)
@@ -484,13 +510,14 @@ void WSClientConnection::post_paint_message(WSWindow& window)
     message.window_id = window.window_id();
     auto rect_set = window.take_pending_paint_rects();
     auto& rects = rect_set.rects();
-    // FIXME: Break it into multiple batches if needed.
-    ASSERT(rects.size() <= 32);
     message.rect_count = rects.size();
-    for (int i = 0; i < rects.size(); ++i)
+    for (int i = 0; i < min(WSAPI_ServerMessage::max_inline_rect_count, rects.size()); ++i)
         message.rects[i] = rects[i];
     message.paint.window_size = window.size();
-    post_message(message);
+    ByteBuffer extra_data;
+    if (rects.size() > WSAPI_ServerMessage::max_inline_rect_count)
+        extra_data = ByteBuffer::wrap((void*)&rects[WSAPI_ServerMessage::max_inline_rect_count], (rects.size() - WSAPI_ServerMessage::max_inline_rect_count) * sizeof(WSAPI_Rect));
+    post_message(message, extra_data);
 }
 
 void WSClientConnection::handle_request(const WSAPIInvalidateRectRequest& request)

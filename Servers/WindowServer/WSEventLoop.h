@@ -1,6 +1,7 @@
 #pragma once
 
 #include <LibCore/CEventLoop.h>
+#include <AK/ByteBuffer.h>
 
 class WSClientConnection;
 struct WSAPI_ClientMessage;
@@ -20,7 +21,7 @@ private:
     void drain_mouse();
     void drain_keyboard();
     void drain_client(WSClientConnection&);
-    void on_receive_from_client(int client_id, const WSAPI_ClientMessage&);
+    bool on_receive_from_client(int client_id, const WSAPI_ClientMessage&, ByteBuffer&& extra_data);
 
     int m_keyboard_fd { -1 };
     int m_mouse_fd { -1 };

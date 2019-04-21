@@ -80,15 +80,19 @@ GEventLoop::~GEventLoop()
 {
 }
 
-void GEventLoop::handle_paint_event(const WSAPI_ServerMessage& event, GWindow& window)
+void GEventLoop::handle_paint_event(const WSAPI_ServerMessage& event, GWindow& window, const ByteBuffer& extra_data)
 {
 #ifdef GEVENTLOOP_DEBUG
     dbgprintf("WID=%x Paint [%d,%d %dx%d]\n", event.window_id, event.paint.rect.location.x, event.paint.rect.location.y, event.paint.rect.size.width, event.paint.rect.size.height);
 #endif
     Vector<Rect, 32> rects;
-    ASSERT(event.rect_count <= 32);
-    for (int i = 0; i < event.rect_count; ++i)
+    for (int i = 0; i < min(WSAPI_ServerMessage::max_inline_rect_count, event.rect_count); ++i)
         rects.append(event.rects[i]);
+    if (event.extra_size) {
+        auto* extra_rects = reinterpret_cast<const WSAPI_Rect*>(extra_data.data());
+        for (int i = 0; i < event.rect_count - WSAPI_ServerMessage::max_inline_rect_count; ++i)
+            rects.append(extra_rects[i]);
+    }
     post_event(window, make<GMultiPaintEvent>(rects, event.paint.window_size));
 }
 
@@ -198,14 +202,15 @@ void GEventLoop::handle_wm_event(const WSAPI_ServerMessage& event, GWindow& wind
     ASSERT_NOT_REACHED();
 }
 
-void GEventLoop::process_unprocessed_messages()
+void GEventLoop::process_unprocessed_bundles()
 {
     int coalesced_paints = 0;
     int coalesced_resizes = 0;
-    auto unprocessed_events = move(m_unprocessed_messages);
+    auto unprocessed_bundles = move(m_unprocessed_bundles);
 
     HashMap<int, Size> latest_size_for_window_id;
-    for (auto& event : unprocessed_events) {
+    for (auto& bundle : unprocessed_bundles) {
+        auto& event = bundle.message;
         if (event.type == WSAPI_ServerMessage::Type::WindowResized) {
             latest_size_for_window_id.set(event.window_id, event.window.rect.size);
         }
@@ -213,7 +218,8 @@ void GEventLoop::process_unprocessed_messages()
 
     int paint_count = 0;
     HashMap<int, Size> latest_paint_size_for_window_id;
-    for (auto& event : unprocessed_events) {
+    for (auto& bundle : unprocessed_bundles) {
+        auto& event = bundle.message;
         if (event.type == WSAPI_ServerMessage::Type::Paint) {
             ++paint_count;
 #ifdef COALESCING_DEBUG
@@ -226,7 +232,8 @@ void GEventLoop::process_unprocessed_messages()
     dbgprintf("paint_count: %d\n", paint_count);
 #endif
 
-    for (auto& event : unprocessed_events) {
+    for (auto& bundle : unprocessed_bundles) {
+        auto& event = bundle.message;
         if (event.type == WSAPI_ServerMessage::Type::Greeting) {
             s_server_pid = event.greeting.server_pid;
             GDesktop::the().did_receive_screen_rect(Badge<GEventLoop>(), event.greeting.screen_rect);
@@ -264,7 +271,7 @@ void GEventLoop::process_unprocessed_messages()
                 ++coalesced_paints;
                 break;
             }
-            handle_paint_event(event, *window);
+            handle_paint_event(event, *window, bundle.extra_data);
             break;
         case WSAPI_ServerMessage::Type::MouseDown:
         case WSAPI_ServerMessage::Type::MouseUp:
@@ -310,8 +317,8 @@ void GEventLoop::process_unprocessed_messages()
         dbgprintf("Coalesced %d resizes\n", coalesced_resizes);
 #endif
 
-    if (!m_unprocessed_messages.is_empty())
-        process_unprocessed_messages();
+    if (!m_unprocessed_bundles.is_empty())
+        process_unprocessed_bundles();
 }
 
 bool GEventLoop::drain_messages_from_server()
@@ -334,15 +341,30 @@ bool GEventLoop::drain_messages_from_server()
             return true;
         }
         assert(nread == sizeof(message));
-        m_unprocessed_messages.append(move(message));
+        ByteBuffer extra_data;
+        if (message.extra_size) {
+            extra_data = ByteBuffer::create_uninitialized(message.extra_size);
+            int extra_nread = read(s_event_fd, extra_data.data(), extra_data.size());
+            ASSERT(extra_nread == message.extra_size);
+        }
+        m_unprocessed_bundles.append({ move(message), move(extra_data) });
         is_first_pass = false;
     }
 }
 
-bool GEventLoop::post_message_to_server(const WSAPI_ClientMessage& message)
+bool GEventLoop::post_message_to_server(const WSAPI_ClientMessage& message, const ByteBuffer& extra_data)
 {
+    if (!extra_data.is_empty())
+        const_cast<WSAPI_ClientMessage&>(message).extra_size = extra_data.size();
+
     int nwritten = write(s_event_fd, &message, sizeof(WSAPI_ClientMessage));
-    return nwritten == sizeof(WSAPI_ClientMessage);
+    ASSERT(nwritten == sizeof(WSAPI_ClientMessage));
+    if (!extra_data.is_empty()) {
+        nwritten = write(s_event_fd, extra_data.data(), extra_data.size());
+        ASSERT(nwritten == extra_data.size());
+    }
+
+    return true;
 }
 
 bool GEventLoop::wait_for_specific_event(WSAPI_ServerMessage::Type type, WSAPI_ServerMessage& event)
@@ -357,10 +379,10 @@ bool GEventLoop::wait_for_specific_event(WSAPI_ServerMessage::Type type, WSAPI_S
         bool success = drain_messages_from_server();
         if (!success)
             return false;
-        for (ssize_t i = 0; i < m_unprocessed_messages.size(); ++i) {
-            if (m_unprocessed_messages[i].type == type) {
-                event = move(m_unprocessed_messages[i]);
-                m_unprocessed_messages.remove(i);
+        for (ssize_t i = 0; i < m_unprocessed_bundles.size(); ++i) {
+            if (m_unprocessed_bundles[i].message.type == type) {
+                event = move(m_unprocessed_bundles[i].message);
+                m_unprocessed_bundles.remove(i);
                 return true;
             }
         }

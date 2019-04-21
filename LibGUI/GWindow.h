@@ -130,7 +130,7 @@ private:
     Rect m_rect_when_windowless;
     String m_title_when_windowless;
     String m_icon_path;
-    Vector<Rect> m_pending_paint_event_rects;
+    Vector<Rect, 32> m_pending_paint_event_rects;
     Size m_size_increment;
     Size m_base_size;
     Color m_background_color { Color::LightGray };
