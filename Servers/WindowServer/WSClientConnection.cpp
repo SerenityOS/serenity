@@ -503,7 +503,7 @@ void WSClientConnection::handle_request(const WSAPIInvalidateRectRequest& reques
     }
     auto& window = *(*it).value;
     for (int i = 0; i < request.rects().size(); ++i)
-        window.request_update(request.rects()[i]);
+        window.request_update(request.rects()[i].intersected({ { }, window.size() }));
 }
 
 void WSClientConnection::handle_request(const WSAPIDidFinishPaintingNotification& request)
