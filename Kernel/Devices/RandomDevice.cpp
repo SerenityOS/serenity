@@ -10,20 +10,13 @@ RandomDevice::~RandomDevice()
 {
 }
 
-// Simple rand() and srand() borrowed from the POSIX standard:
+static dword next = 1;
 
-static unsigned long next = 1;
-
-#define MY_RAND_MAX 32767
-int RandomDevice::random_value()
+#define MY_RAND_MAX 4294967295U
+dword RandomDevice::random_value()
 {
     next = next * 1103515245 + 12345;
-    return((unsigned)(next/((MY_RAND_MAX + 1) * 2)) % (MY_RAND_MAX + 1));
-}
-
-float RandomDevice::random_percentage()
-{
-    return (float)random_value() / (float)MY_RAND_MAX;
+    return next;
 }
 
 #if 0

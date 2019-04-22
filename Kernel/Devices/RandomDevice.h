@@ -8,8 +8,7 @@ public:
     RandomDevice();
     virtual ~RandomDevice() override;
 
-    static int random_value();
-    static float random_percentage();
+    static dword random_value();
 
 private:
     // ^CharacterDevice
