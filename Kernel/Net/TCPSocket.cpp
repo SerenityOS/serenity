@@ -181,7 +181,7 @@ int TCPSocket::protocol_allocate_source_port()
     static const word first_ephemeral_port = 32768;
     static const word last_ephemeral_port = 60999;
     static const word ephemeral_port_range_size = last_ephemeral_port - first_ephemeral_port;
-    word first_scan_port = first_ephemeral_port + (word)(RandomDevice::random_percentage() * ephemeral_port_range_size);
+    word first_scan_port = first_ephemeral_port + RandomDevice::random_value() % ephemeral_port_range_size;
 
     LOCKER(sockets_by_port().lock());
     for (word port = first_scan_port;;) {

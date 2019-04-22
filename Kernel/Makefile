@@ -80,7 +80,7 @@ CXX_OBJS = $(KERNEL_OBJS) $(VFS_OBJS) $(AK_OBJS)
 OBJS = $(CXX_OBJS) Boot/boot.ao
 
 KERNEL = kernel
-CXXFLAGS += -ffreestanding -mregparm=3
+CXXFLAGS += -ffreestanding -mregparm=3 -mno-80387 -mno-mmx -mno-sse -mno-sse2
 DEFINES += -DKERNEL
 LD = i686-pc-serenity-ld
 LDFLAGS += -T linker.ld
