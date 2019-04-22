@@ -40,7 +40,9 @@ void WSButton::on_mouse_event(const WSMouseEvent& event)
     }
 
     if (event.type() == WSEvent::MouseUp && event.button() == MouseButton::Left) {
-        WSWindowManager::the().set_cursor_tracking_button(nullptr);
+        if (wm.cursor_tracking_button() != this)
+            return;
+        wm.set_cursor_tracking_button(nullptr);
         bool old_pressed = m_pressed;
         m_pressed = false;
         if (rect().contains(event.position())) {
@@ -61,6 +63,8 @@ void WSButton::on_mouse_event(const WSMouseEvent& event)
     }
 
     if (event.type() == WSEvent::MouseMove && event.buttons() & (unsigned)MouseButton::Left) {
+        if (wm.cursor_tracking_button() != this)
+            return;
         bool old_pressed = m_pressed;
         m_pressed = m_hovered;
         if (old_pressed != m_pressed)
