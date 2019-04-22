@@ -5,6 +5,7 @@
 
 extern "C" {
 
+#ifndef KERNEL
 void* mmx_memcpy(void* dest, const void* src, size_t len)
 {
     ASSERT(len >= 1024);
@@ -51,6 +52,7 @@ void* mmx_memcpy(void* dest, const void* src, size_t len)
         memcpy(dest_ptr, src_ptr, len);
     return dest;
 }
+#endif
 
 #ifdef KERNEL
 

@@ -8,9 +8,10 @@ extern "C" {
 
 void* memcpy(void* dest_ptr, const void* src_ptr, size_t n)
 {
-    if (n >= 1024) {
+#ifndef KERNEL
+    if (n >= 1024)
         return mmx_memcpy(dest_ptr, src_ptr, n);
-    }
+#endif
 
     size_t dest = (size_t)dest_ptr;
     size_t src = (size_t)src_ptr;
