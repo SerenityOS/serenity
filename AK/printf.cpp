@@ -248,10 +248,12 @@ one_more:
                     ret += print_hex(putch, bufptr, va_arg(ap, qword), 16);
                     break;
 
+#ifndef KERNEL
                 case 'f':
                     // FIXME: Print as float!
                     ret += print_number(putch, bufptr, (int)va_arg(ap, double), leftPad, zeroPad, fieldWidth);
                     break;
+#endif
 
                 case 'o':
                     if (alternate_form) {
