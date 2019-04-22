@@ -101,8 +101,10 @@ public:
     const WSCursor& move_cursor() const { return *m_move_cursor; }
 
     void set_active_window(WSWindow*);
-    void set_cursor_tracking_button(WSButton*);
     void set_hovered_button(WSButton*);
+
+    WSButton* cursor_tracking_button() { return m_cursor_tracking_button.ptr(); }
+    void set_cursor_tracking_button(WSButton*);
 
     void set_resize_candidate(WSWindow&, ResizeDirection);
     void clear_resize_candidate();
