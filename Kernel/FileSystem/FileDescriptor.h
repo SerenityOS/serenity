@@ -14,6 +14,7 @@
 class TTY;
 class MasterPTY;
 class Process;
+class ProcessTracer;
 class Region;
 class CharacterDevice;
 
@@ -24,6 +25,7 @@ public:
     static Retained<FileDescriptor> create(RetainPtr<Inode>&&);
     static Retained<FileDescriptor> create(RetainPtr<Device>&&);
     static Retained<FileDescriptor> create(RetainPtr<SharedMemory>&&);
+    static Retained<FileDescriptor> create(RetainPtr<ProcessTracer>&&);
     static Retained<FileDescriptor> create_pipe_writer(FIFO&);
     static Retained<FileDescriptor> create_pipe_reader(FIFO&);
     ~FileDescriptor();
@@ -101,11 +103,15 @@ public:
 
     KResult truncate(off_t);
 
+    ProcessTracer* tracer() { return m_tracer.ptr(); }
+    const ProcessTracer* tracer() const { return m_tracer.ptr(); }
+
 private:
     friend class VFS;
     FileDescriptor(RetainPtr<Socket>&&, SocketRole);
     explicit FileDescriptor(RetainPtr<Inode>&&);
     explicit FileDescriptor(RetainPtr<Device>&&);
+    explicit FileDescriptor(RetainPtr<ProcessTracer>&&);
     explicit FileDescriptor(RetainPtr<SharedMemory>&&);
     FileDescriptor(FIFO&, FIFO::Direction);
 
@@ -126,6 +132,7 @@ private:
     FIFO::Direction m_fifo_direction { FIFO::Neither };
 
     RetainPtr<SharedMemory> m_shared_memory;
+    RetainPtr<ProcessTracer> m_tracer;
 
     bool m_closed { false };
 };

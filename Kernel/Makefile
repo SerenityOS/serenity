@@ -47,7 +47,8 @@ KERNEL_OBJS = \
        Net/E1000NetworkAdapter.o \
        Net/LoopbackAdapter.o \
        Net/Routing.o \
-       Net/NetworkTask.o
+       Net/NetworkTask.o \
+       ProcessTracer.o
 
 VFS_OBJS = \
     FileSystem/ProcFS.o \

@@ -14,6 +14,7 @@ __BEGIN_DECLS
 
 extern char** environ;
 
+int systrace(pid_t);
 int gettid();
 int donate(int tid);
 int create_thread(int(*)(void*), void*);

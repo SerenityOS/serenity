@@ -12,6 +12,7 @@
 #include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/SharedMemory.h>
+#include <Kernel/ProcessTracer.h>
 
 Retained<FileDescriptor> FileDescriptor::create(RetainPtr<Inode>&& inode)
 {
@@ -21,6 +22,11 @@ Retained<FileDescriptor> FileDescriptor::create(RetainPtr<Inode>&& inode)
 Retained<FileDescriptor> FileDescriptor::create(RetainPtr<Device>&& device)
 {
     return adopt(*new FileDescriptor(move(device)));
+}
+
+Retained<FileDescriptor> FileDescriptor::create(RetainPtr<ProcessTracer>&& tracer)
+{
+    return adopt(*new FileDescriptor(move(tracer)));
 }
 
 Retained<FileDescriptor> FileDescriptor::create(RetainPtr<SharedMemory>&& shared_memory)
@@ -50,6 +56,11 @@ FileDescriptor::FileDescriptor(RetainPtr<Inode>&& inode)
 
 FileDescriptor::FileDescriptor(RetainPtr<Device>&& device)
     : m_device(move(device))
+{
+}
+
+FileDescriptor::FileDescriptor(RetainPtr<ProcessTracer>&& tracer)
+    : m_tracer(move(tracer))
 {
 }
 
@@ -199,6 +210,8 @@ off_t FileDescriptor::seek(off_t offset, int whence)
 
 ssize_t FileDescriptor::read(Process& process, byte* buffer, ssize_t count)
 {
+    if (m_tracer)
+        return m_tracer->read(buffer, count);
     if (is_fifo()) {
         ASSERT(fifo_direction() == FIFO::Reader);
         return m_fifo->read(buffer, count);
@@ -217,6 +230,10 @@ ssize_t FileDescriptor::read(Process& process, byte* buffer, ssize_t count)
 
 ssize_t FileDescriptor::write(Process& process, const byte* data, ssize_t size)
 {
+    if (m_tracer) {
+        // FIXME: Figure out what the right error code would be.
+        return -EIO;
+    }
     if (is_fifo()) {
         ASSERT(fifo_direction() == FIFO::Writer);
         return m_fifo->write(data, size);
@@ -235,6 +252,8 @@ ssize_t FileDescriptor::write(Process& process, const byte* data, ssize_t size)
 
 bool FileDescriptor::can_write(Process& process)
 {
+    if (m_tracer)
+        return true;
     if (is_fifo()) {
         ASSERT(fifo_direction() == FIFO::Writer);
         return m_fifo->can_write();
@@ -248,6 +267,8 @@ bool FileDescriptor::can_write(Process& process)
 
 bool FileDescriptor::can_read(Process& process)
 {
+    if (m_tracer)
+        return m_tracer->can_read();
     if (is_fifo()) {
         ASSERT(fifo_direction() == FIFO::Reader);
         return m_fifo->can_read();
@@ -376,6 +397,8 @@ bool FileDescriptor::is_file() const
 KResultOr<String> FileDescriptor::absolute_path()
 {
     Stopwatch sw("absolute_path");
+    if (m_tracer)
+        return String::format("tracer:%d", m_tracer->pid());
     if (is_tty())
         return tty()->tty_name();
     if (is_fifo())
@@ -405,6 +428,8 @@ InodeMetadata FileDescriptor::metadata() const
 
 bool FileDescriptor::supports_mmap() const
 {
+    if (m_tracer)
+        return false;
     if (m_inode)
         return true;
     if (m_shared_memory)
