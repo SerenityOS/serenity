@@ -99,6 +99,7 @@
     __ENUMERATE_SYSCALL(shm_open) \
     __ENUMERATE_SYSCALL(shm_close) \
     __ENUMERATE_SYSCALL(ftruncate) \
+    __ENUMERATE_SYSCALL(systrace) \
 
 
 namespace Syscall {
