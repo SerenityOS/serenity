@@ -3,6 +3,7 @@
 #include "Syscall.h"
 #include "Console.h"
 #include "Scheduler.h"
+#include <Kernel/ProcessTracer.h>
 
 extern "C" void syscall_trap_entry(RegisterDump&);
 extern "C" void syscall_trap_handler();
@@ -251,6 +252,8 @@ static dword handle(RegisterDump& regs, dword function, dword arg1, dword arg2, 
         return current->process().sys$shm_unlink((const char*)arg1);
     case Syscall::SC_ftruncate:
         return current->process().sys$ftruncate((int)arg1, (off_t)arg2);
+    case Syscall::SC_systrace:
+        return current->process().sys$systrace((pid_t)arg1);
     default:
         kprintf("<%u> int0x82: Unknown function %u requested {%x, %x, %x}\n", current->process().pid(), function, arg1, arg2, arg3);
         break;
@@ -268,6 +271,8 @@ void syscall_trap_entry(RegisterDump& regs)
     dword arg2 = regs.ecx;
     dword arg3 = regs.ebx;
     regs.eax = Syscall::handle(regs, function, arg1, arg2, arg3);
+    if (auto* tracer = current->process().tracer())
+        tracer->did_syscall(function, arg1, arg2, arg3, regs.eax);
     current->process().big_lock().unlock();
 }
 

@@ -22,6 +22,7 @@
 #include <Kernel/ELF/exec_elf.h>
 #include <AK/StringBuilder.h>
 #include <Kernel/SharedMemory.h>
+#include <Kernel/ProcessTracer.h>
 
 //#define DEBUG_IO
 //#define TASK_DEBUG
@@ -1894,6 +1895,9 @@ void Process::finalize()
 
 void Process::die()
 {
+    if (m_tracer)
+        m_tracer->set_dead();
+
     {
         InterruptDisabler disabler;
         for_each_thread([] (Thread& thread) {
@@ -2481,4 +2485,27 @@ int Process::sys$ftruncate(int fd, off_t length)
     if (!descriptor->is_file() && !descriptor->is_shared_memory())
         return -EINVAL;
     return descriptor->truncate(length);
+}
+
+int Process::sys$systrace(pid_t pid)
+{
+    InterruptDisabler disabler;
+    auto* peer = Process::from_pid(pid);
+    if (!peer)
+        return -ESRCH;
+    if (peer->uid() != m_euid)
+        return -EACCES;
+    int fd = alloc_fd();
+    if (fd < 0)
+        return fd;
+    auto descriptor = FileDescriptor::create(peer->ensure_tracer());
+    m_fds[fd].set(move(descriptor), 0);
+    return fd;
+}
+
+ProcessTracer& Process::ensure_tracer()
+{
+    if (!m_tracer)
+        m_tracer = ProcessTracer::create(m_pid);
+    return *m_tracer;
 }

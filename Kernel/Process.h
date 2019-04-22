@@ -18,6 +18,7 @@ class FileDescriptor;
 class PageDirectory;
 class Region;
 class VMObject;
+class ProcessTracer;
 
 void kgettimeofday(timeval&);
 
@@ -175,6 +176,7 @@ public:
     int sys$restore_signal_mask(dword mask);
     int sys$create_thread(int(*)(void*), void*);
     int sys$rename(const char* oldpath, const char* newpath);
+    int sys$systrace(pid_t);
 
     int sys$create_shared_buffer(pid_t peer_pid, int, void** buffer);
     void* sys$get_shared_buffer(int shared_buffer_id);
@@ -193,6 +195,9 @@ public:
     size_t region_count() const { return m_regions.size(); }
     const Vector<Retained<Region>>& regions() const { return m_regions; }
     void dump_regions();
+
+    ProcessTracer* tracer() { return m_tracer.ptr(); }
+    ProcessTracer& ensure_tracer();
 
     dword m_ticks_in_user { 0 };
     dword m_ticks_in_kernel { 0 };
@@ -317,6 +322,8 @@ private:
     int m_next_tid { 0 };
 
     unsigned m_syscall_count { 0 };
+
+    RetainPtr<ProcessTracer> m_tracer;
 
     Lock m_big_lock;
 };
