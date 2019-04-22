@@ -4,6 +4,12 @@
 
 extern "C" {
 
+static struct lconv default_locale = {
+    ".",
+    ",",
+    "\x03\x03",
+};
+
 char* setlocale(int category, const char* locale)
 {
     dbgprintf("FIXME(LibC): setlocale(%d, %s)\n", category, locale);
@@ -12,7 +18,7 @@ char* setlocale(int category, const char* locale)
 
 struct lconv* localeconv()
 {
-    assert(false);
+    return &default_locale;
 }
 
 }
