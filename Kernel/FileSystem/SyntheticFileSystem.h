@@ -14,7 +14,7 @@ public:
     virtual bool initialize() override;
     virtual const char* class_name() const override;
     virtual InodeIdentifier root_inode() const override;
-    virtual RetainPtr<Inode> create_inode(InodeIdentifier parentInode, const String& name, mode_t, unsigned size, int& error) override;
+    virtual RetainPtr<Inode> create_inode(InodeIdentifier parentInode, const String& name, mode_t, off_t size, int& error) override;
     virtual RetainPtr<Inode> create_directory(InodeIdentifier parentInode, const String& name, mode_t, int& error) override;
     virtual RetainPtr<Inode> get_inode(InodeIdentifier) const override;
 

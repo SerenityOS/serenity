@@ -516,7 +516,7 @@ void WSClientConnection::post_paint_message(WSWindow& window)
     message.paint.window_size = window.size();
     ByteBuffer extra_data;
     if (rects.size() > WSAPI_ServerMessage::max_inline_rect_count)
-        extra_data = ByteBuffer::wrap((void*)&rects[WSAPI_ServerMessage::max_inline_rect_count], (rects.size() - WSAPI_ServerMessage::max_inline_rect_count) * sizeof(WSAPI_Rect));
+        extra_data = ByteBuffer::wrap(&rects[WSAPI_ServerMessage::max_inline_rect_count], (rects.size() - WSAPI_ServerMessage::max_inline_rect_count) * sizeof(WSAPI_Rect));
     post_message(message, extra_data);
 }
 

@@ -245,7 +245,7 @@ void GWindow::event(CEvent& event)
                 message.rects[i] = rects[i];
             ByteBuffer extra_data;
             if (rects.size() > WSAPI_ClientMessage::max_inline_rect_count)
-                extra_data = ByteBuffer::wrap((void*)&rects[WSAPI_ClientMessage::max_inline_rect_count], (rects.size() - WSAPI_ClientMessage::max_inline_rect_count) * sizeof(WSAPI_Rect));
+                extra_data = ByteBuffer::wrap(&rects[WSAPI_ClientMessage::max_inline_rect_count], (rects.size() - WSAPI_ClientMessage::max_inline_rect_count) * sizeof(WSAPI_Rect));
             GEventLoop::current().post_message_to_server(message, extra_data);
         }
         return;
@@ -324,7 +324,7 @@ void GWindow::update(const Rect& a_rect)
                 request.rects[i] = m_pending_paint_event_rects[i];
             ByteBuffer extra_data;
             if (m_pending_paint_event_rects.size() > WSAPI_ClientMessage::max_inline_rect_count)
-                extra_data = ByteBuffer::wrap((void*)&m_pending_paint_event_rects[WSAPI_ClientMessage::max_inline_rect_count], (m_pending_paint_event_rects.size() - WSAPI_ClientMessage::max_inline_rect_count) * sizeof(WSAPI_Rect));
+                extra_data = ByteBuffer::wrap(&m_pending_paint_event_rects[WSAPI_ClientMessage::max_inline_rect_count], (m_pending_paint_event_rects.size() - WSAPI_ClientMessage::max_inline_rect_count) * sizeof(WSAPI_Rect));
             request.rect_count = m_pending_paint_event_rects.size();
             GEventLoop::current().post_message_to_server(request, extra_data);
             m_pending_paint_event_rects.clear_with_capacity();

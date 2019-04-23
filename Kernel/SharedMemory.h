@@ -15,7 +15,7 @@ public:
     ~SharedMemory();
 
     String name() const { return m_name; }
-    KResult truncate(int);
+    KResult truncate(off_t);
     VMObject* vmo() { return m_vmo.ptr(); }
     const VMObject* vmo() const { return m_vmo.ptr(); }
     uid_t uid() const { return m_uid; }

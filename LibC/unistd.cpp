@@ -83,7 +83,7 @@ int execl(const char* filename, const char* arg0, ...)
     }
     va_end(ap);
     args.append(nullptr);
-    return execve(filename, (char* const *)args.data(), environ);
+    return execve(filename, const_cast<char* const*>(args.data()), environ);
 }
 
 uid_t getuid()
