@@ -929,11 +929,10 @@ bool Ext2FS::get_inode_allocation_state(InodeIndex index) const
     unsigned group_index = group_index_from_inode(index);
     auto& bgd = group_descriptor(group_index);
     unsigned index_in_group = index - ((group_index - 1) * inodes_per_group());
-    unsigned inodes_per_bitmap_block = block_size() * 8;
-    unsigned bit_index = (index_in_group - 1) % inodes_per_bitmap_block;
+    unsigned bit_index = (index_in_group - 1) % inodes_per_group();
     auto block = read_block(bgd.bg_inode_bitmap);
     ASSERT(block);
-    auto bitmap = Bitmap::wrap(block.pointer(), inodes_per_bitmap_block);
+    auto bitmap = Bitmap::wrap(block.pointer(), inodes_per_group());
     return bitmap.get(bit_index);
 }
 
@@ -943,16 +942,17 @@ bool Ext2FS::set_inode_allocation_state(unsigned index, bool newState)
     unsigned group_index = group_index_from_inode(index);
     auto& bgd = group_descriptor(group_index);
     unsigned index_in_group = index - ((group_index - 1) * inodes_per_group());
-    unsigned inodes_per_bitmap_block = block_size() * 8;
-    unsigned bit_index = (index_in_group - 1) % inodes_per_bitmap_block;
+    unsigned bit_index = (index_in_group - 1) % inodes_per_group();
     auto block = read_block(bgd.bg_inode_bitmap);
     ASSERT(block);
-    auto bitmap = Bitmap::wrap(block.pointer(), inodes_per_bitmap_block);
+    auto bitmap = Bitmap::wrap(block.pointer(), inodes_per_group());
     bool current_state = bitmap.get(bit_index);
     dbgprintf("Ext2FS: set_inode_allocation_state(%u) %u -> %u\n", index, current_state, newState);
 
-    if (current_state == newState)
+    if (current_state == newState) {
+        ASSERT_NOT_REACHED();
         return true;
+    }
 
     bitmap.set(bit_index, newState);
     bool success = write_block(bgd.bg_inode_bitmap, block);
@@ -986,20 +986,21 @@ bool Ext2FS::set_block_allocation_state(BlockIndex block_index, bool new_state)
     unsigned group_index = group_index_from_block_index(block_index);
     auto& bgd = group_descriptor(group_index);
     BlockIndex index_in_group = block_index - ((group_index - 1) * blocks_per_group());
-    unsigned blocks_per_bitmap_block = block_size() * 8;
-    unsigned bit_index = (index_in_group - 1) % blocks_per_bitmap_block;
+    unsigned bit_index = (index_in_group - 1) % blocks_per_group();
     dbgprintf("  index_in_group: %u\n", index_in_group);
-    dbgprintf("  blocks_per_bitmap_block: %u\n", blocks_per_bitmap_block);
+    dbgprintf("  blocks_per_group: %u\n", blocks_per_group());
     dbgprintf("  bit_index: %u\n", bit_index);
     dbgprintf("  read_block(%u)\n", bgd.bg_block_bitmap);
     auto block = read_block(bgd.bg_block_bitmap);
     ASSERT(block);
-    auto bitmap = Bitmap::wrap(block.pointer(), blocks_per_bitmap_block);
+    auto bitmap = Bitmap::wrap(block.pointer(), blocks_per_group());
     bool current_state = bitmap.get(bit_index);
     dbgprintf("Ext2FS:      block %u state: %u -> %u\n", block_index, current_state, new_state);
 
-    if (current_state == new_state)
+    if (current_state == new_state) {
+        ASSERT_NOT_REACHED();
         return true;
+    }
 
     bitmap.set(bit_index, new_state);
     bool success = write_block(bgd.bg_block_bitmap, block);
