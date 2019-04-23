@@ -19,6 +19,7 @@ enum IDECommand : byte {
     IDENTIFY_DRIVE = 0xEC,
     READ_SECTORS = 0x21,
     WRITE_SECTORS = 0x30,
+    FLUSH_CACHE = 0xe7,
 };
 
 enum IDEStatus : byte {
@@ -254,6 +255,12 @@ bool IDEDiskDevice::write_sectors(dword start_sector, word count, const byte* da
     }
 
     m_interrupted = false;
+    enable_irq();
+    wait_for_irq();
+
+    disable_irq();
+    IO::out8(IDE0_COMMAND, FLUSH_CACHE);
+    while (IO::in8(IDE0_STATUS) & BUSY);
     enable_irq();
     wait_for_irq();
 
