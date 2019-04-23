@@ -44,11 +44,12 @@ static KeyCode unshifted_key_map[0x80] =
     Key_Return, // 28
     Key_Control, // 29
     Key_A, Key_S, Key_D, Key_F, Key_G, Key_H, Key_J, Key_K, Key_L, Key_Semicolon, Key_Apostrophe, Key_Backtick,
-    Key_Shift, // 42
+    Key_LeftShift, // 42
     Key_Backslash,
     Key_Z, Key_X, Key_C, Key_V, Key_B, Key_N, Key_M, Key_Comma, Key_Period, Key_Slash,
-    Key_Alt, // 54
-    Key_Invalid, Key_Invalid,
+    Key_RightShift, // 54
+    Key_Invalid,
+    Key_Alt, // 56
     Key_Space, // 57
     Key_Invalid, // 58
     Key_F1, Key_F2, Key_F3, Key_F4, Key_F5, Key_F6, Key_F7, Key_F8, Key_F9, Key_F10,
@@ -86,11 +87,12 @@ static KeyCode shifted_key_map[0x100] =
     Key_Return,
     Key_Control,
     Key_A, Key_S, Key_D, Key_F, Key_G, Key_H, Key_J, Key_K, Key_L, Key_Colon, Key_DoubleQuote, Key_Tilde,
-    Key_Shift,
+    Key_LeftShift, // 42
     Key_Pipe,
     Key_Z, Key_X, Key_C, Key_V, Key_B, Key_N, Key_M, Key_LessThan, Key_GreaterThan, Key_QuestionMark,
+    Key_RightShift, // 54
+    Key_Invalid,
     Key_Alt,
-    Key_Invalid, Key_Invalid,
     Key_Space, // 57
     Key_Invalid, // 58
     Key_F1, Key_F2, Key_F3, Key_F4, Key_F5, Key_F6, Key_F7, Key_F8, Key_F9, Key_F10,
@@ -146,10 +148,19 @@ void KeyboardDevice::handle_irq()
         dbgprintf("Keyboard::handle_irq: %b %s\n", ch, pressed ? "down" : "up");
 #endif
         switch (ch) {
-        case 0x38: update_modifier(Mod_Alt, pressed); break;
-        case 0x1d: update_modifier(Mod_Ctrl, pressed); break;
-        case 0x2a: update_modifier(Mod_Shift, pressed); break;
-        case 0x5b: update_modifier(Mod_Logo, pressed); break;
+        case 0x38:
+            update_modifier(Mod_Alt, pressed);
+            break;
+        case 0x1d:
+            update_modifier(Mod_Ctrl, pressed);
+            break;
+        case 0x5b:
+            update_modifier(Mod_Logo, pressed);
+            break;
+        case 0x2a:
+        case 0x36:
+            update_modifier(Mod_Shift, pressed);
+            break;
         }
         switch (ch) {
         case I8042_ACK: break;
