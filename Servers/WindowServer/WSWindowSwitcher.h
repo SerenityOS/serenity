@@ -27,6 +27,7 @@ public:
 
     int item_height() { return 20; }
     int padding() { return 8; }
+    int item_padding() { return 8; }
 
     WSWindow* selected_window();
 
