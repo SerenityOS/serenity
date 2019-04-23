@@ -202,17 +202,12 @@ bool IDEDiskDevice::read_sectors(dword start_sector, word count, byte* outbuf)
         return false;
 
     byte status = IO::in8(0x1f7);
-    if (status & DRQ) {
+    ASSERT(status & DRQ);
 #ifdef DISK_DEBUG
-        kprintf("Retrieving %u bytes (status=%b), outbuf=%p...\n", count * 512, status, outbuf);
+    kprintf("Retrieving %u bytes (status=%b), outbuf=%p...\n", count * 512, status, outbuf);
 #endif
-        for (dword i = 0; i < (count * 512); i += 2) {
-            word w = IO::in16(IDE0_DATA);
-            outbuf[i] = LSB(w);
-            outbuf[i+1] = MSB(w);
-        }
-    }
 
+    IO::repeated_in16(IDE0_DATA, outbuf, count * 256);
     return true;
 }
 
@@ -246,13 +241,8 @@ bool IDEDiskDevice::write_sectors(dword start_sector, word count, const byte* da
     while (!(IO::in8(IDE0_STATUS) & DRQ));
 
     byte status = IO::in8(0x1f7);
-    if (status & DRQ) {
-        //dbgprintf("Sending %u bytes (status=%b), data=%p...\n", count * 512, status, data);
-        auto* data_as_words = (const word*)data;
-        for (dword i = 0; i < (count * 512) / 2; ++i) {
-            IO::out16(IDE0_DATA, data_as_words[i]);
-        }
-    }
+    ASSERT(status & DRQ);
+    IO::repeated_out16(IDE0_DATA, data, count * 256);
 
     m_interrupted = false;
     enable_irq();
@@ -261,6 +251,7 @@ bool IDEDiskDevice::write_sectors(dword start_sector, word count, const byte* da
     disable_irq();
     IO::out8(IDE0_COMMAND, FLUSH_CACHE);
     while (IO::in8(IDE0_STATUS) & BUSY);
+    m_interrupted = false;
     enable_irq();
     wait_for_irq();
 
