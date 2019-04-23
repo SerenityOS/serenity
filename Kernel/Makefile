@@ -82,8 +82,7 @@ OBJS = $(CXX_OBJS) Boot/boot.ao
 KERNEL = kernel
 CXXFLAGS += -ffreestanding -mregparm=3 -mno-80387 -mno-mmx -mno-sse -mno-sse2
 DEFINES += -DKERNEL
-LD = i686-pc-serenity-ld
-LDFLAGS += -T linker.ld
+LDFLAGS += -Ttext 0x10000 -Wl,-T linker.ld -nostdlib
 
 all: $(KERNEL) kernel.map
 
@@ -91,7 +90,7 @@ kernel.map: kernel
 	@echo "MKMAP $@"; sh mkmap.sh
 
 $(KERNEL): $(OBJS)
-	@echo "LD $@"; $(LD) $(LDFLAGS) -o $@ -Ttext 0x10000 $(OBJS)
+	@echo "LD $@"; $(LD) $(LDFLAGS) -o $@ $(OBJS)
 
 .cpp.o:
 	@echo "CXX $<"; $(CXX) $(CXXFLAGS) -o $@ -c $<
