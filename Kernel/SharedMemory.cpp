@@ -14,6 +14,7 @@ Lockable<HashMap<String, RetainPtr<SharedMemory>>>& shared_memories()
 
 KResultOr<Retained<SharedMemory>> SharedMemory::open(const String& name, int flags, mode_t mode)
 {
+    UNUSED_PARAM(flags);
     LOCKER(shared_memories().lock());
     auto it = shared_memories().resource().find(name);
     if (it != shared_memories().resource().end()) {

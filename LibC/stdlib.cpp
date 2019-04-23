@@ -133,7 +133,7 @@ void free(void* ptr)
         return;
     }
 
-    for (unsigned i = header->first_chunk_index; i < (header->first_chunk_index + header->chunk_count); ++i)
+    for (int i = header->first_chunk_index; i < (header->first_chunk_index + header->chunk_count); ++i)
         s_malloc_map[i / 8] &= ~(1 << (i % 8));
 
     s_malloc_sum_alloc -= header->chunk_count * CHUNK_SIZE;
@@ -473,7 +473,7 @@ long strtol(const char* str, char** endptr, int base)
     } else if (neg)
         acc = -acc;
     if (endptr)
-        *endptr = (char*)(any ? s - 1 : str);
+        *endptr = const_cast<char*>((any ? s - 1 : str));
     return acc;
 }
 

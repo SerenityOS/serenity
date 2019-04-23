@@ -77,7 +77,7 @@ static inline int to_fd(const InodeIdentifier& identifier)
     return (identifier.index() & 0xff) - FI_MaxStaticFileIndex;
 }
 
-static inline unsigned to_sys_index(const InodeIdentifier& identifier)
+static inline int to_sys_index(const InodeIdentifier& identifier)
 {
     ASSERT(to_proc_parent_directory(identifier) == PDI_Root_sys);
     return identifier.index() & 0xff;
@@ -186,7 +186,7 @@ ByteBuffer procfs$pid_fds(InodeIdentifier identifier)
     if (process.number_of_open_file_descriptors() == 0)
         return { };
     StringBuilder builder;
-    for (size_t i = 0; i < process.max_open_file_descriptors(); ++i) {
+    for (int i = 0; i < process.max_open_file_descriptors(); ++i) {
         auto* descriptor = process.file_descriptor(i);
         if (!descriptor)
             continue;
@@ -714,28 +714,28 @@ void ProcFS::add_sys_bool(String&& name, Lockable<bool>& var, Function<void()>&&
 {
     InterruptDisabler disabler;
 
-    unsigned index = m_sys_entries.size();
+    int index = m_sys_entries.size();
     auto inode = adopt(*new ProcFSInode(*this, sys_var_to_identifier(fsid(), index).index()));
     auto data = make<SysVariableData>();
     data->type = SysVariableData::Boolean;
     data->notify_callback = move(notify_callback);
     data->address = &var;
     inode->set_custom_data(move(data));
-    m_sys_entries.append({ strdup(name.characters()), name.length(), read_sys_bool, write_sys_bool, move(inode) });
+    m_sys_entries.append({ strdup(name.characters()), 0, read_sys_bool, write_sys_bool, move(inode) });
 }
 
 void ProcFS::add_sys_string(String&& name, Lockable<String>& var, Function<void()>&& notify_callback)
 {
     InterruptDisabler disabler;
 
-    unsigned index = m_sys_entries.size();
+    int index = m_sys_entries.size();
     auto inode = adopt(*new ProcFSInode(*this, sys_var_to_identifier(fsid(), index).index()));
     auto data = make<SysVariableData>();
     data->type = SysVariableData::String;
     data->notify_callback = move(notify_callback);
     data->address = &var;
     inode->set_custom_data(move(data));
-    m_sys_entries.append({ strdup(name.characters()), name.length(), read_sys_string, write_sys_string, move(inode) });
+    m_sys_entries.append({ strdup(name.characters()), 0, read_sys_string, write_sys_string, move(inode) });
 }
 
 bool ProcFS::initialize()
@@ -748,13 +748,8 @@ const char* ProcFS::class_name() const
     return "ProcFS";
 }
 
-RetainPtr<Inode> ProcFS::create_inode(InodeIdentifier parentInode, const String& name, mode_t mode, unsigned size, int& error)
+RetainPtr<Inode> ProcFS::create_inode(InodeIdentifier, const String&, mode_t, off_t, int&)
 {
-    (void) parentInode;
-    (void) name;
-    (void) mode;
-    (void) size;
-    (void) error;
     kprintf("FIXME: Implement ProcFS::create_inode()?\n");
     return { };
 }
@@ -934,7 +929,7 @@ bool ProcFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry&)
             if (!entry.name)
                 continue;
             if (entry.proc_file_type > __FI_Root_Start && entry.proc_file_type < __FI_Root_End)
-                callback({ entry.name, strlen(entry.name), to_identifier(fsid(), PDI_Root, 0, (ProcFileType)entry.proc_file_type), 0 });
+                callback({ entry.name, (int)strlen(entry.name), to_identifier(fsid(), PDI_Root, 0, (ProcFileType)entry.proc_file_type), 0 });
         }
         for (auto pid_child : Process::all_pids()) {
             char name[16];
@@ -946,7 +941,7 @@ bool ProcFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry&)
     case FI_Root_sys:
         for (int i = 0; i < fs().m_sys_entries.size(); ++i) {
             auto& entry = fs().m_sys_entries[i];
-            callback({ entry.name, strlen(entry.name), sys_var_to_identifier(fsid(), i), 0 });
+            callback({ entry.name, (int)strlen(entry.name), sys_var_to_identifier(fsid(), i), 0 });
         }
         break;
 
@@ -960,7 +955,7 @@ bool ProcFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry&)
                 if (entry.proc_file_type == FI_PID_exe && !process.executable_inode())
                     continue;
                 // FIXME: strlen() here is sad.
-                callback({ entry.name, strlen(entry.name), to_identifier(fsid(), PDI_PID, pid, (ProcFileType)entry.proc_file_type), 0 });
+                callback({ entry.name, (int)strlen(entry.name), to_identifier(fsid(), PDI_PID, pid, (ProcFileType)entry.proc_file_type), 0 });
             }
         }
         }
@@ -976,7 +971,7 @@ bool ProcFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry&)
             if (!descriptor)
                 continue;
             char name[16];
-            size_t name_length = ksprintf(name, "%u", i);
+            int name_length = ksprintf(name, "%u", i);
             callback({ name, name_length, to_identifier_with_fd(fsid(), pid, i), 0 });
         }
         }
@@ -1100,7 +1095,7 @@ ssize_t ProcFSInode::write_bytes(off_t offset, ssize_t size, const byte* buffer,
     ASSERT(is_persistent_inode(identifier()));
     // FIXME: Being able to write into ProcFS at a non-zero offset seems like something we should maybe support..
     ASSERT(offset == 0);
-    bool success = directory_entry->write_callback(identifier(), ByteBuffer::wrap((byte*)buffer, size));
+    bool success = directory_entry->write_callback(identifier(), ByteBuffer::wrap(buffer, size));
     ASSERT(success);
     return 0;
 }

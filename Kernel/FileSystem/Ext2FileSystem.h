@@ -42,7 +42,7 @@ private:
     virtual size_t directory_entry_count() const override;
     virtual KResult chmod(mode_t) override;
     virtual KResult chown(uid_t, gid_t) override;
-    virtual KResult truncate(int) override;
+    virtual KResult truncate(off_t) override;
 
     void populate_lookup_cache() const;
 
@@ -83,36 +83,36 @@ private:
     unsigned blocks_per_group() const;
     unsigned inode_size() const;
 
-    bool write_ext2_inode(unsigned, const ext2_inode&);
-    ByteBuffer read_block_containing_inode(unsigned inode, unsigned& block_index, unsigned& offset) const;
+    bool write_ext2_inode(InodeIndex, const ext2_inode&);
+    ByteBuffer read_block_containing_inode(InodeIndex inode, BlockIndex& block_index, unsigned& offset) const;
 
     ByteBuffer read_super_block() const;
     bool write_super_block(const ext2_super_block&);
 
     virtual const char* class_name() const override;
     virtual InodeIdentifier root_inode() const override;
-    virtual RetainPtr<Inode> create_inode(InodeIdentifier parentInode, const String& name, mode_t, unsigned size, int& error) override;
+    virtual RetainPtr<Inode> create_inode(InodeIdentifier parentInode, const String& name, mode_t, off_t size, int& error) override;
     virtual RetainPtr<Inode> create_directory(InodeIdentifier parentInode, const String& name, mode_t, int& error) override;
     virtual RetainPtr<Inode> get_inode(InodeIdentifier) const override;
 
-    unsigned allocate_inode(unsigned preferredGroup, unsigned expectedSize);
-    Vector<BlockIndex> allocate_blocks(unsigned group, unsigned count);
-    unsigned group_index_from_inode(unsigned) const;
+    InodeIndex allocate_inode(GroupIndex preferred_group, off_t expected_size);
+    Vector<BlockIndex> allocate_blocks(GroupIndex, int count);
+    GroupIndex group_index_from_inode(InodeIndex) const;
     GroupIndex group_index_from_block_index(BlockIndex) const;
 
-    Vector<unsigned> block_list_for_inode(const ext2_inode&, bool include_block_list_blocks = false) const;
+    Vector<BlockIndex> block_list_for_inode(const ext2_inode&, bool include_block_list_blocks = false) const;
     bool write_block_list_for_inode(InodeIndex, ext2_inode&, const Vector<BlockIndex>&);
 
-    void dump_block_bitmap(unsigned groupIndex) const;
-    void dump_inode_bitmap(unsigned groupIndex) const;
+    void dump_block_bitmap(GroupIndex) const;
+    void dump_inode_bitmap(GroupIndex) const;
 
-    template<typename F> void traverse_inode_bitmap(unsigned groupIndex, F) const;
-    template<typename F> void traverse_block_bitmap(unsigned groupIndex, F) const;
+    template<typename F> void traverse_inode_bitmap(GroupIndex, F) const;
+    template<typename F> void traverse_block_bitmap(GroupIndex, F) const;
 
     bool add_inode_to_directory(InodeIndex parent, InodeIndex child, const String& name, byte file_type, int& error);
-    bool write_directory_inode(unsigned directoryInode, Vector<DirectoryEntry>&&);
+    bool write_directory_inode(InodeIndex, Vector<DirectoryEntry>&&);
     bool get_inode_allocation_state(InodeIndex) const;
-    bool set_inode_allocation_state(unsigned inode, bool);
+    bool set_inode_allocation_state(InodeIndex, bool);
     bool set_block_allocation_state(BlockIndex, bool);
 
     void uncache_inode(InodeIndex);
