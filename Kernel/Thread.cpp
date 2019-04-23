@@ -12,7 +12,7 @@ Thread::Thread(Process& process)
     : m_process(process)
     , m_tid(process.m_next_tid++)
 {
-    dbgprintf("Thread: New thread TID=%u in %s(%u)\n", m_tid, process.name().characters(), process.pid());
+    dbgprintf("Thread{%p}: New thread TID=%u in %s(%u)\n", this, m_tid, process.name().characters(), process.pid());
     set_default_signal_dispositions();
     m_fpu_state = (FPUState*)kmalloc_aligned(sizeof(FPUState), 16);
     memset(&m_tss, 0, sizeof(m_tss));
