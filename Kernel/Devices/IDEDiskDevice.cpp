@@ -165,17 +165,9 @@ void IDEDiskDevice::initialize()
     );
 }
 
-IDEDiskDevice::CHS IDEDiskDevice::lba_to_chs(dword lba) const
-{
-    CHS chs;
-    chs.cylinder = lba / (m_sectors_per_track * m_heads);
-    chs.head = (lba / m_sectors_per_track) % m_heads;
-    chs.sector = (lba % m_sectors_per_track) + 1;
-    return chs;
-}
-
 bool IDEDiskDevice::read_sectors(dword start_sector, word count, byte* outbuf)
 {
+    ASSERT(count <= 256);
     LOCKER(m_lock);
 #ifdef DISK_DEBUG
     dbgprintf("%s: Disk::read_sectors request (%u sector(s) @ %u)\n",
@@ -185,20 +177,17 @@ bool IDEDiskDevice::read_sectors(dword start_sector, word count, byte* outbuf)
 #endif
     disable_irq();
 
-    auto chs = lba_to_chs(start_sector);
-
     while (IO::in8(IDE0_STATUS) & BUSY);
 
 #ifdef DISK_DEBUG
-    kprintf("IDEDiskDevice: Reading %u sector(s) @ LBA %u (%u/%u/%u)\n", count, start_sector, chs.cylinder, chs.head, chs.sector);
+    kprintf("IDEDiskDevice: Reading %u sector(s) @ LBA %u\n", count, start_sector);
 #endif
 
-    IO::out8(0x1F2, count == 256 ? 0 : LSB(count));
-    IO::out8(0x1F3, chs.sector);
-    IO::out8(0x1F4, LSB(chs.cylinder));
-    IO::out8(0x1F5, MSB(chs.cylinder));
-
-    IO::out8(0x1F6, 0xA0 | chs.head); /* 0xB0 for 2nd device */
+    IO::out8(0x1f2, count == 256 ? 0 : LSB(count));
+    IO::out8(0x1f3, start_sector & 0xff);
+    IO::out8(0x1f4, (start_sector >> 8) & 0xff);
+    IO::out8(0x1f5, (start_sector >> 16) & 0xff);
+    IO::out8(0x1f6, 0xe0 | ((start_sector >> 24) & 0xf)); // 0xf0 for 2nd device
 
     IO::out8(0x3F6, 0x08);
     while (!(IO::in8(IDE0_STATUS) & DRDY));
@@ -228,6 +217,7 @@ bool IDEDiskDevice::read_sectors(dword start_sector, word count, byte* outbuf)
 
 bool IDEDiskDevice::write_sectors(dword start_sector, word count, const byte* data)
 {
+    ASSERT(count <= 256);
     LOCKER(m_lock);
 #ifdef DISK_DEBUG
     dbgprintf("%s(%u): IDEDiskDevice::write_sectors request (%u sector(s) @ %u)\n",
@@ -238,18 +228,15 @@ bool IDEDiskDevice::write_sectors(dword start_sector, word count, const byte* da
 #endif
     disable_irq();
 
-    auto chs = lba_to_chs(start_sector);
-
     while (IO::in8(IDE0_STATUS) & BUSY);
 
-    //dbgprintf("IDEDiskDevice: Writing %u sector(s) @ LBA %u (%u/%u/%u)\n", count, start_sector, chs.cylinder, chs.head, chs.sector);
+    //dbgprintf("IDEDiskDevice: Writing %u sector(s) @ LBA %u\n", count, start_sector);
 
-    IO::out8(0x1F2, count == 256 ? 0 : LSB(count));
-    IO::out8(0x1F3, chs.sector);
-    IO::out8(0x1F4, LSB(chs.cylinder));
-    IO::out8(0x1F5, MSB(chs.cylinder));
-
-    IO::out8(0x1F6, 0xA0 | chs.head); /* 0xB0 for 2nd device */
+    IO::out8(0x1f2, count == 256 ? 0 : LSB(count));
+    IO::out8(0x1f3, start_sector & 0xff);
+    IO::out8(0x1f4, (start_sector >> 8) & 0xff);
+    IO::out8(0x1f5, (start_sector >> 16) & 0xff);
+    IO::out8(0x1f6, 0xe0 | ((start_sector >> 24) & 0xf)); // 0xf0 for 2nd device
 
     IO::out8(0x3F6, 0x08);
 
