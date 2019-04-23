@@ -196,5 +196,7 @@ int main(int argc, char** argv)
     window->set_main_widget(widget);
     window->show();
 
+    window->set_icon_path("/res/icons/16x16/filetype-folder.png");
+
     return app.exec();
 }
