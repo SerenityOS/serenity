@@ -459,7 +459,7 @@ ssize_t Ext2FSInode::read_bytes(off_t offset, ssize_t count, byte* buffer, FileD
     // This avoids wasting an entire block on short links. (Most links are short.)
     if (is_symlink() && size() < max_inline_symlink_length) {
         ssize_t nread = min((off_t)size() - offset, static_cast<off_t>(count));
-        memcpy(buffer, ((byte*)m_raw_inode.i_block) + offset, (size_t)nread);
+        memcpy(buffer, ((const byte*)m_raw_inode.i_block) + offset, (size_t)nread);
         return nread;
     }
 
@@ -476,17 +476,17 @@ ssize_t Ext2FSInode::read_bytes(off_t offset, ssize_t count, byte* buffer, FileD
         return -EIO;
     }
 
-    const size_t block_size = fs().block_size();
+    const int block_size = fs().block_size();
 
-    dword first_block_logical_index = offset / block_size;
-    dword last_block_logical_index = (offset + count) / block_size;
+    int first_block_logical_index = offset / block_size;
+    int last_block_logical_index = (offset + count) / block_size;
     if (last_block_logical_index >= m_block_list.size())
         last_block_logical_index = m_block_list.size() - 1;
 
-    dword offset_into_first_block = offset % block_size;
+    int offset_into_first_block = offset % block_size;
 
     ssize_t nread = 0;
-    size_t remaining_count = min((off_t)count, (off_t)size() - offset);
+    int remaining_count = min((off_t)count, (off_t)size() - offset);
     byte* out = buffer;
 
 #ifdef EXT2_DEBUG
@@ -494,15 +494,15 @@ ssize_t Ext2FSInode::read_bytes(off_t offset, ssize_t count, byte* buffer, FileD
     //kprintf("ok let's do it, read(%u, %u) -> blocks %u thru %u, oifb: %u\n", offset, count, first_block_logical_index, last_block_logical_index, offset_into_first_block);
 #endif
 
-    for (dword bi = first_block_logical_index; remaining_count && bi <= last_block_logical_index; ++bi) {
+    for (int bi = first_block_logical_index; remaining_count && bi <= last_block_logical_index; ++bi) {
         auto block = fs().read_block(m_block_list[bi]);
         if (!block) {
             kprintf("ext2fs: read_bytes: read_block(%u) failed (lbi: %u)\n", m_block_list[bi], bi);
             return -EIO;
         }
 
-        dword offset_into_block = (bi == first_block_logical_index) ? offset_into_first_block : 0;
-        dword num_bytes_to_copy = min(block_size - offset_into_block, remaining_count);
+        int offset_into_block = (bi == first_block_logical_index) ? offset_into_first_block : 0;
+        int num_bytes_to_copy = min(block_size - offset_into_block, remaining_count);
         memcpy(out, block.pointer() + offset_into_block, num_bytes_to_copy);
         remaining_count -= num_bytes_to_copy;
         nread += num_bytes_to_copy;
@@ -526,7 +526,7 @@ ssize_t Ext2FSInode::write_bytes(off_t offset, ssize_t count, const byte* data, 
             dbgprintf("Ext2FSInode: write_bytes poking into i_block array for inline symlink '%s' (%u bytes)\n", String((const char*)data, count).characters(), count);
 #endif
             memcpy(((byte*)m_raw_inode.i_block) + offset, data, (size_t)count);
-            if ((offset + count) > m_raw_inode.i_size)
+            if ((offset + count) > (off_t)m_raw_inode.i_size)
                 m_raw_inode.i_size = offset + count;
             set_metadata_dirty(true);
             return count;
@@ -551,17 +551,17 @@ ssize_t Ext2FSInode::write_bytes(off_t offset, ssize_t count, const byte* data, 
         ASSERT_NOT_REACHED();
     }
 
-    dword first_block_logical_index = offset / block_size;
-    dword last_block_logical_index = (offset + count) / block_size;
+    int first_block_logical_index = offset / block_size;
+    int last_block_logical_index = (offset + count) / block_size;
     if (last_block_logical_index >= block_list.size())
         last_block_logical_index = block_list.size() - 1;
 
-    dword offset_into_first_block = offset % block_size;
+    int offset_into_first_block = offset % block_size;
 
-    dword last_logical_block_index_in_file = size() / block_size;
+    int last_logical_block_index_in_file = size() / block_size;
 
     ssize_t nwritten = 0;
-    size_t remaining_count = min((off_t)count, (off_t)new_size - offset);
+    int remaining_count = min((off_t)count, (off_t)new_size - offset);
     const byte* in = data;
 
 #ifdef EXT2_DEBUG
@@ -569,9 +569,9 @@ ssize_t Ext2FSInode::write_bytes(off_t offset, ssize_t count, const byte* data, 
 #endif
 
     auto buffer_block = ByteBuffer::create_uninitialized(block_size);
-    for (dword bi = first_block_logical_index; remaining_count && bi <= last_block_logical_index; ++bi) {
-        size_t offset_into_block = (bi == first_block_logical_index) ? offset_into_first_block : 0;
-        size_t num_bytes_to_copy = min((size_t)block_size - offset_into_block, remaining_count);
+    for (int bi = first_block_logical_index; remaining_count && bi <= last_block_logical_index; ++bi) {
+        int offset_into_block = (bi == first_block_logical_index) ? offset_into_first_block : 0;
+        int num_bytes_to_copy = min(block_size - offset_into_block, remaining_count);
 
         ByteBuffer block;
         if (offset_into_block != 0 || num_bytes_to_copy != block_size) {
@@ -585,8 +585,8 @@ ssize_t Ext2FSInode::write_bytes(off_t offset, ssize_t count, const byte* data, 
 
         memcpy(block.pointer() + offset_into_block, in, num_bytes_to_copy);
         if (bi == last_logical_block_index_in_file && num_bytes_to_copy < block_size) {
-            size_t padding_start = new_size % block_size;
-            size_t padding_bytes = block_size - padding_start;
+            int padding_start = new_size % block_size;
+            int padding_bytes = block_size - padding_start;
 #ifdef EXT2_DEBUG
             dbgprintf("Ext2FSInode::write_bytes padding last block of file with zero x %u (new_size=%u, offset_into_block=%u, num_bytes_to_copy=%u)\n", padding_bytes, new_size, offset_into_block, num_bytes_to_copy);
 #endif
@@ -847,17 +847,17 @@ void Ext2FS::traverse_inode_bitmap(unsigned group_index, F callback) const
 }
 
 template<typename F>
-void Ext2FS::traverse_block_bitmap(unsigned group_index, F callback) const
+void Ext2FS::traverse_block_bitmap(GroupIndex group_index, F callback) const
 {
     ASSERT(group_index <= m_block_group_count);
     auto& bgd = group_descriptor(group_index);
 
-    unsigned blocks_in_group = min(blocks_per_group(), super_block().s_blocks_count);
-    unsigned block_count = ceil_div(blocks_in_group, 8u);
-    unsigned first_block_in_group = (group_index - 1) * blocks_per_group();
-    unsigned bits_per_block = block_size() * 8;
+    int blocks_in_group = min(blocks_per_group(), super_block().s_blocks_count);
+    int block_count = ceil_div(blocks_in_group, 8u);
+    BlockIndex first_block_in_group = (group_index - 1) * blocks_per_group();
+    int bits_per_block = block_size() * 8;
 
-    for (unsigned i = 0; i < block_count; ++i) {
+    for (int i = 0; i < block_count; ++i) {
         auto block = read_block(bgd.bg_block_bitmap + i);
         ASSERT(block);
         bool should_continue = callback(first_block_in_group + (i * bits_per_block) + 1, Bitmap::wrap(block.pointer(), blocks_in_group));
@@ -880,7 +880,7 @@ bool Ext2FS::write_ext2_inode(unsigned inode, const ext2_inode& e2inode)
     return success;
 }
 
-Vector<Ext2FS::BlockIndex> Ext2FS::allocate_blocks(unsigned group, unsigned count)
+Vector<Ext2FS::BlockIndex> Ext2FS::allocate_blocks(GroupIndex group, int count)
 {
     LOCKER(m_lock);
     dbgprintf("Ext2FS: allocate_blocks(group: %u, count: %u)\n", group, count);
@@ -913,7 +913,7 @@ Vector<Ext2FS::BlockIndex> Ext2FS::allocate_blocks(unsigned group, unsigned coun
     return blocks;
 }
 
-unsigned Ext2FS::allocate_inode(unsigned preferred_group, unsigned expected_size)
+unsigned Ext2FS::allocate_inode(GroupIndex preferred_group, off_t expected_size)
 {
     LOCKER(m_lock);
     dbgprintf("Ext2FS: allocate_inode(preferredGroup: %u, expectedSize: %u)\n", preferred_group, expected_size);
@@ -1134,7 +1134,7 @@ RetainPtr<Inode> Ext2FS::create_directory(InodeIdentifier parent_id, const Strin
     return inode;
 }
 
-RetainPtr<Inode> Ext2FS::create_inode(InodeIdentifier parent_id, const String& name, mode_t mode, unsigned size, int& error)
+RetainPtr<Inode> Ext2FS::create_inode(InodeIdentifier parent_id, const String& name, mode_t mode, off_t size, int& error)
 {
     LOCKER(m_lock);
     ASSERT(parent_id.fsid() == fsid());
@@ -1388,10 +1388,10 @@ KResult Ext2FSInode::chown(uid_t uid, gid_t gid)
     return KSuccess;
 }
 
-KResult Ext2FSInode::truncate(int size)
+KResult Ext2FSInode::truncate(off_t size)
 {
     LOCKER(m_lock);
-    if (m_raw_inode.i_size == size)
+    if ((off_t)m_raw_inode.i_size == size)
         return KSuccess;
     m_raw_inode.i_size = size;
     set_metadata_dirty(true);

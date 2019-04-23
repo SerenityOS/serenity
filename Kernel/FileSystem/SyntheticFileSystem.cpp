@@ -138,7 +138,7 @@ InodeIdentifier SynthFS::root_inode() const
     return { fsid(), 1 };
 }
 
-RetainPtr<Inode> SynthFS::create_inode(InodeIdentifier parentInode, const String& name, mode_t mode, unsigned size, int& error)
+RetainPtr<Inode> SynthFS::create_inode(InodeIdentifier parentInode, const String& name, mode_t mode, off_t size, int& error)
 {
     (void) parentInode;
     (void) name;
@@ -274,7 +274,7 @@ ssize_t SynthFSInode::write_bytes(off_t offset, ssize_t size, const byte* buffer
         return -EPERM;
     // FIXME: Being able to write into SynthFS at a non-zero offset seems like something we should support..
     ASSERT(offset == 0);
-    bool success = m_write_callback(*this, ByteBuffer::wrap((byte*)buffer, size));
+    bool success = m_write_callback(*this, ByteBuffer::wrap(buffer, size));
     ASSERT(success);
     return 0;
 }

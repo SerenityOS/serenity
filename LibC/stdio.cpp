@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <AK/printf.cpp>
+#include <AK/StdLibExtras.h>
 #include <Kernel/Syscall.h>
 
 extern "C" {
@@ -405,6 +406,7 @@ FILE* freopen(const char* pathname, const char* mode, FILE* stream)
 
 FILE* fdopen(int fd, const char* mode)
 {
+    UNUSED_PARAM(mode);
     // FIXME: Verify that the mode matches how fd is already open.
     if (fd < 0)
         return nullptr;

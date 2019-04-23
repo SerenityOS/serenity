@@ -22,7 +22,7 @@ public:
     virtual InodeIdentifier root_inode() const override;
     virtual RetainPtr<Inode> get_inode(InodeIdentifier) const override;
 
-    virtual RetainPtr<Inode> create_inode(InodeIdentifier parent_id, const String& name, mode_t, unsigned size, int& error) override;
+    virtual RetainPtr<Inode> create_inode(InodeIdentifier parent_id, const String& name, mode_t, off_t size, int& error) override;
     virtual RetainPtr<Inode> create_directory(InodeIdentifier parent_id, const String& name, mode_t, int& error) override;
 
     void add_sys_file(String&&, Function<ByteBuffer(ProcFSInode&)>&& read_callback, Function<ssize_t(ProcFSInode&, const ByteBuffer&)>&& write_callback);

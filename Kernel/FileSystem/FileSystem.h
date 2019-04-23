@@ -45,14 +45,14 @@ public:
 
     struct DirectoryEntry {
         DirectoryEntry(const char* name, InodeIdentifier, byte file_type);
-        DirectoryEntry(const char* name, size_t name_length, InodeIdentifier, byte file_type);
+        DirectoryEntry(const char* name, int name_length, InodeIdentifier, byte file_type);
         char name[256];
         int name_length { 0 };
         InodeIdentifier inode;
         byte file_type { 0 };
     };
 
-    virtual RetainPtr<Inode> create_inode(InodeIdentifier parentInode, const String& name, mode_t, unsigned size, int& error) = 0;
+    virtual RetainPtr<Inode> create_inode(InodeIdentifier parentInode, const String& name, mode_t, off_t size, int& error) = 0;
     virtual RetainPtr<Inode> create_directory(InodeIdentifier parentInode, const String& name, mode_t, int& error) = 0;
 
     virtual RetainPtr<Inode> get_inode(InodeIdentifier) const = 0;
@@ -102,7 +102,7 @@ public:
     virtual size_t directory_entry_count() const = 0;
     virtual KResult chmod(mode_t) = 0;
     virtual KResult chown(uid_t, gid_t) = 0;
-    virtual KResult truncate(int) { return KSuccess; }
+    virtual KResult truncate(off_t) { return KSuccess; }
 
     LocalSocket* socket() { return m_socket.ptr(); }
     const LocalSocket* socket() const { return m_socket.ptr(); }

@@ -202,10 +202,10 @@ char* strchr(const char* str, int c)
 void* memchr(const void* ptr, int c, size_t size)
 {
     char ch = c;
-    char* cptr = (char*)ptr;
+    auto* cptr = (const char*)ptr;
     for (size_t i = 0; i < size; ++i) {
         if (cptr[i] == ch)
-            return cptr + i;
+            return const_cast<char*>(cptr + i);
     }
     return nullptr;
 }
@@ -358,7 +358,7 @@ char* strpbrk(const char* s, const char* accept)
 {
     while (*s)
         if(strchr(accept, *s++))
-            return (char*)--s;
+            return const_cast<char*>(--s);
     return nullptr;
 }
 

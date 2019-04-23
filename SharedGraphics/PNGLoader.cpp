@@ -82,7 +82,7 @@ public:
     {
         if (m_size_remaining < count)
             return false;
-        buffer = ByteBuffer::wrap((void*)m_data_ptr, count);
+        buffer = ByteBuffer::wrap(m_data_ptr, count);
         m_data_ptr += count;
         m_size_remaining -= count;
         return true;
