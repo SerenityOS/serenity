@@ -13,9 +13,7 @@ public:
 
 private:
     void on_screen_rect_change(const Rect&);
-    GButton* create_button();
+    GButton* create_button(const WindowIdentifier&);
 
     virtual void wm_event(GWMEvent&) override;
-
-    WindowList m_window_list;
 };

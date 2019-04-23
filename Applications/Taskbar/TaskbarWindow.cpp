@@ -1,4 +1,5 @@
 #include "TaskbarWindow.h"
+#include "TaskbarButton.h"
 #include <LibGUI/GWindow.h>
 #include <LibGUI/GDesktop.h>
 #include <LibGUI/GEventLoop.h>
@@ -30,8 +31,8 @@ TaskbarWindow::TaskbarWindow()
     widget->set_frame_shadow(FrameShadow::Raised);
     set_main_widget(widget);
 
-    m_window_list.aid_create_button = [this] {
-        return create_button();
+    WindowList::the().aid_create_button = [this] (auto& identifier) {
+        return create_button(identifier);
     };
 }
 
@@ -45,9 +46,9 @@ void TaskbarWindow::on_screen_rect_change(const Rect& rect)
     set_rect(new_rect);
 }
 
-GButton* TaskbarWindow::create_button()
+GButton* TaskbarWindow::create_button(const WindowIdentifier& identifier)
 {
-    auto* button = new GButton(main_widget());
+    auto* button = new TaskbarButton(identifier, main_widget());
     button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
     button->set_preferred_size({ 140, 22 });
     button->set_checkable(true);
@@ -72,7 +73,7 @@ void TaskbarWindow::wm_event(GWMEvent& event)
             removed_event.window_id()
         );
 #endif
-        m_window_list.remove_window(identifier);
+        WindowList::the().remove_window(identifier);
         update();
         break;
     }
@@ -96,7 +97,7 @@ void TaskbarWindow::wm_event(GWMEvent& event)
             changed_event.icon_path().characters()
         );
 #endif
-        if (auto* window = m_window_list.window(identifier)) {
+        if (auto* window = WindowList::the().window(identifier)) {
             window->set_icon_path(changed_event.icon_path());
             window->button()->set_icon(window->icon());
         }
@@ -117,7 +118,7 @@ void TaskbarWindow::wm_event(GWMEvent& event)
 #endif
         if (!should_include_window(changed_event.window_type()))
             break;
-        auto& window = m_window_list.ensure_window(identifier);
+        auto& window = WindowList::the().ensure_window(identifier);
         window.set_title(changed_event.title());
         window.set_rect(changed_event.rect());
         window.set_active(changed_event.is_active());

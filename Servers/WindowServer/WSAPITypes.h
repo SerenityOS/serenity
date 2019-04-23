@@ -210,6 +210,7 @@ struct WSAPI_ClientMessage {
         GetWallpaper,
         SetWindowOverrideCursor,
         WM_SetActiveWindow,
+        WM_SetWindowMinimized,
         PopupMenu,
         DismissMenu,
         SetWindowIcon,
@@ -236,6 +237,7 @@ struct WSAPI_ClientMessage {
         struct {
             int client_id;
             int window_id;
+            bool minimized;
         } wm;
         struct {
             int menubar_id;
@@ -245,6 +247,7 @@ struct WSAPI_ClientMessage {
             int shortcut_text_length;
             bool enabled;
             WSAPI_Point position;
+            bool top_anchored;
         } menu;
         struct {
             WSAPI_Rect rect;
