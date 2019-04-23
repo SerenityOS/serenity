@@ -7,7 +7,7 @@ long ulimit(int cmd, long newlimit)
 {
     (void) cmd;
     (void) newlimit;
-    assert(false);
+    ASSERT_NOT_REACHED();
 }
 
 }

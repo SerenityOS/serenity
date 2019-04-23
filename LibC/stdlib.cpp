@@ -63,7 +63,7 @@ void* malloc(size_t size)
 
     if (s_malloc_sum_free < real_size) {
         fprintf(stderr, "malloc(): Out of memory\ns_malloc_sum_free=%u, real_size=%u\n", s_malloc_sum_free, real_size);
-        assert(false);
+        ASSERT_NOT_REACHED();
     }
 
     size_t chunks_needed = real_size / CHUNK_SIZE;
@@ -183,7 +183,7 @@ void exit(int status)
     extern void _fini();
     _fini();
     _exit(status);
-    assert(false);
+    ASSERT_NOT_REACHED();
 }
 
 int atexit(void (*handler)())
@@ -271,7 +271,7 @@ double strtod(const char* str, char** endptr)
     (void)str;
     (void)endptr;
     dbgprintf("LibC: strtod: '%s'\n", str);
-    assert(false);
+    ASSERT_NOT_REACHED();
 }
 
 float strtof(const char* str, char** endptr)
@@ -279,13 +279,13 @@ float strtof(const char* str, char** endptr)
     (void)str;
     (void)endptr;
     dbgprintf("LibC: strtof: '%s'\n", str);
-    assert(false);
+    ASSERT_NOT_REACHED();
 }
 
 double atof(const char* str)
 {
     dbgprintf("LibC: atof: '%s'\n", str);
-    assert(false);
+    ASSERT_NOT_REACHED();
 }
 
 int atoi(const char* str)
@@ -417,7 +417,7 @@ ldiv_t ldiv(long numerator, long denominator)
 
 size_t mbstowcs(wchar_t*, const char*, size_t)
 {
-    assert(false);
+    ASSERT_NOT_REACHED();
 }
 
 long strtol(const char* str, char** endptr, int base)

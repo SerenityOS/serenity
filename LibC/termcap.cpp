@@ -107,7 +107,7 @@ int tgetnum(const char* id)
     auto it = caps->find(id);
     if (it != caps->end())
         return atoi((*it).value);
-    assert(false);
+    ASSERT_NOT_REACHED();
 }
 
 char* tgoto(const char* cap, int col, int row)
@@ -115,7 +115,7 @@ char* tgoto(const char* cap, int col, int row)
     (void)cap;
     (void)col;
     (void)row;
-    assert(false);
+    ASSERT_NOT_REACHED();
 }
 
 int tputs(const char* str, int affcnt, int (*putc)(int))

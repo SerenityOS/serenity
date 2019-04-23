@@ -180,7 +180,7 @@ static int runcmd(char* cmd)
             exit(1);
         }
         // We should never get here!
-        assert(false);
+        ASSERT_NOT_REACHED();
     }
 
     int wstatus = 0;

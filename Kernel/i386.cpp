@@ -484,6 +484,7 @@ void handle_irq()
     PIC::eoi(irq);
 }
 
+#ifdef DEBUG
 void __assertion_failed(const char* msg, const char* file, unsigned line, const char* func)
 {
     asm volatile("cli");
@@ -493,6 +494,7 @@ void __assertion_failed(const char* msg, const char* file, unsigned line, const 
     asm volatile("hlt");
     for (;;);
 }
+#endif
 
 void sse_init()
 {

@@ -5,7 +5,7 @@ extern "C" {
 
 struct mntent* getmntent(FILE*)
 {
-    assert(false);
+    ASSERT_NOT_REACHED();
     return nullptr;
 }
 

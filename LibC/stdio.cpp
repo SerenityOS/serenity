@@ -401,7 +401,7 @@ FILE* freopen(const char* pathname, const char* mode, FILE* stream)
     (void)pathname;
     (void)mode;
     (void)stream;
-    assert(false);
+    ASSERT_NOT_REACHED();
 }
 
 FILE* fdopen(int fd, const char* mode)
@@ -429,19 +429,19 @@ int rename(const char* oldpath, const char* newpath)
 
 char* tmpnam(char*)
 {
-    assert(false);
+    ASSERT_NOT_REACHED();
 }
 
 FILE* popen(const char* command, const char* type)
 {
     (void)command;
     (void)type;
-    assert(false);
+    ASSERT_NOT_REACHED();
 }
 
 int pclose(FILE*)
 {
-    assert(false);
+    ASSERT_NOT_REACHED();
 }
 
 int remove(const char* pathname)
