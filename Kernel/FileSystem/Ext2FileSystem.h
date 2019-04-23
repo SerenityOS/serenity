@@ -103,11 +103,6 @@ private:
     Vector<BlockIndex> block_list_for_inode(const ext2_inode&, bool include_block_list_blocks = false) const;
     bool write_block_list_for_inode(InodeIndex, ext2_inode&, const Vector<BlockIndex>&);
 
-    void dump_block_bitmap(GroupIndex) const;
-    void dump_inode_bitmap(GroupIndex) const;
-
-    template<typename F> void traverse_inode_bitmap(GroupIndex, F) const;
-
     bool add_inode_to_directory(InodeIndex parent, InodeIndex child, const String& name, byte file_type, int& error);
     bool write_directory_inode(InodeIndex, Vector<DirectoryEntry>&&);
     bool get_inode_allocation_state(InodeIndex) const;

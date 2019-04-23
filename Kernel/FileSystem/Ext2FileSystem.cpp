@@ -795,57 +795,6 @@ unsigned Ext2FS::blocks_per_group() const
     return EXT2_BLOCKS_PER_GROUP(&super_block());
 }
 
-void Ext2FS::dump_block_bitmap(unsigned groupIndex) const
-{
-    LOCKER(m_lock);
-    ASSERT(groupIndex <= m_block_group_count);
-    auto& bgd = group_descriptor(groupIndex);
-
-    unsigned blocks_in_group = min(blocks_per_group(), super_block().s_blocks_count);
-    unsigned block_count = ceil_div(blocks_in_group, 8u);
-
-    auto bitmap_blocks = read_blocks(bgd.bg_block_bitmap, block_count);
-    ASSERT(bitmap_blocks);
-
-    kprintf("ext2fs: group[%u] block bitmap (bitmap occupies %u blocks):\n", groupIndex, block_count);
-
-    auto bitmap = Bitmap::wrap(bitmap_blocks.pointer(), blocks_in_group);
-    for (unsigned i = 0; i < blocks_in_group; ++i) {
-        kprintf("%c", bitmap.get(i) ? '1' : '0');
-    }
-    kprintf("\n");
-}
-
-void Ext2FS::dump_inode_bitmap(unsigned groupIndex) const
-{
-    LOCKER(m_lock);
-    traverse_inode_bitmap(groupIndex, [] (unsigned, const Bitmap& bitmap) {
-        for (int i = 0; i < bitmap.size(); ++i)
-            kprintf("%c", bitmap.get(i) ? '1' : '0');
-        return true;
-    });
-}
-
-template<typename F>
-void Ext2FS::traverse_inode_bitmap(unsigned group_index, F callback) const
-{
-    ASSERT(group_index <= m_block_group_count);
-    auto& bgd = group_descriptor(group_index);
-
-    unsigned inodes_in_group = min(inodes_per_group(), super_block().s_inodes_count);
-    unsigned block_count = ceil_div(inodes_in_group, 8u);
-    unsigned first_inode_in_group = (group_index - 1) * inodes_per_group();
-    unsigned bits_per_block = block_size() * 8;
-
-    for (unsigned i = 0; i < block_count; ++i) {
-        auto block = read_block(bgd.bg_inode_bitmap + i);
-        ASSERT(block);
-        bool should_continue = callback(first_inode_in_group + i * (i * bits_per_block) + 1, Bitmap::wrap(block.pointer(), inodes_in_group));
-        if (!should_continue)
-            break;
-    }
-}
-
 bool Ext2FS::write_ext2_inode(unsigned inode, const ext2_inode& e2inode)
 {
     LOCKER(m_lock);
@@ -905,7 +854,7 @@ unsigned Ext2FS::allocate_inode(GroupIndex preferred_group, off_t expected_size)
 
     dbgprintf("Ext2FS: minimum needed blocks: %u\n", needed_blocks);
 
-    unsigned groupIndex = 0;
+    unsigned group_index = 0;
 
     auto is_suitable_group = [this, needed_blocks] (unsigned groupIndex) {
         auto& bgd = group_descriptor(groupIndex);
@@ -913,31 +862,35 @@ unsigned Ext2FS::allocate_inode(GroupIndex preferred_group, off_t expected_size)
     };
 
     if (preferred_group && is_suitable_group(preferred_group)) {
-        groupIndex = preferred_group;
+        group_index = preferred_group;
     } else {
         for (unsigned i = 1; i <= m_block_group_count; ++i) {
             if (is_suitable_group(i))
-                groupIndex = i;
+                group_index = i;
         }
     }
 
-    if (!groupIndex) {
+    if (!group_index) {
         kprintf("Ext2FS: allocate_inode: no suitable group found for new inode with %u blocks needed :(\n", needed_blocks);
         return 0;
     }
 
-    dbgprintf("Ext2FS: allocate_inode: found suitable group [%u] for new inode with %u blocks needed :^)\n", groupIndex, needed_blocks);
+    dbgprintf("Ext2FS: allocate_inode: found suitable group [%u] for new inode with %u blocks needed :^)\n", group_index, needed_blocks);
 
+    auto& bgd = group_descriptor(group_index);
+    unsigned inodes_in_group = min(inodes_per_group(), super_block().s_inodes_count);
     unsigned first_free_inode_in_group = 0;
-    traverse_inode_bitmap(groupIndex, [&first_free_inode_in_group] (unsigned firstInodeInBitmap, const Bitmap& bitmap) {
-        for (int i = 0; i < bitmap.size(); ++i) {
-            if (!bitmap.get(i)) {
-                first_free_inode_in_group = firstInodeInBitmap + i;
-                return false;
-            }
-        }
-        return true;
-    });
+
+    unsigned first_inode_in_group = (group_index - 1) * inodes_per_group() + 1;
+
+    auto bitmap_block = read_block(bgd.bg_inode_bitmap);
+    auto inode_bitmap = Bitmap::wrap(bitmap_block.data(), inodes_in_group);
+    for (int i = 0; i < inode_bitmap.size(); ++i) {
+        if (inode_bitmap.get(i))
+            continue;
+        first_free_inode_in_group = first_inode_in_group + i;
+        break;
+    }
 
     if (!first_free_inode_in_group) {
         kprintf("Ext2FS: first_free_inode_in_group returned no inode, despite bgd claiming there are inodes :(\n");
