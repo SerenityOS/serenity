@@ -6,7 +6,7 @@ extern "C" {
 pid_t wait(int* wstatus)
 {
     (void)wstatus;
-    assert(false);
+    ASSERT_NOT_REACHED();
 }
 
 }

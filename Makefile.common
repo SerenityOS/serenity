@@ -11,10 +11,10 @@ INCLUDE_FLAGS = -I$(SERENITY_BASE_DIR) -I. -I$(SERENITY_BASE_DIR)/LibC -I$(SEREN
 LDFLAGS = -L$(SERENITY_BASE_DIR)/LibC -L$(SERENITY_BASE_DIR)/LibCore -L$(SERENITY_BASE_DIR)/LibM -L$(SERENITY_BASE_DIR)/LibGUI -Wl,--gc-sections
 CLANG_FLAGS = -Wconsumed -m32 -ffreestanding -march=i686
 #SUGGEST_FLAGS = -Wsuggest-final-types -Wsuggest-final-methods -Wsuggest-override #-Wsuggest-attribute=noreturn 
-DEFINES = -DSANITIZE_PTRS
 CXXFLAGS = -MMD -MP $(WARNING_FLAGS) $(OPTIMIZATION_FLAGS) $(FLAVOR_FLAGS) $(ARCH_FLAGS) $(STANDARD_FLAGS) $(SUGGEST_FLAGS) $(INCLUDE_FLAGS) $(DEFINES)
 #CXX = clang $(CLANG_FLAGS)
 CXX = i686-pc-serenity-g++
 LD = i686-pc-serenity-g++
 AS = i686-pc-serenity-as
 
+DEFINES = -DSANITIZE_PTRS -DDEBUG

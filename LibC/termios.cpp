@@ -29,14 +29,14 @@ int tcflow(int fd, int action)
 {
     (void) fd;
     (void) action;
-    assert(false);
+    ASSERT_NOT_REACHED();
 }
 
 int tcflush(int fd, int queue_selector)
 {
     (void)fd;
     (void)queue_selector;
-    assert(false);
+    ASSERT_NOT_REACHED();
 }
 
 speed_t cfgetispeed(const struct termios* tp)

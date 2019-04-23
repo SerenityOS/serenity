@@ -362,27 +362,27 @@ int access(const char* pathname, int mode)
 int mknod(const char* pathname, mode_t, dev_t)
 {
     (void) pathname;
-    assert(false);
+    ASSERT_NOT_REACHED();
 }
 
 long fpathconf(int fd, int name)
 {
     (void) fd;
     (void) name;
-    assert(false);
+    ASSERT_NOT_REACHED();
 }
 
 long pathconf(const char* path, int name)
 {
     (void) path;
     (void) name;
-    assert(false);
+    ASSERT_NOT_REACHED();
 }
 
 void _exit(int status)
 {
     syscall(SC_exit, status);
-    assert(false);
+    ASSERT_NOT_REACHED();
 }
 
 void sync()
