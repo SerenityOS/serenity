@@ -25,13 +25,6 @@ private:
     // ^DiskDevice
     virtual const char* class_name() const override;
 
-    struct CHS {
-        dword cylinder;
-        word head;
-        word sector;
-    };
-    CHS lba_to_chs(dword) const;
-
     void initialize();
     bool wait_for_irq();
     bool read_sectors(dword start_sector, word count, byte* buffer);
