@@ -5,6 +5,7 @@
 
 extern "C" {
 
+#ifdef DEBUG
 void __assertion_failed(const char* msg, const char* file, unsigned line, const char* func)
 {
     dbgprintf("USERSPACE(%d) ASSERTION FAILED: %s\n%s:%u in %s\n", getpid(), msg, file, line, func);
@@ -12,5 +13,6 @@ void __assertion_failed(const char* msg, const char* file, unsigned line, const 
     abort();
     for (;;);
 }
+#endif
 
 }

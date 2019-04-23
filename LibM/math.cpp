@@ -5,25 +5,25 @@ extern "C" {
 
 double cos(double)
 {
-    assert(false);
+    ASSERT_NOT_REACHED();
 }
 
 double sin(double)
 {
-    assert(false);
+    ASSERT_NOT_REACHED();
 }
 
 double pow(double x, double y)
 {
     (void)x;
     (void)y;
-    assert(false);
+    ASSERT_NOT_REACHED();
 }
 
 double ldexp(double, int exp)
 {
     (void)exp;
-    assert(false);
+    ASSERT_NOT_REACHED();
 }
 
 }

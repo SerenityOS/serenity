@@ -92,12 +92,12 @@ struct tm* gmtime(const time_t* t)
 
 char *asctime(const struct tm*)
 {
-    assert(false);
+    ASSERT_NOT_REACHED();
 }
 
 size_t strftime(char*, size_t, const char*, const struct tm*)
 {
-    assert(false);
+    ASSERT_NOT_REACHED();
 }
 
 long timezone;
@@ -107,7 +107,7 @@ int daylight;
 
 void tzset()
 {
-    assert(false);
+    ASSERT_NOT_REACHED();
 }
 
 }

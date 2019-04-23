@@ -48,7 +48,7 @@ int _start(int argc, char** argv, char** env)
 
 [[noreturn]] void __cxa_pure_virtual()
 {
-    assert(false);
+    ASSERT_NOT_REACHED();
 }
 
 void __cxa_atexit()

@@ -366,7 +366,7 @@ char *strtok(char* str, const char* delim)
 {
     (void)str;
     (void)delim;
-    assert(false);
+    ASSERT_NOT_REACHED();
 }
 
 }
