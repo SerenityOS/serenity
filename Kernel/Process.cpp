@@ -278,7 +278,16 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
 
     dbgprintf("%s(%d) do_exec: thread_count() = %d\n", m_name.characters(), m_pid, thread_count());
     // FIXME(Thread): Kill any threads the moment we commit to the exec().
-    ASSERT(thread_count() == 1);
+    if (thread_count() != 1) {
+        dbgprintf("Gonna die because I have many threads! These are the threads:\n");
+        for_each_thread([] (Thread& thread) {
+            dbgprintf("Thread{%p}: TID=%d, PID=%d\n", &thread, thread.tid(), thread.pid());
+            return IterationDecision::Continue;
+        });
+        ASSERT(thread_count() == 1);
+        ASSERT_NOT_REACHED();
+    }
+
 
     auto parts = path.split('/');
     if (parts.is_empty())
@@ -605,6 +614,14 @@ Process::~Process()
     dbgprintf("~Process{%p} name=%s pid=%d, m_fds=%d\n", this, m_name.characters(), pid(), m_fds.size());
     delete m_main_thread;
     m_main_thread = nullptr;
+
+    Vector<Thread*, 16> my_threads;
+    for_each_thread([&my_threads] (auto& thread) {
+        my_threads.append(&thread);
+        return IterationDecision::Continue;
+    });
+    for (auto* thread : my_threads)
+        delete thread;
 }
 
 void Process::dump_regions()
