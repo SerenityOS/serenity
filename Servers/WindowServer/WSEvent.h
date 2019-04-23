@@ -61,6 +61,7 @@ public:
         APIGetWallpaperRequest,
         APISetWindowOverrideCursorRequest,
         WMAPISetActiveWindowRequest,
+        WMAPISetWindowMinimizedRequest,
         APIPopupMenuRequest,
         APIDismissMenuRequest,
         __End_API_Client_Requests,
@@ -119,6 +120,27 @@ private:
     int m_target_client_id;
     int m_target_window_id;
 };
+
+class WSWMAPISetWindowMinimizedRequest : public WSAPIClientRequest {
+public:
+    WSWMAPISetWindowMinimizedRequest(int client_id, int target_client_id, int target_window_id, bool minimized)
+        : WSAPIClientRequest(WSEvent::WMAPISetWindowMinimizedRequest, client_id)
+        , m_target_client_id(target_client_id)
+        , m_target_window_id(target_window_id)
+        , m_minimized(minimized)
+    {
+    }
+
+    int target_client_id() const { return m_target_client_id; }
+    int target_window_id() const { return m_target_window_id; }
+    bool is_minimized() const { return m_minimized; }
+
+private:
+    int m_target_client_id;
+    int m_target_window_id;
+    bool m_minimized;
+};
+
 
 class WSAPISetGlobalCursorTrackingRequest : public WSAPIClientRequest {
 public:
@@ -192,19 +214,22 @@ private:
 
 class WSAPIPopupMenuRequest : public WSAPIClientRequest {
 public:
-    WSAPIPopupMenuRequest(int client_id, int menu_id, const Point& position)
+    WSAPIPopupMenuRequest(int client_id, int menu_id, const Point& position, bool top_anchored)
         : WSAPIClientRequest(WSEvent::APIPopupMenuRequest, client_id)
         , m_menu_id(menu_id)
         , m_position(position)
+        , m_top_anchored(top_anchored)
     {
     }
 
     int menu_id() const { return m_menu_id; }
     Point position() const { return m_position; }
+    bool top_anchored() const { return m_top_anchored; }
 
 private:
     int m_menu_id;
     Point m_position;
+    bool m_top_anchored;
 };
 
 class WSAPIDismissMenuRequest : public WSAPIClientRequest {

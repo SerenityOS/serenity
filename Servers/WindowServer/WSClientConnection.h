@@ -73,6 +73,7 @@ private:
     void handle_request(const WSAPIGetWallpaperRequest&);
     void handle_request(const WSAPISetWindowOverrideCursorRequest&);
     void handle_request(const WSWMAPISetActiveWindowRequest&);
+    void handle_request(const WSWMAPISetWindowMinimizedRequest&);
     void handle_request(const WSAPIPopupMenuRequest&);
     void handle_request(const WSAPIDismissMenuRequest&);
 

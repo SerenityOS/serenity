@@ -155,7 +155,7 @@ bool WSEventLoop::on_receive_from_client(int client_id, const WSAPI_ClientMessag
         post_event(client, make<WSAPICreateMenuRequest>(client_id, String(message.text, message.text_length)));
         break;
     case WSAPI_ClientMessage::Type::PopupMenu:
-        post_event(client, make<WSAPIPopupMenuRequest>(client_id, message.menu.menu_id, message.menu.position));
+        post_event(client, make<WSAPIPopupMenuRequest>(client_id, message.menu.menu_id, message.menu.position, message.menu.top_anchored));
         break;
     case WSAPI_ClientMessage::Type::DismissMenu:
         post_event(client, make<WSAPIDismissMenuRequest>(client_id, message.menu.menu_id));
@@ -246,6 +246,9 @@ bool WSEventLoop::on_receive_from_client(int client_id, const WSAPI_ClientMessag
         break;
     case WSAPI_ClientMessage::Type::WM_SetActiveWindow:
         post_event(client, make<WSWMAPISetActiveWindowRequest>(client_id, message.wm.client_id, message.wm.window_id));
+        break;
+    case WSAPI_ClientMessage::Type::WM_SetWindowMinimized:
+        post_event(client, make<WSWMAPISetWindowMinimizedRequest>(client_id, message.wm.client_id, message.wm.window_id, message.wm.minimized));
         break;
     default:
         break;
