@@ -33,7 +33,7 @@ int main(int argc, char** argv)
         if (rc < 0)
             perror("utime");
     } else {
-        int fd = open(argv[1], O_CREAT, 0010644);
+        int fd = open(argv[1], O_CREAT, 0100644);
         if (fd < 0) {
             perror("open");
             return 1;
