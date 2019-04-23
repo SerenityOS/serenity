@@ -74,7 +74,7 @@ public:
 
     void close();
 
-    void popup(const Point&);
+    void popup(const Point&, bool top_anchored);
 
 private:
     virtual void event(CEvent&) override;

@@ -2,6 +2,14 @@
 #include <WindowServer/WSAPITypes.h>
 #include <LibGUI/GEventLoop.h>
 
+WindowList& WindowList::the()
+{
+    static WindowList* s_the;
+    if (!s_the)
+        s_the = new WindowList;
+    return *s_the;
+}
+
 Window* WindowList::window(const WindowIdentifier& identifier)
 {
     auto it = m_windows.find(identifier);
@@ -16,7 +24,7 @@ Window& WindowList::ensure_window(const WindowIdentifier& identifier)
     if (it != m_windows.end())
         return *it->value;
     auto window = make<Window>(identifier);
-    window->set_button(aid_create_button());
+    window->set_button(aid_create_button(identifier));
     window->button()->on_click = [identifier] (GButton&) {
         WSAPI_ClientMessage message;
         message.type = WSAPI_ClientMessage::Type::WM_SetActiveWindow;

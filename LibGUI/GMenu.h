@@ -21,7 +21,7 @@ public:
     void add_action(Retained<GAction>);
     void add_separator();
 
-    void popup(const Point& screen_position);
+    void popup(const Point& screen_position, bool top_anchored = true);
     void dismiss();
 
     Function<void(unsigned)> on_item_activation;

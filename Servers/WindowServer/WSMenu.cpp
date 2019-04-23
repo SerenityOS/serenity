@@ -188,11 +188,14 @@ void WSMenu::close()
         menu_window()->set_visible(false);
 }
 
-void WSMenu::popup(const Point& position)
+void WSMenu::popup(const Point& position, bool top_anchored)
 {
     ASSERT(!is_empty());
     auto& window = ensure_menu_window();
-    window.move_to(position);
+    if (top_anchored)
+        window.move_to(position);
+    else
+        window.move_to(position.translated(0, -window.height()));
     window.set_visible(true);
     WSWindowManager::the().set_current_menu(this);
 }
