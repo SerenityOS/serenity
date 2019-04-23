@@ -1003,10 +1003,8 @@ void WSWindowManager::set_active_window(WSWindow* window)
     if (window && window->is_blocked_by_modal_window())
         return;
 
-    if (window->type() != WSWindowType::Normal) {
-        dbgprintf("WSWindowManager: Attempted to make a non-normal window active.\n");
+    if (window->type() != WSWindowType::Normal)
         return;
-    }
 
     if (window == m_active_window)
         return;
