@@ -74,7 +74,6 @@ class GApplication::TooltipWindow final : public GWindow {
 public:
     TooltipWindow()
     {
-        set_title("Tooltip");
         set_window_type(GWindowType::Tooltip);
         m_label = new GLabel;
         m_label->set_background_color(Color::from_rgb(0xdac7b5));
