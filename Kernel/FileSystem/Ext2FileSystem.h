@@ -107,7 +107,6 @@ private:
     void dump_inode_bitmap(GroupIndex) const;
 
     template<typename F> void traverse_inode_bitmap(GroupIndex, F) const;
-    template<typename F> void traverse_block_bitmap(GroupIndex, F) const;
 
     bool add_inode_to_directory(InodeIndex parent, InodeIndex child, const String& name, byte file_type, int& error);
     bool write_directory_inode(InodeIndex, Vector<DirectoryEntry>&&);

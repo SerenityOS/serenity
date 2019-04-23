@@ -5,7 +5,7 @@ fi
 rm -vf _fs_contents.lock
 rm -vf _fs_contents
 dd if=/dev/zero of=_fs_contents bs=1M count=512
-mke2fs _fs_contents
+mke2fs -I 128 _fs_contents
 chown 1000:1000 _fs_contents
 mkdir -vp mnt
 mount -o loop _fs_contents mnt/
