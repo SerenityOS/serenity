@@ -207,6 +207,8 @@ void GTextEditor::paint_event(GPaintEvent& event)
     painter.add_clip_rect(event.rect());
     painter.fill_rect(event.rect(), Color::White);
 
+    painter.translate(frame_thickness(), frame_thickness());
+
     Rect ruler_rect { 0, 0, ruler_width(), height() - height_occupied_by_horizontal_scrollbar()};
 
     if (m_ruler_visible) {
@@ -586,9 +588,7 @@ Rect GTextEditor::cursor_content_rect() const
 
     if (is_single_line()) {
         Rect cursor_rect { cursor_x, 0, 1, font().glyph_height() + 2 };
-        cursor_rect.center_vertically_within(rect());
-        // FIXME: This would not be necessary if we knew more about the font and could center it based on baseline and x-height.
-        cursor_rect.move_by(0, 1);
+        cursor_rect.center_vertically_within({ { }, frame_inner_rect().size() });
         return cursor_rect;
     }
     return { cursor_x, m_cursor.line() * line_height(), 1, line_height() };
@@ -600,7 +600,8 @@ Rect GTextEditor::line_widget_rect(int line_index) const
     rect.set_x(frame_thickness());
     rect.set_width(frame_inner_rect().width());
     rect.move_by(0, -(vertical_scrollbar().value()));
-    rect.intersect(this->rect());
+    rect.move_by(0, frame_thickness());
+    rect.intersect(frame_inner_rect());
     return rect;
 }
 
@@ -614,9 +615,7 @@ Rect GTextEditor::line_content_rect(int line_index) const
     auto& line = *m_lines[line_index];
     if (is_single_line()) {
         Rect line_rect = { content_x_for_position({ line_index, 0 }), 0, line.length() * glyph_width(), font().glyph_height() + 2 };
-        line_rect.center_vertically_within(rect());
-        // FIXME: This would not be necessary if we knew more about the font and could center it based on baseline and x-height.
-        line_rect.move_by(0, 1);
+        line_rect.center_vertically_within({ { }, frame_inner_rect().size() });
         return line_rect;
     }
     return {
