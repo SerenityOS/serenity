@@ -243,7 +243,8 @@ void GTextEditor::paint_event(GPaintEvent& event)
     for (int i = first_visible_line; i <= last_visible_line; ++i) {
         auto& line = *m_lines[i];
         auto line_rect = line_content_rect(i);
-        line_rect.set_width(exposed_width);
+        // FIXME: Make sure we always fill the entire line.
+        //line_rect.set_width(exposed_width);
         if (is_multi_line() && i == m_cursor.line())
             painter.fill_rect(line_rect, Color(230, 230, 230));
         painter.draw_text(line_rect, line.characters(), line.length(), m_text_alignment, Color::Black);
@@ -608,26 +609,24 @@ Rect GTextEditor::line_widget_rect(int line_index) const
 void GTextEditor::scroll_cursor_into_view()
 {
     auto rect = cursor_content_rect();
-    if (m_cursor.column() == 0)
-        rect.set_x(0);
-    else if (m_cursor.column() >= m_lines[m_cursor.line()]->length())
-        rect.set_x(m_lines[m_cursor.line()]->width(font()) + m_horizontal_content_padding * 2);
+    rect.set_x(content_x_for_position(m_cursor));
     scroll_into_view(rect, true, true);
 }
 
 Rect GTextEditor::line_content_rect(int line_index) const
 {
+    auto& line = *m_lines[line_index];
     if (is_single_line()) {
-        Rect line_rect = { m_horizontal_content_padding, 0, content_width() - m_horizontal_content_padding * 2, font().glyph_height() + 2 };
+        Rect line_rect = { content_x_for_position({ line_index, 0 }), 0, line.length() * glyph_width(), font().glyph_height() + 2 };
         line_rect.center_vertically_within(rect());
         // FIXME: This would not be necessary if we knew more about the font and could center it based on baseline and x-height.
         line_rect.move_by(0, 1);
         return line_rect;
     }
     return {
-        m_horizontal_content_padding,
+        content_x_for_position({ line_index, 0 }),
         line_index * line_height(),
-        content_width() - m_horizontal_content_padding * 2,
+        line.length() * glyph_width(),
         line_height()
     };
 }

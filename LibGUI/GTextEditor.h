@@ -90,6 +90,7 @@ public:
     int line_height() const { return font().glyph_height() + m_line_spacing; }
     GTextPosition cursor() const { return m_cursor; }
     GTextRange normalized_selection() const { return m_selection.normalized(); }
+    // FIXME: This should take glyph spacing into account, no?
     int glyph_width() const { return font().glyph_width('x'); }
 
     bool write_to_file(const String& path);
