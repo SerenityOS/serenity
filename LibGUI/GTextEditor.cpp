@@ -605,7 +605,12 @@ Rect GTextEditor::line_widget_rect(int line_index) const
 
 void GTextEditor::scroll_cursor_into_view()
 {
-    scroll_into_view(cursor_content_rect(), true, true);
+    auto rect = cursor_content_rect();
+    if (m_cursor.column() == 0)
+        rect.set_x(content_x_for_position({ m_cursor.line(), 0 }) - 2);
+    else if (m_cursor.column() == m_lines[m_cursor.line()]->length())
+        rect.set_x(content_x_for_position({ m_cursor.line(), m_lines[m_cursor.line()]->length() }) + 2);
+    scroll_into_view(rect, true, true);
 }
 
 Rect GTextEditor::line_content_rect(int line_index) const
