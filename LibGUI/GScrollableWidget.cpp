@@ -96,8 +96,8 @@ Rect GScrollableWidget::visible_content_rect() const
     return {
         m_horizontal_scrollbar->value(),
         m_vertical_scrollbar->value(),
-        frame_inner_rect().width() - width_occupied_by_vertical_scrollbar() - m_size_occupied_by_fixed_elements.width(),
-        frame_inner_rect().height() - height_occupied_by_horizontal_scrollbar() - m_size_occupied_by_fixed_elements.height()
+        min(m_content_size.width(), frame_inner_rect().width() - width_occupied_by_vertical_scrollbar() - m_size_occupied_by_fixed_elements.width()),
+        min(m_content_size.height(), frame_inner_rect().height() - height_occupied_by_horizontal_scrollbar() - m_size_occupied_by_fixed_elements.height())
     };
 }
 
