@@ -597,11 +597,10 @@ Rect GTextEditor::cursor_content_rect() const
 Rect GTextEditor::line_widget_rect(int line_index) const
 {
     auto rect = line_content_rect(line_index);
-    rect.move_by(-(horizontal_scrollbar().value() + ruler_width() + m_horizontal_content_padding), -(vertical_scrollbar().value()));
-    rect.set_width(rect.width() + 1); // Add 1 pixel for when the cursor is on the end.
+    rect.set_x(frame_thickness());
+    rect.set_width(frame_inner_rect().width());
+    rect.move_by(0, -(vertical_scrollbar().value()));
     rect.intersect(this->rect());
-    // This feels rather hackish, but extend the rect to the edge of the content view:
-    rect.set_right(frame_inner_rect().right());
     return rect;
 }
 
