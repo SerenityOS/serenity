@@ -3,6 +3,7 @@
 #include <LibGUI/GScrollableWidget.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>
+#include <SharedGraphics/TextAlignment.h>
 
 class GAction;
 class GMenu;
@@ -68,6 +69,9 @@ public:
     enum Type { MultiLine, SingleLine };
     GTextEditor(Type, GWidget* parent);
     virtual ~GTextEditor() override;
+
+    TextAlignment text_alignment() const { return m_text_alignment; }
+    void set_text_alignment(TextAlignment);
 
     Type type() const { return m_type; }
     bool is_single_line() const { return m_type == SingleLine; }
@@ -173,11 +177,13 @@ private:
     void insert_at_cursor_or_replace_selection(const String&);
     void delete_selection();
     void did_update_selection();
+    int content_x_for_position(const GTextPosition&) const;
 
     Type m_type { MultiLine };
 
     Vector<OwnPtr<Line>> m_lines;
     GTextPosition m_cursor;
+    TextAlignment m_text_alignment { TextAlignment::CenterLeft };
     bool m_cursor_state { true };
     bool m_in_drag_select { false };
     bool m_ruler_visible { true };
