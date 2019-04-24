@@ -25,9 +25,14 @@ Window& WindowList::ensure_window(const WindowIdentifier& identifier)
         return *it->value;
     auto window = make<Window>(identifier);
     window->set_button(aid_create_button(identifier));
-    window->button()->on_click = [identifier] (GButton&) {
+    window->button()->on_click = [window = window.ptr(), identifier] (GButton&) {
         WSAPI_ClientMessage message;
-        message.type = WSAPI_ClientMessage::Type::WM_SetActiveWindow;
+        if (window->is_minimized() || !window->is_active()) {
+            message.type = WSAPI_ClientMessage::Type::WM_SetActiveWindow;
+        } else {
+            message.type = WSAPI_ClientMessage::Type::WM_SetWindowMinimized;
+            message.wm.minimized = true;
+        }
         message.wm.client_id = identifier.client_id();
         message.wm.window_id = identifier.window_id();
         bool success = GEventLoop::post_message_to_server(message);
