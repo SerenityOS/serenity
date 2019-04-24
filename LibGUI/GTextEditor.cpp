@@ -20,7 +20,6 @@ GTextEditor::GTextEditor(Type type, GWidget* parent)
     set_frame_shadow(FrameShadow::Sunken);
     set_frame_thickness(2);
     set_scrollbars_enabled(is_multi_line());
-    m_ruler_visible = is_multi_line();
     set_font(GFontDatabase::the().get_by_name("Csilla Thin"));
     m_lines.append(make<Line>());
     m_cursor = { 0, 0 };
