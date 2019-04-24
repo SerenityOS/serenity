@@ -107,8 +107,22 @@ GTextPosition GTextEditor::text_position_at(const Point& a_position) const
     position.move_by(horizontal_scrollbar().value(), vertical_scrollbar().value());
     position.move_by(-(m_horizontal_content_padding + ruler_width()), 0);
     int line_index = position.y() / line_height();
-    int column_index = position.x() / glyph_width();
     line_index = max(0, min(line_index, line_count() - 1));
+    auto& line = *m_lines[line_index];
+
+    int column_index;
+    switch (m_text_alignment) {
+    case TextAlignment::CenterLeft:
+        column_index = position.x() / glyph_width();
+        break;
+    case TextAlignment::CenterRight:
+        column_index = (position.x() - (frame_inner_rect().right() + 1 - (line.length() * glyph_width()))) / glyph_width();
+        break;
+    default:
+        ASSERT_NOT_REACHED();
+    }
+
+
     column_index = max(0, min(column_index, m_lines[line_index]->length()));
     return { line_index, column_index };
 }
@@ -202,7 +216,7 @@ void GTextEditor::paint_event(GPaintEvent& event)
     painter.translate(-horizontal_scrollbar().value(), -vertical_scrollbar().value());
     if (m_ruler_visible)
         painter.translate(ruler_width(), 0);
-    int exposed_width = max(content_width(), width());
+    int exposed_width = max(content_width(), frame_inner_rect().width());
 
     int first_visible_line = text_position_at(event.rect().top_left()).line();
     int last_visible_line = text_position_at(event.rect().bottom_right()).line();
@@ -232,13 +246,15 @@ void GTextEditor::paint_event(GPaintEvent& event)
         line_rect.set_width(exposed_width);
         if (is_multi_line() && i == m_cursor.line())
             painter.fill_rect(line_rect, Color(230, 230, 230));
-        painter.draw_text(line_rect, line.characters(), line.length(), TextAlignment::CenterLeft, Color::Black);
+        painter.draw_text(line_rect, line.characters(), line.length(), m_text_alignment, Color::Black);
         bool line_has_selection = has_selection && i >= selection.start().line() && i <= selection.end().line();
         if (line_has_selection) {
             int selection_start_column_on_line = selection.start().line() == i ? selection.start().column() : 0;
             int selection_end_column_on_line = selection.end().line() == i ? selection.end().column() : line.length();
-            int selection_left = m_horizontal_content_padding + selection_start_column_on_line * font().glyph_width('x');
-            int selection_right = line_rect.left() + selection_end_column_on_line * font().glyph_width('x');
+
+            int selection_left = content_x_for_position({ i, selection_start_column_on_line });
+            int selection_right = content_x_for_position({ i, selection_end_column_on_line });;
+
             Rect selection_rect { selection_left, line_rect.y(), selection_right - selection_left, line_rect.height() };
             painter.fill_rect(selection_rect, Color::from_rgb(0x955233));
             painter.draw_text(selection_rect, line.characters() + selection_start_column_on_line, line.length() - selection_start_column_on_line - (line.length() - selection_end_column_on_line), TextAlignment::CenterLeft, Color::White);
@@ -544,20 +560,38 @@ void GTextEditor::insert_at_cursor(char ch)
     did_change();
 }
 
+int GTextEditor::content_x_for_position(const GTextPosition& position) const
+{
+    auto& line = *m_lines[position.line()];
+    switch (m_text_alignment) {
+    case TextAlignment::CenterLeft:
+        return m_horizontal_content_padding + position.column() * glyph_width();
+        break;
+    case TextAlignment::CenterRight:
+        return frame_inner_rect().right() + 1 - m_horizontal_content_padding - (line.length() * glyph_width()) + (position.column() * glyph_width());
+        break;
+    default:
+        ASSERT_NOT_REACHED();
+    }
+}
+
 Rect GTextEditor::cursor_content_rect() const
 {
     if (!m_cursor.is_valid())
         return { };
     ASSERT(!m_lines.is_empty());
     ASSERT(m_cursor.column() <= (current_line().length() + 1));
+
+    int cursor_x = content_x_for_position(m_cursor);
+
     if (is_single_line()) {
-        Rect cursor_rect = { m_horizontal_content_padding + m_cursor.column() * glyph_width(), 0, 1, font().glyph_height() + 2 };
+        Rect cursor_rect { cursor_x, 0, 1, font().glyph_height() + 2 };
         cursor_rect.center_vertically_within(rect());
         // FIXME: This would not be necessary if we knew more about the font and could center it based on baseline and x-height.
         cursor_rect.move_by(0, 1);
         return cursor_rect;
     }
-    return { m_horizontal_content_padding + m_cursor.column() * glyph_width(), m_cursor.line() * line_height(), 1, line_height() };
+    return { cursor_x, m_cursor.line() * line_height(), 1, line_height() };
 }
 
 Rect GTextEditor::line_widget_rect(int line_index) const
@@ -584,7 +618,7 @@ void GTextEditor::scroll_cursor_into_view()
 Rect GTextEditor::line_content_rect(int line_index) const
 {
     if (is_single_line()) {
-        Rect line_rect = { m_horizontal_content_padding, 0, content_width(), font().glyph_height() + 2 };
+        Rect line_rect = { m_horizontal_content_padding, 0, content_width() - m_horizontal_content_padding * 2, font().glyph_height() + 2 };
         line_rect.center_vertically_within(rect());
         // FIXME: This would not be necessary if we knew more about the font and could center it based on baseline and x-height.
         line_rect.move_by(0, 1);
@@ -593,7 +627,7 @@ Rect GTextEditor::line_content_rect(int line_index) const
     return {
         m_horizontal_content_padding,
         line_index * line_height(),
-        content_width(),
+        content_width() - m_horizontal_content_padding * 2,
         line_height()
     };
 }
@@ -914,4 +948,12 @@ void GTextEditor::context_menu_event(GContextMenuEvent& event)
         m_context_menu->add_action(delete_action());
     }
     m_context_menu->popup(event.screen_position());
+}
+
+void GTextEditor::set_text_alignment(TextAlignment alignment)
+{
+    if (m_text_alignment == alignment)
+        return;
+    m_text_alignment = alignment;
+    update();
 }
