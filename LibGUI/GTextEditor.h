@@ -187,7 +187,7 @@ private:
     TextAlignment m_text_alignment { TextAlignment::CenterLeft };
     bool m_cursor_state { true };
     bool m_in_drag_select { false };
-    bool m_ruler_visible { true };
+    bool m_ruler_visible { false };
     bool m_have_pending_change_notification { false };
     int m_line_spacing { 4 };
     int m_soft_tab_width { 4 };
