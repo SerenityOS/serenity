@@ -120,13 +120,6 @@ void VFS::traverse_directory_inode(Inode& dir_inode, Function<bool(const FS::Dir
     });
 }
 
-KResultOr<Retained<FileDescriptor>> VFS::open(RetainPtr<Device>&& device, int options)
-{
-    // FIXME: Respect options.
-    (void)options;
-    return FileDescriptor::create(move(device));
-}
-
 KResult VFS::utime(StringView path, Inode& base, time_t atime, time_t mtime)
 {
     auto descriptor_or_error = VFS::the().open(move(path), 0, 0, base);
