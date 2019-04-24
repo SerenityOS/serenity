@@ -95,6 +95,8 @@ void GTextEditor::update_content_size()
     for (auto& line : m_lines)
         content_width = max(line->width(font()), content_width);
     content_width += m_horizontal_content_padding * 2;
+    if (is_right_text_alignment(m_text_alignment))
+        content_width = max(frame_inner_rect().width(), content_width);
     int content_height = line_count() * line_height();
     set_content_size({ content_width, content_height });
     set_size_occupied_by_fixed_elements({ ruler_width(), 0 });
@@ -115,7 +117,7 @@ GTextPosition GTextEditor::text_position_at(const Point& a_position) const
         column_index = position.x() / glyph_width();
         break;
     case TextAlignment::CenterRight:
-        column_index = (position.x() - (frame_inner_rect().right() + 1 - (line.length() * glyph_width()))) / glyph_width();
+        column_index = (position.x() - (content_width() - (line.length() * glyph_width()))) / glyph_width();
         break;
     default:
         ASSERT_NOT_REACHED();
@@ -566,10 +568,8 @@ int GTextEditor::content_x_for_position(const GTextPosition& position) const
     switch (m_text_alignment) {
     case TextAlignment::CenterLeft:
         return m_horizontal_content_padding + position.column() * glyph_width();
-        break;
     case TextAlignment::CenterRight:
-        return frame_inner_rect().right() + 1 - m_horizontal_content_padding - (line.length() * glyph_width()) + (position.column() * glyph_width());
-        break;
+        return content_width() - m_horizontal_content_padding - (line.length() * glyph_width()) + (position.column() * glyph_width());
     default:
         ASSERT_NOT_REACHED();
     }
@@ -606,9 +606,7 @@ Rect GTextEditor::line_widget_rect(int line_index) const
 
 void GTextEditor::scroll_cursor_into_view()
 {
-    auto rect = cursor_content_rect();
-    rect.set_x(content_x_for_position(m_cursor));
-    scroll_into_view(rect, true, true);
+    scroll_into_view(cursor_content_rect(), true, true);
 }
 
 Rect GTextEditor::line_content_rect(int line_index) const
@@ -953,4 +951,10 @@ void GTextEditor::set_text_alignment(TextAlignment alignment)
         return;
     m_text_alignment = alignment;
     update();
+}
+
+void GTextEditor::resize_event(GResizeEvent& event)
+{
+    GScrollableWidget::resize_event(event);
+    update_content_size();
 }

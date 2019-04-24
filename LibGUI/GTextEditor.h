@@ -133,6 +133,7 @@ private:
     virtual void enter_event(CEvent&) override;
     virtual void leave_event(CEvent&) override;
     virtual void context_menu_event(GContextMenuEvent&) override;
+    virtual void resize_event(GResizeEvent&) override;
 
     void create_actions();
     void paint_ruler(Painter&);
