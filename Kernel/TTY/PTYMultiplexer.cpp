@@ -30,6 +30,7 @@ PTYMultiplexer::~PTYMultiplexer()
 
 KResultOr<Retained<FileDescriptor>> PTYMultiplexer::open(int options)
 {
+    UNUSED_PARAM(options);
     LOCKER(m_lock);
     if (m_freelist.is_empty())
         return KResult(-EBUSY);
@@ -38,7 +39,7 @@ KResultOr<Retained<FileDescriptor>> PTYMultiplexer::open(int options)
 #ifdef PTMX_DEBUG
     dbgprintf("PTYMultiplexer::open: Vending master %u\n", master->index());
 #endif
-    return VFS::the().open(move(master), options);
+    return FileDescriptor::create(master.ptr());
 }
 
 void PTYMultiplexer::notify_master_destroyed(Badge<MasterPTY>, unsigned index)

@@ -15,7 +15,8 @@ Device::~Device()
 
 KResultOr<Retained<FileDescriptor>> Device::open(int options)
 {
-    return VFS::the().open(*this, options);
+    UNUSED_PARAM(options);
+    return FileDescriptor::create(this);
 }
 
 void Device::close()
