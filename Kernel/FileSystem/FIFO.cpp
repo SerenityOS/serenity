@@ -1,15 +1,43 @@
 #include <Kernel/FileSystem/FIFO.h>
+#include <Kernel/Lock.h>
 #include <AK/StdLibExtras.h>
+#include <AK/HashTable.h>
 
 //#define FIFO_DEBUG
 
-Retained<FIFO> FIFO::create()
+Lockable<HashTable<FIFO*>>& all_fifos()
 {
-    return adopt(*new FIFO);
+    static Lockable<HashTable<FIFO*>>* s_table;
+    if (!s_table)
+        s_table = new Lockable<HashTable<FIFO*>>;
+    return *s_table;
 }
 
-FIFO::FIFO()
+RetainPtr<FIFO> FIFO::from_fifo_id(dword id)
 {
+    auto* ptr = reinterpret_cast<FIFO*>(id);
+    LOCKER(all_fifos().lock());
+    if (auto it = all_fifos().resource().find(ptr); it == all_fifos().resource().end())
+        return nullptr;
+    return ptr;
+}
+
+Retained<FIFO> FIFO::create(uid_t uid)
+{
+    return adopt(*new FIFO(uid));
+}
+
+FIFO::FIFO(uid_t uid)
+    : m_uid(uid)
+{
+    LOCKER(all_fifos().lock());
+    all_fifos().resource().set(this);
+}
+
+FIFO::~FIFO()
+{
+    LOCKER(all_fifos().lock());
+    all_fifos().resource().remove(this);
 }
 
 void FIFO::open(Direction direction)
