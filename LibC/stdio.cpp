@@ -102,6 +102,8 @@ int fflush(FILE* stream)
         return 0;
     int rc = write(stream->fd, stream->buffer, stream->buffer_index);
     stream->buffer_index = 0;
+    if (rc < 0)
+        stream->error = errno;
     return rc;
 }
 
@@ -134,7 +136,7 @@ int fgetc(FILE* stream)
     size_t nread = fread(&ch, sizeof(char), 1, stream);
     if (nread <= 0) {
         stream->eof = nread == 0;
-        stream->error = -nread;
+        stream->error = errno;
         return EOF;
     }
     return ch;
@@ -205,7 +207,7 @@ void clearerr(FILE* stream)
 {
     assert(stream);
     stream->eof = false;
-    stream->error = false;
+    stream->error = 0;
 }
 
 int ferror(FILE* stream)
@@ -234,8 +236,10 @@ size_t fread(void* ptr, size_t size, size_t nmemb, FILE* stream)
     }
 
     ssize_t rc = read(stream->fd, ptr, nmemb * size);
-    if (rc < 0)
+    if (rc < 0) {
+        stream->error = errno;
         return 0;
+    }
     if (rc == 0)
         stream->eof = true;
     nread += rc;
@@ -245,10 +249,14 @@ size_t fread(void* ptr, size_t size, size_t nmemb, FILE* stream)
 size_t fwrite(const void* ptr, size_t size, size_t nmemb, FILE* stream)
 {
     assert(stream);
-    fflush(stream);
-    ssize_t nwritten = write(stream->fd, ptr, nmemb * size);
-    if (nwritten < 0)
+    int rc = fflush(stream);
+    if (rc < 0)
         return 0;
+    ssize_t nwritten = write(stream->fd, ptr, nmemb * size);
+    if (nwritten < 0) {
+        stream->error = errno;
+        return 0;
+    }
     return nwritten;
 }
 
