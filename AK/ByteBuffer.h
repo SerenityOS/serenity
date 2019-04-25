@@ -118,6 +118,13 @@ public:
     void* end_pointer() { return m_impl ? m_impl->end_pointer() : nullptr; }
     const void* end_pointer() const { return m_impl ? m_impl->end_pointer() : nullptr; }
 
+    ByteBuffer isolated_copy() const
+    {
+        if (!m_impl)
+            return { };
+        return copy(m_impl->pointer(), m_impl->size());
+    }
+
     // NOTE: trim() does not reallocate.
     void trim(ssize_t size)
     {
