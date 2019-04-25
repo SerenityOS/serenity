@@ -143,6 +143,122 @@ static int try_exec(const char* path, char** argv)
     return ret;
 }
 
+struct Redirection {
+    enum Type { Pipe, File, Rewire };
+    Type type;
+    int fd;
+    int rewire_fd;
+};
+
+struct Subcommand {
+    Vector<String> args;
+    Vector<Redirection> redirections;
+};
+
+enum class ParseState {
+    Free,
+    InSingleQuotes,
+    InDoubleQuotes,
+};
+
+static Vector<Subcommand> parse(const char* command)
+{
+    ParseState state = ParseState::Free;
+    Vector<Subcommand> subcommands;
+
+    Vector<String> current_command;
+    Vector<char> current_token;
+
+    auto commit_token = [&] {
+        if (current_token.is_empty())
+            return;
+        current_command.append(String::copy(current_token));
+        current_token.clear_with_capacity();
+    };
+
+    auto commit_subcommand = [&] {
+        if (current_command.is_empty())
+            return;
+        subcommands.append({ current_command });
+        current_command.clear();
+    };
+
+    auto begin_pipe = [&] {
+        Vector<Redirection> redirections;
+        redirections.append({ Redirection::Pipe, STDOUT_FILENO });
+        subcommands.append({ current_command, move(redirections) });
+        current_command.clear();
+    };
+
+    for (const char* c = command; *c; ++c) {
+        switch (state) {
+        case ParseState::Free:
+            if (*c == ' ') {
+                commit_token();
+                break;
+            }
+            if (*c == '|') {
+                commit_token();
+                if (current_command.is_empty()) {
+                    fprintf(stderr, "Syntax error: Nothing before pipe (|)\n");
+                    return { };
+                }
+                begin_pipe();
+                break;
+            }
+#if 0
+            if (*c == '>') {
+                begin_redirect(STDOUT_FILENO);
+                break;
+            }
+            if (*c == '<') {
+                begin_redirect(STDIN_FILENO);
+                break;
+            }
+#endif
+            if (*c == '\'') {
+                state = ParseState::InSingleQuotes;
+                break;
+            }
+            if (*c == '\"') {
+                state = ParseState::InDoubleQuotes;
+                break;
+            }
+            current_token.append(*c);
+            break;
+        case ParseState::InSingleQuotes:
+            if (*c == '\'') {
+                commit_token();
+                state = ParseState::Free;
+                break;
+            }
+            current_token.append(*c);
+            break;
+        case ParseState::InDoubleQuotes:
+            if (*c == '\"') {
+                commit_token();
+                state = ParseState::Free;
+                break;
+            }
+            current_token.append(*c);
+            break;
+        };
+    }
+    commit_token();
+    commit_subcommand();
+
+    if (!subcommands.is_empty()) {
+        for (auto& redirection : subcommands.last().redirections) {
+            if (redirection.type == Redirection::Pipe) {
+                fprintf(stderr, "Syntax error: Nothing after last pipe (|)\n");
+                return { };
+            }
+        }
+    }
+
+    return subcommands;
+}
+
 static int runcmd(char* cmd)
 {
     if (cmd[0] == 0)
@@ -150,48 +266,109 @@ static int runcmd(char* cmd)
     char buf[128];
     memcpy(buf, cmd, 128);
 
-    char* argv[32];
-    size_t argc = 1;
-    argv[0] = &buf[0];
-    size_t buflen = strlen(buf);
-    for (size_t i = 0; i < buflen; ++i) {
-        if (buf[i] == ' ') {
-            buf[i] = '\0';
-            argv[argc++] = &buf[i + 1];
-        }
-    }
-    argv[argc] = nullptr;
+    auto subcommands = parse(cmd);
 
-    int retval = 0;
-    if (handle_builtin(argc, argv, retval)) {
+#ifdef PARSE_DEBUG
+    for (int i = 0; i < subcommands.size(); ++i) {
+        for (int j = 0; j < i; ++j)
+            printf("  ");
+        for (auto& arg : subcommands[i].args) {
+            printf("<%s> ", arg.characters());
+        }
+        printf("\n");
+    }
+#endif
+
+    if (subcommands.is_empty())
         return 0;
+
+    Vector<int> fds;
+
+    for (int i = 0; i < subcommands.size(); ++i) {
+        auto& subcommand = subcommands[i];
+        for (auto& redirection : subcommand.redirections) {
+            if (redirection.type == Redirection::Pipe) {
+                int pipefd[2];
+                int rc = pipe(pipefd);
+                if (rc < 0) {
+                    perror("pipe");
+                    return 1;
+                }
+                subcommand.redirections.append({ Redirection::Rewire, STDOUT_FILENO, pipefd[1] });
+                auto& next_command = subcommands[i + 1];
+                next_command.redirections.append({ Redirection::Rewire, STDIN_FILENO, pipefd[0] });
+                fds.append(pipefd[0]);
+                fds.append(pipefd[1]);
+            }
+        }
     }
 
     struct termios trm;
     tcgetattr(0, &trm);
 
-    pid_t child = fork();
-    if (!child) {
-        setpgid(0, 0);
-        tcsetpgrp(0, getpid());
-        int ret = try_exec(argv[0], argv);
-        if (ret < 0) {
-            printf("exec failed: %s (%s)\n", cmd, strerror(errno));
-            exit(1);
+    Vector<pid_t> children;
+
+    for (int i = 0; i < subcommands.size(); ++i) {
+        auto& subcommand = subcommands[i];
+        Vector<const char*> argv;
+        for (auto& arg : subcommand.args)
+            argv.append(arg.characters());
+        argv.append(nullptr);
+
+        int retval = 0;
+        if (handle_builtin(argv.size() - 1, (char**)argv.data(), retval))
+            return retval;
+
+        pid_t child = fork();
+        if (!child) {
+            setpgid(0, 0);
+            tcsetpgrp(0, getpid());
+            for (auto& redirection : subcommand.redirections) {
+                if (redirection.type == Redirection::Rewire) {
+                    dbgprintf("in %s<%d>, dup2(%d, %d)\n", argv[0], getpid(), redirection.rewire_fd, redirection.fd);
+                    int rc = dup2(redirection.rewire_fd, redirection.fd);
+                    if (rc < 0) {
+                        perror("dup2");
+                        return 1;
+                    }
+                }
+            }
+
+            for (auto& fd : fds)
+                close(fd);
+
+            int rc = execvp(argv[0], (char* const*)argv.data());
+            if (rc < 0) {
+                perror("execvp");
+                exit(1);
+            }
+            ASSERT_NOT_REACHED();
         }
-        // We should never get here!
-        ASSERT_NOT_REACHED();
+        children.append(child);
     }
+
+    dbgprintf("Closing fds in shell process:\n");
+    for (auto& fd : fds) {
+        dbgprintf("  %d\n", fd);
+        close(fd);
+    }
+
+    dbgprintf("Now we gotta wait on children:\n");
+    for (auto& child : children)
+        dbgprintf("  %d\n", child);
 
     int wstatus = 0;
     int rc;
-    do {
-        rc = waitpid(child, &wstatus, 0);
-        if (rc < 0 && errno != EINTR) {
-            perror("waitpid");
-            break;
-        }
-    } while(errno == EINTR);
+
+    for (auto& child : children) {
+        do {
+            rc = waitpid(child, &wstatus, 0);
+            if (rc < 0 && errno != EINTR) {
+                perror("waitpid");
+                break;
+            }
+        } while(errno == EINTR);
+    }
 
     // FIXME: Should I really have to tcsetpgrp() after my child has exited?
     //        Is the terminal controlling pgrp really still the PGID of the dead process?
@@ -202,6 +379,7 @@ static int runcmd(char* cmd)
     if (WIFEXITED(wstatus)) {
         if (WEXITSTATUS(wstatus) != 0)
             printf("Exited with status %d\n", WEXITSTATUS(wstatus));
+        return WEXITSTATUS(wstatus);
     } else {
         if (WIFSIGNALED(wstatus)) {
             switch (WTERMSIG(wstatus)) {
@@ -214,9 +392,10 @@ static int runcmd(char* cmd)
             }
         } else {
             printf("Exited abnormally\n");
+            return 1;
         }
     }
-    return retval;
+    return 0;
 }
 
 int main(int argc, char** argv)
