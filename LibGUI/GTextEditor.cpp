@@ -11,6 +11,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <stdio.h>
+#include <ctype.h>
 
 GTextEditor::GTextEditor(Type type, GWidget* parent)
     : GScrollableWidget(parent)
@@ -127,6 +128,34 @@ GTextPosition GTextEditor::text_position_at(const Point& a_position) const
 
     column_index = max(0, min(column_index, m_lines[line_index]->length()));
     return { line_index, column_index };
+}
+
+void GTextEditor::doubleclick_event(GMouseEvent& event)
+{
+    if (event.button() != GMouseButton::Left)
+        return;
+
+    m_in_drag_select = false;
+
+    auto start = text_position_at(event.position());
+    auto end = start;
+    auto& line = *m_lines[start.line()];
+    while (start.column() > 0) {
+        if (isspace(line.characters()[start.column() - 1]))
+            break;
+        start.set_column(start.column() - 1);
+    }
+
+    while (end.column() < line.length()) {
+        if (isspace(line.characters()[end.column()]))
+            break;
+        end.set_column(end.column() + 1);
+    }
+
+    m_selection.set(start, end);
+    set_cursor(end);
+    update();
+    did_update_selection();
 }
 
 void GTextEditor::mousedown_event(GMouseEvent& event)
