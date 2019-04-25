@@ -25,6 +25,7 @@ int main(int argc, char** argv)
     auto* toolbar = new GToolBar(widget);
     auto* text_editor = new GTextEditor(GTextEditor::MultiLine, widget);
     text_editor->set_ruler_visible(true);
+    text_editor->set_automatic_indentation_enabled(true);
     auto* statusbar = new GStatusBar(widget);
 
     text_editor->on_cursor_change = [statusbar, text_editor] {

@@ -562,10 +562,23 @@ void GTextEditor::insert_at_cursor(char ch)
             return;
         }
         if (at_tail || at_head) {
-            m_lines.insert(m_cursor.line() + (at_tail ? 1 : 0), make<Line>());
+            String new_line_contents;
+            if (m_automatic_indentation_enabled && at_tail) {
+                int leading_spaces = 0;
+                auto& old_line = *m_lines[m_cursor.line()];
+                for (int i = 0; i < old_line.length(); ++i) {
+                    if (old_line.characters()[i] == ' ')
+                        ++leading_spaces;
+                    else
+                        break;
+                }
+                if (leading_spaces)
+                    new_line_contents = String::repeated(' ', leading_spaces);
+            }
+            m_lines.insert(m_cursor.line() + (at_tail ? 1 : 0), make<Line>(new_line_contents));
             update();
             did_change();
-            set_cursor(m_cursor.line() + 1, 0);
+            set_cursor(m_cursor.line() + 1, m_lines[m_cursor.line() + 1]->length());
             return;
         }
         auto new_line = make<Line>();
@@ -707,6 +720,11 @@ void GTextEditor::timer_event(CTimerEvent&)
 GTextEditor::Line::Line()
 {
     clear();
+}
+
+GTextEditor::Line::Line(const String& text)
+{
+    set_text(text);
 }
 
 void GTextEditor::Line::clear()
