@@ -12,6 +12,8 @@
 #include <sys/utsname.h>
 #include <AK/FileSystemPath.h>
 
+//#define SH_DEBUG
+
 struct GlobalState {
     String cwd;
     String username;
@@ -120,10 +122,11 @@ static bool handle_builtin(int argc, char** argv, int& retval)
 }
 
 struct Redirection {
-    enum Type { Pipe, File, Rewire };
+    enum Type { Pipe, FileWrite, FileRead, Rewire };
     Type type;
     int fd { -1 };
     int rewire_fd { -1 };
+    String path { };
 };
 
 struct Subcommand {
@@ -141,7 +144,8 @@ private:
     void commit_token();
     void commit_subcommand();
     void do_pipe();
-    void begin_redirect_fd(int fd);
+    void begin_redirect_read(int fd);
+    void begin_redirect_write(int fd);
 
     enum State {
         Free,
@@ -162,6 +166,11 @@ void Parser::commit_token()
 {
     if (m_token.is_empty())
         return;
+    if (m_state == InRedirectionPath) {
+        m_redirections.last().path = String::copy(m_token);
+        m_token.clear_with_capacity();
+        return;
+    }
     m_tokens.append(String::copy(m_token));
     m_token.clear_with_capacity();
 };
@@ -179,9 +188,14 @@ void Parser::do_pipe()
     commit_subcommand();
 }
 
-void Parser::begin_redirect_fd(int fd)
+void Parser::begin_redirect_read(int fd)
 {
-    m_redirections.append({ Redirection::File, fd });
+    m_redirections.append({ Redirection::FileRead, fd });
+}
+
+void Parser::begin_redirect_write(int fd)
+{
+    m_redirections.append({ Redirection::FileWrite, fd });
 }
 
 Vector<Subcommand> Parser::parse()
@@ -204,12 +218,14 @@ Vector<Subcommand> Parser::parse()
                 break;
             }
             if (ch == '>') {
-                begin_redirect_fd(STDOUT_FILENO);
+                commit_token();
+                begin_redirect_write(STDOUT_FILENO);
                 m_state = State::InRedirectionPath;
                 break;
             }
             if (ch == '<') {
-                begin_redirect_fd(STDIN_FILENO);
+                commit_token();
+                begin_redirect_read(STDIN_FILENO);
                 m_state = State::InRedirectionPath;
                 break;
             }
@@ -224,10 +240,31 @@ Vector<Subcommand> Parser::parse()
             m_token.append(ch);
             break;
         case State::InRedirectionPath:
-            if (ch == ' ') {
+            if (ch == '<') {
                 commit_token();
+                begin_redirect_read(STDIN_FILENO);
+                m_state = State::InRedirectionPath;
                 break;
             }
+            if (ch == '>') {
+                commit_token();
+                begin_redirect_read(STDOUT_FILENO);
+                m_state = State::InRedirectionPath;
+                break;
+            }
+            if (ch == '|') {
+                commit_token();
+                if (m_tokens.is_empty()) {
+                    fprintf(stderr, "Syntax error: Nothing before pipe (|)\n");
+                    return { };
+                }
+                do_pipe();
+                m_state = State::Free;
+                break;
+            }
+            if (ch == ' ')
+                break;
+            m_token.append(ch);
             break;
         case State::InSingleQuotes:
             if (ch == '\'') {
@@ -262,6 +299,23 @@ Vector<Subcommand> Parser::parse()
     return move(m_subcommands);
 }
 
+class FileDescriptorCollector {
+public:
+    FileDescriptorCollector() { }
+    ~FileDescriptorCollector() { collect(); }
+
+    void collect()
+    {
+        for (auto fd : m_fds)
+            close(fd);
+        m_fds.clear();
+    }
+    void add(int fd) { m_fds.append(fd); }
+
+private:
+    Vector<int, 32> m_fds;
+};
+
 static int runcmd(char* cmd)
 {
     if (cmd[0] == 0)
@@ -271,21 +325,39 @@ static int runcmd(char* cmd)
 
     auto subcommands = Parser(cmd).parse();
 
-#ifdef PARSE_DEBUG
+#ifdef SH_DEBUG
     for (int i = 0; i < subcommands.size(); ++i) {
         for (int j = 0; j < i; ++j)
-            printf("  ");
+            printf("    ");
         for (auto& arg : subcommands[i].args) {
             printf("<%s> ", arg.characters());
         }
         printf("\n");
+        for (auto& redirecton : subcommands[i].redirections) {
+            for (int j = 0; j < i; ++j)
+                printf("    ");
+            printf("  ");
+            switch (redirecton.type) {
+            case Redirection::Pipe:
+                printf("Pipe\n");
+                break;
+            case Redirection::FileRead:
+                printf("fd:%d = FileRead: %s\n", redirecton.fd, redirecton.path.characters());
+                break;
+            case Redirection::FileWrite:
+                printf("fd:%d = FileWrite: %s\n", redirecton.fd, redirecton.path.characters());
+                break;
+            default:
+                break;
+            }
+        }
     }
 #endif
 
     if (subcommands.is_empty())
         return 0;
 
-    Vector<int> fds;
+    FileDescriptorCollector fds;
 
     for (int i = 0; i < subcommands.size(); ++i) {
         auto& subcommand = subcommands[i];
@@ -300,8 +372,26 @@ static int runcmd(char* cmd)
                 subcommand.redirections.append({ Redirection::Rewire, STDOUT_FILENO, pipefd[1] });
                 auto& next_command = subcommands[i + 1];
                 next_command.redirections.append({ Redirection::Rewire, STDIN_FILENO, pipefd[0] });
-                fds.append(pipefd[0]);
-                fds.append(pipefd[1]);
+                fds.add(pipefd[0]);
+                fds.add(pipefd[1]);
+            }
+            if (redirection.type == Redirection::FileWrite) {
+                int fd = open(redirection.path.characters(), O_WRONLY | O_CREAT, 0666);
+                if (fd < 0) {
+                    perror("open");
+                    return 1;
+                }
+                subcommand.redirections.append({ Redirection::Rewire, redirection.fd, fd });
+                fds.add(fd);
+            }
+            if (redirection.type == Redirection::FileRead) {
+                int fd = open(redirection.path.characters(), O_RDONLY);
+                if (fd < 0) {
+                    perror("open");
+                    return 1;
+                }
+                subcommand.redirections.append({ Redirection::Rewire, redirection.fd, fd });
+                fds.add(fd);
             }
         }
     }
@@ -319,7 +409,7 @@ static int runcmd(char* cmd)
         argv.append(nullptr);
 
         int retval = 0;
-        if (handle_builtin(argv.size() - 1, (char**)argv.data(), retval))
+        if (handle_builtin(argv.size() - 1, const_cast<char**>(argv.data()), retval))
             return retval;
 
         pid_t child = fork();
@@ -328,7 +418,9 @@ static int runcmd(char* cmd)
             tcsetpgrp(0, getpid());
             for (auto& redirection : subcommand.redirections) {
                 if (redirection.type == Redirection::Rewire) {
+#ifdef SH_DEBUG
                     dbgprintf("in %s<%d>, dup2(%d, %d)\n", argv[0], getpid(), redirection.rewire_fd, redirection.fd);
+#endif
                     int rc = dup2(redirection.rewire_fd, redirection.fd);
                     if (rc < 0) {
                         perror("dup2");
@@ -337,10 +429,9 @@ static int runcmd(char* cmd)
                 }
             }
 
-            for (auto& fd : fds)
-                close(fd);
+            fds.collect();
 
-            int rc = execvp(argv[0], (char* const*)argv.data());
+            int rc = execvp(argv[0], const_cast<char* const*>(argv.data()));
             if (rc < 0) {
                 perror("execvp");
                 exit(1);
@@ -350,13 +441,14 @@ static int runcmd(char* cmd)
         children.append(child);
     }
 
+#ifdef SH_DEBUG
     dbgprintf("Closing fds in shell process:\n");
-    for (auto& fd : fds) {
-        dbgprintf("  %d\n", fd);
-        close(fd);
-    }
+#endif
+    fds.collect();
 
+#ifdef SH_DEBUG
     dbgprintf("Now we gotta wait on children:\n");
+#endif
     for (auto& child : children)
         dbgprintf("  %d\n", child);
 
