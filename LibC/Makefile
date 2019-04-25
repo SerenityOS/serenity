@@ -82,6 +82,6 @@ install: $(LIBRARY)
 	rsync -a --include '*/' --include '*.h' --exclude '*' . ../Base/usr/include
 	# Install the library
 	cp $(LIBRARY) ../Base/usr/lib
-    cp crt0.o ../Base/usr/lib/
-    cp crti.ao ../Base/usr/lib/crti.o
-    cp crtn.ao ../Base/usr/lib/crtn.o
+	cp crt0.o ../Base/usr/lib/
+	cp crti.ao ../Base/usr/lib/crti.o
+	cp crtn.ao ../Base/usr/lib/crtn.o
