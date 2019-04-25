@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <termios.h>
+#include <ctype.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/utsname.h>
@@ -570,6 +571,21 @@ int main(int argc, char** argv)
                     continue;
                 linebuf[--linedx] = '\0';
                 putchar(8);
+                fflush(stdout);
+                continue;
+            }
+            if (ch == g->termios.c_cc[VWERASE]) {
+                bool has_seen_nonspace = false;
+                while (linedx > 0) {
+                    if (isspace(linebuf[linedx - 1])) {
+                        if (has_seen_nonspace)
+                            break;
+                    } else {
+                        has_seen_nonspace = true;
+                    }
+                    putchar(0x8);
+                    --linedx;
+                }
                 fflush(stdout);
                 continue;
             }
