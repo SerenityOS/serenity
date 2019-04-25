@@ -8,10 +8,9 @@
 
 int main(int argc, char** argv)
 {
-    const char* input_file = argc > 1 ? argv[1] : "/dev/stdin";
-    int fd = open(input_file, O_RDONLY);
+    int fd = argc > 1 ? open(argv[1], O_RDONLY) : 0;
     if (fd == -1) {
-        printf("failed to open %s: %s\n", input_file, strerror(errno));
+        printf("failed to open %s: %s\n", argv[1], strerror(errno));
         return 1;
     }
     for (;;) {
