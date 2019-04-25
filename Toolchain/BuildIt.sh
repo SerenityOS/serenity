@@ -9,6 +9,8 @@ SYSROOT="$DIR/../Base"
 
 mkdir -p "$DIR/Tarballs"
 
+source "$DIR/UseIt.sh"
+
 pushd "$DIR/Tarballs"
     if [ ! -e "binutils-2.32.tar.gz" ]; then
         wget "http://ftp.gnu.org/gnu/binutils/binutils-2.32.tar.gz"
@@ -71,7 +73,8 @@ pushd "$DIR/Build/"
         make -j $(nproc) all-gcc all-target-libgcc
         make install-gcc install-target-libgcc
 
-        make -c ../LibC/ install
+        make -C "$DIR/../LibC/" install
+        make -C "$DIR/../LibM/" install
 
         make all-target-libstdc++-v3
         make install-target-libstdc++-v3
