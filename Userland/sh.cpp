@@ -18,6 +18,7 @@
 struct GlobalState {
     String cwd;
     String username;
+    String home;
     char ttyname[32];
     char hostname[32];
     pid_t sid;
@@ -66,16 +67,16 @@ static int sh_exit(int, char**)
 
 static int sh_cd(int argc, char** argv)
 {
-    if (argc == 1) {
-        printf("usage: cd <path>\n");
-        return 0;
-    }
+    char pathbuf[PATH_MAX];
 
-    char pathbuf[128];
-    if (argv[1][0] == '/')
-        memcpy(pathbuf, argv[1], strlen(argv[1]) + 1);
-    else
-        sprintf(pathbuf, "%s/%s", g->cwd.characters(), argv[1]);
+    if (argc == 1) {
+        strcpy(pathbuf, g->home.characters());
+    } else {
+        if (argv[1][0] == '/')
+            memcpy(pathbuf, argv[1], strlen(argv[1]) + 1);
+        else
+            sprintf(pathbuf, "%s/%s", g->cwd.characters(), argv[1]);
+    }
 
     FileSystemPath canonical_path(pathbuf);
     if (!canonical_path.is_valid()) {
@@ -520,8 +521,11 @@ int main(int argc, char** argv)
 
     {
         auto* pw = getpwuid(getuid());
-        if (pw)
+        if (pw) {
             g->username = pw->pw_name;
+            g->home = pw->pw_dir;
+            putenv(const_cast<char*>(String::format("HOME=%s", pw->pw_dir).characters()));
+        }
         endpwent();
     }
 
