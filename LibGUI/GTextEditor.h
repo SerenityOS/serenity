@@ -70,6 +70,9 @@ public:
     GTextEditor(Type, GWidget* parent);
     virtual ~GTextEditor() override;
 
+    bool is_automatic_indentation() const { return m_automatic_indentation_enabled; }
+    void set_automatic_indentation_enabled(bool enabled) { m_automatic_indentation_enabled = enabled; }
+
     TextAlignment text_alignment() const { return m_text_alignment; }
     void set_text_alignment(TextAlignment);
 
@@ -145,6 +148,7 @@ private:
         friend class GTextEditor;
     public:
         Line();
+        explicit Line(const String&);
 
         const char* characters() const { return m_text.data(); }
         int length() const { return m_text.size() - 1; }
@@ -191,6 +195,7 @@ private:
     bool m_in_drag_select { false };
     bool m_ruler_visible { false };
     bool m_have_pending_change_notification { false };
+    bool m_automatic_indentation_enabled { false };
     int m_line_spacing { 4 };
     int m_soft_tab_width { 4 };
     int m_horizontal_content_padding { 2 };

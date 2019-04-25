@@ -166,4 +166,14 @@ bool String::ends_with(const String& str) const
     return !memcmp(characters() + (length() - str.length()), str.characters(), str.length());
 }
 
+String String::repeated(char ch, int count)
+{
+    if (!count)
+        return empty();
+    char* buffer;
+    auto impl = StringImpl::create_uninitialized(count, buffer);
+    memset(buffer, ch, count);
+    return *impl;
+}
+
 }

@@ -61,6 +61,8 @@ public:
     {
     }
 
+    static String repeated(char, int count);
+
     int to_int(bool& ok) const;
     unsigned to_uint(bool& ok) const;
 
