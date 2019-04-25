@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <assert.h>
 
 int main(int argc, char** argv)
 {
@@ -10,11 +11,12 @@ int main(int argc, char** argv)
     }
     for (;;) {
         char buf[4096];
-        fgets(buf, sizeof(buf), stdin);
-        if (strstr(buf, argv[1]))
+        auto* str = fgets(buf, sizeof(buf), stdin);
+        if (str && strstr(str, argv[1]))
             write(1, buf, strlen(buf));
         if (feof(stdin))
             return 0;
+        ASSERT(str);
     }
     return 0;
 }
