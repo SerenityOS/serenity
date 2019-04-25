@@ -119,35 +119,11 @@ static bool handle_builtin(int argc, char** argv, int& retval)
     return false;
 }
 
-static int try_exec(const char* path, char** argv)
-{
-    int ret = execve(path, argv, environ);
-    assert(ret < 0);
-
-    {
-    const char* search_path = "/bin";
-    char pathbuf[128];
-    sprintf(pathbuf, "%s/%s", search_path, argv[0]);
-    ret = execve(pathbuf, argv, environ);
-    assert(ret < 0);
-    }
-
-    {
-    const char* search_path = "/usr/bin";
-    char pathbuf[128];
-    sprintf(pathbuf, "%s/%s", search_path, argv[0]);
-    ret = execve(pathbuf, argv, environ);
-    }
-    if (ret == -1)
-        return -1;
-    return ret;
-}
-
 struct Redirection {
     enum Type { Pipe, File, Rewire };
     Type type;
-    int fd;
-    int rewire_fd;
+    int fd { -1 };
+    int rewire_fd { -1 };
 };
 
 struct Subcommand {
@@ -155,100 +131,127 @@ struct Subcommand {
     Vector<Redirection> redirections;
 };
 
-enum class ParseState {
-    Free,
-    InSingleQuotes,
-    InDoubleQuotes,
+class Parser {
+public:
+    explicit Parser(const String& input) : m_input(input) { }
+
+    Vector<Subcommand> parse();
+
+private:
+    void commit_token();
+    void commit_subcommand();
+    void do_pipe();
+    void begin_redirect_fd(int fd);
+
+    enum State {
+        Free,
+        InSingleQuotes,
+        InDoubleQuotes,
+        InRedirectionPath,
+    };
+    State m_state { Free };
+    String m_input;
+
+    Vector<Subcommand> m_subcommands;
+    Vector<String> m_tokens;
+    Vector<Redirection> m_redirections;
+    Vector<char> m_token;
 };
 
-static Vector<Subcommand> parse(const char* command)
+void Parser::commit_token()
 {
-    ParseState state = ParseState::Free;
-    Vector<Subcommand> subcommands;
+    if (m_token.is_empty())
+        return;
+    m_tokens.append(String::copy(m_token));
+    m_token.clear_with_capacity();
+};
 
-    Vector<String> current_command;
-    Vector<char> current_token;
+void Parser::commit_subcommand()
+{
+    if (m_tokens.is_empty())
+        return;
+    m_subcommands.append({ move(m_tokens), move(m_redirections) });
+}
 
-    auto commit_token = [&] {
-        if (current_token.is_empty())
-            return;
-        current_command.append(String::copy(current_token));
-        current_token.clear_with_capacity();
-    };
+void Parser::do_pipe()
+{
+    m_redirections.append({ Redirection::Pipe, STDOUT_FILENO });
+    commit_subcommand();
+}
 
-    auto commit_subcommand = [&] {
-        if (current_command.is_empty())
-            return;
-        subcommands.append({ current_command });
-        current_command.clear();
-    };
+void Parser::begin_redirect_fd(int fd)
+{
+    m_redirections.append({ Redirection::File, fd });
+}
 
-    auto begin_pipe = [&] {
-        Vector<Redirection> redirections;
-        redirections.append({ Redirection::Pipe, STDOUT_FILENO });
-        subcommands.append({ current_command, move(redirections) });
-        current_command.clear();
-    };
-
-    for (const char* c = command; *c; ++c) {
-        switch (state) {
-        case ParseState::Free:
-            if (*c == ' ') {
+Vector<Subcommand> Parser::parse()
+{
+    for (int i = 0; i < m_input.length(); ++i) {
+        char ch = m_input.characters()[i];
+        switch (m_state) {
+        case State::Free:
+            if (ch == ' ') {
                 commit_token();
                 break;
             }
-            if (*c == '|') {
+            if (ch == '|') {
                 commit_token();
-                if (current_command.is_empty()) {
+                if (m_tokens.is_empty()) {
                     fprintf(stderr, "Syntax error: Nothing before pipe (|)\n");
                     return { };
                 }
-                begin_pipe();
+                do_pipe();
                 break;
             }
-#if 0
-            if (*c == '>') {
-                begin_redirect(STDOUT_FILENO);
+            if (ch == '>') {
+                begin_redirect_fd(STDOUT_FILENO);
+                m_state = State::InRedirectionPath;
                 break;
             }
-            if (*c == '<') {
-                begin_redirect(STDIN_FILENO);
+            if (ch == '<') {
+                begin_redirect_fd(STDIN_FILENO);
+                m_state = State::InRedirectionPath;
                 break;
             }
-#endif
-            if (*c == '\'') {
-                state = ParseState::InSingleQuotes;
+            if (ch == '\'') {
+                m_state = State::InSingleQuotes;
                 break;
             }
-            if (*c == '\"') {
-                state = ParseState::InDoubleQuotes;
+            if (ch == '\"') {
+                m_state = State::InDoubleQuotes;
                 break;
             }
-            current_token.append(*c);
+            m_token.append(ch);
             break;
-        case ParseState::InSingleQuotes:
-            if (*c == '\'') {
+        case State::InRedirectionPath:
+            if (ch == ' ') {
                 commit_token();
-                state = ParseState::Free;
                 break;
             }
-            current_token.append(*c);
             break;
-        case ParseState::InDoubleQuotes:
-            if (*c == '\"') {
+        case State::InSingleQuotes:
+            if (ch == '\'') {
                 commit_token();
-                state = ParseState::Free;
+                m_state = State::Free;
                 break;
             }
-            current_token.append(*c);
+            m_token.append(ch);
+            break;
+        case State::InDoubleQuotes:
+            if (ch == '\"') {
+                commit_token();
+                m_state = State::Free;
+                break;
+            }
+            m_token.append(ch);
             break;
         };
     }
     commit_token();
     commit_subcommand();
 
-    if (!subcommands.is_empty()) {
-        for (auto& redirection : subcommands.last().redirections) {
+    if (!m_subcommands.is_empty()) {
+        for (auto& redirection : m_subcommands.last().redirections) {
             if (redirection.type == Redirection::Pipe) {
                 fprintf(stderr, "Syntax error: Nothing after last pipe (|)\n");
                 return { };
@@ -256,7 +259,7 @@ static Vector<Subcommand> parse(const char* command)
         }
     }
 
-    return subcommands;
+    return move(m_subcommands);
 }
 
 static int runcmd(char* cmd)
@@ -266,7 +269,7 @@ static int runcmd(char* cmd)
     char buf[128];
     memcpy(buf, cmd, 128);
 
-    auto subcommands = parse(cmd);
+    auto subcommands = Parser(cmd).parse();
 
 #ifdef PARSE_DEBUG
     for (int i = 0; i < subcommands.size(); ++i) {
