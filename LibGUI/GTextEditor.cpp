@@ -107,6 +107,8 @@ GTextPosition GTextEditor::text_position_at(const Point& a_position) const
     auto position = a_position;
     position.move_by(horizontal_scrollbar().value(), vertical_scrollbar().value());
     position.move_by(-(m_horizontal_content_padding + ruler_width()), 0);
+    position.move_by(-frame_thickness(), -frame_thickness());
+
     int line_index = position.y() / line_height();
     line_index = max(0, min(line_index, line_count() - 1));
     auto& line = *m_lines[line_index];
@@ -114,15 +116,14 @@ GTextPosition GTextEditor::text_position_at(const Point& a_position) const
     int column_index;
     switch (m_text_alignment) {
     case TextAlignment::CenterLeft:
-        column_index = position.x() / glyph_width();
+        column_index = (position.x() + glyph_width() / 2) / glyph_width();
         break;
     case TextAlignment::CenterRight:
-        column_index = (position.x() - (content_width() - (line.length() * glyph_width()))) / glyph_width();
+        column_index = (position.x() - content_x_for_position({ line_index, 0 }) + glyph_width() / 2) / glyph_width();
         break;
     default:
         ASSERT_NOT_REACHED();
     }
-
 
     column_index = max(0, min(column_index, m_lines[line_index]->length()));
     return { line_index, column_index };
