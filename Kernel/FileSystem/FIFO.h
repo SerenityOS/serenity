@@ -11,7 +11,12 @@ public:
         Neither, Reader, Writer
     };
 
-    static Retained<FIFO> create();
+    static RetainPtr<FIFO> from_fifo_id(dword);
+
+    static Retained<FIFO> create(uid_t);
+    ~FIFO();
+
+    uid_t uid() const { return m_uid; }
 
     void open(Direction);
     void close(Direction);
@@ -23,9 +28,11 @@ public:
     bool can_write() const;
 
 private:
-    FIFO();
+    explicit FIFO(uid_t);
 
     unsigned m_writers { 0 };
     unsigned m_readers { 0 };
     DoubleBuffer m_buffer;
+
+    uid_t m_uid { 0 };
 };
