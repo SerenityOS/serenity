@@ -106,6 +106,7 @@ void* kmalloc_impl(size_t size)
     size_t real_size = size + sizeof(allocation_t);
 
     if (sum_free < real_size) {
+        dump_backtrace(ksyms_ready);
         kprintf("%s(%u) kmalloc(): PANIC! Out of memory (sucks, dude)\nsum_free=%u, real_size=%u\n", current->process().name().characters(), current->pid(), sum_free, real_size);
         hang();
     }
@@ -159,6 +160,7 @@ void* kmalloc_impl(size_t size)
     }
 
     kprintf("%s(%u) kmalloc(): PANIC! Out of memory (no suitable block for size %u)\n", current->process().name().characters(), current->pid(), size);
+    dump_backtrace(ksyms_ready);
     hang();
 }
 
