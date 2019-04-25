@@ -402,7 +402,7 @@ KResultOr<String> FileDescriptor::absolute_path()
     if (is_tty())
         return tty()->tty_name();
     if (is_fifo())
-        return String::format("fifo:%x", m_fifo.ptr());
+        return String::format("fifo:%u", m_fifo.ptr());
     if (is_device())
         return String::format("device:%u,%u (%s)", m_device->major(), m_device->minor(), m_device->class_name());
     if (is_socket())

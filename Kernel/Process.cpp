@@ -276,7 +276,7 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
 {
     ASSERT(is_ring3());
 
-    dbgprintf("%s(%d) do_exec: thread_count() = %d\n", m_name.characters(), m_pid, thread_count());
+    dbgprintf("%s(%d) do_exec(%s): thread_count() = %d\n", m_name.characters(), m_pid, path.characters(), thread_count());
     // FIXME(Thread): Kill any threads the moment we commit to the exec().
     if (thread_count() != 1) {
         dbgprintf("Gonna die because I have many threads! These are the threads:\n");
@@ -1097,7 +1097,7 @@ int Process::sys$pipe(int pipefd[2])
         return -EFAULT;
     if (number_of_open_file_descriptors() + 2 > max_open_file_descriptors())
         return -EMFILE;
-    auto fifo = FIFO::create();
+    auto fifo = FIFO::create(m_uid);
 
     int reader_fd = alloc_fd();
     m_fds[reader_fd].set(FileDescriptor::create_pipe_reader(*fifo));
