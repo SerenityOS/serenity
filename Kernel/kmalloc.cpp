@@ -166,11 +166,11 @@ void* kmalloc_impl(size_t size)
 
 void kfree(void *ptr)
 {
-    ++g_kfree_call_count;
     if (!ptr)
         return;
 
     InterruptDisabler disabler;
+    ++g_kfree_call_count;
 
     auto* a = (allocation_t*)((((byte*)ptr) - sizeof(allocation_t)));
 
