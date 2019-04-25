@@ -12,6 +12,8 @@ public:
 
     int block_size() const { return m_block_size; }
 
+    virtual void flush_writes() override;
+
 protected:
     explicit DiskBackedFS(Retained<DiskDevice>&&);
 
@@ -26,4 +28,6 @@ protected:
 private:
     int m_block_size { 0 };
     Retained<DiskDevice> m_device;
+
+    HashMap<unsigned, ByteBuffer> m_write_cache;
 };

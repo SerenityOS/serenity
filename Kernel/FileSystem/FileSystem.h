@@ -57,6 +57,8 @@ public:
 
     virtual RetainPtr<Inode> get_inode(InodeIdentifier) const = 0;
 
+    virtual void flush_writes() { }
+
 protected:
     FS();
 

@@ -144,7 +144,7 @@ int Inode::decrement_link_count()
 
 void FS::sync()
 {
-    Vector<Retained<Inode>> inodes;
+    Vector<Retained<Inode>, 32> inodes;
     {
         InterruptDisabler disabler;
         for (auto* inode : all_inodes()) {
@@ -157,6 +157,16 @@ void FS::sync()
         ASSERT(inode->is_metadata_dirty());
         inode->flush_metadata();
     }
+
+    Vector<Retained<FS>, 32> fses;
+    {
+        InterruptDisabler disabler;
+        for (auto& it : all_fses())
+            fses.append(*it.value);
+    }
+
+    for (auto fs : fses)
+        fs->flush_writes();
 }
 
 void Inode::set_vmo(VMObject& vmo)
