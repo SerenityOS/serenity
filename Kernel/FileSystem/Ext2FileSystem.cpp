@@ -982,20 +982,24 @@ bool Ext2FS::set_inode_allocation_state(unsigned index, bool newState)
 bool Ext2FS::set_block_allocation_state(BlockIndex block_index, bool new_state)
 {
     LOCKER(m_lock);
+#ifdef EXT2_DEBUG
     dbgprintf("Ext2FS: set_block_allocation_state(block=%u, state=%u)\n", block_index, new_state);
+#endif
     unsigned group_index = group_index_from_block_index(block_index);
     auto& bgd = group_descriptor(group_index);
     BlockIndex index_in_group = block_index - ((group_index - 1) * blocks_per_group());
     unsigned bit_index = index_in_group % blocks_per_group();
+#ifdef EXT2_DEBUG
     dbgprintf("  index_in_group: %u\n", index_in_group);
     dbgprintf("  blocks_per_group: %u\n", blocks_per_group());
     dbgprintf("  bit_index: %u\n", bit_index);
     dbgprintf("  read_block(%u)\n", bgd.bg_block_bitmap);
+#endif
     auto block = read_block(bgd.bg_block_bitmap);
     ASSERT(block);
     auto bitmap = Bitmap::wrap(block.pointer(), blocks_per_group());
     bool current_state = bitmap.get(bit_index);
-    dbgprintf("Ext2FS:      block %u state: %u -> %u\n", block_index, current_state, new_state);
+    dbgprintf("Ext2FS: block %u state: %u -> %u\n", block_index, current_state, new_state);
 
     if (current_state == new_state) {
         ASSERT_NOT_REACHED();
@@ -1021,7 +1025,7 @@ bool Ext2FS::set_block_allocation_state(BlockIndex block_index, bool new_state)
         --mutable_bgd.bg_free_blocks_count;
     else
         ++mutable_bgd.bg_free_blocks_count;
-    dbgprintf("Ext2FS: group free block count %u -> %u\n", bgd.bg_free_blocks_count, bgd.bg_free_blocks_count - 1);
+    dbgprintf("Ext2FS: group %u free block count %u -> %u\n", group_index, bgd.bg_free_blocks_count, bgd.bg_free_blocks_count - 1);
 
     flush_block_group_descriptor_table();
     return true;
