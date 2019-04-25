@@ -370,6 +370,8 @@ void WSWindowManager::tell_wm_listeners_window_rect_changed(WSWindow& window)
 
 void WSWindowManager::notify_title_changed(WSWindow& window)
 {
+    if (window.type() != WSWindowType::Normal)
+        return;
     dbgprintf("[WM] WSWindow{%p} title set to '%s'\n", &window, window.title().characters());
     invalidate(window.frame().rect());
     if (m_switcher.is_visible())
