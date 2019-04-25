@@ -66,8 +66,10 @@ bool DiskBackedFS::write_block(unsigned index, const ByteBuffer& data)
         if (auto* cached_block = block_cache().resource().get({ fsid(), index }))
             cached_block->m_buffer = data;
     }
-    DiskOffset base_offset = static_cast<DiskOffset>(index) * static_cast<DiskOffset>(block_size());
-    return device().write(base_offset, block_size(), data.pointer());
+
+    LOCKER(m_lock);
+    m_write_cache.set(index, data.isolated_copy());
+    return true;
 }
 
 bool DiskBackedFS::write_blocks(unsigned index, unsigned count, const ByteBuffer& data)
@@ -75,16 +77,9 @@ bool DiskBackedFS::write_blocks(unsigned index, unsigned count, const ByteBuffer
 #ifdef DBFS_DEBUG
     kprintf("DiskBackedFileSystem::write_blocks %u x%u\n", index, count);
 #endif
-    // FIXME: Maybe reorder this so we send out the write commands before updating cache?
-    {
-        LOCKER(block_cache().lock());
-        for (unsigned i = 0; i < count; ++i) {
-            if (auto* cached_block = block_cache().resource().get({ fsid(), index + i }))
-                cached_block->m_buffer = data.slice(i * block_size(), block_size());
-        }
-    }
-    DiskOffset base_offset = static_cast<DiskOffset>(index) * static_cast<DiskOffset>(block_size());
-    return device().write(base_offset, count * block_size(), data.pointer());
+    for (unsigned i = 0; i < count; ++i)
+        write_block(index + i, data.slice(i * block_size(), block_size()));
+    return true;
 }
 
 ByteBuffer DiskBackedFS::read_block(unsigned index) const
@@ -92,6 +87,13 @@ ByteBuffer DiskBackedFS::read_block(unsigned index) const
 #ifdef DBFS_DEBUG
     kprintf("DiskBackedFileSystem::read_block %u\n", index);
 #endif
+
+    {
+        LOCKER(m_lock);
+        if (auto it = m_write_cache.find(index); it != m_write_cache.end())
+            return it->value;
+    }
+
     {
         LOCKER(block_cache().lock());
         if (auto* cached_block = block_cache().resource().get({ fsid(), index }))
@@ -105,6 +107,7 @@ ByteBuffer DiskBackedFS::read_block(unsigned index) const
     bool success = device().read(base_offset, block_size(), buffer_pointer);
     ASSERT(success);
     ASSERT(buffer.size() == block_size());
+
     {
         LOCKER(block_cache().lock());
         block_cache().resource().put({ fsid(), index }, CachedBlock({ fsid(), index }, buffer));
@@ -137,4 +140,14 @@ void DiskBackedFS::set_block_size(unsigned block_size)
     if (block_size == m_block_size)
         return;
     m_block_size = block_size;
+}
+
+void DiskBackedFS::flush_writes()
+{
+    LOCKER(m_lock);
+    for (auto& it : m_write_cache) {
+        DiskOffset base_offset = static_cast<DiskOffset>(it.key) * static_cast<DiskOffset>(block_size());
+        device().write(base_offset, block_size(), it.value.data());
+    }
+    m_write_cache.clear();
 }
