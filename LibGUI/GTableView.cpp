@@ -318,11 +318,14 @@ void GTableView::doubleclick_event(GMouseEvent& event)
 {
     if (!model())
         return;
+    auto& model = *this->model();
     if (event.button() == GMouseButton::Left) {
         mousedown_event(event);
-        if (is_editable())
-            begin_editing(model()->selected_index());
-        else
-            model()->activate(model()->selected_index());
+        if (model.selected_index().is_valid()) {
+            if (is_editable())
+                begin_editing(model.selected_index());
+            else
+                model.activate(model.selected_index());
+        }
     }
 }
