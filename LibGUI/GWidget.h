@@ -191,6 +191,8 @@ private:
     void handle_leave_event(CEvent&);
     void do_layout();
 
+    CElapsedTimer& click_clock(GMouseButton);
+
     GWindow* m_window { nullptr };
     OwnPtr<GLayout> m_layout;
 
@@ -210,7 +212,9 @@ private:
     bool m_enabled { true };
     bool m_layout_dirty { false };
 
-    CElapsedTimer m_click_clock;
+    CElapsedTimer m_left_click_clock;
+    CElapsedTimer m_right_click_clock;
+    CElapsedTimer m_middle_click_clock;
 
     HashMap<GShortcut, GAction*> m_local_shortcut_actions;
 };

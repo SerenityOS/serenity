@@ -155,24 +155,37 @@ void GWidget::handle_resize_event(GResizeEvent& event)
     return resize_event(event);
 }
 
+CElapsedTimer& GWidget::click_clock(GMouseButton button)
+{
+    switch (button) {
+    case GMouseButton::Left: return m_left_click_clock;
+    case GMouseButton::Right: return m_right_click_clock;
+    case GMouseButton::Middle: return m_middle_click_clock;
+    default:
+        ASSERT_NOT_REACHED();
+    }
+}
+
 void GWidget::handle_mouseup_event(GMouseEvent& event)
 {
     mouseup_event(event);
 
     if (!rect().contains(event.position()))
         return;
+    auto& clock = click_clock(event.button());
     // It's a click.. but is it a doubleclick?
     // FIXME: This needs improvement.
-    if (m_click_clock.is_valid()) {
-        int elapsed_since_last_click = m_click_clock.elapsed();
+    if (!clock.is_valid()) {
+        clock.start();
+        return;
+    }
+    int elapsed_since_last_click = clock.elapsed();
+    clock.start();
 #if 0
-        dbgprintf("Click clock elapsed: %d\n", m_click_clock.elapsed());
+    dbgprintf("Click clock elapsed: %d\n", elapsed_since_last_click);
 #endif
-        if (elapsed_since_last_click < 250) {
-            doubleclick_event(event);
-        } else {
-            m_click_clock.start();
-        }
+    if (elapsed_since_last_click < 250) {
+        doubleclick_event(event);
     }
 }
 
@@ -180,9 +193,6 @@ void GWidget::handle_mousedown_event(GMouseEvent& event)
 {
     if (accepts_focus())
         set_focus(true);
-    // FIXME: Maybe the click clock should be per-button.
-    if (!m_click_clock.is_valid())
-        m_click_clock.start();
     mousedown_event(event);
     if (event.button() == GMouseButton::Right) {
         GContextMenuEvent c_event(event.position(), screen_relative_rect().location().translated(event.position()));
