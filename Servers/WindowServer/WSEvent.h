@@ -276,13 +276,15 @@ private:
 
 class WSAPIAddMenuItemRequest : public WSAPIClientRequest {
 public:
-    WSAPIAddMenuItemRequest(int client_id, int menu_id, unsigned identifier, const String& text, const String& shortcut_text, bool enabled)
+    WSAPIAddMenuItemRequest(int client_id, int menu_id, unsigned identifier, const String& text, const String& shortcut_text, bool enabled, bool checkable, bool checked)
         : WSAPIClientRequest(WSEvent::APIAddMenuItemRequest, client_id)
         , m_menu_id(menu_id)
         , m_identifier(identifier)
         , m_text(text)
         , m_shortcut_text(shortcut_text)
         , m_enabled(enabled)
+        , m_checkable(checkable)
+        , m_checked(checked)
     {
     }
 
@@ -291,24 +293,30 @@ public:
     String text() const { return m_text; }
     String shortcut_text() const { return m_shortcut_text; }
     bool is_enabled() const { return m_enabled; }
+    bool is_checkable() const { return m_checkable; }
+    bool is_checked() const { return m_checked; }
 
 private:
     int m_menu_id { 0 };
     unsigned m_identifier { 0 };
     String m_text;
     String m_shortcut_text;
-    bool m_enabled { true };
+    bool m_enabled;
+    bool m_checkable;
+    bool m_checked;
 };
 
 class WSAPIUpdateMenuItemRequest : public WSAPIClientRequest {
 public:
-    WSAPIUpdateMenuItemRequest(int client_id, int menu_id, unsigned identifier, const String& text, const String& shortcut_text, bool enabled)
+    WSAPIUpdateMenuItemRequest(int client_id, int menu_id, unsigned identifier, const String& text, const String& shortcut_text, bool enabled, bool checkable, bool checked)
         : WSAPIClientRequest(WSEvent::APIUpdateMenuItemRequest, client_id)
         , m_menu_id(menu_id)
         , m_identifier(identifier)
         , m_text(text)
         , m_shortcut_text(shortcut_text)
         , m_enabled(enabled)
+        , m_checkable(checkable)
+        , m_checked(checked)
     {
     }
 
@@ -317,6 +325,8 @@ public:
     String text() const { return m_text; }
     String shortcut_text() const { return m_shortcut_text; }
     bool is_enabled() const { return m_enabled; }
+    bool is_checkable() const { return m_checkable; }
+    bool is_checked() const { return m_checked; }
 
 private:
     int m_menu_id { 0 };
@@ -324,6 +334,8 @@ private:
     String m_text;
     String m_shortcut_text;
     bool m_enabled { true };
+    bool m_checkable;
+    bool m_checked;
 };
 
 class WSAPIAddMenuSeparatorRequest : public WSAPIClientRequest {

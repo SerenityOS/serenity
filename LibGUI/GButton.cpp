@@ -133,6 +133,9 @@ void GButton::set_action(GAction& action)
     m_action = action.make_weak_ptr();
     action.register_button({ }, *this);
     set_enabled(action.is_enabled());
+    set_checkable(action.is_checkable());
+    if (action.is_checkable())
+        set_checked(action.is_checked());
 }
 
 void GButton::set_icon(RetainPtr<GraphicsBitmap>&& icon)

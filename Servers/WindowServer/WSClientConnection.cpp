@@ -241,7 +241,7 @@ void WSClientConnection::handle_request(const WSAPIAddMenuItemRequest& request)
         return;
     }
     auto& menu = *(*it).value;
-    menu.add_item(make<WSMenuItem>(menu, identifier, request.text(), request.shortcut_text(), request.is_enabled()));
+    menu.add_item(make<WSMenuItem>(menu, identifier, request.text(), request.shortcut_text(), request.is_enabled(), request.is_checkable(), request.is_checked()));
     WSAPI_ServerMessage response;
     response.type = WSAPI_ServerMessage::Type::DidAddMenuItem;
     response.menu.menu_id = menu_id;
@@ -292,6 +292,9 @@ void WSClientConnection::handle_request(const WSAPIUpdateMenuItemRequest& reques
     menu_item->set_text(request.text());
     menu_item->set_shortcut_text(request.shortcut_text());
     menu_item->set_enabled(request.is_enabled());
+    menu_item->set_checkable(request.is_checkable());
+    if (request.is_checkable())
+        menu_item->set_checked(request.is_checked());
     WSAPI_ServerMessage response;
     response.type = WSAPI_ServerMessage::Type::DidUpdateMenuItem;
     response.menu.menu_id = menu_id;

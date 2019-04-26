@@ -106,3 +106,16 @@ void GAction::set_enabled(bool enabled)
         item.set_enabled(enabled);
     });
 }
+
+void GAction::set_checked(bool checked)
+{
+    if (m_checked == checked)
+        return;
+    m_checked = checked;
+    for_each_toolbar_button([checked] (GButton& button) {
+        button.set_checked(checked);
+    });
+    for_each_menu_item([checked] (GMenuItem& item) {
+        item.set_checked(checked);
+    });
+}

@@ -59,6 +59,12 @@ public:
     bool is_enabled() const { return m_enabled; }
     void set_enabled(bool);
 
+    bool is_checkable() const { return m_checkable; }
+    void set_checkable(bool checkable) { m_checkable = checkable; }
+
+    bool is_checked() const { ASSERT(is_checkable()); return m_checked; }
+    void set_checked(bool);
+
     void register_button(Badge<GButton>, GButton&);
     void unregister_button(Badge<GButton>, GButton&);
     void register_menu_item(Badge<GMenuItem>, GMenuItem&);
@@ -79,6 +85,8 @@ private:
     RetainPtr<GraphicsBitmap> m_icon;
     GShortcut m_shortcut;
     bool m_enabled { true };
+    bool m_checkable { false };
+    bool m_checked { false };
     ShortcutScope m_scope { ShortcutScope::None };
 
     HashTable<GButton*> m_buttons;

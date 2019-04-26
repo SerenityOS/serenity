@@ -58,7 +58,7 @@ void StylePainter::paint_button(Painter& painter, const Rect& rect, ButtonStyle 
     if (button_style == ButtonStyle::Normal)
         return paint_button_new(painter, rect, pressed, checked, hovered);
 
-    Color button_color = Color::LightGray;
+    Color button_color = checked ? Color::from_rgb(0xd6d2ce) : Color::LightGray;
     Color highlight_color = Color::White;
     Color shadow_color = Color(96, 96, 96);
 
@@ -71,7 +71,7 @@ void StylePainter::paint_button(Painter& painter, const Rect& rect, ButtonStyle 
     PainterStateSaver saver(painter);
     painter.translate(rect.location());
 
-    if (pressed) {
+    if (pressed || checked) {
         // Base
         painter.fill_rect({ 1, 1, rect.width() - 2, rect.height() - 2 }, button_color);
 

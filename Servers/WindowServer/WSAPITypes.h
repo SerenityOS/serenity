@@ -246,6 +246,8 @@ struct WSAPI_ClientMessage {
             char shortcut_text[32];
             int shortcut_text_length;
             bool enabled;
+            bool checkable;
+            bool checked;
             WSAPI_Point position;
             bool top_anchored;
         } menu;
