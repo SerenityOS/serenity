@@ -20,6 +20,12 @@ public:
     GAction* action() { return m_action.ptr(); }
     unsigned identifier() const { return m_identifier; }
 
+    bool is_checkable() const { return m_checkable; }
+    void set_checkable(bool checkable) { m_checkable = checkable; }
+
+    bool is_checked() const { return m_checked; }
+    void set_checked(bool);
+
     bool is_enabled() const { return m_enabled; }
     void set_enabled(bool);
 
@@ -33,6 +39,8 @@ private:
     unsigned m_menu_id { 0 };
     unsigned m_identifier { 0 };
     bool m_enabled { true };
+    bool m_checkable { false };
+    bool m_checked { false };
     RetainPtr<GAction> m_action;
 };
 

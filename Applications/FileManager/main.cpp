@@ -98,13 +98,24 @@ int main(int argc, char** argv)
         }
     });
 
-    auto view_as_table_action = GAction::create("Table view", { Mod_Ctrl, KeyCode::Key_L }, GraphicsBitmap::load_from_file("/res/icons/16x16/table-view.png"), [&] (const GAction&) {
-        directory_view->set_view_mode(DirectoryView::ViewMode::List);
-    });
+    RetainPtr<GAction> view_as_table_action;
+    RetainPtr<GAction> view_as_icons_action;
 
-    auto view_as_icons_action = GAction::create("Icon view", { Mod_Ctrl, KeyCode::Key_I }, GraphicsBitmap::load_from_file("/res/icons/16x16/icon-view.png"), [&] (const GAction&) {
-        directory_view->set_view_mode(DirectoryView::ViewMode::Icon);
+    view_as_table_action = GAction::create("Table view", { Mod_Ctrl, KeyCode::Key_L }, GraphicsBitmap::load_from_file("/res/icons/16x16/table-view.png"), [&] (const GAction&) {
+        directory_view->set_view_mode(DirectoryView::ViewMode::List);
+        view_as_icons_action->set_checked(false);
+        view_as_table_action->set_checked(true);
     });
+    view_as_table_action->set_checkable(true);
+    view_as_table_action->set_checked(false);
+
+    view_as_icons_action = GAction::create("Icon view", { Mod_Ctrl, KeyCode::Key_I }, GraphicsBitmap::load_from_file("/res/icons/16x16/icon-view.png"), [&] (const GAction&) {
+        directory_view->set_view_mode(DirectoryView::ViewMode::Icon);
+        view_as_table_action->set_checked(false);
+        view_as_icons_action->set_checked(true);
+    });
+    view_as_icons_action->set_checkable(true);
+    view_as_icons_action->set_checked(true);
 
     auto copy_action = GAction::create("Copy", GraphicsBitmap::load_from_file("/res/icons/16x16/edit-copy.png"), [] (const GAction&) {
         dbgprintf("'Copy' action activated!\n");
@@ -138,8 +149,8 @@ int main(int argc, char** argv)
     menubar->add_menu(move(file_menu));
 
     auto view_menu = make<GMenu>("View");
-    view_menu->add_action(view_as_table_action.copy_ref());
-    view_menu->add_action(view_as_icons_action.copy_ref());
+    view_menu->add_action(*view_as_icons_action);
+    view_menu->add_action(*view_as_table_action);
     menubar->add_menu(move(view_menu));
 
     auto go_menu = make<GMenu>("Go");
@@ -165,8 +176,8 @@ int main(int argc, char** argv)
     main_toolbar->add_action(delete_action.copy_ref());
 
     main_toolbar->add_separator();
-    main_toolbar->add_action(view_as_icons_action.copy_ref());
-    main_toolbar->add_action(view_as_table_action.copy_ref());
+    main_toolbar->add_action(*view_as_icons_action);
+    main_toolbar->add_action(*view_as_table_action);
 
     directory_view->on_path_change = [window, location_textbox, &file_system_model, tree_view] (const String& new_path) {
         window->set_title(String::format("FileManager: %s", new_path.characters()));

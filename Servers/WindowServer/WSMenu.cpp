@@ -6,6 +6,7 @@
 #include "WSWindowManager.h"
 #include <WindowServer/WSAPITypes.h>
 #include <WindowServer/WSClientConnection.h>
+#include <SharedGraphics/CharacterBitmap.h>
 #include <SharedGraphics/Painter.h>
 #include <SharedGraphics/StylePainter.h>
 #include <SharedGraphics/Font.h>
@@ -26,6 +27,23 @@ const Font& WSMenu::font() const
     return Font::default_font();
 }
 
+static const char* s_checked_bitmap_data = {
+    "         "
+    "      ## "
+    "     ##  "
+    "     ##  "
+    "    ##   "
+    " ## ##   "
+    "  ####   "
+    "   ##    "
+    "         "
+};
+
+static CharacterBitmap* s_checked_bitmap;
+static const int s_checked_bitmap_width = 9;
+static const int s_checked_bitmap_height = 9;
+static const int s_checked_bitmap_padding = 6;
+
 int WSMenu::width() const
 {
     int longest = 0;
@@ -34,6 +52,8 @@ int WSMenu::width() const
             int item_width = font().width(item->text());
             if (!item->shortcut_text().is_empty())
                 item_width += padding_between_text_and_shortcut() + font().width(item->shortcut_text());
+            if (item->is_checkable())
+                item_width += s_checked_bitmap_width + s_checked_bitmap_padding;
 
             longest = max(longest, item_width);
         }
@@ -92,6 +112,9 @@ void WSMenu::draw()
     StylePainter::paint_menu_frame(painter, rect);
     int width = this->width();
 
+    if (!s_checked_bitmap)
+        s_checked_bitmap = &CharacterBitmap::create_from_ascii(s_checked_bitmap_data, s_checked_bitmap_width, s_checked_bitmap_height).leak_ref();
+
     for (auto& item : m_items) {
         if (item->type() == WSMenuItem::Text) {
             Color text_color = Color::Black;
@@ -101,7 +124,16 @@ void WSMenu::draw()
             }
             if (!item->is_enabled())
                 text_color = Color::MidGray;
-            painter.draw_text(item->rect().translated(left_padding(), 0), item->text(), TextAlignment::CenterLeft, text_color);
+            Rect text_rect = item->rect().translated(left_padding(), 0);
+            if (item->is_checkable()) {
+                if (item->is_checked()) {
+                    Rect checkmark_rect { text_rect.location().x(), 0, s_checked_bitmap_width, s_checked_bitmap_height };
+                    checkmark_rect.center_vertically_within(text_rect);
+                    painter.draw_bitmap(checkmark_rect.location(), *s_checked_bitmap, Color::Black);
+                }
+                text_rect.move_by(s_checked_bitmap_width + s_checked_bitmap_padding, 0);
+            }
+            painter.draw_text(text_rect, item->text(), TextAlignment::CenterLeft, text_color);
             if (!item->shortcut_text().is_empty()) {
                 painter.draw_text(item->rect().translated(-right_padding(), 0), item->shortcut_text(), TextAlignment::CenterRight, text_color);
             }
