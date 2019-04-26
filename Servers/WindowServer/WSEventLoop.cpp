@@ -170,12 +170,12 @@ bool WSEventLoop::on_receive_from_client(int client_id, const WSAPI_ClientMessag
     case WSAPI_ClientMessage::Type::AddMenuItem:
         ASSERT(message.text_length < (ssize_t)sizeof(message.text));
         ASSERT(message.menu.shortcut_text_length < (ssize_t)sizeof(message.menu.shortcut_text));
-        post_event(client, make<WSAPIAddMenuItemRequest>(client_id, message.menu.menu_id, message.menu.identifier, String(message.text, message.text_length), String(message.menu.shortcut_text, message.menu.shortcut_text_length), message.menu.enabled));
+        post_event(client, make<WSAPIAddMenuItemRequest>(client_id, message.menu.menu_id, message.menu.identifier, String(message.text, message.text_length), String(message.menu.shortcut_text, message.menu.shortcut_text_length), message.menu.enabled, message.menu.checkable, message.menu.checked));
         break;
     case WSAPI_ClientMessage::Type::UpdateMenuItem:
         ASSERT(message.text_length < (ssize_t)sizeof(message.text));
         ASSERT(message.menu.shortcut_text_length < (ssize_t)sizeof(message.menu.shortcut_text));
-        post_event(client, make<WSAPIUpdateMenuItemRequest>(client_id, message.menu.menu_id, message.menu.identifier, String(message.text, message.text_length), String(message.menu.shortcut_text, message.menu.shortcut_text_length), message.menu.enabled));
+        post_event(client, make<WSAPIUpdateMenuItemRequest>(client_id, message.menu.menu_id, message.menu.identifier, String(message.text, message.text_length), String(message.menu.shortcut_text, message.menu.shortcut_text_length), message.menu.enabled, message.menu.checkable, message.menu.checked));
         break;
     case WSAPI_ClientMessage::Type::AddMenuSeparator:
         post_event(client, make<WSAPIAddMenuSeparatorRequest>(client_id, message.menu.menu_id));

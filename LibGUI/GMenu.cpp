@@ -90,6 +90,9 @@ int GMenu::realize_menu()
             request.menu.menu_id = m_menu_id;
             request.menu.identifier = i;
             request.menu.enabled = action.is_enabled();
+            request.menu.checkable = action.is_checkable();
+            if (action.is_checkable())
+                request.menu.checked = action.is_checked();
             ASSERT(action.text().length() < (ssize_t)sizeof(request.text));
             strcpy(request.text, action.text().characters());
             request.text_length = action.text().length();

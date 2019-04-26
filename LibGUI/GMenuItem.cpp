@@ -16,6 +16,9 @@ GMenuItem::GMenuItem(unsigned menu_id, Retained<GAction>&& action)
 {
     m_action->register_menu_item({ }, *this);
     m_enabled = m_action->is_enabled();
+    m_checkable = m_action->is_checkable();
+    if (m_checkable)
+        m_checked = m_action->is_checked();
 }
 
 GMenuItem::~GMenuItem()
@@ -32,6 +35,15 @@ void GMenuItem::set_enabled(bool enabled)
     update_window_server();
 }
 
+void GMenuItem::set_checked(bool checked)
+{
+    ASSERT(is_checkable());
+    if (m_checked == checked)
+        return;
+    m_checked = checked;
+    update_window_server();
+}
+
 void GMenuItem::update_window_server()
 {
     auto& action = *m_action;
@@ -40,6 +52,9 @@ void GMenuItem::update_window_server()
     request.menu.menu_id = m_menu_id;
     request.menu.identifier = m_identifier;
     request.menu.enabled = action.is_enabled();
+    request.menu.checkable = action.is_checkable();
+    if (action.is_checkable())
+        request.menu.checked = action.is_checked();
     ASSERT(action.text().length() < (ssize_t)sizeof(request.text));
     strcpy(request.text, action.text().characters());
     request.text_length = action.text().length();
