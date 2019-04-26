@@ -5,7 +5,7 @@
 
 class GraphicsBitmap;
 
-class GLabel final : public GFrame {
+class GLabel : public GFrame {
 public:
     explicit GLabel(GWidget* parent = nullptr);
     GLabel(const String& text, GWidget* parent = nullptr);
