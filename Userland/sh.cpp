@@ -65,6 +65,22 @@ static int sh_exit(int, char**)
     return 0;
 }
 
+static int sh_export(int argc, char** argv)
+{
+    if (argc == 1) {
+        for (int i = 0; environ[i]; ++i)
+            puts(environ[i]);
+        return 0;
+    }
+    auto parts = String(argv[1]).split('=');
+    if (parts.size() != 2) {
+        fprintf(stderr, "usage: export variable=value\n");
+        return 1;
+    }
+    putenv(const_cast<char*>(String::format("%s=%s", parts[0].characters(), parts[1].characters()).characters()));
+    return 0;
+}
+
 static int sh_cd(int argc, char** argv)
 {
     char pathbuf[PATH_MAX];
@@ -118,6 +134,10 @@ static bool handle_builtin(int argc, char** argv, int& retval)
     }
     if (!strcmp(argv[0], "exit")) {
         retval = sh_exit(argc, argv);
+        return true;
+    }
+    if (!strcmp(argv[0], "export")) {
+        retval = sh_export(argc, argv);
         return true;
     }
     return false;
