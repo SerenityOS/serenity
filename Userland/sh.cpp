@@ -470,9 +470,10 @@ static int runcmd(char* cmd)
 
 #ifdef SH_DEBUG
     dbgprintf("Now we gotta wait on children:\n");
-#endif
     for (auto& child : children)
         dbgprintf("  %d\n", child);
+#endif
+
 
     int wstatus = 0;
     int rc;
