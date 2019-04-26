@@ -320,7 +320,8 @@ void GTableView::doubleclick_event(GMouseEvent& event)
         return;
     auto& model = *this->model();
     if (event.button() == GMouseButton::Left) {
-        mousedown_event(event);
+        if (event.y() < header_height())
+            return;
         if (model.selected_index().is_valid()) {
             if (is_editable())
                 begin_editing(model.selected_index());
