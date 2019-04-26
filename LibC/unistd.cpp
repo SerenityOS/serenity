@@ -45,11 +45,11 @@ int execve(const char* filename, char* const argv[], char* const envp[])
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-int execvp(const char* filename, char* const argv[])
+int execvpe(const char* filename, char* const argv[], char* const envp[])
 {
-    int rc = execve(filename, argv, nullptr);
+    int rc = execve(filename, argv, environ);
     if (rc < 0 && errno != ENOENT) {
-        printf("execvp failed on first with %s\n", strerror(errno));
+        fprintf(stderr, "execvpe() failed on first with %s\n", strerror(errno));
         return rc;
     }
     String path = getenv("PATH");
@@ -58,14 +58,19 @@ int execvp(const char* filename, char* const argv[])
     auto parts = path.split(':');
     for (auto& part : parts) {
         auto candidate = String::format("%s/%s", part.characters(), filename);
-        rc = execve(candidate.characters(), argv, environ);
+        int rc = execve(candidate.characters(), argv, environ);
         if (rc < 0 && errno != ENOENT) {
-            printf("execvp failed on attempt (%s) with %s\n", candidate.characters(), strerror(errno));
+            printf("execvpe() failed on attempt (%s) with %s\n", candidate.characters(), strerror(errno));
             return rc;
         }
     }
     errno = ENOENT;
     return -1;
+}
+
+int execvp(const char* filename, char* const argv[])
+{
+    return execvpe(filename, argv, environ);
 }
 
 int execl(const char* filename, const char* arg0, ...)

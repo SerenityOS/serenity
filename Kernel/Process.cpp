@@ -442,6 +442,8 @@ int Process::sys$execve(const char* filename, const char** argv, const char** en
     //       On success, the kernel stack will be lost.
     if (!validate_read_str(filename))
         return -EFAULT;
+    if (!*filename)
+        return -ENOENT;
     if (argv) {
         if (!validate_read_typed(argv))
             return -EFAULT;
