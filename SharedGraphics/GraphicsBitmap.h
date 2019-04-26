@@ -43,6 +43,7 @@ private:
     RGBA32* m_data { nullptr };
     size_t m_pitch { 0 };
     Format m_format { Format::Invalid };
+    bool m_needs_munmap { false };
     MappedFile m_mapped_file;
     RetainPtr<SharedBuffer> m_shared_buffer;
 };
