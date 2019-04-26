@@ -26,27 +26,78 @@ public:
     }
 };
 
+class SquareLabel final : public GLabel {
+public:
+    SquareLabel(Square& square, GWidget* parent)
+        : GLabel(parent)
+        , m_square(square)
+    {
+    }
+
+    Function<void()> on_chord_click;
+
+    virtual void mousedown_event(GMouseEvent& event) override
+    {
+        if (event.buttons() == (GMouseButton::Right | GMouseButton::Left)) {
+            if (event.button() == GMouseButton::Left || event.button() == GMouseButton::Right) {
+                m_chord = true;
+                m_square.field->set_chord_preview(m_square, true);
+            }
+        }
+        GLabel::mousedown_event(event);
+    }
+
+    virtual void mousemove_event(GMouseEvent& event) override
+    {
+        if (m_chord) {
+            if (rect().contains(event.position())) {
+                m_square.field->set_chord_preview(m_square, true);
+            } else {
+                m_square.field->set_chord_preview(m_square, false);
+            }
+        }
+        GLabel::mousemove_event(event);
+    }
+
+    virtual void mouseup_event(GMouseEvent& event) override
+    {
+        if (m_chord) {
+            if (event.button() == GMouseButton::Left || event.button() == GMouseButton::Right) {
+                if (rect().contains(event.position())) {
+                    if (on_chord_click)
+                        on_chord_click();
+                }
+                m_chord = false;
+            }
+        }
+        m_square.field->set_chord_preview(m_square, m_chord);
+        GLabel::mouseup_event(event);
+    }
+
+    Square& m_square;
+    bool m_chord { false };
+};
+
 Field::Field(GLabel& flag_label, GLabel& time_label, GButton& face_button, GWidget* parent)
     : GFrame(parent)
     , m_face_button(face_button)
     , m_flag_label(flag_label)
     , m_time_label(time_label)
 {
-    auto config = CConfigFile::get_for_app("Minesweeper");
-
-    m_mine_count = config->read_num_entry("Game", "MineCount", 10);
-    m_rows = config->read_num_entry("Game", "Rows", 9);
-    m_columns = config->read_num_entry("Game", "Columns", 9);
-
     m_timer.on_timeout = [this] {
-        m_time_label.set_text(String::format("%u", ++m_seconds_elapsed));
+        ++m_time_elapsed;
+        m_time_label.set_text(String::format("%u.%u", m_time_elapsed / 10, m_time_elapsed % 10));
     };
-    m_timer.set_interval(1000);
+    m_timer.set_interval(100);
     set_frame_thickness(2);
     set_frame_shape(FrameShape::Container);
     set_frame_shadow(FrameShadow::Sunken);
     m_mine_bitmap = GraphicsBitmap::load_from_file("/res/icons/minesweeper/mine.png");
     m_flag_bitmap = GraphicsBitmap::load_from_file("/res/icons/minesweeper/flag.png");
+    m_badflag_bitmap = GraphicsBitmap::load_from_file("/res/icons/minesweeper/badflag.png");
+    m_default_face_bitmap = GraphicsBitmap::load_from_file("/res/icons/minesweeper/face-default.png");
+    m_good_face_bitmap = GraphicsBitmap::load_from_file("/res/icons/minesweeper/face-good.png");
+    m_bad_face_bitmap = GraphicsBitmap::load_from_file("/res/icons/minesweeper/face-bad.png");
     for (int i = 0; i < 8; ++i)
         m_number_bitmap[i] = GraphicsBitmap::load_from_file(String::format("/res/icons/minesweeper/%u.png", i + 1));
 
@@ -66,50 +117,51 @@ void Field::set_face(Face face)
 {
     switch (face) {
     case Face::Default:
-        m_face_button.set_icon(GraphicsBitmap::load_from_file("/res/icons/minesweeper/face-default.png"));
+        m_face_button.set_icon(*m_default_face_bitmap);
         break;
     case Face::Good:
-        m_face_button.set_icon(GraphicsBitmap::load_from_file("/res/icons/minesweeper/face-good.png"));
+        m_face_button.set_icon(*m_good_face_bitmap);
         break;
     case Face::Bad:
-        m_face_button.set_icon(GraphicsBitmap::load_from_file("/res/icons/minesweeper/face-bad.png"));
+        m_face_button.set_icon(*m_bad_face_bitmap);
         break;
     }
 }
 
 template<typename Callback>
-void Field::for_each_neighbor_of(const Square& square, Callback callback)
+void Square::for_each_neighbor(Callback callback)
 {
-    int r = square.row;
-    int c = square.column;
+    int r = row;
+    int c = column;
     if (r > 0) // Up
-        callback(this->square(r - 1, c));
+        callback(field->square(r - 1, c));
     if (c > 0) // Left
-        callback(this->square(r, c - 1));
-    if (r < (m_rows - 1)) // Down
-        callback(this->square(r + 1, c));
-    if (c < (m_columns - 1)) // Right
-        callback(this->square(r, c + 1));
+        callback(field->square(r, c - 1));
+    if (r < (field->m_rows - 1)) // Down
+        callback(field->square(r + 1, c));
+    if (c < (field->m_columns - 1)) // Right
+        callback(field->square(r, c + 1));
     if (r > 0 && c > 0) // UpLeft
-        callback(this->square(r - 1, c - 1));
-    if (r > 0 && c < (m_columns - 1)) // UpRight
-        callback(this->square(r - 1, c + 1));
-    if (r < (m_rows - 1) && c > 0) // DownLeft
-        callback(this->square(r + 1, c - 1));
-    if (r < (m_rows - 1) && c < (m_columns - 1)) // DownRight
-        callback(this->square(r + 1, c + 1));
+        callback(field->square(r - 1, c - 1));
+    if (r > 0 && c < (field->m_columns - 1)) // UpRight
+        callback(field->square(r - 1, c + 1));
+    if (r < (field->m_rows - 1) && c > 0) // DownLeft
+        callback(field->square(r + 1, c - 1));
+    if (r < (field->m_rows - 1) && c < (field->m_columns - 1)) // DownRight
+        callback(field->square(r + 1, c + 1));
 }
 
 void Field::reset()
 {
-    m_seconds_elapsed = 0;
+    m_time_elapsed = 0;
     m_time_label.set_text("0");
     m_flags_left = m_mine_count;
     m_flag_label.set_text(String::format("%u", m_flags_left));
-    m_timer.start();
+    m_timer.stop();
     set_greedy_for_hits(false);
     set_face(Face::Default);
     srand(time(nullptr));
+    m_squares.clear();
     m_squares.resize(rows() * columns());
 
     HashTable<int> mines;
@@ -122,15 +174,17 @@ void Field::reset()
     int i = 0;
     for (int r = 0; r < rows(); ++r) {
         for (int c = 0; c < columns(); ++c) {
+            m_squares[i] = make<Square>();
             Rect rect = { frame_thickness() + c * square_size(), frame_thickness() + r * square_size(), square_size(), square_size() };
             auto& square = this->square(r, c);
+            square.field = this;
             square.row = r;
             square.column = c;
             square.has_mine = mines.contains(i);
             square.has_flag = false;
             square.is_swept = false;
             if (!square.label)
-                square.label = new GLabel(this);
+                square.label = new SquareLabel(square, this);
             square.label->set_relative_rect(rect);
             square.label->set_visible(false);
             square.label->set_icon(square.has_mine ? m_mine_bitmap : nullptr);
@@ -138,6 +192,8 @@ void Field::reset()
             square.label->set_fill_with_background_color(false);
             if (!square.button)
                 square.button = new SquareButton(this);
+            square.button->set_checkable(true);
+            square.button->set_checked(false);
             square.button->set_icon(nullptr);
             square.button->set_relative_rect(rect);
             square.button->set_visible(true);
@@ -147,6 +203,9 @@ void Field::reset()
             square.button->on_right_click = [this, &square] {
                 on_square_right_clicked(square);
             };
+            square.label->on_chord_click = [this, &square] {
+                on_square_chorded(square);
+            };
             ++i;
         }
     }
@@ -154,7 +213,7 @@ void Field::reset()
         for (int c = 0; c < columns(); ++c) {
             auto& square = this->square(r, c);
             int number = 0;
-            for_each_neighbor_of(square, [&number] (auto& neighbor) {
+            square.for_each_neighbor([&number] (auto& neighbor) {
                 number += neighbor.has_mine;
             });
             square.number = number;
@@ -173,7 +232,7 @@ void Field::reset()
 void Field::flood_fill(Square& square)
 {
     on_square_clicked(square);
-    for_each_neighbor_of(square, [this] (auto& neighbor) {
+    square.for_each_neighbor([this] (auto& neighbor) {
         if (!neighbor.is_swept && !neighbor.has_mine && neighbor.number == 0)
             flood_fill(neighbor);
         if (!neighbor.has_mine && neighbor.number)
@@ -208,6 +267,8 @@ void Field::on_square_clicked(Square& square)
         return;
     if (square.has_flag)
         return;
+    if (!m_timer.is_active())
+        m_timer.start();
     update();
     square.is_swept = true;
     square.button->set_visible(false);
@@ -223,6 +284,26 @@ void Field::on_square_clicked(Square& square)
 
     if (!m_unswept_empties)
         win();
+}
+
+void Field::on_square_chorded(Square& square)
+{
+    if (!square.is_swept)
+        return;
+    if (!square.number)
+        return;
+    int adjacent_flags = 0;
+    square.for_each_neighbor([&] (auto& neighbor) {
+        if (neighbor.has_flag)
+            ++adjacent_flags;
+    });
+    if (square.number != adjacent_flags)
+        return;
+    square.for_each_neighbor([&] (auto& neighbor) {
+        if (neighbor.has_flag)
+            return;
+        on_square_clicked(neighbor);
+    });
 }
 
 void Field::on_square_right_clicked(Square& square)
@@ -266,11 +347,51 @@ void Field::reveal_mines()
     for (int r = 0; r < rows(); ++r) {
         for (int c = 0; c < columns(); ++c) {
             auto& square = this->square(r, c);
-            if (square.has_mine) {
+            if (square.has_mine && !square.has_flag) {
                 square.button->set_visible(false);
                 square.label->set_visible(true);
+            }
+            if (!square.has_mine && square.has_flag) {
+                square.button->set_icon(*m_badflag_bitmap);
+                square.button->set_visible(true);
+                square.label->set_visible(false);
             }
         }
     }
     update();
+}
+
+void Field::set_chord_preview(Square& square, bool chord_preview)
+{
+    if (m_chord_preview == chord_preview)
+        return;
+    m_chord_preview = chord_preview;
+    square.for_each_neighbor([&] (auto& neighbor) {
+        neighbor.button->set_checked(false);
+        if (!neighbor.has_flag)
+            neighbor.button->set_checked(chord_preview);
+    });
+}
+
+void Field::set_field_size(int rows, int columns, int mine_count)
+{
+    if (m_rows == rows && m_columns == columns && m_mine_count == mine_count)
+        return;
+    auto config = CConfigFile::get_for_app("Minesweeper");
+    config->write_num_entry("Game", "MineCount", mine_count);
+    config->write_num_entry("Game", "Rows", rows);
+    config->write_num_entry("Game", "Columns", columns);
+    m_rows = rows;
+    m_columns = columns;
+    m_mine_count = mine_count;
+    reset();
+    set_preferred_size({ frame_thickness() * 2 + m_columns * square_size(), frame_thickness() * 2 + m_rows * square_size() });
+    if (on_size_changed)
+        on_size_changed();
+}
+
+Square::~Square()
+{
+    delete label;
+    delete button;
 }

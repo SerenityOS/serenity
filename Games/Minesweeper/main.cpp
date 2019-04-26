@@ -7,6 +7,7 @@
 #include <LibGUI/GMenuBar.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GLabel.h>
+#include <LibCore/CConfigFile.h>
 
 int main(int argc, char** argv)
 {
@@ -31,10 +32,27 @@ int main(int argc, char** argv)
     flag_icon_label->set_icon(GraphicsBitmap::load_from_file("/res/icons/minesweeper/flag.png"));
     auto* flag_label = new GLabel(container);
     auto* face_button = new GButton(container);
+    face_button->set_button_style(ButtonStyle::CoolBar);
+    face_button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
+    face_button->set_preferred_size({ 36, 0 });
     auto* time_icon_label = new GLabel(container);
     time_icon_label->set_icon(GraphicsBitmap::load_from_file("/res/icons/minesweeper/timer.png"));
     auto* time_label = new GLabel(container);
     auto* field = new Field(*flag_label, *time_label, *face_button, widget);
+
+    field->on_size_changed = [&] {
+        auto size = field->preferred_size();
+        size.set_height(size.height() + container->preferred_size().height());
+        window->resize(size);
+    };
+
+    {
+        auto config = CConfigFile::get_for_app("Minesweeper");
+        int mine_count = config->read_num_entry("Game", "MineCount", 10);
+        int rows = config->read_num_entry("Game", "Rows", 9);
+        int columns = config->read_num_entry("Game", "Columns", 9);
+        field->set_field_size(rows, columns, mine_count);
+    }
 
     auto menubar = make<GMenuBar>();
 
@@ -48,6 +66,16 @@ int main(int argc, char** argv)
     auto game_menu = make<GMenu>("Game");
     game_menu->add_action(GAction::create("New game", { Mod_None, Key_F2 }, [field] (const GAction&) {
         field->reset();
+    }));
+    game_menu->add_separator();
+    game_menu->add_action(GAction::create("Beginner", { Mod_Ctrl, Key_B }, [field] (const GAction&) {
+        field->set_field_size(9, 9, 10);
+    }));
+    game_menu->add_action(GAction::create("Intermediate", { Mod_Ctrl, Key_I }, [field] (const GAction&) {
+        field->set_field_size(16, 16, 40);
+    }));
+    game_menu->add_action(GAction::create("Expert", { Mod_Ctrl, Key_E }, [field] (const GAction&) {
+        field->set_field_size(16, 30, 99);
     }));
     menubar->add_menu(move(game_menu));
 
