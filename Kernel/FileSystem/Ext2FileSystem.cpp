@@ -558,7 +558,7 @@ ssize_t Ext2FSInode::write_bytes(off_t offset, ssize_t count, const byte* data, 
 
     int offset_into_first_block = offset % block_size;
 
-    int last_logical_block_index_in_file = size() / block_size;
+    int last_logical_block_index_in_file = new_size / block_size;
 
     ssize_t nwritten = 0;
     int remaining_count = min((off_t)count, (off_t)new_size - offset);
