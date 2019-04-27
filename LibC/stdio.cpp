@@ -95,16 +95,19 @@ int feof(FILE* stream)
 
 int fflush(FILE* stream)
 {
-    // FIXME: Implement buffered streams, duh.
-    if (!stream)
-        return -EBADF;
+    // FIXME: fflush(NULL) should flush all open output streams.
+    ASSERT(stream);
     if (!stream->buffer_index)
         return 0;
     int rc = write(stream->fd, stream->buffer, stream->buffer_index);
     stream->buffer_index = 0;
-    if (rc < 0)
+    stream->error = 0;
+    stream->eof = 0;
+    if (rc < 0) {
         stream->error = errno;
-    return rc;
+        return EOF;
+    }
+    return 0;
 }
 
 char* fgets(char* buffer, int size, FILE* stream)
@@ -155,6 +158,8 @@ int getchar()
 int ungetc(int c, FILE* stream)
 {
     ASSERT(stream);
+    if (stream->have_ungotten)
+        return EOF;
     stream->have_ungotten = true;
     stream->ungotten = c;
     stream->eof = false;
@@ -170,7 +175,7 @@ int fputc(int ch, FILE* stream)
         fflush(stream);
     else if (stream->mode == _IONBF || (stream->mode == _IOLBF && ch == '\n'))
         fflush(stream);
-    if (stream->eof)
+    if (stream->eof || stream->error)
         return EOF;
     return (byte)ch;
 }
@@ -192,14 +197,14 @@ int fputs(const char* s, FILE* stream)
         if (rc == EOF)
             return EOF;
     }
-    return 0;
+    return 1;
 }
 
 int puts(const char* s)
 {
     int rc = fputs(s, stdout);
-    if (rc < 0)
-        return rc;
+    if (rc == EOF)
+        return EOF;
     return fputc('\n', stdout);
 }
 
@@ -250,28 +255,34 @@ size_t fwrite(const void* ptr, size_t size, size_t nmemb, FILE* stream)
 {
     assert(stream);
     int rc = fflush(stream);
-    if (rc < 0)
+    if (rc == EOF)
         return 0;
     ssize_t nwritten = write(stream->fd, ptr, nmemb * size);
     if (nwritten < 0) {
         stream->error = errno;
         return 0;
     }
-    return nwritten;
+    return nwritten / size;
 }
 
 int fseek(FILE* stream, long offset, int whence)
 {
     assert(stream);
+    fflush(stream);
     off_t off = lseek(stream->fd, offset, whence);
     if (off < 0)
         return off;
+    stream->eof = false;
+    stream->error = 0;
+    stream->have_ungotten = false;
+    stream->ungotten = 0;
     return 0;
 }
 
 long ftell(FILE* stream)
 {
     assert(stream);
+    fflush(stream);
     return lseek(stream->fd, 0, SEEK_CUR);
 }
 
