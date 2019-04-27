@@ -254,13 +254,13 @@ size_t fread(void* ptr, size_t size, size_t nmemb, FILE* stream)
 size_t fwrite(const void* ptr, size_t size, size_t nmemb, FILE* stream)
 {
     assert(stream);
-    int rc = fflush(stream);
-    if (rc == EOF)
-        return 0;
-    ssize_t nwritten = write(stream->fd, ptr, nmemb * size);
-    if (nwritten < 0) {
-        stream->error = errno;
-        return 0;
+    auto* bytes = (const byte*)ptr;
+    ssize_t nwritten = 0;
+    for (size_t i = 0; i < (size * nmemb); ++i) {
+        int rc = fputc(bytes[i], stream);
+        if (rc == EOF)
+            break;
+        ++nwritten;
     }
     return nwritten / size;
 }
