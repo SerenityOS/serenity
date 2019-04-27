@@ -69,6 +69,10 @@ bool DiskBackedFS::write_block(unsigned index, const ByteBuffer& data)
 
     LOCKER(m_lock);
     m_write_cache.set(index, data.isolated_copy());
+
+    if (m_write_cache.size() >= 32)
+        flush_writes();
+
     return true;
 }
 
