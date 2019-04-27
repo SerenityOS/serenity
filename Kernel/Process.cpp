@@ -822,6 +822,8 @@ ssize_t Process::sys$write(int fd, const byte* data, ssize_t size)
 {
     if (size < 0)
         return -EINVAL;
+    if (size == 0)
+        return 0;
     if (!validate_read(data, size))
         return -EFAULT;
 #ifdef DEBUG_IO
@@ -876,6 +878,8 @@ ssize_t Process::sys$read(int fd, byte* buffer, ssize_t size)
 {
     if (size < 0)
         return -EINVAL;
+    if (size == 0)
+        return 0;
     if (!validate_write(buffer, size))
         return -EFAULT;
 #ifdef DEBUG_IO
