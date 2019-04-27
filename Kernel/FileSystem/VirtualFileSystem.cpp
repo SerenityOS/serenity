@@ -333,7 +333,7 @@ KResult VFS::rename(StringView old_path, StringView new_path, Inode& base)
             return KSuccess;
         if (new_inode->is_directory() && !old_inode->is_directory())
             return KResult(-EISDIR);
-        auto result = new_parent_inode->remove_child(new_parent_inode->reverse_lookup(new_inode->identifier()));
+        auto result = new_parent_inode->remove_child(FileSystemPath(new_path).basename());
         if (result.is_error())
             return result;
     }
@@ -342,7 +342,7 @@ KResult VFS::rename(StringView old_path, StringView new_path, Inode& base)
     if (result.is_error())
         return result;
 
-    result = old_parent_inode->remove_child(old_parent_inode->reverse_lookup(old_inode->identifier()));
+    result = old_parent_inode->remove_child(FileSystemPath(old_path).basename());
     if (result.is_error())
         return result;
 
@@ -495,8 +495,7 @@ KResult VFS::rmdir(StringView path, Inode& base)
     if (result.is_error())
         return result;
 
-    // FIXME: The reverse_lookup here can definitely be avoided.
-    return parent_inode->remove_child(parent_inode->reverse_lookup(inode->identifier()));
+    return parent_inode->remove_child(FileSystemPath(path).basename());
 }
 
 KResultOr<InodeIdentifier> VFS::resolve_symbolic_link(InodeIdentifier base, Inode& symlink_inode)
