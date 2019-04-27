@@ -36,6 +36,9 @@ static byte* s_malloc_pool;
 static uint32_t s_malloc_sum_alloc = 0;
 static uint32_t s_malloc_sum_free = POOL_SIZE;
 
+static bool s_scrub_malloc = true;
+static bool s_scrub_free = true;
+
 void* malloc(size_t size)
 {
     if (size == 0)
@@ -108,7 +111,8 @@ void* malloc(size_t size)
                 s_malloc_sum_alloc += header->chunk_count * CHUNK_SIZE;
                 s_malloc_sum_free  -= header->chunk_count * CHUNK_SIZE;
 
-                memset(ptr, MALLOC_SCRUB_BYTE, (header->chunk_count * CHUNK_SIZE) - sizeof(MallocHeader));
+                if (s_scrub_malloc)
+                    memset(ptr, MALLOC_SCRUB_BYTE, (header->chunk_count * CHUNK_SIZE) - sizeof(MallocHeader));
                 return ptr;
             }
         }
@@ -139,7 +143,8 @@ void free(void* ptr)
     s_malloc_sum_alloc -= header->chunk_count * CHUNK_SIZE;
     s_malloc_sum_free += header->chunk_count * CHUNK_SIZE;
 
-    memset(header, FREE_SCRUB_BYTE, header->chunk_count * CHUNK_SIZE);
+    if (s_scrub_free)
+        memset(header, FREE_SCRUB_BYTE, header->chunk_count * CHUNK_SIZE);
 }
 
 void __malloc_init()
@@ -148,6 +153,12 @@ void __malloc_init()
     int rc = set_mmap_name(s_malloc_pool, malloc_budget, "malloc pool");
     if (rc < 0)
         perror("set_mmap_name failed");
+
+    if (auto* scrub_malloc_env = getenv("LIBC_NOSCRUB_MALLOC"))
+        s_scrub_malloc = false;
+    if (auto* scrub_free_env = getenv("LIBC_NOSCRUB_FREE"))
+        s_scrub_free = false;
+
 }
 
 void* calloc(size_t count, size_t size)
