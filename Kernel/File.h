@@ -27,6 +27,7 @@ public:
 
     virtual bool is_seekable() const { return false; }
 
+    virtual bool is_shared_memory() const { return false; }
     virtual bool is_device() const { return false; }
     virtual bool is_tty() const { return false; }
     virtual bool is_master_pty() const { return false; }

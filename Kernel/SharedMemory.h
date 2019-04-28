@@ -5,14 +5,15 @@
 #include <AK/AKString.h>
 #include <Kernel/KResult.h>
 #include <Kernel/UnixTypes.h>
+#include <Kernel/File.h>
 
 class VMObject;
 
-class SharedMemory : public Retainable<SharedMemory> {
+class SharedMemory : public File {
 public:
     static KResultOr<Retained<SharedMemory>> open(const String& name, int flags, mode_t);
     static KResult unlink(const String& name);
-    ~SharedMemory();
+    virtual ~SharedMemory() override;
 
     String name() const { return m_name; }
     KResult truncate(off_t);
@@ -22,6 +23,15 @@ public:
     gid_t gid() const { return m_gid; }
 
 private:
+    // ^File
+    virtual bool can_read(Process&) const override { return true; }
+    virtual bool can_write(Process&) const override { return true; }
+    virtual int read(Process&, byte*, int) override;
+    virtual int write(Process&, const byte*, int) override;
+    virtual String absolute_path() const override;
+    virtual const char* class_name() const override { return "SharedMemory"; }
+    virtual bool is_shared_memory() const override { return true; }
+
     SharedMemory(const String& name, uid_t, gid_t, mode_t);
 
     String m_name;

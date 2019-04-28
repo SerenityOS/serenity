@@ -67,3 +67,24 @@ KResult SharedMemory::truncate(int length)
     ASSERT_NOT_REACHED();
     return KResult(-ENOTIMPL);
 }
+
+String SharedMemory::absolute_path() const
+{
+    return String::format("shm:%u", this);
+}
+
+int SharedMemory::read(Process&, byte* buffer, int buffer_size)
+{
+    UNUSED_PARAM(buffer);
+    UNUSED_PARAM(buffer_size);
+    // FIXME: Implement.
+    ASSERT_NOT_REACHED();
+}
+
+int SharedMemory::write(Process&, const byte* data, int data_size)
+{
+    UNUSED_PARAM(data);
+    UNUSED_PARAM(data_size);
+    // FIXME: Implement.
+    ASSERT_NOT_REACHED();
+}
