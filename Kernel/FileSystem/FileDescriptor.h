@@ -9,7 +9,6 @@
 #include <AK/Retainable.h>
 #include <AK/Badge.h>
 #include <Kernel/Net/Socket.h>
-#include <Kernel/SharedMemory.h>
 
 class File;
 class TTY;
@@ -17,13 +16,13 @@ class MasterPTY;
 class Process;
 class Region;
 class CharacterDevice;
+class SharedMemory;
 
 class FileDescriptor : public Retainable<FileDescriptor> {
 public:
     static Retained<FileDescriptor> create(RetainPtr<Socket>&&, SocketRole = SocketRole::None);
     static Retained<FileDescriptor> create(RetainPtr<Inode>&&);
     static Retained<FileDescriptor> create(RetainPtr<File>&&);
-    static Retained<FileDescriptor> create(RetainPtr<SharedMemory>&&);
     static Retained<FileDescriptor> create_pipe_writer(FIFO&);
     static Retained<FileDescriptor> create_pipe_reader(FIFO&);
     ~FileDescriptor();
@@ -85,9 +84,9 @@ public:
     FIFO::Direction fifo_direction() { return m_fifo_direction; }
 
     bool is_fsfile() const;
-    bool is_shared_memory() const { return m_shared_memory; }
-    SharedMemory* shared_memory() { return m_shared_memory.ptr(); }
-    const SharedMemory* shared_memory() const { return m_shared_memory.ptr(); }
+    bool is_shared_memory() const;
+    SharedMemory* shared_memory();
+    const SharedMemory* shared_memory() const;
 
     ByteBuffer& generator_cache() { return m_generator_cache; }
 
@@ -103,7 +102,6 @@ private:
     FileDescriptor(RetainPtr<Socket>&&, SocketRole);
     explicit FileDescriptor(RetainPtr<Inode>&&);
     explicit FileDescriptor(RetainPtr<File>&&);
-    explicit FileDescriptor(RetainPtr<SharedMemory>&&);
     FileDescriptor(FIFO&, FIFO::Direction);
 
     RetainPtr<Inode> m_inode;
@@ -121,8 +119,6 @@ private:
 
     RetainPtr<FIFO> m_fifo;
     FIFO::Direction m_fifo_direction { FIFO::Neither };
-
-    RetainPtr<SharedMemory> m_shared_memory;
 
     bool m_closed { false };
 };
