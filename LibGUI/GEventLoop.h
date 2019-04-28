@@ -43,7 +43,8 @@ private:
 
     virtual void do_processing() override
     {
-        process_unprocessed_bundles();
+        while (!m_unprocessed_bundles.is_empty())
+            process_unprocessed_bundles();
     }
 
     void wait_for_event();
