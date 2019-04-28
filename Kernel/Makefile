@@ -48,7 +48,8 @@ KERNEL_OBJS = \
        Net/LoopbackAdapter.o \
        Net/Routing.o \
        Net/NetworkTask.o \
-       ProcessTracer.o
+       ProcessTracer.o \
+       File.o
 
 VFS_OBJS = \
     FileSystem/ProcFS.o \

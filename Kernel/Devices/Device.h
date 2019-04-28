@@ -33,42 +33,21 @@
 //   - Subclasses should take care to validate incoming addresses before dereferencing.
 //
 
-#include <AK/Retainable.h>
-#include <AK/Types.h>
-#include <Kernel/FileSystem/FileDescriptor.h>
+#include <Kernel/File.h>
 
-class Process;
-
-class Device : public Retainable<Device> {
+class Device : public File {
 public:
-    virtual ~Device();
-
-    InodeMetadata metadata() const { return { }; }
-
-    virtual KResultOr<Retained<FileDescriptor>> open(int options);
-    virtual void close();
-
-    virtual bool can_read(Process&) const = 0;
-    virtual bool can_write(Process&) const = 0;
-
-    virtual ssize_t read(Process&, byte*, ssize_t) = 0;
-    virtual ssize_t write(Process&, const byte*, ssize_t) = 0;
+    virtual ~Device() override;
 
     unsigned major() const { return m_major; }
     unsigned minor() const { return m_minor; }
 
-    virtual bool is_tty() const { return false; }
-    virtual bool is_master_pty() const { return false; }
-
-    virtual int ioctl(Process&, unsigned request, unsigned arg);
-
-    virtual const char* class_name() const = 0;
+    virtual String absolute_path() const override;
 
     uid_t uid() const { return m_uid; }
     uid_t gid() const { return m_gid; }
 
-    virtual bool is_block_device() const { return false; }
-    virtual bool is_character_device() const { return false; }
+    virtual bool is_device() const override { return true; }
 
 protected:
     Device(unsigned major, unsigned minor);

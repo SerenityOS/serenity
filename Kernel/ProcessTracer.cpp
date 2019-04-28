@@ -18,14 +18,18 @@ void ProcessTracer::did_syscall(dword function, dword arg1, dword arg2, dword ar
     m_calls.enqueue(data);
 }
 
-int ProcessTracer::read(byte* buffer, int buffer_size)
+int ProcessTracer::read(Process&, byte* buffer, int buffer_size)
 {
-    if (!m_calls.is_empty()) {
-        auto data = m_calls.dequeue();
-        // FIXME: This should not be an assertion.
-        ASSERT(buffer_size == sizeof(data));
-        memcpy(buffer, &data, sizeof(data));
-        return sizeof(data);
-    }
-    return 0;
+    if (m_calls.is_empty())
+        return 0;
+    auto data = m_calls.dequeue();
+    // FIXME: This should not be an assertion.
+    ASSERT(buffer_size == sizeof(data));
+    memcpy(buffer, &data, sizeof(data));
+    return sizeof(data);
+}
+
+String ProcessTracer::absolute_path() const
+{
+    return String::format("tracer:%d", m_pid);
 }
