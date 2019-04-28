@@ -15,6 +15,7 @@ public:
     virtual bool can_read(Process&) const override;
     virtual bool can_write(Process&) const override;
     virtual int ioctl(Process&, unsigned request, unsigned arg) override final;
+    virtual String absolute_path() const override { return tty_name(); }
 
     virtual String tty_name() const = 0;
 
