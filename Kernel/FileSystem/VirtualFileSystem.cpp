@@ -336,6 +336,10 @@ KResult VFS::rename(StringView old_path, StringView new_path, Inode& base)
         // FIXME: Is this really correct? Check what other systems do.
         if (new_inode == old_inode)
             return KSuccess;
+        if (new_parent_inode->metadata().is_sticky()) {
+            if (!current->process().is_superuser() && new_inode->metadata().uid != current->process().euid())
+                return KResult(-EACCES);
+        }
         if (new_inode->is_directory() && !old_inode->is_directory())
             return KResult(-EISDIR);
         auto result = new_parent_inode->remove_child(FileSystemPath(new_path).basename());
