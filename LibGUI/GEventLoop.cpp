@@ -316,9 +316,6 @@ void GEventLoop::process_unprocessed_bundles()
     if (coalesced_resizes)
         dbgprintf("Coalesced %d resizes\n", coalesced_resizes);
 #endif
-
-    if (!m_unprocessed_bundles.is_empty())
-        process_unprocessed_bundles();
 }
 
 bool GEventLoop::drain_messages_from_server()
