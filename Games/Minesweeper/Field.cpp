@@ -15,12 +15,17 @@ public:
     }
 
     Function<void()> on_right_click;
+    Function<void()> on_middle_click;
 
     virtual void mousedown_event(GMouseEvent& event) override
     {
         if (event.button() == GMouseButton::Right) {
             if (on_right_click)
                 on_right_click();
+        }
+        if (event.button() == GMouseButton::Middle) {
+            if (on_middle_click)
+                on_middle_click();
         }
         GButton::mousedown_event(event);
     }
@@ -43,6 +48,14 @@ public:
                 m_chord = true;
                 m_square.field->set_chord_preview(m_square, true);
             }
+        }
+        if (event.button() == GMouseButton::Middle) {
+            m_square.field->for_each_square([] (auto& square) {
+                if (square.is_considering) {
+                    square.is_considering = false;
+                    square.button->set_icon(nullptr);
+                }
+            });
         }
         GLabel::mousedown_event(event);
     }
@@ -95,6 +108,7 @@ Field::Field(GLabel& flag_label, GLabel& time_label, GButton& face_button, GWidg
     m_mine_bitmap = GraphicsBitmap::load_from_file("/res/icons/minesweeper/mine.png");
     m_flag_bitmap = GraphicsBitmap::load_from_file("/res/icons/minesweeper/flag.png");
     m_badflag_bitmap = GraphicsBitmap::load_from_file("/res/icons/minesweeper/badflag.png");
+    m_consider_bitmap = GraphicsBitmap::load_from_file("/res/icons/minesweeper/consider.png");
     m_default_face_bitmap = GraphicsBitmap::load_from_file("/res/icons/minesweeper/face-default.png");
     m_good_face_bitmap = GraphicsBitmap::load_from_file("/res/icons/minesweeper/face-good.png");
     m_bad_face_bitmap = GraphicsBitmap::load_from_file("/res/icons/minesweeper/face-bad.png");
@@ -182,6 +196,7 @@ void Field::reset()
             square.column = c;
             square.has_mine = mines.contains(i);
             square.has_flag = false;
+            square.is_considering = false;
             square.is_swept = false;
             if (!square.label)
                 square.label = new SquareLabel(square, this);
@@ -202,6 +217,9 @@ void Field::reset()
             };
             square.button->on_right_click = [this, &square] {
                 on_square_right_clicked(square);
+            };
+            square.button->on_middle_click = [this, &square] {
+                on_square_middle_clicked(square);
             };
             square.label->on_chord_click = [this, &square] {
                 on_square_chorded(square);
@@ -267,6 +285,8 @@ void Field::on_square_clicked(Square& square)
         return;
     if (square.has_flag)
         return;
+    if (square.is_considering)
+        return;
     if (!m_timer.is_active())
         m_timer.start();
     update();
@@ -313,6 +333,8 @@ void Field::on_square_right_clicked(Square& square)
     if (!square.has_flag && !m_flags_left)
         return;
 
+    square.is_considering = false;
+
     if (!square.has_flag) {
         --m_flags_left;
         square.has_flag = true;
@@ -323,6 +345,20 @@ void Field::on_square_right_clicked(Square& square)
 
     m_flag_label.set_text(String::format("%u", m_flags_left));
     square.button->set_icon(square.has_flag ? m_flag_bitmap : nullptr);
+    square.button->update();
+}
+
+void Field::on_square_middle_clicked(Square& square)
+{
+    if (square.is_swept)
+        return;
+    if (square.has_flag) {
+        ++m_flags_left;
+        square.has_flag = false;
+        m_flag_label.set_text(String::format("%u", m_flags_left));
+    }
+    square.is_considering = !square.is_considering;
+    square.button->set_icon(square.is_considering ? m_consider_bitmap : nullptr);
     square.button->update();
 }
 
@@ -368,7 +404,7 @@ void Field::set_chord_preview(Square& square, bool chord_preview)
     m_chord_preview = chord_preview;
     square.for_each_neighbor([&] (auto& neighbor) {
         neighbor.button->set_checked(false);
-        if (!neighbor.has_flag)
+        if (!neighbor.has_flag && !neighbor.is_considering)
             neighbor.button->set_checked(chord_preview);
     });
 }
@@ -394,4 +430,12 @@ Square::~Square()
 {
     delete label;
     delete button;
+}
+
+template<typename Callback>
+void Field::for_each_square(Callback callback)
+{
+    for (auto& square : m_squares) {
+        callback(*square);
+    }
 }
