@@ -20,6 +20,7 @@ public:
     bool is_swept { false };
     bool has_mine { false };
     bool has_flag { false };
+    bool is_considering { false };
     int row { 0 };
     int column { 0 };
     int number { 0 };
@@ -52,6 +53,7 @@ private:
 
     void on_square_clicked(Square&);
     void on_square_right_clicked(Square&);
+    void on_square_middle_clicked(Square&);
     void on_square_chorded(Square&);
     void game_over();
     void win();
@@ -63,7 +65,7 @@ private:
 
     void flood_fill(Square&);
 
-    template<typename Callback> void for_each_neighbor_of(const Square&, Callback);
+    template<typename Callback> void for_each_square(Callback);
 
     enum class Face { Default, Good, Bad };
     void set_face(Face);
@@ -76,6 +78,7 @@ private:
     RetainPtr<GraphicsBitmap> m_mine_bitmap;
     RetainPtr<GraphicsBitmap> m_flag_bitmap;
     RetainPtr<GraphicsBitmap> m_badflag_bitmap;
+    RetainPtr<GraphicsBitmap> m_consider_bitmap;
     RetainPtr<GraphicsBitmap> m_default_face_bitmap;
     RetainPtr<GraphicsBitmap> m_good_face_bitmap;
     RetainPtr<GraphicsBitmap> m_bad_face_bitmap;
