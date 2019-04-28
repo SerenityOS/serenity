@@ -11,21 +11,19 @@
 #include <Kernel/Net/Socket.h>
 #include <Kernel/SharedMemory.h>
 
+class File;
 class TTY;
 class MasterPTY;
 class Process;
-class ProcessTracer;
 class Region;
 class CharacterDevice;
 
 class FileDescriptor : public Retainable<FileDescriptor> {
 public:
-
     static Retained<FileDescriptor> create(RetainPtr<Socket>&&, SocketRole = SocketRole::None);
     static Retained<FileDescriptor> create(RetainPtr<Inode>&&);
-    static Retained<FileDescriptor> create(RetainPtr<Device>&&);
+    static Retained<FileDescriptor> create(RetainPtr<File>&&);
     static Retained<FileDescriptor> create(RetainPtr<SharedMemory>&&);
-    static Retained<FileDescriptor> create(RetainPtr<ProcessTracer>&&);
     static Retained<FileDescriptor> create_pipe_writer(FIFO&);
     static Retained<FileDescriptor> create_pipe_reader(FIFO&);
     ~FileDescriptor();
@@ -52,14 +50,12 @@ public:
 
     bool is_directory() const;
 
-    bool is_device() const { return m_device.ptr(); }
-    Device* device() { return m_device.ptr(); }
-    const Device* device() const { return m_device.ptr(); }
+    // FIXME: These should go away once everything is a File.
+    bool is_file() const { return m_file.ptr(); }
+    File* file() { return m_file.ptr(); }
+    const File* file() const { return m_file.ptr(); }
 
-    bool is_block_device() const;
-    bool is_character_device() const;
-    CharacterDevice* character_device();
-    const CharacterDevice* character_device() const;
+    bool is_device() const;
 
     bool is_tty() const;
     const TTY* tty() const;
@@ -73,8 +69,7 @@ public:
     Inode* inode() { return m_inode.ptr(); }
     const Inode* inode() const { return m_inode.ptr(); }
 
-    bool supports_mmap() const;
-    Region* mmap(Process&, LinearAddress, size_t offset, size_t, int prot);
+    KResultOr<Region*> mmap(Process&, LinearAddress, size_t offset, size_t, int prot);
 
     bool is_blocking() const { return m_is_blocking; }
     void set_blocking(bool b) { m_is_blocking = b; }
@@ -89,7 +84,7 @@ public:
     bool is_fifo() const { return m_fifo; }
     FIFO::Direction fifo_direction() { return m_fifo_direction; }
 
-    bool is_file() const;
+    bool is_fsfile() const;
     bool is_shared_memory() const { return m_shared_memory; }
     SharedMemory* shared_memory() { return m_shared_memory.ptr(); }
     const SharedMemory* shared_memory() const { return m_shared_memory.ptr(); }
@@ -103,20 +98,16 @@ public:
 
     KResult truncate(off_t);
 
-    ProcessTracer* tracer() { return m_tracer.ptr(); }
-    const ProcessTracer* tracer() const { return m_tracer.ptr(); }
-
 private:
     friend class VFS;
     FileDescriptor(RetainPtr<Socket>&&, SocketRole);
     explicit FileDescriptor(RetainPtr<Inode>&&);
-    explicit FileDescriptor(RetainPtr<Device>&&);
-    explicit FileDescriptor(RetainPtr<ProcessTracer>&&);
+    explicit FileDescriptor(RetainPtr<File>&&);
     explicit FileDescriptor(RetainPtr<SharedMemory>&&);
     FileDescriptor(FIFO&, FIFO::Direction);
 
     RetainPtr<Inode> m_inode;
-    RetainPtr<Device> m_device;
+    RetainPtr<File> m_file;
 
     off_t m_current_offset { 0 };
 
@@ -132,7 +123,6 @@ private:
     FIFO::Direction m_fifo_direction { FIFO::Neither };
 
     RetainPtr<SharedMemory> m_shared_memory;
-    RetainPtr<ProcessTracer> m_tracer;
 
     bool m_closed { false };
 };

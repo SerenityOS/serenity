@@ -84,7 +84,7 @@ dword BXVGADevice::find_framebuffer_address()
     return framebuffer_address;
 }
 
-Region* BXVGADevice::mmap(Process& process, LinearAddress preferred_laddr, size_t offset, size_t size)
+KResultOr<Region*> BXVGADevice::mmap(Process& process, LinearAddress preferred_laddr, size_t offset, size_t size)
 {
     ASSERT(offset == 0);
     ASSERT(size == framebuffer_size_in_bytes());

@@ -7,7 +7,7 @@ class BlockDevice : public Device {
 public:
     virtual ~BlockDevice() override;
 
-    virtual Region* mmap(Process&, LinearAddress preferred_laddr, size_t offset, size_t size) = 0;
+    virtual bool is_seekable() const override { return true; }
 
 protected:
     BlockDevice(unsigned major, unsigned minor) : Device(major, minor) { }

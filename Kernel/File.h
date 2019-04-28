@@ -1,3 +1,5 @@
+#pragma once
+
 #include <AK/Retainable.h>
 #include <AK/Types.h>
 #include <Kernel/FileSystem/FileDescriptor.h>
