@@ -7,6 +7,7 @@
 #include "IRQHandler.h"
 #include "PIC.h"
 #include "Scheduler.h"
+#include <Kernel/KSyms.h>
 
 //#define PAGE_FAULT_DEBUG
 
@@ -280,6 +281,7 @@ void exception_14_handler(RegisterDumpWithExceptionCode& regs)
             regs.exception_code & 2 ? "write" : "read",
             faultAddress);
         dump(regs);
+        dump_backtrace(ksyms_ready);
         current->process().crash();
     } else if (response == PageFaultResponse::Continue) {
 #ifdef PAGE_FAULT_DEBUG
