@@ -384,8 +384,6 @@ bool FileDescriptor::is_fsfile() const
 
 KResultOr<String> FileDescriptor::absolute_path()
 {
-    if (is_tty())
-        return tty()->tty_name();
     if (is_fifo())
         return String::format("fifo:%u", m_fifo.ptr());
     if (m_file)
