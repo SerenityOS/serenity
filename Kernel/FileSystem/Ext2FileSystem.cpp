@@ -523,8 +523,10 @@ bool Ext2FSInode::resize(qword new_size)
     int blocks_needed_before = ceil_div(old_size, block_size);
     int blocks_needed_after = ceil_div(new_size, block_size);
 
-    dbgprintf("blocks needed before (size was %u): %d\n", old_size, blocks_needed_before);
-    dbgprintf("blocks needed after  (size is  %u): %d\n", new_size, blocks_needed_after);
+#ifdef EXT2_DEBUG
+    dbgprintf("Ext2FSInode::resize(): blocks needed before (size was %Q): %d\n", old_size, blocks_needed_before);
+    dbgprintf("Ext2FSInode::resize(): blocks needed after  (size is  %Q): %d\n", new_size, blocks_needed_after);
+#endif
 
     auto block_list = fs().block_list_for_inode(m_raw_inode);
     if (blocks_needed_after > blocks_needed_before) {
