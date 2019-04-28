@@ -326,6 +326,11 @@ KResult VFS::rename(StringView old_path, StringView new_path, Inode& base)
     if (!old_parent_inode->metadata().may_write(current->process()))
         return KResult(-EACCES);
 
+    if (old_parent_inode->metadata().is_sticky()) {
+        if (!current->process().is_superuser() && old_inode->metadata().uid != current->process().euid())
+            return KResult(-EACCES);
+    }
+
     if (!new_inode_or_error.is_error()) {
         auto new_inode = new_inode_or_error.value();
         // FIXME: Is this really correct? Check what other systems do.
@@ -435,6 +440,11 @@ KResult VFS::unlink(StringView path, Inode& base)
 
     if (!parent_inode->metadata().may_write(current->process()))
         return KResult(-EACCES);
+
+    if (parent_inode->metadata().is_sticky()) {
+        if (!current->process().is_superuser() && inode->metadata().uid != current->process().euid())
+            return KResult(-EACCES);
+    }
 
     return parent_inode->remove_child(FileSystemPath(path).basename());
 }
