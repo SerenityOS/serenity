@@ -45,6 +45,7 @@ private:
     virtual KResult truncate(off_t) override;
 
     void populate_lookup_cache() const;
+    bool resize(qword);
 
     Ext2FS& fs();
     const Ext2FS& fs() const;

@@ -216,6 +216,10 @@ bool Ext2FS::write_block_list_for_inode(InodeIndex inode_index, ext2_inode& e2in
     }
     if (inode_dirty) {
         dbgprintf("Ext2FS: Writing %u direct block(s) to i_block array of inode %u\n", min(EXT2_NDIR_BLOCKS, blocks.size()), inode_index);
+#ifdef EXT2_DEBUG
+        for (int i = 0; i < min(EXT2_NDIR_BLOCKS, blocks.size()); ++i)
+            dbgprintf("   + %u\n", blocks[i]);
+#endif
         write_ext2_inode(inode_index, e2inode);
         inode_dirty = false;
     }
@@ -512,6 +516,40 @@ ssize_t Ext2FSInode::read_bytes(off_t offset, ssize_t count, byte* buffer, FileD
     return nread;
 }
 
+bool Ext2FSInode::resize(qword new_size)
+{
+    qword block_size = fs().block_size();
+    qword old_size = size();
+    int blocks_needed_before = ceil_div(old_size, block_size);
+    int blocks_needed_after = ceil_div(new_size, block_size);
+
+    dbgprintf("blocks needed before (size was %u): %d\n", old_size, blocks_needed_before);
+    dbgprintf("blocks needed after  (size is  %u): %d\n", new_size, blocks_needed_after);
+
+    auto block_list = fs().block_list_for_inode(m_raw_inode);
+    if (blocks_needed_after > blocks_needed_before) {
+        auto new_blocks = fs().allocate_blocks(fs().group_index_from_inode(index()), blocks_needed_after - blocks_needed_before);
+        for (auto new_block_index : new_blocks)
+            fs().set_block_allocation_state(new_block_index, true);
+        block_list.append(move(new_blocks));
+    } else if (blocks_needed_after < blocks_needed_before) {
+        while (block_list.size() != blocks_needed_after) {
+            auto block_index = block_list.take_last();
+            fs().set_block_allocation_state(block_index, false);
+        }
+    }
+
+    bool success = fs().write_block_list_for_inode(index(), m_raw_inode, block_list);
+    if (!success)
+        return false;
+
+    m_raw_inode.i_size = new_size;
+    set_metadata_dirty(true);
+
+    m_block_list = move(block_list);
+    return true;
+}
+
 ssize_t Ext2FSInode::write_bytes(off_t offset, ssize_t count, const byte* data, FileDescriptor*)
 {
     ASSERT(offset >= 0);
@@ -534,27 +572,16 @@ ssize_t Ext2FSInode::write_bytes(off_t offset, ssize_t count, const byte* data, 
     }
 
     const ssize_t block_size = fs().block_size();
-    size_t old_size = size();
-    size_t new_size = max(static_cast<size_t>(offset) + count, size());
+    qword old_size = size();
+    qword new_size = max(static_cast<qword>(offset) + count, (qword)size());
 
-    unsigned blocks_needed_before = ceil_div(size(), block_size);
-    unsigned blocks_needed_after = ceil_div(new_size, block_size);
-
-    auto block_list = fs().block_list_for_inode(m_raw_inode);
-    if (blocks_needed_after > blocks_needed_before) {
-        auto new_blocks = fs().allocate_blocks(fs().group_index_from_inode(index()), blocks_needed_after - blocks_needed_before);
-        for (auto new_block_index : new_blocks)
-            fs().set_block_allocation_state(new_block_index, true);
-        block_list.append(move(new_blocks));
-    } else if (blocks_needed_after < blocks_needed_before) {
-        // FIXME: Implement block list shrinking!
-        ASSERT_NOT_REACHED();
-    }
+    if (!resize(new_size))
+        return -EIO;
 
     int first_block_logical_index = offset / block_size;
     int last_block_logical_index = (offset + count) / block_size;
-    if (last_block_logical_index >= block_list.size())
-        last_block_logical_index = block_list.size() - 1;
+    if (last_block_logical_index >= m_block_list.size())
+        last_block_logical_index = m_block_list.size() - 1;
 
     int offset_into_first_block = offset % block_size;
 
@@ -575,9 +602,9 @@ ssize_t Ext2FSInode::write_bytes(off_t offset, ssize_t count, const byte* data, 
 
         ByteBuffer block;
         if (offset_into_block != 0 || num_bytes_to_copy != block_size) {
-            block = fs().read_block(block_list[bi]);
+            block = fs().read_block(m_block_list[bi]);
             if (!block) {
-                kprintf("Ext2FSInode::write_bytes: read_block(%u) failed (lbi: %u)\n", block_list[bi], bi);
+                kprintf("Ext2FSInode::write_bytes: read_block(%u) failed (lbi: %u)\n", m_block_list[bi], bi);
                 return -EIO;
             }
         } else
@@ -595,9 +622,9 @@ ssize_t Ext2FSInode::write_bytes(off_t offset, ssize_t count, const byte* data, 
 #ifdef EXT2_DEBUG
         dbgprintf("Ext2FSInode::write_bytes: writing block %u (offset_into_block: %u)\n", block_list[bi], offset_into_block);
 #endif
-        bool success = fs().write_block(block_list[bi], block);
+        bool success = fs().write_block(m_block_list[bi], block);
         if (!success) {
-            kprintf("Ext2FSInode::write_bytes: write_block(%u) failed (lbi: %u)\n", block_list[bi], bi);
+            kprintf("Ext2FSInode::write_bytes: write_block(%u) failed (lbi: %u)\n", m_block_list[bi], bi);
             ASSERT_NOT_REACHED();
             return -EIO;
         }
@@ -606,17 +633,9 @@ ssize_t Ext2FSInode::write_bytes(off_t offset, ssize_t count, const byte* data, 
         in += num_bytes_to_copy;
     }
 
-    bool success = fs().write_block_list_for_inode(index(), m_raw_inode, block_list);
-    ASSERT(success);
-
-    m_raw_inode.i_size = new_size;
-    fs().write_ext2_inode(index(), m_raw_inode);
 #ifdef EXT2_DEBUG
     dbgprintf("Ext2FSInode::write_bytes: after write, i_size=%u, i_blocks=%u (%u blocks in list)\n", m_raw_inode.i_size, m_raw_inode.i_blocks, block_list.size());
 #endif
-
-    // NOTE: Make sure the cached block list is up to date!
-    m_block_list = move(block_list);
 
     if (old_size != new_size)
         inode_size_changed(old_size, new_size);
@@ -1330,7 +1349,7 @@ KResult Ext2FSInode::truncate(off_t size)
     LOCKER(m_lock);
     if ((off_t)m_raw_inode.i_size == size)
         return KSuccess;
-    m_raw_inode.i_size = size;
+    resize(size);
     set_metadata_dirty(true);
     return KSuccess;
 }
