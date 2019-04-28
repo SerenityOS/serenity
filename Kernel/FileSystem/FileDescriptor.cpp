@@ -23,11 +23,6 @@ Retained<FileDescriptor> FileDescriptor::create(RetainPtr<File>&& file)
     return adopt(*new FileDescriptor(move(file)));
 }
 
-Retained<FileDescriptor> FileDescriptor::create(RetainPtr<SharedMemory>&& shared_memory)
-{
-    return adopt(*new FileDescriptor(move(shared_memory)));
-}
-
 Retained<FileDescriptor> FileDescriptor::create(RetainPtr<Socket>&& socket, SocketRole role)
 {
     return adopt(*new FileDescriptor(move(socket), role));
@@ -50,11 +45,6 @@ FileDescriptor::FileDescriptor(RetainPtr<Inode>&& inode)
 
 FileDescriptor::FileDescriptor(RetainPtr<File>&& file)
     : m_file(move(file))
-{
-}
-
-FileDescriptor::FileDescriptor(RetainPtr<SharedMemory>&& shared_memory)
-    : m_shared_memory(move(shared_memory))
 {
 }
 
@@ -447,4 +437,23 @@ KResult FileDescriptor::truncate(off_t length)
     }
     ASSERT(is_shared_memory());
     return shared_memory()->truncate(length);
+}
+
+bool FileDescriptor::is_shared_memory() const
+{
+    return m_file && m_file->is_shared_memory();
+}
+
+SharedMemory* FileDescriptor::shared_memory()
+{
+    if (!is_shared_memory())
+        return nullptr;
+    return static_cast<SharedMemory*>(m_file.ptr());
+}
+
+const SharedMemory* FileDescriptor::shared_memory() const
+{
+    if (!is_shared_memory())
+        return nullptr;
+    return static_cast<const SharedMemory*>(m_file.ptr());
 }
