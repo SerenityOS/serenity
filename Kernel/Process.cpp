@@ -175,11 +175,10 @@ void* Process::sys$mmap(const Syscall::SC_mmap_params* params)
     auto* descriptor = file_descriptor(fd);
     if (!descriptor)
         return (void*)-EBADF;
-    if (!descriptor->supports_mmap())
-        return (void*)-ENODEV;
-    auto* region = descriptor->mmap(*this, LinearAddress((dword)addr), offset, size, prot);
-    if (!region)
-        return (void*)-ENOMEM;
+    auto region_or_error = descriptor->mmap(*this, LinearAddress((dword)addr), offset, size, prot);
+    if (region_or_error.is_error())
+        return (void*)(int)region_or_error.error();
+    auto region = region_or_error.value();
     if (flags & MAP_SHARED)
         region->set_shared(true);
     return region->laddr().as_ptr();
@@ -1539,9 +1538,9 @@ int Process::sys$ioctl(int fd, unsigned request, unsigned arg)
     auto* descriptor = file_descriptor(fd);
     if (!descriptor)
         return -EBADF;
-    if (!descriptor->is_device())
+    if (!descriptor->is_file())
         return -ENOTTY;
-    return descriptor->device()->ioctl(*this, request, arg);
+    return descriptor->file()->ioctl(*this, request, arg);
 }
 
 int Process::sys$getdtablesize()

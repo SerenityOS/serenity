@@ -13,17 +13,7 @@ Device::~Device()
     VFS::the().unregister_device(*this);
 }
 
-KResultOr<Retained<FileDescriptor>> Device::open(int options)
+String Device::absolute_path() const
 {
-    UNUSED_PARAM(options);
-    return FileDescriptor::create(this);
-}
-
-void Device::close()
-{
-}
-
-int Device::ioctl(Process&, unsigned, unsigned)
-{
-    return -ENOTTY;
+    return String::format("device:%u,%u (%s)", m_major, m_minor, class_name());
 }

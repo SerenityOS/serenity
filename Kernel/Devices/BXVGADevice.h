@@ -18,7 +18,7 @@ public:
     void set_y_offset(int);
 
     virtual int ioctl(Process&, unsigned request, unsigned arg) override;
-    virtual Region* mmap(Process&, LinearAddress preferred_laddr, size_t offset, size_t) override;
+    virtual KResultOr<Region*> mmap(Process&, LinearAddress preferred_laddr, size_t offset, size_t) override;
 
     size_t framebuffer_size_in_bytes() const { return m_framebuffer_size.area() * sizeof(dword) * 2; }
     Size framebuffer_size() const { return m_framebuffer_size; }
