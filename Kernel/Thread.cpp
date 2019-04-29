@@ -1,6 +1,7 @@
 #include <Kernel/Thread.h>
 #include <Kernel/Scheduler.h>
 #include <Kernel/Process.h>
+#include <Kernel/Net/Socket.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <LibC/signal_numbers.h>
 
@@ -531,4 +532,9 @@ bool Thread::is_thread(void* ptr)
             return true;
     }
     return false;
+}
+
+void Thread::set_blocked_socket(Socket* socket)
+{
+    m_blocked_socket = socket;
 }

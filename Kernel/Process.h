@@ -281,8 +281,8 @@ private:
 
     struct FileDescriptorAndFlags {
         operator bool() const { return !!descriptor; }
-        void clear() { descriptor = nullptr; flags = 0; }
-        void set(Retained<FileDescriptor>&& d, dword f = 0) { descriptor = move(d); flags = f; }
+        void clear();
+        void set(Retained<FileDescriptor>&& d, dword f = 0);
         RetainPtr<FileDescriptor> descriptor;
         dword flags { 0 };
     };

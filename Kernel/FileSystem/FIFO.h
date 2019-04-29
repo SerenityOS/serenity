@@ -1,11 +1,12 @@
 #pragma once
 
-#include "DoubleBuffer.h"
-#include <AK/Retainable.h>
-#include <AK/RetainPtr.h>
+#include <Kernel/DoubleBuffer.h>
 #include <Kernel/UnixTypes.h>
+#include <Kernel/File.h>
 
-class FIFO : public Retainable<FIFO> {
+class FileDescriptor;
+
+class FIFO final : public File {
 public:
     enum Direction {
         Neither, Reader, Writer
@@ -14,20 +15,25 @@ public:
     static RetainPtr<FIFO> from_fifo_id(dword);
 
     static Retained<FIFO> create(uid_t);
-    ~FIFO();
+    virtual ~FIFO() override;
 
     uid_t uid() const { return m_uid; }
 
-    void open(Direction);
-    void close(Direction);
+    Retained<FileDescriptor> open_direction(Direction);
 
-    ssize_t write(const byte*, ssize_t);
-    ssize_t read(byte*, ssize_t);
-
-    bool can_read() const;
-    bool can_write() const;
+    void attach(Direction);
+    void detach(Direction);
 
 private:
+    // ^File
+    virtual ssize_t write(Process&, const byte*, ssize_t) override;
+    virtual ssize_t read(Process&, byte*, ssize_t) override;
+    virtual bool can_read(Process&) const override;
+    virtual bool can_write(Process&) const override;
+    virtual String absolute_path() const override;
+    virtual const char* class_name() const override { return "FIFO"; }
+    virtual bool is_fifo() const override { return true; }
+
     explicit FIFO(uid_t);
 
     unsigned m_writers { 0 };

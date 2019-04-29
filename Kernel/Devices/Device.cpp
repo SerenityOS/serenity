@@ -1,4 +1,5 @@
-#include "CharacterDevice.h"
+#include <Kernel/Devices/Device.h>
+#include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <LibC/errno_numbers.h>
 
 Device::Device(unsigned major, unsigned minor)

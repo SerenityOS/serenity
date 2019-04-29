@@ -4,6 +4,7 @@
 #include "i8253.h"
 #include <AK/TemporaryChange.h>
 #include <Kernel/Alarm.h>
+#include <Kernel/FileSystem/FileDescriptor.h>
 
 //#define LOG_EVERY_CONTEXT_SWITCH
 //#define SCHEDULER_DEBUG
