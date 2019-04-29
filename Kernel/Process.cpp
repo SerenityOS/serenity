@@ -2445,12 +2445,13 @@ int Process::sys$create_thread(int(*entry)(void*), void* argument)
 
 void Process::sys$exit_thread(int code)
 {
-    InterruptDisabler disabler;
+    cli();
     if (&current->process().main_thread() == current) {
         sys$exit(code);
         return;
     }
     current->set_state(Thread::State::Dying);
+    big_lock().unlock_if_locked();
     Scheduler::pick_next_and_switch_now();
     ASSERT_NOT_REACHED();
 }
