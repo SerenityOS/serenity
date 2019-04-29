@@ -24,6 +24,8 @@ public:
 
     void apply_size_increments_to_window(GWindow&);
 
+    void set_opacity(float);
+
 private:
     typedef Vector<unsigned, 4> ParamVector;
 

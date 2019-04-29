@@ -882,3 +882,11 @@ void Terminal::update_cursor()
     invalidate_cursor();
     flush_dirty_lines();
 }
+
+void Terminal::set_opacity(float opacity)
+{
+    if (m_opacity == opacity)
+        return;
+    m_opacity = opacity;
+    force_repaint();
+}
