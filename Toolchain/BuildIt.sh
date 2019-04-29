@@ -5,7 +5,7 @@ echo $DIR
 
 TARGET=i686-pc-serenity
 PREFIX="$DIR/Local"
-SYSROOT="$DIR/../Base"
+SYSROOT="$DIR/../Root"
 
 mkdir -p "$DIR/Tarballs"
 
@@ -68,6 +68,8 @@ pushd "$DIR/Build/"
         $DIR/Tarballs/gcc-8.3.0/configure --prefix=$PREFIX \
                                           --target=$TARGET \
                                           --with-sysroot=$SYSROOT \
+                                          --disable-nls \
+                                          --with-newlib \
                                           --enable-languages=c,c++ || exit 1
 
         make -j $(nproc) all-gcc all-target-libgcc
@@ -80,3 +82,4 @@ pushd "$DIR/Build/"
         make install-target-libstdc++-v3
     popd
 popd
+
