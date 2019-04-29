@@ -1,5 +1,6 @@
 #pragma once
 
+#include <LibCore/CLock.h>
 #include <AK/Badge.h>
 #include <AK/HashMap.h>
 #include <AK/OwnPtr.h>
@@ -57,6 +58,8 @@ private:
     bool m_running { false };
     bool m_exit_requested { false };
     int m_exit_code { 0 };
+
+    CLock m_lock;
 
     struct EventLoopTimer {
         int timer_id { 0 };

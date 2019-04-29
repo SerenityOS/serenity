@@ -1,6 +1,7 @@
 #include <LibCore/CObject.h>
 #include <LibCore/CEventLoop.h>
 #include <LibCore/CEvent.h>
+#include <LibCore/CLock.h>
 #include <LibCore/CNotifier.h>
 #include <LibC/unistd.h>
 #include <LibC/stdio.h>
@@ -91,11 +92,17 @@ int CEventLoop::exec()
         if (m_exit_requested)
             return m_exit_code;
         do_processing();
+
         if (m_queued_events.is_empty()) {
             wait_for_event();
             do_processing();
         }
-        auto events = move(m_queued_events);
+        decltype(m_queued_events) events;
+        {
+            LOCKER(m_lock);
+            events = move(m_queued_events);
+        }
+
         for (auto& queued_event : events) {
             auto* receiver = queued_event.receiver.ptr();
             auto& event = *queued_event.event;
@@ -120,6 +127,7 @@ int CEventLoop::exec()
             }
 
             if (m_exit_requested) {
+                LOCKER(m_lock);
                 auto rejigged_event_queue = move(events);
                 rejigged_event_queue.append(move(m_queued_events));
                 m_queued_events = move(rejigged_event_queue);
@@ -132,6 +140,7 @@ int CEventLoop::exec()
 
 void CEventLoop::post_event(CObject& receiver, OwnPtr<CEvent>&& event)
 {
+    LOCKER(m_lock);
 #ifdef CEVENTLOOP_DEBUG
     dbgprintf("CEventLoop::post_event: {%u} << receiver=%p, event=%p\n", m_queued_events.size(), &receiver, event.ptr());
 #endif
@@ -164,11 +173,17 @@ void CEventLoop::wait_for_event()
             ASSERT_NOT_REACHED();
     }
 
+    bool queued_events_is_empty;
+    {
+        LOCKER(m_lock);
+        queued_events_is_empty = m_queued_events.is_empty();
+    }
+
     struct timeval timeout = { 0, 0 };
-    if (!s_timers->is_empty() && m_queued_events.is_empty())
+    if (!s_timers->is_empty() && queued_events_is_empty)
         get_next_timer_expiration(timeout);
 
-    int rc = select(max_fd + 1, &rfds, &wfds, nullptr, (m_queued_events.is_empty() && s_timers->is_empty()) ? nullptr : &timeout);
+    int rc = select(max_fd + 1, &rfds, &wfds, nullptr, (queued_events_is_empty && s_timers->is_empty()) ? nullptr : &timeout);
     if (rc < 0) {
         ASSERT_NOT_REACHED();
     }
