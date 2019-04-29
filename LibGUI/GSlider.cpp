@@ -50,7 +50,7 @@ void GSlider::paint_event(GPaintEvent& event)
     track_rect.center_vertically_within(inner_rect());
 
     StylePainter::paint_frame(painter, track_rect, FrameShape::Panel, FrameShadow::Sunken, 1);
-    StylePainter::paint_button(painter, knob_rect(), ButtonStyle::Normal, false, false);
+    StylePainter::paint_button(painter, knob_rect(), ButtonStyle::Normal, false, m_knob_hovered);
 }
 
 Rect GSlider::knob_rect() const
@@ -84,6 +84,7 @@ void GSlider::mousedown_event(GMouseEvent& event)
 
 void GSlider::mousemove_event(GMouseEvent& event)
 {
+    set_knob_hovered(knob_rect().contains(event.position()));
     if (m_dragging) {
         float delta = event.position().x() - m_drag_origin.x();
         float scrubbable_range = inner_rect().width();
@@ -103,4 +104,18 @@ void GSlider::mouseup_event(GMouseEvent& event)
     }
 
     return GWidget::mouseup_event(event);
+}
+
+void GSlider::leave_event(CEvent& event)
+{
+    set_knob_hovered(false);
+    GWidget::leave_event(event);
+}
+
+void GSlider::set_knob_hovered(bool hovered)
+{
+    if (m_knob_hovered == hovered)
+        return;
+    m_knob_hovered = hovered;
+    update(knob_rect());
 }
