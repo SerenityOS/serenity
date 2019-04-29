@@ -74,6 +74,8 @@ GWindow* make_launcher_window()
     new LauncherButton("FontEditor", "/res/icons/FontEditor.png", "/bin/FontEditor", widget);
     new LauncherButton("FileManager", "/res/icons/32x32/filetype-folder.png", "/bin/FileManager", widget);
     new LauncherButton("TextEditor", "/res/icons/TextEditor.png", "/bin/TextEditor", widget);
+    new LauncherButton("VisualBuilder", "/res/icons/32x32/app-visual-builder.png", "/bin/VisualBuilder", widget);
+    new LauncherButton("IRCClient", "/res/icons/32x32/app-irc-client.png", "/bin/IRCClient", widget);
 
     return window;
 }
