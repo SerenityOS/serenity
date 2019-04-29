@@ -36,11 +36,15 @@ static byte* s_malloc_pool;
 static uint32_t s_malloc_sum_alloc = 0;
 static uint32_t s_malloc_sum_free = POOL_SIZE;
 
+static bool s_log_malloc = false;
 static bool s_scrub_malloc = true;
 static bool s_scrub_free = true;
 
 void* malloc(size_t size)
 {
+    if (s_log_malloc)
+        dbgprintf("LibC: malloc(%u)\n", size);
+
     if (size == 0)
         return nullptr;
 
@@ -154,11 +158,12 @@ void __malloc_init()
     if (rc < 0)
         perror("set_mmap_name failed");
 
-    if (auto* scrub_malloc_env = getenv("LIBC_NOSCRUB_MALLOC"))
+    if (getenv("LIBC_NOSCRUB_MALLOC"))
         s_scrub_malloc = false;
-    if (auto* scrub_free_env = getenv("LIBC_NOSCRUB_FREE"))
+    if (getenv("LIBC_NOSCRUB_FREE"))
         s_scrub_free = false;
-
+    if (getenv("LIBC_LOG_MALLOC"))
+        s_log_malloc = true;
 }
 
 void* calloc(size_t count, size_t size)
