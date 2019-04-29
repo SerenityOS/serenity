@@ -18,6 +18,7 @@ int systrace(pid_t);
 int gettid();
 int donate(int tid);
 int create_thread(int(*)(void*), void*);
+void exit_thread(int);
 int create_shared_buffer(pid_t peer_pid, int, void** buffer);
 void* get_shared_buffer(int shared_buffer_id);
 int release_shared_buffer(int shared_buffer_id);

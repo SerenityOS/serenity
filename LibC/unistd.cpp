@@ -451,6 +451,12 @@ int create_thread(int(*entry)(void*), void* argument)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
+int exit_thread(int code)
+{
+    int rc = syscall(SC_exit_thread, code);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
 int ftruncate(int fd, off_t length)
 {
     int rc = syscall(SC_ftruncate, fd, length);

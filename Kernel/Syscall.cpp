@@ -118,6 +118,11 @@ static dword handle(RegisterDump& regs, dword function, dword arg1, dword arg2, 
         current->process().sys$exit((int)arg1);
         ASSERT_NOT_REACHED();
         return 0;
+    case Syscall::SC_exit_thread:
+        cli();
+        current->process().sys$exit_thread((int)arg1);
+        ASSERT_NOT_REACHED();
+        break;
     case Syscall::SC_chdir:
         return current->process().sys$chdir((const char*)arg1);
     case Syscall::SC_uname:

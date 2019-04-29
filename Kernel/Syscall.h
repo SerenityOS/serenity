@@ -100,6 +100,7 @@
     __ENUMERATE_SYSCALL(shm_close) \
     __ENUMERATE_SYSCALL(ftruncate) \
     __ENUMERATE_SYSCALL(systrace) \
+    __ENUMERATE_SYSCALL(exit_thread) \
 
 
 namespace Syscall {
