@@ -2443,6 +2443,18 @@ int Process::sys$create_thread(int(*entry)(void*), void* argument)
     return 0;
 }
 
+void Process::sys$exit_thread(int code)
+{
+    InterruptDisabler disabler;
+    if (&current->process().main_thread() == current) {
+        sys$exit(code);
+        return;
+    }
+    current->set_state(Thread::State::Dying);
+    Scheduler::pick_next_and_switch_now();
+    ASSERT_NOT_REACHED();
+}
+
 int Process::sys$gettid()
 {
     return current->tid();
