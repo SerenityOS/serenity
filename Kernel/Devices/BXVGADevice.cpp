@@ -103,7 +103,7 @@ KResultOr<Region*> BXVGADevice::mmap(Process& process, LinearAddress preferred_l
     return region;
 }
 
-int BXVGADevice::ioctl(Process& process, unsigned request, unsigned arg)
+int BXVGADevice::ioctl(FileDescriptor&, unsigned request, unsigned arg)
 {
     switch (request) {
     case BXVGA_DEV_IOCTL_SET_Y_OFFSET:
@@ -113,7 +113,7 @@ int BXVGADevice::ioctl(Process& process, unsigned request, unsigned arg)
         return 0;
     case BXVGA_DEV_IOCTL_SET_RESOLUTION: {
         auto* resolution = (const BXVGAResolution*)arg;
-        if (!process.validate_read_typed(resolution))
+        if (!current->process().validate_read_typed(resolution))
             return -EFAULT;
         set_resolution(resolution->width, resolution->height);
         return 0;
@@ -123,22 +123,22 @@ int BXVGADevice::ioctl(Process& process, unsigned request, unsigned arg)
     };
 }
 
-bool BXVGADevice::can_read(Process&) const
+bool BXVGADevice::can_read(FileDescriptor&) const
 {
     ASSERT_NOT_REACHED();
 }
 
-bool BXVGADevice::can_write(Process&) const
+bool BXVGADevice::can_write(FileDescriptor&) const
 {
     ASSERT_NOT_REACHED();
 }
 
-ssize_t BXVGADevice::read(Process&, byte*, ssize_t)
+ssize_t BXVGADevice::read(FileDescriptor&, byte*, ssize_t)
 {
     ASSERT_NOT_REACHED();
 }
 
-ssize_t BXVGADevice::write(Process&, const byte*, ssize_t)
+ssize_t BXVGADevice::write(FileDescriptor&, const byte*, ssize_t)
 {
     ASSERT_NOT_REACHED();
 }

@@ -18,7 +18,7 @@ void ProcessTracer::did_syscall(dword function, dword arg1, dword arg2, dword ar
     m_calls.enqueue(data);
 }
 
-int ProcessTracer::read(Process&, byte* buffer, int buffer_size)
+int ProcessTracer::read(FileDescriptor&, byte* buffer, int buffer_size)
 {
     if (m_calls.is_empty())
         return 0;

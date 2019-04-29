@@ -30,18 +30,18 @@ public:
     int close();
 
     off_t seek(off_t, int whence);
-    ssize_t read(Process&, byte*, ssize_t);
-    ssize_t write(Process&, const byte* data, ssize_t);
+    ssize_t read(byte*, ssize_t);
+    ssize_t write(const byte* data, ssize_t);
     KResult fstat(stat&);
 
     KResult fchmod(mode_t);
 
-    bool can_read(Process&);
-    bool can_write(Process&);
+    bool can_read();
+    bool can_write();
 
     ssize_t get_dir_entries(byte* buffer, ssize_t);
 
-    ByteBuffer read_entire_file(Process&);
+    ByteBuffer read_entire_file();
 
     KResultOr<String> absolute_path();
 

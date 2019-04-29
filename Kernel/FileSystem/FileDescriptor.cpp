@@ -173,10 +173,10 @@ off_t FileDescriptor::seek(off_t offset, int whence)
     return m_current_offset;
 }
 
-ssize_t FileDescriptor::read(Process& process, byte* buffer, ssize_t count)
+ssize_t FileDescriptor::read(byte* buffer, ssize_t count)
 {
     if (m_file) {
-        int nread = m_file->read(process, buffer, count);
+        int nread = m_file->read(*this, buffer, count);
         if (!m_file->is_seekable())
             m_current_offset += nread;
         return nread;
@@ -189,10 +189,10 @@ ssize_t FileDescriptor::read(Process& process, byte* buffer, ssize_t count)
     return nread;
 }
 
-ssize_t FileDescriptor::write(Process& process, const byte* data, ssize_t size)
+ssize_t FileDescriptor::write(const byte* data, ssize_t size)
 {
     if (m_file) {
-        int nwritten = m_file->write(process, data, size);
+        int nwritten = m_file->write(*this, data, size);
         if (m_file->is_seekable())
             m_current_offset += nwritten;
         return nwritten;
@@ -205,25 +205,25 @@ ssize_t FileDescriptor::write(Process& process, const byte* data, ssize_t size)
     return nwritten;
 }
 
-bool FileDescriptor::can_write(Process& process)
+bool FileDescriptor::can_write()
 {
     if (m_file)
-        return m_file->can_write(process);
+        return m_file->can_write(*this);
     if (m_socket)
         return m_socket->can_write(m_socket_role);
     return true;
 }
 
-bool FileDescriptor::can_read(Process& process)
+bool FileDescriptor::can_read()
 {
     if (m_file)
-        return m_file->can_read(process);
+        return m_file->can_read(*this);
     if (m_socket)
         return m_socket->can_read(m_socket_role);
     return true;
 }
 
-ByteBuffer FileDescriptor::read_entire_file(Process& process)
+ByteBuffer FileDescriptor::read_entire_file()
 {
     // HACK ALERT: (This entire function)
 
@@ -231,7 +231,7 @@ ByteBuffer FileDescriptor::read_entire_file(Process& process)
 
     if (m_file) {
         auto buffer = ByteBuffer::create_uninitialized(1024);
-        ssize_t nread = m_file->read(process, buffer.pointer(), buffer.size());
+        ssize_t nread = m_file->read(*this, buffer.pointer(), buffer.size());
         ASSERT(nread >= 0);
         buffer.trim(nread);
         return buffer;

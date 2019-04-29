@@ -135,7 +135,7 @@ void load_ksyms()
     auto result = VFS::the().open("/kernel.map", 0, 0, *VFS::the().root_inode());
     ASSERT(!result.is_error());
     auto descriptor = result.value();
-    auto buffer = descriptor->read_entire_file(current->process());
+    auto buffer = descriptor->read_entire_file();
     ASSERT(buffer);
     load_ksyms_from_data(buffer);
 }

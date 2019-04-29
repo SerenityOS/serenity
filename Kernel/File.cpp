@@ -19,7 +19,7 @@ void File::close()
 {
 }
 
-int File::ioctl(Process&, unsigned, unsigned)
+int File::ioctl(FileDescriptor&, unsigned, unsigned)
 {
     return -ENOTTY;
 }

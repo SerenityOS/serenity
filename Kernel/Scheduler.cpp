@@ -90,14 +90,14 @@ bool Scheduler::pick_next()
         if (thread.state() == Thread::BlockedRead) {
             ASSERT(thread.m_blocked_fd != -1);
             // FIXME: Block until the amount of data wanted is available.
-            if (process.m_fds[thread.m_blocked_fd].descriptor->can_read(process))
+            if (process.m_fds[thread.m_blocked_fd].descriptor->can_read())
                 thread.unblock();
             return IterationDecision::Continue;
         }
 
         if (thread.state() == Thread::BlockedWrite) {
             ASSERT(thread.m_blocked_fd != -1);
-            if (process.m_fds[thread.m_blocked_fd].descriptor->can_write(process))
+            if (process.m_fds[thread.m_blocked_fd].descriptor->can_write())
                 thread.unblock();
             return IterationDecision::Continue;
         }
@@ -130,13 +130,13 @@ bool Scheduler::pick_next()
                 }
             }
             for (int fd : thread.m_select_read_fds) {
-                if (process.m_fds[fd].descriptor->can_read(process)) {
+                if (process.m_fds[fd].descriptor->can_read()) {
                     thread.unblock();
                     return IterationDecision::Continue;
                 }
             }
             for (int fd : thread.m_select_write_fds) {
-                if (process.m_fds[fd].descriptor->can_write(process)) {
+                if (process.m_fds[fd].descriptor->can_write()) {
                     thread.unblock();
                     return IterationDecision::Continue;
                 }

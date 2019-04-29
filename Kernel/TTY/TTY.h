@@ -10,11 +10,11 @@ class TTY : public CharacterDevice {
 public:
     virtual ~TTY() override;
 
-    virtual ssize_t read(Process&, byte*, ssize_t) override;
-    virtual ssize_t write(Process&, const byte*, ssize_t) override;
-    virtual bool can_read(Process&) const override;
-    virtual bool can_write(Process&) const override;
-    virtual int ioctl(Process&, unsigned request, unsigned arg) override final;
+    virtual ssize_t read(FileDescriptor&, byte*, ssize_t) override;
+    virtual ssize_t write(FileDescriptor&, const byte*, ssize_t) override;
+    virtual bool can_read(FileDescriptor&) const override;
+    virtual bool can_write(FileDescriptor&) const override;
+    virtual int ioctl(FileDescriptor&, unsigned request, unsigned arg) override final;
     virtual String absolute_path() const override { return tty_name(); }
 
     virtual String tty_name() const = 0;

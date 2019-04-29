@@ -12,7 +12,7 @@ static void console_putch(char*&, char ch)
         IO::out8(0xe9, ch);
         return;
     }
-    Console::the().write(current->process(), (byte*)&ch, 1);
+    Console::the().put_char(ch);
 }
 
 int kprintf(const char* fmt, ...)
