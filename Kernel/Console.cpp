@@ -23,19 +23,19 @@ Console::~Console()
 {
 }
 
-bool Console::can_read(Process&) const
+bool Console::can_read(FileDescriptor&) const
 {
     return false;
 }
 
-ssize_t Console::read(Process&, byte*, ssize_t)
+ssize_t Console::read(FileDescriptor&, byte*, ssize_t)
 {
     // FIXME: Implement reading from the console.
     //        Maybe we could use a ring buffer for this device?
     return 0;
 }
 
-ssize_t Console::write(Process&, const byte* data, ssize_t size)
+ssize_t Console::write(FileDescriptor&, const byte* data, ssize_t size)
 {
     if (!size)
         return 0;

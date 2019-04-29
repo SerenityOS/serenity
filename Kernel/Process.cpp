@@ -837,14 +837,14 @@ ssize_t Process::sys$write(int fd, const byte* data, ssize_t size)
 #ifdef IO_DEBUG
             dbgprintf("while %u < %u\n", nwritten, size);
 #endif
-            if (!descriptor->can_write(*this)) {
+            if (!descriptor->can_write()) {
 #ifdef IO_DEBUG
                 dbgprintf("block write on %d\n", fd);
 #endif
                 current->m_blocked_fd = fd;
                 current->block(Thread::State::BlockedWrite);
             }
-            ssize_t rc = descriptor->write(*this, (const byte*)data + nwritten, size - nwritten);
+            ssize_t rc = descriptor->write((const byte*)data + nwritten, size - nwritten);
 #ifdef IO_DEBUG
             dbgprintf("   -> write returned %d\n", rc);
 #endif
@@ -863,7 +863,7 @@ ssize_t Process::sys$write(int fd, const byte* data, ssize_t size)
             nwritten += rc;
         }
     } else {
-        nwritten = descriptor->write(*this, (const byte*)data, size);
+        nwritten = descriptor->write((const byte*)data, size);
     }
     if (current->has_unmasked_pending_signals()) {
         current->block(Thread::State::BlockedSignal);
@@ -888,14 +888,14 @@ ssize_t Process::sys$read(int fd, byte* buffer, ssize_t size)
     if (!descriptor)
         return -EBADF;
     if (descriptor->is_blocking()) {
-        if (!descriptor->can_read(*this)) {
+        if (!descriptor->can_read()) {
             current->m_blocked_fd = fd;
             current->block(Thread::State::BlockedRead);
             if (current->m_was_interrupted_while_blocked)
                 return -EINTR;
         }
     }
-    return descriptor->read(*this, buffer, size);
+    return descriptor->read(buffer, size);
 }
 
 int Process::sys$close(int fd)
@@ -1014,7 +1014,7 @@ int Process::sys$readlink(const char* path, char* buffer, ssize_t size)
     if (!descriptor->metadata().is_symlink())
         return -EINVAL;
 
-    auto contents = descriptor->read_entire_file(*this);
+    auto contents = descriptor->read_entire_file();
     if (!contents)
         return -EIO; // FIXME: Get a more detailed error from VFS.
 
@@ -1540,7 +1540,7 @@ int Process::sys$ioctl(int fd, unsigned request, unsigned arg)
         return -EBADF;
     if (!descriptor->is_file())
         return -ENOTTY;
-    return descriptor->file()->ioctl(*this, request, arg);
+    return descriptor->file()->ioctl(*descriptor, request, arg);
 }
 
 int Process::sys$getdtablesize()
@@ -1755,7 +1755,7 @@ int Process::sys$select(const Syscall::SC_select_params* params)
             auto* descriptor = file_descriptor(fd);
             if (!descriptor)
                 continue;
-            if (descriptor->can_read(*this)) {
+            if (descriptor->can_read()) {
                 bitmap.set(fd, true);
                 ++markedfds;
             }
@@ -1769,7 +1769,7 @@ int Process::sys$select(const Syscall::SC_select_params* params)
             auto* descriptor = file_descriptor(fd);
             if (!descriptor)
                 continue;
-            if (descriptor->can_write(*this)) {
+            if (descriptor->can_write()) {
                 bitmap.set(fd, true);
                 ++markedfds;
             }
@@ -1807,9 +1807,9 @@ int Process::sys$poll(pollfd* fds, int nfds, int timeout)
             continue;
         }
         fds[i].revents = 0;
-        if (fds[i].events & POLLIN && descriptor->can_read(*this))
+        if (fds[i].events & POLLIN && descriptor->can_read())
             fds[i].revents |= POLLIN;
-        if (fds[i].events & POLLOUT && descriptor->can_write(*this))
+        if (fds[i].events & POLLOUT && descriptor->can_write())
             fds[i].revents |= POLLOUT;
 
         if (fds[i].revents)

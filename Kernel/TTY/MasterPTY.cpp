@@ -31,14 +31,14 @@ String MasterPTY::pts_name() const
     return m_pts_name;
 }
 
-ssize_t MasterPTY::read(Process&, byte* buffer, ssize_t size)
+ssize_t MasterPTY::read(FileDescriptor&, byte* buffer, ssize_t size)
 {
     if (!m_slave && m_buffer.is_empty())
         return 0;
     return m_buffer.read(buffer, size);
 }
 
-ssize_t MasterPTY::write(Process&, const byte* buffer, ssize_t size)
+ssize_t MasterPTY::write(FileDescriptor&, const byte* buffer, ssize_t size)
 {
     if (!m_slave)
         return -EIO;
@@ -46,14 +46,14 @@ ssize_t MasterPTY::write(Process&, const byte* buffer, ssize_t size)
     return size;
 }
 
-bool MasterPTY::can_read(Process&) const
+bool MasterPTY::can_read(FileDescriptor&) const
 {
     if (!m_slave)
         return true;
     return !m_buffer.is_empty();
 }
 
-bool MasterPTY::can_write(Process&) const
+bool MasterPTY::can_write(FileDescriptor&) const
 {
     return true;
 }
@@ -96,9 +96,9 @@ void MasterPTY::close()
     }
 }
 
-int MasterPTY::ioctl(Process& process, unsigned request, unsigned arg)
+int MasterPTY::ioctl(FileDescriptor& descriptor, unsigned request, unsigned arg)
 {
     if (request == TIOCSWINSZ)
-        return m_slave->ioctl(process, request, arg);
+        return m_slave->ioctl(descriptor, request, arg);
     return -EINVAL;
 }

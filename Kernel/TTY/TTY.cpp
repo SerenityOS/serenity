@@ -24,12 +24,12 @@ void TTY::set_default_termios()
     memcpy(m_termios.c_cc, default_cc, sizeof(default_cc));
 }
 
-ssize_t TTY::read(Process&, byte* buffer, ssize_t size)
+ssize_t TTY::read(FileDescriptor&, byte* buffer, ssize_t size)
 {
     return m_buffer.read(buffer, size);
 }
 
-ssize_t TTY::write(Process&, const byte* buffer, ssize_t size)
+ssize_t TTY::write(FileDescriptor&, const byte* buffer, ssize_t size)
 {
 #ifdef TTY_DEBUG
     dbgprintf("TTY::write {%u} ", size);
@@ -42,12 +42,12 @@ ssize_t TTY::write(Process&, const byte* buffer, ssize_t size)
     return size;
 }
 
-bool TTY::can_read(Process&) const
+bool TTY::can_read(FileDescriptor&) const
 {
     return !m_buffer.is_empty();
 }
 
-bool TTY::can_write(Process&) const
+bool TTY::can_write(FileDescriptor&) const
 {
     return true;
 }
@@ -106,8 +106,9 @@ void TTY::set_termios(const termios& t)
               );
 }
 
-int TTY::ioctl(Process& process, unsigned request, unsigned arg)
+int TTY::ioctl(FileDescriptor&, unsigned request, unsigned arg)
 {
+    auto& process = current->process();
     pid_t pgid;
     termios* tp;
     winsize* ws;
