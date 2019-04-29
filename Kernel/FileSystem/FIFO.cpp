@@ -81,17 +81,17 @@ void FIFO::detach(Direction direction)
     }
 }
 
-bool FIFO::can_read(Process&) const
+bool FIFO::can_read(FileDescriptor&) const
 {
     return !m_buffer.is_empty() || !m_writers;
 }
 
-bool FIFO::can_write(Process&) const
+bool FIFO::can_write(FileDescriptor&) const
 {
     return m_buffer.bytes_in_write_buffer() < 4096;
 }
 
-ssize_t FIFO::read(Process&, byte* buffer, ssize_t size)
+ssize_t FIFO::read(FileDescriptor&, byte* buffer, ssize_t size)
 {
     if (!m_writers && m_buffer.is_empty())
         return 0;
@@ -105,7 +105,7 @@ ssize_t FIFO::read(Process&, byte* buffer, ssize_t size)
     return nread;
 }
 
-ssize_t FIFO::write(Process&, const byte* buffer, ssize_t size)
+ssize_t FIFO::write(FileDescriptor&, const byte* buffer, ssize_t size)
 {
     if (!m_readers)
         return 0;

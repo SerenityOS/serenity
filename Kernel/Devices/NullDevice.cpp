@@ -20,17 +20,17 @@ NullDevice::~NullDevice()
 {
 }
 
-bool NullDevice::can_read(Process&) const
+bool NullDevice::can_read(FileDescriptor&) const
 {
     return true;
 }
 
-ssize_t NullDevice::read(Process&, byte*, ssize_t)
+ssize_t NullDevice::read(FileDescriptor&, byte*, ssize_t)
 {
     return 0;
 }
 
-ssize_t NullDevice::write(Process&, const byte*, ssize_t buffer_size)
+ssize_t NullDevice::write(FileDescriptor&, const byte*, ssize_t buffer_size)
 {
     return min(PAGE_SIZE, buffer_size);
 }

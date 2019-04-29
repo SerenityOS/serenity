@@ -24,10 +24,10 @@ public:
 
 private:
     // ^File
-    virtual bool can_read(Process&) const override { return true; }
-    virtual bool can_write(Process&) const override { return true; }
-    virtual int read(Process&, byte*, int) override;
-    virtual int write(Process&, const byte*, int) override;
+    virtual bool can_read(FileDescriptor&) const override { return true; }
+    virtual bool can_write(FileDescriptor&) const override { return true; }
+    virtual int read(FileDescriptor&, byte*, int) override;
+    virtual int write(FileDescriptor&, const byte*, int) override;
     virtual String absolute_path() const override;
     virtual const char* class_name() const override { return "SharedMemory"; }
     virtual bool is_shared_memory() const override { return true; }

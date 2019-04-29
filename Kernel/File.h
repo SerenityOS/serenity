@@ -18,12 +18,12 @@ public:
     virtual KResultOr<Retained<FileDescriptor>> open(int options);
     virtual void close();
 
-    virtual bool can_read(Process&) const = 0;
-    virtual bool can_write(Process&) const = 0;
+    virtual bool can_read(FileDescriptor&) const = 0;
+    virtual bool can_write(FileDescriptor&) const = 0;
 
-    virtual ssize_t read(Process&, byte*, ssize_t) = 0;
-    virtual ssize_t write(Process&, const byte*, ssize_t) = 0;
-    virtual int ioctl(Process&, unsigned request, unsigned arg);
+    virtual ssize_t read(FileDescriptor&, byte*, ssize_t) = 0;
+    virtual ssize_t write(FileDescriptor&, const byte*, ssize_t) = 0;
+    virtual int ioctl(FileDescriptor&, unsigned request, unsigned arg);
     virtual KResultOr<Region*> mmap(Process&, LinearAddress preferred_laddr, size_t offset, size_t size);
 
     virtual String absolute_path() const = 0;
