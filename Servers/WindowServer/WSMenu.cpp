@@ -46,20 +46,27 @@ static const int s_checked_bitmap_padding = 6;
 
 int WSMenu::width() const
 {
-    int longest = 0;
+    int widest_text = 0;
+    int widest_shortcut = 0;
     for (auto& item : m_items) {
-        if (item->type() == WSMenuItem::Text) {
-            int item_width = font().width(item->text());
-            if (!item->shortcut_text().is_empty())
-                item_width += padding_between_text_and_shortcut() + font().width(item->shortcut_text());
-            if (item->is_checkable())
-                item_width += s_checked_bitmap_width + s_checked_bitmap_padding;
-
-            longest = max(longest, item_width);
+        if (item->type() != WSMenuItem::Text)
+            continue;
+        int text_width = font().width(item->text());
+        if (!item->shortcut_text().is_empty()) {
+            int shortcut_width = font().width(item->shortcut_text());
+            widest_shortcut = max(shortcut_width, widest_shortcut);
         }
+        if (item->is_checkable())
+            text_width += s_checked_bitmap_width + s_checked_bitmap_padding;
+
+        widest_text = max(widest_text, text_width);
     }
 
-    return max(longest, rect_in_menubar().width()) + horizontal_padding() + frame_thickness() * 2;
+    int widest_item = widest_text;
+    if (widest_shortcut)
+        widest_item += padding_between_text_and_shortcut() + widest_shortcut;
+
+    return max(widest_item, rect_in_menubar().width()) + horizontal_padding() + frame_thickness() * 2;
 }
 
 int WSMenu::height() const
