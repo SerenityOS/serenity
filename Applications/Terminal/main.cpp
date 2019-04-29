@@ -15,6 +15,7 @@
 #include <LibGUI/GMenuBar.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GFontDatabase.h>
+#include <LibGUI/GSlider.h>
 
 static void make_shell(int ptm_fd)
 {
@@ -93,16 +94,36 @@ int main(int argc, char** argv)
     window->set_should_exit_event_loop_on_close(true);
 
     Terminal terminal(ptm_fd);
-    window->set_has_alpha_channel(false);
+    window->set_has_alpha_channel(true);
     window->set_main_widget(&terminal);
     window->move_to(300, 300);
     terminal.apply_size_increments_to_window(*window);
     window->show();
     window->set_icon_path("/res/icons/16x16/app-terminal.png");
 
+    auto* opacity_adjustment_window = new GWindow;
+    opacity_adjustment_window->set_title("Adjust opacity");
+    opacity_adjustment_window->set_rect(50, 50, 200, 100);
+
+    auto* slider = new GSlider(nullptr);
+    opacity_adjustment_window->set_main_widget(slider);
+    slider->set_fill_with_background_color(true);
+    slider->set_background_color(Color::LightGray);
+
+    slider->on_value_changed = [&terminal] (int value) {
+        float opacity = value / 100.0;
+        terminal.set_opacity(opacity);
+    };
+
+    slider->set_range(0, 100);
+    slider->set_value(80);
+
     auto menubar = make<GMenuBar>();
 
     auto app_menu = make<GMenu>("Terminal");
+    app_menu->add_action(GAction::create("Adjust opacity...", [opacity_adjustment_window] (const GAction&) {
+        opacity_adjustment_window->show();
+    }));
     app_menu->add_action(GAction::create("Quit", { Mod_Alt, Key_F4 }, [] (const GAction&) {
         dbgprintf("Terminal: Quit menu activated!\n");
         GApplication::the().quit(0);
