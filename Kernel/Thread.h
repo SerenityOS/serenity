@@ -116,7 +116,7 @@ public:
     bool has_used_fpu() const { return m_has_used_fpu; }
     void set_has_used_fpu(bool b) { m_has_used_fpu = b; }
 
-    void set_blocked_socket(Socket* socket) { m_blocked_socket = socket; }
+    void set_blocked_socket(Socket*);
 
     void set_default_signal_dispositions();
     void push_value_on_stack(dword);

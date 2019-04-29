@@ -34,6 +34,7 @@
 //
 
 #include <Kernel/File.h>
+#include <Kernel/UnixTypes.h>
 
 class Device : public File {
 public:

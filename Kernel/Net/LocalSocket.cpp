@@ -1,6 +1,7 @@
 #include <Kernel/Net/LocalSocket.h>
 #include <Kernel/UnixTypes.h>
 #include <Kernel/Process.h>
+#include <Kernel/FileSystem/FileDescriptor.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <LibC/errno_numbers.h>
 

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Kernel/FileSystem/InodeIdentifier.h>
 #include <Kernel/TTY/TTY.h>
 
 class MasterPTY;

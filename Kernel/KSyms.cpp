@@ -1,6 +1,7 @@
 #include "KSyms.h"
 #include "Process.h"
 #include "Scheduler.h"
+#include <Kernel/FileSystem/FileDescriptor.h>
 
 static KSym* s_ksyms;
 dword ksym_lowest_address;

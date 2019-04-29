@@ -1105,11 +1105,11 @@ int Process::sys$pipe(int pipefd[2])
     auto fifo = FIFO::create(m_uid);
 
     int reader_fd = alloc_fd();
-    m_fds[reader_fd].set(FileDescriptor::create_pipe_reader(*fifo));
+    m_fds[reader_fd].set(fifo->open_direction(FIFO::Reader));
     pipefd[0] = reader_fd;
 
     int writer_fd = alloc_fd();
-    m_fds[writer_fd].set(FileDescriptor::create_pipe_writer(*fifo));
+    m_fds[writer_fd].set(fifo->open_direction(FIFO::Writer));
     pipefd[1] = writer_fd;
 
     return 0;
@@ -2530,4 +2530,16 @@ ProcessTracer& Process::ensure_tracer()
     if (!m_tracer)
         m_tracer = ProcessTracer::create(m_pid);
     return *m_tracer;
+}
+
+void Process::FileDescriptorAndFlags::clear()
+{
+    descriptor = nullptr;
+    flags = 0;
+}
+
+void Process::FileDescriptorAndFlags::set(Retained<FileDescriptor>&& d, dword f)
+{
+    descriptor = move(d);
+    flags = f;
 }

@@ -1,5 +1,6 @@
 #include "PTYMultiplexer.h"
 #include "MasterPTY.h"
+#include <Kernel/FileSystem/FileDescriptor.h>
 #include <Kernel/Process.h>
 #include <LibC/errno_numbers.h>
 

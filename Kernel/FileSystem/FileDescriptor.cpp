@@ -28,16 +28,6 @@ Retained<FileDescriptor> FileDescriptor::create(RetainPtr<Socket>&& socket, Sock
     return adopt(*new FileDescriptor(move(socket), role));
 }
 
-Retained<FileDescriptor> FileDescriptor::create_pipe_writer(FIFO& fifo)
-{
-    return adopt(*new FileDescriptor(fifo, FIFO::Writer));
-}
-
-Retained<FileDescriptor> FileDescriptor::create_pipe_reader(FIFO& fifo)
-{
-    return adopt(*new FileDescriptor(fifo, FIFO::Reader));
-}
-
 FileDescriptor::FileDescriptor(RetainPtr<Inode>&& inode)
     : m_inode(move(inode))
 {
@@ -60,13 +50,11 @@ FileDescriptor::~FileDescriptor()
         m_socket->detach_fd(m_socket_role);
         m_socket = nullptr;
     }
+    if (is_fifo())
+        static_cast<FIFO*>(m_file.ptr())->detach(m_fifo_direction);
     if (m_file) {
         m_file->close();
         m_file = nullptr;
-    }
-    if (m_fifo) {
-        m_fifo->close(fifo_direction());
-        m_fifo = nullptr;
     }
     m_inode = nullptr;
 }
@@ -88,9 +76,7 @@ Retained<FileDescriptor> FileDescriptor::clone()
 {
     RetainPtr<FileDescriptor> descriptor;
     if (is_fifo()) {
-        descriptor = fifo_direction() == FIFO::Reader
-            ? FileDescriptor::create_pipe_reader(*m_fifo)
-            : FileDescriptor::create_pipe_writer(*m_fifo);
+        descriptor = fifo()->open_direction(m_fifo_direction);
     } else {
         if (m_file) {
             descriptor = FileDescriptor::create(m_file.copy_ref());
@@ -189,10 +175,6 @@ off_t FileDescriptor::seek(off_t offset, int whence)
 
 ssize_t FileDescriptor::read(Process& process, byte* buffer, ssize_t count)
 {
-    if (is_fifo()) {
-        ASSERT(fifo_direction() == FIFO::Reader);
-        return m_fifo->read(buffer, count);
-    }
     if (m_file) {
         int nread = m_file->read(process, buffer, count);
         if (!m_file->is_seekable())
@@ -209,10 +191,6 @@ ssize_t FileDescriptor::read(Process& process, byte* buffer, ssize_t count)
 
 ssize_t FileDescriptor::write(Process& process, const byte* data, ssize_t size)
 {
-    if (is_fifo()) {
-        ASSERT(fifo_direction() == FIFO::Writer);
-        return m_fifo->write(data, size);
-    }
     if (m_file) {
         int nwritten = m_file->write(process, data, size);
         if (m_file->is_seekable())
@@ -229,10 +207,6 @@ ssize_t FileDescriptor::write(Process& process, const byte* data, ssize_t size)
 
 bool FileDescriptor::can_write(Process& process)
 {
-    if (is_fifo()) {
-        ASSERT(fifo_direction() == FIFO::Writer);
-        return m_fifo->can_write();
-    }
     if (m_file)
         return m_file->can_write(process);
     if (m_socket)
@@ -242,10 +216,6 @@ bool FileDescriptor::can_write(Process& process)
 
 bool FileDescriptor::can_read(Process& process)
 {
-    if (is_fifo()) {
-        ASSERT(fifo_direction() == FIFO::Reader);
-        return m_fifo->can_read();
-    }
     if (m_file)
         return m_file->can_read(process);
     if (m_socket)
@@ -374,22 +344,12 @@ bool FileDescriptor::is_fsfile() const
 
 KResultOr<String> FileDescriptor::absolute_path()
 {
-    if (is_fifo())
-        return String::format("fifo:%u", m_fifo.ptr());
     if (m_file)
         return m_file->absolute_path();
     if (is_socket())
         return String::format("socket:%x (role: %s)", m_socket.ptr(), to_string(m_socket_role));
     ASSERT(m_inode);
     return VFS::the().absolute_path(*m_inode);
-}
-
-FileDescriptor::FileDescriptor(FIFO& fifo, FIFO::Direction direction)
-    : m_is_blocking(true)
-    , m_fifo(fifo)
-    , m_fifo_direction(direction)
-{
-    m_fifo->open(direction);
 }
 
 InodeMetadata FileDescriptor::metadata() const
@@ -456,4 +416,16 @@ const SharedMemory* FileDescriptor::shared_memory() const
     if (!is_shared_memory())
         return nullptr;
     return static_cast<const SharedMemory*>(m_file.ptr());
+}
+
+bool FileDescriptor::is_fifo() const
+{
+    return m_file && m_file->is_fifo();
+}
+
+FIFO* FileDescriptor::fifo()
+{
+    if (!is_fifo())
+        return nullptr;
+    return static_cast<FIFO*>(m_file.ptr());
 }
