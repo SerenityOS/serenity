@@ -138,6 +138,10 @@ static inline Color lookup_color(unsigned color)
 
 void Terminal::escape$m(const ParamVector& params)
 {
+    if (params.is_empty()) {
+        m_current_attribute.reset();
+        return;
+    }
     if (params.size() == 3 && params[1] == 5) {
         if (params[0] == 38) {
             m_current_attribute.foreground_color = params[2];
