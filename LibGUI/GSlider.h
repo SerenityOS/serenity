@@ -28,12 +28,16 @@ protected:
     virtual void mousedown_event(GMouseEvent&) override;
     virtual void mousemove_event(GMouseEvent&) override;
     virtual void mouseup_event(GMouseEvent&) override;
+    virtual void leave_event(CEvent&) override;
 
 private:
+    void set_knob_hovered(bool);
+
     int m_value { 0 };
     int m_min { 0 };
     int m_max { 100 };
 
+    bool m_knob_hovered { false };
     bool m_dragging { false };
     int m_drag_origin_value { 0 };
     Point m_drag_origin;
