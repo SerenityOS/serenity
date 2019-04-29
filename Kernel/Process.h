@@ -175,6 +175,7 @@ public:
     int sys$setsockopt(const Syscall::SC_setsockopt_params*);
     int sys$restore_signal_mask(dword mask);
     int sys$create_thread(int(*)(void*), void*);
+    void sys$exit_thread(int code);
     int sys$rename(const char* oldpath, const char* newpath);
     int sys$systrace(pid_t);
 
