@@ -23,8 +23,6 @@ public:
     static Retained<FileDescriptor> create(RetainPtr<Socket>&&, SocketRole = SocketRole::None);
     static Retained<FileDescriptor> create(RetainPtr<Inode>&&);
     static Retained<FileDescriptor> create(RetainPtr<File>&&);
-    static Retained<FileDescriptor> create_pipe_writer(FIFO&);
-    static Retained<FileDescriptor> create_pipe_reader(FIFO&);
     ~FileDescriptor();
 
     Retained<FileDescriptor> clone();
@@ -80,8 +78,10 @@ public:
     Socket* socket() { return m_socket.ptr(); }
     const Socket* socket() const { return m_socket.ptr(); }
 
-    bool is_fifo() const { return m_fifo; }
+    bool is_fifo() const;
+    FIFO* fifo();
     FIFO::Direction fifo_direction() { return m_fifo_direction; }
+    void set_fifo_direction(Badge<FIFO>, FIFO::Direction direction) { m_fifo_direction = direction; }
 
     bool is_fsfile() const;
     bool is_shared_memory() const;
@@ -117,7 +117,6 @@ private:
     RetainPtr<Socket> m_socket;
     SocketRole m_socket_role { SocketRole::None };
 
-    RetainPtr<FIFO> m_fifo;
     FIFO::Direction m_fifo_direction { FIFO::Neither };
 
     bool m_closed { false };

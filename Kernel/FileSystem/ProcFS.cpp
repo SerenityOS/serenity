@@ -1,5 +1,6 @@
 #include "ProcFS.h"
 #include "Process.h"
+#include <Kernel/FileSystem/FileDescriptor.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/VM/MemoryManager.h>
 #include "StdLib.h"

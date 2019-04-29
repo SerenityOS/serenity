@@ -1,4 +1,5 @@
 #include <Kernel/FileSystem/FIFO.h>
+#include <Kernel/FileSystem/FileDescriptor.h>
 #include <Kernel/Lock.h>
 #include <AK/StdLibExtras.h>
 #include <AK/HashTable.h>
@@ -27,6 +28,14 @@ Retained<FIFO> FIFO::create(uid_t uid)
     return adopt(*new FIFO(uid));
 }
 
+Retained<FileDescriptor> FIFO::open_direction(FIFO::Direction direction)
+{
+    auto descriptor = FileDescriptor::create(this);
+    attach(direction);
+    descriptor->set_fifo_direction({ }, direction);
+    return descriptor;
+}
+
 FIFO::FIFO(uid_t uid)
     : m_uid(uid)
 {
@@ -40,7 +49,7 @@ FIFO::~FIFO()
     all_fifos().resource().remove(this);
 }
 
-void FIFO::open(Direction direction)
+void FIFO::attach(Direction direction)
 {
     if (direction == Reader) {
         ++m_readers;
@@ -55,7 +64,7 @@ void FIFO::open(Direction direction)
     }
 }
 
-void FIFO::close(Direction direction)
+void FIFO::detach(Direction direction)
 {
     if (direction == Reader) {
 #ifdef FIFO_DEBUG
@@ -72,17 +81,17 @@ void FIFO::close(Direction direction)
     }
 }
 
-bool FIFO::can_read() const
+bool FIFO::can_read(Process&) const
 {
     return !m_buffer.is_empty() || !m_writers;
 }
 
-bool FIFO::can_write() const
+bool FIFO::can_write(Process&) const
 {
     return m_buffer.bytes_in_write_buffer() < 4096;
 }
 
-ssize_t FIFO::read(byte* buffer, ssize_t size)
+ssize_t FIFO::read(Process&, byte* buffer, ssize_t size)
 {
     if (!m_writers && m_buffer.is_empty())
         return 0;
@@ -96,7 +105,7 @@ ssize_t FIFO::read(byte* buffer, ssize_t size)
     return nread;
 }
 
-ssize_t FIFO::write(const byte* buffer, ssize_t size)
+ssize_t FIFO::write(Process&, const byte* buffer, ssize_t size)
 {
     if (!m_readers)
         return 0;
@@ -104,4 +113,9 @@ ssize_t FIFO::write(const byte* buffer, ssize_t size)
     dbgprintf("fifo: write(%p, %u)\n", buffer, size);
 #endif
     return m_buffer.write(buffer, size);
+}
+
+String FIFO::absolute_path() const
+{
+    return String::format("fifo:%u", this);
 }

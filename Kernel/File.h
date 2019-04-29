@@ -1,10 +1,15 @@
 #pragma once
 
+#include <AK/AKString.h>
 #include <AK/Retainable.h>
+#include <AK/Retained.h>
 #include <AK/Types.h>
-#include <Kernel/FileSystem/FileDescriptor.h>
+#include <Kernel/KResult.h>
+#include <Kernel/LinearAddress.h>
 
+class FileDescriptor;
 class Process;
+class Region;
 
 class File : public Retainable<File> {
 public:
@@ -28,6 +33,7 @@ public:
     virtual bool is_seekable() const { return false; }
 
     virtual bool is_shared_memory() const { return false; }
+    virtual bool is_fifo() const { return false; }
     virtual bool is_device() const { return false; }
     virtual bool is_tty() const { return false; }
     virtual bool is_master_pty() const { return false; }

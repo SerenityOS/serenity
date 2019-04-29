@@ -3,6 +3,7 @@
 #include <Kernel/Devices/CharacterDevice.h>
 #include <Kernel/MousePacket.h>
 #include <Kernel/IRQHandler.h>
+#include <AK/CircularQueue.h>
 
 class PS2MouseDevice final : public IRQHandler, public CharacterDevice {
 public:
