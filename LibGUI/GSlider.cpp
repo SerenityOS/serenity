@@ -46,13 +46,10 @@ void GSlider::paint_event(GPaintEvent& event)
     GPainter painter(*this);
     painter.add_clip_rect(event.rect());
 
-    auto inner_rect = this->inner_rect();
-
-    Rect track_rect { inner_rect.x(), 0, inner_rect.width(), track_height() };
-    track_rect.center_vertically_within(inner_rect);
+    Rect track_rect { inner_rect().x(), 0, inner_rect().width(), track_height() };
+    track_rect.center_vertically_within(inner_rect());
 
     StylePainter::paint_frame(painter, track_rect, FrameShape::Panel, FrameShadow::Sunken, 1);
-
     StylePainter::paint_button(painter, knob_rect(), ButtonStyle::Normal, false, false);
 }
 
@@ -62,7 +59,12 @@ Rect GSlider::knob_rect() const
     float range_size = m_max - m_min;
     float adjusted_value = m_value - m_min;
     float relative_value = adjusted_value / range_size;
-    Rect rect { inner_rect.x() + (int)(relative_value * inner_rect.width()) - knob_width() / 2, 0, knob_width(), knob_height() };
+    Rect rect {
+        inner_rect.x() + (int)(relative_value * inner_rect.width()) - knob_width() / 2,
+        0,
+        knob_width(),
+        knob_height()
+    };
     rect.center_vertically_within(inner_rect);
     return rect;
 }
@@ -77,7 +79,6 @@ void GSlider::mousedown_event(GMouseEvent& event)
             return;
         }
     }
-
     return GWidget::mousedown_event(event);
 }
 
@@ -88,10 +89,9 @@ void GSlider::mousemove_event(GMouseEvent& event)
         float scrubbable_range = inner_rect().width();
         float value_steps_per_scrubbed_pixel = (m_max - m_min) / scrubbable_range;
         float new_value = m_drag_origin_value + (value_steps_per_scrubbed_pixel * delta);
-        set_value(new_value);
+        set_value((int)new_value);
         return;
     }
-
     return GWidget::mousemove_event(event);
 }
 
