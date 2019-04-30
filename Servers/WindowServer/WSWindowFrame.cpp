@@ -29,11 +29,11 @@ static const int s_close_button_bitmap_height = 9;
 static const char* s_minimize_button_bitmap_data = {
     "        "
     "        "
-    "##    ##"
-    "###  ###"
+    "        "
     " ###### "
     "  ####  "
     "   ##   "
+    "        "
     "        "
     "        "
 };
