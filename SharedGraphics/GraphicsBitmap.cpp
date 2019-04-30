@@ -20,8 +20,8 @@ GraphicsBitmap::GraphicsBitmap(Format format, const Size& size)
     size_t size_in_bytes = size.area() * sizeof(RGBA32);
     m_data = (RGBA32*)mmap(nullptr, size_in_bytes, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0);
     ASSERT(m_data && m_data != (void*)-1);
-    set_mmap_name(m_data, size_in_bytes, String::format("GraphicsBitmap [%dx%d]", width(), height()).characters());
     m_needs_munmap = true;
+    set_mmap_name(String::format("GraphicsBitmap [%dx%d]", width(), height()).characters());
 }
 
 Retained<GraphicsBitmap> GraphicsBitmap::create_wrapper(Format format, const Size& size, RGBA32* data)
@@ -83,3 +83,9 @@ GraphicsBitmap::~GraphicsBitmap()
     m_data = nullptr;
 }
 
+void GraphicsBitmap::set_mmap_name(const String& name)
+{
+    ASSERT(m_needs_munmap);
+    size_t size_in_bytes = m_size.area() * sizeof(RGBA32);
+    ::set_mmap_name(m_data, size_in_bytes, name.characters());
+}
