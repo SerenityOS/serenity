@@ -73,7 +73,7 @@ void VBForm::paint_event(GPaintEvent& event)
 
     for (int y = 0; y < height(); y += m_grid_size) {
         for (int x = 0; x < width(); x += m_grid_size) {
-            painter.set_pixel({ x, y }, Color::Black);
+            painter.set_pixel({ x, y }, Color::from_rgb(0x404040));
         }
     }
 }
