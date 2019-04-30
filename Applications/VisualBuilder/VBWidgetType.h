@@ -11,5 +11,6 @@ enum class VBWidgetType {
     GCheckBox,
     GScrollBar,
     GGroupBox,
+    GSlider,
     __Count
 };

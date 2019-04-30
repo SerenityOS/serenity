@@ -14,6 +14,9 @@ public:
     void set_range(int min, int max);
     void set_value(int);
 
+    void set_min(int min) { set_range(min, max()); }
+    void set_max(int max) { set_range(min(), max); }
+
     int track_height() const { return 2; }
     int knob_width() const { return 8; }
     int knob_height() const { return 20; }
