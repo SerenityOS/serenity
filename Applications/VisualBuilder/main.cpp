@@ -112,6 +112,13 @@ GWindow* make_toolbox_window()
         if (auto* form = VBForm::current())
             form->insert_widget(VBWidgetType::GProgressBar);
     };
+    auto* slider_button = new GButton(widget);
+    slider_button->set_tooltip("GSlider");
+    slider_button->set_icon(GraphicsBitmap::load_from_file("/res/icons/vbwidgets/slider.png"));
+    slider_button->on_click = [] (GButton&) {
+        if (auto* form = VBForm::current())
+            form->insert_widget(VBWidgetType::GSlider);
+    };
     auto* checkbox_button = new GButton(widget);
     checkbox_button->set_tooltip("GCheckBox");
     checkbox_button->set_icon(GraphicsBitmap::load_from_file("/res/icons/vbwidgets/checkbox.png"));
