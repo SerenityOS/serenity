@@ -12,6 +12,7 @@
 #include <LibGUI/GGroupBox.h>
 #include <LibGUI/GCheckBox.h>
 #include <LibGUI/GProgressBar.h>
+#include <LibGUI/GSlider.h>
 
 VBWidget::VBWidget(VBWidgetType type, VBForm& form)
     : m_type(type)
@@ -146,6 +147,12 @@ void VBWidget::setup_properties()
         VB_ADD_PROPERTY(GProgressBar, "min", min, set_min, int);
         VB_ADD_PROPERTY(GProgressBar, "max", max, set_max, int);
         VB_ADD_PROPERTY(GProgressBar, "value", value, set_value, int);
+    }
+
+    if (m_type == VBWidgetType::GSlider) {
+        VB_ADD_PROPERTY(GSlider, "min", min, set_min, int);
+        VB_ADD_PROPERTY(GSlider, "max", max, set_max, int);
+        VB_ADD_PROPERTY(GSlider, "value", value, set_value, int);
     }
 
     if (m_type == VBWidgetType::GTextEditor) {

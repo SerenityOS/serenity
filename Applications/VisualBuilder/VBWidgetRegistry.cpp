@@ -8,6 +8,7 @@
 #include <LibGUI/GCheckBox.h>
 #include <LibGUI/GScrollBar.h>
 #include <LibGUI/GGroupBox.h>
+#include <LibGUI/GSlider.h>
 
 static String to_class_name(VBWidgetType type)
 {
@@ -21,6 +22,7 @@ static String to_class_name(VBWidgetType type)
     case VBWidgetType::GCheckBox: return "GCheckBox";
     case VBWidgetType::GScrollBar: return "GScrollBar";
     case VBWidgetType::GGroupBox: return "GGroupBox";
+    case VBWidgetType::GSlider: return "GSlider";
     default: ASSERT_NOT_REACHED();
     }
 }
@@ -62,6 +64,12 @@ static GWidget* build_gwidget(VBWidgetType type, GWidget* parent)
         bar->set_range(0, 100);
         bar->set_value(50);
         return bar;
+    }
+    case VBWidgetType::GSlider: {
+        auto* slider = new GSlider(parent);
+        slider->set_range(0, 100);
+        slider->set_value(50);
+        return slider;
     }
     case VBWidgetType::GCheckBox: {
         auto* box = new GCheckBox(parent);
