@@ -304,18 +304,25 @@ ByteBuffer procfs$pid_stack(InodeIdentifier identifier)
     StringBuilder builder;
     process.for_each_thread([&] (Thread& thread) {
         builder.appendf("Thread %d:\n", thread.tid());
-        Vector<RecognizedSymbol> recognized_symbols;
-        if (auto* eip_ksym = ksymbolicate(thread.tss().eip))
-            recognized_symbols.append({ thread.tss().eip, eip_ksym });
+        Vector<RecognizedSymbol, 64> recognized_symbols;
+        recognized_symbols.append({ thread.tss().eip, ksymbolicate(thread.tss().eip) });
         for (dword* stack_ptr = (dword*)thread.frame_ptr(); process.validate_read_from_kernel(LinearAddress((dword)stack_ptr)); stack_ptr = (dword*)*stack_ptr) {
             dword retaddr = stack_ptr[1];
-            if (auto* ksym = ksymbolicate(retaddr))
-                recognized_symbols.append({ retaddr, ksym });
+            recognized_symbols.append({ retaddr, ksymbolicate(retaddr) });
         }
 
         for (auto& symbol : recognized_symbols) {
+            if (!symbol.address)
+                break;
+            if (!symbol.ksym) {
+                builder.appendf("%p\n", symbol.address);
+                continue;
+            }
             unsigned offset = symbol.address - symbol.ksym->address;
-            builder.appendf("%p  %s +%u\n", symbol.address, symbol.ksym->name, offset);
+            if (symbol.ksym->address == ksym_highest_address && offset > 4096)
+                builder.appendf("%p\n", symbol.address);
+            else
+                builder.appendf("%p  %s +%u\n", symbol.address, symbol.ksym->name, offset);
         }
         return IterationDecision::Continue;
     });
