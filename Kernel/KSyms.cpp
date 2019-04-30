@@ -30,6 +30,8 @@ const KSym* ksymbolicate(dword address)
 
 static void load_ksyms_from_data(const ByteBuffer& buffer)
 {
+    ksym_lowest_address = 0xffffffff;
+    ksym_highest_address = 0;
     auto* bufptr = (const char*)buffer.pointer();
     auto* start_of_name = bufptr;
     dword address = 0;
@@ -92,8 +94,7 @@ static void load_ksyms_from_data(const ByteBuffer& buffer)
     if (use_ksyms) {
         for (dword* stack_ptr = (dword*)ebp; current->process().validate_read_from_kernel(LinearAddress((dword)stack_ptr)); stack_ptr = (dword*)*stack_ptr) {
             dword retaddr = stack_ptr[1];
-            if (auto* ksym = ksymbolicate(retaddr))
-                recognized_symbols[recognized_symbol_count++] = { retaddr, ksym };
+            recognized_symbols[recognized_symbol_count++] = { retaddr, ksymbolicate(retaddr) };
         }
     } else {
         for (dword* stack_ptr = (dword*)ebp; current->process().validate_read_from_kernel(LinearAddress((dword)stack_ptr)); stack_ptr = (dword*)*stack_ptr) {
@@ -106,12 +107,21 @@ static void load_ksyms_from_data(const ByteBuffer& buffer)
     size_t bytes_needed = 0;
     for (int i = 0; i < recognized_symbol_count; ++i) {
         auto& symbol = recognized_symbols[i];
-        bytes_needed += strlen(symbol.ksym->name) + 8 + 16;
+        bytes_needed += (symbol.ksym ? strlen(symbol.ksym->name) : 0) + 8 + 16;
     }
     for (int i = 0; i < recognized_symbol_count; ++i) {
         auto& symbol = recognized_symbols[i];
+        if (!symbol.address)
+            break;
+        if (!symbol.ksym) {
+            dbgprintf("%p\n", symbol.address);
+            continue;
+        }
         unsigned offset = symbol.address - symbol.ksym->address;
-        dbgprintf("%p  %s +%u\n", symbol.address, symbol.ksym->name, offset);
+        if (symbol.ksym->address == ksym_highest_address && offset > 4096)
+            dbgprintf("%p\n", symbol.address);
+        else
+            dbgprintf("%p  %s +%u\n", symbol.address, symbol.ksym->name, offset);
     }
 }
 
