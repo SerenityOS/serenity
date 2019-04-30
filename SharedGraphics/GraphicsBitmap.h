@@ -33,6 +33,8 @@ public:
     bool has_alpha_channel() const { return m_format == Format::RGBA32; }
     Format format() const { return m_format; }
 
+    void set_mmap_name(const String&);
+
 private:
     GraphicsBitmap(Format, const Size&);
     GraphicsBitmap(Format, const Size&, RGBA32*);

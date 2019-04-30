@@ -1,6 +1,7 @@
 #include <SharedGraphics/PNGLoader.h>
 #include <AK/NetworkOrdered.h>
 #include <AK/MappedFile.h>
+#include <AK/FileSystemPath.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -105,7 +106,10 @@ RetainPtr<GraphicsBitmap> load_png(const String& path)
     MappedFile mapped_file(path);
     if (!mapped_file.is_valid())
         return nullptr;
-    return load_png_impl((const byte*)mapped_file.pointer(), mapped_file.size());
+    auto bitmap = load_png_impl((const byte*)mapped_file.pointer(), mapped_file.size());
+    if (bitmap)
+        bitmap->set_mmap_name(String::format("GraphicsBitmap [%dx%d] - Decoded PNG: %s", bitmap->width(), bitmap->height(), FileSystemPath(path).string().characters()));
+    return bitmap;
 }
 
 [[gnu::always_inline]] static inline byte paeth_predictor(int a, int b, int c)
