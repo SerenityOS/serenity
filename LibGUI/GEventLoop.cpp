@@ -341,6 +341,12 @@ bool GEventLoop::drain_messages_from_server()
         ByteBuffer extra_data;
         if (message.extra_size) {
             extra_data = ByteBuffer::create_uninitialized(message.extra_size);
+            fd_set rfds;
+            FD_ZERO(&rfds);
+            FD_SET(s_event_fd, &rfds);
+            struct timeval timeout { 1, 0 };
+            int rc = select(s_event_fd + 1, &rfds, nullptr, nullptr, &timeout);
+            ASSERT(rc == 1);
             int extra_nread = read(s_event_fd, extra_data.data(), extra_data.size());
             ASSERT(extra_nread == message.extra_size);
         }
