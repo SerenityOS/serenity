@@ -1,5 +1,6 @@
 #!/bin/sh
 
+export SDL_VIDEO_X11_DGAMOUSE=0
 ram_size=128
 
 if [ "$1" = "b" ]; then
