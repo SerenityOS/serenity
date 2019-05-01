@@ -65,7 +65,7 @@ void GButton::paint_event(GPaintEvent& event)
 
 void GButton::mousemove_event(GMouseEvent& event)
 {
-    if (event.buttons() == GMouseButton::Left) {
+    if (event.buttons() & GMouseButton::Left) {
         if (is_enabled()) {
             bool being_pressed = rect().contains(event.position());
             if (being_pressed != m_being_pressed) {
