@@ -1,6 +1,19 @@
-# Serenity
-
+<br>
+<br>
+<h1 align="center">
+<img src="Base/res/icons/serenity@2x.png" height=128 />
+<br>
+Serenity
+</h1>
+<p align="center">
 Graphical Unix-like operating system for x86 computers.
+<br/>
+<a href="https://www.youtube.com/channel/UC3ts8coMP645hZw9JSD3pqQ">Youtube</a> -
+<a href="https://www.patreon.com/serenityos">Patreon</a> -
+<a href="https://github.com/awesomekling/serenity/releases">Releases</a>
+</p>
+<br>
+<br>
 
 ## About
 
