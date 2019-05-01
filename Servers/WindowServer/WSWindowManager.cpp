@@ -188,16 +188,42 @@ void WSWindowManager::tick_clock()
     invalidate(menubar_rect());
 }
 
-bool WSWindowManager::set_wallpaper(const String& path)
+bool WSWindowManager::set_wallpaper(const String& path, Function<void(bool)>&& callback)
 {
-    auto bitmap = load_png(path);
-    if (!bitmap)
-        return false;
+    struct Context {
+        String path;
+        RetainPtr<GraphicsBitmap> bitmap;
+        Function<void(bool)> callback;
+    };
+    auto context = make<Context>();
+    context->path = path;
+    context->callback = move(callback);
 
+    int rc = create_thread([] (void* ctx) -> int {
+        OwnPtr<Context> context((Context*)ctx);
+        context->bitmap = load_png(context->path);
+        if (!context->bitmap) {
+            context->callback(false);
+            exit_thread(0);
+            return 0;
+        }
+        the().deferred_invoke([context = move(context)] (auto&) {
+            the().finish_setting_wallpaper(context->path, *context->bitmap);
+            context->callback(true);
+        });
+        exit_thread(0);
+        return 0;
+    }, context.leak_ptr());
+    ASSERT(rc == 0);
+
+    return true;
+}
+
+void WSWindowManager::finish_setting_wallpaper(const String& path, Retained<GraphicsBitmap>&& bitmap)
+{
     m_wallpaper_path = path;
     m_wallpaper = move(bitmap);
     invalidate();
-    return true;
 }
 
 void WSWindowManager::set_resolution(int width, int height)

@@ -332,11 +332,12 @@ void WSClientConnection::handle_request(const WSAPISetWindowOpacityRequest& requ
 
 void WSClientConnection::handle_request(const WSAPISetWallpaperRequest& request)
 {
-    bool success = WSWindowManager::the().set_wallpaper(request.wallpaper());
-    WSAPI_ServerMessage response;
-    response.type = WSAPI_ServerMessage::Type::DidSetWallpaper;
-    response.value = success;
-    post_message(response);
+    WSWindowManager::the().set_wallpaper(request.wallpaper(), [&] (bool success) {
+        WSAPI_ServerMessage response;
+        response.type = WSAPI_ServerMessage::Type::DidSetWallpaper;
+        response.value = success;
+        post_message(response);
+    });
 }
 
 void WSClientConnection::handle_request(const WSAPIGetWallpaperRequest&)
