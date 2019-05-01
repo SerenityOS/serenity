@@ -44,10 +44,11 @@ private:
 
 [[gnu::always_inline]] inline void CLock::lock()
 {
+    int tid = gettid();
     for (;;) {
         if (CAS(&m_lock, 1, 0) == 0) {
-            if (m_holder == -1 || m_holder == gettid()) {
-                m_holder = gettid();
+            if (m_holder == -1 || m_holder == tid) {
+                m_holder = tid;
                 ++m_level;
                 memory_barrier();
                 m_lock = 0;
