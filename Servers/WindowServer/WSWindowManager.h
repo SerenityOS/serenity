@@ -85,7 +85,7 @@ public:
 
     void set_resolution(int width, int height);
 
-    bool set_wallpaper(const String& path);
+    bool set_wallpaper(const String& path, Function<void(bool)>&& callback);
     String wallpaper_path() const { return m_wallpaper_path; }
 
     const WSCursor& active_cursor() const;
@@ -144,6 +144,7 @@ private:
     void tell_wm_listener_about_window_icon(WSWindow& listener, WSWindow&);
     void tell_wm_listener_about_window_rect(WSWindow& listener, WSWindow&);
     void pick_new_active_window();
+    void finish_setting_wallpaper(const String& path, Retained<GraphicsBitmap>&&);
 
     WSScreen& m_screen;
     Rect m_screen_rect;
