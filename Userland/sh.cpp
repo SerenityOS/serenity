@@ -12,6 +12,7 @@
 #include <sys/stat.h>
 #include <sys/utsname.h>
 #include <AK/FileSystemPath.h>
+#include <LibCore/CElapsedTimer.h>
 
 //#define SH_DEBUG
 
@@ -338,6 +339,19 @@ private:
     Vector<int, 32> m_fds;
 };
 
+struct CommandTimer {
+    CommandTimer()
+    {
+        timer.start();
+    }
+    ~CommandTimer()
+    {
+        dbgprintf("sh: command finished in %d ms\n", timer.elapsed());
+    }
+
+    CElapsedTimer timer;
+};
+
 static int runcmd(char* cmd)
 {
     if (cmd[0] == 0)
@@ -422,6 +436,8 @@ static int runcmd(char* cmd)
     tcgetattr(0, &trm);
 
     Vector<pid_t> children;
+
+    CommandTimer timer;
 
     for (int i = 0; i < subcommands.size(); ++i) {
         auto& subcommand = subcommands[i];
