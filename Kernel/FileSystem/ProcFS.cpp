@@ -229,8 +229,6 @@ ByteBuffer procfs$pid_vm(InodeIdentifier identifier)
             flags_builder.append('R');
         if (region->is_writable())
             flags_builder.append('W');
-        if (region->is_bitmap())
-            flags_builder.append('B');
         builder.appendf("%x -- %x    %x  %x   % 4s   %s\n",
             region->laddr().get(),
             region->laddr().offset(region->size() - 1).get(),
