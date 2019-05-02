@@ -33,7 +33,6 @@ Retained<VMObject> VMObject::clone()
 
 VMObject::VMObject(VMObject& other)
     : m_name(other.m_name)
-    , m_anonymous(other.m_anonymous)
     , m_inode_offset(other.m_inode_offset)
     , m_size(other.m_size)
     , m_inode(other.m_inode)
@@ -43,16 +42,14 @@ VMObject::VMObject(VMObject& other)
 }
 
 VMObject::VMObject(size_t size)
-    : m_anonymous(true)
-    , m_size(size)
+    : m_size(size)
 {
     MM.register_vmo(*this);
     m_physical_pages.resize(page_count());
 }
 
 VMObject::VMObject(PhysicalAddress paddr, size_t size)
-    : m_anonymous(true)
-    , m_size(size)
+    : m_size(size)
 {
     MM.register_vmo(*this);
     for (size_t i = 0; i < size; i += PAGE_SIZE) {
