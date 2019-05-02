@@ -77,6 +77,9 @@ int main(int argc, char** argv)
     game_menu->add_action(GAction::create("Expert", { Mod_Ctrl, Key_E }, [field] (const GAction&) {
         field->set_field_size(16, 30, 99);
     }));
+    game_menu->add_action(GAction::create("Madwoman", { Mod_Ctrl, Key_M }, [field] (const GAction&) {
+        field->set_field_size(32, 60, 350);
+    }));
     menubar->add_menu(move(game_menu));
 
     auto help_menu = make<GMenu>("Help");
