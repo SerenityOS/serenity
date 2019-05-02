@@ -60,7 +60,12 @@ void GButton::paint_event(GPaintEvent& event)
         content_rect.move_by(m_icon->width() + 4, 0);
         content_rect.set_width(content_rect.width() - m_icon->width() - 4);
     }
-    painter.draw_text(content_rect, m_caption, font, text_alignment(), foreground_color(), TextElision::Right);
+    if (is_enabled())
+        painter.draw_text(content_rect, m_caption, font, text_alignment(), foreground_color(), TextElision::Right);
+    else {
+        painter.draw_text(content_rect.translated(1, 1), m_caption, font, text_alignment(), Color::White, TextElision::Right);
+        painter.draw_text(content_rect, m_caption, font, text_alignment(), Color::from_rgb(0x808080), TextElision::Right);
+    }
 }
 
 void GButton::mousemove_event(GMouseEvent& event)
