@@ -204,6 +204,13 @@ void free(void* ptr)
 #ifdef MALLOC_DEBUG
             dbgprintf("Keeping block %p around for size class %u\n", block, good_size);
 #endif
+            if (allocator->blocks.tail() != block) {
+#ifdef MALLOC_DEBUG
+                dbgprintf("Moving block %p to tail of list for size class %u\n", block, good_size);
+#endif
+                allocator->blocks.remove(block);
+                allocator->blocks.append(block);
+            }
             return;
         }
 #ifdef MALLOC_DEBUG
