@@ -45,6 +45,9 @@ public:
     bool is_enabled() const { return m_enabled; }
     void set_enabled(bool);
 
+    bool updates_enabled() const { return m_updates_enabled; }
+    void set_updates_enabled(bool);
+
     virtual void event(CEvent&) override;
     virtual void paint_event(GPaintEvent&);
     virtual void resize_event(GResizeEvent&);
@@ -211,6 +214,7 @@ private:
     bool m_greedy_for_hits { false };
     bool m_enabled { true };
     bool m_layout_dirty { false };
+    bool m_updates_enabled { true };
 
     CElapsedTimer m_left_click_clock;
     CElapsedTimer m_right_click_clock;

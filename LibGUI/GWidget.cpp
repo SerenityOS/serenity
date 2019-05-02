@@ -283,6 +283,8 @@ void GWidget::leave_event(CEvent&)
 
 void GWidget::update()
 {
+    if (rect().is_empty())
+        return;
     update(rect());
 }
 
@@ -290,10 +292,17 @@ void GWidget::update(const Rect& rect)
 {
     if (!is_visible())
         return;
-    auto* w = window();
-    if (!w)
-        return;
-    w->update(rect.translated(window_relative_rect().location()));
+
+    GWindow* window = m_window;
+    GWidget* parent = parent_widget();
+    while (parent) {
+        if (!parent->updates_enabled())
+            return;
+        window = parent->m_window;
+        parent = parent->parent_widget();
+    }
+    if (window)
+        window->update(rect.translated(window_relative_rect().location()));
 }
 
 Rect GWidget::window_relative_rect() const
@@ -515,4 +524,13 @@ void GWidget::register_local_shortcut_action(Badge<GAction>, GAction& action)
 void GWidget::unregister_local_shortcut_action(Badge<GAction>, GAction& action)
 {
     m_local_shortcut_actions.remove(action.shortcut());
+}
+
+void GWidget::set_updates_enabled(bool enabled)
+{
+    if (m_updates_enabled == enabled)
+        return;
+    m_updates_enabled = enabled;
+    if (enabled)
+        update();
 }
