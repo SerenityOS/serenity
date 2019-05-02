@@ -326,7 +326,7 @@ private:
 
     RetainPtr<ProcessTracer> m_tracer;
 
-    Lock m_big_lock;
+    Lock m_big_lock { "Process" };
 };
 
 class ProcessInspectionHandle {

@@ -40,7 +40,6 @@ Retained<IDEDiskDevice> IDEDiskDevice::create()
 
 IDEDiskDevice::IDEDiskDevice()
     : IRQHandler(IRQ_FIXED_DISK)
-    , m_lock("IDEDiskDevice")
 {
     initialize();
 }

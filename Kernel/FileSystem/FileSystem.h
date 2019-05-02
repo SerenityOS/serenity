@@ -62,7 +62,7 @@ public:
 protected:
     FS();
 
-    mutable Lock m_lock;
+    mutable Lock m_lock { "FS" };
 
 private:
     unsigned m_fsid { 0 };
@@ -133,7 +133,7 @@ protected:
     void inode_contents_changed(off_t, ssize_t, const byte*);
     void inode_size_changed(size_t old_size, size_t new_size);
 
-    mutable Lock m_lock;
+    mutable Lock m_lock { "Inode" };
 
 private:
     FS& m_fs;

@@ -549,7 +549,6 @@ Process::Process(String&& name, uid_t uid, gid_t gid, pid_t ppid, RingLevel ring
     , m_executable(move(executable))
     , m_tty(tty)
     , m_ppid(ppid)
-    , m_big_lock("Big Process Lock")
 {
     dbgprintf("Process: New process PID=%u with name=%s\n", m_pid, m_name.characters());
 
