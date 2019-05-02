@@ -9,7 +9,6 @@ public:
     DoubleBuffer()
         : m_write_buffer(&m_buffer1)
         , m_read_buffer(&m_buffer2)
-        , m_lock("DoubleBuffer")
     {
     }
 
@@ -31,5 +30,5 @@ private:
     Vector<byte> m_buffer2;
     ssize_t m_read_buffer_index { 0 };
     bool m_empty { true };
-    Lock m_lock;
+    Lock m_lock { "DoubleBuffer" };
 };

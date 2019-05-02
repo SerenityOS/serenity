@@ -30,7 +30,7 @@ private:
     bool read_sectors(dword start_sector, word count, byte* buffer);
     bool write_sectors(dword start_sector, word count, const byte* data);
 
-    Lock m_lock;
+    Lock m_lock { "IDEDiskDevice" };
     word m_cylinders { 0 };
     word m_heads { 0 };
     word m_sectors_per_track { 0 };

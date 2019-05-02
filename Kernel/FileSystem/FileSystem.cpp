@@ -25,8 +25,7 @@ HashTable<Inode*>& all_inodes()
 }
 
 FS::FS()
-    : m_lock("FS")
-    , m_fsid(++s_lastFileSystemID)
+    : m_fsid(++s_lastFileSystemID)
 {
     all_fses().set(m_fsid, this);
 }
@@ -87,8 +86,7 @@ FS::DirectoryEntry::DirectoryEntry(const char* n, int nl, InodeIdentifier i, byt
 }
 
 Inode::Inode(FS& fs, unsigned index)
-    : m_lock("Inode")
-    , m_fs(fs)
+    : m_fs(fs)
     , m_index(index)
 {
     all_inodes().set(this);

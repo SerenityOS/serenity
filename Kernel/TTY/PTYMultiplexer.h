@@ -27,6 +27,6 @@ private:
     // ^CharacterDevice
     virtual const char* class_name() const override { return "PTYMultiplexer"; }
 
-    Lock m_lock;
+    Lock m_lock { "PTYMultiplexer" };
     Vector<unsigned> m_freelist;
 };

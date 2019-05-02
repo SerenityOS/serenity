@@ -55,5 +55,5 @@ private:
     bool m_allow_cpu_caching { true };
     RetainPtr<Inode> m_inode;
     Vector<RetainPtr<PhysicalPage>> m_physical_pages;
-    Lock m_paging_lock;
+    Lock m_paging_lock { "VMObject" };
 };
