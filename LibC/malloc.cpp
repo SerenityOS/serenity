@@ -123,9 +123,12 @@ void* malloc(size_t size)
 
     if (!allocator) {
         size_t real_size = sizeof(BigAllocationBlock) + size;
-        void* page_ptr = os_alloc(real_size);
-        BigAllocationBlock* bigalloc_header = new (page_ptr) BigAllocationBlock(real_size);
-        return &bigalloc_header->m_slot[0];
+        auto* block = (BigAllocationBlock*)os_alloc(real_size);
+        char buffer[64];
+        snprintf(buffer, sizeof(buffer), "malloc: BigAllocationBlock(%u)", good_size);
+        set_mmap_name(block, PAGE_SIZE, buffer);
+        new (block) BigAllocationBlock(real_size);
+        return &block->m_slot[0];
     }
     assert(allocator);
 
@@ -138,7 +141,7 @@ void* malloc(size_t size)
     if (!block) {
         block = (ChunkedBlock*)os_alloc(PAGE_SIZE);
         char buffer[64];
-        snprintf(buffer, sizeof(buffer), "malloc() page (%u)", good_size);
+        snprintf(buffer, sizeof(buffer), "malloc: ChunkedBlock(%u)", good_size);
         set_mmap_name(block, PAGE_SIZE, buffer);
         new (block) ChunkedBlock(good_size);
         allocator->append(block);
