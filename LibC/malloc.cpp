@@ -15,6 +15,8 @@
 #define MAGIC_BIGALLOC_HEADER 0x42697267
 #define PAGE_ROUND_UP(x) ((((size_t)(x)) + PAGE_SIZE-1) & (~(PAGE_SIZE-1)))
 
+static const size_t number_of_chunked_blocks_to_keep_around_per_size_class = 4;
+
 static bool s_log_malloc = false;
 static bool s_scrub_malloc = true;
 static bool s_scrub_free = true;
@@ -59,9 +61,7 @@ struct ChunkedBlock : public CommonHeader, public InlineLinkedListNode<ChunkedBl
     ChunkedBlock* m_prev { nullptr };
     ChunkedBlock* m_next { nullptr };
     FreelistEntry* m_freelist { nullptr };
-
     unsigned short m_free_chunks { 0 };
-
     unsigned char m_slot[0];
 
     void* chunk(int index)
@@ -74,9 +74,15 @@ struct ChunkedBlock : public CommonHeader, public InlineLinkedListNode<ChunkedBl
     size_t chunk_capacity() const { return (PAGE_SIZE - sizeof(ChunkedBlock)) / m_size; }
 };
 
-static InlineLinkedList<ChunkedBlock> g_allocators[num_size_classes];
+struct Allocator {
+    size_t size { 0 };
+    size_t block_count { 0 };
+    InlineLinkedList<ChunkedBlock> blocks;
+};
 
-static InlineLinkedList<ChunkedBlock>* allocator_for_size(size_t size, size_t& good_size)
+static Allocator g_allocators[num_size_classes];
+
+static Allocator* allocator_for_size(size_t size, size_t& good_size)
 {
     for (int i = 0; size_classes[i]; ++i) {
         if (size <= size_classes[i]) {
@@ -130,10 +136,10 @@ void* malloc(size_t size)
         new (block) BigAllocationBlock(real_size);
         return &block->m_slot[0];
     }
-    assert(allocator);
 
     ChunkedBlock* block = nullptr;
-    for (block = allocator->head(); block; block = block->next()) {
+
+    for (block = allocator->blocks.head(); block; block = block->next()) {
         if (block->free_chunks())
             break;
     }
@@ -144,7 +150,8 @@ void* malloc(size_t size)
         snprintf(buffer, sizeof(buffer), "malloc: ChunkedBlock(%u)", good_size);
         set_mmap_name(block, PAGE_SIZE, buffer);
         new (block) ChunkedBlock(good_size);
-        allocator->append(block);
+        allocator->blocks.append(block);
+        ++allocator->block_count;
     }
 
     --block->m_free_chunks;
@@ -169,26 +176,43 @@ void free(void* ptr)
     size_t magic = *(size_t*)page_base;
 
     if (magic == MAGIC_BIGALLOC_HEADER) {
-        auto* header = (BigAllocationBlock*)page_base;
-        os_free(header, header->m_size);
+        auto* block = (BigAllocationBlock*)page_base;
+        os_free(block, block->m_size);
         return;
     }
 
     assert(magic == MAGIC_PAGE_HEADER);
-    auto* page = (ChunkedBlock*)page_base;
+    auto* block = (ChunkedBlock*)page_base;
 
 #ifdef MALLOC_DEBUG
     dbgprintf("LibC: freeing %p in allocator %p (size=%u, used=%u)\n", ptr, page, page->bytes_per_chunk(), page->used_chunks());
 #endif
 
     if (s_scrub_free)
-        memset(ptr, FREE_SCRUB_BYTE, page->bytes_per_chunk());
+        memset(ptr, FREE_SCRUB_BYTE, block->bytes_per_chunk());
 
     auto* entry = (FreelistEntry*)ptr;
-    entry->next = page->m_freelist;
-    page->m_freelist = entry;
+    entry->next = block->m_freelist;
+    block->m_freelist = entry;
 
-    ++page->m_free_chunks;
+    ++block->m_free_chunks;
+
+    if (!block->used_chunks()) {
+        size_t good_size;
+        auto* allocator = allocator_for_size(block->m_size, good_size);
+        if (allocator->block_count < number_of_chunked_blocks_to_keep_around_per_size_class) {
+#ifdef MALLOC_DEBUG
+            dbgprintf("Keeping block %p around for size class %u\n", block, good_size);
+#endif
+            return;
+        }
+#ifdef MALLOC_DEBUG
+        dbgprintf("Releasing block %p for size class %u\n", block, good_size);
+#endif
+        allocator->blocks.remove(block);
+        --allocator->block_count;
+        os_free(block, PAGE_SIZE);
+    }
 }
 
 void* calloc(size_t count, size_t size)
