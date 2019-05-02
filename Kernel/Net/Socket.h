@@ -60,7 +60,7 @@ protected:
     void load_send_deadline();
 
 private:
-    Lock m_lock;
+    Lock m_lock { "Socket" };
     pid_t m_origin_pid { 0 };
     int m_domain { 0 };
     int m_type { 0 };
