@@ -115,11 +115,15 @@ static dword handle(RegisterDump& regs, dword function, dword arg1, dword arg2, 
         return current->process().sys$gethostname((char*)arg1, (size_t)arg2);
     case Syscall::SC_exit:
         cli();
+        if (auto* tracer = current->process().tracer())
+            tracer->did_syscall(function, arg1, arg2, arg3, 0);
         current->process().sys$exit((int)arg1);
         ASSERT_NOT_REACHED();
         return 0;
     case Syscall::SC_exit_thread:
         cli();
+        if (auto* tracer = current->process().tracer())
+            tracer->did_syscall(function, arg1, arg2, arg3, 0);
         current->process().sys$exit_thread((int)arg1);
         ASSERT_NOT_REACHED();
         break;
@@ -170,6 +174,8 @@ static dword handle(RegisterDump& regs, dword function, dword arg1, dword arg2, 
     case Syscall::SC_setgroups:
         return current->process().sys$setgroups((ssize_t)arg1, (const gid_t*)arg2);
     case Syscall::SC_sigreturn:
+        if (auto* tracer = current->process().tracer())
+            tracer->did_syscall(function, arg1, arg2, arg3, 0);
         current->process().sys$sigreturn();
         ASSERT_NOT_REACHED();
         return 0;
