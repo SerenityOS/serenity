@@ -490,3 +490,12 @@ void GWindow::set_icon_path(const String& path)
     message.text_length = path.length();
     GEventLoop::post_message_to_server(message);
 }
+
+void GWindow::start_wm_resize()
+{
+    WSAPI_ClientMessage message;
+    message.type = WSAPI_ClientMessage::Type::WM_StartWindowResize;
+    message.wm.client_id = GEventLoop::my_client_id();
+    message.wm.window_id = m_window_id;
+    GEventLoop::post_message_to_server(message);
+}

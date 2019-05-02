@@ -250,6 +250,9 @@ bool WSEventLoop::on_receive_from_client(int client_id, const WSAPI_ClientMessag
     case WSAPI_ClientMessage::Type::WM_SetWindowMinimized:
         post_event(client, make<WSWMAPISetWindowMinimizedRequest>(client_id, message.wm.client_id, message.wm.window_id, message.wm.minimized));
         break;
+    case WSAPI_ClientMessage::Type::WM_StartWindowResize:
+        post_event(client, make<WSWMAPIStartWindowResizeRequest>(client_id, message.wm.client_id, message.wm.window_id));
+        break;
     default:
         break;
     }

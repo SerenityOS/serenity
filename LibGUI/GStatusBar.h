@@ -3,6 +3,7 @@
 #include <LibGUI/GWidget.h>
 
 class GLabel;
+class GResizeCorner;
 
 class GStatusBar : public GWidget {
 public:
@@ -18,4 +19,5 @@ private:
     virtual void paint_event(GPaintEvent&) override;
 
     GLabel* m_label { nullptr };
+    GResizeCorner* m_corner { nullptr };
 };

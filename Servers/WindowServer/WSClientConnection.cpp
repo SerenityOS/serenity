@@ -48,6 +48,7 @@ WSClientConnection::WSClientConnection(int fd)
     WSAPI_ServerMessage message;
     message.type = WSAPI_ServerMessage::Type::Greeting;
     message.greeting.server_pid = getpid();
+    message.greeting.your_client_id = m_client_id;
     message.greeting.screen_rect = WSScreen::the().rect();
     post_message(message);
 }
@@ -645,6 +646,24 @@ void WSClientConnection::handle_request(const WSWMAPISetActiveWindowRequest& req
     WSWindowManager::the().move_to_front_and_make_active(window);
 }
 
+void WSClientConnection::handle_request(const WSWMAPIStartWindowResizeRequest& request)
+{
+    auto* client = WSClientConnection::from_client_id(request.target_client_id());
+    if (!client) {
+        post_error("WSWMAPIStartWindowResizeRequest: Bad client ID");
+        return;
+    }
+    auto it = client->m_windows.find(request.target_window_id());
+    if (it == client->m_windows.end()) {
+        post_error("WSWMAPIStartWindowResizeRequest: Bad window ID");
+        return;
+    }
+    auto& window = *(*it).value;
+    // FIXME: We are cheating a bit here by using the current cursor location and hard-coding the left button.
+    //        Maybe the client should be allowed to specify what initiated this request?
+    WSWindowManager::the().start_window_resize(window, WSScreen::the().cursor_location(), MouseButton::Left);
+}
+
 void WSClientConnection::handle_request(const WSWMAPISetWindowMinimizedRequest& request)
 {
     auto* client = WSClientConnection::from_client_id(request.target_client_id());
@@ -722,6 +741,8 @@ void WSClientConnection::on_request(const WSAPIClientRequest& request)
         return handle_request(static_cast<const WSWMAPISetActiveWindowRequest&>(request));
     case WSEvent::WMAPISetWindowMinimizedRequest:
         return handle_request(static_cast<const WSWMAPISetWindowMinimizedRequest&>(request));
+    case WSEvent::WMAPIStartWindowResizeRequest:
+        return handle_request(static_cast<const WSWMAPIStartWindowResizeRequest&>(request));
     case WSEvent::APIPopupMenuRequest:
         return handle_request(static_cast<const WSAPIPopupMenuRequest&>(request));
     case WSEvent::APIDismissMenuRequest:
