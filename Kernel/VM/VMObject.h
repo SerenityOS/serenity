@@ -22,7 +22,7 @@ public:
     Retained<VMObject> clone();
 
     ~VMObject();
-    bool is_anonymous() const { return m_anonymous; }
+    bool is_anonymous() const { return !m_inode; }
 
     Inode* inode() { return m_inode.ptr(); }
     const Inode* inode() const { return m_inode.ptr(); }
@@ -49,10 +49,9 @@ private:
     template<typename Callback> void for_each_region(Callback);
 
     String m_name;
-    bool m_anonymous { false };
+    bool m_allow_cpu_caching { true };
     off_t m_inode_offset { 0 };
     size_t m_size { 0 };
-    bool m_allow_cpu_caching { true };
     RetainPtr<Inode> m_inode;
     Vector<RetainPtr<PhysicalPage>> m_physical_pages;
     Lock m_paging_lock { "VMObject" };
