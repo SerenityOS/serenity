@@ -34,6 +34,10 @@ RetainPtr<WSCursor> WSCursor::create(WSStandardCursor standard_cursor)
         return WSWindowManager::the().resize_horizontally_cursor();
     case WSStandardCursor::ResizeVertical:
         return WSWindowManager::the().resize_vertically_cursor();
+    case WSStandardCursor::ResizeDiagonalTLBR:
+        return WSWindowManager::the().resize_diagonally_tlbr_cursor();
+    case WSStandardCursor::ResizeDiagonalBLTR:
+        return WSWindowManager::the().resize_diagonally_bltr_cursor();
     }
     ASSERT_NOT_REACHED();
 }

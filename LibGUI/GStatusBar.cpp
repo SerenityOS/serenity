@@ -3,6 +3,7 @@
 #include <LibGUI/GBoxLayout.h>
 #include <SharedGraphics/StylePainter.h>
 #include <LibGUI/GPainter.h>
+#include <LibGUI/GResizeCorner.h>
 
 GStatusBar::GStatusBar(GWidget* parent)
     : GWidget(parent)
@@ -17,6 +18,8 @@ GStatusBar::GStatusBar(GWidget* parent)
     m_label->set_frame_shape(FrameShape::Panel);
     m_label->set_frame_thickness(1);
     m_label->set_text_alignment(TextAlignment::CenterLeft);
+
+    m_corner = new GResizeCorner(this);
 }
 
 GStatusBar::~GStatusBar()

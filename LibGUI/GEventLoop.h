@@ -21,6 +21,7 @@ public:
     WSAPI_ServerMessage sync_request(const WSAPI_ClientMessage& request, WSAPI_ServerMessage::Type response_type);
 
     static pid_t server_pid() { return s_server_pid; }
+    static int my_client_id() { return s_my_client_id; }
 
     virtual void take_pending_events_from(CEventLoop& other) override
     {
@@ -59,6 +60,7 @@ private:
     void handle_menu_event(const WSAPI_ServerMessage&);
     void handle_window_entered_or_left_event(const WSAPI_ServerMessage&, GWindow&);
     void handle_wm_event(const WSAPI_ServerMessage&, GWindow&);
+    void handle_greeting(WSAPI_ServerMessage&);
     void connect_to_server();
 
     struct IncomingWSMessageBundle {
@@ -68,5 +70,6 @@ private:
 
     Vector<IncomingWSMessageBundle, 64> m_unprocessed_bundles;
     static pid_t s_server_pid;
-    static pid_t s_event_fd;
+    static int s_my_client_id;
+    static int s_event_fd;
 };

@@ -16,6 +16,8 @@ enum class GStandardCursor {
     IBeam,
     ResizeHorizontal,
     ResizeVertical,
+    ResizeDiagonalTLBR,
+    ResizeDiagonalBLTR,
 };
 
 class GWindow : public CObject {
@@ -70,6 +72,8 @@ public:
     void show();
     void hide();
     void close();
+
+    void start_wm_resize();
 
     GWidget* main_widget() { return m_main_widget; }
     const GWidget* main_widget() const { return m_main_widget; }

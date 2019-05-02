@@ -490,7 +490,7 @@ void WSWindowManager::start_window_drag(WSWindow& window, const WSMouseEvent& ev
     invalidate(window);
 }
 
-void WSWindowManager::start_window_resize(WSWindow& window, const WSMouseEvent& event)
+void WSWindowManager::start_window_resize(WSWindow& window, const Point& position, MouseButton button)
 {
     move_to_front_and_make_active(window);
     constexpr ResizeDirection direction_for_hot_area[3][3] = {
@@ -499,9 +499,9 @@ void WSWindowManager::start_window_resize(WSWindow& window, const WSMouseEvent& 
         { ResizeDirection::DownLeft, ResizeDirection::Down, ResizeDirection::DownRight },
     };
     Rect outer_rect = window.frame().rect();
-    ASSERT(outer_rect.contains(event.position()));
-    int window_relative_x = event.x() - outer_rect.x();
-    int window_relative_y = event.y() - outer_rect.y();
+    ASSERT(outer_rect.contains(position));
+    int window_relative_x = position.x() - outer_rect.x();
+    int window_relative_y = position.y() - outer_rect.y();
     int hot_area_row = min(2, window_relative_y / (outer_rect.height() / 3));
     int hot_area_column = min(2, window_relative_x / (outer_rect.width() / 3));
     m_resize_direction = direction_for_hot_area[hot_area_row][hot_area_column];
@@ -513,15 +513,20 @@ void WSWindowManager::start_window_resize(WSWindow& window, const WSMouseEvent& 
 #ifdef RESIZE_DEBUG
     printf("[WM] Begin resizing WSWindow{%p}\n", &window);
 #endif
-    m_resizing_mouse_button = event.button();
+    m_resizing_mouse_button = button;
     m_resize_window = window.make_weak_ptr();;
-    m_resize_origin = event.position();
+    m_resize_origin = position;
     m_resize_window_original_rect = window.rect();
 
     invalidate(window);
 }
 
-bool WSWindowManager::process_ongoing_window_drag(const WSMouseEvent& event, WSWindow*&)
+void WSWindowManager::start_window_resize(WSWindow& window, const WSMouseEvent& event)
+{
+    start_window_resize(window, event.position(), event.button());
+}
+
+bool WSWindowManager::process_ongoing_window_drag(const WSMouseEvent& event, WSWindow*& hovered_window)
 {
     if (!m_drag_window)
         return false;
@@ -530,6 +535,8 @@ bool WSWindowManager::process_ongoing_window_drag(const WSMouseEvent& event, WSW
         printf("[WM] Finish dragging WSWindow{%p}\n", m_drag_window.ptr());
 #endif
         invalidate(*m_drag_window);
+        if (m_drag_window->rect().contains(event.position()))
+            hovered_window = m_drag_window;
         m_drag_window = nullptr;
         return true;
     }
@@ -539,12 +546,14 @@ bool WSWindowManager::process_ongoing_window_drag(const WSMouseEvent& event, WSW
 #endif
         Point pos = m_drag_window_origin.translated(event.position() - m_drag_origin);
         m_drag_window->set_position_without_repaint(pos);
+        if (m_drag_window->rect().contains(event.position()))
+            hovered_window = m_drag_window;
         return true;
     }
     return false;
 }
 
-bool WSWindowManager::process_ongoing_window_resize(const WSMouseEvent& event, WSWindow*&)
+bool WSWindowManager::process_ongoing_window_resize(const WSMouseEvent& event, WSWindow*& hovered_window)
 {
     if (!m_resize_window)
         return false;
@@ -555,6 +564,8 @@ bool WSWindowManager::process_ongoing_window_resize(const WSMouseEvent& event, W
 #endif
         WSEventLoop::the().post_event(*m_resize_window, make<WSResizeEvent>(m_resize_window->rect(), m_resize_window->rect()));
         invalidate(*m_resize_window);
+        if (m_resize_window->rect().contains(event.position()))
+            hovered_window = m_resize_window;
         m_resize_window = nullptr;
         m_resizing_mouse_button = MouseButton::None;
         return true;
@@ -627,6 +638,9 @@ bool WSWindowManager::process_ongoing_window_resize(const WSMouseEvent& event, W
         new_rect.set_height(m_resize_window->base_size().height() + vertical_incs * m_resize_window->size_increment().height());
     }
 
+    if (new_rect.contains(event.position()))
+        hovered_window = m_resize_window;
+
     if (m_resize_window->rect() == new_rect)
         return true;
 #ifdef RESIZE_DEBUG
@@ -644,14 +658,14 @@ void WSWindowManager::set_cursor_tracking_button(WSButton* button)
     m_cursor_tracking_button = button ? button->make_weak_ptr() : nullptr;
 }
 
-void WSWindowManager::process_mouse_event(const WSMouseEvent& event, WSWindow*& event_window)
+void WSWindowManager::process_mouse_event(const WSMouseEvent& event, WSWindow*& hovered_window)
 {
-    event_window = nullptr;
+    hovered_window = nullptr;
 
-    if (process_ongoing_window_drag(event, event_window))
+    if (process_ongoing_window_drag(event, hovered_window))
         return;
 
-    if (process_ongoing_window_resize(event, event_window))
+    if (process_ongoing_window_resize(event, hovered_window))
         return;
 
     if (m_cursor_tracking_button)
@@ -687,7 +701,7 @@ void WSWindowManager::process_mouse_event(const WSMouseEvent& event, WSWindow*& 
             if (event.type() == WSEvent::MouseDown || event.type() == WSEvent::MouseUp)
                 close_current_menu();
         } else {
-            event_window = &window;
+            hovered_window = &window;
             auto translated_event = event.translated(-window.position());
             window.event(translated_event);
         }
@@ -708,10 +722,12 @@ void WSWindowManager::process_mouse_event(const WSMouseEvent& event, WSWindow*& 
         // In those cases, the event is swallowed by the window manager.
         if (window.type() == WSWindowType::Normal) {
             if (m_keyboard_modifiers == Mod_Logo && event.type() == WSEvent::MouseDown && event.button() == MouseButton::Left) {
+                hovered_window = &window;
                 start_window_drag(window, event);
                 return IterationDecision::Abort;
             }
             if (window.is_resizable() && m_keyboard_modifiers == Mod_Logo && event.type() == WSEvent::MouseDown && event.button() == MouseButton::Right && !window.is_blocked_by_modal_window()) {
+                hovered_window = &window;
                 start_window_resize(window, event);
                 return IterationDecision::Abort;
             }
@@ -720,7 +736,7 @@ void WSWindowManager::process_mouse_event(const WSMouseEvent& event, WSWindow*& 
         if (window.rect().contains(event.position())) {
             if (window.type() == WSWindowType::Normal && event.type() == WSEvent::MouseDown)
                 move_to_front_and_make_active(window);
-            event_window = &window;
+            hovered_window = &window;
             if (!window.global_cursor_tracking() && !windows_who_received_mouse_event_due_to_cursor_tracking.contains(&window)) {
                 auto translated_event = event.translated(-window.position());
                 window.event(translated_event);
@@ -987,9 +1003,9 @@ void WSWindowManager::draw_cursor()
 void WSWindowManager::event(CEvent& event)
 {
     if (static_cast<WSEvent&>(event).is_mouse_event()) {
-        WSWindow* event_window = nullptr;
-        process_mouse_event(static_cast<const WSMouseEvent&>(event), event_window);
-        set_hovered_window(event_window);
+        WSWindow* hovered_window = nullptr;
+        process_mouse_event(static_cast<const WSMouseEvent&>(event), hovered_window);
+        set_hovered_window(hovered_window);
         return;
     }
 
