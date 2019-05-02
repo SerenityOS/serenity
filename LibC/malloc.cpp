@@ -15,7 +15,7 @@
 #define MAGIC_BIGALLOC_HEADER 0x42697267
 #define PAGE_ROUND_UP(x) ((((size_t)(x)) + PAGE_SIZE-1) & (~(PAGE_SIZE-1)))
 
-static const size_t number_of_chunked_blocks_to_keep_around_per_size_class = 4;
+static const size_t number_of_chunked_blocks_to_keep_around_per_size_class = 32;
 
 static bool s_log_malloc = false;
 static bool s_scrub_malloc = true;
