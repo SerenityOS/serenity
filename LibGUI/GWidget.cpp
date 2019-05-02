@@ -293,6 +293,9 @@ void GWidget::update(const Rect& rect)
     if (!is_visible())
         return;
 
+    if (!updates_enabled())
+        return;
+
     GWindow* window = m_window;
     GWidget* parent = parent_widget();
     while (parent) {
