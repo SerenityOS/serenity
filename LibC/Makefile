@@ -17,6 +17,7 @@ LIBC_OBJS = \
        strings.o \
        mman.o \
        dirent.o \
+       malloc.o \
        stdlib.o \
        time.o \
        utsname.o \
