@@ -68,6 +68,7 @@ struct ChunkedBlock : public CommonHeader, public InlineLinkedListNode<ChunkedBl
     {
         return &m_slot[index * m_size];
     }
+    bool is_full() const { return m_free_chunks == 0; }
     size_t bytes_per_chunk() const { return m_size; }
     size_t free_chunks() const { return m_free_chunks; }
     size_t used_chunks() const { return chunk_capacity() - m_free_chunks; }
@@ -77,7 +78,8 @@ struct ChunkedBlock : public CommonHeader, public InlineLinkedListNode<ChunkedBl
 struct Allocator {
     size_t size { 0 };
     size_t block_count { 0 };
-    InlineLinkedList<ChunkedBlock> blocks;
+    InlineLinkedList<ChunkedBlock> usable_blocks;
+    InlineLinkedList<ChunkedBlock> full_blocks;
 };
 
 static Allocator g_allocators[num_size_classes];
@@ -139,7 +141,7 @@ void* malloc(size_t size)
 
     ChunkedBlock* block = nullptr;
 
-    for (block = allocator->blocks.head(); block; block = block->next()) {
+    for (block = allocator->usable_blocks.head(); block; block = block->next()) {
         if (block->free_chunks())
             break;
     }
@@ -150,21 +152,26 @@ void* malloc(size_t size)
         snprintf(buffer, sizeof(buffer), "malloc: ChunkedBlock(%u)", good_size);
         set_mmap_name(block, PAGE_SIZE, buffer);
         new (block) ChunkedBlock(good_size);
-        allocator->blocks.append(block);
+        allocator->usable_blocks.append(block);
         ++allocator->block_count;
     }
 
     --block->m_free_chunks;
     void* ptr = block->m_freelist;
     block->m_freelist = block->m_freelist->next;
+    if (block->is_full()) {
 #ifdef MALLOC_DEBUG
-    dbgprintf("LibC: allocated %p (chunk %d in allocator %p, size %u)\n", ptr, index, page, page->bytes_per_chunk());
+        dbgprintf("Block %p is now full in size class %u\n", block, good_size);
+#endif
+        allocator->usable_blocks.remove(block);
+        allocator->full_blocks.append(block);
+    }
+#ifdef MALLOC_DEBUG
+    dbgprintf("LibC: allocated %p (chunk %d in block %p, size %u)\n", ptr, index, block, block->bytes_per_chunk());
 #endif
     if (s_scrub_malloc)
         memset(ptr, MALLOC_SCRUB_BYTE, block->m_size);
     return ptr;
-
-    ASSERT_NOT_REACHED();
 }
 
 void free(void* ptr)
@@ -195,6 +202,16 @@ void free(void* ptr)
     entry->next = block->m_freelist;
     block->m_freelist = entry;
 
+    if (block->is_full()) {
+        size_t good_size;
+        auto* allocator = allocator_for_size(block->m_size, good_size);
+#ifdef MALLOC_DEBUG
+        dbgprintf("Block %p no longer full in size class %u\n", block, good_size);
+#endif
+        allocator->full_blocks.remove(block);
+        allocator->usable_blocks.prepend(block);
+    }
+
     ++block->m_free_chunks;
 
     if (!block->used_chunks()) {
@@ -204,19 +221,19 @@ void free(void* ptr)
 #ifdef MALLOC_DEBUG
             dbgprintf("Keeping block %p around for size class %u\n", block, good_size);
 #endif
-            if (allocator->blocks.tail() != block) {
+            if (allocator->usable_blocks.tail() != block) {
 #ifdef MALLOC_DEBUG
                 dbgprintf("Moving block %p to tail of list for size class %u\n", block, good_size);
 #endif
-                allocator->blocks.remove(block);
-                allocator->blocks.append(block);
+                allocator->usable_blocks.remove(block);
+                allocator->usable_blocks.append(block);
             }
             return;
         }
 #ifdef MALLOC_DEBUG
         dbgprintf("Releasing block %p for size class %u\n", block, good_size);
 #endif
-        allocator->blocks.remove(block);
+        allocator->usable_blocks.remove(block);
         --allocator->block_count;
         os_free(block, PAGE_SIZE);
     }
