@@ -24,6 +24,7 @@
 //#define COALESCING_DEBUG
 
 int GEventLoop::s_event_fd = -1;
+int GEventLoop::s_my_client_id = -1;
 pid_t GEventLoop::s_server_pid = -1;
 
 void GEventLoop::connect_to_server()
@@ -59,8 +60,7 @@ void GEventLoop::connect_to_server()
     request.type = WSAPI_ClientMessage::Type::Greeting;
     request.greeting.client_pid = getpid();
     auto response = sync_request(request, WSAPI_ServerMessage::Type::Greeting);
-    s_server_pid = response.greeting.server_pid;
-    GDesktop::the().did_receive_screen_rect(Badge<GEventLoop>(), response.greeting.screen_rect);
+    handle_greeting(response);
 }
 
 GEventLoop::GEventLoop()
@@ -235,8 +235,7 @@ void GEventLoop::process_unprocessed_bundles()
     for (auto& bundle : unprocessed_bundles) {
         auto& event = bundle.message;
         if (event.type == WSAPI_ServerMessage::Type::Greeting) {
-            s_server_pid = event.greeting.server_pid;
-            GDesktop::the().did_receive_screen_rect(Badge<GEventLoop>(), event.greeting.screen_rect);
+            handle_greeting(event);
             continue;
         }
 
@@ -401,4 +400,11 @@ WSAPI_ServerMessage GEventLoop::sync_request(const WSAPI_ClientMessage& request,
     success = wait_for_specific_event(response_type, response);
     ASSERT(success);
     return response;
+}
+
+void GEventLoop::handle_greeting(WSAPI_ServerMessage& message)
+{
+    s_server_pid = message.greeting.server_pid;
+    s_my_client_id = message.greeting.your_client_id;
+    GDesktop::the().did_receive_screen_rect(Badge<GEventLoop>(), message.greeting.screen_rect);
 }

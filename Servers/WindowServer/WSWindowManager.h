@@ -116,14 +116,16 @@ public:
     void tell_wm_listeners_window_icon_changed(WSWindow&);
     void tell_wm_listeners_window_rect_changed(WSWindow&);
 
+    void start_window_resize(WSWindow&, const Point&, MouseButton);
+    void start_window_resize(WSWindow&, const WSMouseEvent&);
+
 private:
-    void process_mouse_event(const WSMouseEvent&, WSWindow*& event_window);
-    bool process_ongoing_window_resize(const WSMouseEvent&, WSWindow*& event_window);
-    bool process_ongoing_window_drag(const WSMouseEvent&, WSWindow*& event_window);
+    void process_mouse_event(const WSMouseEvent&, WSWindow*& hovered_window);
+    bool process_ongoing_window_resize(const WSMouseEvent&, WSWindow*& hovered_window);
+    bool process_ongoing_window_drag(const WSMouseEvent&, WSWindow*& hovered_window);
     void handle_menu_mouse_event(WSMenu&, const WSMouseEvent&);
     void handle_menubar_mouse_event(const WSMouseEvent&);
     void handle_close_button_mouse_event(WSWindow&, const WSMouseEvent&);
-    void start_window_resize(WSWindow&, const WSMouseEvent&);
     void start_window_drag(WSWindow&, const WSMouseEvent&);
     void handle_client_request(const WSAPIClientRequest&);
     void set_hovered_window(WSWindow*);

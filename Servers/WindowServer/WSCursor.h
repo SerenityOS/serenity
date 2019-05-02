@@ -8,6 +8,8 @@ enum class WSStandardCursor {
     IBeam,
     ResizeHorizontal,
     ResizeVertical,
+    ResizeDiagonalTLBR,
+    ResizeDiagonalBLTR,
 };
 
 class WSCursor : public Retainable<WSCursor> {

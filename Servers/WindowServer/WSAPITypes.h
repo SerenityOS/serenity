@@ -55,6 +55,8 @@ enum class WSAPI_StandardCursor : unsigned char {
     IBeam,
     ResizeHorizontal,
     ResizeVertical,
+    ResizeDiagonalTLBR,
+    ResizeDiagonalBLTR,
 };
 
 enum WSAPI_WMEventMask : unsigned {
@@ -126,6 +128,7 @@ struct WSAPI_ServerMessage {
     union {
         struct {
             int server_pid;
+            int your_client_id;
             WSAPI_Rect screen_rect;
         } greeting;
         struct {
@@ -211,6 +214,7 @@ struct WSAPI_ClientMessage {
         SetWindowOverrideCursor,
         WM_SetActiveWindow,
         WM_SetWindowMinimized,
+        WM_StartWindowResize,
         PopupMenu,
         DismissMenu,
         SetWindowIcon,
