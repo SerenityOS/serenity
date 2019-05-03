@@ -113,6 +113,8 @@ void LocalSocket::attach(FileDescriptor& descriptor)
     case SocketRole::Connecting:
         ++m_connecting_fds_open;
         break;
+    default:
+        break;
     }
 }
 
@@ -130,6 +132,8 @@ void LocalSocket::detach(FileDescriptor& descriptor)
     case SocketRole::Connecting:
         ASSERT(m_connecting_fds_open);
         --m_connecting_fds_open;
+        break;
+    default:
         break;
     }
 }

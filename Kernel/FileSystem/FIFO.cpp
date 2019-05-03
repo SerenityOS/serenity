@@ -115,7 +115,7 @@ ssize_t FIFO::write(FileDescriptor&, const byte* buffer, ssize_t size)
     return m_buffer.write(buffer, size);
 }
 
-String FIFO::absolute_path() const
+String FIFO::absolute_path(FileDescriptor&) const
 {
     return String::format("fifo:%u", this);
 }

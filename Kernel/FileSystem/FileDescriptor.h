@@ -20,9 +20,8 @@ class SharedMemory;
 
 class FileDescriptor : public Retainable<FileDescriptor> {
 public:
-    static Retained<FileDescriptor> create(RetainPtr<Socket>&&, SocketRole = SocketRole::None);
     static Retained<FileDescriptor> create(RetainPtr<Inode>&&);
-    static Retained<FileDescriptor> create(RetainPtr<File>&&);
+    static Retained<FileDescriptor> create(RetainPtr<File>&&, SocketRole = SocketRole::None);
     ~FileDescriptor();
 
     Retained<FileDescriptor> clone();
@@ -74,9 +73,9 @@ public:
     dword file_flags() const { return m_file_flags; }
     void set_file_flags(dword flags) { m_file_flags = flags; }
 
-    bool is_socket() const { return m_socket; }
-    Socket* socket() { return m_socket.ptr(); }
-    const Socket* socket() const { return m_socket.ptr(); }
+    bool is_socket() const;
+    Socket* socket();
+    const Socket* socket() const;
 
     bool is_fifo() const;
     FIFO* fifo();
@@ -99,9 +98,8 @@ public:
 
 private:
     friend class VFS;
-    FileDescriptor(RetainPtr<Socket>&&, SocketRole);
+    FileDescriptor(RetainPtr<File>&&, SocketRole);
     explicit FileDescriptor(RetainPtr<Inode>&&);
-    explicit FileDescriptor(RetainPtr<File>&&);
     FileDescriptor(FIFO&, FIFO::Direction);
 
     RetainPtr<Inode> m_inode;
@@ -114,7 +112,6 @@ private:
     bool m_is_blocking { true };
     dword m_file_flags { 0 };
 
-    RetainPtr<Socket> m_socket;
     SocketRole m_socket_role { SocketRole::None };
 
     FIFO::Direction m_fifo_direction { FIFO::Neither };
