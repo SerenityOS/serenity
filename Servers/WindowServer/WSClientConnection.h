@@ -77,6 +77,7 @@ private:
     void handle_request(const WSWMAPIStartWindowResizeRequest&);
     void handle_request(const WSAPIPopupMenuRequest&);
     void handle_request(const WSAPIDismissMenuRequest&);
+    void handle_request(const WSAPISetWindowHasAlphaChannelRequest&);
 
     void post_error(const String&);
 

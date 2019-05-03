@@ -386,8 +386,23 @@ void GWindow::set_automatic_cursor_tracking_widget(GWidget* widget)
 
 void GWindow::set_has_alpha_channel(bool value)
 {
-    ASSERT(!m_window_id);
+    if (m_has_alpha_channel == value)
+        return;
     m_has_alpha_channel = value;
+    if (!m_window_id)
+        return;
+
+    m_pending_paint_event_rects.clear();
+    m_back_bitmap = nullptr;
+    m_front_bitmap = nullptr;
+
+    WSAPI_ClientMessage message;
+    message.type = WSAPI_ClientMessage::Type::SetWindowHasAlphaChannel;
+    message.window_id = m_window_id;
+    message.value = value;
+    GEventLoop::current().sync_request(message, WSAPI_ServerMessage::DidSetWindowHasAlphaChannel);
+
+    update();
 }
 
 void GWindow::set_double_buffering_enabled(bool value)

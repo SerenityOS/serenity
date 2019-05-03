@@ -116,7 +116,7 @@ int main(int argc, char** argv)
     };
 
     slider->set_range(0, 100);
-    slider->set_value(80);
+    slider->set_value(100);
 
     auto menubar = make<GMenuBar>();
 
