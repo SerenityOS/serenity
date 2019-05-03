@@ -11,9 +11,9 @@
 #include <AK/Vector.h>
 
 class Alarm;
+class FileDescriptor;
 class Process;
 class Region;
-class Socket;
 
 enum class ShouldUnblockThread { No = 0, Yes };
 
@@ -86,12 +86,13 @@ public:
 
     void sleep(dword ticks);
     void block(Thread::State);
+    void block(Thread::State, FileDescriptor&);
     void unblock();
 
     void set_wakeup_time(qword t) { m_wakeup_time = t; }
     qword wakeup_time() const { return m_wakeup_time; }
     void snooze_until(Alarm&);
-    KResult wait_for_connect(Socket&);
+    KResult wait_for_connect(FileDescriptor&);
 
     const FarPtr& far_ptr() const { return m_far_ptr; }
 
@@ -115,8 +116,6 @@ public:
     FPUState& fpu_state() { return *m_fpu_state; }
     bool has_used_fpu() const { return m_has_used_fpu; }
     void set_has_used_fpu(bool b) { m_has_used_fpu = b; }
-
-    void set_blocked_socket(Socket*);
 
     void set_default_signal_dispositions();
     void push_value_on_stack(dword);
@@ -148,10 +147,9 @@ private:
     void* m_kernel_stack { nullptr };
     void* m_kernel_stack_for_signal_handler { nullptr };
     pid_t m_waitee_pid { -1 };
-    int m_blocked_fd { -1 };
+    RetainPtr<FileDescriptor> m_blocked_descriptor;
     timeval m_select_timeout;
     SignalActionData m_signal_action_data[32];
-    RetainPtr<Socket> m_blocked_socket;
     Region* m_signal_stack_user_region { nullptr };
     Alarm* m_snoozing_alarm { nullptr };
     Vector<int> m_select_read_fds;

@@ -11,6 +11,8 @@
 enum class SocketRole { None, Listener, Accepted, Connected, Connecting };
 enum class ShouldBlock { No = 0, Yes = 1 };
 
+class FileDescriptor;
+
 class Socket : public Retainable<Socket> {
 public:
     static KResultOr<Retained<Socket>> create(int domain, int type, int protocol);
@@ -26,18 +28,18 @@ public:
     KResult listen(int backlog);
 
     virtual KResult bind(const sockaddr*, socklen_t) = 0;
-    virtual KResult connect(const sockaddr*, socklen_t, ShouldBlock) = 0;
+    virtual KResult connect(FileDescriptor&, const sockaddr*, socklen_t, ShouldBlock) = 0;
     virtual bool get_address(sockaddr*, socklen_t*) = 0;
     virtual bool is_local() const { return false; }
     virtual bool is_ipv4() const { return false; }
-    virtual void attach_fd(SocketRole) = 0;
-    virtual void detach_fd(SocketRole) = 0;
-    virtual bool can_read(SocketRole) const = 0;
-    virtual ssize_t read(SocketRole, byte*, ssize_t) = 0;
-    virtual ssize_t write(SocketRole, const byte*, ssize_t) = 0;
-    virtual bool can_write(SocketRole) const = 0;
-    virtual ssize_t sendto(const void*, size_t, int flags, const sockaddr*, socklen_t) = 0;
-    virtual ssize_t recvfrom(void*, size_t, int flags, sockaddr*, socklen_t*) = 0;
+    virtual void attach(FileDescriptor&) = 0;
+    virtual void detach(FileDescriptor&) = 0;
+    virtual bool can_read(FileDescriptor&) const = 0;
+    virtual ssize_t read(FileDescriptor&, byte*, ssize_t) = 0;
+    virtual ssize_t write(FileDescriptor&, const byte*, ssize_t) = 0;
+    virtual bool can_write(FileDescriptor&) const = 0;
+    virtual ssize_t sendto(FileDescriptor&, const void*, size_t, int flags, const sockaddr*, socklen_t) = 0;
+    virtual ssize_t recvfrom(FileDescriptor&, void*, size_t, int flags, sockaddr*, socklen_t*) = 0;
 
     KResult setsockopt(int level, int option, const void*, socklen_t);
     KResult getsockopt(int level, int option, void*, socklen_t*);
