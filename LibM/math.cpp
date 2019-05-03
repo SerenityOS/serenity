@@ -26,4 +26,69 @@ double ldexp(double, int exp)
     ASSERT_NOT_REACHED();
 }
 
+double tanh(double)
+{
+    ASSERT_NOT_REACHED();
+}
+
+double tan(double)
+{
+    ASSERT_NOT_REACHED();
+}
+
+double sqrt(double)
+{
+    ASSERT_NOT_REACHED();
+}
+
+double sinh(double)
+{
+    ASSERT_NOT_REACHED();
+}
+
+double log10(double)
+{
+    ASSERT_NOT_REACHED();
+}
+
+double log(double)
+{
+    ASSERT_NOT_REACHED();
+}
+
+double fmod(double, double)
+{
+    ASSERT_NOT_REACHED();
+}
+
+double exp(double)
+{
+    ASSERT_NOT_REACHED();
+}
+
+double cosh(double)
+{
+    ASSERT_NOT_REACHED();
+}
+
+double atan2(double, double)
+{
+    ASSERT_NOT_REACHED();
+}
+
+double atan(double)
+{
+    ASSERT_NOT_REACHED();
+}
+
+double asin(double)
+{
+    ASSERT_NOT_REACHED();
+}
+
+double acos(double)
+{
+    ASSERT_NOT_REACHED();
+}
+
 }
