@@ -364,10 +364,10 @@ int access(const char* pathname, int mode)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-int mknod(const char* pathname, mode_t, dev_t)
+int mknod(const char* pathname, mode_t mode, dev_t dev)
 {
-    (void) pathname;
-    ASSERT_NOT_REACHED();
+    int rc = syscall(SC_mknod, pathname, mode, dev);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
 long fpathconf(int fd, int name)

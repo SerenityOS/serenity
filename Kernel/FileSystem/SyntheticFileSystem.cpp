@@ -138,7 +138,7 @@ InodeIdentifier SynthFS::root_inode() const
     return { fsid(), 1 };
 }
 
-RetainPtr<Inode> SynthFS::create_inode(InodeIdentifier parentInode, const String& name, mode_t mode, off_t size, int& error)
+RetainPtr<Inode> SynthFS::create_inode(InodeIdentifier parentInode, const String& name, mode_t mode, off_t size, dev_t, int& error)
 {
     (void) parentInode;
     (void) name;

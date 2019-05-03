@@ -101,6 +101,7 @@
     __ENUMERATE_SYSCALL(ftruncate) \
     __ENUMERATE_SYSCALL(systrace) \
     __ENUMERATE_SYSCALL(exit_thread) \
+    __ENUMERATE_SYSCALL(mknod) \
 
 
 namespace Syscall {
