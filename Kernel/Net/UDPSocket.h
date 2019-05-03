@@ -14,6 +14,7 @@ public:
 
 private:
     explicit UDPSocket(int protocol);
+    virtual const char* class_name() const override { return "UDPSocket"; }
 
     virtual int protocol_receive(const ByteBuffer&, void* buffer, size_t buffer_size, int flags, sockaddr* addr, socklen_t* addr_length) override;
     virtual int protocol_send(const void*, int) override;

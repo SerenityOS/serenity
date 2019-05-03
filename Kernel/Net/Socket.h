@@ -5,6 +5,7 @@
 #include <AK/RetainPtr.h>
 #include <AK/HashTable.h>
 #include <AK/Vector.h>
+#include <Kernel/File.h>
 #include <Kernel/UnixTypes.h>
 #include <Kernel/KResult.h>
 
@@ -13,10 +14,10 @@ enum class ShouldBlock { No = 0, Yes = 1 };
 
 class FileDescriptor;
 
-class Socket : public Retainable<Socket> {
+class Socket : public File {
 public:
     static KResultOr<Retained<Socket>> create(int domain, int type, int protocol);
-    virtual ~Socket();
+    virtual ~Socket() override;
 
     int domain() const { return m_domain; }
     int type() const { return m_type; }
@@ -34,10 +35,6 @@ public:
     virtual bool is_ipv4() const { return false; }
     virtual void attach(FileDescriptor&) = 0;
     virtual void detach(FileDescriptor&) = 0;
-    virtual bool can_read(FileDescriptor&) const = 0;
-    virtual ssize_t read(FileDescriptor&, byte*, ssize_t) = 0;
-    virtual ssize_t write(FileDescriptor&, const byte*, ssize_t) = 0;
-    virtual bool can_write(FileDescriptor&) const = 0;
     virtual ssize_t sendto(FileDescriptor&, const void*, size_t, int flags, const sockaddr*, socklen_t) = 0;
     virtual ssize_t recvfrom(FileDescriptor&, void*, size_t, int flags, sockaddr*, socklen_t*) = 0;
 
@@ -53,6 +50,8 @@ public:
 
     Lock& lock() { return m_lock; }
 
+    virtual String absolute_path(FileDescriptor&) const override;
+
 protected:
     Socket(int domain, int type, int protocol);
 
@@ -61,7 +60,11 @@ protected:
     void load_receive_deadline();
     void load_send_deadline();
 
+    virtual const char* class_name() const override { return "Socket"; }
+
 private:
+    virtual bool is_socket() const final { return true; }
+
     Lock m_lock { "Socket" };
     pid_t m_origin_pid { 0 };
     int m_domain { 0 };
