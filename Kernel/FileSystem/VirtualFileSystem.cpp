@@ -195,6 +195,32 @@ KResultOr<Retained<FileDescriptor>> VFS::open(StringView path, int options, mode
     return FileDescriptor::create(*inode);
 }
 
+KResult VFS::mknod(StringView path, mode_t mode, dev_t dev, Inode& base)
+{
+    if (!is_regular_file(mode) && !is_block_device(mode) && !is_character_device(mode) && !is_fifo(mode) && !is_socket(mode))
+        return KResult(-EINVAL);
+
+    RetainPtr<Inode> parent_inode;
+    auto existing_file_or_error = resolve_path_to_inode(path, base, &parent_inode);
+    if (!existing_file_or_error.is_error())
+        return KResult(-EEXIST);
+    if (!parent_inode)
+        return KResult(-ENOENT);
+    if (existing_file_or_error.error() != -ENOENT)
+        return existing_file_or_error.error();
+    if (!parent_inode->metadata().may_write(current->process()))
+        return KResult(-EACCES);
+
+    FileSystemPath p(path);
+    dbgprintf("VFS::mknod: '%s' mode=%o dev=%u in %u:%u\n", p.basename().characters(), mode, dev, parent_inode->fsid(), parent_inode->index());
+    int error;
+    auto new_file = parent_inode->fs().create_inode(parent_inode->identifier(), p.basename(), mode, 0, dev, error);
+    if (!new_file)
+        return KResult(error);
+
+    return KSuccess;
+}
+
 KResultOr<Retained<FileDescriptor>> VFS::create(StringView path, int options, mode_t mode, Inode& base)
 {
     (void)options;
@@ -218,7 +244,7 @@ KResultOr<Retained<FileDescriptor>> VFS::create(StringView path, int options, mo
     FileSystemPath p(path);
     dbgprintf("VFS::create_file: '%s' in %u:%u\n", p.basename().characters(), parent_inode->fsid(), parent_inode->index());
     int error;
-    auto new_file = parent_inode->fs().create_inode(parent_inode->identifier(), p.basename(), mode, 0, error);
+    auto new_file = parent_inode->fs().create_inode(parent_inode->identifier(), p.basename(), mode, 0, 0, error);
     if (!new_file)
         return KResult(error);
 
@@ -469,7 +495,7 @@ KResult VFS::symlink(StringView target, StringView linkpath, Inode& base)
     FileSystemPath p(linkpath);
     dbgprintf("VFS::symlink: '%s' (-> '%s') in %u:%u\n", p.basename().characters(), target.characters(), parent_inode->fsid(), parent_inode->index());
     int error;
-    auto new_file = parent_inode->fs().create_inode(parent_inode->identifier(), p.basename(), 0120644, 0, error);
+    auto new_file = parent_inode->fs().create_inode(parent_inode->identifier(), p.basename(), 0120644, 0, 0, error);
     if (!new_file)
         return KResult(error);
     ssize_t nwritten = new_file->write_bytes(0, target.length(), (const byte*)target.characters(), nullptr);

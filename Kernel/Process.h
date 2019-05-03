@@ -178,7 +178,7 @@ public:
     void sys$exit_thread(int code);
     int sys$rename(const char* oldpath, const char* newpath);
     int sys$systrace(pid_t);
-
+    int sys$mknod(const char* pathname, mode_t, dev_t);
     int sys$create_shared_buffer(pid_t peer_pid, int, void** buffer);
     void* sys$get_shared_buffer(int shared_buffer_id);
     int sys$release_shared_buffer(int shared_buffer_id);

@@ -265,6 +265,8 @@ static dword handle(RegisterDump& regs, dword function, dword arg1, dword arg2, 
         return current->process().sys$ftruncate((int)arg1, (off_t)arg2);
     case Syscall::SC_systrace:
         return current->process().sys$systrace((pid_t)arg1);
+    case Syscall::SC_mknod:
+        return current->process().sys$mknod((const char*)arg1, (mode_t)arg2, (dev_t)arg3);
     default:
         kprintf("<%u> int0x82: Unknown function %u requested {%x, %x, %x}\n", current->process().pid(), function, arg1, arg2, arg3);
         break;
