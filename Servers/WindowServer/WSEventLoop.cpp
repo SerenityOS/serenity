@@ -244,6 +244,9 @@ bool WSEventLoop::on_receive_from_client(int client_id, const WSAPI_ClientMessag
     case WSAPI_ClientMessage::Type::SetWindowOverrideCursor:
         post_event(client, make<WSAPISetWindowOverrideCursorRequest>(client_id, message.window_id, (WSStandardCursor)message.cursor.cursor));
         break;
+    case WSAPI_ClientMessage::SetWindowHasAlphaChannel:
+        post_event(client, make<WSAPISetWindowHasAlphaChannelRequest>(client_id, message.window_id, message.value));
+        break;
     case WSAPI_ClientMessage::Type::WM_SetActiveWindow:
         post_event(client, make<WSWMAPISetActiveWindowRequest>(client_id, message.wm.client_id, message.wm.window_id));
         break;

@@ -891,6 +891,7 @@ void Terminal::set_opacity(float opacity)
 {
     if (m_opacity == opacity)
         return;
+    window()->set_has_alpha_channel(opacity < 1);
     m_opacity = opacity;
     force_repaint();
 }
