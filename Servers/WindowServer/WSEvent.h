@@ -60,6 +60,7 @@ public:
         APISetWallpaperRequest,
         APIGetWallpaperRequest,
         APISetWindowOverrideCursorRequest,
+        APISetWindowHasAlphaChannelRequest,
         WMAPISetActiveWindowRequest,
         WMAPISetWindowMinimizedRequest,
         WMAPIStartWindowResizeRequest,
@@ -385,6 +386,23 @@ public:
 private:
     int m_window_id { 0 };
     WSStandardCursor m_cursor { WSStandardCursor::None };
+};
+
+class WSAPISetWindowHasAlphaChannelRequest final : public WSAPIClientRequest {
+public:
+    explicit WSAPISetWindowHasAlphaChannelRequest(int client_id, int window_id, bool value)
+        : WSAPIClientRequest(WSEvent::APISetWindowHasAlphaChannelRequest, client_id)
+        , m_window_id(window_id)
+        , m_value(value)
+    {
+    }
+
+    int window_id() const { return m_window_id; }
+    bool value() const { return m_value; }
+
+private:
+    int m_window_id { 0 };
+    bool m_value { 0 };
 };
 
 class WSAPISetWallpaperRequest final : public WSAPIClientRequest {

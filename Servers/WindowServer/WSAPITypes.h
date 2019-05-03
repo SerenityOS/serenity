@@ -103,6 +103,7 @@ struct WSAPI_ServerMessage {
         DidSetWindowBackingStore,
         DidSetWallpaper,
         DidGetWallpaper,
+        DidSetWindowHasAlphaChannel,
         ScreenRectChanged,
         WM_WindowRemoved,
         WM_WindowStateChanged,
@@ -218,6 +219,7 @@ struct WSAPI_ClientMessage {
         PopupMenu,
         DismissMenu,
         SetWindowIcon,
+        SetWindowHasAlphaChannel,
     };
     Type type { Invalid };
     int window_id { -1 };

@@ -629,6 +629,24 @@ void WSClientConnection::handle_request(const WSAPISetWindowOverrideCursorReques
     window.set_override_cursor(WSCursor::create(request.cursor()));
 }
 
+void WSClientConnection::handle_request(const WSAPISetWindowHasAlphaChannelRequest& request)
+{
+    int window_id = request.window_id();
+    auto it = m_windows.find(window_id);
+    if (it == m_windows.end()) {
+        post_error("WSAPISetWindowHasAlphaChannelRequest: Bad window ID");
+        return;
+    }
+    auto& window = *(*it).value;
+    window.set_has_alpha_channel(request.value());
+
+    WSAPI_ServerMessage response;
+    response.type = WSAPI_ServerMessage::Type::DidSetWindowHasAlphaChannel;
+    response.window_id = window_id;
+    response.value = request.value();
+    post_message(response);
+}
+
 void WSClientConnection::handle_request(const WSWMAPISetActiveWindowRequest& request)
 {
     auto* client = WSClientConnection::from_client_id(request.target_client_id());
@@ -747,6 +765,8 @@ void WSClientConnection::on_request(const WSAPIClientRequest& request)
         return handle_request(static_cast<const WSAPIPopupMenuRequest&>(request));
     case WSEvent::APIDismissMenuRequest:
         return handle_request(static_cast<const WSAPIDismissMenuRequest&>(request));
+    case WSEvent::APISetWindowHasAlphaChannelRequest:
+        return handle_request(static_cast<const WSAPISetWindowHasAlphaChannelRequest&>(request));
     default:
         break;
     }

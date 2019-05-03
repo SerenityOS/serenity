@@ -376,6 +376,9 @@ bool GEventLoop::wait_for_specific_event(WSAPI_ServerMessage::Type type, WSAPI_S
         FD_ZERO(&rfds);
         FD_SET(s_event_fd, &rfds);
         int rc = select(s_event_fd + 1, &rfds, nullptr, nullptr, nullptr);
+        if (rc < 0) {
+            perror("select");
+        }
         ASSERT(rc > 0);
         ASSERT(FD_ISSET(s_event_fd, &rfds));
         bool success = drain_messages_from_server();
