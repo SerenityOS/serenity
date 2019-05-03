@@ -38,6 +38,7 @@ private:
     virtual KResult protocol_connect(FileDescriptor&, ShouldBlock) override;
     virtual int protocol_allocate_source_port() override;
     virtual bool protocol_is_disconnected() const override;
+    virtual KResult protocol_bind() override;
 
     dword m_sequence_number { 0 };
     dword m_ack_number { 0 };

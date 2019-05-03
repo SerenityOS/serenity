@@ -48,6 +48,7 @@ protected:
 
     int allocate_source_port_if_needed();
 
+    virtual KResult protocol_bind() { return KSuccess; }
     virtual int protocol_receive(const ByteBuffer&, void*, size_t, int, sockaddr*, socklen_t*) { return -ENOTIMPL; }
     virtual int protocol_send(const void*, int) { return -ENOTIMPL; }
     virtual KResult protocol_connect(FileDescriptor&, ShouldBlock) { return KSuccess; }
@@ -59,6 +60,8 @@ private:
 
     bool m_bound { false };
     int m_attached_fds { 0 };
+
+    IPv4Address m_source_address;
     IPv4Address m_destination_address;
 
     DoubleBuffer m_for_client;

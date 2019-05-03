@@ -20,6 +20,7 @@ private:
     virtual int protocol_send(const void*, int) override;
     virtual KResult protocol_connect(FileDescriptor&, ShouldBlock) override { return KSuccess; }
     virtual int protocol_allocate_source_port() override;
+    virtual KResult protocol_bind() override;
 };
 
 class UDPSocketHandle : public SocketHandle {

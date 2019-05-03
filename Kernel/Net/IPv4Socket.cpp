@@ -11,6 +11,7 @@
 #include <Kernel/Net/ARP.h>
 #include <Kernel/Net/Routing.h>
 #include <LibC/errno_numbers.h>
+#include <Kernel/FileSystem/FileDescriptor.h>
 
 #define IPV4_SOCKET_DEBUG
 
@@ -63,7 +64,13 @@ KResult IPv4Socket::bind(const sockaddr* address, socklen_t address_size)
     if (address->sa_family != AF_INET)
         return KResult(-EINVAL);
 
-    ASSERT_NOT_REACHED();
+    auto& ia = *(const sockaddr_in*)address;
+    m_source_address = IPv4Address((const byte*)&ia.sin_addr.s_addr);
+    m_source_port = ntohs(ia.sin_port);
+
+    dbgprintf("IPv4Socket::bind %s{%p} to port %u\n", class_name(), this, m_source_port);
+
+    return protocol_bind();
 }
 
 KResult IPv4Socket::connect(FileDescriptor& descriptor, const sockaddr* address, socklen_t address_size, ShouldBlock should_block)
@@ -91,8 +98,10 @@ void IPv4Socket::detach(FileDescriptor&)
     --m_attached_fds;
 }
 
-bool IPv4Socket::can_read(FileDescriptor&) const
+bool IPv4Socket::can_read(FileDescriptor& descriptor) const
 {
+    if (descriptor.socket_role() == SocketRole::Listener)
+        return can_accept();
     if (protocol_is_disconnected())
         return true;
     return m_can_read;
