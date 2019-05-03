@@ -104,3 +104,12 @@ int UDPSocket::protocol_allocate_source_port()
     }
     return -EADDRINUSE;
 }
+
+KResult UDPSocket::protocol_bind()
+{
+    LOCKER(sockets_by_port().lock());
+    if (sockets_by_port().resource().contains(source_port()))
+        return KResult(-EADDRINUSE);
+    sockets_by_port().resource().set(source_port(), this);
+    return KSuccess;
+}

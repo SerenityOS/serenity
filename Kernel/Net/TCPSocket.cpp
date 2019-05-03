@@ -203,3 +203,12 @@ bool TCPSocket::protocol_is_disconnected() const
 {
     return m_state == State::Disconnecting || m_state == State::Disconnected;
 }
+
+KResult TCPSocket::protocol_bind()
+{
+    LOCKER(sockets_by_port().lock());
+    if (sockets_by_port().resource().contains(source_port()))
+        return KResult(-EADDRINUSE);
+    sockets_by_port().resource().set(source_port(), this);
+    return KSuccess;
+}
