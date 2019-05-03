@@ -49,6 +49,10 @@ Go into the Toolchain/ directory and run the **BuildIt.sh** script. Then source 
 
 Otherwise, see the older [step-by-step guide to building Serenity](https://github.com/awesomekling/serenity/blob/master/Meta/BuildInstructions.md)
 
+## IRC
+
+Come chat in `#serenityos` on the Freenode IRC network.
+
 ## Author
 
 * **Andreas Kling** - [awesomekling](https://github.com/awesomekling)
