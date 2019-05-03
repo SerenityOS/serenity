@@ -1064,7 +1064,7 @@ RetainPtr<Inode> Ext2FS::create_directory(InodeIdentifier parent_id, const Strin
 
     // NOTE: When creating a new directory, make the size 1 block.
     //       There's probably a better strategy here, but this works for now.
-    auto inode = create_inode(parent_id, name, mode, block_size(), error);
+    auto inode = create_inode(parent_id, name, mode, block_size(), 0, error);
     if (!inode)
         return nullptr;
 
@@ -1092,7 +1092,7 @@ RetainPtr<Inode> Ext2FS::create_directory(InodeIdentifier parent_id, const Strin
     return inode;
 }
 
-RetainPtr<Inode> Ext2FS::create_inode(InodeIdentifier parent_id, const String& name, mode_t mode, off_t size, int& error)
+RetainPtr<Inode> Ext2FS::create_inode(InodeIdentifier parent_id, const String& name, mode_t mode, off_t size, dev_t dev, int& error)
 {
     LOCKER(m_lock);
     ASSERT(parent_id.fsid() == fsid());
@@ -1167,6 +1167,11 @@ RetainPtr<Inode> Ext2FS::create_inode(InodeIdentifier parent_id, const String& n
     e2inode.i_mtime = now.tv_sec;
     e2inode.i_dtime = 0;
     e2inode.i_links_count = initial_links_count;
+
+    if (is_character_device(mode))
+        e2inode.i_block[0] = dev;
+    else if (is_block_device(mode))
+        e2inode.i_block[1] = dev;
 
     success = write_block_list_for_inode(inode_id, e2inode, blocks);
     ASSERT(success);

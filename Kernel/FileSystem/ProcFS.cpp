@@ -754,7 +754,7 @@ const char* ProcFS::class_name() const
     return "ProcFS";
 }
 
-RetainPtr<Inode> ProcFS::create_inode(InodeIdentifier, const String&, mode_t, off_t, int&)
+RetainPtr<Inode> ProcFS::create_inode(InodeIdentifier, const String&, mode_t, off_t, dev_t, int&)
 {
     kprintf("FIXME: Implement ProcFS::create_inode()?\n");
     return { };

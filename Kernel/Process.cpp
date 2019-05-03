@@ -2553,3 +2553,11 @@ void Process::FileDescriptorAndFlags::set(Retained<FileDescriptor>&& d, dword f)
     descriptor = move(d);
     flags = f;
 }
+
+int Process::sys$mknod(const char* pathname, mode_t mode, dev_t dev)
+{
+    if (!validate_read_str(pathname))
+        return -EFAULT;
+
+    return VFS::the().mknod(StringView(pathname), mode, dev, cwd_inode());
+}

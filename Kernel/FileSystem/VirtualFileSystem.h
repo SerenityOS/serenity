@@ -76,6 +76,7 @@ public:
     KResult stat(StringView path, int options, Inode& base, struct stat&);
     KResult utime(StringView path, Inode& base, time_t atime, time_t mtime);
     KResult rename(StringView oldpath, StringView newpath, Inode& base);
+    KResult mknod(StringView path, mode_t, dev_t, Inode& base);
     KResultOr<Retained<Inode>> open_directory(StringView path, Inode& base);
 
     void register_device(Device&);
