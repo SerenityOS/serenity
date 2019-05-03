@@ -81,11 +81,6 @@ int UDPSocket::protocol_send(const void* data, int data_length)
     return data_length;
 }
 
-KResult UDPSocket::protocol_connect(ShouldBlock)
-{
-    return KSuccess;
-}
-
 int UDPSocket::protocol_allocate_source_port()
 {
     static const word first_ephemeral_port = 32768;

@@ -21,16 +21,16 @@ public:
     static Lockable<HashTable<IPv4Socket*>>& all_sockets();
 
     virtual KResult bind(const sockaddr*, socklen_t) override;
-    virtual KResult connect(const sockaddr*, socklen_t, ShouldBlock = ShouldBlock::Yes) override;
+    virtual KResult connect(FileDescriptor&, const sockaddr*, socklen_t, ShouldBlock = ShouldBlock::Yes) override;
     virtual bool get_address(sockaddr*, socklen_t*) override;
-    virtual void attach_fd(SocketRole) override;
-    virtual void detach_fd(SocketRole) override;
-    virtual bool can_read(SocketRole) const override;
-    virtual ssize_t read(SocketRole, byte*, ssize_t) override;
-    virtual ssize_t write(SocketRole, const byte*, ssize_t) override;
-    virtual bool can_write(SocketRole) const override;
-    virtual ssize_t sendto(const void*, size_t, int, const sockaddr*, socklen_t) override;
-    virtual ssize_t recvfrom(void*, size_t, int flags, sockaddr*, socklen_t*) override;
+    virtual void attach(FileDescriptor&) override;
+    virtual void detach(FileDescriptor&) override;
+    virtual bool can_read(FileDescriptor&) const override;
+    virtual ssize_t read(FileDescriptor&, byte*, ssize_t) override;
+    virtual ssize_t write(FileDescriptor&, const byte*, ssize_t) override;
+    virtual bool can_write(FileDescriptor&) const override;
+    virtual ssize_t sendto(FileDescriptor&, const void*, size_t, int, const sockaddr*, socklen_t) override;
+    virtual ssize_t recvfrom(FileDescriptor&, void*, size_t, int flags, sockaddr*, socklen_t*) override;
 
     void did_receive(ByteBuffer&&);
 
@@ -49,7 +49,7 @@ protected:
 
     virtual int protocol_receive(const ByteBuffer&, void*, size_t, int, sockaddr*, socklen_t*) { return -ENOTIMPL; }
     virtual int protocol_send(const void*, int) { return -ENOTIMPL; }
-    virtual KResult protocol_connect(ShouldBlock) { return KSuccess; }
+    virtual KResult protocol_connect(FileDescriptor&, ShouldBlock) { return KSuccess; }
     virtual int protocol_allocate_source_port() { return 0; }
     virtual bool protocol_is_disconnected() const { return false; }
 

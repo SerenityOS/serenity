@@ -66,7 +66,7 @@ KResult LocalSocket::bind(const sockaddr* address, socklen_t address_size)
     return KSuccess;
 }
 
-KResult LocalSocket::connect(const sockaddr* address, socklen_t address_size, ShouldBlock)
+KResult LocalSocket::connect(FileDescriptor& descriptor, const sockaddr* address, socklen_t address_size, ShouldBlock)
 {
     ASSERT(!m_bound);
     if (address_size != sizeof(sockaddr_un))
@@ -98,36 +98,45 @@ KResult LocalSocket::connect(const sockaddr* address, socklen_t address_size, Sh
     if (result.is_error())
         return result;
 
-    return current->wait_for_connect(*this);
+    return current->wait_for_connect(descriptor);
 }
 
-void LocalSocket::attach_fd(SocketRole role)
+void LocalSocket::attach(FileDescriptor& descriptor)
 {
-    if (role == SocketRole::Accepted) {
+    switch (descriptor.socket_role()) {
+    case SocketRole::Accepted:
         ++m_accepted_fds_open;
-    } else if (role == SocketRole::Connected) {
+        break;
+    case SocketRole::Connected:
         ++m_connected_fds_open;
-    } else if (role == SocketRole::Connecting) {
+        break;
+    case SocketRole::Connecting:
         ++m_connecting_fds_open;
+        break;
     }
 }
 
-void LocalSocket::detach_fd(SocketRole role)
+void LocalSocket::detach(FileDescriptor& descriptor)
 {
-    if (role == SocketRole::Accepted) {
+    switch (descriptor.socket_role()) {
+    case SocketRole::Accepted:
         ASSERT(m_accepted_fds_open);
         --m_accepted_fds_open;
-    } else if (role == SocketRole::Connected) {
+        break;
+    case SocketRole::Connected:
         ASSERT(m_connected_fds_open);
         --m_connected_fds_open;
-    } else if (role == SocketRole::Connecting) {
+        break;
+    case SocketRole::Connecting:
         ASSERT(m_connecting_fds_open);
         --m_connecting_fds_open;
+        break;
     }
 }
 
-bool LocalSocket::can_read(SocketRole role) const
+bool LocalSocket::can_read(FileDescriptor& descriptor) const
 {
+    auto role = descriptor.socket_role();
     if (role == SocketRole::Listener)
         return can_accept();
     if (role == SocketRole::Accepted)
@@ -137,8 +146,9 @@ bool LocalSocket::can_read(SocketRole role) const
     ASSERT_NOT_REACHED();
 }
 
-ssize_t LocalSocket::read(SocketRole role, byte* buffer, ssize_t size)
+ssize_t LocalSocket::read(FileDescriptor& descriptor, byte* buffer, ssize_t size)
 {
+    auto role = descriptor.socket_role();
     if (role == SocketRole::Accepted)
         return m_for_server.read(buffer, size);
     if (role == SocketRole::Connected)
@@ -146,14 +156,14 @@ ssize_t LocalSocket::read(SocketRole role, byte* buffer, ssize_t size)
     ASSERT_NOT_REACHED();
 }
 
-ssize_t LocalSocket::write(SocketRole role, const byte* data, ssize_t size)
+ssize_t LocalSocket::write(FileDescriptor& descriptor, const byte* data, ssize_t size)
 {
-    if (role == SocketRole::Accepted) {
+    if (descriptor.socket_role() == SocketRole::Accepted) {
         if (!m_accepted_fds_open)
             return -EPIPE;
         return m_for_client.write(data, size);
     }
-    if (role == SocketRole::Connected) {
+    if (descriptor.socket_role() == SocketRole::Connected) {
         if (!m_connected_fds_open && !m_connecting_fds_open)
             return -EPIPE;
         return m_for_server.write(data, size);
@@ -161,21 +171,21 @@ ssize_t LocalSocket::write(SocketRole role, const byte* data, ssize_t size)
     ASSERT_NOT_REACHED();
 }
 
-bool LocalSocket::can_write(SocketRole role) const
+bool LocalSocket::can_write(FileDescriptor& descriptor) const
 {
-    if (role == SocketRole::Accepted)
+    if (descriptor.socket_role() == SocketRole::Accepted)
         return (!m_connected_fds_open && !m_connecting_fds_open) || m_for_client.bytes_in_write_buffer() < 4096;
-    if (role == SocketRole::Connected)
+    if (descriptor.socket_role() == SocketRole::Connected)
         return !m_accepted_fds_open || m_for_server.bytes_in_write_buffer() < 4096;
     ASSERT_NOT_REACHED();
 }
 
-ssize_t LocalSocket::sendto(const void*, size_t, int, const sockaddr*, socklen_t)
+ssize_t LocalSocket::sendto(FileDescriptor&, const void*, size_t, int, const sockaddr*, socklen_t)
 {
     ASSERT_NOT_REACHED();
 }
 
-ssize_t LocalSocket::recvfrom(void*, size_t, int flags, sockaddr*, socklen_t*)
+ssize_t LocalSocket::recvfrom(FileDescriptor&, void*, size_t, int flags, sockaddr*, socklen_t*)
 {
     ASSERT_NOT_REACHED();
 }

@@ -152,7 +152,7 @@ NetworkOrdered<word> TCPSocket::compute_tcp_checksum(const IPv4Address& source, 
     return ~(checksum & 0xffff);
 }
 
-KResult TCPSocket::protocol_connect(ShouldBlock should_block)
+KResult TCPSocket::protocol_connect(FileDescriptor& descriptor, ShouldBlock should_block)
 {
     auto* adapter = adapter_for_route_to(destination_address());
     if (!adapter)
@@ -167,8 +167,7 @@ KResult TCPSocket::protocol_connect(ShouldBlock should_block)
     m_state = State::Connecting;
 
     if (should_block == ShouldBlock::Yes) {
-        current->set_blocked_socket(this);
-        current->block(Thread::BlockedConnect);
+        current->block(Thread::BlockedConnect, descriptor);
         ASSERT(is_connected());
         return KSuccess;
     }

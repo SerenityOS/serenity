@@ -66,7 +66,7 @@ KResult IPv4Socket::bind(const sockaddr* address, socklen_t address_size)
     ASSERT_NOT_REACHED();
 }
 
-KResult IPv4Socket::connect(const sockaddr* address, socklen_t address_size, ShouldBlock should_block)
+KResult IPv4Socket::connect(FileDescriptor& descriptor, const sockaddr* address, socklen_t address_size, ShouldBlock should_block)
 {
     ASSERT(!m_bound);
     if (address_size != sizeof(sockaddr_in))
@@ -78,37 +78,37 @@ KResult IPv4Socket::connect(const sockaddr* address, socklen_t address_size, Sho
     m_destination_address = IPv4Address((const byte*)&ia.sin_addr.s_addr);
     m_destination_port = ntohs(ia.sin_port);
 
-    return protocol_connect(should_block);
+    return protocol_connect(descriptor, should_block);
 }
 
-void IPv4Socket::attach_fd(SocketRole)
+void IPv4Socket::attach(FileDescriptor&)
 {
     ++m_attached_fds;
 }
 
-void IPv4Socket::detach_fd(SocketRole)
+void IPv4Socket::detach(FileDescriptor&)
 {
     --m_attached_fds;
 }
 
-bool IPv4Socket::can_read(SocketRole) const
+bool IPv4Socket::can_read(FileDescriptor&) const
 {
     if (protocol_is_disconnected())
         return true;
     return m_can_read;
 }
 
-ssize_t IPv4Socket::read(SocketRole, byte* buffer, ssize_t size)
+ssize_t IPv4Socket::read(FileDescriptor& descriptor, byte* buffer, ssize_t size)
 {
-    return recvfrom(buffer, size, 0, nullptr, 0);
+    return recvfrom(descriptor, buffer, size, 0, nullptr, 0);
 }
 
-ssize_t IPv4Socket::write(SocketRole, const byte* data, ssize_t size)
+ssize_t IPv4Socket::write(FileDescriptor& descriptor, const byte* data, ssize_t size)
 {
-    return sendto(data, size, 0, nullptr, 0);
+    return sendto(descriptor, data, size, 0, nullptr, 0);
 }
 
-bool IPv4Socket::can_write(SocketRole) const
+bool IPv4Socket::can_write(FileDescriptor&) const
 {
     return is_connected();
 }
@@ -124,7 +124,7 @@ int IPv4Socket::allocate_source_port_if_needed()
     return port;
 }
 
-ssize_t IPv4Socket::sendto(const void* data, size_t data_length, int flags, const sockaddr* addr, socklen_t addr_length)
+ssize_t IPv4Socket::sendto(FileDescriptor&, const void* data, size_t data_length, int flags, const sockaddr* addr, socklen_t addr_length)
 {
     (void)flags;
     if (addr && addr_length != sizeof(sockaddr_in))
@@ -159,7 +159,7 @@ ssize_t IPv4Socket::sendto(const void* data, size_t data_length, int flags, cons
     return protocol_send(data, data_length);
 }
 
-ssize_t IPv4Socket::recvfrom(void* buffer, size_t buffer_length, int flags, sockaddr* addr, socklen_t* addr_length)
+ssize_t IPv4Socket::recvfrom(FileDescriptor& descriptor, void* buffer, size_t buffer_length, int flags, sockaddr* addr, socklen_t* addr_length)
 {
     (void)flags;
     if (addr_length && *addr_length < sizeof(sockaddr_in))
@@ -186,9 +186,8 @@ ssize_t IPv4Socket::recvfrom(void* buffer, size_t buffer_length, int flags, sock
             return 0;
         }
 
-        current->set_blocked_socket(this);
         load_receive_deadline();
-        current->block(Thread::BlockedReceive);
+        current->block(Thread::BlockedReceive, descriptor);
 
         LOCKER(lock());
         if (!m_can_read) {
