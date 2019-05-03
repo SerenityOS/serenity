@@ -26,7 +26,7 @@ public:
     virtual int ioctl(FileDescriptor&, unsigned request, unsigned arg);
     virtual KResultOr<Region*> mmap(Process&, LinearAddress preferred_laddr, size_t offset, size_t size);
 
-    virtual String absolute_path() const = 0;
+    virtual String absolute_path(FileDescriptor&) const = 0;
 
     virtual const char* class_name() const = 0;
 
@@ -39,6 +39,7 @@ public:
     virtual bool is_master_pty() const { return false; }
     virtual bool is_block_device() const { return false; }
     virtual bool is_character_device() const { return false; }
+    virtual bool is_socket() const { return false; }
 
 protected:
     File();

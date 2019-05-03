@@ -68,7 +68,7 @@ KResult SharedMemory::truncate(int length)
     return KResult(-ENOTIMPL);
 }
 
-String SharedMemory::absolute_path() const
+String SharedMemory::absolute_path(FileDescriptor&) const
 {
     return String::format("shm:%u", this);
 }

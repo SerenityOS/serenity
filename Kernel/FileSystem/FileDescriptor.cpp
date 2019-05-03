@@ -18,14 +18,9 @@ Retained<FileDescriptor> FileDescriptor::create(RetainPtr<Inode>&& inode)
     return adopt(*new FileDescriptor(move(inode)));
 }
 
-Retained<FileDescriptor> FileDescriptor::create(RetainPtr<File>&& file)
+Retained<FileDescriptor> FileDescriptor::create(RetainPtr<File>&& file, SocketRole role)
 {
-    return adopt(*new FileDescriptor(move(file)));
-}
-
-Retained<FileDescriptor> FileDescriptor::create(RetainPtr<Socket>&& socket, SocketRole role)
-{
-    return adopt(*new FileDescriptor(move(socket), role));
+    return adopt(*new FileDescriptor(move(file), role));
 }
 
 FileDescriptor::FileDescriptor(RetainPtr<Inode>&& inode)
@@ -33,23 +28,16 @@ FileDescriptor::FileDescriptor(RetainPtr<Inode>&& inode)
 {
 }
 
-FileDescriptor::FileDescriptor(RetainPtr<File>&& file)
+FileDescriptor::FileDescriptor(RetainPtr<File>&& file, SocketRole role)
     : m_file(move(file))
-{
-}
-
-FileDescriptor::FileDescriptor(RetainPtr<Socket>&& socket, SocketRole role)
-    : m_socket(move(socket))
 {
     set_socket_role(role);
 }
 
 FileDescriptor::~FileDescriptor()
 {
-    if (m_socket) {
-        m_socket->detach(*this);
-        m_socket = nullptr;
-    }
+    if (is_socket())
+        socket()->detach(*this);
     if (is_fifo())
         static_cast<FIFO*>(m_file.ptr())->detach(m_fifo_direction);
     if (m_file) {
@@ -64,11 +52,11 @@ void FileDescriptor::set_socket_role(SocketRole role)
     if (role == m_socket_role)
         return;
 
-    ASSERT(m_socket);
+    ASSERT(is_socket());
     if (m_socket_role != SocketRole::None)
-        m_socket->detach(*this);
+        socket()->detach(*this);
     m_socket_role = role;
-    m_socket->attach(*this);
+    socket()->attach(*this);
 }
 
 Retained<FileDescriptor> FileDescriptor::clone()
@@ -78,10 +66,7 @@ Retained<FileDescriptor> FileDescriptor::clone()
         descriptor = fifo()->open_direction(m_fifo_direction);
     } else {
         if (m_file) {
-            descriptor = FileDescriptor::create(m_file.copy_ref());
-            descriptor->m_inode = m_inode.copy_ref();
-        } else if (m_socket) {
-            descriptor = FileDescriptor::create(m_socket.copy_ref(), m_socket_role);
+            descriptor = FileDescriptor::create(m_file.copy_ref(), m_socket_role);
             descriptor->m_inode = m_inode.copy_ref();
         } else {
             descriptor = FileDescriptor::create(m_inode.copy_ref());
@@ -180,8 +165,6 @@ ssize_t FileDescriptor::read(byte* buffer, ssize_t count)
             m_current_offset += nread;
         return nread;
     }
-    if (m_socket)
-        return m_socket->read(*this, buffer, count);
     ASSERT(inode());
     ssize_t nread = inode()->read_bytes(m_current_offset, count, buffer, this);
     m_current_offset += nread;
@@ -196,8 +179,6 @@ ssize_t FileDescriptor::write(const byte* data, ssize_t size)
             m_current_offset += nwritten;
         return nwritten;
     }
-    if (m_socket)
-        return m_socket->write(*this, data, size);
     ASSERT(m_inode);
     ssize_t nwritten = m_inode->write_bytes(m_current_offset, size, data, this);
     m_current_offset += nwritten;
@@ -208,8 +189,6 @@ bool FileDescriptor::can_write()
 {
     if (m_file)
         return m_file->can_write(*this);
-    if (m_socket)
-        return m_socket->can_write(*this);
     return true;
 }
 
@@ -217,8 +196,6 @@ bool FileDescriptor::can_read()
 {
     if (m_file)
         return m_file->can_read(*this);
-    if (m_socket)
-        return m_socket->can_read(*this);
     return true;
 }
 
@@ -322,20 +299,6 @@ int FileDescriptor::close()
     return 0;
 }
 
-const char* to_string(SocketRole role)
-{
-    switch (role) {
-    case SocketRole::Listener:
-        return "Listener";
-    case SocketRole::Accepted:
-        return "Accepted";
-    case SocketRole::Connected:
-        return "Connected";
-    default:
-        return "None";
-    }
-}
-
 bool FileDescriptor::is_fsfile() const
 {
     return !is_tty() && !is_fifo() && !is_device() && !is_socket() && !is_shared_memory();
@@ -344,9 +307,7 @@ bool FileDescriptor::is_fsfile() const
 KResultOr<String> FileDescriptor::absolute_path()
 {
     if (m_file)
-        return m_file->absolute_path();
-    if (is_socket())
-        return String::format("socket:%x (role: %s)", m_socket.ptr(), to_string(m_socket_role));
+        return m_file->absolute_path(*this);
     ASSERT(m_inode);
     return VFS::the().absolute_path(*m_inode);
 }
@@ -427,4 +388,23 @@ FIFO* FileDescriptor::fifo()
     if (!is_fifo())
         return nullptr;
     return static_cast<FIFO*>(m_file.ptr());
+}
+
+bool FileDescriptor::is_socket() const
+{
+    return m_file && m_file->is_socket();
+}
+
+Socket* FileDescriptor::socket()
+{
+    if (!is_socket())
+        return nullptr;
+    return static_cast<Socket*>(m_file.ptr());
+}
+
+const Socket* FileDescriptor::socket() const
+{
+    if (!is_socket())
+        return nullptr;
+    return static_cast<const Socket*>(m_file.ptr());
 }

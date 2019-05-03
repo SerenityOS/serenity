@@ -1,3 +1,4 @@
+#include <Kernel/FileSystem/FileDescriptor.h>
 #include <Kernel/Net/Socket.h>
 #include <Kernel/Net/LocalSocket.h>
 #include <Kernel/Net/IPv4Socket.h>
@@ -118,4 +119,23 @@ void Socket::load_send_deadline()
     m_send_deadline.tv_usec += m_send_timeout.tv_usec;
     m_send_deadline.tv_sec += (m_send_timeout.tv_usec / 1000000) * 1;
     m_send_deadline.tv_usec %= 1000000;
+}
+
+static const char* to_string(SocketRole role)
+{
+    switch (role) {
+    case SocketRole::Listener:
+        return "Listener";
+    case SocketRole::Accepted:
+        return "Accepted";
+    case SocketRole::Connected:
+        return "Connected";
+    default:
+        return "None";
+    }
+}
+
+String Socket::absolute_path(FileDescriptor& descriptor) const
+{
+    return String::format("socket:%x (role: %s)", this, to_string(descriptor.socket_role()));
 }

@@ -29,6 +29,7 @@ public:
 
 private:
     explicit TCPSocket(int protocol);
+    virtual const char* class_name() const override { return "TCPSocket"; }
 
     NetworkOrdered<word> compute_tcp_checksum(const IPv4Address& source, const IPv4Address& destination, const TCPPacket&, word payload_size);
 

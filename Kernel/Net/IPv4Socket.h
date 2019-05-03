@@ -44,6 +44,7 @@ public:
 
 protected:
     IPv4Socket(int type, int protocol);
+    virtual const char* class_name() const override { return "IPv4Socket"; }
 
     int allocate_source_port_if_needed();
 
