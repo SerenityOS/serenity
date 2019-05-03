@@ -840,8 +840,7 @@ ssize_t Process::sys$write(int fd, const byte* data, ssize_t size)
 #ifdef IO_DEBUG
                 dbgprintf("block write on %d\n", fd);
 #endif
-                current->m_blocked_fd = fd;
-                current->block(Thread::State::BlockedWrite);
+                current->block(Thread::State::BlockedWrite, *descriptor);
             }
             ssize_t rc = descriptor->write((const byte*)data + nwritten, size - nwritten);
 #ifdef IO_DEBUG
@@ -888,8 +887,7 @@ ssize_t Process::sys$read(int fd, byte* buffer, ssize_t size)
         return -EBADF;
     if (descriptor->is_blocking()) {
         if (!descriptor->can_read()) {
-            current->m_blocked_fd = fd;
-            current->block(Thread::State::BlockedRead);
+            current->block(Thread::State::BlockedRead, *descriptor);
             if (current->m_was_interrupted_while_blocked)
                 return -EINTR;
         }
@@ -2057,7 +2055,7 @@ int Process::sys$connect(int sockfd, const sockaddr* address, socklen_t address_
         return -EISCONN;
     auto& socket = *descriptor->socket();
     descriptor->set_socket_role(SocketRole::Connecting);
-    auto result = socket.connect(address, address_size, descriptor->is_blocking() ? ShouldBlock::Yes : ShouldBlock::No);
+    auto result = socket.connect(*descriptor, address, address_size, descriptor->is_blocking() ? ShouldBlock::Yes : ShouldBlock::No);
     if (result.is_error()) {
         descriptor->set_socket_role(SocketRole::None);
         return result;
@@ -2089,7 +2087,7 @@ ssize_t Process::sys$sendto(const Syscall::SC_sendto_params* params)
         return -ENOTSOCK;
     auto& socket = *descriptor->socket();
     kprintf("sendto %p (%u), flags=%u, addr: %p (%u)\n", data, data_length, flags, addr, addr_length);
-    return socket.sendto(data, data_length, flags, addr, addr_length);
+    return socket.sendto(*descriptor, data, data_length, flags, addr, addr_length);
 }
 
 ssize_t Process::sys$recvfrom(const Syscall::SC_recvfrom_params* params)
@@ -2121,7 +2119,7 @@ ssize_t Process::sys$recvfrom(const Syscall::SC_recvfrom_params* params)
         return -ENOTSOCK;
     auto& socket = *descriptor->socket();
     kprintf("recvfrom %p (%u), flags=%u, addr: %p (%p)\n", buffer, buffer_length, flags, addr, addr_length);
-    return socket.recvfrom(buffer, buffer_length, flags, addr, addr_length);
+    return socket.recvfrom(*descriptor, buffer, buffer_length, flags, addr, addr_length);
 }
 
 int Process::sys$getsockopt(const Syscall::SC_getsockopt_params* params)

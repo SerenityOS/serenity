@@ -1,7 +1,7 @@
 #include <Kernel/Thread.h>
 #include <Kernel/Scheduler.h>
 #include <Kernel/Process.h>
-#include <Kernel/Net/Socket.h>
+#include <Kernel/FileSystem/FileDescriptor.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <LibC/signal_numbers.h>
 
@@ -91,6 +91,7 @@ Thread::~Thread()
 
 void Thread::unblock()
 {
+    m_blocked_descriptor = nullptr;
     if (current == this) {
         m_state = Thread::Running;
         return;
@@ -118,6 +119,12 @@ void Thread::block(Thread::State new_state)
     Scheduler::yield();
     if (did_unlock)
         process().big_lock().lock();
+}
+
+void Thread::block(Thread::State new_state, FileDescriptor& descriptor)
+{
+    m_blocked_descriptor = &descriptor;
+    block(new_state);
 }
 
 void Thread::sleep(dword ticks)
@@ -157,8 +164,9 @@ const char* to_string(Thread::State state)
 void Thread::finalize()
 {
     dbgprintf("Finalizing Thread %u in %s(%u)\n", tid(), m_process.name().characters(), pid());
-    m_blocked_socket = nullptr;
     set_state(Thread::State::Dead);
+
+    m_blocked_descriptor = nullptr;
 
     if (this == &m_process.main_thread())
         m_process.finalize();
@@ -496,14 +504,14 @@ Thread* Thread::clone(Process& process)
     return clone;
 }
 
-KResult Thread::wait_for_connect(Socket& socket)
+KResult Thread::wait_for_connect(FileDescriptor& descriptor)
 {
+    ASSERT(descriptor.is_socket());
+    auto& socket = *descriptor.socket();
     if (socket.is_connected())
         return KSuccess;
-    m_blocked_socket = socket;
-    block(Thread::State::BlockedConnect);
+    block(Thread::State::BlockedConnect, descriptor);
     Scheduler::yield();
-    m_blocked_socket = nullptr;
     if (!socket.is_connected())
         return KResult(-ECONNREFUSED);
     return KSuccess;
@@ -532,9 +540,4 @@ bool Thread::is_thread(void* ptr)
             return true;
     }
     return false;
-}
-
-void Thread::set_blocked_socket(Socket* socket)
-{
-    m_blocked_socket = socket;
 }

@@ -47,7 +47,7 @@ FileDescriptor::FileDescriptor(RetainPtr<Socket>&& socket, SocketRole role)
 FileDescriptor::~FileDescriptor()
 {
     if (m_socket) {
-        m_socket->detach_fd(m_socket_role);
+        m_socket->detach(*this);
         m_socket = nullptr;
     }
     if (is_fifo())
@@ -65,11 +65,10 @@ void FileDescriptor::set_socket_role(SocketRole role)
         return;
 
     ASSERT(m_socket);
-    auto old_socket_role = m_socket_role;
+    if (m_socket_role != SocketRole::None)
+        m_socket->detach(*this);
     m_socket_role = role;
-    m_socket->attach_fd(role);
-    if (old_socket_role != SocketRole::None)
-        m_socket->detach_fd(old_socket_role);
+    m_socket->attach(*this);
 }
 
 Retained<FileDescriptor> FileDescriptor::clone()
@@ -182,7 +181,7 @@ ssize_t FileDescriptor::read(byte* buffer, ssize_t count)
         return nread;
     }
     if (m_socket)
-        return m_socket->read(m_socket_role, buffer, count);
+        return m_socket->read(*this, buffer, count);
     ASSERT(inode());
     ssize_t nread = inode()->read_bytes(m_current_offset, count, buffer, this);
     m_current_offset += nread;
@@ -198,7 +197,7 @@ ssize_t FileDescriptor::write(const byte* data, ssize_t size)
         return nwritten;
     }
     if (m_socket)
-        return m_socket->write(m_socket_role, data, size);
+        return m_socket->write(*this, data, size);
     ASSERT(m_inode);
     ssize_t nwritten = m_inode->write_bytes(m_current_offset, size, data, this);
     m_current_offset += nwritten;
@@ -210,7 +209,7 @@ bool FileDescriptor::can_write()
     if (m_file)
         return m_file->can_write(*this);
     if (m_socket)
-        return m_socket->can_write(m_socket_role);
+        return m_socket->can_write(*this);
     return true;
 }
 
@@ -219,7 +218,7 @@ bool FileDescriptor::can_read()
     if (m_file)
         return m_file->can_read(*this);
     if (m_socket)
-        return m_socket->can_read(m_socket_role);
+        return m_socket->can_read(*this);
     return true;
 }
 
