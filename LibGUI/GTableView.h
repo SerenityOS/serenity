@@ -40,19 +40,35 @@ private:
     virtual void did_update_model() override;
     virtual void paint_event(GPaintEvent&) override;
     virtual void mousedown_event(GMouseEvent&) override;
+    virtual void mousemove_event(GMouseEvent&) override;
+    virtual void mouseup_event(GMouseEvent&) override;
     virtual void doubleclick_event(GMouseEvent&) override;
     virtual void keydown_event(GKeyEvent&) override;
+    virtual void leave_event(CEvent&) override;
 
     Rect content_rect(int row, int column) const;
     void paint_headers(Painter&);
     int item_count() const;
     Rect row_rect(int item_index) const;
     Rect header_rect(int) const;
+    Rect column_resize_grabbable_rect(int) const;
     int column_width(int) const;
     void update_content_size();
 
-    Vector<bool> m_column_visibility;
+    struct ColumnData {
+        int width { 0 };
+        bool has_initialized_width { false };
+        bool visibility { true };
+    };
+    ColumnData& column_data(int column) const;
+
+    mutable Vector<ColumnData> m_column_data;
     int m_horizontal_padding { 5 };
     bool m_headers_visible { true };
     bool m_alternating_row_colors { true };
+
+    bool m_in_column_resize { false };
+    Point m_column_resize_origin;
+    int m_column_resize_original_width { 0 };
+    int m_resizing_column { -1 };
 };
