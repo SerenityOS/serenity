@@ -30,6 +30,8 @@ public:
     bool is_column_hidden(int) const;
     void set_column_hidden(int, bool);
 
+    Point adjusted_position(const Point&);
+
     virtual Rect content_rect(const GModelIndex&) const override;
 
     virtual const char* class_name() const override { return "GTableView"; }
