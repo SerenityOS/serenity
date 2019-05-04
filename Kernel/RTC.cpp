@@ -33,23 +33,26 @@ inline bool is_leap_year(unsigned year)
 
 static unsigned days_in_months_since_start_of_year(unsigned month, unsigned year)
 {
+    unsigned days = 0;
     switch (month) {
-    case 11: return 30;
-    case 10: return 31;
-    case 9: return 30;
-    case 8: return 31;
-    case 7: return 31;
-    case 6: return 30;
-    case 5: return 31;
-    case 4: return 30;
-    case 3: return 31;
+    case 11: days += 30;
+    case 10: days += 31;
+    case 9: days += 30;
+    case 8: days += 31;
+    case 7: days += 31;
+    case 6: days += 30;
+    case 5: days += 31;
+    case 4: days += 30;
+    case 3: days += 31;
     case 2:
         if (is_leap_year(year))
-            return 29;
-        return 28;
-    case 1: return 31;
-    default: return 0;
+            days += 29;
+        else
+            days += 28;
+    case 1: days += 31;
+    default: break;
     }
+    return days;
 }
 
 static unsigned days_in_years_since_epoch(unsigned year)
@@ -87,6 +90,8 @@ time_t now()
 
     unsigned year, month, day, hour, minute, second;
     read_registers(year, month, day, hour, minute, second);
+
+    kprintf("year: %d, month: %d, day: %d\n", year, month, day);
 
     ASSERT(year >= 2018);
 
