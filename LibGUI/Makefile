@@ -54,6 +54,7 @@ LIBGUI_OBJS = \
     GGroupBox.o \
     GSlider.o \
     GResizeCorner.o \
+    GTabWidget.o \
     GWindow.o
 
 OBJS = $(SHAREDGRAPHICS_OBJS) $(LIBGUI_OBJS)

@@ -6,6 +6,8 @@
 #include <LibGUI/GToolBar.h>
 #include <LibGUI/GMenuBar.h>
 #include <LibGUI/GAction.h>
+#include <LibGUI/GTabWidget.h>
+#include <LibGUI/GLabel.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <signal.h>
@@ -16,7 +18,15 @@ int main(int argc, char** argv)
 {
     GApplication app(argc, argv);
 
-    auto* widget = new GWidget;
+    auto* tabwidget = new GTabWidget(nullptr);
+
+    auto* widget = new GWidget(nullptr);
+    tabwidget->add_widget("Processes", widget);
+    auto* placeholder_label = new GLabel("Placeholder text");
+    placeholder_label->set_fill_with_background_color(true);
+    placeholder_label->set_background_color(Color::from_rgb(0xffc0c0));
+    tabwidget->add_widget("Placeholder", placeholder_label);
+
     widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
 
     auto* toolbar = new GToolBar(widget);
@@ -90,7 +100,7 @@ int main(int argc, char** argv)
     auto* window = new GWindow;
     window->set_title("ProcessManager");
     window->set_rect(20, 200, 680, 400);
-    window->set_main_widget(widget);
+    window->set_main_widget(tabwidget);
     window->set_should_exit_event_loop_on_close(true);
     window->show();
 
