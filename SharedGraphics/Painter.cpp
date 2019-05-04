@@ -7,6 +7,7 @@
 #include <AK/StringBuilder.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <math.h>
 
 Painter::Painter(GraphicsBitmap& bitmap)
     : m_target(bitmap)
@@ -511,9 +512,7 @@ void Painter::draw_line(const Point& p1, const Point& p2, Color color)
     }
 
     // FIXME: Implement clipping below.
-    ASSERT_NOT_REACHED();
 
-#if 0
     const double dx = point2.x() - point1.x();
     const double dy = point2.y() - point1.y();
     const double delta_error = fabs(dy / dx);
@@ -529,7 +528,6 @@ void Painter::draw_line(const Point& p1, const Point& p2, Color color)
             error -= 1.0;
         }
     }
-#endif
 }
 
 void Painter::draw_focus_rect(const Rect& rect)
