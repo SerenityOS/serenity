@@ -91,4 +91,9 @@ double acos(double)
     ASSERT_NOT_REACHED();
 }
 
+double fabs(double value)
+{
+    return value < 0 ? -value : value;
+}
+
 }
