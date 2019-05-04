@@ -36,7 +36,7 @@ UDPSocket::UDPSocket(int protocol)
 UDPSocket::~UDPSocket()
 {
     LOCKER(sockets_by_port().lock());
-    sockets_by_port().resource().remove(source_port());
+    sockets_by_port().resource().remove(local_port());
 }
 
 Retained<UDPSocket> UDPSocket::create(int protocol)
@@ -59,25 +59,25 @@ int UDPSocket::protocol_receive(const ByteBuffer& packet_buffer, void* buffer, s
 
 int UDPSocket::protocol_send(const void* data, int data_length)
 {
-    auto* adapter = adapter_for_route_to(destination_address());
+    auto* adapter = adapter_for_route_to(peer_address());
     if (!adapter)
         return -EHOSTUNREACH;
     auto buffer = ByteBuffer::create_zeroed(sizeof(UDPPacket) + data_length);
     auto& udp_packet = *(UDPPacket*)(buffer.pointer());
-    udp_packet.set_source_port(source_port());
-    udp_packet.set_destination_port(destination_port());
+    udp_packet.set_source_port(local_port());
+    udp_packet.set_destination_port(peer_port());
     udp_packet.set_length(sizeof(UDPPacket) + data_length);
     memcpy(udp_packet.payload(), data, data_length);
     kprintf("sending as udp packet from %s:%u to %s:%u!\n",
         adapter->ipv4_address().to_string().characters(),
-        source_port(),
-        destination_address().to_string().characters(),
-        destination_port());
-    adapter->send_ipv4(MACAddress(), destination_address(), IPv4Protocol::UDP, move(buffer));
+        local_port(),
+        peer_address().to_string().characters(),
+        peer_port());
+    adapter->send_ipv4(MACAddress(), peer_address(), IPv4Protocol::UDP, move(buffer));
     return data_length;
 }
 
-int UDPSocket::protocol_allocate_source_port()
+int UDPSocket::protocol_allocate_local_port()
 {
     static const word first_ephemeral_port = 32768;
     static const word last_ephemeral_port = 60999;
@@ -88,7 +88,7 @@ int UDPSocket::protocol_allocate_source_port()
     for (word port = first_scan_port;;) {
         auto it = sockets_by_port().resource().find(port);
         if (it == sockets_by_port().resource().end()) {
-            set_source_port(port);
+            set_local_port(port);
             sockets_by_port().resource().set(port, this);
             return port;
         }
@@ -104,8 +104,8 @@ int UDPSocket::protocol_allocate_source_port()
 KResult UDPSocket::protocol_bind()
 {
     LOCKER(sockets_by_port().lock());
-    if (sockets_by_port().resource().contains(source_port()))
+    if (sockets_by_port().resource().contains(local_port()))
         return KResult(-EADDRINUSE);
-    sockets_by_port().resource().set(source_port(), this);
+    sockets_by_port().resource().set(local_port(), this);
     return KSuccess;
 }

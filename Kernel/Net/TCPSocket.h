@@ -31,12 +31,12 @@ private:
     explicit TCPSocket(int protocol);
     virtual const char* class_name() const override { return "TCPSocket"; }
 
-    NetworkOrdered<word> compute_tcp_checksum(const IPv4Address& source, const IPv4Address& destination, const TCPPacket&, word payload_size);
+    static NetworkOrdered<word> compute_tcp_checksum(const IPv4Address& source, const IPv4Address& destination, const TCPPacket&, word payload_size);
 
     virtual int protocol_receive(const ByteBuffer&, void* buffer, size_t buffer_size, int flags, sockaddr* addr, socklen_t* addr_length) override;
     virtual int protocol_send(const void*, int) override;
     virtual KResult protocol_connect(FileDescriptor&, ShouldBlock) override;
-    virtual int protocol_allocate_source_port() override;
+    virtual int protocol_allocate_local_port() override;
     virtual bool protocol_is_disconnected() const override;
     virtual KResult protocol_bind() override;
 

@@ -276,7 +276,7 @@ void handle_udp(const EthernetFrameHeader& eth, int frame_size)
     }
 
     ASSERT(socket->type() == SOCK_DGRAM);
-    ASSERT(socket->source_port() == udp_packet.destination_port());
+    ASSERT(socket->local_port() == udp_packet.destination_port());
     socket->did_receive(ipv4_packet.source(), udp_packet.source_port(), ByteBuffer::copy(&ipv4_packet, sizeof(IPv4Packet) + ipv4_packet.payload_size()));
 }
 
@@ -317,7 +317,7 @@ void handle_tcp(const EthernetFrameHeader& eth, int frame_size)
     }
 
     ASSERT(socket->type() == SOCK_STREAM);
-    ASSERT(socket->source_port() == tcp_packet.destination_port());
+    ASSERT(socket->local_port() == tcp_packet.destination_port());
 
     if (tcp_packet.ack_number() != socket->sequence_number()) {
         kprintf("handle_tcp: ack/seq mismatch: got %u, wanted %u\n", tcp_packet.ack_number(), socket->sequence_number());

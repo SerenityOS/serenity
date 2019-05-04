@@ -32,27 +32,27 @@ public:
     virtual ssize_t sendto(FileDescriptor&, const void*, size_t, int, const sockaddr*, socklen_t) override;
     virtual ssize_t recvfrom(FileDescriptor&, void*, size_t, int flags, sockaddr*, socklen_t*) override;
 
-    void did_receive(const IPv4Address& source_address, word source_port, ByteBuffer&&);
+    void did_receive(const IPv4Address& peer_address, word peer_port, ByteBuffer&&);
 
-    const IPv4Address& source_address() const;
-    word source_port() const { return m_source_port; }
-    void set_source_port(word port) { m_source_port = port; }
+    const IPv4Address& local_address() const;
+    word local_port() const { return m_local_port; }
+    void set_local_port(word port) { m_local_port = port; }
 
-    const IPv4Address& destination_address() const { return m_destination_address; }
-    word destination_port() const { return m_destination_port; }
-    void set_destination_port(word port) { m_destination_port = port; }
+    const IPv4Address& peer_address() const { return m_peer_address; }
+    word peer_port() const { return m_peer_port; }
+    void set_peer_port(word port) { m_peer_port = port; }
 
 protected:
     IPv4Socket(int type, int protocol);
     virtual const char* class_name() const override { return "IPv4Socket"; }
 
-    int allocate_source_port_if_needed();
+    int allocate_local_port_if_needed();
 
     virtual KResult protocol_bind() { return KSuccess; }
     virtual int protocol_receive(const ByteBuffer&, void*, size_t, int, sockaddr*, socklen_t*) { return -ENOTIMPL; }
     virtual int protocol_send(const void*, int) { return -ENOTIMPL; }
     virtual KResult protocol_connect(FileDescriptor&, ShouldBlock) { return KSuccess; }
-    virtual int protocol_allocate_source_port() { return 0; }
+    virtual int protocol_allocate_local_port() { return 0; }
     virtual bool protocol_is_disconnected() const { return false; }
 
 private:
@@ -61,22 +61,22 @@ private:
     bool m_bound { false };
     int m_attached_fds { 0 };
 
-    IPv4Address m_source_address;
-    IPv4Address m_destination_address;
+    IPv4Address m_local_address;
+    IPv4Address m_peer_address;
 
     DoubleBuffer m_for_client;
     DoubleBuffer m_for_server;
 
     struct ReceivedPacket {
-        IPv4Address source_address;
-        word source_port;
+        IPv4Address peer_address;
+        word peer_port;
         ByteBuffer data;
     };
 
     SinglyLinkedList<ReceivedPacket> m_receive_queue;
 
-    word m_source_port { 0 };
-    word m_destination_port { 0 };
+    word m_local_port { 0 };
+    word m_peer_port { 0 };
 
     dword m_bytes_received { 0 };
 
