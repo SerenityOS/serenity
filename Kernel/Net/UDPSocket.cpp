@@ -53,10 +53,6 @@ int UDPSocket::protocol_receive(const ByteBuffer& packet_buffer, void* buffer, s
     auto& udp_packet = *static_cast<const UDPPacket*>(ipv4_packet.payload());
     ASSERT(udp_packet.length() >= sizeof(UDPPacket)); // FIXME: This should be rejected earlier.
     ASSERT(buffer_size >= (udp_packet.length() - sizeof(UDPPacket)));
-    if (addr) {
-        auto& ia = *(sockaddr_in*)addr;
-        ia.sin_port = htons(udp_packet.destination_port());
-    }
     memcpy(buffer, udp_packet.payload(), udp_packet.length() - sizeof(UDPPacket));
     return udp_packet.length() - sizeof(UDPPacket);
 }

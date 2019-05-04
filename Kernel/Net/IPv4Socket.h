@@ -32,7 +32,7 @@ public:
     virtual ssize_t sendto(FileDescriptor&, const void*, size_t, int, const sockaddr*, socklen_t) override;
     virtual ssize_t recvfrom(FileDescriptor&, void*, size_t, int flags, sockaddr*, socklen_t*) override;
 
-    void did_receive(ByteBuffer&&);
+    void did_receive(const IPv4Address& source_address, word source_port, ByteBuffer&&);
 
     const IPv4Address& source_address() const;
     word source_port() const { return m_source_port; }
@@ -67,7 +67,13 @@ private:
     DoubleBuffer m_for_client;
     DoubleBuffer m_for_server;
 
-    SinglyLinkedList<ByteBuffer> m_receive_queue;
+    struct ReceivedPacket {
+        IPv4Address source_address;
+        word source_port;
+        ByteBuffer data;
+    };
+
+    SinglyLinkedList<ReceivedPacket> m_receive_queue;
 
     word m_source_port { 0 };
     word m_destination_port { 0 };
