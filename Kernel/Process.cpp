@@ -2105,9 +2105,9 @@ ssize_t Process::sys$recvfrom(const Syscall::SC_recvfrom_params* params)
     if (!validate_write(buffer, buffer_length))
         return -EFAULT;
     if (addr_length) {
-        if (!validate_read_typed(addr_length))
+        if (!validate_write_typed(addr_length))
             return -EFAULT;
-        if (!validate_read(addr, *addr_length))
+        if (!validate_write(addr, *addr_length))
             return -EFAULT;
     } else if (addr) {
        return -EINVAL;

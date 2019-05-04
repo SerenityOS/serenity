@@ -178,11 +178,16 @@ ssize_t IPv4Socket::recvfrom(FileDescriptor& descriptor, void* buffer, size_t bu
     kprintf("recvfrom: type=%d, source_port=%u\n", type(), source_port());
 #endif
 
+    IPv4Address peer_address;
+    word peer_port = 0;
     ByteBuffer packet_buffer;
     {
         LOCKER(lock());
         if (!m_receive_queue.is_empty()) {
-            packet_buffer = m_receive_queue.take_first();
+            auto packet = m_receive_queue.take_first();
+            packet_buffer = packet.data;
+            peer_address = packet.source_address;
+            peer_port = packet.source_port;
             m_can_read = !m_receive_queue.is_empty();
 #ifdef IPV4_SOCKET_DEBUG
             kprintf("IPv4Socket(%p): recvfrom without blocking %d bytes, packets in queue: %d\n", this, packet_buffer.size(), m_receive_queue.size_slow());
@@ -205,7 +210,10 @@ ssize_t IPv4Socket::recvfrom(FileDescriptor& descriptor, void* buffer, size_t bu
         }
         ASSERT(m_can_read);
         ASSERT(!m_receive_queue.is_empty());
-        packet_buffer = m_receive_queue.take_first();
+        auto packet = m_receive_queue.take_first();
+        packet_buffer = packet.data;
+        peer_address = packet.source_address;
+        peer_port = packet.source_port;
         m_can_read = !m_receive_queue.is_empty();
 #ifdef IPV4_SOCKET_DEBUG
         kprintf("IPv4Socket(%p): recvfrom with blocking %d bytes, packets in queue: %d\n", this, packet_buffer.size(), m_receive_queue.size_slow());
@@ -215,8 +223,10 @@ ssize_t IPv4Socket::recvfrom(FileDescriptor& descriptor, void* buffer, size_t bu
     auto& ipv4_packet = *(const IPv4Packet*)(packet_buffer.pointer());
 
     if (addr) {
+        dbgprintf("Incoming packet is from: %s:%u\n", peer_address.to_string().characters(), peer_port);
         auto& ia = *(sockaddr_in*)addr;
-        memcpy(&ia.sin_addr, &m_destination_address, sizeof(IPv4Address));
+        memcpy(&ia.sin_addr, &peer_address, sizeof(IPv4Address));
+        ia.sin_port = htons(peer_port);
         ia.sin_family = AF_INET;
         ASSERT(addr_length);
         *addr_length = sizeof(sockaddr_in);
@@ -231,11 +241,11 @@ ssize_t IPv4Socket::recvfrom(FileDescriptor& descriptor, void* buffer, size_t bu
     return protocol_receive(packet_buffer, buffer, buffer_length, flags, addr, addr_length);
 }
 
-void IPv4Socket::did_receive(ByteBuffer&& packet)
+void IPv4Socket::did_receive(const IPv4Address& source_address, word source_port, ByteBuffer&& packet)
 {
     LOCKER(lock());
     auto packet_size = packet.size();
-    m_receive_queue.append(move(packet));
+    m_receive_queue.append({ source_address, source_port, move(packet) });
     m_can_read = true;
     m_bytes_received += packet_size;
 #ifdef IPV4_SOCKET_DEBUG
