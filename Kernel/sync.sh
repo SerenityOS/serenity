@@ -2,10 +2,15 @@ if [ $(id -u) != 0 ]; then
     echo "This needs to be run as root"
     exit
 fi
+
 rm -vf _fs_contents.lock
-rm -vf _fs_contents
-dd if=/dev/zero of=_fs_contents bs=1M count=512
-mke2fs -I 128 _fs_contents
+
+# If target filesystem image doesn't exist, create it.
+if [ ! -f _fs_contents ]; then
+    dd if=/dev/zero of=_fs_contents bs=1M count=512
+fi
+
+mke2fs -F -I 128 _fs_contents
 chown 1000:1000 _fs_contents
 mkdir -vp mnt
 mount -o loop _fs_contents mnt/
@@ -64,5 +69,10 @@ ln -s Minesweeper mnt/bin/ms
 cp -v ../Games/Snake/Snake mnt/bin/Snake
 ln -s Snake mnt/bin/sn
 cp -v kernel.map mnt/
-sh sync-local.sh
+
+# Run local sync script, if it exists
+if [ -f sync-local.sh ]; then
+    sh sync-local.sh
+fi
+
 umount mnt || ( sleep 0.5 && sync && umount mnt )
