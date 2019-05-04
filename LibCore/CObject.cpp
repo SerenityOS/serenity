@@ -43,6 +43,9 @@ void CObject::event(CEvent& event)
 
 void CObject::add_child(CObject& object)
 {
+    // FIXME: Should we support reparenting objects?
+    ASSERT(!object.parent() || object.parent() == this);
+    object.m_parent = this;
     m_children.append(&object);
     event(*make<CChildEvent>(CEvent::ChildAdded, object));
 }
