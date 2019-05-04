@@ -1,3 +1,9 @@
+#!/bin/bash
+
+if [ "$1" = "-f" ]; then
+    rm -vf _fs_contents
+fi
+
 if [ $(id -u) != 0 ]; then
     echo "This needs to be run as root"
     exit
@@ -11,6 +17,7 @@ if [ ! -f _fs_contents ]; then
 fi
 
 mke2fs -F -I 128 _fs_contents
+
 chown 1000:1000 _fs_contents
 mkdir -vp mnt
 mount -o loop _fs_contents mnt/
