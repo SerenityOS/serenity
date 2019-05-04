@@ -3,6 +3,7 @@
 #include <LibGUI/GScrollBar.h>
 #include <LibGUI/GPainter.h>
 #include <LibGUI/GTextBox.h>
+#include <LibGUI/GWindow.h>
 #include <Kernel/KeyCode.h>
 #include <AK/StringBuilder.h>
 
@@ -26,7 +27,7 @@ void GTableView::update_content_size()
     int content_width = 0;
     int column_count = model()->column_count();
     for (int i = 0; i < column_count; ++i)
-        content_width += model()->column_metadata(i).preferred_width + horizontal_padding() * 2;
+        content_width += column_width(i) + horizontal_padding() * 2;
     int content_height = item_count() * item_height();
 
     set_content_size({ content_width, content_height });
@@ -62,7 +63,12 @@ Rect GTableView::row_rect(int item_index) const
 
 int GTableView::column_width(int column_index) const
 {
-    return model()->column_metadata(column_index).preferred_width;
+    auto& column_data = this->column_data(column_index);
+    if (!column_data.has_initialized_width) {
+        column_data.has_initialized_width = true;
+        column_data.width = model()->column_metadata(column_index).preferred_width;
+    }
+    return column_data.width;
 }
 
 Rect GTableView::header_rect(int column_index) const
@@ -75,9 +81,7 @@ Rect GTableView::header_rect(int column_index) const
             continue;
         x_offset += column_width(i) + horizontal_padding() * 2;
     }
-    auto column_metadata = model()->column_metadata(column_index);
-    int column_width = column_metadata.preferred_width;
-    return { x_offset, 0, column_width + horizontal_padding() * 2, header_height() };
+    return { x_offset, 0, column_width(column_index) + horizontal_padding() * 2, header_height() };
 }
 
 Point GTableView::adjusted_position(const Point& position)
@@ -85,14 +89,31 @@ Point GTableView::adjusted_position(const Point& position)
     return position.translated(-frame_thickness(), vertical_scrollbar().value() - frame_thickness());
 }
 
+Rect GTableView::column_resize_grabbable_rect(int column) const
+{
+    auto header_rect = this->header_rect(column);
+    return { header_rect.right() - 1, header_rect.top(), 4, header_rect.height() };
+}
+
 void GTableView::mousedown_event(GMouseEvent& event)
 {
     if (!model())
         return;
 
+    auto adjusted_position = this->adjusted_position(event.position());
+
     if (event.y() < header_height()) {
-        auto adjusted_position = this->adjusted_position(event.position());
         for (int i = 0; i < model()->column_count(); ++i) {
+            if (event.button() == GMouseButton::Left) {
+                if (column_resize_grabbable_rect(i).contains(adjusted_position)) {
+                    dbgprintf("now resizing column %d\n", i);
+                    m_resizing_column = i;
+                    m_in_column_resize = true;
+                    m_column_resize_original_width = column_width(i);
+                    m_column_resize_origin = event.position();
+                    return;
+                }
+            }
             auto header_rect = this->header_rect(i);
             if (header_rect.contains(adjusted_position)) {
                 auto new_sort_order = GSortOrder::Ascending;
@@ -108,7 +129,6 @@ void GTableView::mousedown_event(GMouseEvent& event)
     }
 
     if (event.button() == GMouseButton::Left) {
-        auto adjusted_position = this->adjusted_position(event.position());
         for (int row = 0, row_count = model()->row_count(); row < row_count; ++row) {
             if (!row_rect(row).contains(adjusted_position))
                 continue;
@@ -122,6 +142,41 @@ void GTableView::mousedown_event(GMouseEvent& event)
         }
         model()->set_selected_index({ });
         update();
+    }
+}
+
+void GTableView::mousemove_event(GMouseEvent& event)
+{
+    if (m_in_column_resize) {
+        auto delta = event.position() - m_column_resize_origin;
+        int new_width = m_column_resize_original_width + delta.x();
+        auto& column_data = this->column_data(m_resizing_column);
+        if (column_data.width != new_width) {
+            column_data.width = new_width;
+            update();
+        }
+        return;
+    }
+
+    auto adjusted_position = this->adjusted_position(event.position());
+    if (event.buttons() == 0) {
+        for (int i = 0; i < model()->column_count(); ++i) {
+            if (column_resize_grabbable_rect(i).contains(adjusted_position)) {
+                window()->set_override_cursor(GStandardCursor::ResizeHorizontal);
+                return;
+            }
+        }
+    }
+    window()->set_override_cursor(GStandardCursor::None);
+}
+
+void GTableView::mouseup_event(GMouseEvent& event)
+{
+    auto adjusted_position = this->adjusted_position(event.position());
+    if (event.button() == GMouseButton::Left) {
+        if (!column_resize_grabbable_rect(m_resizing_column).contains(adjusted_position))
+            window()->set_override_cursor(GStandardCursor::None);
+        m_in_column_resize = false;
     }
 }
 
@@ -167,7 +222,7 @@ void GTableView::paint_event(GPaintEvent& event)
             if (is_column_hidden(column_index))
                 continue;
             auto column_metadata = model()->column_metadata(column_index);
-            int column_width = column_metadata.preferred_width;
+            int column_width = this->column_width(column_index);
             const Font& font = column_metadata.font ? *column_metadata.font : this->font();
             bool is_key_column = model()->key_column() == column_index;
             Rect cell_rect(horizontal_padding() + x_offset, y, column_width, item_height());
@@ -214,8 +269,7 @@ void GTableView::paint_headers(Painter& painter)
     for (int column_index = 0; column_index < model()->column_count(); ++column_index) {
         if (is_column_hidden(column_index))
             continue;
-        auto column_metadata = model()->column_metadata(column_index);
-        int column_width = column_metadata.preferred_width;
+        int column_width = this->column_width(column_index);
         bool is_key_column = model()->key_column() == column_index;
         Rect cell_rect(x_offset, 0, column_width + horizontal_padding() * 2, header_height());
         StylePainter::paint_button(painter, cell_rect, ButtonStyle::Normal, false);
@@ -309,23 +363,27 @@ void GTableView::scroll_into_view(const GModelIndex& index, Orientation orientat
     GScrollableWidget::scroll_into_view(rect, orientation);
 }
 
+GTableView::ColumnData& GTableView::column_data(int column) const
+{
+    ASSERT(model());
+    ASSERT(column >= 0 && column < model()->column_count());
+    if (column >= m_column_data.size())
+        m_column_data.resize(model()->column_count());
+    return m_column_data.at(column);
+}
+
 bool GTableView::is_column_hidden(int column) const
 {
-    if (column >= 0 && column < m_column_visibility.size())
-        return !m_column_visibility[column];
-    return false;
+    return !column_data(column).visibility;
 }
 
 void GTableView::set_column_hidden(int column, bool hidden)
 {
-    ASSERT(column >= 0);
-    if (m_column_visibility.size() <= column) {
-        int previous_column_count = m_column_visibility.size();
-        m_column_visibility.resize(column + 1);
-        for (int i = previous_column_count; i < m_column_visibility.size(); ++i)
-            m_column_visibility[i] = true;
-    }
-    m_column_visibility[column] = !hidden;
+    auto& column_data = this->column_data(column);
+    if (column_data.visibility == !hidden)
+        return;
+    column_data.visibility = !hidden;
+    update();
 }
 
 void GTableView::doubleclick_event(GMouseEvent& event)
@@ -343,4 +401,9 @@ void GTableView::doubleclick_event(GMouseEvent& event)
                 model.activate(model.selected_index());
         }
     }
+}
+
+void GTableView::leave_event(CEvent&)
+{
+    window()->set_override_cursor(GStandardCursor::None);
 }
