@@ -23,7 +23,7 @@ static void paint_button_new(Painter& painter, const Rect& rect, bool pressed, b
         // Base
         painter.fill_rect({ 1, 1, rect.width() - 2, rect.height() - 2 }, button_color);
 
-        painter.draw_rect(rect, shadow_color2);
+        painter.draw_rect({ { }, rect.size() }, shadow_color2);
 
         // Sunken shadow
         painter.draw_line({ 1, 1 }, { rect.width() - 2, 1 }, shadow_color1);

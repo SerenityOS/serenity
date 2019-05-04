@@ -4,6 +4,7 @@
 #include <LibGUI/GPainter.h>
 #include <LibGUI/GTextBox.h>
 #include <Kernel/KeyCode.h>
+#include <AK/StringBuilder.h>
 
 GTableView::GTableView(GWidget* parent)
     : GAbstractView(parent)
@@ -79,13 +80,18 @@ Rect GTableView::header_rect(int column_index) const
     return { x_offset, 0, column_width + horizontal_padding() * 2, header_height() };
 }
 
+Point GTableView::adjusted_position(const Point& position)
+{
+    return position.translated(-frame_thickness(), vertical_scrollbar().value() - frame_thickness());
+}
+
 void GTableView::mousedown_event(GMouseEvent& event)
 {
     if (!model())
         return;
 
     if (event.y() < header_height()) {
-        auto adjusted_position = event.position().translated(horizontal_scrollbar().value(), 0);
+        auto adjusted_position = this->adjusted_position(event.position());
         for (int i = 0; i < model()->column_count(); ++i) {
             auto header_rect = this->header_rect(i);
             if (header_rect.contains(adjusted_position)) {
@@ -102,7 +108,7 @@ void GTableView::mousedown_event(GMouseEvent& event)
     }
 
     if (event.button() == GMouseButton::Left) {
-        auto adjusted_position = event.position().translated(0, vertical_scrollbar().value());
+        auto adjusted_position = this->adjusted_position(event.position());
         for (int row = 0, row_count = model()->row_count(); row < row_count; ++row) {
             if (!row_rect(row).contains(adjusted_position))
                 continue;
@@ -129,6 +135,7 @@ void GTableView::paint_event(GPaintEvent& event)
     GPainter painter(*this);
     painter.add_clip_rect(frame_inner_rect());
     painter.add_clip_rect(event.rect());
+    painter.translate(frame_thickness(), frame_thickness());
     painter.translate(-horizontal_scrollbar().value(), -vertical_scrollbar().value());
 
     int exposed_width = max(content_size().width(), width());
@@ -211,17 +218,24 @@ void GTableView::paint_headers(Painter& painter)
         int column_width = column_metadata.preferred_width;
         bool is_key_column = model()->key_column() == column_index;
         Rect cell_rect(x_offset, 0, column_width + horizontal_padding() * 2, header_height());
+        StylePainter::paint_button(painter, cell_rect, ButtonStyle::Normal, false);
+        String text;
         if (is_key_column) {
-            painter.fill_rect(cell_rect.shrunken(2, 2), Color::from_rgb(0xdddddd));
+            StringBuilder builder;
+            builder.append(model()->column_name(column_index));
+            auto sort_order = model()->sort_order();
+            if (sort_order == GSortOrder::Ascending)
+                builder.append(" \xf6");
+            else if (sort_order == GSortOrder::Descending)
+                builder.append(" \xf7");
+            text = builder.to_string();
+        } else {
+            text = model()->column_name(column_index);
         }
-        painter.draw_text(cell_rect.translated(horizontal_padding(), 0), model()->column_name(column_index), Font::default_bold_font(), TextAlignment::CenterLeft, Color::Black);
+        auto text_rect = cell_rect.translated(horizontal_padding(), 0);
+        painter.draw_text(text_rect, text, Font::default_bold_font(), TextAlignment::CenterLeft, Color::Black);
         x_offset += column_width + horizontal_padding() * 2;
-        // Draw column separator.
-        painter.draw_line(cell_rect.top_left().translated(0, 1), cell_rect.bottom_left().translated(0, -1), Color::White);
-        painter.draw_line(cell_rect.top_right(), cell_rect.bottom_right().translated(0, -1), Color::MidGray);
     }
-    // Draw the "start" of a new column to make the last separator look right.
-    painter.draw_line({ x_offset, 1 }, { x_offset, header_height() - 2 }, Color::White);
 }
 
 int GTableView::item_count() const
