@@ -63,6 +63,7 @@ Rect GTableView::row_rect(int item_index) const
 
 int GTableView::column_width(int column_index) const
 {
+    ASSERT(column_index >= 0 && column_index < model()->column_count());
     auto& column_data = this->column_data(column_index);
     if (!column_data.has_initialized_width) {
         column_data.has_initialized_width = true;
@@ -73,6 +74,7 @@ int GTableView::column_width(int column_index) const
 
 Rect GTableView::header_rect(int column_index) const
 {
+    ASSERT(column_index >= 0 && column_index < model()->column_count());
     if (is_column_hidden(column_index))
         return { };
     int x_offset = 0;
@@ -91,6 +93,7 @@ Point GTableView::adjusted_position(const Point& position)
 
 Rect GTableView::column_resize_grabbable_rect(int column) const
 {
+    ASSERT(column >= 0 && column < model()->column_count());
     auto header_rect = this->header_rect(column);
     return { header_rect.right() - 1, header_rect.top(), 4, header_rect.height() };
 }
@@ -150,6 +153,7 @@ void GTableView::mousemove_event(GMouseEvent& event)
     if (m_in_column_resize) {
         auto delta = event.position() - m_column_resize_origin;
         int new_width = m_column_resize_original_width + delta.x();
+        ASSERT(m_resizing_column >= 0 && m_resizing_column < model()->column_count());
         auto& column_data = this->column_data(m_resizing_column);
         if (column_data.width != new_width) {
             column_data.width = new_width;
@@ -174,9 +178,11 @@ void GTableView::mouseup_event(GMouseEvent& event)
 {
     auto adjusted_position = this->adjusted_position(event.position());
     if (event.button() == GMouseButton::Left) {
-        if (!column_resize_grabbable_rect(m_resizing_column).contains(adjusted_position))
-            window()->set_override_cursor(GStandardCursor::None);
-        m_in_column_resize = false;
+        if (m_in_column_resize) {
+            if (!column_resize_grabbable_rect(m_resizing_column).contains(adjusted_position))
+                window()->set_override_cursor(GStandardCursor::None);
+            m_in_column_resize = false;
+        }
     }
 }
 
@@ -374,11 +380,13 @@ GTableView::ColumnData& GTableView::column_data(int column) const
 
 bool GTableView::is_column_hidden(int column) const
 {
+    ASSERT(column >= 0 && column < model()->column_count());
     return !column_data(column).visibility;
 }
 
 void GTableView::set_column_hidden(int column, bool hidden)
 {
+    ASSERT(column >= 0 && column < model()->column_count());
     auto& column_data = this->column_data(column);
     if (column_data.visibility == !hidden)
         return;
