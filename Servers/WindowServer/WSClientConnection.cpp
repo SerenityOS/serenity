@@ -510,10 +510,12 @@ void WSClientConnection::handle_request(const WSAPIDestroyWindowRequest& request
 
 void WSClientConnection::post_paint_message(WSWindow& window)
 {
+    auto rect_set = window.take_pending_paint_rects();
+    if (window.is_minimized())
+        return;
     WSAPI_ServerMessage message;
     message.type = WSAPI_ServerMessage::Type::Paint;
     message.window_id = window.window_id();
-    auto rect_set = window.take_pending_paint_rects();
     auto& rects = rect_set.rects();
     message.rect_count = rects.size();
     for (int i = 0; i < min(WSAPI_ServerMessage::max_inline_rect_count, rects.size()); ++i)

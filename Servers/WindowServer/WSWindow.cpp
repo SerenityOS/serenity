@@ -128,6 +128,8 @@ void WSWindow::set_minimized(bool minimized)
     if (m_minimized == minimized)
         return;
     m_minimized = minimized;
+    if (!minimized)
+        request_update({ { }, size() });
     invalidate();
     WSWindowManager::the().notify_minimization_state_changed(*this);
 }
