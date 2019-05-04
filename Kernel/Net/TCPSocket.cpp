@@ -54,10 +54,6 @@ int TCPSocket::protocol_receive(const ByteBuffer& packet_buffer, void* buffer, s
     size_t payload_size = packet_buffer.size() - sizeof(IPv4Packet) - tcp_packet.header_size();
     kprintf("payload_size %u, will it fit in %u?\n", payload_size, buffer_size);
     ASSERT(buffer_size >= payload_size);
-    if (addr) {
-        auto& ia = *(sockaddr_in*)addr;
-        ia.sin_port = htons(tcp_packet.destination_port());
-    }
     memcpy(buffer, tcp_packet.payload(), payload_size);
     return payload_size;
 }
