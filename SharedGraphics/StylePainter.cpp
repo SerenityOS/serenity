@@ -131,10 +131,10 @@ void StylePainter::paint_button(Painter& painter, const Rect& rect, ButtonStyle 
     }
 }
 
-void StylePainter::paint_surface(Painter& painter, const Rect& rect, bool paint_vertical_lines)
+void StylePainter::paint_surface(Painter& painter, const Rect& rect, bool paint_vertical_lines, bool paint_top_line)
 {
     painter.fill_rect({ rect.x(), rect.y() + 1, rect.width(), rect.height() - 2 }, Color::LightGray);
-    painter.draw_line(rect.top_left(), rect.top_right(), Color::White);
+    painter.draw_line(rect.top_left(), rect.top_right(), paint_top_line ? Color::White : Color::LightGray);
     painter.draw_line(rect.bottom_left(), rect.bottom_right(), Color::MidGray);
     if (paint_vertical_lines) {
         painter.draw_line(rect.top_left().translated(0, 1), rect.bottom_left().translated(0, -1), Color::White);
@@ -148,6 +148,12 @@ void StylePainter::paint_frame(Painter& painter, const Rect& rect, FrameShape sh
     Color bottom_right_color;
     Color dark_shade = Color::from_rgb(0x808080);
     Color light_shade = Color::from_rgb(0xffffff);
+
+    if (shape == FrameShape::Container && thickness >= 2) {
+        if (shadow == FrameShadow::Raised) {
+            dark_shade = Color::from_rgb(0x404040);
+        }
+    }
 
     if (shadow == FrameShadow::Raised) {
         top_left_color = light_shade;
@@ -176,6 +182,7 @@ void StylePainter::paint_frame(Painter& painter, const Rect& rect, FrameShape sh
         Color dark_shade = Color::from_rgb(0x404040);
         Color light_shade = Color::from_rgb(0xc0c0c0);
         if (shadow == FrameShadow::Raised) {
+            dark_shade = Color::from_rgb(0x808080);
             top_left_color = light_shade;
             bottom_right_color = dark_shade;
         } else if (shadow == FrameShadow::Sunken) {
