@@ -3,7 +3,7 @@
 
 void StylePainter::paint_tab_button(Painter& painter, const Rect& rect, bool active, bool hovered, bool enabled)
 {
-    Color button_color = Color::from_rgb(0xc0c0c0);
+    Color base_color = Color::from_rgb(0xc0c0c0);
     Color highlight_color2 = Color::from_rgb(0xdfdfdf);
     Color shadow_color1 = Color::from_rgb(0x808080);
     Color shadow_color2 = Color::from_rgb(0x404040);
@@ -11,17 +11,17 @@ void StylePainter::paint_tab_button(Painter& painter, const Rect& rect, bool act
 
     if (enabled) {
         if (hovered)
-            button_color = Color::from_rgb(0xe3dfdb);
+            base_color = Color::from_rgb(0xe3dfdb);
         //else
 //            button_color = Color::from_rgb(0xd6d2ce);
     } else if (hovered && enabled)
-        button_color = Color::from_rgb(0xd4d4d4);
+        base_color = Color::from_rgb(0xd4d4d4);
 
     PainterStateSaver saver(painter);
     painter.translate(rect.location());
 
     // Base
-    painter.fill_rect({ 1, 1, rect.width() - 2, rect.height() - 1 }, button_color);
+    painter.fill_rect({ 1, 1, rect.width() - 2, rect.height() - 1 }, base_color);
 
     // Top line
     painter.draw_line({ 2, 0 }, { rect.width() - 3, 0 }, highlight_color2);

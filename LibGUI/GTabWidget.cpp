@@ -31,7 +31,9 @@ void GTabWidget::set_active_widget(GWidget* widget)
         m_active_widget->set_visible(true);
     }
 
-    update(bar_rect());
+    auto invalidation_rect = bar_rect();
+    invalidation_rect.set_height(invalidation_rect.height() + 1);
+    update(invalidation_rect);
 }
 
 void GTabWidget::resize_event(GResizeEvent& event)
@@ -43,7 +45,7 @@ void GTabWidget::resize_event(GResizeEvent& event)
 
 Rect GTabWidget::child_rect_for_size(const Size& size) const
 {
-    return { { 0, bar_height() }, { size.width(), size.height() - bar_height() } };
+    return { { container_padding(), bar_height() + container_padding() }, { size.width() - container_padding() * 2, size.height() - bar_height() - container_padding() * 2 } };
 }
 
 void GTabWidget::child_event(CChildEvent& event)
@@ -83,6 +85,15 @@ void GTabWidget::paint_event(GPaintEvent& event)
 
     painter.fill_rect(bar_rect(), Color::LightGray);
 
+    Rect container_rect { 0, bar_height(), width(), height() - bar_height() };
+    auto padding_rect = container_rect;
+    for (int i = 0; i < container_padding(); ++i) {
+        painter.draw_rect(padding_rect, background_color());
+        padding_rect.shrink(2, 2);
+    }
+
+    StylePainter::paint_frame(painter, container_rect, FrameShape::Panel, FrameShadow::Raised, 2);
+
     for (int i = 0; i < m_tabs.size(); ++i) {
         if (m_tabs[i].widget == m_active_widget)
             continue;
@@ -97,6 +108,7 @@ void GTabWidget::paint_event(GPaintEvent& event)
         auto button_rect = this->button_rect(i);
         StylePainter::paint_tab_button(painter, button_rect, true, m_tabs[i].hovered, m_tabs[i].widget->is_enabled());
         painter.draw_text(button_rect, m_tabs[i].title, TextAlignment::Center);
+        painter.draw_line(button_rect.bottom_left().translated(1, 1), button_rect.bottom_right().translated(-1, 1), background_color());
         break;
     }
 }
