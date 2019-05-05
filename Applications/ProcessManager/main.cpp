@@ -24,8 +24,13 @@ int main(int argc, char** argv)
     tabwidget->add_widget("Processes", widget);
     auto* placeholder_label = new GLabel("Placeholder text");
     placeholder_label->set_fill_with_background_color(true);
-    placeholder_label->set_background_color(Color::from_rgb(0xffc0c0));
+    placeholder_label->set_background_color(Color::LightGray);
     tabwidget->add_widget("Placeholder", placeholder_label);
+
+    auto* placeholder2_label = new GLabel("Placeholder2 text");
+    placeholder2_label->set_fill_with_background_color(true);
+    placeholder2_label->set_background_color(Color::LightGray);
+    tabwidget->add_widget("Another", placeholder2_label);
 
     widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
 

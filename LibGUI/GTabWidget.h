@@ -34,6 +34,7 @@ private:
         int width(const Font&) const;
         String title;
         GWidget* widget { nullptr };
+        bool hovered { false };
     };
     Vector<TabData> m_tabs;
 };
