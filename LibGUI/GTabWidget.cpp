@@ -81,21 +81,40 @@ void GTabWidget::paint_event(GPaintEvent& event)
     GPainter painter(*this);
     painter.add_clip_rect(event.rect());
 
-    painter.fill_rect(bar_rect(), Color::MidGray);
+    painter.fill_rect(bar_rect(), Color::LightGray);
 
     for (int i = 0; i < m_tabs.size(); ++i) {
+        if (m_tabs[i].widget == m_active_widget)
+            continue;
         auto button_rect = this->button_rect(i);
-        StylePainter::paint_button(painter, button_rect, ButtonStyle::Normal, m_tabs[i].widget == m_active_widget);
+        StylePainter::paint_tab_button(painter, button_rect, false, m_tabs[i].hovered, m_tabs[i].widget->is_enabled());
         painter.draw_text(button_rect, m_tabs[i].title, TextAlignment::Center);
+    }
+
+    for (int i = 0; i < m_tabs.size(); ++i) {
+        if (m_tabs[i].widget != m_active_widget)
+            continue;
+        auto button_rect = this->button_rect(i);
+        StylePainter::paint_tab_button(painter, button_rect, true, m_tabs[i].hovered, m_tabs[i].widget->is_enabled());
+        painter.draw_text(button_rect, m_tabs[i].title, TextAlignment::Center);
+        break;
     }
 }
 
 Rect GTabWidget::button_rect(int index) const
 {
-    int x_offset = 0;
+    int x_offset = 2;
     for (int i = 0; i < index; ++i)
         x_offset += m_tabs[i].width(font());
-    return { x_offset, 0, m_tabs[index].width(font()), bar_height() };
+    Rect rect { x_offset, 0, m_tabs[index].width(font()), bar_height() };
+    if (m_tabs[index].widget != m_active_widget) {
+        rect.move_by(0, 2);
+        rect.set_height(rect.height() - 2);
+    } else {
+        rect.move_by(-2, 0);
+        rect.set_width(rect.width() + 4);
+    }
+    return rect;
 }
 
 int GTabWidget::TabData::width(const Font& font) const

@@ -1,6 +1,41 @@
 #include <SharedGraphics/StylePainter.h>
 #include <LibGUI/GPainter.h>
 
+void StylePainter::paint_tab_button(Painter& painter, const Rect& rect, bool active, bool hovered, bool enabled)
+{
+    Color button_color = Color::from_rgb(0xc0c0c0);
+    Color highlight_color2 = Color::from_rgb(0xdfdfdf);
+    Color shadow_color1 = Color::from_rgb(0x808080);
+    Color shadow_color2 = Color::from_rgb(0x404040);
+    ASSERT(!hovered);
+
+    if (enabled) {
+        if (hovered)
+            button_color = Color::from_rgb(0xe3dfdb);
+        //else
+//            button_color = Color::from_rgb(0xd6d2ce);
+    } else if (hovered && enabled)
+        button_color = Color::from_rgb(0xd4d4d4);
+
+    PainterStateSaver saver(painter);
+    painter.translate(rect.location());
+
+    // Base
+    painter.fill_rect({ 1, 1, rect.width() - 2, rect.height() - 1 }, button_color);
+
+    // Top line
+    painter.draw_line({ 2, 0 }, { rect.width() - 3, 0 }, highlight_color2);
+
+    // Left side
+    painter.draw_line({ 0, 2 }, { 0, rect.height() - 1 }, highlight_color2);
+    painter.set_pixel({ 1, 1 }, highlight_color2);
+
+    // Right side
+    painter.draw_line({ rect.width() - 1, 2, }, { rect.width() - 1, rect.height() - 1 }, shadow_color2);
+    painter.draw_line({ rect.width() - 2, 2, }, { rect.width() - 2, rect.height() - 1 }, shadow_color1);
+    painter.set_pixel({ rect.width() - 2, 1, }, shadow_color2);
+}
+
 static void paint_button_new(Painter& painter, const Rect& rect, bool pressed, bool checked, bool hovered, bool enabled)
 {
     Color button_color = Color::from_rgb(0xc0c0c0);
