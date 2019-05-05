@@ -92,7 +92,7 @@ void GTabWidget::paint_event(GPaintEvent& event)
         padding_rect.shrink(2, 2);
     }
 
-    StylePainter::paint_frame(painter, container_rect, FrameShape::Panel, FrameShadow::Raised, 2);
+    StylePainter::paint_frame(painter, container_rect, FrameShape::Container, FrameShadow::Raised, 2);
 
     for (int i = 0; i < m_tabs.size(); ++i) {
         if (m_tabs[i].widget == m_active_widget)
