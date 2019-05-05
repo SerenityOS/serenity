@@ -17,6 +17,7 @@ public:
         White,
         Red,
         Green,
+        Cyan,
         Blue,
         Yellow,
         Magenta,
