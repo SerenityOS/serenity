@@ -18,7 +18,13 @@ int main(int argc, char** argv)
 {
     GApplication app(argc, argv);
 
-    auto* tabwidget = new GTabWidget(nullptr);
+    auto* keeper = new GWidget;
+    keeper->set_layout(make<GBoxLayout>(Orientation::Vertical));
+    keeper->set_fill_with_background_color(true);
+    keeper->set_background_color(Color::LightGray);
+    keeper->layout()->set_margins({ 2, 2, 2, 2 });
+
+    auto* tabwidget = new GTabWidget(keeper);
 
     auto* widget = new GWidget(nullptr);
     tabwidget->add_widget("Processes", widget);
@@ -105,7 +111,7 @@ int main(int argc, char** argv)
     auto* window = new GWindow;
     window->set_title("ProcessManager");
     window->set_rect(20, 200, 680, 400);
-    window->set_main_widget(tabwidget);
+    window->set_main_widget(keeper);
     window->set_should_exit_event_loop_on_close(true);
     window->show();
 
