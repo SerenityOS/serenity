@@ -688,7 +688,10 @@ void GTextEditor::set_cursor(const GTextPosition& position)
     ASSERT(position.line() < m_lines.size());
     ASSERT(position.column() <= m_lines[position.line()]->length());
     if (m_cursor != position) {
-        auto old_cursor_line_rect = line_widget_rect(m_cursor.line());
+        // NOTE: If the old cursor is no longer valid, repaint everything just in case.
+        auto old_cursor_line_rect = m_cursor.line() < m_lines.size()
+            ? line_widget_rect(m_cursor.line())
+            : rect();
         m_cursor = position;
         m_cursor_state = true;
         scroll_cursor_into_view();
