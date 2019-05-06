@@ -23,6 +23,7 @@ public:
     RGBA32* scanline(int y);
     const RGBA32* scanline(int y) const;
 
+    byte* bits(int y);
     const byte* bits(int y) const;
 
     Rect rect() const { return { {}, m_size }; }
@@ -85,4 +86,9 @@ inline const RGBA32* GraphicsBitmap::scanline(int y) const
 inline const byte* GraphicsBitmap::bits(int y) const
 {
     return reinterpret_cast<const byte*>(scanline(y));
+}
+
+inline byte* GraphicsBitmap::bits(int y)
+{
+    return reinterpret_cast<byte*>(scanline(y));
 }
