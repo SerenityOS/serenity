@@ -75,6 +75,8 @@ cp -v ../Games/Minesweeper/Minesweeper mnt/bin/Minesweeper
 ln -s Minesweeper mnt/bin/ms
 cp -v ../Games/Snake/Snake mnt/bin/Snake
 ln -s Snake mnt/bin/sn
+cp -v ../Shell/Shell mnt/bin/Shell
+ln -s Shell mnt/bin/sh
 cp -v kernel.map mnt/
 
 # Run local sync script, if it exists
