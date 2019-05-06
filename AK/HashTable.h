@@ -46,8 +46,8 @@ public:
 
     ~HashTable() { clear(); }
     bool is_empty() const { return !m_size; }
-    unsigned size() const { return m_size; }
-    unsigned capacity() const { return m_capacity; }
+    int size() const { return m_size; }
+    int capacity() const { return m_capacity; }
 
     void set(const T&);
     void set(T&&);
@@ -108,7 +108,7 @@ public:
         }
     private:
         friend class HashTable;
-        explicit Iterator(HashTable& table, bool is_end, typename DoublyLinkedList<T>::Iterator bucket_iterator = DoublyLinkedList<T>::Iterator::universal_end(), unsigned bucket_index = 0)
+        explicit Iterator(HashTable& table, bool is_end, typename DoublyLinkedList<T>::Iterator bucket_iterator = DoublyLinkedList<T>::Iterator::universal_end(), int bucket_index = 0)
             : m_table(table)
             , m_bucket_index(bucket_index)
             , m_is_end(is_end)
@@ -125,7 +125,7 @@ public:
         }
 
         HashTable& m_table;
-        unsigned m_bucket_index { 0 };
+        int m_bucket_index { 0 };
         bool m_is_end { false };
         typename DoublyLinkedList<T>::Iterator m_bucket_iterator;
     };
@@ -186,7 +186,7 @@ public:
         }
     private:
         friend class HashTable;
-        ConstIterator(const HashTable& table, bool is_end, typename DoublyLinkedList<T>::ConstIterator bucket_iterator = DoublyLinkedList<T>::ConstIterator::universal_end(), unsigned bucket_index = 0)
+        ConstIterator(const HashTable& table, bool is_end, typename DoublyLinkedList<T>::ConstIterator bucket_iterator = DoublyLinkedList<T>::ConstIterator::universal_end(), int bucket_index = 0)
             : m_table(table)
             , m_bucket_index(bucket_index)
             , m_is_end(is_end)
@@ -204,7 +204,7 @@ public:
         }
 
         const HashTable& m_table;
-        unsigned m_bucket_index { 0 };
+        int m_bucket_index { 0 };
         bool m_is_end { false };
         typename DoublyLinkedList<T>::ConstIterator m_bucket_iterator;
     };
@@ -225,16 +225,16 @@ public:
     void remove(Iterator);
 
 private:
-    Bucket& lookup(const T&, unsigned* bucket_index = nullptr);
-    const Bucket& lookup(const T&, unsigned* bucket_index = nullptr) const;
-    void rehash(unsigned capacity);
+    Bucket& lookup(const T&, int* bucket_index = nullptr);
+    const Bucket& lookup(const T&, int* bucket_index = nullptr) const;
+    void rehash(int capacity);
     void insert(const T&);
     void insert(T&&);
 
     Bucket* m_buckets { nullptr };
 
-    unsigned m_size { 0 };
-    unsigned m_capacity { 0 };
+    int m_size { 0 };
+    int m_capacity { 0 };
 };
 
 template<typename T, typename TraitsForT>
@@ -281,7 +281,7 @@ void HashTable<T, TraitsForT>::set(const T& value)
 
 
 template<typename T, typename TraitsForT>
-void HashTable<T, TraitsForT>::rehash(unsigned new_capacity)
+void HashTable<T, TraitsForT>::rehash(int new_capacity)
 {
     new_capacity *= 2;
 #ifdef HASHTABLE_DEBUG
@@ -289,14 +289,14 @@ void HashTable<T, TraitsForT>::rehash(unsigned new_capacity)
 #endif
     auto* new_buckets = new Bucket[new_capacity];
     auto* old_buckets = m_buckets;
-    unsigned old_capacity = m_capacity;
+    int old_capacity = m_capacity;
     m_buckets = new_buckets;
     m_capacity = new_capacity;
 
 #ifdef HASHTABLE_DEBUG
     kprintf("reinsert %u buckets\n", old_capacity);
 #endif
-    for (unsigned i = 0; i < old_capacity; ++i) {
+    for (int i = 0; i < old_capacity; ++i) {
         for (auto& value : old_buckets[i].chain) {
             insert(move(value));
         }
@@ -348,7 +348,7 @@ auto HashTable<T, TraitsForT>::find(const T& value) -> Iterator
 {
     if (is_empty())
         return end();
-    unsigned bucket_index;
+    int bucket_index;
     auto& bucket = lookup(value, &bucket_index);
     auto bucket_iterator = bucket.chain.find(value);
     if (bucket_iterator != bucket.chain.end())
@@ -361,7 +361,7 @@ auto HashTable<T, TraitsForT>::find(const T& value) const -> ConstIterator
 {
     if (is_empty())
         return end();
-    unsigned bucket_index;
+    int bucket_index;
     auto& bucket = lookup(value, &bucket_index);
     auto bucket_iterator = bucket.chain.find(value);
     if (bucket_iterator != bucket.chain.end())
@@ -378,7 +378,7 @@ void HashTable<T, TraitsForT>::remove(Iterator it)
 }
 
 template<typename T, typename TraitsForT>
-typename HashTable<T, TraitsForT>::Bucket& HashTable<T, TraitsForT>::lookup(const T& value, unsigned* bucket_index)
+typename HashTable<T, TraitsForT>::Bucket& HashTable<T, TraitsForT>::lookup(const T& value, int* bucket_index)
 {
     unsigned hash = TraitsForT::hash(value);
 #ifdef HASHTABLE_DEBUG
@@ -392,7 +392,7 @@ typename HashTable<T, TraitsForT>::Bucket& HashTable<T, TraitsForT>::lookup(cons
 }
 
 template<typename T, typename TraitsForT>
-const typename HashTable<T, TraitsForT>::Bucket& HashTable<T, TraitsForT>::lookup(const T& value, unsigned* bucket_index) const
+const typename HashTable<T, TraitsForT>::Bucket& HashTable<T, TraitsForT>::lookup(const T& value, int* bucket_index) const
 {
     unsigned hash = TraitsForT::hash(value);
 #ifdef HASHTABLE_DEBUG
@@ -409,7 +409,7 @@ template<typename T, typename TraitsForT>
 void HashTable<T, TraitsForT>::dump() const
 {
     kprintf("HashTable{%p} m_size=%u, m_capacity=%u, m_buckets=%p\n", this, m_size, m_capacity, m_buckets);
-    for (unsigned i = 0; i < m_capacity; ++i) {
+    for (int i = 0; i < m_capacity; ++i) {
         auto& bucket = m_buckets[i];
         kprintf("Bucket %u\n", i);
         for (auto& e : bucket.chain) {
