@@ -53,7 +53,7 @@ int main(int argc, char** argv)
 
     auto* memory_graph_group_box = new GGroupBox("Memory usage", graphs_container);
     memory_graph_group_box->set_layout(make<GBoxLayout>(Orientation::Vertical));
-    memory_graph_group_box->layout()->set_margins({ 4, 16, 4, 4 });
+    memory_graph_group_box->layout()->set_margins({ 6, 16, 6, 6 });
     tabwidget->add_widget("Graphs", graphs_container);
     memory_graph_group_box->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     memory_graph_group_box->set_preferred_size({ 0, 120 });
