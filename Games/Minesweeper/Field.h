@@ -59,6 +59,7 @@ private:
     void win();
     void reveal_mines();
     void set_chord_preview(Square&, bool);
+    void set_flag(Square&, bool);
 
     Square& square(int row, int column) { return *m_squares[row * columns() + column]; }
     const Square& square(int row, int column) const { return *m_squares[row * columns() + column]; }

@@ -344,15 +344,24 @@ void Field::on_square_right_clicked(Square& square)
     if (!square.has_flag && !m_flags_left)
         return;
 
+    set_flag(square, !square.has_flag);
+}
+
+void Field::set_flag(Square& square, bool flag)
+{
+    ASSERT(!square.is_swept);
+    if (square.has_flag == flag)
+        return;
     square.is_considering = false;
 
-    if (!square.has_flag) {
-        --m_flags_left;
-        square.has_flag = true;
-    } else {
+    if (!flag) {
         ++m_flags_left;
-        square.has_flag = false;
+    } else {
+
+        ASSERT(m_flags_left);
+        --m_flags_left;
     }
+    square.has_flag = flag;
 
     m_flag_label.set_text(String::format("%u", m_flags_left));
     square.button->set_icon(square.has_flag ? m_flag_bitmap : nullptr);
@@ -378,6 +387,10 @@ void Field::win()
     m_timer.stop();
     set_greedy_for_hits(true);
     set_face(Face::Good);
+    for_each_square([&] (auto& square) {
+        if (!square.has_flag && square.has_mine)
+            set_flag(square, true);
+    });
     reveal_mines();
 }
 
@@ -448,7 +461,6 @@ Square::~Square()
 template<typename Callback>
 void Field::for_each_square(Callback callback)
 {
-    for (auto& square : m_squares) {
-        callback(*square);
-    }
+    for (int i = 0; i < rows() * columns(); ++i)
+        callback(*m_squares[i]);
 }
