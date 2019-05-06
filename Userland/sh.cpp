@@ -352,12 +352,10 @@ struct CommandTimer {
     CElapsedTimer timer;
 };
 
-static int runcmd(char* cmd)
+static int run_command(const String& cmd)
 {
-    if (cmd[0] == 0)
+    if (cmd.is_empty())
         return 0;
-    char buf[128];
-    memcpy(buf, cmd, 128);
 
     auto subcommands = Parser(cmd).parse();
 
@@ -571,14 +569,12 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    char linebuf[128];
-    int linedx = 0;
-    linebuf[0] = '\0';
+    Vector<char, 256> line_buffer;
 
     {
-        char cwdbuf[1024];
-        getcwd(cwdbuf, sizeof(cwdbuf));
-        g->cwd = cwdbuf;
+        auto* cwd = getcwd(nullptr, 0);
+        g->cwd = cwd;
+        free(cwd);
     }
     prompt();
     for (;;) {
@@ -589,12 +585,11 @@ int main(int argc, char** argv)
         if (nread < 0) {
             if (errno == EINTR) {
                 if (g->was_interrupted) {
-                    if (linedx != 0)
+                    if (!line_buffer.is_empty())
                         printf("^C");
                 }
                 g->was_interrupted = false;
-                linebuf[0] = '\0';
-                linedx = 0;
+                line_buffer.clear();
                 putchar('\n');
                 prompt();
                 continue;
@@ -608,46 +603,44 @@ int main(int argc, char** argv)
             if (ch == 0)
                 continue;
             if (ch == 8 || ch == g->termios.c_cc[VERASE]) {
-                if (linedx == 0)
+                if (line_buffer.is_empty())
                     continue;
-                linebuf[--linedx] = '\0';
+                line_buffer.take_last();
                 putchar(8);
                 fflush(stdout);
                 continue;
             }
             if (ch == g->termios.c_cc[VWERASE]) {
                 bool has_seen_nonspace = false;
-                while (linedx > 0) {
-                    if (isspace(linebuf[linedx - 1])) {
+                while (!line_buffer.is_empty()) {
+                    if (isspace(line_buffer.last())) {
                         if (has_seen_nonspace)
                             break;
                     } else {
                         has_seen_nonspace = true;
                     }
                     putchar(0x8);
-                    --linedx;
+                    line_buffer.take_last();
                 }
                 fflush(stdout);
                 continue;
             }
             if (ch == g->termios.c_cc[VKILL]) {
-                if (linedx == 0)
+                if (line_buffer.is_empty())
                     continue;
-                for (; linedx; --linedx)
+                for (int i = 0; i < line_buffer.size(); ++i)
                     putchar(0x8);
-                linebuf[0] = '\0';
+                line_buffer.clear();
                 fflush(stdout);
                 continue;
             }
             putchar(ch);
             fflush(stdout);
             if (ch != '\n') {
-                linebuf[linedx++] = ch;
-                linebuf[linedx] = '\0';
+                line_buffer.append(ch);
             } else {
-                runcmd(linebuf);
-                linebuf[0] = '\0';
-                linedx = 0;
+                run_command(String::copy(line_buffer));
+                line_buffer.clear();
                 prompt();
             }
         }
