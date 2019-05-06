@@ -88,7 +88,7 @@ Rect GTableView::header_rect(int column_index) const
 
 Point GTableView::adjusted_position(const Point& position)
 {
-    return position.translated(-frame_thickness(), vertical_scrollbar().value() - frame_thickness());
+    return position.translated(horizontal_scrollbar().value() - frame_thickness(), vertical_scrollbar().value() - frame_thickness());
 }
 
 Rect GTableView::column_resize_grabbable_rect(int column) const
@@ -109,7 +109,6 @@ void GTableView::mousedown_event(GMouseEvent& event)
         for (int i = 0; i < model()->column_count(); ++i) {
             if (event.button() == GMouseButton::Left) {
                 if (column_resize_grabbable_rect(i).contains(adjusted_position)) {
-                    dbgprintf("now resizing column %d\n", i);
                     m_resizing_column = i;
                     m_in_column_resize = true;
                     m_column_resize_original_width = column_width(i);
@@ -157,6 +156,7 @@ void GTableView::mousemove_event(GMouseEvent& event)
         auto& column_data = this->column_data(m_resizing_column);
         if (column_data.width != new_width) {
             column_data.width = new_width;
+            update_content_size();
             update();
         }
         return;
