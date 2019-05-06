@@ -48,8 +48,8 @@ public:
     }
 
     bool is_empty() const { return m_table.is_empty(); }
-    unsigned size() const { return m_table.size(); }
-    unsigned capacity() const { return m_table.capacity(); }
+    int size() const { return m_table.size(); }
+    int capacity() const { return m_table.capacity(); }
     void clear() { m_table.clear(); }
 
     void set(const K&, const V&);
