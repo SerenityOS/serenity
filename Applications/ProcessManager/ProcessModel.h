@@ -6,6 +6,8 @@
 #include <LibGUI/GModel.h>
 #include <unistd.h>
 
+class GraphWidget;
+
 class ProcessModel final : public GModel {
 public:
     enum Column {
@@ -22,7 +24,7 @@ public:
         __Count
     };
 
-    static Retained<ProcessModel> create() { return adopt(*new ProcessModel); }
+    static Retained<ProcessModel> create(GraphWidget& graph) { return adopt(*new ProcessModel(graph)); }
     virtual ~ProcessModel() override;
 
     virtual int row_count(const GModelIndex&) const override;
@@ -33,7 +35,9 @@ public:
     virtual void update() override;
 
 private:
-    ProcessModel();
+    explicit ProcessModel(GraphWidget&);
+
+    GraphWidget& m_graph;
 
     struct ProcessState {
         pid_t pid;

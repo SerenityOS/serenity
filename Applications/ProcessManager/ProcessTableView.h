@@ -4,11 +4,12 @@
 #include <AK/Function.h>
 #include <unistd.h>
 
+class GraphWidget;
 class ProcessModel;
 
 class ProcessTableView final : public GTableView {
 public:
-    explicit ProcessTableView(GWidget* parent);
+    ProcessTableView(GraphWidget&, GWidget* parent);
     virtual ~ProcessTableView() override;
 
     pid_t selected_pid() const;

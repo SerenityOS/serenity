@@ -5,6 +5,7 @@
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GToolBar.h>
 #include <LibGUI/GMenuBar.h>
+#include <LibGUI/GGroupBox.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GTabWidget.h>
 #include <LibGUI/GLabel.h>
@@ -13,6 +14,7 @@
 #include <signal.h>
 #include "ProcessTableView.h"
 #include "MemoryStatsWidget.h"
+#include "GraphWidget.h"
 
 int main(int argc, char** argv)
 {
@@ -28,21 +30,45 @@ int main(int argc, char** argv)
 
     auto* widget = new GWidget(nullptr);
     tabwidget->add_widget("Processes", widget);
-    auto* placeholder_label = new GLabel("Placeholder text");
-    placeholder_label->set_fill_with_background_color(true);
-    placeholder_label->set_background_color(Color::LightGray);
-    tabwidget->add_widget("Placeholder", placeholder_label);
 
-    auto* placeholder2_label = new GLabel("Placeholder2 text");
-    placeholder2_label->set_fill_with_background_color(true);
-    placeholder2_label->set_background_color(Color::LightGray);
-    tabwidget->add_widget("Another", placeholder2_label);
+    auto* graphs_container = new GWidget;
+    graphs_container->set_fill_with_background_color(true);
+    graphs_container->set_background_color(Color::LightGray);
+    graphs_container->set_layout(make<GBoxLayout>(Orientation::Vertical));
+    graphs_container->layout()->set_margins({ 4, 4, 4, 4 });
+    graphs_container->layout()->set_spacing(4);
+
+    auto* cpu_graph_group_box = new GGroupBox("CPU usage", graphs_container);
+    cpu_graph_group_box->set_layout(make<GBoxLayout>(Orientation::Vertical));
+    cpu_graph_group_box->layout()->set_margins({ 6, 16, 6, 6 });
+    cpu_graph_group_box->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+    cpu_graph_group_box->set_preferred_size({ 0, 120 });
+    auto* cpu_graph = new GraphWidget(cpu_graph_group_box);
+    cpu_graph->set_max(100);
+    cpu_graph->set_text_color(Color::Green);
+    cpu_graph->set_graph_color(Color::from_rgb(0x00bb00));
+    cpu_graph->text_formatter = [] (int value, int) {
+        return String::format("%d%%", value);
+    };
+
+    auto* memory_graph_group_box = new GGroupBox("Memory usage", graphs_container);
+    memory_graph_group_box->set_layout(make<GBoxLayout>(Orientation::Vertical));
+    memory_graph_group_box->layout()->set_margins({ 4, 16, 4, 4 });
+    tabwidget->add_widget("Graphs", graphs_container);
+    memory_graph_group_box->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+    memory_graph_group_box->set_preferred_size({ 0, 120 });
+    auto* memory_graph = new GraphWidget(memory_graph_group_box);
+    memory_graph->set_text_color(Color::Cyan);
+    memory_graph->set_graph_color(Color::from_rgb(0x00bbbb));
+    memory_graph->text_formatter = [] (int value, int max) {
+        return String::format("%d / %d KB", value, max);
+    };
 
     widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
 
     auto* toolbar = new GToolBar(widget);
-    auto* process_table_view = new ProcessTableView(widget);
-    auto* memory_stats_widget = new MemoryStatsWidget(widget);
+    auto* process_table_view = new ProcessTableView(*cpu_graph, widget);
+    auto* memory_stats_widget = new MemoryStatsWidget(*memory_graph, widget);
 
     auto* refresh_timer = new CTimer(1000, [&] {
         process_table_view->refresh();
@@ -86,6 +112,9 @@ int main(int argc, char** argv)
     menubar->add_menu(move(process_menu));
 
     auto frequency_menu = make<GMenu>("Frequency");
+    frequency_menu->add_action(GAction::create("0.25 sec", [refresh_timer] (auto&) {
+        refresh_timer->restart(250);
+    }));
     frequency_menu->add_action(GAction::create("0.5 sec", [refresh_timer] (auto&) {
         refresh_timer->restart(500);
     }));
