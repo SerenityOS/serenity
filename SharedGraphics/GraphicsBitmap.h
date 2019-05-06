@@ -11,7 +11,7 @@
 
 class GraphicsBitmap : public Retainable<GraphicsBitmap> {
 public:
-    enum class Format { Invalid, RGB32, RGBA32 };
+    enum class Format { Invalid, RGB32, RGBA32, Indexed8 };
 
     static Retained<GraphicsBitmap> create(Format, const Size&);
     static Retained<GraphicsBitmap> create_wrapper(Format, const Size&, RGBA32*);
@@ -22,6 +22,8 @@ public:
 
     RGBA32* scanline(int y);
     const RGBA32* scanline(int y) const;
+
+    const byte* bits(int y) const;
 
     Rect rect() const { return { {}, m_size }; }
     Size size() const { return m_size; }
@@ -37,6 +39,23 @@ public:
 
     size_t size_in_bytes() const { return m_pitch * m_size.height() * sizeof(RGBA32); }
 
+    Color palette_color(byte index) const { return Color::from_rgba(m_palette[index]); }
+    void set_palette_color(byte index, Color color) { m_palette[index] = color.value(); }
+
+    Color get_pixel(int x, int y) const
+    {
+        switch (m_format) {
+        case Format::RGB32:
+            return Color::from_rgb(scanline(y)[x]);
+        case Format::RGBA32:
+            return Color::from_rgba(scanline(y)[x]);
+        case Format::Indexed8:
+            return Color::from_rgba(m_palette[bits(y)[x]]);
+        default:
+            ASSERT_NOT_REACHED();
+        }
+    }
+
 private:
     GraphicsBitmap(Format, const Size&);
     GraphicsBitmap(Format, const Size&, RGBA32*);
@@ -45,6 +64,7 @@ private:
 
     Size m_size;
     RGBA32* m_data { nullptr };
+    RGBA32* m_palette { nullptr };
     size_t m_pitch { 0 };
     Format m_format { Format::Invalid };
     bool m_needs_munmap { false };
@@ -60,4 +80,9 @@ inline RGBA32* GraphicsBitmap::scanline(int y)
 inline const RGBA32* GraphicsBitmap::scanline(int y) const
 {
     return reinterpret_cast<const RGBA32*>((((const byte*)m_data) + (y * m_pitch)));
+}
+
+inline const byte* GraphicsBitmap::bits(int y) const
+{
+    return reinterpret_cast<const byte*>(scanline(y));
 }

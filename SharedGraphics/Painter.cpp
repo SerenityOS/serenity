@@ -308,15 +308,32 @@ void Painter::blit(const Point& position, const GraphicsBitmap& source, const Re
     const int last_row = clipped_rect.bottom() - dst_rect.top();
     const int first_column = clipped_rect.left() - dst_rect.left();
     RGBA32* dst = m_target->scanline(clipped_rect.y()) + clipped_rect.x();
-    const RGBA32* src = source.scanline(src_rect.top() + first_row) + src_rect.left() + first_column;
     const size_t dst_skip = m_target->pitch() / sizeof(RGBA32);
-    const size_t src_skip = source.pitch() / sizeof(RGBA32);
 
-    for (int row = first_row; row <= last_row; ++row) {
-        fast_dword_copy(dst, src, clipped_rect.width());
-        dst += dst_skip;
-        src += src_skip;
+    if (source.format() == GraphicsBitmap::Format::RGB32 || source.format() == GraphicsBitmap::Format::RGBA32) {
+        const RGBA32* src = source.scanline(src_rect.top() + first_row) + src_rect.left() + first_column;
+        const size_t src_skip = source.pitch() / sizeof(RGBA32);
+        for (int row = first_row; row <= last_row; ++row) {
+            fast_dword_copy(dst, src, clipped_rect.width());
+            dst += dst_skip;
+            src += src_skip;
+        }
+        return;
     }
+
+    if (source.format() == GraphicsBitmap::Format::Indexed8) {
+        const byte* src = source.bits(src_rect.top() + first_row) + src_rect.left() + first_column;
+        const size_t src_skip = source.pitch();
+        for (int row = first_row; row <= last_row; ++row) {
+            for (int i = 0; i < clipped_rect.width(); ++i)
+                dst[i] = source.palette_color(src[i]).value();
+            dst += dst_skip;
+            src += src_skip;
+        }
+        return;
+    }
+
+    ASSERT_NOT_REACHED();
 }
 
 void Painter::draw_scaled_bitmap(const Rect& a_dst_rect, const GraphicsBitmap& source, const Rect& src_rect)
@@ -345,7 +362,7 @@ void Painter::draw_scaled_bitmap(const Rect& a_dst_rect, const GraphicsBitmap& s
 
             auto scaled_x = (float)(x - dst_rect.x()) * hscale;
             auto scaled_y = (float)(y - dst_rect.y()) * vscale;
-            auto src_pixel = Color::from_rgba(source.scanline((int)scaled_y)[(int)scaled_x]);
+            auto src_pixel = source.get_pixel(scaled_x, scaled_y);
 
             if (!src_pixel.alpha())
                 continue;
