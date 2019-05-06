@@ -2,6 +2,7 @@ include ../Makefile.common
 
 OBJS = \
     Parser.o \
+    LineEditor.o \
     main.o
 
 APP = Shell
