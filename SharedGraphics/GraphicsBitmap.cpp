@@ -17,6 +17,8 @@ GraphicsBitmap::GraphicsBitmap(Format format, const Size& size)
     , m_pitch(round_up_to_power_of_two(size.width() * sizeof(RGBA32), 16))
     , m_format(format)
 {
+    if (format == Format::Indexed8)
+        m_palette = new RGBA32[256];
     m_data = (RGBA32*)mmap(nullptr, size_in_bytes(), PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0);
     ASSERT(m_data && m_data != (void*)-1);
     m_needs_munmap = true;
@@ -47,6 +49,7 @@ GraphicsBitmap::GraphicsBitmap(Format format, const Size& size, RGBA32* data)
     , m_pitch(round_up_to_power_of_two(size.width() * sizeof(RGBA32), 16))
     , m_format(format)
 {
+    ASSERT(format != Format::Indexed8);
 }
 
 GraphicsBitmap::GraphicsBitmap(Format format, const Size& size, MappedFile&& mapped_file)
@@ -56,6 +59,7 @@ GraphicsBitmap::GraphicsBitmap(Format format, const Size& size, MappedFile&& map
     , m_format(format)
     , m_mapped_file(move(mapped_file))
 {
+    ASSERT(format != Format::Indexed8);
 }
 
 Retained<GraphicsBitmap> GraphicsBitmap::create_with_shared_buffer(Format format, Retained<SharedBuffer>&& shared_buffer, const Size& size)
@@ -70,6 +74,7 @@ GraphicsBitmap::GraphicsBitmap(Format format, Retained<SharedBuffer>&& shared_bu
     , m_format(format)
     , m_shared_buffer(move(shared_buffer))
 {
+    ASSERT(format != Format::Indexed8);
 }
 
 GraphicsBitmap::~GraphicsBitmap()
@@ -79,6 +84,7 @@ GraphicsBitmap::~GraphicsBitmap()
         ASSERT(rc == 0);
     }
     m_data = nullptr;
+    delete [] m_palette;
 }
 
 void GraphicsBitmap::set_mmap_name(const String& name)
