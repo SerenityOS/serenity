@@ -1,10 +1,12 @@
 #include "ProcessModel.h"
+#include "GraphWidget.h"
 #include <LibCore/CFile.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <pwd.h>
 
-ProcessModel::ProcessModel()
+ProcessModel::ProcessModel(GraphWidget& graph)
+    : m_graph(graph)
 {
     setpwent();
     while (auto* passwd = getpwent())
@@ -197,6 +199,7 @@ void ProcessModel::update()
     }
 
     m_pids.clear();
+    float total_cpu_percent = 0;
     Vector<pid_t, 16> pids_to_remove;
     for (auto& it : m_processes) {
         if (!live_pids.contains(it.key)) {
@@ -206,11 +209,15 @@ void ProcessModel::update()
         auto& process = *it.value;
         dword nsched_diff = process.current_state.nsched - process.previous_state.nsched;
         process.current_state.cpu_percent = ((float)nsched_diff * 100) / (float)(sum_nsched - last_sum_nsched);
-        if (it.key != 0)
+        if (it.key != 0) {
+            total_cpu_percent += process.current_state.cpu_percent;
             m_pids.append(it.key);
+        }
     }
     for (auto pid : pids_to_remove)
         m_processes.remove(pid);
+
+    m_graph.add_value(total_cpu_percent);
 
     did_update();
 }

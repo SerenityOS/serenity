@@ -1,4 +1,5 @@
 #include "MemoryStatsWidget.h"
+#include "GraphWidget.h"
 #include <LibGUI/GPainter.h>
 #include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GLabel.h>
@@ -6,8 +7,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-MemoryStatsWidget::MemoryStatsWidget(GWidget* parent)
+MemoryStatsWidget::MemoryStatsWidget(GraphWidget& graph, GWidget* parent)
     : GWidget(parent)
+    , m_graph(graph)
     , m_proc_memstat("/proc/memstat")
 {
     if (!m_proc_memstat.open(CIODevice::OpenMode::ReadOnly))
@@ -95,6 +97,9 @@ void MemoryStatsWidget::refresh()
         m_user_physical_pages_label->set_text(String::format("%uK/%uK", page_count_to_kb(user_pages_alloc), page_count_to_kb(user_pages_available)));
         m_supervisor_physical_pages_label->set_text(String::format("%uK/%uK", page_count_to_kb(supervisor_pages_alloc), page_count_to_kb(supervisor_pages_available)));
         m_kmalloc_count_label->set_text(String::format("%u/%u (+%u)", kmalloc_call_count, kfree_call_count, kmalloc_call_count - kfree_call_count));
+
+        m_graph.set_max(page_count_to_kb(user_pages_available));
+        m_graph.add_value(page_count_to_kb(user_pages_alloc));
     }
 }
 
