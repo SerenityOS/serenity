@@ -14,11 +14,10 @@ Retained<GraphicsBitmap> GraphicsBitmap::create(Format format, const Size& size)
 
 GraphicsBitmap::GraphicsBitmap(Format format, const Size& size)
     : m_size(size)
-    , m_pitch(size.width() * sizeof(RGBA32))
+    , m_pitch(round_up_to_power_of_two(size.width() * sizeof(RGBA32), 16))
     , m_format(format)
 {
-    size_t size_in_bytes = size.area() * sizeof(RGBA32);
-    m_data = (RGBA32*)mmap(nullptr, size_in_bytes, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0);
+    m_data = (RGBA32*)mmap(nullptr, size_in_bytes(), PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0);
     ASSERT(m_data && m_data != (void*)-1);
     m_needs_munmap = true;
     set_mmap_name(String::format("GraphicsBitmap [%dx%d]", width(), height()).characters());
@@ -45,7 +44,7 @@ RetainPtr<GraphicsBitmap> GraphicsBitmap::load_from_file(Format format, const St
 GraphicsBitmap::GraphicsBitmap(Format format, const Size& size, RGBA32* data)
     : m_size(size)
     , m_data(data)
-    , m_pitch(size.width() * sizeof(RGBA32))
+    , m_pitch(round_up_to_power_of_two(size.width() * sizeof(RGBA32), 16))
     , m_format(format)
 {
 }
@@ -53,7 +52,7 @@ GraphicsBitmap::GraphicsBitmap(Format format, const Size& size, RGBA32* data)
 GraphicsBitmap::GraphicsBitmap(Format format, const Size& size, MappedFile&& mapped_file)
     : m_size(size)
     , m_data((RGBA32*)mapped_file.pointer())
-    , m_pitch(size.width() * sizeof(RGBA32))
+    , m_pitch(round_up_to_power_of_two(size.width() * sizeof(RGBA32), 16))
     , m_format(format)
     , m_mapped_file(move(mapped_file))
 {
@@ -67,7 +66,7 @@ Retained<GraphicsBitmap> GraphicsBitmap::create_with_shared_buffer(Format format
 GraphicsBitmap::GraphicsBitmap(Format format, Retained<SharedBuffer>&& shared_buffer, const Size& size)
     : m_size(size)
     , m_data((RGBA32*)shared_buffer->data())
-    , m_pitch(size.width() * sizeof(RGBA32))
+    , m_pitch(round_up_to_power_of_two(size.width() * sizeof(RGBA32), 16))
     , m_format(format)
     , m_shared_buffer(move(shared_buffer))
 {
@@ -76,8 +75,7 @@ GraphicsBitmap::GraphicsBitmap(Format format, Retained<SharedBuffer>&& shared_bu
 GraphicsBitmap::~GraphicsBitmap()
 {
     if (m_needs_munmap) {
-        size_t size_in_bytes = m_size.area() * sizeof(RGBA32);
-        int rc = munmap(m_data, size_in_bytes);
+        int rc = munmap(m_data, size_in_bytes());
         ASSERT(rc == 0);
     }
     m_data = nullptr;
@@ -86,6 +84,5 @@ GraphicsBitmap::~GraphicsBitmap()
 void GraphicsBitmap::set_mmap_name(const String& name)
 {
     ASSERT(m_needs_munmap);
-    size_t size_in_bytes = m_size.area() * sizeof(RGBA32);
-    ::set_mmap_name(m_data, size_in_bytes, name.characters());
+    ::set_mmap_name(m_data, size_in_bytes(), name.characters());
 }

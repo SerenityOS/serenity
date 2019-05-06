@@ -41,6 +41,11 @@ extern "C" void* mmx_memcpy(void* to, const void* from, size_t);
     );
 }
 
+inline constexpr dword round_up_to_power_of_two(dword value, dword power_of_two)
+{
+    return ((value - 1) & ~ (power_of_two - 1)) + power_of_two;
+}
+
 namespace AK {
 
 template<typename T>

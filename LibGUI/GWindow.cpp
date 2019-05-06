@@ -473,7 +473,8 @@ Retained<GraphicsBitmap> GWindow::create_backing_bitmap(const Size& size)
 {
     ASSERT(GEventLoop::server_pid());
     ASSERT(!size.is_empty());
-    size_t size_in_bytes = size.area() * sizeof(RGBA32);
+    size_t pitch = round_up_to_power_of_two(size.width() * sizeof(RGBA32), 16);
+    size_t size_in_bytes = size.height() * pitch;
     auto shared_buffer = SharedBuffer::create(GEventLoop::server_pid(), size_in_bytes);
     ASSERT(shared_buffer);
     auto format = m_has_alpha_channel ? GraphicsBitmap::Format::RGBA32 : GraphicsBitmap::Format::RGB32;

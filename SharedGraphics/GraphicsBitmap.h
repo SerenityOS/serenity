@@ -35,6 +35,8 @@ public:
 
     void set_mmap_name(const String&);
 
+    size_t size_in_bytes() const { return m_pitch * m_size.height() * sizeof(RGBA32); }
+
 private:
     GraphicsBitmap(Format, const Size&);
     GraphicsBitmap(Format, const Size&, RGBA32*);
