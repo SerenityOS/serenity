@@ -19,6 +19,7 @@
 //#define SH_DEBUG
 
 GlobalState g;
+static LineEditor editor;
 
 static void prompt()
 {
@@ -112,6 +113,14 @@ static int sh_cd(int argc, char** argv)
     return 0;
 }
 
+static int sh_history(int, char**)
+{
+    for (int i = 0; i < editor.history().size(); ++i) {
+        printf("%6d  %s\n", i, editor.history()[i].characters());
+    }
+    return 0;
+}
+
 static bool handle_builtin(int argc, char** argv, int& retval)
 {
     if (argc == 0)
@@ -130,6 +139,10 @@ static bool handle_builtin(int argc, char** argv, int& retval)
     }
     if (!strcmp(argv[0], "export")) {
         retval = sh_export(argc, argv);
+        return true;
+    }
+    if (!strcmp(argv[0], "history")) {
+        retval = sh_history(argc, argv);
         return true;
     }
     return false;
@@ -387,7 +400,6 @@ int main(int argc, char** argv)
         free(cwd);
     }
 
-    LineEditor editor;
     for (;;) {
         prompt();
         auto line = editor.get_line();
