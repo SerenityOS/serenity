@@ -65,9 +65,9 @@ static void make_shell(int ptm_fd)
             perror("ioctl(TIOCSCTTY)");
             exit(1);
         }
-        char* args[] = { "/bin/sh", nullptr };
+        char* args[] = { "/bin/Shell", nullptr };
         char* envs[] = { "TERM=xterm", "PATH=/bin:/usr/bin", nullptr };
-        rc = execve("/bin/sh", args, envs);
+        rc = execve("/bin/Shell", args, envs);
         if (rc < 0) {
             perror("execve");
             exit(1);
