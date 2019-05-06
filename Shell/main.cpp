@@ -7,43 +7,33 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <termios.h>
-#include <ctype.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/utsname.h>
 #include <AK/FileSystemPath.h>
 #include <LibCore/CElapsedTimer.h>
+#include "GlobalState.h"
 #include "Parser.h"
+#include "LineEditor.h"
 
 //#define SH_DEBUG
 
-struct GlobalState {
-    String cwd;
-    String username;
-    String home;
-    char ttyname[32];
-    char hostname[32];
-    pid_t sid;
-    uid_t uid;
-    struct termios termios;
-    bool was_interrupted { false };
-};
-static GlobalState* g;
+GlobalState g;
 
 static void prompt()
 {
-    if (g->uid == 0)
+    if (g.uid == 0)
         printf("# ");
     else {
-        printf("\033]0;%s@%s:%s\007", g->username.characters(), g->hostname, g->cwd.characters());
-        printf("\033[31;1m%s\033[0m@\033[37;1m%s\033[0m:\033[32;1m%s\033[0m$> ", g->username.characters(), g->hostname, g->cwd.characters());
+        printf("\033]0;%s@%s:%s\007", g.username.characters(), g.hostname, g.cwd.characters());
+        printf("\033[31;1m%s\033[0m@\033[37;1m%s\033[0m:\033[32;1m%s\033[0m$> ", g.username.characters(), g.hostname, g.cwd.characters());
     }
     fflush(stdout);
 }
 
 static int sh_pwd(int, char**)
 {
-    printf("%s\n", g->cwd.characters());
+    printf("%s\n", g.cwd.characters());
     return 0;
 }
 
@@ -57,7 +47,7 @@ void did_receive_signal(int signum)
 
 void handle_sigint(int)
 {
-    g->was_interrupted = true;
+    g.was_interrupted = true;
 }
 
 static int sh_exit(int, char**)
@@ -88,12 +78,12 @@ static int sh_cd(int argc, char** argv)
     char pathbuf[PATH_MAX];
 
     if (argc == 1) {
-        strcpy(pathbuf, g->home.characters());
+        strcpy(pathbuf, g.home.characters());
     } else {
         if (argv[1][0] == '/')
             memcpy(pathbuf, argv[1], strlen(argv[1]) + 1);
         else
-            sprintf(pathbuf, "%s/%s", g->cwd.characters(), argv[1]);
+            sprintf(pathbuf, "%s/%s", g.cwd.characters(), argv[1]);
     }
 
     FileSystemPath canonical_path(pathbuf);
@@ -118,7 +108,7 @@ static int sh_cd(int argc, char** argv)
         printf("chdir(%s) failed: %s\n", path, strerror(errno));
         return 1;
     }
-    g->cwd = canonical_path.string();
+    g.cwd = canonical_path.string();
     return 0;
 }
 
@@ -277,7 +267,7 @@ static int run_command(const String& cmd)
             tcsetpgrp(0, getpid());
             for (auto& redirection : subcommand.redirections) {
                 if (redirection.type == Redirection::Rewire) {
-#ifdef SH_DEBUG
+#ifdef SH_DEBUGsh
                     dbgprintf("in %s<%d>, dup2(%d, %d)\n", argv[0], getpid(), redirection.rewire_fd, redirection.fd);
 #endif
                     int rc = dup2(redirection.rewire_fd, redirection.fd);
@@ -355,11 +345,10 @@ static int run_command(const String& cmd)
 
 int main(int argc, char** argv)
 {
-    g = new GlobalState;
-    g->uid = getuid();
-    g->sid = setsid();
+    g.uid = getuid();
+    g.sid = setsid();
     tcsetpgrp(0, getpgrp());
-    tcgetattr(0, &g->termios);
+    tcgetattr(0, &g.termios);
 
     {
         struct sigaction sa;
@@ -370,18 +359,18 @@ int main(int argc, char** argv)
         assert(rc == 0);
     }
 
-    int rc = gethostname(g->hostname, sizeof(g->hostname));
+    int rc = gethostname(g.hostname, sizeof(g.hostname));
     if (rc < 0)
         perror("gethostname");
-    rc = ttyname_r(0, g->ttyname, sizeof(g->ttyname));
+    rc = ttyname_r(0, g.ttyname, sizeof(g.ttyname));
     if (rc < 0)
         perror("ttyname_r");
 
     {
         auto* pw = getpwuid(getuid());
         if (pw) {
-            g->username = pw->pw_name;
-            g->home = pw->pw_dir;
+            g.username = pw->pw_name;
+            g.home = pw->pw_dir;
             putenv(const_cast<char*>(String::format("HOME=%s", pw->pw_dir).characters()));
         }
         endpwent();
@@ -392,81 +381,21 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    Vector<char, 256> line_buffer;
-
     {
         auto* cwd = getcwd(nullptr, 0);
-        g->cwd = cwd;
+        g.cwd = cwd;
         free(cwd);
     }
-    prompt();
+
+    LineEditor editor;
     for (;;) {
-        char keybuf[16];
-        ssize_t nread = read(0, keybuf, sizeof(keybuf));
-        if (nread == 0)
-            return 0;
-        if (nread < 0) {
-            if (errno == EINTR) {
-                if (g->was_interrupted) {
-                    if (!line_buffer.is_empty())
-                        printf("^C");
-                }
-                g->was_interrupted = false;
-                line_buffer.clear();
-                putchar('\n');
-                prompt();
-                continue;
-            } else {
-                perror("read failed");
-                return 2;
-            }
-        }
-        for (ssize_t i = 0; i < nread; ++i) {
-            char ch = keybuf[i];
-            if (ch == 0)
-                continue;
-            if (ch == 8 || ch == g->termios.c_cc[VERASE]) {
-                if (line_buffer.is_empty())
-                    continue;
-                line_buffer.take_last();
-                putchar(8);
-                fflush(stdout);
-                continue;
-            }
-            if (ch == g->termios.c_cc[VWERASE]) {
-                bool has_seen_nonspace = false;
-                while (!line_buffer.is_empty()) {
-                    if (isspace(line_buffer.last())) {
-                        if (has_seen_nonspace)
-                            break;
-                    } else {
-                        has_seen_nonspace = true;
-                    }
-                    putchar(0x8);
-                    line_buffer.take_last();
-                }
-                fflush(stdout);
-                continue;
-            }
-            if (ch == g->termios.c_cc[VKILL]) {
-                if (line_buffer.is_empty())
-                    continue;
-                for (int i = 0; i < line_buffer.size(); ++i)
-                    putchar(0x8);
-                line_buffer.clear();
-                fflush(stdout);
-                continue;
-            }
-            putchar(ch);
-            fflush(stdout);
-            if (ch != '\n') {
-                line_buffer.append(ch);
-            } else {
-                run_command(String::copy(line_buffer));
-                line_buffer.clear();
-                prompt();
-            }
-        }
+        prompt();
+        auto line = editor.get_line();
+        if (line.is_empty())
+            continue;
+        run_command(line);
+        editor.add_to_history(line);
     }
+
     return 0;
 }
