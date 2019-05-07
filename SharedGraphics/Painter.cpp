@@ -547,15 +547,6 @@ void Painter::draw_line(const Point& p1, const Point& p2, Color color)
     }
 }
 
-void Painter::draw_focus_rect(const Rect& rect)
-{
-    Rect focus_rect = rect;
-    focus_rect.move_by(1, 1);
-    focus_rect.set_width(focus_rect.width() - 2);
-    focus_rect.set_height(focus_rect.height() - 2);
-    draw_rect(focus_rect, Color::from_rgb(0x84351a));
-}
-
 void Painter::add_clip_rect(const Rect& rect)
 {
     state().clip_rect.intersect(rect.translated(m_clip_origin.location()));
