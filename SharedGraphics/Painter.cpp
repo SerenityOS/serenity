@@ -478,6 +478,8 @@ void Painter::set_pixel(const Point& p, Color color)
 
 void Painter::draw_line(const Point& p1, const Point& p2, Color color)
 {
+    auto clip_rect = this->clip_rect();
+
     auto point1 = p1;
     point1.move_by(state().translation);
 
@@ -487,37 +489,34 @@ void Painter::draw_line(const Point& p1, const Point& p2, Color color)
     // Special case: vertical line.
     if (point1.x() == point2.x()) {
         const int x = point1.x();
-        if (x < clip_rect().left() || x > clip_rect().right())
+        if (x < clip_rect.left() || x > clip_rect.right())
             return;
         if (point1.y() > point2.y())
             swap(point1, point2);
-        if (point1.y() > clip_rect().bottom())
+        if (point1.y() > clip_rect.bottom())
             return;
-        if (point2.y() < clip_rect().top())
+        if (point2.y() < clip_rect.top())
             return;
-        int min_y = max(point1.y(), clip_rect().top());
-        int max_y = min(point2.y(), clip_rect().bottom());
+        int min_y = max(point1.y(), clip_rect.top());
+        int max_y = min(point2.y(), clip_rect.bottom());
         for (int y = min_y; y <= max_y; ++y)
             set_pixel_with_draw_op(m_target->scanline(y)[x], color);
         return;
     }
 
-    if (point1.x() > point2.x())
-        swap(point1, point2);
-
     // Special case: horizontal line.
     if (point1.y() == point2.y()) {
         const int y = point1.y();
-        if (y < clip_rect().top() || y > clip_rect().bottom())
+        if (y < clip_rect.top() || y > clip_rect.bottom())
             return;
         if (point1.x() > point2.x())
             swap(point1, point2);
-        if (point1.x() > clip_rect().right())
+        if (point1.x() > clip_rect.right())
             return;
-        if (point2.x() < clip_rect().left())
+        if (point2.x() < clip_rect.left())
             return;
-        int min_x = max(point1.x(), clip_rect().left());
-        int max_x = min(point2.x(), clip_rect().right());
+        int min_x = max(point1.x(), clip_rect.left());
+        int max_x = min(point2.x(), clip_rect.right());
         auto* pixels = m_target->scanline(point1.y());
         if (draw_op() == DrawOp::Copy) {
             fast_dword_fill(pixels + min_x, color.value(), max_x - min_x + 1);
@@ -528,21 +527,47 @@ void Painter::draw_line(const Point& p1, const Point& p2, Color color)
         return;
     }
 
-    // FIXME: Implement clipping below.
+    const double adx = abs(point2.x() - point1.x());
+    const double ady = abs(point2.y() - point1.y());
 
+    if (adx > ady) {
+        if (point1.x() > point2.x())
+            swap(point1, point2);
+    } else {
+        if (point1.y() > point2.y())
+            swap(point1, point2);
+    }
+
+    // FIXME: Implement clipping below.
     const double dx = point2.x() - point1.x();
     const double dy = point2.y() - point1.y();
-    const double delta_error = fabs(dy / dx);
     double error = 0;
-    const double y_step = dy == 0 ? 0 : (dy > 0 ? 1 : -1);
 
-    int y = point1.y();
-    for (int x = point1.x(); x <= point2.x(); ++x) {
-        m_target->scanline(y)[x] = color.value();
-        error += delta_error;
-        if (error >= 0.5) {
-            y = (double)y + y_step;
-            error -= 1.0;
+    if (dx > dy) {
+        const double y_step = dy == 0 ? 0 : (dy > 0 ? 1 : -1);
+        const double delta_error = fabs(dy / dx);
+        int y = point1.y();
+        for (int x = point1.x(); x <= point2.x(); ++x) {
+            if (clip_rect.contains(x, y))
+                m_target->scanline(y)[x] = color.value();
+            error += delta_error;
+            if (error >= 0.5) {
+                y = (double)y + y_step;
+                error -= 1.0;
+            }
+        }
+    } else {
+        const double x_step = dx == 0 ? 0 : (dx > 0 ? 1 : -1);
+        const double delta_error = fabs(dx / dy);
+        int x = point1.x();
+        for (int y = point1.y(); y <= point2.y(); ++y) {
+            if (clip_rect.contains(x, y))
+                m_target->scanline(y)[x] = color.value();
+            error += delta_error;
+            if (error >= 0.5) {
+                x = (double)x + x_step;
+                error -= 1.0;
+            }
         }
     }
 }
