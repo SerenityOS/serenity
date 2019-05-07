@@ -48,6 +48,8 @@ $make_cmd -C ../Games/Snake clean && \
 $make_cmd -C ../Games/Snake && \
 $make_cmd -C ../Shell clean && \
 $make_cmd -C ../Shell && \
+$make_cmd -C ../Demos/HelloWorld clean && \
+$make_cmd -C ../Demos/HelloWorld && \
 $make_cmd clean &&\
 $make_cmd && \
 sudo ./sync.sh

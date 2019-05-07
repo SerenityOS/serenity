@@ -78,6 +78,7 @@ ln -s Snake mnt/bin/sn
 cp -v ../Shell/Shell mnt/bin/Shell
 ln -s Shell mnt/bin/sh
 cp -v kernel.map mnt/
+cp -v ../Demos/HelloWorld/HelloWorld mnt/bin/HelloWorld
 
 # Run local sync script, if it exists
 if [ -f sync-local.sh ]; then
