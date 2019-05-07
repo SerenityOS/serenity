@@ -16,6 +16,9 @@ public:
 private:
     void clear_line();
     void append(const String&);
+    void vt_save_cursor();
+    void vt_restore_cursor();
+    void vt_clear_to_end_of_line();
 
     Vector<char, 1024> m_buffer;
     int m_cursor { 0 };
