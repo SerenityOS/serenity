@@ -6,6 +6,8 @@
 GTabWidget::GTabWidget(GWidget* parent)
     : GWidget(parent)
 {
+    set_fill_with_background_color(true);
+    set_background_color(Color::LightGray);
 }
 
 GTabWidget::~GTabWidget()
@@ -80,8 +82,6 @@ void GTabWidget::paint_event(GPaintEvent& event)
 {
     GPainter painter(*this);
     painter.add_clip_rect(event.rect());
-
-    painter.fill_rect(bar_rect(), Color::LightGray);
 
     Rect container_rect { 0, bar_height(), width(), height() - bar_height() };
     auto padding_rect = container_rect;
