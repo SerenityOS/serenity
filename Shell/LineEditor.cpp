@@ -146,42 +146,39 @@ String LineEditor::get_line()
                 continue;
             }
 
-            if (ch == 8 || ch == g.termios.c_cc[VERASE]) {
+            auto do_backspace = [&] {
                 if (m_cursor == 0)
-                    continue;
+                    return;
                 m_buffer.remove(m_cursor - 1);
                 --m_cursor;
                 putchar(8);
-                fputs("\033[s", stdout);
-                fputs("\033[K", stdout);
+                vt_save_cursor();
+                vt_clear_to_end_of_line();
                 for (int i = m_cursor; i < m_buffer.size(); ++i)
                     fputc(m_buffer[i], stdout);
-                fputs("\033[u", stdout);
-                fflush(stdout);
+                vt_restore_cursor();
+            };
+
+            if (ch == 8 || ch == g.termios.c_cc[VERASE]) {
+                do_backspace();
                 continue;
             }
             if (ch == g.termios.c_cc[VWERASE]) {
                 bool has_seen_nonspace = false;
-                while (!m_buffer.is_empty()) {
-                    if (isspace(m_buffer.last())) {
+                while (m_cursor > 0) {
+                    if (isspace(m_buffer[m_cursor - 1])) {
                         if (has_seen_nonspace)
                             break;
                     } else {
                         has_seen_nonspace = true;
                     }
-                    putchar(0x8);
-                    m_buffer.take_last();
+                    do_backspace();
                 }
-                fflush(stdout);
                 continue;
             }
             if (ch == g.termios.c_cc[VKILL]) {
-                if (m_buffer.is_empty())
-                    continue;
-                for (int i = 0; i < m_buffer.size(); ++i)
-                    putchar(0x8);
-                m_buffer.clear();
-                fflush(stdout);
+                while (m_cursor > 0)
+                    do_backspace();
                 continue;
             }
             putchar(ch);
@@ -197,15 +194,31 @@ String LineEditor::get_line()
                 ++m_cursor;
                 continue;
             }
-            fputs("\033[s", stdout);
-            fputs("\033[K", stdout);
+            vt_save_cursor();
+            vt_clear_to_end_of_line();
             for (int i = m_cursor; i < m_buffer.size(); ++i)
                 fputc(m_buffer[i], stdout);
-            fputs("\033[u", stdout);
-            fflush(stdout);
+            vt_restore_cursor();
             m_buffer.insert(m_cursor, move(ch));
             ++m_cursor;
-
         }
     }
+}
+
+void LineEditor::vt_save_cursor()
+{
+    fputs("\033[s", stdout);
+    fflush(stdout);
+}
+
+void LineEditor::vt_restore_cursor()
+{
+    fputs("\033[u", stdout);
+    fflush(stdout);
+}
+
+void LineEditor::vt_clear_to_end_of_line()
+{
+    fputs("\033[K", stdout);
+    fflush(stdout);
 }
