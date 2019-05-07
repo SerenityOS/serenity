@@ -19,8 +19,24 @@ void LineEditor::add_to_history(const String& line)
     m_history.append(line);
 }
 
+void LineEditor::clear_line()
+{
+    for (int i = 0; i < m_buffer.size(); ++i)
+        fputc(0x8, stdout);
+    fflush(stdout);
+    m_buffer.clear();
+}
+
+void LineEditor::append(const String& string)
+{
+    m_buffer.append(string.characters(), string.length());
+    fputs(string.characters(), stdout);
+    fflush(stdout);
+}
+
 String LineEditor::get_line()
 {
+    m_history_cursor = m_history.size();
     for (;;) {
         char keybuf[16];
         ssize_t nread = read(0, keybuf, sizeof(keybuf));
@@ -37,17 +53,64 @@ String LineEditor::get_line()
                 m_buffer.clear();
                 putchar('\n');
                 return String::empty();
-            } else {
-                perror("read failed");
-                // FIXME: exit()ing here is a bit off. Should communicate failure to caller somehow instead.
-                exit(2);
             }
+            perror("read failed");
+            // FIXME: exit()ing here is a bit off. Should communicate failure to caller somehow instead.
+            exit(2);
         }
 
         for (ssize_t i = 0; i < nread; ++i) {
             char ch = keybuf[i];
             if (ch == 0)
                 continue;
+
+            switch (m_state) {
+            case InputState::ExpectBracket:
+                if (ch == '[') {
+                    m_state = InputState::ExpectFinal;
+                    continue;
+                } else {
+                    m_state = InputState::Free;
+                    break;
+                }
+            case InputState::ExpectFinal:
+                switch (ch) {
+                case 'A': // up
+                    if (m_history_cursor > 0)
+                        --m_history_cursor;
+                    clear_line();
+                    if (m_history_cursor < m_history.size())
+                        append(m_history[m_history_cursor]);
+                    m_state = InputState::Free;
+                    continue;
+                case 'B': // down
+                    if (m_history_cursor < m_history.size())
+                        ++m_history_cursor;
+                    clear_line();
+                    if (m_history_cursor < m_history.size())
+                        append(m_history[m_history_cursor]);
+                    m_state = InputState::Free;
+                    continue;
+                case 'D': // left
+                    m_state = InputState::Free;
+                    continue;
+                case 'C': // right
+                    m_state = InputState::Free;
+                    continue;
+                default:
+                    dbgprintf("Shell: Unhandled final: %b (%c)\n", ch, ch);
+                    m_state = InputState::Free;
+                    continue;
+                }
+                break;
+            case InputState::Free:
+                if (ch == 27) {
+                    m_state = InputState::ExpectBracket;
+                    continue;
+                }
+                break;
+            }
+
             if (ch == 8 || ch == g.termios.c_cc[VERASE]) {
                 if (m_buffer.is_empty())
                     continue;
