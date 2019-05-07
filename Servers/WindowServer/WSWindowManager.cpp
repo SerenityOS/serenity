@@ -95,8 +95,8 @@ WSWindowManager::WSWindowManager()
     {
         byte system_menu_name[] = { 0xf8, 0 };
         m_system_menu = make<WSMenu>(nullptr, -1, String((const char*)system_menu_name));
-        m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, 0, "Open Terminal..."));
-        m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, 1, "Open ProcessManager..."));
+        m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, 1, "Open Terminal..."));
+        m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, 2, "Open ProcessManager..."));
         m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, WSMenuItem::Separator));
         m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, 100, "640x480"));
         m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, 101, "800x600"));
@@ -107,14 +107,14 @@ WSWindowManager::WSWindowManager()
         m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, WSMenuItem::Separator));
         m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, 200, "About..."));
         m_system_menu->on_item_activation = [this] (WSMenuItem& item) {
-            if (item.identifier() == 0) {
+            if (item.identifier() == 1) {
                 if (fork() == 0) {
                     execl("/bin/Terminal", "/bin/Terminal", nullptr);
                     ASSERT_NOT_REACHED();
                 }
                 return;
             }
-            if (item.identifier() == 1) {
+            if (item.identifier() == 2) {
                 if (fork() == 0) {
                     execl("/bin/ProcessManager", "/bin/ProcessManager", nullptr);
                     ASSERT_NOT_REACHED();
