@@ -98,7 +98,7 @@ void GTabWidget::paint_event(GPaintEvent& event)
         bool hovered = i == m_hovered_tab_index;
         auto button_rect = this->button_rect(i);
         StylePainter::paint_tab_button(painter, button_rect, false, hovered, m_tabs[i].widget->is_enabled());
-        painter.draw_text(button_rect, m_tabs[i].title, TextAlignment::Center);
+        painter.draw_text(button_rect.translated(0, 1), m_tabs[i].title, TextAlignment::Center);
     }
 
     for (int i = 0; i < m_tabs.size(); ++i) {
@@ -107,7 +107,7 @@ void GTabWidget::paint_event(GPaintEvent& event)
         bool hovered = i == m_hovered_tab_index;
         auto button_rect = this->button_rect(i);
         StylePainter::paint_tab_button(painter, button_rect, true, hovered, m_tabs[i].widget->is_enabled());
-        painter.draw_text(button_rect, m_tabs[i].title, TextAlignment::Center);
+        painter.draw_text(button_rect.translated(0, 1), m_tabs[i].title, TextAlignment::Center);
         painter.draw_line(button_rect.bottom_left().translated(1, 1), button_rect.bottom_right().translated(-1, 1), background_color());
         break;
     }

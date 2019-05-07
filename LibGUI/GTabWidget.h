@@ -10,7 +10,7 @@ public:
     GWidget* active_widget() const { return m_active_widget; }
     void set_active_widget(GWidget*);
 
-    int bar_height() const { return 22; }
+    int bar_height() const { return 21; }
     int container_padding() const { return 2; }
 
     void add_widget(const String&, GWidget*);
