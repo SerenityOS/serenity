@@ -25,6 +25,7 @@ void LineEditor::clear_line()
         fputc(0x8, stdout);
     fflush(stdout);
     m_buffer.clear();
+    m_cursor = 0;
 }
 
 void LineEditor::append(const String& string)
@@ -32,11 +33,13 @@ void LineEditor::append(const String& string)
     m_buffer.append(string.characters(), string.length());
     fputs(string.characters(), stdout);
     fflush(stdout);
+    m_cursor = m_buffer.size();
 }
 
 String LineEditor::get_line()
 {
     m_history_cursor = m_history.size();
+    m_cursor = 0;
     for (;;) {
         char keybuf[16];
         ssize_t nread = read(0, keybuf, sizeof(keybuf));
@@ -92,9 +95,19 @@ String LineEditor::get_line()
                     m_state = InputState::Free;
                     continue;
                 case 'D': // left
+                    if (m_cursor > 0) {
+                        --m_cursor;
+                        fputs("\033[D", stdout);
+                        fflush(stdout);
+                    }
                     m_state = InputState::Free;
                     continue;
                 case 'C': // right
+                    if (m_cursor < m_buffer.size()) {
+                        ++m_cursor;
+                        fputs("\033[C", stdout);
+                        fflush(stdout);
+                    }
                     m_state = InputState::Free;
                     continue;
                 default:
@@ -117,10 +130,16 @@ String LineEditor::get_line()
             }
 
             if (ch == 8 || ch == g.termios.c_cc[VERASE]) {
-                if (m_buffer.is_empty())
+                if (m_cursor == 0)
                     continue;
-                m_buffer.take_last();
+                m_buffer.remove(m_cursor - 1);
+                --m_cursor;
                 putchar(8);
+                fputs("\033[s", stdout);
+                fputs("\033[K", stdout);
+                for (int i = m_cursor; i < m_buffer.size(); ++i)
+                    fputc(m_buffer[i], stdout);
+                fputs("\033[u", stdout);
                 fflush(stdout);
                 continue;
             }
@@ -150,13 +169,26 @@ String LineEditor::get_line()
             }
             putchar(ch);
             fflush(stdout);
-            if (ch != '\n') {
-                m_buffer.append(ch);
-            } else {
+            if (ch == '\n') {
                 auto string = String::copy(m_buffer);
                 m_buffer.clear();
                 return string;
             }
+
+            if (m_cursor == m_buffer.size()) {
+                m_buffer.append(ch);
+                ++m_cursor;
+                continue;
+            }
+            fputs("\033[s", stdout);
+            fputs("\033[K", stdout);
+            for (int i = m_cursor; i < m_buffer.size(); ++i)
+                fputc(m_buffer[i], stdout);
+            fputs("\033[u", stdout);
+            fflush(stdout);
+            m_buffer.insert(m_cursor, move(ch));
+            ++m_cursor;
+
         }
     }
 }
