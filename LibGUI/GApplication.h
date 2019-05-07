@@ -18,7 +18,7 @@ public:
     ~GApplication();
 
     int exec();
-    void quit(int);
+    void quit(int = 0);
 
     void set_menubar(OwnPtr<GMenuBar>&&);
     GAction* action_for_key_event(const GKeyEvent&);
