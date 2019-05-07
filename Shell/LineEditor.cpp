@@ -21,8 +21,9 @@ void LineEditor::add_to_history(const String& line)
 
 void LineEditor::clear_line()
 {
-    for (int i = 0; i < m_buffer.size(); ++i)
+    for (int i = 0; i < m_cursor; ++i)
         fputc(0x8, stdout);
+    fputs("\033[K", stdout);
     fflush(stdout);
     m_buffer.clear();
     m_cursor = 0;
@@ -107,6 +108,22 @@ String LineEditor::get_line()
                         ++m_cursor;
                         fputs("\033[C", stdout);
                         fflush(stdout);
+                    }
+                    m_state = InputState::Free;
+                    continue;
+                case 'H':
+                    if (m_cursor > 0) {
+                        fprintf(stdout, "\033[%dD", m_cursor);
+                        fflush(stdout);
+                        m_cursor = 0;
+                    }
+                    m_state = InputState::Free;
+                    continue;
+                case 'F':
+                    if (m_cursor < m_buffer.size()) {
+                        fprintf(stdout, "\033[%dC", m_buffer.size() - m_cursor);
+                        fflush(stdout);
+                        m_cursor = m_buffer.size();
                     }
                     m_state = InputState::Free;
                     continue;
