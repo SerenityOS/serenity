@@ -111,6 +111,11 @@ String LineEditor::get_line()
                 break;
             }
 
+            if (ch == '\t') {
+                // FIXME: Implement tab-completion.
+                continue;
+            }
+
             if (ch == 8 || ch == g.termios.c_cc[VERASE]) {
                 if (m_buffer.is_empty())
                     continue;
