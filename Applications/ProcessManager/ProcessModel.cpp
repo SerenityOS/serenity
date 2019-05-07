@@ -54,13 +54,13 @@ GModel::ColumnMetadata ProcessModel::column_metadata(int column) const
 {
     switch (column) {
     case Column::Icon: return { 16, TextAlignment::CenterLeft };
-    case Column::PID: return { 25, TextAlignment::CenterRight };
+    case Column::PID: return { 32, TextAlignment::CenterRight };
     case Column::State: return { 75, TextAlignment::CenterLeft };
     case Column::Priority: return { 16, TextAlignment::CenterLeft };
     case Column::User: return { 50, TextAlignment::CenterLeft };
     case Column::Linear: return { 65, TextAlignment::CenterRight };
     case Column::Physical: return { 65, TextAlignment::CenterRight };
-    case Column::CPU: return { 25, TextAlignment::CenterRight };
+    case Column::CPU: return { 32, TextAlignment::CenterRight };
     case Column::Name: return { 140, TextAlignment::CenterLeft };
     case Column::Syscalls: return { 60, TextAlignment::CenterRight };
     default: ASSERT_NOT_REACHED();
