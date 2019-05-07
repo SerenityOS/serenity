@@ -79,8 +79,8 @@ void WSScreen::on_receive_mouse_data(int dx, int dy, unsigned buttons)
         auto message = make<WSMouseEvent>(WSEvent::MouseMove, m_cursor_location, buttons, MouseButton::None, m_modifiers);
         WSEventLoop::the().post_event(WSWindowManager::the(), move(message));
     }
-    // NOTE: Invalidate the cursor if it moved, or if the left button changed state (for the cursor color inversion.)
-    if (m_cursor_location != prev_location || changed_buttons & (unsigned)MouseButton::Left)
+
+    if (m_cursor_location != prev_location)
         WSWindowManager::the().invalidate_cursor();
 }
 
