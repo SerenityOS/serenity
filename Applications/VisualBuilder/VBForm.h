@@ -25,6 +25,8 @@ public:
 
     Function<void(VBWidget*)> on_widget_selected;
 
+    void dump();
+
 protected:
     virtual void paint_event(GPaintEvent&) override;
     virtual void second_paint_event(GPaintEvent&) override;

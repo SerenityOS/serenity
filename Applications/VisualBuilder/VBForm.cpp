@@ -300,6 +300,19 @@ void VBForm::mousemove_event(GMouseEvent& event)
     }
 }
 
+void VBForm::dump()
+{
+    dbgprintf("[Form]\n");
+    dbgprintf("Name=%s\n", m_name.characters());
+    dbgprintf("\n");
+    int i = 0;
+    for (auto& widget : m_widgets) {
+        dbgprintf("[Widget %d]\n", i++);
+        widget->dump();
+        dbgprintf("\n");
+    }
+}
+
 void VBForm::mouseup_event(GMouseEvent& event)
 {
     if (event.button() == GMouseButton::Left) {
