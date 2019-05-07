@@ -24,7 +24,6 @@ public:
     void draw_bitmap(const Point&, const GlyphBitmap&, Color = Color());
     void set_pixel(const Point&, Color);
     void draw_line(const Point&, const Point&, Color);
-    void draw_focus_rect(const Rect&);
     void draw_scaled_bitmap(const Rect& dst_rect, const GraphicsBitmap&, const Rect& src_rect);
     void blit(const Point&, const GraphicsBitmap&, const Rect& src_rect, float opacity = 1.0f);
     void blit_dimmed(const Point&, const GraphicsBitmap&, const Rect& src_rect);
