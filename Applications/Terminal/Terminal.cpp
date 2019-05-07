@@ -769,6 +769,12 @@ void Terminal::keydown_event(GKeyEvent& event)
     case KeyCode::Key_Left:
         write(m_ptm_fd, "\033[D", 3);
         break;
+    case KeyCode::Key_Home:
+        write(m_ptm_fd, "\033[H", 3);
+        break;
+    case KeyCode::Key_End:
+        write(m_ptm_fd, "\033[F", 3);
+        break;
     default:
         write(m_ptm_fd, &ch, 1);
         break;
