@@ -31,9 +31,7 @@ void GTabWidget::set_active_widget(GWidget* widget)
         m_active_widget->set_visible(true);
     }
 
-    auto invalidation_rect = bar_rect();
-    invalidation_rect.set_height(invalidation_rect.height() + 1);
-    update(invalidation_rect);
+    update_bar();
 }
 
 void GTabWidget::resize_event(GResizeEvent& event)
@@ -97,16 +95,18 @@ void GTabWidget::paint_event(GPaintEvent& event)
     for (int i = 0; i < m_tabs.size(); ++i) {
         if (m_tabs[i].widget == m_active_widget)
             continue;
+        bool hovered = i == m_hovered_tab_index;
         auto button_rect = this->button_rect(i);
-        StylePainter::paint_tab_button(painter, button_rect, false, m_tabs[i].hovered, m_tabs[i].widget->is_enabled());
+        StylePainter::paint_tab_button(painter, button_rect, false, hovered, m_tabs[i].widget->is_enabled());
         painter.draw_text(button_rect, m_tabs[i].title, TextAlignment::Center);
     }
 
     for (int i = 0; i < m_tabs.size(); ++i) {
         if (m_tabs[i].widget != m_active_widget)
             continue;
+        bool hovered = i == m_hovered_tab_index;
         auto button_rect = this->button_rect(i);
-        StylePainter::paint_tab_button(painter, button_rect, true, m_tabs[i].hovered, m_tabs[i].widget->is_enabled());
+        StylePainter::paint_tab_button(painter, button_rect, true, hovered, m_tabs[i].widget->is_enabled());
         painter.draw_text(button_rect, m_tabs[i].title, TextAlignment::Center);
         painter.draw_line(button_rect.bottom_left().translated(1, 1), button_rect.bottom_right().translated(-1, 1), background_color());
         break;
@@ -141,5 +141,38 @@ void GTabWidget::mousedown_event(GMouseEvent& event)
         if (!button_rect.contains(event.position()))
             continue;
         set_active_widget(m_tabs[i].widget);
+        return;
     }
+}
+
+void GTabWidget::mousemove_event(GMouseEvent& event)
+{
+    int hovered_tab = -1;
+    for (int i = 0; i < m_tabs.size(); ++i) {
+        auto button_rect = this->button_rect(i);
+        if (!button_rect.contains(event.position()))
+            continue;
+        hovered_tab = i;
+        if (m_tabs[i].widget == m_active_widget)
+            break;
+    }
+    if (hovered_tab == m_hovered_tab_index)
+        return;
+    m_hovered_tab_index = hovered_tab;
+    update_bar();
+}
+
+void GTabWidget::leave_event(CEvent&)
+{
+    if (m_hovered_tab_index != -1) {
+        m_hovered_tab_index = -1;
+        update_bar();
+    }
+}
+
+void GTabWidget::update_bar()
+{
+    auto invalidation_rect = bar_rect();
+    invalidation_rect.set_height(invalidation_rect.height() + 1);
+    update(invalidation_rect);
 }

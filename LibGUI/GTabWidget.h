@@ -22,11 +22,14 @@ protected:
     virtual void child_event(CChildEvent&) override;
     virtual void resize_event(GResizeEvent&) override;
     virtual void mousedown_event(GMouseEvent&) override;
+    virtual void mousemove_event(GMouseEvent&) override;
+    virtual void leave_event(CEvent&) override;
 
 private:
     Rect child_rect_for_size(const Size&) const;
     Rect button_rect(int index) const;
     Rect bar_rect() const;
+    void update_bar();
 
     GWidget* m_active_widget { nullptr };
 
@@ -35,7 +38,7 @@ private:
         int width(const Font&) const;
         String title;
         GWidget* widget { nullptr };
-        bool hovered { false };
     };
     Vector<TabData> m_tabs;
+    int m_hovered_tab_index { -1 };
 };
