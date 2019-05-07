@@ -52,6 +52,7 @@ public:
 
     T* head() const { return m_head; }
     T* remove_head();
+    T* remove_tail();
 
     T* tail() const { return m_tail; }
 
@@ -146,6 +147,14 @@ template<typename T> inline void InlineLinkedList<T>::remove(T* node)
 template<typename T> inline T* InlineLinkedList<T>::remove_head()
 {
     T* node = head();
+    if (node)
+        remove(node);
+    return node;
+}
+
+template<typename T> inline T* InlineLinkedList<T>::remove_tail()
+{
+    T* node = tail();
     if (node)
         remove(node);
     return node;
