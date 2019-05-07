@@ -21,6 +21,8 @@ public:
 
     Function<void(int value)> on_change;
 
+    virtual const char* class_name() const override { return "GSpinBox"; }
+
 protected:
     virtual void resize_event(GResizeEvent&) override;
 
