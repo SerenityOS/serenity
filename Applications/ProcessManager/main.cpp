@@ -54,7 +54,6 @@ int main(int argc, char** argv)
     auto* memory_graph_group_box = new GGroupBox("Memory usage", graphs_container);
     memory_graph_group_box->set_layout(make<GBoxLayout>(Orientation::Vertical));
     memory_graph_group_box->layout()->set_margins({ 6, 16, 6, 6 });
-    tabwidget->add_widget("Graphs", graphs_container);
     memory_graph_group_box->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     memory_graph_group_box->set_preferred_size({ 0, 120 });
     auto* memory_graph = new GraphWidget(memory_graph_group_box);
@@ -63,6 +62,8 @@ int main(int argc, char** argv)
     memory_graph->text_formatter = [] (int value, int max) {
         return String::format("%d / %d KB", value, max);
     };
+
+    tabwidget->add_widget("Graphs", graphs_container);
 
     widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
 
