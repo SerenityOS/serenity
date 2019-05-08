@@ -128,21 +128,6 @@ inline bool is_valid_final_character(byte ch)
     return ch >= 0x40 && ch <= 0x7e;
 }
 
-unsigned parse_uint(const String& str, bool& ok)
-{
-    unsigned value = 0;
-    for (int i = 0; i < str.length(); ++i) {
-        if (str[i] < '0' || str[i] > '9') {
-            ok = false;
-            return 0;
-        }
-        value = value * 10;
-        value += str[i] - '0';
-    }
-    ok = true;
-    return value;
-}
-
 enum class VGAColor : byte {
     Black = 0,
     Blue,
@@ -324,7 +309,7 @@ void VirtualConsole::execute_escape_sequence(byte final)
     Vector<unsigned> params;
     for (auto& parampart : paramparts) {
         bool ok;
-        unsigned value = parse_uint(parampart, ok);
+        unsigned value = parampart.to_uint(ok);
         if (!ok) {
             // FIXME: Should we do something else?
             return;
