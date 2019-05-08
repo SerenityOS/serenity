@@ -5,46 +5,27 @@
 #include <LibCore/CFile.h>
 #include <AK/AKString.h>
 
-static unsigned parse_uint(const String& str, bool& ok)
-{
-    if (str.is_empty()) {
-        ok = false;
-        return 0;
-    }
-    unsigned value = 0;
-    for (int i = 0; i < str.length(); ++i) {
-        if (str[i] < '0' || str[i] > '9') {
-            ok = false;
-            return 0;
-        }
-        value = value * 10;
-        value += (unsigned)(str[i] - '0');
-    }
-    ok = true;
-    return value;
-}
-
 static void print_usage_and_exit()
 {
     printf("usage: killall [-signal] process_name\n");
     exit(1);
 }
 
-static int kill_all(const String & process_name, const unsigned signum)
+static int kill_all(const String& process_name, const unsigned signum)
 {
     CFile file("/proc/all");
     if (!file.open(CIODevice::ReadOnly)) {
-	printf("killall failed to open /proc/all\n");
+	fprintf(stderr, "killall failed to open /proc/all\n");
 	return 3;
     }
 
-    for(;;) {
+    for (;;) {
 	auto line = file.read_line(1024);
       
 	if (line.is_empty())
 	    break;
 
-	auto chomped = String((const char *)line.pointer(), line.size() - 1, Chomp);
+	auto chomped = String((const char*)line.pointer(), line.size() - 1, Chomp);
 	auto parts = chomped.split_view(',');
 
 	if (parts.size() < 18)
@@ -55,14 +36,14 @@ static int kill_all(const String & process_name, const unsigned signum)
 	String name = parts[11];
 
 	if (!ok) {
-	    printf("killall failed : couldn't convert %s to a valid pid\n", parts[0].characters());
+	    fprintf(stderr, "killall failed : couldn't convert %s to a valid pid\n", parts[0].characters());
 	    return 4;
 	}
       
 	if (name == process_name) {	
 	    int ret = kill(pid, signum);
 	    if (ret < 0)
-		perror("killall");
+		perror("kill");
 	}
     }
 
@@ -83,13 +64,13 @@ int main(int argc, char** argv)
       
         if (argv[1][0] != '-')
             print_usage_and_exit();
-        signum = parse_uint(&argv[1][1], ok);
+	
+	signum = String(&argv[1][1]).to_uint(ok);
         if (!ok) {
             printf("'%s' is not a valid signal number\n", &argv[1][1]);
             return 2;
         }
     }
 
-    String given_name = String(argv[name_argi]);
-    return kill_all(given_name, signum);
+    return kill_all(argv[name_argi], signum);
 }
