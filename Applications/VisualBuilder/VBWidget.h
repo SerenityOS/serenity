@@ -59,8 +59,6 @@ public:
     Rect transform_origin_rect() const { return m_transform_origin_rect; }
     void capture_transform_origin_rect();
 
-    void dump();
-
 private:
     VBWidget(VBWidgetType, VBForm&);
 

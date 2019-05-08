@@ -195,10 +195,3 @@ void VBWidget::capture_transform_origin_rect()
 {
     m_transform_origin_rect = rect();
 }
-
-void VBWidget::dump()
-{
-    for (auto& property : m_properties) {
-        dbgprintf("%s=%s\n", property->name().characters(), property->value().to_string().characters());
-    }
-}
