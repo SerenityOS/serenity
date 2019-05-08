@@ -1,7 +1,6 @@
 include ../../Makefile.common
 
 OBJS = \
-    DirectoryModel.o \
     DirectoryView.o \
     main.o
 

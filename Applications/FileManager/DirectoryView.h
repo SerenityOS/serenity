@@ -3,8 +3,8 @@
 #include <LibGUI/GTableView.h>
 #include <LibGUI/GItemView.h>
 #include <LibGUI/GStackWidget.h>
+#include <LibGUI/GDirectoryModel.h>
 #include <sys/stat.h>
-#include "DirectoryModel.h"
 
 class DirectoryView final : public GStackWidget {
 public:
@@ -26,14 +26,14 @@ public:
     ViewMode view_mode() const { return m_view_mode; }
 
 private:
-    DirectoryModel& model() { return *m_model; }
-    const DirectoryModel& model() const { return *m_model; }
+    GDirectoryModel& model() { return *m_model; }
+    const GDirectoryModel& model() const { return *m_model; }
 
     void set_status_message(const String&);
 
     ViewMode m_view_mode { Invalid };
 
-    Retained<DirectoryModel> m_model;
+    Retained<GDirectoryModel> m_model;
 
     GTableView* m_table_view { nullptr };
     GItemView* m_item_view { nullptr };
