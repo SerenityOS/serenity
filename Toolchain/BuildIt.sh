@@ -7,18 +7,27 @@ TARGET=i686-pc-serenity
 PREFIX="$DIR/Local"
 SYSROOT="$DIR/../Root"
 
+echo PREFIX is $PREFIX
+echo SYSROOT is $SYSROOT
+
 mkdir -p "$DIR/Tarballs"
 
 source "$DIR/UseIt.sh"
 
 pushd "$DIR/Tarballs"
-    if [ ! -e "binutils-2.32.tar.gz" ]; then
+    md5="$(md5sum binutils-2.32.tar.gz | cut -f1 -d' ')"
+    echo "bu md5='$md5'"
+    if [ ! -e "binutils-2.32.tar.gz" ] || [ "$md5" != "d1119c93fc0ed3007be4a84dd186af55" ] ; then
+        rm -f binutils-2.32.tar.gz
         wget "http://ftp.gnu.org/gnu/binutils/binutils-2.32.tar.gz"
     else
         echo "Skipped downloading binutils"
     fi
 
-    if [ ! -e "gcc-8.3.0.tar.gz" ]; then
+    md5="$(md5sum gcc-8.3.0.tar.gz | cut -f1 -d' ')"
+    echo "gc md5='$md5'"
+    if [ ! -e "gcc-8.3.0.tar.gz" ] || [ "$md5" != "9972f8c24c02ebcb5a342c1b30de69ff" ] ; then
+        rm -f gcc-8.3.0.tar.gz
         wget "http://ftp.gnu.org/gnu/gcc/gcc-8.3.0/gcc-8.3.0.tar.gz"
     else
         echo "Skipped downloading gcc"
@@ -60,8 +69,8 @@ pushd "$DIR/Build/"
                                               --target=$TARGET \
                                               --with-sysroot=$SYSROOT \
                                               --disable-nls || exit 1
-        make -j $(nproc)
-        make install
+        make -j $(nproc) || exit 1
+        make install || exit 1
     popd
 
     pushd gcc
@@ -72,14 +81,19 @@ pushd "$DIR/Build/"
                                           --with-newlib \
                                           --enable-languages=c,c++ || exit 1
 
-        make -j $(nproc) all-gcc all-target-libgcc
-        make install-gcc install-target-libgcc
+        echo "XXX build gcc and libgcc"
+        make -j $(nproc) all-gcc all-target-libgcc || exit 1
+        echo "XXX install gcc and libgcc"
+        make install-gcc install-target-libgcc || exit 1
 
+        echo "XXX serenity libc and libm"
         make -C "$DIR/../LibC/" install
         make -C "$DIR/../LibM/" install
 
-        make all-target-libstdc++-v3
-        make install-target-libstdc++-v3
+        echo "XXX build libstdc++"
+        make all-target-libstdc++-v3 || exit 1 
+        echo "XXX install libstdc++"
+        make install-target-libstdc++-v3 || exit 1
     popd
 popd
 
