@@ -1,6 +1,6 @@
-#include <LibGUI/GWindow.h>
+#include <LibGUI/GDialog.h>
 
-class GFilePicker final : public GWindow {
+class GFilePicker final : public GDialog {
 public:
     GFilePicker();
     virtual ~GFilePicker() override;
