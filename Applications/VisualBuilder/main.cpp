@@ -40,6 +40,9 @@ int main(int argc, char** argv)
     file_menu->add_action(GAction::create("Dump Form", [&] (auto&) {
         form1->dump();
     }));
+    file_menu->add_action(GAction::create("Save Form...", { Mod_Ctrl, Key_S }, [form1] (auto&) {
+        form1->write_to_file("/tmp/form.frm");
+    }));
     menubar->add_menu(move(file_menu));
 
     auto edit_menu = make<GMenu>("Edit");
