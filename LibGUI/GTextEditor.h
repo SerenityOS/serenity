@@ -70,6 +70,9 @@ public:
     GTextEditor(Type, GWidget* parent);
     virtual ~GTextEditor() override;
 
+    bool is_readonly() const { return m_readonly; }
+    void set_readonly(bool);
+
     bool is_automatic_indentation() const { return m_automatic_indentation_enabled; }
     void set_automatic_indentation_enabled(bool enabled) { m_automatic_indentation_enabled = enabled; }
 
@@ -196,6 +199,7 @@ private:
     bool m_ruler_visible { false };
     bool m_have_pending_change_notification { false };
     bool m_automatic_indentation_enabled { false };
+    bool m_readonly { false };
     int m_line_spacing { 4 };
     int m_soft_tab_width { 4 };
     int m_horizontal_content_padding { 2 };

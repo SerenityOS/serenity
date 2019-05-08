@@ -112,7 +112,6 @@ GTextPosition GTextEditor::text_position_at(const Point& a_position) const
 
     int line_index = position.y() / line_height();
     line_index = max(0, min(line_index, line_count() - 1));
-    auto& line = *m_lines[line_index];
 
     int column_index;
     switch (m_text_alignment) {
@@ -249,7 +248,6 @@ void GTextEditor::paint_event(GPaintEvent& event)
     painter.translate(-horizontal_scrollbar().value(), -vertical_scrollbar().value());
     if (m_ruler_visible)
         painter.translate(ruler_width(), 0);
-    int exposed_width = max(content_width(), frame_inner_rect().width());
 
     int first_visible_line = text_position_at(event.rect().top_left()).line();
     int last_visible_line = text_position_at(event.rect().bottom_right()).line();
@@ -463,6 +461,8 @@ void GTextEditor::keydown_event(GKeyEvent& event)
     }
 
     if (event.key() == KeyCode::Key_Backspace) {
+        if (is_readonly())
+            return;
         if (has_selection()) {
             delete_selection();
             did_update_selection();
@@ -490,16 +490,20 @@ void GTextEditor::keydown_event(GKeyEvent& event)
     }
 
     if (event.modifiers() == Mod_Shift && event.key() == KeyCode::Key_Delete) {
+        if (is_readonly())
+            return;
         delete_current_line();
         return;
     }
 
     if (event.key() == KeyCode::Key_Delete) {
+        if (is_readonly())
+            return;
         do_delete();
         return;
     }
 
-    if (!event.ctrl() && !event.alt() && !event.text().is_empty())
+    if (!is_readonly() && !event.ctrl() && !event.alt() && !event.text().is_empty())
         insert_at_cursor_or_replace_selection(event.text());
 
     return GWidget::keydown_event(event);
@@ -520,6 +524,9 @@ void GTextEditor::delete_current_line()
 
 void GTextEditor::do_delete()
 {
+    if (is_readonly())
+        return;
+
     if (has_selection())
         return delete_selection();
 
@@ -923,6 +930,7 @@ void GTextEditor::delete_selection()
 
 void GTextEditor::insert_at_cursor_or_replace_selection(const String& text)
 {
+    ASSERT(!is_readonly());
     if (has_selection())
         delete_selection();
     insert_at_cursor(text);
@@ -930,6 +938,8 @@ void GTextEditor::insert_at_cursor_or_replace_selection(const String& text)
 
 void GTextEditor::cut()
 {
+    if (is_readonly())
+        return;
     auto selected_text = this->selected_text();
     printf("Cut: \"%s\"\n", selected_text.characters());
     GClipboard::the().set_data(selected_text);
@@ -945,6 +955,8 @@ void GTextEditor::copy()
 
 void GTextEditor::paste()
 {
+    if (is_readonly())
+        return;
     auto paste_text = GClipboard::the().data();
     printf("Paste: \"%s\"\n", paste_text.characters());
     insert_at_cursor_or_replace_selection(paste_text);
@@ -975,9 +987,19 @@ void GTextEditor::did_change()
     }
 }
 
+void GTextEditor::set_readonly(bool readonly)
+{
+    if (m_readonly == readonly)
+        return;
+    m_readonly = readonly;
+    m_cut_action->set_enabled(!is_readonly() && has_selection());
+    m_delete_action->set_enabled(!is_readonly());
+    m_paste_action->set_enabled(!is_readonly());
+}
+
 void GTextEditor::did_update_selection()
 {
-    m_cut_action->set_enabled(has_selection());
+    m_cut_action->set_enabled(!is_readonly() && has_selection());
     m_copy_action->set_enabled(has_selection());
     if (on_selection_change)
         on_selection_change();
