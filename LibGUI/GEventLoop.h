@@ -68,7 +68,7 @@ private:
         ByteBuffer extra_data;
     };
 
-    Vector<IncomingWSMessageBundle, 64> m_unprocessed_bundles;
+    Vector<IncomingWSMessageBundle> m_unprocessed_bundles;
     static pid_t s_server_pid;
     static int s_my_client_id;
     static int s_event_fd;
