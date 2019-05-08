@@ -3,7 +3,7 @@
 
 DirectoryView::DirectoryView(GWidget* parent)
     : GStackWidget(parent)
-    , m_model(DirectoryModel::create())
+    , m_model(GDirectoryModel::create())
 {
     set_active_widget(nullptr);
     m_item_view = new GItemView(this);
@@ -12,9 +12,9 @@ DirectoryView::DirectoryView(GWidget* parent)
     m_table_view = new GTableView(this);
     m_table_view->set_model(GSortingProxyModel::create(m_model.copy_ref()));
 
-    m_table_view->model()->set_key_column_and_sort_order(DirectoryModel::Column::Name, GSortOrder::Ascending);
+    m_table_view->model()->set_key_column_and_sort_order(GDirectoryModel::Column::Name, GSortOrder::Ascending);
 
-    m_item_view->set_model_column(DirectoryModel::Column::Name);
+    m_item_view->set_model_column(GDirectoryModel::Column::Name);
 
     m_item_view->on_model_notification = [this] (const GModelNotification& notification) {
         if (notification.type() == GModelNotification::Type::ModelUpdated) {

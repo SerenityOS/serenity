@@ -4,11 +4,11 @@
 #include <AK/HashMap.h>
 #include <sys/stat.h>
 
-class DirectoryModel final : public GModel {
+class GDirectoryModel final : public GModel {
     friend int thumbnail_thread(void*);
 public:
-    static Retained<DirectoryModel> create() { return adopt(*new DirectoryModel); }
-    virtual ~DirectoryModel() override;
+    static Retained<GDirectoryModel> create() { return adopt(*new GDirectoryModel); }
+    virtual ~GDirectoryModel() override;
 
     enum Column {
         Icon = 0,
@@ -36,7 +36,7 @@ public:
     Function<void(int done, int total)> on_thumbnail_progress;
 
 private:
-    DirectoryModel();
+    GDirectoryModel();
 
     String name_for_uid(uid_t) const;
     String name_for_gid(gid_t) const;
@@ -51,7 +51,7 @@ private:
         mutable RetainPtr<GraphicsBitmap> thumbnail;
         bool is_directory() const { return S_ISDIR(mode); }
         bool is_executable() const { return mode & S_IXUSR; }
-        String full_path(const DirectoryModel& model) const { return String::format("%s/%s", model.path().characters(), name.characters()); }
+        String full_path(const GDirectoryModel& model) const { return String::format("%s/%s", model.path().characters(), name.characters()); }
     };
 
     const Entry& entry(int index) const

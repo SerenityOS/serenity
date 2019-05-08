@@ -79,6 +79,7 @@ cp -v ../Shell/Shell mnt/bin/Shell
 ln -s Shell mnt/bin/sh
 cp -v kernel.map mnt/
 cp -v ../Demos/HelloWorld/HelloWorld mnt/bin/HelloWorld
+ln -s HelloWorld mnt/bin/hw
 
 # Run local sync script, if it exists
 if [ -f sync-local.sh ]; then
