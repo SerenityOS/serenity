@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include <sys/select.h>
 #include <stdio.h>
+#include <AK/printf.cpp>
 
 CIODevice::CIODevice(CObject* parent)
     : CObject(parent)
@@ -184,4 +185,26 @@ bool CIODevice::seek(signed_qword offset)
     m_buffered_data.clear();
     m_eof = false;
     return true;
+}
+
+bool CIODevice::write(const byte* data, int size)
+{
+    int rc = ::write(m_fd, data, size);
+    if (rc < 0) {
+        perror("CIODevice::write: write");
+        return false;
+    }
+    return rc == size;
+}
+
+int CIODevice::printf(const char* format, ...)
+{
+    va_list ap;
+    va_start(ap, format);
+    // FIXME: We're not propagating write() failures to client here!
+    int ret = printf_internal([this] (char*&, char ch) {
+        write((const byte*)&ch, 1);
+    }, nullptr, format, ap);
+    va_end(ap);
+    return ret;
 }

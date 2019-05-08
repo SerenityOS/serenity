@@ -30,6 +30,8 @@ public:
     ByteBuffer read_line(int max_size);
     ByteBuffer read_all();
 
+    bool write(const byte*, int size);
+
     // FIXME: I would like this to be const but currently it needs to call populate_read_buffer().
     bool can_read_line();
 
@@ -39,6 +41,8 @@ public:
 
     virtual bool open(CIODevice::OpenMode) = 0;
     virtual bool close();
+
+    int printf(const char*, ...);
 
     virtual const char* class_name() const override { return "CIODevice"; }
 
