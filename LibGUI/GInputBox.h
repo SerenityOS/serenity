@@ -12,6 +12,8 @@ public:
 
     String text_value() const { return m_text_value; }
 
+    virtual const char* class_name() const override { return "GInputBox"; }
+
 private:
     void build();
     String m_prompt;

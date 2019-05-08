@@ -14,6 +14,8 @@ public:
     int result() const { return m_result; }
     void done(int result);
 
+    virtual const char* class_name() const override { return "GDialog"; }
+
 protected:
     explicit GDialog(CObject* parent);
 

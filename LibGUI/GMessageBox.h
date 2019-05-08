@@ -16,6 +16,8 @@ public:
 
     static void show(const String& text, const String& title, Type type = Type::None, CObject* parent = nullptr);
 
+    virtual const char* class_name() const override { return "GMessageBox"; }
+
 private:
     void build();
     RetainPtr<GraphicsBitmap> icon() const;
