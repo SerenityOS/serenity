@@ -2,9 +2,9 @@
 #include <LibGUI/GPainter.h>
 #include <SharedGraphics/StylePainter.h>
 
-GGroupBox::GGroupBox(const String& name, GWidget* parent)
+GGroupBox::GGroupBox(const String& title, GWidget* parent)
     : GWidget(parent)
-    , m_name(name)
+    , m_title(title)
 {
     set_fill_with_background_color(true);
     set_background_color(Color::LightGray);
@@ -25,15 +25,15 @@ void GGroupBox::paint_event(GPaintEvent& event)
     };
     StylePainter::paint_frame(painter, frame_rect, FrameShape::Box, FrameShadow::Sunken, 2);
 
-    Rect text_rect { 4, 0, font().width(m_name) + 6, font().glyph_height() };
+    Rect text_rect { 4, 0, font().width(m_title) + 6, font().glyph_height() };
     painter.fill_rect(text_rect, background_color());
-    painter.draw_text(text_rect, m_name, TextAlignment::Center, foreground_color());
+    painter.draw_text(text_rect, m_title, TextAlignment::Center, foreground_color());
 }
 
-void GGroupBox::set_name(const String& name)
+void GGroupBox::set_title(const String& title)
 {
-    if (m_name == name)
+    if (m_title == title)
         return;
-    m_name = name;
+    m_title = title;
     update();
 }
