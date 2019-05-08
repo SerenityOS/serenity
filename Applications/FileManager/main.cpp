@@ -14,6 +14,7 @@
 #include <LibGUI/GTreeView.h>
 #include <LibGUI/GFileSystemModel.h>
 #include <LibGUI/GSplitter.h>
+#include <AK/FileSystemPath.h>
 #include <unistd.h>
 #include <signal.h>
 #include <stdio.h>
@@ -84,13 +85,13 @@ int main(int argc, char** argv)
     auto mkdir_action = GAction::create("New directory...", GraphicsBitmap::load_from_file("/res/icons/16x16/mkdir.png"), [&] (const GAction&) {
         GInputBox input_box("Enter name:", "New directory", window);
         if (input_box.exec() == GInputBox::ExecOK && !input_box.text_value().is_empty()) {
-            auto new_dir_path = String::format("%s/%s",
+            auto new_dir_path = FileSystemPath(String::format("%s/%s",
                 directory_view->path().characters(),
                 input_box.text_value().characters()
-            );
+            )).string();
             int rc = mkdir(new_dir_path.characters(), 0777);
             if (rc < 0) {
-                GMessageBox::show(String::format("mkdir() failed: %s", strerror(errno)), "Error", GMessageBox::Type::Error, window);
+                GMessageBox::show(String::format("mkdir(\"%s\") failed: %s", new_dir_path.characters(), strerror(errno)), "Error", GMessageBox::Type::Error, window);
             } else {
                 directory_view->refresh();
             }
