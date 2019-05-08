@@ -38,7 +38,7 @@ public:
 
     void set_mmap_name(const String&);
 
-    size_t size_in_bytes() const { return m_pitch * m_size.height() * sizeof(RGBA32); }
+    size_t size_in_bytes() const { return m_pitch * m_size.height(); }
 
     Color palette_color(byte index) const { return Color::from_rgba(m_palette[index]); }
     void set_palette_color(byte index, Color color) { m_palette[index] = color.value(); }
