@@ -307,8 +307,7 @@ void VBForm::write_to_file(const String& path)
 {
     CFile file(path);
     if (!file.open(CIODevice::WriteOnly)) {
-        GMessageBox box(String::format("Could not open '%s' for writing", path.characters()), "Error", window());
-        box.exec();
+        GMessageBox::show(String::format("Could not open '%s' for writing", path.characters()), "Error", GMessageBox::Type::Error, window());
         return;
     }
     file.printf("[Form]\n");

@@ -90,8 +90,7 @@ int main(int argc, char** argv)
             );
             int rc = mkdir(new_dir_path.characters(), 0777);
             if (rc < 0) {
-                GMessageBox message_box(String::format("mkdir() failed: %s", strerror(errno)), "Error", window);
-                message_box.exec();
+                GMessageBox::show(String::format("mkdir() failed: %s", strerror(errno)), "Error", GMessageBox::Type::Error, window);
             } else {
                 directory_view->refresh();
             }
