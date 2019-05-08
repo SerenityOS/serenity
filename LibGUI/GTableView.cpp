@@ -149,6 +149,9 @@ void GTableView::mousedown_event(GMouseEvent& event)
 
 void GTableView::mousemove_event(GMouseEvent& event)
 {
+    if (!model())
+        return;
+
     if (m_in_column_resize) {
         auto delta = event.position() - m_column_resize_origin;
         int new_width = m_column_resize_original_width + delta.x();
