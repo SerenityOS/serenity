@@ -40,8 +40,8 @@ $make_cmd -C ../Applications/Taskbar clean && \
 $make_cmd -C ../Applications/Taskbar && \
 $make_cmd -C ../Applications/Downloader clean && \
 $make_cmd -C ../Applications/Downloader && \
-$make_cmd -C ../Applications/VisualBuilder clean && \
-$make_cmd -C ../Applications/VisualBuilder && \
+$make_cmd -C ../DevTools/VisualBuilder clean && \
+$make_cmd -C ../DevTools/VisualBuilder && \
 $make_cmd -C ../Games/Minesweeper clean && \
 $make_cmd -C ../Games/Minesweeper && \
 $make_cmd -C ../Games/Snake clean && \
