@@ -460,7 +460,7 @@ void GWindow::flip(const Rect& dirty_rect)
 
     if (!m_back_bitmap || m_back_bitmap->size() != m_front_bitmap->size()) {
         m_back_bitmap = create_backing_bitmap(m_front_bitmap->size());
-        memcpy(m_back_bitmap->scanline(0), m_front_bitmap->scanline(0), m_front_bitmap->size().area() * sizeof(RGBA32));
+        memcpy(m_back_bitmap->scanline(0), m_front_bitmap->scanline(0), m_front_bitmap->size_in_bytes());
         return;
     }
 
