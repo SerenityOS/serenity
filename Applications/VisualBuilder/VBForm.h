@@ -25,6 +25,7 @@ public:
 
     Function<void(VBWidget*)> on_widget_selected;
 
+    void write_to_file(const String& path);
     void dump();
 
 protected:

@@ -1,8 +1,11 @@
 #include "VBForm.h"
 #include "VBWidget.h"
+#include "VBProperty.h"
 #include <LibGUI/GPainter.h>
 #include <LibGUI/GMenu.h>
 #include <LibGUI/GAction.h>
+#include <LibGUI/GMessageBox.h>
+#include <LibCore/CFile.h>
 
 static VBForm* s_current;
 VBForm* VBForm::current()
@@ -300,6 +303,27 @@ void VBForm::mousemove_event(GMouseEvent& event)
     }
 }
 
+void VBForm::write_to_file(const String& path)
+{
+    CFile file(path);
+    if (!file.open(CIODevice::WriteOnly)) {
+        GMessageBox box(String::format("Could not open '%s' for writing", path.characters()), "Error", window());
+        box.exec();
+        return;
+    }
+    file.printf("[Form]\n");
+    file.printf("Name=%s\n", m_name.characters());
+    file.printf("\n");
+    int i = 0;
+    for (auto& widget : m_widgets) {
+        file.printf("[Widget %d]\n", i++);
+        widget->for_each_property([&] (auto& property) {
+            file.printf("%s=%s\n", property.name().characters(), property.value().to_string().characters());
+        });
+        file.printf("\n");
+    }
+}
+
 void VBForm::dump()
 {
     dbgprintf("[Form]\n");
@@ -308,7 +332,9 @@ void VBForm::dump()
     int i = 0;
     for (auto& widget : m_widgets) {
         dbgprintf("[Widget %d]\n", i++);
-        widget->dump();
+        widget->for_each_property([] (auto& property) {
+            dbgprintf("%s=%s\n", property.name().characters(), property.value().to_string().characters());
+        });
         dbgprintf("\n");
     }
 }
