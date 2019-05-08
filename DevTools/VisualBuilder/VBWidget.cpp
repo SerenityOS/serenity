@@ -127,7 +127,7 @@ void VBWidget::setup_properties()
     }
 
     if (m_type == VBWidgetType::GGroupBox) {
-        VB_ADD_PROPERTY(GGroupBox, "name", name, set_name, string);
+        VB_ADD_PROPERTY(GGroupBox, "title", title, set_title, string);
     }
 
     if (m_type == VBWidgetType::GScrollBar) {
