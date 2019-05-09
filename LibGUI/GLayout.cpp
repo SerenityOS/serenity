@@ -22,22 +22,34 @@ void GLayout::notify_disowned(Badge<GWidget>, GWidget& widget)
     m_owner.clear();
 }
 
-void GLayout::add_layout(OwnPtr<GLayout>&& layout)
+void GLayout::add_entry(Entry&& entry)
 {
-    Entry entry;
-    entry.layout = move(layout);
     m_entries.append(move(entry));
     if (m_owner)
         m_owner->notify_layout_changed(Badge<GLayout>());
 }
 
+void GLayout::add_spacer()
+{
+    Entry entry;
+    entry.type = Entry::Type::Spacer;
+    add_entry(move(entry));
+}
+
+void GLayout::add_layout(OwnPtr<GLayout>&& layout)
+{
+    Entry entry;
+    entry.type = Entry::Type::Layout;
+    entry.layout = move(layout);
+    add_entry(move(entry));
+}
+
 void GLayout::add_widget(GWidget& widget)
 {
     Entry entry;
+    entry.type = Entry::Type::Widget;
     entry.widget = widget.make_weak_ptr();
-    m_entries.append(move(entry));
-    if (m_owner)
-        m_owner->notify_layout_changed(Badge<GLayout>());
+    add_entry(move(entry));
 }
 
 void GLayout::remove_widget(GWidget& widget)
