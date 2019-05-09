@@ -5,6 +5,8 @@
 #include <LibGUI/GLabel.h>
 #include <LibGUI/GButton.h>
 #include <LibGUI/GSortingProxyModel.h>
+#include <LibGUI/GAction.h>
+#include <LibGUI/GToolBar.h>
 #include <AK/FileSystemPath.h>
 
 GFilePicker::GFilePicker(const String& path, CObject* parent)
@@ -19,9 +21,21 @@ GFilePicker::GFilePicker(const String& path, CObject* parent)
     main_widget()->layout()->set_spacing(4);
     main_widget()->set_fill_with_background_color(true);
     main_widget()->set_background_color(Color::LightGray);
-    m_view = new GTableView(main_widget());
+
+    auto* upper_container = new GWidget(main_widget());
+    upper_container->set_layout(make<GBoxLayout>(Orientation::Vertical));
+    upper_container->layout()->set_spacing(4);
+
+    auto* toolbar = new GToolBar(upper_container);
+
+    m_view = new GTableView(upper_container);
     m_view->set_model(GSortingProxyModel::create(*m_model));
     m_model->open(path);
+
+    auto open_parent_directory_action = GAction::create("Open parent directory", { Mod_Alt, Key_Up }, GraphicsBitmap::load_from_file("/res/icons/16x16/open-parent-directory.png"), [this] (const GAction&) {
+        m_model->open(String::format("%s/..", m_model->path().characters()));
+    });
+    toolbar->add_action(*open_parent_directory_action);
 
     auto* lower_container = new GWidget(main_widget());
     lower_container->set_layout(make<GBoxLayout>(Orientation::Vertical));
@@ -39,16 +53,19 @@ GFilePicker::GFilePicker(const String& path, CObject* parent)
     filename_label->set_preferred_size({ 60, 0 });
     auto* filename_textbox = new GTextBox(filename_container);
 
-    m_view->on_activation = [&] (auto& index) {
+    m_view->on_activation = [this, filename_textbox] (auto& index) {
         auto& filter_model = (GSortingProxyModel&)*m_view->model();
         auto local_index = filter_model.map_to_target(index);
         const GDirectoryModel::Entry& entry = m_model->entry(local_index.row());
 
         FileSystemPath path(String::format("%s/%s", m_model->path().characters(), entry.name.characters()));
 
-        if (entry.is_directory())
+        if (entry.is_directory()) {
             m_model->open(path.string());
-        filename_textbox->set_text(entry.name);
+            // NOTE: 'entry' is invalid from here on
+        } else {
+            filename_textbox->set_text(entry.name);
+        }
     };
 
     auto* button_container = new GWidget(lower_container);
