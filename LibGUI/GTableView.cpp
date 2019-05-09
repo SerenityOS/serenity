@@ -63,7 +63,8 @@ Rect GTableView::row_rect(int item_index) const
 
 int GTableView::column_width(int column_index) const
 {
-    ASSERT(column_index >= 0 && column_index < model()->column_count());
+    if (!model())
+        return 0;
     auto& column_data = this->column_data(column_index);
     if (!column_data.has_initialized_width) {
         column_data.has_initialized_width = true;
@@ -74,7 +75,8 @@ int GTableView::column_width(int column_index) const
 
 Rect GTableView::header_rect(int column_index) const
 {
-    ASSERT(column_index >= 0 && column_index < model()->column_count());
+    if (!model())
+        return { };
     if (is_column_hidden(column_index))
         return { };
     int x_offset = 0;
@@ -93,7 +95,8 @@ Point GTableView::adjusted_position(const Point& position)
 
 Rect GTableView::column_resize_grabbable_rect(int column) const
 {
-    ASSERT(column >= 0 && column < model()->column_count());
+    if (!model())
+        return { };
     auto header_rect = this->header_rect(column);
     return { header_rect.right() - 1, header_rect.top(), 4, header_rect.height() };
 }
@@ -314,7 +317,7 @@ void GTableView::keydown_event(GKeyEvent& event)
         return;
     auto& model = *this->model();
     if (event.key() == KeyCode::Key_Return) {
-        model.activate(model.selected_index());
+        activate(model.selected_index());
         return;
     }
     if (event.key() == KeyCode::Key_Up) {
@@ -374,22 +377,18 @@ void GTableView::scroll_into_view(const GModelIndex& index, Orientation orientat
 
 GTableView::ColumnData& GTableView::column_data(int column) const
 {
-    ASSERT(model());
-    ASSERT(column >= 0 && column < model()->column_count());
     if (column >= m_column_data.size())
-        m_column_data.resize(model()->column_count());
+        m_column_data.resize(column + 1);
     return m_column_data.at(column);
 }
 
 bool GTableView::is_column_hidden(int column) const
 {
-    ASSERT(column >= 0 && column < model()->column_count());
     return !column_data(column).visibility;
 }
 
 void GTableView::set_column_hidden(int column, bool hidden)
 {
-    ASSERT(column >= 0 && column < model()->column_count());
     auto& column_data = this->column_data(column);
     if (column_data.visibility == !hidden)
         return;
@@ -409,7 +408,7 @@ void GTableView::doubleclick_event(GMouseEvent& event)
             if (is_editable())
                 begin_editing(model.selected_index());
             else
-                model.activate(model.selected_index());
+                activate(model.selected_index());
         }
     }
 }

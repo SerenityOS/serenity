@@ -72,7 +72,3 @@ void IRCLogBufferModel::update()
 {
     did_update();
 }
-
-void IRCLogBufferModel::activate(const GModelIndex&)
-{
-}

@@ -22,7 +22,6 @@ public:
     virtual ColumnMetadata column_metadata(int column) const override;
     virtual GVariant data(const GModelIndex&, Role = Role::Display) const override;
     virtual void update() override;
-    virtual void activate(const GModelIndex&) override;
 
 private:
     explicit IRCLogBufferModel(Retained<IRCLogBuffer>&&);

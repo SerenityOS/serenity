@@ -29,6 +29,8 @@ private:
     GDirectoryModel& model() { return *m_model; }
     const GDirectoryModel& model() const { return *m_model; }
 
+    void handle_activation(const GModelIndex&);
+
     void set_status_message(const String&);
 
     ViewMode m_view_mode { Invalid };

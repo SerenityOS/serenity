@@ -55,11 +55,6 @@ GVariant GSortingProxyModel::data(const GModelIndex& index, Role role) const
     return target().data(map_to_target(index), role);
 }
 
-void GSortingProxyModel::activate(const GModelIndex& index)
-{
-    target().activate(map_to_target(index));
-}
-
 void GSortingProxyModel::update()
 {
     target().update();

@@ -6,7 +6,6 @@
 IRCChannelMemberListModel::IRCChannelMemberListModel(IRCChannel& channel)
     : m_channel(channel)
 {
-    set_activates_on_selection(true);
 }
 
 IRCChannelMemberListModel::~IRCChannelMemberListModel()
@@ -52,10 +51,4 @@ GVariant IRCChannelMemberListModel::data(const GModelIndex& index, Role role) co
 void IRCChannelMemberListModel::update()
 {
     did_update();
-}
-
-void IRCChannelMemberListModel::activate(const GModelIndex& index)
-{
-    if (on_activation)
-        on_activation(m_channel.member_at(index.row()));
 }

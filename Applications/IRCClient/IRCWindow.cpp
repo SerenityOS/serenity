@@ -37,6 +37,7 @@ IRCWindow::IRCWindow(IRCClient& client, void* owner, Type type, const String& na
         member_view->set_preferred_size({ 100, 0 });
         member_view->set_alternating_row_colors(false);
         member_view->set_model(channel().member_model());
+        member_view->set_activates_on_selection(true);
     }
 
     m_text_editor = new GTextEditor(GTextEditor::SingleLine, this);

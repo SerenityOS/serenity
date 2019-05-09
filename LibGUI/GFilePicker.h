@@ -8,11 +8,12 @@ public:
     GFilePicker(const String& path = "/", CObject* parent = nullptr);
     virtual ~GFilePicker() override;
 
+    String selected_file() const;
+
     virtual const char* class_name() const override { return "GFilePicker"; }
 
 private:
-    GDirectoryModel& model() { return *m_model; }
-
     GTableView* m_view { nullptr };
     Retained<GDirectoryModel> m_model;
+    String m_selected_file;
 };

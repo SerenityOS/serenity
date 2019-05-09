@@ -88,3 +88,9 @@ void GAbstractView::stop_editing()
     delete m_edit_widget;
     m_edit_widget = nullptr;
 }
+
+void GAbstractView::activate(const GModelIndex& index)
+{
+    if (on_activation)
+        on_activation(index);
+}

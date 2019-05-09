@@ -23,7 +23,6 @@ public:
     virtual void update() override;
     virtual GModelIndex parent_index(const GModelIndex&) const override;
     virtual GModelIndex index(int row, int column = 0, const GModelIndex& parent = GModelIndex()) const override;
-    virtual void activate(const GModelIndex&) override;
 
 private:
     GFileSystemModel(const String& root_path, Mode);
