@@ -13,7 +13,7 @@ GFilePicker::GFilePicker(const String& path, CObject* parent)
     set_rect(200, 200, 400, 300);
     set_main_widget(new GWidget);
     main_widget()->set_layout(make<GBoxLayout>(Orientation::Vertical));
-    main_widget()->layout()->set_margins({ 4, 0, 4, 0 });
+    main_widget()->layout()->set_margins({ 4, 4, 4, 4 });
     main_widget()->layout()->set_spacing(4);
     main_widget()->set_fill_with_background_color(true);
     main_widget()->set_background_color(Color::LightGray);
@@ -42,6 +42,7 @@ GFilePicker::GFilePicker(const String& path, CObject* parent)
     button_container->set_preferred_size({ 0, 20 });
     button_container->set_layout(make<GBoxLayout>(Orientation::Horizontal));
     button_container->layout()->set_spacing(4);
+    button_container->layout()->add_spacer();
 
     auto* cancel_button = new GButton(button_container);
     cancel_button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
