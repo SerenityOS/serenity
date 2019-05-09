@@ -30,7 +30,7 @@ GModelIndex GSortingProxyModel::map_to_target(const GModelIndex& index) const
 {
     if (!index.is_valid())
         return { };
-    if (index.row() >= row_count() || index.column() >= column_count())
+    if (index.row() >= m_row_mappings.size() || index.column() >= column_count())
         return { };
     return target().index(m_row_mappings[index.row()], index.column());
 }
