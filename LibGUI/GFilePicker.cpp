@@ -23,14 +23,30 @@ GFilePicker::GFilePicker(const String& path, CObject* parent)
     main_widget()->set_background_color(Color::LightGray);
 
     auto* upper_container = new GWidget(main_widget());
-    upper_container->set_layout(make<GBoxLayout>(Orientation::Vertical));
+    upper_container->set_layout(make<GBoxLayout>(Orientation::Horizontal));
     upper_container->layout()->set_spacing(4);
+    upper_container->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+    upper_container->set_preferred_size({ 0, 26 });
 
     auto* toolbar = new GToolBar(upper_container);
+    toolbar->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
+    toolbar->set_preferred_size({ 32, 0 });
 
-    m_view = new GTableView(upper_container);
+    auto* location_textbox = new GTextBox(upper_container);
+    location_textbox->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+    location_textbox->set_preferred_size({ 0, 20 });
+
+    m_view = new GTableView(main_widget());
     m_view->set_model(GSortingProxyModel::create(*m_model));
+    m_view->set_column_hidden(GDirectoryModel::Column::Owner, true);
+    m_view->set_column_hidden(GDirectoryModel::Column::Group, true);
+    m_view->set_column_hidden(GDirectoryModel::Column::Permissions, true);
+    m_view->set_column_hidden(GDirectoryModel::Column::Inode, true);
     m_model->open(path);
+
+    location_textbox->on_return_pressed = [&] {
+        m_model->open(location_textbox->text());
+    };
 
     auto open_parent_directory_action = GAction::create("Open parent directory", { Mod_Alt, Key_Up }, GraphicsBitmap::load_from_file("/res/icons/16x16/open-parent-directory.png"), [this] (const GAction&) {
         m_model->open(String::format("%s/..", m_model->path().characters()));
