@@ -78,8 +78,10 @@ void GSortingProxyModel::resort()
     m_row_mappings.resize(row_count);
     for (int i = 0; i < row_count; ++i)
         m_row_mappings[i] = i;
-    if (m_key_column == -1)
+    if (m_key_column == -1) {
+        did_update();
         return;
+    }
     quick_sort(m_row_mappings.begin(), m_row_mappings.end(), [&] (auto row1, auto row2) -> bool {
         auto data1 = target().data(target().index(row1, m_key_column), GModel::Role::Sort);
         auto data2 = target().data(target().index(row2, m_key_column), GModel::Role::Sort);
@@ -90,6 +92,7 @@ void GSortingProxyModel::resort()
     });
     if (previously_selected_target_row != -1) {
         // Preserve selection.
+        ASSERT(m_row_mappings.size() == row_count);
         for (int i = 0; i < row_count; ++i) {
             if (m_row_mappings[i] == previously_selected_target_row) {
                 set_selected_index(index(i, 0));
