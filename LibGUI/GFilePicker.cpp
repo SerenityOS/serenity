@@ -7,6 +7,8 @@
 #include <LibGUI/GSortingProxyModel.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GToolBar.h>
+#include <LibGUI/GInputBox.h>
+#include <LibGUI/GMessageBox.h>
 #include <AK/FileSystemPath.h>
 
 GFilePicker::GFilePicker(const String& path, CObject* parent)
@@ -30,7 +32,7 @@ GFilePicker::GFilePicker(const String& path, CObject* parent)
 
     auto* toolbar = new GToolBar(upper_container);
     toolbar->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
-    toolbar->set_preferred_size({ 32, 0 });
+    toolbar->set_preferred_size({ 60, 0 });
 
     auto* location_textbox = new GTextBox(upper_container);
     location_textbox->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
@@ -52,6 +54,23 @@ GFilePicker::GFilePicker(const String& path, CObject* parent)
         m_model->open(String::format("%s/..", m_model->path().characters()));
     });
     toolbar->add_action(*open_parent_directory_action);
+
+    auto mkdir_action = GAction::create("New directory...", GraphicsBitmap::load_from_file("/res/icons/16x16/mkdir.png"), [this] (const GAction&) {
+        GInputBox input_box("Enter name:", "New directory", this);
+        if (input_box.exec() == GInputBox::ExecOK && !input_box.text_value().is_empty()) {
+            auto new_dir_path = FileSystemPath(String::format("%s/%s",
+                m_model->path().characters(),
+                input_box.text_value().characters()
+            )).string();
+            int rc = mkdir(new_dir_path.characters(), 0777);
+            if (rc < 0) {
+                GMessageBox::show(String::format("mkdir(\"%s\") failed: %s", new_dir_path.characters(), strerror(errno)), "Error", GMessageBox::Type::Error, this);
+            } else {
+                m_model->update();
+            }
+        }
+    });
+    toolbar->add_action(*mkdir_action);
 
     auto* lower_container = new GWidget(main_widget());
     lower_container->set_layout(make<GBoxLayout>(Orientation::Vertical));
