@@ -4,6 +4,8 @@
 #include <LibGUI/GTextBox.h>
 #include <LibGUI/GLabel.h>
 #include <LibGUI/GButton.h>
+#include <LibGUI/GSortingProxyModel.h>
+#include <AK/FileSystemPath.h>
 
 GFilePicker::GFilePicker(const String& path, CObject* parent)
     : GDialog(parent)
@@ -18,8 +20,8 @@ GFilePicker::GFilePicker(const String& path, CObject* parent)
     main_widget()->set_fill_with_background_color(true);
     main_widget()->set_background_color(Color::LightGray);
     m_view = new GTableView(main_widget());
-    m_view->set_model(*m_model);
-    model().open("/");
+    m_view->set_model(GSortingProxyModel::create(*m_model));
+    m_model->open(path);
 
     auto* lower_container = new GWidget(main_widget());
     lower_container->set_layout(make<GBoxLayout>(Orientation::Vertical));
@@ -36,6 +38,18 @@ GFilePicker::GFilePicker(const String& path, CObject* parent)
     filename_label->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
     filename_label->set_preferred_size({ 60, 0 });
     auto* filename_textbox = new GTextBox(filename_container);
+
+    m_view->on_activation = [&] (auto& index) {
+        auto& filter_model = (GSortingProxyModel&)*m_view->model();
+        auto local_index = filter_model.map_to_target(index);
+        const GDirectoryModel::Entry& entry = m_model->entry(local_index.row());
+
+        FileSystemPath path(String::format("%s/%s", m_model->path().characters(), entry.name.characters()));
+
+        if (entry.is_directory())
+            m_model->open(path.string());
+        filename_textbox->set_text(entry.name);
+    };
 
     auto* button_container = new GWidget(lower_container);
     button_container->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);

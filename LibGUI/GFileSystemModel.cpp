@@ -199,10 +199,6 @@ GVariant GFileSystemModel::data(const GModelIndex& index, Role role) const
     return { };
 }
 
-void GFileSystemModel::activate(const GModelIndex&)
-{
-}
-
 int GFileSystemModel::column_count(const GModelIndex&) const
 {
     return 1;

@@ -90,7 +90,7 @@ void GItemView::doubleclick_event(GMouseEvent& event)
         return;
     if (event.button() == GMouseButton::Left) {
         mousedown_event(event);
-        model()->activate(model()->selected_index());
+        activate(model()->selected_index());
     }
 }
 
@@ -161,7 +161,7 @@ void GItemView::keydown_event(GKeyEvent& event)
 
     auto& model = *this->model();
     if (event.key() == KeyCode::Key_Return) {
-        model.activate(model.selected_index());
+        activate(model.selected_index());
         return;
     }
     if (event.key() == KeyCode::Key_Home) {
