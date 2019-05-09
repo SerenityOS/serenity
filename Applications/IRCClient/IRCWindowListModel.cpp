@@ -8,7 +8,6 @@
 IRCWindowListModel::IRCWindowListModel(IRCClient& client)
     : m_client(client)
 {
-    set_activates_on_selection(true);
 }
 
 IRCWindowListModel::~IRCWindowListModel()
@@ -71,10 +70,4 @@ GVariant IRCWindowListModel::data(const GModelIndex& index, Role role) const
 void IRCWindowListModel::update()
 {
     did_update();
-}
-
-void IRCWindowListModel::activate(const GModelIndex& index)
-{
-    if (on_activation)
-        on_activation(m_client.window_at(index.row()));
 }

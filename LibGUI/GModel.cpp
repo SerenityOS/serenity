@@ -44,8 +44,6 @@ void GModel::set_selected_index(const GModelIndex& index)
     for_each_view([] (auto& view) {
         view.did_update_selection();
     });
-    if (m_activates_on_selection && is_valid(index))
-        activate(index);
 }
 
 GModelIndex GModel::create_index(int row, int column, void* data) const

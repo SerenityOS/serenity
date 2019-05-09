@@ -56,7 +56,6 @@ public:
     virtual void update() = 0;
     virtual GModelIndex parent_index(const GModelIndex&) const { return { }; }
     virtual GModelIndex index(int row, int column = 0, const GModelIndex& = GModelIndex()) const { return create_index(row, column); }
-    virtual void activate(const GModelIndex&) { }
     virtual GModelIndex sibling(int row, int column, const GModelIndex& parent) const;
     virtual bool is_editable(const GModelIndex&) const { return false; }
     virtual void set_data(const GModelIndex&, const GVariant&) { }
@@ -68,9 +67,6 @@ public:
 
     void set_selected_index(const GModelIndex&);
     GModelIndex selected_index() const { return m_selected_index; }
-
-    bool activates_on_selection() const { return m_activates_on_selection; }
-    void set_activates_on_selection(bool b) { m_activates_on_selection = b; }
 
     virtual int key_column() const { return -1; }
     virtual GSortOrder sort_order() const { return GSortOrder::None; }
@@ -93,7 +89,6 @@ protected:
 private:
     HashTable<GAbstractView*> m_views;
     GModelIndex m_selected_index;
-    bool m_activates_on_selection { false };
 };
 
 inline GModelIndex GModelIndex::parent() const

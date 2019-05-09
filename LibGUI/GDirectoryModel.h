@@ -27,19 +27,12 @@ public:
     virtual ColumnMetadata column_metadata(int column) const override;
     virtual GVariant data(const GModelIndex&, Role = Role::Display) const override;
     virtual void update() override;
-    virtual void activate(const GModelIndex&) override;
 
     String path() const { return m_path; }
     void open(const String& path);
     size_t bytes_in_files() const { return m_bytes_in_files; }
 
     Function<void(int done, int total)> on_thumbnail_progress;
-
-private:
-    GDirectoryModel();
-
-    String name_for_uid(uid_t) const;
-    String name_for_gid(gid_t) const;
 
     struct Entry {
         String name;
@@ -60,6 +53,13 @@ private:
             return m_directories[index];
         return m_files[index - m_directories.size()];
     }
+
+private:
+    GDirectoryModel();
+
+    String name_for_uid(uid_t) const;
+    String name_for_gid(gid_t) const;
+
     GIcon icon_for(const Entry& entry) const;
 
     String m_path;

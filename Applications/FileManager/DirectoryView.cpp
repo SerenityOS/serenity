@@ -1,5 +1,47 @@
 #include "DirectoryView.h"
 #include <LibGUI/GSortingProxyModel.h>
+#include <AK/FileSystemPath.h>
+#include <unistd.h>
+#include <stdio.h>
+
+void DirectoryView::handle_activation(const GModelIndex& index)
+{
+    if (!index.is_valid())
+        return;
+    dbgprintf("on activation: %d,%d, this=%p, m_model=%p\n", index.row(), index.column(), this, m_model.ptr());
+    auto& entry = model().entry(index.row());
+    FileSystemPath path(String::format("%s/%s", model().path().characters(), entry.name.characters()));
+    if (entry.is_directory()) {
+        open(path.string());
+        return;
+    }
+    if (entry.is_executable()) {
+        if (fork() == 0) {
+            int rc = execl(path.string().characters(), path.string().characters(), nullptr);
+            if (rc < 0)
+                perror("exec");
+            ASSERT_NOT_REACHED();
+        }
+        return;
+    }
+
+    if (path.string().to_lowercase().ends_with(".png")) {
+        if (fork() == 0) {
+            int rc = execl("/bin/qs", "/bin/qs", path.string().characters(), nullptr);
+            if (rc < 0)
+                perror("exec");
+            ASSERT_NOT_REACHED();
+        }
+        return;
+    }
+
+    if (fork() == 0) {
+        int rc = execl("/bin/TextEditor", "/bin/TextEditor", path.string().characters(), nullptr);
+        if (rc < 0)
+            perror("exec");
+        ASSERT_NOT_REACHED();
+    }
+};
 
 DirectoryView::DirectoryView(GWidget* parent)
     : GStackWidget(parent)
@@ -32,6 +74,14 @@ DirectoryView::DirectoryView(GWidget* parent)
     m_model->on_thumbnail_progress = [this] (int done, int total) {
         if (on_thumbnail_progress)
             on_thumbnail_progress(done, total);
+    };
+
+    m_item_view->on_activation = [&] (const GModelIndex& index) {
+        handle_activation(index);
+    };
+    m_table_view->on_activation = [&] (auto& index) {
+        auto& filter_model = (GSortingProxyModel&)*m_table_view->model();
+        handle_activation(filter_model.map_to_target(index));
     };
 
     set_view_mode(ViewMode::Icon);

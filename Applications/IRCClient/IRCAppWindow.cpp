@@ -151,9 +151,11 @@ void IRCAppWindow::setup_widgets()
     m_window_list->set_headers_visible(false);
     m_window_list->set_alternating_row_colors(false);
     m_window_list->set_model(m_client.client_window_list_model());
+    m_window_list->set_activates_on_selection(true);
     m_window_list->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
     m_window_list->set_preferred_size({ 100, 0 });
-    m_client.client_window_list_model()->on_activation = [this] (IRCWindow& window) {
+    m_window_list->on_activation = [this] (auto& index) {
+        auto& window = m_client.window_at(index.row());
         m_container->set_active_widget(&window);
         window.clear_unread_count();
     };

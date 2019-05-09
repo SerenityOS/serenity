@@ -27,6 +27,10 @@ public:
     void begin_editing(const GModelIndex&);
     void stop_editing();
 
+    void set_activates_on_selection(bool b) { m_activates_on_selection = b; }
+    bool activates_on_selection() const { return m_activates_on_selection; }
+
+    Function<void(const GModelIndex&)> on_activation;
     Function<void(const GModelNotification&)> on_model_notification;
 
     virtual const char* class_name() const override { return "GAbstractView"; }
@@ -34,6 +38,7 @@ public:
 protected:
     virtual void model_notification(const GModelNotification&);
     virtual void did_scroll() override;
+    void activate(const GModelIndex&);
     void update_edit_widget_position();
 
     bool m_editable { false };
@@ -43,4 +48,5 @@ protected:
 
 private:
     RetainPtr<GModel> m_model;
+    bool m_activates_on_selection { false };
 };

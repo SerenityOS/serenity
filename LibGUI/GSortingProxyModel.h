@@ -14,7 +14,6 @@ public:
     virtual ColumnMetadata column_metadata(int) const override;
     virtual GVariant data(const GModelIndex&, Role = Role::Display) const override;
     virtual void update() override;
-    virtual void activate(const GModelIndex&) override;
 
     virtual int key_column() const override { return m_key_column; }
     virtual GSortOrder sort_order() const override { return m_sort_order; }

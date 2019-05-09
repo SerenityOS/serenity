@@ -243,6 +243,8 @@ void GTreeView::did_update_selection()
     if (opened_any)
         update_content_size();
     update();
+    if (activates_on_selection())
+        activate(index);
 }
 
 void GTreeView::update_content_size()
