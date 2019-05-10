@@ -818,6 +818,77 @@ int Process::sys$ptsname_r(int fd, char* buffer, ssize_t size)
     return 0;
 }
 
+ssize_t Process::sys$writev(int fd, const struct iovec* iov, int iov_count)
+{
+    if (iov_count < 0)
+        return -EINVAL;
+
+    if (!validate_read_typed(iov, iov_count))
+        return -EFAULT;
+
+    // FIXME: Return EINVAL if sum of iovecs is greater than INT_MAX
+
+    auto* descriptor = file_descriptor(fd);
+    if (!descriptor)
+        return -EBADF;
+
+    int nwritten = 0;
+    for (int i = 0; i < iov_count; ++i) {
+        int rc = do_write(*descriptor, (const byte*)iov[i].iov_base, iov[i].iov_len);
+        if (rc < 0) {
+            if (nwritten == 0)
+                return rc;
+            return nwritten;
+        }
+        nwritten += rc;
+    }
+
+    if (current->has_unmasked_pending_signals()) {
+        current->block(Thread::State::BlockedSignal);
+        if (nwritten == 0)
+            return -EINTR;
+    }
+
+    return nwritten;
+}
+
+ssize_t Process::do_write(FileDescriptor& descriptor, const byte* data, int data_size)
+{
+    ssize_t nwritten = 0;
+    if (!descriptor.is_blocking())
+        return descriptor.write(data, data_size);
+
+    while (nwritten < data_size) {
+#ifdef IO_DEBUG
+        dbgprintf("while %u < %u\n", nwritten, size);
+#endif
+        if (!descriptor.can_write()) {
+#ifdef IO_DEBUG
+            dbgprintf("block write on %d\n", fd);
+#endif
+            current->block(Thread::State::BlockedWrite, descriptor);
+        }
+        ssize_t rc = descriptor.write(data + nwritten, data_size - nwritten);
+#ifdef IO_DEBUG
+        dbgprintf("   -> write returned %d\n", rc);
+#endif
+        if (rc < 0) {
+            // FIXME: Support returning partial nwritten with errno.
+            ASSERT(nwritten == 0);
+            return rc;
+        }
+        if (rc == 0)
+            break;
+        if (current->has_unmasked_pending_signals()) {
+            current->block(Thread::State::BlockedSignal);
+            if (nwritten == 0)
+                return -EINTR;
+        }
+        nwritten += rc;
+    }
+    return nwritten;
+}
+
 ssize_t Process::sys$write(int fd, const byte* data, ssize_t size)
 {
     if (size < 0)
@@ -832,39 +903,7 @@ ssize_t Process::sys$write(int fd, const byte* data, ssize_t size)
     auto* descriptor = file_descriptor(fd);
     if (!descriptor)
         return -EBADF;
-    ssize_t nwritten = 0;
-    if (descriptor->is_blocking()) {
-        while (nwritten < (ssize_t)size) {
-#ifdef IO_DEBUG
-            dbgprintf("while %u < %u\n", nwritten, size);
-#endif
-            if (!descriptor->can_write()) {
-#ifdef IO_DEBUG
-                dbgprintf("block write on %d\n", fd);
-#endif
-                current->block(Thread::State::BlockedWrite, *descriptor);
-            }
-            ssize_t rc = descriptor->write((const byte*)data + nwritten, size - nwritten);
-#ifdef IO_DEBUG
-            dbgprintf("   -> write returned %d\n", rc);
-#endif
-            if (rc < 0) {
-                // FIXME: Support returning partial nwritten with errno.
-                ASSERT(nwritten == 0);
-                return rc;
-            }
-            if (rc == 0)
-                break;
-            if (current->has_unmasked_pending_signals()) {
-                current->block(Thread::State::BlockedSignal);
-                if (nwritten == 0)
-                    return -EINTR;
-            }
-            nwritten += rc;
-        }
-    } else {
-        nwritten = descriptor->write((const byte*)data, size);
-    }
+    auto nwritten = do_write(*descriptor, data, size);
     if (current->has_unmasked_pending_signals()) {
         current->block(Thread::State::BlockedSignal);
         if (nwritten == 0)
