@@ -121,6 +121,26 @@ static int sh_history(int, char**)
     return 0;
 }
 
+static int sh_umask(int argc, char** argv)
+{
+    if (argc == 1) {
+        mode_t old_mask = umask(0);
+        printf("%#o\n", old_mask);
+        umask(old_mask);
+        return 0;
+    }
+    if (argc == 2) {
+        unsigned mask;
+        int matches = sscanf(argv[1], "%o", &mask);
+        if (matches == 1) {
+            umask(mask);
+            return 0;
+        }
+    }
+    printf("usage: umask <octal-mask>\n");
+    return 0;
+}
+
 static bool handle_builtin(int argc, char** argv, int& retval)
 {
     if (argc == 0)
@@ -143,6 +163,10 @@ static bool handle_builtin(int argc, char** argv, int& retval)
     }
     if (!strcmp(argv[0], "history")) {
         retval = sh_history(argc, argv);
+        return true;
+    }
+    if (!strcmp(argv[0], "umask")) {
+        retval = sh_umask(argc, argv);
         return true;
     }
     return false;
