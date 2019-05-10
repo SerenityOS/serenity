@@ -395,6 +395,7 @@ void GTableView::set_column_hidden(int column, bool hidden)
     if (column_data.visibility == !hidden)
         return;
     column_data.visibility = !hidden;
+    update_content_size();
     update();
 }
 
