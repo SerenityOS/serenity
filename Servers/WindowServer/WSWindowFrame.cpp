@@ -67,7 +67,7 @@ WSWindowFrame::~WSWindowFrame()
 
 Rect WSWindowFrame::title_bar_rect() const
 {
-    return { 2, 2, m_window.width() + 2, window_titlebar_height };
+    return { 3, 2, m_window.width(), window_titlebar_height };
 }
 
 Rect WSWindowFrame::title_bar_icon_rect() const
@@ -91,11 +91,6 @@ Rect WSWindowFrame::title_bar_text_rect() const
         titlebar_rect.width() - 4 - titlebar_icon_rect.width() - 2,
         titlebar_rect.height()
     };
-}
-
-Rect WSWindowFrame::middle_border_rect() const
-{
-    return { 1, 1, m_window.width() + 4, m_window.height() + 4 + window_titlebar_height };
 }
 
 void WSWindowFrame::paint(Painter& painter)
@@ -124,13 +119,6 @@ void WSWindowFrame::paint(Painter& painter)
 
     auto titlebar_title_rect = titlebar_inner_rect;
     titlebar_title_rect.set_width(Font::default_bold_font().width(window.title()));
-
-    Rect inner_border_rect {
-        2,
-        2 + window_titlebar_height,
-        window.width() + 2,
-        window.height() + 2
-    };
 
     Color title_color;
     Color border_color;
@@ -167,9 +155,9 @@ void WSWindowFrame::paint(Painter& painter)
     for (int i = 2; i <= titlebar_inner_rect.height() - 2; i += 2) {
         painter.draw_line({ titlebar_title_rect.right() + 4, titlebar_inner_rect.y() + i }, { leftmost_button_rect.left() - 3, titlebar_inner_rect.y() + i }, border_color);
     }
-    painter.draw_rect(middle_border_rect(), middle_border_color);
-    painter.draw_rect(outer_rect, border_color);
-    painter.draw_rect(inner_border_rect, border_color);
+
+    painter.draw_line(titlebar_rect.bottom_left().translated(0, 1), titlebar_rect.bottom_right().translated(0, 1), Color::LightGray);
+    StylePainter::paint_window_frame(painter, outer_rect);
 
     // FIXME: The translated(0, 1) wouldn't be necessary if we could center text based on its baseline.
     painter.draw_text(titlebar_title_rect.translated(0, 1), window.title(), wm.window_title_font(), TextAlignment::CenterLeft, title_color);

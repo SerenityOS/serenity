@@ -115,8 +115,8 @@ void WSMenu::draw()
     Painter painter(*menu_window()->backing_store());
 
     Rect rect { { }, menu_window()->size() };
-    painter.fill_rect(rect.shrunken(4, 4), Color::LightGray);
-    StylePainter::paint_menu_frame(painter, rect);
+    painter.fill_rect(rect.shrunken(6, 6), Color::LightGray);
+    StylePainter::paint_window_frame(painter, rect);
     int width = this->width();
 
     if (!s_checked_bitmap)
