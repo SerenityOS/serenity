@@ -81,5 +81,9 @@ void GToolBar::paint_event(GPaintEvent& event)
 {
     GPainter painter(*this);
     painter.add_clip_rect(event.rect());
-    StylePainter::paint_surface(painter, rect(), x() != 0, y() != 0);
+
+    if (m_has_frame)
+        StylePainter::paint_surface(painter, rect(), x() != 0, y() != 0);
+    else
+        painter.fill_rect(event.rect(), Color::LightGray);
 }
