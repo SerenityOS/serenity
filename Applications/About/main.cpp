@@ -3,6 +3,7 @@
 #include <LibGUI/GLabel.h>
 #include <LibGUI/GButton.h>
 #include <LibGUI/GBoxLayout.h>
+#include <LibGUI/GDesktop.h>
 #include <sys/utsname.h>
 
 int main(int argc, char** argv)
@@ -12,7 +13,8 @@ int main(int argc, char** argv)
     auto* window = new GWindow;
     window->set_title("About Serenity");
     Rect window_rect { 0, 0, 240, 150 };
-    window_rect.center_within({ 0, 0, 1024, 768 });
+    window_rect.center_within(GDesktop::the().rect());
+    window->set_resizable(false);
     window->set_rect(window_rect);
     window->set_should_exit_event_loop_on_close(true);
 
