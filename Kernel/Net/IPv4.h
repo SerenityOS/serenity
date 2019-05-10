@@ -48,7 +48,7 @@ public:
 private:
     union {
         byte m_data[4];
-        dword m_data_as_dword;
+        dword m_data_as_dword { 0 };
     };
 };
 
