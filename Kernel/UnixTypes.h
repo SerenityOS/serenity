@@ -390,3 +390,8 @@ struct [[gnu::packed]] FarPtr {
     dword offset { 0 };
     word selector { 0 };
 };
+
+struct iovec {
+    void* iov_base;
+    size_t iov_len;
+};

@@ -19,6 +19,7 @@
 #include <LibC/errno.h>
 #include <LibC/string.h>
 #include <LibC/stdlib.h>
+#include <sys/uio.h>
 
 //#define GEVENTLOOP_DEBUG
 //#define COALESCING_DEBUG
@@ -359,12 +360,19 @@ bool GEventLoop::post_message_to_server(const WSAPI_ClientMessage& message, cons
     if (!extra_data.is_empty())
         const_cast<WSAPI_ClientMessage&>(message).extra_size = extra_data.size();
 
-    int nwritten = write(s_event_fd, &message, sizeof(WSAPI_ClientMessage));
-    ASSERT(nwritten == sizeof(WSAPI_ClientMessage));
+    struct iovec iov[2];
+    int iov_count = 1;
+    iov[0].iov_base = (void*)&message;
+    iov[0].iov_len = sizeof(message);
+
     if (!extra_data.is_empty()) {
-        nwritten = write(s_event_fd, extra_data.data(), extra_data.size());
-        ASSERT(nwritten == extra_data.size());
+        iov[1].iov_base = (void*)extra_data.data();
+        iov[1].iov_len = extra_data.size();
+        ++iov_count;
     }
+
+    int nwritten = writev(s_event_fd, iov, iov_count);
+    ASSERT(nwritten == sizeof(message) + extra_data.size());
 
     return true;
 }

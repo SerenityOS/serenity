@@ -110,6 +110,7 @@ public:
     int sys$close(int fd);
     ssize_t sys$read(int fd, byte*, ssize_t);
     ssize_t sys$write(int fd, const byte*, ssize_t);
+    ssize_t sys$writev(int fd, const struct iovec* iov, int iov_count);
     int sys$fstat(int fd, stat*);
     int sys$lstat(const char*, stat*);
     int sys$stat(const char*, stat*);
@@ -255,6 +256,7 @@ private:
     Process(String&& name, uid_t, gid_t, pid_t ppid, RingLevel, RetainPtr<Inode>&& cwd = nullptr, RetainPtr<Inode>&& executable = nullptr, TTY* = nullptr, Process* fork_parent = nullptr);
 
     int do_exec(String path, Vector<String> arguments, Vector<String> environment);
+    ssize_t do_write(FileDescriptor&, const byte*, int data_size);
 
     int alloc_fd(int first_candidate_fd = 0);
     void disown_all_shared_buffers();
