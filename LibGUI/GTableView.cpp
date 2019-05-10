@@ -4,6 +4,8 @@
 #include <LibGUI/GPainter.h>
 #include <LibGUI/GTextBox.h>
 #include <LibGUI/GWindow.h>
+#include <LibGUI/GMenu.h>
+#include <LibGUI/GAction.h>
 #include <Kernel/KeyCode.h>
 #include <AK/StringBuilder.h>
 
@@ -109,15 +111,15 @@ void GTableView::mousedown_event(GMouseEvent& event)
     auto adjusted_position = this->adjusted_position(event.position());
 
     if (event.y() < header_height()) {
+        if (event.button() != GMouseButton::Left)
+            return;
         for (int i = 0; i < model()->column_count(); ++i) {
-            if (event.button() == GMouseButton::Left) {
-                if (column_resize_grabbable_rect(i).contains(adjusted_position)) {
-                    m_resizing_column = i;
-                    m_in_column_resize = true;
-                    m_column_resize_original_width = column_width(i);
-                    m_column_resize_origin = event.position();
-                    return;
-                }
+            if (column_resize_grabbable_rect(i).contains(adjusted_position)) {
+                m_resizing_column = i;
+                m_in_column_resize = true;
+                m_column_resize_original_width = column_width(i);
+                m_column_resize_origin = event.position();
+                return;
             }
             auto header_rect = this->header_rect(i);
             if (header_rect.contains(adjusted_position)) {
@@ -411,6 +413,40 @@ void GTableView::doubleclick_event(GMouseEvent& event)
                 activate(model.selected_index());
         }
     }
+}
+
+GMenu& GTableView::ensure_header_context_menu()
+{
+    // FIXME: This menu needs to be rebuilt if the model is swapped out,
+    //        or if the column count/names change.
+    if (!m_header_context_menu) {
+        ASSERT(model());
+        m_header_context_menu = make<GMenu>("");
+
+        for (int column = 0; column < model()->column_count(); ++column) {
+            auto& column_data = this->column_data(column);
+            column_data.visibility_action = GAction::create(model()->column_name(column), [this, column] (GAction& action) {
+                action.set_checked(!action.is_checked());
+                set_column_hidden(column, !action.is_checked());
+            });
+            column_data.visibility_action->set_checkable(true);
+            column_data.visibility_action->set_checked(true);
+
+            m_header_context_menu->add_action(*column_data.visibility_action);
+        }
+    }
+    return *m_header_context_menu;
+}
+
+void GTableView::context_menu_event(GContextMenuEvent& event)
+{
+    if (!model())
+        return;
+    if (event.position().y() < header_height()) {
+        ensure_header_context_menu().popup(event.screen_position());
+        return;
+    }
+    dbgprintf("GTableView::context_menu_event(): FIXME: Implement for table rows.\n");
 }
 
 void GTableView::leave_event(CEvent&)
