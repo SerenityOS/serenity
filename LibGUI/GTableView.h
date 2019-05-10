@@ -45,6 +45,7 @@ private:
     virtual void doubleclick_event(GMouseEvent&) override;
     virtual void keydown_event(GKeyEvent&) override;
     virtual void leave_event(CEvent&) override;
+    virtual void context_menu_event(GContextMenuEvent&) override;
 
     Rect content_rect(int row, int column) const;
     void paint_headers(Painter&);
@@ -59,6 +60,7 @@ private:
         int width { 0 };
         bool has_initialized_width { false };
         bool visibility { true };
+        RetainPtr<GAction> visibility_action;
     };
     ColumnData& column_data(int column) const;
 
@@ -71,4 +73,7 @@ private:
     Point m_column_resize_origin;
     int m_column_resize_original_width { 0 };
     int m_resizing_column { -1 };
+
+    GMenu& ensure_header_context_menu();
+    OwnPtr<GMenu> m_header_context_menu;
 };
