@@ -28,8 +28,10 @@ void GTableView::update_content_size()
 
     int content_width = 0;
     int column_count = model()->column_count();
-    for (int i = 0; i < column_count; ++i)
-        content_width += column_width(i) + horizontal_padding() * 2;
+    for (int i = 0; i < column_count; ++i) {
+        if (!is_column_hidden(i))
+            content_width += column_width(i) + horizontal_padding() * 2;
+    }
     int content_height = item_count() * item_height();
 
     set_content_size({ content_width, content_height });
@@ -423,7 +425,8 @@ GMenu& GTableView::ensure_header_context_menu()
 
         for (int column = 0; column < model()->column_count(); ++column) {
             auto& column_data = this->column_data(column);
-            column_data.visibility_action = GAction::create(model()->column_name(column), [this, column] (GAction& action) {
+            auto name = model()->column_name(column);
+            column_data.visibility_action = GAction::create(name, [this, column] (GAction& action) {
                 action.set_checked(!action.is_checked());
                 set_column_hidden(column, !action.is_checked());
             });
