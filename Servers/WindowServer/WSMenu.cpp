@@ -29,13 +29,13 @@ const Font& WSMenu::font() const
 
 static const char* s_checked_bitmap_data = {
     "         "
+    "       # "
     "      ## "
-    "     ##  "
-    "     ##  "
-    "    ##   "
-    " ## ##   "
-    "  ####   "
-    "   ##    "
+    "     ### "
+    " ## ###  "
+    " #####   "
+    "  ###    "
+    "   #     "
     "         "
 };
 
