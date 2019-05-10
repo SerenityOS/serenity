@@ -10,6 +10,7 @@
 #include <WindowServer/WSScreen.h>
 #include <SharedBuffer.h>
 #include <sys/ioctl.h>
+#include <sys/uio.h>
 #include <unistd.h>
 #include <errno.h>
 #include <stdio.h>
@@ -76,31 +77,29 @@ void WSClientConnection::post_message(const WSAPI_ServerMessage& message, const 
     if (!extra_data.is_empty())
         const_cast<WSAPI_ServerMessage&>(message).extra_size = extra_data.size();
 
-    int nwritten = write(m_fd, &message, sizeof(message));
+    struct iovec iov[2];
+    int iov_count = 1;
+
+    iov[0].iov_base = (void*)&message;
+    iov[0].iov_len = sizeof(message);
+
+    if (!extra_data.is_empty()) {
+        iov[1].iov_base = (void*)extra_data.data();
+        iov[1].iov_len = extra_data.size();
+        ++iov_count;
+    }
+
+    int nwritten = writev(m_fd, iov, iov_count);
     if (nwritten < 0) {
         if (errno == EPIPE) {
             dbgprintf("WSClientConnection::post_message: Disconnected from peer.\n");
             return;
         }
-        perror("WSClientConnection::post_message write");
+        perror("WSClientConnection::post_message writev");
         ASSERT_NOT_REACHED();
     }
 
-    ASSERT(nwritten == sizeof(message));
-
-    if (!extra_data.is_empty()) {
-        nwritten = write(m_fd, extra_data.data(), extra_data.size());
-        if (nwritten < 0) {
-            if (errno == EPIPE) {
-                dbgprintf("WSClientConnection::post_message: Disconnected from peer during extra_data write.\n");
-                return;
-            }
-            perror("WSClientConnection::post_message write (extra_data)");
-            ASSERT_NOT_REACHED();
-        }
-
-        ASSERT(nwritten == extra_data.size());
-    }
+    ASSERT(nwritten == sizeof(message) + extra_data.size());
 }
 
 void WSClientConnection::notify_about_new_screen_rect(const Rect& rect)
