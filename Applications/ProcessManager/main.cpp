@@ -24,7 +24,7 @@ int main(int argc, char** argv)
     keeper->set_layout(make<GBoxLayout>(Orientation::Vertical));
     keeper->set_fill_with_background_color(true);
     keeper->set_background_color(Color::LightGray);
-    keeper->layout()->set_margins({ 2, 2, 2, 2 });
+    keeper->layout()->set_margins({ 4, 4, 4, 4 });
 
     auto* tabwidget = new GTabWidget(keeper);
 
@@ -36,7 +36,6 @@ int main(int argc, char** argv)
     graphs_container->set_background_color(Color::LightGray);
     graphs_container->set_layout(make<GBoxLayout>(Orientation::Vertical));
     graphs_container->layout()->set_margins({ 4, 4, 4, 4 });
-    graphs_container->layout()->set_spacing(4);
 
     auto* cpu_graph_group_box = new GGroupBox("CPU usage", graphs_container);
     cpu_graph_group_box->set_layout(make<GBoxLayout>(Orientation::Vertical));
@@ -66,8 +65,11 @@ int main(int argc, char** argv)
     tabwidget->add_widget("Graphs", graphs_container);
 
     widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
+    widget->layout()->set_margins({ 4, 0, 4, 4 });
+    widget->layout()->set_spacing(0);
 
     auto* toolbar = new GToolBar(widget);
+    toolbar->set_has_frame(false);
     auto* process_table_view = new ProcessTableView(*cpu_graph, widget);
     auto* memory_stats_widget = new MemoryStatsWidget(*memory_graph, widget);
 
