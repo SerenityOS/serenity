@@ -24,7 +24,6 @@ private:
     Rect title_bar_rect() const;
     Rect title_bar_icon_rect() const;
     Rect title_bar_text_rect() const;
-    Rect middle_border_rect() const;
 
     WSWindow& m_window;
     Vector<OwnPtr<WSButton>> m_buttons;
