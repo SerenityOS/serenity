@@ -108,13 +108,12 @@ void GTableView::mousedown_event(GMouseEvent& event)
     if (!model())
         return;
 
-    auto adjusted_position = this->adjusted_position(event.position());
+    if (event.button() != GMouseButton::Left)
+        return;
 
     if (event.y() < header_height()) {
-        if (event.button() != GMouseButton::Left)
-            return;
         for (int i = 0; i < model()->column_count(); ++i) {
-            if (column_resize_grabbable_rect(i).contains(adjusted_position)) {
+            if (column_resize_grabbable_rect(i).contains(event.position())) {
                 m_resizing_column = i;
                 m_in_column_resize = true;
                 m_column_resize_original_width = column_width(i);
@@ -122,7 +121,7 @@ void GTableView::mousedown_event(GMouseEvent& event)
                 return;
             }
             auto header_rect = this->header_rect(i);
-            if (header_rect.contains(adjusted_position)) {
+            if (header_rect.contains(event.position())) {
                 auto new_sort_order = GSortOrder::Ascending;
                 if (model()->key_column() == i)
                     new_sort_order = model()->sort_order() == GSortOrder::Ascending
@@ -135,21 +134,20 @@ void GTableView::mousedown_event(GMouseEvent& event)
         return;
     }
 
-    if (event.button() == GMouseButton::Left) {
-        for (int row = 0, row_count = model()->row_count(); row < row_count; ++row) {
-            if (!row_rect(row).contains(adjusted_position))
+    auto adjusted_position = this->adjusted_position(event.position());
+    for (int row = 0, row_count = model()->row_count(); row < row_count; ++row) {
+        if (!row_rect(row).contains(adjusted_position))
+            continue;
+        for (int column = 0, column_count = model()->column_count(); column < column_count; ++column) {
+            if (!content_rect(row, column).contains(adjusted_position))
                 continue;
-            for (int column = 0, column_count = model()->column_count(); column < column_count; ++column) {
-                if (!content_rect(row, column).contains(adjusted_position))
-                    continue;
-                model()->set_selected_index(model()->index(row, column));
-                update();
-                return;
-            }
+            model()->set_selected_index(model()->index(row, column));
+            update();
+            return;
         }
-        model()->set_selected_index({ });
-        update();
     }
+    model()->set_selected_index({ });
+    update();
 }
 
 void GTableView::mousemove_event(GMouseEvent& event)
