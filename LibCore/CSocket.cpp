@@ -47,15 +47,15 @@ bool CSocket::connect(const CSocketAddress& address, int port)
     m_destination_address = address;
     m_destination_port = port;
 
-    printf("Connecting to %s...", address.to_string().characters());
+    dbgprintf("Connecting to %s...", address.to_string().characters());
     fflush(stdout);
     int rc = ::connect(fd(), (struct sockaddr*)&addr, sizeof(addr));
     if (rc < 0) {
         if (errno == EINPROGRESS) {
-            printf("in progress.\n");
+            dbgprintf("in progress.\n");
             m_notifier = make<CNotifier>(fd(), CNotifier::Event::Write);
             m_notifier->on_ready_to_write = [this] {
-                printf("%s{%p} connected!\n", class_name(), this);
+                dbgprintf("%s{%p} connected!\n", class_name(), this);
                 m_connected = true;
                 m_notifier->set_event_mask(CNotifier::Event::None);
                 if (on_connected)
@@ -66,7 +66,7 @@ bool CSocket::connect(const CSocketAddress& address, int port)
         perror("connect");
         exit(1);
     }
-    printf("ok!\n");
+    dbgprintf("ok!\n");
     m_connected = true;
     return true;
 }
