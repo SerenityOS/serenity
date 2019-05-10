@@ -118,7 +118,7 @@ ByteBuffer CIODevice::read_line(int max_size)
         return { };
     if (m_eof) {
         if (m_buffered_data.size() > max_size) {
-            printf("CIODevice::read_line: At EOF but there's more than max_size(%d) buffered\n", max_size);
+            dbgprintf("CIODevice::read_line: At EOF but there's more than max_size(%d) buffered\n", max_size);
             return { };
         }
         auto buffer = ByteBuffer::copy(m_buffered_data.data(), m_buffered_data.size());
@@ -203,7 +203,9 @@ int CIODevice::printf(const char* format, ...)
     va_start(ap, format);
     // FIXME: We're not propagating write() failures to client here!
     int ret = printf_internal([this] (char*&, char ch) {
-        write((const byte*)&ch, 1);
+        int rc = write((const byte*)&ch, 1);
+        if (rc < 0)
+            dbgprintf("CIODevice::printf: write: %s\n", strerror(errno));
     }, nullptr, format, ap);
     va_end(ap);
     return ret;
