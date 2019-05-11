@@ -9,6 +9,8 @@
 #include <stdio.h>
 #include <math.h>
 
+#pragma GCC optimize("O3")
+
 template<GraphicsBitmap::Format format = GraphicsBitmap::Format::Invalid>
 static ALWAYS_INLINE Color get_pixel(const GraphicsBitmap& bitmap, int x, int y)
 {
