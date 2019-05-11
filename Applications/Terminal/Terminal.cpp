@@ -21,6 +21,10 @@ Terminal::Terminal(int ptm_fd)
     : m_ptm_fd(ptm_fd)
     , m_notifier(ptm_fd, CNotifier::Read)
 {
+    set_frame_shape(FrameShape::Container);
+    set_frame_shadow(FrameShadow::Sunken);
+    set_frame_thickness(2);
+
     m_cursor_blink_timer.set_interval(500);
     m_cursor_blink_timer.on_timeout = [this] {
         m_cursor_blink_state = !m_cursor_blink_state;
@@ -670,8 +674,8 @@ void Terminal::set_size(word columns, word rows)
     for (size_t i = 0; i < rows; ++i)
         m_lines[i] = new Line(columns);
 
-    m_pixel_width = m_columns * font().glyph_width('x') + m_inset * 2;
-    m_pixel_height = (m_rows * (font().glyph_height() + m_line_spacing)) + (m_inset * 2) - m_line_spacing;
+    m_pixel_width = (frame_thickness() * 2) + (m_inset * 2) + (m_columns * font().glyph_width('x'));
+    m_pixel_height = (frame_thickness() * 2) + (m_inset * 2) + (m_rows * (font().glyph_height() + m_line_spacing)) - m_line_spacing;
 
     set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
     set_preferred_size({ m_pixel_width, m_pixel_height });
@@ -691,13 +695,13 @@ Rect Terminal::glyph_rect(word row, word column)
 {
     int y = row * m_line_height;
     int x = column * font().glyph_width('x');
-    return { x + m_inset, y + m_inset, font().glyph_width('x'), font().glyph_height() };
+    return { x + frame_thickness() + m_inset, y + frame_thickness() + m_inset, font().glyph_width('x'), font().glyph_height() };
 }
 
 Rect Terminal::row_rect(word row)
 {
     int y = row * m_line_height;
-    Rect rect = { m_inset, y + m_inset, font().glyph_width('x') * m_columns, font().glyph_height() };
+    Rect rect = { frame_thickness() + m_inset, y + frame_thickness() + m_inset, font().glyph_width('x') * m_columns, font().glyph_height() };
     rect.inflate(0, m_line_spacing);
     return rect;
 }
@@ -766,13 +770,15 @@ void Terminal::keydown_event(GKeyEvent& event)
     }
 }
 
-void Terminal::paint_event(GPaintEvent&)
+void Terminal::paint_event(GPaintEvent& event)
 {   
+    GFrame::paint_event(event);
+
     GPainter painter(*this);
 
     if (m_needs_background_fill) {
         m_needs_background_fill = false;
-        painter.fill_rect(rect(), Color(Color::Black).with_alpha(255 * m_opacity));
+        painter.fill_rect(frame_inner_rect(), Color(Color::Black).with_alpha(255 * m_opacity));
     }
 
     if (m_rows_to_scroll_backing_store && m_rows_to_scroll_backing_store < m_rows) {
@@ -780,10 +786,10 @@ void Terminal::paint_event(GPaintEvent&)
         int second_scanline = m_inset + (m_rows_to_scroll_backing_store * m_line_height);
         int num_rows_to_memcpy = m_rows - m_rows_to_scroll_backing_store;
         int scanlines_to_copy = (num_rows_to_memcpy * m_line_height) - m_line_spacing;
-        fast_dword_copy(
+        memcpy(
             painter.target()->scanline(first_scanline),
             painter.target()->scanline(second_scanline),
-            scanlines_to_copy * m_pixel_width
+            scanlines_to_copy * painter.target()->pitch()
         );
         line(max(0, m_cursor_row - m_rows_to_scroll_backing_store)).dirty = true;
     }
@@ -821,7 +827,7 @@ void Terminal::paint_event(GPaintEvent&)
     }
 
     if (m_belling)
-        painter.draw_rect(rect(), Color::Red);
+        painter.draw_rect(frame_inner_rect(), Color::Red);
 }
 
 void Terminal::set_window_title(String&& title)
@@ -854,6 +860,7 @@ void Terminal::flush_dirty_lines()
 
 void Terminal::force_repaint()
 {
+    m_needs_background_fill = true;
     for (int i = 0; i < m_rows; ++i)
         line(i).dirty = true;
     update();
@@ -861,15 +868,15 @@ void Terminal::force_repaint()
 
 void Terminal::resize_event(GResizeEvent& event)
 {
-    int new_columns = event.size().width() / font().glyph_width('x');
-    int new_rows = event.size().height() / m_line_height;
+    int new_columns = (event.size().width() - frame_thickness() * 2 - m_inset * 2) / font().glyph_width('x');
+    int new_rows = (event.size().height() - frame_thickness() * 2 - m_inset * 2) / m_line_height;
     set_size(new_columns, new_rows);
 }
 
 void Terminal::apply_size_increments_to_window(GWindow& window)
 {
     window.set_size_increment({ font().glyph_width('x'), m_line_height });
-    window.set_base_size({ m_inset * 2, m_inset * 2});
+    window.set_base_size({ frame_thickness() * 2 + m_inset * 2, frame_thickness() * 2 + m_inset * 2 });
 }
 
 void Terminal::update_cursor()

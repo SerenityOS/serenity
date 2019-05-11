@@ -5,13 +5,13 @@
 #include <AK/Vector.h>
 #include <SharedGraphics/GraphicsBitmap.h>
 #include <SharedGraphics/Rect.h>
-#include <LibGUI/GWidget.h>
+#include <LibGUI/GFrame.h>
 #include <LibCore/CNotifier.h>
 #include <LibCore/CTimer.h>
 
 class Font;
 
-class Terminal final : public GWidget {
+class Terminal final : public GFrame {
 public:
     explicit Terminal(int ptm_fd);
     virtual ~Terminal() override;
