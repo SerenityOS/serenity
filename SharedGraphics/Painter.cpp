@@ -349,27 +349,18 @@ void Painter::draw_scaled_bitmap(const Rect& a_dst_rect, const GraphicsBitmap& s
     if (clipped_rect.is_empty())
         return;
 
-    float hscale = (float)src_rect.width() / (float)dst_rect.width();
-    float vscale = (float)src_rect.height() / (float)dst_rect.height();
+    int hscale = (src_rect.width() << 16) / dst_rect.width();
+    int vscale = (src_rect.height() << 16) / dst_rect.height();
 
-    for (int y = dst_rect.top(); y <= dst_rect.bottom(); ++y) {
-        if (y < clipped_rect.top() || y > clipped_rect.bottom())
-            continue;
+    for (int y = clipped_rect.top(); y <= clipped_rect.bottom(); ++y) {
         auto* scanline = (Color*)m_target->scanline(y);
-        for (int x = dst_rect.left(); x <= dst_rect.right(); ++x) {
-            if (x < clipped_rect.left() || x >= clipped_rect.right())
-                continue;
+        for (int x = clipped_rect.left(); x <= clipped_rect.right(); ++x) {
 
-            auto scaled_x = (float)(x - dst_rect.x()) * hscale;
-            auto scaled_y = (float)(y - dst_rect.y()) * vscale;
+            auto scaled_x = ((x - dst_rect.x()) * hscale) >> 16;
+            auto scaled_y = ((y - dst_rect.y()) * vscale) >> 16;
             auto src_pixel = source.get_pixel(scaled_x, scaled_y);
 
-            if (!src_pixel.alpha())
-                continue;
-            if (src_pixel.alpha() == 0xff)
-                scanline[x] = src_pixel;
-            else
-                scanline[x] = scanline[x].blend(scanline[x]);
+            scanline[x] = scanline[x].blend(src_pixel);
         }
     }
 }
