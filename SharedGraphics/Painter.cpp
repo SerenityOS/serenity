@@ -381,7 +381,7 @@ ALWAYS_INLINE static void do_draw_scaled_bitmap(GraphicsBitmap& target, const Re
         if (hfactor == 3 && vfactor == 3)
             return do_draw_integer_scaled_bitmap<has_alpha_channel>(target, dst_rect, clipped_rect, source, hscale, vscale, 3, 3, get_pixel);
         if (hfactor == 4 && vfactor == 4)
-            return do_draw_integer_scaled_bitmap<has_alpha_channel>(target, dst_rect, clipped_rect, source, hscale, vscale, 3, 3, get_pixel);
+            return do_draw_integer_scaled_bitmap<has_alpha_channel>(target, dst_rect, clipped_rect, source, hscale, vscale, 4, 4, get_pixel);
         return do_draw_integer_scaled_bitmap<has_alpha_channel>(target, dst_rect, clipped_rect, source, hscale, vscale, hfactor, vfactor, get_pixel);
     }
 
