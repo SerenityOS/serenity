@@ -41,6 +41,7 @@ int main(int argc, char** argv)
 
     auto* widget = new GWidget;
     widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
+    widget->layout()->set_spacing(0);
 
     auto* main_toolbar = new GToolBar(widget);
     auto* location_toolbar = new GToolBar(widget);
