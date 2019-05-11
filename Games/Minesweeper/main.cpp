@@ -22,6 +22,7 @@ int main(int argc, char** argv)
     auto* widget = new GWidget;
     window->set_main_widget(widget);
     widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
+    widget->layout()->set_spacing(0);
 
     auto* container = new GWidget(widget);
     container->set_fill_with_background_color(true);
