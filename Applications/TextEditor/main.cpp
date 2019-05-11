@@ -21,6 +21,7 @@ int main(int argc, char** argv)
 
     auto* widget = new GWidget;
     widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
+    widget->layout()->set_spacing(0);
 
     auto* toolbar = new GToolBar(widget);
     auto* text_editor = new GTextEditor(GTextEditor::MultiLine, widget);
