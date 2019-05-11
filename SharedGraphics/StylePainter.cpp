@@ -205,8 +205,6 @@ void StylePainter::paint_frame(Painter& painter, const Rect& rect, FrameShape sh
 
 void StylePainter::paint_window_frame(Painter& painter, const Rect& rect)
 {
-    Color top_left_color;
-    Color bottom_right_color;
     Color base_color = Color::from_rgb(0xc0c0c0);
     Color dark_shade = Color::from_rgb(0x404040);
     Color mid_shade = Color::from_rgb(0x808080);
