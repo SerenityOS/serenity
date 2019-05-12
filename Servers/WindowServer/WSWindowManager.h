@@ -131,8 +131,8 @@ private:
     void start_window_drag(WSWindow&, const WSMouseEvent&);
     void handle_client_request(const WSAPIClientRequest&);
     void set_hovered_window(WSWindow*);
-    template<typename Callback> IterationDecision for_each_visible_window_of_type_from_back_to_front(WSWindowType, Callback);
-    template<typename Callback> IterationDecision for_each_visible_window_of_type_from_front_to_back(WSWindowType, Callback);
+    template<typename Callback> IterationDecision for_each_visible_window_of_type_from_back_to_front(WSWindowType, Callback, bool ignore_highlight = false);
+    template<typename Callback> IterationDecision for_each_visible_window_of_type_from_front_to_back(WSWindowType, Callback, bool ignore_highlight = false);
     template<typename Callback> IterationDecision for_each_visible_window_from_front_to_back(Callback);
     template<typename Callback> IterationDecision for_each_visible_window_from_back_to_front(Callback);
     template<typename Callback> void for_each_window_listening_to_wm_events(Callback);
@@ -234,7 +234,7 @@ private:
 };
 
 template<typename Callback>
-IterationDecision WSWindowManager::for_each_visible_window_of_type_from_back_to_front(WSWindowType type, Callback callback)
+IterationDecision WSWindowManager::for_each_visible_window_of_type_from_back_to_front(WSWindowType type, Callback callback, bool ignore_highlight)
 {
     bool do_highlight_window_at_end = false;
     for (auto* window = m_windows_in_order.head(); window; window = window->next()) {
@@ -244,7 +244,7 @@ IterationDecision WSWindowManager::for_each_visible_window_of_type_from_back_to_
             continue;
         if (window->type() != type)
             continue;
-        if (m_highlight_window == window) {
+        if (!ignore_highlight && m_highlight_window == window) {
             do_highlight_window_at_end = true;
             continue;
         }
@@ -273,9 +273,9 @@ IterationDecision WSWindowManager::for_each_visible_window_from_back_to_front(Ca
 }
 
 template<typename Callback>
-IterationDecision WSWindowManager::for_each_visible_window_of_type_from_front_to_back(WSWindowType type, Callback callback)
+IterationDecision WSWindowManager::for_each_visible_window_of_type_from_front_to_back(WSWindowType type, Callback callback, bool ignore_highlight)
 {
-    if (m_highlight_window && m_highlight_window->type() == type && m_highlight_window->is_visible()) {
+    if (!ignore_highlight && m_highlight_window && m_highlight_window->type() == type && m_highlight_window->is_visible()) {
         if (callback(*m_highlight_window) == IterationDecision::Abort)
             return IterationDecision::Abort;
     }
@@ -287,7 +287,7 @@ IterationDecision WSWindowManager::for_each_visible_window_of_type_from_front_to
             continue;
         if (window->type() != type)
             continue;
-        if (window == m_highlight_window)
+        if (!ignore_highlight && window == m_highlight_window)
             continue;
         if (callback(*window) == IterationDecision::Abort)
             return IterationDecision::Abort;
