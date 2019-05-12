@@ -94,13 +94,13 @@ WSWindowFrame::WSWindowFrame(WSWindow& window)
         m_window.event(close_request);
     }));
 
-    m_buttons.append(make<WSButton>(*this, *s_minimize_button_bitmap, [this] (auto&) {
-        m_window.set_minimized(true);
-    }));
-
     m_buttons.append(make<WSButton>(*this, *s_maximize_button_bitmap, [this] (auto& button) {
         m_window.set_maximized(!m_window.is_maximized());
         button.set_bitmap(m_window.is_maximized() ? *s_unmaximize_button_bitmap : *s_maximize_button_bitmap);
+    }));
+
+    m_buttons.append(make<WSButton>(*this, *s_minimize_button_bitmap, [this] (auto&) {
+        m_window.set_minimized(true);
     }));
 }
 
