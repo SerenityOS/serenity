@@ -28,10 +28,11 @@ WSWindow::WSWindow(CObject& internal_owner, WSWindowType type)
     WSWindowManager::the().add_window(*this);
 }
 
-WSWindow::WSWindow(WSClientConnection& client, WSWindowType window_type, int window_id, bool modal)
+WSWindow::WSWindow(WSClientConnection& client, WSWindowType window_type, int window_id, bool modal, bool resizable)
     : m_client(&client)
     , m_type(window_type)
     , m_modal(modal)
+    , m_resizable(resizable)
     , m_window_id(window_id)
     , m_icon(default_window_icon())
     , m_icon_path(default_window_icon_path())
@@ -259,13 +260,6 @@ void WSWindow::set_visible(bool b)
         return;
     m_visible = b;
     invalidate();
-}
-
-void WSWindow::set_resizable(bool resizable)
-{
-    if (m_resizable == resizable)
-        return;
-    m_resizable = resizable;
 }
 
 void WSWindow::invalidate()
