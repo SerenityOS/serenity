@@ -2,9 +2,19 @@
 #include <WindowServer/WSWindowManager.h>
 #include <WindowServer/WSEvent.h>
 #include <SharedGraphics/Font.h>
+#include <SharedGraphics/StylePainter.h>
+
+static WSWindowSwitcher* s_the;
+
+WSWindowSwitcher& WSWindowSwitcher::the()
+{
+    ASSERT(s_the);
+    return *s_the;
+}
 
 WSWindowSwitcher::WSWindowSwitcher()
 {
+    s_the = this;
 }
 
 WSWindowSwitcher::~WSWindowSwitcher()
@@ -80,8 +90,15 @@ void WSWindowSwitcher::draw()
             rect_text_color = Color::MidGray;
         }
         item_rect.shrink(item_padding(), 0);
-        painter.blit(item_rect.location().translated(0, (item_rect.height() - window.icon().height()) / 2), window.icon(), window.icon().rect());
-        painter.draw_text(item_rect.translated(window.icon().width() + 4, 0), window.title(), WSWindowManager::the().window_title_font(), TextAlignment::CenterLeft, text_color);
+        Rect thumbnail_rect = { item_rect.location().translated(0, 5), { thumbnail_width(), thumbnail_height() } };
+        if (window.backing_store()) {
+            painter.draw_scaled_bitmap(thumbnail_rect, *window.backing_store(), window.backing_store()->rect());
+            StylePainter::paint_frame(painter, thumbnail_rect.inflated(4, 4), FrameShape::Container, FrameShadow::Sunken, 2);
+        }
+        Rect icon_rect = { thumbnail_rect.bottom_right().translated(-window.icon().width(), -window.icon().height()), { window.icon().width(), window.icon().height() } };
+        painter.fill_rect(icon_rect, Color::LightGray);
+        painter.blit(icon_rect.location(), window.icon(), window.icon().rect());
+        painter.draw_text(item_rect.translated(thumbnail_width() + 12, 0), window.title(), WSWindowManager::the().window_title_font(), TextAlignment::CenterLeft, text_color);
         painter.draw_text(item_rect, window.rect().to_string(), TextAlignment::CenterRight, rect_text_color);
     }
 }
@@ -108,11 +125,19 @@ void WSWindowSwitcher::refresh()
         return;
     }
     int space_for_window_rect = 180;
-    m_rect.set_width(longest_title_width + space_for_window_rect + padding() * 2 + item_padding() * 2);
+    m_rect.set_width(thumbnail_width() + longest_title_width + space_for_window_rect + padding() * 2 + item_padding() * 2);
     m_rect.set_height(window_count * item_height() + padding() * 2);
     m_rect.center_within(WSWindowManager::the().m_screen_rect);
     if (!m_switcher_window)
         m_switcher_window = make<WSWindow>(*this, WSWindowType::WindowSwitcher);
     m_switcher_window->set_rect(m_rect);
     draw();
+}
+
+void WSWindowSwitcher::refresh_if_needed()
+{
+    if (m_visible) {
+        refresh();
+        WSWindowManager::the().invalidate(m_rect);
+    }
 }

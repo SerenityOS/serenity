@@ -8,6 +8,7 @@
 #include <WindowServer/WSAPITypes.h>
 #include <WindowServer/WSClipboard.h>
 #include <WindowServer/WSScreen.h>
+#include <WindowServer/WSWindowSwitcher.h>
 #include <SharedBuffer.h>
 #include <sys/ioctl.h>
 #include <sys/uio.h>
@@ -550,6 +551,8 @@ void WSClientConnection::handle_request(const WSAPIDidFinishPaintingNotification
     auto& window = *(*it).value;
     for (auto& rect : request.rects())
         WSWindowManager::the().invalidate(window, rect);
+
+    WSWindowSwitcher::the().refresh_if_needed();
 }
 
 void WSClientConnection::handle_request(const WSAPIGetWindowBackingStoreRequest& request)

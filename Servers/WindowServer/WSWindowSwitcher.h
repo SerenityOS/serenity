@@ -11,6 +11,8 @@ class WSWindow;
 
 class WSWindowSwitcher : public CObject {
 public:
+    static WSWindowSwitcher& the();
+
     WSWindowSwitcher();
     virtual ~WSWindowSwitcher() override;
 
@@ -22,10 +24,14 @@ public:
 
     void on_key_event(const WSKeyEvent&);
     void refresh();
+    void refresh_if_needed();
 
     void draw();
 
-    int item_height() { return 20; }
+    int thumbnail_width() { return 40; }
+    int thumbnail_height() { return 40; }
+
+    int item_height() { return 10 + thumbnail_height(); }
     int padding() { return 8; }
     int item_padding() { return 8; }
 
