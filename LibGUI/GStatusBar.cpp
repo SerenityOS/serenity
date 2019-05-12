@@ -26,9 +26,9 @@ GStatusBar::~GStatusBar()
 {
 }
 
-void GStatusBar::set_text(String&& text)
+void GStatusBar::set_text(const String& text)
 {
-    m_label->set_text(move(text));
+    m_label->set_text(text);
 }
 
 String GStatusBar::text() const

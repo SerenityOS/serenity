@@ -407,9 +407,9 @@ private:
 
 class WSAPISetWallpaperRequest final : public WSAPIClientRequest {
 public:
-    explicit WSAPISetWallpaperRequest(int client_id, String&& wallpaper)
+    explicit WSAPISetWallpaperRequest(int client_id, const String& wallpaper)
         : WSAPIClientRequest(WSEvent::APISetWallpaperRequest, client_id)
-        , m_wallpaper(move(wallpaper))
+        , m_wallpaper(wallpaper)
     {
     }
 
@@ -429,10 +429,10 @@ public:
 
 class WSAPISetWindowTitleRequest final : public WSAPIClientRequest {
 public:
-    explicit WSAPISetWindowTitleRequest(int client_id, int window_id, String&& title)
+    explicit WSAPISetWindowTitleRequest(int client_id, int window_id, const String& title)
         : WSAPIClientRequest(WSEvent::APISetWindowTitleRequest, client_id)
         , m_window_id(window_id)
-        , m_title(move(title))
+        , m_title(title)
     {
     }
 

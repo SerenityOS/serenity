@@ -830,12 +830,12 @@ void Terminal::paint_event(GPaintEvent& event)
         painter.draw_rect(frame_inner_rect(), Color::Red);
 }
 
-void Terminal::set_window_title(String&& title)
+void Terminal::set_window_title(const String& title)
 {
     auto* w = window();
     if (!w)
         return;
-    w->set_title(move(title));
+    w->set_title(title);
 }
 
 void Terminal::invalidate_cursor()

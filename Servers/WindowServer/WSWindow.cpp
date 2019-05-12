@@ -50,11 +50,11 @@ WSWindow::~WSWindow()
     WSWindowManager::the().remove_window(*this);
 }
 
-void WSWindow::set_title(String&& title)
+void WSWindow::set_title(const String& title)
 {
     if (m_title == title)
         return;
-    m_title = move(title);
+    m_title = title;
     WSWindowManager::the().notify_title_changed(*this);
 }
 
