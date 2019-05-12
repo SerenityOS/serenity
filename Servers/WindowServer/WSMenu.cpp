@@ -11,7 +11,7 @@
 #include <SharedGraphics/StylePainter.h>
 #include <SharedGraphics/Font.h>
 
-WSMenu::WSMenu(WSClientConnection* client, int menu_id, String&& name)
+WSMenu::WSMenu(WSClientConnection* client, int menu_id, const String& name)
     : m_client(client)
     , m_menu_id(menu_id)
     , m_name(move(name))
