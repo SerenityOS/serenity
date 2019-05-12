@@ -474,10 +474,9 @@ void WSClientConnection::handle_request(const WSAPIGetClipboardContentsRequest&)
 void WSClientConnection::handle_request(const WSAPICreateWindowRequest& request)
 {
     int window_id = m_next_window_id++;
-    auto window = make<WSWindow>(*this, request.window_type(), window_id, request.is_modal());
+    auto window = make<WSWindow>(*this, request.window_type(), window_id, request.is_modal(), request.is_resizable());
     window->set_background_color(request.background_color());
     window->set_has_alpha_channel(request.has_alpha_channel());
-    window->set_resizable(request.is_resizable());
     window->set_title(request.title());
     window->set_rect(request.rect());
     window->set_opacity(request.opacity());
