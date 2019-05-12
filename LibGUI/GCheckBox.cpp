@@ -35,11 +35,11 @@ GCheckBox::~GCheckBox()
 {
 }
 
-void GCheckBox::set_caption(String&& caption)
+void GCheckBox::set_caption(const String& caption)
 {
     if (caption == m_caption)
         return;
-    m_caption = move(caption);
+    m_caption = caption;
     update();
 }
 

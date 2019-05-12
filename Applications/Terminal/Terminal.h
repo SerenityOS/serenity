@@ -40,7 +40,7 @@ private:
     void set_cursor(unsigned row, unsigned column);
     void put_character_at(unsigned row, unsigned column, byte ch);
     void invalidate_cursor();
-    void set_window_title(String&&);
+    void set_window_title(const String&);
 
     void inject_string(const String&);
     void unimplemented_escape();

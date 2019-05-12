@@ -43,7 +43,7 @@ public:
     int window_id() const { return m_window_id; }
 
     String title() const { return m_title; }
-    void set_title(String&&);
+    void set_title(const String&);
 
     float opacity() const { return m_opacity; }
     void set_opacity(float opacity) { m_opacity = opacity; }

@@ -10,7 +10,7 @@ public:
     virtual ~GCheckBox() override;
 
     String caption() const { return m_caption; }
-    void set_caption(String&&);
+    void set_caption(const String&);
 
     bool is_checked() const { return m_checked; }
     void set_checked(bool);
