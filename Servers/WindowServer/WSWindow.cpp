@@ -134,6 +134,21 @@ void WSWindow::set_minimized(bool minimized)
     WSWindowManager::the().notify_minimization_state_changed(*this);
 }
 
+void WSWindow::set_maximized(bool maximized)
+{
+    if (m_maximized == maximized)
+        return;
+    m_maximized = maximized;
+    auto old_rect = m_rect;
+    if (maximized) {
+        m_unmaximized_rect = m_rect;
+        set_rect(WSWindowManager::the().maximized_window_rect(*this));
+    } else {
+        set_rect(m_unmaximized_rect);
+    }
+    WSEventLoop::the().post_event(*this, make<WSResizeEvent>(old_rect, m_rect));
+}
+
 void WSWindow::event(CEvent& event)
 {
     if (m_internal_owner)

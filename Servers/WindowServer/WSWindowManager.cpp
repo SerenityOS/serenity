@@ -1218,3 +1218,24 @@ void WSWindowManager::set_resize_candidate(WSWindow& window, ResizeDirection dir
     m_resize_candidate = window.make_weak_ptr();
     m_resize_direction = direction;
 }
+
+Rect WSWindowManager::maximized_window_rect(const WSWindow& window) const
+{
+    Rect rect = m_screen_rect;
+
+    // Subtract window title bar (leaving the border)
+    rect.set_y(rect.y() + window.frame().title_bar_rect().height());
+    rect.set_height(rect.height() - window.frame().title_bar_rect().height());
+
+    // Subtract menu bar
+    rect.set_y(rect.y() + menubar_rect().height());
+    rect.set_height(rect.height() - menubar_rect().height());
+
+    // Subtract taskbar window height if present
+    const_cast<WSWindowManager*>(this)->for_each_visible_window_of_type_from_back_to_front(WSWindowType::Taskbar, [&rect] (WSWindow& taskbar_window) {
+        rect.set_height(rect.height() - taskbar_window.height());
+        return IterationDecision::Abort;
+    });
+
+    return rect;
+}

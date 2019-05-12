@@ -20,11 +20,11 @@ public:
     void notify_window_rect_changed(const Rect& old_rect, const Rect& new_rect);
     void invalidate_title_bar();
 
-private:
     Rect title_bar_rect() const;
     Rect title_bar_icon_rect() const;
     Rect title_bar_text_rect() const;
 
+private:
     WSWindow& m_window;
     Vector<OwnPtr<WSButton>> m_buttons;
 };
