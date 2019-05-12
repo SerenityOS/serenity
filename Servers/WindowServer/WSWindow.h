@@ -16,7 +16,7 @@ class WSMouseEvent;
 
 class WSWindow final : public CObject, public InlineLinkedListNode<WSWindow> {
 public:
-    WSWindow(WSClientConnection&, WSWindowType, int window_id, bool modal);
+    WSWindow(WSClientConnection&, WSWindowType, int window_id, bool modal, bool resizable);
     WSWindow(CObject&, WSWindowType);
     virtual ~WSWindow() override;
 
@@ -64,7 +64,6 @@ public:
     bool is_modal() const { return m_modal; }
 
     bool is_resizable() const { return m_resizable; }
-    void set_resizable(bool);
 
     Rect rect() const { return m_rect; }
     void set_rect(const Rect&);
