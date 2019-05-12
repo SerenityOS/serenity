@@ -42,6 +42,38 @@ static CharacterBitmap* s_minimize_button_bitmap;
 static const int s_minimize_button_bitmap_width = 8;
 static const int s_minimize_button_bitmap_height = 9;
 
+static const char* s_maximize_button_bitmap_data = {
+    "        "
+    "        "
+    "        "
+    "   ##   "
+    "  ####  "
+    " ###### "
+    "        "
+    "        "
+    "        "
+};
+
+static CharacterBitmap* s_maximize_button_bitmap;
+static const int s_maximize_button_bitmap_width = 8;
+static const int s_maximize_button_bitmap_height = 9;
+
+static const char* s_unmaximize_button_bitmap_data = {
+    "        "
+    "   ##   "
+    "  ####  "
+    " ###### "
+    "        "
+    " ###### "
+    "  ####  "
+    "   ##   "
+    "        "
+};
+
+static CharacterBitmap* s_unmaximize_button_bitmap;
+static const int s_unmaximize_button_bitmap_width = 8;
+static const int s_unmaximize_button_bitmap_height = 9;
+
 WSWindowFrame::WSWindowFrame(WSWindow& window)
     : m_window(window)
 {
@@ -51,13 +83,24 @@ WSWindowFrame::WSWindowFrame(WSWindow& window)
     if (!s_minimize_button_bitmap)
         s_minimize_button_bitmap = &CharacterBitmap::create_from_ascii(s_minimize_button_bitmap_data, s_minimize_button_bitmap_width, s_minimize_button_bitmap_height).leak_ref();
 
-    m_buttons.append(make<WSButton>(*this, *s_close_button_bitmap, [this] {
+    if (!s_maximize_button_bitmap)
+        s_maximize_button_bitmap = &CharacterBitmap::create_from_ascii(s_maximize_button_bitmap_data, s_maximize_button_bitmap_width, s_maximize_button_bitmap_height).leak_ref();
+
+    if (!s_unmaximize_button_bitmap)
+        s_unmaximize_button_bitmap = &CharacterBitmap::create_from_ascii(s_unmaximize_button_bitmap_data, s_unmaximize_button_bitmap_width, s_unmaximize_button_bitmap_height).leak_ref();
+
+    m_buttons.append(make<WSButton>(*this, *s_close_button_bitmap, [this] (auto&) {
         WSEvent close_request(WSEvent::WindowCloseRequest);
         m_window.event(close_request);
     }));
 
-    m_buttons.append(make<WSButton>(*this, *s_minimize_button_bitmap, [this] {
+    m_buttons.append(make<WSButton>(*this, *s_minimize_button_bitmap, [this] (auto&) {
         m_window.set_minimized(true);
+    }));
+
+    m_buttons.append(make<WSButton>(*this, *s_maximize_button_bitmap, [this] (auto& button) {
+        m_window.set_maximized(!m_window.is_maximized());
+        button.set_bitmap(m_window.is_maximized() ? *s_unmaximize_button_bitmap : *s_maximize_button_bitmap);
     }));
 }
 

@@ -29,6 +29,9 @@ public:
     bool is_minimized() const { return m_minimized; }
     void set_minimized(bool);
 
+    bool is_maximized() const { return m_maximized; }
+    void set_maximized(bool);
+
     WSWindowFrame& frame() { return m_frame; }
     const WSWindowFrame& frame() const { return m_frame; }
 
@@ -152,6 +155,7 @@ private:
     bool m_resizable { false };
     bool m_listens_to_wm_events { false };
     bool m_minimized { false };
+    bool m_maximized { false };
     RetainPtr<GraphicsBitmap> m_backing_store;
     RetainPtr<GraphicsBitmap> m_last_backing_store;
     int m_window_id { -1 };
@@ -165,4 +169,5 @@ private:
     Color m_background_color { Color::LightGray };
     unsigned m_wm_event_mask { 0 };
     DisjointRectSet m_pending_paint_rects;
+    Rect m_unmaximized_rect;
 };

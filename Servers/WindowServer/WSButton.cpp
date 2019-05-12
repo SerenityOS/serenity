@@ -5,7 +5,7 @@
 #include <SharedGraphics/StylePainter.h>
 #include <SharedGraphics/CharacterBitmap.h>
 
-WSButton::WSButton(WSWindowFrame& frame, Retained<CharacterBitmap>&& bitmap, Function<void()>&& on_click_handler)
+WSButton::WSButton(WSWindowFrame& frame, Retained<CharacterBitmap>&& bitmap, Function<void(WSButton&)>&& on_click_handler)
     : on_click(move(on_click_handler))
     , m_frame(frame)
     , m_bitmap(move(bitmap))
@@ -47,7 +47,7 @@ void WSButton::on_mouse_event(const WSMouseEvent& event)
         m_pressed = false;
         if (rect().contains(event.position())) {
             if (on_click)
-                on_click();
+                on_click(*this);
         }
         if (old_pressed != m_pressed)
             wm.invalidate(screen_rect());

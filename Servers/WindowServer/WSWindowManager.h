@@ -46,6 +46,8 @@ public:
     void notify_minimization_state_changed(WSWindow&);
     void notify_client_changed_app_menubar(WSClientConnection&);
 
+    Rect maximized_window_rect(const WSWindow&) const;
+
     WSWindow* active_window() { return m_active_window.ptr(); }
     const WSClientConnection* active_client() const;
 
