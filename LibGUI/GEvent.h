@@ -19,6 +19,7 @@ public:
         MouseMove,
         MouseDown,
         MouseUp,
+        MouseWheel,
         Enter,
         Leave,
         KeyDown,
@@ -44,7 +45,6 @@ public:
     explicit GEvent(Type type) : CEvent(type) { }
     virtual ~GEvent() { }
 
-    bool is_mouse_event() const { return type() == MouseMove || type() == MouseDown || type() == MouseUp; }
     bool is_key_event() const { return type() == KeyUp || type() == KeyDown; }
     bool is_paint_event() const { return type() == Paint; }
 };
@@ -244,12 +244,13 @@ private:
 
 class GMouseEvent final : public GEvent {
 public:
-    GMouseEvent(Type type, const Point& position, unsigned buttons, GMouseButton button, unsigned modifiers)
+    GMouseEvent(Type type, const Point& position, unsigned buttons, GMouseButton button, unsigned modifiers, int wheel_delta)
         : GEvent(type)
         , m_position(position)
         , m_buttons(buttons)
         , m_button(button)
         , m_modifiers(modifiers)
+        , m_wheel_delta(wheel_delta)
     {
     }
 
@@ -259,10 +260,12 @@ public:
     GMouseButton button() const { return m_button; }
     unsigned buttons() const { return m_buttons; }
     unsigned modifiers() const { return m_modifiers; }
+    int wheel_delta() const { return m_wheel_delta; }
 
 private:
     Point m_position;
     unsigned m_buttons { 0 };
     GMouseButton m_button { GMouseButton::None };
     unsigned m_modifiers { 0 };
+    int m_wheel_delta { 0 };
 };

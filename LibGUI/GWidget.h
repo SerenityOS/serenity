@@ -58,6 +58,7 @@ public:
     virtual void mousemove_event(GMouseEvent&);
     virtual void mousedown_event(GMouseEvent&);
     virtual void mouseup_event(GMouseEvent&);
+    virtual void mousewheel_event(GMouseEvent&);
     virtual void click_event(GMouseEvent&);
     virtual void doubleclick_event(GMouseEvent&);
     virtual void context_menu_event(GContextMenuEvent&);

@@ -27,6 +27,12 @@ GScrollableWidget::~GScrollableWidget()
 {
 }
 
+void GScrollableWidget::mousewheel_event(GMouseEvent& event)
+{
+    // FIXME: The wheel delta multiplier should probably come from... somewhere?
+    vertical_scrollbar().set_value(vertical_scrollbar().value() + event.wheel_delta() * 20);
+}
+
 void GScrollableWidget::resize_event(GResizeEvent& event)
 {
     auto inner_rect = frame_inner_rect_for_size(event.size());
