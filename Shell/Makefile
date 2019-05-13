@@ -20,5 +20,5 @@ $(APP): $(OBJS)
 -include $(OBJS:%.o=%.d)
 
 clean:
-	@echo "CLEAN"; rm -f $(APPS) $(OBJS) *.d
+	@echo "CLEAN"; rm -f $(APP) $(OBJS) *.d
 
