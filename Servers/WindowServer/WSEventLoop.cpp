@@ -62,6 +62,7 @@ void WSEventLoop::drain_mouse()
     unsigned prev_buttons = screen.mouse_button_state();
     int dx = 0;
     int dy = 0;
+    int dz = 0;
     unsigned buttons = prev_buttons;
     for (;;) {
         MousePacket packet;
@@ -73,15 +74,17 @@ void WSEventLoop::drain_mouse()
 
         dx += packet.dx;
         dy += -packet.dy;
+        dz += packet.dz;
         if (buttons != prev_buttons) {
-            screen.on_receive_mouse_data(dx, dy, buttons);
+            screen.on_receive_mouse_data(dx, dy, dz, buttons);
             dx = 0;
             dy = 0;
+            dz = 0;
             prev_buttons = buttons;
         }
     }
-    if (dx || dy)
-        screen.on_receive_mouse_data(dx, dy, buttons);
+    if (dx || dy || dz)
+        screen.on_receive_mouse_data(dx, dy, dz, buttons);
 }
 
 void WSEventLoop::drain_keyboard()

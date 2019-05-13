@@ -74,6 +74,7 @@ struct WSAPI_ServerMessage {
         MouseMove,
         MouseDown,
         MouseUp,
+        MouseWheel,
         WindowEntered,
         WindowLeft,
         KeyDown,
@@ -155,6 +156,7 @@ struct WSAPI_ServerMessage {
             WSAPI_MouseButton button;
             unsigned buttons;
             byte modifiers;
+            int wheel_delta;
         } mouse;
         struct {
             char character;

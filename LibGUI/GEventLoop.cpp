@@ -152,13 +152,14 @@ void GEventLoop::handle_key_event(const WSAPI_ServerMessage& event, GWindow& win
 void GEventLoop::handle_mouse_event(const WSAPI_ServerMessage& event, GWindow& window)
 {
 #ifdef GEVENTLOOP_DEBUG
-    dbgprintf("WID=%x MouseEvent %d,%d\n", event.window_id, event.mouse.position.x, event.mouse.position.y);
+    dbgprintf("WID=%x MouseEvent %d,%d,%d\n", event.window_id, event.mouse.position.x, event.mouse.position.y, event.mouse.wheel_delta);
 #endif
     GMouseEvent::Type type;
     switch (event.type) {
     case WSAPI_ServerMessage::Type::MouseMove: type = GEvent::MouseMove; break;
     case WSAPI_ServerMessage::Type::MouseUp: type = GEvent::MouseUp; break;
     case WSAPI_ServerMessage::Type::MouseDown: type = GEvent::MouseDown; break;
+    case WSAPI_ServerMessage::Type::MouseWheel: type = GEvent::MouseWheel; break;
     default: ASSERT_NOT_REACHED(); break;
     }
     GMouseButton button { GMouseButton::None };
@@ -169,7 +170,7 @@ void GEventLoop::handle_mouse_event(const WSAPI_ServerMessage& event, GWindow& w
     case WSAPI_MouseButton::Middle: button = GMouseButton::Middle; break;
     default: ASSERT_NOT_REACHED(); break;
     }
-    post_event(window, make<GMouseEvent>(type, event.mouse.position, event.mouse.buttons, button, event.mouse.modifiers));
+    post_event(window, make<GMouseEvent>(type, event.mouse.position, event.mouse.buttons, button, event.mouse.modifiers, event.mouse.wheel_delta));
 }
 
 void GEventLoop::handle_menu_event(const WSAPI_ServerMessage& event)
@@ -276,6 +277,7 @@ void GEventLoop::process_unprocessed_bundles()
         case WSAPI_ServerMessage::Type::MouseDown:
         case WSAPI_ServerMessage::Type::MouseUp:
         case WSAPI_ServerMessage::Type::MouseMove:
+        case WSAPI_ServerMessage::Type::MouseWheel:
             handle_mouse_event(event, *window);
             break;
         case WSAPI_ServerMessage::Type::WindowActivated:

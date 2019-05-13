@@ -86,6 +86,8 @@ void GWidget::event(CEvent& event)
         return handle_mousedown_event(static_cast<GMouseEvent&>(event));
     case GEvent::MouseUp:
         return handle_mouseup_event(static_cast<GMouseEvent&>(event));
+    case GEvent::MouseWheel:
+        return mousewheel_event(static_cast<GMouseEvent&>(event));
     case GEvent::Enter:
         return handle_enter_event(event);
     case GEvent::Leave:
@@ -258,6 +260,10 @@ void GWidget::mouseup_event(GMouseEvent&)
 }
 
 void GWidget::mousemove_event(GMouseEvent&)
+{
+}
+
+void GWidget::mousewheel_event(GMouseEvent&)
 {
 }
 

@@ -58,7 +58,7 @@ void WSScreen::set_resolution(int width, int height)
     m_cursor_location.constrain(rect());
 }
 
-void WSScreen::on_receive_mouse_data(int dx, int dy, unsigned buttons)
+void WSScreen::on_receive_mouse_data(int dx, int dy, int dz, unsigned buttons)
 {
     auto prev_location = m_cursor_location;
     m_cursor_location.move_by(dx, dy);
@@ -77,6 +77,11 @@ void WSScreen::on_receive_mouse_data(int dx, int dy, unsigned buttons)
     post_mousedown_or_mouseup_if_needed(MouseButton::Middle);
     if (m_cursor_location != prev_location) {
         auto message = make<WSMouseEvent>(WSEvent::MouseMove, m_cursor_location, buttons, MouseButton::None, m_modifiers);
+        WSEventLoop::the().post_event(WSWindowManager::the(), move(message));
+    }
+
+    if (dz) {
+        auto message = make<WSMouseEvent>(WSEvent::MouseWheel, m_cursor_location, buttons, MouseButton::None, m_modifiers, dz);
         WSEventLoop::the().post_event(WSWindowManager::the(), move(message));
     }
 
