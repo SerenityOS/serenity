@@ -18,6 +18,7 @@ public:
         MouseMove,
         MouseDown,
         MouseUp,
+        MouseWheel,
         WindowEntered,
         WindowLeft,
         KeyDown,
@@ -74,7 +75,7 @@ public:
     virtual ~WSEvent() { }
 
     bool is_client_request() const { return type() > __Begin_API_Client_Requests && type() < __End_API_Client_Requests; }
-    bool is_mouse_event() const { return type() == MouseMove || type() == MouseDown || type() == MouseUp; }
+    bool is_mouse_event() const { return type() == MouseMove || type() == MouseDown || type() == MouseUp || type() == MouseWheel; }
     bool is_key_event() const { return type() == KeyUp || type() == KeyDown; }
 };
 
@@ -718,12 +719,13 @@ private:
 
 class WSMouseEvent final : public WSEvent {
 public:
-    WSMouseEvent(Type type, const Point& position, unsigned buttons, MouseButton button, unsigned modifiers)
+    WSMouseEvent(Type type, const Point& position, unsigned buttons, MouseButton button, unsigned modifiers, int wheel_delta = 0)
         : WSEvent(type)
         , m_position(position)
         , m_buttons(buttons)
         , m_button(button)
         , m_modifiers(modifiers)
+        , m_wheel_delta(wheel_delta)
     {
     }
 
@@ -733,14 +735,16 @@ public:
     MouseButton button() const { return m_button; }
     unsigned buttons() const { return m_buttons; }
     unsigned modifiers() const { return m_modifiers; }
+    int wheel_delta() const { return m_wheel_delta; }
 
-    WSMouseEvent translated(const Point& delta) const { return WSMouseEvent((Type)type(), m_position.translated(delta), m_buttons, m_button, m_modifiers); }
+    WSMouseEvent translated(const Point& delta) const { return WSMouseEvent((Type)type(), m_position.translated(delta), m_buttons, m_button, m_modifiers, m_wheel_delta); }
 
 private:
     Point m_position;
     unsigned m_buttons { 0 };
     MouseButton m_button { MouseButton::None };
     unsigned m_modifiers { 0 };
+    int m_wheel_delta { 0 };
 };
 
 class WSResizeEvent final : public WSEvent {

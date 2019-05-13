@@ -95,6 +95,7 @@ void WSWindow::handle_mouse_event(const WSMouseEvent& event)
     case WSEvent::MouseMove: server_message.type = WSAPI_ServerMessage::Type::MouseMove; break;
     case WSEvent::MouseDown: server_message.type = WSAPI_ServerMessage::Type::MouseDown; break;
     case WSEvent::MouseUp: server_message.type = WSAPI_ServerMessage::Type::MouseUp; break;
+    case WSEvent::MouseWheel: server_message.type = WSAPI_ServerMessage::Type::MouseWheel; break;
     default: ASSERT_NOT_REACHED();
     }
 
@@ -102,6 +103,7 @@ void WSWindow::handle_mouse_event(const WSMouseEvent& event)
     server_message.mouse.button = to_api(event.button());
     server_message.mouse.buttons = event.buttons();
     server_message.mouse.modifiers = event.modifiers();
+    server_message.mouse.wheel_delta = event.wheel_delta();
 
     m_client->post_message(server_message);
 }

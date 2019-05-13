@@ -26,7 +26,7 @@ public:
     Point cursor_location() const { return m_cursor_location; }
     unsigned mouse_button_state() const { return m_mouse_button_state; }
 
-    void on_receive_mouse_data(int dx, int dy, unsigned buttons);
+    void on_receive_mouse_data(int dx, int dy, int dz, unsigned buttons);
     void on_receive_keyboard_data(KeyEvent);
 
 private:
