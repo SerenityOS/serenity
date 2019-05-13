@@ -206,7 +206,16 @@ void srandom(unsigned seed)
 
 int system(const char* command)
 {
-    return execl("/bin/sh", "sh", "-c", command, nullptr);
+    auto child = fork();
+    if (!child) {
+        int rc = execl("/bin/sh", "sh", "-c", command, nullptr);
+        if (rc < 0)
+            perror("execl");
+        exit(0);
+    }
+    int wstatus;
+    waitpid(child, &wstatus, 0);
+    return WEXITSTATUS(wstatus);
 }
 
 char* mktemp(char* pattern)

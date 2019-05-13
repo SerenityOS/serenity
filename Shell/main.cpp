@@ -413,9 +413,10 @@ int main(int argc, char** argv)
         endpwent();
     }
 
-    if (argc > 1 && !strcmp(argv[1], "-c")) {
-        fprintf(stderr, "FIXME: Implement /bin/sh -c\n");
-        return 1;
+    if (argc > 2 && !strcmp(argv[1], "-c")) {
+        dbgprintf("sh -c '%s'\n", argv[2]);
+        run_command(argv[2]);
+        return 0;
     }
 
     {
