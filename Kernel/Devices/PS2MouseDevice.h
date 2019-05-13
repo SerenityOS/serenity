@@ -33,8 +33,10 @@ private:
     void wait_then_write(byte port, byte data);
     byte wait_then_read(byte port);
     void parse_data_packet();
+    void expect_ack();
 
     CircularQueue<MousePacket, 100> m_queue;
     byte m_data_state { 0 };
-    byte m_data[3];
+    byte m_data[4];
+    bool m_has_wheel { false };
 };
