@@ -42,10 +42,10 @@ static int pid_of(const String& process_name, bool single_shot, bool omit_pid, p
 	    if (!omit_pid || (omit_pid && current_pid != pid)) {
 		printf("%d ", current_pid);
 		displayed_at_least_one = true;
-	    }
 
-	    if (single_shot)
-		break;
+		if (single_shot)
+		    break;
+	    }
 	}
     }
 
@@ -72,18 +72,16 @@ int main(int argc, char** argv)
         bool ok = false;
         String pid_str = args.get("o");
 
-	if (pid_str == "%PPID") {
+	if (pid_str == "%PPID")
 	    pid = getppid();
-	    printf("pid : %d\n", pid);
-	}
 	else
 	    pid = pid_str.to_uint(ok);
     }
     
     // We should have one single value : the process name
-    AK::Vector<String> values = args.get_single_values();
+    Vector<String> values = args.get_single_values();
     if (values.size() == 0) {
-        printf("%s\n", args_parser.get_usage().characters());
+	args_parser.print_usage();
         return 0;
     }
     
