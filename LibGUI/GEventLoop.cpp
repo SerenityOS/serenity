@@ -24,15 +24,15 @@
 //#define GEVENTLOOP_DEBUG
 //#define COALESCING_DEBUG
 
-int GEventLoop::s_event_fd = -1;
+int GEventLoop::s_windowserver_fd = -1;
 int GEventLoop::s_my_client_id = -1;
 pid_t GEventLoop::s_server_pid = -1;
 
 void GEventLoop::connect_to_server()
 {
-    ASSERT(s_event_fd == -1);
-    s_event_fd = socket(AF_LOCAL, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0);
-    if (s_event_fd < 0) {
+    ASSERT(s_windowserver_fd == -1);
+    s_windowserver_fd = socket(AF_LOCAL, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0);
+    if (s_windowserver_fd < 0) {
         perror("socket");
         ASSERT_NOT_REACHED();
     }
@@ -44,7 +44,7 @@ void GEventLoop::connect_to_server()
     int retries = 1000;
     int rc = 0;
     while (retries) {
-        rc = connect(s_event_fd, (const sockaddr*)&address, sizeof(address));
+        rc = connect(s_windowserver_fd, (const sockaddr*)&address, sizeof(address));
         if (rc == 0)
             break;
 #ifdef GEVENTLOOP_DEBUG
@@ -325,7 +325,7 @@ bool GEventLoop::drain_messages_from_server()
     bool is_first_pass = true;
     for (;;) {
         WSAPI_ServerMessage message;
-        ssize_t nread = read(s_event_fd, &message, sizeof(WSAPI_ServerMessage));
+        ssize_t nread = read(s_windowserver_fd, &message, sizeof(WSAPI_ServerMessage));
         if (nread < 0) {
             perror("read");
             quit(1);
@@ -345,11 +345,11 @@ bool GEventLoop::drain_messages_from_server()
             extra_data = ByteBuffer::create_uninitialized(message.extra_size);
             fd_set rfds;
             FD_ZERO(&rfds);
-            FD_SET(s_event_fd, &rfds);
+            FD_SET(s_windowserver_fd, &rfds);
             struct timeval timeout { 1, 0 };
-            int rc = select(s_event_fd + 1, &rfds, nullptr, nullptr, &timeout);
+            int rc = select(s_windowserver_fd + 1, &rfds, nullptr, nullptr, &timeout);
             ASSERT(rc == 1);
-            int extra_nread = read(s_event_fd, extra_data.data(), extra_data.size());
+            int extra_nread = read(s_windowserver_fd, extra_data.data(), extra_data.size());
             ASSERT(extra_nread == message.extra_size);
         }
         m_unprocessed_bundles.append({ move(message), move(extra_data) });
@@ -373,7 +373,7 @@ bool GEventLoop::post_message_to_server(const WSAPI_ClientMessage& message, cons
         ++iov_count;
     }
 
-    int nwritten = writev(s_event_fd, iov, iov_count);
+    int nwritten = writev(s_windowserver_fd, iov, iov_count);
     ASSERT(nwritten == sizeof(message) + extra_data.size());
 
     return true;
@@ -384,13 +384,13 @@ bool GEventLoop::wait_for_specific_event(WSAPI_ServerMessage::Type type, WSAPI_S
     for (;;) {
         fd_set rfds;
         FD_ZERO(&rfds);
-        FD_SET(s_event_fd, &rfds);
-        int rc = select(s_event_fd + 1, &rfds, nullptr, nullptr, nullptr);
+        FD_SET(s_windowserver_fd, &rfds);
+        int rc = select(s_windowserver_fd + 1, &rfds, nullptr, nullptr, nullptr);
         if (rc < 0) {
             perror("select");
         }
         ASSERT(rc > 0);
-        ASSERT(FD_ISSET(s_event_fd, &rfds));
+        ASSERT(FD_ISSET(s_windowserver_fd, &rfds));
         bool success = drain_messages_from_server();
         if (!success)
             return false;

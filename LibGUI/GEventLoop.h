@@ -32,13 +32,13 @@ public:
 private:
     virtual void add_file_descriptors_for_select(fd_set& fds, int& max_fd_added) override
     {
-        FD_SET(s_event_fd, &fds);
-        max_fd_added = s_event_fd;
+        FD_SET(s_windowserver_fd, &fds);
+        max_fd_added = s_windowserver_fd;
     }
 
     virtual void process_file_descriptors_after_select(const fd_set& fds) override
     {
-        if (FD_ISSET(s_event_fd, &fds))
+        if (FD_ISSET(s_windowserver_fd, &fds))
             drain_messages_from_server();
     }
 
@@ -71,5 +71,5 @@ private:
     Vector<IncomingWSMessageBundle> m_unprocessed_bundles;
     static pid_t s_server_pid;
     static int s_my_client_id;
-    static int s_event_fd;
+    static int s_windowserver_fd;
 };
