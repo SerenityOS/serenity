@@ -7,7 +7,13 @@
 
 ProcessModel::ProcessModel(GraphWidget& graph)
     : m_graph(graph)
+    , m_proc_all("/proc/all")
 {
+    if (!m_proc_all.open(CIODevice::ReadOnly)) {
+        fprintf(stderr, "ProcessManager: Failed to open /proc/all: %s\n", m_proc_all.error_string());
+        exit(1);
+    }
+
     setpwent();
     while (auto* passwd = getpwent())
         m_usernames.set(passwd->pw_uid, passwd->pw_name);
@@ -137,12 +143,7 @@ GVariant ProcessModel::data(const GModelIndex& index, Role role) const
 
 void ProcessModel::update()
 {
-    CFile file("/proc/all");
-    if (!file.open(CIODevice::ReadOnly)) {
-        fprintf(stderr, "ProcessManager: Failed to open /proc/all: %s\n", file.error_string());
-        exit(1);
-        return;
-    }
+    m_proc_all.seek(0);
 
     unsigned last_sum_nsched = 0;
     for (auto& it : m_processes)
@@ -151,7 +152,7 @@ void ProcessModel::update()
     HashTable<pid_t> live_pids;
     unsigned sum_nsched = 0;
     for (;;) {
-        auto line = file.read_line(1024);
+        auto line = m_proc_all.read_line(1024);
         if (line.is_empty())
             break;
         auto chomped = String((const char*)line.pointer(), line.size() - 1, Chomp);

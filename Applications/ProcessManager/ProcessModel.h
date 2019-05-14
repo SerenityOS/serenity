@@ -4,6 +4,7 @@
 #include <AK/HashMap.h>
 #include <AK/Vector.h>
 #include <LibGUI/GModel.h>
+#include <LibCore/CFile.h>
 #include <unistd.h>
 
 class GraphWidget;
@@ -64,4 +65,5 @@ private:
     RetainPtr<GraphicsBitmap> m_high_priority_icon;
     RetainPtr<GraphicsBitmap> m_low_priority_icon;
     RetainPtr<GraphicsBitmap> m_normal_priority_icon;
+    CFile m_proc_all;
 };
