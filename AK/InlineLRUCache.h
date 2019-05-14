@@ -46,7 +46,7 @@ public:
         m_entries.prepend(new_entry);
         m_map.set(key, new_entry);
 
-        while (size() >= capacity())
+        while (size() > capacity())
             remove_last();
     }
 
