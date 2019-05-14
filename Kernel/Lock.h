@@ -4,6 +4,7 @@
 #include <AK/Types.h>
 #include <Kernel/i386.h>
 #include <Kernel/Scheduler.h>
+#include <Kernel/KSyms.h>
 
 class Thread;
 extern Thread* current;
@@ -52,6 +53,7 @@ private:
 {
     if (!are_interrupts_enabled()) {
         kprintf("Interrupts disabled when trying to take Lock{%s}\n", m_name);
+        dump_backtrace(ksyms_ready);
         hang();
     }
     ASSERT(!Scheduler::is_active());
