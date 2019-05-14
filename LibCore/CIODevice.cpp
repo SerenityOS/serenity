@@ -146,8 +146,8 @@ bool CIODevice::populate_read_buffer()
 {
     if (m_fd < 0)
         return false;
-    auto buffer = ByteBuffer::create_uninitialized(PAGE_SIZE);
-    int nread = ::read(m_fd, buffer.pointer(), buffer.size());
+    byte buffer[1024];
+    int nread = ::read(m_fd, buffer, sizeof(buffer));
     if (nread < 0) {
         set_error(errno);
         return false;
@@ -156,8 +156,7 @@ bool CIODevice::populate_read_buffer()
         set_eof(true);
         return false;
     }
-    buffer.trim(nread);
-    m_buffered_data.append(buffer.pointer(), buffer.size());
+    m_buffered_data.append(buffer, nread);
     return true;
 }
 
