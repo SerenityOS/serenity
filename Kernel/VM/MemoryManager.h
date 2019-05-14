@@ -68,6 +68,9 @@ public:
 
     void map_for_kernel(LinearAddress, PhysicalAddress);
 
+    RetainPtr<Region> allocate_kernel_region(size_t, String&& name);
+    void map_region_at_address(PageDirectory&, Region&, LinearAddress, bool user_accessible);
+
 private:
     MemoryManager();
     ~MemoryManager();
@@ -77,7 +80,6 @@ private:
     void register_region(Region&);
     void unregister_region(Region&);
 
-    void map_region_at_address(PageDirectory&, Region&, LinearAddress, bool user_accessible);
     void remap_region_page(Region&, unsigned page_index_in_region, bool user_allowed);
 
     void initialize_paging();
@@ -211,7 +213,8 @@ private:
     Vector<Retained<PhysicalPage>> m_free_supervisor_physical_pages;
 
     HashTable<VMObject*> m_vmos;
-    HashTable<Region*> m_regions;
+    HashTable<Region*> m_user_regions;
+    HashTable<Region*> m_kernel_regions;
 
     size_t m_ram_size { 0 };
     bool m_quickmap_in_use { false };

@@ -80,7 +80,9 @@ void MemoryManager::initialize_paging()
     // 1 MB   -> 2 MB           kmalloc_eternal() space.
     // 2 MB   -> 3 MB           kmalloc() space.
     // 3 MB   -> 4 MB           Supervisor physical pages (available for allocation!)
-    // 4 MB   -> (max) MB       Userspace physical pages (available for allocation!)
+    // 4 MB   -> 0xc0000000     Userspace physical pages (available for allocation!)
+    // 0xc0000000-0xffffffff    Kernel-only linear address space
+
     for (size_t i = (2 * MB); i < (4 * MB); i += PAGE_SIZE)
         m_free_supervisor_physical_pages.append(PhysicalPage::create_eternal(PhysicalAddress(i), true));
 
@@ -209,6 +211,13 @@ Region* MemoryManager::region_from_laddr(Process& process, LinearAddress laddr)
 {
     ASSERT_INTERRUPTS_DISABLED();
 
+    if (laddr.get() >= 0xc0000000) {
+        for (auto& region : MM.m_kernel_regions) {
+            if (region->contains(laddr))
+                return region;
+        }
+    }
+
     // FIXME: Use a binary search tree (maybe red/black?) or some other more appropriate data structure!
     for (auto& region : process.m_regions) {
         if (region->contains(laddr))
@@ -220,6 +229,13 @@ Region* MemoryManager::region_from_laddr(Process& process, LinearAddress laddr)
 
 const Region* MemoryManager::region_from_laddr(const Process& process, LinearAddress laddr)
 {
+    if (laddr.get() >= 0xc0000000) {
+        for (auto& region : MM.m_kernel_regions) {
+            if (region->contains(laddr))
+                return region;
+        }
+    }
+
     // FIXME: Use a binary search tree (maybe red/black?) or some other more appropriate data structure!
     for (auto& region : process.m_regions) {
         if (region->contains(laddr))
@@ -377,6 +393,21 @@ PageFaultResponse MemoryManager::handle_page_fault(const PageFault& fault)
     }
 
     return PageFaultResponse::ShouldCrash;
+}
+
+RetainPtr<Region> MemoryManager::allocate_kernel_region(size_t size, String&& name)
+{
+    InterruptDisabler disabler;
+
+    // FIXME: We need a linear address space allocator.
+    static dword next_laddr = 0xd0000000;
+    ASSERT(!(size % PAGE_SIZE));
+    LinearAddress laddr(next_laddr);
+    next_laddr += size + 16384;
+
+    auto region = adopt(*new Region(laddr, size, move(name), true, true, false));
+    MM.map_region_at_address(*m_kernel_page_directory, *region, laddr, false);
+    return region;
 }
 
 RetainPtr<PhysicalPage> MemoryManager::allocate_physical_page(ShouldZeroFill should_zero_fill)
@@ -610,13 +641,19 @@ void MemoryManager::unregister_vmo(VMObject& vmo)
 void MemoryManager::register_region(Region& region)
 {
     InterruptDisabler disabler;
-    m_regions.set(&region);
+    if (region.laddr().get() >= 0xc0000000)
+        m_kernel_regions.set(&region);
+    else
+        m_user_regions.set(&region);
 }
 
 void MemoryManager::unregister_region(Region& region)
 {
     InterruptDisabler disabler;
-    m_regions.remove(&region);
+    if (region.laddr().get() >= 0xc0000000)
+        m_kernel_regions.remove(&region);
+    else
+        m_user_regions.remove(&region);
 }
 
 ProcessPagingScope::ProcessPagingScope(Process& process)

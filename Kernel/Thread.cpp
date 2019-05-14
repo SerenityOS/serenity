@@ -45,12 +45,14 @@ Thread::Thread(Process& process)
         // FIXME: This memory is leaked.
         // But uh, there's also no kernel process termination, so I guess it's not technically leaked...
         dword stack_bottom = (dword)kmalloc_eternal(default_kernel_stack_size);
-        m_tss.esp = (stack_bottom + default_kernel_stack_size) & 0xffffff8;
+        m_tss.esp = (stack_bottom + default_kernel_stack_size) & 0xfffffff8u;
     } else {
         // Ring3 processes need a separate stack for Ring0.
-        m_kernel_stack = kmalloc(default_kernel_stack_size);
+        m_kernel_stack_region = MM.allocate_kernel_region(default_kernel_stack_size, String::format("Kernel Stack (Thread %d)", m_tid));
+        m_kernel_stack_region->commit();
+
         m_tss.ss0 = 0x10;
-        m_tss.esp0 = ((dword)m_kernel_stack + default_kernel_stack_size) & 0xffffff8;
+        m_tss.esp0 = m_kernel_stack_region->laddr().offset(default_kernel_stack_size).get() & 0xfffffff8u;
     }
 
     // HACK: Ring2 SS in the TSS is the current PID.
@@ -77,11 +79,6 @@ Thread::~Thread()
 
     if (selector())
         gdt_free_entry(selector());
-
-    if (m_kernel_stack) {
-        kfree(m_kernel_stack);
-        m_kernel_stack = nullptr;
-    }
 
     if (m_kernel_stack_for_signal_handler) {
         kfree(m_kernel_stack_for_signal_handler);
@@ -438,7 +435,7 @@ void Thread::push_value_on_stack(dword value)
 
 void Thread::make_userspace_stack_for_main_thread(Vector<String> arguments, Vector<String> environment)
 {
-    auto* region = m_process.allocate_region(LinearAddress(), default_userspace_stack_size, "stack");
+    auto* region = m_process.allocate_region(LinearAddress(), default_userspace_stack_size, "Stack (Main thread)");
     ASSERT(region);
     m_tss.esp = region->laddr().offset(default_userspace_stack_size).get();
 
@@ -484,7 +481,7 @@ void Thread::make_userspace_stack_for_main_thread(Vector<String> arguments, Vect
 
 void Thread::make_userspace_stack_for_secondary_thread(void *argument)
 {
-    auto* region = m_process.allocate_region(LinearAddress(), default_userspace_stack_size, String::format("Thread %u Stack", tid()));
+    auto* region = m_process.allocate_region(LinearAddress(), default_userspace_stack_size, String::format("Stack (Thread %d)", tid()));
     ASSERT(region);
     m_tss.esp = region->laddr().offset(default_userspace_stack_size).get();
 
