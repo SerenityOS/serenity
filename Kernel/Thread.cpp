@@ -79,11 +79,6 @@ Thread::~Thread()
 
     if (selector())
         gdt_free_entry(selector());
-
-    if (m_kernel_stack_for_signal_handler) {
-        kfree(m_kernel_stack_for_signal_handler);
-        m_kernel_stack_for_signal_handler = nullptr;
-    }
 }
 
 void Thread::unblock()
@@ -360,14 +355,14 @@ ShouldUnblockThread Thread::dispatch_signal(byte signal)
             m_signal_stack_user_region = m_process.allocate_region(LinearAddress(), default_userspace_stack_size, "Signal stack (user)");
             ASSERT(m_signal_stack_user_region);
         }
-        if (!m_kernel_stack_for_signal_handler) {
-            m_kernel_stack_for_signal_handler = kmalloc(default_kernel_stack_size);
-            ASSERT(m_kernel_stack_for_signal_handler);
+        if (!m_kernel_stack_for_signal_handler_region) {
+            m_kernel_stack_for_signal_handler_region = MM.allocate_kernel_region(default_kernel_stack_size, String::format("Kernel Stack (Thread %d)", m_tid));
+            m_kernel_stack_for_signal_handler_region->commit();
         }
         m_tss.ss = 0x23;
         m_tss.esp = m_signal_stack_user_region->laddr().offset(default_userspace_stack_size).get();
         m_tss.ss0 = 0x10;
-        m_tss.esp0 = (dword)m_kernel_stack_for_signal_handler + default_kernel_stack_size;
+        m_tss.esp0 = m_kernel_stack_for_signal_handler_region->laddr().offset(default_kernel_stack_size).get();
 
         push_value_on_stack(0);
     } else {
