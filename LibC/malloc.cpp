@@ -1,5 +1,6 @@
 #include <AK/Bitmap.h>
 #include <AK/InlineLinkedList.h>
+#include <AK/Vector.h>
 #include <sys/mman.h>
 #include <stdlib.h>
 #include <assert.h>
@@ -16,6 +17,7 @@
 #define PAGE_ROUND_UP(x) ((((size_t)(x)) + PAGE_SIZE-1) & (~(PAGE_SIZE-1)))
 
 static const size_t number_of_chunked_blocks_to_keep_around_per_size_class = 32;
+static const size_t number_of_big_blocks_to_keep_around_per_size_class = 8;
 
 static bool s_log_malloc = false;
 static bool s_scrub_malloc = true;
@@ -82,7 +84,12 @@ struct Allocator {
     InlineLinkedList<ChunkedBlock> full_blocks;
 };
 
+struct BigAllocator {
+    Vector<BigAllocationBlock*> blocks;
+};
+
 static Allocator g_allocators[num_size_classes];
+static BigAllocator g_big_allocators[1];
 
 static Allocator* allocator_for_size(size_t size, size_t& good_size)
 {
@@ -95,6 +102,14 @@ static Allocator* allocator_for_size(size_t size, size_t& good_size)
     good_size = PAGE_ROUND_UP(size);
     return nullptr;
 }
+
+static BigAllocator* big_allocator_for_size(size_t size)
+{
+    if (size == 4096)
+        return &g_big_allocators[0];
+    return nullptr;
+}
+
 
 extern "C" {
 
@@ -130,10 +145,16 @@ void* malloc(size_t size)
     auto* allocator = allocator_for_size(size, good_size);
 
     if (!allocator) {
-        size_t real_size = sizeof(BigAllocationBlock) + size;
+        size_t real_size = PAGE_ROUND_UP(sizeof(BigAllocationBlock) + size);
+        if (auto* allocator = big_allocator_for_size(real_size)) {
+            if (!allocator->blocks.is_empty()) {
+                auto* block = allocator->blocks.take_last();
+                return &block->m_slot[0];
+            }
+        }
         auto* block = (BigAllocationBlock*)os_alloc(real_size);
         char buffer[64];
-        snprintf(buffer, sizeof(buffer), "malloc: BigAllocationBlock(%u)", good_size);
+        snprintf(buffer, sizeof(buffer), "malloc: BigAllocationBlock(%u)", real_size);
         set_mmap_name(block, PAGE_SIZE, buffer);
         new (block) BigAllocationBlock(real_size);
         return &block->m_slot[0];
@@ -184,6 +205,12 @@ void free(void* ptr)
 
     if (magic == MAGIC_BIGALLOC_HEADER) {
         auto* block = (BigAllocationBlock*)page_base;
+        if (auto* allocator = big_allocator_for_size(block->m_size)) {
+            if (allocator->blocks.size() < number_of_big_blocks_to_keep_around_per_size_class) {
+                allocator->blocks.append(block);
+                return;
+            }
+        }
         os_free(block, block->m_size);
         return;
     }
