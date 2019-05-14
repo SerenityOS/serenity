@@ -4,6 +4,7 @@
 #include <Kernel/KResult.h>
 #include <Kernel/LinearAddress.h>
 #include <Kernel/UnixTypes.h>
+#include <Kernel/VM/Region.h>
 #include <AK/AKString.h>
 #include <AK/InlineLinkedList.h>
 #include <AK/OwnPtr.h>
@@ -100,7 +101,7 @@ public:
     void set_ticks_left(dword t) { m_ticks_left = t; }
     dword ticks_left() const { return m_ticks_left; }
 
-    dword kernel_stack_base() const { return (dword)m_kernel_stack; }
+    dword kernel_stack_base() const { return m_kernel_stack_region->laddr().get(); }
     dword kernel_stack_for_signal_handler_base() const { return (dword)m_kernel_stack_for_signal_handler; }
 
     void set_selector(word s) { m_far_ptr.selector = s; }
@@ -144,7 +145,7 @@ private:
     dword m_times_scheduled { 0 };
     dword m_pending_signals { 0 };
     dword m_signal_mask { 0 };
-    void* m_kernel_stack { nullptr };
+    RetainPtr<Region> m_kernel_stack_region;
     void* m_kernel_stack_for_signal_handler { nullptr };
     pid_t m_waitee_pid { -1 };
     RetainPtr<FileDescriptor> m_blocked_descriptor;

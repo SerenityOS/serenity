@@ -552,6 +552,11 @@ Process::Process(String&& name, uid_t uid, gid_t gid, pid_t ppid, RingLevel ring
 {
     dbgprintf("Process: New process PID=%u with name=%s\n", m_pid, m_name.characters());
 
+    if (fork_parent)
+        m_next_region = fork_parent->m_next_region;
+    else
+        m_next_region = LinearAddress(0x10000000);
+
     m_page_directory = PageDirectory::create();
 #ifdef MM_DEBUG
     dbgprintf("Process %u ctor: PD=%x created\n", pid(), m_page_directory.ptr());
@@ -595,12 +600,6 @@ Process::Process(String&& name, uid_t uid, gid_t gid, pid_t ppid, RingLevel ring
         m_fds[1].set(*device_to_use_as_tty.open(O_WRONLY).value());
         m_fds[2].set(*device_to_use_as_tty.open(O_WRONLY).value());
     }
-
-    if (fork_parent)
-        m_next_region = fork_parent->m_next_region;
-    else
-        m_next_region = LinearAddress(0x10000000);
-
 
     if (fork_parent) {
         m_sid = fork_parent->m_sid;
