@@ -362,8 +362,7 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
         entry_eip = loader.entry().get();
     }
 
-    kfree(current->m_kernel_stack_for_signal_handler);
-    current->m_kernel_stack_for_signal_handler = nullptr;
+    current->m_kernel_stack_for_signal_handler_region = nullptr;
     current->m_signal_stack_user_region = nullptr;
     current->set_default_signal_dispositions();
     current->m_signal_mask = 0;
