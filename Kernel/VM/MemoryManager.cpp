@@ -264,7 +264,7 @@ bool MemoryManager::zero_page(Region& region, unsigned page_index_in_region)
 #ifdef PAGE_FAULT_DEBUG
     dbgprintf("      >> ZERO P%x\n", physical_page->paddr().get());
 #endif
-    region.m_cow_map.set(page_index_in_region, false);
+    region.set_should_cow(page_index_in_region, false);
     vmo.physical_pages()[page_index_in_region] = move(physical_page);
     remap_region_page(region, page_index_in_region, true);
     return true;
@@ -278,7 +278,7 @@ bool MemoryManager::copy_on_write(Region& region, unsigned page_index_in_region)
 #ifdef PAGE_FAULT_DEBUG
         dbgprintf("    >> It's a COW page but nobody is sharing it anymore. Remap r/w\n");
 #endif
-        region.m_cow_map.set(page_index_in_region, false);
+        region.set_should_cow(page_index_in_region, false);
         remap_region_page(region, page_index_in_region, true);
         return true;
     }
@@ -296,7 +296,7 @@ bool MemoryManager::copy_on_write(Region& region, unsigned page_index_in_region)
     memcpy(dest_ptr, src_ptr, PAGE_SIZE);
     vmo.physical_pages()[page_index_in_region] = move(physical_page);
     unquickmap_page();
-    region.m_cow_map.set(page_index_in_region, false);
+    region.set_should_cow(page_index_in_region, false);
     remap_region_page(region, page_index_in_region, true);
     return true;
 }
@@ -379,7 +379,7 @@ PageFaultResponse MemoryManager::handle_page_fault(const PageFault& fault)
             return PageFaultResponse::Continue;
         }
     } else if (fault.is_protection_violation()) {
-        if (region->m_cow_map.get(page_index_in_region)) {
+        if (region->should_cow(page_index_in_region)) {
 #ifdef PAGE_FAULT_DEBUG
             dbgprintf("PV(cow) fault in Region{%p}[%u]\n", region, page_index_in_region);
 #endif
@@ -534,7 +534,7 @@ void MemoryManager::remap_region_page(Region& region, unsigned page_index_in_reg
     ASSERT(physical_page);
     pte.set_physical_page_base(physical_page->paddr().get());
     pte.set_present(true); // FIXME: Maybe we should use the is_readable flag here?
-    if (region.m_cow_map.get(page_index_in_region))
+    if (region.should_cow(page_index_in_region))
         pte.set_writable(false);
     else
         pte.set_writable(region.is_writable());
@@ -570,7 +570,7 @@ void MemoryManager::map_region_at_address(PageDirectory& page_directory, Region&
             pte.set_physical_page_base(physical_page->paddr().get());
             pte.set_present(true); // FIXME: Maybe we should use the is_readable flag here?
             // FIXME: It seems wrong that the *region* cow map is essentially using *VMO* relative indices.
-            if (region.m_cow_map.get(region.first_page_index() + i))
+            if (region.should_cow(region.first_page_index() + i))
                 pte.set_writable(false);
             else
                 pte.set_writable(region.is_writable());

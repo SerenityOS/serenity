@@ -45,15 +45,19 @@ public:
     byte* data() { return m_data; }
     const byte* data() const { return m_data; }
 
+    void fill(bool value)
+    {
+        memset(m_data, value ? 0xff : 0x00, size_in_bytes());
+    }
+
 private:
     explicit Bitmap(int size, bool default_value)
         : m_size(size)
         , m_owned(true)
     {
         ASSERT(m_size != 0);
-        int size_to_allocate = ceil_div(size, 8);
-        m_data = reinterpret_cast<byte*>(kmalloc(size_to_allocate));
-        memset(m_data, default_value ? 0xff : 0x00, size_to_allocate);
+        m_data = reinterpret_cast<byte*>(kmalloc(size_in_bytes()));
+        fill(default_value);
     }
 
     Bitmap(byte* data, int size)
@@ -62,6 +66,8 @@ private:
         , m_owned(false)
     {
     }
+
+    int size_in_bytes() const { return ceil_div(m_size, 8); }
 
     byte* m_data { nullptr };
     int m_size { 0 };

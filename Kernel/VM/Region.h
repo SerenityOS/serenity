@@ -75,7 +75,8 @@ public:
         m_page_directory.clear();
     }
 
-    const Bitmap& cow_map() const { return m_cow_map; }
+    bool should_cow(size_t page_index) const { return m_cow_map.get(page_index); }
+    void set_should_cow(size_t page_index, bool cow) { m_cow_map.set(page_index, cow); }
 
     void set_writable(bool b) { m_writable = b; }
 
