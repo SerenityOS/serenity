@@ -102,7 +102,7 @@ public:
     dword ticks_left() const { return m_ticks_left; }
 
     dword kernel_stack_base() const { return m_kernel_stack_region->laddr().get(); }
-    dword kernel_stack_for_signal_handler_base() const { return m_kernel_stack_for_signal_handler_region->laddr().get(); }
+    dword kernel_stack_for_signal_handler_base() const { return m_kernel_stack_for_signal_handler_region ? m_kernel_stack_for_signal_handler_region->laddr().get() : 0; }
 
     void set_selector(word s) { m_far_ptr.selector = s; }
     void set_state(State s) { m_state = s; }
