@@ -407,6 +407,8 @@ RetainPtr<Region> MemoryManager::allocate_kernel_region(size_t size, String&& na
 
     auto region = adopt(*new Region(laddr, size, move(name), true, true, false));
     MM.map_region_at_address(*m_kernel_page_directory, *region, laddr, false);
+    // FIXME: It would be cool if these could zero-fill on demand instead.
+    region->commit();
     return region;
 }
 

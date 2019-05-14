@@ -49,8 +49,6 @@ Thread::Thread(Process& process)
     } else {
         // Ring3 processes need a separate stack for Ring0.
         m_kernel_stack_region = MM.allocate_kernel_region(default_kernel_stack_size, String::format("Kernel Stack (Thread %d)", m_tid));
-        m_kernel_stack_region->commit();
-
         m_tss.ss0 = 0x10;
         m_tss.esp0 = m_kernel_stack_region->laddr().offset(default_kernel_stack_size).get() & 0xfffffff8u;
     }
@@ -352,13 +350,11 @@ ShouldUnblockThread Thread::dispatch_signal(byte signal)
 #endif
 
         if (!m_signal_stack_user_region) {
-            m_signal_stack_user_region = m_process.allocate_region(LinearAddress(), default_userspace_stack_size, "Signal stack (user)");
+            m_signal_stack_user_region = m_process.allocate_region(LinearAddress(), default_userspace_stack_size, String::format("User Signal Stack (Thread %d)", m_tid));
             ASSERT(m_signal_stack_user_region);
         }
-        if (!m_kernel_stack_for_signal_handler_region) {
-            m_kernel_stack_for_signal_handler_region = MM.allocate_kernel_region(default_kernel_stack_size, String::format("Kernel Stack (Thread %d)", m_tid));
-            m_kernel_stack_for_signal_handler_region->commit();
-        }
+        if (!m_kernel_stack_for_signal_handler_region)
+            m_kernel_stack_for_signal_handler_region = MM.allocate_kernel_region(default_kernel_stack_size, String::format("Kernel Signal Stack (Thread %d)", m_tid));
         m_tss.ss = 0x23;
         m_tss.esp = m_signal_stack_user_region->laddr().offset(default_userspace_stack_size).get();
         m_tss.ss0 = 0x10;
