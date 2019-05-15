@@ -14,6 +14,7 @@ __BEGIN_DECLS
 
 extern char** environ;
 
+void beep();
 int systrace(pid_t);
 int gettid();
 int donate(int tid);

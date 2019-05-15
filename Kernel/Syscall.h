@@ -103,6 +103,7 @@
     __ENUMERATE_SYSCALL(exit_thread) \
     __ENUMERATE_SYSCALL(mknod) \
     __ENUMERATE_SYSCALL(writev) \
+    __ENUMERATE_SYSCALL(beep) \
 
 
 namespace Syscall {

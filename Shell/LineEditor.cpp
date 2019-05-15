@@ -147,8 +147,11 @@ String LineEditor::get_line()
             }
 
             auto do_backspace = [&] {
-                if (m_cursor == 0)
+                if (m_cursor == 0) {
+                    fputc('\a', stdout);
+                    fflush(stdout);
                     return;
+                }
                 m_buffer.remove(m_cursor - 1);
                 --m_cursor;
                 putchar(8);
