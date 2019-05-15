@@ -40,6 +40,7 @@ public:
     void set_action(GAction&);
 
     virtual const char* class_name() const override { return "GButton"; }
+    virtual bool accepts_focus() const override { return true; }
 
 protected:
     virtual void paint_event(GPaintEvent&) override;

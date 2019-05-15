@@ -60,9 +60,15 @@ void GButton::paint_event(GPaintEvent& event)
         content_rect.move_by(m_icon->width() + 4, 0);
         content_rect.set_width(content_rect.width() - m_icon->width() - 4);
     }
-    if (is_enabled())
+    if (is_enabled()) {
         painter.draw_text(content_rect, m_caption, font, text_alignment(), foreground_color(), TextElision::Right);
-    else {
+        if (is_focused()) {
+            Rect focus_rect = { 0, 0, font.width(m_caption), font.glyph_height() };
+            focus_rect.inflate(6, 4);
+            focus_rect.center_within(content_rect);
+            painter.draw_rect(focus_rect, Color(140, 140, 140));
+        }
+    } else {
         painter.draw_text(content_rect.translated(1, 1), m_caption, font, text_alignment(), Color::White, TextElision::Right);
         painter.draw_text(content_rect, m_caption, font, text_alignment(), Color::from_rgb(0x808080), TextElision::Right);
     }

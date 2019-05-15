@@ -315,6 +315,9 @@ void GTextEditor::toggle_selection_if_needed_for_event(const GKeyEvent& event)
 
 void GTextEditor::keydown_event(GKeyEvent& event)
 {
+    if (is_single_line() && event.key() == KeyCode::Key_Tab)
+        return GWidget::keydown_event(event);
+
     if (event.key() == KeyCode::Key_Escape) {
         if (on_escape_pressed)
             on_escape_pressed();
@@ -505,8 +508,6 @@ void GTextEditor::keydown_event(GKeyEvent& event)
 
     if (!is_readonly() && !event.ctrl() && !event.alt() && !event.text().is_empty())
         insert_at_cursor_or_replace_selection(event.text());
-
-    return GWidget::keydown_event(event);
 }
 
 void GTextEditor::delete_current_line()
