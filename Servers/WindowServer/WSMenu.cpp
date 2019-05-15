@@ -4,6 +4,7 @@
 #include "WSEvent.h"
 #include "WSEventLoop.h"
 #include "WSWindowManager.h"
+#include "WSScreen.h"
 #include <WindowServer/WSAPITypes.h>
 #include <WindowServer/WSClientConnection.h>
 #include <SharedGraphics/CharacterBitmap.h>
@@ -227,14 +228,21 @@ void WSMenu::close()
         menu_window()->set_visible(false);
 }
 
-void WSMenu::popup(const Point& position, bool top_anchored)
+void WSMenu::popup(const Point& position)
 {
     ASSERT(!is_empty());
+
     auto& window = ensure_menu_window();
-    if (top_anchored)
-        window.move_to(position);
-    else
-        window.move_to(position.translated(0, -window.height()));
+    const int margin = 30;
+    Point adjusted_pos = position;
+    if (adjusted_pos.x() + window.width() >= WSScreen::the().width() - margin) {
+        adjusted_pos = adjusted_pos.translated(-window.width(), 0);
+    }
+    if (adjusted_pos.y() + window.height() >= WSScreen::the().height() - margin) {
+        adjusted_pos = adjusted_pos.translated(0, -window.height());
+    }
+
+    window.move_to(adjusted_pos);
     window.set_visible(true);
     WSWindowManager::the().set_current_menu(this);
 }

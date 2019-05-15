@@ -158,7 +158,7 @@ bool WSEventLoop::on_receive_from_client(int client_id, const WSAPI_ClientMessag
         post_event(client, make<WSAPICreateMenuRequest>(client_id, String(message.text, message.text_length)));
         break;
     case WSAPI_ClientMessage::Type::PopupMenu:
-        post_event(client, make<WSAPIPopupMenuRequest>(client_id, message.menu.menu_id, message.menu.position, message.menu.top_anchored));
+        post_event(client, make<WSAPIPopupMenuRequest>(client_id, message.menu.menu_id, message.menu.position));
         break;
     case WSAPI_ClientMessage::Type::DismissMenu:
         post_event(client, make<WSAPIDismissMenuRequest>(client_id, message.menu.menu_id));
