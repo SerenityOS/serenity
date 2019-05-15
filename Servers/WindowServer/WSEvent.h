@@ -17,6 +17,7 @@ public:
         WM_ClientDisconnected,
         MouseMove,
         MouseDown,
+        MouseDoubleClick,
         MouseUp,
         MouseWheel,
         WindowEntered,
@@ -75,7 +76,7 @@ public:
     virtual ~WSEvent() { }
 
     bool is_client_request() const { return type() > __Begin_API_Client_Requests && type() < __End_API_Client_Requests; }
-    bool is_mouse_event() const { return type() == MouseMove || type() == MouseDown || type() == MouseUp || type() == MouseWheel; }
+    bool is_mouse_event() const { return type() == MouseMove || type() == MouseDown || type() == MouseDoubleClick || type() == MouseUp || type() == MouseWheel; }
     bool is_key_event() const { return type() == KeyUp || type() == KeyDown; }
 };
 

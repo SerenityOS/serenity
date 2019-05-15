@@ -190,14 +190,13 @@ private:
     void handle_paint_event(GPaintEvent&);
     void handle_resize_event(GResizeEvent&);
     void handle_mousedown_event(GMouseEvent&);
+    void handle_mousedoubleclick_event(GMouseEvent&);
     void handle_mouseup_event(GMouseEvent&);
     void handle_enter_event(CEvent&);
     void handle_leave_event(CEvent&);
     void do_layout();
     void focus_previous_widget();
     void focus_next_widget();
-
-    CElapsedTimer& click_clock(GMouseButton);
 
     GWindow* m_window { nullptr };
     OwnPtr<GLayout> m_layout;
@@ -218,10 +217,6 @@ private:
     bool m_enabled { true };
     bool m_layout_dirty { false };
     bool m_updates_enabled { true };
-
-    CElapsedTimer m_left_click_clock;
-    CElapsedTimer m_right_click_clock;
-    CElapsedTimer m_middle_click_clock;
 
     HashMap<GShortcut, GAction*> m_local_shortcut_actions;
 };

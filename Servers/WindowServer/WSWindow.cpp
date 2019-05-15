@@ -94,6 +94,7 @@ void WSWindow::handle_mouse_event(const WSMouseEvent& event)
     switch (event.type()) {
     case WSEvent::MouseMove: server_message.type = WSAPI_ServerMessage::Type::MouseMove; break;
     case WSEvent::MouseDown: server_message.type = WSAPI_ServerMessage::Type::MouseDown; break;
+    case WSEvent::MouseDoubleClick: server_message.type = WSAPI_ServerMessage::Type::MouseDoubleClick; break;
     case WSEvent::MouseUp: server_message.type = WSAPI_ServerMessage::Type::MouseUp; break;
     case WSEvent::MouseWheel: server_message.type = WSAPI_ServerMessage::Type::MouseWheel; break;
     default: ASSERT_NOT_REACHED();

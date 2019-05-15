@@ -658,7 +658,58 @@ void WSWindowManager::set_cursor_tracking_button(WSButton* button)
     m_cursor_tracking_button = button ? button->make_weak_ptr() : nullptr;
 }
 
-void WSWindowManager::process_mouse_event(const WSMouseEvent& event, WSWindow*& hovered_window)
+CElapsedTimer& WSWindowManager::DoubleClickInfo::click_clock(MouseButton button)
+{
+    switch (button) {
+    case MouseButton::Left: return m_left_click_clock;
+    case MouseButton::Right: return m_right_click_clock;
+    case MouseButton::Middle: return m_middle_click_clock;
+    default:
+        ASSERT_NOT_REACHED();
+    }
+}
+
+// #define DOUBLECLICK_DEBUG
+
+void WSWindowManager::deliver_mouse_event(WSWindow& window, WSMouseEvent& event)
+{
+    if (event.type() == WSEvent::MouseUp) {
+        if (&window != m_double_click_info.m_clicked_window) {
+            // we either haven't clicked anywhere, or we haven't clicked on this
+            // window. set the current click window, and reset the timers.
+#if defined(DOUBLECLICK_DEBUG)
+            dbgprintf("Initial mouseup on window %p (previous was %p)\n", &window, m_double_click_info.m_clicked_window);
+#endif
+            m_double_click_info.m_clicked_window = window.make_weak_ptr();
+            m_double_click_info.reset();
+        }
+
+        auto& clock = m_double_click_info.click_clock(event.button());
+
+        // if the clock is invalid, we haven't clicked with this button on this
+        // window yet, so there's nothing to do.
+        if (clock.is_valid()) {
+            int elapsed_since_last_click = clock.elapsed();
+            clock.start();
+
+            // FIXME: It might be a sensible idea to also add a distance travel check.
+            // If the pointer moves too far, it's not a double click.
+            if (elapsed_since_last_click < 250) {
+#if defined(DOUBLECLICK_DEBUG)
+                dbgprintf("Transforming MouseUp to MouseDoubleClick!\n");
+#endif
+                event = WSMouseEvent(WSEvent::MouseDoubleClick, event.position(), event.buttons(), event.button(), event.modifiers(), event.wheel_delta());
+            }
+        }
+
+        // start (or re-start, if it was invalid) the double click timer again.
+        clock.start();
+    }
+
+    window.event(event);
+}
+
+void WSWindowManager::process_mouse_event(WSMouseEvent& event, WSWindow*& hovered_window)
 {
     hovered_window = nullptr;
 
@@ -684,7 +735,7 @@ void WSWindowManager::process_mouse_event(const WSMouseEvent& event, WSWindow*& 
         ASSERT(!window->is_minimized()); // Maybe this should also be supported? Idk.
         windows_who_received_mouse_event_due_to_cursor_tracking.set(window);
         auto translated_event = event.translated(-window->position());
-        window->event(translated_event);
+        deliver_mouse_event(*window, translated_event);
     }
 
     if (menubar_rect().contains(event.position())) {
@@ -703,7 +754,7 @@ void WSWindowManager::process_mouse_event(const WSMouseEvent& event, WSWindow*& 
         } else {
             hovered_window = &window;
             auto translated_event = event.translated(-window.position());
-            window.event(translated_event);
+            deliver_mouse_event(window, translated_event);
         }
         return;
     }
@@ -736,10 +787,11 @@ void WSWindowManager::process_mouse_event(const WSMouseEvent& event, WSWindow*& 
         if (window.rect().contains(event.position())) {
             if (window.type() == WSWindowType::Normal && event.type() == WSEvent::MouseDown)
                 move_to_front_and_make_active(window);
+
             hovered_window = &window;
             if (!window.global_cursor_tracking() && !windows_who_received_mouse_event_due_to_cursor_tracking.contains(&window)) {
                 auto translated_event = event.translated(-window.position());
-                window.event(translated_event);
+                deliver_mouse_event(window, translated_event);
             }
             return IterationDecision::Abort;
         }
@@ -1004,7 +1056,7 @@ void WSWindowManager::event(CEvent& event)
 {
     if (static_cast<WSEvent&>(event).is_mouse_event()) {
         WSWindow* hovered_window = nullptr;
-        process_mouse_event(static_cast<const WSMouseEvent&>(event), hovered_window);
+        process_mouse_event(static_cast<WSMouseEvent&>(event), hovered_window);
         set_hovered_window(hovered_window);
         return;
     }
