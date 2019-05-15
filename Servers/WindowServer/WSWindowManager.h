@@ -15,6 +15,7 @@
 #include <WindowServer/WSCursor.h>
 #include <WindowServer/WSEvent.h>
 #include <WindowServer/WSCPUMonitor.h>
+#include <LibCore/CElapsedTimer.h>
 
 class WSAPIClientRequest;
 class WSScreen;
@@ -122,7 +123,8 @@ public:
     void start_window_resize(WSWindow&, const WSMouseEvent&);
 
 private:
-    void process_mouse_event(const WSMouseEvent&, WSWindow*& hovered_window);
+    void process_mouse_event(WSMouseEvent&, WSWindow*& hovered_window);
+    void deliver_mouse_event(WSWindow& window, WSMouseEvent& event);
     bool process_ongoing_window_resize(const WSMouseEvent&, WSWindow*& hovered_window);
     bool process_ongoing_window_drag(const WSMouseEvent&, WSWindow*& hovered_window);
     void handle_menu_mouse_event(WSMenu&, const WSMouseEvent&);
@@ -170,6 +172,22 @@ private:
     HashMap<int, OwnPtr<WSWindow>> m_windows_by_id;
     HashTable<WSWindow*> m_windows;
     InlineLinkedList<WSWindow> m_windows_in_order;
+
+    struct DoubleClickInfo
+    {
+        CElapsedTimer& click_clock(MouseButton);
+        void reset() {
+            m_left_click_clock = CElapsedTimer();
+            m_right_click_clock = CElapsedTimer();
+            m_middle_click_clock = CElapsedTimer();
+        }
+
+        WeakPtr<WSWindow> m_clicked_window;
+        CElapsedTimer m_left_click_clock;
+        CElapsedTimer m_right_click_clock;
+        CElapsedTimer m_middle_click_clock;
+    };
+    DoubleClickInfo m_double_click_info;
 
     WeakPtr<WSWindow> m_active_window;
     WeakPtr<WSWindow> m_hovered_window;

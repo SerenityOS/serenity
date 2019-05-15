@@ -170,7 +170,7 @@ void GWindow::set_override_cursor(GStandardCursor cursor)
 
 void GWindow::event(CEvent& event)
 {
-    if (event.type() == GEvent::MouseUp || event.type() == GEvent::MouseDown || event.type() == GEvent::MouseMove || event.type() == GEvent::MouseWheel) {
+    if (event.type() == GEvent::MouseUp || event.type() == GEvent::MouseDown || event.type() == GEvent::MouseDoubleClick || event.type() == GEvent::MouseMove || event.type() == GEvent::MouseWheel) {
         auto& mouse_event = static_cast<GMouseEvent&>(event);
         if (m_global_cursor_tracking_widget) {
             auto window_relative_rect = m_global_cursor_tracking_widget->window_relative_rect();

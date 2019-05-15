@@ -159,6 +159,7 @@ void GEventLoop::handle_mouse_event(const WSAPI_ServerMessage& event, GWindow& w
     case WSAPI_ServerMessage::Type::MouseMove: type = GEvent::MouseMove; break;
     case WSAPI_ServerMessage::Type::MouseUp: type = GEvent::MouseUp; break;
     case WSAPI_ServerMessage::Type::MouseDown: type = GEvent::MouseDown; break;
+    case WSAPI_ServerMessage::Type::MouseDoubleClick: type = GEvent::MouseDoubleClick; break;
     case WSAPI_ServerMessage::Type::MouseWheel: type = GEvent::MouseWheel; break;
     default: ASSERT_NOT_REACHED(); break;
     }
@@ -275,6 +276,7 @@ void GEventLoop::process_unprocessed_bundles()
             handle_paint_event(event, *window, bundle.extra_data);
             break;
         case WSAPI_ServerMessage::Type::MouseDown:
+        case WSAPI_ServerMessage::Type::MouseDoubleClick:
         case WSAPI_ServerMessage::Type::MouseUp:
         case WSAPI_ServerMessage::Type::MouseMove:
         case WSAPI_ServerMessage::Type::MouseWheel:

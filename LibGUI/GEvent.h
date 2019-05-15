@@ -18,6 +18,7 @@ public:
         Resize,
         MouseMove,
         MouseDown,
+        MouseDoubleClick,
         MouseUp,
         MouseWheel,
         Enter,
