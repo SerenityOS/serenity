@@ -63,6 +63,10 @@ mkdir -p $PREFIX
 mkdir -p "$DIR/Build/binutils"
 mkdir -p "$DIR/Build/gcc"
 
+if [ -z "$MAKEJOBS" ]; then
+    MAKEJOBS=$(nproc)
+fi
+
 pushd "$DIR/Build/"
     unset PKG_CONFIG_LIBDIR # Just in case
 
@@ -71,7 +75,7 @@ pushd "$DIR/Build/"
                                               --target=$TARGET \
                                               --with-sysroot=$SYSROOT \
                                               --disable-nls || exit 1
-        make -j $(nproc) || exit 1
+        make -j $MAKEJOBS || exit 1
         make install || exit 1
     popd
 
@@ -84,7 +88,7 @@ pushd "$DIR/Build/"
                                           --enable-languages=c,c++ || exit 1
 
         echo "XXX build gcc and libgcc"
-        make -j $(nproc) all-gcc all-target-libgcc || exit 1
+        make -j $MAKEJOBS all-gcc all-target-libgcc || exit 1
         echo "XXX install gcc and libgcc"
         make install-gcc install-target-libgcc || exit 1
 
