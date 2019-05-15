@@ -688,7 +688,9 @@ void WSWindowManager::deliver_mouse_event(WSWindow& window, WSMouseEvent& event)
 
         // if the clock is invalid, we haven't clicked with this button on this
         // window yet, so there's nothing to do.
-        if (clock.is_valid()) {
+        if (!clock.is_valid()) {
+            clock.start();
+        } else {
             int elapsed_since_last_click = clock.elapsed();
             clock.start();
 
@@ -699,11 +701,14 @@ void WSWindowManager::deliver_mouse_event(WSWindow& window, WSMouseEvent& event)
                 dbgprintf("Transforming MouseUp to MouseDoubleClick!\n");
 #endif
                 event = WSMouseEvent(WSEvent::MouseDoubleClick, event.position(), event.buttons(), event.button(), event.modifiers(), event.wheel_delta());
+                // invalidate this now we've delivered a doubleclick, otherwise
+                // tripleclick will deliver two doubleclick events (incorrectly).
+                clock = CElapsedTimer();
+            } else {
+                // too slow; try again
+                clock.start();
             }
         }
-
-        // start (or re-start, if it was invalid) the double click timer again.
-        clock.start();
     }
 
     window.event(event);
