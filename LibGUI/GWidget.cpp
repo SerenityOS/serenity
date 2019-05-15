@@ -243,8 +243,14 @@ void GWidget::hide_event(GHideEvent&)
 {
 }
 
-void GWidget::keydown_event(GKeyEvent&)
+void GWidget::keydown_event(GKeyEvent& event)
 {
+    if (!event.alt() && !event.ctrl() && !event.logo() && event.key() == KeyCode::Key_Tab) {
+        if (event.shift())
+            focus_previous_widget();
+        else
+            focus_next_widget();
+    }
 }
 
 void GWidget::keyup_event(GKeyEvent&)
@@ -542,4 +548,30 @@ void GWidget::set_updates_enabled(bool enabled)
     m_updates_enabled = enabled;
     if (enabled)
         update();
+}
+
+void GWidget::focus_previous_widget()
+{
+    auto focusable_widgets = window()->focusable_widgets();
+    for (int i = focusable_widgets.size() - 1; i >= 0; --i) {
+        if (focusable_widgets[i] != this)
+            continue;
+        if (i > 0)
+            focusable_widgets[i - 1]->set_focus(true);
+        else
+            focusable_widgets.last()->set_focus(true);
+    }
+}
+
+void GWidget::focus_next_widget()
+{
+    auto focusable_widgets = window()->focusable_widgets();
+    for (int i = 0; i < focusable_widgets.size(); ++i) {
+        if (focusable_widgets[i] != this)
+            continue;
+        if (i < focusable_widgets.size() - 1)
+            focusable_widgets[i + 1]->set_focus(true);
+        else
+            focusable_widgets.first()->set_focus(true);
+    }
 }

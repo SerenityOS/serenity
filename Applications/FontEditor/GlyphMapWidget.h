@@ -27,7 +27,6 @@ public:
 private:
     virtual void paint_event(GPaintEvent&) override;
     virtual void mousedown_event(GMouseEvent&) override;
-    virtual bool accepts_focus() const override { return true; }
 
     Rect get_outer_rect(byte glyph) const;
 

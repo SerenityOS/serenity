@@ -113,6 +113,8 @@ public:
     String icon_path() const { return m_icon_path; }
     void set_icon_path(const String&);
 
+    Vector<GWidget*> focusable_widgets() const;
+
     virtual const char* class_name() const override { return "GWindow"; }
 
 protected:
