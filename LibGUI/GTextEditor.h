@@ -211,4 +211,5 @@ private:
     RetainPtr<GAction> m_copy_action;
     RetainPtr<GAction> m_paste_action;
     RetainPtr<GAction> m_delete_action;
+    CElapsedTimer m_triple_click_timer;
 };
