@@ -1,5 +1,5 @@
 #!/bin/bash
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+DIR=$( dirname $( readlink -e "$0" ) )
 export PATH="$DIR/Local/bin:$PATH"
 export TOOLCHAIN="$DIR"
 echo "$PATH"
