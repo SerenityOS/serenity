@@ -2,45 +2,24 @@
 #include <stdio.h>
 #include <signal.h>
 #include <stdlib.h>
-#include <LibCore/CFile.h>
+#include <LibCore/CProcessHelper.h>
 #include <AK/AKString.h>
 #include <AK/Vector.h>
 #include <AK/ArgsParser.h>
+#include <AK/HashMap.h>
+#include <AK/RetainPtr.h>
 
 static int pid_of(const String& process_name, bool single_shot, bool omit_pid, pid_t pid)
 {
     bool displayed_at_least_one = false;
 
-    CFile file("/proc/all");
-    if (!file.open(CIODevice::ReadOnly)) {
-	fprintf(stderr, "pidof failed to open /proc/all\n");
-	return 2;
-    }
-
-    for (;;) {
-	auto line = file.read_line(1024);
-		
-	if (line.is_empty())
-	    break;
-
-	auto chomped = String((const char*)line.pointer(), line.size() - 1, Chomp);
-	auto parts = chomped.split_view(',');
-
-	if (parts.size() < 18)
-	    break;
-
-	bool ok = false;
-	pid_t current_pid = parts[0].to_uint(ok);
-	String name = parts[11];
-
-	if (!ok) {
-	    fprintf(stderr, "pidof failed : couldn't convert %s to a valid pid\n", parts[0].characters());
-	    return 3;
-	}
-		
-	if (name == process_name) {	
-	    if (!omit_pid || (omit_pid && current_pid != pid)) {
-		printf("%d ", current_pid);
+    CProcessHelper processHelper;
+    HashMap<pid_t, RetainPtr<CProcessInfo>> processes = processHelper.get_map();
+    
+    for (auto& it : processes) {
+	if (it.value->name == process_name) {	
+	    if (!omit_pid || (omit_pid && it.value->pid != pid)) {
+		printf("%d ", it.value->pid);
 		displayed_at_least_one = true;
 
 		if (single_shot)
