@@ -2,7 +2,11 @@
 
 sudo id
 
-make_cmd="make -j3"
+if [ -z "$MAKEJOBS" ]; then
+    MAKEJOBS=$(nproc)
+fi
+
+make_cmd="make -j $MAKEJOBS"
 
 $make_cmd -C ../LibC clean && \
 $make_cmd -C ../LibC && \
