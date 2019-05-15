@@ -235,22 +235,19 @@ private:
 
 class WSAPIPopupMenuRequest : public WSAPIClientRequest {
 public:
-    WSAPIPopupMenuRequest(int client_id, int menu_id, const Point& position, bool top_anchored)
+    WSAPIPopupMenuRequest(int client_id, int menu_id, const Point& position)
         : WSAPIClientRequest(WSEvent::APIPopupMenuRequest, client_id)
         , m_menu_id(menu_id)
         , m_position(position)
-        , m_top_anchored(top_anchored)
     {
     }
 
     int menu_id() const { return m_menu_id; }
     Point position() const { return m_position; }
-    bool top_anchored() const { return m_top_anchored; }
 
 private:
     int m_menu_id;
     Point m_position;
-    bool m_top_anchored;
 };
 
 class WSAPIDismissMenuRequest : public WSAPIClientRequest {

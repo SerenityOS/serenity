@@ -260,7 +260,7 @@ void WSClientConnection::handle_request(const WSAPIPopupMenuRequest& request)
         return;
     }
     auto& menu = *(*it).value;
-    menu.popup(position, request.top_anchored());
+    menu.popup(position);
 }
 
 void WSClientConnection::handle_request(const WSAPIDismissMenuRequest& request)

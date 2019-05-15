@@ -27,7 +27,7 @@ TaskbarButton::~TaskbarButton()
 
 void TaskbarButton::context_menu_event(GContextMenuEvent&)
 {
-    ensure_menu().popup(screen_relative_rect().location(), /* top_anchored */ false);
+    ensure_menu().popup(screen_relative_rect().location());
 }
 
 GMenu& TaskbarButton::ensure_menu()
