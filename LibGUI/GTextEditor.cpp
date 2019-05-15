@@ -134,6 +134,7 @@ void GTextEditor::doubleclick_event(GMouseEvent& event)
     if (event.button() != GMouseButton::Left)
         return;
 
+    m_triple_click_timer.start();
     m_in_drag_select = false;
 
     auto start = text_position_at(event.position());
@@ -160,6 +161,27 @@ void GTextEditor::doubleclick_event(GMouseEvent& event)
 void GTextEditor::mousedown_event(GMouseEvent& event)
 {
     if (event.button() != GMouseButton::Left) {
+        return;
+    }
+
+    if (m_triple_click_timer.is_valid() && m_triple_click_timer.elapsed() < 250) {
+        m_triple_click_timer = CElapsedTimer();
+
+        GTextPosition start;
+        GTextPosition end;
+
+        if (is_multi_line()) {
+            // select *current* line
+            start = GTextPosition(m_cursor.line(), 0);
+            end = GTextPosition(m_cursor.line(), m_lines[m_cursor.line()]->length());
+        } else {
+            // select *whole* line
+            start = GTextPosition(0, 0);
+            end = GTextPosition(line_count() - 1, m_lines[line_count() - 1]->length());
+        }
+
+        m_selection.set(start, end);
+        set_cursor(end);
         return;
     }
 
