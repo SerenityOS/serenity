@@ -2,24 +2,23 @@
 #include <stdio.h>
 #include <signal.h>
 #include <stdlib.h>
-#include <LibCore/CProcessHelper.h>
+#include <LibCore/CProcessStatisticsReader.h>
 #include <AK/AKString.h>
 #include <AK/Vector.h>
 #include <AK/ArgsParser.h>
 #include <AK/HashMap.h>
-#include <AK/RetainPtr.h>
 
 static int pid_of(const String& process_name, bool single_shot, bool omit_pid, pid_t pid)
 {
     bool displayed_at_least_one = false;
 
-    CProcessHelper processHelper;
-    HashMap<pid_t, RetainPtr<CProcessInfo>> processes = processHelper.get_map();
+    CProcessStatisticsReader processes_stats;
+    HashMap<pid_t, CProcessStatistics> processes = processes_stats.get_map();
     
     for (auto& it : processes) {
-	if (it.value->name == process_name) {	
-	    if (!omit_pid || (omit_pid && it.value->pid != pid)) {
-		printf("%d ", it.value->pid);
+	if (it.value.name == process_name) {	
+	    if (!omit_pid || (omit_pid && it.value.pid != pid)) {
+		printf("%d ", it.value.pid);
 		displayed_at_least_one = true;
 
 		if (single_shot)

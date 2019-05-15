@@ -2,10 +2,8 @@
 
 #include <AK/AKString.h>
 #include <AK/HashMap.h>
-#include <AK/RetainPtr.h>
 
-class CProcessInfo : public Retainable<CProcessInfo> {
-public:
+struct CProcessStatistics {
     pid_t pid;
     unsigned nsched;
     String name;
@@ -18,13 +16,13 @@ public:
     unsigned syscalls;
 };
 
-class CProcessHelper {
+class CProcessStatisticsReader {
 public:
-    CProcessHelper();
-    HashMap<pid_t, RetainPtr<CProcessInfo>> get_map();
+    CProcessStatisticsReader();
+    HashMap<pid_t, CProcessStatistics> get_map();
 
 private:
-    int update_map(HashMap<pid_t, RetainPtr<CProcessInfo>>& map);
+    void update_map(HashMap<pid_t, CProcessStatistics>& map);
     String get_username_from_uid(const uid_t uid);
   
     HashMap<uid_t, String> m_usernames;

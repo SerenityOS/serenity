@@ -17,7 +17,7 @@ OBJS = \
     CEventLoop.o \
     CConfigFile.o \
     CEvent.o \
-    CProcessHelper.o
+    CProcessStatisticsReader.o
 
 LIBRARY = libcore.a
 DEFINES += -DUSERLAND

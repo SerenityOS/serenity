@@ -1,10 +1,10 @@
-#include "CProcessHelper.h"
+#include "CProcessStatisticsReader.h"
 #include "CFile.h"
 
 #include <stdio.h>
 #include <pwd.h>
 
-CProcessHelper::CProcessHelper()
+CProcessStatisticsReader::CProcessStatisticsReader()
 {
     setpwent();
     while (auto* passwd = getpwent())
@@ -12,24 +12,19 @@ CProcessHelper::CProcessHelper()
     endpwent();
 }
 
-HashMap<pid_t, RetainPtr<CProcessInfo>> CProcessHelper::get_map()
+HashMap<pid_t, CProcessStatistics> CProcessStatisticsReader::get_map()
 {
-    HashMap<pid_t, RetainPtr<CProcessInfo>> res;
-    int error = 0;
-  
-    if ((error = update_map(res)) != 0) {
-	fprintf(stderr, "CProcessHelper::update_map failed with code %d\n", error);
-    }
-
+    HashMap<pid_t, CProcessStatistics> res;
+    update_map(res);
     return res;
 }
 
-int CProcessHelper::update_map(HashMap<pid_t, RetainPtr<CProcessInfo>>& map)
+void CProcessStatisticsReader::update_map(HashMap<pid_t, CProcessStatistics>& map)
 {
     CFile file("/proc/all");
     if (!file.open(CIODevice::ReadOnly)) {
 	fprintf(stderr, "CProcessHelper : failed to open /proc/all: %s\n", file.error_string());
-	return 1;
+	return;
     }
 
     for (;;) {
@@ -45,59 +40,57 @@ int CProcessHelper::update_map(HashMap<pid_t, RetainPtr<CProcessInfo>>& map)
 	    break;
 
 	bool ok = false;
-	RetainPtr<CProcessInfo> process = RetainPtr<CProcessInfo>(new CProcessInfo);
+	CProcessStatistics process;
 
-	process->pid = parts[0].to_uint(ok);
+	process.pid = parts[0].to_uint(ok);
 	if (!ok) {
 	    fprintf(stderr, "CProcessHelper : couldn't convert %s to a valid pid\n", parts[0].characters());
-	    return 2;
+	    return;
 	}
 
-	process->nsched = parts[1].to_uint(ok);
+	process.nsched = parts[1].to_uint(ok);
 	if (!ok) {
 	    fprintf(stderr, "CProcessHelper : couldn't convert %s to a valid nsched value\n", parts[1].characters());
-	    return 3;
+	    return;
 	}
 
 	uid_t uid = parts[5].to_uint(ok);
 	if (!ok) {
 	    fprintf(stderr, "CProcessHelper : couldn't convert %s to a valid uid value\n", parts[5].characters());
-	    return 4;
+	    return;
 	}
 
-	process->uid = uid;
-	process->username = get_username_from_uid(uid);
+	process.uid = uid;
+	process.username = get_username_from_uid(uid);
 
-	process->priority = parts[16];
+	process.priority = parts[16];
     
-	process->syscalls = parts[17].to_uint(ok);
+	process.syscalls = parts[17].to_uint(ok);
 	if (!ok) {
 	    fprintf(stderr, "CProcessHelper : couldn't convert %s to a valid syscalls count value\n", parts[17].characters());
-	    return 5;
+	    return;
 	}
 
-	process->state = parts[7];
+	process.state = parts[7];
 
-	process->name = parts[11];
-	process->linear = parts[12].to_uint(ok);
+	process.name = parts[11];
+	process.linear = parts[12].to_uint(ok);
 	if (!ok) {
-	    fprintf(stderr, "CProcessHelper : couldn't convert %s to a valid linear address\n", parts[12].characters());
-	    return 6;
+	    fprintf(stderr, "CProcessHelper : couldn't convert %s to a valid amount of linear address space used\n", parts[12].characters());
+	    return;
 	}
 
-	process->physical = parts[13].to_uint(ok);
+	process.physical = parts[13].to_uint(ok);
 	if (!ok) {
-	    fprintf(stderr, "CProcessHelper : couldn't convert %s to a valid physical address\n", parts[13].characters());
-	    return 7;
+	    fprintf(stderr, "CProcessHelper : couldn't convert %s to a valid amount of physical address space used\n", parts[13].characters());
+	    return;
 	}
 
-	map.set(process->pid, process);
+	map.set(process.pid, process);
     }
-
-    return 0;
 }
 
-String CProcessHelper::get_username_from_uid(const uid_t uid)
+String CProcessStatisticsReader::get_username_from_uid(const uid_t uid)
 {
     auto it = m_usernames.find(uid);
     if (it != m_usernames.end())
