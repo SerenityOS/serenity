@@ -475,4 +475,9 @@ int donate(int tid)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
+void beep()
+{
+    syscall(SC_beep);
+}
+
 }

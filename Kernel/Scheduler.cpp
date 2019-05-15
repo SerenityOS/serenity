@@ -5,6 +5,7 @@
 #include <AK/TemporaryChange.h>
 #include <Kernel/Alarm.h>
 #include <Kernel/FileSystem/FileDescriptor.h>
+#include <Kernel/Devices/PCSpeaker.h>
 
 //#define LOG_EVERY_CONTEXT_SWITCH
 //#define SCHEDULER_DEBUG
@@ -30,6 +31,7 @@ Thread* g_last_fpu_thread;
 Thread* g_finalizer;
 static Process* s_colonel_process;
 qword g_uptime;
+static qword s_beep_timeout;
 
 struct TaskRedirectionData {
     word selector;
@@ -41,6 +43,12 @@ static bool s_active;
 bool Scheduler::is_active()
 {
     return s_active;
+}
+
+void Scheduler::beep()
+{
+    PCSpeaker::tone_on(440);
+    s_beep_timeout = g_uptime + 100;
 }
 
 bool Scheduler::pick_next()
@@ -394,6 +402,11 @@ void Scheduler::timer_tick(RegisterDump& regs)
         return;
 
     ++g_uptime;
+
+    if (s_beep_timeout && g_uptime > s_beep_timeout) {
+        PCSpeaker::tone_off();
+        s_beep_timeout = 0;
+    }
 
     if (current->tick())
         return;
