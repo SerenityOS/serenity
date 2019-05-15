@@ -49,6 +49,7 @@ protected:
     virtual void mousemove_event(GMouseEvent&) override;
     virtual void enter_event(CEvent&) override;
     virtual void leave_event(CEvent&) override;
+    virtual void keydown_event(GKeyEvent&) override;
 
 private:
     String m_caption;

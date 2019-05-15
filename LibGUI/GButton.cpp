@@ -3,6 +3,7 @@
 #include <SharedGraphics/StylePainter.h>
 #include <AK/StringBuilder.h>
 #include <LibGUI/GAction.h>
+#include <Kernel/KeyCode.h>
 
 //#define GBUTTON_DEBUG
 
@@ -157,4 +158,11 @@ void GButton::set_icon(RetainPtr<GraphicsBitmap>&& icon)
         return;
     m_icon = move(icon);
     update();
+}
+
+void GButton::keydown_event(GKeyEvent& event)
+{
+    if (event.key() == KeyCode::Key_Return)
+        click();
+    GWidget::keydown_event(event);
 }
