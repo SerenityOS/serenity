@@ -159,31 +159,32 @@ void GTextEditor::doubleclick_event(GMouseEvent& event)
 
 void GTextEditor::mousedown_event(GMouseEvent& event)
 {
-    if (event.button() == GMouseButton::Left) {
-        if (event.modifiers() & Mod_Shift) {
-            if (!has_selection())
-                m_selection.set(m_cursor, { });
-        } else {
-            m_selection.clear();
-        }
-
-        m_in_drag_select = true;
-
-        set_cursor(text_position_at(event.position()));
-
-        if (!(event.modifiers() & Mod_Shift)) {
-            if (!has_selection())
-                m_selection.set(m_cursor, { });
-        }
-
-        if (m_selection.start().is_valid() && m_selection.start() != m_cursor)
-            m_selection.set_end(m_cursor);
-
-        // FIXME: Only update the relevant rects.
-        update();
-        did_update_selection();
+    if (event.button() != GMouseButton::Left) {
         return;
     }
+
+    if (event.modifiers() & Mod_Shift) {
+        if (!has_selection())
+            m_selection.set(m_cursor, { });
+    } else {
+        m_selection.clear();
+    }
+
+    m_in_drag_select = true;
+
+    set_cursor(text_position_at(event.position()));
+
+    if (!(event.modifiers() & Mod_Shift)) {
+        if (!has_selection())
+            m_selection.set(m_cursor, { });
+    }
+
+    if (m_selection.start().is_valid() && m_selection.start() != m_cursor)
+        m_selection.set_end(m_cursor);
+
+    // FIXME: Only update the relevant rects.
+    update();
+    did_update_selection();
 }
 
 void GTextEditor::mouseup_event(GMouseEvent& event)
