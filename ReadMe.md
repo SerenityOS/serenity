@@ -47,6 +47,10 @@ There's also a [Patreon](https://www.patreon.com/serenityos) if you would like t
 
 Go into the Toolchain/ directory and run the **BuildIt.sh** script. Then source the **UseIt.sh** script to put the i686-pc-serenity toolchain in your $PATH.
 
+Once you've done both of those, go into the Kernel directory, then run
+**makeall.sh**, and if nothing breaks too much, take it for a spin by using
+**run**.
+
 Otherwise, see the older [step-by-step guide to building Serenity](https://github.com/awesomekling/serenity/blob/master/Meta/BuildInstructions.md)
 
 ## IRC
