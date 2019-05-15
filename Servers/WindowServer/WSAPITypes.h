@@ -258,7 +258,6 @@ struct WSAPI_ClientMessage {
             bool checkable;
             bool checked;
             WSAPI_Point position;
-            bool top_anchored;
         } menu;
         struct {
             WSAPI_Rect rect;
