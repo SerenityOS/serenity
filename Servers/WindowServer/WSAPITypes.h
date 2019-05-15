@@ -73,6 +73,7 @@ struct WSAPI_ServerMessage {
         Paint,
         MouseMove,
         MouseDown,
+        MouseDoubleClick,
         MouseUp,
         MouseWheel,
         WindowEntered,
