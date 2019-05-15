@@ -60,7 +60,9 @@ void GCheckBox::paint_event(GPaintEvent& event)
 
     auto text_rect = rect();
     text_rect.set_left(s_box_width + 4);
+    text_rect.set_width(font().width(m_caption));
     text_rect.set_top(height() / 2 - font().glyph_height() / 2);
+    text_rect.set_height(font().glyph_height());
 
     if (fill_with_background_color())
         painter.fill_rect(rect(), background_color());
@@ -78,8 +80,14 @@ void GCheckBox::paint_event(GPaintEvent& event)
     if (m_checked)
         painter.draw_bitmap(box_rect.shrunken(4, 4).location(), *s_checked_bitmap, foreground_color());
 
-    if (!caption().is_empty())
+    if (!caption().is_empty()) {
         painter.draw_text(text_rect, caption(), TextAlignment::TopLeft, foreground_color());
+        if (is_focused()) {
+            Rect focus_rect = text_rect;
+            focus_rect.inflate(6, 4);
+            painter.draw_rect(focus_rect, Color(140, 140, 140));
+        }
+    }
 }
 
 void GCheckBox::mousemove_event(GMouseEvent& event)
