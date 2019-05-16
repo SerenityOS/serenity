@@ -38,5 +38,11 @@ size_t strftime(char* s, size_t max, const char* format, const struct tm*);
 
 #define difftime(t1,t0) (double)(t1 - t0)
 
+// This is c++11+, but we have no macro for that now.
+struct timespec {
+    time_t tv_sec;
+    long tv_nsec;
+};
+
 __END_DECLS
 
