@@ -174,15 +174,31 @@ bool CIODevice::close()
     return true;
 }
 
-bool CIODevice::seek(signed_qword offset)
+bool CIODevice::seek(signed_qword offset, SeekMode mode, off_t *pos)
 {
-    int rc = lseek(m_fd, offset, SEEK_SET);
+    int m = SEEK_SET;
+    switch (mode) {
+    case SeekMode::SetPosition:
+        m = SEEK_SET;
+        break;
+    case SeekMode::FromCurrentPosition:
+        m = SEEK_CUR;
+        break;
+    case SeekMode::FromEndPosition:
+        m = SEEK_END;
+        break;
+    }
+    off_t rc = lseek(m_fd, offset, m);
     if (rc < 0) {
-        perror("CIODevice::seek: lseek");
+        set_error(errno);
+        if (pos)
+            *pos = -1;
         return false;
     }
     m_buffered_data.clear();
     m_eof = false;
+    if (pos)
+        *pos = rc;
     return true;
 }
 
