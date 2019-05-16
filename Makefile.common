@@ -1,5 +1,5 @@
 ARCH_FLAGS =
-STANDARD_FLAGS = -std=c++17 -nostdinc++ -nostdlib -nostdinc -Wno-sized-deallocation -fno-sized-deallocation
+STANDARD_FLAGS = -std=c++17 -Wno-sized-deallocation -fno-sized-deallocation
 WARNING_FLAGS = -Wextra -Wall -Wundef -Wcast-qual -Wwrite-strings -Wimplicit-fallthrough
 FLAVOR_FLAGS = -fno-exceptions -fno-rtti
 OPTIMIZATION_FLAGS = -Os
