@@ -212,7 +212,7 @@ template<typename F>
 inline void ELFImage::for_each_symbol(F func) const
 {
     for (unsigned i = 0; i < symbol_count(); ++i) {
-        if (!func(symbol(i)))
+        if (func(symbol(i)) == IterationDecision::Abort)
             break;
     }
 }

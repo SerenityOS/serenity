@@ -14,6 +14,7 @@
 #include <Kernel/Thread.h>
 #include <Kernel/Lock.h>
 
+class ELFLoader;
 class FileDescriptor;
 class PageDirectory;
 class Region;
@@ -248,6 +249,8 @@ public:
     unsigned syscall_count() const { return m_syscall_count; }
     void did_syscall() { ++m_syscall_count; }
 
+    const ELFLoader* elf_loader() const { return m_elf_loader.ptr(); }
+
 private:
     friend class MemoryManager;
     friend class Scheduler;
@@ -327,6 +330,7 @@ private:
     unsigned m_syscall_count { 0 };
 
     RetainPtr<ProcessTracer> m_tracer;
+    OwnPtr<ELFLoader> m_elf_loader;
 
     Lock m_big_lock { "Process" };
 };

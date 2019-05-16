@@ -18,6 +18,8 @@ public:
     char* symbol_ptr(const char* name);
     LinearAddress entry() const { return m_image.entry(); }
 
+    String symbolicate(dword address) const;
+
 private:
     bool layout();
     bool perform_relocations();
@@ -39,5 +41,11 @@ private:
     ELFImage m_image;
 
     HashMap<String, char*> m_sections;
+
+    struct SortedSymbol {
+        dword address;
+        const char* name;
+    };
+    mutable Vector<SortedSymbol> m_sorted_symbols;
 };
 
