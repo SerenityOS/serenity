@@ -9,8 +9,10 @@ __BEGIN_DECLS
 #define AF_MASK 0xff
 #define AF_UNSPEC 0
 #define AF_LOCAL 1
+#define AF_UNIX AF_LOCAL
 #define AF_INET 2
 #define PF_LOCAL AF_LOCAL
+#define PF_UNIX PF_LOCAL
 #define PF_INET AF_INET
 
 #define SOCK_TYPE_MASK 0xff
