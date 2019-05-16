@@ -281,7 +281,6 @@ void exception_14_handler(RegisterDumpWithExceptionCode& regs)
             regs.exception_code & 2 ? "write" : "read",
             faultAddress);
         dump(regs);
-        dump_backtrace();
         current->process().crash();
     } else if (response == PageFaultResponse::Continue) {
 #ifdef PAGE_FAULT_DEBUG

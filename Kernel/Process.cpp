@@ -727,6 +727,8 @@ void Process::crash()
     ASSERT_INTERRUPTS_DISABLED();
     ASSERT(!is_dead());
 
+    dump_backtrace();
+
     m_termination_signal = SIGSEGV;
     dump_regions();
     ASSERT(is_ring3());
