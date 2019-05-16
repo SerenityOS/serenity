@@ -125,11 +125,11 @@ static void load_ksyms_from_data(const ByteBuffer& buffer)
     }
 }
 
-void dump_backtrace(bool use_ksyms)
+void dump_backtrace()
 {
     dword ebp;
     asm volatile("movl %%ebp, %%eax":"=a"(ebp));
-    dump_backtrace_impl(ebp, use_ksyms);
+    dump_backtrace_impl(ebp, ksyms_ready);
 }
 
 void init_ksyms()

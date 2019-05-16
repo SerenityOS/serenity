@@ -281,7 +281,7 @@ void exception_14_handler(RegisterDumpWithExceptionCode& regs)
             regs.exception_code & 2 ? "write" : "read",
             faultAddress);
         dump(regs);
-        dump_backtrace(ksyms_ready);
+        dump_backtrace();
         current->process().crash();
     } else if (response == PageFaultResponse::Continue) {
 #ifdef PAGE_FAULT_DEBUG
@@ -491,8 +491,7 @@ void __assertion_failed(const char* msg, const char* file, unsigned line, const 
 {
     asm volatile("cli");
     kprintf("ASSERTION FAILED: %s\n%s:%u in %s\n", msg, file, line, func);
-    extern void dump_backtrace(bool);
-    dump_backtrace(true);
+    dump_backtrace();
     asm volatile("hlt");
     for (;;);
 }
