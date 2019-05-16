@@ -47,6 +47,7 @@ struct sockaddr_in {
 };
 
 #define SOL_SOCKET 1
+#define SOMAXCONN 128
 
 #define SO_RCVTIMEO 1
 #define SO_SNDTIMEO 2
