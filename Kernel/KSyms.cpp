@@ -2,6 +2,7 @@
 #include "Process.h"
 #include "Scheduler.h"
 #include <Kernel/FileSystem/FileDescriptor.h>
+#include <Kernel/ELF/ELFLoader.h>
 
 static KSym* s_ksyms;
 dword ksym_lowest_address;
@@ -114,7 +115,11 @@ static void load_ksyms_from_data(const ByteBuffer& buffer)
         if (!symbol.address)
             break;
         if (!symbol.ksym) {
-            dbgprintf("%p\n", symbol.address);
+            if (current->process().elf_loader()) {
+                dbgprintf("%p  %s\n", symbol.address, current->process().elf_loader()->symbolicate(symbol.address).characters());
+            } else {
+                dbgprintf("%p (no ELF loader for process)\n", symbol.address);
+            }
             continue;
         }
         unsigned offset = symbol.address - symbol.ksym->address;

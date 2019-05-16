@@ -327,19 +327,20 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
         bool success = region->page_in();
         ASSERT(success);
     }
+    OwnPtr<ELFLoader> loader;
     {
         // Okay, here comes the sleight of hand, pay close attention..
         auto old_regions = move(m_regions);
         m_regions.append(*region);
-        ELFLoader loader(region->laddr().as_ptr());
-        loader.map_section_hook = [&] (LinearAddress laddr, size_t size, size_t alignment, size_t offset_in_image, bool is_readable, bool is_writable, const String& name) {
+        loader = make<ELFLoader>(region->laddr().as_ptr());
+        loader->map_section_hook = [&] (LinearAddress laddr, size_t size, size_t alignment, size_t offset_in_image, bool is_readable, bool is_writable, const String& name) {
             ASSERT(size);
             ASSERT(alignment == PAGE_SIZE);
             size = ceil_div(size, PAGE_SIZE) * PAGE_SIZE;
             (void) allocate_region_with_vmo(laddr, size, vmo.copy_ref(), offset_in_image, String(name), is_readable, is_writable);
             return laddr.as_ptr();
         };
-        loader.alloc_section_hook = [&] (LinearAddress laddr, size_t size, size_t alignment, bool is_readable, bool is_writable, const String& name) {
+        loader->alloc_section_hook = [&] (LinearAddress laddr, size_t size, size_t alignment, bool is_readable, bool is_writable, const String& name) {
             ASSERT(size);
             ASSERT(alignment == PAGE_SIZE);
             size += laddr.get() & 0xfff;
@@ -348,8 +349,8 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
             (void) allocate_region(laddr, size, String(name), is_readable, is_writable);
             return laddr.as_ptr();
         };
-        bool success = loader.load();
-        if (!success || !loader.entry().get()) {
+        bool success = loader->load();
+        if (!success || !loader->entry().get()) {
             m_page_directory = move(old_page_directory);
             // FIXME: RAII this somehow instead.
             ASSERT(&current->process() == this);
@@ -359,8 +360,10 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
             return -ENOEXEC;
         }
 
-        entry_eip = loader.entry().get();
+        entry_eip = loader->entry().get();
     }
+
+    m_elf_loader = move(loader);
 
     current->m_kernel_stack_for_signal_handler_region = nullptr;
     current->m_signal_stack_user_region = nullptr;
