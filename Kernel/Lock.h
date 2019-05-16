@@ -53,7 +53,7 @@ private:
 {
     if (!are_interrupts_enabled()) {
         kprintf("Interrupts disabled when trying to take Lock{%s}\n", m_name);
-        dump_backtrace(ksyms_ready);
+        dump_backtrace();
         hang();
     }
     ASSERT(!Scheduler::is_active());
