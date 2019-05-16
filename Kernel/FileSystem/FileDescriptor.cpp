@@ -142,16 +142,16 @@ off_t FileDescriptor::seek(off_t offset, int whence)
         break;
     case SEEK_CUR:
         newOffset = m_current_offset + offset;
-        if (newOffset < 0)
-            return -EINVAL;
         break;
     case SEEK_END:
-        ASSERT(metadata.size); // FIXME: What do I do?
         newOffset = metadata.size;
         break;
     default:
         return -EINVAL;
     }
+
+    if (newOffset < 0 || newOffset > metadata.size)
+        return -EINVAL;
 
     m_current_offset = newOffset;
     return m_current_offset;
