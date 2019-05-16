@@ -37,7 +37,13 @@ public:
 
     bool can_read() const;
 
-    bool seek(signed_qword);
+    enum class SeekMode {
+        SetPosition,
+        FromCurrentPosition,
+        FromEndPosition,
+    };
+
+    bool seek(signed_qword, SeekMode = SeekMode::SetPosition, off_t* = nullptr);
 
     virtual bool open(CIODevice::OpenMode) = 0;
     virtual bool close();
