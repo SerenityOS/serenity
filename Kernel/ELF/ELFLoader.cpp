@@ -45,10 +45,25 @@ bool ELFLoader::layout()
         kprintf("PH: L%x %u r:%u w:%u\n", program_header.laddr().get(), program_header.size_in_memory(), program_header.is_readable(), program_header.is_writable());
 #endif
         if (program_header.is_writable()) {
-            allocate_section(program_header.laddr(), program_header.size_in_memory(), program_header.alignment(), program_header.is_readable(), program_header.is_writable());
+            alloc_section_hook(
+                program_header.laddr(),
+                program_header.size_in_memory(),
+                program_header.alignment(),
+                program_header.is_readable(),
+                program_header.is_writable(),
+                String::format("elf-alloc-%s%s", program_header.is_readable() ? "r" : "", program_header.is_writable() ? "w" : "")
+            );
             memcpy(program_header.laddr().as_ptr(), program_header.raw_data(), program_header.size_in_image());
         } else {
-            map_section(program_header.laddr(), program_header.size_in_memory(), program_header.alignment(), program_header.offset(), program_header.is_readable(), program_header.is_writable());
+            map_section_hook(
+                program_header.laddr(),
+                program_header.size_in_memory(),
+                program_header.alignment(),
+                program_header.offset(),
+                program_header.is_readable(),
+                program_header.is_writable(),
+                String::format("elf-map-%s%s", program_header.is_readable() ? "r" : "", program_header.is_writable() ? "w" : "")
+            );
         }
     });
     return !failed;
@@ -161,16 +176,4 @@ char* ELFLoader::symbol_ptr(const char* name)
         return false;
     });
     return found_ptr;
-}
-
-bool ELFLoader::allocate_section(LinearAddress laddr, size_t size, size_t alignment, bool is_readable, bool is_writable)
-{
-    ASSERT(alloc_section_hook);
-    return alloc_section_hook(laddr, size, alignment, is_readable, is_writable, String::format("elf-alloc-%s%s", is_readable ? "r" : "", is_writable ? "w" : ""));
-}
-
-bool ELFLoader::map_section(LinearAddress laddr, size_t size, size_t alignment, size_t offset_in_image, bool is_readable, bool is_writable)
-{
-    ASSERT(alloc_section_hook);
-    return map_section_hook(laddr, size, alignment, offset_in_image, is_readable, is_writable, String::format("elf-map-%s%s", is_readable ? "r" : "", is_writable ? "w" : ""));
 }
