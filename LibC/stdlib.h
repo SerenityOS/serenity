@@ -16,6 +16,7 @@ void free(void*);
 void* realloc(void *ptr, size_t);
 char* getenv(const char* name);
 int putenv(char*);
+int unsetenv(char*);
 int atoi(const char*);
 long atol(const char*);
 long long atoll(const char*);
