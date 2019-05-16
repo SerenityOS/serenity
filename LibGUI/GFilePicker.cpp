@@ -122,7 +122,9 @@ GFilePicker::GFilePicker(const String& path, CObject* parent)
     ok_button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
     ok_button->set_preferred_size({ 80, 0 });
     ok_button->set_caption("OK");
-    ok_button->on_click = [this] (auto&) {
+    ok_button->on_click = [this, filename_textbox] (auto&) {
+        FileSystemPath path(String::format("%s/%s", m_model->path().characters(), filename_textbox->text().characters()));
+        m_selected_file = path.string();
         done(ExecOK);
     };
 }
