@@ -8,7 +8,8 @@ public:
     GFilePicker(const String& path = "/", CObject* parent = nullptr);
     virtual ~GFilePicker() override;
 
-    String selected_file() const;
+    // TODO: Should this return a FileSystemPath instead?
+    String selected_file() const { return m_selected_file; }
 
     virtual const char* class_name() const override { return "GFilePicker"; }
 
