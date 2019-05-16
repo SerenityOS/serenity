@@ -909,6 +909,8 @@ void WSWindowManager::compose()
                 continue;
             PainterStateSaver saver(*m_back_painter);
             m_back_painter->add_clip_rect(dirty_rect);
+            if (!backing_store)
+                m_back_painter->fill_rect(dirty_rect, window.background_color());
             window.frame().paint(*m_back_painter);
             if (!backing_store)
                 continue;
