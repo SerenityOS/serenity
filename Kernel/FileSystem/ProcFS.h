@@ -3,6 +3,7 @@
 #include <Kernel/Lock.h>
 #include <AK/Types.h>
 #include <Kernel/FileSystem/FileSystem.h>
+#include <Kernel/FileSystem/Inode.h>
 
 class Process;
 
