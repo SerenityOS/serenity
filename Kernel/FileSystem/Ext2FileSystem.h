@@ -1,9 +1,9 @@
 #pragma once
 
-#include "DiskBackedFileSystem.h"
-#include "UnixTypes.h"
-#include <AK/OwnPtr.h>
-#include "ext2_fs.h"
+#include <Kernel/UnixTypes.h>
+#include <Kernel/FileSystem/Inode.h>
+#include <Kernel/FileSystem/ext2_fs.h>
+#include <Kernel/FileSystem/DiskBackedFileSystem.h>
 
 struct ext2_group_desc;
 struct ext2_inode;

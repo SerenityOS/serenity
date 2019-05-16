@@ -1,4 +1,5 @@
 #include <Kernel/VM/MemoryManager.h>
+#include <Kernel/FileSystem/Inode.h>
 #include <AK/Assertions.h>
 #include <AK/kstdio.h>
 #include "i386.h"

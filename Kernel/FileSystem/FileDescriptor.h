@@ -2,6 +2,7 @@
 
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/FileSystem/InodeMetadata.h>
+#include <Kernel/FileSystem/Inode.h>
 #include <Kernel/FileSystem/FIFO.h>
 #include <Kernel/LinearAddress.h>
 #include <AK/ByteBuffer.h>

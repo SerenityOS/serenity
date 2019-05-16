@@ -1,6 +1,7 @@
 #include <Kernel/VM/VMObject.h>
 #include <Kernel/VM/MemoryManager.h>
-#include <FileSystem/FileSystem.h>
+#include <Kernel/FileSystem/FileSystem.h>
+#include <Kernel/FileSystem/Inode.h>
 
 Retained<VMObject> VMObject::create_file_backed(RetainPtr<Inode>&& inode)
 {
