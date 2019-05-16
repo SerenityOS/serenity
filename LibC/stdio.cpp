@@ -295,10 +295,12 @@ int dbgprintf(const char* fmt, ...)
 {
     // if this fails, you're printing too early.
     ASSERT(stddbg);
+    int errno_backup = errno;
     va_list ap;
     va_start(ap, fmt);
     int ret = vfprintf(stddbg, fmt, ap);
     va_end(ap);
+    errno = errno_backup;
     return ret;
 }
 
