@@ -62,13 +62,40 @@ char* getenv(const char* name)
     return nullptr;
 }
 
+int unsetenv(char* name)
+{
+    auto new_var_len = strlen(name);
+    size_t environ_size = 0;
+    size_t skip = -1;
+
+    for (; environ[environ_size]; ++environ_size) {
+        char* old_var = environ[environ_size];
+        char* old_eq = strchr(old_var, '=');
+        ASSERT(old_eq);
+        auto old_var_len = old_eq - old_var;
+
+        if (new_var_len != old_var_len)
+            continue; // can't match
+
+        if (strncmp(name, old_var, new_var_len) == 0)
+            skip = environ_size;
+    }
+
+    if (skip == -1)
+        return 0; // not found: no failure.
+
+    // Shuffle the existing array down by one.
+    memmove(&environ[skip], &environ[skip+1], ((environ_size-1)-skip) * sizeof(environ[0]));
+    environ[environ_size-1] = nullptr;
+    return 0;
+}
+
 int putenv(char* new_var)
 {
     char* new_eq = strchr(new_var, '=');
 
-    // FIXME: should remove the var from the environment.
     if (!new_eq)
-        return 0;
+        return unsetenv(new_var);
 
     auto new_var_len = new_eq - new_var;
     size_t environ_size = 0;
