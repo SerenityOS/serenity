@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <AK/Types.h>
 #include <AK/StdLibExtras.h>
+#include "ctype.h"
 
 extern "C" {
 
@@ -89,6 +90,35 @@ int strncmp(const char* s1, const char* s2, size_t n)
             break;
     } while (--n);
     return 0;
+}
+
+int strcasecmp(const char* s1, const char* s2)
+{
+    int c1, c2;
+    for (;;) {
+        c1 = tolower(*s1++);
+        c2 = tolower(*s2++);
+        if (c1 == 0 || c1 != c2) {
+            return c1 - c2;
+        }
+    }
+}
+
+int strncasecmp(const char* s1, const char* s2, size_t n)
+{
+    if (n == 0) {
+        return 0;
+    }
+
+    while (n-- != 0 && tolower(*s1) == tolower(*s2)) {
+        if (n == 0 || *s1 == '\0' || *s2 == '\0') {
+            break;
+        }
+        s1++;
+        s2++;
+    }
+
+    return tolower(*s1) - tolower(*s2);
 }
 
 int memcmp(const void* v1, const void* v2, size_t n)
