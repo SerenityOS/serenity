@@ -80,6 +80,17 @@ static int sh_export(int argc, char** argv)
     return 0;
 }
 
+static int sh_unset(int argc, char** argv)
+{
+    if (argc != 2) {
+        fprintf(stderr, "usage: unset variable\n");
+        return 1;
+    }
+
+    unsetenv(argv[1]);
+    return 0;
+}
+
 static int sh_cd(int argc, char** argv)
 {
     char pathbuf[PATH_MAX];
@@ -165,6 +176,10 @@ static bool handle_builtin(int argc, char** argv, int& retval)
     }
     if (!strcmp(argv[0], "export")) {
         retval = sh_export(argc, argv);
+        return true;
+    }
+    if (!strcmp(argv[0], "unset")) {
+        retval = sh_unset(argc, argv);
         return true;
     }
     if (!strcmp(argv[0], "history")) {
