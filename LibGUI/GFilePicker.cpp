@@ -33,6 +33,7 @@ GFilePicker::GFilePicker(const String& path, CObject* parent)
     auto* toolbar = new GToolBar(upper_container);
     toolbar->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
     toolbar->set_preferred_size({ 60, 0 });
+    toolbar->set_has_frame(false);
 
     auto* location_textbox = new GTextBox(upper_container);
     location_textbox->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
