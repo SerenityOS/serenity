@@ -257,7 +257,14 @@ void WSWindowFrame::on_mouse_event(const WSMouseEvent& event)
     auto& wm = WSWindowManager::the();
     if (m_window.type() != WSWindowType::Normal)
         return;
-    if (title_bar_rect().contains(event.position())) {
+
+    // This is slightly hackish, but expand the title bar rect by one pixel downwards,
+    // so that mouse events between the title bar and window contents don't act like
+    // mouse events on the border.
+    auto adjusted_title_bar_rect = title_bar_rect();
+    adjusted_title_bar_rect.set_height(adjusted_title_bar_rect.height() + 1);
+
+    if (adjusted_title_bar_rect.contains(event.position())) {
         wm.clear_resize_candidate();
 
         if (event.type() == WSEvent::MouseDown)
