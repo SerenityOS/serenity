@@ -1,5 +1,6 @@
 #include "ELFLoader.h"
 #include <AK/kstdio.h>
+#include <AK/QuickSort.h>
 
 //#define ELFLOADER_DEBUG
 //#define SUPPORT_RELOCATIONS
@@ -162,9 +163,9 @@ char* ELFLoader::symbol_ptr(const char* name)
     char* found_ptr = nullptr;
     m_image.for_each_symbol([&] (const ELFImage::Symbol symbol) {
         if (symbol.type() != STT_FUNC)
-            return true;
+            return IterationDecision::Continue;
         if (strcmp(symbol.name(), name))
-            return true;
+            return IterationDecision::Continue;
         if (m_image.is_executable())
             found_ptr = (char*)symbol.value();
 #ifdef SUPPORT_RELOCATIONS
@@ -173,7 +174,31 @@ char* ELFLoader::symbol_ptr(const char* name)
 #endif
         else
             ASSERT_NOT_REACHED();
-        return false;
+        return IterationDecision::Abort;
     });
     return found_ptr;
+}
+
+String ELFLoader::symbolicate(dword address) const
+{
+    if (m_sorted_symbols.is_empty()) {
+        m_sorted_symbols.ensure_capacity(m_image.symbol_count());
+        m_image.for_each_symbol([this] (auto& symbol) {
+            m_sorted_symbols.append({ symbol.value(), symbol.name() });
+            return IterationDecision::Continue;
+        });
+        quick_sort(m_sorted_symbols.begin(), m_sorted_symbols.end(), [] (auto& a, auto& b) {
+            return a.address < b.address;
+        });
+    }
+
+    for (int i = 0; i < m_sorted_symbols.size(); ++i) {
+        if (m_sorted_symbols[i].address > address) {
+            if (i == 0)
+                return "!!";
+            auto& symbol = m_sorted_symbols[i - 1];
+            return String::format("%s +%u", symbol.name, address - symbol.address);
+        }
+    }
+    return "??";
 }
