@@ -8,7 +8,7 @@ int main(int, char**);
 
 int errno;
 char** environ;
-//bool __environ_is_malloced;
+bool __environ_is_malloced;
 
 void __libc_init()
 {
@@ -22,7 +22,7 @@ void __libc_init()
 int _start(int argc, char** argv, char** env)
 {
     environ = env;
-    //__environ_is_malloced = false;
+    __environ_is_malloced = false;
 
     __libc_init();
 
