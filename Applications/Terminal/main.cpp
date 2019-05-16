@@ -89,6 +89,7 @@ int main(int argc, char** argv)
     make_shell(ptm_fd);
 
     auto* window = new GWindow;
+    window->set_title("Terminal");
     window->set_background_color(Color::Black);
     window->set_double_buffering_enabled(false);
     window->set_should_exit_event_loop_on_close(true);
