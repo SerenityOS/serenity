@@ -1,7 +1,8 @@
 #pragma once
 
-#include "FileSystem.h"
-#include "UnixTypes.h"
+#include <Kernel/FileSystem/FileSystem.h>
+#include <Kernel/FileSystem/Inode.h>
+#include <Kernel/UnixTypes.h>
 #include <AK/HashMap.h>
 
 class SynthFSInode;
