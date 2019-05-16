@@ -46,18 +46,17 @@ void abort()
 
 char* getenv(const char* name)
 {
+    size_t vl = strlen(name);
     for (size_t i = 0; environ[i]; ++i) {
         const char* decl = environ[i];
         char* eq = strchr(decl, '=');
         if (!eq)
             continue;
         size_t varLength = eq - decl;
-        char* var = (char*)alloca(varLength + 1);
-        memcpy(var, decl, varLength);
-        var[varLength] = '\0';
-        if (!strcmp(var, name)) {
-            char* value = eq + 1;
-            return value;
+        if (vl != varLength)
+            continue;
+        if (strncmp(decl, name, varLength) == 0) {
+            return eq + 1;
         }
     }
     return nullptr;
@@ -65,48 +64,51 @@ char* getenv(const char* name)
 
 int putenv(char* new_var)
 {
-    HashMap<String, String> environment;
+    char* new_eq = strchr(new_var, '=');
 
-    auto handle_environment_entry = [&environment] (const char* decl) {
-        char* eq = strchr(decl, '=');
-        if (!eq)
-            return;
-        size_t var_length = eq - decl;
-        char* var = (char*)alloca(var_length + 1);
-        memcpy(var, decl, var_length);
-        var[var_length] = '\0';
-        const char* value = eq + 1;
-        environment.set(var, value);
-    };
-    for (size_t i = 0; environ[i]; ++i)
-        handle_environment_entry(environ[i]);
-    handle_environment_entry(new_var);
+    // FIXME: should remove the var from the environment.
+    if (!new_eq)
+        return 0;
 
-    //extern bool __environ_is_malloced;
-    //if (__environ_is_malloced)
-    //    free(environ);
-    //__environ_is_malloced = true;
+    auto new_var_len = new_eq - new_var;
+    size_t environ_size = 0;
+    for (; environ[environ_size]; ++environ_size) {
+        char* old_var = environ[environ_size];
+        char* old_eq = strchr(old_var, '=');
+        ASSERT(old_eq);
+        auto old_var_len = old_eq - old_var;
 
-    int environment_size = sizeof(char*); // For the null sentinel.
-    for (auto& it : environment)
-        environment_size += (int)sizeof(char*) + it.key.length() + 1 + it.value.length() + 1;
+        if (new_var_len != old_var_len)
+            continue; // can't match
 
-    char* buffer = (char*)malloc(environment_size);
-    environ = (char**)buffer;
-    char* bufptr = buffer + sizeof(char*) * (environment.size() + 1);
-
-    int i = 0;
-    for (auto& it : environment) {
-        environ[i] = bufptr;
-        memcpy(bufptr, it.key.characters(), it.key.length());
-        bufptr += it.key.length();
-        *(bufptr++) = '=';
-        memcpy(bufptr, it.value.characters(), it.value.length());
-        bufptr += it.value.length();
-        *(bufptr++) = '\0';
-        ++i;
+        if (strncmp(new_var, old_var, new_var_len) == 0) {
+            environ[environ_size] = new_var;
+            return 0;
+        }
     }
-    environ[environment.size()] = nullptr;
+
+    // At this point, we need to append the new var.
+    // 2 here: one for the new var, one for the sentinel value.
+    char **new_environ = (char**)malloc((environ_size + 2) * sizeof(char*));
+    if (new_environ == nullptr) {
+        errno = ENOMEM;
+        return -1;
+    }
+
+    for (size_t i = 0; environ[i]; ++i) {
+        new_environ[i] = environ[i];
+    }
+
+    new_environ[environ_size] = new_var;
+    new_environ[environ_size + 1] = nullptr;
+
+    // swap new and old
+    // note that the initial environ is not heap allocated!
+    extern bool __environ_is_malloced;
+    if (__environ_is_malloced)
+        free(environ);
+    __environ_is_malloced = true;
+    environ = new_environ;
     return 0;
 }
 

@@ -293,6 +293,8 @@ void rewind(FILE* stream)
 
 int dbgprintf(const char* fmt, ...)
 {
+    // if this fails, you're printing too early.
+    ASSERT(stddbg);
     va_list ap;
     va_start(ap, fmt);
     int ret = vfprintf(stddbg, fmt, ap);
