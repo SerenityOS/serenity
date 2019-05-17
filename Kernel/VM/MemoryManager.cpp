@@ -20,6 +20,7 @@ MemoryManager& MM
 }
 
 MemoryManager::MemoryManager()
+    : m_range_allocator(LinearAddress(0xc0000000), 0x3f000000)
 {
     // FIXME: This is not the best way to do memory map detection.
     //        Rewrite to use BIOS int 15,e820 once we have VM86 support.
@@ -400,14 +401,11 @@ RetainPtr<Region> MemoryManager::allocate_kernel_region(size_t size, String&& na
 {
     InterruptDisabler disabler;
 
-    // FIXME: We need a linear address space allocator.
-    static dword next_laddr = 0xd0000000;
     ASSERT(!(size % PAGE_SIZE));
-    LinearAddress laddr(next_laddr);
-    next_laddr += size + 16384;
-
-    auto region = adopt(*new Region(laddr, size, move(name), true, true, false));
-    MM.map_region_at_address(*m_kernel_page_directory, *region, laddr, false);
+    auto range = m_range_allocator.allocate_anywhere(size);
+    ASSERT(range.is_valid());
+    auto region = adopt(*new Region(range.base(), range.size(), move(name), true, true, false));
+    MM.map_region_at_address(*m_kernel_page_directory, *region, range.base(), false);
     // FIXME: It would be cool if these could zero-fill on demand instead.
     region->commit();
     return region;
