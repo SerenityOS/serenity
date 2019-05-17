@@ -13,6 +13,7 @@
 #include <AK/Weakable.h>
 #include <Kernel/LinearAddress.h>
 #include <Kernel/VM/PhysicalPage.h>
+#include <Kernel/VM/RangeAllocator.h>
 #include <Kernel/VM/Region.h>
 #include <Kernel/VM/VMObject.h>
 #include <Kernel/FileSystem/InodeIdentifier.h>
@@ -215,6 +216,8 @@ private:
     HashTable<VMObject*> m_vmos;
     HashTable<Region*> m_user_regions;
     HashTable<Region*> m_kernel_regions;
+
+    RangeAllocator m_range_allocator;
 
     size_t m_ram_size { 0 };
     bool m_quickmap_in_use { false };
