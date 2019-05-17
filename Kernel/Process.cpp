@@ -1710,7 +1710,7 @@ clock_t Process::sys$times(tms* times)
     times->tms_stime = m_ticks_in_kernel;
     times->tms_cutime = m_ticks_in_user_for_dead_children;
     times->tms_cstime = m_ticks_in_kernel_for_dead_children;
-    return 0;
+    return g_uptime & 0x7fffffff;
 }
 
 int Process::sys$select(const Syscall::SC_select_params* params)
