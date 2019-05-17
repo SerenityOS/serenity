@@ -1,34 +1,26 @@
 #include <stdio.h>
 #include <errno.h>
 #include <unistd.h>
-#include <getopt.h>
 #include <stdlib.h>
-
-[[noreturn]] static void print_usage_and_exit()
-{
-    printf("usage: ln [-s] <target> <link-path>\n");
-    exit(0);
-}
+#include <AK/ArgsParser.h>
 
 int main(int argc, char** argv)
 {
-    bool flag_symlink = false;
-    int opt;
-    while ((opt = getopt(argc, argv, "s")) != -1) {
-        switch (opt) {
-        case 's':
-            flag_symlink = true;
-            break;
-        default:
-            print_usage_and_exit();
-        }
+    AK::ArgsParser args_parser("ln");
+
+    args_parser.add_arg("s", "create a symlink");
+    args_parser.add_required_single_value("target");
+    args_parser.add_required_single_value("link-path");
+
+    AK::ArgsParserResult args = args_parser.parse(argc, (const char**)argv);
+    Vector<String> values = args.get_single_values();
+    if (values.size() == 0) {
+        args_parser.print_usage();
+        return 0;
     }
 
-    if ((optind + 1) >= argc)
-        print_usage_and_exit();
-
-    if (flag_symlink) {
-        int rc = symlink(argv[optind], argv[optind + 1]);
+    if (args.is_present("s")) {
+        int rc = symlink(values[0].characters(), values[1].characters());
         if (rc < 0) {
             perror("symlink");
             return 1;
@@ -36,7 +28,7 @@ int main(int argc, char** argv)
         return 0;
     }
 
-    int rc = link(argv[1], argv[2]);
+    int rc = link(values[0].characters(), values[1].characters());
     if (rc < 0) {
         perror("link");
         return 1;
