@@ -54,10 +54,12 @@ void NetworkTask_main()
 {
     LoopbackAdapter::the();
 
-    auto* adapter_ptr = E1000NetworkAdapter::the();
-    ASSERT(adapter_ptr);
-    auto& adapter = *adapter_ptr;
-    adapter.set_ipv4_address(IPv4Address(192, 168, 5, 2));
+    auto* adapter = E1000NetworkAdapter::the();
+    if (!adapter)
+        dbgprintf("E1000 network card not found!\n");
+
+    if (adapter)
+        adapter->set_ipv4_address(IPv4Address(192, 168, 5, 2));
 
     auto dequeue_packet = [&] () -> ByteBuffer {
         auto packet = LoopbackAdapter::the().dequeue_packet();
@@ -65,8 +67,8 @@ void NetworkTask_main()
             dbgprintf("Receive loopback packet (%d bytes)\n", packet.size());
             return packet;
         }
-        if (adapter.has_queued_packets())
-            return adapter.dequeue_packet();
+        if (adapter && adapter->has_queued_packets())
+            return adapter->dequeue_packet();
         return { };
     };
 
