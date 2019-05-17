@@ -68,17 +68,20 @@ bool Process::in_group(gid_t gid) const
     return m_gids.contains(gid);
 }
 
-Region* Process::allocate_region(LinearAddress laddr, size_t size, String&& name, bool is_readable, bool is_writable, bool commit)
+Range Process::allocate_range(LinearAddress laddr, size_t size)
 {
     laddr.mask(PAGE_MASK);
     size = PAGE_ROUND_UP(size);
-
-    Range range;
     if (laddr.is_null())
-        range = m_range_allocator.allocate_anywhere(size);
-    else
-        range = m_range_allocator.allocate_specific(laddr, size);
+        return m_range_allocator.allocate_anywhere(size);
+    return m_range_allocator.allocate_specific(laddr, size);
+}
 
+Region* Process::allocate_region(LinearAddress laddr, size_t size, String&& name, bool is_readable, bool is_writable, bool commit)
+{
+    auto range = allocate_range(laddr, size);
+    if (!range.is_valid())
+        return nullptr;
     m_regions.append(adopt(*new Region(range, move(name), is_readable, is_writable)));
     MM.map_region(*this, *m_regions.last());
     if (commit)
@@ -88,15 +91,9 @@ Region* Process::allocate_region(LinearAddress laddr, size_t size, String&& name
 
 Region* Process::allocate_file_backed_region(LinearAddress laddr, size_t size, RetainPtr<Inode>&& inode, String&& name, bool is_readable, bool is_writable)
 {
-    laddr.mask(PAGE_MASK);
-    size = PAGE_ROUND_UP(size);
-
-    Range range;
-    if (laddr.is_null())
-        range = m_range_allocator.allocate_anywhere(size);
-    else
-        range = m_range_allocator.allocate_specific(laddr, size);
-
+    auto range = allocate_range(laddr, size);
+    if (!range.is_valid())
+        return nullptr;
     m_regions.append(adopt(*new Region(range, move(inode), move(name), is_readable, is_writable)));
     MM.map_region(*this, *m_regions.last());
     return m_regions.last().ptr();
@@ -104,15 +101,9 @@ Region* Process::allocate_file_backed_region(LinearAddress laddr, size_t size, R
 
 Region* Process::allocate_region_with_vmo(LinearAddress laddr, size_t size, Retained<VMObject>&& vmo, size_t offset_in_vmo, String&& name, bool is_readable, bool is_writable)
 {
-    laddr.mask(PAGE_MASK);
-    size = PAGE_ROUND_UP(size);
-
-    Range range;
-    if (laddr.is_null())
-        range = m_range_allocator.allocate_anywhere(size);
-    else
-        range = m_range_allocator.allocate_specific(laddr, size);
-
+    auto range = allocate_range(laddr, size);
+    if (!range.is_valid())
+        return nullptr;
     offset_in_vmo &= PAGE_MASK;
     size = ceil_div(size, PAGE_SIZE) * PAGE_SIZE;
     m_regions.append(adopt(*new Region(range, move(vmo), offset_in_vmo, move(name), is_readable, is_writable)));
@@ -328,6 +319,7 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
     vmo->set_name("ELF image");
 #endif
     RetainPtr<Region> region = allocate_region_with_vmo(LinearAddress(), descriptor->metadata().size, vmo.copy_ref(), 0, "executable", true, false);
+    ASSERT(region);
 
     if (this != &current->process()) {
         // FIXME: Don't force-load the entire executable at once, let the on-demand pager take care of it.
