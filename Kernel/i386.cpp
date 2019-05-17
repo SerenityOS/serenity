@@ -12,7 +12,7 @@
 //#define PAGE_FAULT_DEBUG
 
 struct [[gnu::packed]] DescriptorTablePointer {
-    word size;
+    word limit;
     void* address;
 };
 
@@ -25,7 +25,7 @@ static IRQHandler** s_irq_handler;
 
 static Vector<word>* s_gdt_freelist;
 
-static word s_gdtLength;
+static word s_gdt_length;
 
 word gdt_alloc_entry()
 {
@@ -323,9 +323,8 @@ static void write_raw_gdt_entry(word selector, dword low, dword high)
     s_gdt[i].low = low;
     s_gdt[i].high = high;
 
-    if (i > s_gdtLength) {
-        s_gdtr.size = (s_gdtLength + 1) * 8;
-    }
+    if (i > s_gdt_length)
+        s_gdtr.limit = (s_gdt_length + 1) * 8 - 1;
 }
 
 void write_gdt_entry(word selector, Descriptor& descriptor)
@@ -342,23 +341,23 @@ Descriptor& get_gdt_entry(word selector)
 void flush_gdt()
 {
     s_gdtr.address = s_gdt;
-    s_gdtr.size = (s_gdtLength * 8) - 1;
-    asm("lgdt %0"::"m"(s_gdtr));
+    s_gdtr.limit = (s_gdt_length * 8) - 1;
+    asm("lgdt %0"::"m"(s_gdtr):"memory");
 }
 
 void gdt_init()
 {
     s_gdt = static_cast<Descriptor*>(kmalloc_eternal(sizeof(Descriptor) * 256));
-    s_gdtLength = 5;
+    s_gdt_length = 5;
 
     s_gdt_freelist = new Vector<word>();
     s_gdt_freelist->ensure_capacity(256);
-    for (size_t i = s_gdtLength; i < 256; ++i)
+    for (size_t i = s_gdt_length; i < 256; ++i)
         s_gdt_freelist->append(i * 8);
 
-    s_gdtLength = 256;
+    s_gdt_length = 256;
     s_gdtr.address = s_gdt;
-    s_gdtr.size = (s_gdtLength * 8) - 1;
+    s_gdtr.limit = (s_gdt_length * 8) - 1;
 
     write_raw_gdt_entry(0x0000, 0x00000000, 0x00000000);
     write_raw_gdt_entry(0x0008, 0x0000ffff, 0x00cf9a00);
@@ -424,7 +423,7 @@ void idt_init()
     s_idt = static_cast<Descriptor*>(kmalloc_eternal(sizeof(Descriptor) * 256));
 
     s_idtr.address = s_idt;
-    s_idtr.size = 0x100 * 8;
+    s_idtr.limit = 0x100 * 8 - 1;
 
     for (byte i = 0xff; i > 0x10; --i)
         register_interrupt_handler(i, unimp_trap);
