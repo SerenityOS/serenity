@@ -576,7 +576,7 @@ void Terminal::on_char(byte ch)
         }
         return;
     case '\a':
-        beep();
+        sysbeep();
         return;
     case '\t': {
         for (unsigned i = m_cursor_column; i < columns(); ++i) {
