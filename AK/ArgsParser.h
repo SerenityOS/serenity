@@ -30,7 +30,7 @@ private:
 
 class ArgsParser {
 public:
-    ArgsParser(const String& program_name, const String& prefix);
+    ArgsParser(const String& program_name);
 
     ArgsParserResult parse(const int argc, const char** argv);
 

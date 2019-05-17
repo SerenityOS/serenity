@@ -28,8 +28,8 @@ ArgsParser::Arg::Arg(const String& name, const String& value_name, const String&
     : name(name), description(description), value_name(value_name), required(required)
 {}
 
-ArgsParser::ArgsParser(const String& program_name, const String& prefix)
-    : m_program_name(program_name), m_prefix(prefix)
+ArgsParser::ArgsParser(const String& program_name)
+    : m_program_name(program_name), m_prefix("-")
 {}
 
 ArgsParserResult ArgsParser::parse(const int argc, const char** argv) 
