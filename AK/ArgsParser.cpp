@@ -115,14 +115,24 @@ bool ArgsParser::check_required_args(const ArgsParserResult& res)
     return true;
 }
 
-void ArgsParser::add_arg(const String& name, const String& description, bool required)
+void ArgsParser::add_required_arg(const String& name, const String& description)
 {
-    m_args.set(name, Arg(name, description, required));
+    m_args.set(name, Arg(name, description, true));
 }
 
-void ArgsParser::add_arg(const String& name, const String& value_name, const String& description, bool required)
+void ArgsParser::add_required_arg(const String& name, const String& value_name, const String& description)
 {
-    m_args.set(name, Arg(name, value_name, description, required));
+    m_args.set(name, Arg(name, value_name, description, true));
+}
+
+void ArgsParser::add_arg(const String& name, const String& description)
+{
+    m_args.set(name, Arg(name, description, false));
+}
+
+void ArgsParser::add_arg(const String& name, const String& value_name, const String& description)
+{
+    m_args.set(name, Arg(name, value_name, description, false));
 }
 
 String ArgsParser::get_usage() const
