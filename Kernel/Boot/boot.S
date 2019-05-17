@@ -40,6 +40,9 @@ stack_top:
 .type init, @function
 
 start:
+    cli
+    cld
+
     mov $stack_top, %esp
 
     and $-16, %esp
@@ -48,7 +51,6 @@ start:
     pushl %eax /* Multiboot header magic */
     pushl %ebx /* Multiboot header pointer */
 
-    cli
     call init
 
     pushl $exit_message
