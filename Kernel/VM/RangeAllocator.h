@@ -15,7 +15,7 @@ public:
 
     LinearAddress base() const { return m_base; }
     size_t size() const { return m_size; }
-    bool is_valid() const { return m_base.is_null(); }
+    bool is_valid() const { return !m_base.is_null(); }
 
     LinearAddress end() const { return m_base.offset(m_size); }
 
