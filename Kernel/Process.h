@@ -258,6 +258,8 @@ private:
 
     Process(String&& name, uid_t, gid_t, pid_t ppid, RingLevel, RetainPtr<Inode>&& cwd = nullptr, RetainPtr<Inode>&& executable = nullptr, TTY* = nullptr, Process* fork_parent = nullptr);
 
+    Range allocate_range(LinearAddress, size_t);
+
     int do_exec(String path, Vector<String> arguments, Vector<String> environment);
     ssize_t do_write(FileDescriptor&, const byte*, int data_size);
 
