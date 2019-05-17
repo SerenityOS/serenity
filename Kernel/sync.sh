@@ -6,7 +6,7 @@ fi
 
 if [ $(id -u) != 0 ]; then
     echo "This needs to be run as root"
-    exit
+    exit 1
 fi
 
 rm -vf _fs_contents.lock
