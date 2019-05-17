@@ -34,7 +34,7 @@ static int pid_of(const String& process_name, bool single_shot, bool omit_pid, p
 
 int main(int argc, char** argv)
 {
-    AK::ArgsParser args_parser("pidof", "-");
+    AK::ArgsParser args_parser("pidof");
 
     args_parser.add_arg("s", "Single shot - this instructs the program to only return one pid");
     args_parser.add_arg("o", "pid", "Tells pidof to omit processes with that pid. The special pid %PPID can be used to name the parent process of the pidof program.");
