@@ -7,10 +7,10 @@
 #include <AK/WeakPtr.h>
 #include <AK/Weakable.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
+#include <Kernel/VM/RangeAllocator.h>
 #include <Kernel/TTY/TTY.h>
 #include <Kernel/Syscall.h>
 #include <Kernel/UnixTypes.h>
-
 #include <Kernel/Thread.h>
 #include <Kernel/Lock.h>
 
@@ -331,6 +331,7 @@ private:
 
     RetainPtr<ProcessTracer> m_tracer;
     OwnPtr<ELFLoader> m_elf_loader;
+    RangeAllocator m_range_allocator;
 
     Lock m_big_lock { "Process" };
 };
