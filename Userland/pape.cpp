@@ -56,7 +56,7 @@ int main(int argc, char** argv)
 
     args_parser.add_arg("a", "show all wallpapers");
     args_parser.add_arg("c", "show current wallpaper");
-    args_parser.set_single_value("name");
+    args_parser.add_single_value("name");
 
     AK::ArgsParserResult args = args_parser.parse(argc, (const char**)argv);
 

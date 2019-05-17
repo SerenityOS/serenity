@@ -79,7 +79,7 @@ int main(int argc, char *argv[])
 
     args_parser.add_arg("f", "follow -- appended data is output as it is written to the file");
     args_parser.add_arg("n", "lines", "fetch the specified number of lines");
-    args_parser.set_required_single_value("file");
+    args_parser.add_required_single_value("file");
 
     AK::ArgsParserResult args = args_parser.parse(argc, (const char**)argv);
 
