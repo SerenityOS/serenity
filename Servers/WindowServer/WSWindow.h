@@ -16,7 +16,7 @@ class WSMouseEvent;
 
 class WSWindow final : public CObject, public InlineLinkedListNode<WSWindow> {
 public:
-    WSWindow(WSClientConnection&, WSWindowType, int window_id, bool modal, bool resizable);
+    WSWindow(WSClientConnection&, WSWindowType, int window_id, bool modal, bool resizable, bool fullscreen);
     WSWindow(CObject&, WSWindowType);
     virtual ~WSWindow() override;
 
@@ -31,6 +31,8 @@ public:
 
     bool is_maximized() const { return m_maximized; }
     void set_maximized(bool);
+
+    bool is_fullscreen() const { return m_fullscreen; }
 
     WSWindowFrame& frame() { return m_frame; }
     const WSWindowFrame& frame() const { return m_frame; }
@@ -63,7 +65,7 @@ public:
 
     bool is_modal() const { return m_modal; }
 
-    bool is_resizable() const { return m_resizable; }
+    bool is_resizable() const { return m_resizable && !m_fullscreen; }
 
     Rect rect() const { return m_rect; }
     void set_rect(const Rect&);
@@ -155,6 +157,7 @@ private:
     bool m_listens_to_wm_events { false };
     bool m_minimized { false };
     bool m_maximized { false };
+    bool m_fullscreen { false };
     RetainPtr<GraphicsBitmap> m_backing_store;
     RetainPtr<GraphicsBitmap> m_last_backing_store;
     int m_window_id { -1 };

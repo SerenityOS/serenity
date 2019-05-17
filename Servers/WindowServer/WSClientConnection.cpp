@@ -413,6 +413,10 @@ void WSClientConnection::handle_request(const WSAPISetWindowRectRequest& request
         return;
     }
     auto& window = *(*it).value;
+    if (window.is_fullscreen()) {
+        dbgprintf("WSClientConnection: Ignoring SetWindowRect request for fullscreen window\n");
+        return;
+    }
     window.set_rect(request.rect());
     window.request_update(request.rect());
 }
@@ -474,11 +478,12 @@ void WSClientConnection::handle_request(const WSAPIGetClipboardContentsRequest&)
 void WSClientConnection::handle_request(const WSAPICreateWindowRequest& request)
 {
     int window_id = m_next_window_id++;
-    auto window = make<WSWindow>(*this, request.window_type(), window_id, request.is_modal(), request.is_resizable());
+    auto window = make<WSWindow>(*this, request.window_type(), window_id, request.is_modal(), request.is_resizable(), request.is_fullscreen());
     window->set_background_color(request.background_color());
     window->set_has_alpha_channel(request.has_alpha_channel());
     window->set_title(request.title());
-    window->set_rect(request.rect());
+    if (!request.is_fullscreen())
+        window->set_rect(request.rect());
     window->set_opacity(request.opacity());
     window->set_size_increment(request.size_increment());
     window->set_base_size(request.base_size());

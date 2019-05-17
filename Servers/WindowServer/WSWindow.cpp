@@ -28,11 +28,12 @@ WSWindow::WSWindow(CObject& internal_owner, WSWindowType type)
     WSWindowManager::the().add_window(*this);
 }
 
-WSWindow::WSWindow(WSClientConnection& client, WSWindowType window_type, int window_id, bool modal, bool resizable)
+WSWindow::WSWindow(WSClientConnection& client, WSWindowType window_type, int window_id, bool modal, bool resizable, bool fullscreen)
     : m_client(&client)
     , m_type(window_type)
     , m_modal(modal)
     , m_resizable(resizable)
+    , m_fullscreen(fullscreen)
     , m_window_id(window_id)
     , m_icon(default_window_icon())
     , m_icon_path(default_window_icon_path())

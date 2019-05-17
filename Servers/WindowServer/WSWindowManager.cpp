@@ -311,6 +311,12 @@ void WSWindowManager::add_window(WSWindow& window)
 {
     m_windows.set(&window);
     m_windows_in_order.append(&window);
+
+    if (window.is_fullscreen()) {
+        WSEventLoop::the().post_event(window, make<WSResizeEvent>(window.rect(), m_screen_rect));
+        window.set_rect(m_screen_rect);
+    }
+
     set_active_window(&window);
     if (m_switcher.is_visible() && window.type() != WSWindowType::WindowSwitcher)
         m_switcher.refresh();
@@ -792,7 +798,7 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event, WSWindow*& hovere
         // First check if we should initiate a drag or resize (Logo+LMB or Logo+RMB).
         // In those cases, the event is swallowed by the window manager.
         if (window.type() == WSWindowType::Normal) {
-            if (m_keyboard_modifiers == Mod_Logo && event.type() == WSEvent::MouseDown && event.button() == MouseButton::Left) {
+            if (!window.is_fullscreen() && m_keyboard_modifiers == Mod_Logo && event.type() == WSEvent::MouseDown && event.button() == MouseButton::Left) {
                 hovered_window = &window;
                 start_window_drag(window, event);
                 return IterationDecision::Abort;
@@ -913,7 +919,7 @@ void WSWindowManager::compose()
             m_back_painter->blit(dirty_rect.location(), *m_wallpaper, dirty_rect);
     }
 
-    for_each_visible_window_from_back_to_front([&] (WSWindow& window) {
+    auto compose_window = [&] (WSWindow& window) -> IterationDecision {
         if (!any_dirty_rect_intersects_window(window))
             return IterationDecision::Continue;
         PainterStateSaver saver(*m_back_painter);
@@ -926,7 +932,8 @@ void WSWindowManager::compose()
             m_back_painter->add_clip_rect(dirty_rect);
             if (!backing_store)
                 m_back_painter->fill_rect(dirty_rect, window.background_color());
-            window.frame().paint(*m_back_painter);
+            if (!window.is_fullscreen())
+                window.frame().paint(*m_back_painter);
             if (!backing_store)
                 continue;
             Rect dirty_rect_in_window_coordinates = Rect::intersection(dirty_rect, window.rect());
@@ -949,10 +956,19 @@ void WSWindowManager::compose()
             }
         }
         return IterationDecision::Continue;
-    });
+    };
 
-    draw_geometry_label();
-    draw_menubar();
+    if (auto* fullscreen_window = active_fullscreen_window()) {
+        compose_window(*fullscreen_window);
+    } else {
+        for_each_visible_window_from_back_to_front([&] (WSWindow& window) {
+            return compose_window(window);
+        });
+
+        draw_geometry_label();
+        draw_menubar();
+    }
+
     draw_cursor();
 
     if (m_flash_flush) {
@@ -977,6 +993,8 @@ void WSWindowManager::invalidate_cursor()
 
 Rect WSWindowManager::menubar_rect() const
 {
+    if (active_fullscreen_window())
+        return { };
     return { 0, 0, m_screen_rect.width(), 18 };
 }
 
