@@ -374,6 +374,12 @@ void gdt_init()
         :: "a"(0x10)
         : "memory"
     );
+
+    // Make sure CS points to the kernel code descriptor.
+    asm volatile(
+        "ljmpl $0x8, $sanity\n"
+        "sanity:\n"
+    );
 }
 
 static void unimp_trap()
