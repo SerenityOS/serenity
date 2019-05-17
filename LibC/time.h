@@ -32,7 +32,10 @@ time_t time(time_t*);
 char* ctime(const time_t*);
 void tzset();
 char *asctime(const struct tm*);
+
+#define CLOCKS_PER_SEC 1000
 clock_t clock();
+
 double difftime(time_t, time_t);
 size_t strftime(char* s, size_t max, const char* format, const struct tm*);
 

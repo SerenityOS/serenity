@@ -1,5 +1,6 @@
 #include <time.h>
 #include <sys/time.h>
+#include <sys/times.h>
 #include <errno.h>
 #include <assert.h>
 #include <Kernel/Syscall.h>
@@ -108,6 +109,13 @@ int daylight;
 void tzset()
 {
     ASSERT_NOT_REACHED();
+}
+
+clock_t clock()
+{
+    struct tms tms;
+    times(&tms);
+    return tms.tms_utime + tms.tms_stime;
 }
 
 }
