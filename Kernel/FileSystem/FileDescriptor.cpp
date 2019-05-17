@@ -346,6 +346,8 @@ KResultOr<Region*> FileDescriptor::mmap(Process& process, LinearAddress laddr, s
     // FIXME: Implement mapping at a client-specified address. Most of the support is already in plcae.
     ASSERT(laddr.as_ptr() == nullptr);
     auto* region = process.allocate_file_backed_region(LinearAddress(), size, inode(), move(region_name), prot & PROT_READ, prot & PROT_WRITE);
+    if (!region)
+        return KResult(-ENOMEM);
     region->page_in();
     return region;
 }
