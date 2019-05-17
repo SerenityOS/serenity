@@ -46,8 +46,8 @@ ln -s /proc/self/fd/1 mnt/dev/stdout
 ln -s /proc/self/fd/2 mnt/dev/stderr
 cp -vR ../Base/* mnt/
 cp -vR ../Root/* mnt/
-mkdir mnt/home/anon
-mkdir mnt/home/nona
+mkdir -vp mnt/home/anon
+mkdir -vp mnt/home/nona
 cp ../ReadMe.md mnt/home/anon/
 chown -vR 100:100 mnt/home/anon
 chown -vR 200:200 mnt/home/nona
