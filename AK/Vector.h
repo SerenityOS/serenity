@@ -167,6 +167,20 @@ public:
         new (slot(index)) T(move(value));
     }
 
+    void insert(int index, const T& value)
+    {
+        ASSERT(index <= size());
+        if (index == size())
+            return append(value);
+        grow_capacity(size() + 1);
+        ++m_size;
+        for (int i = size() - 1; i > index; --i) {
+            new (slot(i)) T(move(at(i - 1)));
+            at(i - 1).~T();
+        }
+        new (slot(index)) T(value);
+    }
+
     Vector& operator=(const Vector& other)
     {
         if (this != &other) {
