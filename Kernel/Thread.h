@@ -101,7 +101,7 @@ public:
     void set_ticks_left(dword t) { m_ticks_left = t; }
     dword ticks_left() const { return m_ticks_left; }
 
-    dword kernel_stack_base() const { return m_kernel_stack_region->laddr().get(); }
+    dword kernel_stack_base() const { return m_kernel_stack_base; }
     dword kernel_stack_for_signal_handler_base() const { return m_kernel_stack_for_signal_handler_region ? m_kernel_stack_for_signal_handler_region->laddr().get() : 0; }
 
     void set_selector(word s) { m_far_ptr.selector = s; }
@@ -145,6 +145,7 @@ private:
     dword m_times_scheduled { 0 };
     dword m_pending_signals { 0 };
     dword m_signal_mask { 0 };
+    dword m_kernel_stack_base { 0 };
     RetainPtr<Region> m_kernel_stack_region;
     RetainPtr<Region> m_kernel_stack_for_signal_handler_region;
     pid_t m_waitee_pid { -1 };
