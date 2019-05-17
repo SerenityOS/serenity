@@ -1,5 +1,4 @@
 #include <AK/Types.h>
-#include "kmalloc.h"
 #include "i386.h"
 #include "Assertions.h"
 #include "Process.h"
@@ -18,10 +17,10 @@ struct [[gnu::packed]] DescriptorTablePointer {
 
 static DescriptorTablePointer s_idtr;
 static DescriptorTablePointer s_gdtr;
-static Descriptor* s_idt;
-static Descriptor* s_gdt;
+static Descriptor s_idt[256];
+static Descriptor s_gdt[256];
 
-static IRQHandler** s_irq_handler;
+static IRQHandler* s_irq_handler[16];
 
 static Vector<word>* s_gdt_freelist;
 
@@ -347,7 +346,6 @@ void flush_gdt()
 
 void gdt_init()
 {
-    s_gdt = static_cast<Descriptor*>(kmalloc_eternal(sizeof(Descriptor) * 256));
     s_gdt_length = 5;
 
     s_gdt_freelist = new Vector<word>();
@@ -430,8 +428,6 @@ asm(
 
 void idt_init()
 {
-    s_idt = static_cast<Descriptor*>(kmalloc_eternal(sizeof(Descriptor) * 256));
-
     s_idtr.address = s_idt;
     s_idtr.limit = 0x100 * 8 - 1;
 
@@ -458,7 +454,6 @@ void idt_init()
 
     register_interrupt_handler(0x57, irq7_handler);
 
-    s_irq_handler = static_cast<IRQHandler**>(kmalloc_eternal(sizeof(IRQHandler*) * 16));
     for (byte i = 0; i < 16; ++i) {
         s_irq_handler[i] = nullptr;
     }
