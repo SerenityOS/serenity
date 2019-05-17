@@ -23,8 +23,10 @@ void GInputBox::build()
     set_main_widget(widget);
 
     int text_width = widget->font().width(m_prompt);
+    int title_width = widget->font().width(title()) + 24 /* icon, plus a little padding -- not perfect */;
+    int max_width = AK::max(text_width, title_width);
 
-    set_rect(x(), y(), text_width + 80, 80);
+    set_rect(x(), y(), max_width + 80, 80);
 
     widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
     widget->set_fill_with_background_color(true);
