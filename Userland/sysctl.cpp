@@ -107,7 +107,7 @@ int main(int argc, char** argv)
     AK::ArgsParser args_parser("sysctl");
 
     args_parser.add_arg("a", "show all variables");
-    args_parser.set_single_value("variable=[value]");
+    args_parser.add_single_value("variable=[value]");
 
     AK::ArgsParserResult args = args_parser.parse(argc, (const char**)argv);
 

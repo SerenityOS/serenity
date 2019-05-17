@@ -113,8 +113,15 @@ bool ArgsParser::check_required_args(const ArgsParserResult& res)
         }
     }
 
-    if (m_single_value_required) {
-        if (res.m_single_values.size() == 0)
+    int required_arguments = 0;
+    for (const auto& a : m_single_args) {
+        if (a.required) {
+            required_arguments++;
+        }
+    }
+
+    if (required_arguments != 0) {
+        if (res.m_single_values.size() < required_arguments)
             return false;
     }
 
@@ -141,16 +148,18 @@ void ArgsParser::add_arg(const String& name, const String& value_name, const Str
     m_args.set(name, Arg(name, value_name, description, false));
 }
 
-void ArgsParser::set_single_value(const String& name)
+void ArgsParser::add_single_value(const String& name)
 {
-    m_single_value_name = name;
-    m_single_value_required = false;
+    m_single_args.append(SingleArg{name, false});
 }
 
-void ArgsParser::set_required_single_value(const String& name)
+void ArgsParser::add_required_single_value(const String& name)
 {
-    m_single_value_name = name;
-    m_single_value_required = true;
+    if (m_single_args.size() != 0) {
+        // adding required arguments after non-required arguments would be nonsensical
+        ASSERT(m_single_args.last().required);
+    }
+    m_single_args.append(SingleArg{name, true});
 }
 
 String ArgsParser::get_usage() const
@@ -181,18 +190,18 @@ String ArgsParser::get_usage() const
             sb.append("] ");
     }
 
-    if (m_single_value_name.length()) {
-        if (m_single_value_required)
+    for (auto& arg : m_single_args) {
+        if (arg.required)
             sb.append("<");
         else
             sb.append("[");
 
-        sb.append(m_single_value_name);
+        sb.append(arg.name);
 
-        if (m_single_value_required)
-            sb.append(">");
+        if (arg.required)
+            sb.append("> ");
         else
-            sb.append("]");
+            sb.append("] ");
     }
 
     sb.append("\n");
