@@ -12,7 +12,7 @@ elif [ "$1" = "qn" ]; then
     # ./run qn: qemu without network
     $SERENITY_QEMU_BIN -s -m $ram_size \
         $SERENITY_EXTRA_QEMU_ARGS \
-        -d cpu_reset \
+        -d cpu_reset,guest_errors \
         -device e1000 \
         -kernel kernel \
         -hda _fs_contents \
@@ -21,7 +21,7 @@ elif [ "$1" = "qtap" ]; then
     # ./run qtap: qemu with tap
     sudo $SERENITY_QEMU_BIN -s -m $ram_size \
         $SERENITY_EXTRA_QEMU_ARGS \
-        -d cpu_reset \
+        -d cpu_reset,guest_errors \
         -object filter-dump,id=hue,netdev=br0,file=e1000.pcap \
         -netdev tap,ifname=tap0,id=br0 \
         -device e1000,netdev=br0 \
@@ -32,7 +32,7 @@ else
     # ./run: qemu with user networking
     $SERENITY_QEMU_BIN -s -m $ram_size \
         $SERENITY_EXTRA_QEMU_ARGS \
-        -d cpu_reset \
+        -d cpu_reset,guest_errors \
         -object filter-dump,id=hue,netdev=breh,file=e1000.pcap \
         -netdev user,id=breh,hostfwd=tcp:127.0.0.1:8888-192.168.5.2:8888 \
         -device e1000,netdev=breh \
