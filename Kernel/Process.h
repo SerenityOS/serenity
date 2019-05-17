@@ -309,9 +309,6 @@ private:
 
     Vector<Retained<Region>> m_regions;
 
-    // FIXME: Implement some kind of ASLR?
-    LinearAddress m_next_region;
-
     LinearAddress m_return_to_ring3_from_signal_trampoline;
     LinearAddress m_return_to_ring0_from_signal_trampoline;
 
