@@ -2317,7 +2317,7 @@ void SharedBuffer::destroy_if_unused()
 #ifdef SHARED_BUFFER_DEBUG
         kprintf("Destroying unused SharedBuffer{%p} id: %d (pid1: %d, pid2: %d)\n", this, m_shared_buffer_id, m_pid1, m_pid2);
 #endif
-        size_t count_before = shared_buffers().resource().size();
+        auto count_before = shared_buffers().resource().size();
         shared_buffers().resource().remove(m_shared_buffer_id);
         ASSERT(count_before != shared_buffers().resource().size());
     }
