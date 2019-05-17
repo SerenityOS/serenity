@@ -366,6 +366,16 @@ void gdt_init()
     write_raw_gdt_entry(0x0020, 0x0000ffff, 0x00cff200);
 
     flush_gdt();
+
+    asm volatile(
+        "mov %%ax, %%ds\n"
+        "mov %%ax, %%es\n"
+        "mov %%ax, %%fs\n"
+        "mov %%ax, %%gs\n"
+        "mov %%ax, %%ss\n"
+        :: "a"(0x10)
+        : "memory"
+    );
 }
 
 static void unimp_trap()
