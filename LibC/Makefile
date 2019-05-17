@@ -7,8 +7,7 @@ AK_OBJS = \
     ../AK/StringBuilder.o \
     ../AK/FileSystemPath.o \
     ../AK/StdLibExtras.o \
-    ../AK/MappedFile.o \
-    ../AK/ArgsParser.o
+    ../AK/MappedFile.o
 
 LIBC_OBJS = \
        SharedBuffer.o \

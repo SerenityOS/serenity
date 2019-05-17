@@ -1,6 +1,7 @@
 include ../Makefile.common
 
 OBJS = \
+    CArgsParser.o \
     CIODevice.o \
     CFile.o \
     CSocket.o \

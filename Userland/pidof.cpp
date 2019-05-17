@@ -3,9 +3,9 @@
 #include <signal.h>
 #include <stdlib.h>
 #include <LibCore/CProcessStatisticsReader.h>
+#include <LibCore/CArgsParser.h>
 #include <AK/AKString.h>
 #include <AK/Vector.h>
-#include <AK/ArgsParser.h>
 #include <AK/HashMap.h>
 
 static int pid_of(const String& process_name, bool single_shot, bool omit_pid, pid_t pid)
@@ -34,12 +34,12 @@ static int pid_of(const String& process_name, bool single_shot, bool omit_pid, p
 
 int main(int argc, char** argv)
 {
-    AK::ArgsParser args_parser("pidof");
+    CArgsParser args_parser("pidof");
 
     args_parser.add_arg("s", "Single shot - this instructs the program to only return one pid");
     args_parser.add_arg("o", "pid", "Tells pidof to omit processes with that pid. The special pid %PPID can be used to name the parent process of the pidof program.");
 
-    AK::ArgsParserResult args = args_parser.parse(argc, (const char**)argv);
+    CArgsParserResult args = args_parser.parse(argc, (const char**)argv);
     
     bool s_arg = args.is_present("s");
     bool o_arg = args.is_present("o");

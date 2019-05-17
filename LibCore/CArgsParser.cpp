@@ -1,40 +1,38 @@
-#include "ArgsParser.h"
-#include "StringBuilder.h"
+#include "CArgsParser.h"
+#include <AK/StringBuilder.h>
 
 #include <stdio.h>
 
-namespace AK {
-
-bool ArgsParserResult::is_present(const String& arg_name) const
+bool CArgsParserResult::is_present(const String& arg_name) const
 {
     return m_args.contains(arg_name);
 }
 
-String ArgsParserResult::get(const String& arg_name) const
+String CArgsParserResult::get(const String& arg_name) const
 {
     return m_args.get(arg_name);
 }
 
-const Vector<String>& ArgsParserResult::get_single_values() const
+const Vector<String>& CArgsParserResult::get_single_values() const
 {
     return m_single_values;
 }
 
-ArgsParser::Arg::Arg(const String& name, const String& description, bool required)
+CArgsParser::Arg::Arg(const String& name, const String& description, bool required)
     : name(name), description(description), required(required)
 {}
 
-ArgsParser::Arg::Arg(const String& name, const String& value_name, const String& description, bool required)
+CArgsParser::Arg::Arg(const String& name, const String& value_name, const String& description, bool required)
     : name(name), description(description), value_name(value_name), required(required)
 {}
 
-ArgsParser::ArgsParser(const String& program_name)
+CArgsParser::CArgsParser(const String& program_name)
     : m_program_name(program_name), m_prefix("-")
 {}
 
-ArgsParserResult ArgsParser::parse(const int argc, const char** argv) 
+CArgsParserResult CArgsParser::parse(const int argc, const char** argv) 
 {
-    ArgsParserResult res;
+    CArgsParserResult res;
 
     // We should have at least one parameter
     if (argc < 2)
@@ -50,7 +48,7 @@ ArgsParserResult ArgsParser::parse(const int argc, const char** argv)
     return res;
 }
 
-int ArgsParser::parse_next_param(const int index, const char** argv, const int params_left, ArgsParserResult& res) 
+int CArgsParser::parse_next_param(const int index, const char** argv, const int params_left, CArgsParserResult& res) 
 {
     if (params_left == 0)
         return 0;
@@ -99,12 +97,12 @@ int ArgsParser::parse_next_param(const int index, const char** argv, const int p
     return parse_next_param(index + 1, argv, params_left - 1, res);
 }
 
-bool ArgsParser::is_param_valid(const String& param_name)
+bool CArgsParser::is_param_valid(const String& param_name)
 {
     return param_name.substring(0, m_prefix.length()) == m_prefix;
 }
 
-bool ArgsParser::check_required_args(const ArgsParserResult& res)
+bool CArgsParser::check_required_args(const CArgsParserResult& res)
 {
     for (auto& it : m_args) {
         if (it.value.required) {
@@ -128,32 +126,32 @@ bool ArgsParser::check_required_args(const ArgsParserResult& res)
     return true;
 }
 
-void ArgsParser::add_required_arg(const String& name, const String& description)
+void CArgsParser::add_required_arg(const String& name, const String& description)
 {
     m_args.set(name, Arg(name, description, true));
 }
 
-void ArgsParser::add_required_arg(const String& name, const String& value_name, const String& description)
+void CArgsParser::add_required_arg(const String& name, const String& value_name, const String& description)
 {
     m_args.set(name, Arg(name, value_name, description, true));
 }
 
-void ArgsParser::add_arg(const String& name, const String& description)
+void CArgsParser::add_arg(const String& name, const String& description)
 {
     m_args.set(name, Arg(name, description, false));
 }
 
-void ArgsParser::add_arg(const String& name, const String& value_name, const String& description)
+void CArgsParser::add_arg(const String& name, const String& value_name, const String& description)
 {
     m_args.set(name, Arg(name, value_name, description, false));
 }
 
-void ArgsParser::add_single_value(const String& name)
+void CArgsParser::add_single_value(const String& name)
 {
     m_single_args.append(SingleArg{name, false});
 }
 
-void ArgsParser::add_required_single_value(const String& name)
+void CArgsParser::add_required_single_value(const String& name)
 {
     if (m_single_args.size() != 0) {
         // adding required arguments after non-required arguments would be nonsensical
@@ -162,7 +160,7 @@ void ArgsParser::add_required_single_value(const String& name)
     m_single_args.append(SingleArg{name, true});
 }
 
-String ArgsParser::get_usage() const
+String CArgsParser::get_usage() const
 {
     StringBuilder sb;
 
@@ -224,9 +222,8 @@ String ArgsParser::get_usage() const
     return sb.to_string();
 }
 
-void ArgsParser::print_usage() const
+void CArgsParser::print_usage() const
 {
     printf("%s\n", get_usage().characters());
 }
 
-}
