@@ -6,6 +6,7 @@
 #include <SharedGraphics/Painter.h>
 #include <SharedGraphics/CharacterBitmap.h>
 #include <AK/StdLibExtras.h>
+#include <AK/Vector.h>
 #include <errno.h>
 #include "WSMenu.h"
 #include "WSMenuBar.h"
@@ -92,11 +93,32 @@ WSWindowManager::WSWindowManager()
 
     m_menu_selection_color = Color::from_rgb(0x84351a);
 
+    struct AppMenuItem {
+        const char *binary_name;
+        const char *description;
+    };
+
+    Vector<AppMenuItem> apps;
+    apps.append({ "/bin/Terminal", "Open Terminal..." });
+    apps.append({ "/bin/FontEditor", "Open FontEditor..." });
+    apps.append({ "/bin/TextEditor", "Open TextEditor..." });
+    apps.append({ "/bin/VisualBuilder", "Open VisualBuilder..." });
+    apps.append({ "/bin/IRCClient", "Open IRCClient..." });
+    apps.append({ "/bin/FileManager", "Open FileManager..." });
+    apps.append({ "/bin/ProcessManager", "Open ProcessManager..." });
+    apps.append({ "/bin/HelloWorld", "Open HelloWorld..." });
+    apps.append({ "/bin/Minesweeper", "Play Minesweeper..." });
+    apps.append({ "/bin/Snake", "Play Snake..." });
+
     {
         byte system_menu_name[] = { 0xf8, 0 };
         m_system_menu = make<WSMenu>(nullptr, -1, String((const char*)system_menu_name));
-        m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, 1, "Open Terminal..."));
-        m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, 2, "Open ProcessManager..."));
+
+        int appIndex = 1;
+        for (const auto& app : apps) {
+            m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, appIndex++, app.description));
+        }
+
         m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, WSMenuItem::Separator));
         m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, 100, "640x480"));
         m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, 101, "800x600"));
@@ -106,20 +128,13 @@ WSWindowManager::WSWindowManager()
         m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, 105, "1920x1080"));
         m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, WSMenuItem::Separator));
         m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, 200, "About..."));
-        m_system_menu->on_item_activation = [this] (WSMenuItem& item) {
-            if (item.identifier() == 1) {
+        m_system_menu->on_item_activation = [this, apps] (WSMenuItem& item) {
+            if (item.identifier() >= 1 && item.identifier() <= 1 + apps.size() - 1) {
                 if (fork() == 0) {
-                    execl("/bin/Terminal", "/bin/Terminal", nullptr);
+                    const auto& bin = apps[item.identifier() -1].binary_name;
+                    execl(bin, bin, nullptr);
                     ASSERT_NOT_REACHED();
                 }
-                return;
-            }
-            if (item.identifier() == 2) {
-                if (fork() == 0) {
-                    execl("/bin/ProcessManager", "/bin/ProcessManager", nullptr);
-                    ASSERT_NOT_REACHED();
-                }
-                return;
             }
             switch (item.identifier()) {
             case 100: set_resolution(640, 480); break;
