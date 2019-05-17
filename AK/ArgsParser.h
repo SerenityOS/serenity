@@ -34,8 +34,10 @@ public:
 
     ArgsParserResult parse(const int argc, const char** argv);
 
-    void add_arg(const String& name, const String& description, bool required);
-    void add_arg(const String& name, const String& value_name, const String& description, bool required);
+    void add_required_arg(const String& name, const String& description);
+    void add_required_arg(const String& name, const String& value_name, const String& description);
+    void add_arg(const String& name, const String& description);
+    void add_arg(const String& name, const String& value_name, const String& description);
     String get_usage() const;
     void print_usage() const;
 
