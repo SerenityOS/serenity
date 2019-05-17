@@ -33,6 +33,7 @@ build_targets="$build_targets ../Games/Snake"
 build_targets="$build_targets ../Shell"
 build_targets="$build_targets ../Demos/HelloWorld"
 build_targets="$build_targets ../Demos/RetroFetch"
+build_targets="$build_targets ." # the kernel
 
 for targ in $build_targets; do
     echo "Building $targ"
@@ -45,7 +46,9 @@ for targ in $build_targets; do
     fi
 done
 
-$make_cmd clean
-$make_cmd
+# has no need to build separately, but install headers.
+(cd ../SharedGraphics && ./install.sh)
+(cd ../AK && ./install.sh)
+
 sudo ./sync.sh
 
