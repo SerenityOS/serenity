@@ -3,6 +3,7 @@
 #include <AK/AKString.h>
 #include <AK/Bitmap.h>
 #include <Kernel/VM/PageDirectory.h>
+#include <Kernel/VM/RangeAllocator.h>
 
 class Inode;
 class VMObject;
@@ -10,13 +11,13 @@ class VMObject;
 class Region : public Retainable<Region> {
     friend class MemoryManager;
 public:
-    Region(LinearAddress, size_t, String&&, bool r, bool w, bool cow = false);
-    Region(LinearAddress, size_t, Retained<VMObject>&&, size_t offset_in_vmo, String&&, bool r, bool w, bool cow = false);
-    Region(LinearAddress, size_t, RetainPtr<Inode>&&, String&&, bool r, bool w);
+    Region(const Range&, String&&, bool r, bool w, bool cow = false);
+    Region(const Range&, Retained<VMObject>&&, size_t offset_in_vmo, String&&, bool r, bool w, bool cow = false);
+    Region(const Range&, RetainPtr<Inode>&&, String&&, bool r, bool w);
     ~Region();
 
-    LinearAddress laddr() const { return m_laddr; }
-    size_t size() const { return m_size; }
+    LinearAddress laddr() const { return m_range.base(); }
+    size_t size() const { return m_range.size(); }
     bool is_readable() const { return m_readable; }
     bool is_writable() const { return m_writable; }
     String name() const { return m_name; }
@@ -30,14 +31,15 @@ public:
     void set_shared(bool shared) { m_shared = shared; }
 
     Retained<Region> clone();
+
     bool contains(LinearAddress laddr) const
     {
-        return laddr >= m_laddr && laddr < m_laddr.offset(size());
+        return m_range.contains(laddr);
     }
 
     unsigned page_index_from_address(LinearAddress laddr) const
     {
-        return (laddr - m_laddr).get() / PAGE_SIZE;
+        return (laddr - m_range.base()).get() / PAGE_SIZE;
     }
 
     size_t first_page_index() const
@@ -52,7 +54,7 @@ public:
 
     size_t page_count() const
     {
-        return m_size / PAGE_SIZE;
+        return size() / PAGE_SIZE;
     }
 
     bool page_in();
@@ -82,8 +84,7 @@ public:
 
 private:
     RetainPtr<PageDirectory> m_page_directory;
-    LinearAddress m_laddr;
-    size_t m_size { 0 };
+    Range m_range;
     size_t m_offset_in_vmo { 0 };
     Retained<VMObject> m_vmo;
     String m_name;

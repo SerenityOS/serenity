@@ -17,6 +17,8 @@ public:
     size_t size() const { return m_size; }
     bool is_valid() const { return !m_base.is_null(); }
 
+    bool contains(LinearAddress laddr) const { return laddr >= base() && laddr < end(); }
+
     LinearAddress end() const { return m_base.offset(m_size); }
 
     bool operator==(const Range& other) const

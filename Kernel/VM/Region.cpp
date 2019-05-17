@@ -4,10 +4,9 @@
 #include <Kernel/Process.h>
 #include <Kernel/Thread.h>
 
-Region::Region(LinearAddress a, size_t s, String&& n, bool r, bool w, bool cow)
-    : m_laddr(a)
-    , m_size(s)
-    , m_vmo(VMObject::create_anonymous(s))
+Region::Region(const Range& range, String&& n, bool r, bool w, bool cow)
+    : m_range(range)
+    , m_vmo(VMObject::create_anonymous(size()))
     , m_name(move(n))
     , m_readable(r)
     , m_writable(w)
@@ -17,9 +16,8 @@ Region::Region(LinearAddress a, size_t s, String&& n, bool r, bool w, bool cow)
     MM.register_region(*this);
 }
 
-Region::Region(LinearAddress a, size_t s, RetainPtr<Inode>&& inode, String&& n, bool r, bool w)
-    : m_laddr(a)
-    , m_size(s)
+Region::Region(const Range& range, RetainPtr<Inode>&& inode, String&& n, bool r, bool w)
+    : m_range(range)
     , m_vmo(VMObject::create_file_backed(move(inode)))
     , m_name(move(n))
     , m_readable(r)
@@ -29,9 +27,8 @@ Region::Region(LinearAddress a, size_t s, RetainPtr<Inode>&& inode, String&& n, 
     MM.register_region(*this);
 }
 
-Region::Region(LinearAddress a, size_t s, Retained<VMObject>&& vmo, size_t offset_in_vmo, String&& n, bool r, bool w, bool cow)
-    : m_laddr(a)
-    , m_size(s)
+Region::Region(const Range& range, Retained<VMObject>&& vmo, size_t offset_in_vmo, String&& n, bool r, bool w, bool cow)
+    : m_range(range)
     , m_offset_in_vmo(offset_in_vmo)
     , m_vmo(move(vmo))
     , m_name(move(n))
@@ -83,7 +80,7 @@ Retained<Region> Region::clone()
                   laddr().get());
 #endif
         // Create a new region backed by the same VMObject.
-        return adopt(*new Region(laddr(), size(), m_vmo.copy_ref(), m_offset_in_vmo, String(m_name), m_readable, m_writable));
+        return adopt(*new Region(m_range, m_vmo.copy_ref(), m_offset_in_vmo, String(m_name), m_readable, m_writable));
     }
 
 #ifdef MM_DEBUG
@@ -96,7 +93,7 @@ Retained<Region> Region::clone()
     // Set up a COW region. The parent (this) region becomes COW as well!
     m_cow_map.fill(true);
     MM.remap_region(current->process().page_directory(), *this);
-    return adopt(*new Region(laddr(), size(), m_vmo->clone(), m_offset_in_vmo, String(m_name), m_readable, m_writable, true));
+    return adopt(*new Region(m_range, m_vmo->clone(), m_offset_in_vmo, String(m_name), m_readable, m_writable, true));
 }
 
 int Region::commit()
