@@ -2,17 +2,17 @@
 #include <errno.h>
 #include <unistd.h>
 #include <stdlib.h>
-#include <AK/ArgsParser.h>
+#include <LibCore/CArgsParser.h>
 
 int main(int argc, char** argv)
 {
-    AK::ArgsParser args_parser("ln");
+    CArgsParser args_parser("ln");
 
     args_parser.add_arg("s", "create a symlink");
     args_parser.add_required_single_value("target");
     args_parser.add_required_single_value("link-path");
 
-    AK::ArgsParserResult args = args_parser.parse(argc, (const char**)argv);
+    CArgsParserResult args = args_parser.parse(argc, (const char**)argv);
     Vector<String> values = args.get_single_values();
     if (values.size() == 0) {
         args_parser.print_usage();

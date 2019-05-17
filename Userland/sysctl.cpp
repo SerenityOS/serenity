@@ -4,10 +4,10 @@
 #include <errno.h>
 #include <string.h>
 #include <fcntl.h>
-#include <AK/ArgsParser.h>
 #include <AK/AKString.h>
 #include <AK/StringBuilder.h>
 #include <AK/Vector.h>
+#include <LibCore/CArgsParser.h>
 
 static String read_var(const String& name)
 {
@@ -104,12 +104,12 @@ static int handle_var(const String& var)
 
 int main(int argc, char** argv)
 {
-    AK::ArgsParser args_parser("sysctl");
+    CArgsParser args_parser("sysctl");
 
     args_parser.add_arg("a", "show all variables");
     args_parser.add_single_value("variable=[value]");
 
-    AK::ArgsParserResult args = args_parser.parse(argc, (const char**)argv);
+    CArgsParserResult args = args_parser.parse(argc, (const char**)argv);
 
     if (args.is_present("a")) {
         return handle_show_all();
