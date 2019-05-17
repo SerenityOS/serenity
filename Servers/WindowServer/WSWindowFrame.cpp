@@ -254,6 +254,8 @@ void WSWindowFrame::notify_window_rect_changed(const Rect& old_rect, const Rect&
 
 void WSWindowFrame::on_mouse_event(const WSMouseEvent& event)
 {
+    ASSERT(!m_window.is_fullscreen());
+
     auto& wm = WSWindowManager::the();
     if (m_window.type() != WSWindowType::Normal)
         return;

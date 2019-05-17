@@ -30,6 +30,9 @@ public:
     bool is_modal() const { return m_modal; }
     void set_modal(bool);
 
+    bool is_fullscreen() const { return m_fullscreen; }
+    void set_fullscreen(bool fullscreen) { m_fullscreen = fullscreen; }
+
     bool is_resizable() const { return m_resizable; }
     void set_resizable(bool resizable) { m_resizable = resizable; }
 
@@ -150,4 +153,5 @@ private:
     bool m_double_buffering_enabled { true };
     bool m_modal { false };
     bool m_resizable { true };
+    bool m_fullscreen { false };
 };
