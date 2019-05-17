@@ -38,6 +38,8 @@ public:
     void add_required_arg(const String& name, const String& value_name, const String& description);
     void add_arg(const String& name, const String& description);
     void add_arg(const String& name, const String& value_name, const String& description);
+    void set_single_value(const String& name);
+    void set_required_single_value(const String& name);
     String get_usage() const;
     void print_usage() const;
 
@@ -59,6 +61,8 @@ private:
 
     String m_program_name;
     String m_prefix;
+    String m_single_value_name;
+    bool m_single_value_required = false;
     HashMap<String, Arg> m_args;
 };
 
