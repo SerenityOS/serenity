@@ -79,7 +79,7 @@ Region* Process::allocate_region(LinearAddress laddr, size_t size, String&& name
     else
         range = m_range_allocator.allocate_specific(laddr, size);
 
-    m_regions.append(adopt(*new Region(range.base(), range.size(), move(name), is_readable, is_writable)));
+    m_regions.append(adopt(*new Region(range, move(name), is_readable, is_writable)));
     MM.map_region(*this, *m_regions.last());
     if (commit)
         m_regions.last()->commit();
@@ -97,7 +97,7 @@ Region* Process::allocate_file_backed_region(LinearAddress laddr, size_t size, R
     else
         range = m_range_allocator.allocate_specific(laddr, size);
 
-    m_regions.append(adopt(*new Region(range.base(), range.size(), move(inode), move(name), is_readable, is_writable)));
+    m_regions.append(adopt(*new Region(range, move(inode), move(name), is_readable, is_writable)));
     MM.map_region(*this, *m_regions.last());
     return m_regions.last().ptr();
 }
@@ -115,7 +115,7 @@ Region* Process::allocate_region_with_vmo(LinearAddress laddr, size_t size, Reta
 
     offset_in_vmo &= PAGE_MASK;
     size = ceil_div(size, PAGE_SIZE) * PAGE_SIZE;
-    m_regions.append(adopt(*new Region(range.base(), range.size(), move(vmo), offset_in_vmo, move(name), is_readable, is_writable)));
+    m_regions.append(adopt(*new Region(range, move(vmo), offset_in_vmo, move(name), is_readable, is_writable)));
     MM.map_region(*this, *m_regions.last());
     return m_regions.last().ptr();
 }
