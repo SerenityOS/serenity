@@ -2,16 +2,10 @@
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
-#include <getopt.h>
 #include <unistd.h>
 #include <AK/Assertions.h>
+#include <AK/ArgsParser.h>
 #include <LibCore/CFile.h>
-
-static void print_usage_and_exit()
-{
-    printf("usage: tail [-f, -n <linecount>] <filename>\n");
-    exit(1);
-}
 
 int tail_from_pos(CFile& file, off_t startline, bool want_follow)
 {
@@ -81,36 +75,37 @@ static void exit_because_we_wanted_lines()
 
 int main(int argc, char *argv[])
 {
+    AK::ArgsParser args_parser("tail");
+
+    args_parser.add_arg("f", "follow -- appended data is output as it is written to the file");
+    args_parser.add_arg("n", "lines", "fetch the specified number of lines");
+    args_parser.set_required_single_value("file");
+
+    AK::ArgsParserResult args = args_parser.parse(argc, (const char**)argv);
+
+    Vector<String> values = args.get_single_values();
+    if (values.size() != 1) {
+        args_parser.print_usage();
+        return -1;
+    }
+
     int line_count = 0;
-    bool flag_follow = false;
-    int opt;
-    while ((opt = getopt(argc, argv, "fn:")) != -1) {
-        switch (opt) {
-        case 'f':
-            flag_follow = true;
-            break;
-        case 'n':
-            line_count = strtol(optarg, NULL, 10);
-            if (errno == EINVAL) {
-                exit_because_we_wanted_lines();
-            }
-            break;
-        default:
-            print_usage_and_exit();
+    if (args.is_present("n")) {
+        line_count = strtol(args.get("n").characters(), NULL, 10);
+        if (errno == EINVAL) {
+            args_parser.print_usage();
+            return -1;
         }
     }
-    const char *path = nullptr;
-    if (optind >= argc) {
-        print_usage_and_exit();
-    }
 
-    path = argv[optind];
-
-    CFile f(path);
+    CFile f(values[0]);
     if (!f.open(CIODevice::ReadOnly)) {
-        fprintf(stderr, "Error opening file %s: %s\n", path, strerror(errno));
+        fprintf(stderr, "Error opening file %s: %s\n", f.filename().characters(), strerror(errno));
         exit(-1);
     }
+
+    bool flag_follow = args.is_present("f");
+    bool o_arg = args.is_present("o");
 
     auto pos = find_seek_pos(f, line_count);
     return tail_from_pos(f, pos, flag_follow);

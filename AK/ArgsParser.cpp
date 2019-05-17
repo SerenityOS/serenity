@@ -112,6 +112,12 @@ bool ArgsParser::check_required_args(const ArgsParserResult& res)
                 return false;
         }
     }
+
+    if (m_single_value_required) {
+        if (res.m_single_values.size() == 0)
+            return false;
+    }
+
     return true;
 }
 
@@ -133,6 +139,18 @@ void ArgsParser::add_arg(const String& name, const String& description)
 void ArgsParser::add_arg(const String& name, const String& value_name, const String& description)
 {
     m_args.set(name, Arg(name, value_name, description, false));
+}
+
+void ArgsParser::set_single_value(const String& name)
+{
+    m_single_value_name = name;
+    m_single_value_required = false;
+}
+
+void ArgsParser::set_required_single_value(const String& name)
+{
+    m_single_value_name = name;
+    m_single_value_required = true;
 }
 
 String ArgsParser::get_usage() const
@@ -161,6 +179,20 @@ String ArgsParser::get_usage() const
             sb.append("> ");
         else
             sb.append("] ");
+    }
+
+    if (m_single_value_name.length()) {
+        if (m_single_value_required)
+            sb.append("<");
+        else
+            sb.append("[");
+
+        sb.append(m_single_value_name);
+
+        if (m_single_value_required)
+            sb.append(">");
+        else
+            sb.append("]");
     }
 
     sb.append("\n");
