@@ -581,7 +581,7 @@ private:
 
 class WSAPICreateWindowRequest : public WSAPIClientRequest {
 public:
-    WSAPICreateWindowRequest(int client_id, const Rect& rect, const String& title, bool has_alpha_channel, bool modal, bool resizable, float opacity, const Size& base_size, const Size& size_increment, WSWindowType window_type, Color background_color)
+    WSAPICreateWindowRequest(int client_id, const Rect& rect, const String& title, bool has_alpha_channel, bool modal, bool resizable, bool fullscreen, float opacity, const Size& base_size, const Size& size_increment, WSWindowType window_type, Color background_color)
         : WSAPIClientRequest(WSEvent::APICreateWindowRequest, client_id)
         , m_rect(rect)
         , m_title(title)
@@ -589,6 +589,7 @@ public:
         , m_has_alpha_channel(has_alpha_channel)
         , m_modal(modal)
         , m_resizable(resizable)
+        , m_fullscreen(fullscreen)
         , m_size_increment(size_increment)
         , m_base_size(base_size)
         , m_window_type(window_type)
@@ -601,6 +602,7 @@ public:
     bool has_alpha_channel() const { return m_has_alpha_channel; }
     bool is_modal() const { return m_modal; }
     bool is_resizable() const { return m_resizable; }
+    bool is_fullscreen() const { return m_fullscreen; }
     float opacity() const { return m_opacity; }
     Size size_increment() const { return m_size_increment; }
     Size base_size() const { return m_base_size; }
@@ -614,6 +616,7 @@ private:
     bool m_has_alpha_channel { false };
     bool m_modal { false };
     bool m_resizable { false };
+    bool m_fullscreen { false };
     Size m_size_increment;
     Size m_base_size;
     WSWindowType m_window_type;

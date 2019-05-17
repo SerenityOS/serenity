@@ -264,6 +264,7 @@ struct WSAPI_ClientMessage {
             bool has_alpha_channel;
             bool modal;
             bool resizable;
+            bool fullscreen;
             WSAPI_WindowType type;
             float opacity;
             WSAPI_Size base_size;

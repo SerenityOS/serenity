@@ -122,6 +122,9 @@ public:
     void start_window_resize(WSWindow&, const Point&, MouseButton);
     void start_window_resize(WSWindow&, const WSMouseEvent&);
 
+    const WSWindow* active_fullscreen_window() const { return (m_active_window && m_active_window->is_fullscreen()) ? m_active_window : nullptr; }
+    WSWindow* active_fullscreen_window() { return (m_active_window && m_active_window->is_fullscreen()) ? m_active_window : nullptr; }
+
 private:
     void process_mouse_event(WSMouseEvent&, WSWindow*& hovered_window);
     void deliver_mouse_event(WSWindow& window, WSMouseEvent& event);
