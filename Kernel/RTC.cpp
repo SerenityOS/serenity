@@ -33,24 +33,44 @@ inline bool is_leap_year(unsigned year)
 
 static unsigned days_in_months_since_start_of_year(unsigned month, unsigned year)
 {
+    ASSERT(month <= 11);
     unsigned days = 0;
     switch (month) {
-    case 11: days += 30;
-    case 10: days += 31;
-    case 9: days += 30;
-    case 8: days += 31;
-    case 7: days += 31;
-    case 6: days += 30;
-    case 5: days += 31;
-    case 4: days += 30;
-    case 3: days += 31;
+    case 11:
+        days += 30;
+        [[fallthrough]];
+    case 10:
+        days += 31;
+        [[fallthrough]];
+    case 9:
+        days += 30;
+        [[fallthrough]];
+    case 8:
+        days += 31;
+        [[fallthrough]];
+    case 7:
+        days += 31;
+        [[fallthrough]];
+    case 6:
+        days += 30;
+        [[fallthrough]];
+    case 5:
+        days += 31;
+        [[fallthrough]];
+    case 4:
+        days += 30;
+        [[fallthrough]];
+    case 3:
+        days += 31;
+        [[fallthrough]];
     case 2:
         if (is_leap_year(year))
             days += 29;
         else
             days += 28;
-    case 1: days += 31;
-    default: break;
+        [[fallthrough]];
+    case 1:
+        days += 31;
     }
     return days;
 }
