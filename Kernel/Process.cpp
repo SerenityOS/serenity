@@ -105,7 +105,6 @@ Region* Process::allocate_region_with_vmo(LinearAddress laddr, size_t size, Reta
     if (!range.is_valid())
         return nullptr;
     offset_in_vmo &= PAGE_MASK;
-    size = ceil_div(size, PAGE_SIZE) * PAGE_SIZE;
     m_regions.append(adopt(*new Region(range, move(vmo), offset_in_vmo, move(name), is_readable, is_writable)));
     MM.map_region(*this, *m_regions.last());
     return m_regions.last().ptr();
@@ -335,16 +334,12 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
         loader->map_section_hook = [&] (LinearAddress laddr, size_t size, size_t alignment, size_t offset_in_image, bool is_readable, bool is_writable, const String& name) {
             ASSERT(size);
             ASSERT(alignment == PAGE_SIZE);
-            size = ceil_div(size, PAGE_SIZE) * PAGE_SIZE;
             (void) allocate_region_with_vmo(laddr, size, vmo.copy_ref(), offset_in_image, String(name), is_readable, is_writable);
             return laddr.as_ptr();
         };
         loader->alloc_section_hook = [&] (LinearAddress laddr, size_t size, size_t alignment, bool is_readable, bool is_writable, const String& name) {
             ASSERT(size);
             ASSERT(alignment == PAGE_SIZE);
-            size += laddr.get() & 0xfff;
-            laddr.mask(0xffff000);
-            size = ceil_div(size, PAGE_SIZE) * PAGE_SIZE;
             (void) allocate_region(laddr, size, String(name), is_readable, is_writable);
             return laddr.as_ptr();
         };
