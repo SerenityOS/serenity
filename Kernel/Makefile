@@ -78,8 +78,7 @@ AK_OBJS = \
     ../AK/StringBuilder.o \
     ../AK/StringView.o \
     ../AK/FileSystemPath.o \
-    ../AK/StdLibExtras.o \
-    ../AK/ArgsParser.o
+    ../AK/StdLibExtras.o
 
 CXX_OBJS = $(KERNEL_OBJS) $(VFS_OBJS) $(AK_OBJS)
 OBJS = $(CXX_OBJS) Boot/boot.ao

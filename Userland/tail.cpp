@@ -4,8 +4,8 @@
 #include <errno.h>
 #include <unistd.h>
 #include <AK/Assertions.h>
-#include <AK/ArgsParser.h>
 #include <LibCore/CFile.h>
+#include <LibCore/CArgsParser.h>
 
 int tail_from_pos(CFile& file, off_t startline, bool want_follow)
 {
@@ -75,13 +75,13 @@ static void exit_because_we_wanted_lines()
 
 int main(int argc, char *argv[])
 {
-    AK::ArgsParser args_parser("tail");
+    CArgsParser args_parser("tail");
 
     args_parser.add_arg("f", "follow -- appended data is output as it is written to the file");
     args_parser.add_arg("n", "lines", "fetch the specified number of lines");
     args_parser.add_required_single_value("file");
 
-    AK::ArgsParserResult args = args_parser.parse(argc, (const char**)argv);
+    CArgsParserResult args = args_parser.parse(argc, (const char**)argv);
 
     Vector<String> values = args.get_single_values();
     if (values.size() != 1) {
