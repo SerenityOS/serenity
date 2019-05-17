@@ -6,10 +6,10 @@
 #include <fcntl.h>
 #include <dirent.h>
 #include <AK/AKString.h>
-#include <AK/ArgsParser.h>
 #include <AK/StringBuilder.h>
 #include <AK/Vector.h>
 #include <AK/FileSystemPath.h>
+#include <LibCore/CArgsParser.h>
 #include <LibGUI/GDesktop.h>
 #include <LibGUI/GApplication.h>
 
@@ -52,13 +52,13 @@ int main(int argc, char** argv)
 {
     GApplication app(argc, argv);
 
-    AK::ArgsParser args_parser("pape");
+    CArgsParser args_parser("pape");
 
     args_parser.add_arg("a", "show all wallpapers");
     args_parser.add_arg("c", "show current wallpaper");
     args_parser.add_single_value("name");
 
-    AK::ArgsParserResult args = args_parser.parse(argc, (const char**)argv);
+    CArgsParserResult args = args_parser.parse(argc, (const char**)argv);
 
     if (args.is_present("a"))
         return handle_show_all();
