@@ -70,14 +70,16 @@ bool Process::in_group(gid_t gid) const
 
 Region* Process::allocate_region(LinearAddress laddr, size_t size, String&& name, bool is_readable, bool is_writable, bool commit)
 {
+    laddr.mask(PAGE_MASK);
     size = PAGE_ROUND_UP(size);
-    // FIXME: This needs sanity checks. What if this overlaps existing regions?
-    if (laddr.is_null()) {
-        laddr = m_next_region;
-        m_next_region = m_next_region.offset(size).offset(PAGE_SIZE);
-    }
-    laddr.mask(0xfffff000);
-    m_regions.append(adopt(*new Region(laddr, size, move(name), is_readable, is_writable)));
+
+    Range range;
+    if (laddr.is_null())
+        range = m_range_allocator.allocate_anywhere(size);
+    else
+        range = m_range_allocator.allocate_specific(laddr, size);
+
+    m_regions.append(adopt(*new Region(range.base(), range.size(), move(name), is_readable, is_writable)));
     MM.map_region(*this, *m_regions.last());
     if (commit)
         m_regions.last()->commit();
@@ -86,30 +88,34 @@ Region* Process::allocate_region(LinearAddress laddr, size_t size, String&& name
 
 Region* Process::allocate_file_backed_region(LinearAddress laddr, size_t size, RetainPtr<Inode>&& inode, String&& name, bool is_readable, bool is_writable)
 {
+    laddr.mask(PAGE_MASK);
     size = PAGE_ROUND_UP(size);
-    // FIXME: This needs sanity checks. What if this overlaps existing regions?
-    if (laddr.is_null()) {
-        laddr = m_next_region;
-        m_next_region = m_next_region.offset(size).offset(PAGE_SIZE);
-    }
-    laddr.mask(0xfffff000);
-    m_regions.append(adopt(*new Region(laddr, size, move(inode), move(name), is_readable, is_writable)));
+
+    Range range;
+    if (laddr.is_null())
+        range = m_range_allocator.allocate_anywhere(size);
+    else
+        range = m_range_allocator.allocate_specific(laddr, size);
+
+    m_regions.append(adopt(*new Region(range.base(), range.size(), move(inode), move(name), is_readable, is_writable)));
     MM.map_region(*this, *m_regions.last());
     return m_regions.last().ptr();
 }
 
 Region* Process::allocate_region_with_vmo(LinearAddress laddr, size_t size, Retained<VMObject>&& vmo, size_t offset_in_vmo, String&& name, bool is_readable, bool is_writable)
 {
+    laddr.mask(PAGE_MASK);
     size = PAGE_ROUND_UP(size);
-    // FIXME: This needs sanity checks. What if this overlaps existing regions?
-    if (laddr.is_null()) {
-        laddr = m_next_region;
-        m_next_region = m_next_region.offset(size).offset(PAGE_SIZE);
-    }
-    laddr.mask(0xfffff000);
+
+    Range range;
+    if (laddr.is_null())
+        range = m_range_allocator.allocate_anywhere(size);
+    else
+        range = m_range_allocator.allocate_specific(laddr, size);
+
     offset_in_vmo &= PAGE_MASK;
     size = ceil_div(size, PAGE_SIZE) * PAGE_SIZE;
-    m_regions.append(adopt(*new Region(laddr, size, move(vmo), offset_in_vmo, move(name), is_readable, is_writable)));
+    m_regions.append(adopt(*new Region(range.base(), range.size(), move(vmo), offset_in_vmo, move(name), is_readable, is_writable)));
     MM.map_region(*this, *m_regions.last());
     return m_regions.last().ptr();
 }
@@ -119,6 +125,7 @@ bool Process::deallocate_region(Region& region)
     InterruptDisabler disabler;
     for (int i = 0; i < m_regions.size(); ++i) {
         if (m_regions[i] == &region) {
+            m_range_allocator.deallocate({ region.laddr(), region.size() });
             MM.unmap_region(region);
             m_regions.remove(i);
             return true;
@@ -539,6 +546,9 @@ Process* Process::create_kernel_process(String&& name, void (*e)())
     return process;
 }
 
+static const dword userspace_range_base = 0x01000000;
+static const dword kernelspace_range_base = 0xc0000000;
+
 Process::Process(String&& name, uid_t uid, gid_t gid, pid_t ppid, RingLevel ring, RetainPtr<Inode>&& cwd, RetainPtr<Inode>&& executable, TTY* tty, Process* fork_parent)
     : m_name(move(name))
     , m_pid(next_pid++) // FIXME: RACE: This variable looks racy!
@@ -551,6 +561,7 @@ Process::Process(String&& name, uid_t uid, gid_t gid, pid_t ppid, RingLevel ring
     , m_executable(move(executable))
     , m_tty(tty)
     , m_ppid(ppid)
+    , m_range_allocator(LinearAddress(userspace_range_base), kernelspace_range_base - userspace_range_base)
 {
     dbgprintf("Process: New process PID=%u with name=%s\n", m_pid, m_name.characters());
 
