@@ -8,7 +8,7 @@ class FileDescriptor;
 
 class FIFO final : public File {
 public:
-    enum Direction {
+    enum class Direction : byte {
         Neither, Reader, Writer
     };
 
