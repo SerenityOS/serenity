@@ -150,8 +150,9 @@ off_t FileDescriptor::seek(off_t offset, int whence)
         return -EINVAL;
     }
 
-    if (newOffset < 0 || newOffset > metadata.size)
+    if (newOffset < 0)
         return -EINVAL;
+    // FIXME: Return -EINVAL if attempting to seek past the end of a seekable device.
 
     m_current_offset = newOffset;
     return m_current_offset;
