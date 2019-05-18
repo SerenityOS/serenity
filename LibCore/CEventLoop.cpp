@@ -92,51 +92,56 @@ int CEventLoop::exec()
     for (;;) {
         if (m_exit_requested)
             return m_exit_code;
-        do_processing();
-
-        if (m_queued_events.is_empty()) {
-            wait_for_event();
-            do_processing();
-        }
-        decltype(m_queued_events) events;
-        {
-            LOCKER(m_lock);
-            events = move(m_queued_events);
-        }
-
-        for (auto& queued_event : events) {
-            auto* receiver = queued_event.receiver.ptr();
-            auto& event = *queued_event.event;
-#ifdef CEVENTLOOP_DEBUG
-            dbgprintf("CEventLoop: %s{%p} event %u\n", receiver->class_name(), receiver, (unsigned)event.type());
-#endif
-            if (!receiver) {
-                switch (event.type()) {
-                case CEvent::Quit:
-                    ASSERT_NOT_REACHED();
-                    return 0;
-                default:
-                    dbgprintf("Event type %u with no receiver :(\n", event.type());
-                }
-            } else if (event.type() == CEvent::Type::DeferredInvoke) {
-#ifdef DEFERRED_INVOKE_DEBUG
-                printf("DeferredInvoke: receiver=%s{%p}\n", receiver->class_name(), receiver);
-#endif
-                static_cast<CDeferredInvocationEvent&>(event).m_invokee(*receiver);
-            } else {
-                receiver->event(event);
-            }
-
-            if (m_exit_requested) {
-                LOCKER(m_lock);
-                auto rejigged_event_queue = move(events);
-                rejigged_event_queue.append(move(m_queued_events));
-                m_queued_events = move(rejigged_event_queue);
-                return m_exit_code;
-            }
-        }
+        pump();
     }
     ASSERT_NOT_REACHED();
+}
+
+void CEventLoop::pump(WaitMode mode)
+{
+    // window server event processing...
+    do_processing();
+
+    if (m_queued_events.is_empty()) {
+        wait_for_event(mode);
+        do_processing();
+    }
+    decltype(m_queued_events) events;
+    {
+        LOCKER(m_lock);
+        events = move(m_queued_events);
+    }
+
+    for (auto& queued_event : events) {
+        auto* receiver = queued_event.receiver.ptr();
+        auto& event = *queued_event.event;
+#ifdef CEVENTLOOP_DEBUG
+        dbgprintf("CEventLoop: %s{%p} event %u\n", receiver->class_name(), receiver, (unsigned)event.type());
+#endif
+        if (!receiver) {
+            switch (event.type()) {
+            case CEvent::Quit:
+                ASSERT_NOT_REACHED();
+                return;
+            default:
+                dbgprintf("Event type %u with no receiver :(\n", event.type());
+            }
+        } else if (event.type() == CEvent::Type::DeferredInvoke) {
+#ifdef DEFERRED_INVOKE_DEBUG
+            printf("DeferredInvoke: receiver=%s{%p}\n", receiver->class_name(), receiver);
+#endif
+            static_cast<CDeferredInvocationEvent&>(event).m_invokee(*receiver);
+        } else {
+            receiver->event(event);
+        }
+
+        if (m_exit_requested) {
+            LOCKER(m_lock);
+            auto rejigged_event_queue = move(events);
+            rejigged_event_queue.append(move(m_queued_events));
+            m_queued_events = move(rejigged_event_queue);
+        }
+    }
 }
 
 void CEventLoop::post_event(CObject& receiver, OwnPtr<CEvent>&& event)
@@ -148,7 +153,7 @@ void CEventLoop::post_event(CObject& receiver, OwnPtr<CEvent>&& event)
     m_queued_events.append({ receiver.make_weak_ptr(), move(event) });
 }
 
-void CEventLoop::wait_for_event()
+void CEventLoop::wait_for_event(WaitMode mode)
 {
     fd_set rfds;
     fd_set wfds;
@@ -182,13 +187,20 @@ void CEventLoop::wait_for_event()
 
     timeval now;
     struct timeval timeout = { 0, 0 };
-    if (!s_timers->is_empty() && queued_events_is_empty) {
-        gettimeofday(&now, nullptr);
-        get_next_timer_expiration(timeout);
-        AK::timeval_sub(&timeout, &now, &timeout);
+    bool should_wait_forever = false;
+    if (mode == WaitMode::WaitForEvents) {
+        if (!s_timers->is_empty() && queued_events_is_empty) {
+            gettimeofday(&now, nullptr);
+            get_next_timer_expiration(timeout);
+            AK::timeval_sub(&timeout, &now, &timeout);
+        } else {
+            should_wait_forever = true;
+        }
+    } else {
+        should_wait_forever = false;
     }
 
-    int rc = select(max_fd + 1, &rfds, &wfds, nullptr, (queued_events_is_empty && s_timers->is_empty()) ? nullptr : &timeout);
+    int rc = select(max_fd + 1, &rfds, &wfds, nullptr, should_wait_forever ? nullptr : &timeout);
     if (rc < 0) {
         ASSERT_NOT_REACHED();
     }
