@@ -10,6 +10,8 @@
 // FIXME: Thread safety.
 
 //#define MALLOC_DEBUG
+#define RECYCLE_BIG_ALLOCATIONS
+
 #define MALLOC_SCRUB_BYTE 0x85
 #define FREE_SCRUB_BYTE 0x82
 #define MAGIC_PAGE_HEADER 0x42657274
@@ -85,7 +87,7 @@ struct Allocator {
 };
 
 struct BigAllocator {
-    Vector<BigAllocationBlock*> blocks;
+    Vector<BigAllocationBlock*, number_of_big_blocks_to_keep_around_per_size_class> blocks;
 };
 
 static Allocator g_allocators[num_size_classes];
@@ -109,7 +111,6 @@ static BigAllocator* big_allocator_for_size(size_t size)
         return &g_big_allocators[0];
     return nullptr;
 }
-
 
 extern "C" {
 
@@ -146,12 +147,14 @@ void* malloc(size_t size)
 
     if (!allocator) {
         size_t real_size = PAGE_ROUND_UP(sizeof(BigAllocationBlock) + size);
+#ifdef RECYCLE_BIG_ALLOCATIONS
         if (auto* allocator = big_allocator_for_size(real_size)) {
             if (!allocator->blocks.is_empty()) {
                 auto* block = allocator->blocks.take_last();
                 return &block->m_slot[0];
             }
         }
+#endif
         auto* block = (BigAllocationBlock*)os_alloc(real_size);
         char buffer[64];
         snprintf(buffer, sizeof(buffer), "malloc: BigAllocationBlock(%u)", real_size);
@@ -205,12 +208,14 @@ void free(void* ptr)
 
     if (magic == MAGIC_BIGALLOC_HEADER) {
         auto* block = (BigAllocationBlock*)page_base;
+#ifdef RECYCLE_BIG_ALLOCATIONS
         if (auto* allocator = big_allocator_for_size(block->m_size)) {
             if (allocator->blocks.size() < number_of_big_blocks_to_keep_around_per_size_class) {
                 allocator->blocks.append(block);
                 return;
             }
         }
+#endif
         os_free(block, block->m_size);
         return;
     }
