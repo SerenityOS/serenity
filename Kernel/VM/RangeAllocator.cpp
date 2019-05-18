@@ -7,7 +7,9 @@
 RangeAllocator::RangeAllocator(LinearAddress base, size_t size)
 {
     m_available_ranges.append({ base, size });
+#ifdef VRA_DEBUG
     dump();
+#endif
 }
 
 RangeAllocator::~RangeAllocator()
