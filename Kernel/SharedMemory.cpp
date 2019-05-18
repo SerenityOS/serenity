@@ -88,3 +88,10 @@ int SharedMemory::write(FileDescriptor&, const byte* data, int data_size)
     // FIXME: Implement.
     ASSERT_NOT_REACHED();
 }
+
+KResultOr<Region*> SharedMemory::mmap(Process& process, LinearAddress laddr, size_t offset, size_t size)
+{
+    if (!vmo())
+        return KResult(-ENODEV);
+    return process.allocate_region_with_vmo(laddr, size, *vmo(), offset, name(), true, true);
+}
