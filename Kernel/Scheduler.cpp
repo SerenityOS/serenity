@@ -232,6 +232,9 @@ bool Scheduler::pick_next()
     }
 #endif
 
+    if (g_runnable_threads->is_empty())
+        return context_switch(s_colonel_process->main_thread());
+
     auto* previous_head = g_runnable_threads->head();
     for (;;) {
         // Move head to tail.
