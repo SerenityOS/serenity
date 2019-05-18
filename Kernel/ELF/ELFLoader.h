@@ -18,6 +18,8 @@ public:
     char* symbol_ptr(const char* name);
     LinearAddress entry() const { return m_image.entry(); }
 
+    bool has_symbols() const { return m_image.symbol_count(); }
+
     String symbolicate(dword address) const;
 
 private:

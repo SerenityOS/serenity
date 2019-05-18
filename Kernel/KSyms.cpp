@@ -115,10 +115,10 @@ static void load_ksyms_from_data(const ByteBuffer& buffer)
         if (!symbol.address)
             break;
         if (!symbol.ksym) {
-            if (current->process().elf_loader()) {
+            if (current->process().elf_loader() && current->process().elf_loader()->has_symbols()) {
                 dbgprintf("%p  %s\n", symbol.address, current->process().elf_loader()->symbolicate(symbol.address).characters());
             } else {
-                dbgprintf("%p (no ELF loader for process)\n", symbol.address);
+                dbgprintf("%p (no ELF symbols for process)\n", symbol.address);
             }
             continue;
         }

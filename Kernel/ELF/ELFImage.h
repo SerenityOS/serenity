@@ -86,7 +86,7 @@ public:
         unsigned offset() const { return m_section_header.sh_offset; }
         unsigned size() const { return m_section_header.sh_size; }
         unsigned entry_size() const { return m_section_header.sh_entsize; }
-        unsigned entry_count() const { return size() / entry_size(); }
+        unsigned entry_count() const { return !entry_size() ? 0 : size() / entry_size(); }
         dword address() const { return m_section_header.sh_addr; }
         const char* raw_data() const { return m_image.raw_data(m_section_header.sh_offset); }
         bool is_undefined() const { return m_section_index == SHN_UNDEF; }
