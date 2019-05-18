@@ -1405,11 +1405,33 @@ enum class KernelMemoryCheckResult {
     AccessDenied
 };
 
+// FIXME: Nothing about this is really super...
+// This structure is only present at offset 28 in the main multiboot info struct
+// if bit 5 of offset 0 (flags) is set.  We're just assuming that the flag is set.
+//
+// Also, there's almost certainly a better way to get that information here than
+// a global set by boot.S
+//
+// Also I'm not 100% sure any of this is correct...
+
+struct mb_elf {
+    uint32_t num;
+    uint32_t size;
+    uint32_t addr;
+    uint32_t shndx;
+};
+
+extern "C" {
+void* multiboot_ptr;
+}
+
 static KernelMemoryCheckResult check_kernel_memory_access(LinearAddress laddr, bool is_write)
 {
-    auto* kernel_elf_header = (Elf32_Ehdr*)0xf000;
-    auto* kernel_program_headers = (Elf32_Phdr*)(0xf000 + kernel_elf_header->e_phoff);
-    for (unsigned i = 0; i < kernel_elf_header->e_phnum; ++i) {
+	// FIXME: It would be better to have a proper structure for this...
+    auto* sections = (const mb_elf*)((const byte*)multiboot_ptr + 28);
+
+    auto* kernel_program_headers = (Elf32_Phdr*)(sections->addr);
+    for (unsigned i = 0; i < sections->num; ++i) {
         auto& segment = kernel_program_headers[i];
         if (segment.p_type != PT_LOAD || !segment.p_vaddr || !segment.p_memsz)
             continue;

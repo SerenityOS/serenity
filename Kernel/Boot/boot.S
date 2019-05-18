@@ -1,7 +1,7 @@
 .set MULTIBOOT_MAGIC,         0x1badb002
 .set MULTIBOOT_PAGE_ALIGN,    0x1
 .set MULTIBOOT_MEMORY_INFO,   0x2
-.set MULTIBOOT_VIDEO_MODE,    0x4
+.set MULTIBOOT_VIDEO_MODE,    0x0
 .set multiboot_flags,         MULTIBOOT_PAGE_ALIGN | MULTIBOOT_MEMORY_INFO | MULTIBOOT_VIDEO_MODE
 .set multiboot_checksum,      -(MULTIBOOT_MAGIC + multiboot_flags)
 
@@ -39,6 +39,9 @@ stack_top:
 .extern init 
 .type init, @function
 
+.extern multiboot_ptr
+.type multiboot_ptr, @object
+
 start:
     cli
     cld
@@ -50,6 +53,8 @@ start:
     pushl %esp
     pushl %eax /* Multiboot header magic */
     pushl %ebx /* Multiboot header pointer */
+
+    mov %ebx, multiboot_ptr
 
     call init
 
