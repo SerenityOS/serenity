@@ -5,7 +5,18 @@
 #include <Kernel/VM/MemoryManager.h>
 #include <LibC/signal_numbers.h>
 
-InlineLinkedList<Thread>* g_threads;
+HashTable<Thread*>& thread_table()
+{
+    ASSERT_INTERRUPTS_DISABLED();
+    static HashTable<Thread*>* table;
+    if (!table)
+        table = new HashTable<Thread*>;
+    return *table;
+}
+
+InlineLinkedList<Thread>* g_runnable_threads;
+InlineLinkedList<Thread>* g_nonrunnable_threads;
+
 static const dword default_kernel_stack_size = 16384;
 static const dword default_userspace_stack_size = 65536;
 
@@ -61,7 +72,9 @@ Thread::Thread(Process& process)
 
     if (m_process.pid() != 0) {
         InterruptDisabler disabler;
-        g_threads->prepend(this);
+        thread_table().set(this);
+        g_nonrunnable_threads->prepend(this);
+        m_thread_list = g_nonrunnable_threads;
     }
 }
 
@@ -71,7 +84,9 @@ Thread::~Thread()
     kfree_aligned(m_fpu_state);
     {
         InterruptDisabler disabler;
-        g_threads->remove(this);
+        if (m_thread_list)
+            m_thread_list->remove(this);
+        thread_table().remove(this);
     }
 
     if (g_last_fpu_thread == this)
@@ -85,11 +100,11 @@ void Thread::unblock()
 {
     m_blocked_descriptor = nullptr;
     if (current == this) {
-        m_state = Thread::Running;
+        set_state(Thread::Running);
         return;
     }
     ASSERT(m_state != Thread::Runnable && m_state != Thread::Running);
-    m_state = Thread::Runnable;
+    set_state(Thread::Runnable);
 }
 
 void Thread::snooze_until(Alarm& alarm)
@@ -509,7 +524,8 @@ KResult Thread::wait_for_connect(FileDescriptor& descriptor)
 
 void Thread::initialize()
 {
-    g_threads = new InlineLinkedList<Thread>;
+    g_runnable_threads = new InlineLinkedList<Thread>;
+    g_nonrunnable_threads = new InlineLinkedList<Thread>;
     Scheduler::initialize();
 }
 
@@ -517,17 +533,26 @@ Vector<Thread*> Thread::all_threads()
 {
     Vector<Thread*> threads;
     InterruptDisabler disabler;
-    for (auto* thread = g_threads->head(); thread; thread = thread->next())
-        threads.append(thread);
+    threads.ensure_capacity(thread_table().size());
+    for (auto* thread : thread_table())
+        threads.unchecked_append(thread);
     return threads;
 }
 
 bool Thread::is_thread(void* ptr)
 {
     ASSERT_INTERRUPTS_DISABLED();
-    for (auto* thread = g_threads->head(); thread; thread = thread->next()) {
-        if (thread == ptr)
-            return true;
-    }
-    return false;
+    return thread_table().contains((Thread*)ptr);
+}
+
+void Thread::set_state(State new_state)
+{
+    m_state = new_state;
+    auto* new_thread_list = thread_list_for_state(new_state);
+    if (m_thread_list == new_thread_list)
+        return;
+    if (m_thread_list)
+        m_thread_list->remove(this);
+    new_thread_list->append(this);
+    m_thread_list = new_thread_list;
 }
