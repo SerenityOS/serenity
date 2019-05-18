@@ -547,7 +547,7 @@ void WSWindowManager::start_window_resize(WSWindow& window, const WSMouseEvent& 
     start_window_resize(window, event.position(), event.button());
 }
 
-bool WSWindowManager::process_ongoing_window_drag(const WSMouseEvent& event, WSWindow*& hovered_window)
+bool WSWindowManager::process_ongoing_window_drag(WSMouseEvent& event, WSWindow*& hovered_window)
 {
     if (!m_drag_window)
         return false;
@@ -558,6 +558,19 @@ bool WSWindowManager::process_ongoing_window_drag(const WSMouseEvent& event, WSW
         invalidate(*m_drag_window);
         if (m_drag_window->rect().contains(event.position()))
             hovered_window = m_drag_window;
+        if (m_drag_window->is_resizable()) {
+            process_event_for_doubleclick(*m_drag_window, event);
+            if (event.type() == WSEvent::MouseDoubleClick) {
+#if defined(DOUBLECLICK_DEBUG)
+                dbgprintf("[WM] Click up became doubleclick!\n");
+#endif
+                if (m_drag_window->is_maximized()) {
+                    m_drag_window->set_maximized(false);
+                } else {
+                    m_drag_window->set_maximized(true);
+                }
+            }
+        }
         m_drag_window = nullptr;
         return true;
     }
@@ -692,46 +705,53 @@ CElapsedTimer& WSWindowManager::DoubleClickInfo::click_clock(MouseButton button)
 
 // #define DOUBLECLICK_DEBUG
 
+void WSWindowManager::process_event_for_doubleclick(WSWindow& window, WSMouseEvent& event)
+{
+    // We only care about button presses (because otherwise it's not a doubleclick, duh!)
+    ASSERT(event.type() == WSEvent::MouseUp);
+
+    if (&window != m_double_click_info.m_clicked_window) {
+        // we either haven't clicked anywhere, or we haven't clicked on this
+        // window. set the current click window, and reset the timers.
+#if defined(DOUBLECLICK_DEBUG)
+        dbgprintf("Initial mouseup on window %p (previous was %p)\n", &window, m_double_click_info.m_clicked_window);
+#endif
+        m_double_click_info.m_clicked_window = window.make_weak_ptr();
+        m_double_click_info.reset();
+    }
+
+    auto& clock = m_double_click_info.click_clock(event.button());
+
+    // if the clock is invalid, we haven't clicked with this button on this
+    // window yet, so there's nothing to do.
+    if (!clock.is_valid()) {
+        clock.start();
+    } else {
+        int elapsed_since_last_click = clock.elapsed();
+        clock.start();
+
+        // FIXME: It might be a sensible idea to also add a distance travel check.
+        // If the pointer moves too far, it's not a double click.
+        if (elapsed_since_last_click < 250) {
+#if defined(DOUBLECLICK_DEBUG)
+            dbgprintf("Transforming MouseUp to MouseDoubleClick!\n");
+#endif
+            event = WSMouseEvent(WSEvent::MouseDoubleClick, event.position(), event.buttons(), event.button(), event.modifiers(), event.wheel_delta());
+            // invalidate this now we've delivered a doubleclick, otherwise
+            // tripleclick will deliver two doubleclick events (incorrectly).
+            clock = CElapsedTimer();
+        } else {
+            // too slow; try again
+            clock.start();
+        }
+    }
+}
+
 void WSWindowManager::deliver_mouse_event(WSWindow& window, WSMouseEvent& event)
 {
     if (event.type() == WSEvent::MouseUp) {
-        if (&window != m_double_click_info.m_clicked_window) {
-            // we either haven't clicked anywhere, or we haven't clicked on this
-            // window. set the current click window, and reset the timers.
-#if defined(DOUBLECLICK_DEBUG)
-            dbgprintf("Initial mouseup on window %p (previous was %p)\n", &window, m_double_click_info.m_clicked_window);
-#endif
-            m_double_click_info.m_clicked_window = window.make_weak_ptr();
-            m_double_click_info.reset();
-        }
-
-        auto& clock = m_double_click_info.click_clock(event.button());
-
-        // if the clock is invalid, we haven't clicked with this button on this
-        // window yet, so there's nothing to do.
-        if (!clock.is_valid()) {
-            clock.start();
-        } else {
-            int elapsed_since_last_click = clock.elapsed();
-            clock.start();
-
-            // FIXME: It might be a sensible idea to also add a distance travel check.
-            // If the pointer moves too far, it's not a double click.
-            if (elapsed_since_last_click < 250) {
-#if defined(DOUBLECLICK_DEBUG)
-                dbgprintf("Transforming MouseUp to MouseDoubleClick!\n");
-#endif
-                event = WSMouseEvent(WSEvent::MouseDoubleClick, event.position(), event.buttons(), event.button(), event.modifiers(), event.wheel_delta());
-                // invalidate this now we've delivered a doubleclick, otherwise
-                // tripleclick will deliver two doubleclick events (incorrectly).
-                clock = CElapsedTimer();
-            } else {
-                // too slow; try again
-                clock.start();
-            }
-        }
+        process_event_for_doubleclick(window, event);
     }
-
     window.event(event);
 }
 
