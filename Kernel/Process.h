@@ -403,7 +403,15 @@ inline void Process::for_each_thread(Callback callback) const
 {
     InterruptDisabler disabler;
     pid_t my_pid = pid();
-    for (auto* thread = g_threads->head(); thread;) {
+    for (auto* thread = g_runnable_threads->head(); thread;) {
+        auto* next_thread = thread->next();
+        if (thread->pid() == my_pid) {
+            if (callback(*thread) == IterationDecision::Abort)
+                break;
+        }
+        thread = next_thread;
+    }
+    for (auto* thread = g_nonrunnable_threads->head(); thread;) {
         auto* next_thread = thread->next();
         if (thread->pid() == my_pid) {
             if (callback(*thread) == IterationDecision::Abort)

@@ -15,6 +15,7 @@ class Alarm;
 class FileDescriptor;
 class Process;
 class Region;
+class Thread;
 
 enum class ShouldUnblockThread { No = 0, Yes };
 
@@ -23,6 +24,9 @@ struct SignalActionData {
     dword mask { 0 };
     int flags { 0 };
 };
+
+extern InlineLinkedList<Thread>* g_runnable_threads;
+extern InlineLinkedList<Thread>* g_nonrunnable_threads;
 
 class Thread : public InlineLinkedListNode<Thread> {
     friend class Process;
@@ -105,7 +109,7 @@ public:
     dword kernel_stack_for_signal_handler_base() const { return m_kernel_stack_for_signal_handler_region ? m_kernel_stack_for_signal_handler_region->laddr().get() : 0; }
 
     void set_selector(word s) { m_far_ptr.selector = s; }
-    void set_state(State s) { m_state = s; }
+    void set_state(State);
 
     void send_signal(byte signal, Process* sender);
 
@@ -129,9 +133,25 @@ public:
     Thread* m_prev { nullptr };
     Thread* m_next { nullptr };
 
+    InlineLinkedList<Thread>* thread_list() { return m_thread_list; }
+
     template<typename Callback> static void for_each_in_state(State, Callback);
     template<typename Callback> static void for_each_living(Callback);
+    template<typename Callback> static void for_each_runnable(Callback);
+    template<typename Callback> static void for_each_nonrunnable(Callback);
     template<typename Callback> static void for_each(Callback);
+
+    static bool is_runnable_state(Thread::State state)
+    {
+        return state == Thread::State::Running || state == Thread::State::Runnable;
+    }
+
+    static InlineLinkedList<Thread>* thread_list_for_state(Thread::State state)
+    {
+        if (is_runnable_state(state))
+            return g_runnable_threads;
+        return g_nonrunnable_threads;
+    }
 
 private:
     Process& m_process;
@@ -158,13 +178,14 @@ private:
     Vector<int> m_select_write_fds;
     Vector<int> m_select_exceptional_fds;
     FPUState* m_fpu_state { nullptr };
+    InlineLinkedList<Thread>* m_thread_list { nullptr };
     State m_state { Invalid };
     bool m_select_has_timeout { false };
     bool m_has_used_fpu { false };
     bool m_was_interrupted_while_blocked { false };
 };
 
-extern InlineLinkedList<Thread>* g_threads;
+HashTable<Thread*>& thread_table();
 
 const char* to_string(Thread::State);
 
@@ -172,7 +193,7 @@ template<typename Callback>
 inline void Thread::for_each_in_state(State state, Callback callback)
 {
     ASSERT_INTERRUPTS_DISABLED();
-    for (auto* thread = g_threads->head(); thread;) {
+    for (auto* thread = thread_list_for_state(state)->head(); thread;) {
         auto* next_thread = thread->next();
         if (thread->state() == state)
             callback(*thread);
@@ -184,7 +205,13 @@ template<typename Callback>
 inline void Thread::for_each_living(Callback callback)
 {
     ASSERT_INTERRUPTS_DISABLED();
-    for (auto* thread = g_threads->head(); thread;) {
+    for (auto* thread = g_runnable_threads->head(); thread;) {
+        auto* next_thread = thread->next();
+        if (thread->state() != Thread::State::Dead && thread->state() != Thread::State::Dying)
+            callback(*thread);
+        thread = next_thread;
+    }
+    for (auto* thread = g_nonrunnable_threads->head(); thread;) {
         auto* next_thread = thread->next();
         if (thread->state() != Thread::State::Dead && thread->state() != Thread::State::Dying)
             callback(*thread);
@@ -196,7 +223,15 @@ template<typename Callback>
 inline void Thread::for_each(Callback callback)
 {
     ASSERT_INTERRUPTS_DISABLED();
-    for (auto* thread = g_threads->head(); thread;) {
+    for_each_runnable(callback);
+    for_each_nonrunnable(callback);
+}
+
+template<typename Callback>
+inline void Thread::for_each_runnable(Callback callback)
+{
+    ASSERT_INTERRUPTS_DISABLED();
+    for (auto* thread = g_runnable_threads->head(); thread;) {
         auto* next_thread = thread->next();
         if (callback(*thread) == IterationDecision::Abort)
             return;
@@ -204,3 +239,14 @@ inline void Thread::for_each(Callback callback)
     }
 }
 
+template<typename Callback>
+inline void Thread::for_each_nonrunnable(Callback callback)
+{
+    ASSERT_INTERRUPTS_DISABLED();
+    for (auto* thread = g_nonrunnable_threads->head(); thread;) {
+        auto* next_thread = thread->next();
+        if (callback(*thread) == IterationDecision::Abort)
+            return;
+        thread = next_thread;
+    }
+}
