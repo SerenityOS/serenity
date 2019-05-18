@@ -1140,11 +1140,11 @@ int Process::sys$pipe(int pipefd[2])
     auto fifo = FIFO::create(m_uid);
 
     int reader_fd = alloc_fd();
-    m_fds[reader_fd].set(fifo->open_direction(FIFO::Reader));
+    m_fds[reader_fd].set(fifo->open_direction(FIFO::Direction::Reader));
     pipefd[0] = reader_fd;
 
     int writer_fd = alloc_fd();
-    m_fds[writer_fd].set(fifo->open_direction(FIFO::Writer));
+    m_fds[writer_fd].set(fifo->open_direction(FIFO::Direction::Writer));
     pipefd[1] = writer_fd;
 
     return 0;

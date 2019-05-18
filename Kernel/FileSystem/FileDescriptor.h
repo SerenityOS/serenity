@@ -110,13 +110,10 @@ private:
 
     ByteBuffer m_generator_cache;
 
-    bool m_is_blocking { true };
     dword m_file_flags { 0 };
 
+    bool m_is_blocking { true };
     SocketRole m_socket_role { SocketRole::None };
-
-    FIFO::Direction m_fifo_direction { FIFO::Neither };
-
-    bool m_closed { false };
+    FIFO::Direction m_fifo_direction { FIFO::Direction::Neither };
 };
 
