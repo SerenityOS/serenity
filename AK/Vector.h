@@ -316,6 +316,7 @@ public:
         Iterator operator-(int value) { return { m_vector, m_index - value }; }
         Iterator operator+(int value) { return { m_vector, m_index + value }; }
         T& operator*() { return m_vector[m_index]; }
+        int operator-(const Iterator& other) { return m_index - other.m_index; }
     private:
         friend class Vector;
         Iterator(Vector& vector, int index) : m_vector(vector), m_index(index) { }
@@ -335,6 +336,7 @@ public:
         ConstIterator operator-(int value) { return { m_vector, m_index - value }; }
         ConstIterator operator+(int value) { return { m_vector, m_index + value }; }
         const T& operator*() const { return m_vector[m_index]; }
+        int operator-(const ConstIterator& other) { return m_index - other.m_index; }
     private:
         friend class Vector;
         ConstIterator(const Vector& vector, const int index) : m_vector(vector), m_index(index) { }
