@@ -72,7 +72,7 @@ bool Scheduler::pick_next()
     auto now_usec = now.tv_usec;
 
     // Check and unblock threads whose wait conditions have been met.
-    Thread::for_each([&] (Thread& thread) {
+    Thread::for_each_nonrunnable([&] (Thread& thread) {
         auto& process = thread.process();
 
         if (thread.state() == Thread::BlockedSleep) {
@@ -223,8 +223,8 @@ bool Scheduler::pick_next()
     });
 
 #ifdef SCHEDULER_DEBUG
-    dbgprintf("Scheduler choices:\n");
-    for (auto* thread = g_threads->head(); thread; thread = thread->next()) {
+    dbgprintf("Scheduler choices: (runnable threads: %p)\n", g_runnable_threads);
+    for (auto* thread = g_runnable_threads->head(); thread; thread = thread->next()) {
         //if (process->state() == Thread::BlockedWait || process->state() == Thread::BlockedSleep)
 //            continue;
         auto* process = &thread->process();
@@ -232,11 +232,11 @@ bool Scheduler::pick_next()
     }
 #endif
 
-    auto* previous_head = g_threads->head();
+    auto* previous_head = g_runnable_threads->head();
     for (;;) {
         // Move head to tail.
-        g_threads->append(g_threads->remove_head());
-        auto* thread = g_threads->head();
+        g_runnable_threads->append(g_runnable_threads->remove_head());
+        auto* thread = g_runnable_threads->head();
 
         if (!thread->process().is_being_inspected() && (thread->state() == Thread::Runnable || thread->state() == Thread::Running)) {
 #ifdef SCHEDULER_DEBUG
