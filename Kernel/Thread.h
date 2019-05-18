@@ -134,6 +134,7 @@ public:
     Thread* m_next { nullptr };
 
     InlineLinkedList<Thread>* thread_list() { return m_thread_list; }
+    void set_thread_list(InlineLinkedList<Thread>*);
 
     template<typename Callback> static void for_each_in_state(State, Callback);
     template<typename Callback> static void for_each_living(Callback);
