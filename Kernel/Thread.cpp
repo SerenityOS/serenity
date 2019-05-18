@@ -73,8 +73,7 @@ Thread::Thread(Process& process)
     if (m_process.pid() != 0) {
         InterruptDisabler disabler;
         thread_table().set(this);
-        g_nonrunnable_threads->prepend(this);
-        m_thread_list = g_nonrunnable_threads;
+        set_thread_list(g_nonrunnable_threads);
     }
 }
 
@@ -545,14 +544,19 @@ bool Thread::is_thread(void* ptr)
     return thread_table().contains((Thread*)ptr);
 }
 
-void Thread::set_state(State new_state)
+void Thread::set_thread_list(InlineLinkedList<Thread>* thread_list)
 {
-    m_state = new_state;
-    auto* new_thread_list = thread_list_for_state(new_state);
-    if (m_thread_list == new_thread_list)
+    if (m_thread_list == thread_list)
         return;
     if (m_thread_list)
         m_thread_list->remove(this);
-    new_thread_list->append(this);
-    m_thread_list = new_thread_list;
+    if (thread_list)
+        thread_list->append(this);
+    m_thread_list = thread_list;
+}
+
+void Thread::set_state(State new_state)
+{
+    m_state = new_state;
+    set_thread_list(thread_list_for_state(new_state));
 }
