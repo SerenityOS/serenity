@@ -1854,9 +1854,27 @@ int Process::sys$poll(pollfd* fds, int nfds, int timeout)
             current->m_select_write_fds.append(fds[i].fd);
     }
 
-    // FIXME: this should set m_select_timeout, right?
-    if (timeout < 0)
+    if (timeout >= 0) {
+        // poll is in ms, we want s/us.
+        struct timeval tvtimeout;
+        tvtimeout.tv_sec = 0;
+        while (timeout >= 1000) {
+            tvtimeout.tv_sec += 1;
+            timeout -= 1000;
+        }
+        tvtimeout.tv_usec = timeout * 1000;
+
+        struct timeval now;
+        kgettimeofday(now);
+        AK::timeval_add(&now, &tvtimeout, &current->m_select_timeout);
+        current->m_select_has_timeout = true;
+    } else {
+        current->m_select_has_timeout = false;
+    }
+
+    if (current->m_select_has_timeout || timeout < 0) {
         current->block(Thread::State::BlockedSelect);
+    }
 
     int fds_with_revents = 0;
 
