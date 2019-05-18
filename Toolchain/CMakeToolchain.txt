@@ -4,6 +4,8 @@ if (NOT DEFINED ENV{SERENITY_ROOT})
     message(FATAL_ERROR "SERENITY_ROOT not set. Please source Toolchain/UseIt.sh.")
 endif()
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti -fno-exceptions")
+
 # where to read from/write to
 set(CMAKE_SYSROOT $ENV{SERENITY_ROOT}/Root)
 set(CMAKE_STAGING_PREFIX $ENV{SERENITY_ROOT}/Root)
