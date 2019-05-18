@@ -21,6 +21,7 @@
 #include <Kernel/TTY/MasterPTY.h>
 #include <Kernel/ELF/exec_elf.h>
 #include <AK/StringBuilder.h>
+#include <AK/Time.h>
 #include <Kernel/SharedMemory.h>
 #include <Kernel/ProcessTracer.h>
 
@@ -1735,7 +1736,9 @@ int Process::sys$select(const Syscall::SC_select_params* params)
     (void)exceptfds;
 
     if (timeout) {
-        current->m_select_timeout = *timeout;
+        struct timeval now;
+        kgettimeofday(now);
+        AK::timeval_add(&now, timeout, &current->m_select_timeout);
         current->m_select_has_timeout = true;
     } else {
         current->m_select_has_timeout = false;
@@ -1829,6 +1832,7 @@ int Process::sys$poll(pollfd* fds, int nfds, int timeout)
             current->m_select_write_fds.append(fds[i].fd);
     }
 
+    // FIXME: this should set m_select_timeout, right?
     if (timeout < 0)
         current->block(Thread::State::BlockedSelect);
 
