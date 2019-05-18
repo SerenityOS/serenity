@@ -324,12 +324,6 @@ KResultOr<Region*> FileDescriptor::mmap(Process& process, LinearAddress laddr, s
     if (m_file)
         return m_file->mmap(process, laddr, offset, size);
 
-    if (is_shared_memory()) {
-        if (!shared_memory()->vmo())
-            return KResult(-ENODEV);
-        return process.allocate_region_with_vmo(laddr, size, *shared_memory()->vmo(), offset, shared_memory()->name(), true, true);
-    }
-
     if (!is_fsfile())
         return KResult(-ENODEV);
 
