@@ -3,6 +3,7 @@
 #include "Scheduler.h"
 #include <Kernel/FileSystem/FileDescriptor.h>
 #include <Kernel/ELF/ELFLoader.h>
+#include <AK/TemporaryChange.h>
 
 static KSym* s_ksyms;
 dword ksym_lowest_address;
@@ -132,6 +133,12 @@ static void load_ksyms_from_data(const ByteBuffer& buffer)
 
 void dump_backtrace()
 {
+    static bool in_dump_backtrace = false;
+    if (in_dump_backtrace) {
+        dbgprintf("dump_backtrace() called from within itself, what the hell is going on!\n");
+        return;
+    }
+    TemporaryChange change(in_dump_backtrace, true);
     dword ebp;
     asm volatile("movl %%ebp, %%eax":"=a"(ebp));
     dump_backtrace_impl(ebp, ksyms_ready);
