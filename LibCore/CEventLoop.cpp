@@ -14,6 +14,7 @@
 #include <LibC/errno.h>
 #include <LibC/string.h>
 #include <LibC/stdlib.h>
+#include <AK/Time.h>
 
 //#define CEVENTLOOP_DEBUG
 //#define DEFERRED_INVOKE_DEBUG
@@ -179,18 +180,22 @@ void CEventLoop::wait_for_event()
         queued_events_is_empty = m_queued_events.is_empty();
     }
 
+    timeval now;
     struct timeval timeout = { 0, 0 };
-    if (!s_timers->is_empty() && queued_events_is_empty)
+    if (!s_timers->is_empty() && queued_events_is_empty) {
+        gettimeofday(&now, nullptr);
         get_next_timer_expiration(timeout);
+        AK::timeval_sub(&timeout, &now, &timeout);
+    }
 
     int rc = select(max_fd + 1, &rfds, &wfds, nullptr, (queued_events_is_empty && s_timers->is_empty()) ? nullptr : &timeout);
     if (rc < 0) {
         ASSERT_NOT_REACHED();
     }
 
-    timeval now;
-    if (!s_timers->is_empty())
+    if (!s_timers->is_empty()) {
         gettimeofday(&now, nullptr);
+    }
 
     for (auto& it : *s_timers) {
         auto& timer = *it.value;
