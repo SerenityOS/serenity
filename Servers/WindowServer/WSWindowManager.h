@@ -127,9 +127,10 @@ public:
 
 private:
     void process_mouse_event(WSMouseEvent&, WSWindow*& hovered_window);
+    void process_event_for_doubleclick(WSWindow& window, WSMouseEvent& event);
     void deliver_mouse_event(WSWindow& window, WSMouseEvent& event);
     bool process_ongoing_window_resize(const WSMouseEvent&, WSWindow*& hovered_window);
-    bool process_ongoing_window_drag(const WSMouseEvent&, WSWindow*& hovered_window);
+    bool process_ongoing_window_drag(WSMouseEvent&, WSWindow*& hovered_window);
     void handle_menu_mouse_event(WSMenu&, const WSMouseEvent&);
     void handle_menubar_mouse_event(const WSMouseEvent&);
     void handle_close_button_mouse_event(WSWindow&, const WSMouseEvent&);
