@@ -1757,7 +1757,7 @@ int Process::sys$select(const Syscall::SC_select_params* params)
     // FIXME: Implement exceptfds support.
     (void)exceptfds;
 
-    if (timeout) {
+    if (timeout && (timeout->tv_sec || timeout->tv_usec)) {
         struct timeval now;
         kgettimeofday(now);
         AK::timeval_add(&now, timeout, &current->m_select_timeout);
@@ -1802,7 +1802,7 @@ int Process::sys$select(const Syscall::SC_select_params* params)
     dbgprintf("%s<%u> selecting on (read:%u, write:%u), timeout=%p\n", name().characters(), pid(), current->m_select_read_fds.size(), current->m_select_write_fds.size(), timeout);
 #endif
 
-    if (!timeout || (timeout->tv_sec || timeout->tv_usec))
+    if (!timeout || current->m_select_has_timeout)
         current->block(Thread::State::BlockedSelect);
 
     int markedfds = 0;
