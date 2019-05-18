@@ -9,7 +9,7 @@
 #include <Kernel/UnixTypes.h>
 #include <Kernel/KResult.h>
 
-enum class SocketRole { None, Listener, Accepted, Connected, Connecting };
+enum class SocketRole : byte { None, Listener, Accepted, Connected, Connecting };
 enum class ShouldBlock { No = 0, Yes = 1 };
 
 class FileDescriptor;
