@@ -20,6 +20,15 @@ public:
 
     int exec();
 
+    enum class WaitMode {
+        WaitForEvents,
+        PollForEvents,
+    };
+
+    // processe events, generally called by exec() in a loop.
+    // this should really only be used for integrating with other event loops
+    void pump(WaitMode = WaitMode::WaitForEvents);
+
     void post_event(CObject& receiver, OwnPtr<CEvent>&&);
 
     static CEventLoop& main();
@@ -46,13 +55,14 @@ protected:
     virtual void do_processing() { }
 
 private:
-    void wait_for_event();
+    void wait_for_event(WaitMode);
     void get_next_timer_expiration(timeval&);
 
     struct QueuedEvent {
         WeakPtr<CObject> receiver;
         OwnPtr<CEvent> event;
     };
+
     Vector<QueuedEvent, 64> m_queued_events;
 
     bool m_running { false };
