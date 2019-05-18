@@ -108,14 +108,6 @@ bool ELFImage::parse()
             m_string_table_section_index = i;
         }
     }
-
-#ifdef SUPPORT_RELOCATIONS
-    // Then create a name-to-index map.
-    for (unsigned i = 0; i < section_count(); ++i) {
-        auto& section = this->section(i);
-        m_sections.set(section.name(), move(i));
-    }
-#endif
     return true;
 }
 
@@ -175,39 +167,3 @@ const ELFImage::ProgramHeader ELFImage::program_header(unsigned index) const
     ASSERT(index < program_header_count());
     return ProgramHeader(*this, index);
 }
-
-#ifdef SUPPORT_RELOCATIONS
-const ELFImage::Relocation ELFImage::RelocationSection::relocation(unsigned index) const
-{
-    ASSERT(index < relocation_count());
-    auto* rels = reinterpret_cast<const Elf32_Rel*>(m_image.raw_data(offset()));
-    return Relocation(m_image, rels[index]);
-}
-
-const ELFImage::RelocationSection ELFImage::Section::relocations() const
-{
-    // FIXME: This is ugly.
-    char relocation_sectionName[128];
-    ksprintf(relocation_sectionName, ".rel%s", name());
-
-#ifdef ELFIMAGE_DEBUG
-    kprintf("looking for '%s'\n", relocation_sectionName);
-#endif
-    auto relocation_section = m_image.lookup_section(relocation_sectionName);
-    if (relocation_section.type() != SHT_REL)
-        return static_cast<const RelocationSection>(m_image.section(0));
-
-#ifdef ELFIMAGE_DEBUG
-    kprintf("Found relocations for %s in %s\n", name(), relocation_section.name());
-#endif
-    return static_cast<const RelocationSection>(relocation_section);
-}
-
-const ELFImage::Section ELFImage::lookup_section(const char* name) const
-{
-    if (auto it = m_sections.find(name); it != m_sections.end())
-        return section((*it).value);
-    return section(0);
-}
-#endif
-

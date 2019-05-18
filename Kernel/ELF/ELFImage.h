@@ -90,9 +90,6 @@ public:
         dword address() const { return m_section_header.sh_addr; }
         const char* raw_data() const { return m_image.raw_data(m_section_header.sh_offset); }
         bool is_undefined() const { return m_section_index == SHN_UNDEF; }
-#ifdef SUPPORT_RELOCATIONS
-        const RelocationSection relocations() const;
-#endif
         dword flags() const { return m_section_header.sh_flags; }
         bool is_writable() const { return flags() & SHF_WRITE; }
         bool is_executable() const { return flags() & PF_X; }
@@ -103,39 +100,6 @@ public:
         const Elf32_Shdr& m_section_header;
         unsigned m_section_index;
     };
-
-#ifdef SUPPORT_RELOCATIONS
-    class RelocationSection : public Section {
-    public:
-        RelocationSection(const Section& section)
-            : Section(section.m_image, section.m_section_index)
-        {
-        }
-        unsigned relocation_count() const { return entry_count(); }
-        const Relocation relocation(unsigned index) const;
-        template<typename F> void for_each_relocation(F) const;
-    };
-
-    class Relocation {
-    public:
-        Relocation(const ELFImage& image, const Elf32_Rel& rel)
-            : m_image(image)
-            , m_rel(rel)
-        {
-        }
-
-        ~Relocation() { }
-
-        unsigned offset() const { return m_rel.r_offset; }
-        unsigned type() const { return ELF32_R_TYPE(m_rel.r_info); }
-        unsigned symbol_index() const { return ELF32_R_SYM(m_rel.r_info); }
-        const Symbol symbol() const { return m_image.symbol(symbol_index()); }
-
-    private:
-        const ELFImage& m_image;
-        const Elf32_Rel& m_rel;
-    };
-#endif
 
     unsigned symbol_count() const;
     unsigned section_count() const;
@@ -149,10 +113,6 @@ public:
     template<typename F> void for_each_section_of_type(unsigned, F) const;
     template<typename F> void for_each_symbol(F) const;
     template<typename F> void for_each_program_header(F) const;
-
-    // NOTE: Returns section(0) if section with name is not found.
-    // FIXME: I don't love this API.
-    const Section lookup_section(const char* name) const;
 
     bool is_executable() const { return header().e_type == ET_EXEC; }
     bool is_relocatable() const { return header().e_type == ET_REL; }
@@ -170,9 +130,6 @@ private:
     const char* section_index_to_string(unsigned index);
 
     const byte* m_buffer { nullptr };
-#ifdef SUPPORT_RELOCATIONS
-    HashMap<String, unsigned> m_sections;
-#endif
     bool m_valid { false };
     unsigned m_symbol_table_section_index { 0 };
     unsigned m_string_table_section_index { 0 };
@@ -196,17 +153,6 @@ inline void ELFImage::for_each_section_of_type(unsigned type, F func) const
         }
     }
 }
-
-#ifdef SUPPORT_RELOCATIONS
-template<typename F>
-inline void ELFImage::RelocationSection::for_each_relocation(F func) const
-{
-    for (unsigned i = 0; i < relocation_count(); ++i) {
-        if (!func(relocation(i)))
-            break;
-    }
-}
-#endif
 
 template<typename F>
 inline void ELFImage::for_each_symbol(F func) const
