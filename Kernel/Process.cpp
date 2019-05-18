@@ -1751,9 +1751,9 @@ int Process::sys$select(const Syscall::SC_select_params* params)
     // FIXME: Return -EINVAL if timeout is invalid.
 
     auto transfer_fds = [this, nfds] (fd_set* set, auto& vector) -> int {
+        vector.clear_with_capacity();
         if (!set)
             return 0;
-        vector.clear_with_capacity();
         auto bitmap = Bitmap::wrap((byte*)set, FD_SETSIZE);
         for (int i = 0; i < nfds; ++i) {
             if (bitmap.get(i)) {
