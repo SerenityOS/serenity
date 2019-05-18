@@ -1794,7 +1794,7 @@ int Process::sys$select(const Syscall::SC_select_params* params)
     error = transfer_fds(readfds, current->m_select_read_fds);
     if (error)
         return error;
-    error = transfer_fds(readfds, current->m_select_exceptional_fds);
+    error = transfer_fds(exceptfds, current->m_select_exceptional_fds);
     if (error)
         return error;
 
