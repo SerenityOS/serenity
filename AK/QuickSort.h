@@ -2,44 +2,36 @@
 
 namespace AK {
 
-template<typename IteratorType, typename LessThan>
-IteratorType partition(IteratorType first, IteratorType last, LessThan less_than)
-{
-    auto pivot = last;
-    auto smallest = first - 1;
-    auto it = first;
-    for (; it < last; ++it) {
-        if (less_than(*it, *pivot)) {
-            ++smallest;
-            swap(*it, *smallest);
-        }
-    }
-    swap(*(smallest + 1), *last);
-    return smallest + 1;
-}
-
-template<typename IteratorType, typename LessThan>
-void quick_sort_impl(IteratorType begin, IteratorType first, IteratorType last, LessThan less_than)
-{
-    if (first < last) {
-        auto pivot = partition(first, last, less_than);
-        quick_sort_impl(begin, first, pivot - 1, less_than);
-        quick_sort_impl(begin, pivot + 1, last, less_than);
-    }
-}
-
 template<typename T>
 bool is_less_than(const T& a, const T& b)
 {
     return a < b;
 }
 
-template<typename IteratorType, typename LessThan>
-void quick_sort(IteratorType begin, IteratorType end, LessThan less_than = is_less_than)
+template <typename Iterator, typename LessThan>
+void quick_sort(Iterator start, Iterator end, LessThan less_than = is_less_than)
 {
-    if (begin == end)
+    int size = end - start;
+    if (size <= 0)
         return;
-    quick_sort_impl(begin, begin, end - 1, less_than);
+
+    int pivot_point = size / 2;
+    auto pivot = *(start + pivot_point);
+
+    if (pivot_point)
+        swap(*(start + pivot_point), *start);
+
+    int i = 1;
+    for (int j = 1; j < size; ++j) {
+        if (less_than(*(start + j), pivot)) {
+            swap(*(start+j), *(start + i));
+            ++i;
+        }
+    }
+
+    swap(*start, *(start + i - 1));
+    quick_sort(start, start + i - 1, less_than);
+    quick_sort(start + i, end, less_than);
 }
 
 }
