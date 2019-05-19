@@ -301,7 +301,7 @@ void WSEventLoop::drain_client(WSClientConnection& client)
         WSAPI_ClientMessage message;
         // FIXME: Don't go one message at a time, that's so much context switching, oof.
         ssize_t nread = read(client.fd(), &message, sizeof(WSAPI_ClientMessage));
-        if (nread == 0) {
+        if (nread == 0 || (nread == -1 && errno == EAGAIN)) {
             if (!messages_received)
                 post_event(client, make<WSClientDisconnectedNotification>(client.client_id()));
             break;
