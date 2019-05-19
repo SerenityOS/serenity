@@ -53,5 +53,6 @@ private:
     PhysicalRegionDescriptor m_prdt;
     RetainPtr<PhysicalPage> m_dma_buffer_page;
     word m_bus_master_base { 0 };
+    Lockable<bool> m_dma_enabled;
 };
 
