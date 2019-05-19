@@ -25,6 +25,7 @@
 #include <Kernel/SharedMemory.h>
 #include <Kernel/ProcessTracer.h>
 
+//#define DEBUG_POLL_SELECT
 //#define DEBUG_IO
 //#define TASK_DEBUG
 //#define FORK_DEBUG
@@ -1798,7 +1799,7 @@ int Process::sys$select(const Syscall::SC_select_params* params)
     if (error)
         return error;
 
-#ifdef DEBUG_IO
+#if defined(DEBUG_IO) || defined(DEBUG_POLL_SELECT)
     dbgprintf("%s<%u> selecting on (read:%u, write:%u), timeout=%p\n", name().characters(), pid(), current->m_select_read_fds.size(), current->m_select_write_fds.size(), timeout);
 #endif
 
@@ -1871,6 +1872,10 @@ int Process::sys$poll(pollfd* fds, int nfds, int timeout)
     } else {
         current->m_select_has_timeout = false;
     }
+
+#if defined(DEBUG_IO) || defined(DEBUG_POLL_SELECT)
+    dbgprintf("%s<%u> polling on (read:%u, write:%u), timeout=%d\n", name().characters(), pid(), current->m_select_read_fds.size(), current->m_select_write_fds.size(), timeout);
+#endif
 
     if (current->m_select_has_timeout || timeout < 0) {
         current->block(Thread::State::BlockedSelect);
