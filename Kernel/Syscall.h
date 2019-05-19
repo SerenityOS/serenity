@@ -134,6 +134,7 @@ struct SC_mmap_params {
     int32_t flags;
     int32_t fd;
     int32_t offset; // FIXME: 64-bit off_t?
+    const char* name { nullptr };
 };
 
 struct SC_select_params {

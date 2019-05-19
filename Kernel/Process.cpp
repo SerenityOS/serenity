@@ -151,12 +151,15 @@ void* Process::sys$mmap(const Syscall::SC_mmap_params* params)
 {
     if (!validate_read(params, sizeof(Syscall::SC_mmap_params)))
         return (void*)-EFAULT;
+    if (params->name && !validate_read_str(params->name))
+        return (void*)-EFAULT;
     void* addr = (void*)params->addr;
     size_t size = params->size;
     int prot = params->prot;
     int flags = params->flags;
     int fd = params->fd;
     off_t offset = params->offset;
+    const char* name = params->name;
     if (size == 0)
         return (void*)-EINVAL;
     if ((dword)addr & ~PAGE_MASK)
@@ -167,6 +170,8 @@ void* Process::sys$mmap(const Syscall::SC_mmap_params* params)
             return (void*)-ENOMEM;
         if (flags & MAP_SHARED)
             region->set_shared(true);
+        if (name)
+            region->set_name(name);
         return region->laddr().as_ptr();
     }
     if (offset & ~PAGE_MASK)
@@ -180,6 +185,8 @@ void* Process::sys$mmap(const Syscall::SC_mmap_params* params)
     auto region = region_or_error.value();
     if (flags & MAP_SHARED)
         region->set_shared(true);
+    if (name)
+        region->set_name(name);
     return region->laddr().as_ptr();
 }
 
