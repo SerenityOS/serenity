@@ -15,6 +15,74 @@
 #define IDE0_STATUS      0x1F7
 #define IDE0_COMMAND     0x1F7
 
+#define ATA_SR_BSY     0x80
+#define ATA_SR_DRDY    0x40
+#define ATA_SR_DF      0x20
+#define ATA_SR_DSC     0x10
+#define ATA_SR_DRQ     0x08
+#define ATA_SR_CORR    0x04
+#define ATA_SR_IDX     0x02
+#define ATA_SR_ERR     0x01
+
+#define ATA_ER_BBK      0x80
+#define ATA_ER_UNC      0x40
+#define ATA_ER_MC       0x20
+#define ATA_ER_IDNF     0x10
+#define ATA_ER_MCR      0x08
+#define ATA_ER_ABRT     0x04
+#define ATA_ER_TK0NF    0x02
+#define ATA_ER_AMNF     0x01
+
+#define ATA_CMD_READ_PIO          0x20
+#define ATA_CMD_READ_PIO_EXT      0x24
+#define ATA_CMD_READ_DMA          0xC8
+#define ATA_CMD_READ_DMA_EXT      0x25
+#define ATA_CMD_WRITE_PIO         0x30
+#define ATA_CMD_WRITE_PIO_EXT     0x34
+#define ATA_CMD_WRITE_DMA         0xCA
+#define ATA_CMD_WRITE_DMA_EXT     0x35
+#define ATA_CMD_CACHE_FLUSH       0xE7
+#define ATA_CMD_CACHE_FLUSH_EXT   0xEA
+#define ATA_CMD_PACKET            0xA0
+#define ATA_CMD_IDENTIFY_PACKET   0xA1
+#define ATA_CMD_IDENTIFY          0xEC
+
+#define ATAPI_CMD_READ            0xA8
+#define ATAPI_CMD_EJECT           0x1B
+
+#define ATA_IDENT_DEVICETYPE   0
+#define ATA_IDENT_CYLINDERS    2
+#define ATA_IDENT_HEADS        6
+#define ATA_IDENT_SECTORS      12
+#define ATA_IDENT_SERIAL       20
+#define ATA_IDENT_MODEL        54
+#define ATA_IDENT_CAPABILITIES 98
+#define ATA_IDENT_FIELDVALID   106
+#define ATA_IDENT_MAX_LBA      120
+#define ATA_IDENT_COMMANDSETS  164
+#define ATA_IDENT_MAX_LBA_EXT  200
+
+#define IDE_ATA            0x00
+#define IDE_ATAPI          0x01
+
+#define ATA_REG_DATA       0x00
+#define ATA_REG_ERROR      0x01
+#define ATA_REG_FEATURES   0x01
+#define ATA_REG_SECCOUNT0  0x02
+#define ATA_REG_LBA0       0x03
+#define ATA_REG_LBA1       0x04
+#define ATA_REG_LBA2       0x05
+#define ATA_REG_HDDEVSEL   0x06
+#define ATA_REG_COMMAND    0x07
+#define ATA_REG_STATUS     0x07
+#define ATA_REG_SECCOUNT1  0x08
+#define ATA_REG_LBA3       0x09
+#define ATA_REG_LBA4       0x0A
+#define ATA_REG_LBA5       0x0B
+#define ATA_REG_CONTROL    0x0C
+#define ATA_REG_ALTSTATUS  0x0C
+#define ATA_REG_DEVADDRESS 0x0D
+
 enum IDECommand : byte {
     IDENTIFY_DRIVE = 0xEC,
     READ_SECTORS = 0x21,
@@ -60,6 +128,8 @@ unsigned IDEDiskDevice::block_size() const
 
 bool IDEDiskDevice::read_block(unsigned index, byte* out) const
 {
+    if (m_bus_master_base)
+        return const_cast<IDEDiskDevice&>(*this).read_sector_with_dma(index, out);
     return const_cast<IDEDiskDevice&>(*this).read_sectors(index, 1, out);
 }
 
@@ -116,6 +186,15 @@ void IDEDiskDevice::handle_irq()
 
 void IDEDiskDevice::initialize()
 {
+    static const PCI::ID piix3_ide_id = { 0x8086, 0x7010 };
+    static const PCI::ID piix4_ide_id = { 0x8086, 0x7111 };
+    PCI::enumerate_all([this] (const PCI::Address& address, PCI::ID id) {
+        if (id == piix3_ide_id || id == piix4_ide_id) {
+            m_pci_address = address;
+            kprintf("PIIX%u IDE device found!\n", id == piix3_ide_id ? 3 : 4);
+        }
+    });
+
 #ifdef DISK_DEBUG
     byte status = IO::in8(IDE0_STATUS);
     kprintf("initial status: ");
@@ -163,6 +242,98 @@ void IDEDiskDevice::initialize()
         m_heads,
         m_sectors_per_track
     );
+
+    // Let's try to set up DMA transfers.
+    if (!m_pci_address.is_null()) {
+        m_prdt.end_of_table = 0x8000;
+        PCI::enable_bus_mastering(m_pci_address);
+        m_bus_master_base = PCI::get_BAR4(m_pci_address) & 0xfffc;
+        dbgprintf("PIIX Bus master IDE: I/O @ %x\n", m_bus_master_base);
+    }
+}
+
+static void wait_400ns(word io_base)
+{
+    for (int i = 0; i < 4; ++i)
+        IO::in8(io_base + ATA_REG_ALTSTATUS);
+}
+
+bool IDEDiskDevice::read_sector_with_dma(dword lba, byte* outbuf)
+{
+    LOCKER(m_lock);
+#ifdef DISK_DEBUG
+    dbgprintf("%s(%u): IDEDiskDevice::read_sector_with_dma (%u) -> %p\n",
+            current->process().name().characters(),
+            current->pid(), lba, outbuf);
+#endif
+
+    disable_irq();
+
+    m_prdt.offset = PhysicalAddress((dword)outbuf);
+    m_prdt.size = 512;
+
+    // Stop bus master
+    IO::out8(m_bus_master_base, 0);
+
+    // Write the PRDT location
+    IO::out32(m_bus_master_base + 4, (dword)&m_prdt);
+
+    // Turn on "Interrupt" and "Error" flag. The error flag should be cleared by hardware.
+    IO::out8(m_bus_master_base + 2, IO::in8(m_bus_master_base + 2) | 0x6);
+
+    // Set transfer direction
+    IO::out8(m_bus_master_base, 0x8);
+
+    m_interrupted = false;
+    enable_irq();
+
+    while (IO::in8(IDE0_STATUS) & BUSY);
+
+    word io_base = 0x1f0;
+    bool is_slave = false;
+
+    IO::out8(io_base + ATA_REG_CONTROL, 0);
+    IO::out8(io_base + ATA_REG_HDDEVSEL, 0xe0 | (is_slave << 4));
+    wait_400ns(io_base);
+
+    IO::out8(io_base + ATA_REG_FEATURES, 0);
+
+    IO::out8(io_base + ATA_REG_SECCOUNT0, 0);
+    IO::out8(io_base + ATA_REG_LBA0, 0);
+    IO::out8(io_base + ATA_REG_LBA1, 0);
+    IO::out8(io_base + ATA_REG_LBA2, 0);
+
+    IO::out8(io_base + ATA_REG_SECCOUNT0, 1);
+    IO::out8(io_base + ATA_REG_LBA0, (lba & 0x000000ff) >> 0);
+    IO::out8(io_base + ATA_REG_LBA1, (lba & 0x0000ff00) >> 8);
+    IO::out8(io_base + ATA_REG_LBA2, (lba & 0x00ff0000) >> 16);
+
+    for (;;) {
+        auto status = IO::in8(io_base + ATA_REG_STATUS);
+        if (!(status & ATA_SR_BSY) && (status & ATA_SR_DRDY))
+            break;
+    }
+
+    IO::out8(io_base + ATA_REG_COMMAND, ATA_CMD_READ_DMA_EXT);
+    wait_400ns(io_base);
+
+    // Start bus master
+    IO::out8(m_bus_master_base, 0x9);
+
+    for (;;) {
+        auto status = IO::in8(m_bus_master_base + 2);
+        auto dstatus = IO::in8(io_base + ATA_REG_STATUS);
+        if (!(status & 4))
+            continue;
+        if (!(dstatus & ATA_SR_BSY))
+            break;
+    }
+
+    disable_irq();
+
+    // I read somewhere that this may trigger a cache flush so let's do it.
+    IO::out8(m_bus_master_base + 2, IO::in8(m_bus_master_base + 2) | 0x6);
+    return true;
 }
 
 bool IDEDiskDevice::read_sectors(dword start_sector, word count, byte* outbuf)
