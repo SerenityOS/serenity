@@ -324,22 +324,22 @@ void GEventLoop::process_unprocessed_bundles()
 
 bool GEventLoop::drain_messages_from_server()
 {
-    bool is_first_pass = true;
     for (;;) {
         WSAPI_ServerMessage message;
         ssize_t nread = read(s_windowserver_fd, &message, sizeof(WSAPI_ServerMessage));
         if (nread < 0) {
+            if (errno == EAGAIN) {
+                return true;
+            }
             perror("read");
             quit(1);
             return false;
         }
         if (nread == 0) {
-            if (is_first_pass) {
-                fprintf(stderr, "EOF on WindowServer fd\n");
-                quit(1);
-                return false;
-            }
-            return true;
+            fprintf(stderr, "EOF on WindowServer fd\n");
+            quit(1);
+            exit(-1);
+            return false;
         }
         assert(nread == sizeof(message));
         ByteBuffer extra_data;
@@ -355,7 +355,6 @@ bool GEventLoop::drain_messages_from_server()
             ASSERT(extra_nread == message.extra_size);
         }
         m_unprocessed_bundles.append({ move(message), move(extra_data) });
-        is_first_pass = false;
     }
 }
 
