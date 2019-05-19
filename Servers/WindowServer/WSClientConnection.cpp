@@ -92,12 +92,21 @@ void WSClientConnection::post_message(const WSAPI_ServerMessage& message, const 
 
     int nwritten = writev(m_fd, iov, iov_count);
     if (nwritten < 0) {
-        if (errno == EPIPE) {
+        switch (errno) {
+        case EPIPE:
             dbgprintf("WSClientConnection::post_message: Disconnected from peer.\n");
+            delete_later();
             return;
+            break;
+        case EAGAIN:
+            dbgprintf("WSClientConnection::post_message: Client buffer overflowed.\n");
+            did_misbehave();
+            return;
+            break;
+        default:
+            perror("WSClientConnection::post_message writev");
+            ASSERT_NOT_REACHED();
         }
-        perror("WSClientConnection::post_message writev");
-        ASSERT_NOT_REACHED();
     }
 
     ASSERT(nwritten == sizeof(message) + extra_data.size());
