@@ -32,8 +32,7 @@ void setpwent()
             perror("open /etc/passwd");
         }
         assert(__pwdb_stream);
-        __pwdb_entry = (struct passwd_with_strings*)mmap(nullptr, getpagesize(), PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0);
-        set_mmap_name(__pwdb_entry, getpagesize(), "setpwent");
+        __pwdb_entry = (struct passwd_with_strings*)mmap_with_name(nullptr, getpagesize(), PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0, "setpwent");
     }
 }
 

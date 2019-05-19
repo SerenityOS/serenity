@@ -19,10 +19,9 @@ GraphicsBitmap::GraphicsBitmap(Format format, const Size& size)
 {
     if (format == Format::Indexed8)
         m_palette = new RGBA32[256];
-    m_data = (RGBA32*)mmap(nullptr, size_in_bytes(), PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0);
+    m_data = (RGBA32*)mmap_with_name(nullptr, size_in_bytes(), PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0, String::format("GraphicsBitmap [%dx%d]", width(), height()).characters());
     ASSERT(m_data && m_data != (void*)-1);
     m_needs_munmap = true;
-    set_mmap_name(String::format("GraphicsBitmap [%dx%d]", width(), height()).characters());
 }
 
 Retained<GraphicsBitmap> GraphicsBitmap::create_wrapper(Format format, const Size& size, RGBA32* data)
