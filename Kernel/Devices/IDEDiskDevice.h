@@ -3,9 +3,19 @@
 #include <Kernel/Lock.h>
 #include <AK/RetainPtr.h>
 #include <Kernel/Devices/DiskDevice.h>
-#include "IRQHandler.h"
+#include <Kernel/IRQHandler.h>
+#include <Kernel/PCI.h>
+#include <Kernel/PhysicalAddress.h>
+#include <Kernel/VM/PhysicalPage.h>
+
+struct PhysicalRegionDescriptor {
+    PhysicalAddress offset;
+    word size { 0 };
+    word end_of_table { 0 };
+};
 
 class IDEDiskDevice final : public IRQHandler, public DiskDevice {
+    AK_MAKE_ETERNAL
 public:
     static Retained<IDEDiskDevice> create();
     virtual ~IDEDiskDevice() override;
@@ -27,6 +37,7 @@ private:
 
     void initialize();
     bool wait_for_irq();
+    bool read_sector_with_dma(dword sector, byte*);
     bool read_sectors(dword start_sector, word count, byte* buffer);
     bool write_sectors(dword start_sector, word count, const byte* data);
 
@@ -37,5 +48,8 @@ private:
     volatile bool m_interrupted { false };
     volatile byte m_device_error { 0 };
 
+    PCI::Address m_pci_address;
+    PhysicalRegionDescriptor m_prdt;
+    word m_bus_master_base { 0 };
 };
 
