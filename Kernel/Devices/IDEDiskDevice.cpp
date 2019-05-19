@@ -7,6 +7,7 @@
 #include "PIC.h"
 #include <Kernel/Lock.h>
 #include <Kernel/VM/MemoryManager.h>
+#include <Kernel/FileSystem/ProcFS.h>
 
 //#define DISK_DEBUG
 
@@ -110,6 +111,8 @@ Retained<IDEDiskDevice> IDEDiskDevice::create()
 IDEDiskDevice::IDEDiskDevice()
     : IRQHandler(IRQ_FIXED_DISK)
 {
+    m_dma_enabled.resource() = true;
+    ProcFS::the().add_sys_bool("ide_dma", m_dma_enabled);
     initialize();
 }
 
@@ -129,14 +132,14 @@ unsigned IDEDiskDevice::block_size() const
 
 bool IDEDiskDevice::read_blocks(unsigned index, word count, byte* out)
 {
-    if (m_bus_master_base)
+    if (m_bus_master_base && m_dma_enabled.resource())
         return read_sectors_with_dma(index, count, out);
     return read_sectors(index, count, out);
 }
 
 bool IDEDiskDevice::read_block(unsigned index, byte* out) const
 {
-    if (m_bus_master_base)
+    if (m_bus_master_base && const_cast<IDEDiskDevice*>(this)->m_dma_enabled.resource())
         return const_cast<IDEDiskDevice&>(*this).read_sectors_with_dma(index, 1, out);
     return const_cast<IDEDiskDevice&>(*this).read_sectors(index, 1, out);
 }
