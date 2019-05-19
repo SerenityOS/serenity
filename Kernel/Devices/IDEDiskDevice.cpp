@@ -320,16 +320,11 @@ bool IDEDiskDevice::read_sector_with_dma(dword lba, byte* outbuf)
     // Start bus master
     IO::out8(m_bus_master_base, 0x9);
 
-    for (;;) {
-        auto status = IO::in8(m_bus_master_base + 2);
-        auto dstatus = IO::in8(io_base + ATA_REG_STATUS);
-        if (!(status & 4))
-            continue;
-        if (!(dstatus & ATA_SR_BSY))
-            break;
-    }
-
+    wait_for_irq();
     disable_irq();
+
+    if (m_device_error)
+        return false;
 
     // I read somewhere that this may trigger a cache flush so let's do it.
     IO::out8(m_bus_master_base + 2, IO::in8(m_bus_master_base + 2) | 0x6);
