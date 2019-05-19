@@ -153,10 +153,20 @@ bool LocalSocket::can_read(FileDescriptor& descriptor) const
 ssize_t LocalSocket::read(FileDescriptor& descriptor, byte* buffer, ssize_t size)
 {
     auto role = descriptor.socket_role();
-    if (role == SocketRole::Accepted)
+    if (role == SocketRole::Accepted) {
+        if (!descriptor.is_blocking()) {
+            if (m_for_server.is_empty())
+                return -EAGAIN;
+        }
         return m_for_server.read(buffer, size);
-    if (role == SocketRole::Connected)
+    }
+    if (role == SocketRole::Connected) {
+        if (!descriptor.is_blocking()) {
+            if (m_for_client.is_empty())
+                return -EAGAIN;
+        }
         return m_for_client.read(buffer, size);
+    }
     ASSERT_NOT_REACHED();
 }
 
