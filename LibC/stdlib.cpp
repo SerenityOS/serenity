@@ -62,7 +62,7 @@ char* getenv(const char* name)
     return nullptr;
 }
 
-int unsetenv(char* name)
+int unsetenv(const char* name)
 {
     auto new_var_len = strlen(name);
     size_t environ_size = 0;
