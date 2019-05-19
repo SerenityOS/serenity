@@ -65,6 +65,7 @@ ssize_t recv(int sockfd, void*, size_t, int flags);
 ssize_t recvfrom(int sockfd, void*, size_t, int flags, struct sockaddr*, socklen_t*);
 int getsockopt(int sockfd, int level, int option, void*, socklen_t*);
 int setsockopt(int sockfd, int level, int option, const void*, socklen_t);
+int getsockname(int sockfd, struct sockaddr*, socklen_t*);
 
 __END_DECLS
 

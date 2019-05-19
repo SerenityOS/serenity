@@ -2217,6 +2217,31 @@ ssize_t Process::sys$recvfrom(const Syscall::SC_recvfrom_params* params)
     return socket.recvfrom(*descriptor, buffer, buffer_length, flags, addr, addr_length);
 }
 
+int Process::sys$getsockname(int sockfd, sockaddr* addr, socklen_t* addrlen)
+{
+    if (!validate_read_typed(addrlen))
+        return -EFAULT;
+
+    if (*addrlen <= 0)
+        return -EINVAL;
+
+    if (!validate_write(addr, *addrlen))
+        return -EFAULT;
+
+    auto* descriptor = file_descriptor(sockfd);
+    if (!descriptor)
+        return -EBADF;
+
+    if (!descriptor->is_socket())
+        return -ENOTSOCK;
+
+    auto& socket = *descriptor->socket();
+    if (!socket.get_address(addr, addrlen))
+        return -EINVAL; // FIXME: Should this be another error? I'm not sure.
+
+    return 0;
+}
+
 int Process::sys$getsockopt(const Syscall::SC_getsockopt_params* params)
 {
     if (!validate_read_typed(params))

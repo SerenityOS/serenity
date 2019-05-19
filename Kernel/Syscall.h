@@ -104,6 +104,7 @@
     __ENUMERATE_SYSCALL(mknod) \
     __ENUMERATE_SYSCALL(writev) \
     __ENUMERATE_SYSCALL(beep) \
+    __ENUMERATE_SYSCALL(getsockname) \
 
 
 namespace Syscall {
