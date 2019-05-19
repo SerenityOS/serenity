@@ -42,8 +42,6 @@ private:
     };
     ELFImage m_image;
 
-    HashMap<String, char*> m_sections;
-
     struct SortedSymbol {
         dword address;
         const char* name;
