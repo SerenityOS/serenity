@@ -72,4 +72,10 @@ int setsockopt(int sockfd, int level, int option, const void* value, socklen_t v
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
+int getsockname(int sockfd, struct sockaddr* addr, socklen_t* addrlen)
+{
+    int rc = syscall(SC_getsockname, sockfd, addr, addrlen);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
 }
