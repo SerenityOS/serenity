@@ -853,8 +853,10 @@ ssize_t Process::sys$writev(int fd, const struct iovec* iov, int iov_count)
 ssize_t Process::do_write(FileDescriptor& descriptor, const byte* data, int data_size)
 {
     ssize_t nwritten = 0;
-    if (!descriptor.is_blocking())
-        return descriptor.write(data, data_size);
+    if (!descriptor.is_blocking()) {
+        if (!descriptor.can_write())
+            return -EAGAIN;
+    }
 
     while (nwritten < data_size) {
 #ifdef IO_DEBUG
