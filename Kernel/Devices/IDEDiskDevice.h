@@ -24,6 +24,7 @@ public:
     virtual unsigned block_size() const override;
     virtual bool read_block(unsigned index, byte*) const override;
     virtual bool write_block(unsigned index, const byte*) override;
+    virtual bool read_blocks(unsigned index, word count, byte*) override;
 
 protected:
     IDEDiskDevice();
@@ -37,7 +38,7 @@ private:
 
     void initialize();
     bool wait_for_irq();
-    bool read_sector_with_dma(dword sector, byte*);
+    bool read_sectors_with_dma(dword sector, word count, byte*);
     bool read_sectors(dword start_sector, word count, byte* buffer);
     bool write_sectors(dword start_sector, word count, const byte* data);
 
@@ -50,6 +51,7 @@ private:
 
     PCI::Address m_pci_address;
     PhysicalRegionDescriptor m_prdt;
+    RetainPtr<PhysicalPage> m_dma_buffer_page;
     word m_bus_master_base { 0 };
 };
 

@@ -17,6 +17,8 @@ public:
     bool read(DiskOffset, unsigned length, byte*) const;
     bool write(DiskOffset, unsigned length, const byte*);
 
+    virtual bool read_blocks(unsigned index, word count, byte*) = 0;
+
 protected:
     DiskDevice();
 };

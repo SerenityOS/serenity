@@ -6,6 +6,7 @@
 #include "Scheduler.h"
 #include "PIC.h"
 #include <Kernel/Lock.h>
+#include <Kernel/VM/MemoryManager.h>
 
 //#define DISK_DEBUG
 
@@ -126,10 +127,17 @@ unsigned IDEDiskDevice::block_size() const
     return 512;
 }
 
+bool IDEDiskDevice::read_blocks(unsigned index, word count, byte* out)
+{
+    if (m_bus_master_base)
+        return read_sectors_with_dma(index, count, out);
+    return read_sectors(index, count, out);
+}
+
 bool IDEDiskDevice::read_block(unsigned index, byte* out) const
 {
     if (m_bus_master_base)
-        return const_cast<IDEDiskDevice&>(*this).read_sector_with_dma(index, out);
+        return const_cast<IDEDiskDevice&>(*this).read_sectors_with_dma(index, 1, out);
     return const_cast<IDEDiskDevice&>(*this).read_sectors(index, 1, out);
 }
 
@@ -248,6 +256,7 @@ void IDEDiskDevice::initialize()
         m_prdt.end_of_table = 0x8000;
         PCI::enable_bus_mastering(m_pci_address);
         m_bus_master_base = PCI::get_BAR4(m_pci_address) & 0xfffc;
+        m_dma_buffer_page = MM.allocate_supervisor_physical_page();
         dbgprintf("PIIX Bus master IDE: I/O @ %x\n", m_bus_master_base);
     }
 }
@@ -258,19 +267,21 @@ static void wait_400ns(word io_base)
         IO::in8(io_base + ATA_REG_ALTSTATUS);
 }
 
-bool IDEDiskDevice::read_sector_with_dma(dword lba, byte* outbuf)
+bool IDEDiskDevice::read_sectors_with_dma(dword lba, word count, byte* outbuf)
 {
     LOCKER(m_lock);
 #ifdef DISK_DEBUG
-    dbgprintf("%s(%u): IDEDiskDevice::read_sector_with_dma (%u) -> %p\n",
+    dbgprintf("%s(%u): IDEDiskDevice::read_sectors_with_dma (%u x%u) -> %p\n",
             current->process().name().characters(),
-            current->pid(), lba, outbuf);
+            current->pid(), lba, count, outbuf);
 #endif
 
     disable_irq();
 
-    m_prdt.offset = PhysicalAddress((dword)outbuf);
-    m_prdt.size = 512;
+    m_prdt.offset = m_dma_buffer_page->paddr();
+    m_prdt.size = 512 * count;
+
+    ASSERT(m_prdt.size <= PAGE_SIZE);
 
     // Stop bus master
     IO::out8(m_bus_master_base, 0);
@@ -303,7 +314,7 @@ bool IDEDiskDevice::read_sector_with_dma(dword lba, byte* outbuf)
     IO::out8(io_base + ATA_REG_LBA1, 0);
     IO::out8(io_base + ATA_REG_LBA2, 0);
 
-    IO::out8(io_base + ATA_REG_SECCOUNT0, 1);
+    IO::out8(io_base + ATA_REG_SECCOUNT0, count);
     IO::out8(io_base + ATA_REG_LBA0, (lba & 0x000000ff) >> 0);
     IO::out8(io_base + ATA_REG_LBA1, (lba & 0x0000ff00) >> 8);
     IO::out8(io_base + ATA_REG_LBA2, (lba & 0x00ff0000) >> 16);
@@ -325,6 +336,8 @@ bool IDEDiskDevice::read_sector_with_dma(dword lba, byte* outbuf)
 
     if (m_device_error)
         return false;
+
+    memcpy(outbuf, m_dma_buffer_page->paddr().as_ptr(), 512 * count);
 
     // I read somewhere that this may trigger a cache flush so let's do it.
     IO::out8(m_bus_master_base + 2, IO::in8(m_bus_master_base + 2) | 0x6);
