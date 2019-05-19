@@ -92,4 +92,5 @@ private:
     int m_flags_left { 0 };
     Face m_face { Face::Default };
     bool m_chord_preview { false };
+    bool m_first_click { true };
 };

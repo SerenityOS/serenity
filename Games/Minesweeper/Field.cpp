@@ -97,6 +97,7 @@ Field::Field(GLabel& flag_label, GLabel& time_label, GButton& face_button, GWidg
     , m_flag_label(flag_label)
     , m_time_label(time_label)
 {
+    srand(time(nullptr));
     m_timer.on_timeout = [this] {
         ++m_time_elapsed;
         m_time_label.set_text(String::format("%u.%u", m_time_elapsed / 10, m_time_elapsed % 10));
@@ -167,6 +168,7 @@ void Square::for_each_neighbor(Callback callback)
 
 void Field::reset()
 {
+    m_first_click = true;
     set_updates_enabled(false);
     m_time_elapsed = 0;
     m_time_label.set_text("0");
@@ -175,7 +177,6 @@ void Field::reset()
     m_timer.stop();
     set_greedy_for_hits(false);
     set_face(Face::Default);
-    srand(time(nullptr));
 
     m_squares.resize(max(m_squares.size(), rows() * columns()));
 
@@ -292,6 +293,13 @@ void Field::paint_event(GPaintEvent& event)
 
 void Field::on_square_clicked(Square& square)
 {
+    if (m_first_click) {
+        while (square.has_mine) {
+            reset();
+        }
+    }
+    m_first_click = false;
+
     if (square.is_swept)
         return;
     if (square.has_flag)
@@ -307,11 +315,12 @@ void Field::on_square_clicked(Square& square)
     if (square.has_mine) {
         square.label->set_fill_with_background_color(true);
         game_over();
-    } else {
-        --m_unswept_empties;
-        if (square.number == 0)
-            flood_fill(square);
+        return;
     }
+
+    --m_unswept_empties;
+    if (square.number == 0)
+        flood_fill(square);
 
     if (!m_unswept_empties)
         win();
