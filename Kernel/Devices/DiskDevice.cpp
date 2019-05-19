@@ -15,12 +15,8 @@ bool DiskDevice::read(DiskOffset offset, unsigned length, byte* out) const
     dword first_block = offset / block_size();
     dword end_block = (offset + length) / block_size();
     byte* outptr = out;
-    for (unsigned bi = first_block; bi < end_block; ++bi) {
-        if (!read_block(bi, outptr))
-            return false;
-        outptr += block_size();
-    }
-    return true;
+
+    return const_cast<DiskDevice*>(this)->read_blocks(first_block, end_block - first_block, outptr);
 }
 
 bool DiskDevice::write(DiskOffset offset, unsigned length, const byte* in)
