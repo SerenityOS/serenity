@@ -480,4 +480,11 @@ void sysbeep()
     syscall(SC_beep);
 }
 
+int fsync(int fd)
+{
+    UNUSED_PARAM(fd);
+    dbgprintf("FIXME: Implement fsync()\n");
+    return 0;
+}
+
 }

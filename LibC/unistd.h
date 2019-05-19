@@ -14,6 +14,7 @@ __BEGIN_DECLS
 
 extern char** environ;
 
+int fsync(int fd);
 void sysbeep();
 int systrace(pid_t);
 int gettid();
