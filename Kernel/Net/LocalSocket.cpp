@@ -193,9 +193,9 @@ ssize_t LocalSocket::write(FileDescriptor& descriptor, const byte* data, ssize_t
 bool LocalSocket::can_write(FileDescriptor& descriptor) const
 {
     if (descriptor.socket_role() == SocketRole::Accepted)
-        return !has_attached_peer(descriptor) || m_for_client.bytes_in_write_buffer() < 4096;
+        return !has_attached_peer(descriptor) || m_for_client.bytes_in_write_buffer() < 16384;
     if (descriptor.socket_role() == SocketRole::Connected)
-        return !has_attached_peer(descriptor) || m_for_server.bytes_in_write_buffer() < 4096;
+        return !has_attached_peer(descriptor) || m_for_server.bytes_in_write_buffer() < 16384;
     ASSERT_NOT_REACHED();
 }
 
