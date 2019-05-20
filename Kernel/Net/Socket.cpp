@@ -76,7 +76,7 @@ KResult Socket::setsockopt(int level, int option, const void* value, socklen_t v
         m_receive_timeout = *(const timeval*)value;
         return KSuccess;
     default:
-        kprintf("%s(%u): setsockopt() at SOL_SOCKET with unimplemented option %d\n", option);
+        kprintf("%s(%u): setsockopt() at SOL_SOCKET with unimplemented option %d\n", current->process().name().characters(), current->process().pid(), option);
         return KResult(-ENOPROTOOPT);
     }
 }
