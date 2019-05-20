@@ -31,7 +31,7 @@ pid_t GEventLoop::s_server_pid = -1;
 void GEventLoop::connect_to_server()
 {
     ASSERT(s_windowserver_fd == -1);
-    s_windowserver_fd = socket(AF_LOCAL, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0);
+    s_windowserver_fd = socket(AF_LOCAL, SOCK_STREAM | SOCK_CLOEXEC, 0);
     if (s_windowserver_fd < 0) {
         perror("socket");
         ASSERT_NOT_REACHED();
@@ -326,7 +326,7 @@ bool GEventLoop::drain_messages_from_server()
 {
     for (;;) {
         WSAPI_ServerMessage message;
-        ssize_t nread = read(s_windowserver_fd, &message, sizeof(WSAPI_ServerMessage));
+        ssize_t nread = recv(s_windowserver_fd, &message, sizeof(WSAPI_ServerMessage), MSG_DONTWAIT);
         if (nread < 0) {
             if (errno == EAGAIN) {
                 return true;
@@ -341,16 +341,10 @@ bool GEventLoop::drain_messages_from_server()
             exit(-1);
             return false;
         }
-        assert(nread == sizeof(message));
+        ASSERT(nread == sizeof(message));
         ByteBuffer extra_data;
         if (message.extra_size) {
             extra_data = ByteBuffer::create_uninitialized(message.extra_size);
-            fd_set rfds;
-            FD_ZERO(&rfds);
-            FD_SET(s_windowserver_fd, &rfds);
-            struct timeval timeout { 1, 0 };
-            int rc = select(s_windowserver_fd + 1, &rfds, nullptr, nullptr, &timeout);
-            ASSERT(rc == 1);
             int extra_nread = read(s_windowserver_fd, extra_data.data(), extra_data.size());
             ASSERT(extra_nread == message.extra_size);
         }
