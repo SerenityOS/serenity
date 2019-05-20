@@ -121,7 +121,7 @@ struct WSAPI_ServerMessage {
         int rect_count;
     };
 
-    static const int max_inline_rect_count = 1;
+    static const int max_inline_rect_count = 32;
     union {
         char text[512];
         WSAPI_Rect rects[32];
@@ -232,7 +232,7 @@ struct WSAPI_ClientMessage {
         int rect_count;
     };
 
-    static const int max_inline_rect_count = 1;
+    static const int max_inline_rect_count = 32;
     union {
         char text[512];
         WSAPI_Rect rects[max_inline_rect_count];
