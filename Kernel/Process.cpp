@@ -75,8 +75,8 @@ Range Process::allocate_range(LinearAddress laddr, size_t size)
     laddr.mask(PAGE_MASK);
     size = PAGE_ROUND_UP(size);
     if (laddr.is_null())
-        return m_range_allocator.allocate_anywhere(size);
-    return m_range_allocator.allocate_specific(laddr, size);
+        return page_directory().range_allocator().allocate_anywhere(size);
+    return page_directory().range_allocator().allocate_specific(laddr, size);
 }
 
 Region* Process::allocate_region(LinearAddress laddr, size_t size, String&& name, bool is_readable, bool is_writable, bool commit)
@@ -117,7 +117,7 @@ bool Process::deallocate_region(Region& region)
     InterruptDisabler disabler;
     for (int i = 0; i < m_regions.size(); ++i) {
         if (m_regions[i] == &region) {
-            m_range_allocator.deallocate({ region.laddr(), region.size() });
+            page_directory().range_allocator().deallocate({ region.laddr(), region.size() });
             MM.unmap_region(region);
             m_regions.remove(i);
             return true;
@@ -313,7 +313,7 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
     dword entry_eip = 0;
     // FIXME: Is there a race here?
     auto old_page_directory = move(m_page_directory);
-    m_page_directory = PageDirectory::create();
+    m_page_directory = PageDirectory::create_for_userspace();
 #ifdef MM_DEBUG
     dbgprintf("Process %u exec: PD=%x created\n", pid(), m_page_directory.ptr());
 #endif
@@ -542,9 +542,6 @@ Process* Process::create_kernel_process(String&& name, void (*e)())
     return process;
 }
 
-static const dword userspace_range_base = 0x01000000;
-static const dword kernelspace_range_base = 0xc0000000;
-
 Process::Process(String&& name, uid_t uid, gid_t gid, pid_t ppid, RingLevel ring, RetainPtr<Inode>&& cwd, RetainPtr<Inode>&& executable, TTY* tty, Process* fork_parent)
     : m_name(move(name))
     , m_pid(next_pid++) // FIXME: RACE: This variable looks racy!
@@ -557,11 +554,10 @@ Process::Process(String&& name, uid_t uid, gid_t gid, pid_t ppid, RingLevel ring
     , m_executable(move(executable))
     , m_tty(tty)
     , m_ppid(ppid)
-    , m_range_allocator(LinearAddress(userspace_range_base), kernelspace_range_base - userspace_range_base)
 {
     dbgprintf("Process: New process PID=%u with name=%s\n", m_pid, m_name.characters());
 
-    m_page_directory = PageDirectory::create();
+    m_page_directory = PageDirectory::create_for_userspace();
 #ifdef MM_DEBUG
     dbgprintf("Process %u ctor: PD=%x created\n", pid(), m_page_directory.ptr());
 #endif
