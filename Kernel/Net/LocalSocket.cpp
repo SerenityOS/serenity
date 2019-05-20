@@ -24,7 +24,7 @@ LocalSocket::~LocalSocket()
 {
 }
 
-bool LocalSocket::get_address(sockaddr* address, socklen_t* address_size)
+bool LocalSocket::get_local_address(sockaddr* address, socklen_t* address_size)
 {
     // FIXME: Look into what fallback behavior we should have here.
     if (*address_size != sizeof(sockaddr_un))
@@ -32,6 +32,11 @@ bool LocalSocket::get_address(sockaddr* address, socklen_t* address_size)
     memcpy(address, &m_address, sizeof(sockaddr_un));
     *address_size = sizeof(sockaddr_un);
     return true;
+}
+
+bool LocalSocket::get_peer_address(sockaddr* address, socklen_t* address_size)
+{
+    return get_local_address(address, address_size);
 }
 
 KResult LocalSocket::bind(const sockaddr* address, socklen_t address_size)
