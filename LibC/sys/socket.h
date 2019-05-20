@@ -55,6 +55,7 @@ struct sockaddr_in {
 
 #define SO_RCVTIMEO 1
 #define SO_SNDTIMEO 2
+#define SO_KEEPALIVE 3
 
 int socket(int domain, int type, int protocol);
 int bind(int sockfd, const struct sockaddr* addr, socklen_t);
@@ -68,6 +69,7 @@ ssize_t recvfrom(int sockfd, void*, size_t, int flags, struct sockaddr*, socklen
 int getsockopt(int sockfd, int level, int option, void*, socklen_t*);
 int setsockopt(int sockfd, int level, int option, const void*, socklen_t);
 int getsockname(int sockfd, struct sockaddr*, socklen_t*);
+int getpeername(int sockfd, struct sockaddr*, socklen_t*);
 
 __END_DECLS
 
