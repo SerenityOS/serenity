@@ -331,7 +331,6 @@ private:
 
     RetainPtr<ProcessTracer> m_tracer;
     OwnPtr<ELFLoader> m_elf_loader;
-    RangeAllocator m_range_allocator;
 
     Lock m_big_lock { "Process" };
 };

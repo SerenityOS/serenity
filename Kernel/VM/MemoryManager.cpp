@@ -20,7 +20,6 @@ MemoryManager& MM
 }
 
 MemoryManager::MemoryManager()
-    : m_range_allocator(LinearAddress(0xc0000000), 0x3f000000)
 {
     // FIXME: This is not the best way to do memory map detection.
     //        Rewrite to use BIOS int 15,e820 once we have VM86 support.
@@ -402,7 +401,7 @@ RetainPtr<Region> MemoryManager::allocate_kernel_region(size_t size, String&& na
     InterruptDisabler disabler;
 
     ASSERT(!(size % PAGE_SIZE));
-    auto range = m_range_allocator.allocate_anywhere(size);
+    auto range = kernel_page_directory().range_allocator().allocate_anywhere(size);
     ASSERT(range.is_valid());
     auto region = adopt(*new Region(range, move(name), true, true, false));
     MM.map_region_at_address(*m_kernel_page_directory, *region, range.base(), false);
