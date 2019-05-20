@@ -144,9 +144,9 @@ bool LocalSocket::can_read(FileDescriptor& descriptor) const
     if (role == SocketRole::Listener)
         return can_accept();
     if (role == SocketRole::Accepted)
-        return (!m_connected_fds_open && !m_connecting_fds_open) || !m_for_server.is_empty();
+        return !has_attached_peer(descriptor) || !m_for_server.is_empty();
     if (role == SocketRole::Connected)
-        return !m_accepted_fds_open || !m_for_client.is_empty();
+        return !has_attached_peer(descriptor) || !m_for_client.is_empty();
     ASSERT_NOT_REACHED();
 }
 
@@ -170,27 +170,32 @@ ssize_t LocalSocket::read(FileDescriptor& descriptor, byte* buffer, ssize_t size
     ASSERT_NOT_REACHED();
 }
 
+bool LocalSocket::has_attached_peer(const FileDescriptor& descriptor) const
+{
+    if (descriptor.socket_role() == SocketRole::Accepted)
+        return m_connected_fds_open || m_connecting_fds_open;
+    if (descriptor.socket_role() == SocketRole::Connected)
+        return m_accepted_fds_open;
+    ASSERT_NOT_REACHED();
+}
+
 ssize_t LocalSocket::write(FileDescriptor& descriptor, const byte* data, ssize_t size)
 {
-    if (descriptor.socket_role() == SocketRole::Accepted) {
-        if (!m_accepted_fds_open)
-            return -EPIPE;
+    if (!has_attached_peer(descriptor))
+        return -EPIPE;
+    if (descriptor.socket_role() == SocketRole::Accepted)
         return m_for_client.write(data, size);
-    }
-    if (descriptor.socket_role() == SocketRole::Connected) {
-        if (!m_connected_fds_open && !m_connecting_fds_open)
-            return -EPIPE;
+    if (descriptor.socket_role() == SocketRole::Connected)
         return m_for_server.write(data, size);
-    }
     ASSERT_NOT_REACHED();
 }
 
 bool LocalSocket::can_write(FileDescriptor& descriptor) const
 {
     if (descriptor.socket_role() == SocketRole::Accepted)
-        return (!m_connected_fds_open && !m_connecting_fds_open) || m_for_client.bytes_in_write_buffer() < 4096;
+        return !has_attached_peer(descriptor) || m_for_client.bytes_in_write_buffer() < 4096;
     if (descriptor.socket_role() == SocketRole::Connected)
-        return !m_accepted_fds_open || m_for_server.bytes_in_write_buffer() < 4096;
+        return !has_attached_peer(descriptor) || m_for_server.bytes_in_write_buffer() < 4096;
     ASSERT_NOT_REACHED();
 }
 
