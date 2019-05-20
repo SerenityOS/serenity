@@ -105,6 +105,7 @@
     __ENUMERATE_SYSCALL(writev) \
     __ENUMERATE_SYSCALL(beep) \
     __ENUMERATE_SYSCALL(getsockname) \
+    __ENUMERATE_SYSCALL(getpeername) \
 
 
 namespace Syscall {

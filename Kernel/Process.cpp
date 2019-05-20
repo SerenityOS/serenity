@@ -2120,7 +2120,7 @@ int Process::sys$accept(int accepting_socket_fd, sockaddr* address, socklen_t* a
     }
     auto accepted_socket = socket.accept();
     ASSERT(accepted_socket);
-    bool success = accepted_socket->get_address(address, address_size);
+    bool success = accepted_socket->get_local_address(address, address_size);
     ASSERT(success);
     auto accepted_socket_descriptor = FileDescriptor::create(move(accepted_socket), SocketRole::Accepted);
     // NOTE: The accepted socket inherits fd flags from the accepting socket.
@@ -2240,7 +2240,33 @@ int Process::sys$getsockname(int sockfd, sockaddr* addr, socklen_t* addrlen)
         return -ENOTSOCK;
 
     auto& socket = *descriptor->socket();
-    if (!socket.get_address(addr, addrlen))
+    if (!socket.get_local_address(addr, addrlen))
+        return -EINVAL; // FIXME: Should this be another error? I'm not sure.
+
+    return 0;
+}
+
+int Process::sys$getpeername(int sockfd, sockaddr* addr, socklen_t* addrlen)
+{
+    if (!validate_read_typed(addrlen))
+        return -EFAULT;
+
+    if (*addrlen <= 0)
+        return -EINVAL;
+
+    if (!validate_write(addr, *addrlen))
+        return -EFAULT;
+
+    auto* descriptor = file_descriptor(sockfd);
+    if (!descriptor)
+        return -EBADF;
+
+    if (!descriptor->is_socket())
+        return -ENOTSOCK;
+
+    auto& socket = *descriptor->socket();
+
+    if (!socket.get_peer_address(addr, addrlen))
         return -EINVAL; // FIXME: Should this be another error? I'm not sure.
 
     return 0;

@@ -12,7 +12,8 @@ public:
 
     virtual KResult bind(const sockaddr*, socklen_t) override;
     virtual KResult connect(FileDescriptor&, const sockaddr*, socklen_t, ShouldBlock = ShouldBlock::Yes) override;
-    virtual bool get_address(sockaddr*, socklen_t*) override;
+    virtual bool get_local_address(sockaddr*, socklen_t*) override;
+    virtual bool get_peer_address(sockaddr*, socklen_t*) override;
     virtual void attach(FileDescriptor&) override;
     virtual void detach(FileDescriptor&) override;
     virtual bool can_read(FileDescriptor&) const override;

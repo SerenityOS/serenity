@@ -46,12 +46,28 @@ IPv4Socket::~IPv4Socket()
     all_sockets().resource().remove(this);
 }
 
-bool IPv4Socket::get_address(sockaddr* address, socklen_t* address_size)
+bool IPv4Socket::get_local_address(sockaddr* address, socklen_t* address_size)
 {
     // FIXME: Look into what fallback behavior we should have here.
-    if (*address_size != sizeof(sockaddr_in))
+    if (*address_size < sizeof(sockaddr_in))
         return false;
-    memcpy(address, &m_peer_address, sizeof(sockaddr_in));
+    auto& ia = (sockaddr_in&)*address;
+    ia.sin_family = AF_INET;
+    ia.sin_port = m_local_port;
+    memcpy(&ia.sin_addr, &m_local_address, sizeof(IPv4Address));
+    *address_size = sizeof(sockaddr_in);
+    return true;
+}
+
+bool IPv4Socket::get_peer_address(sockaddr* address, socklen_t* address_size)
+{
+    // FIXME: Look into what fallback behavior we should have here.
+    if (*address_size < sizeof(sockaddr_in))
+        return false;
+    auto& ia = (sockaddr_in&)*address;
+    ia.sin_family = AF_INET;
+    ia.sin_port = m_peer_port;
+    memcpy(&ia.sin_addr, &m_peer_address, sizeof(IPv4Address));
     *address_size = sizeof(sockaddr_in);
     return true;
 }
