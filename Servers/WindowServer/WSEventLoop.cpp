@@ -154,7 +154,10 @@ bool WSEventLoop::on_receive_from_client(int client_id, const WSAPI_ClientMessag
         post_event(client, make<WSAPIAddMenuToMenubarRequest>(client_id, message.menu.menubar_id, message.menu.menu_id));
         break;
     case WSAPI_ClientMessage::Type::CreateMenu:
-        ASSERT(message.text_length < (ssize_t)sizeof(message.text));
+        if (message.text_length > (int)sizeof(message.text)) {
+            client.did_misbehave();
+            return false;
+        }
         post_event(client, make<WSAPICreateMenuRequest>(client_id, String(message.text, message.text_length)));
         break;
     case WSAPI_ClientMessage::Type::PopupMenu:
@@ -164,38 +167,58 @@ bool WSEventLoop::on_receive_from_client(int client_id, const WSAPI_ClientMessag
         post_event(client, make<WSAPIDismissMenuRequest>(client_id, message.menu.menu_id));
         break;
     case WSAPI_ClientMessage::Type::SetWindowIcon:
-        ASSERT(message.text_length < (ssize_t)sizeof(message.text));
+        if (message.text_length > (int)sizeof(message.text)) {
+            client.did_misbehave();
+            return false;
+        }
         post_event(client, make<WSAPISetWindowIconRequest>(client_id, message.window_id, String(message.text, message.text_length)));
         break;
     case WSAPI_ClientMessage::Type::DestroyMenu:
         post_event(client, make<WSAPIDestroyMenuRequest>(client_id, message.menu.menu_id));
         break;
     case WSAPI_ClientMessage::Type::AddMenuItem:
-        ASSERT(message.text_length < (ssize_t)sizeof(message.text));
-        ASSERT(message.menu.shortcut_text_length < (ssize_t)sizeof(message.menu.shortcut_text));
+        if (message.text_length > (int)sizeof(message.text)) {
+            client.did_misbehave();
+            return false;
+        }
+        if (message.menu.shortcut_text_length > (int)sizeof(message.menu.shortcut_text)) {
+            client.did_misbehave();
+            return false;
+        }
         post_event(client, make<WSAPIAddMenuItemRequest>(client_id, message.menu.menu_id, message.menu.identifier, String(message.text, message.text_length), String(message.menu.shortcut_text, message.menu.shortcut_text_length), message.menu.enabled, message.menu.checkable, message.menu.checked));
         break;
     case WSAPI_ClientMessage::Type::UpdateMenuItem:
-        ASSERT(message.text_length < (ssize_t)sizeof(message.text));
-        ASSERT(message.menu.shortcut_text_length < (ssize_t)sizeof(message.menu.shortcut_text));
+        if (message.text_length > (int)sizeof(message.text)) {
+            client.did_misbehave();
+            return false;
+        }
+        if (message.menu.shortcut_text_length > (int)sizeof(message.menu.shortcut_text)) {
+            client.did_misbehave();
+            return false;
+        }
         post_event(client, make<WSAPIUpdateMenuItemRequest>(client_id, message.menu.menu_id, message.menu.identifier, String(message.text, message.text_length), String(message.menu.shortcut_text, message.menu.shortcut_text_length), message.menu.enabled, message.menu.checkable, message.menu.checked));
         break;
     case WSAPI_ClientMessage::Type::AddMenuSeparator:
         post_event(client, make<WSAPIAddMenuSeparatorRequest>(client_id, message.menu.menu_id));
         break;
     case WSAPI_ClientMessage::Type::CreateWindow:
-        ASSERT(message.text_length < (ssize_t)sizeof(message.text));
+        if (message.text_length > (int)sizeof(message.text)) {
+            client.did_misbehave();
+            return false;
+        }
         post_event(client, make<WSAPICreateWindowRequest>(client_id, message.window.rect, String(message.text, message.text_length), message.window.has_alpha_channel, message.window.modal, message.window.resizable, message.window.fullscreen, message.window.opacity, message.window.base_size, message.window.size_increment, from_api(message.window.type), Color::from_rgba(message.window.background_color)));
         break;
     case WSAPI_ClientMessage::Type::DestroyWindow:
         post_event(client, make<WSAPIDestroyWindowRequest>(client_id, message.window_id));
         break;
     case WSAPI_ClientMessage::Type::SetWindowTitle:
-        ASSERT(message.text_length < (ssize_t)sizeof(message.text));
+        if (message.text_length > (int)sizeof(message.text)) {
+            client.did_misbehave();
+            return false;
+        }
         post_event(client, make<WSAPISetWindowTitleRequest>(client_id, message.window_id, String(message.text, message.text_length)));
         break;
     case WSAPI_ClientMessage::Type::GetWindowTitle:
-        ASSERT(message.text_length < (ssize_t)sizeof(message.text));
         post_event(client, make<WSAPIGetWindowTitleRequest>(client_id, message.window_id));
         break;
     case WSAPI_ClientMessage::Type::SetWindowRect:
@@ -238,7 +261,10 @@ bool WSEventLoop::on_receive_from_client(int client_id, const WSAPI_ClientMessag
         post_event(client, make<WSAPISetGlobalCursorTrackingRequest>(client_id, message.window_id, message.value));
         break;
     case WSAPI_ClientMessage::Type::SetWallpaper:
-        ASSERT(message.text_length < (ssize_t)sizeof(message.text));
+        if (message.text_length > (int)sizeof(message.text)) {
+            client.did_misbehave();
+            return false;
+        }
         post_event(client, make<WSAPISetWallpaperRequest>(client_id, String(message.text, message.text_length)));
         break;
     case WSAPI_ClientMessage::Type::GetWallpaper:
@@ -307,7 +333,7 @@ void WSEventLoop::drain_client(WSClientConnection& client)
             break;
         }
         if (nread < 0) {
-            perror("read");
+            perror("recv");
             ASSERT_NOT_REACHED();
         }
         ByteBuffer extra_data;
