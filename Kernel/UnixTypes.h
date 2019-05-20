@@ -329,6 +329,8 @@ struct pollfd {
 #define SOCK_NONBLOCK 04000
 #define SOCK_CLOEXEC 02000000
 
+#define MSG_DONTWAIT 0x40
+
 #define SOL_SOCKET 1
 
 #define SO_RCVTIMEO 1

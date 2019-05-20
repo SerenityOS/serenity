@@ -26,6 +26,8 @@ __BEGIN_DECLS
 #define IPPROTO_TCP 6
 #define IPPROTO_UDP 17
 
+#define MSG_DONTWAIT 0x40
+
 struct sockaddr {
     uint16_t sa_family;
     char sa_data[14];

@@ -2213,8 +2213,16 @@ ssize_t Process::sys$recvfrom(const Syscall::SC_recvfrom_params* params)
     if (!descriptor->is_socket())
         return -ENOTSOCK;
     auto& socket = *descriptor->socket();
-    kprintf("recvfrom %p (%u), flags=%u, addr: %p (%p)\n", buffer, buffer_length, flags, addr, addr_length);
-    return socket.recvfrom(*descriptor, buffer, buffer_length, flags, addr, addr_length);
+
+    bool original_blocking = descriptor->is_blocking();
+    if (flags & MSG_DONTWAIT)
+        descriptor->set_blocking(false);
+
+    auto nrecv = socket.recvfrom(*descriptor, buffer, buffer_length, flags, addr, addr_length);
+    if (flags & MSG_DONTWAIT)
+        descriptor->set_blocking(original_blocking);
+
+    return nrecv;
 }
 
 int Process::sys$getsockname(int sockfd, sockaddr* addr, socklen_t* addrlen)
