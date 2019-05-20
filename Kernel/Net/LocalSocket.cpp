@@ -204,7 +204,7 @@ ssize_t LocalSocket::sendto(FileDescriptor&, const void*, size_t, int, const soc
     ASSERT_NOT_REACHED();
 }
 
-ssize_t LocalSocket::recvfrom(FileDescriptor&, void*, size_t, int flags, sockaddr*, socklen_t*)
+ssize_t LocalSocket::recvfrom(FileDescriptor& descriptor, void* buffer, size_t buffer_size, int, sockaddr*, socklen_t*)
 {
-    ASSERT_NOT_REACHED();
+    return read(descriptor, (byte*)buffer, buffer_size);
 }
