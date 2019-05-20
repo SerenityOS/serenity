@@ -3,12 +3,17 @@
 #include <Kernel/Process.h>
 #include <Kernel/Thread.h>
 
+static const dword userspace_range_base = 0x01000000;
+static const dword kernelspace_range_base = 0xc0000000;
+
 PageDirectory::PageDirectory(PhysicalAddress paddr)
+    : m_range_allocator(LinearAddress(0xc0000000), 0x3f000000)
 {
     m_directory_page = PhysicalPage::create_eternal(paddr, true);
 }
 
 PageDirectory::PageDirectory()
+    : m_range_allocator(LinearAddress(userspace_range_base), kernelspace_range_base - userspace_range_base)
 {
     MM.populate_page_directory(*this);
 }
