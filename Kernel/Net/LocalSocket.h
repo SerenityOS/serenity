@@ -25,6 +25,7 @@ public:
 private:
     explicit LocalSocket(int type);
     virtual bool is_local() const override { return true; }
+    bool has_attached_peer(const FileDescriptor&) const;
 
     RetainPtr<FileDescriptor> m_file;
 
