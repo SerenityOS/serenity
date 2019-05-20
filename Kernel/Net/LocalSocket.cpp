@@ -199,9 +199,9 @@ bool LocalSocket::can_write(FileDescriptor& descriptor) const
     ASSERT_NOT_REACHED();
 }
 
-ssize_t LocalSocket::sendto(FileDescriptor&, const void*, size_t, int, const sockaddr*, socklen_t)
+ssize_t LocalSocket::sendto(FileDescriptor& descriptor, const void* data, size_t data_size, int, const sockaddr*, socklen_t)
 {
-    ASSERT_NOT_REACHED();
+    return write(descriptor, (const byte*)data, data_size);
 }
 
 ssize_t LocalSocket::recvfrom(FileDescriptor& descriptor, void* buffer, size_t buffer_size, int, sockaddr*, socklen_t*)
