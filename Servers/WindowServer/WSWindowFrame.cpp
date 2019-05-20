@@ -298,6 +298,6 @@ void WSWindowFrame::on_mouse_event(const WSMouseEvent& event)
         return;
     }
 
-    if (m_window.is_resizable() && event.button() == MouseButton::Left)
+    if (m_window.is_resizable() && event.type() == WSEvent::MouseDown && event.button() == MouseButton::Left)
         wm.start_window_resize(m_window, event.translated(rect().location()));
 }
