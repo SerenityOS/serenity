@@ -312,9 +312,17 @@ public:
         bool operator!=(const Iterator& other) { return m_index != other.m_index; }
         bool operator==(const Iterator& other) { return m_index == other.m_index; }
         bool operator<(const Iterator& other) { return m_index < other.m_index; }
+        bool operator>(const Iterator& other) { return m_index > other.m_index; }
+        bool operator>=(const Iterator& other) { return m_index >= other.m_index; }
         Iterator& operator++() { ++m_index; return *this; }
+        Iterator& operator--() { --m_index; return *this; }
         Iterator operator-(int value) { return { m_vector, m_index - value }; }
         Iterator operator+(int value) { return { m_vector, m_index + value }; }
+        Iterator& operator=(const Iterator& other)
+        {
+            m_index = other.m_index;
+            return *this;
+        }
         T& operator*() { return m_vector[m_index]; }
         int operator-(const Iterator& other) { return m_index - other.m_index; }
     private:
@@ -332,9 +340,17 @@ public:
         bool operator!=(const ConstIterator& other) { return m_index != other.m_index; }
         bool operator==(const ConstIterator& other) { return m_index == other.m_index; }
         bool operator<(const ConstIterator& other) { return m_index < other.m_index; }
+        bool operator>(const ConstIterator& other) { return m_index > other.m_index; }
+        bool operator>=(const ConstIterator& other) { return m_index >= other.m_index; }
         ConstIterator& operator++() { ++m_index; return *this; }
+        ConstIterator& operator--() { --m_index; return *this; }
         ConstIterator operator-(int value) { return { m_vector, m_index - value }; }
         ConstIterator operator+(int value) { return { m_vector, m_index + value }; }
+        ConstIterator& operator=(const ConstIterator& other)
+        {
+            m_index = other.m_index;
+            return *this;
+        }
         const T& operator*() const { return m_vector[m_index]; }
         int operator-(const ConstIterator& other) { return m_index - other.m_index; }
     private:
