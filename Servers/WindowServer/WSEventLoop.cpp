@@ -26,7 +26,7 @@ WSEventLoop::WSEventLoop()
 
     unlink("/tmp/wsportal");
 
-    m_server_fd = socket(AF_LOCAL, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0);
+    m_server_fd = socket(AF_LOCAL, SOCK_STREAM | SOCK_CLOEXEC, 0);
     ASSERT(m_server_fd >= 0);
     sockaddr_un address;
     address.sun_family = AF_LOCAL;
@@ -300,7 +300,7 @@ void WSEventLoop::drain_client(WSClientConnection& client)
     for (;;) {
         WSAPI_ClientMessage message;
         // FIXME: Don't go one message at a time, that's so much context switching, oof.
-        ssize_t nread = read(client.fd(), &message, sizeof(WSAPI_ClientMessage));
+        ssize_t nread = recv(client.fd(), &message, sizeof(WSAPI_ClientMessage), MSG_DONTWAIT);
         if (nread == 0 || (nread == -1 && errno == EAGAIN)) {
             if (!messages_received)
                 post_event(client, make<WSClientDisconnectedNotification>(client.client_id()));
@@ -316,19 +316,8 @@ void WSEventLoop::drain_client(WSClientConnection& client)
                 dbgprintf("message.extra_size is way too large\n");
                 return client.did_misbehave();
             }
-
             extra_data = ByteBuffer::create_uninitialized(message.extra_size);
-
-            fd_set rfds;
-            FD_ZERO(&rfds);
-            FD_SET(client.fd(), &rfds);
-            struct timeval timeout { 1, 0 };
-            int rc = select(client.fd() + 1, &rfds, nullptr, nullptr, &timeout);
-            if (rc != 1) {
-                dbgprintf("extra_data didn't show up in time\n");
-                return client.did_misbehave();
-            }
-
+            // FIXME: We should allow this to time out. Maybe use a socket timeout?
             int extra_nread = read(client.fd(), extra_data.data(), extra_data.size());
             if (extra_nread != message.extra_size) {
                 dbgprintf("extra_nread(%d) != extra_size(%d)\n", extra_nread, extra_data.size());
