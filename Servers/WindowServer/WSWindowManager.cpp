@@ -749,10 +749,12 @@ void WSWindowManager::process_event_for_doubleclick(WSWindow& window, WSMouseEve
 
 void WSWindowManager::deliver_mouse_event(WSWindow& window, WSMouseEvent& event)
 {
+    window.event(event);
     if (event.type() == WSEvent::MouseUp) {
         process_event_for_doubleclick(window, event);
+        if (event.type() == WSEvent::MouseDoubleClick)
+            window.event(event);
     }
-    window.event(event);
 }
 
 void WSWindowManager::process_mouse_event(WSMouseEvent& event, WSWindow*& hovered_window)
