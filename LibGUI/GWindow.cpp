@@ -226,13 +226,12 @@ void GWindow::event(CEvent& event)
             rects.append({ { }, paint_event.window_size() });
         }
 
-        for (auto& rect : rects) {
+        for (auto& rect : rects)
             m_main_widget->event(*make<GPaintEvent>(rect));
-            if (m_double_buffering_enabled)
-                flip(rect);
-        }
 
-        if (!m_double_buffering_enabled && created_new_backing_store)
+        if (m_double_buffering_enabled)
+            flip(rects);
+        else if (created_new_backing_store)
             set_current_backing_bitmap(*m_back_bitmap, true);
 
         if (m_window_id) {
@@ -451,7 +450,7 @@ void GWindow::set_current_backing_bitmap(GraphicsBitmap& bitmap, bool flush_imme
     GEventLoop::current().sync_request(message, WSAPI_ServerMessage::Type::DidSetWindowBackingStore);
 }
 
-void GWindow::flip(const Rect& dirty_rect)
+void GWindow::flip(const Vector<Rect, 32>& dirty_rects)
 {
     swap(m_front_bitmap, m_back_bitmap);
 
@@ -465,7 +464,8 @@ void GWindow::flip(const Rect& dirty_rect)
 
     // Copy whatever was painted from the front to the back.
     Painter painter(*m_back_bitmap);
-    painter.blit(dirty_rect.location(), *m_front_bitmap, dirty_rect);
+    for (auto& dirty_rect : dirty_rects)
+        painter.blit(dirty_rect.location(), *m_front_bitmap, dirty_rect);
 }
 
 Retained<GraphicsBitmap> GWindow::create_backing_bitmap(const Size& size)
