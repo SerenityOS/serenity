@@ -3,7 +3,7 @@
 #include <AK/Types.h>
 
 template<typename T>
-T convert_between_host_and_network(T host_value)
+[[gnu::always_inline]] inline T convert_between_host_and_network(T host_value)
 {
     if constexpr (sizeof(T) == 4) {
         auto* s = (byte*)&host_value;
