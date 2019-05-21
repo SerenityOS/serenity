@@ -17,7 +17,7 @@ HashTable<Thread*>& thread_table()
 InlineLinkedList<Thread>* g_runnable_threads;
 InlineLinkedList<Thread>* g_nonrunnable_threads;
 
-static const dword default_kernel_stack_size = 16384;
+static const dword default_kernel_stack_size = 65536;
 static const dword default_userspace_stack_size = 65536;
 
 Thread::Thread(Process& process)
