@@ -21,5 +21,16 @@ static inline uint16_t ntohs(uint16_t ns)
     return htons(ns);
 }
 
+static inline uint32_t htonl(uint32_t hs)
+{
+    uint8_t* s = (uint8_t*)&hs;
+    return (uint32_t)(s[0] << 24 | s[1] << 16 | s[2] << 8 | s[3]);
+}
+
+static inline uint32_t ntohl(uint32_t ns)
+{
+    return htonl(ns);
+}
+
 __END_DECLS
 
