@@ -155,4 +155,10 @@ void siglongjmp(jmp_buf env, int val)
     longjmp(env, val);
 }
 
+int sigsuspend(const sigset_t*)
+{
+    dbgprintf("FIXME: Implement sigsuspend()\n");
+    ASSERT_NOT_REACHED();
+}
+
 }
