@@ -3,6 +3,7 @@
 #include <sys/cdefs.h>
 #include <sys/types.h>
 #include <stdint.h>
+#include <sys/un.h>
 
 __BEGIN_DECLS
 
@@ -33,12 +34,6 @@ struct sockaddr {
     char sa_data[14];
 };
 
-#define UNIX_PATH_MAX 108
-struct sockaddr_un {
-    uint16_t sun_family;
-    char sun_path[UNIX_PATH_MAX];
-};
-
 struct in_addr {
     uint32_t s_addr;
 };
@@ -56,6 +51,7 @@ struct sockaddr_in {
 #define SO_RCVTIMEO 1
 #define SO_SNDTIMEO 2
 #define SO_KEEPALIVE 3
+#define SO_ERROR 4
 
 int socket(int domain, int type, int protocol);
 int bind(int sockfd, const struct sockaddr* addr, socklen_t);
