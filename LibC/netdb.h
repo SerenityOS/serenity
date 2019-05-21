@@ -16,4 +16,13 @@ struct hostent {
 
 struct hostent *gethostbyname(const char*);
 
+struct servent {
+    char* s_name;
+    char** s_aliases;
+    int s_port;
+    char* s_proto;
+};
+
+struct servent* getservbyname(const char* name, const char* protocol);
+
 __END_DECLS
