@@ -171,6 +171,8 @@ void exception_6_handler(RegisterDump& regs)
 
     dump(regs);
 
+    dump_backtrace();
+
     if (current->process().is_ring0()) {
         kprintf("Oh shit, we've crashed in ring 0 :(\n");
         hang();
