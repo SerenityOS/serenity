@@ -12,8 +12,8 @@ PageDirectory::PageDirectory(PhysicalAddress paddr)
     m_directory_page = PhysicalPage::create_eternal(paddr, true);
 }
 
-PageDirectory::PageDirectory()
-    : m_range_allocator(LinearAddress(userspace_range_base), kernelspace_range_base - userspace_range_base)
+PageDirectory::PageDirectory(const RangeAllocator* parent_range_allocator)
+    : m_range_allocator(parent_range_allocator ? RangeAllocator(*parent_range_allocator) : RangeAllocator(LinearAddress(userspace_range_base), kernelspace_range_base - userspace_range_base))
 {
     MM.populate_page_directory(*this);
 }

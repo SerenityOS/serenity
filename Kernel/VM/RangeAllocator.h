@@ -46,6 +46,7 @@ private:
 class RangeAllocator {
 public:
     RangeAllocator(LinearAddress, size_t);
+    RangeAllocator(const RangeAllocator&);
     ~RangeAllocator();
 
     Range allocate_anywhere(size_t);
