@@ -38,9 +38,6 @@ int _start(int argc, char** argv, char** env)
 
     int status = main(argc, argv);
 
-    fflush(stdout);
-    fflush(stderr);
-
     exit(status);
 
     return 20150614;

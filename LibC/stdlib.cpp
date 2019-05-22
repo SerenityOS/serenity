@@ -26,6 +26,8 @@ void exit(int status)
         __atexit_handlers[i]();
     extern void _fini();
     _fini();
+    fflush(stdout);
+    fflush(stderr);
     _exit(status);
     ASSERT_NOT_REACHED();
 }
@@ -41,7 +43,7 @@ int atexit(void (*handler)())
 void abort()
 {
     // FIXME: Implement proper abort().
-    exit(253);
+    CRASH();
 }
 
 char* getenv(const char* name)

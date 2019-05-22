@@ -440,7 +440,8 @@ int fclose(FILE* stream)
 {
     fflush(stream);
     int rc = close(stream->fd);
-    free(stream);
+    if (stream != &__default_streams[0] && stream != &__default_streams[1] && stream != &__default_streams[2] && stream != &__default_streams[3])
+        free(stream);
     return rc;
 }
 
@@ -510,6 +511,11 @@ int vfscanf(FILE* stream, const char* fmt, va_list ap)
     return vsscanf(buffer, fmt, ap);
 }
 
+FILE* tmpfile()
+{
+    dbgprintf("FIXME: Implement tmpfile()\n");
+    ASSERT_NOT_REACHED();
+}
 
 }
 
