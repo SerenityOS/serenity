@@ -5,6 +5,8 @@
 #include <Kernel/VM/MemoryManager.h>
 #include <LibC/signal_numbers.h>
 
+//#define SIGNAL_DEBUG
+
 HashTable<Thread*>& thread_table()
 {
     ASSERT_INTERRUPTS_DISABLED();
@@ -293,7 +295,7 @@ ShouldUnblockThread Thread::dispatch_signal(byte signal)
     ASSERT(signal < 32);
 
 #ifdef SIGNAL_DEBUG
-    kprintf("dispatch_signal %s(%u) <- %u\n", name().characters(), pid(), signal);
+    kprintf("dispatch_signal %s(%u) <- %u\n", process().name().characters(), pid(), signal);
 #endif
 
     auto& action = m_signal_action_data[signal];
@@ -322,6 +324,8 @@ ShouldUnblockThread Thread::dispatch_signal(byte signal)
             m_process.terminate_due_to_signal(signal);
             return ShouldUnblockThread::No;
         case DefaultSignalAction::Ignore:
+            if (state() == BlockedSignal)
+                set_state(Runnable);
             return ShouldUnblockThread::No;
         case DefaultSignalAction::Continue:
             return ShouldUnblockThread::Yes;
@@ -331,7 +335,7 @@ ShouldUnblockThread Thread::dispatch_signal(byte signal)
 
     if (handler_laddr.as_ptr() == SIG_IGN) {
 #ifdef SIGNAL_DEBUG
-        kprintf("%s(%u) ignored signal %u\n", name().characters(), pid(), signal);
+        kprintf("%s(%u) ignored signal %u\n", process().name().characters(), pid(), signal);
 #endif
         return ShouldUnblockThread::Yes;
     }
@@ -357,12 +361,12 @@ ShouldUnblockThread Thread::dispatch_signal(byte signal)
 
     if (interrupting_in_kernel) {
 #ifdef SIGNAL_DEBUG
-        kprintf("dispatch_signal to %s(%u) in state=%s with return to %w:%x\n", name().characters(), pid(), to_string(state()), ret_cs, ret_eip);
+        kprintf("dispatch_signal to %s(%u) in state=%s with return to %w:%x\n", process().name().characters(), pid(), to_string(state()), ret_cs, ret_eip);
 #endif
         ASSERT(is_blocked());
         m_tss_to_resume_kernel = make<TSS32>(m_tss);
 #ifdef SIGNAL_DEBUG
-        kprintf("resume tss pc: %w:%x stack: %w:%x flags: %x cr3: %x\n", m_tss_to_resume_kernel.cs, m_tss_to_resume_kernel->eip, m_tss_to_resume_kernel->ss, m_tss_to_resume_kernel->esp, m_tss_to_resume_kernel->eflags, m_tss_to_resume_kernel->cr3);
+        kprintf("resume tss pc: %w:%x stack: %w:%x flags: %x cr3: %x\n", m_tss_to_resume_kernel->cs, m_tss_to_resume_kernel->eip, m_tss_to_resume_kernel->ss, m_tss_to_resume_kernel->esp, m_tss_to_resume_kernel->eflags, m_tss_to_resume_kernel->cr3);
 #endif
 
         if (!m_signal_stack_user_region) {
@@ -420,7 +424,7 @@ ShouldUnblockThread Thread::dispatch_signal(byte signal)
     set_state(Skip1SchedulerPass);
 
 #ifdef SIGNAL_DEBUG
-    kprintf("signal: Okay, %s(%u) {%s} has been primed with signal handler %w:%x\n", name().characters(), pid(), to_string(state()), m_tss.cs, m_tss.eip);
+    kprintf("signal: Okay, %s(%u) {%s} has been primed with signal handler %w:%x\n", process().name().characters(), pid(), to_string(state()), m_tss.cs, m_tss.eip);
 #endif
     return ShouldUnblockThread::Yes;
 }
