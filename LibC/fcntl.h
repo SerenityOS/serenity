@@ -1,6 +1,7 @@
 #pragma once
 
 #include <sys/cdefs.h>
+#include <sys/types.h>
 
 __BEGIN_DECLS
 
@@ -53,5 +54,18 @@ __BEGIN_DECLS
 #define S_IRWXO (S_IRWXG >> 3)
 
 int fcntl(int fd, int cmd, ...);
+
+#define F_WRLCK 1
+#define F_UNLCK 2
+
+#define F_SETLKW 7
+
+struct flock {
+    short l_type;
+    short l_whence;
+    off_t l_start;
+    off_t l_len;
+    pid_t l_pid;
+};
 
 __END_DECLS
