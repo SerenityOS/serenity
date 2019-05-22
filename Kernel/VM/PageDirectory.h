@@ -9,7 +9,7 @@
 class PageDirectory : public Retainable<PageDirectory> {
     friend class MemoryManager;
 public:
-    static Retained<PageDirectory> create_for_userspace() { return adopt(*new PageDirectory); }
+    static Retained<PageDirectory> create_for_userspace(const RangeAllocator* parent_range_allocator = nullptr) { return adopt(*new PageDirectory(parent_range_allocator)); }
     static Retained<PageDirectory> create_at_fixed_address(PhysicalAddress paddr) { return adopt(*new PageDirectory(paddr)); }
     ~PageDirectory();
 
@@ -21,7 +21,7 @@ public:
     RangeAllocator& range_allocator() { return m_range_allocator; }
 
 private:
-    PageDirectory();
+    explicit PageDirectory(const RangeAllocator* parent_range_allocator);
     explicit PageDirectory(PhysicalAddress);
 
     RangeAllocator m_range_allocator;

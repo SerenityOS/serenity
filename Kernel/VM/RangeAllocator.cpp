@@ -12,6 +12,11 @@ RangeAllocator::RangeAllocator(LinearAddress base, size_t size)
 #endif
 }
 
+RangeAllocator::RangeAllocator(const RangeAllocator& parent_allocator)
+    : m_available_ranges(parent_allocator.m_available_ranges)
+{
+}
+
 RangeAllocator::~RangeAllocator()
 {
 }
