@@ -13,9 +13,6 @@ $(LIBRARY): $(OBJS)
 .cpp.o:
 	@echo "CXX $<"; $(CXX) $(CXXFLAGS) -o $@ -c $<
 
-%.no: %.asm
-	@echo "NASM $@"; nasm -f elf -o $@ $<
-
 -include $(OBJS:%.o=%.d)
 
 clean:

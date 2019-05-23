@@ -12,9 +12,9 @@ First off, GCC needs MPFR, MPC and GMP. On Ubuntu, this is as simple as:
 
     sudo apt install libmpfr-dev libmpc-dev libgmp-dev
 
-For Serenity, we will need nasm, e2fsprogs and QEMU:
+For Serenity, we will need e2fsprogs and QEMU:
 
-    sudo apt install nasm e2fsprogs qemu-system-i386
+    sudo apt install e2fsprogs qemu-system-i386
 
 ## Binutils:
 
