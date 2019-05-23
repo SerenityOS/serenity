@@ -184,6 +184,8 @@ public:
     void register_local_shortcut_action(Badge<GAction>, GAction&);
     void unregister_local_shortcut_action(Badge<GAction>, GAction&);
 
+    virtual bool is_radio_button() const { return false; }
+
 private:
     virtual bool is_widget() const final { return true; }
 
