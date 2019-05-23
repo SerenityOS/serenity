@@ -3,7 +3,7 @@
 #include <AK/OwnPtr.h>
 #include <AK/HashMap.h>
 #include <AK/AKString.h>
-#include <Kernel/ELF/exec_elf.h>
+#include <AK/ELF/exec_elf.h>
 
 class ELFImage {
 public:

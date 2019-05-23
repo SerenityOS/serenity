@@ -6,7 +6,6 @@
 #include <Kernel/FileSystem/FileDescriptor.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Devices/NullDevice.h>
-#include <Kernel/ELF/ELFLoader.h>
 #include <Kernel/VM/MemoryManager.h>
 #include "i8253.h"
 #include "RTC.h"
@@ -19,7 +18,8 @@
 #include "KSyms.h"
 #include <Kernel/Net/Socket.h>
 #include <Kernel/TTY/MasterPTY.h>
-#include <Kernel/ELF/exec_elf.h>
+#include <AK/ELF/exec_elf.h>
+#include <AK/ELF/ELFLoader.h>
 #include <AK/StringBuilder.h>
 #include <AK/Time.h>
 #include <Kernel/SharedMemory.h>

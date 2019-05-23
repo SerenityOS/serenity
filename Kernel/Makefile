@@ -31,8 +31,6 @@ KERNEL_OBJS = \
        FileSystem/FIFO.o \
        Scheduler.o \
        DoubleBuffer.o \
-       ELF/ELFImage.o \
-       ELF/ELFLoader.o \
        KSyms.o \
        SharedMemory.o \
        FileSystem/DevPtsFS.o \
@@ -78,7 +76,9 @@ AK_OBJS = \
     ../AK/StringBuilder.o \
     ../AK/StringView.o \
     ../AK/FileSystemPath.o \
-    ../AK/StdLibExtras.o
+    ../AK/StdLibExtras.o \
+    ../AK/ELF/ELFImage.o \
+    ../AK/ELF/ELFLoader.o
 
 CXX_OBJS = $(KERNEL_OBJS) $(VFS_OBJS) $(AK_OBJS)
 OBJS = $(CXX_OBJS) Boot/boot.ao
