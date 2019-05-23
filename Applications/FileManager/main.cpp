@@ -76,7 +76,10 @@ int main(int argc, char** argv)
     };
 
     file_system_model->on_selection_changed = [&] (auto& index) {
-        directory_view->open(file_system_model->path(index));
+        auto path = file_system_model->path(index);
+        if (directory_view->path() == path)
+            return;
+        directory_view->open(path);
     };
 
     auto open_parent_directory_action = GAction::create("Open parent directory", { Mod_Alt, Key_Up }, GraphicsBitmap::load_from_file("/res/icons/16x16/open-parent-directory.png"), [directory_view] (const GAction&) {
@@ -126,12 +129,14 @@ int main(int argc, char** argv)
         dbgprintf("'Delete' action activated!\n");
     });
 
-    auto go_back_action = GAction::create("Go Back", GraphicsBitmap::load_from_file("/res/icons/16x16/go-back.png"), [] (const GAction&) {
+    auto go_back_action = GAction::create("Go Back", GraphicsBitmap::load_from_file("/res/icons/16x16/go-back.png"), [directory_view] (const GAction&) {
         dbgprintf("'Go Back' action activated!\n");
+        directory_view->open_previous_directory();
     });
 
-    auto go_forward_action = GAction::create("Go Forward", GraphicsBitmap::load_from_file("/res/icons/16x16/go-forward.png"), [] (const GAction&) {
+    auto go_forward_action = GAction::create("Go Forward", GraphicsBitmap::load_from_file("/res/icons/16x16/go-forward.png"), [directory_view] (const GAction&) {
         dbgprintf("'Go Forward' action activated!\n");
+        directory_view->open_next_directory();
     });
 
     auto menubar = make<GMenuBar>();
@@ -158,6 +163,7 @@ int main(int argc, char** argv)
     go_menu->add_action(go_back_action.copy_ref());
     go_menu->add_action(go_forward_action.copy_ref());
     go_menu->add_action(open_parent_directory_action.copy_ref());
+    menubar->add_menu(move(go_menu));
 
     auto help_menu = make<GMenu>("Help");
     help_menu->add_action(GAction::create("About", [] (const GAction&) {
@@ -180,12 +186,16 @@ int main(int argc, char** argv)
     main_toolbar->add_action(*view_as_icons_action);
     main_toolbar->add_action(*view_as_table_action);
 
-    directory_view->on_path_change = [window, location_textbox, &file_system_model, tree_view] (const String& new_path) {
+    directory_view->on_path_change = [window, location_textbox, &file_system_model, tree_view, &go_forward_action, &go_back_action, directory_view] (const String& new_path) {
         window->set_title(String::format("FileManager: %s", new_path.characters()));
         location_textbox->set_text(new_path);
         file_system_model->set_selected_index(file_system_model->index(new_path));
         tree_view->scroll_into_view(file_system_model->selected_index(), Orientation::Vertical);
         tree_view->update();
+
+        go_forward_action->set_enabled(directory_view->path_history_position()
+                                       < directory_view->path_history_size() - 1);
+        go_back_action->set_enabled(directory_view->path_history_position() > 0);
     };
 
     directory_view->on_status_message = [statusbar] (String message) {
