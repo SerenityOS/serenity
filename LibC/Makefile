@@ -76,7 +76,7 @@ $(LIBRARY): $(CPP_OBJS) $(ASM_OBJS)
 clean:
 	@echo "CLEAN"; rm -f $(LIBRARY) $(CPP_OBJS) $(ASM_OBJS) *.d
 
-install: $(LIBRARY)
+install: $(LIBRARY) startfiles
 	mkdir -p ../Root/usr/include
 	mkdir -p ../Root/usr/lib
 	# Copy headers
