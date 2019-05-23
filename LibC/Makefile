@@ -48,7 +48,7 @@ LIBC_OBJS = \
        netdb.o \
        sched.o
 
-ASM_OBJS = setjmp.no crti.ao crtn.ao
+ASM_OBJS = setjmp.ao crti.ao crtn.ao
 
 CPP_OBJS = $(AK_OBJS) $(WIDGETS_OBJS) $(LIBC_OBJS)
 
@@ -67,9 +67,6 @@ $(LIBRARY): $(CPP_OBJS) $(ASM_OBJS)
 
 .cpp.o:
 	@echo "CXX $<"; $(CXX) $(CXXFLAGS) -o $@ -c $<
-
-%.no: %.asm
-	@echo "NASM $@"; nasm -f elf -o $@ $<
 
 %.ao: %.S
 	@echo "AS $@"; $(AS) -o $@ $<
