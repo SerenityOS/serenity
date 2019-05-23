@@ -1,5 +1,6 @@
 #pragma once
 
+#include <AK/Vector.h>
 #include <LibGUI/GTableView.h>
 #include <LibGUI/GItemView.h>
 #include <LibGUI/GStackWidget.h>
@@ -14,6 +15,10 @@ public:
     void open(const String& path);
     String path() const { return model().path(); }
     void open_parent_directory();
+    void open_previous_directory();
+    void open_next_directory();
+    int path_history_size() const { return m_path_history.size(); }
+    int path_history_position() const { return m_path_history_position; }
 
     void refresh();
 
@@ -36,6 +41,9 @@ private:
     ViewMode m_view_mode { Invalid };
 
     Retained<GDirectoryModel> m_model;
+    int m_path_history_position{ 0 };
+    Vector<String> m_path_history;
+    void add_path_to_history(const String& path);
 
     GTableView* m_table_view { nullptr };
     GItemView* m_item_view { nullptr };
