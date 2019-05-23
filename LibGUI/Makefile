@@ -57,6 +57,7 @@ LIBGUI_OBJS = \
     GSlider.o \
     GResizeCorner.o \
     GTabWidget.o \
+    GRadioButton.o \
     GWindow.o
 
 OBJS = $(SHAREDGRAPHICS_OBJS) $(LIBGUI_OBJS)
