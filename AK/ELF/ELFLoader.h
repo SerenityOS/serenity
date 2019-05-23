@@ -4,8 +4,10 @@
 #include <AK/HashMap.h>
 #include <AK/OwnPtr.h>
 #include <AK/Vector.h>
+#if defined(KERNEL)
 #include <Kernel/LinearAddress.h>
-#include <Kernel/ELF/ELFImage.h>
+#endif
+#include <AK/ELF/ELFImage.h>
 
 class ELFLoader {
 public:
@@ -13,10 +15,12 @@ public:
     ~ELFLoader();
 
     bool load();
+#if defined(KERNEL)
     Function<void*(LinearAddress, size_t, size_t, bool, bool, const String&)> alloc_section_hook;
     Function<void*(LinearAddress, size_t, size_t, size_t, bool, bool, const String&)> map_section_hook;
-    char* symbol_ptr(const char* name);
     LinearAddress entry() const { return m_image.entry(); }
+#endif
+    char* symbol_ptr(const char* name);
 
     bool has_symbols() const { return m_image.symbol_count(); }
 
