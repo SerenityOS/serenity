@@ -2266,6 +2266,9 @@ int Process::sys$getpeername(int sockfd, sockaddr* addr, socklen_t* addrlen)
 
     auto& socket = *descriptor->socket();
 
+    if (!socket.is_connected())
+        return -ENOTCONN;
+
     if (!socket.get_peer_address(addr, addrlen))
         return -EINVAL; // FIXME: Should this be another error? I'm not sure.
 
