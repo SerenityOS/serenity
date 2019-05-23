@@ -2,7 +2,7 @@
 #include "Process.h"
 #include "Scheduler.h"
 #include <Kernel/FileSystem/FileDescriptor.h>
-#include <Kernel/ELF/ELFLoader.h>
+#include <AK/ELF/ELFLoader.h>
 #include <AK/TemporaryChange.h>
 
 static KSym* s_ksyms;
