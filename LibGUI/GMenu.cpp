@@ -32,6 +32,7 @@ GMenu::~GMenu()
 void GMenu::add_action(Retained<GAction> action)
 {
     m_items.append(make<GMenuItem>(m_menu_id, move(action)));
+    dbgprintf("MenuItem Menu ID: %d\n", m_menu_id);
 }
 
 void GMenu::add_separator()
@@ -70,6 +71,7 @@ int GMenu::realize_menu()
     auto response = GEventLoop::current().sync_request(request, WSAPI_ServerMessage::Type::DidCreateMenu);
     m_menu_id = response.menu.menu_id;
 
+    dbgprintf("GMenu: Realizing menu! New menu ID: %d", m_menu_id);
     ASSERT(m_menu_id > 0);
     for (int i = 0; i < m_items.size(); ++i) {
         auto& item = *m_items[i];
@@ -79,6 +81,7 @@ int GMenu::realize_menu()
             WSAPI_ClientMessage request;
             request.type = WSAPI_ClientMessage::Type::AddMenuSeparator;
             request.menu.menu_id = m_menu_id;
+            dbgprintf("MenuItem [New] Menu ID: %d\n", m_menu_id);
             GEventLoop::current().sync_request(request, WSAPI_ServerMessage::Type::DidAddMenuSeparator);
             continue;
         }
