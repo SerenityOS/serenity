@@ -45,14 +45,20 @@ void GLabel::paint_event(GPaintEvent& event)
             painter.blit(icon_location, *m_icon, m_icon->rect());
         }
     }
-    if (!text().is_empty()) {
-        int indent = 0;
-        if (frame_thickness() > 0)
-            indent = font().glyph_width('x') / 2;
-        auto text_rect = frame_inner_rect();
-        text_rect.move_by(indent, 0);
-        text_rect.set_width(text_rect.width() - indent * 2);
-        painter.draw_text(text_rect, text(), m_text_alignment, foreground_color());
+    if (text().is_empty())
+        return;
+    int indent = 0;
+    if (frame_thickness() > 0)
+        indent = font().glyph_width('x') / 2;
+    auto text_rect = frame_inner_rect();
+    text_rect.move_by(indent, 0);
+    text_rect.set_width(text_rect.width() - indent * 2);
+
+    if (is_enabled()) {
+        painter.draw_text(text_rect, text(), m_text_alignment, foreground_color(), TextElision::Right);
+    } else {
+        painter.draw_text(text_rect.translated(1, 1), text(), font(), text_alignment(), Color::White, TextElision::Right);
+        painter.draw_text(text_rect, text(), font(), text_alignment(), Color::from_rgb(0x808080), TextElision::Right);
     }
 }
 
