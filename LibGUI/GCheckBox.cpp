@@ -25,8 +25,11 @@ static const int s_box_height = 13;
 GCheckBox::GCheckBox(GWidget* parent)
     : GAbstractButton(parent)
 {
-    if (!s_checked_bitmap)
-        s_checked_bitmap = &CharacterBitmap::create_from_ascii(s_checked_bitmap_data, s_checked_bitmap_width, s_checked_bitmap_height).leak_ref();
+}
+
+GCheckBox::GCheckBox(const String& text, GWidget* parent)
+    : GAbstractButton(text, parent)
+{
 }
 
 GCheckBox::~GCheckBox()
@@ -57,8 +60,11 @@ void GCheckBox::paint_event(GPaintEvent& event)
     if (is_being_pressed())
         painter.draw_rect(box_rect.shrunken(4, 4), Color::MidGray);
 
-    if (is_checked())
+    if (is_checked()) {
+        if (!s_checked_bitmap)
+            s_checked_bitmap = &CharacterBitmap::create_from_ascii(s_checked_bitmap_data, s_checked_bitmap_width, s_checked_bitmap_height).leak_ref();
         painter.draw_bitmap(box_rect.shrunken(4, 4).location(), *s_checked_bitmap, foreground_color());
+    }
 
     if (!text().is_empty()) {
         painter.draw_text(text_rect, text(), TextAlignment::TopLeft, foreground_color());
