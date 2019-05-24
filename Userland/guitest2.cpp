@@ -113,7 +113,7 @@ GWindow* make_launcher_window()
 
     auto* checkbox = new GCheckBox(widget);
     checkbox->set_relative_rect({ 5, 170, 90, 20 });
-    checkbox->set_caption("CheckBox");
+    checkbox->set_text("CheckBox");
 
     window->set_focused_widget(textbox);
 
