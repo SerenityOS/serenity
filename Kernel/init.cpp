@@ -27,7 +27,7 @@
 #include <Kernel/Devices/DebugLogDevice.h>
 
 #define SPAWN_TERMINAL
-//#define SPAWN_LAUNCHER
+#define SPAWN_LAUNCHER
 //#define SPAWN_GUITEST2
 //#define SPAWN_FILE_MANAGER
 //#define SPAWN_PROCESS_MANAGER
