@@ -4,6 +4,7 @@
 #include <LibGUI/GButton.h>
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GBoxLayout.h>
+#include <LibCore/CConfigFile.h>
 #include <sys/wait.h>
 #include <signal.h>
 #include <unistd.h>
@@ -60,22 +61,25 @@ private:
 
 GWindow* make_launcher_window()
 {
+    auto config = CConfigFile::get_for_app("Launcher");
+
     auto* window = new GWindow;
     window->set_title("Launcher");
-    window->set_rect(50, 50, 300, 60);
+    window->set_rect(50, 50,
+                     50, config->groups().size() * 55);
 
     auto* widget = new GWidget;
     widget->set_fill_with_background_color(true);
-    widget->set_layout(make<GBoxLayout>(Orientation::Horizontal));
+    widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
     widget->layout()->set_margins({ 5, 5, 5, 5 });
     window->set_main_widget(widget);
 
-    new LauncherButton("Terminal", "/res/icons/Terminal.png", "/bin/Terminal", widget);
-    new LauncherButton("FontEditor", "/res/icons/FontEditor.png", "/bin/FontEditor", widget);
-    new LauncherButton("FileManager", "/res/icons/32x32/filetype-folder.png", "/bin/FileManager", widget);
-    new LauncherButton("TextEditor", "/res/icons/TextEditor.png", "/bin/TextEditor", widget);
-    new LauncherButton("VisualBuilder", "/res/icons/32x32/app-visual-builder.png", "/bin/VisualBuilder", widget);
-    new LauncherButton("IRCClient", "/res/icons/32x32/app-irc-client.png", "/bin/IRCClient", widget);
+    for (auto& group : config->groups()) {
+        new LauncherButton(config->read_entry(group, "Name", group),
+                           config->read_entry(group, "Icon", ""),
+                           config->read_entry(group, "Path", ""),
+                           widget);
+    }
 
     return window;
 }
