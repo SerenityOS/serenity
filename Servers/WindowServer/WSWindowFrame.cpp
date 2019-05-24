@@ -1,12 +1,13 @@
+#include <SharedGraphics/CharacterBitmap.h>
+#include <SharedGraphics/Font.h>
+#include <SharedGraphics/Painter.h>
+#include <SharedGraphics/StylePainter.h>
+#include <WindowServer/WSButton.h>
+#include <WindowServer/WSCompositor.h>
+#include <WindowServer/WSEvent.h>
+#include <WindowServer/WSWindow.h>
 #include <WindowServer/WSWindowFrame.h>
 #include <WindowServer/WSWindowManager.h>
-#include <WindowServer/WSWindow.h>
-#include <WindowServer/WSEvent.h>
-#include <WindowServer/WSButton.h>
-#include <SharedGraphics/CharacterBitmap.h>
-#include <SharedGraphics/Painter.h>
-#include <SharedGraphics/Font.h>
-#include <SharedGraphics/StylePainter.h>
 
 static const int window_titlebar_height = 19;
 
@@ -294,7 +295,7 @@ void WSWindowFrame::on_mouse_event(const WSMouseEvent& event)
         int hot_area_row = min(2, window_relative_y / (outer_rect.height() / 3));
         int hot_area_column = min(2, window_relative_x / (outer_rect.width() / 3));
         wm.set_resize_candidate(m_window, direction_for_hot_area[hot_area_row][hot_area_column]);
-        wm.invalidate_cursor();
+        WSCompositor::the().invalidate_cursor();
         return;
     }
 

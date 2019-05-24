@@ -1,11 +1,12 @@
-#include "WSScreen.h"
-#include "WSEventLoop.h"
+#include "WSCompositor.h"
 #include "WSEvent.h"
+#include "WSEventLoop.h"
+#include "WSScreen.h"
 #include "WSWindowManager.h"
-#include <unistd.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
+#include <unistd.h>
 
 static WSScreen* s_the;
 
@@ -86,7 +87,7 @@ void WSScreen::on_receive_mouse_data(int dx, int dy, int dz, unsigned buttons)
     }
 
     if (m_cursor_location != prev_location)
-        WSWindowManager::the().invalidate_cursor();
+        WSCompositor::the().invalidate_cursor();
 }
 
 void WSScreen::on_receive_keyboard_data(KeyEvent kernel_event)
