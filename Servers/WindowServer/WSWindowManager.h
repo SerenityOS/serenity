@@ -58,10 +58,7 @@ public:
 
     void move_to_front_and_make_active(WSWindow&);
 
-    void draw_cursor();
-    void draw_menubar();
     void draw_window_switcher();
-    void draw_geometry_label();
 
     Rect menubar_rect() const;
     WSMenuBar* current_menubar() { return m_current_menubar.ptr(); }
@@ -148,9 +145,7 @@ private:
 
     void close_current_menu();
     virtual void event(CEvent&) override;
-    void compose();
     void paint_window_frame(const WSWindow&);
-    void flip_buffers();
     void tick_clock();
     void tell_wm_listener_about_window(WSWindow& listener, WSWindow&);
     void tell_wm_listener_about_window_icon(WSWindow& listener, WSWindow&);
@@ -180,7 +175,6 @@ private:
     Color m_highlight_window_border_color2;
     Color m_highlight_window_title_color;
 
-    HashMap<int, OwnPtr<WSWindow>> m_windows_by_id;
     HashTable<WSWindow*> m_windows;
     InlineLinkedList<WSWindow> m_windows_in_order;
 
