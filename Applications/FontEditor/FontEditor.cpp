@@ -50,7 +50,7 @@ FontEditorWidget::FontEditorWidget(const String& path, RetainPtr<Font>&& edited_
     };
 
     auto* save_button = new GButton(this);
-    save_button->set_caption("Save");
+    save_button->set_text("Save");
     save_button->set_relative_rect({ 5, 300, 105, 20 });
     save_button->on_click = [this] (GButton&) {
         dbgprintf("write to file: '%s'\n", m_path.characters());
@@ -58,7 +58,7 @@ FontEditorWidget::FontEditorWidget(const String& path, RetainPtr<Font>&& edited_
     };
 
     auto* quit_button = new GButton(this);
-    quit_button->set_caption("Quit");
+    quit_button->set_text("Quit");
     quit_button->set_relative_rect({ 110, 300, 105, 20 });
     quit_button->on_click = [] (GButton&) {
         exit(0);

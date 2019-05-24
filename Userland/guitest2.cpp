@@ -67,7 +67,7 @@ GWindow* make_launcher_window()
 
     auto* terminal_button = new GButton(widget);
     terminal_button->set_relative_rect({ 5, 20, 90, 20 });
-    terminal_button->set_caption("Terminal");
+    terminal_button->set_text("Terminal");
 
     terminal_button->on_click = [label] (GButton&) {
         pid_t child_pid = fork();
@@ -83,7 +83,7 @@ GWindow* make_launcher_window()
 
     auto* guitest_button = new GButton(widget);
     guitest_button->set_relative_rect({ 5, 50, 90, 20 });
-    guitest_button->set_caption("guitest");
+    guitest_button->set_text("guitest");
 
     guitest_button->on_click = [label] (GButton&) {
         pid_t child_pid = fork();
@@ -99,7 +99,7 @@ GWindow* make_launcher_window()
 
     auto* dummy_button = new GButton(widget);
     dummy_button->set_relative_rect({ 5, 80, 90, 20 });
-    dummy_button->set_caption("Dummy");
+    dummy_button->set_text("Dummy");
 
     auto* textbox = new GTextBox(widget);
     textbox->set_relative_rect({ 5, 110, 90, 20 });
@@ -119,7 +119,7 @@ GWindow* make_launcher_window()
 
     auto* close_button = new GButton(widget);
     close_button->set_relative_rect({ 5, 200, 90, 20 });
-    close_button->set_caption("Close");
+    close_button->set_text("Close");
     close_button->on_click = [window] (GButton&) {
         window->close();
     };
