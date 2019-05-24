@@ -49,6 +49,9 @@ void GRadioButton::paint_event(GPaintEvent& event)
         Rect text_rect { circle_rect.right() + 4, 0, font().width(text()), font().glyph_height() };
         text_rect.center_vertically_within(rect());
         painter.draw_text(text_rect, text(), TextAlignment::CenterLeft, foreground_color());
+
+        if (is_focused())
+            painter.draw_rect(text_rect.inflated(6, 4), Color(140, 140, 140));
     }
 }
 
