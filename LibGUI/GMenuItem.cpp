@@ -46,6 +46,8 @@ void GMenuItem::set_checked(bool checked)
 
 void GMenuItem::update_window_server()
 {
+    if (m_menu_id < 0)
+        return;
     auto& action = *m_action;
     WSAPI_ClientMessage request;
     request.type = WSAPI_ClientMessage::Type::UpdateMenuItem;
