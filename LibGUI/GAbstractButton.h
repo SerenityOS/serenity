@@ -1,6 +1,9 @@
 #pragma once
 
 #include <LibGUI/GWidget.h>
+#include <SharedGraphics/TextAlignment.h>
+
+class GPainter;
 
 class GAbstractButton : public GWidget {
 public:
@@ -34,6 +37,8 @@ protected:
     virtual void keydown_event(GKeyEvent&) override;
     virtual void enter_event(CEvent&) override;
     virtual void leave_event(CEvent&) override;
+
+    void paint_text(GPainter&, const Rect&, const Font&, TextAlignment);
 
 private:
     String m_text;

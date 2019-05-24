@@ -45,14 +45,9 @@ void GRadioButton::paint_event(GPaintEvent& event)
     auto& bitmap = circle_bitmap(is_checked(), is_being_pressed());
     painter.blit(circle_rect.location(), bitmap, bitmap.rect());
 
-    if (!text().is_empty()) {
-        Rect text_rect { circle_rect.right() + 4, 0, font().width(text()), font().glyph_height() };
-        text_rect.center_vertically_within(rect());
-        painter.draw_text(text_rect, text(), TextAlignment::CenterLeft, foreground_color());
-
-        if (is_focused())
-            painter.draw_rect(text_rect.inflated(6, 4), Color(140, 140, 140));
-    }
+    Rect text_rect { circle_rect.right() + 4, 0, font().width(text()), font().glyph_height() };
+    text_rect.center_vertically_within(rect());
+    paint_text(painter, text_rect, font(), TextAlignment::TopLeft);
 }
 
 template<typename Callback>
