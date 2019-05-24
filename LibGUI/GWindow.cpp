@@ -531,6 +531,8 @@ Vector<GWidget*> GWindow::focusable_widgets() const
             auto& child_widget = *static_cast<GWidget*>(child);
             if (!child_widget.is_visible())
                 continue;
+            if (!child_widget.is_enabled())
+                continue;
             collect_focusable_widgets(child_widget);
         }
     };
