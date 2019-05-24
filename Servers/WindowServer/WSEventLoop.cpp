@@ -114,6 +114,7 @@ static WSWindowType from_api(WSAPI_WindowType api_type)
     case WSAPI_WindowType::Tooltip:
         return WSWindowType::Tooltip;
     default:
+        dbgprintf("Unknown WSAPI_WindowType: %d\n", api_type);
         ASSERT_NOT_REACHED();
     }
 }
@@ -206,7 +207,20 @@ bool WSEventLoop::on_receive_from_client(int client_id, const WSAPI_ClientMessag
             client.did_misbehave();
             return false;
         }
-        post_event(client, make<WSAPICreateWindowRequest>(client_id, message.window.rect, String(message.text, message.text_length), message.window.has_alpha_channel, message.window.modal, message.window.resizable, message.window.fullscreen, message.window.opacity, message.window.base_size, message.window.size_increment, from_api(message.window.type), Color::from_rgba(message.window.background_color)));
+        post_event(client,
+                   make<WSAPICreateWindowRequest>(client_id,
+                                                  message.window.rect,
+                                                  String(message.text, message.text_length),
+                                                  message.window.has_alpha_channel,
+                                                  message.window.modal,
+                                                  message.window.resizable,
+                                                  message.window.fullscreen,
+                                                  message.window.show_titlebar,
+                                                  message.window.opacity,
+                                                  message.window.base_size,
+                                                  message.window.size_increment,
+                                                  from_api(message.window.type),
+                                                  Color::from_rgba(message.window.background_color)));
         break;
     case WSAPI_ClientMessage::Type::DestroyWindow:
         post_event(client, make<WSAPIDestroyWindowRequest>(client_id, message.window_id));

@@ -195,6 +195,12 @@ void WSWindowFrame::paint(Painter& painter)
         middle_border_color = Color::MidGray;
     }
 
+    painter.draw_line(titlebar_rect.bottom_left().translated(0, 1), titlebar_rect.bottom_right().translated(0, 1), Color::LightGray);
+    StylePainter::paint_window_frame(painter, outer_rect);
+
+    if (!window.show_titlebar())
+        return;
+
     auto leftmost_button_rect = m_buttons.is_empty() ? Rect() : m_buttons.last()->relative_rect();
 
     painter.fill_rect_with_gradient(titlebar_rect, border_color, border_color2);
@@ -202,8 +208,6 @@ void WSWindowFrame::paint(Painter& painter)
         painter.draw_line({ titlebar_title_rect.right() + 4, titlebar_inner_rect.y() + i }, { leftmost_button_rect.left() - 3, titlebar_inner_rect.y() + i }, border_color);
     }
 
-    painter.draw_line(titlebar_rect.bottom_left().translated(0, 1), titlebar_rect.bottom_right().translated(0, 1), Color::LightGray);
-    StylePainter::paint_window_frame(painter, outer_rect);
 
     // FIXME: The translated(0, 1) wouldn't be necessary if we could center text based on its baseline.
     painter.draw_text(titlebar_title_rect.translated(0, 1), window.title(), wm.window_title_font(), TextAlignment::CenterLeft, title_color);
@@ -215,19 +219,30 @@ void WSWindowFrame::paint(Painter& painter)
     }
 }
 
-static Rect frame_rect_for_window_type(WSWindowType type, const Rect& rect)
+static Rect frame_rect_for_window(WSWindow& window, const Rect& rect)
 {
+    auto type = window.type();
+    auto offset = !window.show_titlebar() ? window_titlebar_height : 0;
+
     switch (type) {
     case WSWindowType::Normal:
-        return { rect.x() - 3, rect.y() - window_titlebar_height - 3, rect.width() + 6, rect.height() + 6 + window_titlebar_height };
+        return { rect.x() - 3,
+                 rect.y() - window_titlebar_height - 3 + offset,
+                 rect.width() + 6,
+                 rect.height() + 6 + window_titlebar_height - offset };
     default:
         return rect;
     }
 }
 
+static Rect frame_rect_for_window(WSWindow& window)
+{
+    return frame_rect_for_window(window, window.rect());
+}
+
 Rect WSWindowFrame::rect() const
 {
-    return frame_rect_for_window_type(m_window.type(), m_window.rect());
+    return frame_rect_for_window(m_window);
 }
 
 void WSWindowFrame::invalidate_title_bar()
@@ -248,8 +263,8 @@ void WSWindowFrame::notify_window_rect_changed(const Rect& old_rect, const Rect&
     }
 
     auto& wm = WSWindowManager::the();
-    wm.invalidate(frame_rect_for_window_type(m_window.type(), old_rect));
-    wm.invalidate(frame_rect_for_window_type(m_window.type(), new_rect));
+    wm.invalidate(frame_rect_for_window(m_window, old_rect));
+    wm.invalidate(frame_rect_for_window(m_window, new_rect));
     wm.notify_rect_changed(m_window, old_rect, new_rect);
 }
 

@@ -494,6 +494,7 @@ void WSClientConnection::handle_request(const WSAPICreateWindowRequest& request)
     window->set_title(request.title());
     if (!request.is_fullscreen())
         window->set_rect(request.rect());
+    window->set_show_titlebar(request.show_titlebar());
     window->set_opacity(request.opacity());
     window->set_size_increment(request.size_increment());
     window->set_base_size(request.base_size());

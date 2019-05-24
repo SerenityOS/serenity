@@ -46,6 +46,9 @@ public:
     String title() const;
     void set_title(const String&);
 
+    bool show_titlebar() const { return m_show_titlebar; };
+    void set_show_titlebar(bool show) { m_show_titlebar = show; };
+
     Color background_color() const { return m_background_color; }
     void set_background_color(Color color) { m_background_color = color; }
 
@@ -154,4 +157,5 @@ private:
     bool m_modal { false };
     bool m_resizable { true };
     bool m_fullscreen { false };
+    bool m_show_titlebar { true };
 };
