@@ -163,7 +163,7 @@ int main(int argc, char** argv)
     go_menu->add_action(go_back_action.copy_ref());
     go_menu->add_action(go_forward_action.copy_ref());
     go_menu->add_action(open_parent_directory_action.copy_ref());
-    //menubar->add_menu(move(go_menu));
+    menubar->add_menu(move(go_menu));
 
     auto help_menu = make<GMenu>("Help");
     help_menu->add_action(GAction::create("About", [] (const GAction&) {
