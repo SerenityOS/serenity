@@ -48,20 +48,8 @@ void GButton::paint_event(GPaintEvent& event)
         content_rect.move_by(m_icon->width() + 4, 0);
         content_rect.set_width(content_rect.width() - m_icon->width() - 4);
     }
-    if (is_enabled()) {
-        if (!text().is_empty()) {
-            painter.draw_text(content_rect, text(), font, text_alignment(), foreground_color(), TextElision::Right);
-            if (is_focused()) {
-                Rect focus_rect = { 0, 0, font.width(text()), font.glyph_height() };
-                focus_rect.inflate(6, 4);
-                focus_rect.center_within(content_rect);
-                painter.draw_rect(focus_rect, Color(140, 140, 140));
-            }
-        }
-    } else {
-        painter.draw_text(content_rect.translated(1, 1), text(), font, text_alignment(), Color::White, TextElision::Right);
-        painter.draw_text(content_rect, text(), font, text_alignment(), Color::from_rgb(0x808080), TextElision::Right);
-    }
+
+    paint_text(painter, content_rect, font, text_alignment());
 }
 
 void GButton::click()

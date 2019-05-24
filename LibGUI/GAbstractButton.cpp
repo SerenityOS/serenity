@@ -1,4 +1,5 @@
 #include <LibGUI/GAbstractButton.h>
+#include <LibGUI/GPainter.h>
 
 GAbstractButton::GAbstractButton(GWidget* parent)
     : GWidget(parent)
@@ -105,4 +106,23 @@ void GAbstractButton::keydown_event(GKeyEvent& event)
     if (event.key() == KeyCode::Key_Return)
         click();
     GWidget::keydown_event(event);
+}
+
+void GAbstractButton::paint_text(GPainter& painter, const Rect& rect, const Font& font, TextAlignment text_alignment)
+{
+    if (!is_enabled()) {
+        painter.draw_text(rect.translated(1, 1), text(), font, text_alignment, Color::White, TextElision::Right);
+        painter.draw_text(rect, text(), font, text_alignment, Color::from_rgb(0x808080), TextElision::Right);
+        return;
+    }
+
+    if (text().is_empty())
+        return;
+    painter.draw_text(rect, text(), font, text_alignment, foreground_color(), TextElision::Right);
+    if (is_focused()) {
+        Rect focus_rect = { 0, 0, font.width(text()), font.glyph_height() };
+        focus_rect.inflate(6, 4);
+        focus_rect.center_within(rect);
+        painter.draw_rect(focus_rect, Color(140, 140, 140));
+    }
 }

@@ -66,14 +66,7 @@ void GCheckBox::paint_event(GPaintEvent& event)
         painter.draw_bitmap(box_rect.shrunken(4, 4).location(), *s_checked_bitmap, foreground_color());
     }
 
-    if (!text().is_empty()) {
-        painter.draw_text(text_rect, text(), TextAlignment::TopLeft, foreground_color());
-        if (is_focused()) {
-            Rect focus_rect = text_rect;
-            focus_rect.inflate(6, 4);
-            painter.draw_rect(focus_rect, Color(140, 140, 140));
-        }
-    }
+    paint_text(painter, text_rect, font(), TextAlignment::TopLeft);
 }
 
 void GCheckBox::click()
