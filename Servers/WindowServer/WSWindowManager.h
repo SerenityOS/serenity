@@ -31,6 +31,7 @@ class WSButton;
 enum class ResizeDirection { None, Left, UpLeft, Up, UpRight, Right, DownRight, Down, DownLeft };
 
 class WSWindowManager : public CObject {
+    friend class WSCompositor;
     friend class WSWindowFrame;
     friend class WSWindowSwitcher;
 public:
@@ -57,7 +58,6 @@ public:
 
     void move_to_front_and_make_active(WSWindow&);
 
-    void invalidate_cursor();
     void draw_cursor();
     void draw_menubar();
     void draw_window_switcher();
@@ -69,11 +69,20 @@ public:
     WSMenu* current_menu() { return m_current_menu.ptr(); }
     void set_current_menu(WSMenu*);
 
+    const WSCursor& active_cursor() const;
+    const WSCursor& arrow_cursor() const { return *m_arrow_cursor; }
+    const WSCursor& resize_horizontally_cursor() const { return *m_resize_horizontally_cursor; }
+    const WSCursor& resize_vertically_cursor() const { return *m_resize_vertically_cursor; }
+    const WSCursor& resize_diagonally_tlbr_cursor() const { return *m_resize_diagonally_tlbr_cursor; }
+    const WSCursor& resize_diagonally_bltr_cursor() const { return *m_resize_diagonally_bltr_cursor; }
+    const WSCursor& i_beam_cursor() const { return *m_i_beam_cursor; }
+    const WSCursor& disallowed_cursor() const { return *m_disallowed_cursor; }
+    const WSCursor& move_cursor() const { return *m_move_cursor; }
+
     void invalidate(const WSWindow&);
     void invalidate(const WSWindow&, const Rect&);
-    void invalidate(const Rect&, bool should_schedule_compose_event = true);
+    void invalidate(const Rect&);
     void invalidate();
-    void recompose_immediately();
     void flush(const Rect&);
 
     const Font& font() const;
@@ -87,21 +96,6 @@ public:
     int menubar_menu_margin() const;
 
     void set_resolution(int width, int height);
-
-    bool set_wallpaper(const String& path, Function<void(bool)>&& callback);
-    String wallpaper_path() const { return m_wallpaper_path; }
-
-    const WSCursor& active_cursor() const;
-    Rect current_cursor_rect() const;
-
-    const WSCursor& arrow_cursor() const { return *m_arrow_cursor; }
-    const WSCursor& resize_horizontally_cursor() const { return *m_resize_horizontally_cursor; }
-    const WSCursor& resize_vertically_cursor() const { return *m_resize_vertically_cursor; }
-    const WSCursor& resize_diagonally_tlbr_cursor() const { return *m_resize_diagonally_tlbr_cursor; }
-    const WSCursor& resize_diagonally_bltr_cursor() const { return *m_resize_diagonally_bltr_cursor; }
-    const WSCursor& i_beam_cursor() const { return *m_i_beam_cursor; }
-    const WSCursor& disallowed_cursor() const { return *m_disallowed_cursor; }
-    const WSCursor& move_cursor() const { return *m_move_cursor; }
 
     void set_active_window(WSWindow*);
     void set_hovered_button(WSButton*);
@@ -143,7 +137,15 @@ private:
     template<typename Callback> IterationDecision for_each_visible_window_from_back_to_front(Callback);
     template<typename Callback> void for_each_window_listening_to_wm_events(Callback);
     template<typename Callback> void for_each_window(Callback);
-    template<typename Callback> void for_each_active_menubar_menu(Callback);
+
+    template<typename Callback>
+    void for_each_active_menubar_menu(Callback callback)
+    {
+        callback(*m_system_menu);
+        if (m_current_menubar)
+            m_current_menubar->for_each_menu(callback);
+    }
+
     void close_current_menu();
     virtual void event(CEvent&) override;
     void compose();
@@ -154,10 +156,15 @@ private:
     void tell_wm_listener_about_window_icon(WSWindow& listener, WSWindow&);
     void tell_wm_listener_about_window_rect(WSWindow& listener, WSWindow&);
     void pick_new_active_window();
-    void finish_setting_wallpaper(const String& path, Retained<GraphicsBitmap>&&);
 
-    WSScreen& m_screen;
-    Rect m_screen_rect;
+    RetainPtr<WSCursor> m_arrow_cursor;
+    RetainPtr<WSCursor> m_resize_horizontally_cursor;
+    RetainPtr<WSCursor> m_resize_vertically_cursor;
+    RetainPtr<WSCursor> m_resize_diagonally_tlbr_cursor;
+    RetainPtr<WSCursor> m_resize_diagonally_bltr_cursor;
+    RetainPtr<WSCursor> m_i_beam_cursor;
+    RetainPtr<WSCursor> m_disallowed_cursor;
+    RetainPtr<WSCursor> m_move_cursor;
 
     Color m_background_color;
     Color m_active_window_border_color;
@@ -207,37 +214,6 @@ private:
     Rect m_resize_window_original_rect;
     Point m_resize_origin;
     ResizeDirection m_resize_direction { ResizeDirection::None };
-
-    Rect m_last_cursor_rect;
-    Rect m_last_geometry_label_rect;
-
-    unsigned m_compose_count { 0 };
-    unsigned m_flush_count { 0 };
-
-    RetainPtr<GraphicsBitmap> m_front_bitmap;
-    RetainPtr<GraphicsBitmap> m_back_bitmap;
-
-    DisjointRectSet m_dirty_rects;
-
-    bool m_pending_compose_event { false };
-
-    RetainPtr<WSCursor> m_arrow_cursor;
-    RetainPtr<WSCursor> m_resize_horizontally_cursor;
-    RetainPtr<WSCursor> m_resize_vertically_cursor;
-    RetainPtr<WSCursor> m_resize_diagonally_tlbr_cursor;
-    RetainPtr<WSCursor> m_resize_diagonally_bltr_cursor;
-    RetainPtr<WSCursor> m_i_beam_cursor;
-    RetainPtr<WSCursor> m_disallowed_cursor;
-    RetainPtr<WSCursor> m_move_cursor;
-
-    OwnPtr<Painter> m_back_painter;
-    OwnPtr<Painter> m_front_painter;
-
-    String m_wallpaper_path;
-    RetainPtr<GraphicsBitmap> m_wallpaper;
-
-    bool m_flash_flush { false };
-    bool m_buffers_are_flipped { false };
 
     byte m_keyboard_modifiers { 0 };
 

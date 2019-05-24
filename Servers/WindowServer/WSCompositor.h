@@ -1,0 +1,58 @@
+#pragma once
+
+#include <AK/OwnPtr.h>
+#include <AK/RetainPtr.h>
+#include <LibCore/CObject.h>
+#include <SharedGraphics/DisjointRectSet.h>
+#include <SharedGraphics/GraphicsBitmap.h>
+
+class Painter;
+class WSCursor;
+
+class WSCompositor final : public CObject {
+public:
+    static WSCompositor& the();
+
+    void compose();
+    void invalidate();
+    void invalidate(const Rect&);
+
+    void set_resolution(int width, int height);
+
+    bool set_wallpaper(const String& path, Function<void(bool)>&& callback);
+    String wallpaper_path() const { return m_wallpaper_path; }
+
+    void invalidate_cursor();
+    Rect current_cursor_rect() const;
+
+private:
+    virtual void event(CEvent&) override;
+    virtual const char* class_name() const override { return "WSCompositor"; }
+
+    WSCompositor();
+    void flip_buffers();
+    void flush(const Rect&);
+    void draw_cursor();
+    void draw_geometry_label();
+    void draw_menubar();
+    void finish_setting_wallpaper(const String& path, Retained<GraphicsBitmap>&&);
+
+    unsigned m_compose_count { 0 };
+    unsigned m_flush_count { 0 };
+    bool m_pending_compose_event { false };
+    bool m_flash_flush { false };
+    bool m_buffers_are_flipped { false };
+
+    RetainPtr<GraphicsBitmap> m_front_bitmap;
+    RetainPtr<GraphicsBitmap> m_back_bitmap;
+    OwnPtr<Painter> m_back_painter;
+    OwnPtr<Painter> m_front_painter;
+
+    DisjointRectSet m_dirty_rects;
+
+    Rect m_last_cursor_rect;
+    Rect m_last_geometry_label_rect;
+
+    String m_wallpaper_path;
+    RetainPtr<GraphicsBitmap> m_wallpaper;
+};
