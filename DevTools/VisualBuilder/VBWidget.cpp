@@ -161,7 +161,7 @@ void VBWidget::setup_properties()
     }
 
     if (m_type == VBWidgetType::GCheckBox) {
-        VB_ADD_PROPERTY(GCheckBox, "caption", caption, set_caption, string);
+        VB_ADD_PROPERTY(GCheckBox, "caption", text, set_text, string);
         VB_ADD_PROPERTY(GCheckBox, "checked", is_checked, set_checked, bool);
     }
 }

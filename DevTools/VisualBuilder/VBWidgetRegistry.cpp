@@ -73,7 +73,7 @@ static GWidget* build_gwidget(VBWidgetType type, GWidget* parent)
     }
     case VBWidgetType::GCheckBox: {
         auto* box = new GCheckBox(parent);
-        box->set_caption("checkbox_1");
+        box->set_text("checkbox_1");
         return box;
     }
     default:

@@ -29,6 +29,8 @@ void GAbstractButton::set_checked(bool checked)
         return;
     m_checked = checked;
     update();
+    if (on_checked)
+        on_checked(checked);
 }
 
 void GAbstractButton::set_checkable(bool checkable)
