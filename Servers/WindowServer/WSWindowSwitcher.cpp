@@ -1,6 +1,7 @@
 #include <WindowServer/WSWindowSwitcher.h>
 #include <WindowServer/WSWindowManager.h>
 #include <WindowServer/WSEvent.h>
+#include <WindowServer/WSScreen.h>
 #include <SharedGraphics/Font.h>
 #include <SharedGraphics/StylePainter.h>
 
@@ -130,7 +131,7 @@ void WSWindowSwitcher::refresh()
     int space_for_window_rect = 180;
     m_rect.set_width(thumbnail_width() + longest_title_width + space_for_window_rect + padding() * 2 + item_padding() * 2);
     m_rect.set_height(window_count * item_height() + padding() * 2);
-    m_rect.center_within(wm.m_screen_rect);
+    m_rect.center_within(WSScreen::the().rect());
     if (!m_switcher_window)
         m_switcher_window = make<WSWindow>(*this, WSWindowType::WindowSwitcher);
     m_switcher_window->set_rect(m_rect);

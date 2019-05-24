@@ -1,20 +1,21 @@
+#include <SharedBuffer.h>
+#include <WindowServer/WSAPITypes.h>
 #include <WindowServer/WSClientConnection.h>
+#include <WindowServer/WSClipboard.h>
+#include <WindowServer/WSCompositor.h>
 #include <WindowServer/WSEventLoop.h>
-#include <WindowServer/WSMenuBar.h>
 #include <WindowServer/WSMenu.h>
+#include <WindowServer/WSMenuBar.h>
 #include <WindowServer/WSMenuItem.h>
+#include <WindowServer/WSScreen.h>
 #include <WindowServer/WSWindow.h>
 #include <WindowServer/WSWindowManager.h>
-#include <WindowServer/WSAPITypes.h>
-#include <WindowServer/WSClipboard.h>
-#include <WindowServer/WSScreen.h>
 #include <WindowServer/WSWindowSwitcher.h>
-#include <SharedBuffer.h>
+#include <errno.h>
+#include <stdio.h>
 #include <sys/ioctl.h>
 #include <sys/uio.h>
 #include <unistd.h>
-#include <errno.h>
-#include <stdio.h>
 
 HashMap<int, WSClientConnection*>* s_connections;
 
@@ -342,7 +343,7 @@ void WSClientConnection::handle_request(const WSAPISetWindowOpacityRequest& requ
 
 void WSClientConnection::handle_request(const WSAPISetWallpaperRequest& request)
 {
-    WSWindowManager::the().set_wallpaper(request.wallpaper(), [&] (bool success) {
+    WSCompositor::the().set_wallpaper(request.wallpaper(), [&] (bool success) {
         WSAPI_ServerMessage response;
         response.type = WSAPI_ServerMessage::Type::DidSetWallpaper;
         response.value = success;
@@ -352,7 +353,7 @@ void WSClientConnection::handle_request(const WSAPISetWallpaperRequest& request)
 
 void WSClientConnection::handle_request(const WSAPIGetWallpaperRequest&)
 {
-    auto path = WSWindowManager::the().wallpaper_path();
+    auto path = WSCompositor::the().wallpaper_path();
     WSAPI_ServerMessage response;
     response.type = WSAPI_ServerMessage::Type::DidGetWallpaper;
     ASSERT(path.length() < (int)sizeof(response.text));
