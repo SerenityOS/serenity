@@ -81,6 +81,8 @@ cp -v kernel.map mnt/
 cp -v ../Demos/HelloWorld/HelloWorld mnt/bin/HelloWorld
 ln -s HelloWorld mnt/bin/hw
 cp -v ../Demos/RetroFetch/RetroFetch mnt/bin/RetroFetch
+cp -v ../Demos/WidgetGallery/WidgetGallery mnt/bin/WidgetGallery
+ln -s WidgetGallery mnt/bin/wg
 
 # Run local sync script, if it exists
 if [ -f sync-local.sh ]; then

@@ -6,6 +6,7 @@
 
 class GCheckBox : public GAbstractButton {
 public:
+    GCheckBox(const String&, GWidget* parent);
     explicit GCheckBox(GWidget* parent);
     virtual ~GCheckBox() override;
 

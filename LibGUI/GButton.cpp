@@ -10,6 +10,11 @@ GButton::GButton(GWidget* parent)
 {
 }
 
+GButton::GButton(const String& text, GWidget* parent)
+    : GAbstractButton(text, parent)
+{
+}
+
 GButton::~GButton()
 {
     if (m_action)
