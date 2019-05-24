@@ -114,7 +114,7 @@ GFilePicker::GFilePicker(const String& path, CObject* parent)
     auto* cancel_button = new GButton(button_container);
     cancel_button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
     cancel_button->set_preferred_size({ 80, 0 });
-    cancel_button->set_caption("Cancel");
+    cancel_button->set_text("Cancel");
     cancel_button->on_click = [this] (auto&) {
         done(ExecCancel);
     };
@@ -122,7 +122,7 @@ GFilePicker::GFilePicker(const String& path, CObject* parent)
     auto* ok_button = new GButton(button_container);
     ok_button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
     ok_button->set_preferred_size({ 80, 0 });
-    ok_button->set_caption("OK");
+    ok_button->set_text("OK");
     ok_button->on_click = [this, filename_textbox] (auto&) {
         FileSystemPath path(String::format("%s/%s", m_model->path().characters(), filename_textbox->text().characters()));
         m_selected_file = path.string();

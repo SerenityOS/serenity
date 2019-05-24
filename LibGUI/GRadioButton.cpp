@@ -7,9 +7,8 @@ static RetainPtr<GraphicsBitmap> s_filled_circle_bitmap;
 static RetainPtr<GraphicsBitmap> s_changing_filled_circle_bitmap;
 static RetainPtr<GraphicsBitmap> s_changing_unfilled_circle_bitmap;
 
-GRadioButton::GRadioButton(const String& label, GWidget* parent)
-    : GWidget(parent)
-    , m_label(label)
+GRadioButton::GRadioButton(const String& text, GWidget* parent)
+    : GAbstractButton(text, parent)
 {
     if (!s_unfilled_circle_bitmap) {
         s_unfilled_circle_bitmap = GraphicsBitmap::load_from_file("/res/icons/unfilled-radio-circle.png");
@@ -43,13 +42,13 @@ void GRadioButton::paint_event(GPaintEvent& event)
     Rect circle_rect { { 2, 0 }, circle_size() };
     circle_rect.center_vertically_within(rect());
 
-    auto& bitmap = circle_bitmap(m_checked, m_changing);
+    auto& bitmap = circle_bitmap(is_checked(), is_being_pressed());
     painter.blit(circle_rect.location(), bitmap, bitmap.rect());
 
-    if (!m_label.is_empty()) {
-        Rect text_rect { circle_rect.right() + 4, 0, font().width(m_label), font().glyph_height() };
+    if (!text().is_empty()) {
+        Rect text_rect { circle_rect.right() + 4, 0, font().width(text()), font().glyph_height() };
         text_rect.center_vertically_within(rect());
-        painter.draw_text(text_rect, m_label, TextAlignment::CenterLeft, foreground_color());
+        painter.draw_text(text_rect, text(), TextAlignment::CenterLeft, foreground_color());
     }
 }
 
@@ -67,56 +66,13 @@ void GRadioButton::for_each_in_group(Callback callback)
     }
 }
 
-void GRadioButton::mousedown_event(GMouseEvent& event)
+void GRadioButton::click()
 {
-    if (event.button() != GMouseButton::Left)
+    if (!is_enabled())
         return;
-
-    m_changing = rect().contains(event.position());
-    m_tracking = true;
-    update();
-}
-
-void GRadioButton::mousemove_event(GMouseEvent& event)
-{
-    if (m_tracking) {
-        bool old_changing = m_changing;
-        m_changing = rect().contains(event.position());
-        if (old_changing != m_changing)
-            update();
-    }
-}
-
-void GRadioButton::mouseup_event(GMouseEvent& event)
-{
-    if (event.button() != GMouseButton::Left)
-        return;
-
-    if (rect().contains(event.position())) {
-        for_each_in_group([this] (auto& button) {
-            if (&button != this)
-                button.set_checked(false);
-        });
-        set_checked(true);
-    }
-
-    m_changing = false;
-    m_tracking = false;
-    update();
-}
-
-void GRadioButton::set_label(const String& label)
-{
-    if (m_label == label)
-        return;
-    m_label = label;
-    update();
-}
-
-void GRadioButton::set_checked(bool checked)
-{
-    if (m_checked == checked)
-        return;
-    m_checked = checked;
-    update();
+    for_each_in_group([this] (auto& button) {
+        if (&button != this)
+            button.set_checked(false);
+    });
+    set_checked(true);
 }

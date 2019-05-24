@@ -31,7 +31,7 @@ void GToolBar::add_action(Retained<GAction>&& action)
     if (item->action->icon())
         button->set_icon(item->action->icon());
     else
-        button->set_caption(item->action->text());
+        button->set_text(item->action->text());
     button->on_click = [raw_action_ptr] (const GButton&) {
         raw_action_ptr->activate();
     };

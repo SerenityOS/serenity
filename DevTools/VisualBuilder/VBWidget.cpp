@@ -123,7 +123,7 @@ void VBWidget::setup_properties()
     }
 
     if (m_type == VBWidgetType::GButton) {
-        VB_ADD_PROPERTY(GButton, "caption", caption, set_caption, string);
+        VB_ADD_PROPERTY(GButton, "text", text, set_text, string);
     }
 
     if (m_type == VBWidgetType::GGroupBox) {

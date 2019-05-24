@@ -44,7 +44,7 @@ static GWidget* build_gwidget(VBWidgetType type, GWidget* parent)
     }
     case VBWidgetType::GButton: {
         auto* button = new GButton(parent);
-        button->set_caption("button_1");
+        button->set_text("button_1");
         return button;
     }
     case VBWidgetType::GSpinBox: {

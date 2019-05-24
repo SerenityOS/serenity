@@ -46,7 +46,7 @@ int main(int argc, char** argv)
     version_label->set_preferred_size({ 0, 11 });
 
     auto* quit_button = new GButton(widget);
-    quit_button->set_caption("Okay");
+    quit_button->set_text("Okay");
     quit_button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
     quit_button->set_preferred_size({ 100, 20 });
     quit_button->on_click = [] (GButton&) {
