@@ -71,6 +71,8 @@ Rect GSlider::knob_rect() const
 
 void GSlider::mousedown_event(GMouseEvent& event)
 {
+    if (!is_enabled())
+        return;
     if (event.button() == GMouseButton::Left) {
         if (knob_rect().contains(event.position())) {
             m_dragging = true;
@@ -84,6 +86,8 @@ void GSlider::mousedown_event(GMouseEvent& event)
 
 void GSlider::mousemove_event(GMouseEvent& event)
 {
+    if (!is_enabled())
+        return;
     set_knob_hovered(knob_rect().contains(event.position()));
     if (m_dragging) {
         float delta = event.position().x() - m_drag_origin.x();
@@ -98,6 +102,8 @@ void GSlider::mousemove_event(GMouseEvent& event)
 
 void GSlider::mouseup_event(GMouseEvent& event)
 {
+    if (!is_enabled())
+        return;
     if (event.button() == GMouseButton::Left) {
         m_dragging = false;
         return;
@@ -108,6 +114,8 @@ void GSlider::mouseup_event(GMouseEvent& event)
 
 void GSlider::leave_event(CEvent& event)
 {
+    if (!is_enabled())
+        return;
     set_knob_hovered(false);
     GWidget::leave_event(event);
 }
