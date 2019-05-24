@@ -33,7 +33,7 @@ private:
     int realize_menu();
     void unrealize_menu();
 
-    int m_menu_id { 0 };
+    int m_menu_id { -1 };
     String m_name;
     Vector<OwnPtr<GMenuItem>> m_items;
 };

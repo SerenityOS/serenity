@@ -36,7 +36,7 @@ private:
     void update_window_server();
 
     Type m_type { Invalid };
-    unsigned m_menu_id { 0 };
+    int m_menu_id { -1 };
     unsigned m_identifier { 0 };
     bool m_enabled { true };
     bool m_checkable { false };
