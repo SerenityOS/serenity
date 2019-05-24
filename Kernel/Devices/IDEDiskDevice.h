@@ -25,6 +25,7 @@ public:
     virtual bool read_block(unsigned index, byte*) const override;
     virtual bool write_block(unsigned index, const byte*) override;
     virtual bool read_blocks(unsigned index, word count, byte*) override;
+    virtual bool write_blocks(unsigned index, word count, const byte*) override;
 
 protected:
     IDEDiskDevice();
@@ -46,6 +47,7 @@ private:
     word m_cylinders { 0 };
     word m_heads { 0 };
     word m_sectors_per_track { 0 };
+    word m_io_base { 0 };
     volatile bool m_interrupted { false };
     volatile byte m_device_error { 0 };
 
