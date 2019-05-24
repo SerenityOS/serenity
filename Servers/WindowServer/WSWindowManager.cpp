@@ -218,7 +218,6 @@ void WSWindowManager::set_current_menubar(WSMenuBar* menubar)
 
 void WSWindowManager::add_window(WSWindow& window)
 {
-    m_windows.set(&window);
     m_windows_in_order.append(&window);
 
     if (window.is_fullscreen()) {
@@ -258,11 +257,7 @@ void WSWindowManager::move_to_front_and_make_active(WSWindow& window)
 
 void WSWindowManager::remove_window(WSWindow& window)
 {
-    if (!m_windows.contains(&window))
-        return;
-
     invalidate(window);
-    m_windows.remove(&window);
     m_windows_in_order.remove(&window);
     if (window.is_active())
         pick_new_active_window();
