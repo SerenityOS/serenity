@@ -39,7 +39,7 @@ FontEditorWidget::FontEditorWidget(const String& path, RetainPtr<Font>&& edited_
 
     auto* fixed_width_checkbox = new GCheckBox(font_group_box);
     fixed_width_checkbox->set_relative_rect(10, 45, 190, 20);
-    fixed_width_checkbox->set_caption("Fixed width");
+    fixed_width_checkbox->set_text("Fixed width");
     fixed_width_checkbox->set_checked(m_edited_font->is_fixed_width());
 
     m_path_textbox = new GTextBox(this);
@@ -102,8 +102,8 @@ FontEditorWidget::FontEditorWidget(const String& path, RetainPtr<Font>&& edited_
         info_label->set_text(String::format("0x%b (%c)", glyph, glyph));
     };
 
-    fixed_width_checkbox->on_change = [this, width_spinbox, update_demo] (GCheckBox&, bool is_checked) {
-        m_edited_font->set_fixed_width(is_checked);
+    fixed_width_checkbox->on_checked = [this, width_spinbox, update_demo] (bool checked) {
+        m_edited_font->set_fixed_width(checked);
         width_spinbox->set_value(m_edited_font->glyph_width(m_glyph_map_widget->selected_glyph()));
         m_glyph_editor_widget->update();
         update_demo();

@@ -6,6 +6,8 @@ class GAbstractButton : public GWidget {
 public:
     virtual ~GAbstractButton() override;
 
+    Function<void(bool)> on_checked;
+
     void set_text(const String&);
     const String& text() const { return m_text; }
 
@@ -19,8 +21,8 @@ public:
     bool is_being_pressed() const { return m_being_pressed; }
 
     virtual void click() = 0;
-
     virtual const char* class_name() const override { return "GAbstractButton"; }
+    virtual bool accepts_focus() const override { return true; }
 
 protected:
     explicit GAbstractButton(GWidget* parent);
