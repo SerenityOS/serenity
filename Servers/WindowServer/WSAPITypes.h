@@ -265,6 +265,7 @@ struct WSAPI_ClientMessage {
             bool modal;
             bool resizable;
             bool fullscreen;
+            bool show_titlebar;
             WSAPI_WindowType type;
             float opacity;
             WSAPI_Size base_size;
