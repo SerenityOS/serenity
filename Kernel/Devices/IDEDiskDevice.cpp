@@ -1,21 +1,14 @@
-#include "IDEDiskDevice.h"
-#include <AK/Types.h>
-#include "Process.h"
-#include "StdLib.h"
-#include "IO.h"
-#include "Scheduler.h"
-#include "PIC.h"
-#include <Kernel/Lock.h>
-#include <Kernel/VM/MemoryManager.h>
+#include <Kernel/Devices/IDEDiskDevice.h>
 #include <Kernel/FileSystem/ProcFS.h>
+#include <Kernel/VM/MemoryManager.h>
+#include <Kernel/Process.h>
+#include <Kernel/StdLib.h>
+#include <Kernel/IO.h>
+#include <Kernel/PIC.h>
 
 //#define DISK_DEBUG
 
 #define IRQ_FIXED_DISK 14
-
-#define IDE0_DATA        0x1F0
-#define IDE0_STATUS      0x1F7
-#define IDE0_COMMAND     0x1F7
 
 #define ATA_SR_BSY     0x80
 #define ATA_SR_DRDY    0x40
@@ -85,24 +78,6 @@
 #define ATA_REG_ALTSTATUS  0x0C
 #define ATA_REG_DEVADDRESS 0x0D
 
-enum IDECommand : byte {
-    IDENTIFY_DRIVE = 0xEC,
-    READ_SECTORS = 0x21,
-    WRITE_SECTORS = 0x30,
-    FLUSH_CACHE = 0xe7,
-};
-
-enum IDEStatus : byte {
-    BUSY = (1 << 7),
-    DRDY = (1 << 6),
-    DF   = (1 << 5),
-    SRV  = (1 << 4),
-    DRQ  = (1 << 3),
-    CORR = (1 << 2),
-    IDX  = (1 << 1),
-    ERR  = (1 << 0),
-};
-
 Retained<IDEDiskDevice> IDEDiskDevice::create()
 {
     return adopt(*new IDEDiskDevice);
@@ -110,6 +85,7 @@ Retained<IDEDiskDevice> IDEDiskDevice::create()
 
 IDEDiskDevice::IDEDiskDevice()
     : IRQHandler(IRQ_FIXED_DISK)
+    , m_io_base(0x1f0)
 {
     m_dma_enabled.resource() = true;
     ProcFS::the().add_sys_bool("ide_dma", m_dma_enabled);
@@ -139,27 +115,34 @@ bool IDEDiskDevice::read_blocks(unsigned index, word count, byte* out)
 
 bool IDEDiskDevice::read_block(unsigned index, byte* out) const
 {
-    if (m_bus_master_base && const_cast<IDEDiskDevice*>(this)->m_dma_enabled.resource())
-        return const_cast<IDEDiskDevice&>(*this).read_sectors_with_dma(index, 1, out);
-    return const_cast<IDEDiskDevice&>(*this).read_sectors(index, 1, out);
+    return const_cast<IDEDiskDevice*>(this)->read_blocks(index, 1, out);
+}
+
+bool IDEDiskDevice::write_blocks(unsigned index, word count, const byte* data)
+{
+    for (unsigned i = 0; i < count; ++i) {
+        if (!write_sectors(index + i, 1, data + i * 512))
+            return false;
+    }
+    return true;
 }
 
 bool IDEDiskDevice::write_block(unsigned index, const byte* data)
 {
-    return write_sectors(index, 1, data);
+    return write_blocks(index, 1, data);
 }
 
 static void print_ide_status(byte status)
 {
-    kprintf("DRQ=%u BUSY=%u DRDY=%u SRV=%u DF=%u CORR=%u IDX=%u ERR=%u\n",
-            (status & DRQ) != 0,
-            (status & BUSY) != 0,
-            (status & DRDY) != 0,
-            (status & SRV) != 0,
-            (status & DF) != 0,
-            (status & CORR) != 0,
-            (status & IDX) != 0,
-            (status & ERR) != 0);
+    kprintf("DRQ=%u BSY=%u DRDY=%u DSC=%u DF=%u CORR=%u IDX=%u ERR=%u\n",
+            (status & ATA_SR_DRQ) != 0,
+            (status & ATA_SR_BSY) != 0,
+            (status & ATA_SR_DRDY) != 0,
+            (status & ATA_SR_DSC) != 0,
+            (status & ATA_SR_DF) != 0,
+            (status & ATA_SR_CORR) != 0,
+            (status & ATA_SR_IDX) != 0,
+            (status & ATA_SR_ERR) != 0);
 }
 
 bool IDEDiskDevice::wait_for_irq()
@@ -181,16 +164,16 @@ bool IDEDiskDevice::wait_for_irq()
 
 void IDEDiskDevice::handle_irq()
 {
-    byte status = IO::in8(0x1f7);
-    if (status & ERR) {
+    byte status = IO::in8(m_io_base + ATA_REG_STATUS);
+    if (status & ATA_SR_ERR) {
         print_ide_status(status);
-        m_device_error = IO::in8(0x1f1);
+        m_device_error = IO::in8(m_io_base + ATA_REG_ERROR);
         kprintf("IDEDiskDevice: Error %b!\n", m_device_error);
     } else {
         m_device_error = 0;
     }
 #ifdef DISK_DEBUG
-    kprintf("disk:interrupt: DRQ=%u BUSY=%u DRDY=%u\n", (status & DRQ) != 0, (status & BUSY) != 0, (status & DRDY) != 0);
+    kprintf("disk:interrupt: DRQ=%u BSY=%u DRDY=%u\n", (status & ATA_SR_DRQ) != 0, (status & ATA_SR_BSY) != 0, (status & ATA_SR_DRDY) != 0);
 #endif
     m_interrupted = true;
 }
@@ -207,20 +190,20 @@ void IDEDiskDevice::initialize()
     });
 
 #ifdef DISK_DEBUG
-    byte status = IO::in8(IDE0_STATUS);
+    byte status = IO::in8(m_io_base + ATA_REG_STATUS);
     kprintf("initial status: ");
     print_ide_status(status);
 #endif
 
     m_interrupted = false;
 
-    while (IO::in8(IDE0_STATUS) & BUSY);
+    while (IO::in8(m_io_base + ATA_REG_STATUS) & ATA_SR_BSY);
 
     enable_irq();
 
     IO::out8(0x1F6, 0xA0); // 0xB0 for 2nd device
     IO::out8(0x3F6, 0xA0); // 0xB0 for 2nd device
-    IO::out8(IDE0_COMMAND, IDENTIFY_DRIVE);
+    IO::out8(m_io_base + ATA_REG_COMMAND, ATA_CMD_IDENTIFY);
 
     enable_irq();
     wait_for_irq();
@@ -232,7 +215,7 @@ void IDEDiskDevice::initialize()
     const word* wbufbase = (word*)wbuf.pointer();
 
     for (dword i = 0; i < 256; ++i) {
-        word data = IO::in16(IDE0_DATA);
+        word data = IO::in16(m_io_base + ATA_REG_DATA);
         *(w++) = data;
         *(b++) = MSB(data);
         *(b++) = LSB(data);
@@ -301,35 +284,34 @@ bool IDEDiskDevice::read_sectors_with_dma(dword lba, word count, byte* outbuf)
     m_interrupted = false;
     enable_irq();
 
-    while (IO::in8(IDE0_STATUS) & BUSY);
+    while (IO::in8(m_io_base + ATA_REG_STATUS) & ATA_SR_BSY);
 
-    word io_base = 0x1f0;
     bool is_slave = false;
 
-    IO::out8(io_base + ATA_REG_CONTROL, 0);
-    IO::out8(io_base + ATA_REG_HDDEVSEL, 0xe0 | (is_slave << 4));
-    wait_400ns(io_base);
+    IO::out8(m_io_base + ATA_REG_CONTROL, 0);
+    IO::out8(m_io_base + ATA_REG_HDDEVSEL, 0xe0 | (is_slave << 4));
+    wait_400ns(m_io_base);
 
-    IO::out8(io_base + ATA_REG_FEATURES, 0);
+    IO::out8(m_io_base + ATA_REG_FEATURES, 0);
 
-    IO::out8(io_base + ATA_REG_SECCOUNT0, 0);
-    IO::out8(io_base + ATA_REG_LBA0, 0);
-    IO::out8(io_base + ATA_REG_LBA1, 0);
-    IO::out8(io_base + ATA_REG_LBA2, 0);
+    IO::out8(m_io_base + ATA_REG_SECCOUNT0, 0);
+    IO::out8(m_io_base + ATA_REG_LBA0, 0);
+    IO::out8(m_io_base + ATA_REG_LBA1, 0);
+    IO::out8(m_io_base + ATA_REG_LBA2, 0);
 
-    IO::out8(io_base + ATA_REG_SECCOUNT0, count);
-    IO::out8(io_base + ATA_REG_LBA0, (lba & 0x000000ff) >> 0);
-    IO::out8(io_base + ATA_REG_LBA1, (lba & 0x0000ff00) >> 8);
-    IO::out8(io_base + ATA_REG_LBA2, (lba & 0x00ff0000) >> 16);
+    IO::out8(m_io_base + ATA_REG_SECCOUNT0, count);
+    IO::out8(m_io_base + ATA_REG_LBA0, (lba & 0x000000ff) >> 0);
+    IO::out8(m_io_base + ATA_REG_LBA1, (lba & 0x0000ff00) >> 8);
+    IO::out8(m_io_base + ATA_REG_LBA2, (lba & 0x00ff0000) >> 16);
 
     for (;;) {
-        auto status = IO::in8(io_base + ATA_REG_STATUS);
+        auto status = IO::in8(m_io_base + ATA_REG_STATUS);
         if (!(status & ATA_SR_BSY) && (status & ATA_SR_DRDY))
             break;
     }
 
-    IO::out8(io_base + ATA_REG_COMMAND, ATA_CMD_READ_DMA_EXT);
-    wait_400ns(io_base);
+    IO::out8(m_io_base + ATA_REG_COMMAND, ATA_CMD_READ_DMA_EXT);
+    wait_400ns(m_io_base);
 
     // Start bus master
     IO::out8(m_bus_master_base, 0x9);
@@ -359,22 +341,22 @@ bool IDEDiskDevice::read_sectors(dword start_sector, word count, byte* outbuf)
 #endif
     disable_irq();
 
-    while (IO::in8(IDE0_STATUS) & BUSY);
+    while (IO::in8(m_io_base + ATA_REG_STATUS) & ATA_SR_BSY);
 
 #ifdef DISK_DEBUG
     kprintf("IDEDiskDevice: Reading %u sector(s) @ LBA %u\n", count, start_sector);
 #endif
 
-    IO::out8(0x1f2, count == 256 ? 0 : LSB(count));
-    IO::out8(0x1f3, start_sector & 0xff);
-    IO::out8(0x1f4, (start_sector >> 8) & 0xff);
-    IO::out8(0x1f5, (start_sector >> 16) & 0xff);
-    IO::out8(0x1f6, 0xe0 | ((start_sector >> 24) & 0xf)); // 0xf0 for 2nd device
+    IO::out8(m_io_base + ATA_REG_SECCOUNT0, count == 256 ? 0 : LSB(count));
+    IO::out8(m_io_base + ATA_REG_LBA0, start_sector & 0xff);
+    IO::out8(m_io_base + ATA_REG_LBA1, (start_sector >> 8) & 0xff);
+    IO::out8(m_io_base + ATA_REG_LBA2, (start_sector >> 16) & 0xff);
+    IO::out8(m_io_base + ATA_REG_HDDEVSEL, 0xe0 | ((start_sector >> 24) & 0xf)); // 0xf0 for 2nd device
 
     IO::out8(0x3F6, 0x08);
-    while (!(IO::in8(IDE0_STATUS) & DRDY));
+    while (!(IO::in8(m_io_base + ATA_REG_STATUS) & ATA_SR_DRDY));
 
-    IO::out8(IDE0_COMMAND, READ_SECTORS);
+    IO::out8(m_io_base + ATA_REG_COMMAND, ATA_CMD_READ_PIO);
     m_interrupted = false;
     enable_irq();
     wait_for_irq();
@@ -382,13 +364,13 @@ bool IDEDiskDevice::read_sectors(dword start_sector, word count, byte* outbuf)
     if (m_device_error)
         return false;
 
-    byte status = IO::in8(0x1f7);
-    ASSERT(status & DRQ);
+    byte status = IO::in8(m_io_base + ATA_REG_STATUS);
+    ASSERT(status & ATA_SR_DRQ);
 #ifdef DISK_DEBUG
     kprintf("Retrieving %u bytes (status=%b), outbuf=%p...\n", count * 512, status, outbuf);
 #endif
 
-    IO::repeated_in16(IDE0_DATA, outbuf, count * 256);
+    IO::repeated_in16(m_io_base + ATA_REG_DATA, outbuf, count * 256);
     return true;
 }
 
@@ -405,33 +387,33 @@ bool IDEDiskDevice::write_sectors(dword start_sector, word count, const byte* da
 #endif
     disable_irq();
 
-    while (IO::in8(IDE0_STATUS) & BUSY);
+    while (IO::in8(m_io_base + ATA_REG_STATUS) & ATA_SR_BSY);
 
     //dbgprintf("IDEDiskDevice: Writing %u sector(s) @ LBA %u\n", count, start_sector);
 
-    IO::out8(0x1f2, count == 256 ? 0 : LSB(count));
-    IO::out8(0x1f3, start_sector & 0xff);
-    IO::out8(0x1f4, (start_sector >> 8) & 0xff);
-    IO::out8(0x1f5, (start_sector >> 16) & 0xff);
-    IO::out8(0x1f6, 0xe0 | ((start_sector >> 24) & 0xf)); // 0xf0 for 2nd device
+    IO::out8(m_io_base + ATA_REG_SECCOUNT0, count == 256 ? 0 : LSB(count));
+    IO::out8(m_io_base + ATA_REG_LBA0, start_sector & 0xff);
+    IO::out8(m_io_base + ATA_REG_LBA1, (start_sector >> 8) & 0xff);
+    IO::out8(m_io_base + ATA_REG_LBA2, (start_sector >> 16) & 0xff);
+    IO::out8(m_io_base + ATA_REG_HDDEVSEL, 0xe0 | ((start_sector >> 24) & 0xf)); // 0xf0 for 2nd device
 
     IO::out8(0x3F6, 0x08);
 
-    IO::out8(IDE0_COMMAND, WRITE_SECTORS);
+    IO::out8(m_io_base + ATA_REG_COMMAND, ATA_CMD_WRITE_PIO);
 
-    while (!(IO::in8(IDE0_STATUS) & DRQ));
+    while (!(IO::in8(m_io_base + ATA_REG_STATUS) & ATA_SR_DRQ));
 
-    byte status = IO::in8(0x1f7);
-    ASSERT(status & DRQ);
-    IO::repeated_out16(IDE0_DATA, data, count * 256);
+    byte status = IO::in8(m_io_base + ATA_REG_STATUS);
+    ASSERT(status & ATA_SR_DRQ);
+    IO::repeated_out16(m_io_base + ATA_REG_DATA, data, count * 256);
 
     m_interrupted = false;
     enable_irq();
     wait_for_irq();
 
     disable_irq();
-    IO::out8(IDE0_COMMAND, FLUSH_CACHE);
-    while (IO::in8(IDE0_STATUS) & BUSY);
+    IO::out8(m_io_base + ATA_REG_COMMAND, ATA_CMD_CACHE_FLUSH);
+    while (IO::in8(m_io_base + ATA_REG_STATUS) & ATA_SR_BSY);
     m_interrupted = false;
     enable_irq();
     wait_for_irq();
