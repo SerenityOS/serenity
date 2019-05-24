@@ -72,15 +72,8 @@ WSWindowManager::WSWindowManager()
 
     Vector<AppMenuItem> apps;
     apps.append({ "/bin/Terminal", "Open Terminal..." });
-    apps.append({ "/bin/FontEditor", "Open FontEditor..." });
-    apps.append({ "/bin/TextEditor", "Open TextEditor..." });
-    apps.append({ "/bin/VisualBuilder", "Open VisualBuilder..." });
-    apps.append({ "/bin/IRCClient", "Open IRCClient..." });
     apps.append({ "/bin/FileManager", "Open FileManager..." });
     apps.append({ "/bin/ProcessManager", "Open ProcessManager..." });
-    apps.append({ "/bin/HelloWorld", "Open HelloWorld..." });
-    apps.append({ "/bin/Minesweeper", "Play Minesweeper..." });
-    apps.append({ "/bin/Snake", "Play Snake..." });
 
     {
         byte system_menu_name[] = { 0xf8, 0 };
