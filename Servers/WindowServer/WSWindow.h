@@ -34,6 +34,9 @@ public:
 
     bool is_fullscreen() const { return m_fullscreen; }
 
+    bool show_titlebar() const { return m_show_titlebar; }
+    void set_show_titlebar(bool show) { m_show_titlebar = show; }
+
     WSWindowFrame& frame() { return m_frame; }
     const WSWindowFrame& frame() const { return m_frame; }
 
@@ -158,6 +161,7 @@ private:
     bool m_minimized { false };
     bool m_maximized { false };
     bool m_fullscreen { false };
+    bool m_show_titlebar { true };
     RetainPtr<GraphicsBitmap> m_backing_store;
     RetainPtr<GraphicsBitmap> m_last_backing_store;
     int m_window_id { -1 };

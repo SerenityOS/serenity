@@ -62,6 +62,7 @@ void GWindow::show()
     request.window.modal = m_modal;
     request.window.resizable = m_resizable;
     request.window.fullscreen = m_fullscreen;
+    request.window.show_titlebar = m_show_titlebar;
     request.window.opacity = m_opacity_when_windowless;
     request.window.background_color = m_background_color.value();
     request.window.size_increment = m_size_increment;
