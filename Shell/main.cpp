@@ -233,24 +233,27 @@ static int run_command(const String& cmd)
 #ifdef SH_DEBUG
     for (int i = 0; i < subcommands.size(); ++i) {
         for (int j = 0; j < i; ++j)
-            printf("    ");
+            dbgprintf("    ");
         for (auto& arg : subcommands[i].args) {
-            printf("<%s> ", arg.characters());
+            dbgprintf("<%s> ", arg.characters());
         }
-        printf("\n");
+        dbgprintf("\n");
         for (auto& redirecton : subcommands[i].redirections) {
             for (int j = 0; j < i; ++j)
-                printf("    ");
-            printf("  ");
+                dbgprintf("    ");
+            dbgprintf("  ");
             switch (redirecton.type) {
             case Redirection::Pipe:
-                printf("Pipe\n");
+                dbgprintf("Pipe\n");
                 break;
             case Redirection::FileRead:
-                printf("fd:%d = FileRead: %s\n", redirecton.fd, redirecton.path.characters());
+                dbgprintf("fd:%d = FileRead: %s\n", redirecton.fd, redirecton.path.characters());
                 break;
             case Redirection::FileWrite:
-                printf("fd:%d = FileWrite: %s\n", redirecton.fd, redirecton.path.characters());
+                dbgprintf("fd:%d = FileWrite: %s\n", redirecton.fd, redirecton.path.characters());
+                break;
+            case Redirection::FileWriteAppend:
+                dbgprintf("fd:%d = FileWriteAppend: %s\n", redirecton.fd, redirecton.path.characters());
                 break;
             default:
                 break;
@@ -267,36 +270,53 @@ static int run_command(const String& cmd)
     for (int i = 0; i < subcommands.size(); ++i) {
         auto& subcommand = subcommands[i];
         for (auto& redirection : subcommand.redirections) {
-            if (redirection.type == Redirection::Pipe) {
-                int pipefd[2];
-                int rc = pipe(pipefd);
-                if (rc < 0) {
-                    perror("pipe");
-                    return 1;
+            switch (redirection.type) {
+                case Redirection::Pipe: {
+                    int pipefd[2];
+                    int rc = pipe(pipefd);
+                    if (rc < 0) {
+                        perror("pipe");
+                        return 1;
+                    }
+                    subcommand.redirections.append({ Redirection::Rewire, STDOUT_FILENO, pipefd[1] });
+                    auto& next_command = subcommands[i + 1];
+                    next_command.redirections.append({ Redirection::Rewire, STDIN_FILENO, pipefd[0] });
+                    fds.add(pipefd[0]);
+                    fds.add(pipefd[1]);
+                    break;
                 }
-                subcommand.redirections.append({ Redirection::Rewire, STDOUT_FILENO, pipefd[1] });
-                auto& next_command = subcommands[i + 1];
-                next_command.redirections.append({ Redirection::Rewire, STDIN_FILENO, pipefd[0] });
-                fds.add(pipefd[0]);
-                fds.add(pipefd[1]);
-            }
-            if (redirection.type == Redirection::FileWrite) {
-                int fd = open(redirection.path.characters(), O_WRONLY | O_CREAT, 0666);
-                if (fd < 0) {
-                    perror("open");
-                    return 1;
+                case Redirection::FileWriteAppend: {
+                    int fd = open(redirection.path.characters(), O_WRONLY | O_CREAT | O_APPEND, 0666);
+                    if (fd < 0) {
+                        perror("open");
+                        return 1;
+                    }
+                    subcommand.redirections.append({ Redirection::Rewire, redirection.fd, fd });
+                    fds.add(fd);
+                    break;
                 }
-                subcommand.redirections.append({ Redirection::Rewire, redirection.fd, fd });
-                fds.add(fd);
-            }
-            if (redirection.type == Redirection::FileRead) {
-                int fd = open(redirection.path.characters(), O_RDONLY);
-                if (fd < 0) {
-                    perror("open");
-                    return 1;
+                case Redirection::FileWrite: {
+                    int fd = open(redirection.path.characters(), O_WRONLY | O_CREAT, 0666);
+                    if (fd < 0) {
+                        perror("open");
+                        return 1;
+                    }
+                    subcommand.redirections.append({ Redirection::Rewire, redirection.fd, fd });
+                    fds.add(fd);
+                    break;
                 }
-                subcommand.redirections.append({ Redirection::Rewire, redirection.fd, fd });
-                fds.add(fd);
+                case Redirection::FileRead: {
+                    int fd = open(redirection.path.characters(), O_RDONLY);
+                    if (fd < 0) {
+                        perror("open");
+                        return 1;
+                    }
+                    subcommand.redirections.append({ Redirection::Rewire, redirection.fd, fd });
+                    fds.add(fd);
+                    break;
+                }
+                case Redirection::Rewire:
+                    break; // ignore
             }
         }
     }
