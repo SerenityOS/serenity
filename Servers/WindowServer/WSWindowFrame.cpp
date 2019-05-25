@@ -113,7 +113,7 @@ WSWindowFrame::~WSWindowFrame()
 
 Rect WSWindowFrame::title_bar_rect() const
 {
-    return { 3, 2, m_window.width(), window_titlebar_height };
+    return { 3, 3, m_window.width(), window_titlebar_height };
 }
 
 Rect WSWindowFrame::title_bar_icon_rect() const
@@ -144,16 +144,7 @@ void WSWindowFrame::paint(Painter& painter)
     PainterStateSaver saver(painter);
     painter.translate(rect().location());
 
-    if (m_window.type() == WSWindowType::Menu)
-        return;
-
-    if (m_window.type() == WSWindowType::WindowSwitcher)
-        return;
-
-    if (m_window.type() == WSWindowType::Taskbar)
-        return;
-
-    if (m_window.type() == WSWindowType::Tooltip)
+    if (m_window.type() != WSWindowType::Normal)
         return;
 
     auto& window = m_window;
@@ -204,7 +195,7 @@ void WSWindowFrame::paint(Painter& painter)
         painter.draw_line({ titlebar_title_rect.right() + 4, titlebar_inner_rect.y() + i }, { leftmost_button_rect.left() - 3, titlebar_inner_rect.y() + i }, border_color);
     }
 
-
+    painter.draw_text(titlebar_title_rect.translated(1, 2), window.title(), wm.window_title_font(), TextAlignment::CenterLeft, border_color.darkened(0.4));
     // FIXME: The translated(0, 1) wouldn't be necessary if we could center text based on its baseline.
     painter.draw_text(titlebar_title_rect.translated(0, 1), window.title(), wm.window_title_font(), TextAlignment::CenterLeft, title_color);
 
@@ -218,14 +209,14 @@ void WSWindowFrame::paint(Painter& painter)
 static Rect frame_rect_for_window(WSWindow& window, const Rect& rect)
 {
     auto type = window.type();
-    auto offset = !window.show_titlebar() ? window_titlebar_height : 0;
+    auto offset = !window.show_titlebar() ? (window_titlebar_height + 1) : 0;
 
     switch (type) {
     case WSWindowType::Normal:
         return { rect.x() - 3,
-                 rect.y() - window_titlebar_height - 3 + offset,
+                 rect.y() - window_titlebar_height - 4 + offset,
                  rect.width() + 6,
-                 rect.height() + 6 + window_titlebar_height - offset };
+                 rect.height() + 7 + window_titlebar_height - offset };
     default:
         return rect;
     }
