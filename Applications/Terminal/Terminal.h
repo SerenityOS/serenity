@@ -8,12 +8,13 @@
 #include <LibGUI/GFrame.h>
 #include <LibCore/CNotifier.h>
 #include <LibCore/CTimer.h>
+#include <LibCore/CConfigFile.h>
 
 class Font;
 
 class Terminal final : public GFrame {
 public:
-    explicit Terminal(int ptm_fd);
+    explicit Terminal(int ptm_fd, RetainPtr<CConfigFile> config);
     virtual ~Terminal() override;
 
     void create_window();
@@ -25,6 +26,8 @@ public:
     void apply_size_increments_to_window(GWindow&);
 
     void set_opacity(float);
+
+    RetainPtr<CConfigFile> config() const { return m_config; }
 
 private:
     typedef Vector<unsigned, 4> ParamVector;
@@ -41,6 +44,7 @@ private:
     void put_character_at(unsigned row, unsigned column, byte ch);
     void invalidate_cursor();
     void set_window_title(const String&);
+
 
     void inject_string(const String&);
     void unimplemented_escape();
@@ -165,4 +169,5 @@ private:
     int m_glyph_width { 0 };
 
     CTimer m_cursor_blink_timer;
+    RetainPtr<CConfigFile> m_config;
 };
