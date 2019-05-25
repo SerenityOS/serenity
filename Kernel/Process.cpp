@@ -861,6 +861,13 @@ ssize_t Process::do_write(FileDescriptor& descriptor, const byte* data, int data
             return -EAGAIN;
     }
 
+    if (descriptor.should_append()) {
+#ifdef IO_DEBUG
+        dbgprintf("seeking to end (O_APPEND)\n");
+#endif
+        descriptor.seek(0, SEEK_END);
+    }
+
     while (nwritten < data_size) {
 #ifdef IO_DEBUG
         dbgprintf("while %u < %u\n", nwritten, size);
@@ -1118,8 +1125,8 @@ int Process::sys$open(const char* path, int options, mode_t mode)
     auto descriptor = result.value();
     if (options & O_DIRECTORY && !descriptor->is_directory())
         return -ENOTDIR; // FIXME: This should be handled by VFS::open.
-    if (options & O_NONBLOCK)
-        descriptor->set_blocking(false);
+    descriptor->set_blocking(!(options & O_NONBLOCK));
+    descriptor->set_should_append(options & O_APPEND);
     dword flags = (options & O_CLOEXEC) ? FD_CLOEXEC : 0;
     m_fds[fd].set(move(descriptor), flags);
     return fd;

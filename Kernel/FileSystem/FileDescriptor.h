@@ -70,6 +70,8 @@ public:
 
     bool is_blocking() const { return m_is_blocking; }
     void set_blocking(bool b) { m_is_blocking = b; }
+    bool should_append() const { return m_should_append; }
+    void set_should_append(bool s) { m_should_append = s; }
 
     dword file_flags() const { return m_file_flags; }
     void set_file_flags(dword flags) { m_file_flags = flags; }
@@ -113,6 +115,7 @@ private:
     dword m_file_flags { 0 };
 
     bool m_is_blocking { true };
+    bool m_should_append { false };
     SocketRole m_socket_role { SocketRole::None };
     FIFO::Direction m_fifo_direction { FIFO::Direction::Neither };
 };
