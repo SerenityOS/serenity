@@ -25,24 +25,24 @@ int GMenuBar::realize_menubar()
 
 void GMenuBar::unrealize_menubar()
 {
-    if (!m_menubar_id)
+    if (m_menubar_id == -1)
         return;
     WSAPI_ClientMessage request;
     request.type = WSAPI_ClientMessage::Type::DestroyMenubar;
     request.menu.menubar_id = m_menubar_id;
     GEventLoop::current().sync_request(request, WSAPI_ServerMessage::Type::DidDestroyMenubar);
-    m_menubar_id = 0;
+    m_menubar_id = -1;
 }
 
 void GMenuBar::notify_added_to_application(Badge<GApplication>)
 {
-    ASSERT(!m_menubar_id);
+    ASSERT(m_menubar_id == -1);
     m_menubar_id = realize_menubar();
-    ASSERT(m_menubar_id > 0);
+    ASSERT(m_menubar_id != -1);
     for (auto& menu : m_menus) {
         ASSERT(menu);
         int menu_id = menu->realize_menu();
-        ASSERT(menu_id > 0);
+        ASSERT(menu_id != -1);
         WSAPI_ClientMessage request;
         request.type = WSAPI_ClientMessage::Type::AddMenuToMenubar;
         request.menu.menubar_id = m_menubar_id;

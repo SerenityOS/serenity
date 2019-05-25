@@ -20,6 +20,6 @@ private:
     int realize_menubar();
     void unrealize_menubar();
 
-    int m_menubar_id { 0 };
+    int m_menubar_id { -1 };
     Vector<OwnPtr<GMenu>> m_menus;
 };
