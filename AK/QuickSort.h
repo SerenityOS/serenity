@@ -12,7 +12,7 @@ template <typename Iterator, typename LessThan>
 void quick_sort(Iterator start, Iterator end, LessThan less_than = is_less_than)
 {
     int size = end - start;
-    if (size <= 0)
+    if (size <= 1)
         return;
 
     int pivot_point = size / 2;
