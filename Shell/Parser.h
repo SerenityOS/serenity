@@ -4,7 +4,7 @@
 #include <AK/Vector.h>
 
 struct Redirection {
-    enum Type { Pipe, FileWrite, FileRead, Rewire };
+    enum Type { Pipe, FileWrite, FileWriteAppend, FileRead, Rewire };
     Type type;
     int fd { -1 };
     int rewire_fd { -1 };
@@ -33,6 +33,7 @@ private:
         Free,
         InSingleQuotes,
         InDoubleQuotes,
+        InWriteAppendOrRedirectionPath,
         InRedirectionPath,
     };
     State m_state { Free };
