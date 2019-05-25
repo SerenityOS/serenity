@@ -1,8 +1,9 @@
 #pragma once
 
-#include "Point.h"
-#include "Size.h"
 #include <AK/AKString.h>
+#include <SharedGraphics/Point.h>
+#include <SharedGraphics/Size.h>
+#include <SharedGraphics/TextAlignment.h>
 
 struct WSAPI_Rect;
 
@@ -206,6 +207,8 @@ public:
     Point top_right() const { return { right(), top() }; }
     Point bottom_left() const { return { left(), bottom() }; }
     Point bottom_right() const { return { right(), bottom() }; }
+
+    void align_within(const Rect&, TextAlignment);
 
     void center_within(const Rect& other)
     {
