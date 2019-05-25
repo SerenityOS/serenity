@@ -5,6 +5,7 @@
 #include <AK/CircularQueue.h>
 #include <AK/Function.h>
 #include <LibCore/CTCPSocket.h>
+#include <LibCore/CConfigFile.h>
 #include "IRCLogBuffer.h"
 #include "IRCWindow.h"
 
@@ -111,7 +112,7 @@ private:
 
     void on_socket_connected();
 
-    String m_hostname;
+    String m_hostname { "none" };
     int m_port { 6667 };
 
     CTCPSocket* m_socket { nullptr };
@@ -127,4 +128,5 @@ private:
 
     Retained<IRCWindowListModel> m_client_window_list_model;
     Retained<IRCLogBuffer> m_log;
+    Retained<CConfigFile> m_config;
 };

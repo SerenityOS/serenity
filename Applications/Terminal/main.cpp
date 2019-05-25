@@ -94,7 +94,8 @@ int main(int argc, char** argv)
     window->set_double_buffering_enabled(false);
     window->set_should_exit_event_loop_on_close(true);
 
-    Terminal terminal(ptm_fd);
+    RetainPtr<CConfigFile> config = CConfigFile::get_for_app("Terminal");
+    Terminal terminal(ptm_fd, config);
     window->set_has_alpha_channel(true);
     window->set_main_widget(&terminal);
     window->move_to(300, 300);
@@ -119,6 +120,9 @@ int main(int argc, char** argv)
     slider->set_range(0, 100);
     slider->set_value(100);
 
+    auto new_opacity = config->read_num_entry("Window", "Opacity", 255);
+    terminal.set_opacity((float)new_opacity / 255.0);
+
     auto menubar = make<GMenuBar>();
 
     auto app_menu = make<GMenu>("Terminal");
@@ -136,6 +140,9 @@ int main(int argc, char** argv)
     GFontDatabase::the().for_each_fixed_width_font([&] (const String& font_name) {
         font_menu->add_action(GAction::create(font_name, [&terminal] (const GAction& action) {
             terminal.set_font(GFontDatabase::the().get_by_name(action.text()));
+            auto metadata = GFontDatabase::the().get_metadata_by_name(action.text());
+            terminal.config()->write_entry("Text", "Font", metadata.path);
+            terminal.config()->sync();
             terminal.force_repaint();
         }));
     });
@@ -149,5 +156,6 @@ int main(int argc, char** argv)
 
     app.set_menubar(move(menubar));
 
+    config->sync();
     return app.exec();
 }

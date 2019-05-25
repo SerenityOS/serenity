@@ -42,7 +42,7 @@ public:
     virtual ~WSWindowManager() override;
 
     RetainPtr<CConfigFile> wm_config() const { return m_wm_config; }
-    void set_wm_config(Retained<CConfigFile> conf) { m_wm_config = conf; }
+    void reload_config(bool);
 
     void add_window(WSWindow&);
     void remove_window(WSWindow&);
@@ -156,8 +156,6 @@ private:
     void tell_wm_listener_about_window_rect(WSWindow& listener, WSWindow&);
     void pick_new_active_window();
 
-    void reload_config();
-
     RetainPtr<WSCursor> m_arrow_cursor;
     RetainPtr<WSCursor> m_resize_horizontally_cursor;
     RetainPtr<WSCursor> m_resize_vertically_cursor;
@@ -199,6 +197,7 @@ private:
         CElapsedTimer m_middle_click_clock;
     };
     DoubleClickInfo m_double_click_info;
+    unsigned int m_double_click_speed;
 
     WeakPtr<WSWindow> m_active_window;
     WeakPtr<WSWindow> m_hovered_window;
