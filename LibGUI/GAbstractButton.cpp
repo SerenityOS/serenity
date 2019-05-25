@@ -110,19 +110,17 @@ void GAbstractButton::keydown_event(GKeyEvent& event)
 
 void GAbstractButton::paint_text(GPainter& painter, const Rect& rect, const Font& font, TextAlignment text_alignment)
 {
+    auto clipped_rect = rect.intersected(this->rect());
+
     if (!is_enabled()) {
-        painter.draw_text(rect.translated(1, 1), text(), font, text_alignment, Color::White, TextElision::Right);
-        painter.draw_text(rect, text(), font, text_alignment, Color::from_rgb(0x808080), TextElision::Right);
+        painter.draw_text(clipped_rect.translated(1, 1), text(), font, text_alignment, Color::White, TextElision::Right);
+        painter.draw_text(clipped_rect, text(), font, text_alignment, Color::from_rgb(0x808080), TextElision::Right);
         return;
     }
 
     if (text().is_empty())
         return;
-    painter.draw_text(rect, text(), font, text_alignment, foreground_color(), TextElision::Right);
-    if (is_focused()) {
-        Rect focus_rect = { 0, 0, font.width(text()), font.glyph_height() };
-        focus_rect.inflate(6, 4);
-        focus_rect.center_within(rect);
-        painter.draw_rect(focus_rect, Color(140, 140, 140));
-    }
+    painter.draw_text(clipped_rect, text(), font, text_alignment, foreground_color(), TextElision::Right);
+    if (is_focused())
+        painter.draw_rect(clipped_rect.inflated(6, 4), Color(140, 140, 140));
 }
