@@ -79,9 +79,9 @@ public:
         return Color(gray, gray, gray, alpha());
     }
 
-    Color darkened() const
+    Color darkened(float amount = 0.5) const
     {
-        return Color(red() * 0.8, green() * 0.8, blue() * 0.8, alpha());
+        return Color(red() * amount, green() * amount, blue() * amount, alpha());
     }
 
     Color lightened() const
