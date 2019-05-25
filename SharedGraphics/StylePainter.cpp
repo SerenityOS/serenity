@@ -65,13 +65,6 @@ static void paint_button_new(Painter& painter, const Rect& rect, bool pressed, b
         painter.draw_line({ 0, 0 }, { rect.width() - 2, 0 }, highlight_color2);
         painter.draw_line({ 0, 1 }, { 0, rect.height() - 2 }, highlight_color2);
 
-#if 0
-        // Inner highlight (this looks "too thick" to me right now..)
-        Color highlight_color1 = Color::from_rgb(0xffffff);
-        painter.draw_line({ 1, 1 }, { rect.width() - 3, 1 }, highlight_color1);
-        painter.draw_line({ 1, 2 }, { 1, rect.height() - 3 }, highlight_color1);
-#endif
-
         // Outer shadow
         painter.draw_line({ 0, rect.height() - 1 }, { rect.width() - 1, rect.height() - 1 }, shadow_color2);
         painter.draw_line({ rect.width() - 1, 0 }, { rect.width() - 1, rect.height() - 2 }, shadow_color2);
@@ -91,9 +84,6 @@ void StylePainter::paint_button(Painter& painter, const Rect& rect, ButtonStyle 
     Color highlight_color = Color::White;
     Color shadow_color = Color(96, 96, 96);
 
-    if (button_style == ButtonStyle::OldNormal)
-        painter.draw_rect(rect, Color::Black);
-
     if (button_style == ButtonStyle::CoolBar && !enabled)
         return;
 
@@ -111,7 +101,7 @@ void StylePainter::paint_button(Painter& painter, const Rect& rect, ButtonStyle 
         // Bottom highlight
         painter.draw_line({ rect.width() - 2, 1 }, { rect.width() - 2, rect.height() - 3 }, highlight_color);
         painter.draw_line({ 1, rect.height() - 2 }, { rect.width() - 2, rect.height() - 2 }, highlight_color);
-    } else if (button_style == ButtonStyle::OldNormal || (button_style == ButtonStyle::CoolBar && hovered)) {
+    } else if (button_style == ButtonStyle::CoolBar && hovered) {
         // Base
         painter.fill_rect({ 1, 1, rect.width() - 2, rect.height() - 2 }, button_color);
 
