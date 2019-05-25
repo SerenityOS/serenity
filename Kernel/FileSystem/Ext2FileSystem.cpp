@@ -269,6 +269,11 @@ Vector<Ext2FS::BlockIndex> Ext2FS::block_list_for_inode(const ext2_inode& e2inod
 
     // NOTE: i_blocks is number of 512-byte blocks, not number of fs-blocks.
     unsigned block_count = e2inode.i_blocks / (block_size() / 512);
+
+#ifdef EXT2_DEBUG
+    dbgprintf("Ext2FS::block_list_for_inode(): i_size=%u, i_blocks=%u, block_count=%u\n", e2inode.i_size, block_count);
+#endif
+
     unsigned blocks_remaining = block_count;
     Vector<BlockIndex> list;
     if (include_block_list_blocks) {
@@ -280,7 +285,10 @@ Vector<Ext2FS::BlockIndex> Ext2FS::block_list_for_inode(const ext2_inode& e2inod
 
     unsigned direct_count = min(block_count, (unsigned)EXT2_NDIR_BLOCKS);
     for (unsigned i = 0; i < direct_count; ++i) {
-        list.unchecked_append(e2inode.i_block[i]);
+        auto block_index = e2inode.i_block[i];
+        if (!block_index)
+            return list;
+        list.unchecked_append(block_index);
         --blocks_remaining;
     }
 
