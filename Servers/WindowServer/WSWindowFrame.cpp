@@ -195,11 +195,12 @@ void WSWindowFrame::paint(Painter& painter)
         middle_border_color = Color::MidGray;
     }
 
-    painter.draw_line(titlebar_rect.bottom_left().translated(0, 1), titlebar_rect.bottom_right().translated(0, 1), Color::LightGray);
     StylePainter::paint_window_frame(painter, outer_rect);
 
     if (!window.show_titlebar())
         return;
+
+    painter.draw_line(titlebar_rect.bottom_left().translated(0, 1), titlebar_rect.bottom_right().translated(0, 1), Color::LightGray);
 
     auto leftmost_button_rect = m_buttons.is_empty() ? Rect() : m_buttons.last()->relative_rect();
 
