@@ -38,28 +38,7 @@ WSWindowManager::WSWindowManager()
 {
     s_the = this;
 
-    m_arrow_cursor = WSCursor::create(*GraphicsBitmap::load_from_file("/res/cursors/arrow.png"), { 2, 2 });
-    m_resize_horizontally_cursor = WSCursor::create(*GraphicsBitmap::load_from_file("/res/cursors/resize-horizontal.png"));
-    m_resize_vertically_cursor = WSCursor::create(*GraphicsBitmap::load_from_file("/res/cursors/resize-vertical.png"));
-    m_resize_diagonally_tlbr_cursor = WSCursor::create(*GraphicsBitmap::load_from_file("/res/cursors/resize-diagonal-tlbr.png"));
-    m_resize_diagonally_bltr_cursor = WSCursor::create(*GraphicsBitmap::load_from_file("/res/cursors/resize-diagonal-bltr.png"));
-    m_i_beam_cursor = WSCursor::create(*GraphicsBitmap::load_from_file("/res/cursors/i-beam.png"));
-    m_disallowed_cursor = WSCursor::create(*GraphicsBitmap::load_from_file("/res/cursors/disallowed.png"));
-    m_move_cursor = WSCursor::create(*GraphicsBitmap::load_from_file("/res/cursors/move.png"));
-
-    m_background_color = Color(50, 50, 50);
-    m_active_window_border_color = Color(110, 34, 9);
-    m_active_window_border_color2 = Color(244, 202, 158);
-    m_active_window_title_color = Color::White;
-    m_inactive_window_border_color = Color(128, 128, 128);
-    m_inactive_window_border_color2 = Color(192, 192, 192);
-    m_inactive_window_title_color = Color(213, 208, 199);
-    m_dragging_window_border_color = Color(161, 50, 13);
-    m_dragging_window_border_color2 = Color(250, 220, 187);
-    m_dragging_window_title_color = Color::White;
-    m_highlight_window_border_color = Color::from_rgb(0xa10d0d);
-    m_highlight_window_border_color2 = Color::from_rgb(0xfabbbb);
-    m_highlight_window_title_color = Color::White;
+    m_wm_config = CConfigFile::get_for_app("WindowManager");
 
     m_username = getlogin();
 
@@ -103,13 +82,27 @@ WSWindowManager::WSWindowManager()
                 }
             }
             switch (item.identifier()) {
-            case 100: set_resolution(640, 480); break;
-            case 101: set_resolution(800, 600); break;
-            case 102: set_resolution(1024, 768); break;
-            case 103: set_resolution(1280, 720); break;
-            case 104: set_resolution(1440, 900); break;
-            case 105: set_resolution(1920, 1080); break;
-            case 106: set_resolution(2560, 1440); break;
+            case 100:
+                set_resolution(640, 480);
+                break;
+            case 101:
+                set_resolution(800, 600);
+                break;
+            case 102:
+                set_resolution(1024, 768);
+                break;
+            case 103:
+                set_resolution(1280, 720);
+                break;
+            case 104:
+                set_resolution(1440, 900);
+                break;
+            case 105:
+                set_resolution(1920, 1080);
+                break;
+            case 106:
+                set_resolution(2560, 1440);
+                break;
             }
             if (item.identifier() == 200) {
                 if (fork() == 0) {
@@ -123,6 +116,44 @@ WSWindowManager::WSWindowManager()
 #endif
         };
     }
+
+    dbgprintf("WindowManager: Loaded config from %s\n",
+              m_wm_config->file_name().view().characters());
+    dbgprintf("WindowManager: Screen size is %dx%d\n",
+              m_wm_config->read_num_entry("Screen", "Width", 800),
+              m_wm_config->read_num_entry("Screen", "Height", 600));
+    set_resolution(m_wm_config->read_num_entry("Screen", "Width", 800),
+                   m_wm_config->read_num_entry("Screen", "Height", 600));
+
+    dbgprintf("WindowManager: Loading cursors (arrow: %s)\n", m_wm_config->read_entry("Cursor", "Arrow", "").characters());
+    m_arrow_cursor = WSCursor::create(*GraphicsBitmap::load_from_file(m_wm_config->read_entry("Cursor", "Arrow", "")), { 2, 2 });
+    m_resize_horizontally_cursor = WSCursor::create(*GraphicsBitmap::load_from_file(m_wm_config->read_entry("Cursor", "ResizeH", "")));
+    m_resize_vertically_cursor = WSCursor::create(*GraphicsBitmap::load_from_file(m_wm_config->read_entry("Cursor", "ResizeV", "")));
+    m_resize_diagonally_tlbr_cursor = WSCursor::create(*GraphicsBitmap::load_from_file(m_wm_config->read_entry("Cursor", "ResizeDTLBR", "")));
+    m_resize_diagonally_bltr_cursor = WSCursor::create(*GraphicsBitmap::load_from_file(m_wm_config->read_entry("Cursor", "ResizeDBLTR", "")));
+    m_i_beam_cursor = WSCursor::create(*GraphicsBitmap::load_from_file(m_wm_config->read_entry("Cursor", "IBeam", "")));
+    m_disallowed_cursor = WSCursor::create(*GraphicsBitmap::load_from_file(m_wm_config->read_entry("Cursor", "Disallowed", "")));
+    m_move_cursor = WSCursor::create(*GraphicsBitmap::load_from_file(m_wm_config->read_entry("Cursor", "Move", "")));
+
+    dbgprintf("WindowManager: Loading colors\n");
+    m_background_color = m_wm_config->read_color_entry("Colors", "Background", Color::Red);
+    dbgprintf("-- BGColor: %s\n", m_background_color.to_string());
+
+    m_active_window_border_color = m_wm_config->read_color_entry("Colors", "ActiveWindowBorder", Color::Red);
+    m_active_window_border_color2 = m_wm_config->read_color_entry("Colors", "ActiveWindowBorder2", Color::Red);
+    m_active_window_title_color = m_wm_config->read_color_entry("Colors", "ActiveWindowTitle", Color::Red);
+
+    m_inactive_window_border_color = m_wm_config->read_color_entry("Colors", "InactiveWindowBorder", Color::Red);
+    m_inactive_window_border_color2 = m_wm_config->read_color_entry("Colors", "InactiveWindowBorder2", Color::Red);
+    m_inactive_window_title_color = m_wm_config->read_color_entry("Colors", "InactiveWindowTitle", Color::Red);
+
+    m_dragging_window_border_color = m_wm_config->read_color_entry("Colors", "DraggingWindowBorder", Color::Red);
+    m_dragging_window_border_color2 = m_wm_config->read_color_entry("Colors", "DraggingWindowBorder2", Color::Red);
+    m_dragging_window_title_color = m_wm_config->read_color_entry("Colors", "DraggingWindowTitle", Color::Red);
+
+    m_highlight_window_border_color = m_wm_config->read_color_entry("Colors", "HighlightWindowBorder", Color::Red);
+    m_highlight_window_border_color2 = m_wm_config->read_color_entry("Colors", "HighlightWindowBorder2", Color::Red);
+    m_highlight_window_title_color = m_wm_config->read_color_entry("Colors", "HighlightWindowTitle", Color::Red);
 
     // NOTE: This ensures that the system menu has the correct dimensions.
     set_current_menubar(nullptr);
@@ -176,6 +207,11 @@ void WSWindowManager::set_resolution(int width, int height)
     WSClientConnection::for_each_client([&] (WSClientConnection& client) {
         client.notify_about_new_screen_rect(WSScreen::the().rect());
     });
+    /*dbgprintf("Saving resolution: %dx%d to config file at %s.\n", width, height,
+              m_wm_config->file_name().characters());
+    m_wm_config->write_num_entry("Screen", "Width", width);
+    m_wm_config->write_num_entry("Screen", "Height", height);
+    m_wm_config->sync();*/
 }
 
 

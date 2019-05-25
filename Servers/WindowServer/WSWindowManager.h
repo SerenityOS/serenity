@@ -16,6 +16,7 @@
 #include <WindowServer/WSEvent.h>
 #include <WindowServer/WSCPUMonitor.h>
 #include <LibCore/CElapsedTimer.h>
+#include <LibCore/CConfigFile.h>
 
 class WSAPIClientRequest;
 class WSScreen;
@@ -39,6 +40,9 @@ public:
 
     WSWindowManager();
     virtual ~WSWindowManager() override;
+
+    RetainPtr<CConfigFile> wm_config() const { return m_wm_config; }
+    void set_wm_config(Retained<CConfigFile> conf) { m_wm_config = conf; }
 
     void add_window(WSWindow&);
     void remove_window(WSWindow&);
@@ -223,6 +227,8 @@ private:
     WeakPtr<WSButton> m_hovered_button;
 
     WSCPUMonitor m_cpu_monitor;
+
+    RetainPtr<CConfigFile> m_wm_config;
 };
 
 template<typename Callback>
