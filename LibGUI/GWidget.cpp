@@ -94,6 +94,8 @@ void GWidget::event(CEvent& event)
         return handle_enter_event(event);
     case GEvent::Leave:
         return handle_leave_event(event);
+    case GEvent::EnabledChange:
+        return change_event(static_cast<GEvent&>(event));
     default:
         return CObject::event(event);
     }
@@ -268,6 +270,10 @@ void GWidget::enter_event(CEvent&)
 }
 
 void GWidget::leave_event(CEvent&)
+{
+}
+
+void GWidget::change_event(GEvent&)
 {
 }
 
@@ -454,6 +460,8 @@ void GWidget::set_enabled(bool enabled)
     if (m_enabled == enabled)
         return;
     m_enabled = enabled;
+    GEvent e(GEvent::EnabledChange);
+    event(e);
     update();
 }
 

@@ -300,3 +300,12 @@ void GScrollBar::leave_event(CEvent&)
         update();
     }
 }
+
+void GScrollBar::change_event(GEvent& event)
+{
+    if (event.type() == GEvent::Type::EnabledChange) {
+        if (!is_enabled())
+            m_scrubbing = false;
+    }
+    return GWidget::change_event(event);
+}

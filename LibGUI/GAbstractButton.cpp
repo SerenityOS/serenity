@@ -124,3 +124,16 @@ void GAbstractButton::paint_text(GPainter& painter, const Rect& rect, const Font
     if (is_focused())
         painter.draw_rect(clipped_rect.inflated(6, 4), Color(140, 140, 140));
 }
+
+void GAbstractButton::change_event(GEvent& event)
+{
+    if (event.type() == GEvent::Type::EnabledChange) {
+        if (!is_enabled()) {
+            bool was_being_pressed = m_being_pressed;
+            m_being_pressed = false;
+            if (was_being_pressed)
+                update();
+        }
+    }
+    GWidget::change_event(event);
+}
