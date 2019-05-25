@@ -60,7 +60,9 @@ Vector<Subcommand> Parser::parse()
             if (ch == '>') {
                 commit_token();
                 begin_redirect_write(STDOUT_FILENO);
-                m_state = State::InRedirectionPath;
+
+                // Search for another > for append.
+                m_state = State::InWriteAppendOrRedirectionPath;
                 break;
             }
             if (ch == '<') {
@@ -79,6 +81,18 @@ Vector<Subcommand> Parser::parse()
             }
             m_token.append(ch);
             break;
+        case State::InWriteAppendOrRedirectionPath:
+            if (ch == '>') {
+                commit_token();
+                m_state = State::InRedirectionPath;
+                ASSERT(m_redirections.size());
+                m_redirections[m_redirections.size() - 1].type = Redirection::FileWriteAppend;
+                break;
+            }
+
+            // Not another > means that it's probably a path.
+            m_state = InRedirectionPath;
+            [[fallthrough]];
         case State::InRedirectionPath:
             if (ch == '<') {
                 commit_token();
