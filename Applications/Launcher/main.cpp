@@ -10,6 +10,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <errno.h>
+#include <LibCore/CUserInfo.h>
 
 static GWindow* make_launcher_window();
 
@@ -23,6 +24,7 @@ void handle_sigchld(int)
 
 int main(int argc, char** argv)
 {
+    chdir(get_current_user_home_path());
     GApplication app(argc, argv);
 
     signal(SIGCHLD, handle_sigchld);

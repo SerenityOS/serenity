@@ -7,6 +7,7 @@
 #include <assert.h>
 #include <sys/ioctl.h>
 #include <sys/select.h>
+#include <pwd.h>
 #include "Terminal.h"
 #include <Kernel/KeyCode.h>
 #include <LibGUI/GApplication.h>
@@ -16,6 +17,7 @@
 #include <LibGUI/GAction.h>
 #include <LibGUI/GFontDatabase.h>
 #include <LibGUI/GSlider.h>
+#include <LibCore/CUserInfo.h>
 
 static void make_shell(int ptm_fd)
 {
@@ -80,6 +82,8 @@ int main(int argc, char** argv)
 {
     GApplication app(argc, argv);
 
+    chdir(get_current_user_home_path());
+
     int ptm_fd = open("/dev/ptmx", O_RDWR);
     if (ptm_fd < 0) {
         perror("open(ptmx)");
@@ -112,7 +116,7 @@ int main(int argc, char** argv)
     slider->set_fill_with_background_color(true);
     slider->set_background_color(Color::LightGray);
 
-    slider->on_value_changed = [&terminal] (int value) {
+    slider->on_value_changed = [&terminal, &config] (int value) {
         float opacity = value / 100.0;
         terminal.set_opacity(opacity);
     };
@@ -138,11 +142,11 @@ int main(int argc, char** argv)
 
     auto font_menu = make<GMenu>("Font");
     GFontDatabase::the().for_each_fixed_width_font([&] (const String& font_name) {
-        font_menu->add_action(GAction::create(font_name, [&terminal] (const GAction& action) {
+                                                       font_menu->add_action(GAction::create(font_name, [&terminal, &config] (const GAction& action) {
             terminal.set_font(GFontDatabase::the().get_by_name(action.text()));
             auto metadata = GFontDatabase::the().get_metadata_by_name(action.text());
-            terminal.config()->write_entry("Text", "Font", metadata.path);
-            terminal.config()->sync();
+            config->write_entry("Text", "Font", metadata.path);
+            config->sync();
             terminal.force_repaint();
         }));
     });

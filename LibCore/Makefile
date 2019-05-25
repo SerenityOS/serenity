@@ -19,7 +19,8 @@ OBJS = \
     CConfigFile.o \
     CEvent.o \
     CProcessStatisticsReader.o \
-    CDirIterator.o
+    CDirIterator.o \
+    CUserInfo.o
 
 LIBRARY = libcore.a
 DEFINES += -DUSERLAND

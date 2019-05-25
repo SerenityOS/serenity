@@ -1,5 +1,6 @@
 #include <LibCore/CConfigFile.h>
 #include <LibCore/CFile.h>
+#include <LibCore/CUserInfo.h>
 #include <AK/StringBuilder.h>
 #include <stdio.h>
 #include <pwd.h>
@@ -7,15 +8,8 @@
 
 Retained<CConfigFile> CConfigFile::get_for_app(const String& app_name)
 {
-    String home_path;
-    if (auto* home_env = getenv("HOME")) {
-        home_path = home_env;
-    } else {
-        uid_t uid = getuid();
-        if (auto* pwd = getpwuid(uid))
-            home_path = pwd->pw_dir;
-    }
-    if (home_path.is_empty())
+    String home_path = get_current_user_home_path();
+    if (home_path == "/")
         home_path = String::format("/tmp");
     auto path = String::format("%s/%s.ini", home_path.characters(), app_name.characters());
     return adopt(*new CConfigFile(path));
