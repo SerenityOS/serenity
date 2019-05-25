@@ -76,3 +76,23 @@ Vector<Rect> Rect::shatter(const Rect& hammer) const
 
     return pieces;
 }
+
+void Rect::align_within(const Rect& other, TextAlignment alignment)
+{
+    switch (alignment) {
+    case TextAlignment::Center:
+        center_within(other);
+        return;
+    case TextAlignment::TopLeft:
+        set_location(other.location());
+        return;
+    case TextAlignment::CenterLeft:
+        set_x(other.x());
+        center_vertically_within(other);
+        return;
+    case TextAlignment::CenterRight:
+        set_x(other.x() + other.width() - width());
+        center_vertically_within(other);
+        return;
+    }
+}

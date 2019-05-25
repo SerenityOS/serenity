@@ -52,8 +52,8 @@ void GButton::paint_event(GPaintEvent& event)
     Rect text_rect { 0, 0, font.width(text()), font.glyph_height() };
     if (text_rect.width() > content_rect.width())
         text_rect.set_width(content_rect.width());
-    text_rect.center_within(content_rect);
-    paint_text(painter, text_rect, font, text_alignment());
+    text_rect.align_within(content_rect, text_alignment());
+    paint_text(painter, text_rect, font, TextAlignment::Center);
 }
 
 void GButton::click()
