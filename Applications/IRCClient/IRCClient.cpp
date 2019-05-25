@@ -31,8 +31,12 @@ IRCClient::IRCClient()
     : m_nickname("seren1ty")
     , m_client_window_list_model(IRCWindowListModel::create(*this))
     , m_log(IRCLogBuffer::create())
+    , m_config(CConfigFile::get_for_app("IRCClient"))
 {
     m_socket = new CTCPSocket(this);
+    m_nickname = m_config->read_entry("User", "Nickname", "seren1ty");
+    m_hostname = m_config->read_entry("Connection", "Server", "chat.freenode.net");
+    m_port = m_config->read_num_entry("Connection", "Port", 6667);
 }
 
 IRCClient::~IRCClient()
@@ -53,8 +57,16 @@ void IRCClient::on_socket_connected()
     send_user();
     send_nick();
 
-    if (on_connect)
+    if (on_connect) {
+        auto channel_str = m_config->read_entry("Connection", "AutoJoinChannels", "#test");
+        dbgprintf("IRCClient: Channels to autojoin: %s\n", channel_str.characters());
+        auto channels = channel_str.split(',');
+        for (auto channel : channels) {
+            join_channel(channel);
+            dbgprintf("IRCClient: Auto joining channel: %s\n", channel.characters());
+        }
         on_connect();
+    }
 }
 
 bool IRCClient::connect()

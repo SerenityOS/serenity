@@ -17,21 +17,30 @@
 
 //#define TERMINAL_DEBUG
 
-Terminal::Terminal(int ptm_fd)
+Terminal::Terminal(int ptm_fd, RetainPtr<CConfigFile> config)
     : m_ptm_fd(ptm_fd)
     , m_notifier(ptm_fd, CNotifier::Read)
+    , m_config(config)
 {
     set_frame_shape(FrameShape::Container);
     set_frame_shadow(FrameShadow::Sunken);
     set_frame_thickness(2);
 
-    m_cursor_blink_timer.set_interval(500);
+    dbgprintf("Terminal: Load config file from %s\n", m_config->file_name().characters());
+    m_cursor_blink_timer.set_interval(m_config->read_num_entry("Text",
+                                                               "CursorBlinkInterval",
+                                                               500));
     m_cursor_blink_timer.on_timeout = [this] {
         m_cursor_blink_state = !m_cursor_blink_state;
         update_cursor();
     };
 
-    set_font(Font::default_fixed_width_font());
+    auto font_entry = m_config->read_entry("Text", "Font", "default");
+    if (font_entry == "default")
+        set_font(Font::default_fixed_width_font());
+    else
+        set_font(Font::load_from_file(font_entry));
+
     m_notifier.on_ready_to_read = [this]{
         byte buffer[BUFSIZ];
         ssize_t nread = read(m_ptm_fd, buffer, sizeof(buffer));
@@ -53,7 +62,8 @@ Terminal::Terminal(int ptm_fd)
 
     m_line_height = font().glyph_height() + m_line_spacing;
 
-    set_size(80, 25);
+    set_size(m_config->read_num_entry("Window", "Width", 80),
+             m_config->read_num_entry("Window", "Height", 25));
 }
 
 Terminal::Line::Line(word columns)
