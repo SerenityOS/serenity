@@ -52,12 +52,14 @@ void IRCAppWindow::setup_client()
         m_client.join_channel("#test");
     };
 
-    GInputBox input_box("Enter server:", "Connect to server", this);
-    auto result = input_box.exec();
-    if (result == GInputBox::ExecCancel)
-        ::exit(0);
+    if (m_client.hostname() == "none") {
+        GInputBox input_box("Enter server:", "Connect to server", this);
+        auto result = input_box.exec();
+        if (result == GInputBox::ExecCancel)
+            ::exit(0);
 
-    m_client.set_server(input_box.text_value(), 6667);
+        m_client.set_server(input_box.text_value(), 6667);
+    }
     update_title();
     bool success = m_client.connect();
     ASSERT(success);
