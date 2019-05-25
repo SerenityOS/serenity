@@ -60,6 +60,7 @@ Come chat in `#serenityos` on the Freenode IRC network.
 ## Author
 
 * **Andreas Kling** - [awesomekling](https://github.com/awesomekling)
+* **Robin Burchell** - [rburchell](https://github.com/rburchell)
 
 ## License
 
