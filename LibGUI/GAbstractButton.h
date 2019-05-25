@@ -37,6 +37,7 @@ protected:
     virtual void keydown_event(GKeyEvent&) override;
     virtual void enter_event(CEvent&) override;
     virtual void leave_event(CEvent&) override;
+    virtual void change_event(GEvent&) override;
 
     void paint_text(GPainter&, const Rect&, const Font&, TextAlignment);
 

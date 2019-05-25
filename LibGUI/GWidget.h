@@ -67,6 +67,7 @@ public:
     virtual void enter_event(CEvent&);
     virtual void leave_event(CEvent&);
     virtual void child_event(CChildEvent&) override;
+    virtual void change_event(GEvent&);
 
     // This is called after children have been painted.
     virtual void second_paint_event(GPaintEvent&);

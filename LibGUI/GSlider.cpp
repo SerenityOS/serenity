@@ -120,6 +120,15 @@ void GSlider::leave_event(CEvent& event)
     GWidget::leave_event(event);
 }
 
+void GSlider::change_event(GEvent& event)
+{
+    if (event.type() == GEvent::Type::EnabledChange) {
+        if (!is_enabled()))
+            m_dragging = false;
+    }
+    GWidget::change_event(event);
+}
+
 void GSlider::set_knob_hovered(bool hovered)
 {
     if (m_knob_hovered == hovered)

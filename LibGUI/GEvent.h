@@ -33,6 +33,7 @@ public:
         FocusOut,
         WindowCloseRequest,
         ContextMenu,
+        EnabledChange,
 
         __Begin_WM_Events,
         WM_WindowRemoved,

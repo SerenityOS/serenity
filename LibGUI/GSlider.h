@@ -32,6 +32,7 @@ protected:
     virtual void mousemove_event(GMouseEvent&) override;
     virtual void mouseup_event(GMouseEvent&) override;
     virtual void leave_event(CEvent&) override;
+    virtual void change_event(GEvent&) override;
 
 private:
     void set_knob_hovered(bool);

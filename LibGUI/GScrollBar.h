@@ -42,6 +42,7 @@ private:
     virtual void mouseup_event(GMouseEvent&) override;
     virtual void mousemove_event(GMouseEvent&) override;
     virtual void leave_event(CEvent&) override;
+    virtual void change_event(GEvent&) override;
 
     int button_size() const { return 16; }
     int button_width() const { return orientation() == Orientation::Vertical ? width() : button_size(); }
