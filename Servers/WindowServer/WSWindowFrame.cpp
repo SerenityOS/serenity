@@ -169,7 +169,6 @@ void WSWindowFrame::paint(Painter& painter)
     Color title_color;
     Color border_color;
     Color border_color2;
-    Color middle_border_color;
 
     auto& wm = WSWindowManager::the();
 
@@ -177,22 +176,18 @@ void WSWindowFrame::paint(Painter& painter)
         border_color = wm.m_highlight_window_border_color;
         border_color2 = wm.m_highlight_window_border_color2;
         title_color = wm.m_highlight_window_title_color;
-        middle_border_color = Color::White;
     } else if (&window == wm.m_drag_window) {
         border_color = wm.m_dragging_window_border_color;
         border_color2 = wm.m_dragging_window_border_color2;
         title_color = wm.m_dragging_window_title_color;
-        middle_border_color = Color::from_rgb(0xf9b36a);
     } else if (&window == wm.m_active_window) {
         border_color = wm.m_active_window_border_color;
         border_color2 = wm.m_active_window_border_color2;
         title_color = wm.m_active_window_title_color;
-        middle_border_color = Color::from_rgb(0x8f673d);
     } else {
         border_color = wm.m_inactive_window_border_color;
         border_color2 = wm.m_inactive_window_border_color2;
         title_color = wm.m_inactive_window_title_color;
-        middle_border_color = Color::MidGray;
     }
 
     StylePainter::paint_window_frame(painter, outer_rect);
