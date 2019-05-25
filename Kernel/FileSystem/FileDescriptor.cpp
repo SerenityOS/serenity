@@ -75,6 +75,7 @@ Retained<FileDescriptor> FileDescriptor::clone()
     ASSERT(descriptor);
     descriptor->m_current_offset = m_current_offset;
     descriptor->m_is_blocking = m_is_blocking;
+    descriptor->m_should_append = m_should_append;
     descriptor->m_file_flags = m_file_flags;
     return *descriptor;
 }
