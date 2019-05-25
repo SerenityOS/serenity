@@ -21,6 +21,12 @@ Retained<CConfigFile> CConfigFile::get_for_app(const String& app_name)
     return adopt(*new CConfigFile(path));
 }
 
+Retained<CConfigFile> CConfigFile::get_for_system(const String& app_name)
+{
+    auto path = String::format("/etc/%s.ini", app_name.characters());
+    return adopt(*new CConfigFile(path));
+}
+
 CConfigFile::CConfigFile(const String& file_name)
     : m_file_name(file_name)
 {
@@ -105,6 +111,30 @@ int CConfigFile::read_num_entry(const String& group, const String &key, int defa
     return value;
 }
 
+Color CConfigFile::read_color_entry(const String& group, const String &key, Color default_value) const
+{
+    if (!has_key(group, key)) {
+        const_cast<CConfigFile&>(*this).write_color_entry(group, key, default_value);
+        return default_value;
+    }
+
+    Vector<String> shades = read_entry(group, key).split(',');
+    bool ok = shades.size() >= 3;
+    Color value;
+    if (shades.size() == 3)
+        value = Color(shades[0].to_uint(ok),
+                      shades[1].to_uint(ok),
+                      shades[2].to_uint(ok));
+    else
+        value = Color(shades[0].to_uint(ok),
+                      shades[1].to_uint(ok),
+                      shades[2].to_uint(ok),
+                      shades[3].to_uint(ok));
+    if (!ok)
+        return default_value;
+    return value;
+}
+
 bool CConfigFile::read_bool_entry(const String& group, const String &key, bool default_value) const
 {
     return read_entry(group, key, default_value ? "1" : "0") == "1";
@@ -119,6 +149,13 @@ void CConfigFile::write_entry(const String& group, const String& key, const Stri
 void CConfigFile::write_num_entry(const String& group, const String& key, int value)
 {
     write_entry(group, key, String::format("%d", value));
+}
+void CConfigFile::write_color_entry(const String& group, const String& key, Color value)
+{
+    write_entry(group, key, String::format("%d,%d,%d,%d", value.red(),
+                                           value.green(),
+                                           value.blue(),
+                                           value.alpha()));
 }
 
 bool CConfigFile::sync()
