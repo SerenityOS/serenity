@@ -156,6 +156,8 @@ private:
     void tell_wm_listener_about_window_rect(WSWindow& listener, WSWindow&);
     void pick_new_active_window();
 
+    void reload_config();
+
     RetainPtr<WSCursor> m_arrow_cursor;
     RetainPtr<WSCursor> m_resize_horizontally_cursor;
     RetainPtr<WSCursor> m_resize_vertically_cursor;
