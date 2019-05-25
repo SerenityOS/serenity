@@ -76,10 +76,8 @@ void WSCompositor::compose()
     for (auto& dirty_rect : dirty_rects.rects()) {
         if (wm.any_opaque_window_contains_rect(dirty_rect))
             continue;
-        if (!m_wallpaper)
-            m_back_painter->fill_rect(dirty_rect, wm.m_background_color);
-        else
-            m_back_painter->blit(dirty_rect.location(), *m_wallpaper, dirty_rect);
+        m_back_painter->fill_rect(dirty_rect, wm.m_background_color);
+        m_back_painter->blit(dirty_rect.location(), *m_wallpaper, dirty_rect);
     }
 
     auto compose_window = [&] (WSWindow& window) -> IterationDecision {
