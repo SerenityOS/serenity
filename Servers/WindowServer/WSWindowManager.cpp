@@ -38,11 +38,10 @@ WSWindowManager::WSWindowManager()
 {
     s_the = this;
 
-    m_wm_config = CConfigFile::get_for_app("WindowManager");
 
     m_username = getlogin();
 
-    m_menu_selection_color = Color::from_rgb(0x84351a);
+    reload_config();
 
     struct AppMenuItem {
         const char *binary_name;
@@ -117,44 +116,6 @@ WSWindowManager::WSWindowManager()
         };
     }
 
-    dbgprintf("WindowManager: Loaded config from %s\n",
-              m_wm_config->file_name().view().characters());
-    dbgprintf("WindowManager: Screen size is %dx%d\n",
-              m_wm_config->read_num_entry("Screen", "Width", 800),
-              m_wm_config->read_num_entry("Screen", "Height", 600));
-    set_resolution(m_wm_config->read_num_entry("Screen", "Width", 800),
-                   m_wm_config->read_num_entry("Screen", "Height", 600));
-
-    dbgprintf("WindowManager: Loading cursors (arrow: %s)\n", m_wm_config->read_entry("Cursor", "Arrow", "").characters());
-    m_arrow_cursor = WSCursor::create(*GraphicsBitmap::load_from_file(m_wm_config->read_entry("Cursor", "Arrow", "")), { 2, 2 });
-    m_resize_horizontally_cursor = WSCursor::create(*GraphicsBitmap::load_from_file(m_wm_config->read_entry("Cursor", "ResizeH", "")));
-    m_resize_vertically_cursor = WSCursor::create(*GraphicsBitmap::load_from_file(m_wm_config->read_entry("Cursor", "ResizeV", "")));
-    m_resize_diagonally_tlbr_cursor = WSCursor::create(*GraphicsBitmap::load_from_file(m_wm_config->read_entry("Cursor", "ResizeDTLBR", "")));
-    m_resize_diagonally_bltr_cursor = WSCursor::create(*GraphicsBitmap::load_from_file(m_wm_config->read_entry("Cursor", "ResizeDBLTR", "")));
-    m_i_beam_cursor = WSCursor::create(*GraphicsBitmap::load_from_file(m_wm_config->read_entry("Cursor", "IBeam", "")));
-    m_disallowed_cursor = WSCursor::create(*GraphicsBitmap::load_from_file(m_wm_config->read_entry("Cursor", "Disallowed", "")));
-    m_move_cursor = WSCursor::create(*GraphicsBitmap::load_from_file(m_wm_config->read_entry("Cursor", "Move", "")));
-
-    dbgprintf("WindowManager: Loading colors\n");
-    m_background_color = m_wm_config->read_color_entry("Colors", "Background", Color::Red);
-    dbgprintf("-- BGColor: %s\n", m_background_color.to_string());
-
-    m_active_window_border_color = m_wm_config->read_color_entry("Colors", "ActiveWindowBorder", Color::Red);
-    m_active_window_border_color2 = m_wm_config->read_color_entry("Colors", "ActiveWindowBorder2", Color::Red);
-    m_active_window_title_color = m_wm_config->read_color_entry("Colors", "ActiveWindowTitle", Color::Red);
-
-    m_inactive_window_border_color = m_wm_config->read_color_entry("Colors", "InactiveWindowBorder", Color::Red);
-    m_inactive_window_border_color2 = m_wm_config->read_color_entry("Colors", "InactiveWindowBorder2", Color::Red);
-    m_inactive_window_title_color = m_wm_config->read_color_entry("Colors", "InactiveWindowTitle", Color::Red);
-
-    m_dragging_window_border_color = m_wm_config->read_color_entry("Colors", "DraggingWindowBorder", Color::Red);
-    m_dragging_window_border_color2 = m_wm_config->read_color_entry("Colors", "DraggingWindowBorder2", Color::Red);
-    m_dragging_window_title_color = m_wm_config->read_color_entry("Colors", "DraggingWindowTitle", Color::Red);
-
-    m_highlight_window_border_color = m_wm_config->read_color_entry("Colors", "HighlightWindowBorder", Color::Red);
-    m_highlight_window_border_color2 = m_wm_config->read_color_entry("Colors", "HighlightWindowBorder2", Color::Red);
-    m_highlight_window_title_color = m_wm_config->read_color_entry("Colors", "HighlightWindowTitle", Color::Red);
-
     // NOTE: This ensures that the system menu has the correct dimensions.
     set_current_menubar(nullptr);
 
@@ -174,6 +135,40 @@ WSWindowManager::WSWindowManager()
 
 WSWindowManager::~WSWindowManager()
 {
+}
+
+void WSWindowManager::reload_config()
+{
+    m_wm_config = CConfigFile::get_for_app("WindowManager");
+
+    m_arrow_cursor = WSCursor::create(*GraphicsBitmap::load_from_file(m_wm_config->read_entry("Cursor", "Arrow", "")), { 2, 2 });
+    m_resize_horizontally_cursor = WSCursor::create(*GraphicsBitmap::load_from_file(m_wm_config->read_entry("Cursor", "ResizeH", "")));
+    m_resize_vertically_cursor = WSCursor::create(*GraphicsBitmap::load_from_file(m_wm_config->read_entry("Cursor", "ResizeV", "")));
+    m_resize_diagonally_tlbr_cursor = WSCursor::create(*GraphicsBitmap::load_from_file(m_wm_config->read_entry("Cursor", "ResizeDTLBR", "")));
+    m_resize_diagonally_bltr_cursor = WSCursor::create(*GraphicsBitmap::load_from_file(m_wm_config->read_entry("Cursor", "ResizeDBLTR", "")));
+    m_i_beam_cursor = WSCursor::create(*GraphicsBitmap::load_from_file(m_wm_config->read_entry("Cursor", "IBeam", "")));
+    m_disallowed_cursor = WSCursor::create(*GraphicsBitmap::load_from_file(m_wm_config->read_entry("Cursor", "Disallowed", "")));
+    m_move_cursor = WSCursor::create(*GraphicsBitmap::load_from_file(m_wm_config->read_entry("Cursor", "Move", "")));
+
+    m_background_color = m_wm_config->read_color_entry("Colors", "Background", Color::Red);
+
+    m_active_window_border_color = m_wm_config->read_color_entry("Colors", "ActiveWindowBorder", Color::Red);
+    m_active_window_border_color2 = m_wm_config->read_color_entry("Colors", "ActiveWindowBorder2", Color::Red);
+    m_active_window_title_color = m_wm_config->read_color_entry("Colors", "ActiveWindowTitle", Color::Red);
+
+    m_inactive_window_border_color = m_wm_config->read_color_entry("Colors", "InactiveWindowBorder", Color::Red);
+    m_inactive_window_border_color2 = m_wm_config->read_color_entry("Colors", "InactiveWindowBorder2", Color::Red);
+    m_inactive_window_title_color = m_wm_config->read_color_entry("Colors", "InactiveWindowTitle", Color::Red);
+
+    m_dragging_window_border_color = m_wm_config->read_color_entry("Colors", "DraggingWindowBorder", Color::Red);
+    m_dragging_window_border_color2 = m_wm_config->read_color_entry("Colors", "DraggingWindowBorder2", Color::Red);
+    m_dragging_window_title_color = m_wm_config->read_color_entry("Colors", "DraggingWindowTitle", Color::Red);
+
+    m_highlight_window_border_color = m_wm_config->read_color_entry("Colors", "HighlightWindowBorder", Color::Red);
+    m_highlight_window_border_color2 = m_wm_config->read_color_entry("Colors", "HighlightWindowBorder2", Color::Red);
+    m_highlight_window_title_color = m_wm_config->read_color_entry("Colors", "HighlightWindowTitle", Color::Red);
+
+    m_menu_selection_color = m_wm_config->read_color_entry("Colors", "MenuSelectionColor", Color::Red);
 }
 
 const Font& WSWindowManager::font() const
@@ -207,11 +202,13 @@ void WSWindowManager::set_resolution(int width, int height)
     WSClientConnection::for_each_client([&] (WSClientConnection& client) {
         client.notify_about_new_screen_rect(WSScreen::the().rect());
     });
-    /*dbgprintf("Saving resolution: %dx%d to config file at %s.\n", width, height,
-              m_wm_config->file_name().characters());
-    m_wm_config->write_num_entry("Screen", "Width", width);
-    m_wm_config->write_num_entry("Screen", "Height", height);
-    m_wm_config->sync();*/
+    if (m_wm_config) {
+        dbgprintf("Saving resolution: %dx%d to config file at %s.\n", width, height,
+                  m_wm_config->file_name().characters());
+        m_wm_config->write_num_entry("Screen", "Width", width);
+        m_wm_config->write_num_entry("Screen", "Height", height);
+        m_wm_config->sync();
+    }
 }
 
 
