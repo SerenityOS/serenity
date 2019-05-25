@@ -23,7 +23,7 @@
 
 #define C_IN    1
 
-static Vector<IPv4Address> lookup(const String& hostname, bool& did_timeout);
+static Vector<IPv4Address> lookup(const String& hostname, bool& did_timeout, const String& DNS_IP);
 static String parse_dns_name(const byte*, int& offset, int max_offset);
 
 int main(int argc, char**argv)
@@ -32,6 +32,11 @@ int main(int argc, char**argv)
     (void)argv;
 
     unlink("/tmp/.LookupServer-socket");
+
+    auto config = CConfigFile::get_for_system("LookupServer");
+    dbgprintf("LookupServer: Using network config file at %s.\n",
+              config->file_name().view().characters());
+    const String& DNS_IP = config->read_entry("DNS", "IPAddress", "127.0.0.53");
 
     HashMap<String, IPv4Address> dns_cache;
 
@@ -93,7 +98,9 @@ int main(int argc, char**argv)
         client_buffer[nrecv] = '\0';
 
         auto hostname = String(client_buffer, nrecv, Chomp);
-        dbgprintf("LookupServer: Got request for '%s'\n", hostname.characters());
+        dbgprintf("LookupServer: Got request for '%s' (using IP %s)\n",
+                  hostname.characters(),
+                  DNS_IP.view().characters());
 
         Vector<IPv4Address> addresses;
 
@@ -102,7 +109,7 @@ int main(int argc, char**argv)
             int retries = 3;
             do {
                 did_timeout = false;
-                addresses = lookup(hostname, did_timeout);
+                addresses = lookup(hostname, did_timeout, DNS_IP);
                 if (!did_timeout)
                     break;
             } while (--retries);
@@ -139,7 +146,7 @@ static word get_next_id()
     return ++s_next_id;
 }
 
-Vector<IPv4Address> lookup(const String& hostname, bool& did_timeout)
+Vector<IPv4Address> lookup(const String& hostname, bool& did_timeout, const String& DNS_IP)
 {
     // FIXME: First check if it's an IP address in a string!
 
@@ -186,7 +193,7 @@ Vector<IPv4Address> lookup(const String& hostname, bool& did_timeout)
 
     dst_addr.sin_family = AF_INET;
     dst_addr.sin_port = htons(53);
-    rc = inet_pton(AF_INET, "127.0.0.53", &dst_addr.sin_addr);
+    rc = inet_pton(AF_INET, DNS_IP.view().characters(), &dst_addr.sin_addr);
 
     int nsent = sendto(fd, buffer.pointer(), buffer.size(), 0,(const struct sockaddr *)&dst_addr, sizeof(dst_addr));
     if (nsent < 0) {
