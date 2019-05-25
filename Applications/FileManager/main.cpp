@@ -14,6 +14,7 @@
 #include <LibGUI/GTreeView.h>
 #include <LibGUI/GFileSystemModel.h>
 #include <LibGUI/GSplitter.h>
+#include <LibCore/CUserInfo.h>
 #include <AK/FileSystemPath.h>
 #include <unistd.h>
 #include <signal.h>
