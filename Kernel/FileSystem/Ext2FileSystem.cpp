@@ -51,9 +51,9 @@ bool Ext2FS::write_super_block(const ext2_super_block& sb)
     return true;
 }
 
-unsigned Ext2FS::first_block_of_group(unsigned groupIndex) const
+unsigned Ext2FS::first_block_of_group(GroupIndex group_index) const
 {
-    return super_block().s_first_data_block + (groupIndex * super_block().s_blocks_per_group);
+    return super_block().s_first_data_block + (group_index * super_block().s_blocks_per_group);
 }
 
 const ext2_super_block& Ext2FS::super_block() const
@@ -63,10 +63,10 @@ const ext2_super_block& Ext2FS::super_block() const
     return *reinterpret_cast<ext2_super_block*>(m_cached_super_block.pointer());
 }
 
-const ext2_group_desc& Ext2FS::group_descriptor(unsigned groupIndex) const
+const ext2_group_desc& Ext2FS::group_descriptor(GroupIndex group_index) const
 {
     // FIXME: Should this fail gracefully somehow?
-    ASSERT(groupIndex <= m_block_group_count);
+    ASSERT(group_index <= m_block_group_count);
 
     if (!m_cached_group_descriptor_table) {
         LOCKER(m_lock);
@@ -78,7 +78,7 @@ const ext2_group_desc& Ext2FS::group_descriptor(unsigned groupIndex) const
 #endif
         m_cached_group_descriptor_table = read_blocks(first_block_of_bgdt, blocks_to_read);
     }
-    return reinterpret_cast<ext2_group_desc*>(m_cached_group_descriptor_table.pointer())[groupIndex - 1];
+    return reinterpret_cast<ext2_group_desc*>(m_cached_group_descriptor_table.pointer())[group_index - 1];
 }
 
 bool Ext2FS::initialize()
@@ -262,29 +262,29 @@ bool Ext2FS::write_block_list_for_inode(InodeIndex inode_index, ext2_inode& e2in
     ASSERT_NOT_REACHED();
 }
 
-Vector<unsigned> Ext2FS::block_list_for_inode(const ext2_inode& e2inode, bool include_block_list_blocks) const
+Vector<Ext2FS::BlockIndex> Ext2FS::block_list_for_inode(const ext2_inode& e2inode, bool include_block_list_blocks) const
 {
     LOCKER(m_lock);
     unsigned entries_per_block = EXT2_ADDR_PER_BLOCK(&super_block());
 
     // NOTE: i_blocks is number of 512-byte blocks, not number of fs-blocks.
     unsigned block_count = e2inode.i_blocks / (block_size() / 512);
-    unsigned blocksRemaining = block_count;
-    Vector<unsigned> list;
+    unsigned blocks_remaining = block_count;
+    Vector<BlockIndex> list;
     if (include_block_list_blocks) {
         // This seems like an excessive over-estimate but w/e.
-        list.ensure_capacity(blocksRemaining * 2);
+        list.ensure_capacity(blocks_remaining * 2);
     } else {
-        list.ensure_capacity(blocksRemaining);
+        list.ensure_capacity(blocks_remaining);
     }
 
     unsigned direct_count = min(block_count, (unsigned)EXT2_NDIR_BLOCKS);
     for (unsigned i = 0; i < direct_count; ++i) {
         list.unchecked_append(e2inode.i_block[i]);
-        --blocksRemaining;
+        --blocks_remaining;
     }
 
-    if (!blocksRemaining)
+    if (!blocks_remaining)
         return list;
 
     auto process_block_array = [&] (unsigned array_block_index, auto&& callback) {
@@ -293,14 +293,14 @@ Vector<unsigned> Ext2FS::block_list_for_inode(const ext2_inode& e2inode, bool in
         auto array_block = read_block(array_block_index);
         ASSERT(array_block);
         auto* array = reinterpret_cast<const __u32*>(array_block.pointer());
-        unsigned count = min(blocksRemaining, entries_per_block);
+        unsigned count = min(blocks_remaining, entries_per_block);
         for (unsigned i = 0; i < count; ++i) {
             if (!array[i]) {
-                blocksRemaining = 0;
+                blocks_remaining = 0;
                 return;
             }
             callback(array[i]);
-            --blocksRemaining;
+            --blocks_remaining;
         }
     };
 
@@ -308,7 +308,7 @@ Vector<unsigned> Ext2FS::block_list_for_inode(const ext2_inode& e2inode, bool in
         list.unchecked_append(entry);
     });
 
-    if (!blocksRemaining)
+    if (!blocks_remaining)
         return list;
 
     process_block_array(e2inode.i_block[EXT2_DIND_BLOCK], [&] (unsigned entry) {
@@ -317,7 +317,7 @@ Vector<unsigned> Ext2FS::block_list_for_inode(const ext2_inode& e2inode, bool in
         });
     });
 
-    if (!blocksRemaining)
+    if (!blocks_remaining)
         return list;
 
     process_block_array(e2inode.i_block[EXT2_TIND_BLOCK], [&] (unsigned entry) {
@@ -535,6 +535,12 @@ bool Ext2FSInode::resize(qword new_size)
             fs().set_block_allocation_state(new_block_index, true);
         block_list.append(move(new_blocks));
     } else if (blocks_needed_after < blocks_needed_before) {
+#ifdef EXT2_DEBUG
+        dbgprintf("Ext2FSInode::resize(): Shrinking. Old block list is %d entries:\n", block_list.size());
+        for (auto block_index : block_list) {
+            dbgprintf("    # %u\n", block_index);
+        }
+#endif
         while (block_list.size() != blocks_needed_after) {
             auto block_index = block_list.take_last();
             fs().set_block_allocation_state(block_index, false);
@@ -622,7 +628,7 @@ ssize_t Ext2FSInode::write_bytes(off_t offset, ssize_t count, const byte* data, 
             memset(block.pointer() + padding_start, 0, padding_bytes);
         }
 #ifdef EXT2_DEBUG
-        dbgprintf("Ext2FSInode::write_bytes: writing block %u (offset_into_block: %u)\n", block_list[bi], offset_into_block);
+        dbgprintf("Ext2FSInode::write_bytes: writing block %u (offset_into_block: %u)\n", m_block_list[bi], offset_into_block);
 #endif
         bool success = fs().write_block(m_block_list[bi], block);
         if (!success) {
@@ -636,7 +642,7 @@ ssize_t Ext2FSInode::write_bytes(off_t offset, ssize_t count, const byte* data, 
     }
 
 #ifdef EXT2_DEBUG
-    dbgprintf("Ext2FSInode::write_bytes: after write, i_size=%u, i_blocks=%u (%u blocks in list)\n", m_raw_inode.i_size, m_raw_inode.i_blocks, block_list.size());
+    dbgprintf("Ext2FSInode::write_bytes: after write, i_size=%u, i_blocks=%u (%u blocks in list)\n", m_raw_inode.i_size, m_raw_inode.i_blocks, m_block_list.size());
 #endif
 
     if (old_size != new_size)
@@ -746,10 +752,10 @@ KResult Ext2FSInode::remove_child(const String& name)
     return KSuccess;
 }
 
-bool Ext2FS::write_directory_inode(unsigned directoryInode, Vector<DirectoryEntry>&& entries)
+bool Ext2FS::write_directory_inode(InodeIndex directory_inode_index, Vector<DirectoryEntry>&& entries)
 {
     LOCKER(m_lock);
-    dbgprintf("Ext2FS: New directory inode %u contents to write:\n", directoryInode);
+    dbgprintf("Ext2FS: New directory inode %u contents to write:\n", directory_inode_index);
 
     int directory_size = 0;
     for (auto& entry : entries) {
@@ -791,7 +797,7 @@ bool Ext2FS::write_directory_inode(unsigned directoryInode, Vector<DirectoryEntr
 
     stream.fill_to_end(0);
 
-    auto directory_inode = get_inode({ fsid(), directoryInode });
+    auto directory_inode = get_inode({ fsid(), directory_inode_index });
     ssize_t nwritten = directory_inode->write_bytes(0, directory_data.size(), directory_data.pointer(), nullptr);
     return nwritten == directory_data.size();
 }
@@ -869,7 +875,7 @@ Vector<Ext2FS::BlockIndex> Ext2FS::allocate_blocks(GroupIndex group_index, int c
 unsigned Ext2FS::allocate_inode(GroupIndex preferred_group, off_t expected_size)
 {
     LOCKER(m_lock);
-    dbgprintf("Ext2FS: allocate_inode(preferredGroup: %u, expectedSize: %u)\n", preferred_group, expected_size);
+    dbgprintf("Ext2FS: allocate_inode(preferredGroup: %u, expected_size: %u)\n", preferred_group, expected_size);
 
     unsigned needed_blocks = ceil_div(expected_size, block_size());
 
@@ -877,8 +883,8 @@ unsigned Ext2FS::allocate_inode(GroupIndex preferred_group, off_t expected_size)
 
     unsigned group_index = 0;
 
-    auto is_suitable_group = [this, needed_blocks] (unsigned groupIndex) {
-        auto& bgd = group_descriptor(groupIndex);
+    auto is_suitable_group = [this, needed_blocks] (GroupIndex group_index) {
+        auto& bgd = group_descriptor(group_index);
         return bgd.bg_free_inodes_count && bgd.bg_free_blocks_count >= needed_blocks;
     };
 
@@ -957,32 +963,32 @@ bool Ext2FS::get_inode_allocation_state(InodeIndex index) const
     return bitmap.get(bit_index);
 }
 
-bool Ext2FS::set_inode_allocation_state(unsigned index, bool newState)
+bool Ext2FS::set_inode_allocation_state(InodeIndex inode_index, bool new_state)
 {
     LOCKER(m_lock);
-    unsigned group_index = group_index_from_inode(index);
+    unsigned group_index = group_index_from_inode(inode_index);
     auto& bgd = group_descriptor(group_index);
-    unsigned index_in_group = index - ((group_index - 1) * inodes_per_group());
+    unsigned index_in_group = inode_index - ((group_index - 1) * inodes_per_group());
     unsigned bit_index = (index_in_group - 1) % inodes_per_group();
     auto block = read_block(bgd.bg_inode_bitmap);
     ASSERT(block);
     auto bitmap = Bitmap::wrap(block.pointer(), inodes_per_group());
     bool current_state = bitmap.get(bit_index);
-    dbgprintf("Ext2FS: set_inode_allocation_state(%u) %u -> %u\n", index, current_state, newState);
+    dbgprintf("Ext2FS: set_inode_allocation_state(%u) %u -> %u\n", inode_index, current_state, new_state);
 
-    if (current_state == newState) {
+    if (current_state == new_state) {
         ASSERT_NOT_REACHED();
         return true;
     }
 
-    bitmap.set(bit_index, newState);
+    bitmap.set(bit_index, new_state);
     bool success = write_block(bgd.bg_inode_bitmap, block);
     ASSERT(success);
 
     // Update superblock
     auto& sb = *reinterpret_cast<ext2_super_block*>(m_cached_super_block.pointer());
     dbgprintf("Ext2FS: superblock free inode count %u -> %u\n", sb.s_free_inodes_count, sb.s_free_inodes_count - 1);
-    if (newState)
+    if (new_state)
         --sb.s_free_inodes_count;
     else
         ++sb.s_free_inodes_count;
@@ -990,7 +996,7 @@ bool Ext2FS::set_inode_allocation_state(unsigned index, bool newState)
 
     // Update BGD
     auto& mutable_bgd = const_cast<ext2_group_desc&>(bgd);
-    if (newState)
+    if (new_state)
         --mutable_bgd.bg_free_inodes_count;
     else
         ++mutable_bgd.bg_free_inodes_count;
