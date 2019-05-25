@@ -123,7 +123,7 @@ void GSlider::leave_event(CEvent& event)
 void GSlider::change_event(GEvent& event)
 {
     if (event.type() == GEvent::Type::EnabledChange) {
-        if (!is_enabled()))
+        if (!is_enabled())
             m_dragging = false;
     }
     GWidget::change_event(event);
