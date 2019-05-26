@@ -109,7 +109,7 @@ const char* sys_siglist[NSIG] = {
     "Trap",
     "Aborted",
     "Bus error",
-    "FP exception",
+    "Division by zero",
     "Killed",
     "User signal 1",
     "Segmentation violation",
