@@ -720,14 +720,14 @@ void Process::sys$sigreturn()
     ASSERT_NOT_REACHED();
 }
 
-void Process::crash()
+void Process::crash(int signal)
 {
     ASSERT_INTERRUPTS_DISABLED();
     ASSERT(!is_dead());
 
     dump_backtrace();
 
-    m_termination_signal = SIGSEGV;
+    m_termination_signal = signal;
     dump_regions();
     ASSERT(is_ring3());
     die();

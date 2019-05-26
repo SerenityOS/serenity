@@ -167,19 +167,22 @@ void exception_6_handler(RegisterDump& regs)
         kprintf("#UD with !current\n");
         hang();
     }
-    kprintf("%s invalid opcode: %u(%s)\n", current->process().is_ring0() ? "Kernel" : "Process", current->pid(), current->process().name().characters());
+
+    kprintf("%s Illegal instruction: %s(%u)\n",
+        current->process().is_ring0() ? "Kernel" : "Process",
+        current->process().name().characters(),
+        current->pid()
+    );
 
     dump(regs);
-
     dump_backtrace();
 
     if (current->process().is_ring0()) {
         kprintf("Oh shit, we've crashed in ring 0 :(\n");
         hang();
     }
-    hang();
 
-    current->process().crash();
+    current->process().crash(SIGILL);
 }
 
 // 7: FPU not available exception
@@ -216,7 +219,11 @@ void exception_7_handler(RegisterDump& regs)
 EH_ENTRY_NO_CODE(0);
 void exception_0_handler(RegisterDump& regs)
 {
-    kprintf("%s DIVIDE ERROR: %u(%s)\n", current->process().is_ring0() ? "Kernel" : "User", current->pid(), current->process().name().characters());
+    kprintf("%s Division by zero: %s(%u)\n",
+        current->process().is_ring0() ? "Kernel" : "User",
+        current->process().name().characters(),
+        current->pid()
+    );
 
     dump(regs);
 
@@ -225,7 +232,7 @@ void exception_0_handler(RegisterDump& regs)
         hang();
     }
 
-    current->process().crash();
+    current->process().crash(SIGFPE);
 }
 
 
