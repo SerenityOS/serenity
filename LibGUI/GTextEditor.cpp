@@ -292,7 +292,7 @@ void GTextEditor::paint_event(GPaintEvent& event)
         }
     }
 
-    painter.add_clip_rect({ m_ruler_visible ? (ruler_rect.right() + 1) : 0, 0, width() - width_occupied_by_vertical_scrollbar() - ruler_width(), height() - height_occupied_by_horizontal_scrollbar() });
+    painter.add_clip_rect({ m_ruler_visible ? (ruler_rect.right() + frame_thickness() + 1) : frame_thickness(), frame_thickness(), width() - width_occupied_by_vertical_scrollbar() - ruler_width(), height() - height_occupied_by_horizontal_scrollbar() });
 
     for (int i = first_visible_line; i <= last_visible_line; ++i) {
         auto& line = *m_lines[i];
