@@ -10,6 +10,8 @@
 class Painter;
 class WSCursor;
 
+enum class WallpaperMode { Simple, Tile, Center, Unchecked };
+
 class WSCompositor final : public CObject {
 public:
     static WSCompositor& the();
@@ -55,5 +57,6 @@ private:
     Rect m_last_geometry_label_rect;
 
     String m_wallpaper_path;
+    WallpaperMode m_wallpaper_mode { WallpaperMode::Unchecked };
     RetainPtr<GraphicsBitmap> m_wallpaper;
 };
