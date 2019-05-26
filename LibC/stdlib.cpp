@@ -7,6 +7,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <ctype.h>
+#include <signal.h>
 #include <AK/Assertions.h>
 #include <AK/Types.h>
 #include <Kernel/Syscall.h>
@@ -42,8 +43,7 @@ int atexit(void (*handler)())
 
 void abort()
 {
-    // FIXME: Implement proper abort().
-    CRASH();
+    raise(SIGABRT);
 }
 
 char* getenv(const char* name)
