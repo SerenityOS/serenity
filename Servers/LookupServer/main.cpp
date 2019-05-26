@@ -13,6 +13,7 @@
 #include <AK/BufferStream.h>
 #include "DNSPacket.h"
 #include "DNSRecord.h"
+#include <LibCore/CConfigFile.h>
 
 #define T_A     1
 #define T_NS    2
@@ -35,8 +36,8 @@ int main(int argc, char**argv)
 
     auto config = CConfigFile::get_for_system("LookupServer");
     dbgprintf("LookupServer: Using network config file at %s.\n",
-              config->file_name().view().characters());
-    const String& DNS_IP = config->read_entry("DNS", "IPAddress", "127.0.0.53");
+              config->file_name().characters());
+    auto DNS_IP = config->read_entry("DNS", "IPAddress", "127.0.0.53");
 
     HashMap<String, IPv4Address> dns_cache;
 

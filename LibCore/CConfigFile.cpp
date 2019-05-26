@@ -112,19 +112,25 @@ Color CConfigFile::read_color_entry(const String& group, const String &key, Colo
         return default_value;
     }
 
-    Vector<String> shades = read_entry(group, key).split(',');
-    bool ok = shades.size() >= 3;
+    auto shades = read_entry(group, key).split(',');
+    if (shades.size() < 3)
+        return default_value;
+    bool ok1 = true,
+        ok2 = true,
+        ok3 = true,
+        ok4 = true;
     Color value;
-    if (shades.size() == 3)
-        value = Color(shades[0].to_uint(ok),
-                      shades[1].to_uint(ok),
-                      shades[2].to_uint(ok));
-    else
-        value = Color(shades[0].to_uint(ok),
-                      shades[1].to_uint(ok),
-                      shades[2].to_uint(ok),
-                      shades[3].to_uint(ok));
-    if (!ok)
+    if (shades.size() == 3) {
+        value = Color(shades[0].to_uint(ok1),
+                      shades[1].to_uint(ok2),
+                      shades[2].to_uint(ok3));
+    } else {
+        value = Color(shades[0].to_uint(ok1),
+                      shades[1].to_uint(ok2),
+                      shades[2].to_uint(ok3),
+                      shades[3].to_uint(ok4));
+    }
+    if (!(ok1 && ok2 && ok3 && ok4))
         return default_value;
     return value;
 }

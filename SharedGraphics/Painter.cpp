@@ -273,6 +273,32 @@ void Painter::blit_dimmed(const Point& position, const GraphicsBitmap& source, c
     }
 }
 
+void Painter::blit_tiled(const Point& position, const GraphicsBitmap& source, const Rect& src_rect)
+{
+    auto dst_rect = Rect(position, src_rect.size()).translated(translation());
+    auto clipped_rect = dst_rect.intersected(clip_rect());
+    if (clipped_rect.is_empty())
+        return;
+    const int first_row = clipped_rect.top() - dst_rect.top();
+    const int last_row = clipped_rect.bottom() - dst_rect.top();
+    const int first_column = clipped_rect.left() - dst_rect.left();
+    const int last_column = clipped_rect.right() - dst_rect.left();
+    RGBA32* dst = m_target->scanline(clipped_rect.y()) + clipped_rect.x();
+    const RGBA32* isrc = source.scanline(0) + src_rect.left() + first_column;
+    const RGBA32* src = source.scanline(src_rect.top() + first_row) + src_rect.left() + first_column;
+    const size_t dst_skip = m_target->pitch() / sizeof(RGBA32);
+    const size_t src_skip = source.pitch() / sizeof(RGBA32);
+
+    for (int row = first_row; row <= last_row; ++row) {
+        int y = (src - isrc) / src_skip % source.size().height();
+        src = y * src_skip + isrc;
+        for (int x = 0; x <= (last_column - first_column); ++x) {
+            dst[x] = src[x % source.size().width()];
+        }
+        dst += dst_skip;
+        src += src_skip;
+    }
+}
 
 void Painter::blit_with_alpha(const Point& position, const GraphicsBitmap& source, const Rect& src_rect)
 {

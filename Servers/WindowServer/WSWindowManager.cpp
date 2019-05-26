@@ -112,6 +112,25 @@ WSWindowManager::~WSWindowManager()
 {
 }
 
+Retained<WSCursor> WSWindowManager::get_cursor(const String& name, const Point& hotspot)
+{
+    auto path = m_wm_config->read_entry("Cursor", name, "/res/cursors/arrow.png");
+    auto gb = GraphicsBitmap::load_from_file(path);
+    if (gb)
+        return WSCursor::create(*gb, hotspot);
+    return WSCursor::create(*GraphicsBitmap::load_from_file("/res/cursors/arrow.png"));
+}
+
+Retained<WSCursor> WSWindowManager::get_cursor(const String& name)
+{
+    auto path = m_wm_config->read_entry("Cursor", name, "/res/cursors/arrow.png");
+    auto gb = GraphicsBitmap::load_from_file(path);
+
+    if (gb)
+        return WSCursor::create(*gb);
+    return WSCursor::create(*GraphicsBitmap::load_from_file("/res/cursors/arrow.png"));
+}
+
 void WSWindowManager::reload_config(bool set_screen)
 {
     m_wm_config = CConfigFile::get_for_app("WindowManager");
@@ -122,14 +141,14 @@ void WSWindowManager::reload_config(bool set_screen)
         set_resolution(m_wm_config->read_num_entry("Screen", "Width", 1920),
                        m_wm_config->read_num_entry("Screen", "Height", 1080));
 
-    m_arrow_cursor = WSCursor::create(*GraphicsBitmap::load_from_file(m_wm_config->read_entry("Cursor", "Arrow", "")), { 2, 2 });
-    m_resize_horizontally_cursor = WSCursor::create(*GraphicsBitmap::load_from_file(m_wm_config->read_entry("Cursor", "ResizeH", "")));
-    m_resize_vertically_cursor = WSCursor::create(*GraphicsBitmap::load_from_file(m_wm_config->read_entry("Cursor", "ResizeV", "")));
-    m_resize_diagonally_tlbr_cursor = WSCursor::create(*GraphicsBitmap::load_from_file(m_wm_config->read_entry("Cursor", "ResizeDTLBR", "")));
-    m_resize_diagonally_bltr_cursor = WSCursor::create(*GraphicsBitmap::load_from_file(m_wm_config->read_entry("Cursor", "ResizeDBLTR", "")));
-    m_i_beam_cursor = WSCursor::create(*GraphicsBitmap::load_from_file(m_wm_config->read_entry("Cursor", "IBeam", "")));
-    m_disallowed_cursor = WSCursor::create(*GraphicsBitmap::load_from_file(m_wm_config->read_entry("Cursor", "Disallowed", "")));
-    m_move_cursor = WSCursor::create(*GraphicsBitmap::load_from_file(m_wm_config->read_entry("Cursor", "Move", "")));
+    m_arrow_cursor = get_cursor("Arrow", { 2, 2 });
+    m_resize_horizontally_cursor = get_cursor("ResizeH");
+    m_resize_vertically_cursor = get_cursor("ResizeV");
+    m_resize_diagonally_tlbr_cursor = get_cursor("ResizeDTLBR");
+    m_resize_diagonally_bltr_cursor = get_cursor("ResizeDBLTR");
+    m_i_beam_cursor = get_cursor("IBeam");
+    m_disallowed_cursor = get_cursor("Disallowed");
+    m_move_cursor = get_cursor("Move");
 
     m_background_color = m_wm_config->read_color_entry("Colors", "Background", Color::Red);
 

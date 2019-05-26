@@ -48,11 +48,8 @@ void IRCAppWindow::setup_client()
     m_client.on_nickname_changed = [this] (const String&) {
         update_title();
     };
-    m_client.on_connect = [this] {
-        m_client.join_channel("#test");
-    };
 
-    if (m_client.hostname() == "none") {
+    if (m_client.hostname().is_empty()) {
         GInputBox input_box("Enter server:", "Connect to server", this);
         auto result = input_box.exec();
         if (result == GInputBox::ExecCancel)

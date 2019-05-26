@@ -112,7 +112,7 @@ private:
 
     void on_socket_connected();
 
-    String m_hostname { "none" };
+    String m_hostname;
     int m_port { 6667 };
 
     CTCPSocket* m_socket { nullptr };
