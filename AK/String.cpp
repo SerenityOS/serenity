@@ -196,4 +196,58 @@ String String::repeated(char ch, int count)
     return *impl;
 }
 
+bool String::matches(const String& mask, CaseSensitivity case_sensitivity) const
+{
+    if (case_sensitivity == CaseSensitivity::CaseInsensitive) {
+        String this_lower = this->to_lowercase();
+        String mask_lower = mask.to_lowercase();
+        return this_lower.match_helper(mask_lower);
+    }
+
+    return match_helper(mask);
+}
+
+bool String::match_helper(const String& mask) const
+{
+    if (is_null() || mask.is_null())
+        return false;
+
+    const char* string_ptr = characters();
+    const char* mask_ptr = mask.characters();
+
+    // Match string against mask directly unless we hit a *
+    while ((*string_ptr) && (*mask_ptr != '*')) {
+        if ((*mask_ptr != *string_ptr) && (*mask_ptr != '?'))
+            return false;
+        mask_ptr++;
+        string_ptr++;
+    }
+
+    const char* cp = nullptr;
+    const char* mp = nullptr;
+
+    while (*string_ptr) {
+        if (*mask_ptr == '*') {
+            // If we have only a * left, there is no way to not match.
+            if (!*++mask_ptr)
+                return true;
+            mp = mask_ptr;
+            cp = string_ptr+1;
+        } else if ((*mask_ptr == *string_ptr) || (*mask_ptr == '?')) {
+            mask_ptr++;
+            string_ptr++;
+        } else {
+            mask_ptr = mp;
+            string_ptr = cp++;
+        }
+    }
+
+    // Handle any trailing mask
+    while (*mask_ptr == '*')
+        mask_ptr++;
+
+    // If we 'ate' all of the mask then we match.
+    return !*mask_ptr;
+}
+
 }
