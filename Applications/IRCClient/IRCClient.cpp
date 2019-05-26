@@ -35,7 +35,7 @@ IRCClient::IRCClient()
 {
     m_socket = new CTCPSocket(this);
     m_nickname = m_config->read_entry("User", "Nickname", "seren1ty");
-    m_hostname = m_config->read_entry("Connection", "Server", "chat.freenode.net");
+    m_hostname = m_config->read_entry("Connection", "Server", "");
     m_port = m_config->read_num_entry("Connection", "Port", 6667);
 }
 
@@ -47,6 +47,9 @@ void IRCClient::set_server(const String &hostname, int port)
 {
     m_hostname = hostname;
     m_port = port;
+    m_config->write_entry("Connection", "Server", hostname);
+    m_config->write_num_entry("Connection", "Port", port);
+    m_config->sync();
 }
 
 void IRCClient::on_socket_connected()
@@ -61,7 +64,7 @@ void IRCClient::on_socket_connected()
         auto channel_str = m_config->read_entry("Connection", "AutoJoinChannels", "#test");
         dbgprintf("IRCClient: Channels to autojoin: %s\n", channel_str.characters());
         auto channels = channel_str.split(',');
-        for (auto channel : channels) {
+        for (auto& channel : channels) {
             join_channel(channel);
             dbgprintf("IRCClient: Auto joining channel: %s\n", channel.characters());
         }
