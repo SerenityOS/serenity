@@ -405,14 +405,7 @@ static int run_command(const String& cmd)
         return WEXITSTATUS(wstatus);
     } else {
         if (WIFSIGNALED(wstatus)) {
-            switch (WTERMSIG(wstatus)) {
-            case SIGINT:
-                printf("Interrupted\n");
-                break;
-            default:
-                printf("Terminated by signal %d\n", WTERMSIG(wstatus));
-                break;
-            }
+            puts(strsignal(WTERMSIG(wstatus)));
         } else {
             printf("Exited abnormally\n");
             return 1;
