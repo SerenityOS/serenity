@@ -16,6 +16,16 @@ WSCompositor& WSCompositor::the()
     return s_the;
 }
 
+WallpaperMode mode_to_enum(const String& name)
+{
+    if (name == "simple")
+        return WallpaperMode::Simple;
+    if (name == "tile")
+        return WallpaperMode::Tile;
+    if (name == "center")
+        return WallpaperMode::Center;
+}
+
 WSCompositor::WSCompositor()
 {
     auto size = WSScreen::the().size();
@@ -49,6 +59,9 @@ WSCompositor::WSCompositor()
 void WSCompositor::compose()
 {
     auto& wm = WSWindowManager::the();
+    if (m_wallpaper_mode == WallpaperMode::Unchecked)
+        m_wallpaper_mode = mode_to_enum(wm.wm_config()->read_entry("Background", "Mode", "simple"));
+    auto& ws = WSScreen::the();
 
     auto dirty_rects = move(m_dirty_rects);
 
@@ -77,8 +90,17 @@ void WSCompositor::compose()
         if (wm.any_opaque_window_contains_rect(dirty_rect))
             continue;
         m_back_painter->fill_rect(dirty_rect, wm.m_background_color);
-        if (m_wallpaper)
-            m_back_painter->blit(dirty_rect.location(), *m_wallpaper, dirty_rect);
+        if (m_wallpaper) {
+            if (m_wallpaper_mode == WallpaperMode::Simple ||
+                m_wallpaper_mode == WallpaperMode::Unchecked) {
+                m_back_painter->blit(dirty_rect.location(), *m_wallpaper, dirty_rect);
+            } else if (m_wallpaper_mode == WallpaperMode::Center) {
+                // TODO: Implement centered wallpaper
+                m_back_painter->blit(dirty_rect.location(), *m_wallpaper, dirty_rect);
+            } else if (m_wallpaper_mode == WallpaperMode::Tile) {
+                m_back_painter->blit_tiled(dirty_rect.location(), *m_wallpaper, dirty_rect);
+            }
+        }
     }
 
     auto compose_window = [&] (WSWindow& window) -> IterationDecision {

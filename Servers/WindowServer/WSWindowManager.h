@@ -121,6 +121,9 @@ public:
     WSWindow* active_fullscreen_window() { return (m_active_window && m_active_window->is_fullscreen()) ? m_active_window : nullptr; }
 
 private:
+    Retained<WSCursor> get_cursor(const String& name);
+    Retained<WSCursor> get_cursor(const String& name, const Point& hotspot);
+
     void process_mouse_event(WSMouseEvent&, WSWindow*& hovered_window);
     void process_event_for_doubleclick(WSWindow& window, WSMouseEvent& event);
     void deliver_mouse_event(WSWindow& window, WSMouseEvent& event);
