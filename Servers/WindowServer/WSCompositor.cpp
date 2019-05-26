@@ -30,12 +30,20 @@ WSCompositor::WSCompositor()
 
     m_compose_timer.on_timeout = [=]() {
 #if defined(COMPOSITOR_DEBUG)
-        dbgprintf("WSCompositor: frame callback\n");
+        dbgprintf("WSCompositor: delayed frame callback: %d rects\n", m_dirty_rects.size());
 #endif
         compose();
     };
     m_compose_timer.set_single_shot(true);
     m_compose_timer.set_interval(1000 / 60);
+    m_immediate_compose_timer.on_timeout = [=]() {
+#if defined(COMPOSITOR_DEBUG)
+        dbgprintf("WSCompositor: immediate frame callback: %d rects\n", m_dirty_rects.size());
+#endif
+        compose();
+    };
+    m_immediate_compose_timer.set_single_shot(true);
+    m_immediate_compose_timer.set_interval(0);
 }
 
 void WSCompositor::compose()
@@ -43,6 +51,12 @@ void WSCompositor::compose()
     auto& wm = WSWindowManager::the();
 
     auto dirty_rects = move(m_dirty_rects);
+
+    if (dirty_rects.size() == 0) {
+        // nothing dirtied since the last compose pass.
+        return;
+    }
+
     dirty_rects.add(Rect::intersection(m_last_geometry_label_rect, WSScreen::the().rect()));
     dirty_rects.add(Rect::intersection(m_last_cursor_rect, WSScreen::the().rect()));
     dirty_rects.add(Rect::intersection(current_cursor_rect(), WSScreen::the().rect()));
@@ -161,11 +175,22 @@ void WSCompositor::invalidate(const Rect& a_rect)
     if (rect.is_empty())
         return;
 
-#if defined(COMPOSITOR_DEBUG)
-    dbgprintf("Invalidated: %dx%d %dx%d\n", a_rect.x(), a_rect.y(), a_rect.width(), a_rect.height());
-#endif
     m_dirty_rects.add(rect);
-    m_compose_timer.start();
+
+    // We delay composition by a timer interval, but to not affect latency too
+    // much, if a pending compose is not already scheduled, we also schedule an
+    // immediate compose the next spin of the event loop.
+    if (!m_compose_timer.is_active()) {
+#if defined(COMPOSITOR_DEBUG)
+        dbgprintf("Invalidated (starting immediate frame): %dx%d %dx%d\n", a_rect.x(), a_rect.y(), a_rect.width(), a_rect.height());
+#endif
+        m_compose_timer.start();
+        m_immediate_compose_timer.start();
+    } else {
+#if defined(COMPOSITOR_DEBUG)
+        dbgprintf("Invalidated (frame callback pending): %dx%d %dx%d\n", a_rect.x(), a_rect.y(), a_rect.width(), a_rect.height());
+#endif
+    }
 }
 
 bool WSCompositor::set_wallpaper(const String& path, Function<void(bool)>&& callback)
