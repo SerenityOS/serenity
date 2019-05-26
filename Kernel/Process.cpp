@@ -1232,7 +1232,7 @@ int Process::sys$kill(pid_t pid, int signal)
     }
     if (pid == m_pid) {
         current->send_signal(signal, this);
-        Scheduler::yield();
+        current->block(Thread::State::BlockedSignal);
         return 0;
     }
     InterruptDisabler disabler;
