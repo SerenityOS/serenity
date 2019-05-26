@@ -194,7 +194,7 @@ private:
         RawPoint as_point;
         RawSize as_size;
         RawRect as_rect;
-    } m_value; 
+    } m_value;
 
     Type m_type { Type::Invalid };
 };

@@ -15,7 +15,7 @@ bool String::operator==(const String& other) const
 
     if (length() != other.length())
         return false;
-    
+
     return !memcmp(characters(), other.characters(), length());
 }
 
@@ -122,12 +122,32 @@ ByteBuffer String::to_byte_buffer() const
     return ByteBuffer::copy(reinterpret_cast<const byte*>(characters()), length());
 }
 
-// FIXME: Duh.
 int String::to_int(bool& ok) const
 {
-    unsigned value = to_uint(ok);
-    ASSERT(ok);
-    return (int)value;
+    bool negative = false;
+    int value = 0;
+    ssize_t i = 0;
+
+    if (is_null()) {
+        ok = false;
+        return 0;
+    }
+
+    if (characters()[0] == '-') {
+        i++;
+        negative = true;
+    }
+    for (; i < length(); i++) {
+        if (characters()[i] < '0' || characters()[i] > '9') {
+            ok = false;
+            return 0;
+        }
+        value = value * 10;
+        value += characters()[i] - '0';
+    }
+    ok = true;
+
+    return negative ? -value : value;
 }
 
 unsigned String::to_uint(bool& ok) const
