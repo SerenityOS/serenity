@@ -8,6 +8,8 @@
 #include <SharedGraphics/PNGLoader.h>
 #include <SharedGraphics/Painter.h>
 
+// #define COMPOSITOR_DEBUG
+
 WSCompositor& WSCompositor::the()
 {
     static WSCompositor s_the;
@@ -25,15 +27,15 @@ WSCompositor::WSCompositor()
 
     m_wallpaper_path = "/res/wallpapers/retro.rgb";
     m_wallpaper = GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, m_wallpaper_path, { 1024, 768 });
-}
 
-void WSCompositor::event(CEvent& event)
-{
-    if (event.type() == WSEvent::WM_DeferredCompose) {
-        m_pending_compose_event = false;
+    m_compose_timer.on_timeout = [=]() {
+#if defined(COMPOSITOR_DEBUG)
+        dbgprintf("WSCompositor: frame callback\n");
+#endif
         compose();
-        return;
-    }
+    };
+    m_compose_timer.set_single_shot(true);
+    m_compose_timer.set_interval(1000 / 60);
 }
 
 void WSCompositor::compose()
@@ -159,12 +161,11 @@ void WSCompositor::invalidate(const Rect& a_rect)
     if (rect.is_empty())
         return;
 
+#if defined(COMPOSITOR_DEBUG)
+    dbgprintf("Invalidated: %dx%d %dx%d\n", a_rect.x(), a_rect.y(), a_rect.width(), a_rect.height());
+#endif
     m_dirty_rects.add(rect);
-
-    if (!m_pending_compose_event) {
-        WSEventLoop::the().post_event(*this, make<WSEvent>(WSEvent::WM_DeferredCompose));
-        m_pending_compose_event = true;
-    }
+    m_compose_timer.start();
 }
 
 bool WSCompositor::set_wallpaper(const String& path, Function<void(bool)>&& callback)
