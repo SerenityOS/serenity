@@ -3,6 +3,7 @@
 #include <AK/OwnPtr.h>
 #include <AK/RetainPtr.h>
 #include <LibCore/CObject.h>
+#include <LibCore/CTimer.h>
 #include <SharedGraphics/DisjointRectSet.h>
 #include <SharedGraphics/GraphicsBitmap.h>
 
@@ -26,7 +27,6 @@ public:
     Rect current_cursor_rect() const;
 
 private:
-    virtual void event(CEvent&) override;
     virtual const char* class_name() const override { return "WSCompositor"; }
 
     WSCompositor();
@@ -39,7 +39,7 @@ private:
 
     unsigned m_compose_count { 0 };
     unsigned m_flush_count { 0 };
-    bool m_pending_compose_event { false };
+    CTimer m_compose_timer;
     bool m_flash_flush { false };
     bool m_buffers_are_flipped { false };
 
