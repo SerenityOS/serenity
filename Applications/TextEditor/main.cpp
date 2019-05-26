@@ -63,7 +63,7 @@ int main(int argc, char** argv)
     auto open_action = GAction::create("Open document", { Mod_Ctrl, Key_O }, GraphicsBitmap::load_from_file("/res/icons/16x16/open.png"), [window, text_editor, &path](const GAction&) {
         GFilePicker picker;
         if (picker.exec() == GDialog::ExecOK) {
-            path = picker.selected_file();
+            path = picker.selected_file().string();
             open_sesame(*window, *text_editor, path);
         }
     });

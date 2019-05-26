@@ -125,7 +125,7 @@ GFilePicker::GFilePicker(const String& path, CObject* parent)
     ok_button->set_text("OK");
     ok_button->on_click = [this, filename_textbox] (auto&) {
         FileSystemPath path(String::format("%s/%s", m_model->path().characters(), filename_textbox->text().characters()));
-        m_selected_file = path.string();
+        m_selected_file = path;
         done(ExecOK);
     };
 }
