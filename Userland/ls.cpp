@@ -185,6 +185,19 @@ int do_dir(const char* path)
     return 0;
 }
 
+
+int print_filesystem_object_short(const char *path, const char *name, int *nprinted) {
+    struct stat st;
+    int rc = lstat(path, &st);
+    if (rc == -1) {
+        printf("lstat(%s) failed: %s\n", path, strerror(errno));
+        return 2;
+    }
+
+    *nprinted = print_name(st, name);
+    return 0;
+}
+
 int do_dir_short(const char* path)
 {
     int rows;
@@ -193,8 +206,15 @@ int do_dir_short(const char* path)
 
     DIR* dirp = opendir(path);
     if (!dirp) {
-        perror("opendir");
-        return 1;
+        if (errno == ENOTDIR) {
+          int nprinted;
+          print_filesystem_object_short(path, path, &nprinted);
+          printf("\n");
+          return 0;
+        } else {
+          perror("opendir");
+          return 1;
+        }
     }
 
     Vector<String, 1024> names;
@@ -209,19 +229,16 @@ int do_dir_short(const char* path)
     closedir(dirp);
 
     int printed_on_row = 0;
+    int nprinted;
 
     for (int i = 0; i < names.size(); ++i) {
         auto& name = names[i];
-        struct stat st;
         char pathbuf[256];
         sprintf(pathbuf, "%s/%s", path, name.characters());
-        int rc = lstat(pathbuf, &st);
-        if (rc == -1) {
-            printf("lstat(%s) failed: %s\n", pathbuf, strerror(errno));
-            return 2;
-        }
 
-        int nprinted = print_name(st, name.characters());
+        if (print_filesystem_object_short(pathbuf, name.characters(), &nprinted) == 2) {
+          return 2;
+        }
         int column_width = 14;
         printed_on_row += column_width;
 
