@@ -13,6 +13,7 @@
 #include <Kernel/UnixTypes.h>
 #include <Kernel/Thread.h>
 #include <Kernel/Lock.h>
+#include <LibC/signal_numbers.h>
 
 class ELFLoader;
 class FileDescriptor;
@@ -191,7 +192,7 @@ public:
 
     static void initialize();
 
-    [[noreturn]] void crash();
+    [[noreturn]] void crash(int signal = SIGSEGV);
     [[nodiscard]] static int reap(Process&);
 
     const TTY* tty() const { return m_tty; }
