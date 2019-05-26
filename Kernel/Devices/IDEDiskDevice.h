@@ -39,9 +39,10 @@ private:
 
     void initialize();
     bool wait_for_irq();
-    bool read_sectors_with_dma(dword sector, word count, byte*);
-    bool read_sectors(dword start_sector, word count, byte* buffer);
-    bool write_sectors(dword start_sector, word count, const byte* data);
+    bool read_sectors_with_dma(dword lba, word count, byte*);
+    bool write_sectors_with_dma(dword lba, word count, const byte*);
+    bool read_sectors(dword lba, word count, byte* buffer);
+    bool write_sectors(dword lba, word count, const byte* data);
 
     Lock m_lock { "IDEDiskDevice" };
     word m_cylinders { 0 };
