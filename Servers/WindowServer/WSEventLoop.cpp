@@ -100,25 +100,6 @@ void WSEventLoop::drain_keyboard()
     }
 }
 
-static WSWindowType from_api(WSAPI_WindowType api_type)
-{
-    switch (api_type) {
-    case WSAPI_WindowType::Normal:
-        return WSWindowType::Normal;
-    case WSAPI_WindowType::Menu:
-        return WSWindowType::Menu;
-    case WSAPI_WindowType::WindowSwitcher:
-        return WSWindowType::WindowSwitcher;
-    case WSAPI_WindowType::Taskbar:
-        return WSWindowType::Taskbar;
-    case WSAPI_WindowType::Tooltip:
-        return WSWindowType::Tooltip;
-    default:
-        dbgprintf("Unknown WSAPI_WindowType: %d\n", api_type);
-        ASSERT_NOT_REACHED();
-    }
-}
-
 static Vector<Rect, 32> get_rects(const WSAPI_ClientMessage& message, const ByteBuffer& extra_data)
 {
     Vector<Rect, 32> rects;
@@ -202,11 +183,39 @@ bool WSEventLoop::on_receive_from_client(int client_id, const WSAPI_ClientMessag
     case WSAPI_ClientMessage::Type::AddMenuSeparator:
         post_event(client, make<WSAPIAddMenuSeparatorRequest>(client_id, message.menu.menu_id));
         break;
-    case WSAPI_ClientMessage::Type::CreateWindow:
+    case WSAPI_ClientMessage::Type::CreateWindow: {
         if (message.text_length > (int)sizeof(message.text)) {
             client.did_misbehave();
             return false;
         }
+
+        auto ws_window_type = WSWindowType::Invalid;
+        switch (message.window.type) {
+        case WSAPI_WindowType::Normal:
+            ws_window_type = WSWindowType::Normal;
+            break;
+        case WSAPI_WindowType::Menu:
+            ws_window_type = WSWindowType::Menu;
+            break;
+        case WSAPI_WindowType::WindowSwitcher:
+            ws_window_type = WSWindowType::WindowSwitcher;
+            break;
+        case WSAPI_WindowType::Taskbar:
+            ws_window_type = WSWindowType::Taskbar;
+            break;
+        case WSAPI_WindowType::Tooltip:
+            ws_window_type = WSWindowType::Tooltip;
+            break;
+        case WSAPI_WindowType::Invalid:
+            break; // handled below
+        }
+
+        if (ws_window_type == WSWindowType::Invalid) {
+            dbgprintf("Unknown WSAPI_WindowType: %d\n", message.window.type);
+            client.did_misbehave();
+            return false;
+        }
+
         post_event(client,
                    make<WSAPICreateWindowRequest>(client_id,
                                                   message.window.rect,
@@ -219,9 +228,10 @@ bool WSEventLoop::on_receive_from_client(int client_id, const WSAPI_ClientMessag
                                                   message.window.opacity,
                                                   message.window.base_size,
                                                   message.window.size_increment,
-                                                  from_api(message.window.type),
+                                                  ws_window_type,
                                                   Color::from_rgba(message.window.background_color)));
         break;
+    }
     case WSAPI_ClientMessage::Type::DestroyWindow:
         post_event(client, make<WSAPIDestroyWindowRequest>(client_id, message.window_id));
         break;
