@@ -296,7 +296,7 @@ static int run_command(const String& cmd)
                     break;
                 }
                 case Redirection::FileWrite: {
-                    int fd = open(redirection.path.characters(), O_WRONLY | O_CREAT, 0666);
+                    int fd = open(redirection.path.characters(), O_WRONLY | O_CREAT | O_TRUNC, 0666);
                     if (fd < 0) {
                         perror("open");
                         return 1;
