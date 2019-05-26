@@ -34,7 +34,7 @@ public:
     static CEventLoop& main();
     static CEventLoop& current();
 
-    bool running() const { return m_running; }
+    bool was_exit_requested() const { return m_exit_requested; }
 
     static int register_timer(CObject&, int milliseconds, bool should_reload);
     static bool unregister_timer(int timer_id);
@@ -65,7 +65,6 @@ private:
 
     Vector<QueuedEvent, 64> m_queued_events;
 
-    bool m_running { false };
     bool m_exit_requested { false };
     int m_exit_code { 0 };
 

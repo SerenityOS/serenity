@@ -87,8 +87,6 @@ private:
 int CEventLoop::exec()
 {
     CEventLoopPusher pusher(*this);
-
-    m_running = true;
     for (;;) {
         if (m_exit_requested)
             return m_exit_code;
