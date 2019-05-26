@@ -12,6 +12,7 @@
 #include <sys/utsname.h>
 #include <AK/FileSystemPath.h>
 #include <LibCore/CElapsedTimer.h>
+#include <LibCore/CDirIterator.h>
 #include "GlobalState.h"
 #include "Parser.h"
 #include "LineEditor.h"
@@ -223,6 +224,47 @@ struct CommandTimer {
     CElapsedTimer timer;
 };
 
+static Vector<String> process_arguments(const Vector<String>& args)
+{
+    Vector<String> argv_string;
+    for (auto& arg : args) {
+        bool is_glob = false;
+        for (int i = 0; i < arg.length(); i++) {
+            char c = arg.characters()[i];
+            if (c == '*' || c == '?') {
+                is_glob = true;
+            }
+        }
+
+        if (is_glob == false) {
+            argv_string.append(arg.characters());
+        } else {
+            CDirIterator di(".", CDirIterator::NoFlags);
+            if (di.has_error()) {
+                fprintf(stderr, "CDirIterator: %s\n", di.error_string());
+                continue;
+            }
+
+            while (di.has_next()) {
+                String name = di.next_path();
+
+                // Dotfiles have to be explicitly requested
+                if (name[0] == '.' && arg[0] != '.')
+                    continue;
+
+                // And even if they are, skip . and ..
+                if (name == "."  || name == "..")
+                    continue;
+
+                if (name.matches(arg, String::CaseSensitivity::CaseSensitive))
+                    argv_string.append(name);
+            }
+        }
+    }
+
+    return argv_string;
+}
+
 static int run_command(const String& cmd)
 {
     if (cmd.is_empty())
@@ -330,10 +372,20 @@ static int run_command(const String& cmd)
 
     for (int i = 0; i < subcommands.size(); ++i) {
         auto& subcommand = subcommands[i];
+        Vector<String> argv_string = process_arguments(subcommand.args);
         Vector<const char*> argv;
-        for (auto& arg : subcommand.args)
-            argv.append(arg.characters());
+        argv.ensure_capacity(argv_string.size());
+        for (const auto& s : argv_string) {
+            argv.append(s.characters());
+        }
         argv.append(nullptr);
+
+#ifdef SH_DEBUG
+        for (auto& arg : argv) {
+            dbgprintf("<%s> ", arg);
+        }
+        dbgprintf("\n");
+#endif
 
         int retval = 0;
         if (handle_builtin(argv.size() - 1, const_cast<char**>(argv.data()), retval))

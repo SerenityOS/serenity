@@ -61,7 +61,13 @@ public:
     {
     }
 
+    enum class CaseSensitivity {
+        CaseInsensitive,
+        CaseSensitive,
+    };
+
     static String repeated(char, int count);
+    bool matches(const String& pattern, CaseSensitivity = CaseSensitivity::CaseInsensitive) const;
 
     int to_int(bool& ok) const;
     unsigned to_uint(bool& ok) const;
@@ -136,6 +142,7 @@ public:
     StringView view() const { return { characters(), length() }; }
 
 private:
+    bool match_helper(const String& mask) const;
     RetainPtr<StringImpl> m_impl;
 };
 
