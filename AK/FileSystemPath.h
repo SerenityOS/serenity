@@ -16,6 +16,8 @@ public:
 
     const Vector<String>& parts() const { return m_parts; }
 
+    bool has_extension(StringView) const;
+
 private:
     bool canonicalize(bool resolve_symbolic_links = false);
 
