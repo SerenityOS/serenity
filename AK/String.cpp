@@ -124,28 +124,30 @@ ByteBuffer String::to_byte_buffer() const
 
 int String::to_int(bool& ok) const
 {
-  bool negative = false;
-  int value = 0;
-  ssize_t i = 0;
-  if (characters()[0] == '-') {
-    i++;
-    negative = true;
-  }
-  for (; i < length(); i++) {
-      if (characters()[i] < '0' || characters()[i] > '9') {
-          ok = false;
-          return 0;
-      }
-      value = value * 10;
-      value += characters()[i] - '0';
-  }
-  ok = true;
-  
-  if (negative) {
-    return -value;
-  } else {
-    return value;
-  }
+    bool negative = false;
+    int value = 0;
+    ssize_t i = 0;
+
+    if (is_null()) {
+        ok = false;
+        return 0;
+    }
+
+    if (characters()[0] == '-') {
+        i++;
+        negative = true;
+    }
+    for (; i < length(); i++) {
+        if (characters()[i] < '0' || characters()[i] > '9') {
+            ok = false;
+            return 0;
+        }
+        value = value * 10;
+        value += characters()[i] - '0';
+    }
+    ok = true;
+
+    return negative ? -value : value;
 }
 
 unsigned String::to_uint(bool& ok) const
