@@ -120,6 +120,8 @@ bool IDEDiskDevice::read_block(unsigned index, byte* out) const
 
 bool IDEDiskDevice::write_blocks(unsigned index, word count, const byte* data)
 {
+    if (m_bus_master_base && m_dma_enabled.resource())
+        return write_sectors_with_dma(index, count, data);
     for (unsigned i = 0; i < count; ++i) {
         if (!write_sectors(index + i, 1, data + i * 512))
             return false;
@@ -371,6 +373,79 @@ bool IDEDiskDevice::read_sectors(dword start_sector, word count, byte* outbuf)
 #endif
 
     IO::repeated_in16(m_io_base + ATA_REG_DATA, outbuf, count * 256);
+    return true;
+}
+
+bool IDEDiskDevice::write_sectors_with_dma(dword lba, word count, const byte* inbuf)
+{
+    LOCKER(m_lock);
+#ifdef DISK_DEBUG
+    dbgprintf("%s(%u): IDEDiskDevice::write_sectors_with_dma (%u x%u) <- %p\n",
+            current->process().name().characters(),
+            current->pid(), lba, count, inbuf);
+#endif
+
+    disable_irq();
+
+    m_prdt.offset = m_dma_buffer_page->paddr();
+    m_prdt.size = 512 * count;
+
+    memcpy(m_dma_buffer_page->paddr().as_ptr(), inbuf, 512 * count);
+
+    ASSERT(m_prdt.size <= PAGE_SIZE);
+
+    // Stop bus master
+    IO::out8(m_bus_master_base, 0);
+
+    // Write the PRDT location
+    IO::out32(m_bus_master_base + 4, (dword)&m_prdt);
+
+    // Turn on "Interrupt" and "Error" flag. The error flag should be cleared by hardware.
+    IO::out8(m_bus_master_base + 2, IO::in8(m_bus_master_base + 2) | 0x6);
+
+    m_interrupted = false;
+    enable_irq();
+
+    while (IO::in8(m_io_base + ATA_REG_STATUS) & ATA_SR_BSY);
+
+    bool is_slave = false;
+
+    IO::out8(m_io_base + ATA_REG_CONTROL, 0);
+    IO::out8(m_io_base + ATA_REG_HDDEVSEL, 0xe0 | (is_slave << 4));
+    wait_400ns(m_io_base);
+
+    IO::out8(m_io_base + ATA_REG_FEATURES, 0);
+
+    IO::out8(m_io_base + ATA_REG_SECCOUNT0, 0);
+    IO::out8(m_io_base + ATA_REG_LBA0, 0);
+    IO::out8(m_io_base + ATA_REG_LBA1, 0);
+    IO::out8(m_io_base + ATA_REG_LBA2, 0);
+
+    IO::out8(m_io_base + ATA_REG_SECCOUNT0, count);
+    IO::out8(m_io_base + ATA_REG_LBA0, (lba & 0x000000ff) >> 0);
+    IO::out8(m_io_base + ATA_REG_LBA1, (lba & 0x0000ff00) >> 8);
+    IO::out8(m_io_base + ATA_REG_LBA2, (lba & 0x00ff0000) >> 16);
+
+    for (;;) {
+        auto status = IO::in8(m_io_base + ATA_REG_STATUS);
+        if (!(status & ATA_SR_BSY) && (status & ATA_SR_DRDY))
+            break;
+    }
+
+    IO::out8(m_io_base + ATA_REG_COMMAND, ATA_CMD_WRITE_DMA_EXT);
+    wait_400ns(m_io_base);
+
+    // Start bus master
+    IO::out8(m_bus_master_base, 0x1);
+
+    wait_for_irq();
+    disable_irq();
+
+    if (m_device_error)
+        return false;
+
+    // I read somewhere that this may trigger a cache flush so let's do it.
+    IO::out8(m_bus_master_base + 2, IO::in8(m_bus_master_base + 2) | 0x6);
     return true;
 }
 
