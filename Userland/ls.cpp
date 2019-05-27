@@ -11,8 +11,8 @@
 #include <AK/AKString.h>
 #include <AK/Vector.h>
 
-static int do_dir(const char* path);
-static int do_dir_short(const char* path);
+static int do_file_system_object_long(const char* path);
+static int do_file_system_object_short(const char* path);
 
 static bool flag_colorize = true;
 static bool flag_long = false;
@@ -45,30 +45,24 @@ int main(int argc, char** argv)
 
     int status;
     if (optind >= argc) {
-      if (flag_long) {
-          status = do_dir(".");
-      } else {
-          status = do_dir_short(".");
-      }
-      return status;
+      status = do_file_system_object(".")
+    } if (optind+1 >= argc) {
+      status = do_file_system_object(argv[optind]);
     } else {
-        bool show_names = !(optind+1 >= argc);
-
         for (; optind < argc; optind++) {
-          if (show_names) {
             printf("%s:\n", argv[optind]);
-          }
-          if (flag_long) {
-              status = do_dir(argv[optind]);
-          } else {
-              status = do_dir_short(argv[optind]);
-          }
-          if (status != 0) {
-            return status;
-          }
+            status = do_file_system_object(argv[optind]);
         }
     }
-    return 0;
+    return status;
+}
+
+int do_file_system_object(const char* path) {
+    if (flag_long) {
+        return do_file_system_object_long(argv[optind]);
+    } else {
+        return do_file_system_object_short(argv[optind]);
+    }
 }
 
 void get_geometry(int& rows, int& columns)
@@ -186,7 +180,7 @@ bool print_filesystem_object(const char* path, const char* name) {
     return true;
 }
 
-int do_dir(const char* path)
+int do_file_system_object_long(const char* path)
 {
     DIR* dirp = opendir(path);
     if (!dirp) {
@@ -227,7 +221,7 @@ bool print_filesystem_object_short(const char *path, const char *name, int *npri
     return true;
 }
 
-int do_dir_short(const char* path)
+int do_file_system_object_short(const char* path)
 {
     int rows;
     int columns;
