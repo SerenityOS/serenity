@@ -25,7 +25,7 @@ int main(int argc, char** argv)
         edited_font = Font::default_font().clone();
 
     auto* window = new GWindow;
-    window->set_title("FontEditor");
+    window->set_title("Font Editor");
     window->set_rect({ 50, 50, 390, 325 });
     auto* font_editor = new FontEditorWidget(path, move(edited_font));
     window->set_main_widget(font_editor);
