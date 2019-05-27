@@ -28,6 +28,7 @@ public:
     void blit(const Point&, const GraphicsBitmap&, const Rect& src_rect, float opacity = 1.0f);
     void blit_dimmed(const Point&, const GraphicsBitmap&, const Rect& src_rect);
     void blit_tiled(const Point&, const GraphicsBitmap&, const Rect& src_rect);
+    void blit_offset(const Point&, const GraphicsBitmap&, const Rect& src_rect, const Point&);
     void draw_text(const Rect&, const char* text, int length, const Font&, TextAlignment = TextAlignment::TopLeft, Color = Color::Black, TextElision = TextElision::None);
     void draw_text(const Rect&, const char* text, int length, TextAlignment = TextAlignment::TopLeft, Color = Color::Black, TextElision = TextElision::None);
     void draw_text(const Rect&, const String&, const Font&, TextAlignment = TextAlignment::TopLeft, Color = Color::Black, TextElision = TextElision::None);
