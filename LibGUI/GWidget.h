@@ -185,6 +185,16 @@ public:
     void register_local_shortcut_action(Badge<GAction>, GAction&);
     void unregister_local_shortcut_action(Badge<GAction>, GAction&);
 
+    template<typename Callback>
+    void for_each_child_widget(Callback callback)
+    {
+        for_each_child([&] (auto& child) {
+            if (child.is_widget())
+                return callback(static_cast<GWidget&>(child));
+            return IterationDecision::Continue;
+        });
+    }
+
     virtual bool is_radio_button() const { return false; }
 
 private:
