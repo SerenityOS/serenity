@@ -1,0 +1,18 @@
+diff -Nru pristine/bash-5.0/locale.c bash-5.0/locale.c
++++ bash-5.0/locale.c	2019-05-21 02:18:05.843104487 +0200
+@@ -76,6 +76,7 @@
+ void
+ set_default_locale ()
+ {
++    return;
+ #if defined (HAVE_SETLOCALE)
+   default_locale = setlocale (LC_ALL, "");
+   if (default_locale)
+@@ -95,6 +96,7 @@
+ void
+ set_default_locale_vars ()
+ {
++    return;
+   char *val;
+ 
+#if defined (HAVE_SETLOCALE)
