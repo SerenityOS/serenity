@@ -177,7 +177,7 @@ public:
     Point location() const { return m_location; }
     Size size() const { return m_size; }
 
-    Vector<Rect> shatter(const Rect& hammer) const;
+    Vector<Rect, 4> shatter(const Rect& hammer) const;
 
     operator WSAPI_Rect() const;
 
