@@ -10,7 +10,7 @@
 class Painter;
 class WSCursor;
 
-enum class WallpaperMode { Simple, Tile, Center, Unchecked };
+enum class WallpaperMode { Simple, Tile, Center, Scaled, Unchecked };
 
 class WSCompositor final : public CObject {
 public:
