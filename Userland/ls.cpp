@@ -104,6 +104,72 @@ int print_name(struct stat& st, const char* name, const char* path_for_link_reso
     return nprinted;
 }
 
+bool print_filesystem_object(const char* path, const char* name) {
+    struct stat st;
+    int rc = lstat(path, &st);
+    if (rc == -1) {
+        printf("lstat(%s) failed: %s\n", path, strerror(errno));
+        return false;
+    }
+
+    if (flag_show_inode)
+        printf("%08u ", st.st_ino);
+
+    if (S_ISDIR(st.st_mode))
+        printf("d");
+    else if (S_ISLNK(st.st_mode))
+        printf("l");
+    else if (S_ISBLK(st.st_mode))
+        printf("b");
+    else if (S_ISCHR(st.st_mode))
+        printf("c");
+    else if (S_ISFIFO(st.st_mode))
+        printf("f");
+    else if (S_ISSOCK(st.st_mode))
+        printf("s");
+    else if (S_ISREG(st.st_mode))
+        printf("-");
+    else
+        printf("?");
+
+    printf("%c%c%c%c%c%c%c%c",
+        st.st_mode & S_IRUSR ? 'r' : '-',
+        st.st_mode & S_IWUSR ? 'w' : '-',
+        st.st_mode & S_ISUID ? 's' : (st.st_mode & S_IXUSR ? 'x' : '-'),
+        st.st_mode & S_IRGRP ? 'r' : '-',
+        st.st_mode & S_IWGRP ? 'w' : '-',
+        st.st_mode & S_ISGID ? 's' : (st.st_mode & S_IXGRP ? 'x' : '-'),
+        st.st_mode & S_IROTH ? 'r' : '-',
+        st.st_mode & S_IWOTH ? 'w' : '-'
+    );
+
+    if (st.st_mode & S_ISVTX)
+        printf("t");
+    else
+        printf("%c", st.st_mode & S_IXOTH ? 'x' : '-');
+
+    printf(" %4u %4u", st.st_uid, st.st_gid);
+
+    if (S_ISCHR(st.st_mode) || S_ISBLK(st.st_mode))
+        printf("  %4u,%4u ", major(st.st_rdev), minor(st.st_rdev));
+    else
+        printf(" %10u ", st.st_size);
+
+    auto* tm = localtime(&st.st_mtime);
+    printf("  %4u-%02u-%02u %02u:%02u:%02u  ",
+        tm->tm_year + 1900,
+        tm->tm_mon + 1,
+        tm->tm_mday,
+        tm->tm_hour,
+        tm->tm_min,
+        tm->tm_sec);
+
+    print_name(st, name, path);
+
+    printf("\n");
+    return true;
+}
+
 int do_dir(const char* path)
 {
     DIR* dirp = opendir(path);
@@ -118,84 +184,23 @@ int do_dir(const char* path)
             continue;
         sprintf(pathbuf, "%s/%s", path, de->d_name);
 
-        struct stat st;
-        int rc = lstat(pathbuf, &st);
-        if (rc == -1) {
-            printf("lstat(%s) failed: %s\n", pathbuf, strerror(errno));
-            return 2;
-        }
-
-        if (flag_show_inode)
-            printf("%08u ", de->d_ino);
-
-        if (S_ISDIR(st.st_mode))
-            printf("d");
-        else if (S_ISLNK(st.st_mode))
-            printf("l");
-        else if (S_ISBLK(st.st_mode))
-            printf("b");
-        else if (S_ISCHR(st.st_mode))
-            printf("c");
-        else if (S_ISFIFO(st.st_mode))
-            printf("f");
-        else if (S_ISSOCK(st.st_mode))
-            printf("s");
-        else if (S_ISREG(st.st_mode))
-            printf("-");
-        else
-            printf("?");
-
-        printf("%c%c%c%c%c%c%c%c",
-            st.st_mode & S_IRUSR ? 'r' : '-',
-            st.st_mode & S_IWUSR ? 'w' : '-',
-            st.st_mode & S_ISUID ? 's' : (st.st_mode & S_IXUSR ? 'x' : '-'),
-            st.st_mode & S_IRGRP ? 'r' : '-',
-            st.st_mode & S_IWGRP ? 'w' : '-',
-            st.st_mode & S_ISGID ? 's' : (st.st_mode & S_IXGRP ? 'x' : '-'),
-            st.st_mode & S_IROTH ? 'r' : '-',
-            st.st_mode & S_IWOTH ? 'w' : '-'
-        );
-
-        if (st.st_mode & S_ISVTX)
-            printf("t");
-        else
-            printf("%c", st.st_mode & S_IXOTH ? 'x' : '-');
-
-        printf(" %4u %4u", st.st_uid, st.st_gid);
-
-        if (S_ISCHR(st.st_mode) || S_ISBLK(st.st_mode))
-            printf("  %4u,%4u ", major(st.st_rdev), minor(st.st_rdev));
-        else
-            printf(" %10u ", st.st_size);
-
-        auto* tm = localtime(&st.st_mtime);
-        printf("  %4u-%02u-%02u %02u:%02u:%02u  ",
-            tm->tm_year + 1900,
-            tm->tm_mon + 1,
-            tm->tm_mday,
-            tm->tm_hour,
-            tm->tm_min,
-            tm->tm_sec);
-
-        print_name(st, de->d_name, pathbuf);
-
-        printf("\n");
+        print_filesystem_object(pathbuf, de->d_name);
     }
     closedir(dirp);
     return 0;
 }
 
 
-int print_filesystem_object_short(const char *path, const char *name, int *nprinted) {
+bool print_filesystem_object_short(const char *path, const char *name, int *nprinted) {
     struct stat st;
     int rc = lstat(path, &st);
     if (rc == -1) {
         printf("lstat(%s) failed: %s\n", path, strerror(errno));
-        return 2;
+        return false;
     }
 
     *nprinted = print_name(st, name);
-    return 0;
+    return true;
 }
 
 int do_dir_short(const char* path)
@@ -207,13 +212,13 @@ int do_dir_short(const char* path)
     DIR* dirp = opendir(path);
     if (!dirp) {
         if (errno == ENOTDIR) {
-          int nprinted;
-          print_filesystem_object_short(path, path, &nprinted);
-          printf("\n");
-          return 0;
+            int nprinted;
+            print_filesystem_object_short(path, path, &nprinted);
+            printf("\n");
+            return 0;
         } else {
-          perror("opendir");
-          return 1;
+            perror("opendir");
+            return 1;
         }
     }
 
@@ -236,8 +241,8 @@ int do_dir_short(const char* path)
         char pathbuf[256];
         sprintf(pathbuf, "%s/%s", path, name.characters());
 
-        if (print_filesystem_object_short(pathbuf, name.characters(), &nprinted) == 2) {
-          return 2;
+        if (!print_filesystem_object_short(pathbuf, name.characters(), &nprinted)) {
+            return 2;
         }
         int column_width = 14;
         printed_on_row += column_width;
