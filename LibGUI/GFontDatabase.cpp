@@ -1,4 +1,5 @@
 #include <LibGUI/GFontDatabase.h>
+#include <LibCore/CDirIterator.h>
 #include <SharedGraphics/Font.h>
 #include <dirent.h>
 #include <stdio.h>
@@ -15,15 +16,14 @@ GFontDatabase& GFontDatabase::the()
 
 GFontDatabase::GFontDatabase()
 {
-    DIR* dirp = opendir("/res/fonts");
-    if (!dirp) {
-        perror("opendir");
+    CDirIterator di("/res/fonts", CDirIterator::SkipDots);
+    if (di.has_error()) {
+        fprintf(stderr, "CDirIterator: %s\n", di.error_string());
         exit(1);
     }
-    while (auto* de = readdir(dirp)) {
-        if (de->d_name[0] == '.')
-            continue;
-        auto path = String::format("/res/fonts/%s", de->d_name);
+    while (di.has_next()) {
+        String name = di.next_path();
+        auto path = String::format("/res/fonts/%s", name.characters());
         if (auto font = Font::load_from_file(path)) {
             Metadata metadata;
             metadata.path = path;
@@ -32,7 +32,6 @@ GFontDatabase::GFontDatabase()
             m_name_to_metadata.set(font->name(), move(metadata));
         }
     }
-    closedir(dirp);
 }
 
 GFontDatabase::~GFontDatabase()
