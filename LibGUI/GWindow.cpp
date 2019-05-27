@@ -526,16 +526,14 @@ Vector<GWidget*> GWindow::focusable_widgets() const
     Function<void(GWidget&)> collect_focusable_widgets = [&] (GWidget& widget) {
         if (widget.accepts_focus())
             collected_widgets.append(&widget);
-        for (auto& child : widget.children()) {
-            if (!child->is_widget())
-                continue;
-            auto& child_widget = *static_cast<GWidget*>(child);
-            if (!child_widget.is_visible())
-                continue;
-            if (!child_widget.is_enabled())
-                continue;
-            collect_focusable_widgets(child_widget);
-        }
+        widget.for_each_child_widget([&] (auto& child) {
+            if (!child.is_visible())
+                return IterationDecision::Continue;
+            if (!child.is_enabled())
+                return IterationDecision::Continue;
+            collect_focusable_widgets(child);
+            return IterationDecision::Continue;
+        });
     };
 
     collect_focusable_widgets(*m_main_widget);

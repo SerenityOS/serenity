@@ -116,15 +116,15 @@ void GWidget::handle_paint_event(GPaintEvent& event)
 #endif
     }
     paint_event(event);
-    for (auto* ch : children()) {
-        auto* child = (GWidget*)ch;
-        if (!child->is_visible())
-            continue;
-        if (child->relative_rect().intersects(event.rect())) {
-            GPaintEvent local_event(event.rect().intersected(child->relative_rect()).translated(-child->relative_position()));
-            child->event(local_event);
+    for_each_child_widget([&] (auto& child) {
+        if (!child.is_visible())
+            return IterationDecision::Continue;
+        if (child.relative_rect().intersects(event.rect())) {
+            GPaintEvent local_event(event.rect().intersected(child.relative_rect()).translated(-child.relative_position()));
+            child.event(local_event);
         }
-    }
+        return IterationDecision::Continue;
+    });
     second_paint_event(event);
 }
 
