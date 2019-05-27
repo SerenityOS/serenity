@@ -35,7 +35,7 @@ int main(int argc, char** argv)
     GApplication app(argc, argv);
 
     auto* window = new GWindow;
-    window->set_title("FileManager");
+    window->set_title("File Manager");
     window->set_rect(20, 200, 640, 480);
     window->set_should_exit_event_loop_on_close(true);
 
@@ -141,7 +141,7 @@ int main(int argc, char** argv)
 
     auto menubar = make<GMenuBar>();
 
-    auto app_menu = make<GMenu>("FileManager");
+    auto app_menu = make<GMenu>("File Manager");
     app_menu->add_action(GAction::create("Quit", { Mod_Alt, Key_F4 }, [] (const GAction&) {
         GApplication::the().quit(0);
         return;
@@ -187,7 +187,7 @@ int main(int argc, char** argv)
     main_toolbar->add_action(*view_as_table_action);
 
     directory_view->on_path_change = [window, location_textbox, &file_system_model, tree_view, &go_forward_action, &go_back_action, directory_view] (const String& new_path) {
-        window->set_title(String::format("FileManager: %s", new_path.characters()));
+        window->set_title(String::format("File Manager: %s", new_path.characters()));
         location_textbox->set_text(new_path);
         file_system_model->set_selected_index(file_system_model->index(new_path));
         tree_view->scroll_into_view(file_system_model->selected_index(), Orientation::Vertical);

@@ -25,7 +25,7 @@ void open_sesame(GWindow& window, GTextEditor& editor, const String& path)
         GMessageBox::show(String::format("Opening \"%s\" failed: %s", path.characters(), strerror(errno)), "Error", GMessageBox::Type::Error, &window);
     }
 
-    window.set_title(String::format("TextEditor: %s", path.characters()));
+    window.set_title(String::format("Text Editor: %s", path.characters()));
     editor.set_text(String::copy(file.read_all()));
 }
 
@@ -74,7 +74,7 @@ int main(int argc, char** argv)
     });
 
     auto menubar = make<GMenuBar>();
-    auto app_menu = make<GMenu>("TextEditor");
+    auto app_menu = make<GMenu>("Text Editor");
     app_menu->add_action(GAction::create("Quit", { Mod_Alt, Key_F4 }, [] (const GAction&) {
         GApplication::the().quit(0);
         return;
