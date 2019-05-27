@@ -34,11 +34,11 @@ Rect Rect::united(const Rect& other) const
     return rect;
 }
 
-Vector<Rect> Rect::shatter(const Rect& hammer) const
+Vector<Rect, 4> Rect::shatter(const Rect& hammer) const
 {
-    Vector<Rect> pieces;
+    Vector<Rect, 4> pieces;
     if (!intersects(hammer)) {
-        pieces.append(*this);
+        pieces.unchecked_append(*this);
         return pieces;
     }
     Rect top_shard {
@@ -66,13 +66,13 @@ Vector<Rect> Rect::shatter(const Rect& hammer) const
         min((hammer.y() + hammer.height()), (y() + height())) - max(hammer.y(), y())
     };
     if (intersects(top_shard))
-        pieces.append(top_shard);
+        pieces.unchecked_append(top_shard);
     if (intersects(bottom_shard))
-        pieces.append(bottom_shard);
+        pieces.unchecked_append(bottom_shard);
     if (intersects(left_shard))
-        pieces.append(left_shard);
+        pieces.unchecked_append(left_shard);
     if (intersects(right_shard))
-        pieces.append(right_shard);
+        pieces.unchecked_append(right_shard);
 
     return pieces;
 }
