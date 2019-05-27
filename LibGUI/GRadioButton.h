@@ -20,3 +20,10 @@ private:
     template<typename Callback> void for_each_in_group(Callback);
     static Size circle_size();
 };
+
+template<> inline bool is<GRadioButton>(const CObject& object)
+{
+    if (!is<GWidget>(object))
+        return false;
+    return to<GWidget>(object).is_radio_button();
+}
