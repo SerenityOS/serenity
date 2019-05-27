@@ -101,7 +101,7 @@ int main(int argc, char** argv)
     toolbar->add_action(continue_action.copy_ref());
 
     auto menubar = make<GMenuBar>();
-    auto app_menu = make<GMenu>("ProcessManager");
+    auto app_menu = make<GMenu>("Process Manager");
     app_menu->add_action(GAction::create("Quit", { Mod_Alt, Key_F4 }, [] (const GAction&) {
         GApplication::the().quit(0);
         return;
@@ -141,7 +141,7 @@ int main(int argc, char** argv)
     app.set_menubar(move(menubar));
 
     auto* window = new GWindow;
-    window->set_title("ProcessManager");
+    window->set_title("Process Manager");
     window->set_rect(20, 200, 680, 400);
     window->set_main_widget(keeper);
     window->set_should_exit_event_loop_on_close(true);
