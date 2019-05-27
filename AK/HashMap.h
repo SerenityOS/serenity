@@ -69,6 +69,8 @@ public:
     ConstIteratorType end() const { return m_table.end(); }
     ConstIteratorType find(const K&) const;
 
+    void ensure_capacity(int capacity) { m_table.ensure_capacity(capacity); }
+
     void dump() const { m_table.dump(); }
 
     V get(const K& key) const

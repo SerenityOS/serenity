@@ -49,6 +49,12 @@ public:
     int size() const { return m_size; }
     int capacity() const { return m_capacity; }
 
+    void ensure_capacity(int capacity)
+    {
+        ASSERT(capacity >= size());
+        rehash(capacity);
+    }
+
     void set(const T&);
     void set(T&&);
     bool contains(const T&) const;
