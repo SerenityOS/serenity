@@ -43,26 +43,24 @@ int main(int argc, char** argv)
         }
     }
 
+    auto do_file_system_object = [&] (const char* path) {
+        if (flag_long)
+            return do_file_system_object_long(path);
+        return do_file_system_object_short(path);
+    };
+
     int status;
     if (optind >= argc) {
-      status = do_file_system_object(".")
-    } if (optind+1 >= argc) {
-      status = do_file_system_object(argv[optind]);
+        status = do_file_system_object(".");
+    } else if (optind+1 >= argc) {
+        status = do_file_system_object(argv[optind]);
     } else {
-        for (; optind < argc; optind++) {
+        for (; optind < argc; ++optind) {
             printf("%s:\n", argv[optind]);
             status = do_file_system_object(argv[optind]);
         }
     }
     return status;
-}
-
-int do_file_system_object(const char* path) {
-    if (flag_long) {
-        return do_file_system_object_long(argv[optind]);
-    } else {
-        return do_file_system_object_short(argv[optind]);
-    }
 }
 
 void get_geometry(int& rows, int& columns)
@@ -98,11 +96,10 @@ int print_name(struct stat& st, const char* name, const char* path_for_link_reso
         if (path_for_link_resolution) {
             char linkbuf[256];
             ssize_t nread = readlink(path_for_link_resolution, linkbuf, sizeof(linkbuf));
-            if (nread < 0) {
+            if (nread < 0)
                 perror("readlink failed");
-            } else {
+            else
                 nprinted += printf(" -> %s", linkbuf);
-            }
         } else {
             nprinted += printf("@");
         }
@@ -185,9 +182,8 @@ int do_file_system_object_long(const char* path)
     DIR* dirp = opendir(path);
     if (!dirp) {
         if (errno == ENOTDIR) {
-            if (print_filesystem_object(path, path)) {
+            if (print_filesystem_object(path, path))
                 return 0;
-            }
             return 2;
         }
         perror("opendir");
@@ -199,10 +195,8 @@ int do_file_system_object_long(const char* path)
         if (de->d_name[0] == '.' && !flag_show_dotfiles)
             continue;
         sprintf(pathbuf, "%s/%s", path, de->d_name);
-
-        if (!print_filesystem_object(pathbuf, de->d_name)) {
+        if (!print_filesystem_object(pathbuf, de->d_name))
             return 2;
-        }
     }
     closedir(dirp);
     return 0;
@@ -233,9 +227,8 @@ int do_file_system_object_short(const char* path)
             int nprinted;
             bool status = print_filesystem_object_short(path, path, &nprinted);
             printf("\n");
-            if (status) {
-              return 0;
-            }
+            if (status)
+                return 0;
             return 2;
         }
         perror("opendir");
@@ -261,9 +254,8 @@ int do_file_system_object_short(const char* path)
         char pathbuf[256];
         sprintf(pathbuf, "%s/%s", path, name.characters());
 
-        if (!print_filesystem_object_short(pathbuf, name.characters(), &nprinted)) {
+        if (!print_filesystem_object_short(pathbuf, name.characters(), &nprinted))
             return 2;
-        }
         int column_width = 14;
         printed_on_row += column_width;
 
