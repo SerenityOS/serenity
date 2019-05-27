@@ -19,57 +19,65 @@ if [ -z "$PORT_DIR" ]; then
     exit 1
 fi
 
+function run_command() {
+    echo "+ $@"
+    (cd "$PORT_DIR" && "$@")
+    echo "+ FINISHED: $@"
+}
+
 function run_fetch_git() {
     if [ -d "$PORT_DIR/.git" ]; then
-        (cd "$PORT_DIR" && git fetch && git reset --hard FETCH_HEAD)
+        run_command git fetch
+        run_command git reset --hard FETCH_HEAD
     else
-        git clone "$1" "$PORT_DIR"
+        run_command git clone "$1" "$PORT_DIR"
     fi
 }
 
+function run_patch() {
+    echo "+ Applying patch $1"
+    run_command patch "$2" < "$1"
+}
+
 function run_configure_cmake() {
-    (
-        cd "$PORT_DIR"
-        cmake -DCMAKE_TOOLCHAIN_FILE="$SERENITY_ROOT/Toolchain/CMakeToolchain.txt" .
-    )
+    run_command cmake -DCMAKE_TOOLCHAIN_FILE="$SERENITY_ROOT/Toolchain/CMakeToolchain.txt" .
 }
 
 function run_configure_autotools() {
-    (
-        cd "$PORT_DIR"
-        ./configure --host=i686-pc-serenity
-    )
+    run_command ./configure --host=i686-pc-serenity "$@"
 }
 
 function run_make() {
-    (
-        cd "$PORT_DIR"
-        make $MAKEOPTS "$@"
-    )
+    run_command make $MAKEOPTS "$@"
 }
 
 function run_make_install() {
-    (
-        cd "$PORT_DIR"
-        make $INSTALLOPTS install "$@"
-    )
+    run_command make $INSTALLOPTS install "$@"
 }
 
 if [ -z "$1" ]; then
+    echo "+ Fetching..."
     fetch
+    echo "+ Configuring..."
     configure
+    echo "+ Building..."
     build
+    echo "+ Installing..."
     install
     exit 0
 fi
 
 if [ "$1" == "fetch" ]; then
+    echo "+ Fetching..."
     fetch
 elif [ "$1" == "configure" ]; then
+    echo "+ Configuring..."
     configure
 elif [ "$1" == "build" ]; then
+    echo "+ Building..."
     build
 elif [ "$1" == "install" ]; then
+    echo "+ Installing..."
     install
 else
     echo "Unknown verb: $1"
