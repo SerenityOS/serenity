@@ -55,9 +55,7 @@ void GRadioButton::for_each_in_group(Callback callback)
 {
     if (!parent())
         return;
-    for_each_child_widget([&] (auto& child) {
-        if (!child.is_radio_button())
-            return IterationDecision::Continue;
+    parent()->for_each_child_of_type<GRadioButton>([&] (auto& child) {
         return callback(static_cast<GRadioButton&>(child));
     });
 }
