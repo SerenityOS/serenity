@@ -61,12 +61,10 @@ void GTabWidget::child_event(CChildEvent& event)
     } else if (event.type() == GEvent::ChildRemoved) {
         if (m_active_widget == &child) {
             GWidget* new_active_widget = nullptr;
-            for (auto* new_child : children()) {
-                if (new_child->is_widget()) {
-                    new_active_widget = static_cast<GWidget*>(new_child);
-                    break;
-                }
-            }
+            for_each_child_widget([&] (auto& new_child) {
+                new_active_widget = &new_child;
+                return IterationDecision::Abort;
+            });
             set_active_widget(new_active_widget);
         }
     }

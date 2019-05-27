@@ -40,17 +40,15 @@ void GSplitter::mousedown_event(GMouseEvent& event)
     GWidget* first_resizee { nullptr };
     GWidget* second_resizee { nullptr };
     int fudge = layout()->spacing();
-    for (auto* child : children()) {
-        if (!child->is_widget())
-            continue;
-        auto& child_widget = *static_cast<GWidget*>(child);
-        int child_start = m_orientation == Orientation::Horizontal ? child_widget.relative_rect().left() : child_widget.relative_rect().top();
-        int child_end = m_orientation == Orientation::Horizontal ? child_widget.relative_rect().right() : child_widget.relative_rect().bottom();
+    for_each_child_widget([&] (auto& child) {
+        int child_start = m_orientation == Orientation::Horizontal ? child.relative_rect().left() : child.relative_rect().top();
+        int child_end = m_orientation == Orientation::Horizontal ? child.relative_rect().right() : child.relative_rect().bottom();
         if (x_or_y > child_end && (x_or_y - fudge) <= child_end)
-            first_resizee = &child_widget;
+            first_resizee = &child;
         if (x_or_y < child_start && (x_or_y + fudge) >= child_start)
-            second_resizee = &child_widget;
-    }
+            second_resizee = &child;
+        return IterationDecision::Continue;
+    });
     ASSERT(first_resizee && second_resizee);
     m_first_resizee = first_resizee->make_weak_ptr();
     m_second_resizee = second_resizee->make_weak_ptr();
