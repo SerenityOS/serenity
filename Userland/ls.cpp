@@ -10,6 +10,7 @@
 #include <sys/stat.h>
 #include <AK/AKString.h>
 #include <AK/Vector.h>
+#include <LibCore/CDirIterator.h>
 
 static int do_file_system_object_long(const char* path);
 static int do_file_system_object_short(const char* path);
@@ -221,9 +222,9 @@ int do_file_system_object_short(const char* path)
     int columns;
     get_geometry(rows, columns);
 
-    DIR* dirp = opendir(path);
-    if (!dirp) {
-        if (errno == ENOTDIR) {
+    CDirIterator di(path, !flag_show_dotfiles ? CDirIterator::SkipDots : CDirIterator::Flags::NoFlags);
+    if (di.has_error()) {
+        if (di.error() == ENOTDIR) {
             int nprinted;
             bool status = print_filesystem_object_short(path, path, &nprinted);
             printf("\n");
@@ -231,20 +232,18 @@ int do_file_system_object_short(const char* path)
                 return 0;
             return 2;
         }
-        perror("opendir");
+        fprintf(stderr, "CDirIterator: %s\n", di.error_string());
         return 1;
     }
 
     Vector<String, 1024> names;
     int longest_name = 0;
-    while (auto* de = readdir(dirp)) {
-        if (de->d_name[0] == '.' && !flag_show_dotfiles)
-            continue;
-        names.append(de->d_name);
+    while (di.has_next()) {
+        String name = di.next_path();
+        names.append(name);
         if (names.last().length() > longest_name)
-            longest_name = names.last().length();
+            longest_name = name.length();
     }
-    closedir(dirp);
 
     int printed_on_row = 0;
     int nprinted;

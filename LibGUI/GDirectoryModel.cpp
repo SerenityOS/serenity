@@ -9,6 +9,7 @@
 #include <SharedGraphics/GraphicsBitmap.h>
 #include <LibGUI/GPainter.h>
 #include <LibCore/CLock.h>
+#include <LibCore/CDirIterator.h>
 
 static CLockable<HashMap<String, RetainPtr<GraphicsBitmap>>>& thumbnail_cache()
 {
@@ -235,22 +236,23 @@ GVariant GDirectoryModel::data(const GModelIndex& index, Role role) const
 
 void GDirectoryModel::update()
 {
-    DIR* dirp = opendir(m_path.characters());
-    if (!dirp) {
-        perror("opendir");
+    CDirIterator di(m_path, CDirIterator::SkipDots);
+    if (di.has_error()) {
+        fprintf(stderr, "CDirIterator: %s\n", di.error_string());
         exit(1);
     }
+
     m_directories.clear();
     m_files.clear();
 
     m_bytes_in_files = 0;
-    while (auto* de = readdir(dirp)) {
+    while (di.has_next()) {
+        String name = di.next_path();
         Entry entry;
-        entry.name = de->d_name;
-        if (entry.name == "." || entry.name == "..")
-            continue;
+        entry.name = name;
+
         struct stat st;
-        int rc = lstat(String::format("%s/%s", m_path.characters(), de->d_name).characters(), &st);
+        int rc = lstat(String::format("%s/%s", m_path.characters(), name.characters()).characters(), &st);
         if (rc < 0) {
             perror("lstat");
             continue;
@@ -266,7 +268,6 @@ void GDirectoryModel::update()
         if (S_ISREG(entry.mode))
             m_bytes_in_files += st.st_size;
     }
-    closedir(dirp);
 
     did_update();
 }

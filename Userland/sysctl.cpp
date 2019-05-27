@@ -8,6 +8,7 @@
 #include <AK/StringBuilder.h>
 #include <AK/Vector.h>
 #include <LibCore/CArgsParser.h>
+#include <LibCore/CDirIterator.h>
 
 static String read_var(const String& name)
 {
@@ -52,17 +53,16 @@ static void write_var(const String& name, const String& value)
 
 static int handle_show_all()
 {
-    DIR* dirp = opendir("/proc/sys");
-    if (!dirp) {
-        perror("opendir");
+    CDirIterator di("/proc/sys", CDirIterator::SkipDots);
+    if (di.has_error()) {
+        fprintf(stderr, "CDirIterator: %s\n", di.error_string());
         return 1;
     }
-    char pathbuf[PATH_MAX];
 
-    while (auto* de = readdir(dirp)) {
-        if (de->d_name[0] == '.')
-            continue;
-        sprintf(pathbuf, "/proc/sys/%s", de->d_name);
+    char pathbuf[PATH_MAX];
+    while (di.has_next()) {
+        String name = di.next_path();
+        sprintf(pathbuf, "/proc/sys/%s", name.characters());
         int fd = open(pathbuf, O_RDONLY);
         if (fd < 0) {
             perror("open");
@@ -76,11 +76,10 @@ static int handle_show_all()
             continue;
         }
         buffer[nread] = '\0';
-        printf("%s = %s", de->d_name, buffer);
+        printf("%s = %s", name.characters(), buffer);
         if (nread && buffer[nread - 1] != '\n')
             printf("\n");
     }
-    closedir(dirp);
     return 0;
 }
 

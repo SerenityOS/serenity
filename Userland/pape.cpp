@@ -10,22 +10,22 @@
 #include <AK/Vector.h>
 #include <AK/FileSystemPath.h>
 #include <LibCore/CArgsParser.h>
+#include <LibCore/CDirIterator.h>
 #include <LibGUI/GDesktop.h>
 #include <LibGUI/GApplication.h>
 
 static int handle_show_all()
 {
-    DIR* dirp = opendir("/res/wallpapers");
-    if (!dirp) {
-        perror("opendir");
+    CDirIterator di("/res/wallpapers", CDirIterator::SkipDots);
+    if (di.has_error()) {
+        fprintf(stderr, "CDirIterator: %s\n", di.error_string());
         return 1;
     }
-    while (auto* de = readdir(dirp)) {
-        if (de->d_name[0] == '.')
-            continue;
-        printf("%s\n", de->d_name);
+
+    while (di.has_next()) {
+        String name = di.next_path();
+        printf("%s\n", name.characters());
     }
-    closedir(dirp);
     return 0;
 }
 

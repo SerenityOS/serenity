@@ -1,4 +1,5 @@
 #include <LibGUI/GFileSystemModel.h>
+#include <LibCore/CDirIterator.h>
 #include <AK/FileSystemPath.h>
 #include <AK/StringBuilder.h>
 #include <sys/stat.h>
@@ -33,15 +34,16 @@ struct GFileSystemModel::Node {
         has_traversed = true;
 
         auto full_path = this->full_path(model);
-        DIR* dirp = opendir(full_path.characters());
-        if (!dirp)
+        CDirIterator di(full_path, CDirIterator::SkipDots);
+        if (di.has_error()) {
+            fprintf(stderr, "CDirIterator: %s\n", di.error_string());
             return;
+        }
 
-        while (auto* de = readdir(dirp)) {
-            if (!strcmp(de->d_name, ".") || !strcmp(de->d_name, ".."))
-                continue;
+        while (di.has_next()) {
+            String name = di.next_path();
             struct stat st;
-            int rc = lstat(String::format("%s/%s", full_path.characters(), de->d_name).characters(), &st);
+            int rc = lstat(String::format("%s/%s", full_path.characters(), name.characters()).characters(), &st);
             if (rc < 0) {
                 perror("lstat");
                 continue;
@@ -49,13 +51,11 @@ struct GFileSystemModel::Node {
             if (model.m_mode == DirectoriesOnly && !S_ISDIR(st.st_mode))
                 continue;
             auto* child = new Node;
-            child->name = de->d_name;
+            child->name = name;
             child->type = S_ISDIR(st.st_mode) ? Node::Type::Directory : Node::Type::File;
             child->parent = this;
             children.append(child);
         }
-
-        closedir(dirp);
     }
 
     void reify_if_needed(const GFileSystemModel& model)
