@@ -38,21 +38,37 @@ int main(int argc, char** argv)
             flag_show_inode = true;
             break;
         default:
-            fprintf(stderr, "usage: ls [-%s] [path]\n", valid_option_characters);
+            fprintf(stderr, "usage: ls [-%s] [paths...]\n", valid_option_characters);
             return 1;
         }
     }
 
-    const char* path;
+    int status;
+    if (optind >= argc) {
+      if (flag_long) {
+          status = do_dir(".");
+      } else {
+          status = do_dir_short(".");
+      }
+      return status;
+    } else {
+        bool show_names = !(optind+1 >= argc);
 
-    if (optind >= argc)
-        path = ".";
-    else
-        path = argv[optind];
-
-    if (flag_long)
-        return do_dir(path);
-    return do_dir_short(path);
+        for (; optind < argc; optind++) {
+          if (show_names) {
+            printf("%s:\n", argv[optind]);
+          }
+          if (flag_long) {
+              status = do_dir(argv[optind]);
+          } else {
+              status = do_dir_short(argv[optind]);
+          }
+          if (status != 0) {
+            return status;
+          }
+        }
+    }
+    return 0;
 }
 
 void get_geometry(int& rows, int& columns)
