@@ -58,3 +58,20 @@ private:
     bool m_widget { false };
     Vector<CObject*> m_children;
 };
+
+template<typename T> inline bool is(const CObject&) { return false; }
+template<> inline bool is<CObject>(const CObject&) { return true; }
+
+template<typename T>
+inline T& to(CObject& object)
+{
+    ASSERT(is<T>(object));
+    return static_cast<T&>(object);
+}
+
+template<typename T>
+inline const T& to(const CObject& object)
+{
+    ASSERT(is<T>(object));
+    return static_cast<const T&>(object);
+}

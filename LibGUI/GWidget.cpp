@@ -26,13 +26,13 @@ GWidget::~GWidget()
 void GWidget::child_event(CChildEvent& event)
 {
     if (event.type() == GEvent::ChildAdded) {
-        if (event.child() && event.child()->is_widget() && layout())
-            layout()->add_widget(static_cast<GWidget&>(*event.child()));
+        if (event.child() && is<GWidget>(*event.child()) && layout())
+            layout()->add_widget(to<GWidget>(*event.child()));
     }
     if (event.type() == GEvent::ChildRemoved) {
         if (layout()) {
-            if (event.child() && event.child()->is_widget())
-                layout()->remove_widget(static_cast<GWidget&>(*event.child()));
+            if (event.child() && is<GWidget>(*event.child()))
+                layout()->remove_widget(to<GWidget>(*event.child()));
             else
                 invalidate_layout();
         }
@@ -321,9 +321,9 @@ Rect GWidget::screen_relative_rect() const
 GWidget* GWidget::child_at(const Point& point) const
 {
     for (int i = children().size() - 1; i >= 0; --i) {
-        if (!children()[i]->is_widget())
+        if (!is<GWidget>(*children()[i]))
             continue;
-        auto& child = *(GWidget*)children()[i];
+        auto& child = to<GWidget>(*children()[i]);
         if (!child.is_visible())
             continue;
         if (child.relative_rect().contains(point))
