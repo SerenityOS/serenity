@@ -20,6 +20,15 @@ public:
     Vector<CObject*>& children() { return m_children; }
     const Vector<CObject*>& children() const { return m_children; }
 
+    template<typename Callback>
+    void for_each_child(Callback callback)
+    {
+        for (auto* child : m_children) {
+            if (callback(*child) == IterationDecision::Abort)
+                return;
+        }
+    }
+
     CObject* parent() { return m_parent; }
     const CObject* parent() const { return m_parent; }
 
