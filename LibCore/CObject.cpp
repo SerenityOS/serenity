@@ -100,9 +100,10 @@ void CObject::dump_tree(int indent)
     }
     printf("%s{%p}\n", class_name(), this);
 
-    for (auto* child : children()) {
-        child->dump_tree(indent + 2);
-    }
+    for_each_child([&] (auto& child) {
+        child.dump_tree(indent + 2);
+        return IterationDecision::Continue;
+    });
 }
 
 void CObject::deferred_invoke(Function<void(CObject&)> invokee)
