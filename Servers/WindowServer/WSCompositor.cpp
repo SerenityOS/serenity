@@ -95,8 +95,10 @@ void WSCompositor::compose()
                 m_wallpaper_mode == WallpaperMode::Unchecked) {
                 m_back_painter->blit(dirty_rect.location(), *m_wallpaper, dirty_rect);
             } else if (m_wallpaper_mode == WallpaperMode::Center) {
-                // TODO: Implement centered wallpaper
-                m_back_painter->blit(dirty_rect.location(), *m_wallpaper, dirty_rect);
+                Point offset{ ws.size().width() / 2 - m_wallpaper->size().width() / 2,
+                              ws.size().height() / 2 - m_wallpaper->size().height() / 2 };
+                m_back_painter->blit_offset(dirty_rect.location(), *m_wallpaper,
+                                            dirty_rect, offset);
             } else if (m_wallpaper_mode == WallpaperMode::Tile) {
                 m_back_painter->blit_tiled(dirty_rect.location(), *m_wallpaper, dirty_rect);
             }
