@@ -174,6 +174,12 @@ int do_dir(const char* path)
 {
     DIR* dirp = opendir(path);
     if (!dirp) {
+        if (errno == ENOTDIR) {
+            if (print_filesystem_object(path, path)) {
+                return 0;
+            }
+            return 2;
+        }
         perror("opendir");
         return 1;
     }
@@ -184,7 +190,9 @@ int do_dir(const char* path)
             continue;
         sprintf(pathbuf, "%s/%s", path, de->d_name);
 
-        print_filesystem_object(pathbuf, de->d_name);
+        if (!print_filesystem_object(pathbuf, de->d_name)) {
+            return 2;
+        }
     }
     closedir(dirp);
     return 0;
@@ -213,13 +221,15 @@ int do_dir_short(const char* path)
     if (!dirp) {
         if (errno == ENOTDIR) {
             int nprinted;
-            print_filesystem_object_short(path, path, &nprinted);
+            bool status = print_filesystem_object_short(path, path, &nprinted);
             printf("\n");
-            return 0;
-        } else {
-            perror("opendir");
-            return 1;
+            if (status) {
+              return 0;
+            }
+            return 2;
         }
+        perror("opendir");
+        return 1;
     }
 
     Vector<String, 1024> names;
