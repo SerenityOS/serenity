@@ -33,9 +33,9 @@ void GStackWidget::resize_event(GResizeEvent& event)
 
 void GStackWidget::child_event(CChildEvent& event)
 {
-    if (!event.child() || !event.child()->is_widget())
+    if (!event.child() || !is<GWidget>(*event.child()))
         return GWidget::child_event(event);
-    auto& child = static_cast<GWidget&>(*event.child());
+    auto& child = to<GWidget>(*event.child());
     if (event.type() == GEvent::ChildAdded) {
         if (!m_active_widget)
             set_active_widget(&child);
@@ -44,12 +44,10 @@ void GStackWidget::child_event(CChildEvent& event)
     } else if (event.type() == GEvent::ChildRemoved) {
         if (m_active_widget == &child) {
             GWidget* new_active_widget = nullptr;
-            for (auto* new_child : children()) {
-                if (new_child->is_widget()) {
-                    new_active_widget = static_cast<GWidget*>(new_child);
-                    break;
-                }
-            }
+            for_each_child_widget([&] (auto& new_child) {
+                new_active_widget = &new_child;
+                return IterationDecision::Abort;
+            });
             set_active_widget(new_active_widget);
         }
     }

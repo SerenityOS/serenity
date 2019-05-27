@@ -50,9 +50,9 @@ Rect GTabWidget::child_rect_for_size(const Size& size) const
 
 void GTabWidget::child_event(CChildEvent& event)
 {
-    if (!event.child() || !event.child()->is_widget())
+    if (!event.child() || !is<GWidget>(*event.child()))
         return GWidget::child_event(event);
-    auto& child = static_cast<GWidget&>(*event.child());
+    auto& child = to<GWidget>(*event.child());
     if (event.type() == GEvent::ChildAdded) {
         if (!m_active_widget)
             set_active_widget(&child);

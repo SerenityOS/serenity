@@ -141,18 +141,8 @@ public:
 
     void set_window(GWindow*);
 
-    GWidget* parent_widget()
-    {
-        if (parent() && parent()->is_widget())
-            return static_cast<GWidget*>(parent());
-        return nullptr;
-    }
-    const GWidget* parent_widget() const
-    {
-        if (parent() && parent()->is_widget())
-            return static_cast<const GWidget*>(parent());
-        return nullptr;
-    }
+    GWidget* parent_widget();
+    const GWidget* parent_widget() const;
 
     void set_fill_with_background_color(bool b) { m_fill_with_background_color = b; }
     bool fill_with_background_color() const { return m_fill_with_background_color; }
@@ -189,8 +179,8 @@ public:
     void for_each_child_widget(Callback callback)
     {
         for_each_child([&] (auto& child) {
-            if (child.is_widget())
-                return callback(static_cast<GWidget&>(child));
+            if (is<GWidget>(child))
+                return callback(to<GWidget>(child));
             return IterationDecision::Continue;
         });
     }
@@ -233,3 +223,21 @@ private:
 
     HashMap<GShortcut, GAction*> m_local_shortcut_actions;
 };
+
+template<> inline bool is<GWidget>(const CObject& object)
+{
+    return object.is_widget();
+}
+
+inline GWidget* GWidget::parent_widget()
+{
+    if (parent() && is<GWidget>(*parent()))
+        return &to<GWidget>(*parent());
+    return nullptr;
+}
+inline const GWidget* GWidget::parent_widget() const
+{
+    if (parent() && is<GWidget>(*parent()))
+        return &to<const GWidget>(*parent());
+    return nullptr;
+}
