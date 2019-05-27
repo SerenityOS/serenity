@@ -34,6 +34,7 @@ int main(int argc, char** argv)
     GApplication app(argc, argv);
 
     auto* window = new GWindow;
+    window->set_title("Text Editor");
     auto* widget = new GWidget;
     widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
     widget->layout()->set_spacing(0);
