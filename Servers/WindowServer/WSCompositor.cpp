@@ -24,6 +24,8 @@ WallpaperMode mode_to_enum(const String& name)
         return WallpaperMode::Tile;
     if (name == "center")
         return WallpaperMode::Center;
+    if (name == "scaled")
+        return WallpaperMode::Scaled;
 }
 
 WSCompositor::WSCompositor()
@@ -91,8 +93,7 @@ void WSCompositor::compose()
             continue;
         m_back_painter->fill_rect(dirty_rect, wm.m_background_color);
         if (m_wallpaper) {
-            if (m_wallpaper_mode == WallpaperMode::Simple ||
-                m_wallpaper_mode == WallpaperMode::Unchecked) {
+            if (m_wallpaper_mode == WallpaperMode::Simple) {
                 m_back_painter->blit(dirty_rect.location(), *m_wallpaper, dirty_rect);
             } else if (m_wallpaper_mode == WallpaperMode::Center) {
                 Point offset{ ws.size().width() / 2 - m_wallpaper->size().width() / 2,
@@ -101,6 +102,11 @@ void WSCompositor::compose()
                                             dirty_rect, offset);
             } else if (m_wallpaper_mode == WallpaperMode::Tile) {
                 m_back_painter->blit_tiled(dirty_rect.location(), *m_wallpaper, dirty_rect);
+            } else {
+                // FIXME: Does not work: offset rect creates trails.
+                m_back_painter->draw_scaled_bitmap(dirty_rect, *m_wallpaper,
+                                                   { dirty_rect.location(),
+                                                     m_wallpaper->size() });
             }
         }
     }
