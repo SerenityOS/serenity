@@ -18,8 +18,8 @@ function configure() {
 }
 function build() {
     # Avoid some broken cross compile tests...
-    run_command perl -p -i -e "s/define GETCWD_BROKEN 1/undef GETCWD_BROKEN/" config.h
-    run_command perl -p -i -e "s/define CAN_REDEFINE_GETENV 1/undef CAN_REDEFINE_GETENV/" config.h
+    run_replace_in_file "s/define GETCWD_BROKEN 1/undef GETCWD_BROKEN/" config.h
+    run_replace_in_file "s/define CAN_REDEFINE_GETENV 1/undef CAN_REDEFINE_GETENV/" config.h
     run_make
 }
 function install() {
