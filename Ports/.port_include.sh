@@ -40,6 +40,10 @@ function run_fetch_git() {
     fi
 }
 
+function run_replace_in_file() {
+    run_command perl -p -i -e "$1" $2
+}
+
 function run_patch() {
     echo "+ Applying patch $1"
     run_command patch "$2" < "$1"
