@@ -66,6 +66,12 @@ function run_make_install() {
     run_command make $INSTALLOPTS install "$@"
 }
 
+function run_send_to_file() {
+    echo "+ rewrite '$1'"
+	(cd "$PORT_DIR" && echo "$2" > "$1")
+    echo "+ FINISHED"
+}
+
 if [ -z "$1" ]; then
     echo "+ Fetching..."
     fetch
