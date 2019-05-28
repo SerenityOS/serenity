@@ -1,7 +1,8 @@
 #pragma once
 
-#include <sys/cdefs.h>
+#include <stddef.h>
 #include <stdint.h>
+#include <sys/cdefs.h>
 
 __BEGIN_DECLS
 
@@ -14,7 +15,6 @@ typedef uint32_t gid_t;
 typedef int __pid_t;
 #define pid_t __pid_t
 
-typedef __SIZE_TYPE__ size_t;
 typedef int __ssize_t;
 #define ssize_t __ssize_t
 
@@ -57,12 +57,6 @@ struct utimbuf {
     time_t actime;
     time_t modtime;
 };
-
-#ifdef __cplusplus
-#define NULL nullptr
-#else
-#define NULL 0
-#endif
 
 __END_DECLS
 
