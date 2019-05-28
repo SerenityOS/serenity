@@ -12,4 +12,4 @@ function build() {
 function install() {
     run_make_install
 }
-source ./.port_include.sh
+source ../.port_include.sh
