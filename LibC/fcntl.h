@@ -55,6 +55,7 @@ __BEGIN_DECLS
 
 int fcntl(int fd, int cmd, ...);
 
+#define F_RDLCK 0
 #define F_WRLCK 1
 #define F_UNLCK 2
 
