@@ -4,10 +4,11 @@
 
 class CNotifier {
 public:
-    enum Event {
-        None        = 0,
-        Read        = 1,
-        Write       = 2,
+    enum Event
+    {
+        None = 0,
+        Read = 1,
+        Write = 2,
         Exceptional = 4,
     };
     CNotifier(int fd, unsigned event_mask);

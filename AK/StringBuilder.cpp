@@ -1,7 +1,7 @@
 #include "StringBuilder.h"
-#include <LibC/stdarg.h>
 #include "printf.cpp"
 #include <AK/StdLibExtras.h>
+#include <LibC/stdarg.h>
 
 namespace AK {
 
@@ -43,9 +43,10 @@ void StringBuilder::append(char ch)
 
 void StringBuilder::appendvf(const char* fmt, va_list ap)
 {
-    printf_internal([this] (char*&, char ch) {
+    printf_internal([this](char*&, char ch) {
         append(ch);
-    }, nullptr, fmt, ap);
+    },
+        nullptr, fmt, ap);
 }
 
 void StringBuilder::appendf(const char* fmt, ...)
@@ -71,4 +72,3 @@ String StringBuilder::to_string()
 }
 
 }
-

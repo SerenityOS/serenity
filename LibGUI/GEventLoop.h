@@ -1,8 +1,8 @@
 #pragma once
 
 #include <LibCore/CEventLoop.h>
-#include <WindowServer/WSAPITypes.h>
 #include <LibGUI/GEvent.h>
+#include <WindowServer/WSAPITypes.h>
 
 class GAction;
 class CObject;
@@ -16,7 +16,7 @@ public:
 
     static GEventLoop& current() { return static_cast<GEventLoop&>(CEventLoop::current()); }
 
-    static bool post_message_to_server(const WSAPI_ClientMessage&, const ByteBuffer& extra_data = { });
+    static bool post_message_to_server(const WSAPI_ClientMessage&, const ByteBuffer& extra_data = {});
     bool wait_for_specific_event(WSAPI_ServerMessage::Type, WSAPI_ServerMessage&);
     WSAPI_ServerMessage sync_request(const WSAPI_ClientMessage& request, WSAPI_ServerMessage::Type response_type);
 

@@ -1,22 +1,22 @@
 #pragma once
 
-#include <SharedGraphics/Rect.h>
-#include <SharedGraphics/Color.h>
-#include <SharedGraphics/Painter.h>
-#include <SharedGraphics/DisjointRectSet.h>
+#include "WSMenuBar.h"
+#include <AK/HashMap.h>
 #include <AK/HashTable.h>
 #include <AK/InlineLinkedList.h>
 #include <AK/WeakPtr.h>
-#include <AK/HashMap.h>
-#include "WSMenuBar.h"
-#include <WindowServer/WSWindowSwitcher.h>
-#include <WindowServer/WSWindowType.h>
-#include <WindowServer/WSWindow.h>
+#include <LibCore/CConfigFile.h>
+#include <LibCore/CElapsedTimer.h>
+#include <SharedGraphics/Color.h>
+#include <SharedGraphics/DisjointRectSet.h>
+#include <SharedGraphics/Painter.h>
+#include <SharedGraphics/Rect.h>
+#include <WindowServer/WSCPUMonitor.h>
 #include <WindowServer/WSCursor.h>
 #include <WindowServer/WSEvent.h>
-#include <WindowServer/WSCPUMonitor.h>
-#include <LibCore/CElapsedTimer.h>
-#include <LibCore/CConfigFile.h>
+#include <WindowServer/WSWindow.h>
+#include <WindowServer/WSWindowSwitcher.h>
+#include <WindowServer/WSWindowType.h>
 
 class WSAPIClientRequest;
 class WSScreen;
@@ -29,12 +29,24 @@ class WSWindowSwitcher;
 class GraphicsBitmap;
 class WSButton;
 
-enum class ResizeDirection { None, Left, UpLeft, Up, UpRight, Right, DownRight, Down, DownLeft };
+enum class ResizeDirection
+{
+    None,
+    Left,
+    UpLeft,
+    Up,
+    UpRight,
+    Right,
+    DownRight,
+    Down,
+    DownLeft
+};
 
 class WSWindowManager : public CObject {
     friend class WSCompositor;
     friend class WSWindowFrame;
     friend class WSWindowSwitcher;
+
 public:
     static WSWindowManager& the();
 
@@ -135,12 +147,18 @@ private:
     void start_window_drag(WSWindow&, const WSMouseEvent&);
     void handle_client_request(const WSAPIClientRequest&);
     void set_hovered_window(WSWindow*);
-    template<typename Callback> IterationDecision for_each_visible_window_of_type_from_back_to_front(WSWindowType, Callback, bool ignore_highlight = false);
-    template<typename Callback> IterationDecision for_each_visible_window_of_type_from_front_to_back(WSWindowType, Callback, bool ignore_highlight = false);
-    template<typename Callback> IterationDecision for_each_visible_window_from_front_to_back(Callback);
-    template<typename Callback> IterationDecision for_each_visible_window_from_back_to_front(Callback);
-    template<typename Callback> void for_each_window_listening_to_wm_events(Callback);
-    template<typename Callback> void for_each_window(Callback);
+    template<typename Callback>
+    IterationDecision for_each_visible_window_of_type_from_back_to_front(WSWindowType, Callback, bool ignore_highlight = false);
+    template<typename Callback>
+    IterationDecision for_each_visible_window_of_type_from_front_to_back(WSWindowType, Callback, bool ignore_highlight = false);
+    template<typename Callback>
+    IterationDecision for_each_visible_window_from_front_to_back(Callback);
+    template<typename Callback>
+    IterationDecision for_each_visible_window_from_back_to_front(Callback);
+    template<typename Callback>
+    void for_each_window_listening_to_wm_events(Callback);
+    template<typename Callback>
+    void for_each_window(Callback);
 
     template<typename Callback>
     void for_each_active_menubar_menu(Callback callback)
@@ -185,10 +203,10 @@ private:
     HashTable<WSWindow*> m_windows;
     InlineLinkedList<WSWindow> m_windows_in_order;
 
-    struct DoubleClickInfo
-    {
+    struct DoubleClickInfo {
         CElapsedTimer& click_clock(MouseButton);
-        void reset() {
+        void reset()
+        {
             m_left_click_clock = CElapsedTimer();
             m_right_click_clock = CElapsedTimer();
             m_middle_click_clock = CElapsedTimer();

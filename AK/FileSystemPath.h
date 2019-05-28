@@ -6,7 +6,7 @@ namespace AK {
 
 class FileSystemPath {
 public:
-    FileSystemPath() { }
+    FileSystemPath() {}
     explicit FileSystemPath(const String&);
 
     bool is_valid() const { return m_is_valid; }

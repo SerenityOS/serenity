@@ -4,14 +4,16 @@
 
 namespace AK {
 
-template<typename T> class OwnPtr;
+template<typename T>
+class OwnPtr;
 
 template<typename T>
 class WeakPtr {
     friend class Weakable<T>;
+
 public:
-    WeakPtr() { }
-    WeakPtr(std::nullptr_t) { }
+    WeakPtr() {}
+    WeakPtr(std::nullptr_t) {}
 
     template<typename U>
     WeakPtr(WeakPtr<U>&& other)
@@ -48,7 +50,10 @@ public:
     bool operator==(const OwnPtr<T>& other) const { return ptr() == other.ptr(); }
 
 private:
-    WeakPtr(RetainPtr<WeakLink<T>>&& link) : m_link(move(link)) { }
+    WeakPtr(RetainPtr<WeakLink<T>>&& link)
+        : m_link(move(link))
+    {
+    }
 
     RetainPtr<WeakLink<T>> m_link;
 };
@@ -64,4 +69,3 @@ inline WeakPtr<T> Weakable<T>::make_weak_ptr()
 }
 
 using AK::WeakPtr;
-

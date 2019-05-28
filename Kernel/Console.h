@@ -35,4 +35,3 @@ private:
     ConsoleImplementation* m_implementation { nullptr };
     CircularQueue<char, 16384> m_logbuffer;
 };
-

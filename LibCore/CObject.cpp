@@ -1,7 +1,7 @@
-#include <LibCore/CObject.h>
+#include <AK/Assertions.h>
 #include <LibCore/CEvent.h>
 #include <LibCore/CEventLoop.h>
-#include <AK/Assertions.h>
+#include <LibCore/CObject.h>
 #include <stdio.h>
 
 CObject::CObject(CObject* parent, bool is_widget)
@@ -100,7 +100,7 @@ void CObject::dump_tree(int indent)
     }
     printf("%s{%p}\n", class_name(), this);
 
-    for_each_child([&] (auto& child) {
+    for_each_child([&](auto& child) {
         child.dump_tree(indent + 2);
         return IterationDecision::Continue;
     });

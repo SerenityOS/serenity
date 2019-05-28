@@ -24,16 +24,15 @@ char* strncpy(char* dest, const char* src, size_t);
 char* strchr(const char*, int c);
 char* strstr(const char* haystack, const char* needle);
 char* strrchr(const char*, int c);
-char* strcat(char *dest, const char *src);
-char* strncat(char *dest, const char *src, size_t);
+char* strcat(char* dest, const char* src);
+char* strncat(char* dest, const char* src, size_t);
 size_t strspn(const char*, const char* accept);
 size_t strcspn(const char*, const char* reject);
 char* strerror(int errnum);
 char* strsignal(int signum);
 char* strpbrk(const char*, const char* accept);
-char *strtok(char* str, const char* delim);
-int strcoll(const char *s1, const char *s2);
-size_t strxfrm(char *dest, const char *src, size_t n);
+char* strtok(char* str, const char* delim);
+int strcoll(const char* s1, const char* s2);
+size_t strxfrm(char* dest, const char* src, size_t n);
 
 __END_DECLS
-

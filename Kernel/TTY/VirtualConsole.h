@@ -1,13 +1,19 @@
 #pragma once
 
-#include <Kernel/TTY/TTY.h>
-#include <Kernel/Devices/KeyboardDevice.h>
 #include "Console.h"
+#include <Kernel/Devices/KeyboardDevice.h>
+#include <Kernel/TTY/TTY.h>
 
-class VirtualConsole final : public TTY, public KeyboardClient, public ConsoleImplementation {
+class VirtualConsole final : public TTY
+    , public KeyboardClient
+    , public ConsoleImplementation {
     AK_MAKE_ETERNAL
 public:
-    enum InitialContents { Cleared, AdoptCurrentVGABuffer };
+    enum InitialContents
+    {
+        Cleared,
+        AdoptCurrentVGABuffer
+    };
 
     VirtualConsole(unsigned index, InitialContents = Cleared);
     virtual ~VirtualConsole() override;
@@ -67,7 +73,8 @@ private:
 
     void execute_escape_sequence(byte final);
 
-    enum EscapeState {
+    enum EscapeState
+    {
         Normal,
         ExpectBracket,
         ExpectParameter,

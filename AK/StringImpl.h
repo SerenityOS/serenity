@@ -1,12 +1,15 @@
 #pragma once
 
-#include "Retainable.h"
 #include "RetainPtr.h"
+#include "Retainable.h"
 #include "Types.h"
 
 namespace AK {
 
-enum ShouldChomp { NoChomp, Chomp };
+enum ShouldChomp {
+    NoChomp,
+    Chomp
+};
 
 class StringImpl : public Retainable<StringImpl> {
 public:
@@ -22,7 +25,11 @@ public:
 
     ssize_t length() const { return m_length; }
     const char* characters() const { return m_characters; }
-    char operator[](ssize_t i) const { ASSERT(i >= 0 && i < m_length); return m_characters[i]; }
+    char operator[](ssize_t i) const
+    {
+        ASSERT(i >= 0 && i < m_length);
+        return m_characters[i];
+    }
 
     unsigned hash() const
     {
@@ -32,10 +39,17 @@ public:
     }
 
 private:
-    enum ConstructTheEmptyStringImplTag { ConstructTheEmptyStringImpl };
-    explicit StringImpl(ConstructTheEmptyStringImplTag) : m_characters("") { }
+    enum ConstructTheEmptyStringImplTag {
+        ConstructTheEmptyStringImpl
+    };
+    explicit StringImpl(ConstructTheEmptyStringImplTag)
+        : m_characters("")
+    {
+    }
 
-    enum ConstructWithInlineBufferTag { ConstructWithInlineBuffer };
+    enum ConstructWithInlineBufferTag {
+        ConstructWithInlineBuffer
+    };
     StringImpl(ConstructWithInlineBufferTag, ssize_t length);
 
     void compute_hash() const;
@@ -63,6 +77,6 @@ inline dword string_hash(const char* characters, int length)
 
 }
 
-using AK::StringImpl;
 using AK::Chomp;
 using AK::string_hash;
+using AK::StringImpl;

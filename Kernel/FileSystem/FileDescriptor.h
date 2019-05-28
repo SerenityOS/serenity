@@ -1,14 +1,14 @@
 #pragma once
 
-#include <Kernel/FileSystem/VirtualFileSystem.h>
-#include <Kernel/FileSystem/InodeMetadata.h>
-#include <Kernel/FileSystem/Inode.h>
-#include <Kernel/FileSystem/FIFO.h>
-#include <Kernel/LinearAddress.h>
+#include <AK/Badge.h>
 #include <AK/ByteBuffer.h>
 #include <AK/CircularQueue.h>
 #include <AK/Retainable.h>
-#include <AK/Badge.h>
+#include <Kernel/FileSystem/FIFO.h>
+#include <Kernel/FileSystem/Inode.h>
+#include <Kernel/FileSystem/InodeMetadata.h>
+#include <Kernel/FileSystem/VirtualFileSystem.h>
+#include <Kernel/LinearAddress.h>
 #include <Kernel/Net/Socket.h>
 
 class File;
@@ -119,4 +119,3 @@ private:
     SocketRole m_socket_role { SocketRole::None };
     FIFO::Direction m_fifo_direction { FIFO::Direction::Neither };
 };
-

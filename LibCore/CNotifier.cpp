@@ -1,6 +1,6 @@
-#include <LibCore/CNotifier.h>
-#include <LibCore/CEventLoop.h>
 #include <LibCore/CEvent.h>
+#include <LibCore/CEventLoop.h>
+#include <LibCore/CNotifier.h>
 
 CNotifier::CNotifier(int fd, unsigned event_mask)
     : m_fd(fd)
@@ -13,4 +13,3 @@ CNotifier::~CNotifier()
 {
     CEventLoop::unregister_notifier(Badge<CNotifier>(), *this);
 }
-

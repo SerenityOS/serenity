@@ -4,7 +4,7 @@
 
 class CElapsedTimer {
 public:
-    CElapsedTimer() { }
+    CElapsedTimer() {}
 
     bool is_valid() const { return m_valid; }
     void start();
@@ -12,5 +12,7 @@ public:
 
 private:
     bool m_valid { false };
-    struct timeval m_start_time { 0, 0 };
+    struct timeval m_start_time {
+        0, 0
+    };
 };

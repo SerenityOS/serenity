@@ -23,4 +23,3 @@ public:
 protected:
     DiskDevice();
 };
-

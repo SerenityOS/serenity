@@ -1,7 +1,7 @@
 #pragma once
 
-#include <AK/Retainable.h>
 #include <AK/ByteBuffer.h>
+#include <AK/Retainable.h>
 
 class CNetworkResponse : public Retainable<CNetworkResponse> {
 public:

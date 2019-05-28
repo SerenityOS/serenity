@@ -16,4 +16,3 @@ private:
     virtual bool can_write(FileDescriptor&) const override { return true; }
     virtual const char* class_name() const override { return "FullDevice"; }
 };
-

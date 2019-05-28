@@ -1,9 +1,9 @@
 #pragma once
 
-#include <SharedGraphics/Rect.h>
 #include <AK/Vector.h>
 #include <AK/WeakPtr.h>
 #include <LibCore/CObject.h>
+#include <SharedGraphics/Rect.h>
 
 class Painter;
 class WSKeyEvent;

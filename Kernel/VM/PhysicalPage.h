@@ -1,13 +1,14 @@
 #pragma once
 
+#include <AK/Retained.h>
 #include <Kernel/Assertions.h>
 #include <Kernel/PhysicalAddress.h>
-#include <AK/Retained.h>
 
 class PhysicalPage {
     friend class MemoryManager;
     friend class PageDirectory;
     friend class VMObject;
+
 public:
     PhysicalAddress paddr() const { return m_paddr; }
 
@@ -35,7 +36,7 @@ public:
 
 private:
     PhysicalPage(PhysicalAddress paddr, bool supervisor, bool may_return_to_freelist = true);
-    ~PhysicalPage() { }
+    ~PhysicalPage() {}
 
     void return_to_freelist();
 

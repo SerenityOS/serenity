@@ -54,4 +54,3 @@ float ldexpf(float, int exp);
 double pow(double x, double y);
 
 __END_DECLS
-

@@ -1,7 +1,7 @@
 #include "FileSystemPath.h"
+#include "StringBuilder.h"
 #include "Vector.h"
 #include "kstdio.h"
-#include "StringBuilder.h"
 
 namespace AK {
 
@@ -14,7 +14,7 @@ FileSystemPath::FileSystemPath(const String& s)
 bool FileSystemPath::canonicalize(bool resolve_symbolic_links)
 {
     // FIXME: Implement "resolve_symbolic_links"
-    (void) resolve_symbolic_links;
+    (void)resolve_symbolic_links;
     auto parts = m_string.split('/');
     Vector<String> canonical_parts;
 

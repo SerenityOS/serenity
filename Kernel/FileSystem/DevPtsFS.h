@@ -26,4 +26,3 @@ private:
 
     HashTable<SlavePTY*> m_slave_ptys;
 };
-

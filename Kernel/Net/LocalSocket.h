@@ -1,7 +1,7 @@
 #pragma once
 
-#include <Kernel/Net/Socket.h>
 #include <Kernel/DoubleBuffer.h>
+#include <Kernel/Net/Socket.h>
 
 class FileDescriptor;
 
@@ -39,4 +39,3 @@ private:
     DoubleBuffer m_for_client;
     DoubleBuffer m_for_server;
 };
-

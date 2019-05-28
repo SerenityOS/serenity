@@ -1,11 +1,12 @@
 #pragma once
 
-#include <LibGUI/GWidget.h>
-#include <AK/Vector.h>
 #include "VBWidget.h"
+#include <AK/Vector.h>
+#include <LibGUI/GWidget.h>
 
 class VBForm : public GWidget {
     friend class VBWidget;
+
 public:
     explicit VBForm(const String& name, GWidget* parent = nullptr);
     virtual ~VBForm() override;
@@ -43,7 +44,8 @@ private:
     void add_to_selection(VBWidget&);
     void remove_from_selection(VBWidget&);
     void delete_selected_widgets();
-    template<typename Callback> void for_each_selected_widget(Callback);
+    template<typename Callback>
+    void for_each_selected_widget(Callback);
 
     VBWidget* single_selected_widget();
 

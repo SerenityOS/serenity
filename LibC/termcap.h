@@ -16,4 +16,3 @@ char* tgoto(const char* cap, int col, int row);
 int tputs(const char* str, int affcnt, int (*putc)(int));
 
 __END_DECLS
-

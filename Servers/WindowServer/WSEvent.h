@@ -1,17 +1,18 @@
 #pragma once
 
-#include <SharedGraphics/Point.h>
-#include <SharedGraphics/Rect.h>
 #include <AK/AKString.h>
 #include <AK/Types.h>
 #include <Kernel/KeyCode.h>
+#include <LibCore/CEvent.h>
+#include <SharedGraphics/Point.h>
+#include <SharedGraphics/Rect.h>
 #include <WindowServer/WSCursor.h>
 #include <WindowServer/WSWindowType.h>
-#include <LibCore/CEvent.h>
 
 class WSEvent : public CEvent {
 public:
-    enum Type {
+    enum Type
+    {
         Invalid = 2000,
         WM_DeferredCompose,
         WM_ClientDisconnected,
@@ -71,9 +72,12 @@ public:
         __End_API_Client_Requests,
     };
 
-    WSEvent() { }
-    explicit WSEvent(Type type) : CEvent(type) { }
-    virtual ~WSEvent() { }
+    WSEvent() {}
+    explicit WSEvent(Type type)
+        : CEvent(type)
+    {
+    }
+    virtual ~WSEvent() {}
 
     bool is_client_request() const { return type() > __Begin_API_Client_Requests && type() < __End_API_Client_Requests; }
     bool is_mouse_event() const { return type() == MouseMove || type() == MouseDown || type() == MouseDoubleClick || type() == MouseUp || type() == MouseWheel; }
@@ -161,7 +165,6 @@ private:
     int m_target_window_id;
     bool m_minimized;
 };
-
 
 class WSAPISetGlobalCursorTrackingRequest : public WSAPIClientRequest {
 public:
@@ -688,7 +691,8 @@ private:
     Vector<Rect, 32> m_rects;
 };
 
-enum class MouseButton : byte {
+enum class MouseButton : byte
+{
     None = 0,
     Left = 1,
     Right = 2,

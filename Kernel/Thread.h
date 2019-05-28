@@ -1,15 +1,15 @@
 #pragma once
 
-#include <Kernel/i386.h>
-#include <Kernel/KResult.h>
-#include <Kernel/LinearAddress.h>
-#include <Kernel/UnixTypes.h>
-#include <Kernel/VM/Region.h>
 #include <AK/AKString.h>
 #include <AK/InlineLinkedList.h>
 #include <AK/OwnPtr.h>
 #include <AK/RetainPtr.h>
 #include <AK/Vector.h>
+#include <Kernel/KResult.h>
+#include <Kernel/LinearAddress.h>
+#include <Kernel/UnixTypes.h>
+#include <Kernel/VM/Region.h>
+#include <Kernel/i386.h>
 
 class Alarm;
 class FileDescriptor;
@@ -17,7 +17,11 @@ class Process;
 class Region;
 class Thread;
 
-enum class ShouldUnblockThread { No = 0, Yes };
+enum class ShouldUnblockThread
+{
+    No = 0,
+    Yes
+};
 
 struct SignalActionData {
     LinearAddress handler_or_sigaction;
@@ -31,6 +35,7 @@ extern InlineLinkedList<Thread>* g_nonrunnable_threads;
 class Thread : public InlineLinkedListNode<Thread> {
     friend class Process;
     friend class Scheduler;
+
 public:
     explicit Thread(Process&);
     ~Thread();
@@ -49,7 +54,8 @@ public:
 
     void finalize();
 
-    enum State : byte {
+    enum State : byte
+    {
         Invalid = 0,
         Runnable,
         Running,
@@ -136,11 +142,16 @@ public:
     InlineLinkedList<Thread>* thread_list() { return m_thread_list; }
     void set_thread_list(InlineLinkedList<Thread>*);
 
-    template<typename Callback> static void for_each_in_state(State, Callback);
-    template<typename Callback> static void for_each_living(Callback);
-    template<typename Callback> static void for_each_runnable(Callback);
-    template<typename Callback> static void for_each_nonrunnable(Callback);
-    template<typename Callback> static void for_each(Callback);
+    template<typename Callback>
+    static void for_each_in_state(State, Callback);
+    template<typename Callback>
+    static void for_each_living(Callback);
+    template<typename Callback>
+    static void for_each_runnable(Callback);
+    template<typename Callback>
+    static void for_each_nonrunnable(Callback);
+    template<typename Callback>
+    static void for_each(Callback);
 
     static bool is_runnable_state(Thread::State state)
     {

@@ -1,18 +1,19 @@
 #pragma once
 
-#include <AK/Assertions.h>
 #include <AK/AKString.h>
+#include <AK/Assertions.h>
 #include <AK/Types.h>
 #include <Kernel/StdLib.h>
 
-class [[gnu::packed]] MACAddress {
+class [[gnu::packed]] MACAddress
+{
 public:
-    MACAddress() { }
+    MACAddress() {}
     MACAddress(const byte data[6])
     {
         memcpy(m_data, data, 6);
     }
-    ~MACAddress() { }
+    ~MACAddress() {}
 
     byte operator[](int i) const
     {

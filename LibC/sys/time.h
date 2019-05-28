@@ -15,6 +15,6 @@ struct timezone {
     int tz_dsttime;
 };
 
-int gettimeofday(struct timeval* __restrict__, void* __restrict__)  __attribute__((nonnull(1)));
+int gettimeofday(struct timeval* __restrict__, void* __restrict__) __attribute__((nonnull(1)));
 
 __END_DECLS
