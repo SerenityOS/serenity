@@ -1,5 +1,7 @@
-#include "dlfcn.h"
 #include <assert.h>
+#include <dlfcn.h>
+
+extern "C" {
 
 int dlclose(void*)
 {
@@ -19,4 +21,6 @@ void *dlopen(const char*, int)
 void *dlsym(void*, const char*)
 {
     ASSERT_NOT_REACHED();
+}
+
 }
