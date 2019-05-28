@@ -6,7 +6,8 @@ class IRCLogBuffer;
 
 class IRCLogBufferModel final : public GModel {
 public:
-    enum Column {
+    enum Column
+    {
         Timestamp = 0,
         Name,
         Text,

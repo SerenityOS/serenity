@@ -1,9 +1,9 @@
 #pragma once
 
-#include <Kernel/Devices/DiskDevice.h>
-#include <AK/RetainPtr.h>
 #include <AK/AKString.h>
+#include <AK/RetainPtr.h>
 #include <AK/Types.h>
+#include <Kernel/Devices/DiskDevice.h>
 #include <stdio.h>
 
 class FileBackedDiskDevice final : public DiskDevice {
@@ -30,4 +30,3 @@ private:
     DiskOffset m_file_length { 0 };
     unsigned m_block_size { 0 };
 };
-

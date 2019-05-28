@@ -30,8 +30,8 @@ typedef signed_dword int32_t;
 typedef signed_qword int64_t;
 
 #else
-#include <stdint.h>
-#include <sys/types.h>
+#    include <stdint.h>
+#    include <sys/types.h>
 
 typedef uint8_t byte;
 typedef uint16_t word;
@@ -48,9 +48,11 @@ constexpr unsigned KB = 1024;
 constexpr unsigned MB = KB * KB;
 constexpr unsigned GB = KB * KB * KB;
 
-enum class IterationDecision { Continue, Abort };
+enum class IterationDecision {
+    Continue,
+    Abort
+};
 
 namespace std {
 typedef decltype(nullptr) nullptr_t;
 }
-

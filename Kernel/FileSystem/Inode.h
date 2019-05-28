@@ -1,12 +1,12 @@
 #pragma once
 
-#include <AK/Retainable.h>
 #include <AK/AKString.h>
 #include <AK/Function.h>
+#include <AK/Retainable.h>
 #include <AK/WeakPtr.h>
+#include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/FileSystem/InodeIdentifier.h>
 #include <Kernel/FileSystem/InodeMetadata.h>
-#include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/KResult.h>
 #include <Kernel/Lock.h>
 
@@ -17,10 +17,11 @@ class VMObject;
 class Inode : public Retainable<Inode> {
     friend class VFS;
     friend class FS;
+
 public:
     virtual ~Inode();
 
-    virtual void one_retain_left() { }
+    virtual void one_retain_left() {}
 
     FS& fs() { return m_fs; }
     const FS& fs() const { return m_fs; }
@@ -89,4 +90,3 @@ private:
     RetainPtr<LocalSocket> m_socket;
     bool m_metadata_dirty { false };
 };
-

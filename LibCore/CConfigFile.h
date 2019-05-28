@@ -1,11 +1,11 @@
 #pragma once
 
-#include <SharedGraphics/Color.h>
-#include <AK/Vector.h>
-#include <AK/HashMap.h>
 #include <AK/AKString.h>
-#include <AK/Retainable.h>
+#include <AK/HashMap.h>
 #include <AK/RetainPtr.h>
+#include <AK/Retainable.h>
+#include <AK/Vector.h>
+#include <SharedGraphics/Color.h>
 
 class CConfigFile : public Retainable<CConfigFile> {
 public:
@@ -22,18 +22,18 @@ public:
     String read_entry(const String& group, const String& key, const String& default_vaule = String()) const;
     int read_num_entry(const String& group, const String& key, int default_value = 0) const;
     bool read_bool_entry(const String& group, const String& key, bool default_value = false) const;
-    Color read_color_entry(const String& group, const String &key, Color default_value) const;
+    Color read_color_entry(const String& group, const String& key, Color default_value) const;
 
-    void write_entry(const String& group, const String& key, const String &value);
+    void write_entry(const String& group, const String& key, const String& value);
     void write_num_entry(const String& group, const String& key, int value);
     void write_bool_entry(const String& group, const String& key, bool value);
     void write_color_entry(const String& group, const String& key, Color value);
 
-	void dump() const;
+    void dump() const;
 
     bool is_dirty() const { return m_dirty; }
 
-	bool sync();
+    bool sync();
 
     void remove_group(const String& group);
     void remove_entry(const String& group, const String& key);

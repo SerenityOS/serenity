@@ -2,15 +2,16 @@
 
 #include "Assertions.h"
 #include "DoublyLinkedList.h"
-#include "Traits.h"
 #include "StdLibExtras.h"
+#include "Traits.h"
 #include "kstdio.h"
 
 //#define HASHTABLE_DEBUG
 
 namespace AK {
 
-template<typename T, typename = Traits<T>> class HashTable;
+template<typename T, typename = Traits<T>>
+class HashTable;
 
 template<typename T, typename TraitsForT>
 class HashTable {
@@ -20,7 +21,7 @@ private:
     };
 
 public:
-    HashTable() { }
+    HashTable() {}
     explicit HashTable(HashTable&& other)
         : m_buckets(other.m_buckets)
         , m_size(other.m_size)
@@ -112,6 +113,7 @@ public:
                     return;
             }
         }
+
     private:
         friend class HashTable;
         explicit Iterator(HashTable& table, bool is_end, typename DoublyLinkedList<T>::Iterator bucket_iterator = DoublyLinkedList<T>::Iterator::universal_end(), int bucket_index = 0)
@@ -190,6 +192,7 @@ public:
                     return;
             }
         }
+
     private:
         friend class HashTable;
         ConstIterator(const HashTable& table, bool is_end, typename DoublyLinkedList<T>::ConstIterator bucket_iterator = DoublyLinkedList<T>::ConstIterator::universal_end(), int bucket_index = 0)
@@ -285,7 +288,6 @@ void HashTable<T, TraitsForT>::set(const T& value)
     m_size++;
 }
 
-
 template<typename T, typename TraitsForT>
 void HashTable<T, TraitsForT>::rehash(int new_capacity)
 {
@@ -308,14 +310,14 @@ void HashTable<T, TraitsForT>::rehash(int new_capacity)
         }
     }
 
-    delete [] old_buckets;
+    delete[] old_buckets;
 }
 
 template<typename T, typename TraitsForT>
 void HashTable<T, TraitsForT>::clear()
 {
     if (m_buckets) {
-        delete [] m_buckets;
+        delete[] m_buckets;
         m_buckets = nullptr;
     }
     m_capacity = 0;
@@ -429,4 +431,3 @@ void HashTable<T, TraitsForT>::dump() const
 }
 
 using AK::HashTable;
-

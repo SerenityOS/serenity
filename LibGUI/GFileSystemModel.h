@@ -4,8 +4,14 @@
 
 class GFileSystemModel : public GModel {
     friend class Node;
+
 public:
-    enum Mode { Invalid, DirectoriesOnly, FilesAndDirectories };
+    enum Mode
+    {
+        Invalid,
+        DirectoriesOnly,
+        FilesAndDirectories
+    };
 
     static Retained<GFileSystemModel> create(const String& root_path = "/", Mode mode = Mode::FilesAndDirectories)
     {

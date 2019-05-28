@@ -1,9 +1,9 @@
 #pragma once
 
-#include <Kernel/UnixTypes.h>
+#include <Kernel/FileSystem/DiskBackedFileSystem.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/FileSystem/ext2_fs.h>
-#include <Kernel/FileSystem/DiskBackedFileSystem.h>
+#include <Kernel/UnixTypes.h>
 
 struct ext2_group_desc;
 struct ext2_inode;
@@ -13,6 +13,7 @@ class Ext2FS;
 
 class Ext2FSInode final : public Inode {
     friend class Ext2FS;
+
 public:
     virtual ~Ext2FSInode() override;
 
@@ -59,8 +60,9 @@ private:
 
 class Ext2FS final : public DiskBackedFS {
     friend class Ext2FSInode;
+
 public:
-    static Retained <Ext2FS> create(Retained<DiskDevice>&&);
+    static Retained<Ext2FS> create(Retained<DiskDevice>&&);
     virtual ~Ext2FS() override;
     virtual bool initialize() override;
 

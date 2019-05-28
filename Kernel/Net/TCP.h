@@ -3,20 +3,22 @@
 #include <Kernel/Net/IPv4.h>
 
 struct TCPFlags {
-enum : word {
-    FIN  = 0x01,
-    SYN  = 0x02,
-    RST  = 0x04,
-    PUSH = 0x08,
-    ACK  = 0x10,
-    URG  = 0x20
-};
+    enum : word
+    {
+        FIN = 0x01,
+        SYN = 0x02,
+        RST = 0x04,
+        PUSH = 0x08,
+        ACK = 0x10,
+        URG = 0x20
+    };
 };
 
-class [[gnu::packed]] TCPPacket {
+class [[gnu::packed]] TCPPacket
+{
 public:
-    TCPPacket() { }
-    ~TCPPacket() { }
+    TCPPacket() {}
+    ~TCPPacket() {}
 
     size_t header_size() const { return data_offset() * sizeof(dword); }
 

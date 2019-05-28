@@ -1,9 +1,9 @@
+#include <AK/StringBuilder.h>
 #include <LibCore/CConfigFile.h>
 #include <LibCore/CFile.h>
 #include <LibCore/CUserInfo.h>
-#include <AK/StringBuilder.h>
-#include <stdio.h>
 #include <pwd.h>
+#include <stdio.h>
 #include <unistd.h>
 
 Retained<CConfigFile> CConfigFile::get_for_app(const String& app_name)
@@ -24,17 +24,17 @@ Retained<CConfigFile> CConfigFile::get_for_system(const String& app_name)
 CConfigFile::CConfigFile(const String& file_name)
     : m_file_name(file_name)
 {
-	reparse();
+    reparse();
 }
 
 CConfigFile::~CConfigFile()
 {
-	sync();
+    sync();
 }
 
 void CConfigFile::reparse()
 {
-	m_groups.clear();
+    m_groups.clear();
 
     CFile file(m_file_name);
     if (!file.open(CIODevice::OpenMode::ReadOnly))
@@ -46,38 +46,38 @@ void CConfigFile::reparse()
         auto line = file.read_line(BUFSIZ);
         auto* cp = (const char*)line.pointer();
 
-        while(*cp && (*cp == ' ' || *cp == '\t' || *cp == '\n'))
-			++cp;
+        while (*cp && (*cp == ' ' || *cp == '\t' || *cp == '\n'))
+            ++cp;
 
         switch (*cp) {
-			case '\0':// EOL...
-			case '#': // Comment, skip entire line.
-			case ';': // -||-
-				continue;
-            case '[': { // Start of new group.
-                StringBuilder builder;
-				++cp; // Skip the '['
-                while (*cp && (*cp != ']'))
-                    builder.append(*(cp++));
-                current_group = &m_groups.ensure(builder.to_string());
-				break;
-			}
-            default: { // Start of key{
-                StringBuilder key_builder;
-                StringBuilder value_builder;
-                while (*cp && (*cp != '='))
-                    key_builder.append(*(cp++));
-				++cp; // Skip the '='
-                while (*cp && (*cp != '\n'))
-                    value_builder.append(*(cp++));
-                if (!current_group) {
-					// We're not in a group yet, create one with the name ""...
-                    current_group = &m_groups.ensure("");
-				}
-                current_group->set(key_builder.to_string(), value_builder.to_string());
-			}
-		}
-	}
+        case '\0': // EOL...
+        case '#':  // Comment, skip entire line.
+        case ';':  // -||-
+            continue;
+        case '[': { // Start of new group.
+            StringBuilder builder;
+            ++cp; // Skip the '['
+            while (*cp && (*cp != ']'))
+                builder.append(*(cp++));
+            current_group = &m_groups.ensure(builder.to_string());
+            break;
+        }
+        default: { // Start of key{
+            StringBuilder key_builder;
+            StringBuilder value_builder;
+            while (*cp && (*cp != '='))
+                key_builder.append(*(cp++));
+            ++cp; // Skip the '='
+            while (*cp && (*cp != '\n'))
+                value_builder.append(*(cp++));
+            if (!current_group) {
+                // We're not in a group yet, create one with the name ""...
+                current_group = &m_groups.ensure("");
+            }
+            current_group->set(key_builder.to_string(), value_builder.to_string());
+        }
+        }
+    }
 }
 
 String CConfigFile::read_entry(const String& group, const String& key, const String& default_value) const
@@ -91,7 +91,7 @@ String CConfigFile::read_entry(const String& group, const String& key, const Str
     return jt->value;
 }
 
-int CConfigFile::read_num_entry(const String& group, const String &key, int default_value) const
+int CConfigFile::read_num_entry(const String& group, const String& key, int default_value) const
 {
     if (!has_key(group, key)) {
         const_cast<CConfigFile&>(*this).write_num_entry(group, key, default_value);
@@ -105,7 +105,7 @@ int CConfigFile::read_num_entry(const String& group, const String &key, int defa
     return value;
 }
 
-Color CConfigFile::read_color_entry(const String& group, const String &key, Color default_value) const
+Color CConfigFile::read_color_entry(const String& group, const String& key, Color default_value) const
 {
     if (!has_key(group, key)) {
         const_cast<CConfigFile&>(*this).write_color_entry(group, key, default_value);
@@ -116,26 +116,26 @@ Color CConfigFile::read_color_entry(const String& group, const String &key, Colo
     if (shades.size() < 3)
         return default_value;
     bool ok1 = true,
-        ok2 = true,
-        ok3 = true,
-        ok4 = true;
+         ok2 = true,
+         ok3 = true,
+         ok4 = true;
     Color value;
     if (shades.size() == 3) {
         value = Color(shades[0].to_uint(ok1),
-                      shades[1].to_uint(ok2),
-                      shades[2].to_uint(ok3));
+            shades[1].to_uint(ok2),
+            shades[2].to_uint(ok3));
     } else {
         value = Color(shades[0].to_uint(ok1),
-                      shades[1].to_uint(ok2),
-                      shades[2].to_uint(ok3),
-                      shades[3].to_uint(ok4));
+            shades[1].to_uint(ok2),
+            shades[2].to_uint(ok3),
+            shades[3].to_uint(ok4));
     }
     if (!(ok1 && ok2 && ok3 && ok4))
         return default_value;
     return value;
 }
 
-bool CConfigFile::read_bool_entry(const String& group, const String &key, bool default_value) const
+bool CConfigFile::read_bool_entry(const String& group, const String& key, bool default_value) const
 {
     return read_entry(group, key, default_value ? "1" : "0") == "1";
 }
@@ -143,7 +143,7 @@ bool CConfigFile::read_bool_entry(const String& group, const String &key, bool d
 void CConfigFile::write_entry(const String& group, const String& key, const String& value)
 {
     m_groups.ensure(group).ensure(key) = value;
-	m_dirty = true;
+    m_dirty = true;
 }
 
 void CConfigFile::write_num_entry(const String& group, const String& key, int value)
@@ -152,32 +152,29 @@ void CConfigFile::write_num_entry(const String& group, const String& key, int va
 }
 void CConfigFile::write_color_entry(const String& group, const String& key, Color value)
 {
-    write_entry(group, key, String::format("%d,%d,%d,%d", value.red(),
-                                           value.green(),
-                                           value.blue(),
-                                           value.alpha()));
+    write_entry(group, key, String::format("%d,%d,%d,%d", value.red(), value.green(), value.blue(), value.alpha()));
 }
 
 bool CConfigFile::sync()
 {
     if (!m_dirty)
-		return true;
+        return true;
 
-    FILE *fp = fopen(m_file_name.characters(), "wb");
+    FILE* fp = fopen(m_file_name.characters(), "wb");
     if (!fp)
-		return false;
+        return false;
 
     for (auto& it : m_groups) {
         fprintf(fp, "[%s]\n", it.key.characters());
         for (auto& jt : it.value)
             fprintf(fp, "%s=%s\n", jt.key.characters(), jt.value.characters());
         fprintf(fp, "\n");
-	}
+    }
 
     fclose(fp);
 
-	m_dirty = false;
-	return true;
+    m_dirty = false;
+    return true;
 }
 
 void CConfigFile::dump() const
@@ -187,7 +184,7 @@ void CConfigFile::dump() const
         for (auto& jt : it.value)
             printf("%s=%s\n", jt.key.characters(), jt.value.characters());
         printf("\n");
-	}
+    }
 }
 
 Vector<String> CConfigFile::groups() const
@@ -199,7 +196,7 @@ Vector<String> CConfigFile::keys(const String& group) const
 {
     auto it = m_groups.find(group);
     if (it == m_groups.end())
-        return { };
+        return {};
     return it->value.keys();
 }
 
@@ -207,7 +204,7 @@ bool CConfigFile::has_key(const String& group, const String& key) const
 {
     auto it = m_groups.find(group);
     if (it == m_groups.end())
-        return { };
+        return {};
     return it->value.contains(key);
 }
 
@@ -219,7 +216,7 @@ bool CConfigFile::has_group(const String& group) const
 void CConfigFile::remove_group(const String& group)
 {
     m_groups.remove(group);
-	m_dirty = true;
+    m_dirty = true;
 }
 
 void CConfigFile::remove_entry(const String& group, const String& key)
@@ -228,5 +225,5 @@ void CConfigFile::remove_entry(const String& group, const String& key)
     if (it == m_groups.end())
         return;
     it->value.remove(key);
-	m_dirty = true;
+    m_dirty = true;
 }

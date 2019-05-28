@@ -1,18 +1,19 @@
 #pragma once
 
-#include <LibCore/CObject.h>
 #include <AK/ByteBuffer.h>
+#include <LibCore/CObject.h>
 
 class CIODevice : public CObject {
 public:
-    enum OpenMode {
-        NotOpen      = 0,
-        ReadOnly     = 1,
-        WriteOnly    = 2,
-        ReadWrite    = 3,
-        Append       = 4,
-        Truncate     = 8,
-        MustBeNew    = 16,
+    enum OpenMode
+    {
+        NotOpen = 0,
+        ReadOnly = 1,
+        WriteOnly = 2,
+        ReadWrite = 3,
+        Append = 4,
+        Truncate = 8,
+        MustBeNew = 16,
     };
 
     virtual ~CIODevice() override;
@@ -37,7 +38,8 @@ public:
 
     bool can_read() const;
 
-    enum class SeekMode {
+    enum class SeekMode
+    {
         SetPosition,
         FromCurrentPosition,
         FromEndPosition,

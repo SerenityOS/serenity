@@ -1,13 +1,12 @@
 #pragma once
 
-#include "kstdio.h"
 #include "HashFunctions.h"
+#include "kstdio.h"
 
 namespace AK {
 
 template<typename T>
-struct Traits 
-{
+struct Traits {
 };
 
 template<>
@@ -38,4 +37,3 @@ struct Traits<T*> {
 };
 
 }
-

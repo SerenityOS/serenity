@@ -1,7 +1,7 @@
 #include "CUserInfo.h"
+#include <pwd.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <pwd.h>
 
 const char* get_current_user_home_path()
 {

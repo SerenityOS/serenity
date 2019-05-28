@@ -31,13 +31,14 @@
 
 namespace AK {
 
-template<typename> class Function;
+template<typename>
+class Function;
 
-template <typename Out, typename... In>
+template<typename Out, typename... In>
 class Function<Out(In...)> {
 public:
     Function() = default;
-    Function(std::nullptr_t) { }
+    Function(std::nullptr_t) {}
 
     template<typename CallableType, class = typename EnableIf<!(IsPointer<CallableType>::value && IsFunction<typename RemovePointer<CallableType>::Type>::value) && IsRvalueReference<CallableType&&>::value>::Type>
     Function(CallableType&& callable)
@@ -82,7 +83,7 @@ public:
 private:
     class CallableWrapperBase {
     public:
-        virtual ~CallableWrapperBase() { }
+        virtual ~CallableWrapperBase() {}
         virtual Out call(In...) const = 0;
     };
 
@@ -109,4 +110,3 @@ private:
 }
 
 using AK::Function;
-

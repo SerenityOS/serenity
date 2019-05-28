@@ -1,8 +1,8 @@
 #pragma once
 
-#include <LibCore/CNetworkJob.h>
-#include <LibCore/CHttpRequest.h>
 #include <AK/HashMap.h>
+#include <LibCore/CHttpRequest.h>
+#include <LibCore/CNetworkJob.h>
 
 class CTCPSocket;
 
@@ -18,7 +18,8 @@ public:
 private:
     void on_socket_connected();
 
-    enum class State {
+    enum class State
+    {
         InStatus,
         InHeaders,
         InBody,

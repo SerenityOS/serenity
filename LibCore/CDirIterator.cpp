@@ -65,4 +65,3 @@ String CDirIterator::next_path()
     m_next = String();
     return tmp;
 }
-

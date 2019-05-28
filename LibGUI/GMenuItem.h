@@ -8,7 +8,12 @@ class GMenu;
 
 class GMenuItem {
 public:
-    enum Type { Invalid, Action, Separator };
+    enum Type
+    {
+        Invalid,
+        Action,
+        Separator
+    };
 
     GMenuItem(unsigned menu_id, Type);
     GMenuItem(unsigned menu_id, Retained<GAction>&&);
@@ -43,4 +48,3 @@ private:
     bool m_checked { false };
     RetainPtr<GAction> m_action;
 };
-

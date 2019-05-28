@@ -6,27 +6,27 @@
 namespace AK {
 
 template<class T>
-constexpr auto call_will_be_destroyed_if_present(T* object) -> decltype(object->will_be_destroyed(), TrueType { })
+constexpr auto call_will_be_destroyed_if_present(T* object) -> decltype(object->will_be_destroyed(), TrueType {})
 {
     object->will_be_destroyed();
-    return { };
+    return {};
 }
 
 constexpr auto call_will_be_destroyed_if_present(...) -> FalseType
 {
-    return { };
+    return {};
 }
 
 template<class T>
-constexpr auto call_one_retain_left_if_present(T* object) -> decltype(object->one_retain_left(), TrueType { })
+constexpr auto call_one_retain_left_if_present(T* object) -> decltype(object->one_retain_left(), TrueType {})
 {
     object->one_retain_left();
-    return { };
+    return {};
 }
 
 constexpr auto call_one_retain_left_if_present(...) -> FalseType
 {
-    return { };
+    return {};
 }
 
 class RetainableBase {
@@ -43,7 +43,7 @@ public:
     }
 
 protected:
-    RetainableBase() { }
+    RetainableBase() {}
     ~RetainableBase()
     {
         ASSERT(!m_retain_count);
@@ -76,4 +76,3 @@ public:
 }
 
 using AK::Retainable;
-

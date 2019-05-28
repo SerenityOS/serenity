@@ -32,7 +32,7 @@ private:
     };
 
 public:
-    HashMap() { }
+    HashMap() {}
 
     HashMap(HashMap&& other)
         : m_table(move(other.m_table))
@@ -115,13 +115,13 @@ private:
 template<typename K, typename V>
 void HashMap<K, V>::set(const K& key, V&& value)
 {
-    m_table.set(Entry{key, move(value)});
+    m_table.set(Entry { key, move(value) });
 }
 
 template<typename K, typename V>
 void HashMap<K, V>::set(const K& key, const V& value)
 {
-    m_table.set(Entry{key, value});
+    m_table.set(Entry { key, value });
 }
 
 template<typename K, typename V>
@@ -148,4 +148,3 @@ auto HashMap<K, V>::find(const K& key) const -> ConstIteratorType
 }
 
 using AK::HashMap;
-

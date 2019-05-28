@@ -1,16 +1,17 @@
 #pragma once
 
-#include <LibCore/CObject.h>
-#include <LibGUI/GWindowType.h>
-#include <SharedGraphics/Rect.h>
-#include <SharedGraphics/GraphicsBitmap.h>
 #include <AK/AKString.h>
 #include <AK/WeakPtr.h>
+#include <LibCore/CObject.h>
+#include <LibGUI/GWindowType.h>
+#include <SharedGraphics/GraphicsBitmap.h>
+#include <SharedGraphics/Rect.h>
 
 class GWidget;
 class GWMEvent;
 
-enum class GStandardCursor {
+enum class GStandardCursor
+{
     None = 0,
     Arrow,
     IBeam,

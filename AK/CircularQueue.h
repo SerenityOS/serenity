@@ -60,9 +60,14 @@ public:
         }
 
         const T& operator*() const { return m_queue.m_elements[m_index]; }
+
     private:
         friend class CircularQueue;
-        ConstIterator(const CircularQueue& queue, const int index) : m_queue(queue), m_index(index) { }
+        ConstIterator(const CircularQueue& queue, const int index)
+            : m_queue(queue)
+            , m_index(index)
+        {
+        }
         const CircularQueue& m_queue;
         int m_index { 0 };
     };
@@ -82,4 +87,3 @@ private:
 }
 
 using AK::CircularQueue;
-

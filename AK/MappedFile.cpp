@@ -1,9 +1,9 @@
 #include <AK/MappedFile.h>
+#include <fcntl.h>
+#include <stdio.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
-#include <fcntl.h>
 #include <unistd.h>
-#include <stdio.h>
 
 //#define DEBUG_MAPPED_FILE
 
@@ -14,7 +14,7 @@ MappedFile::MappedFile(const String& file_name)
 {
     m_size = PAGE_SIZE;
     m_fd = open(m_file_name.characters(), O_RDONLY | O_CLOEXEC);
-    
+
     if (m_fd != -1) {
         struct stat st;
         fstat(m_fd, &st);
@@ -44,7 +44,7 @@ void MappedFile::unmap()
     ASSERT(rc == 0);
     rc = close(m_fd);
     ASSERT(rc == 0);
-    m_file_name = { };
+    m_file_name = {};
     m_size = 0;
     m_fd = -1;
     m_map = (void*)-1;
@@ -74,4 +74,3 @@ MappedFile& MappedFile::operator=(MappedFile&& other)
 }
 
 }
-

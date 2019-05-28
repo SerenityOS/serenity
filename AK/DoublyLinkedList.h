@@ -9,22 +9,28 @@ template<typename T>
 class DoublyLinkedList {
 private:
     struct Node {
-        explicit Node(const T& v) : value(v) { }
-        explicit Node(T&& v) : value(move(v)) { }
+        explicit Node(const T& v)
+            : value(v)
+        {
+        }
+        explicit Node(T&& v)
+            : value(move(v))
+        {
+        }
         T value;
         Node* next { nullptr };
         Node* prev { nullptr };
     };
 
 public:
-    DoublyLinkedList() { }
+    DoublyLinkedList() {}
     ~DoublyLinkedList() { clear(); }
 
     bool is_empty() const { return !head(); }
 
     void clear()
     {
-        for (auto* node = m_head; node; ) {
+        for (auto* node = m_head; node;) {
             auto* next = node->next;
             delete node;
             node = next;
@@ -33,15 +39,30 @@ public:
         m_tail = nullptr;
     }
 
-    T& first() { ASSERT(head()); return head()->value; }
-    const T& first() const { ASSERT(head()); return head()->value; }
-    T& last() { ASSERT(head()); return tail()->value; }
-    const T& last() const { ASSERT(head()); return tail()->value; }
+    T& first()
+    {
+        ASSERT(head());
+        return head()->value;
+    }
+    const T& first() const
+    {
+        ASSERT(head());
+        return head()->value;
+    }
+    T& last()
+    {
+        ASSERT(head());
+        return tail()->value;
+    }
+    const T& last() const
+    {
+        ASSERT(head());
+        return tail()->value;
+    }
 
     void append(T&& value)
     {
         append_node(new Node(move(value)));
-
     }
 
     void append(const T& value)
@@ -62,14 +83,22 @@ public:
     public:
         bool operator!=(const Iterator& other) const { return m_node != other.m_node; }
         bool operator==(const Iterator& other) const { return m_node == other.m_node; }
-        Iterator& operator++() { m_node = m_node->next; return *this; }
+        Iterator& operator++()
+        {
+            m_node = m_node->next;
+            return *this;
+        }
         T& operator*() { return m_node->value; }
         T* operator->() { return &m_node->value; }
         bool is_end() const { return !m_node; }
         static Iterator universal_end() { return Iterator(nullptr); }
+
     private:
         friend class DoublyLinkedList;
-        explicit Iterator(DoublyLinkedList::Node* node) : m_node(node) { }
+        explicit Iterator(DoublyLinkedList::Node* node)
+            : m_node(node)
+        {
+        }
         DoublyLinkedList::Node* m_node;
     };
 
@@ -80,14 +109,22 @@ public:
     public:
         bool operator!=(const ConstIterator& other) const { return m_node != other.m_node; }
         bool operator==(const ConstIterator& other) const { return m_node == other.m_node; }
-        ConstIterator& operator++() { m_node = m_node->next; return *this; }
+        ConstIterator& operator++()
+        {
+            m_node = m_node->next;
+            return *this;
+        }
         const T& operator*() const { return m_node->value; }
         const T* operator->() const { return &m_node->value; }
         bool is_end() const { return !m_node; }
         static ConstIterator universal_end() { return ConstIterator(nullptr); }
+
     private:
         friend class DoublyLinkedList;
-        explicit ConstIterator(const DoublyLinkedList::Node* node) : m_node(node) { }
+        explicit ConstIterator(const DoublyLinkedList::Node* node)
+            : m_node(node)
+        {
+        }
         const DoublyLinkedList::Node* m_node;
     };
 
@@ -163,4 +200,3 @@ private:
 }
 
 using AK::DoublyLinkedList;
-

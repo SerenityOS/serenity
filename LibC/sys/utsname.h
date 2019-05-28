@@ -17,4 +17,3 @@ struct utsname {
 int uname(struct utsname*);
 
 __END_DECLS
-

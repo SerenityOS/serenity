@@ -27,4 +27,3 @@ int closedir(DIR*);
 struct dirent* readdir(DIR*);
 
 __END_DECLS
-

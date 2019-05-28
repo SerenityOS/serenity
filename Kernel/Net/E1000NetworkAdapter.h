@@ -1,12 +1,13 @@
 #pragma once
 
+#include <AK/OwnPtr.h>
+#include <Kernel/IRQHandler.h>
 #include <Kernel/Net/NetworkAdapter.h>
 #include <Kernel/PCI.h>
 #include <Kernel/VM/MemoryManager.h>
-#include <Kernel/IRQHandler.h>
-#include <AK/OwnPtr.h>
 
-class E1000NetworkAdapter final : public NetworkAdapter, public IRQHandler {
+class E1000NetworkAdapter final : public NetworkAdapter
+    , public IRQHandler {
 public:
     static E1000NetworkAdapter* the();
 
@@ -21,7 +22,8 @@ private:
     virtual void handle_irq() override;
     virtual const char* class_name() const override { return "E1000NetworkAdapter"; }
 
-    struct [[gnu::packed]] e1000_rx_desc {
+    struct [[gnu::packed]] e1000_rx_desc
+    {
         volatile uint64_t addr { 0 };
         volatile uint16_t length { 0 };
         volatile uint16_t checksum { 0 };
@@ -30,7 +32,8 @@ private:
         volatile uint16_t special { 0 };
     };
 
-    struct [[gnu::packed]] e1000_tx_desc {
+    struct [[gnu::packed]] e1000_tx_desc
+    {
         volatile uint64_t addr { 0 };
         volatile uint16_t length { 0 };
         volatile uint8_t cso { 0 };

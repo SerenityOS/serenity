@@ -1,9 +1,9 @@
 #pragma once
 
-#include "Types.h"
 #include "StdLibExtras.h"
-#include <AK/Retainable.h>
+#include "Types.h"
 #include <AK/RetainPtr.h>
+#include <AK/Retainable.h>
 #include <AK/kmalloc.h>
 
 namespace AK {
@@ -28,8 +28,16 @@ public:
         m_data = nullptr;
     }
 
-    byte& operator[](int i) { ASSERT(i < m_size); return m_data[i]; }
-    const byte& operator[](int i) const { ASSERT(i < m_size); return m_data[i]; }
+    byte& operator[](int i)
+    {
+        ASSERT(i < m_size);
+        return m_data[i];
+    }
+    const byte& operator[](int i) const
+    {
+        ASSERT(i < m_size);
+        return m_data[i];
+    }
     bool is_empty() const { return !m_size; }
     int size() const { return m_size; }
 
@@ -52,11 +60,16 @@ public:
     void grow(int size);
 
 private:
-    enum ConstructionMode { Uninitialized, Copy, Wrap, Adopt };
-    explicit ByteBufferImpl(int); // For ConstructionMode=Uninitialized
+    enum ConstructionMode {
+        Uninitialized,
+        Copy,
+        Wrap,
+        Adopt
+    };
+    explicit ByteBufferImpl(int);                       // For ConstructionMode=Uninitialized
     ByteBufferImpl(const void*, int, ConstructionMode); // For ConstructionMode=Copy
-    ByteBufferImpl(void*, int, ConstructionMode); // For ConstructionMode=Wrap/Adopt
-    ByteBufferImpl() { }
+    ByteBufferImpl(void*, int, ConstructionMode);       // For ConstructionMode=Wrap/Adopt
+    ByteBufferImpl() {}
 
     byte* m_data { nullptr };
     int m_size { 0 };
@@ -65,8 +78,8 @@ private:
 
 class ByteBuffer {
 public:
-    ByteBuffer() { }
-    ByteBuffer(std::nullptr_t) { }
+    ByteBuffer() {}
+    ByteBuffer(std::nullptr_t) {}
     ByteBuffer(const ByteBuffer& other)
         : m_impl(other.m_impl.copy_ref())
     {
@@ -101,8 +114,16 @@ public:
     bool operator!() const { return is_null(); }
     bool is_null() const { return m_impl == nullptr; }
 
-    byte& operator[](ssize_t i) { ASSERT(m_impl); return (*m_impl)[i]; }
-    byte operator[](ssize_t i) const { ASSERT(m_impl); return (*m_impl)[i]; }
+    byte& operator[](ssize_t i)
+    {
+        ASSERT(m_impl);
+        return (*m_impl)[i];
+    }
+    byte operator[](ssize_t i) const
+    {
+        ASSERT(m_impl);
+        return (*m_impl)[i];
+    }
     bool is_empty() const { return !m_impl || m_impl->is_empty(); }
     ssize_t size() const { return m_impl ? m_impl->size() : 0; }
 
@@ -121,7 +142,7 @@ public:
     ByteBuffer isolated_copy() const
     {
         if (!m_impl)
-            return { };
+            return {};
         return copy(m_impl->pointer(), m_impl->size());
     }
 
@@ -135,9 +156,9 @@ public:
     ByteBuffer slice(ssize_t offset, ssize_t size) const
     {
         if (is_null())
-            return { };
+            return {};
         if (offset >= this->size())
-            return { };
+            return {};
         if (offset + size >= this->size())
             size = this->size() - offset;
         return copy(offset_pointer(offset), size);
@@ -241,4 +262,3 @@ inline Retained<ByteBufferImpl> ByteBufferImpl::adopt(void* data, int size)
 }
 
 using AK::ByteBuffer;
-

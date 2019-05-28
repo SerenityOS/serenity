@@ -14,7 +14,7 @@ struct hostent {
 #define h_addr h_addr_list[0]
 };
 
-struct hostent *gethostbyname(const char*);
+struct hostent* gethostbyname(const char*);
 
 struct servent {
     char* s_name;

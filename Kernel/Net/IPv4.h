@@ -5,7 +5,8 @@
 #include <AK/NetworkOrdered.h>
 #include <AK/Types.h>
 
-enum class IPv4Protocol : word {
+enum class IPv4Protocol : word
+{
     ICMP = 1,
     TCP = 6,
     UDP = 17,
@@ -13,9 +14,10 @@ enum class IPv4Protocol : word {
 
 NetworkOrdered<word> internet_checksum(const void*, size_t);
 
-class [[gnu::packed]] IPv4Address {
+class [[gnu::packed]] IPv4Address
+{
 public:
-    IPv4Address() { }
+    IPv4Address() {}
     IPv4Address(const byte data[4])
     {
         m_data[0] = data[0];
@@ -64,7 +66,8 @@ struct Traits<IPv4Address> {
 
 }
 
-class [[gnu::packed]] IPv4Packet {
+class [[gnu::packed]] IPv4Packet
+{
 public:
     byte version() const { return (m_version_and_ihl >> 4) & 0xf; }
     void set_version(byte version) { m_version_and_ihl = (m_version_and_ihl & 0x0f) | (version << 4); }

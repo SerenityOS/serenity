@@ -1,7 +1,7 @@
 #pragma once
 
-#include <LibCore/CEventLoop.h>
 #include <AK/ByteBuffer.h>
+#include <LibCore/CEventLoop.h>
 
 class WSClientConnection;
 struct WSAPI_ClientMessage;

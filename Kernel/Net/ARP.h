@@ -1,23 +1,26 @@
 #pragma once
 
-#include <Kernel/Net/MACAddress.h>
-#include <Kernel/Net/IPv4.h>
 #include <Kernel/Net/EtherType.h>
+#include <Kernel/Net/IPv4.h>
+#include <Kernel/Net/MACAddress.h>
 
 struct ARPOperation {
-enum : word {
-    Request = 1,
-    Response = 2,
-};
+    enum : word
+    {
+        Request = 1,
+        Response = 2,
+    };
 };
 
 struct ARPHardwareType {
-enum : word {
-    Ethernet = 1,
-};
+    enum : word
+    {
+        Ethernet = 1,
+    };
 };
 
-class [[gnu::packed]] ARPPacket {
+class [[gnu::packed]] ARPPacket
+{
 public:
     word hardware_type() const { return ntohs(m_hardware_type); }
     void set_hardware_type(word w) { m_hardware_type = htons(w); }

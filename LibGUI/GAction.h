@@ -1,23 +1,25 @@
 #pragma once
 
 #include <AK/AKString.h>
+#include <AK/Badge.h>
 #include <AK/Function.h>
+#include <AK/HashTable.h>
 #include <AK/Retainable.h>
 #include <AK/Retained.h>
-#include <AK/Weakable.h>
 #include <AK/WeakPtr.h>
-#include <AK/Badge.h>
-#include <AK/HashTable.h>
-#include <SharedGraphics/GraphicsBitmap.h>
+#include <AK/Weakable.h>
 #include <LibGUI/GShortcut.h>
+#include <SharedGraphics/GraphicsBitmap.h>
 
 class GButton;
 class GMenuItem;
 class GWidget;
 
-class GAction : public Retainable<GAction>, public Weakable<GAction> {
+class GAction : public Retainable<GAction>
+    , public Weakable<GAction> {
 public:
-    enum class ShortcutScope {
+    enum class ShortcutScope
+    {
         None,
         ApplicationGlobal,
         WidgetLocal,
@@ -62,7 +64,11 @@ public:
     bool is_checkable() const { return m_checkable; }
     void set_checkable(bool checkable) { m_checkable = checkable; }
 
-    bool is_checked() const { ASSERT(is_checkable()); return m_checked; }
+    bool is_checked() const
+    {
+        ASSERT(is_checkable());
+        return m_checked;
+    }
     void set_checked(bool);
 
     void register_button(Badge<GButton>, GButton&);
@@ -77,8 +83,10 @@ private:
     GAction(const String& text, RetainPtr<GraphicsBitmap>&& icon, Function<void(GAction&)> = nullptr, GWidget* = nullptr);
     GAction(const String& text, const String& custom_data = String(), Function<void(GAction&)> = nullptr, GWidget* = nullptr);
 
-    template<typename Callback> void for_each_toolbar_button(Callback);
-    template<typename Callback> void for_each_menu_item(Callback);
+    template<typename Callback>
+    void for_each_toolbar_button(Callback);
+    template<typename Callback>
+    void for_each_menu_item(Callback);
 
     String m_text;
     String m_custom_data;

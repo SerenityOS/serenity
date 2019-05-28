@@ -2,7 +2,7 @@
 
 class GMargins {
 public:
-    GMargins() { }
+    GMargins() {}
     GMargins(int left, int top, int right, int bottom)
         : m_left(left)
         , m_top(top)
@@ -10,7 +10,7 @@ public:
         , m_bottom(bottom)
     {
     }
-    ~GMargins() { }
+    ~GMargins() {}
 
     bool is_null() const { return !m_left && !m_top && !m_right && !m_bottom; }
 

@@ -1,15 +1,18 @@
 #pragma once
 
 #include <Kernel/DoubleBuffer.h>
-#include <Kernel/UnixTypes.h>
 #include <Kernel/File.h>
+#include <Kernel/UnixTypes.h>
 
 class FileDescriptor;
 
 class FIFO final : public File {
 public:
-    enum class Direction : byte {
-        Neither, Reader, Writer
+    enum class Direction : byte
+    {
+        Neither,
+        Reader,
+        Writer
     };
 
     static RetainPtr<FIFO> from_fifo_id(dword);

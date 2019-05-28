@@ -1,9 +1,9 @@
 #pragma once
 
+#include <AK/HashMap.h>
 #include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/UnixTypes.h>
-#include <AK/HashMap.h>
 
 class SynthFSInode;
 
@@ -47,6 +47,7 @@ struct SynthFSInodeCustomData {
 class SynthFSInode final : public Inode {
     friend class SynthFS;
     friend class DevPtsFS;
+
 public:
     virtual ~SynthFSInode() override;
 

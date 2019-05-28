@@ -112,8 +112,16 @@ public:
         return m_outline_buffer;
     }
 
-    const T& at(int i) const { ASSERT(i >= 0 && i < m_size); return data()[i]; }
-    T& at(int i) { ASSERT(i >= 0 && i < m_size); return data()[i]; }
+    const T& at(int i) const
+    {
+        ASSERT(i >= 0 && i < m_size);
+        return data()[i];
+    }
+    T& at(int i)
+    {
+        ASSERT(i >= 0 && i < m_size);
+        return data()[i];
+    }
 
     const T& operator[](int i) const { return at(i); }
     T& operator[](int i) { return at(i); }
@@ -314,8 +322,16 @@ public:
         bool operator<(const Iterator& other) { return m_index < other.m_index; }
         bool operator>(const Iterator& other) { return m_index > other.m_index; }
         bool operator>=(const Iterator& other) { return m_index >= other.m_index; }
-        Iterator& operator++() { ++m_index; return *this; }
-        Iterator& operator--() { --m_index; return *this; }
+        Iterator& operator++()
+        {
+            ++m_index;
+            return *this;
+        }
+        Iterator& operator--()
+        {
+            --m_index;
+            return *this;
+        }
         Iterator operator-(int value) { return { m_vector, m_index - value }; }
         Iterator operator+(int value) { return { m_vector, m_index + value }; }
         Iterator& operator=(const Iterator& other)
@@ -325,9 +341,14 @@ public:
         }
         T& operator*() { return m_vector[m_index]; }
         int operator-(const Iterator& other) { return m_index - other.m_index; }
+
     private:
         friend class Vector;
-        Iterator(Vector& vector, int index) : m_vector(vector), m_index(index) { }
+        Iterator(Vector& vector, int index)
+            : m_vector(vector)
+            , m_index(index)
+        {
+        }
         Vector& m_vector;
         int m_index { 0 };
     };
@@ -342,8 +363,16 @@ public:
         bool operator<(const ConstIterator& other) { return m_index < other.m_index; }
         bool operator>(const ConstIterator& other) { return m_index > other.m_index; }
         bool operator>=(const ConstIterator& other) { return m_index >= other.m_index; }
-        ConstIterator& operator++() { ++m_index; return *this; }
-        ConstIterator& operator--() { --m_index; return *this; }
+        ConstIterator& operator++()
+        {
+            ++m_index;
+            return *this;
+        }
+        ConstIterator& operator--()
+        {
+            --m_index;
+            return *this;
+        }
         ConstIterator operator-(int value) { return { m_vector, m_index - value }; }
         ConstIterator operator+(int value) { return { m_vector, m_index + value }; }
         ConstIterator& operator=(const ConstIterator& other)
@@ -353,9 +382,14 @@ public:
         }
         const T& operator*() const { return m_vector[m_index]; }
         int operator-(const ConstIterator& other) { return m_index - other.m_index; }
+
     private:
         friend class Vector;
-        ConstIterator(const Vector& vector, const int index) : m_vector(vector), m_index(index) { }
+        ConstIterator(const Vector& vector, const int index)
+            : m_vector(vector)
+            , m_index(index)
+        {
+        }
         const Vector& m_vector;
         int m_index { 0 };
     };
@@ -377,8 +411,16 @@ private:
     T* slot(int i) { return &data()[i]; }
     const T* slot(int i) const { return &data()[i]; }
 
-    T* inline_buffer() { static_assert(inline_capacity > 0); return reinterpret_cast<T*>(m_inline_buffer_storage); }
-    const T* inline_buffer() const { static_assert(inline_capacity > 0); return reinterpret_cast<const T*>(m_inline_buffer_storage); }
+    T* inline_buffer()
+    {
+        static_assert(inline_capacity > 0);
+        return reinterpret_cast<T*>(m_inline_buffer_storage);
+    }
+    const T* inline_buffer() const
+    {
+        static_assert(inline_capacity > 0);
+        return reinterpret_cast<const T*>(m_inline_buffer_storage);
+    }
 
     int m_size { 0 };
     int m_capacity { 0 };

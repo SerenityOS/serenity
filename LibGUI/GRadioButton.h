@@ -17,11 +17,13 @@ protected:
 private:
     virtual bool is_radio_button() const final { return true; }
 
-    template<typename Callback> void for_each_in_group(Callback);
+    template<typename Callback>
+    void for_each_in_group(Callback);
     static Size circle_size();
 };
 
-template<> inline bool is<GRadioButton>(const CObject& object)
+template<>
+inline bool is<GRadioButton>(const CObject& object)
 {
     if (!is<GWidget>(object))
         return false;

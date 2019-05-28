@@ -3,18 +3,18 @@
 #include <AK/ByteBuffer.h>
 #include <AK/RetainPtr.h>
 #include <AK/StringImpl.h>
+#include <AK/StringView.h>
 #include <AK/Traits.h>
 #include <AK/Vector.h>
-#include <AK/StringView.h>
 #include <AK/kstdio.h>
 
 namespace AK {
 
 class String {
 public:
-    ~String() { }
+    ~String() {}
 
-    String() { }
+    String() {}
 
     String(StringView view)
         : m_impl(StringImpl::create(view.characters(), view.length()))
@@ -96,7 +96,11 @@ public:
     bool is_empty() const { return length() == 0; }
     ssize_t length() const { return m_impl ? m_impl->length() : 0; }
     const char* characters() const { return m_impl ? m_impl->characters() : nullptr; }
-    char operator[](ssize_t i) const { ASSERT(m_impl); return (*m_impl)[i]; }
+    char operator[](ssize_t i) const
+    {
+        ASSERT(m_impl);
+        return (*m_impl)[i];
+    }
 
     bool ends_with(const String&) const;
 
@@ -131,7 +135,7 @@ public:
     static String copy(const BufferType& buffer, ShouldChomp should_chomp = NoChomp)
     {
         if (buffer.is_null())
-            return { };
+            return {};
         if (buffer.is_empty())
             return empty();
         return String((const char*)buffer.data(), buffer.size(), should_chomp);

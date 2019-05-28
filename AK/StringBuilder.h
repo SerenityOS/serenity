@@ -9,7 +9,7 @@ namespace AK {
 class StringBuilder {
 public:
     explicit StringBuilder(ssize_t initial_capacity = 16);
-    ~StringBuilder() { }
+    ~StringBuilder() {}
 
     void append(const String&);
     void append(char);
@@ -30,4 +30,3 @@ private:
 }
 
 using AK::StringBuilder;
-

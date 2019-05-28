@@ -52,4 +52,3 @@ private:
     unsigned short m_rows { 0 };
     unsigned short m_columns { 0 };
 };
-

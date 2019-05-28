@@ -1,7 +1,7 @@
 #pragma once
 
-#include <LibCore/CObject.h>
 #include <AK/Function.h>
+#include <LibCore/CObject.h>
 
 class CTimer final : public CObject {
 public:

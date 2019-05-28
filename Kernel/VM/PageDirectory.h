@@ -1,13 +1,14 @@
 #pragma once
 
+#include <AK/HashMap.h>
+#include <AK/RetainPtr.h>
+#include <AK/Retainable.h>
 #include <Kernel/VM/PhysicalPage.h>
 #include <Kernel/VM/RangeAllocator.h>
-#include <AK/HashMap.h>
-#include <AK/Retainable.h>
-#include <AK/RetainPtr.h>
 
 class PageDirectory : public Retainable<PageDirectory> {
     friend class MemoryManager;
+
 public:
     static Retained<PageDirectory> create_for_userspace(const RangeAllocator* parent_range_allocator = nullptr) { return adopt(*new PageDirectory(parent_range_allocator)); }
     static Retained<PageDirectory> create_at_fixed_address(PhysicalAddress paddr) { return adopt(*new PageDirectory(paddr)); }

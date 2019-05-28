@@ -1,20 +1,20 @@
 #pragma once
 
-#include <Kernel/Devices/DiskDevice.h>
 #include "InodeIdentifier.h"
 #include "InodeMetadata.h"
 #include "UnixTypes.h"
+#include <AK/AKString.h>
 #include <AK/ByteBuffer.h>
+#include <AK/Function.h>
 #include <AK/HashMap.h>
 #include <AK/OwnPtr.h>
-#include <AK/Retainable.h>
 #include <AK/RetainPtr.h>
-#include <AK/AKString.h>
-#include <AK/Function.h>
-#include <AK/kstdio.h>
-#include <Kernel/Lock.h>
+#include <AK/Retainable.h>
 #include <AK/WeakPtr.h>
+#include <AK/kstdio.h>
+#include <Kernel/Devices/DiskDevice.h>
 #include <Kernel/KResult.h>
+#include <Kernel/Lock.h>
 
 static const dword mepoch = 476763780;
 
@@ -25,6 +25,7 @@ class VMObject;
 
 class FS : public Retainable<FS> {
     friend class Inode;
+
 public:
     virtual ~FS();
 
@@ -57,7 +58,7 @@ public:
 
     virtual RetainPtr<Inode> get_inode(InodeIdentifier) const = 0;
 
-    virtual void flush_writes() { }
+    virtual void flush_writes() {}
 
 protected:
     FS();
@@ -93,4 +94,3 @@ struct Traits<InodeIdentifier> {
 };
 
 }
-

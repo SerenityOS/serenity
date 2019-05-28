@@ -18,6 +18,7 @@ public:
     {
         return m_client_id == other.m_client_id && m_window_id == other.m_window_id;
     }
+
 private:
     int m_client_id { -1 };
     int m_window_id { -1 };

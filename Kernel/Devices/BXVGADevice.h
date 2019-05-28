@@ -1,10 +1,10 @@
 #pragma once
 
-#include <AK/Types.h>
 #include <AK/AKString.h>
-#include <SharedGraphics/Size.h>
-#include <Kernel/PhysicalAddress.h>
+#include <AK/Types.h>
 #include <Kernel/Devices/BlockDevice.h>
+#include <Kernel/PhysicalAddress.h>
+#include <SharedGraphics/Size.h>
 
 class BXVGADevice final : public BlockDevice {
     AK_MAKE_ETERNAL

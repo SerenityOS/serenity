@@ -1,8 +1,8 @@
 #pragma once
 
 #include <AK/AKString.h>
-#include <AK/HashMap.h>
 #include <AK/Function.h>
+#include <AK/HashMap.h>
 
 class Font;
 
@@ -20,7 +20,8 @@ public:
     void for_each_font(Function<void(const String&)>);
     void for_each_fixed_width_font(Function<void(const String&)>);
 
-    Metadata get_metadata_by_name(const String& name) const {
+    Metadata get_metadata_by_name(const String& name) const
+    {
         return m_name_to_metadata.get(name);
     };
 

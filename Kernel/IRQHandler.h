@@ -18,4 +18,3 @@ protected:
 private:
     byte m_irq_number { 0 };
 };
-

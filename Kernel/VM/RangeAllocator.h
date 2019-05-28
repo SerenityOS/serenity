@@ -1,12 +1,13 @@
 #pragma once
 
-#include <Kernel/LinearAddress.h>
 #include <AK/Vector.h>
+#include <Kernel/LinearAddress.h>
 
 class Range {
     friend class RangeAllocator;
+
 public:
-    Range() { }
+    Range() {}
     Range(LinearAddress base, size_t size)
         : m_base(base)
         , m_size(size)

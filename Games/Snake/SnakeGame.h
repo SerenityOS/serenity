@@ -1,7 +1,7 @@
 #pragma once
 
-#include <LibGUI/GWidget.h>
 #include <AK/CircularQueue.h>
+#include <LibGUI/GWidget.h>
 
 class SnakeGame : public GWidget {
 public:

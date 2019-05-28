@@ -1,12 +1,12 @@
-#include <AK/StringView.h>
 #include <AK/AKString.h>
+#include <AK/StringView.h>
 
 namespace AK {
 
 Vector<StringView> StringView::split_view(const char separator) const
 {
     if (is_empty())
-        return { };
+        return {};
 
     Vector<StringView> v;
     ssize_t substart = 0;
@@ -30,7 +30,7 @@ Vector<StringView> StringView::split_view(const char separator) const
 StringView StringView::substring_view(int start, int length) const
 {
     if (!length)
-        return { };
+        return {};
     ASSERT(start + length <= m_length);
     return { m_characters + start, length };
 }
@@ -49,6 +49,5 @@ unsigned StringView::to_uint(bool& ok) const
     ok = true;
     return value;
 }
-
 
 }

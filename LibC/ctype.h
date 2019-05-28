@@ -1,7 +1,7 @@
 #pragma once
 
-#include <sys/cdefs.h>
 #include <string.h>
+#include <sys/cdefs.h>
 
 __BEGIN_DECLS
 
@@ -38,12 +38,12 @@ int isupper(int);
 #define isxdigit(c) (_ctype_[(int)(c)] & (_N | _X))
 #define isspace(c) (_ctype_[(int)(c)] & (_S))
 #define ispunct(c) (_ctype_[(int)(c)] & (_P))
-#define isprint(c) (_ctype_[(int)(c)] & (_P|_U|_L|_N|_B))
-#define isgraph(c) (_ctype_[(int)(c)] & (_P|_U|_L|_N))
+#define isprint(c) (_ctype_[(int)(c)] & (_P | _U | _L | _N | _B))
+#define isgraph(c) (_ctype_[(int)(c)] & (_P | _U | _L | _N))
 #define islower(c) ((_ctype_[(int)(c)] & (_U | _L)) == _L)
 #define isupper(c) ((_ctype_[(int)(c)] & (_U | _L)) == _U)
 
 #define isascii(c) ((unsigned)c <= 127)
-#define toascii(c) ((c) & 127)
+#define toascii(c) ((c)&127)
 
 __END_DECLS

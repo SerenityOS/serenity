@@ -1,11 +1,16 @@
 #pragma once
 
-#include <LibGUI/GWindow.h>
 #include <LibGUI/GEventLoop.h>
+#include <LibGUI/GWindow.h>
 
 class GDialog : public GWindow {
 public:
-    enum ExecResult { ExecOK = 0, ExecCancel = 1, ExecAborted = 2 };
+    enum ExecResult
+    {
+        ExecOK = 0,
+        ExecCancel = 1,
+        ExecAborted = 2
+    };
 
     virtual ~GDialog() override;
 

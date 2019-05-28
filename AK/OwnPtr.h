@@ -1,24 +1,34 @@
 #pragma once
 
 #include "StdLibExtras.h"
-#include "Types.h"
 #include "Traits.h"
+#include "Types.h"
 
 namespace AK {
 
 template<typename T>
 class OwnPtr {
 public:
-    OwnPtr() { }
-    explicit OwnPtr(T* ptr) : m_ptr(ptr) { }
-    OwnPtr(OwnPtr&& other) : m_ptr(other.leak_ptr()) { }
-    template<typename U> OwnPtr(OwnPtr<U>&& other) : m_ptr(static_cast<T*>(other.leak_ptr())) { }
-    OwnPtr(std::nullptr_t) { };
+    OwnPtr() {}
+    explicit OwnPtr(T* ptr)
+        : m_ptr(ptr)
+    {
+    }
+    OwnPtr(OwnPtr&& other)
+        : m_ptr(other.leak_ptr())
+    {
+    }
+    template<typename U>
+    OwnPtr(OwnPtr<U>&& other)
+        : m_ptr(static_cast<T*>(other.leak_ptr()))
+    {
+    }
+    OwnPtr(std::nullptr_t) {};
     ~OwnPtr()
     {
         clear();
 #ifdef SANITIZE_PTRS
-        if constexpr(sizeof(T*) == 8)
+        if constexpr (sizeof(T*) == 8)
             m_ptr = (T*)(0xe1e1e1e1e1e1e1e1);
         else
             m_ptr = (T*)(0xe1e1e1e1);
@@ -91,7 +101,8 @@ private:
     T* m_ptr = nullptr;
 };
 
-template<class T, class... Args> inline OwnPtr<T>
+template<class T, class... Args>
+inline OwnPtr<T>
 make(Args&&... args)
 {
     return OwnPtr<T>(new T(AK::forward<Args>(args)...));
@@ -105,6 +116,5 @@ struct Traits<OwnPtr<T>> {
 
 }
 
-using AK::OwnPtr;
 using AK::make;
-
+using AK::OwnPtr;

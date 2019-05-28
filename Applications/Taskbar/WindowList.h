@@ -1,10 +1,10 @@
 #pragma once
 
+#include "WindowIdentifier.h"
 #include <AK/AKString.h>
 #include <AK/HashMap.h>
-#include <SharedGraphics/Rect.h>
 #include <LibGUI/GButton.h>
-#include "WindowIdentifier.h"
+#include <SharedGraphics/Rect.h>
 
 class Window {
 public:
@@ -64,7 +64,8 @@ class WindowList {
 public:
     static WindowList& the();
 
-    template<typename Callback> void for_each_window(Callback callback)
+    template<typename Callback>
+    void for_each_window(Callback callback)
     {
         for (auto& it : m_windows)
             callback(*it.value);

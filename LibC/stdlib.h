@@ -1,8 +1,8 @@
 #pragma once
 
+#include <stddef.h>
 #include <sys/cdefs.h>
 #include <sys/types.h>
-#include <stddef.h>
 
 __BEGIN_DECLS
 
@@ -13,7 +13,7 @@ __BEGIN_DECLS
 __attribute__((malloc)) __attribute__((alloc_size(1))) void* malloc(size_t);
 __attribute__((malloc)) __attribute__((alloc_size(1, 2))) void* calloc(size_t nmemb, size_t);
 void free(void*);
-void* realloc(void *ptr, size_t);
+void* realloc(void* ptr, size_t);
 char* getenv(const char* name);
 int putenv(char*);
 int unsetenv(const char*);
@@ -36,7 +36,7 @@ long labs(long);
 double atof(const char*);
 int system(const char* command);
 char* mktemp(char*);
-void* bsearch(const void* key, const void* base, size_t nmemb, size_t size, int (*compar)(const void *, const void *));
+void* bsearch(const void* key, const void* base, size_t nmemb, size_t size, int (*compar)(const void*, const void*));
 
 #define RAND_MAX 32767
 int rand();
@@ -45,10 +45,15 @@ void srand(unsigned seed);
 long int random();
 void srandom(unsigned seed);
 
-typedef struct { int quot; int rem; } div_t;
+typedef struct {
+    int quot;
+    int rem;
+} div_t;
 div_t div(int, int);
-typedef struct { long quot; long rem; } ldiv_t;
+typedef struct {
+    long quot;
+    long rem;
+} ldiv_t;
 ldiv_t ldiv(long, long);
 
 __END_DECLS
-

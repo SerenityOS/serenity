@@ -5,47 +5,54 @@
 
 namespace AK {
 
-template<typename T> class InlineLinkedListNode {
+template<typename T>
+class InlineLinkedListNode {
 public:
     InlineLinkedListNode();
-    
+
     void set_prev(T*);
     void set_next(T*);
-    
+
     T* prev() const;
     T* next() const;
 };
 
-template<typename T> inline InlineLinkedListNode<T>::InlineLinkedListNode()
+template<typename T>
+inline InlineLinkedListNode<T>::InlineLinkedListNode()
 {
     set_prev(0);
     set_next(0);
 }
 
-template<typename T> inline void InlineLinkedListNode<T>::set_prev(T* prev)
+template<typename T>
+inline void InlineLinkedListNode<T>::set_prev(T* prev)
 {
     static_cast<T*>(this)->m_prev = prev;
 }
 
-template<typename T> inline void InlineLinkedListNode<T>::set_next(T* next)
+template<typename T>
+inline void InlineLinkedListNode<T>::set_next(T* next)
 {
     static_cast<T*>(this)->m_next = next;
 }
 
-template<typename T> inline T* InlineLinkedListNode<T>::prev() const
+template<typename T>
+inline T* InlineLinkedListNode<T>::prev() const
 {
     return static_cast<const T*>(this)->m_prev;
 }
 
-template<typename T> inline T* InlineLinkedListNode<T>::next() const
+template<typename T>
+inline T* InlineLinkedListNode<T>::next() const
 {
     return static_cast<const T*>(this)->m_next;
 }
 
-template<typename T> class InlineLinkedList {
+template<typename T>
+class InlineLinkedList {
 public:
-    InlineLinkedList() { }
-    
+    InlineLinkedList() {}
+
     bool is_empty() const { return !m_head; }
     size_t size_slow() const;
     void clear();
@@ -75,7 +82,8 @@ private:
     T* m_tail { nullptr };
 };
 
-template<typename T> inline size_t InlineLinkedList<T>::size_slow() const
+template<typename T>
+inline size_t InlineLinkedList<T>::size_slow() const
 {
     size_t size = 0;
     for (T* node = m_head; node; node = node->next())
@@ -83,13 +91,15 @@ template<typename T> inline size_t InlineLinkedList<T>::size_slow() const
     return size;
 }
 
-template<typename T> inline void InlineLinkedList<T>::clear()
+template<typename T>
+inline void InlineLinkedList<T>::clear()
 {
     m_head = 0;
     m_tail = 0;
 }
 
-template<typename T> inline void InlineLinkedList<T>::prepend(T* node)
+template<typename T>
+inline void InlineLinkedList<T>::prepend(T* node)
 {
     if (!m_head) {
         ASSERT(!m_tail);
@@ -107,7 +117,8 @@ template<typename T> inline void InlineLinkedList<T>::prepend(T* node)
     m_head = node;
 }
 
-template<typename T> inline void InlineLinkedList<T>::append(T* node)
+template<typename T>
+inline void InlineLinkedList<T>::append(T* node)
 {
     if (!m_tail) {
         ASSERT(!m_head);
@@ -125,7 +136,8 @@ template<typename T> inline void InlineLinkedList<T>::append(T* node)
     m_tail = node;
 }
 
-template<typename T> inline void InlineLinkedList<T>::remove(T* node)
+template<typename T>
+inline void InlineLinkedList<T>::remove(T* node)
 {
     if (node->prev()) {
         ASSERT(node != m_head);
@@ -144,7 +156,8 @@ template<typename T> inline void InlineLinkedList<T>::remove(T* node)
     }
 }
 
-template<typename T> inline T* InlineLinkedList<T>::remove_head()
+template<typename T>
+inline T* InlineLinkedList<T>::remove_head()
 {
     T* node = head();
     if (node)
@@ -152,7 +165,8 @@ template<typename T> inline T* InlineLinkedList<T>::remove_head()
     return node;
 }
 
-template<typename T> inline T* InlineLinkedList<T>::remove_tail()
+template<typename T>
+inline T* InlineLinkedList<T>::remove_tail()
 {
     T* node = tail();
     if (node)
@@ -160,7 +174,8 @@ template<typename T> inline T* InlineLinkedList<T>::remove_tail()
     return node;
 }
 
-template<typename T> inline void InlineLinkedList<T>::append(InlineLinkedList<T>& other)
+template<typename T>
+inline void InlineLinkedList<T>::append(InlineLinkedList<T>& other)
 {
     if (!other.head())
         return;

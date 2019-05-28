@@ -1,14 +1,15 @@
 #pragma once
 
-#include <LibGUI/GModel.h>
 #include <AK/Function.h>
+#include <LibGUI/GModel.h>
 
 class IRCClient;
 class IRCWindow;
 
 class IRCWindowListModel final : public GModel {
 public:
-    enum Column {
+    enum Column
+    {
         Name,
     };
 

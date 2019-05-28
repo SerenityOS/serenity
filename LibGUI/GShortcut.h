@@ -1,12 +1,12 @@
 #pragma once
 
-#include <Kernel/KeyCode.h>
 #include <AK/AKString.h>
 #include <AK/Traits.h>
+#include <Kernel/KeyCode.h>
 
 class GShortcut {
 public:
-    GShortcut() { }
+    GShortcut() {}
     GShortcut(byte modifiers, KeyCode key)
         : m_modifiers(modifiers)
         , m_key(key)

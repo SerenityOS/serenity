@@ -7,7 +7,12 @@ class CNotifier;
 
 class CSocket : public CIODevice {
 public:
-    enum class Type { Invalid, TCP, UDP };
+    enum class Type
+    {
+        Invalid,
+        TCP,
+        UDP
+    };
     virtual ~CSocket() override;
 
     bool connect(const String& hostname, int port);

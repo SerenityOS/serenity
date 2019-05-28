@@ -18,4 +18,3 @@ private:
     virtual bool can_read(FileDescriptor&) const override;
     virtual const char* class_name() const override { return "NullDevice"; }
 };
-

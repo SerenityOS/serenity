@@ -1,14 +1,14 @@
 #pragma once
 
+#include "FileSystem.h"
+#include "InodeIdentifier.h"
+#include "InodeMetadata.h"
+#include <AK/AKString.h>
+#include <AK/Function.h>
 #include <AK/HashMap.h>
 #include <AK/OwnPtr.h>
 #include <AK/RetainPtr.h>
-#include <AK/AKString.h>
 #include <AK/Vector.h>
-#include <AK/Function.h>
-#include "InodeIdentifier.h"
-#include "InodeMetadata.h"
-#include "FileSystem.h"
 #include <Kernel/KResult.h>
 
 #define O_RDONLY 0
@@ -116,4 +116,3 @@ private:
     Vector<OwnPtr<Mount>> m_mounts;
     HashMap<dword, Device*> m_devices;
 };
-

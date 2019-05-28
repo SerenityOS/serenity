@@ -1,8 +1,8 @@
 #pragma once
 
 #include <AK/Badge.h>
-#include <AK/OwnPtr.h>
 #include <AK/HashMap.h>
+#include <AK/OwnPtr.h>
 #include <LibGUI/GShortcut.h>
 
 class GAction;

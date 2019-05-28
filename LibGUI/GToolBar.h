@@ -21,7 +21,12 @@ private:
     virtual void paint_event(GPaintEvent&) override;
 
     struct Item {
-        enum Type { Invalid, Separator, Action };
+        enum Type
+        {
+            Invalid,
+            Separator,
+            Action
+        };
         Type type { Invalid };
         RetainPtr<GAction> action;
     };

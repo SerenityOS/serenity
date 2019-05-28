@@ -26,4 +26,3 @@ int shm_open(const char* name, int flags, mode_t);
 int shm_unlink(const char* name);
 
 __END_DECLS
-

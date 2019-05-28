@@ -4,11 +4,18 @@
 #include <AK/Vector.h>
 
 struct Redirection {
-    enum Type { Pipe, FileWrite, FileWriteAppend, FileRead, Rewire };
+    enum Type
+    {
+        Pipe,
+        FileWrite,
+        FileWriteAppend,
+        FileRead,
+        Rewire
+    };
     Type type;
     int fd { -1 };
     int rewire_fd { -1 };
-    String path { };
+    String path {};
 };
 
 struct Subcommand {
@@ -18,7 +25,10 @@ struct Subcommand {
 
 class Parser {
 public:
-    explicit Parser(const String& input) : m_input(input) { }
+    explicit Parser(const String& input)
+        : m_input(input)
+    {
+    }
 
     Vector<Subcommand> parse();
 
@@ -29,7 +39,8 @@ private:
     void begin_redirect_read(int fd);
     void begin_redirect_write(int fd);
 
-    enum State {
+    enum State
+    {
         Free,
         InSingleQuotes,
         InDoubleQuotes,
@@ -44,4 +55,3 @@ private:
     Vector<Redirection> m_redirections;
     Vector<char> m_token;
 };
-

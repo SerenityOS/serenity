@@ -3,9 +3,10 @@
 #include <AK/NetworkOrdered.h>
 #include <AK/Types.h>
 
-class [[gnu::packed]] DNSRecord {
+class [[gnu::packed]] DNSRecord
+{
 public:
-    DNSRecord() { }
+    DNSRecord() {}
 
     word name() const { return m_name; }
     word type() const { return m_type; }

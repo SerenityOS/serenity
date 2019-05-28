@@ -1,7 +1,7 @@
 #include <LibCore/CFile.h>
-#include <unistd.h>
 #include <fcntl.h>
 #include <stdio.h>
+#include <unistd.h>
 
 CFile::CFile(const String& filename)
     : m_filename(filename)

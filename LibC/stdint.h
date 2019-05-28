@@ -55,9 +55,9 @@ typedef __INTMAX_TYPE__ intmax_t;
 #define INTMAX_MIN (-INTMAX_MAX - 1)
 
 #define INT8_MIN (-128)
-#define INT16_MIN (-32767-1)
-#define INT32_MIN (-2147483647-1)
-#define INT64_MIN (-9223372036854775807LL-1LL)
+#define INT16_MIN (-32767 - 1)
+#define INT32_MIN (-2147483647 - 1)
+#define INT64_MIN (-9223372036854775807LL - 1LL)
 #define INT8_MAX (127)
 #define INT16_MAX (32767)
 #define INT32_MAX (2147483647)
@@ -101,8 +101,7 @@ typedef __INTMAX_TYPE__ intmax_t;
 #define UINT_LEAST32_MAX UINT32_MAX
 #define UINT_LEAST64_MAX UINT64_MAX
 
-#define INT64_C(x)  x##LL
+#define INT64_C(x) x##LL
 #define UINT64_C(x) x##ULL
 
 __END_DECLS
-

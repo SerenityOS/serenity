@@ -4,8 +4,9 @@ class GModel;
 
 class GModelIndex {
     friend class GModel;
+
 public:
-    GModelIndex() { }
+    GModelIndex() {}
 
     bool is_valid() const { return m_row != -1 && m_column != -1; }
     int row() const { return m_row; }

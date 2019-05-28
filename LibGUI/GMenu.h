@@ -1,10 +1,10 @@
 #pragma once
 
-#include <LibGUI/GMenuItem.h>
 #include <AK/Function.h>
 #include <AK/Retainable.h>
 #include <AK/Retained.h>
 #include <AK/Vector.h>
+#include <LibGUI/GMenuItem.h>
 
 class GAction;
 class Point;

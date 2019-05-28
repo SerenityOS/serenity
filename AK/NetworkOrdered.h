@@ -18,7 +18,8 @@ template<typename T>
 }
 
 template<typename T>
-class [[gnu::packed]] NetworkOrdered {
+class [[gnu::packed]] NetworkOrdered
+{
 public:
     NetworkOrdered()
         : m_network_value(0)

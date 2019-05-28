@@ -5,7 +5,6 @@
 
 #ifdef __cplusplus
 
-
 struct Stopwatch {
     union SplitQword {
         struct {
@@ -14,6 +13,7 @@ struct Stopwatch {
         };
         uint64_t qw { 0 };
     };
+
 public:
     Stopwatch(const char* name)
         : m_name(name)

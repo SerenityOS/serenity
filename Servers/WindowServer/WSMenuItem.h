@@ -8,13 +8,14 @@ class WSMenu;
 
 class WSMenuItem {
 public:
-    enum Type {
+    enum Type
+    {
         None,
         Text,
         Separator,
     };
 
-    WSMenuItem(WSMenu&, unsigned identifier, const String& text, const String& shortcut_text = { }, bool enabled = true, bool checkable = false, bool checked = false);
+    WSMenuItem(WSMenu&, unsigned identifier, const String& text, const String& shortcut_text = {}, bool enabled = true, bool checkable = false, bool checked = false);
     WSMenuItem(WSMenu&, Type);
     ~WSMenuItem();
 
@@ -51,4 +52,3 @@ private:
     String m_shortcut_text;
     Rect m_rect;
 };
-

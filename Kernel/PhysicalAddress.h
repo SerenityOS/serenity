@@ -2,8 +2,11 @@
 
 class PhysicalAddress {
 public:
-    PhysicalAddress() { }
-    explicit PhysicalAddress(dword address) : m_address(address) { }
+    PhysicalAddress() {}
+    explicit PhysicalAddress(dword address)
+        : m_address(address)
+    {
+    }
 
     PhysicalAddress offset(dword o) const { return PhysicalAddress(m_address + o); }
     dword get() const { return m_address; }
@@ -22,4 +25,3 @@ public:
 private:
     dword m_address { 0 };
 };
-

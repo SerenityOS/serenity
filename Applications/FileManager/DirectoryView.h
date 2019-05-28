@@ -1,10 +1,10 @@
 #pragma once
 
 #include <AK/Vector.h>
-#include <LibGUI/GTableView.h>
+#include <LibGUI/GDirectoryModel.h>
 #include <LibGUI/GItemView.h>
 #include <LibGUI/GStackWidget.h>
-#include <LibGUI/GDirectoryModel.h>
+#include <LibGUI/GTableView.h>
 #include <sys/stat.h>
 
 class DirectoryView final : public GStackWidget {
@@ -26,7 +26,12 @@ public:
     Function<void(String)> on_status_message;
     Function<void(int done, int total)> on_thumbnail_progress;
 
-    enum ViewMode { Invalid, List, Icon };
+    enum ViewMode
+    {
+        Invalid,
+        List,
+        Icon
+    };
     void set_view_mode(ViewMode);
     ViewMode view_mode() const { return m_view_mode; }
 
@@ -41,7 +46,7 @@ private:
     ViewMode m_view_mode { Invalid };
 
     Retained<GDirectoryModel> m_model;
-    int m_path_history_position{ 0 };
+    int m_path_history_position { 0 };
     Vector<String> m_path_history;
     void add_path_to_history(const String& path);
 

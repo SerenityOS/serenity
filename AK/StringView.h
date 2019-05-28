@@ -8,9 +8,17 @@ class String;
 
 class StringView {
 public:
-    StringView() { }
-    StringView(const char* characters, int length) : m_characters(characters), m_length(length) { }
-    StringView(const unsigned char* characters, int length) : m_characters((const char*)characters), m_length(length) { }
+    StringView() {}
+    StringView(const char* characters, int length)
+        : m_characters(characters)
+        , m_length(length)
+    {
+    }
+    StringView(const unsigned char* characters, int length)
+        : m_characters((const char*)characters)
+        , m_length(length)
+    {
+    }
     StringView(const char* cstring)
         : m_characters(cstring)
     {

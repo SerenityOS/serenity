@@ -35,4 +35,3 @@ private:
     InodeIdentifier m_devpts_inode_id;
     String m_tty_name;
 };
-

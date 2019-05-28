@@ -20,7 +20,8 @@ struct WSAPI_Rect {
     WSAPI_Size size;
 };
 
-enum WSAPI_WindowType {
+enum WSAPI_WindowType
+{
     Invalid = 0,
     Normal,
     Menu,
@@ -36,20 +37,25 @@ struct WSAPI_WindowBackingStoreInfo {
     RGBA32* pixels;
 };
 
-enum class WSAPI_MouseButton : unsigned char {
+enum class WSAPI_MouseButton : unsigned char
+{
     NoButton = 0,
-    Left     = 1,
-    Right    = 2,
-    Middle   = 4,
+    Left = 1,
+    Right = 2,
+    Middle = 4,
 };
 
-struct WSAPI_KeyModifiers { enum {
-    Shift = 1 << 0,
-    Alt   = 1 << 1,
-    Ctrl  = 1 << 2,
-}; };
+struct WSAPI_KeyModifiers {
+    enum
+    {
+        Shift = 1 << 0,
+        Alt = 1 << 1,
+        Ctrl = 1 << 2,
+    };
+};
 
-enum class WSAPI_StandardCursor : unsigned char {
+enum class WSAPI_StandardCursor : unsigned char
+{
     None = 0,
     Arrow,
     IBeam,
@@ -59,7 +65,8 @@ enum class WSAPI_StandardCursor : unsigned char {
     ResizeDiagonalBLTR,
 };
 
-enum WSAPI_WMEventMask : unsigned {
+enum WSAPI_WMEventMask : unsigned
+{
     WindowRectChanges = 1 << 0,
     WindowStateChanges = 1 << 1,
     WindowIconChanges = 1 << 2,
@@ -67,7 +74,8 @@ enum WSAPI_WMEventMask : unsigned {
 };
 
 struct WSAPI_ServerMessage {
-    enum Type : unsigned {
+    enum Type : unsigned
+    {
         Invalid,
         Error,
         Paint,
@@ -187,7 +195,8 @@ struct WSAPI_ServerMessage {
 };
 
 struct WSAPI_ClientMessage {
-    enum Type : unsigned {
+    enum Type : unsigned
+    {
         Invalid,
         CreateMenubar,
         DestroyMenubar,
@@ -290,9 +299,18 @@ struct WSAPI_ClientMessage {
     };
 };
 
-inline Rect::Rect(const WSAPI_Rect& r) : Rect(r.location, r.size) { }
-inline Point::Point(const WSAPI_Point& p) : Point(p.x, p.y) { }
-inline Size::Size(const WSAPI_Size& s) : Size(s.width, s.height) { }
+inline Rect::Rect(const WSAPI_Rect& r)
+    : Rect(r.location, r.size)
+{
+}
+inline Point::Point(const WSAPI_Point& p)
+    : Point(p.x, p.y)
+{
+}
+inline Size::Size(const WSAPI_Size& s)
+    : Size(s.width, s.height)
+{
+}
 inline Rect::operator WSAPI_Rect() const { return { m_location, m_size }; }
 inline Point::operator WSAPI_Point() const { return { m_x, m_y }; }
 inline Size::operator WSAPI_Size() const { return { m_width, m_height }; }

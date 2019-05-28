@@ -1,12 +1,12 @@
-#include <LibCore/CSocket.h>
 #include <LibCore/CNotifier.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
+#include <LibCore/CSocket.h>
 #include <arpa/inet.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <netdb.h>
 #include <errno.h>
+#include <netdb.h>
+#include <netinet/in.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/socket.h>
 
 CSocket::CSocket(Type type, CObject* parent)
     : CIODevice(parent)

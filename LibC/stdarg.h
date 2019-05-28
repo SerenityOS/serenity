@@ -1,10 +1,10 @@
 #pragma once
 
 #ifdef KERNEL
-#define __BEGIN_DECLS
-#define __END_DECLS
+#    define __BEGIN_DECLS
+#    define __END_DECLS
 #else
-#include <sys/cdefs.h>
+#    include <sys/cdefs.h>
 #endif
 
 __BEGIN_DECLS
@@ -16,4 +16,3 @@ typedef __builtin_va_list va_list;
 #define va_arg(v, l) __builtin_va_arg(v, l)
 
 __END_DECLS
-

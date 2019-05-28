@@ -43,4 +43,3 @@ private:
     TextAlignment m_text_alignment { TextAlignment::Center };
     WeakPtr<GAction> m_action;
 };
-

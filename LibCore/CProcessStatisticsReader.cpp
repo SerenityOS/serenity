@@ -1,8 +1,8 @@
 #include "CProcessStatisticsReader.h"
 #include "CFile.h"
 
-#include <stdio.h>
 #include <pwd.h>
+#include <stdio.h>
 
 CProcessStatisticsReader::CProcessStatisticsReader()
 {
@@ -64,7 +64,7 @@ void CProcessStatisticsReader::update_map(HashMap<pid_t, CProcessStatistics>& ma
         process.username = get_username_from_uid(uid);
 
         process.priority = parts[16];
-        
+
         process.syscalls = parts[17].to_uint(ok);
         if (!ok) {
             fprintf(stderr, "CProcessHelper : couldn't convert %s to a valid syscalls count value\n", parts[17].characters());

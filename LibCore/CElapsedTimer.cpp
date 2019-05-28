@@ -1,6 +1,6 @@
-#include <LibCore/CElapsedTimer.h>
 #include <AK/Assertions.h>
 #include <AK/Time.h>
+#include <LibCore/CElapsedTimer.h>
 #include <sys/time.h>
 
 void CElapsedTimer::start()

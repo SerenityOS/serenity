@@ -2,9 +2,9 @@
 
 #include <AK/Assertions.h>
 #include <AK/Types.h>
-#include <Kernel/i386.h>
-#include <Kernel/Scheduler.h>
 #include <Kernel/KSyms.h>
+#include <Kernel/Scheduler.h>
+#include <Kernel/i386.h>
 
 class Thread;
 extern Thread* current;
@@ -14,16 +14,19 @@ static inline dword CAS(volatile dword* mem, dword newval, dword oldval)
     dword ret;
     asm volatile(
         "cmpxchgl %2, %1"
-        :"=a"(ret), "+m"(*mem)
-        :"r"(newval), "0"(oldval)
-        :"cc", "memory");
+        : "=a"(ret), "+m"(*mem)
+        : "r"(newval), "0"(oldval)
+        : "cc", "memory");
     return ret;
 }
 
 class Lock {
 public:
-    Lock(const char* name = nullptr) : m_name(name) { }
-    ~Lock() { }
+    Lock(const char* name = nullptr)
+        : m_name(name)
+    {
+    }
+    ~Lock() {}
 
     void lock();
     void unlock();
@@ -40,7 +43,11 @@ private:
 
 class Locker {
 public:
-    [[gnu::always_inline]] inline explicit Locker(Lock& l) : m_lock(l) { lock(); }
+    [[gnu::always_inline]] inline explicit Locker(Lock& l)
+        : m_lock(l)
+    {
+        lock();
+    }
     [[gnu::always_inline]] inline ~Locker() { unlock(); }
     [[gnu::always_inline]] inline void unlock() { m_lock.unlock(); }
     [[gnu::always_inline]] inline void lock() { m_lock.lock(); }
@@ -123,8 +130,11 @@ inline bool Lock::unlock_if_locked()
 template<typename T>
 class Lockable {
 public:
-    Lockable() { }
-    Lockable(T&& resource) : m_resource(move(resource)) { }
+    Lockable() {}
+    Lockable(T&& resource)
+        : m_resource(move(resource))
+    {
+    }
     Lock& lock() { return m_lock; }
     T& resource() { return m_resource; }
 
@@ -138,4 +148,3 @@ private:
     T m_resource;
     Lock m_lock;
 };
-

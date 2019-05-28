@@ -1,7 +1,7 @@
 #pragma once
 
-#include <Kernel/File.h>
 #include <AK/CircularQueue.h>
+#include <Kernel/File.h>
 #include <Kernel/UnixTypes.h>
 
 class ProcessTracer : public File {

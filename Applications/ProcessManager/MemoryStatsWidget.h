@@ -1,7 +1,7 @@
 #pragma once
 
-#include <LibGUI/GWidget.h>
 #include <LibCore/CFile.h>
+#include <LibGUI/GWidget.h>
 
 class GLabel;
 class GraphWidget;

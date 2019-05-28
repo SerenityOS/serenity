@@ -1,11 +1,12 @@
 #pragma once
 
-#include <Kernel/Devices/CharacterDevice.h>
-#include <Kernel/MousePacket.h>
-#include <Kernel/IRQHandler.h>
 #include <AK/CircularQueue.h>
+#include <Kernel/Devices/CharacterDevice.h>
+#include <Kernel/IRQHandler.h>
+#include <Kernel/MousePacket.h>
 
-class PS2MouseDevice final : public IRQHandler, public CharacterDevice {
+class PS2MouseDevice final : public IRQHandler
+    , public CharacterDevice {
 public:
     PS2MouseDevice();
     virtual ~PS2MouseDevice() override;

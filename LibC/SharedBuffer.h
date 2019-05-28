@@ -1,7 +1,7 @@
 #pragma once
 
-#include <AK/Retainable.h>
 #include <AK/RetainPtr.h>
+#include <AK/Retainable.h>
 
 class SharedBuffer : public Retainable<SharedBuffer> {
 public:

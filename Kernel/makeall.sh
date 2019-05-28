@@ -38,6 +38,7 @@ build_targets="$build_targets ." # the kernel
 
 for targ in $build_targets; do
     echo "Building $targ"
+    #(cd "$targ" && find . -name "*.c" -o -name "*.cpp" -o -name "*.h" -exec clang-format -i {} \;)
     $make_cmd -C "$targ" clean
     $make_cmd -C "$targ"
 

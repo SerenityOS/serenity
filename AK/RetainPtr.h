@@ -1,38 +1,80 @@
 #pragma once
 
-#include <AK/Types.h>
 #include <AK/Retained.h>
+#include <AK/Types.h>
 
 namespace AK {
 
 template<typename T>
 class RetainPtr {
 public:
-    enum AdoptTag { Adopt };
+    enum AdoptTag {
+        Adopt
+    };
 
-    RetainPtr() { }
-    RetainPtr(const T* ptr) : m_ptr(const_cast<T*>(ptr)) { retain_if_not_null(m_ptr); }
-    RetainPtr(T* ptr) : m_ptr(ptr) { retain_if_not_null(m_ptr); }
-    RetainPtr(T& object) : m_ptr(&object) { m_ptr->retain(); }
-    RetainPtr(const T& object) : m_ptr(const_cast<T*>(&object)) { m_ptr->retain(); }
-    RetainPtr(AdoptTag, T& object) : m_ptr(&object) { }
-    RetainPtr(RetainPtr& other) : m_ptr(other.copy_ref().leak_ref()) { }
-    RetainPtr(RetainPtr&& other) : m_ptr(other.leak_ref()) { }
-    template<typename U> RetainPtr(Retained<U>&& other) : m_ptr(static_cast<T*>(&other.leak_ref())) { }
-    template<typename U> RetainPtr(RetainPtr<U>&& other) : m_ptr(static_cast<T*>(other.leak_ref())) { }
-    RetainPtr(const RetainPtr& other) : m_ptr(const_cast<RetainPtr&>(other).copy_ref().leak_ref()) { }
-    template<typename U> RetainPtr(const RetainPtr<U>& other) : m_ptr(const_cast<RetainPtr<U>&>(other).copy_ref().leak_ref()) { }
+    RetainPtr() {}
+    RetainPtr(const T* ptr)
+        : m_ptr(const_cast<T*>(ptr))
+    {
+        retain_if_not_null(m_ptr);
+    }
+    RetainPtr(T* ptr)
+        : m_ptr(ptr)
+    {
+        retain_if_not_null(m_ptr);
+    }
+    RetainPtr(T& object)
+        : m_ptr(&object)
+    {
+        m_ptr->retain();
+    }
+    RetainPtr(const T& object)
+        : m_ptr(const_cast<T*>(&object))
+    {
+        m_ptr->retain();
+    }
+    RetainPtr(AdoptTag, T& object)
+        : m_ptr(&object)
+    {
+    }
+    RetainPtr(RetainPtr& other)
+        : m_ptr(other.copy_ref().leak_ref())
+    {
+    }
+    RetainPtr(RetainPtr&& other)
+        : m_ptr(other.leak_ref())
+    {
+    }
+    template<typename U>
+    RetainPtr(Retained<U>&& other)
+        : m_ptr(static_cast<T*>(&other.leak_ref()))
+    {
+    }
+    template<typename U>
+    RetainPtr(RetainPtr<U>&& other)
+        : m_ptr(static_cast<T*>(other.leak_ref()))
+    {
+    }
+    RetainPtr(const RetainPtr& other)
+        : m_ptr(const_cast<RetainPtr&>(other).copy_ref().leak_ref())
+    {
+    }
+    template<typename U>
+    RetainPtr(const RetainPtr<U>& other)
+        : m_ptr(const_cast<RetainPtr<U>&>(other).copy_ref().leak_ref())
+    {
+    }
     ~RetainPtr()
     {
         clear();
 #ifdef SANITIZE_PTRS
-        if constexpr(sizeof(T*) == 8)
+        if constexpr (sizeof(T*) == 8)
             m_ptr = (T*)(0xe0e0e0e0e0e0e0e0);
         else
             m_ptr = (T*)(0xe0e0e0e0);
 #endif
     }
-    RetainPtr(std::nullptr_t) { }
+    RetainPtr(std::nullptr_t) {}
 
     RetainPtr& operator=(RetainPtr&& other)
     {
@@ -143,4 +185,3 @@ private:
 }
 
 using AK::RetainPtr;
-

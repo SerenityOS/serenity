@@ -1,12 +1,13 @@
 #pragma once
 
-#include <Kernel/Net/MACAddress.h>
 #include <AK/NetworkOrdered.h>
+#include <Kernel/Net/MACAddress.h>
 
-class [[gnu::packed]] EthernetFrameHeader {
+class [[gnu::packed]] EthernetFrameHeader
+{
 public:
-    EthernetFrameHeader() { }
-    ~EthernetFrameHeader() { }
+    EthernetFrameHeader() {}
+    ~EthernetFrameHeader() {}
 
     MACAddress destination() const { return m_destination; }
     void set_destination(const MACAddress& address) { m_destination = address; }
@@ -28,4 +29,3 @@ private:
 };
 
 static_assert(sizeof(EthernetFrameHeader) == 14);
-

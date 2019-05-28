@@ -1,9 +1,9 @@
 #pragma once
 
-#include <LibGUI/GModel.h>
-#include <LibGUI/GAbstractView.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>
+#include <LibGUI/GAbstractView.h>
+#include <LibGUI/GModel.h>
 
 class GScrollBar;
 class Painter;

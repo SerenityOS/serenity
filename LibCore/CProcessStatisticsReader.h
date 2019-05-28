@@ -24,6 +24,6 @@ public:
 private:
     void update_map(HashMap<pid_t, CProcessStatistics>& map);
     String get_username_from_uid(const uid_t uid);
-  
+
     HashMap<uid_t, String> m_usernames;
 };

@@ -1,7 +1,7 @@
 #include "StringImpl.h"
+#include "HashTable.h"
 #include "StdLibExtras.h"
 #include "kmalloc.h"
-#include "HashTable.h"
 
 //#define DEBUG_STRINGIMPL
 
@@ -26,7 +26,8 @@ static StringImpl* s_the_empty_stringimpl = nullptr;
 StringImpl& StringImpl::the_empty_stringimpl()
 {
     if (!s_the_empty_stringimpl)
-        s_the_empty_stringimpl = new StringImpl(ConstructTheEmptyStringImpl);;
+        s_the_empty_stringimpl = new StringImpl(ConstructTheEmptyStringImpl);
+    ;
     return *s_the_empty_stringimpl;
 }
 
@@ -168,4 +169,3 @@ void StringImpl::compute_hash() const
 }
 
 }
-

@@ -1,13 +1,16 @@
 #pragma once
 
-#include <LibGUI/GModel.h>
 #include <AK/Function.h>
+#include <LibGUI/GModel.h>
 
 class IRCChannel;
 
 class IRCChannelMemberListModel final : public GModel {
 public:
-    enum Column { Name };
+    enum Column
+    {
+        Name
+    };
     static Retained<IRCChannelMemberListModel> create(IRCChannel& channel) { return adopt(*new IRCChannelMemberListModel(channel)); }
     virtual ~IRCChannelMemberListModel() override;
 

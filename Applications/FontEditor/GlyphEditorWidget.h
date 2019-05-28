@@ -1,5 +1,5 @@
-#include <LibGUI/GFrame.h>
 #include <AK/Function.h>
+#include <LibGUI/GFrame.h>
 
 class GlyphEditorWidget final : public GFrame {
 public:

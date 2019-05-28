@@ -67,4 +67,3 @@ private:
     Vector<SingleArg> m_single_args;
     HashMap<String, Arg> m_args;
 };
-

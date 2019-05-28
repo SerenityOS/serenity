@@ -1,11 +1,11 @@
 #pragma once
 
-#include <Kernel/Net/Socket.h>
-#include <Kernel/DoubleBuffer.h>
-#include <Kernel/Net/IPv4.h>
 #include <AK/HashMap.h>
-#include <Kernel/Lock.h>
 #include <AK/SinglyLinkedList.h>
+#include <Kernel/DoubleBuffer.h>
+#include <Kernel/Lock.h>
+#include <Kernel/Net/IPv4.h>
+#include <Kernel/Net/Socket.h>
 
 class IPv4SocketHandle;
 class TCPSocketHandle;
@@ -86,7 +86,7 @@ private:
 
 class IPv4SocketHandle : public SocketHandle {
 public:
-    IPv4SocketHandle() { }
+    IPv4SocketHandle() {}
 
     IPv4SocketHandle(RetainPtr<IPv4Socket>&& socket)
         : SocketHandle(move(socket))

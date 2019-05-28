@@ -1,7 +1,7 @@
 #pragma once
 
-#include <LibGUI/GTextEditor.h>
 #include <AK/Function.h>
+#include <LibGUI/GTextEditor.h>
 
 class GTextBox final : public GTextEditor {
 public:
@@ -10,4 +10,3 @@ public:
 
     virtual const char* class_name() const override { return "GTextBox"; }
 };
-

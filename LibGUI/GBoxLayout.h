@@ -15,4 +15,3 @@ public:
 private:
     Orientation m_orientation;
 };
-

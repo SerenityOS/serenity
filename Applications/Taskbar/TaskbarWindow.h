@@ -1,6 +1,6 @@
-#include <LibGUI/GWindow.h>
-#include <LibGUI/GWidget.h>
 #include "WindowList.h"
+#include <LibGUI/GWidget.h>
+#include <LibGUI/GWindow.h>
 
 class TaskbarWindow final : public GWindow {
 public:

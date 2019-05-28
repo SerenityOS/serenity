@@ -1,7 +1,7 @@
 #pragma once
 
-#include <Kernel/Devices/CharacterDevice.h>
 #include <AK/Badge.h>
+#include <Kernel/Devices/CharacterDevice.h>
 #include <Kernel/Lock.h>
 
 class MasterPTY;

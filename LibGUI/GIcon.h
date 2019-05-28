@@ -1,18 +1,18 @@
 #pragma once
 
-#include <SharedGraphics/GraphicsBitmap.h>
 #include <AK/HashMap.h>
+#include <SharedGraphics/GraphicsBitmap.h>
 
 class GIconImpl : public Retainable<GIconImpl> {
 public:
     static Retained<GIconImpl> create() { return adopt(*new GIconImpl); }
-    ~GIconImpl() { }
+    ~GIconImpl() {}
 
     const GraphicsBitmap* bitmap_for_size(int) const;
     void set_bitmap_for_size(int, RetainPtr<GraphicsBitmap>&&);
 
 private:
-    GIconImpl() { }
+    GIconImpl() {}
     HashMap<int, RetainPtr<GraphicsBitmap>> m_bitmaps;
 };
 
@@ -23,7 +23,7 @@ public:
     explicit GIcon(RetainPtr<GraphicsBitmap>&&, RetainPtr<GraphicsBitmap>&&);
     explicit GIcon(const GIconImpl&);
     GIcon(const GIcon&);
-    ~GIcon() { }
+    ~GIcon() {}
 
     static GIcon default_icon(const String&);
 

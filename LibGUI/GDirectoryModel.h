@@ -1,16 +1,18 @@
 #pragma once
 
-#include <LibGUI/GModel.h>
 #include <AK/HashMap.h>
+#include <LibGUI/GModel.h>
 #include <sys/stat.h>
 
 class GDirectoryModel final : public GModel {
     friend int thumbnail_thread(void*);
+
 public:
     static Retained<GDirectoryModel> create() { return adopt(*new GDirectoryModel); }
     virtual ~GDirectoryModel() override;
 
-    enum Column {
+    enum Column
+    {
         Icon = 0,
         Name,
         Size,

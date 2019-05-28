@@ -1,9 +1,9 @@
 #pragma once
 
-#include <Kernel/Lock.h>
 #include <AK/RetainPtr.h>
 #include <Kernel/Devices/DiskDevice.h>
 #include <Kernel/IRQHandler.h>
+#include <Kernel/Lock.h>
 #include <Kernel/PCI.h>
 #include <Kernel/PhysicalAddress.h>
 #include <Kernel/VM/PhysicalPage.h>
@@ -14,7 +14,8 @@ struct PhysicalRegionDescriptor {
     word end_of_table { 0 };
 };
 
-class IDEDiskDevice final : public IRQHandler, public DiskDevice {
+class IDEDiskDevice final : public IRQHandler
+    , public DiskDevice {
     AK_MAKE_ETERNAL
 public:
     static Retained<IDEDiskDevice> create();
@@ -58,4 +59,3 @@ private:
     word m_bus_master_base { 0 };
     Lockable<bool> m_dma_enabled;
 };
-

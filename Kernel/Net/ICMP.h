@@ -1,19 +1,21 @@
 #pragma once
 
-#include <Kernel/Net/MACAddress.h>
 #include <Kernel/Net/IPv4.h>
+#include <Kernel/Net/MACAddress.h>
 
 struct ICMPType {
-enum {
-    EchoReply = 0,
-    EchoRequest = 8,
-};
+    enum
+    {
+        EchoReply = 0,
+        EchoRequest = 8,
+    };
 };
 
-class [[gnu::packed]] ICMPHeader {
+class [[gnu::packed]] ICMPHeader
+{
 public:
-    ICMPHeader() { }
-    ~ICMPHeader() { }
+    ICMPHeader() {}
+    ~ICMPHeader() {}
 
     byte type() const { return m_type; }
     void set_type(byte b) { m_type = b; }
@@ -36,7 +38,8 @@ private:
 
 static_assert(sizeof(ICMPHeader) == 4);
 
-struct [[gnu::packed]] ICMPEchoPacket {
+struct [[gnu::packed]] ICMPEchoPacket
+{
     ICMPHeader header;
     NetworkOrdered<word> identifier;
     NetworkOrdered<word> sequence_number;

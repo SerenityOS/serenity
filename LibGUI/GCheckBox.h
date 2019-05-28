@@ -17,4 +17,3 @@ public:
 private:
     virtual void paint_event(GPaintEvent&) override;
 };
-

@@ -3,12 +3,12 @@
 #include <AK/AKString.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
-#include <SharedGraphics/GraphicsBitmap.h>
-#include <SharedGraphics/Rect.h>
-#include <LibGUI/GFrame.h>
+#include <LibCore/CConfigFile.h>
 #include <LibCore/CNotifier.h>
 #include <LibCore/CTimer.h>
-#include <LibCore/CConfigFile.h>
+#include <LibGUI/GFrame.h>
+#include <SharedGraphics/GraphicsBitmap.h>
+#include <SharedGraphics/Rect.h>
 
 class Font;
 
@@ -44,7 +44,6 @@ private:
     void put_character_at(unsigned row, unsigned column, byte ch);
     void invalidate_cursor();
     void set_window_title(const String&);
-
 
     void inject_string(const String&);
     void unimplemented_escape();
@@ -107,7 +106,11 @@ private:
         bool dirty { false };
         word length { 0 };
     };
-    Line& line(size_t index) { ASSERT(index < m_rows); return *m_lines[index]; }
+    Line& line(size_t index)
+    {
+        ASSERT(index < m_rows);
+        return *m_lines[index];
+    }
 
     Line** m_lines { nullptr };
 
@@ -125,7 +128,8 @@ private:
     void execute_escape_sequence(byte final);
     void execute_xterm_command();
 
-    enum EscapeState {
+    enum EscapeState
+    {
         Normal,
         ExpectBracket,
         ExpectParameter,

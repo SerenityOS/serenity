@@ -9,6 +9,7 @@ class VBWidget;
 
 class VBProperty {
     friend class VBWidget;
+
 public:
     VBProperty(VBWidget&, const String& name, const GVariant& value);
     VBProperty(VBWidget&, const String& name, Function<GVariant(const GWidget&)>&& getter, Function<void(GWidget&, const GVariant&)>&& setter);
