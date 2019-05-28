@@ -687,8 +687,6 @@ do_something(something, false);
 set_resizable(NotResizable);
 ```
 
-[](#names-objc-methods) Objective-C method names should follow the Cocoa naming guidelines — they should read like a phrase and each piece of the selector should start with a lowercase letter and use intercaps.
-
 [](#names-enum-members) Enum members should use InterCaps with an initial capital letter.
 
 [](#names-const-to-define) Prefer `const` to `#define`. Prefer inline functions to macros.
@@ -831,39 +829,12 @@ void MyClass::get_some_value(OutArgumentType* outArgument) const
 
 ### #include Statements
 
-[](#include-config-h) All implementation files must `#include` `config.h` first. Header files should never include `config.h`.
-
-###### Right:
-
-```cpp
-// RenderLayer.h
-#include "Node.h"
-#include "RenderObject.h"
-#include "RenderView.h"
-```
-
-###### Wrong:
-
-```cpp
-// RenderLayer.h
-#include "config.h"
-
-#include "RenderObject.h"
-#include "RenderView.h"
-#include "Node.h"
-```
-
-[](#include-primary) All implementation files must `#include` the primary header second, just after `config.h`. So for example, `Node.cpp` should include `Node.h` first, before other files. This guarantees that each header's completeness is tested. This also assures that each header can be compiled without requiring any other header files be included first.
-
-[](#include-others) Other `#include` statements should be in sorted order (case sensitive, as done by the command-line sort tool or the Xcode sort selection command). Don't bother to organize them in a logical order.
+[](#include-others) `#include` statements should be in sorted order (case sensitive, as done by the command-line sort tool or an IDE sort selection command). Don't bother to organize them in a logical order.
 
 ###### Right:
 
 ```cpp
 // HTMLDivElement.cpp
-#include "config.h"
-#include "HTMLDivElement.h"
-
 #include "Attribute.h"
 #include "HTMLElement.h"
 #include "QualifiedName.h"
