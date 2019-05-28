@@ -109,4 +109,7 @@ enum
  */
 #define _POSIX_PRIORITY_SCHEDULING
 
+// Stifle an less error iirc
+#define _PC_VDISABLE 8
+
 __END_DECLS

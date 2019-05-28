@@ -42,6 +42,7 @@ private:
     virtual const char* class_name() const override { return "Terminal"; }
 
     void scroll_up();
+    void scroll_down();
     void newline();
     void set_cursor(unsigned row, unsigned column);
     void put_character_at(unsigned row, unsigned column, byte ch);
@@ -68,6 +69,9 @@ private:
     void escape$u(const ParamVector&);
     void escape$t(const ParamVector&);
     void escape$r(const ParamVector&);
+    void escape$S(const ParamVector&);
+    void escape$T(const ParamVector&);
+    void escape$L(const ParamVector&);
 
     void clear();
 
@@ -144,6 +148,8 @@ private:
     bool m_stomp { false };
 
     bool m_should_beep { false };
+    byte m_scroll_region_top { 0 };
+    byte m_scroll_region_bottom { 0 };
 
     Attribute m_current_attribute;
 

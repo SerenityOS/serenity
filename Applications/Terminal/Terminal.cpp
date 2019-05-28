@@ -254,7 +254,13 @@ void Terminal::escape$r(const ParamVector& params)
         top = params[0];
     if (params.size() >= 2)
         bottom = params[1];
-    dbgprintf("FIXME: escape$r: Set scrolling region: %u-%u\n", top, bottom);
+    if ((bottom - top) < 2 || bottom > m_rows) {
+        dbgprintf("Error: escape: scrolling region invalid: %u-%u\n", top, bottom);
+        return;
+    }
+    m_scroll_region_top = top;
+    m_scroll_region_bottom = bottom;
+    set_cursor(0, 0);
 }
 
 void Terminal::escape$H(const ParamVector& params)
@@ -415,6 +421,42 @@ void Terminal::escape$J(const ParamVector& params)
     }
 }
 
+void Terminal::escape$S(const ParamVector& params)
+{
+    int count = 1;
+    if (params.size() >= 1)
+        count = params[0];
+    dbgprintf("Terminal: Scrolling up %d lines\n", count);
+
+    for (word i = 0; i < count; i++)
+        scroll_up();
+}
+
+void Terminal::escape$T(const ParamVector& params)
+{
+    int count = 1;
+    if (params.size() >= 1)
+        count = params[0];
+    dbgprintf("Terminal: Scrolling down %d lines\n", count);
+
+    for (word i = 0; i < count; i++)
+        scroll_down();
+}
+
+void Terminal::escape$L(const ParamVector& params)
+{
+    int count = 1;
+    if (params.size() >= 1)
+        count = params[0];
+    dbgprintf("Terminal: Adding %d lines below cursor (at line %d)\n", count, m_cursor_row);
+    invalidate_cursor();
+    for (word row = m_rows; row > m_cursor_row; --row)
+        m_lines[row] = m_lines[row - 1];
+    m_lines[m_cursor_row] = new Line(m_columns);
+    ++m_rows_to_scroll_backing_store;
+    m_need_full_flush = true;
+}
+
 void Terminal::escape$M(const ParamVector& params)
 {
     int count = 1;
@@ -430,8 +472,11 @@ void Terminal::escape$M(const ParamVector& params)
     count = min(count, max_count);
 
     dbgprintf("Delete %d line(s) starting from %d\n", count, m_cursor_row);
-    // FIXME: Implement.
-    ASSERT_NOT_REACHED();
+    for (word i = 0; i < count; ++i)
+        delete m_lines[m_cursor_row + i];
+    for (word row = m_cursor_row + count + 1; row < rows(); ++row)
+        m_lines[row - 1] = m_lines[row];
+    m_lines[m_rows - 1]->clear(m_current_attribute);
 }
 
 void Terminal::execute_xterm_command()
@@ -480,6 +525,9 @@ void Terminal::execute_escape_sequence(byte final)
     case 'J': escape$J(params); break;
     case 'K': escape$K(params); break;
     case 'M': escape$M(params); break;
+    case 'S': escape$S(params); break;
+    case 'T': escape$T(params); break;
+    case 'L': escape$L(params); break;
     case 'G': escape$G(params); break;
     case 'X': escape$X(params); break;
     case 'd': escape$d(params); break;
@@ -512,11 +560,22 @@ void Terminal::scroll_up()
 {
     // NOTE: We have to invalidate the cursor first.
     invalidate_cursor();
-    delete m_lines[0];
-    for (word row = 1; row < rows(); ++row)
+    delete m_lines[m_scroll_region_top];
+    for (word row = m_scroll_region_top + 1; row < m_scroll_region_bottom; ++row)
         m_lines[row - 1] = m_lines[row];
-    m_lines[m_rows - 1] = new Line(m_columns);
+    m_lines[m_scroll_region_bottom - 1] = new Line(m_columns);
     ++m_rows_to_scroll_backing_store;
+    m_need_full_flush = true;
+}
+
+void Terminal::scroll_down()
+{
+    // NOTE: We have to invalidate the cursor first.
+    invalidate_cursor();
+    for (word row = m_scroll_region_bottom; row > m_scroll_region_top; --row)
+        m_lines[row] = m_lines[row - 1];
+    m_lines[m_scroll_region_top] = new Line(m_columns);
+    --m_rows_to_scroll_backing_store;
     m_need_full_flush = true;
 }
 
@@ -718,6 +777,9 @@ void Terminal::set_size(word columns, word rows)
     m_columns = columns;
     m_rows = rows;
 
+    m_scroll_region_top = 0;
+    m_scroll_region_bottom = rows;
+
     m_cursor_row = 0;
     m_cursor_column = 0;
     m_saved_cursor_row = 0;
@@ -824,6 +886,9 @@ void Terminal::keydown_event(GKeyEvent& event)
         break;
     case KeyCode::Key_End:
         write(m_ptm_fd, "\033[F", 3);
+        break;
+    case KeyCode::Key_RightShift:
+        dbgprintf("Terminal: A wild Right Shift key is pressed. Not handled.\n");
         break;
     default:
         write(m_ptm_fd, &ch, 1);
