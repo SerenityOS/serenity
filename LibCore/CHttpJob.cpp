@@ -22,7 +22,7 @@ void CHttpJob::on_socket_connected()
 
     bool success = m_socket->send(raw_request);
     if (!success)
-        return deferred_invoke([this](auto&){ did_fail(CNetworkJob::Error::TransmissionFailed); });
+        return deferred_invoke([this](auto&) { did_fail(CNetworkJob::Error::TransmissionFailed); });
 
     Vector<byte> buffer;
     while (m_socket->is_connected()) {
@@ -33,18 +33,18 @@ void CHttpJob::on_socket_connected()
             auto line = m_socket->read_line(PAGE_SIZE);
             if (line.is_null()) {
                 printf("Expected HTTP status\n");
-                return deferred_invoke([this](auto&){ did_fail(CNetworkJob::Error::TransmissionFailed); });
+                return deferred_invoke([this](auto&) { did_fail(CNetworkJob::Error::TransmissionFailed); });
             }
             auto parts = String::copy(line, Chomp).split(' ');
             if (parts.size() < 3) {
                 printf("Expected 3-part HTTP status, got '%s'\n", line.pointer());
-                return deferred_invoke([this](auto&){ did_fail(CNetworkJob::Error::ProtocolFailed); });
+                return deferred_invoke([this](auto&) { did_fail(CNetworkJob::Error::ProtocolFailed); });
             }
             bool ok;
             m_code = parts[1].to_uint(ok);
             if (!ok) {
                 printf("Expected numeric HTTP status\n");
-                return deferred_invoke([this](auto&){ did_fail(CNetworkJob::Error::ProtocolFailed); });
+                return deferred_invoke([this](auto&) { did_fail(CNetworkJob::Error::ProtocolFailed); });
             }
             m_state = State::InHeaders;
             continue;
@@ -65,12 +65,12 @@ void CHttpJob::on_socket_connected()
             auto parts = chomped_line.split(':');
             if (parts.is_empty()) {
                 printf("Expected HTTP header with key/value\n");
-                return deferred_invoke([this](auto&){ did_fail(CNetworkJob::Error::ProtocolFailed); });
+                return deferred_invoke([this](auto&) { did_fail(CNetworkJob::Error::ProtocolFailed); });
             }
             auto name = parts[0];
             if (chomped_line.length() < name.length() + 2) {
                 printf("Malformed HTTP header: '%s' (%d)\n", chomped_line.characters(), chomped_line.length());
-                return deferred_invoke([this](auto&){ did_fail(CNetworkJob::Error::ProtocolFailed); });
+                return deferred_invoke([this](auto&) { did_fail(CNetworkJob::Error::ProtocolFailed); });
             }
             auto value = chomped_line.substring(name.length() + 2, chomped_line.length() - name.length() - 2);
             m_headers.set(name, value);
@@ -84,13 +84,13 @@ void CHttpJob::on_socket_connected()
                 m_state = State::Finished;
                 break;
             }
-            return deferred_invoke([this](auto&){ did_fail(CNetworkJob::Error::ProtocolFailed); });
+            return deferred_invoke([this](auto&) { did_fail(CNetworkJob::Error::ProtocolFailed); });
         }
         buffer.append(payload.pointer(), payload.size());
     }
 
     auto response = CHttpResponse::create(m_code, move(m_headers), ByteBuffer::copy(buffer.data(), buffer.size()));
-    deferred_invoke([this, response] (auto&) {
+    deferred_invoke([this, response](auto&) {
         did_finish(move(response));
     });
 }

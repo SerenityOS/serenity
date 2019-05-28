@@ -1,16 +1,27 @@
 #pragma once
 
-#include <Kernel/Lock.h>
-#include <AK/Retainable.h>
-#include <AK/RetainPtr.h>
 #include <AK/HashTable.h>
+#include <AK/RetainPtr.h>
+#include <AK/Retainable.h>
 #include <AK/Vector.h>
 #include <Kernel/File.h>
-#include <Kernel/UnixTypes.h>
 #include <Kernel/KResult.h>
+#include <Kernel/Lock.h>
+#include <Kernel/UnixTypes.h>
 
-enum class SocketRole : byte { None, Listener, Accepted, Connected, Connecting };
-enum class ShouldBlock { No = 0, Yes = 1 };
+enum class SocketRole : byte
+{
+    None,
+    Listener,
+    Accepted,
+    Connected,
+    Connecting
+};
+enum class ShouldBlock
+{
+    No = 0,
+    Yes = 1
+};
 
 class FileDescriptor;
 
@@ -85,7 +96,7 @@ private:
 
 class SocketHandle {
 public:
-    SocketHandle() { }
+    SocketHandle() {}
 
     SocketHandle(RetainPtr<Socket>&& socket)
         : m_socket(move(socket))

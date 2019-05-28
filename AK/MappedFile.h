@@ -6,7 +6,7 @@ namespace AK {
 
 class MappedFile {
 public:
-    MappedFile() { }
+    MappedFile() {}
     explicit MappedFile(const String& file_name);
     MappedFile(MappedFile&&);
     ~MappedFile();
@@ -30,4 +30,3 @@ private:
 }
 
 using AK::MappedFile;
-

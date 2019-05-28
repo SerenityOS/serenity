@@ -1,8 +1,8 @@
 #pragma once
 
-#include <LibCore/CNetworkResponse.h>
 #include <AK/AKString.h>
 #include <AK/HashMap.h>
+#include <LibCore/CNetworkResponse.h>
 
 class CHttpResponse : public CNetworkResponse {
 public:

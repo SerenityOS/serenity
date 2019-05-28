@@ -10,8 +10,8 @@ __BEGIN_DECLS
 #define RTLD_LOCAL 4
 
 int dlclose(void*);
-char *dlerror();
-void *dlopen(const char*, int);
-void *dlsym(void*, const char*);
+char* dlerror();
+void* dlopen(const char*, int);
+void* dlsym(void*, const char*);
 
 __END_DECLS

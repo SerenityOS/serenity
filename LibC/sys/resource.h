@@ -27,6 +27,6 @@ struct rusage {
 #define RUSAGE_SELF 1
 #define RUSAGE_CHILDREN 2
 
-int getrusage(int who, struct rusage *usage);
+int getrusage(int who, struct rusage* usage);
 
 __END_DECLS

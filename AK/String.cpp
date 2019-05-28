@@ -38,7 +38,7 @@ String String::empty()
 String String::isolated_copy() const
 {
     if (!m_impl)
-        return { };
+        return {};
     if (!m_impl->length())
         return empty();
     char* buffer;
@@ -50,7 +50,7 @@ String String::isolated_copy() const
 String String::substring(int start, int length) const
 {
     if (!length)
-        return { };
+        return {};
     ASSERT(m_impl);
     ASSERT(start + length <= m_impl->length());
     // FIXME: This needs some input bounds checking.
@@ -60,7 +60,7 @@ String String::substring(int start, int length) const
 StringView String::substring_view(int start, int length) const
 {
     if (!length)
-        return { };
+        return {};
     ASSERT(m_impl);
     ASSERT(start + length <= m_impl->length());
     // FIXME: This needs some input bounds checking.
@@ -70,7 +70,7 @@ StringView String::substring_view(int start, int length) const
 Vector<String> String::split(const char separator) const
 {
     if (is_empty())
-        return { };
+        return {};
 
     Vector<String> v;
     ssize_t substart = 0;
@@ -94,7 +94,7 @@ Vector<String> String::split(const char separator) const
 Vector<StringView> String::split_view(const char separator) const
 {
     if (is_empty())
-        return { };
+        return {};
 
     Vector<StringView> v;
     ssize_t substart = 0;
@@ -232,7 +232,7 @@ bool String::match_helper(const String& mask) const
             if (!*++mask_ptr)
                 return true;
             mp = mask_ptr;
-            cp = string_ptr+1;
+            cp = string_ptr + 1;
         } else if ((*mask_ptr == *string_ptr) || (*mask_ptr == '?')) {
             mask_ptr++;
             string_ptr++;

@@ -1,9 +1,9 @@
 #pragma once
 
+#include "Assertions.h"
 #include "StdLibExtras.h"
 #include "Types.h"
 #include "kmalloc.h"
-#include "Assertions.h"
 
 namespace AK {
 
@@ -77,4 +77,3 @@ private:
 }
 
 using AK::Bitmap;
-

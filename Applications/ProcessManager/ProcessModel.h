@@ -3,15 +3,16 @@
 #include <AK/AKString.h>
 #include <AK/HashMap.h>
 #include <AK/Vector.h>
-#include <LibGUI/GModel.h>
 #include <LibCore/CFile.h>
+#include <LibGUI/GModel.h>
 #include <unistd.h>
 
 class GraphWidget;
 
 class ProcessModel final : public GModel {
 public:
-    enum Column {
+    enum Column
+    {
         Icon = 0,
         Name,
         CPU,

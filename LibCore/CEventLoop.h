@@ -21,7 +21,8 @@ public:
 
     int exec();
 
-    enum class WaitMode {
+    enum class WaitMode
+    {
         WaitForEvents,
         PollForEvents,
     };
@@ -52,8 +53,8 @@ public:
 
 protected:
     virtual void add_file_descriptors_for_select(fd_set&, int& max_fd) { UNUSED_PARAM(max_fd); }
-    virtual void process_file_descriptors_after_select(const fd_set&) { }
-    virtual void do_processing() { }
+    virtual void process_file_descriptors_after_select(const fd_set&) {}
+    virtual void do_processing() {}
 
 private:
     void wait_for_event(WaitMode);

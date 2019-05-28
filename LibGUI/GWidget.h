@@ -1,15 +1,15 @@
 #pragma once
 
+#include <AK/AKString.h>
+#include <AK/Badge.h>
+#include <AK/HashMap.h>
 #include <LibCore/CElapsedTimer.h>
+#include <LibCore/CObject.h>
 #include <LibGUI/GEvent.h>
 #include <LibGUI/GShortcut.h>
-#include <LibCore/CObject.h>
-#include <SharedGraphics/Rect.h>
 #include <SharedGraphics/Color.h>
 #include <SharedGraphics/Font.h>
-#include <AK/Badge.h>
-#include <AK/AKString.h>
-#include <AK/HashMap.h>
+#include <SharedGraphics/Rect.h>
 
 class GraphicsBitmap;
 class GAction;
@@ -17,10 +17,26 @@ class GLayout;
 class GMenu;
 class GWindow;
 
-enum class SizePolicy { Fixed, Fill };
-enum class Orientation { Horizontal, Vertical };
-enum class HorizontalDirection { Left, Right };
-enum class VerticalDirection { Up, Down };
+enum class SizePolicy
+{
+    Fixed,
+    Fill
+};
+enum class Orientation
+{
+    Horizontal,
+    Vertical
+};
+enum class HorizontalDirection
+{
+    Left,
+    Right
+};
+enum class VerticalDirection
+{
+    Up,
+    Down
+};
 
 class GWidget : public CObject {
 public:
@@ -178,7 +194,7 @@ public:
     template<typename Callback>
     void for_each_child_widget(Callback callback)
     {
-        for_each_child([&] (auto& child) {
+        for_each_child([&](auto& child) {
             if (is<GWidget>(child))
                 return callback(to<GWidget>(child));
             return IterationDecision::Continue;
@@ -224,7 +240,8 @@ private:
     HashMap<GShortcut, GAction*> m_local_shortcut_actions;
 };
 
-template<> inline bool is<GWidget>(const CObject& object)
+template<>
+inline bool is<GWidget>(const CObject& object)
 {
     return object.is_widget();
 }

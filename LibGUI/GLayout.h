@@ -32,7 +32,8 @@ public:
 
 protected:
     struct Entry {
-        enum class Type {
+        enum class Type
+        {
             Invalid = 0,
             Widget,
             Layout,
@@ -51,4 +52,3 @@ protected:
     GMargins m_margins;
     int m_spacing { 4 };
 };
-

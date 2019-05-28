@@ -1,11 +1,11 @@
 #pragma once
 
+#include <AK/Function.h>
 #include <AK/HashMap.h>
 #include <AK/OwnPtr.h>
 #include <AK/WeakPtr.h>
-#include <AK/Function.h>
-#include <SharedGraphics/GraphicsBitmap.h>
 #include <LibCore/CObject.h>
+#include <SharedGraphics/GraphicsBitmap.h>
 #include <WindowServer/WSEvent.h>
 
 class WSWindow;
@@ -21,7 +21,7 @@ public:
     static WSClientConnection* from_client_id(int client_id);
     static void for_each_client(Function<void(WSClientConnection&)>);
 
-    void post_message(const WSAPI_ServerMessage&, const ByteBuffer& = { });
+    void post_message(const WSAPI_ServerMessage&, const ByteBuffer& = {});
 
     int client_id() const { return m_client_id; }
     WSMenuBar* app_menubar() { return m_app_menubar.ptr(); }
@@ -33,8 +33,10 @@ public:
 
     void set_client_pid(pid_t pid) { m_pid = pid; }
 
-    template<typename Matching, typename Callback> void for_each_window_matching(Matching, Callback);
-    template<typename Callback> void for_each_window(Callback);
+    template<typename Matching, typename Callback>
+    void for_each_window_matching(Matching, Callback);
+    template<typename Callback>
+    void for_each_window(Callback);
 
     void notify_about_new_screen_rect(const Rect&);
     void post_paint_message(WSWindow&);

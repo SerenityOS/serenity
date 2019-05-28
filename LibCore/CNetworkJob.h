@@ -1,13 +1,14 @@
 #pragma once
 
-#include <LibCore/CObject.h>
 #include <AK/Function.h>
+#include <LibCore/CObject.h>
 
 class CNetworkResponse;
 
 class CNetworkJob : public CObject {
 public:
-    enum class Error {
+    enum class Error
+    {
         None,
         ConnectionFailed,
         TransmissionFailed,

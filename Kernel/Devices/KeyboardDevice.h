@@ -1,15 +1,16 @@
 #pragma once
 
-#include <AK/Types.h>
-#include <AK/DoublyLinkedList.h>
-#include <AK/CircularQueue.h>
-#include <Kernel/Devices/CharacterDevice.h>
 #include "IRQHandler.h"
 #include "KeyCode.h"
+#include <AK/CircularQueue.h>
+#include <AK/DoublyLinkedList.h>
+#include <AK/Types.h>
+#include <Kernel/Devices/CharacterDevice.h>
 
 class KeyboardClient;
 
-class KeyboardDevice final : public IRQHandler, public CharacterDevice {
+class KeyboardDevice final : public IRQHandler
+    , public CharacterDevice {
     AK_MAKE_ETERNAL
 public:
     using Event = KeyEvent;

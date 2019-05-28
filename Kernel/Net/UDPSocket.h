@@ -25,7 +25,7 @@ private:
 
 class UDPSocketHandle : public SocketHandle {
 public:
-    UDPSocketHandle() { }
+    UDPSocketHandle() {}
 
     UDPSocketHandle(RetainPtr<UDPSocket>&& socket)
         : SocketHandle(move(socket))
@@ -46,4 +46,3 @@ public:
     UDPSocket& socket() { return static_cast<UDPSocket&>(SocketHandle::socket()); }
     const UDPSocket& socket() const { return static_cast<const UDPSocket&>(SocketHandle::socket()); }
 };
-

@@ -8,7 +8,7 @@ bool is_less_than(const T& a, const T& b)
     return a < b;
 }
 
-template <typename Iterator, typename LessThan>
+template<typename Iterator, typename LessThan>
 void quick_sort(Iterator start, Iterator end, LessThan less_than = is_less_than)
 {
     int size = end - start;
@@ -24,7 +24,7 @@ void quick_sort(Iterator start, Iterator end, LessThan less_than = is_less_than)
     int i = 1;
     for (int j = 1; j < size; ++j) {
         if (less_than(*(start + j), pivot)) {
-            swap(*(start+j), *(start + i));
+            swap(*(start + j), *(start + i));
             ++i;
         }
     }

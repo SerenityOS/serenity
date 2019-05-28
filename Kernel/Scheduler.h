@@ -26,6 +26,7 @@ public:
     static Process* colonel();
     static bool is_active();
     static void beep();
+
 private:
     static void prepare_for_iret_to_new_process();
 };

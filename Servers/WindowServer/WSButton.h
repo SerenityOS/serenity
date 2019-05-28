@@ -1,9 +1,9 @@
 #pragma once
 
-#include <SharedGraphics/Rect.h>
 #include <AK/Function.h>
 #include <AK/Retained.h>
 #include <AK/Weakable.h>
+#include <SharedGraphics/Rect.h>
 
 class CharacterBitmap;
 class Painter;
@@ -18,7 +18,7 @@ public:
     Rect relative_rect() const { return m_relative_rect; }
     void set_relative_rect(const Rect& rect) { m_relative_rect = rect; }
 
-    Rect rect() const { return { { }, m_relative_rect.size() }; }
+    Rect rect() const { return { {}, m_relative_rect.size() }; }
     Rect screen_rect() const;
 
     void paint(Painter&);

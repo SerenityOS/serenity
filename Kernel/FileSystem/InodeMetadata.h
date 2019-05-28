@@ -84,5 +84,3 @@ struct InodeMetadata {
     unsigned major_device { 0 };
     unsigned minor_device { 0 };
 };
-
-

@@ -4,23 +4,24 @@
 #include <AK/Types.h>
 #include <unistd.h>
 
-#define memory_barrier() asm volatile ("" ::: "memory")
+#define memory_barrier() asm volatile("" :: \
+                                          : "memory")
 
 static inline dword CAS(volatile dword* mem, dword newval, dword oldval)
 {
     dword ret;
     asm volatile(
         "cmpxchgl %2, %1"
-        :"=a"(ret), "+m"(*mem)
-        :"r"(newval), "0"(oldval)
-        :"cc", "memory");
+        : "=a"(ret), "+m"(*mem)
+        : "r"(newval), "0"(oldval)
+        : "cc", "memory");
     return ret;
 }
 
 class CLock {
 public:
-    CLock() { }
-    ~CLock() { }
+    CLock() {}
+    ~CLock() {}
 
     void lock();
     void unlock();
@@ -33,7 +34,11 @@ private:
 
 class CLocker {
 public:
-    [[gnu::always_inline]] inline explicit CLocker(CLock& l) : m_lock(l) { lock(); }
+    [[gnu::always_inline]] inline explicit CLocker(CLock& l)
+        : m_lock(l)
+    {
+        lock();
+    }
     [[gnu::always_inline]] inline ~CLocker() { unlock(); }
     [[gnu::always_inline]] inline void unlock() { m_lock.unlock(); }
     [[gnu::always_inline]] inline void lock() { m_lock.lock(); }
@@ -86,8 +91,11 @@ inline void CLock::unlock()
 template<typename T>
 class CLockable {
 public:
-    CLockable() { }
-    CLockable(T&& resource) : m_resource(move(resource)) { }
+    CLockable() {}
+    CLockable(T&& resource)
+        : m_resource(move(resource))
+    {
+    }
     CLock& lock() { return m_lock; }
     T& resource() { return m_resource; }
 
@@ -101,4 +109,3 @@ private:
     T m_resource;
     CLock m_lock;
 };
-

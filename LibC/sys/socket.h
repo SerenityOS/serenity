@@ -1,8 +1,8 @@
 #pragma once
 
+#include <stdint.h>
 #include <sys/cdefs.h>
 #include <sys/types.h>
-#include <stdint.h>
 #include <sys/un.h>
 
 __BEGIN_DECLS
@@ -68,4 +68,3 @@ int getsockname(int sockfd, struct sockaddr*, socklen_t*);
 int getpeername(int sockfd, struct sockaddr*, socklen_t*);
 
 __END_DECLS
-

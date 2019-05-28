@@ -1,11 +1,11 @@
 #pragma once
 
-#include <LibCore/CIODevice.h>
 #include <AK/AKString.h>
+#include <LibCore/CIODevice.h>
 
 class CFile final : public CIODevice {
 public:
-    CFile() { }
+    CFile() {}
     explicit CFile(const String&);
     virtual ~CFile() override;
 
@@ -14,7 +14,11 @@ public:
 
     virtual bool open(CIODevice::OpenMode) override;
 
-    enum class ShouldCloseFileDescriptor { No = 0, Yes };
+    enum class ShouldCloseFileDescriptor
+    {
+        No = 0,
+        Yes
+    };
     bool open(int fd, CIODevice::OpenMode, ShouldCloseFileDescriptor);
 
     virtual const char* class_name() const override { return "CFile"; }

@@ -3,9 +3,9 @@
 #include <AK/AKString.h>
 #include <AK/Vector.h>
 #include <AK/WeakPtr.h>
+#include <LibCore/CObject.h>
 #include <SharedGraphics/Rect.h>
 #include <WindowServer/WSMenuItem.h>
-#include <LibCore/CObject.h>
 
 class WSClientConnection;
 class WSMenuBar;
@@ -91,4 +91,3 @@ private:
     Vector<OwnPtr<WSMenuItem>> m_items;
     OwnPtr<WSWindow> m_menu_window;
 };
-

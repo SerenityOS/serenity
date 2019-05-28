@@ -1,7 +1,7 @@
 #pragma once
 
-#include <LibGUI/GButton.h>
 #include "WindowIdentifier.h"
+#include <LibGUI/GButton.h>
 
 class TaskbarButton final : public GButton {
 public:

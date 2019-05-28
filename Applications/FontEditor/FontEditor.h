@@ -1,7 +1,7 @@
 #pragma once
 
-#include <LibGUI/GWidget.h>
 #include <AK/Function.h>
+#include <LibGUI/GWidget.h>
 
 class GlyphEditorWidget;
 class GlyphMapWidget;

@@ -1,7 +1,7 @@
 #pragma once
 
-#include <LibGUI/GFrame.h>
 #include <AK/Function.h>
+#include <LibGUI/GFrame.h>
 
 class GlyphMapWidget final : public GFrame {
 public:

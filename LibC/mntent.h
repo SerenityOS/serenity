@@ -1,7 +1,7 @@
 #pragma once
 
-#include <sys/cdefs.h>
 #include <stdio.h>
+#include <sys/cdefs.h>
 
 __BEGIN_DECLS
 
@@ -20,4 +20,3 @@ struct mntent {
 struct mntent* getmntent(FILE* stream);
 
 __END_DECLS
-

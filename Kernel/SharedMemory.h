@@ -1,11 +1,11 @@
 #pragma once
 
-#include <AK/Retainable.h>
-#include <AK/RetainPtr.h>
 #include <AK/AKString.h>
+#include <AK/RetainPtr.h>
+#include <AK/Retainable.h>
+#include <Kernel/File.h>
 #include <Kernel/KResult.h>
 #include <Kernel/UnixTypes.h>
-#include <Kernel/File.h>
 
 class VMObject;
 

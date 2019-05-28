@@ -29,7 +29,8 @@ public:
         }
     }
 
-    template<typename T, typename Callback> void for_each_child_of_type(Callback callback);
+    template<typename T, typename Callback>
+    void for_each_child_of_type(Callback callback);
 
     CObject* parent() { return m_parent; }
     const CObject* parent() const { return m_parent; }
@@ -61,7 +62,8 @@ private:
     Vector<CObject*> m_children;
 };
 
-template<typename T> inline bool is(const CObject&) { return true; }
+template<typename T>
+inline bool is(const CObject&) { return true; }
 
 template<typename T>
 inline T& to(CObject& object)
@@ -80,7 +82,7 @@ inline const T& to(const CObject& object)
 template<typename T, typename Callback>
 inline void CObject::for_each_child_of_type(Callback callback)
 {
-    for_each_child([&] (auto& child) {
+    for_each_child([&](auto& child) {
         if (is<T>(child))
             return callback(to<T>(child));
         return IterationDecision::Continue;

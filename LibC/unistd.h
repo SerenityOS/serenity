@@ -1,9 +1,9 @@
 #pragma once
 
+#include <errno.h>
+#include <limits.h>
 #include <sys/cdefs.h>
 #include <sys/types.h>
-#include <limits.h>
-#include <errno.h>
 
 __BEGIN_DECLS
 
@@ -19,7 +19,7 @@ void sysbeep();
 int systrace(pid_t);
 int gettid();
 int donate(int tid);
-int create_thread(int(*)(void*), void*);
+int create_thread(int (*)(void*), void*);
 void exit_thread(int);
 int create_shared_buffer(pid_t peer_pid, int, void** buffer);
 void* get_shared_buffer(int shared_buffer_id);
@@ -85,19 +85,20 @@ int access(const char* pathname, int mode);
 int isatty(int fd);
 int mknod(const char* pathname, mode_t, dev_t);
 long fpathconf(int fd, int name);
-long pathconf(const char *path, int name);
+long pathconf(const char* path, int name);
 char* getlogin();
 int chown(const char* pathname, uid_t, gid_t);
 int ftruncate(int fd, off_t length);
 
-enum {
+enum
+{
     _PC_NAME_MAX,
 };
 
-#define WEXITSTATUS(status) (((status) & 0xff00) >> 8)
-#define WTERMSIG(status) ((status) & 0x7f)
+#define WEXITSTATUS(status) (((status)&0xff00) >> 8)
+#define WTERMSIG(status) ((status)&0x7f)
 #define WIFEXITED(status) (WTERMSIG(status) == 0)
-#define WIFSIGNALED(status) (((char) (((status) & 0x7f) + 1) >> 1) > 0)
+#define WIFSIGNALED(status) (((char)(((status)&0x7f) + 1) >> 1) > 0)
 
 #define HOST_NAME_MAX 64
 
@@ -107,4 +108,3 @@ enum {
 #define F_OK 0
 
 __END_DECLS
-

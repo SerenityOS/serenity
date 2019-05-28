@@ -1,8 +1,8 @@
 #pragma once
 
-#include <LibGUI/GMenu.h>
 #include <AK/Badge.h>
 #include <AK/Vector.h>
+#include <LibGUI/GMenu.h>
 
 class GApplication;
 

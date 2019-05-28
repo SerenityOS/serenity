@@ -1,18 +1,18 @@
 #pragma once
 
+#include <fcntl.h>
 #include <sys/cdefs.h>
 #include <sys/types.h>
-#include <fcntl.h>
 
 __BEGIN_DECLS
 
-#define S_ISDIR(m) (((m) & S_IFMT) == S_IFDIR)
-#define S_ISCHR(m) (((m) & S_IFMT) == S_IFCHR)
-#define S_ISBLK(m) (((m) & S_IFMT) == S_IFBLK)
-#define S_ISREG(m) (((m) & S_IFMT) == S_IFREG)
-#define S_ISFIFO(m) (((m) & S_IFMT) == S_IFIFO)
-#define S_ISLNK(m) (((m) & S_IFMT) == S_IFLNK)
-#define S_ISSOCK(m) (((m) & S_IFMT) == S_IFSOCK)
+#define S_ISDIR(m) (((m)&S_IFMT) == S_IFDIR)
+#define S_ISCHR(m) (((m)&S_IFMT) == S_IFCHR)
+#define S_ISBLK(m) (((m)&S_IFMT) == S_IFBLK)
+#define S_ISREG(m) (((m)&S_IFMT) == S_IFREG)
+#define S_ISFIFO(m) (((m)&S_IFMT) == S_IFIFO)
+#define S_ISLNK(m) (((m)&S_IFMT) == S_IFLNK)
+#define S_ISSOCK(m) (((m)&S_IFMT) == S_IFSOCK)
 
 mode_t umask(mode_t);
 int chmod(const char* pathname, mode_t);

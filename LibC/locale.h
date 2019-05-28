@@ -4,7 +4,8 @@
 
 __BEGIN_DECLS
 
-enum {
+enum
+{
     LC_ALL,
     LC_NUMERIC,
     LC_CTYPE,
@@ -23,4 +24,3 @@ struct lconv* localeconv();
 char* setlocale(int category, const char* locale);
 
 __END_DECLS
-

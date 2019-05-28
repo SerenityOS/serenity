@@ -2,16 +2,16 @@
 
 #define _STDIO_H // Make GMP believe we exist.
 
+#include <limits.h>
+#include <stdarg.h>
 #include <sys/cdefs.h>
 #include <sys/types.h>
-#include <stdarg.h>
-#include <limits.h>
 
 #define BUFSIZ 1024
 
 __BEGIN_DECLS
- #ifndef EOF
-#define EOF (-1)
+#ifndef EOF
+#    define EOF (-1)
 #endif
 
 #define SEEK_SET 0
@@ -57,7 +57,8 @@ int getchar();
 int ungetc(int c, FILE*);
 int remove(const char* pathname);
 FILE* fdopen(int fd, const char* mode);
-FILE* fopen(const char* pathname, const char* mode); FILE* freopen(const char* pathname, const char* mode, FILE*);
+FILE* fopen(const char* pathname, const char* mode);
+FILE* freopen(const char* pathname, const char* mode, FILE*);
 int fclose(FILE*);
 void rewind(FILE*);
 void clearerr(FILE*);
@@ -81,7 +82,7 @@ int puts(const char*);
 int fputs(const char*, FILE*);
 void perror(const char*);
 int scanf(const char* fmt, ...);
-int sscanf (const char* str, const char* fmt, ...);
+int sscanf(const char* str, const char* fmt, ...);
 int fscanf(FILE*, const char* fmt, ...);
 int vfscanf(FILE*, const char*, va_list);
 int vsscanf(const char*, const char*, va_list);
@@ -95,4 +96,3 @@ FILE* popen(const char* command, const char* type);
 int pclose(FILE*);
 
 __END_DECLS
-

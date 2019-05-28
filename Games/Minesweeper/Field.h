@@ -1,8 +1,8 @@
 #pragma once
 
-#include <LibGUI/GFrame.h>
-#include <LibCore/CTimer.h>
 #include <AK/Noncopyable.h>
+#include <LibCore/CTimer.h>
+#include <LibGUI/GFrame.h>
 
 class Field;
 class GButton;
@@ -13,7 +13,7 @@ class SquareLabel;
 class Square {
     AK_MAKE_NONCOPYABLE(Square)
 public:
-    Square() { }
+    Square() {}
     ~Square();
 
     Field* field { nullptr };
@@ -27,12 +27,14 @@ public:
     SquareButton* button { nullptr };
     SquareLabel* label { nullptr };
 
-    template<typename Callback> void for_each_neighbor(Callback);
+    template<typename Callback>
+    void for_each_neighbor(Callback);
 };
 
 class Field final : public GFrame {
     friend class Square;
     friend class SquareLabel;
+
 public:
     Field(GLabel& flag_label, GLabel& time_label, GButton& face_button, GWidget* parent);
     virtual ~Field() override;
@@ -66,9 +68,15 @@ private:
 
     void flood_fill(Square&);
 
-    template<typename Callback> void for_each_square(Callback);
+    template<typename Callback>
+    void for_each_square(Callback);
 
-    enum class Face { Default, Good, Bad };
+    enum class Face
+    {
+        Default,
+        Good,
+        Bad
+    };
     void set_face(Face);
 
     int m_rows { 9 };

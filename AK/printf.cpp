@@ -169,7 +169,6 @@ template<typename PutChFunc>
     return fieldWidth;
 }
 
-
 template<typename PutChFunc>
 [[gnu::always_inline]] inline int print_signed_number(PutChFunc putch, char*& bufptr, int number, bool leftPad, bool zeroPad, dword fieldWidth)
 {
@@ -183,7 +182,7 @@ template<typename PutChFunc>
 template<typename PutChFunc>
 [[gnu::always_inline]] inline int printf_internal(PutChFunc putch, char* buffer, const char*& fmt, char*& ap)
 {
-    const char *p;
+    const char* p;
 
     int ret = 0;
     char* bufptr = buffer;
@@ -195,7 +194,7 @@ template<typename PutChFunc>
         unsigned long_qualifiers = 0;
         bool alternate_form = 0;
         if (*p == '%' && *(p + 1)) {
-one_more:
+        one_more:
             ++p;
             if (*p == ' ') {
                 leftPad = true;
@@ -223,87 +222,81 @@ one_more:
                 if (*(p + 1))
                     goto one_more;
             }
-            switch( *p )
-            {
-                case 's':
-                    {
-                        const char* sp = va_arg(ap, const char*);
-                        ret += print_string(putch, bufptr, sp ? sp : "(null)", leftPad, fieldWidth);
-                    }
-                    break;
+            switch (*p) {
+            case 's': {
+                const char* sp = va_arg(ap, const char*);
+                ret += print_string(putch, bufptr, sp ? sp : "(null)", leftPad, fieldWidth);
+            } break;
 
-                case 'd':
-                    ret += print_signed_number(putch, bufptr, va_arg(ap, int), leftPad, zeroPad, fieldWidth);
-                    break;
+            case 'd':
+                ret += print_signed_number(putch, bufptr, va_arg(ap, int), leftPad, zeroPad, fieldWidth);
+                break;
 
-                case 'u':
-                    ret += print_number(putch, bufptr, va_arg(ap, dword), leftPad, zeroPad, fieldWidth);
-                    break;
+            case 'u':
+                ret += print_number(putch, bufptr, va_arg(ap, dword), leftPad, zeroPad, fieldWidth);
+                break;
 
-                case 'Q':
-                    ret += print_qword(putch, bufptr, va_arg(ap, qword), leftPad, zeroPad, fieldWidth);
-                    break;
+            case 'Q':
+                ret += print_qword(putch, bufptr, va_arg(ap, qword), leftPad, zeroPad, fieldWidth);
+                break;
 
-                case 'q':
-                    ret += print_hex(putch, bufptr, va_arg(ap, qword), 16);
-                    break;
+            case 'q':
+                ret += print_hex(putch, bufptr, va_arg(ap, qword), 16);
+                break;
 
 #ifndef KERNEL
-                case 'f':
-                    // FIXME: Print as float!
-                    ret += print_number(putch, bufptr, (int)va_arg(ap, double), leftPad, zeroPad, fieldWidth);
-                    break;
+            case 'f':
+                // FIXME: Print as float!
+                ret += print_number(putch, bufptr, (int)va_arg(ap, double), leftPad, zeroPad, fieldWidth);
+                break;
 #endif
 
-                case 'o':
-                    if (alternate_form) {
-                        putch(bufptr, '0');
-                        ++ret;
-                    }
-                    ret += print_octal_number(putch, bufptr, va_arg(ap, dword), leftPad, zeroPad, fieldWidth);
-                    break;
-
-                case 'x':
-                    if (alternate_form) {
-                        putch(bufptr, '0');
-                        putch(bufptr, 'x');
-                        ret += 2;
-                    }
-                    ret += print_hex(putch, bufptr, va_arg(ap, dword), 8);
-                    break;
-
-                case 'w':
-                    ret += print_hex(putch, bufptr, va_arg(ap, int), 4);
-                    break;
-
-                case 'b':
-                    ret += print_hex(putch, bufptr, va_arg(ap, int), 2);
-                    break;
-
-                case 'c':
-                    putch(bufptr, (char)va_arg(ap, int));
+            case 'o':
+                if (alternate_form) {
+                    putch(bufptr, '0');
                     ++ret;
-                    break;
+                }
+                ret += print_octal_number(putch, bufptr, va_arg(ap, dword), leftPad, zeroPad, fieldWidth);
+                break;
 
-                case '%':
-                    putch(bufptr, '%');
-                    ++ret;
-                    break;
-
-                case 'p':
+            case 'x':
+                if (alternate_form) {
                     putch(bufptr, '0');
                     putch(bufptr, 'x');
                     ret += 2;
-                    ret += print_hex(putch, bufptr, va_arg(ap, dword), 8);
-                    break;
+                }
+                ret += print_hex(putch, bufptr, va_arg(ap, dword), 8);
+                break;
+
+            case 'w':
+                ret += print_hex(putch, bufptr, va_arg(ap, int), 4);
+                break;
+
+            case 'b':
+                ret += print_hex(putch, bufptr, va_arg(ap, int), 2);
+                break;
+
+            case 'c':
+                putch(bufptr, (char)va_arg(ap, int));
+                ++ret;
+                break;
+
+            case '%':
+                putch(bufptr, '%');
+                ++ret;
+                break;
+
+            case 'p':
+                putch(bufptr, '0');
+                putch(bufptr, 'x');
+                ret += 2;
+                ret += print_hex(putch, bufptr, va_arg(ap, dword), 8);
+                break;
             }
-        }
-        else {
+        } else {
             putch(bufptr, *p);
             ++ret;
         }
     }
     return ret;
 }
-
-

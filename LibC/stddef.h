@@ -4,9 +4,9 @@
 #include <sys/types.h>
 
 #ifdef __cplusplus
-#define NULL nullptr
+#    define NULL nullptr
 #else
-#define NULL ((void*)0)
+#    define NULL ((void*)0)
 #endif
 
 typedef __PTRDIFF_TYPE__ ptrdiff_t;

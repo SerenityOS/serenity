@@ -1,11 +1,11 @@
 #pragma once
 
-#include <AK/Badge.h>
-#include <AK/Retainable.h>
-#include <AK/Weakable.h>
-#include <AK/RetainPtr.h>
-#include <AK/Vector.h>
 #include <AK/AKString.h>
+#include <AK/Badge.h>
+#include <AK/RetainPtr.h>
+#include <AK/Retainable.h>
+#include <AK/Vector.h>
+#include <AK/Weakable.h>
 #include <Kernel/Lock.h>
 #include <Kernel/PhysicalAddress.h>
 #include <Kernel/UnixTypes.h>
@@ -13,8 +13,10 @@
 class Inode;
 class PhysicalPage;
 
-class VMObject : public Retainable<VMObject>, public Weakable<VMObject> {
+class VMObject : public Retainable<VMObject>
+    , public Weakable<VMObject> {
     friend class MemoryManager;
+
 public:
     static Retained<VMObject> create_file_backed(RetainPtr<Inode>&&);
     static Retained<VMObject> create_anonymous(size_t);
@@ -46,7 +48,8 @@ private:
     explicit VMObject(size_t);
     VMObject(PhysicalAddress, size_t);
 
-    template<typename Callback> void for_each_region(Callback);
+    template<typename Callback>
+    void for_each_region(Callback);
 
     String m_name;
     bool m_allow_cpu_caching { true };

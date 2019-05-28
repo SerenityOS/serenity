@@ -10,6 +10,7 @@ class VMObject;
 
 class Region : public Retainable<Region> {
     friend class MemoryManager;
+
 public:
     Region(const Range&, String&&, bool r, bool w, bool cow = false);
     Region(const Range&, Retained<VMObject>&&, size_t offset_in_vmo, String&&, bool r, bool w, bool cow = false);

@@ -1,12 +1,12 @@
 #pragma once
 
-#include <SharedGraphics/Rect.h>
+#include "VBWidgetType.h"
+#include <AK/Function.h>
+#include <AK/HashMap.h>
 #include <AK/Retainable.h>
 #include <AK/Retained.h>
 #include <AK/Weakable.h>
-#include <AK/HashMap.h>
-#include <AK/Function.h>
-#include "VBWidgetType.h"
+#include <SharedGraphics/Rect.h>
 
 class GPainter;
 class GVariant;
@@ -15,7 +15,18 @@ class VBForm;
 class VBProperty;
 class VBWidgetPropertyModel;
 
-enum class Direction { None, Left, UpLeft, Up, UpRight, Right, DownRight, Down, DownLeft };
+enum class Direction
+{
+    None,
+    Left,
+    UpLeft,
+    Up,
+    UpRight,
+    Right,
+    DownRight,
+    Down,
+    DownLeft
+};
 template<typename Callback>
 inline void for_each_direction(Callback callback)
 {
@@ -29,8 +40,10 @@ inline void for_each_direction(Callback callback)
     callback(Direction::DownLeft);
 }
 
-class VBWidget : public Retainable<VBWidget>, public Weakable<VBWidget> {
+class VBWidget : public Retainable<VBWidget>
+    , public Weakable<VBWidget> {
     friend class VBWidgetPropertyModel;
+
 public:
     static Retained<VBWidget> create(VBWidgetType type, VBForm& form) { return adopt(*new VBWidget(type, form)); }
     ~VBWidget();

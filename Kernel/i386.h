@@ -1,12 +1,13 @@
 #pragma once
 
-#include <Kernel/kstdio.h>
 #include <Kernel/LinearAddress.h>
+#include <Kernel/kstdio.h>
 
 #define PAGE_SIZE 4096
 #define PAGE_MASK 0xfffff000
 
-struct [[gnu::packed]] TSS32 {
+struct [[gnu::packed]] TSS32
+{
     word backlink, __blh;
     dword esp0;
     word ss0, __ss0h;
@@ -15,7 +16,7 @@ struct [[gnu::packed]] TSS32 {
     dword esp2;
     word ss2, __ss2h;
     dword cr3, eip, eflags;
-    dword eax,ecx,edx,ebx,esp,ebp,esi,edi;
+    dword eax, ecx, edx, ebx, esp, ebp, esi, edi;
     word es, __esh;
     word cs, __csh;
     word ss, __ssh;
@@ -26,7 +27,8 @@ struct [[gnu::packed]] TSS32 {
     word trace, iomapbase;
 };
 
-union [[gnu::packed]] Descriptor {
+union [[gnu::packed]] Descriptor
+{
     struct {
         word limit_lo;
         word base_lo;
@@ -47,7 +49,8 @@ union [[gnu::packed]] Descriptor {
         dword high;
     };
 
-    enum Type {
+    enum Type
+    {
         Invalid = 0,
         AvailableTSS_16bit = 0x1,
         LDT = 0x2,
@@ -65,7 +68,7 @@ union [[gnu::packed]] Descriptor {
 
     void set_base(void* b)
     {
-        base_lo = (dword)(b) & 0xffff;
+        base_lo = (dword)(b)&0xffff;
         base_hi = ((dword)(b) >> 16) & 0xff;
         base_hi2 = ((dword)(b) >> 24) & 0xff;
     }
@@ -97,22 +100,27 @@ void write_gdt_entry(word selector, Descriptor&);
 [[noreturn]] static inline void hang()
 {
     asm volatile("cli; hlt");
-    for (;;) { }
+    for (;;) {
+    }
 }
 
-#define LSW(x) ((dword)(x) & 0xFFFF)
+#define LSW(x) ((dword)(x)&0xFFFF)
 #define MSW(x) (((dword)(x) >> 16) & 0xFFFF)
-#define LSB(x) ((x) & 0xFF)
-#define MSB(x) (((x)>>8) & 0xFF)
+#define LSB(x) ((x)&0xFF)
+#define MSB(x) (((x) >> 8) & 0xFF)
 
-#define cli() asm volatile("cli" ::: "memory")
-#define sti() asm volatile("sti" ::: "memory")
-#define memory_barrier() asm volatile ("" ::: "memory")
+#define cli() asm volatile("cli" :: \
+                               : "memory")
+#define sti() asm volatile("sti" :: \
+                               : "memory")
+#define memory_barrier() asm volatile("" :: \
+                                          : "memory")
 
 inline dword cpu_cr3()
 {
     dword cr3;
-    asm volatile("movl %%cr3, %%eax":"=a"(cr3));
+    asm volatile("movl %%cr3, %%eax"
+                 : "=a"(cr3));
     return cr3;
 }
 
@@ -122,8 +130,7 @@ inline dword cpu_flags()
     asm volatile(
         "pushf\n"
         "pop %0\n"
-        :"=rm"(flags)
-        ::"memory");
+        : "=rm"(flags)::"memory");
     return flags;
 }
 
@@ -173,15 +180,16 @@ private:
 #define IRQ_VECTOR_BASE 0x50
 
 struct PageFaultFlags {
-enum Flags {
-    NotPresent = 0x00,
-    ProtectionViolation = 0x01,
-    Read = 0x00,
-    Write = 0x02,
-    UserMode = 0x04,
-    SupervisorMode = 0x00,
-    InstructionFetch = 0x08,
-};
+    enum Flags
+    {
+        NotPresent = 0x00,
+        ProtectionViolation = 0x01,
+        Read = 0x00,
+        Write = 0x02,
+        UserMode = 0x04,
+        SupervisorMode = 0x00,
+        InstructionFetch = 0x08,
+    };
 };
 
 class PageFault {
@@ -208,7 +216,8 @@ private:
     LinearAddress m_laddr;
 };
 
-struct [[gnu::packed]] RegisterDump {
+struct [[gnu::packed]] RegisterDump
+{
     word ss;
     word gs;
     word fs;
@@ -230,7 +239,8 @@ struct [[gnu::packed]] RegisterDump {
     word ss_if_crossRing;
 };
 
-struct [[gnu::packed]] RegisterDumpWithExceptionCode {
+struct [[gnu::packed]] RegisterDumpWithExceptionCode
+{
     word ss;
     word gs;
     word fs;
@@ -254,7 +264,8 @@ struct [[gnu::packed]] RegisterDumpWithExceptionCode {
     word ss_if_crossRing;
 };
 
-struct [[gnu::aligned(16)]] FPUState {
+struct [[gnu::aligned(16)]] FPUState
+{
     byte buffer[512];
 };
 
@@ -265,11 +276,14 @@ inline constexpr dword page_base_of(dword address)
 
 class CPUID {
 public:
-    CPUID(dword function) { asm volatile("cpuid" : "=a" (m_eax), "=b" (m_ebx), "=c" (m_ecx), "=d" (m_edx) : "a" (function), "c" (0)); }
+    CPUID(dword function) { asm volatile("cpuid"
+                                         : "=a"(m_eax), "=b"(m_ebx), "=c"(m_ecx), "=d"(m_edx)
+                                         : "a"(function), "c"(0)); }
     dword eax() const { return m_eax; }
     dword ebx() const { return m_ebx; }
     dword ecx() const { return m_ecx; }
     dword edx() const { return m_edx; }
+
 private:
     dword m_eax { 0xffffffff };
     dword m_ebx { 0xffffffff };
@@ -279,7 +293,8 @@ private:
 
 inline void read_tsc(dword& lsw, dword& msw)
 {
-    asm volatile("rdtsc":"=d"(msw),"=a"(lsw));
+    asm volatile("rdtsc"
+                 : "=d"(msw), "=a"(lsw));
 }
 
 struct Stopwatch {
@@ -290,6 +305,7 @@ struct Stopwatch {
         };
         uint64_t qw { 0 };
     };
+
 public:
     Stopwatch(const char* name)
         : m_name(name)

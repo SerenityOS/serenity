@@ -1,16 +1,17 @@
 #pragma once
 
+#include <Kernel/KeyCode.h>
 #include <LibCore/CEvent.h>
+#include <LibGUI/GWindowType.h>
 #include <SharedGraphics/Point.h>
 #include <SharedGraphics/Rect.h>
-#include <Kernel/KeyCode.h>
-#include <LibGUI/GWindowType.h>
 
 class CObject;
 
-class GEvent : public CEvent{
+class GEvent : public CEvent {
 public:
-    enum Type {
+    enum Type
+    {
         Show = 1000,
         Hide,
         Paint,
@@ -43,9 +44,12 @@ public:
         __End_WM_Events,
     };
 
-    GEvent() { }
-    explicit GEvent(Type type) : CEvent(type) { }
-    virtual ~GEvent() { }
+    GEvent() {}
+    explicit GEvent(Type type)
+        : CEvent(type)
+    {
+    }
+    virtual ~GEvent() {}
 
     bool is_key_event() const { return type() == KeyUp || type() == KeyDown; }
     bool is_paint_event() const { return type() == Paint; }
@@ -175,6 +179,7 @@ public:
 
     const Size& old_size() const { return m_old_size; }
     const Size& size() const { return m_size; }
+
 private:
     Size m_old_size;
     Size m_size;
@@ -213,7 +218,8 @@ public:
     }
 };
 
-enum GMouseButton : byte {
+enum GMouseButton : byte
+{
     None = 0,
     Left = 1,
     Right = 2,
