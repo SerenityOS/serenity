@@ -7,7 +7,7 @@ if [ -z "$MAKEOPTS" ]; then
     MAKEOPTS="-j $(nproc)"
 fi
 if [ -z "$INSTALLOPTS" ]; then
-    MAKEOPTS="-j $(nproc)"
+    INSTALLOPTS=""
 fi
 if [ -z "$SERENITY_ROOT" ]; then
     echo "You must have source'd UseIt.sh to build any ports!"
