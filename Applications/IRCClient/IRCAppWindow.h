@@ -1,9 +1,9 @@
 #pragma once
 
-#include <LibGUI/GWindow.h>
-#include <LibGUI/GWidget.h>
 #include "IRCClient.h"
 #include "IRCWindow.h"
+#include <LibGUI/GWidget.h>
+#include <LibGUI/GWindow.h>
 
 class GAction;
 class GStackWidget;

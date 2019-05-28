@@ -1,20 +1,19 @@
-#include <LibCore/CObject.h>
-#include <LibCore/CEventLoop.h>
-#include <LibCore/CEvent.h>
-#include <LibCore/CLock.h>
-#include <LibCore/CNotifier.h>
-#include <LibC/unistd.h>
-#include <LibC/stdio.h>
+#include <AK/Time.h>
+#include <LibC/errno.h>
 #include <LibC/fcntl.h>
+#include <LibC/stdio.h>
+#include <LibC/stdlib.h>
 #include <LibC/string.h>
-#include <LibC/time.h>
 #include <LibC/sys/select.h>
 #include <LibC/sys/socket.h>
 #include <LibC/sys/time.h>
-#include <LibC/errno.h>
-#include <LibC/string.h>
-#include <LibC/stdlib.h>
-#include <AK/Time.h>
+#include <LibC/time.h>
+#include <LibC/unistd.h>
+#include <LibCore/CEvent.h>
+#include <LibCore/CEventLoop.h>
+#include <LibCore/CLock.h>
+#include <LibCore/CNotifier.h>
+#include <LibCore/CObject.h>
 
 //#define CEVENTLOOP_DEBUG
 //#define DEFERRED_INVOKE_DEBUG
@@ -66,7 +65,8 @@ void CEventLoop::quit(int code)
 
 struct CEventLoopPusher {
 public:
-    CEventLoopPusher(CEventLoop& event_loop) : m_event_loop(event_loop)
+    CEventLoopPusher(CEventLoop& event_loop)
+        : m_event_loop(event_loop)
     {
         if (&m_event_loop != s_main_event_loop) {
             m_event_loop.take_pending_events_from(CEventLoop::current());
@@ -80,6 +80,7 @@ public:
             CEventLoop::current().take_pending_events_from(m_event_loop);
         }
     }
+
 private:
     CEventLoop& m_event_loop;
 };
@@ -159,7 +160,7 @@ void CEventLoop::wait_for_event(WaitMode mode)
     FD_ZERO(&wfds);
 
     int max_fd = 0;
-    auto add_fd_to_set = [&max_fd] (int fd, fd_set& set){
+    auto add_fd_to_set = [&max_fd](int fd, fd_set& set) {
         FD_SET(fd, &set);
         if (fd > max_fd)
             max_fd = fd;
@@ -271,8 +272,8 @@ int CEventLoop::register_timer(CObject& object, int milliseconds, bool should_re
     gettimeofday(&now, nullptr);
     timer->reload(now);
     timer->should_reload = should_reload;
-    int timer_id = ++s_next_timer_id;  // FIXME: This will eventually wrap around.
-    ASSERT(timer_id); // FIXME: Aforementioned wraparound.
+    int timer_id = ++s_next_timer_id; // FIXME: This will eventually wrap around.
+    ASSERT(timer_id);                 // FIXME: Aforementioned wraparound.
     timer->timer_id = timer_id;
     s_timers->set(timer->timer_id, move(timer));
     return timer_id;

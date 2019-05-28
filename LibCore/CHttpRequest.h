@@ -6,7 +6,13 @@ class CNetworkJob;
 
 class CHttpRequest {
 public:
-    enum Method { Invalid, HEAD, GET, POST };
+    enum Method
+    {
+        Invalid,
+        HEAD,
+        GET,
+        POST
+    };
 
     CHttpRequest();
     ~CHttpRequest();

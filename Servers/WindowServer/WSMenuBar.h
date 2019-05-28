@@ -2,8 +2,8 @@
 
 #include "WSMenu.h"
 #include <AK/Vector.h>
-#include <AK/Weakable.h>
 #include <AK/WeakPtr.h>
+#include <AK/Weakable.h>
 
 class WSMenuBar : public Weakable<WSMenuBar> {
 public:

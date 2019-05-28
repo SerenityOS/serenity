@@ -28,7 +28,8 @@ private:
     int m_history_cursor { 0 };
     int m_history_capacity { 100 };
 
-    enum class InputState {
+    enum class InputState
+    {
         Free,
         ExpectBracket,
         ExpectFinal,

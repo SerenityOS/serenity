@@ -33,4 +33,3 @@ static inline uint32_t ntohl(uint32_t ns)
 }
 
 __END_DECLS
-

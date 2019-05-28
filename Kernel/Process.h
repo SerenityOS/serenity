@@ -1,18 +1,18 @@
 #pragma once
 
-#include <AK/Types.h>
-#include <AK/InlineLinkedList.h>
 #include <AK/AKString.h>
+#include <AK/InlineLinkedList.h>
+#include <AK/Types.h>
 #include <AK/Vector.h>
 #include <AK/WeakPtr.h>
 #include <AK/Weakable.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
-#include <Kernel/VM/RangeAllocator.h>
-#include <Kernel/TTY/TTY.h>
-#include <Kernel/Syscall.h>
-#include <Kernel/UnixTypes.h>
-#include <Kernel/Thread.h>
 #include <Kernel/Lock.h>
+#include <Kernel/Syscall.h>
+#include <Kernel/TTY/TTY.h>
+#include <Kernel/Thread.h>
+#include <Kernel/UnixTypes.h>
+#include <Kernel/VM/RangeAllocator.h>
 #include <LibC/signal_numbers.h>
 
 class ELFLoader;
@@ -24,9 +24,11 @@ class ProcessTracer;
 
 void kgettimeofday(timeval&);
 
-class Process : public InlineLinkedListNode<Process>, public Weakable<Process> {
+class Process : public InlineLinkedListNode<Process>
+    , public Weakable<Process> {
     friend class InlineLinkedListNode<Process>;
     friend class Thread;
+
 public:
     static Process* create_kernel_process(String&& name, void (*entry)());
     static Process* create_user_process(const String& path, uid_t, gid_t, pid_t ppid, int& error, Vector<String>&& arguments = Vector<String>(), Vector<String>&& environment = Vector<String>(), TTY* = nullptr);
@@ -35,14 +37,16 @@ public:
     static Vector<pid_t> all_pids();
     static Vector<Process*> all_processes();
 
-    enum Priority {
+    enum Priority
+    {
         IdlePriority,
         LowPriority,
         NormalPriority,
         HighPriority,
     };
 
-    enum RingLevel {
+    enum RingLevel
+    {
         Ring0 = 0,
         Ring3 = 3,
     };
@@ -83,10 +87,14 @@ public:
     FileDescriptor* file_descriptor(int fd);
     const FileDescriptor* file_descriptor(int fd) const;
 
-    template<typename Callback> static void for_each(Callback);
-    template<typename Callback> static void for_each_in_pgrp(pid_t, Callback);
-    template<typename Callback> void for_each_child(Callback);
-    template<typename Callback> void for_each_thread(Callback) const;
+    template<typename Callback>
+    static void for_each(Callback);
+    template<typename Callback>
+    static void for_each_in_pgrp(pid_t, Callback);
+    template<typename Callback>
+    void for_each_child(Callback);
+    template<typename Callback>
+    void for_each_thread(Callback) const;
 
     void die();
     void finalize();
@@ -179,7 +187,7 @@ public:
     int sys$getsockname(int sockfd, sockaddr* addr, socklen_t* addrlen);
     int sys$getpeername(int sockfd, sockaddr* addr, socklen_t* addrlen);
     int sys$restore_signal_mask(dword mask);
-    int sys$create_thread(int(*)(void*), void*);
+    int sys$create_thread(int (*)(void*), void*);
     void sys$exit_thread(int code);
     int sys$rename(const char* oldpath, const char* newpath);
     int sys$systrace(pid_t);
@@ -216,8 +224,10 @@ public:
     bool validate_read(const void*, ssize_t) const;
     bool validate_write(void*, ssize_t) const;
     bool validate_read_str(const char* str);
-    template<typename T> bool validate_read_typed(T* value, size_t count = 1) { return validate_read(value, sizeof(T) * count); }
-    template<typename T> bool validate_write_typed(T* value, size_t count = 1) { return validate_write(value, sizeof(T) * count); }
+    template<typename T>
+    bool validate_read_typed(T* value, size_t count = 1) { return validate_read(value, sizeof(T) * count); }
+    template<typename T>
+    bool validate_write_typed(T* value, size_t count = 1) { return validate_write(value, sizeof(T) * count); }
 
     Inode& cwd_inode();
     Inode* executable_inode() { return m_executable.ptr(); }
@@ -365,6 +375,7 @@ public:
 
     Process* operator->() { return &m_process; }
     Process& operator*() { return m_process; }
+
 private:
     Process& m_process;
 };

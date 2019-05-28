@@ -1,7 +1,7 @@
 #pragma once
 
-#include <sys/types.h>
 #include <signal_numbers.h>
+#include <sys/types.h>
 
 __BEGIN_DECLS
 
@@ -50,4 +50,3 @@ extern const char* sys_siglist[NSIG];
 #define SIG_SETMASK 2
 
 __END_DECLS
-

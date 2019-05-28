@@ -1,11 +1,11 @@
 #pragma once
 
+#include "IRCLogBuffer.h"
 #include <AK/AKString.h>
 #include <AK/CircularQueue.h>
-#include <AK/Vector.h>
-#include <AK/Retainable.h>
 #include <AK/RetainPtr.h>
-#include "IRCLogBuffer.h"
+#include <AK/Retainable.h>
+#include <AK/Vector.h>
 
 class IRCClient;
 class IRCChannelMemberListModel;

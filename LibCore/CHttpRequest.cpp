@@ -1,6 +1,6 @@
-#include <LibCore/CHttpRequest.h>
-#include <LibCore/CHttpJob.h>
 #include <AK/StringBuilder.h>
+#include <LibCore/CHttpJob.h>
+#include <LibCore/CHttpRequest.h>
 
 CHttpRequest::CHttpRequest()
 {

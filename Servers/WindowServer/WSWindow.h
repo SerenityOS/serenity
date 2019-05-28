@@ -1,20 +1,21 @@
 #pragma once
 
-#include <SharedGraphics/Rect.h>
-#include <SharedGraphics/GraphicsBitmap.h>
 #include <AK/AKString.h>
 #include <AK/InlineLinkedList.h>
 #include <LibCore/CObject.h>
-#include <WindowServer/WSWindowType.h>
-#include <WindowServer/WSWindowFrame.h>
 #include <SharedGraphics/DisjointRectSet.h>
+#include <SharedGraphics/GraphicsBitmap.h>
+#include <SharedGraphics/Rect.h>
+#include <WindowServer/WSWindowFrame.h>
+#include <WindowServer/WSWindowType.h>
 
 class WSClientConnection;
 class WSCursor;
 class WSMenu;
 class WSMouseEvent;
 
-class WSWindow final : public CObject, public InlineLinkedListNode<WSWindow> {
+class WSWindow final : public CObject
+    , public InlineLinkedListNode<WSWindow> {
 public:
     WSWindow(WSClientConnection&, WSWindowType, int window_id, bool modal, bool resizable, bool fullscreen);
     WSWindow(CObject&, WSWindowType);

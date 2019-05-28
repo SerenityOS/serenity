@@ -4,8 +4,11 @@
 
 class LinearAddress {
 public:
-    LinearAddress() { }
-    explicit LinearAddress(dword address) : m_address(address) { }
+    LinearAddress() {}
+    explicit LinearAddress(dword address)
+        : m_address(address)
+    {
+    }
 
     bool is_null() const { return m_address == 0; }
 

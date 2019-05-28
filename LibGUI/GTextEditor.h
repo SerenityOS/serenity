@@ -1,8 +1,8 @@
 #pragma once
 
-#include <LibGUI/GScrollableWidget.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>
+#include <LibGUI/GScrollableWidget.h>
 #include <SharedGraphics/TextAlignment.h>
 
 class GAction;
@@ -12,7 +12,7 @@ class Painter;
 
 class GTextPosition {
 public:
-    GTextPosition() { }
+    GTextPosition() {}
     GTextPosition(int line, int column)
         : m_line(line)
         , m_column(column)
@@ -38,11 +38,19 @@ private:
 
 class GTextRange {
 public:
-    GTextRange() { }
-    GTextRange(const GTextPosition& start, const GTextPosition& end) : m_start(start) , m_end(end) { }
+    GTextRange() {}
+    GTextRange(const GTextPosition& start, const GTextPosition& end)
+        : m_start(start)
+        , m_end(end)
+    {
+    }
 
     bool is_valid() const { return m_start.is_valid() && m_end.is_valid(); }
-    void clear() { m_start = { }; m_end = { }; }
+    void clear()
+    {
+        m_start = {};
+        m_end = {};
+    }
 
     GTextPosition& start() { return m_start; }
     GTextPosition& end() { return m_end; }
@@ -54,7 +62,11 @@ public:
     void set_start(const GTextPosition& position) { m_start = position; }
     void set_end(const GTextPosition& position) { m_end = position; }
 
-    void set(const GTextPosition& start, const GTextPosition& end) { m_start = start; m_end = end; }
+    void set(const GTextPosition& start, const GTextPosition& end)
+    {
+        m_start = start;
+        m_end = end;
+    }
 
 private:
     GTextPosition normalized_start() const { return m_start < m_end ? m_start : m_end; }
@@ -66,7 +78,11 @@ private:
 
 class GTextEditor : public GScrollableWidget {
 public:
-    enum Type { MultiLine, SingleLine };
+    enum Type
+    {
+        MultiLine,
+        SingleLine
+    };
     GTextEditor(Type, GWidget* parent);
     virtual ~GTextEditor() override;
 
@@ -149,6 +165,7 @@ private:
 
     class Line {
         friend class GTextEditor;
+
     public:
         Line();
         explicit Line(const String&);

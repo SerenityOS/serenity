@@ -2,10 +2,11 @@
 
 #include <Kernel/Net/IPv4.h>
 
-class [[gnu::packed]] UDPPacket {
+class [[gnu::packed]] UDPPacket
+{
 public:
-    UDPPacket() { }
-    ~UDPPacket() { }
+    UDPPacket() {}
+    ~UDPPacket() {}
 
     word source_port() const { return m_source_port; }
     void set_source_port(word port) { m_source_port = port; }

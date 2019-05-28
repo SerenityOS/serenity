@@ -1,11 +1,12 @@
 #pragma once
 
-#include <dirent.h>
 #include <AK/AKString.h>
+#include <dirent.h>
 
 class CDirIterator {
 public:
-    enum Flags {
+    enum Flags
+    {
         NoFlags = 0x0,
         SkipDots = 0x1,
     };
@@ -27,4 +28,3 @@ private:
 
     bool advance_next();
 };
-

@@ -1,7 +1,7 @@
 #pragma once
 
-#include <LibGUI/GTableView.h>
 #include <AK/Function.h>
+#include <LibGUI/GTableView.h>
 #include <unistd.h>
 
 class GraphWidget;
@@ -19,4 +19,3 @@ public:
 private:
     virtual void model_notification(const GModelNotification&) override;
 };
-

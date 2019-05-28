@@ -7,7 +7,8 @@ public:
     static Retained<TCPSocket> create(int protocol);
     virtual ~TCPSocket() override;
 
-    enum class State {
+    enum class State
+    {
         Disconnected,
         Connecting,
         Connected,
@@ -47,7 +48,7 @@ private:
 
 class TCPSocketHandle : public SocketHandle {
 public:
-    TCPSocketHandle() { }
+    TCPSocketHandle() {}
 
     TCPSocketHandle(RetainPtr<TCPSocket>&& socket)
         : SocketHandle(move(socket))

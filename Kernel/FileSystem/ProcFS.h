@@ -1,9 +1,9 @@
 #pragma once
 
-#include <Kernel/Lock.h>
 #include <AK/Types.h>
 #include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/FileSystem/Inode.h>
+#include <Kernel/Lock.h>
 
 class Process;
 
@@ -11,6 +11,7 @@ class ProcFSInode;
 
 class ProcFS final : public FS {
     friend class ProcFSInode;
+
 public:
     [[gnu::pure]] static ProcFS& the();
 
@@ -34,7 +35,7 @@ private:
     ProcFS();
 
     struct ProcFSDirectoryEntry {
-        ProcFSDirectoryEntry() { }
+        ProcFSDirectoryEntry() {}
         ProcFSDirectoryEntry(const char* a_name, unsigned a_proc_file_type, Function<ByteBuffer(InodeIdentifier)>&& a_read_callback = nullptr, Function<ssize_t(InodeIdentifier, const ByteBuffer&)>&& a_write_callback = nullptr, RetainPtr<ProcFSInode>&& a_inode = nullptr)
             : name(a_name)
             , proc_file_type(a_proc_file_type)
@@ -69,6 +70,7 @@ struct ProcFSInodeCustomData {
 
 class ProcFSInode final : public Inode {
     friend class ProcFS;
+
 public:
     virtual ~ProcFSInode() override;
 

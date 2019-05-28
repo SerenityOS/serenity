@@ -36,4 +36,3 @@ private:
     TextAlignment m_text_alignment { TextAlignment::Center };
     bool m_should_stretch_icon { false };
 };
-

@@ -1,7 +1,7 @@
 #pragma once
 
-#include <LibGUI/GWidget.h>
 #include <AK/Function.h>
+#include <LibGUI/GWidget.h>
 
 class GScrollBar final : public GWidget {
 public:
@@ -28,7 +28,8 @@ public:
 
     virtual const char* class_name() const override { return "GScrollBar"; }
 
-    enum Component {
+    enum Component
+    {
         Invalid,
         DecrementButton,
         IncrementButton,

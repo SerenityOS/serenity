@@ -27,7 +27,8 @@ public:
     void clear();
     ~GVariant();
 
-    enum class Type {
+    enum class Type
+    {
         Invalid,
         Bool,
         Int,

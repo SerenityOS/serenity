@@ -12,11 +12,17 @@
 class Font;
 class GAbstractView;
 
-enum class GSortOrder { None, Ascending, Descending };
+enum class GSortOrder
+{
+    None,
+    Ascending,
+    Descending
+};
 
 class GModelNotification {
 public:
-    enum Type {
+    enum Type
+    {
         Invalid = 0,
         ModelUpdated,
     };
@@ -43,22 +49,30 @@ public:
         const Font* font { nullptr };
     };
 
-    enum class Role { Display, Sort, Custom, ForegroundColor, BackgroundColor, Icon };
+    enum class Role
+    {
+        Display,
+        Sort,
+        Custom,
+        ForegroundColor,
+        BackgroundColor,
+        Icon
+    };
 
     virtual ~GModel();
 
     virtual int row_count(const GModelIndex& = GModelIndex()) const = 0;
     virtual int column_count(const GModelIndex& = GModelIndex()) const = 0;
-    virtual String row_name(int) const { return { }; }
-    virtual String column_name(int) const { return { }; }
-    virtual ColumnMetadata column_metadata(int) const { return { }; }
+    virtual String row_name(int) const { return {}; }
+    virtual String column_name(int) const { return {}; }
+    virtual ColumnMetadata column_metadata(int) const { return {}; }
     virtual GVariant data(const GModelIndex&, Role = Role::Display) const = 0;
     virtual void update() = 0;
-    virtual GModelIndex parent_index(const GModelIndex&) const { return { }; }
+    virtual GModelIndex parent_index(const GModelIndex&) const { return {}; }
     virtual GModelIndex index(int row, int column = 0, const GModelIndex& = GModelIndex()) const { return create_index(row, column); }
     virtual GModelIndex sibling(int row, int column, const GModelIndex& parent) const;
     virtual bool is_editable(const GModelIndex&) const { return false; }
-    virtual void set_data(const GModelIndex&, const GVariant&) { }
+    virtual void set_data(const GModelIndex&, const GVariant&) {}
 
     bool is_valid(const GModelIndex& index) const
     {
@@ -70,7 +84,7 @@ public:
 
     virtual int key_column() const { return -1; }
     virtual GSortOrder sort_order() const { return GSortOrder::None; }
-    virtual void set_key_column_and_sort_order(int, GSortOrder) { }
+    virtual void set_key_column_and_sort_order(int, GSortOrder) {}
 
     void register_view(Badge<GAbstractView>, GAbstractView&);
     void unregister_view(Badge<GAbstractView>, GAbstractView&);

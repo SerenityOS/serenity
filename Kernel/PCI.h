@@ -18,8 +18,13 @@ struct ID {
 };
 
 struct Address {
-    Address() { }
-    Address(byte bus, byte slot, byte function) : m_bus(bus), m_slot(slot), m_function(function) { }
+    Address() {}
+    Address(byte bus, byte slot, byte function)
+        : m_bus(bus)
+        , m_slot(slot)
+        , m_function(function)
+    {
+    }
 
     bool is_null() const { return !m_bus && !m_slot && !m_function; }
     operator bool() const { return !is_null(); }

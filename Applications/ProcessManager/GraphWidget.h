@@ -1,5 +1,5 @@
-#include <LibGUI/GFrame.h>
 #include <AK/CircularQueue.h>
+#include <LibGUI/GFrame.h>
 
 class GraphWidget final : public GFrame {
 public:

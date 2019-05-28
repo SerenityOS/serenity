@@ -1,13 +1,14 @@
 #pragma once
 
+#include <AK/Function.h>
 #include <LibGUI/GModel.h>
 #include <LibGUI/GScrollableWidget.h>
-#include <AK/Function.h>
 
 class GTextBox;
 
 class GAbstractView : public GScrollableWidget {
     friend class GModel;
+
 public:
     explicit GAbstractView(GWidget* parent);
     virtual ~GAbstractView() override;
@@ -23,7 +24,7 @@ public:
     virtual void did_update_model();
     virtual void did_update_selection();
 
-    virtual Rect content_rect(const GModelIndex&) const { return { }; }
+    virtual Rect content_rect(const GModelIndex&) const { return {}; }
     void begin_editing(const GModelIndex&);
     void stop_editing();
 

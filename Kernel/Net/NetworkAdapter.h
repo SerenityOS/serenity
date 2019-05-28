@@ -3,19 +3,23 @@
 #include <AK/ByteBuffer.h>
 #include <AK/SinglyLinkedList.h>
 #include <AK/Types.h>
-#include <Kernel/Net/MACAddress.h>
-#include <Kernel/Net/IPv4.h>
+#include <Kernel/Alarm.h>
 #include <Kernel/Net/ARP.h>
 #include <Kernel/Net/ICMP.h>
-#include <Kernel/Alarm.h>
+#include <Kernel/Net/IPv4.h>
+#include <Kernel/Net/MACAddress.h>
 
 class NetworkAdapter;
 
 class PacketQueueAlarm final : public Alarm {
 public:
-    PacketQueueAlarm(NetworkAdapter& adapter) : m_adapter(adapter) { }
-    virtual ~PacketQueueAlarm() override { }
+    PacketQueueAlarm(NetworkAdapter& adapter)
+        : m_adapter(adapter)
+    {
+    }
+    virtual ~PacketQueueAlarm() override {}
     virtual bool is_ringing() const override;
+
 private:
     NetworkAdapter& m_adapter;
 };

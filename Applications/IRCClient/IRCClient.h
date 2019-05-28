@@ -1,13 +1,13 @@
 #pragma once
 
-#include <AK/AKString.h>
-#include <AK/HashMap.h>
-#include <AK/CircularQueue.h>
-#include <AK/Function.h>
-#include <LibCore/CTCPSocket.h>
-#include <LibCore/CConfigFile.h>
 #include "IRCLogBuffer.h"
 #include "IRCWindow.h"
+#include <AK/AKString.h>
+#include <AK/CircularQueue.h>
+#include <AK/Function.h>
+#include <AK/HashMap.h>
+#include <LibCore/CConfigFile.h>
+#include <LibCore/CTCPSocket.h>
 
 class IRCChannel;
 class IRCQuery;
@@ -17,6 +17,7 @@ class CNotifier;
 class IRCClient final : public CObject {
     friend class IRCChannel;
     friend class IRCQuery;
+
 public:
     IRCClient();
     virtual ~IRCClient() override;

@@ -4,7 +4,8 @@
 
 class GMessageBox : public GDialog {
 public:
-    enum class Type {
+    enum class Type
+    {
         None,
         Information,
         Warning,

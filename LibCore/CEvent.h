@@ -1,15 +1,16 @@
 #pragma once
 
 #include <AK/AKString.h>
+#include <AK/Function.h>
 #include <AK/Types.h>
 #include <AK/WeakPtr.h>
-#include <AK/Function.h>
 
 class CObject;
 
 class CEvent {
 public:
-    enum Type {
+    enum Type
+    {
         Invalid = 0,
         Quit,
         Timer,
@@ -19,9 +20,12 @@ public:
         ChildRemoved,
     };
 
-    CEvent() { }
-    explicit CEvent(unsigned type) : m_type(type) { }
-    virtual ~CEvent() { }
+    CEvent() {}
+    explicit CEvent(unsigned type)
+        : m_type(type)
+    {
+    }
+    virtual ~CEvent() {}
 
     unsigned type() const { return m_type; }
 
@@ -31,6 +35,7 @@ private:
 
 class CDeferredInvocationEvent : public CEvent {
     friend class CEventLoop;
+
 public:
     CDeferredInvocationEvent(Function<void(CObject&)> invokee)
         : CEvent(CEvent::Type::DeferredInvoke)
@@ -45,10 +50,11 @@ private:
 class CTimerEvent final : public CEvent {
 public:
     explicit CTimerEvent(int timer_id)
-        : CEvent(CEvent::Timer), m_timer_id(timer_id)
+        : CEvent(CEvent::Timer)
+        , m_timer_id(timer_id)
     {
     }
-    ~CTimerEvent() { }
+    ~CTimerEvent() {}
 
     int timer_id() const { return m_timer_id; }
 

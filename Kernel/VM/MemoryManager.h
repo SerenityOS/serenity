@@ -1,27 +1,28 @@
 #pragma once
 
-#include <AK/Types.h>
 #include "i386.h"
-#include <AK/Bitmap.h>
-#include <AK/ByteBuffer.h>
-#include <AK/Retainable.h>
-#include <AK/RetainPtr.h>
-#include <AK/Vector.h>
-#include <AK/HashTable.h>
 #include <AK/AKString.h>
 #include <AK/Badge.h>
+#include <AK/Bitmap.h>
+#include <AK/ByteBuffer.h>
+#include <AK/HashTable.h>
+#include <AK/RetainPtr.h>
+#include <AK/Retainable.h>
+#include <AK/Types.h>
+#include <AK/Vector.h>
 #include <AK/Weakable.h>
+#include <Kernel/FileSystem/InodeIdentifier.h>
 #include <Kernel/LinearAddress.h>
 #include <Kernel/VM/PhysicalPage.h>
 #include <Kernel/VM/Region.h>
 #include <Kernel/VM/VMObject.h>
-#include <Kernel/FileSystem/InodeIdentifier.h>
 
-#define PAGE_ROUND_UP(x) ((((dword)(x)) + PAGE_SIZE-1) & (~(PAGE_SIZE-1)))
+#define PAGE_ROUND_UP(x) ((((dword)(x)) + PAGE_SIZE - 1) & (~(PAGE_SIZE - 1)))
 
 class SynthFSInode;
 
-enum class PageFaultResponse {
+enum class PageFaultResponse
+{
     ShouldCrash,
     Continue,
 };
@@ -36,6 +37,7 @@ class MemoryManager {
     friend class VMObject;
     friend ByteBuffer procfs$mm(InodeIdentifier);
     friend ByteBuffer procfs$memstat(InodeIdentifier);
+
 public:
     [[gnu::pure]] static MemoryManager& the();
 
@@ -54,7 +56,11 @@ public:
     bool validate_user_read(const Process&, LinearAddress) const;
     bool validate_user_write(const Process&, LinearAddress) const;
 
-    enum class ShouldZeroFill { No, Yes };
+    enum class ShouldZeroFill
+    {
+        No,
+        Yes
+    };
 
     RetainPtr<PhysicalPage> allocate_physical_page(ShouldZeroFill);
     RetainPtr<PhysicalPage> allocate_supervisor_physical_page();
@@ -106,7 +112,10 @@ private:
     PageDirectory& kernel_page_directory() { return *m_kernel_page_directory; }
 
     struct PageDirectoryEntry {
-        explicit PageDirectoryEntry(dword* pde) : m_pde(pde) { }
+        explicit PageDirectoryEntry(dword* pde)
+            : m_pde(pde)
+        {
+        }
 
         dword* page_table_base() { return reinterpret_cast<dword*>(raw() & 0xfffff000u); }
         void set_page_table_base(dword value)
@@ -118,7 +127,8 @@ private:
         dword raw() const { return *m_pde; }
         dword* ptr() { return m_pde; }
 
-        enum Flags {
+        enum Flags
+        {
             Present = 1 << 0,
             ReadWrite = 1 << 1,
             UserSupervisor = 1 << 2,
@@ -153,7 +163,10 @@ private:
     };
 
     struct PageTableEntry {
-        explicit PageTableEntry(dword* pte) : m_pte(pte) { }
+        explicit PageTableEntry(dword* pte)
+            : m_pte(pte)
+        {
+        }
 
         dword* physical_page_base() { return reinterpret_cast<dword*>(raw() & 0xfffff000u); }
         void set_physical_page_base(dword value)
@@ -165,7 +178,8 @@ private:
         dword raw() const { return *m_pte; }
         dword* ptr() { return m_pte; }
 
-        enum Flags {
+        enum Flags
+        {
             Present = 1 << 0,
             ReadWrite = 1 << 1,
             UserSupervisor = 1 << 2,

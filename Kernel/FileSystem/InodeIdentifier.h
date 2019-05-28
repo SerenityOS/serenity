@@ -8,7 +8,7 @@ struct InodeMetadata;
 
 class InodeIdentifier {
 public:
-    InodeIdentifier() { }
+    InodeIdentifier() {}
     InodeIdentifier(dword fsid, dword inode)
         : m_fsid(fsid)
         , m_index(inode)
@@ -39,4 +39,3 @@ private:
     dword m_fsid { 0 };
     dword m_index { 0 };
 };
-

@@ -4,9 +4,14 @@
 
 class CSocketAddress {
 public:
-    enum class Type { Invalid, IPv4, Local };
+    enum class Type
+    {
+        Invalid,
+        IPv4,
+        Local
+    };
 
-    CSocketAddress() { }
+    CSocketAddress() {}
     CSocketAddress(const IPv4Address& address)
         : m_type(Type::IPv4)
         , m_ipv4_address(address)
@@ -20,8 +25,10 @@ public:
     String to_string() const
     {
         switch (m_type) {
-        case Type::IPv4: return m_ipv4_address.to_string();
-        default: return "[CSocketAddress]";
+        case Type::IPv4:
+            return m_ipv4_address.to_string();
+        default:
+            return "[CSocketAddress]";
         }
     }
 

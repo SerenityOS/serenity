@@ -19,18 +19,27 @@ const Vector<String>& CArgsParserResult::get_single_values() const
 }
 
 CArgsParser::Arg::Arg(const String& name, const String& description, bool required)
-    : name(name), description(description), required(required)
-{}
+    : name(name)
+    , description(description)
+    , required(required)
+{
+}
 
 CArgsParser::Arg::Arg(const String& name, const String& value_name, const String& description, bool required)
-    : name(name), description(description), value_name(value_name), required(required)
-{}
+    : name(name)
+    , description(description)
+    , value_name(value_name)
+    , required(required)
+{
+}
 
 CArgsParser::CArgsParser(const String& program_name)
-    : m_program_name(program_name), m_prefix("-")
-{}
+    : m_program_name(program_name)
+    , m_prefix("-")
+{
+}
 
-CArgsParserResult CArgsParser::parse(const int argc, const char** argv) 
+CArgsParserResult CArgsParser::parse(const int argc, const char** argv)
 {
     CArgsParserResult res;
 
@@ -48,7 +57,7 @@ CArgsParserResult CArgsParser::parse(const int argc, const char** argv)
     return res;
 }
 
-int CArgsParser::parse_next_param(const int index, const char** argv, const int params_left, CArgsParserResult& res) 
+int CArgsParser::parse_next_param(const int index, const char** argv, const int params_left, CArgsParserResult& res)
 {
     if (params_left == 0)
         return 0;
@@ -148,7 +157,7 @@ void CArgsParser::add_arg(const String& name, const String& value_name, const St
 
 void CArgsParser::add_single_value(const String& name)
 {
-    m_single_args.append(SingleArg{name, false});
+    m_single_args.append(SingleArg { name, false });
 }
 
 void CArgsParser::add_required_single_value(const String& name)
@@ -157,7 +166,7 @@ void CArgsParser::add_required_single_value(const String& name)
         // adding required arguments after non-required arguments would be nonsensical
         ASSERT(m_single_args.last().required);
     }
-    m_single_args.append(SingleArg{name, true});
+    m_single_args.append(SingleArg { name, true });
 }
 
 String CArgsParser::get_usage() const
@@ -226,4 +235,3 @@ void CArgsParser::print_usage() const
 {
     printf("%s\n", get_usage().characters());
 }
-

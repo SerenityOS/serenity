@@ -15,7 +15,10 @@ word get_irr();
 
 class IRQHandlerScope {
 public:
-    explicit IRQHandlerScope(byte irq) : m_irq(irq) { }
+    explicit IRQHandlerScope(byte irq)
+        : m_irq(irq)
+    {
+    }
     ~IRQHandlerScope() { PIC::eoi(m_irq); }
 
 private:
