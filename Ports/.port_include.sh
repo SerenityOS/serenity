@@ -35,6 +35,7 @@ function run_fetch_git() {
     if [ -d "$PORT_DIR/.git" ]; then
         run_command git fetch
         run_command git reset --hard FETCH_HEAD
+        run_command git clean -fx
     else
         run_command_nocd git clone "$1" "$PORT_DIR"
     fi

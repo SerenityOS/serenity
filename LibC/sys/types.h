@@ -37,11 +37,6 @@ typedef uint32_t clock_t;
 #define __socklen_t uint32_t
 typedef __socklen_t socklen_t;
 
-struct timeval {
-    time_t tv_sec;
-    suseconds_t tv_usec;
-};
-
 struct stat {
     dev_t     st_dev;     /* ID of device containing file */
     ino_t     st_ino;     /* inode number */

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <time.h>
+#include <sys/time.h>
 
 class CElapsedTimer {
 public:
