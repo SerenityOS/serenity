@@ -1,6 +1,4 @@
 #!/bin/sh
-MAKEOPTS=" " # bash will die weirdly if you try build with multiple jobs.
-INSTALLOPTS=" "
 PORT_DIR=bash
 function fetch() {
     run_fetch_git "https://git.savannah.gnu.org/git/bash.git"
