@@ -41,6 +41,23 @@ function run_fetch_git() {
     fi
 }
 
+function run_fetch_web() {
+    if [ -d "$PORT_DIR" ]; then
+        run_command_nocd rm -rf "$PORT_DIR"
+    fi
+    file=$(basename "$1")
+    run_command_nocd curl "$1" -o "$file"
+    mkdir "$PORT_DIR"
+
+    # may need to make strip-components configurable, as I bet some sick person
+    # out there has an archive that isn't in a directory :shrug:
+    run_command_nocd tar xavf "$file" -C "$PORT_DIR" --strip-components=1
+}
+
+function run_export_env() {
+    export $1="$2"
+}
+
 function run_replace_in_file() {
     run_command perl -p -i -e "$1" $2
 }
