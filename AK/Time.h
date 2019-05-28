@@ -2,7 +2,8 @@
 
 namespace AK {
 
-inline void timeval_sub(const struct timeval* a, const struct timeval* b, struct timeval* result)
+template<typename TimevalType>
+inline void timeval_sub(const TimevalType* a, const TimevalType* b, TimevalType* result)
 {
     result->tv_sec = a->tv_sec - b->tv_sec;
     result->tv_usec = a->tv_usec - b->tv_usec;
@@ -12,7 +13,8 @@ inline void timeval_sub(const struct timeval* a, const struct timeval* b, struct
     }
 }
 
-inline void timeval_add(const struct timeval* a, const struct timeval* b, struct timeval* result)
+template<typename TimevalType>
+inline void timeval_add(const TimevalType* a, const TimevalType* b, TimevalType* result)
 {
     result->tv_sec = a->tv_sec + b->tv_sec;
     result->tv_usec = a->tv_usec + b->tv_usec;
