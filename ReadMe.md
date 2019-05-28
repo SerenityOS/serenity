@@ -2,6 +2,8 @@
 
 Graphical Unix-like operating system for x86 computers.
 
+![Travis CI status](https://travis-ci.org/SerenityOS/serenity.svg?branch=master)
+
 ## About
 
 *I always wondered what it would be like to write my own operating system, but I never took it seriously. Until now.*

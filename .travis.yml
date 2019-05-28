@@ -1,0 +1,26 @@
+sudo: require
+dist: xenial
+
+language: cpp
+
+compiler:
+- gcc
+
+cache:
+  directories:
+  - /var/cache/apt/archives/*.deb
+
+notifications:
+  irc: "chat.freenode.net#serenityos"
+
+before_install:
+- sudo apt-get update
+- sudo apt-get install -y libmpfr-dev libmpc-dev libgmp-dev
+- sudo apt-get install -y e2fsprogs qemu-system-i386
+
+script:
+- cd Toolchain
+- ./BuildIt.sh
+- source ./UseIt.sh
+- cd ../Kernel
+- ./makeall.sh
