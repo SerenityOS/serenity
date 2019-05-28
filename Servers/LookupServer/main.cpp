@@ -1,19 +1,19 @@
+#include "DNSPacket.h"
+#include "DNSRecord.h"
+#include <AK/AKString.h>
+#include <AK/BufferStream.h>
+#include <AK/ByteBuffer.h>
+#include <AK/HashMap.h>
+#include <Kernel/Net/IPv4.h>
+#include <LibCore/CConfigFile.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/select.h>
 #include <sys/socket.h>
-#include <arpa/inet.h>
-#include <netinet/in.h>
+#include <sys/time.h>
 #include <unistd.h>
-#include <unistd.h>
-#include <Kernel/Net/IPv4.h>
-#include <AK/AKString.h>
-#include <AK/HashMap.h>
-#include <AK/ByteBuffer.h>
-#include <AK/BufferStream.h>
-#include "DNSPacket.h"
-#include "DNSRecord.h"
-#include <LibCore/CConfigFile.h>
 
 #define T_A     1
 #define T_NS    2
