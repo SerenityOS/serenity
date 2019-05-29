@@ -287,7 +287,7 @@ void* realloc(void* ptr, size_t size)
     auto* header = (const CommonHeader*)page_base;
     old_size = header->m_size;
 
-    if (size == old_size)
+    if (malloc_good_size(size) == old_size)
         return ptr;
     auto* new_ptr = malloc(size);
     memcpy(new_ptr, ptr, min(old_size, size));
