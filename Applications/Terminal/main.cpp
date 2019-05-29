@@ -68,7 +68,7 @@ static void make_shell(int ptm_fd)
             exit(1);
         }
         char* args[] = { "/bin/Shell", nullptr };
-        char* envs[] = { "TERM=xterm", "PATH=/bin:/usr/bin", nullptr };
+        char* envs[] = { "TERM=xterm", "PATH=/bin:/usr/bin:/usr/local/bin", nullptr };
         rc = execve("/bin/Shell", args, envs);
         if (rc < 0) {
             perror("execve");
