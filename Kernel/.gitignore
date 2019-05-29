@@ -8,3 +8,4 @@ sync-local.sh
 *.pcap
 eth_null*
 _disk_image
+compile_commmands.json
