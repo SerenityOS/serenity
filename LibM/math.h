@@ -53,4 +53,12 @@ float ldexpf(float, int exp);
 
 double pow(double x, double y);
 
+double log2(double);
+float log2f(float);
+long double log2l(long double);     
+double frexp(double, int *);
+float frexpf(float, int *);
+long double frexpl(long double, int *);
+
+
 __END_DECLS

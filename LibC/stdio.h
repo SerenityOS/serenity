@@ -22,6 +22,8 @@ __BEGIN_DECLS
 #define _IOLBF 1
 #define _IONBF 2
 
+#define L_tmpnam 256
+
 struct __STDIO_FILE {
     int fd;
     int eof;
