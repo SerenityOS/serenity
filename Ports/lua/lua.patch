@@ -1,0 +1,22 @@
+--- lua/src/Makefile	2018-06-25 13:46:36.000000000 -0400
++++ /home/mustafa/src/lua/src/Makefile	2019-05-28 15:26:12.575719307 -0400
+@@ -4,15 +4,15 @@
+ # == CHANGE THE SETTINGS BELOW TO SUIT YOUR ENVIRONMENT =======================
+ 
+ # Your platform. See PLATS for possible values.
+-PLAT= none
++PLAT= generic
+ 
+-CC= gcc -std=gnu99
++CC= i686-pc-serenity-gcc -std=gnu99
+ CFLAGS= -O2 -Wall -Wextra -DLUA_COMPAT_5_2 $(SYSCFLAGS) $(MYCFLAGS)
+ LDFLAGS= $(SYSLDFLAGS) $(MYLDFLAGS)
+ LIBS= -lm $(SYSLIBS) $(MYLIBS)
+ 
+-AR= ar rcu
+-RANLIB= ranlib
++AR= i686-pc-serenity-ar rcu
++RANLIB= i686-pc-serenity-ranlib
+ RM= rm -f
+ 
+ SYSCFLAGS=
