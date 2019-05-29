@@ -20,6 +20,7 @@
 #include <LibGUI/GAction.h>
 #include <LibGUI/GFontDatabase.h>
 #include <LibGUI/GSlider.h>
+#include <LibGUI/GRadioButton.h>
 #include <LibCore/CUserInfo.h>
 
 static void make_shell(int ptm_fd)

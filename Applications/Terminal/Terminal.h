@@ -72,6 +72,7 @@ private:
     void escape$S(const ParamVector&);
     void escape$T(const ParamVector&);
     void escape$L(const ParamVector&);
+    void escape$h_l(bool, bool, const ParamVector&);
 
     void clear();
 
@@ -97,7 +98,8 @@ private:
         byte foreground_color;
         byte background_color;
 
-        enum Flags {
+        enum Flags
+        {
             NoAttributes = 0x00,
             Bold = 0x01,
             Italic = 0x02,
@@ -136,7 +138,10 @@ private:
         return *m_lines[index];
     }
 
-    Line** m_lines { nullptr };
+    Vector<OwnPtr<Line>> m_lines;
+
+    int m_scroll_region_top { 0 };
+    int m_scroll_region_bottom { 0 };
 
     word m_columns { 0 };
     word m_rows { 0 };
@@ -148,8 +153,6 @@ private:
     bool m_stomp { false };
 
     bool m_should_beep { false };
-    byte m_scroll_region_top { 0 };
-    byte m_scroll_region_bottom { 0 };
 
     Attribute m_current_attribute;
 
@@ -179,7 +182,6 @@ private:
 
     int m_pixel_width { 0 };
     int m_pixel_height { 0 };
-    int m_rows_to_scroll_backing_store { 0 };
 
     int m_inset { 2 };
     int m_line_spacing { 4 };
