@@ -2282,6 +2282,49 @@ int Process::sys$getpeername(int sockfd, sockaddr* addr, socklen_t* addrlen)
     return 0;
 }
 
+int Process::sys$sched_setparam(pid_t pid, const struct sched_param* param)
+{
+    if (!validate_read_typed(param))
+        return -EFAULT;
+
+    InterruptDisabler disabler;
+    auto* peer = this;
+    if (pid != 0)
+        peer = Process::from_pid(pid);
+
+    if (!peer)
+        return -ESRCH;
+
+    if (!is_superuser() && m_euid != peer->m_uid && m_uid != peer->m_uid)
+        return -EPERM;
+
+    if (param->sched_priority < Process::FirstPriority || param->sched_priority > Process::LastPriority)
+        return -EINVAL;
+
+    peer->set_priority(Priority(param->sched_priority));
+    return 0;
+}
+
+int Process::sys$sched_getparam(pid_t pid, struct sched_param* param)
+{
+    if (!validate_read_typed(param))
+        return -EFAULT;
+
+    InterruptDisabler disabler;
+    auto* peer = this;
+    if (pid != 0)
+        peer = Process::from_pid(pid);
+
+    if (!peer)
+        return -ESRCH;
+
+    if (!is_superuser() && m_euid != peer->m_uid && m_uid != peer->m_uid)
+        return -EPERM;
+
+    param->sched_priority = peer->priority();
+    return 0;
+}
+
 int Process::sys$getsockopt(const Syscall::SC_getsockopt_params* params)
 {
     if (!validate_read_typed(params))
