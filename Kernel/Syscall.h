@@ -105,7 +105,9 @@
     __ENUMERATE_SYSCALL(writev)                 \
     __ENUMERATE_SYSCALL(beep)                   \
     __ENUMERATE_SYSCALL(getsockname)            \
-    __ENUMERATE_SYSCALL(getpeername)
+    __ENUMERATE_SYSCALL(getpeername)            \
+    __ENUMERATE_SYSCALL(sched_setparam)          \
+    __ENUMERATE_SYSCALL(sched_getparam)
 
 namespace Syscall {
 
