@@ -335,6 +335,8 @@ struct pollfd {
 
 #define SO_RCVTIMEO 1
 #define SO_SNDTIMEO 2
+#define SO_KEEPALIVE 3
+#define SO_ERROR 4
 
 #define IPPROTO_ICMP 1
 #define IPPROTO_TCP 6
