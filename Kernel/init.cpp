@@ -26,15 +26,6 @@
 #include <Kernel/Net/NetworkTask.h>
 #include <Kernel/Devices/DebugLogDevice.h>
 
-#define SPAWN_TERMINAL
-#define SPAWN_LAUNCHER
-//#define SPAWN_GUITEST2
-//#define SPAWN_FILE_MANAGER
-//#define SPAWN_PROCESS_MANAGER
-//#define SPAWN_TEXT_EDITOR
-//#define SPAWN_FONTEDITOR
-//#define SPAWN_VISUAL_BUILDER
-//#define SPAWN_MULTIPLE_SHELLS
 //#define STRESS_TEST_SPAWNING
 
 VirtualConsole* tty0;
@@ -88,52 +79,12 @@ VFS* vfs;
 
     int error;
 
-    auto* dns_lookup_server_process = Process::create_user_process("/bin/LookupServer", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, { }, tty0);
+    auto* system_server_process = Process::create_user_process("/bin/SystemServer", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, { }, tty0);
     if (error != 0) {
-        dbgprintf("error spawning LookupServer: %d\n", error);
+        dbgprintf("error spawning SystemServer: %d\n", error);
         hang();
     }
-
-    auto* window_server_process = Process::create_user_process("/bin/WindowServer", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, { }, tty0);
-    if (error != 0) {
-        dbgprintf("error spawning WindowServer: %d\n", error);
-        hang();
-    }
-    window_server_process->set_priority(Process::HighPriority);
-    Process::create_user_process("/bin/Taskbar", (uid_t)100, (gid_t)100, (pid_t)0, error);
-    //Process::create_user_process("/bin/sh", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, move(environment), tty0);
-#ifdef SPAWN_TERMINAL
-    Process::create_user_process("/bin/Terminal", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, { }, tty0);
-#endif
-#ifdef SPAWN_GUITEST2
-    Process::create_user_process("/bin/guitest2", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, { }, tty0);
-#endif
-#ifdef SPAWN_LAUNCHER
-    Process::create_user_process("/bin/Launcher", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, { }, tty0);
-#endif
-#ifdef SPAWN_VISUAL_BUILDER
-    Process::create_user_process("/bin/VisualBuilder", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, { }, tty0);
-#endif
-#ifdef SPAWN_FILE_MANAGER
-    Process::create_user_process("/bin/FileManager", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, { }, tty0);
-#endif
-#ifdef SPAWN_PROCESS_MANAGER
-    Process::create_user_process("/bin/ProcessManager", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, { }, tty0);
-#endif
-#ifdef SPAWN_TEXT_EDITOR
-    Vector<String> text_editor_arguments;
-    text_editor_arguments.append("/bin/TextEditor");
-    text_editor_arguments.append("/home/anon/ReadMe.md");
-    Process::create_user_process("/bin/TextEditor", (uid_t)100, (gid_t)100, (pid_t)0, error, move(text_editor_arguments), { }, tty0);
-#endif
-#ifdef SPAWN_FONTEDITOR
-    Process::create_user_process("/bin/FontEditor", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, move(environment), tty0);
-#endif
-#ifdef SPAWN_MULTIPLE_SHELLS
-    Process::create_user_process("/bin/sh", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, { }, tty1);
-    Process::create_user_process("/bin/sh", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, { }, tty2);
-    Process::create_user_process("/bin/sh", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, { }, tty3);
-#endif
+    system_server_process->set_priority(Process::HighPriority);
 
 #ifdef STRESS_TEST_SPAWNING
     Process::create_kernel_process("spawn_stress", spawn_stress);
