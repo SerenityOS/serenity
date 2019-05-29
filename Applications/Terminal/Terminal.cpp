@@ -16,6 +16,8 @@
 #include <sys/ioctl.h>
 
 //#define TERMINAL_DEBUG
+byte Terminal::Attribute::default_foreground_color = 7;
+byte Terminal::Attribute::default_background_color = 0;
 
 Terminal::Terminal(int ptm_fd, RetainPtr<CConfigFile> config)
     : m_ptm_fd(ptm_fd)
@@ -157,8 +159,34 @@ void Terminal::escape$m(const ParamVector& params)
             m_current_attribute.reset();
             break;
         case 1:
-            // Bold
-            //m_current_attribute.bold = true;
+            m_current_attribute.flags |= Attribute::Bold;
+            break;
+        case 3:
+            m_current_attribute.flags |= Attribute::Italic;
+            break;
+        case 4:
+            m_current_attribute.flags |= Attribute::Underline;
+            break;
+        case 5:
+            m_current_attribute.flags |= Attribute::Blink;
+            break;
+        case 7:
+            m_current_attribute.flags |= Attribute::Negative;
+            break;
+        case 22:
+            m_current_attribute.flags &= ~Attribute::Bold;
+            break;
+        case 23:
+            m_current_attribute.flags &= ~Attribute::Italic;
+            break;
+        case 24:
+            m_current_attribute.flags &= ~Attribute::Underline;
+            break;
+        case 25:
+            m_current_attribute.flags &= ~Attribute::Blink;
+            break;
+        case 27:
+            m_current_attribute.flags &= ~Attribute::Negative;
             break;
         case 30:
         case 31:
@@ -169,7 +197,13 @@ void Terminal::escape$m(const ParamVector& params)
         case 36:
         case 37:
             // Foreground color
+            if (m_current_attribute.flags & Attribute::Bold)
+                param += 8;
             m_current_attribute.foreground_color = param - 30;
+            break;
+        case 39:
+            // reset foreground
+            m_current_attribute.foreground_color = Attribute::default_foreground_color;
             break;
         case 40:
         case 41:
@@ -180,8 +214,16 @@ void Terminal::escape$m(const ParamVector& params)
         case 46:
         case 47:
             // Background color
+            if (m_current_attribute.flags & Attribute::Bold)
+                param += 8;
             m_current_attribute.background_color = param - 40;
             break;
+        case 49:
+            // reset background
+            m_current_attribute.background_color = Attribute::default_background_color;
+            break;
+        default:
+            dbgprintf("FIXME: escape$m: p: %u\n", param);
         }
     }
 }
