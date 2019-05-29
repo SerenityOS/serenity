@@ -77,18 +77,35 @@ private:
 
     struct Attribute {
         Attribute() { reset(); }
+
+        static byte default_foreground_color;
+        static byte default_background_color;
+
         void reset()
         {
-            foreground_color = 7;
-            background_color = 0;
-            //bold = false;
+            foreground_color = default_foreground_color;
+            background_color = default_background_color;
+            flags = Flags::NoAttributes;
         }
         byte foreground_color;
         byte background_color;
-        //bool bold : 1;
+
+        enum Flags {
+            NoAttributes = 0x00,
+            Bold = 0x01,
+            Italic = 0x02,
+            Underline = 0x04,
+            Negative = 0x08,
+            Blink = 0x10,
+        };
+
+        // TODO: it would be really nice if we had a helper for enums that
+        // exposed bit ops for class enums...
+        int flags = Flags::NoAttributes;
+
         bool operator==(const Attribute& other) const
         {
-            return foreground_color == other.foreground_color && background_color == other.background_color;
+            return foreground_color == other.foreground_color && background_color == other.background_color && flags == other.flags;
         }
         bool operator!=(const Attribute& other) const
         {
