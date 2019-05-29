@@ -97,8 +97,15 @@ KResult Socket::getsockopt(int level, int option, void* value, socklen_t* value_
         *(timeval*)value = m_receive_timeout;
         *value_size = sizeof(timeval);
         return KSuccess;
+    case SO_ERROR:
+        if (*value_size < sizeof(int))
+            return KResult(-EINVAL);
+        kprintf("%s(%u): getsockopt() SO_ERROR: WARNING! I have no idea what the real error is, so I'll just stick my fingers in my ears and pretend there is none! %d\n", current->process().name().characters(), option);
+        *(int*)value = 0;
+        *value_size = sizeof(int);
+        return KSuccess;
     default:
-        kprintf("%s(%u): getsockopt() at SOL_SOCKET with unimplemented option %d\n", option);
+        kprintf("%s(%u): getsockopt() at SOL_SOCKET with unimplemented option %d\n", current->process().name().characters(), option);
         return KResult(-ENOPROTOOPT);
     }
 }
