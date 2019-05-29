@@ -40,9 +40,11 @@ public:
     enum Priority
     {
         IdlePriority,
+        FirstPriority = IdlePriority,
         LowPriority,
         NormalPriority,
         HighPriority,
+        LastPriority = HighPriority,
     };
 
     enum RingLevel
@@ -186,6 +188,8 @@ public:
     int sys$setsockopt(const Syscall::SC_setsockopt_params*);
     int sys$getsockname(int sockfd, sockaddr* addr, socklen_t* addrlen);
     int sys$getpeername(int sockfd, sockaddr* addr, socklen_t* addrlen);
+    int sys$sched_setparam(pid_t pid, const struct sched_param* param);
+    int sys$sched_getparam(pid_t pid, struct sched_param* param);
     int sys$restore_signal_mask(dword mask);
     int sys$create_thread(int (*)(void*), void*);
     void sys$exit_thread(int code);
