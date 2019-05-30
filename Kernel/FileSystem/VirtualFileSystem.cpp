@@ -39,16 +39,15 @@ InodeIdentifier VFS::root_inode_id() const
 bool VFS::mount(RetainPtr<FS>&& file_system, StringView path)
 {
     ASSERT(file_system);
-    int error;
-    auto inode = old_resolve_path(path, root_inode_id(), error);
-    if (!inode.is_valid()) {
+    auto result = resolve_path_to_custody(path, root_custody());
+    if (result.is_error()) {
         kprintf("VFS: mount can't resolve mount point '%s'\n", path.characters());
         return false;
     }
-
+    auto& inode = result.value()->inode();
     kprintf("VFS: mounting %s{%p} at %s (inode: %u)\n", file_system->class_name(), file_system.ptr(), path.characters(), inode.index());
     // FIXME: check that this is not already a mount point
-    auto mount = make<Mount>(inode, move(file_system));
+    auto mount = make<Mount>(inode.identifier(), move(file_system));
     m_mounts.append(move(mount));
     return true;
 }
@@ -430,21 +429,6 @@ KResult VFS::chown(StringView path, uid_t a_uid, gid_t a_gid, Custody& base)
     return inode.chown(new_uid, new_gid);
 }
 
-KResultOr<Retained<Inode>> VFS::resolve_path_to_inode(StringView path, Inode& base, RetainPtr<Inode>* parent_inode, int options)
-{
-    // FIXME: This won't work nicely across mount boundaries.
-    FileSystemPath p(path);
-    if (!p.is_valid())
-        return KResult(-EINVAL);
-    InodeIdentifier parent_id;
-    auto result = resolve_path(path, base.identifier(), options, &parent_id);
-    if (parent_inode && parent_id.is_valid())
-        *parent_inode = get_inode(parent_id);
-    if (result.is_error())
-        return result.error();
-    return Retained<Inode>(*get_inode(result.value()));
-}
-
 KResult VFS::link(StringView old_path, StringView new_path, Custody& base)
 {
     auto old_custody_or_error = resolve_path_to_custody(old_path, base);
@@ -715,16 +699,6 @@ KResultOr<InodeIdentifier> VFS::resolve_path(StringView path, InodeIdentifier ba
         }
     }
     return crumb_id;
-}
-
-InodeIdentifier VFS::old_resolve_path(StringView path, InodeIdentifier base, int& error, int options, InodeIdentifier* parent_id)
-{
-    auto result = resolve_path(path, base, options, parent_id);
-    if (result.is_error()) {
-        error = result.error();
-        return { };
-    }
-    return result.value();
 }
 
 VFS::Mount::Mount(InodeIdentifier host, RetainPtr<FS>&& guest_fs)
