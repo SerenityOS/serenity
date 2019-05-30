@@ -1,21 +1,22 @@
+#include "GlobalState.h"
+#include "LineEditor.h"
+#include "Parser.h"
+#include <AK/FileSystemPath.h>
+#include <LibCore/CDirIterator.h>
+#include <LibCore/CElapsedTimer.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <pwd.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <termios.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/utsname.h>
-#include <AK/FileSystemPath.h>
-#include <LibCore/CElapsedTimer.h>
-#include <LibCore/CDirIterator.h>
-#include "GlobalState.h"
-#include "Parser.h"
-#include "LineEditor.h"
+#include <sys/wait.h>
+#include <termios.h>
+#include <unistd.h>
 
 //#define SH_DEBUG
 
