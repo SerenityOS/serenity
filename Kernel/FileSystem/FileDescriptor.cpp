@@ -324,7 +324,7 @@ InodeMetadata FileDescriptor::metadata() const
 KResultOr<Region*> FileDescriptor::mmap(Process& process, LinearAddress laddr, size_t offset, size_t size, int prot)
 {
     if (m_file)
-        return m_file->mmap(process, laddr, offset, size);
+        return m_file->mmap(process, laddr, offset, size, prot);
 
     if (!is_fsfile())
         return KResult(-ENODEV);

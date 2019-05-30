@@ -84,7 +84,7 @@ dword BXVGADevice::find_framebuffer_address()
     return framebuffer_address;
 }
 
-KResultOr<Region*> BXVGADevice::mmap(Process& process, LinearAddress preferred_laddr, size_t offset, size_t size)
+KResultOr<Region*> BXVGADevice::mmap(Process& process, LinearAddress preferred_laddr, size_t offset, size_t size, int prot)
 {
     ASSERT(offset == 0);
     ASSERT(size == framebuffer_size_in_bytes());
@@ -95,7 +95,9 @@ KResultOr<Region*> BXVGADevice::mmap(Process& process, LinearAddress preferred_l
         move(vmo),
         0,
         "BXVGA Framebuffer",
-        true, true);
+        prot & PROT_READ,
+        prot & PROT_WRITE
+    );
     kprintf("BXVGA: %s(%u) created Region{%p} with size %u for framebuffer P%x with laddr L%x\n",
             process.name().characters(), process.pid(),
             region, region->size(), framebuffer_address().as_ptr(), region->laddr().get());
