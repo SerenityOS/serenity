@@ -1,14 +1,7 @@
-#!/bin/sh
+#!/bin/bash
 PORT_DIR=binutils
 function fetch() {
-    # Canonical repository:
-    # run_fetch_git "http://sourceware.org/git/binutils-gdb.git"
-
-    # Much faster mirror (though unofficial):
-    run_fetch_git "https://github.com/bminor/binutils-gdb.git"
-
-    # FIXME: It would probably be better to build from a tarball.
-    run_command git reset --hard binutils-2_32
+    run_fetch_web "https://ftp.gnu.org/gnu/binutils/binutils-2.32.tar.xz"
 
     # Add the big binutils patch (same one used by toolchain.)
     run_patch $SERENITY_ROOT/Toolchain/Patches/binutils.patch -p1
