@@ -360,7 +360,7 @@ ByteBuffer procfs$pid_exe(InodeIdentifier identifier)
     if (!handle)
         return { };
     auto& process = handle->process();
-    auto* custody = process.executable_custody();
+    auto* custody = process.executable();
     ASSERT(custody);
     return custody->absolute_path().to_byte_buffer();
 }
@@ -370,7 +370,7 @@ ByteBuffer procfs$pid_cwd(InodeIdentifier identifier)
     auto handle = ProcessInspectionHandle::from_pid(to_pid(identifier));
     if (!handle)
         return { };
-    return handle->process().cwd_custody().absolute_path().to_byte_buffer();
+    return handle->process().current_directory().absolute_path().to_byte_buffer();
 }
 
 ByteBuffer procfs$self(InodeIdentifier)
@@ -953,7 +953,7 @@ bool ProcFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry&)
         auto& process = handle->process();
         for (auto& entry : fs().m_entries) {
             if (entry.proc_file_type > __FI_PID_Start && entry.proc_file_type < __FI_PID_End) {
-                if (entry.proc_file_type == FI_PID_exe && !process.executable_custody())
+                if (entry.proc_file_type == FI_PID_exe && !process.executable())
                     continue;
                 // FIXME: strlen() here is sad.
                 callback({ entry.name, (int)strlen(entry.name), to_identifier(fsid(), PDI_PID, pid, (ProcFileType)entry.proc_file_type), 0 });
@@ -1034,7 +1034,7 @@ InodeIdentifier ProcFSInode::lookup(const String& name)
         auto& process = handle->process();
         for (auto& entry : fs().m_entries) {
             if (entry.proc_file_type > __FI_PID_Start && entry.proc_file_type < __FI_PID_End) {
-                if (entry.proc_file_type == FI_PID_exe && !process.executable_custody())
+                if (entry.proc_file_type == FI_PID_exe && !process.executable())
                     continue;
                 if (entry.name == nullptr)
                     continue;
