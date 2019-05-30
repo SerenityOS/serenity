@@ -49,6 +49,7 @@ KERNEL_OBJS = \
        Net/NetworkTask.o \
        ProcessTracer.o \
        Devices/PCSpeaker.o \
+       FileSystem/InodeFile.o \
        File.o
 
 VFS_OBJS = \

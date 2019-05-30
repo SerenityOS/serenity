@@ -47,10 +47,8 @@ public:
 
     bool is_directory() const;
 
-    // FIXME: These should go away once everything is a File.
-    bool is_file() const { return m_file.ptr(); }
-    File* file() { return m_file.ptr(); }
-    const File* file() const { return m_file.ptr(); }
+    File& file() { return *m_file; }
+    const File& file() const { return *m_file; }
 
     bool is_device() const;
 
@@ -85,7 +83,6 @@ public:
     FIFO::Direction fifo_direction() { return m_fifo_direction; }
     void set_fifo_direction(Badge<FIFO>, FIFO::Direction direction) { m_fifo_direction = direction; }
 
-    bool is_fsfile() const;
     bool is_shared_memory() const;
     SharedMemory* shared_memory();
     const SharedMemory* shared_memory() const;
@@ -99,10 +96,11 @@ public:
 
     KResult truncate(off_t);
 
+    off_t offset() const { return m_current_offset; }
+
 private:
     friend class VFS;
-    FileDescriptor(RetainPtr<File>&&, SocketRole);
-    explicit FileDescriptor(RetainPtr<Inode>&&);
+    FileDescriptor(RetainPtr<File>&&, SocketRole = SocketRole::None);
     FileDescriptor(FIFO&, FIFO::Direction);
 
     RetainPtr<Inode> m_inode;

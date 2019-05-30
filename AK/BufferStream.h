@@ -1,6 +1,7 @@
 #pragma once
 
-#include "ByteBuffer.h"
+#include <AK/AKString.h>
+#include <AK/ByteBuffer.h>
 
 namespace AK {
 

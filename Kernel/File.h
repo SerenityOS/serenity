@@ -6,6 +6,7 @@
 #include <AK/Types.h>
 #include <Kernel/KResult.h>
 #include <Kernel/LinearAddress.h>
+#include <Kernel/UnixTypes.h>
 
 class FileDescriptor;
 class Process;
@@ -28,10 +29,13 @@ public:
 
     virtual String absolute_path(FileDescriptor&) const = 0;
 
+    virtual KResult truncate(off_t) { return KResult(-EINVAL); }
+
     virtual const char* class_name() const = 0;
 
     virtual bool is_seekable() const { return false; }
 
+    virtual bool is_inode() const { return false; }
     virtual bool is_shared_memory() const { return false; }
     virtual bool is_fifo() const { return false; }
     virtual bool is_device() const { return false; }
