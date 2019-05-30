@@ -12,6 +12,7 @@ __BEGIN_DECLS
 
 __attribute__((malloc)) __attribute__((alloc_size(1))) void* malloc(size_t);
 __attribute__((malloc)) __attribute__((alloc_size(1, 2))) void* calloc(size_t nmemb, size_t);
+size_t malloc_size(void*);
 void free(void*);
 void* realloc(void* ptr, size_t);
 char* getenv(const char* name);
