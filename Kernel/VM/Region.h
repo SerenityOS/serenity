@@ -10,17 +10,24 @@ class VMObject;
 
 class Region : public Retainable<Region> {
     friend class MemoryManager;
-
 public:
-    Region(const Range&, String&&, bool r, bool w, bool cow = false);
-    Region(const Range&, Retained<VMObject>&&, size_t offset_in_vmo, String&&, bool r, bool w, bool cow = false);
-    Region(const Range&, RetainPtr<Inode>&&, String&&, bool r, bool w);
+    enum Access
+    {
+        Read = 1,
+        Write = 2,
+        Execute = 4,
+    };
+
+    Region(const Range&, String&&, byte access, bool cow = false);
+    Region(const Range&, Retained<VMObject>&&, size_t offset_in_vmo, String&&, byte access, bool cow = false);
+    Region(const Range&, RetainPtr<Inode>&&, String&&, byte access);
     ~Region();
 
     LinearAddress laddr() const { return m_range.base(); }
     size_t size() const { return m_range.size(); }
-    bool is_readable() const { return m_readable; }
-    bool is_writable() const { return m_writable; }
+    bool is_readable() const { return m_access & Access::Read; }
+    bool is_writable() const { return m_access & Access::Write; }
+    bool is_executable() const { return m_access & Access::Execute; }
     String name() const { return m_name; }
 
     void set_name(String&& name) { m_name = move(name); }
@@ -81,7 +88,13 @@ public:
     bool should_cow(size_t page_index) const { return m_cow_map.get(page_index); }
     void set_should_cow(size_t page_index, bool cow) { m_cow_map.set(page_index, cow); }
 
-    void set_writable(bool b) { m_writable = b; }
+    void set_writable(bool b)
+    {
+        if (b)
+            m_access |= Access::Read;
+        else
+            m_access &= ~Access::Write;
+    }
 
 private:
     RetainPtr<PageDirectory> m_page_directory;
@@ -89,8 +102,7 @@ private:
     size_t m_offset_in_vmo { 0 };
     Retained<VMObject> m_vmo;
     String m_name;
-    bool m_readable { true };
-    bool m_writable { true };
+    byte m_access { 0 };
     bool m_shared { false };
     Bitmap m_cow_map;
 };
