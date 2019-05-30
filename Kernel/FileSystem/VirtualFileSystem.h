@@ -25,6 +25,7 @@
 #define O_CLOEXEC 02000000
 #define O_NOFOLLOW_NOERROR 0x4000000
 
+class Custody;
 class Device;
 class FileDescriptor;
 
@@ -96,6 +97,9 @@ public:
 
     Device* get_device(unsigned major, unsigned minor);
 
+    Custody& root_custody();
+    KResultOr<Retained<Custody>> resolve_path_to_custody(StringView path, Custody& base, int options = 0);
+
 private:
     friend class FileDescriptor;
 
@@ -115,4 +119,6 @@ private:
     RetainPtr<Inode> m_root_inode;
     Vector<OwnPtr<Mount>> m_mounts;
     HashMap<dword, Device*> m_devices;
+
+    RetainPtr<Custody> m_root_custody;
 };
