@@ -46,6 +46,16 @@ void abort()
     raise(SIGABRT);
 }
 
+static HashTable<char*> s_malloced_environment_variables;
+
+static void free_environment_variable_if_needed(const char* var)
+{
+    if (!s_malloced_environment_variables.contains((char*)var))
+        return;
+    free((void*)var);
+    s_malloced_environment_variables.remove((char*)var);
+}
+
 char* getenv(const char* name)
 {
     size_t vl = strlen(name);
@@ -89,7 +99,20 @@ int unsetenv(const char* name)
     // Shuffle the existing array down by one.
     memmove(&environ[skip], &environ[skip+1], ((environ_size-1)-skip) * sizeof(environ[0]));
     environ[environ_size-1] = nullptr;
+
+    free_environment_variable_if_needed(name);
     return 0;
+}
+
+int setenv(const char* name, const char* value, int overwrite)
+{
+    if (!overwrite && !getenv(name))
+        return 0;
+    auto length = strlen(name) + strlen(value) + 2;
+    auto* var = (char*)malloc(length);
+    snprintf(var, length, "%s=%s", name, value);
+    s_malloced_environment_variables.set(var);
+    return putenv(var);
 }
 
 int putenv(char* new_var)
@@ -111,6 +134,7 @@ int putenv(char* new_var)
             continue; // can't match
 
         if (strncmp(new_var, old_var, new_var_len) == 0) {
+            free_environment_variable_if_needed(old_var);
             environ[environ_size] = new_var;
             return 0;
         }
