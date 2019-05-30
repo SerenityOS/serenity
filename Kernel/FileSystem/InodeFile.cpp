@@ -41,12 +41,11 @@ KResultOr<Region*> InodeFile::mmap(Process& process, LinearAddress preferred_lad
     return region;
 }
 
-String InodeFile::absolute_path(FileDescriptor&) const
+String InodeFile::absolute_path(FileDescriptor& descriptor) const
 {
-    auto path_or_error = VFS::the().absolute_path(const_cast<Inode&>(inode()));
-    if (path_or_error.is_error())
-        return { };
-    return path_or_error.value();
+    ASSERT_NOT_REACHED();
+    ASSERT(descriptor.custody());
+    return descriptor.absolute_path();
 }
 
 KResult InodeFile::truncate(off_t size)

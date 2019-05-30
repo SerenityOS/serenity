@@ -41,17 +41,20 @@ class VFS {
 public:
     class Mount {
     public:
-        Mount(InodeIdentifier host, RetainPtr<FS>&&);
+        Mount(RetainPtr<Custody>&&, Retained<FS>&&);
 
-        InodeIdentifier host() const { return m_host; }
+        InodeIdentifier host() const;
         InodeIdentifier guest() const { return m_guest; }
 
         const FS& guest_fs() const { return *m_guest_fs; }
 
+        String absolute_path() const;
+
     private:
         InodeIdentifier m_host;
         InodeIdentifier m_guest;
-        RetainPtr<FS> m_guest_fs;
+        Retained<FS> m_guest_fs;
+        RetainPtr<Custody> m_host_custody;
     };
 
     [[gnu::pure]] static VFS& the();
@@ -59,8 +62,8 @@ public:
     VFS();
     ~VFS();
 
-    bool mount_root(RetainPtr<FS>&&);
-    bool mount(RetainPtr<FS>&&, StringView path);
+    bool mount_root(Retained<FS>&&);
+    bool mount(Retained<FS>&&, StringView path);
 
     KResultOr<Retained<FileDescriptor>> open(RetainPtr<Device>&&, int options);
     KResultOr<Retained<FileDescriptor>> open(StringView path, int options, mode_t mode, Custody& base);
@@ -85,9 +88,6 @@ public:
 
     size_t mount_count() const { return m_mounts.size(); }
     void for_each_mount(Function<void(const Mount&)>) const;
-
-    KResultOr<String> absolute_path(Inode&);
-    KResultOr<String> absolute_path(InodeIdentifier);
 
     InodeIdentifier root_inode_id() const;
     Inode* root_inode() { return m_root_inode.ptr(); }

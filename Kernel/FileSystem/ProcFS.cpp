@@ -192,10 +192,7 @@ ByteBuffer procfs$pid_fds(InodeIdentifier identifier)
         auto* descriptor = process.file_descriptor(i);
         if (!descriptor)
             continue;
-        auto result = descriptor->absolute_path();
-        if (result.is_error())
-            continue;
-        builder.appendf("% 3u %s\n", i, result.value().characters());
+        builder.appendf("% 3u %s\n", i, descriptor->absolute_path().characters());
     }
     return builder.to_byte_buffer();
 }
@@ -210,10 +207,7 @@ ByteBuffer procfs$pid_fd_entry(InodeIdentifier identifier)
     auto* descriptor = process.file_descriptor(fd);
     if (!descriptor)
         return { };
-    auto result = descriptor->absolute_path();
-    if (result.is_error())
-        return { };
-    return result.value().to_byte_buffer();
+    return descriptor->absolute_path().to_byte_buffer();
 }
 
 ByteBuffer procfs$pid_vm(InodeIdentifier identifier)
@@ -420,11 +414,7 @@ ByteBuffer procfs$mounts(InodeIdentifier)
         else {
             builder.appendf("%u:%u", mount.host().fsid(), mount.host().index());
             builder.append(' ');
-            auto result = VFS::the().absolute_path(mount.host());
-            if (result.is_error())
-                builder.append("[error]");
-            else
-                builder.append(result.value());
+            builder.append(mount.absolute_path());
         }
         builder.append('\n');
     });
@@ -442,15 +432,7 @@ ByteBuffer procfs$df(InodeIdentifier)
         builder.appendf("%u,", fs.free_block_count());
         builder.appendf("%u,", fs.total_inode_count());
         builder.appendf("%u,", fs.free_inode_count());
-        if (!mount.host().is_valid())
-            builder.append("/");
-        else {
-            auto result = VFS::the().absolute_path(mount.host());
-            if (result.is_error())
-                builder.append("[Error]");
-            else
-                builder.append(result.value());
-        }
+        builder.append(mount.absolute_path());
         builder.append('\n');
     });
     return builder.to_byte_buffer();
@@ -613,11 +595,7 @@ ByteBuffer procfs$inodes(InodeIdentifier)
     StringBuilder builder;
     for (auto it : all_inodes()) {
         RetainPtr<Inode> inode = *it;
-        auto result = VFS::the().absolute_path(*inode);
-        if (result.is_error())
-            continue;
-        auto path = result.value();
-        builder.appendf("Inode{K%x} %02u:%08u (%u) %s\n", inode.ptr(), inode->fsid(), inode->index(), inode->retain_count(), path.characters());
+        builder.appendf("Inode{K%x} %02u:%08u (%u)\n", inode.ptr(), inode->fsid(), inode->index(), inode->retain_count());
     }
     return builder.to_byte_buffer();
 }
