@@ -72,7 +72,7 @@ public:
     void set_should_append(bool s) { m_should_append = s; }
 
     dword file_flags() const { return m_file_flags; }
-    void set_file_flags(dword flags) { m_file_flags = flags; }
+    void set_file_flags(dword);
 
     bool is_socket() const;
     Socket* socket();

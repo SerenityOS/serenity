@@ -1012,7 +1012,6 @@ int Process::sys$fcntl(int fd, int cmd, dword arg)
     case F_GETFL:
         return descriptor->file_flags();
     case F_SETFL:
-        // FIXME: Support changing O_NONBLOCK
         descriptor->set_file_flags(arg);
         break;
     default:
@@ -1125,10 +1124,9 @@ int Process::sys$open(const char* path, int options, mode_t mode)
     auto descriptor = result.value();
     if (options & O_DIRECTORY && !descriptor->is_directory())
         return -ENOTDIR; // FIXME: This should be handled by VFS::open.
-    descriptor->set_blocking(!(options & O_NONBLOCK));
-    descriptor->set_should_append(options & O_APPEND);
-    dword flags = (options & O_CLOEXEC) ? FD_CLOEXEC : 0;
-    m_fds[fd].set(move(descriptor), flags);
+    descriptor->set_file_flags(options);
+    dword fd_flags = (options & O_CLOEXEC) ? FD_CLOEXEC : 0;
+    m_fds[fd].set(move(descriptor), fd_flags);
     return fd;
 }
 
