@@ -43,7 +43,7 @@ public:
 
     ByteBuffer read_entire_file();
 
-    KResultOr<String> absolute_path();
+    String absolute_path();
 
     bool is_directory() const;
 
