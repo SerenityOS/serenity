@@ -261,7 +261,7 @@ int FileDescriptor::close()
     return 0;
 }
 
-KResultOr<String> FileDescriptor::absolute_path()
+String FileDescriptor::absolute_path()
 {
     if (m_custody)
         return m_custody->absolute_path();

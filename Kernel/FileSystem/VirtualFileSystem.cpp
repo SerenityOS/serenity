@@ -36,9 +36,8 @@ InodeIdentifier VFS::root_inode_id() const
     return m_root_inode->identifier();
 }
 
-bool VFS::mount(RetainPtr<FS>&& file_system, StringView path)
+bool VFS::mount(Retained<FS>&& file_system, StringView path)
 {
-    ASSERT(file_system);
     auto result = resolve_path_to_custody(path, root_custody());
     if (result.is_error()) {
         kprintf("VFS: mount can't resolve mount point '%s'\n", path.characters());
@@ -47,19 +46,19 @@ bool VFS::mount(RetainPtr<FS>&& file_system, StringView path)
     auto& inode = result.value()->inode();
     kprintf("VFS: mounting %s{%p} at %s (inode: %u)\n", file_system->class_name(), file_system.ptr(), path.characters(), inode.index());
     // FIXME: check that this is not already a mount point
-    auto mount = make<Mount>(inode.identifier(), move(file_system));
+    auto mount = make<Mount>(*result.value(), move(file_system));
     m_mounts.append(move(mount));
     return true;
 }
 
-bool VFS::mount_root(RetainPtr<FS>&& file_system)
+bool VFS::mount_root(Retained<FS>&& file_system)
 {
     if (m_root_inode) {
         kprintf("VFS: mount_root can't mount another root\n");
         return false;
     }
 
-    auto mount = make<Mount>(InodeIdentifier(), move(file_system));
+    auto mount = make<Mount>(nullptr, move(file_system));
 
     auto root_inode_id = mount->guest().fs()->root_inode();
     auto root_inode = mount->guest().fs()->get_inode(root_inode_id);
@@ -565,53 +564,6 @@ RetainPtr<Inode> VFS::get_inode(InodeIdentifier inode_id)
     return inode_id.fs()->get_inode(inode_id);
 }
 
-KResultOr<String> VFS::absolute_path(InodeIdentifier inode_id)
-{
-    auto inode = get_inode(inode_id);
-    if (!inode)
-        return KResult(-EIO);
-    return absolute_path(*inode);
-}
-
-KResultOr<String> VFS::absolute_path(Inode& core_inode)
-{
-    Vector<InodeIdentifier> lineage;
-    RetainPtr<Inode> inode = &core_inode;
-    while (inode->identifier() != root_inode_id()) {
-        if (auto* mount = find_mount_for_guest(inode->identifier()))
-            lineage.append(mount->host());
-        else
-            lineage.append(inode->identifier());
-
-        InodeIdentifier parent_id;
-        if (inode->is_directory()) {
-            auto result = resolve_path("..", inode->identifier());
-            if (result.is_error())
-                return result.error();
-            parent_id = result.value();
-        } else {
-            parent_id = inode->parent()->identifier();
-        }
-        if (!parent_id.is_valid())
-            return KResult(-EIO);
-        inode = get_inode(parent_id);
-    }
-    if (lineage.is_empty())
-        return "/";
-    lineage.append(root_inode_id());
-    StringBuilder builder;
-    for (size_t i = lineage.size() - 1; i >= 1; --i) {
-        auto& child = lineage[i - 1];
-        auto parent = lineage[i];
-        if (auto* mount = find_mount_for_host(parent))
-            parent = mount->guest();
-        builder.append('/');
-        auto parent_inode = get_inode(parent);
-        builder.append(parent_inode->reverse_lookup(child));
-    }
-    return builder.to_string();
-}
-
 KResultOr<InodeIdentifier> VFS::resolve_path(StringView path, InodeIdentifier base, int options, InodeIdentifier* parent_id)
 {
     if (path.is_empty())
@@ -701,11 +653,25 @@ KResultOr<InodeIdentifier> VFS::resolve_path(StringView path, InodeIdentifier ba
     return crumb_id;
 }
 
-VFS::Mount::Mount(InodeIdentifier host, RetainPtr<FS>&& guest_fs)
-    : m_host(host)
-    , m_guest(guest_fs->root_inode())
+VFS::Mount::Mount(RetainPtr<Custody>&& host_custody, Retained<FS>&& guest_fs)
+    : m_guest(guest_fs->root_inode())
     , m_guest_fs(move(guest_fs))
+    , m_host_custody(move(host_custody))
 {
+}
+
+String VFS::Mount::absolute_path() const
+{
+    if (!m_host_custody)
+        return "/";
+    return m_host_custody->absolute_path();
+}
+
+InodeIdentifier VFS::Mount::host() const
+{
+    if (!m_host_custody)
+        return { };
+    return m_host_custody->inode().identifier();
 }
 
 void VFS::register_device(Device& device)
