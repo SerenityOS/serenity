@@ -1,6 +1,7 @@
 #include <AK/BufferStream.h>
 #include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/Devices/CharacterDevice.h>
+#include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/FIFO.h>
 #include <Kernel/FileSystem/FileDescriptor.h>
 #include <Kernel/FileSystem/FileSystem.h>
@@ -14,9 +15,11 @@
 #include <Kernel/VM/MemoryManager.h>
 #include <LibC/errno_numbers.h>
 
-Retained<FileDescriptor> FileDescriptor::create(RetainPtr<Inode>&& inode)
+Retained<FileDescriptor> FileDescriptor::create(RetainPtr<Custody>&& custody)
 {
-    return adopt(*new FileDescriptor(InodeFile::create(*inode)));
+    auto descriptor = adopt(*new FileDescriptor(InodeFile::create(custody->inode())));
+    descriptor->m_custody = move(custody);
+    return descriptor;
 }
 
 Retained<FileDescriptor> FileDescriptor::create(RetainPtr<File>&& file, SocketRole role)
@@ -62,6 +65,7 @@ Retained<FileDescriptor> FileDescriptor::clone()
         descriptor = fifo()->open_direction(m_fifo_direction);
     } else {
         descriptor = FileDescriptor::create(m_file.copy_ref(), m_socket_role);
+        descriptor->m_custody = m_custody.copy_ref();
         descriptor->m_inode = m_inode.copy_ref();
     }
     ASSERT(descriptor);
@@ -102,7 +106,7 @@ KResult FileDescriptor::fchmod(mode_t mode)
 {
     if (!m_inode)
         return KResult(-EBADF);
-    return VFS::the().chmod(*m_inode, mode);
+    return VFS::the().fchmod(*m_inode, mode);
 }
 
 off_t FileDescriptor::seek(off_t offset, int whence)
@@ -259,6 +263,9 @@ int FileDescriptor::close()
 
 KResultOr<String> FileDescriptor::absolute_path()
 {
+    if (m_custody)
+        return m_custody->absolute_path();
+    dbgprintf("FileDescriptor::absolute_path() for FD without custody, File type: %s\n", m_file->class_name());
     return m_file->absolute_path(*this);
 }
 
