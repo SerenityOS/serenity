@@ -1,21 +1,22 @@
-#include "FileDescriptor.h"
-#include <Kernel/FileSystem/FileSystem.h>
-#include <Kernel/Devices/CharacterDevice.h>
-#include <LibC/errno_numbers.h>
-#include "UnixTypes.h"
 #include <AK/BufferStream.h>
+#include <Kernel/Devices/BlockDevice.h>
+#include <Kernel/Devices/CharacterDevice.h>
 #include <Kernel/FileSystem/FIFO.h>
-#include <Kernel/TTY/TTY.h>
-#include <Kernel/TTY/MasterPTY.h>
+#include <Kernel/FileSystem/FileDescriptor.h>
+#include <Kernel/FileSystem/FileSystem.h>
+#include <Kernel/FileSystem/InodeFile.h>
 #include <Kernel/Net/Socket.h>
 #include <Kernel/Process.h>
-#include <Kernel/Devices/BlockDevice.h>
-#include <Kernel/VM/MemoryManager.h>
 #include <Kernel/SharedMemory.h>
+#include <Kernel/TTY/MasterPTY.h>
+#include <Kernel/TTY/TTY.h>
+#include <Kernel/UnixTypes.h>
+#include <Kernel/VM/MemoryManager.h>
+#include <LibC/errno_numbers.h>
 
 Retained<FileDescriptor> FileDescriptor::create(RetainPtr<Inode>&& inode)
 {
-    return adopt(*new FileDescriptor(move(inode)));
+    return adopt(*new FileDescriptor(InodeFile::create(*inode)));
 }
 
 Retained<FileDescriptor> FileDescriptor::create(RetainPtr<File>&& file, SocketRole role)
@@ -23,14 +24,11 @@ Retained<FileDescriptor> FileDescriptor::create(RetainPtr<File>&& file, SocketRo
     return adopt(*new FileDescriptor(move(file), role));
 }
 
-FileDescriptor::FileDescriptor(RetainPtr<Inode>&& inode)
-    : m_inode(move(inode))
-{
-}
-
 FileDescriptor::FileDescriptor(RetainPtr<File>&& file, SocketRole role)
     : m_file(move(file))
 {
+    if (m_file->is_inode())
+        m_inode = static_cast<InodeFile&>(*m_file).inode();
     set_socket_role(role);
 }
 
@@ -40,10 +38,8 @@ FileDescriptor::~FileDescriptor()
         socket()->detach(*this);
     if (is_fifo())
         static_cast<FIFO*>(m_file.ptr())->detach(m_fifo_direction);
-    if (m_file) {
-        m_file->close();
-        m_file = nullptr;
-    }
+    m_file->close();
+    m_file = nullptr;
     m_inode = nullptr;
 }
 
@@ -65,12 +61,8 @@ Retained<FileDescriptor> FileDescriptor::clone()
     if (is_fifo()) {
         descriptor = fifo()->open_direction(m_fifo_direction);
     } else {
-        if (m_file) {
-            descriptor = FileDescriptor::create(m_file.copy_ref(), m_socket_role);
-            descriptor->m_inode = m_inode.copy_ref();
-        } else {
-            descriptor = FileDescriptor::create(m_inode.copy_ref());
-        }
+        descriptor = FileDescriptor::create(m_file.copy_ref(), m_socket_role);
+        descriptor->m_inode = m_inode.copy_ref();
     }
     ASSERT(descriptor);
     descriptor->m_current_offset = m_current_offset;
@@ -80,17 +72,10 @@ Retained<FileDescriptor> FileDescriptor::clone()
     return *descriptor;
 }
 
-bool addition_would_overflow(off_t a, off_t b)
-{
-    ASSERT(a > 0);
-    uint64_t ua = a;
-    return (ua + b) > OFF_T_MAX;
-}
-
 KResult FileDescriptor::fstat(stat& buffer)
 {
     ASSERT(!is_fifo());
-    if (!m_inode && !m_file)
+    if (!m_inode)
         return KResult(-EBADF);
 
     auto metadata = this->metadata();
@@ -122,12 +107,9 @@ KResult FileDescriptor::fchmod(mode_t mode)
 
 off_t FileDescriptor::seek(off_t offset, int whence)
 {
-    ASSERT(!is_fifo());
-    if (!m_inode && !m_file)
-        return -EBADF;
+    if (!m_file->is_seekable())
+        return -EINVAL;
 
-    // FIXME: The file type should be cached on the vnode.
-    //        It's silly that we have to do a full metadata lookup here.
     auto metadata = this->metadata();
     if (!metadata.is_valid())
         return -EIO;
@@ -135,86 +117,60 @@ off_t FileDescriptor::seek(off_t offset, int whence)
     if (metadata.is_socket() || metadata.is_fifo())
         return -ESPIPE;
 
-    off_t newOffset;
+    off_t new_offset;
 
     switch (whence) {
     case SEEK_SET:
-        newOffset = offset;
+        new_offset = offset;
         break;
     case SEEK_CUR:
-        newOffset = m_current_offset + offset;
+        new_offset = m_current_offset + offset;
         break;
     case SEEK_END:
-        newOffset = metadata.size;
+        new_offset = metadata.size;
         break;
     default:
         return -EINVAL;
     }
 
-    if (newOffset < 0)
+    if (new_offset < 0)
         return -EINVAL;
     // FIXME: Return -EINVAL if attempting to seek past the end of a seekable device.
 
-    m_current_offset = newOffset;
+    m_current_offset = new_offset;
     return m_current_offset;
 }
 
 ssize_t FileDescriptor::read(byte* buffer, ssize_t count)
 {
-    if (m_file) {
-        int nread = m_file->read(*this, buffer, count);
-        if (!m_file->is_seekable())
-            m_current_offset += nread;
-        return nread;
-    }
-    ASSERT(inode());
-    ssize_t nread = inode()->read_bytes(m_current_offset, count, buffer, this);
-    m_current_offset += nread;
+    int nread = m_file->read(*this, buffer, count);
+    if (m_file->is_seekable())
+        m_current_offset += nread;
     return nread;
 }
 
 ssize_t FileDescriptor::write(const byte* data, ssize_t size)
 {
-    if (m_file) {
-        int nwritten = m_file->write(*this, data, size);
-        if (m_file->is_seekable())
-            m_current_offset += nwritten;
-        return nwritten;
-    }
-    ASSERT(m_inode);
-    ssize_t nwritten = m_inode->write_bytes(m_current_offset, size, data, this);
-    m_current_offset += nwritten;
+    int nwritten = m_file->write(*this, data, size);
+    if (m_file->is_seekable())
+        m_current_offset += nwritten;
     return nwritten;
 }
 
 bool FileDescriptor::can_write()
 {
-    if (m_file)
-        return m_file->can_write(*this);
-    return true;
+    return m_file->can_write(*this);
 }
 
 bool FileDescriptor::can_read()
 {
-    if (m_file)
-        return m_file->can_read(*this);
-    return true;
+    return m_file->can_read(*this);
 }
 
 ByteBuffer FileDescriptor::read_entire_file()
 {
     // HACK ALERT: (This entire function)
-
-    ASSERT(!is_fifo());
-
-    if (m_file) {
-        auto buffer = ByteBuffer::create_uninitialized(1024);
-        ssize_t nread = m_file->read(*this, buffer.pointer(), buffer.size());
-        ASSERT(nread >= 0);
-        buffer.trim(nread);
-        return buffer;
-    }
-
+    ASSERT(m_file->is_inode());
     ASSERT(m_inode);
     return m_inode->read_entire(this);
 }
@@ -255,12 +211,12 @@ ssize_t FileDescriptor::get_dir_entries(byte* buffer, ssize_t size)
 
 bool FileDescriptor::is_device() const
 {
-    return m_file && m_file->is_device();
+    return m_file->is_device();
 }
 
 bool FileDescriptor::is_tty() const
 {
-    return m_file && m_file->is_tty();
+    return m_file->is_tty();
 }
 
 const TTY* FileDescriptor::tty() const
@@ -279,7 +235,7 @@ TTY* FileDescriptor::tty()
 
 bool FileDescriptor::is_master_pty() const
 {
-    return m_file && m_file->is_master_pty();
+    return m_file->is_master_pty();
 }
 
 const MasterPTY* FileDescriptor::master_pty() const
@@ -301,17 +257,9 @@ int FileDescriptor::close()
     return 0;
 }
 
-bool FileDescriptor::is_fsfile() const
-{
-    return !is_tty() && !is_fifo() && !is_device() && !is_socket() && !is_shared_memory();
-}
-
 KResultOr<String> FileDescriptor::absolute_path()
 {
-    if (m_file)
-        return m_file->absolute_path(*this);
-    ASSERT(m_inode);
-    return VFS::the().absolute_path(*m_inode);
+    return m_file->absolute_path(*this);
 }
 
 InodeMetadata FileDescriptor::metadata() const
@@ -323,40 +271,17 @@ InodeMetadata FileDescriptor::metadata() const
 
 KResultOr<Region*> FileDescriptor::mmap(Process& process, LinearAddress laddr, size_t offset, size_t size, int prot)
 {
-    if (m_file)
-        return m_file->mmap(process, laddr, offset, size, prot);
-
-    if (!is_fsfile())
-        return KResult(-ENODEV);
-
-    ASSERT(m_inode);
-    // FIXME: If PROT_EXEC, check that the underlying file system isn't mounted noexec.
-    String region_name;
-#if 0
-    // FIXME: I would like to do this, but it would instantiate all the damn inodes.
-    region_name = absolute_path();
-#else
-    region_name = "Memory-mapped file";
-#endif
-    InterruptDisabler disabler;
-    auto* region = process.allocate_file_backed_region(laddr, size, inode(), move(region_name), prot & PROT_READ, prot & PROT_WRITE);
-    if (!region)
-        return KResult(-ENOMEM);
-    return region;
+    return m_file->mmap(process, laddr, offset, size, prot);
 }
 
 KResult FileDescriptor::truncate(off_t length)
 {
-    if (is_file()) {
-        return m_inode->truncate(length);
-    }
-    ASSERT(is_shared_memory());
-    return shared_memory()->truncate(length);
+    return m_file->truncate(length);
 }
 
 bool FileDescriptor::is_shared_memory() const
 {
-    return m_file && m_file->is_shared_memory();
+    return m_file->is_shared_memory();
 }
 
 SharedMemory* FileDescriptor::shared_memory()
@@ -375,7 +300,7 @@ const SharedMemory* FileDescriptor::shared_memory() const
 
 bool FileDescriptor::is_fifo() const
 {
-    return m_file && m_file->is_fifo();
+    return m_file->is_fifo();
 }
 
 FIFO* FileDescriptor::fifo()
@@ -387,7 +312,7 @@ FIFO* FileDescriptor::fifo()
 
 bool FileDescriptor::is_socket() const
 {
-    return m_file && m_file->is_socket();
+    return m_file->is_socket();
 }
 
 Socket* FileDescriptor::socket()
