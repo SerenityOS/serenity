@@ -228,7 +228,7 @@ int Process::sys$gethostname(char* buffer, ssize_t size)
 
 Process* Process::fork(RegisterDump& regs)
 {
-    auto* child = new Process(String(m_name), m_uid, m_gid, m_pid, m_ring, m_cwd_custody.copy_ref(), m_executable_custody.copy_ref(), m_tty, this);
+    auto* child = new Process(String(m_name), m_uid, m_gid, m_pid, m_ring, m_cwd.copy_ref(), m_executable.copy_ref(), m_tty, this);
     if (!child)
         return nullptr;
 
@@ -311,7 +311,7 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
     if (parts.is_empty())
         return -ENOENT;
 
-    auto result = VFS::the().open(path.view(), 0, 0, cwd_custody());
+    auto result = VFS::the().open(path.view(), 0, 0, current_directory());
     if (result.is_error())
         return result.error();
     auto descriptor = result.value();
@@ -435,7 +435,7 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
     main_thread().m_tss.esp0 = old_esp0;
     main_thread().m_tss.ss2 = m_pid;
 
-    m_executable_custody = descriptor->custody();
+    m_executable = descriptor->custody();
 
     if (descriptor->metadata().is_setuid())
         m_euid = descriptor->metadata().uid;
@@ -525,7 +525,7 @@ Process* Process::create_user_process(const String& path, uid_t uid, gid_t gid, 
     {
         InterruptDisabler disabler;
         if (auto* parent = Process::from_pid(parent_pid))
-            cwd = parent->m_cwd_custody.copy_ref();
+            cwd = parent->m_cwd.copy_ref();
     }
 
     if (!cwd)
@@ -575,8 +575,8 @@ Process::Process(String&& name, uid_t uid, gid_t gid, pid_t ppid, RingLevel ring
     , m_euid(uid)
     , m_egid(gid)
     , m_ring(ring)
-    , m_executable_custody(move(executable))
-    , m_cwd_custody(move(cwd))
+    , m_executable(move(executable))
+    , m_cwd(move(cwd))
     , m_tty(tty)
     , m_ppid(ppid)
 {
@@ -998,14 +998,14 @@ int Process::sys$utime(const char* pathname, const utimbuf* buf)
         mtime = now.tv_sec;
         atime = now.tv_sec;
     }
-    return VFS::the().utime(StringView(pathname), cwd_custody(), atime, mtime);
+    return VFS::the().utime(StringView(pathname), current_directory(), atime, mtime);
 }
 
 int Process::sys$access(const char* pathname, int mode)
 {
     if (!validate_read_str(pathname))
         return -EFAULT;
-    return VFS::the().access(StringView(pathname), mode, cwd_custody());
+    return VFS::the().access(StringView(pathname), mode, current_directory());
 }
 
 int Process::sys$fcntl(int fd, int cmd, dword arg)
@@ -1059,14 +1059,14 @@ int Process::sys$lstat(const char* path, stat* statbuf)
 {
     if (!validate_write_typed(statbuf))
         return -EFAULT;
-    return VFS::the().stat(StringView(path), O_NOFOLLOW_NOERROR, cwd_custody(), *statbuf);
+    return VFS::the().stat(StringView(path), O_NOFOLLOW_NOERROR, current_directory(), *statbuf);
 }
 
 int Process::sys$stat(const char* path, stat* statbuf)
 {
     if (!validate_write_typed(statbuf))
         return -EFAULT;
-    return VFS::the().stat(StringView(path), O_NOFOLLOW_NOERROR, cwd_custody(), *statbuf);
+    return VFS::the().stat(StringView(path), O_NOFOLLOW_NOERROR, current_directory(), *statbuf);
 }
 
 int Process::sys$readlink(const char* path, char* buffer, ssize_t size)
@@ -1078,7 +1078,7 @@ int Process::sys$readlink(const char* path, char* buffer, ssize_t size)
     if (!validate_write(buffer, size))
         return -EFAULT;
 
-    auto result = VFS::the().open(path, O_RDONLY | O_NOFOLLOW_NOERROR, 0, cwd_custody());
+    auto result = VFS::the().open(path, O_RDONLY | O_NOFOLLOW_NOERROR, 0, current_directory());
     if (result.is_error())
         return result.error();
     auto descriptor = result.value();
@@ -1100,10 +1100,10 @@ int Process::sys$chdir(const char* path)
 {
     if (!validate_read_str(path))
         return -EFAULT;
-    auto directory_or_error = VFS::the().open_directory(StringView(path), cwd_custody());
+    auto directory_or_error = VFS::the().open_directory(StringView(path), current_directory());
     if (directory_or_error.is_error())
         return directory_or_error.error();
-    m_cwd_custody = *directory_or_error.value();
+    m_cwd = *directory_or_error.value();
     return 0;
 }
 
@@ -1113,7 +1113,7 @@ int Process::sys$getcwd(char* buffer, ssize_t size)
         return -EINVAL;
     if (!validate_write(buffer, size))
         return -EFAULT;
-    auto path = cwd_custody().absolute_path();
+    auto path = current_directory().absolute_path();
     if (size < path.length() + 1)
         return -ERANGE;
     strcpy(buffer, path.characters());
@@ -1140,7 +1140,7 @@ int Process::sys$open(const char* path, int options, mode_t mode)
     int fd = alloc_fd();
     if (fd < 0)
         return fd;
-    auto result = VFS::the().open(path, options, mode & ~umask(), cwd_custody());
+    auto result = VFS::the().open(path, options, mode & ~umask(), current_directory());
     if (result.is_error())
         return result.error();
     auto descriptor = result.value();
@@ -1319,15 +1319,6 @@ uid_t Process::sys$getuid()
 
 gid_t Process::sys$getgid()
 {
-    auto result = VFS::the().resolve_path_to_custody("/home/anon", VFS::the().root_custody());
-    if (result.is_error()) {
-        dbgprintf("resolve_path_to_custody failed\n");
-    } else {
-        for (auto* custody = result.value().ptr(); custody; custody = custody->parent()) {
-            dbgprintf("Custody{%p} name=%s, inode=%u:%u\n", custody, custody->name().characters(), custody->inode().fsid(), custody->inode().index());
-        }
-    }
-
     return m_gid;
 }
 
@@ -1762,7 +1753,7 @@ int Process::sys$mkdir(const char* pathname, mode_t mode)
         return -EINVAL;
     if (pathname_length >= 255)
         return -ENAMETOOLONG;
-    return VFS::the().mkdir(StringView(pathname, pathname_length), mode & ~umask(), cwd_custody());
+    return VFS::the().mkdir(StringView(pathname, pathname_length), mode & ~umask(), current_directory());
 }
 
 clock_t Process::sys$times(tms* times)
@@ -1941,11 +1932,11 @@ int Process::sys$poll(pollfd* fds, int nfds, int timeout)
     return fds_with_revents;
 }
 
-Custody& Process::cwd_custody()
+Custody& Process::current_directory()
 {
-    if (!m_cwd_custody)
-        m_cwd_custody = VFS::the().root_custody();
-    return *m_cwd_custody;
+    if (!m_cwd)
+        m_cwd = VFS::the().root_custody();
+    return *m_cwd;
 }
 
 int Process::sys$link(const char* old_path, const char* new_path)
@@ -1954,14 +1945,14 @@ int Process::sys$link(const char* old_path, const char* new_path)
         return -EFAULT;
     if (!validate_read_str(new_path))
         return -EFAULT;
-    return VFS::the().link(StringView(old_path), StringView(new_path), cwd_custody());
+    return VFS::the().link(StringView(old_path), StringView(new_path), current_directory());
 }
 
 int Process::sys$unlink(const char* pathname)
 {
     if (!validate_read_str(pathname))
         return -EFAULT;
-    return VFS::the().unlink(StringView(pathname), cwd_custody());
+    return VFS::the().unlink(StringView(pathname), current_directory());
 }
 
 int Process::sys$symlink(const char* target, const char* linkpath)
@@ -1970,14 +1961,14 @@ int Process::sys$symlink(const char* target, const char* linkpath)
         return -EFAULT;
     if (!validate_read_str(linkpath))
         return -EFAULT;
-    return VFS::the().symlink(StringView(target), StringView(linkpath), cwd_custody());
+    return VFS::the().symlink(StringView(target), StringView(linkpath), current_directory());
 }
 
 int Process::sys$rmdir(const char* pathname)
 {
     if (!validate_read_str(pathname))
         return -EFAULT;
-    return VFS::the().rmdir(StringView(pathname), cwd_custody());
+    return VFS::the().rmdir(StringView(pathname), current_directory());
 }
 
 int Process::sys$read_tsc(dword* lsw, dword* msw)
@@ -1994,7 +1985,7 @@ int Process::sys$chmod(const char* pathname, mode_t mode)
 {
     if (!validate_read_str(pathname))
         return -EFAULT;
-    return VFS::the().chmod(StringView(pathname), mode, cwd_custody());
+    return VFS::the().chmod(StringView(pathname), mode, current_directory());
 }
 
 int Process::sys$fchmod(int fd, mode_t mode)
@@ -2009,7 +2000,7 @@ int Process::sys$chown(const char* pathname, uid_t uid, gid_t gid)
 {
     if (!validate_read_str(pathname))
         return -EFAULT;
-    return VFS::the().chown(StringView(pathname), uid, gid, cwd_custody());
+    return VFS::the().chown(StringView(pathname), uid, gid, current_directory());
 }
 
 void Process::finalize()
@@ -2712,7 +2703,7 @@ int Process::sys$rename(const char* oldpath, const char* newpath)
         return -EFAULT;
     if (!validate_read_str(newpath))
         return -EFAULT;
-    return VFS::the().rename(StringView(oldpath), StringView(newpath), cwd_custody());
+    return VFS::the().rename(StringView(oldpath), StringView(newpath), current_directory());
 }
 
 int Process::sys$shm_open(const char* name, int flags, mode_t mode)
@@ -2786,5 +2777,5 @@ int Process::sys$mknod(const char* pathname, mode_t mode, dev_t dev)
     if (!validate_read_str(pathname))
         return -EFAULT;
 
-    return VFS::the().mknod(StringView(pathname), mode, dev, cwd_custody());
+    return VFS::the().mknod(StringView(pathname), mode, dev, current_directory());
 }

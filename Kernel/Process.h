@@ -233,8 +233,8 @@ public:
     template<typename T>
     bool validate_write_typed(T* value, size_t count = 1) { return validate_write(value, sizeof(T) * count); }
 
-    Custody& cwd_custody();
-    Custody* executable_custody() { return m_executable_custody.ptr(); }
+    Custody& current_directory();
+    Custody* executable() { return m_executable.ptr(); }
 
     int number_of_open_file_descriptors() const;
     int max_open_file_descriptors() const { return m_max_open_file_descriptors; }
@@ -319,8 +319,8 @@ private:
     byte m_termination_status { 0 };
     byte m_termination_signal { 0 };
 
-    RetainPtr<Custody> m_executable_custody;
-    RetainPtr<Custody> m_cwd_custody;
+    RetainPtr<Custody> m_executable;
+    RetainPtr<Custody> m_cwd;
 
     TTY* m_tty { nullptr };
 
