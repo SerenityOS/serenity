@@ -72,13 +72,7 @@ static int sh_export(int argc, char** argv)
         return 1;
     }
 
-    // FIXME: Yes, this leaks.
-    // Maybe LibCore should grow a CEnvironment which is secretly a map to char*,
-    // so it can keep track of the environment pointers as needed?
-    const auto& s = String::format("%s=%s", parts[0].characters(), parts[1].characters());
-    char *ev = strndup(s.characters(), s.length());
-    putenv(ev);
-    return 0;
+    return setenv(parts[0].characters(), parts[1].characters(), 1);
 }
 
 static int sh_unset(int argc, char** argv)
@@ -494,9 +488,7 @@ int main(int argc, char** argv)
         if (pw) {
             g.username = pw->pw_name;
             g.home = pw->pw_dir;
-            const auto& s = String::format("HOME=%s", pw->pw_dir);
-            char *ev = strndup(s.characters(), s.length());
-            putenv(ev);
+            setenv("HOME", pw->pw_dir, 1);
         }
         endpwent();
     }
