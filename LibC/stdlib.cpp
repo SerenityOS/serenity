@@ -1,19 +1,20 @@
-#include <stdlib.h>
-#include <sys/mman.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <string.h>
-#include <alloca.h>
-#include <assert.h>
-#include <errno.h>
-#include <ctype.h>
-#include <signal.h>
+#include <AK/AKString.h>
 #include <AK/Assertions.h>
+#include <AK/HashMap.h>
+#include <AK/StdLibExtras.h>
 #include <AK/Types.h>
 #include <Kernel/Syscall.h>
-#include <AK/StdLibExtras.h>
-#include <AK/HashMap.h>
-#include <AK/AKString.h>
+#include <alloca.h>
+#include <assert.h>
+#include <ctype.h>
+#include <errno.h>
+#include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/mman.h>
+#include <sys/wait.h>
+#include <unistd.h>
 
 extern "C" {
 
