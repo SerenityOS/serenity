@@ -328,3 +328,10 @@ const Socket* FileDescriptor::socket() const
         return nullptr;
     return static_cast<const Socket*>(m_file.ptr());
 }
+
+void FileDescriptor::set_file_flags(dword flags)
+{
+    m_is_blocking = !(flags & O_NONBLOCK);
+    m_should_append = flags & O_APPEND;
+    m_file_flags = flags;
+}
