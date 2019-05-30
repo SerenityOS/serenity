@@ -545,7 +545,7 @@ KResult VFS::rmdir(StringView path, Custody& base)
     return parent_inode.remove_child(FileSystemPath(path).basename());
 }
 
-KResultOr<InodeIdentifier> VFS::resolve_symbolic_link(InodeIdentifier base, Inode& symlink_inode)
+KResultOr<Retained<Custody>> VFS::resolve_symbolic_link(Custody& base, Inode& symlink_inode)
 {
     auto symlink_contents = symlink_inode.read_entire();
     if (!symlink_contents)
@@ -554,7 +554,7 @@ KResultOr<InodeIdentifier> VFS::resolve_symbolic_link(InodeIdentifier base, Inod
 #ifdef VFS_DEBUG
     kprintf("linkee (%s)(%u) from %u:%u\n", linkee.characters(), linkee.length(), base.fsid(), base.index());
 #endif
-    return resolve_path(linkee, base);
+    return resolve_path_to_custody(linkee, base);
 }
 
 RetainPtr<Inode> VFS::get_inode(InodeIdentifier inode_id)
@@ -562,95 +562,6 @@ RetainPtr<Inode> VFS::get_inode(InodeIdentifier inode_id)
     if (!inode_id.is_valid())
         return nullptr;
     return inode_id.fs()->get_inode(inode_id);
-}
-
-KResultOr<InodeIdentifier> VFS::resolve_path(StringView path, InodeIdentifier base, int options, InodeIdentifier* parent_id)
-{
-    if (path.is_empty())
-        return KResult(-EINVAL);
-
-    auto parts = path.split_view('/');
-    InodeIdentifier crumb_id;
-
-    if (path[0] == '/')
-        crumb_id = root_inode_id();
-    else
-        crumb_id = base.is_valid() ? base : root_inode_id();
-
-    if (parent_id)
-        *parent_id = crumb_id;
-
-    for (int i = 0; i < parts.size(); ++i) {
-        bool inode_was_root_at_head_of_loop = crumb_id.is_root_inode();
-        auto& part = parts[i];
-        if (part.is_empty())
-            break;
-        auto crumb_inode = get_inode(crumb_id);
-        if (!crumb_inode) {
-#ifdef VFS_DEBUG
-            kprintf("invalid metadata\n");
-#endif
-            return KResult(-EIO);
-        }
-        auto metadata = crumb_inode->metadata();
-        if (!metadata.is_directory()) {
-#ifdef VFS_DEBUG
-            kprintf("parent of <%s> not directory, it's inode %u:%u / %u:%u, mode: %u, size: %u\n", part.characters(), crumb_id.fsid(), crumb_id.index(), metadata.inode.fsid(), metadata.inode.index(), metadata.mode, metadata.size);
-#endif
-            return KResult(-ENOTDIR);
-        }
-        if (!metadata.may_execute(current->process()))
-            return KResult(-EACCES);
-        auto parent = crumb_id;
-        crumb_id = crumb_inode->lookup(part);
-        if (!crumb_id.is_valid()) {
-#ifdef VFS_DEBUG
-            kprintf("child <%s>(%u) not found in directory, %02u:%08u\n", part.characters(), part.length(), parent.fsid(), parent.index());
-#endif
-            return KResult(-ENOENT);
-        }
-#ifdef VFS_DEBUG
-        kprintf("<%s> %u:%u\n", part.characters(), crumb_id.fsid(), crumb_id.index());
-#endif
-        if (auto mount = find_mount_for_host(crumb_id)) {
-#ifdef VFS_DEBUG
-            kprintf("  -- is host\n");
-#endif
-            crumb_id = mount->guest();
-        }
-        if (inode_was_root_at_head_of_loop && crumb_id.is_root_inode() && !is_vfs_root(crumb_id) && part == "..") {
-#ifdef VFS_DEBUG
-            kprintf("  -- is guest\n");
-#endif
-            auto mount = find_mount_for_guest(crumb_id);
-            auto dir_inode = get_inode(mount->host());
-            ASSERT(dir_inode);
-            crumb_id = dir_inode->lookup("..");
-        }
-        crumb_inode = get_inode(crumb_id);
-        ASSERT(crumb_inode);
-        metadata = crumb_inode->metadata();
-        if (metadata.is_directory()) {
-            if (i != parts.size() - 1) {
-                if (parent_id)
-                    *parent_id = crumb_id;
-            }
-        }
-        if (metadata.is_symlink()) {
-            if (i == parts.size() - 1) {
-                if (options & O_NOFOLLOW)
-                    return KResult(-ELOOP);
-                if (options & O_NOFOLLOW_NOERROR)
-                    return crumb_id;
-            }
-            auto result = resolve_symbolic_link(parent, *crumb_inode);
-            if (result.is_error())
-                return KResult(-ENOENT);
-            crumb_id = result.value();
-            ASSERT(crumb_id.is_valid());
-        }
-    }
-    return crumb_id;
 }
 
 VFS::Mount::Mount(RetainPtr<Custody>&& host_custody, Retained<FS>&& guest_fs)
@@ -748,7 +659,6 @@ KResultOr<Retained<Custody>> VFS::resolve_path_to_custody(StringView path, Custo
             return KResult(-ENOTDIR);
         if (!metadata.may_execute(current->process()))
             return KResult(-EACCES);
-        auto parent = crumb_id;
         crumb_id = crumb_inode->lookup(part);
         if (!crumb_id.is_valid())
             return KResult(-ENOENT);
@@ -777,11 +687,10 @@ KResultOr<Retained<Custody>> VFS::resolve_path_to_custody(StringView path, Custo
                 if (options & O_NOFOLLOW_NOERROR)
                     return custody_chain.last();
             }
-            auto result = resolve_symbolic_link(parent, *crumb_inode);
+            auto result = resolve_symbolic_link(*custody_chain.last(), *crumb_inode);
             if (result.is_error())
                 return KResult(-ENOENT);
-            crumb_id = result.value();
-            ASSERT(crumb_id.is_valid());
+            crumb_id = result.value()->inode().identifier();
         }
     }
     return custody_chain.last();
