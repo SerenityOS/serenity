@@ -6,6 +6,7 @@
 #include <Kernel/Devices/CharacterDevice.h>
 #include <LibC/errno_numbers.h>
 #include <Kernel/Process.h>
+#include <Kernel/FileSystem/Custody.h>
 
 //#define VFS_DEBUG
 
@@ -738,4 +739,78 @@ void VFS::for_each_mount(Function<void(const Mount&)> callback) const
 void VFS::sync()
 {
     FS::sync();
+}
+
+Custody& VFS::root_custody()
+{
+    if (!m_root_custody)
+        m_root_custody = Custody::create(nullptr, "", *root_inode());
+    return *m_root_custody;
+}
+
+KResultOr<Retained<Custody>> VFS::resolve_path_to_custody(StringView path, Custody& base, int options)
+{
+    if (path.is_empty())
+        return KResult(-EINVAL);
+
+    auto parts = path.split_view('/');
+    InodeIdentifier crumb_id;
+
+    Vector<Retained<Custody>, 32> custody_chain;
+
+    if (path[0] == '/') {
+        custody_chain.append(Retained<Custody>(base));
+        crumb_id = root_inode_id();
+    } else {
+        for (auto* custody = &base; custody; custody = custody->parent()) {
+            // FIXME: Prepending here is not efficient! Fix this.
+            custody_chain.prepend(*custody);
+        }
+        crumb_id = base.inode().identifier();
+    }
+
+    for (int i = 0; i < parts.size(); ++i) {
+        bool inode_was_root_at_head_of_loop = crumb_id.is_root_inode();
+        auto& part = parts[i];
+        if (part.is_empty())
+            break;
+        auto crumb_inode = get_inode(crumb_id);
+        if (!crumb_inode)
+            return KResult(-EIO);
+        auto metadata = crumb_inode->metadata();
+        if (!metadata.is_directory())
+            return KResult(-ENOTDIR);
+        if (!metadata.may_execute(current->process()))
+            return KResult(-EACCES);
+        auto parent = crumb_id;
+        crumb_id = crumb_inode->lookup(part);
+        if (!crumb_id.is_valid())
+            return KResult(-ENOENT);
+        if (auto mount = find_mount_for_host(crumb_id))
+            crumb_id = mount->guest();
+        if (inode_was_root_at_head_of_loop && crumb_id.is_root_inode() && !is_vfs_root(crumb_id) && part == "..") {
+            auto mount = find_mount_for_guest(crumb_id);
+            auto dir_inode = get_inode(mount->host());
+            ASSERT(dir_inode);
+            crumb_id = dir_inode->lookup("..");
+        }
+        crumb_inode = get_inode(crumb_id);
+        ASSERT(crumb_inode);
+        custody_chain.append(Custody::create(custody_chain.last().ptr(), part, *crumb_inode));
+        metadata = crumb_inode->metadata();
+        if (metadata.is_symlink()) {
+            if (i == parts.size() - 1) {
+                if (options & O_NOFOLLOW)
+                    return KResult(-ELOOP);
+                if (options & O_NOFOLLOW_NOERROR)
+                    return custody_chain.last();
+            }
+            auto result = resolve_symbolic_link(parent, *crumb_inode);
+            if (result.is_error())
+                return KResult(-ENOENT);
+            crumb_id = result.value();
+            ASSERT(crumb_id.is_valid());
+        }
+    }
+    return custody_chain.last();
 }

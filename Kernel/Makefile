@@ -50,6 +50,7 @@ KERNEL_OBJS = \
        ProcessTracer.o \
        Devices/PCSpeaker.o \
        FileSystem/InodeFile.o \
+       FileSystem/Custody.o \
        File.o
 
 VFS_OBJS = \
