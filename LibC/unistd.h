@@ -95,11 +95,6 @@ enum
     _PC_NAME_MAX,
 };
 
-#define WEXITSTATUS(status) (((status)&0xff00) >> 8)
-#define WTERMSIG(status) ((status)&0x7f)
-#define WIFEXITED(status) (WTERMSIG(status) == 0)
-#define WIFSIGNALED(status) (((char)(((status)&0x7f) + 1) >> 1) > 0)
-
 #define HOST_NAME_MAX 64
 
 #define R_OK 4
