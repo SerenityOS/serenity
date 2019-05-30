@@ -54,7 +54,8 @@ bool ELFLoader::layout()
                 program_header.offset(),
                 program_header.is_readable(),
                 program_header.is_writable(),
-                String::format("elf-map-%s%s", program_header.is_readable() ? "r" : "", program_header.is_writable() ? "w" : "")
+                program_header.is_executable(),
+                String::format("elf-map-%s%s%s", program_header.is_readable() ? "r" : "", program_header.is_writable() ? "w" : "", program_header.is_writable() ? "x" : "")
             );
         }
     });

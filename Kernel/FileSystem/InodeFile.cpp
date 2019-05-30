@@ -35,7 +35,7 @@ KResultOr<Region*> InodeFile::mmap(Process& process, LinearAddress preferred_lad
     region_name = "Memory-mapped file";
 #endif
     InterruptDisabler disabler;
-    auto* region = process.allocate_file_backed_region(preferred_laddr, size, inode(), move(region_name), prot & PROT_READ, prot & PROT_WRITE);
+    auto* region = process.allocate_file_backed_region(preferred_laddr, size, inode(), move(region_name), prot);
     if (!region)
         return KResult(-ENOMEM);
     return region;

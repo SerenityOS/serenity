@@ -403,7 +403,7 @@ RetainPtr<Region> MemoryManager::allocate_kernel_region(size_t size, String&& na
     ASSERT(!(size % PAGE_SIZE));
     auto range = kernel_page_directory().range_allocator().allocate_anywhere(size);
     ASSERT(range.is_valid());
-    auto region = adopt(*new Region(range, move(name), true, true, false));
+    auto region = adopt(*new Region(range, move(name), PROT_READ | PROT_WRITE | PROT_EXEC, false));
     MM.map_region_at_address(*m_kernel_page_directory, *region, range.base(), false);
     // FIXME: It would be cool if these could zero-fill on demand instead.
     region->commit();

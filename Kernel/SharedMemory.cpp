@@ -93,5 +93,5 @@ KResultOr<Region*> SharedMemory::mmap(Process& process, LinearAddress laddr, siz
 {
     if (!vmo())
         return KResult(-ENODEV);
-    return process.allocate_region_with_vmo(laddr, size, *vmo(), offset, name(), prot & PROT_READ, prot & PROT_WRITE);
+    return process.allocate_region_with_vmo(laddr, size, *vmo(), offset, name(), prot);
 }

@@ -17,7 +17,7 @@ public:
     bool load();
 #if defined(KERNEL)
     Function<void*(LinearAddress, size_t, size_t, bool, bool, const String&)> alloc_section_hook;
-    Function<void*(LinearAddress, size_t, size_t, size_t, bool, bool, const String&)> map_section_hook;
+    Function<void*(LinearAddress, size_t, size_t, size_t, bool r, bool w, bool x, const String&)> map_section_hook;
     LinearAddress entry() const { return m_image.entry(); }
 #endif
     char* symbol_ptr(const char* name);

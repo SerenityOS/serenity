@@ -95,8 +95,7 @@ KResultOr<Region*> BXVGADevice::mmap(Process& process, LinearAddress preferred_l
         move(vmo),
         0,
         "BXVGA Framebuffer",
-        prot & PROT_READ,
-        prot & PROT_WRITE
+        prot
     );
     kprintf("BXVGA: %s(%u) created Region{%p} with size %u for framebuffer P%x with laddr L%x\n",
             process.name().characters(), process.pid(),

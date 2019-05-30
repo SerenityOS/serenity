@@ -79,35 +79,47 @@ Range Process::allocate_range(LinearAddress laddr, size_t size)
     return page_directory().range_allocator().allocate_specific(laddr, size);
 }
 
-Region* Process::allocate_region(LinearAddress laddr, size_t size, String&& name, bool is_readable, bool is_writable, bool commit)
+static unsigned prot_to_region_access_flags(int prot)
+{
+    unsigned access = 0;
+    if (prot & PROT_READ)
+        access |= Region::Access::Read;
+    if (prot & PROT_WRITE)
+        access |= Region::Access::Write;
+    if (prot & PROT_EXEC)
+        access |= Region::Access::Execute;
+    return access;
+}
+
+Region* Process::allocate_region(LinearAddress laddr, size_t size, String&& name, int prot, bool commit)
 {
     auto range = allocate_range(laddr, size);
     if (!range.is_valid())
         return nullptr;
-    m_regions.append(adopt(*new Region(range, move(name), is_readable, is_writable)));
+    m_regions.append(adopt(*new Region(range, move(name), prot_to_region_access_flags(prot))));
     MM.map_region(*this, *m_regions.last());
     if (commit)
         m_regions.last()->commit();
     return m_regions.last().ptr();
 }
 
-Region* Process::allocate_file_backed_region(LinearAddress laddr, size_t size, RetainPtr<Inode>&& inode, String&& name, bool is_readable, bool is_writable)
+Region* Process::allocate_file_backed_region(LinearAddress laddr, size_t size, RetainPtr<Inode>&& inode, String&& name, int prot)
 {
     auto range = allocate_range(laddr, size);
     if (!range.is_valid())
         return nullptr;
-    m_regions.append(adopt(*new Region(range, move(inode), move(name), is_readable, is_writable)));
+    m_regions.append(adopt(*new Region(range, move(inode), move(name), prot_to_region_access_flags(prot))));
     MM.map_region(*this, *m_regions.last());
     return m_regions.last().ptr();
 }
 
-Region* Process::allocate_region_with_vmo(LinearAddress laddr, size_t size, Retained<VMObject>&& vmo, size_t offset_in_vmo, String&& name, bool is_readable, bool is_writable)
+Region* Process::allocate_region_with_vmo(LinearAddress laddr, size_t size, Retained<VMObject>&& vmo, size_t offset_in_vmo, String&& name, int prot)
 {
     auto range = allocate_range(laddr, size);
     if (!range.is_valid())
         return nullptr;
     offset_in_vmo &= PAGE_MASK;
-    m_regions.append(adopt(*new Region(range, move(vmo), offset_in_vmo, move(name), is_readable, is_writable)));
+    m_regions.append(adopt(*new Region(range, move(vmo), offset_in_vmo, move(name), prot_to_region_access_flags(prot))));
     MM.map_region(*this, *m_regions.last());
     return m_regions.last().ptr();
 }
@@ -165,7 +177,7 @@ void* Process::sys$mmap(const Syscall::SC_mmap_params* params)
     if ((dword)addr & ~PAGE_MASK)
         return (void*)-EINVAL;
     if (flags & MAP_ANONYMOUS) {
-        auto* region = allocate_region(LinearAddress((dword)addr), size, "mmap", prot & PROT_READ, prot & PROT_WRITE, false);
+        auto* region = allocate_region(LinearAddress((dword)addr), size, "mmap", prot, false);
         if (!region)
             return (void*)-ENOMEM;
         if (flags & MAP_SHARED)
@@ -326,7 +338,7 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
 #else
     vmo->set_name("ELF image");
 #endif
-    RetainPtr<Region> region = allocate_region_with_vmo(LinearAddress(), descriptor->metadata().size, vmo.copy_ref(), 0, "executable", true, false);
+    RetainPtr<Region> region = allocate_region_with_vmo(LinearAddress(), descriptor->metadata().size, vmo.copy_ref(), 0, "executable", PROT_READ);
     ASSERT(region);
 
     if (this != &current->process()) {
@@ -340,16 +352,28 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
         auto old_regions = move(m_regions);
         m_regions.append(*region);
         loader = make<ELFLoader>(region->laddr().as_ptr());
-        loader->map_section_hook = [&] (LinearAddress laddr, size_t size, size_t alignment, size_t offset_in_image, bool is_readable, bool is_writable, const String& name) {
+        loader->map_section_hook = [&] (LinearAddress laddr, size_t size, size_t alignment, size_t offset_in_image, bool is_readable, bool is_writable, bool is_executable, const String& name) {
             ASSERT(size);
             ASSERT(alignment == PAGE_SIZE);
-            (void) allocate_region_with_vmo(laddr, size, vmo.copy_ref(), offset_in_image, String(name), is_readable, is_writable);
+            int prot = 0;
+            if (is_readable)
+                prot |= PROT_READ;
+            if (is_writable)
+                prot |= PROT_WRITE;
+            if (is_executable)
+                prot |= PROT_EXEC;
+            (void) allocate_region_with_vmo(laddr, size, vmo.copy_ref(), offset_in_image, String(name), prot);
             return laddr.as_ptr();
         };
         loader->alloc_section_hook = [&] (LinearAddress laddr, size_t size, size_t alignment, bool is_readable, bool is_writable, const String& name) {
             ASSERT(size);
             ASSERT(alignment == PAGE_SIZE);
-            (void) allocate_region(laddr, size, String(name), is_readable, is_writable);
+            int prot = 0;
+            if (is_readable)
+                prot |= PROT_READ;
+            if (is_writable)
+                prot |= PROT_WRITE;
+            (void) allocate_region(laddr, size, String(name), prot);
             return laddr.as_ptr();
         };
         bool success = loader->load();
@@ -657,7 +681,7 @@ void Process::create_signal_trampolines_if_needed()
         return;
     // FIXME: This should be a global trampoline shared by all processes, not one created per process!
     // FIXME: Remap as read-only after setup.
-    auto* region = allocate_region(LinearAddress(), PAGE_SIZE, "Signal trampolines", true, true);
+    auto* region = allocate_region(LinearAddress(), PAGE_SIZE, "Signal trampolines", PROT_READ | PROT_WRITE | PROT_EXEC);
     m_return_to_ring3_from_signal_trampoline = region->laddr();
     byte* code_ptr = m_return_to_ring3_from_signal_trampoline.as_ptr();
     *code_ptr++ = 0x58; // pop eax (Argument to signal handler (ignored here))
@@ -2379,14 +2403,14 @@ struct SharedBuffer {
         if (m_pid1 == process.pid()) {
             ++m_pid1_retain_count;
             if (!m_pid1_region) {
-                m_pid1_region = process.allocate_region_with_vmo(LinearAddress(), size(), m_vmo.copy_ref(), 0, "SharedBuffer", true, m_pid1_writable);
+                m_pid1_region = process.allocate_region_with_vmo(LinearAddress(), size(), m_vmo.copy_ref(), 0, "SharedBuffer", PROT_READ | (m_pid1_writable ? PROT_WRITE : 0));
                 m_pid1_region->set_shared(true);
             }
             return m_pid1_region->laddr().as_ptr();
         } else if (m_pid2 == process.pid()) {
             ++m_pid2_retain_count;
             if (!m_pid2_region) {
-                m_pid2_region = process.allocate_region_with_vmo(LinearAddress(), size(), m_vmo.copy_ref(), 0, "SharedBuffer", true, m_pid2_writable);
+                m_pid2_region = process.allocate_region_with_vmo(LinearAddress(), size(), m_vmo.copy_ref(), 0, "SharedBuffer", PROT_READ | (m_pid2_writable ? PROT_WRITE : 0));
                 m_pid2_region->set_shared(true);
             }
             return m_pid2_region->laddr().as_ptr();
@@ -2515,7 +2539,7 @@ int Process::sys$create_shared_buffer(pid_t peer_pid, int size, void** buffer)
     auto shared_buffer = make<SharedBuffer>(m_pid, peer_pid, size);
     shared_buffer->m_shared_buffer_id = shared_buffer_id;
     ASSERT(shared_buffer->size() >= size);
-    shared_buffer->m_pid1_region = allocate_region_with_vmo(LinearAddress(), shared_buffer->size(), shared_buffer->m_vmo.copy_ref(), 0, "SharedBuffer", true, true);
+    shared_buffer->m_pid1_region = allocate_region_with_vmo(LinearAddress(), shared_buffer->size(), shared_buffer->m_vmo.copy_ref(), 0, "SharedBuffer", PROT_READ | PROT_WRITE);
     shared_buffer->m_pid1_region->set_shared(true);
     *buffer = shared_buffer->m_pid1_region->laddr().as_ptr();
 #ifdef SHARED_BUFFER_DEBUG

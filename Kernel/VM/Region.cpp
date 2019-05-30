@@ -4,36 +4,33 @@
 #include <Kernel/Process.h>
 #include <Kernel/Thread.h>
 
-Region::Region(const Range& range, String&& n, bool r, bool w, bool cow)
+Region::Region(const Range& range, String&& n, byte access, bool cow)
     : m_range(range)
     , m_vmo(VMObject::create_anonymous(size()))
     , m_name(move(n))
-    , m_readable(r)
-    , m_writable(w)
+    , m_access(access)
     , m_cow_map(Bitmap::create(m_vmo->page_count(), cow))
 {
     m_vmo->set_name(m_name);
     MM.register_region(*this);
 }
 
-Region::Region(const Range& range, RetainPtr<Inode>&& inode, String&& n, bool r, bool w)
+Region::Region(const Range& range, RetainPtr<Inode>&& inode, String&& n, byte access)
     : m_range(range)
     , m_vmo(VMObject::create_file_backed(move(inode)))
     , m_name(move(n))
-    , m_readable(r)
-    , m_writable(w)
+    , m_access(access)
     , m_cow_map(Bitmap::create(m_vmo->page_count()))
 {
     MM.register_region(*this);
 }
 
-Region::Region(const Range& range, Retained<VMObject>&& vmo, size_t offset_in_vmo, String&& n, bool r, bool w, bool cow)
+Region::Region(const Range& range, Retained<VMObject>&& vmo, size_t offset_in_vmo, String&& n, byte access, bool cow)
     : m_range(range)
     , m_offset_in_vmo(offset_in_vmo)
     , m_vmo(move(vmo))
     , m_name(move(n))
-    , m_readable(r)
-    , m_writable(w)
+    , m_access(access)
     , m_cow_map(Bitmap::create(m_vmo->page_count(), cow))
 {
     MM.register_region(*this);
@@ -71,7 +68,7 @@ bool Region::page_in()
 Retained<Region> Region::clone()
 {
     ASSERT(current);
-    if (m_shared || (m_readable && !m_writable)) {
+    if (m_shared || (is_readable() && !is_writable())) {
 #ifdef MM_DEBUG
         dbgprintf("%s<%u> Region::clone(): sharing %s (L%x)\n",
                   current->process().name().characters(),
@@ -80,7 +77,7 @@ Retained<Region> Region::clone()
                   laddr().get());
 #endif
         // Create a new region backed by the same VMObject.
-        return adopt(*new Region(m_range, m_vmo.copy_ref(), m_offset_in_vmo, String(m_name), m_readable, m_writable));
+        return adopt(*new Region(m_range, m_vmo.copy_ref(), m_offset_in_vmo, String(m_name), m_access));
     }
 
 #ifdef MM_DEBUG
@@ -93,7 +90,7 @@ Retained<Region> Region::clone()
     // Set up a COW region. The parent (this) region becomes COW as well!
     m_cow_map.fill(true);
     MM.remap_region(current->process().page_directory(), *this);
-    return adopt(*new Region(m_range, m_vmo->clone(), m_offset_in_vmo, String(m_name), m_readable, m_writable, true));
+    return adopt(*new Region(m_range, m_vmo->clone(), m_offset_in_vmo, String(m_name), m_access, true));
 }
 
 int Region::commit()
