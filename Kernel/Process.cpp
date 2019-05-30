@@ -1066,7 +1066,7 @@ int Process::sys$stat(const char* path, stat* statbuf)
 {
     if (!validate_write_typed(statbuf))
         return -EFAULT;
-    return VFS::the().stat(StringView(path), O_NOFOLLOW_NOERROR, current_directory(), *statbuf);
+    return VFS::the().stat(StringView(path), 0, current_directory(), *statbuf);
 }
 
 int Process::sys$readlink(const char* path, char* buffer, ssize_t size)
