@@ -1608,9 +1608,7 @@ int Process::sys$ioctl(int fd, unsigned request, unsigned arg)
     auto* descriptor = file_descriptor(fd);
     if (!descriptor)
         return -EBADF;
-    if (!descriptor->is_file())
-        return -ENOTTY;
-    return descriptor->file()->ioctl(*descriptor, request, arg);
+    return descriptor->file().ioctl(*descriptor, request, arg);
 }
 
 int Process::sys$getdtablesize()
@@ -2717,8 +2715,6 @@ int Process::sys$ftruncate(int fd, off_t length)
     if (!descriptor)
         return -EBADF;
     // FIXME: Check that fd is writable, otherwise EINVAL.
-    if (!descriptor->is_file() && !descriptor->is_shared_memory())
-        return -EINVAL;
     return descriptor->truncate(length);
 }
 

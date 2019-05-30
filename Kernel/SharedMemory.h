@@ -16,7 +16,7 @@ public:
     virtual ~SharedMemory() override;
 
     String name() const { return m_name; }
-    KResult truncate(off_t);
+    virtual KResult truncate(off_t) override;
     VMObject* vmo() { return m_vmo.ptr(); }
     const VMObject* vmo() const { return m_vmo.ptr(); }
     uid_t uid() const { return m_uid; }
