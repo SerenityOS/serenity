@@ -155,9 +155,7 @@ void* malloc(size_t size)
             }
         }
 #endif
-        char buffer[64];
-        snprintf(buffer, sizeof(buffer), "malloc: BigAllocationBlock(%u)", real_size);
-        auto* block = (BigAllocationBlock*)os_alloc(real_size, buffer);
+        auto* block = (BigAllocationBlock*)os_alloc(real_size, "malloc: BigAllocationBlock");
         new (block) BigAllocationBlock(real_size);
         return &block->m_slot[0];
     }
@@ -277,20 +275,27 @@ void* calloc(size_t count, size_t size)
     return ptr;
 }
 
+size_t malloc_size(void* ptr)
+{
+    if (!ptr)
+        return 0;
+    void* page_base = (void*)((uintptr_t)ptr & (uintptr_t)~0xfff);
+    auto* header = (const CommonHeader*)page_base;
+    auto size = header->m_size;
+    if (header->m_magic == MAGIC_BIGALLOC_HEADER)
+        size -= sizeof(CommonHeader);
+    return size;
+}
+
 void* realloc(void* ptr, size_t size)
 {
     if (!ptr)
         return malloc(size);
-
-    size_t old_size = 0;
-    void* page_base = (void*)((uintptr_t)ptr & (uintptr_t)~0xfff);
-    auto* header = (const CommonHeader*)page_base;
-    old_size = header->m_size;
-
-    if (malloc_good_size(size) == old_size)
+    auto existing_allocation_size = malloc_size(ptr);
+    if (size <= existing_allocation_size)
         return ptr;
     auto* new_ptr = malloc(size);
-    memcpy(new_ptr, ptr, min(old_size, size));
+    memcpy(new_ptr, ptr, min(existing_allocation_size, size));
     free(ptr);
     return new_ptr;
 }
