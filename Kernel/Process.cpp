@@ -24,6 +24,7 @@
 #include <AK/Time.h>
 #include <Kernel/SharedMemory.h>
 #include <Kernel/ProcessTracer.h>
+#include <Kernel/FileSystem/Custody.h>
 
 //#define DEBUG_POLL_SELECT
 //#define DEBUG_IO
@@ -227,7 +228,7 @@ int Process::sys$gethostname(char* buffer, ssize_t size)
 
 Process* Process::fork(RegisterDump& regs)
 {
-    auto* child = new Process(String(m_name), m_uid, m_gid, m_pid, m_ring, m_cwd.copy_ref(), m_executable.copy_ref(), m_tty, this);
+    auto* child = new Process(String(m_name), m_uid, m_gid, m_pid, m_ring, m_cwd_custody.copy_ref(), m_executable_custody.copy_ref(), m_tty, this);
     if (!child)
         return nullptr;
 
@@ -310,7 +311,7 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
     if (parts.is_empty())
         return -ENOENT;
 
-    auto result = VFS::the().open(path.view(), 0, 0, cwd_inode());
+    auto result = VFS::the().open(path.view(), 0, 0, cwd_custody());
     if (result.is_error())
         return result.error();
     auto descriptor = result.value();
@@ -434,7 +435,7 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
     main_thread().m_tss.esp0 = old_esp0;
     main_thread().m_tss.ss2 = m_pid;
 
-    m_executable = descriptor->inode();
+    m_executable_custody = descriptor->custody();
 
     if (descriptor->metadata().is_setuid())
         m_euid = descriptor->metadata().uid;
@@ -520,15 +521,15 @@ Process* Process::create_user_process(const String& path, uid_t uid, gid_t gid, 
     if (arguments.is_empty()) {
         arguments.append(parts.last());
     }
-    RetainPtr<Inode> cwd;
+    RetainPtr<Custody> cwd;
     {
         InterruptDisabler disabler;
         if (auto* parent = Process::from_pid(parent_pid))
-            cwd = parent->m_cwd.copy_ref();
+            cwd = parent->m_cwd_custody.copy_ref();
     }
 
     if (!cwd)
-        cwd = VFS::the().root_inode();
+        cwd = VFS::the().root_custody();
 
     auto* process = new Process(parts.take_last(), uid, gid, parent_pid, Ring3, move(cwd), nullptr, tty);
 
@@ -566,7 +567,7 @@ Process* Process::create_kernel_process(String&& name, void (*e)())
     return process;
 }
 
-Process::Process(String&& name, uid_t uid, gid_t gid, pid_t ppid, RingLevel ring, RetainPtr<Inode>&& cwd, RetainPtr<Inode>&& executable, TTY* tty, Process* fork_parent)
+Process::Process(String&& name, uid_t uid, gid_t gid, pid_t ppid, RingLevel ring, RetainPtr<Custody>&& cwd, RetainPtr<Custody>&& executable, TTY* tty, Process* fork_parent)
     : m_name(move(name))
     , m_pid(next_pid++) // FIXME: RACE: This variable looks racy!
     , m_uid(uid)
@@ -574,8 +575,8 @@ Process::Process(String&& name, uid_t uid, gid_t gid, pid_t ppid, RingLevel ring
     , m_euid(uid)
     , m_egid(gid)
     , m_ring(ring)
-    , m_cwd(move(cwd))
-    , m_executable(move(executable))
+    , m_executable_custody(move(executable))
+    , m_cwd_custody(move(cwd))
     , m_tty(tty)
     , m_ppid(ppid)
 {
@@ -997,14 +998,14 @@ int Process::sys$utime(const char* pathname, const utimbuf* buf)
         mtime = now.tv_sec;
         atime = now.tv_sec;
     }
-    return VFS::the().utime(StringView(pathname), cwd_inode(), atime, mtime);
+    return VFS::the().utime(StringView(pathname), cwd_custody(), atime, mtime);
 }
 
 int Process::sys$access(const char* pathname, int mode)
 {
     if (!validate_read_str(pathname))
         return -EFAULT;
-    return VFS::the().access(StringView(pathname), mode, cwd_inode());
+    return VFS::the().access(StringView(pathname), mode, cwd_custody());
 }
 
 int Process::sys$fcntl(int fd, int cmd, dword arg)
@@ -1058,14 +1059,14 @@ int Process::sys$lstat(const char* path, stat* statbuf)
 {
     if (!validate_write_typed(statbuf))
         return -EFAULT;
-    return VFS::the().stat(StringView(path), O_NOFOLLOW_NOERROR, cwd_inode(), *statbuf);
+    return VFS::the().stat(StringView(path), O_NOFOLLOW_NOERROR, cwd_custody(), *statbuf);
 }
 
 int Process::sys$stat(const char* path, stat* statbuf)
 {
     if (!validate_write_typed(statbuf))
         return -EFAULT;
-    return VFS::the().stat(StringView(path), O_NOFOLLOW_NOERROR, cwd_inode(), *statbuf);
+    return VFS::the().stat(StringView(path), O_NOFOLLOW_NOERROR, cwd_custody(), *statbuf);
 }
 
 int Process::sys$readlink(const char* path, char* buffer, ssize_t size)
@@ -1077,7 +1078,7 @@ int Process::sys$readlink(const char* path, char* buffer, ssize_t size)
     if (!validate_write(buffer, size))
         return -EFAULT;
 
-    auto result = VFS::the().open(path, O_RDONLY | O_NOFOLLOW_NOERROR, 0, cwd_inode());
+    auto result = VFS::the().open(path, O_RDONLY | O_NOFOLLOW_NOERROR, 0, cwd_custody());
     if (result.is_error())
         return result.error();
     auto descriptor = result.value();
@@ -1099,10 +1100,10 @@ int Process::sys$chdir(const char* path)
 {
     if (!validate_read_str(path))
         return -EFAULT;
-    auto directory_or_error = VFS::the().open_directory(StringView(path), cwd_inode());
+    auto directory_or_error = VFS::the().open_directory(StringView(path), cwd_custody());
     if (directory_or_error.is_error())
         return directory_or_error.error();
-    m_cwd = *directory_or_error.value();
+    m_cwd_custody = *directory_or_error.value();
     return 0;
 }
 
@@ -1112,10 +1113,7 @@ int Process::sys$getcwd(char* buffer, ssize_t size)
         return -EINVAL;
     if (!validate_write(buffer, size))
         return -EFAULT;
-    auto path_or_error = VFS::the().absolute_path(cwd_inode());
-    if (path_or_error.is_error())
-        return path_or_error.error();
-    auto path = path_or_error.value();
+    auto path = cwd_custody().absolute_path();
     if (size < path.length() + 1)
         return -ERANGE;
     strcpy(buffer, path.characters());
@@ -1142,7 +1140,7 @@ int Process::sys$open(const char* path, int options, mode_t mode)
     int fd = alloc_fd();
     if (fd < 0)
         return fd;
-    auto result = VFS::the().open(path, options, mode & ~umask(), cwd_inode());
+    auto result = VFS::the().open(path, options, mode & ~umask(), cwd_custody());
     if (result.is_error())
         return result.error();
     auto descriptor = result.value();
@@ -1321,6 +1319,15 @@ uid_t Process::sys$getuid()
 
 gid_t Process::sys$getgid()
 {
+    auto result = VFS::the().resolve_path_to_custody("/home/anon", VFS::the().root_custody());
+    if (result.is_error()) {
+        dbgprintf("resolve_path_to_custody failed\n");
+    } else {
+        for (auto* custody = result.value().ptr(); custody; custody = custody->parent()) {
+            dbgprintf("Custody{%p} name=%s, inode=%u:%u\n", custody, custody->name().characters(), custody->inode().fsid(), custody->inode().index());
+        }
+    }
+
     return m_gid;
 }
 
@@ -1755,7 +1762,7 @@ int Process::sys$mkdir(const char* pathname, mode_t mode)
         return -EINVAL;
     if (pathname_length >= 255)
         return -ENAMETOOLONG;
-    return VFS::the().mkdir(StringView(pathname, pathname_length), mode & ~umask(), cwd_inode());
+    return VFS::the().mkdir(StringView(pathname, pathname_length), mode & ~umask(), cwd_custody());
 }
 
 clock_t Process::sys$times(tms* times)
@@ -1934,12 +1941,11 @@ int Process::sys$poll(pollfd* fds, int nfds, int timeout)
     return fds_with_revents;
 }
 
-Inode& Process::cwd_inode()
+Custody& Process::cwd_custody()
 {
-    // FIXME: This is retarded factoring.
-    if (!m_cwd)
-        m_cwd = VFS::the().root_inode();
-    return *m_cwd;
+    if (!m_cwd_custody)
+        m_cwd_custody = VFS::the().root_custody();
+    return *m_cwd_custody;
 }
 
 int Process::sys$link(const char* old_path, const char* new_path)
@@ -1948,14 +1954,14 @@ int Process::sys$link(const char* old_path, const char* new_path)
         return -EFAULT;
     if (!validate_read_str(new_path))
         return -EFAULT;
-    return VFS::the().link(StringView(old_path), StringView(new_path), cwd_inode());
+    return VFS::the().link(StringView(old_path), StringView(new_path), cwd_custody());
 }
 
 int Process::sys$unlink(const char* pathname)
 {
     if (!validate_read_str(pathname))
         return -EFAULT;
-    return VFS::the().unlink(StringView(pathname), cwd_inode());
+    return VFS::the().unlink(StringView(pathname), cwd_custody());
 }
 
 int Process::sys$symlink(const char* target, const char* linkpath)
@@ -1964,14 +1970,14 @@ int Process::sys$symlink(const char* target, const char* linkpath)
         return -EFAULT;
     if (!validate_read_str(linkpath))
         return -EFAULT;
-    return VFS::the().symlink(StringView(target), StringView(linkpath), cwd_inode());
+    return VFS::the().symlink(StringView(target), StringView(linkpath), cwd_custody());
 }
 
 int Process::sys$rmdir(const char* pathname)
 {
     if (!validate_read_str(pathname))
         return -EFAULT;
-    return VFS::the().rmdir(StringView(pathname), cwd_inode());
+    return VFS::the().rmdir(StringView(pathname), cwd_custody());
 }
 
 int Process::sys$read_tsc(dword* lsw, dword* msw)
@@ -1988,7 +1994,7 @@ int Process::sys$chmod(const char* pathname, mode_t mode)
 {
     if (!validate_read_str(pathname))
         return -EFAULT;
-    return VFS::the().chmod(StringView(pathname), mode, cwd_inode());
+    return VFS::the().chmod(StringView(pathname), mode, cwd_custody());
 }
 
 int Process::sys$fchmod(int fd, mode_t mode)
@@ -2003,7 +2009,7 @@ int Process::sys$chown(const char* pathname, uid_t uid, gid_t gid)
 {
     if (!validate_read_str(pathname))
         return -EFAULT;
-    return VFS::the().chown(StringView(pathname), uid, gid, cwd_inode());
+    return VFS::the().chown(StringView(pathname), uid, gid, cwd_custody());
 }
 
 void Process::finalize()
@@ -2706,7 +2712,7 @@ int Process::sys$rename(const char* oldpath, const char* newpath)
         return -EFAULT;
     if (!validate_read_str(newpath))
         return -EFAULT;
-    return VFS::the().rename(StringView(oldpath), StringView(newpath), cwd_inode());
+    return VFS::the().rename(StringView(oldpath), StringView(newpath), cwd_custody());
 }
 
 int Process::sys$shm_open(const char* name, int flags, mode_t mode)
@@ -2780,5 +2786,5 @@ int Process::sys$mknod(const char* pathname, mode_t mode, dev_t dev)
     if (!validate_read_str(pathname))
         return -EFAULT;
 
-    return VFS::the().mknod(StringView(pathname), mode, dev, cwd_inode());
+    return VFS::the().mknod(StringView(pathname), mode, dev, cwd_custody());
 }

@@ -233,8 +233,8 @@ public:
     template<typename T>
     bool validate_write_typed(T* value, size_t count = 1) { return validate_write(value, sizeof(T) * count); }
 
-    Inode& cwd_inode();
-    Inode* executable_inode() { return m_executable.ptr(); }
+    Custody& cwd_custody();
+    Custody* executable_custody() { return m_executable_custody.ptr(); }
 
     int number_of_open_file_descriptors() const;
     int max_open_file_descriptors() const { return m_max_open_file_descriptors; }
@@ -273,7 +273,7 @@ private:
     friend class Scheduler;
     friend class Region;
 
-    Process(String&& name, uid_t, gid_t, pid_t ppid, RingLevel, RetainPtr<Inode>&& cwd = nullptr, RetainPtr<Inode>&& executable = nullptr, TTY* = nullptr, Process* fork_parent = nullptr);
+    Process(String&& name, uid_t, gid_t, pid_t ppid, RingLevel, RetainPtr<Custody>&& cwd = nullptr, RetainPtr<Custody>&& executable = nullptr, TTY* = nullptr, Process* fork_parent = nullptr);
 
     Range allocate_range(LinearAddress, size_t);
 
@@ -319,8 +319,8 @@ private:
     byte m_termination_status { 0 };
     byte m_termination_signal { 0 };
 
-    RetainPtr<Inode> m_cwd;
-    RetainPtr<Inode> m_executable;
+    RetainPtr<Custody> m_executable_custody;
+    RetainPtr<Custody> m_cwd_custody;
 
     TTY* m_tty { nullptr };
 

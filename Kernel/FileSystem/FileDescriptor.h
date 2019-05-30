@@ -21,7 +21,7 @@ class SharedMemory;
 
 class FileDescriptor : public Retainable<FileDescriptor> {
 public:
-    static Retained<FileDescriptor> create(RetainPtr<Inode>&&);
+    static Retained<FileDescriptor> create(RetainPtr<Custody>&&);
     static Retained<FileDescriptor> create(RetainPtr<File>&&, SocketRole = SocketRole::None);
     ~FileDescriptor();
 
@@ -64,6 +64,9 @@ public:
     Inode* inode() { return m_inode.ptr(); }
     const Inode* inode() const { return m_inode.ptr(); }
 
+    Custody* custody() { return m_custody.ptr(); }
+    const Custody* custody() const { return m_custody.ptr(); }
+
     KResultOr<Region*> mmap(Process&, LinearAddress, size_t offset, size_t, int prot);
 
     bool is_blocking() const { return m_is_blocking; }
@@ -103,6 +106,7 @@ private:
     FileDescriptor(RetainPtr<File>&&, SocketRole = SocketRole::None);
     FileDescriptor(FIFO&, FIFO::Direction);
 
+    RetainPtr<Custody> m_custody;
     RetainPtr<Inode> m_inode;
     RetainPtr<File> m_file;
 
