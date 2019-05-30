@@ -63,22 +63,22 @@ public:
     bool mount(RetainPtr<FS>&&, StringView path);
 
     KResultOr<Retained<FileDescriptor>> open(RetainPtr<Device>&&, int options);
-    KResultOr<Retained<FileDescriptor>> open(StringView path, int options, mode_t mode, Inode& base);
-    KResultOr<Retained<FileDescriptor>> create(StringView path, int options, mode_t mode, Inode& base);
-    KResult mkdir(StringView path, mode_t mode, Inode& base);
-    KResult link(StringView old_path, StringView new_path, Inode& base);
-    KResult unlink(StringView path, Inode& base);
-    KResult symlink(StringView target, StringView linkpath, Inode& base);
-    KResult rmdir(StringView path, Inode& base);
-    KResult chmod(StringView path, mode_t, Inode& base);
-    KResult chmod(Inode&, mode_t);
-    KResult chown(StringView path, uid_t, gid_t, Inode& base);
-    KResult access(StringView path, int mode, Inode& base);
-    KResult stat(StringView path, int options, Inode& base, struct stat&);
-    KResult utime(StringView path, Inode& base, time_t atime, time_t mtime);
-    KResult rename(StringView oldpath, StringView newpath, Inode& base);
-    KResult mknod(StringView path, mode_t, dev_t, Inode& base);
-    KResultOr<Retained<Inode>> open_directory(StringView path, Inode& base);
+    KResultOr<Retained<FileDescriptor>> open(StringView path, int options, mode_t mode, Custody& base);
+    KResultOr<Retained<FileDescriptor>> create(StringView path, int options, mode_t mode, Custody& base);
+    KResult mkdir(StringView path, mode_t mode, Custody& base);
+    KResult link(StringView old_path, StringView new_path, Custody& base);
+    KResult unlink(StringView path, Custody& base);
+    KResult symlink(StringView target, StringView linkpath, Custody& base);
+    KResult rmdir(StringView path, Custody& base);
+    KResult chmod(StringView path, mode_t, Custody& base);
+    KResult fchmod(Inode&, mode_t);
+    KResult chown(StringView path, uid_t, gid_t, Custody& base);
+    KResult access(StringView path, int mode, Custody& base);
+    KResult stat(StringView path, int options, Custody& base, struct stat&);
+    KResult utime(StringView path, Custody& base, time_t atime, time_t mtime);
+    KResult rename(StringView oldpath, StringView newpath, Custody& base);
+    KResult mknod(StringView path, mode_t, dev_t, Custody& base);
+    KResultOr<Retained<Custody>> open_directory(StringView path, Custody& base);
 
     void register_device(Device&);
     void unregister_device(Device&);
@@ -98,7 +98,7 @@ public:
     Device* get_device(unsigned major, unsigned minor);
 
     Custody& root_custody();
-    KResultOr<Retained<Custody>> resolve_path_to_custody(StringView path, Custody& base, int options = 0);
+    KResultOr<Retained<Custody>> resolve_path_to_custody(StringView path, Custody& base, RetainPtr<Custody>* parent = nullptr, int options = 0);
 
 private:
     friend class FileDescriptor;

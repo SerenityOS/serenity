@@ -23,6 +23,8 @@ public:
 
     const String& name() const { return m_name; }
 
+    String absolute_path() const;
+
 private:
     Custody(Custody* parent, const String& name, Inode&);
 
