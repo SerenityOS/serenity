@@ -64,7 +64,7 @@ private:
     virtual String reverse_lookup(InodeIdentifier) override;
     virtual void flush_metadata() override;
     virtual ssize_t write_bytes(off_t, ssize_t, const byte* buffer, FileDescriptor*) override;
-    virtual KResult add_child(InodeIdentifier child_id, const String& name, byte file_type) override;
+    virtual KResult add_child(InodeIdentifier child_id, const String& name, mode_t) override;
     virtual KResult remove_child(const String& name) override;
     virtual RetainPtr<Inode> parent() const override;
     virtual size_t directory_entry_count() const override;

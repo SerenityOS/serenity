@@ -279,11 +279,10 @@ ssize_t SynthFSInode::write_bytes(off_t offset, ssize_t size, const byte* buffer
     return 0;
 }
 
-KResult SynthFSInode::add_child(InodeIdentifier child_id, const String& name, byte file_type)
+KResult SynthFSInode::add_child(InodeIdentifier child_id, const String& name, mode_t)
 {
     (void)child_id;
     (void)name;
-    (void)file_type;
     ASSERT_NOT_REACHED();
 }
 

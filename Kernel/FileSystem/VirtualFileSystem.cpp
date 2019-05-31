@@ -390,7 +390,7 @@ KResult VFS::rename(StringView old_path, StringView new_path, Custody& base)
         new_custody.did_delete({});
     }
 
-    auto result = new_parent_inode.add_child(old_inode.identifier(), new_basename, 0 /* FIXME: file type? */);
+    auto result = new_parent_inode.add_child(old_inode.identifier(), new_basename, old_inode.mode());
     if (result.is_error())
         return result;
 
@@ -461,7 +461,7 @@ KResult VFS::link(StringView old_path, StringView new_path, Custody& base)
     if (!parent_inode.metadata().may_write(current->process()))
         return KResult(-EACCES);
 
-    return parent_inode.add_child(old_inode.identifier(), FileSystemPath(new_path).basename(), 0);
+    return parent_inode.add_child(old_inode.identifier(), FileSystemPath(new_path).basename(), old_inode.mode());
 }
 
 KResult VFS::unlink(StringView path, Custody& base)
