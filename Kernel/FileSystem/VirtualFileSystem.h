@@ -1,14 +1,15 @@
 #pragma once
 
-#include "FileSystem.h"
-#include "InodeIdentifier.h"
-#include "InodeMetadata.h"
 #include <AK/AKString.h>
+#include <AK/Badge.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>
 #include <AK/OwnPtr.h>
 #include <AK/RetainPtr.h>
 #include <AK/Vector.h>
+#include <Kernel/FileSystem/FileSystem.h>
+#include <Kernel/FileSystem/InodeIdentifier.h>
+#include <Kernel/FileSystem/InodeMetadata.h>
 #include <Kernel/KResult.h>
 
 #define O_RDONLY 0
@@ -83,8 +84,8 @@ public:
     KResult mknod(StringView path, mode_t, dev_t, Custody& base);
     KResultOr<Retained<Custody>> open_directory(StringView path, Custody& base);
 
-    void register_device(Device&);
-    void unregister_device(Device&);
+    void register_device(Badge<Device>, Device&);
+    void unregister_device(Badge<Device>, Device&);
 
     size_t mount_count() const { return m_mounts.size(); }
     void for_each_mount(Function<void(const Mount&)>) const;
