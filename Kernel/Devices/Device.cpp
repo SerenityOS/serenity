@@ -6,12 +6,12 @@ Device::Device(unsigned major, unsigned minor)
      : m_major(major)
      , m_minor(minor)
 {
-    VFS::the().register_device(*this);
+    VFS::the().register_device({}, *this);
 }
 
 Device::~Device()
 {
-    VFS::the().unregister_device(*this);
+    VFS::the().unregister_device({}, *this);
 }
 
 String Device::absolute_path(FileDescriptor&) const
