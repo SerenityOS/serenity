@@ -12,6 +12,25 @@
 
 static const ssize_t max_inline_symlink_length = 60;
 
+static byte to_ext2_file_type(mode_t mode)
+{
+    if (is_regular_file(mode))
+        return EXT2_FT_REG_FILE;
+    if (is_directory(mode))
+        return EXT2_FT_DIR;
+    if (is_character_device(mode))
+        return EXT2_FT_CHRDEV;
+    if (is_block_device(mode))
+        return EXT2_FT_BLKDEV;
+    if (is_fifo(mode))
+        return EXT2_FT_FIFO;
+    if (is_socket(mode))
+        return EXT2_FT_SOCK;
+    if (is_symlink(mode))
+        return EXT2_FT_SYMLINK;
+    return EXT2_FT_UNKNOWN;
+}
+
 Retained<Ext2FS> Ext2FS::create(Retained<DiskDevice>&& device)
 {
     return adopt(*new Ext2FS(move(device)));
@@ -685,7 +704,7 @@ bool Ext2FSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry&)
     return true;
 }
 
-KResult Ext2FSInode::add_child(InodeIdentifier child_id, const String& name, byte file_type)
+KResult Ext2FSInode::add_child(InodeIdentifier child_id, const String& name, mode_t mode)
 {
     LOCKER(m_lock);
     ASSERT(is_directory());
@@ -713,7 +732,7 @@ KResult Ext2FSInode::add_child(InodeIdentifier child_id, const String& name, byt
     if (child_inode)
         child_inode->increment_link_count();
 
-    entries.append({ name.characters(), name.length(), child_id, file_type });
+    entries.append({ name.characters(), name.length(), child_id, to_ext2_file_type(mode) });
     bool success = fs().write_directory_inode(index(), move(entries));
     if (success)
         m_lookup_cache.set(name, child_id.index());
@@ -1130,24 +1149,8 @@ RetainPtr<Inode> Ext2FS::create_inode(InodeIdentifier parent_id, const String& n
         return { };
     }
 
-    byte file_type = 0;
-    if (is_regular_file(mode))
-        file_type = EXT2_FT_REG_FILE;
-    else if (is_directory(mode))
-        file_type = EXT2_FT_DIR;
-    else if (is_character_device(mode))
-        file_type = EXT2_FT_CHRDEV;
-    else if (is_block_device(mode))
-        file_type = EXT2_FT_BLKDEV;
-    else if (is_fifo(mode))
-        file_type = EXT2_FT_FIFO;
-    else if (is_socket(mode))
-        file_type = EXT2_FT_SOCK;
-    else if (is_symlink(mode))
-        file_type = EXT2_FT_SYMLINK;
-
     // Try adding it to the directory first, in case the name is already in use.
-    auto result = parent_inode->add_child({ fsid(), inode_id }, name, file_type);
+    auto result = parent_inode->add_child({ fsid(), inode_id }, name, to_ext2_file_type(mode));
     if (result.is_error()) {
         error = result;
         return { };
