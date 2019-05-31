@@ -127,7 +127,6 @@ private:
     bool m_stomp { false };
 
     bool m_should_beep { false };
-    int m_visual_beep_frames { 0 };
 
     Attribute m_current_attribute;
 
@@ -179,5 +178,6 @@ private:
     int m_glyph_width { 0 };
 
     CTimer m_cursor_blink_timer;
+    CTimer m_visual_beep_timer;
     RetainPtr<CConfigFile> m_config;
 };
