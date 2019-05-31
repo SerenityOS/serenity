@@ -1,14 +1,15 @@
-#include "VBWidgetRegistry.h"
 #include "VBProperty.h"
-#include <LibGUI/GLabel.h>
+#include "VBWidgetRegistry.h"
 #include <LibGUI/GButton.h>
+#include <LibGUI/GCheckBox.h>
+#include <LibGUI/GGroupBox.h>
+#include <LibGUI/GLabel.h>
+#include <LibGUI/GProgressBar.h>
+#include <LibGUI/GRadioButton.h>
+#include <LibGUI/GScrollBar.h>
+#include <LibGUI/GSlider.h>
 #include <LibGUI/GSpinBox.h>
 #include <LibGUI/GTextEditor.h>
-#include <LibGUI/GProgressBar.h>
-#include <LibGUI/GCheckBox.h>
-#include <LibGUI/GScrollBar.h>
-#include <LibGUI/GGroupBox.h>
-#include <LibGUI/GSlider.h>
 
 static String to_class_name(VBWidgetType type)
 {
@@ -20,6 +21,7 @@ static String to_class_name(VBWidgetType type)
     case VBWidgetType::GTextEditor: return "GTextEditor";
     case VBWidgetType::GProgressBar: return "GProgressBar";
     case VBWidgetType::GCheckBox: return "GCheckBox";
+    case VBWidgetType::GRadioButton: return "GRadioButton";
     case VBWidgetType::GScrollBar: return "GScrollBar";
     case VBWidgetType::GGroupBox: return "GGroupBox";
     case VBWidgetType::GSlider: return "GSlider";
@@ -76,6 +78,8 @@ static GWidget* build_gwidget(VBWidgetType type, GWidget* parent)
         box->set_text("checkbox_1");
         return box;
     }
+    case VBWidgetType::GRadioButton:
+        return new GRadioButton("radio_1", parent);
     default:
         ASSERT_NOT_REACHED();
         return nullptr;

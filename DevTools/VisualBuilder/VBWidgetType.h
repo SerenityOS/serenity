@@ -10,6 +10,7 @@ enum class VBWidgetType
     GTextEditor,
     GProgressBar,
     GCheckBox,
+    GRadioButton,
     GScrollBar,
     GGroupBox,
     GSlider,

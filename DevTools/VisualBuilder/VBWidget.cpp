@@ -1,18 +1,19 @@
-#include "VBWidget.h"
 #include "VBForm.h"
 #include "VBProperty.h"
-#include "VBWidgetRegistry.h"
+#include "VBWidget.h"
 #include "VBWidgetPropertyModel.h"
-#include <LibGUI/GPainter.h>
-#include <LibGUI/GLabel.h>
+#include "VBWidgetRegistry.h"
 #include <LibGUI/GButton.h>
+#include <LibGUI/GCheckBox.h>
+#include <LibGUI/GGroupBox.h>
+#include <LibGUI/GLabel.h>
+#include <LibGUI/GPainter.h>
+#include <LibGUI/GProgressBar.h>
+#include <LibGUI/GRadioButton.h>
 #include <LibGUI/GScrollBar.h>
+#include <LibGUI/GSlider.h>
 #include <LibGUI/GSpinBox.h>
 #include <LibGUI/GTextEditor.h>
-#include <LibGUI/GGroupBox.h>
-#include <LibGUI/GCheckBox.h>
-#include <LibGUI/GProgressBar.h>
-#include <LibGUI/GSlider.h>
 
 VBWidget::VBWidget(VBWidgetType type, VBForm& form)
     : m_type(type)
@@ -161,8 +162,13 @@ void VBWidget::setup_properties()
     }
 
     if (m_type == VBWidgetType::GCheckBox) {
-        VB_ADD_PROPERTY(GCheckBox, "caption", text, set_text, string);
+        VB_ADD_PROPERTY(GCheckBox, "text", text, set_text, string);
         VB_ADD_PROPERTY(GCheckBox, "checked", is_checked, set_checked, bool);
+    }
+
+    if (m_type == VBWidgetType::GRadioButton) {
+        VB_ADD_PROPERTY(GRadioButton, "text", text, set_text, string);
+        VB_ADD_PROPERTY(GRadioButton, "checked", is_checked, set_checked, bool);
     }
 }
 
