@@ -315,13 +315,13 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
     if (result.is_error())
         return result.error();
     auto descriptor = result.value();
+    auto metadata = descriptor->metadata();
 
-    if (!descriptor->metadata().may_execute(m_euid, m_gids))
+    if (!metadata.may_execute(m_euid, m_gids))
         return -EACCES;
 
-    if (!descriptor->metadata().size) {
+    if (!metadata.size)
         return -ENOTIMPL;
-    }
 
     dword entry_eip = 0;
     // FIXME: Is there a race here?
@@ -339,7 +339,7 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
 #else
     vmo->set_name("ELF image");
 #endif
-    RetainPtr<Region> region = allocate_region_with_vmo(LinearAddress(), descriptor->metadata().size, vmo.copy_ref(), 0, "executable", PROT_READ);
+    RetainPtr<Region> region = allocate_region_with_vmo(LinearAddress(), metadata.size, vmo.copy_ref(), 0, "executable", PROT_READ);
     ASSERT(region);
 
     if (this != &current->process()) {
@@ -388,10 +388,17 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
             return -ENOEXEC;
         }
 
+        // NOTE: At this point, we've committed to the new executable.
         entry_eip = loader->entry().get();
     }
 
     m_elf_loader = move(loader);
+    m_executable = descriptor->custody();
+
+    if (metadata.is_setuid())
+        m_euid = metadata.uid;
+    if (metadata.is_setgid())
+        m_egid = metadata.gid;
 
     current->m_kernel_stack_for_signal_handler_region = nullptr;
     current->m_signal_stack_user_region = nullptr;
@@ -434,13 +441,6 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
     main_thread().m_tss.ss0 = 0x10;
     main_thread().m_tss.esp0 = old_esp0;
     main_thread().m_tss.ss2 = m_pid;
-
-    m_executable = descriptor->custody();
-
-    if (descriptor->metadata().is_setuid())
-        m_euid = descriptor->metadata().uid;
-    if (descriptor->metadata().is_setgid())
-        m_egid = descriptor->metadata().gid;
 
 #ifdef TASK_DEBUG
     kprintf("Process %u (%s) exec'd %s @ %p\n", pid(), name().characters(), path.characters(), main_thread().tss().eip);
