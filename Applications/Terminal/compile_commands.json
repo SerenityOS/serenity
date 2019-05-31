@@ -1,0 +1,33 @@
+[
+    {
+        "arguments": [
+            "i686-pc-serenity-g++",
+            "-c",
+            "-Wextra",
+            "-Wall",
+            "-Wundef",
+            "-Wcast-qual",
+            "-Wwrite-strings",
+            "-Wimplicit-fallthrough",
+            "-Os",
+            "-fno-exceptions",
+            "-fno-rtti",
+            "-std=c++17",
+            "-Wno-sized-deallocation",
+            "-fno-sized-deallocation",
+            "-I/home/christopherdumas/serenity",
+            "-I.",
+            "-I/home/christopherdumas/serenity/LibC",
+            "-I/home/christopherdumas/serenity/Servers",
+            "-I/home/christopherdumas/serenity/LibM",
+            "-DSANITIZE_PTRS",
+            "-DDEBUG",
+            "-DUSERLAND",
+            "-o",
+            "Terminal.o",
+            "Terminal.cpp"
+        ],
+        "directory": "/home/christopherdumas/serenity/Applications/Terminal",
+        "file": "Terminal.cpp"
+    }
+]
