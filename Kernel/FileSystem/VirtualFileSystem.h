@@ -98,7 +98,7 @@ public:
     Device* get_device(unsigned major, unsigned minor);
 
     Custody& root_custody();
-    KResultOr<Retained<Custody>> resolve_path_to_custody(StringView path, Custody& base, RetainPtr<Custody>* parent = nullptr, int options = 0);
+    KResultOr<Retained<Custody>> resolve_path(StringView path, Custody& base, RetainPtr<Custody>* parent = nullptr, int options = 0);
 
 private:
     friend class FileDescriptor;
