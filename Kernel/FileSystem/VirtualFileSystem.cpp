@@ -48,6 +48,8 @@ bool VFS::mount(Retained<FS>&& file_system, StringView path)
     // FIXME: check that this is not already a mount point
     auto mount = make<Mount>(*result.value(), move(file_system));
     m_mounts.append(move(mount));
+
+    result.value()->did_mount_on({});
     return true;
 }
 
@@ -368,6 +370,8 @@ KResult VFS::rename(StringView old_path, StringView new_path, Custody& base)
             return KResult(-EACCES);
     }
 
+    auto new_basename = FileSystemPath(new_path).basename();
+
     if (!new_custody_or_error.is_error()) {
         auto& new_custody = *new_custody_or_error.value();
         auto& new_inode = new_custody.inode();
@@ -380,18 +384,20 @@ KResult VFS::rename(StringView old_path, StringView new_path, Custody& base)
         }
         if (new_inode.is_directory() && !old_inode.is_directory())
             return KResult(-EISDIR);
-        auto result = new_parent_inode.remove_child(FileSystemPath(new_path).basename());
+        auto result = new_parent_inode.remove_child(new_basename);
         if (result.is_error())
             return result;
+        new_custody.did_delete({});
     }
 
-    auto result = new_parent_inode.add_child(old_inode.identifier(), FileSystemPath(new_path).basename(), 0 /* FIXME: file type? */);
+    auto result = new_parent_inode.add_child(old_inode.identifier(), new_basename, 0 /* FIXME: file type? */);
     if (result.is_error())
         return result;
 
     result = old_parent_inode.remove_child(FileSystemPath(old_path).basename());
     if (result.is_error())
         return result;
+    old_custody.did_rename({}, new_basename);
 
     return KSuccess;
 }
@@ -479,7 +485,12 @@ KResult VFS::unlink(StringView path, Custody& base)
             return KResult(-EACCES);
     }
 
-    return parent_inode.remove_child(FileSystemPath(path).basename());
+    auto result = parent_inode.remove_child(FileSystemPath(path).basename());
+    if (result.is_error())
+        return result;
+
+    custody.did_delete({});
+    return KSuccess;
 }
 
 KResult VFS::symlink(StringView target, StringView linkpath, Custody& base)
@@ -662,7 +673,7 @@ KResultOr<Retained<Custody>> VFS::resolve_path_to_custody(StringView path, Custo
         crumb_inode = get_inode(crumb_id);
         ASSERT(crumb_inode);
 
-        custody_chain.append(Custody::create(custody_chain.last().ptr(), part, *crumb_inode));
+        custody_chain.append(Custody::get_or_create(custody_chain.last().ptr(), part, *crumb_inode));
 
         metadata = crumb_inode->metadata();
         if (metadata.is_directory()) {
