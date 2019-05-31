@@ -44,7 +44,7 @@ public:
     virtual InodeIdentifier lookup(const String& name) = 0;
     virtual String reverse_lookup(InodeIdentifier) = 0;
     virtual ssize_t write_bytes(off_t, ssize_t, const byte* data, FileDescriptor*) = 0;
-    virtual KResult add_child(InodeIdentifier child_id, const String& name, byte file_type) = 0;
+    virtual KResult add_child(InodeIdentifier child_id, const String& name, mode_t) = 0;
     virtual KResult remove_child(const String& name) = 0;
     virtual RetainPtr<Inode> parent() const = 0;
     virtual size_t directory_entry_count() const = 0;
