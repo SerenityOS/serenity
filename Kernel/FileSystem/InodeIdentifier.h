@@ -1,5 +1,6 @@
 #pragma once
 
+#include <AK/AKString.h>
 #include <AK/ByteBuffer.h>
 #include <AK/Types.h>
 
@@ -34,6 +35,8 @@ public:
     }
 
     bool is_root_inode() const;
+
+    String to_string() const { return String::format("%u:%u", m_fsid, m_index); }
 
 private:
     dword m_fsid { 0 };
