@@ -38,7 +38,7 @@ InodeIdentifier VFS::root_inode_id() const
 
 bool VFS::mount(Retained<FS>&& file_system, StringView path)
 {
-    auto result = resolve_path_to_custody(path, root_custody());
+    auto result = resolve_path(path, root_custody());
     if (result.is_error()) {
         kprintf("VFS: mount can't resolve mount point '%s'\n", path.characters());
         return false;
@@ -143,7 +143,7 @@ KResult VFS::utime(StringView path, Custody& base, time_t atime, time_t mtime)
 
 KResult VFS::stat(StringView path, int options, Custody& base, struct stat& statbuf)
 {
-    auto custody_or_error = resolve_path_to_custody(path, base, nullptr, options);
+    auto custody_or_error = resolve_path(path, base, nullptr, options);
     if (custody_or_error.is_error())
         return custody_or_error.error();
     return FileDescriptor::create(custody_or_error.value().ptr())->fstat(statbuf);
@@ -151,7 +151,7 @@ KResult VFS::stat(StringView path, int options, Custody& base, struct stat& stat
 
 KResultOr<Retained<FileDescriptor>> VFS::open(StringView path, int options, mode_t mode, Custody& base)
 {
-    auto custody_or_error = resolve_path_to_custody(path, base, nullptr, options);
+    auto custody_or_error = resolve_path(path, base, nullptr, options);
     if (options & O_CREAT) {
         if (custody_or_error.is_error())
             return create(path, options, mode, base);
@@ -203,7 +203,7 @@ KResult VFS::mknod(StringView path, mode_t mode, dev_t dev, Custody& base)
         return KResult(-EINVAL);
 
     RetainPtr<Custody> parent_custody;
-    auto existing_file_or_error = resolve_path_to_custody(path, base, &parent_custody);
+    auto existing_file_or_error = resolve_path(path, base, &parent_custody);
     if (!existing_file_or_error.is_error())
         return KResult(-EEXIST);
     if (!parent_custody)
@@ -234,7 +234,7 @@ KResultOr<Retained<FileDescriptor>> VFS::create(StringView path, int options, mo
     }
 
     RetainPtr<Custody> parent_custody;
-    auto existing_custody_or_error = resolve_path_to_custody(path, base, &parent_custody);
+    auto existing_custody_or_error = resolve_path(path, base, &parent_custody);
     if (!existing_custody_or_error.is_error())
         return KResult(-EEXIST);
     if (!parent_custody)
@@ -259,7 +259,7 @@ KResultOr<Retained<FileDescriptor>> VFS::create(StringView path, int options, mo
 KResult VFS::mkdir(StringView path, mode_t mode, Custody& base)
 {
     RetainPtr<Custody> parent_custody;
-    auto result = resolve_path_to_custody(path, base, &parent_custody);
+    auto result = resolve_path(path, base, &parent_custody);
     if (!result.is_error())
         return KResult(-EEXIST);
     if (!parent_custody)
@@ -282,7 +282,7 @@ KResult VFS::mkdir(StringView path, mode_t mode, Custody& base)
 
 KResult VFS::access(StringView path, int mode, Custody& base)
 {
-    auto custody_or_error = resolve_path_to_custody(path, base);
+    auto custody_or_error = resolve_path(path, base);
     if (custody_or_error.is_error())
         return custody_or_error.error();
     auto& custody = *custody_or_error.value();
@@ -305,7 +305,7 @@ KResult VFS::access(StringView path, int mode, Custody& base)
 
 KResultOr<Retained<Custody>> VFS::open_directory(StringView path, Custody& base)
 {
-    auto inode_or_error = resolve_path_to_custody(path, base);
+    auto inode_or_error = resolve_path(path, base);
     if (inode_or_error.is_error())
         return inode_or_error.error();
     auto& custody = *inode_or_error.value();
@@ -332,7 +332,7 @@ KResult VFS::fchmod(Inode& inode, mode_t mode)
 
 KResult VFS::chmod(StringView path, mode_t mode, Custody& base)
 {
-    auto custody_or_error = resolve_path_to_custody(path, base);
+    auto custody_or_error = resolve_path(path, base);
     if (custody_or_error.is_error())
         return custody_or_error.error();
     auto& custody = *custody_or_error.value();
@@ -343,14 +343,14 @@ KResult VFS::chmod(StringView path, mode_t mode, Custody& base)
 KResult VFS::rename(StringView old_path, StringView new_path, Custody& base)
 {
     RetainPtr<Custody> old_parent_custody;
-    auto old_custody_or_error = resolve_path_to_custody(old_path, base, &old_parent_custody);
+    auto old_custody_or_error = resolve_path(old_path, base, &old_parent_custody);
     if (old_custody_or_error.is_error())
         return old_custody_or_error.error();
     auto& old_custody = *old_custody_or_error.value();
     auto& old_inode = old_custody.inode();
 
     RetainPtr<Custody> new_parent_custody;
-    auto new_custody_or_error = resolve_path_to_custody(new_path, base, &new_parent_custody);
+    auto new_custody_or_error = resolve_path(new_path, base, &new_parent_custody);
     if (new_custody_or_error.is_error()) {
         if (new_custody_or_error.error() != -ENOENT)
             return new_custody_or_error.error();
@@ -404,7 +404,7 @@ KResult VFS::rename(StringView old_path, StringView new_path, Custody& base)
 
 KResult VFS::chown(StringView path, uid_t a_uid, gid_t a_gid, Custody& base)
 {
-    auto custody_or_error = resolve_path_to_custody(path, base);
+    auto custody_or_error = resolve_path(path, base);
     if (custody_or_error.is_error())
         return custody_or_error.error();
     auto& custody = *custody_or_error.value();
@@ -436,14 +436,14 @@ KResult VFS::chown(StringView path, uid_t a_uid, gid_t a_gid, Custody& base)
 
 KResult VFS::link(StringView old_path, StringView new_path, Custody& base)
 {
-    auto old_custody_or_error = resolve_path_to_custody(old_path, base);
+    auto old_custody_or_error = resolve_path(old_path, base);
     if (old_custody_or_error.is_error())
         return old_custody_or_error.error();
     auto& old_custody = *old_custody_or_error.value();
     auto& old_inode = old_custody.inode();
 
     RetainPtr<Custody> parent_custody;
-    auto new_custody_or_error = resolve_path_to_custody(new_path, base, &parent_custody);
+    auto new_custody_or_error = resolve_path(new_path, base, &parent_custody);
     if (!new_custody_or_error.is_error())
         return KResult(-EEXIST);
 
@@ -467,7 +467,7 @@ KResult VFS::link(StringView old_path, StringView new_path, Custody& base)
 KResult VFS::unlink(StringView path, Custody& base)
 {
     RetainPtr<Custody> parent_custody;
-    auto custody_or_error = resolve_path_to_custody(path, base, &parent_custody);
+    auto custody_or_error = resolve_path(path, base, &parent_custody);
     if (custody_or_error.is_error())
         return custody_or_error.error();
     auto& custody = *custody_or_error.value();
@@ -496,7 +496,7 @@ KResult VFS::unlink(StringView path, Custody& base)
 KResult VFS::symlink(StringView target, StringView linkpath, Custody& base)
 {
     RetainPtr<Custody> parent_custody;
-    auto existing_custody_or_error = resolve_path_to_custody(linkpath, base, &parent_custody);
+    auto existing_custody_or_error = resolve_path(linkpath, base, &parent_custody);
     if (!existing_custody_or_error.is_error())
         return KResult(-EEXIST);
     if (!parent_custody)
@@ -522,7 +522,7 @@ KResult VFS::symlink(StringView target, StringView linkpath, Custody& base)
 KResult VFS::rmdir(StringView path, Custody& base)
 {
     RetainPtr<Custody> parent_custody;
-    auto custody_or_error = resolve_path_to_custody(path, base, &parent_custody);
+    auto custody_or_error = resolve_path(path, base, &parent_custody);
     if (custody_or_error.is_error())
         return KResult(custody_or_error.error());
 
@@ -621,7 +621,7 @@ Custody& VFS::root_custody()
     return *m_root_custody;
 }
 
-KResultOr<Retained<Custody>> VFS::resolve_path_to_custody(StringView path, Custody& base, RetainPtr<Custody>* parent_custody, int options)
+KResultOr<Retained<Custody>> VFS::resolve_path(StringView path, Custody& base, RetainPtr<Custody>* parent_custody, int options)
 {
     if (path.is_empty())
         return KResult(-EINVAL);
@@ -694,7 +694,7 @@ KResultOr<Retained<Custody>> VFS::resolve_path_to_custody(StringView path, Custo
                 return KResult(-ENOENT);
 
             // FIXME: We should limit the recursion here and return -ELOOP if it goes to deep.
-            return resolve_path_to_custody(
+            return resolve_path(
                 StringView(symlink_contents.pointer(),
                 symlink_contents.size()),
                 *current_parent,
