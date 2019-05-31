@@ -12,6 +12,35 @@ static Lockable<HashTable<Custody*>>& all_custodies()
     return *table;
 }
 
+Custody* Custody::get_if_cached(Custody* parent, const String& name)
+{
+    LOCKER(all_custodies().lock());
+    for (auto& custody : all_custodies().resource()) {
+        if (custody->is_deleted())
+            continue;
+        if (custody->is_mounted_on())
+            continue;
+        if (custody->parent() == parent && custody->name() == name)
+            return custody;
+    }
+    return nullptr;
+}
+
+Retained<Custody> Custody::get_or_create(Custody* parent, const String& name, Inode& inode)
+{
+    if (RetainPtr<Custody> cached_custody = get_if_cached(parent, name)) {
+        if (&cached_custody->inode() != &inode) {
+            dbgprintf("WTF! cached custody for name '%s' has inode=%s, new inode=%s\n",
+                      name.characters(),
+                      cached_custody->inode().identifier().to_string().characters(),
+                      inode.identifier().to_string().characters());
+        }
+        ASSERT(&cached_custody->inode() == &inode);
+        return *cached_custody;
+    }
+    return create(parent, name, inode);
+}
+
 Custody::Custody(Custody* parent, const String& name, Inode& inode)
     : m_parent(parent)
     , m_name(name)
@@ -39,3 +68,19 @@ String Custody::absolute_path() const
     }
     return builder.to_string();
 }
+
+void Custody::did_delete(Badge<VFS>)
+{
+    m_deleted = true;
+}
+
+void Custody::did_mount_on(Badge<VFS>)
+{
+    m_mounted_on = true;
+}
+
+void Custody::did_rename(Badge<VFS>, const String& name)
+{
+    m_name = name;
+}
+
