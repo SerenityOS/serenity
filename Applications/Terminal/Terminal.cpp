@@ -631,14 +631,12 @@ void Terminal::on_char(byte ch)
         if (m_should_beep)
             sysbeep();
         else {
-            m_visual_beep_timer.restart(500);
+            m_visual_beep_timer.restart(200);
             m_visual_beep_timer.set_single_shot(true);
             m_visual_beep_timer.on_timeout = [this] {
-                                                 m_needs_background_fill = true;
-                                                 update();
+                                                 force_repaint();
                                              };
-            m_needs_background_fill = true;
-            update();
+            force_repaint();
         }
         return;
     case '\t': {
