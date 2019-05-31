@@ -110,7 +110,7 @@ static int sh_cd(int argc, char** argv)
     struct stat st;
     int rc = stat(path, &st);
     if (rc < 0) {
-        printf("lstat(%s) failed: %s\n", path, strerror(errno));
+        printf("stat(%s) failed: %s\n", path, strerror(errno));
         return 1;
     }
     if (!S_ISDIR(st.st_mode)) {
