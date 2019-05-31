@@ -189,7 +189,7 @@ KResultOr<Retained<FileDescriptor>> VFS::open(StringView path, int options, mode
         auto descriptor_or_error = (*it).value->open(options);
         if (descriptor_or_error.is_error())
             return descriptor_or_error.error();
-        descriptor_or_error.value()->set_original_inode(Badge<VFS>(), inode);
+        descriptor_or_error.value()->set_original_inode({}, inode);
         return descriptor_or_error;
     }
     if (should_truncate_file)

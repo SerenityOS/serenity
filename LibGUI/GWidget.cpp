@@ -131,10 +131,10 @@ void GWidget::handle_paint_event(GPaintEvent& event)
 void GWidget::set_layout(OwnPtr<GLayout>&& layout)
 {
     if (m_layout)
-        m_layout->notify_disowned(Badge<GWidget>(), *this);
+        m_layout->notify_disowned({}, *this);
     m_layout = move(layout);
     if (m_layout) {
-        m_layout->notify_adopted(Badge<GWidget>(), *this);
+        m_layout->notify_adopted({}, *this);
         do_layout();
     } else {
         update();

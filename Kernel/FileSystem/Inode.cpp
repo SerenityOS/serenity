@@ -78,13 +78,13 @@ void Inode::will_be_destroyed()
 void Inode::inode_contents_changed(off_t offset, ssize_t size, const byte* data)
 {
     if (m_vmo)
-        m_vmo->inode_contents_changed(Badge<Inode>(), offset, size, data);
+        m_vmo->inode_contents_changed({}, offset, size, data);
 }
 
 void Inode::inode_size_changed(size_t old_size, size_t new_size)
 {
     if (m_vmo)
-        m_vmo->inode_size_changed(Badge<Inode>(), old_size, new_size);
+        m_vmo->inode_size_changed({}, old_size, new_size);
 }
 
 int Inode::set_atime(time_t)

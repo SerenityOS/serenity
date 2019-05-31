@@ -20,10 +20,10 @@ void GAbstractView::set_model(RetainPtr<GModel>&& model)
     if (model == m_model)
         return;
     if (m_model)
-        m_model->unregister_view(Badge<GAbstractView>(), *this);
+        m_model->unregister_view({}, *this);
     m_model = move(model);
     if (m_model)
-        m_model->register_view(Badge<GAbstractView>(), *this);
+        m_model->register_view({}, *this);
     did_update_model();
 }
 

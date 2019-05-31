@@ -26,7 +26,7 @@ void GLayout::add_entry(Entry&& entry)
 {
     m_entries.append(move(entry));
     if (m_owner)
-        m_owner->notify_layout_changed(Badge<GLayout>());
+        m_owner->notify_layout_changed({});
 }
 
 void GLayout::add_spacer()
@@ -58,7 +58,7 @@ void GLayout::remove_widget(GWidget& widget)
         return entry.widget == &widget;
     });
     if (m_owner)
-        m_owner->notify_layout_changed(Badge<GLayout>());
+        m_owner->notify_layout_changed({});
 }
 
 void GLayout::set_spacing(int spacing)
@@ -67,7 +67,7 @@ void GLayout::set_spacing(int spacing)
         return;
     m_spacing = spacing;
     if (m_owner)
-        m_owner->notify_layout_changed(Badge<GLayout>());
+        m_owner->notify_layout_changed({});
 }
 
 void GLayout::set_margins(const GMargins& margins)
@@ -76,5 +76,5 @@ void GLayout::set_margins(const GMargins& margins)
         return;
     m_margins = margins;
     if (m_owner)
-        m_owner->notify_layout_changed(Badge<GLayout>());
+        m_owner->notify_layout_changed({});
 }

@@ -62,5 +62,5 @@ ssize_t SlavePTY::read(FileDescriptor& descriptor, byte* buffer, ssize_t size)
 
 void SlavePTY::close()
 {
-    m_master->notify_slave_closed(Badge<SlavePTY>());
+    m_master->notify_slave_closed({});
 }
