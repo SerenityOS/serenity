@@ -90,8 +90,6 @@ public:
     void for_each_mount(Function<void(const Mount&)>) const;
 
     InodeIdentifier root_inode_id() const;
-    Inode* root_inode() { return m_root_inode.ptr(); }
-    const Inode* root_inode() const { return m_root_inode.ptr(); }
 
     void sync();
 

@@ -617,7 +617,7 @@ void VFS::sync()
 Custody& VFS::root_custody()
 {
     if (!m_root_custody)
-        m_root_custody = Custody::create(nullptr, "", *root_inode());
+        m_root_custody = Custody::create(nullptr, "", *m_root_inode);
     return *m_root_custody;
 }
 
