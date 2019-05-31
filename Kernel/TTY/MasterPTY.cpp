@@ -23,7 +23,7 @@ MasterPTY::~MasterPTY()
 #ifdef MASTERPTY_DEBUG
     dbgprintf("~MasterPTY(%u)\n", m_index);
 #endif
-    PTYMultiplexer::the().notify_master_destroyed(Badge<MasterPTY>(), m_index);
+    PTYMultiplexer::the().notify_master_destroyed({}, m_index);
 }
 
 String MasterPTY::pts_name() const

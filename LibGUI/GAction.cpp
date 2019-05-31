@@ -39,19 +39,19 @@ GAction::GAction(const String& text, const GShortcut& shortcut, RetainPtr<Graphi
 {
     if (m_widget) {
         m_scope = ShortcutScope::WidgetLocal;
-        m_widget->register_local_shortcut_action(Badge<GAction>(), *this);
+        m_widget->register_local_shortcut_action({}, *this);
     } else {
         m_scope = ShortcutScope::ApplicationGlobal;
-        GApplication::the().register_global_shortcut_action(Badge<GAction>(), *this);
+        GApplication::the().register_global_shortcut_action({}, *this);
     }
 }
 
 GAction::~GAction()
 {
     if (m_shortcut.is_valid() && m_scope == ShortcutScope::ApplicationGlobal)
-        GApplication::the().unregister_global_shortcut_action(Badge<GAction>(), *this);
+        GApplication::the().unregister_global_shortcut_action({}, *this);
     if (m_widget && m_scope == ShortcutScope::WidgetLocal)
-        m_widget->unregister_local_shortcut_action(Badge<GAction>(), *this);
+        m_widget->unregister_local_shortcut_action({}, *this);
 }
 
 void GAction::activate()
