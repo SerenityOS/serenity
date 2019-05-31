@@ -584,12 +584,12 @@ InodeIdentifier VFS::Mount::host() const
     return m_host_custody->inode().identifier();
 }
 
-void VFS::register_device(Device& device)
+void VFS::register_device(Badge<Device>, Device& device)
 {
     m_devices.set(encoded_device(device.major(), device.minor()), &device);
 }
 
-void VFS::unregister_device(Device& device)
+void VFS::unregister_device(Badge<Device>, Device& device)
 {
     m_devices.remove(encoded_device(device.major(), device.minor()));
 }
