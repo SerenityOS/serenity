@@ -545,18 +545,6 @@ KResult VFS::rmdir(StringView path, Custody& base)
     return parent_inode.remove_child(FileSystemPath(path).basename());
 }
 
-KResultOr<Retained<Custody>> VFS::resolve_symbolic_link(Custody& base, Inode& symlink_inode)
-{
-    auto symlink_contents = symlink_inode.read_entire();
-    if (!symlink_contents)
-        return KResult(-ENOENT);
-    auto linkee = StringView(symlink_contents.pointer(), symlink_contents.size());
-#ifdef VFS_DEBUG
-    kprintf("linkee (%s)(%u) from %u:%u\n", linkee.characters(), linkee.length(), base.fsid(), base.index());
-#endif
-    return resolve_path_to_custody(linkee, base);
-}
-
 RetainPtr<Inode> VFS::get_inode(InodeIdentifier inode_id)
 {
     if (!inode_id.is_valid())
@@ -659,6 +647,7 @@ KResultOr<Retained<Custody>> VFS::resolve_path_to_custody(StringView path, Custo
             return KResult(-ENOTDIR);
         if (!metadata.may_execute(current->process()))
             return KResult(-EACCES);
+        auto current_parent = custody_chain.last();
         crumb_id = crumb_inode->lookup(part);
         if (!crumb_id.is_valid())
             return KResult(-ENOENT);
@@ -672,7 +661,9 @@ KResultOr<Retained<Custody>> VFS::resolve_path_to_custody(StringView path, Custo
         }
         crumb_inode = get_inode(crumb_id);
         ASSERT(crumb_inode);
+
         custody_chain.append(Custody::create(custody_chain.last().ptr(), part, *crumb_inode));
+
         metadata = crumb_inode->metadata();
         if (metadata.is_directory()) {
             if (i != parts.size() - 1) {
@@ -687,10 +678,18 @@ KResultOr<Retained<Custody>> VFS::resolve_path_to_custody(StringView path, Custo
                 if (options & O_NOFOLLOW_NOERROR)
                     return custody_chain.last();
             }
-            auto result = resolve_symbolic_link(*custody_chain.last(), *crumb_inode);
-            if (result.is_error())
+            auto symlink_contents = crumb_inode->read_entire();
+            if (!symlink_contents)
                 return KResult(-ENOENT);
-            crumb_id = result.value()->inode().identifier();
+
+            // FIXME: We should limit the recursion here and return -ELOOP if it goes to deep.
+            return resolve_path_to_custody(
+                StringView(symlink_contents.pointer(),
+                symlink_contents.size()),
+                *current_parent,
+                parent_custody,
+                options
+            );
         }
     }
     return custody_chain.last();

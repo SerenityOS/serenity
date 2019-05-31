@@ -108,7 +108,6 @@ private:
     bool is_vfs_root(InodeIdentifier) const;
 
     void traverse_directory_inode(Inode&, Function<bool(const FS::DirectoryEntry&)>);
-    KResultOr<Retained<Custody>> resolve_symbolic_link(Custody& base, Inode& symlink_inode);
 
     Mount* find_mount_for_host(InodeIdentifier);
     Mount* find_mount_for_guest(InodeIdentifier);
