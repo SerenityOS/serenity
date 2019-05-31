@@ -243,7 +243,7 @@ void GEventLoop::process_unprocessed_bundles()
         }
 
         if (event.type == WSAPI_ServerMessage::Type::ScreenRectChanged) {
-            GDesktop::the().did_receive_screen_rect(Badge<GEventLoop>(), event.screen.rect);
+            GDesktop::the().did_receive_screen_rect({}, event.screen.rect);
             continue;
         }
 
@@ -414,5 +414,5 @@ void GEventLoop::handle_greeting(WSAPI_ServerMessage& message)
 {
     s_server_pid = message.greeting.server_pid;
     s_my_client_id = message.greeting.your_client_id;
-    GDesktop::the().did_receive_screen_rect(Badge<GEventLoop>(), message.greeting.screen_rect);
+    GDesktop::the().did_receive_screen_rect({}, message.greeting.screen_rect);
 }

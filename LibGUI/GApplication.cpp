@@ -46,10 +46,10 @@ void GApplication::quit(int exit_code)
 void GApplication::set_menubar(OwnPtr<GMenuBar>&& menubar)
 {
     if (m_menubar)
-        m_menubar->notify_removed_from_application(Badge<GApplication>());
+        m_menubar->notify_removed_from_application({});
     m_menubar = move(menubar);
     if (m_menubar)
-        m_menubar->notify_added_to_application(Badge<GApplication>());
+        m_menubar->notify_added_to_application({});
 }
 
 void GApplication::register_global_shortcut_action(Badge<GAction>, GAction& action)
