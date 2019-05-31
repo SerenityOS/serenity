@@ -2010,6 +2010,8 @@ void Process::finalize()
 
     m_fds.clear();
     m_tty = nullptr;
+    m_executable = nullptr;
+    m_cwd = nullptr;
     disown_all_shared_buffers();
     {
         InterruptDisabler disabler;
