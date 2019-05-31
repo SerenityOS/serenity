@@ -26,6 +26,8 @@ public:
     void apply_size_increments_to_window(GWindow&);
 
     void set_opacity(float);
+    bool should_beep() { return m_should_beep; };
+    void set_should_beep(bool sb) { m_should_beep = sb; };
 
     RetainPtr<CConfigFile> config() const { return m_config; }
 
@@ -139,6 +141,9 @@ private:
     byte m_saved_cursor_row { 0 };
     byte m_saved_cursor_column { 0 };
     bool m_stomp { false };
+
+    bool m_should_beep { false };
+    int m_visual_beep_frames { 0 };
 
     Attribute m_current_attribute;
 

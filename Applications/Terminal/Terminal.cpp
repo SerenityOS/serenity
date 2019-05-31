@@ -628,7 +628,10 @@ void Terminal::on_char(byte ch)
         }
         return;
     case '\a':
-        sysbeep();
+        if (m_should_beep)
+            sysbeep();
+        else
+            m_visual_beep_frames = 2;
         return;
     case '\t': {
         for (unsigned i = m_cursor_column; i < columns(); ++i) {
@@ -823,7 +826,8 @@ void Terminal::keydown_event(GKeyEvent& event)
 }
 
 void Terminal::paint_event(GPaintEvent& event)
-{   
+{
+    m_visual_beep_frames--;
     GFrame::paint_event(event);
 
     GPainter painter(*this);
@@ -855,9 +859,10 @@ void Terminal::paint_event(GPaintEvent& event)
             continue;
         line.dirty = false;
         bool has_only_one_background_color = line.has_only_one_background_color();
-        if (has_only_one_background_color) {
+        if (m_visual_beep_frames > 0)
+            painter.fill_rect(row_rect(row), Color::Red);
+        else if (has_only_one_background_color)
             painter.fill_rect(row_rect(row), lookup_color(line.attributes[0].background_color).with_alpha(255 * m_opacity));
-        }
         for (word column = 0; column < m_columns; ++column) {
             bool should_reverse_fill_for_cursor = m_cursor_blink_state && m_in_active_window && row == m_cursor_row && column == m_cursor_column;
             auto& attribute = line.attributes[column];
@@ -877,9 +882,6 @@ void Terminal::paint_event(GPaintEvent& event)
         auto cell_rect = glyph_rect(m_cursor_row, m_cursor_column).inflated(0, m_line_spacing);
         painter.draw_rect(cell_rect, lookup_color(line(m_cursor_row).attributes[m_cursor_column].foreground_color));
     }
-
-    if (m_belling)
-        painter.draw_rect(frame_inner_rect(), Color::Red);
 }
 
 void Terminal::set_window_title(const String& title)
