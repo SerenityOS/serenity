@@ -630,8 +630,16 @@ void Terminal::on_char(byte ch)
     case '\a':
         if (m_should_beep)
             sysbeep();
-        else
-            m_visual_beep_frames = 2;
+        else {
+            m_visual_beep_timer.restart(500);
+            m_visual_beep_timer.set_single_shot(true);
+            m_visual_beep_timer.on_timeout = [this] {
+                                                 m_needs_background_fill = true;
+                                                 update();
+                                             };
+            m_needs_background_fill = true;
+            update();
+        }
         return;
     case '\t': {
         for (unsigned i = m_cursor_column; i < columns(); ++i) {
@@ -827,14 +835,16 @@ void Terminal::keydown_event(GKeyEvent& event)
 
 void Terminal::paint_event(GPaintEvent& event)
 {
-    m_visual_beep_frames--;
     GFrame::paint_event(event);
 
     GPainter painter(*this);
 
     if (m_needs_background_fill) {
         m_needs_background_fill = false;
-        painter.fill_rect(frame_inner_rect(), Color(Color::Black).with_alpha(255 * m_opacity));
+        if (m_visual_beep_timer.is_active())
+            painter.fill_rect(frame_inner_rect(), Color::Red);
+        else
+            painter.fill_rect(frame_inner_rect(), Color(Color::Black).with_alpha(255 * m_opacity));
     }
 
     if (m_rows_to_scroll_backing_store && m_rows_to_scroll_backing_store < m_rows) {
@@ -859,7 +869,7 @@ void Terminal::paint_event(GPaintEvent& event)
             continue;
         line.dirty = false;
         bool has_only_one_background_color = line.has_only_one_background_color();
-        if (m_visual_beep_frames > 0)
+        if (m_visual_beep_timer.is_active())
             painter.fill_rect(row_rect(row), Color::Red);
         else if (has_only_one_background_color)
             painter.fill_rect(row_rect(row), lookup_color(line.attributes[0].background_color).with_alpha(255 * m_opacity));
