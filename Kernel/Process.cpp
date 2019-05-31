@@ -2012,6 +2012,8 @@ void Process::finalize()
     m_tty = nullptr;
     m_executable = nullptr;
     m_cwd = nullptr;
+    m_elf_loader = nullptr;
+
     disown_all_shared_buffers();
     {
         InterruptDisabler disabler;
