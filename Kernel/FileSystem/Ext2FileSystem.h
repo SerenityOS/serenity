@@ -29,12 +29,10 @@ private:
     virtual InodeMetadata metadata() const override;
     virtual bool traverse_as_directory(Function<bool(const FS::DirectoryEntry&)>) const override;
     virtual InodeIdentifier lookup(const String& name) override;
-    virtual String reverse_lookup(InodeIdentifier) override;
     virtual void flush_metadata() override;
     virtual ssize_t write_bytes(off_t, ssize_t, const byte* data, FileDescriptor*) override;
     virtual KResult add_child(InodeIdentifier child_id, const String& name, mode_t) override;
     virtual KResult remove_child(const String& name) override;
-    virtual RetainPtr<Inode> parent() const override;
     virtual int set_atime(time_t) override;
     virtual int set_ctime(time_t) override;
     virtual int set_mtime(time_t) override;
@@ -55,7 +53,6 @@ private:
     mutable Vector<unsigned> m_block_list;
     mutable HashMap<String, unsigned> m_lookup_cache;
     ext2_inode m_raw_inode;
-    mutable InodeIdentifier m_parent_id;
 };
 
 class Ext2FS final : public DiskBackedFS {
