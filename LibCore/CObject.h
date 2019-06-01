@@ -1,6 +1,7 @@
 #pragma once
 
 #include <AK/Function.h>
+#include <AK/StdLibExtras.h>
 #include <AK/Vector.h>
 #include <AK/Weakable.h>
 
@@ -63,19 +64,22 @@ private:
 };
 
 template<typename T>
-inline bool is(const CObject&) { return true; }
+inline bool is(const CObject&) { return false; }
+
+template<>
+inline bool is<CObject>(const CObject&) { return true; }
 
 template<typename T>
 inline T& to(CObject& object)
 {
-    ASSERT(is<T>(object));
+    ASSERT(is<typename RemoveConst<T>::Type>(object));
     return static_cast<T&>(object);
 }
 
 template<typename T>
 inline const T& to(const CObject& object)
 {
-    ASSERT(is<T>(object));
+    ASSERT(is<typename RemoveConst<T>::Type>(object));
     return static_cast<const T&>(object);
 }
 
