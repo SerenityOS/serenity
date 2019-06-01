@@ -957,7 +957,7 @@ bool ProcFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry&)
     return true;
 }
 
-InodeIdentifier ProcFSInode::lookup(const String& name)
+InodeIdentifier ProcFSInode::lookup(StringView name)
 {
     ASSERT(is_directory());
     if (name == ".")
