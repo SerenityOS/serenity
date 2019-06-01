@@ -59,6 +59,7 @@ bool Region::page_in()
             bool success = MM.page_in_from_inode(*this, i);
             if (!success)
                 return false;
+            continue;
         }
         MM.remap_region_page(*this, i, true);
     }
