@@ -11,6 +11,8 @@
 #include <AK/AKString.h>
 #include <AK/Vector.h>
 #include <LibCore/CDirIterator.h>
+#include <pwd.h>
+#include <grp.h>
 
 static int do_file_system_object_long(const char* path);
 static int do_file_system_object_short(const char* path);
@@ -19,10 +21,11 @@ static bool flag_colorize = true;
 static bool flag_long = false;
 static bool flag_show_dotfiles = false;
 static bool flag_show_inode = false;
+static bool flag_print_numeric = false;
 
 int main(int argc, char** argv)
 {
-    static const char* valid_option_characters = "laiG";
+    static const char* valid_option_characters = "laiGn";
     int opt;
     while ((opt = getopt(argc, argv, valid_option_characters)) != -1) {
         switch (opt) {
@@ -38,6 +41,10 @@ int main(int argc, char** argv)
         case 'i':
             flag_show_inode = true;
             break;
+        case 'n':
+            flag_print_numeric = true;
+            break;
+
         default:
             fprintf(stderr, "usage: ls [-%s] [paths...]\n", valid_option_characters);
             return 1;
@@ -156,10 +163,21 @@ bool print_filesystem_object(const char* path, const char* name) {
     else
         printf("%c", st.st_mode & S_IXOTH ? 'x' : '-');
 
-    printf(" %4u %4u", st.st_uid, st.st_gid);
+    passwd* pwd = getpwuid(st.st_uid);
+    group* grp = getgrgid(st.st_gid);
+    if (!flag_print_numeric && pwd) {
+      printf(" %5s", pwd->pw_name);
+    } else {
+      printf(" %5u", st.st_uid);
+    }
+    if (!flag_print_numeric && grp) {
+      printf(" %5s", grp->gr_name);
+    } else {
+      printf(" %5u", st.st_gid);
+    }
 
     if (S_ISCHR(st.st_mode) || S_ISBLK(st.st_mode))
-        printf("  %4u,%4u ", major(st.st_rdev), minor(st.st_rdev));
+        printf(" %4u,%4u ", major(st.st_rdev), minor(st.st_rdev));
     else
         printf(" %10u ", st.st_size);
 
