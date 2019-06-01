@@ -333,13 +333,8 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
     ProcessPagingScope paging_scope(*this);
 
     auto vmo = VMObject::create_file_backed(descriptor->inode());
-#if 0
-    // FIXME: I would like to do this, but it would instantiate all the damn inodes.
     vmo->set_name(descriptor->absolute_path());
-#else
-    vmo->set_name("ELF image");
-#endif
-    RetainPtr<Region> region = allocate_region_with_vmo(LinearAddress(), metadata.size, vmo.copy_ref(), 0, "executable", PROT_READ);
+    RetainPtr<Region> region = allocate_region_with_vmo(LinearAddress(), metadata.size, vmo.copy_ref(), 0, vmo->name(), PROT_READ);
     ASSERT(region);
 
     if (this != &current->process()) {
