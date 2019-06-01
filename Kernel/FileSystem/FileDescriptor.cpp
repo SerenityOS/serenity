@@ -243,7 +243,7 @@ int FileDescriptor::close()
     return 0;
 }
 
-String FileDescriptor::absolute_path()
+String FileDescriptor::absolute_path() const
 {
     if (m_custody)
         return m_custody->absolute_path();

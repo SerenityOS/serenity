@@ -142,7 +142,7 @@ static const char* to_string(SocketRole role)
     }
 }
 
-String Socket::absolute_path(FileDescriptor& descriptor) const
+String Socket::absolute_path(const FileDescriptor& descriptor) const
 {
     return String::format("socket:%x (role: %s)", this, to_string(descriptor.socket_role()));
 }

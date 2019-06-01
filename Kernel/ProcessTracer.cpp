@@ -29,7 +29,7 @@ int ProcessTracer::read(FileDescriptor&, byte* buffer, int buffer_size)
     return sizeof(data);
 }
 
-String ProcessTracer::absolute_path(FileDescriptor&) const
+String ProcessTracer::absolute_path(const FileDescriptor&) const
 {
     return String::format("tracer:%d", m_pid);
 }

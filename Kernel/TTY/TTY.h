@@ -15,7 +15,7 @@ public:
     virtual bool can_read(FileDescriptor&) const override;
     virtual bool can_write(FileDescriptor&) const override;
     virtual int ioctl(FileDescriptor&, unsigned request, unsigned arg) override final;
-    virtual String absolute_path(FileDescriptor&) const override { return tty_name(); }
+    virtual String absolute_path(const FileDescriptor&) const override { return tty_name(); }
 
     virtual String tty_name() const = 0;
 

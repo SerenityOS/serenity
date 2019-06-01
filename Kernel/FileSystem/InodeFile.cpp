@@ -41,7 +41,7 @@ KResultOr<Region*> InodeFile::mmap(Process& process, LinearAddress preferred_lad
     return region;
 }
 
-String InodeFile::absolute_path(FileDescriptor& descriptor) const
+String InodeFile::absolute_path(const FileDescriptor& descriptor) const
 {
     ASSERT_NOT_REACHED();
     ASSERT(descriptor.custody());

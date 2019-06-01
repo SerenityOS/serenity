@@ -18,7 +18,7 @@ public:
     virtual bool can_write(FileDescriptor&) const override { return true; }
     virtual int write(FileDescriptor&, const byte*, int) override { return -EIO; }
 
-    virtual String absolute_path(FileDescriptor&) const override;
+    virtual String absolute_path(const FileDescriptor&) const override;
 
     void did_syscall(dword function, dword arg1, dword arg2, dword arg3, dword result);
     pid_t pid() const { return m_pid; }

@@ -27,7 +27,7 @@ public:
     virtual int ioctl(FileDescriptor&, unsigned request, unsigned arg);
     virtual KResultOr<Region*> mmap(Process&, LinearAddress preferred_laddr, size_t offset, size_t size, int prot);
 
-    virtual String absolute_path(FileDescriptor&) const = 0;
+    virtual String absolute_path(const FileDescriptor&) const = 0;
 
     virtual KResult truncate(off_t) { return KResult(-EINVAL); }
 

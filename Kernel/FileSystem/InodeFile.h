@@ -23,7 +23,7 @@ public:
     virtual ssize_t write(FileDescriptor&, const byte*, ssize_t) override;
     virtual KResultOr<Region*> mmap(Process&, LinearAddress preferred_laddr, size_t offset, size_t size, int prot) override;
 
-    virtual String absolute_path(FileDescriptor&) const override;
+    virtual String absolute_path(const FileDescriptor&) const override;
 
     virtual KResult truncate(off_t) override;
 
