@@ -739,11 +739,6 @@ RetainPtr<Inode> ProcFS::create_directory(InodeIdentifier, const String&, mode_t
     return nullptr;
 }
 
-RetainPtr<Inode> ProcFSInode::parent() const
-{
-    return fs().get_inode(to_parent_id(identifier()));
-}
-
 InodeIdentifier ProcFS::root_inode() const
 {
     return { fsid(), FI_Root };
@@ -1039,26 +1034,6 @@ InodeIdentifier ProcFSInode::lookup(const String& name)
                 return to_identifier_with_fd(fsid(), to_pid(identifier()), name_as_number);
         }
     }
-    return { };
-}
-
-String ProcFSInode::reverse_lookup(InodeIdentifier child_id)
-{
-    ASSERT(is_directory());
-    auto proc_file_type = to_proc_file_type(identifier());
-    if (proc_file_type == FI_Root) {
-        for (auto& entry : fs().m_entries) {
-            if (child_id == to_identifier(fsid(), PDI_Root, 0, (ProcFileType)entry.proc_file_type)) {
-                return entry.name;
-            }
-        }
-        auto child_proc_file_type = to_proc_file_type(child_id);
-        if (child_proc_file_type == FI_PID)
-            return String::format("%u", to_pid(child_id));
-        return { };
-    }
-    // FIXME: Implement
-    ASSERT_NOT_REACHED();
     return { };
 }
 
