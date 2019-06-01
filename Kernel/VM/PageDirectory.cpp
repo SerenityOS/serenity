@@ -32,6 +32,6 @@ void PageDirectory::flush(LinearAddress laddr)
 #endif
     if (!current)
         return;
-    if (&current->process().page_directory() == this)
+    if (this == &MM.kernel_page_directory() || &current->process().page_directory() == this)
         MM.flush_tlb(laddr);
 }
