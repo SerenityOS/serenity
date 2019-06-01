@@ -405,7 +405,7 @@ static bool process_IHDR(const ByteBuffer& data, PNGLoadingContext& context)
 #endif
 
     context.decompression_buffer_size = (context.width * context.height * context.bytes_per_pixel + context.height);
-    context.decompression_buffer = (byte*)mmap(nullptr, context.decompression_buffer_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0);
+    context.decompression_buffer = (byte*)mmap_with_name(nullptr, context.decompression_buffer_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0, "PNG decompression buffer");
     return true;
 }
 
