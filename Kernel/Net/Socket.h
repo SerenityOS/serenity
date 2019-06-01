@@ -62,7 +62,7 @@ public:
 
     Lock& lock() { return m_lock; }
 
-    virtual String absolute_path(FileDescriptor&) const override;
+    virtual String absolute_path(const FileDescriptor&) const override;
 
 protected:
     Socket(int domain, int type, int protocol);
