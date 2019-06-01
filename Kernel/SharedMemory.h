@@ -28,7 +28,7 @@ private:
     virtual bool can_write(FileDescriptor&) const override { return true; }
     virtual int read(FileDescriptor&, byte*, int) override;
     virtual int write(FileDescriptor&, const byte*, int) override;
-    virtual String absolute_path(FileDescriptor&) const override;
+    virtual String absolute_path(const FileDescriptor&) const override;
     virtual const char* class_name() const override { return "SharedMemory"; }
     virtual bool is_shared_memory() const override { return true; }
     virtual KResultOr<Region*> mmap(Process&, LinearAddress, size_t offset, size_t size, int prot) override;
