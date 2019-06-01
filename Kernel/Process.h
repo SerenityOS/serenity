@@ -177,6 +177,7 @@ public:
     int sys$chmod(const char* pathname, mode_t);
     int sys$fchmod(int fd, mode_t);
     int sys$chown(const char* pathname, uid_t, gid_t);
+    int sys$fchown(int fd, uid_t, gid_t);
     int sys$socket(int domain, int type, int protocol);
     int sys$bind(int sockfd, const sockaddr* addr, socklen_t);
     int sys$listen(int sockfd, int backlog);

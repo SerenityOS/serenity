@@ -1991,6 +1991,14 @@ int Process::sys$fchmod(int fd, mode_t mode)
     return descriptor->fchmod(mode);
 }
 
+int Process::sys$fchown(int fd, uid_t uid, gid_t gid)
+{
+    auto* descriptor = file_descriptor(fd);
+    if (!descriptor)
+        return -EBADF;
+    return descriptor->chown(uid, gid);
+}
+
 int Process::sys$chown(const char* pathname, uid_t uid, gid_t gid)
 {
     if (!validate_read_str(pathname))
