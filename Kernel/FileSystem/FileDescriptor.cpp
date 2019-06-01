@@ -81,25 +81,7 @@ KResult FileDescriptor::fstat(stat& buffer)
     ASSERT(!is_fifo());
     if (!m_inode)
         return KResult(-EBADF);
-
-    auto metadata = this->metadata();
-    if (!metadata.is_valid())
-        return KResult(-EIO);
-
-    buffer.st_rdev = encoded_device(metadata.major_device, metadata.minor_device);
-    buffer.st_ino = metadata.inode.index();
-    buffer.st_mode = metadata.mode;
-    buffer.st_nlink = metadata.link_count;
-    buffer.st_uid = metadata.uid;
-    buffer.st_gid = metadata.gid;
-    buffer.st_dev = 0; // FIXME
-    buffer.st_size = metadata.size;
-    buffer.st_blksize = metadata.block_size;
-    buffer.st_blocks = metadata.block_count;
-    buffer.st_atime = metadata.atime;
-    buffer.st_mtime = metadata.mtime;
-    buffer.st_ctime = metadata.ctime;
-    return KSuccess;
+    return metadata().stat(buffer);
 }
 
 KResult FileDescriptor::fchmod(mode_t mode)

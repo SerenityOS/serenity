@@ -1,10 +1,16 @@
 #pragma once
 
-#include "InodeIdentifier.h"
-#include "UnixTypes.h"
 #include <AK/HashTable.h>
+#include <Kernel/FileSystem/InodeIdentifier.h>
+#include <Kernel/KResult.h>
+#include <Kernel/UnixTypes.h>
 
 class Process;
+
+inline constexpr dword encoded_device(unsigned major, unsigned minor)
+{
+    return (minor & 0xff) | (major << 8) | ((minor & ~0xff) << 12);
+}
 
 inline bool is_directory(mode_t mode) { return (mode & 0170000) == 0040000; }
 inline bool is_character_device(mode_t mode) { return (mode & 0170000) == 0020000; }
@@ -68,6 +74,26 @@ struct InodeMetadata {
     bool is_sticky() const { return ::is_sticky(mode); }
     bool is_setuid() const { return ::is_setuid(mode); }
     bool is_setgid() const { return ::is_setgid(mode); }
+
+    KResult stat(stat& buffer) const
+    {
+        if (!is_valid())
+            return KResult(-EIO);
+        buffer.st_rdev = encoded_device(major_device, minor_device);
+        buffer.st_ino = inode.index();
+        buffer.st_mode = mode;
+        buffer.st_nlink = link_count;
+        buffer.st_uid = uid;
+        buffer.st_gid = gid;
+        buffer.st_dev = 0; // FIXME
+        buffer.st_size = size;
+        buffer.st_blksize = block_size;
+        buffer.st_blocks = block_count;
+        buffer.st_atime = atime;
+        buffer.st_mtime = mtime;
+        buffer.st_ctime = ctime;
+        return KSuccess;
+    }
 
     InodeIdentifier inode;
     off_t size { 0 };
