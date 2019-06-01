@@ -324,3 +324,10 @@ void FileDescriptor::set_file_flags(dword flags)
     m_should_append = flags & O_APPEND;
     m_file_flags = flags;
 }
+
+KResult FileDescriptor::chown(uid_t uid, gid_t gid)
+{
+    if (!m_inode)
+        return KResult(-EINVAL);
+    return m_inode->chown(uid, gid);
+}

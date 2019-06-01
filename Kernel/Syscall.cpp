@@ -242,6 +242,8 @@ static dword handle(RegisterDump& regs, dword function, dword arg1, dword arg2, 
         return current->process().sys$release_shared_buffer((int)arg1);
     case Syscall::SC_chown:
         return current->process().sys$chown((const char*)arg1, (uid_t)arg2, (gid_t)arg3);
+    case Syscall::SC_fchown:
+        return current->process().sys$fchown((int)arg1, (uid_t)arg2, (gid_t)arg3);
     case Syscall::SC_restore_signal_mask:
         return current->process().sys$restore_signal_mask((dword)arg1);
     case Syscall::SC_seal_shared_buffer:
