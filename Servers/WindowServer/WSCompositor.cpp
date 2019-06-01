@@ -26,6 +26,7 @@ WallpaperMode mode_to_enum(const String& name)
         return WallpaperMode::Center;
     if (name == "scaled")
         return WallpaperMode::Scaled;
+    return WallpaperMode::Simple;
 }
 
 WSCompositor::WSCompositor()
