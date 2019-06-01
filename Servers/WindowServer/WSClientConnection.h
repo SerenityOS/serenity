@@ -80,6 +80,7 @@ private:
     void handle_request(const WSAPIPopupMenuRequest&);
     void handle_request(const WSAPIDismissMenuRequest&);
     void handle_request(const WSAPISetWindowHasAlphaChannelRequest&);
+    void handle_request(const WSAPIMoveWindowToFrontRequest&);
 
     void post_error(const String&);
 

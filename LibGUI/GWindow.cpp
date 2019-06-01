@@ -49,6 +49,17 @@ void GWindow::close()
     delete_later();
 }
 
+void GWindow::move_to_front()
+{
+    if (!m_window_id)
+        return;
+
+    WSAPI_ClientMessage request;
+    request.type = WSAPI_ClientMessage::Type::MoveWindowToFront;
+    request.window_id = m_window_id;
+    GEventLoop::post_message_to_server(request);
+}
+
 void GWindow::show()
 {
     if (m_window_id)
