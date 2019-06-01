@@ -293,3 +293,4 @@ using AK::max;
 using AK::min;
 using AK::move;
 using AK::swap;
+using AK::RemoveConst;
