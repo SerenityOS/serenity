@@ -30,13 +30,6 @@ class Custody;
 class Device;
 class FileDescriptor;
 
-inline constexpr dword encoded_device(unsigned major, unsigned minor)
-{
-    return (minor & 0xff) | (major << 8) | ((minor & ~0xff) << 12);
-}
-
-class VFS;
-
 class VFS {
     AK_MAKE_ETERNAL
 public:

@@ -146,7 +146,7 @@ KResult VFS::stat(StringView path, int options, Custody& base, struct stat& stat
     auto custody_or_error = resolve_path(path, base, nullptr, options);
     if (custody_or_error.is_error())
         return custody_or_error.error();
-    return FileDescriptor::create(custody_or_error.value().ptr())->fstat(statbuf);
+    return custody_or_error.value()->inode().metadata().stat(statbuf);
 }
 
 KResultOr<Retained<FileDescriptor>> VFS::open(StringView path, int options, mode_t mode, Custody& base)
