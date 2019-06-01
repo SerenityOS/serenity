@@ -454,12 +454,6 @@ void MemoryManager::enter_process_paging_scope(Process& process)
     asm volatile("movl %%eax, %%cr3"::"a"(process.page_directory().cr3()):"memory");
 }
 
-void MemoryManager::enter_kernel_paging_scope()
-{
-    InterruptDisabler disabler;
-    asm volatile("movl %%eax, %%cr3"::"a"(kernel_page_directory().cr3()):"memory");
-}
-
 void MemoryManager::flush_entire_tlb()
 {
     asm volatile(
@@ -663,17 +657,6 @@ ProcessPagingScope::ProcessPagingScope(Process& process)
 }
 
 ProcessPagingScope::~ProcessPagingScope()
-{
-    MM.enter_process_paging_scope(current->process());
-}
-
-KernelPagingScope::KernelPagingScope()
-{
-    ASSERT(current);
-    MM.enter_kernel_paging_scope();
-}
-
-KernelPagingScope::~KernelPagingScope()
 {
     MM.enter_process_paging_scope(current->process());
 }
