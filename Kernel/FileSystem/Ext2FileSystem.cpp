@@ -1204,36 +1204,6 @@ RetainPtr<Inode> Ext2FS::create_inode(InodeIdentifier parent_id, const String& n
     return get_inode({ fsid(), inode_id });
 }
 
-RetainPtr<Inode> Ext2FSInode::parent() const
-{
-    LOCKER(m_lock);
-    if (m_parent_id.is_valid())
-        return fs().get_inode(m_parent_id);
-
-    unsigned group_index = fs().group_index_from_inode(index());
-    unsigned first_inode_in_group = fs().inodes_per_group() * (group_index - 1);
-
-    Vector<Retained<Ext2FSInode>> directories_in_group;
-
-    for (unsigned i = 0; i < fs().inodes_per_group(); ++i) {
-        auto group_member = fs().get_inode({ fsid(), first_inode_in_group + i });
-        if (!group_member)
-            continue;
-        if (group_member->is_directory())
-            directories_in_group.append(*group_member);
-    }
-
-    for (auto& directory : directories_in_group) {
-        if (!directory->reverse_lookup(identifier()).is_null()) {
-            m_parent_id = directory->identifier();
-            break;
-        }
-    }
-
-    ASSERT(m_parent_id.is_valid());
-    return fs().get_inode(m_parent_id);
-}
-
 void Ext2FSInode::populate_lookup_cache() const
 {
     LOCKER(m_lock);
@@ -1259,19 +1229,6 @@ InodeIdentifier Ext2FSInode::lookup(const String& name)
     auto it = m_lookup_cache.find(name);
     if (it != m_lookup_cache.end())
         return { fsid(), (*it).value };
-    return { };
-}
-
-String Ext2FSInode::reverse_lookup(InodeIdentifier child_id)
-{
-    ASSERT(is_directory());
-    ASSERT(child_id.fsid() == fsid());
-    populate_lookup_cache();
-    LOCKER(m_lock);
-    for (auto it : m_lookup_cache) {
-        if (it.value == child_id.index())
-            return it.key;
-    }
     return { };
 }
 

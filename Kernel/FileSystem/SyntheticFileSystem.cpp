@@ -161,12 +161,6 @@ auto SynthFS::generate_inode_index() -> InodeIndex
     return m_next_inode_index++;
 }
 
-RetainPtr<Inode> SynthFSInode::parent() const
-{
-    LOCKER(m_lock);
-    return fs().get_inode(m_parent);
-}
-
 RetainPtr<Inode> SynthFS::get_inode(InodeIdentifier inode) const
 {
     LOCKER(m_lock);
@@ -248,17 +242,6 @@ InodeIdentifier SynthFSInode::lookup(const String& name)
     for (auto& child : m_children) {
         if (child->m_name == name)
             return child->identifier();
-    }
-    return { };
-}
-
-String SynthFSInode::reverse_lookup(InodeIdentifier child_id)
-{
-    LOCKER(m_lock);
-    ASSERT(is_directory());
-    for (auto& child : m_children) {
-        if (child->identifier() == child_id)
-            return child->m_name;
     }
     return { };
 }
