@@ -64,6 +64,7 @@ public:
         APIGetWallpaperRequest,
         APISetWindowOverrideCursorRequest,
         APISetWindowHasAlphaChannelRequest,
+        APIMoveWindowToFrontRequest,
         WMAPISetActiveWindowRequest,
         WMAPISetWindowMinimizedRequest,
         WMAPIStartWindowResizeRequest,
@@ -450,6 +451,20 @@ class WSAPIGetWindowTitleRequest final : public WSAPIClientRequest {
 public:
     explicit WSAPIGetWindowTitleRequest(int client_id, int window_id)
         : WSAPIClientRequest(WSEvent::APIGetWindowTitleRequest, client_id)
+        , m_window_id(window_id)
+    {
+    }
+
+    int window_id() const { return m_window_id; }
+
+private:
+    int m_window_id { 0 };
+};
+
+class WSAPIMoveWindowToFrontRequest final : public WSAPIClientRequest {
+public:
+    explicit WSAPIMoveWindowToFrontRequest(int client_id, int window_id)
+        : WSAPIClientRequest(WSEvent::APIMoveWindowToFrontRequest, client_id)
         , m_window_id(window_id)
     {
     }

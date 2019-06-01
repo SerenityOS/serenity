@@ -232,6 +232,7 @@ struct WSAPI_ClientMessage {
         DismissMenu,
         SetWindowIcon,
         SetWindowHasAlphaChannel,
+        MoveWindowToFront,
     };
     Type type { Invalid };
     int window_id { -1 };
