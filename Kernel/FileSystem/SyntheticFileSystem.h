@@ -60,7 +60,7 @@ private:
     virtual ssize_t read_bytes(off_t, ssize_t, byte* buffer, FileDescriptor*) const override;
     virtual InodeMetadata metadata() const override;
     virtual bool traverse_as_directory(Function<bool(const FS::DirectoryEntry&)>) const override;
-    virtual InodeIdentifier lookup(const String& name) override;
+    virtual InodeIdentifier lookup(StringView name) override;
     virtual void flush_metadata() override;
     virtual ssize_t write_bytes(off_t, ssize_t, const byte* buffer, FileDescriptor*) override;
     virtual KResult add_child(InodeIdentifier child_id, const String& name, mode_t) override;

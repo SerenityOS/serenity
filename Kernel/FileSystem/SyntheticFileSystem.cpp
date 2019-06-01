@@ -231,7 +231,7 @@ bool SynthFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry&
     return true;
 }
 
-InodeIdentifier SynthFSInode::lookup(const String& name)
+InodeIdentifier SynthFSInode::lookup(StringView name)
 {
     LOCKER(m_lock);
     ASSERT(is_directory());

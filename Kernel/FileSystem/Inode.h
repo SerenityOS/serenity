@@ -41,7 +41,7 @@ public:
 
     virtual ssize_t read_bytes(off_t, ssize_t, byte* buffer, FileDescriptor*) const = 0;
     virtual bool traverse_as_directory(Function<bool(const FS::DirectoryEntry&)>) const = 0;
-    virtual InodeIdentifier lookup(const String& name) = 0;
+    virtual InodeIdentifier lookup(StringView name) = 0;
     virtual ssize_t write_bytes(off_t, ssize_t, const byte* data, FileDescriptor*) = 0;
     virtual KResult add_child(InodeIdentifier child_id, const String& name, mode_t) = 0;
     virtual KResult remove_child(const String& name) = 0;

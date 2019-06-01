@@ -1221,7 +1221,7 @@ void Ext2FSInode::populate_lookup_cache() const
     m_lookup_cache = move(children);
 }
 
-InodeIdentifier Ext2FSInode::lookup(const String& name)
+InodeIdentifier Ext2FSInode::lookup(StringView name)
 {
     ASSERT(is_directory());
     populate_lookup_cache();
