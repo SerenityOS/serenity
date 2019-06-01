@@ -88,6 +88,7 @@ long fpathconf(int fd, int name);
 long pathconf(const char* path, int name);
 char* getlogin();
 int chown(const char* pathname, uid_t, gid_t);
+int fchown(int fd, uid_t, gid_t);
 int ftruncate(int fd, off_t length);
 
 enum

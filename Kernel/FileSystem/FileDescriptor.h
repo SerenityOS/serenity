@@ -101,6 +101,8 @@ public:
 
     off_t offset() const { return m_current_offset; }
 
+    KResult chown(uid_t, gid_t);
+
 private:
     friend class VFS;
     FileDescriptor(RetainPtr<File>&&, SocketRole = SocketRole::None);
