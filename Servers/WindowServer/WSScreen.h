@@ -1,5 +1,6 @@
 #pragma once
 
+#include <AK/HashMap.h>
 #include <Kernel/KeyCode.h>
 #include <SharedGraphics/Color.h>
 #include <SharedGraphics/Rect.h>
@@ -39,6 +40,7 @@ private:
     Point m_cursor_location;
     unsigned m_mouse_button_state { 0 };
     unsigned m_modifiers { 0 };
+    AK::HashMap<int, bool> m_key_state;
 };
 
 inline RGBA32* WSScreen::scanline(int y)
