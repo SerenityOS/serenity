@@ -174,6 +174,7 @@ int main(int argc, char** argv)
                                                  settings_window =
                                                      create_settings_window(terminal, config)->make_weak_ptr();
                                              settings_window->show();
+                                             settings_window->move_to_front();
                                          }));
     app_menu->add_action(GAction::create("Quit", { Mod_Alt, Key_F4 }, [] (const GAction&) {
         dbgprintf("Terminal: Quit menu activated!\n");
