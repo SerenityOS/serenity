@@ -6,6 +6,7 @@
 #include "Process.h"
 #include "PIC.h"
 #include <Kernel/Devices/IDEDiskDevice.h>
+#include <Kernel/Devices/OffsetDiskDevice.h>
 #include "KSyms.h"
 #include <Kernel/Devices/NullDevice.h>
 #include <Kernel/Devices/ZeroDevice.h>
@@ -57,6 +58,11 @@ VFS* vfs;
 }
 #endif
 
+// TODO: delete this magic number. this block offset corresponds to a
+// partition that starts at 32k into an MBR disk. this value is also specified
+// in sync.sh, but should ideally be read from the MBR header at startup.
+#define PARTITION_OFFSET 62
+
 [[noreturn]] static void init_stage2()
 {
     Syscall::initialize();
@@ -66,7 +72,8 @@ VFS* vfs;
     auto dev_random = make<RandomDevice>();
     auto dev_ptmx = make<PTYMultiplexer>();
     auto dev_hd0 = IDEDiskDevice::create();
-    auto e2fs = Ext2FS::create(dev_hd0.copy_ref());
+    auto dev_hd0p1 = OffsetDiskDevice::create(dev_hd0.copy_ref(), PARTITION_OFFSET);
+    auto e2fs = Ext2FS::create(dev_hd0p1.copy_ref());
     e2fs->initialize();
 
     vfs->mount_root(e2fs.copy_ref());

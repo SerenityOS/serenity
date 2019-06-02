@@ -7,3 +7,4 @@ _fs_contents
 sync-local.sh
 *.pcap
 eth_null*
+_disk_image
