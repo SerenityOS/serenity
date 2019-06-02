@@ -413,11 +413,13 @@ KResult VFS::chown(StringView path, uid_t a_uid, gid_t a_gid, Custody& base)
     if (inode.fs().is_readonly())
         return KResult(-EROFS);
 
-    if (current->process().euid() != inode.metadata().uid && !current->process().is_superuser())
+    auto metadata = inode.metadata();
+
+    if (current->process().euid() != metadata.uid && !current->process().is_superuser())
         return KResult(-EPERM);
 
-    uid_t new_uid = inode.metadata().uid;
-    gid_t new_gid = inode.metadata().gid;
+    uid_t new_uid = metadata.uid;
+    gid_t new_gid = metadata.gid;
 
     if (a_uid != (uid_t)-1) {
         if (current->process().euid() != a_uid && !current->process().is_superuser())
