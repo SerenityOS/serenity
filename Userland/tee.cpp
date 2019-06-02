@@ -1,4 +1,5 @@
 #include <AK/Vector.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <getopt.h>
 #include <signal.h>
@@ -23,8 +24,9 @@ static Vector<int> collect_fds(int argc, char** argv, int start, bool aflag, boo
         if (fd < 0) {
             perror("failed to open file for writing");
             *err = true;
+        } else {
+            fds.append(fd);
         }
-        fds.append(fd);
     }
     fds.append(STDOUT_FILENO);
     return fds;
@@ -40,12 +42,29 @@ static void copy_stdin(Vector<int>& fds, bool* err)
         if (nread < 0) {
             perror("read() error");
             *err = true;
+            // a failure to read from stdin should lead to an early exit
+            return;
         }
 
         for (int fd : fds) {
-            ssize_t nwrite = write(fd, buf, nread);
-            if (nwrite != nread)
-                *err = true;
+            int twrite = 0;
+            while (twrite != nread) {
+                ssize_t nwrite = write(fd, buf + twrite, nread - twrite);
+                if (nwrite < 0) {
+                    if (errno == EINTR) {
+                        continue;
+                    } else {
+                        perror("write() failed");
+                        *err = true;
+                        // write failures to a successfully opened fd shall
+                        // prevent further writes, but shall not block writes
+                        // to the other open fds
+                        break;
+                    }
+                } else {
+                    twrite += nwrite;
+                }
+            }
         }
     }
 }
@@ -86,11 +105,11 @@ int main(int argc, char** argv)
         }
     }
 
-    bool err_open = false, err_write = false;
+    bool err_open = false;
+    bool err_write = false;
     auto fds = collect_fds(argc, argv, optind, aflag, &err_open);
     copy_stdin(fds, &err_write);
     close_fds(fds);
 
     return (err_open || err_write) ? 1 : 0;
 }
-
