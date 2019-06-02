@@ -301,7 +301,7 @@ void GTextEditor::paint_event(GPaintEvent& event)
         //line_rect.set_width(exposed_width);
         if (is_multi_line() && i == m_cursor.line())
             painter.fill_rect(line_rect, Color(230, 230, 230));
-        painter.draw_text(line_rect, line.characters(), line.length(), m_text_alignment, Color::Black);
+        painter.draw_text(line_rect, StringView(line.characters(), line.length()), m_text_alignment, Color::Black);
         bool line_has_selection = has_selection && i >= selection.start().line() && i <= selection.end().line();
         if (line_has_selection) {
             int selection_start_column_on_line = selection.start().line() == i ? selection.start().column() : 0;
@@ -312,7 +312,7 @@ void GTextEditor::paint_event(GPaintEvent& event)
 
             Rect selection_rect { selection_left, line_rect.y(), selection_right - selection_left, line_rect.height() };
             painter.fill_rect(selection_rect, Color::from_rgb(0x955233));
-            painter.draw_text(selection_rect, line.characters() + selection_start_column_on_line, line.length() - selection_start_column_on_line - (line.length() - selection_end_column_on_line), TextAlignment::CenterLeft, Color::White);
+            painter.draw_text(selection_rect, StringView(line.characters() + selection_start_column_on_line, line.length() - selection_start_column_on_line - (line.length() - selection_end_column_on_line)), TextAlignment::CenterLeft, Color::White);
         }
     }
 

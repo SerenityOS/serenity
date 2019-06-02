@@ -508,18 +508,24 @@ void Painter::draw_scaled_bitmap(const Rect& a_dst_rect, const GraphicsBitmap& s
     draw_bitmap(point, font.glyph_bitmap(ch), color);
 }
 
-void Painter::draw_text(const Rect& rect, const char* text, int length, const Font& font, TextAlignment alignment, Color color, TextElision elision)
+void Painter::draw_text(const Rect& rect, const StringView& text, TextAlignment alignment, Color color, TextElision elision)
 {
+    draw_text(rect, text, font(), alignment, color, elision);
+}
+
+void Painter::draw_text(const Rect& rect, const StringView& text, const Font& font, TextAlignment alignment, Color color, TextElision elision)
+{
+    StringView final_text(text);
     String elided_text;
     if (elision == TextElision::Right) {
-        int text_width = font.width(StringView(text, length));
-        if (font.width(StringView(text, length)) > rect.width()) {
+        int text_width = font.width(final_text);
+        if (font.width(final_text) > rect.width()) {
             int glyph_spacing = font.glyph_spacing();
             int new_length = 0;
             int new_width = font.width("...");
             if (new_width < text_width) {
-                for (int i = 0; i < length; ++i) {
-                    int glyph_width = font.glyph_width(text[i]);
+                for (int i = 0; i < final_text.length(); ++i) {
+                    int glyph_width = font.glyph_width(final_text.characters()[i]);
                     // NOTE: Glyph spacing should not be added after the last glyph on the line,
                     //       but since we are here because the last glyph does not actually fit on the line,
                     //       we don't have to worry about spacing.
@@ -530,11 +536,10 @@ void Painter::draw_text(const Rect& rect, const char* text, int length, const Fo
                     new_width += glyph_width + glyph_spacing;
                 }
                 StringBuilder builder;
-                builder.append(text, new_length);
+                builder.append(StringView(final_text.characters(), new_length));
                 builder.append("...");
                 elided_text = builder.to_string();
-                text = elided_text.characters();
-                length = elided_text.length();
+                final_text = elided_text;
             }
         }
     }
@@ -546,10 +551,10 @@ void Painter::draw_text(const Rect& rect, const char* text, int length, const Fo
     } else if (alignment == TextAlignment::CenterLeft) {
         point = { rect.x(), rect.center().y() - (font.glyph_height() / 2) };
     } else if (alignment == TextAlignment::CenterRight) {
-        int text_width = font.width(StringView(text, length));
+        int text_width = font.width(final_text);
         point = { rect.right() - text_width, rect.center().y() - (font.glyph_height() / 2) };
     } else if (alignment == TextAlignment::Center) {
-        int text_width = font.width(StringView(text, length));
+        int text_width = font.width(final_text);
         point = rect.center();
         point.move_by(-(text_width / 2), -(font.glyph_height() / 2));
     } else {
@@ -557,8 +562,8 @@ void Painter::draw_text(const Rect& rect, const char* text, int length, const Fo
     }
 
     int space_width = font.glyph_width(' ') + font.glyph_spacing();
-    for (ssize_t i = 0; i < length; ++i) {
-        char ch = text[i];
+    for (ssize_t i = 0; i < final_text.length(); ++i) {
+        char ch = final_text.characters()[i];
         if (ch == ' ') {
             point.move_by(space_width, 0);
             continue;
@@ -566,21 +571,6 @@ void Painter::draw_text(const Rect& rect, const char* text, int length, const Fo
         draw_glyph(point, ch, font, color);
         point.move_by(font.glyph_width(ch) + font.glyph_spacing(), 0);
     }
-}
-
-void Painter::draw_text(const Rect& rect, const StringView& text, TextAlignment alignment, Color color, TextElision elision)
-{
-    draw_text(rect, text.characters(), text.length(), alignment, color, elision);
-}
-
-void Painter::draw_text(const Rect& rect, const StringView& text, const Font& font, TextAlignment alignment, Color color, TextElision elision)
-{
-    draw_text(rect, text.characters(), text.length(), font, alignment, color, elision);
-}
-
-void Painter::draw_text(const Rect& rect, const char* text, int length, TextAlignment alignment, Color color, TextElision elision)
-{
-    draw_text(rect, text, length, font(), alignment, color, elision);
 }
 
 void Painter::set_pixel(const Point& p, Color color)
