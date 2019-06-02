@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <unistd.h>
 
-CFile::CFile(const String& filename)
+CFile::CFile(const StringView& filename)
     : m_filename(filename)
 {
 }

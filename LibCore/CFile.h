@@ -6,11 +6,11 @@
 class CFile final : public CIODevice {
 public:
     CFile() {}
-    explicit CFile(const String&);
+    explicit CFile(const StringView&);
     virtual ~CFile() override;
 
     String filename() const { return m_filename; }
-    void set_filename(const String& filename) { m_filename = filename; }
+    void set_filename(const StringView& filename) { m_filename = filename; }
 
     virtual bool open(CIODevice::OpenMode) override;
 

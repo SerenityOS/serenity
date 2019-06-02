@@ -108,7 +108,7 @@ void DirectoryView::set_view_mode(ViewMode mode)
     ASSERT_NOT_REACHED();
 }
 
-void DirectoryView::add_path_to_history(const String& path)
+void DirectoryView::add_path_to_history(const StringView& path)
 {
     if (m_path_history_position < m_path_history.size())
         m_path_history.resize(m_path_history_position + 1);
@@ -117,13 +117,13 @@ void DirectoryView::add_path_to_history(const String& path)
     m_path_history_position = m_path_history.size() - 1;
 }
 
-void DirectoryView::open(const String& path)
+void DirectoryView::open(const StringView& path)
 {
     add_path_to_history(path);
     model().open(path);
 }
 
-void DirectoryView::set_status_message(const String& message)
+void DirectoryView::set_status_message(const StringView& message)
 {
     if (on_status_message)
         on_status_message(message);

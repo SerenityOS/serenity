@@ -16,7 +16,7 @@ StringBuilder::StringBuilder(ssize_t initial_capacity)
     m_buffer.grow(initial_capacity);
 }
 
-void StringBuilder::append(const String& str)
+void StringBuilder::append(const StringView& str)
 {
     if (str.is_empty())
         return;

@@ -5,7 +5,7 @@
 
 namespace AK {
 
-FileSystemPath::FileSystemPath(const String& s)
+FileSystemPath::FileSystemPath(const StringView& s)
     : m_string(s)
 {
     m_is_valid = canonicalize();

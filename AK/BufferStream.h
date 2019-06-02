@@ -36,15 +36,7 @@ public:
         m_buffer[m_offset++] = (byte)(value >> 24) & 0xffu;
     }
 
-    void operator<<(const char* str)
-    {
-        ssize_t len = strlen(str);
-        ASSERT(len >= 0);
-        for (ssize_t i = 0; i < len; ++i)
-            m_buffer[m_offset++] = str[i];
-    }
-
-    void operator<<(const String& value)
+    void operator<<(const StringView& value)
     {
         for (ssize_t i = 0; i < value.length(); ++i)
             m_buffer[m_offset++] = value[i];

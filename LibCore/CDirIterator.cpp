@@ -1,7 +1,7 @@
 #include "CDirIterator.h"
 #include <cerrno>
 
-CDirIterator::CDirIterator(const String& path, Flags flags)
+CDirIterator::CDirIterator(const StringView& path, Flags flags)
     : m_flags(flags)
 {
     m_dir = opendir(path.characters());
