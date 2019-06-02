@@ -6,6 +6,7 @@
 #include "Process.h"
 #include "PIC.h"
 #include <Kernel/Devices/IDEDiskDevice.h>
+#include <Kernel/Devices/MBRPartitionTable.h>
 #include <Kernel/Devices/DiskPartition.h>
 #include "KSyms.h"
 #include <Kernel/Devices/NullDevice.h>
@@ -58,11 +59,6 @@ VFS* vfs;
 }
 #endif
 
-// TODO: delete this magic number. this block offset corresponds to a
-// partition that starts at 32k into an MBR disk. this value is also specified
-// in sync.sh, but should ideally be read from the MBR header at startup.
-#define PARTITION_OFFSET 62
-
 [[noreturn]] static void init_stage2()
 {
     Syscall::initialize();
@@ -71,10 +67,29 @@ VFS* vfs;
     auto dev_full = make<FullDevice>();
     auto dev_random = make<RandomDevice>();
     auto dev_ptmx = make<PTYMultiplexer>();
+
+    // TODO: decide what drive/partition to use based on cmdline from
+    // bootloader. currently hardcoded to the equivalent of hd0,1.
+
     auto dev_hd0 = IDEDiskDevice::create();
-    auto dev_hd0p1 = DiskPartition::create(dev_hd0.copy_ref(), PARTITION_OFFSET);
-    auto e2fs = Ext2FS::create(dev_hd0p1.copy_ref());
-    e2fs->initialize();
+
+    MBRPartitionTable dev_hd0pt(dev_hd0.copy_ref());
+    if (!dev_hd0pt.initialize()) {
+        kprintf("init_stage2: couldn't read MBR from disk");
+        hang();
+    }
+
+    auto dev_hd0p1 = dev_hd0pt.partition(1);
+    if (!dev_hd0p1) {
+        kprintf("init_stage2: couldn't get first partition");
+        hang();
+    }
+
+    auto e2fs = Ext2FS::create(*dev_hd0p1.copy_ref());
+    if (!e2fs->initialize()) {
+        kprintf("init_stage2: couldn't open root filesystem");
+        hang();
+    }
 
     vfs->mount_root(e2fs.copy_ref());
 
@@ -89,7 +104,7 @@ VFS* vfs;
 
     auto* system_server_process = Process::create_user_process("/bin/SystemServer", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, { }, tty0);
     if (error != 0) {
-        dbgprintf("error spawning SystemServer: %d\n", error);
+        dbgprintf("init_stage2: error spawning SystemServer: %d\n", error);
         hang();
     }
     system_server_process->set_priority(Process::HighPriority);
