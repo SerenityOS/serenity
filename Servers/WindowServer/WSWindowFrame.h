@@ -1,5 +1,6 @@
 #pragma once
 
+#include <AK/Badge.h>
 #include <AK/OwnPtr.h>
 #include <AK/Vector.h>
 
@@ -24,7 +25,10 @@ public:
     Rect title_bar_icon_rect() const;
     Rect title_bar_text_rect() const;
 
+    void did_set_maximized(Badge<WSWindow>, bool);
+
 private:
     WSWindow& m_window;
     Vector<OwnPtr<WSButton>> m_buttons;
+    WSButton* m_maximize_button { nullptr };
 };

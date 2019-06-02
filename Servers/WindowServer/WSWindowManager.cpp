@@ -501,11 +501,7 @@ bool WSWindowManager::process_ongoing_window_drag(WSMouseEvent& event, WSWindow*
 #if defined(DOUBLECLICK_DEBUG)
                 dbgprintf("[WM] Click up became doubleclick!\n");
 #endif
-                if (m_drag_window->is_maximized()) {
-                    m_drag_window->set_maximized(false);
-                } else {
-                    m_drag_window->set_maximized(true);
-                }
+                m_drag_window->set_maximized(!m_drag_window->is_maximized());
             }
         }
         m_drag_window = nullptr;

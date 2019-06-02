@@ -151,6 +151,7 @@ void WSWindow::set_maximized(bool maximized)
     } else {
         set_rect(m_unmaximized_rect);
     }
+    m_frame.did_set_maximized({}, maximized);
     WSEventLoop::the().post_event(*this, make<WSResizeEvent>(old_rect, m_rect));
 }
 
