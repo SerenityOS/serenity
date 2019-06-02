@@ -175,7 +175,7 @@ String String::format(const char* fmt, ...)
     return builder.to_string();
 }
 
-bool String::ends_with(const String& str) const
+bool String::ends_with(const StringView& str) const
 {
     if (str.is_empty())
         return true;
@@ -196,20 +196,20 @@ String String::repeated(char ch, int count)
     return *impl;
 }
 
-bool String::matches(const String& mask, CaseSensitivity case_sensitivity) const
+bool String::matches(const StringView& mask, CaseSensitivity case_sensitivity) const
 {
     if (case_sensitivity == CaseSensitivity::CaseInsensitive) {
         String this_lower = this->to_lowercase();
-        String mask_lower = mask.to_lowercase();
+        String mask_lower = String(mask).to_lowercase();
         return this_lower.match_helper(mask_lower);
     }
 
     return match_helper(mask);
 }
 
-bool String::match_helper(const String& mask) const
+bool String::match_helper(const StringView& mask) const
 {
-    if (is_null() || mask.is_null())
+    if (is_null())
         return false;
 
     const char* string_ptr = characters();
