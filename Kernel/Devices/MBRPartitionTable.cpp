@@ -3,11 +3,6 @@
 
 #define MBR_DEBUG
 
-Retained<MBRPartitionTable> MBRPartitionTable::create(Retained<DiskDevice>&& device)
-{
-    return adopt(*new MBRPartitionTable(move(device)));
-}
-
 MBRPartitionTable::MBRPartitionTable(Retained<DiskDevice>&& device)
     : m_device(move(device))
 {
@@ -17,25 +12,17 @@ MBRPartitionTable::~MBRPartitionTable()
 {
 }
 
-ByteBuffer MBRPartitionTable::read_header() const
-{
-    auto buffer = ByteBuffer::create_uninitialized(512);
-    bool success = m_device->read_block(0, buffer.pointer());
-    ASSERT(success);
-    return buffer;
-}
-
 const MBRPartitionHeader& MBRPartitionTable::header() const
 {
-    if (!m_cached_header) {
-        m_cached_header = read_header();
-    }
-
-    return *reinterpret_cast<MBRPartitionHeader*>(m_cached_header.pointer());
+    return *reinterpret_cast<const MBRPartitionHeader*>(m_cached_header);
 }
 
 bool MBRPartitionTable::initialize()
 {
+    if (!m_device->read_block(0, m_cached_header)) {
+        return false;
+    }
+
     auto& header = this->header();
 
 #ifdef MBR_DEBUG
@@ -57,6 +44,11 @@ RetainPtr<DiskPartition> MBRPartitionTable::partition(unsigned index)
     auto& header = this->header();
     auto& entry = header.entry[index - 1];
 
+    if (header.mbr_signature != MBR_SIGNATURE) {
+        kprintf("MBRPartitionTable::initialize: bad mbr signature - not initalized? %#x\n", header.mbr_signature);
+        return nullptr;
+    }
+
 #ifdef MBR_DEBUG
     kprintf("MBRPartitionTable::partition: status=%#x offset=%#x\n", entry.status, entry.offset);
 #endif
@@ -66,9 +58,4 @@ RetainPtr<DiskPartition> MBRPartitionTable::partition(unsigned index)
     }
 
     return DiskPartition::create(m_device.copy_ref(), entry.offset);
-}
-
-const char* MBRPartitionTable::class_name() const
-{
-    return "MBRPartitionTable";
 }

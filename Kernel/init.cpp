@@ -73,13 +73,13 @@ VFS* vfs;
 
     auto dev_hd0 = IDEDiskDevice::create();
 
-    auto dev_hd0pt = MBRPartitionTable::create(dev_hd0.copy_ref());
-    if (!dev_hd0pt->initialize()) {
+    MBRPartitionTable dev_hd0pt(dev_hd0.copy_ref());
+    if (!dev_hd0pt.initialize()) {
         kprintf("init_stage2: couldn't read MBR from disk");
         hang();
     }
 
-    auto dev_hd0p1 = dev_hd0pt->partition(1);
+    auto dev_hd0p1 = dev_hd0pt.partition(1);
     if (!dev_hd0p1) {
         kprintf("init_stage2: couldn't get first partition");
         hang();

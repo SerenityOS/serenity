@@ -27,23 +27,21 @@ struct MBRPartitionHeader {
     word mbr_signature;
 } __attribute__((packed));
 
-class MBRPartitionTable : public Retainable<MBRPartitionTable> {
+class MBRPartitionTable {
+    AK_MAKE_ETERNAL
+
 public:
-    static Retained<MBRPartitionTable> create(Retained<DiskDevice>&& device);
-    virtual ~MBRPartitionTable();
+    MBRPartitionTable(Retained<DiskDevice>&& device);
+    ~MBRPartitionTable();
 
     bool initialize();
     RetainPtr<DiskPartition> partition(unsigned index);
 
 private:
-    virtual const char* class_name() const;
-
-    MBRPartitionTable(Retained<DiskDevice>&&);
-
     Retained<DiskDevice> m_device;
 
     ByteBuffer read_header() const;
     const MBRPartitionHeader& header() const;
 
-    mutable ByteBuffer m_cached_header;
+    byte m_cached_header[512];
 };
