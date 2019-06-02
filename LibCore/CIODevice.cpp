@@ -208,6 +208,7 @@ bool CIODevice::write(const byte* data, int size)
     int rc = ::write(m_fd, data, size);
     if (rc < 0) {
         perror("CIODevice::write: write");
+        set_error(errno);
         return false;
     }
     return rc == size;
