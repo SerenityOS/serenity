@@ -312,7 +312,7 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
     if (parts.is_empty())
         return -ENOENT;
 
-    auto result = VFS::the().open(path.view(), 0, 0, current_directory());
+    auto result = VFS::the().open(path, 0, 0, current_directory());
     if (result.is_error())
         return result.error();
     auto descriptor = result.value();

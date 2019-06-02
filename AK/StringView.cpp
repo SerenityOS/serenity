@@ -3,6 +3,12 @@
 
 namespace AK {
 
+StringView::StringView(const AK::String& string)
+    : m_characters(string.characters())
+    , m_length(string.length())
+{
+}
+
 Vector<StringView> StringView::split_view(const char separator) const
 {
     if (is_empty())
@@ -23,7 +29,7 @@ Vector<StringView> StringView::split_view(const char separator) const
     if (taillen != 0)
         v.append(substring_view(substart, taillen));
     if (characters()[length() - 1] == separator)
-        v.append(String::empty().view());
+        v.append(String::empty());
     return v;
 }
 

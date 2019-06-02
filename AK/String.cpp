@@ -111,7 +111,7 @@ Vector<StringView> String::split_view(const char separator) const
     if (taillen != 0)
         v.append(substring_view(substart, taillen));
     if (characters()[length() - 1] == separator)
-        v.append(empty().view());
+        v.append(empty());
     return v;
 }
 
