@@ -46,7 +46,9 @@ static void copy_stdin(Vector<int>& fds, bool* err)
             return;
         }
 
-        for (int fd : fds) {
+        Vector<int> broken_indicies;
+        for (int i = 0; i < fds.size(); ++i) {
+            auto fd = fds.at(i);
             int twrite = 0;
             while (twrite != nread) {
                 ssize_t nwrite = write(fd, buf + twrite, nread - twrite);
@@ -56,6 +58,7 @@ static void copy_stdin(Vector<int>& fds, bool* err)
                     } else {
                         perror("write() failed");
                         *err = true;
+                        broken_indicies.append(fd);
                         // write failures to a successfully opened fd shall
                         // prevent further writes, but shall not block writes
                         // to the other open fds
@@ -66,6 +69,10 @@ static void copy_stdin(Vector<int>& fds, bool* err)
                 }
             }
         }
+
+        // remove any fds which we can no longer write to for subsequent copies
+        for (auto idx : broken_indicies) 
+            fds.remove(idx);
     }
 }
 
