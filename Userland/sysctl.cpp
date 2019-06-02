@@ -9,6 +9,7 @@
 #include <AK/Vector.h>
 #include <LibCore/CArgsParser.h>
 #include <LibCore/CDirIterator.h>
+#include <LibCore/CFile.h>
 
 static String read_var(const String& name)
 {
@@ -16,19 +17,17 @@ static String read_var(const String& name)
     builder.append("/proc/sys/");
     builder.append(name);
     auto path = builder.to_string();
-    int fd = open(path.characters(), O_RDONLY);
-    if (fd < 0) {
-        perror("open");
+    CFile f(path);
+    if (!f.open(CIODevice::ReadOnly)) {
+        fprintf(stderr, "open: %s", f.error_string());
         exit(1);
     }
-    char buffer[1024];
-    int nread = read(fd, buffer, sizeof(buffer));
-    close(fd);
-    if (nread < 0) {
-        perror("read");
+    const auto& b = f.read_all();
+    if (f.error() < 0) {
+        fprintf(stderr, "read: %s", f.error_string());
         exit(1);
     }
-    return String(buffer, nread, Chomp);
+    return String((const char*)b.pointer(), b.size(), Chomp);
 }
 
 static void write_var(const String& name, const String& value)
@@ -37,17 +36,16 @@ static void write_var(const String& name, const String& value)
     builder.append("/proc/sys/");
     builder.append(name);
     auto path = builder.to_string();
-    int fd = open(path.characters(), O_WRONLY);
-    if (fd < 0) {
-        perror("open");
+    CFile f(path);
+    if (!f.open(CIODevice::WriteOnly)) {
+        fprintf(stderr, "open: %s", f.error_string());
         exit(1);
     }
-    int nwritten = write(fd, value.characters(), value.length());
-    if (nwritten < 0) {
-        perror("read");
+    f.write(value.view());
+    if (f.error() < 0) {
+        fprintf(stderr, "write: %s", f.error_string());
         exit(1);
     }
-    close(fd);
 }
 
 
@@ -61,24 +59,8 @@ static int handle_show_all()
 
     char pathbuf[PATH_MAX];
     while (di.has_next()) {
-        String name = di.next_path();
-        sprintf(pathbuf, "/proc/sys/%s", name.characters());
-        int fd = open(pathbuf, O_RDONLY);
-        if (fd < 0) {
-            perror("open");
-            continue;
-        }
-        char buffer[1024];
-        int nread = read(fd, buffer, sizeof(buffer));
-        close(fd);
-        if (nread < 0) {
-            perror("read");
-            continue;
-        }
-        buffer[nread] = '\0';
-        printf("%s = %s", name.characters(), buffer);
-        if (nread && buffer[nread - 1] != '\n')
-            printf("\n");
+        String variable_name = di.next_path();
+        printf("%s = %s\n", variable_name.characters(), read_var(variable_name).characters());
     }
     return 0;
 }
