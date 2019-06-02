@@ -54,11 +54,23 @@ mkdir -p mnt/{boot,bin,etc,proc,tmp}
 chmod 1777 mnt/tmp
 echo "done"
 
-echo "installing grub..."
-mkdir -p mnt/boot/grub
-cp grub.cfg mnt/boot/grub/grub.cfg
-grub-install --boot-directory=mnt/boot --target=i386-pc --modules="ext2 part_msdos" ${dev}
-echo "done"
+grub=$(which grub-install 2>/dev/null) || true
+if [[ -z "$grub" ]]; then
+    grub=$(which grub2-install 2>/dev/null) || true
+fi
+if [ -z "$grub" ]; then
+    echo "can't find a grub-install or grub2-install binary, oh no"
+    exit 1
+fi
+echo "installing grub using $grub..."
+
+$grub --boot-directory=mnt/boot --target=i386-pc --modules="ext2 part_msdos" ${dev}
+
+if [ -d mnt/boot/grub2 ]; then
+    cp grub.cfg mnt/boot/grub2/grub.cfg
+else
+    cp grub.cfg mnt/boot/grub/grub.cfg
+fi
 
 echo -n "setting up device nodes... "
 mkdir -p mnt/dev
