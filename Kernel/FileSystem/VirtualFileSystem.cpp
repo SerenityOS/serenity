@@ -317,7 +317,7 @@ KResultOr<Retained<Custody>> VFS::open_directory(StringView path, Custody& base)
     return custody;
 }
 
-KResult VFS::fchmod(Inode& inode, mode_t mode)
+KResult VFS::chmod(Inode& inode, mode_t mode)
 {
     if (inode.fs().is_readonly())
         return KResult(-EROFS);
@@ -337,7 +337,7 @@ KResult VFS::chmod(StringView path, mode_t mode, Custody& base)
         return custody_or_error.error();
     auto& custody = *custody_or_error.value();
     auto& inode = custody.inode();
-    return fchmod(inode, mode);
+    return chmod(inode, mode);
 }
 
 KResult VFS::rename(StringView old_path, StringView new_path, Custody& base)
