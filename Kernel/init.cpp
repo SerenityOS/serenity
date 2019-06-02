@@ -6,7 +6,7 @@
 #include "Process.h"
 #include "PIC.h"
 #include <Kernel/Devices/IDEDiskDevice.h>
-#include <Kernel/Devices/OffsetDiskDevice.h>
+#include <Kernel/Devices/DiskPartition.h>
 #include "KSyms.h"
 #include <Kernel/Devices/NullDevice.h>
 #include <Kernel/Devices/ZeroDevice.h>
@@ -72,7 +72,7 @@ VFS* vfs;
     auto dev_random = make<RandomDevice>();
     auto dev_ptmx = make<PTYMultiplexer>();
     auto dev_hd0 = IDEDiskDevice::create();
-    auto dev_hd0p1 = OffsetDiskDevice::create(dev_hd0.copy_ref(), PARTITION_OFFSET);
+    auto dev_hd0p1 = DiskPartition::create(dev_hd0.copy_ref(), PARTITION_OFFSET);
     auto e2fs = Ext2FS::create(dev_hd0p1.copy_ref());
     e2fs->initialize();
 
