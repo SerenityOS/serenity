@@ -329,5 +329,5 @@ KResult FileDescriptor::chown(uid_t uid, gid_t gid)
 {
     if (!m_inode)
         return KResult(-EINVAL);
-    return m_inode->chown(uid, gid);
+    return VFS::the().chown(*m_inode, uid, gid);
 }
