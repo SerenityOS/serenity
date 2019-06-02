@@ -5,7 +5,7 @@
 
 class OffsetDiskDevice final : public DiskDevice {
 public:
-    static Retained<OffsetDiskDevice> create(Retained<DiskDevice>&& device, unsigned offset);
+    static Retained<OffsetDiskDevice> create(Retained<DiskDevice>&& device, unsigned block_offset);
     virtual ~OffsetDiskDevice();
 
     virtual unsigned block_size() const override;
@@ -20,5 +20,5 @@ private:
     OffsetDiskDevice(Retained<DiskDevice>&&, unsigned);
 
     Retained<DiskDevice> m_device;
-    unsigned m_offset;
+    unsigned m_block_offset;
 };
