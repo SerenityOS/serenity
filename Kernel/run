@@ -18,9 +18,7 @@ elif [ "$1" = "qn" ]; then
         -device VGA,vgamem_mb=64 \
         -debugcon stdio \
         -device e1000 \
-        -kernel kernel \
-        -append ${SERENITY_KERNEL_CMDLINE} \
-        -hda _fs_contents \
+        -hda _disk_image \
         -soundhw pcspk
 elif [ "$1" = "qtap" ]; then
     # ./run qtap: qemu with tap
@@ -32,9 +30,7 @@ elif [ "$1" = "qtap" ]; then
         -object filter-dump,id=hue,netdev=br0,file=e1000.pcap \
         -netdev tap,ifname=tap0,id=br0 \
         -device e1000,netdev=br0 \
-        -kernel kernel \
-        -append ${SERENITY_KERNEL_CMDLINE} \
-        -hda _fs_contents \
+        -hda _disk_image \
         -soundhw pcspk
 else
     # ./run: qemu with user networking
@@ -46,9 +42,7 @@ else
         -object filter-dump,id=hue,netdev=breh,file=e1000.pcap \
         -netdev user,id=breh,hostfwd=tcp:127.0.0.1:8888-192.168.5.2:8888 \
         -device e1000,netdev=breh \
-        -kernel kernel \
-        -append ${SERENITY_KERNEL_CMDLINE} \
-        -hda _fs_contents \
+        -hda _disk_image \
         -soundhw pcspk
 fi
 
