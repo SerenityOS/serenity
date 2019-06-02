@@ -39,8 +39,8 @@ stack_top:
 .extern init 
 .type init, @function
 
-.extern multiboot_ptr
-.type multiboot_ptr, @object
+.extern multiboot_info_ptr
+.type multiboot_info_ptr, @object
 
 start:
     cli
@@ -54,7 +54,7 @@ start:
     pushl %eax /* Multiboot header magic */
     pushl %ebx /* Multiboot header pointer */
 
-    mov %ebx, multiboot_ptr
+    mov %ebx, multiboot_info_ptr
 
     call init
 

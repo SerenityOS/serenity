@@ -2,6 +2,8 @@
 
 [ -z "$SERENITY_QEMU_BIN" ] && SERENITY_QEMU_BIN="qemu-system-i386"
 
+SERENITY_KERNEL_CMDLINE="hello"
+
 export SDL_VIDEO_X11_DGAMOUSE=0
 ram_size=128
 
@@ -17,6 +19,7 @@ elif [ "$1" = "qn" ]; then
         -debugcon stdio \
         -device e1000 \
         -kernel kernel \
+        -append ${SERENITY_KERNEL_CMDLINE} \
         -hda _fs_contents \
         -soundhw pcspk
 elif [ "$1" = "qtap" ]; then
@@ -30,6 +33,7 @@ elif [ "$1" = "qtap" ]; then
         -netdev tap,ifname=tap0,id=br0 \
         -device e1000,netdev=br0 \
         -kernel kernel \
+        -append ${SERENITY_KERNEL_CMDLINE} \
         -hda _fs_contents \
         -soundhw pcspk
 else
@@ -43,6 +47,7 @@ else
         -netdev user,id=breh,hostfwd=tcp:127.0.0.1:8888-192.168.5.2:8888 \
         -device e1000,netdev=breh \
         -kernel kernel \
+        -append ${SERENITY_KERNEL_CMDLINE} \
         -hda _fs_contents \
         -soundhw pcspk
 fi

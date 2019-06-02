@@ -25,6 +25,7 @@
 #include <Kernel/Net/E1000NetworkAdapter.h>
 #include <Kernel/Net/NetworkTask.h>
 #include <Kernel/Devices/DebugLogDevice.h>
+#include <Kernel/Multiboot.h>
 
 //#define STRESS_TEST_SPAWNING
 
@@ -94,9 +95,13 @@ VFS* vfs;
     ASSERT_NOT_REACHED();
 }
 
+extern "C" {
+multiboot_info_t* multiboot_info_ptr;
+}
+
 extern "C" [[noreturn]] void init()
 {
-    cli();
+    kprintf("Kernel command line: '%s'\n", multiboot_info_ptr->cmdline);
 
     sse_init();
 
