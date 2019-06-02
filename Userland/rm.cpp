@@ -1,18 +1,69 @@
+#include <AK/AKString.h>
+#include <AK/StringBuilder.h>
+#include <AK/Vector.h>
+#include <LibCore/CArgsParser.h>
+#include <LibCore/CDirIterator.h>
+#include <dirent.h>
 #include <stdio.h>
-#include <errno.h>
+#include <string.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
-int main(int argc, char** argv)
+int remove(bool recursive, const char* path)
 {
-    if (argc != 2) {
-        fprintf(stderr, "usage: rm <path>\n");
+    struct stat path_stat;
+    int s = stat(path, &path_stat);
+    if (s < 0) {
+        perror("stat");
         return 1;
     }
-    int rc = unlink(argv[1]);
-    if (rc < 0) {
-        perror("unlink");
-        return 1;
+
+    if (S_ISDIR(path_stat.st_mode) && recursive) {
+        DIR* derp = opendir(path);
+        if (!derp) {
+            return 1;
+        }
+
+        while (auto* de = readdir(derp)) {
+            if (strcmp(de->d_name, ".") != 0 && strcmp(de->d_name, "..") != 0) {
+                StringBuilder builder;
+                builder.append(path);
+                builder.append('/');
+                builder.append(de->d_name);
+                int s = remove(true, builder.to_string().characters());
+                if (s < 0)
+                    return s;
+            }
+        }
+        printf("Removing directory: %s\n", path);
+        int s = rmdir(path);
+        if (s < 0) {
+            perror("rmdir");
+            return 1;
+        }
+    } else {
+        int rc = unlink(path);
+        if (rc < 0) {
+            perror("unlink");
+            return 1;
+        }
+        printf("Removing file: %s\n", path);
     }
     return 0;
 }
 
+int main(int argc, char** argv)
+{
+    CArgsParser args_parser("rm");
+    args_parser.add_arg("r", "Delete directory recursively.");
+    args_parser.add_required_single_value("path");
+
+    CArgsParserResult args = args_parser.parse(argc, (const char**)argv);
+    Vector<String> values = args.get_single_values();
+    if (values.size() == 0) {
+        args_parser.print_usage();
+        return 1;
+    }
+
+    return remove(args.is_present("r"), values[0].characters());
+}
