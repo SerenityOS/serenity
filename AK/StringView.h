@@ -27,6 +27,7 @@ public:
                 ++m_length;
         }
     }
+    StringView(const AK::String& string);
 
     bool is_empty() const { return m_length == 0; }
     const char* characters() const { return m_characters; }

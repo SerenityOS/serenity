@@ -101,7 +101,7 @@ int main(int argc, char**argv)
         auto hostname = String(client_buffer, nrecv, Chomp);
         dbgprintf("LookupServer: Got request for '%s' (using IP %s)\n",
                   hostname.characters(),
-                  DNS_IP.view().characters());
+                  DNS_IP.characters());
 
         Vector<IPv4Address> addresses;
 
@@ -194,7 +194,7 @@ Vector<IPv4Address> lookup(const String& hostname, bool& did_timeout, const Stri
 
     dst_addr.sin_family = AF_INET;
     dst_addr.sin_port = htons(53);
-    rc = inet_pton(AF_INET, DNS_IP.view().characters(), &dst_addr.sin_addr);
+    rc = inet_pton(AF_INET, DNS_IP.characters(), &dst_addr.sin_addr);
 
     int nsent = sendto(fd, buffer.pointer(), buffer.size(), 0,(const struct sockaddr *)&dst_addr, sizeof(dst_addr));
     if (nsent < 0) {
