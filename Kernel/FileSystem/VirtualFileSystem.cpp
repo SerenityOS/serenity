@@ -402,14 +402,8 @@ KResult VFS::rename(StringView old_path, StringView new_path, Custody& base)
     return KSuccess;
 }
 
-KResult VFS::chown(StringView path, uid_t a_uid, gid_t a_gid, Custody& base)
+KResult VFS::chown(Inode& inode, uid_t a_uid, gid_t a_gid)
 {
-    auto custody_or_error = resolve_path(path, base);
-    if (custody_or_error.is_error())
-        return custody_or_error.error();
-    auto& custody = *custody_or_error.value();
-    auto& inode = custody.inode();
-
     if (inode.fs().is_readonly())
         return KResult(-EROFS);
 
@@ -434,6 +428,16 @@ KResult VFS::chown(StringView path, uid_t a_uid, gid_t a_gid, Custody& base)
 
     dbgprintf("VFS::chown(): inode %u:%u <- uid:%d, gid:%d\n", inode.fsid(), inode.index(), new_uid, new_gid);
     return inode.chown(new_uid, new_gid);
+}
+
+KResult VFS::chown(StringView path, uid_t a_uid, gid_t a_gid, Custody& base)
+{
+    auto custody_or_error = resolve_path(path, base);
+    if (custody_or_error.is_error())
+        return custody_or_error.error();
+    auto& custody = *custody_or_error.value();
+    auto& inode = custody.inode();
+    return chown(inode, a_uid, a_gid);
 }
 
 KResult VFS::link(StringView old_path, StringView new_path, Custody& base)

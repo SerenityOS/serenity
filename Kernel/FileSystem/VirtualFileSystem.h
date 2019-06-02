@@ -70,6 +70,7 @@ public:
     KResult chmod(StringView path, mode_t, Custody& base);
     KResult fchmod(Inode&, mode_t);
     KResult chown(StringView path, uid_t, gid_t, Custody& base);
+    KResult chown(Inode&, uid_t, gid_t);
     KResult access(StringView path, int mode, Custody& base);
     KResult stat(StringView path, int options, Custody& base, struct stat&);
     KResult utime(StringView path, Custody& base, time_t atime, time_t mtime);
