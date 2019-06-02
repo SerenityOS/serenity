@@ -24,7 +24,7 @@ int File::ioctl(FileDescriptor&, unsigned, unsigned)
     return -ENOTTY;
 }
 
-KResultOr<Region*> File::mmap(Process&, LinearAddress, size_t, size_t, int)
+KResultOr<Region*> File::mmap(Process&, FileDescriptor&, LinearAddress, size_t, size_t, int)
 {
     return KResult(-ENODEV);
 }

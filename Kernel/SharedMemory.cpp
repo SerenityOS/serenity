@@ -89,7 +89,7 @@ int SharedMemory::write(FileDescriptor&, const byte* data, int data_size)
     ASSERT_NOT_REACHED();
 }
 
-KResultOr<Region*> SharedMemory::mmap(Process& process, LinearAddress laddr, size_t offset, size_t size, int prot)
+KResultOr<Region*> SharedMemory::mmap(Process& process, FileDescriptor&, LinearAddress laddr, size_t offset, size_t size, int prot)
 {
     if (!vmo())
         return KResult(-ENODEV);
