@@ -48,8 +48,8 @@ public:
 
     RetainPtr<Font> clone() const;
 
-    static RetainPtr<Font> load_from_file(const String& path);
-    bool write_to_file(const String& path);
+    static RetainPtr<Font> load_from_file(const StringView& path);
+    bool write_to_file(const StringView& path);
 
     ~Font();
 
@@ -60,11 +60,10 @@ public:
     byte min_glyph_width() const { return m_min_glyph_width; }
     byte max_glyph_width() const { return m_max_glyph_width; }
     byte glyph_spacing() const { return m_fixed_width ? 0 : 1; }
-    int width(const String& string) const;
-    int width(const char*, int) const;
+    int width(const StringView& string) const;
 
     String name() const { return m_name; }
-    void set_name(const String& name) { m_name = name; }
+    void set_name(const StringView& name) { m_name = name; }
 
     bool is_fixed_width() const { return m_fixed_width; }
     void set_fixed_width(bool b) { m_fixed_width = b; }
@@ -76,7 +75,7 @@ public:
     }
 
 private:
-    Font(const String& name, unsigned* rows, byte* widths, bool is_fixed_width, byte glyph_width, byte glyph_height);
+    Font(const StringView& name, unsigned* rows, byte* widths, bool is_fixed_width, byte glyph_width, byte glyph_height);
 
     static RetainPtr<Font> load_from_memory(const byte*);
 

@@ -84,7 +84,7 @@ public:
         set_main_widget(m_label);
     }
 
-    void set_tooltip(const String& tooltip)
+    void set_tooltip(const StringView& tooltip)
     {
         // FIXME: Add some kind of GLabel auto-sizing feature.
         int text_width = m_label->font().width(tooltip);
@@ -95,7 +95,7 @@ public:
     GLabel* m_label { nullptr };
 };
 
-void GApplication::show_tooltip(const String& tooltip, const Point& screen_location)
+void GApplication::show_tooltip(const StringView& tooltip, const Point& screen_location)
 {
     if (!m_tooltip_window) {
         m_tooltip_window = new TooltipWindow;

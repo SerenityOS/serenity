@@ -17,7 +17,7 @@ public:
     int max() const { return m_max; }
 
     String caption() const { return m_caption; }
-    void set_caption(const String& caption) { m_caption = caption; }
+    void set_caption(const StringView& caption) { m_caption = caption; }
 
     enum Format
     {

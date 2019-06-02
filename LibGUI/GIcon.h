@@ -25,7 +25,7 @@ public:
     GIcon(const GIcon&);
     ~GIcon() {}
 
-    static GIcon default_icon(const String&);
+    static GIcon default_icon(const StringView&);
 
     GIcon& operator=(const GIcon& other)
     {

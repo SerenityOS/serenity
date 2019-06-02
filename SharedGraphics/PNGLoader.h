@@ -2,4 +2,4 @@
 
 #include <SharedGraphics/GraphicsBitmap.h>
 
-RetainPtr<GraphicsBitmap> load_png(const String& path);
+RetainPtr<GraphicsBitmap> load_png(const StringView& path);

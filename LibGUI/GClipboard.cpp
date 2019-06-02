@@ -34,7 +34,7 @@ String GClipboard::data() const
     return String((const char*)shared_buffer->data(), response.clipboard.contents_size);
 }
 
-void GClipboard::set_data(const String& data)
+void GClipboard::set_data(const StringView& data)
 {
     WSAPI_ClientMessage request;
     request.type = WSAPI_ClientMessage::Type::SetClipboardContents;

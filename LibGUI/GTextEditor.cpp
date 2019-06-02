@@ -58,7 +58,7 @@ void GTextEditor::create_actions()
     }, this);
 }
 
-void GTextEditor::set_text(const String& text)
+void GTextEditor::set_text(const StringView& text)
 {
     if (is_single_line() && text.length() == m_lines[0]->length() && !memcmp(text.characters(), m_lines[0]->characters(), text.length()))
         return;
@@ -71,7 +71,7 @@ void GTextEditor::set_text(const String& text)
         int line_length = current_position - start_of_current_line;
         auto line = make<Line>();
         if (line_length)
-            line->set_text(text.substring(start_of_current_line, current_position - start_of_current_line));
+            line->set_text(text.substring_view(start_of_current_line, current_position - start_of_current_line));
         m_lines.append(move(line));
         start_of_current_line = current_position + 1;
     };
@@ -574,7 +574,7 @@ void GTextEditor::do_delete()
     }
 }
 
-void GTextEditor::insert_at_cursor(const String& text)
+void GTextEditor::insert_at_cursor(const StringView& text)
 {
     // FIXME: This should obviously not be implemented this way.
     for (int i = 0; i < text.length(); ++i) {
@@ -756,7 +756,7 @@ GTextEditor::Line::Line()
     clear();
 }
 
-GTextEditor::Line::Line(const String& text)
+GTextEditor::Line::Line(const StringView& text)
 {
     set_text(text);
 }
@@ -767,7 +767,7 @@ void GTextEditor::Line::clear()
     m_text.append(0);
 }
 
-void GTextEditor::Line::set_text(const String& text)
+void GTextEditor::Line::set_text(const StringView& text)
 {
     if (text.length() == length() && !memcmp(text.characters(), characters(), length()))
         return;
@@ -828,7 +828,7 @@ void GTextEditor::Line::truncate(int length)
     m_text.last() = 0;
 }
 
-bool GTextEditor::write_to_file(const String& path)
+bool GTextEditor::write_to_file(const StringView& path)
 {
     int fd = open(path.characters(), O_WRONLY | O_CREAT | O_TRUNC, 0666);
     if (fd < 0) {
@@ -952,7 +952,7 @@ void GTextEditor::delete_selection()
     update();
 }
 
-void GTextEditor::insert_at_cursor_or_replace_selection(const String& text)
+void GTextEditor::insert_at_cursor_or_replace_selection(const StringView& text)
 {
     ASSERT(!is_readonly());
     if (has_selection())
