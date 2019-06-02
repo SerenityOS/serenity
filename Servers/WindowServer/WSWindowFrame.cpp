@@ -96,10 +96,11 @@ WSWindowFrame::WSWindowFrame(WSWindow& window)
     }));
 
     if (window.is_resizable()) {
-        m_buttons.append(make<WSButton>(*this, *s_maximize_button_bitmap, [this] (auto& button) {
+        auto button = make<WSButton>(*this, *s_maximize_button_bitmap, [this] (auto&) {
             m_window.set_maximized(!m_window.is_maximized());
-            button.set_bitmap(m_window.is_maximized() ? *s_unmaximize_button_bitmap : *s_maximize_button_bitmap);
-        }));
+        });
+        m_maximize_button = button.ptr();
+        m_buttons.append(move(button));
     }
 
     m_buttons.append(make<WSButton>(*this, *s_minimize_button_bitmap, [this] (auto&) {
@@ -109,6 +110,12 @@ WSWindowFrame::WSWindowFrame(WSWindow& window)
 
 WSWindowFrame::~WSWindowFrame()
 {
+}
+
+void WSWindowFrame::did_set_maximized(Badge<WSWindow>, bool maximized)
+{
+    ASSERT(m_maximize_button);
+    m_maximize_button->set_bitmap(maximized ? *s_unmaximize_button_bitmap : *s_maximize_button_bitmap);
 }
 
 Rect WSWindowFrame::title_bar_rect() const
