@@ -260,7 +260,7 @@ InodeMetadata FileDescriptor::metadata() const
 
 KResultOr<Region*> FileDescriptor::mmap(Process& process, LinearAddress laddr, size_t offset, size_t size, int prot)
 {
-    return m_file->mmap(process, laddr, offset, size, prot);
+    return m_file->mmap(process, *this, laddr, offset, size, prot);
 }
 
 KResult FileDescriptor::truncate(off_t length)
