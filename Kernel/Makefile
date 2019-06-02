@@ -65,7 +65,7 @@ VFS_OBJS = \
     Devices/ZeroDevice.o \
     Devices/RandomDevice.o \
     Devices/DebugLogDevice.o \
-    Devices/OffsetDiskDevice.o \
+    Devices/DiskPartition.o \
     FileSystem/FileSystem.o \
     FileSystem/DiskBackedFileSystem.o \
     FileSystem/Ext2FileSystem.o \

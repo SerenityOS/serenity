@@ -3,10 +3,10 @@
 #include <AK/RetainPtr.h>
 #include <Kernel/Devices/DiskDevice.h>
 
-class OffsetDiskDevice final : public DiskDevice {
+class DiskPartition final : public DiskDevice {
 public:
-    static Retained<OffsetDiskDevice> create(Retained<DiskDevice>&& device, unsigned block_offset);
-    virtual ~OffsetDiskDevice();
+    static Retained<DiskPartition> create(Retained<DiskDevice>&& device, unsigned block_offset);
+    virtual ~DiskPartition();
 
     virtual unsigned block_size() const override;
     virtual bool read_block(unsigned index, byte* out) const override;
@@ -17,7 +17,7 @@ public:
 private:
     virtual const char* class_name() const override;
 
-    OffsetDiskDevice(Retained<DiskDevice>&&, unsigned);
+    DiskPartition(Retained<DiskDevice>&&, unsigned);
 
     Retained<DiskDevice> m_device;
     unsigned m_block_offset;
