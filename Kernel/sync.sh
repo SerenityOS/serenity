@@ -14,7 +14,7 @@ fi
 echo "setting up disk image..."
 if [ ! -f _disk_image ]; then
     echo "not found; creating a new one"
-    dd if=/dev/zero of=_disk_image bs=1M count=100 || die "couldn't create disk image"
+    dd if=/dev/zero of=_disk_image bs=1M count=${DISK_SIZE:-500} || die "couldn't create disk image"
     parted -s _disk_image mklabel msdos mkpart primary ext2 32k 100% -a minimal set 1 boot on || die "couldn't partition disk image"
     chown 1000:1000 _disk_image || die "couldn't adjust permissions on disk image"
 else
