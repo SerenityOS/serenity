@@ -7,7 +7,7 @@ GLabel::GLabel(GWidget* parent)
 {
 }
 
-GLabel::GLabel(const String& text, GWidget* parent)
+GLabel::GLabel(const StringView& text, GWidget* parent)
     : GFrame(parent)
     , m_text(text)
 {
@@ -22,7 +22,7 @@ void GLabel::set_icon(RetainPtr<GraphicsBitmap>&& icon)
     m_icon = move(icon);
 }
 
-void GLabel::set_text(const String& text)
+void GLabel::set_text(const StringView& text)
 {
     if (text == m_text)
         return;

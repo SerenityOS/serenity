@@ -104,7 +104,7 @@ void GWindow::hide()
     m_front_bitmap = nullptr;
 }
 
-void GWindow::set_title(const String& title)
+void GWindow::set_title(const StringView& title)
 {
     m_title_when_windowless = title;
     if (!m_window_id)
@@ -502,7 +502,7 @@ void GWindow::wm_event(GWMEvent&)
 {
 }
 
-void GWindow::set_icon_path(const String& path)
+void GWindow::set_icon_path(const StringView& path)
 {
     if (m_icon_path == path)
         return;

@@ -7,7 +7,7 @@ static RetainPtr<GraphicsBitmap> s_filled_circle_bitmap;
 static RetainPtr<GraphicsBitmap> s_changing_filled_circle_bitmap;
 static RetainPtr<GraphicsBitmap> s_changing_unfilled_circle_bitmap;
 
-GRadioButton::GRadioButton(const String& text, GWidget* parent)
+GRadioButton::GRadioButton(const StringView& text, GWidget* parent)
     : GAbstractButton(text, parent)
 {
     if (!s_unfilled_circle_bitmap) {

@@ -101,7 +101,7 @@ private:
 static RetainPtr<GraphicsBitmap> load_png_impl(const byte*, int);
 static bool process_chunk(Streamer&, PNGLoadingContext& context);
 
-RetainPtr<GraphicsBitmap> load_png(const String& path)
+RetainPtr<GraphicsBitmap> load_png(const StringView& path)
 {
     MappedFile mapped_file(path);
     if (!mapped_file.is_valid())

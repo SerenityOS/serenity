@@ -11,7 +11,7 @@ public:
 
     Function<void(bool)> on_checked;
 
-    void set_text(const String&);
+    void set_text(const StringView&);
     const String& text() const { return m_text; }
 
     bool is_checked() const { return m_checked; }
@@ -29,7 +29,7 @@ public:
 
 protected:
     explicit GAbstractButton(GWidget* parent);
-    GAbstractButton(const String&, GWidget* parent);
+    GAbstractButton(const StringView&, GWidget* parent);
 
     virtual void mousedown_event(GMouseEvent&) override;
     virtual void mousemove_event(GMouseEvent&) override;

@@ -12,10 +12,10 @@ public:
         Error,
     };
 
-    explicit GMessageBox(const String& text, const String& title, Type type = Type::None, CObject* parent = nullptr);
+    explicit GMessageBox(const StringView& text, const StringView& title, Type type = Type::None, CObject* parent = nullptr);
     virtual ~GMessageBox() override;
 
-    static void show(const String& text, const String& title, Type type = Type::None, CObject* parent = nullptr);
+    static void show(const StringView& text, const StringView& title, Type type = Type::None, CObject* parent = nullptr);
 
     virtual const char* class_name() const override { return "GMessageBox"; }
 

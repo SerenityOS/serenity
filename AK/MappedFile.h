@@ -1,13 +1,13 @@
 #pragma once
 
-#include "AKString.h"
+#include "StringView.h"
 
 namespace AK {
 
 class MappedFile {
 public:
     MappedFile() {}
-    explicit MappedFile(const String& file_name);
+    explicit MappedFile(const StringView& file_name);
     MappedFile(MappedFile&&);
     ~MappedFile();
 
@@ -21,7 +21,6 @@ public:
     size_t size() const { return m_size; }
 
 private:
-    String m_file_name;
     size_t m_size { 0 };
     int m_fd { -1 };
     void* m_map { (void*)-1 };

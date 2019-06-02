@@ -3,7 +3,7 @@
 #include <LibGUI/GButton.h>
 #include <LibGUI/GMenuItem.h>
 
-GAction::GAction(const String& text, const String& custom_data, Function<void(GAction&)> on_activation_callback, GWidget* widget)
+GAction::GAction(const StringView& text, const StringView& custom_data, Function<void(GAction&)> on_activation_callback, GWidget* widget)
     : on_activation(move(on_activation_callback))
     , m_text(text)
     , m_custom_data(custom_data)
@@ -11,12 +11,12 @@ GAction::GAction(const String& text, const String& custom_data, Function<void(GA
 {
 }
 
-GAction::GAction(const String& text, Function<void(GAction&)> on_activation_callback, GWidget* widget)
+GAction::GAction(const StringView& text, Function<void(GAction&)> on_activation_callback, GWidget* widget)
     : GAction(text, String(), move(on_activation_callback), widget)
 {
 }
 
-GAction::GAction(const String& text, RetainPtr<GraphicsBitmap>&& icon, Function<void(GAction&)> on_activation_callback, GWidget* widget)
+GAction::GAction(const StringView& text, RetainPtr<GraphicsBitmap>&& icon, Function<void(GAction&)> on_activation_callback, GWidget* widget)
     : on_activation(move(on_activation_callback))
     , m_text(text)
     , m_icon(move(icon))
@@ -24,13 +24,13 @@ GAction::GAction(const String& text, RetainPtr<GraphicsBitmap>&& icon, Function<
 {
 }
 
-GAction::GAction(const String& text, const GShortcut& shortcut, Function<void(GAction&)> on_activation_callback, GWidget* widget)
+GAction::GAction(const StringView& text, const GShortcut& shortcut, Function<void(GAction&)> on_activation_callback, GWidget* widget)
     : GAction(text, shortcut, nullptr, move(on_activation_callback), widget)
 {
 }
 
 
-GAction::GAction(const String& text, const GShortcut& shortcut, RetainPtr<GraphicsBitmap>&& icon, Function<void(GAction&)> on_activation_callback, GWidget* widget)
+GAction::GAction(const StringView& text, const GShortcut& shortcut, RetainPtr<GraphicsBitmap>&& icon, Function<void(GAction&)> on_activation_callback, GWidget* widget)
     : on_activation(move(on_activation_callback))
     , m_text(text)
     , m_icon(move(icon))

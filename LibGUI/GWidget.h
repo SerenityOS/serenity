@@ -56,7 +56,7 @@ public:
 
     bool has_tooltip() const { return !m_tooltip.is_empty(); }
     String tooltip() const { return m_tooltip; }
-    void set_tooltip(const String& tooltip) { m_tooltip = tooltip; }
+    void set_tooltip(const StringView& tooltip) { m_tooltip = tooltip; }
 
     bool is_enabled() const { return m_enabled; }
     void set_enabled(bool);

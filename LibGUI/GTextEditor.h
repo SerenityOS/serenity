@@ -105,7 +105,7 @@ public:
     Function<void()> on_cursor_change;
     Function<void()> on_selection_change;
 
-    void set_text(const String&);
+    void set_text(const StringView&);
     void scroll_cursor_into_view();
     int line_count() const { return m_lines.size(); }
     int line_spacing() const { return m_line_spacing; }
@@ -115,7 +115,7 @@ public:
     // FIXME: This should take glyph spacing into account, no?
     int glyph_width() const { return font().glyph_width('x'); }
 
-    bool write_to_file(const String& path);
+    bool write_to_file(const StringView& path);
 
     bool has_selection() const { return m_selection.is_valid(); }
     String selected_text() const;
@@ -168,12 +168,12 @@ private:
 
     public:
         Line();
-        explicit Line(const String&);
+        explicit Line(const StringView&);
 
         const char* characters() const { return m_text.data(); }
         int length() const { return m_text.size() - 1; }
         int width(const Font&) const;
-        void set_text(const String&);
+        void set_text(const StringView&);
         void append(char);
         void prepend(char);
         void insert(int index, char);
@@ -197,11 +197,11 @@ private:
     const Line& current_line() const { return *m_lines[m_cursor.line()]; }
     GTextPosition text_position_at(const Point&) const;
     void insert_at_cursor(char);
-    void insert_at_cursor(const String&);
+    void insert_at_cursor(const StringView&);
     int ruler_width() const;
     Rect ruler_content_rect(int line) const;
     void toggle_selection_if_needed_for_event(const GKeyEvent&);
-    void insert_at_cursor_or_replace_selection(const String&);
+    void insert_at_cursor_or_replace_selection(const StringView&);
     void delete_selection();
     void did_update_selection();
     int content_x_for_position(const GTextPosition&) const;
