@@ -12,6 +12,33 @@ class FileDescriptor;
 class Process;
 class Region;
 
+// File is the base class for anything that can be referenced by a FileDescriptor.
+//
+// The most important functions in File are:
+//
+// read() and write()
+//   - Implement reading and writing.
+//   - Return the number of bytes read/written, OR a negative error code.
+//
+// can_read() and can_write()
+//
+//   - Used to implement blocking I/O, and the select() and poll() syscalls.
+//   - Return true if read() or write() would succeed, respectively.
+//   - Note that can_read() should return true in EOF conditions,
+//     and a subsequent call to read() should return 0.
+//
+// ioctl()
+//
+//   - Optional. If unimplemented, ioctl() on this File will fail with -ENOTTY.
+//   - Can be overridden in subclasses to implement arbitrary functionality.
+//   - Subclasses should take care to validate incoming addresses before dereferencing.
+//
+// mmap()
+//
+//   - Optional. If unimplemented, mmap() on this File will fail with -ENODEV.
+//   - Called by mmap() when userspace wants to memory-map this File somewhere.
+//   - Should create a Region in the Process and return it if successful.
+
 class File : public Retainable<File> {
 public:
     virtual ~File();
