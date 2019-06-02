@@ -11,7 +11,7 @@ public:
     explicit StringBuilder(ssize_t initial_capacity = 16);
     ~StringBuilder() {}
 
-    void append(const String&);
+    void append(const StringView&);
     void append(char);
     void append(const char*, ssize_t);
     void appendf(const char*, ...);

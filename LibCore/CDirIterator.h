@@ -11,7 +11,7 @@ public:
         SkipDots = 0x1,
     };
 
-    CDirIterator(const String& path, Flags = Flags::NoFlags);
+    CDirIterator(const StringView& path, Flags = Flags::NoFlags);
     ~CDirIterator();
 
     bool has_error() const { return m_error != 0; }

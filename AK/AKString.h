@@ -87,7 +87,7 @@ public:
     };
 
     static String repeated(char, int count);
-    bool matches(const String& pattern, CaseSensitivity = CaseSensitivity::CaseInsensitive) const;
+    bool matches(const StringView& pattern, CaseSensitivity = CaseSensitivity::CaseInsensitive) const;
 
     int to_int(bool& ok) const;
     unsigned to_uint(bool& ok) const;
@@ -122,7 +122,7 @@ public:
         return (*m_impl)[i];
     }
 
-    bool ends_with(const String&) const;
+    bool ends_with(const StringView&) const;
 
     bool operator==(const String&) const;
     bool operator!=(const String& other) const { return !(*this == other); }
@@ -166,7 +166,7 @@ public:
     StringView view() const { return { characters(), length() }; }
 
 private:
-    bool match_helper(const String& mask) const;
+    bool match_helper(const StringView& mask) const;
     RetainPtr<StringImpl> m_impl;
 };
 

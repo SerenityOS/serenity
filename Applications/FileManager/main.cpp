@@ -199,8 +199,8 @@ int main(int argc, char** argv)
         go_back_action->set_enabled(directory_view->path_history_position() > 0);
     };
 
-    directory_view->on_status_message = [statusbar] (String message) {
-        statusbar->set_text(move(message));
+    directory_view->on_status_message = [statusbar] (const StringView& message) {
+        statusbar->set_text(message);
     };
 
     directory_view->on_thumbnail_progress = [&] (int done, int total) {
