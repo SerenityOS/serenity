@@ -24,23 +24,23 @@ public:
         ApplicationGlobal,
         WidgetLocal,
     };
-    static Retained<GAction> create(const String& text, Function<void(GAction&)> callback, GWidget* widget = nullptr)
+    static Retained<GAction> create(const StringView& text, Function<void(GAction&)> callback, GWidget* widget = nullptr)
     {
         return adopt(*new GAction(text, move(callback), widget));
     }
-    static Retained<GAction> create(const String& text, const String& custom_data, Function<void(GAction&)> callback, GWidget* widget = nullptr)
+    static Retained<GAction> create(const StringView& text, const StringView& custom_data, Function<void(GAction&)> callback, GWidget* widget = nullptr)
     {
         return adopt(*new GAction(text, custom_data, move(callback), widget));
     }
-    static Retained<GAction> create(const String& text, RetainPtr<GraphicsBitmap>&& icon, Function<void(GAction&)> callback, GWidget* widget = nullptr)
+    static Retained<GAction> create(const StringView& text, RetainPtr<GraphicsBitmap>&& icon, Function<void(GAction&)> callback, GWidget* widget = nullptr)
     {
         return adopt(*new GAction(text, move(icon), move(callback), widget));
     }
-    static Retained<GAction> create(const String& text, const GShortcut& shortcut, Function<void(GAction&)> callback, GWidget* widget = nullptr)
+    static Retained<GAction> create(const StringView& text, const GShortcut& shortcut, Function<void(GAction&)> callback, GWidget* widget = nullptr)
     {
         return adopt(*new GAction(text, shortcut, move(callback), widget));
     }
-    static Retained<GAction> create(const String& text, const GShortcut& shortcut, RetainPtr<GraphicsBitmap>&& icon, Function<void(GAction&)> callback, GWidget* widget = nullptr)
+    static Retained<GAction> create(const StringView& text, const GShortcut& shortcut, RetainPtr<GraphicsBitmap>&& icon, Function<void(GAction&)> callback, GWidget* widget = nullptr)
     {
         return adopt(*new GAction(text, shortcut, move(icon), move(callback), widget));
     }
@@ -77,11 +77,11 @@ public:
     void unregister_menu_item(Badge<GMenuItem>, GMenuItem&);
 
 private:
-    GAction(const String& text, Function<void(GAction&)> = nullptr, GWidget* = nullptr);
-    GAction(const String& text, const GShortcut&, Function<void(GAction&)> = nullptr, GWidget* = nullptr);
-    GAction(const String& text, const GShortcut&, RetainPtr<GraphicsBitmap>&& icon, Function<void(GAction&)> = nullptr, GWidget* = nullptr);
-    GAction(const String& text, RetainPtr<GraphicsBitmap>&& icon, Function<void(GAction&)> = nullptr, GWidget* = nullptr);
-    GAction(const String& text, const String& custom_data = String(), Function<void(GAction&)> = nullptr, GWidget* = nullptr);
+    GAction(const StringView& text, Function<void(GAction&)> = nullptr, GWidget* = nullptr);
+    GAction(const StringView& text, const GShortcut&, Function<void(GAction&)> = nullptr, GWidget* = nullptr);
+    GAction(const StringView& text, const GShortcut&, RetainPtr<GraphicsBitmap>&& icon, Function<void(GAction&)> = nullptr, GWidget* = nullptr);
+    GAction(const StringView& text, RetainPtr<GraphicsBitmap>&& icon, Function<void(GAction&)> = nullptr, GWidget* = nullptr);
+    GAction(const StringView& text, const StringView& custom_data = StringView(), Function<void(GAction&)> = nullptr, GWidget* = nullptr);
 
     template<typename Callback>
     void for_each_toolbar_button(Callback);

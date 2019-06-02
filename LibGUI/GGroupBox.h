@@ -4,11 +4,11 @@
 
 class GGroupBox : public GWidget {
 public:
-    GGroupBox(const String& title, GWidget* parent);
+    GGroupBox(const StringView& title, GWidget* parent);
     virtual ~GGroupBox() override;
 
     String title() const { return m_title; }
-    void set_title(const String&);
+    void set_title(const StringView&);
 
     virtual const char* class_name() const override { return "GGroupBox"; }
 

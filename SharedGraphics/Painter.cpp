@@ -512,8 +512,8 @@ void Painter::draw_text(const Rect& rect, const char* text, int length, const Fo
 {
     String elided_text;
     if (elision == TextElision::Right) {
-        int text_width = font.width(text, length);
-        if (font.width(text, length) > rect.width()) {
+        int text_width = font.width(StringView(text, length));
+        if (font.width(StringView(text, length)) > rect.width()) {
             int glyph_spacing = font.glyph_spacing();
             int new_length = 0;
             int new_width = font.width("...");
@@ -546,10 +546,10 @@ void Painter::draw_text(const Rect& rect, const char* text, int length, const Fo
     } else if (alignment == TextAlignment::CenterLeft) {
         point = { rect.x(), rect.center().y() - (font.glyph_height() / 2) };
     } else if (alignment == TextAlignment::CenterRight) {
-        int text_width = font.width(text);
+        int text_width = font.width(StringView(text, length));
         point = { rect.right() - text_width, rect.center().y() - (font.glyph_height() / 2) };
     } else if (alignment == TextAlignment::Center) {
-        int text_width = font.width(text);
+        int text_width = font.width(StringView(text, length));
         point = rect.center();
         point.move_by(-(text_width / 2), -(font.glyph_height() / 2));
     } else {
@@ -568,12 +568,12 @@ void Painter::draw_text(const Rect& rect, const char* text, int length, const Fo
     }
 }
 
-void Painter::draw_text(const Rect& rect, const String& text, TextAlignment alignment, Color color, TextElision elision)
+void Painter::draw_text(const Rect& rect, const StringView& text, TextAlignment alignment, Color color, TextElision elision)
 {
     draw_text(rect, text.characters(), text.length(), alignment, color, elision);
 }
 
-void Painter::draw_text(const Rect& rect, const String& text, const Font& font, TextAlignment alignment, Color color, TextElision elision)
+void Painter::draw_text(const Rect& rect, const StringView& text, const Font& font, TextAlignment alignment, Color color, TextElision elision)
 {
     draw_text(rect, text.characters(), text.length(), font, alignment, color, elision);
 }

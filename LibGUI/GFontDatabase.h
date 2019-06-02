@@ -16,11 +16,11 @@ class GFontDatabase {
 public:
     static GFontDatabase& the();
 
-    RetainPtr<Font> get_by_name(const String&);
-    void for_each_font(Function<void(const String&)>);
-    void for_each_fixed_width_font(Function<void(const String&)>);
+    RetainPtr<Font> get_by_name(const StringView&);
+    void for_each_font(Function<void(const StringView&)>);
+    void for_each_fixed_width_font(Function<void(const StringView&)>);
 
-    Metadata get_metadata_by_name(const String& name) const
+    Metadata get_metadata_by_name(const StringView& name) const
     {
         return m_name_to_metadata.get(name);
     };

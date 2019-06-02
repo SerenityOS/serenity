@@ -92,7 +92,7 @@ struct GFileSystemModel::Node {
     }
 };
 
-GModelIndex GFileSystemModel::index(const String& path) const
+GModelIndex GFileSystemModel::index(const StringView& path) const
 {
     FileSystemPath canonical_path(path);
     const Node* node = m_root;
@@ -125,7 +125,7 @@ String GFileSystemModel::path(const GModelIndex& index) const
     return node.full_path(*this);
 }
 
-GFileSystemModel::GFileSystemModel(const String& root_path, Mode mode)
+GFileSystemModel::GFileSystemModel(const StringView& root_path, Mode mode)
     : m_root_path(FileSystemPath(root_path).string())
     , m_mode(mode)
 {

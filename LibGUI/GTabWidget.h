@@ -13,7 +13,7 @@ public:
     int bar_height() const { return 21; }
     int container_padding() const { return 2; }
 
-    void add_widget(const String&, GWidget*);
+    void add_widget(const StringView&, GWidget*);
 
     virtual const char* class_name() const override { return "GTabWidget"; }
 

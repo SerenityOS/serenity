@@ -13,7 +13,7 @@ public:
     GDesktop();
 
     String wallpaper() const;
-    bool set_wallpaper(const String& path);
+    bool set_wallpaper(const StringView& path);
 
     Rect rect() const { return m_rect; }
     void did_receive_screen_rect(Badge<GEventLoop>, const Rect&);

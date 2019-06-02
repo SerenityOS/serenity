@@ -12,7 +12,7 @@
 #include <LibGUI/GToolBar.h>
 #include <SharedGraphics/PNGLoader.h>
 
-GFilePicker::GFilePicker(const String& path, CObject* parent)
+GFilePicker::GFilePicker(const StringView& path, CObject* parent)
     : GDialog(parent)
     , m_model(GDirectoryModel::create())
 {

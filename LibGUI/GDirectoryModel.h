@@ -31,7 +31,7 @@ public:
     virtual void update() override;
 
     String path() const { return m_path; }
-    void open(const String& path);
+    void open(const StringView& path);
     size_t bytes_in_files() const { return m_bytes_in_files; }
 
     Function<void(int done, int total)> on_thumbnail_progress;

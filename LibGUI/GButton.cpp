@@ -10,7 +10,7 @@ GButton::GButton(GWidget* parent)
 {
 }
 
-GButton::GButton(const String& text, GWidget* parent)
+GButton::GButton(const StringView& text, GWidget* parent)
     : GAbstractButton(text, parent)
 {
 }

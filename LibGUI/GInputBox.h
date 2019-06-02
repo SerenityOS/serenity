@@ -7,7 +7,7 @@ class GTextEditor;
 
 class GInputBox : public GDialog {
 public:
-    explicit GInputBox(const String& prompt, const String& title, CObject* parent = nullptr);
+    explicit GInputBox(const StringView& prompt, const StringView& title, CObject* parent = nullptr);
     virtual ~GInputBox() override;
 
     String text_value() const { return m_text_value; }

@@ -27,7 +27,7 @@ GCheckBox::GCheckBox(GWidget* parent)
 {
 }
 
-GCheckBox::GCheckBox(const String& text, GWidget* parent)
+GCheckBox::GCheckBox(const StringView& text, GWidget* parent)
     : GAbstractButton(text, parent)
 {
 }

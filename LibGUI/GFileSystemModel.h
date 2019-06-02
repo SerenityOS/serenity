@@ -13,7 +13,7 @@ public:
         FilesAndDirectories
     };
 
-    static Retained<GFileSystemModel> create(const String& root_path = "/", Mode mode = Mode::FilesAndDirectories)
+    static Retained<GFileSystemModel> create(const StringView& root_path = "/", Mode mode = Mode::FilesAndDirectories)
     {
         return adopt(*new GFileSystemModel(root_path, mode));
     }
@@ -21,7 +21,7 @@ public:
 
     String root_path() const { return m_root_path; }
     String path(const GModelIndex&) const;
-    GModelIndex index(const String& path) const;
+    GModelIndex index(const StringView& path) const;
 
     virtual int row_count(const GModelIndex& = GModelIndex()) const override;
     virtual int column_count(const GModelIndex& = GModelIndex()) const override;
@@ -31,7 +31,7 @@ public:
     virtual GModelIndex index(int row, int column = 0, const GModelIndex& parent = GModelIndex()) const override;
 
 private:
-    GFileSystemModel(const String& root_path, Mode);
+    GFileSystemModel(const StringView& root_path, Mode);
 
     String m_root_path;
     Mode m_mode { Invalid };

@@ -29,12 +29,12 @@ Retained<GraphicsBitmap> GraphicsBitmap::create_wrapper(Format format, const Siz
     return adopt(*new GraphicsBitmap(format, size, data));
 }
 
-RetainPtr<GraphicsBitmap> GraphicsBitmap::load_from_file(const String& path)
+RetainPtr<GraphicsBitmap> GraphicsBitmap::load_from_file(const StringView& path)
 {
     return load_png(path);
 }
 
-RetainPtr<GraphicsBitmap> GraphicsBitmap::load_from_file(Format format, const String& path, const Size& size)
+RetainPtr<GraphicsBitmap> GraphicsBitmap::load_from_file(Format format, const StringView& path, const Size& size)
 {
     MappedFile mapped_file(path);
     if (!mapped_file.is_valid())
@@ -86,7 +86,7 @@ GraphicsBitmap::~GraphicsBitmap()
     delete [] m_palette;
 }
 
-void GraphicsBitmap::set_mmap_name(const String& name)
+void GraphicsBitmap::set_mmap_name(const StringView& name)
 {
     ASSERT(m_needs_munmap);
     ::set_mmap_name(m_data, size_in_bytes(), name.characters());

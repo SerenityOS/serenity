@@ -2,7 +2,7 @@
 #include <LibGUI/GPainter.h>
 #include <SharedGraphics/StylePainter.h>
 
-GGroupBox::GGroupBox(const String& title, GWidget* parent)
+GGroupBox::GGroupBox(const StringView& title, GWidget* parent)
     : GWidget(parent)
     , m_title(title)
 {
@@ -30,7 +30,7 @@ void GGroupBox::paint_event(GPaintEvent& event)
     painter.draw_text(text_rect, m_title, TextAlignment::Center, foreground_color());
 }
 
-void GGroupBox::set_title(const String& title)
+void GGroupBox::set_title(const StringView& title)
 {
     if (m_title == title)
         return;

@@ -6,6 +6,7 @@
 #include <AK/Retainable.h>
 #include <AK/RetainPtr.h>
 #include <AK/AKString.h>
+#include <AK/StringView.h>
 #include <AK/MappedFile.h>
 #include <SharedBuffer.h>
 
@@ -15,8 +16,8 @@ public:
 
     static Retained<GraphicsBitmap> create(Format, const Size&);
     static Retained<GraphicsBitmap> create_wrapper(Format, const Size&, RGBA32*);
-    static RetainPtr<GraphicsBitmap> load_from_file(const String& path);
-    static RetainPtr<GraphicsBitmap> load_from_file(Format, const String& path, const Size&);
+    static RetainPtr<GraphicsBitmap> load_from_file(const StringView& path);
+    static RetainPtr<GraphicsBitmap> load_from_file(Format, const StringView& path, const Size&);
     static Retained<GraphicsBitmap> create_with_shared_buffer(Format, Retained<SharedBuffer>&&, const Size&);
     ~GraphicsBitmap();
 
@@ -36,7 +37,7 @@ public:
     bool has_alpha_channel() const { return m_format == Format::RGBA32; }
     Format format() const { return m_format; }
 
-    void set_mmap_name(const String&);
+    void set_mmap_name(const StringView&);
 
     size_t size_in_bytes() const { return m_pitch * m_size.height(); }
 

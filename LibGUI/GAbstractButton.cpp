@@ -6,7 +6,7 @@ GAbstractButton::GAbstractButton(GWidget* parent)
 {
 }
 
-GAbstractButton::GAbstractButton(const String& text, GWidget* parent)
+GAbstractButton::GAbstractButton(const StringView& text, GWidget* parent)
     : GWidget(parent)
     , m_text(text)
 {
@@ -16,7 +16,7 @@ GAbstractButton::~GAbstractButton()
 {
 }
 
-void GAbstractButton::set_text(const String& text)
+void GAbstractButton::set_text(const StringView& text)
 {
     if (m_text == text)
         return;

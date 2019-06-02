@@ -14,7 +14,7 @@ GTabWidget::~GTabWidget()
 {
 }
 
-void GTabWidget::add_widget(const String& title, GWidget* widget)
+void GTabWidget::add_widget(const StringView& title, GWidget* widget)
 {
     m_tabs.append({ title, widget });
     add_child(*widget);

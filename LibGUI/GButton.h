@@ -11,7 +11,7 @@ class GAction;
 
 class GButton : public GAbstractButton {
 public:
-    GButton(const String& text, GWidget* parent);
+    GButton(const StringView& text, GWidget* parent);
     explicit GButton(GWidget* parent);
     virtual ~GButton() override;
 

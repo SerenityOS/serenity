@@ -66,7 +66,7 @@ RetainPtr<Font> Font::clone() const
     return adopt(*new Font(m_name, new_rows, new_widths, m_fixed_width, m_glyph_width, m_glyph_height));
 }
 
-Font::Font(const String& name, unsigned* rows, byte* widths, bool is_fixed_width, byte glyph_width, byte glyph_height)
+Font::Font(const StringView& name, unsigned* rows, byte* widths, bool is_fixed_width, byte glyph_width, byte glyph_height)
     : m_name(name)
     , m_rows(rows)
     , m_glyph_widths(widths)
@@ -113,7 +113,7 @@ RetainPtr<Font> Font::load_from_memory(const byte* data)
     return adopt(*new Font(String(header.name), rows, widths, !header.is_variable_width, header.glyph_width, header.glyph_height));
 }
 
-RetainPtr<Font> Font::load_from_file(const String& path)
+RetainPtr<Font> Font::load_from_file(const StringView& path)
 {
     MappedFile mapped_file(path);
     if (!mapped_file.is_valid())
@@ -124,7 +124,7 @@ RetainPtr<Font> Font::load_from_file(const String& path)
     return font;
 }
 
-bool Font::write_to_file(const String& path)
+bool Font::write_to_file(const StringView& path)
 {
     int fd = creat(path.characters(), 0644);
     if (fd < 0) {
@@ -158,22 +158,17 @@ bool Font::write_to_file(const String& path)
     return true;
 }
 
-int Font::width(const String& string) const
+int Font::width(const StringView& string) const
 {
-    return width(string.characters(), string.length());
-}
-
-int Font::width(const char* characters, int length) const
-{
-    if (!length)
+    if (!string.length())
         return 0;
 
     if (m_fixed_width)
-        return length * m_glyph_width;
+        return string.length() * m_glyph_width;
 
     int width = 0;
-    for (int i = 0; i < length; ++i)
-        width += glyph_width(characters[i]) + 1;
+    for (int i = 0; i < string.length(); ++i)
+        width += glyph_width(string.characters()[i]) + 1;
 
     return width - 1;
 }

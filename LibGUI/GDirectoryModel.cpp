@@ -272,7 +272,7 @@ void GDirectoryModel::update()
     did_update();
 }
 
-void GDirectoryModel::open(const String& a_path)
+void GDirectoryModel::open(const StringView& a_path)
 {
     FileSystemPath canonical_path(a_path);
     auto path = canonical_path.string();

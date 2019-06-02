@@ -11,7 +11,7 @@ class Point;
 
 class GMenu {
 public:
-    explicit GMenu(const String& name);
+    explicit GMenu(const StringView& name);
     ~GMenu();
 
     static GMenu* from_menu_id(int);

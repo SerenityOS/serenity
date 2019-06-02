@@ -99,7 +99,7 @@ int main(int argc, char** argv)
     menubar->add_menu(move(edit_menu));
 
     auto font_menu = make<GMenu>("Font");
-    GFontDatabase::the().for_each_fixed_width_font([&] (const String& font_name) {
+    GFontDatabase::the().for_each_fixed_width_font([&] (const StringView& font_name) {
         font_menu->add_action(GAction::create(font_name, [text_editor] (const GAction& action) {
             text_editor->set_font(GFontDatabase::the().get_by_name(action.text()));
             text_editor->update();

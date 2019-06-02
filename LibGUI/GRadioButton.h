@@ -4,7 +4,7 @@
 
 class GRadioButton : public GAbstractButton {
 public:
-    GRadioButton(const String& text, GWidget* parent);
+    GRadioButton(const StringView& text, GWidget* parent);
     virtual ~GRadioButton() override;
 
     virtual const char* class_name() const override { return "GRadioButton"; }

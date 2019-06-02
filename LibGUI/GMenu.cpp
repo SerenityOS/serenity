@@ -21,7 +21,7 @@ GMenu* GMenu::from_menu_id(int menu_id)
     return (*it).value;
 }
 
-GMenu::GMenu(const String& name)
+GMenu::GMenu(const StringView& name)
     : m_name(name)
 {
 }
