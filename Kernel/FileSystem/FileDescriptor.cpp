@@ -88,7 +88,7 @@ KResult FileDescriptor::fchmod(mode_t mode)
 {
     if (!m_inode)
         return KResult(-EBADF);
-    return VFS::the().fchmod(*m_inode, mode);
+    return VFS::the().chmod(*m_inode, mode);
 }
 
 off_t FileDescriptor::seek(off_t offset, int whence)
