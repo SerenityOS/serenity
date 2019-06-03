@@ -10,6 +10,7 @@
 #include <fcntl.h>
 #include <AK/printf.cpp>
 #include <AK/StdLibExtras.h>
+#include <AK/ValueRestorer.h>
 #include <Kernel/Syscall.h>
 
 extern "C" {
@@ -458,14 +459,70 @@ char* tmpnam(char*)
 
 FILE* popen(const char* command, const char* type)
 {
-    (void)command;
-    (void)type;
-    ASSERT_NOT_REACHED();
+    if (!type || (*type != 'r' && *type != 'w')) {
+        errno = EINVAL;
+        return nullptr;
+    }
+
+    int pipe_fds[2];
+
+    int rc = pipe(pipe_fds);
+    if (rc < 0) {
+        ValueRestorer restorer(errno);
+        perror("pipe");
+        return nullptr;
+    }
+
+    pid_t child_pid = fork();
+    if (!child_pid) {
+        if (*type == 'r') {
+            int rc = dup2(pipe_fds[1], STDOUT_FILENO);
+            if (rc < 0) {
+                perror("dup2");
+                exit(1);
+            }
+            close(pipe_fds[0]);
+            close(pipe_fds[1]);
+        } else if (*type == 'w') {
+            int rc = dup2(pipe_fds[0], STDIN_FILENO);
+            if (rc < 0) {
+                perror("dup2");
+                exit(1);
+            }
+            close(pipe_fds[0]);
+            close(pipe_fds[1]);
+        }
+
+        int rc = execl("/bin/sh", "sh", "-c", command, nullptr);
+        if (rc < 0)
+            perror("execl");
+        exit(1);
+    }
+
+    FILE* fp = nullptr;
+    if (*type == 'r') {
+        fp = make_FILE(pipe_fds[0]);
+        close(pipe_fds[1]);
+    } else if (*type == 'w') {
+        fp = make_FILE(pipe_fds[1]);
+        close(pipe_fds[0]);
+    }
+
+    fp->popen_child = child_pid;
+    return fp;
 }
 
-int pclose(FILE*)
+int pclose(FILE* fp)
 {
-    ASSERT_NOT_REACHED();
+    ASSERT(fp);
+    ASSERT(fp->popen_child != 0);
+
+    int wstatus = 0;
+    int rc = waitpid(fp->popen_child, &wstatus, 0);
+    if (rc < 0)
+        return rc;
+
+    return wstatus;
 }
 
 int remove(const char* pathname)
