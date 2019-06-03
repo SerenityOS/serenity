@@ -278,24 +278,28 @@ void GWindow::event(CEvent& event)
         }
 
         if (m_keybind_mode) {
-            StringBuilder builder;
-            //Y u no work
-            builder.append(m_entered_keybind);
-            builder.append(keyevent.text());
-            m_entered_keybind = builder.to_string();
+            if (event.type() == GEvent::KeyUp) {
+              StringBuilder builder;
+              //Y u no work
+              builder.append(m_entered_keybind);
+              builder.append(keyevent.text());
+              m_entered_keybind = builder.to_string();
 
-            auto found_widget = m_hashed_potential_keybind_widgets.find(m_entered_keybind);
-            if (found_widget != m_hashed_potential_keybind_widgets.end()) {
-              m_keybind_mode = false;
-              const auto& point = Point();
-              auto event = make<GMouseEvent>(GEvent::MouseDown, point, 0, GMouseButton::Left, 0, 0);
-              found_widget->value->event(*event);
-              event = make<GMouseEvent>(GEvent::MouseUp, point, 0, GMouseButton::Left, 0, 0);
-              found_widget->value->event(*event);
-              //Call click on the found widget
+              auto found_widget = m_hashed_potential_keybind_widgets.find(m_entered_keybind);
+              if (found_widget != m_hashed_potential_keybind_widgets.end()) {
+                m_keybind_mode = false;
+                const auto& point = Point();
+                auto event = make<GMouseEvent>(GEvent::MouseDown, point, 0, GMouseButton::Left, 0, 0);
+                found_widget->value->event(*event);
+                event = make<GMouseEvent>(GEvent::MouseUp, point, 0, GMouseButton::Left, 0, 0);
+                found_widget->value->event(*event);
+                //Call click on the found widget
+              } else if (m_entered_keybind.length() >= m_max_keybind_length) {
+                m_keybind_mode = false;
+              }
+              //m_entered_keybind.append(keyevent.text());
+              update();
             }
-            //m_entered_keybind.append(keyevent.text());
-            update();
         } else {
             if (m_focused_widget)
               return m_focused_widget->event(event);
@@ -348,7 +352,8 @@ void GWindow::find_keyboard_selectable() {
     m_hashed_potential_keybind_widgets.clear();
     find_keyboard_selectable_children(m_main_widget);
 
-    size_t buffer_length = ceil_div(m_potential_keybind_widgets.size(), ('z'-'a'))+1;
+    m_max_keybind_length = ceil_div(m_potential_keybind_widgets.size(), ('z'-'a'));
+    size_t buffer_length = m_max_keybind_length + 1;
     char keybind_buffer[buffer_length];
     for (size_t i = 0; i < buffer_length-1; i++) {
       keybind_buffer[i] = 'a';

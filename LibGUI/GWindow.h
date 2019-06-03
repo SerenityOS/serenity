@@ -166,6 +166,7 @@ private:
     bool m_show_titlebar { true };
     bool m_keybind_mode { false };
     String m_entered_keybind;
+    size_t m_max_keybind_length;
     Vector<GWidget*> m_potential_keybind_widgets;
     HashMap<String, GWidget*> m_hashed_potential_keybind_widgets;
 };
