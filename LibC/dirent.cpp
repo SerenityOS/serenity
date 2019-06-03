@@ -1,14 +1,15 @@
-#include <dirent.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <sys/stat.h>
-#include <unistd.h>
+#include <AK/Assertions.h>
 #include <AK/StdLibExtras.h>
 #include <Kernel/Syscall.h>
+#include <dirent.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <unistd.h>
 
 extern "C" {
 
@@ -83,6 +84,12 @@ dirent* readdir(DIR* dirp)
 
     dirp->nextptr += sys_ent->total_size();
     return &dirp->cur_ent;
+}
+
+int dirfd(DIR* dirp)
+{
+    ASSERT(dirp);
+    return dirp->fd;
 }
 
 }
