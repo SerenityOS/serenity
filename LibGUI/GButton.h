@@ -33,6 +33,7 @@ public:
 
     virtual const char* class_name() const override { return "GButton"; }
     virtual bool accepts_focus() const override { return true; }
+    virtual bool accepts_keyboard_select() const;
 
 protected:
     virtual void paint_event(GPaintEvent&) override;
