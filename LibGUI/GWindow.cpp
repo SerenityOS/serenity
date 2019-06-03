@@ -233,12 +233,21 @@ void GWindow::event(CEvent& event)
         if (m_keybind_mode) {
           //If we're in keybind mode indicate widgets in m_potential_keybind_widgets
           GPainter painter(*m_main_widget);
-          painter.draw_text(Rect(20,20,20,20), m_entered_keybind.characters(), TextAlignment::TopLeft, Color::Green);
 
           for (auto& keypair: m_hashed_potential_keybind_widgets) {
             auto widget = keypair.value;
             auto rect = Rect(widget->x()-5, widget->y()-5, 12, 12);
-            painter.draw_text(rect, keypair.key.characters(), TextAlignment::TopLeft, Color::Black);
+            bool could_be_keybind = true;
+            for (size_t i = 0; i < m_entered_keybind.length(); i++) {
+              if (keypair.key.characters()[i] != m_entered_keybind.characters()[i]) {
+                could_be_keybind = false;
+              }
+            }
+            if (could_be_keybind) {
+              painter.draw_text(rect, keypair.key.characters(), TextAlignment::TopLeft, Color::Black);
+              painter.draw_text(rect, m_entered_keybind.characters(), TextAlignment::TopLeft, Color::Green);
+            }
+
           }
 
         }
@@ -280,7 +289,6 @@ void GWindow::event(CEvent& event)
         if (m_keybind_mode) {
             if (event.type() == GEvent::KeyUp) {
               StringBuilder builder;
-              //Y u no work
               builder.append(m_entered_keybind);
               builder.append(keyevent.text());
               m_entered_keybind = builder.to_string();
@@ -297,7 +305,6 @@ void GWindow::event(CEvent& event)
               } else if (m_entered_keybind.length() >= m_max_keybind_length) {
                 m_keybind_mode = false;
               }
-              //m_entered_keybind.append(keyevent.text());
               update();
             }
         } else {
