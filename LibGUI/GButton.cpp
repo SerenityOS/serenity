@@ -64,6 +64,10 @@ void GButton::click()
         on_click(*this);
 }
 
+/*bool GButton::accepts_keyboard_select() const {
+  return is_enabled();
+}*/
+
 void GButton::set_action(GAction& action)
 {
     m_action = action.make_weak_ptr();
