@@ -4,7 +4,8 @@
 namespace AK {
 
 StringView::StringView(const AK::String& string)
-    : m_characters(string.characters())
+    : m_string(&string)
+    , m_characters(string.characters())
     , m_length(string.length())
 {
 }
