@@ -36,9 +36,12 @@ public:
 
     String() {}
 
-    String(StringView view)
-        : m_impl(StringImpl::create(view.characters(), view.length()))
+    String(const StringView& view)
     {
+        if (view.m_string)
+            *this = String(*view.m_string);
+        else
+            m_impl = StringImpl::create(view.characters(), view.length());
     }
 
     String(const String& other)
