@@ -29,6 +29,7 @@ struct __STDIO_FILE {
     int eof;
     int error;
     int mode;
+    pid_t popen_child;
     char* buffer;
     size_t buffer_size;
     size_t buffer_index;
