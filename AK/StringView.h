@@ -44,6 +44,8 @@ public:
     bool operator==(const String&) const;
 
 private:
+    friend class String;
+    const AK::String* m_string { nullptr };
     const char* m_characters { nullptr };
     int m_length { 0 };
 };
