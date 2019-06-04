@@ -69,12 +69,17 @@ StringView String::substring_view(int start, int length) const
 
 Vector<String> String::split(const char separator) const
 {
+    return split_limit(separator, 0);
+}
+
+Vector<String> String::split_limit(const char separator, int limit) const
+{
     if (is_empty())
         return {};
 
     Vector<String> v;
     ssize_t substart = 0;
-    for (ssize_t i = 0; i < length(); ++i) {
+    for (ssize_t i = 0; i < length() && (v.size() + 1) != limit; ++i) {
         char ch = characters()[i];
         if (ch == separator) {
             ssize_t sublen = i - substart;
