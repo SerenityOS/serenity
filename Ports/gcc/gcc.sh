@@ -1,6 +1,6 @@
-#!/bin/bash
+#!/bin/sh
 PORT_DIR=gcc
-function fetch() {
+fetch() {
     run_fetch_web "https://ftp.gnu.org/gnu/gcc/gcc-8.3.0/gcc-8.3.0.tar.xz"
 
     # Add the big GCC patch (same one used by toolchain.)
@@ -12,7 +12,7 @@ function fetch() {
     # Patch mpfr, mpc and isl to teach them about "serenity" targets.
     run_patch dependencies-config.patch -p1
 }
-function configure() {
+configure() {
     run_configure_autotools \
         --target=i686-pc-serenity \
         --with-sysroot=/ \
@@ -22,12 +22,12 @@ function configure() {
         --disable-lto \
         --disable-nls
 }
-function build() {
+build() {
     MAKEOPTS=""
     run_make all-gcc all-target-libgcc all-target-libstdc++-v3
     run_command find ./host-i686-pc-serenity/gcc/ -maxdepth 1 -type f -executable -exec strip --strip-debug {} \; || echo
 }
-function install() {
+install() {
     run_make $INSTALLOPTS DESTDIR="$SERENITY_ROOT"/Root install-gcc install-target-libgcc install-target-libstdc++-v3
 }
-source ../.port_include.sh
+. ../.port_include.sh
