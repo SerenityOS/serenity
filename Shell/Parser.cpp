@@ -19,7 +19,7 @@ void Parser::commit_subcommand()
 {
     if (m_tokens.is_empty())
         return;
-    m_subcommands.append({ move(m_tokens), move(m_redirections) });
+    m_subcommands.append({ move(m_tokens), move(m_redirections), {} });
 }
 
 void Parser::do_pipe()
