@@ -7,7 +7,8 @@ KParams& KParams::the()
     return *s_the;
 }
 
-KParams::KParams(const String cmdline) : m_cmdline(cmdline)
+KParams::KParams(const String& cmdline)
+    : m_cmdline(cmdline)
 {
     s_the = this;
 
@@ -22,12 +23,7 @@ KParams::KParams(const String cmdline) : m_cmdline(cmdline)
     }
 }
 
-const String KParams::cmdline() const
-{
-    return m_cmdline;
-}
-
-const String KParams::get(const String& key) const
+String KParams::get(const String& key) const
 {
     return m_params.get(key);
 }
