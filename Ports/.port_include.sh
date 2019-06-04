@@ -19,19 +19,19 @@ if [ -z "$PORT_DIR" ]; then
     exit 1
 fi
 
-function run_command() {
+run_command() {
     echo "+ $@"
     (cd "$PORT_DIR" && "$@")
     echo "+ FINISHED: $@"
 }
 
-function run_command_nocd() {
+run_command_nocd() {
     echo "+ $@ (nocd)"
     ("$@")
     echo "+ FINISHED (nocd): $@"
 }
 
-function run_fetch_git() {
+run_fetch_git() {
     if [ -d "$PORT_DIR/.git" ]; then
         run_command git fetch
         run_command git reset --hard FETCH_HEAD
@@ -41,7 +41,7 @@ function run_fetch_git() {
     fi
 }
 
-function run_fetch_web() {
+run_fetch_web() {
     if [ -d "$PORT_DIR" ]; then
         run_command_nocd rm -rf "$PORT_DIR"
     fi
@@ -54,36 +54,36 @@ function run_fetch_web() {
     run_command_nocd tar xavf "$file" -C "$PORT_DIR" --strip-components=1
 }
 
-function run_export_env() {
+run_export_env() {
     export $1="$2"
 }
 
-function run_replace_in_file() {
+run_replace_in_file() {
     run_command perl -p -i -e "$1" $2
 }
 
-function run_patch() {
+run_patch() {
     echo "+ Applying patch $1"
     run_command patch "$2" < "$1"
 }
 
-function run_configure_cmake() {
+run_configure_cmake() {
     run_command cmake -DCMAKE_TOOLCHAIN_FILE="$SERENITY_ROOT/Toolchain/CMakeToolchain.txt" .
 }
 
-function run_configure_autotools() {
+run_configure_autotools() {
     run_command ./configure --host=i686-pc-serenity "$@"
 }
 
-function run_make() {
+run_make() {
     run_command make $MAKEOPTS "$@"
 }
 
-function run_make_install() {
+run_make_install() {
     run_command make $INSTALLOPTS install "$@"
 }
 
-function run_send_to_file() {
+run_send_to_file() {
     echo "+ rewrite '$1'"
 	(cd "$PORT_DIR" && echo "$2" > "$1")
     echo "+ FINISHED"
@@ -101,16 +101,16 @@ if [ -z "$1" ]; then
     exit 0
 fi
 
-if [ "$1" == "fetch" ]; then
+if [ "$1" = "fetch" ]; then
     echo "+ Fetching..."
     fetch
-elif [ "$1" == "configure" ]; then
+elif [ "$1" = "configure" ]; then
     echo "+ Configuring..."
     configure
-elif [ "$1" == "build" ]; then
+elif [ "$1" = "build" ]; then
     echo "+ Building..."
     build
-elif [ "$1" == "install" ]; then
+elif [ "$1" = "install" ]; then
     echo "+ Installing..."
     install
 else
