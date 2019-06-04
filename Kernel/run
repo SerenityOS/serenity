@@ -18,6 +18,7 @@ elif [ "$1" = "qn" ]; then
         -device VGA,vgamem_mb=64 \
         -debugcon stdio \
         -device e1000 \
+        -kernel kernel \
         -hda _disk_image \
         -soundhw pcspk
 elif [ "$1" = "qtap" ]; then
@@ -30,6 +31,19 @@ elif [ "$1" = "qtap" ]; then
         -object filter-dump,id=hue,netdev=br0,file=e1000.pcap \
         -netdev tap,ifname=tap0,id=br0 \
         -device e1000,netdev=br0 \
+        -kernel kernel \
+        -hda _disk_image \
+        -soundhw pcspk
+elif [ "$1" = "qgrub" ]; then
+    # ./run qgrub: qemu with grub
+    $SERENITY_QEMU_BIN -s -m $ram_size \
+        $SERENITY_EXTRA_QEMU_ARGS \
+        -d cpu_reset,guest_errors \
+        -device VGA,vgamem_mb=64 \
+        -debugcon stdio \
+        -object filter-dump,id=hue,netdev=breh,file=e1000.pcap \
+        -netdev user,id=breh,hostfwd=tcp:127.0.0.1:8888-192.168.5.2:8888 \
+        -device e1000,netdev=breh \
         -hda _disk_image \
         -soundhw pcspk
 else
@@ -42,6 +56,7 @@ else
         -object filter-dump,id=hue,netdev=breh,file=e1000.pcap \
         -netdev user,id=breh,hostfwd=tcp:127.0.0.1:8888-192.168.5.2:8888 \
         -device e1000,netdev=breh \
+        -kernel kernel \
         -hda _disk_image \
         -soundhw pcspk
 fi
