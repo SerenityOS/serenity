@@ -126,6 +126,7 @@ public:
         return (*m_impl)[i];
     }
 
+    bool starts_with(const StringView&) const;
     bool ends_with(const StringView&) const;
 
     bool operator==(const String&) const;
