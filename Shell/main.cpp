@@ -315,9 +315,9 @@ static int run_command(const String& cmd)
                         perror("pipe");
                         return 1;
                     }
-                    subcommand.redirections.append({ Redirection::Rewire, STDOUT_FILENO, pipefd[1] });
+                    subcommand.rewirings.append({ STDOUT_FILENO, pipefd[1] });
                     auto& next_command = subcommands[i + 1];
-                    next_command.redirections.append({ Redirection::Rewire, STDIN_FILENO, pipefd[0] });
+                    next_command.rewirings.append({ STDIN_FILENO, pipefd[0] });
                     fds.add(pipefd[0]);
                     fds.add(pipefd[1]);
                     break;
@@ -328,7 +328,7 @@ static int run_command(const String& cmd)
                         perror("open");
                         return 1;
                     }
-                    subcommand.redirections.append({ Redirection::Rewire, redirection.fd, fd });
+                    subcommand.rewirings.append({ redirection.fd, fd });
                     fds.add(fd);
                     break;
                 }
@@ -338,7 +338,7 @@ static int run_command(const String& cmd)
                         perror("open");
                         return 1;
                     }
-                    subcommand.redirections.append({ Redirection::Rewire, redirection.fd, fd });
+                    subcommand.rewirings.append({ redirection.fd, fd });
                     fds.add(fd);
                     break;
                 }
@@ -348,12 +348,10 @@ static int run_command(const String& cmd)
                         perror("open");
                         return 1;
                     }
-                    subcommand.redirections.append({ Redirection::Rewire, redirection.fd, fd });
+                    subcommand.rewirings.append({ redirection.fd, fd });
                     fds.add(fd);
                     break;
                 }
-                case Redirection::Rewire:
-                    break; // ignore
             }
         }
     }
@@ -390,16 +388,14 @@ static int run_command(const String& cmd)
         if (!child) {
             setpgid(0, 0);
             tcsetpgrp(0, getpid());
-            for (auto& redirection : subcommand.redirections) {
-                if (redirection.type == Redirection::Rewire) {
-#ifdef SH_DEBUGsh
-                    dbgprintf("in %s<%d>, dup2(%d, %d)\n", argv[0], getpid(), redirection.rewire_fd, redirection.fd);
+            for (auto& rewiring : subcommand.rewirings) {
+#ifdef SH_DEBUG
+                dbgprintf("in %s<%d>, dup2(%d, %d)\n", argv[0], getpid(), redirection.rewire_fd, redirection.fd);
 #endif
-                    int rc = dup2(redirection.rewire_fd, redirection.fd);
-                    if (rc < 0) {
-                        perror("dup2");
-                        return 1;
-                    }
+                int rc = dup2(rewiring.rewire_fd, rewiring.fd);
+                if (rc < 0) {
+                    perror("dup2");
+                    return 1;
                 }
             }
 
