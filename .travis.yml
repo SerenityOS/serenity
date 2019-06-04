@@ -16,7 +16,7 @@ notifications:
 before_install:
 - sudo apt-get update
 - sudo apt-get install -y libmpfr-dev libmpc-dev libgmp-dev
-- sudo apt-get install -y e2fsprogs qemu-system-i386
+- sudo apt-get install -y e2fsprogs qemu-system-i386 qemu-utils
 
 script:
 - cd Toolchain
