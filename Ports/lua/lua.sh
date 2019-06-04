@@ -4,21 +4,21 @@ MAKEOPTS='generic'
 
 INSTALLOPTS="INSTALL_TOP=$SERENITY_ROOT/Root/"
 
-function fetch() {
+fetch() {
     run_fetch_web "http://www.lua.org/ftp/lua-5.3.5.tar.gz"
     run_patch lua.patch -p1
 }
-function configure() {
+configure() {
     run_export_env CC i686-pc-serenity-gcc
 }
-function run_make() {
+run_make() {
     run_command make $MAKEOPTS "$@"
 }
 
-function build() {
+build() {
     run_make
 }
-function install() {
+install() {
     run_make_install DESTDIR="$SERENITY_ROOT"/Root
 }
-source ../.port_include.sh
+. ../.port_include.sh

@@ -2,17 +2,17 @@
 PORT_DIR=ncurses
 INSTALLOPTS="DESTDIR=$SERENITY_ROOT/Root/"
 
-function fetch() {
+fetch() {
     run_fetch_git "https://github.com/mirror/ncurses.git"
     run_patch allow-serenity-os-ncurses.patch -p1
 }
-function configure() {
+configure() {
     run_configure_autotools
 }
-function build() {
+build() {
     run_make
 }
-function install() {
+install() {
     run_make_install
 }
-source ../.port_include.sh
+. ../.port_include.sh

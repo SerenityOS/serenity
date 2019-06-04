@@ -1,15 +1,15 @@
 #!/bin/sh
 PORT_DIR=SDL
-function fetch() {
+fetch() {
     run_fetch_git "https://github.com/SerenityOS/SDL"
 }
-function configure() {
+configure() {
     run_configure_cmake
 }
-function build() {
+build() {
     run_make
 }
-function install() {
+install() {
     run_make_install
 }
-source ../.port_include.sh
+. ../.port_include.sh

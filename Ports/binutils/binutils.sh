@@ -1,12 +1,12 @@
-#!/bin/bash
+#!/bin/sh
 PORT_DIR=binutils
-function fetch() {
+fetch() {
     run_fetch_web "https://ftp.gnu.org/gnu/binutils/binutils-2.32.tar.xz"
 
     # Add the big binutils patch (same one used by toolchain.)
     run_patch $SERENITY_ROOT/Toolchain/Patches/binutils.patch -p1
 }
-function configure() {
+configure() {
     run_configure_autotools \
         --target=i686-pc-serenity \
         --with-sysroot=/ \
@@ -15,10 +15,10 @@ function configure() {
         --disable-gdb \
         --disable-nls
 }
-function build() {
+build() {
     run_make
 }
-function install() {
+install() {
     run_make_install DESTDIR="$SERENITY_ROOT"/Root
 }
-source ../.port_include.sh
+. ../.port_include.sh

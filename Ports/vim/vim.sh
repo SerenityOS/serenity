@@ -2,11 +2,11 @@
 PORT_DIR=vim
 INSTALLOPTS="DESTDIR=$SERENITY_ROOT/Root/"
 
-function fetch() {
+fetch() {
     run_fetch_git "https://github.com/vim/vim.git"
 }
 
-function configure() {
+configure() {
 	run_send_to_file src/auto/config.cache "
 	vim_cv_getcwd_broken=no
 	vim_cv_memmove_handles_overlap=yes
@@ -19,12 +19,12 @@ function configure() {
 	run_configure_autotools --with-tlib=ncurses --with-features=small
 }
 
-function build() {
+build() {
     run_make
 }
 
-function install() {
+install() {
     run_make_install
 }
 
-source ../.port_include.sh
+. ../.port_include.sh
