@@ -69,26 +69,54 @@ VFS* vfs;
     auto dev_random = make<RandomDevice>();
     auto dev_ptmx = make<PTYMultiplexer>();
 
-    // TODO: decide what drive/partition to use based on cmdline from
-    // bootloader. currently hardcoded to the equivalent of hd0,1.
+    auto root = KParams::the().get("root");
+    if (root.is_empty()) {
+        root = "/dev/hda";
+    }
+
+    if (!root.starts_with("/dev/hda")) {
+        kprintf("init_stage2: root filesystem must be on the first IDE hard drive (/dev/hda)\n");
+        hang();
+    }
 
     auto dev_hd0 = IDEDiskDevice::create();
 
-    MBRPartitionTable dev_hd0pt(dev_hd0.copy_ref());
-    if (!dev_hd0pt.initialize()) {
-        kprintf("init_stage2: couldn't read MBR from disk");
-        hang();
+    Retained<DiskDevice> root_dev = dev_hd0.copy_ref();
+
+    root = root.substring(strlen("/dev/hda"), root.length() - strlen("/dev/hda"));
+
+    if (root.length()) {
+        bool ok;
+        unsigned partition_number = root.to_uint(ok);
+
+        if (!ok) {
+            kprintf("init_stage2: couldn't parse partition number from root kernel parameter\n");
+            hang();
+        }
+
+        if (partition_number < 1 || partition_number > 4) {
+            kprintf("init_stage2: invalid partition number %d; expected 1 to 4\n", partition_number);
+            hang();
+        }
+
+        MBRPartitionTable mbr(root_dev.copy_ref());
+        if (!mbr.initialize()) {
+            kprintf("init_stage2: couldn't read MBR from disk\n");
+            hang();
+        }
+
+        auto partition = mbr.partition(partition_number);
+        if (!partition) {
+            kprintf("init_stage2: couldn't get partition %d\n", partition_number);
+            hang();
+        }
+
+        root_dev = *partition;
     }
 
-    auto dev_hd0p1 = dev_hd0pt.partition(1);
-    if (!dev_hd0p1) {
-        kprintf("init_stage2: couldn't get first partition");
-        hang();
-    }
-
-    auto e2fs = Ext2FS::create(*dev_hd0p1.copy_ref());
+    auto e2fs = Ext2FS::create(root_dev.copy_ref());
     if (!e2fs->initialize()) {
-        kprintf("init_stage2: couldn't open root filesystem");
+        kprintf("init_stage2: couldn't open root filesystem\n");
         hang();
     }
 
