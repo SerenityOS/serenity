@@ -28,6 +28,7 @@
 #include <Kernel/Net/NetworkTask.h>
 #include <Kernel/Devices/DebugLogDevice.h>
 #include <Kernel/Multiboot.h>
+#include <Kernel/KParams.h>
 
 //#define STRESS_TEST_SPAWNING
 
@@ -123,12 +124,13 @@ multiboot_info_t* multiboot_info_ptr;
 
 extern "C" [[noreturn]] void init()
 {
-    kprintf("Kernel command line: '%s'\n", multiboot_info_ptr->cmdline);
-
     sse_init();
 
     kmalloc_init();
     init_ksyms();
+
+    // must come after kmalloc_init because we use AK_MAKE_ETERNAL in KParams
+    new KParams(String(reinterpret_cast<const char*>(multiboot_info_ptr->cmdline)));
 
     vfs = new VFS;
     dev_debuglog = new DebugLogDevice;
