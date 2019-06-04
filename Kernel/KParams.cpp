@@ -13,6 +13,10 @@ KParams::KParams(const String& cmdline)
     s_the = this;
 
     for (auto str : m_cmdline.split(' ')) {
+        if (str == "") {
+            continue;
+        }
+
         auto pair = str.split_limit('=', 2);
 
         if (pair.size() == 1) {
