@@ -32,6 +32,7 @@ KERNEL_OBJS = \
        Scheduler.o \
        DoubleBuffer.o \
        KSyms.o \
+       KParams.o \
        SharedMemory.o \
        FileSystem/DevPtsFS.o \
        Devices/BXVGADevice.o \
