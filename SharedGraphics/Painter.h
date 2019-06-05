@@ -4,9 +4,9 @@
 #include "Point.h"
 #include "Rect.h"
 #include "Size.h"
+#include <AK/AKString.h>
 #include <SharedGraphics/TextAlignment.h>
 #include <SharedGraphics/TextElision.h>
-#include <AK/AKString.h>
 
 class CharacterBitmap;
 class GlyphBitmap;
@@ -38,7 +38,11 @@ public:
     const Font& font() const { return *state().font; }
     void set_font(const Font& font) { state().font = &font; }
 
-    enum class DrawOp { Copy, Xor };
+    enum class DrawOp
+    {
+        Copy,
+        Xor
+    };
     void set_draw_op(DrawOp op) { state().draw_op = op; }
     DrawOp draw_op() const { return state().draw_op; }
 
@@ -54,7 +58,11 @@ public:
     GraphicsBitmap* target() { return m_target.ptr(); }
 
     void save() { m_state_stack.append(m_state_stack.last()); }
-    void restore() { ASSERT(m_state_stack.size() > 1); m_state_stack.take_last(); }
+    void restore()
+    {
+        ASSERT(m_state_stack.size() > 1);
+        m_state_stack.take_last();
+    }
 
 protected:
     void set_pixel_with_draw_op(dword& pixel, const Color&);
