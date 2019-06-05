@@ -16,6 +16,8 @@ For Serenity, we will need e2fsprogs and QEMU:
 
     sudo apt install e2fsprogs qemu-system-i386
 
+Note: there is a problem with the PS/2 keyboard/mouse emulation in QEMU 2.11.1 as packaged in Ubuntu's LTS releases. If you have any strange behaviour with missing keyboard inputs or jittery mouse movement, try building QEMU from source. 2.12.1, 3.0.1, 3.1.0, and 4.0.0 are all confirmed as working when built from source.
+
 ## Binutils:
 
 Download GNU binutils-2.32 and apply the patch serenity/Meta/binutils-2.32-serenity.patch
