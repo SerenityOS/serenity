@@ -15,19 +15,19 @@
 #include <sys/time.h>
 #include <unistd.h>
 
-#define T_A     1
-#define T_NS    2
+#define T_A 1
+#define T_NS 2
 #define T_CNAME 5
-#define T_SOA   6
-#define T_PTR   12
-#define T_MX    15
+#define T_SOA 6
+#define T_PTR 12
+#define T_MX 15
 
-#define C_IN    1
+#define C_IN 1
 
 static Vector<String> lookup(const String& hostname, bool& did_timeout, const String& DNS_IP, unsigned short record_type);
 static String parse_dns_name(const byte*, int& offset, int max_offset);
 
-int main(int argc, char**argv)
+int main(int argc, char** argv)
 {
     (void)argc;
     (void)argv;
@@ -36,7 +36,7 @@ int main(int argc, char**argv)
 
     auto config = CConfigFile::get_for_system("LookupServer");
     dbgprintf("LookupServer: Using network config file at %s.\n",
-              config->file_name().characters());
+        config->file_name().characters());
     auto DNS_IP = config->read_entry("DNS", "IPAddress", "127.0.0.53");
 
     HashMap<String, IPv4Address> dns_cache;
@@ -106,8 +106,8 @@ int main(int argc, char**argv)
         }
         auto hostname = String(client_buffer + 1, nrecv - 1, Chomp);
         dbgprintf("LookupServer: Got request for '%s' (using IP %s)\n",
-                  hostname.characters(),
-                  DNS_IP.characters());
+            hostname.characters(),
+            DNS_IP.characters());
 
         Vector<String> responses;
 
@@ -185,15 +185,17 @@ Vector<String> lookup(const String& hostname, bool& did_timeout, const String& D
     int fd = socket(AF_INET, SOCK_DGRAM, 0);
     if (fd < 0) {
         perror("socket");
-        return { };
+        return {};
     }
 
-    struct timeval timeout { 1, 0 };
+    struct timeval timeout {
+        1, 0
+    };
     int rc = setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
     if (rc < 0) {
         perror("setsockopt");
         close(fd);
-        return { };
+        return {};
     }
 
     struct sockaddr_in dst_addr;
@@ -203,10 +205,10 @@ Vector<String> lookup(const String& hostname, bool& did_timeout, const String& D
     dst_addr.sin_port = htons(53);
     rc = inet_pton(AF_INET, DNS_IP.characters(), &dst_addr.sin_addr);
 
-    int nsent = sendto(fd, buffer.pointer(), buffer.size(), 0,(const struct sockaddr *)&dst_addr, sizeof(dst_addr));
+    int nsent = sendto(fd, buffer.pointer(), buffer.size(), 0, (const struct sockaddr*)&dst_addr, sizeof(dst_addr));
     if (nsent < 0) {
         perror("sendto");
-        return { };
+        return {};
     }
     ASSERT(nsent == buffer.size());
 
@@ -221,7 +223,7 @@ Vector<String> lookup(const String& hostname, bool& did_timeout, const String& D
             perror("recvfrom");
         }
         close(fd);
-        return { };
+        return {};
     }
     close(fd);
 
@@ -229,7 +231,7 @@ Vector<String> lookup(const String& hostname, bool& did_timeout, const String& D
 
     if (nrecv < (int)sizeof(DNSPacket)) {
         dbgprintf("LookupServer: Response not big enough (%d) to be a DNS packet :(\n", nrecv);
-        return { };
+        return {};
     }
 
     auto& response_header = *(DNSPacket*)(response_buffer);
@@ -241,15 +243,15 @@ Vector<String> lookup(const String& hostname, bool& did_timeout, const String& D
 
     if (response_header.id() != request_header.id()) {
         dbgprintf("LookupServer: ID mismatch (%u vs %u) :(\n", response_header.id(), request_header.id());
-        return { };
+        return {};
     }
     if (response_header.question_count() != 1) {
         dbgprintf("LookupServer: Question count (%u vs %u) :(\n", response_header.question_count(), request_header.question_count());
-        return { };
+        return {};
     }
     if (response_header.answer_count() < 1) {
         dbgprintf("LookupServer: Not enough answers (%u) :(\n", response_header.answer_count());
-        return { };
+        return {};
     }
 
     int offset = 0;
