@@ -104,10 +104,10 @@ void WSCompositor::compose()
             } else if (m_wallpaper_mode == WallpaperMode::Tile) {
                 m_back_painter->blit_tiled(dirty_rect.location(), *m_wallpaper, dirty_rect);
             } else {
-                // FIXME: Does not work: offset rect creates trails.
-                m_back_painter->draw_scaled_bitmap(dirty_rect, *m_wallpaper,
-                    { dirty_rect.location(),
-                        m_wallpaper->size() });
+                float hscale = (float)m_wallpaper->size().width() / (float)ws.size().width();
+                float vscale = (float)m_wallpaper->size().height() / (float)ws.size().height();
+
+                m_back_painter->blit_scaled(dirty_rect.location(), *m_wallpaper, dirty_rect, hscale, vscale);
             }
         }
     }
