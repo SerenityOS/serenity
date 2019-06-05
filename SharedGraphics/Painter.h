@@ -29,7 +29,7 @@ public:
     void blit_dimmed(const Point&, const GraphicsBitmap&, const Rect& src_rect);
     void blit_tiled(const Point&, const GraphicsBitmap&, const Rect& src_rect);
     void blit_offset(const Point&, const GraphicsBitmap&, const Rect& src_rect, const Point&);
-    void blit_scaled(const Point&, const GraphicsBitmap&, const Rect& src_rect, const Size&);
+    void blit_scaled(const Point&, const GraphicsBitmap&, const Rect&, float, float);
     void draw_text(const Rect&, const StringView&, const Font&, TextAlignment = TextAlignment::TopLeft, Color = Color::Black, TextElision = TextElision::None);
     void draw_text(const Rect&, const StringView&, TextAlignment = TextAlignment::TopLeft, Color = Color::Black, TextElision = TextElision::None);
     void draw_glyph(const Point&, char, Color);
