@@ -80,7 +80,7 @@ void WSCompositor::compose()
     dbgprintf("[WM] compose #%u (%u rects)\n", ++m_compose_count, dirty_rects.rects().size());
 #endif
 
-    auto any_dirty_rect_intersects_window = [&dirty_rects] (const WSWindow& window) {
+    auto any_dirty_rect_intersects_window = [&dirty_rects](const WSWindow& window) {
         auto window_frame_rect = window.frame().rect();
         for (auto& dirty_rect : dirty_rects.rects()) {
             if (dirty_rect.intersects(window_frame_rect))
@@ -97,22 +97,22 @@ void WSCompositor::compose()
             if (m_wallpaper_mode == WallpaperMode::Simple) {
                 m_back_painter->blit(dirty_rect.location(), *m_wallpaper, dirty_rect);
             } else if (m_wallpaper_mode == WallpaperMode::Center) {
-                Point offset{ ws.size().width() / 2 - m_wallpaper->size().width() / 2,
-                              ws.size().height() / 2 - m_wallpaper->size().height() / 2 };
+                Point offset { ws.size().width() / 2 - m_wallpaper->size().width() / 2,
+                    ws.size().height() / 2 - m_wallpaper->size().height() / 2 };
                 m_back_painter->blit_offset(dirty_rect.location(), *m_wallpaper,
-                                            dirty_rect, offset);
+                    dirty_rect, offset);
             } else if (m_wallpaper_mode == WallpaperMode::Tile) {
                 m_back_painter->blit_tiled(dirty_rect.location(), *m_wallpaper, dirty_rect);
             } else {
                 // FIXME: Does not work: offset rect creates trails.
                 m_back_painter->draw_scaled_bitmap(dirty_rect, *m_wallpaper,
-                                                   { dirty_rect.location(),
-                                                     m_wallpaper->size() });
+                    { dirty_rect.location(),
+                        m_wallpaper->size() });
             }
         }
     }
 
-    auto compose_window = [&] (WSWindow& window) -> IterationDecision {
+    auto compose_window = [&](WSWindow& window) -> IterationDecision {
         if (!any_dirty_rect_intersects_window(window))
             return IterationDecision::Continue;
         PainterStateSaver saver(*m_back_painter);
@@ -154,7 +154,7 @@ void WSCompositor::compose()
     if (auto* fullscreen_window = wm.active_fullscreen_window()) {
         compose_window(*fullscreen_window);
     } else {
-        wm.for_each_visible_window_from_back_to_front([&] (WSWindow& window) {
+        wm.for_each_visible_window_from_back_to_front([&](WSWindow& window) {
             return compose_window(window);
         });
 
@@ -234,7 +234,7 @@ bool WSCompositor::set_wallpaper(const String& path, Function<void(bool)>&& call
     context->path = path;
     context->callback = move(callback);
 
-    int rc = create_thread([] (void* ctx) -> int {
+    int rc = create_thread([](void* ctx) -> int {
         OwnPtr<Context> context((Context*)ctx);
         context->bitmap = load_png(context->path);
         if (!context->bitmap) {
@@ -242,13 +242,14 @@ bool WSCompositor::set_wallpaper(const String& path, Function<void(bool)>&& call
             exit_thread(0);
             return 0;
         }
-        the().deferred_invoke([context = move(context)] (auto&) {
+        the().deferred_invoke([context = move(context)](auto&) {
             the().finish_setting_wallpaper(context->path, *context->bitmap);
             context->callback(true);
         });
         exit_thread(0);
         return 0;
-    }, context.leak_ptr());
+    },
+        context.leak_ptr());
     ASSERT(rc == 0);
 
     return true;
@@ -275,7 +276,7 @@ void WSCompositor::set_resolution(int width, int height)
     auto screen_rect = WSScreen::the().rect();
     if (screen_rect.width() == width && screen_rect.height() == height)
         return;
-    m_wallpaper_path = { };
+    m_wallpaper_path = {};
     m_wallpaper = nullptr;
     WSScreen::the().set_resolution(width, height);
     m_front_bitmap = GraphicsBitmap::create_wrapper(GraphicsBitmap::Format::RGB32, { width, height }, WSScreen::the().scanline(0));
@@ -303,7 +304,7 @@ void WSCompositor::draw_geometry_label()
     auto& wm = WSWindowManager::the();
     auto* window_being_moved_or_resized = wm.m_drag_window ? wm.m_drag_window.ptr() : (wm.m_resize_window ? wm.m_resize_window.ptr() : nullptr);
     if (!window_being_moved_or_resized) {
-        m_last_geometry_label_rect = { };
+        m_last_geometry_label_rect = {};
         return;
     }
     auto geometry_string = window_being_moved_or_resized->rect().to_string();
@@ -340,7 +341,7 @@ void WSCompositor::draw_menubar()
     m_back_painter->fill_rect(menubar_rect, Color::LightGray);
     m_back_painter->draw_line({ 0, menubar_rect.bottom() }, { menubar_rect.right(), menubar_rect.bottom() }, Color::MidGray);
     int index = 0;
-    wm.for_each_active_menubar_menu([&] (WSMenu& menu) {
+    wm.for_each_active_menubar_menu([&](WSMenu& menu) {
         Color text_color = Color::Black;
         if (&menu == wm.current_menu()) {
             m_back_painter->fill_rect(menu.rect_in_menubar(), wm.menu_selection_color());
@@ -351,8 +352,7 @@ void WSCompositor::draw_menubar()
             menu.name(),
             index == 1 ? wm.app_menu_font() : wm.menu_font(),
             TextAlignment::CenterLeft,
-            text_color
-        );
+            text_color);
         ++index;
         return true;
     });
