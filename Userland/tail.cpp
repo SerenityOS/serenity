@@ -10,7 +10,7 @@
 int tail_from_pos(CFile& file, off_t startline, bool want_follow)
 {
     if (!file.seek(startline + 1))
-        return -1;
+        return 1;
 
     while (true) {
         const auto& b = file.read(4096);
@@ -26,9 +26,8 @@ int tail_from_pos(CFile& file, off_t startline, bool want_follow)
             }
         }
 
-        if (write(STDOUT_FILENO, b.pointer(), b.size()) < 0) {
-            return -1;
-        }
+        if (write(STDOUT_FILENO, b.pointer(), b.size()) < 0)
+            return 1;
     }
 
     return 0;
@@ -41,7 +40,7 @@ off_t find_seek_pos(CFile& file, int wanted_lines)
     off_t pos = 0;
     if (!file.seek(0, CIODevice::SeekMode::FromEndPosition, &pos)) {
         fprintf(stderr, "Failed to find end of file: %s\n", file.error_string());
-        return -1;
+        return 1;
     }
 
     off_t end = pos;
@@ -70,7 +69,7 @@ off_t find_seek_pos(CFile& file, int wanted_lines)
 static void exit_because_we_wanted_lines()
 {
     fprintf(stderr, "Expected a line count after -n");
-    exit(-1);
+    exit(1);
 }
 
 int main(int argc, char *argv[])
@@ -86,7 +85,7 @@ int main(int argc, char *argv[])
     Vector<String> values = args.get_single_values();
     if (values.size() != 1) {
         args_parser.print_usage();
-        return -1;
+        return 1;
     }
 
     int line_count = 0;
@@ -94,14 +93,14 @@ int main(int argc, char *argv[])
         line_count = strtol(args.get("n").characters(), NULL, 10);
         if (errno == EINVAL) {
             args_parser.print_usage();
-            return -1;
+            return 1;
         }
     }
 
     CFile f(values[0]);
     if (!f.open(CIODevice::ReadOnly)) {
         fprintf(stderr, "Error opening file %s: %s\n", f.filename().characters(), strerror(errno));
-        exit(-1);
+        exit(1);
     }
 
     bool flag_follow = args.is_present("f");
