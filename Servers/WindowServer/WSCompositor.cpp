@@ -107,7 +107,7 @@ void WSCompositor::compose()
                 float hscale = (float)m_wallpaper->size().width() / (float)ws.size().width();
                 float vscale = (float)m_wallpaper->size().height() / (float)ws.size().height();
 
-                m_back_painter->blit_scaled(dirty_rect.location(), *m_wallpaper, dirty_rect, hscale, vscale);
+                m_back_painter->blit_scaled(dirty_rect, *m_wallpaper, dirty_rect, hscale, vscale);
             }
         }
     }
