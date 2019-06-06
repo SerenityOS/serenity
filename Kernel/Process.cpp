@@ -1294,10 +1294,17 @@ int Process::sys$sleep(unsigned seconds)
     return 0;
 }
 
-void kgettimeofday(timeval& tv)
+timeval kgettimeofday()
 {
+    timeval tv;
     tv.tv_sec = RTC::boot_time() + PIT::seconds_since_boot();
     tv.tv_usec = PIT::ticks_this_second() * 1000;
+    return tv;
+}
+
+void kgettimeofday(timeval& tv)
+{
+    tv = kgettimeofday();
 }
 
 int Process::sys$gettimeofday(timeval* tv)
@@ -1744,106 +1751,72 @@ clock_t Process::sys$times(tms* times)
 
 int Process::sys$select(const Syscall::SC_select_params* params)
 {
+    // FIXME: Return -EINTR if a signal is caught.
+    // FIXME: Return -EINVAL if timeout is invalid.
     if (!validate_read_typed(params))
         return -EFAULT;
-    if (params->writefds && !validate_read_typed(params->writefds))
+    if (params->writefds && !validate_write_typed(params->writefds))
         return -EFAULT;
-    if (params->readfds && !validate_read_typed(params->readfds))
+    if (params->readfds && !validate_write_typed(params->readfds))
         return -EFAULT;
-    if (params->exceptfds && !validate_read_typed(params->exceptfds))
+    if (params->exceptfds && !validate_write_typed(params->exceptfds))
         return -EFAULT;
     if (params->timeout && !validate_read_typed(params->timeout))
         return -EFAULT;
-    int nfds = params->nfds;
-    fd_set* writefds = params->writefds;
-    fd_set* readfds = params->readfds;
-    fd_set* exceptfds = params->exceptfds;
-    auto* timeout = params->timeout;
+    if (params->nfds < 0)
+        return -EINVAL;
 
-    // FIXME: Implement exceptfds support.
-    (void)exceptfds;
-
-    if (timeout && (timeout->tv_sec || timeout->tv_usec)) {
-        struct timeval now;
-        kgettimeofday(now);
-        AK::timeval_add(&now, timeout, &current->m_select_timeout);
+    if (params->timeout && (params->timeout->tv_sec || params->timeout->tv_usec)) {
+        auto now = kgettimeofday();
+        AK::timeval_add(&now, params->timeout, &current->m_select_timeout);
         current->m_select_has_timeout = true;
     } else {
         current->m_select_has_timeout = false;
     }
 
-    if (nfds < 0)
-        return -EINVAL;
-
-    // FIXME: Return -EINTR if a signal is caught.
-    // FIXME: Return -EINVAL if timeout is invalid.
-
-    auto transfer_fds = [this, nfds] (fd_set* set, auto& vector) -> int {
+    auto transfer_fds = [&] (auto* fds, auto& vector) -> int {
         vector.clear_with_capacity();
-        if (!set)
+        if (!fds)
             return 0;
-        auto bitmap = Bitmap::wrap((byte*)set, FD_SETSIZE);
-        for (int i = 0; i < nfds; ++i) {
-            if (bitmap.get(i)) {
-                if (!file_descriptor(i))
+        for (int fd = 0; fd < params->nfds; ++fd) {
+            if (FD_ISSET(fd, fds)) {
+                if (!file_descriptor(fd))
                     return -EBADF;
-                vector.append(i);
+                vector.append(fd);
             }
         }
         return 0;
     };
-
-    int error = 0;
-    error = transfer_fds(writefds, current->m_select_write_fds);
-    if (error)
+    if (int error = transfer_fds(params->writefds, current->m_select_write_fds))
         return error;
-    error = transfer_fds(readfds, current->m_select_read_fds);
-    if (error)
+    if (int error = transfer_fds(params->readfds, current->m_select_read_fds))
         return error;
-    error = transfer_fds(exceptfds, current->m_select_exceptional_fds);
-    if (error)
+    if (int error = transfer_fds(params->exceptfds, current->m_select_exceptional_fds))
         return error;
 
 #if defined(DEBUG_IO) || defined(DEBUG_POLL_SELECT)
-    dbgprintf("%s<%u> selecting on (read:%u, write:%u), timeout=%p\n", name().characters(), pid(), current->m_select_read_fds.size(), current->m_select_write_fds.size(), timeout);
+    dbgprintf("%s<%u> selecting on (read:%u, write:%u), timeout=%p\n", name().characters(), pid(), current->m_select_read_fds.size(), current->m_select_write_fds.size(), params->timeout);
 #endif
 
-    if (!timeout || current->m_select_has_timeout)
+    if (!params->timeout || current->m_select_has_timeout)
         current->block(Thread::State::BlockedSelect);
 
-    int markedfds = 0;
-
-    if (readfds) {
-        memset(readfds, 0, sizeof(fd_set));
-        auto bitmap = Bitmap::wrap((byte*)readfds, FD_SETSIZE);
-        for (int fd : current->m_select_read_fds) {
-            auto* descriptor = file_descriptor(fd);
-            if (!descriptor)
-                continue;
-            if (descriptor->can_read()) {
-                bitmap.set(fd, true);
-                ++markedfds;
+    int marked_fd_count = 0;
+    auto mark_fds = [&] (auto* fds, auto& vector, auto should_mark) {
+        if (!fds)
+            return;
+        FD_ZERO(fds);
+        for (int fd : vector) {
+            if (auto* descriptor = file_descriptor(fd); descriptor && should_mark(*descriptor)) {
+                FD_SET(fd, fds);
+                ++marked_fd_count;
             }
         }
-    }
-
-    if (writefds) {
-        memset(writefds, 0, sizeof(fd_set));
-        auto bitmap = Bitmap::wrap((byte*)writefds, FD_SETSIZE);
-        for (int fd : current->m_select_write_fds) {
-            auto* descriptor = file_descriptor(fd);
-            if (!descriptor)
-                continue;
-            if (descriptor->can_write()) {
-                bitmap.set(fd, true);
-                ++markedfds;
-            }
-        }
-    }
-
-    // FIXME: Check for exceptional conditions.
-
-    return markedfds;
+    };
+    mark_fds(params->readfds, current->m_select_read_fds, [] (auto& descriptor) { return descriptor.can_read(); });
+    mark_fds(params->writefds, current->m_select_write_fds, [] (auto& descriptor) { return descriptor.can_write(); });
+    // FIXME: We should also mark params->exceptfds as appropriate.
+    return marked_fd_count;
 }
 
 int Process::sys$poll(pollfd* fds, int nfds, int timeout)
@@ -1869,9 +1842,7 @@ int Process::sys$poll(pollfd* fds, int nfds, int timeout)
             timeout -= 1000;
         }
         tvtimeout.tv_usec = timeout * 1000;
-
-        struct timeval now;
-        kgettimeofday(now);
+        auto now = kgettimeofday();
         AK::timeval_add(&now, &tvtimeout, &current->m_select_timeout);
         current->m_select_has_timeout = true;
     } else {

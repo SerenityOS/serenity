@@ -22,6 +22,7 @@ class Region;
 class VMObject;
 class ProcessTracer;
 
+timeval kgettimeofday();
 void kgettimeofday(timeval&);
 
 class Process : public InlineLinkedListNode<Process>
