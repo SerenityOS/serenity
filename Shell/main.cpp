@@ -359,7 +359,12 @@ static int run_command(const String& cmd)
     struct termios trm;
     tcgetattr(0, &trm);
 
-    Vector<pid_t> children;
+    struct SpawnedProcess {
+        String name;
+        pid_t pid;
+    };
+
+    Vector<SpawnedProcess> children;
 
     CommandTimer timer;
 
@@ -408,7 +413,7 @@ static int run_command(const String& cmd)
             }
             ASSERT_NOT_REACHED();
         }
-        children.append(child);
+        children.append({ argv[0], child });
     }
 
 #ifdef SH_DEBUG
@@ -429,7 +434,7 @@ static int run_command(const String& cmd)
     for (int i = 0; i < children.size(); ++i) {
         auto& child = children[i];
         do {
-            int rc = waitpid(child, &wstatus, 0);
+            int rc = waitpid(child.pid, &wstatus, 0);
             if (rc < 0 && errno != EINTR) {
                 if (errno != ECHILD)
                     perror("waitpid");
@@ -437,14 +442,14 @@ static int run_command(const String& cmd)
             }
             if (WIFEXITED(wstatus)) {
                 if (WEXITSTATUS(wstatus) != 0)
-                    printf("Shell: Child %d exited with status %d\n", child, WEXITSTATUS(wstatus));
+                    printf("Shell: %s(%d) exited with status %d\n", child.name.characters(), child.pid, WEXITSTATUS(wstatus));
                 if (i == 0)
                     return_value = WEXITSTATUS(wstatus);
             } else {
                 if (WIFSIGNALED(wstatus)) {
-                    printf("Shell: Child %d exited due to signal '%s'\n", child, strsignal(WTERMSIG(wstatus)));
+                    printf("Shell: %s(%d) exited due to signal '%s'\n", child.name.characters(), child.pid, strsignal(WTERMSIG(wstatus)));
                 } else {
-                    printf("Shell: Child %d exited abnormally\n", child);
+                    printf("Shell: %s(%d) exited abnormally\n", child.name.characters(), child.pid);
                 }
             }
         } while(errno == EINTR);
