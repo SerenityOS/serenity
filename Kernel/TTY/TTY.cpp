@@ -65,6 +65,11 @@ void TTY::emit(byte ch)
             generate_signal(SIGQUIT);
             return;
         }
+        if (ch == m_termios.c_cc[VSUSP]) {
+            dbgprintf("%s: VSUSP pressed!\n", tty_name().characters());
+            generate_signal(SIGTSTP);
+            return;
+        }
     }
     m_buffer.write(&ch, 1);
 }
