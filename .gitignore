@@ -13,3 +13,4 @@ Toolchain/Build
 Toolchain/Local
 .vscode
 compile_commands.json
+.clang_complete
