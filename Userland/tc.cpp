@@ -38,7 +38,7 @@ int main(int argc, char** argv)
     dst_addr.sin_family = AF_INET;
     dst_addr.sin_port = htons(80);
     rc = inet_pton(AF_INET, addr_str, &dst_addr.sin_addr);
-    if (rc < 0) {
+    if (rc <= 0) {
         perror("inet_pton");
         return 1;
     }
