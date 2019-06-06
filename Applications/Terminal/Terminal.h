@@ -127,10 +127,11 @@ private:
         ~Line();
         void clear(Attribute);
         bool has_only_one_background_color() const;
+        void set_length(word);
         byte* characters { nullptr };
         Attribute* attributes { nullptr };
         bool dirty { false };
-        word length { 0 };
+        word m_length { 0 };
     };
     Line& line(size_t index)
     {
