@@ -7,6 +7,8 @@
 #include <LibCore/CFile.h>
 #include <LibCore/CArgsParser.h>
 
+#define DEFAULT_LINE_COUNT 10
+
 int tail_from_pos(CFile& file, off_t startline, bool want_follow)
 {
     if (!file.seek(startline + 1))
@@ -97,7 +99,7 @@ int main(int argc, char *argv[])
             return -1;
         }
     } else {
-    	line_count = 10;
+    	line_count = DEFAULT_LINE_COUNT;
     }
 
     CFile f(values[0]);
